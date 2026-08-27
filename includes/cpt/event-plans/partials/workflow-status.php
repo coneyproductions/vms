@@ -64,11 +64,11 @@
     <?php if (function_exists('vms_event_credits_render_event_plan_panel')) { vms_event_credits_render_event_plan_panel((int) $post->ID, (string) $plan_status); } ?>
 
     <?php
-        $k_rescheduled_from = function_exists('vms_meta_key')
-            ? (vms_meta_key('event_plan', 'rescheduled_from_plan_id') ?: '_vms_rescheduled_from_plan_id')
+        $k_rescheduled_from = function_exists('bvmgr_meta_key')
+            ? (bvmgr_meta_key('event_plan', 'rescheduled_from_plan_id') ?: '_vms_rescheduled_from_plan_id')
             : '_vms_rescheduled_from_plan_id';
-        $k_rescheduled_to = function_exists('vms_meta_key')
-            ? (vms_meta_key('event_plan', 'rescheduled_to_plan_ids') ?: '_vms_rescheduled_to_plan_ids')
+        $k_rescheduled_to = function_exists('bvmgr_meta_key')
+            ? (bvmgr_meta_key('event_plan', 'rescheduled_to_plan_ids') ?: '_vms_rescheduled_to_plan_ids')
             : '_vms_rescheduled_to_plan_ids';
         $rescheduled_from_id = absint(get_post_meta($post->ID, $k_rescheduled_from, true));
         $rescheduled_to_ids = function_exists('vms_event_plan_normalize_related_plan_ids')
@@ -133,8 +133,8 @@
     <p class="vms-ep-status-current">
         <strong><?php esc_html_e('Status:', 'backstage-venue-manager'); ?></strong>
         <?php
-            $plan_status_label = function_exists('vms_event_plan_status_label')
-                ? (string) vms_event_plan_status_label((string) $plan_status)
+            $plan_status_label = function_exists('bvmgr_event_plan_status_label')
+                ? (string) bvmgr_event_plan_status_label((string) $plan_status)
                 : ucwords(str_replace(array('_', '-'), ' ', (string) $plan_status));
             echo esc_html($plan_status_label);
         ?>

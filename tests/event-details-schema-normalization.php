@@ -187,7 +187,7 @@ function tribe_get_cost($eventId, bool $withCurrency = false): string
 	return (string) ($GLOBALS['vms_event_details_test_cost'] ?? '');
 }
 
-function vms_tec_is_cancelled_event(int $eventId): bool
+function bvmgr_tec_is_cancelled_event(int $eventId): bool
 {
 	unset($eventId);
 	return false;

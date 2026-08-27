@@ -115,7 +115,7 @@ function vms_vendor_ics_extract_events(string $raw, array $active_dates = array(
     preg_match_all('/BEGIN:VEVENT(.*?)END:VEVENT/s', $raw, $matches);
     if (empty($matches[1])) return array();
 
-    $fallback_tz = vms_get_timezone(); // your helpers.php
+    $fallback_tz = bvmgr_get_timezone(); // your helpers.php
     $window = vms_vendor_ics_build_window_from_active_dates($active_dates, $fallback_tz);
 
     // Parse blocks into structured VEVENT records
@@ -737,7 +737,7 @@ function vms_vendor_ics_parse_dt(string $value, DateTimeZone $fallback_tz): ?int
  */
 function vms_vendor_ics_busy_dates(array $events): array
 {
-    $tz = vms_get_timezone();
+    $tz = bvmgr_get_timezone();
     $busy = array();
 
     // MVP show window (local time)

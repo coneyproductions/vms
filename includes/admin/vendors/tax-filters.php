@@ -37,7 +37,7 @@ function vms_vendor_tax_filter_query($query)
 	$status = isset($_GET['vms_tax_status']) ? sanitize_text_field(wp_unslash($_GET['vms_tax_status'])) : '';
 	if ($status === '') return;
 
-	$k_done = vms_meta_key('vendor', 'tax_profile_completed_at');
+	$k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 
 	if ($status === 'complete') {
 		$query->set('meta_query', array(

@@ -6,8 +6,8 @@ if (!defined('ABSPATH')) exit;
  */
 function bvmgr_activate_plugin(): void
 {
-	if (function_exists('vms_resource_fingerprint_flag')) {
-		vms_resource_fingerprint_flag('plugin_activation', bvmgr_plugin_lifecycle_basename());
+	if (function_exists('bvmgr_resource_fingerprint_flag')) {
+		bvmgr_resource_fingerprint_flag('plugin_activation', bvmgr_plugin_lifecycle_basename());
 	}
 
 	if (function_exists('bvmgr_run_legacy_square_nightly_sync_cleanup')) {
@@ -63,8 +63,8 @@ function bvmgr_activate_plugin(): void
 
 function bvmgr_deactivate_plugin(): void
 {
-	if (function_exists('vms_resource_fingerprint_flag')) {
-		vms_resource_fingerprint_flag('plugin_deactivation', bvmgr_plugin_lifecycle_basename());
+	if (function_exists('bvmgr_resource_fingerprint_flag')) {
+		bvmgr_resource_fingerprint_flag('plugin_deactivation', bvmgr_plugin_lifecycle_basename());
 	}
 
 	if (function_exists('bvmgr_run_legacy_square_nightly_sync_cleanup')) {

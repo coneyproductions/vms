@@ -172,8 +172,8 @@ if (!function_exists('vms_social_render_admin_page')) {
 	{
 		vms_social_require_manage_capability();
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('Social Sharing', 'backstage-venue-manager'),
 					'notices_callback' => 'vms_social_render_notices',
@@ -240,7 +240,7 @@ if (!function_exists('vms_social_render_overview_tab')) {
 	function vms_social_render_overview_tab(): void
 	{
 		$settings = vms_social_get_settings();
-		$providers = vms_social_get_providers();
+		$providers = bvmgr_social_get_providers();
 		$next = wp_next_scheduled(defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue');
 
 		echo '<h2>' . esc_html__('Module Status', 'backstage-venue-manager') . '</h2>';

@@ -38,7 +38,7 @@ if (!function_exists('vms_email_followups_event_context')) {
 			return array('valid' => false, 'message' => __('Event Plan not found.', 'backstage-venue-manager'));
 		}
 
-		$status_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+		$status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 		if ($status_key === '') {
 			$status_key = '_vms_event_plan_status';
 		}

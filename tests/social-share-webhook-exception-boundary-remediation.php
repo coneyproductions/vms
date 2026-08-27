@@ -360,7 +360,7 @@ function vms_social_venue_map_for_platform(int $venue_id, string $platform): ?ar
 /**
  * @return mixed
  */
-function vms_social_get_provider(string $platform)
+function bvmgr_social_get_provider(string $platform)
 {
 	$GLOBALS['vms_test_provider_lookups'][] = $platform;
 	return new BVMGR_Social_Provider_Webhook();

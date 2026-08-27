@@ -306,7 +306,7 @@ function delete_user_meta(int $user_id, string $meta_key, $meta_value = '')
 	return true;
 }
 
-function vms_get_tour_registry(): array
+function bvmgr_get_tour_registry(): array
 {
 	return (array) ($GLOBALS['vms_test_legacy_registry'] ?? array());
 }

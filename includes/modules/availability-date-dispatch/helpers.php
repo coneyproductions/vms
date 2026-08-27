@@ -51,8 +51,8 @@ if (!function_exists('vms_add_dispatch_now_mysql')) {
 if (!function_exists('vms_add_dispatch_event_meta_key')) {
 	function vms_add_dispatch_event_meta_key(string $key, string $fallback): string
 	{
-		if (function_exists('vms_meta_key')) {
-			$resolved = (string) vms_meta_key('event_plan', $key);
+		if (function_exists('bvmgr_meta_key')) {
+			$resolved = (string) bvmgr_meta_key('event_plan', $key);
 			if ($resolved !== '') {
 				return $resolved;
 			}
@@ -65,8 +65,8 @@ if (!function_exists('vms_add_dispatch_event_meta_key')) {
 if (!function_exists('vms_add_dispatch_vendor_email_key')) {
 	function vms_add_dispatch_vendor_email_key(): string
 	{
-		if (function_exists('vms_meta_key')) {
-			$resolved = (string) vms_meta_key('vendor', 'email');
+		if (function_exists('bvmgr_meta_key')) {
+			$resolved = (string) bvmgr_meta_key('vendor', 'email');
 			if ($resolved !== '') {
 				return $resolved;
 			}
@@ -87,8 +87,8 @@ if (!function_exists('vms_add_dispatch_primary_vendor_key')) {
 if (!function_exists('vms_add_dispatch_event_status_key')) {
 	function vms_add_dispatch_event_status_key(): string
 	{
-		if (function_exists('vms_meta_key')) {
-			$resolved = (string) vms_meta_key('event_plan', 'status');
+		if (function_exists('bvmgr_meta_key')) {
+			$resolved = (string) bvmgr_meta_key('event_plan', 'status');
 			if ($resolved !== '') {
 				return $resolved;
 			}
@@ -254,8 +254,8 @@ if (!function_exists('vms_add_dispatch_vendor_type_slugs')) {
 			}
 		}
 
-		$primary_type = function_exists('vms_calendar_vendor_primary_type')
-			? sanitize_title((string) (vms_calendar_vendor_primary_type($vendor_id)['slug'] ?? ''))
+		$primary_type = function_exists('bvmgr_calendar_vendor_primary_type')
+			? sanitize_title((string) (bvmgr_calendar_vendor_primary_type($vendor_id)['slug'] ?? ''))
 			: '';
 
 		return $primary_type !== '' ? array($primary_type) : array();
@@ -811,8 +811,8 @@ if (!function_exists('vms_add_dispatch_vendor_email')) {
 
 		$candidates = array(
 			(string) get_post_meta($vendor_id, vms_add_dispatch_vendor_email_key(), true),
-			(function_exists('vms_meta_key') ? (string) get_post_meta($vendor_id, (string) (vms_meta_key('vendor', 'primary_email') ?: '_vms_vendor_primary_email'), true) : (string) get_post_meta($vendor_id, '_vms_vendor_primary_email', true)),
-			(function_exists('vms_meta_key') ? (string) get_post_meta($vendor_id, (string) (vms_meta_key('vendor', 'contact_email') ?: '_vms_contact_email'), true) : (string) get_post_meta($vendor_id, '_vms_contact_email', true)),
+			(function_exists('bvmgr_meta_key') ? (string) get_post_meta($vendor_id, (string) (bvmgr_meta_key('vendor', 'primary_email') ?: '_vms_vendor_primary_email'), true) : (string) get_post_meta($vendor_id, '_vms_vendor_primary_email', true)),
+			(function_exists('bvmgr_meta_key') ? (string) get_post_meta($vendor_id, (string) (bvmgr_meta_key('vendor', 'contact_email') ?: '_vms_contact_email'), true) : (string) get_post_meta($vendor_id, '_vms_contact_email', true)),
 		);
 
 		foreach ($candidates as $candidate) {

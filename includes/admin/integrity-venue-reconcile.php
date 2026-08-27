@@ -133,8 +133,8 @@ function vms_render_integrity_venue_reconcile_page(): void
   $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
   $actions_html .= '<a class="button button-primary" href="' . esc_url($settings_url) . '">' . esc_html__('Settings & Scan', 'backstage-venue-manager') . '</a>';
 
-  if (function_exists('vms_admin_ui_render_shell')) {
-    vms_admin_ui_render_shell(
+  if (function_exists('bvmgr_admin_ui_render_shell')) {
+    bvmgr_admin_ui_render_shell(
       array(
         'title' => __('Integrity: Venue Links', 'backstage-venue-manager'),
         'actions_html' => $actions_html,

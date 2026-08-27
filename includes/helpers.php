@@ -182,8 +182,8 @@ if (!function_exists('vms_event_plan_get_rescheduled_child_plan_ids')) {
             return array();
         }
 
-        $meta_key = function_exists('vms_meta_key')
-            ? (string) (vms_meta_key('event_plan', 'rescheduled_to_plan_ids') ?: '_vms_rescheduled_to_plan_ids')
+        $meta_key = function_exists('bvmgr_meta_key')
+            ? (string) (bvmgr_meta_key('event_plan', 'rescheduled_to_plan_ids') ?: '_vms_rescheduled_to_plan_ids')
             : '_vms_rescheduled_to_plan_ids';
 
         $value = get_post_meta($plan_id, $meta_key, true);
@@ -248,13 +248,13 @@ if (!function_exists('vms_event_plan_get_public_event_payload')) {
             'title' => $title,
             'date_raw' => $date_raw,
             'date_label' => $date_label,
-            'status' => (function_exists('vms_event_plan_get_status') ? vms_event_plan_get_status($plan_id, 'generic') : sanitize_key((string) get_post_meta($plan_id, (function_exists('vms_meta_key') ? (string) (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status'), true))),
+            'status' => (function_exists('bvmgr_event_plan_get_status') ? bvmgr_event_plan_get_status($plan_id, 'generic') : sanitize_key((string) get_post_meta($plan_id, (function_exists('bvmgr_meta_key') ? (string) (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status'), true))),
         );
     }
 }
 
-if (!function_exists('vms_event_plan_get_public_reschedule_destination')) {
-    function vms_event_plan_get_public_reschedule_destination(int $source_plan_id): array
+if (!function_exists('bvmgr_event_plan_get_public_reschedule_destination')) {
+    function bvmgr_event_plan_get_public_reschedule_destination(int $source_plan_id): array
     {
         $source_plan_id = absint($source_plan_id);
         if ($source_plan_id <= 0) {
@@ -270,7 +270,7 @@ if (!function_exists('vms_event_plan_get_public_reschedule_destination')) {
         $candidates = array();
 
         foreach ($child_ids as $child_id) {
-            $status = function_exists('vms_event_plan_get_status') ? vms_event_plan_get_status($child_id, 'generic') : sanitize_key((string) get_post_meta($child_id, (function_exists('vms_meta_key') ? (string) (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status'), true));
+            $status = function_exists('bvmgr_event_plan_get_status') ? bvmgr_event_plan_get_status($child_id, 'generic') : sanitize_key((string) get_post_meta($child_id, (function_exists('bvmgr_meta_key') ? (string) (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status'), true));
             if ($status === 'cancelled') {
                 continue;
             }
@@ -330,7 +330,7 @@ if (!function_exists('vms_event_plan_get_public_reschedule_destination')) {
  * @param int $tec_event_id TEC event post ID.
  * @return int Event Plan ID, or 0 when no valid link exists.
  */
-function vms_resolve_event_plan_for_tec_event($tec_event_id)
+function bvmgr_resolve_event_plan_for_tec_event($tec_event_id)
 {
     $tec_event_id = absint($tec_event_id);
     if ($tec_event_id <= 0) {
@@ -359,15 +359,15 @@ function vms_resolve_event_plan_for_tec_event($tec_event_id)
         return 0;
     }
 
-    $ticketing_config_key = function_exists('vms_meta_key')
-        ? (string) vms_meta_key('event_plan', 'ticketing_config_v2')
+    $ticketing_config_key = function_exists('bvmgr_meta_key')
+        ? (string) bvmgr_meta_key('event_plan', 'ticketing_config_v2')
         : '_vms_ticketing_config_v2';
     if ($ticketing_config_key === '') {
         $ticketing_config_key = '_vms_ticketing_config_v2';
     }
 
-    $status_key = function_exists('vms_meta_key')
-        ? (string) vms_meta_key('event_plan', 'status')
+    $status_key = function_exists('bvmgr_meta_key')
+        ? (string) bvmgr_meta_key('event_plan', 'status')
         : '_vms_event_plan_status';
     if ($status_key === '') {
         $status_key = '_vms_event_plan_status';
@@ -385,8 +385,8 @@ function vms_resolve_event_plan_for_tec_event($tec_event_id)
             continue;
         }
 
-        $workflow_status = function_exists('vms_event_plan_get_status')
-            ? sanitize_key((string) vms_event_plan_get_status($plan_id, 'generic'))
+        $workflow_status = function_exists('bvmgr_event_plan_get_status')
+            ? sanitize_key((string) bvmgr_event_plan_get_status($plan_id, 'generic'))
             : sanitize_key((string) get_post_meta($plan_id, $status_key, true));
 
         $saved_ticketing_config = get_post_meta($plan_id, $ticketing_config_key, true);
@@ -428,10 +428,10 @@ function vms_resolve_event_plan_for_tec_event($tec_event_id)
     return (int) $ranked[0]['id'];
 }
 
-function vms_get_event_plan_for_tec_event($tec_event_id)
+function bvmgr_get_event_plan_for_tec_event($tec_event_id)
 {
-    $plan_id = function_exists('vms_resolve_event_plan_for_tec_event')
-        ? (int) vms_resolve_event_plan_for_tec_event($tec_event_id)
+    $plan_id = function_exists('bvmgr_resolve_event_plan_for_tec_event')
+        ? (int) bvmgr_resolve_event_plan_for_tec_event($tec_event_id)
         : 0;
 
     return $plan_id > 0 ? $plan_id : null;
@@ -524,7 +524,7 @@ function vms_get_timezone_id(): string
     return 'UTC';
 }
 
-function vms_get_timezone(): DateTimeZone
+function bvmgr_get_timezone(): DateTimeZone
 {
     $opts = (array) get_option('vms_settings', array());
     $tz = isset($opts['timezone']) ? trim((string) $opts['timezone']) : '';
@@ -548,7 +548,7 @@ function vms_get_event_titles_by_date(array $active_dates): array
 
     $active_set = array_fill_keys($active_dates, true);
     $map = array();
-    $tz  = vms_get_timezone();
+    $tz  = bvmgr_get_timezone();
 
     $q = new WP_Query(array(
         'post_type'      => 'tribe_events',
@@ -784,8 +784,8 @@ if (!function_exists('vms_get_vendor_default_agent_fee_terms')) {
             return array();
         }
 
-        $k_pct = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_commission_percent') ?: '_vms_default_commission_percent') : '_vms_default_commission_percent';
-        $k_mode = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_commission_mode') ?: '_vms_default_commission_mode') : '_vms_default_commission_mode';
+        $k_pct = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_commission_percent') ?: '_vms_default_commission_percent') : '_vms_default_commission_percent';
+        $k_mode = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_commission_mode') ?: '_vms_default_commission_mode') : '_vms_default_commission_mode';
 
         $pct = vms_normalize_agent_fee_percent(get_post_meta($vendor_id, $k_pct, true));
         $mode = vms_normalize_agent_fee_mode(get_post_meta($vendor_id, $k_mode, true));
@@ -1282,8 +1282,8 @@ if (!function_exists('vms_comp_hash_from_terms')) {
     }
 }
 
-if (!function_exists('vms_get_event_plan_comp_terms')) {
-    function vms_get_event_plan_comp_terms(int $plan_id): array
+if (!function_exists('bvmgr_get_event_plan_comp_terms')) {
+    function bvmgr_get_event_plan_comp_terms(int $plan_id): array
     {
         $terms = array(
             'structure' => (string) get_post_meta($plan_id, '_vms_comp_structure', true),
@@ -1339,8 +1339,8 @@ if (!function_exists('vms_event_plan_apply_comp_terms')) {
             delete_post_meta($plan_id, '_vms_door_split_percent');
         }
 
-        $k_commission_override_none = function_exists('vms_meta_key')
-            ? (vms_meta_key('event_plan', 'commission_override_none') ?: '_vms_commission_override_none')
+        $k_commission_override_none = function_exists('bvmgr_meta_key')
+            ? (bvmgr_meta_key('event_plan', 'commission_override_none') ?: '_vms_commission_override_none')
             : '_vms_commission_override_none';
 
         $commission_percent = vms_normalize_agent_fee_percent($terms['commission_percent'] ?? null);
@@ -1410,11 +1410,11 @@ if (!function_exists('vms_event_plan_apply_comp_terms')) {
     }
 }
 
-if (!function_exists('vms_calculate_attendance_bonus_payout')) {
+if (!function_exists('bvmgr_calculate_attendance_bonus_payout')) {
     /**
      * @return array<string,int|float|string>
      */
-    function vms_calculate_attendance_bonus_payout(array $terms, int $attendance_count): array
+    function bvmgr_calculate_attendance_bonus_payout(array $terms, int $attendance_count): array
     {
         $base_pay = vms_normalize_comp_nonnegative_float($terms['flat_fee_amount'] ?? null);
         if ($base_pay === null) {
@@ -1480,7 +1480,7 @@ if (!function_exists('vms_get_attendance_bonus_progress_snapshot')) {
         $structure = sanitize_key((string) ($terms['structure'] ?? ''));
         $mode = vms_normalize_attendance_bonus_mode((string) ($terms['attendance_bonus_mode'] ?? ''));
         $attendance_count = max(0, $attendance_count);
-        $payout = vms_calculate_attendance_bonus_payout($terms, $attendance_count);
+        $payout = bvmgr_calculate_attendance_bonus_payout($terms, $attendance_count);
 
         $base_pay = (float) ($payout['base_pay'] ?? 0.0);
         $current_bonus = (float) ($payout['bonus'] ?? 0.0);
@@ -1714,7 +1714,7 @@ function vms_apply_comp_package_to_plan(int $plan_id, int $package_id): bool
 
 function vms_comp_hash_for_plan(int $plan_id): string
 {
-    return vms_comp_hash_from_terms(vms_get_event_plan_comp_terms($plan_id));
+    return vms_comp_hash_from_terms(bvmgr_get_event_plan_comp_terms($plan_id));
 }
 
 /**
@@ -1754,7 +1754,7 @@ function vms_get_vendor_default_comp_by_venue_map(int $vendor_id): array
 {
     if ($vendor_id <= 0) return array();
 
-    $k_by_venue = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_comp_by_venue') ?: '_vms_vendor_default_comp_by_venue') : '_vms_vendor_default_comp_by_venue';
+    $k_by_venue = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_comp_by_venue') ?: '_vms_vendor_default_comp_by_venue') : '_vms_vendor_default_comp_by_venue';
     $saved = get_post_meta($vendor_id, $k_by_venue, true);
     if (!is_array($saved)) {
         return array();
@@ -1791,7 +1791,7 @@ function vms_get_vendor_default_comp_by_venue_dow_map(int $vendor_id): array
 {
     if ($vendor_id <= 0) return array();
 
-    $k = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_comp_by_venue_dow') ?: '_vms_vendor_default_comp_by_venue_dow') : '_vms_vendor_default_comp_by_venue_dow';
+    $k = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_comp_by_venue_dow') ?: '_vms_vendor_default_comp_by_venue_dow') : '_vms_vendor_default_comp_by_venue_dow';
     $saved = get_post_meta($vendor_id, $k, true);
     if (!is_array($saved)) {
         return array();
@@ -1835,15 +1835,15 @@ function vms_get_vendor_default_comp_terms(int $vendor_id, int $venue_id = 0, st
     $venue_id = absint($venue_id);
     $event_date = trim((string) $event_date);
 
-    $k_structure = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_comp_structure') ?: '_vms_default_comp_structure') : '_vms_default_comp_structure';
-    $k_flat      = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_flat_fee_amount') ?: '_vms_default_flat_fee_amount') : '_vms_default_flat_fee_amount';
-    $k_split     = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_door_split_percent') ?: '_vms_default_door_split_percent') : '_vms_default_door_split_percent';
-    $k_bonus_mode = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_attendance_bonus_mode') ?: '_vms_default_attendance_bonus_mode') : '_vms_default_attendance_bonus_mode';
-    $k_bonus_start = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_attendance_bonus_start_count') ?: '_vms_default_attendance_bonus_start_count') : '_vms_default_attendance_bonus_start_count';
-    $k_bonus_step_size = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_attendance_bonus_step_size') ?: '_vms_default_attendance_bonus_step_size') : '_vms_default_attendance_bonus_step_size';
-    $k_bonus_step_bonus = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_attendance_bonus_step_bonus') ?: '_vms_default_attendance_bonus_step_bonus') : '_vms_default_attendance_bonus_step_bonus';
-    $k_bonus_per_ticket = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_attendance_bonus_per_ticket_rate') ?: '_vms_default_attendance_bonus_per_ticket_rate') : '_vms_default_attendance_bonus_per_ticket_rate';
-    $k_bonus_max = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'default_attendance_bonus_max_bonus') ?: '_vms_default_attendance_bonus_max_bonus') : '_vms_default_attendance_bonus_max_bonus';
+    $k_structure = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_comp_structure') ?: '_vms_default_comp_structure') : '_vms_default_comp_structure';
+    $k_flat      = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_flat_fee_amount') ?: '_vms_default_flat_fee_amount') : '_vms_default_flat_fee_amount';
+    $k_split     = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_door_split_percent') ?: '_vms_default_door_split_percent') : '_vms_default_door_split_percent';
+    $k_bonus_mode = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_attendance_bonus_mode') ?: '_vms_default_attendance_bonus_mode') : '_vms_default_attendance_bonus_mode';
+    $k_bonus_start = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_attendance_bonus_start_count') ?: '_vms_default_attendance_bonus_start_count') : '_vms_default_attendance_bonus_start_count';
+    $k_bonus_step_size = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_attendance_bonus_step_size') ?: '_vms_default_attendance_bonus_step_size') : '_vms_default_attendance_bonus_step_size';
+    $k_bonus_step_bonus = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_attendance_bonus_step_bonus') ?: '_vms_default_attendance_bonus_step_bonus') : '_vms_default_attendance_bonus_step_bonus';
+    $k_bonus_per_ticket = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_attendance_bonus_per_ticket_rate') ?: '_vms_default_attendance_bonus_per_ticket_rate') : '_vms_default_attendance_bonus_per_ticket_rate';
+    $k_bonus_max = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'default_attendance_bonus_max_bonus') ?: '_vms_default_attendance_bonus_max_bonus') : '_vms_default_attendance_bonus_max_bonus';
 
     $out = array();
 
@@ -1911,7 +1911,7 @@ function vms_get_vendor_default_comp_terms(int $vendor_id, int $venue_id = 0, st
     }
 
     if ($venue_id > 0 && preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date)) {
-        $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+        $tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
         if (!$tz instanceof DateTimeZone) {
             $tz = wp_timezone();
         }
@@ -1948,8 +1948,8 @@ function vms_get_vendor_supporting_default_comp_terms(int $vendor_id): array
 {
     if ($vendor_id <= 0) return array();
 
-    $k_support_flat = function_exists('vms_meta_key')
-        ? (vms_meta_key('vendor', 'default_supporting_flat_fee_amount') ?: '_vms_default_supporting_flat_fee_amount')
+    $k_support_flat = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('vendor', 'default_supporting_flat_fee_amount') ?: '_vms_default_supporting_flat_fee_amount')
         : '_vms_default_supporting_flat_fee_amount';
 
     $raw_flat = get_post_meta($vendor_id, $k_support_flat, true);
@@ -2057,8 +2057,8 @@ function vms_get_vendor_default_comp_package_id(int $vendor_id): int
         return 0;
     }
 
-    $key = function_exists('vms_meta_key')
-        ? (vms_meta_key('vendor', 'default_comp_package_id') ?: '_vms_default_comp_package_id')
+    $key = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('vendor', 'default_comp_package_id') ?: '_vms_default_comp_package_id')
         : '_vms_default_comp_package_id';
 
     $package_id = absint(get_post_meta($vendor_id, $key, true));
@@ -2455,7 +2455,7 @@ function vms_get_event_plan_comp_options(int $venue_id, string $event_date, int 
     if ($vendor_id > 0 && $venue_id > 0 && $has_date && function_exists('vms_get_vendor_default_comp_by_venue_dow_map')) {
         $vendor_by_venue_dow = vms_get_vendor_default_comp_by_venue_dow_map($vendor_id);
         if (isset($vendor_by_venue_dow[$venue_id]) && is_array($vendor_by_venue_dow[$venue_id])) {
-            $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+            $tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
             if (!$tz instanceof DateTimeZone) $tz = wp_timezone();
             try {
                 $dt = new DateTimeImmutable($event_date, $tz);
@@ -2644,7 +2644,7 @@ function vms_vendor_tax_profile_missing_items(int $vendor_id): array
     $missing = array();
     // Staff employee: use Employee Packet requirements (W-4 + I-9). Contractors use W-9 tax profile.
     if (get_post_type($vendor_id) === 'vms_staff') {
-        $k_worker = function_exists('vms_meta_key') ? (string) vms_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
+        $k_worker = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
         if ($k_worker === '') $k_worker = '_vms_staff_worker_type';
         $wt = sanitize_key((string) get_post_meta($vendor_id, $k_worker, true));
         if ($wt === 'employee') {
@@ -2659,20 +2659,20 @@ function vms_vendor_tax_profile_missing_items(int $vendor_id): array
 
 
     // Meta keys (canonical)
-    $k_done   = vms_meta_key('vendor', 'tax_profile_completed_at');
+    $k_done   = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 
-    $k_legal  = vms_meta_key('vendor', 'payee_legal_name');
-    $k_entity = vms_meta_key('vendor', 'entity_type');
+    $k_legal  = bvmgr_meta_key('vendor', 'payee_legal_name');
+    $k_entity = bvmgr_meta_key('vendor', 'entity_type');
 
-    $k_addr1 = vms_meta_key('vendor', 'addr1');
-    $k_city  = vms_meta_key('vendor', 'city');
-    $k_state = vms_meta_key('vendor', 'state');
-    $k_zip   = vms_meta_key('vendor', 'zip');
+    $k_addr1 = bvmgr_meta_key('vendor', 'addr1');
+    $k_city  = bvmgr_meta_key('vendor', 'city');
+    $k_state = bvmgr_meta_key('vendor', 'state');
+    $k_zip   = bvmgr_meta_key('vendor', 'zip');
 
-    $k_upload = vms_meta_key('vendor', 'w9_upload_id');
-    $k_recv   = vms_meta_key('vendor', 'w9_received_date');
-    $k_attest = vms_meta_key('vendor', 'w9_attested_at');
-    $k_prov   = vms_meta_key('vendor', 'w9_provider');
+    $k_upload = bvmgr_meta_key('vendor', 'w9_upload_id');
+    $k_recv   = bvmgr_meta_key('vendor', 'w9_received_date');
+    $k_attest = bvmgr_meta_key('vendor', 'w9_attested_at');
+    $k_prov   = bvmgr_meta_key('vendor', 'w9_provider');
 
     // If an admin explicitly marked the profile complete, treat it as complete.
     // This supports email-based W-9 workflows where the signed W-9 is not uploaded into VMS.
@@ -3013,7 +3013,7 @@ function vms_snapshot_summary_line(array $snap): string
     $parts = [];
 
     if ($structure !== '') {
-        $parts[] = 'Structure: ' . vms_pretty_structure_label($structure);
+        $parts[] = 'Structure: ' . bvmgr_pretty_structure_label($structure);
     }
 
     if (array_key_exists('flat_fee_amount', $snap) && $snap['flat_fee_amount'] !== null && $snap['flat_fee_amount'] !== '') {
@@ -3185,7 +3185,7 @@ if (!function_exists('vms_detect_public_event_calendar_url')) {
     }
 }
 
-if (!function_exists('vms_get_public_event_calendar_url')) {
+if (!function_exists('bvmgr_get_public_event_calendar_url')) {
     /**
      * Resolve the customer-facing events/calendar URL used in public notices.
      *
@@ -3196,7 +3196,7 @@ if (!function_exists('vms_get_public_event_calendar_url')) {
      * 4. TEC events archive.
      * 5. Home page.
      */
-    function vms_get_public_event_calendar_url(): string
+    function bvmgr_get_public_event_calendar_url(): string
     {
         $settings = (array) get_option('vms_settings', array());
 
@@ -3502,8 +3502,8 @@ function vms_get_active_dates_for_venue(int $venue_id, int $months_ahead = 24): 
 }
 
 
-if (!function_exists('vms_pretty_structure_label')) {
-    function vms_pretty_structure_label($s): string
+if (!function_exists('bvmgr_pretty_structure_label')) {
+    function bvmgr_pretty_structure_label($s): string
     {
         $s = (string) $s;
 
@@ -4227,7 +4227,7 @@ function vms_dash_render_venue_selector(): void
 
 // Legacy fallback assets.
 // Canonical boot uses includes/core/plugin.php for asset loading.
-if (!function_exists('vms_core')) {
+if (!function_exists('bvmgr_core')) {
     add_action('admin_enqueue_scripts', function () {
         $page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive legacy admin asset page state only scopes read-only styling and remains nonce-free.
         if ($page === '' || strpos($page, 'vms') !== 0) {
@@ -4385,7 +4385,7 @@ if (!function_exists('vms_vendor_profile_is_enabled')) {
             return false;
         }
 
-        $key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
+        $key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
         $val = get_post_meta($vendor_id, $key, true);
 
         $enabled = ($val === '1' || $val === 1 || $val === true || $val === 'yes' || $val === 'on');
@@ -4418,13 +4418,13 @@ function vms_apply_band_comp_defaults_to_plan(int $event_plan_id): bool
 		return false;
 	}
 
-	$k_venue_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'venue_id') ?: '_vms_venue_id') : '_vms_venue_id';
+	$k_venue_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'venue_id') ?: '_vms_venue_id') : '_vms_venue_id';
 	$venue_id = (int) get_post_meta($event_plan_id, $k_venue_id, true);
-	$k_event_date = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'date') ?: '_vms_event_date') : '_vms_event_date';
+	$k_event_date = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'date') ?: '_vms_event_date') : '_vms_event_date';
 	$event_date = (string) get_post_meta($event_plan_id, $k_event_date, true);
 	$terms = vms_get_vendor_default_comp_terms($band_id, $venue_id, $event_date);
-	$k_commission_override_none = function_exists('vms_meta_key')
-		? (vms_meta_key('event_plan', 'commission_override_none') ?: '_vms_commission_override_none')
+	$k_commission_override_none = function_exists('bvmgr_meta_key')
+		? (bvmgr_meta_key('event_plan', 'commission_override_none') ?: '_vms_commission_override_none')
 		: '_vms_commission_override_none';
 	$commission_override_none = ((string) get_post_meta($event_plan_id, $k_commission_override_none, true) === '1');
 	if ($commission_override_none) {
@@ -4699,16 +4699,16 @@ if (!function_exists('vms_event_plan_current_internal_status')) {
 			return 'draft';
 		}
 
-		if (function_exists('vms_event_plan_get_status')) {
-			$status = (string) vms_event_plan_get_status($event_plan_id, $context);
+		if (function_exists('bvmgr_event_plan_get_status')) {
+			$status = (string) bvmgr_event_plan_get_status($event_plan_id, $context);
 			$status = sanitize_key($status);
 			if ($status !== '') {
 				return $status;
 			}
 		}
 
-		$k_status = function_exists('vms_meta_key')
-			? (string) vms_meta_key('event_plan', 'status')
+		$k_status = function_exists('bvmgr_meta_key')
+			? (string) bvmgr_meta_key('event_plan', 'status')
 			: '_vms_event_plan_status';
 		$status = sanitize_key((string) get_post_meta($event_plan_id, $k_status, true));
 		return $status !== '' ? $status : 'draft';

@@ -150,7 +150,7 @@ if (!function_exists('vms_feedback_survey_url')) {
 if (!function_exists('vms_feedback_get_event_plan_date')) {
 	function vms_feedback_get_event_plan_date(int $event_plan_id): string
 	{
-		$key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'date') : '_vms_event_date';
+		$key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
 		$date = trim((string) get_post_meta($event_plan_id, $key, true));
 		if ($date === '') {
 			$date = trim((string) get_post_meta($event_plan_id, '_vms_event_date', true));
@@ -162,7 +162,7 @@ if (!function_exists('vms_feedback_get_event_plan_date')) {
 if (!function_exists('vms_feedback_get_event_plan_venue_id')) {
 	function vms_feedback_get_event_plan_venue_id(int $event_plan_id): int
 	{
-		$key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
+		$key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
 		$venue_id = absint(get_post_meta($event_plan_id, $key, true));
 		if ($venue_id <= 0) {
 			$venue_id = absint(get_post_meta($event_plan_id, '_vms_event_plan_venue_id', true));
@@ -174,13 +174,13 @@ if (!function_exists('vms_feedback_get_event_plan_venue_id')) {
 if (!function_exists('vms_feedback_get_primary_vendor_id')) {
 	function vms_feedback_get_primary_vendor_id(int $event_plan_id): int
 	{
-		$key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+		$key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
 		$vendor_id = absint(get_post_meta($event_plan_id, $key, true));
 		if ($vendor_id > 0) {
 			return $vendor_id;
 		}
 
-		$lineup_entries_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'lineup_entries_v1') : '_vms_lineup_entries_v1';
+		$lineup_entries_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'lineup_entries_v1') : '_vms_lineup_entries_v1';
 		$entries = get_post_meta($event_plan_id, $lineup_entries_key, true);
 		if (is_array($entries)) {
 			foreach ($entries as $entry) {
@@ -205,7 +205,7 @@ if (!function_exists('vms_feedback_get_secondary_vendor_ids')) {
 	 */
 	function vms_feedback_get_secondary_vendor_ids(int $event_plan_id): array
 	{
-		$key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+		$key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
 		$ids = get_post_meta($event_plan_id, $key, true);
 		if (!is_array($ids)) {
 			$ids = get_post_meta($event_plan_id, '_vms_secondary_vendor_id', false);

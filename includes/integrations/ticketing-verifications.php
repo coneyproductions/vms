@@ -1636,11 +1636,11 @@ if (!function_exists('vms_ticketing_verification_event_has_verified_tickets')) {
         if ($tec_event_id <= 0) {
             return false;
         }
-        if (!function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') || !function_exists('vms_ticketing_v2_get_config')) {
+        if (!function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') || !function_exists('vms_ticketing_v2_get_config')) {
             return false;
         }
 
-        $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
+        $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
         if ($plan_id <= 0) {
             return false;
         }
@@ -3044,8 +3044,8 @@ if (!function_exists('vms_ticketing_verification_render_admin_page')) {
                 'approvals.credentials.help',
                 __('Start Guided Tour', 'backstage-venue-manager')
             );
-        } elseif (function_exists('vms_render_help_button')) {
-            $help_button = vms_render_help_button(
+        } elseif (function_exists('bvmgr_render_help_button')) {
+            $help_button = bvmgr_render_help_button(
                 array(
                     'tour_id' => 'vms.approvals.credentials',
                     'anchor' => 'approvals.credentials.help',

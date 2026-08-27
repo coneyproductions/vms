@@ -296,19 +296,19 @@ if (!function_exists('vms_cancellation_backfill_legacy_job')) {
 			);
 		}
 
-		$k_status = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
-		$k_job_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
-		$k_job_state = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
-		$k_job_summary = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
-		$k_cancel_review = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
+		$k_status = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
+		$k_job_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
+		$k_job_state = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
+		$k_job_summary = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
+		$k_cancel_review = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
 			: '_vms_cancel_requires_operator_review';
-		$k_cancel_policy = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_policy') ?: '_vms_cancel_policy') : '_vms_cancel_policy';
-		$k_cancel_reason_code = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code') : '_vms_cancel_reason_code';
-		$k_cancel_reason_note = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note') : '_vms_cancel_reason_note';
-		$k_cancel_vendor_message = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_vendor_message') ?: '_vms_cancel_vendor_message') : '_vms_cancel_vendor_message';
-		$k_cancelled_at_gmt = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancelled_at_gmt') ?: '_vms_cancelled_at_gmt') : '_vms_cancelled_at_gmt';
-		$k_cancelled_by_user_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancelled_by_user_id') ?: '_vms_cancelled_by_user_id') : '_vms_cancelled_by_user_id';
+		$k_cancel_policy = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_policy') ?: '_vms_cancel_policy') : '_vms_cancel_policy';
+		$k_cancel_reason_code = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code') : '_vms_cancel_reason_code';
+		$k_cancel_reason_note = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note') : '_vms_cancel_reason_note';
+		$k_cancel_vendor_message = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_vendor_message') ?: '_vms_cancel_vendor_message') : '_vms_cancel_vendor_message';
+		$k_cancelled_at_gmt = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancelled_at_gmt') ?: '_vms_cancelled_at_gmt') : '_vms_cancelled_at_gmt';
+		$k_cancelled_by_user_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancelled_by_user_id') ?: '_vms_cancelled_by_user_id') : '_vms_cancelled_by_user_id';
 
 		$plan_status = sanitize_key((string) get_post_meta($event_plan_id, $k_status, true));
 		if ($plan_status !== 'cancelled') {
@@ -666,14 +666,14 @@ if (!function_exists('vms_cancellation_create_job')) {
 				'active_run' => array(),
 		);
 
-		$k_job_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
-		$k_job_state = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
-		$k_job_summary = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
-		$k_cancel_policy = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_policy') ?: '_vms_cancel_policy') : '_vms_cancel_policy';
-		$k_cancel_reason_code = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code') : '_vms_cancel_reason_code';
-		$k_cancel_reason_note = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note') : '_vms_cancel_reason_note';
-		$k_cancelled_at_gmt = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancelled_at_gmt') ?: '_vms_cancelled_at_gmt') : '_vms_cancelled_at_gmt';
-		$k_cancelled_by_user_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancelled_by_user_id') ?: '_vms_cancelled_by_user_id') : '_vms_cancelled_by_user_id';
+		$k_job_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
+		$k_job_state = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
+		$k_job_summary = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
+		$k_cancel_policy = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_policy') ?: '_vms_cancel_policy') : '_vms_cancel_policy';
+		$k_cancel_reason_code = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code') : '_vms_cancel_reason_code';
+		$k_cancel_reason_note = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note') : '_vms_cancel_reason_note';
+		$k_cancelled_at_gmt = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancelled_at_gmt') ?: '_vms_cancelled_at_gmt') : '_vms_cancelled_at_gmt';
+		$k_cancelled_by_user_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancelled_by_user_id') ?: '_vms_cancelled_by_user_id') : '_vms_cancelled_by_user_id';
 
 		update_post_meta($event_plan_id, $k_job_id, $job_id);
 		update_post_meta($event_plan_id, $k_job_state, 'queued');
@@ -780,11 +780,11 @@ if (!function_exists('vms_cancellation_retry_step')) {
 			return array('ok' => false, 'state' => 'failed', 'step_key' => $step_key, 'error' => 'invalid_retry_request', 'summary' => array());
 		}
 
-		$k_job_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
-		$k_job_state = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
-		$k_job_summary = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
-		$k_cancel_review = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
+		$k_job_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
+		$k_job_state = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
+		$k_job_summary = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
+		$k_cancel_review = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
 			: '_vms_cancel_requires_operator_review';
 
 		$job_id_actual = sanitize_text_field((string) get_post_meta($event_plan_id, $k_job_id, true));
@@ -948,10 +948,10 @@ if (!function_exists('vms_cancellation_retry_all_failed_steps')) {
 			return array('ok' => false, 'state' => 'failed', 'retried_steps' => array(), 'error' => 'invalid_retry_request', 'summary' => array());
 		}
 
-		$k_job_state = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
-		$k_job_summary = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
-		$k_cancel_review = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
+		$k_job_state = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
+		$k_job_summary = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
+		$k_cancel_review = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
 			: '_vms_cancel_requires_operator_review';
 
 		$summary = get_post_meta($event_plan_id, $k_job_summary, true);
@@ -1105,15 +1105,15 @@ if (!function_exists('vms_cancellation_request_live_refund_run')) {
 			return array('ok' => false, 'state' => 'failed', 'target_policy' => '', 'reset_steps' => array(), 'error' => 'invalid_event_plan_id', 'summary' => array());
 		}
 
-		$k_job_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
-		$k_job_state = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
-		$k_job_summary = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
-		$k_cancel_policy = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_policy') ?: '_vms_cancel_policy') : '_vms_cancel_policy';
-		$k_cancel_review = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
+		$k_job_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
+		$k_job_state = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
+		$k_job_summary = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
+		$k_cancel_policy = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_policy') ?: '_vms_cancel_policy') : '_vms_cancel_policy';
+		$k_cancel_review = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
 			: '_vms_cancel_requires_operator_review';
-		$k_plan_status = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
+		$k_plan_status = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
 			: '_vms_event_plan_status';
 
 		$plan_status = sanitize_key((string) get_post_meta($event_plan_id, $k_plan_status, true));
@@ -1285,11 +1285,11 @@ if (!function_exists('vms_cancellation_run_job')) {
 			return array('ok' => false, 'state' => 'failed', 'summary' => array('error' => 'invalid_event_plan_id'));
 		}
 
-		$k_job_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
-		$k_job_state = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
-		$k_job_summary = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
-		$k_cancel_review = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
+		$k_job_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_id') ?: '_vms_cancel_job_id') : '_vms_cancel_job_id';
+		$k_job_state = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state') : '_vms_cancel_job_state';
+		$k_job_summary = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
+		$k_cancel_review = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'cancel_requires_operator_review') ?: '_vms_cancel_requires_operator_review')
 			: '_vms_cancel_requires_operator_review';
 
 		$job_id_expected = isset($args['job_id']) ? sanitize_text_field((string) $args['job_id']) : '';

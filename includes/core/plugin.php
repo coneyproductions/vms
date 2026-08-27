@@ -17,8 +17,8 @@ defined('ABSPATH') || exit;
 // 	}
 // }, 999);
 
-if (!function_exists('vms_core')) {
-	function vms_core(): array
+if (!function_exists('bvmgr_core')) {
+	function bvmgr_core(): array
 	{
 		return [
 			'slug'    => 'vms',

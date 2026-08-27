@@ -641,7 +641,7 @@ function get_post_type(int $post_id): string
 	return 'vms_vendor';
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	return '_vms_' . $field;

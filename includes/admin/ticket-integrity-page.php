@@ -2422,8 +2422,8 @@ function vms_ticket_integrity_render_admin_page(): void
 		}));
 	}
 
-	$tour_button = function_exists('vms_render_help_button')
-		? vms_render_help_button(
+	$tour_button = function_exists('bvmgr_render_help_button')
+		? bvmgr_render_help_button(
 			array(
 				'tour_id' => 'vms.ticket_integrity.monitor',
 				'anchor' => 'ticket-integrity.help',
@@ -2435,8 +2435,8 @@ function vms_ticket_integrity_render_admin_page(): void
 
 	$actions_html = '<div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help">' . $tour_button . '</div>';
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('Ticket Integrity', 'backstage-venue-manager'),
 					'subtitle' => __('Proactively scan published upcoming events for customer-facing ticketing failures before sales are lost.', 'backstage-venue-manager'),

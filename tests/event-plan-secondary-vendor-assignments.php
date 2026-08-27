@@ -275,8 +275,8 @@ try {
 	$afterBroadSave = $normalizeAssignments((array) get_post_meta($planId, $assignmentMetaKey, true));
 	$assert($afterBroadSave === $beforeBroadSave, 'Broad Event Plan saves must not wipe canonical secondary vendor assignments when the detached module is not posted.');
 
-	$setResult = function_exists('vms_event_plan_set_secondary_vendors')
-		? vms_event_plan_set_secondary_vendors($planId, 'food_truck', array($foodVendorA))
+	$setResult = function_exists('bvmgr_event_plan_set_secondary_vendors')
+		? bvmgr_event_plan_set_secondary_vendors($planId, 'food_truck', array($foodVendorA))
 		: new WP_Error('missing_helper', 'Secondary vendor set helper is unavailable.');
 	$assert(!is_wp_error($setResult), 'Setting one secondary vendor group should succeed.');
 

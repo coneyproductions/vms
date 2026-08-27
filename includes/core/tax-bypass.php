@@ -22,8 +22,8 @@ if (!function_exists('vms_tax_bypass_supported_post_types')) {
 if (!function_exists('vms_tax_bypass_key')) {
   function vms_tax_bypass_key(string $field): string
   {
-    if (function_exists('vms_meta_key')) {
-      $k = (string) vms_meta_key('vendor', $field);
+    if (function_exists('bvmgr_meta_key')) {
+      $k = (string) bvmgr_meta_key('vendor', $field);
       if ($k !== '') return $k;
     }
 

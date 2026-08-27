@@ -45,8 +45,8 @@ function vms_payables_resolve_vendor_payee_name(int $vendor_id): string
         return '';
     }
 
-    $k_dba   = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'payee_dba') : '_vms_payee_dba';
-    $k_legal = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'payee_legal_name') : '_vms_payee_legal_name';
+    $k_dba   = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'payee_dba') : '_vms_payee_dba';
+    $k_legal = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'payee_legal_name') : '_vms_payee_legal_name';
 
     $dba = (string) get_post_meta($vendor_id, $k_dba, true);
     $dba = trim($dba);
@@ -156,7 +156,7 @@ function vms_payables_add_days(string $ymd, int $days): string
  *    ],
  *  ]
  */
-function vms_payables_build_bills_for_export(string $event_date, array $venue_ids, array $args = []): array
+function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_ids, array $args = []): array
 {
     $event_date = trim((string) $event_date);
 
@@ -193,12 +193,12 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
         define('BVMGR_CPT_EVENT_PLAN', 'vms_event_plan');
     }
 
-    $k_date   = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
-    $k_venue  = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
-    $k_status = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
-    $k_vendor = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
-    $k_struct = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'comp_structure') : '_vms_comp_structure';
-    $k_flat   = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'flat_fee_amount') : '_vms_flat_fee_amount';
+    $k_date   = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
+    $k_venue  = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
+    $k_status = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+    $k_vendor = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+    $k_struct = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'comp_structure') : '_vms_comp_structure';
+    $k_flat   = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'flat_fee_amount') : '_vms_flat_fee_amount';
 
     $q = [
         'post_type'      => BVMGR_CPT_EVENT_PLAN,

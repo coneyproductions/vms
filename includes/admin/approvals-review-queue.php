@@ -860,8 +860,8 @@ if (!function_exists('vms_approvals_queue_render_help_button')) {
 	function vms_approvals_queue_render_help_button(string $tour_id, string $anchor, string $label): string
 	{
 		$button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="' . esc_attr($tour_id) . '" data-vms-tour="' . esc_attr($anchor) . '">' . esc_html($label) . '</button>';
-		if (function_exists('vms_render_help_button')) {
-			$button = vms_render_help_button(
+		if (function_exists('bvmgr_render_help_button')) {
+			$button = bvmgr_render_help_button(
 				array(
 					'tour_id' => $tour_id,
 					'anchor' => $anchor,

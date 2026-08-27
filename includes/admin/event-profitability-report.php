@@ -261,8 +261,8 @@ if (!function_exists('vms_event_profitability_get_rows')) {
 				continue;
 			}
 
-			$status = function_exists('vms_event_plan_get_status')
-				? (string) vms_event_plan_get_status($event_plan_id, 'financial')
+			$status = function_exists('bvmgr_event_plan_get_status')
+				? (string) bvmgr_event_plan_get_status($event_plan_id, 'financial')
 				: 'draft';
 			$status = sanitize_key($status);
 

@@ -651,8 +651,8 @@ if (!function_exists('vms_private_files_delete')) {
 if (!function_exists('vms_private_w9_storage_kind_meta_key')) {
 	function vms_private_w9_storage_kind_meta_key(): string
 	{
-		if (function_exists('vms_meta_key')) {
-			$mapped = (string) vms_meta_key('vendor', 'w9_upload_storage_kind');
+		if (function_exists('bvmgr_meta_key')) {
+			$mapped = (string) bvmgr_meta_key('vendor', 'w9_upload_storage_kind');
 			if ($mapped !== '') {
 				return $mapped;
 			}
@@ -760,7 +760,7 @@ if (!function_exists('vms_private_w9_file_payload')) {
 			return new WP_Error('w9_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		$upload_key = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_upload_id') : '_vms_w9_upload_id';
+		$upload_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_upload_id') : '_vms_w9_upload_id';
 		if ($upload_key === '') {
 			$upload_key = '_vms_w9_upload_id';
 		}

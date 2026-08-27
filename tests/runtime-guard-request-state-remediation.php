@@ -171,18 +171,18 @@ vms_test_assert_same('edit-vms_venue', vms_resource_fingerprint_current_admin_pa
 
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => 'edit-vms_event_plan');
 $_GET = array();
-vms_test_assert_same('edit-vms_event_plan', vms_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve an explicit current screen ID.');
+vms_test_assert_same('edit-vms_event_plan', bvmgr_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve an explicit current screen ID.');
 
 $GLOBALS['vms_test_current_screen'] = null;
 $GLOBALS['pagenow'] = 'edit.php';
 $_GET = array('post_type' => 'VMS_Event_Plan');
-vms_test_assert_same('', vms_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve the existing no-screen-id fallback behavior when only pagenow-based edit context is available.');
+vms_test_assert_same('', bvmgr_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve the existing no-screen-id fallback behavior when only pagenow-based edit context is available.');
 
 $_GET = array(
 	'post_type' => array('bad'),
 	'post' => '77',
 );
-vms_test_assert_same('', vms_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve the existing no-screen-id fallback behavior when malformed post_type input leaves only the derived post ID path.');
+vms_test_assert_same('', bvmgr_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve the existing no-screen-id fallback behavior when malformed post_type input leaves only the derived post ID path.');
 
 $_REQUEST = array('action' => "  slashed\\-action  ");
 vms_test_assert_same('slashed-action', vms_admin_guard_request_value('action'), 'Allowlisted dynamic request keys should unslash and trim scalar input.');

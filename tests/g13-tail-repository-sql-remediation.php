@@ -114,7 +114,7 @@ function get_the_title(int $post_id): string
 	return $GLOBALS['g13_tail_titles'][$post_id] ?? ('Post ' . $post_id);
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	$keys = array(
@@ -127,7 +127,7 @@ function vms_meta_key(string $scope, string $field): string
 	return $keys[$field] ?? ('_vms_' . $field);
 }
 
-function vms_event_plan_get_status(int $post_id, string $context): string
+function bvmgr_event_plan_get_status(int $post_id, string $context): string
 {
 	unset($context);
 	return $GLOBALS['g13_tail_statuses'][$post_id] ?? 'draft';
@@ -149,7 +149,7 @@ function vms_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_y
 	return $ymd >= $start_ymd && $ymd <= $end_ymd;
 }
 
-function vms_get_timezone(): DateTimeZone
+function bvmgr_get_timezone(): DateTimeZone
 {
 	return new DateTimeZone('America/Chicago');
 }
@@ -179,7 +179,7 @@ function vms_rating_submitted_comment(): string
 	return (string) ($GLOBALS['g13_tail_rating_fields']['vms_rating_comment'] ?? '');
 }
 
-function vms_get_event_plan_for_tec_event(int $event_id): int
+function bvmgr_get_event_plan_for_tec_event(int $event_id): int
 {
 	unset($event_id);
 	return (int) $GLOBALS['g13_tail_rating_plan_id'];
@@ -461,7 +461,7 @@ foreach (array_diff($relative_files, array('includes/schedule/schedule.php')) as
 
 $owned_function_map = array(
 	'includes/cpt/ratings.php' => array('vms_get_band_rating_summary', 'vms_handle_rating_submission'),
-	'includes/helpers.php' => array('vms_resolve_event_plan_for_tec_event', 'vms_get_ticket_product_ids_for_event', 'vms_get_event_titles_by_date', 'vms_get_comp_packages_for_venue'),
+	'includes/helpers.php' => array('bvmgr_resolve_event_plan_for_tec_event', 'vms_get_ticket_product_ids_for_event', 'vms_get_event_titles_by_date', 'vms_get_comp_packages_for_venue'),
 	'includes/schedule/schedule.php' => array('vms_sch_get_plans_by_date', 'vms_sch_get_plans_by_date_all'),
 	'includes/admin/approvals-review-queue.php' => array('vms_approvals_queue_vendor_summary'),
 );
@@ -622,10 +622,10 @@ g13_tail_contains("couldn't find a ticket", $no_duplicate['message'], 'Empty dup
 
 // Linked Event Plan lifecycle resolution retains complete candidate enumeration and deterministic ranking.
 g13_tail_reset();
-g13_tail_same(0, vms_resolve_event_plan_for_tec_event(0), 'Invalid TEC resolver result changed.');
+g13_tail_same(0, bvmgr_resolve_event_plan_for_tec_event(0), 'Invalid TEC resolver result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid TEC ID should not query Event Plans.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array());
-g13_tail_same(0, vms_resolve_event_plan_for_tec_event(88), 'Empty TEC resolver result changed.');
+g13_tail_same(0, bvmgr_resolve_event_plan_for_tec_event(88), 'Empty TEC resolver result changed.');
 $resolver_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $resolver_args['posts_per_page'], 'TEC resolver must inspect all linked lifecycle candidates.');
 g13_tail_same('ids', $resolver_args['fields'], 'TEC resolver result shape changed.');
@@ -644,7 +644,7 @@ $GLOBALS['g13_tail_meta'] = array(
 	102 => array('_vms_ticketing_config_v2' => array()),
 	103 => array('_vms_ticketing_config_v2' => array('enabled' => true)),
 );
-g13_tail_same(102, vms_resolve_event_plan_for_tec_event(88), 'TEC resolver lifecycle ranking changed.');
+g13_tail_same(102, bvmgr_resolve_event_plan_for_tec_event(88), 'TEC resolver lifecycle ranking changed.');
 
 // Ticket-product lookup retains invalid/empty behavior, complete exact linkage, and integer results.
 g13_tail_reset();

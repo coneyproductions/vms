@@ -68,13 +68,13 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
         'meta_query'     => array(
             'relation' => 'AND',
             array(
-                'key'     => vms_meta_key('event_plan', 'venue_id'),
+                'key'     => bvmgr_meta_key('event_plan', 'venue_id'),
                 'value'   => (int) $venue_id,
                 'compare' => '=',
                 'type'    => 'NUMERIC',
             ),
             array(
-                'key'     => vms_meta_key('event_plan', 'date'),
+                'key'     => bvmgr_meta_key('event_plan', 'date'),
                 'value'   => array($start_ymd, $end_ymd),
                 'compare' => 'BETWEEN',
                 'type'    => 'DATE',
@@ -89,7 +89,7 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
         // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The legacy fallback removes the date bound, scans all plans for this venue, and reapplies the caller's window in PHP below.
         $args['meta_query'] = array(
             array(
-                'key'     => vms_meta_key('event_plan', 'venue_id'),
+                'key'     => bvmgr_meta_key('event_plan', 'venue_id'),
                 'value'   => (int) $venue_id,
                 'compare' => '=',
                 'type'    => 'NUMERIC',
@@ -111,13 +111,13 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
             }
         }
 
-        $ymd = (string) get_post_meta($pid, vms_meta_key('event_plan', 'date'), true);
+        $ymd = (string) get_post_meta($pid, bvmgr_meta_key('event_plan', 'date'), true);
         if (!vms_sch_is_valid_ymd($ymd)) continue;
         if (!vms_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
 
         if (!isset($map[$ymd])) $map[$ymd] = array();
 
-        $plan_status = function_exists('vms_event_plan_get_status') ? (string) vms_event_plan_get_status($pid, $context) : '';
+        $plan_status = function_exists('bvmgr_event_plan_get_status') ? (string) bvmgr_event_plan_get_status($pid, $context) : '';
 
         $map[$ymd][] = array(
             'plan_id'     => (int) $pid,
@@ -161,13 +161,13 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
         'meta_query'     => array(
             'relation' => 'AND',
             array(
-                'key'     => vms_meta_key('event_plan', 'venue_id'),
+                'key'     => bvmgr_meta_key('event_plan', 'venue_id'),
                 'value'   => $venue_ids,
                 'compare' => 'IN',
                 'type'    => 'NUMERIC',
             ),
             array(
-                'key'     => vms_meta_key('event_plan', 'date'),
+                'key'     => bvmgr_meta_key('event_plan', 'date'),
                 'value'   => array($start_ymd, $end_ymd),
                 'compare' => 'BETWEEN',
                 'type'    => 'DATE',
@@ -182,7 +182,7 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
         // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The legacy fallback removes the date bound, scans all plans for the selected venues, and reapplies the caller's window in PHP below.
         $args['meta_query'] = array(
             array(
-                'key'     => vms_meta_key('event_plan', 'venue_id'),
+                'key'     => bvmgr_meta_key('event_plan', 'venue_id'),
                 'value'   => $venue_ids,
                 'compare' => 'IN',
                 'type'    => 'NUMERIC',
@@ -201,15 +201,15 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
             }
         }
 
-        $ymd = (string) get_post_meta($pid, vms_meta_key('event_plan', 'date'), true);
+        $ymd = (string) get_post_meta($pid, bvmgr_meta_key('event_plan', 'date'), true);
         if (!vms_sch_is_valid_ymd($ymd)) continue;
         if (!vms_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
 
-        $vid = (int) get_post_meta($pid, vms_meta_key('event_plan', 'venue_id'), true);
+        $vid = (int) get_post_meta($pid, bvmgr_meta_key('event_plan', 'venue_id'), true);
 
         if (!isset($map[$ymd])) $map[$ymd] = array();
 
-        $plan_status = function_exists('vms_event_plan_get_status') ? (string) vms_event_plan_get_status($pid, $context) : '';
+        $plan_status = function_exists('bvmgr_event_plan_get_status') ? (string) bvmgr_event_plan_get_status($pid, $context) : '';
 
         $map[$ymd][] = array(
             'plan_id'     => $pid,

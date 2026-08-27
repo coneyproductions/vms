@@ -42,8 +42,8 @@ if (!function_exists('vms_staff_tax_provider_label')) {
 if (!function_exists('vms_staff_tax_meta_key')) {
     function vms_staff_tax_meta_key(string $field, string $fallback): string
     {
-        if (function_exists('vms_meta_key')) {
-            $mapped = (string) vms_meta_key('vendor', $field);
+        if (function_exists('bvmgr_meta_key')) {
+            $mapped = (string) bvmgr_meta_key('vendor', $field);
             if ($mapped !== '') {
                 return $mapped;
             }
@@ -216,7 +216,7 @@ function vms_render_staff_tax_status_metabox($post)
         : '';
 
     if ($worker_type === '') {
-        $k = function_exists('vms_meta_key') ? (string) vms_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
+        $k = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
         $raw = (string) get_post_meta($staff_id, $k !== '' ? $k : '_vms_staff_worker_type', true);
         $raw = sanitize_key($raw);
         $worker_type = in_array($raw, array('employee', 'contractor'), true) ? $raw : 'contractor';
@@ -331,8 +331,8 @@ function vms_render_staff_tax_status_metabox($post)
  */
 function vms_staff_employee_w4_received_key(): string
 {
-    if (function_exists('vms_meta_key')) {
-        $k = (string) vms_meta_key('staff', 'employee_w4_received');
+    if (function_exists('bvmgr_meta_key')) {
+        $k = (string) bvmgr_meta_key('staff', 'employee_w4_received');
         if ($k !== '') return $k;
     }
     return '_vms_employee_w4_received';
@@ -340,8 +340,8 @@ function vms_staff_employee_w4_received_key(): string
 
 function vms_staff_employee_i9_verified_key(): string
 {
-    if (function_exists('vms_meta_key')) {
-        $k = (string) vms_meta_key('staff', 'employee_i9_verified');
+    if (function_exists('bvmgr_meta_key')) {
+        $k = (string) bvmgr_meta_key('staff', 'employee_i9_verified');
         if ($k !== '') return $k;
     }
     return '_vms_employee_i9_verified';
@@ -349,8 +349,8 @@ function vms_staff_employee_i9_verified_key(): string
 
 function vms_staff_employee_direct_deposit_received_key(): string
 {
-    if (function_exists('vms_meta_key')) {
-        $k = (string) vms_meta_key('staff', 'employee_direct_deposit_received');
+    if (function_exists('bvmgr_meta_key')) {
+        $k = (string) bvmgr_meta_key('staff', 'employee_direct_deposit_received');
         if ($k !== '') return $k;
     }
     return '_vms_employee_direct_deposit_received';

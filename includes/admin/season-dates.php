@@ -493,12 +493,12 @@ function vms_sd_maybe_handle_post(): void
 			return;
 		}
 
-		if (!function_exists('vms_sch_season_generate_active_dates') || !function_exists('vms_sch_season_set_active_payload')) {
+		if (!function_exists('bvmgr_sch_season_generate_active_dates') || !function_exists('vms_sch_season_set_active_payload')) {
 			vms_sd_redirect(add_query_arg('vms_error', 'missing_core', $redirect));
 			return;
 		}
 
-		$payload = vms_sch_season_generate_active_dates($venue_id, $from, $to);
+		$payload = bvmgr_sch_season_generate_active_dates($venue_id, $from, $to);
 		if (is_array($payload) && !empty($payload['error'])) {
 			vms_sd_redirect(add_query_arg('vms_error', sanitize_key((string)$payload['error']), $redirect));
 			return;

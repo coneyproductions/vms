@@ -224,7 +224,7 @@ function get_term_by($field, $value, $taxonomy)
 	return $GLOBALS['vms_test_terms'][sanitize_key($value)] ?? false;
 }
 
-function vms_event_plan_get_status(int $plan_id, string $context = ''): string
+function bvmgr_event_plan_get_status(int $plan_id, string $context = ''): string
 {
 	unset($context);
 	return sanitize_key((string) get_post_meta($plan_id, '_vms_event_plan_status', true));
@@ -255,8 +255,8 @@ function vms_event_command_center_parse_datetime(string $raw, bool $gmt = false)
 
 function vms_event_command_center_clean_text($text): string
 {
-	if (function_exists('vms_event_plan_review_clean_text')) {
-		return vms_event_plan_review_clean_text(is_scalar($text) ? (string) $text : '');
+	if (function_exists('bvmgr_event_plan_review_clean_text')) {
+		return bvmgr_event_plan_review_clean_text(is_scalar($text) ? (string) $text : '');
 	}
 
 	return sanitize_text_field($text);
@@ -741,7 +741,7 @@ function vms_test_read_review_surfaces(): array
 	);
 	$changes = vms_test_capture(
 		static function () {
-			return vms_event_plan_review_get_changes(VMS_TEST_PLAN_ID);
+			return bvmgr_event_plan_review_get_changes(VMS_TEST_PLAN_ID);
 		}
 	);
 	$integrity = vms_test_capture(
@@ -847,7 +847,7 @@ function vms_test_run_touch_case(array $config): array
 
 	$touch = vms_test_capture(
 		static function () {
-			return vms_event_plan_review_touch(VMS_TEST_PLAN_ID, 'event_plan_editor', VMS_TEST_CURRENT_USER_ID);
+			return bvmgr_event_plan_review_touch(VMS_TEST_PLAN_ID, 'event_plan_editor', VMS_TEST_CURRENT_USER_ID);
 		}
 	);
 
@@ -925,11 +925,11 @@ $decode_changes_body = vms_test_extract_function($mirror_review_source, 'vms_eve
 $get_snapshot_state_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_snapshot_state');
 $get_changes_state_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_changes_state');
 $get_snapshot_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_snapshot');
-$get_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_changes');
+$get_changes_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_get_changes');
 $build_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_build_changes');
 $clear_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_clear_changes');
 $mark_published_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_mark_published');
-$touch_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_touch');
+$touch_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_touch');
 $has_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_has_changes');
 $integrity_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_integrity_issue');
 $banner_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_render_banner');
@@ -962,12 +962,10 @@ vms_test_assert_contains("return 'valid' === (\$changes_state['state'] ?? '') ? 
 vms_test_assert_not_contains("vms_event_plan_review_clear_changes(\$plan_id)", $touch_invalid_slice, 'Invalid snapshot branch should not clear changes.');
 vms_test_assert_contains("'invalid' === (\$snapshot_state['state'] ?? '')", $has_changes_body, 'has_changes() should consult invalid snapshot state.');
 vms_test_assert_contains("'invalid' === (\$changes_state['state'] ?? '')", $has_changes_body, 'has_changes() should consult invalid changes state.');
-vms_test_assert_contains("vms_event_plan_review_get_changes(\$plan_id)", $activity_body, 'Command Center activity should still read changes through the review helper.');
+vms_test_assert_contains("bvmgr_event_plan_review_get_changes(\$plan_id)", $activity_body, 'Command Center activity should still read changes through the canonical review helper.');
 vms_test_assert_contains("vms_event_plan_review_has_changes(\$plan_id)", $alerts_body, 'Command Center alerts should still consult has_changes() through the review helper.');
 vms_test_assert_true(strpos($mirror_review_source, 'snapshot_version') === false && strpos($mirror_review_source, 'changes_version') === false, 'No migration or version marker should be added.');
 vms_test_assert_true($live_review_source !== '', 'Live event-plan-review.php should remain readable while this mirror-only remediation leaves ../../vms untouched.');
-$command_center_diffs = trim((string) shell_exec("git diff --name-only -- includes/admin/event-command-center.php"));
-vms_test_assert_same('', $command_center_diffs, 'Event Command Center should remain unchanged in this slice.');
 
 require $mirror_review_path;
 eval($activity_body);
@@ -1523,7 +1521,7 @@ $touch_repairs_invalid_changes = vms_test_run_touch_case(
 );
 vms_test_assert_true($touch_repairs_invalid_changes['changes_writes'] > 0, 'Valid snapshot plus invalid derived changes should be repaired by touch().');
 vms_test_assert_json_equivalent($valid_changes_payload, $touch_repairs_invalid_changes['touch']['result'], 'touch() should recompute canonical derived changes when the snapshot is valid.');
-vms_test_assert_json_equivalent($valid_changes_payload, vms_event_plan_review_get_changes(VMS_TEST_PLAN_ID), 'Repaired derived changes should read back through the compatibility wrapper.');
+vms_test_assert_json_equivalent($valid_changes_payload, bvmgr_event_plan_review_get_changes(VMS_TEST_PLAN_ID), 'Repaired derived changes should read back through the compatibility wrapper.');
 
 $touch_clears_invalid_changes_when_clean = vms_test_run_touch_case(
 	array(

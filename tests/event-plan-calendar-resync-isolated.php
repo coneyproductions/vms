@@ -143,7 +143,7 @@ try {
         return $value;
     };
 
-    $tecMetaKey = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
+    $tecMetaKey = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
     $checkinMetaKey = function_exists('vms_event_plan_checkin_close_meta_key') ? vms_event_plan_checkin_close_meta_key() : '_checkin_close_at';
     $legacyTicketKeys = function_exists('vms_event_plan_legacy_ticket_meta_keys')
         ? (array) vms_event_plan_legacy_ticket_meta_keys()

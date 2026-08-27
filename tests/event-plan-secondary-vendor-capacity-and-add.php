@@ -198,7 +198,7 @@ try {
 	$assert(in_array('market_vendor', (array) ($context['missing_secondary_types'] ?? array()), true), 'ADD missing types should include only open-capacity groups.');
 	$assert(!in_array('food_truck', (array) ($context['missing_secondary_types'] ?? array()), true), 'ADD missing types should not include over-capacity groups as open needs.');
 
-	$blockedSet = vms_event_plan_set_secondary_vendors($planId, 'dessert_truck', array($dessertVendorA, $dessertVendorB));
+	$blockedSet = bvmgr_event_plan_set_secondary_vendors($planId, 'dessert_truck', array($dessertVendorA, $dessertVendorB));
 	$assert(is_wp_error($blockedSet), 'ADD assignment setter should reject over-capacity secondary vendor updates without an override.');
 	$assert($blockedSet instanceof WP_Error && $blockedSet->get_error_code() === 'vms_secondary_vendor_over_capacity', 'ADD assignment setter should surface the capacity error code.');
 
@@ -229,7 +229,7 @@ try {
 		),
 	));
 	$assert(!is_wp_error($enableDessertOverride), 'Saving a pending override for a full group should succeed.');
-	$approvedSet = vms_event_plan_set_secondary_vendors($planId, 'dessert_truck', array($dessertVendorA, $dessertVendorB));
+	$approvedSet = bvmgr_event_plan_set_secondary_vendors($planId, 'dessert_truck', array($dessertVendorA, $dessertVendorB));
 	$assert(!is_wp_error($approvedSet), 'ADD assignment setter should preserve an existing group override and allow the assignment.');
 	$afterSetterAssignments = (array) get_post_meta($planId, $assignmentMetaKey, true);
 	$assert((int) ($afterSetterAssignments['market_vendor']['needed_slots'] ?? 0) === 3, 'ADD assignment setter should preserve unrelated Market Vendor needed_slots.');

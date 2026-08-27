@@ -187,7 +187,7 @@ function apply_filters(string $hook, $value)
 	return $value;
 }
 
-function vms_get_tour_registry(): array
+function bvmgr_get_tour_registry(): array
 {
 	return $GLOBALS['vms_test_query_registry'];
 }

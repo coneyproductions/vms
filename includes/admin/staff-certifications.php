@@ -60,8 +60,8 @@ if (!function_exists('vms_render_staff_certifications_admin_page')) {
     {
         $pending = vms_staff_certifications_get_pending_review_items();
 
-        if (function_exists('vms_admin_ui_render_shell')) {
-            vms_admin_ui_render_shell(
+        if (function_exists('bvmgr_admin_ui_render_shell')) {
+            bvmgr_admin_ui_render_shell(
                 array(
                     'title' => __('Staff Certifications', 'backstage-venue-manager'),
                     'subtitle' => __('Review staff-uploaded certificates, licenses, and permits that are waiting on admin approval.', 'backstage-venue-manager'),

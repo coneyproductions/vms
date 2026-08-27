@@ -122,7 +122,7 @@ function vms_admission_table_entries(): string
 	return (string) $GLOBALS['portal_admissions_table'];
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	$keys = array(
@@ -155,7 +155,7 @@ function vms_vendor_portal_build_secondary_sales_snapshot_card(int $plan_id): ar
 	return $GLOBALS['portal_secondary_cards'][$plan_id] ?? array();
 }
 
-function vms_event_plan_get_status(int $plan_id, string $context): string
+function bvmgr_event_plan_get_status(int $plan_id, string $context): string
 {
 	unset($context);
 	return $GLOBALS['portal_event_statuses'][$plan_id] ?? 'draft';
@@ -175,12 +175,12 @@ function vms_format_local_ymd(string $date, string $format): string
 	return $format . ':' . $date;
 }
 
-function vms_vendor_portal_get_progress_headcount_context(int $plan_id): array
+function bvmgr_vendor_portal_get_progress_headcount_context(int $plan_id): array
 {
 	return array('headcount' => $plan_id + 10);
 }
 
-function vms_vendor_portal_get_count_breakdown(int $plan_id, array $context = array()): array
+function bvmgr_vendor_portal_get_count_breakdown(int $plan_id, array $context = array()): array
 {
 	return array('plan_id' => $plan_id, 'headcount' => (int) ($context['headcount'] ?? 0));
 }

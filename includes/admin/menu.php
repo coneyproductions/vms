@@ -437,8 +437,8 @@ add_action('admin_head', function () {
  
 function vms_render_dashboard_page(): void
 {
-  if (function_exists('vms_admin_ui_render_shell')) {
-    vms_admin_ui_render_shell(
+  if (function_exists('bvmgr_admin_ui_render_shell')) {
+    bvmgr_admin_ui_render_shell(
       array(
         'title' => __('Dashboard', 'backstage-venue-manager'),
         'subtitle' => __('Operational overview and quick launch actions for planning, staffing, and finance.', 'backstage-venue-manager'),
@@ -517,8 +517,8 @@ function vms_render_dashboard_page_content(): void
 
   $guided_tours_url = admin_url('admin.php?page=vms-guided-tours');
   $dashboard_tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.dashboard.basics" data-vms-tour="dashboard_help_start">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-  if (function_exists('vms_render_help_button')) {
-    $dashboard_tour_button = vms_render_help_button(array(
+  if (function_exists('bvmgr_render_help_button')) {
+    $dashboard_tour_button = bvmgr_render_help_button(array(
       'tour_id' => 'vms.dashboard.basics',
       'anchor' => 'dashboard_help_start',
       'label' => __('Start Guided Tour', 'backstage-venue-manager'),

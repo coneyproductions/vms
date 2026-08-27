@@ -105,7 +105,7 @@ function get_post_meta(int $postId, string $key, bool $single = false)
 	$GLOBALS['bvmgr_test_requested_meta_keys'][] = $key;
 	return $GLOBALS['bvmgr_test_meta'][$key] ?? '';
 }
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	return '_vms_' . $scope . '_' . $field;
 }

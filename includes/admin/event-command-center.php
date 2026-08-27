@@ -316,8 +316,8 @@ if (!function_exists('vms_event_command_center_days_until_label')) {
 if (!function_exists('vms_event_command_center_clean_text')) {
     function vms_event_command_center_clean_text(string $text): string
     {
-        if (function_exists('vms_event_plan_review_clean_text')) {
-            return (string) vms_event_plan_review_clean_text($text);
+        if (function_exists('bvmgr_event_plan_review_clean_text')) {
+            return (string) bvmgr_event_plan_review_clean_text($text);
         }
 
         $text = wp_strip_all_tags((string) $text);
@@ -456,7 +456,7 @@ if (!function_exists('vms_event_command_center_get_plan_ids')) {
             'fields' => 'ids',
             'orderby' => 'meta_value',
             // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This admin selector is capped at 200 plan IDs and uses the canonical date key only for ordering.
-            'meta_key' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date',
+            'meta_key' => function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date',
             'order' => 'ASC',
             'no_found_rows' => true,
         ));
@@ -516,15 +516,15 @@ if (!function_exists('vms_event_command_center_get_weather_url')) {
 if (!function_exists('vms_event_command_center_get_plan_header')) {
     function vms_event_command_center_get_plan_header(int $plan_id): array
     {
-        $status = function_exists('vms_event_plan_get_status')
-            ? (string) vms_event_plan_get_status($plan_id, 'dashboard')
+        $status = function_exists('bvmgr_event_plan_get_status')
+            ? (string) bvmgr_event_plan_get_status($plan_id, 'dashboard')
             : 'draft';
         $status = sanitize_key($status ?: 'draft');
 
-        $event_date = (string) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date', true);
+        $event_date = (string) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date', true);
         $start_time = (string) get_post_meta($plan_id, '_vms_start_time', true);
         $end_time = (string) get_post_meta($plan_id, '_vms_end_time', true);
-        $venue_id = absint(get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'venue_id') : '_vms_venue_id', true));
+        $venue_id = absint(get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'venue_id') : '_vms_venue_id', true));
         $venue_label = $venue_id > 0 ? trim((string) get_the_title($venue_id)) : __('Unassigned venue', 'backstage-venue-manager');
         $date_label = function_exists('vms_event_plan_review_format_date')
             ? (string) vms_event_plan_review_format_date($event_date)
@@ -545,15 +545,15 @@ if (!function_exists('vms_event_command_center_get_plan_header')) {
         }
 
         $days_until = vms_event_command_center_days_until($event_date);
-        $tec_event_id = absint(get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id', true));
-        $tec_event_url = (string) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_url') : '_vms_tec_event_url', true);
+        $tec_event_id = absint(get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id', true));
+        $tec_event_url = (string) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_url') : '_vms_tec_event_url', true);
         $ticket_url = function_exists('vms_tec_get_ticket_url_for_plan') ? (string) vms_tec_get_ticket_url_for_plan($plan_id) : '';
 
         return array(
             'plan_id' => $plan_id,
             'title' => (string) get_the_title($plan_id),
             'status' => $status,
-            'status_label' => function_exists('vms_event_plan_status_label') ? (string) vms_event_plan_status_label($status) : ucfirst($status),
+            'status_label' => function_exists('bvmgr_event_plan_status_label') ? (string) bvmgr_event_plan_status_label($status) : ucfirst($status),
             'status_tone' => vms_event_command_center_status_tone($status),
             'date_raw' => $event_date,
             'date_label' => $date_label,
@@ -591,14 +591,14 @@ if (!function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
     {
         return (array) vms_event_command_center_request_cache($plan_id, 'ticket_reporting_truth', static function () use ($plan_id): array {
             $plan_id = absint($plan_id);
-            if (function_exists('vms_resource_fingerprint_flag')) {
-                vms_resource_fingerprint_flag('ecc_calculation', array(
+            if (function_exists('bvmgr_resource_fingerprint_flag')) {
+                bvmgr_resource_fingerprint_flag('ecc_calculation', array(
                     'plan_id' => $plan_id,
                     'step' => 'ticket_reporting_truth',
                 ));
             }
-            if (function_exists('vms_resource_fingerprint_span_start')) {
-                vms_resource_fingerprint_span_start('ecc.ticket_reporting_truth', array('plan_id' => $plan_id));
+            if (function_exists('bvmgr_resource_fingerprint_span_start')) {
+                bvmgr_resource_fingerprint_span_start('ecc.ticket_reporting_truth', array('plan_id' => $plan_id));
             }
             $empty = array(
                 'available' => false,
@@ -629,8 +629,8 @@ if (!function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
                             'square_scope_mode' => 'full_day',
                             'compare' => 0,
                         ));
-                        if (function_exists('vms_resource_fingerprint_add_marker')) {
-                            vms_resource_fingerprint_add_marker('ecc.ticket_source.dt_model', 0.0, array('plan_id' => $plan_id));
+                        if (function_exists('bvmgr_resource_fingerprint_add_marker')) {
+                            bvmgr_resource_fingerprint_add_marker('ecc.ticket_source.dt_model', 0.0, array('plan_id' => $plan_id));
                         }
                         $costs = isset($model['costs']) && is_array($model['costs']) ? (array) $model['costs'] : array();
                         $summary = isset($model['summary']) && is_array($model['summary']) ? (array) $model['summary'] : array();
@@ -681,9 +681,9 @@ if (!function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
                     }
                 }
 
-                if (function_exists('vms_ticket_revenue_build_report')) {
+                if (function_exists('bvmgr_ticket_revenue_build_report')) {
                     try {
-                        $report = (array) vms_ticket_revenue_build_report(array(
+                        $report = (array) bvmgr_ticket_revenue_build_report(array(
                             'event_from' => '',
                             'event_to' => '',
                             'sold_from' => '',
@@ -693,8 +693,8 @@ if (!function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
                             'preview_limit' => 500,
                             'unresolved_limit' => 100,
                         ));
-                        if (function_exists('vms_resource_fingerprint_add_marker')) {
-                            vms_resource_fingerprint_add_marker('ecc.ticket_source.core_ticket_revenue', 0.0, array('plan_id' => $plan_id));
+                        if (function_exists('bvmgr_resource_fingerprint_add_marker')) {
+                            bvmgr_resource_fingerprint_add_marker('ecc.ticket_source.core_ticket_revenue', 0.0, array('plan_id' => $plan_id));
                         }
 
                         $paid_qty = 0;
@@ -744,8 +744,8 @@ if (!function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
 
                 return $empty;
             } finally {
-                if (function_exists('vms_resource_fingerprint_span_finish')) {
-                    vms_resource_fingerprint_span_finish('ecc.ticket_reporting_truth', array('plan_id' => $plan_id));
+                if (function_exists('bvmgr_resource_fingerprint_span_finish')) {
+                    bvmgr_resource_fingerprint_span_finish('ecc.ticket_reporting_truth', array('plan_id' => $plan_id));
                 }
             }
         });
@@ -775,14 +775,14 @@ if (!function_exists('vms_event_command_center_get_ticket_snapshot')) {
             $comp_count = $true_comp_count;
         }
 
-        if (function_exists('vms_resource_fingerprint_span_start')) {
-            vms_resource_fingerprint_span_start('ecc.ticket_integrity_scan', array('plan_id' => $plan_id));
+        if (function_exists('bvmgr_resource_fingerprint_span_start')) {
+            bvmgr_resource_fingerprint_span_start('ecc.ticket_integrity_scan', array('plan_id' => $plan_id));
         }
         $scan = function_exists('vms_ticket_integrity_scan_event_record')
             ? (array) vms_ticket_integrity_scan_event_record($plan_id)
             : array();
-        if (function_exists('vms_resource_fingerprint_span_finish')) {
-            vms_resource_fingerprint_span_finish('ecc.ticket_integrity_scan', array(
+        if (function_exists('bvmgr_resource_fingerprint_span_finish')) {
+            bvmgr_resource_fingerprint_span_finish('ecc.ticket_integrity_scan', array(
                 'plan_id' => $plan_id,
                 'ticket_rows' => count((array) ($scan['ticket_snapshots'] ?? array())),
             ));
@@ -928,8 +928,8 @@ if (!function_exists('vms_event_command_center_get_lineup_snapshot')) {
             $band_key = function_exists('vms_lineup_schedule_meta_key')
                 ? (string) vms_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id')
                 : '_vms_band_vendor_id';
-            $secondary_key = function_exists('vms_meta_key')
-                ? (string) vms_meta_key('event_plan', 'secondary_vendor_ids')
+            $secondary_key = function_exists('bvmgr_meta_key')
+                ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_ids')
                 : '_vms_secondary_vendor_ids';
 
             $raw_entries = $read_meta($lineup_key, array());
@@ -1073,7 +1073,7 @@ if (!function_exists('vms_event_command_center_get_staffing_snapshot')) {
             $rollup = array();
         }
 
-        $slots = function_exists('vms_staffing_get_event_slots') ? (array) vms_staffing_get_event_slots($plan_id, false) : array();
+        $slots = function_exists('bvmgr_staffing_get_event_slots') ? (array) bvmgr_staffing_get_event_slots($plan_id, false) : array();
         $roles = array();
         foreach ($slots as $slot) {
             if (!is_array($slot)) {
@@ -1120,7 +1120,7 @@ if (!function_exists('vms_event_command_center_get_staffing_snapshot')) {
 if (!function_exists('vms_event_command_center_get_marketing_snapshot')) {
     function vms_event_command_center_get_marketing_snapshot(int $plan_id, array $header = array()): array
     {
-        $do_not_post = !empty(get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'do_not_post') : '_vms_social_do_not_post', true));
+        $do_not_post = !empty(get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'do_not_post') : '_vms_social_do_not_post', true));
         $promo = function_exists('vms_vendor_portal_get_headliner_promo_video_data')
             ? (array) vms_vendor_portal_get_headliner_promo_video_data($plan_id)
             : array();
@@ -1295,7 +1295,7 @@ if (!function_exists('vms_event_command_center_get_weather_snapshot')) {
 if (!function_exists('vms_event_command_center_get_notes_snapshot')) {
     function vms_event_command_center_get_notes_snapshot(int $plan_id): array
     {
-        $notes = (string) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'notes_internal') : '_vms_event_plan_notes_internal', true);
+        $notes = (string) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'notes_internal') : '_vms_event_plan_notes_internal', true);
         $notes = trim((string) $notes);
         return array(
             'has_notes' => $notes !== '',
@@ -1321,7 +1321,7 @@ if (!function_exists('vms_event_command_center_collect_activity')) {
 
         $changes_at = (string) get_post_meta($plan_id, vms_event_plan_review_meta_key('changes_at'), true);
         if ($changes_at !== '') {
-            $changes = vms_event_plan_review_get_changes($plan_id);
+            $changes = bvmgr_event_plan_review_get_changes($plan_id);
             $summary = vms_event_plan_review_compact_summary((array) ($changes['changes'] ?? array()));
             $items[] = array(
                 'title' => __('Unpublished changes tracked', 'backstage-venue-manager'),
@@ -1331,7 +1331,7 @@ if (!function_exists('vms_event_command_center_collect_activity')) {
             );
         }
 
-        $ticket_stats = get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1', true);
+        $ticket_stats = get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1', true);
         if (is_array($ticket_stats)) {
             $computed = trim((string) ($ticket_stats['computed_at_gmt'] ?? $ticket_stats['computed_at'] ?? ''));
             if ($computed !== '') {
@@ -1354,7 +1354,7 @@ if (!function_exists('vms_event_command_center_collect_activity')) {
             );
         }
 
-        $promo_uploaded_at = (string) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'headliner_promo_video_uploaded_at_gmt') : '_vms_headliner_promo_video_uploaded_at_gmt', true);
+        $promo_uploaded_at = (string) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'headliner_promo_video_uploaded_at_gmt') : '_vms_headliner_promo_video_uploaded_at_gmt', true);
         if ($promo_uploaded_at !== '') {
             $items[] = array(
                 'title' => __('Promo video uploaded', 'backstage-venue-manager'),
@@ -1408,7 +1408,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
         }
 
         if (function_exists('vms_event_plan_review_has_changes') && vms_event_plan_review_has_changes($plan_id)) {
-            $changes = (array) vms_event_plan_review_get_changes($plan_id);
+            $changes = (array) bvmgr_event_plan_review_get_changes($plan_id);
             $count = max(0, (int) ($changes['count'] ?? 0));
             $summary = vms_event_plan_review_compact_summary((array) ($changes['changes'] ?? array()));
             $detail = $summary !== ''
@@ -1424,7 +1424,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
             );
         }
 
-        $integrity_issue = trim((string) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue', true));
+        $integrity_issue = trim((string) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue', true));
         if ($integrity_issue !== '') {
             $alerts[] = array(
                 'severity' => 'red',
@@ -1717,14 +1717,14 @@ if (!function_exists('vms_event_command_center_get_next_actions')) {
 if (!function_exists('vms_event_command_center_build_payload')) {
     function vms_event_command_center_build_payload(int $plan_id): array
     {
-        if (function_exists('vms_resource_fingerprint_flag')) {
-            vms_resource_fingerprint_flag('ecc_calculation', array(
+        if (function_exists('bvmgr_resource_fingerprint_flag')) {
+            bvmgr_resource_fingerprint_flag('ecc_calculation', array(
                 'plan_id' => $plan_id,
                 'step' => 'build_payload',
             ));
         }
-        if (function_exists('vms_resource_fingerprint_span_start')) {
-            vms_resource_fingerprint_span_start('ecc.build_payload', array('plan_id' => $plan_id));
+        if (function_exists('bvmgr_resource_fingerprint_span_start')) {
+            bvmgr_resource_fingerprint_span_start('ecc.build_payload', array('plan_id' => $plan_id));
         }
 
         try {
@@ -1758,8 +1758,8 @@ if (!function_exists('vms_event_command_center_build_payload')) {
                 'activity' => $activity,
             );
         } finally {
-            if (function_exists('vms_resource_fingerprint_span_finish')) {
-                vms_resource_fingerprint_span_finish('ecc.build_payload', array('plan_id' => $plan_id));
+            if (function_exists('bvmgr_resource_fingerprint_span_finish')) {
+                bvmgr_resource_fingerprint_span_finish('ecc.build_payload', array('plan_id' => $plan_id));
             }
         }
     }
@@ -1786,7 +1786,7 @@ if (!function_exists('vms_event_command_center_render_picker')) {
         echo '<label class="screen-reader-text" for="vms-cc-plan-id">' . esc_html__('Event Plan', 'backstage-venue-manager') . '</label>';
         echo '<select id="vms-cc-plan-id" name="plan_id">';
         foreach ($ids as $plan_id) {
-            $date = (string) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date', true);
+            $date = (string) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date', true);
             $title = (string) get_the_title($plan_id);
             $label = $title;
             if ($date !== '') {
@@ -2164,22 +2164,22 @@ if (!function_exists('vms_event_command_center_ticket_summary_meta_bundle')) {
                 $all_meta = array();
             }
 
-            $ticket_stats_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
+            $ticket_stats_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
             if ($ticket_stats_key === '') {
                 $ticket_stats_key = '_vms_ticket_stats_v1';
             }
-            $integrity_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
+            $integrity_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
             if ($integrity_key === '') {
                 $integrity_key = '_vms_integrity_issue';
             }
-            $tec_event_key = function_exists('vms_ticketing_b_meta_key')
-                ? (string) vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
+            $tec_event_key = function_exists('bvmgr_ticketing_b_meta_key')
+                ? (string) bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
                 : '_vms_tec_event_id';
             if ($tec_event_key === '') {
                 $tec_event_key = '_vms_tec_event_id';
             }
-            $ticket_product_ids_key = function_exists('vms_ticketing_b_meta_key')
-                ? (string) vms_ticketing_b_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1')
+            $ticket_product_ids_key = function_exists('bvmgr_ticketing_b_meta_key')
+                ? (string) bvmgr_ticketing_b_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1')
                 : '_vms_ticket_product_ids_v1';
             if ($ticket_product_ids_key === '') {
                 $ticket_product_ids_key = '_vms_ticket_product_ids_v1';
@@ -2935,7 +2935,7 @@ if (!function_exists('vms_render_event_command_center_page')) {
             }
         }
 
-        vms_admin_ui_render_shell(
+        bvmgr_admin_ui_render_shell(
             array(
                 'title' => __('Event Command Center', 'backstage-venue-manager'),
                 'subtitle' => __('A single-glance operations view for one event plan, pulling lineup, staffing, ticketing, marketing, and review risk into one place.', 'backstage-venue-manager'),

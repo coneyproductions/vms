@@ -13,10 +13,10 @@ if (!($bvmgr_vendor_profile_post instanceof WP_Post)) {
 
 $bvmgr_vendor_profile_post_id = (int) $bvmgr_vendor_profile_post->ID;
 
-$bvmgr_vendor_profile_show_email_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
-$bvmgr_vendor_profile_show_phone_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
-$bvmgr_vendor_profile_show_website_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
-$bvmgr_vendor_profile_show_location_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
+$bvmgr_vendor_profile_show_email_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
+$bvmgr_vendor_profile_show_phone_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
+$bvmgr_vendor_profile_show_website_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
+$bvmgr_vendor_profile_show_location_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
 
 $bvmgr_vendor_profile_raw_show_email = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_show_email_meta_key, true);
 $bvmgr_vendor_profile_raw_show_phone = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_show_phone_meta_key, true);
@@ -28,28 +28,28 @@ $bvmgr_vendor_profile_show_phone = ($bvmgr_vendor_profile_raw_show_phone === '')
 $bvmgr_vendor_profile_show_website = ($bvmgr_vendor_profile_raw_show_website === '') ? true : ($bvmgr_vendor_profile_raw_show_website === '1');
 $bvmgr_vendor_profile_show_location = ($bvmgr_vendor_profile_raw_show_location === '') ? true : ($bvmgr_vendor_profile_raw_show_location === '1');
 
-$bvmgr_vendor_profile_primary_email_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
-$bvmgr_vendor_profile_primary_phone_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
-$bvmgr_vendor_profile_website_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'website') : '_vms_vendor_website';
+$bvmgr_vendor_profile_primary_email_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+$bvmgr_vendor_profile_primary_phone_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
+$bvmgr_vendor_profile_website_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'website') : '_vms_vendor_website';
 
 $bvmgr_vendor_profile_email = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_primary_email_meta_key, true);
 $bvmgr_vendor_profile_phone = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_primary_phone_meta_key, true);
 $bvmgr_vendor_profile_website = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_website_meta_key, true);
 
 if ($bvmgr_vendor_profile_email === '') {
-    $bvmgr_vendor_profile_legacy_email_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_email') : '_vms_contact_email';
+    $bvmgr_vendor_profile_legacy_email_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_email') : '_vms_contact_email';
     $bvmgr_vendor_profile_email = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_legacy_email_meta_key, true);
 }
 if ($bvmgr_vendor_profile_phone === '') {
-    $bvmgr_vendor_profile_legacy_phone_meta_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_phone') : '_vms_contact_phone';
+    $bvmgr_vendor_profile_legacy_phone_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_phone') : '_vms_contact_phone';
     $bvmgr_vendor_profile_phone = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_legacy_phone_meta_key, true);
 }
 if ($bvmgr_vendor_profile_website === '') {
     $bvmgr_vendor_profile_website = (string) get_post_meta($bvmgr_vendor_profile_post_id, '_vms_website_url', true);
 }
 
-$bvmgr_vendor_profile_city  = (string) get_post_meta($bvmgr_vendor_profile_post_id, function_exists('vms_meta_key') ? vms_meta_key('vendor', 'city') : '_vms_city', true);
-$bvmgr_vendor_profile_state = (string) get_post_meta($bvmgr_vendor_profile_post_id, function_exists('vms_meta_key') ? vms_meta_key('vendor', 'state') : '_vms_state', true);
+$bvmgr_vendor_profile_city  = (string) get_post_meta($bvmgr_vendor_profile_post_id, function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'city') : '_vms_city', true);
+$bvmgr_vendor_profile_state = (string) get_post_meta($bvmgr_vendor_profile_post_id, function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'state') : '_vms_state', true);
 if (($bvmgr_vendor_profile_city === '' || $bvmgr_vendor_profile_state === '')) {
     $bvmgr_vendor_profile_legacy_location = (string) get_post_meta($bvmgr_vendor_profile_post_id, '_vms_vendor_location', true);
     if ($bvmgr_vendor_profile_legacy_location !== '') {

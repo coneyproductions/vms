@@ -743,7 +743,7 @@ if (!function_exists('vms_goals_refresh_event_actuals')) {
 if (!function_exists('vms_goals_get_ticket_stats')) {
 	function vms_goals_get_ticket_stats(int $event_plan_id): array
 	{
-		$key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
+		$key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
 		if ($key === '') {
 			$key = '_vms_ticket_stats_v1';
 		}

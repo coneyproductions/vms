@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-inventory.php';
+require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-b3.php';
 
 $failures = array();
 $assert = static function (bool $condition, string $message) use (&$failures): void {
@@ -12,6 +13,12 @@ $assert = static function (bool $condition, string $message) use (&$failures): v
 
 $root = dirname(__DIR__);
 $manifest = json_decode((string) file_get_contents($root . '/docs/wporg-prefix-migration-manifest.json'), true);
+$b3Map = BVMGR_WPORG_Prefix_B3::loadJson($root . '/' . BVMGR_WPORG_Prefix_B3::MAP_PATH);
+$b3ByCurrent = array();
+foreach ((array) ($b3Map['mappings'] ?? array()) as $mapping) {
+	$b3ByCurrent[(string) $mapping['legacy_identifier']] = $mapping;
+	$b3ByCurrent[(string) $mapping['canonical_identifier']] = $mapping;
+}
 $addons = is_array($manifest) ? (array) ($manifest['known_addons'] ?? array()) : array();
 $coreFunctions = array_fill_keys(
 	array_column((array) ($manifest['symbols']['functions'] ?? array()), 'current_identifier'),
@@ -54,7 +61,8 @@ foreach ($addons as $addon) {
 	}
 	foreach ((array) ($addon['consumed_contracts']['core_php_functions'] ?? array()) as $function) {
 		$assert(isset($coreFunctions[$function]), "{$slug} mapped core function must exist in the semantic manifest: {$function}.");
-		$assert(preg_match('/\b' . preg_quote((string) $function, '/') . '\b/', $sources) === 1, "{$slug} must still consume mapped core function {$function}.");
+		$installedIdentifier = (string) ($b3ByCurrent[$function]['legacy_identifier'] ?? $function);
+		$assert(preg_match('/\b' . preg_quote($installedIdentifier, '/') . '\b/', $sources) === 1, "{$slug} installed/live regression evidence must retain mapped pre-B3 identifier {$installedIdentifier}.");
 	}
 	foreach (array('hooks', 'physical_cpt_taxonomy_identifiers', 'asset_handles') as $contractType) {
 		foreach ((array) ($addon['consumed_contracts'][$contractType] ?? array()) as $identifier) {
@@ -104,7 +112,7 @@ if ($pluginsRoot !== '') {
 
 $referApi = null;
 foreach ((array) ($manifest['public_extension_apis'] ?? array()) as $api) {
-	if (($api['current_identifier'] ?? '') === 'vms_register_admin_page') {
+	if (($api['legacy_identifier'] ?? $api['current_identifier'] ?? '') === 'vms_register_admin_page') {
 		$referApi = $api;
 		break;
 	}

@@ -21,8 +21,8 @@ if (!function_exists('vms_event_plan_review_meta_key')) {
 if (!function_exists('vms_event_plan_review_event_meta_key')) {
     function vms_event_plan_review_event_meta_key(string $key, string $fallback): string
     {
-        if (function_exists('vms_meta_key')) {
-            $resolved = (string) vms_meta_key('event_plan', $key);
+        if (function_exists('bvmgr_meta_key')) {
+            $resolved = (string) bvmgr_meta_key('event_plan', $key);
             if ($resolved !== '') {
                 return $resolved;
             }
@@ -55,8 +55,8 @@ if (!function_exists('vms_event_plan_review_current_snapshot')) {
         $secondary_vendor_ids = array_values(array_unique(array_filter(array_map('absint', (array) $secondary_vendor_ids))));
         sort($secondary_vendor_ids);
 
-        $status = function_exists('vms_event_plan_get_status')
-            ? (string) vms_event_plan_get_status($plan_id, 'review_snapshot')
+        $status = function_exists('bvmgr_event_plan_get_status')
+            ? (string) bvmgr_event_plan_get_status($plan_id, 'review_snapshot')
             : (string) get_post_meta($plan_id, $status_key, true);
         $status = sanitize_key($status);
         if ($status === 'canceled') {
@@ -572,16 +572,16 @@ if (!function_exists('vms_event_plan_review_get_snapshot')) {
     }
 }
 
-if (!function_exists('vms_event_plan_review_get_changes')) {
-    function vms_event_plan_review_get_changes(int $plan_id): array
+if (!function_exists('bvmgr_event_plan_review_get_changes')) {
+    function bvmgr_event_plan_review_get_changes(int $plan_id): array
     {
         $state = vms_event_plan_review_get_changes_state($plan_id);
         return 'valid' === ($state['state'] ?? '') ? (array) ($state['value'] ?? array()) : array();
     }
 }
 
-if (!function_exists('vms_event_plan_review_source_label')) {
-    function vms_event_plan_review_source_label(string $source): string
+if (!function_exists('bvmgr_event_plan_review_source_label')) {
+    function bvmgr_event_plan_review_source_label(string $source): string
     {
         $source = sanitize_key($source);
         $map = array(
@@ -685,8 +685,8 @@ if (!function_exists('vms_event_plan_review_status_label')) {
             $status = 'draft';
         }
 
-        if (function_exists('vms_event_plan_status_label')) {
-            return (string) vms_event_plan_status_label($status);
+        if (function_exists('bvmgr_event_plan_status_label')) {
+            return (string) bvmgr_event_plan_status_label($status);
         }
 
         return ucwords(str_replace(array('_', '-'), ' ', $status));
@@ -1019,8 +1019,8 @@ if (!function_exists('vms_event_plan_review_build_changes')) {
 }
 
 
-if (!function_exists('vms_event_plan_review_clean_text')) {
-    function vms_event_plan_review_clean_text(string $text): string
+if (!function_exists('bvmgr_event_plan_review_clean_text')) {
+    function bvmgr_event_plan_review_clean_text(string $text): string
     {
         $text = wp_strip_all_tags((string) $text);
         $text = str_replace(
@@ -1081,7 +1081,7 @@ if (!function_exists('vms_event_plan_review_compact_summary')) {
                     $summary .= '. ' . ucfirst(implode('; ', $extras)) . '.';
                 }
 
-                return vms_event_plan_review_clean_text($summary);
+                return bvmgr_event_plan_review_clean_text($summary);
                 }
             }
         }
@@ -1089,7 +1089,7 @@ if (!function_exists('vms_event_plan_review_compact_summary')) {
         if (!empty($by_field['lineup_rows'])) {
             $lineup_summary = trim((string) ($by_field['lineup_rows']['summary'] ?? ''));
             if ($lineup_summary !== '') {
-                return vms_event_plan_review_clean_text($lineup_summary);
+                return bvmgr_event_plan_review_clean_text($lineup_summary);
             }
         }
 
@@ -1101,14 +1101,14 @@ if (!function_exists('vms_event_plan_review_compact_summary')) {
 
             $summary = trim((string) ($change['summary'] ?? ''));
             if ($summary !== '') {
-                return vms_event_plan_review_clean_text($summary);
+                return bvmgr_event_plan_review_clean_text($summary);
             }
         }
 
         foreach ($changes as $change) {
             $summary = trim((string) ($change['summary'] ?? ''));
             if ($summary !== '') {
-                return vms_event_plan_review_clean_text($summary);
+                return bvmgr_event_plan_review_clean_text($summary);
             }
         }
 
@@ -1180,8 +1180,8 @@ if (!function_exists('vms_event_plan_review_mark_published')) {
     }
 }
 
-if (!function_exists('vms_event_plan_review_touch')) {
-    function vms_event_plan_review_touch(int $plan_id, string $source = 'unknown', int $user_id = 0): array
+if (!function_exists('bvmgr_event_plan_review_touch')) {
+    function bvmgr_event_plan_review_touch(int $plan_id, string $source = 'unknown', int $user_id = 0): array
     {
         $plan_id = absint($plan_id);
         if ($plan_id <= 0 || get_post_type($plan_id) !== 'vms_event_plan') {
@@ -1281,7 +1281,7 @@ if (!function_exists('vms_event_plan_review_render_banner')) {
         }
         if ($changed_source !== '') {
             /* translators: %s: source label for the tracked changes. */
-            $meta_bits[] = sprintf(__('Source: %s', 'backstage-venue-manager'), vms_event_plan_review_source_label($changed_source));
+            $meta_bits[] = sprintf(__('Source: %s', 'backstage-venue-manager'), bvmgr_event_plan_review_source_label($changed_source));
         }
 
         echo '<div class="notice notice-warning inline">';
@@ -1301,7 +1301,7 @@ if (!function_exists('vms_event_plan_review_render_banner')) {
                 if ($summary === '') {
                     continue;
                 }
-                echo '<li>' . esc_html(vms_event_plan_review_clean_text($summary)) . '</li>';
+                echo '<li>' . esc_html(bvmgr_event_plan_review_clean_text($summary)) . '</li>';
             }
             echo '</ul>';
         }
@@ -1321,7 +1321,7 @@ if (!function_exists('vms_event_plan_review_render_status_note')) {
             return;
         }
 
-        $changes = vms_event_plan_review_get_changes($post_id);
+        $changes = bvmgr_event_plan_review_get_changes($post_id);
         $integrity_issue = vms_event_plan_review_get_integrity_issue($post_id);
         $count = max(0, (int) ($changes['count'] ?? 0));
         $first = vms_event_plan_review_compact_summary((array) ($changes['changes'] ?? array()));
@@ -1333,7 +1333,7 @@ if (!function_exists('vms_event_plan_review_render_status_note')) {
         }
         echo '</div>';
         if ($first !== '') {
-            echo '<div class="description">' . esc_html(vms_event_plan_review_clean_text($first)) . '</div>';
+            echo '<div class="description">' . esc_html(bvmgr_event_plan_review_clean_text($first)) . '</div>';
         } elseif (!empty($integrity_issue)) {
             echo '<div class="description">' . esc_html((string) ($integrity_issue['message'] ?? vms_event_plan_review_integrity_message())) . '</div>';
         }
@@ -1400,7 +1400,7 @@ if (!function_exists('vms_event_plan_review_after_save')) {
             return;
         }
 
-        vms_event_plan_review_touch($post_id, 'event_plan_editor');
+        bvmgr_event_plan_review_touch($post_id, 'event_plan_editor');
     }
 }
 add_action('save_post_vms_event_plan', 'vms_event_plan_review_after_save', 999, 2);

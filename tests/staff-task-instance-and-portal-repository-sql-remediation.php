@@ -380,7 +380,7 @@ function vms_staff_portal_visible_event_statuses(): array
 	return array('confirmed', 'published', 'ready');
 }
 
-function vms_staffing_resolve_slot_window(int $plan_id, array $row): array
+function bvmgr_staffing_resolve_slot_window(int $plan_id, array $row): array
 {
 	unset($plan_id, $row);
 	return array();
@@ -392,12 +392,12 @@ function vms_format_local_ymd(string $ymd, string $format): string
 	return $ymd;
 }
 
-function vms_event_plan_status_label(string $status): string
+function bvmgr_event_plan_status_label(string $status): string
 {
 	return strtoupper($status);
 }
 
-function vms_event_plan_get_status(int $plan_id, string $context): string
+function bvmgr_event_plan_get_status(int $plan_id, string $context): string
 {
 	unset($context);
 	return $GLOBALS['vms_test_plan_status'][$plan_id] ?? 'draft';

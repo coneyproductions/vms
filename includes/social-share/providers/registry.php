@@ -15,11 +15,11 @@ if (!function_exists('vms_social_resolve_provider_key')) {
 	}
 }
 
-if (!function_exists('vms_social_get_providers')) {
+if (!function_exists('bvmgr_social_get_providers')) {
 	/**
 	 * @return array<string,BVMGR_Social_Provider_Interface>
 	 */
-	function vms_social_get_providers(): array
+	function bvmgr_social_get_providers(): array
 	{
 		static $providers = null;
 		if (is_array($providers)) {
@@ -56,11 +56,11 @@ if (!function_exists('vms_social_get_providers')) {
 	}
 }
 
-if (!function_exists('vms_social_get_provider')) {
-	function vms_social_get_provider(string $platform): ?BVMGR_Social_Provider_Interface
+if (!function_exists('bvmgr_social_get_provider')) {
+	function bvmgr_social_get_provider(string $platform): ?BVMGR_Social_Provider_Interface
 	{
 		$key = vms_social_resolve_provider_key($platform);
-		$providers = vms_social_get_providers();
+		$providers = bvmgr_social_get_providers();
 		return isset($providers[$key]) ? $providers[$key] : null;
 	}
 }

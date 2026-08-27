@@ -186,7 +186,7 @@ try {
 		}
 	}
 	$assert(!empty($foodRow['is_open']) && (int) ($foodRow['open_needed'] ?? 0) === 1, 'Food Vendor open need should remain after assigning vendor as Dessert Vendor.');
-	$compatIds = get_post_meta($planId, function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids', true);
+	$compatIds = get_post_meta($planId, function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids', true);
 	$assert(in_array($vendorId, (array) $compatIds, true), 'Compatibility secondary vendor IDs should include assigned Dessert Vendor.');
 	$freshResponse = vms_add_dispatch_get_response($responseId);
 	$assert(is_array($freshResponse) && trim((string) ($freshResponse['assigned_at'] ?? '')) !== '', 'ADD response should be marked assigned after confirmation.');

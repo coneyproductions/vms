@@ -14,8 +14,8 @@ if (!defined('ABSPATH')) exit;
 if (!function_exists('vms_vendor_linked_staff_meta_key')) {
     function vms_vendor_linked_staff_meta_key(): string
     {
-        if (function_exists('vms_meta_key')) {
-            $k = (string) vms_meta_key('vendor', 'linked_staff_id');
+        if (function_exists('bvmgr_meta_key')) {
+            $k = (string) bvmgr_meta_key('vendor', 'linked_staff_id');
             if ($k !== '') return $k;
         }
         return '_vms_linked_staff_id';
@@ -25,8 +25,8 @@ if (!function_exists('vms_vendor_linked_staff_meta_key')) {
 if (!function_exists('vms_staff_linked_vendor_meta_key')) {
     function vms_staff_linked_vendor_meta_key(): string
     {
-        if (function_exists('vms_meta_key')) {
-            $k = (string) vms_meta_key('staff', 'linked_vendor_id');
+        if (function_exists('bvmgr_meta_key')) {
+            $k = (string) bvmgr_meta_key('staff', 'linked_vendor_id');
             if ($k !== '') return $k;
         }
         return '_vms_linked_vendor_id';

@@ -509,12 +509,12 @@ function vms_ticket_inventory_forensics_find_plan_id_by_event(int $tec_event_id)
 		return 0;
 	}
 
-	if (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-		return absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+	if (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+		return absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
 	}
 
-	if (function_exists('vms_get_event_plan_for_tec_event')) {
-		return absint(vms_get_event_plan_for_tec_event($tec_event_id));
+	if (function_exists('bvmgr_get_event_plan_for_tec_event')) {
+		return absint(bvmgr_get_event_plan_for_tec_event($tec_event_id));
 	}
 
 	return 0;

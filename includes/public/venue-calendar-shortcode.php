@@ -28,7 +28,7 @@ if (!function_exists('vms_public_calendar_event_is_past')) {
 	 */
 	function vms_public_calendar_event_is_past(array $event): bool
 	{
-		$tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+		$tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		$now = time();
 
 		$end_local = trim((string) ($event['end_local'] ?? ''));
@@ -70,7 +70,7 @@ if (!function_exists('vms_public_calendar_month_label')) {
 			return $ym;
 		}
 
-		$timezone = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+		$timezone = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		$ts = strtotime($ym . '-01 12:00:00');
 		if ($ts === false) {
 			return $ym;
@@ -359,11 +359,11 @@ if (!function_exists('vms_public_calendar_compact_events_for_months')) {
 			return array();
 		}
 
-		if (!function_exists('vms_get_calendar_events')) {
+		if (!function_exists('bvmgr_get_calendar_events')) {
 			return array();
 		}
 
-		return (array) vms_get_calendar_events(array_merge($feed_args, array(
+		return (array) bvmgr_get_calendar_events(array_merge($feed_args, array(
 			'start_date' => $start_date,
 			'end_date' => $end_date,
 		)));
@@ -663,8 +663,8 @@ if (!function_exists('vms_public_calendar_vendor_slots')) {
 			: array();
 
 		$plan_id = (int) ($event['event_plan_id'] ?? 0);
-		if ($plan_id > 0 && function_exists('vms_calendar_plan_vendor_ids')) {
-			$ids = (array) vms_calendar_plan_vendor_ids($plan_id);
+		if ($plan_id > 0 && function_exists('bvmgr_calendar_plan_vendor_ids')) {
+			$ids = (array) bvmgr_calendar_plan_vendor_ids($plan_id);
 			$ordered_ids = array();
 			$band_id = isset($ids['band_id']) ? absint($ids['band_id']) : 0;
 			if ($band_id > 0) {
@@ -684,8 +684,8 @@ if (!function_exists('vms_public_calendar_vendor_slots')) {
 				}
 				$seen[$name] = true;
 				$icon = '';
-				if (function_exists('vms_calendar_vendor_primary_type')) {
-					$type = (array) vms_calendar_vendor_primary_type((int) $vendor_id);
+				if (function_exists('bvmgr_calendar_vendor_primary_type')) {
+					$type = (array) bvmgr_calendar_vendor_primary_type((int) $vendor_id);
 					$slug = sanitize_key((string) ($type['slug'] ?? ''));
 					if ($slug !== '' && isset($icon_map[$slug])) {
 						$icon = trim((string) $icon_map[$slug]);
@@ -796,8 +796,8 @@ if (!function_exists('vms_public_calendar_render_list_view')) {
 			$plan_id = absint($event['event_plan_id'] ?? 0);
 			$plan_status = sanitize_key((string) ($event['plan_status'] ?? ''));
 			$is_cancelled = ($plan_status === 'cancelled');
-			$rescheduled = ($is_cancelled && $plan_id > 0 && function_exists('vms_event_plan_get_public_reschedule_destination'))
-				? (array) vms_event_plan_get_public_reschedule_destination($plan_id)
+			$rescheduled = ($is_cancelled && $plan_id > 0 && function_exists('bvmgr_event_plan_get_public_reschedule_destination'))
+				? (array) bvmgr_event_plan_get_public_reschedule_destination($plan_id)
 				: array();
 			$is_rescheduled = $is_cancelled && !empty($rescheduled['url']);
 			// Calendar cards keep cancelled/rescheduled state classes for styling/CTA logic,
@@ -985,7 +985,7 @@ if (!function_exists('vms_public_calendar_build_day_states')) {
 			return $out;
 		}
 
-		$tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+		$tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		$today = wp_date('Y-m-d', time(), $tz);
 
 			for ($day = 1; $day <= $days_in_month; $day++) {
@@ -1091,8 +1091,8 @@ if (!function_exists('vms_public_calendar_render_day_entries')) {
 			$plan_id = absint($ev['event_plan_id'] ?? 0);
 			$plan_status = sanitize_key((string) ($ev['plan_status'] ?? ''));
 			$is_cancelled = ($plan_status === 'cancelled');
-			$rescheduled = ($is_cancelled && $plan_id > 0 && function_exists('vms_event_plan_get_public_reschedule_destination'))
-				? (array) vms_event_plan_get_public_reschedule_destination($plan_id)
+			$rescheduled = ($is_cancelled && $plan_id > 0 && function_exists('bvmgr_event_plan_get_public_reschedule_destination'))
+				? (array) bvmgr_event_plan_get_public_reschedule_destination($plan_id)
 				: array();
 			$is_rescheduled = $is_cancelled && !empty($rescheduled['url']);
 			$entry_classes = array('vms-cal-entry');
@@ -1406,7 +1406,7 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 		);
 			$atts = shortcode_atts($defaults, (array) $atts, $tag);
 
-			$current_ym = wp_date('Y-m', time(), function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone());
+			$current_ym = wp_date('Y-m', time(), function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone());
 
 			$ym = $atts['month'] !== '' ? sanitize_text_field((string) $atts['month']) : '';
 			$requested_ym = vms_public_calendar_get_requested_month();
@@ -1524,11 +1524,11 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 		}
 
 		$events = array();
-		if (!empty($rendered_months) && function_exists('vms_get_calendar_events')) {
+		if (!empty($rendered_months) && function_exists('bvmgr_get_calendar_events')) {
 			$query_start = isset($rendered_months[0]['start']) ? (string) $rendered_months[0]['start'] : $month['start'];
 			$last_rendered_month = $rendered_months[count($rendered_months) - 1] ?? $month;
 			$query_end = isset($last_rendered_month['end']) ? gmdate('Y-m-d', strtotime('-1 day', strtotime((string) $last_rendered_month['end']))) : $month_end_inclusive;
-			$events = (array) vms_get_calendar_events(array_merge($calendar_feed_args, array(
+			$events = (array) bvmgr_get_calendar_events(array_merge($calendar_feed_args, array(
 				'start_date' => $query_start,
 				'end_date' => $query_end,
 			)));

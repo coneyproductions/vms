@@ -14,9 +14,9 @@ defined('ABSPATH') || exit;
  * - No destructive deletes in v1.
  */
 
-function vms_ticketing_b_meta_key(string $field, string $fallback): string {
-    if (function_exists('vms_meta_key')) {
-        $k = (string) vms_meta_key('event_plan', $field);
+function bvmgr_ticketing_b_meta_key(string $field, string $fallback): string {
+    if (function_exists('bvmgr_meta_key')) {
+        $k = (string) bvmgr_meta_key('event_plan', $field);
         if ($k !== '') {
             return $k;
         }
@@ -74,7 +74,7 @@ function vms_ticketing_b_get_linked_tec_event_id(int $plan_id): int {
     if ($plan_id <= 0) {
         return 0;
     }
-    $k_id = vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
+    $k_id = bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
     return (int) get_post_meta($plan_id, $k_id, true);
 }
 
@@ -83,7 +83,7 @@ function vms_ticketing_b_get_mode(int $plan_id): string {
     if ($plan_id <= 0) {
         return 'read_only';
     }
-    $k = vms_ticketing_b_meta_key('ticketing_mode', '_vms_ticketing_mode_v1');
+    $k = bvmgr_ticketing_b_meta_key('ticketing_mode', '_vms_ticketing_mode_v1');
     $v = (string) get_post_meta($plan_id, $k, true);
     $v = trim($v);
     if ($v === '') {
@@ -103,7 +103,7 @@ function vms_ticketing_b_set_mode(int $plan_id, string $mode): void {
     if (!in_array($mode, array('none', 'read_only', 'vms_managed'), true)) {
         $mode = 'read_only';
     }
-    $k = vms_ticketing_b_meta_key('ticketing_mode', '_vms_ticketing_mode_v1');
+    $k = bvmgr_ticketing_b_meta_key('ticketing_mode', '_vms_ticketing_mode_v1');
     update_post_meta($plan_id, $k, $mode);
 }
 
@@ -112,7 +112,7 @@ function vms_ticketing_b_get_tiers(int $plan_id): array {
     if ($plan_id <= 0) {
         return array();
     }
-    $k = vms_ticketing_b_meta_key('ticket_tiers', '_vms_ticket_tiers_v1');
+    $k = bvmgr_ticketing_b_meta_key('ticket_tiers', '_vms_ticket_tiers_v1');
     $tiers = get_post_meta($plan_id, $k, true);
     if (!is_array($tiers)) {
         return array();
@@ -125,7 +125,7 @@ function vms_ticketing_b_set_tiers(int $plan_id, array $tiers): void {
     if ($plan_id <= 0) {
         return;
     }
-    $k = vms_ticketing_b_meta_key('ticket_tiers', '_vms_ticket_tiers_v1');
+    $k = bvmgr_ticketing_b_meta_key('ticket_tiers', '_vms_ticket_tiers_v1');
     update_post_meta($plan_id, $k, array_values($tiers));
 }
 
@@ -134,7 +134,7 @@ function vms_ticketing_b_get_map(int $plan_id): array {
     if ($plan_id <= 0) {
         return array();
     }
-    $k = vms_ticketing_b_meta_key('ticket_tier_map', '_vms_ticket_tier_map_v1');
+    $k = bvmgr_ticketing_b_meta_key('ticket_tier_map', '_vms_ticket_tier_map_v1');
     $m = get_post_meta($plan_id, $k, true);
     if (!is_array($m)) {
         return array();
@@ -147,7 +147,7 @@ function vms_ticketing_b_set_map(int $plan_id, array $map): void {
     if ($plan_id <= 0) {
         return;
     }
-    $k = vms_ticketing_b_meta_key('ticket_tier_map', '_vms_ticket_tier_map_v1');
+    $k = bvmgr_ticketing_b_meta_key('ticket_tier_map', '_vms_ticket_tier_map_v1');
     update_post_meta($plan_id, $k, $map);
 }
 
@@ -1885,8 +1885,8 @@ function vms_ticketing_b_commit_sync(int $plan_id, array $preview_items): array 
     vms_ticketing_b_set_mode($plan_id, 'vms_managed');
 
     // Clear cached Phase A stats; operator can refresh.
-    $k_pids = vms_ticketing_b_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1');
-    $k_stat = vms_ticketing_b_meta_key('ticket_stats', '_vms_ticket_stats_v1');
+    $k_pids = bvmgr_ticketing_b_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1');
+    $k_stat = bvmgr_ticketing_b_meta_key('ticket_stats', '_vms_ticket_stats_v1');
     delete_post_meta($plan_id, $k_pids);
     delete_post_meta($plan_id, $k_stat);
 
@@ -2228,13 +2228,13 @@ function vms_ticketing_v2_k(string $which): string {
     // Event Plan meta keys
     switch ($which) {
         case 'config':
-            return vms_ticketing_b_meta_key('ticketing_config_v2', '_vms_ticketing_config_v2');
+            return bvmgr_ticketing_b_meta_key('ticketing_config_v2', '_vms_ticketing_config_v2');
         case 'sync':
-            return vms_ticketing_b_meta_key('ticketing_sync_v2', '_vms_ticketing_sync_v2');
+            return bvmgr_ticketing_b_meta_key('ticketing_sync_v2', '_vms_ticketing_sync_v2');
         case 'stats':
-            return vms_ticketing_b_meta_key('ticketing_stats_v2', '_vms_ticketing_stats_v2');
+            return bvmgr_ticketing_b_meta_key('ticketing_stats_v2', '_vms_ticketing_stats_v2');
         case 'migration_snapshot':
-            return vms_ticketing_b_meta_key('ticketing_migration_snapshot_v1', '_vms_ticketing_migration_snapshot_v1');
+            return bvmgr_ticketing_b_meta_key('ticketing_migration_snapshot_v1', '_vms_ticketing_migration_snapshot_v1');
         default:
             return '';
     }
@@ -2242,8 +2242,8 @@ function vms_ticketing_v2_k(string $which): string {
 
 function vms_ticketing_v2_product_meta_key(string $which): string {
     // Product meta keys (stored on Woo product posts)
-    if (function_exists('vms_meta_key')) {
-        $k = vms_meta_key('product', $which);
+    if (function_exists('bvmgr_meta_key')) {
+        $k = bvmgr_meta_key('product', $which);
         if (is_string($k) && $k !== '') {
             return $k;
         }
@@ -2810,8 +2810,8 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
         return array('ok' => false, 'message' => __('Invalid event plan.', 'backstage-venue-manager'));
     }
 
-    $k_id  = vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
-    $k_url = vms_ticketing_b_meta_key('tec_event_url', '_vms_tec_event_url');
+    $k_id  = bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
+    $k_url = bvmgr_ticketing_b_meta_key('tec_event_url', '_vms_tec_event_url');
     if (function_exists('vms_event_plan_capture_actor_user_id')) {
         vms_event_plan_capture_actor_user_id($plan_id, (int) get_current_user_id(), 'ticketing_v2_ensure_tec_event_link');
     }
@@ -3472,7 +3472,7 @@ function vms_ticketing_v2_reconcile_event_plan_ticket_cache(int $plan_id, int $t
     $detected = array_values(array_unique(array_filter(array_map('absint', (array) $detected))));
     sort($detected, SORT_NUMERIC);
 
-    $k_manual = vms_ticketing_b_meta_key('ticket_manual_product_ids', '_vms_ticket_manual_product_ids_v1');
+    $k_manual = bvmgr_ticketing_b_meta_key('ticket_manual_product_ids', '_vms_ticket_manual_product_ids_v1');
     $manual = get_post_meta($plan_id, $k_manual, true);
     if (!is_array($manual)) {
         $manual = array();
@@ -3561,8 +3561,8 @@ function vms_ticketing_v2_reconcile_event_plan_ticket_cache(int $plan_id, int $t
     $persist_failures = array();
 
     if ($persist) {
-        $k_pids = vms_ticketing_b_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1');
-        $k_stat = vms_ticketing_b_meta_key('ticket_stats', '_vms_ticket_stats_v1');
+        $k_pids = bvmgr_ticketing_b_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1');
+        $k_stat = bvmgr_ticketing_b_meta_key('ticket_stats', '_vms_ticket_stats_v1');
 
         update_post_meta($plan_id, $k_pids, $canonical_ids);
         update_post_meta($plan_id, $k_stat, $stats_v1);
@@ -5180,8 +5180,8 @@ function vms_ticketing_v2_resolve_event_featured_image_id(int $plan_id): int
         $tec_event_id = absint(vms_ticketing_b_get_linked_tec_event_id($plan_id));
     }
     if ($tec_event_id <= 0) {
-        $tec_key = function_exists('vms_ticketing_b_meta_key')
-            ? vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
+        $tec_key = function_exists('bvmgr_ticketing_b_meta_key')
+            ? bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
             : '_vms_tec_event_id';
         $tec_event_id = absint(get_post_meta($plan_id, $tec_key, true));
     }
@@ -6084,8 +6084,8 @@ function vms_ticketing_v2_find_plan_id_by_tec_event(int $tec_event_id): int {
         return 0;
     }
 
-    $k_tec = function_exists('vms_ticketing_b_meta_key')
-        ? vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
+    $k_tec = function_exists('bvmgr_ticketing_b_meta_key')
+        ? bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
         : '_vms_tec_event_id';
 
     $args = array(

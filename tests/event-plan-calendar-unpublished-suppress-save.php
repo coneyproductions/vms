@@ -120,25 +120,25 @@ try {
         return $decoded;
     };
 
-    $kSuppress = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
+    $kSuppress = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
         : '_vms_calendar_unpublished_suppress';
-    $kSecondaryIds = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids')
+    $kSecondaryIds = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids')
         : '_vms_secondary_vendor_ids';
-    $kSecondaryType = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'secondary_vendor_type') ?: '_vms_secondary_vendor_type')
+    $kSecondaryType = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'secondary_vendor_type') ?: '_vms_secondary_vendor_type')
         : '_vms_secondary_vendor_type';
-    $kTicketOverride = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'ticketing_enabled_override') ?: '_vms_ticketing_enabled_override')
+    $kTicketOverride = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'ticketing_enabled_override') ?: '_vms_ticketing_enabled_override')
         : '_vms_ticketing_enabled_override';
     $kTicketLayoutOverride = '_vms_ticket_ui_layout_override';
     $kTicketHeadingOverride = '_vms_ticket_ui_addons_heading_override';
-    $kIntegrityIssue = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'integrity_issue') ?: '_vms_integrity_issue')
+    $kIntegrityIssue = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'integrity_issue') ?: '_vms_integrity_issue')
         : '_vms_integrity_issue';
-    $kIntegrityTs = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'integrity_ts') ?: '_vms_integrity_ts')
+    $kIntegrityTs = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'integrity_ts') ?: '_vms_integrity_ts')
         : '_vms_integrity_ts';
 
     $captureState = static function (int $planId) use ($kSuppress, $kSecondaryIds, $kSecondaryType, $kTicketOverride, $kTicketLayoutOverride, $kTicketHeadingOverride, $kIntegrityIssue, $kIntegrityTs): array {

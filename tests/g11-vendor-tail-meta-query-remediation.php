@@ -197,7 +197,7 @@ $relative_paths = array(
 );
 $function_names = array(
 	'vendors' => 'vms_vendor_delete_revert_event_plans',
-	'payables' => 'vms_payables_build_bills_for_export',
+	'payables' => 'bvmgr_payables_build_bills_for_export',
 	'onboarding' => 'vms_vendor_booking_onboarding_daily_runner',
 	'tax_export' => 'vms_vendor_tax_export_csv_adminpost',
 	'profiles' => 'vms_vendor_profiles_find_next_upcoming_event',
@@ -510,7 +510,7 @@ function current_time(string $type, bool $gmt = false)
 	return $type === 'timestamp' ? (int) $GLOBALS['g11_now_ts'] : gmdate($type, (int) $GLOBALS['g11_now_ts']);
 }
 
-function vms_meta_key(string $scope, string $name): string
+function bvmgr_meta_key(string $scope, string $name): string
 {
 	$keys = array(
 		'event_plan' => array(
@@ -607,7 +607,7 @@ function vms_vendor_booking_onboarding_get_settings(): array
 	return $GLOBALS['g11_onboarding_settings'];
 }
 
-function vms_event_plan_get_status(int $plan_id, string $context): string
+function bvmgr_event_plan_get_status(int $plan_id, string $context): string
 {
 	unset($context);
 	return $GLOBALS['g11_plan_statuses'][$plan_id] ?? '';
@@ -672,7 +672,7 @@ function vms_vendor_profiles_today_ymd(): string
 	return '2026-08-08';
 }
 
-function vms_tec_is_cancelled_event(int $event_id): bool
+function bvmgr_tec_is_cancelled_event(int $event_id): bool
 {
 	return !empty($GLOBALS['g11_cancelled'][$event_id]);
 }
@@ -782,13 +782,13 @@ g11_same(array(array('ID' => 101, 'post_status' => 'draft')), $GLOBALS['g11_post
 g11_same(1, count($GLOBALS['g11_notices']), 'Vendor deletion should emit one summary notice.');
 
 g11_reset_runtime();
-$missing_input = vms_payables_build_bills_for_export('', array());
+$missing_input = bvmgr_payables_build_bills_for_export('', array());
 g11_same(array('bills' => array(), 'warnings' => array('Missing event date and/or venues.')), $missing_input, 'Payables missing-input result changed.');
 g11_same(array(), $GLOBALS['g11_get_posts_calls'], 'Payables missing input must not query.');
 
 g11_reset_runtime();
 $GLOBALS['g11_get_posts_queue'][] = false;
-$payables_failure = vms_payables_build_bills_for_export('2026-09-20', array(4, 0, 2), array('status_allow' => array('ready', 'cancelled')));
+$payables_failure = bvmgr_payables_build_bills_for_export('2026-09-20', array(4, 0, 2), array('status_allow' => array('ready', 'cancelled')));
 $payables_args = array(
 	'post_type' => 'vms_event_plan',
 	'post_status' => array('publish', 'draft', 'pending', 'private'),
@@ -810,7 +810,7 @@ g11_same(array('bills' => array(), 'warnings' => array()), $payables_failure, 'P
 g11_reset_runtime();
 $GLOBALS['g11_get_posts_queue'][] = array(201);
 $GLOBALS['g11_meta'][201]['_vms_venue_id'] = 0;
-$payables_result = vms_payables_build_bills_for_export('2026-09-20', array(4), array('status_allow' => array('published')));
+$payables_result = bvmgr_payables_build_bills_for_export('2026-09-20', array(4), array('status_allow' => array('published')));
 g11_same(array(201), $GLOBALS['g11_get_posts_calls'][0]['result'], 'Payables non-empty query result capture changed.');
 g11_same(array('Plan #201 is missing a venue link; skipped.'), $payables_result['warnings'], 'Payables missing-venue result changed.');
 g11_same(array(), $payables_result['bills'], 'Payables missing-venue result must not create bills.');

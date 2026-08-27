@@ -427,7 +427,7 @@ function vms_meta_keys(): array
 /**
  * Convenience getter: vms_meta_key('vendor', 'email')
  */
-function vms_meta_key(string $entity, string $field): string
+function bvmgr_meta_key(string $entity, string $field): string
 {
 	$map = vms_meta_keys();
 	return $map[$entity][$field] ?? '';

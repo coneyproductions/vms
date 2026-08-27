@@ -119,11 +119,11 @@ if (!function_exists('vms_admin_ui_current_user_can_ops')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_nav_clusters')) {
+if (!function_exists('bvmgr_admin_ui_nav_clusters')) {
 	/**
 	 * @return array<string,array<string,mixed>>
 	 */
-	function vms_admin_ui_nav_clusters(): array
+	function bvmgr_admin_ui_nav_clusters(): array
 	{
 		$vendor_app_pt = vms_admin_ui_vendor_application_post_type();
 		$rating_url = post_type_exists('vms_rating')
@@ -380,8 +380,8 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 
 		function vms_admin_ui_render_top_nav(): void
 		{
-			$clusters = vms_admin_ui_nav_clusters();
-			$active = vms_admin_ui_active_cluster();
+			$clusters = bvmgr_admin_ui_nav_clusters();
+			$active = bvmgr_admin_ui_active_cluster();
 		$current_page = vms_admin_ui_get_page_slug();
 		$current_post_type = vms_admin_ui_get_post_type();
 		$current_taxonomy = sanitize_key(vms_admin_ui_query_arg('taxonomy'));
@@ -525,8 +525,8 @@ if (!function_exists('vms_admin_ui_render_global_top_nav')) {
 		}
 
 		$active_cluster = '';
-		if (function_exists('vms_admin_ui_active_cluster')) {
-			$cluster = vms_admin_ui_active_cluster();
+		if (function_exists('bvmgr_admin_ui_active_cluster')) {
+			$cluster = bvmgr_admin_ui_active_cluster();
 			if (is_string($cluster) && $cluster !== '') {
 				$active_cluster = sanitize_html_class($cluster);
 			}
@@ -1145,8 +1145,8 @@ if (!function_exists('vms_admin_ui_render_marketing_social_hub_page')) {
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Marketing & Social', 'backstage-venue-manager')),
 				$render_content
 			);
@@ -1171,8 +1171,8 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 				vms_dt_render_tools_home();
 			};
 
-			if (function_exists('vms_admin_ui_render_shell')) {
-				vms_admin_ui_render_shell(
+			if (function_exists('bvmgr_admin_ui_render_shell')) {
+				bvmgr_admin_ui_render_shell(
 					array(
 						'title' => __('Data Tools', 'backstage-venue-manager'),
 						'subtitle' => __('Importers, reports, reconciliation, and maintenance tools inside the Backstage Venue Manager admin shell.', 'backstage-venue-manager'),
@@ -1198,8 +1198,8 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Data Tools', 'backstage-venue-manager')),
 				$render_content
 			);
@@ -1232,8 +1232,8 @@ if (!function_exists('vms_admin_ui_render_teams_page')) {
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Teams', 'backstage-venue-manager')),
 				$render_content
 			);
@@ -1266,8 +1266,8 @@ if (!function_exists('vms_admin_ui_render_alert_presets_page')) {
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Alert Presets', 'backstage-venue-manager')),
 				$render_content
 			);
@@ -1297,8 +1297,8 @@ if (!function_exists('vms_admin_ui_render_ops_console_page')) {
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Backstage Venue Manager Ops Console', 'backstage-venue-manager')),
 				$render_content
 			);

@@ -98,8 +98,8 @@ function vms_handle_integrity_calendar_links_action(): void
 
   if ($action === 'clear_calendar_integrity_flag') {
     // Clear integrity flag only if it is a calendar-related flag.
-    $k_issue = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
-    $k_ts    = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_ts') : '_vms_integrity_ts';
+    $k_issue = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
+    $k_ts    = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'integrity_ts') : '_vms_integrity_ts';
 
     $calendar_issues = array(
       'calendar_event_unlinked',
@@ -119,12 +119,12 @@ function vms_handle_integrity_calendar_links_action(): void
   }
 
   if ($action === 'suppress_calendar_unpublished_warning' || $action === 'unsuppress_calendar_unpublished_warning') {
-    $k_sup = function_exists('vms_meta_key')
-      ? (vms_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
+    $k_sup = function_exists('bvmgr_meta_key')
+      ? (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
       : '_vms_calendar_unpublished_suppress';
 
-    $k_issue = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
-    $k_ts    = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_ts') : '_vms_integrity_ts';
+    $k_issue = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
+    $k_ts    = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'integrity_ts') : '_vms_integrity_ts';
 
     foreach ($plan_ids as $pid) {
       if ($action === 'suppress_calendar_unpublished_warning') {
@@ -189,8 +189,8 @@ function vms_render_integrity_calendar_reconcile_page(): void
   $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
   $actions_html .= '<a class="button button-primary" href="' . esc_url($settings_url) . '">' . esc_html__('Settings & Scan', 'backstage-venue-manager') . '</a>';
 
-  if (function_exists('vms_admin_ui_render_shell')) {
-    vms_admin_ui_render_shell(
+  if (function_exists('bvmgr_admin_ui_render_shell')) {
+    bvmgr_admin_ui_render_shell(
       array(
         'title' => __('Integrity: Calendar Links', 'backstage-venue-manager'),
         'actions_html' => $actions_html,
@@ -351,8 +351,8 @@ function vms_render_integrity_calendar_reconcile_page_sections(): void
   }
 
   // Section: Suppressed Unpublished Warnings
-  $k_sup = function_exists('vms_meta_key')
-    ? (vms_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
+  $k_sup = function_exists('bvmgr_meta_key')
+    ? (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
     : '_vms_calendar_unpublished_suppress';
 
   $suppressed_ids = get_posts(array(

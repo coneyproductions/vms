@@ -133,7 +133,7 @@ function wc_get_order(int $order_id)
 	return null;
 }
 
-function vms_ticketing_b_meta_key(string $key, string $fallback): string
+function bvmgr_ticketing_b_meta_key(string $key, string $fallback): string
 {
 	unset($key);
 	return $fallback;
@@ -219,7 +219,7 @@ if (!is_string($source)) {
 $purchased_source = vms_test_extract_function($source, 'vms_ticketing_v2_purchased_ticket_qty_for_user');
 $decode_source = vms_test_extract_function($source, 'vms_ticketing_v2_decode_stored_claim_assignment_rows');
 $assignee_source = vms_test_extract_function($source, 'vms_ticketing_v2_assignee_consumed_qty_for_event');
-$plan_source = vms_test_extract_function($source, 'vms_ticketing_v2_find_plan_id_by_tec_event_id');
+$plan_source = vms_test_extract_function($source, 'bvmgr_ticketing_v2_find_plan_id_by_tec_event_id');
 eval($purchased_source);
 eval($decode_source);
 eval($assignee_source);
@@ -348,8 +348,8 @@ vms_test_same(0, vms_ticketing_v2_assignee_consumed_qty_for_event_fallback(56, '
 VMS_Rules_V2_WP_Query_Spy::$calls = array();
 VMS_Rules_V2_WP_Query_Spy::$queue = array(array(901));
 $GLOBALS['vms_rules_v2_reset_postdata_calls'] = 0;
-vms_test_same(0, vms_ticketing_v2_find_plan_id_by_tec_event_id(0), 'Invalid TEC event IDs should not query.');
-vms_test_same(901, vms_ticketing_v2_find_plan_id_by_tec_event_id(77), 'WP_Query fallback should return the newest matching plan ID.');
+vms_test_same(0, bvmgr_ticketing_v2_find_plan_id_by_tec_event_id(0), 'Invalid TEC event IDs should not query.');
+vms_test_same(901, bvmgr_ticketing_v2_find_plan_id_by_tec_event_id(77), 'WP_Query fallback should return the newest matching plan ID.');
 vms_test_same(1, count(VMS_Rules_V2_WP_Query_Spy::$calls), 'WP_Query fallback should execute once.');
 $args = VMS_Rules_V2_WP_Query_Spy::$calls[0];
 vms_test_same(1, $args['posts_per_page'], 'Plan fallback should remain single-result bounded.');

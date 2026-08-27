@@ -43,7 +43,7 @@ add_action('save_post', function ($post_id, $post) {
     if ($post->post_type === 'vms_staff') {
         $wt = function_exists('vms_staff_get_worker_type') ? (string) vms_staff_get_worker_type((int) $post_id) : '';
         if ($wt === '') {
-            $k_wt = function_exists('vms_meta_key') ? (string) vms_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
+            $k_wt = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
             if ($k_wt === '') $k_wt = '_vms_staff_worker_type';
             $wt = sanitize_key((string) get_post_meta((int) $post_id, $k_wt, true));
         }
@@ -57,10 +57,10 @@ add_action('save_post', function ($post_id, $post) {
         return vms_request_read_text_field($_POST, (string) $key);
     };
     $k = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 
@@ -136,7 +136,7 @@ function vms_render_tax_profile_admin_metabox($post)
     if (($post instanceof WP_Post) && $post->post_type === "vms_staff") {
         $wt = function_exists("vms_staff_get_worker_type") ? (string) vms_staff_get_worker_type($id) : "";
         if ($wt === "") {
-            $k_wt = function_exists("vms_meta_key") ? (string) vms_meta_key("staff", "worker_type") : "_vms_staff_worker_type";
+            $k_wt = function_exists("bvmgr_meta_key") ? (string) bvmgr_meta_key("staff", "worker_type") : "_vms_staff_worker_type";
             if ($k_wt === "") $k_wt = "_vms_staff_worker_type";
             $wt = sanitize_key((string) get_post_meta($id, $k_wt, true));
         }
@@ -144,10 +144,10 @@ function vms_render_tax_profile_admin_metabox($post)
     }
 
     $k = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 

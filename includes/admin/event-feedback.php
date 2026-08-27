@@ -8,11 +8,11 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_feedback_admin_register_page')) {
 	function vms_feedback_admin_register_page(): void
 	{
-		if (!function_exists('vms_register_admin_page')) {
+		if (!function_exists('bvmgr_register_admin_page')) {
 			return;
 		}
 
-		vms_register_admin_page(array(
+		bvmgr_register_admin_page(array(
 			'id' => 'event_feedback',
 			'slug' => 'vms-event-feedback',
 			'page_title' => __('Event Feedback', 'backstage-venue-manager'),
@@ -234,7 +234,7 @@ if (!function_exists('vms_feedback_recent_event_plans')) {
 	 */
 	function vms_feedback_recent_event_plans(int $limit = 75): array
 	{
-		$date_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'date') : '_vms_event_date';
+		$date_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
 		return get_posts(array(
 			'post_type' => 'vms_event_plan',
 			'post_status' => array('publish', 'draft', 'pending', 'future', 'private'),
@@ -851,8 +851,8 @@ if (!function_exists('vms_render_event_feedback_admin_page')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('Event Feedback', 'backstage-venue-manager'),
 					'subtitle' => __('Private one-stop post-event surveys for venue, bar, bathrooms, primary vendors, and secondary vendors.', 'backstage-venue-manager'),

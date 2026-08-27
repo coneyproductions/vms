@@ -44,11 +44,11 @@ function vms_event_plan_compact_label($plan_id): string {
 
     // Resolve plan status (meta-driven; stable for Schedule labeling).
     $status = '';
-    if (function_exists('vms_event_plan_get_status')) {
-        $status = (string) vms_event_plan_get_status($plan_id, 'schedule_admin');
+    if (function_exists('bvmgr_event_plan_get_status')) {
+        $status = (string) bvmgr_event_plan_get_status($plan_id, 'schedule_admin');
     }
     if ($status === '') {
-        $status = sanitize_key((string) get_post_meta($plan_id, vms_meta_key('event_plan', 'status'), true));
+        $status = sanitize_key((string) get_post_meta($plan_id, bvmgr_meta_key('event_plan', 'status'), true));
     }
     $status = sanitize_key((string) $status);
     if ($status === 'canceled') {
@@ -73,8 +73,8 @@ function vms_event_plan_compact_label($plan_id): string {
         } elseif ($status === 'confirmed') {
             $label = 'Confirmed';
         } else {
-            $label = function_exists('vms_event_plan_status_label')
-                ? (string) vms_event_plan_status_label($status)
+            $label = function_exists('bvmgr_event_plan_status_label')
+                ? (string) bvmgr_event_plan_status_label($status)
                 : ucwords(str_replace(array('_', '-'), ' ', $status));
         }
         $suffix = ' (' . $label . ')';

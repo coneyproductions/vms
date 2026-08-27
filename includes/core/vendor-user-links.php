@@ -466,9 +466,9 @@ if (!function_exists('vms_vendor_user_link_vendor_email_meta_keys')) {
     function vms_vendor_user_link_vendor_email_meta_keys(): array
     {
         $keys = array(
-            function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email',
-            function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'contact_email') : '_vms_contact_email',
-            function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'email') : '_vms_vendor_email',
+            function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email',
+            function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'contact_email') : '_vms_contact_email',
+            function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'email') : '_vms_vendor_email',
         );
 
         $out = array();

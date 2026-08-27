@@ -353,7 +353,7 @@ function vms_ticket_integrity_get_settings(): array
 	return array('days_ahead' => $GLOBALS['g10_days_ahead']);
 }
 
-function vms_ticketing_b_meta_key(string $name, string $fallback): string
+function bvmgr_ticketing_b_meta_key(string $name, string $fallback): string
 {
 	unset($name);
 	return $fallback;
@@ -376,7 +376,7 @@ function vms_ticket_integrity_event_timestamp(int $plan_id, int $tec_event_id): 
 	return 0;
 }
 
-function vms_tec_is_cancelled_event(int $tec_event_id): bool
+function bvmgr_tec_is_cancelled_event(int $tec_event_id): bool
 {
 	return !empty($GLOBALS['g10_cancelled'][$tec_event_id]);
 }

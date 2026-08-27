@@ -5,7 +5,7 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_event_plan_checkin_close_meta_key')) {
     function vms_event_plan_checkin_close_meta_key(): string
     {
-        $key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'checkin_close_at') : '';
+        $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'checkin_close_at') : '';
         return $key !== '' ? $key : '_checkin_close_at';
     }
 }

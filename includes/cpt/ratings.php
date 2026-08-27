@@ -333,7 +333,7 @@ function vms_rate_band_shortcode($atts) {
     }
 
     // Look up Event Plan for this TEC event.
-    $plan_id = vms_get_event_plan_for_tec_event($event_id);
+    $plan_id = bvmgr_get_event_plan_for_tec_event($event_id);
     if (!$plan_id) {
         return '<p>Nope. This doesn\'t look like a valid show in our system.</p>';
     }
@@ -476,7 +476,7 @@ function vms_handle_rating_submission($event_id, $band_id)
     }
 
     // 1) Make sure this event is managed by an Event Plan.
-    $plan_id = vms_get_event_plan_for_tec_event($event_id);
+    $plan_id = bvmgr_get_event_plan_for_tec_event($event_id);
     if (!$plan_id) {
         return array(
             'success' => false,

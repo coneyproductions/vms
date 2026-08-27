@@ -28,7 +28,7 @@ function vms_docs_admin_page_render() {
         wp_die('You do not have permission to view this page.');
     }
 
-    $index = vms_docs_index();
+    $index = bvmgr_docs_index();
 
     $active_module = sanitize_key(vms_docs_query_arg('mod'));
     if ($active_module === '') {

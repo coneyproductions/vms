@@ -55,8 +55,8 @@ function vms_vendor_app_cpt_slugs(): array
 if (!function_exists('vms_vendor_app_meta_key')) {
     function vms_vendor_app_meta_key(string $field): string
     {
-        $mapped = function_exists('vms_meta_key')
-            ? (string) vms_meta_key('vendor_application', $field)
+        $mapped = function_exists('bvmgr_meta_key')
+            ? (string) bvmgr_meta_key('vendor_application', $field)
             : '';
         if ($mapped !== '') {
             return $mapped;
@@ -2907,17 +2907,17 @@ function vms_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id
     }
 
     // 2) Canonical vendor meta hydration.
-    $k_primary_email = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
-    $k_vendor_email  = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'email') : '_vms_vendor_email';
-    $k_contact_email = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'contact_email') : '_vms_contact_email';
-    $k_website       = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'website') : '_vms_vendor_website';
-    $k_city          = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'city') : '_vms_city';
-    $k_state         = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'state') : '_vms_state';
-    $k_notes         = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'notes_internal') : '_vms_vendor_notes_internal';
+    $k_primary_email = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+    $k_vendor_email  = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'email') : '_vms_vendor_email';
+    $k_contact_email = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'contact_email') : '_vms_contact_email';
+    $k_website       = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'website') : '_vms_vendor_website';
+    $k_city          = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'city') : '_vms_city';
+    $k_state         = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'state') : '_vms_state';
+    $k_notes         = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'notes_internal') : '_vms_vendor_notes_internal';
 
     $contact_name = sanitize_text_field((string) get_post_meta($app_id, '_vms_app_contact_name', true));
     if ($contact_name !== '') {
-        $write_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'contact_name') : '_vms_contact_name', $contact_name);
+        $write_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'contact_name') : '_vms_contact_name', $contact_name);
     }
 
     $email = sanitize_email((string) get_post_meta($app_id, '_vms_app_email', true));
@@ -2929,9 +2929,9 @@ function vms_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id
 
     $phone = sanitize_text_field((string) get_post_meta($app_id, '_vms_app_phone', true));
     if ($phone !== '') {
-        $write_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone', $phone);
-        $write_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'phone') : '_vms_vendor_phone', $phone);
-        $write_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'contact_phone') : '_vms_contact_phone', $phone);
+        $write_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone', $phone);
+        $write_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'phone') : '_vms_vendor_phone', $phone);
+        $write_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'contact_phone') : '_vms_contact_phone', $phone);
     }
 
     $location_raw = sanitize_text_field((string) get_post_meta($app_id, '_vms_app_location', true));
@@ -3157,7 +3157,7 @@ if (!function_exists('vms_vendor_app_backfill_application_shape_once')) {
 
                 $contact_name = trim((string) get_post_meta($app_id, '_vms_app_contact_name', true));
                 if ($contact_name === '' && $vendor_id > 0) {
-                    $contact_name = trim((string) get_post_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'contact_name') : '_vms_contact_name', true));
+                    $contact_name = trim((string) get_post_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'contact_name') : '_vms_contact_name', true));
                     if ($contact_name !== '') {
                         update_post_meta($app_id, '_vms_app_contact_name', $contact_name);
                         $updates++;
@@ -3167,9 +3167,9 @@ if (!function_exists('vms_vendor_app_backfill_application_shape_once')) {
                 $phone = trim((string) get_post_meta($app_id, '_vms_app_phone', true));
                 if ($phone === '' && $vendor_id > 0) {
                     $phone_candidates = array(
-                        get_post_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone', true),
-                        get_post_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'contact_phone') : '_vms_contact_phone', true),
-                        get_post_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'phone') : '_vms_vendor_phone', true),
+                        get_post_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone', true),
+                        get_post_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'contact_phone') : '_vms_contact_phone', true),
+                        get_post_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'phone') : '_vms_vendor_phone', true),
                     );
                     foreach ($phone_candidates as $candidate) {
                         $candidate = trim((string) $candidate);
@@ -3185,7 +3185,7 @@ if (!function_exists('vms_vendor_app_backfill_application_shape_once')) {
                 if ($website === '') {
                     $website = vms_vendor_app_get_website_value($app_id);
                     if ($website === '' && $vendor_id > 0) {
-                        $website = esc_url_raw((string) get_post_meta($vendor_id, function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'website') : '_vms_vendor_website', true));
+                        $website = esc_url_raw((string) get_post_meta($vendor_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'website') : '_vms_vendor_website', true));
                         if ($website === '') {
                             $website = esc_url_raw((string) get_post_meta($vendor_id, '_vms_website_url', true));
                         }

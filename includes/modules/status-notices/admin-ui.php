@@ -219,8 +219,8 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 		$scope_labels = vms_status_notice_scope_labels();
 		$severity_labels = vms_status_notice_severity_labels();
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('Status Notices', 'backstage-venue-manager'),
 					'subtitle' => __('Targeted website and admin notices with device/browser-aware delivery.', 'backstage-venue-manager'),
@@ -533,8 +533,8 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 			echo '</form>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => $title,
 					'subtitle' => $subtitle,

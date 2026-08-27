@@ -212,7 +212,7 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
         $item_tec_event_id = absint(vms_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id')));
         $item_plan_id = absint(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id')));
         $snapshot_title = vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event'));
-        $snapshot_date = vms_ticket_revenue_normalize_ymd(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date')));
+        $snapshot_date = bvmgr_ticket_revenue_normalize_ymd(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date')));
 
         $resolved = array(
             'product_id' => !empty($candidate_product_ids) ? (int) $candidate_product_ids[0] : 0,
@@ -321,7 +321,7 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
                 $resolved['event_plan_title'] = (string) get_the_title($item_plan_id);
             }
 
-            $plan_date = vms_ticket_revenue_normalize_ymd((string) get_post_meta($item_plan_id, '_vms_event_date', true));
+            $plan_date = bvmgr_ticket_revenue_normalize_ymd((string) get_post_meta($item_plan_id, '_vms_event_date', true));
             if ($resolved['event_date'] === '' && $plan_date !== '') {
                 $resolved['event_date'] = $plan_date;
             }
@@ -516,20 +516,20 @@ if (!function_exists('vms_ticket_sales_resolver_build_row')) {
             'currency' => is_object($order) && method_exists($order, 'get_currency')
                 ? (string) $order->get_currency()
                 : '',
-            'line_subtotal' => vms_ticket_revenue_cents_to_decimal($gross_subtotal_cents),
+            'line_subtotal' => bvmgr_ticket_revenue_cents_to_decimal($gross_subtotal_cents),
             'line_subtotal_cents' => $gross_subtotal_cents,
-            'line_net_subtotal' => vms_ticket_revenue_cents_to_decimal($net_subtotal_cents),
+            'line_net_subtotal' => bvmgr_ticket_revenue_cents_to_decimal($net_subtotal_cents),
             'line_net_subtotal_cents' => $net_subtotal_cents,
-            'line_discount_total' => vms_ticket_revenue_cents_to_decimal($discount_cents),
+            'line_discount_total' => bvmgr_ticket_revenue_cents_to_decimal($discount_cents),
             'line_discount_total_cents' => $discount_cents,
             'line_discount_tax_total_cents' => $discount_tax_cents,
-            'line_tax_total' => vms_ticket_revenue_cents_to_decimal($line_tax_cents),
+            'line_tax_total' => bvmgr_ticket_revenue_cents_to_decimal($line_tax_cents),
             'line_tax_total_cents' => $line_tax_cents,
-            'line_total' => vms_ticket_revenue_cents_to_decimal($line_total_cents),
+            'line_total' => bvmgr_ticket_revenue_cents_to_decimal($line_total_cents),
             'line_total_cents' => $line_total_cents,
-            'line_refunded_total' => vms_ticket_revenue_cents_to_decimal($refunded_subtotal_cents),
+            'line_refunded_total' => bvmgr_ticket_revenue_cents_to_decimal($refunded_subtotal_cents),
             'line_refunded_total_cents' => $refunded_subtotal_cents,
-            'line_refunded_tax_total' => vms_ticket_revenue_cents_to_decimal($refunded_tax_cents),
+            'line_refunded_tax_total' => bvmgr_ticket_revenue_cents_to_decimal($refunded_tax_cents),
             'line_refunded_tax_total_cents' => $refunded_tax_cents,
             'is_refunded' => $is_refunded,
             'payment_method' => is_object($order) && method_exists($order, 'get_payment_method')

@@ -399,8 +399,8 @@ function vms_dashboard_build_bills_response(array $args): array
           $r = is_object($row) ? (array) $row : $row;
           $plan_status = isset($r['plan_status']) ? sanitize_key((string) $r['plan_status']) : '';
         }
-        if ($plan_status === '' && function_exists('vms_event_plan_get_status')) {
-          $plan_status = (string) vms_event_plan_get_status($plan_id, 'dashboard_bills');
+        if ($plan_status === '' && function_exists('bvmgr_event_plan_get_status')) {
+          $plan_status = (string) bvmgr_event_plan_get_status($plan_id, 'dashboard_bills');
           $plan_status = sanitize_key($plan_status);
         }
         if ($plan_status === 'canceled') $plan_status = 'cancelled';
@@ -518,8 +518,8 @@ function vms_dashboard_build_bills_response(array $args): array
         }
 
         $is_estimated = true;
-        $plan_status_label = function_exists('vms_event_plan_status_label')
-          ? (string) vms_event_plan_status_label((string) $plan_status)
+        $plan_status_label = function_exists('bvmgr_event_plan_status_label')
+          ? (string) bvmgr_event_plan_status_label((string) $plan_status)
           : ucwords(str_replace(array('_', '-'), ' ', (string) $plan_status));
 
         $items[] = [
@@ -1009,8 +1009,8 @@ function vms_dashboard_flatten_plans_by_date(
           continue;
         }
 
-        $status_key = function_exists('vms_event_plan_get_status')
-          ? (string) vms_event_plan_get_status($plan_id, 'dashboard')
+        $status_key = function_exists('bvmgr_event_plan_get_status')
+          ? (string) bvmgr_event_plan_get_status($plan_id, 'dashboard')
           : sanitize_key((string) ($it['status'] ?? ''));
         if ($status_key === 'canceled') {
           $status_key = 'cancelled';
@@ -1019,8 +1019,8 @@ function vms_dashboard_flatten_plans_by_date(
           $status_key = 'draft';
         }
 
-        $status_label = function_exists('vms_event_plan_status_label')
-          ? (string) vms_event_plan_status_label($status_key)
+        $status_label = function_exists('bvmgr_event_plan_status_label')
+          ? (string) bvmgr_event_plan_status_label($status_key)
           : ucwords(str_replace(array('_', '-'), ' ', $status_key));
 
         // Dashboard should display canonical status labels (Draft/Ready/Published/Cancelled).
@@ -1055,7 +1055,7 @@ function vms_dashboard_flatten_plans_by_date(
       $tax_bypass_active = false;
       $tax_bypass_until = '';
 
-      $k_band_vendor_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '';
+      $k_band_vendor_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '';
       if ($k_band_vendor_id === '') $k_band_vendor_id = '_vms_band_vendor_id';
 
       if ($plan_id > 0) {

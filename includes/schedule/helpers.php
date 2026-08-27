@@ -136,8 +136,8 @@ if (!function_exists('vms_get_venue_default_comp_for_date')) {
 
         // Use VMS timezone helper if available; fallback to WP timezone.
         $tz = null;
-        if (function_exists('vms_get_timezone')) {
-            $tz = vms_get_timezone(); // expected DateTimeZone
+        if (function_exists('bvmgr_get_timezone')) {
+            $tz = bvmgr_get_timezone(); // expected DateTimeZone
         }
         if (!$tz instanceof DateTimeZone) {
             $tz = wp_timezone();

@@ -1027,8 +1027,8 @@ if (!function_exists('vms_add_dispatch_render_admin_page')) {
 	function vms_add_dispatch_render_admin_page(): void
 	{
 		$help_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.add_dispatch.basics" data-vms-tour="add-dispatch.help">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-		if (function_exists('vms_render_help_button')) {
-			$help_button = vms_render_help_button(array(
+		if (function_exists('bvmgr_render_help_button')) {
+			$help_button = bvmgr_render_help_button(array(
 				'tour_id' => 'vms.add_dispatch.basics',
 				'anchor' => 'add-dispatch.help',
 				'label' => __('Start Guided Tour', 'backstage-venue-manager'),
@@ -1036,8 +1036,8 @@ if (!function_exists('vms_add_dispatch_render_admin_page')) {
 			));
 		}
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('Availability & Date Dispatch', 'backstage-venue-manager'),
 					'subtitle' => __('Universal vendor outreach lives here. Phase 1 supports one saved Event Plan at a time, with secure YES or NO responses and one-click assignment follow-up.', 'backstage-venue-manager'),

@@ -7,8 +7,8 @@ if (!function_exists('vms_event_plan_import_meta_key')) {
 	 */
 	function vms_event_plan_import_meta_key(string $field, string $fallback): string
 	{
-		if (function_exists('vms_meta_key')) {
-			$key = (string) vms_meta_key('event_plan', $field);
+		if (function_exists('bvmgr_meta_key')) {
+			$key = (string) bvmgr_meta_key('event_plan', $field);
 			if ($key !== '') {
 				return $key;
 			}
@@ -1086,8 +1086,8 @@ if (!function_exists('vms_event_plan_import_build_preview_from_csv')) {
 				$plan_id = (int) $plan_lookup[$event_key];
 			}
 			if ($plan_id > 0) {
-				$current_status = function_exists('vms_event_plan_get_status')
-					? (string) vms_event_plan_get_status($plan_id, 'event_list')
+				$current_status = function_exists('bvmgr_event_plan_get_status')
+					? (string) bvmgr_event_plan_get_status($plan_id, 'event_list')
 					: sanitize_key((string) get_post_meta($plan_id, vms_event_plan_import_meta_key('status', '_vms_event_plan_status'), true));
 			}
 
@@ -2227,8 +2227,8 @@ if (!function_exists('vms_event_plan_import_run_commit')) {
 			$is_update = ($plan_id > 0);
 			$current_status = '';
 			if ($is_update) {
-				$current_status = function_exists('vms_event_plan_get_status')
-					? (string) vms_event_plan_get_status($plan_id, 'event_list')
+				$current_status = function_exists('bvmgr_event_plan_get_status')
+					? (string) bvmgr_event_plan_get_status($plan_id, 'event_list')
 					: sanitize_key((string) get_post_meta($plan_id, vms_event_plan_import_meta_key('status', '_vms_event_plan_status'), true));
 			}
 

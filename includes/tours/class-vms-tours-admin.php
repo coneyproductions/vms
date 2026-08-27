@@ -96,8 +96,8 @@ if (!class_exists('BVMGR_Tours_Admin')) {
 				wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 			}
 
-			if (function_exists('vms_admin_ui_render_shell')) {
-				vms_admin_ui_render_shell(
+			if (function_exists('bvmgr_admin_ui_render_shell')) {
+				bvmgr_admin_ui_render_shell(
 					array(
 						'title' => __('Guided Tours', 'backstage-venue-manager'),
 						'subtitle' => __('Manage global tour defaults, reset your progress, and run tours by screen.', 'backstage-venue-manager'),

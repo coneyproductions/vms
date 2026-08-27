@@ -54,8 +54,8 @@ try {
     $assert(post_type_exists('tribe_events'), 'Expected The Events Calendar to be available.');
     $assert(class_exists('WooCommerce') && class_exists('WC_Product_Simple'), 'Expected WooCommerce to be available.');
 
-    $planStatusKey = function_exists('vms_meta_key')
-        ? (string) (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
+    $planStatusKey = function_exists('bvmgr_meta_key')
+        ? (string) (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
         : '_vms_event_plan_status';
     $planMetaKey = function_exists('vms_ticketing_v2_product_meta_key')
         ? (string) vms_ticketing_v2_product_meta_key('event_plan_id')
@@ -63,8 +63,8 @@ try {
     $roleMetaKey = function_exists('vms_ticketing_v2_product_meta_key')
         ? (string) vms_ticketing_v2_product_meta_key('product_role')
         : '_vms_product_role';
-    $tecMetaKey = function_exists('vms_ticketing_b_meta_key')
-        ? (string) vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
+    $tecMetaKey = function_exists('bvmgr_ticketing_b_meta_key')
+        ? (string) bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
         : '_vms_tec_event_id';
     $visibilityMetaKey = function_exists('vms_ticketing_v2_product_meta_key')
         ? (string) vms_ticketing_v2_product_meta_key('ticketing_visibility_mode')

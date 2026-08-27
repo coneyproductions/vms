@@ -13,8 +13,8 @@ if (!defined('ABSPATH')) exit;
 
 function vms_staff_worker_type_meta_key(): string
 {
-	if (function_exists('vms_meta_key')) {
-		$k = (string) vms_meta_key('staff', 'worker_type');
+	if (function_exists('bvmgr_meta_key')) {
+		$k = (string) bvmgr_meta_key('staff', 'worker_type');
 		if ($k !== '') return $k;
 	}
 	return '_vms_staff_worker_type';

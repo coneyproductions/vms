@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (function_exists('vms_register_module')) {
-	vms_register_module(array(
+if (function_exists('bvmgr_register_module')) {
+	bvmgr_register_module(array(
 		'slug' => 'email_followups',
 		'name' => 'Email Follow-Ups',
 		'version' => defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '0.2.24.584',

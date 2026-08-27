@@ -160,7 +160,7 @@ if (!function_exists('vms_vendor_booking_onboarding_update_store')) {
 if (!function_exists('vms_vendor_booking_onboarding_contact_name')) {
     function vms_vendor_booking_onboarding_contact_name(int $vendor_id): string
     {
-        $key = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'contact_name') : '_vms_contact_name';
+        $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'contact_name') : '_vms_contact_name';
         if ($key === '') {
             $key = '_vms_contact_name';
         }
@@ -237,8 +237,8 @@ if (!function_exists('vms_vendor_booking_onboarding_vendor_email')) {
 if (!function_exists('vms_vendor_booking_onboarding_vendor_type_label')) {
     function vms_vendor_booking_onboarding_vendor_type_label(int $vendor_id): string
     {
-        if (function_exists('vms_calendar_vendor_primary_type')) {
-            $type = (array) vms_calendar_vendor_primary_type($vendor_id);
+        if (function_exists('bvmgr_calendar_vendor_primary_type')) {
+            $type = (array) bvmgr_calendar_vendor_primary_type($vendor_id);
             $label = trim((string) ($type['label'] ?? ''));
             if ($label !== '') {
                 return $label;
@@ -366,7 +366,7 @@ if (!function_exists('vms_vendor_booking_onboarding_plan_targets')) {
             }
         }
 
-        $secondary_ids = get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids', true);
+        $secondary_ids = get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids', true);
         if (!is_array($secondary_ids)) {
             $secondary_ids = get_post_meta($plan_id, '_vms_secondary_vendor_ids', true);
         }
@@ -397,7 +397,7 @@ if (!function_exists('vms_vendor_booking_onboarding_video_attachment_id')) {
             $data = (array) vms_vendor_portal_get_headliner_promo_video_data($plan_id);
             return (int) ($data['attachment_id'] ?? 0);
         }
-        $key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'headliner_promo_video_attachment_id') : '_vms_headliner_promo_video_attachment_id';
+        $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'headliner_promo_video_attachment_id') : '_vms_headliner_promo_video_attachment_id';
         if ($key === '') {
             $key = '_vms_headliner_promo_video_attachment_id';
         }
@@ -416,7 +416,7 @@ if (!function_exists('vms_vendor_booking_onboarding_video_is_live')) {
         if ($attachment_id <= 0) {
             return false;
         }
-        $hidden_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'headliner_promo_video_hidden') : '_vms_headliner_promo_video_hidden';
+        $hidden_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'headliner_promo_video_hidden') : '_vms_headliner_promo_video_hidden';
         if ($hidden_key === '') {
             $hidden_key = '_vms_headliner_promo_video_hidden';
         }
@@ -539,8 +539,8 @@ if (!function_exists('vms_vendor_booking_onboarding_build_tokens')) {
         $start_time = trim((string) get_post_meta($plan_id, '_vms_start_time', true));
         $end_time = trim((string) get_post_meta($plan_id, '_vms_end_time', true));
         $event_time = vms_vendor_booking_onboarding_format_time($start_time, $end_time);
-        $tec_event_id = (int) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id', true);
-        $event_url = trim((string) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_url') : '_vms_tec_event_url', true));
+        $tec_event_id = (int) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id', true);
+        $event_url = trim((string) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_url') : '_vms_tec_event_url', true));
         if ($event_url === '' && $tec_event_id > 0) {
             $event_url = (string) get_permalink($tec_event_id);
         }
@@ -591,8 +591,8 @@ if (!function_exists('vms_vendor_booking_onboarding_build_tokens')) {
 if (!function_exists('vms_vendor_booking_onboarding_signature')) {
     function vms_vendor_booking_onboarding_signature(int $plan_id, int $vendor_id, array $assignment): string
     {
-        $status = function_exists('vms_event_plan_get_status')
-            ? sanitize_key((string) vms_event_plan_get_status($plan_id, 'dashboard_bills'))
+        $status = function_exists('bvmgr_event_plan_get_status')
+            ? sanitize_key((string) bvmgr_event_plan_get_status($plan_id, 'dashboard_bills'))
             : sanitize_key((string) get_post_meta($plan_id, '_vms_event_plan_status', true));
         $payload = array(
             'plan_id' => $plan_id,
@@ -603,7 +603,7 @@ if (!function_exists('vms_vendor_booking_onboarding_signature')) {
             'start_time' => (string) get_post_meta($plan_id, '_vms_start_time', true),
             'end_time' => (string) get_post_meta($plan_id, '_vms_end_time', true),
             'venue_id' => (int) get_post_meta($plan_id, '_vms_venue_id', true),
-            'tec_event_id' => (int) get_post_meta($plan_id, function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id', true),
+            'tec_event_id' => (int) get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id', true),
             'video_required' => !empty($assignment['is_headliner']),
         );
         return md5(wp_json_encode($payload));
@@ -741,8 +741,8 @@ if (!function_exists('vms_vendor_booking_onboarding_process_plan')) {
             return $results;
         }
 
-        $status = function_exists('vms_event_plan_get_status')
-            ? sanitize_key((string) vms_event_plan_get_status($plan_id, 'dashboard_bills'))
+        $status = function_exists('bvmgr_event_plan_get_status')
+            ? sanitize_key((string) bvmgr_event_plan_get_status($plan_id, 'dashboard_bills'))
             : sanitize_key((string) get_post_meta($plan_id, '_vms_event_plan_status', true));
         if ($status === 'canceled') {
             $status = 'cancelled';
@@ -921,8 +921,8 @@ if (!function_exists('vms_vendor_booking_onboarding_daily_runner')) {
                 continue;
             }
 
-            $status = function_exists('vms_event_plan_get_status')
-                ? sanitize_key((string) vms_event_plan_get_status($plan_id, 'dashboard_bills'))
+            $status = function_exists('bvmgr_event_plan_get_status')
+                ? sanitize_key((string) bvmgr_event_plan_get_status($plan_id, 'dashboard_bills'))
                 : sanitize_key((string) get_post_meta($plan_id, '_vms_event_plan_status', true));
             if (!vms_vendor_booking_onboarding_should_process_status($status, $settings)) {
                 continue;

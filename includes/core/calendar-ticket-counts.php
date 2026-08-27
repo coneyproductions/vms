@@ -8,7 +8,7 @@ if (!defined('BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK')) {
 if (!function_exists('vms_calendar_ticket_counts_meta_key')) {
 	function vms_calendar_ticket_counts_meta_key(): string
 	{
-		$key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tickets_sold_count') : '';
+		$key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tickets_sold_count') : '';
 		return $key !== '' ? $key : '_vms_tickets_sold_count';
 	}
 }
@@ -16,7 +16,7 @@ if (!function_exists('vms_calendar_ticket_counts_meta_key')) {
 if (!function_exists('vms_calendar_ticket_counts_tec_key')) {
 	function vms_calendar_ticket_counts_tec_key(): string
 	{
-		$key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '';
+		$key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '';
 		return $key !== '' ? $key : '_vms_tec_event_id';
 	}
 }
@@ -24,7 +24,7 @@ if (!function_exists('vms_calendar_ticket_counts_tec_key')) {
 if (!function_exists('vms_calendar_ticket_counts_date_key')) {
 	function vms_calendar_ticket_counts_date_key(): string
 	{
-		$key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '';
+		$key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '';
 		return $key !== '' ? $key : '_vms_event_date';
 	}
 }
@@ -117,8 +117,8 @@ if (!function_exists('vms_calendar_ticket_counts_set_plan_qty')) {
 			update_post_meta($plan_id, $meta_key, $qty);
 		}
 
-		if ($before !== $qty && function_exists('vms_calendar_feed_cache_bust')) {
-			vms_calendar_feed_cache_bust();
+		if ($before !== $qty && function_exists('bvmgr_calendar_feed_cache_bust')) {
+			bvmgr_calendar_feed_cache_bust();
 		}
 	}
 }
@@ -263,7 +263,7 @@ add_action('woocommerce_order_status_changed', 'vms_calendar_ticket_counts_order
 if (!function_exists('vms_calendar_ticket_counts_nightly_scan')) {
 	function vms_calendar_ticket_counts_nightly_scan(): void
 	{
-		$today = wp_date('Y-m-d', time(), function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone());
+		$today = wp_date('Y-m-d', time(), function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone());
 		$days = (int) apply_filters('vms_calendar_ticket_counts_scan_window_days', 60);
 		if ($days < 1) {
 			$days = 60;

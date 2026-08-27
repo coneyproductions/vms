@@ -148,12 +148,12 @@ if (!function_exists('vms_vendor_profiles_get_primary_vendor_for_tec_event')) {
             return 0;
         }
 
-        $plan_id = function_exists('vms_get_event_plan_for_tec_event') ? (int) vms_get_event_plan_for_tec_event($tec_event_id) : 0;
+        $plan_id = function_exists('bvmgr_get_event_plan_for_tec_event') ? (int) bvmgr_get_event_plan_for_tec_event($tec_event_id) : 0;
         if ($plan_id <= 0) {
             return 0;
         }
 
-        $band_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
+        $band_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
         return (int) get_post_meta($plan_id, $band_key, true);
     }
 }
@@ -167,7 +167,7 @@ if (!function_exists('vms_vendor_profiles_get_secondary_vendors_for_tec_event'))
             return array();
         }
 
-        $plan_id = function_exists('vms_get_event_plan_for_tec_event') ? (int) vms_get_event_plan_for_tec_event($tec_event_id) : 0;
+        $plan_id = function_exists('bvmgr_get_event_plan_for_tec_event') ? (int) bvmgr_get_event_plan_for_tec_event($tec_event_id) : 0;
         if ($plan_id <= 0) {
             return array();
         }
@@ -225,11 +225,11 @@ if (!function_exists('vms_vendor_profiles_get_event_plan_for_tec_event')) {
     function vms_vendor_profiles_get_event_plan_for_tec_event(int $tec_event_id): int
     {
         $tec_event_id = absint($tec_event_id);
-        if ($tec_event_id <= 0 || !function_exists('vms_get_event_plan_for_tec_event')) {
+        if ($tec_event_id <= 0 || !function_exists('bvmgr_get_event_plan_for_tec_event')) {
             return 0;
         }
 
-        return (int) vms_get_event_plan_for_tec_event($tec_event_id);
+        return (int) bvmgr_get_event_plan_for_tec_event($tec_event_id);
     }
 }
 
@@ -718,9 +718,9 @@ if (!function_exists('vms_vendor_profiles_find_next_upcoming_event')) {
             return array();
         }
 
-        $band_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
-        $date_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'date') ?: '_vms_event_date') : '_vms_event_date';
-        $tec_key  = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
+        $band_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
+        $date_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'date') ?: '_vms_event_date') : '_vms_event_date';
+        $tec_key  = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
 
         $today = vms_vendor_profiles_today_ymd();
 
@@ -773,7 +773,7 @@ if (!function_exists('vms_vendor_profiles_find_next_upcoming_event')) {
                     continue;
                 }
 
-                if (function_exists('vms_tec_is_cancelled_event') && vms_tec_is_cancelled_event($tec_event_id)) {
+                if (function_exists('bvmgr_tec_is_cancelled_event') && bvmgr_tec_is_cancelled_event($tec_event_id)) {
                     continue;
                 }
 
@@ -1120,8 +1120,8 @@ if (!function_exists('vms_vendor_profiles_render_event_teaser')) {
                 <?php endif; ?>
 
                 <?php
-                $promo_plan_id = $tec_event_id > 0 && function_exists('vms_get_event_plan_for_tec_event')
-                    ? (int) vms_get_event_plan_for_tec_event($tec_event_id)
+                $promo_plan_id = $tec_event_id > 0 && function_exists('bvmgr_get_event_plan_for_tec_event')
+                    ? (int) bvmgr_get_event_plan_for_tec_event($tec_event_id)
                     : 0;
                 $promo_markup = ($promo_plan_id > 0 && function_exists('vms_vendor_portal_render_headliner_promo_video_player'))
                     ? (string) vms_vendor_portal_render_headliner_promo_video_player($promo_plan_id, array(
@@ -1265,8 +1265,8 @@ if (!function_exists('vms_vendor_profiles_render_event_promo_video_section')) {
             return '';
         }
 
-        $promo_plan_id = function_exists('vms_get_event_plan_for_tec_event')
-            ? (int) vms_get_event_plan_for_tec_event($tec_event_id)
+        $promo_plan_id = function_exists('bvmgr_get_event_plan_for_tec_event')
+            ? (int) bvmgr_get_event_plan_for_tec_event($tec_event_id)
             : 0;
         if ($promo_plan_id <= 0 || !function_exists('vms_vendor_portal_render_headliner_promo_video_player')) {
             return '';

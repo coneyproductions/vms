@@ -286,7 +286,7 @@ if (!function_exists('vms_admin_menu_left_menu_visible_slugs')) {
 	}
 }
 
-if (!function_exists('vms_register_admin_page')) {
+if (!function_exists('bvmgr_register_admin_page')) {
 	/**
 	 * Register a VMS admin page for add-ons and future core pages.
 	 *
@@ -294,7 +294,7 @@ if (!function_exists('vms_register_admin_page')) {
 	 *
 	 * @param array<string,mixed> $args
 	 */
-	function vms_register_admin_page(array $args): bool
+	function bvmgr_register_admin_page(array $args): bool
 	{
 		$slug = isset($args['slug']) ? sanitize_key((string) $args['slug']) : '';
 		if ($slug === '' && isset($args['id'])) {
@@ -380,7 +380,7 @@ if (!function_exists('vms_admin_menu_boot_registry')) {
 			$GLOBALS['bvmgr_admin_menu_registry'] = array();
 		}
 
-		vms_register_admin_page(array(
+		bvmgr_register_admin_page(array(
 			'id' => 'admin_pages',
 			'slug' => 'vms-admin-pages',
 			'page_title' => __('All Backstage Venue Manager Pages', 'backstage-venue-manager'),
@@ -477,7 +477,7 @@ if (!function_exists('vms_admin_menu_register_core_page_metadata')) {
 				continue;
 			}
 
-			vms_register_admin_page(array(
+			bvmgr_register_admin_page(array(
 				'id' => $slug,
 				'slug' => $slug,
 				'page_title' => $label,
@@ -797,8 +797,8 @@ if (!function_exists('vms_admin_menu_render_page_directory')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('All Backstage Venue Manager Pages', 'backstage-venue-manager'),
 					'subtitle' => __('Discoverable safety net for Backstage Venue Manager core pages, module pages, and add-on admin screens.', 'backstage-venue-manager'),

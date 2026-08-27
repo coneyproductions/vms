@@ -451,8 +451,8 @@ if (!function_exists('vms_event_plan_import_render_admin_page')) {
 			$render_main_content();
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('Import Event Plans (CSV)', 'backstage-venue-manager'),
 					'subtitle' => __('Preview then commit VMS-only Event Plan updates.', 'backstage-venue-manager'),

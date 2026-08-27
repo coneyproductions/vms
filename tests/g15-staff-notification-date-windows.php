@@ -250,7 +250,7 @@ function vms_tasks_log_task_action(int $instance_id, string $action, mixed $acto
     $GLOBALS['g15_logs'][] = array($instance_id, $action, $actor_id, $details);
 }
 
-function vms_notify_user(int $user_id, string $event_key, string $template_key, array $vars): void
+function bvmgr_notify_user(int $user_id, string $event_key, string $template_key, array $vars): void
 {
     $GLOBALS['g15_notifications'][] = array($user_id, $event_key, $template_key, $vars);
 }

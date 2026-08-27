@@ -232,11 +232,11 @@ if (!function_exists('vms_notify_channel_provider_key')) {
 	}
 }
 
-if (!function_exists('vms_notify_get_providers')) {
+if (!function_exists('bvmgr_notify_get_providers')) {
 	/**
 	 * @return array<string,callable>
 	 */
-	function vms_notify_get_providers(): array
+	function bvmgr_notify_get_providers(): array
 	{
 		$providers = array(
 			'core_email' => 'vms_notify_provider_core_email_send',
@@ -546,13 +546,13 @@ if (!function_exists('vms_notify_get_recipient_for_channel')) {
 	}
 }
 
-if (!function_exists('vms_notify_user')) {
+if (!function_exists('bvmgr_notify_user')) {
 	/**
 	 * @param array<string,mixed> $vars
 	 * @param string[] $channels
 	 * @return array<string,mixed>
 	 */
-	function vms_notify_user(int $user_id, string $event_key, string $template_key, array $vars, array $channels = array()): array
+	function bvmgr_notify_user(int $user_id, string $event_key, string $template_key, array $vars, array $channels = array()): array
 	{
 		$user_id = absint($user_id);
 		$event_key = sanitize_key($event_key);
@@ -629,7 +629,7 @@ if (!function_exists('vms_notify_user')) {
 			);
 		}
 
-		$providers = vms_notify_get_providers();
+		$providers = bvmgr_notify_get_providers();
 		$results = array();
 		$sent = 0;
 		$failed = 0;

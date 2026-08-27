@@ -375,7 +375,7 @@ function vms_staffing_now_mysql_utc(): string
 	return '2026-08-02 12:00:00';
 }
 
-function vms_staffing_get_event_slots(int $event_plan_id, bool $include_canceled = false): array
+function bvmgr_staffing_get_event_slots(int $event_plan_id, bool $include_canceled = false): array
 {
 	unset($event_plan_id, $include_canceled);
 	return $GLOBALS['vms_test_event_slots_after_save'] ?? array();
@@ -408,7 +408,7 @@ function vms_staffing_event_plan_datetime(int $event_plan_id): array
 	return $GLOBALS['vms_test_event_datetimes'][$event_plan_id] ?? array();
 }
 
-function vms_staffing_resolve_slot_window(int $event_plan_id, array $slot): array
+function bvmgr_staffing_resolve_slot_window(int $event_plan_id, array $slot): array
 {
 	unset($event_plan_id);
 	$slot_id = isset($slot['slot_id']) ? absint($slot['slot_id']) : 0;
@@ -421,7 +421,7 @@ function vms_staffing_resolve_slot_window(int $event_plan_id, array $slot): arra
 	);
 }
 
-function vms_event_plan_get_status(int $event_plan_id, string $context = ''): string
+function bvmgr_event_plan_get_status(int $event_plan_id, string $context = ''): string
 {
 	unset($context);
 	return $GLOBALS['vms_test_event_status'][$event_plan_id] ?? 'draft';

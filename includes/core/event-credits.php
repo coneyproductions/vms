@@ -194,8 +194,8 @@ if (!function_exists('vms_event_credits_get_latest_candidate_scan')) {
 			return $scan;
 		}
 
-		$summary_key = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary')
+		$summary_key = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary')
 			: '_vms_cancel_job_summary';
 		$summary = get_post_meta($event_plan_id, $summary_key, true);
 		if (!is_array($summary) || empty($summary['steps']) || !is_array($summary['steps'])) {
@@ -234,8 +234,8 @@ if (!function_exists('vms_event_credits_discover_candidates')) {
 			return array('status' => 'blocked', 'message' => 'cancellation_engine_unavailable', 'data' => array());
 		}
 
-		$summary_key = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary')
+		$summary_key = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary')
 			: '_vms_cancel_job_summary';
 		$summary = get_post_meta($event_plan_id, $summary_key, true);
 		if (!is_array($summary)) {
@@ -443,7 +443,7 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 		$currency = method_exists($order, 'get_currency') ? sanitize_text_field((string) $order->get_currency()) : '';
 		$order_number = method_exists($order, 'get_order_number') ? sanitize_text_field((string) $order->get_order_number()) : (string) $order_id;
 		$expires_at_gmt = !empty($args['expires_at_gmt']) ? sanitize_text_field((string) $args['expires_at_gmt']) : vms_event_credit_default_expiration_gmt();
-		$tec_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
+		$tec_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
 		$tec_event_id = absint(get_post_meta($event_plan_id, $tec_key, true));
 
 		/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
@@ -588,7 +588,7 @@ if (!function_exists('vms_event_credits_render_event_plan_panel')) {
 		if ($event_plan_id <= 0) {
 			return;
 		}
-		$status_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
+		$status_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
 		if ($plan_status === '') {
 			$plan_status = sanitize_key((string) get_post_meta($event_plan_id, $status_key, true));
 		}
@@ -835,7 +835,7 @@ if (!function_exists('vms_event_credit_product_is_eligible')) {
 		}
 
 		if ($product_plan_id > 0) {
-			$status_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
+			$status_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
 			$event_status = sanitize_key((string) get_post_meta($product_plan_id, $status_key, true));
 			if ($event_status === 'cancelled') {
 				return false;

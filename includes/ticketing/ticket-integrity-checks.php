@@ -454,7 +454,7 @@ function vms_ticket_integrity_build_context(int $plan_id): array
 		'sync_map' => $sync_map,
 		'mode' => $mode,
 		'ticketing_enabled' => $ticketing_enabled,
-		'cancelled' => ($tec_event_id > 0 && function_exists('vms_tec_is_cancelled_event')) ? (bool) vms_tec_is_cancelled_event($tec_event_id) : false,
+		'cancelled' => ($tec_event_id > 0 && function_exists('bvmgr_tec_is_cancelled_event')) ? (bool) bvmgr_tec_is_cancelled_event($tec_event_id) : false,
 		'attached_product_ids' => $attached_product_ids,
 		'mapped_ticket_product_ids' => array_values(array_unique($mapped_ticket_ids)),
 		'mapped_entitlement_product_ids' => array_values(array_unique($mapped_entitlement_ids)),

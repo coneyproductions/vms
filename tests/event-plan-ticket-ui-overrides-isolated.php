@@ -233,8 +233,8 @@ try {
     $tecMetaKey = function_exists('vms_ticketing_meta_key')
         ? (string) vms_ticketing_meta_key('tec_event_id', '_vms_tec_event_id')
         : '_vms_tec_event_id';
-    $suppressMetaKey = function_exists('vms_meta_key')
-        ? (string) (vms_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
+    $suppressMetaKey = function_exists('bvmgr_meta_key')
+        ? (string) (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
         : '_vms_calendar_unpublished_suppress';
     $legacyTicketKeys = function_exists('vms_event_plan_legacy_ticket_meta_keys')
         ? (array) vms_event_plan_legacy_ticket_meta_keys()

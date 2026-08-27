@@ -162,7 +162,7 @@ function add_post_meta(int $post_id, string $key, $value, bool $unique = false):
 	return count($GLOBALS['event_plan_adds']);
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	$keys = array(

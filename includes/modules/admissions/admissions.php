@@ -15,8 +15,8 @@ require_once __DIR__ . '/pass-claims.php';
 if (!function_exists('vms_admission_module_boot')) {
 	function vms_admission_module_boot(): void
 	{
-		if (function_exists('vms_register_module')) {
-			vms_register_module(array(
+		if (function_exists('bvmgr_register_module')) {
+			bvmgr_register_module(array(
 				'slug' => 'admissions',
 				'name' => 'Guest List / Comp Admission',
 				'version' => '1.0.0',

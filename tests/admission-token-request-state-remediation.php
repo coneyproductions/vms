@@ -191,7 +191,7 @@ function get_post_meta(int $post_id, string $key, bool $single = true)
 	return '';
 }
 
-function vms_meta_key(string $group, string $key): string
+function bvmgr_meta_key(string $group, string $key): string
 {
 	return '_vms_event_plan_status';
 }

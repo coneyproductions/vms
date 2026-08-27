@@ -42,9 +42,9 @@ function vms_admin_vendor_tax_columns_render($col, $post_id)
 {
 	if (get_post_type($post_id) !== BVMGR_CPT_VENDOR) return;
 
-	$k_done     = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_provider = vms_meta_key('vendor', 'w9_provider');
-	$k_upload   = vms_meta_key('vendor', 'w9_upload_id');
+	$k_done     = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_provider = bvmgr_meta_key('vendor', 'w9_provider');
+	$k_upload   = bvmgr_meta_key('vendor', 'w9_upload_id');
 
 	if ($col === 'vms_tax_provider') {
 		$provider = (string) get_post_meta($post_id, $k_provider, true);

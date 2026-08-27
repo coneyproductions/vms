@@ -54,7 +54,7 @@ function absint($value): int
 	return abs((int) $value);
 }
 
-function vms_meta_key(string $scope, string $name): string
+function bvmgr_meta_key(string $scope, string $name): string
 {
 	$GLOBALS['vms_schema_meta_key_calls'][] = array($scope, $name);
 	if ($scope === 'event_plan' && $name === 'checkin_close_at') {
@@ -166,7 +166,7 @@ require $schema_path;
 require $meta_registry_path;
 require $checkin_path;
 
-$schema = vms_vendor_schema();
+$schema = bvmgr_vendor_schema();
 vms_schema_same(31, count($schema), 'Vendor schema should retain all 31 canonical field descriptors.');
 vms_schema_same(
 	array('display_name', 'primary_email', 'primary_phone', 'email', 'phone', 'website', 'vendor_type'),

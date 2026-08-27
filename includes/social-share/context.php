@@ -4,8 +4,8 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_social_event_meta_key')) {
 	function vms_social_event_meta_key(string $field, string $fallback): string
 	{
-		if (function_exists('vms_meta_key')) {
-			$key = (string) vms_meta_key('event_plan', $field);
+		if (function_exists('bvmgr_meta_key')) {
+			$key = (string) bvmgr_meta_key('event_plan', $field);
 			if ($key !== '') {
 				return $key;
 			}

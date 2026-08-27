@@ -16,8 +16,8 @@ if (is_admin()) {
 if (!function_exists('vms_staff_tasks_module_boot')) {
 	function vms_staff_tasks_module_boot(): void
 	{
-		if (function_exists('vms_register_module')) {
-			vms_register_module(array(
+		if (function_exists('bvmgr_register_module')) {
+			bvmgr_register_module(array(
 				'slug' => 'staff_tasks',
 				'name' => 'Staff Tasks',
 				'version' => '1.2.0',

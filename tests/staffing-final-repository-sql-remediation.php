@@ -409,7 +409,7 @@ function wp_timezone(): DateTimeZone
 	return new DateTimeZone('UTC');
 }
 
-function vms_meta_key(string $scope, string $key): string
+function bvmgr_meta_key(string $scope, string $key): string
 {
 	return $GLOBALS['vms_test_meta_keys'][$scope . ':' . $key] ?? '';
 }

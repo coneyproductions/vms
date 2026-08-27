@@ -78,8 +78,8 @@ if (!function_exists('vms_tasks_maybe_notify_user')) {
 			return;
 		}
 
-		if (function_exists('vms_notify_user')) {
-			vms_notify_user($user_id, $event_key, $template_key, $vars);
+		if (function_exists('bvmgr_notify_user')) {
+			bvmgr_notify_user($user_id, $event_key, $template_key, $vars);
 			return;
 		}
 

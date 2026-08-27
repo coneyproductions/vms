@@ -31,10 +31,10 @@ function vms_tax_bypass_supported_post_types(): array
 if (!function_exists('vms_vendor_tax_bypass_meta_key')) {
 function vms_vendor_tax_bypass_meta_key(string $field, string $fallback): string
 {
-    if (!function_exists('vms_meta_key')) {
+    if (!function_exists('bvmgr_meta_key')) {
         return $fallback;
     }
-    $mapped = (string) vms_meta_key('vendor', $field);
+    $mapped = (string) bvmgr_meta_key('vendor', $field);
     return $mapped !== '' ? $mapped : $fallback;
 }
 }

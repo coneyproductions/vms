@@ -47,11 +47,11 @@ if (!function_exists('vms_tours_sanitize_anchor_token')) {
 	}
 }
 
-if (!function_exists('vms_render_help_button')) {
+if (!function_exists('bvmgr_render_help_button')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_render_help_button(array $args = array()): string
+	function bvmgr_render_help_button(array $args = array()): string
 	{
 		$tour_id = isset($args['tour_id']) ? (string) $args['tour_id'] : '';
 		$tour_id = strtolower(trim($tour_id));

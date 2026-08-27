@@ -51,11 +51,11 @@ if (!function_exists('vms_staff_portal_tax_status')) {
         $staff_id = absint($staff_id);
         $provider = vms_staff_portal_tax_provider();
 
-        $k_done = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'tax_profile_completed_at') : '_vms_tax_profile_completed_at';
-        $k_attest = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_attested_at') : '_vms_w9_external_vendor_attested_at';
-        $k_prov = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_provider') : '_vms_w9_offsite_provider';
-        $k_confirmed_at = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'tax_admin_confirmed_at') : '_vms_tax_admin_confirmed_at';
-        $k_confirmed_by = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'tax_admin_confirmed_by') : '_vms_tax_admin_confirmed_by';
+        $k_done = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'tax_profile_completed_at') : '_vms_tax_profile_completed_at';
+        $k_attest = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_attested_at') : '_vms_w9_external_vendor_attested_at';
+        $k_prov = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_provider') : '_vms_w9_offsite_provider';
+        $k_confirmed_at = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'tax_admin_confirmed_at') : '_vms_tax_admin_confirmed_at';
+        $k_confirmed_by = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'tax_admin_confirmed_by') : '_vms_tax_admin_confirmed_by';
 
         $done_at = (int) get_post_meta($staff_id, $k_done, true);
         $attested_at = (int) get_post_meta($staff_id, $k_attest, true);
@@ -171,8 +171,8 @@ if (!function_exists('vms_staff_portal_safe_html')) {
 if (!function_exists('vms_staff_portal_notice_html')) {
     function vms_staff_portal_notice_html(string $type, string $message): string
     {
-        if (function_exists('vms_portal_notice')) {
-            return vms_staff_portal_safe_html(vms_portal_notice($type, $message));
+        if (function_exists('bvmgr_portal_notice')) {
+            return vms_staff_portal_safe_html(bvmgr_portal_notice($type, $message));
         }
 
         return '<p>' . esc_html($message) . '</p>';
@@ -397,11 +397,11 @@ if (!function_exists('vms_staff_portal_plan_event_icon')) {
         $fallback = trim((string) ($icon_map['talent'] ?? ''));
         $icon = $fallback;
 
-        if ($plan_id > 0 && function_exists('vms_calendar_plan_vendor_ids')) {
-            $vendor_ids = (array) vms_calendar_plan_vendor_ids($plan_id);
+        if ($plan_id > 0 && function_exists('bvmgr_calendar_plan_vendor_ids')) {
+            $vendor_ids = (array) bvmgr_calendar_plan_vendor_ids($plan_id);
             $primary_vendor_id = absint($vendor_ids['band_id'] ?? 0);
-            if ($primary_vendor_id > 0 && function_exists('vms_calendar_vendor_primary_type')) {
-                $primary_type = (array) vms_calendar_vendor_primary_type($primary_vendor_id);
+            if ($primary_vendor_id > 0 && function_exists('bvmgr_calendar_vendor_primary_type')) {
+                $primary_type = (array) bvmgr_calendar_vendor_primary_type($primary_vendor_id);
                 $primary_slug = sanitize_key((string) ($primary_type['slug'] ?? 'talent'));
                 if ($primary_slug !== '' && !empty($icon_map[$primary_slug])) {
                     $icon = trim((string) $icon_map[$primary_slug]);
@@ -423,7 +423,7 @@ if (!function_exists('vms_staff_portal_plan_event_icon')) {
 if (!function_exists('vms_staff_portal_calendar_event_map')) {
     function vms_staff_portal_calendar_event_map(array $assignment_rows): array
     {
-        if (empty($assignment_rows) || !function_exists('vms_get_calendar_events')) {
+        if (empty($assignment_rows) || !function_exists('bvmgr_get_calendar_events')) {
             return array();
         }
 
@@ -440,7 +440,7 @@ if (!function_exists('vms_staff_portal_calendar_event_map')) {
         }
 
         sort($dates);
-        $events = (array) vms_get_calendar_events(array(
+        $events = (array) bvmgr_get_calendar_events(array(
             'context' => 'admin',
             'start_date' => (string) reset($dates),
             'end_date' => (string) end($dates),
@@ -499,8 +499,8 @@ if (!function_exists('vms_staff_portal_assignment_event_payload')) {
 
                 if ($image_url === '') {
                     $img_id = get_post_thumbnail_id($plan_id);
-                    if (!$img_id && function_exists('vms_calendar_plan_vendor_ids')) {
-                        $vendor_ids = (array) vms_calendar_plan_vendor_ids($plan_id);
+                    if (!$img_id && function_exists('bvmgr_calendar_plan_vendor_ids')) {
+                        $vendor_ids = (array) bvmgr_calendar_plan_vendor_ids($plan_id);
                         $band_id = absint($vendor_ids['band_id'] ?? 0);
                         if ($band_id > 0) {
                             $img_id = get_post_thumbnail_id($band_id);
@@ -513,7 +513,7 @@ if (!function_exists('vms_staff_portal_assignment_event_payload')) {
             }
 
             if ($venue_name === '') {
-                $venue_key = function_exists('vms_meta_key') ? (string) (vms_meta_key('event_plan', 'venue_id') ?: '_vms_venue_id') : '_vms_venue_id';
+                $venue_key = function_exists('bvmgr_meta_key') ? (string) (bvmgr_meta_key('event_plan', 'venue_id') ?: '_vms_venue_id') : '_vms_venue_id';
                 $venue_id = absint(get_post_meta($plan_id, $venue_key, true));
                 if ($venue_id > 0) {
                     $venue_name = trim((string) get_the_title($venue_id));
@@ -521,8 +521,8 @@ if (!function_exists('vms_staff_portal_assignment_event_payload')) {
             }
 
             if ($view_url === '') {
-                $tec_event_url_key = function_exists('vms_meta_key') ? (string) (vms_meta_key('event_plan', 'tec_event_url') ?: '_vms_tec_event_url') : '_vms_tec_event_url';
-                $tec_event_id_key = function_exists('vms_meta_key') ? (string) (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
+                $tec_event_url_key = function_exists('bvmgr_meta_key') ? (string) (bvmgr_meta_key('event_plan', 'tec_event_url') ?: '_vms_tec_event_url') : '_vms_tec_event_url';
+                $tec_event_id_key = function_exists('bvmgr_meta_key') ? (string) (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
                 $view_url = trim((string) get_post_meta($plan_id, $tec_event_url_key, true));
                 if ($view_url === '') {
                     $tec_event_id = absint(get_post_meta($plan_id, $tec_event_id_key, true));
@@ -620,7 +620,7 @@ if (!function_exists('vms_staff_portal_get_event_ticket_qty')) {
 
         if ($qty === null) {
             $candidate_keys = array(
-                function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tickets_sold_count') : '',
+                function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tickets_sold_count') : '',
                 '_vms_tickets_sold_count',
                 'vms_tickets_sold_count',
             );
@@ -657,8 +657,8 @@ if (!function_exists('vms_staff_portal_get_event_tech_docs')) {
         }
 
         $vendor_ids = array();
-        if (function_exists('vms_calendar_plan_vendor_ids')) {
-            $bundle = (array) vms_calendar_plan_vendor_ids($plan_id);
+        if (function_exists('bvmgr_calendar_plan_vendor_ids')) {
+            $bundle = (array) bvmgr_calendar_plan_vendor_ids($plan_id);
             $vendor_ids[] = absint($bundle['band_id'] ?? 0);
             foreach ((array) ($bundle['secondary_ids'] ?? array()) as $vendor_id) {
                 $vendor_ids[] = absint($vendor_id);
@@ -1050,8 +1050,8 @@ if (!function_exists('vms_staff_portal_render_assigned_event_cards')) {
                     (int) $ticket_qty
                 );
             $event_status = sanitize_key((string) ($group['event_status'] ?? ($primary_assignment['event_status'] ?? '')));
-            $event_status_label = function_exists('vms_event_plan_status_label')
-                ? (string) vms_event_plan_status_label($event_status)
+            $event_status_label = function_exists('bvmgr_event_plan_status_label')
+                ? (string) bvmgr_event_plan_status_label($event_status)
                 : ucfirst($event_status);
 
             echo '<details class="vms-staff-shift-card">';
@@ -1247,8 +1247,8 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
 
             if (!isset($plan_cache[$plan_id])) {
                 $event_date = (string) get_post_meta($plan_id, '_vms_event_date', true);
-                $status = function_exists('vms_event_plan_get_status')
-                    ? (string) vms_event_plan_get_status($plan_id, 'dashboard')
+                $status = function_exists('bvmgr_event_plan_get_status')
+                    ? (string) bvmgr_event_plan_get_status($plan_id, 'dashboard')
                     : 'draft';
                 $plan_cache[$plan_id] = array(
                     'event_date' => $event_date,
@@ -1270,8 +1270,8 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
                 continue;
             }
 
-            $window = function_exists('vms_staffing_resolve_slot_window')
-                ? (array) vms_staffing_resolve_slot_window($plan_id, $row)
+            $window = function_exists('bvmgr_staffing_resolve_slot_window')
+                ? (array) bvmgr_staffing_resolve_slot_window($plan_id, $row)
                 : array();
 
             $start_ts = isset($row['shift_start_ts']) && $row['shift_start_ts'] !== null ? (int) $row['shift_start_ts'] : 0;
@@ -1321,8 +1321,8 @@ if (!function_exists('vms_staff_portal_get_assignment_rows')) {
                 'assignment_status' => $status_key,
                 'assignment_status_label' => $status_label,
                 'event_status' => (string) ($plan['status'] ?? ''),
-                'event_status_label' => function_exists('vms_event_plan_status_label')
-                    ? (string) vms_event_plan_status_label((string) ($plan['status'] ?? ''))
+                'event_status_label' => function_exists('bvmgr_event_plan_status_label')
+                    ? (string) bvmgr_event_plan_status_label((string) ($plan['status'] ?? ''))
                     : (string) ($plan['status'] ?? ''),
                 'role_id' => $role_id,
                 'role_label' => $role_label,
@@ -2081,9 +2081,9 @@ function vms_staff_portal_render_tax_profile($staff_id)
     $provider = vms_staff_portal_tax_provider();
     $provider_label = vms_staff_portal_provider_label($provider);
 
-    $k_done = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'tax_profile_completed_at') : '_vms_tax_profile_completed_at';
-    $k_attest = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_attested_at') : '_vms_w9_external_vendor_attested_at';
-    $k_prov = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_provider') : '_vms_w9_offsite_provider';
+    $k_done = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'tax_profile_completed_at') : '_vms_tax_profile_completed_at';
+    $k_attest = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_attested_at') : '_vms_w9_external_vendor_attested_at';
+    $k_prov = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_provider') : '_vms_w9_offsite_provider';
     $k_upload_kind = function_exists('vms_private_w9_storage_kind_meta_key') ? vms_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
 
     if (vms_staff_portal_is_exact_post_request() && isset($_POST['vms_staff_tax_save'])) {

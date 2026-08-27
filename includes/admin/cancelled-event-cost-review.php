@@ -5,8 +5,8 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_cancelled_cost_review_is_cancelled')) {
     function vms_cancelled_cost_review_is_cancelled(int $event_plan_id): bool
     {
-        $status = function_exists('vms_event_plan_get_status')
-            ? (string) vms_event_plan_get_status($event_plan_id, 'dashboard')
+        $status = function_exists('bvmgr_event_plan_get_status')
+            ? (string) bvmgr_event_plan_get_status($event_plan_id, 'dashboard')
             : (string) get_post_meta($event_plan_id, '_vms_event_plan_status', true);
         $status = sanitize_key($status);
         if ($status === 'canceled') {

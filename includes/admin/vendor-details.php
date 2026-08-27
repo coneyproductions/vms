@@ -143,10 +143,10 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
         return vms_request_read_text_field($_POST, (string) $key);
     };
     $vk = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 
@@ -500,10 +500,10 @@ function vms_render_vendor_defaults_metabox($post)
 {
     wp_nonce_field('vms_save_vendor_defaults', 'vms_vendor_defaults_nonce');
     $vk = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 

@@ -321,7 +321,7 @@ if (!function_exists('vms_event_details_context')) {
             return array();
         }
 
-        $plan_id = function_exists('vms_get_event_plan_for_tec_event') ? (int) vms_get_event_plan_for_tec_event($event_id) : 0;
+        $plan_id = function_exists('bvmgr_get_event_plan_for_tec_event') ? (int) bvmgr_get_event_plan_for_tec_event($event_id) : 0;
         $start = vms_event_details_event_datetime($event_id, 'start', $plan_id);
         $end = vms_event_details_event_datetime($event_id, 'end', $plan_id);
         if (!$end && $start instanceof DateTimeInterface) {
@@ -332,7 +332,7 @@ if (!function_exists('vms_event_details_context')) {
         $ticket = vms_event_details_ticket_context($event_id, $plan_id);
         $event_url = (string) get_permalink($event_id);
         $title = vms_event_details_normalize_schema_name((string) get_the_title($event_id));
-        $status = function_exists('vms_tec_is_cancelled_event') && vms_tec_is_cancelled_event($event_id) ? 'cancelled' : 'scheduled';
+        $status = function_exists('bvmgr_tec_is_cancelled_event') && bvmgr_tec_is_cancelled_event($event_id) ? 'cancelled' : 'scheduled';
 
         $date_label = '';
         $time_label = '';
@@ -411,8 +411,8 @@ if (!function_exists('vms_event_details_event_datetime')) {
         $timezone = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone((string) get_option('timezone_string', 'UTC'));
 
         $meta_keys = $which === 'start'
-            ? array('_EventStartDate', function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'start_datetime') : '_vms_event_plan_start_datetime')
-            : array('_EventEndDate', function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'end_datetime') : '_vms_event_plan_end_datetime');
+            ? array('_EventStartDate', function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'start_datetime') : '_vms_event_plan_start_datetime')
+            : array('_EventEndDate', function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'end_datetime') : '_vms_event_plan_end_datetime');
 
         foreach ($meta_keys as $key) {
             $key = trim((string) $key);
@@ -473,7 +473,7 @@ if (!function_exists('vms_event_details_venue_context')) {
         }
 
         if (($venue['name'] === '' || $venue['address'] === '') && $plan_id > 0) {
-            $venue_id_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'venue_id') ?: '_vms_venue_id') : '_vms_venue_id';
+            $venue_id_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'venue_id') ?: '_vms_venue_id') : '_vms_venue_id';
             $venue_id = absint(get_post_meta($plan_id, $venue_id_key, true));
             if ($venue_id > 0) {
                 if ($venue['name'] === '') {
@@ -490,7 +490,7 @@ if (!function_exists('vms_event_details_venue_context')) {
                     if ($venue[$field] !== '') {
                         continue;
                     }
-                    $key = function_exists('vms_meta_key') ? (vms_meta_key('venue', $meta_field) ?: '') : '';
+                    $key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('venue', $meta_field) ?: '') : '';
                     if ($key === '') {
                         $fallback = array(
                             'address' => '_vms_address',
@@ -668,7 +668,7 @@ if (!function_exists('vms_event_details_parse_schema_price')) {
 if (!function_exists('vms_event_details_ticket_context')) {
     function vms_event_details_ticket_context(int $event_id, int $plan_id = 0): array
     {
-        if (function_exists('vms_tec_is_cancelled_event') && vms_tec_is_cancelled_event($event_id)) {
+        if (function_exists('bvmgr_tec_is_cancelled_event') && bvmgr_tec_is_cancelled_event($event_id)) {
             return array('label' => __('Ticket sales are closed for this cancelled event.', 'backstage-venue-manager'), 'min_price' => null, 'free_labels' => array());
         }
 
@@ -738,7 +738,7 @@ if (!function_exists('vms_event_details_performer_name')) {
         if ($plan_id <= 0) {
             return '';
         }
-        $band_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
+        $band_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
         $vendor_id = absint(get_post_meta($plan_id, $band_key, true));
         if ($vendor_id <= 0) {
             return '';

@@ -1764,8 +1764,8 @@ function vms_render_settings_page()
 {
   vms_get_settings_page_ticketing_stock_notice_state(true);
 
-  if (function_exists('vms_admin_ui_render_shell')) {
-    vms_admin_ui_render_shell(
+  if (function_exists('bvmgr_admin_ui_render_shell')) {
+    bvmgr_admin_ui_render_shell(
       array(
         'title' => __('Backstage Venue Manager Settings', 'backstage-venue-manager'),
         'notices_callback' => 'vms_render_settings_page_notice_bar',
@@ -1865,8 +1865,8 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   echo '<th scope="row"><label for="vms_ticket_ui_layout">' . esc_html__('Ticket UI', 'backstage-venue-manager') . '</label></th>';
   echo '<td data-vms-tour="ticketing-ui.settings-root">';
   $ticketing_ui_tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.settings.ticketing_ui" data-vms-tour="ticketing-ui.start-tour">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-  if (function_exists('vms_render_help_button')) {
-    $ticketing_ui_tour_button = vms_render_help_button(array(
+  if (function_exists('bvmgr_render_help_button')) {
+    $ticketing_ui_tour_button = bvmgr_render_help_button(array(
       'tour_id' => 'vms.settings.ticketing_ui',
       'anchor' => 'ticketing-ui.start-tour',
       'label' => __('Start Guided Tour', 'backstage-venue-manager'),
@@ -2094,7 +2094,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   }
   $public_calendar_page_id = isset($settings['public_calendar_page_id']) ? absint($settings['public_calendar_page_id']) : 0;
   $public_calendar_custom_url = isset($settings['public_calendar_custom_url']) ? trim((string) $settings['public_calendar_custom_url']) : '';
-  $public_calendar_resolved_url = function_exists('vms_get_public_event_calendar_url') ? (string) vms_get_public_event_calendar_url() : '';
+  $public_calendar_resolved_url = function_exists('bvmgr_get_public_event_calendar_url') ? (string) bvmgr_get_public_event_calendar_url() : '';
   $calendar_open_slot_target = isset($settings['calendar_open_slot_link_target']) ? sanitize_key((string) $settings['calendar_open_slot_link_target']) : 'vendor_dashboard';
   if (!in_array($calendar_open_slot_target, array('vendor_dashboard', 'vendor_registration', 'custom'), true)) {
     $calendar_open_slot_target = 'vendor_dashboard';

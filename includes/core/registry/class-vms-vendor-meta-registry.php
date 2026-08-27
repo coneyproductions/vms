@@ -19,13 +19,13 @@ final class BVMGR_Vendor_Meta_Registry {
 	 */
 	public static function get(): array {
 
-		if (!function_exists('vms_vendor_schema')) {
+		if (!function_exists('bvmgr_vendor_schema')) {
 			// Hard fail would be fine too, but returning an empty array avoids white screens
 			// if schema load order is temporarily wrong. Up to you.
 			return [];
 		}
 
-		$schema = vms_vendor_schema();
+		$schema = bvmgr_vendor_schema();
 		$meta   = [];
 
 		foreach ($schema as $field_key => $def) {

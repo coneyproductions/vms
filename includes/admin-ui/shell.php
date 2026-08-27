@@ -173,11 +173,11 @@ if (!function_exists('vms_admin_ui_header_actions_allowed_html')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_render_shell')) {
+if (!function_exists('bvmgr_admin_ui_render_shell')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_admin_ui_render_shell(array $args, callable $content_callback): void
+	function bvmgr_admin_ui_render_shell(array $args, callable $content_callback): void
 	{
 			$title = isset($args['title']) ? (string) $args['title'] : '';
 			$subtitle = isset($args['subtitle']) ? (string) $args['subtitle'] : '';
@@ -212,8 +212,8 @@ if (!function_exists('vms_admin_ui_render_shell')) {
 			$explicit_notices_html = vms_admin_ui_prepare_notice_markup($explicit_notices_html);
 			$rich_explicit_notices_html = vms_admin_ui_prepare_notice_markup($rich_explicit_notices_html);
 
-		if (function_exists('vms_admin_ui_active_cluster')) {
-			$cluster = vms_admin_ui_active_cluster();
+		if (function_exists('bvmgr_admin_ui_active_cluster')) {
+			$cluster = bvmgr_admin_ui_active_cluster();
 			if (is_string($cluster) && $cluster !== '') {
 				$active_cluster = sanitize_html_class($cluster);
 			}

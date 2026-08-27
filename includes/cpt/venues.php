@@ -66,8 +66,8 @@ function vms_register_venue_cpt()
 if (!function_exists('vms_venue_meta_key')) {
     function vms_venue_meta_key(string $field, string $fallback = ''): string
     {
-        if (function_exists('vms_meta_key')) {
-            $key = (string) vms_meta_key('venue', $field);
+        if (function_exists('bvmgr_meta_key')) {
+            $key = (string) bvmgr_meta_key('venue', $field);
             if ($key !== '') {
                 return $key;
             }

@@ -1704,7 +1704,7 @@ if (!function_exists('vms_staffing_apply_template_to_event')) {
 		}
 		$tpl_slots = isset($template['slots']) && is_array($template['slots']) ? $template['slots'] : array();
 
-		$existing_slots = vms_staffing_get_event_slots($event_plan_id, true);
+		$existing_slots = bvmgr_staffing_get_event_slots($event_plan_id, true);
 		$existing_by_role = array();
 		foreach ($existing_slots as $slot) {
 			if (!is_array($slot)) continue;
@@ -1861,8 +1861,8 @@ if (!function_exists('vms_staffing_resolve_anchor_local')) {
 	}
 }
 
-if (!function_exists('vms_staffing_resolve_slot_window')) {
-	function vms_staffing_resolve_slot_window(int $event_plan_id, array $slot): array
+if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
+	function bvmgr_staffing_resolve_slot_window(int $event_plan_id, array $slot): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -1966,7 +1966,7 @@ if (!function_exists('vms_staffing_sync_assignment_shift_timestamps_for_slot')) 
 		$slot = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE slot_id = %d', $t_slot, $slot_id), ARRAY_A);
 		if (!is_array($slot) || empty($slot['event_plan_id'])) return;
 
-		$window = vms_staffing_resolve_slot_window((int) $slot['event_plan_id'], $slot);
+		$window = bvmgr_staffing_resolve_slot_window((int) $slot['event_plan_id'], $slot);
 		$start_ts = isset($window['start_ts']) ? $window['start_ts'] : null;
 		$end_ts = isset($window['end_ts']) ? $window['end_ts'] : null;
 
@@ -1983,8 +1983,8 @@ if (!function_exists('vms_staffing_sync_assignment_shift_timestamps_for_slot')) 
 	}
 }
 
-if (!function_exists('vms_staffing_get_event_slots')) {
-	function vms_staffing_get_event_slots(int $event_plan_id, bool $include_canceled = false): array
+if (!function_exists('bvmgr_staffing_get_event_slots')) {
+	function bvmgr_staffing_get_event_slots(int $event_plan_id, bool $include_canceled = false): array
 	{
 		global $wpdb;
 		$event_plan_id = absint($event_plan_id);
@@ -2056,7 +2056,7 @@ if (!function_exists('vms_staffing_get_event_assigned_staff_map')) {
 		}
 
 		$assigned = array();
-		$slots = vms_staffing_get_event_slots($event_plan_id, true);
+		$slots = bvmgr_staffing_get_event_slots($event_plan_id, true);
 		if (!empty($slots)) {
 			foreach ($slots as $slot_row) {
 				if (!is_array($slot_row)) {
@@ -2214,7 +2214,7 @@ if (!function_exists('vms_staffing_seed_event_slots_from_template')) {
 if (!function_exists('vms_staffing_build_legacy_staff_assignments_from_slots')) {
 	function vms_staffing_build_legacy_staff_assignments_from_slots(int $event_plan_id): array
 	{
-		$slots = vms_staffing_get_event_slots($event_plan_id, false);
+		$slots = bvmgr_staffing_get_event_slots($event_plan_id, false);
 		$legacy = array();
 		foreach ($slots as $slot) {
 			$role_id = isset($slot['role_id']) ? absint($slot['role_id']) : 0;
@@ -2240,8 +2240,8 @@ if (!function_exists('vms_staffing_build_legacy_staff_assignments_from_slots')) 
 if (!function_exists('vms_staffing_role_activation_threshold_meta_key')) {
 	function vms_staffing_role_activation_threshold_meta_key(): string
 	{
-		if (function_exists('vms_meta_key')) {
-			$key = (string) vms_meta_key('event_plan', 'staff_role_activation_thresholds');
+		if (function_exists('bvmgr_meta_key')) {
+			$key = (string) bvmgr_meta_key('event_plan', 'staff_role_activation_thresholds');
 			if ($key !== '') {
 				return $key;
 			}
@@ -2335,7 +2335,7 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
 		}
 
 		$pids = array();
-		$k_pids = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_product_ids') : '_vms_ticket_product_ids_v1';
+		$k_pids = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_product_ids') : '_vms_ticket_product_ids_v1';
 		if ($k_pids === '') {
 			$k_pids = '_vms_ticket_product_ids_v1';
 		}
@@ -2347,7 +2347,7 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
 		if (function_exists('vms_ticketing_get_manual_product_ids')) {
 			$pids = array_merge($pids, (array) vms_ticketing_get_manual_product_ids($event_plan_id));
 		} else {
-			$k_manual = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_manual_product_ids') : '_vms_ticket_manual_product_ids_v1';
+			$k_manual = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_manual_product_ids') : '_vms_ticket_manual_product_ids_v1';
 			if ($k_manual === '') {
 				$k_manual = '_vms_ticket_manual_product_ids_v1';
 			}
@@ -2362,7 +2362,7 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
 			$tec_id = (int) vms_ticketing_b_get_linked_tec_event_id($event_plan_id);
 		}
 		if ($tec_id <= 0) {
-			$k_tec = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
+			$k_tec = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
 			if ($k_tec === '') {
 				$k_tec = '_vms_tec_event_id';
 			}
@@ -2444,7 +2444,7 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_sales_snapshot')) {
 			);
 		}
 
-		$ticket_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
+		$ticket_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
 		if ($ticket_key === '') {
 			$ticket_key = '_vms_ticket_stats_v1';
 		}
@@ -2916,7 +2916,7 @@ if (!function_exists('vms_staffing_assess_event_plan_save_request')) {
 			return $role_id > 0;
 		})));
 
-		$before_slots = vms_staffing_get_event_slots($event_plan_id, true);
+		$before_slots = bvmgr_staffing_get_event_slots($event_plan_id, true);
 		$desired_signature = vms_staffing_desired_event_roles_matrix_signature(
 			$role_ids,
 			$role_map,
@@ -3025,7 +3025,7 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 
 		$before = is_array($precomputed_state['before_slots'] ?? null)
 			? $precomputed_state['before_slots']
-			: vms_staffing_get_event_slots($event_plan_id, true);
+			: bvmgr_staffing_get_event_slots($event_plan_id, true);
 		$desired_signature = is_array($precomputed_state['desired_signature'] ?? null)
 			? $precomputed_state['desired_signature']
 			: vms_staffing_desired_event_roles_matrix_signature(
@@ -3312,7 +3312,7 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 
 		vms_staffing_mark_rollup_dirty($event_plan_id, 'event_staffing_saved');
 		$rollup = vms_staffing_compute_rollup($event_plan_id);
-		$after = vms_staffing_get_event_slots($event_plan_id, true);
+		$after = bvmgr_staffing_get_event_slots($event_plan_id, true);
 		vms_staffing_audit_log('event_staffing_save', $event_plan_id, array('slots' => $before), array('slots' => $after), $actor_user_id);
 		do_action('vms_staffing_event_saved', $event_plan_id);
 
@@ -3336,7 +3336,7 @@ if (!function_exists('vms_staffing_mark_rollup_dirty')) {
 		if ($t === '') return;
 
 		$venue_id = absint(get_post_meta($event_plan_id, '_vms_venue_id', true));
-		$status = function_exists('vms_event_plan_get_status') ? (string) vms_event_plan_get_status($event_plan_id, 'dashboard') : 'draft';
+		$status = function_exists('bvmgr_event_plan_get_status') ? (string) bvmgr_event_plan_get_status($event_plan_id, 'dashboard') : 'draft';
 		$status = sanitize_key($status);
 		if ($status === '') $status = 'draft';
 
@@ -3409,7 +3409,7 @@ if (!function_exists('vms_staffing_estimate_slot_cost')) {
 			return array('known' => true, 'cost' => (float) $pay_rate * (float) $headcount, 'hours' => 0.0);
 		}
 
-		$window = vms_staffing_resolve_slot_window($event_plan_id, $slot);
+		$window = bvmgr_staffing_resolve_slot_window($event_plan_id, $slot);
 		$duration_minutes = isset($window['duration_minutes']) ? $window['duration_minutes'] : null;
 		if ($duration_minutes === null) {
 			return array('known' => false, 'cost' => null, 'hours' => null);
@@ -3473,7 +3473,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 		$role_map = vms_staffing_role_map_by_id(true);
 		$event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
 		$venue_id = absint(get_post_meta($event_plan_id, '_vms_venue_id', true));
-		$status = function_exists('vms_event_plan_get_status') ? (string) vms_event_plan_get_status($event_plan_id, 'dashboard') : 'draft';
+		$status = function_exists('bvmgr_event_plan_get_status') ? (string) bvmgr_event_plan_get_status($event_plan_id, 'dashboard') : 'draft';
 		$status = sanitize_key($status);
 		if ($status === '') $status = 'draft';
 
@@ -3557,7 +3557,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 			if ($open > 0) {
 				$open_headcount_total += $open;
 				$open_slots_count++;
-				$window = vms_staffing_resolve_slot_window($event_plan_id, $slot);
+				$window = bvmgr_staffing_resolve_slot_window($event_plan_id, $slot);
 				$missing_items[] = array(
 					'role_id'     => $role_id,
 					'role_name'   => $role_name,

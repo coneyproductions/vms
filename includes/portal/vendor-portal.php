@@ -37,8 +37,8 @@ if (file_exists($bvmgr_vendor_tax_profile_file)) {
 /**
  * Small, theme-agnostic notices for the portal.
  */
-if (!function_exists('vms_portal_notice')) {
-    function vms_portal_notice(string $type, string $msg): string
+if (!function_exists('bvmgr_portal_notice')) {
+    function bvmgr_portal_notice(string $type, string $msg): string
     {
         $type = ($type === 'success' || $type === 'warning') ? $type : 'error';
         return '<div class="vms-notice vms-notice-' . esc_attr($type) . '">' . esc_html($msg) . '</div>';
@@ -463,13 +463,13 @@ if (!function_exists('vms_vendor_availability_busy_source_for_plan')) {
         }
 
         $status = '';
-        if (function_exists('vms_event_plan_get_status')) {
-            $status = (string) vms_event_plan_get_status($plan_id, 'schedule_admin');
+        if (function_exists('bvmgr_event_plan_get_status')) {
+            $status = (string) bvmgr_event_plan_get_status($plan_id, 'schedule_admin');
         }
 
         if ($status === '') {
-            $k_status = function_exists('vms_meta_key')
-                ? (string) vms_meta_key('event_plan', 'status')
+            $k_status = function_exists('bvmgr_meta_key')
+                ? (string) bvmgr_meta_key('event_plan', 'status')
                 : '_vms_event_plan_status';
             if ($k_status === '') {
                 $k_status = '_vms_event_plan_status';
@@ -499,7 +499,7 @@ if (!function_exists('vms_vendor_portal_format_money')) {
 if (!function_exists('vms_vendor_portal_get_ticket_stats_payload')) {
     function vms_vendor_portal_get_ticket_stats_payload(int $plan_id): array
     {
-        $key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
+        $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
         if ($key === '') {
             $key = '_vms_ticket_stats_v1';
         }
@@ -617,7 +617,7 @@ if (!function_exists('vms_vendor_portal_get_ticket_product_ids')) {
             return $cache[$plan_id];
         }
 
-        $k_pids = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_product_ids') : '_vms_ticket_product_ids_v1';
+        $k_pids = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_product_ids') : '_vms_ticket_product_ids_v1';
         if ($k_pids === '') {
             $k_pids = '_vms_ticket_product_ids_v1';
         }
@@ -640,7 +640,7 @@ if (!function_exists('vms_vendor_portal_get_ticket_product_ids')) {
         if (function_exists('vms_ticketing_get_manual_product_ids')) {
             $pids = array_merge($pids, vms_ticketing_get_manual_product_ids($plan_id));
         } else {
-            $k_manual = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_manual_product_ids') : '_vms_ticket_manual_product_ids_v1';
+            $k_manual = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_manual_product_ids') : '_vms_ticket_manual_product_ids_v1';
             if ($k_manual === '') {
                 $k_manual = '_vms_ticket_manual_product_ids_v1';
             }
@@ -655,7 +655,7 @@ if (!function_exists('vms_vendor_portal_get_ticket_product_ids')) {
             $tec_id = (int) vms_ticketing_b_get_linked_tec_event_id($plan_id);
         }
         if ($tec_id <= 0) {
-            $k_tec = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
+            $k_tec = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
             if ($k_tec === '') {
                 $k_tec = '_vms_tec_event_id';
             }
@@ -998,8 +998,8 @@ if (!function_exists('vms_vendor_portal_get_guest_admissions_count')) {
     }
 }
 
-if (!function_exists('vms_vendor_portal_get_count_breakdown')) {
-    function vms_vendor_portal_get_count_breakdown(int $plan_id, array $headcount_context = array()): array
+if (!function_exists('bvmgr_vendor_portal_get_count_breakdown')) {
+    function bvmgr_vendor_portal_get_count_breakdown(int $plan_id, array $headcount_context = array()): array
     {
         $plan_id = absint($plan_id);
         if ($plan_id <= 0) {
@@ -1101,8 +1101,8 @@ if (!function_exists('vms_vendor_portal_render_count_breakdown_markup')) {
     }
 }
 
-if (!function_exists('vms_vendor_portal_get_progress_headcount_context')) {
-    function vms_vendor_portal_get_progress_headcount_context(int $plan_id): array
+if (!function_exists('bvmgr_vendor_portal_get_progress_headcount_context')) {
+    function bvmgr_vendor_portal_get_progress_headcount_context(int $plan_id): array
     {
         $plan_id = absint($plan_id);
         $fallback = function_exists('vms_staffing_get_event_plan_headcount_context')
@@ -1182,15 +1182,15 @@ if (!function_exists('vms_vendor_portal_build_secondary_sales_snapshot_card')) {
             return array();
         }
 
-        $status = function_exists('vms_event_plan_get_status')
-            ? (string) vms_event_plan_get_status($plan_id, 'dashboard')
+        $status = function_exists('bvmgr_event_plan_get_status')
+            ? (string) bvmgr_event_plan_get_status($plan_id, 'dashboard')
             : 'draft';
         if ($status !== 'published') {
             return array();
         }
 
-        $headcount_context = vms_vendor_portal_get_progress_headcount_context($plan_id);
-        $count_breakdown = vms_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
+        $headcount_context = bvmgr_vendor_portal_get_progress_headcount_context($plan_id);
+        $count_breakdown = bvmgr_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
         $is_wired = !empty($headcount_context['wired']);
         if (!$is_wired && empty($count_breakdown['has_any'])) {
             return array();
@@ -1235,19 +1235,19 @@ if (!function_exists('vms_vendor_portal_build_bonus_progress_card')) {
             return array();
         }
 
-        $status = function_exists('vms_event_plan_get_status')
-            ? (string) vms_event_plan_get_status($plan_id, 'dashboard')
+        $status = function_exists('bvmgr_event_plan_get_status')
+            ? (string) bvmgr_event_plan_get_status($plan_id, 'dashboard')
             : 'draft';
         if ($status !== 'published') {
             return array();
         }
 
-        $terms = function_exists('vms_get_event_plan_comp_terms')
-            ? (array) vms_get_event_plan_comp_terms($plan_id)
+        $terms = function_exists('bvmgr_get_event_plan_comp_terms')
+            ? (array) bvmgr_get_event_plan_comp_terms($plan_id)
             : array();
         $structure = sanitize_key((string) ($terms['structure'] ?? ''));
 
-        $headcount_context = vms_vendor_portal_get_progress_headcount_context($plan_id);
+        $headcount_context = bvmgr_vendor_portal_get_progress_headcount_context($plan_id);
         $attendance_count = max(0, (int) ($headcount_context['headcount'] ?? 0));
         $source_label = isset($headcount_context['label']) ? (string) ($headcount_context['label']) : __('Ticket sales', 'backstage-venue-manager');
 
@@ -1313,7 +1313,7 @@ if (!function_exists('vms_vendor_portal_build_bonus_progress_card')) {
             ? trim((string) ($headcount_context['updated_label'] ?? ''))
             : vms_vendor_portal_format_stats_updated_label($stats_payload);
 
-        $count_breakdown = vms_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
+        $count_breakdown = bvmgr_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
 
         return array(
             'plan_id' => $plan_id,
@@ -1352,7 +1352,7 @@ if (!function_exists('vms_vendor_portal_get_bonus_progress_cards')) {
         }
 
         $today = wp_date('Y-m-d', current_time('timestamp'), wp_timezone());
-        $k_band_vendor_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+        $k_band_vendor_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
         if ($k_band_vendor_id === '') {
             $k_band_vendor_id = '_vms_band_vendor_id';
         }
@@ -1415,7 +1415,7 @@ if (!function_exists('vms_vendor_portal_get_recent_bonus_history_cards')) {
         }
 
         $today = wp_date('Y-m-d', current_time('timestamp'), wp_timezone());
-        $k_band_vendor_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+        $k_band_vendor_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
         if ($k_band_vendor_id === '') {
             $k_band_vendor_id = '_vms_band_vendor_id';
         }
@@ -1656,7 +1656,7 @@ if (!function_exists('vms_vendor_portal_get_secondary_sales_snapshot_cards')) {
         }
 
         $today = wp_date('Y-m-d', current_time('timestamp'), wp_timezone());
-        $k_secondary_vendor_id = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+        $k_secondary_vendor_id = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
         if ($k_secondary_vendor_id === '') {
             $k_secondary_vendor_id = '_vms_secondary_vendor_id';
         }
@@ -1754,7 +1754,7 @@ if (!function_exists('vms_vendor_portal_get_secondary_sales_history_cards')) {
         }
 
         $today = wp_date('Y-m-d', current_time('timestamp'), wp_timezone());
-        $k_secondary_vendor_id = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+        $k_secondary_vendor_id = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
         if ($k_secondary_vendor_id === '') {
             $k_secondary_vendor_id = '_vms_secondary_vendor_id';
         }
@@ -1817,9 +1817,9 @@ if (!function_exists('vms_vendor_portal_get_past_assigned_event_rows')) {
         }
 
         $today = wp_date('Y-m-d', current_time('timestamp'), wp_timezone());
-        $k_band_vendor_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
-        $k_secondary_vendor_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
-        $k_lineup_vendor_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'lineup_entry_vendor_id') : '_vms_lineup_entry_vendor_id';
+        $k_band_vendor_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+        $k_secondary_vendor_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+        $k_lineup_vendor_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'lineup_entry_vendor_id') : '_vms_lineup_entry_vendor_id';
         if ($k_band_vendor_id === '') {
             $k_band_vendor_id = '_vms_band_vendor_id';
         }
@@ -1877,8 +1877,8 @@ if (!function_exists('vms_vendor_portal_get_past_assigned_event_rows')) {
                 continue;
             }
 
-            $status = function_exists('vms_event_plan_get_status')
-                ? (string) vms_event_plan_get_status($plan_id, 'dashboard')
+            $status = function_exists('bvmgr_event_plan_get_status')
+                ? (string) bvmgr_event_plan_get_status($plan_id, 'dashboard')
                 : 'draft';
             if ($status !== 'published') {
                 continue;
@@ -1910,9 +1910,9 @@ if (!function_exists('vms_vendor_portal_get_past_assigned_event_rows')) {
             $attendance_count = null;
             $count_breakdown = array();
             if ($show_counts) {
-                $headcount_context = vms_vendor_portal_get_progress_headcount_context($plan_id);
+                $headcount_context = bvmgr_vendor_portal_get_progress_headcount_context($plan_id);
                 $attendance_count = max(0, (int) ($headcount_context['headcount'] ?? 0));
-                $count_breakdown = vms_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
+                $count_breakdown = bvmgr_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
             }
 
             $rows[] = array(
@@ -2876,8 +2876,8 @@ if (!function_exists('vms_vendor_portal_is_primary_type_slug')) {
 if (!function_exists('vms_vendor_portal_current_type_slug')) {
     function vms_vendor_portal_current_type_slug(int $vendor_id): string
     {
-        return function_exists('vms_calendar_vendor_primary_type')
-            ? sanitize_title((string) (vms_calendar_vendor_primary_type($vendor_id)['slug'] ?? ''))
+        return function_exists('bvmgr_calendar_vendor_primary_type')
+            ? sanitize_title((string) (bvmgr_calendar_vendor_primary_type($vendor_id)['slug'] ?? ''))
             : '';
     }
 }
@@ -2914,8 +2914,8 @@ if (!function_exists('vms_vendor_portal_headliner_promo_video_meta_key')) {
             'pending_uploaded_by' => 'headliner_promo_video_pending_uploaded_by',
         );
 
-        if (function_exists('vms_meta_key')) {
-            $resolved = (string) vms_meta_key('event_plan', $key_map[$field]);
+        if (function_exists('bvmgr_meta_key')) {
+            $resolved = (string) bvmgr_meta_key('event_plan', $key_map[$field]);
             if ($resolved !== '') {
                 return $resolved;
             }
@@ -3300,7 +3300,7 @@ if (!function_exists('vms_vendor_portal_is_headliner_for_plan')) {
             return false;
         }
 
-        $band_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+        $band_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
         if ($band_key === '') {
             $band_key = '_vms_band_vendor_id';
         }
@@ -3317,15 +3317,15 @@ if (!function_exists('vms_vendor_portal_get_next_headliner_booking')) {
             return array();
         }
 
-        $date_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
+        $date_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
         if ($date_key === '') {
             $date_key = '_vms_event_date';
         }
-        $band_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+        $band_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
         if ($band_key === '') {
             $band_key = '_vms_band_vendor_id';
         }
-        $tec_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
+        $tec_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
         if ($tec_key === '') {
             $tec_key = '_vms_tec_event_id';
         }
@@ -3941,7 +3941,7 @@ if (!function_exists('vms_vendor_portal_calendar_event_lines')) {
             'modal_venue_name' => trim((string) ($event['venue_name'] ?? '')),
         );
 
-        if ($plan_id <= 0 || !function_exists('vms_calendar_plan_vendor_ids')) {
+        if ($plan_id <= 0 || !function_exists('bvmgr_calendar_plan_vendor_ids')) {
             $line_items[] = array_merge(array(
                 'kind' => 'event',
                 'text' => $event_label,
@@ -3950,7 +3950,7 @@ if (!function_exists('vms_vendor_portal_calendar_event_lines')) {
             return $line_items;
         }
 
-        $vendor_ids = (array) vms_calendar_plan_vendor_ids($plan_id);
+        $vendor_ids = (array) bvmgr_calendar_plan_vendor_ids($plan_id);
         $primary_vendor_id = absint($vendor_ids['band_id'] ?? 0);
         $secondary_vendor_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($vendor_ids['secondary_ids'] ?? array())))));
         $lineup_vendor_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($vendor_ids['lineup_ids'] ?? array())))));
@@ -3958,7 +3958,7 @@ if (!function_exists('vms_vendor_portal_calendar_event_lines')) {
         $event_icon = '';
         $primary_name = $primary_vendor_id > 0 ? trim((string) get_the_title($primary_vendor_id)) : '';
         if ($primary_vendor_id > 0) {
-            $primary_type = function_exists('vms_calendar_vendor_primary_type') ? (array) vms_calendar_vendor_primary_type($primary_vendor_id) : array();
+            $primary_type = function_exists('bvmgr_calendar_vendor_primary_type') ? (array) bvmgr_calendar_vendor_primary_type($primary_vendor_id) : array();
             $primary_slug = sanitize_key((string) ($primary_type['slug'] ?? 'talent'));
             if ($primary_slug === '') {
                 $primary_slug = 'talent';
@@ -3993,7 +3993,7 @@ if (!function_exists('vms_vendor_portal_calendar_event_lines')) {
             if ($secondary_vendor_id === $viewer_vendor_id && $viewer_type !== '' && !vms_vendor_portal_is_primary_type_slug($viewer_type)) {
                 continue;
             }
-            $secondary_type = function_exists('vms_calendar_vendor_primary_type') ? (array) vms_calendar_vendor_primary_type($secondary_vendor_id) : array();
+            $secondary_type = function_exists('bvmgr_calendar_vendor_primary_type') ? (array) bvmgr_calendar_vendor_primary_type($secondary_vendor_id) : array();
             $secondary_slug = sanitize_key((string) ($secondary_type['slug'] ?? ''));
             $secondary_icon = trim((string) ($icon_map[$secondary_slug] ?? ''));
             $line_items[] = array(
@@ -4012,7 +4012,7 @@ if (!function_exists('vms_vendor_portal_calendar_event_lines')) {
             if ($lineup_name === '') {
                 continue;
             }
-            $lineup_type = function_exists('vms_calendar_vendor_primary_type') ? (array) vms_calendar_vendor_primary_type($lineup_vendor_id) : array();
+            $lineup_type = function_exists('bvmgr_calendar_vendor_primary_type') ? (array) bvmgr_calendar_vendor_primary_type($lineup_vendor_id) : array();
             $lineup_slug = sanitize_key((string) ($lineup_type['slug'] ?? ''));
             $lineup_icon = trim((string) ($icon_map[$lineup_slug] ?? ($icon_map['talent'] ?? '')));
             $line_items[] = array(
@@ -4179,13 +4179,13 @@ if (!function_exists('vms_vendor_portal_render_opportunities')) {
         echo '<div class="vms-portal-card vms-vio-opps-card">';
         echo '<h3>' . esc_html__('Opportunities', 'backstage-venue-manager') . '</h3>';
         if (!empty($flash['message'])) {
-            echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
+            echo wp_kses_post(bvmgr_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
         }
 
         $today = wp_date('Y-m-d', time(), wp_timezone());
         $end = wp_date('Y-m-d', strtotime('+12 months', strtotime($today)), wp_timezone());
-        $events = function_exists('vms_get_calendar_events')
-            ? (array) vms_get_calendar_events(array(
+        $events = function_exists('bvmgr_get_calendar_events')
+            ? (array) bvmgr_get_calendar_events(array(
                 'start_date' => $today,
                 'end_date' => $end,
                 'context' => 'vendor',
@@ -4534,7 +4534,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
 
         ob_start();
         if (!empty($flash['message'])) {
-            echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
+            echo wp_kses_post(bvmgr_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
         }
 
         echo '<div class="vms-portal-auth-wrap">';
@@ -4546,7 +4546,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
         }
 
         if (empty($candidate_vendor_ids)) {
-            echo wp_kses_post(vms_portal_notice('warning', __('We could not find a vendor profile using this website account email yet.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('warning', __('We could not find a vendor profile using this website account email yet.', 'backstage-venue-manager')));
             echo '<p>' . esc_html__('If your vendor profile uses a different email address, please contact the venue so they can connect the correct record manually.', 'backstage-venue-manager') . '</p>';
         } else {
             echo '<p>' . esc_html__('We found the following vendor profile matches for this account. Send a request for the one that should be linked to you.', 'backstage-venue-manager') . '</p>';
@@ -4592,7 +4592,7 @@ if (!function_exists('vms_vendor_portal_render_link_request_panel')) {
                             $requested_label
                         )
                         : __('Your request is already pending review.', 'backstage-venue-manager');
-                    echo wp_kses_post(vms_portal_notice('warning', $pending_message));
+                    echo wp_kses_post(bvmgr_portal_notice('warning', $pending_message));
                 } else {
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
                     echo '<input type="hidden" name="action" value="vms_vendor_portal_link_request">';
@@ -4900,7 +4900,7 @@ function vms_vendor_portal_shortcode($atts = []): string
 
     $flash = vms_vendor_portal_pull_flash($user_id);
     if (!empty($flash['message'])) {
-        echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
+        echo wp_kses_post(bvmgr_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
     }
 
     // Route
@@ -4913,9 +4913,9 @@ function vms_vendor_portal_shortcode($atts = []): string
         // ------------------------------------------------------
         // Upcoming bookings (Event Plans)
         // ------------------------------------------------------
-        $k_band_vendor_id = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
-        $k_secondary_vendor_id = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
-        $k_lineup_vendor_id = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'lineup_entry_vendor_id') : '_vms_lineup_entry_vendor_id';
+        $k_band_vendor_id = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+        $k_secondary_vendor_id = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+        $k_lineup_vendor_id = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'lineup_entry_vendor_id') : '_vms_lineup_entry_vendor_id';
 
         $upcoming = get_posts(array(
             'post_type'      => 'vms_event_plan',
@@ -5130,13 +5130,13 @@ $manual_future = 0;
 
         if ($needs_av_setup) {
             $any_actions = true;
-            echo wp_kses_post(vms_portal_notice('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('warning', __('You have not set up availability yet. Enable Pattern, connect ICS, or set a few manual dates.', 'backstage-venue-manager')));
         }
 
         if ($needs_ics_sync) {
             $any_actions = true;
             /* translators: %d: number of days since the vendor ICS calendar was last synced. */
-            echo wp_kses_post(vms_portal_notice('warning', sprintf(__('Your calendar sync is %d days old. Open Availability and tap “Sync Now”.', 'backstage-venue-manager'), $ics_stale_days)));
+            echo wp_kses_post(bvmgr_portal_notice('warning', sprintf(__('Your calendar sync is %d days old. Open Availability and tap “Sync Now”.', 'backstage-venue-manager'), $ics_stale_days)));
         }
 
         if (!$any_actions) {
@@ -5169,19 +5169,19 @@ $manual_future = 0;
         if (function_exists('vms_vendor_portal_render_event_history_tab')) {
             vms_vendor_portal_render_event_history_tab($vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('Event History is not available right now.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('error', __('Event History is not available right now.', 'backstage-venue-manager')));
         }
     } elseif ($tab === 'profile') {
         if (function_exists('vms_vendor_portal_render_profile')) {
             vms_vendor_portal_render_profile($vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('Profile module is not loaded.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('error', __('Profile module is not loaded.', 'backstage-venue-manager')));
         }
     } elseif ($tab === 'tax-profile') {
         if (function_exists('vms_vendor_portal_render_tax_profile')) {
             vms_vendor_portal_render_tax_profile($vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('Tax Profile module is not loaded.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('error', __('Tax Profile module is not loaded.', 'backstage-venue-manager')));
         }
     } elseif ($tab === 'availability' || $tab === 'opportunities') {
         $venue_id = vms_vendor_guess_venue_id($vendor_id);
@@ -5191,18 +5191,18 @@ $manual_future = 0;
         if (function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             vms_vendor_portal_render_all_vendors_availability($vendor_ids, $base_url, $vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('All Vendors view is not available.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('error', __('All Vendors view is not available.', 'backstage-venue-manager')));
         }
     } elseif ($tab === 'tech') {
         if (function_exists('vms_vendor_portal_render_tech_docs')) {
             vms_vendor_portal_render_tech_docs($vendor_id);
         } else {
-            echo wp_kses_post(vms_portal_notice('error', __('Tech Docs module is not loaded.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('error', __('Tech Docs module is not loaded.', 'backstage-venue-manager')));
         }
     } else {
         $custom_rendered = (bool) apply_filters('vms_vendor_portal_render_custom_tab', false, $tab, $portal_context);
         if (!$custom_rendered) {
-            echo wp_kses_post(vms_portal_notice('error', __('That portal section is not available.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('error', __('That portal section is not available.', 'backstage-venue-manager')));
         }
     }
 
@@ -5224,7 +5224,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         $vendor_id = (int) $vendor_id;
 
         if ($vendor_id <= 0) {
-            echo wp_kses_post(vms_portal_notice('error', __('Invalid vendor.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('error', __('Invalid vendor.', 'backstage-venue-manager')));
             return;
         }
 
@@ -5294,7 +5294,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     ? sanitize_text_field(wp_unslash((string) $_POST['vms_ics_nonce']))
                     : '';
                 if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_ics_settings')) {
-                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
+                    echo wp_kses_post(bvmgr_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $new_url = esc_url_raw(vms_request_read_scalar($_POST, 'vms_ics_url'));
                     $new_autosync = vms_request_read_bool_flag($_POST, 'vms_ics_autosync') ? 1 : 0;
@@ -5314,7 +5314,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         vms_vendor_flag_vendor_update($vendor_id, 'availability_ics_settings');
                     }
 
-                    echo wp_kses_post(vms_portal_notice('success', __('Calendar settings saved.', 'backstage-venue-manager')));
+                    echo wp_kses_post(bvmgr_portal_notice('success', __('Calendar settings saved.', 'backstage-venue-manager')));
                 }
             }
 
@@ -5324,7 +5324,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     ? sanitize_text_field(wp_unslash((string) $_POST['vms_avail_nonce']))
                     : '';
                 if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_availability')) {
-                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
+                    echo wp_kses_post(bvmgr_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $incoming = vms_vendor_portal_post_array('vms_availability');
 
@@ -5357,7 +5357,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                         vms_vendor_flag_vendor_update($vendor_id, 'availability_manual');
                     }
 
-                    echo wp_kses_post(vms_portal_notice('success', __('Availability saved.', 'backstage-venue-manager')));
+                    echo wp_kses_post(bvmgr_portal_notice('success', __('Availability saved.', 'backstage-venue-manager')));
                 }
             }
 
@@ -5368,7 +5368,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     is_array($_POST['vms_pattern_nonce']) ||
                     !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_pattern_nonce'])), 'vms_pattern_settings')
                 ) {
-                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
+                    echo wp_kses_post(bvmgr_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     $days = array();
                     foreach (vms_vendor_portal_post_array('vms_pattern_days') as $d) {
@@ -5400,7 +5400,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
 
                     vms_vendor_flag_vendor_update($vendor_id, 'availability_pattern');
 
-                    echo wp_kses_post(vms_portal_notice('success', __('Pattern availability saved.', 'backstage-venue-manager')));
+                    echo wp_kses_post(bvmgr_portal_notice('success', __('Pattern availability saved.', 'backstage-venue-manager')));
                 }
             }
 
@@ -5410,15 +5410,15 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                     ? sanitize_text_field(wp_unslash((string) $_POST['vms_ics_nonce']))
                     : '';
                 if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_ics_settings')) {
-                    echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
+                    echo wp_kses_post(bvmgr_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
                 } else {
                     update_post_meta($vendor_id, '_vms_availability_preferred_method', 'ics');
                     $preferred = 'ics';
 
                     if (empty($ics_url)) {
-                        echo wp_kses_post(vms_portal_notice('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager')));
+                        echo wp_kses_post(bvmgr_portal_notice('warning', __('Please paste your calendar feed (ICS) URL first.', 'backstage-venue-manager')));
                     } elseif (!function_exists('vms_vendor_ics_sync_now')) {
-                        echo wp_kses_post(vms_portal_notice('error', __('ICS sync module is not loaded.', 'backstage-venue-manager')));
+                        echo wp_kses_post(bvmgr_portal_notice('error', __('ICS sync module is not loaded.', 'backstage-venue-manager')));
                     } else {
                         $result = vms_vendor_ics_sync_now($vendor_id, $active_dates);
 
@@ -5450,10 +5450,10 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                                 : 0;
 
                             /* translators: %d: number of unavailable dates imported from the ICS calendar. */
-                            echo wp_kses_post(vms_portal_notice('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'backstage-venue-manager'), $count)));
+                            echo wp_kses_post(bvmgr_portal_notice('success', sprintf(__('Calendar synced. %d date(s) marked unavailable.', 'backstage-venue-manager'), $count)));
                         } else {
                             $msg = !empty($result['error']) ? (string) $result['error'] : __('Calendar sync failed.', 'backstage-venue-manager');
-                            echo wp_kses_post(vms_portal_notice('error', $msg));
+                            echo wp_kses_post(bvmgr_portal_notice('error', $msg));
                         }
                     }
                 }
@@ -5466,7 +5466,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
         echo '<h3>' . esc_html__('Availability', 'backstage-venue-manager') . '</h3>';
 
         if (empty($active_dates)) {
-            echo wp_kses_post(vms_portal_notice('warning', __('No season dates configured yet.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('warning', __('No season dates configured yet.', 'backstage-venue-manager')));
             return;
         }
         // Always render a fixed month window (prevents months from disappearing when out of season)
@@ -5703,7 +5703,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
             $month_end_inclusive = gmdate('Y-m-d', strtotime('-1 day', strtotime($month_end_exclusive)));
 
             $month_events = array();
-            if (function_exists('vms_get_calendar_events')) {
+            if (function_exists('bvmgr_get_calendar_events')) {
                 $feed_args = array(
                     'start_date' => $month_start,
                     'end_date' => $month_end_inclusive,
@@ -5715,7 +5715,7 @@ if (!function_exists('vms_vendor_portal_render_availability')) {
                 if (!empty($venue_id)) {
                     $feed_args['venue_ids'] = array((int) $venue_id);
                 }
-                $month_events = (array) vms_get_calendar_events($feed_args);
+                $month_events = (array) bvmgr_get_calendar_events($feed_args);
             }
 
             foreach ($month_events as $event) {
@@ -6273,7 +6273,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
         echo '<h3>' . esc_html__('All Vendors', 'backstage-venue-manager') . '</h3>';
 
         if (!is_array($vendor_ids) || count($vendor_ids) < 2) {
-            echo wp_kses_post(vms_portal_notice('warning', __('You do not have multiple vendors linked to this account.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('warning', __('You do not have multiple vendors linked to this account.', 'backstage-venue-manager')));
             return;
         }
 
@@ -6283,7 +6283,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
         })));
 
         if (empty($vendor_ids)) {
-            echo wp_kses_post(vms_portal_notice('warning', __('No vendors available for this view.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('warning', __('No vendors available for this view.', 'backstage-venue-manager')));
             return;
         }
 
@@ -6317,7 +6317,7 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             : array();
 
         if (empty($months)) {
-            echo wp_kses_post(vms_portal_notice('warning', __('No months available for this view.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('warning', __('No months available for this view.', 'backstage-venue-manager')));
             return;
         }
 
@@ -6372,8 +6372,8 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
             $window_end_inclusive = gmdate('Y-m-d', strtotime('-1 day', strtotime($window_end)));
             $vendor_filter = array_fill_keys(array_values(array_unique(array_map('absint', (array) $vendor_ids))), true);
 
-            $window_events = function_exists('vms_get_calendar_events')
-                ? (array) vms_get_calendar_events(array(
+            $window_events = function_exists('bvmgr_get_calendar_events')
+                ? (array) bvmgr_get_calendar_events(array(
                     'start_date' => $window_start,
                     'end_date' => $window_end_inclusive,
                     'context' => 'admin',
@@ -6430,8 +6430,8 @@ if (!function_exists('vms_vendor_portal_render_all_vendors_availability')) {
                 }
 
                 $status = isset($event['plan_status']) ? sanitize_key((string) $event['plan_status']) : '';
-                $busy_src = function_exists('vms_calendar_assignment_status_for_plan')
-                    ? (string) (vms_calendar_assignment_status_for_plan($status) ?? '')
+                $busy_src = function_exists('bvmgr_calendar_assignment_status_for_plan')
+                    ? (string) (bvmgr_calendar_assignment_status_for_plan($status) ?? '')
                     : '';
                 if ($busy_src === 'tentative') {
                     $label = __('Tentative', 'backstage-venue-manager') . ': ' . $label;
@@ -6904,7 +6904,7 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_techdocs_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_techdocs_save')) {
-                echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
+                echo wp_kses_post(bvmgr_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
             } else {
 
                 $updated = false;
@@ -6922,7 +6922,7 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
                         $updated = true;
                     } else {
                         /* translators: %s: media upload error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message())));
+                        echo wp_kses_post(bvmgr_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message())));
                     }
                 }
 
@@ -6939,13 +6939,13 @@ if (!function_exists('vms_vendor_portal_render_tech_docs')) {
                         $updated = true;
                     } else {
                         /* translators: %s: media upload error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Input list upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message())));
+                        echo wp_kses_post(bvmgr_portal_notice('error', sprintf(__('Input list upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message())));
                     }
                 }
 
                 if ($updated) {
                     vms_vendor_flag_vendor_update($vendor_id, 'tech_docs');
-                    echo wp_kses_post(vms_portal_notice('success', __('Tech docs updated.', 'backstage-venue-manager')));
+                    echo wp_kses_post(bvmgr_portal_notice('success', __('Tech docs updated.', 'backstage-venue-manager')));
                 }
             }
         }
@@ -6989,7 +6989,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         $vendor_id = (int) $vendor_id;
 
         if ($vendor_id <= 0) {
-            echo wp_kses_post(vms_portal_notice('error', __('Invalid vendor.', 'backstage-venue-manager')));
+            echo wp_kses_post(bvmgr_portal_notice('error', __('Invalid vendor.', 'backstage-venue-manager')));
             return;
         }
 
@@ -7001,12 +7001,12 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
         }
 
         // Canonical meta keys (single source of truth).
-        $k_contact_name  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_name') : '_vms_contact_name';
-        $k_primary_email = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
-        $k_primary_phone = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
-        $k_website       = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'website') : '_vms_vendor_website';
-        $k_city          = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'city') : '_vms_city';
-        $k_state         = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'state') : '_vms_state';
+        $k_contact_name  = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_name') : '_vms_contact_name';
+        $k_primary_email = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+        $k_primary_phone = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
+        $k_website       = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'website') : '_vms_vendor_website';
+        $k_city          = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'city') : '_vms_city';
+        $k_state         = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'state') : '_vms_state';
         $social_meta_map = array(
             'facebook'  => '_vms_vendor_social_facebook',
             'instagram' => '_vms_vendor_social_instagram',
@@ -7026,7 +7026,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                 ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_profile_nonce']))
                 : '';
             if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_profile_save')) {
-                echo wp_kses_post(vms_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
+                echo wp_kses_post(bvmgr_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
             } else {
 
                 $display_name  = vms_request_read_text_field($_POST, 'vms_vendor_display_name');
@@ -7062,7 +7062,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                         set_post_thumbnail($vendor_id, (int) $attach_id);
                     } else {
                         /* translators: %s: media upload error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Logo upload failed: %s', 'backstage-venue-manager'), $attach_id->get_error_message())));
+                        echo wp_kses_post(bvmgr_portal_notice('error', sprintf(__('Logo upload failed: %s', 'backstage-venue-manager'), $attach_id->get_error_message())));
                     }
                 }
 
@@ -7080,7 +7080,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                     $r = wp_update_post($update, true);
                     if (is_wp_error($r)) {
                         /* translators: %s: WordPress post update error message. */
-                        echo wp_kses_post(vms_portal_notice('error', sprintf(__('Profile save failed: %s', 'backstage-venue-manager'), $r->get_error_message())));
+                        echo wp_kses_post(bvmgr_portal_notice('error', sprintf(__('Profile save failed: %s', 'backstage-venue-manager'), $r->get_error_message())));
                     }
                 }
 
@@ -7121,7 +7121,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                             }
                         } else {
                             /* translators: 1: gallery slot number, 2: media upload error message. */
-                            echo wp_kses_post(vms_portal_notice('error', sprintf(__('Gallery photo %1$d upload failed: %2$s', 'backstage-venue-manager'), $i, $attach_id->get_error_message())));
+                            echo wp_kses_post(bvmgr_portal_notice('error', sprintf(__('Gallery photo %1$d upload failed: %2$s', 'backstage-venue-manager'), $i, $attach_id->get_error_message())));
                         }
                     }
 
@@ -7137,7 +7137,7 @@ if (!function_exists('vms_vendor_portal_render_profile')) {
                     vms_vendor_flag_vendor_update($vendor_id, 'profile');
                 }
 
-                echo wp_kses_post(vms_portal_notice('success', __('Profile saved.', 'backstage-venue-manager')));
+                echo wp_kses_post(bvmgr_portal_notice('success', __('Profile saved.', 'backstage-venue-manager')));
             }
         }
 

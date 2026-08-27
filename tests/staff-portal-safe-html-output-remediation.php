@@ -61,8 +61,8 @@ if (!function_exists('esc_html')) {
 	}
 }
 
-if (!function_exists('vms_portal_notice')) {
-	function vms_portal_notice(string $type, string $msg): string
+if (!function_exists('bvmgr_portal_notice')) {
+	function bvmgr_portal_notice(string $type, string $msg): string
 	{
 		$type = ($type === 'success' || $type === 'warning') ? $type : 'error';
 		return '<div class="vms-notice vms-notice-' . esc_attr($type) . '">' . esc_html($msg) . '</div>';

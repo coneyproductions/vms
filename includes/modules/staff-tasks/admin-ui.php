@@ -412,11 +412,11 @@ if (!function_exists('vms_tasks_admin_hover_tip_map')) {
 	function vms_tasks_admin_hover_tip_map(): array
 	{
 		$map = array();
-		if (!function_exists('vms_get_tour_registry')) {
+		if (!function_exists('bvmgr_get_tour_registry')) {
 			return $map;
 		}
 
-		foreach ((array) vms_get_tour_registry() as $tour) {
+		foreach ((array) bvmgr_get_tour_registry() as $tour) {
 			if (!is_array($tour)) {
 				continue;
 			}
@@ -464,8 +464,8 @@ if (!function_exists('vms_tasks_admin_help_button')) {
 		if ($tour_id === '') {
 			return '';
 		}
-		if (function_exists('vms_render_help_button')) {
-			return vms_render_help_button(array(
+		if (function_exists('bvmgr_render_help_button')) {
+			return bvmgr_render_help_button(array(
 				'tour_id' => $tour_id,
 				'anchor' => $anchor,
 				'class' => 'vms-staff-tasks-help-menu',
@@ -486,7 +486,7 @@ if (!function_exists('vms_tasks_admin_get_event_options')) {
 			: array();
 
 		if (empty($event_ids)) {
-			$k_date = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
+			$k_date = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
 			if ($k_date === '') {
 				$k_date = '_vms_event_date';
 			}

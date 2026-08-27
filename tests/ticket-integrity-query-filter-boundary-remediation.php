@@ -362,8 +362,8 @@ if (!function_exists('wp_date')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_b_meta_key')) {
-	function vms_ticketing_b_meta_key(string $field, string $fallback): string
+if (!function_exists('bvmgr_ticketing_b_meta_key')) {
+	function bvmgr_ticketing_b_meta_key(string $field, string $fallback): string
 	{
 		unset($field);
 		return $fallback;
@@ -400,8 +400,8 @@ if (!function_exists('vms_ticketing_b_get_event_ticket_products')) {
 	}
 }
 
-if (!function_exists('vms_tec_is_cancelled_event')) {
-	function vms_tec_is_cancelled_event(int $tec_event_id): bool
+if (!function_exists('bvmgr_tec_is_cancelled_event')) {
+	function bvmgr_tec_is_cancelled_event(int $tec_event_id): bool
 	{
 		return !empty($GLOBALS['vms_test_cancelled_events'][$tec_event_id]);
 	}

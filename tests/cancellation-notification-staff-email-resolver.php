@@ -106,7 +106,7 @@ try {
 		}
 
 		$vendorId = $registerPost((int) $vendorId);
-		$key = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'primary_email') ?: '_vms_vendor_primary_email') : '_vms_vendor_primary_email';
+		$key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'primary_email') ?: '_vms_vendor_primary_email') : '_vms_vendor_primary_email';
 		update_post_meta($vendorId, $key, $email);
 
 		return $vendorId;
@@ -157,8 +157,8 @@ try {
 	$registerPost($eventPlanId);
 	$registerPlan($eventPlanId);
 
-	$bandKey = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
-	$secondaryKey = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+	$bandKey = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
+	$secondaryKey = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids') : '_vms_secondary_vendor_ids';
 	update_post_meta($eventPlanId, $bandKey, $primaryVendorId);
 	update_post_meta($eventPlanId, $secondaryKey, array($secondaryVendorId));
 	update_post_meta($eventPlanId, '_vms_event_date', '2026-07-04');

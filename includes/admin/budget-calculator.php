@@ -231,28 +231,28 @@ function vms_budget_calculator_is_valid_ymd(string $ymd): bool
 
 function vms_budget_calculator_event_plan_date_key(): string
 {
-  $key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
+  $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
   if ($key === '') $key = '_vms_event_date';
   return $key;
 }
 
 function vms_budget_calculator_event_plan_status_key(): string
 {
-  $key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+  $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
   if ($key === '') $key = '_vms_event_plan_status';
   return $key;
 }
 
 function vms_budget_calculator_event_plan_ticket_stats_key(): string
 {
-  $key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
+  $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
   if ($key === '') $key = '_vms_ticket_stats_v1';
   return $key;
 }
 
 function vms_budget_calculator_ensure_inclusion_helpers(): void
 {
-  if (function_exists('vms_event_plan_should_include') && function_exists('vms_event_plan_get_status')) {
+  if (function_exists('vms_event_plan_should_include') && function_exists('bvmgr_event_plan_get_status')) {
     return;
   }
 
@@ -314,16 +314,16 @@ function vms_budget_calculator_collect_event_plans_for_year(int $year, bool $inc
     }
 
     $status = '';
-    if (function_exists('vms_event_plan_get_status')) {
-      $status = (string) vms_event_plan_get_status($pid, 'financial');
+    if (function_exists('bvmgr_event_plan_get_status')) {
+      $status = (string) bvmgr_event_plan_get_status($pid, 'financial');
     } else {
       $status = sanitize_key((string) get_post_meta($pid, $status_key, true));
     }
     if ($status === 'canceled') $status = 'cancelled';
     if ($status === '') $status = 'draft';
 
-    $status_label = function_exists('vms_event_plan_status_label')
-      ? (string) vms_event_plan_status_label($status)
+    $status_label = function_exists('bvmgr_event_plan_status_label')
+      ? (string) bvmgr_event_plan_status_label($status)
       : ucwords(str_replace(array('_', '-'), ' ', $status));
 
     $rows[] = array(

@@ -34,8 +34,8 @@ if (!function_exists('vms_cancellation_refund_product_meta_key')) {
 			}
 		}
 
-		if (function_exists('vms_meta_key')) {
-			$key = vms_meta_key('product', $which);
+		if (function_exists('bvmgr_meta_key')) {
+			$key = bvmgr_meta_key('product', $which);
 			if (is_string($key) && $key !== '') {
 				return $key;
 			}
@@ -362,11 +362,11 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 			);
 		}
 
-		$k_tec_event_id = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id')
+		$k_tec_event_id = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id')
 			: '_vms_tec_event_id';
-		$k_ticketing_override = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'ticketing_enabled_override') ?: '_vms_ticketing_enabled_override')
+		$k_ticketing_override = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'ticketing_enabled_override') ?: '_vms_ticketing_enabled_override')
 			: '_vms_ticketing_enabled_override';
 
 		$tec_event_id = (int) get_post_meta($event_plan_id, $k_tec_event_id, true);
@@ -614,8 +614,8 @@ if (!empty($data['failed_products']) || !empty($data['failed_rsvp_tickets'])) {
 		);
 	}
 
-	$k_tec_event_id = function_exists('vms_meta_key')
-		? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id')
+	$k_tec_event_id = function_exists('bvmgr_meta_key')
+		? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id')
 		: '_vms_tec_event_id';
 	$tec_event_id = (int) get_post_meta($event_plan_id, $k_tec_event_id, true);
 	if ($tec_event_id <= 0) {
@@ -1250,12 +1250,12 @@ if (!function_exists('vms_cancellation_collect_modern_staff_assignment_map')) {
 	function vms_cancellation_collect_modern_staff_assignment_map(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
-		if ($event_plan_id <= 0 || !function_exists('vms_staffing_get_event_slots')) {
+		if ($event_plan_id <= 0 || !function_exists('bvmgr_staffing_get_event_slots')) {
 			return array();
 		}
 
 		$assigned = array();
-		$slots = (array) vms_staffing_get_event_slots($event_plan_id, true);
+		$slots = (array) bvmgr_staffing_get_event_slots($event_plan_id, true);
 		foreach ($slots as $slot_row) {
 			if (!is_array($slot_row)) {
 				continue;
@@ -1698,9 +1698,9 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		if ($vendor_id <= 0) {
 			return '';
 		}
-		$k_primary = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'primary_email') ?: '_vms_vendor_primary_email') : '_vms_vendor_primary_email';
-		$k_email = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'email') ?: '_vms_vendor_email') : '_vms_vendor_email';
-		$k_contact = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'contact_email') ?: '_vms_contact_email') : '_vms_contact_email';
+		$k_primary = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'primary_email') ?: '_vms_vendor_primary_email') : '_vms_vendor_primary_email';
+		$k_email = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'email') ?: '_vms_vendor_email') : '_vms_vendor_email';
+		$k_contact = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'contact_email') ?: '_vms_contact_email') : '_vms_contact_email';
 
 		$candidates = array(
 			(string) get_post_meta($vendor_id, $k_primary, true),
@@ -1716,7 +1716,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		return '';
 	};
 
-	$k_band_vendor_id = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
+	$k_band_vendor_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
 	$band_vendor_id = absint(get_post_meta($event_plan_id, $k_band_vendor_id, true));
 	if ($band_vendor_id > 0) {
 		$add_recipient(
@@ -1761,7 +1761,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		);
 	}
 
-	$k_secondary_vendor_ids = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+	$k_secondary_vendor_ids = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids') : '_vms_secondary_vendor_ids';
 	$secondary_vendor_ids = get_post_meta($event_plan_id, $k_secondary_vendor_ids, true);
 	if (!is_array($secondary_vendor_ids)) {
 		$secondary_vendor_ids = array();
@@ -1888,8 +1888,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 
 	$vendor_message = isset($summary['vendor_message']) ? sanitize_textarea_field((string) $summary['vendor_message']) : '';
 	if ($vendor_message === '') {
-		$k_cancel_vendor_message = function_exists('vms_meta_key')
-			? (vms_meta_key('event_plan', 'cancel_vendor_message') ?: '_vms_cancel_vendor_message')
+		$k_cancel_vendor_message = function_exists('bvmgr_meta_key')
+			? (bvmgr_meta_key('event_plan', 'cancel_vendor_message') ?: '_vms_cancel_vendor_message')
 			: '_vms_cancel_vendor_message';
 		$vendor_message = sanitize_textarea_field((string) get_post_meta($event_plan_id, $k_cancel_vendor_message, true));
 	}

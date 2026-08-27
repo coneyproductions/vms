@@ -351,8 +351,8 @@ function vms_render_schedule_page(): void
     $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
     $actions_html .= '<a class="button button-primary" href="' . esc_url($new_event_plan_url) . '">' . esc_html__('New Event Plan', 'backstage-venue-manager') . '</a>';
 
-    if (function_exists('vms_admin_ui_render_shell')) {
-        vms_admin_ui_render_shell(
+    if (function_exists('bvmgr_admin_ui_render_shell')) {
+        bvmgr_admin_ui_render_shell(
             array(
                 'title' => __('Schedule', 'backstage-venue-manager'),
                 'subtitle' => __('Plan dates, venues, and event readiness from a single calendar command center.', 'backstage-venue-manager'),

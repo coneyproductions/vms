@@ -317,7 +317,7 @@ if (!function_exists('vms_social_queue_process_item')) {
 			return;
 		}
 
-		$provider = vms_social_get_provider((string) ($row['platform'] ?? ''));
+		$provider = bvmgr_social_get_provider((string) ($row['platform'] ?? ''));
 		if (!($provider instanceof BVMGR_Social_Provider_Interface)) {
 			vms_social_queue_update($queue_id, array(
 				'status' => 'needs_review',

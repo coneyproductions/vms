@@ -15,7 +15,7 @@
         $linked_tec_url = (string) ($linked_tec_summary['linked_tec_url'] ?? ($meta_bundle['linked_tec_url'] ?? ''));
         $linked_tec_title = (string) ($linked_tec_summary['linked_tec_title'] ?? '');
 
-        $k_ticket_pids = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'ticket_product_ids') ?: '_vms_ticket_product_ids_v1') : '_vms_ticket_product_ids_v1';
+        $k_ticket_pids = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'ticket_product_ids') ?: '_vms_ticket_product_ids_v1') : '_vms_ticket_product_ids_v1';
         $ticket_pids = isset($meta_bundle['ticket_product_ids']) && is_array($meta_bundle['ticket_product_ids']) ? $meta_bundle['ticket_product_ids'] : array();
         $ticket_stats = isset($ticket_stats) && is_array($ticket_stats)
             ? $ticket_stats
@@ -422,8 +422,8 @@
             </div>
 
             <?php
-                $k_sup = function_exists('vms_meta_key')
-                    ? (vms_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
+                $k_sup = function_exists('bvmgr_meta_key')
+                    ? (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
                     : '_vms_calendar_unpublished_suppress';
                 $sup_val = (string) get_post_meta($post->ID, $k_sup, true);
                 $sup_checked = in_array($sup_val, array('1', 'yes', 'true'), true);

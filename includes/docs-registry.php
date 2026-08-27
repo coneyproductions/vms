@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) { exit; }
  * Stores sources (core + addons) and the discovered docs in those sources.
  */
 
-function vms_docs_sources() {
+function bvmgr_docs_sources() {
     static $sources = null;
 
     if ($sources !== null) {
@@ -50,10 +50,10 @@ function vms_docs_sources() {
  * Discover markdown docs in registered sources.
  * Returns array keyed by module, each item is an array of docs.
  */
-function vms_docs_index() {
+function bvmgr_docs_index() {
     $index = [];
 
-    foreach (vms_docs_sources() as $src) {
+    foreach (bvmgr_docs_sources() as $src) {
         $path = $src['path'];
 
         if (!is_dir($path)) {

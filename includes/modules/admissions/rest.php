@@ -112,7 +112,7 @@ if (!function_exists('vms_admission_event_plan_context')) {
 		$venue_id = (int) get_post_meta($event_plan_id, '_vms_venue_id', true);
 		$venue_name = $venue_id > 0 ? get_the_title($venue_id) : '';
 		$event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
-		$status_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+		$status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 		if ($status_key === '') {
 			$status_key = '_vms_event_plan_status';
 		}

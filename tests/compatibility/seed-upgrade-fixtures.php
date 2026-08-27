@@ -24,8 +24,8 @@ $labelBase = strtoupper($fixturePrefix) . '-' . $suffix;
 wp_set_current_user(1);
 
 $eventPlanMetaKey = static function (string $field, string $fallback): string {
-	if (function_exists('vms_meta_key')) {
-		$key = (string) vms_meta_key('event_plan', $field);
+	if (function_exists('bvmgr_meta_key')) {
+		$key = (string) bvmgr_meta_key('event_plan', $field);
 		if ($key !== '') {
 			return $key;
 		}
@@ -41,8 +41,8 @@ $productMetaKey = static function (string $field, string $fallback): string {
 			return $key;
 		}
 	}
-	if (function_exists('vms_meta_key')) {
-		$key = (string) vms_meta_key('product', $field);
+	if (function_exists('bvmgr_meta_key')) {
+		$key = (string) bvmgr_meta_key('product', $field);
 		if ($key !== '') {
 			return $key;
 		}

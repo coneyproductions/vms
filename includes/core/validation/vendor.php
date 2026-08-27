@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
  * Returns: ['ok' => bool, 'data' => array, 'errors' => array]
  */
 function vms_validate_vendor_input(array $input): array {
-	$schema = vms_vendor_schema();
+	$schema = bvmgr_vendor_schema();
 
 	$out = [];
 	$errors = [];

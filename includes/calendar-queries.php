@@ -54,8 +54,8 @@ function vms_get_event_plans_for_venue_month(int $venue_id, string $ym): array
 
     // Convert exclusive end to inclusive end for the canonical feed.
     $month_end_inclusive = gmdate('Y-m-d', strtotime('-1 day', strtotime($m['end'])));
-    $events = function_exists('vms_get_calendar_events')
-        ? (array) vms_get_calendar_events([
+    $events = function_exists('bvmgr_get_calendar_events')
+        ? (array) bvmgr_get_calendar_events([
             'start_date' => $m['start'],
             'end_date' => $month_end_inclusive,
             'venue_ids' => [$venue_id],

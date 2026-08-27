@@ -185,7 +185,7 @@ function wp_insert_post(array $postarr, bool $wpError = false)
 	return 321;
 }
 
-function vms_get_event_plan_for_tec_event(int $eventId): int
+function bvmgr_get_event_plan_for_tec_event(int $eventId): int
 {
 	return (int) ($GLOBALS['vms_test_event_plan_map'][$eventId] ?? 0);
 }

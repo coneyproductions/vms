@@ -598,8 +598,8 @@ function vms_due_render_admin_notices(): void {
 }
 
 function vms_render_due_dates_admin_page(): void {
-  if (function_exists('vms_admin_ui_render_shell')) {
-    vms_admin_ui_render_shell(
+  if (function_exists('bvmgr_admin_ui_render_shell')) {
+    bvmgr_admin_ui_render_shell(
       array(
         'title' => __('Due Dates', 'backstage-venue-manager'),
         'notices_callback' => 'vms_due_render_admin_notices',

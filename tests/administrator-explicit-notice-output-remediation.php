@@ -1328,7 +1328,7 @@ $assert($richNoticesCallbackFiles === $expectedRichNoticesCallbackFiles, 'Rich e
 
 $GLOBALS['vms_test_rich_notice_callback_calls'] = 0;
 ob_start();
-vms_admin_ui_render_shell(
+bvmgr_admin_ui_render_shell(
 	array(
 		'title' => 'Rich Shell Test',
 		'rich_notices_callback' => static function (): void {
@@ -1347,7 +1347,7 @@ $assert(strpos($richShellOutput, 'Heads up.') < strpos($richShellOutput, 'Plain 
 
 $GLOBALS['vms_test_rich_notice_callback_calls'] = 0;
 ob_start();
-vms_admin_ui_render_shell(
+bvmgr_admin_ui_render_shell(
 	array(
 		'title' => 'Rich Shell Empty Test',
 		'rich_notices_callback' => static function (): void {

@@ -48,7 +48,7 @@ function vms_docs_public_render() {
         return;
     }
 
-    $index = vms_docs_index();
+    $index = bvmgr_docs_index();
     if (empty($index[$module])) {
         wp_die('Documentation not found.');
     }

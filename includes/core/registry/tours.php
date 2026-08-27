@@ -2,14 +2,14 @@
 
 defined('ABSPATH') || exit;
  
-if (!function_exists('vms_register_tour')) {
+if (!function_exists('bvmgr_register_tour')) {
 	/**
 	 * Runtime registry API for modules/add-ons.
 	 *
 	 * @param string $tour_id
 	 * @param array<string,mixed> $args
 	 */
-	function vms_register_tour(string $tour_id, array $args): void
+	function bvmgr_register_tour(string $tour_id, array $args): void
 	{
 		$tour_id = sanitize_key($tour_id);
 		if ($tour_id === '') {
@@ -23,11 +23,11 @@ if (!function_exists('vms_register_tour')) {
 	}
 }
 
-if (!function_exists('vms_get_registered_tours')) {
+if (!function_exists('bvmgr_get_registered_tours')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_get_registered_tours(): array
+	function bvmgr_get_registered_tours(): array
 	{
 		$rows = isset($GLOBALS['bvmgr_registered_tours']) && is_array($GLOBALS['bvmgr_registered_tours'])
 			? $GLOBALS['bvmgr_registered_tours']
@@ -36,11 +36,11 @@ if (!function_exists('vms_get_registered_tours')) {
 	}
 }
 
-if (!function_exists('vms_get_tour_registry')) {
+if (!function_exists('bvmgr_get_tour_registry')) {
 	/**
 	 * Returns canonical tour registry.
 	 */
-	function vms_get_tour_registry(): array
+	function bvmgr_get_tour_registry(): array
 	{
 		$tours = array(
 			array(
@@ -84,7 +84,7 @@ if (!function_exists('vms_get_tour_registry')) {
 			),
 		);
 
-		$dynamic = vms_get_registered_tours();
+		$dynamic = bvmgr_get_registered_tours();
 		if (!empty($dynamic)) {
 			$tours = array_merge($tours, $dynamic);
 		}

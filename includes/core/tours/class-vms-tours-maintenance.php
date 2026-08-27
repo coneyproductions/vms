@@ -28,8 +28,8 @@ if (!class_exists('BVMGR_Tours_Maintenance')) {
 				wp_die('Insufficient permissions.');
 			}
 
-			if (function_exists('vms_admin_ui_render_shell')) {
-				vms_admin_ui_render_shell(
+			if (function_exists('bvmgr_admin_ui_render_shell')) {
+				bvmgr_admin_ui_render_shell(
 					array(
 						'title' => __('Tour Maintenance', 'backstage-venue-manager'),
 						'shell_id' => 'vms-tour-maintenance',

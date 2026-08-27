@@ -193,7 +193,7 @@ function wp_date(string $format, ?int $timestamp = null, ?DateTimeZone $timezone
 	return (new DateTimeImmutable('@' . $timestamp))->setTimezone($timezone)->format($format);
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	if ($scope === 'event_plan' && $field === 'import_key') {
 		return '_vms_import_event_key';

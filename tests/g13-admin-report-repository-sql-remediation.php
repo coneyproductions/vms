@@ -118,7 +118,7 @@ function vms_ticketing_v2_product_meta_key(string $field): string
 	return '_vms_' . $field;
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	return $field === 'date' ? '_vms_event_date' : '_vms_' . $field;
@@ -149,13 +149,13 @@ function vms_event_plan_should_include(int $plan_id, string $context, array $arg
 	return !in_array($plan_id, $GLOBALS['g13_excluded'], true);
 }
 
-function vms_event_plan_get_status(int $plan_id, string $context): string
+function bvmgr_event_plan_get_status(int $plan_id, string $context): string
 {
 	unset($context);
 	return $GLOBALS['g13_statuses'][$plan_id] ?? 'draft';
 }
 
-function vms_event_plan_status_label(string $status): string
+function bvmgr_event_plan_status_label(string $status): string
 {
 	return strtoupper($status);
 }

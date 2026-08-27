@@ -64,8 +64,8 @@ add_action('plugins_loaded', 'vms_square_ticket_mirror_maybe_upgrade_schema', 12
 
 function vms_square_ticket_mirror_product_meta_key(string $which): string
 {
-    if (function_exists('vms_meta_key')) {
-        $mapped = (string) vms_meta_key('product', $which);
+    if (function_exists('bvmgr_meta_key')) {
+        $mapped = (string) bvmgr_meta_key('product', $which);
         if ($mapped !== '') {
             return $mapped;
         }
@@ -105,8 +105,8 @@ function vms_square_ticket_mirror_product_meta_key(string $which): string
 
 function vms_square_ticket_mirror_event_plan_meta_key(string $which): string
 {
-    if (function_exists('vms_meta_key')) {
-        $mapped = (string) vms_meta_key('event_plan', $which);
+    if (function_exists('bvmgr_meta_key')) {
+        $mapped = (string) bvmgr_meta_key('event_plan', $which);
         if ($mapped !== '') {
             return $mapped;
         }

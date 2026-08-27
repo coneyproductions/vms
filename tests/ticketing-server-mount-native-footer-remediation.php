@@ -213,12 +213,12 @@ function get_post_type($post = null): string
 	return (string) ($GLOBALS['vms_test_context']['post_types'][$postId] ?? '');
 }
 
-function vms_tec_is_cancelled_event(int $eventId): bool
+function bvmgr_tec_is_cancelled_event(int $eventId): bool
 {
 	return in_array($eventId, (array) ($GLOBALS['vms_test_context']['cancelled_event_ids'] ?? array()), true);
 }
 
-function vms_ticketing_v2_find_plan_id_by_tec_event_id(int $eventId): int
+function bvmgr_ticketing_v2_find_plan_id_by_tec_event_id(int $eventId): int
 {
 	return (int) ($GLOBALS['vms_test_context']['plan_ids'][$eventId] ?? 0);
 }

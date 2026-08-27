@@ -72,8 +72,8 @@ if (!function_exists('vms_events_photo_overlay_context')) {
         $is_cancelled = ($plan_status === 'cancelled');
         $rescheduled = array();
 
-        if ($is_cancelled && $plan_id > 0 && function_exists('vms_event_plan_get_public_reschedule_destination')) {
-            $rescheduled = (array) vms_event_plan_get_public_reschedule_destination($plan_id);
+        if ($is_cancelled && $plan_id > 0 && function_exists('bvmgr_event_plan_get_public_reschedule_destination')) {
+            $rescheduled = (array) bvmgr_event_plan_get_public_reschedule_destination($plan_id);
         }
 
         $is_rescheduled = $is_cancelled && !empty($rescheduled['url']);
@@ -175,7 +175,7 @@ if (!function_exists('vms_events_photo_register_shortcodes')) {
 if (!function_exists('vms_events_photo_shortcode')) {
     function vms_events_photo_shortcode(array $atts = array()): string
     {
-        if (!function_exists('vms_get_calendar_events')) {
+        if (!function_exists('bvmgr_get_calendar_events')) {
             return '';
         }
 
@@ -224,7 +224,7 @@ if (!function_exists('vms_events_photo_shortcode')) {
             ? vms_calendar_boolish($atts['more_link'], false)
             : !empty($atts['more_link']);
 
-        $timezone = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+        $timezone = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
         $today = (string) wp_date('Y-m-d', time(), $timezone);
 
         $start_date = trim((string) $atts['start_date']);
@@ -264,7 +264,7 @@ if (!function_exists('vms_events_photo_shortcode')) {
             $query_args['venue_ids'] = $venue_ids;
         }
 
-        $events = (array) vms_get_calendar_events($query_args);
+        $events = (array) bvmgr_get_calendar_events($query_args);
         if (empty($events)) {
             return '<div class="vms-events-photo vms-events-photo--empty"><p class="vms-events-photo__empty">' . esc_html((string) $atts['empty_message']) . '</p></div>';
         }

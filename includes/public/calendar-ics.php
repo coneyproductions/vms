@@ -91,7 +91,7 @@ if (!function_exists('vms_calendar_ics_dt_from_ymd_utc')) {
 		if (!vms_calendar_ics_valid_ymd($ymd)) {
 			return '';
 		}
-		$tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+		$tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		try {
 			$dt = new DateTimeImmutable($ymd . ' 00:00:00', $tz);
 		} catch (Exception $e) {
@@ -142,7 +142,7 @@ if (!function_exists('vms_calendar_ics_normalize_range')) {
 	 */
 	function vms_calendar_ics_normalize_range(): array
 	{
-		$today = wp_date('Y-m-d', time(), function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone());
+		$today = wp_date('Y-m-d', time(), function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone());
 		$default_start = $today;
 		$default_end = gmdate('Y-m-d', strtotime('+365 days', strtotime($default_start)));
 
@@ -213,10 +213,10 @@ if (!function_exists('vms_calendar_ics_collect_events')) {
 			$args['viewer_vendor_id'] = $viewer_vendor_id;
 		}
 
-		if (!function_exists('vms_get_calendar_events')) {
+		if (!function_exists('bvmgr_get_calendar_events')) {
 			return array();
 		}
-		return (array) vms_get_calendar_events($args);
+		return (array) bvmgr_get_calendar_events($args);
 	}
 }
 
@@ -257,7 +257,7 @@ if (!function_exists('vms_calendar_ics_build')) {
 	{
 		$mode = sanitize_key($mode);
 		$site_name = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
-		$tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+		$tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		$tz_name = ($tz instanceof DateTimeZone) ? (string) $tz->getName() : 'UTC';
 		$site_host = (string) wp_parse_url(home_url('/'), PHP_URL_HOST);
 		$cal_name = ($mode === 'vendor')

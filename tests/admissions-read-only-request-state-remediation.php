@@ -278,7 +278,7 @@ function vms_admission_vendor_guest_portal_events(int $vendor_id): array
 	return (array) ($GLOBALS['vms_test_guest_events'] ?? array());
 }
 
-function vms_portal_notice(string $type, string $message): string
+function bvmgr_portal_notice(string $type, string $message): string
 {
 	return '<div class="' . esc_attr($type) . '">' . esc_html($message) . '</div>';
 }

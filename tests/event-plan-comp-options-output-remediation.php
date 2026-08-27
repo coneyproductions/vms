@@ -280,8 +280,8 @@ try {
 	$disabledPackageId = $createPost('vms_comp_package', 'Disabled <img src=x onerror=alert(1)>');
 
 	$vendorMetaKey = static function (string $field, string $fallback): string {
-		return function_exists('vms_meta_key')
-			? (string) (vms_meta_key('vendor', $field) ?: $fallback)
+		return function_exists('bvmgr_meta_key')
+			? (string) (bvmgr_meta_key('vendor', $field) ?: $fallback)
 			: $fallback;
 	};
 

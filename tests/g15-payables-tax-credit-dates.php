@@ -416,7 +416,7 @@ function vms_event_credit_meta_keys(): array
 	return array('original_event_plan_id' => '_credit_original_plan');
 }
 
-function vms_meta_key(string $object, string $field): string
+function bvmgr_meta_key(string $object, string $field): string
 {
 	unset($object, $field);
 	return '_event_status';

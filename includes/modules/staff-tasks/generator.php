@@ -577,7 +577,7 @@ if (!function_exists('vms_tasks_collect_upcoming_event_ids')) {
 		$today = wp_date('Y-m-d', time(), $tz);
 		$end = wp_date('Y-m-d', time() + ($horizon_days * DAY_IN_SECONDS), $tz);
 
-		$k_date = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
+		$k_date = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
 		if ($k_date === '') {
 			$k_date = '_vms_event_date';
 		}

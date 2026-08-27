@@ -71,7 +71,7 @@ This phase does not authorize B4–B8 work, pushing, deployment, packaging for d
 
 ### W1 — activation and plugin-basename pilot
 
-Status: verified, pending isolated commit.
+Status: committed at `c0c72a0507e5415bb5800dd25f2d1e9beb21b624`.
 
 - Exact cutover: `35` unique functions / `35` declaration sites / no duplicate family; all declarations and all frozen direct-call and exact function-literal references moved atomically.
 - Ratchet: `35` migrated / `4,486` legacy functions remaining; scanner B3 rows `4,541 -> 4,506`; no stale/forward reference, unexpected finding, unmapped finding, or wrapper.
@@ -80,3 +80,17 @@ Status: verified, pending isolated commit.
 - Real lifecycle: the exact dev ZIP passed the VMS-only disposable dependency matrix, activation, deactivation, reactivation, repeated activation, baseline upgrade, interrupted-migration resume, fixture preservation, and uninstall preservation. Report SHA-256: `afd9ff4c0b1ce90a368564996b1677e169951582f50870795b3af306e6481098`; `WARN` is limited to captured PHP/dependency deprecations.
 - Strict packaged scan: `5,239` total = historical `125` errors + `5,114` phase-aware warnings. B3 function rows are exactly `4,506`; B7 `182`; method-scope `420`; external/core `6`. The migration-aware gate passes with exactly `35` authoritative B3 findings removed and zero unexpected/unmapped rows. Normalized JSON SHA-256: `ee65a3b1a7c7ac1f428f867d920b489958a31629dcd472d88ea691fdd3d8b54f`.
 - Untouched boundaries: `docs/wporg-prefix-b3-untouched-tree-baseline.json` freezes reproducible content hashes for the installed/live core and all five installed add-ons. No installed/live source was modified.
+
+### W2 — atomic five-add-on and public-extension API boundary
+
+Status: verified for the isolated W2 commit.
+
+- Exact cutover: `66` unique functions / `68` declaration sites, including both sites of `vms_event_plan_set_secondary_vendors` and `vms_render_help_button`; all frozen direct calls and proven function-resolution literals moved atomically.
+- Ratchet: `101` migrated / `4,420` legacy functions remaining and `4,438` B3 declaration rows remaining; no stale or forward reference, unexpected finding, unmapped finding, completed-batch residual, or wrapper.
+- Controlled recovery: the first transformation exposed six retained contracts that share function-like spelling. The failed tracked attempt is preserved at `/private/tmp/bvm-wporg-b3-w2-failed-exact-literal.patch` (SHA-256 `f77ad24f05e9a699d63cd3bfa6fb8b20a4eaea1d4bbbc3d785ed8d06a184cedb`). W2 was restored to its clean W1 checkpoint and reapplied with the transformer restricted to proven function-resolution contexts; the retained admin hooks, option value, and notification-source values remain unchanged.
+- Disposable add-ons: `/private/tmp/bvm-wporg-b3-addon-isolation` contains source snapshots, pre-B3 copies, migrated workspaces, provenance, and deterministic patches for all five known add-ons. The explicit isolated-root compatibility harness passes with `63` callable entries / `53` unique core functions; the two excluded Fill Dates entries are retained hook-name homonyms rather than callable dependencies. Installed add-on contract regressions also pass against their untouched legacy callers.
+- Focused verification: phase-aware B3, manifest, scanner, B2 foundation, B2.5 runtime, migration-state, installed/disposable add-on, runtime-stub, plugin-identity, Event Plan review/secondary-vendor, guided-tour, social-panel/queue/provider/webhook, changed-PHP lint, release-compatibility self-test, public-release pipeline self-test, and diff gates pass.
+- Disposable package: `/private/tmp/bvm-wporg-b3-w2-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `c0217f9b2a1dbaf9184786dd05ffeeb90d4839801f4f0f14240aa186d78782fe`. The build staged `374` files, linted `271` PHP files, checked `55` JavaScript files, and passed package integrity.
+- Real lifecycle: the exact W2 dev ZIP completed the VMS-only matrix, activation, deactivation, reactivation, repeated activation, baseline upgrade, interruption recovery, fixture preservation, and uninstall preservation. Report SHA-256: `b581ef24cba9b8a5531c928652c7cd8639ecfec31fecf695843b51a90f0a85f9`; `WARN` is limited to captured PHP/dependency deprecations.
+- Strict packaged scan: `5,171` total = historical `125` errors + `5,046` phase-aware warnings. B3 function rows are exactly `4,438`; B7 `182`; method-scope `420`; external/core `6`. The migration-aware gate passes with zero unexpected/unmapped/completed rows. Normalized JSON SHA-256: `8991509152b0ed4ee70fd063b036cfec5df21b3722b54aafffef8ff999276896`.
+- Boundaries: no B4-B8 identifier family changed. Installed/live core and add-on trees retain their recorded hashes; no push, merge, upload, tag, deployment, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

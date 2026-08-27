@@ -358,8 +358,8 @@ function vms_ticketing_v2_cart_scan(): array {
         // Fallback: Event Tickets products can be mapped to a plan via TEC event ID.
         if ($plan_id <= 0) {
             $tec_event_id = absint(vms_ticketing_v2_meta_get($pid, '_tribe_wooticket_for_event'));
-            if ($tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-                $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
+            if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+                $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
                 if ($role === '') {
                     $role = 'ga_ticket';
                 }
@@ -1821,8 +1821,8 @@ function vms_ticketing_v2_resolve_plan_id_for_ticket_product(int $product_id): i
         if ($tec_event_id <= 0 && function_exists('vms_ticketing_v2_product_meta_key')) {
             $tec_event_id = absint(vms_ticketing_v2_meta_get($product_id, vms_ticketing_v2_product_meta_key('tec_event_id')));
         }
-        if ($tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-            $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+        if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+            $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
         }
     }
 
@@ -2649,8 +2649,8 @@ function vms_ticketing_v2_event_ticket_product_ids_for_event(int $event_id): arr
 
     $product_ids = array();
 
-    if (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') && function_exists('vms_ticketing_v2_get_config')) {
-        $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($event_id));
+    if (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') && function_exists('vms_ticketing_v2_get_config')) {
+        $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($event_id));
         if ($plan_id > 0) {
             $cfg = vms_ticketing_v2_get_config($plan_id);
             $sync = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($plan_id) : array();
@@ -4265,7 +4265,7 @@ function vms_ticketing_v2_product_cancelled_event_id(int $product_id): int
     $event_id = function_exists('vms_ticketing_v2_resolve_event_id_for_product')
         ? absint(vms_ticketing_v2_resolve_event_id_for_product($product_id))
         : 0;
-    if ($event_id > 0 && vms_tec_is_cancelled_event($event_id)) {
+    if ($event_id > 0 && bvmgr_tec_is_cancelled_event($event_id)) {
         return $event_id;
     }
 
@@ -4296,8 +4296,8 @@ function vms_ticketing_v2_linked_tec_event_id_for_plan(int $plan_id): int
         }
     }
 
-    $tec_key = function_exists('vms_ticketing_b_meta_key')
-        ? (string) vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
+    $tec_key = function_exists('bvmgr_ticketing_b_meta_key')
+        ? (string) bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
         : '_vms_tec_event_id';
     if ($tec_key === '') {
         $tec_key = '_vms_tec_event_id';
@@ -4406,8 +4406,8 @@ function vms_ticketing_v2_sale_context_status_label(string $status): string
     if ($status === '') {
         return __('unavailable', 'backstage-venue-manager');
     }
-    if (function_exists('vms_event_plan_status_label')) {
-        return (string) vms_event_plan_status_label($status);
+    if (function_exists('bvmgr_event_plan_status_label')) {
+        return (string) bvmgr_event_plan_status_label($status);
     }
 
     return ucwords(str_replace('_', ' ', $status));
@@ -4608,7 +4608,7 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
         }
     }
 
-    if (vms_tec_is_cancelled_event($tec_event_id)) {
+    if (bvmgr_tec_is_cancelled_event($tec_event_id)) {
         $code = 'event_cancelled';
         return array(
             'ok' => false,
@@ -4928,8 +4928,8 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
     // Fallback for Event Tickets products: map tec_event_id to a plan when plan marker is missing.
     if ($plan_id <= 0) {
         $tec_event_id = absint(vms_ticketing_v2_meta_get($pid, '_tribe_wooticket_for_event'));
-        if ($tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-            $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
+        if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+            $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
         }
     }
 
@@ -5799,7 +5799,7 @@ function vms_ticketing_v2_resolve_event_id_for_product(int $product_id): int
     if (function_exists('vms_ticketing_v2_product_meta_key')) {
         $plan_id = absint(get_post_meta($product_id, vms_ticketing_v2_product_meta_key('event_plan_id'), true));
         if ($plan_id > 0) {
-            $tec_key = (function_exists('vms_ticketing_b_meta_key') ? vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id');
+            $tec_key = (function_exists('bvmgr_ticketing_b_meta_key') ? bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id');
             $maybe = absint(get_post_meta($plan_id, $tec_key, true));
             if ($maybe > 0 && get_post_type($maybe) === 'tribe_events') {
                 return $maybe;
@@ -6463,8 +6463,8 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     }
     $event_is_rsvp = false;
 
-    if ($is_event && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') && function_exists('vms_ticketing_v2_get_config')) {
-        $plan_id_for_event = vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
+    if ($is_event && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') && function_exists('vms_ticketing_v2_get_config')) {
+        $plan_id_for_event = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
         if ($plan_id_for_event > 0) {
             $cfg_for_event = vms_ticketing_v2_get_config($plan_id_for_event);
             $sync_for_event = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($plan_id_for_event) : array();
@@ -7004,7 +7004,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
     $plan_id = $plan_id_for_event;
     if ($plan_id <= 0) {
-        $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
+        $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
     }
     if ($plan_id <= 0) return;
 
@@ -7032,7 +7032,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 /**
  * True if the linked VMS Event Plan for a TEC event is cancelled.
  */
-function vms_tec_is_cancelled_event(int $tec_event_id): bool
+function bvmgr_tec_is_cancelled_event(int $tec_event_id): bool
 {
     $tec_event_id = absint($tec_event_id);
     if ($tec_event_id <= 0) {
@@ -7040,18 +7040,18 @@ function vms_tec_is_cancelled_event(int $tec_event_id): bool
     }
 
     $plan_id = 0;
-    if (function_exists('vms_get_event_plan_for_tec_event')) {
-        $plan_id = (int) vms_get_event_plan_for_tec_event($tec_event_id);
-    } elseif (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $plan_id = (int) vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
+    if (function_exists('bvmgr_get_event_plan_for_tec_event')) {
+        $plan_id = (int) bvmgr_get_event_plan_for_tec_event($tec_event_id);
+    } elseif (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $plan_id = (int) bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
     }
 
     if ($plan_id <= 0) {
         return false;
     }
 
-    $k_status = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
+    $k_status = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
         : '_vms_event_plan_status';
 
     $status = sanitize_key((string) get_post_meta($plan_id, $k_status, true));
@@ -7071,7 +7071,7 @@ function vms_tec_cancelled_event_body_class(array $classes): array
         return $classes;
     }
     $event_id = (int) get_queried_object_id();
-    if ($event_id > 0 && vms_tec_is_cancelled_event($event_id)) {
+    if ($event_id > 0 && bvmgr_tec_is_cancelled_event($event_id)) {
         $classes[] = 'vms-event-is-cancelled';
     }
     return array_values(array_unique(array_filter(array_map('sanitize_html_class', $classes))));
@@ -7097,20 +7097,20 @@ function vms_tec_prepend_cancelled_notice(string $content): string
         return $content;
     }
 
-    if (!vms_tec_is_cancelled_event($tec_event_id)) {
+    if (!bvmgr_tec_is_cancelled_event($tec_event_id)) {
         return $content;
     }
 
     // Pull cancellation reason from the linked plan (if present).
-    $plan_id = function_exists('vms_get_event_plan_for_tec_event')
-        ? (int) vms_get_event_plan_for_tec_event($tec_event_id)
-        : (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') ? (int) vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id) : 0);
+    $plan_id = function_exists('bvmgr_get_event_plan_for_tec_event')
+        ? (int) bvmgr_get_event_plan_for_tec_event($tec_event_id)
+        : (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') ? (int) bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id) : 0);
 
-    $k_reason_code = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code')
+    $k_reason_code = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code')
         : '_vms_cancel_reason_code';
-    $k_reason_note = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note')
+    $k_reason_note = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note')
         : '_vms_cancel_reason_note';
 
     $reason_code = $plan_id > 0 ? sanitize_key((string) get_post_meta($plan_id, $k_reason_code, true)) : '';
@@ -7124,15 +7124,15 @@ function vms_tec_prepend_cancelled_notice(string $content): string
         }
     }
 
-    $rescheduled = ($plan_id > 0 && function_exists('vms_event_plan_get_public_reschedule_destination'))
-        ? (array) vms_event_plan_get_public_reschedule_destination($plan_id)
+    $rescheduled = ($plan_id > 0 && function_exists('bvmgr_event_plan_get_public_reschedule_destination'))
+        ? (array) bvmgr_event_plan_get_public_reschedule_destination($plan_id)
         : array();
     $has_replacement_url = !empty($rescheduled['url']);
     $replacement_title = trim((string) ($rescheduled['title'] ?? ''));
     $replacement_date = trim((string) ($rescheduled['date_label'] ?? $rescheduled['date_raw'] ?? ''));
 
-    $events_url = function_exists('vms_get_public_event_calendar_url')
-        ? (string) vms_get_public_event_calendar_url()
+    $events_url = function_exists('bvmgr_get_public_event_calendar_url')
+        ? (string) bvmgr_get_public_event_calendar_url()
         : (function_exists('tribe_get_events_link') ? (string) tribe_get_events_link() : home_url('/events/'));
 
     $html  = "\n" . '<div class="vms-event-status-banner vms-event-status-banner--cancelled' . ($has_replacement_url ? ' vms-event-status-banner--rescheduled' : '') . '" role="status" aria-live="polite">';
@@ -7191,15 +7191,15 @@ function vms_tec_cancelled_thumbnail_overlay(string $html, int $post_id, int $po
     if ($post_id <= 0 || get_post_type($post_id) !== 'tribe_events') {
         return $html;
     }
-    if (!vms_tec_is_cancelled_event($post_id)) {
+    if (!bvmgr_tec_is_cancelled_event($post_id)) {
         return $html;
     }
 
-    $plan_id = function_exists('vms_get_event_plan_for_tec_event')
-        ? (int) vms_get_event_plan_for_tec_event($post_id)
-        : (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') ? (int) vms_ticketing_v2_find_plan_id_by_tec_event_id($post_id) : 0);
-    $rescheduled = ($plan_id > 0 && function_exists('vms_event_plan_get_public_reschedule_destination'))
-        ? (array) vms_event_plan_get_public_reschedule_destination($plan_id)
+    $plan_id = function_exists('bvmgr_get_event_plan_for_tec_event')
+        ? (int) bvmgr_get_event_plan_for_tec_event($post_id)
+        : (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') ? (int) bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($post_id) : 0);
+    $rescheduled = ($plan_id > 0 && function_exists('bvmgr_event_plan_get_public_reschedule_destination'))
+        ? (array) bvmgr_event_plan_get_public_reschedule_destination($plan_id)
         : array();
     $is_rescheduled = !empty($rescheduled['url']);
 
@@ -7232,7 +7232,7 @@ function vms_tec_suppress_ticket_forms_for_cancelled_event(string $hook, $provid
     if ($event_id <= 0) {
         return $hook;
     }
-    if (!vms_tec_is_cancelled_event($event_id)) {
+    if (!bvmgr_tec_is_cancelled_event($event_id)) {
         return $hook;
     }
     return '';
@@ -7251,7 +7251,7 @@ function vms_tec_suppress_tickets_for_cancelled_events(array $args): array
     // If we're on a cancelled TEC single-event page, suppress any ticket query regardless of provider/query-shape.
     if (is_singular('tribe_events')) {
         $current_event_id = (int) get_queried_object_id();
-        if ($current_event_id > 0 && vms_tec_is_cancelled_event($current_event_id)) {
+        if ($current_event_id > 0 && bvmgr_tec_is_cancelled_event($current_event_id)) {
             $args['post__in'] = array(0);
             return $args;
         }
@@ -7285,7 +7285,7 @@ function vms_tec_suppress_tickets_for_cancelled_events(array $args): array
             }
 
             $candidate = absint($val);
-            if ($candidate > 0 && vms_tec_is_cancelled_event($candidate)) {
+            if ($candidate > 0 && bvmgr_tec_is_cancelled_event($candidate)) {
                 $event_id = $candidate;
                 break;
             }
@@ -7296,7 +7296,7 @@ function vms_tec_suppress_tickets_for_cancelled_events(array $args): array
         return $args;
     }
 
-    if (!vms_tec_is_cancelled_event($event_id)) {
+    if (!bvmgr_tec_is_cancelled_event($event_id)) {
         return $args;
     }
 
@@ -7437,7 +7437,7 @@ function vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount(string $h
         return $html;
     }
 
-    if (vms_tec_is_cancelled_event($tec_event_id)) {
+    if (bvmgr_tec_is_cancelled_event($tec_event_id)) {
         return $html;
     }
 
@@ -7445,8 +7445,8 @@ function vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount(string $h
         return $html;
     }
 
-    $plan_id = function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')
-        ? absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id))
+    $plan_id = function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')
+        ? absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id))
         : 0;
     if ($plan_id <= 0) {
         return $html;
@@ -7487,15 +7487,15 @@ function vms_ticketing_v2_filter_disabled_ticket_query_args(array $args): array
         return $args;
     }
 
-    if (vms_tec_is_cancelled_event($tec_event_id)) {
+    if (bvmgr_tec_is_cancelled_event($tec_event_id)) {
         return $args;
     }
 
-    if (!function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') || !function_exists('vms_ticketing_v2_disabled_ticket_products_for_plan')) {
+    if (!function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') || !function_exists('vms_ticketing_v2_disabled_ticket_products_for_plan')) {
         return $args;
     }
 
-    $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+    $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
     if ($plan_id <= 0) {
         return $args;
     }
@@ -7540,8 +7540,8 @@ function vms_ticketing_v2_append_entitlements_to_tec_event(string $content): str
     if (vms_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)) return $content;
 
     // Cancelled events should not show reserved add-ons.
-    if (vms_tec_is_cancelled_event((int) $tec_event_id)) return $content;
-    $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
+    if (bvmgr_tec_is_cancelled_event((int) $tec_event_id)) return $content;
+    $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
     if ($plan_id <= 0) return $content;
 
     $html = vms_ticketing_v2_render_entitlements_block((int) $tec_event_id, (int) $plan_id);
@@ -7565,28 +7565,28 @@ function vms_ticketing_v2_shortcode_reserved_add_ons($atts = array()): string
     }
     if ($tec_event_id <= 0) return '';
 
-    if (vms_tec_is_cancelled_event((int) $tec_event_id)) return '';
+    if (bvmgr_tec_is_cancelled_event((int) $tec_event_id)) return '';
 
-    $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
+    $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
     if ($plan_id <= 0) return '';
 
     return vms_ticketing_v2_render_entitlements_block((int) $tec_event_id, (int) $plan_id);
 }
 
-function vms_ticketing_v2_find_plan_id_by_tec_event_id(int $tec_event_id): int
+function bvmgr_ticketing_v2_find_plan_id_by_tec_event_id(int $tec_event_id): int
 {
     $tec_event_id = absint($tec_event_id);
     if ($tec_event_id <= 0) return 0;
 
-    if (function_exists('vms_resolve_event_plan_for_tec_event')) {
-        return (int) vms_resolve_event_plan_for_tec_event($tec_event_id);
+    if (function_exists('bvmgr_resolve_event_plan_for_tec_event')) {
+        return (int) bvmgr_resolve_event_plan_for_tec_event($tec_event_id);
     }
 
     // Fallback for unusual load-order situations. Keep deterministic ordering even
     // when the shared resolver has not loaded yet.
     if (!class_exists('WP_Query')) return 0;
 
-    $tec_key = (function_exists('vms_ticketing_b_meta_key') ? vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id');
+    $tec_key = (function_exists('bvmgr_ticketing_b_meta_key') ? bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id');
 
     $q = new WP_Query(array(
         'post_type'      => 'vms_event_plan',
@@ -7615,11 +7615,11 @@ function vms_ticketing_v2_find_plan_id_by_tec_event_id(int $tec_event_id): int
 
 function vms_ticketing_v2_event_is_past(int $tec_event_id, int $plan_id): bool
 {
-    $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+    $tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
     $now = time();
 
     if ($plan_id > 0) {
-        $k_date = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
+        $k_date = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
         if ($k_date === '') {
             $k_date = '_vms_event_date';
         }
@@ -7663,7 +7663,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
 
 
     // Cancelled events must not display add-ons or allow purchase flows.
-    if ($tec_event_id > 0 && vms_tec_is_cancelled_event($tec_event_id)) return '';
+    if ($tec_event_id > 0 && bvmgr_tec_is_cancelled_event($tec_event_id)) return '';
 
     // Respect per-event ticketing override (cancellations set this to off).
     if (function_exists('vms_event_plan_is_ticketing_enabled') && $plan_id > 0 && !vms_event_plan_is_ticketing_enabled($plan_id)) return '';
@@ -8629,8 +8629,8 @@ function vms_ticketing_v2_atomic_product_matches_plan(int $product_id, int $plan
     $event_id = function_exists('vms_ticketing_v2_resolve_event_id_for_product')
         ? absint(vms_ticketing_v2_resolve_event_id_for_product($product_id))
         : 0;
-    if ($event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $mapped_plan = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($event_id));
+    if ($event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $mapped_plan = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($event_id));
         if ($mapped_plan > 0) {
             return ((int) $mapped_plan === (int) $plan_id);
         }
@@ -8770,8 +8770,8 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'empty_selection'), 400);
     }
 
-    if ($event_plan_id <= 0 && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $event_plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+    if ($event_plan_id <= 0 && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $event_plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
     }
 
     if (function_exists('wc_load_cart')) {
@@ -9151,8 +9151,8 @@ function vms_ticketing_v2_ajax_silent_add(): void
     vms_ticketing_v2_clear_success_notices();
 
     $hint_plan_id = $event_plan_id;
-    if ($hint_plan_id <= 0 && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $hint_plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+    if ($hint_plan_id <= 0 && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $hint_plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
     }
     $seeded_hint_plan_id = 0;
     if ($hint_plan_id > 0 && $ga_qty_hint > 0) {
@@ -9268,8 +9268,8 @@ function vms_ticketing_v2_ajax_cart_context(): void
         vms_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
-    if ($plan_id <= 0 && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+    if ($plan_id <= 0 && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
     }
 
     if (function_exists('wc_load_cart')) {

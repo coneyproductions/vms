@@ -469,11 +469,11 @@ if (!function_exists('vms_vendor_availability_busy_map')) {
      */
     function vms_vendor_availability_busy_map(string $start_date, string $end_date): array
     {
-        if (!function_exists('vms_get_calendar_events')) {
+        if (!function_exists('bvmgr_get_calendar_events')) {
             return array();
         }
 
-        $events = (array) vms_get_calendar_events(array(
+        $events = (array) bvmgr_get_calendar_events(array(
             'start_date' => $start_date,
             'end_date' => $end_date,
             'context' => 'admin',
@@ -492,8 +492,8 @@ if (!function_exists('vms_vendor_availability_busy_map')) {
             }
 
             $plan_status = isset($event['plan_status']) ? (string) $event['plan_status'] : '';
-            $busy_status = function_exists('vms_calendar_assignment_status_for_plan')
-                ? (string) (vms_calendar_assignment_status_for_plan($plan_status) ?? '')
+            $busy_status = function_exists('bvmgr_calendar_assignment_status_for_plan')
+                ? (string) (bvmgr_calendar_assignment_status_for_plan($plan_status) ?? '')
                 : '';
             if ($busy_status !== 'booked' && $busy_status !== 'tentative') {
                 continue;
@@ -1273,8 +1273,8 @@ if (!function_exists('vms_render_vendor_availability_page')) {
     function vms_render_vendor_availability_page(): void
     {
         $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.vendor_availability.basics" data-vms-tour="vendor-availability.help-action">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-        if (function_exists('vms_render_help_button')) {
-            $tour_button = vms_render_help_button(array(
+        if (function_exists('bvmgr_render_help_button')) {
+            $tour_button = bvmgr_render_help_button(array(
                 'tour_id' => 'vms.vendor_availability.basics',
                 'anchor' => 'vendor-availability.help-action',
                 'label' => __('Start Guided Tour', 'backstage-venue-manager'),
@@ -1284,8 +1284,8 @@ if (!function_exists('vms_render_vendor_availability_page')) {
 
         $actions_html = '<div class="vms-va-header-actions">' . $tour_button . '</div>';
 
-        if (function_exists('vms_admin_ui_render_shell')) {
-            vms_admin_ui_render_shell(
+        if (function_exists('bvmgr_admin_ui_render_shell')) {
+            bvmgr_admin_ui_render_shell(
                 array(
                     'title' => __('Vendor Availability', 'backstage-venue-manager'),
                     'subtitle' => __('See who is actually available first, then expand each day for the full vendor picture without jumping into each profile.', 'backstage-venue-manager'),

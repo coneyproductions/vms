@@ -358,7 +358,7 @@ function vms_ticket_integrity_get_settings(): array
 	return array('days_ahead' => 30);
 }
 
-function vms_ticketing_b_meta_key(string $field, string $fallback): string
+function bvmgr_ticketing_b_meta_key(string $field, string $fallback): string
 {
 	unset($field);
 	return $fallback;

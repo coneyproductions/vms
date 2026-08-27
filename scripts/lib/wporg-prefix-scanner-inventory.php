@@ -159,6 +159,7 @@ final class BVMGR_WPORG_Prefix_Scanner_Inventory
 			$strictRows,
 			static fn(array $row): bool => !str_starts_with((string) $row['code'], self::PREFIX_CODE)
 		));
+		$historicalRows = self::normalizeCompletedB3HistoricalMessages($historicalRows, $manifest);
 		$prefixRows = array_values(array_filter(
 			$strictRows,
 			static fn(array $row): bool => str_starts_with((string) $row['code'], self::PREFIX_CODE)
@@ -448,6 +449,39 @@ final class BVMGR_WPORG_Prefix_Scanner_Inventory
 			return array_values($a) <=> array_values($b);
 		});
 		return $normalized;
+	}
+
+	/**
+	 * Preserve the immutable 125-row historical baseline when a B3-only symbol
+	 * rename changes the function name quoted inside an otherwise identical
+	 * non-prefix finding message.
+	 *
+	 * @param array<int,array<string,mixed>> $rows
+	 * @param array<string,mixed>            $manifest
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function normalizeCompletedB3HistoricalMessages(array $rows, array $manifest): array
+	{
+		$aliases = array();
+		foreach ((array) ($manifest['completed_batches']['B3']['symbol_map'] ?? array()) as $mapping) {
+			$from = (string) ($mapping['canonical_identifier'] ?? '');
+			$to = (string) ($mapping['legacy_identifier'] ?? '');
+			if ($from !== '' && $to !== '') {
+				$aliases[$from] = $to;
+			}
+		}
+		if ($aliases === array()) {
+			return self::normalizeRows($rows);
+		}
+		foreach ($rows as &$row) {
+			$row['message'] = preg_replace_callback(
+				'/\bbvmgr_[A-Za-z0-9_]+\b/',
+				static fn(array $match): string => $aliases[$match[0]] ?? $match[0],
+				(string) ($row['message'] ?? '')
+			);
+		}
+		unset($row);
+		return self::normalizeRows($rows);
 	}
 
 	/**

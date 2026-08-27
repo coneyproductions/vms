@@ -4,8 +4,8 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_lineup_schedule_meta_key')) {
     function vms_lineup_schedule_meta_key(string $slot, string $fallback): string
     {
-        if (function_exists('vms_meta_key')) {
-            $resolved = (string) vms_meta_key('event_plan', $slot);
+        if (function_exists('bvmgr_meta_key')) {
+            $resolved = (string) bvmgr_meta_key('event_plan', $slot);
             if ($resolved !== '') {
                 return $resolved;
             }

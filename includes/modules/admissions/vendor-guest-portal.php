@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_admission_vendor_guest_meta_key')) {
 	function vms_admission_vendor_guest_meta_key(): string
 	{
-		$key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'vendor_guest_rules') : '';
+		$key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'vendor_guest_rules') : '';
 		return $key !== '' ? $key : '_vms_vendor_guest_rules';
 	}
 }
@@ -43,11 +43,11 @@ if (!function_exists('vms_admission_get_event_vendor_ids')) {
 	function vms_admission_get_event_vendor_ids(int $event_plan_id): array
 	{
 		$ids = array();
-		$band_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+		$band_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
 		$band_key = $band_key !== '' ? $band_key : '_vms_band_vendor_id';
-		$secondary_ids_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+		$secondary_ids_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
 		$secondary_ids_key = $secondary_ids_key !== '' ? $secondary_ids_key : '_vms_secondary_vendor_ids';
-		$secondary_idx_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+		$secondary_idx_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
 		$secondary_idx_key = $secondary_idx_key !== '' ? $secondary_idx_key : '_vms_secondary_vendor_id';
 
 		$band_id = (int) get_post_meta($event_plan_id, $band_key, true);
@@ -783,9 +783,9 @@ if (!function_exists('vms_admission_vendor_guest_portal_events')) {
 			return array();
 		}
 		$today = wp_date('Y-m-d', time(), wp_timezone());
-		$band_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+		$band_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
 		$band_key = $band_key !== '' ? $band_key : '_vms_band_vendor_id';
-		$secondary_idx_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+		$secondary_idx_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
 		$secondary_idx_key = $secondary_idx_key !== '' ? $secondary_idx_key : '_vms_secondary_vendor_id';
 			$posts = get_posts(array(
 				'post_type' => 'vms_event_plan',
@@ -1122,15 +1122,15 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 		echo '<div class="vms-vendor-guest-root">';
 		echo '<div class="vms-vendor-guest-tour" data-vms-tour="vendor-portal-guest.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.vendor.portal.guest_list">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button></div>';
 		echo '<p class="vms-vendor-guest-help">' . esc_html__('Use this page to add the complimentary guests the venue has allowed for your upcoming events. Every entry is checked against the current door list and paid customer history before it is accepted.', 'backstage-venue-manager') . '</p>';
-		if (!empty($flash['message']) && function_exists('vms_portal_notice')) {
-			echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
+		if (!empty($flash['message']) && function_exists('bvmgr_portal_notice')) {
+			echo wp_kses_post(bvmgr_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
 		}
-		if ($is_preview && function_exists('vms_portal_notice')) {
-			echo wp_kses_post(vms_portal_notice('warning', __('Admin preview is read-only here so you can inspect the workflow without changing the vendor’s guest list.', 'backstage-venue-manager')));
+		if ($is_preview && function_exists('bvmgr_portal_notice')) {
+			echo wp_kses_post(bvmgr_portal_notice('warning', __('Admin preview is read-only here so you can inspect the workflow without changing the vendor’s guest list.', 'backstage-venue-manager')));
 		}
 		if (empty($events)) {
-			if (function_exists('vms_portal_notice')) {
-				echo wp_kses_post(vms_portal_notice('warning', __('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager')));
+			if (function_exists('bvmgr_portal_notice')) {
+				echo wp_kses_post(bvmgr_portal_notice('warning', __('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager')));
 			} else {
 				echo '<p>' . esc_html__('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager') . '</p>';
 			}

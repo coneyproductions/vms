@@ -442,7 +442,7 @@
  			}
  		}
  
- 		$secondary_type_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'secondary_vendor_type') ?: '_vms_secondary_vendor_type') : '_vms_secondary_vendor_type';
+		$secondary_type_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'secondary_vendor_type') ?: '_vms_secondary_vendor_type') : '_vms_secondary_vendor_type';
 		$event_plan_ids = get_posts([
 			'post_type' => 'vms_event_plan',
 			'post_status' => 'any',

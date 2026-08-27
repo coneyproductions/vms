@@ -474,8 +474,8 @@ if (!function_exists('is_wp_error')) {
 	}
 }
 
-if (!function_exists('vms_meta_key')) {
-	function vms_meta_key(string $group, string $field): string
+if (!function_exists('bvmgr_meta_key')) {
+	function bvmgr_meta_key(string $group, string $field): string
 	{
 		if ($group === 'event_plan' && $field === 'secondary_vendor_type') {
 			return '_vms_secondary_vendor_type';

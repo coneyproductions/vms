@@ -26,9 +26,9 @@ function vms_vendor_handle_tax_bulk_actions($redirect_url, $action, $post_ids)
 		return $redirect_url;
 	}
 
-	$k_done    = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_attest  = vms_meta_key('vendor', 'w9_attested_at');
-	$k_prov    = vms_meta_key('vendor', 'w9_provider');
+	$k_done    = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_attest  = bvmgr_meta_key('vendor', 'w9_attested_at');
+	$k_prov    = bvmgr_meta_key('vendor', 'w9_provider');
 
 	$now = time();
 	$changed = 0;

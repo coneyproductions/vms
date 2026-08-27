@@ -343,7 +343,7 @@ if (!function_exists('vms_calendar_get_venue_slot_limits')) {
 	}
 }
 
-if (!function_exists('vms_calendar_get_event_slot_limits')) {
+if (!function_exists('bvmgr_calendar_get_event_slot_limits')) {
 	/**
 	 * Resolve slot limits with precedence:
 	 * 1) Event plan override
@@ -352,13 +352,13 @@ if (!function_exists('vms_calendar_get_event_slot_limits')) {
 	 *
 	 * @return array<string,int>
 	 */
-	function vms_calendar_get_event_slot_limits(int $event_plan_id, int $venue_id): array
+	function bvmgr_calendar_get_event_slot_limits(int $event_plan_id, int $venue_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$venue_id = absint($venue_id);
 		$slot_limits = array();
 
-		$k_slot_limits = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'slot_limits') : '';
+		$k_slot_limits = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'slot_limits') : '';
 		$candidates = array();
 		if ($k_slot_limits !== '') {
 			$candidates[] = $k_slot_limits;
@@ -412,11 +412,11 @@ if (!function_exists('vms_calendar_get_event_slot_limits')) {
 	}
 }
 
-if (!function_exists('vms_calendar_vendor_primary_type')) {
+if (!function_exists('bvmgr_calendar_vendor_primary_type')) {
 	/**
 	 * @return array{slug:string,name:string}
 	 */
-	function vms_calendar_vendor_primary_type(int $vendor_id): array
+	function bvmgr_calendar_vendor_primary_type(int $vendor_id): array
 	{
 		static $cache = array();
 		$vendor_id = absint($vendor_id);
@@ -468,16 +468,16 @@ if (!function_exists('vms_calendar_vendor_type_label')) {
 	}
 }
 
-if (!function_exists('vms_calendar_plan_vendor_ids')) {
+if (!function_exists('bvmgr_calendar_plan_vendor_ids')) {
 	/**
 	 * @return array{band_id:int,secondary_ids:int[],secondary_assignments:array<string,array<string,mixed>>,lineup_ids:int[]}
 	 */
-	function vms_calendar_plan_vendor_ids(int $event_plan_id): array
+	function bvmgr_calendar_plan_vendor_ids(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
-		$k_band = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
-		$k_secondary_ids = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
-		$k_secondary_idx = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+		$k_band = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+		$k_secondary_ids = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+		$k_secondary_idx = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
 
 		$band_id = absint(get_post_meta($event_plan_id, $k_band ?: '_vms_band_vendor_id', true));
 		$secondary_assignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
@@ -535,11 +535,11 @@ if (!function_exists('vms_calendar_vendor_display_url')) {
 	}
 }
 
-if (!function_exists('vms_calendar_assignment_status_for_plan')) {
-	function vms_calendar_assignment_status_for_plan(string $plan_status): ?string
+if (!function_exists('bvmgr_calendar_assignment_status_for_plan')) {
+	function bvmgr_calendar_assignment_status_for_plan(string $plan_status): ?string
 	{
-		$s = function_exists('vms_event_plan_status_normalize')
-			? vms_event_plan_status_normalize($plan_status)
+		$s = function_exists('bvmgr_event_plan_status_normalize')
+			? bvmgr_event_plan_status_normalize($plan_status)
 			: sanitize_key($plan_status);
 
 		if ($s === 'published') {
@@ -599,7 +599,7 @@ if (!function_exists('vms_calendar_get_ticket_sold_count')) {
 			return 0;
 		}
 
-		$k_count = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tickets_sold_count') : '';
+		$k_count = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tickets_sold_count') : '';
 		$candidates = array();
 		if ($k_count !== '') {
 			$candidates[] = $k_count;
@@ -614,7 +614,7 @@ if (!function_exists('vms_calendar_get_ticket_sold_count')) {
 			}
 		}
 
-		$k_stats = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
+		$k_stats = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
 		if ($k_stats === '') {
 			$k_stats = '_vms_ticket_stats_v1';
 		}
@@ -651,7 +651,7 @@ if (!function_exists('vms_calendar_parse_time_hhmm')) {
 if (!function_exists('vms_calendar_iso_local')) {
 	function vms_calendar_iso_local(string $ymd, string $hhmm = ''): string
 	{
-		$tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+		$tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		$time = ($hhmm !== '') ? $hhmm : '00:00';
 		try {
 			$dt = new DateTimeImmutable($ymd . ' ' . $time . ':00', $tz);
@@ -683,8 +683,8 @@ if (!function_exists('vms_calendar_prepare_vendor_groups')) {
 		$include_vendor_types = array_values(array_filter(array_map('sanitize_key', $include_vendor_types)));
 
 		$icon_map = vms_calendar_vendor_type_icons();
-		$limits = vms_calendar_get_event_slot_limits($event_plan_id, $venue_id);
-		$vendor_ids = vms_calendar_plan_vendor_ids($event_plan_id);
+		$limits = bvmgr_calendar_get_event_slot_limits($event_plan_id, $venue_id);
+		$vendor_ids = bvmgr_calendar_plan_vendor_ids($event_plan_id);
 		$secondary_assignments = is_array($vendor_ids['secondary_assignments'] ?? null)
 			? (array) $vendor_ids['secondary_assignments']
 			: array();
@@ -756,7 +756,7 @@ if (!function_exists('vms_calendar_prepare_vendor_groups')) {
 
 		$primary_vendor_id = absint($vendor_ids['band_id'] ?? 0);
 		if ($primary_vendor_id > 0) {
-			$primary_type = vms_calendar_vendor_primary_type($primary_vendor_id);
+			$primary_type = bvmgr_calendar_vendor_primary_type($primary_vendor_id);
 			$primary_type_slug = sanitize_key((string) ($primary_type['slug'] ?? ''));
 			$primary_type_name = trim((string) ($primary_type['name'] ?? ''));
 			if ($ensure_group($primary_type_slug, $primary_type_name)) {
@@ -783,7 +783,7 @@ if (!function_exists('vms_calendar_prepare_vendor_groups')) {
 					continue;
 				}
 
-				$type = vms_calendar_vendor_primary_type($vendor_id);
+				$type = bvmgr_calendar_vendor_primary_type($vendor_id);
 				$type_slug = sanitize_key((string) ($type['slug'] ?? ''));
 				$type_name = trim((string) ($type['name'] ?? ''));
 				if (!$ensure_group($type_slug, $type_name)) {
@@ -794,7 +794,7 @@ if (!function_exists('vms_calendar_prepare_vendor_groups')) {
 			}
 		}
 
-		$viewer_type = ($viewer_vendor_id > 0) ? (string) (vms_calendar_vendor_primary_type($viewer_vendor_id)['slug'] ?? '') : '';
+		$viewer_type = ($viewer_vendor_id > 0) ? (string) (bvmgr_calendar_vendor_primary_type($viewer_vendor_id)['slug'] ?? '') : '';
 		$viewer_type_slugs = array();
 		if ($viewer_vendor_id > 0 && function_exists('vms_event_plan_secondary_vendor_terms_for_vendor')) {
 			$viewer_type_slugs = array_values(array_unique(array_filter(array_map('sanitize_key', (array) vms_event_plan_secondary_vendor_terms_for_vendor($viewer_vendor_id)))));
@@ -865,8 +865,8 @@ if (!function_exists('vms_calendar_prepare_vendor_groups')) {
 	}
 }
 
-if (!function_exists('vms_calendar_feed_cache_bust')) {
-	function vms_calendar_feed_cache_bust(): void
+if (!function_exists('bvmgr_calendar_feed_cache_bust')) {
+	function bvmgr_calendar_feed_cache_bust(): void
 	{
 		update_option(BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION, (string) time(), false);
 	}
@@ -875,26 +875,26 @@ if (!function_exists('vms_calendar_feed_cache_bust')) {
 if (!function_exists('vms_calendar_feed_hooks')) {
 	function vms_calendar_feed_hooks(): void
 	{
-		add_action('save_post_vms_event_plan', 'vms_calendar_feed_cache_bust', 20, 0);
-		add_action('save_post_vms_vendor', 'vms_calendar_feed_cache_bust', 20, 0);
-		add_action('save_post_vms_venue', 'vms_calendar_feed_cache_bust', 20, 0);
+		add_action('save_post_vms_event_plan', 'bvmgr_calendar_feed_cache_bust', 20, 0);
+		add_action('save_post_vms_vendor', 'bvmgr_calendar_feed_cache_bust', 20, 0);
+		add_action('save_post_vms_venue', 'bvmgr_calendar_feed_cache_bust', 20, 0);
 		add_action('updated_option', function ($option) {
 			if ($option === 'vms_settings') {
-				vms_calendar_feed_cache_bust();
+				bvmgr_calendar_feed_cache_bust();
 			}
 		}, 10, 1);
 	}
 }
 vms_calendar_feed_hooks();
 
-if (!function_exists('vms_get_calendar_events')) {
+if (!function_exists('bvmgr_get_calendar_events')) {
 	/**
 	 * Canonical Event Feed (Core).
 	 *
 	 * @param array<string,mixed> $args
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_get_calendar_events(array $args): array
+	function bvmgr_get_calendar_events(array $args): array
 	{
 		$context = isset($args['context']) ? sanitize_key((string) $args['context']) : 'public';
 		if (!in_array($context, array('admin', 'vendor', 'public'), true)) {
@@ -928,8 +928,8 @@ if (!function_exists('vms_get_calendar_events')) {
 		$include_statuses = array();
 		if (isset($args['include_statuses']) && is_array($args['include_statuses']) && !empty($args['include_statuses'])) {
 			foreach ((array) $args['include_statuses'] as $st) {
-				$key = function_exists('vms_event_plan_status_normalize')
-					? vms_event_plan_status_normalize((string) $st)
+				$key = function_exists('bvmgr_event_plan_status_normalize')
+					? bvmgr_event_plan_status_normalize((string) $st)
 					: sanitize_key((string) $st);
 				if ($key !== '') {
 					$include_statuses[] = $key;
@@ -969,10 +969,10 @@ if (!function_exists('vms_get_calendar_events')) {
 			return $cached;
 		}
 
-		$k_date = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
-		$k_venue = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
-		$k_tec_event_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
-		$k_tec_event_url = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_url') : '_vms_tec_event_url';
+		$k_date = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
+		$k_venue = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
+		$k_tec_event_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
+		$k_tec_event_url = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_url') : '_vms_tec_event_url';
 
 		if ($k_date === '') {
 			$k_date = '_vms_event_date';
@@ -1040,7 +1040,7 @@ if (!function_exists('vms_get_calendar_events')) {
 		}
 
 		$events = array();
-		$today = wp_date('Y-m-d', time(), function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone());
+		$today = wp_date('Y-m-d', time(), function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone());
 
 		$venue_name_cache = array();
 		foreach ($plan_ids as $plan_id) {
@@ -1053,12 +1053,12 @@ if (!function_exists('vms_get_calendar_events')) {
 				continue;
 			}
 
-			$plan_status = function_exists('vms_event_plan_get_status')
-				? (string) vms_event_plan_get_status($plan_id, $context)
-				: sanitize_key((string) get_post_meta($plan_id, (function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status'), true));
+			$plan_status = function_exists('bvmgr_event_plan_get_status')
+				? (string) bvmgr_event_plan_get_status($plan_id, $context)
+				: sanitize_key((string) get_post_meta($plan_id, (function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status'), true));
 
-			$plan_status = function_exists('vms_event_plan_status_normalize')
-				? vms_event_plan_status_normalize($plan_status)
+			$plan_status = function_exists('bvmgr_event_plan_status_normalize')
+				? bvmgr_event_plan_status_normalize($plan_status)
 				: sanitize_key($plan_status);
 
 			if (!in_array($plan_status, $include_statuses, true)) {
@@ -1120,7 +1120,7 @@ if (!function_exists('vms_get_calendar_events')) {
 
 			$img_id = get_post_thumbnail_id($plan_id);
 			if (!$img_id) {
-				$v = vms_calendar_plan_vendor_ids($plan_id);
+				$v = bvmgr_calendar_plan_vendor_ids($plan_id);
 				if (!empty($v['band_id'])) {
 					$img_id = get_post_thumbnail_id((int) $v['band_id']);
 				}
@@ -1150,7 +1150,7 @@ if (!function_exists('vms_get_calendar_events')) {
 			if ($context === 'vendor') {
 				$viewer_status = array(
 					'assigned' => $viewer_assigned,
-					'assignment_status' => $viewer_assigned ? vms_calendar_assignment_status_for_plan($plan_status) : null,
+					'assignment_status' => $viewer_assigned ? bvmgr_calendar_assignment_status_for_plan($plan_status) : null,
 				);
 			}
 

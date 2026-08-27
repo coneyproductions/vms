@@ -340,7 +340,7 @@ function wp_doing_ajax(): bool { return false; }
 function wp_doing_cron(): bool { return false; }
 function vms_admin_guard_request_method(): string { return 'post'; }
 function vms_resource_fingerprint_current_admin_page(): string { return ''; }
-function vms_admin_guard_current_screen_id(): string { return ''; }
+function bvmgr_admin_guard_current_screen_id(): string { return ''; }
 function vms_request_current_uri(): string { return '/vendor/apply?token=token-sentinel'; }
 function vms_resource_fingerprint_store_entry(array $entry): void { $GLOBALS['g16a_entries'][] = $entry; }
 

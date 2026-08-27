@@ -136,8 +136,8 @@ function vms_render_comp_package_meta_box($post)
     ));
 
     $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.comp_package.editor.basics" data-vms-tour="comp-package.help-action">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-    if (function_exists('vms_render_help_button')) {
-        $tour_button = vms_render_help_button(array(
+    if (function_exists('bvmgr_render_help_button')) {
+        $tour_button = bvmgr_render_help_button(array(
             'tour_id' => 'vms.comp_package.editor.basics',
             'anchor' => 'comp-package.help-action',
             'label' => __('Start Guided Tour', 'backstage-venue-manager'),

@@ -160,16 +160,16 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 		 */
 		private function check_bug_01(): array
 		{
-			$k_status = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+			$k_status = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 			if ($k_status === '') {
 				$k_status = '_vms_event_plan_status';
 			}
-			$k_tec = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
+			$k_tec = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
 			if ($k_tec === '') {
 				$k_tec = '_vms_tec_event_id';
 			}
 
-			$k_issue = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
+			$k_issue = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
 			if ($k_issue === '') {
 				$k_issue = '_vms_integrity_issue';
 			}
@@ -1069,23 +1069,23 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			 */
 		private function check_can_01(): array
 		{
-			$k_status = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+			$k_status = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 			if ($k_status === '') {
 				$k_status = '_vms_event_plan_status';
 			}
-			$k_job_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'cancel_job_id') : '_vms_cancel_job_id';
+			$k_job_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'cancel_job_id') : '_vms_cancel_job_id';
 			if ($k_job_id === '') {
 				$k_job_id = '_vms_cancel_job_id';
 			}
-			$k_job_state = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'cancel_job_state') : '_vms_cancel_job_state';
+			$k_job_state = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'cancel_job_state') : '_vms_cancel_job_state';
 			if ($k_job_state === '') {
 				$k_job_state = '_vms_cancel_job_state';
 			}
-			$k_job_summary = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'cancel_job_summary') : '_vms_cancel_job_summary';
+			$k_job_summary = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'cancel_job_summary') : '_vms_cancel_job_summary';
 			if ($k_job_summary === '') {
 				$k_job_summary = '_vms_cancel_job_summary';
 			}
-			$k_review = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'cancel_requires_operator_review') : '_vms_cancel_requires_operator_review';
+			$k_review = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'cancel_requires_operator_review') : '_vms_cancel_requires_operator_review';
 			if ($k_review === '') {
 				$k_review = '_vms_cancel_requires_operator_review';
 			}

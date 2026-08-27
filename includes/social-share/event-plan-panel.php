@@ -22,8 +22,8 @@ if (!function_exists('vms_social_event_panel_meta_key')) {
 			'status' => '_vms_event_plan_status',
 		);
 		$fallback = isset($fallbacks[$field]) ? $fallbacks[$field] : '_vms_social_' . sanitize_key($field);
-		if (function_exists('vms_meta_key')) {
-			$key = (string) vms_meta_key('event_plan', $field);
+		if (function_exists('bvmgr_meta_key')) {
+			$key = (string) bvmgr_meta_key('event_plan', $field);
 			if ($key !== '') {
 				return $key;
 			}

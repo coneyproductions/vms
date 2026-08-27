@@ -119,10 +119,10 @@ if (!class_exists('BVMGR_Tours')) {
 
 		public static function get_registry(): array
 		{
-			if (!function_exists('vms_get_tour_registry')) {
+			if (!function_exists('bvmgr_get_tour_registry')) {
 				return array();
 			}
-			$raw = (array) vms_get_tour_registry();
+			$raw = (array) bvmgr_get_tour_registry();
 			$out = array();
 			foreach ($raw as $tour) {
 				$normalized = self::normalize_tour($tour);
@@ -562,12 +562,12 @@ if (!class_exists('BVMGR_Tours')) {
 					}
 				}
 			}
-			if (!function_exists('vms_render_help_button')) {
+			if (!function_exists('bvmgr_render_help_button')) {
 				return;
 			}
 
 			echo '<div class="vms-global-help-float" style="position:fixed;top:42px;right:16px;z-index:100000;">';
-			echo vms_render_help_button(array(
+			echo bvmgr_render_help_button(array(
 				'tour_id' => $tour_id,
 				'anchor' => '',
 				'class' => 'vms-global-help-menu',
@@ -992,7 +992,7 @@ if (!function_exists('vms_enqueue_tour_assets')) {
 	}
 }
 
-if (!function_exists('vms_render_help_button')) {
+if (!function_exists('bvmgr_render_help_button')) {
 	if (!function_exists('vms_tours_sanitize_anchor_token')) {
 		function vms_tours_sanitize_anchor_token(string $anchor): string
 		{
@@ -1008,7 +1008,7 @@ if (!function_exists('vms_render_help_button')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_render_help_button(array $args = array()): string
+	function bvmgr_render_help_button(array $args = array()): string
 	{
 		$tour_id = sanitize_key((string) ($args['tour_id'] ?? ''));
 		$anchor = vms_tours_sanitize_anchor_token((string) ($args['anchor'] ?? ''));

@@ -752,8 +752,8 @@ function vms_ticket_integrity_plan_uses_ticketing(int $plan_id, int $tec_event_i
 		}
 	}
 
-	$legacy_ids_key = function_exists('vms_ticketing_b_meta_key')
-		? vms_ticketing_b_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1')
+	$legacy_ids_key = function_exists('bvmgr_ticketing_b_meta_key')
+		? bvmgr_ticketing_b_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1')
 		: '_vms_ticket_product_ids_v1';
 	if ($legacy_ids_key !== '' && metadata_exists('post', $plan_id, $legacy_ids_key)) {
 		$legacy_ids = get_post_meta($plan_id, $legacy_ids_key, true);
@@ -794,8 +794,8 @@ function vms_ticket_integrity_build_targets(array $args = array()): array
 	$tz = wp_timezone();
 	$start_date = wp_date('Y-m-d', $now, $tz);
 	$end_date = wp_date('Y-m-d', $cutoff, $tz);
-	$tec_event_meta_key = function_exists('vms_ticketing_b_meta_key')
-		? vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
+	$tec_event_meta_key = function_exists('bvmgr_ticketing_b_meta_key')
+		? bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
 		: '_vms_tec_event_id';
 	$targets = array();
 	$batch_size = max(25, min(500, (int) apply_filters('vms_ticket_integrity_target_query_batch_size', 100)));
@@ -867,8 +867,8 @@ function vms_ticket_integrity_build_targets(array $args = array()): array
 				continue;
 			}
 
-			$is_cancelled = function_exists('vms_tec_is_cancelled_event')
-				? (bool) vms_tec_is_cancelled_event($tec_event_id)
+			$is_cancelled = function_exists('bvmgr_tec_is_cancelled_event')
+				? (bool) bvmgr_tec_is_cancelled_event($tec_event_id)
 				: false;
 			if (!$include_inactive && $is_cancelled) {
 				continue;

@@ -42,6 +42,7 @@ final class BVMGR_WPORG_Prefix_B3
 		'call_user_func' => 0,
 		'call_user_func_array' => 0,
 		'is_callable' => 0,
+		'function_exists' => 0,
 		'preg_replace_callback' => 1,
 		'set_error_handler' => 0,
 		'set_exception_handler' => 0,
@@ -452,6 +453,125 @@ final class BVMGR_WPORG_Prefix_B3
 		);
 	}
 
+	/** Apply selected core function identities to one disposable add-on consumer. */
+	public static function transformAddonConsumers(string $addonRoot, array $map, array $legacyNames): array
+	{
+		$addonRoot = self::root($addonRoot);
+		self::validateMap($map);
+		$all = self::mappingIndex($map);
+		$selected = array();
+		foreach (array_values(array_unique($legacyNames)) as $legacy) {
+			if (!isset($all[$legacy]) || $all[$legacy]['legacy_identifier'] !== $legacy) {
+				throw new RuntimeException('Unknown add-on B3 consumer symbol: ' . $legacy);
+			}
+			$selected[$legacy] = $all[$legacy];
+			$selected[(string) $all[$legacy]['canonical_identifier']] = $all[$legacy];
+		}
+		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($addonRoot, FilesystemIterator::SKIP_DOTS));
+		$files = array();
+		foreach ($iterator as $file) {
+			if ($file->isFile() && strtolower((string) $file->getExtension()) === 'php') {
+				$files[] = ltrim(str_replace('\\', '/', substr((string) $file->getPathname(), strlen($addonRoot))), '/');
+			}
+		}
+		sort($files, SORT_STRING);
+		$changed = array();
+		$seen = array();
+		$totals = array();
+		$transformedSources = array();
+		foreach ($files as $file) {
+			$absolute = $addonRoot . '/' . $file;
+			$source = (string) file_get_contents($absolute);
+			$scan = self::scanSource($source, $file, $selected, true, true);
+			if ($scan['declarations'] !== array()) {
+				throw new RuntimeException('Disposable add-on declares a selected core function: ' . $file . ':' . $scan['declarations'][0]['line']);
+			}
+			$replacements = array();
+			foreach ($scan['references'] as $candidate) {
+				$identifier = (string) $candidate['identifier'];
+				if (!str_starts_with($identifier, 'vms_') || !isset($selected[$identifier])) {
+					continue;
+				}
+				$seen[$identifier] = true;
+				$replacement = (string) $selected[$identifier]['canonical_identifier'];
+				if ($candidate['kind'] === 'string_reference') {
+					$quote = $source[$candidate['offset']] ?? "'";
+					$replacement = $quote . $replacement . $quote;
+				}
+				$replacements[] = array('offset' => (int) $candidate['offset'], 'length' => (int) $candidate['length'], 'replacement' => $replacement, 'kind' => $candidate['kind']);
+			}
+			if ($replacements === array()) {
+				continue;
+			}
+			usort($replacements, static fn(array $a, array $b): int => $b['offset'] <=> $a['offset']);
+			$positions = array();
+			foreach ($replacements as $replacement) {
+				$key = $replacement['offset'] . ':' . $replacement['length'];
+				if (isset($positions[$key])) {
+					continue;
+				}
+				$positions[$key] = true;
+				$source = substr_replace($source, $replacement['replacement'], $replacement['offset'], $replacement['length']);
+				$totals[$replacement['kind']] = ($totals[$replacement['kind']] ?? 0) + 1;
+			}
+			$transformedSources[$absolute] = $source;
+			$changed[] = $file;
+		}
+		foreach ($transformedSources as $absolute => $source) {
+			if (file_put_contents($absolute, $source) === false) {
+				throw new RuntimeException('Unable to write disposable add-on file: ' . $absolute);
+			}
+		}
+		ksort($totals, SORT_STRING);
+		$matched = array_keys($seen);
+		sort($matched, SORT_STRING);
+		$unmatched = array_values(array_diff(array_values(array_unique($legacyNames)), $matched));
+		sort($unmatched, SORT_STRING);
+		return array(
+			'artifact' => 'wporg-prefix-b3-addon-transform',
+			'mapped_functions' => count(array_unique($legacyNames)),
+			'matched_function_consumers' => $matched,
+			'unmatched_manifest_candidates' => $unmatched,
+			'changed_files' => $changed,
+			'replacement_counts' => $totals,
+		);
+	}
+
+	public static function addonConsumerInventory(string $addonRoot, array $map, array $legacyNames): array
+	{
+		$addonRoot = self::root($addonRoot);
+		self::validateMap($map);
+		$all = self::mappingIndex($map);
+		$selected = array();
+		foreach (array_values(array_unique($legacyNames)) as $legacy) {
+			if (!isset($all[$legacy]) || $all[$legacy]['legacy_identifier'] !== $legacy) {
+				throw new RuntimeException('Unknown add-on inventory symbol: ' . $legacy);
+			}
+			$selected[$legacy] = $all[$legacy];
+			$selected[(string) $all[$legacy]['canonical_identifier']] = $all[$legacy];
+		}
+		$counts = array('legacy_references' => array(), 'canonical_references' => array(), 'selected_declarations' => array());
+		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($addonRoot, FilesystemIterator::SKIP_DOTS));
+		foreach ($iterator as $file) {
+			if (!$file->isFile() || strtolower((string) $file->getExtension()) !== 'php') {
+				continue;
+			}
+			$relative = ltrim(str_replace('\\', '/', substr((string) $file->getPathname(), strlen($addonRoot))), '/');
+			$scan = self::scanSource((string) file_get_contents((string) $file->getPathname()), $relative, $selected, false, true);
+			foreach ($scan['declarations'] as $declaration) {
+				$counts['selected_declarations'][] = array('file' => $relative, 'line' => $declaration['line'], 'identifier' => $declaration['identifier']);
+			}
+			foreach ($scan['references'] as $reference) {
+				$identifier = (string) $reference['identifier'];
+				$bucket = str_starts_with($identifier, 'vms_') ? 'legacy_references' : 'canonical_references';
+				$counts[$bucket][$identifier] = ($counts[$bucket][$identifier] ?? 0) + 1;
+			}
+		}
+		ksort($counts['legacy_references'], SORT_STRING);
+		ksort($counts['canonical_references'], SORT_STRING);
+		return $counts;
+	}
+
 	private static function mappingIndex(array $map): array
 	{
 		$index = array();
@@ -467,7 +587,7 @@ final class BVMGR_WPORG_Prefix_B3
 		return self::scanSource((string) file_get_contents($absolute), $relative, $index, $forTransform);
 	}
 
-	private static function scanSource(string $source, string $file, array $index, bool $forTransform): array
+	private static function scanSource(string $source, string $file, array $index, bool $forTransform, bool $consumerMode = false): array
 	{
 		$tokens = token_get_all($source);
 		$offsets = array();
@@ -485,8 +605,10 @@ final class BVMGR_WPORG_Prefix_B3
 			foreach ((array) ($entry['declaration_sites'] ?? array()) as $site) {
 				$declarationSites[$name . '|' . (string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0)] = true;
 			}
-			foreach ((array) ($entry['baseline_dynamic_sites']['exact_literal'] ?? array()) as $site) {
-				$literalSites[$name . '|' . (string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0)] = true;
+			foreach (array('function_exists', 'callback', 'reflection') as $kind) {
+				foreach ((array) ($entry['baseline_dynamic_sites'][$kind] ?? array()) as $site) {
+					$literalSites[$name . '|' . (string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0)] = true;
+				}
 			}
 		}
 		$declarations = array();
@@ -526,7 +648,7 @@ final class BVMGR_WPORG_Prefix_B3
 					if ($isDeclaration && $classDepths === array()) {
 						$legacy = (string) $index[$text]['legacy_identifier'];
 						$authorized = isset($declarationSites[$legacy . '|' . $file . '|' . $line]);
-						if ($authorized || ($forTransform && str_starts_with($file, 'tests/'))) {
+					if ($authorized || $consumerMode || ($forTransform && str_starts_with($file, 'tests/'))) {
 							$declarations[] = array('kind' => 'declaration', 'identifier' => $text, 'file' => $file, 'line' => $line, 'offset' => $offsets[$i], 'length' => strlen($text), 'caller' => '');
 						}
 					} elseif ($next === '(' && !self::isMethodOrTypeContext($previous)) {
@@ -544,7 +666,7 @@ final class BVMGR_WPORG_Prefix_B3
 					// Exact literals are authorized by the frozen B2.5 site inventory. This
 					// avoids mistaking a retained bvmgr_* key/global-slot contract for the
 					// canonical target of an unrelated function with the same suffix.
-					if ($legacy !== '' && isset($literalSites[$legacy . '|' . $file . '|' . $line])) {
+					if ($legacy !== '' && (isset($literalSites[$legacy . '|' . $file . '|' . $line]) || self::isProvenStringReference($tokens, $i, $callStack, $brace, $file))) {
 						$references[] = array('kind' => 'string_reference', 'identifier' => $value, 'file' => $file, 'line' => $line, 'offset' => $offsets[$i], 'length' => strlen($text), 'caller' => self::currentCaller($functionStack));
 					}
 				}
@@ -585,7 +707,7 @@ final class BVMGR_WPORG_Prefix_B3
 		return array('declarations' => $declarations, 'references' => $references);
 	}
 
-	private static function isProvenStringReference(array $tokens, int $index, array $callStack, int $brace): bool
+	private static function isProvenStringReference(array $tokens, int $index, array $callStack, int $brace, string $file): bool
 	{
 		$frame = $callStack === array() ? null : end($callStack);
 		if (is_array($frame) && $frame['brace'] === $brace) {
@@ -597,9 +719,12 @@ final class BVMGR_WPORG_Prefix_B3
 			if ($name === 'reflectionfunction' && $argument === 0) {
 				return true;
 			}
+			if (str_starts_with($file, 'tests/') && $argument === 1 && str_contains($name, 'extract') && str_contains($name, 'function')) {
+				return true;
+			}
 		}
 		$previousIndex = self::previousSignificantIndex($tokens, $index);
-		if ($previousIndex !== null && $tokens[$previousIndex] === '=>') {
+		if ($previousIndex !== null && (is_array($tokens[$previousIndex]) ? $tokens[$previousIndex][0] === T_DOUBLE_ARROW : $tokens[$previousIndex] === '=>')) {
 			$keyIndex = self::previousSignificantIndex($tokens, $previousIndex);
 			if ($keyIndex !== null && is_array($tokens[$keyIndex]) && $tokens[$keyIndex][0] === T_CONSTANT_ENCAPSED_STRING) {
 				return in_array(self::literal((string) $tokens[$keyIndex][1]), self::REGISTRY_CALLBACK_KEYS, true);

@@ -121,8 +121,8 @@ if (!class_exists('BVMGR_Tours_Compat')) {
 				$legacy = array();
 			}
 
-			if (function_exists('vms_get_registered_tours')) {
-				$dynamic = vms_get_registered_tours();
+			if (function_exists('bvmgr_get_registered_tours')) {
+				$dynamic = bvmgr_get_registered_tours();
 				if (is_array($dynamic) && !empty($dynamic)) {
 					$legacy = array_merge($legacy, $dynamic);
 				}

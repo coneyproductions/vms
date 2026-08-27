@@ -13,8 +13,8 @@ if (is_admin()) {
 if (!function_exists('vms_add_dispatch_module_boot')) {
 	function vms_add_dispatch_module_boot(): void
 	{
-		if (function_exists('vms_register_module')) {
-			vms_register_module(array(
+		if (function_exists('bvmgr_register_module')) {
+			bvmgr_register_module(array(
 				'slug' => 'availability_date_dispatch',
 				'name' => 'ADD - Availability & Date Dispatch',
 				'version' => defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '0.2.24.454',

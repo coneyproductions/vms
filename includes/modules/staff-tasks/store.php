@@ -1034,9 +1034,9 @@ if (!function_exists('vms_tasks_get_event_context')) {
 			return null;
 		}
 
-		$k_date = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
-		$k_venue = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
-		$k_start_dt = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'start_datetime') : '_vms_event_plan_start_datetime';
+		$k_date = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
+		$k_venue = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
+		$k_start_dt = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'start_datetime') : '_vms_event_plan_start_datetime';
 
 		$date_ymd = trim((string) get_post_meta($event_id, $k_date, true));
 		$start_local = trim((string) get_post_meta($event_id, $k_start_dt, true));

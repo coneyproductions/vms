@@ -272,8 +272,8 @@ if (!function_exists('vms_render_square_sync_protection_page')) {
             wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
         }
 
-        if (function_exists('vms_admin_ui_render_shell')) {
-            vms_admin_ui_render_shell(
+        if (function_exists('bvmgr_admin_ui_render_shell')) {
+            bvmgr_admin_ui_render_shell(
                 array(
                     'title' => __('Square Sync Protection', 'backstage-venue-manager'),
                     'subtitle' => __('Protect VMS-owned products from accidental Square catalog and inventory sync.', 'backstage-venue-manager'),

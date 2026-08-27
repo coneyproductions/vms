@@ -13,8 +13,8 @@ if (!defined('ABSPATH')) exit;
 
 function vms_vendor_linked_staff_meta_key(): string
 {
-	if (function_exists('vms_meta_key')) {
-		$k = (string) vms_meta_key('vendor', 'linked_staff_id');
+	if (function_exists('bvmgr_meta_key')) {
+		$k = (string) bvmgr_meta_key('vendor', 'linked_staff_id');
 		if ($k !== '') return $k;
 	}
 	return '_vms_linked_staff_id';
@@ -22,8 +22,8 @@ function vms_vendor_linked_staff_meta_key(): string
 
 function vms_staff_linked_vendor_meta_key(): string
 {
-	if (function_exists('vms_meta_key')) {
-		$k = (string) vms_meta_key('staff', 'linked_vendor_id');
+	if (function_exists('bvmgr_meta_key')) {
+		$k = (string) bvmgr_meta_key('staff', 'linked_vendor_id');
 		if ($k !== '') return $k;
 	}
 	return '_vms_linked_vendor_id';
@@ -227,9 +227,9 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 	$staff_id = (int) $staff_id;
 
 	// Copy basic contact fields (best-effort, non-destructive).
-	$k_email = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
-	$k_phone = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
-	$k_contact = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_name') : '_vms_contact_name';
+	$k_email = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+	$k_phone = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
+	$k_contact = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_name') : '_vms_contact_name';
 
 	$contact_name = (string) get_post_meta($vendor_id, (string) $k_contact, true);
 	$email = (string) get_post_meta($vendor_id, (string) $k_email, true);
@@ -240,7 +240,7 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 	if ($phone !== '') update_post_meta($staff_id, '_vms_contact_phone', $phone);
 
 	// Default worker type: contractor
-	$k_worker = function_exists('vms_staff_worker_type_meta_key') ? vms_staff_worker_type_meta_key() : (function_exists('vms_meta_key') ? (string) vms_meta_key('staff', 'worker_type') : '_vms_staff_worker_type');
+	$k_worker = function_exists('vms_staff_worker_type_meta_key') ? vms_staff_worker_type_meta_key() : (function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type');
 	if ($k_worker === '') $k_worker = '_vms_staff_worker_type';
 	update_post_meta($staff_id, $k_worker, 'contractor');
 

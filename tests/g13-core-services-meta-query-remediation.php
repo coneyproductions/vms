@@ -294,9 +294,9 @@ foreach (array('calendar_ticket_counts', 'cancellation_adapters', 'cli_stale_che
 	g13_same($mirror_sources[$source_name], $shadow_sources[$source_name], 'Full mirror/shadow-live parity must remain intact: ' . $relative_paths[$source_name]);
 }
 g13_assert($mirror_sources['calendar_feed'] !== $shadow_sources['calendar_feed'], 'Calendar Feed whole-file structural divergence must remain intact.');
-g13_same(g13_extract_function($mirror_sources['calendar_feed'], 'vms_get_calendar_events'), g13_extract_function($shadow_sources['calendar_feed'], 'vms_get_calendar_events'), 'Owned Calendar Feed function must retain exact mirror/shadow-live parity.');
-g13_same('745b266c3e0b4569ecf63842d082db14018a5c60b2542583290d005f8923177c', hash('sha256', g13_function_projection($mirror_sources['calendar_feed'], 'vms_get_calendar_events')), 'Mirror Calendar Feed outside-owned projection changed.');
-g13_same('0915721d579ebf17b8ecb196cbaeebfdce7bca39af2ab2c65b2fff5459b06dc2', hash('sha256', g13_function_projection($shadow_sources['calendar_feed'], 'vms_get_calendar_events')), 'Shadow-live Calendar Feed outside-owned projection changed.');
+g13_same(g13_extract_function($mirror_sources['calendar_feed'], 'bvmgr_get_calendar_events'), g13_extract_function($shadow_sources['calendar_feed'], 'bvmgr_get_calendar_events'), 'Owned Calendar Feed function must retain exact mirror/shadow-live parity.');
+g13_same('745b266c3e0b4569ecf63842d082db14018a5c60b2542583290d005f8923177c', hash('sha256', g13_function_projection($mirror_sources['calendar_feed'], 'bvmgr_get_calendar_events')), 'Mirror Calendar Feed outside-owned projection changed.');
+g13_same('0915721d579ebf17b8ecb196cbaeebfdce7bca39af2ab2c65b2fff5459b06dc2', hash('sha256', g13_function_projection($shadow_sources['calendar_feed'], 'bvmgr_get_calendar_events')), 'Shadow-live Calendar Feed outside-owned projection changed.');
 
 final class WP_Post
 {
@@ -487,7 +487,7 @@ function wp_timezone(): DateTimeZone
 	return new DateTimeZone('UTC');
 }
 
-function vms_get_timezone(): DateTimeZone
+function bvmgr_get_timezone(): DateTimeZone
 {
 	return wp_timezone();
 }
@@ -499,7 +499,7 @@ function wp_date(string $format, ?int $timestamp = null, ?DateTimeZone $timezone
 	return (new DateTimeImmutable('@' . $timestamp))->setTimezone($timezone)->format($format);
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	$map = array(
 		'event_plan:date' => '_vms_event_date',
@@ -653,7 +653,7 @@ $calendar_args = array(
 	'include_open_close_shading' => true,
 );
 $GLOBALS['g13_query_queue'][] = array();
-g13_same(array(), vms_get_calendar_events($calendar_args), 'Empty Calendar Feed query should retain its empty result.');
+g13_same(array(), bvmgr_get_calendar_events($calendar_args), 'Empty Calendar Feed query should retain its empty result.');
 $calendar_query = $GLOBALS['g13_query_calls'][0];
 $calendar_meta_query = array(
 	'relation' => 'AND',
@@ -680,13 +680,13 @@ g13_same(
 );
 g13_same(array(), $calendar_query['result'], 'Captured Calendar Feed query result must remain unchanged.');
 $calendar_call_count = count($GLOBALS['g13_query_calls']);
-g13_same(array(), vms_get_calendar_events($calendar_args), 'Cached empty Calendar Feed result should remain empty.');
+g13_same(array(), bvmgr_get_calendar_events($calendar_args), 'Cached empty Calendar Feed result should remain empty.');
 g13_same($calendar_call_count, count($GLOBALS['g13_query_calls']), 'Cached Calendar Feed result must not repeat get_posts().');
 $GLOBALS['g13_query_queue'][] = false;
 $failed_calendar_args = $calendar_args;
 $failed_calendar_args['start_date'] = '2026-09-01';
 $failed_calendar_args['end_date'] = '2026-09-02';
-g13_same(array(), vms_get_calendar_events($failed_calendar_args), 'Non-array Calendar Feed query failures should fail closed.');
+g13_same(array(), bvmgr_get_calendar_events($failed_calendar_args), 'Non-array Calendar Feed query failures should fail closed.');
 g13_same(false, $GLOBALS['g13_query_calls'][1]['result'], 'Calendar Feed failure result should be captured unchanged.');
 
 // Credit-code collision probes remain single-ID, bounded to 20 attempts, and preserve their UUID fallback.

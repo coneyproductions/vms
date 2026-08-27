@@ -646,7 +646,7 @@ if (!function_exists('vms_sch_season_get_blackout_notes_map')) {
  * Returns true if venue is open on date, using generated dates when available for that range,
  * otherwise computing from rules.
  */
-function vms_sch_is_venue_open_on_date(int $venue_id, string $ymd): bool
+function bvmgr_sch_is_venue_open_on_date(int $venue_id, string $ymd): bool
 {
     $venue_id = absint($venue_id);
     if ($venue_id <= 0) {
@@ -676,7 +676,7 @@ function vms_sch_is_venue_open_on_date(int $venue_id, string $ymd): bool
  * Generate and return (but do not automatically save) the active dates payload for a venue.
  * The UI layer should call vms_sch_season_set_active_payload() only after explicit confirmation.
  */
-function vms_sch_season_generate_active_dates(int $venue_id, string $from_ymd, string $to_ymd): array
+function bvmgr_sch_season_generate_active_dates(int $venue_id, string $from_ymd, string $to_ymd): array
 {
     $venue_id = absint($venue_id);
 

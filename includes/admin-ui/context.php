@@ -232,8 +232,8 @@ if (!function_exists('vms_admin_ui_track_planning_context')) {
 }
 add_action('current_screen', 'vms_admin_ui_track_planning_context', 20);
 
-if (!function_exists('vms_admin_ui_active_cluster')) {
-	function vms_admin_ui_active_cluster(): string
+if (!function_exists('bvmgr_admin_ui_active_cluster')) {
+	function bvmgr_admin_ui_active_cluster(): string
 	{
 		$page = vms_admin_ui_get_page_slug();
 		$post_type = vms_admin_ui_get_post_type();

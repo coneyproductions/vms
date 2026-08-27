@@ -35,8 +35,8 @@ if (!function_exists('vms_module_registry')) {
 	}
 }
 
-if (!function_exists('vms_register_module')) {
-	function vms_register_module(array $module): bool
+if (!function_exists('bvmgr_register_module')) {
+	function bvmgr_register_module(array $module): bool
 	{
 		$slug = sanitize_key((string) ($module['slug'] ?? ''));
 		if ($slug === '') {

@@ -463,7 +463,7 @@ function vms_duplicate_venue_as_draft(int $template_id): int
 	return $newId;
 }
 
-function vms_meta_key(string $object, string $field): string
+function bvmgr_meta_key(string $object, string $field): string
 {
 	$map = array(
 		'event_plan' => array(

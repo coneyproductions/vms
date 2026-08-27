@@ -38,10 +38,10 @@ function vms_vendor_tax_metabox_render($post)
 
 	$vendor_id = (int) $post->ID;
 
-	$k_done    = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_attest  = vms_meta_key('vendor', 'w9_attested_at');
-	$k_prov    = vms_meta_key('vendor', 'w9_provider');
-	$k_upload  = vms_meta_key('vendor', 'w9_upload_id');
+	$k_done    = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_attest  = bvmgr_meta_key('vendor', 'w9_attested_at');
+	$k_prov    = bvmgr_meta_key('vendor', 'w9_provider');
+	$k_upload  = bvmgr_meta_key('vendor', 'w9_upload_id');
 
 	$done_at    = (int) get_post_meta($vendor_id, $k_done, true);
 	$attest_at  = (int) get_post_meta($vendor_id, $k_attest, true);
@@ -118,9 +118,9 @@ function vms_vendor_tax_adminpost_mark_complete()
 
 	check_admin_referer('vms_vendor_tax_mark_complete_' . $vendor_id);
 
-	$k_done = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_recv = vms_meta_key('vendor', 'w9_received_date');
-	$k_prov = vms_meta_key('vendor', 'w9_provider');
+	$k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_recv = bvmgr_meta_key('vendor', 'w9_received_date');
+	$k_prov = bvmgr_meta_key('vendor', 'w9_provider');
 
 	update_post_meta($vendor_id, $k_done, time());
 
@@ -153,9 +153,9 @@ function vms_vendor_tax_adminpost_mark_incomplete()
 
 	check_admin_referer('vms_vendor_tax_mark_incomplete_' . $vendor_id);
 
-	$k_done   = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_attest = vms_meta_key('vendor', 'w9_attested_at');
-	$k_prov   = vms_meta_key('vendor', 'w9_provider');
+	$k_done   = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_attest = bvmgr_meta_key('vendor', 'w9_attested_at');
+	$k_prov   = bvmgr_meta_key('vendor', 'w9_provider');
 
 	delete_post_meta($vendor_id, $k_done);
 	delete_post_meta($vendor_id, $k_attest);

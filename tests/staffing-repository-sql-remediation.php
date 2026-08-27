@@ -327,7 +327,7 @@ function vms_staffing_pick_template_event_type(int $event_plan_id): string
 	return sanitize_key((string) get_post_meta($event_plan_id, '_vms_event_type', true));
 }
 
-function vms_staffing_resolve_slot_window(int $event_plan_id, array $slot): array
+function bvmgr_staffing_resolve_slot_window(int $event_plan_id, array $slot): array
 {
 	unset($event_plan_id);
 	$slot_id = isset($slot['slot_id']) ? absint($slot['slot_id']) : 0;
@@ -843,7 +843,7 @@ $target_functions = array(
 	'vms_staffing_save_template',
 	'vms_staffing_apply_template_to_event',
 	'vms_staffing_sync_assignment_shift_timestamps_for_slot',
-	'vms_staffing_get_event_slots',
+	'bvmgr_staffing_get_event_slots',
 	'vms_staffing_seed_event_slots_from_template',
 );
 vms_test_assert_same(
@@ -866,7 +866,7 @@ foreach (array(
 	'vms_staffing_save_template',
 	'vms_staffing_apply_template_to_event',
 	'vms_staffing_sync_assignment_shift_timestamps_for_slot',
-	'vms_staffing_get_event_slots',
+	'bvmgr_staffing_get_event_slots',
 	'vms_staffing_seed_event_slots_from_template',
 ) as $function_name) {
 	eval(vms_test_extract_function($staffing_source, $function_name));
@@ -1133,7 +1133,7 @@ try {
 			array('assignment_id' => 33, 'slot_id' => 702, 'status' => 'proposed', 'staff_id' => 2003),
 		),
 	);
-	$event_slots = vms_staffing_get_event_slots(55, false);
+	$event_slots = bvmgr_staffing_get_event_slots(55, false);
 	vms_test_assert_same(array(701, 702), array_column($event_slots, 'slot_id'), 'Event-slot reads should preserve slot ordering.');
 	vms_test_assert_same(array(32), array_column($event_slots[0]['assignments'], 'assignment_id'), 'Event-slot enrichment should group assignments by slot ID.');
 	vms_test_assert_same(array(31, 33), array_column($event_slots[1]['assignments'], 'assignment_id'), 'Event-slot enrichment should preserve assignment ordering within each slot.');
@@ -1155,7 +1155,7 @@ try {
 			array('assignment_id' => 42, 'slot_id' => 802, 'status' => 'proposed', 'staff_id' => 3002),
 		),
 	);
-	$event_slots = vms_staffing_get_event_slots(56, true);
+	$event_slots = bvmgr_staffing_get_event_slots(56, true);
 	vms_test_assert_same(2, count($event_slots), 'Event-slot reads should allow canceled rows through when requested.');
 	$slot_list_prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE event_plan_id = %d AND (%d = 1 OR status = %s) ORDER BY slot_id ASC');
 	vms_test_assert_same(array('wp_vms_event_role_slots', 56, 1, 'active'), $slot_list_prepare['args'], 'Event-slot reads should disable the active-only gate explicitly when canceled rows are included.');

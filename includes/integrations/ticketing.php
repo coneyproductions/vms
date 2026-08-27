@@ -19,8 +19,8 @@ defined('ABSPATH') || exit;
  */
 function vms_ticketing_meta_key(string $field, string $fallback): string
 {
-    if (function_exists('vms_meta_key')) {
-        $k = (string) vms_meta_key('event_plan', $field);
+    if (function_exists('bvmgr_meta_key')) {
+        $k = (string) bvmgr_meta_key('event_plan', $field);
         if ($k !== '') {
             return $k;
         }

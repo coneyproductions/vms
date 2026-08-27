@@ -194,7 +194,7 @@ if (!function_exists('vms_pass_claims_event_plan_is_published')) {
 		if ($event_plan_id <= 0) {
 			return false;
 		}
-		$key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+		$key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 		if ($key === '') {
 			$key = '_vms_event_plan_status';
 		}
@@ -244,7 +244,7 @@ if (!function_exists('vms_pass_claims_get_published_event_plans')) {
 		$meta_query = array(
 			'relation' => 'AND',
 			array(
-				'key' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status',
+				'key' => function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status',
 				'value' => 'published',
 				'compare' => '=',
 			),
@@ -2367,8 +2367,8 @@ if (!function_exists('vms_pass_claims_render_admin_page')) {
 				vms_pass_claims_render_reports_tab();
 			};
 
-			if (function_exists('vms_admin_ui_render_shell')) {
-				vms_admin_ui_render_shell(
+			if (function_exists('bvmgr_admin_ui_render_shell')) {
+				bvmgr_admin_ui_render_shell(
 					array(
 						'title' => __('Guest Passes', 'backstage-venue-manager'),
 						'subtitle' => __('Forecast-first pass claims with Source attribution, batch generation, and door check-in parity.', 'backstage-venue-manager'),
@@ -2504,7 +2504,7 @@ if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
 		$meta_query = array(
 			'relation' => 'AND',
 			array(
-				'key' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status',
+				'key' => function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status',
 				'value' => 'published',
 				'compare' => '=',
 			),
@@ -2592,7 +2592,7 @@ if (!function_exists('vms_pass_claims_empty_events_notice')) {
 			);
 		}
 
-		$status_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+		$status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 		if ($status_key === '') {
 			$status_key = '_vms_event_plan_status';
 		}

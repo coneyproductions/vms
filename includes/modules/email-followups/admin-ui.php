@@ -159,8 +159,8 @@ if (!function_exists('vms_email_followups_render_admin_page')) {
 			}
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(array(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(array(
 				'title' => __('Email Follow-Ups', 'backstage-venue-manager'),
 				'subtitle' => __('Event-aware buyer reminders, day-of updates, and post-show follow-ups.', 'backstage-venue-manager'),
 				'shell_id' => 'vms-email-followups-admin',

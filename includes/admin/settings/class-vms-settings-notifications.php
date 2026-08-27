@@ -79,7 +79,7 @@ if (!class_exists('BVMGR_Settings_Notifications')) {
 
 		public static function render_providers_status_field(): void
 		{
-			$providers = vms_notify_get_providers();
+			$providers = bvmgr_notify_get_providers();
 			$sms_provider = vms_notify_channel_provider_key('sms');
 			$wa_provider = vms_notify_channel_provider_key('whatsapp');
 

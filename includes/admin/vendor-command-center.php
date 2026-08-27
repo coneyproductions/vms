@@ -465,8 +465,8 @@ if (!function_exists('vms_vendor_command_center_resolved_template')) {
 if (!function_exists('vms_vendor_command_center_vendor_meta_key')) {
     function vms_vendor_command_center_vendor_meta_key(string $field, string $fallback): string
     {
-        if (function_exists('vms_meta_key')) {
-            $mapped = (string) vms_meta_key('vendor', $field);
+        if (function_exists('bvmgr_meta_key')) {
+            $mapped = (string) bvmgr_meta_key('vendor', $field);
             if ($mapped !== '') {
                 return $mapped;
             }
@@ -744,8 +744,8 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
                 continue;
             }
 
-            $status = function_exists('vms_event_plan_get_status')
-                ? sanitize_key((string) vms_event_plan_get_status($plan_id, 'dashboard_bills'))
+            $status = function_exists('bvmgr_event_plan_get_status')
+                ? sanitize_key((string) bvmgr_event_plan_get_status($plan_id, 'dashboard_bills'))
                 : sanitize_key((string) get_post_meta($plan_id, '_vms_event_plan_status', true));
             if ($status === 'canceled') {
                 $status = 'cancelled';
@@ -779,8 +779,8 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
                             'plan_id' => $plan_id,
                             'event_date' => $event_date,
                             'status' => $status,
-                            'label' => function_exists('vms_event_plan_status_label')
-                                ? (string) vms_event_plan_status_label($status)
+                            'label' => function_exists('bvmgr_event_plan_status_label')
+                                ? (string) bvmgr_event_plan_status_label($status)
                                 : ucwords(str_replace(array('_', '-'), ' ', $status)),
                             'edit_link' => get_edit_post_link($plan_id, ''),
                         );
@@ -1391,8 +1391,8 @@ if (!function_exists('vms_render_vendor_command_center_page')) {
     function vms_render_vendor_command_center_page(): void
     {
         $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.vendor_command_center.basics" data-vms-tour="vendor-command.help-action">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-        if (function_exists('vms_render_help_button')) {
-            $tour_button = vms_render_help_button(array(
+        if (function_exists('bvmgr_render_help_button')) {
+            $tour_button = bvmgr_render_help_button(array(
                 'tour_id' => 'vms.vendor_command_center.basics',
                 'anchor' => 'vendor-command.help-action',
                 'label' => __('Start Guided Tour', 'backstage-venue-manager'),
@@ -1402,8 +1402,8 @@ if (!function_exists('vms_render_vendor_command_center_page')) {
 
         $actions_html = '<div class="vms-vcc-header-actions">' . $tour_button . '</div>';
 
-        if (function_exists('vms_admin_ui_render_shell')) {
-            vms_admin_ui_render_shell(
+        if (function_exists('bvmgr_admin_ui_render_shell')) {
+            bvmgr_admin_ui_render_shell(
                 array(
                     'title' => __('Vendor Command Center', 'backstage-venue-manager'),
                     'subtitle' => __('One vendor-focused table for website accounts, profile links, onboarding outreach, next dates, and payable health.', 'backstage-venue-manager'),

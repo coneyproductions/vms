@@ -241,9 +241,9 @@ add_action('init', 'vms_ticket_integrity_maybe_schedule_cron', 40);
 
 function vms_ticket_integrity_run_daily_scan(): void
 {
-	if (function_exists('vms_resource_fingerprint_flag')) {
-		vms_resource_fingerprint_flag('cron_run', array('hook' => vms_ticket_integrity_daily_hook()));
-		vms_resource_fingerprint_flag('vms_queue', array('hook' => vms_ticket_integrity_daily_hook(), 'action' => 'run'));
+	if (function_exists('bvmgr_resource_fingerprint_flag')) {
+		bvmgr_resource_fingerprint_flag('cron_run', array('hook' => vms_ticket_integrity_daily_hook()));
+		bvmgr_resource_fingerprint_flag('vms_queue', array('hook' => vms_ticket_integrity_daily_hook(), 'action' => 'run'));
 	}
 	if (!function_exists('vms_ticket_integrity_scan_all')) {
 		return;
@@ -263,9 +263,9 @@ function vms_ticket_integrity_run_payment_gateway_health_cron(): void
 	$hook = function_exists('vms_ticket_integrity_payment_gateway_health_hook')
 		? vms_ticket_integrity_payment_gateway_health_hook()
 		: 'vms_ticket_integrity_payment_gateway_health';
-	if (function_exists('vms_resource_fingerprint_flag')) {
-		vms_resource_fingerprint_flag('cron_run', array('hook' => $hook));
-		vms_resource_fingerprint_flag('vms_queue', array('hook' => $hook, 'action' => 'run'));
+	if (function_exists('bvmgr_resource_fingerprint_flag')) {
+		bvmgr_resource_fingerprint_flag('cron_run', array('hook' => $hook));
+		bvmgr_resource_fingerprint_flag('vms_queue', array('hook' => $hook, 'action' => 'run'));
 	}
 
 	if (!function_exists('vms_ticket_integrity_run_payment_gateway_health_check')) {
@@ -348,8 +348,8 @@ function vms_ticket_integrity_queue_spot_scan(int $plan_id, string $reason = '')
 			$heavy_action_reason = 'already_scheduled';
 		}
 
-		if (function_exists('vms_resource_fingerprint_flag')) {
-			vms_resource_fingerprint_flag('vms_queue', array(
+		if (function_exists('bvmgr_resource_fingerprint_flag')) {
+			bvmgr_resource_fingerprint_flag('vms_queue', array(
 				'hook' => $hook,
 				'plan_id' => $plan_id,
 				'reason' => $reason,
@@ -423,9 +423,9 @@ function vms_ticket_integrity_queue_spot_scan(int $plan_id, string $reason = '')
 function vms_ticket_integrity_run_spot_scan(int $plan_id): void
 {
 	$plan_id = absint($plan_id);
-	if (function_exists('vms_resource_fingerprint_flag')) {
-		vms_resource_fingerprint_flag('cron_run', array('hook' => vms_ticket_integrity_spot_hook(), 'plan_id' => $plan_id));
-		vms_resource_fingerprint_flag('vms_queue', array('hook' => vms_ticket_integrity_spot_hook(), 'plan_id' => $plan_id, 'action' => 'run'));
+	if (function_exists('bvmgr_resource_fingerprint_flag')) {
+		bvmgr_resource_fingerprint_flag('cron_run', array('hook' => vms_ticket_integrity_spot_hook(), 'plan_id' => $plan_id));
+		bvmgr_resource_fingerprint_flag('vms_queue', array('hook' => vms_ticket_integrity_spot_hook(), 'plan_id' => $plan_id, 'action' => 'run'));
 	}
 	$trace = function_exists('vms_event_plan_perf_span_start')
 		? vms_event_plan_perf_span_start('vms_ticket_integrity_run_spot_scan', $plan_id, array('job_name' => 'ticket_integrity_spot_scan'))
@@ -609,8 +609,8 @@ function vms_ticket_integrity_watch_publish_transition(string $new_status, strin
 	$plan_id = 0;
 	if ($post->post_type === 'vms_event_plan') {
 		$plan_id = absint($post->ID);
-	} elseif ($post->post_type === 'tribe_events' && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-		$plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $post->ID));
+	} elseif ($post->post_type === 'tribe_events' && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+		$plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $post->ID));
 	}
 	$trace = function_exists('vms_event_plan_perf_span_start')
 		? vms_event_plan_perf_span_start(
@@ -645,7 +645,7 @@ function vms_ticket_integrity_watch_publish_transition(string $new_status, strin
 		return;
 	}
 
-	if ($post->post_type === 'tribe_events' && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
+	if ($post->post_type === 'tribe_events' && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
 		if ($plan_id > 0) {
 			try {
 				vms_ticket_integrity_queue_spot_scan($plan_id, 'tec_event_publish');

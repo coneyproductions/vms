@@ -368,7 +368,7 @@ if (!function_exists('vms_admission_scan_template_router')) {
 		$event_plan_id = is_array($row) ? (int) ($row['event_plan_id'] ?? 0) : 0;
 		$title = $event_plan_id > 0 ? (string) get_the_title($event_plan_id) : '';
 		$date = $event_plan_id > 0 ? (string) get_post_meta($event_plan_id, '_vms_event_date', true) : '';
-		$event_status_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+		$event_status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 		if ($event_status_key === '') {
 			$event_status_key = '_vms_event_plan_status';
 		}
