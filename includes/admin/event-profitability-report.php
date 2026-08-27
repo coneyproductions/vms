@@ -87,8 +87,8 @@ if (!function_exists('bvmgr_event_profitability_readable_status')) {
 if (!function_exists('bvmgr_event_profitability_get_event_timestamp')) {
 	function bvmgr_event_profitability_get_event_timestamp(int $event_plan_id): int
 	{
-		$dt = function_exists('vms_staffing_event_plan_datetime')
-			? (array) vms_staffing_event_plan_datetime($event_plan_id)
+		$dt = function_exists('bvmgr_staffing_event_plan_datetime')
+			? (array) bvmgr_staffing_event_plan_datetime($event_plan_id)
 			: array();
 
 		if (isset($dt['start_local']) && $dt['start_local'] instanceof DateTimeImmutable) {
@@ -167,16 +167,16 @@ if (!function_exists('bvmgr_event_profitability_get_labor_cost_cents')) {
 	{
 		$labor_dollars = null;
 
-		if (function_exists('vms_staffing_get_rollup')) {
-			$rollup = vms_staffing_get_rollup($event_plan_id);
+		if (function_exists('bvmgr_staffing_get_rollup')) {
+			$rollup = bvmgr_staffing_get_rollup($event_plan_id);
 			$needs_compute = !is_array($rollup)
 				|| !array_key_exists('est_labor_cost_total', $rollup)
 				|| $rollup['est_labor_cost_total'] === null
 				|| $rollup['est_labor_cost_total'] === ''
-				|| (!empty($rollup['dirty']) && function_exists('vms_staffing_compute_rollup'));
+				|| (!empty($rollup['dirty']) && function_exists('bvmgr_staffing_compute_rollup'));
 
-			if ($needs_compute && function_exists('vms_staffing_compute_rollup')) {
-				$computed = (array) vms_staffing_compute_rollup($event_plan_id);
+			if ($needs_compute && function_exists('bvmgr_staffing_compute_rollup')) {
+				$computed = (array) bvmgr_staffing_compute_rollup($event_plan_id);
 				if (!empty($computed['ok']) && isset($computed['est_labor_cost_total']) && $computed['est_labor_cost_total'] !== null) {
 					$labor_dollars = (float) $computed['est_labor_cost_total'];
 				}

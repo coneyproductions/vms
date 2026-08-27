@@ -51,10 +51,10 @@ $cleanup = static function () use (&$createdPosts, &$createdUsers, &$createdTerm
 	global $wpdb;
 
 	foreach (array_reverse($createdPlanIds) as $planId) {
-		$slotTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('event_slots') : '';
-		$assignmentTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('assignments') : '';
-		$rollupTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('rollups') : '';
-		$auditTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('audit') : '';
+		$slotTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('event_slots') : '';
+		$assignmentTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('assignments') : '';
+		$rollupTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('rollups') : '';
+		$auditTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('audit') : '';
 		$slotIds = array();
 		if ($slotTable !== '') {
 			$slotIds = $wpdb->get_col($wpdb->prepare("SELECT slot_id FROM {$slotTable} WHERE event_plan_id = %d", (int) $planId));
@@ -178,8 +178,8 @@ try {
 	update_user_meta($conflictUserId, '_vms_staff_id', $staffLinkedId);
 	update_user_meta($metaOnlyUserId, '_vms_staff_id', $staffMetaOnlyId);
 
-	$seedResult = function_exists('vms_staffing_save_event_roles_matrix')
-		? vms_staffing_save_event_roles_matrix(
+	$seedResult = function_exists('bvmgr_staffing_save_event_roles_matrix')
+		? bvmgr_staffing_save_event_roles_matrix(
 			$eventPlanId,
 			array($roleId => 3),
 			array($roleId => array($staffLinkedId, $staffMetaOnlyId, $staffMissingId))

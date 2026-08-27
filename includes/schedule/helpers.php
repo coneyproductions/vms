@@ -4,8 +4,8 @@ defined('ABSPATH') || exit;
 // Shared schedule helpers (used by admin + REST).
 // Developers can override via filter 'vms_sch_all_venue_ids'.
 
-if (!function_exists('vms_sch_get_all_venue_ids')) {
-    function vms_sch_get_all_venue_ids(): array
+if (!function_exists('bvmgr_sch_get_all_venue_ids')) {
+    function bvmgr_sch_get_all_venue_ids(): array
     {
         static $cached = null;
         if (is_array($cached)) {
@@ -58,14 +58,14 @@ if (!function_exists('vms_sch_get_all_venue_ids')) {
     }
 }
 
-if (!function_exists('vms_sch_get_schedule_venue_candidates')) {
+if (!function_exists('bvmgr_sch_get_schedule_venue_candidates')) {
     /**
      * Returns candidate VMS venue IDs for Schedule "This venue" context.
      *
      * This intentionally queries only vms_venue posts (not TEC venues), so the
      * selector and fallback logic use the same candidate set.
      */
-    function vms_sch_get_schedule_venue_candidates(int $limit = -1): array
+    function bvmgr_sch_get_schedule_venue_candidates(int $limit = -1): array
     {
         $posts_per_page = (int) $limit;
         if ($posts_per_page === 0) {
@@ -90,11 +90,11 @@ if (!function_exists('vms_sch_get_schedule_venue_candidates')) {
     }
 }
 
-if (!function_exists('vms_sch_pick_single_venue_candidate')) {
+if (!function_exists('bvmgr_sch_pick_single_venue_candidate')) {
     /**
      * Returns a single venue ID when exactly one unique candidate exists; else 0.
      */
-    function vms_sch_pick_single_venue_candidate(array $candidate_ids): int
+    function bvmgr_sch_pick_single_venue_candidate(array $candidate_ids): int
     {
         $ids = array_values(array_unique(array_filter(array_map('intval', $candidate_ids))));
         return (count($ids) === 1) ? (int) $ids[0] : 0;
@@ -104,14 +104,14 @@ if (!function_exists('vms_sch_pick_single_venue_candidate')) {
 // Venue default compensation (shared)
 // ===============================
 
-if (!function_exists('vms_get_venue_default_comp_by_dow')) {
+if (!function_exists('bvmgr_get_venue_default_comp_by_dow')) {
     /**
      * Returns per-day default compensation rows stored on a venue.
      *
      * Storage: post_meta on vms_venue
      *   _vms_default_comp_by_dow (array keyed by 0..6)
      */
-    function vms_get_venue_default_comp_by_dow(int $venue_id): array
+    function bvmgr_get_venue_default_comp_by_dow(int $venue_id): array
     {
         if ($venue_id <= 0) return array();
         $saved = get_post_meta($venue_id, '_vms_default_comp_by_dow', true);
@@ -119,7 +119,7 @@ if (!function_exists('vms_get_venue_default_comp_by_dow')) {
     }
 }
 
-if (!function_exists('vms_get_venue_default_comp_for_date')) {
+if (!function_exists('bvmgr_get_venue_default_comp_for_date')) {
     /**
      * Returns the normalized default compensation row for a venue + event date.
      *
@@ -129,7 +129,7 @@ if (!function_exists('vms_get_venue_default_comp_for_date')) {
      * - door_split_percent (string|float|null)
      * - commission_percent (string|float|null)
      */
-    function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date): array
+    function bvmgr_get_venue_default_comp_for_date(int $venue_id, string $event_date): array
     {
         $event_date = trim($event_date);
         if ($venue_id <= 0 || $event_date === '') return array();
@@ -152,7 +152,7 @@ if (!function_exists('vms_get_venue_default_comp_for_date')) {
 
         $dow = (int) $dt->format('w'); // 0..6 (Sun..Sat)
 
-        $all = vms_get_venue_default_comp_by_dow($venue_id);
+        $all = bvmgr_get_venue_default_comp_by_dow($venue_id);
         if (!isset($all[$dow]) || !is_array($all[$dow])) return array();
 
         $row = $all[$dow];
@@ -171,7 +171,7 @@ if (!function_exists('vms_get_venue_default_comp_for_date')) {
 // Holidays (shared)
 // ===============================
 
-if (!function_exists('vms_sch_get_holidays_for_date')) {
+if (!function_exists('bvmgr_sch_get_holidays_for_date')) {
     /**
      * Return holiday entries for a venue + date.
      *
@@ -186,7 +186,7 @@ if (!function_exists('vms_sch_get_holidays_for_date')) {
      * Defensive: if a future format stores multiple holidays under a single date,
      * we also accept a numeric array of holiday objects.
      */
-    function vms_sch_get_holidays_for_date(int $venue_id, string $ymd): array
+    function bvmgr_sch_get_holidays_for_date(int $venue_id, string $ymd): array
     {
         $ymd = trim($ymd);
         if ($venue_id <= 0 || $ymd === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd)) {
@@ -241,14 +241,14 @@ if (!function_exists('vms_sch_get_holidays_for_date')) {
 // Holiday precedence helpers (shared)
 // ===============================
 
-if (!function_exists('vms_sch_holiday_forces_open')) {
+if (!function_exists('bvmgr_sch_holiday_forces_open')) {
     /**
      * Returns true when ANY holiday entry on this date is explicitly marked as open.
      * Holiday always wins over blackout in Schedule semantics.
      */
-    function vms_sch_holiday_forces_open(int $venue_id, string $ymd): bool
+    function bvmgr_sch_holiday_forces_open(int $venue_id, string $ymd): bool
     {
-        $entries = function_exists('vms_sch_get_holidays_for_date') ? vms_sch_get_holidays_for_date($venue_id, $ymd) : array();
+        $entries = function_exists('bvmgr_sch_get_holidays_for_date') ? bvmgr_sch_get_holidays_for_date($venue_id, $ymd) : array();
         if (empty($entries)) {
             return false;
         }

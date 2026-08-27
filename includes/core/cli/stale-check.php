@@ -459,7 +459,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 		{
 			$has_validate_fn = function_exists('bvmgr_validate_event_plan');
 			$has_venue_guard = function_exists('bvmgr_event_plan_is_venue_closed_for_event_date');
-			$has_rule_eval = function_exists('vms_sch_season_is_open_by_rules');
+			$has_rule_eval = function_exists('bvmgr_sch_season_is_open_by_rules');
 
 			$issues = array();
 			if (!$has_validate_fn) {
@@ -500,10 +500,10 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 					),
 				);
 
-				$mask_sat_open = (bool) vms_sch_season_is_open_by_rules($rules_mask, $sat);
-				$mask_fri_closed = !((bool) vms_sch_season_is_open_by_rules($rules_mask, $fri));
-				$array_sat_open = (bool) vms_sch_season_is_open_by_rules($rules_array, $sat);
-				$array_fri_closed = !((bool) vms_sch_season_is_open_by_rules($rules_array, $fri));
+				$mask_sat_open = (bool) bvmgr_sch_season_is_open_by_rules($rules_mask, $sat);
+				$mask_fri_closed = !((bool) bvmgr_sch_season_is_open_by_rules($rules_mask, $fri));
+				$array_sat_open = (bool) bvmgr_sch_season_is_open_by_rules($rules_array, $sat);
+				$array_fri_closed = !((bool) bvmgr_sch_season_is_open_by_rules($rules_array, $fri));
 
 				$fixture_ok = ($mask_sat_open && $mask_fri_closed && $array_sat_open && $array_fri_closed);
 				if (!$fixture_ok) {
@@ -542,14 +542,14 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			$schedule_file = WP_CONTENT_DIR . '/plugins/vms/includes/admin/schedule.php';
 			$schedule_code = is_readable($schedule_file) ? (string) file_get_contents($schedule_file) : '';
 			$has_schedule_wiring = (
-				strpos($schedule_code, 'vms_sch_get_schedule_venue_candidates') !== false
-				&& strpos($schedule_code, 'vms_sch_pick_single_venue_candidate') !== false
+				strpos($schedule_code, 'bvmgr_sch_get_schedule_venue_candidates') !== false
+				&& strpos($schedule_code, 'bvmgr_sch_pick_single_venue_candidate') !== false
 			);
 			if (!$has_schedule_wiring) {
 				$issues[] = 'schedule venue bootstrap missing helper wiring for single-venue fallback';
 			}
 
-			if (!function_exists('vms_sch_pick_single_venue_candidate')) {
+			if (!function_exists('bvmgr_sch_pick_single_venue_candidate')) {
 				$schedule_helpers_file = WP_CONTENT_DIR . '/plugins/vms/includes/schedule/helpers.php';
 				if (is_readable($schedule_helpers_file)) {
 					require_once $schedule_helpers_file;
@@ -558,13 +558,13 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 
 			$fixture_ok = false;
 			$fixture_notes = '';
-			if (!function_exists('vms_sch_pick_single_venue_candidate')) {
+			if (!function_exists('bvmgr_sch_pick_single_venue_candidate')) {
 				$issues[] = 'single-venue helper function unavailable';
 			} else {
-				$case_single = (int) vms_sch_pick_single_venue_candidate(array(17));
-				$case_single_dupe = (int) vms_sch_pick_single_venue_candidate(array(17, 17));
-				$case_none = (int) vms_sch_pick_single_venue_candidate(array());
-				$case_many = (int) vms_sch_pick_single_venue_candidate(array(17, 18));
+				$case_single = (int) bvmgr_sch_pick_single_venue_candidate(array(17));
+				$case_single_dupe = (int) bvmgr_sch_pick_single_venue_candidate(array(17, 17));
+				$case_none = (int) bvmgr_sch_pick_single_venue_candidate(array());
+				$case_many = (int) bvmgr_sch_pick_single_venue_candidate(array(17, 18));
 
 				$fixture_ok = (
 					$case_single === 17

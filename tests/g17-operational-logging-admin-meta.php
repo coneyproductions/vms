@@ -130,18 +130,18 @@ CURRENT,
 		$historical = <<<'HISTORICAL'
 function vms_admin_render_season_dates_page(): void
   {
-    if (function_exists('vms_render_season_dates_page')) {
-      vms_render_season_dates_page();
+    if (function_exists('bvmgr_render_season_dates_page')) {
+      bvmgr_render_season_dates_page();
       return;
     }
 
     echo '<div class="wrap">';
     echo '<h1>Season Dates</h1>';
-    echo '<p>Season Dates page renderer is missing. Expected function <code>vms_render_season_dates_page()</code>.</p>';
+    echo '<p>Season Dates page renderer is missing. Expected function <code>bvmgr_render_season_dates_page()</code>.</p>';
     echo '</div>';
 
     if (defined('WP_DEBUG') && WP_DEBUG) {
-      error_log('VMS: Season Dates renderer missing. Expected vms_render_season_dates_page().');
+      error_log('VMS: Season Dates renderer missing. Expected bvmgr_render_season_dates_page().');
     }
   }
 HISTORICAL;
@@ -899,7 +899,7 @@ ob_start();
 bvmgr_admin_render_season_dates_page();
 $g17b_menu_html = (string) ob_get_clean();
 g17b_same(
-	'<div class="wrap"><h1>Season Dates</h1><p>Season Dates page renderer is missing. Expected function <code>vms_render_season_dates_page()</code>.</p></div>',
+	'<div class="wrap"><h1>Season Dates</h1><p>Season Dates page renderer is missing. Expected function <code>bvmgr_render_season_dates_page()</code>.</p></div>',
 	$g17b_menu_html,
 	'Season Dates fallback HTML changed'
 );

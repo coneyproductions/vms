@@ -41,7 +41,7 @@ add_action('save_post', function ($post_id, $post) {
 
     // Staff employees use the Employee Packet workflow; do not save W-9 fields here.
     if ($post->post_type === 'vms_staff') {
-        $wt = function_exists('vms_staff_get_worker_type') ? (string) vms_staff_get_worker_type((int) $post_id) : '';
+        $wt = function_exists('bvmgr_staff_get_worker_type') ? (string) bvmgr_staff_get_worker_type((int) $post_id) : '';
         if ($wt === '') {
             $k_wt = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
             if ($k_wt === '') $k_wt = '_vms_staff_worker_type';
@@ -134,7 +134,7 @@ function vms_render_tax_profile_admin_metabox($post)
     $id = (int) $post->ID;
     $is_staff_employee = false;
     if (($post instanceof WP_Post) && $post->post_type === "vms_staff") {
-        $wt = function_exists("vms_staff_get_worker_type") ? (string) vms_staff_get_worker_type($id) : "";
+        $wt = function_exists("bvmgr_staff_get_worker_type") ? (string) bvmgr_staff_get_worker_type($id) : "";
         if ($wt === "") {
             $k_wt = function_exists("bvmgr_meta_key") ? (string) bvmgr_meta_key("staff", "worker_type") : "_vms_staff_worker_type";
             if ($k_wt === "") $k_wt = "_vms_staff_worker_type";
@@ -176,8 +176,8 @@ function vms_render_tax_profile_admin_metabox($post)
 
     // Staff employee: show employee packet status instead of W-9 tax profile UI.
     if ($is_staff_employee) {
-        $missing_emp = function_exists('vms_staff_employee_packet_missing_items')
-            ? (array) vms_staff_employee_packet_missing_items($id)
+        $missing_emp = function_exists('bvmgr_staff_employee_packet_missing_items')
+            ? (array) bvmgr_staff_employee_packet_missing_items($id)
             : array(__('W-4 received', 'backstage-venue-manager'), __('I-9 verified', 'backstage-venue-manager'));
 
         $emp_complete = empty($missing_emp);

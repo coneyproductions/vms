@@ -37,8 +37,8 @@ function bvmgr_activate_plugin(): void
 
 	$recurring_bootstraps = array(
 		'vms_social_schedule_cron',
-		'vms_tasks_notifications_ensure_cron',
-		'vms_tasks_schedule_nightly_generator',
+		'bvmgr_tasks_notifications_ensure_cron',
+		'bvmgr_tasks_schedule_nightly_generator',
 		'vms_email_followups_schedule_cron',
 		'bvmgr_calendar_ticket_counts_schedule_cron',
 		'bvmgr_vendor_booking_onboarding_schedule_event',

@@ -10,7 +10,7 @@ require_once __DIR__ . '/season-dates.php';
  * Returns a map of open dates for the venue in the window.
  * open_map['YYYY-mm-dd'] = true
  */
-function vms_sch_get_open_map(int $venue_id, string $start_ymd, string $end_ymd): array
+function bvmgr_sch_get_open_map(int $venue_id, string $start_ymd, string $end_ymd): array
 {
     $open = array();
 
@@ -27,7 +27,7 @@ function vms_sch_get_open_map(int $venue_id, string $start_ymd, string $end_ymd)
         if (is_array($dates)) {
             foreach ($dates as $d) {
                 $d = (string) $d;
-                if (vms_sch_is_valid_ymd($d)) {
+                if (bvmgr_sch_is_valid_ymd($d)) {
                     $open[$d] = true;
                 }
             }
@@ -41,7 +41,7 @@ function vms_sch_get_open_map(int $venue_id, string $start_ymd, string $end_ymd)
  * Returns a map of plans by date.
  * plans_by_date['YYYY-mm-dd'] = [plan_id, plan_id, …]
  */
-function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end_ymd, bool $include_drafts = false, array $opts = array())
+function bvmgr_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end_ymd, bool $include_drafts = false, array $opts = array())
 {
     $map = array();
 
@@ -112,8 +112,8 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
         }
 
         $ymd = (string) get_post_meta($pid, bvmgr_meta_key('event_plan', 'date'), true);
-        if (!vms_sch_is_valid_ymd($ymd)) continue;
-        if (!vms_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
+        if (!bvmgr_sch_is_valid_ymd($ymd)) continue;
+        if (!bvmgr_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
 
         if (!isset($map[$ymd])) $map[$ymd] = array();
 
@@ -137,7 +137,7 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
  *   ['plan_id' => 124, 'venue_id' => 56],
  * ]
  */
-function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, string $end_ymd, bool $include_drafts = false, array $opts = array())
+function bvmgr_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, string $end_ymd, bool $include_drafts = false, array $opts = array())
 {
     $map = array();
     $venue_ids = array_values(array_filter(array_map('intval', $venue_ids)));
@@ -202,8 +202,8 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
         }
 
         $ymd = (string) get_post_meta($pid, bvmgr_meta_key('event_plan', 'date'), true);
-        if (!vms_sch_is_valid_ymd($ymd)) continue;
-        if (!vms_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
+        if (!bvmgr_sch_is_valid_ymd($ymd)) continue;
+        if (!bvmgr_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
 
         $vid = (int) get_post_meta($pid, bvmgr_meta_key('event_plan', 'venue_id'), true);
 
@@ -224,7 +224,7 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
 /**
  * Build a lookup map: venue_id => venue_name
  */
-function vms_sch_get_venue_name_map(array $venue_ids): array
+function bvmgr_sch_get_venue_name_map(array $venue_ids): array
 {
     $map = array();
     foreach ($venue_ids as $vid) {
@@ -235,14 +235,14 @@ function vms_sch_get_venue_name_map(array $venue_ids): array
     return $map;
 }
 
-function vms_sch_is_valid_ymd(string $ymd): bool
+function bvmgr_sch_is_valid_ymd(string $ymd): bool
 {
     return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd);
 }
 
-function vms_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_ymd): bool
+function bvmgr_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_ymd): bool
 {
-    if (!vms_sch_is_valid_ymd($ymd) || !vms_sch_is_valid_ymd($start_ymd) || !vms_sch_is_valid_ymd($end_ymd)) {
+    if (!bvmgr_sch_is_valid_ymd($ymd) || !bvmgr_sch_is_valid_ymd($start_ymd) || !bvmgr_sch_is_valid_ymd($end_ymd)) {
         return false;
     }
     $t = strtotime($ymd);

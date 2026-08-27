@@ -146,12 +146,12 @@ $source = (string) file_get_contents($mirrorPath);
 $liveSource = (string) file_get_contents($livePath);
 $storeSource = (string) file_get_contents($storePath);
 
-$helperBody = vms_test_extract_function($source, 'vms_tasks_decode_stored_event_signature');
-$decisionBody = vms_test_extract_function($source, 'vms_tasks_should_allow_supersede');
-$writerBody = vms_test_extract_function($source, 'vms_tasks_build_event_signature');
+$helperBody = vms_test_extract_function($source, 'bvmgr_tasks_decode_stored_event_signature');
+$decisionBody = vms_test_extract_function($source, 'bvmgr_tasks_should_allow_supersede');
+$writerBody = vms_test_extract_function($source, 'bvmgr_tasks_build_event_signature');
 
-vms_test_assert_contains('function vms_tasks_decode_stored_event_signature', $source, 'Specialized decoder should exist.');
-vms_test_assert_contains('vms_tasks_decode_stored_event_signature(', $decisionBody, 'Decision function should use the specialized decoder.');
+vms_test_assert_contains('function bvmgr_tasks_decode_stored_event_signature', $source, 'Specialized decoder should exist.');
+vms_test_assert_contains('bvmgr_tasks_decode_stored_event_signature(', $decisionBody, 'Decision function should use the specialized decoder.');
 vms_test_assert_true(strpos($decisionBody, 'json_decode(') === false, 'Decision function should no longer decode JSON directly.');
 vms_test_assert_same(1, substr_count($source, 'json_decode('), 'Generator file should retain exactly one raw json_decode() call.');
 vms_test_assert_same(1, substr_count($helperBody, 'json_decode('), 'Helper should retain the single raw json_decode() call.');
@@ -161,7 +161,7 @@ vms_test_assert_contains("'venue_id' => absint(\$event_context['venue_id'] ?? 0)
 vms_test_assert_contains("'event_type' => sanitize_key((string) (\$event_context['event_type'] ?? ''))", $writerBody, 'Writer should preserve event_type normalization.');
 vms_test_assert_contains('($current_signature === $saved_signature || $current_signature === $pending_signature)', $source, 'Pending-signature skip code should remain unchanged.');
 vms_test_assert_same(hash('sha256', $source), hash('sha256', $liveSource), 'Mirror and live generator files should be byte-identical.');
-vms_test_assert_true(strpos($storeSource, 'vms_tasks_decode_stored_event_signature') === false, 'store.php should remain outside this slice.');
+vms_test_assert_true(strpos($storeSource, 'bvmgr_tasks_decode_stored_event_signature') === false, 'store.php should remain outside this slice.');
 vms_test_assert_contains('overrides_json', $storeSource, 'store.php overrides_json boundary should remain untouched.');
 vms_test_assert_true(strpos($source, 'overrides_json') === false, 'Generator source should remain outside overrides_json scope.');
 
@@ -311,7 +311,7 @@ $decoderCases = array(
 foreach ($decoderCases as $name => $case) {
 	$call = vms_test_call_without_warnings(
 		static function () use ($case) {
-			return vms_tasks_decode_stored_event_signature($case['raw']);
+			return bvmgr_tasks_decode_stored_event_signature($case['raw']);
 		}
 	);
 	$result = $call['result'];
@@ -345,15 +345,15 @@ $allOff = array(
 	'regenerate_on_event_type_change' => 0,
 );
 
-$writerJson = vms_tasks_event_signature_json($currentContext);
+$writerJson = bvmgr_tasks_event_signature_json($currentContext);
 $roundTrip = vms_test_call_without_warnings(
 	static function () use ($writerJson) {
-		return vms_tasks_decode_stored_event_signature($writerJson);
+		return bvmgr_tasks_decode_stored_event_signature($writerJson);
 	}
 );
 vms_test_assert_same(array(), $roundTrip['warnings'], 'Writer round-trip should not emit warnings.');
 vms_test_assert_same('valid', $roundTrip['result']['state'] ?? null, 'Writer output should decode as valid.');
-vms_test_assert_same(vms_tasks_build_event_signature($currentContext), $roundTrip['result']['signature'] ?? null, 'Writer output should round-trip to the current signature shape.');
+vms_test_assert_same(bvmgr_tasks_build_event_signature($currentContext), $roundTrip['result']['signature'] ?? null, 'Writer output should round-trip to the current signature shape.');
 
 $decisionCases = array(
 	'missing_meta' => array(
@@ -500,7 +500,7 @@ foreach ($decisionCases as $name => $case) {
 	$GLOBALS['vms_test_mutation_calls'] = array();
 	$call = vms_test_call_without_warnings(
 		static function () use ($case) {
-			return vms_tasks_should_allow_supersede(77, $case['context'], $case['settings']);
+			return bvmgr_tasks_should_allow_supersede(77, $case['context'], $case['settings']);
 		}
 	);
 
@@ -510,11 +510,11 @@ foreach ($decisionCases as $name => $case) {
 }
 
 vms_test_set_signature_meta($writerJson, true);
-$firstSequential = vms_tasks_should_allow_supersede(77, array('date_ymd' => '2026-07-23', 'venue_id' => 17, 'event_type' => 'concert'), $allOn);
+$firstSequential = bvmgr_tasks_should_allow_supersede(77, array('date_ymd' => '2026-07-23', 'venue_id' => 17, 'event_type' => 'concert'), $allOn);
 vms_test_set_signature_meta('{"date_ymd":', true);
-$secondSequential = vms_tasks_should_allow_supersede(77, array('date_ymd' => '2026-07-24', 'venue_id' => 25, 'event_type' => 'festival'), $allOn);
+$secondSequential = bvmgr_tasks_should_allow_supersede(77, array('date_ymd' => '2026-07-24', 'venue_id' => 25, 'event_type' => 'festival'), $allOn);
 vms_test_set_signature_meta($writerJson, true);
-$thirdSequential = vms_tasks_should_allow_supersede(77, $currentContext, $allOn);
+$thirdSequential = bvmgr_tasks_should_allow_supersede(77, $currentContext, $allOn);
 
 vms_test_assert_same(true, $firstSequential, 'Sequential valid changed signature call should allow supersede.');
 vms_test_assert_same(false, $secondSequential, 'Sequential invalid signature call should fail closed.');

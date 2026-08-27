@@ -139,12 +139,12 @@ function bvmgr_event_plan_should_include(int $post_id, string $context, array $f
 	return !in_array($post_id, $GLOBALS['g13_tail_excluded'], true);
 }
 
-function vms_sch_is_valid_ymd(string $ymd): bool
+function bvmgr_sch_is_valid_ymd(string $ymd): bool
 {
 	return preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd) === 1;
 }
 
-function vms_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_ymd): bool
+function bvmgr_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_ymd): bool
 {
 	return $ymd >= $start_ymd && $ymd <= $end_ymd;
 }
@@ -462,7 +462,7 @@ foreach (array_diff($relative_files, array('includes/schedule/schedule.php')) as
 $owned_function_map = array(
 	'includes/cpt/ratings.php' => array('bvmgr_get_band_rating_summary', 'bvmgr_handle_rating_submission'),
 	'includes/helpers.php' => array('bvmgr_resolve_event_plan_for_tec_event', 'bvmgr_get_ticket_product_ids_for_event', 'bvmgr_get_event_titles_by_date', 'bvmgr_get_comp_packages_for_venue'),
-	'includes/schedule/schedule.php' => array('vms_sch_get_plans_by_date', 'vms_sch_get_plans_by_date_all'),
+	'includes/schedule/schedule.php' => array('bvmgr_sch_get_plans_by_date', 'bvmgr_sch_get_plans_by_date_all'),
 	'includes/admin/approvals-review-queue.php' => array('vms_approvals_queue_vendor_summary'),
 );
 $owned_chunks = array();
@@ -689,7 +689,7 @@ g13_tail_same(array(array('key' => '_vms_venue_id', 'value' => 12, 'compare' => 
 
 // Single-venue schedule query retains bounded primary args/results and the unbounded historical fallback with PHP revalidation.
 g13_tail_reset();
-g13_tail_same(array(), vms_sch_get_plans_by_date(0, '2026-09-01', '2026-09-30'), 'Invalid venue schedule result changed.');
+g13_tail_same(array(), bvmgr_sch_get_plans_by_date(0, '2026-09-01', '2026-09-30'), 'Invalid venue schedule result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid venue should not query schedule plans.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array(701, 702, 703));
 $GLOBALS['g13_tail_meta'] = array(
@@ -704,7 +704,7 @@ $GLOBALS['g13_tail_posts'] = array(
 );
 $GLOBALS['g13_tail_statuses'] = array(701 => 'published', 702 => 'draft', 703 => 'published');
 $GLOBALS['g13_tail_excluded'] = array(703);
-$single_map = vms_sch_get_plans_by_date(12, '2026-09-01', '2026-09-30', false, array('context' => 'schedule_admin'));
+$single_map = bvmgr_sch_get_plans_by_date(12, '2026-09-01', '2026-09-30', false, array('context' => 'schedule_admin'));
 g13_tail_same(array(701), array_column($single_map['2026-09-05'], 'plan_id'), 'Single-venue schedule PHP filtering/result changed.');
 $single_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $single_args['posts_per_page'], 'Single-venue schedule completeness changed.');
@@ -722,7 +722,7 @@ $GLOBALS['g13_tail_posts'] = array(
 	705 => new WP_Post(705, 'vms_event_plan', 'publish'),
 );
 $GLOBALS['g13_tail_statuses'] = array(704 => 'published', 705 => 'published');
-$single_fallback_map = vms_sch_get_plans_by_date(12, '2026-09-01', '2026-09-30');
+$single_fallback_map = bvmgr_sch_get_plans_by_date(12, '2026-09-01', '2026-09-30');
 g13_tail_same(array(704), array_column($single_fallback_map['2026-09-08'], 'plan_id'), 'Single-venue fallback PHP window filtering changed.');
 g13_tail_same(2, count($GLOBALS['g13_tail_get_posts_calls']), 'Empty primary schedule query should invoke one fallback.');
 g13_tail_same(1, count($GLOBALS['g13_tail_get_posts_calls'][1]['meta_query']), 'Single-venue fallback must remove only the date constraint.');
@@ -731,13 +731,13 @@ g13_tail_same(-1, $GLOBALS['g13_tail_get_posts_calls'][1]['posts_per_page'], 'Si
 
 // Multi-venue schedule query retains finite venue/date primary bounds and the selected-venues historical fallback.
 g13_tail_reset();
-g13_tail_same(array(), vms_sch_get_plans_by_date_all(array(), '2026-09-01', '2026-09-30'), 'Empty multi-venue schedule result changed.');
+g13_tail_same(array(), bvmgr_sch_get_plans_by_date_all(array(), '2026-09-01', '2026-09-30'), 'Empty multi-venue schedule result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Empty venue set should not query schedule plans.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array(711));
 $GLOBALS['g13_tail_meta'] = array(711 => array('_vms_event_date' => '2026-09-09', '_vms_venue_id' => 21));
 $GLOBALS['g13_tail_posts'] = array(711 => new WP_Post(711, 'vms_event_plan', 'publish'));
 $GLOBALS['g13_tail_statuses'] = array(711 => 'published');
-$all_map = vms_sch_get_plans_by_date_all(array(21, 22), '2026-09-01', '2026-09-30');
+$all_map = bvmgr_sch_get_plans_by_date_all(array(21, 22), '2026-09-01', '2026-09-30');
 g13_tail_same(array(array('plan_id' => 711, 'venue_id' => 21, 'plan_status' => 'published')), $all_map['2026-09-09'], 'Multi-venue schedule primary result changed.');
 $all_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same('IN', $all_args['meta_query'][0]['compare'], 'Multi-venue primary venue comparison changed.');
@@ -755,7 +755,7 @@ $GLOBALS['g13_tail_posts'] = array(
 	713 => new WP_Post(713, 'vms_event_plan', 'publish'),
 );
 $GLOBALS['g13_tail_statuses'] = array(712 => 'published', 713 => 'published');
-$all_fallback_map = vms_sch_get_plans_by_date_all(array(21, 22), '2026-09-01', '2026-09-30');
+$all_fallback_map = bvmgr_sch_get_plans_by_date_all(array(21, 22), '2026-09-01', '2026-09-30');
 g13_tail_same(array(712), array_column($all_fallback_map['2026-09-10'], 'plan_id'), 'Multi-venue fallback PHP window filtering changed.');
 g13_tail_same(2, count($GLOBALS['g13_tail_get_posts_calls']), 'Empty multi-venue primary query should invoke one fallback.');
 g13_tail_same(1, count($GLOBALS['g13_tail_get_posts_calls'][1]['meta_query']), 'Multi-venue fallback must remove only the date constraint.');

@@ -299,8 +299,8 @@ $restDashboard = (string) file_get_contents($root . '/includes/rest-dashboard.ph
 $scheduleHelpers = (string) file_get_contents($root . '/includes/schedule/helpers.php');
 $assert(
 	str_contains($restDashboard, "require_once __DIR__ . '/schedule/helpers.php';")
-	&& str_contains($restDashboard, "if (!function_exists('" . $b3Name('vms_sch_get_all_venue_ids') . "'))")
-	&& str_contains($scheduleHelpers, "function " . $b3Name('vms_sch_get_all_venue_ids') . "(): array"),
+	&& str_contains($restDashboard, "if (!function_exists('" . $b3Name('bvmgr_sch_get_all_venue_ids') . "'))")
+	&& str_contains($scheduleHelpers, "function " . $b3Name('bvmgr_sch_get_all_venue_ids') . "(): array"),
 	'Unreachable rest-dashboard $path exclusion must retain its require-before-guard proof.'
 );
 $assert(count($templateAssignmentNames) === 38, 'Vendor-profile template must expose exactly 38 assigned/bound semantic slots.');

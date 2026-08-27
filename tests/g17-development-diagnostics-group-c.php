@@ -149,17 +149,17 @@ PHP;
 $ticket_capture = g17c_function($sources['mirror']['ticket'], 'bvmgr_ticket_mutation_audit_capture_source_trace');
 
 $reconstruct_staff = static function (string $source) use ($staff_schema, $staff_nightly_failure, $staff_direct): string {
-	$nightly = g17c_function($source, 'vms_tasks_run_nightly_generator');
+	$nightly = g17c_function($source, 'bvmgr_tasks_run_nightly_generator');
 	$nightly = g17c_once($nightly, $staff_schema, "\t\t\terror_log('[VMS Tasks] Nightly generator skipped: DB schema not ready.');", 'Schema reverse failed.');
 	$nightly = g17c_once($nightly, $staff_nightly_failure, '', 'Nightly failure reverse failed.');
 	$nightly = g17c_once($nightly, "\t\t\tif (is_wp_error(\$run)) {\n\n\t\t\t\t\$summary['warnings']++;", "\t\t\tif (is_wp_error(\$run)) {\n\t\t\t\t\$summary['warnings']++;", 'Nightly reverse whitespace failed.');
 	$close = strrpos($nightly, "\n\t}");
 	g17c_assert($close !== false, 'Nightly close missing.');
 	$nightly = substr($nightly, 0, (int) $close) . "\n\t\terror_log('[VMS Tasks] nightly_generator ' . wp_json_encode(\$summary));" . substr($nightly, (int) $close);
-	$source = g17c_swap($source, 'vms_tasks_run_nightly_generator', $nightly);
-	$direct = g17c_function($source, 'vms_tasks_generate_for_event_safe');
+	$source = g17c_swap($source, 'bvmgr_tasks_run_nightly_generator', $nightly);
+	$direct = g17c_function($source, 'bvmgr_tasks_generate_for_event_safe');
 	$direct = g17c_once($direct, $staff_direct, "\t\t\terror_log('[VMS Tasks] event generation failed: ' . \$run->get_error_message());", 'Direct reverse failed.');
-	return g17c_swap($source, 'vms_tasks_generate_for_event_safe', $direct);
+	return g17c_swap($source, 'bvmgr_tasks_generate_for_event_safe', $direct);
 };
 $reconstruct_ticket = static function (string $source) use ($ticket_fallback): string {
 	$trace = g17c_function($source, 'bvmgr_ticket_mutation_audit_trace');
@@ -355,22 +355,22 @@ $GLOBALS['g17c_generate_calls'] = array();
 $GLOBALS['g17c_event_contexts'] = array();
 $GLOBALS['g17c_allow_supersede'] = false;
 $GLOBALS['g17c_summary'] = null;
-function vms_tasks_db_ready(): bool
+function bvmgr_tasks_db_ready(): bool
 {
 	$GLOBALS['g17c_order'][] = 'db_ready';
 	return (bool) $GLOBALS['g17c_db_ready'];
 }
-function vms_tasks_get_settings(): array
+function bvmgr_tasks_get_settings(): array
 {
 	$GLOBALS['g17c_order'][] = 'settings';
 	return $GLOBALS['g17c_settings'];
 }
-function vms_tasks_collect_upcoming_event_ids(int $horizon_days): array
+function bvmgr_tasks_collect_upcoming_event_ids(int $horizon_days): array
 {
 	$GLOBALS['g17c_order'][] = 'collect:' . $horizon_days;
 	return $GLOBALS['g17c_plan_ids'];
 }
-function vms_tasks_generate_for_event(int $post_id, array $args = array())
+function bvmgr_tasks_generate_for_event(int $post_id, array $args = array())
 {
 	$GLOBALS['g17c_order'][] = 'generate:' . $post_id;
 	$GLOBALS['g17c_generate_calls'][] = array($post_id, $args);
@@ -382,26 +382,26 @@ function vms_tasks_generate_for_event(int $post_id, array $args = array())
 		'warnings' => array(),
 	);
 }
-function vms_tasks_get_event_context(int $post_id)
+function bvmgr_tasks_get_event_context(int $post_id)
 {
 	$GLOBALS['g17c_order'][] = 'context:' . $post_id;
 	return $GLOBALS['g17c_event_contexts'][$post_id] ?? null;
 }
-function vms_tasks_should_allow_supersede(int $post_id, array $event_context, array $settings): bool
+function bvmgr_tasks_should_allow_supersede(int $post_id, array $event_context, array $settings): bool
 {
 	unset($event_context, $settings);
 	$GLOBALS['g17c_order'][] = 'supersede:' . $post_id;
 	return (bool) $GLOBALS['g17c_allow_supersede'];
 }
 
-$nightly_probe = g17c_function($sources['mirror']['staff'], 'vms_tasks_run_nightly_generator');
-$nightly_probe = g17c_once($nightly_probe, 'function vms_tasks_run_nightly_generator(', 'function g17c_tasks_run_nightly_generator(', 'Nightly probe rename failed.');
+$nightly_probe = g17c_function($sources['mirror']['staff'], 'bvmgr_tasks_run_nightly_generator');
+$nightly_probe = g17c_once($nightly_probe, 'function bvmgr_tasks_run_nightly_generator(', 'function g17c_tasks_run_nightly_generator(', 'Nightly probe rename failed.');
 $nightly_close = strrpos($nightly_probe, "\n\t}");
 g17c_assert($nightly_close !== false, 'Nightly probe close changed.');
 $nightly_probe = substr($nightly_probe, 0, (int) $nightly_close) . "\n\t\t\$GLOBALS['g17c_summary'] = \$summary;" . substr($nightly_probe, (int) $nightly_close);
 eval($nightly_probe);
-$direct_probe = g17c_function($sources['mirror']['staff'], 'vms_tasks_generate_for_event_safe');
-$direct_probe = g17c_once($direct_probe, 'function vms_tasks_generate_for_event_safe(', 'function g17c_tasks_generate_for_event_safe(', 'Direct probe rename failed.');
+$direct_probe = g17c_function($sources['mirror']['staff'], 'bvmgr_tasks_generate_for_event_safe');
+$direct_probe = g17c_once($direct_probe, 'function bvmgr_tasks_generate_for_event_safe(', 'function g17c_tasks_generate_for_event_safe(', 'Direct probe rename failed.');
 eval($direct_probe);
 
 $GLOBALS['g17c_db_ready'] = false;
@@ -466,6 +466,6 @@ $GLOBALS['g17c_order'] = $GLOBALS['g17c_issues'] = $GLOBALS['g17c_generate_calls
 g17c_same(null, g17c_tasks_generate_for_event_safe(21, 7), 'Successful direct return changed.');
 g17c_same(0, count($GLOBALS['g17c_issues']), 'Successful direct generation must not log a failure.');
 
-g17c_same(g17c_function($sources['mirror']['staff'], 'vms_tasks_run_queued_event_generation'), g17c_function($sources['shadow']['staff'], 'vms_tasks_run_queued_event_generation'), 'Queued generation parity changed.');
+g17c_same(g17c_function($sources['mirror']['staff'], 'bvmgr_tasks_run_queued_event_generation'), g17c_function($sources['shadow']['staff'], 'bvmgr_tasks_run_queued_event_generation'), 'Queued generation parity changed.');
 
 fwrite(STDOUT, "G17 development diagnostics group C: PASS\n");

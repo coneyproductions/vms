@@ -158,7 +158,7 @@ Status: committed at `34fe7afcd06355b781896a17606e01308cb7069e`.
 
 ### W8 — portals, availability, calendar, and public vendor profiles
 
-Status: verified for the isolated W8 commit.
+Status: committed at `f53107c90574d4a2ae4d79a44395553f9fc228b1`.
 
 - Exact cutover: `524` unique functions / `524` declaration sites moved atomically; W8 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
 - Ratchet: cumulative B3 progress is `3,290 / 4,521` functions and `3,302 / 4,541` declaration sites; `1,231` legacy functions / `1,239` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
@@ -167,4 +167,15 @@ Status: verified for the isolated W8 commit.
 - Disposable package: `/private/tmp/bvm-wporg-b3-w8-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `11c8904b93d22853e15bad764cb508d9a1cc35b649ea7e80444bf38202528311`, passed package integrity.
 - Supported-stack smoke: the exact W8 ZIP completed activation and authenticated/public smoke requests with the supported WooCommerce/TEC/Event Tickets stack without a VMS fatal or duplicate scheduled-work owner. Report SHA-256: `7767ae6d87c3cc95d87c841d2e783fb6964900f65e63a6d19615935f13edb828`; `WARN` is limited to dependency/PHP deprecations.
 - Strict packaged scan: `1,972` total = historical `125` errors + `1,847` warnings, categorized exactly as B3 `1,239`, B7 `182`, method scope `420`, and external/core `6`. The gate records `3,302` authoritative B3 findings removed and no regression. Strict JSON SHA-256: `94157bc176f3b6824e7d2a0ee8d192bd2ab3ac5e7653b549758371b75ecb7ac0`.
+- Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### W9 — staffing, staff tasks, schedule, season, and due dates
+
+Status: verified for the isolated W9 commit.
+
+- Exact cutover: `441` unique functions / `445` declaration sites moved atomically, including all four W9 two-site duplicate families; no wrapper, alias, trampoline, or dual declaration ships.
+- Ratchet: cumulative B3 progress is `3,731 / 4,521` functions and `3,747 / 4,541` declaration sites; `790` legacy functions / `794` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, split-duplicate, or completed-wave residual.
+- Literal authority: ten admin-shell, REST, activation-bootstrap, and source-introspection callable identities moved; `43` database-table, cron-hook, and performance-telemetry sites remain legacy contracts.
+- Focused verification: schedule invalid-bound, unpublished-venue, and warning output; Staff Certification notices; strict POST boundaries; Administrator shell and authorization boundaries; changed-PHP lint; diff checks; and all primary B3/B2/B2.5/add-on/identity/runtime/release gates pass. Explicit-WordPress-root tests and tests whose terminal assertion requires the intentionally untouched live/shadow tree remain excluded rather than weakened.
+- Checkpoint sequencing: W9 is committed on its independent green focused gate; final exact-ZIP package, strict scan, and full lifecycle proof follow W11.
 - Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

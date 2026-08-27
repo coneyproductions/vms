@@ -1280,7 +1280,7 @@ function vms_field_staff_portal_doc_visibility_roles()
     ? array_values(array_unique(array_filter(array_map('absint', (array) $opts['staff_portal_doc_visibility_role_ids']))))
     : array();
 
-  $role_map = function_exists('vms_staffing_role_map_by_id') ? (array) vms_staffing_role_map_by_id(false) : array();
+  $role_map = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(false) : array();
 
   if (empty($role_map)) {
     echo '<p class="description">' . esc_html__('No staffing roles are available yet. Create staffing roles first, then come back here to limit who sees event docs in the Staff Portal.', 'backstage-venue-manager') . '</p>';

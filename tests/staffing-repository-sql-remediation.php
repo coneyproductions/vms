@@ -259,28 +259,28 @@ function get_post_meta(int $post_id, string $key, bool $single = true)
 	return $GLOBALS['vms_test_post_meta'][$post_id][$key] ?? '';
 }
 
-function vms_staffing_ensure_template_attendance_band_schema(): bool
+function bvmgr_staffing_ensure_template_attendance_band_schema(): bool
 {
 	return $GLOBALS['vms_test_template_schema_ready'];
 }
 
-function vms_staffing_ensure_template_slot_activation_schema(): bool
+function bvmgr_staffing_ensure_template_slot_activation_schema(): bool
 {
 	return $GLOBALS['vms_test_template_slot_schema_ready'];
 }
 
-function vms_staffing_role_map_by_id(bool $active_only = true): array
+function bvmgr_staffing_role_map_by_id(bool $active_only = true): array
 {
 	unset($active_only);
 	return $GLOBALS['vms_test_role_map'];
 }
 
-function vms_staffing_get_event_role_activation_thresholds(int $event_plan_id): array
+function bvmgr_staffing_get_event_role_activation_thresholds(int $event_plan_id): array
 {
 	return $GLOBALS['vms_test_event_thresholds'][$event_plan_id] ?? array();
 }
 
-function vms_staffing_set_event_role_activation_thresholds(int $event_plan_id, array $thresholds): void
+function bvmgr_staffing_set_event_role_activation_thresholds(int $event_plan_id, array $thresholds): void
 {
 	$GLOBALS['vms_test_threshold_sets'][] = array(
 		'event_plan_id' => $event_plan_id,
@@ -289,7 +289,7 @@ function vms_staffing_set_event_role_activation_thresholds(int $event_plan_id, a
 	$GLOBALS['vms_test_event_thresholds'][$event_plan_id] = $thresholds;
 }
 
-function vms_staffing_set_event_applied_template_id(int $event_plan_id, int $template_id, string $source): void
+function bvmgr_staffing_set_event_applied_template_id(int $event_plan_id, int $template_id, string $source): void
 {
 	$GLOBALS['vms_test_applied_templates'][] = array(
 		'event_plan_id' => $event_plan_id,
@@ -298,7 +298,7 @@ function vms_staffing_set_event_applied_template_id(int $event_plan_id, int $tem
 	);
 }
 
-function vms_staffing_mark_rollup_dirty(int $event_plan_id, string $reason): void
+function bvmgr_staffing_mark_rollup_dirty(int $event_plan_id, string $reason): void
 {
 	$GLOBALS['vms_test_rollup_dirty'][] = array(
 		'event_plan_id' => $event_plan_id,
@@ -306,12 +306,12 @@ function vms_staffing_mark_rollup_dirty(int $event_plan_id, string $reason): voi
 	);
 }
 
-function vms_staffing_compute_rollup(int $event_plan_id): void
+function bvmgr_staffing_compute_rollup(int $event_plan_id): void
 {
 	$GLOBALS['vms_test_rollup_computes'][] = $event_plan_id;
 }
 
-function vms_staffing_pick_template_for_event(int $venue_id, string $event_date_ymd, string $event_type = '', ?int $headcount = null): ?array
+function bvmgr_staffing_pick_template_for_event(int $venue_id, string $event_date_ymd, string $event_type = '', ?int $headcount = null): ?array
 {
 	$GLOBALS['vms_test_pick_template_calls'][] = array(
 		'venue_id' => $venue_id,
@@ -322,7 +322,7 @@ function vms_staffing_pick_template_for_event(int $venue_id, string $event_date_
 	return $GLOBALS['vms_test_pick_template_result'];
 }
 
-function vms_staffing_pick_template_event_type(int $event_plan_id): string
+function bvmgr_staffing_pick_template_event_type(int $event_plan_id): string
 {
 	return sanitize_key((string) get_post_meta($event_plan_id, '_vms_event_type', true));
 }
@@ -833,18 +833,18 @@ vms_test_assert_true($negative_control_rejected, 'Synthetic negative control sho
 vms_test_assert_true(strpos($staffing_source, 'phpcs:disable') === false, 'No file-level or block-level PHPCS disable should appear in staffing.php.');
 
 $target_functions = array(
-	'vms_staffing_templates_have_attendance_band_columns',
-	'vms_staffing_template_slots_have_activation_threshold_column',
-	'vms_staffing_audit_log',
-	'vms_staffing_get_templates',
-	'vms_staffing_get_template',
-	'vms_staffing_delete_template',
-	'vms_staffing_get_template_slots',
-	'vms_staffing_save_template',
-	'vms_staffing_apply_template_to_event',
-	'vms_staffing_sync_assignment_shift_timestamps_for_slot',
+	'bvmgr_staffing_templates_have_attendance_band_columns',
+	'bvmgr_staffing_template_slots_have_activation_threshold_column',
+	'bvmgr_staffing_audit_log',
+	'bvmgr_staffing_get_templates',
+	'bvmgr_staffing_get_template',
+	'bvmgr_staffing_delete_template',
+	'bvmgr_staffing_get_template_slots',
+	'bvmgr_staffing_save_template',
+	'bvmgr_staffing_apply_template_to_event',
+	'bvmgr_staffing_sync_assignment_shift_timestamps_for_slot',
 	'bvmgr_staffing_get_event_slots',
-	'vms_staffing_seed_event_slots_from_template',
+	'bvmgr_staffing_seed_event_slots_from_template',
 );
 vms_test_assert_same(
 	vms_test_collect_target_hashes($staffing_source, $target_functions),
@@ -853,21 +853,21 @@ vms_test_assert_same(
 );
 
 foreach (array(
-	'vms_staffing_table_name',
-	'vms_staffing_now_mysql_utc',
-	'vms_staffing_templates_have_attendance_band_columns',
-	'vms_staffing_template_slots_have_activation_threshold_column',
-	'vms_staffing_audit_log',
-	'vms_staffing_get_templates',
-	'vms_staffing_get_template',
-	'vms_staffing_delete_template',
-	'vms_staffing_get_template_slots',
-	'vms_staffing_template_normalize_slot_row',
-	'vms_staffing_save_template',
-	'vms_staffing_apply_template_to_event',
-	'vms_staffing_sync_assignment_shift_timestamps_for_slot',
+	'bvmgr_staffing_table_name',
+	'bvmgr_staffing_now_mysql_utc',
+	'bvmgr_staffing_templates_have_attendance_band_columns',
+	'bvmgr_staffing_template_slots_have_activation_threshold_column',
+	'bvmgr_staffing_audit_log',
+	'bvmgr_staffing_get_templates',
+	'bvmgr_staffing_get_template',
+	'bvmgr_staffing_delete_template',
+	'bvmgr_staffing_get_template_slots',
+	'bvmgr_staffing_template_normalize_slot_row',
+	'bvmgr_staffing_save_template',
+	'bvmgr_staffing_apply_template_to_event',
+	'bvmgr_staffing_sync_assignment_shift_timestamps_for_slot',
 	'bvmgr_staffing_get_event_slots',
-	'vms_staffing_seed_event_slots_from_template',
+	'bvmgr_staffing_seed_event_slots_from_template',
 ) as $function_name) {
 	eval(vms_test_extract_function($staffing_source, $function_name));
 }
@@ -878,8 +878,8 @@ try {
 		array('template_id', 'min_headcount', 'max_headcount'),
 		array('template_slot_id', 'activation_threshold'),
 	);
-	vms_test_assert_true(vms_staffing_templates_have_attendance_band_columns(), 'Template attendance-band schema probe should report both expected columns.');
-	vms_test_assert_true(vms_staffing_template_slots_have_activation_threshold_column(), 'Template-slot schema probe should report the activation-threshold column.');
+	vms_test_assert_true(bvmgr_staffing_templates_have_attendance_band_columns(), 'Template attendance-band schema probe should report both expected columns.');
+	vms_test_assert_true(bvmgr_staffing_template_slots_have_activation_threshold_column(), 'Template-slot schema probe should report the activation-threshold column.');
 	vms_test_assert_same('DESC %i', $wpdb->prepare_calls[0]['query'], 'Template schema probe should prepare the DESC statement with an identifier placeholder.');
 	vms_test_assert_same(array('wp_vms_staffing_templates'), $wpdb->prepare_calls[0]['args'], 'Template schema probe should prepare the templates table identifier.');
 	vms_test_assert_same('DESC %i', $wpdb->prepare_calls[1]['query'], 'Template-slot schema probe should prepare the DESC statement with an identifier placeholder.');
@@ -889,7 +889,7 @@ try {
 	}
 
 	$wpdb = vms_test_reset_state();
-	vms_staffing_audit_log('template_save', 45, array('before' => 1), array('after' => 2), 19);
+	bvmgr_staffing_audit_log('template_save', 45, array('before' => 1), array('after' => 2), 19);
 	$audit_inserts = vms_test_filter_calls($wpdb, 'insert');
 	vms_test_assert_same(1, count($audit_inserts), 'Audit logging should perform exactly one insert.');
 	vms_test_assert_same('wp_vms_staffing_audit_log', $audit_inserts[0]['table'], 'Audit logging should target the staffing audit table.');
@@ -903,7 +903,7 @@ try {
 			array('template_id' => 4, 'priority' => 100),
 		),
 	);
-	$template_rows = vms_staffing_get_templates(array('is_active' => 1, 'auto_apply' => 0));
+	$template_rows = bvmgr_staffing_get_templates(array('is_active' => 1, 'auto_apply' => 0));
 	vms_test_assert_same(9, $template_rows[0]['template_id'], 'Template list reads should preserve the database ordering.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE (%d = -1 OR is_active = %d) AND (%d = -1 OR auto_apply_on_event_create = %d) ORDER BY priority DESC, template_id ASC');
 	vms_test_assert_same(array('wp_vms_staffing_templates', 1, 1, 0, 0), $prepare['args'], 'Template list reads should bind both filter sentinels and values explicitly.');
@@ -912,7 +912,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_results_queue = array(array());
-	vms_staffing_get_templates(array());
+	bvmgr_staffing_get_templates(array());
 	$prepare = vms_test_last_call($wpdb, 'prepare');
 	vms_test_assert_same(array('wp_vms_staffing_templates', -1, -1, -1, -1), $prepare['args'], 'Unfiltered template list reads should keep both sentinel filters disabled.');
 
@@ -926,7 +926,7 @@ try {
 			array('template_slot_id' => 5, 'role_id' => 9),
 		),
 	);
-	$template = vms_staffing_get_template(55);
+	$template = bvmgr_staffing_get_template(55);
 	vms_test_assert_same(55, $template['template_id'], 'Single template reads should return the queued template row.');
 	vms_test_assert_same(array(2, 5), array_column($template['slots'], 'template_slot_id'), 'Template slot reads should preserve template_slot_id ordering.');
 	$single_prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE template_id = %d');
@@ -944,7 +944,7 @@ try {
 			array('template_slot_id' => 1, 'role_id' => 5),
 		),
 	);
-	$deleted = vms_staffing_delete_template(17, 91);
+	$deleted = bvmgr_staffing_delete_template(17, 91);
 	vms_test_assert_true($deleted, 'Template deletion should return true when the template delete reports success.');
 	$delete_calls = vms_test_filter_calls($wpdb, 'delete');
 	vms_test_assert_same(2, count($delete_calls), 'Template deletion should delete slot rows before deleting the parent template row.');
@@ -953,7 +953,7 @@ try {
 	vms_test_assert_same('wp_vms_staffing_audit_log', vms_test_last_call($wpdb, 'insert')['table'], 'Template deletion should append an audit-log insert after the delete cascade.');
 
 	$wpdb = vms_test_reset_state();
-	$save_update = vms_staffing_save_template(
+	$save_update = bvmgr_staffing_save_template(
 		array(
 			'template_id' => 12,
 			'name' => 'Load In',
@@ -991,7 +991,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->insert_id = 444;
-	$save_insert = vms_staffing_save_template(
+	$save_insert = bvmgr_staffing_save_template(
 		array(
 			'name' => 'Close Out',
 			'is_active' => 1,
@@ -1044,7 +1044,7 @@ try {
 			array('assignment_id' => 11, 'slot_id' => 301, 'status' => 'confirmed', 'staff_id' => 700),
 		),
 	);
-	$merge_result = vms_staffing_apply_template_to_event(88, 21, 'merge_missing', 91);
+	$merge_result = bvmgr_staffing_apply_template_to_event(88, 21, 'merge_missing', 91);
 	vms_test_assert_same(array('ok' => true, 'template_id' => 21, 'seeded' => 1, 'skipped' => 1, 'mode' => 'merge_missing'), $merge_result, 'Merge-missing template application should skip already-active roles and seed only missing ones.');
 	$insert_calls = vms_test_filter_calls($wpdb, 'insert');
 	vms_test_assert_same('wp_vms_event_role_slots', $insert_calls[0]['table'], 'Merge-missing template application should insert event-slot rows.');
@@ -1085,7 +1085,7 @@ try {
 			array('assignment_id' => 22, 'slot_id' => 402, 'status' => 'confirmed', 'staff_id' => 1002),
 		),
 	);
-	$replace_result = vms_staffing_apply_template_to_event(90, 33, 'replace_all', 91);
+	$replace_result = bvmgr_staffing_apply_template_to_event(90, 33, 'replace_all', 91);
 	vms_test_assert_same(array('ok' => true, 'template_id' => 33, 'seeded' => 2, 'skipped' => 0, 'mode' => 'replace_all'), $replace_result, 'Replace-all template application should cancel existing assignments, clear slots, and reseed the template roles.');
 	$query_calls = vms_test_filter_calls($wpdb, 'query');
 	$delete_calls = vms_test_filter_calls($wpdb, 'delete');
@@ -1114,7 +1114,7 @@ try {
 	$wpdb->get_row_queue = array(
 		array('slot_id' => 515, 'event_plan_id' => 88),
 	);
-	vms_staffing_sync_assignment_shift_timestamps_for_slot(515);
+	bvmgr_staffing_sync_assignment_shift_timestamps_for_slot(515);
 	$slot_prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE slot_id = %d');
 	vms_test_assert_same(array('wp_vms_event_role_slots', 515), $slot_prepare['args'], 'Slot timestamp sync should prepare the event-slot table identifier and slot ID.');
 	$sync_prepare = vms_test_find_prepare($wpdb, "UPDATE %i SET shift_start_ts = %s, shift_end_ts = %s, updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')");
@@ -1162,7 +1162,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_var_queue = array(2);
-	$seed_gate_result = vms_staffing_seed_event_slots_from_template(44, false, 91);
+	$seed_gate_result = bvmgr_staffing_seed_event_slots_from_template(44, false, 91);
 	vms_test_assert_same(
 		array('ok' => true, 'seeded' => 0, 'template_id' => 0, 'skipped' => 'slots_exist'),
 		$seed_gate_result,
@@ -1186,7 +1186,7 @@ try {
 		'_vms_event_type' => 'festival',
 	);
 	$GLOBALS['vms_test_pick_template_result'] = array('template_id' => 77);
-	$seed_result = vms_staffing_seed_event_slots_from_template(44, false, 91);
+	$seed_result = bvmgr_staffing_seed_event_slots_from_template(44, false, 91);
 	vms_test_assert_same(array('ok' => true, 'seeded' => 2, 'template_id' => 77), $seed_result, 'Template seeding should insert each template slot in order when the gate is clear.');
 	$insert_calls = vms_test_filter_calls($wpdb, 'insert');
 	vms_test_assert_same(array(9, 5), array($insert_calls[0]['data']['role_id'], $insert_calls[1]['data']['role_id']), 'Template seeding should preserve template-slot order during event-slot inserts.');

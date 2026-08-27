@@ -426,18 +426,18 @@ function bvmgr_venue_is_in_season(int $venue_id, string $ymd): bool
 	return (bool) $GLOBALS['g14_venue_in_season'];
 }
 
-function vms_sch_season_is_valid_ymd(string $ymd): bool
+function bvmgr_sch_season_is_valid_ymd(string $ymd): bool
 {
 	$date = DateTimeImmutable::createFromFormat('!Y-m-d', $ymd, new DateTimeZone('UTC'));
 	return $date instanceof DateTimeImmutable && $date->format('Y-m-d') === $ymd;
 }
 
-function vms_sch_season_get_rules(int $venue_id): array
+function bvmgr_sch_season_get_rules(int $venue_id): array
 {
 	return $GLOBALS['g14_season_rules'][$venue_id] ?? array();
 }
 
-function vms_sch_season_sanitize_note($note): string
+function bvmgr_sch_season_sanitize_note($note): string
 {
 	return sanitize_text_field($note);
 }
@@ -527,9 +527,9 @@ foreach ($local_expectations as $timezone_name => $expected) {
 }
 foreach (array('mirror', 'shadow') as $tree) {
 	foreach (array(
-		"vms_staff_employee_packet_set_flag(\$staff_id, vms_staff_employee_w4_received_key(), '_vms_employee_w4_received_date', \$w4, \$today);",
-		"vms_staff_employee_packet_set_flag(\$staff_id, vms_staff_employee_i9_verified_key(), '_vms_employee_i9_verified_date', \$i9, \$today);",
-		"vms_staff_employee_packet_set_flag(\$staff_id, vms_staff_employee_direct_deposit_received_key(), '_vms_employee_direct_deposit_received_date', \$dd, \$today);",
+		"bvmgr_staff_employee_packet_set_flag(\$staff_id, bvmgr_staff_employee_w4_received_key(), '_vms_employee_w4_received_date', \$w4, \$today);",
+		"bvmgr_staff_employee_packet_set_flag(\$staff_id, bvmgr_staff_employee_i9_verified_key(), '_vms_employee_i9_verified_date', \$i9, \$today);",
+		"bvmgr_staff_employee_packet_set_flag(\$staff_id, bvmgr_staff_employee_direct_deposit_received_key(), '_vms_employee_direct_deposit_received_date', \$dd, \$today);",
 	) as $persist_call) {
 		g14_same(1, substr_count($sources[$tree]['includes/admin/staff-tax-sidebar.php'], $persist_call), 'Staff compliance persistence propagation changed: ' . $tree);
 	}
@@ -621,10 +621,10 @@ foreach (array('UTC', 'America/Chicago') as $runtime_timezone) {
 	g14_same(false, bvmgr_venue_is_open_on_date(7, '2026-03-07'), 'Saturday closure decision changed: ' . $runtime_timezone);
 }
 
-$season_function = g14_extract_function($mirror['includes/schedule/season-dates.php'], 'vms_sch_season_get_blackout_notes_map');
+$season_function = g14_extract_function($mirror['includes/schedule/season-dates.php'], 'bvmgr_sch_season_get_blackout_notes_map');
 g14_same(
 	$season_function,
-	g14_extract_function($sources['shadow']['includes/schedule/season-dates.php'], 'vms_sch_season_get_blackout_notes_map'),
+	g14_extract_function($sources['shadow']['includes/schedule/season-dates.php'], 'bvmgr_sch_season_get_blackout_notes_map'),
 	'Season blackout range function must match across mirror/shadow.'
 );
 eval($season_function);
@@ -645,7 +645,7 @@ $expected_dst_start = array(
 );
 foreach (array('UTC', 'America/Chicago') as $runtime_timezone) {
 	date_default_timezone_set($runtime_timezone);
-	g14_same($expected_dst_start, vms_sch_season_get_blackout_notes_map(9, '2026-03-07', '2026-03-10'), 'DST-start range keys changed: ' . $runtime_timezone);
+	g14_same($expected_dst_start, bvmgr_sch_season_get_blackout_notes_map(9, '2026-03-07', '2026-03-10'), 'DST-start range keys changed: ' . $runtime_timezone);
 }
 
 $GLOBALS['g14_season_rules'] = array(
@@ -661,18 +661,18 @@ $expected_dst_end = array(
 );
 foreach (array('UTC', 'America/Chicago') as $runtime_timezone) {
 	date_default_timezone_set($runtime_timezone);
-	g14_same($expected_dst_end, vms_sch_season_get_blackout_notes_map(9, '2026-10-31', '2026-11-02'), 'DST-end range keys changed: ' . $runtime_timezone);
+	g14_same($expected_dst_end, bvmgr_sch_season_get_blackout_notes_map(9, '2026-10-31', '2026-11-02'), 'DST-end range keys changed: ' . $runtime_timezone);
 }
-g14_same(array(), vms_sch_season_get_blackout_notes_map(9, 'invalid', '2026-11-02'), 'Invalid season window must fail closed.');
+g14_same(array(), bvmgr_sch_season_get_blackout_notes_map(9, 'invalid', '2026-11-02'), 'Invalid season window must fail closed.');
 $GLOBALS['g14_season_rules'][9] = array(
 	array('enabled' => 1, 'type' => 'blackout_range', 'start_ymd' => '1970-01-01', 'end_ymd' => '1970-01-02', 'note' => 'Epoch'),
 );
 date_default_timezone_set('UTC');
-g14_same(array(), vms_sch_season_get_blackout_notes_map(9, '1970-01-01', '1970-01-02'), 'Zero epoch timestamp must retain the historical skipped-range behavior.');
+g14_same(array(), bvmgr_sch_season_get_blackout_notes_map(9, '1970-01-01', '1970-01-02'), 'Zero epoch timestamp must retain the historical skipped-range behavior.');
 date_default_timezone_set('America/Chicago');
 g14_same(
 	array('1970-01-01' => array('Epoch'), '1970-01-02' => array('Epoch')),
-	vms_sch_season_get_blackout_notes_map(9, '1970-01-01', '1970-01-02'),
+	bvmgr_sch_season_get_blackout_notes_map(9, '1970-01-01', '1970-01-02'),
 	'Non-UTC epoch date strings must retain their historical nonzero range behavior.'
 );
 

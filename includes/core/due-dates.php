@@ -23,8 +23,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_due_opt')) {
-  function vms_due_opt(string $const_or_key): string {
+if (!function_exists('bvmgr_due_opt')) {
+  function bvmgr_due_opt(string $const_or_key): string {
     // Allow constants, but fall back to provided string.
     if (defined($const_or_key)) {
       $v = constant($const_or_key);
@@ -34,8 +34,8 @@ if (!function_exists('vms_due_opt')) {
   }
 }
 
-if (!function_exists('vms_due_new_id')) {
-  function vms_due_new_id(string $prefix): string {
+if (!function_exists('bvmgr_due_new_id')) {
+  function bvmgr_due_new_id(string $prefix): string {
     $prefix = sanitize_key($prefix);
     if ($prefix === '') $prefix = 'id';
     $uuid = function_exists('wp_generate_uuid4') ? wp_generate_uuid4() : uniqid('', true);
@@ -44,9 +44,9 @@ if (!function_exists('vms_due_new_id')) {
   }
 }
 
-if (!function_exists('vms_due_get_payees')) {
-  function vms_due_get_payees(): array {
-    $key = vms_due_opt('BVMGR_OPT_DUE_PAYEES');
+if (!function_exists('bvmgr_due_get_payees')) {
+  function bvmgr_due_get_payees(): array {
+    $key = bvmgr_due_opt('BVMGR_OPT_DUE_PAYEES');
     $raw = get_option($key, null);
     if (is_array($raw)) return $raw;
 
@@ -65,15 +65,15 @@ if (!function_exists('vms_due_get_payees')) {
   }
 }
 
-if (!function_exists('vms_due_save_payees')) {
-  function vms_due_save_payees(array $payees): bool {
-    return update_option(vms_due_opt('BVMGR_OPT_DUE_PAYEES'), $payees, false);
+if (!function_exists('bvmgr_due_save_payees')) {
+  function bvmgr_due_save_payees(array $payees): bool {
+    return update_option(bvmgr_due_opt('BVMGR_OPT_DUE_PAYEES'), $payees, false);
   }
 }
 
-if (!function_exists('vms_due_get_obligations')) {
-  function vms_due_get_obligations(): array {
-    $key = vms_due_opt('BVMGR_OPT_DUE_OBLIGATIONS');
+if (!function_exists('bvmgr_due_get_obligations')) {
+  function bvmgr_due_get_obligations(): array {
+    $key = bvmgr_due_opt('BVMGR_OPT_DUE_OBLIGATIONS');
     $raw = get_option($key, null);
     if (is_array($raw)) return $raw;
 
@@ -90,15 +90,15 @@ if (!function_exists('vms_due_get_obligations')) {
   }
 }
 
-if (!function_exists('vms_due_save_obligations')) {
-  function vms_due_save_obligations(array $obligations): bool {
-    return update_option(vms_due_opt('BVMGR_OPT_DUE_OBLIGATIONS'), $obligations, false);
+if (!function_exists('bvmgr_due_save_obligations')) {
+  function bvmgr_due_save_obligations(array $obligations): bool {
+    return update_option(bvmgr_due_opt('BVMGR_OPT_DUE_OBLIGATIONS'), $obligations, false);
   }
 }
 
-if (!function_exists('vms_due_get_log')) {
-  function vms_due_get_log(): array {
-    $key = vms_due_opt('BVMGR_OPT_DUE_LOG');
+if (!function_exists('bvmgr_due_get_log')) {
+  function bvmgr_due_get_log(): array {
+    $key = bvmgr_due_opt('BVMGR_OPT_DUE_LOG');
     $raw = get_option($key, null);
     if (is_array($raw)) return $raw;
 
@@ -115,16 +115,16 @@ if (!function_exists('vms_due_get_log')) {
   }
 }
 
-if (!function_exists('vms_due_append_log')) {
-  function vms_due_append_log(array $entry): bool {
-    $log = vms_due_get_log();
+if (!function_exists('bvmgr_due_append_log')) {
+  function bvmgr_due_append_log(array $entry): bool {
+    $log = bvmgr_due_get_log();
     $log[] = $entry;
-    return update_option(vms_due_opt('BVMGR_OPT_DUE_LOG'), $log, false);
+    return update_option(bvmgr_due_opt('BVMGR_OPT_DUE_LOG'), $log, false);
   }
 }
 
-if (!function_exists('vms_due_log_index')) {
-  function vms_due_log_index(array $log): array {
+if (!function_exists('bvmgr_due_log_index')) {
+  function bvmgr_due_log_index(array $log): array {
     $idx = [];
     foreach ($log as $row) {
       if (!is_array($row)) continue;
@@ -147,15 +147,15 @@ if (!function_exists('vms_due_log_index')) {
   }
 }
 
-if (!function_exists('vms_due_is_completed')) {
-  function vms_due_is_completed(string $obligation_id, string $due_date, array $log_index): bool {
+if (!function_exists('bvmgr_due_is_completed')) {
+  function bvmgr_due_is_completed(string $obligation_id, string $due_date, array $log_index): bool {
     $k = sanitize_key($obligation_id) . '|' . sanitize_text_field($due_date);
     return !empty($log_index[$k]);
   }
 }
 
-if (!function_exists('vms_due_dt')) {
-  function vms_due_dt(string $ymd, DateTimeZone $tz): ?DateTimeImmutable {
+if (!function_exists('bvmgr_due_dt')) {
+  function bvmgr_due_dt(string $ymd, DateTimeZone $tz): ?DateTimeImmutable {
     $ymd = sanitize_text_field($ymd);
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd)) return null;
     try {
@@ -167,42 +167,42 @@ if (!function_exists('vms_due_dt')) {
 }
 
 
-if (!function_exists('vms_due_norm_ymd')) {
-  function vms_due_norm_ymd(string $ymd): string {
+if (!function_exists('bvmgr_due_norm_ymd')) {
+  function bvmgr_due_norm_ymd(string $ymd): string {
     $ymd = sanitize_text_field($ymd);
     return preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd) ? $ymd : '';
   }
 }
 
-if (!function_exists('vms_due_dt_max')) {
-  function vms_due_dt_max(DateTimeImmutable $a, DateTimeImmutable $b): DateTimeImmutable {
+if (!function_exists('bvmgr_due_dt_max')) {
+  function bvmgr_due_dt_max(DateTimeImmutable $a, DateTimeImmutable $b): DateTimeImmutable {
     return ($a >= $b) ? $a : $b;
   }
 }
 
-if (!function_exists('vms_due_dt_min')) {
-  function vms_due_dt_min(DateTimeImmutable $a, DateTimeImmutable $b): DateTimeImmutable {
+if (!function_exists('bvmgr_due_dt_min')) {
+  function bvmgr_due_dt_min(DateTimeImmutable $a, DateTimeImmutable $b): DateTimeImmutable {
     return ($a <= $b) ? $a : $b;
   }
 }
 
-if (!function_exists('vms_due_obligation_effective_range')) {
-  function vms_due_obligation_effective_range(array $ob, DateTimeImmutable $win_start, DateTimeImmutable $win_end, DateTimeImmutable $today): ?array {
+if (!function_exists('bvmgr_due_obligation_effective_range')) {
+  function bvmgr_due_obligation_effective_range(array $ob, DateTimeImmutable $win_start, DateTimeImmutable $win_end, DateTimeImmutable $today): ?array {
     $tz = wp_timezone();
 
     $cadence = isset($ob['cadence']) ? sanitize_key((string) $ob['cadence']) : 'monthly';
 
-    $start_ymd = vms_due_norm_ymd((string) ($ob['start_date'] ?? ''));
-    $end_ymd   = vms_due_norm_ymd((string) ($ob['end_date'] ?? ''));
+    $start_ymd = bvmgr_due_norm_ymd((string) ($ob['start_date'] ?? ''));
+    $end_ymd   = bvmgr_due_norm_ymd((string) ($ob['end_date'] ?? ''));
 
-    $start_dt = ($start_ymd !== '') ? vms_due_dt($start_ymd, $tz) : null;
-    $end_dt   = ($end_ymd !== '') ? vms_due_dt($end_ymd, $tz) : null;
+    $start_dt = ($start_ymd !== '') ? bvmgr_due_dt($start_ymd, $tz) : null;
+    $end_dt   = ($end_ymd !== '') ? bvmgr_due_dt($end_ymd, $tz) : null;
 
     $due_dt = null;
     if ($cadence === 'one_time') {
-      $due_ymd = vms_due_norm_ymd((string) ($ob['due_date'] ?? ''));
+      $due_ymd = bvmgr_due_norm_ymd((string) ($ob['due_date'] ?? ''));
       if ($due_ymd !== '') {
-        $due_dt = vms_due_dt($due_ymd, $tz);
+        $due_dt = bvmgr_due_dt($due_ymd, $tz);
       }
     }
 
@@ -218,11 +218,11 @@ if (!function_exists('vms_due_obligation_effective_range')) {
     }
 
     // Window intersected with obligation's active range.
-    $eff_start = vms_due_dt_max($win_start, $start_dt);
+    $eff_start = bvmgr_due_dt_max($win_start, $start_dt);
     $eff_end   = $win_end;
 
     if ($end_dt) {
-      $eff_end = vms_due_dt_min($eff_end, $end_dt);
+      $eff_end = bvmgr_due_dt_min($eff_end, $end_dt);
     }
 
     // One-time obligations can be important even if overdue beyond the standard overdue window.
@@ -245,8 +245,8 @@ if (!function_exists('vms_due_obligation_effective_range')) {
     return [$eff_start, $eff_end];
   }
 }
-if (!function_exists('vms_due_clamp_dom')) {
-  function vms_due_clamp_dom(int $year, int $month, int $day): int {
+if (!function_exists('bvmgr_due_clamp_dom')) {
+  function bvmgr_due_clamp_dom(int $year, int $month, int $day): int {
     $day = max(1, min(31, $day));
     $month = max(1, min(12, $month));
     $last = (int) cal_days_in_month(CAL_GREGORIAN, $month, $year);
@@ -256,15 +256,15 @@ if (!function_exists('vms_due_clamp_dom')) {
 
 
 
-if (!function_exists('vms_due_last_dom')) {
-  function vms_due_last_dom(int $year, int $month): int {
+if (!function_exists('bvmgr_due_last_dom')) {
+  function bvmgr_due_last_dom(int $year, int $month): int {
     $month = max(1, min(12, $month));
     return (int) cal_days_in_month(CAL_GREGORIAN, $month, $year);
   }
 }
 
-if (!function_exists('vms_due_iter_months')) {
-  function vms_due_iter_months(DateTimeImmutable $start, DateTimeImmutable $end, DateTimeZone $tz): array {
+if (!function_exists('bvmgr_due_iter_months')) {
+  function bvmgr_due_iter_months(DateTimeImmutable $start, DateTimeImmutable $end, DateTimeZone $tz): array {
     // Returns array of [Y, m] for each month that intersects the range.
     $out = [];
     $cur = new DateTimeImmutable($start->format('Y-m-01') . ' 00:00:00', $tz);
@@ -279,8 +279,8 @@ if (!function_exists('vms_due_iter_months')) {
   }
 }
 
-if (!function_exists('vms_due_generate_occurrences')) {
-  function vms_due_generate_occurrences(array $ob, DateTimeImmutable $start, DateTimeImmutable $end): array {
+if (!function_exists('bvmgr_due_generate_occurrences')) {
+  function bvmgr_due_generate_occurrences(array $ob, DateTimeImmutable $start, DateTimeImmutable $end): array {
     $tz = wp_timezone();
 
     $cadence = isset($ob['cadence']) ? sanitize_key((string) $ob['cadence']) : 'monthly';
@@ -294,7 +294,7 @@ if (!function_exists('vms_due_generate_occurrences')) {
 
     if ($cadence === 'one_time') {
       $ymd = isset($ob['due_date']) ? (string) $ob['due_date'] : '';
-      $dt = vms_due_dt($ymd, $tz);
+      $dt = bvmgr_due_dt($ymd, $tz);
       if ($dt && $dt >= $start && $dt <= $end) {
         $out[] = $dt->format('Y-m-d');
       }
@@ -305,7 +305,7 @@ if (!function_exists('vms_due_generate_occurrences')) {
       $month = max(1, min(12, $month));
       $years = range((int) $start->format('Y'), (int) $end->format('Y'));
       foreach ($years as $y) {
-        $dom = $eom ? vms_due_last_dom($y, $month) : vms_due_clamp_dom($y, $month, $day);
+        $dom = $eom ? bvmgr_due_last_dom($y, $month) : bvmgr_due_clamp_dom($y, $month, $day);
         $dt = new DateTimeImmutable(sprintf('%04d-%02d-%02d 00:00:00', $y, $month, $dom), $tz);
         if ($dt >= $start && $dt <= $end) {
           $out[] = $dt->format('Y-m-d');
@@ -321,7 +321,7 @@ if (!function_exists('vms_due_generate_occurrences')) {
         // Standard quarters: Jan/Apr/Jul/Oct.
         foreach ([1, 4, 7, 10] as $qStart) {
           $m = $qStart + ($q_month - 1);
-          $dom = $eom ? vms_due_last_dom($y, $m) : vms_due_clamp_dom($y, $m, $day);
+          $dom = $eom ? bvmgr_due_last_dom($y, $m) : bvmgr_due_clamp_dom($y, $m, $day);
           $dt = new DateTimeImmutable(sprintf('%04d-%02d-%02d 00:00:00', $y, $m, $dom), $tz);
           if ($dt >= $start && $dt <= $end) {
             $out[] = $dt->format('Y-m-d');
@@ -333,11 +333,11 @@ if (!function_exists('vms_due_generate_occurrences')) {
     }
 
     // Default: monthly
-    $months = vms_due_iter_months($start, $end, $tz);
+    $months = bvmgr_due_iter_months($start, $end, $tz);
     foreach ($months as $pair) {
       $y = (int) $pair[0];
       $m = (int) $pair[1];
-      $dom = $eom ? vms_due_last_dom($y, $m) : vms_due_clamp_dom($y, $m, $day);
+      $dom = $eom ? bvmgr_due_last_dom($y, $m) : bvmgr_due_clamp_dom($y, $m, $day);
       $dt = new DateTimeImmutable(sprintf('%04d-%02d-%02d 00:00:00', $y, $m, $dom), $tz);
       if ($dt >= $start && $dt <= $end) {
         $out[] = $dt->format('Y-m-d');
@@ -348,8 +348,8 @@ if (!function_exists('vms_due_generate_occurrences')) {
   }
 }
 
-if (!function_exists('vms_due_build_dashboard_items')) {
-  function vms_due_build_dashboard_items(int $span_days = 30): array {
+if (!function_exists('bvmgr_due_build_dashboard_items')) {
+  function bvmgr_due_build_dashboard_items(int $span_days = 30): array {
     $tz = wp_timezone();
     $today = new DateTimeImmutable('today', $tz);
 
@@ -362,10 +362,10 @@ if (!function_exists('vms_due_build_dashboard_items')) {
     $start = $today->modify('-' . $overdue_days . ' days');
     $end = $today->modify('+' . $span_days . ' days');
 
-    $payees = vms_due_get_payees();
-    $obligations = vms_due_get_obligations();
-    $log = vms_due_get_log();
-    $log_idx = vms_due_log_index($log);
+    $payees = bvmgr_due_get_payees();
+    $obligations = bvmgr_due_get_obligations();
+    $log = bvmgr_due_get_log();
+    $log_idx = bvmgr_due_log_index($log);
 
     $items = [];
     foreach ($obligations as $oid => $ob) {
@@ -421,20 +421,20 @@ if (!function_exists('vms_due_build_dashboard_items')) {
       $remind_days = isset($ob['remind_days']) ? (int) $ob['remind_days'] : 14;
       $remind_days = max(0, min(365, $remind_days));
 
-      $range = vms_due_obligation_effective_range($ob, $start, $end, $today);
+      $range = bvmgr_due_obligation_effective_range($ob, $start, $end, $today);
       if (!$range || !is_array($range) || count($range) !== 2) {
         continue;
       }
       $rstart = $range[0];
       $rend   = $range[1];
 
-      $occ = vms_due_generate_occurrences($ob, $rstart, $rend);
+      $occ = bvmgr_due_generate_occurrences($ob, $rstart, $rend);
       foreach ($occ as $due_ymd) {
-        if (vms_due_is_completed($oid, $due_ymd, $log_idx)) {
+        if (bvmgr_due_is_completed($oid, $due_ymd, $log_idx)) {
           continue;
         }
 
-        $due_dt = vms_due_dt($due_ymd, $tz);
+        $due_dt = bvmgr_due_dt($due_ymd, $tz);
         if (!$due_dt) continue;
 
         $days_until = (int) floor(($due_dt->getTimestamp() - $today->getTimestamp()) / 86400);
@@ -509,8 +509,8 @@ if (!function_exists('vms_due_build_dashboard_items')) {
   }
 }
 
-if (!function_exists('vms_due_dashboard_summary')) {
-  function vms_due_dashboard_summary(array $items): array {
+if (!function_exists('bvmgr_due_dashboard_summary')) {
+  function bvmgr_due_dashboard_summary(array $items): array {
     $overdue = 0;
     $d7 = 0;
     $d14 = 0;
@@ -547,30 +547,30 @@ if (!function_exists('vms_due_dashboard_summary')) {
 
 // Back-compat alias used by dashboard response builder.
 // (The canonical helper is vms_due_dashboard_summary().)
-if (!function_exists('vms_due_summary_counts')) {
-  function vms_due_summary_counts(array $items): array {
-    return vms_due_dashboard_summary($items);
+if (!function_exists('bvmgr_due_summary_counts')) {
+  function bvmgr_due_summary_counts(array $items): array {
+    return bvmgr_due_dashboard_summary($items);
   }
 }
 
-if (!function_exists('vms_due_norm_list_status_filter')) {
-  function vms_due_norm_list_status_filter(string $status): string {
+if (!function_exists('bvmgr_due_norm_list_status_filter')) {
+  function bvmgr_due_norm_list_status_filter(string $status): string {
     $status = sanitize_key($status);
     $allowed = ['open', 'completed', 'overdue', 'due_soon', 'upcoming', 'all'];
     return in_array($status, $allowed, true) ? $status : 'open';
   }
 }
 
-if (!function_exists('vms_due_norm_list_cadence_filter')) {
-  function vms_due_norm_list_cadence_filter(string $cadence): string {
+if (!function_exists('bvmgr_due_norm_list_cadence_filter')) {
+  function bvmgr_due_norm_list_cadence_filter(string $cadence): string {
     $cadence = sanitize_key($cadence);
     $allowed = ['all', 'monthly', 'quarterly', 'annual', 'one_time'];
     return in_array($cadence, $allowed, true) ? $cadence : 'all';
   }
 }
 
-if (!function_exists('vms_due_norm_list_payee_filter')) {
-  function vms_due_norm_list_payee_filter(string $payee_id): string {
+if (!function_exists('bvmgr_due_norm_list_payee_filter')) {
+  function bvmgr_due_norm_list_payee_filter(string $payee_id): string {
     $payee_id = sanitize_text_field($payee_id);
     if ($payee_id === '' || $payee_id === 'all') return 'all';
     if ($payee_id === 'none') return 'none';
@@ -579,10 +579,10 @@ if (!function_exists('vms_due_norm_list_payee_filter')) {
   }
 }
 
-if (!function_exists('vms_due_list_status_matches_filter')) {
-  function vms_due_list_status_matches_filter(string $item_status, string $status_filter): bool {
+if (!function_exists('bvmgr_due_list_status_matches_filter')) {
+  function bvmgr_due_list_status_matches_filter(string $item_status, string $status_filter): bool {
     $item_status = sanitize_key($item_status);
-    $status_filter = vms_due_norm_list_status_filter($status_filter);
+    $status_filter = bvmgr_due_norm_list_status_filter($status_filter);
 
     if ($status_filter === 'all') {
       return true;
@@ -595,7 +595,7 @@ if (!function_exists('vms_due_list_status_matches_filter')) {
   }
 }
 
-if (!function_exists('vms_due_build_obligations_list_response')) {
+if (!function_exists('bvmgr_due_build_obligations_list_response')) {
   /**
    * Build due-instance list with deterministic filters + stable ordering.
    *
@@ -608,13 +608,13 @@ if (!function_exists('vms_due_build_obligations_list_response')) {
    * - lookahead_days: 1..1825 (default 120)
    * - limit: 1..1000 (default 500)
    */
-  function vms_due_build_obligations_list_response(array $args = []): array {
+  function bvmgr_due_build_obligations_list_response(array $args = []): array {
     $tz = wp_timezone();
     $today = new DateTimeImmutable('today', $tz);
 
-    $status_filter = vms_due_norm_list_status_filter((string) ($args['status'] ?? 'open'));
-    $cadence_filter = vms_due_norm_list_cadence_filter((string) ($args['cadence'] ?? 'all'));
-    $payee_filter = vms_due_norm_list_payee_filter((string) ($args['payee_id'] ?? 'all'));
+    $status_filter = bvmgr_due_norm_list_status_filter((string) ($args['status'] ?? 'open'));
+    $cadence_filter = bvmgr_due_norm_list_cadence_filter((string) ($args['cadence'] ?? 'all'));
+    $payee_filter = bvmgr_due_norm_list_payee_filter((string) ($args['payee_id'] ?? 'all'));
     $include_archived = !empty($args['include_archived']);
 
     $lookback_days = isset($args['lookback_days']) ? (int) $args['lookback_days'] : 120;
@@ -628,9 +628,9 @@ if (!function_exists('vms_due_build_obligations_list_response')) {
     $start = $today->modify('-' . $lookback_days . ' days');
     $end = $today->modify('+' . $lookahead_days . ' days');
 
-    $payees = vms_due_get_payees();
-    $obligations = vms_due_get_obligations();
-    $log_idx = vms_due_log_index(vms_due_get_log());
+    $payees = bvmgr_due_get_payees();
+    $obligations = bvmgr_due_get_obligations();
+    $log_idx = bvmgr_due_log_index(bvmgr_due_get_log());
 
     $counts = [
       'open' => 0,
@@ -714,20 +714,20 @@ if (!function_exists('vms_due_build_obligations_list_response')) {
       $remind_days = isset($ob['remind_days']) ? (int) $ob['remind_days'] : 14;
       $remind_days = max(0, min(365, $remind_days));
 
-      $range = vms_due_obligation_effective_range($ob, $start, $end, $today);
+      $range = bvmgr_due_obligation_effective_range($ob, $start, $end, $today);
       if (!$range || !is_array($range) || count($range) !== 2) {
         continue;
       }
       $rstart = $range[0];
       $rend = $range[1];
 
-      $occurrences = vms_due_generate_occurrences($ob, $rstart, $rend);
+      $occurrences = bvmgr_due_generate_occurrences($ob, $rstart, $rend);
       foreach ($occurrences as $due_ymd) {
-        $due_dt = vms_due_dt($due_ymd, $tz);
+        $due_dt = bvmgr_due_dt($due_ymd, $tz);
         if (!$due_dt) continue;
 
         $days_until = (int) floor(($due_dt->getTimestamp() - $today->getTimestamp()) / 86400);
-        $is_completed = vms_due_is_completed($oid, $due_ymd, $log_idx);
+        $is_completed = bvmgr_due_is_completed($oid, $due_ymd, $log_idx);
 
         $status = 'upcoming';
         if ($is_completed) {
@@ -745,7 +745,7 @@ if (!function_exists('vms_due_build_obligations_list_response')) {
           $counts[$status]++;
         }
 
-        if (!vms_due_list_status_matches_filter($status, $status_filter)) {
+        if (!bvmgr_due_list_status_matches_filter($status, $status_filter)) {
           continue;
         }
 
@@ -822,11 +822,11 @@ if (!function_exists('vms_due_build_obligations_list_response')) {
   }
 }
 
-if (!function_exists('vms_due_validate_log_target')) {
+if (!function_exists('bvmgr_due_validate_log_target')) {
   /**
    * Validate obligation + due_date pair for completion/uncompletion transitions.
    */
-  function vms_due_validate_log_target(string $obligation_id, string $due_date): array {
+  function bvmgr_due_validate_log_target(string $obligation_id, string $due_date): array {
     $obligation_id = sanitize_key($obligation_id);
     $due_date = sanitize_text_field($due_date);
 
@@ -834,7 +834,7 @@ if (!function_exists('vms_due_validate_log_target')) {
       return ['ok' => false, 'error' => 'invalid_input'];
     }
 
-    $obligations = vms_due_get_obligations();
+    $obligations = bvmgr_due_get_obligations();
     if (empty($obligations[$obligation_id]) || !is_array($obligations[$obligation_id])) {
       return ['ok' => false, 'error' => 'obligation_not_found'];
     }
@@ -843,7 +843,7 @@ if (!function_exists('vms_due_validate_log_target')) {
 
     // Validate that this due_date belongs to this obligation and is within the obligation's active range.
     $tz = wp_timezone();
-    $due_dt = vms_due_dt($due_date, $tz);
+    $due_dt = bvmgr_due_dt($due_date, $tz);
     if (!$due_dt) {
       return ['ok' => false, 'error' => 'invalid_input'];
     }
@@ -851,9 +851,9 @@ if (!function_exists('vms_due_validate_log_target')) {
     $cadence = isset($ob['cadence']) ? sanitize_key((string) $ob['cadence']) : 'monthly';
 
     $start_dt = null;
-    $start_ymd = vms_due_norm_ymd((string) ($ob['start_date'] ?? ''));
+    $start_ymd = bvmgr_due_norm_ymd((string) ($ob['start_date'] ?? ''));
     if ($start_ymd !== '') {
-      $start_dt = vms_due_dt($start_ymd, $tz);
+      $start_dt = bvmgr_due_dt($start_ymd, $tz);
     }
     if (!$start_dt) {
       $today = new DateTimeImmutable('today', $tz);
@@ -861,9 +861,9 @@ if (!function_exists('vms_due_validate_log_target')) {
     }
 
     $end_dt = null;
-    $end_ymd = vms_due_norm_ymd((string) ($ob['end_date'] ?? ''));
+    $end_ymd = bvmgr_due_norm_ymd((string) ($ob['end_date'] ?? ''));
     if ($end_ymd !== '') {
-      $end_dt = vms_due_dt($end_ymd, $tz);
+      $end_dt = bvmgr_due_dt($end_ymd, $tz);
     }
     if ($end_dt && $end_dt < $start_dt) {
       $end_dt = null;
@@ -877,7 +877,7 @@ if (!function_exists('vms_due_validate_log_target')) {
     }
 
     // Make sure this due_date matches the cadence rule (prevents arbitrary log entries).
-    $matches = vms_due_generate_occurrences($ob, $due_dt, $due_dt);
+    $matches = bvmgr_due_generate_occurrences($ob, $due_dt, $due_dt);
     if (!in_array($due_date, $matches, true)) {
       return ['ok' => false, 'error' => 'due_date_not_valid_for_obligation'];
     }
@@ -886,21 +886,21 @@ if (!function_exists('vms_due_validate_log_target')) {
   }
 }
 
-if (!function_exists('vms_due_safe_complete')) {
-  function vms_due_safe_complete(string $obligation_id, string $due_date, string $notes = '', string $proof_url = ''): array {
+if (!function_exists('bvmgr_due_safe_complete')) {
+  function bvmgr_due_safe_complete(string $obligation_id, string $due_date, string $notes = '', string $proof_url = ''): array {
     $obligation_id = sanitize_key($obligation_id);
     $due_date = sanitize_text_field($due_date);
     $notes = sanitize_textarea_field($notes);
     $proof_url = esc_url_raw($proof_url);
 
-    $valid = vms_due_validate_log_target($obligation_id, $due_date);
+    $valid = bvmgr_due_validate_log_target($obligation_id, $due_date);
     if (empty($valid['ok'])) {
       return $valid;
     }
 
-    $log = vms_due_get_log();
-    $idx = vms_due_log_index($log);
-    if (vms_due_is_completed($obligation_id, $due_date, $idx)) {
+    $log = bvmgr_due_get_log();
+    $idx = bvmgr_due_log_index($log);
+    if (bvmgr_due_is_completed($obligation_id, $due_date, $idx)) {
       return ['ok' => true, 'already' => true];
     }
 
@@ -914,13 +914,13 @@ if (!function_exists('vms_due_safe_complete')) {
       'proof_url' => $proof_url,
     ];
 
-    $ok = vms_due_append_log($entry);
+    $ok = bvmgr_due_append_log($entry);
     return ['ok' => (bool) $ok, 'already' => false];
   }
 }
 
-if (!function_exists('vms_due_safe_uncomplete')) {
-  function vms_due_safe_uncomplete(string $obligation_id, string $due_date, string $notes = '', string $proof_url = ''): array {
+if (!function_exists('bvmgr_due_safe_uncomplete')) {
+  function bvmgr_due_safe_uncomplete(string $obligation_id, string $due_date, string $notes = '', string $proof_url = ''): array {
     $obligation_id = sanitize_key($obligation_id);
     $due_date = sanitize_text_field($due_date);
     $notes = sanitize_textarea_field($notes);
@@ -930,14 +930,14 @@ if (!function_exists('vms_due_safe_uncomplete')) {
       return ['ok' => false, 'error' => 'invalid_input'];
     }
 
-    $obligations = vms_due_get_obligations();
+    $obligations = bvmgr_due_get_obligations();
     if (empty($obligations[$obligation_id]) || !is_array($obligations[$obligation_id])) {
       return ['ok' => false, 'error' => 'obligation_not_found'];
     }
 
-    $log = vms_due_get_log();
-    $idx = vms_due_log_index($log);
-    if (!vms_due_is_completed($obligation_id, $due_date, $idx)) {
+    $log = bvmgr_due_get_log();
+    $idx = bvmgr_due_log_index($log);
+    if (!bvmgr_due_is_completed($obligation_id, $due_date, $idx)) {
       return ['ok' => true, 'already' => true];
     }
 
@@ -951,13 +951,13 @@ if (!function_exists('vms_due_safe_uncomplete')) {
       'proof_url' => $proof_url,
     ];
 
-    $ok = vms_due_append_log($entry);
+    $ok = bvmgr_due_append_log($entry);
     return ['ok' => (bool) $ok, 'already' => false];
   }
 }
 
-if (!function_exists('vms_due_build_dashboard_response')) {
-  function vms_due_build_dashboard_response(int $span_days = 30): array {
+if (!function_exists('bvmgr_due_build_dashboard_response')) {
+  function bvmgr_due_build_dashboard_response(int $span_days = 30): array {
     $tz = wp_timezone();
     $today = new DateTimeImmutable('today', $tz);
 
@@ -967,11 +967,11 @@ if (!function_exists('vms_due_build_dashboard_response')) {
     $start = $today->modify('-' . $overdue_days . ' days');
     $end = $today->modify('+' . $span_days . ' days');
 
-    $items = vms_due_build_dashboard_items($span_days);
-    $counts = vms_due_summary_counts($items);
+    $items = bvmgr_due_build_dashboard_items($span_days);
+    $counts = bvmgr_due_summary_counts($items);
 
     // How many active obligations exist (helps render empty-state copy).
-    $obs = vms_due_get_obligations();
+    $obs = bvmgr_due_get_obligations();
     $active = 0;
     foreach ($obs as $ob) {
       if (!is_array($ob)) continue;

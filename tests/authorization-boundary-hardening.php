@@ -502,27 +502,27 @@ function bvmgr_add_admin_notice(string $message, string $type = 'success'): void
 	$GLOBALS['vms_test_notices'][] = array('message' => $message, 'type' => $type);
 }
 
-function vms_sd_require_engine(): void
+function bvmgr_sd_require_engine(): void
 {
 }
 
-function vms_sch_season_get_rules(int $venue_id): array
+function bvmgr_sch_season_get_rules(int $venue_id): array
 {
 	return array();
 }
 
-function vms_sch_season_save_rules(int $venue_id, array $rules): bool
+function bvmgr_sch_season_save_rules(int $venue_id, array $rules): bool
 {
 	$GLOBALS['vms_test_season_save_calls']++;
 	return true;
 }
 
-function vms_sd_base_url(string $page_slug, int $venue_id): string
+function bvmgr_sd_base_url(string $page_slug, int $venue_id): string
 {
 	return admin_url('admin.php?page=' . $page_slug . '&venue_id=' . $venue_id);
 }
 
-function vms_sd_redirect(string $url): void
+function bvmgr_sd_redirect(string $url): void
 {
 	wp_safe_redirect($url);
 }
@@ -697,8 +697,8 @@ eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_appl
 eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_applications_handle_resync_vendor'));
 eval(vms_test_extract_named_function($helpersPath, 'bvmgr_vendor_handle_mark_reviewed'));
 eval(vms_test_extract_named_function($venueTemplatesPath, 'bvmgr_handle_create_venue_from_template'));
-eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_query_arg'));
-eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_maybe_handle_post'));
+eval(vms_test_extract_named_function($seasonDatesPath, 'bvmgr_sd_query_arg'));
+eval(vms_test_extract_named_function($seasonDatesPath, 'bvmgr_sd_maybe_handle_post'));
 eval(vms_test_extract_named_function($eventPlansPath, 'bvmgr_event_plan_current_get_request'));
 $GLOBALS['vms_test_event_plan_admin_guard'] = eval(
 	'return ' . vms_test_extract_inline_closure($eventPlansPath, "add_action('admin_init', function () {") . ';'
@@ -943,7 +943,7 @@ try {
 		'venue_id' => 55,
 	);
 	$_REQUEST = array_merge($_GET, $_POST);
-	vms_sd_maybe_handle_post();
+	bvmgr_sd_maybe_handle_post();
 	$assert((int) $GLOBALS['vms_test_season_save_calls'] === 0, 'Season Dates POST handler should not reach mutation paths without the admin capability.');
 
 	fwrite(STDOUT, "Authorization boundary hardening OK.\n");

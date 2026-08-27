@@ -7,7 +7,7 @@ require_once __DIR__ . '/schedule/helpers.php';
 require_once __DIR__ . '/schedule/schedule.php';
 
 // BOTH?
-if (!function_exists('vms_sch_get_all_venue_ids')) {
+if (!function_exists('bvmgr_sch_get_all_venue_ids')) {
   $path = __DIR__ . '/schedule/helpers.php';
   if (file_exists($path)) {
     require_once $path;
@@ -127,13 +127,13 @@ function bvmgr_dashboard_rest_get(WP_REST_Request $req)
 
   // ---------- Due Dates (separate range, not schedule-derived) ----------
   if ($range === 'due') {
-    if (!function_exists('vms_due_build_dashboard_response')) {
+    if (!function_exists('bvmgr_due_build_dashboard_response')) {
       $path = __DIR__ . '/core/due-dates.php';
       if (file_exists($path)) require_once $path;
     }
 
     $span_days = bvmgr_dashboard_get_due_span_days();
-    $resp = vms_due_build_dashboard_response($span_days);
+    $resp = bvmgr_due_build_dashboard_response($span_days);
 
     if ($debug_on) {
       $resp['debug'] = [
@@ -171,8 +171,8 @@ function bvmgr_dashboard_rest_get(WP_REST_Request $req)
 
   // ---------- Staffing Readiness (next N events rollup cache) ----------
   if ($range === 'staffing') {
-    if (function_exists('vms_staffing_build_dashboard_response')) {
-      $resp = vms_staffing_build_dashboard_response([
+    if (function_exists('bvmgr_staffing_build_dashboard_response')) {
+      $resp = bvmgr_staffing_build_dashboard_response([
         'venue_id' => $venue_id,
         'staffing_n' => $staffing_n,
         'include_drafts' => (bool) $staffing_include_drafts,
@@ -354,21 +354,21 @@ function bvmgr_dashboard_build_bills_response(array $args): array
 
   $venue_ids = [];
   if ($venue_id === 'all') {
-    $venue_ids = function_exists('vms_sch_get_all_venue_ids') ? (array) vms_sch_get_all_venue_ids() : [];
+    $venue_ids = function_exists('bvmgr_sch_get_all_venue_ids') ? (array) bvmgr_sch_get_all_venue_ids() : [];
   } else {
     $venue_ids = [absint($venue_id)];
   }
   $venue_ids = array_values(array_filter(array_map('absint', $venue_ids)));
 
-  $venue_name_map = function_exists('vms_sch_get_venue_name_map') ? (array) vms_sch_get_venue_name_map($venue_ids) : [];
+  $venue_name_map = function_exists('bvmgr_sch_get_venue_name_map') ? (array) bvmgr_sch_get_venue_name_map($venue_ids) : [];
 
   // Collect plan IDs inside the event-date window
   $plans_by_date = [];
   if (!empty($venue_ids)) {
-    if ($venue_id === 'all' && function_exists('vms_sch_get_plans_by_date_all')) {
-      $plans_by_date = (array) vms_sch_get_plans_by_date_all($venue_ids, $event_start_ymd, $event_end_ymd, $include_drafts, array('context' => 'dashboard_bills', 'include_cancelled' => false));
-    } elseif ($venue_id !== 'all' && function_exists('vms_sch_get_plans_by_date')) {
-      $plans_by_date = (array) vms_sch_get_plans_by_date((int) $venue_ids[0], $event_start_ymd, $event_end_ymd, $include_drafts, array('context' => 'dashboard_bills', 'include_cancelled' => false));
+    if ($venue_id === 'all' && function_exists('bvmgr_sch_get_plans_by_date_all')) {
+      $plans_by_date = (array) bvmgr_sch_get_plans_by_date_all($venue_ids, $event_start_ymd, $event_end_ymd, $include_drafts, array('context' => 'dashboard_bills', 'include_cancelled' => false));
+    } elseif ($venue_id !== 'all' && function_exists('bvmgr_sch_get_plans_by_date')) {
+      $plans_by_date = (array) bvmgr_sch_get_plans_by_date((int) $venue_ids[0], $event_start_ymd, $event_end_ymd, $include_drafts, array('context' => 'dashboard_bills', 'include_cancelled' => false));
     }
   }
 
@@ -469,8 +469,8 @@ function bvmgr_dashboard_build_bills_response(array $args): array
         // If flat fee not explicitly stored on the plan and no snapshot exists,
         // fall back to the venue's per-day default comp (by DOW).
         if (($flat_fee === null || (float) $flat_fee <= 0) && in_array($structure, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true)) {
-          if (function_exists('vms_get_venue_default_comp_for_date') && $venue_id_effective > 0 && $event_date_ymd !== '') {
-            $def = (array) vms_get_venue_default_comp_for_date((int) $venue_id_effective, (string) $event_date_ymd);
+          if (function_exists('bvmgr_get_venue_default_comp_for_date') && $venue_id_effective > 0 && $event_date_ymd !== '') {
+            $def = (array) bvmgr_get_venue_default_comp_for_date((int) $venue_id_effective, (string) $event_date_ymd);
             $def_struct = isset($def['structure']) ? (string) $def['structure'] : '';
             $def_fee = isset($def['flat_fee_amount']) ? $def['flat_fee_amount'] : null;
             if (in_array($def_struct, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true) && is_numeric($def_fee) && (float) $def_fee > 0) {
@@ -573,15 +573,15 @@ function bvmgr_dashboard_build_bills_response(array $args): array
 
 function bvmgr_dashboard_build_financial_response(array $args): array
 {
-  if (!function_exists('vms_due_build_dashboard_response')) {
+  if (!function_exists('bvmgr_due_build_dashboard_response')) {
     $path = __DIR__ . '/core/due-dates.php';
     if (file_exists($path)) require_once $path;
   }
 
   $bills = bvmgr_dashboard_build_bills_response($args);
   $due_span_days = bvmgr_dashboard_get_due_span_days();
-  $due = function_exists('vms_due_build_dashboard_response')
-    ? vms_due_build_dashboard_response($due_span_days)
+  $due = function_exists('bvmgr_due_build_dashboard_response')
+    ? bvmgr_due_build_dashboard_response($due_span_days)
     : ['range_start' => '', 'range_end' => '', 'active_obligations' => 0, 'counts' => [], 'items' => []];
 
   $bills_items = (isset($bills['items']) && is_array($bills['items'])) ? $bills['items'] : [];
@@ -708,7 +708,7 @@ function bvmgr_schedule_items_for_dashboard(array $args)
   $items = [];
 
   if ($venue_id === 'all') {
-    $venue_ids = vms_sch_get_all_venue_ids();
+    $venue_ids = bvmgr_sch_get_all_venue_ids();
     $debug['venue_ids_count'] = is_array($venue_ids) ? count($venue_ids) : 0;
     $debug['venue_ids_sample'] = is_array($venue_ids) ? array_slice($venue_ids, 0, 10) : [];
 
@@ -718,8 +718,8 @@ function bvmgr_schedule_items_for_dashboard(array $args)
     }
 
     // $plans_by_date = vms_sch_get_plans_by_date_all($venue_ids, $start_ymd, $end_ymd);
-    $plans_by_date = vms_sch_get_plans_by_date_all($venue_ids, $start_ymd, $end_ymd, $include_drafts, array('context' => 'dashboard', 'include_cancelled' => $include_canceled));
-    $venue_name_map = vms_sch_get_venue_name_map($venue_ids);
+    $plans_by_date = bvmgr_sch_get_plans_by_date_all($venue_ids, $start_ymd, $end_ymd, $include_drafts, array('context' => 'dashboard', 'include_cancelled' => $include_canceled));
+    $venue_name_map = bvmgr_sch_get_venue_name_map($venue_ids);
 
     if (is_array($plans_by_date)) {
       $debug['plans_days'] = count($plans_by_date);
@@ -748,8 +748,8 @@ function bvmgr_schedule_items_for_dashboard(array $args)
   } else {
     $vid = (int) $venue_id;
 
-    $open_map = vms_sch_get_open_map($vid, $start_ymd, $end_ymd);
-    $plans_by_date = vms_sch_get_plans_by_date($vid, $start_ymd, $end_ymd, $include_drafts, array('context' => 'dashboard', 'include_cancelled' => $include_canceled));
+    $open_map = bvmgr_sch_get_open_map($vid, $start_ymd, $end_ymd);
+    $plans_by_date = bvmgr_sch_get_plans_by_date($vid, $start_ymd, $end_ymd, $include_drafts, array('context' => 'dashboard', 'include_cancelled' => $include_canceled));
 
     if ($want_debug && is_array($plans_by_date)) {
       $debug['rows_for_2026_01_25'] = $plans_by_date['2026-01-25'] ?? null;

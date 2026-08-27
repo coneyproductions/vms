@@ -11,8 +11,8 @@ if (!defined('ABSPATH')) exit;
  * - Vendor post_meta: vms_meta_key('vendor','linked_staff_id') fallback '_vms_linked_staff_id'
  */
 
-if (!function_exists('vms_vendor_linked_staff_meta_key')) {
-    function vms_vendor_linked_staff_meta_key(): string
+if (!function_exists('bvmgr_vendor_linked_staff_meta_key')) {
+    function bvmgr_vendor_linked_staff_meta_key(): string
     {
         if (function_exists('bvmgr_meta_key')) {
             $k = (string) bvmgr_meta_key('vendor', 'linked_staff_id');
@@ -22,8 +22,8 @@ if (!function_exists('vms_vendor_linked_staff_meta_key')) {
     }
 }
 
-if (!function_exists('vms_staff_linked_vendor_meta_key')) {
-    function vms_staff_linked_vendor_meta_key(): string
+if (!function_exists('bvmgr_staff_linked_vendor_meta_key')) {
+    function bvmgr_staff_linked_vendor_meta_key(): string
     {
         if (function_exists('bvmgr_meta_key')) {
             $k = (string) bvmgr_meta_key('staff', 'linked_vendor_id');
@@ -37,19 +37,19 @@ add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_staff_vendor_link',
         __('Linked Vendor', 'backstage-venue-manager'),
-        'vms_staff_vendor_link_metabox_render',
+        'bvmgr_staff_vendor_link_metabox_render',
         'vms_staff',
         'side',
         'default'
     );
 });
 
-function vms_staff_vendor_link_metabox_render($post): void
+function bvmgr_staff_vendor_link_metabox_render($post): void
 {
     if (!($post instanceof WP_Post)) return;
 
     $staff_id = (int) $post->ID;
-    $current_vendor_id = (int) get_post_meta($staff_id, vms_staff_linked_vendor_meta_key(), true);
+    $current_vendor_id = (int) get_post_meta($staff_id, bvmgr_staff_linked_vendor_meta_key(), true);
 
     wp_nonce_field('vms_staff_vendor_link_save', 'vms_staff_vendor_link_nonce');
 
@@ -106,8 +106,8 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     }
 
     $staff_id = (int) $post_id;
-    $k_staff_vendor = vms_staff_linked_vendor_meta_key();
-    $k_vendor_staff = vms_vendor_linked_staff_meta_key();
+    $k_staff_vendor = bvmgr_staff_linked_vendor_meta_key();
+    $k_vendor_staff = bvmgr_vendor_linked_staff_meta_key();
 
     $old_vendor_id = (int) get_post_meta($staff_id, $k_staff_vendor, true);
     $new_vendor_id = isset($_POST['vms_linked_vendor_id']) ? (int) $_POST['vms_linked_vendor_id'] : 0;

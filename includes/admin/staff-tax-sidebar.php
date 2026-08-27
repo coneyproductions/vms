@@ -10,8 +10,8 @@ if (!defined('ABSPATH')) exit;
  * - Employee (W-2): Employee packet required (W-4 + I-9 verified)
  */
 
-if (!function_exists('vms_staff_tax_provider')) {
-    function vms_staff_tax_provider(): string
+if (!function_exists('bvmgr_staff_tax_provider')) {
+    function bvmgr_staff_tax_provider(): string
     {
         if (function_exists('bvmgr_tax_settings_get_provider')) {
             return (string) bvmgr_tax_settings_get_provider();
@@ -27,8 +27,8 @@ if (!function_exists('vms_staff_tax_provider')) {
     }
 }
 
-if (!function_exists('vms_staff_tax_provider_label')) {
-    function vms_staff_tax_provider_label(string $provider): string
+if (!function_exists('bvmgr_staff_tax_provider_label')) {
+    function bvmgr_staff_tax_provider_label(string $provider): string
     {
         if (function_exists('bvmgr_tax_provider_label')) {
             return (string) bvmgr_tax_provider_label($provider);
@@ -39,8 +39,8 @@ if (!function_exists('vms_staff_tax_provider_label')) {
     }
 }
 
-if (!function_exists('vms_staff_tax_meta_key')) {
-    function vms_staff_tax_meta_key(string $field, string $fallback): string
+if (!function_exists('bvmgr_staff_tax_meta_key')) {
+    function bvmgr_staff_tax_meta_key(string $field, string $fallback): string
     {
         if (function_exists('bvmgr_meta_key')) {
             $mapped = (string) bvmgr_meta_key('vendor', $field);
@@ -52,18 +52,18 @@ if (!function_exists('vms_staff_tax_meta_key')) {
     }
 }
 
-if (!function_exists('vms_staff_tax_status_context')) {
-    function vms_staff_tax_status_context(int $staff_id): array
+if (!function_exists('bvmgr_staff_tax_status_context')) {
+    function bvmgr_staff_tax_status_context(int $staff_id): array
     {
         $staff_id = absint($staff_id);
-        $provider = vms_staff_tax_provider();
+        $provider = bvmgr_staff_tax_provider();
 
-        $k_done = vms_staff_tax_meta_key('tax_profile_completed_at', '_vms_tax_profile_completed_at');
-        $k_attest = vms_staff_tax_meta_key('w9_attested_at', '_vms_w9_external_vendor_attested_at');
-        $k_prov = vms_staff_tax_meta_key('w9_provider', '_vms_w9_offsite_provider');
-        $k_upload = vms_staff_tax_meta_key('w9_upload_id', '_vms_w9_upload_id');
-        $k_confirmed_at = vms_staff_tax_meta_key('tax_admin_confirmed_at', '_vms_tax_admin_confirmed_at');
-        $k_confirmed_by = vms_staff_tax_meta_key('tax_admin_confirmed_by', '_vms_tax_admin_confirmed_by');
+        $k_done = bvmgr_staff_tax_meta_key('tax_profile_completed_at', '_vms_tax_profile_completed_at');
+        $k_attest = bvmgr_staff_tax_meta_key('w9_attested_at', '_vms_w9_external_vendor_attested_at');
+        $k_prov = bvmgr_staff_tax_meta_key('w9_provider', '_vms_w9_offsite_provider');
+        $k_upload = bvmgr_staff_tax_meta_key('w9_upload_id', '_vms_w9_upload_id');
+        $k_confirmed_at = bvmgr_staff_tax_meta_key('tax_admin_confirmed_at', '_vms_tax_admin_confirmed_at');
+        $k_confirmed_by = bvmgr_staff_tax_meta_key('tax_admin_confirmed_by', '_vms_tax_admin_confirmed_by');
 
         $done_at = (int) get_post_meta($staff_id, $k_done, true);
         $attested_at = (int) get_post_meta($staff_id, $k_attest, true);
@@ -101,7 +101,7 @@ if (!function_exists('vms_staff_tax_status_context')) {
 
         return array(
             'provider' => $effective_provider,
-            'provider_label' => vms_staff_tax_provider_label($effective_provider),
+            'provider_label' => bvmgr_staff_tax_provider_label($effective_provider),
             'global_provider' => $provider,
             'done_at' => $done_at,
             'attested_at' => $attested_at,
@@ -124,8 +124,8 @@ if (!function_exists('vms_staff_tax_status_context')) {
     }
 }
 
-if (!function_exists('vms_staff_tax_mark_complete_url')) {
-    function vms_staff_tax_mark_complete_url(int $staff_id): string
+if (!function_exists('bvmgr_staff_tax_mark_complete_url')) {
+    function bvmgr_staff_tax_mark_complete_url(int $staff_id): string
     {
         return wp_nonce_url(
             add_query_arg(array('action' => 'vms_staff_tax_mark_complete', 'staff_id' => $staff_id), admin_url('admin-post.php')),
@@ -134,8 +134,8 @@ if (!function_exists('vms_staff_tax_mark_complete_url')) {
     }
 }
 
-if (!function_exists('vms_staff_tax_clear_complete_url')) {
-    function vms_staff_tax_clear_complete_url(int $staff_id): string
+if (!function_exists('bvmgr_staff_tax_clear_complete_url')) {
+    function bvmgr_staff_tax_clear_complete_url(int $staff_id): string
     {
         return wp_nonce_url(
             add_query_arg(array('action' => 'vms_staff_tax_clear_complete', 'staff_id' => $staff_id), admin_url('admin-post.php')),
@@ -151,8 +151,8 @@ add_action('admin_post_vms_staff_tax_mark_complete', function (): void {
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
     check_admin_referer('vms_staff_tax_mark_complete_' . $staff_id);
 
-    $provider = vms_staff_tax_provider();
-    $ctx = vms_staff_tax_status_context($staff_id);
+    $provider = bvmgr_staff_tax_provider();
+    $ctx = bvmgr_staff_tax_status_context($staff_id);
     $keys = isset($ctx['keys']) && is_array($ctx['keys']) ? $ctx['keys'] : array();
 
     update_post_meta($staff_id, (string) ($keys['done'] ?? '_vms_tax_profile_completed_at'), time());
@@ -171,7 +171,7 @@ add_action('admin_post_vms_staff_tax_clear_complete', function (): void {
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
     check_admin_referer('vms_staff_tax_clear_complete_' . $staff_id);
 
-    $ctx = vms_staff_tax_status_context($staff_id);
+    $ctx = bvmgr_staff_tax_status_context($staff_id);
     $keys = isset($ctx['keys']) && is_array($ctx['keys']) ? $ctx['keys'] : array();
 
     delete_post_meta($staff_id, (string) ($keys['done'] ?? '_vms_tax_profile_completed_at'));
@@ -200,19 +200,19 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_staff_tax_status',
         __('Tax Profile Status', 'backstage-venue-manager'),
-        'vms_render_staff_tax_status_metabox',
+        'bvmgr_render_staff_tax_status_metabox',
         'vms_staff',
         'side',
         'low'
     );
 });
 
-function vms_render_staff_tax_status_metabox($post)
+function bvmgr_render_staff_tax_status_metabox($post)
 {
     $staff_id = (int) $post->ID;
 
-    $worker_type = function_exists('vms_staff_get_worker_type')
-        ? (string) vms_staff_get_worker_type($staff_id)
+    $worker_type = function_exists('bvmgr_staff_get_worker_type')
+        ? (string) bvmgr_staff_get_worker_type($staff_id)
         : '';
 
     if ($worker_type === '') {
@@ -225,7 +225,7 @@ function vms_render_staff_tax_status_metabox($post)
     if ($worker_type === 'employee') {
         wp_nonce_field('vms_staff_employee_packet_save', 'vms_staff_employee_packet_nonce');
 
-        $missing = vms_staff_employee_packet_missing_items($staff_id);
+        $missing = bvmgr_staff_employee_packet_missing_items($staff_id);
         $is_complete = empty($missing);
 
         echo '<p class="vms-staff-tax-badge-row">';
@@ -245,9 +245,9 @@ function vms_render_staff_tax_status_metabox($post)
             echo '</ul>';
         }
 
-        $w4 = (int) get_post_meta($staff_id, vms_staff_employee_w4_received_key(), true) ? 1 : 0;
-        $i9 = (int) get_post_meta($staff_id, vms_staff_employee_i9_verified_key(), true) ? 1 : 0;
-        $dd = (int) get_post_meta($staff_id, vms_staff_employee_direct_deposit_received_key(), true) ? 1 : 0;
+        $w4 = (int) get_post_meta($staff_id, bvmgr_staff_employee_w4_received_key(), true) ? 1 : 0;
+        $i9 = (int) get_post_meta($staff_id, bvmgr_staff_employee_i9_verified_key(), true) ? 1 : 0;
+        $dd = (int) get_post_meta($staff_id, bvmgr_staff_employee_direct_deposit_received_key(), true) ? 1 : 0;
 
         echo '<div class="vms-mini">';
         echo '<label class="vms-admin-tax-check"><input type="checkbox" name="vms_emp_w4" value="1" ' . checked($w4, 1, false) . '> ' . esc_html__('W-4 received', 'backstage-venue-manager') . '</label>';
@@ -259,7 +259,7 @@ function vms_render_staff_tax_status_metabox($post)
         return;
     }
 
-    $ctx = vms_staff_tax_status_context($staff_id);
+    $ctx = bvmgr_staff_tax_status_context($staff_id);
     $stage = (string) ($ctx['stage'] ?? 'incomplete');
     $provider = (string) ($ctx['provider'] ?? 'upload');
     $provider_label = (string) ($ctx['provider_label'] ?? __('Upload', 'backstage-venue-manager'));
@@ -318,9 +318,9 @@ function vms_render_staff_tax_status_metabox($post)
         ? __('Mark QuickBooks complete', 'backstage-venue-manager')
         : (($provider === 'tax1099_email') ? __('Mark Tax1099 complete', 'backstage-venue-manager') : __('Mark complete', 'backstage-venue-manager'));
 
-    echo '<p><a class="button button-primary" href="' . esc_url(vms_staff_tax_mark_complete_url($staff_id)) . '">' . esc_html($complete_label) . '</a></p>';
+    echo '<p><a class="button button-primary" href="' . esc_url(bvmgr_staff_tax_mark_complete_url($staff_id)) . '">' . esc_html($complete_label) . '</a></p>';
     if ($stage === 'complete') {
-        echo '<p><a class="button" href="' . esc_url(vms_staff_tax_clear_complete_url($staff_id)) . '">' . esc_html__('Clear admin completion', 'backstage-venue-manager') . '</a></p>';
+        echo '<p><a class="button" href="' . esc_url(bvmgr_staff_tax_clear_complete_url($staff_id)) . '">' . esc_html__('Clear admin completion', 'backstage-venue-manager') . '</a></p>';
     }
 
     echo '<p class="vms-mini vms-staff-tax-tip">' . esc_html__('Tip: staff can complete their side from the Staff Portal. This box reflects the active source of truth and lets admin confirm it without using the temporary bypass.', 'backstage-venue-manager') . '</p>';
@@ -329,7 +329,7 @@ function vms_render_staff_tax_status_metabox($post)
 /**
  * Employee packet helpers
  */
-function vms_staff_employee_w4_received_key(): string
+function bvmgr_staff_employee_w4_received_key(): string
 {
     if (function_exists('bvmgr_meta_key')) {
         $k = (string) bvmgr_meta_key('staff', 'employee_w4_received');
@@ -338,7 +338,7 @@ function vms_staff_employee_w4_received_key(): string
     return '_vms_employee_w4_received';
 }
 
-function vms_staff_employee_i9_verified_key(): string
+function bvmgr_staff_employee_i9_verified_key(): string
 {
     if (function_exists('bvmgr_meta_key')) {
         $k = (string) bvmgr_meta_key('staff', 'employee_i9_verified');
@@ -347,7 +347,7 @@ function vms_staff_employee_i9_verified_key(): string
     return '_vms_employee_i9_verified';
 }
 
-function vms_staff_employee_direct_deposit_received_key(): string
+function bvmgr_staff_employee_direct_deposit_received_key(): string
 {
     if (function_exists('bvmgr_meta_key')) {
         $k = (string) bvmgr_meta_key('staff', 'employee_direct_deposit_received');
@@ -356,13 +356,13 @@ function vms_staff_employee_direct_deposit_received_key(): string
     return '_vms_employee_direct_deposit_received';
 }
 
-function vms_staff_employee_packet_missing_items(int $staff_id): array
+function bvmgr_staff_employee_packet_missing_items(int $staff_id): array
 {
     $missing = array();
     $staff_id = (int) $staff_id;
 
-    $w4 = (int) get_post_meta($staff_id, vms_staff_employee_w4_received_key(), true) ? 1 : 0;
-    $i9 = (int) get_post_meta($staff_id, vms_staff_employee_i9_verified_key(), true) ? 1 : 0;
+    $w4 = (int) get_post_meta($staff_id, bvmgr_staff_employee_w4_received_key(), true) ? 1 : 0;
+    $i9 = (int) get_post_meta($staff_id, bvmgr_staff_employee_i9_verified_key(), true) ? 1 : 0;
 
     if (!$w4) $missing[] = __('W-4 received', 'backstage-venue-manager');
     if (!$i9) $missing[] = __('I-9 verified', 'backstage-venue-manager');
@@ -383,7 +383,7 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     }
 
     $staff_id = (int) $post_id;
-    $worker_type = function_exists('vms_staff_get_worker_type') ? (string) vms_staff_get_worker_type($staff_id) : '';
+    $worker_type = function_exists('bvmgr_staff_get_worker_type') ? (string) bvmgr_staff_get_worker_type($staff_id) : '';
     if ($worker_type !== 'employee') {
         return;
     }
@@ -399,13 +399,13 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
 
     $today = wp_date('Y-m-d', time(), wp_timezone());
 
-    vms_staff_employee_packet_set_flag($staff_id, vms_staff_employee_w4_received_key(), '_vms_employee_w4_received_date', $w4, $today);
-    vms_staff_employee_packet_set_flag($staff_id, vms_staff_employee_i9_verified_key(), '_vms_employee_i9_verified_date', $i9, $today);
-    vms_staff_employee_packet_set_flag($staff_id, vms_staff_employee_direct_deposit_received_key(), '_vms_employee_direct_deposit_received_date', $dd, $today);
+    bvmgr_staff_employee_packet_set_flag($staff_id, bvmgr_staff_employee_w4_received_key(), '_vms_employee_w4_received_date', $w4, $today);
+    bvmgr_staff_employee_packet_set_flag($staff_id, bvmgr_staff_employee_i9_verified_key(), '_vms_employee_i9_verified_date', $i9, $today);
+    bvmgr_staff_employee_packet_set_flag($staff_id, bvmgr_staff_employee_direct_deposit_received_key(), '_vms_employee_direct_deposit_received_date', $dd, $today);
 
 }, 20, 3);
 
-function vms_staff_employee_packet_set_flag(int $staff_id, string $flag_key, string $date_key_fallback, int $value, string $today): void
+function bvmgr_staff_employee_packet_set_flag(int $staff_id, string $flag_key, string $date_key_fallback, int $value, string $today): void
 {
     $staff_id = (int) $staff_id;
     $flag_key = (string) $flag_key;

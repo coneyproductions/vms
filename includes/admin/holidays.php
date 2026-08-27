@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
 // === Holidays admin venue persistence (per-user) ==============================
 define('BVMGR_HOLIDAYS_LAST_VENUE_USERMETA_KEY', '_vms_holidays_last_venue_id');
 
-function vms_holidays_read_query_arg(string $key): string
+function bvmgr_holidays_read_query_arg(string $key): string
 {
 	// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- Read-only admin routing and notice parameters only affect page state.
 	if (!isset($_GET[$key])) {
@@ -37,7 +37,7 @@ function vms_holidays_read_query_arg(string $key): string
 	return (string) wp_unslash($_GET[$key]);
 }
 
-function vms_holidays_read_request_arg(string $key): string
+function bvmgr_holidays_read_request_arg(string $key): string
 {
 	// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- Shared helper is used for non-mutating venue selection and for admin-post payloads already nonce-verified in vms_admin_holidays_adminpost_handle().
 	if (!isset($_REQUEST[$key])) {
@@ -48,7 +48,7 @@ function vms_holidays_read_request_arg(string $key): string
 	return (string) wp_unslash($_REQUEST[$key]);
 }
 
-function vms_holidays_read_request_array(string $key): array
+function bvmgr_holidays_read_request_array(string $key): array
 {
 	// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- Shared helper is used for admin-post payloads already nonce-verified in vms_admin_holidays_adminpost_handle().
 	if (!isset($_REQUEST[$key]) || !is_array($_REQUEST[$key])) {
@@ -66,7 +66,7 @@ function vms_holidays_read_request_array(string $key): array
 	);
 }
 
-function vms_holidays_read_post_arg(string $key): string
+function bvmgr_holidays_read_post_arg(string $key): string
 {
 	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Shared admin-post handler verifies the holidays nonce before delegated POST reads.
 	if (!isset($_POST[$key])) {
@@ -81,7 +81,7 @@ function vms_holidays_read_post_arg(string $key): string
  * Get venue_id from request or user's last selection, and persist when a valid venue is chosen.
  * Returns an int venue_id (0 if none).
  */
-function vms_holidays_get_effective_venue_id()
+function bvmgr_holidays_get_effective_venue_id()
 {
 	if (!is_user_logged_in()) {
 		return 0;
@@ -90,7 +90,7 @@ function vms_holidays_get_effective_venue_id()
 	$user_id = get_current_user_id();
 
 	// 1) Request wins (GET/POST).
-	$venue_id_req = absint(vms_holidays_read_request_arg('venue_id'));
+	$venue_id_req = absint(bvmgr_holidays_read_request_arg('venue_id'));
 
 	// If request venue looks valid, persist it and return it.
 	if ($venue_id_req > 0 && post_type_exists('vms_venue')) {
@@ -117,12 +117,12 @@ function vms_holidays_get_effective_venue_id()
  * Build a safe URL back to this Holidays admin page with a venue_id.
  * Preserves the current page slug if available.
  */
-function vms_holidays_admin_url_with_venue($venue_id)
+function bvmgr_holidays_admin_url_with_venue($venue_id)
 {
 	$venue_id = absint($venue_id);
 
 	// Try to preserve the current admin page slug (?page=...).
-	$page = sanitize_key(vms_holidays_read_query_arg('page'));
+	$page = sanitize_key(bvmgr_holidays_read_query_arg('page'));
 
 	$args = array();
 	if ($page !== '') {
@@ -139,29 +139,29 @@ function vms_holidays_admin_url_with_venue($venue_id)
  * Register admin-post handlers early (no output, safe redirects).
  */
 if (is_admin()) {
-	add_action('admin_post_vms_holidays_save', 'vms_admin_holidays_adminpost_save');
-	add_action('admin_post_vms_holidays_delete', 'vms_admin_holidays_adminpost_delete');
-	add_action('admin_post_vms_holidays_bulk_delete', 'vms_admin_holidays_adminpost_bulk_delete');
+	add_action('admin_post_vms_holidays_save', 'bvmgr_admin_holidays_adminpost_save');
+	add_action('admin_post_vms_holidays_delete', 'bvmgr_admin_holidays_adminpost_delete');
+	add_action('admin_post_vms_holidays_bulk_delete', 'bvmgr_admin_holidays_adminpost_bulk_delete');
 }
 
-function vms_admin_holidays_register_page(): void
+function bvmgr_admin_holidays_register_page(): void
 {
 	// This function exists so menu.php can call it as a callback safely.
 }
 
-function vms_admin_holidays_page_slug(): string
+function bvmgr_admin_holidays_page_slug(): string
 {
 	return 'vms-holidays';
 }
 
-function vms_admin_holidays_enqueue_assets(): void
+function bvmgr_admin_holidays_enqueue_assets(): void
 {
 	if (!current_user_can('manage_options')) {
 		return;
 	}
 
-	$page = sanitize_key(vms_holidays_read_query_arg('page'));
-	if ($page !== vms_admin_holidays_page_slug()) {
+	$page = sanitize_key(bvmgr_holidays_read_query_arg('page'));
+	if ($page !== bvmgr_admin_holidays_page_slug()) {
 		return;
 	}
 
@@ -177,33 +177,33 @@ function vms_admin_holidays_enqueue_assets(): void
 		true
 	);
 }
-add_action('admin_enqueue_scripts', 'vms_admin_holidays_enqueue_assets', 50);
+add_action('admin_enqueue_scripts', 'bvmgr_admin_holidays_enqueue_assets', 50);
 
-function vms_admin_holidays_adminpost_bulk_delete(): void
+function bvmgr_admin_holidays_adminpost_bulk_delete(): void
 {
-	vms_admin_holidays_adminpost_handle('bulk_delete');
+	bvmgr_admin_holidays_adminpost_handle('bulk_delete');
 }
 
 /**
  * Admin-post: SAVE
  */
-function vms_admin_holidays_adminpost_save(): void
+function bvmgr_admin_holidays_adminpost_save(): void
 {
-	vms_admin_holidays_adminpost_handle('save');
+	bvmgr_admin_holidays_adminpost_handle('save');
 }
 
 /**
  * Admin-post: DELETE
  */
-function vms_admin_holidays_adminpost_delete(): void
+function bvmgr_admin_holidays_adminpost_delete(): void
 {
-	vms_admin_holidays_adminpost_handle('delete');
+	bvmgr_admin_holidays_adminpost_handle('delete');
 }
 
 /**
  * Shared admin-post handler.
  */
-function vms_admin_holidays_adminpost_handle(string $expected_action): void
+function bvmgr_admin_holidays_adminpost_handle(string $expected_action): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die(esc_html__('You do not have permission to do that.', 'backstage-venue-manager'));
@@ -239,7 +239,7 @@ function vms_admin_holidays_adminpost_handle(string $expected_action): void
 		exit;
 	}
 
-	$result = vms_admin_holidays_apply_post($expected_action);
+	$result = bvmgr_admin_holidays_apply_post($expected_action);
 
 	$redirect = admin_url('admin.php?page=vms-holidays');
 	if ($venue_id > 0) {
@@ -259,7 +259,7 @@ function vms_admin_holidays_adminpost_handle(string $expected_action): void
 }
 
 
-function vms_holidays_sanitize_money($raw): string
+function bvmgr_holidays_sanitize_money($raw): string
 {
 	$raw = is_string($raw) ? $raw : '';
 	$raw = trim($raw);
@@ -276,7 +276,7 @@ function vms_holidays_sanitize_money($raw): string
 	return (string) (0 + $raw);
 }
 
-function vms_holidays_sanitize_percent($raw): string
+function bvmgr_holidays_sanitize_percent($raw): string
 {
 	$raw = is_string($raw) ? $raw : '';
 	$raw = trim($raw);
@@ -297,7 +297,7 @@ function vms_holidays_sanitize_percent($raw): string
  * Validates manual holiday payload.
  * Returns: array('ok' => bool, 'message' => string)
  */
-function vms_holidays_validate_manual_fields(string $name, string $status, string $v_structure, string $v_flat, string $v_split): array
+function bvmgr_holidays_validate_manual_fields(string $name, string $status, string $v_structure, string $v_flat, string $v_split): array
 {
 	$name = trim($name);
 	if ($name === '') {
@@ -312,8 +312,8 @@ function vms_holidays_validate_manual_fields(string $name, string $status, strin
 		return array('ok' => false, 'message' => 'Vendor Structure is invalid.');
 	}
 
-	$flat = ($v_flat !== '') ? vms_holidays_sanitize_money($v_flat) : '';
-	$pct  = ($v_split !== '') ? vms_holidays_sanitize_percent($v_split) : '';
+	$flat = ($v_flat !== '') ? bvmgr_holidays_sanitize_money($v_flat) : '';
+	$pct  = ($v_split !== '') ? bvmgr_holidays_sanitize_percent($v_split) : '';
 
 	if ($v_structure !== '') {
 		$has_flat = ($flat !== '' && is_numeric($flat));
@@ -344,9 +344,9 @@ function vms_holidays_validate_manual_fields(string $name, string $status, strin
 /**
  * Pure “apply” logic. No echoes. No redirects. Returns result array.
  */
-function vms_admin_holidays_apply_post(string $action): array
+function bvmgr_admin_holidays_apply_post(string $action): array
 {
-	$venue_id = absint(vms_holidays_read_request_arg('venue_id'));
+	$venue_id = absint(bvmgr_holidays_read_request_arg('venue_id'));
 	if ($venue_id <= 0) {
 		return array('ok' => false, 'message' => 'Venue is required.');
 	}
@@ -358,7 +358,7 @@ function vms_admin_holidays_apply_post(string $action): array
 
 	// Bulk delete
 	if ($action === 'bulk_delete') {
-		$confirm = sanitize_text_field(vms_holidays_read_request_arg('confirm'));
+		$confirm = sanitize_text_field(bvmgr_holidays_read_request_arg('confirm'));
 
 		if ($confirm !== '1') {
 			return array('ok' => false, 'message' => 'Confirmation required.');
@@ -368,7 +368,7 @@ function vms_admin_holidays_apply_post(string $action): array
 			static function ($d) {
 				return sanitize_text_field((string) $d);
 			},
-			vms_holidays_read_request_array('holiday_dates')
+			bvmgr_holidays_read_request_array('holiday_dates')
 		);
 
 		if (empty($dates)) {
@@ -396,13 +396,13 @@ function vms_admin_holidays_apply_post(string $action): array
 		return array('ok' => true, 'message' => $deleted > 0 ? 'Deleted selected holidays.' : 'Nothing was deleted.');
 	}
 
-	$date = sanitize_text_field(vms_holidays_read_request_arg('holiday_date'));
+	$date = sanitize_text_field(bvmgr_holidays_read_request_arg('holiday_date'));
 	if (!$date || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
 		return array('ok' => false, 'message' => 'Date is required and must be YYYY-MM-DD.');
 	}
 
 	if ($action === 'delete') {
-		$confirm = sanitize_text_field(vms_holidays_read_request_arg('confirm'));
+		$confirm = sanitize_text_field(bvmgr_holidays_read_request_arg('confirm'));
 		if ($confirm !== '1') {
 			return array('ok' => false, 'message' => 'Confirmation required.');
 		}
@@ -419,8 +419,8 @@ function vms_admin_holidays_apply_post(string $action): array
 	}
 
 	// action === 'save'
-	$name   = sanitize_text_field(vms_holidays_read_post_arg('holiday_name'));
-	$status = sanitize_text_field(vms_holidays_read_post_arg('holiday_status'));
+	$name   = sanitize_text_field(bvmgr_holidays_read_post_arg('holiday_name'));
+	$status = sanitize_text_field(bvmgr_holidays_read_post_arg('holiday_status'));
 	if ($status === '') {
 		$status = 'open';
 	}
@@ -428,21 +428,21 @@ function vms_admin_holidays_apply_post(string $action): array
 		$status = 'open';
 	}
 
-	$v_structure = sanitize_text_field(vms_holidays_read_post_arg('vendor_structure'));
+	$v_structure = sanitize_text_field(bvmgr_holidays_read_post_arg('vendor_structure'));
 	if (!in_array($v_structure, array('', 'flat_fee', 'door_split', 'flat_fee_door_split'), true)) {
 		$v_structure = '';
 	}
 
-	$v_flat_raw  = sanitize_text_field(vms_holidays_read_post_arg('vendor_flat_fee_amount'));
-	$v_split_raw = sanitize_text_field(vms_holidays_read_post_arg('vendor_door_split_percent'));
+	$v_flat_raw  = sanitize_text_field(bvmgr_holidays_read_post_arg('vendor_flat_fee_amount'));
+	$v_split_raw = sanitize_text_field(bvmgr_holidays_read_post_arg('vendor_door_split_percent'));
 
-	$check = vms_holidays_validate_manual_fields($name, $status, $v_structure, $v_flat_raw, $v_split_raw);
+	$check = bvmgr_holidays_validate_manual_fields($name, $status, $v_structure, $v_flat_raw, $v_split_raw);
 	if (empty($check['ok'])) {
 		return array('ok' => false, 'message' => (string) $check['message']);
 	}
 
-	$v_flat  = ($v_flat_raw !== '') ? vms_holidays_sanitize_money($v_flat_raw) : '';
-	$v_split = ($v_split_raw !== '') ? vms_holidays_sanitize_percent($v_split_raw) : '';
+	$v_flat  = ($v_flat_raw !== '') ? bvmgr_holidays_sanitize_money($v_flat_raw) : '';
+	$v_split = ($v_split_raw !== '') ? bvmgr_holidays_sanitize_percent($v_split_raw) : '';
 
 	$rules = array();
 	$vendor = array();
@@ -477,13 +477,13 @@ function vms_admin_holidays_apply_post(string $action): array
 /**
  * Page renderer (GET-only).
  */
-function vms_admin_holidays_page(): void
+function bvmgr_admin_holidays_page(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die(esc_html__('You do not have permission to access this page.', 'backstage-venue-manager'));
 	}
 
-	$venue_id = vms_holidays_get_effective_venue_id();
+	$venue_id = bvmgr_holidays_get_effective_venue_id();
 
 	$venues = get_posts(array(
 		'post_type'      => 'vms_venue',
@@ -514,7 +514,7 @@ function vms_admin_holidays_page(): void
 		ksort($venue_holidays);
 	}
 
-	$edit_date = sanitize_text_field(vms_holidays_read_query_arg('edit_date'));
+	$edit_date = sanitize_text_field(bvmgr_holidays_read_query_arg('edit_date'));
 	$edit_row = null;
 	if ($venue_id > 0 && $edit_date && isset($venue_holidays[$edit_date]) && is_array($venue_holidays[$edit_date])) {
 		$edit_row = $venue_holidays[$edit_date];
@@ -542,9 +542,9 @@ function vms_admin_holidays_page(): void
 	echo '<h1>' . esc_html__('Holidays', 'backstage-venue-manager') . '</h1>';
 
 	// Notices (from redirects)
-	$notice_ok = vms_holidays_read_query_arg('vms_ok');
-	$notice_err = vms_holidays_read_query_arg('vms_err');
-	$notice_msg = rawurldecode(vms_holidays_read_query_arg('vms_msg'));
+	$notice_ok = bvmgr_holidays_read_query_arg('vms_ok');
+	$notice_err = bvmgr_holidays_read_query_arg('vms_err');
+	$notice_msg = rawurldecode(bvmgr_holidays_read_query_arg('vms_msg'));
 	if ($notice_ok === '1') {
 		$msg = $notice_msg !== '' ? $notice_msg : 'Saved.';
 		echo '<div class="notice notice-success"><p><strong>' . esc_html($msg) . '</strong></p></div>';
@@ -554,7 +554,7 @@ function vms_admin_holidays_page(): void
 	}
 
 	// Venue selector (sticky per admin user)
-	$venue_id = vms_holidays_get_effective_venue_id();
+	$venue_id = bvmgr_holidays_get_effective_venue_id();
 
 		echo '<form id="vms_holidays_venue_form" class="vms-holidays-venue-form" method="get" action="' . esc_url(admin_url('admin.php')) . '">';
 	echo '<input type="hidden" name="page" value="vms-holidays" />';

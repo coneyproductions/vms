@@ -16,14 +16,14 @@ add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_staff_user_link',
         __('Portal User', 'backstage-venue-manager'),
-        'vms_staff_user_link_metabox_render',
+        'bvmgr_staff_user_link_metabox_render',
         'vms_staff',
         'side',
         'default'
     );
 });
 
-function vms_staff_user_link_metabox_render($post): void
+function bvmgr_staff_user_link_metabox_render($post): void
 {
     if (!($post instanceof WP_Post)) return;
 

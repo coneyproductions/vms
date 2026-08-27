@@ -1052,8 +1052,8 @@ if (!function_exists('bvmgr_private_staff_cert_download_handler')) {
 			wp_die(esc_html__('You do not have permission to download this file.', 'backstage-venue-manager'));
 		}
 
-		$rows = function_exists('vms_staffing_get_staff_qualifications')
-			? (array) vms_staffing_get_staff_qualifications($staff_id)
+		$rows = function_exists('bvmgr_staffing_get_staff_qualifications')
+			? (array) bvmgr_staffing_get_staff_qualifications($staff_id)
 			: array();
 		$match = null;
 		foreach ($rows as $row) {

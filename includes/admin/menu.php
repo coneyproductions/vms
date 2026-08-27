@@ -4,8 +4,8 @@ if (!defined('ABSPATH')) exit;
 if (!function_exists('bvmgr_admin_render_season_dates_page')) {
   function bvmgr_admin_render_season_dates_page(): void
   {
-    if (function_exists('vms_render_season_dates_page')) {
-      vms_render_season_dates_page();
+    if (function_exists('bvmgr_render_season_dates_page')) {
+      bvmgr_render_season_dates_page();
       return;
     }
 
@@ -108,7 +108,7 @@ add_action('admin_menu', function () {
   // Top-level menu → Dashboard
   add_menu_page(
 	$top_level_menu_label,
-	(function_exists('vms_staff_certifications_pending_count') && function_exists('vms_staff_certifications_admin_badge_markup') ? $top_level_menu_label . vms_staff_certifications_admin_badge_markup(vms_staff_certifications_pending_count()) : $top_level_menu_label),
+	(function_exists('bvmgr_staff_certifications_pending_count') && function_exists('bvmgr_staff_certifications_admin_badge_markup') ? $top_level_menu_label . bvmgr_staff_certifications_admin_badge_markup(bvmgr_staff_certifications_pending_count()) : $top_level_menu_label),
     $capability,
     $parent_slug,
     'bvmgr_render_dashboard_page',
@@ -167,14 +167,14 @@ add_action('admin_menu', function () {
 
 
   // Core custom admin pages
-  if (function_exists('vms_render_schedule_page')) {
+  if (function_exists('bvmgr_render_schedule_page')) {
     add_submenu_page(
       $parent_slug,
       __('Schedule', 'backstage-venue-manager'),
       __('Schedule', 'backstage-venue-manager'),
       $capability,
       'vms-schedule',
-      'vms_render_schedule_page'
+      'bvmgr_render_schedule_page'
     );
   }
 
@@ -240,14 +240,14 @@ add_action('admin_menu', function () {
     'edit.php?post_type=vms_staff'
   );
 
-  if (function_exists('vms_render_staff_certifications_admin_page')) {
+  if (function_exists('bvmgr_render_staff_certifications_admin_page')) {
     add_submenu_page(
       $parent_slug,
       __('Staff Certifications', 'backstage-venue-manager'),
-      function_exists('vms_staff_certifications_admin_menu_label') ? vms_staff_certifications_admin_menu_label(__('Staff Certifications', 'backstage-venue-manager')) : __('Staff Certifications', 'backstage-venue-manager'),
+      function_exists('bvmgr_staff_certifications_admin_menu_label') ? bvmgr_staff_certifications_admin_menu_label(__('Staff Certifications', 'backstage-venue-manager')) : __('Staff Certifications', 'backstage-venue-manager'),
       $capability,
       'vms-staff-certifications',
-      'vms_render_staff_certifications_admin_page'
+      'bvmgr_render_staff_certifications_admin_page'
     );
   }
 
@@ -285,7 +285,7 @@ add_action('admin_menu', function () {
     __('Holidays', 'backstage-venue-manager'),
     $capability,
     'vms-holidays',
-    'vms_admin_holidays_page'
+    'bvmgr_admin_holidays_page'
   );
 
   if (function_exists('vms_render_settings_page')) {
@@ -540,8 +540,8 @@ function bvmgr_render_dashboard_page_content(): void
     bvmgr_add_dispatch_render_dashboard_card();
   }
 
-  if (function_exists('vms_tasks_render_dashboard_cards')) {
-    vms_tasks_render_dashboard_cards();
+  if (function_exists('bvmgr_tasks_render_dashboard_cards')) {
+    bvmgr_tasks_render_dashboard_cards();
   }
 
   if (function_exists('bvmgr_ticket_integrity_render_dashboard_panel')) {

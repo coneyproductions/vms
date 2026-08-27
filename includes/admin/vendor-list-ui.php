@@ -325,12 +325,12 @@ function bvmgr_admin_vendor_column_render_refined($column, $post_id)
             }
 
         case 'vms_vendor_dualhat': {
-                if (!function_exists('vms_vendor_linked_staff_meta_key')) {
+                if (!function_exists('bvmgr_vendor_linked_staff_meta_key')) {
                     echo '&nbsp;';
                     break;
                 }
 
-                $staff_id = (int) get_post_meta((int) $post_id, vms_vendor_linked_staff_meta_key(), true);
+                $staff_id = (int) get_post_meta((int) $post_id, bvmgr_vendor_linked_staff_meta_key(), true);
                 if ($staff_id <= 0) {
                     echo '&nbsp;';
                     break;

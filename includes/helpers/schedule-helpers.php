@@ -125,7 +125,7 @@ function bvmgr_get_plan_headliner_link_html($plan_id, $css_class = 'vms-event-he
     // Always link to the plan edit screen and use the shared schedule label.
     $label = function_exists('bvmgr_event_plan_compact_label')
         ? bvmgr_event_plan_compact_label($plan_id)
-        : vms_sch_plan_label($plan_id);
+        : bvmgr_sch_plan_label($plan_id);
 
     $edit_url = get_edit_post_link($plan_id, 'raw');
     if (empty($edit_url)) {

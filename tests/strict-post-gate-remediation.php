@@ -106,13 +106,13 @@ $portalSource = (string) file_get_contents($pluginRoot . '/includes/portal/staff
 // Vendor Tax Profile remains mirror-only and deferred in this slice; no mirror/live cmp is required here.
 $vendorTaxSource = (string) file_get_contents($pluginRoot . '/includes/portal/vendor-tax-profile.php');
 
-$seasonHelperSource = vms_test_extract_function($seasonSource, 'vms_sd_is_exact_post_request');
-$tasksHelperSource = vms_test_extract_function($tasksSource, 'vms_tasks_admin_is_exact_post_request');
+$seasonHelperSource = vms_test_extract_function($seasonSource, 'bvmgr_sd_is_exact_post_request');
+$tasksHelperSource = vms_test_extract_function($tasksSource, 'bvmgr_tasks_admin_is_exact_post_request');
 $portalHelperSource = vms_test_extract_function($portalSource, 'bvmgr_staff_portal_is_exact_post_request');
 
-vms_test_assert(strpos($seasonSource, 'function vms_sd_query_arg(string $key): string') !== false, 'Season Dates should expose a dedicated read-only query helper.');
-vms_test_assert(substr_count($seasonSource, 'function vms_sd_is_exact_post_request(') === 1, 'Season Dates should define exactly one exact POST helper.');
-vms_test_assert(substr_count($tasksSource, 'function vms_tasks_admin_is_exact_post_request(') === 1, 'Staff Tasks should define exactly one exact POST helper.');
+vms_test_assert(strpos($seasonSource, 'function bvmgr_sd_query_arg(string $key): string') !== false, 'Season Dates should expose a dedicated read-only query helper.');
+vms_test_assert(substr_count($seasonSource, 'function bvmgr_sd_is_exact_post_request(') === 1, 'Season Dates should define exactly one exact POST helper.');
+vms_test_assert(substr_count($tasksSource, 'function bvmgr_tasks_admin_is_exact_post_request(') === 1, 'Staff Tasks should define exactly one exact POST helper.');
 vms_test_assert(substr_count($portalSource, 'function bvmgr_staff_portal_is_exact_post_request(') === 1, 'Staff Portal should define exactly one exact POST helper.');
 
 vms_test_assert(substr_count($seasonSource, '$_SERVER[\'REQUEST_METHOD\']') === 1, 'Season Dates should retain only one guarded REQUEST_METHOD read.');
@@ -120,14 +120,14 @@ vms_test_assert(substr_count($tasksSource, '$_SERVER[\'REQUEST_METHOD\']') === 1
 vms_test_assert(substr_count($portalSource, '$_SERVER[\'REQUEST_METHOD\']') === 1, 'Staff Portal should retain only one guarded REQUEST_METHOD read.');
 
 vms_test_assert(strpos($seasonSource, "if ((\$_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') return;") === false, 'Season Dates should no longer use the direct REQUEST_METHOD gate.');
-vms_test_assert(strpos($seasonSource, 'if (!vms_sd_is_exact_post_request()) return;') !== false, 'Season Dates should gate through the exact POST helper.');
+vms_test_assert(strpos($seasonSource, 'if (!bvmgr_sd_is_exact_post_request()) return;') !== false, 'Season Dates should gate through the exact POST helper.');
 
 vms_test_assert(strpos($tasksSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_tasks_template_action'])) {") === false, 'Staff Tasks template gate should no longer read REQUEST_METHOD directly.');
 vms_test_assert(strpos($tasksSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_tasks_checklist_action'])) {") === false, 'Staff Tasks checklist gate should no longer read REQUEST_METHOD directly.');
 vms_test_assert(strpos($tasksSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_tasks_settings_action'])) {") === false, 'Staff Tasks settings gate should no longer read REQUEST_METHOD directly.');
-vms_test_assert(substr_count($tasksSource, "if (vms_tasks_admin_is_exact_post_request() && isset(\$_POST['vms_tasks_template_action'])) {") === 1, 'Staff Tasks template gate should use the exact POST helper.');
-vms_test_assert(substr_count($tasksSource, "if (vms_tasks_admin_is_exact_post_request() && isset(\$_POST['vms_tasks_checklist_action'])) {") === 1, 'Staff Tasks checklist gate should use the exact POST helper.');
-vms_test_assert(substr_count($tasksSource, "if (vms_tasks_admin_is_exact_post_request() && isset(\$_POST['vms_tasks_settings_action'])) {") === 1, 'Staff Tasks settings gate should use the exact POST helper.');
+vms_test_assert(substr_count($tasksSource, "if (bvmgr_tasks_admin_is_exact_post_request() && isset(\$_POST['vms_tasks_template_action'])) {") === 1, 'Staff Tasks template gate should use the exact POST helper.');
+vms_test_assert(substr_count($tasksSource, "if (bvmgr_tasks_admin_is_exact_post_request() && isset(\$_POST['vms_tasks_checklist_action'])) {") === 1, 'Staff Tasks checklist gate should use the exact POST helper.');
+vms_test_assert(substr_count($tasksSource, "if (bvmgr_tasks_admin_is_exact_post_request() && isset(\$_POST['vms_tasks_settings_action'])) {") === 1, 'Staff Tasks settings gate should use the exact POST helper.');
 
 vms_test_assert(strpos($portalSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_employee_packet_ack'])) {") === false, 'Staff Portal employee packet gate should no longer read REQUEST_METHOD directly.');
 vms_test_assert(strpos($portalSource, "if (\$_SERVER['REQUEST_METHOD'] === 'POST' && isset(\$_POST['vms_staff_tax_save'])) {") === false, 'Staff Portal tax-profile gate should no longer read REQUEST_METHOD directly.');
@@ -154,9 +154,9 @@ vms_test_assert(strpos($portalWithoutHelper, '$_SERVER[\'REQUEST_METHOD\']') ===
 vms_test_assert_order(
 	$seasonSource,
 	array(
-		'if (!vms_sd_is_exact_post_request()) return;',
+		'if (!bvmgr_sd_is_exact_post_request()) return;',
 		'if (empty($_POST[\'vms_season_dates_nonce\']) || empty($_POST[\'vms_action\'])) return;',
-		'$page_slug = sanitize_key(vms_sd_query_arg(\'page\'));',
+		'$page_slug = sanitize_key(bvmgr_sd_query_arg(\'page\'));',
 		'$cap = apply_filters(\'vms_admin_capability\', \'manage_options\');',
 		'if (!current_user_can($cap)) return;',
 	),
@@ -167,8 +167,8 @@ vms_test_assert(strpos($seasonSource, 'if (!$venue_id || !wp_verify_nonce($nonce
 vms_test_assert_order(
 	$tasksSource,
 	array(
-		'if (!vms_tasks_current_user_can_manage_templates()) {',
-		'if (vms_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_template_action\'])) {',
+		'if (!bvmgr_tasks_current_user_can_manage_templates()) {',
+		'if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_template_action\'])) {',
 		'check_admin_referer(\'vms_tasks_save_template\');',
 		'$action = sanitize_key((string) wp_unslash($_POST[\'vms_tasks_template_action\']));',
 	),
@@ -177,8 +177,8 @@ vms_test_assert_order(
 vms_test_assert_order(
 	$tasksSource,
 	array(
-		'if (!vms_tasks_current_user_can_manage_checklists()) {',
-		'if (vms_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_checklist_action\'])) {',
+		'if (!bvmgr_tasks_current_user_can_manage_checklists()) {',
+		'if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_checklist_action\'])) {',
 		'check_admin_referer(\'vms_tasks_save_checklist\');',
 		'$action = sanitize_key((string) wp_unslash($_POST[\'vms_tasks_checklist_action\']));',
 	),
@@ -187,8 +187,8 @@ vms_test_assert_order(
 vms_test_assert_order(
 	$tasksSource,
 	array(
-		'if (!vms_tasks_current_user_can_manage_all()) {',
-		'if (vms_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_settings_action\'])) {',
+		'if (!bvmgr_tasks_current_user_can_manage_all()) {',
+		'if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_settings_action\'])) {',
 		'check_admin_referer(\'vms_tasks_save_settings\');',
 		'$input = array(',
 	),
@@ -279,8 +279,8 @@ foreach ($cases as $case) {
 	$expected = $case['expected'];
 	$label = $case['label'];
 
-	vms_test_assert(vms_sd_is_exact_post_request() === $expected, 'Season Dates helper mismatch for case: ' . $label);
-	vms_test_assert(vms_tasks_admin_is_exact_post_request() === $expected, 'Staff Tasks helper mismatch for case: ' . $label);
+	vms_test_assert(bvmgr_sd_is_exact_post_request() === $expected, 'Season Dates helper mismatch for case: ' . $label);
+	vms_test_assert(bvmgr_tasks_admin_is_exact_post_request() === $expected, 'Staff Tasks helper mismatch for case: ' . $label);
 	vms_test_assert(bvmgr_staff_portal_is_exact_post_request() === $expected, 'Staff Portal helper mismatch for case: ' . $label);
 }
 

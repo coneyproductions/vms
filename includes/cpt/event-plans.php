@@ -6025,7 +6025,7 @@ class BVMGR_Admin_Event_Plans
             }
         }
 
-        $staff_role_meta_map = function_exists('vms_staffing_role_map_by_id') ? (array) vms_staffing_role_map_by_id(true) : array();
+        $staff_role_meta_map = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(true) : array();
 
         $staff_posts = get_posts(array(
             'post_type'      => 'vms_staff',
@@ -6046,8 +6046,8 @@ class BVMGR_Admin_Event_Plans
             }
         }
 
-        $staff_assigned_by_role = function_exists('vms_staffing_get_event_assigned_staff_map')
-            ? (array) vms_staffing_get_event_assigned_staff_map($post_id)
+        $staff_assigned_by_role = function_exists('bvmgr_staffing_get_event_assigned_staff_map')
+            ? (array) bvmgr_staffing_get_event_assigned_staff_map($post_id)
             : array();
         $staff_by_role = array();
         $staff_eligible_counts_by_role = array();
@@ -6065,8 +6065,8 @@ class BVMGR_Admin_Event_Plans
                         continue;
                     }
 
-                    $candidate_status = function_exists('vms_staffing_staff_candidate_status_for_role')
-                        ? (array) vms_staffing_staff_candidate_status_for_role($sid, $role_id)
+                    $candidate_status = function_exists('bvmgr_staffing_staff_candidate_status_for_role')
+                        ? (array) bvmgr_staffing_staff_candidate_status_for_role($sid, $role_id)
                         : array('eligible' => false);
                     if (empty($candidate_status['eligible'])) {
                         continue;
@@ -6137,26 +6137,26 @@ class BVMGR_Admin_Event_Plans
             }
         }
 
-        $staff_activation_thresholds = function_exists('vms_staffing_get_event_role_activation_thresholds')
-            ? (array) vms_staffing_get_event_role_activation_thresholds($post_id)
+        $staff_activation_thresholds = function_exists('bvmgr_staffing_get_event_role_activation_thresholds')
+            ? (array) bvmgr_staffing_get_event_role_activation_thresholds($post_id)
             : array();
-        $staff_headcount_context = function_exists('vms_staffing_get_event_plan_headcount_context')
-            ? (array) vms_staffing_get_event_plan_headcount_context($post_id)
+        $staff_headcount_context = function_exists('bvmgr_staffing_get_event_plan_headcount_context')
+            ? (array) bvmgr_staffing_get_event_plan_headcount_context($post_id)
             : array('wired' => false, 'headcount' => 0, 'label' => __('Attendance not wired yet', 'backstage-venue-manager'));
         $staff_headcount_wired = !empty($staff_headcount_context['wired']);
         $staff_current_headcount = max(0, (int) ($staff_headcount_context['headcount'] ?? 0));
         $staff_headcount_label = isset($staff_headcount_context['label']) ? (string) $staff_headcount_context['label'] : __('Attendance not wired yet', 'backstage-venue-manager');
-        $staffing_templates = function_exists('vms_staffing_get_templates')
-            ? (array) vms_staffing_get_templates(array('is_active' => 1))
+        $staffing_templates = function_exists('bvmgr_staffing_get_templates')
+            ? (array) bvmgr_staffing_get_templates(array('is_active' => 1))
             : array();
-        $staff_applied_template_id = function_exists('vms_staffing_get_event_applied_template_id')
-            ? (int) vms_staffing_get_event_applied_template_id($post_id)
+        $staff_applied_template_id = function_exists('bvmgr_staffing_get_event_applied_template_id')
+            ? (int) bvmgr_staffing_get_event_applied_template_id($post_id)
             : 0;
-        $staff_applied_template = ($staff_applied_template_id > 0 && function_exists('vms_staffing_get_template'))
-            ? vms_staffing_get_template($staff_applied_template_id)
+        $staff_applied_template = ($staff_applied_template_id > 0 && function_exists('bvmgr_staffing_get_template'))
+            ? bvmgr_staffing_get_template($staff_applied_template_id)
             : null;
-        $staff_recommended_template = function_exists('vms_staffing_get_recommended_template_for_event_plan')
-            ? vms_staffing_get_recommended_template_for_event_plan($post_id)
+        $staff_recommended_template = function_exists('bvmgr_staffing_get_recommended_template_for_event_plan')
+            ? bvmgr_staffing_get_recommended_template_for_event_plan($post_id)
             : null;
 
         return array(
@@ -6574,8 +6574,8 @@ class BVMGR_Admin_Event_Plans
                     /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                     __('%1$s (%2$s)', 'backstage-venue-manager'),
                     (string) $qualification_rule['name'],
-                    function_exists('vms_staffing_admin_qualification_mode_label')
-                        ? vms_staffing_admin_qualification_mode_label((string) ($qualification_rule['mode'] ?? 'warn'))
+                    function_exists('bvmgr_staffing_admin_qualification_mode_label')
+                        ? bvmgr_staffing_admin_qualification_mode_label((string) ($qualification_rule['mode'] ?? 'warn'))
                         : (string) ($qualification_rule['mode'] ?? 'warn')
                 );
             }
@@ -6656,8 +6656,8 @@ class BVMGR_Admin_Event_Plans
             }
 
             $checked = in_array($staff_id, $assigned_ids, true);
-            $candidate_status = function_exists('vms_staffing_staff_candidate_status_for_role')
-                ? (array) vms_staffing_staff_candidate_status_for_role($staff_id, $role_id)
+            $candidate_status = function_exists('bvmgr_staffing_staff_candidate_status_for_role')
+                ? (array) bvmgr_staffing_staff_candidate_status_for_role($staff_id, $role_id)
                 : array(
                     'eligible' => true,
                     'qualification' => array('ok' => true, 'mode' => 'warn', 'missing' => array(), 'expired' => array()),
@@ -8982,13 +8982,13 @@ class BVMGR_Admin_Event_Plans
                 array_map('intval', array_keys((array) $staffing_duration_minutes))
             ));
 
-            $staff_headcount_context = function_exists('vms_staffing_get_event_plan_headcount_context')
-                ? (array) vms_staffing_get_event_plan_headcount_context((int) $post_id)
+            $staff_headcount_context = function_exists('bvmgr_staffing_get_event_plan_headcount_context')
+                ? (array) bvmgr_staffing_get_event_plan_headcount_context((int) $post_id)
                 : array('wired' => false, 'headcount' => 0);
             $staff_current_headcount = max(0, (int) ($staff_headcount_context['headcount'] ?? 0));
             $staff_headcount_wired = !empty($staff_headcount_context['wired']);
-            $existing_assigned_staff_by_role = function_exists('vms_staffing_get_event_assigned_staff_map')
-                ? (array) vms_staffing_get_event_assigned_staff_map((int) $post_id)
+            $existing_assigned_staff_by_role = function_exists('bvmgr_staffing_get_event_assigned_staff_map')
+                ? (array) bvmgr_staffing_get_event_assigned_staff_map((int) $post_id)
                 : array();
 
             foreach ($staff_role_ids as $staff_role_id) {
@@ -9049,8 +9049,8 @@ class BVMGR_Admin_Event_Plans
                     : array();
                 foreach ($assigned_staff as $assigned_staff_id) {
                     $staff_name = get_the_title((int) $assigned_staff_id);
-                    $candidate_status = function_exists('vms_staffing_staff_candidate_status_for_role')
-                        ? (array) vms_staffing_staff_candidate_status_for_role((int) $assigned_staff_id, (int) $staff_role_id)
+                    $candidate_status = function_exists('bvmgr_staffing_staff_candidate_status_for_role')
+                        ? (array) bvmgr_staffing_staff_candidate_status_for_role((int) $assigned_staff_id, (int) $staff_role_id)
                         : array(
                             'eligible' => true,
                             'ineligibility_reason' => '',
@@ -10233,8 +10233,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     $staffing_save_trace = function_exists('bvmgr_event_plan_perf_span_start')
                         ? bvmgr_event_plan_perf_span_start('event_plan_staffing_save', $post_id, array('section' => 'staffing_save'))
                         : '';
-                    $staffing_request_state = function_exists('vms_staffing_assess_event_plan_save_request')
-                        ? vms_staffing_assess_event_plan_save_request(
+                    $staffing_request_state = function_exists('bvmgr_staffing_assess_event_plan_save_request')
+                        ? bvmgr_staffing_assess_event_plan_save_request(
                             (int) $post_id,
                             is_array($staffing_headcounts) ? $staffing_headcounts : array(),
                             is_array($staffing_raw_assignments) ? $staffing_raw_assignments : array(),
@@ -10258,8 +10258,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     $staffing_template_apply_requested = $staffing_has_request_state
                         ? !empty($staffing_request_state['template_apply_requested'])
                         : (!empty($staffing_template_apply_now) && (int) $staffing_template_selected_id > 0);
-                    $staffing_dirty_reason = $staffing_has_request_state && function_exists('vms_staffing_plan_save_request_state_dirty_reason')
-                        ? vms_staffing_plan_save_request_state_dirty_reason($staffing_request_state)
+                    $staffing_dirty_reason = $staffing_has_request_state && function_exists('bvmgr_staffing_plan_save_request_state_dirty_reason')
+                        ? bvmgr_staffing_plan_save_request_state_dirty_reason($staffing_request_state)
                         : '';
                     $staffing_should_skip_expensive_work = (
                         $staffing_has_request_state
@@ -10289,8 +10289,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     }
 
                     if ($staffing_matrix_dirty) {
-                        if (function_exists('vms_staffing_save_event_roles_matrix')) {
-                            vms_staffing_save_event_roles_matrix(
+                        if (function_exists('bvmgr_staffing_save_event_roles_matrix')) {
+                            bvmgr_staffing_save_event_roles_matrix(
                                 (int) $post_id,
                                 is_array($staffing_headcounts) ? $staffing_headcounts : array(),
                                 is_array($staffing_raw_assignments) ? $staffing_raw_assignments : array(),
@@ -10324,8 +10324,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     }
 
                     if ($staffing_thresholds_dirty) {
-                        if (function_exists('vms_staffing_set_event_role_activation_thresholds')) {
-                            vms_staffing_set_event_role_activation_thresholds((int) $post_id, is_array($staffing_activation_thresholds_clean) ? $staffing_activation_thresholds_clean : array());
+                        if (function_exists('bvmgr_staffing_set_event_role_activation_thresholds')) {
+                            bvmgr_staffing_set_event_role_activation_thresholds((int) $post_id, is_array($staffing_activation_thresholds_clean) ? $staffing_activation_thresholds_clean : array());
                         } elseif (!empty($staffing_activation_thresholds_clean)) {
                             update_post_meta($post_id, '_vms_staff_role_activation_thresholds', $staffing_activation_thresholds_clean);
                         } else {
@@ -10382,8 +10382,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                             'error'
                         );
                     }
-                    if ($staffing_template_apply_requested && function_exists('vms_staffing_apply_template_to_event')) {
-                        $template_apply_result = vms_staffing_apply_template_to_event((int) $post_id, (int) $staffing_template_selected_id, (string) $staffing_template_apply_mode, (int) get_current_user_id());
+                    if ($staffing_template_apply_requested && function_exists('bvmgr_staffing_apply_template_to_event')) {
+                        $template_apply_result = bvmgr_staffing_apply_template_to_event((int) $post_id, (int) $staffing_template_selected_id, (string) $staffing_template_apply_mode, (int) get_current_user_id());
                         if (!empty($template_apply_result['ok']) && function_exists('bvmgr_add_admin_notice')) {
                             bvmgr_add_admin_notice(
                                 sprintf(
@@ -11553,8 +11553,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
             // When Season Dates open-window rules exist, enforce them directly from rules
             // (not generated payload) to avoid stale-payload false negatives.
-            if (function_exists('vms_sch_season_get_rules') && function_exists('vms_sch_season_is_open_by_rules')) {
-                $rules = vms_sch_season_get_rules($venue_id);
+            if (function_exists('bvmgr_sch_season_get_rules') && function_exists('bvmgr_sch_season_is_open_by_rules')) {
+                $rules = bvmgr_sch_season_get_rules($venue_id);
                 $has_enabled_open_window = false;
 
                 if (is_array($rules)) {
@@ -11574,7 +11574,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 }
 
                 if ($has_enabled_open_window) {
-                    $is_open = (bool) vms_sch_season_is_open_by_rules((array) $rules, $event_date);
+                    $is_open = (bool) bvmgr_sch_season_is_open_by_rules((array) $rules, $event_date);
                     $context['reason'] = $is_open ? 'season_rules_open' : 'season_rules_closed';
                     return !$is_open;
                 }

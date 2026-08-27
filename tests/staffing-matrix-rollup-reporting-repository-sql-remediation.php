@@ -323,17 +323,17 @@ function do_action(string $hook, ...$args): void
 	);
 }
 
-function vms_staffing_admin_request_method(): string
+function bvmgr_staffing_admin_request_method(): string
 {
 	return $GLOBALS['vms_test_admin_request_method'] ?? 'GET';
 }
 
-function vms_staffing_admin_get_venues(): array
+function bvmgr_staffing_admin_get_venues(): array
 {
 	return $GLOBALS['vms_test_admin_venues'] ?? array();
 }
 
-function vms_staffing_rebuild_rollups(array $filters, bool $preview): array
+function bvmgr_staffing_rebuild_rollups(array $filters, bool $preview): array
 {
 	$GLOBALS['vms_test_rebuild_rollups_calls'][] = array(
 		'filters' => $filters,
@@ -349,7 +349,7 @@ function vms_staffing_rebuild_rollups(array $filters, bool $preview): array
 	);
 }
 
-function vms_staffing_get_event_plan_ticket_sales_snapshot(int $event_plan_id): array
+function bvmgr_staffing_get_event_plan_ticket_sales_snapshot(int $event_plan_id): array
 {
 	return $GLOBALS['vms_test_ticket_snapshots'][$event_plan_id] ?? array();
 }
@@ -359,18 +359,18 @@ function vms_admission_table_entries(): string
 	return $GLOBALS['vms_test_admissions_table'] ?? '';
 }
 
-function vms_staffing_table_name(string $name): string
+function bvmgr_staffing_table_name(string $name): string
 {
 	return $GLOBALS['vms_test_table_names'][$name] ?? '';
 }
 
-function vms_staffing_role_map_by_id(bool $active_only = true): array
+function bvmgr_staffing_role_map_by_id(bool $active_only = true): array
 {
 	unset($active_only);
 	return $GLOBALS['vms_test_role_map'];
 }
 
-function vms_staffing_now_mysql_utc(): string
+function bvmgr_staffing_now_mysql_utc(): string
 {
 	return '2026-08-02 12:00:00';
 }
@@ -381,18 +381,18 @@ function bvmgr_staffing_get_event_slots(int $event_plan_id, bool $include_cancel
 	return $GLOBALS['vms_test_event_slots_after_save'] ?? array();
 }
 
-function vms_staffing_sync_assignment_shift_timestamps_for_slot(int $slot_id): void
+function bvmgr_staffing_sync_assignment_shift_timestamps_for_slot(int $slot_id): void
 {
 	$GLOBALS['vms_test_sync_calls'][] = $slot_id;
 }
 
-function vms_staffing_build_legacy_staff_assignments_from_slots(int $event_plan_id): array
+function bvmgr_staffing_build_legacy_staff_assignments_from_slots(int $event_plan_id): array
 {
 	unset($event_plan_id);
 	return $GLOBALS['vms_test_legacy_assignments'] ?? array();
 }
 
-function vms_staffing_audit_log(string $action, int $object_id, array $before, array $after, ?int $actor_user_id = null): void
+function bvmgr_staffing_audit_log(string $action, int $object_id, array $before, array $after, ?int $actor_user_id = null): void
 {
 	$GLOBALS['vms_test_audit_log_calls'][] = array(
 		'action' => $action,
@@ -403,7 +403,7 @@ function vms_staffing_audit_log(string $action, int $object_id, array $before, a
 	);
 }
 
-function vms_staffing_event_plan_datetime(int $event_plan_id): array
+function bvmgr_staffing_event_plan_datetime(int $event_plan_id): array
 {
 	return $GLOBALS['vms_test_event_datetimes'][$event_plan_id] ?? array();
 }
@@ -809,7 +809,7 @@ function vms_test_run_admin_rollups_query_assertions(): void
 	$wpdb->get_var_queue = array(3);
 
 	ob_start();
-	vms_staffing_admin_render_rollups_page();
+	bvmgr_staffing_admin_render_rollups_page();
 	$output = (string) ob_get_clean();
 
 	vms_test_assert_contains('Dirty rollups:', $output, 'Rollups admin page should render the dirty-rollup status summary.');
@@ -831,7 +831,7 @@ function vms_test_run_headcount_context_assertions(): void
 		7,
 	);
 
-	$context = vms_staffing_get_event_plan_headcount_context(44);
+	$context = bvmgr_staffing_get_event_plan_headcount_context(44);
 	vms_test_assert_same(
 		array(
 			'wired' => true,
@@ -861,7 +861,7 @@ function vms_test_run_mark_rollup_dirty_assertions(): void
 		'start_local' => new DateTimeImmutable('2026-08-20 17:30:00'),
 	);
 
-	vms_staffing_mark_rollup_dirty(77, 'event_staffing_saved');
+	bvmgr_staffing_mark_rollup_dirty(77, 'event_staffing_saved');
 
 	$prepare = vms_test_find_prepare($wpdb, 'INSERT INTO %i (event_plan_id, venue_id, event_status, event_start_local, dirty, dirty_reason, computed_at, calc_version)');
 	vms_test_assert_same(
@@ -902,7 +902,7 @@ function vms_test_run_save_event_roles_matrix_assertions(): void
 		array(),
 	);
 
-	$result = vms_staffing_save_event_roles_matrix(
+	$result = bvmgr_staffing_save_event_roles_matrix(
 		88,
 		array(5 => 2, 6 => 1, 9 => 0),
 		array(5 => array(101, 102), 6 => array(103), 9 => array()),
@@ -1020,7 +1020,7 @@ function vms_test_run_compute_rollup_assertions(): void
 	);
 	$wpdb->get_var_queue = array(2);
 
-	$result = vms_staffing_compute_rollup(55);
+	$result = bvmgr_staffing_compute_rollup(55);
 	vms_test_assert_true(!empty($result['ok']), 'Rollup recompute should report success for a valid event plan.');
 	vms_test_assert_same(2, $result['slots_total'], 'Rollup recompute should count each active slot.');
 	vms_test_assert_same(3, $result['headcount_needed_total'], 'Rollup recompute should total required headcount across active slots.');
@@ -1060,7 +1060,7 @@ function vms_test_run_get_rollup_assertions(): void
 		),
 	);
 
-	$row = vms_staffing_get_rollup(55);
+	$row = bvmgr_staffing_get_rollup(55);
 	vms_test_assert_same(array('event_plan_id' => 55, 'readiness_status' => 'ready'), $row, 'Rollup reads should return the queued repository row unchanged.');
 
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE event_plan_id = %d');
@@ -1224,14 +1224,14 @@ vms_test_assert_true(strpos($core_staffing_source, 'phpcs:disable') === false, '
 vms_test_assert_true(strpos($admin_staffing_source, 'phpcs:disable') === false, 'No file-level or block-level PHPCS disable should appear in admin staffing.php.');
 
 $admin_targets = array(
-	'vms_staffing_admin_render_rollups_page',
+	'bvmgr_staffing_admin_render_rollups_page',
 );
 $core_targets = array(
-	'vms_staffing_get_event_plan_headcount_context',
-	'vms_staffing_save_event_roles_matrix',
-	'vms_staffing_mark_rollup_dirty',
-	'vms_staffing_compute_rollup',
-	'vms_staffing_get_rollup',
+	'bvmgr_staffing_get_event_plan_headcount_context',
+	'bvmgr_staffing_save_event_roles_matrix',
+	'bvmgr_staffing_mark_rollup_dirty',
+	'bvmgr_staffing_compute_rollup',
+	'bvmgr_staffing_get_rollup',
 );
 vms_test_assert_same(
 	vms_test_collect_target_hashes($admin_staffing_source, $admin_targets),
@@ -1244,13 +1244,13 @@ vms_test_assert_same(
 	'Mirror and live staffing matrix and rollup targets should remain byte-identical.'
 );
 
-eval(vms_test_extract_function($admin_staffing_source, 'vms_staffing_admin_render_rollups_page'));
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_get_event_plan_headcount_context'));
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_mark_rollup_dirty'));
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_estimate_slot_cost'));
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_compute_rollup'));
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_get_rollup'));
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_save_event_roles_matrix'));
+eval(vms_test_extract_function($admin_staffing_source, 'bvmgr_staffing_admin_render_rollups_page'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_get_event_plan_headcount_context'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_mark_rollup_dirty'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_estimate_slot_cost'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_compute_rollup'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_get_rollup'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_save_event_roles_matrix'));
 
 try {
 	vms_test_run_admin_rollups_query_assertions();

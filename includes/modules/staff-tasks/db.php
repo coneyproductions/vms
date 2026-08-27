@@ -1,23 +1,23 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_tasks_db_option_key')) {
-	function vms_tasks_db_option_key(): string
+if (!function_exists('bvmgr_tasks_db_option_key')) {
+	function bvmgr_tasks_db_option_key(): string
 	{
 		return defined('BVMGR_OPT_TASKS_DB_SCHEMA_VERSION') ? (string) BVMGR_OPT_TASKS_DB_SCHEMA_VERSION : 'vms_tasks_db_schema_version';
 	}
 }
 
-if (!function_exists('vms_tasks_db_schema_target')) {
-	function vms_tasks_db_schema_target(): string
+if (!function_exists('bvmgr_tasks_db_schema_target')) {
+	function bvmgr_tasks_db_schema_target(): string
 	{
 		// 1.2.0 adds recurring cadence fields on task instances.
 		return '1.2.0';
 	}
 }
 
-if (!function_exists('vms_tasks_table_name')) {
-	function vms_tasks_table_name(string $kind): string
+if (!function_exists('bvmgr_tasks_table_name')) {
+	function bvmgr_tasks_table_name(string $kind): string
 	{
 		global $wpdb;
 		$map = array(
@@ -35,16 +35,16 @@ if (!function_exists('vms_tasks_table_name')) {
 	}
 }
 
-if (!function_exists('vms_tasks_db_ready')) {
-	function vms_tasks_db_ready(): bool
+if (!function_exists('bvmgr_tasks_db_ready')) {
+	function bvmgr_tasks_db_ready(): bool
 	{
 		global $wpdb;
 		$required = array(
-			vms_tasks_table_name('task_templates'),
-			vms_tasks_table_name('checklist_templates'),
-			vms_tasks_table_name('checklist_items'),
-			vms_tasks_table_name('task_instances'),
-			vms_tasks_table_name('task_logs'),
+			bvmgr_tasks_table_name('task_templates'),
+			bvmgr_tasks_table_name('checklist_templates'),
+			bvmgr_tasks_table_name('checklist_items'),
+			bvmgr_tasks_table_name('task_instances'),
+			bvmgr_tasks_table_name('task_logs'),
 		);
 
 			foreach ($required as $table) {
@@ -63,12 +63,12 @@ if (!function_exists('vms_tasks_db_ready')) {
 	}
 }
 
-if (!function_exists('vms_tasks_maybe_upgrade_schema')) {
-	function vms_tasks_maybe_upgrade_schema(): void
+if (!function_exists('bvmgr_tasks_maybe_upgrade_schema')) {
+	function bvmgr_tasks_maybe_upgrade_schema(): void
 	{
-		$current = (string) get_option(vms_tasks_db_option_key(), '');
-		$target = vms_tasks_db_schema_target();
-		if ($current === $target && vms_tasks_db_ready()) {
+		$current = (string) get_option(bvmgr_tasks_db_option_key(), '');
+		$target = bvmgr_tasks_db_schema_target();
+		if ($current === $target && bvmgr_tasks_db_ready()) {
 			return;
 		}
 
@@ -76,11 +76,11 @@ if (!function_exists('vms_tasks_maybe_upgrade_schema')) {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 
-		$t_task_templates = vms_tasks_table_name('task_templates');
-		$t_checklist_templates = vms_tasks_table_name('checklist_templates');
-		$t_checklist_items = vms_tasks_table_name('checklist_items');
-		$t_task_instances = vms_tasks_table_name('task_instances');
-		$t_task_logs = vms_tasks_table_name('task_logs');
+		$t_task_templates = bvmgr_tasks_table_name('task_templates');
+		$t_checklist_templates = bvmgr_tasks_table_name('checklist_templates');
+		$t_checklist_items = bvmgr_tasks_table_name('checklist_items');
+		$t_task_instances = bvmgr_tasks_table_name('task_instances');
+		$t_task_logs = bvmgr_tasks_table_name('task_logs');
 
 		$sql_task_templates = "CREATE TABLE {$t_task_templates} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -196,11 +196,11 @@ if (!function_exists('vms_tasks_maybe_upgrade_schema')) {
 		dbDelta($sql_task_instances);
 		dbDelta($sql_task_logs);
 
-		update_option(vms_tasks_db_option_key(), $target, false);
-		if (function_exists('vms_tasks_settings_defaults') && function_exists('vms_tasks_settings_option_key')) {
-			$existing = get_option(vms_tasks_settings_option_key(), null);
+		update_option(bvmgr_tasks_db_option_key(), $target, false);
+		if (function_exists('bvmgr_tasks_settings_defaults') && function_exists('bvmgr_tasks_settings_option_key')) {
+			$existing = get_option(bvmgr_tasks_settings_option_key(), null);
 			if (!is_array($existing)) {
-				update_option(vms_tasks_settings_option_key(), vms_tasks_settings_defaults(), false);
+				update_option(bvmgr_tasks_settings_option_key(), bvmgr_tasks_settings_defaults(), false);
 			}
 		}
 	}

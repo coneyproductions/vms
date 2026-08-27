@@ -592,8 +592,8 @@ if (!function_exists('wp_date')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_review_url')) {
-	function vms_staffing_staff_qualification_review_url(int $staff_id): string
+if (!function_exists('bvmgr_staffing_staff_qualification_review_url')) {
+	function bvmgr_staffing_staff_qualification_review_url(int $staff_id): string
 	{
 		return admin_url('post.php?post=' . $staff_id . '&action=edit');
 	}
@@ -700,11 +700,11 @@ $GLOBALS['vms_test_feedback_event_context_calls'] = 0;
 $GLOBALS['vms_test_feedback_event_context_ids'] = array();
 $GLOBALS['vms_test_feedback_event_context_value'] = array();
 
-if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
+if (!function_exists('bvmgr_staffing_get_staff_qualification_review_items')) {
 	/**
 	 * @return array<int|string,mixed>
 	 */
-	function vms_staffing_get_staff_qualification_review_items(string $status): array
+	function bvmgr_staffing_get_staff_qualification_review_items(string $status): array
 	{
 		$GLOBALS['vms_test_staff_certifications_provider_calls']++;
 		$GLOBALS['vms_test_staff_certifications_provider_statuses'][] = $status;
@@ -1258,7 +1258,7 @@ $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*
 $calendarRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]bvmgr_render_integrity_calendar_reconcile_notice[\'"]~', $allIncludeSource, $unusedCalendarRichMatches);
 $venueRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]bvmgr_render_integrity_venue_reconcile_notice[\'"]~', $allIncludeSource, $unusedVenueRichMatches);
 $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
-$dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
+$dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
 $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
 $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*function\s*\(\)\s*use\s*\(\s*\$pending\s*\)\s*:\s*void~', $staffCertificationsSource, $unusedStaffMatches);
 $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notices~', $emailFollowupsSource, $unusedEmailFollowupsMatches);
@@ -1783,19 +1783,19 @@ $assert(
 );
 $assert(strpos($toursAdminSource, "'notices_callback' =>") === false, 'Guided Tours should remain without an explicit notice callback in this pass.');
 $assert(strpos($scheduleSource, "echo '<div class=\"vms-admin-schedule-content\">';") !== false, 'Schedule notice families should remain nested inside the schedule content wrapper.');
-$assert(strpos($scheduleSource, 'function vms_schedule_get_invalid_bounds_notice_context(bool $show): array') !== false, 'Schedule should expose a dedicated invalid-bounds notice context builder.');
-$assert(strpos($scheduleSource, 'function vms_schedule_render_invalid_bounds_notice(array $context): void') !== false, 'Schedule should expose a dedicated invalid-bounds notice renderer.');
-$assert(strpos($scheduleSource, 'function vms_schedule_get_scope_warning_notice_context(bool $show, string $variant): array') !== false, 'Schedule should expose a dedicated scope warning notice context builder.');
-$assert(strpos($scheduleSource, 'function vms_schedule_render_scope_warning_notice(array $context): void') !== false, 'Schedule should expose a dedicated scope warning notice renderer.');
-$assert(strpos($scheduleSource, 'function vms_schedule_get_unpublished_venue_notice_context(bool $show, string $variant, string $title, string $status, string $edit_url): array') !== false, 'Schedule should expose a dedicated unpublished-venue notice context builder.');
-$assert(strpos($scheduleSource, 'function vms_schedule_render_unpublished_venue_notice(array $context): void') !== false, 'Schedule should expose a dedicated unpublished-venue notice renderer.');
+$assert(strpos($scheduleSource, 'function bvmgr_schedule_get_invalid_bounds_notice_context(bool $show): array') !== false, 'Schedule should expose a dedicated invalid-bounds notice context builder.');
+$assert(strpos($scheduleSource, 'function bvmgr_schedule_render_invalid_bounds_notice(array $context): void') !== false, 'Schedule should expose a dedicated invalid-bounds notice renderer.');
+$assert(strpos($scheduleSource, 'function bvmgr_schedule_get_scope_warning_notice_context(bool $show, string $variant): array') !== false, 'Schedule should expose a dedicated scope warning notice context builder.');
+$assert(strpos($scheduleSource, 'function bvmgr_schedule_render_scope_warning_notice(array $context): void') !== false, 'Schedule should expose a dedicated scope warning notice renderer.');
+$assert(strpos($scheduleSource, 'function bvmgr_schedule_get_unpublished_venue_notice_context(bool $show, string $variant, string $title, string $status, string $edit_url): array') !== false, 'Schedule should expose a dedicated unpublished-venue notice context builder.');
+$assert(strpos($scheduleSource, 'function bvmgr_schedule_render_unpublished_venue_notice(array $context): void') !== false, 'Schedule should expose a dedicated unpublished-venue notice renderer.');
 $assert(substr_count($scheduleSource, "echo '<div class=\"notice notice-error\"><p>Schedule window bounds were invalid.</p></div>';") === 1, 'Schedule should keep only one direct invalid-bounds notice fragment after normalizing the repeated branches.');
-$assert(substr_count($scheduleSource, 'vms_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);') === 4, 'Schedule should route all four invalid-bounds branches through the shared page-local renderer.');
-$assert(substr_count($scheduleSource, 'vms_schedule_render_unpublished_venue_notice($unpublished_notice_context);') === 2, 'Schedule should route both richer unpublished-venue branches through the shared page-local renderer.');
+$assert(substr_count($scheduleSource, 'bvmgr_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);') === 4, 'Schedule should route all four invalid-bounds branches through the shared page-local renderer.');
+$assert(substr_count($scheduleSource, 'bvmgr_schedule_render_unpublished_venue_notice($unpublished_notice_context);') === 2, 'Schedule should route both richer unpublished-venue branches through the shared page-local renderer.');
 $assert(strpos($scheduleSource, "echo '<div class=\"notice notice-error\"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';") !== false, 'Schedule should preserve the richer action-required notice family in ordinary content.');
 $assert(substr_count($scheduleSource, '<div class="notice notice-warning"><p>Select a venue to view its schedule.</p></div>') === 1, 'Schedule should keep only one direct no-selection warning fragment after normalizing the shared scope warning family.');
 $assert(substr_count($scheduleSource, '<div class="notice notice-warning"><p>No venues found to display.</p></div>') === 1, 'Schedule should keep only one direct no-venues warning fragment after normalizing the shared scope warning family.');
-$assert(substr_count($scheduleSource, 'vms_schedule_render_scope_warning_notice($scope_warning_notice_context);') === 2, 'Schedule should route both scope warning branches through the shared page-local renderer.');
+$assert(substr_count($scheduleSource, 'bvmgr_schedule_render_scope_warning_notice($scope_warning_notice_context);') === 2, 'Schedule should route both scope warning branches through the shared page-local renderer.');
 $assert(strpos($scheduleSource, "'notices_callback' =>") === false, 'Schedule should remain without an explicit notice callback in this pass.');
 
 $_GET = array(
@@ -2252,18 +2252,18 @@ bvmgr_continuity_binder_render_updated_notice();
 $continuityNoNotice = (string) ob_get_clean();
 $assert($continuityNoNotice === '', 'Continuity Binder explicit notice callback should stay silent when the exact updated flag is absent.');
 
-$assert(strpos($dueDatesSource, 'function vms_due_render_admin_notices(): void') !== false, 'Due Dates should expose a dedicated explicit notice callback.');
-$assert(substr_count($dueDatesSource, "'notices_callback' => 'vms_due_render_admin_notices'") === 1, 'Due Dates shell call should supply its explicit notice callback exactly once.');
+$assert(strpos($dueDatesSource, 'function bvmgr_due_render_admin_notices(): void') !== false, 'Due Dates should expose a dedicated explicit notice callback.');
+$assert(substr_count($dueDatesSource, "'notices_callback' => 'bvmgr_due_render_admin_notices'") === 1, 'Due Dates shell call should supply its explicit notice callback exactly once.');
 $assert(strpos($dueDatesSource, 'apply_filters(') === false && strpos($dueDatesSource, 'do_action(') === false, 'Due Dates notice path should not hand off markup through hooks or filters.');
 $assert(strpos($dueDatesSource, 'settings_errors(') === false && strpos($dueDatesSource, 'do_settings_sections(') === false && strpos($dueDatesSource, 'wp_editor(') === false, 'Due Dates should not route notice markup through Settings API or editor callbacks.');
-$dueNoticeStart = strpos($dueDatesSource, 'function vms_due_render_admin_notices(): void');
-$dueNoticeEnd = strpos($dueDatesSource, 'function vms_render_due_dates_admin_page(): void');
+$dueNoticeStart = strpos($dueDatesSource, 'function bvmgr_due_render_admin_notices(): void');
+$dueNoticeEnd = strpos($dueDatesSource, 'function bvmgr_render_due_dates_admin_page(): void');
 $assert($dueNoticeStart !== false && $dueNoticeEnd !== false && $dueNoticeEnd > $dueNoticeStart, 'Due Dates explicit notice callback body should be locatable.');
 $dueNoticeSource = substr($dueDatesSource, (int) $dueNoticeStart, (int) $dueNoticeEnd - (int) $dueNoticeStart);
-$dueContentStart = strpos($dueDatesSource, 'function vms_render_due_dates_admin_page_content(): void');
+$dueContentStart = strpos($dueDatesSource, 'function bvmgr_render_due_dates_admin_page_content(): void');
 $assert($dueContentStart !== false, 'Due Dates content callback body should be locatable.');
 $dueDatesContentSource = substr($dueDatesSource, (int) $dueContentStart);
-$assert(strpos($dueNoticeSource, 'sanitize_key(vms_due_admin_query_arg(\'vms_due_msg\'))') !== false, 'Due Dates explicit notice callback should preserve the existing sanitized message source.');
+$assert(strpos($dueNoticeSource, 'sanitize_key(bvmgr_due_admin_query_arg(\'vms_due_msg\'))') !== false, 'Due Dates explicit notice callback should preserve the existing sanitized message source.');
 $assert(strpos($dueNoticeSource, 'strpos($msg, \'error\') !== false') !== false, 'Due Dates explicit notice callback should preserve the severity mapping.');
 $assert(strpos($dueNoticeSource, 'esc_html(str_replace(\'_\', \' \', $msg))') !== false, 'Due Dates explicit notice callback should preserve contextual escaping and wording normalization.');
 $assert(strpos($dueNoticeSource, 'notice ' . "' . (\$is_error ? 'notice-error' : 'notice-success') . ' is-dismissible") !== false, 'Due Dates explicit notice callback should keep the exact class family.');
@@ -2274,7 +2274,7 @@ $_GET = array(
 	'vms_due_msg' => 'payee_added',
 );
 ob_start();
-vms_due_render_admin_notices();
+bvmgr_due_render_admin_notices();
 $dueSuccessNotice = (string) ob_get_clean();
 $assert(
 	$dueSuccessNotice === '<div class="notice notice-success is-dismissible"><p>payee added</p></div>',
@@ -2289,7 +2289,7 @@ $_GET = array(
 	'vms_due_msg' => 'due_complete_error_unknown',
 );
 ob_start();
-vms_due_render_admin_notices();
+bvmgr_due_render_admin_notices();
 $dueErrorNotice = (string) ob_get_clean();
 $assert(
 	$dueErrorNotice === '<div class="notice notice-error is-dismissible"><p>due complete error unknown</p></div>',
@@ -2300,7 +2300,7 @@ $_GET = array(
 	'vms_due_msg' => '',
 );
 ob_start();
-vms_due_render_admin_notices();
+bvmgr_due_render_admin_notices();
 $dueNoNotice = (string) ob_get_clean();
 $assert($dueNoNotice === '', 'Due Dates explicit notice callback should stay silent when no message slug is present.');
 
@@ -2363,27 +2363,27 @@ bvmgr_square_sync_protection_render_admin_notice();
 $squareNoNotice = (string) ob_get_clean();
 $assert($squareNoNotice === '', 'Square Sync Protection explicit notice callback should stay silent when no notice slug is present.');
 
-$assert(strpos($staffCertificationsSource, 'function vms_staff_certifications_get_pending_review_items(): array') !== false, 'Staff Certifications should expose a dedicated pending-review loader helper.');
-$assert(strpos($staffCertificationsSource, "vms_staffing_get_staff_qualification_review_items('pending_verification')") !== false, 'Staff Certifications should preserve the exact pending-review provider call and argument.');
-$assert(substr_count($staffCertificationsSource, "vms_staffing_get_staff_qualification_review_items('pending_verification')") === 1, 'Staff Certifications pending-review provider should appear exactly once in production source.');
-$assert(strpos($staffCertificationsSource, 'function vms_staff_certifications_render_empty_state_notice(array $pending): void') !== false, 'Staff Certifications should expose a dedicated empty-state explicit notice helper.');
+$assert(strpos($staffCertificationsSource, 'function bvmgr_staff_certifications_get_pending_review_items(): array') !== false, 'Staff Certifications should expose a dedicated pending-review loader helper.');
+$assert(strpos($staffCertificationsSource, "bvmgr_staffing_get_staff_qualification_review_items('pending_verification')") !== false, 'Staff Certifications should preserve the exact pending-review provider call and argument.');
+$assert(substr_count($staffCertificationsSource, "bvmgr_staffing_get_staff_qualification_review_items('pending_verification')") === 1, 'Staff Certifications pending-review provider should appear exactly once in production source.');
+$assert(strpos($staffCertificationsSource, 'function bvmgr_staff_certifications_render_empty_state_notice(array $pending): void') !== false, 'Staff Certifications should expose a dedicated empty-state explicit notice helper.');
 $assert(strpos($staffCertificationsSource, "'notices_callback' => function () use (\$pending): void {") !== false, 'Staff Certifications shell call should supply a page-local explicit notice closure using the resolved pending dataset.');
-$assert(strpos($staffCertificationsSource, "function () use (\$pending): void {\n                    vms_render_staff_certifications_admin_page_content(\$pending);") !== false, 'Staff Certifications shell content callback should use the same resolved pending dataset.');
-$assert(strpos($staffCertificationsSource, 'vms_render_staff_certifications_admin_page_content(?array $pending = null): void') !== false, 'Staff Certifications content callback should accept an already-resolved pending dataset.');
-$assert(strpos($staffCertificationsSource, 'vms_staff_certifications_render_empty_state_notice($pending);') !== false, 'Staff Certifications fallback renderer should reuse the same pending dataset for the empty-state notice.');
+$assert(strpos($staffCertificationsSource, "function () use (\$pending): void {\n                    bvmgr_render_staff_certifications_admin_page_content(\$pending);") !== false, 'Staff Certifications shell content callback should use the same resolved pending dataset.');
+$assert(strpos($staffCertificationsSource, 'bvmgr_render_staff_certifications_admin_page_content(?array $pending = null): void') !== false, 'Staff Certifications content callback should accept an already-resolved pending dataset.');
+$assert(strpos($staffCertificationsSource, 'bvmgr_staff_certifications_render_empty_state_notice($pending);') !== false, 'Staff Certifications fallback renderer should reuse the same pending dataset for the empty-state notice.');
 $assert(strpos($staffCertificationsSource, 'if (empty($pending)) {') !== false, 'Staff Certifications should preserve the exact empty-state condition.');
 $assert(strpos($staffCertificationsSource, '<div class="notice notice-success inline"><p>') !== false, 'Staff Certifications explicit notice helper should preserve the exact inline success notice fragment.');
 $assert(strpos($staffCertificationsSource, 'esc_html__(\'No staff certifications are waiting for review.\'') !== false, 'Staff Certifications explicit notice helper should preserve the exact message translation and escaping function.');
-$assert(strpos($staffCertificationsSource, 'function vms_staff_certifications_get_pending_review_warning_context(): array') !== false, 'Staff Certifications should expose a dedicated pending-review warning context builder.');
-$assert(strpos($staffCertificationsSource, 'function vms_staff_certifications_render_pending_review_warning(array $context): void') !== false, 'Staff Certifications should expose a dedicated pending-review warning renderer.');
-$assert(strpos($staffCertificationsSource, 'function vms_staff_certifications_render_pending_review_admin_notice(): void') !== false, 'Staff Certifications should expose a dedicated pending-review admin_notices callback.');
-$assert(strpos($staffCertificationsSource, "add_action('admin_notices', 'vms_staff_certifications_render_pending_review_admin_notice');") !== false, 'Staff Certifications should keep the separate rich warning family on the admin_notices hook through the named callback.');
+$assert(strpos($staffCertificationsSource, 'function bvmgr_staff_certifications_get_pending_review_warning_context(): array') !== false, 'Staff Certifications should expose a dedicated pending-review warning context builder.');
+$assert(strpos($staffCertificationsSource, 'function bvmgr_staff_certifications_render_pending_review_warning(array $context): void') !== false, 'Staff Certifications should expose a dedicated pending-review warning renderer.');
+$assert(strpos($staffCertificationsSource, 'function bvmgr_staff_certifications_render_pending_review_admin_notice(): void') !== false, 'Staff Certifications should expose a dedicated pending-review admin_notices callback.');
+$assert(strpos($staffCertificationsSource, "add_action('admin_notices', 'bvmgr_staff_certifications_render_pending_review_admin_notice');") !== false, 'Staff Certifications should keep the separate rich warning family on the admin_notices hook through the named callback.');
 $assert(strpos($staffCertificationsSource, '$screen && isset($screen->id) && $screen->id === \'vms_page_vms-staff-certifications\'') !== false, 'Staff Certifications rich warning family should keep its existing screen visibility guard.');
 $assert(strpos($staffCertificationsSource, 'notice notice-warning is-dismissible vms-staff-certifications-admin-notice') !== false, 'Staff Certifications should retain the richer global warning notice family markup unchanged.');
 $assert(strpos($staffCertificationsSource, '<p><strong>') !== false && strpos($staffCertificationsSource, '<a href="') !== false, 'Staff Certifications rich warning family should remain outside the explicit notice contract.');
 
 ob_start();
-vms_staff_certifications_render_empty_state_notice(array());
+bvmgr_staff_certifications_render_empty_state_notice(array());
 $staffEmptyNotice = (string) ob_get_clean();
 $assert(
 	$staffEmptyNotice === '<div class="notice notice-success inline"><p>No staff certifications are waiting for review.</p></div>',
@@ -2395,7 +2395,7 @@ $assert(
 );
 
 ob_start();
-vms_staff_certifications_render_empty_state_notice(
+bvmgr_staff_certifications_render_empty_state_notice(
 	array(
 		array(
 			'staff_id' => 17,
@@ -2406,13 +2406,13 @@ $staffNonemptyNotice = (string) ob_get_clean();
 $assert($staffNonemptyNotice === '', 'Staff Certifications explicit notice helper should stay silent when pending items exist.');
 
 ob_start();
-vms_render_staff_certifications_admin_page_content(array());
+bvmgr_render_staff_certifications_admin_page_content(array());
 $staffEmptyContent = (string) ob_get_clean();
 $assert(strpos($staffEmptyContent, 'No staff certifications are waiting for review.') === false, 'Staff Certifications content callback should no longer emit the moved empty-state notice.');
 $assert(strpos($staffEmptyContent, 'Pending Review') !== false, 'Staff Certifications content callback should still render the summary content for the empty state.');
 
 ob_start();
-vms_render_staff_certifications_admin_page_content(
+bvmgr_render_staff_certifications_admin_page_content(
 	array(
 		array(
 			'staff_id' => 29,
@@ -2434,7 +2434,7 @@ $GLOBALS['vms_test_staff_certifications_pending_items'] = array();
 $GLOBALS['vms_test_staff_certifications_provider_calls'] = 0;
 $GLOBALS['vms_test_staff_certifications_provider_statuses'] = array();
 ob_start();
-vms_render_staff_certifications_admin_page();
+bvmgr_render_staff_certifications_admin_page();
 $staffEmptyPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_staff_certifications_provider_calls'] === 1, 'Staff Certifications page renderer should resolve the pending-review dataset exactly once for the empty state.');
 $assert($GLOBALS['vms_test_staff_certifications_provider_statuses'] === array('pending_verification'), 'Staff Certifications page renderer should use the existing pending-review provider argument exactly once.');
@@ -2457,7 +2457,7 @@ $GLOBALS['vms_test_staff_certifications_pending_items'] = array(
 $GLOBALS['vms_test_staff_certifications_provider_calls'] = 0;
 $GLOBALS['vms_test_staff_certifications_provider_statuses'] = array();
 ob_start();
-vms_render_staff_certifications_admin_page();
+bvmgr_render_staff_certifications_admin_page();
 $staffNonemptyPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_staff_certifications_provider_calls'] === 1, 'Staff Certifications page renderer should still resolve the pending-review dataset exactly once for the nonempty state.');
 $assert($GLOBALS['vms_test_staff_certifications_provider_statuses'] === array('pending_verification'), 'Staff Certifications nonempty render should keep the existing provider argument.');

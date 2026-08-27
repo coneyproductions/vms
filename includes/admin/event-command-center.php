@@ -1060,10 +1060,10 @@ if (!function_exists('bvmgr_event_command_center_get_lineup_snapshot')) {
 if (!function_exists('bvmgr_event_command_center_get_staffing_snapshot')) {
     function bvmgr_event_command_center_get_staffing_snapshot(int $plan_id): array
     {
-        $rollup = function_exists('vms_staffing_get_rollup') ? vms_staffing_get_rollup($plan_id) : null;
+        $rollup = function_exists('bvmgr_staffing_get_rollup') ? bvmgr_staffing_get_rollup($plan_id) : null;
         $needs_compute = !is_array($rollup) || !isset($rollup['readiness_status']) || !empty($rollup['dirty']);
-        if ($needs_compute && function_exists('vms_staffing_compute_rollup')) {
-            $computed = (array) vms_staffing_compute_rollup($plan_id);
+        if ($needs_compute && function_exists('bvmgr_staffing_compute_rollup')) {
+            $computed = (array) bvmgr_staffing_compute_rollup($plan_id);
             if (!empty($computed['ok'])) {
                 $rollup = $computed;
             }
@@ -1103,8 +1103,8 @@ if (!function_exists('bvmgr_event_command_center_get_staffing_snapshot')) {
             'rollup' => $rollup,
             'roles' => array_values($roles),
             'readiness_status' => sanitize_key((string) ($rollup['readiness_status'] ?? 'na')),
-            'readiness_label' => function_exists('vms_staffing_dashboard_readiness_label')
-                ? (string) vms_staffing_dashboard_readiness_label((string) ($rollup['readiness_status'] ?? 'na'))
+            'readiness_label' => function_exists('bvmgr_staffing_dashboard_readiness_label')
+                ? (string) bvmgr_staffing_dashboard_readiness_label((string) ($rollup['readiness_status'] ?? 'na'))
                 : __('N/A', 'backstage-venue-manager'),
             'headcount_needed_total' => max(0, (int) ($rollup['headcount_needed_total'] ?? 0)),
             'headcount_filled_total' => max(0, (int) ($rollup['headcount_filled_total'] ?? 0)),
@@ -1616,7 +1616,7 @@ if (!function_exists('bvmgr_event_command_center_get_timeline_rows')) {
         unset($staffing);
 
         $rows = array();
-        $dt = function_exists('vms_staffing_event_plan_datetime') ? (array) vms_staffing_event_plan_datetime($plan_id) : array();
+        $dt = function_exists('bvmgr_staffing_event_plan_datetime') ? (array) bvmgr_staffing_event_plan_datetime($plan_id) : array();
         $start_hhmm = (string) ($dt['start_hhmm'] ?? get_post_meta($plan_id, '_vms_start_time', true));
         $end_hhmm = (string) ($dt['end_hhmm'] ?? get_post_meta($plan_id, '_vms_end_time', true));
 
@@ -2545,7 +2545,7 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot_light')) {
 if (!function_exists('bvmgr_event_command_center_get_staffing_snapshot_light')) {
     function bvmgr_event_command_center_get_staffing_snapshot_light(int $plan_id): array
     {
-        $rollup = function_exists('vms_staffing_get_rollup') ? vms_staffing_get_rollup($plan_id) : null;
+        $rollup = function_exists('bvmgr_staffing_get_rollup') ? bvmgr_staffing_get_rollup($plan_id) : null;
         if (!is_array($rollup)) {
             $rollup = array();
         }
@@ -2554,8 +2554,8 @@ if (!function_exists('bvmgr_event_command_center_get_staffing_snapshot_light')) 
             'rollup' => $rollup,
             'roles' => array(),
             'readiness_status' => sanitize_key((string) ($rollup['readiness_status'] ?? 'na')),
-            'readiness_label' => function_exists('vms_staffing_dashboard_readiness_label')
-                ? (string) vms_staffing_dashboard_readiness_label((string) ($rollup['readiness_status'] ?? 'na'))
+            'readiness_label' => function_exists('bvmgr_staffing_dashboard_readiness_label')
+                ? (string) bvmgr_staffing_dashboard_readiness_label((string) ($rollup['readiness_status'] ?? 'na'))
                 : __('N/A', 'backstage-venue-manager'),
             'headcount_needed_total' => max(0, (int) ($rollup['headcount_needed_total'] ?? 0)),
             'headcount_filled_total' => max(0, (int) ($rollup['headcount_filled_total'] ?? 0)),

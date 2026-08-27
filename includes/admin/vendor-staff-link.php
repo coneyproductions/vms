@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
  * We keep Vendor and Staff concepts separate, and link them 1:1 when needed.
  */
 
-function vms_vendor_linked_staff_meta_key(): string
+function bvmgr_vendor_linked_staff_meta_key(): string
 {
 	if (function_exists('bvmgr_meta_key')) {
 		$k = (string) bvmgr_meta_key('vendor', 'linked_staff_id');
@@ -20,7 +20,7 @@ function vms_vendor_linked_staff_meta_key(): string
 	return '_vms_linked_staff_id';
 }
 
-function vms_staff_linked_vendor_meta_key(): string
+function bvmgr_staff_linked_vendor_meta_key(): string
 {
 	if (function_exists('bvmgr_meta_key')) {
 		$k = (string) bvmgr_meta_key('staff', 'linked_vendor_id');
@@ -33,19 +33,19 @@ add_action('add_meta_boxes', function (): void {
 	add_meta_box(
 		'vms_vendor_staff_link',
 		__('Also Works as Staff', 'backstage-venue-manager'),
-		'vms_vendor_staff_link_metabox_render',
+		'bvmgr_vendor_staff_link_metabox_render',
 		'vms_vendor',
 		'side',
 		'default'
 	);
 });
 
-function vms_vendor_staff_link_metabox_render($post): void
+function bvmgr_vendor_staff_link_metabox_render($post): void
 {
 	if (!($post instanceof WP_Post)) return;
 
 	$vendor_id = (int) $post->ID;
-	$current_staff_id = (int) get_post_meta($vendor_id, vms_vendor_linked_staff_meta_key(), true);
+	$current_staff_id = (int) get_post_meta($vendor_id, bvmgr_vendor_linked_staff_meta_key(), true);
 
 	wp_nonce_field('vms_vendor_staff_link_save', 'vms_vendor_staff_link_nonce');
 
@@ -113,8 +113,8 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 	}
 
 	$vendor_id = (int) $post_id;
-	$k_vendor_staff = vms_vendor_linked_staff_meta_key();
-	$k_staff_vendor = vms_staff_linked_vendor_meta_key();
+	$k_vendor_staff = bvmgr_vendor_linked_staff_meta_key();
+	$k_staff_vendor = bvmgr_staff_linked_vendor_meta_key();
 
 	$old_staff_id = (int) get_post_meta($vendor_id, $k_vendor_staff, true);
 	$new_staff_id = isset($_POST['vms_linked_staff_id']) ? (int) $_POST['vms_linked_staff_id'] : 0;
@@ -197,8 +197,8 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 		exit;
 	}
 
-	$k_vendor_staff = vms_vendor_linked_staff_meta_key();
-	$k_staff_vendor = vms_staff_linked_vendor_meta_key();
+	$k_vendor_staff = bvmgr_vendor_linked_staff_meta_key();
+	$k_staff_vendor = bvmgr_staff_linked_vendor_meta_key();
 
 	$existing_staff_id = (int) get_post_meta($vendor_id, $k_vendor_staff, true);
 	if ($existing_staff_id > 0) {
@@ -240,7 +240,7 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 	if ($phone !== '') update_post_meta($staff_id, '_vms_contact_phone', $phone);
 
 	// Default worker type: contractor
-	$k_worker = function_exists('vms_staff_worker_type_meta_key') ? vms_staff_worker_type_meta_key() : (function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type');
+	$k_worker = function_exists('bvmgr_staff_worker_type_meta_key') ? bvmgr_staff_worker_type_meta_key() : (function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type');
 	if ($k_worker === '') $k_worker = '_vms_staff_worker_type';
 	update_post_meta($staff_id, $k_worker, 'contractor');
 

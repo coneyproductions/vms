@@ -229,29 +229,29 @@ function vms_test_call_without_warnings(callable $callback): array
 
 function vms_test_compile_generate_wrapper(string $source): string
 {
-	$body = vms_test_extract_function($source, 'vms_tasks_generate_for_event');
+	$body = vms_test_extract_function($source, 'bvmgr_tasks_generate_for_event');
 
 	return strtr(
 		$body,
 		array(
-			'function vms_tasks_generate_for_event' => 'function vms_test_generate_for_event',
-			'vms_tasks_db_ready(' => 'vms_test_db_ready(',
-			'vms_tasks_get_event_context(' => 'vms_test_get_event_context(',
-			'vms_tasks_get_settings(' => 'vms_test_get_settings(',
-			'vms_tasks_should_allow_supersede(' => 'vms_test_should_allow_supersede(',
-			'vms_tasks_signature_meta_key(' => 'vms_test_signature_meta_key(',
-			'vms_tasks_build_event_signature(' => 'vms_test_build_event_signature(',
-			'vms_tasks_get_applicable_checklists(' => 'vms_test_get_applicable_checklists(',
-			'vms_tasks_get_checklist_items(' => 'vms_test_get_checklist_items(',
-			'vms_tasks_get_task_template(' => 'vms_test_get_task_template(',
-			'vms_tasks_merge_template_with_overrides(' => 'vms_test_merge_template_with_overrides(',
-			'vms_tasks_compute_due_at_local(' => 'vms_test_compute_due_at_local(',
-			'vms_tasks_resolve_assignment_for_instance(' => 'vms_test_resolve_assignment_for_instance(',
-			'vms_tasks_select_existing_open_instance(' => 'vms_test_select_existing_open_instance(',
-			'vms_tasks_update_instance_assignment(' => 'vms_test_update_instance_assignment(',
-			'vms_tasks_log_task_action(' => 'vms_test_log_task_action(',
-			'vms_tasks_insert_instance(' => 'vms_test_insert_instance(',
-			'vms_tasks_supersede_open_instances(' => 'vms_test_supersede_open_instances(',
+			'function bvmgr_tasks_generate_for_event' => 'function vms_test_generate_for_event',
+			'bvmgr_tasks_db_ready(' => 'vms_test_db_ready(',
+			'bvmgr_tasks_get_event_context(' => 'vms_test_get_event_context(',
+			'bvmgr_tasks_get_settings(' => 'vms_test_get_settings(',
+			'bvmgr_tasks_should_allow_supersede(' => 'vms_test_should_allow_supersede(',
+			'bvmgr_tasks_signature_meta_key(' => 'vms_test_signature_meta_key(',
+			'bvmgr_tasks_build_event_signature(' => 'vms_test_build_event_signature(',
+			'bvmgr_tasks_get_applicable_checklists(' => 'vms_test_get_applicable_checklists(',
+			'bvmgr_tasks_get_checklist_items(' => 'vms_test_get_checklist_items(',
+			'bvmgr_tasks_get_task_template(' => 'vms_test_get_task_template(',
+			'bvmgr_tasks_merge_template_with_overrides(' => 'vms_test_merge_template_with_overrides(',
+			'bvmgr_tasks_compute_due_at_local(' => 'vms_test_compute_due_at_local(',
+			'bvmgr_tasks_resolve_assignment_for_instance(' => 'vms_test_resolve_assignment_for_instance(',
+			'bvmgr_tasks_select_existing_open_instance(' => 'vms_test_select_existing_open_instance(',
+			'bvmgr_tasks_update_instance_assignment(' => 'vms_test_update_instance_assignment(',
+			'bvmgr_tasks_log_task_action(' => 'vms_test_log_task_action(',
+			'bvmgr_tasks_insert_instance(' => 'vms_test_insert_instance(',
+			'bvmgr_tasks_supersede_open_instances(' => 'vms_test_supersede_open_instances(',
 		)
 	);
 }
@@ -399,7 +399,7 @@ function vms_test_merge_template_with_overrides(array $template, array $override
 		'template' => $template,
 		'overrides' => $overrides,
 	);
-	return vms_tasks_merge_template_with_overrides($template, $overrides);
+	return bvmgr_tasks_merge_template_with_overrides($template, $overrides);
 }
 
 function vms_test_compute_due_at_local(array $eventContext, string $dueMode, ?int $dueOffsetMinutes, string $dueTimeLocal = ''): ?string
@@ -410,7 +410,7 @@ function vms_test_compute_due_at_local(array $eventContext, string $dueMode, ?in
 		'due_offset_minutes' => $dueOffsetMinutes,
 		'due_time_local' => $dueTimeLocal,
 	);
-	return vms_tasks_compute_due_at_local($eventContext, $dueMode, $dueOffsetMinutes, $dueTimeLocal);
+	return bvmgr_tasks_compute_due_at_local($eventContext, $dueMode, $dueOffsetMinutes, $dueTimeLocal);
 }
 
 function vms_test_resolve_assignment_for_instance(int $eventId, array $effective): array
@@ -419,7 +419,7 @@ function vms_test_resolve_assignment_for_instance(int $eventId, array $effective
 		'event_id' => $eventId,
 		'effective' => $effective,
 	);
-	return vms_tasks_resolve_assignment_for_instance($eventId, $effective);
+	return bvmgr_tasks_resolve_assignment_for_instance($eventId, $effective);
 }
 
 function vms_test_select_existing_open_instance(int $eventId, int $templateId, int $originChecklistId, ?string $dueAtLocal, bool $strictDue = true): ?array
@@ -480,12 +480,12 @@ function vms_test_supersede_open_instances(int $eventId, int $templateId, int $o
 	return (int) $GLOBALS['vms_test_generate_env']['supersede_result'];
 }
 
-function vms_tasks_table_name(string $kind): string
+function bvmgr_tasks_table_name(string $kind): string
 {
 	return 'wp_' . $kind;
 }
 
-function vms_tasks_resolve_scheduled_role_user_id(int $eventId, string $roleKey): array
+function bvmgr_tasks_resolve_scheduled_role_user_id(int $eventId, string $roleKey): array
 {
 	$GLOBALS['vms_test_generate_trace']['scheduled_role_calls'][] = array(
 		'event_id' => $eventId,
@@ -523,38 +523,38 @@ $liveGeneratorSource = (string) file_get_contents($liveGeneratorPath);
 $dbSource = (string) file_get_contents($dbPath);
 $adminUiSource = (string) file_get_contents($adminUiPath);
 
-$decoderBody = vms_test_extract_function($storeSource, 'vms_tasks_decode_checklist_overrides');
-$getChecklistBody = vms_test_extract_function($storeSource, 'vms_tasks_get_checklist_items');
-$writerBody = vms_test_extract_function($storeSource, 'vms_tasks_replace_checklist_items');
-$dueBody = vms_test_extract_function($generatorSource, 'vms_tasks_compute_due_at_local');
-$mergeBody = vms_test_extract_function($generatorSource, 'vms_tasks_merge_template_with_overrides');
-$resolveBody = vms_test_extract_function($generatorSource, 'vms_tasks_resolve_assignment_for_instance');
-$generateBody = vms_test_extract_function($generatorSource, 'vms_tasks_generate_for_event');
-$signatureHelperBody = vms_test_extract_function($generatorSource, 'vms_tasks_decode_stored_event_signature');
+$decoderBody = vms_test_extract_function($storeSource, 'bvmgr_tasks_decode_checklist_overrides');
+$getChecklistBody = vms_test_extract_function($storeSource, 'bvmgr_tasks_get_checklist_items');
+$writerBody = vms_test_extract_function($storeSource, 'bvmgr_tasks_replace_checklist_items');
+$dueBody = vms_test_extract_function($generatorSource, 'bvmgr_tasks_compute_due_at_local');
+$mergeBody = vms_test_extract_function($generatorSource, 'bvmgr_tasks_merge_template_with_overrides');
+$resolveBody = vms_test_extract_function($generatorSource, 'bvmgr_tasks_resolve_assignment_for_instance');
+$generateBody = vms_test_extract_function($generatorSource, 'bvmgr_tasks_generate_for_event');
+$signatureHelperBody = vms_test_extract_function($generatorSource, 'bvmgr_tasks_decode_stored_event_signature');
 
-vms_test_assert_contains('function vms_tasks_decode_checklist_overrides', $storeSource, 'Specialized checklist-overrides decoder should exist.');
-vms_test_assert_not_contains('json_decode(', $getChecklistBody, 'vms_tasks_get_checklist_items() should no longer decode JSON directly.');
+vms_test_assert_contains('function bvmgr_tasks_decode_checklist_overrides', $storeSource, 'Specialized checklist-overrides decoder should exist.');
+vms_test_assert_not_contains('json_decode(', $getChecklistBody, 'bvmgr_tasks_get_checklist_items() should no longer decode JSON directly.');
 vms_test_assert_same(1, substr_count($storeSource, 'json_decode('), 'store.php should retain exactly one raw json_decode() call.');
 vms_test_assert_same(1, substr_count($decoderBody, 'json_decode('), 'Checklist-overrides decoder should own the single raw json_decode() call.');
 vms_test_assert_contains("'overrides_state'", $getChecklistBody, 'Checklist items should expose overrides_state.');
 vms_test_assert_contains("'overrides_reason'", $getChecklistBody, 'Checklist items should expose overrides_reason.');
 vms_test_assert_contains("\$payload['required_default'] = !empty(\$overrides['required_default']) ? 1 : 0;", $writerBody, 'Checklist writer should preserve required_default normalization.');
-vms_test_assert_contains("\$payload['priority'] = vms_tasks_sanitize_priority((string) \$overrides['priority']);", $writerBody, 'Checklist writer should preserve priority normalization.');
-vms_test_assert_contains("\$payload['assignment_mode'] = vms_tasks_sanitize_assignment_mode((string) \$overrides['assignment_mode']);", $writerBody, 'Checklist writer should preserve assignment_mode normalization.');
+vms_test_assert_contains("\$payload['priority'] = bvmgr_tasks_sanitize_priority((string) \$overrides['priority']);", $writerBody, 'Checklist writer should preserve priority normalization.');
+vms_test_assert_contains("\$payload['assignment_mode'] = bvmgr_tasks_sanitize_assignment_mode((string) \$overrides['assignment_mode']);", $writerBody, 'Checklist writer should preserve assignment_mode normalization.');
 vms_test_assert_contains("\$payload['role_key'] = sanitize_key((string) \$overrides['role_key']);", $writerBody, 'Checklist writer should preserve role_key normalization.');
 vms_test_assert_contains("\$payload['assignee_user_id'] = absint(\$overrides['assignee_user_id']);", $writerBody, 'Checklist writer should preserve assignee_user_id normalization.');
 vms_test_assert_contains("\$payload['due_offset_minutes'] = (int) \$overrides['due_offset_minutes'];", $writerBody, 'Checklist writer should preserve due_offset_minutes normalization.');
 vms_test_assert_contains('overrides_json LONGTEXT NULL,', $dbSource, 'Checklist storage schema should remain overrides_json LONGTEXT NULL.');
-vms_test_assert_contains("if (!vms_tasks_current_user_can_manage_checklists()) {", $adminUiSource, 'Checklist capability guard should remain unchanged.');
-vms_test_assert_contains("if (vms_tasks_admin_is_exact_post_request() && isset(\$_POST['vms_tasks_checklist_action'])) {", $adminUiSource, 'Checklist exact POST gate should remain unchanged.');
+vms_test_assert_contains("if (!bvmgr_tasks_current_user_can_manage_checklists()) {", $adminUiSource, 'Checklist capability guard should remain unchanged.');
+vms_test_assert_contains("if (bvmgr_tasks_admin_is_exact_post_request() && isset(\$_POST['vms_tasks_checklist_action'])) {", $adminUiSource, 'Checklist exact POST gate should remain unchanged.');
 vms_test_assert_contains("check_admin_referer('vms_tasks_save_checklist');", $adminUiSource, 'Checklist nonce check should remain unchanged.');
-vms_test_assert_contains("if (!vms_tasks_current_user_can_manage_all()) {", $adminUiSource, 'One-off capability guard should remain unchanged.');
+vms_test_assert_contains("if (!bvmgr_tasks_current_user_can_manage_all()) {", $adminUiSource, 'One-off capability guard should remain unchanged.');
 vms_test_assert_contains("!wp_verify_nonce(\$nonce, 'vms_tasks_create_one_off')", $adminUiSource, 'One-off nonce boundary should remain unchanged.');
 vms_test_assert_same(hash('sha256', $storeSource), hash('sha256', $liveStoreSource), 'Mirror and live store files should be byte-identical.');
 vms_test_assert_same(hash('sha256', $generatorSource), hash('sha256', $liveGeneratorSource), 'Mirror and live generator files should be byte-identical.');
 vms_test_assert_same(1, substr_count($generatorSource, 'json_decode('), 'Generator file should retain exactly one raw json_decode() call for the signature helper.');
 vms_test_assert_same(1, substr_count($signatureHelperBody, 'json_decode('), 'Stored-signature helper should remain the only raw decoder in generator.php.');
-vms_test_assert_true(strpos($storeSource, 'vms_tasks_decode_stored_event_signature') === false, 'store.php should remain outside the stored-signature slice.');
+vms_test_assert_true(strpos($storeSource, 'bvmgr_tasks_decode_stored_event_signature') === false, 'store.php should remain outside the stored-signature slice.');
 vms_test_assert_true(strpos($generatorSource, 'overrides_json') === false, 'Generator source should continue consuming decoded overrides instead of raw overrides_json.');
 
 $invalidCheckPos = strpos($generateBody, "if (\$overrides_state === 'invalid')");
@@ -567,10 +567,10 @@ vms_test_assert_contains("\$summary['warnings'][] = sprintf(", $generateBody, 'G
 vms_test_assert_contains("absint(\$item['id'] ?? 0)", $generateBody, 'Invalid-row warning should include the safe checklist row id.');
 vms_test_assert_contains("\$template_id,", $generateBody, 'Invalid-row warning should include the task template id.');
 
-eval(vms_test_extract_function($storeSource, 'vms_tasks_allowed_priorities'));
-eval(vms_test_extract_function($storeSource, 'vms_tasks_sanitize_priority'));
-eval(vms_test_extract_function($storeSource, 'vms_tasks_sanitize_due_mode'));
-eval(vms_test_extract_function($storeSource, 'vms_tasks_sanitize_assignment_mode'));
+eval(vms_test_extract_function($storeSource, 'bvmgr_tasks_allowed_priorities'));
+eval(vms_test_extract_function($storeSource, 'bvmgr_tasks_sanitize_priority'));
+eval(vms_test_extract_function($storeSource, 'bvmgr_tasks_sanitize_due_mode'));
+eval(vms_test_extract_function($storeSource, 'bvmgr_tasks_sanitize_assignment_mode'));
 eval($decoderBody);
 eval($getChecklistBody);
 eval($dueBody);
@@ -653,7 +653,7 @@ $seenStates = array();
 foreach ($decoderCases as $name => $case) {
 	$call = vms_test_call_without_warnings(
 		static function () use ($case) {
-			return vms_tasks_decode_checklist_overrides($case['raw']);
+			return bvmgr_tasks_decode_checklist_overrides($case['raw']);
 		}
 	);
 	$result = $call['result'];
@@ -681,7 +681,7 @@ $wpdb->rows = array(
 
 $checklistRowsCall = vms_test_call_without_warnings(
 	static function () {
-		return vms_tasks_get_checklist_items(55);
+		return bvmgr_tasks_get_checklist_items(55);
 	}
 );
 $checklistRows = $checklistRowsCall['result'];

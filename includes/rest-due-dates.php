@@ -15,7 +15,7 @@ add_action('rest_api_init', function () {
     'permission_callback' => function () {
       return current_user_can('manage_options');
     },
-    'callback'            => 'vms_rest_due_dates_obligations',
+    'callback'            => 'bvmgr_rest_due_dates_obligations',
     'args'                => [
       'status' => [
         'required' => false,
@@ -60,7 +60,7 @@ add_action('rest_api_init', function () {
     'permission_callback' => function () {
       return current_user_can('manage_options');
     },
-    'callback'            => 'vms_rest_due_dates_complete',
+    'callback'            => 'bvmgr_rest_due_dates_complete',
     'args'                => [
       'obligation_id' => [
         'required' => true,
@@ -88,7 +88,7 @@ add_action('rest_api_init', function () {
     'permission_callback' => function () {
       return current_user_can('manage_options');
     },
-    'callback'            => 'vms_rest_due_dates_uncomplete',
+    'callback'            => 'bvmgr_rest_due_dates_uncomplete',
     'args'                => [
       'obligation_id' => [
         'required' => true,
@@ -112,9 +112,9 @@ add_action('rest_api_init', function () {
   ]);
 });
 
-function vms_rest_due_dates_obligations(WP_REST_Request $req)
+function bvmgr_rest_due_dates_obligations(WP_REST_Request $req)
 {
-  if (!function_exists('vms_due_build_obligations_list_response')) {
+  if (!function_exists('bvmgr_due_build_obligations_list_response')) {
     $path = __DIR__ . '/core/due-dates.php';
     if (file_exists($path)) require_once $path;
   }
@@ -129,12 +129,12 @@ function vms_rest_due_dates_obligations(WP_REST_Request $req)
     'limit' => absint($req->get_param('limit')),
   ];
 
-  return rest_ensure_response(vms_due_build_obligations_list_response($args));
+  return rest_ensure_response(bvmgr_due_build_obligations_list_response($args));
 }
 
-function vms_rest_due_dates_complete(WP_REST_Request $req)
+function bvmgr_rest_due_dates_complete(WP_REST_Request $req)
 {
-  if (!function_exists('vms_due_safe_complete')) {
+  if (!function_exists('bvmgr_due_safe_complete')) {
     $path = __DIR__ . '/core/due-dates.php';
     if (file_exists($path)) require_once $path;
   }
@@ -144,12 +144,12 @@ function vms_rest_due_dates_complete(WP_REST_Request $req)
   $notes = sanitize_textarea_field((string) $req->get_param('notes'));
   $proof = esc_url_raw((string) $req->get_param('proof_url'));
 
-  return rest_ensure_response(vms_due_safe_complete($oid, $due, $notes, $proof));
+  return rest_ensure_response(bvmgr_due_safe_complete($oid, $due, $notes, $proof));
 }
 
-function vms_rest_due_dates_uncomplete(WP_REST_Request $req)
+function bvmgr_rest_due_dates_uncomplete(WP_REST_Request $req)
 {
-  if (!function_exists('vms_due_safe_uncomplete')) {
+  if (!function_exists('bvmgr_due_safe_uncomplete')) {
     $path = __DIR__ . '/core/due-dates.php';
     if (file_exists($path)) require_once $path;
   }
@@ -159,5 +159,5 @@ function vms_rest_due_dates_uncomplete(WP_REST_Request $req)
   $notes = sanitize_textarea_field((string) $req->get_param('notes'));
   $proof = esc_url_raw((string) $req->get_param('proof_url'));
 
-  return rest_ensure_response(vms_due_safe_uncomplete($oid, $due, $notes, $proof));
+  return rest_ensure_response(bvmgr_due_safe_uncomplete($oid, $due, $notes, $proof));
 }

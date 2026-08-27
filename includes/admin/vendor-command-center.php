@@ -633,8 +633,8 @@ if (!function_exists('bvmgr_vendor_command_center_extract_known_amount')) {
         }
 
         if (($flat_fee === null || (float) $flat_fee <= 0) && in_array($structure, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true)) {
-            if (function_exists('vms_get_venue_default_comp_for_date') && $venue_id > 0 && $event_date_ymd !== '') {
-                $default = (array) vms_get_venue_default_comp_for_date($venue_id, $event_date_ymd);
+            if (function_exists('bvmgr_get_venue_default_comp_for_date') && $venue_id > 0 && $event_date_ymd !== '') {
+                $default = (array) bvmgr_get_venue_default_comp_for_date($venue_id, $event_date_ymd);
                 $def_structure = isset($default['structure']) ? sanitize_key((string) $default['structure']) : '';
                 $def_fee = isset($default['flat_fee_amount']) ? $default['flat_fee_amount'] : null;
                 if (in_array($def_structure, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true) && is_numeric($def_fee) && (float) $def_fee > 0) {

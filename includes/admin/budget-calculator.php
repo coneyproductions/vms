@@ -434,10 +434,10 @@ function vms_budget_calculator_resolve_plan_band_pay(int $plan_id, string $event
   if ($needs_flat && $flat_fee !== null && $flat_fee > 0) {
     $band_pay = max(0.0, (float) $flat_fee);
     $source = ($structure === 'attendance_bonus') ? 'event_plan_base_pay' : 'event_plan_flat_fee';
-  } elseif ($needs_flat && function_exists('vms_get_venue_default_comp_for_date')) {
+  } elseif ($needs_flat && function_exists('bvmgr_get_venue_default_comp_for_date')) {
     $venue_id = (int) get_post_meta($plan_id, '_vms_venue_id', true);
     if ($venue_id > 0 && vms_budget_calculator_is_valid_ymd($event_date_ymd)) {
-      $def = (array) vms_get_venue_default_comp_for_date($venue_id, $event_date_ymd);
+      $def = (array) bvmgr_get_venue_default_comp_for_date($venue_id, $event_date_ymd);
       $def_struct = isset($def['structure']) ? sanitize_key((string) $def['structure']) : '';
       $def_flat = $def['flat_fee_amount'] ?? null;
       if (in_array($def_struct, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true) && is_numeric($def_flat) && (float) $def_flat > 0) {

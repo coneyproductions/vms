@@ -2362,8 +2362,8 @@ function bvmgr_get_event_plan_effective_comp_default(int $venue_id, string $even
         : array();
 
     $venue_terms = array();
-    if (function_exists('vms_get_venue_default_comp_for_date')) {
-        $row = vms_get_venue_default_comp_for_date($venue_id, $event_date);
+    if (function_exists('bvmgr_get_venue_default_comp_for_date')) {
+        $row = bvmgr_get_venue_default_comp_for_date($venue_id, $event_date);
         if (is_array($row)) {
             $venue_terms = $row;
         }
@@ -2399,8 +2399,8 @@ function bvmgr_get_event_plan_comp_options(int $venue_id, string $event_date, in
     // Venue defaults
     $venue_terms = array();
     $venue_row = array();
-    if ($venue_id > 0 && $has_date && function_exists('vms_get_venue_default_comp_for_date')) {
-        $row = vms_get_venue_default_comp_for_date($venue_id, $event_date);
+    if ($venue_id > 0 && $has_date && function_exists('bvmgr_get_venue_default_comp_for_date')) {
+        $row = bvmgr_get_venue_default_comp_for_date($venue_id, $event_date);
         if (is_array($row) && !empty($row['structure'])) {
             $venue_row = $row;
             $venue_terms = bvmgr_normalize_comp_terms($row);

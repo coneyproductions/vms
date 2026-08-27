@@ -11,8 +11,8 @@ defined('ABSPATH') || exit;
  * - Rebuild helpers
  */
 
-if (!function_exists('vms_staffing_table_name')) {
-	function vms_staffing_table_name(string $kind): string
+if (!function_exists('bvmgr_staffing_table_name')) {
+	function bvmgr_staffing_table_name(string $kind): string
 	{
 		global $wpdb;
 
@@ -33,12 +33,12 @@ if (!function_exists('vms_staffing_table_name')) {
 	}
 }
 
-if (!function_exists('vms_staffing_templates_have_attendance_band_columns')) {
-	function vms_staffing_templates_have_attendance_band_columns(): bool
+if (!function_exists('bvmgr_staffing_templates_have_attendance_band_columns')) {
+	function bvmgr_staffing_templates_have_attendance_band_columns(): bool
 	{
 		global $wpdb;
 
-		$table = vms_staffing_table_name('templates');
+		$table = bvmgr_staffing_table_name('templates');
 		if ($table === '') {
 			return false;
 		}
@@ -53,10 +53,10 @@ if (!function_exists('vms_staffing_templates_have_attendance_band_columns')) {
 	}
 }
 
-if (!function_exists('vms_staffing_ensure_template_attendance_band_schema')) {
-	function vms_staffing_ensure_template_attendance_band_schema(): bool
+if (!function_exists('bvmgr_staffing_ensure_template_attendance_band_schema')) {
+	function bvmgr_staffing_ensure_template_attendance_band_schema(): bool
 	{
-		if (vms_staffing_templates_have_attendance_band_columns()) {
+		if (bvmgr_staffing_templates_have_attendance_band_columns()) {
 			return true;
 		}
 
@@ -73,16 +73,16 @@ if (!function_exists('vms_staffing_ensure_template_attendance_band_schema')) {
 			bvmgr_db_migrate_vendor_core_v5();
 		}
 
-		return vms_staffing_templates_have_attendance_band_columns();
+		return bvmgr_staffing_templates_have_attendance_band_columns();
 	}
 }
 
-if (!function_exists('vms_staffing_template_slots_have_activation_threshold_column')) {
-	function vms_staffing_template_slots_have_activation_threshold_column(): bool
+if (!function_exists('bvmgr_staffing_template_slots_have_activation_threshold_column')) {
+	function bvmgr_staffing_template_slots_have_activation_threshold_column(): bool
 	{
 		global $wpdb;
 
-		$table = vms_staffing_table_name('template_slots');
+		$table = bvmgr_staffing_table_name('template_slots');
 		if ($table === '') {
 			return false;
 		}
@@ -97,10 +97,10 @@ if (!function_exists('vms_staffing_template_slots_have_activation_threshold_colu
 	}
 }
 
-if (!function_exists('vms_staffing_ensure_template_slot_activation_schema')) {
-	function vms_staffing_ensure_template_slot_activation_schema(): bool
+if (!function_exists('bvmgr_staffing_ensure_template_slot_activation_schema')) {
+	function bvmgr_staffing_ensure_template_slot_activation_schema(): bool
 	{
-		if (vms_staffing_template_slots_have_activation_threshold_column()) {
+		if (bvmgr_staffing_template_slots_have_activation_threshold_column()) {
 			return true;
 		}
 
@@ -115,12 +115,12 @@ if (!function_exists('vms_staffing_ensure_template_slot_activation_schema')) {
 			bvmgr_db_migrate_vendor_core_v6();
 		}
 
-		return vms_staffing_template_slots_have_activation_threshold_column();
+		return bvmgr_staffing_template_slots_have_activation_threshold_column();
 	}
 }
 
-if (!function_exists('vms_staffing_role_meta_defaults')) {
-	function vms_staffing_role_meta_defaults(): array
+if (!function_exists('bvmgr_staffing_role_meta_defaults')) {
+	function bvmgr_staffing_role_meta_defaults(): array
 	{
 		return array(
 			'is_critical'               => 0,
@@ -136,11 +136,11 @@ if (!function_exists('vms_staffing_role_meta_defaults')) {
 	}
 }
 
-if (!function_exists('vms_staffing_role_meta_get')) {
-	function vms_staffing_role_meta_get(int $role_id): array
+if (!function_exists('bvmgr_staffing_role_meta_get')) {
+	function bvmgr_staffing_role_meta_get(int $role_id): array
 	{
 		$role_id = absint($role_id);
-		$d = vms_staffing_role_meta_defaults();
+		$d = bvmgr_staffing_role_meta_defaults();
 		if ($role_id <= 0) {
 			return $d;
 		}
@@ -164,9 +164,9 @@ if (!function_exists('vms_staffing_role_meta_get')) {
 			$default_rate = number_format($r, 2, '.', '');
 		}
 		$default_notes = (string) get_term_meta($role_id, '_vms_staff_role_default_notes', true);
-		$qualification_check_mode = vms_staffing_normalize_qualification_mode((string) get_term_meta($role_id, '_vms_staff_role_qualification_check_mode', true), 'warn');
+		$qualification_check_mode = bvmgr_staffing_normalize_qualification_mode((string) get_term_meta($role_id, '_vms_staff_role_qualification_check_mode', true), 'warn');
 		$required_qualifications_raw = get_term_meta($role_id, '_vms_staff_role_required_qualifications', true);
-		$required_qualification_rules = vms_staffing_normalize_role_required_qualification_rules($required_qualifications_raw, $qualification_check_mode);
+		$required_qualification_rules = bvmgr_staffing_normalize_role_required_qualification_rules($required_qualifications_raw, $qualification_check_mode);
 		$required_qualifications = array_values(array_map(static function (array $rule): string {
 			return (string) ($rule['name'] ?? '');
 		}, $required_qualification_rules));
@@ -185,8 +185,8 @@ if (!function_exists('vms_staffing_role_meta_get')) {
 	}
 }
 
-if (!function_exists('vms_staffing_role_meta_save')) {
-	function vms_staffing_role_meta_save(int $role_id, array $in): void
+if (!function_exists('bvmgr_staffing_role_meta_save')) {
+	function bvmgr_staffing_role_meta_save(int $role_id, array $in): void
 	{
 		$role_id = absint($role_id);
 		if ($role_id <= 0) {
@@ -208,13 +208,13 @@ if (!function_exists('vms_staffing_role_meta_save')) {
 			$default_rate = number_format(max(0, (float) $in['default_rate']), 2, '.', '');
 		}
 		$default_notes = isset($in['default_notes']) ? sanitize_textarea_field((string) $in['default_notes']) : '';
-		$qualification_check_mode = isset($in['qualification_check_mode']) ? vms_staffing_normalize_qualification_mode((string) $in['qualification_check_mode'], 'warn') : 'warn';
+		$qualification_check_mode = isset($in['qualification_check_mode']) ? bvmgr_staffing_normalize_qualification_mode((string) $in['qualification_check_mode'], 'warn') : 'warn';
 		$required_qualifications_raw = isset($in['required_qualifications']) ? $in['required_qualifications'] : array();
-		$required_qualification_rules = vms_staffing_normalize_role_required_qualification_rules($required_qualifications_raw, $qualification_check_mode);
+		$required_qualification_rules = bvmgr_staffing_normalize_role_required_qualification_rules($required_qualifications_raw, $qualification_check_mode);
 		$required_qualifications = array_values(array_map(static function (array $rule): string {
 			return (string) ($rule['name'] ?? '');
 		}, $required_qualification_rules));
-		$qualification_check_mode = vms_staffing_normalize_qualification_mode($qualification_check_mode, 'warn');
+		$qualification_check_mode = bvmgr_staffing_normalize_qualification_mode($qualification_check_mode, 'warn');
 
 		update_term_meta($role_id, '_vms_staff_role_is_critical', $is_critical);
 		update_term_meta($role_id, '_vms_staff_role_is_active', $is_active);
@@ -239,8 +239,8 @@ if (!function_exists('vms_staffing_role_meta_save')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_role_catalog')) {
-	function vms_staffing_get_role_catalog(bool $include_inactive = false): array
+if (!function_exists('bvmgr_staffing_get_role_catalog')) {
+	function bvmgr_staffing_get_role_catalog(bool $include_inactive = false): array
 	{
 		if (!taxonomy_exists('vms_staff_role')) {
 			return array();
@@ -263,7 +263,7 @@ if (!function_exists('vms_staffing_get_role_catalog')) {
 			if ($role_id <= 0) {
 				continue;
 			}
-			$meta = vms_staffing_role_meta_get($role_id);
+			$meta = bvmgr_staffing_role_meta_get($role_id);
 			if (!$include_inactive && empty($meta['is_active'])) {
 				continue;
 			}
@@ -287,10 +287,10 @@ if (!function_exists('vms_staffing_get_role_catalog')) {
 	}
 }
 
-if (!function_exists('vms_staffing_role_map_by_id')) {
-	function vms_staffing_role_map_by_id(bool $include_inactive = true): array
+if (!function_exists('bvmgr_staffing_role_map_by_id')) {
+	function bvmgr_staffing_role_map_by_id(bool $include_inactive = true): array
 	{
-		$rows = vms_staffing_get_role_catalog($include_inactive);
+		$rows = bvmgr_staffing_get_role_catalog($include_inactive);
 		$map = array();
 		foreach ($rows as $r) {
 			$rid = isset($r['role_id']) ? absint($r['role_id']) : 0;
@@ -301,8 +301,8 @@ if (!function_exists('vms_staffing_role_map_by_id')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_role_match_for_role')) {
-	function vms_staffing_staff_role_match_for_role(int $staff_id, int $role_id): array
+if (!function_exists('bvmgr_staffing_staff_role_match_for_role')) {
+	function bvmgr_staffing_staff_role_match_for_role(int $staff_id, int $role_id): array
 	{
 		static $role_term_cache = array();
 		static $staff_term_cache = array();
@@ -383,15 +383,15 @@ if (!function_exists('vms_staffing_staff_role_match_for_role')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_meta_key')) {
-	function vms_staffing_staff_qualification_meta_key(): string
+if (!function_exists('bvmgr_staffing_staff_qualification_meta_key')) {
+	function bvmgr_staffing_staff_qualification_meta_key(): string
 	{
 		return '_vms_staff_qualifications';
 	}
 }
 
-if (!function_exists('vms_staffing_normalize_qualification_name')) {
-	function vms_staffing_normalize_qualification_name(string $name): string
+if (!function_exists('bvmgr_staffing_normalize_qualification_name')) {
+	function bvmgr_staffing_normalize_qualification_name(string $name): string
 	{
 		$name = sanitize_text_field($name);
 		$name = preg_replace('/\s+/', ' ', trim((string) $name));
@@ -400,8 +400,8 @@ if (!function_exists('vms_staffing_normalize_qualification_name')) {
 }
 
 
-if (!function_exists('vms_staffing_normalize_qualification_mode')) {
-	function vms_staffing_normalize_qualification_mode(string $mode, string $fallback = 'warn'): string
+if (!function_exists('bvmgr_staffing_normalize_qualification_mode')) {
+	function bvmgr_staffing_normalize_qualification_mode(string $mode, string $fallback = 'warn'): string
 	{
 		$mode = sanitize_key($mode);
 		if (!in_array($mode, array('warn', 'soft_block', 'hard_block'), true)) {
@@ -414,10 +414,10 @@ if (!function_exists('vms_staffing_normalize_qualification_mode')) {
 	}
 }
 
-if (!function_exists('vms_staffing_qualification_mode_rank')) {
-	function vms_staffing_qualification_mode_rank(string $mode): int
+if (!function_exists('bvmgr_staffing_qualification_mode_rank')) {
+	function bvmgr_staffing_qualification_mode_rank(string $mode): int
 	{
-		$mode = vms_staffing_normalize_qualification_mode($mode);
+		$mode = bvmgr_staffing_normalize_qualification_mode($mode);
 		$map = array(
 			'warn' => 1,
 			'soft_block' => 2,
@@ -427,8 +427,8 @@ if (!function_exists('vms_staffing_qualification_mode_rank')) {
 	}
 }
 
-if (!function_exists('vms_staffing_normalize_role_required_qualification_rule')) {
-	function vms_staffing_normalize_role_required_qualification_rule($row, string $fallback_mode = 'warn'): ?array
+if (!function_exists('bvmgr_staffing_normalize_role_required_qualification_rule')) {
+	function bvmgr_staffing_normalize_role_required_qualification_rule($row, string $fallback_mode = 'warn'): ?array
 	{
 		if (is_string($row)) {
 			$row = array('name' => $row, 'mode' => $fallback_mode);
@@ -436,12 +436,12 @@ if (!function_exists('vms_staffing_normalize_role_required_qualification_rule'))
 		if (!is_array($row)) {
 			return null;
 		}
-		$name = isset($row['name']) ? vms_staffing_normalize_qualification_name((string) $row['name']) : '';
+		$name = isset($row['name']) ? bvmgr_staffing_normalize_qualification_name((string) $row['name']) : '';
 		if ($name === '') {
 			return null;
 		}
 		$mode = isset($row['mode']) ? (string) $row['mode'] : $fallback_mode;
-		$mode = vms_staffing_normalize_qualification_mode($mode, $fallback_mode);
+		$mode = bvmgr_staffing_normalize_qualification_mode($mode, $fallback_mode);
 		return array(
 			'name' => $name,
 			'mode' => $mode,
@@ -449,13 +449,13 @@ if (!function_exists('vms_staffing_normalize_role_required_qualification_rule'))
 	}
 }
 
-if (!function_exists('vms_staffing_normalize_role_required_qualification_rules')) {
-	function vms_staffing_normalize_role_required_qualification_rules($raw, string $fallback_mode = 'warn'): array
+if (!function_exists('bvmgr_staffing_normalize_role_required_qualification_rules')) {
+	function bvmgr_staffing_normalize_role_required_qualification_rules($raw, string $fallback_mode = 'warn'): array
 	{
 		$rules = array();
 		if (is_array($raw)) {
 			foreach ($raw as $row) {
-				$rule = vms_staffing_normalize_role_required_qualification_rule($row, $fallback_mode);
+				$rule = bvmgr_staffing_normalize_role_required_qualification_rule($row, $fallback_mode);
 				if (!is_array($rule)) {
 					continue;
 				}
@@ -469,7 +469,7 @@ if (!function_exists('vms_staffing_normalize_role_required_qualification_rules')
 			$parts = preg_split('/[
 ,]+/', (string) $raw);
 			foreach ((array) $parts as $part) {
-				$rule = vms_staffing_normalize_role_required_qualification_rule((string) $part, $fallback_mode);
+				$rule = bvmgr_staffing_normalize_role_required_qualification_rule((string) $part, $fallback_mode);
 				if (!is_array($rule)) {
 					continue;
 				}
@@ -484,15 +484,15 @@ if (!function_exists('vms_staffing_normalize_role_required_qualification_rules')
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_allowed_statuses')) {
-	function vms_staffing_staff_qualification_allowed_statuses(): array
+if (!function_exists('bvmgr_staffing_staff_qualification_allowed_statuses')) {
+	function bvmgr_staffing_staff_qualification_allowed_statuses(): array
 	{
 		return array('active', 'pending_verification', 'rejected', 'expired', 'inactive');
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_status_label')) {
-	function vms_staffing_staff_qualification_status_label(string $status): string
+if (!function_exists('bvmgr_staffing_staff_qualification_status_label')) {
+	function bvmgr_staffing_staff_qualification_status_label(string $status): string
 	{
 		$status = sanitize_key($status);
 		if ($status === 'active') return __('Approved', 'backstage-venue-manager');
@@ -504,24 +504,24 @@ if (!function_exists('vms_staffing_staff_qualification_status_label')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_generate_id')) {
-	function vms_staffing_staff_qualification_generate_id(): string
+if (!function_exists('bvmgr_staffing_staff_qualification_generate_id')) {
+	function bvmgr_staffing_staff_qualification_generate_id(): string
 	{
 		return 'qual_' . strtolower(wp_generate_password(12, false, false));
 	}
 }
 
-if (!function_exists('vms_staffing_normalize_staff_qualification_row')) {
-	function vms_staffing_normalize_staff_qualification_row(array $row): ?array
+if (!function_exists('bvmgr_staffing_normalize_staff_qualification_row')) {
+	function bvmgr_staffing_normalize_staff_qualification_row(array $row): ?array
 	{
-		$name = isset($row['name']) ? vms_staffing_normalize_qualification_name((string) $row['name']) : '';
+		$name = isset($row['name']) ? bvmgr_staffing_normalize_qualification_name((string) $row['name']) : '';
 		if ($name === '') {
 			return null;
 		}
 
 		$id = isset($row['id']) ? sanitize_key((string) $row['id']) : '';
 		if ($id === '') {
-			$id = vms_staffing_staff_qualification_generate_id();
+			$id = bvmgr_staffing_staff_qualification_generate_id();
 		}
 
 		$authority = isset($row['authority']) ? sanitize_text_field((string) $row['authority']) : '';
@@ -535,7 +535,7 @@ if (!function_exists('vms_staffing_normalize_staff_qualification_row')) {
 			$expiration_date = '';
 		}
 		$status = isset($row['status']) ? sanitize_key((string) $row['status']) : 'active';
-		if (!in_array($status, vms_staffing_staff_qualification_allowed_statuses(), true)) {
+		if (!in_array($status, bvmgr_staffing_staff_qualification_allowed_statuses(), true)) {
 			$status = 'active';
 		}
 
@@ -584,14 +584,14 @@ if (!function_exists('vms_staffing_normalize_staff_qualification_row')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_staff_qualifications')) {
-	function vms_staffing_get_staff_qualifications(int $staff_id): array
+if (!function_exists('bvmgr_staffing_get_staff_qualifications')) {
+	function bvmgr_staffing_get_staff_qualifications(int $staff_id): array
 	{
 		$staff_id = absint($staff_id);
 		if ($staff_id <= 0) {
 			return array();
 		}
-		$raw = get_post_meta($staff_id, vms_staffing_staff_qualification_meta_key(), true);
+		$raw = get_post_meta($staff_id, bvmgr_staffing_staff_qualification_meta_key(), true);
 		if (!is_array($raw)) {
 			return array();
 		}
@@ -601,7 +601,7 @@ if (!function_exists('vms_staffing_get_staff_qualifications')) {
 			if (!is_array($row)) {
 				continue;
 			}
-			$clean = vms_staffing_normalize_staff_qualification_row($row);
+			$clean = bvmgr_staffing_normalize_staff_qualification_row($row);
 			if (!is_array($clean)) {
 				continue;
 			}
@@ -637,15 +637,15 @@ if (!function_exists('vms_staffing_get_staff_qualifications')) {
 	}
 }
 
-if (!function_exists('vms_staffing_save_staff_qualifications')) {
-	function vms_staffing_save_staff_qualifications(int $staff_id, array $rows): void
+if (!function_exists('bvmgr_staffing_save_staff_qualifications')) {
+	function bvmgr_staffing_save_staff_qualifications(int $staff_id, array $rows): void
 	{
 		$staff_id = absint($staff_id);
 		if ($staff_id <= 0) {
 			return;
 		}
 
-		$old_rows = vms_staffing_get_staff_qualifications($staff_id);
+		$old_rows = bvmgr_staffing_get_staff_qualifications($staff_id);
 		$old_private_ids = array();
 		foreach ($old_rows as $old_row) {
 			if (!is_array($old_row)) {
@@ -666,7 +666,7 @@ if (!function_exists('vms_staffing_save_staff_qualifications')) {
 			if (!is_array($row)) {
 				continue;
 			}
-			$norm = vms_staffing_normalize_staff_qualification_row($row);
+			$norm = bvmgr_staffing_normalize_staff_qualification_row($row);
 			if (is_array($norm)) {
 				$clean[] = $norm;
 				if (sanitize_key((string) ($norm['storage_kind'] ?? '')) === 'private_file') {
@@ -686,15 +686,15 @@ if (!function_exists('vms_staffing_save_staff_qualifications')) {
 		}
 
 		if (empty($clean)) {
-			delete_post_meta($staff_id, vms_staffing_staff_qualification_meta_key());
+			delete_post_meta($staff_id, bvmgr_staffing_staff_qualification_meta_key());
 			return;
 		}
-		update_post_meta($staff_id, vms_staffing_staff_qualification_meta_key(), $clean);
+		update_post_meta($staff_id, bvmgr_staffing_staff_qualification_meta_key(), $clean);
 	}
 }
 
-if (!function_exists('vms_staffing_get_staff_user')) {
-	function vms_staffing_get_staff_user(int $staff_id): ?WP_User
+if (!function_exists('bvmgr_staffing_get_staff_user')) {
+	function bvmgr_staffing_get_staff_user(int $staff_id): ?WP_User
 	{
 		$staff_id = absint($staff_id);
 		if ($staff_id <= 0) { return null; }
@@ -713,8 +713,8 @@ if (!function_exists('vms_staffing_get_staff_user')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_admin_recipients')) {
-	function vms_staffing_staff_qualification_admin_recipients(int $staff_id, array $row, string $event): array
+if (!function_exists('bvmgr_staffing_staff_qualification_admin_recipients')) {
+	function bvmgr_staffing_staff_qualification_admin_recipients(int $staff_id, array $row, string $event): array
 	{
 		$emails = array();
 		$site_admin = sanitize_email((string) get_option('admin_email'));
@@ -745,8 +745,8 @@ if (!function_exists('vms_staffing_staff_qualification_admin_recipients')) {
 	}
 }
 
-if (!function_exists('vms_staffing_mail_headers')) {
-	function vms_staffing_mail_headers(): array
+if (!function_exists('bvmgr_staffing_mail_headers')) {
+	function bvmgr_staffing_mail_headers(): array
 	{
 		$from_email = sanitize_email((string) get_option('admin_email'));
 		if ($from_email === '' || !is_email($from_email)) {
@@ -762,8 +762,8 @@ if (!function_exists('vms_staffing_mail_headers')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_review_url')) {
-	function vms_staffing_staff_qualification_review_url(int $staff_id): string
+if (!function_exists('bvmgr_staffing_staff_qualification_review_url')) {
+	function bvmgr_staffing_staff_qualification_review_url(int $staff_id): string
 	{
 		$staff_id = absint($staff_id);
 		if ($staff_id <= 0) {
@@ -773,8 +773,8 @@ if (!function_exists('vms_staffing_staff_qualification_review_url')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_mail_lines')) {
-	function vms_staffing_staff_qualification_mail_lines(array $lines): string
+if (!function_exists('bvmgr_staffing_staff_qualification_mail_lines')) {
+	function bvmgr_staffing_staff_qualification_mail_lines(array $lines): string
 	{
 		$clean = array();
 		foreach ($lines as $line) {
@@ -784,8 +784,8 @@ if (!function_exists('vms_staffing_staff_qualification_mail_lines')) {
 	}
 }
 
-if (!function_exists('vms_staffing_record_qualification_audit')) {
-	function vms_staffing_record_qualification_audit(int $staff_id, string $action, array $row, ?int $actor_user_id = null): void
+if (!function_exists('bvmgr_staffing_record_qualification_audit')) {
+	function bvmgr_staffing_record_qualification_audit(int $staff_id, string $action, array $row, ?int $actor_user_id = null): void
 	{
 		$staff_id = absint($staff_id);
 		if ($staff_id <= 0) {
@@ -810,8 +810,8 @@ if (!function_exists('vms_staffing_record_qualification_audit')) {
 	}
 }
 
-if (!function_exists('vms_staffing_send_staff_qualification_submission_notifications')) {
-	function vms_staffing_send_staff_qualification_submission_notifications(int $staff_id, array $row, ?int $submitter_user_id = null): void
+if (!function_exists('bvmgr_staffing_send_staff_qualification_submission_notifications')) {
+	function bvmgr_staffing_send_staff_qualification_submission_notifications(int $staff_id, array $row, ?int $submitter_user_id = null): void
 	{
 		$staff_id = absint($staff_id);
 		$staff_name = get_the_title($staff_id);
@@ -820,9 +820,9 @@ if (!function_exists('vms_staffing_send_staff_qualification_submission_notificat
 		}
 		$qualification = isset($row['name']) ? (string) $row['name'] : __('Certification', 'backstage-venue-manager');
 		$expiration = !empty($row['expiration_date']) ? (string) $row['expiration_date'] : __('Not provided', 'backstage-venue-manager');
-		$review_url = vms_staffing_staff_qualification_review_url($staff_id);
+		$review_url = bvmgr_staffing_staff_qualification_review_url($staff_id);
 
-		$admin_body = vms_staffing_staff_qualification_mail_lines(array(
+		$admin_body = bvmgr_staffing_staff_qualification_mail_lines(array(
 			/* translators: %s: a staff certification was submitted for review. */
 			sprintf(__('A staff certification was submitted for review: %s', 'backstage-venue-manager'), $qualification),
 			'',
@@ -835,14 +835,14 @@ if (!function_exists('vms_staffing_send_staff_qualification_submission_notificat
 			/* translators: %s: review link URL. */
 			sprintf(__('Review link: %s', 'backstage-venue-manager'), $review_url),
 		));
-		foreach (vms_staffing_staff_qualification_admin_recipients($staff_id, $row, 'submitted') as $email) {
+		foreach (bvmgr_staffing_staff_qualification_admin_recipients($staff_id, $row, 'submitted') as $email) {
 			/* translators: %s: staff certification pending review. */
-			wp_mail($email, sprintf(__('[Backstage Venue Manager] Staff certification pending review: %s', 'backstage-venue-manager'), $qualification), $admin_body, vms_staffing_mail_headers());
+			wp_mail($email, sprintf(__('[Backstage Venue Manager] Staff certification pending review: %s', 'backstage-venue-manager'), $qualification), $admin_body, bvmgr_staffing_mail_headers());
 		}
 
-		$user = $submitter_user_id ? get_user_by('id', absint($submitter_user_id)) : vms_staffing_get_staff_user($staff_id);
+		$user = $submitter_user_id ? get_user_by('id', absint($submitter_user_id)) : bvmgr_staffing_get_staff_user($staff_id);
 		if ($user instanceof WP_User && is_email($user->user_email)) {
-			$staff_body = vms_staffing_staff_qualification_mail_lines(array(
+			$staff_body = bvmgr_staffing_staff_qualification_mail_lines(array(
 				/* translators: %s: human-readable value used in this message. */
 				sprintf(__('We received your %s certificate.', 'backstage-venue-manager'), $qualification),
 				'',
@@ -851,13 +851,13 @@ if (!function_exists('vms_staffing_send_staff_qualification_submission_notificat
 				$expiration !== __('Not provided', 'backstage-venue-manager') ? sprintf(__('Expiration date submitted: %s', 'backstage-venue-manager'), $expiration) : '',
 			));
 			/* translators: %s: human-readable value used in this message. */
-			wp_mail($user->user_email, sprintf(__('We received your %s certificate', 'backstage-venue-manager'), $qualification), $staff_body, vms_staffing_mail_headers());
+			wp_mail($user->user_email, sprintf(__('We received your %s certificate', 'backstage-venue-manager'), $qualification), $staff_body, bvmgr_staffing_mail_headers());
 		}
 	}
 }
 
-if (!function_exists('vms_staffing_send_staff_qualification_review_notification')) {
-	function vms_staffing_send_staff_qualification_review_notification(int $staff_id, array $row, string $new_status): void
+if (!function_exists('bvmgr_staffing_send_staff_qualification_review_notification')) {
+	function bvmgr_staffing_send_staff_qualification_review_notification(int $staff_id, array $row, string $new_status): void
 	{
 		$new_status = sanitize_key($new_status);
 		if (!in_array($new_status, array('active', 'rejected'), true)) {
@@ -888,9 +888,9 @@ if (!function_exists('vms_staffing_send_staff_qualification_review_notification'
 			$subject = sprintf(__('Your %s certificate needs attention', 'backstage-venue-manager'), $qualification);
 		}
 
-		$user = vms_staffing_get_staff_user($staff_id);
+		$user = bvmgr_staffing_get_staff_user($staff_id);
 		if ($user instanceof WP_User && is_email($user->user_email)) {
-			wp_mail($user->user_email, $subject, vms_staffing_staff_qualification_mail_lines($lines), vms_staffing_mail_headers());
+			wp_mail($user->user_email, $subject, bvmgr_staffing_staff_qualification_mail_lines($lines), bvmgr_staffing_mail_headers());
 		}
 
 		$staff_name = get_the_title($staff_id);
@@ -910,43 +910,43 @@ if (!function_exists('vms_staffing_send_staff_qualification_review_notification'
 			/* translators: %s: reason. */
 			($new_status === 'rejected' && $notes !== '') ? sprintf(__('Reason: %s', 'backstage-venue-manager'), $notes) : '',
 			/* translators: %s: staff profile. */
-			sprintf(__('Staff profile: %s', 'backstage-venue-manager'), vms_staffing_staff_qualification_review_url($staff_id)),
+			sprintf(__('Staff profile: %s', 'backstage-venue-manager'), bvmgr_staffing_staff_qualification_review_url($staff_id)),
 		);
-		foreach (vms_staffing_staff_qualification_admin_recipients($staff_id, $row, $status_event) as $email) {
+		foreach (bvmgr_staffing_staff_qualification_admin_recipients($staff_id, $row, $status_event) as $email) {
 			/* translators: 1: certification review action such as approved or rejected, 2: certification name. */
-			wp_mail($email, sprintf(__('[Backstage Venue Manager] Staff certification %1$s: %2$s', 'backstage-venue-manager'), $status_event, $qualification), vms_staffing_staff_qualification_mail_lines($admin_lines), vms_staffing_mail_headers());
+			wp_mail($email, sprintf(__('[Backstage Venue Manager] Staff certification %1$s: %2$s', 'backstage-venue-manager'), $status_event, $qualification), bvmgr_staffing_staff_qualification_mail_lines($admin_lines), bvmgr_staffing_mail_headers());
 		}
 	}
 }
 
-if (!function_exists('vms_staffing_add_staff_qualification_submission')) {
-	function vms_staffing_add_staff_qualification_submission(int $staff_id, array $row, int $submitter_user_id): array
+if (!function_exists('bvmgr_staffing_add_staff_qualification_submission')) {
+	function bvmgr_staffing_add_staff_qualification_submission(int $staff_id, array $row, int $submitter_user_id): array
 	{
 		$staff_id = absint($staff_id);
 		$submitter_user_id = absint($submitter_user_id);
 		if ($staff_id <= 0 || $submitter_user_id <= 0) {
 			return array('ok' => false, 'message' => __('Invalid staff certification submission.', 'backstage-venue-manager'));
 		}
-		$row['id'] = isset($row['id']) ? sanitize_key((string) $row['id']) : vms_staffing_staff_qualification_generate_id();
+		$row['id'] = isset($row['id']) ? sanitize_key((string) $row['id']) : bvmgr_staffing_staff_qualification_generate_id();
 		$row['status'] = 'pending_verification';
 		$row['source'] = 'staff_portal';
 		$row['submitted_by'] = $submitter_user_id;
 		$row['submitted_at'] = time();
-		$clean = vms_staffing_normalize_staff_qualification_row($row);
+		$clean = bvmgr_staffing_normalize_staff_qualification_row($row);
 		if (!is_array($clean)) {
 			return array('ok' => false, 'message' => __('Please enter the certification name before uploading.', 'backstage-venue-manager'));
 		}
-		$rows = vms_staffing_get_staff_qualifications($staff_id);
+		$rows = bvmgr_staffing_get_staff_qualifications($staff_id);
 		$rows[] = $clean;
-		vms_staffing_save_staff_qualifications($staff_id, $rows);
-		vms_staffing_record_qualification_audit($staff_id, 'submitted', $clean, $submitter_user_id);
-		vms_staffing_send_staff_qualification_submission_notifications($staff_id, $clean, $submitter_user_id);
+		bvmgr_staffing_save_staff_qualifications($staff_id, $rows);
+		bvmgr_staffing_record_qualification_audit($staff_id, 'submitted', $clean, $submitter_user_id);
+		bvmgr_staffing_send_staff_qualification_submission_notifications($staff_id, $clean, $submitter_user_id);
 		return array('ok' => true, 'row' => $clean);
 	}
 }
 
-if (!function_exists('vms_staffing_save_staff_qualifications_with_review')) {
-	function vms_staffing_save_staff_qualifications_with_review(int $staff_id, array $rows, ?int $actor_user_id = null): void
+if (!function_exists('bvmgr_staffing_save_staff_qualifications_with_review')) {
+	function bvmgr_staffing_save_staff_qualifications_with_review(int $staff_id, array $rows, ?int $actor_user_id = null): void
 	{
 		$staff_id = absint($staff_id);
 		$actor_user_id = $actor_user_id ? absint($actor_user_id) : get_current_user_id();
@@ -954,7 +954,7 @@ if (!function_exists('vms_staffing_save_staff_qualifications_with_review')) {
 			return;
 		}
 
-		$old_rows = vms_staffing_get_staff_qualifications($staff_id);
+		$old_rows = bvmgr_staffing_get_staff_qualifications($staff_id);
 		$old_by_id = array();
 		foreach ($old_rows as $old) {
 			$id = isset($old['id']) ? sanitize_key((string) $old['id']) : '';
@@ -969,7 +969,7 @@ if (!function_exists('vms_staffing_save_staff_qualifications_with_review')) {
 			if (!is_array($row)) {
 				continue;
 			}
-			$norm = vms_staffing_normalize_staff_qualification_row($row);
+			$norm = bvmgr_staffing_normalize_staff_qualification_row($row);
 			if (!is_array($norm)) {
 				continue;
 			}
@@ -984,20 +984,20 @@ if (!function_exists('vms_staffing_save_staff_qualifications_with_review')) {
 			$clean[] = $norm;
 		}
 
-		vms_staffing_save_staff_qualifications($staff_id, $clean);
+		bvmgr_staffing_save_staff_qualifications($staff_id, $clean);
 
 		foreach ($transitions as $transition) {
 			$row = isset($transition['row']) && is_array($transition['row']) ? $transition['row'] : array();
 			$status = isset($transition['status']) ? sanitize_key((string) $transition['status']) : '';
-			vms_staffing_record_qualification_audit($staff_id, $status === 'active' ? 'approved' : 'rejected', $row, $actor_user_id);
-			vms_staffing_send_staff_qualification_review_notification($staff_id, $row, $status);
+			bvmgr_staffing_record_qualification_audit($staff_id, $status === 'active' ? 'approved' : 'rejected', $row, $actor_user_id);
+			bvmgr_staffing_send_staff_qualification_review_notification($staff_id, $row, $status);
 		}
 	}
 }
 
 
-if (!function_exists('vms_staffing_staff_qualification_status_counts')) {
-	function vms_staffing_staff_qualification_status_counts(int $staff_id): array
+if (!function_exists('bvmgr_staffing_staff_qualification_status_counts')) {
+	function bvmgr_staffing_staff_qualification_status_counts(int $staff_id): array
 	{
 		$counts = array(
 			'pending_verification' => 0,
@@ -1006,7 +1006,7 @@ if (!function_exists('vms_staffing_staff_qualification_status_counts')) {
 			'expired' => 0,
 			'inactive' => 0,
 		);
-		foreach (vms_staffing_get_staff_qualifications($staff_id) as $row) {
+		foreach (bvmgr_staffing_get_staff_qualifications($staff_id) as $row) {
 			$status = sanitize_key((string) ($row['status'] ?? 'active'));
 			if ($status === '' || !array_key_exists($status, $counts)) {
 				$status = 'active';
@@ -1017,8 +1017,8 @@ if (!function_exists('vms_staffing_staff_qualification_status_counts')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
-	function vms_staffing_get_staff_qualification_review_items(string $status = 'pending_verification'): array
+if (!function_exists('bvmgr_staffing_get_staff_qualification_review_items')) {
+	function bvmgr_staffing_get_staff_qualification_review_items(string $status = 'pending_verification'): array
 	{
 		$status = sanitize_key($status);
 		if ($status === '') {
@@ -1036,7 +1036,7 @@ if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
 		$items = array();
 		foreach ((array) $staff_ids as $staff_id) {
 			$staff_id = absint($staff_id);
-			foreach (vms_staffing_get_staff_qualifications($staff_id) as $row) {
+			foreach (bvmgr_staffing_get_staff_qualifications($staff_id) as $row) {
 				$row_status = sanitize_key((string) ($row['status'] ?? 'active'));
 				if ($row_status !== $status) {
 					continue;
@@ -1052,17 +1052,17 @@ if (!function_exists('vms_staffing_get_staff_qualification_review_items')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_pending_staff_qualification_count')) {
-	function vms_staffing_get_pending_staff_qualification_count(): int
+if (!function_exists('bvmgr_staffing_get_pending_staff_qualification_count')) {
+	function bvmgr_staffing_get_pending_staff_qualification_count(): int
 	{
-		return count(vms_staffing_get_staff_qualification_review_items('pending_verification'));
+		return count(bvmgr_staffing_get_staff_qualification_review_items('pending_verification'));
 	}
 }
 
-if (!function_exists('vms_staffing_get_role_required_qualification_rules')) {
-	function vms_staffing_get_role_required_qualification_rules(int $role_id): array
+if (!function_exists('bvmgr_staffing_get_role_required_qualification_rules')) {
+	function bvmgr_staffing_get_role_required_qualification_rules(int $role_id): array
 	{
-		$role_meta = vms_staffing_role_meta_get($role_id);
+		$role_meta = bvmgr_staffing_role_meta_get($role_id);
 		$rules = isset($role_meta['required_qualification_rules']) && is_array($role_meta['required_qualification_rules'])
 			? $role_meta['required_qualification_rules']
 			: array();
@@ -1071,7 +1071,7 @@ if (!function_exists('vms_staffing_get_role_required_qualification_rules')) {
 			if (!is_array($rule)) {
 				continue;
 			}
-			$clean = vms_staffing_normalize_role_required_qualification_rule($rule, isset($role_meta['qualification_check_mode']) ? (string) $role_meta['qualification_check_mode'] : 'warn');
+			$clean = bvmgr_staffing_normalize_role_required_qualification_rule($rule, isset($role_meta['qualification_check_mode']) ? (string) $role_meta['qualification_check_mode'] : 'warn');
 			if (!is_array($clean)) {
 				continue;
 			}
@@ -1081,10 +1081,10 @@ if (!function_exists('vms_staffing_get_role_required_qualification_rules')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_role_required_qualification_keys')) {
-	function vms_staffing_get_role_required_qualification_keys(int $role_id): array
+if (!function_exists('bvmgr_staffing_get_role_required_qualification_keys')) {
+	function bvmgr_staffing_get_role_required_qualification_keys(int $role_id): array
 	{
-		$rules = vms_staffing_get_role_required_qualification_rules($role_id);
+		$rules = bvmgr_staffing_get_role_required_qualification_rules($role_id);
 		$keys = array();
 		foreach ($rules as $rule) {
 			$key = sanitize_title((string) ($rule['name'] ?? ''));
@@ -1096,16 +1096,16 @@ if (!function_exists('vms_staffing_get_role_required_qualification_keys')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_qualification_check_for_role')) {
-	function vms_staffing_staff_qualification_check_for_role(int $staff_id, int $role_id): array
+if (!function_exists('bvmgr_staffing_staff_qualification_check_for_role')) {
+	function bvmgr_staffing_staff_qualification_check_for_role(int $staff_id, int $role_id): array
 	{
-		$rules = vms_staffing_get_role_required_qualification_rules($role_id);
-		$role_meta = vms_staffing_role_meta_get($role_id);
+		$rules = bvmgr_staffing_get_role_required_qualification_rules($role_id);
+		$role_meta = bvmgr_staffing_role_meta_get($role_id);
 		$fallback_mode = isset($role_meta['qualification_check_mode']) ? (string) $role_meta['qualification_check_mode'] : 'warn';
 		if (empty($rules)) {
 			return array(
 				'ok' => true,
-				'mode' => vms_staffing_normalize_qualification_mode($fallback_mode, 'warn'),
+				'mode' => bvmgr_staffing_normalize_qualification_mode($fallback_mode, 'warn'),
 				'missing' => array(),
 				'expired' => array(),
 				'required' => array(),
@@ -1113,7 +1113,7 @@ if (!function_exists('vms_staffing_staff_qualification_check_for_role')) {
 				'expired_details' => array(),
 			);
 		}
-		$qualifications = vms_staffing_get_staff_qualifications($staff_id);
+		$qualifications = bvmgr_staffing_get_staff_qualifications($staff_id);
 		$active = array();
 		$expired = array();
 		foreach ($qualifications as $qual) {
@@ -1138,8 +1138,8 @@ if (!function_exists('vms_staffing_staff_qualification_check_for_role')) {
 			if ($key === '' || isset($active[$key])) {
 				continue;
 			}
-			$mode = vms_staffing_normalize_qualification_mode((string) ($rule['mode'] ?? $fallback_mode), $fallback_mode);
-			if (vms_staffing_qualification_mode_rank($mode) > vms_staffing_qualification_mode_rank($effective_mode)) {
+			$mode = bvmgr_staffing_normalize_qualification_mode((string) ($rule['mode'] ?? $fallback_mode), $fallback_mode);
+			if (bvmgr_staffing_qualification_mode_rank($mode) > bvmgr_staffing_qualification_mode_rank($effective_mode)) {
 				$effective_mode = $mode;
 			}
 			$detail = array('name' => (string) ($rule['name'] ?? $key), 'mode' => $mode);
@@ -1154,7 +1154,7 @@ if (!function_exists('vms_staffing_staff_qualification_check_for_role')) {
 		$has_issues = !empty($missing) || !empty($expired_missing);
 		return array(
 			'ok' => !$has_issues,
-			'mode' => $has_issues ? $effective_mode : vms_staffing_normalize_qualification_mode($fallback_mode, 'warn'),
+			'mode' => $has_issues ? $effective_mode : bvmgr_staffing_normalize_qualification_mode($fallback_mode, 'warn'),
 			'missing' => array_values($missing),
 			'expired' => array_values($expired_missing),
 			'required' => array_values(array_map(static function (array $rule): string { return (string) ($rule['name'] ?? ''); }, $rules)),
@@ -1164,11 +1164,11 @@ if (!function_exists('vms_staffing_staff_qualification_check_for_role')) {
 	}
 }
 
-if (!function_exists('vms_staffing_staff_candidate_status_for_role')) {
-	function vms_staffing_staff_candidate_status_for_role(int $staff_id, int $role_id): array
+if (!function_exists('bvmgr_staffing_staff_candidate_status_for_role')) {
+	function bvmgr_staffing_staff_candidate_status_for_role(int $staff_id, int $role_id): array
 	{
-		$role_match = vms_staffing_staff_role_match_for_role($staff_id, $role_id);
-		$qualification = vms_staffing_staff_qualification_check_for_role($staff_id, $role_id);
+		$role_match = bvmgr_staffing_staff_role_match_for_role($staff_id, $role_id);
+		$qualification = bvmgr_staffing_staff_qualification_check_for_role($staff_id, $role_id);
 		$hard_blocked = !empty($role_match['ok']) && empty($qualification['ok']) && ((string) ($qualification['mode'] ?? '') === 'hard_block');
 
 		$ineligibility_reason = '';
@@ -1202,18 +1202,18 @@ if (!function_exists('vms_staffing_staff_candidate_status_for_role')) {
 	}
 }
 
-if (!function_exists('vms_staffing_now_mysql_utc')) {
-	function vms_staffing_now_mysql_utc(): string
+if (!function_exists('bvmgr_staffing_now_mysql_utc')) {
+	function bvmgr_staffing_now_mysql_utc(): string
 	{
 		return current_time('mysql', true);
 	}
 }
 
-if (!function_exists('vms_staffing_audit_log')) {
-	function vms_staffing_audit_log(string $action, ?int $event_plan_id = null, array $before = array(), array $after = array(), ?int $actor_user_id = null): void
+if (!function_exists('bvmgr_staffing_audit_log')) {
+	function bvmgr_staffing_audit_log(string $action, ?int $event_plan_id = null, array $before = array(), array $after = array(), ?int $actor_user_id = null): void
 	{
 		global $wpdb;
-		$table = vms_staffing_table_name('audit');
+		$table = bvmgr_staffing_table_name('audit');
 		if ($table === '') {
 			return;
 		}
@@ -1237,18 +1237,18 @@ if (!function_exists('vms_staffing_audit_log')) {
 				'action'        => $action,
 				'before_json'   => !empty($before) ? wp_json_encode($before) : null,
 				'after_json'    => !empty($after) ? wp_json_encode($after) : null,
-				'created_at'    => vms_staffing_now_mysql_utc(),
+				'created_at'    => bvmgr_staffing_now_mysql_utc(),
 			),
 			array('%d', '%d', '%s', '%s', '%s', '%s')
 		);
 	}
 }
 
-if (!function_exists('vms_staffing_get_templates')) {
-	function vms_staffing_get_templates(array $filters = array()): array
+if (!function_exists('bvmgr_staffing_get_templates')) {
+	function bvmgr_staffing_get_templates(array $filters = array()): array
 	{
 		global $wpdb;
-		$t = vms_staffing_table_name('templates');
+		$t = bvmgr_staffing_table_name('templates');
 		if ($t === '') return array();
 
 		$is_active_filter = array_key_exists('is_active', $filters) ? (!empty($filters['is_active']) ? 1 : 0) : -1;
@@ -1270,59 +1270,59 @@ if (!function_exists('vms_staffing_get_templates')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_template')) {
-	function vms_staffing_get_template(int $template_id): ?array
+if (!function_exists('bvmgr_staffing_get_template')) {
+	function bvmgr_staffing_get_template(int $template_id): ?array
 	{
 		global $wpdb;
 		$template_id = absint($template_id);
 		if ($template_id <= 0) return null;
 
-		$t = vms_staffing_table_name('templates');
+		$t = bvmgr_staffing_table_name('templates');
 		if ($t === '') return null;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template reads target a custom repository table with %i/%d-prepared identifiers and IDs, and template edits must remain immediately visible without a persistent cache layer.
 		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE template_id = %d', $t, $template_id), ARRAY_A);
 		if (!is_array($row)) return null;
 
-		$row['slots'] = vms_staffing_get_template_slots($template_id);
+		$row['slots'] = bvmgr_staffing_get_template_slots($template_id);
 		return $row;
 	}
 }
 
-if (!function_exists('vms_staffing_delete_template')) {
-	function vms_staffing_delete_template(int $template_id, ?int $actor_user_id = null): bool
+if (!function_exists('bvmgr_staffing_delete_template')) {
+	function bvmgr_staffing_delete_template(int $template_id, ?int $actor_user_id = null): bool
 	{
 		global $wpdb;
 		$template_id = absint($template_id);
 		if ($template_id <= 0) return false;
 
-		$t_tpl = vms_staffing_table_name('templates');
-		$t_slot = vms_staffing_table_name('template_slots');
+		$t_tpl = bvmgr_staffing_table_name('templates');
+		$t_slot = bvmgr_staffing_table_name('template_slots');
 		if ($t_tpl === '' || $t_slot === '') return false;
 
 		$actor_user_id = $actor_user_id !== null ? absint($actor_user_id) : absint(get_current_user_id());
-		$before = vms_staffing_get_template($template_id);
+		$before = bvmgr_staffing_get_template($template_id);
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template deletion clears custom child rows directly before deleting the parent repository row, and no persistent cache contract safely spans this mutation pair.
 		$wpdb->delete($t_slot, array('template_id' => $template_id), array('%d'));
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template deletion removes the plugin-owned parent repository row directly; no core API preserves this two-step cascade behavior.
 		$deleted = $wpdb->delete($t_tpl, array('template_id' => $template_id), array('%d'));
 		if ($deleted) {
-			vms_staffing_audit_log('template_delete', null, is_array($before) ? $before : array(), array('template_id' => $template_id), $actor_user_id);
+			bvmgr_staffing_audit_log('template_delete', null, is_array($before) ? $before : array(), array('template_id' => $template_id), $actor_user_id);
 			return true;
 		}
 		return false;
 	}
 }
 
-if (!function_exists('vms_staffing_get_template_slots')) {
-	function vms_staffing_get_template_slots(int $template_id): array
+if (!function_exists('bvmgr_staffing_get_template_slots')) {
+	function bvmgr_staffing_get_template_slots(int $template_id): array
 	{
 		global $wpdb;
 		$template_id = absint($template_id);
 		if ($template_id <= 0) return array();
 
-		$t = vms_staffing_table_name('template_slots');
+		$t = bvmgr_staffing_table_name('template_slots');
 		if ($t === '') return array();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template-slot reads target a custom repository table with %i/%d-prepared identifiers, and template edits must remain immediately visible without a persistent cache layer.
@@ -1334,8 +1334,8 @@ if (!function_exists('vms_staffing_get_template_slots')) {
 	}
 }
 
-if (!function_exists('vms_staffing_template_normalize_slot_row')) {
-	function vms_staffing_template_normalize_slot_row(array $row): ?array
+if (!function_exists('bvmgr_staffing_template_normalize_slot_row')) {
+	function bvmgr_staffing_template_normalize_slot_row(array $row): ?array
 	{
 		$role_id = isset($row['role_id']) ? absint($row['role_id']) : 0;
 		if ($role_id <= 0) return null;
@@ -1400,21 +1400,21 @@ if (!function_exists('vms_staffing_template_normalize_slot_row')) {
 	}
 }
 
-if (!function_exists('vms_staffing_save_template')) {
-	function vms_staffing_save_template(array $payload, ?int $actor_user_id = null): array
+if (!function_exists('bvmgr_staffing_save_template')) {
+	function bvmgr_staffing_save_template(array $payload, ?int $actor_user_id = null): array
 	{
 		global $wpdb;
 
 		$actor_user_id = $actor_user_id !== null ? absint($actor_user_id) : absint(get_current_user_id());
-		$t_tpl = vms_staffing_table_name('templates');
-		$t_slot = vms_staffing_table_name('template_slots');
+		$t_tpl = bvmgr_staffing_table_name('templates');
+		$t_slot = bvmgr_staffing_table_name('template_slots');
 		if ($t_tpl === '' || $t_slot === '') {
 			return array('ok' => false, 'error' => 'missing_tables');
 		}
-		if (!vms_staffing_ensure_template_attendance_band_schema()) {
+		if (!bvmgr_staffing_ensure_template_attendance_band_schema()) {
 			return array('ok' => false, 'error' => 'template_schema_missing');
 		}
-		if (!vms_staffing_ensure_template_slot_activation_schema()) {
+		if (!bvmgr_staffing_ensure_template_slot_activation_schema()) {
 			return array('ok' => false, 'error' => 'template_slot_schema_missing');
 		}
 
@@ -1453,11 +1453,11 @@ if (!function_exists('vms_staffing_save_template')) {
 		$slots = array();
 		foreach ($slots_in as $row) {
 			if (!is_array($row)) continue;
-			$n = vms_staffing_template_normalize_slot_row($row);
+			$n = bvmgr_staffing_template_normalize_slot_row($row);
 			if (is_array($n)) $slots[] = $n;
 		}
 
-		$now = vms_staffing_now_mysql_utc();
+		$now = bvmgr_staffing_now_mysql_utc();
 		if ($template_id > 0) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staffing template updates mutate a custom repository row through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
 			$wpdb->update(
@@ -1540,14 +1540,14 @@ if (!function_exists('vms_staffing_save_template')) {
 			);
 		}
 
-		vms_staffing_audit_log('template_save', null, array(), array('template_id' => $template_id, 'name' => $name, 'slot_count' => count($slots)), $actor_user_id);
+		bvmgr_staffing_audit_log('template_save', null, array(), array('template_id' => $template_id, 'name' => $name, 'slot_count' => count($slots)), $actor_user_id);
 
 		return array('ok' => true, 'template_id' => $template_id, 'slot_count' => count($slots));
 	}
 }
 
-if (!function_exists('vms_staffing_pick_template_for_event')) {
-	function vms_staffing_pick_template_for_event(int $venue_id, string $event_date_ymd, string $event_type = '', ?int $headcount = null): ?array
+if (!function_exists('bvmgr_staffing_pick_template_for_event')) {
+	function bvmgr_staffing_pick_template_for_event(int $venue_id, string $event_date_ymd, string $event_type = '', ?int $headcount = null): ?array
 	{
 		$venue_id = absint($venue_id);
 		$event_date_ymd = trim($event_date_ymd);
@@ -1558,7 +1558,7 @@ if (!function_exists('vms_staffing_pick_template_for_event')) {
 		$event_type = sanitize_key($event_type);
 		$headcount = $headcount !== null ? max(0, (int) $headcount) : null;
 		$dow = (int) wp_date('w', strtotime($event_date_ymd . ' 12:00:00'), wp_timezone());
-		$templates = vms_staffing_get_templates(array('is_active' => 1, 'auto_apply' => 1));
+		$templates = bvmgr_staffing_get_templates(array('is_active' => 1, 'auto_apply' => 1));
 		if (empty($templates)) {
 			return null;
 		}
@@ -1624,26 +1624,26 @@ if (!function_exists('vms_staffing_pick_template_for_event')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_applied_template_meta_key')) {
-	function vms_staffing_get_applied_template_meta_key(): string
+if (!function_exists('bvmgr_staffing_get_applied_template_meta_key')) {
+	function bvmgr_staffing_get_applied_template_meta_key(): string
 	{
 		return '_vms_staffing_template_applied';
 	}
 }
 
-if (!function_exists('vms_staffing_get_event_applied_template_id')) {
-	function vms_staffing_get_event_applied_template_id(int $event_plan_id): int
+if (!function_exists('bvmgr_staffing_get_event_applied_template_id')) {
+	function bvmgr_staffing_get_event_applied_template_id(int $event_plan_id): int
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return 0;
 		}
-		return absint(get_post_meta($event_plan_id, vms_staffing_get_applied_template_meta_key(), true));
+		return absint(get_post_meta($event_plan_id, bvmgr_staffing_get_applied_template_meta_key(), true));
 	}
 }
 
-if (!function_exists('vms_staffing_set_event_applied_template_id')) {
-	function vms_staffing_set_event_applied_template_id(int $event_plan_id, int $template_id, string $mode = 'auto'): void
+if (!function_exists('bvmgr_staffing_set_event_applied_template_id')) {
+	function bvmgr_staffing_set_event_applied_template_id(int $event_plan_id, int $template_id, string $mode = 'auto'): void
 	{
 		$event_plan_id = absint($event_plan_id);
 		$template_id = absint($template_id);
@@ -1651,17 +1651,17 @@ if (!function_exists('vms_staffing_set_event_applied_template_id')) {
 			return;
 		}
 		if ($template_id <= 0) {
-			delete_post_meta($event_plan_id, vms_staffing_get_applied_template_meta_key());
+			delete_post_meta($event_plan_id, bvmgr_staffing_get_applied_template_meta_key());
 			delete_post_meta($event_plan_id, '_vms_staffing_template_applied_mode');
 			return;
 		}
-		update_post_meta($event_plan_id, vms_staffing_get_applied_template_meta_key(), $template_id);
+		update_post_meta($event_plan_id, bvmgr_staffing_get_applied_template_meta_key(), $template_id);
 		update_post_meta($event_plan_id, '_vms_staffing_template_applied_mode', sanitize_key($mode));
 	}
 }
 
-if (!function_exists('vms_staffing_get_recommended_template_for_event_plan')) {
-	function vms_staffing_get_recommended_template_for_event_plan(int $event_plan_id): ?array
+if (!function_exists('bvmgr_staffing_get_recommended_template_for_event_plan')) {
+	function bvmgr_staffing_get_recommended_template_for_event_plan(int $event_plan_id): ?array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -1669,18 +1669,18 @@ if (!function_exists('vms_staffing_get_recommended_template_for_event_plan')) {
 		}
 		$venue_id = absint(get_post_meta($event_plan_id, '_vms_venue_id', true));
 		$event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
-		$event_type = vms_staffing_pick_template_event_type($event_plan_id);
-		$headcount_ctx = vms_staffing_get_event_plan_headcount_context($event_plan_id);
+		$event_type = bvmgr_staffing_pick_template_event_type($event_plan_id);
+		$headcount_ctx = bvmgr_staffing_get_event_plan_headcount_context($event_plan_id);
 		$headcount = isset($headcount_ctx['headcount']) ? max(0, (int) $headcount_ctx['headcount']) : 0;
 		if ($venue_id <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date)) {
 			return null;
 		}
-		return vms_staffing_pick_template_for_event($venue_id, $event_date, $event_type, $headcount);
+		return bvmgr_staffing_pick_template_for_event($venue_id, $event_date, $event_type, $headcount);
 	}
 }
 
-if (!function_exists('vms_staffing_apply_template_to_event')) {
-	function vms_staffing_apply_template_to_event(int $event_plan_id, int $template_id, string $mode = 'merge_missing', ?int $actor_user_id = null): array
+if (!function_exists('bvmgr_staffing_apply_template_to_event')) {
+	function bvmgr_staffing_apply_template_to_event(int $event_plan_id, int $template_id, string $mode = 'merge_missing', ?int $actor_user_id = null): array
 	{
 		global $wpdb;
 		$event_plan_id = absint($event_plan_id);
@@ -1692,13 +1692,13 @@ if (!function_exists('vms_staffing_apply_template_to_event')) {
 		if ($event_plan_id <= 0 || $template_id <= 0) {
 			return array('ok' => false, 'error' => 'invalid_context');
 		}
-		$t_slot = vms_staffing_table_name('event_slots');
-		$t_asn = vms_staffing_table_name('assignments');
+		$t_slot = bvmgr_staffing_table_name('event_slots');
+		$t_asn = bvmgr_staffing_table_name('assignments');
 		if ($t_slot === '' || $t_asn === '') {
 			return array('ok' => false, 'error' => 'missing_table');
 		}
 		$actor_user_id = $actor_user_id !== null ? absint($actor_user_id) : absint(get_current_user_id());
-		$template = vms_staffing_get_template($template_id);
+		$template = bvmgr_staffing_get_template($template_id);
 		if (!is_array($template)) {
 			return array('ok' => false, 'error' => 'missing_template');
 		}
@@ -1715,8 +1715,8 @@ if (!function_exists('vms_staffing_apply_template_to_event')) {
 			}
 		}
 
-		$thresholds = function_exists('vms_staffing_get_event_role_activation_thresholds')
-			? vms_staffing_get_event_role_activation_thresholds($event_plan_id)
+		$thresholds = function_exists('bvmgr_staffing_get_event_role_activation_thresholds')
+			? bvmgr_staffing_get_event_role_activation_thresholds($event_plan_id)
 			: array();
 		if (!is_array($thresholds)) {
 			$thresholds = array();
@@ -1730,7 +1730,7 @@ if (!function_exists('vms_staffing_apply_template_to_event')) {
 				$wpdb->query($wpdb->prepare(
 					"UPDATE %i SET status = 'canceled', updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
 					$t_asn,
-					vms_staffing_now_mysql_utc(),
+					bvmgr_staffing_now_mysql_utc(),
 					$actor_user_id > 0 ? $actor_user_id : 0,
 					$slot_id
 				));
@@ -1741,7 +1741,7 @@ if (!function_exists('vms_staffing_apply_template_to_event')) {
 			$thresholds = array();
 		}
 
-		$now = vms_staffing_now_mysql_utc();
+		$now = bvmgr_staffing_now_mysql_utc();
 		$seeded = 0;
 		$skipped = 0;
 		foreach ($tpl_slots as $row) {
@@ -1788,20 +1788,20 @@ if (!function_exists('vms_staffing_apply_template_to_event')) {
 			$seeded++;
 		}
 
-		if (function_exists('vms_staffing_set_event_role_activation_thresholds')) {
-			vms_staffing_set_event_role_activation_thresholds($event_plan_id, $thresholds);
+		if (function_exists('bvmgr_staffing_set_event_role_activation_thresholds')) {
+			bvmgr_staffing_set_event_role_activation_thresholds($event_plan_id, $thresholds);
 		}
-		vms_staffing_set_event_applied_template_id($event_plan_id, $template_id, $mode === 'replace_all' ? 'manual_replace' : 'manual_merge');
-		vms_staffing_mark_rollup_dirty($event_plan_id, 'apply_template');
-		vms_staffing_compute_rollup($event_plan_id);
-		vms_staffing_audit_log('apply_template', $event_plan_id, array(), array('template_id' => $template_id, 'seeded' => $seeded, 'skipped' => $skipped, 'mode' => $mode), $actor_user_id);
+		bvmgr_staffing_set_event_applied_template_id($event_plan_id, $template_id, $mode === 'replace_all' ? 'manual_replace' : 'manual_merge');
+		bvmgr_staffing_mark_rollup_dirty($event_plan_id, 'apply_template');
+		bvmgr_staffing_compute_rollup($event_plan_id);
+		bvmgr_staffing_audit_log('apply_template', $event_plan_id, array(), array('template_id' => $template_id, 'seeded' => $seeded, 'skipped' => $skipped, 'mode' => $mode), $actor_user_id);
 
 		return array('ok' => true, 'template_id' => $template_id, 'seeded' => $seeded, 'skipped' => $skipped, 'mode' => $mode);
 	}
 }
 
-if (!function_exists('vms_staffing_event_plan_datetime')) {
-	function vms_staffing_event_plan_datetime(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_event_plan_datetime')) {
+	function bvmgr_staffing_event_plan_datetime(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$ymd = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
@@ -1830,11 +1830,11 @@ if (!function_exists('vms_staffing_event_plan_datetime')) {
 	}
 }
 
-if (!function_exists('vms_staffing_resolve_anchor_local')) {
-	function vms_staffing_resolve_anchor_local(int $event_plan_id, string $anchor_key): ?DateTimeImmutable
+if (!function_exists('bvmgr_staffing_resolve_anchor_local')) {
+	function bvmgr_staffing_resolve_anchor_local(int $event_plan_id, string $anchor_key): ?DateTimeImmutable
 	{
 		$anchor_key = sanitize_key($anchor_key);
-		$dt = vms_staffing_event_plan_datetime($event_plan_id);
+		$dt = bvmgr_staffing_event_plan_datetime($event_plan_id);
 
 		if ($anchor_key === 'event_start') {
 			return $dt['start_local'] instanceof DateTimeImmutable ? $dt['start_local'] : null;
@@ -1874,7 +1874,7 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 			$mode = 'absolute';
 		}
 
-		$dt = vms_staffing_event_plan_datetime($event_plan_id);
+		$dt = bvmgr_staffing_event_plan_datetime($event_plan_id);
 		$ymd = (string) $dt['event_date_ymd'];
 		$tz = wp_timezone();
 
@@ -1895,7 +1895,7 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 		} else {
 			$start_anchor_key = isset($slot['start_anchor_key']) ? sanitize_key((string) $slot['start_anchor_key']) : '';
 			$start_offset = isset($slot['start_offset_minutes']) ? (int) $slot['start_offset_minutes'] : 0;
-			$start_anchor = vms_staffing_resolve_anchor_local($event_plan_id, $start_anchor_key);
+			$start_anchor = bvmgr_staffing_resolve_anchor_local($event_plan_id, $start_anchor_key);
 			if (!$start_anchor instanceof DateTimeImmutable) {
 				$start_anchor = $dt['start_local'] instanceof DateTimeImmutable ? $dt['start_local'] : null;
 			}
@@ -1909,7 +1909,7 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 			if ($start_local instanceof DateTimeImmutable && $duration !== null && $duration > 0) {
 				$end_local = $start_local->modify('+' . $duration . ' minutes');
 			} else {
-				$end_anchor = vms_staffing_resolve_anchor_local($event_plan_id, $end_anchor_key);
+				$end_anchor = bvmgr_staffing_resolve_anchor_local($event_plan_id, $end_anchor_key);
 				if (!$end_anchor instanceof DateTimeImmutable && $dt['end_local'] instanceof DateTimeImmutable) {
 					$end_anchor = $dt['end_local'];
 				}
@@ -1951,15 +1951,15 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 	}
 }
 
-if (!function_exists('vms_staffing_sync_assignment_shift_timestamps_for_slot')) {
-	function vms_staffing_sync_assignment_shift_timestamps_for_slot(int $slot_id): void
+if (!function_exists('bvmgr_staffing_sync_assignment_shift_timestamps_for_slot')) {
+	function bvmgr_staffing_sync_assignment_shift_timestamps_for_slot(int $slot_id): void
 	{
 		global $wpdb;
 		$slot_id = absint($slot_id);
 		if ($slot_id <= 0) return;
 
-		$t_slot = vms_staffing_table_name('event_slots');
-		$t_asn = vms_staffing_table_name('assignments');
+		$t_slot = bvmgr_staffing_table_name('event_slots');
+		$t_asn = bvmgr_staffing_table_name('assignments');
 		if ($t_slot === '' || $t_asn === '') return;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Slot timestamp sync reads one custom repository row with %i/%d-prepared identifiers and IDs, and assignment updates must observe immediate slot edits.
@@ -1976,7 +1976,7 @@ if (!function_exists('vms_staffing_sync_assignment_shift_timestamps_for_slot')) 
 			$t_asn,
 			$start_ts !== null ? (string) (int) $start_ts : null,
 			$end_ts !== null ? (string) (int) $end_ts : null,
-			vms_staffing_now_mysql_utc(),
+			bvmgr_staffing_now_mysql_utc(),
 			absint(get_current_user_id()),
 			$slot_id
 		));
@@ -1990,8 +1990,8 @@ if (!function_exists('bvmgr_staffing_get_event_slots')) {
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) return array();
 
-		$t_slot = vms_staffing_table_name('event_slots');
-		$t_asn = vms_staffing_table_name('assignments');
+		$t_slot = bvmgr_staffing_table_name('event_slots');
+		$t_asn = bvmgr_staffing_table_name('assignments');
 		if ($t_slot === '' || $t_asn === '') return array();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Event-slot reads target a custom repository table with %i/%d-prepared identifiers and filters, and staffing/admin flows must observe request-fresh state after slot mutations.
@@ -2033,7 +2033,7 @@ if (!function_exists('bvmgr_staffing_get_event_slots')) {
 			}
 		}
 
-		$role_map = vms_staffing_role_map_by_id(true);
+		$role_map = bvmgr_staffing_role_map_by_id(true);
 		foreach ($slots as &$s) {
 			$sid = isset($s['slot_id']) ? absint($s['slot_id']) : 0;
 			$rid = isset($s['role_id']) ? absint($s['role_id']) : 0;
@@ -2047,8 +2047,8 @@ if (!function_exists('bvmgr_staffing_get_event_slots')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_event_assigned_staff_map')) {
-	function vms_staffing_get_event_assigned_staff_map(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_get_event_assigned_staff_map')) {
+	function bvmgr_staffing_get_event_assigned_staff_map(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -2108,8 +2108,8 @@ if (!function_exists('vms_staffing_get_event_assigned_staff_map')) {
 	}
 }
 
-if (!function_exists('vms_staffing_pick_template_event_type')) {
-	function vms_staffing_pick_template_event_type(int $event_plan_id): string
+if (!function_exists('bvmgr_staffing_pick_template_event_type')) {
+	function bvmgr_staffing_pick_template_event_type(int $event_plan_id): string
 	{
 		$event_type = (string) get_post_meta($event_plan_id, '_vms_event_type', true);
 		$event_type = sanitize_key($event_type);
@@ -2117,8 +2117,8 @@ if (!function_exists('vms_staffing_pick_template_event_type')) {
 	}
 }
 
-if (!function_exists('vms_staffing_seed_event_slots_from_template')) {
-	function vms_staffing_seed_event_slots_from_template(int $event_plan_id, bool $force = false, ?int $actor_user_id = null): array
+if (!function_exists('bvmgr_staffing_seed_event_slots_from_template')) {
+	function bvmgr_staffing_seed_event_slots_from_template(int $event_plan_id, bool $force = false, ?int $actor_user_id = null): array
 	{
 		global $wpdb;
 		$event_plan_id = absint($event_plan_id);
@@ -2126,7 +2126,7 @@ if (!function_exists('vms_staffing_seed_event_slots_from_template')) {
 			return array('ok' => false, 'error' => 'invalid_event_plan');
 		}
 
-		$t_slot = vms_staffing_table_name('event_slots');
+		$t_slot = bvmgr_staffing_table_name('event_slots');
 		if ($t_slot === '') {
 			return array('ok' => false, 'error' => 'missing_table');
 		}
@@ -2146,24 +2146,24 @@ if (!function_exists('vms_staffing_seed_event_slots_from_template')) {
 
 		$venue_id = absint(get_post_meta($event_plan_id, '_vms_venue_id', true));
 		$event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
-		$event_type = vms_staffing_pick_template_event_type($event_plan_id);
+		$event_type = bvmgr_staffing_pick_template_event_type($event_plan_id);
 
 		if ($venue_id <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date)) {
 			return array('ok' => true, 'seeded' => 0, 'template_id' => 0, 'skipped' => 'missing_context');
 		}
 
-		$template = vms_staffing_pick_template_for_event($venue_id, $event_date, $event_type, 0);
+		$template = bvmgr_staffing_pick_template_for_event($venue_id, $event_date, $event_type, 0);
 		if (!is_array($template) || empty($template['template_id'])) {
 			return array('ok' => true, 'seeded' => 0, 'template_id' => 0, 'skipped' => 'no_template');
 		}
 
 		$template_id = absint($template['template_id']);
-		$tpl_slots = vms_staffing_get_template_slots($template_id);
+		$tpl_slots = bvmgr_staffing_get_template_slots($template_id);
 		if (empty($tpl_slots)) {
 			return array('ok' => true, 'seeded' => 0, 'template_id' => $template_id, 'skipped' => 'template_empty');
 		}
 
-		$now = vms_staffing_now_mysql_utc();
+		$now = bvmgr_staffing_now_mysql_utc();
 		$seeded = 0;
 		foreach ($tpl_slots as $row) {
 			if (!is_array($row)) continue;
@@ -2202,17 +2202,17 @@ if (!function_exists('vms_staffing_seed_event_slots_from_template')) {
 			$seeded++;
 		}
 
-		vms_staffing_set_event_applied_template_id($event_plan_id, $template_id, 'auto');
-		vms_staffing_mark_rollup_dirty($event_plan_id, 'seed_from_template');
-		vms_staffing_compute_rollup($event_plan_id);
-		vms_staffing_audit_log('seed_from_template', $event_plan_id, array(), array('template_id' => $template_id, 'seeded' => $seeded), $actor_user_id);
+		bvmgr_staffing_set_event_applied_template_id($event_plan_id, $template_id, 'auto');
+		bvmgr_staffing_mark_rollup_dirty($event_plan_id, 'seed_from_template');
+		bvmgr_staffing_compute_rollup($event_plan_id);
+		bvmgr_staffing_audit_log('seed_from_template', $event_plan_id, array(), array('template_id' => $template_id, 'seeded' => $seeded), $actor_user_id);
 
 		return array('ok' => true, 'seeded' => $seeded, 'template_id' => $template_id);
 	}
 }
 
-if (!function_exists('vms_staffing_build_legacy_staff_assignments_from_slots')) {
-	function vms_staffing_build_legacy_staff_assignments_from_slots(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_build_legacy_staff_assignments_from_slots')) {
+	function bvmgr_staffing_build_legacy_staff_assignments_from_slots(int $event_plan_id): array
 	{
 		$slots = bvmgr_staffing_get_event_slots($event_plan_id, false);
 		$legacy = array();
@@ -2237,8 +2237,8 @@ if (!function_exists('vms_staffing_build_legacy_staff_assignments_from_slots')) 
 	}
 }
 
-if (!function_exists('vms_staffing_role_activation_threshold_meta_key')) {
-	function vms_staffing_role_activation_threshold_meta_key(): string
+if (!function_exists('bvmgr_staffing_role_activation_threshold_meta_key')) {
+	function bvmgr_staffing_role_activation_threshold_meta_key(): string
 	{
 		if (function_exists('bvmgr_meta_key')) {
 			$key = (string) bvmgr_meta_key('event_plan', 'staff_role_activation_thresholds');
@@ -2250,8 +2250,8 @@ if (!function_exists('vms_staffing_role_activation_threshold_meta_key')) {
 	}
 }
 
-if (!function_exists('vms_staffing_normalize_role_activation_thresholds')) {
-	function vms_staffing_normalize_role_activation_thresholds(array $raw): array
+if (!function_exists('bvmgr_staffing_normalize_role_activation_thresholds')) {
+	function bvmgr_staffing_normalize_role_activation_thresholds(array $raw): array
 	{
 		$out = array();
 		foreach ($raw as $role_id => $threshold) {
@@ -2266,44 +2266,44 @@ if (!function_exists('vms_staffing_normalize_role_activation_thresholds')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_event_role_activation_thresholds')) {
-	function vms_staffing_get_event_role_activation_thresholds(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_get_event_role_activation_thresholds')) {
+	function bvmgr_staffing_get_event_role_activation_thresholds(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return array();
 		}
 
-		$raw = get_post_meta($event_plan_id, vms_staffing_role_activation_threshold_meta_key(), true);
+		$raw = get_post_meta($event_plan_id, bvmgr_staffing_role_activation_threshold_meta_key(), true);
 		if (!is_array($raw)) {
 			return array();
 		}
 
-		return vms_staffing_normalize_role_activation_thresholds($raw);
+		return bvmgr_staffing_normalize_role_activation_thresholds($raw);
 	}
 }
 
-if (!function_exists('vms_staffing_set_event_role_activation_thresholds')) {
-	function vms_staffing_set_event_role_activation_thresholds(int $event_plan_id, array $thresholds): void
+if (!function_exists('bvmgr_staffing_set_event_role_activation_thresholds')) {
+	function bvmgr_staffing_set_event_role_activation_thresholds(int $event_plan_id, array $thresholds): void
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return;
 		}
 
-		$clean = vms_staffing_normalize_role_activation_thresholds($thresholds);
+		$clean = bvmgr_staffing_normalize_role_activation_thresholds($thresholds);
 		if (empty($clean)) {
-			delete_post_meta($event_plan_id, vms_staffing_role_activation_threshold_meta_key());
+			delete_post_meta($event_plan_id, bvmgr_staffing_role_activation_threshold_meta_key());
 			return;
 		}
 
-		update_post_meta($event_plan_id, vms_staffing_role_activation_threshold_meta_key(), $clean);
+		update_post_meta($event_plan_id, bvmgr_staffing_role_activation_threshold_meta_key(), $clean);
 	}
 }
 
 
-if (!function_exists('vms_staffing_extract_ticket_qty')) {
-	function vms_staffing_extract_ticket_qty(array $stats): array
+if (!function_exists('bvmgr_staffing_extract_ticket_qty')) {
+	function bvmgr_staffing_extract_ticket_qty(array $stats): array
 	{
 		$qty = 0;
 		$resolved = false;
@@ -2322,8 +2322,8 @@ if (!function_exists('vms_staffing_extract_ticket_qty')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
-	function vms_staffing_get_event_plan_ticket_product_ids(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_get_event_plan_ticket_product_ids')) {
+	function bvmgr_staffing_get_event_plan_ticket_product_ids(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -2383,8 +2383,8 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_paid_ticket_product_ids')) {
-	function vms_staffing_get_paid_ticket_product_ids(array $product_ids): array
+if (!function_exists('bvmgr_staffing_get_paid_ticket_product_ids')) {
+	function bvmgr_staffing_get_paid_ticket_product_ids(array $product_ids): array
 	{
 		$product_ids = array_values(array_unique(array_filter(array_map('absint', $product_ids))));
 		if (empty($product_ids)) {
@@ -2409,8 +2409,8 @@ if (!function_exists('vms_staffing_get_paid_ticket_product_ids')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_event_plan_ticket_sales_snapshot')) {
-	function vms_staffing_get_event_plan_ticket_sales_snapshot(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_get_event_plan_ticket_sales_snapshot')) {
+	function bvmgr_staffing_get_event_plan_ticket_sales_snapshot(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$snapshot = array(
@@ -2424,7 +2424,7 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_sales_snapshot')) {
 
 		if (function_exists('bvmgr_vendor_portal_get_ticket_sales_snapshot')) {
 			$raw = (array) bvmgr_vendor_portal_get_ticket_sales_snapshot($event_plan_id);
-			$qty_meta = vms_staffing_extract_ticket_qty($raw);
+			$qty_meta = bvmgr_staffing_extract_ticket_qty($raw);
 			$resolved = !empty($qty_meta['resolved']) || !empty($raw['ticket_product_ids']) || !empty($raw['all_ticket_product_ids']);
 			return array(
 				'resolved' => (bool) $resolved,
@@ -2433,10 +2433,10 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_sales_snapshot')) {
 			);
 		}
 
-		$product_ids = vms_staffing_get_paid_ticket_product_ids(vms_staffing_get_event_plan_ticket_product_ids($event_plan_id));
+		$product_ids = bvmgr_staffing_get_paid_ticket_product_ids(bvmgr_staffing_get_event_plan_ticket_product_ids($event_plan_id));
 		if (!empty($product_ids) && function_exists('bvmgr_ticketing_compute_stats')) {
 			$live = (array) bvmgr_ticketing_compute_stats($product_ids);
-			$qty_meta = vms_staffing_extract_ticket_qty($live);
+			$qty_meta = bvmgr_staffing_extract_ticket_qty($live);
 			return array(
 				'resolved' => true,
 				'qty' => max(0, (int) ($qty_meta['qty'] ?? 0)),
@@ -2452,7 +2452,7 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_sales_snapshot')) {
 		if (!is_array($raw)) {
 			$raw = array();
 		}
-		$qty_meta = vms_staffing_extract_ticket_qty($raw);
+		$qty_meta = bvmgr_staffing_extract_ticket_qty($raw);
 		if (!empty($qty_meta['resolved'])) {
 			$snapshot['resolved'] = true;
 			$snapshot['qty'] = max(0, (int) ($qty_meta['qty'] ?? 0));
@@ -2463,8 +2463,8 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_sales_snapshot')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_event_plan_headcount_context')) {
-	function vms_staffing_get_event_plan_headcount_context(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_get_event_plan_headcount_context')) {
+	function bvmgr_staffing_get_event_plan_headcount_context(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$context = array(
@@ -2477,7 +2477,7 @@ if (!function_exists('vms_staffing_get_event_plan_headcount_context')) {
 			return $context;
 		}
 
-		$ticket_snapshot = vms_staffing_get_event_plan_ticket_sales_snapshot($event_plan_id);
+		$ticket_snapshot = bvmgr_staffing_get_event_plan_ticket_sales_snapshot($event_plan_id);
 		$ticket_qty = max(0, (int) ($ticket_snapshot['qty'] ?? 0));
 		$ticket_resolved = !empty($ticket_snapshot['resolved']);
 
@@ -2530,16 +2530,16 @@ if (!function_exists('vms_staffing_get_event_plan_headcount_context')) {
 	}
 }
 
-if (!function_exists('vms_staffing_matrix_signature_time')) {
-	function vms_staffing_matrix_signature_time($value): ?string
+if (!function_exists('bvmgr_staffing_matrix_signature_time')) {
+	function bvmgr_staffing_matrix_signature_time($value): ?string
 	{
 		$value = trim((string) $value);
 		return preg_match('/^\d{2}:\d{2}$/', $value) ? $value : null;
 	}
 }
 
-if (!function_exists('vms_staffing_matrix_signature_anchor')) {
-	function vms_staffing_matrix_signature_anchor($value): ?string
+if (!function_exists('bvmgr_staffing_matrix_signature_anchor')) {
+	function bvmgr_staffing_matrix_signature_anchor($value): ?string
 	{
 		$value = sanitize_key((string) $value);
 		$allowed = array('event_start', 'event_end', 'a1', 'a2', 'a3', 'a4');
@@ -2547,8 +2547,8 @@ if (!function_exists('vms_staffing_matrix_signature_anchor')) {
 	}
 }
 
-if (!function_exists('vms_staffing_matrix_signature_rate')) {
-	function vms_staffing_matrix_signature_rate($value)
+if (!function_exists('bvmgr_staffing_matrix_signature_rate')) {
+	function bvmgr_staffing_matrix_signature_rate($value)
 	{
 		if ($value === null || $value === '') {
 			return null;
@@ -2557,8 +2557,8 @@ if (!function_exists('vms_staffing_matrix_signature_rate')) {
 	}
 }
 
-if (!function_exists('vms_staffing_matrix_signature_staff_ids')) {
-	function vms_staffing_matrix_signature_staff_ids(array $values): array
+if (!function_exists('bvmgr_staffing_matrix_signature_staff_ids')) {
+	function bvmgr_staffing_matrix_signature_staff_ids(array $values): array
 	{
 		$ids = array_values(array_unique(array_filter(array_map('absint', $values), function ($n) {
 			return $n > 0;
@@ -2568,8 +2568,8 @@ if (!function_exists('vms_staffing_matrix_signature_staff_ids')) {
 	}
 }
 
-if (!function_exists('vms_staffing_matrix_signature_entry')) {
-	function vms_staffing_matrix_signature_entry(
+if (!function_exists('bvmgr_staffing_matrix_signature_entry')) {
+	function bvmgr_staffing_matrix_signature_entry(
 		int $role_id,
 		array $meta,
 		int $headcount,
@@ -2588,16 +2588,16 @@ if (!function_exists('vms_staffing_matrix_signature_entry')) {
 	): array {
 		$role_id = absint($role_id);
 		$headcount = max(0, absint($headcount));
-		$staff_ids = vms_staffing_matrix_signature_staff_ids($staff_ids);
+		$staff_ids = bvmgr_staffing_matrix_signature_staff_ids($staff_ids);
 		$mode = sanitize_key($mode);
 		if (!in_array($mode, array('absolute', 'relative'), true)) {
 			$mode = 'absolute';
 		}
 
-		$shift_start = vms_staffing_matrix_signature_time($shift_start);
-		$shift_end = vms_staffing_matrix_signature_time($shift_end);
-		$start_anchor = vms_staffing_matrix_signature_anchor($start_anchor);
-		$end_anchor = vms_staffing_matrix_signature_anchor($end_anchor);
+		$shift_start = bvmgr_staffing_matrix_signature_time($shift_start);
+		$shift_end = bvmgr_staffing_matrix_signature_time($shift_end);
+		$start_anchor = bvmgr_staffing_matrix_signature_anchor($start_anchor);
+		$end_anchor = bvmgr_staffing_matrix_signature_anchor($end_anchor);
 		$start_offset = (int) $start_offset;
 		$end_offset = (int) $end_offset;
 		$duration = ($duration === null || $duration === '') ? null : max(0, (int) $duration);
@@ -2632,14 +2632,14 @@ if (!function_exists('vms_staffing_matrix_signature_entry')) {
 			'end_offset_minutes'   => $end_offset,
 			'duration_minutes'     => $duration,
 			'pay_type'             => $pay_type,
-			'pay_rate'             => vms_staffing_matrix_signature_rate($pay_rate),
+			'pay_rate'             => bvmgr_staffing_matrix_signature_rate($pay_rate),
 			'notes'                => $notes !== '' ? $notes : null,
 		);
 	}
 }
 
-if (!function_exists('vms_staffing_desired_event_roles_matrix_signature')) {
-	function vms_staffing_desired_event_roles_matrix_signature(
+if (!function_exists('bvmgr_staffing_desired_event_roles_matrix_signature')) {
+	function bvmgr_staffing_desired_event_roles_matrix_signature(
 		array $role_ids,
 		array $role_map,
 		array $headcounts,
@@ -2662,7 +2662,7 @@ if (!function_exists('vms_staffing_desired_event_roles_matrix_signature')) {
 			$meta = isset($role_map[$role_id]) && is_array($role_map[$role_id]) ? $role_map[$role_id] : array();
 			$headcount = isset($headcounts[$role_id]) ? max(0, absint($headcounts[$role_id])) : 0;
 			$raw_staff = isset($assignments[$role_id]) && is_array($assignments[$role_id]) ? $assignments[$role_id] : array();
-			$staff_ids = vms_staffing_matrix_signature_staff_ids($raw_staff);
+			$staff_ids = bvmgr_staffing_matrix_signature_staff_ids($raw_staff);
 			if ($headcount <= 0 && empty($staff_ids)) {
 				continue;
 			}
@@ -2671,7 +2671,7 @@ if (!function_exists('vms_staffing_desired_event_roles_matrix_signature')) {
 			$pay_rate = isset($meta['default_rate']) && $meta['default_rate'] !== null ? $meta['default_rate'] : null;
 			$notes = isset($meta['default_notes']) ? (string) $meta['default_notes'] : '';
 
-			$out[$role_id] = vms_staffing_matrix_signature_entry(
+			$out[$role_id] = bvmgr_staffing_matrix_signature_entry(
 				$role_id,
 				$meta,
 				$headcount,
@@ -2694,8 +2694,8 @@ if (!function_exists('vms_staffing_desired_event_roles_matrix_signature')) {
 	}
 }
 
-if (!function_exists('vms_staffing_current_event_roles_matrix_signature')) {
-	function vms_staffing_current_event_roles_matrix_signature(array $slots, array $role_ids): array
+if (!function_exists('bvmgr_staffing_current_event_roles_matrix_signature')) {
+	function bvmgr_staffing_current_event_roles_matrix_signature(array $slots, array $role_ids): array
 	{
 		$managed_role_ids = array();
 		foreach ($role_ids as $rid) {
@@ -2734,7 +2734,7 @@ if (!function_exists('vms_staffing_current_event_roles_matrix_signature')) {
 				}
 			}
 
-			$out[$role_id] = vms_staffing_matrix_signature_entry(
+			$out[$role_id] = bvmgr_staffing_matrix_signature_entry(
 				$role_id,
 				array(),
 				isset($slot['headcount_needed']) ? (int) $slot['headcount_needed'] : 0,
@@ -2757,8 +2757,8 @@ if (!function_exists('vms_staffing_current_event_roles_matrix_signature')) {
 	}
 }
 
-if (!function_exists('vms_staffing_event_context_meta_keys')) {
-	function vms_staffing_event_context_meta_keys(): array
+if (!function_exists('bvmgr_staffing_event_context_meta_keys')) {
+	function bvmgr_staffing_event_context_meta_keys(): array
 	{
 		return array(
 			'_vms_event_date',
@@ -2770,8 +2770,8 @@ if (!function_exists('vms_staffing_event_context_meta_keys')) {
 	}
 }
 
-if (!function_exists('vms_staffing_plan_save_request_state_get')) {
-	function vms_staffing_plan_save_request_state_get(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_plan_save_request_state_get')) {
+	function bvmgr_staffing_plan_save_request_state_get(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -2783,8 +2783,8 @@ if (!function_exists('vms_staffing_plan_save_request_state_get')) {
 	}
 }
 
-if (!function_exists('vms_staffing_plan_save_request_state_set')) {
-	function vms_staffing_plan_save_request_state_set(int $event_plan_id, array $state): void
+if (!function_exists('bvmgr_staffing_plan_save_request_state_set')) {
+	function bvmgr_staffing_plan_save_request_state_set(int $event_plan_id, array $state): void
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -2799,8 +2799,8 @@ if (!function_exists('vms_staffing_plan_save_request_state_set')) {
 	}
 }
 
-if (!function_exists('vms_staffing_plan_save_request_state_dirty_reason')) {
-	function vms_staffing_plan_save_request_state_dirty_reason(array $state): string
+if (!function_exists('bvmgr_staffing_plan_save_request_state_dirty_reason')) {
+	function bvmgr_staffing_plan_save_request_state_dirty_reason(array $state): string
 	{
 		$dirty_categories = isset($state['dirty_categories']) && is_array($state['dirty_categories'])
 			? array_values(array_unique(array_filter(array_map('sanitize_key', $state['dirty_categories']))))
@@ -2810,8 +2810,8 @@ if (!function_exists('vms_staffing_plan_save_request_state_dirty_reason')) {
 	}
 }
 
-if (!function_exists('vms_staffing_plan_save_context_dirty_keys')) {
-	function vms_staffing_plan_save_context_dirty_keys(): array
+if (!function_exists('bvmgr_staffing_plan_save_context_dirty_keys')) {
+	function bvmgr_staffing_plan_save_context_dirty_keys(): array
 	{
 		if (!function_exists('bvmgr_event_plan_save_profiler_active') || !bvmgr_event_plan_save_profiler_active() || !function_exists('bvmgr_event_plan_save_profiler_state')) {
 			return array();
@@ -2820,7 +2820,7 @@ if (!function_exists('vms_staffing_plan_save_context_dirty_keys')) {
 		$state = bvmgr_event_plan_save_profiler_state();
 		$meta_keys = is_array($state['meta_keys'] ?? null) ? $state['meta_keys'] : array();
 		$dirty = array();
-		foreach (vms_staffing_event_context_meta_keys() as $meta_key) {
+		foreach (bvmgr_staffing_event_context_meta_keys() as $meta_key) {
 			if (isset($meta_keys[$meta_key])) {
 				$dirty[] = sanitize_key((string) $meta_key);
 			}
@@ -2830,8 +2830,8 @@ if (!function_exists('vms_staffing_plan_save_context_dirty_keys')) {
 	}
 }
 
-if (!function_exists('vms_staffing_plan_save_dirty_categories_from_signatures')) {
-	function vms_staffing_plan_save_dirty_categories_from_signatures(array $current_signature, array $desired_signature): array
+if (!function_exists('bvmgr_staffing_plan_save_dirty_categories_from_signatures')) {
+	function bvmgr_staffing_plan_save_dirty_categories_from_signatures(array $current_signature, array $desired_signature): array
 	{
 		$dirty = array();
 		$role_ids = array_values(array_unique(array_merge(array_keys($current_signature), array_keys($desired_signature))));
@@ -2877,8 +2877,8 @@ if (!function_exists('vms_staffing_plan_save_dirty_categories_from_signatures'))
 	}
 }
 
-if (!function_exists('vms_staffing_assess_event_plan_save_request')) {
-	function vms_staffing_assess_event_plan_save_request(
+if (!function_exists('bvmgr_staffing_assess_event_plan_save_request')) {
+	function bvmgr_staffing_assess_event_plan_save_request(
 		int $event_plan_id,
 		array $headcounts,
 		array $assignments,
@@ -2900,7 +2900,7 @@ if (!function_exists('vms_staffing_assess_event_plan_save_request')) {
 			return array();
 		}
 
-		$role_map = vms_staffing_role_map_by_id(true);
+		$role_map = bvmgr_staffing_role_map_by_id(true);
 		$role_ids = array();
 		foreach (array_keys($headcounts) as $rid) $role_ids[] = absint($rid);
 		foreach (array_keys($assignments) as $rid) $role_ids[] = absint($rid);
@@ -2917,7 +2917,7 @@ if (!function_exists('vms_staffing_assess_event_plan_save_request')) {
 		})));
 
 		$before_slots = bvmgr_staffing_get_event_slots($event_plan_id, true);
-		$desired_signature = vms_staffing_desired_event_roles_matrix_signature(
+		$desired_signature = bvmgr_staffing_desired_event_roles_matrix_signature(
 			$role_ids,
 			$role_map,
 			$headcounts,
@@ -2931,18 +2931,18 @@ if (!function_exists('vms_staffing_assess_event_plan_save_request')) {
 			$end_offset_minutes,
 			$duration_minutes
 		);
-		$current_signature = vms_staffing_current_event_roles_matrix_signature($before_slots, $role_ids);
-		$current_thresholds = function_exists('vms_staffing_get_event_role_activation_thresholds')
-			? vms_staffing_get_event_role_activation_thresholds($event_plan_id)
+		$current_signature = bvmgr_staffing_current_event_roles_matrix_signature($before_slots, $role_ids);
+		$current_thresholds = function_exists('bvmgr_staffing_get_event_role_activation_thresholds')
+			? bvmgr_staffing_get_event_role_activation_thresholds($event_plan_id)
 			: array();
-		$desired_thresholds = function_exists('vms_staffing_normalize_role_activation_thresholds')
-			? vms_staffing_normalize_role_activation_thresholds($activation_thresholds)
+		$desired_thresholds = function_exists('bvmgr_staffing_normalize_role_activation_thresholds')
+			? bvmgr_staffing_normalize_role_activation_thresholds($activation_thresholds)
 			: array();
 
 		$matrix_dirty = (wp_json_encode($desired_signature) !== wp_json_encode($current_signature));
 		$thresholds_dirty = (wp_json_encode($desired_thresholds) !== wp_json_encode($current_thresholds));
 		$dirty_categories = $matrix_dirty
-			? vms_staffing_plan_save_dirty_categories_from_signatures($current_signature, $desired_signature)
+			? bvmgr_staffing_plan_save_dirty_categories_from_signatures($current_signature, $desired_signature)
 			: array();
 		if ($thresholds_dirty) {
 			$dirty_categories[] = 'staff_activation_threshold_changed';
@@ -2972,13 +2972,13 @@ if (!function_exists('vms_staffing_assess_event_plan_save_request')) {
 			'before_slots' => is_array($before_slots) ? $before_slots : array(),
 		);
 
-		vms_staffing_plan_save_request_state_set($event_plan_id, $state);
+		bvmgr_staffing_plan_save_request_state_set($event_plan_id, $state);
 		return $state;
 	}
 }
 
-if (!function_exists('vms_staffing_save_event_roles_matrix')) {
-	function vms_staffing_save_event_roles_matrix(
+if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
+	function bvmgr_staffing_save_event_roles_matrix(
 		int $event_plan_id,
 		array $headcounts,
 		array $assignments,
@@ -2999,14 +2999,14 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 			return array('ok' => false, 'error' => 'invalid_event_plan');
 		}
 
-		$t_slot = vms_staffing_table_name('event_slots');
-		$t_asn = vms_staffing_table_name('assignments');
+		$t_slot = bvmgr_staffing_table_name('event_slots');
+		$t_asn = bvmgr_staffing_table_name('assignments');
 		if ($t_slot === '' || $t_asn === '') {
 			return array('ok' => false, 'error' => 'missing_table');
 		}
 
 		$actor_user_id = $actor_user_id !== null ? absint($actor_user_id) : absint(get_current_user_id());
-		$role_map = vms_staffing_role_map_by_id(true);
+		$role_map = bvmgr_staffing_role_map_by_id(true);
 		$role_ids = array();
 
 		foreach (array_keys($headcounts) as $rid) $role_ids[] = absint($rid);
@@ -3028,7 +3028,7 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 			: bvmgr_staffing_get_event_slots($event_plan_id, true);
 		$desired_signature = is_array($precomputed_state['desired_signature'] ?? null)
 			? $precomputed_state['desired_signature']
-			: vms_staffing_desired_event_roles_matrix_signature(
+			: bvmgr_staffing_desired_event_roles_matrix_signature(
 				$role_ids,
 				$role_map,
 				$headcounts,
@@ -3044,7 +3044,7 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 			);
 		$current_signature = is_array($precomputed_state['current_signature'] ?? null)
 			? $precomputed_state['current_signature']
-			: vms_staffing_current_event_roles_matrix_signature($before, $role_ids);
+			: bvmgr_staffing_current_event_roles_matrix_signature($before, $role_ids);
 
 		if (wp_json_encode($desired_signature) === wp_json_encode($current_signature)) {
 			if (function_exists('bvmgr_event_plan_save_profiler_note_heavy_action')) {
@@ -3084,7 +3084,7 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 			}
 		}
 
-		$now = vms_staffing_now_mysql_utc();
+		$now = bvmgr_staffing_now_mysql_utc();
 		$slot_count = 0;
 		$assignment_count = 0;
 
@@ -3300,20 +3300,20 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 				}
 			}
 
-			vms_staffing_sync_assignment_shift_timestamps_for_slot($slot_id);
+			bvmgr_staffing_sync_assignment_shift_timestamps_for_slot($slot_id);
 		}
 
-		$legacy = vms_staffing_build_legacy_staff_assignments_from_slots($event_plan_id);
+		$legacy = bvmgr_staffing_build_legacy_staff_assignments_from_slots($event_plan_id);
 		if (!empty($legacy)) {
 			update_post_meta($event_plan_id, '_vms_staff_assignments', $legacy);
 		} else {
 			delete_post_meta($event_plan_id, '_vms_staff_assignments');
 		}
 
-		vms_staffing_mark_rollup_dirty($event_plan_id, 'event_staffing_saved');
-		$rollup = vms_staffing_compute_rollup($event_plan_id);
+		bvmgr_staffing_mark_rollup_dirty($event_plan_id, 'event_staffing_saved');
+		$rollup = bvmgr_staffing_compute_rollup($event_plan_id);
 		$after = bvmgr_staffing_get_event_slots($event_plan_id, true);
-		vms_staffing_audit_log('event_staffing_save', $event_plan_id, array('slots' => $before), array('slots' => $after), $actor_user_id);
+		bvmgr_staffing_audit_log('event_staffing_save', $event_plan_id, array('slots' => $before), array('slots' => $after), $actor_user_id);
 		do_action('vms_staffing_event_saved', $event_plan_id);
 
 		return array(
@@ -3325,14 +3325,14 @@ if (!function_exists('vms_staffing_save_event_roles_matrix')) {
 	}
 }
 
-if (!function_exists('vms_staffing_mark_rollup_dirty')) {
-	function vms_staffing_mark_rollup_dirty(int $event_plan_id, string $reason = ''): void
+if (!function_exists('bvmgr_staffing_mark_rollup_dirty')) {
+	function bvmgr_staffing_mark_rollup_dirty(int $event_plan_id, string $reason = ''): void
 	{
 		global $wpdb;
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) return;
 
-		$t = vms_staffing_table_name('rollups');
+		$t = bvmgr_staffing_table_name('rollups');
 		if ($t === '') return;
 
 		$venue_id = absint(get_post_meta($event_plan_id, '_vms_venue_id', true));
@@ -3340,7 +3340,7 @@ if (!function_exists('vms_staffing_mark_rollup_dirty')) {
 		$status = sanitize_key($status);
 		if ($status === '') $status = 'draft';
 
-		$dt = vms_staffing_event_plan_datetime($event_plan_id);
+		$dt = bvmgr_staffing_event_plan_datetime($event_plan_id);
 		$event_start_local = '';
 		if (isset($dt['start_local']) && $dt['start_local'] instanceof DateTimeImmutable) {
 			$event_start_local = $dt['start_local']->format('Y-m-d H:i:s');
@@ -3348,7 +3348,7 @@ if (!function_exists('vms_staffing_mark_rollup_dirty')) {
 		$dirty_reason = sanitize_text_field($reason);
 		if ($dirty_reason === '') $dirty_reason = 'manual';
 
-		$now = vms_staffing_now_mysql_utc();
+		$now = bvmgr_staffing_now_mysql_utc();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup dirty-flag writes update the plugin-owned rollups repository with a %i-prepared identifier so rebuild and dashboard flows observe immediate request-fresh state.
 		$wpdb->query($wpdb->prepare(
 			"INSERT INTO %i (event_plan_id, venue_id, event_status, event_start_local, dirty, dirty_reason, computed_at, calc_version)
@@ -3371,8 +3371,8 @@ if (!function_exists('vms_staffing_mark_rollup_dirty')) {
 	}
 }
 
-if (!function_exists('vms_staffing_estimate_slot_cost')) {
-	function vms_staffing_estimate_slot_cost(array $slot, array $role_meta, int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_estimate_slot_cost')) {
+	function bvmgr_staffing_estimate_slot_cost(array $slot, array $role_meta, int $event_plan_id): array
 	{
 		$pay_type = isset($slot['pay_type']) ? sanitize_key((string) $slot['pay_type']) : 'inherit_role';
 		$slot_rate = isset($slot['pay_rate']) && $slot['pay_rate'] !== null && $slot['pay_rate'] !== '' && is_numeric($slot['pay_rate'])
@@ -3419,8 +3419,8 @@ if (!function_exists('vms_staffing_estimate_slot_cost')) {
 	}
 }
 
-if (!function_exists('vms_staffing_compute_rollup')) {
-	function vms_staffing_compute_rollup(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_compute_rollup')) {
+	function bvmgr_staffing_compute_rollup(int $event_plan_id): array
 	{
 		global $wpdb;
 		$event_plan_id = absint($event_plan_id);
@@ -3428,9 +3428,9 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 			return array('ok' => false, 'error' => 'invalid_event_plan');
 		}
 
-		$t_slot = vms_staffing_table_name('event_slots');
-			$t_asn = vms_staffing_table_name('assignments');
-			$t_roll = vms_staffing_table_name('rollups');
+		$t_slot = bvmgr_staffing_table_name('event_slots');
+			$t_asn = bvmgr_staffing_table_name('assignments');
+			$t_roll = bvmgr_staffing_table_name('rollups');
 			if ($t_slot === '' || $t_asn === '' || $t_roll === '') {
 				return array('ok' => false, 'error' => 'missing_table');
 			}
@@ -3470,14 +3470,14 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 			}
 		}
 
-		$role_map = vms_staffing_role_map_by_id(true);
+		$role_map = bvmgr_staffing_role_map_by_id(true);
 		$event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
 		$venue_id = absint(get_post_meta($event_plan_id, '_vms_venue_id', true));
 		$status = function_exists('bvmgr_event_plan_get_status') ? (string) bvmgr_event_plan_get_status($event_plan_id, 'dashboard') : 'draft';
 		$status = sanitize_key($status);
 		if ($status === '') $status = 'draft';
 
-		$event_dt = vms_staffing_event_plan_datetime($event_plan_id);
+		$event_dt = bvmgr_staffing_event_plan_datetime($event_plan_id);
 		$event_start_local = isset($event_dt['start_local']) && $event_dt['start_local'] instanceof DateTimeImmutable
 			? $event_dt['start_local']->format('Y-m-d H:i:s')
 			: null;
@@ -3576,7 +3576,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 				}
 			}
 
-			$cost_row = vms_staffing_estimate_slot_cost($slot, $role_meta, $event_plan_id);
+			$cost_row = bvmgr_staffing_estimate_slot_cost($slot, $role_meta, $event_plan_id);
 			if (empty($cost_row['known'])) {
 				$cost_known = false;
 			} else {
@@ -3687,7 +3687,7 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 			'conflict_summary'          => $conflict_summary,
 			);
 			$calc_hash = md5(wp_json_encode($calc_data));
-			$computed_at = vms_staffing_now_mysql_utc();
+			$computed_at = bvmgr_staffing_now_mysql_utc();
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup recompute upserts the plugin-owned rollup repository directly with a %i-prepared identifier so dashboard and rebuild reads see the freshly computed state.
 			$wpdb->query($wpdb->prepare(
@@ -3768,13 +3768,13 @@ if (!function_exists('vms_staffing_compute_rollup')) {
 	}
 }
 
-if (!function_exists('vms_staffing_get_rollup')) {
-	function vms_staffing_get_rollup(int $event_plan_id): ?array
+if (!function_exists('bvmgr_staffing_get_rollup')) {
+	function bvmgr_staffing_get_rollup(int $event_plan_id): ?array
 	{
 			global $wpdb;
 			$event_plan_id = absint($event_plan_id);
 			if ($event_plan_id <= 0) return null;
-			$t = vms_staffing_table_name('rollups');
+			$t = bvmgr_staffing_table_name('rollups');
 			if ($t === '') return null;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Single rollup reads target the custom repository with a %i/%d-prepared identifier and event key, and admin/reporting flows must observe request-fresh state after rebuilds.
 			$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE event_plan_id = %d', $t, $event_plan_id), ARRAY_A);
@@ -3782,8 +3782,8 @@ if (!function_exists('vms_staffing_get_rollup')) {
 		}
 	}
 
-if (!function_exists('vms_staffing_dashboard_readiness_label')) {
-	function vms_staffing_dashboard_readiness_label(string $status): string
+if (!function_exists('bvmgr_staffing_dashboard_readiness_label')) {
+	function bvmgr_staffing_dashboard_readiness_label(string $status): string
 	{
 		$status = sanitize_key($status);
 		if ($status === 'ready') return __('Ready', 'backstage-venue-manager');
@@ -3793,8 +3793,8 @@ if (!function_exists('vms_staffing_dashboard_readiness_label')) {
 	}
 }
 
-if (!function_exists('vms_staffing_build_dashboard_response')) {
-	function vms_staffing_build_dashboard_response(array $args = array()): array
+if (!function_exists('bvmgr_staffing_build_dashboard_response')) {
+	function bvmgr_staffing_build_dashboard_response(array $args = array()): array
 	{
 		$n = isset($args['staffing_n']) ? absint($args['staffing_n']) : 10;
 		if (!in_array($n, array(5, 10, 20), true)) $n = 10;
@@ -3836,10 +3836,10 @@ if (!function_exists('vms_staffing_build_dashboard_response')) {
 				}
 			}
 
-			$roll = vms_staffing_get_rollup($plan_id);
+			$roll = bvmgr_staffing_get_rollup($plan_id);
 			if (!is_array($roll) || !empty($roll['dirty'])) {
-				vms_staffing_compute_rollup($plan_id);
-				$roll = vms_staffing_get_rollup($plan_id);
+				bvmgr_staffing_compute_rollup($plan_id);
+				$roll = bvmgr_staffing_get_rollup($plan_id);
 			}
 			if (!is_array($roll)) continue;
 
@@ -3867,7 +3867,7 @@ if (!function_exists('vms_staffing_build_dashboard_response')) {
 				'venue_id'                => $venue_id_int,
 				'venue_name'              => $venue_name,
 				'readiness_status'        => (string) ($roll['readiness_status'] ?? 'not_applicable'),
-				'readiness_label'         => vms_staffing_dashboard_readiness_label((string) ($roll['readiness_status'] ?? 'not_applicable')),
+				'readiness_label'         => bvmgr_staffing_dashboard_readiness_label((string) ($roll['readiness_status'] ?? 'not_applicable')),
 				'open_headcount_total'    => (int) ($roll['open_headcount_total'] ?? 0),
 				'red_flag_reason_mask'    => (int) ($roll['red_flag_reason_mask'] ?? 0),
 				'est_labor_cost_total'    => ($roll['est_labor_cost_total'] !== null && $roll['est_labor_cost_total'] !== '') ? (float) $roll['est_labor_cost_total'] : null,
@@ -3896,8 +3896,8 @@ if (!function_exists('vms_staffing_build_dashboard_response')) {
 	}
 }
 
-if (!function_exists('vms_staffing_collect_rebuild_plan_ids')) {
-	function vms_staffing_collect_rebuild_plan_ids(array $filters = array()): array
+if (!function_exists('bvmgr_staffing_collect_rebuild_plan_ids')) {
+	function bvmgr_staffing_collect_rebuild_plan_ids(array $filters = array()): array
 	{
 		$start = isset($filters['start_date']) ? (string) $filters['start_date'] : '';
 		$end = isset($filters['end_date']) ? (string) $filters['end_date'] : '';
@@ -3934,10 +3934,10 @@ if (!function_exists('vms_staffing_collect_rebuild_plan_ids')) {
 	}
 }
 
-if (!function_exists('vms_staffing_rebuild_rollups')) {
-	function vms_staffing_rebuild_rollups(array $filters = array(), bool $preview = false): array
+if (!function_exists('bvmgr_staffing_rebuild_rollups')) {
+	function bvmgr_staffing_rebuild_rollups(array $filters = array(), bool $preview = false): array
 	{
-		$plan_ids = vms_staffing_collect_rebuild_plan_ids($filters);
+		$plan_ids = bvmgr_staffing_collect_rebuild_plan_ids($filters);
 		$run_id = wp_generate_uuid4();
 		$result = array(
 			'run_id'        => $run_id,
@@ -3954,7 +3954,7 @@ if (!function_exists('vms_staffing_rebuild_rollups')) {
 		}
 
 		foreach ($plan_ids as $pid) {
-			$resp = vms_staffing_compute_rollup((int) $pid);
+			$resp = bvmgr_staffing_compute_rollup((int) $pid);
 			if (empty($resp['ok'])) {
 				$result['error_count']++;
 				$result['errors'][] = array(
@@ -3966,7 +3966,7 @@ if (!function_exists('vms_staffing_rebuild_rollups')) {
 			$result['rebuilt_count']++;
 		}
 
-		vms_staffing_audit_log(
+		bvmgr_staffing_audit_log(
 			'rollup_rebuild_run',
 			null,
 			array(),
@@ -3984,15 +3984,15 @@ if (!function_exists('vms_staffing_rebuild_rollups')) {
 	}
 }
 
-if (!function_exists('vms_staffing_seed_event_slots_queue_hook')) {
-	function vms_staffing_seed_event_slots_queue_hook(): string
+if (!function_exists('bvmgr_staffing_seed_event_slots_queue_hook')) {
+	function bvmgr_staffing_seed_event_slots_queue_hook(): string
 	{
 		return 'vms_staffing_seed_event_slots_queued';
 	}
 }
 
-if (!function_exists('vms_staffing_queue_seed_event_slots')) {
-	function vms_staffing_queue_seed_event_slots(int $event_plan_id, int $actor_user_id = 0, string $reason = 'event_plan_save'): void
+if (!function_exists('bvmgr_staffing_queue_seed_event_slots')) {
+	function bvmgr_staffing_queue_seed_event_slots(int $event_plan_id, int $actor_user_id = 0, string $reason = 'event_plan_save'): void
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0 || get_post_type($event_plan_id) !== 'vms_event_plan') {
@@ -4042,7 +4042,7 @@ if (!function_exists('vms_staffing_queue_seed_event_slots')) {
 			return;
 		}
 
-		$hook = vms_staffing_seed_event_slots_queue_hook();
+		$hook = bvmgr_staffing_seed_event_slots_queue_hook();
 		$args = array($event_plan_id);
 		$already_scheduled = (bool) wp_next_scheduled($hook, $args);
 		$already_locked = function_exists('bvmgr_event_plan_perf_job_has_lock')
@@ -4104,8 +4104,8 @@ if (!function_exists('vms_staffing_queue_seed_event_slots')) {
 	}
 }
 
-if (!function_exists('vms_staffing_run_queued_seed_event_slots')) {
-	function vms_staffing_run_queued_seed_event_slots(int $event_plan_id): void
+if (!function_exists('bvmgr_staffing_run_queued_seed_event_slots')) {
+	function bvmgr_staffing_run_queued_seed_event_slots(int $event_plan_id): void
 	{
 		$event_plan_id = absint($event_plan_id);
 		$trace = function_exists('bvmgr_event_plan_perf_span_start')
@@ -4172,7 +4172,7 @@ if (!function_exists('vms_staffing_run_queued_seed_event_slots')) {
 		$actor_user_id = absint(get_post_meta($event_plan_id, '_vms_staffing_seed_actor_user_id', true));
 		try {
 			update_post_meta($event_plan_id, '_vms_staffing_seed_queue_state', 'running');
-			vms_staffing_seed_event_slots_from_template($event_plan_id, false, $actor_user_id > 0 ? $actor_user_id : null);
+			bvmgr_staffing_seed_event_slots_from_template($event_plan_id, false, $actor_user_id > 0 ? $actor_user_id : null);
 			update_post_meta($event_plan_id, '_vms_staffing_seed_queue_state', 'complete');
 			update_post_meta($event_plan_id, '_vms_staffing_seed_completed_at', time());
 		} finally {
@@ -4185,7 +4185,7 @@ if (!function_exists('vms_staffing_run_queued_seed_event_slots')) {
 		}
 	}
 }
-add_action('vms_staffing_seed_event_slots_queued', 'vms_staffing_run_queued_seed_event_slots', 10, 1);
+add_action('vms_staffing_seed_event_slots_queued', 'bvmgr_staffing_run_queued_seed_event_slots', 10, 1);
 
 // Mark staffing rollup dirty when Event Plan saves actually touch staffing.
 add_action('save_post_vms_event_plan', function ($post_id, $post, $update) {
@@ -4241,12 +4241,12 @@ add_action('save_post_vms_event_plan', function ($post_id, $post, $update) {
 		}
 		return;
 	}
-	$request_state = function_exists('vms_staffing_plan_save_request_state_get')
-		? vms_staffing_plan_save_request_state_get($post_id)
+	$request_state = function_exists('bvmgr_staffing_plan_save_request_state_get')
+		? bvmgr_staffing_plan_save_request_state_get($post_id)
 		: array();
 	$request_state_has_matrix_change = !empty($request_state['matrix_dirty']);
-	$request_state_dirty_reason = function_exists('vms_staffing_plan_save_request_state_dirty_reason')
-		? vms_staffing_plan_save_request_state_dirty_reason($request_state)
+	$request_state_dirty_reason = function_exists('bvmgr_staffing_plan_save_request_state_dirty_reason')
+		? bvmgr_staffing_plan_save_request_state_dirty_reason($request_state)
 		: '';
 	if (!empty($request_state) && !$request_state_has_matrix_change) {
 		if (function_exists('bvmgr_event_plan_perf_log')) {
@@ -4310,7 +4310,7 @@ add_action('save_post_vms_event_plan', function ($post_id, $post, $update) {
 			)
 		);
 	}
-	vms_staffing_mark_rollup_dirty($post_id, 'event_plan_saved');
+	bvmgr_staffing_mark_rollup_dirty($post_id, 'event_plan_saved');
 	if (function_exists('bvmgr_event_plan_perf_span_finish')) {
 		bvmgr_event_plan_perf_span_finish('vms_staffing_rollup_dirty_on_save', $post_id, $trace, array('job_name' => 'staffing_rollup_dirty', 'dirty_reason' => $request_state_dirty_reason));
 	}
@@ -4375,15 +4375,15 @@ add_action('save_post_vms_event_plan', function ($post_id, $post, $update) {
 		}
 		return;
 	}
-	$request_state = function_exists('vms_staffing_plan_save_request_state_get')
-		? vms_staffing_plan_save_request_state_get($post_id)
+	$request_state = function_exists('bvmgr_staffing_plan_save_request_state_get')
+		? bvmgr_staffing_plan_save_request_state_get($post_id)
 		: array();
 	$request_state_has_matrix_change = !empty($request_state['matrix_dirty']);
-	$request_state_dirty_reason = function_exists('vms_staffing_plan_save_request_state_dirty_reason')
-		? vms_staffing_plan_save_request_state_dirty_reason($request_state)
+	$request_state_dirty_reason = function_exists('bvmgr_staffing_plan_save_request_state_dirty_reason')
+		? bvmgr_staffing_plan_save_request_state_dirty_reason($request_state)
 		: '';
-	$context_dirty_keys = function_exists('vms_staffing_plan_save_context_dirty_keys')
-		? vms_staffing_plan_save_context_dirty_keys()
+	$context_dirty_keys = function_exists('bvmgr_staffing_plan_save_context_dirty_keys')
+		? bvmgr_staffing_plan_save_context_dirty_keys()
 		: array();
 	$seed_dirty_reasons = array();
 	if ($request_state_has_matrix_change && $request_state_dirty_reason !== '') {
@@ -4428,7 +4428,7 @@ add_action('save_post_vms_event_plan', function ($post_id, $post, $update) {
 		}
 		return;
 	}
-	if (!function_exists('vms_staffing_seed_event_slots_from_template')) {
+	if (!function_exists('bvmgr_staffing_seed_event_slots_from_template')) {
 		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
 			bvmgr_event_plan_perf_span_finish('vms_staffing_seed_template_on_save', $post_id, $trace, array('job_name' => 'staffing_seed_template', 'skipped' => 1));
 		}
@@ -4470,7 +4470,7 @@ add_action('save_post_vms_event_plan', function ($post_id, $post, $update) {
 
 	$should_seed = ($request_state_has_matrix_change || !empty($context_dirty_keys));
 	if (!$should_seed && function_exists('bvmgr_event_plan_save_profiler_active') && bvmgr_event_plan_save_profiler_active() && function_exists('bvmgr_event_plan_save_profiler_module_touched') && function_exists('bvmgr_event_plan_save_profiler_meta_key_touched')) {
-		$context_keys = vms_staffing_event_context_meta_keys();
+		$context_keys = bvmgr_staffing_event_context_meta_keys();
 		$should_seed = bvmgr_event_plan_save_profiler_module_touched('staffing') || bvmgr_event_plan_save_profiler_meta_key_touched($context_keys);
 		if (!$should_seed) {
 			if (function_exists('bvmgr_event_plan_perf_log')) {
@@ -4518,8 +4518,8 @@ add_action('save_post_vms_event_plan', function ($post_id, $post, $update) {
 	if (function_exists('bvmgr_event_plan_save_profiler_note_heavy_action')) {
 		bvmgr_event_plan_save_profiler_note_heavy_action('staffing_seed_template', 'scheduled', $seed_dirty_reason !== '' ? $seed_dirty_reason : 'staffing_or_context_changed');
 	}
-	if (function_exists('vms_staffing_queue_seed_event_slots')) {
-		vms_staffing_queue_seed_event_slots($post_id, (int) get_current_user_id(), 'event_plan_save');
+	if (function_exists('bvmgr_staffing_queue_seed_event_slots')) {
+		bvmgr_staffing_queue_seed_event_slots($post_id, (int) get_current_user_id(), 'event_plan_save');
 	}
 	if (function_exists('bvmgr_event_plan_perf_span_finish')) {
 		bvmgr_event_plan_perf_span_finish('vms_staffing_seed_template_on_save', $post_id, $trace, array('job_name' => 'staffing_seed_template', 'dirty_reason' => $seed_dirty_reason));

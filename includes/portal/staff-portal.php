@@ -183,8 +183,8 @@ if (!function_exists('bvmgr_staff_portal_certification_status_badge')) {
     function bvmgr_staff_portal_certification_status_badge(string $status): string
     {
         $status = sanitize_key($status);
-        $label = function_exists('vms_staffing_staff_qualification_status_label')
-            ? (string) vms_staffing_staff_qualification_status_label($status)
+        $label = function_exists('bvmgr_staffing_staff_qualification_status_label')
+            ? (string) bvmgr_staffing_staff_qualification_status_label($status)
             : ucwords(str_replace('_', ' ', $status));
         $class = 'vms-badge';
         if ($status === 'active') {
@@ -212,7 +212,7 @@ if (!function_exists('bvmgr_staff_portal_handle_certification_submission')) {
             return bvmgr_staff_portal_notice_html('error', __('Could not verify the certification upload. Please refresh and try again.', 'backstage-venue-manager'));
         }
 
-        $name = vms_staffing_normalize_qualification_name(bvmgr_staff_portal_post_text_field('vms_certification_name'));
+        $name = bvmgr_staffing_normalize_qualification_name(bvmgr_staff_portal_post_text_field('vms_certification_name'));
         if ($name === '') {
             return bvmgr_staff_portal_notice_html('error', __('Please choose or enter the certification type before uploading.', 'backstage-venue-manager'));
         }
@@ -245,8 +245,8 @@ if (!function_exists('bvmgr_staff_portal_handle_certification_submission')) {
             'proof_url' => '',
         );
 
-        $result = function_exists('vms_staffing_add_staff_qualification_submission')
-            ? vms_staffing_add_staff_qualification_submission($staff_id, $row, get_current_user_id())
+        $result = function_exists('bvmgr_staffing_add_staff_qualification_submission')
+            ? bvmgr_staffing_add_staff_qualification_submission($staff_id, $row, get_current_user_id())
             : array('ok' => false, 'message' => __('Certification upload saved, but the qualification workflow is unavailable.', 'backstage-venue-manager'));
 
         if (empty($result['ok'])) {
@@ -269,8 +269,8 @@ if (!function_exists('bvmgr_staff_portal_render_certifications')) {
 
         echo wp_kses(bvmgr_staff_portal_safe_html(bvmgr_staff_portal_handle_certification_submission($staff_id)), bvmgr_staff_portal_safe_html_allowed_html());
 
-        $rows = function_exists('vms_staffing_get_staff_qualifications')
-            ? (array) vms_staffing_get_staff_qualifications($staff_id)
+        $rows = function_exists('bvmgr_staffing_get_staff_qualifications')
+            ? (array) bvmgr_staffing_get_staff_qualifications($staff_id)
             : array();
 
         $suggestions = array('TABC', 'Food Handler Permit', 'Security License', 'CPR / First Aid');
@@ -728,12 +728,12 @@ if (!function_exists('bvmgr_staff_portal_get_event_crew_rows')) {
 
         global $wpdb;
 
-        if (!function_exists('vms_staffing_table_name')) {
+        if (!function_exists('bvmgr_staffing_table_name')) {
             return array();
         }
 
-        $t_assignments = vms_staffing_table_name('assignments');
-        $t_slots = vms_staffing_table_name('event_slots');
+        $t_assignments = bvmgr_staffing_table_name('assignments');
+        $t_slots = bvmgr_staffing_table_name('event_slots');
         if ($t_assignments === '' || $t_slots === '') {
             return array();
         }
@@ -760,7 +760,7 @@ if (!function_exists('bvmgr_staff_portal_get_event_crew_rows')) {
             return $cache[$plan_id];
         }
 
-        $role_map = function_exists('vms_staffing_role_map_by_id') ? (array) vms_staffing_role_map_by_id(true) : array();
+        $role_map = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(true) : array();
         $rows = array();
 
         foreach ($raw_rows as $row) {
@@ -1195,12 +1195,12 @@ if (!function_exists('bvmgr_staff_portal_get_assignment_rows')) {
 
         $staff_id = absint($staff_id);
         $limit = max(1, (int) $limit);
-        if ($staff_id <= 0 || !function_exists('vms_staffing_table_name')) {
+        if ($staff_id <= 0 || !function_exists('bvmgr_staffing_table_name')) {
             return array();
         }
 
-        $t_assignments = vms_staffing_table_name('assignments');
-        $t_slots = vms_staffing_table_name('event_slots');
+        $t_assignments = bvmgr_staffing_table_name('assignments');
+        $t_slots = bvmgr_staffing_table_name('event_slots');
         if ($t_assignments === '' || $t_slots === '') {
             return array();
         }
@@ -1231,7 +1231,7 @@ if (!function_exists('bvmgr_staff_portal_get_assignment_rows')) {
         }
 
         $today = wp_date('Y-m-d', time(), wp_timezone());
-        $role_map = function_exists('vms_staffing_role_map_by_id') ? (array) vms_staffing_role_map_by_id(true) : array();
+        $role_map = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(true) : array();
         $plan_cache = array();
         $rows = array();
 
@@ -1748,7 +1748,7 @@ function bvmgr_staff_portal_shortcode()
         return '<p>' . esc_html__('Your linked staff profile could not be found. Please contact the admin.', 'backstage-venue-manager') . '</p>';
     }
 
-    $worker_type = function_exists('vms_staff_get_worker_type') ? (string) vms_staff_get_worker_type($staff_id) : '';
+    $worker_type = function_exists('bvmgr_staff_get_worker_type') ? (string) bvmgr_staff_get_worker_type($staff_id) : '';
     if ($worker_type === '') {
         $raw = (string) get_post_meta($staff_id, '_vms_staff_worker_type', true);
         $raw = sanitize_key($raw);

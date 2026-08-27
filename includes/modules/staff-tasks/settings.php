@@ -1,18 +1,18 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_tasks_settings_option_key')) {
-	function vms_tasks_settings_option_key(): string
+if (!function_exists('bvmgr_tasks_settings_option_key')) {
+	function bvmgr_tasks_settings_option_key(): string
 	{
 		return defined('BVMGR_OPT_TASKS_SETTINGS') ? (string) BVMGR_OPT_TASKS_SETTINGS : 'vms_tasks_settings_v1';
 	}
 }
 
-if (!function_exists('vms_tasks_settings_defaults')) {
+if (!function_exists('bvmgr_tasks_settings_defaults')) {
 	/**
 	 * @return array<string,mixed>
 	 */
-	function vms_tasks_settings_defaults(): array
+	function bvmgr_tasks_settings_defaults(): array
 	{
 		return array(
 			'horizon_days' => 60,
@@ -32,14 +32,14 @@ if (!function_exists('vms_tasks_settings_defaults')) {
 	}
 }
 
-if (!function_exists('vms_tasks_sanitize_settings')) {
+if (!function_exists('bvmgr_tasks_sanitize_settings')) {
 	/**
 	 * @param array<string,mixed> $input
 	 * @return array<string,mixed>
 	 */
-	function vms_tasks_sanitize_settings(array $input): array
+	function bvmgr_tasks_sanitize_settings(array $input): array
 	{
-		$defaults = vms_tasks_settings_defaults();
+		$defaults = bvmgr_tasks_settings_defaults();
 
 		$out = array();
 		$out['horizon_days'] = max(1, min(365, absint($input['horizon_days'] ?? $defaults['horizon_days'])));
@@ -68,31 +68,31 @@ if (!function_exists('vms_tasks_sanitize_settings')) {
 	}
 }
 
-if (!function_exists('vms_tasks_get_settings')) {
+if (!function_exists('bvmgr_tasks_get_settings')) {
 	/**
 	 * @return array<string,mixed>
 	 */
-	function vms_tasks_get_settings(): array
+	function bvmgr_tasks_get_settings(): array
 	{
-		$defaults = vms_tasks_settings_defaults();
-		$stored = get_option(vms_tasks_settings_option_key(), array());
+		$defaults = bvmgr_tasks_settings_defaults();
+		$stored = get_option(bvmgr_tasks_settings_option_key(), array());
 		if (!is_array($stored)) {
 			$stored = array();
 		}
 
-		return vms_tasks_sanitize_settings(array_merge($defaults, $stored));
+		return bvmgr_tasks_sanitize_settings(array_merge($defaults, $stored));
 	}
 }
 
-if (!function_exists('vms_tasks_update_settings')) {
+if (!function_exists('bvmgr_tasks_update_settings')) {
 	/**
 	 * @param array<string,mixed> $input
 	 * @return array<string,mixed>
 	 */
-	function vms_tasks_update_settings(array $input): array
+	function bvmgr_tasks_update_settings(array $input): array
 	{
-		$settings = vms_tasks_sanitize_settings($input);
-		update_option(vms_tasks_settings_option_key(), $settings, false);
+		$settings = bvmgr_tasks_sanitize_settings($input);
+		update_option(bvmgr_tasks_settings_option_key(), $settings, false);
 		return $settings;
 	}
 }

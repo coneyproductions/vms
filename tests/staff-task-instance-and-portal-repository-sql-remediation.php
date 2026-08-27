@@ -242,7 +242,7 @@ function get_current_user_id(): int
 	return 77;
 }
 
-function vms_tasks_table_name(string $name): string
+function bvmgr_tasks_table_name(string $name): string
 {
 	$map = array(
 		'task_instances' => 'wp_vms_task_instances',
@@ -251,34 +251,34 @@ function vms_tasks_table_name(string $name): string
 	return $map[$name] ?? '';
 }
 
-function vms_tasks_now_utc_mysql(): string
+function bvmgr_tasks_now_utc_mysql(): string
 {
 	return '2026-08-02 17:00:00';
 }
 
-function vms_tasks_now_local_mysql(): string
+function bvmgr_tasks_now_local_mysql(): string
 {
 	return '2026-08-02 12:00:00';
 }
 
-function vms_tasks_sanitize_status(string $status): string
+function bvmgr_tasks_sanitize_status(string $status): string
 {
 	return sanitize_key($status);
 }
 
-function vms_tasks_sanitize_recurrence_pattern(string $pattern): string
+function bvmgr_tasks_sanitize_recurrence_pattern(string $pattern): string
 {
 	return sanitize_key($pattern);
 }
 
-function vms_tasks_normalize_recurrence_every_n_days(string $pattern, $value): int
+function bvmgr_tasks_normalize_recurrence_every_n_days(string $pattern, $value): int
 {
 	unset($pattern);
 	$normalized = absint($value);
 	return $normalized > 0 ? $normalized : 1;
 }
 
-function vms_tasks_recurrence_next_due_local(string $due_at_local, string $pattern, int $every_n_days): ?string
+function bvmgr_tasks_recurrence_next_due_local(string $due_at_local, string $pattern, int $every_n_days): ?string
 {
 	unset($pattern, $every_n_days);
 	$dt = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $due_at_local);
@@ -289,17 +289,17 @@ function vms_tasks_recurrence_next_due_local(string $due_at_local, string $patte
 	return $dt->modify('+1 day')->format('Y-m-d H:i:s');
 }
 
-function vms_tasks_sanitize_priority(string $priority): string
+function bvmgr_tasks_sanitize_priority(string $priority): string
 {
 	return sanitize_key($priority);
 }
 
-function vms_tasks_sanitize_assignment_mode(string $mode): string
+function bvmgr_tasks_sanitize_assignment_mode(string $mode): string
 {
 	return sanitize_key($mode);
 }
 
-function vms_tasks_log_task_action(int $instance_id, string $action, ?int $actor_user_id, $payload): void
+function bvmgr_tasks_log_task_action(int $instance_id, string $action, ?int $actor_user_id, $payload): void
 {
 	$GLOBALS['vms_task_logs'][] = array(
 		'instance_id' => $instance_id,
@@ -309,7 +309,7 @@ function vms_tasks_log_task_action(int $instance_id, string $action, ?int $actor
 	);
 }
 
-function vms_tasks_emit_assignment_notification(array $instance): void
+function bvmgr_tasks_emit_assignment_notification(array $instance): void
 {
 	$GLOBALS['vms_assignment_notifications'][] = $instance;
 }
@@ -334,7 +334,7 @@ function get_post_meta(int $post_id, string $key, bool $single = true)
 	return $GLOBALS['vms_test_post_meta'][$post_id][$key] ?? '';
 }
 
-function vms_staffing_table_name(string $name): string
+function bvmgr_staffing_table_name(string $name): string
 {
 	$map = array(
 		'assignments' => 'wp_vms_assignments',
@@ -344,7 +344,7 @@ function vms_staffing_table_name(string $name): string
 	return $map[$name] ?? '';
 }
 
-function vms_staffing_role_map_by_id(bool $active_only = true): array
+function bvmgr_staffing_role_map_by_id(bool $active_only = true): array
 {
 	unset($active_only);
 	return array(
@@ -587,16 +587,16 @@ $live_store_source = (string) file_get_contents($live_store_path);
 $live_portal_source = (string) file_get_contents($live_portal_path);
 
 $store_targets = array(
-	'vms_tasks_get_instance',
-	'vms_tasks_get_instances',
-	'vms_tasks_count_instances',
-	'vms_tasks_insert_instance',
-	'vms_tasks_update_instance_assignment',
-	'vms_tasks_transition_instance_status',
-	'vms_tasks_spawn_next_recurrence_instance',
-	'vms_tasks_resolve_scheduled_role_user_id',
-	'vms_tasks_select_existing_open_instance',
-	'vms_tasks_supersede_open_instances',
+	'bvmgr_tasks_get_instance',
+	'bvmgr_tasks_get_instances',
+	'bvmgr_tasks_count_instances',
+	'bvmgr_tasks_insert_instance',
+	'bvmgr_tasks_update_instance_assignment',
+	'bvmgr_tasks_transition_instance_status',
+	'bvmgr_tasks_spawn_next_recurrence_instance',
+	'bvmgr_tasks_resolve_scheduled_role_user_id',
+	'bvmgr_tasks_select_existing_open_instance',
+	'bvmgr_tasks_supersede_open_instances',
 );
 $portal_targets = array(
 	'bvmgr_staff_portal_get_event_crew_rows',
@@ -615,9 +615,9 @@ try {
 		'Mirror and live staff-portal repository targets should remain byte-identical.'
 	);
 
-	$get_instances_source = vms_test_extract_function($store_source, 'vms_tasks_get_instances');
-	$count_instances_source = vms_test_extract_function($store_source, 'vms_tasks_count_instances');
-	$resolve_role_source = vms_test_extract_function($store_source, 'vms_tasks_resolve_scheduled_role_user_id');
+	$get_instances_source = vms_test_extract_function($store_source, 'bvmgr_tasks_get_instances');
+	$count_instances_source = vms_test_extract_function($store_source, 'bvmgr_tasks_count_instances');
+	$resolve_role_source = vms_test_extract_function($store_source, 'bvmgr_tasks_resolve_scheduled_role_user_id');
 	$crew_rows_source = vms_test_extract_function($portal_source, 'bvmgr_staff_portal_get_event_crew_rows');
 	$assignment_rows_source = vms_test_extract_function($portal_source, 'bvmgr_staff_portal_get_assignment_rows');
 
@@ -637,7 +637,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_row_queue[] = array('id' => 41, 'status' => 'open');
-	vms_test_assert_same(array('id' => 41, 'status' => 'open'), vms_tasks_get_instance(41), 'Single task-instance reads should return the row unchanged.');
+	vms_test_assert_same(array('id' => 41, 'status' => 'open'), bvmgr_tasks_get_instance(41), 'Single task-instance reads should return the row unchanged.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE id = %d LIMIT 1');
 	vms_test_assert_same(
 		array('wp_vms_task_instances', 41),
@@ -662,7 +662,7 @@ try {
 		'due_after' => '2026-08-10 10:00:00',
 		'limit' => 1500,
 	);
-	vms_test_assert_same(array(array('id' => 1)), vms_tasks_get_instances($list_filters), 'Task-instance list reads should return the queued row set unchanged.');
+	vms_test_assert_same(array(array('id' => 1)), bvmgr_tasks_get_instances($list_filters), 'Task-instance list reads should return the queued row set unchanged.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE (%d = 0 OR id = %d)');
 	vms_test_assert_same(
 		array(
@@ -706,7 +706,7 @@ try {
 		'role_key' => '!!!',
 		'required_only' => true,
 	);
-	vms_test_assert_same(4, vms_tasks_count_instances($count_filters), 'Task-instance count reads should return the queued count value.');
+	vms_test_assert_same(4, bvmgr_tasks_count_instances($count_filters), 'Task-instance count reads should return the queued count value.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT COUNT(*) FROM %i WHERE (%d = 0 OR id = %d)');
 	vms_test_assert_same(
 		array(
@@ -741,7 +741,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->insert_id = 913;
-	$inserted = vms_tasks_insert_instance(array(
+	$inserted = bvmgr_tasks_insert_instance(array(
 		'title' => 'Line Check',
 		'event_id' => 22,
 		'assignee_user_id' => 12,
@@ -756,7 +756,7 @@ try {
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_row_queue[] = array('id' => 33, 'assignee_user_id' => 45);
 	vms_test_assert_true(
-		vms_tasks_update_instance_assignment(33, 45, true, 88, 'role', 'Front_Desk'),
+		bvmgr_tasks_update_instance_assignment(33, 45, true, 88, 'role', 'Front_Desk'),
 		'Task-instance assignment updates should report success when wpdb::update() succeeds.'
 	);
 	$update_call = vms_test_last_call($wpdb, 'update');
@@ -767,7 +767,7 @@ try {
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_row_queue[] = array('id' => 44, 'status' => 'done');
 	vms_test_assert_true(
-		vms_tasks_transition_instance_status(44, 'open', '', 90),
+		bvmgr_tasks_transition_instance_status(44, 'open', '', 90),
 		'Task-instance status transitions should report success when wpdb::update() succeeds.'
 	);
 	$update_call = vms_test_last_call($wpdb, 'update');
@@ -799,7 +799,7 @@ try {
 	);
 	$wpdb->get_var_queue[] = 0;
 	$wpdb->get_row_queue[] = array('id' => 902, 'assignee_user_id' => 71);
-	vms_test_assert_same(902, vms_tasks_spawn_next_recurrence_instance(55, 91), 'Recurrence spawning should return the inserted task-instance ID when no successor exists.');
+	vms_test_assert_same(902, bvmgr_tasks_spawn_next_recurrence_instance(55, 91), 'Recurrence spawning should return the inserted task-instance ID when no successor exists.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT id FROM %i WHERE (id = %d OR recurrence_root_instance_id = %d)');
 	vms_test_assert_same(
 		array('wp_vms_task_instances', 55, 55, '2026-08-11 09:00:00', 'superseded'),
@@ -815,7 +815,7 @@ try {
 	$GLOBALS['vms_test_post_meta'][123]['_vms_linked_user_id'] = '';
 	vms_test_assert_same(
 		array('status' => 'single', 'assignee_user_id' => 88, 'staff_ids' => array(123)),
-		vms_tasks_resolve_scheduled_role_user_id(11, 'ops'),
+		bvmgr_tasks_resolve_scheduled_role_user_id(11, 'ops'),
 		'Scheduled-role resolution should return the linked user when exactly one staffed match exists.'
 	);
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT DISTINCT a.staff_id FROM %i s INNER JOIN %i a ON a.slot_id = s.slot_id');
@@ -833,7 +833,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_row_queue[] = array('id' => 1);
-	vms_test_assert_same(array('id' => 1), vms_tasks_select_existing_open_instance(20, 4, 6, null, true), 'Strict due-null selection should return the queued row.');
+	vms_test_assert_same(array('id' => 1), bvmgr_tasks_select_existing_open_instance(20, 4, 6, null, true), 'Strict due-null selection should return the queued row.');
 	$prepare = vms_test_find_prepare($wpdb, 'due_at_local IS NULL ORDER BY id DESC LIMIT 1');
 	vms_test_assert_same(
 		array('wp_vms_task_instances', 20, 4, 6, 'open'),
@@ -843,7 +843,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_row_queue[] = array('id' => 2);
-	vms_test_assert_same(array('id' => 2), vms_tasks_select_existing_open_instance(20, 4, 6, '2026-08-20 08:00:00', true), 'Strict due-match selection should return the queued row.');
+	vms_test_assert_same(array('id' => 2), bvmgr_tasks_select_existing_open_instance(20, 4, 6, '2026-08-20 08:00:00', true), 'Strict due-match selection should return the queued row.');
 	$prepare = vms_test_find_prepare($wpdb, 'due_at_local = %s ORDER BY id DESC LIMIT 1');
 	vms_test_assert_same(
 		array('wp_vms_task_instances', 20, 4, 6, 'open', '2026-08-20 08:00:00'),
@@ -853,7 +853,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_row_queue[] = array('id' => 3);
-	vms_test_assert_same(array('id' => 3), vms_tasks_select_existing_open_instance(20, 4, 6, '2026-08-20 08:00:00', false), 'Non-strict open-instance selection should return the queued row.');
+	vms_test_assert_same(array('id' => 3), bvmgr_tasks_select_existing_open_instance(20, 4, 6, '2026-08-20 08:00:00', false), 'Non-strict open-instance selection should return the queued row.');
 	$prepare = vms_test_find_prepare($wpdb, 'status = %s ORDER BY id DESC LIMIT 1');
 	vms_test_assert_same(
 		array('wp_vms_task_instances', 20, 4, 6, 'open'),
@@ -863,7 +863,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_results_queue[] = array(array('id' => 5), array('id' => 6));
-	vms_test_assert_same(2, vms_tasks_supersede_open_instances(20, 4, 6, 99, 72), 'Open-instance supersession should count each successful sibling update.');
+	vms_test_assert_same(2, bvmgr_tasks_supersede_open_instances(20, 4, 6, 99, 72), 'Open-instance supersession should count each successful sibling update.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT id FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND id <> %d');
 	vms_test_assert_same(
 		array('wp_vms_task_instances', 20, 4, 6, 'open', 99),

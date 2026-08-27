@@ -1105,8 +1105,8 @@ if (!function_exists('bvmgr_vendor_portal_get_progress_headcount_context')) {
     function bvmgr_vendor_portal_get_progress_headcount_context(int $plan_id): array
     {
         $plan_id = absint($plan_id);
-        $fallback = function_exists('vms_staffing_get_event_plan_headcount_context')
-            ? (array) vms_staffing_get_event_plan_headcount_context($plan_id)
+        $fallback = function_exists('bvmgr_staffing_get_event_plan_headcount_context')
+            ? (array) bvmgr_staffing_get_event_plan_headcount_context($plan_id)
             : array(
                 'wired' => false,
                 'headcount' => 0,

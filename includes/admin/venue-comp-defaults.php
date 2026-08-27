@@ -31,7 +31,7 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_comp_defaults',
         __('Default Pay (By Day)', 'backstage-venue-manager'),
-        'vms_render_venue_comp_defaults_metabox',
+        'bvmgr_render_venue_comp_defaults_metabox',
         'vms_venue',
         'normal',
         'default'
@@ -112,7 +112,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
 /**
  * Render metabox UI.
  */
-function vms_render_venue_comp_defaults_metabox($post) {
+function bvmgr_render_venue_comp_defaults_metabox($post) {
 
     wp_nonce_field('vms_save_venue_comp_defaults', 'vms_venue_comp_defaults_nonce');
 
@@ -212,8 +212,8 @@ function vms_render_venue_comp_defaults_metabox($post) {
  * Helper: get all per-day defaults for a venue.
  */
 
-if (!function_exists('vms_get_venue_default_comp_by_dow')) {
-function vms_get_venue_default_comp_by_dow(int $venue_id): array {
+if (!function_exists('bvmgr_get_venue_default_comp_by_dow')) {
+function bvmgr_get_venue_default_comp_by_dow(int $venue_id): array {
     $saved = get_post_meta($venue_id, '_vms_default_comp_by_dow', true);
     return is_array($saved) ? $saved : array();
 }
@@ -222,8 +222,8 @@ function vms_get_venue_default_comp_by_dow(int $venue_id): array {
 
 
 
-if (!function_exists('vms_get_venue_default_comp_for_date')) {
-function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
+if (!function_exists('bvmgr_get_venue_default_comp_for_date')) {
+function bvmgr_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
     $event_date = trim($event_date);
     if ($venue_id <= 0 || $event_date === '') return array();
 
@@ -245,7 +245,7 @@ function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date):
 
     $dow = (int) $dt->format('w'); // 0..6 (Sun..Sat)
 
-    $all = vms_get_venue_default_comp_by_dow($venue_id);
+    $all = bvmgr_get_venue_default_comp_by_dow($venue_id);
     if (!isset($all[$dow]) || !is_array($all[$dow])) return array();
 
     // Normalize output keys
