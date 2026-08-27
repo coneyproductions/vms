@@ -217,8 +217,8 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 	));
 
 	if (is_wp_error($staff_id) || !$staff_id) {
-		if (function_exists('vms_add_admin_notice')) {
-			vms_add_admin_notice(__('Failed to create staff profile from vendor.', 'backstage-venue-manager'), 'error');
+		if (function_exists('bvmgr_add_admin_notice')) {
+			bvmgr_add_admin_notice(__('Failed to create staff profile from vendor.', 'backstage-venue-manager'), 'error');
 		}
 		wp_safe_redirect(admin_url('post.php?post=' . (string) $vendor_id . '&action=edit'));
 		exit;
@@ -248,8 +248,8 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 	update_post_meta($vendor_id, $k_vendor_staff, $staff_id);
 	update_post_meta($staff_id, $k_staff_vendor, $vendor_id);
 
-	if (function_exists('vms_add_admin_notice')) {
-		vms_add_admin_notice(__('Staff profile created and linked to this vendor.', 'backstage-venue-manager'), 'success');
+	if (function_exists('bvmgr_add_admin_notice')) {
+		bvmgr_add_admin_notice(__('Staff profile created and linked to this vendor.', 'backstage-venue-manager'), 'success');
 	}
 
 	$edit_staff = get_edit_post_link($staff_id, '');

@@ -426,7 +426,7 @@ function vms_tasks_get_event_context(int $event_id): ?array
 	return $GLOBALS['vms_test_event_contexts'][$event_id] ?? null;
 }
 
-function vms_event_plan_should_include(int $plan_id, string $context, array $args = array()): bool
+function bvmgr_event_plan_should_include(int $plan_id, string $context, array $args = array()): bool
 {
 	$GLOBALS['vms_test_event_plan_should_include_calls'][] = array(
 		'plan_id' => $plan_id,

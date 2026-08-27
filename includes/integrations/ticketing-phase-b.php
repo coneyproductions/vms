@@ -2801,8 +2801,8 @@ if (!function_exists('vms_ticketing_v2_truthy')) {
 function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
     $plan_id = absint($plan_id);
     $linked_tec_event_id = 0;
-    $trace = function_exists('vms_event_plan_perf_span_start')
-        ? vms_event_plan_perf_span_start('vms_ticketing_v2_ensure_tec_event_link', $plan_id, array('job_name' => 'tec_event_link'))
+    $trace = function_exists('bvmgr_event_plan_perf_span_start')
+        ? bvmgr_event_plan_perf_span_start('vms_ticketing_v2_ensure_tec_event_link', $plan_id, array('job_name' => 'tec_event_link'))
         : '';
 
     try {
@@ -2812,15 +2812,15 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
 
     $k_id  = bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
     $k_url = bvmgr_ticketing_b_meta_key('tec_event_url', '_vms_tec_event_url');
-    if (function_exists('vms_event_plan_capture_actor_user_id')) {
-        vms_event_plan_capture_actor_user_id($plan_id, (int) get_current_user_id(), 'ticketing_v2_ensure_tec_event_link');
+    if (function_exists('bvmgr_event_plan_capture_actor_user_id')) {
+        bvmgr_event_plan_capture_actor_user_id($plan_id, (int) get_current_user_id(), 'ticketing_v2_ensure_tec_event_link');
     }
 
     $existing = (int) get_post_meta($plan_id, $k_id, true);
     if ($existing > 0 && get_post_status($existing)) {
         $linked_tec_event_id = $existing;
-        if (function_exists('vms_event_plan_backfill_tec_event_author')) {
-            vms_event_plan_backfill_tec_event_author($plan_id, $existing, 'vms_ticketing_v2_ensure_tec_event_link');
+        if (function_exists('bvmgr_event_plan_backfill_tec_event_author')) {
+            bvmgr_event_plan_backfill_tec_event_author($plan_id, $existing, 'vms_ticketing_v2_ensure_tec_event_link');
         }
         $existing_permalink = get_permalink($existing);
         if (is_string($existing_permalink) && $existing_permalink !== '') {
@@ -2836,14 +2836,14 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
         );
     }
 
-    if (!function_exists('vms_build_tec_event_args')) {
+    if (!function_exists('bvmgr_build_tec_event_args')) {
         return array(
             'ok'      => false,
             'message' => __('Backstage Venue Manager could not build the calendar event payload (internal missing function).', 'backstage-venue-manager'),
         );
     }
 
-    $args = vms_build_tec_event_args($plan_id);
+    $args = bvmgr_build_tec_event_args($plan_id);
     if (empty($args) || empty($args['EventStartDate']) || empty($args['EventEndDate'])) {
         return array(
             'ok'      => false,
@@ -2853,8 +2853,8 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
 
     // Create as draft (unpublished). Publishing happens when the plan is published.
     $args['post_status'] = 'draft';
-    if (function_exists('vms_event_plan_apply_tec_author_args')) {
-        $args = vms_event_plan_apply_tec_author_args($plan_id, $args, 0, 'vms_ticketing_v2_ensure_tec_event_link');
+    if (function_exists('bvmgr_event_plan_apply_tec_author_args')) {
+        $args = bvmgr_event_plan_apply_tec_author_args($plan_id, $args, 0, 'vms_ticketing_v2_ensure_tec_event_link');
     }
 
     $new_id = tribe_create_event($args);
@@ -2871,8 +2871,8 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
     $linked_tec_event_id = $tec_event_id;
     update_post_meta($plan_id, $k_id, $tec_event_id);
 
-    if (function_exists('vms_event_plan_backfill_tec_event_author')) {
-        vms_event_plan_backfill_tec_event_author($plan_id, $tec_event_id, 'vms_ticketing_v2_ensure_tec_event_link');
+    if (function_exists('bvmgr_event_plan_backfill_tec_event_author')) {
+        bvmgr_event_plan_backfill_tec_event_author($plan_id, $tec_event_id, 'vms_ticketing_v2_ensure_tec_event_link');
     }
 
     $permalink = get_permalink($tec_event_id);
@@ -2885,8 +2885,8 @@ function vms_ticketing_v2_ensure_tec_event_link(int $plan_id): array {
 
     return array('ok' => true, 'tec_event_id' => $tec_event_id, 'created' => true);
     } finally {
-        if (function_exists('vms_event_plan_perf_span_finish')) {
-            vms_event_plan_perf_span_finish(
+        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+            bvmgr_event_plan_perf_span_finish(
                 'vms_ticketing_v2_ensure_tec_event_link',
                 $plan_id,
                 $trace,
@@ -9639,11 +9639,11 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
 
     // Legacy suppression: retire any SR-* duplicates for entitlements now managed by Ticketing v2.
     $legacy_cleanup = vms_ticketing_v2_cleanup_legacy_sr_duplicates($plan_id, $tec_event_id, $cfg, $sync_map);
-    if (is_array($legacy_cleanup) && !empty($legacy_cleanup['retired']) && is_array($legacy_cleanup['retired']) && function_exists('vms_add_admin_notice')) {
+    if (is_array($legacy_cleanup) && !empty($legacy_cleanup['retired']) && is_array($legacy_cleanup['retired']) && function_exists('bvmgr_add_admin_notice')) {
         $count = count($legacy_cleanup['retired']);
         if ($count > 0) {
             /* translators: %d: number used in this message. */
-            vms_add_admin_notice(sprintf(__('Retired %d legacy SR-prefixed duplicate products for this event.', 'backstage-venue-manager'), $count), 'warning');
+            bvmgr_add_admin_notice(sprintf(__('Retired %d legacy SR-prefixed duplicate products for this event.', 'backstage-venue-manager'), $count), 'warning');
         }
     }
     if (is_array($legacy_cleanup) && !empty($legacy_cleanup['warnings']) && is_array($legacy_cleanup['warnings'])) {
@@ -9715,7 +9715,7 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
         vms_ticketing_v2_set_sync($plan_id, $sync_out);
     }
 
-    if (function_exists('vms_add_admin_notice')) {
+    if (function_exists('bvmgr_add_admin_notice')) {
         if (!empty($recon_warnings)) {
             $sample = array_slice($recon_warnings, 0, 2);
             $msg = __('Ticketing sync committed, but reconciliation found mismatches:', 'backstage-venue-manager') . ' ' . implode(' ', $sample);
@@ -9723,9 +9723,9 @@ function vms_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $o
                 /* translators: %d: number used in this message. */
                 $msg .= ' ' . sprintf(__('(+%d more)', 'backstage-venue-manager'), count($recon_warnings) - 2);
             }
-            vms_add_admin_notice($msg, 'warning');
+            bvmgr_add_admin_notice($msg, 'warning');
         } else {
-            vms_add_admin_notice(__('Ticketing sync committed and canonical ticket IDs were reconciled. Click “Refresh ticket stats” to update sold/revenue totals.', 'backstage-venue-manager'), 'success');
+            bvmgr_add_admin_notice(__('Ticketing sync committed and canonical ticket IDs were reconciled. Click “Refresh ticket stats” to update sold/revenue totals.', 'backstage-venue-manager'), 'success');
         }
     }
 

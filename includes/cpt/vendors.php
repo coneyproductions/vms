@@ -88,8 +88,8 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
             $k_issue = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
             $issue_now = (string) get_post_meta($plan_id, $k_issue, true);
             if ($issue_now !== 'missing_vendor') {
-                if (function_exists('vms_event_plan_flag_missing_secondary_vendor')) {
-                    vms_event_plan_flag_missing_secondary_vendor($plan_id, $vendor_id, $vendor_title);
+                if (function_exists('bvmgr_event_plan_flag_missing_secondary_vendor')) {
+                    bvmgr_event_plan_flag_missing_secondary_vendor($plan_id, $vendor_id, $vendor_title);
                 } else {
                     update_post_meta($plan_id, '_vms_integrity_issue', 'missing_secondary_vendor');
                     update_post_meta($plan_id, '_vms_integrity_vendor_id', $vendor_id);
@@ -110,8 +110,8 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
         }
 
         // Flag and clear broken pointer (non-destructive; does not touch TEC events automatically).
-        if (function_exists('vms_event_plan_flag_missing_vendor')) {
-            vms_event_plan_flag_missing_vendor($plan_id, $vendor_id, $vendor_title);
+        if (function_exists('bvmgr_event_plan_flag_missing_vendor')) {
+            bvmgr_event_plan_flag_missing_vendor($plan_id, $vendor_id, $vendor_title);
         } else {
             // Fallback: set minimal meta flags if helpers are unavailable.
             update_post_meta($plan_id, '_vms_integrity_issue', 'missing_vendor');
@@ -131,9 +131,9 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
         $count++;
     }
 
-    if ($count > 0 && function_exists('vms_add_admin_notice')) {
+    if ($count > 0 && function_exists('bvmgr_add_admin_notice')) {
         /* translators: %d: number used in this message. */
-        vms_add_admin_notice(sprintf(__('🚩 Vendor deleted. %d event plan(s) were reverted to Draft and flagged for review.', 'backstage-venue-manager'), $count), 'warning');
+        bvmgr_add_admin_notice(sprintf(__('🚩 Vendor deleted. %d event plan(s) were reverted to Draft and flagged for review.', 'backstage-venue-manager'), $count), 'warning');
     }
 }
 
@@ -486,8 +486,8 @@ class BVMGR_Admin_Vendors
             $enabled  = isset($_POST['vms_public_profile_enabled']) ? '1' : '0';
             if ($enabled === '1' && !vms_vendor_has_public_profile_type($post_id)) {
                 $enabled = '0';
-                if (function_exists('vms_add_admin_notice')) {
-                    vms_add_admin_notice(__('Public profiles require a Vendor Type. Assign a Vendor Type before enabling this public profile.', 'backstage-venue-manager'), 'error');
+                if (function_exists('bvmgr_add_admin_notice')) {
+                    bvmgr_add_admin_notice(__('Public profiles require a Vendor Type. Assign a Vendor Type before enabling this public profile.', 'backstage-venue-manager'), 'error');
                 }
             }
             $show_e   = isset($_POST['vms_public_profile_show_email']) ? '1' : '0';

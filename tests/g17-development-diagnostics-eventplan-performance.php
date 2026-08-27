@@ -173,7 +173,7 @@ PHP;
 
 function g17a_restore_performance(string $source): string
 {
-	$current = g17a_extract_function($source, 'vms_event_plan_perf_log');
+	$current = g17a_extract_function($source, 'bvmgr_event_plan_perf_log');
 	$historical = <<<'PHP'
 function vms_event_plan_perf_log(string $hook_name, int $plan_id = 0, array $context = array()): void
 	{
@@ -335,22 +335,22 @@ g17a_assert(hash('sha256', $g17a_mutation) !== $g17a_expected_projection_hashes[
 
 $g17a_mirror_event = $g17a_sources['mirror']['includes/cpt/event-plans.php'];
 $g17a_shadow_event = $g17a_sources['shadow']['includes/cpt/event-plans.php'];
-$g17a_mirror_cleanup = g17a_extract_function($g17a_mirror_event, 'vms_event_plan_cleanup_legacy_ticket_meta_once');
-$g17a_shadow_cleanup = g17a_extract_function($g17a_shadow_event, 'vms_event_plan_cleanup_legacy_ticket_meta_once');
-g17a_same(1, substr_count($g17a_mirror_cleanup, '!empty(vms_event_plan_current_post_request())'), 'Mirror cleanup must preserve its normalized request guard.');
+$g17a_mirror_cleanup = g17a_extract_function($g17a_mirror_event, 'bvmgr_event_plan_cleanup_legacy_ticket_meta_once');
+$g17a_shadow_cleanup = g17a_extract_function($g17a_shadow_event, 'bvmgr_event_plan_cleanup_legacy_ticket_meta_once');
+g17a_same(1, substr_count($g17a_mirror_cleanup, '!empty(bvmgr_event_plan_current_post_request())'), 'Mirror cleanup must preserve its normalized request guard.');
 g17a_same(1, substr_count($g17a_shadow_cleanup, '!empty($_POST)'), 'Shadow cleanup must preserve its direct request guard.');
-g17a_same($g17a_shadow_cleanup, str_replace('!empty(vms_event_plan_current_post_request())', '!empty($_POST)', $g17a_mirror_cleanup), 'Cleanup parity may differ only at the established request guard.');
-foreach (array('vms_resync_event_to_calendar', 'vms_tec_sync_event_extras_from_plan') as $function) {
+g17a_same($g17a_shadow_cleanup, str_replace('!empty(bvmgr_event_plan_current_post_request())', '!empty($_POST)', $g17a_mirror_cleanup), 'Cleanup parity may differ only at the established request guard.');
+foreach (array('bvmgr_resync_event_to_calendar', 'bvmgr_tec_sync_event_extras_from_plan') as $function) {
 	g17a_same(g17a_extract_function($g17a_mirror_event, $function), g17a_extract_function($g17a_shadow_event, $function), 'Event Plans owned boundary parity changed: ' . $function);
 }
-foreach (array('vms_event_plan_save_profiler_store_profile', 'vms_event_plan_save_profiler_finish') as $function) {
+foreach (array('bvmgr_event_plan_save_profiler_store_profile', 'bvmgr_event_plan_save_profiler_finish') as $function) {
 	g17a_same(
 		g17a_extract_function($g17a_sources['mirror']['includes/core/event-plan-save-profiler.php'], $function),
 		g17a_extract_function($g17a_sources['shadow']['includes/core/event-plan-save-profiler.php'], $function),
 		'Save-profiler owned boundary parity changed: ' . $function
 	);
 }
-foreach (array('vms_event_plan_perf_log_path', 'vms_event_plan_perf_log') as $function) {
+foreach (array('bvmgr_event_plan_perf_log_path', 'bvmgr_event_plan_perf_log') as $function) {
 	g17a_same(
 		g17a_extract_function($g17a_sources['mirror']['includes/core/event-plan-performance.php'], $function),
 		g17a_extract_function($g17a_sources['shadow']['includes/core/event-plan-performance.php'], $function),
@@ -360,13 +360,13 @@ foreach (array('vms_event_plan_perf_log_path', 'vms_event_plan_perf_log') as $fu
 g17a_assert($g17a_sources['mirror']['includes/cpt/event-plans.php'] !== $g17a_sources['shadow']['includes/cpt/event-plans.php'], 'Event Plans whole-file structural divergence must remain preserved.');
 
 $g17a_perf_source = $g17a_sources['mirror']['includes/core/event-plan-performance.php'];
-$g17a_perf_log = g17a_extract_function($g17a_perf_source, 'vms_event_plan_perf_log');
-$g17a_perf_path = g17a_extract_function($g17a_perf_source, 'vms_event_plan_perf_log_path');
+$g17a_perf_log = g17a_extract_function($g17a_perf_source, 'bvmgr_event_plan_perf_log');
+$g17a_perf_path = g17a_extract_function($g17a_perf_source, 'bvmgr_event_plan_perf_log_path');
 g17a_contains("return defined('VMS_EP_PERF_TRACE') && VMS_EP_PERF_TRACE;", $g17a_perf_source, 'Performance trace gate changed.');
 g17a_contains("apply_filters('vms_event_plan_perf_log_path', \$path)", $g17a_perf_path, 'Legacy performance path filter must remain callable.');
-g17a_not_contains('vms_event_plan_perf_log_path()', $g17a_perf_log, 'Action-only logger must leave the legacy path helper inert.');
+g17a_not_contains('bvmgr_event_plan_perf_log_path()', $g17a_perf_log, 'Action-only logger must leave the legacy path helper inert.');
 g17a_not_contains('bvmgr_record_operational_issue', $g17a_perf_log, 'Performance tracing must not persist through the operational adapter.');
-g17a_not_contains('vms_event_plan_perf_request_context', $g17a_perf_log, 'Performance action must not capture ambient request context.');
+g17a_not_contains('bvmgr_event_plan_perf_request_context', $g17a_perf_log, 'Performance action must not capture ambient request context.');
 foreach (array('request_uri', 'current_user_id', "'pid'", 'query_count', 'sql', 'meta_key', 'wp_json_encode', 'PHP_EOL') as $forbidden) {
 	g17a_not_contains($forbidden, $g17a_perf_log, 'Performance action retained forbidden field or sink.');
 }
@@ -374,8 +374,8 @@ g17a_contains("do_action('vms_event_plan_perf_trace', \$entry);", $g17a_perf_log
 g17a_contains("\$integer_keys = array('count');", $g17a_perf_log, 'Performance count allowlist changed.');
 g17a_contains("\$timing_keys = array('elapsed_ms', 'runtime_ms', 'duration_ms', 'total_elapsed_ms');", $g17a_perf_log, 'Performance timing allowlist changed.');
 
-$g17a_resync = g17a_extract_function($g17a_mirror_event, 'vms_resync_event_to_calendar');
-$g17a_extras = g17a_extract_function($g17a_mirror_event, 'vms_tec_sync_event_extras_from_plan');
+$g17a_resync = g17a_extract_function($g17a_mirror_event, 'bvmgr_resync_event_to_calendar');
+$g17a_extras = g17a_extract_function($g17a_mirror_event, 'bvmgr_tec_sync_event_extras_from_plan');
 foreach (array('event_plan_tec_provider_unavailable', 'event_plan_tec_resync_failed') as $event_code) {
 	g17a_same(1, substr_count($g17a_resync, "bvmgr_record_operational_issue('" . $event_code . "'"), 'TEC event code must occur exactly once: ' . $event_code);
 }
@@ -445,17 +445,17 @@ function do_action(string $hook, ...$args): void
 	$GLOBALS['g17a_actions'][] = array($hook, $args);
 }
 
-function vms_event_plan_perf_trace_enabled(): bool
+function bvmgr_event_plan_perf_trace_enabled(): bool
 {
 	return (bool) ($GLOBALS['g17a_perf_enabled'] ?? false);
 }
 
-function vms_event_plan_perf_request_id(): string
+function bvmgr_event_plan_perf_request_id(): string
 {
 	return 'abcdef123456';
 }
 
-function vms_event_plan_ticketing_snapshot(int $plan_id): array
+function bvmgr_event_plan_ticketing_snapshot(int $plan_id): array
 {
 	$GLOBALS['g17a_ticket_snapshot_calls'][] = $plan_id;
 	return array('effective_ticket_count' => 17, 'mode' => 'General Admission');
@@ -476,7 +476,7 @@ function g17a_tribe_update_event_available(): bool
 	return (bool) ($GLOBALS['g17a_tribe_available'] ?? false);
 }
 
-function vms_event_plan_current_post_request(): array
+function bvmgr_event_plan_current_post_request(): array
 {
 	return array();
 }
@@ -501,13 +501,13 @@ function delete_option(string $key): bool
 	return true;
 }
 
-function vms_event_plan_legacy_ticket_meta_candidate_ids(int $cursor, int $batch_size): array
+function bvmgr_event_plan_legacy_ticket_meta_candidate_ids(int $cursor, int $batch_size): array
 {
 	$GLOBALS['g17a_cleanup_queries'][] = array($cursor, $batch_size);
 	return array();
 }
 
-function vms_event_plan_save_profiler_recording_enabled(): bool
+function bvmgr_event_plan_save_profiler_recording_enabled(): bool
 {
 	return (bool) ($GLOBALS['g17a_profiler_recording_enabled'] ?? true);
 }
@@ -555,8 +555,8 @@ if (!defined('BVMGR_VERSION')) {
 	define('BVMGR_VERSION', '1.2.0');
 }
 
-$g17a_cleanup_mirror_eval = g17a_rename_function($g17a_mirror_cleanup, 'vms_event_plan_cleanup_legacy_ticket_meta_once', 'g17a_cleanup_mirror');
-$g17a_cleanup_shadow_eval = g17a_rename_function($g17a_shadow_cleanup, 'vms_event_plan_cleanup_legacy_ticket_meta_once', 'g17a_cleanup_shadow');
+$g17a_cleanup_mirror_eval = g17a_rename_function($g17a_mirror_cleanup, 'bvmgr_event_plan_cleanup_legacy_ticket_meta_once', 'g17a_cleanup_mirror');
+$g17a_cleanup_shadow_eval = g17a_rename_function($g17a_shadow_cleanup, 'bvmgr_event_plan_cleanup_legacy_ticket_meta_once', 'g17a_cleanup_shadow');
 eval($g17a_cleanup_mirror_eval);
 eval($g17a_cleanup_shadow_eval);
 
@@ -603,8 +603,8 @@ g17a_assert(!isset($g17a_cleanup_mirror_result['options']['vms_event_plan_legacy
 g17a_assert(!isset($g17a_cleanup_mirror_result['options']['vms_event_plan_legacy_ticket_cleanup_lock_until']), 'Cleanup lock must still be deleted.');
 g17a_same(array(), $g17a_cleanup_mirror_result['operational'], 'Cleanup success must not create a duplicate operational record.');
 
-$g17a_profiler_store = g17a_extract_function($g17a_sources['mirror']['includes/core/event-plan-save-profiler.php'], 'vms_event_plan_save_profiler_store_profile');
-eval(g17a_rename_function($g17a_profiler_store, 'vms_event_plan_save_profiler_store_profile', 'g17a_profiler_store'));
+$g17a_profiler_store = g17a_extract_function($g17a_sources['mirror']['includes/core/event-plan-save-profiler.php'], 'bvmgr_event_plan_save_profiler_store_profile');
+eval(g17a_rename_function($g17a_profiler_store, 'bvmgr_event_plan_save_profiler_store_profile', 'g17a_profiler_store'));
 $GLOBALS['g17a_profiler_recording_enabled'] = true;
 $GLOBALS['g17a_post_meta'] = array();
 $GLOBALS['g17a_post_meta_updates'] = array();
@@ -616,11 +616,11 @@ g17a_same(array(6, 5, 4, 3, 2), array_map(
 	static fn(array $profile): int => (int) ($profile['profile_id'] ?? 0),
 	$GLOBALS['g17a_post_meta'][501]['_vms_event_plan_save_profile_history'] ?? array()
 ), 'Profiler five-entry history persistence changed.');
-$g17a_profiler_finish = g17a_extract_function($g17a_sources['mirror']['includes/core/event-plan-save-profiler.php'], 'vms_event_plan_save_profiler_finish');
-g17a_same(1, substr_count($g17a_profiler_finish, 'vms_event_plan_save_profiler_store_profile($post_id, $profile);'), 'Profiler finish must retain one durable store call.');
+$g17a_profiler_finish = g17a_extract_function($g17a_sources['mirror']['includes/core/event-plan-save-profiler.php'], 'bvmgr_event_plan_save_profiler_finish');
+g17a_same(1, substr_count($g17a_profiler_finish, 'bvmgr_event_plan_save_profiler_store_profile($post_id, $profile);'), 'Profiler finish must retain one durable store call.');
 g17a_not_contains('WP_DEBUG', $g17a_profiler_finish, 'Profiler finish must not retain the duplicate debug branch.');
 
-$g17a_path_eval = g17a_rename_function($g17a_perf_path, 'vms_event_plan_perf_log_path', 'g17a_perf_log_path');
+$g17a_path_eval = g17a_rename_function($g17a_perf_path, 'bvmgr_event_plan_perf_log_path', 'g17a_perf_log_path');
 eval($g17a_path_eval);
 $GLOBALS['g17a_filters'] = array();
 $GLOBALS['g17a_filtered_perf_path'] = sys_get_temp_dir() . '/bvm-g17-inert-path-' . getmypid() . '.log';
@@ -628,7 +628,7 @@ g17a_same($GLOBALS['g17a_filtered_perf_path'], g17a_perf_log_path(), 'Legacy per
 g17a_same('vms_event_plan_perf_log_path', $GLOBALS['g17a_filters'][0][0] ?? '', 'Legacy performance path filter name changed.');
 g17a_assert(!is_file($GLOBALS['g17a_filtered_perf_path']), 'Fresh inert performance path sentinel unexpectedly exists before runtime proof.');
 
-eval(g17a_rename_function($g17a_perf_log, 'vms_event_plan_perf_log', 'g17a_perf_log'));
+eval(g17a_rename_function($g17a_perf_log, 'bvmgr_event_plan_perf_log', 'g17a_perf_log'));
 $GLOBALS['g17a_perf_enabled'] = false;
 $GLOBALS['g17a_actions'] = array();
 $GLOBALS['g17a_ticket_snapshot_calls'] = array();
@@ -676,7 +676,7 @@ foreach (array('request_uri', 'current_user_id', 'actor_id', 'pid', 'query_count
 g17a_same($g17a_operational_before_perf, count($GLOBALS['g17a_operational_records']), 'Performance action must not persist through the operational adapter.');
 g17a_assert(!is_file($GLOBALS['g17a_filtered_perf_path']), 'Enabled performance tracing must write no file.');
 
-$g17a_resync_eval = g17a_rename_function($g17a_resync, 'vms_resync_event_to_calendar', 'g17a_resync_event_to_calendar');
+$g17a_resync_eval = g17a_rename_function($g17a_resync, 'bvmgr_resync_event_to_calendar', 'g17a_resync_event_to_calendar');
 $g17a_resync_eval = g17a_replace_once($g17a_resync_eval, "function_exists('tribe_update_event')", 'g17a_tribe_update_event_available()', 'TEC provider availability injection');
 eval($g17a_resync_eval);
 $GLOBALS['g17a_operational_records'] = array();
@@ -694,7 +694,7 @@ g17a_same(array(
 	),
 ), $GLOBALS['g17a_operational_records'][0] ?? null, 'Missing TEC provider structured event changed.');
 
-function vms_build_tec_event_args(int $plan_id, int $tec_event_id = 0): array
+function bvmgr_build_tec_event_args(int $plan_id, int $tec_event_id = 0): array
 {
 	$GLOBALS['g17a_tec_order'][] = 'build_args';
 	return array('post_title' => 'Safe Event', 'plan_id' => $plan_id, 'tec_event_id' => $tec_event_id);
@@ -733,7 +733,7 @@ g17a_same('tec_transport_failed', $g17a_resync_record['error']['error_code'] ?? 
 g17a_assert(preg_match('/^[a-f0-9]{24}$/', (string) ($g17a_resync_record['error']['error_fingerprint'] ?? '')) === 1, 'TEC resync error fingerprint changed.');
 g17a_same(0, substr_count((string) json_encode($g17a_resync_record), $g17a_sentinel), 'TEC resync event leaked raw error content.');
 
-eval(g17a_rename_function($g17a_extras, 'vms_tec_sync_event_extras_from_plan', 'g17a_tec_sync_event_extras_from_plan'));
+eval(g17a_rename_function($g17a_extras, 'bvmgr_tec_sync_event_extras_from_plan', 'g17a_tec_sync_event_extras_from_plan'));
 $GLOBALS['g17a_tec_order'] = array();
 $GLOBALS['g17a_post_meta_deletes'] = array();
 $GLOBALS['g17a_tribe_result'] = new WP_Error('tec_extras_failed', $g17a_sentinel);

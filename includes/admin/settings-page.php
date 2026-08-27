@@ -104,13 +104,13 @@ function vms_handle_integrity_scan(): void
 
 	$results = array();
 	if ($mode === 'vendors') {
-		$results = vms_integrity_scan_event_plans_for_missing_vendors($limit);
+		$results = bvmgr_integrity_scan_event_plans_for_missing_vendors($limit);
 	} elseif ($mode === 'venues') {
-		$results = vms_integrity_scan_event_plans_for_orphaned_venues($limit);
+		$results = bvmgr_integrity_scan_event_plans_for_orphaned_venues($limit);
 	} elseif ($mode === 'events') {
-		$results = vms_integrity_scan_event_plans_for_orphaned_calendar_events($limit);
+		$results = bvmgr_integrity_scan_event_plans_for_orphaned_calendar_events($limit);
 	} else {
-		$results = vms_integrity_scan_event_plans_all($limit);
+		$results = bvmgr_integrity_scan_event_plans_all($limit);
 		$mode = 'all';
 	}
 

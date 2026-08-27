@@ -166,8 +166,8 @@ function vms_render_integrity_venue_reconcile_page_sections(): void
   if ($limit < 1) $limit = 500;
   if ($limit > 5000) $limit = 5000;
 
-  $issues = function_exists('vms_integrity_list_event_plans_with_venue_issues')
-    ? (array) vms_integrity_list_event_plans_with_venue_issues($limit)
+  $issues = function_exists('bvmgr_integrity_list_event_plans_with_venue_issues')
+    ? (array) bvmgr_integrity_list_event_plans_with_venue_issues($limit)
     : array();
 
   $trashed = isset($issues['trashed']) ? (array) $issues['trashed'] : array();

@@ -1146,8 +1146,8 @@ if (!function_exists('vms_goals_get_event_ids_in_period')) {
 		$out = array();
 		foreach ($ids as $id) {
 			$include = true;
-			if (function_exists('vms_event_plan_should_include')) {
-				$include = vms_event_plan_should_include($id, 'financial', array(
+			if (function_exists('bvmgr_event_plan_should_include')) {
+				$include = bvmgr_event_plan_should_include($id, 'financial', array(
 					'include_drafts' => false,
 					'include_cancelled' => false,
 				));

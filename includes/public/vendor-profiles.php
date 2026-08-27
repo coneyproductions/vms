@@ -172,11 +172,11 @@ if (!function_exists('vms_vendor_profiles_get_secondary_vendors_for_tec_event'))
             return array();
         }
 
-        $secondary_assignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-            ? (array) vms_event_plan_get_secondary_vendor_assignments($plan_id)
+        $secondary_assignments = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+            ? (array) bvmgr_event_plan_get_secondary_vendor_assignments($plan_id)
             : array();
-        $secondary_ids = !empty($secondary_assignments) && function_exists('vms_event_plan_get_secondary_vendor_flat_ids_from_assignments')
-            ? vms_event_plan_get_secondary_vendor_flat_ids_from_assignments($secondary_assignments)
+        $secondary_ids = !empty($secondary_assignments) && function_exists('bvmgr_event_plan_get_secondary_vendor_flat_ids_from_assignments')
+            ? bvmgr_event_plan_get_secondary_vendor_flat_ids_from_assignments($secondary_assignments)
             : array();
         if (empty($secondary_ids)) {
             return array();
@@ -186,8 +186,8 @@ if (!function_exists('vms_vendor_profiles_get_secondary_vendors_for_tec_event'))
             ? vms_vendor_type_normalize_slug($type_filter)
             : sanitize_title($type_filter);
         if ($type_filter !== '') {
-            if (!empty($secondary_assignments) && function_exists('vms_event_plan_get_secondary_vendor_ids_for_type')) {
-                $secondary_ids = vms_event_plan_get_secondary_vendor_ids_for_type($secondary_assignments, $type_filter);
+            if (!empty($secondary_assignments) && function_exists('bvmgr_event_plan_get_secondary_vendor_ids_for_type')) {
+                $secondary_ids = bvmgr_event_plan_get_secondary_vendor_ids_for_type($secondary_assignments, $type_filter);
             } else {
                 $secondary_ids = array_values(array_filter($secondary_ids, static function (int $vendor_id) use ($type_filter): bool {
                     return function_exists('vms_vendor_has_type') ? vms_vendor_has_type($vendor_id, $type_filter) : (function_exists('has_term') ? has_term($type_filter, 'vms_vendor_type', $vendor_id) : true);
@@ -556,8 +556,8 @@ if (!function_exists('vms_vendor_profiles_build_event_vendor_groups')) {
             $append_card($primary_type, $primary_vendor_id);
         }
 
-        $secondary_assignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-            ? (array) vms_event_plan_get_secondary_vendor_assignments($plan_id, array(
+        $secondary_assignments = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+            ? (array) bvmgr_event_plan_get_secondary_vendor_assignments($plan_id, array(
                 'primary_vendor_id' => $primary_vendor_id,
             ))
             : array();

@@ -133,7 +133,7 @@ try {
 		'get_posts(',
 		'update_post_meta(',
 		'delete_post_meta(',
-		'vms_event_plan_collect_vendor_category_snapshot(',
+		'bvmgr_event_plan_collect_vendor_category_snapshot(',
 		'wp_kses_post(',
 		'wp_kses(',
 	) as $forbiddenRendererToken) {
@@ -332,8 +332,8 @@ try {
 			return (string) json_encode($value, $flags, $depth);
 		}
 	}
-	if (!function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')) {
-		function vms_event_plan_parse_secondary_vendor_over_capacity_override($value): bool
+	if (!function_exists('bvmgr_event_plan_parse_secondary_vendor_over_capacity_override')) {
+		function bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($value): bool
 		{
 			if (is_bool($value)) {
 				return $value;
@@ -346,8 +346,8 @@ try {
 			return in_array($value, array('1', 'true', 'yes', 'on'), true);
 		}
 	}
-	if (!function_exists('vms_event_plan_additional_vendor_type_options')) {
-		function vms_event_plan_additional_vendor_type_options(): array
+	if (!function_exists('bvmgr_event_plan_additional_vendor_type_options')) {
+		function bvmgr_event_plan_additional_vendor_type_options(): array
 		{
 			return array(
 				'food_vendor' => 'Food Vendor',
@@ -355,14 +355,14 @@ try {
 			);
 		}
 	}
-	if (!function_exists('vms_event_plan_secondary_vendor_default_mode')) {
-		function vms_event_plan_secondary_vendor_default_mode(string $type_slug): string
+	if (!function_exists('bvmgr_event_plan_secondary_vendor_default_mode')) {
+		function bvmgr_event_plan_secondary_vendor_default_mode(string $type_slug): string
 		{
 			return $type_slug === 'market_vendor' ? 'market' : 'standard';
 		}
 	}
-	if (!function_exists('vms_event_plan_secondary_vendor_default_slot_limit')) {
-		function vms_event_plan_secondary_vendor_default_slot_limit(string $type_slug, string $mode): int
+	if (!function_exists('bvmgr_event_plan_secondary_vendor_default_slot_limit')) {
+		function bvmgr_event_plan_secondary_vendor_default_slot_limit(string $type_slug, string $mode): int
 		{
 			unset($mode);
 			return $type_slug === 'market_vendor' ? 4 : 1;
@@ -409,8 +409,8 @@ try {
 			return '';
 		}
 	}
-	if (!function_exists('vms_event_plan_get_secondary_vendor_assignments')) {
-		function vms_event_plan_get_secondary_vendor_assignments(int $post_id, array $args = array()): array
+	if (!function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')) {
+		function bvmgr_event_plan_get_secondary_vendor_assignments(int $post_id, array $args = array()): array
 		{
 			unset($args);
 			$assignments = isset($GLOBALS['vms_secondary_vendor_test_secondary_assignments']) && is_array($GLOBALS['vms_secondary_vendor_test_secondary_assignments'])
@@ -901,10 +901,10 @@ try {
 	$assert($richScriptXpath->query('//*[@id="root"]//script[not(@type="application/json")]')->length === 0, 'Secondary Vendors lazy-load renderer should not create an executable script element from hostile config text.');
 
 	$legacyPartialSource = $secondaryVendorsPartialSource;
-	$assert(strpos($legacyPartialSource, "vms_event_plan_parse_secondary_vendor_over_capacity_override(\$group['open_for_dispatch'] ?? true)") !== false, 'Legacy Secondary Vendors partial should interpret open_for_dispatch through the shared parser.');
-	$assert(strpos($legacyPartialSource, "vms_event_plan_parse_secondary_vendor_over_capacity_override(\$group['allow_over_capacity'] ?? false)") !== false, 'Legacy Secondary Vendors partial should interpret allow_over_capacity through the shared parser.');
-	$assert(strpos($eventPlansSource, "vms_event_plan_parse_secondary_vendor_over_capacity_override(\$group['open_for_dispatch'] ?? true)") !== false, 'Secondary Vendors lazy-load renderer should interpret open_for_dispatch through the shared parser.');
-	$assert(strpos($eventPlansSource, "vms_event_plan_parse_secondary_vendor_over_capacity_override(\$group['allow_over_capacity'] ?? false)") !== false, 'Secondary Vendors lazy-load renderer should interpret allow_over_capacity through the shared parser.');
+	$assert(strpos($legacyPartialSource, "bvmgr_event_plan_parse_secondary_vendor_over_capacity_override(\$group['open_for_dispatch'] ?? true)") !== false, 'Legacy Secondary Vendors partial should interpret open_for_dispatch through the shared parser.');
+	$assert(strpos($legacyPartialSource, "bvmgr_event_plan_parse_secondary_vendor_over_capacity_override(\$group['allow_over_capacity'] ?? false)") !== false, 'Legacy Secondary Vendors partial should interpret allow_over_capacity through the shared parser.');
+	$assert(strpos($eventPlansSource, "bvmgr_event_plan_parse_secondary_vendor_over_capacity_override(\$group['open_for_dispatch'] ?? true)") !== false, 'Secondary Vendors lazy-load renderer should interpret open_for_dispatch through the shared parser.');
+	$assert(strpos($eventPlansSource, "bvmgr_event_plan_parse_secondary_vendor_over_capacity_override(\$group['allow_over_capacity'] ?? false)") !== false, 'Secondary Vendors lazy-load renderer should interpret allow_over_capacity through the shared parser.');
 
 	$booleanCases = array(
 		'bool_true' => array('value' => true, 'expected' => true),

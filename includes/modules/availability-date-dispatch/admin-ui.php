@@ -1068,8 +1068,8 @@ if (!function_exists('vms_add_dispatch_handle_send_request')) {
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint((string) $_POST['event_plan_id']) : 0;
 		$context = vms_add_dispatch_get_event_plan_context($event_plan_id);
 		if (!$context) {
-			if (function_exists('vms_add_admin_notice')) {
-				vms_add_admin_notice(__('Save the Event Plan first before using ADD.', 'backstage-venue-manager'), 'error');
+			if (function_exists('bvmgr_add_admin_notice')) {
+				bvmgr_add_admin_notice(__('Save the Event Plan first before using ADD.', 'backstage-venue-manager'), 'error');
 			}
 			wp_safe_redirect(vms_add_dispatch_admin_url());
 			exit;
@@ -1092,8 +1092,8 @@ if (!function_exists('vms_add_dispatch_handle_send_request')) {
 
 		$created = vms_add_dispatch_create_request($event_plan_id, $builder_args, $selected_recipients);
 		if (is_wp_error($created)) {
-			if (function_exists('vms_add_admin_notice')) {
-				vms_add_admin_notice($created->get_error_message(), 'error');
+			if (function_exists('bvmgr_add_admin_notice')) {
+				bvmgr_add_admin_notice($created->get_error_message(), 'error');
 			}
 			wp_safe_redirect(vms_add_dispatch_admin_url(array('event_plan_id' => $event_plan_id)));
 			exit;
@@ -1112,14 +1112,14 @@ if (!function_exists('vms_add_dispatch_handle_send_request')) {
 			}
 		}
 
-		if (function_exists('vms_add_admin_notice')) {
+		if (function_exists('bvmgr_add_admin_notice')) {
 			if ($sent > 0) {
 				/* translators: %d: number used in this message. */
-				vms_add_admin_notice(sprintf(__('ADD request sent to %d vendor(s).', 'backstage-venue-manager'), $sent), 'success');
+				bvmgr_add_admin_notice(sprintf(__('ADD request sent to %d vendor(s).', 'backstage-venue-manager'), $sent), 'success');
 			}
 			if ($failed > 0) {
 				/* translators: %d: number of vendors whose ADD notification email failed. */
-				vms_add_admin_notice(sprintf(__('ADD could not email %d vendor(s). Check notification logs and recipient email addresses.', 'backstage-venue-manager'), $failed), 'warning');
+				bvmgr_add_admin_notice(sprintf(__('ADD could not email %d vendor(s). Check notification logs and recipient email addresses.', 'backstage-venue-manager'), $failed), 'warning');
 			}
 		}
 
@@ -1159,11 +1159,11 @@ if (!function_exists('vms_add_dispatch_handle_confirm_assignment')) {
 		$allow_over_capacity = !empty($_POST['allow_over_capacity']);
 
 		$result = vms_add_dispatch_apply_assignment_review($response_id, $target_type, $allow_over_capacity);
-		if (function_exists('vms_add_admin_notice')) {
+		if (function_exists('bvmgr_add_admin_notice')) {
 			if (is_wp_error($result)) {
-				vms_add_admin_notice($result->get_error_message(), 'error');
+				bvmgr_add_admin_notice($result->get_error_message(), 'error');
 			} else {
-				vms_add_admin_notice(__('Vendor assigned from ADD response.', 'backstage-venue-manager'), 'success');
+				bvmgr_add_admin_notice(__('Vendor assigned from ADD response.', 'backstage-venue-manager'), 'success');
 			}
 		}
 		if (is_wp_error($result)) {
@@ -1187,11 +1187,11 @@ if (!function_exists('vms_add_dispatch_handle_close_request')) {
 		$request_id = isset($_GET['request_id']) ? absint((string) $_GET['request_id']) : 0;
 		check_admin_referer('vms_add_dispatch_close_request_' . $request_id);
 		$result = vms_add_dispatch_close_request($request_id);
-		if (function_exists('vms_add_admin_notice')) {
+		if (function_exists('bvmgr_add_admin_notice')) {
 			if (is_wp_error($result)) {
-				vms_add_admin_notice($result->get_error_message(), 'error');
+				bvmgr_add_admin_notice($result->get_error_message(), 'error');
 			} else {
-				vms_add_admin_notice(__('ADD request closed.', 'backstage-venue-manager'), 'success');
+				bvmgr_add_admin_notice(__('ADD request closed.', 'backstage-venue-manager'), 'success');
 			}
 		}
 
@@ -1214,8 +1214,8 @@ if (!function_exists('vms_add_dispatch_handle_resend_response')) {
 
 		$prepared = vms_add_dispatch_prepare_resend($response_id);
 		if (is_wp_error($prepared)) {
-			if (function_exists('vms_add_admin_notice')) {
-				vms_add_admin_notice($prepared->get_error_message(), 'error');
+			if (function_exists('bvmgr_add_admin_notice')) {
+				bvmgr_add_admin_notice($prepared->get_error_message(), 'error');
 			}
 		} else {
 			$result = vms_add_dispatch_send_response_email(
@@ -1223,11 +1223,11 @@ if (!function_exists('vms_add_dispatch_handle_resend_response')) {
 				(array) ($prepared['response'] ?? array()),
 				(array) ($prepared['context'] ?? array())
 			);
-			if (function_exists('vms_add_admin_notice')) {
+			if (function_exists('bvmgr_add_admin_notice')) {
 				if (!empty($result['success'])) {
-					vms_add_admin_notice(__('ADD request resent.', 'backstage-venue-manager'), 'success');
+					bvmgr_add_admin_notice(__('ADD request resent.', 'backstage-venue-manager'), 'success');
 				} else {
-					vms_add_admin_notice(__('The ADD email could not be resent. Check the notification log for details.', 'backstage-venue-manager'), 'error');
+					bvmgr_add_admin_notice(__('The ADD email could not be resent. Check the notification log for details.', 'backstage-venue-manager'), 'error');
 				}
 			}
 		}

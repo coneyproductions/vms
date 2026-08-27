@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 	require_once $wpLoad;
 }
 
-if (!function_exists('vms_cancellation_run_step')) {
+if (!function_exists('bvmgr_cancellation_run_step')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
@@ -194,7 +194,7 @@ try {
 		'steps' => array(),
 		'vendor_message' => '',
 	);
-	$result = vms_cancellation_run_step($eventPlanId, 'status_only', 'notifications', $summary);
+	$result = bvmgr_cancellation_run_step($eventPlanId, 'status_only', 'notifications', $summary);
 	$assert(($result['status'] ?? '') === 'done', 'Expected dry-run notifications step to return done.');
 	$assert(($result['message'] ?? '') === 'notifications_dry_run_only', 'Expected dry-run notifications step message.');
 

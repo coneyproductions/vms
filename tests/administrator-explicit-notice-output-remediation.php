@@ -733,8 +733,8 @@ if (!function_exists('vms_email_followups_settings')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_import_get_preview_payload')) {
-	function vms_event_plan_import_get_preview_payload(string $token, int $user_id = 0): array
+if (!function_exists('bvmgr_event_plan_import_get_preview_payload')) {
+	function bvmgr_event_plan_import_get_preview_payload(string $token, int $user_id = 0): array
 	{
 		unset($user_id);
 		$GLOBALS['vms_test_event_plan_import_preview_payload_calls']++;
@@ -745,8 +745,8 @@ if (!function_exists('vms_event_plan_import_get_preview_payload')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_import_get_audit_runs')) {
-	function vms_event_plan_import_get_audit_runs(): array
+if (!function_exists('bvmgr_event_plan_import_get_audit_runs')) {
+	function bvmgr_event_plan_import_get_audit_runs(): array
 	{
 		$GLOBALS['vms_test_event_plan_import_audit_runs_calls']++;
 		return is_array($GLOBALS['vms_test_event_plan_import_audit_runs_value'])
@@ -755,8 +755,8 @@ if (!function_exists('vms_event_plan_import_get_audit_runs')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_import_latest_revertible_run')) {
-	function vms_event_plan_import_latest_revertible_run(): array
+if (!function_exists('bvmgr_event_plan_import_latest_revertible_run')) {
+	function bvmgr_event_plan_import_latest_revertible_run(): array
 	{
 		$GLOBALS['vms_test_event_plan_import_latest_revertible_run_calls']++;
 		return is_array($GLOBALS['vms_test_event_plan_import_latest_revertible_run_value'])
@@ -765,8 +765,8 @@ if (!function_exists('vms_event_plan_import_latest_revertible_run')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_import_read_rows_json')) {
-	function vms_event_plan_import_read_rows_json(string $reference)
+if (!function_exists('bvmgr_event_plan_import_read_rows_json')) {
+	function bvmgr_event_plan_import_read_rows_json(string $reference)
 	{
 		$GLOBALS['vms_test_event_plan_import_read_rows_json_calls']++;
 		$GLOBALS['vms_test_event_plan_import_read_rows_json_references'][] = $reference;
@@ -919,8 +919,8 @@ if (!function_exists('vms_ticket_integrity_get_logs')) {
 	}
 }
 
-if (!function_exists('vms_integrity_list_event_plans_with_venue_issues')) {
-	function vms_integrity_list_event_plans_with_venue_issues(int $limit): array
+if (!function_exists('bvmgr_integrity_list_event_plans_with_venue_issues')) {
+	function bvmgr_integrity_list_event_plans_with_venue_issues(int $limit): array
 	{
 		$GLOBALS['vms_test_integrity_venue_issue_calls']++;
 		$GLOBALS['vms_test_integrity_venue_issue_limits'][] = $limit;
@@ -928,8 +928,8 @@ if (!function_exists('vms_integrity_list_event_plans_with_venue_issues')) {
 	}
 }
 
-if (!function_exists('vms_integrity_list_event_plans_with_calendar_issues')) {
-	function vms_integrity_list_event_plans_with_calendar_issues(int $limit): array
+if (!function_exists('bvmgr_integrity_list_event_plans_with_calendar_issues')) {
+	function bvmgr_integrity_list_event_plans_with_calendar_issues(int $limit): array
 	{
 		$GLOBALS['vms_test_integrity_calendar_issue_calls']++;
 		$GLOBALS['vms_test_integrity_calendar_issue_limits'][] = $limit;
@@ -969,8 +969,8 @@ if (!function_exists('get_the_title')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_event_plan_date')) {
-	function vms_feedback_get_event_plan_date(int $event_plan_id): string
+if (!function_exists('bvmgr_feedback_get_event_plan_date')) {
+	function bvmgr_feedback_get_event_plan_date(int $event_plan_id): string
 	{
 		$GLOBALS['vms_test_feedback_event_plan_date_calls']++;
 		$GLOBALS['vms_test_feedback_event_plan_date_ids'][] = $event_plan_id;
@@ -978,8 +978,8 @@ if (!function_exists('vms_feedback_get_event_plan_date')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_event_context')) {
-	function vms_feedback_get_event_context(int $event_plan_id): array
+if (!function_exists('bvmgr_feedback_get_event_context')) {
+	function bvmgr_feedback_get_event_context(int $event_plan_id): array
 	{
 		$GLOBALS['vms_test_feedback_event_context_calls']++;
 		$GLOBALS['vms_test_feedback_event_context_ids'][] = $event_plan_id;
@@ -1257,12 +1257,12 @@ $richNoticesCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=
 $statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
 $calendarRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]vms_render_integrity_calendar_reconcile_notice[\'"]~', $allIncludeSource, $unusedCalendarRichMatches);
 $venueRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]vms_render_integrity_venue_reconcile_notice[\'"]~', $allIncludeSource, $unusedVenueRichMatches);
-$continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
+$continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
 $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
 $squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
 $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*function\s*\(\)\s*use\s*\(\s*\$pending\s*\)\s*:\s*void~', $staffCertificationsSource, $unusedStaffMatches);
 $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notices~', $emailFollowupsSource, $unusedEmailFollowupsMatches);
-$eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
+$eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
 $ticketIntegrityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_ticket_integrity_render_notice_from_query[\'"]~', $ticketIntegritySource, $unusedTicketIntegrityMatches);
 $settingsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_render_settings_page_notice_bar[\'"]~', $settingsSource, $unusedSettingsMatches);
 $passClaimsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_pass_claims_render_admin_notices[\'"]~', $passClaimsSource, $unusedPassClaimsMatches);
@@ -1404,7 +1404,7 @@ $assert(strpos($venueNoticeSource, '<div class="notice notice-warning"><p><stron
 $assert(strpos($venueNoticeSource, '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>') !== false, 'Venue Reconciliation rich notice callback should preserve the nothing-selected warning fragment.');
 $assert(strpos($venueNoticeSource, '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: ') !== false, 'Venue Reconciliation rich notice callback should preserve the success fragment.');
 $assert(strpos($venueNoticeSource, '<a ') === false && strpos($venueNoticeSource, '<span') === false && strpos($venueNoticeSource, '<em') === false && strpos($venueNoticeSource, '<button') === false && strpos($venueNoticeSource, '<ul') === false && strpos($venueNoticeSource, '<ol') === false && strpos($venueNoticeSource, '<li') === false && strpos($venueNoticeSource, 'data-') === false && strpos($venueNoticeSource, 'role=') === false && strpos($venueNoticeSource, 'style=') === false, 'Venue Reconciliation rich notice callback should remain limited to div[class], p, strong, and text nodes.');
-$assert(strpos($venueNoticeSource, 'get_option(') === false && strpos($venueNoticeSource, 'get_transient(') === false && strpos($venueNoticeSource, 'set_transient(') === false && strpos($venueNoticeSource, 'delete_transient(') === false && strpos($venueNoticeSource, 'get_posts(') === false && strpos($venueNoticeSource, 'vms_integrity_list_event_plans_with_venue_issues(') === false, 'Venue Reconciliation rich notice callback should not add provider or storage reads or mutations.');
+$assert(strpos($venueNoticeSource, 'get_option(') === false && strpos($venueNoticeSource, 'get_transient(') === false && strpos($venueNoticeSource, 'set_transient(') === false && strpos($venueNoticeSource, 'delete_transient(') === false && strpos($venueNoticeSource, 'get_posts(') === false && strpos($venueNoticeSource, 'bvmgr_integrity_list_event_plans_with_venue_issues(') === false, 'Venue Reconciliation rich notice callback should not add provider or storage reads or mutations.');
 $assert(strpos($venueNoticeSource, 'apply_filters(') === false && strpos($venueNoticeSource, 'do_action(') === false && strpos($venueNoticeSource, 'settings_errors(') === false && strpos($venueNoticeSource, 'add_settings_error(') === false, 'Venue Reconciliation rich notice callback should remain package-owned and outside hooks or Settings API notice ownership.');
 $assert(strpos($venueSectionsSource, 'Review Event Plans that reference Venues') === false, 'Venue Reconciliation page sections helper should not duplicate the intro copy.');
 
@@ -1574,7 +1574,7 @@ $assert(strpos($calendarNoticeSource, '<div class="notice notice-warning"><p><st
 $assert(strpos($calendarNoticeSource, '<div class="notice notice-warning"><p><strong>Nothing selected.</strong> Select one or more Event Plans first.</p></div>') !== false, 'Calendar Reconciliation rich notice callback should preserve the nothing-selected warning fragment.');
 $assert(strpos($calendarNoticeSource, '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: ') !== false, 'Calendar Reconciliation rich notice callback should preserve the success fragment.');
 $assert(strpos($calendarNoticeSource, '<a ') === false && strpos($calendarNoticeSource, '<span') === false && strpos($calendarNoticeSource, '<em') === false && strpos($calendarNoticeSource, '<button') === false && strpos($calendarNoticeSource, '<ul') === false && strpos($calendarNoticeSource, '<ol') === false && strpos($calendarNoticeSource, '<li') === false && strpos($calendarNoticeSource, 'data-') === false && strpos($calendarNoticeSource, 'role=') === false && strpos($calendarNoticeSource, 'style=') === false, 'Calendar Reconciliation rich notice callback should remain limited to div[class], p, strong, and text nodes.');
-$assert(strpos($calendarNoticeSource, 'get_option(') === false && strpos($calendarNoticeSource, 'get_transient(') === false && strpos($calendarNoticeSource, 'set_transient(') === false && strpos($calendarNoticeSource, 'delete_transient(') === false && strpos($calendarNoticeSource, 'get_posts(') === false && strpos($calendarNoticeSource, 'vms_integrity_list_event_plans_with_calendar_issues(') === false, 'Calendar Reconciliation rich notice callback should not add provider or storage reads or mutations.');
+$assert(strpos($calendarNoticeSource, 'get_option(') === false && strpos($calendarNoticeSource, 'get_transient(') === false && strpos($calendarNoticeSource, 'set_transient(') === false && strpos($calendarNoticeSource, 'delete_transient(') === false && strpos($calendarNoticeSource, 'get_posts(') === false && strpos($calendarNoticeSource, 'bvmgr_integrity_list_event_plans_with_calendar_issues(') === false, 'Calendar Reconciliation rich notice callback should not add provider or storage reads or mutations.');
 $assert(strpos($calendarNoticeSource, 'apply_filters(') === false && strpos($calendarNoticeSource, 'do_action(') === false && strpos($calendarNoticeSource, 'settings_errors(') === false && strpos($calendarNoticeSource, 'add_settings_error(') === false, 'Calendar Reconciliation rich notice callback should remain package-owned and outside hooks or Settings API notice ownership.');
 $assert(strpos($calendarSectionsSource, 'Review Event Plans that reference missing, trashed, or unpublished TEC events') === false, 'Calendar Reconciliation page sections helper should not duplicate the intro copy.');
 
@@ -2203,19 +2203,19 @@ $assert(
 	'Status Notice callback should preserve the bulk-updated notice fragment with inert dynamic text.'
 );
 
-$assert(strpos($continuitySource, 'function vms_continuity_binder_render_updated_notice(): void') !== false, 'Continuity Binder should expose a dedicated explicit notice callback.');
-$assert(substr_count($continuitySource, "'notices_callback' => 'vms_continuity_binder_render_updated_notice'") === 1, 'Continuity Binder shell call should supply its explicit notice callback exactly once.');
+$assert(strpos($continuitySource, 'function bvmgr_continuity_binder_render_updated_notice(): void') !== false, 'Continuity Binder should expose a dedicated explicit notice callback.');
+$assert(substr_count($continuitySource, "'notices_callback' => 'bvmgr_continuity_binder_render_updated_notice'") === 1, 'Continuity Binder shell call should supply its explicit notice callback exactly once.');
 $assert(substr_count($continuitySource, 'notice notice-success is-dismissible') === 1, 'Continuity Binder success notice should have exactly one production emission path.');
 $assert(strpos($continuitySource, 'notice notice-warning') !== false, 'Continuity Binder warning notice should remain in the content callback.');
 $assert(strpos($continuitySource, 'notice notice-warning"><p><strong>') !== false, 'Continuity Binder warning notice should remain a richer captured family outside the explicit contract.');
 $assert(strpos($continuitySource, 'apply_filters(') === false && strpos($continuitySource, 'do_action(') === false, 'Continuity Binder notice paths should not hand off markup through hooks or filters.');
 $assert(strpos($continuitySource, 'settings_errors(') === false && strpos($continuitySource, 'do_settings_sections(') === false && strpos($continuitySource, 'wp_editor(') === false, 'Continuity Binder should not route notice markup through Settings API or editor callbacks.');
-$updatedNoticeStart = strpos($continuitySource, 'function vms_continuity_binder_render_updated_notice(): void');
-$updatedNoticeEnd = strpos($continuitySource, 'function vms_render_continuity_binder_page()');
+$updatedNoticeStart = strpos($continuitySource, 'function bvmgr_continuity_binder_render_updated_notice(): void');
+$updatedNoticeEnd = strpos($continuitySource, 'function bvmgr_render_continuity_binder_page()');
 $assert($updatedNoticeStart !== false && $updatedNoticeEnd !== false && $updatedNoticeEnd > $updatedNoticeStart, 'Continuity Binder explicit notice callback body should be locatable.');
 $updatedNoticeSource = substr($continuitySource, (int) $updatedNoticeStart, (int) $updatedNoticeEnd - (int) $updatedNoticeStart);
-$contentStart = strpos($continuitySource, 'function vms_render_continuity_binder_page_content()');
-$contentEnd = strpos($continuitySource, 'function vms_admin_post_save_continuity_binder()');
+$contentStart = strpos($continuitySource, 'function bvmgr_render_continuity_binder_page_content()');
+$contentEnd = strpos($continuitySource, 'function bvmgr_admin_post_save_continuity_binder()');
 $assert($contentStart !== false && $contentEnd !== false && $contentEnd > $contentStart, 'Continuity Binder content callback body should be locatable.');
 $continuityContentSource = substr($continuitySource, (int) $contentStart, (int) $contentEnd - (int) $contentStart);
 $assert(
@@ -2233,7 +2233,7 @@ $_GET = array(
 	'updated' => '1',
 );
 ob_start();
-vms_continuity_binder_render_updated_notice();
+bvmgr_continuity_binder_render_updated_notice();
 $continuityUpdatedNotice = (string) ob_get_clean();
 $assert(
 	$continuityUpdatedNotice === '<div class="notice notice-success is-dismissible"><p>Binder updated.</p></div>',
@@ -2248,7 +2248,7 @@ $_GET = array(
 	'updated' => '0',
 );
 ob_start();
-vms_continuity_binder_render_updated_notice();
+bvmgr_continuity_binder_render_updated_notice();
 $continuityNoNotice = (string) ob_get_clean();
 $assert($continuityNoNotice === '', 'Continuity Binder explicit notice callback should stay silent when the exact updated flag is absent.');
 
@@ -3268,40 +3268,40 @@ $assert(substr_count($ticketIntegrityRenderedPage, 'State of the Range email fai
 $assert(strpos($ticketIntegrityRenderedPage, 'State of the Range email failed to send. Mailer down') < strpos($ticketIntegrityRenderedPage, 'Run Ticket Integrity Check Now'), 'Ticket Integrity shell output should keep the moved notice before the run panel.');
 $assert(strpos($ticketIntegrityRenderedPage, 'Run Ticket Integrity Check Now') < strpos($ticketIntegrityRenderedPage, 'Monitor Settings'), 'Ticket Integrity shell output should preserve the original content ordering after the moved notice.');
 
-$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_get_page_state(): array') !== false, 'Event Feedback should expose a dedicated page-state resolver for the selected Event Plan.');
-$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_query_arg(string $key): string') !== false, 'Event Feedback should expose a dedicated read-only query helper for page state.');
-$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_has_query_arg(string $key): bool') !== false, 'Event Feedback should expose a dedicated read-only query presence helper.');
-$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(array $args = array()): void') !== false, 'Event Feedback should expose a dedicated explicit notice callback.');
-$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_resolved_content(array $state, bool $render_missing_plan_notice = false): void') !== false, 'Event Feedback should expose a dedicated resolved-content renderer for the selected Event Plan state.');
-$assert(strpos($eventFeedbackSource, 'function vms_feedback_admin_render_page_without_shell(): void') !== false, 'Event Feedback should expose a dedicated no-shell fallback renderer.');
-$assert(substr_count($eventFeedbackSource, "'notices_callback' => 'vms_feedback_admin_render_notices'") === 1, 'Event Feedback shell call should supply its explicit notice callback exactly once.');
-$eventFeedbackStateStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_get_page_state(): array');
-$eventFeedbackStateEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_admin_render_notices'))");
+$assert(strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_get_page_state(): array') !== false, 'Event Feedback should expose a dedicated page-state resolver for the selected Event Plan.');
+$assert(strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_query_arg(string $key): string') !== false, 'Event Feedback should expose a dedicated read-only query helper for page state.');
+$assert(strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_has_query_arg(string $key): bool') !== false, 'Event Feedback should expose a dedicated read-only query presence helper.');
+$assert(strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_render_notices(array $args = array()): void') !== false, 'Event Feedback should expose a dedicated explicit notice callback.');
+$assert(strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_render_resolved_content(array $state, bool $render_missing_plan_notice = false): void') !== false, 'Event Feedback should expose a dedicated resolved-content renderer for the selected Event Plan state.');
+$assert(strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_render_page_without_shell(): void') !== false, 'Event Feedback should expose a dedicated no-shell fallback renderer.');
+$assert(substr_count($eventFeedbackSource, "'notices_callback' => 'bvmgr_feedback_admin_render_notices'") === 1, 'Event Feedback shell call should supply its explicit notice callback exactly once.');
+$eventFeedbackStateStart = strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_get_page_state(): array');
+$eventFeedbackStateEnd = strpos($eventFeedbackSource, "if (!function_exists('bvmgr_feedback_admin_render_notices'))");
 $assert($eventFeedbackStateStart !== false && $eventFeedbackStateEnd !== false && $eventFeedbackStateEnd > $eventFeedbackStateStart, 'Event Feedback page-state resolver body should be locatable.');
 $eventFeedbackStateSource = substr($eventFeedbackSource, (int) $eventFeedbackStateStart, (int) $eventFeedbackStateEnd - (int) $eventFeedbackStateStart);
-$eventFeedbackNoticeStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_notices(array $args = array()): void');
-$eventFeedbackNoticeEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_admin_render_notification_settings'))");
+$eventFeedbackNoticeStart = strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_render_notices(array $args = array()): void');
+$eventFeedbackNoticeEnd = strpos($eventFeedbackSource, "if (!function_exists('bvmgr_feedback_admin_render_notification_settings'))");
 $assert($eventFeedbackNoticeStart !== false && $eventFeedbackNoticeEnd !== false && $eventFeedbackNoticeEnd > $eventFeedbackNoticeStart, 'Event Feedback explicit notice callback body should be locatable.');
 $eventFeedbackNoticeSource = substr($eventFeedbackSource, (int) $eventFeedbackNoticeStart, (int) $eventFeedbackNoticeEnd - (int) $eventFeedbackNoticeStart);
-$eventFeedbackContentStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_content(): void');
-$eventFeedbackContentEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_admin_render_page_without_shell'))");
+$eventFeedbackContentStart = strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_render_content(): void');
+$eventFeedbackContentEnd = strpos($eventFeedbackSource, "if (!function_exists('bvmgr_feedback_admin_render_page_without_shell'))");
 $assert($eventFeedbackContentStart !== false && $eventFeedbackContentEnd !== false && $eventFeedbackContentEnd > $eventFeedbackContentStart, 'Event Feedback content callback body should be locatable.');
 $eventFeedbackContentSource = substr($eventFeedbackSource, (int) $eventFeedbackContentStart, (int) $eventFeedbackContentEnd - (int) $eventFeedbackContentStart);
-$eventFeedbackFallbackStart = strpos($eventFeedbackSource, 'function vms_feedback_admin_render_page_without_shell(): void');
-$eventFeedbackFallbackEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_render_event_feedback_admin_page'))");
+$eventFeedbackFallbackStart = strpos($eventFeedbackSource, 'function bvmgr_feedback_admin_render_page_without_shell(): void');
+$eventFeedbackFallbackEnd = strpos($eventFeedbackSource, "if (!function_exists('bvmgr_render_event_feedback_admin_page'))");
 $assert($eventFeedbackFallbackStart !== false && $eventFeedbackFallbackEnd !== false && $eventFeedbackFallbackEnd > $eventFeedbackFallbackStart, 'Event Feedback no-shell fallback renderer body should be locatable.');
 $eventFeedbackFallbackSource = substr($eventFeedbackSource, (int) $eventFeedbackFallbackStart, (int) $eventFeedbackFallbackEnd - (int) $eventFeedbackFallbackStart);
-$eventFeedbackPageStart = strpos($eventFeedbackSource, 'function vms_render_event_feedback_admin_page(): void');
-$eventFeedbackPageEnd = strpos($eventFeedbackSource, "if (!function_exists('vms_feedback_add_event_plan_metabox'))");
+$eventFeedbackPageStart = strpos($eventFeedbackSource, 'function bvmgr_render_event_feedback_admin_page(): void');
+$eventFeedbackPageEnd = strpos($eventFeedbackSource, "if (!function_exists('bvmgr_feedback_add_event_plan_metabox'))");
 $assert($eventFeedbackPageStart !== false && $eventFeedbackPageEnd !== false && $eventFeedbackPageEnd > $eventFeedbackPageStart, 'Event Feedback page renderer body should be locatable.');
 $eventFeedbackPageSource = substr($eventFeedbackSource, (int) $eventFeedbackPageStart, (int) $eventFeedbackPageEnd - (int) $eventFeedbackPageStart);
-$assert(strpos($eventFeedbackStateSource, "vms_feedback_admin_has_query_arg('event_plan_id') ? wp_json_encode(vms_feedback_admin_query_arg('event_plan_id')) : 'missing'") !== false, 'Event Feedback page-state resolver should preserve the selected Event Plan cache-key normalization.');
-$assert(strpos($eventFeedbackStateSource, 'absint(vms_feedback_admin_query_arg(\'event_plan_id\'))') !== false, 'Event Feedback page-state resolver should preserve the selected Event Plan request normalization.');
-$assert(strpos($eventFeedbackStateSource, 'vms_feedback_get_event_context($selected_event_plan_id)') !== false, 'Event Feedback page-state resolver should preserve the existing Event Plan context lookup.');
+$assert(strpos($eventFeedbackStateSource, "bvmgr_feedback_admin_has_query_arg('event_plan_id') ? wp_json_encode(bvmgr_feedback_admin_query_arg('event_plan_id')) : 'missing'") !== false, 'Event Feedback page-state resolver should preserve the selected Event Plan cache-key normalization.');
+$assert(strpos($eventFeedbackStateSource, 'absint(bvmgr_feedback_admin_query_arg(\'event_plan_id\'))') !== false, 'Event Feedback page-state resolver should preserve the selected Event Plan request normalization.');
+$assert(strpos($eventFeedbackStateSource, 'bvmgr_feedback_get_event_context($selected_event_plan_id)') !== false, 'Event Feedback page-state resolver should preserve the existing Event Plan context lookup.');
 $assert(strpos($eventFeedbackStateSource, '\'show_missing_plan_notice\' => $show_missing_plan_notice') !== false, 'Event Feedback page-state resolver should preserve a dedicated missing-plan flag.');
-$assert(strpos($eventFeedbackNoticeSource, "vms_feedback_admin_query_arg('vms_feedback_settings_saved') !== ''") !== false, 'Event Feedback explicit notice callback should preserve the existing saved-settings presence check.');
-$assert(strpos($eventFeedbackNoticeSource, "vms_feedback_admin_has_query_arg('vms_feedback_deleted')") !== false, 'Event Feedback explicit notice callback should preserve the delete-status presence check.');
-$assert(strpos($eventFeedbackNoticeSource, 'sanitize_key(vms_feedback_admin_query_arg(\'vms_feedback_deleted\'))') !== false, 'Event Feedback explicit notice callback should preserve the sanitized delete-status source.');
+$assert(strpos($eventFeedbackNoticeSource, "bvmgr_feedback_admin_query_arg('vms_feedback_settings_saved') !== ''") !== false, 'Event Feedback explicit notice callback should preserve the existing saved-settings presence check.');
+$assert(strpos($eventFeedbackNoticeSource, "bvmgr_feedback_admin_has_query_arg('vms_feedback_deleted')") !== false, 'Event Feedback explicit notice callback should preserve the delete-status presence check.');
+$assert(strpos($eventFeedbackNoticeSource, 'sanitize_key(bvmgr_feedback_admin_query_arg(\'vms_feedback_deleted\'))') !== false, 'Event Feedback explicit notice callback should preserve the sanitized delete-status source.');
 $assert(strpos($eventFeedbackNoticeSource, 'That Event Plan could not be found.') !== false, 'Event Feedback explicit notice callback should now own the missing-plan notice family.');
 $assert(strpos($eventFeedbackNoticeSource, 'include_missing_plan_notice') !== false, 'Event Feedback explicit notice callback should support including the missing-plan family without replacing the redirect notices.');
 $assert(substr_count($eventFeedbackNoticeSource, 'notice notice-success is-dismissible') === 2, 'Event Feedback explicit notice callback should preserve both success notice branches.');
@@ -3315,24 +3315,24 @@ $assert(strpos($eventFeedbackNoticeSource, '<strong>') === false && strpos($even
 $assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedback_settings_saved\', \'1\'') !== false, 'Event Feedback save handler should preserve the redirect-status notice source.');
 $assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedback_deleted\', \'missing\'') !== false, 'Event Feedback delete handler should preserve the missing-response redirect path.');
 $assert(strpos($eventFeedbackSource, 'wp_safe_redirect(add_query_arg(\'vms_feedback_deleted\', $deleted ? \'1\' : \'0\'') !== false, 'Event Feedback delete handler should preserve the success/failure redirect-status path.');
-$assert(strpos($eventFeedbackPageSource, "'notices_callback' => 'vms_feedback_admin_render_notices'") !== false, 'Event Feedback page renderer should pass the explicit notice callback through the Administrator shell.');
-$assert(strpos($eventFeedbackPageSource, 'vms_feedback_admin_render_page_without_shell();') !== false, 'Event Feedback page renderer should delegate the no-shell fallback through the dedicated renderer.');
+$assert(strpos($eventFeedbackPageSource, "'notices_callback' => 'bvmgr_feedback_admin_render_notices'") !== false, 'Event Feedback page renderer should pass the explicit notice callback through the Administrator shell.');
+$assert(strpos($eventFeedbackPageSource, 'bvmgr_feedback_admin_render_page_without_shell();') !== false, 'Event Feedback page renderer should delegate the no-shell fallback through the dedicated renderer.');
 $eventFeedbackFallbackHeadingPos = strpos($eventFeedbackFallbackSource, "echo '<div class=\"wrap\"><h1>'");
-$eventFeedbackFallbackNoticePos = strpos($eventFeedbackFallbackSource, 'vms_feedback_admin_render_notices(array(');
-$eventFeedbackFallbackSelectorPos = strpos($eventFeedbackFallbackSource, 'vms_feedback_admin_render_event_selector($selected_event_plan_id);');
-$eventFeedbackFallbackContentPos = strpos($eventFeedbackFallbackSource, 'vms_feedback_admin_render_resolved_content($state, true);');
+$eventFeedbackFallbackNoticePos = strpos($eventFeedbackFallbackSource, 'bvmgr_feedback_admin_render_notices(array(');
+$eventFeedbackFallbackSelectorPos = strpos($eventFeedbackFallbackSource, 'bvmgr_feedback_admin_render_event_selector($selected_event_plan_id);');
+$eventFeedbackFallbackContentPos = strpos($eventFeedbackFallbackSource, 'bvmgr_feedback_admin_render_resolved_content($state, true);');
 $assert($eventFeedbackFallbackHeadingPos !== false && $eventFeedbackFallbackNoticePos !== false && $eventFeedbackFallbackSelectorPos !== false && $eventFeedbackFallbackContentPos !== false && $eventFeedbackFallbackHeadingPos < $eventFeedbackFallbackNoticePos && $eventFeedbackFallbackNoticePos < $eventFeedbackFallbackSelectorPos && $eventFeedbackFallbackSelectorPos < $eventFeedbackFallbackContentPos, 'Event Feedback no-shell fallback should preserve heading, redirect notices, selector, then the resolved page body.');
 $assert(strpos($eventFeedbackFallbackSource, "'include_missing_plan_notice' => false") !== false, 'Event Feedback no-shell fallback should defer the missing-plan notice until after the selector.');
-$assert(strpos($eventFeedbackContentSource, 'vms_feedback_admin_render_notices();') === false, 'Event Feedback content callback should no longer emit the moved redirect notice family.');
+$assert(strpos($eventFeedbackContentSource, 'bvmgr_feedback_admin_render_notices();') === false, 'Event Feedback content callback should no longer emit the moved redirect notice family.');
 $assert(strpos($eventFeedbackContentSource, 'That Event Plan could not be found.') === false, 'Event Feedback content callback should remove the original missing-plan notice emission from ordinary content.');
-$assert(strpos($eventFeedbackContentSource, 'vms_feedback_admin_render_event_selector($selected_event_plan_id);') !== false, 'Event Feedback content callback should still render the selector before the remaining page body.');
-$assert(strpos($eventFeedbackContentSource, 'vms_feedback_admin_render_resolved_content($state);') !== false, 'Event Feedback content callback should delegate to the resolved content renderer after rendering the selector.');
+$assert(strpos($eventFeedbackContentSource, 'bvmgr_feedback_admin_render_event_selector($selected_event_plan_id);') !== false, 'Event Feedback content callback should still render the selector before the remaining page body.');
+$assert(strpos($eventFeedbackContentSource, 'bvmgr_feedback_admin_render_resolved_content($state);') !== false, 'Event Feedback content callback should delegate to the resolved content renderer after rendering the selector.');
 
 $_GET = array(
 	'vms_feedback_settings_saved' => '1',
 );
 ob_start();
-vms_feedback_admin_render_notices();
+bvmgr_feedback_admin_render_notices();
 $eventFeedbackSavedNotice = (string) ob_get_clean();
 $assert(
 	$eventFeedbackSavedNotice === '<div class="notice notice-success is-dismissible"><p>Event Feedback notification settings saved.</p></div>',
@@ -3347,7 +3347,7 @@ $_GET = array(
 	'vms_feedback_deleted' => '1',
 );
 ob_start();
-vms_feedback_admin_render_notices();
+bvmgr_feedback_admin_render_notices();
 $eventFeedbackDeletedNotice = (string) ob_get_clean();
 $assert(
 	$eventFeedbackDeletedNotice === '<div class="notice notice-success is-dismissible"><p>Feedback response deleted.</p></div>',
@@ -3358,7 +3358,7 @@ $_GET = array(
 	'vms_feedback_deleted' => 'missing',
 );
 ob_start();
-vms_feedback_admin_render_notices();
+bvmgr_feedback_admin_render_notices();
 $eventFeedbackMissingNotice = (string) ob_get_clean();
 $assert(
 	$eventFeedbackMissingNotice === '<div class="notice notice-error is-dismissible"><p>Feedback response could not be found.</p></div>',
@@ -3369,7 +3369,7 @@ $_GET = array(
 	'vms_feedback_deleted' => '0',
 );
 ob_start();
-vms_feedback_admin_render_notices();
+bvmgr_feedback_admin_render_notices();
 $eventFeedbackFailedNotice = (string) ob_get_clean();
 $assert(
 	$eventFeedbackFailedNotice === '<div class="notice notice-error is-dismissible"><p>Feedback response could not be deleted.</p></div>',
@@ -3380,7 +3380,7 @@ $_GET = array(
 	'vms_feedback_deleted' => '<strong>unexpected</strong>',
 );
 ob_start();
-vms_feedback_admin_render_notices();
+bvmgr_feedback_admin_render_notices();
 $eventFeedbackMalformedNotice = (string) ob_get_clean();
 $assert(
 	$eventFeedbackMalformedNotice === '<div class="notice notice-error is-dismissible"><p>Feedback response could not be deleted.</p></div>',
@@ -3392,7 +3392,7 @@ $_GET = array(
 	'vms_feedback_deleted' => 'missing',
 );
 ob_start();
-vms_feedback_admin_render_notices();
+bvmgr_feedback_admin_render_notices();
 $eventFeedbackCombinedNotice = (string) ob_get_clean();
 $assert(
 	$eventFeedbackCombinedNotice === '<div class="notice notice-success is-dismissible"><p>Event Feedback notification settings saved.</p></div><div class="notice notice-error is-dismissible"><p>Feedback response could not be found.</p></div>',
@@ -3406,7 +3406,7 @@ $_GET = array(
 	'event_plan_id' => '77',
 );
 ob_start();
-vms_feedback_admin_render_notices(array('include_redirect_notices' => false));
+bvmgr_feedback_admin_render_notices(array('include_redirect_notices' => false));
 $eventFeedbackMissingPlanNotice = (string) ob_get_clean();
 $assert(
 	$eventFeedbackMissingPlanNotice === '<div class="notice notice-error"><p>That Event Plan could not be found.</p></div>',
@@ -3425,7 +3425,7 @@ $_GET = array(
 	'event_plan_id' => '<strong>unexpected</strong>',
 );
 ob_start();
-vms_feedback_admin_render_notices(array('include_redirect_notices' => false));
+bvmgr_feedback_admin_render_notices(array('include_redirect_notices' => false));
 $eventFeedbackMalformedPlanNotice = (string) ob_get_clean();
 $assert($eventFeedbackMalformedPlanNotice === '', 'Event Feedback missing-plan notice should stay silent when the selected Event Plan request sanitizes to zero.');
 $assert($GLOBALS['vms_test_feedback_event_context_calls'] === 0, 'Event Feedback missing-plan notice should not resolve Event Plan context when the selected Event Plan request sanitizes to zero.');
@@ -3447,7 +3447,7 @@ $_GET = array(
 	'vms_feedback_settings_saved' => '1',
 );
 ob_start();
-vms_render_event_feedback_admin_page();
+bvmgr_render_event_feedback_admin_page();
 $eventFeedbackShellPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_feedback_recent_event_plans_calls'] === 1, 'Event Feedback shell render should resolve recent Event Plans exactly once for the selector.');
 $assert($GLOBALS['vms_test_feedback_event_plan_date_calls'] === 1 && $GLOBALS['vms_test_feedback_event_plan_date_ids'] === array(77), 'Event Feedback shell render should preserve the existing selector label date lookup exactly once.');
@@ -3478,7 +3478,7 @@ $_GET = array(
 	'vms_feedback_settings_saved' => '1',
 );
 ob_start();
-vms_feedback_admin_render_page_without_shell();
+bvmgr_feedback_admin_render_page_without_shell();
 $eventFeedbackFallbackPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_feedback_recent_event_plans_calls'] === 1, 'Event Feedback no-shell fallback should resolve recent Event Plans exactly once for the selector.');
 $assert($GLOBALS['vms_test_feedback_event_plan_date_calls'] === 1 && $GLOBALS['vms_test_feedback_event_plan_date_ids'] === array(78), 'Event Feedback no-shell fallback should preserve the existing selector label date lookup exactly once.');
@@ -3500,69 +3500,69 @@ $GLOBALS['vms_test_feedback_event_context_calls'] = 0;
 $GLOBALS['vms_test_feedback_event_context_ids'] = array();
 $_GET = array();
 ob_start();
-vms_feedback_admin_render_page_without_shell();
+bvmgr_feedback_admin_render_page_without_shell();
 $eventFeedbackIntroPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_feedback_recent_event_plans_calls'] === 1, 'Event Feedback intro render should still resolve recent Event Plans exactly once for the selector.');
 $assert($GLOBALS['vms_test_feedback_event_context_calls'] === 0, 'Event Feedback intro render should not resolve Event Plan context when no Event Plan is selected.');
 $assert(strpos($eventFeedbackIntroPage, 'class="vms-feedback-admin-selector"') < strpos($eventFeedbackIntroPage, 'Get started'), 'Event Feedback intro render should preserve selector-before-intro ordering.');
 $assert(strpos($eventFeedbackIntroPage, 'That Event Plan could not be found.') === false, 'Event Feedback intro render should stay separate from the missing-plan notice family when no Event Plan is selected.');
 
-$assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_notice_class(string $type): string') !== false, 'Event Plan Import should preserve the notice-class mapper.');
-$assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_notice(array $notice): void') !== false, 'Event Plan Import should expose a dedicated explicit notice renderer.');
-$assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_intro(): void') !== false, 'Event Plan Import should expose a dedicated intro renderer for the shared page copy.');
-$assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_rows_payload_error_messages(): array') !== false, 'Event Plan Import should expose the local rows-payload error vocabulary.');
-$assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_rows_payload_error(string $error_code): void') !== false, 'Event Plan Import should expose a dedicated local rows-payload error renderer.');
-$assert(strpos($eventPlanImportSource, 'function vms_event_plan_import_render_main_content(array $preview, string $preview_token, array $latest_run, array $revertible_run): void') !== false, 'Event Plan Import should expose a dedicated renderer for the remaining page content.');
-$eventPlanImportNoticeStart = strpos($eventPlanImportSource, 'function vms_event_plan_import_render_notice(array $notice): void');
-$eventPlanImportNoticeEnd = strpos($eventPlanImportSource, "if (!function_exists('vms_event_plan_import_render_summary_cards'))");
+$assert(strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_notice_class(string $type): string') !== false, 'Event Plan Import should preserve the notice-class mapper.');
+$assert(strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_render_notice(array $notice): void') !== false, 'Event Plan Import should expose a dedicated explicit notice renderer.');
+$assert(strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_render_intro(): void') !== false, 'Event Plan Import should expose a dedicated intro renderer for the shared page copy.');
+$assert(strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_rows_payload_error_messages(): array') !== false, 'Event Plan Import should expose the local rows-payload error vocabulary.');
+$assert(strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_render_rows_payload_error(string $error_code): void') !== false, 'Event Plan Import should expose a dedicated local rows-payload error renderer.');
+$assert(strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_render_main_content(array $preview, string $preview_token, array $latest_run, array $revertible_run): void') !== false, 'Event Plan Import should expose a dedicated renderer for the remaining page content.');
+$eventPlanImportNoticeStart = strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_render_notice(array $notice): void');
+$eventPlanImportNoticeEnd = strpos($eventPlanImportSource, "if (!function_exists('bvmgr_event_plan_import_render_summary_cards'))");
 $assert($eventPlanImportNoticeStart !== false && $eventPlanImportNoticeEnd !== false && $eventPlanImportNoticeEnd > $eventPlanImportNoticeStart, 'Event Plan Import explicit notice renderer body should be locatable.');
 $eventPlanImportNoticeSource = substr($eventPlanImportSource, (int) $eventPlanImportNoticeStart, (int) $eventPlanImportNoticeEnd - (int) $eventPlanImportNoticeStart);
-$eventPlanImportIntroStart = strpos($eventPlanImportSource, 'function vms_event_plan_import_render_intro(): void');
-$eventPlanImportIntroEnd = strpos($eventPlanImportSource, "if (!function_exists('vms_event_plan_import_render_summary_cards'))");
+$eventPlanImportIntroStart = strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_render_intro(): void');
+$eventPlanImportIntroEnd = strpos($eventPlanImportSource, "if (!function_exists('bvmgr_event_plan_import_render_summary_cards'))");
 $assert($eventPlanImportIntroStart !== false && $eventPlanImportIntroEnd !== false && $eventPlanImportIntroEnd > $eventPlanImportIntroStart, 'Event Plan Import intro renderer body should be locatable.');
 $eventPlanImportIntroSource = substr($eventPlanImportSource, (int) $eventPlanImportIntroStart, (int) $eventPlanImportIntroEnd - (int) $eventPlanImportIntroStart);
-$eventPlanImportMainContentStart = strpos($eventPlanImportSource, 'function vms_event_plan_import_render_main_content(array $preview, string $preview_token, array $latest_run, array $revertible_run): void');
-$eventPlanImportMainContentEnd = strpos($eventPlanImportSource, "if (!function_exists('vms_event_plan_import_render_admin_page'))");
+$eventPlanImportMainContentStart = strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_render_main_content(array $preview, string $preview_token, array $latest_run, array $revertible_run): void');
+$eventPlanImportMainContentEnd = strpos($eventPlanImportSource, "if (!function_exists('bvmgr_event_plan_import_render_admin_page'))");
 $assert($eventPlanImportMainContentStart !== false && $eventPlanImportMainContentEnd !== false && $eventPlanImportMainContentEnd > $eventPlanImportMainContentStart, 'Event Plan Import main-content renderer body should be locatable.');
 $eventPlanImportMainContentSource = substr($eventPlanImportSource, (int) $eventPlanImportMainContentStart, (int) $eventPlanImportMainContentEnd - (int) $eventPlanImportMainContentStart);
-$eventPlanImportPageStart = strpos($eventPlanImportSource, 'function vms_event_plan_import_render_admin_page(): void');
+$eventPlanImportPageStart = strpos($eventPlanImportSource, 'function bvmgr_event_plan_import_render_admin_page(): void');
 $assert($eventPlanImportPageStart !== false, 'Event Plan Import page renderer body should be locatable.');
 $eventPlanImportPageSource = substr($eventPlanImportSource, (int) $eventPlanImportPageStart);
 $eventPlanImportContentStart = strpos($eventPlanImportPageSource, '$render_content = static function () use (');
 $eventPlanImportContentEnd = strpos($eventPlanImportPageSource, "if (function_exists('bvmgr_admin_ui_render_shell')) {");
 $assert($eventPlanImportContentStart !== false && $eventPlanImportContentEnd !== false && $eventPlanImportContentEnd > $eventPlanImportContentStart, 'Event Plan Import content callback body should be locatable.');
 $eventPlanImportContentSource = substr($eventPlanImportPageSource, (int) $eventPlanImportContentStart, (int) $eventPlanImportContentEnd - (int) $eventPlanImportContentStart);
-$eventPlanImportSetStart = strpos($eventPlanImportEngineSource, 'function vms_event_plan_import_set_notice(string $type, string $message): void');
-$eventPlanImportSetEnd = strpos($eventPlanImportEngineSource, "if (!function_exists('vms_event_plan_import_pop_notice'))");
+$eventPlanImportSetStart = strpos($eventPlanImportEngineSource, 'function bvmgr_event_plan_import_set_notice(string $type, string $message): void');
+$eventPlanImportSetEnd = strpos($eventPlanImportEngineSource, "if (!function_exists('bvmgr_event_plan_import_pop_notice'))");
 $assert($eventPlanImportSetStart !== false && $eventPlanImportSetEnd !== false && $eventPlanImportSetEnd > $eventPlanImportSetStart, 'Event Plan Import notice-set helper body should be locatable.');
 $eventPlanImportSetSource = substr($eventPlanImportEngineSource, (int) $eventPlanImportSetStart, (int) $eventPlanImportSetEnd - (int) $eventPlanImportSetStart);
-$eventPlanImportPopStart = strpos($eventPlanImportEngineSource, 'function vms_event_plan_import_pop_notice(): array');
-$eventPlanImportPopEnd = strpos($eventPlanImportEngineSource, "if (!function_exists('vms_event_plan_import_get_preview_payload'))");
+$eventPlanImportPopStart = strpos($eventPlanImportEngineSource, 'function bvmgr_event_plan_import_pop_notice(): array');
+$eventPlanImportPopEnd = strpos($eventPlanImportEngineSource, "if (!function_exists('bvmgr_event_plan_import_get_preview_payload'))");
 $assert($eventPlanImportPopStart !== false && $eventPlanImportPopEnd !== false && $eventPlanImportPopEnd > $eventPlanImportPopStart, 'Event Plan Import notice-pop helper body should be locatable.');
 $eventPlanImportPopSource = substr($eventPlanImportEngineSource, (int) $eventPlanImportPopStart, (int) $eventPlanImportPopEnd - (int) $eventPlanImportPopStart);
 $eventPlanImportCapabilityCheckPos = strpos($eventPlanImportPageSource, "current_user_can('manage_options')");
-$eventPlanImportPopPos = strpos($eventPlanImportPageSource, '$notice = vms_event_plan_import_pop_notice();');
+$eventPlanImportPopPos = strpos($eventPlanImportPageSource, '$notice = bvmgr_event_plan_import_pop_notice();');
 $assert($eventPlanImportCapabilityCheckPos !== false && $eventPlanImportPopPos !== false && $eventPlanImportCapabilityCheckPos < $eventPlanImportPopPos, 'Event Plan Import should preserve the capability gate before the destructive notice pop.');
-$assert(strpos($eventPlanImportSetSource, 'vms_event_plan_import_notice_transient_key($user_id)') !== false, 'Event Plan Import notice storage should stay keyed by the current user.');
+$assert(strpos($eventPlanImportSetSource, 'bvmgr_event_plan_import_notice_transient_key($user_id)') !== false, 'Event Plan Import notice storage should stay keyed by the current user.');
 $assert(strpos($eventPlanImportSetSource, 'sanitize_key($type)') !== false, 'Event Plan Import notice storage should preserve type sanitization.');
 $assert(strpos($eventPlanImportSetSource, 'sanitize_text_field($message)') !== false, 'Event Plan Import notice storage should preserve text-only message sanitization.');
 $assert(strpos($eventPlanImportPopSource, 'get_transient($key);') !== false && strpos($eventPlanImportPopSource, 'delete_transient($key);') !== false, 'Event Plan Import notice pop should remain a destructive transient read-and-delete operation.');
 $assert(strpos($eventPlanImportIntroSource, 'Upload a CSV, preview changes, then commit. This importer only writes VMS Event Plan data and does not create or update TEC/Woo records.') !== false, 'Event Plan Import intro renderer should preserve the original introductory copy.');
 $assert(strpos($eventPlanImportMainContentSource, 'name="event_plan_csv_file"') !== false, 'Event Plan Import main-content renderer should preserve the first import-form marker after the moved notice boundary.');
-$assert(strpos($eventPlanImportNoticeSource, 'vms_event_plan_import_notice_class($type)') !== false, 'Event Plan Import explicit notice renderer should preserve the existing severity mapper.');
+$assert(strpos($eventPlanImportNoticeSource, 'bvmgr_event_plan_import_notice_class($type)') !== false, 'Event Plan Import explicit notice renderer should preserve the existing severity mapper.');
 $assert(strpos($eventPlanImportNoticeSource, 'esc_html($message)') !== false, 'Event Plan Import explicit notice renderer should preserve contextual escaping for text.');
 $assert(strpos($eventPlanImportNoticeSource, '<div class="') !== false && strpos($eventPlanImportNoticeSource, ' inline"><p>') !== false, 'Event Plan Import explicit notice renderer should preserve the inline notice fragment shape.');
 $assert(strpos($eventPlanImportNoticeSource, '<strong>') === false && strpos($eventPlanImportNoticeSource, '<a ') === false && strpos($eventPlanImportNoticeSource, '<button') === false, 'Event Plan Import explicit notice renderer should stay within the simple fragment contract.');
-$assert(preg_match('~\$render_notice\s*=\s*static function \(\) use \(\$notice\): void \{\s*vms_event_plan_import_render_notice\(\$notice\);~s', $eventPlanImportPageSource) === 1, 'Event Plan Import should route the popped notice through a page-local explicit notice callback.');
-$assert(preg_match('~\$render_intro\s*=\s*static function \(\): void \{\s*vms_event_plan_import_render_intro\(\);~s', $eventPlanImportPageSource) === 1, 'Event Plan Import page renderer should expose the shared intro renderer through a page-local callable.');
-$assert(preg_match('~\$render_main_content\s*=\s*static function \(\) use \(\$preview,\s*\$preview_token,\s*\$latest_run,\s*\$revertible_run\): void \{\s*vms_event_plan_import_render_main_content\(\$preview,\s*\$preview_token,\s*\$latest_run,\s*\$revertible_run\);~s', $eventPlanImportPageSource) === 1, 'Event Plan Import page renderer should expose the remaining page content through a page-local callable.');
+$assert(preg_match('~\$render_notice\s*=\s*static function \(\) use \(\$notice\): void \{\s*bvmgr_event_plan_import_render_notice\(\$notice\);~s', $eventPlanImportPageSource) === 1, 'Event Plan Import should route the popped notice through a page-local explicit notice callback.');
+$assert(preg_match('~\$render_intro\s*=\s*static function \(\): void \{\s*bvmgr_event_plan_import_render_intro\(\);~s', $eventPlanImportPageSource) === 1, 'Event Plan Import page renderer should expose the shared intro renderer through a page-local callable.');
+$assert(preg_match('~\$render_main_content\s*=\s*static function \(\) use \(\$preview,\s*\$preview_token,\s*\$latest_run,\s*\$revertible_run\): void \{\s*bvmgr_event_plan_import_render_main_content\(\$preview,\s*\$preview_token,\s*\$latest_run,\s*\$revertible_run\);~s', $eventPlanImportPageSource) === 1, 'Event Plan Import page renderer should expose the remaining page content through a page-local callable.');
 $assert(preg_match('~\$render_content\s*=\s*static function \(\) use \(\$render_intro,\s*\$render_main_content\): void \{\s*\$render_intro\(\);\s*\$render_main_content\(\);~s', $eventPlanImportPageSource) === 1, 'Event Plan Import shell content callback should still render introduction before the remaining content.');
 $assert(preg_match('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notice~', $eventPlanImportPageSource) === 1, 'Event Plan Import shell call should supply the page-local explicit notice callback.');
 $assert(preg_match('~echo\s+[\'"]<div class=\"wrap\"><h1>[\'"].*?\$render_intro\(\);\s*\$render_notice\(\);\s*\$render_main_content\(\);~s', $eventPlanImportPageSource) === 1, 'Event Plan Import no-shell fallback should preserve heading, intro, notice, then remaining content ordering.');
-$assert(substr_count($eventPlanImportSource, 'vms_event_plan_import_pop_notice();') === 1, 'Event Plan Import page source should keep exactly one destructive notice pop call.');
-$assert(strpos($eventPlanImportContentSource, 'vms_event_plan_import_pop_notice();') === false, 'Event Plan Import content callback should no longer pop notice state directly.');
-$assert(strpos($eventPlanImportContentSource, 'vms_event_plan_import_render_notice(') === false, 'Event Plan Import content callback should no longer emit the moved primary notice.');
-$assert(strpos($eventPlanImportMainContentSource, 'vms_event_plan_import_render_rows_payload_error((string) $rows_payload->get_error_code());') !== false, 'Event Plan Import should route the rows-payload branch through the dedicated local renderer.');
+$assert(substr_count($eventPlanImportSource, 'bvmgr_event_plan_import_pop_notice();') === 1, 'Event Plan Import page source should keep exactly one destructive notice pop call.');
+$assert(strpos($eventPlanImportContentSource, 'bvmgr_event_plan_import_pop_notice();') === false, 'Event Plan Import content callback should no longer pop notice state directly.');
+$assert(strpos($eventPlanImportContentSource, 'bvmgr_event_plan_import_render_notice(') === false, 'Event Plan Import content callback should no longer emit the moved primary notice.');
+$assert(strpos($eventPlanImportMainContentSource, 'bvmgr_event_plan_import_render_rows_payload_error((string) $rows_payload->get_error_code());') !== false, 'Event Plan Import should route the rows-payload branch through the dedicated local renderer.');
 $assert(strpos($eventPlanImportMainContentSource, '$rows_payload->get_error_message()') === false, 'Event Plan Import should no longer interpolate arbitrary rows-payload error text directly into Preview Results markup.');
 $assert(strpos($eventPlanImportSource, '<div class="notice notice-error inline"><p>') !== false, 'Event Plan Import should preserve the separate inline rows-payload error fragment in its dedicated local renderer.');
 $assert(strpos($eventPlanImportSource, "'rows_json_missing' => __('Preview rows cache is missing. Please run Preview again.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the missing-cache message.');
@@ -3570,8 +3570,8 @@ $assert(strpos($eventPlanImportSource, "'rows_json_unsafe' => __('Preview rows c
 $assert(strpos($eventPlanImportSource, "'rows_json_too_large' => __('Preview rows cache is too large to validate safely.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the oversized-cache message.');
 $assert(strpos($eventPlanImportSource, "'rows_json_empty' => __('Preview rows cache is empty.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the empty-cache message.');
 $assert(strpos($eventPlanImportSource, "'rows_json_invalid' => __('Preview rows cache is not valid JSON.', 'backstage-venue-manager')") !== false, 'Event Plan Import rows-payload renderer should preserve the invalid-JSON message.');
-$assert(strpos($eventPlanImportActionsSource, 'function vms_event_plan_import_handle_preview_action(): void') !== false && strpos($eventPlanImportActionsSource, 'function vms_event_plan_import_handle_commit_action(): void') !== false && strpos($eventPlanImportActionsSource, 'function vms_event_plan_import_handle_revert_last_action(): void') !== false, 'Event Plan Import should preserve the existing notice-writing action handlers.');
-$assert(preg_match_all('~vms_event_plan_import_set_notice\s*\(~', $eventPlanImportActionsSource, $unusedEventPlanImportSetNoticeMatches) === 13, 'Event Plan Import action handlers should preserve every existing notice-writing path.');
+$assert(strpos($eventPlanImportActionsSource, 'function bvmgr_event_plan_import_handle_preview_action(): void') !== false && strpos($eventPlanImportActionsSource, 'function bvmgr_event_plan_import_handle_commit_action(): void') !== false && strpos($eventPlanImportActionsSource, 'function bvmgr_event_plan_import_handle_revert_last_action(): void') !== false, 'Event Plan Import should preserve the existing notice-writing action handlers.');
+$assert(preg_match_all('~bvmgr_event_plan_import_set_notice\s*\(~', $eventPlanImportActionsSource, $unusedEventPlanImportSetNoticeMatches) === 13, 'Event Plan Import action handlers should preserve every existing notice-writing path.');
 $assert(strpos($eventPlanImportActionsSource, 'Preview ready. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.') !== false, 'Event Plan Import preview action should preserve the summary success message source.');
 $assert(strpos($eventPlanImportActionsSource, 'Import committed. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.') !== false, 'Event Plan Import commit action should preserve the summary success message source.');
 $assert(strpos($eventPlanImportActionsSource, 'Revert complete. Restored: %1$d, Failed: %2$d.') !== false, 'Event Plan Import revert action should preserve the summary success message source.');
@@ -3600,41 +3600,41 @@ $resetEventPlanImportHarness = static function (): void {
 	$GLOBALS['vms_test_event_plan_import_read_rows_json_value'] = array();
 };
 
-$assert(vms_event_plan_import_notice_transient_key(7) === 'vms_epcsv_notice_7', 'Event Plan Import notice transient keys should remain user-scoped.');
+$assert(bvmgr_event_plan_import_notice_transient_key(7) === 'vms_epcsv_notice_7', 'Event Plan Import notice transient keys should remain user-scoped.');
 
 ob_start();
-vms_event_plan_import_render_notice(array('type' => 'error', 'message' => 'Import failed.'));
+bvmgr_event_plan_import_render_notice(array('type' => 'error', 'message' => 'Import failed.'));
 $eventPlanImportErrorNotice = (string) ob_get_clean();
 $assert($eventPlanImportErrorNotice === '<div class="notice notice-error inline"><p>Import failed.</p></div>', 'Event Plan Import explicit notice renderer should preserve the error notice fragment.');
 
 ob_start();
-vms_event_plan_import_render_notice(array('type' => 'critical', 'message' => 'Critical rollback failure.'));
+bvmgr_event_plan_import_render_notice(array('type' => 'critical', 'message' => 'Critical rollback failure.'));
 $eventPlanImportCriticalNotice = (string) ob_get_clean();
 $assert($eventPlanImportCriticalNotice === '<div class="notice notice-error inline"><p>Critical rollback failure.</p></div>', 'Event Plan Import explicit notice renderer should preserve the critical-to-error mapping.');
 
 ob_start();
-vms_event_plan_import_render_notice(array('type' => 'warning', 'message' => 'Review selected rows.'));
+bvmgr_event_plan_import_render_notice(array('type' => 'warning', 'message' => 'Review selected rows.'));
 $eventPlanImportWarningNotice = (string) ob_get_clean();
 $assert($eventPlanImportWarningNotice === '<div class="notice notice-warning inline"><p>Review selected rows.</p></div>', 'Event Plan Import explicit notice renderer should preserve the warning notice fragment.');
 
 ob_start();
-vms_event_plan_import_render_notice(array('type' => 'info', 'message' => 'Preview queued.'));
+bvmgr_event_plan_import_render_notice(array('type' => 'info', 'message' => 'Preview queued.'));
 $eventPlanImportInfoNotice = (string) ob_get_clean();
 $assert($eventPlanImportInfoNotice === '<div class="notice notice-info inline"><p>Preview queued.</p></div>', 'Event Plan Import explicit notice renderer should preserve the info notice fragment.');
 
 ob_start();
-vms_event_plan_import_render_notice(array('type' => 'unexpected', 'message' => 'Fallback to success.'));
+bvmgr_event_plan_import_render_notice(array('type' => 'unexpected', 'message' => 'Fallback to success.'));
 $eventPlanImportFallbackBranchNotice = (string) ob_get_clean();
 $assert($eventPlanImportFallbackBranchNotice === '<div class="notice notice-success inline"><p>Fallback to success.</p></div>', 'Event Plan Import explicit notice renderer should preserve the unknown-type fallback.');
 $assert(wp_kses($eventPlanImportFallbackBranchNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $eventPlanImportFallbackBranchNotice, 'The explicit notice allowlist should admit the Event Plan Import notice fragment unchanged.');
 
 ob_start();
-vms_event_plan_import_render_notice(array('type' => 'success', 'message' => ''));
+bvmgr_event_plan_import_render_notice(array('type' => 'success', 'message' => ''));
 $eventPlanImportEmptyNotice = (string) ob_get_clean();
 $assert($eventPlanImportEmptyNotice === '', 'Event Plan Import explicit notice renderer should stay silent when the message is empty.');
 
 $resetEventPlanImportHarness();
-vms_event_plan_import_set_notice('Bad Type<script>', 'Queue <strong>run complete.</strong>');
+bvmgr_event_plan_import_set_notice('Bad Type<script>', 'Queue <strong>run complete.</strong>');
 $assert($GLOBALS['vms_test_transient_set_calls'] === 1, 'Event Plan Import notice storage should write exactly one transient value.');
 $assert(
 	$GLOBALS['vms_test_transient_set_payloads'] === array(
@@ -3649,22 +3649,22 @@ $assert(
 	),
 	'Event Plan Import notice storage should preserve sanitized text-only payloads and the existing expiration.'
 );
-$eventPlanImportFirstPop = vms_event_plan_import_pop_notice();
-$eventPlanImportSecondPop = vms_event_plan_import_pop_notice();
+$eventPlanImportFirstPop = bvmgr_event_plan_import_pop_notice();
+$eventPlanImportSecondPop = bvmgr_event_plan_import_pop_notice();
 $assert($eventPlanImportFirstPop === array('type' => 'badtypescript', 'message' => 'Queue run complete.'), 'Event Plan Import notice pop should return the sanitized stored payload.');
 $assert($eventPlanImportSecondPop === array(), 'Event Plan Import notice pop should be destructive and empty on the second read.');
 $assert($GLOBALS['vms_test_transient_get_calls'] === 2 && $GLOBALS['vms_test_transient_delete_calls'] === 2, 'Event Plan Import notice pop should keep one transient read and delete per pop call.');
 ob_start();
-vms_event_plan_import_render_notice($eventPlanImportFirstPop);
+bvmgr_event_plan_import_render_notice($eventPlanImportFirstPop);
 $eventPlanImportSanitizedNotice = (string) ob_get_clean();
 $assert($eventPlanImportSanitizedNotice === '<div class="notice notice-success inline"><p>Queue run complete.</p></div>', 'Event Plan Import explicit notice renderer should preserve sanitized text and unknown-type fallback from stored payloads.');
 $assert(strpos($eventPlanImportSanitizedNotice, '<strong>') === false && strpos($eventPlanImportSanitizedNotice, '<script') === false, 'Event Plan Import stored text should not become executable markup.');
 
 $resetEventPlanImportHarness();
-vms_event_plan_import_set_notice('success', 'Preview ready.');
+bvmgr_event_plan_import_set_notice('success', 'Preview ready.');
 $GLOBALS['vms_test_current_user_can'] = false;
 try {
-	vms_event_plan_import_render_admin_page();
+	bvmgr_event_plan_import_render_admin_page();
 	$assert(false, 'Event Plan Import should block unauthorized page renders.');
 } catch (RuntimeException $exception) {
 	$assert($exception->getMessage() === 'Insufficient permissions.', 'Event Plan Import should preserve the capability failure message.');
@@ -3674,9 +3674,9 @@ $assert(isset($GLOBALS['vms_test_transients']['vms_epcsv_notice_7']), 'Event Pla
 $assert($GLOBALS['vms_test_event_plan_import_preview_payload_calls'] === 0 && $GLOBALS['vms_test_event_plan_import_audit_runs_calls'] === 0 && $GLOBALS['vms_test_event_plan_import_latest_revertible_run_calls'] === 0, 'Event Plan Import should not resolve page providers when authorization fails.');
 
 $resetEventPlanImportHarness();
-vms_event_plan_import_set_notice('warning', 'Manual <em>review</em> required.');
+bvmgr_event_plan_import_set_notice('warning', 'Manual <em>review</em> required.');
 ob_start();
-vms_event_plan_import_render_admin_page();
+bvmgr_event_plan_import_render_admin_page();
 $eventPlanImportPrimaryPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_delete_calls'] === 1, 'Event Plan Import page render should pop the primary notice exactly once.');
 $assert($GLOBALS['vms_test_event_plan_import_preview_payload_calls'] === 0, 'Event Plan Import page render should not resolve preview payloads without a preview token.');
@@ -3688,13 +3688,13 @@ $assert(strpos($eventPlanImportPrimaryPage, 'Upload a CSV, preview changes, then
 $assert(empty($GLOBALS['vms_test_transients']), 'Event Plan Import page render should delete the popped transient after output.');
 
 $resetEventPlanImportHarness();
-vms_event_plan_import_set_notice('warning', 'Manual <em>review</em> required.');
-$eventPlanImportFallbackNotice = vms_event_plan_import_pop_notice();
+bvmgr_event_plan_import_set_notice('warning', 'Manual <em>review</em> required.');
+$eventPlanImportFallbackNotice = bvmgr_event_plan_import_pop_notice();
 ob_start();
 echo '<div class="wrap"><h1>' . esc_html__('Import Event Plans (CSV)', 'backstage-venue-manager') . '</h1>';
-vms_event_plan_import_render_intro();
-vms_event_plan_import_render_notice($eventPlanImportFallbackNotice);
-vms_event_plan_import_render_main_content(array(), '', array(), array());
+bvmgr_event_plan_import_render_intro();
+bvmgr_event_plan_import_render_notice($eventPlanImportFallbackNotice);
+bvmgr_event_plan_import_render_main_content(array(), '', array(), array());
 echo '</div>';
 $eventPlanImportFallbackPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_delete_calls'] === 1, 'Event Plan Import fallback composition should pop the primary notice exactly once.');
@@ -3706,7 +3706,7 @@ $assert(strpos($eventPlanImportFallbackPage, 'notice notice-warning inline') !==
 $assert(strpos($eventPlanImportFallbackPage, 'notice notice-warning inline below-h2 vms-shell-notice') === false, 'Event Plan Import fallback output should not receive shell notice normalization.');
 
 $resetEventPlanImportHarness();
-vms_event_plan_import_set_notice('success', 'Preview ready.');
+bvmgr_event_plan_import_set_notice('success', 'Preview ready.');
 $GLOBALS['vms_test_event_plan_import_preview_payload_value'] = array(
 	'summary' => array(
 		'total_rows' => 3,
@@ -3719,7 +3719,7 @@ $_GET = array(
 	'preview_token' => 'preview-token-1',
 );
 ob_start();
-vms_event_plan_import_render_admin_page();
+bvmgr_event_plan_import_render_admin_page();
 $eventPlanImportRowsErrorPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_delete_calls'] === 1, 'Event Plan Import rows-error render should still pop the primary notice exactly once.');
 $assert($GLOBALS['vms_test_event_plan_import_preview_payload_calls'] === 1, 'Event Plan Import rows-error render should resolve the preview payload exactly once.');

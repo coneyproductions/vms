@@ -351,7 +351,7 @@ add_submenu_page(
     __('Continuity Binder', 'backstage-venue-manager'),
     'manage_options',
     'vms-continuity-binder',
-    'vms_render_continuity_binder_page'
+    'bvmgr_render_continuity_binder_page'
 );
 
   // Docs (optional custom page)

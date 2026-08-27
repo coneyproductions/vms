@@ -7117,8 +7117,8 @@ function vms_tec_prepend_cancelled_notice(string $content): string
     $reason_note = $plan_id > 0 ? trim((string) get_post_meta($plan_id, $k_reason_note, true)) : '';
 
     $reason_label = '';
-    if ($reason_code !== '' && function_exists('vms_cancellation_reason_options')) {
-        $opts = (array) vms_cancellation_reason_options();
+    if ($reason_code !== '' && function_exists('bvmgr_cancellation_reason_options')) {
+        $opts = (array) bvmgr_cancellation_reason_options();
         if (isset($opts[$reason_code])) {
             $reason_label = (string) $opts[$reason_code];
         }

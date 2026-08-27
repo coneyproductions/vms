@@ -165,8 +165,8 @@ try {
 	update_post_meta($planId, '_vms_venue_id', 0);
 	update_post_meta($planId, '_vms_band_vendor_id', $primaryVendorId);
 
-	$assignmentMetaKey = function_exists('vms_event_plan_secondary_vendor_assignment_meta_key')
-		? vms_event_plan_secondary_vendor_assignment_meta_key()
+	$assignmentMetaKey = function_exists('bvmgr_event_plan_secondary_vendor_assignment_meta_key')
+		? bvmgr_event_plan_secondary_vendor_assignment_meta_key()
 		: '_vms_secondary_vendor_assignments_v1';
 
 	delete_post_meta($planId, $assignmentMetaKey);
@@ -175,8 +175,8 @@ try {
 	delete_post_meta($planId, '_vms_secondary_vendor_id');
 	add_post_meta($planId, '_vms_secondary_vendor_id', $foodVendorA, false);
 
-	$legacyHydrated = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-		? vms_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
+	$legacyHydrated = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+		? bvmgr_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
 		: array();
 	$assert($normalizeAssignments($legacyHydrated) === array(
 		'food_truck' => array(
@@ -186,8 +186,8 @@ try {
 		),
 	), 'Legacy secondary vendor meta should hydrate into the canonical assignment map.');
 
-	$saveResult = function_exists('vms_event_plan_save_secondary_vendors_module')
-		? vms_event_plan_save_secondary_vendors_module($planId, array(
+	$saveResult = function_exists('bvmgr_event_plan_save_secondary_vendors_module')
+		? bvmgr_event_plan_save_secondary_vendors_module($planId, array(
 			'vms_secondary_vendor_assignments' => array(
 				array(
 					'type_slug' => 'food_truck',
@@ -243,10 +243,10 @@ try {
 	sort($indexSecondaryIds);
 	$assert($indexSecondaryIds === $expectedFlatIds, 'Repeated secondary vendor index rows should contain every assigned additional vendor.');
 
-	if (function_exists('vms_event_plan_import_update_secondary_meta')) {
-		vms_event_plan_import_update_secondary_meta($planId, 'food_truck', array($foodVendorB), $primaryVendorId);
-		$afterImportAssignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-			? vms_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
+	if (function_exists('bvmgr_event_plan_import_update_secondary_meta')) {
+		bvmgr_event_plan_import_update_secondary_meta($planId, 'food_truck', array($foodVendorB), $primaryVendorId);
+		$afterImportAssignments = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+			? bvmgr_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
 			: array();
 		$assert($normalizeAssignments($afterImportAssignments) === array(
 			'dessert_truck' => array(
@@ -280,8 +280,8 @@ try {
 		: new WP_Error('missing_helper', 'Secondary vendor set helper is unavailable.');
 	$assert(!is_wp_error($setResult), 'Setting one secondary vendor group should succeed.');
 
-	$afterSetAssignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-		? vms_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
+	$afterSetAssignments = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+		? bvmgr_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
 		: array();
 	$assert($normalizeAssignments($afterSetAssignments) === $expectedAssignments, 'Saving Food Vendor should not wipe Dessert Vendor or Market Vendor groups.');
 
@@ -302,8 +302,8 @@ try {
 			'vendor_ids' => array($marketVendorC, $marketVendorD, $marketVendorE),
 		),
 	);
-	$writeCalendarAssignments = function_exists('vms_event_plan_write_secondary_vendor_assignments')
-		? vms_event_plan_write_secondary_vendor_assignments($planId, $calendarAssignments)
+	$writeCalendarAssignments = function_exists('bvmgr_event_plan_write_secondary_vendor_assignments')
+		? bvmgr_event_plan_write_secondary_vendor_assignments($planId, $calendarAssignments)
 		: new WP_Error('missing_helper', 'Secondary vendor write helper is unavailable.');
 	$assert(!is_wp_error($writeCalendarAssignments), 'Writing calendar secondary vendor assignments should succeed.');
 

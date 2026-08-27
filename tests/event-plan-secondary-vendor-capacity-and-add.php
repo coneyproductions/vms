@@ -114,12 +114,12 @@ try {
 	$marketVendorA = $createVendor('Capacity Market Vendor A', array('market_vendor'));
 	$marketVendorB = $createVendor('Capacity Market Vendor B', array('market_vendor'));
 
-	$assignmentMetaKey = function_exists('vms_event_plan_secondary_vendor_assignment_meta_key')
-		? (string) vms_event_plan_secondary_vendor_assignment_meta_key()
+	$assignmentMetaKey = function_exists('bvmgr_event_plan_secondary_vendor_assignment_meta_key')
+		? (string) bvmgr_event_plan_secondary_vendor_assignment_meta_key()
 		: '_vms_secondary_vendor_assignments_v1';
 
 	$planId = $createPlan('Secondary Vendor Capacity Regression', $primaryVendorId);
-	$seedResult = vms_event_plan_save_secondary_vendors_module($planId, array(
+	$seedResult = bvmgr_event_plan_save_secondary_vendors_module($planId, array(
 		'vms_secondary_vendor_assignments' => array(
 			array(
 				'type_slug' => 'food_truck',
@@ -135,7 +135,7 @@ try {
 	$beforeFlatIds = get_post_meta($planId, '_vms_secondary_vendor_ids', true);
 	$beforeIndexIds = get_post_meta($planId, '_vms_secondary_vendor_id', false);
 
-	$blockedResult = vms_event_plan_save_secondary_vendors_module($planId, array(
+	$blockedResult = bvmgr_event_plan_save_secondary_vendors_module($planId, array(
 		'vms_secondary_vendor_assignments' => array(
 			array(
 				'type_slug' => 'food_truck',
@@ -151,7 +151,7 @@ try {
 	$assert(wp_json_encode($beforeFlatIds) === wp_json_encode(get_post_meta($planId, '_vms_secondary_vendor_ids', true)), 'Blocked over-capacity saves must not change flat compatibility meta.');
 	$assert(wp_json_encode($beforeIndexIds) === wp_json_encode(get_post_meta($planId, '_vms_secondary_vendor_id', false)), 'Blocked over-capacity saves must not change repeated compatibility meta.');
 
-	$approvedResult = vms_event_plan_save_secondary_vendors_module($planId, array(
+	$approvedResult = bvmgr_event_plan_save_secondary_vendors_module($planId, array(
 		'vms_secondary_vendor_assignments' => array(
 			array(
 				'type_slug' => 'food_truck',
@@ -202,7 +202,7 @@ try {
 	$assert(is_wp_error($blockedSet), 'ADD assignment setter should reject over-capacity secondary vendor updates without an override.');
 	$assert($blockedSet instanceof WP_Error && $blockedSet->get_error_code() === 'vms_secondary_vendor_over_capacity', 'ADD assignment setter should surface the capacity error code.');
 
-	$enableDessertOverride = vms_event_plan_save_secondary_vendors_module($planId, array(
+	$enableDessertOverride = bvmgr_event_plan_save_secondary_vendors_module($planId, array(
 		'vms_secondary_vendor_assignments' => array(
 			array(
 				'type_slug' => 'food_truck',
@@ -236,7 +236,7 @@ try {
 	$assert(!empty($afterSetterAssignments['market_vendor']['open_for_dispatch']), 'ADD assignment setter should preserve unrelated Market Vendor open_for_dispatch.');
 
 	$marketPlanId = $createPlan('Market Vendor Capacity Regression', $primaryVendorId);
-	$marketBlocked = vms_event_plan_save_secondary_vendors_module($marketPlanId, array(
+	$marketBlocked = bvmgr_event_plan_save_secondary_vendors_module($marketPlanId, array(
 		'vms_secondary_vendor_assignments' => array(
 			array(
 				'type_slug' => 'market_vendor',
@@ -248,7 +248,7 @@ try {
 	));
 	$assert(is_wp_error($marketBlocked), 'Market Vendor groups with an explicit capacity should also require an override when over capacity.');
 
-	$marketUncapped = vms_event_plan_save_secondary_vendors_module($marketPlanId, array(
+	$marketUncapped = bvmgr_event_plan_save_secondary_vendors_module($marketPlanId, array(
 		'vms_secondary_vendor_assignments' => array(
 			array(
 				'type_slug' => 'market_vendor',

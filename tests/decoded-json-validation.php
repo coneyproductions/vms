@@ -490,7 +490,7 @@ $assert(
 );
 
 $assert(
-	vms_event_plan_import_validate_rows_payload(
+	bvmgr_event_plan_import_validate_rows_payload(
 		array(
 			'columns' => array(
 				'has_agenda_text' => true,
@@ -512,7 +512,7 @@ $assert(
 	'Importer preview payload validator should accept the expected object-with-rows shape.'
 );
 $assert(
-	!vms_event_plan_import_validate_rows_payload(
+	!bvmgr_event_plan_import_validate_rows_payload(
 		array(
 			'columns' => array('has_agenda_text' => true),
 			'rows' => array(
@@ -525,7 +525,7 @@ $assert(
 );
 
 $assert(
-	vms_event_plan_import_validate_snapshot_payload(
+	bvmgr_event_plan_import_validate_snapshot_payload(
 		array(
 			'created_at' => time(),
 			'entries' => array(
@@ -540,7 +540,7 @@ $assert(
 	'Importer snapshot validator should accept the expected object-with-entries shape.'
 );
 $assert(
-	!vms_event_plan_import_validate_snapshot_payload(
+	!bvmgr_event_plan_import_validate_snapshot_payload(
 		array(
 			'entries' => array(
 				'bad' => array('plan_id' => 99),

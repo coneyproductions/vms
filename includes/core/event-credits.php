@@ -13,8 +13,8 @@ if (!defined('BVMGR_CPT_EVENT_CREDIT')) {
 	define('BVMGR_CPT_EVENT_CREDIT', 'vms_event_credit');
 }
 
-if (!function_exists('vms_event_credit_meta_keys')) {
-	function vms_event_credit_meta_keys(): array
+if (!function_exists('bvmgr_event_credit_meta_keys')) {
+	function bvmgr_event_credit_meta_keys(): array
 	{
 		return array(
 			'code' => '_vms_event_credit_code',
@@ -40,8 +40,8 @@ if (!function_exists('vms_event_credit_meta_keys')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_status_options')) {
-	function vms_event_credit_status_options(): array
+if (!function_exists('bvmgr_event_credit_status_options')) {
+	function bvmgr_event_credit_status_options(): array
 	{
 		return array(
 			'issued' => __('Issued', 'backstage-venue-manager'),
@@ -53,9 +53,9 @@ if (!function_exists('vms_event_credit_status_options')) {
 	}
 }
 
-add_action('init', 'vms_register_event_credit_cpt');
-if (!function_exists('vms_register_event_credit_cpt')) {
-	function vms_register_event_credit_cpt(): void
+add_action('init', 'bvmgr_register_event_credit_cpt');
+if (!function_exists('bvmgr_register_event_credit_cpt')) {
+	function bvmgr_register_event_credit_cpt(): void
 	{
 		register_post_type(BVMGR_CPT_EVENT_CREDIT, array(
 			'labels' => array(
@@ -89,8 +89,8 @@ if (!function_exists('vms_register_event_credit_cpt')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_format_money')) {
-	function vms_event_credit_format_money($amount, string $currency = ''): string
+if (!function_exists('bvmgr_event_credit_format_money')) {
+	function bvmgr_event_credit_format_money($amount, string $currency = ''): string
 	{
 		$amount = (float) $amount;
 		if (function_exists('wc_price')) {
@@ -104,8 +104,8 @@ if (!function_exists('vms_event_credit_format_money')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_generate_code')) {
-	function vms_event_credit_generate_code(): string
+if (!function_exists('bvmgr_event_credit_generate_code')) {
+	function bvmgr_event_credit_generate_code(): string
 	{
 		$prefix = strtoupper((string) apply_filters('vms_event_credit_code_prefix', 'EVENT-CREDIT'));
 		$prefix = preg_replace('/[^A-Z0-9\-]/', '', $prefix);
@@ -134,8 +134,8 @@ if (!function_exists('vms_event_credit_generate_code')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_default_expiration_gmt')) {
-	function vms_event_credit_default_expiration_gmt(): string
+if (!function_exists('bvmgr_event_credit_default_expiration_gmt')) {
+	function bvmgr_event_credit_default_expiration_gmt(): string
 	{
 		$months = (int) apply_filters('vms_event_credit_default_expiration_months', 12);
 		if ($months < 1) {
@@ -146,8 +146,8 @@ if (!function_exists('vms_event_credit_default_expiration_gmt')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_find_existing')) {
-	function vms_event_credit_find_existing(int $event_plan_id, int $order_id): int
+if (!function_exists('bvmgr_event_credit_find_existing')) {
+	function bvmgr_event_credit_find_existing(int $event_plan_id, int $order_id): int
 	{
 		$event_plan_id = absint($event_plan_id);
 		$order_id = absint($order_id);
@@ -181,8 +181,8 @@ if (!function_exists('vms_event_credit_find_existing')) {
 	}
 }
 
-if (!function_exists('vms_event_credits_get_latest_candidate_scan')) {
-	function vms_event_credits_get_latest_candidate_scan(int $event_plan_id): array
+if (!function_exists('bvmgr_event_credits_get_latest_candidate_scan')) {
+	function bvmgr_event_credits_get_latest_candidate_scan(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -222,15 +222,15 @@ if (!function_exists('vms_event_credits_get_latest_candidate_scan')) {
 	}
 }
 
-if (!function_exists('vms_event_credits_discover_candidates')) {
-	function vms_event_credits_discover_candidates(int $event_plan_id): array
+if (!function_exists('bvmgr_event_credits_discover_candidates')) {
+	function bvmgr_event_credits_discover_candidates(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return array('status' => 'failed', 'message' => 'invalid_event_plan_id', 'data' => array());
 		}
 
-		if (!function_exists('vms_cancellation_run_step')) {
+		if (!function_exists('bvmgr_cancellation_run_step')) {
 			return array('status' => 'blocked', 'message' => 'cancellation_engine_unavailable', 'data' => array());
 		}
 
@@ -242,7 +242,7 @@ if (!function_exists('vms_event_credits_discover_candidates')) {
 			$summary = array('event_plan_id' => $event_plan_id);
 		}
 
-		$result = vms_cancellation_run_step($event_plan_id, 'stop_sales_queue_refunds', 'refund_discovery', $summary);
+		$result = bvmgr_cancellation_run_step($event_plan_id, 'stop_sales_queue_refunds', 'refund_discovery', $summary);
 		if (!is_array($result)) {
 			$result = array('status' => 'failed', 'message' => 'candidate_scan_failed', 'data' => array());
 		}
@@ -260,15 +260,15 @@ if (!function_exists('vms_event_credits_discover_candidates')) {
 	}
 }
 
-if (!function_exists('vms_event_credits_find_candidate_for_order')) {
-	function vms_event_credits_find_candidate_for_order(int $event_plan_id, int $order_id): array
+if (!function_exists('bvmgr_event_credits_find_candidate_for_order')) {
+	function bvmgr_event_credits_find_candidate_for_order(int $event_plan_id, int $order_id): array
 	{
 		$order_id = absint($order_id);
 		if ($order_id <= 0) {
 			return array();
 		}
 
-		$scan = vms_event_credits_get_latest_candidate_scan($event_plan_id);
+		$scan = bvmgr_event_credits_get_latest_candidate_scan($event_plan_id);
 		$candidates = isset($scan['data']['candidates']) && is_array($scan['data']['candidates']) ? $scan['data']['candidates'] : array();
 		foreach ($candidates as $candidate) {
 			if (is_array($candidate) && absint($candidate['order_id'] ?? 0) === $order_id) {
@@ -276,7 +276,7 @@ if (!function_exists('vms_event_credits_find_candidate_for_order')) {
 			}
 		}
 
-		$scan = vms_event_credits_discover_candidates($event_plan_id);
+		$scan = bvmgr_event_credits_discover_candidates($event_plan_id);
 		$candidates = isset($scan['data']['candidates']) && is_array($scan['data']['candidates']) ? $scan['data']['candidates'] : array();
 		foreach ($candidates as $candidate) {
 			if (is_array($candidate) && absint($candidate['order_id'] ?? 0) === $order_id) {
@@ -288,8 +288,8 @@ if (!function_exists('vms_event_credits_find_candidate_for_order')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_create_coupon')) {
-	function vms_event_credit_create_coupon(int $credit_id, string $code, float $amount, string $customer_email, string $expires_at_gmt): int
+if (!function_exists('bvmgr_event_credit_create_coupon')) {
+	function bvmgr_event_credit_create_coupon(int $credit_id, string $code, float $amount, string $customer_email, string $expires_at_gmt): int
 	{
 		$credit_id = absint($credit_id);
 		$amount = max(0.0, (float) $amount);
@@ -342,15 +342,15 @@ if (!function_exists('vms_event_credit_create_coupon')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_send_email')) {
-	function vms_event_credit_send_email(int $credit_id): bool
+if (!function_exists('bvmgr_event_credit_send_email')) {
+	function bvmgr_event_credit_send_email(int $credit_id): bool
 	{
 		$credit_id = absint($credit_id);
 		if ($credit_id <= 0 || get_post_type($credit_id) !== BVMGR_CPT_EVENT_CREDIT) {
 			return false;
 		}
 
-		$keys = vms_event_credit_meta_keys();
+		$keys = bvmgr_event_credit_meta_keys();
 		$email = sanitize_email((string) get_post_meta($credit_id, $keys['customer_email'], true));
 		if (!is_email($email)) {
 			return false;
@@ -377,7 +377,7 @@ if (!function_exists('vms_event_credit_send_email')) {
 
 		$lines = array();
 		/* translators: 1: cancelled event title, 2: formatted credit amount. */
-		$lines[] = sprintf(__('Because %1$s was cancelled, we have issued an event credit for %2$s.', 'backstage-venue-manager'), $event_title, vms_event_credit_format_money($amount, $currency));
+		$lines[] = sprintf(__('Because %1$s was cancelled, we have issued an event credit for %2$s.', 'backstage-venue-manager'), $event_title, bvmgr_event_credit_format_money($amount, $currency));
 		$lines[] = '';
 		/* translators: %s: event credit code. */
 		$lines[] = sprintf(__('Event Credit Code: %s', 'backstage-venue-manager'), $code);
@@ -401,8 +401,8 @@ if (!function_exists('vms_event_credit_send_email')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_create_for_order')) {
-	function vms_event_credit_create_for_order(int $event_plan_id, int $order_id, array $args = array()): array
+if (!function_exists('bvmgr_event_credit_create_for_order')) {
+	function bvmgr_event_credit_create_for_order(int $event_plan_id, int $order_id, array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$order_id = absint($order_id);
@@ -413,12 +413,12 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 			return array('ok' => false, 'credit_id' => 0, 'error' => 'woocommerce_unavailable');
 		}
 
-		$existing_id = vms_event_credit_find_existing($event_plan_id, $order_id);
+		$existing_id = bvmgr_event_credit_find_existing($event_plan_id, $order_id);
 		if ($existing_id > 0) {
 			return array('ok' => true, 'credit_id' => $existing_id, 'existing' => true);
 		}
 
-		$candidate = vms_event_credits_find_candidate_for_order($event_plan_id, $order_id);
+		$candidate = bvmgr_event_credits_find_candidate_for_order($event_plan_id, $order_id);
 		if (empty($candidate)) {
 			return array('ok' => false, 'credit_id' => 0, 'error' => 'order_not_credit_eligible');
 		}
@@ -435,14 +435,14 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 			return array('ok' => false, 'credit_id' => 0, 'error' => 'no_remaining_credit_amount');
 		}
 
-		$code = vms_event_credit_generate_code();
+		$code = bvmgr_event_credit_generate_code();
 		$customer_email = method_exists($order, 'get_billing_email') ? sanitize_email((string) $order->get_billing_email()) : '';
 		$first = method_exists($order, 'get_billing_first_name') ? trim((string) $order->get_billing_first_name()) : '';
 		$last = method_exists($order, 'get_billing_last_name') ? trim((string) $order->get_billing_last_name()) : '';
 		$customer_name = trim($first . ' ' . $last);
 		$currency = method_exists($order, 'get_currency') ? sanitize_text_field((string) $order->get_currency()) : '';
 		$order_number = method_exists($order, 'get_order_number') ? sanitize_text_field((string) $order->get_order_number()) : (string) $order_id;
-		$expires_at_gmt = !empty($args['expires_at_gmt']) ? sanitize_text_field((string) $args['expires_at_gmt']) : vms_event_credit_default_expiration_gmt();
+		$expires_at_gmt = !empty($args['expires_at_gmt']) ? sanitize_text_field((string) $args['expires_at_gmt']) : bvmgr_event_credit_default_expiration_gmt();
 		$tec_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
 		$tec_event_id = absint(get_post_meta($event_plan_id, $tec_key, true));
 
@@ -460,7 +460,7 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 		}
 
 		$credit_id = absint($credit_id);
-		$keys = vms_event_credit_meta_keys();
+		$keys = bvmgr_event_credit_meta_keys();
 		update_post_meta($credit_id, $keys['code'], $code);
 		update_post_meta($credit_id, $keys['status'], 'issued');
 		update_post_meta($credit_id, $keys['amount'], wc_format_decimal($amount, 2));
@@ -476,7 +476,7 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 		update_post_meta($credit_id, $keys['issued_at_gmt'], gmdate('Y-m-d H:i:s'));
 		update_post_meta($credit_id, $keys['issued_by_user_id'], get_current_user_id());
 
-		$coupon_id = function_exists('wc_format_coupon_code') ? vms_event_credit_create_coupon($credit_id, $code, $amount, $customer_email, $expires_at_gmt) : 0;
+		$coupon_id = function_exists('wc_format_coupon_code') ? bvmgr_event_credit_create_coupon($credit_id, $code, $amount, $customer_email, $expires_at_gmt) : 0;
 		if ($coupon_id > 0) {
 			update_post_meta($credit_id, $keys['coupon_id'], $coupon_id);
 			update_post_meta($coupon_id, '_vms_event_credit_id', $credit_id);
@@ -485,12 +485,12 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 		}
 
 		if (method_exists($order, 'add_order_note')) {
-			$order->add_order_note(sprintf('Backstage Venue Manager Event Credit %1$s issued for %2$s from cancelled Event Plan #%3$d.', $code, vms_event_credit_format_money($amount, $currency), $event_plan_id));
+			$order->add_order_note(sprintf('Backstage Venue Manager Event Credit %1$s issued for %2$s from cancelled Event Plan #%3$d.', $code, bvmgr_event_credit_format_money($amount, $currency), $event_plan_id));
 		}
 
 		$email_sent = false;
 		if (!empty($args['send_email'])) {
-			$email_sent = vms_event_credit_send_email($credit_id);
+			$email_sent = bvmgr_event_credit_send_email($credit_id);
 		}
 
 		do_action('vms_event_credit_created', $credit_id, $event_plan_id, $order_id, $candidate, $args);
@@ -506,9 +506,9 @@ if (!function_exists('vms_event_credit_create_for_order')) {
 	}
 }
 
-add_action('save_post_vms_event_plan', 'vms_event_credits_handle_event_plan_save', 30, 2);
-if (!function_exists('vms_event_credits_handle_event_plan_save')) {
-	function vms_event_credits_handle_event_plan_save(int $post_id, WP_Post $post): void
+add_action('save_post_vms_event_plan', 'bvmgr_event_credits_handle_event_plan_save', 30, 2);
+if (!function_exists('bvmgr_event_credits_handle_event_plan_save')) {
+	function bvmgr_event_credits_handle_event_plan_save(int $post_id, WP_Post $post): void
 	{
 		$nonce = (isset($_POST['vms_event_plan_details_nonce']) && !is_array($_POST['vms_event_plan_details_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['vms_event_plan_details_nonce']))
@@ -533,11 +533,11 @@ if (!function_exists('vms_event_credits_handle_event_plan_save')) {
 		}
 
 		if ($action_raw === 'refresh_candidates') {
-			$scan = vms_event_credits_discover_candidates($post_id);
+			$scan = bvmgr_event_credits_discover_candidates($post_id);
 			$count = isset($scan['data']['candidate_order_count']) ? absint($scan['data']['candidate_order_count']) : 0;
-			if (function_exists('vms_add_admin_notice')) {
+			if (function_exists('bvmgr_add_admin_notice')) {
 				/* translators: %d: number of candidate orders found in the scan. */
-				vms_add_admin_notice(sprintf(__('Event Credit candidate scan complete. Found %d candidate order(s).', 'backstage-venue-manager'), $count), 'success');
+				bvmgr_add_admin_notice(sprintf(__('Event Credit candidate scan complete. Found %d candidate order(s).', 'backstage-venue-manager'), $count), 'success');
 			}
 			update_post_meta($post_id, '_vms_admin_scroll_to', 'vms_event_credits_panel');
 			return;
@@ -555,11 +555,11 @@ if (!function_exists('vms_event_credits_handle_event_plan_save')) {
 			return;
 		}
 
-		$result = vms_event_credit_create_for_order($post_id, $order_id, array('send_email' => $send_email));
+		$result = bvmgr_event_credit_create_for_order($post_id, $order_id, array('send_email' => $send_email));
 		if (!empty($result['ok'])) {
 			$credit_id = absint($result['credit_id'] ?? 0);
 			$code = sanitize_text_field((string) ($result['code'] ?? get_post_meta($credit_id, '_vms_event_credit_code', true)));
-			if (function_exists('vms_add_admin_notice')) {
+			if (function_exists('bvmgr_add_admin_notice')) {
 				$msg = !empty($result['existing'])
 					/* translators: %s: an event credit already exists for this order. */
 					? sprintf(__('An Event Credit already exists for this order: %s', 'backstage-venue-manager'), $code)
@@ -568,21 +568,21 @@ if (!function_exists('vms_event_credits_handle_event_plan_save')) {
 				if ($send_email && empty($result['email_sent'])) {
 					$msg .= ' ' . __('The credit was created, but the customer email could not be sent.', 'backstage-venue-manager');
 				}
-				vms_add_admin_notice($msg, empty($result['email_sent']) && $send_email ? 'warning' : 'success');
+				bvmgr_add_admin_notice($msg, empty($result['email_sent']) && $send_email ? 'warning' : 'success');
 			}
 		} else {
-			if (function_exists('vms_add_admin_notice')) {
+			if (function_exists('bvmgr_add_admin_notice')) {
 				$error = sanitize_text_field((string) ($result['error'] ?? 'event_credit_failed'));
 				/* translators: %s: event credit could not be created. */
-				vms_add_admin_notice(sprintf(__('Event Credit could not be created: %s', 'backstage-venue-manager'), $error), 'error');
+				bvmgr_add_admin_notice(sprintf(__('Event Credit could not be created: %s', 'backstage-venue-manager'), $error), 'error');
 			}
 		}
 		update_post_meta($post_id, '_vms_admin_scroll_to', 'vms_event_credits_panel');
 	}
 }
 
-if (!function_exists('vms_event_credits_render_event_plan_panel')) {
-	function vms_event_credits_render_event_plan_panel(int $event_plan_id, string $plan_status = ''): void
+if (!function_exists('bvmgr_event_credits_render_event_plan_panel')) {
+	function bvmgr_event_credits_render_event_plan_panel(int $event_plan_id, string $plan_status = ''): void
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -596,7 +596,7 @@ if (!function_exists('vms_event_credits_render_event_plan_panel')) {
 			return;
 		}
 
-		$scan = vms_event_credits_get_latest_candidate_scan($event_plan_id);
+		$scan = bvmgr_event_credits_get_latest_candidate_scan($event_plan_id);
 		$candidates = isset($scan['data']['candidates']) && is_array($scan['data']['candidates']) ? $scan['data']['candidates'] : array();
 		$scanned_at = sanitize_text_field((string) ($scan['scanned_at_gmt'] ?? ''));
 		$source = sanitize_key((string) ($scan['source'] ?? ''));
@@ -671,7 +671,7 @@ if (!function_exists('vms_event_credits_render_event_plan_panel')) {
 									$line_names[] = ($qty > 0 ? rtrim(rtrim(number_format($qty, 2), '0'), '.') . ' × ' : '') . $label;
 								}
 							}
-							$existing_credit_id = vms_event_credit_find_existing($event_plan_id, $order_id);
+							$existing_credit_id = bvmgr_event_credit_find_existing($event_plan_id, $order_id);
 							$existing_code = $existing_credit_id > 0 ? sanitize_text_field((string) get_post_meta($existing_credit_id, '_vms_event_credit_code', true)) : '';
 							$existing_status = $existing_credit_id > 0 ? sanitize_key((string) get_post_meta($existing_credit_id, '_vms_event_credit_status', true)) : '';
 							$credit_url = $existing_credit_id > 0 ? get_edit_post_link($existing_credit_id) : '';
@@ -688,7 +688,7 @@ if (!function_exists('vms_event_credits_render_event_plan_panel')) {
 									<?php echo esc_html($name !== '' ? $name : __('Unknown customer', 'backstage-venue-manager')); ?><br />
 									<?php echo $email !== '' ? '<code>' . esc_html($email) . '</code>' : esc_html__('No billing email', 'backstage-venue-manager'); ?>
 								</td>
-								<td><?php echo esc_html(vms_event_credit_format_money($amount, $currency)); ?></td>
+								<td><?php echo esc_html(bvmgr_event_credit_format_money($amount, $currency)); ?></td>
 								<td><?php echo esc_html(!empty($line_names) ? implode(' | ', $line_names) : __('Matched event items', 'backstage-venue-manager')); ?></td>
 								<td>
 									<?php if ($existing_credit_id > 0) : ?>
@@ -724,9 +724,9 @@ if (!function_exists('vms_event_credits_render_event_plan_panel')) {
 	}
 }
 
-add_filter('woocommerce_coupon_is_valid_for_product', 'vms_event_credit_coupon_is_valid_for_product', 10, 4);
-if (!function_exists('vms_event_credit_coupon_is_valid_for_product')) {
-	function vms_event_credit_coupon_is_valid_for_product($valid, $product, $coupon, $values)
+add_filter('woocommerce_coupon_is_valid_for_product', 'bvmgr_event_credit_coupon_is_valid_for_product', 10, 4);
+if (!function_exists('bvmgr_event_credit_coupon_is_valid_for_product')) {
+	function bvmgr_event_credit_coupon_is_valid_for_product($valid, $product, $coupon, $values)
 	{
 		if (!$coupon || !is_object($coupon) || !method_exists($coupon, 'get_id')) {
 			return $valid;
@@ -744,13 +744,13 @@ if (!function_exists('vms_event_credit_coupon_is_valid_for_product')) {
 		if ($product_id <= 0 && is_array($values)) {
 			$product_id = absint($values['product_id'] ?? 0);
 		}
-		return vms_event_credit_product_is_eligible($credit_id, $product_id);
+		return bvmgr_event_credit_product_is_eligible($credit_id, $product_id);
 	}
 }
 
-add_filter('woocommerce_coupon_is_valid_for_cart', 'vms_event_credit_coupon_is_valid_for_cart', 10, 2);
-if (!function_exists('vms_event_credit_coupon_is_valid_for_cart')) {
-	function vms_event_credit_coupon_is_valid_for_cart($valid, $coupon)
+add_filter('woocommerce_coupon_is_valid_for_cart', 'bvmgr_event_credit_coupon_is_valid_for_cart', 10, 2);
+if (!function_exists('bvmgr_event_credit_coupon_is_valid_for_cart')) {
+	function bvmgr_event_credit_coupon_is_valid_for_cart($valid, $coupon)
 	{
 		if (!$coupon || !is_object($coupon) || !method_exists($coupon, 'get_id')) {
 			return $valid;
@@ -766,9 +766,9 @@ if (!function_exists('vms_event_credit_coupon_is_valid_for_cart')) {
 	}
 }
 
-add_filter('woocommerce_coupon_is_valid', 'vms_event_credit_coupon_is_valid', 10, 3);
-if (!function_exists('vms_event_credit_coupon_is_valid')) {
-	function vms_event_credit_coupon_is_valid($valid, $coupon, $discounts)
+add_filter('woocommerce_coupon_is_valid', 'bvmgr_event_credit_coupon_is_valid', 10, 3);
+if (!function_exists('bvmgr_event_credit_coupon_is_valid')) {
+	function bvmgr_event_credit_coupon_is_valid($valid, $coupon, $discounts)
 	{
 		if (!$valid || !$coupon || !is_object($coupon) || !method_exists($coupon, 'get_id')) {
 			return $valid;
@@ -794,7 +794,7 @@ if (!function_exists('vms_event_credit_coupon_is_valid')) {
 			}
 
 			foreach (array_unique(array_filter($product_ids)) as $product_id) {
-				if (vms_event_credit_product_is_eligible($credit_id, $product_id)) {
+				if (bvmgr_event_credit_product_is_eligible($credit_id, $product_id)) {
 					return true;
 				}
 			}
@@ -804,8 +804,8 @@ if (!function_exists('vms_event_credit_coupon_is_valid')) {
 	}
 }
 
-if (!function_exists('vms_event_credit_product_is_eligible')) {
-	function vms_event_credit_product_is_eligible(int $credit_id, int $product_id): bool
+if (!function_exists('bvmgr_event_credit_product_is_eligible')) {
+	function bvmgr_event_credit_product_is_eligible(int $credit_id, int $product_id): bool
 	{
 		$credit_id = absint($credit_id);
 		$product_id = absint($product_id);
@@ -813,7 +813,7 @@ if (!function_exists('vms_event_credit_product_is_eligible')) {
 			return false;
 		}
 
-		$keys = vms_event_credit_meta_keys();
+		$keys = bvmgr_event_credit_meta_keys();
 		$original_event_plan_id = absint(get_post_meta($credit_id, $keys['original_event_plan_id'], true));
 		$product_plan_id = absint(get_post_meta($product_id, '_vms_event_plan_id', true));
 		if ($product_plan_id <= 0) {
@@ -828,7 +828,7 @@ if (!function_exists('vms_event_credit_product_is_eligible')) {
 			$tec_event_id = absint(get_post_meta($product_id, '_vms_tec_event_id', true));
 		}
 		if ($tec_event_id <= 0 && $product_plan_id <= 0) {
-			$role = function_exists('vms_cancellation_refund_product_role') ? sanitize_key((string) vms_cancellation_refund_product_role($product_id)) : '';
+			$role = function_exists('bvmgr_cancellation_refund_product_role') ? sanitize_key((string) bvmgr_cancellation_refund_product_role($product_id)) : '';
 			if ($role === '') {
 				return false;
 			}
@@ -851,9 +851,9 @@ if (!function_exists('vms_event_credit_product_is_eligible')) {
 	}
 }
 
-add_action('woocommerce_order_status_changed', 'vms_event_credits_sync_redeemed_from_order', 20, 4);
-if (!function_exists('vms_event_credits_sync_redeemed_from_order')) {
-	function vms_event_credits_sync_redeemed_from_order(int $order_id, string $old_status, string $new_status, $order): void
+add_action('woocommerce_order_status_changed', 'bvmgr_event_credits_sync_redeemed_from_order', 20, 4);
+if (!function_exists('bvmgr_event_credits_sync_redeemed_from_order')) {
+	function bvmgr_event_credits_sync_redeemed_from_order(int $order_id, string $old_status, string $new_status, $order): void
 	{
 		if (!$order || !is_object($order) || !method_exists($order, 'get_coupon_codes')) {
 			return;
@@ -869,7 +869,7 @@ if (!function_exists('vms_event_credits_sync_redeemed_from_order')) {
 			if ($credit_id <= 0 || get_post_type($credit_id) !== BVMGR_CPT_EVENT_CREDIT) {
 				continue;
 			}
-			$keys = vms_event_credit_meta_keys();
+			$keys = bvmgr_event_credit_meta_keys();
 			$status = sanitize_key((string) get_post_meta($credit_id, $keys['status'], true));
 			if ($status === 'redeemed') {
 				continue;
@@ -881,19 +881,19 @@ if (!function_exists('vms_event_credits_sync_redeemed_from_order')) {
 	}
 }
 
-add_action('add_meta_boxes_' . BVMGR_CPT_EVENT_CREDIT, 'vms_event_credit_add_meta_boxes');
-if (!function_exists('vms_event_credit_add_meta_boxes')) {
-	function vms_event_credit_add_meta_boxes(): void
+add_action('add_meta_boxes_' . BVMGR_CPT_EVENT_CREDIT, 'bvmgr_event_credit_add_meta_boxes');
+if (!function_exists('bvmgr_event_credit_add_meta_boxes')) {
+	function bvmgr_event_credit_add_meta_boxes(): void
 	{
-		add_meta_box('vms_event_credit_details', __('Event Credit Details', 'backstage-venue-manager'), 'vms_event_credit_render_details_metabox', BVMGR_CPT_EVENT_CREDIT, 'normal', 'high');
+		add_meta_box('vms_event_credit_details', __('Event Credit Details', 'backstage-venue-manager'), 'bvmgr_event_credit_render_details_metabox', BVMGR_CPT_EVENT_CREDIT, 'normal', 'high');
 	}
 }
 
-if (!function_exists('vms_event_credit_render_details_metabox')) {
-	function vms_event_credit_render_details_metabox(WP_Post $post): void
+if (!function_exists('bvmgr_event_credit_render_details_metabox')) {
+	function bvmgr_event_credit_render_details_metabox(WP_Post $post): void
 	{
 		wp_nonce_field('vms_save_event_credit', 'vms_event_credit_nonce');
-		$keys = vms_event_credit_meta_keys();
+		$keys = bvmgr_event_credit_meta_keys();
 		$status = sanitize_key((string) get_post_meta($post->ID, $keys['status'], true));
 		if ($status === '') {
 			$status = 'issued';
@@ -918,7 +918,7 @@ if (!function_exists('vms_event_credit_render_details_metabox')) {
 				<th scope="row"><?php esc_html_e('Status', 'backstage-venue-manager'); ?></th>
 				<td>
 					<select name="vms_event_credit_status">
-						<?php foreach (vms_event_credit_status_options() as $key => $label) : ?>
+						<?php foreach (bvmgr_event_credit_status_options() as $key => $label) : ?>
 							<option value="<?php echo esc_attr((string) $key); ?>" <?php selected($status, (string) $key); ?>><?php echo esc_html((string) $label); ?></option>
 						<?php endforeach; ?>
 					</select>
@@ -926,7 +926,7 @@ if (!function_exists('vms_event_credit_render_details_metabox')) {
 			</tr>
 			<tr>
 				<th scope="row"><?php esc_html_e('Amount', 'backstage-venue-manager'); ?></th>
-				<td><?php echo esc_html(vms_event_credit_format_money($amount, $currency)); ?></td>
+				<td><?php echo esc_html(bvmgr_event_credit_format_money($amount, $currency)); ?></td>
 			</tr>
 			<tr>
 				<th scope="row"><?php esc_html_e('Customer', 'backstage-venue-manager'); ?></th>
@@ -963,9 +963,9 @@ if (!function_exists('vms_event_credit_render_details_metabox')) {
 	}
 }
 
-add_action('save_post_' . BVMGR_CPT_EVENT_CREDIT, 'vms_event_credit_save_metabox', 10, 2);
-if (!function_exists('vms_event_credit_save_metabox')) {
-	function vms_event_credit_save_metabox(int $post_id, WP_Post $post): void
+add_action('save_post_' . BVMGR_CPT_EVENT_CREDIT, 'bvmgr_event_credit_save_metabox', 10, 2);
+if (!function_exists('bvmgr_event_credit_save_metabox')) {
+	function bvmgr_event_credit_save_metabox(int $post_id, WP_Post $post): void
 	{
 		$nonce = (isset($_POST['vms_event_credit_nonce']) && !is_array($_POST['vms_event_credit_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['vms_event_credit_nonce']))
@@ -979,9 +979,9 @@ if (!function_exists('vms_event_credit_save_metabox')) {
 		if (!current_user_can('manage_options')) {
 			return;
 		}
-		$keys = vms_event_credit_meta_keys();
+		$keys = bvmgr_event_credit_meta_keys();
 		$status = isset($_POST['vms_event_credit_status']) ? sanitize_key((string) wp_unslash($_POST['vms_event_credit_status'])) : 'issued';
-		$options = array_keys(vms_event_credit_status_options());
+		$options = array_keys(bvmgr_event_credit_status_options());
 		if (!in_array($status, $options, true)) {
 			$status = 'issued';
 		}
@@ -1019,9 +1019,9 @@ if (!function_exists('vms_event_credit_save_metabox')) {
 	}
 }
 
-add_filter('manage_' . BVMGR_CPT_EVENT_CREDIT . '_posts_columns', 'vms_event_credit_admin_columns');
-if (!function_exists('vms_event_credit_admin_columns')) {
-	function vms_event_credit_admin_columns(array $columns): array
+add_filter('manage_' . BVMGR_CPT_EVENT_CREDIT . '_posts_columns', 'bvmgr_event_credit_admin_columns');
+if (!function_exists('bvmgr_event_credit_admin_columns')) {
+	function bvmgr_event_credit_admin_columns(array $columns): array
 	{
 		return array(
 			'cb' => $columns['cb'] ?? '<input type="checkbox" />',
@@ -1035,18 +1035,18 @@ if (!function_exists('vms_event_credit_admin_columns')) {
 	}
 }
 
-add_action('manage_' . BVMGR_CPT_EVENT_CREDIT . '_posts_custom_column', 'vms_event_credit_admin_column_content', 10, 2);
-if (!function_exists('vms_event_credit_admin_column_content')) {
-	function vms_event_credit_admin_column_content(string $column, int $post_id): void
+add_action('manage_' . BVMGR_CPT_EVENT_CREDIT . '_posts_custom_column', 'bvmgr_event_credit_admin_column_content', 10, 2);
+if (!function_exists('bvmgr_event_credit_admin_column_content')) {
+	function bvmgr_event_credit_admin_column_content(string $column, int $post_id): void
 	{
-		$keys = vms_event_credit_meta_keys();
+		$keys = bvmgr_event_credit_meta_keys();
 		switch ($column) {
 			case 'vms_credit_status':
 				$status = sanitize_key((string) get_post_meta($post_id, $keys['status'], true));
 				echo esc_html(ucwords(str_replace('_', ' ', $status ?: 'issued')));
 				break;
 			case 'vms_credit_amount':
-				echo esc_html(vms_event_credit_format_money((float) get_post_meta($post_id, $keys['amount'], true), (string) get_post_meta($post_id, $keys['currency'], true)));
+				echo esc_html(bvmgr_event_credit_format_money((float) get_post_meta($post_id, $keys['amount'], true), (string) get_post_meta($post_id, $keys['currency'], true)));
 				break;
 			case 'vms_credit_customer':
 				$name = sanitize_text_field((string) get_post_meta($post_id, $keys['customer_name'], true));

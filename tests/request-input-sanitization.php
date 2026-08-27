@@ -351,7 +351,7 @@ $_POST = array(
 );
 $_SERVER['REQUEST_METHOD'] = 'GET';
 
-$html = vms_rate_band_shortcode(array());
+$html = bvmgr_rate_band_shortcode(array());
 $assertContains('Rate Band &lt;Stage&gt;', $html, 'The shortcode should preserve valid form repopulation and escape the band title at output.');
 $assertContains('Event: Event &lt;Title&gt;', $html, 'The shortcode should escape the event title at output.');
 $assertContains('value="Alice &lt;script&gt;alert(1)&lt;/script&gt; &quot;A&quot;"', $html, 'Name repopulation should remain escaped at output.');
@@ -370,7 +370,7 @@ $_POST = array(
 	'vms_rating_value' => '4',
 	'vms_rating_comment' => 'Still ignored',
 );
-$invalidResult = vms_handle_rating_submission(7, 9);
+$invalidResult = bvmgr_handle_rating_submission(7, 9);
 $assert(($invalidResult['success'] ?? null) === false, 'Malformed rating input should fail closed.');
 $assertContains('Please fill in your name, email, and rating.', (string) ($invalidResult['message'] ?? ''), 'Malformed rating input should preserve the existing validation message.');
 $assert(count((array) $GLOBALS['vms_test_insert_post_calls']) === 0, 'Malformed rating input should not reach mutation or storage paths.');

@@ -176,8 +176,8 @@ try {
 	};
 
 	$runSecondaryVendorModuleSave = static function (int $planId, array $request = array()) use ($assert): array {
-		$assert(function_exists('vms_event_plan_save_secondary_vendors_module'), 'Expected isolated Secondary Vendors module save helper to exist.');
-		$result = vms_event_plan_save_secondary_vendors_module($planId, $request);
+		$assert(function_exists('bvmgr_event_plan_save_secondary_vendors_module'), 'Expected isolated Secondary Vendors module save helper to exist.');
+		$result = bvmgr_event_plan_save_secondary_vendors_module($planId, $request);
 		if ($result instanceof WP_Error) {
 			throw new RuntimeException('Secondary Vendors module save failed: ' . $result->get_error_message());
 		}

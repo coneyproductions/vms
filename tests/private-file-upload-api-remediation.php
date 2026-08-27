@@ -120,7 +120,7 @@ $assert(strpos($ticketingSource, 'bvmgr_private_files_delete((int) $stored[\'fil
 $assert(strpos($verificationStoreFunction, 'vms_ticketing_verification_optimize_image_upload(') !== false, 'The verification image branch should remain intact.');
 $assert(strpos($verificationStoreFunction, 'bvmgr_private_files_register_path(') !== false, 'The verification image branch should still register files directly.');
 $assert(strpos($verificationStoreFunction, 'bvmgr_private_files_store_validated_upload(') !== false, 'The verification non-image branch should still use the shared broker.');
-$assert(strpos($eventPlanSource, 'vms_event_plan_import_with_scoped_upload_dir(') !== false, 'The Event Plan upload API implementation should remain unchanged.');
+$assert(strpos($eventPlanSource, 'bvmgr_event_plan_import_with_scoped_upload_dir(') !== false, 'The Event Plan upload API implementation should remain unchanged.');
 $assert(strpos($eventPlanSource, 'wp_handle_upload(') !== false, 'The Event Plan upload API implementation should remain present.');
 
 define('ABSPATH', __DIR__ . '/');

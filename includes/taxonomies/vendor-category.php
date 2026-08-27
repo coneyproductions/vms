@@ -352,7 +352,7 @@ if (!function_exists('vms_vendor_categories_touch_related_event_plans')) {
 
 		vms_vendor_categories_seed_from_legacy_meta($vendor_id);
 
-		if (!function_exists('vms_event_plan_update_vendor_category_snapshot')) {
+		if (!function_exists('bvmgr_event_plan_update_vendor_category_snapshot')) {
 			return;
 		}
 
@@ -363,11 +363,11 @@ if (!function_exists('vms_vendor_categories_touch_related_event_plans')) {
 
 		$k_tec = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
 		foreach ($plan_ids as $plan_id) {
-			vms_event_plan_update_vendor_category_snapshot((int) $plan_id);
-			if (function_exists('vms_tec_sync_vendor_categories_from_plan')) {
+			bvmgr_event_plan_update_vendor_category_snapshot((int) $plan_id);
+			if (function_exists('bvmgr_tec_sync_vendor_categories_from_plan')) {
 				$tec_event_id = (int) get_post_meta((int) $plan_id, $k_tec, true);
 				if ($tec_event_id > 0) {
-					vms_tec_sync_vendor_categories_from_plan((int) $plan_id, $tec_event_id);
+					bvmgr_tec_sync_vendor_categories_from_plan((int) $plan_id, $tec_event_id);
 				}
 			}
 		}

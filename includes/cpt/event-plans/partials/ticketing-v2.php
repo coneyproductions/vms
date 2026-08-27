@@ -26,8 +26,8 @@ $load_url = isset($vms_ticketing_v2_load_url) ? (string) $vms_ticketing_v2_load_
 $summary_url = isset($vms_ticketing_v2_summary_url) ? (string) $vms_ticketing_v2_summary_url : '';
 
 if ($render_mode !== 'full') {
-    if (function_exists('vms_event_plan_perf_log')) {
-        vms_event_plan_perf_log('event_plan_ticketing_v2_lookup', $plan_id, array(
+    if (function_exists('bvmgr_event_plan_perf_log')) {
+        bvmgr_event_plan_perf_log('event_plan_ticketing_v2_lookup', $plan_id, array(
             'phase' => 'summary_only',
             'section' => 'ticketing_v2_lookup',
             'lazy_load' => 'request_reload',
@@ -35,7 +35,7 @@ if ($render_mode !== 'full') {
             'linked_tec_event_id' => $linked_tec_id,
             'ticket_mode' => $ticket_mode,
         ));
-        vms_event_plan_perf_log('event_plan_admin_boot_woo_lookup', $plan_id, array(
+        bvmgr_event_plan_perf_log('event_plan_admin_boot_woo_lookup', $plan_id, array(
             'phase' => 'deferred',
             'section' => 'ticketing_summary',
             'reason' => 'summary_only_initial_load',
@@ -74,16 +74,16 @@ if ($render_mode !== 'full') {
     return;
 }
 
-if (function_exists('vms_event_plan_perf_log')) {
-    vms_event_plan_perf_log('event_plan_section_lazy_load', $plan_id, array(
+if (function_exists('bvmgr_event_plan_perf_log')) {
+    bvmgr_event_plan_perf_log('event_plan_section_lazy_load', $plan_id, array(
         'phase' => 'run',
         'section' => 'ticketing_v2',
         'lazy_load' => 'request_reload',
     ));
 }
 
-$v2_lookup_trace = function_exists('vms_event_plan_perf_span_start')
-    ? vms_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', $plan_id, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
+$v2_lookup_trace = function_exists('bvmgr_event_plan_perf_span_start')
+    ? bvmgr_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', $plan_id, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
     : '';
 $can_phase_b = function_exists('vms_ticketing_b_is_event_tickets_woo_available')
     ? vms_ticketing_b_is_event_tickets_woo_available()
@@ -166,8 +166,8 @@ if ($linked_tec_id > 0 && $mode_v2 === 'vms_managed' && function_exists('vms_tic
 }
 $recon_v2_warnings = (is_array($recon_v2) && !empty($recon_v2['warnings']) && is_array($recon_v2['warnings'])) ? $recon_v2['warnings'] : array();
 $recon_v2_warnings = array_values(array_unique(array_filter(array_map('strval', $recon_v2_warnings))));
-if (function_exists('vms_event_plan_perf_span_finish')) {
-    vms_event_plan_perf_span_finish('event_plan_ticketing_v2_lookup', $plan_id, $v2_lookup_trace, array(
+if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+    bvmgr_event_plan_perf_span_finish('event_plan_ticketing_v2_lookup', $plan_id, $v2_lookup_trace, array(
         'section' => 'ticketing_v2_lookup',
         'linked_tec_event_id' => $linked_tec_id,
         'ticketing_mode' => sanitize_key($mode_v2),

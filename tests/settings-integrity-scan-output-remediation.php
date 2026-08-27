@@ -558,32 +558,32 @@ if (!function_exists('get_edit_post_link')) {
 	}
 }
 
-if (!function_exists('vms_integrity_scan_event_plans_for_missing_vendors')) {
-	function vms_integrity_scan_event_plans_for_missing_vendors(int $limit = 500): array
+if (!function_exists('bvmgr_integrity_scan_event_plans_for_missing_vendors')) {
+	function bvmgr_integrity_scan_event_plans_for_missing_vendors(int $limit = 500): array
 	{
 		$GLOBALS['vms_test_scan_calls'][] = array('mode' => 'vendors', 'limit' => $limit);
 		return $GLOBALS['vms_test_scan_vendor_result'] ?? array();
 	}
 }
 
-if (!function_exists('vms_integrity_scan_event_plans_for_orphaned_venues')) {
-	function vms_integrity_scan_event_plans_for_orphaned_venues(int $limit = 500): array
+if (!function_exists('bvmgr_integrity_scan_event_plans_for_orphaned_venues')) {
+	function bvmgr_integrity_scan_event_plans_for_orphaned_venues(int $limit = 500): array
 	{
 		$GLOBALS['vms_test_scan_calls'][] = array('mode' => 'venues', 'limit' => $limit);
 		return $GLOBALS['vms_test_scan_venue_result'] ?? array();
 	}
 }
 
-if (!function_exists('vms_integrity_scan_event_plans_for_orphaned_calendar_events')) {
-	function vms_integrity_scan_event_plans_for_orphaned_calendar_events(int $limit = 500): array
+if (!function_exists('bvmgr_integrity_scan_event_plans_for_orphaned_calendar_events')) {
+	function bvmgr_integrity_scan_event_plans_for_orphaned_calendar_events(int $limit = 500): array
 	{
 		$GLOBALS['vms_test_scan_calls'][] = array('mode' => 'events', 'limit' => $limit);
 		return $GLOBALS['vms_test_scan_event_result'] ?? array();
 	}
 }
 
-if (!function_exists('vms_integrity_scan_event_plans_all')) {
-	function vms_integrity_scan_event_plans_all(int $limit = 500): array
+if (!function_exists('bvmgr_integrity_scan_event_plans_all')) {
+	function bvmgr_integrity_scan_event_plans_all(int $limit = 500): array
 	{
 		$GLOBALS['vms_test_scan_calls'][] = array('mode' => 'all', 'limit' => $limit);
 		return $GLOBALS['vms_test_scan_all_result'] ?? array();

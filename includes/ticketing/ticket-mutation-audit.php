@@ -1130,8 +1130,8 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 		}
 	}
 
-	$import_key = function_exists('vms_event_plan_import_meta_key_import_key')
-		? trim((string) get_post_meta($plan_id, vms_event_plan_import_meta_key_import_key(), true))
+	$import_key = function_exists('bvmgr_event_plan_import_meta_key_import_key')
+		? trim((string) get_post_meta($plan_id, bvmgr_event_plan_import_meta_key_import_key(), true))
 		: trim((string) get_post_meta($plan_id, '_vms_import_event_key', true));
 	$tec_legacy_identifiers = ($tec_event_id > 0 && function_exists('vms_ticketing_get_tec_legacy_identifiers'))
 		? (array) vms_ticketing_get_tec_legacy_identifiers($tec_event_id)

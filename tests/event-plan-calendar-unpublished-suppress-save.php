@@ -226,7 +226,7 @@ try {
     $admin->render_event_plan_advanced_controls_host_meta_box(get_post($planId));
     $advancedHtml = (string) ob_get_clean();
     ob_start();
-    vms_event_plan_editor_render_detached_forms();
+    bvmgr_event_plan_editor_render_detached_forms();
     $detachedFormsHtml = (string) ob_get_clean();
 
     $assert(strpos($advancedHtml, 'name="vms_event_plan_action" value="resync_to_calendar"') === false, 'Re-sync to Calendar should no longer submit through the broad Event Plan save path.');

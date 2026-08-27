@@ -428,7 +428,7 @@ function vms_add_dispatch_context_vendor_need_rows(array $context, bool $eligibl
 	return (array) ($context['rows'] ?? array());
 }
 
-function vms_event_plan_perf_log(string $name, int $object_id, array $context): void
+function bvmgr_event_plan_perf_log(string $name, int $object_id, array $context): void
 {
 	$GLOBALS['g10_perf_logs'][] = compact('name', 'object_id', 'context');
 }

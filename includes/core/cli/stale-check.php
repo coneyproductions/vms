@@ -457,8 +457,8 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			 */
 			private function check_bug_06(): array
 		{
-			$has_validate_fn = function_exists('vms_validate_event_plan');
-			$has_venue_guard = function_exists('vms_event_plan_is_venue_closed_for_event_date');
+			$has_validate_fn = function_exists('bvmgr_validate_event_plan');
+			$has_venue_guard = function_exists('bvmgr_event_plan_is_venue_closed_for_event_date');
 			$has_rule_eval = function_exists('vms_sch_season_is_open_by_rules');
 
 			$issues = array();
@@ -997,9 +997,9 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 				$fixture_ok = false;
 				$fixture_notes = '';
 				$resolver = null;
-				if (function_exists('vms_tec_resolve_featured_image_arg')) {
+				if (function_exists('bvmgr_tec_resolve_featured_image_arg')) {
 					$resolver = function (int $plan, int $existing, int $vendor): int {
-						return (int) vms_tec_resolve_featured_image_arg($plan, $existing, $vendor);
+						return (int) bvmgr_tec_resolve_featured_image_arg($plan, $existing, $vendor);
 					};
 				} elseif ($has_helper && $has_helper_plan_branch && $has_helper_existing_branch && $has_helper_vendor_branch) {
 					// Fallback for static probes where Event Plan functions are not loaded in runtime.
@@ -1045,7 +1045,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 					if (!$fixture_ok) {
 						$issues[] = 'resolver fixture failed: ' . implode(', ', $fixture_failures);
 					} else {
-						$fixture_notes = function_exists('vms_tec_resolve_featured_image_arg')
+						$fixture_notes = function_exists('bvmgr_tec_resolve_featured_image_arg')
 							? 'Resolver fixture passed: plan image wins, linked TEC image is preserved, vendor image is fallback-only when both plan+TEC images are missing.'
 							: 'Static resolver fixture passed from source markers: plan image wins, linked TEC image is preserved, vendor image remains fallback-only.';
 					}
@@ -1141,8 +1141,8 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 				$review_flag = ((string) get_post_meta($plan_id, $k_review, true) === '1');
 
 				if ($job_id === '' || !is_array($summary) || empty($summary['steps']) || !is_array($summary['steps'])) {
-					if ($this->repair_mode && function_exists('vms_cancellation_backfill_legacy_job')) {
-						$repair = (array) vms_cancellation_backfill_legacy_job($plan_id, array(
+					if ($this->repair_mode && function_exists('bvmgr_cancellation_backfill_legacy_job')) {
+						$repair = (array) bvmgr_cancellation_backfill_legacy_job($plan_id, array(
 							'source' => 'stale_check_can01',
 							'backfill_by_user_id' => get_current_user_id(),
 						));

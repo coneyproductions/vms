@@ -252,7 +252,7 @@ function vms_budget_calculator_event_plan_ticket_stats_key(): string
 
 function vms_budget_calculator_ensure_inclusion_helpers(): void
 {
-  if (function_exists('vms_event_plan_should_include') && function_exists('bvmgr_event_plan_get_status')) {
+  if (function_exists('bvmgr_event_plan_should_include') && function_exists('bvmgr_event_plan_get_status')) {
     return;
   }
 
@@ -304,8 +304,8 @@ function vms_budget_calculator_collect_event_plans_for_year(int $year, bool $inc
     if (!vms_budget_calculator_is_valid_ymd($event_date)) continue;
     if ($event_date < $start_ymd || $event_date > $end_ymd) continue;
 
-    if (function_exists('vms_event_plan_should_include')) {
-      if (!vms_event_plan_should_include($pid, 'financial', array(
+    if (function_exists('bvmgr_event_plan_should_include')) {
+      if (!bvmgr_event_plan_should_include($pid, 'financial', array(
         'include_drafts' => (bool) $include_drafts,
         'include_cancelled' => false,
       ))) {

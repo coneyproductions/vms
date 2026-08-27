@@ -581,22 +581,22 @@ function wp_update_post(array $post): int
 	return (int) ($post['ID'] ?? 0);
 }
 
-function vms_event_plan_flag_missing_vendor(int $plan_id, int $vendor_id, string $vendor_title): void
+function bvmgr_event_plan_flag_missing_vendor(int $plan_id, int $vendor_id, string $vendor_title): void
 {
 	$GLOBALS['g11_primary_flags'][] = compact('plan_id', 'vendor_id', 'vendor_title');
 }
 
-function vms_event_plan_flag_missing_secondary_vendor(int $plan_id, int $vendor_id, string $vendor_title): void
+function bvmgr_event_plan_flag_missing_secondary_vendor(int $plan_id, int $vendor_id, string $vendor_title): void
 {
 	$GLOBALS['g11_secondary_flags'][] = compact('plan_id', 'vendor_id', 'vendor_title');
 }
 
-function vms_add_admin_notice(string $message, string $type): void
+function bvmgr_add_admin_notice(string $message, string $type): void
 {
 	$GLOBALS['g11_notices'][] = compact('message', 'type');
 }
 
-function vms_event_plan_allowed_statuses(string $context, array $args): array
+function bvmgr_event_plan_allowed_statuses(string $context, array $args): array
 {
 	$GLOBALS['g11_allowed_status_calls'][] = compact('context', 'args');
 	return $GLOBALS['g11_allowed_statuses'];

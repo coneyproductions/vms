@@ -137,7 +137,7 @@ function vms_test_event_plan_perf_expected_id(string $seed): string
 function vms_test_event_plan_perf_instrument_request_id(string $functionSource, string $functionName): string
 {
 	$instrumented = preg_replace(
-		'/function\s+vms_event_plan_perf_request_id\s*\(/',
+		'/function\s+bvmgr_event_plan_perf_request_id\s*\(/',
 		'function ' . $functionName . '(',
 		$functionSource,
 		1
@@ -243,8 +243,8 @@ vms_test_event_plan_perf_assert($guardsSource !== '', 'Runtime Guards source sho
 vms_test_event_plan_perf_assert($ticketSource !== '', 'Ticketing source should be readable.');
 vms_test_event_plan_perf_assert($liveSource !== '', 'Live Event Plan performance source should remain readable while this mirror-only remediation leaves ../../vms untouched.');
 
-$requestIdSource = vms_test_event_plan_perf_extract_named_function($mirrorPath, 'vms_event_plan_perf_request_id');
-vms_test_event_plan_perf_assert_contains('function vms_event_plan_perf_request_id(): string', $requestIdSource, 'Request ID function should exist.');
+$requestIdSource = vms_test_event_plan_perf_extract_named_function($mirrorPath, 'bvmgr_event_plan_perf_request_id');
+vms_test_event_plan_perf_assert_contains('function bvmgr_event_plan_perf_request_id(): string', $requestIdSource, 'Request ID function should exist.');
 vms_test_event_plan_perf_assert_contains('static $request_id = \'\';', $requestIdSource, 'Request ID function should preserve static caching.');
 vms_test_event_plan_perf_assert_contains('(string) microtime(true)', $requestIdSource, 'Request ID function should preserve the microtime seed.');
 vms_test_event_plan_perf_assert_contains('(string) wp_rand(1000, 999999)', $requestIdSource, 'Request ID function should preserve the wp_rand seed.');
@@ -257,8 +257,8 @@ vms_test_event_plan_perf_assert_contains("isset(\$_SERVER['REQUEST_TIME_FLOAT'])
 vms_test_event_plan_perf_assert(substr_count($mirrorSource, "bvmgr_request_server_value('REQUEST_TIME_FLOAT')") === 1, 'Mirror Event Plan performance source should contain one canonical helper-backed request-time seed.');
 vms_test_event_plan_perf_assert(substr_count($liveSource, "vms_request_server_value('REQUEST_TIME_FLOAT')") === 0, 'Untouched live Event Plan performance source should not be rewritten during isolated B3.');
 
-vms_test_event_plan_perf_assert(substr_count($mirrorSource, "'request_id' => vms_event_plan_perf_request_id()") === 2, 'Event Plan performance should preserve the two downstream request_id payload assignments.');
-vms_test_event_plan_perf_assert_contains("'request_id' => vms_event_plan_perf_request_id(),", $mirrorSource, 'Trace logging should still receive the derived request ID.');
+vms_test_event_plan_perf_assert(substr_count($mirrorSource, "'request_id' => bvmgr_event_plan_perf_request_id()") === 2, 'Event Plan performance should preserve the two downstream request_id payload assignments.');
+vms_test_event_plan_perf_assert_contains("'request_id' => bvmgr_event_plan_perf_request_id(),", $mirrorSource, 'Trace logging should still receive the derived request ID.');
 vms_test_event_plan_perf_assert_contains("'state' => sanitize_key(\$state),", $mirrorSource, 'Transient lock payload should still preserve the state key.');
 vms_test_event_plan_perf_assert_contains("'updated_at_gmt' => gmdate('Y-m-d H:i:s'),", $mirrorSource, 'Transient lock payload should still preserve the update timestamp key.');
 

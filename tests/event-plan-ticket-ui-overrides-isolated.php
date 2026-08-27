@@ -236,8 +236,8 @@ try {
     $suppressMetaKey = function_exists('bvmgr_meta_key')
         ? (string) (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
         : '_vms_calendar_unpublished_suppress';
-    $legacyTicketKeys = function_exists('vms_event_plan_legacy_ticket_meta_keys')
-        ? (array) vms_event_plan_legacy_ticket_meta_keys()
+    $legacyTicketKeys = function_exists('bvmgr_event_plan_legacy_ticket_meta_keys')
+        ? (array) bvmgr_event_plan_legacy_ticket_meta_keys()
         : array('_vms_price_ga', '_vms_enable_tables');
 
     $captureState = static function (int $planId) use ($ticketConfigKey, $tecMetaKey, $suppressMetaKey, $legacyTicketKeys, $normalizeValue): array {

@@ -434,18 +434,18 @@ function g16b_assert_no_sentinels(array $records, array $sentinels, string $mess
 	}
 }
 
-function vms_event_plan_import_delete_stored_file(string $target_key): void
+function bvmgr_event_plan_import_delete_stored_file(string $target_key): void
 {
 	$GLOBALS['g16b_trace'][] = 'delete:' . $target_key;
 }
 
-function vms_event_plan_import_set_notice(string $type, string $message): void
+function bvmgr_event_plan_import_set_notice(string $type, string $message): void
 {
 	$GLOBALS['g16b_trace'][] = 'notice:' . $type;
 	$GLOBALS['g16b_notice'] = array($type, $message);
 }
 
-function vms_event_plan_import_admin_page_url(array $args = array()): string
+function bvmgr_event_plan_import_admin_page_url(array $args = array()): string
 {
 	return '/wp-admin/tools.php?' . http_build_query($args);
 }
@@ -479,7 +479,7 @@ function g16b_import_behavior(string $source): void
 		'ua_sentinel',
 	);
 	$preview_error = new WP_Error('preview_failed', $raw_message);
-	$preview_function = g16b_extract_guarded_function($source, 'vms_event_plan_import_handle_preview_action');
+	$preview_function = g16b_extract_guarded_function($source, 'bvmgr_event_plan_import_handle_preview_action');
 	$preview_block = g16b_extract_if_block($preview_function, 'if (is_wp_error($preview))');
 
 	g16b_reset_capture(false);
@@ -504,7 +504,7 @@ function g16b_import_behavior(string $source): void
 	g16b_same($preview_record['error'], $GLOBALS['g16b_records'][0]['error'] ?? array(), 'Identical WP_Error identity must produce a deterministic fingerprint.');
 	g16b_same(array('error', $raw_message), $GLOBALS['g16b_notice'], 'Adapter return value must not change preview notice behavior.');
 
-	$commit_function = g16b_extract_guarded_function($source, 'vms_event_plan_import_handle_commit_action');
+	$commit_function = g16b_extract_guarded_function($source, 'bvmgr_event_plan_import_handle_commit_action');
 	$commit_block = g16b_extract_if_block($commit_function, 'if (is_wp_error($result))');
 	g16b_reset_capture(false);
 	g16b_eval_failure_branch($commit_block, array(
@@ -519,7 +519,7 @@ function g16b_import_behavior(string $source): void
 	g16b_same(array('error', $raw_message), $GLOBALS['g16b_notice'], 'Commit failure must retain exact privileged raw notice.');
 	g16b_assert_no_sentinels($GLOBALS['g16b_records'], $sentinels, 'Commit storage leaked raw error data');
 
-	$revert_function = g16b_extract_guarded_function($source, 'vms_event_plan_import_handle_revert_last_action');
+	$revert_function = g16b_extract_guarded_function($source, 'bvmgr_event_plan_import_handle_revert_last_action');
 	$revert_block = g16b_extract_if_block($revert_function, 'if (is_wp_error($result))');
 	g16b_reset_capture(false);
 	g16b_eval_failure_branch($revert_block, array('result' => new WP_Error('revert_failed', $raw_message)));

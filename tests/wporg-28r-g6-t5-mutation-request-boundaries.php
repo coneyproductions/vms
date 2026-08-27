@@ -212,7 +212,7 @@ foreach ($paths as $key => $path) {
 	$sources[$key] = vms_t5_read_file($path);
 }
 
-eval(vms_t5_extract_function($sources['event_import'], 'vms_event_plan_import_read_selected_rows_from_post'));
+eval(vms_t5_extract_function($sources['event_import'], 'bvmgr_event_plan_import_read_selected_rows_from_post'));
 eval(vms_t5_extract_function($sources['phase_b'], 'vms_ticketing_b_request_payload_value'));
 eval(vms_t5_extract_function($sources['rules_v2'], 'vms_ticketing_v2_read_form_request_payload'));
 eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_guest_rules_from_post'));
@@ -240,8 +240,8 @@ vms_t5_assert_same(false, bvmgr_request_has_post_data(), 'POST probe should pres
 $_POST = array('unexpected' => array('nested'));
 vms_t5_assert_same(true, bvmgr_request_has_post_data(), 'POST probe should reject nonempty POST traffic without inspecting values.');
 
-vms_t5_assert_same(array(2, 5), vms_event_plan_import_read_selected_rows_from_post(array('selected_rows' => array('2', 'bad', '2', '-3', array('4'), '5'))), 'Selected rows should preserve first positive unique order and skip malformed values.');
-vms_t5_assert_same(array(), vms_event_plan_import_read_selected_rows_from_post(array('selected_rows' => '2')), 'Selected rows should reject scalar top-level values.');
+vms_t5_assert_same(array(2, 5), bvmgr_event_plan_import_read_selected_rows_from_post(array('selected_rows' => array('2', 'bad', '2', '-3', array('4'), '5'))), 'Selected rows should preserve first positive unique order and skip malformed values.');
+vms_t5_assert_same(array(), bvmgr_event_plan_import_read_selected_rows_from_post(array('selected_rows' => '2')), 'Selected rows should reject scalar top-level values.');
 
 $present = null;
 $valid = null;
@@ -287,7 +287,7 @@ $prefs_method = $tour_reflection->getMethod('read_ajax_prefs_from_request');
 vms_t5_assert_same(array(), $prefs_method->invoke($tour_service, array('prefs' => 'bad')), 'Tours prefs reader should reject scalar top-level prefs.');
 vms_t5_assert_same(array('level' => 'advanced', 'dismissed_tours' => array('intro' => '1')), $prefs_method->invoke($tour_service, array('prefs' => array('level' => 'advanced', 'dismissed_tours' => array('intro' => '1')))), 'Tours prefs reader should unslash and preserve array-shaped prefs.');
 
-vms_t5_assert_order("check_admin_referer('vms_event_plan_import_commit');", 'vms_event_plan_import_read_selected_rows_from_post($_POST)', $sources['event_import'], 'Event Plan Import should keep nonce verification before selected-row reads.');
+vms_t5_assert_order("check_admin_referer('vms_event_plan_import_commit');", 'bvmgr_event_plan_import_read_selected_rows_from_post($_POST)', $sources['event_import'], 'Event Plan Import should keep nonce verification before selected-row reads.');
 vms_t5_assert_order("check_ajax_referer('vms_ticketing_nonce', 'nonce', false)", 'vms_ticketing_b_request_payload_value($_POST, \'tiers\'', $sources['phase_b'], 'Phase-B tiers should keep nonce verification before payload reads.');
 vms_t5_assert_order("check_ajax_referer('vms_ticketing_nonce', 'nonce', false)", 'vms_ticketing_b_request_payload_value($_POST, \'config\'', $sources['phase_b'], 'Ticketing V2 config should keep nonce verification before payload reads.');
 vms_t5_assert_order("check_ajax_referer('vms_tours', 'nonce');", '$this->read_ajax_prefs_from_request($_POST)', $sources['tours_service'], 'Tours prefs should keep nonce verification before prefs reads.');

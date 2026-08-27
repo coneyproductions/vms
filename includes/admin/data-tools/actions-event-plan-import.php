@@ -1,12 +1,12 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_event_plan_import_filter_upload_dir')) {
+if (!function_exists('bvmgr_event_plan_import_filter_upload_dir')) {
 	/**
 	 * @param array<string,mixed> $uploads
 	 * @return array<string,mixed>
 	 */
-	function vms_event_plan_import_filter_upload_dir(array $uploads): array
+	function bvmgr_event_plan_import_filter_upload_dir(array $uploads): array
 	{
 		$context = isset($GLOBALS['bvmgr_event_plan_import_upload_dir_context']) && is_array($GLOBALS['bvmgr_event_plan_import_upload_dir_context'])
 			? $GLOBALS['bvmgr_event_plan_import_upload_dir_context']
@@ -27,36 +27,36 @@ if (!function_exists('vms_event_plan_import_filter_upload_dir')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_import_with_scoped_upload_dir')) {
+if (!function_exists('bvmgr_event_plan_import_with_scoped_upload_dir')) {
 	/**
 	 * @param array<string,mixed> $context
 	 * @return mixed
 	 */
-	function vms_event_plan_import_with_scoped_upload_dir(array $context, callable $callback)
+	function bvmgr_event_plan_import_with_scoped_upload_dir(array $context, callable $callback)
 	{
 		$GLOBALS['bvmgr_event_plan_import_upload_dir_context'] = $context;
-		add_filter('upload_dir', 'vms_event_plan_import_filter_upload_dir');
+		add_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir');
 
 		try {
 			return $callback();
 		} finally {
-			remove_filter('upload_dir', 'vms_event_plan_import_filter_upload_dir');
+			remove_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir');
 			unset($GLOBALS['bvmgr_event_plan_import_upload_dir_context']);
 		}
 	}
 }
 
-if (!function_exists('vms_event_plan_import_redirect_storage_failure')) {
-	function vms_event_plan_import_redirect_storage_failure(): void
+if (!function_exists('bvmgr_event_plan_import_redirect_storage_failure')) {
+	function bvmgr_event_plan_import_redirect_storage_failure(): void
 	{
-		vms_event_plan_import_set_notice('error', __('Failed to store uploaded CSV file.', 'backstage-venue-manager'));
-		wp_safe_redirect(vms_event_plan_import_admin_page_url());
+		bvmgr_event_plan_import_set_notice('error', __('Failed to store uploaded CSV file.', 'backstage-venue-manager'));
+		wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 		exit;
 	}
 }
 
-if (!function_exists('vms_event_plan_import_handle_preview_action')) {
-	function vms_event_plan_import_handle_preview_action(): void
+if (!function_exists('bvmgr_event_plan_import_handle_preview_action')) {
+	function bvmgr_event_plan_import_handle_preview_action(): void
 	{
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
@@ -66,16 +66,16 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 
 		$upload = bvmgr_upload_read_file($_FILES, 'event_plan_csv_file');
 		if (is_wp_error($upload)) {
-			vms_event_plan_import_set_notice('error', __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'));
-			wp_safe_redirect(vms_event_plan_import_admin_page_url());
+			bvmgr_event_plan_import_set_notice('error', __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'));
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 			exit;
 		}
 
 		$validated = bvmgr_validate_uploaded_file(
 			$upload,
 			array(
-				'allowed_mimes' => vms_event_plan_import_allowed_mimes(),
-				'max_bytes' => vms_event_plan_import_max_bytes(),
+				'allowed_mimes' => bvmgr_event_plan_import_allowed_mimes(),
+				'max_bytes' => bvmgr_event_plan_import_max_bytes(),
 				'type_message' => __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'),
 				'empty_message' => __('The uploaded CSV file is empty.', 'backstage-venue-manager'),
 				'too_large_message' => __('The uploaded CSV file is too large.', 'backstage-venue-manager'),
@@ -83,17 +83,17 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 			)
 		);
 		if (is_wp_error($validated)) {
-			vms_event_plan_import_set_notice('error', $validated->get_error_message());
-			wp_safe_redirect(vms_event_plan_import_admin_page_url());
+			bvmgr_event_plan_import_set_notice('error', $validated->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 			exit;
 		}
 
-		$token = vms_event_plan_import_make_token();
+		$token = bvmgr_event_plan_import_make_token();
 		$source_name = isset($upload['name']) ? (string) $upload['name'] : '';
-		$prepared = vms_event_plan_import_prepare_generated_path('csv', $token, 'source');
+		$prepared = bvmgr_event_plan_import_prepare_generated_path('csv', $token, 'source');
 		if (is_wp_error($prepared)) {
-			vms_event_plan_import_set_notice('error', $prepared->get_error_message());
-			wp_safe_redirect(vms_event_plan_import_admin_page_url());
+			bvmgr_event_plan_import_set_notice('error', $prepared->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 			exit;
 		}
 
@@ -101,7 +101,7 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 		$target_key = (string) ($prepared['storage_key'] ?? '');
 		$tmp_name = trim((string) ($validated['tmp_name'] ?? ''));
 		if ($target_path === '' || $target_key === '' || $tmp_name === '') {
-			vms_event_plan_import_redirect_storage_failure();
+			bvmgr_event_plan_import_redirect_storage_failure();
 		}
 
 		if (!function_exists('wp_handle_upload')) {
@@ -112,7 +112,7 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 		$upload_for_handle['size'] = max(0, (int) ($validated['size'] ?? ($upload['size'] ?? 0)));
 		$target_dir = dirname($target_path);
 		$target_basename = basename($target_path);
-		$handled = vms_event_plan_import_with_scoped_upload_dir(
+		$handled = bvmgr_event_plan_import_with_scoped_upload_dir(
 			array(
 				'path' => $target_dir,
 			),
@@ -121,7 +121,7 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 					$upload_for_handle,
 					array(
 						'test_form' => false,
-						'mimes' => vms_event_plan_import_allowed_mimes(),
+						'mimes' => bvmgr_event_plan_import_allowed_mimes(),
 						'unique_filename_callback' => static function (string $dir, string $name, string $ext) use ($target_basename): string {
 							unset($dir, $name, $ext);
 							return $target_basename;
@@ -146,13 +146,13 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 				$handled_file !== ''
 				&& file_exists($handled_file)
 				&& is_file($handled_file)
-				&& function_exists('vms_event_plan_import_path_is_safe')
-				&& vms_event_plan_import_path_is_safe($handled_file)
+				&& function_exists('bvmgr_event_plan_import_path_is_safe')
+				&& bvmgr_event_plan_import_path_is_safe($handled_file)
 			) {
 				wp_delete_file($handled_file);
 			}
 
-			vms_event_plan_import_redirect_storage_failure();
+			bvmgr_event_plan_import_redirect_storage_failure();
 		}
 		@chmod($target_path, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- Preserve 0640 permissions on the validated private staging CSV so administrator preview uploads remain stored under the private import bucket without widening web access; WP_Filesystem would add credential-driven semantics.
 
@@ -161,9 +161,9 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 			'allow_update_locked_plans' => !empty($_POST['allow_update_locked_plans']),
 		);
 
-		$preview = vms_event_plan_import_build_preview_from_csv($target_path, $source_name, $options, $token, $target_key);
+		$preview = bvmgr_event_plan_import_build_preview_from_csv($target_path, $source_name, $options, $token, $target_key);
 		if (is_wp_error($preview)) {
-			vms_event_plan_import_delete_stored_file($target_key);
+			bvmgr_event_plan_import_delete_stored_file($target_key);
 			bvmgr_record_operational_issue(
 				'event_plan_import_preview_failed',
 				array(
@@ -174,12 +174,12 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 				),
 				$preview
 			);
-			vms_event_plan_import_set_notice('error', $preview->get_error_message());
-			wp_safe_redirect(vms_event_plan_import_admin_page_url());
+			bvmgr_event_plan_import_set_notice('error', $preview->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 			exit;
 		}
 
-		vms_event_plan_import_set_preview_payload($token, $preview);
+		bvmgr_event_plan_import_set_preview_payload($token, $preview);
 
 		$summary = isset($preview['summary']) && is_array($preview['summary']) ? $preview['summary'] : array();
 		$message = sprintf(
@@ -190,19 +190,19 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 			(int) ($summary['skip'] ?? 0),
 			(int) ($summary['errors'] ?? 0)
 		);
-		vms_event_plan_import_set_notice('success', $message);
+		bvmgr_event_plan_import_set_notice('success', $message);
 
-		wp_safe_redirect(vms_event_plan_import_admin_page_url(array('preview_token' => $token)));
+		wp_safe_redirect(bvmgr_event_plan_import_admin_page_url(array('preview_token' => $token)));
 		exit;
 	}
 }
-add_action('admin_post_vms_event_plan_import_preview', 'vms_event_plan_import_handle_preview_action');
+add_action('admin_post_vms_event_plan_import_preview', 'bvmgr_event_plan_import_handle_preview_action');
 
-if (!function_exists('vms_event_plan_import_read_selected_rows_from_post')) {
+if (!function_exists('bvmgr_event_plan_import_read_selected_rows_from_post')) {
 	/**
 	 * @return array<int,int>
 	 */
-	function vms_event_plan_import_read_selected_rows_from_post(array $source): array
+	function bvmgr_event_plan_import_read_selected_rows_from_post(array $source): array
 	{
 		$selected_rows_raw = bvmgr_request_read_array($source, 'selected_rows');
 		if ($selected_rows_raw === null) {
@@ -230,8 +230,8 @@ if (!function_exists('vms_event_plan_import_read_selected_rows_from_post')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_import_handle_commit_action')) {
-	function vms_event_plan_import_handle_commit_action(): void
+if (!function_exists('bvmgr_event_plan_import_handle_commit_action')) {
+	function bvmgr_event_plan_import_handle_commit_action(): void
 	{
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
@@ -241,29 +241,29 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 
 		$token = isset($_POST['preview_token']) ? sanitize_key((string) $_POST['preview_token']) : '';
 		if ($token === '') {
-			vms_event_plan_import_set_notice('error', __('Missing preview token. Please run Preview again.', 'backstage-venue-manager'));
-			wp_safe_redirect(vms_event_plan_import_admin_page_url());
+			bvmgr_event_plan_import_set_notice('error', __('Missing preview token. Please run Preview again.', 'backstage-venue-manager'));
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 			exit;
 		}
 
-		$preview = vms_event_plan_import_get_preview_payload($token);
+		$preview = bvmgr_event_plan_import_get_preview_payload($token);
 		if (empty($preview)) {
-			vms_event_plan_import_set_notice('error', __('Preview has expired or is missing. Please run Preview again.', 'backstage-venue-manager'));
-			wp_safe_redirect(vms_event_plan_import_admin_page_url());
+			bvmgr_event_plan_import_set_notice('error', __('Preview has expired or is missing. Please run Preview again.', 'backstage-venue-manager'));
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 			exit;
 		}
 
 		$commit_scope_raw = isset($_POST['commit_scope']) ? sanitize_key((string) $_POST['commit_scope']) : 'all';
 		$commit_scope = in_array($commit_scope_raw, array('all', 'selected'), true) ? $commit_scope_raw : 'all';
-		$selected_rows = vms_event_plan_import_read_selected_rows_from_post($_POST);
+		$selected_rows = bvmgr_event_plan_import_read_selected_rows_from_post($_POST);
 
 		if ($commit_scope === 'selected' && empty($selected_rows)) {
-			vms_event_plan_import_set_notice('error', __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager'));
-			wp_safe_redirect(vms_event_plan_import_admin_page_url(array('preview_token' => $token)));
+			bvmgr_event_plan_import_set_notice('error', __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager'));
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url(array('preview_token' => $token)));
 			exit;
 		}
 
-		$result = vms_event_plan_import_run_commit($preview, array(
+		$result = bvmgr_event_plan_import_run_commit($preview, array(
 			'scope' => $commit_scope,
 			'selected_rows' => $selected_rows,
 		));
@@ -278,12 +278,12 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 				),
 				$result
 			);
-			vms_event_plan_import_set_notice('error', $result->get_error_message());
-			wp_safe_redirect(vms_event_plan_import_admin_page_url(array('preview_token' => $token)));
+			bvmgr_event_plan_import_set_notice('error', $result->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url(array('preview_token' => $token)));
 			exit;
 		}
 
-		vms_event_plan_import_delete_preview_payload($token);
+		bvmgr_event_plan_import_delete_preview_payload($token);
 
 		$summary = isset($result['summary']) && is_array($result['summary']) ? $result['summary'] : array();
 		$message = sprintf(
@@ -311,15 +311,15 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 			);
 		}
 
-		vms_event_plan_import_set_notice('success', $message);
-		wp_safe_redirect(vms_event_plan_import_admin_page_url());
+		bvmgr_event_plan_import_set_notice('success', $message);
+		wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 		exit;
 	}
 }
-add_action('admin_post_vms_event_plan_import_commit', 'vms_event_plan_import_handle_commit_action');
+add_action('admin_post_vms_event_plan_import_commit', 'bvmgr_event_plan_import_handle_commit_action');
 
-if (!function_exists('vms_event_plan_import_handle_download_report_action')) {
-	function vms_event_plan_import_handle_download_report_action(): void
+if (!function_exists('bvmgr_event_plan_import_handle_download_report_action')) {
+	function bvmgr_event_plan_import_handle_download_report_action(): void
 	{
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
@@ -337,13 +337,13 @@ if (!function_exists('vms_event_plan_import_handle_download_report_action')) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
 
-		$preview = vms_event_plan_import_get_preview_payload($token);
+		$preview = bvmgr_event_plan_import_get_preview_payload($token);
 		if (empty($preview) || !is_array($preview)) {
 			wp_die(esc_html__('Preview report is no longer available. Run Preview again.', 'backstage-venue-manager'));
 		}
 
-		$path = vms_event_plan_import_storage_path((string) ($preview['report_csv_storage_key'] ?? ($preview['report_csv_path'] ?? '')));
-		if ($path === '' || !file_exists($path) || !vms_event_plan_import_path_is_safe($path)) {
+		$path = bvmgr_event_plan_import_storage_path((string) ($preview['report_csv_storage_key'] ?? ($preview['report_csv_path'] ?? '')));
+		if ($path === '' || !file_exists($path) || !bvmgr_event_plan_import_path_is_safe($path)) {
 			wp_die(esc_html__('Preview report file is missing.', 'backstage-venue-manager'));
 		}
 
@@ -359,10 +359,10 @@ if (!function_exists('vms_event_plan_import_handle_download_report_action')) {
 		exit;
 	}
 }
-add_action('admin_post_vms_event_plan_import_download_report_csv', 'vms_event_plan_import_handle_download_report_action');
+add_action('admin_post_vms_event_plan_import_download_report_csv', 'bvmgr_event_plan_import_handle_download_report_action');
 
-if (!function_exists('vms_event_plan_import_handle_revert_last_action')) {
-	function vms_event_plan_import_handle_revert_last_action(): void
+if (!function_exists('bvmgr_event_plan_import_handle_revert_last_action')) {
+	function bvmgr_event_plan_import_handle_revert_last_action(): void
 	{
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
@@ -370,7 +370,7 @@ if (!function_exists('vms_event_plan_import_handle_revert_last_action')) {
 
 		check_admin_referer('vms_event_plan_import_revert_last');
 
-		$result = vms_event_plan_import_revert_last_run();
+		$result = bvmgr_event_plan_import_revert_last_run();
 		if (is_wp_error($result)) {
 			bvmgr_record_operational_issue(
 				'event_plan_import_revert_failed',
@@ -382,8 +382,8 @@ if (!function_exists('vms_event_plan_import_handle_revert_last_action')) {
 				),
 				$result
 			);
-			vms_event_plan_import_set_notice('error', $result->get_error_message());
-			wp_safe_redirect(vms_event_plan_import_admin_page_url());
+			bvmgr_event_plan_import_set_notice('error', $result->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 			exit;
 		}
 
@@ -393,15 +393,15 @@ if (!function_exists('vms_event_plan_import_handle_revert_last_action')) {
 			(int) ($result['restored'] ?? 0),
 			(int) ($result['failed'] ?? 0)
 		);
-		vms_event_plan_import_set_notice('success', $message);
-		wp_safe_redirect(vms_event_plan_import_admin_page_url());
+		bvmgr_event_plan_import_set_notice('success', $message);
+		wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
 		exit;
 	}
 }
-add_action('admin_post_vms_event_plan_import_revert_last', 'vms_event_plan_import_handle_revert_last_action');
+add_action('admin_post_vms_event_plan_import_revert_last', 'bvmgr_event_plan_import_handle_revert_last_action');
 
-if (!function_exists('vms_event_plan_import_handle_download_sample_csv')) {
-	function vms_event_plan_import_handle_download_sample_csv(): void
+if (!function_exists('bvmgr_event_plan_import_handle_download_sample_csv')) {
+	function bvmgr_event_plan_import_handle_download_sample_csv(): void
 	{
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
@@ -519,4 +519,4 @@ if (!function_exists('vms_event_plan_import_handle_download_sample_csv')) {
 		exit;
 	}
 }
-add_action('admin_post_vms_event_plan_import_download_sample_csv', 'vms_event_plan_import_handle_download_sample_csv');
+add_action('admin_post_vms_event_plan_import_download_sample_csv', 'bvmgr_event_plan_import_handle_download_sample_csv');

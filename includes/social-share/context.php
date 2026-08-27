@@ -104,8 +104,8 @@ if (!function_exists('vms_social_resolve_ticket_url')) {
 			return '';
 		}
 
-		if (function_exists('vms_tec_get_ticket_url_for_plan')) {
-			$url = esc_url_raw((string) vms_tec_get_ticket_url_for_plan($event_plan_id));
+		if (function_exists('bvmgr_tec_get_ticket_url_for_plan')) {
+			$url = esc_url_raw((string) bvmgr_tec_get_ticket_url_for_plan($event_plan_id));
 			if ($url !== '') {
 				return $url;
 			}

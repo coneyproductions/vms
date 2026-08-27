@@ -376,8 +376,8 @@ if (!function_exists('wp_upload_dir')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_import_storage_path')) {
-	function vms_event_plan_import_storage_path(string $reference): string
+if (!function_exists('bvmgr_event_plan_import_storage_path')) {
+	function bvmgr_event_plan_import_storage_path(string $reference): string
 	{
 		$GLOBALS['vms_test_rows_storage_path_calls']++;
 		$GLOBALS['vms_test_rows_storage_path_references'][] = $reference;
@@ -389,8 +389,8 @@ if (!function_exists('vms_event_plan_import_storage_path')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_import_path_is_safe')) {
-	function vms_event_plan_import_path_is_safe(string $path): bool
+if (!function_exists('bvmgr_event_plan_import_path_is_safe')) {
+	function bvmgr_event_plan_import_path_is_safe(string $path): bool
 	{
 		$GLOBALS['vms_test_rows_path_is_safe_calls']++;
 		$GLOBALS['vms_test_rows_path_is_safe_paths'][] = $path;
@@ -469,7 +469,7 @@ $writeFile = static function (string $name, string $contents) use ($assert): str
 
 $renderMainContent = static function (array $preview, string $preview_token = 'preview-token'): string {
 	ob_start();
-	vms_event_plan_import_render_main_content($preview, $preview_token, array(), array());
+	bvmgr_event_plan_import_render_main_content($preview, $preview_token, array(), array());
 	return (string) ob_get_clean();
 };
 
@@ -509,7 +509,7 @@ $assertErrorPlacement = static function (string $html, string $message, string $
 	$assert(strpos($html, 'No preview rows are available.') !== false, $label . ' should preserve the historical empty preview-table fallback while the rows payload is unavailable.');
 };
 
-$assert(vms_event_plan_import_rows_payload_error_messages() === array(
+$assert(bvmgr_event_plan_import_rows_payload_error_messages() === array(
 	'rows_json_missing' => 'Preview rows cache is missing. Please run Preview again.',
 	'rows_json_unsafe' => 'Preview rows cache path is invalid.',
 	'rows_json_too_large' => 'Preview rows cache is too large to validate safely.',
@@ -518,17 +518,17 @@ $assert(vms_event_plan_import_rows_payload_error_messages() === array(
 ), 'Rows-payload renderer should keep the exact package-owned five-code vocabulary.');
 
 ob_start();
-vms_event_plan_import_render_rows_payload_error('rows_json_missing');
+bvmgr_event_plan_import_render_rows_payload_error('rows_json_missing');
 $directFragment = (string) ob_get_clean();
 $assert($directFragment === '<div class="notice notice-error inline"><p>Preview rows cache is missing. Please run Preview again.</p></div>', 'Rows-payload renderer should emit the fixed inline fragment for the missing-cache code.');
 
 ob_start();
-vms_event_plan_import_render_rows_payload_error('rows_json_missing<script>alert(1)</script>');
+bvmgr_event_plan_import_render_rows_payload_error('rows_json_missing<script>alert(1)</script>');
 $unknownFragment = (string) ob_get_clean();
 $assert($unknownFragment === '', 'Rows-payload renderer should ignore unknown or malformed error codes instead of echoing arbitrary text.');
 
 $GLOBALS['vms_test_rows_add_submenu_calls'] = array();
-vms_event_plan_import_register_admin_page();
+bvmgr_event_plan_import_register_admin_page();
 $assert($GLOBALS['vms_test_rows_add_submenu_calls'] === array(
 	array(
 		null,
@@ -536,7 +536,7 @@ $assert($GLOBALS['vms_test_rows_add_submenu_calls'] === array(
 		'Import Event Plans (CSV)',
 		'manage_options',
 		'vms-import-event-plans',
-		'vms_event_plan_import_render_admin_page',
+		'bvmgr_event_plan_import_render_admin_page',
 	),
 ), 'Event Plan Import registration should preserve the null-parent submenu, manage_options gate, slug, and renderer.');
 
@@ -627,7 +627,7 @@ foreach ($error_cases as $case) {
 		$GLOBALS['vms_test_rows_forced_unsafe_paths'][] = $case['path'];
 	}
 
-	$rows_payload = vms_event_plan_import_read_rows_json($case['reference']);
+	$rows_payload = bvmgr_event_plan_import_read_rows_json($case['reference']);
 	$assert($rows_payload instanceof WP_Error, $case['label'] . ' should produce a WP_Error from the rows decoder.');
 	$assert($rows_payload->get_error_code() === $case['expected_code'], $case['label'] . ' should preserve the exact rows decoder error code.');
 	$assert($rows_payload->get_error_message() === $case['expected_message'], $case['label'] . ' should preserve the exact rows decoder message.');
@@ -650,7 +650,7 @@ foreach ($error_cases as $case) {
 
 $reset();
 $GLOBALS['vms_test_rows_storage_map']['rows-valid'] = $valid_path;
-$validRowsPayload = vms_event_plan_import_read_rows_json('rows-valid');
+$validRowsPayload = bvmgr_event_plan_import_read_rows_json('rows-valid');
 $assert(is_array($validRowsPayload), 'Valid rows cache should decode into an array payload.');
 $assert(isset($validRowsPayload['rows']) && is_array($validRowsPayload['rows']) && count($validRowsPayload['rows']) === 1, 'Valid rows cache should preserve the single preview row.');
 
@@ -672,13 +672,13 @@ $assert(strpos($validHtml, 'name="preview_token"') !== false, 'Valid rows cache 
 $assert($GLOBALS['vms_test_rows_storage_path_calls'] === 1, 'Valid rows cache render should decode the rows payload exactly once.');
 
 $reset();
-vms_event_plan_import_set_notice('success', 'Preview ready.');
-vms_event_plan_import_set_preview_payload('preview-token-1', $previewPayload('rows-missing'));
+bvmgr_event_plan_import_set_notice('success', 'Preview ready.');
+bvmgr_event_plan_import_set_preview_payload('preview-token-1', $previewPayload('rows-missing'));
 $_GET = array(
 	'preview_token' => 'preview-token-1',
 );
 ob_start();
-vms_event_plan_import_render_admin_page();
+bvmgr_event_plan_import_render_admin_page();
 $shellPage = (string) ob_get_clean();
 $assert(substr_count($shellPage, 'Preview ready.') === 1, 'Shell render should emit the primary Event Plan Import notice exactly once.');
 $assert(substr_count($shellPage, 'Preview rows cache is missing. Please run Preview again.') === 1, 'Shell render should emit the rows-payload error exactly once.');
@@ -691,13 +691,13 @@ $assert($GLOBALS['vms_test_rows_get_transient_calls'] === 2, 'Shell render shoul
 $assert($GLOBALS['vms_test_rows_delete_transient_calls'] === 1, 'Shell render should destructively pop only the primary notice transient.');
 
 $reset();
-vms_event_plan_import_set_notice('success', 'Preview ready.');
-$fallbackNotice = vms_event_plan_import_pop_notice();
+bvmgr_event_plan_import_set_notice('success', 'Preview ready.');
+$fallbackNotice = bvmgr_event_plan_import_pop_notice();
 ob_start();
 echo '<div class="wrap"><h1>' . esc_html__('Import Event Plans (CSV)', 'backstage-venue-manager') . '</h1>';
-vms_event_plan_import_render_intro();
-vms_event_plan_import_render_notice($fallbackNotice);
-vms_event_plan_import_render_main_content($previewPayload('rows-missing'), 'preview-token-fallback', array(), array());
+bvmgr_event_plan_import_render_intro();
+bvmgr_event_plan_import_render_notice($fallbackNotice);
+bvmgr_event_plan_import_render_main_content($previewPayload('rows-missing'), 'preview-token-fallback', array(), array());
 echo '</div>';
 $fallbackPage = (string) ob_get_clean();
 $assert(strpos($fallbackPage, 'Import Event Plans (CSV)') < strpos($fallbackPage, 'Upload a CSV, preview changes, then commit.'), 'No-shell fallback should keep the page heading before the intro copy.');

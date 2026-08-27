@@ -408,8 +408,8 @@ function bvmgr_dashboard_build_bills_response(array $args): array
 
         // Canonical inclusion parity for financial feed (FIN-01):
         // Published-only by default; Include Draft/Ready enables what-if rows.
-        if (function_exists('vms_event_plan_should_include')) {
-          if (!vms_event_plan_should_include((int) $plan_id, 'dashboard_bills', array(
+        if (function_exists('bvmgr_event_plan_should_include')) {
+          if (!bvmgr_event_plan_should_include((int) $plan_id, 'dashboard_bills', array(
             'include_drafts'    => (bool) $include_drafts,
             'include_cancelled' => false,
           ))) {
@@ -1001,8 +1001,8 @@ function bvmgr_dashboard_flatten_plans_by_date(
 
       // Canonical inclusion rules: Published-only by default; optional what-if includes Draft/Ready.
       // Cancelled is controlled by its own toggle.
-      if (function_exists('vms_event_plan_should_include')) {
-        if ($plan_id > 0 && !vms_event_plan_should_include($plan_id, 'dashboard', array(
+      if (function_exists('bvmgr_event_plan_should_include')) {
+        if ($plan_id > 0 && !bvmgr_event_plan_should_include($plan_id, 'dashboard', array(
           'include_drafts'    => (bool) $include_drafts,
           'include_cancelled' => (bool) $include_canceled,
         ))) {

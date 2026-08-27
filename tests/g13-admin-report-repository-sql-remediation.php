@@ -143,7 +143,7 @@ function vms_budget_calculator_is_valid_ymd(string $value): bool
 	return preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1;
 }
 
-function vms_event_plan_should_include(int $plan_id, string $context, array $args): bool
+function bvmgr_event_plan_should_include(int $plan_id, string $context, array $args): bool
 {
 	unset($context, $args);
 	return !in_array($plan_id, $GLOBALS['g13_excluded'], true);
@@ -394,8 +394,8 @@ foreach (array_diff($relative_files, array('includes/admin/budget-calculator.php
 $owned_chunks = array();
 $owned_function_map = array(
 	'includes/admin/budget-calculator.php' => array('vms_budget_calculator_collect_event_plans_for_year'),
-	'includes/admin/event-command-center.php' => array('vms_event_command_center_get_plan_ids'),
-	'includes/admin/event-feedback.php' => array('vms_feedback_recent_event_plans'),
+	'includes/admin/event-command-center.php' => array('bvmgr_event_command_center_get_plan_ids'),
+	'includes/admin/event-feedback.php' => array('bvmgr_feedback_recent_event_plans'),
 	'includes/admin/settings-page.php' => array('vms_handle_sync_entitlement_images', 'vms_ticketing_stock_reconcile_scan'),
 	'includes/admin/settings/class-vms-settings-tours.php' => array('handle_reset_current_user'),
 	'includes/admin/vendor-command-center.php' => array('vms_vendor_command_center_collect_plan_maps'),
@@ -473,8 +473,8 @@ g13_same(0, substr_count($all_runtime_source, 'WordPress.Security.EscapeOutput.O
 
 foreach (array(
 	'vms_budget_calculator_collect_event_plans_for_year',
-	'vms_event_command_center_get_plan_ids',
-	'vms_feedback_recent_event_plans',
+	'bvmgr_event_command_center_get_plan_ids',
+	'bvmgr_feedback_recent_event_plans',
 	'vms_ticketing_stock_reconcile_scan',
 	'vms_vendor_command_center_collect_plan_maps',
 	'vms_render_create_from_template_panel',
@@ -522,7 +522,7 @@ g13_same(-1, $GLOBALS['g13_get_posts_calls'][1]['posts_per_page'], 'Budget fallb
 // Finite get_posts selectors retain exact limits, ordering, and returned values.
 g13_reset_query_spies();
 $GLOBALS['g13_get_posts_queue'] = array(array(0, '61', 62));
-g13_same(array(61, 62), vms_event_command_center_get_plan_ids(), 'Command Center ID normalization changed.');
+g13_same(array(61, 62), bvmgr_event_command_center_get_plan_ids(), 'Command Center ID normalization changed.');
 $command_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(200, $command_args['posts_per_page'], 'Command Center finite limit changed.');
 g13_same('_vms_event_date', $command_args['meta_key'], 'Command Center date ordering key changed.');
@@ -532,7 +532,7 @@ g13_same(true, $command_args['no_found_rows'], 'Command Center count-query behav
 g13_reset_query_spies();
 $feedback_post = new WP_Post(71);
 $GLOBALS['g13_get_posts_queue'] = array(array($feedback_post));
-g13_same(array($feedback_post), vms_feedback_recent_event_plans(), 'Feedback selector returned objects changed.');
+g13_same(array($feedback_post), bvmgr_feedback_recent_event_plans(), 'Feedback selector returned objects changed.');
 $feedback_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(75, $feedback_args['posts_per_page'], 'Feedback selector default limit changed.');
 g13_same('_vms_event_date', $feedback_args['meta_key'], 'Feedback selector date key changed.');

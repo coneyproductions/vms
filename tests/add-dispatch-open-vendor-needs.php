@@ -172,7 +172,7 @@ try {
 	$cancelledPlan = $createPlan('ADD Cancelled Missing Primary Excluded', $futureDate, 0, 'cancelled');
 
 	$foodOpenPlan = $createPlan('ADD Food Vendor Open Need', $futureDate, $primaryVendorId, 'ready');
-	$foodResult = vms_event_plan_write_secondary_vendor_assignments($foodOpenPlan, array(
+	$foodResult = bvmgr_event_plan_write_secondary_vendor_assignments($foodOpenPlan, array(
 		'food_truck' => array(
 			'mode' => 'standard',
 			'slot_limit' => 1,
@@ -182,7 +182,7 @@ try {
 	$assert(!is_wp_error($foodResult), 'Food Vendor open fixture should save.');
 
 	$dessertFullPlan = $createPlan('ADD Dessert Vendor Full No Need', $futureDate, $primaryVendorId, 'ready');
-	$dessertResult = vms_event_plan_write_secondary_vendor_assignments($dessertFullPlan, array(
+	$dessertResult = bvmgr_event_plan_write_secondary_vendor_assignments($dessertFullPlan, array(
 		'dessert_truck' => array(
 			'mode' => 'standard',
 			'slot_limit' => 1,
@@ -192,7 +192,7 @@ try {
 	$assert(!is_wp_error($dessertResult), 'Dessert Vendor full fixture should save.');
 
 	$marketCapacityOnlyPlan = $createPlan('ADD Market Capacity Only No Target', $futureDate, $primaryVendorId, 'ready');
-	$marketCapacityResult = vms_event_plan_write_secondary_vendor_assignments($marketCapacityOnlyPlan, array(
+	$marketCapacityResult = bvmgr_event_plan_write_secondary_vendor_assignments($marketCapacityOnlyPlan, array(
 		'market_vendor' => array(
 			'mode' => 'market',
 			'slot_limit' => 50,
@@ -202,7 +202,7 @@ try {
 	$assert(!is_wp_error($marketCapacityResult), 'Market capacity-only fixture should save.');
 
 	$marketTargetPlan = $createPlan('ADD Market Target Open Need', $futureDate, $primaryVendorId, 'ready');
-	$marketTargetResult = vms_event_plan_write_secondary_vendor_assignments($marketTargetPlan, array(
+	$marketTargetResult = bvmgr_event_plan_write_secondary_vendor_assignments($marketTargetPlan, array(
 		'market_vendor' => array(
 			'mode' => 'market',
 			'slot_limit' => 50,
@@ -214,7 +214,7 @@ try {
 	$assert(!is_wp_error($marketTargetResult), 'Market target fixture should save.');
 
 	$marketTargetFullPlan = $createPlan('ADD Market Target Full', $futureDate, $primaryVendorId, 'ready');
-	$marketTargetFullResult = vms_event_plan_write_secondary_vendor_assignments($marketTargetFullPlan, array(
+	$marketTargetFullResult = bvmgr_event_plan_write_secondary_vendor_assignments($marketTargetFullPlan, array(
 		'market_vendor' => array(
 			'mode' => 'market',
 			'slot_limit' => 50,
@@ -226,7 +226,7 @@ try {
 	$assert(!is_wp_error($marketTargetFullResult), 'Market target-full fixture should save.');
 
 	$marketOverTargetPlan = $createPlan('ADD Market Over Target No Open Need', $futureDate, $primaryVendorId, 'ready');
-	$marketOverTargetResult = vms_event_plan_write_secondary_vendor_assignments($marketOverTargetPlan, array(
+	$marketOverTargetResult = bvmgr_event_plan_write_secondary_vendor_assignments($marketOverTargetPlan, array(
 		'market_vendor' => array(
 			'mode' => 'market',
 			'slot_limit' => 50,
@@ -238,7 +238,7 @@ try {
 	$assert(!is_wp_error($marketOverTargetResult), 'Market over-target fixture should save.');
 
 	$overCapacityPlan = $createPlan('ADD Over Capacity Status', $futureDate, $primaryVendorId, 'ready');
-	$overCapacityResult = vms_event_plan_write_secondary_vendor_assignments($overCapacityPlan, array(
+	$overCapacityResult = bvmgr_event_plan_write_secondary_vendor_assignments($overCapacityPlan, array(
 		'food_truck' => array(
 			'mode' => 'standard',
 			'slot_limit' => 1,

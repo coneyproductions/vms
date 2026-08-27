@@ -254,8 +254,8 @@ function vms_square_ticket_mirror_handle_admin_action(): void
         $notice_message = __('Unknown Square mirror action.', 'backstage-venue-manager');
     }
 
-    if ($notice_message !== '' && function_exists('vms_add_admin_notice')) {
-        vms_add_admin_notice($notice_message, $notice_type);
+    if ($notice_message !== '' && function_exists('bvmgr_add_admin_notice')) {
+        bvmgr_add_admin_notice($notice_message, $notice_type);
     }
 
     wp_safe_redirect(vms_square_ticket_mirror_admin_redirect_url($product_id));

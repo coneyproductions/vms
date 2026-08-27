@@ -411,7 +411,7 @@ function apply_filters(string $hook, $value, ...$args)
 	return $GLOBALS['g15_filter_value'];
 }
 
-function vms_event_credit_meta_keys(): array
+function bvmgr_event_credit_meta_keys(): array
 {
 	return array('original_event_plan_id' => '_credit_original_plan');
 }
@@ -422,14 +422,14 @@ function bvmgr_meta_key(string $object, string $field): string
 	return '_event_status';
 }
 
-function vms_cancellation_refund_product_role(int $product_id): string
+function bvmgr_cancellation_refund_product_role(int $product_id): string
 {
 	unset($product_id);
 	return '';
 }
 
-$credit_function = g15_extract_function($sources['mirror']['includes/core/event-credits.php'], 'vms_event_credit_product_is_eligible');
-$credit_function = g15_replace_once($credit_function, 'function vms_event_credit_product_is_eligible(', 'function g15_event_credit_product_is_eligible(', 'Event Credit test-function rename changed.');
+$credit_function = g15_extract_function($sources['mirror']['includes/core/event-credits.php'], 'bvmgr_event_credit_product_is_eligible');
+$credit_function = g15_replace_once($credit_function, 'function bvmgr_event_credit_product_is_eligible(', 'function g15_event_credit_product_is_eligible(', 'Event Credit test-function rename changed.');
 $credit_function = g15_replace_once($credit_function, 'time()', '$GLOBALS[\'g15_now\']', 'Event Credit clock injection changed.');
 eval($credit_function);
 

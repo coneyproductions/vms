@@ -39,7 +39,7 @@ $vms_module_owner = isset($vms_module_owner) ? sanitize_key((string) $vms_module
 
 $secondary_group_type_options = !empty($secondary_type_options) && is_array($secondary_type_options)
 	? $secondary_type_options
-	: (function_exists('vms_event_plan_additional_vendor_type_options') ? (array) vms_event_plan_additional_vendor_type_options() : array());
+	: (function_exists('bvmgr_event_plan_additional_vendor_type_options') ? (array) bvmgr_event_plan_additional_vendor_type_options() : array());
 
 $secondary_config_type_options = array();
 foreach ($secondary_group_type_options as $type_slug => $type_label) {
@@ -49,11 +49,11 @@ foreach ($secondary_group_type_options as $type_slug => $type_label) {
 		continue;
 	}
 
-	$default_mode = function_exists('vms_event_plan_secondary_vendor_default_mode')
-		? (string) vms_event_plan_secondary_vendor_default_mode($type_slug)
+	$default_mode = function_exists('bvmgr_event_plan_secondary_vendor_default_mode')
+		? (string) bvmgr_event_plan_secondary_vendor_default_mode($type_slug)
 		: 'standard';
-	$default_slot_limit = function_exists('vms_event_plan_secondary_vendor_default_slot_limit')
-		? vms_event_plan_secondary_vendor_default_slot_limit($type_slug, $default_mode)
+	$default_slot_limit = function_exists('bvmgr_event_plan_secondary_vendor_default_slot_limit')
+		? bvmgr_event_plan_secondary_vendor_default_slot_limit($type_slug, $default_mode)
 		: 1;
 	$secondary_config_type_options[] = array(
 		'slug' => $type_slug,
@@ -185,8 +185,8 @@ $render_secondary_vendor_group_summary = static function (array $group): array {
 	$needed_slots = array_key_exists('needed_slots', $group) && $group['needed_slots'] !== null && $group['needed_slots'] !== ''
 		? max(0, (int) $group['needed_slots'])
 		: null;
-	$open_for_dispatch = function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')
-		? vms_event_plan_parse_secondary_vendor_over_capacity_override($group['open_for_dispatch'] ?? true)
+	$open_for_dispatch = function_exists('bvmgr_event_plan_parse_secondary_vendor_over_capacity_override')
+		? bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($group['open_for_dispatch'] ?? true)
 		: !array_key_exists('open_for_dispatch', $group) || !empty($group['open_for_dispatch']);
 	$warning = '';
 	$over_capacity = false;
@@ -293,15 +293,15 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 	$group_summary = $render_secondary_vendor_group_summary($group);
 	$is_market_group = !empty($group_summary['is_market_group']);
 	$group_has_type = ($type_slug !== '');
-	$allow_over_capacity = function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')
-		? vms_event_plan_parse_secondary_vendor_over_capacity_override($group['allow_over_capacity'] ?? false)
+	$allow_over_capacity = function_exists('bvmgr_event_plan_parse_secondary_vendor_over_capacity_override')
+		? bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($group['allow_over_capacity'] ?? false)
 		: !empty($group['allow_over_capacity']);
 	$is_over_capacity = !empty($group_summary['over_capacity']);
 	$needed_slots_display = array_key_exists('needed_slots', $group) && $group['needed_slots'] !== null && $group['needed_slots'] !== ''
 		? (string) max(0, (int) $group['needed_slots'])
 		: '';
-	$open_for_dispatch = function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')
-		? vms_event_plan_parse_secondary_vendor_over_capacity_override($group['open_for_dispatch'] ?? true)
+	$open_for_dispatch = function_exists('bvmgr_event_plan_parse_secondary_vendor_over_capacity_override')
+		? bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($group['open_for_dispatch'] ?? true)
 		: !array_key_exists('open_for_dispatch', $group) || !empty($group['open_for_dispatch']);
 	$market_control_attrs = $is_market_group ? '' : ' hidden="hidden"';
 	$market_input_attrs = $is_market_group ? '' : ' disabled="disabled"';
@@ -589,8 +589,8 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 	</template>
 
 	<?php
-	$vendor_category_snapshot = function_exists('vms_event_plan_collect_vendor_category_snapshot')
-		? (array) vms_event_plan_collect_vendor_category_snapshot((int) $post->ID)
+	$vendor_category_snapshot = function_exists('bvmgr_event_plan_collect_vendor_category_snapshot')
+		? (array) bvmgr_event_plan_collect_vendor_category_snapshot((int) $post->ID)
 		: array();
 	$vendor_category_rows = isset($vendor_category_snapshot['vendors']) && is_array($vendor_category_snapshot['vendors'])
 		? $vendor_category_snapshot['vendors']

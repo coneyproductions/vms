@@ -288,8 +288,8 @@ function vms_ticket_integrity_queue_spot_scan(int $plan_id, string $reason = '')
 		return;
 	}
 
-	$trace = function_exists('vms_event_plan_perf_span_start')
-		? vms_event_plan_perf_span_start(
+	$trace = function_exists('bvmgr_event_plan_perf_span_start')
+		? bvmgr_event_plan_perf_span_start(
 			'vms_ticket_integrity_queue_spot_scan',
 			$plan_id,
 			array(
@@ -298,18 +298,18 @@ function vms_ticket_integrity_queue_spot_scan(int $plan_id, string $reason = '')
 			)
 		)
 		: '';
-	$profiler_active = function_exists('vms_event_plan_save_profiler_active') && vms_event_plan_save_profiler_active();
+	$profiler_active = function_exists('bvmgr_event_plan_save_profiler_active') && bvmgr_event_plan_save_profiler_active();
 	$queue_note = 'scheduled';
 	$heavy_action_status = 'scheduled';
 	$heavy_action_reason = (string) $reason;
 
 	try {
-		if (function_exists('vms_event_plan_has_effective_tickets') && !vms_event_plan_has_effective_tickets($plan_id)) {
+		if (function_exists('bvmgr_event_plan_has_effective_tickets') && !bvmgr_event_plan_has_effective_tickets($plan_id)) {
 			$queue_note = 'skipped_no_effective_tickets';
 			$heavy_action_status = 'skipped';
 			$heavy_action_reason = 'no_effective_tickets';
-			if (function_exists('vms_event_plan_perf_log')) {
-				vms_event_plan_perf_log(
+			if (function_exists('bvmgr_event_plan_perf_log')) {
+				bvmgr_event_plan_perf_log(
 					'vms_ticket_integrity_queue_spot_scan',
 					$plan_id,
 					array(
@@ -326,15 +326,15 @@ function vms_ticket_integrity_queue_spot_scan(int $plan_id, string $reason = '')
 		$hook = vms_ticket_integrity_spot_hook();
 		$args = array($plan_id);
 		$already_scheduled = (bool) wp_next_scheduled($hook, $args);
-		$already_locked = function_exists('vms_event_plan_perf_job_has_lock')
-			? vms_event_plan_perf_job_has_lock('ticket_integrity_spot_scan', $plan_id)
+		$already_locked = function_exists('bvmgr_event_plan_perf_job_has_lock')
+			? bvmgr_event_plan_perf_job_has_lock('ticket_integrity_spot_scan', $plan_id)
 			: false;
 		$scheduled_now = false;
 		if (!$already_locked && !$already_scheduled) {
 			wp_schedule_single_event(time() + 90, $hook, $args);
 			$scheduled_now = true;
-			if (function_exists('vms_event_plan_perf_job_set_lock')) {
-				vms_event_plan_perf_job_set_lock('ticket_integrity_spot_scan', $plan_id, 'pending', 15 * MINUTE_IN_SECONDS);
+			if (function_exists('bvmgr_event_plan_perf_job_set_lock')) {
+				bvmgr_event_plan_perf_job_set_lock('ticket_integrity_spot_scan', $plan_id, 'pending', 15 * MINUTE_IN_SECONDS);
 			}
 		}
 
@@ -357,8 +357,8 @@ function vms_ticket_integrity_queue_spot_scan(int $plan_id, string $reason = '')
 				'already_locked' => $already_locked ? 1 : 0,
 			));
 		}
-		if (function_exists('vms_event_plan_perf_log')) {
-			vms_event_plan_perf_log(
+		if (function_exists('bvmgr_event_plan_perf_log')) {
+			bvmgr_event_plan_perf_log(
 				'vms_ticket_integrity_queue_spot_scan',
 				$plan_id,
 				array(
@@ -386,27 +386,27 @@ function vms_ticket_integrity_queue_spot_scan(int $plan_id, string $reason = '')
 			);
 		}
 	} finally {
-		if (function_exists('vms_event_plan_save_profiler_note')) {
-			vms_event_plan_save_profiler_note('ticket_integrity_spot_scan', $queue_note);
+		if (function_exists('bvmgr_event_plan_save_profiler_note')) {
+			bvmgr_event_plan_save_profiler_note('ticket_integrity_spot_scan', $queue_note);
 		}
-		if (function_exists('vms_event_plan_save_profiler_note_heavy_action')) {
-			vms_event_plan_save_profiler_note_heavy_action('ticket_integrity_spot_scan', $heavy_action_status, $heavy_action_reason);
+		if (function_exists('bvmgr_event_plan_save_profiler_note_heavy_action')) {
+			bvmgr_event_plan_save_profiler_note_heavy_action('ticket_integrity_spot_scan', $heavy_action_status, $heavy_action_reason);
 		}
 
 		// Publish transitions queue Ticket Integrity before save_post starts, so the
 		// Event Plan save profiler is not active yet. Defer that note so the follow-up
 		// save profile can show that publish queued/skipped the spot scan.
 		if (!$profiler_active && $reason === 'event_plan_publish') {
-			if (function_exists('vms_event_plan_save_profiler_defer_note_for_post')) {
-				vms_event_plan_save_profiler_defer_note_for_post($plan_id, 'ticket_integrity_spot_scan', $queue_note);
+			if (function_exists('bvmgr_event_plan_save_profiler_defer_note_for_post')) {
+				bvmgr_event_plan_save_profiler_defer_note_for_post($plan_id, 'ticket_integrity_spot_scan', $queue_note);
 			}
-			if (function_exists('vms_event_plan_save_profiler_defer_heavy_action_for_post')) {
-				vms_event_plan_save_profiler_defer_heavy_action_for_post($plan_id, 'ticket_integrity_spot_scan', $heavy_action_status, $heavy_action_reason);
+			if (function_exists('bvmgr_event_plan_save_profiler_defer_heavy_action_for_post')) {
+				bvmgr_event_plan_save_profiler_defer_heavy_action_for_post($plan_id, 'ticket_integrity_spot_scan', $heavy_action_status, $heavy_action_reason);
 			}
 		}
 
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish(
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish(
 				'vms_ticket_integrity_queue_spot_scan',
 				$plan_id,
 				$trace,
@@ -427,15 +427,15 @@ function vms_ticket_integrity_run_spot_scan(int $plan_id): void
 		bvmgr_resource_fingerprint_flag('cron_run', array('hook' => vms_ticket_integrity_spot_hook(), 'plan_id' => $plan_id));
 		bvmgr_resource_fingerprint_flag('vms_queue', array('hook' => vms_ticket_integrity_spot_hook(), 'plan_id' => $plan_id, 'action' => 'run'));
 	}
-	$trace = function_exists('vms_event_plan_perf_span_start')
-		? vms_event_plan_perf_span_start('vms_ticket_integrity_run_spot_scan', $plan_id, array('job_name' => 'ticket_integrity_spot_scan'))
+	$trace = function_exists('bvmgr_event_plan_perf_span_start')
+		? bvmgr_event_plan_perf_span_start('vms_ticket_integrity_run_spot_scan', $plan_id, array('job_name' => 'ticket_integrity_spot_scan'))
 		: '';
-	$lock = function_exists('vms_event_plan_perf_job_get_lock')
-		? vms_event_plan_perf_job_get_lock('ticket_integrity_spot_scan', $plan_id)
+	$lock = function_exists('bvmgr_event_plan_perf_job_get_lock')
+		? bvmgr_event_plan_perf_job_get_lock('ticket_integrity_spot_scan', $plan_id)
 		: array();
 	if (($lock['state'] ?? '') === 'running') {
-		if (function_exists('vms_event_plan_perf_log')) {
-			vms_event_plan_perf_log(
+		if (function_exists('bvmgr_event_plan_perf_log')) {
+			bvmgr_event_plan_perf_log(
 				'vms_ticket_integrity_run_spot_scan',
 				$plan_id,
 				array(
@@ -445,23 +445,23 @@ function vms_ticket_integrity_run_spot_scan(int $plan_id): void
 				)
 			);
 		}
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish('vms_ticket_integrity_run_spot_scan', $plan_id, $trace, array('job_name' => 'ticket_integrity_spot_scan', 'skipped' => 1));
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_run_spot_scan', $plan_id, $trace, array('job_name' => 'ticket_integrity_spot_scan', 'skipped' => 1));
 		}
 		return;
 	}
 	if (!function_exists('vms_ticket_integrity_scan_event_now')) {
-		if (function_exists('vms_event_plan_perf_job_clear_lock')) {
-			vms_event_plan_perf_job_clear_lock('ticket_integrity_spot_scan', $plan_id);
+		if (function_exists('bvmgr_event_plan_perf_job_clear_lock')) {
+			bvmgr_event_plan_perf_job_clear_lock('ticket_integrity_spot_scan', $plan_id);
 		}
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish('vms_ticket_integrity_run_spot_scan', $plan_id, $trace, array('job_name' => 'ticket_integrity_spot_scan', 'skipped' => 1));
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_run_spot_scan', $plan_id, $trace, array('job_name' => 'ticket_integrity_spot_scan', 'skipped' => 1));
 		}
 		return;
 	}
-	if (function_exists('vms_event_plan_has_effective_tickets') && !vms_event_plan_has_effective_tickets($plan_id)) {
-		if (function_exists('vms_event_plan_perf_log')) {
-			vms_event_plan_perf_log(
+	if (function_exists('bvmgr_event_plan_has_effective_tickets') && !bvmgr_event_plan_has_effective_tickets($plan_id)) {
+		if (function_exists('bvmgr_event_plan_perf_log')) {
+			bvmgr_event_plan_perf_log(
 				'vms_ticket_integrity_run_spot_scan',
 				$plan_id,
 				array(
@@ -471,17 +471,17 @@ function vms_ticket_integrity_run_spot_scan(int $plan_id): void
 				)
 			);
 		}
-		if (function_exists('vms_event_plan_perf_job_clear_lock')) {
-			vms_event_plan_perf_job_clear_lock('ticket_integrity_spot_scan', $plan_id);
+		if (function_exists('bvmgr_event_plan_perf_job_clear_lock')) {
+			bvmgr_event_plan_perf_job_clear_lock('ticket_integrity_spot_scan', $plan_id);
 		}
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish('vms_ticket_integrity_run_spot_scan', $plan_id, $trace, array('job_name' => 'ticket_integrity_spot_scan', 'skipped' => 1));
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_run_spot_scan', $plan_id, $trace, array('job_name' => 'ticket_integrity_spot_scan', 'skipped' => 1));
 		}
 		return;
 	}
 
-	if (function_exists('vms_event_plan_perf_job_set_lock')) {
-		vms_event_plan_perf_job_set_lock('ticket_integrity_spot_scan', $plan_id, 'running', 15 * MINUTE_IN_SECONDS);
+	if (function_exists('bvmgr_event_plan_perf_job_set_lock')) {
+		bvmgr_event_plan_perf_job_set_lock('ticket_integrity_spot_scan', $plan_id, 'running', 15 * MINUTE_IN_SECONDS);
 	}
 
 	try {
@@ -492,11 +492,11 @@ function vms_ticket_integrity_run_spot_scan(int $plan_id): void
 			)
 		);
 	} finally {
-		if (function_exists('vms_event_plan_perf_job_clear_lock')) {
-			vms_event_plan_perf_job_clear_lock('ticket_integrity_spot_scan', $plan_id);
+		if (function_exists('bvmgr_event_plan_perf_job_clear_lock')) {
+			bvmgr_event_plan_perf_job_clear_lock('ticket_integrity_spot_scan', $plan_id);
 		}
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish('vms_ticket_integrity_run_spot_scan', $plan_id, $trace, array('job_name' => 'ticket_integrity_spot_scan'));
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_run_spot_scan', $plan_id, $trace, array('job_name' => 'ticket_integrity_spot_scan'));
 		}
 	}
 }
@@ -531,11 +531,11 @@ function vms_ticket_integrity_plan_save_should_queue(int $post_id, WP_Post $post
 	// paths. The filter exists only as an escape hatch for legacy installs.
 	$queue_general_save = (bool) apply_filters('vms_ticket_integrity_queue_on_general_plan_save', false, $post_id, $post, $update);
 	if (!$queue_general_save) {
-		if (function_exists('vms_event_plan_save_profiler_note')) {
-			vms_event_plan_save_profiler_note('ticket_integrity_plan_save', 'skipped_general_editor_save');
+		if (function_exists('bvmgr_event_plan_save_profiler_note')) {
+			bvmgr_event_plan_save_profiler_note('ticket_integrity_plan_save', 'skipped_general_editor_save');
 		}
-		if (function_exists('vms_event_plan_save_profiler_note_heavy_action')) {
-			vms_event_plan_save_profiler_note_heavy_action('ticket_integrity_plan_save', 'skipped', 'general_editor_save');
+		if (function_exists('bvmgr_event_plan_save_profiler_note_heavy_action')) {
+			bvmgr_event_plan_save_profiler_note_heavy_action('ticket_integrity_plan_save', 'skipped', 'general_editor_save');
 		}
 		return false;
 	}
@@ -544,11 +544,11 @@ function vms_ticket_integrity_plan_save_should_queue(int $post_id, WP_Post $post
 	if ($throttle > 0) {
 		$last = (int) get_post_meta($post_id, '_vms_ticket_integrity_last_plan_save_queue_at', true);
 		if ($last > 0 && (time() - $last) < $throttle) {
-			if (function_exists('vms_event_plan_save_profiler_note')) {
-				vms_event_plan_save_profiler_note('ticket_integrity_plan_save', 'skipped_throttled');
+			if (function_exists('bvmgr_event_plan_save_profiler_note')) {
+				bvmgr_event_plan_save_profiler_note('ticket_integrity_plan_save', 'skipped_throttled');
 			}
-			if (function_exists('vms_event_plan_save_profiler_note_heavy_action')) {
-				vms_event_plan_save_profiler_note_heavy_action('ticket_integrity_plan_save', 'skipped', 'throttled');
+			if (function_exists('bvmgr_event_plan_save_profiler_note_heavy_action')) {
+				bvmgr_event_plan_save_profiler_note_heavy_action('ticket_integrity_plan_save', 'skipped', 'throttled');
 			}
 			return false;
 		}
@@ -559,12 +559,12 @@ function vms_ticket_integrity_plan_save_should_queue(int $post_id, WP_Post $post
 
 function vms_ticket_integrity_watch_plan_save(int $post_id, WP_Post $post, bool $update): void
 {
-	$deferred_state = function_exists('vms_event_plan_save_profiler_deferred_state_for_post')
-		? vms_event_plan_save_profiler_deferred_state_for_post($post_id)
+	$deferred_state = function_exists('bvmgr_event_plan_save_profiler_deferred_state_for_post')
+		? bvmgr_event_plan_save_profiler_deferred_state_for_post($post_id)
 		: array();
 	$deferred_context = is_array($deferred_state['context'] ?? null) ? $deferred_state['context'] : array();
-	$trace = function_exists('vms_event_plan_perf_span_start')
-		? vms_event_plan_perf_span_start(
+	$trace = function_exists('bvmgr_event_plan_perf_span_start')
+		? bvmgr_event_plan_perf_span_start(
 			'vms_ticket_integrity_watch_plan_save',
 			$post_id,
 			array(
@@ -578,27 +578,27 @@ function vms_ticket_integrity_watch_plan_save(int $post_id, WP_Post $post, bool 
 		: '';
 
 	if (wp_is_post_revision($post_id) || (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)) {
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish('vms_ticket_integrity_watch_plan_save', $post_id, $trace, array('job_name' => 'ticket_integrity_watch_plan_save', 'skipped' => 1));
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_watch_plan_save', $post_id, $trace, array('job_name' => 'ticket_integrity_watch_plan_save', 'skipped' => 1));
 		}
 		return;
 	}
 
 	if (!vms_ticket_integrity_plan_save_should_queue($post_id, $post, $update)) {
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish('vms_ticket_integrity_watch_plan_save', $post_id, $trace, array('job_name' => 'ticket_integrity_watch_plan_save', 'skipped' => 1));
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_watch_plan_save', $post_id, $trace, array('job_name' => 'ticket_integrity_watch_plan_save', 'skipped' => 1));
 		}
 		return;
 	}
 
 	try {
 		vms_ticket_integrity_queue_spot_scan($post_id, $update ? 'event_plan_save' : 'event_plan_create');
-		if (!function_exists('vms_event_plan_has_effective_tickets') || vms_event_plan_has_effective_tickets($post_id)) {
+		if (!function_exists('bvmgr_event_plan_has_effective_tickets') || bvmgr_event_plan_has_effective_tickets($post_id)) {
 			update_post_meta(absint($post_id), '_vms_ticket_integrity_last_plan_save_queue_at', time());
 		}
 	} finally {
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish('vms_ticket_integrity_watch_plan_save', $post_id, $trace, array('job_name' => 'ticket_integrity_watch_plan_save'));
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_watch_plan_save', $post_id, $trace, array('job_name' => 'ticket_integrity_watch_plan_save'));
 		}
 	}
 }
@@ -612,8 +612,8 @@ function vms_ticket_integrity_watch_publish_transition(string $new_status, strin
 	} elseif ($post->post_type === 'tribe_events' && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
 		$plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $post->ID));
 	}
-	$trace = function_exists('vms_event_plan_perf_span_start')
-		? vms_event_plan_perf_span_start(
+	$trace = function_exists('bvmgr_event_plan_perf_span_start')
+		? bvmgr_event_plan_perf_span_start(
 			'vms_ticket_integrity_watch_publish_transition',
 			$plan_id,
 			array(
@@ -628,8 +628,8 @@ function vms_ticket_integrity_watch_publish_transition(string $new_status, strin
 		: '';
 
 	if ($new_status !== 'publish' || $old_status === 'publish') {
-		if (function_exists('vms_event_plan_perf_span_finish')) {
-			vms_event_plan_perf_span_finish('vms_ticket_integrity_watch_publish_transition', $plan_id, $trace, array('job_name' => 'ticket_integrity_watch_publish_transition', 'skipped' => 1));
+		if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+			bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_watch_publish_transition', $plan_id, $trace, array('job_name' => 'ticket_integrity_watch_publish_transition', 'skipped' => 1));
 		}
 		return;
 	}
@@ -638,8 +638,8 @@ function vms_ticket_integrity_watch_publish_transition(string $new_status, strin
 		try {
 			vms_ticket_integrity_queue_spot_scan((int) $post->ID, 'event_plan_publish');
 		} finally {
-			if (function_exists('vms_event_plan_perf_span_finish')) {
-				vms_event_plan_perf_span_finish('vms_ticket_integrity_watch_publish_transition', $plan_id, $trace, array('job_name' => 'ticket_integrity_watch_publish_transition', 'post_type' => $post->post_type));
+			if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+				bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_watch_publish_transition', $plan_id, $trace, array('job_name' => 'ticket_integrity_watch_publish_transition', 'post_type' => $post->post_type));
 			}
 		}
 		return;
@@ -650,16 +650,16 @@ function vms_ticket_integrity_watch_publish_transition(string $new_status, strin
 			try {
 				vms_ticket_integrity_queue_spot_scan($plan_id, 'tec_event_publish');
 			} finally {
-				if (function_exists('vms_event_plan_perf_span_finish')) {
-					vms_event_plan_perf_span_finish('vms_ticket_integrity_watch_publish_transition', $plan_id, $trace, array('job_name' => 'ticket_integrity_watch_publish_transition', 'post_type' => $post->post_type));
+				if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+					bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_watch_publish_transition', $plan_id, $trace, array('job_name' => 'ticket_integrity_watch_publish_transition', 'post_type' => $post->post_type));
 				}
 			}
 			return;
 		}
 	}
 
-	if (function_exists('vms_event_plan_perf_span_finish')) {
-		vms_event_plan_perf_span_finish('vms_ticket_integrity_watch_publish_transition', $plan_id, $trace, array('job_name' => 'ticket_integrity_watch_publish_transition', 'post_type' => $post->post_type, 'skipped' => 1));
+	if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+		bvmgr_event_plan_perf_span_finish('vms_ticket_integrity_watch_publish_transition', $plan_id, $trace, array('job_name' => 'ticket_integrity_watch_publish_transition', 'post_type' => $post->post_type, 'skipped' => 1));
 	}
 }
 add_action('transition_post_status', 'vms_ticket_integrity_watch_publish_transition', 20, 3);
@@ -686,8 +686,8 @@ function vms_ticket_integrity_watch_ticketing_meta(int $meta_id, int $object_id,
 		return;
 	}
 
-	if (function_exists('vms_event_plan_perf_log')) {
-		vms_event_plan_perf_log(
+	if (function_exists('bvmgr_event_plan_perf_log')) {
+		bvmgr_event_plan_perf_log(
 			'vms_ticket_integrity_watch_ticketing_meta',
 			$object_id,
 			array(

@@ -236,13 +236,13 @@ function vms_get_event_plan_lineup_entries(int $plan_id): array
 	return (array) ($GLOBALS['vms_test_lineup_rows'] ?? array());
 }
 
-function vms_event_command_center_time_ago_label(string $raw, bool $gmt = false): string
+function bvmgr_event_command_center_time_ago_label(string $raw, bool $gmt = false): string
 {
 	unset($gmt);
 	return 'ago:' . $raw;
 }
 
-function vms_event_command_center_parse_datetime(string $raw, bool $gmt = false)
+function bvmgr_event_command_center_parse_datetime(string $raw, bool $gmt = false)
 {
 	unset($gmt);
 	try {
@@ -253,7 +253,7 @@ function vms_event_command_center_parse_datetime(string $raw, bool $gmt = false)
 	}
 }
 
-function vms_event_command_center_clean_text($text): string
+function bvmgr_event_command_center_clean_text($text): string
 {
 	if (function_exists('bvmgr_event_plan_review_clean_text')) {
 		return bvmgr_event_plan_review_clean_text(is_scalar($text) ? (string) $text : '');
@@ -267,7 +267,7 @@ function bvmgr_admin_ui_page_url(string $slug): string
 	return '/wp-admin/admin.php?page=' . rawurlencode($slug);
 }
 
-function vms_event_command_center_admin_url(array $args = array()): string
+function bvmgr_event_command_center_admin_url(array $args = array()): string
 {
 	$query = http_build_query($args);
 	return '/wp-admin/admin.php?page=vms-event-command-center' . ($query !== '' ? '&' . $query : '');
@@ -569,7 +569,7 @@ function vms_test_snapshot_from_state(array $state): array
 {
 	vms_test_reset_environment();
 	vms_test_apply_state($state);
-	return vms_event_plan_review_current_snapshot(VMS_TEST_PLAN_ID);
+	return bvmgr_event_plan_review_current_snapshot(VMS_TEST_PLAN_ID);
 }
 
 function vms_test_meta_value(string $meta_key)
@@ -726,17 +726,17 @@ function vms_test_read_review_surfaces(): array
 {
 	$snapshot_state = vms_test_capture(
 		static function () {
-			return vms_event_plan_review_get_snapshot_state(VMS_TEST_PLAN_ID);
+			return bvmgr_event_plan_review_get_snapshot_state(VMS_TEST_PLAN_ID);
 		}
 	);
 	$snapshot = vms_test_capture(
 		static function () {
-			return vms_event_plan_review_get_snapshot(VMS_TEST_PLAN_ID);
+			return bvmgr_event_plan_review_get_snapshot(VMS_TEST_PLAN_ID);
 		}
 	);
 	$changes_state = vms_test_capture(
 		static function () {
-			return vms_event_plan_review_get_changes_state(VMS_TEST_PLAN_ID);
+			return bvmgr_event_plan_review_get_changes_state(VMS_TEST_PLAN_ID);
 		}
 	);
 	$changes = vms_test_capture(
@@ -746,12 +746,12 @@ function vms_test_read_review_surfaces(): array
 	);
 	$integrity = vms_test_capture(
 		static function () {
-			return vms_event_plan_review_get_integrity_issue(VMS_TEST_PLAN_ID);
+			return bvmgr_event_plan_review_get_integrity_issue(VMS_TEST_PLAN_ID);
 		}
 	);
 	$has_changes = vms_test_capture(
 		static function () {
-			return vms_event_plan_review_has_changes(VMS_TEST_PLAN_ID);
+			return bvmgr_event_plan_review_has_changes(VMS_TEST_PLAN_ID);
 		}
 	);
 
@@ -761,23 +761,23 @@ function vms_test_read_review_surfaces(): array
 
 	$banner = vms_test_capture_render(
 		static function () use ($post): void {
-			vms_event_plan_review_render_banner($post);
+			bvmgr_event_plan_review_render_banner($post);
 		}
 	);
 	$status_note = vms_test_capture_render(
 		static function (): void {
-			vms_event_plan_review_render_status_note('vms_plan_status', VMS_TEST_PLAN_ID);
+			bvmgr_event_plan_review_render_status_note('vms_plan_status', VMS_TEST_PLAN_ID);
 		}
 	);
 	$activity = vms_test_capture(
 		static function () {
-			return vms_event_command_center_collect_activity(VMS_TEST_PLAN_ID);
+			return bvmgr_event_command_center_collect_activity(VMS_TEST_PLAN_ID);
 		}
 	);
 	$command_center_inputs = vms_test_command_center_inputs();
 	$alerts = vms_test_capture(
 		static function () use ($command_center_inputs) {
-			return vms_event_command_center_build_alerts(
+			return bvmgr_event_command_center_build_alerts(
 				VMS_TEST_PLAN_ID,
 				(array) $command_center_inputs['header'],
 				(array) $command_center_inputs['ticket'],
@@ -790,7 +790,7 @@ function vms_test_read_review_surfaces(): array
 	);
 	$health = vms_test_capture(
 		static function () use ($alerts) {
-			return vms_event_command_center_get_health((array) $alerts['result']);
+			return bvmgr_event_command_center_get_health((array) $alerts['result']);
 		}
 	);
 
@@ -919,24 +919,24 @@ $mirror_review_source = (string) file_get_contents($mirror_review_path);
 $live_review_source = (string) file_get_contents($live_review_path);
 $command_center_source = (string) file_get_contents($command_center_path);
 
-$current_snapshot_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_current_snapshot');
-$decode_snapshot_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_decode_snapshot_json');
-$decode_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_decode_changes_json');
-$get_snapshot_state_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_snapshot_state');
-$get_changes_state_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_changes_state');
-$get_snapshot_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_snapshot');
+$current_snapshot_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_current_snapshot');
+$decode_snapshot_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_decode_snapshot_json');
+$decode_changes_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_decode_changes_json');
+$get_snapshot_state_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_get_snapshot_state');
+$get_changes_state_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_get_changes_state');
+$get_snapshot_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_get_snapshot');
 $get_changes_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_get_changes');
-$build_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_build_changes');
-$clear_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_clear_changes');
-$mark_published_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_mark_published');
+$build_changes_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_build_changes');
+$clear_changes_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_clear_changes');
+$mark_published_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_mark_published');
 $touch_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_touch');
-$has_changes_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_has_changes');
-$integrity_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_get_integrity_issue');
-$banner_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_render_banner');
-$status_note_body = vms_test_extract_function($mirror_review_source, 'vms_event_plan_review_render_status_note');
-$activity_body = vms_test_extract_function($command_center_source, 'vms_event_command_center_collect_activity');
-$alerts_body = vms_test_extract_function($command_center_source, 'vms_event_command_center_build_alerts');
-$health_body = vms_test_extract_function($command_center_source, 'vms_event_command_center_get_health');
+$has_changes_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_has_changes');
+$integrity_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_get_integrity_issue');
+$banner_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_render_banner');
+$status_note_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_render_status_note');
+$activity_body = vms_test_extract_function($command_center_source, 'bvmgr_event_command_center_collect_activity');
+$alerts_body = vms_test_extract_function($command_center_source, 'bvmgr_event_command_center_build_alerts');
+$health_body = vms_test_extract_function($command_center_source, 'bvmgr_event_command_center_get_health');
 
 vms_test_assert_same(1, substr_count($decode_snapshot_body, 'json_decode('), 'Snapshot decoder should retain exactly one raw json_decode() call.');
 vms_test_assert_same(1, substr_count($decode_changes_body, 'json_decode('), 'Changes decoder should retain exactly one raw json_decode() call.');
@@ -944,26 +944,26 @@ vms_test_assert_same(2, substr_count($mirror_review_source, 'json_decode('), 'Ev
 vms_test_assert_true(strpos($get_snapshot_body, 'json_decode(') === false, 'Snapshot compatibility wrapper should no longer decode raw JSON directly.');
 vms_test_assert_true(strpos($get_changes_body, 'json_decode(') === false, 'Changes compatibility wrapper should no longer decode raw JSON directly.');
 vms_test_assert_true(strpos($mirror_review_source, 'vms_json_decode_associative(') === false, 'Event Plan Review should not delegate these fields to the shared JSON helper.');
-vms_test_assert_true(strpos($mirror_review_source, 'vms_event_plan_review_decode_snapshot_json') !== false && strpos($mirror_review_source, 'vms_event_plan_review_decode_changes_json') !== false, 'Specialized JSON decoders should exist.');
-vms_test_assert_true(strpos($mirror_review_source, 'vms_event_plan_review_get_snapshot_state') !== false && strpos($mirror_review_source, 'vms_event_plan_review_get_changes_state') !== false, 'State-aware post readers should exist.');
-vms_test_assert_contains("update_post_meta(\$plan_id, vms_event_plan_review_meta_key('snapshot_json'), wp_json_encode(\$snapshot));", $mark_published_body, 'Snapshot writer should remain wp_json_encode()-backed.');
-vms_test_assert_contains("update_post_meta(\$plan_id, vms_event_plan_review_meta_key('changes_json'), wp_json_encode(\$payload));", $touch_body, 'Changes writer should remain wp_json_encode()-backed.');
+vms_test_assert_true(strpos($mirror_review_source, 'bvmgr_event_plan_review_decode_snapshot_json') !== false && strpos($mirror_review_source, 'bvmgr_event_plan_review_decode_changes_json') !== false, 'Specialized JSON decoders should exist.');
+vms_test_assert_true(strpos($mirror_review_source, 'bvmgr_event_plan_review_get_snapshot_state') !== false && strpos($mirror_review_source, 'bvmgr_event_plan_review_get_changes_state') !== false, 'State-aware post readers should exist.');
+vms_test_assert_contains("update_post_meta(\$plan_id, bvmgr_event_plan_review_meta_key('snapshot_json'), wp_json_encode(\$snapshot));", $mark_published_body, 'Snapshot writer should remain wp_json_encode()-backed.');
+vms_test_assert_contains("update_post_meta(\$plan_id, bvmgr_event_plan_review_meta_key('changes_json'), wp_json_encode(\$payload));", $touch_body, 'Changes writer should remain wp_json_encode()-backed.');
 vms_test_assert_contains("'snapshot_json' => '_vms_published_snapshot_json'", $mirror_review_source, 'Snapshot meta key should remain unchanged.');
 vms_test_assert_contains("'changes_json' => '_vms_unpublished_changes_json'", $mirror_review_source, 'Changes meta key should remain unchanged.');
 vms_test_assert_contains("'count' => count(\$changes)", $touch_body, 'Changes payload should still contain count.');
 vms_test_assert_contains("'changes' => \$changes", $touch_body, 'Changes payload should still contain changes.');
-vms_test_assert_contains("vms_event_plan_review_get_snapshot_state(\$plan_id)", $touch_body, 'touch() should use snapshot state.');
+vms_test_assert_contains("bvmgr_event_plan_review_get_snapshot_state(\$plan_id)", $touch_body, 'touch() should use snapshot state.');
 $touch_invalid_pos = strpos($touch_body, "if ('invalid' === (\$snapshot_state['state'] ?? ''))");
-$touch_write_pos = strpos($touch_body, "update_post_meta(\$plan_id, vms_event_plan_review_meta_key('changes_json'), wp_json_encode(\$payload));");
+$touch_write_pos = strpos($touch_body, "update_post_meta(\$plan_id, bvmgr_event_plan_review_meta_key('changes_json'), wp_json_encode(\$payload));");
 vms_test_assert_true(is_int($touch_invalid_pos) && is_int($touch_write_pos) && $touch_invalid_pos < $touch_write_pos, 'Invalid snapshot branch should return before the changes write path.');
 $touch_user_id_pos = strpos($touch_body, 'if ($user_id <= 0)');
 $touch_invalid_slice = is_int($touch_invalid_pos) && is_int($touch_user_id_pos) && $touch_invalid_pos < $touch_user_id_pos ? substr($touch_body, $touch_invalid_pos, $touch_user_id_pos - $touch_invalid_pos) : '';
 vms_test_assert_contains("return 'valid' === (\$changes_state['state'] ?? '') ? (array) (\$changes_state['value'] ?? array()) : array();", $touch_invalid_slice, 'Invalid snapshot branch should preserve only stored valid changes.');
-vms_test_assert_not_contains("vms_event_plan_review_clear_changes(\$plan_id)", $touch_invalid_slice, 'Invalid snapshot branch should not clear changes.');
+vms_test_assert_not_contains("bvmgr_event_plan_review_clear_changes(\$plan_id)", $touch_invalid_slice, 'Invalid snapshot branch should not clear changes.');
 vms_test_assert_contains("'invalid' === (\$snapshot_state['state'] ?? '')", $has_changes_body, 'has_changes() should consult invalid snapshot state.');
 vms_test_assert_contains("'invalid' === (\$changes_state['state'] ?? '')", $has_changes_body, 'has_changes() should consult invalid changes state.');
 vms_test_assert_contains("bvmgr_event_plan_review_get_changes(\$plan_id)", $activity_body, 'Command Center activity should still read changes through the canonical review helper.');
-vms_test_assert_contains("vms_event_plan_review_has_changes(\$plan_id)", $alerts_body, 'Command Center alerts should still consult has_changes() through the review helper.');
+vms_test_assert_contains("bvmgr_event_plan_review_has_changes(\$plan_id)", $alerts_body, 'Command Center alerts should still consult has_changes() through the review helper.');
 vms_test_assert_true(strpos($mirror_review_source, 'snapshot_version') === false && strpos($mirror_review_source, 'changes_version') === false, 'No migration or version marker should be added.');
 vms_test_assert_true($live_review_source !== '', 'Live event-plan-review.php should remain readable while this mirror-only remediation leaves ../../vms untouched.');
 
@@ -978,7 +978,7 @@ $published_snapshot_json = (string) wp_json_encode($published_snapshot);
 $current_snapshot_json = (string) wp_json_encode($current_snapshot);
 vms_test_assert_true($published_snapshot_json !== '' && $current_snapshot_json !== '', 'Valid snapshot fixtures should JSON-encode successfully.');
 
-$computed_changes = vms_event_plan_review_build_changes($published_snapshot, $current_snapshot);
+$computed_changes = bvmgr_event_plan_review_build_changes($published_snapshot, $current_snapshot);
 vms_test_assert_true(count($computed_changes) > 0, 'Published and current snapshot fixtures should produce tracked changes.');
 $valid_changes_payload = array(
 	'count' => count($computed_changes),
@@ -1003,7 +1003,7 @@ $changes_with_unknown_keys_json = (string) wp_json_encode(
 	)
 );
 $duplicate_count_changes_json = '{"count":99,"count":1,"changes":[{"field":"status","label":"Plan status","before":"published","after":"draft","before_label":"Published","after_label":"Draft","summary":"Plan status changed from Published to Draft"}]}';
-$invalid_snapshot_message = vms_event_plan_review_integrity_message();
+$invalid_snapshot_message = bvmgr_event_plan_review_integrity_message();
 
 $snapshot_state_cases = array(
 	'true_no_baseline' => array(
@@ -1460,7 +1460,7 @@ $GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_by'] = VMS
 $GLOBALS['vms_test_meta'][VMS_TEST_PLAN_ID]['_vms_unpublished_changes_source'] = 'event_plan_editor';
 $first_publish_mark = vms_test_capture(
 	static function () {
-		return vms_event_plan_review_mark_published(VMS_TEST_PLAN_ID, 'event_plan_editor', VMS_TEST_CURRENT_USER_ID);
+		return bvmgr_event_plan_review_mark_published(VMS_TEST_PLAN_ID, 'event_plan_editor', VMS_TEST_CURRENT_USER_ID);
 	}
 );
 vms_test_assert_same($current_snapshot, $first_publish_mark['result'], 'mark_published() should snapshot the current Event Plan state.');

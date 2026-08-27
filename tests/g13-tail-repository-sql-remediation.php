@@ -133,7 +133,7 @@ function bvmgr_event_plan_get_status(int $post_id, string $context): string
 	return $GLOBALS['g13_tail_statuses'][$post_id] ?? 'draft';
 }
 
-function vms_event_plan_should_include(int $post_id, string $context, array $flags): bool
+function bvmgr_event_plan_should_include(int $post_id, string $context, array $flags): bool
 {
 	unset($context, $flags);
 	return !in_array($post_id, $GLOBALS['g13_tail_excluded'], true);
@@ -159,22 +159,22 @@ function wp_reset_postdata(): void
 	$GLOBALS['g13_tail_reset_postdata']++;
 }
 
-function vms_rating_submitted_text_field(string $key): string
+function bvmgr_rating_submitted_text_field(string $key): string
 {
 	return (string) ($GLOBALS['g13_tail_rating_fields'][$key] ?? '');
 }
 
-function vms_rating_submitted_email(string $key): string
+function bvmgr_rating_submitted_email(string $key): string
 {
 	return sanitize_email($GLOBALS['g13_tail_rating_fields'][$key] ?? '');
 }
 
-function vms_rating_submitted_value(string $key): int
+function bvmgr_rating_submitted_value(string $key): int
 {
 	return (int) ($GLOBALS['g13_tail_rating_fields'][$key] ?? 0);
 }
 
-function vms_rating_submitted_comment(): string
+function bvmgr_rating_submitted_comment(): string
 {
 	return (string) ($GLOBALS['g13_tail_rating_fields']['vms_rating_comment'] ?? '');
 }
@@ -185,7 +185,7 @@ function bvmgr_get_event_plan_for_tec_event(int $event_id): int
 	return (int) $GLOBALS['g13_tail_rating_plan_id'];
 }
 
-function vms_has_attended_event(int $event_id, string $email): bool
+function bvmgr_has_attended_event(int $event_id, string $email): bool
 {
 	unset($event_id, $email);
 	return (bool) $GLOBALS['g13_tail_attended'];
@@ -460,7 +460,7 @@ foreach (array_diff($relative_files, array('includes/schedule/schedule.php')) as
 }
 
 $owned_function_map = array(
-	'includes/cpt/ratings.php' => array('vms_get_band_rating_summary', 'vms_handle_rating_submission'),
+	'includes/cpt/ratings.php' => array('bvmgr_get_band_rating_summary', 'bvmgr_handle_rating_submission'),
 	'includes/helpers.php' => array('bvmgr_resolve_event_plan_for_tec_event', 'bvmgr_get_ticket_product_ids_for_event', 'bvmgr_get_event_titles_by_date', 'bvmgr_get_comp_packages_for_venue'),
 	'includes/schedule/schedule.php' => array('vms_sch_get_plans_by_date', 'vms_sch_get_plans_by_date_all'),
 	'includes/admin/approvals-review-queue.php' => array('vms_approvals_queue_vendor_summary'),
@@ -547,10 +547,10 @@ foreach ($owned_function_map as $relative_file => $functions) {
 
 // Complete ratings aggregate semantics: invalid/empty inputs, filters, IDs, and aggregate results.
 g13_tail_reset();
-g13_tail_same(array('average' => null, 'count' => 0), vms_get_band_rating_summary(0), 'Invalid band summary result changed.');
+g13_tail_same(array('average' => null, 'count' => 0), bvmgr_get_band_rating_summary(0), 'Invalid band summary result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid band should not query ratings.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array());
-g13_tail_same(array('average' => null, 'count' => 0), vms_get_band_rating_summary(44), 'Empty rating summary result changed.');
+g13_tail_same(array('average' => null, 'count' => 0), bvmgr_get_band_rating_summary(44), 'Empty rating summary result changed.');
 $empty_rating_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $empty_rating_args['posts_per_page'], 'Rating aggregate must remain complete rather than count-capped.');
 g13_tail_same('ids', $empty_rating_args['fields'], 'Rating aggregate result shape changed.');
@@ -564,7 +564,7 @@ $GLOBALS['g13_tail_meta'] = array(
 	12 => array('_vms_rating_value' => 3),
 	13 => array('_vms_rating_value' => 0),
 );
-g13_tail_same(array('average' => 4.0, 'count' => 2), vms_get_band_rating_summary(44, false), 'Rating aggregate average/count changed.');
+g13_tail_same(array('average' => 4.0, 'count' => 2), bvmgr_get_band_rating_summary(44, false), 'Rating aggregate average/count changed.');
 $rating_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(array(array('key' => '_vms_band_id', 'value' => 44)), $rating_args['meta_query'], 'Unverified rating filter changed.');
 
@@ -578,7 +578,7 @@ $GLOBALS['g13_tail_rating_fields'] = array(
 	'vms_rating_comment' => 'Good show',
 );
 $GLOBALS['g13_tail_nonce_valid'] = false;
-$nonce_failure = vms_handle_rating_submission(700, 77);
+$nonce_failure = bvmgr_handle_rating_submission(700, 77);
 g13_tail_same(false, $nonce_failure['success'], 'Invalid rating nonce should still fail.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid rating nonce should not query duplicates.');
 
@@ -588,7 +588,7 @@ $GLOBALS['g13_tail_meta'] = array(
 	701 => array('_vms_band_vendor_id' => 77, '_vms_event_date' => '', '_vms_start_time' => ''),
 );
 $GLOBALS['g13_tail_get_posts_queue'] = array(array(901));
-$duplicate_failure = vms_handle_rating_submission(700, 77);
+$duplicate_failure = bvmgr_handle_rating_submission(700, 77);
 g13_tail_same(false, $duplicate_failure['success'], 'Existing duplicate rating should still fail.');
 g13_tail_contains('already submitted', $duplicate_failure['message'], 'Duplicate rating failure message changed.');
 $duplicate_args = $GLOBALS['g13_tail_get_posts_calls'][0];
@@ -616,7 +616,7 @@ $GLOBALS['g13_tail_meta'] = array(
 );
 $GLOBALS['g13_tail_get_posts_queue'] = array(array());
 $GLOBALS['g13_tail_attended'] = false;
-$no_duplicate = vms_handle_rating_submission(700, 77);
+$no_duplicate = bvmgr_handle_rating_submission(700, 77);
 g13_tail_same(false, $no_duplicate['success'], 'Empty duplicate result should continue to attendance validation.');
 g13_tail_contains("couldn't find a ticket", $no_duplicate['message'], 'Empty duplicate-result continuation changed.');
 

@@ -694,7 +694,7 @@ g13_reset_runtime();
 $GLOBALS['g13_password_queue'] = array('TAKEN001', 'FREE0001');
 $GLOBALS['g13_coupon_ids']['EVENT-CREDIT-TAKEN001'] = 41;
 $GLOBALS['g13_query_queue'] = array(array(901), array());
-g13_same('EVENT-CREDIT-FREE0001', vms_event_credit_generate_code(), 'Credit-code generation should preserve collision retry behavior.');
+g13_same('EVENT-CREDIT-FREE0001', bvmgr_event_credit_generate_code(), 'Credit-code generation should preserve collision retry behavior.');
 g13_same(2, count($GLOBALS['g13_query_calls']), 'Credit generation should issue one query per attempted code.');
 g13_same(
 	array(
@@ -717,14 +717,14 @@ for ($index = 0; $index < 20; $index++) {
 	$GLOBALS['g13_password_queue'][] = sprintf('C%07d', $index);
 	$GLOBALS['g13_query_queue'][] = array(1000 + $index);
 }
-g13_same('EVENT-CREDIT-00000000-0000-4000-8000-000000000000', vms_event_credit_generate_code(), 'Twenty collisions should retain the UUID fallback.');
+g13_same('EVENT-CREDIT-00000000-0000-4000-8000-000000000000', bvmgr_event_credit_generate_code(), 'Twenty collisions should retain the UUID fallback.');
 g13_same(20, count($GLOBALS['g13_query_calls']), 'Credit collision probing must remain capped at 20 queries.');
 
 g13_reset_runtime();
-g13_same(0, vms_event_credit_find_existing(0, 10), 'Invalid credit identity should fail closed without querying.');
+g13_same(0, bvmgr_event_credit_find_existing(0, 10), 'Invalid credit identity should fail closed without querying.');
 g13_same(array(), $GLOBALS['g13_query_calls'], 'Invalid credit identity must not query.');
 $GLOBALS['g13_query_queue'][] = array(333);
-g13_same(333, vms_event_credit_find_existing(12, 34), 'Existing credit lookup should return the first exact match.');
+g13_same(333, bvmgr_event_credit_find_existing(12, 34), 'Existing credit lookup should return the first exact match.');
 g13_same(
 	array(
 		'post_type' => BVMGR_CPT_EVENT_CREDIT,
@@ -744,16 +744,16 @@ g13_same(
 );
 g13_same(array(333), $GLOBALS['g13_query_calls'][0]['result'], 'Existing credit query result must remain unchanged.');
 $GLOBALS['g13_query_queue'][] = array();
-g13_same(0, vms_event_credit_find_existing(12, 35), 'Missing credit identity should retain zero fallback.');
+g13_same(0, bvmgr_event_credit_find_existing(12, 35), 'Missing credit identity should retain zero fallback.');
 
 // Cancellation discovery retains complete linked products, fallback RSVP coverage, and single-user resolution.
 g13_reset_runtime();
-g13_same(array(), vms_cancellation_get_event_refundable_product_ids(0, 0), 'Invalid cancellation identity should fail closed.');
+g13_same(array(), bvmgr_cancellation_get_event_refundable_product_ids(0, 0), 'Invalid cancellation identity should fail closed.');
 g13_same(array(), $GLOBALS['g13_query_calls'], 'Invalid cancellation identity must not query.');
 $GLOBALS['g13_ticket_product_ids'] = array(11, 12);
 $GLOBALS['g13_post_meta'][13] = array('_vms_product_role' => 'ticket', '_vms_tec_event_id' => 55);
 $GLOBALS['g13_query_queue'][] = array(13, 0, 13);
-g13_same(array(11, 12, 13), vms_cancellation_get_event_refundable_product_ids(0, 55), 'Cancellation product discovery should preserve merged, normalized results.');
+g13_same(array(11, 12, 13), bvmgr_cancellation_get_event_refundable_product_ids(0, 55), 'Cancellation product discovery should preserve merged, normalized results.');
 g13_same(
 	array(
 		'post_type' => 'product',
@@ -771,7 +771,7 @@ g13_same(
 );
 g13_same(array(13, 0, 13), $GLOBALS['g13_query_calls'][0]['result'], 'Cancellation product query result must remain unchanged before normalization.');
 $GLOBALS['g13_query_queue'][] = false;
-g13_same(array(11, 12), vms_cancellation_get_event_refundable_product_ids(0, 56), 'Cancellation query failure should retain provider-derived ticket IDs.');
+g13_same(array(11, 12), bvmgr_cancellation_get_event_refundable_product_ids(0, 56), 'Cancellation query failure should retain provider-derived ticket IDs.');
 
 g13_reset_runtime();
 $provider_callbacks = $GLOBALS['g13_registered_filters']['vms_cancellation_run_step'] ?? array();
@@ -796,11 +796,11 @@ g13_same(
 g13_same(array(701, 701, 0), $GLOBALS['g13_query_calls'][2]['result'], 'Cancellation RSVP fallback result must remain unchanged before normalization.');
 
 g13_reset_runtime();
-g13_same(0, vms_cancellation_resolve_staff_notification_recipient(0)['staff_id'], 'Invalid Staff recipient should fail closed.');
+g13_same(0, bvmgr_cancellation_resolve_staff_notification_recipient(0)['staff_id'], 'Invalid Staff recipient should fail closed.');
 g13_same(array(), $GLOBALS['g13_user_query_calls'], 'Invalid Staff recipient must not query users.');
 $GLOBALS['g13_user_query_queue'][] = array(900);
 $GLOBALS['g13_users'][900] = new WP_User(900, 'staff@example.test', 'Staff Person');
-$staff_recipient = vms_cancellation_resolve_staff_notification_recipient(55);
+$staff_recipient = bvmgr_cancellation_resolve_staff_notification_recipient(55);
 g13_same('staff@example.test', $staff_recipient['email'], 'Staff reverse-meta fallback should preserve resolved email.');
 g13_same('user_staff_meta', $staff_recipient['email_source'], 'Staff reverse-meta fallback should preserve email source.');
 g13_same(
@@ -812,7 +812,7 @@ g13_same(array(900), $GLOBALS['g13_user_query_calls'][0]['result'], 'Staff fallb
 $GLOBALS['g13_post_meta'][56]['_vms_linked_user_id'] = 901;
 $GLOBALS['g13_users'][901] = new WP_User(901, 'linked@example.test', 'Linked Person');
 $user_query_count = count($GLOBALS['g13_user_query_calls']);
-g13_same('linked@example.test', vms_cancellation_resolve_staff_notification_recipient(56)['email'], 'Direct Staff/user link should still take precedence.');
+g13_same('linked@example.test', bvmgr_cancellation_resolve_staff_notification_recipient(56)['email'], 'Direct Staff/user link should still take precedence.');
 g13_same($user_query_count, count($GLOBALS['g13_user_query_calls']), 'Usable direct Staff/user link must not issue fallback usermeta query.');
 
 // Calendar ticket counts retain exact linkage and configured nightly-window queries.
@@ -922,7 +922,7 @@ g13_same(array(), $GLOBALS['g13_query_calls'][2]['result'], 'CAN-01 empty query 
 g13_reset_runtime();
 $response_posts = array(new WP_Post(71, BVMGR_CPT_FEEDBACK_RESPONSE, 'private'), new WP_Post(72, BVMGR_CPT_FEEDBACK_RESPONSE, 'publish'));
 $GLOBALS['g13_query_queue'][] = $response_posts;
-g13_same($response_posts, vms_feedback_get_responses(44, 25), 'Filtered feedback list should return get_posts() results unchanged.');
+g13_same($response_posts, bvmgr_feedback_get_responses(44, 25), 'Filtered feedback list should return get_posts() results unchanged.');
 g13_same(
 	array(
 		'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
@@ -937,12 +937,12 @@ g13_same(
 	'Filtered feedback list arguments must remain exact.'
 );
 g13_same($response_posts, $GLOBALS['g13_query_calls'][0]['result'], 'Feedback list query result must remain unchanged.');
-g13_same(0, vms_feedback_existing_response_by_meta(0, 'submission_uid_hash', 'x'), 'Invalid feedback identity should fail closed.');
+g13_same(0, bvmgr_feedback_existing_response_by_meta(0, 'submission_uid_hash', 'x'), 'Invalid feedback identity should fail closed.');
 $query_count = count($GLOBALS['g13_query_calls']);
-g13_same(0, vms_feedback_existing_response_by_meta(44, '', 'x'), 'Blank feedback meta key should fail closed.');
+g13_same(0, bvmgr_feedback_existing_response_by_meta(44, '', 'x'), 'Blank feedback meta key should fail closed.');
 g13_same($query_count, count($GLOBALS['g13_query_calls']), 'Invalid feedback identities must not query.');
 $GLOBALS['g13_query_queue'][] = array(88);
-g13_same(88, vms_feedback_existing_response_by_meta(44, 'submission_uid_hash', 'token'), 'Exact feedback token lookup should return its first result.');
+g13_same(88, bvmgr_feedback_existing_response_by_meta(44, 'submission_uid_hash', 'token'), 'Exact feedback token lookup should return its first result.');
 g13_same(
 	array(
 		'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
@@ -962,7 +962,7 @@ g13_same(
 g13_same(array(88), $GLOBALS['g13_query_calls'][1]['result'], 'Exact feedback-token result must remain unchanged.');
 $recent_started = time();
 $GLOBALS['g13_query_queue'][] = array(99);
-g13_same(99, vms_feedback_existing_recent_duplicate(44, 'fingerprint', 'request-hash', 7200), 'Recent feedback duplicate lookup should return its first result.');
+g13_same(99, bvmgr_feedback_existing_recent_duplicate(44, 'fingerprint', 'request-hash', 7200), 'Recent feedback duplicate lookup should return its first result.');
 $recent_finished = time();
 $recent_args = $GLOBALS['g13_query_calls'][2]['args'];
 $recent_threshold = (string) ($recent_args['meta_query'][3]['value'] ?? '');
@@ -990,7 +990,7 @@ g13_same(
 );
 g13_same(array(99), $GLOBALS['g13_query_calls'][2]['result'], 'Recent feedback duplicate result must remain unchanged.');
 $GLOBALS['g13_query_queue'][] = false;
-g13_same(0, vms_feedback_existing_recent_duplicate(44, 'other-fingerprint', 'other-hash', 60), 'Non-array recent-feedback query failures should fail closed.');
+g13_same(0, bvmgr_feedback_existing_recent_duplicate(44, 'other-fingerprint', 'other-hash', 60), 'Non-array recent-feedback query failures should fail closed.');
 
 // Ticket-sales resolution retains a complete exact-pair lookup and request-local cache behavior.
 g13_reset_runtime();

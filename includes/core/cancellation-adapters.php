@@ -9,14 +9,14 @@ defined('ABSPATH') || exit;
  * - Keep Event visibility decisions out of this first adapter pass.
  */
 
-if (!function_exists('vms_cancellation_refund_product_roles')) {
+if (!function_exists('bvmgr_cancellation_refund_product_roles')) {
 	/**
 	 * Product roles VMS can safely refund when an Event Plan is cancelled.
 	 *
 	 * This list intentionally excludes generic Woo products. A product still needs
 	 * an Event Plan, TEC event, ticket, or sync-map link before it is considered.
 	 */
-	function vms_cancellation_refund_product_roles(): array
+	function bvmgr_cancellation_refund_product_roles(): array
 	{
 		$roles = array('ticket', 'ga_ticket', 'legacy_ticket', 'entitlement', 'addon');
 		$roles = array_values(array_unique(array_filter(array_map('sanitize_key', $roles))));
@@ -24,8 +24,8 @@ if (!function_exists('vms_cancellation_refund_product_roles')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_refund_product_meta_key')) {
-	function vms_cancellation_refund_product_meta_key(string $which): string
+if (!function_exists('bvmgr_cancellation_refund_product_meta_key')) {
+	function bvmgr_cancellation_refund_product_meta_key(string $which): string
 	{
 		if (function_exists('vms_ticketing_v2_product_meta_key')) {
 			$key = vms_ticketing_v2_product_meta_key($which);
@@ -56,15 +56,15 @@ if (!function_exists('vms_cancellation_refund_product_meta_key')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_refund_product_role')) {
-	function vms_cancellation_refund_product_role(int $product_id): string
+if (!function_exists('bvmgr_cancellation_refund_product_role')) {
+	function bvmgr_cancellation_refund_product_role(int $product_id): string
 	{
 		$product_id = absint($product_id);
 		if ($product_id <= 0) {
 			return '';
 		}
 
-		$role_key = vms_cancellation_refund_product_meta_key('product_role');
+		$role_key = bvmgr_cancellation_refund_product_meta_key('product_role');
 		$role = $role_key !== '' ? sanitize_key((string) get_post_meta($product_id, $role_key, true)) : '';
 		if ($role !== '') {
 			return $role;
@@ -91,8 +91,8 @@ if (!function_exists('vms_cancellation_refund_product_role')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_refund_collect_sync_product_ids')) {
-	function vms_cancellation_refund_collect_sync_product_ids(int $event_plan_id): array
+if (!function_exists('bvmgr_cancellation_refund_collect_sync_product_ids')) {
+	function bvmgr_cancellation_refund_collect_sync_product_ids(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0 || !function_exists('vms_ticketing_v2_get_sync')) {
@@ -136,14 +136,14 @@ if (!function_exists('vms_cancellation_refund_collect_sync_product_ids')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_get_event_refundable_product_ids')) {
+if (!function_exists('bvmgr_cancellation_get_event_refundable_product_ids')) {
 	/**
 	 * Return Woo product IDs that VMS can prove are tied to this cancelled Event Plan.
 	 *
 	 * This includes TEC ticket products and VMS-managed event add-ons/entitlements.
 	 * It intentionally does not include unrelated products that happen to be in the same order.
 	 */
-	function vms_cancellation_get_event_refundable_product_ids(int $event_plan_id, int $tec_event_id = 0): array
+	function bvmgr_cancellation_get_event_refundable_product_ids(int $event_plan_id, int $tec_event_id = 0): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$tec_event_id = absint($tec_event_id);
@@ -151,9 +151,9 @@ if (!function_exists('vms_cancellation_get_event_refundable_product_ids')) {
 			return array();
 		}
 
-		$event_plan_key = vms_cancellation_refund_product_meta_key('event_plan_id');
-		$tec_event_key = vms_cancellation_refund_product_meta_key('tec_event_id');
-		$roles = vms_cancellation_refund_product_roles();
+		$event_plan_key = bvmgr_cancellation_refund_product_meta_key('event_plan_id');
+		$tec_event_key = bvmgr_cancellation_refund_product_meta_key('tec_event_id');
+		$roles = bvmgr_cancellation_refund_product_roles();
 		$ids = array();
 		$ticket_ids = array();
 		$sync_ids = array();
@@ -164,7 +164,7 @@ if (!function_exists('vms_cancellation_get_event_refundable_product_ids')) {
 		}
 
 		if ($event_plan_id > 0) {
-			$sync_ids = vms_cancellation_refund_collect_sync_product_ids($event_plan_id);
+			$sync_ids = bvmgr_cancellation_refund_collect_sync_product_ids($event_plan_id);
 			$ids = array_merge($ids, $sync_ids);
 		}
 
@@ -217,7 +217,7 @@ if (!function_exists('vms_cancellation_get_event_refundable_product_ids')) {
 
 			$is_tec_ticket = isset($ticket_lookup[$product_id]);
 			$is_sync_product = isset($sync_lookup[$product_id]);
-			$role = vms_cancellation_refund_product_role($product_id);
+			$role = bvmgr_cancellation_refund_product_role($product_id);
 			$role_allowed = ($role !== '' && in_array($role, $roles, true));
 			$product_plan_id = $event_plan_key !== '' ? absint(get_post_meta($product_id, $event_plan_key, true)) : 0;
 			$product_tec_id = $tec_event_key !== '' ? absint(get_post_meta($product_id, $tec_event_key, true)) : 0;
@@ -237,8 +237,8 @@ if (!function_exists('vms_cancellation_get_event_refundable_product_ids')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_refund_order_item_meta_first')) {
-	function vms_cancellation_refund_order_item_meta_first($item, array $keys): string
+if (!function_exists('bvmgr_cancellation_refund_order_item_meta_first')) {
+	function bvmgr_cancellation_refund_order_item_meta_first($item, array $keys): string
 	{
 		if (!is_object($item) || !method_exists($item, 'get_meta')) {
 			return '';
@@ -263,11 +263,11 @@ if (!function_exists('vms_cancellation_refund_order_item_meta_first')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_refund_match_order_item')) {
+if (!function_exists('bvmgr_cancellation_refund_match_order_item')) {
 	/**
 	 * Decide whether a Woo order line is safe to refund for the cancelled Event Plan.
 	 */
-	function vms_cancellation_refund_match_order_item($item, int $event_plan_id, int $tec_event_id, array $product_lookup): array
+	function bvmgr_cancellation_refund_match_order_item($item, int $event_plan_id, int $tec_event_id, array $product_lookup): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$tec_event_id = absint($tec_event_id);
@@ -287,29 +287,29 @@ if (!function_exists('vms_cancellation_refund_match_order_item')) {
 					'matched' => true,
 					'source' => 'event_product_lookup',
 					'product_id' => $product_id,
-					'product_role' => vms_cancellation_refund_product_role($product_id),
+					'product_role' => bvmgr_cancellation_refund_product_role($product_id),
 				);
 			}
 		}
 
-		$item_plan_id = absint(vms_cancellation_refund_order_item_meta_first($item, array('_vms_event_plan_id', 'vms_event_plan_id')));
-		$item_tec_event_id = absint(vms_cancellation_refund_order_item_meta_first($item, array('_vms_tec_event_post_id', '_vms_tec_event_id', '_tribe_wooticket_for_event')));
+		$item_plan_id = absint(bvmgr_cancellation_refund_order_item_meta_first($item, array('_vms_event_plan_id', 'vms_event_plan_id')));
+		$item_tec_event_id = absint(bvmgr_cancellation_refund_order_item_meta_first($item, array('_vms_tec_event_post_id', '_vms_tec_event_id', '_tribe_wooticket_for_event')));
 		if (($event_plan_id > 0 && $item_plan_id === $event_plan_id) || ($tec_event_id > 0 && $item_tec_event_id === $tec_event_id)) {
 			$product_id = !empty($product_ids) ? absint($product_ids[0]) : 0;
 			return array(
 				'matched' => true,
 				'source' => 'order_item_event_snapshot',
 				'product_id' => $product_id,
-				'product_role' => $product_id > 0 ? vms_cancellation_refund_product_role($product_id) : '',
+				'product_role' => $product_id > 0 ? bvmgr_cancellation_refund_product_role($product_id) : '',
 			);
 		}
 
-		$event_plan_key = vms_cancellation_refund_product_meta_key('event_plan_id');
-		$tec_event_key = vms_cancellation_refund_product_meta_key('tec_event_id');
-		$roles = vms_cancellation_refund_product_roles();
+		$event_plan_key = bvmgr_cancellation_refund_product_meta_key('event_plan_id');
+		$tec_event_key = bvmgr_cancellation_refund_product_meta_key('tec_event_id');
+		$roles = bvmgr_cancellation_refund_product_roles();
 
 		foreach ($product_ids as $product_id) {
-			$role = vms_cancellation_refund_product_role($product_id);
+			$role = bvmgr_cancellation_refund_product_role($product_id);
 			$role_allowed = ($role !== '' && in_array($role, $roles, true));
 			$tribe_event_id = absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true));
 			if ($tec_event_id > 0 && $tribe_event_id === $tec_event_id) {
@@ -391,8 +391,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 			);
 		}
 
-		$product_ids = function_exists('vms_cancellation_get_event_refundable_product_ids')
-			? array_values(array_unique(array_filter(array_map('absint', (array) vms_cancellation_get_event_refundable_product_ids($event_plan_id, $tec_event_id)))))
+		$product_ids = function_exists('bvmgr_cancellation_get_event_refundable_product_ids')
+			? array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_cancellation_get_event_refundable_product_ids($event_plan_id, $tec_event_id)))))
 			: (function_exists('bvmgr_get_ticket_product_ids_for_event') ? array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id))))) : array());
 		if (empty($product_ids)) {
 			$data['note'] = 'no_woo_event_products_found';
@@ -629,8 +629,8 @@ if (!empty($data['failed_products']) || !empty($data['failed_rsvp_tickets'])) {
 	$ticket_product_ids = function_exists('bvmgr_get_ticket_product_ids_for_event')
 		? array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id)))))
 		: array();
-	$product_ids = function_exists('vms_cancellation_get_event_refundable_product_ids')
-		? array_values(array_unique(array_filter(array_map('absint', (array) vms_cancellation_get_event_refundable_product_ids($event_plan_id, $tec_event_id)))))
+	$product_ids = function_exists('bvmgr_cancellation_get_event_refundable_product_ids')
+		? array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_cancellation_get_event_refundable_product_ids($event_plan_id, $tec_event_id)))))
 		: $ticket_product_ids;
 	if (empty($product_ids)) {
 		return array(
@@ -703,8 +703,8 @@ if (!empty($data['failed_products']) || !empty($data['failed_rsvp_tickets'])) {
 					continue;
 				}
 
-				$match = function_exists('vms_cancellation_refund_match_order_item')
-					? (array) vms_cancellation_refund_match_order_item($item, $event_plan_id, $tec_event_id, $product_lookup)
+				$match = function_exists('bvmgr_cancellation_refund_match_order_item')
+					? (array) bvmgr_cancellation_refund_match_order_item($item, $event_plan_id, $tec_event_id, $product_lookup)
 					: array('matched' => false, 'source' => '', 'product_id' => (int) $item->get_product_id(), 'product_role' => '');
 				if (empty($match['matched'])) {
 					continue;
@@ -982,8 +982,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		);
 	}
 
-	$guard = function_exists('vms_cancellation_auto_refund_guard')
-		? (array) vms_cancellation_auto_refund_guard($event_plan_id, $policy, $summary, array('user_id' => get_current_user_id()))
+	$guard = function_exists('bvmgr_cancellation_auto_refund_guard')
+		? (array) bvmgr_cancellation_auto_refund_guard($event_plan_id, $policy, $summary, array('user_id' => get_current_user_id()))
 		: array(
 			'allowed' => true,
 			'dry_run' => false,
@@ -1209,8 +1209,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 	);
 }, 10, 5);
 
-if (!function_exists('vms_cancellation_notification_kind_label')) {
-	function vms_cancellation_notification_kind_label(string $kind): string
+if (!function_exists('bvmgr_cancellation_notification_kind_label')) {
+	function bvmgr_cancellation_notification_kind_label(string $kind): string
 	{
 		$kind = sanitize_key($kind);
 		switch ($kind) {
@@ -1229,8 +1229,8 @@ if (!function_exists('vms_cancellation_notification_kind_label')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_notification_kind_group')) {
-	function vms_cancellation_notification_kind_group(string $kind): string
+if (!function_exists('bvmgr_cancellation_notification_kind_group')) {
+	function bvmgr_cancellation_notification_kind_group(string $kind): string
 	{
 		$kind = sanitize_key($kind);
 		if ($kind === 'vendor_secondary') {
@@ -1246,8 +1246,8 @@ if (!function_exists('vms_cancellation_notification_kind_group')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_collect_modern_staff_assignment_map')) {
-	function vms_cancellation_collect_modern_staff_assignment_map(int $event_plan_id): array
+if (!function_exists('bvmgr_cancellation_collect_modern_staff_assignment_map')) {
+	function bvmgr_cancellation_collect_modern_staff_assignment_map(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0 || !function_exists('bvmgr_staffing_get_event_slots')) {
@@ -1292,8 +1292,8 @@ if (!function_exists('vms_cancellation_collect_modern_staff_assignment_map')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_collect_legacy_staff_assignment_map')) {
-	function vms_cancellation_collect_legacy_staff_assignment_map(int $event_plan_id): array
+if (!function_exists('bvmgr_cancellation_collect_legacy_staff_assignment_map')) {
+	function bvmgr_cancellation_collect_legacy_staff_assignment_map(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -1318,8 +1318,8 @@ if (!function_exists('vms_cancellation_collect_legacy_staff_assignment_map')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_resolve_staff_notification_recipient')) {
-	function vms_cancellation_resolve_staff_notification_recipient(int $staff_id): array
+if (!function_exists('bvmgr_cancellation_resolve_staff_notification_recipient')) {
+	function bvmgr_cancellation_resolve_staff_notification_recipient(int $staff_id): array
 	{
 		$staff_id = absint($staff_id);
 		if ($staff_id <= 0) {
@@ -1467,14 +1467,14 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		$email = sanitize_email($email);
 		$group = isset($extra['group']) ? sanitize_key((string) $extra['group']) : '';
 		if ($group === '') {
-			$group = function_exists('vms_cancellation_notification_kind_group')
-				? vms_cancellation_notification_kind_group($kind)
+			$group = function_exists('bvmgr_cancellation_notification_kind_group')
+				? bvmgr_cancellation_notification_kind_group($kind)
 				: 'other';
 		}
 		$kind_label = isset($extra['kind_label']) ? sanitize_text_field((string) $extra['kind_label']) : '';
 		if ($kind_label === '') {
-			$kind_label = function_exists('vms_cancellation_notification_kind_label')
-				? vms_cancellation_notification_kind_label($kind)
+			$kind_label = function_exists('bvmgr_cancellation_notification_kind_label')
+				? bvmgr_cancellation_notification_kind_label($kind)
 				: __('Recipient', 'backstage-venue-manager');
 		}
 		$recipient_type = isset($extra['recipient_type']) ? sanitize_key((string) $extra['recipient_type']) : '';
@@ -1753,8 +1753,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 			$get_vendor_email($vendor_id),
 			array(
 				'recipient_type' => 'vendor',
-				'group' => function_exists('vms_cancellation_notification_kind_group')
-					? vms_cancellation_notification_kind_group($kind)
+				'group' => function_exists('bvmgr_cancellation_notification_kind_group')
+					? bvmgr_cancellation_notification_kind_group($kind)
 					: 'vendor',
 				'vendor_id' => $vendor_id,
 			)
@@ -1784,13 +1784,13 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 		);
 	}
 
-	$staff_assignment_map = function_exists('vms_cancellation_collect_modern_staff_assignment_map')
-		? (array) vms_cancellation_collect_modern_staff_assignment_map($event_plan_id)
+	$staff_assignment_map = function_exists('bvmgr_cancellation_collect_modern_staff_assignment_map')
+		? (array) bvmgr_cancellation_collect_modern_staff_assignment_map($event_plan_id)
 		: array();
 	$staff_assignment_source = !empty($staff_assignment_map) ? 'modern' : 'none';
 	if (empty($staff_assignment_map)) {
-		$staff_assignment_map = function_exists('vms_cancellation_collect_legacy_staff_assignment_map')
-			? (array) vms_cancellation_collect_legacy_staff_assignment_map($event_plan_id)
+		$staff_assignment_map = function_exists('bvmgr_cancellation_collect_legacy_staff_assignment_map')
+			? (array) bvmgr_cancellation_collect_legacy_staff_assignment_map($event_plan_id)
 			: array();
 		if (!empty($staff_assignment_map)) {
 			$staff_assignment_source = 'legacy';
@@ -1818,8 +1818,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 	}
 
 	foreach ($staff_role_ids_by_staff as $staff_id => $role_ids) {
-		$staff_context = function_exists('vms_cancellation_resolve_staff_notification_recipient')
-			? (array) vms_cancellation_resolve_staff_notification_recipient((int) $staff_id)
+		$staff_context = function_exists('bvmgr_cancellation_resolve_staff_notification_recipient')
+			? (array) bvmgr_cancellation_resolve_staff_notification_recipient((int) $staff_id)
 			: array(
 				'staff_id' => absint($staff_id),
 				'post_id' => absint($staff_id),

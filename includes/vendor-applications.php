@@ -1808,8 +1808,8 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
             ? vms_vendor_app_get_confirmation_state($post_id)
             : 'confirmed';
         if ($confirmation_state !== 'confirmed' && in_array($decision, array('holding', 'approved', 'rejected'), true)) {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('This application cannot be reviewed yet because the applicant has not confirmed the application email.', 'backstage-venue-manager'), 'error');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('This application cannot be reviewed yet because the applicant has not confirmed the application email.', 'backstage-venue-manager'), 'error');
             }
             return;
         }
@@ -1827,8 +1827,8 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
         if ($decision === 'approved') {
             $vendor_id = vms_vendor_app_get_or_create_vendor($post_id);
             if ($vendor_id <= 0) {
-                if (function_exists('vms_add_admin_notice')) {
-                    vms_add_admin_notice(__('Vendor approval could not complete because the vendor profile could not be created.', 'backstage-venue-manager'), 'error');
+                if (function_exists('bvmgr_add_admin_notice')) {
+                    bvmgr_add_admin_notice(__('Vendor approval could not complete because the vendor profile could not be created.', 'backstage-venue-manager'), 'error');
                 }
                 return;
             }
@@ -1842,8 +1842,8 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
                 : new WP_Error('vms_vendor_app_missing_confirmed_user', __('Vendor was created, but no confirmed website account is attached to this application yet.', 'backstage-venue-manager'));
             if (is_wp_error($link_result)) {
                 $block_approved_email = true;
-                if (function_exists('vms_add_admin_notice')) {
-                    vms_add_admin_notice(
+                if (function_exists('bvmgr_add_admin_notice')) {
+                    bvmgr_add_admin_notice(
                         __('Vendor was created, but the confirmed website account could not be linked automatically. Review the vendor user link before notifying the applicant.', 'backstage-venue-manager'),
                         'error'
                     );
@@ -1861,15 +1861,15 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
 
         if ($decision === 'approved' && $block_approved_email) {
             $send_email = false;
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Approval was recorded, but the approved email was blocked because portal access is not linked to a valid confirmed website account yet.', 'backstage-venue-manager'), 'warning');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Approval was recorded, but the approved email was blocked because portal access is not linked to a valid confirmed website account yet.', 'backstage-venue-manager'), 'warning');
             }
         }
 
         if ($send_email) {
             $sent = vms_vendor_app_send_response_email($post_id, $decision, $message, (int) get_current_user_id());
-            if (!$sent && function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Application status was updated, but the response email could not be sent. Check the applicant email and site mail settings.', 'backstage-venue-manager'), 'warning');
+            if (!$sent && function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Application status was updated, but the response email could not be sent. Check the applicant email and site mail settings.', 'backstage-venue-manager'), 'warning');
             }
         } else {
             update_post_meta($post_id, '_vms_app_last_response_status', sanitize_key($decision));
@@ -1896,8 +1896,8 @@ function vms_vendor_applications_handle_approve(): void
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, vms_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
     if (function_exists('vms_vendor_app_get_confirmation_state') && vms_vendor_app_get_confirmation_state($app_id) !== 'confirmed') {
-        if (function_exists('vms_add_admin_notice')) {
-            vms_add_admin_notice(__('This application cannot be approved until the applicant confirms the application email.', 'backstage-venue-manager'), 'error');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice(__('This application cannot be approved until the applicant confirms the application email.', 'backstage-venue-manager'), 'error');
         }
         wp_safe_redirect(admin_url('post.php?post=' . $app_id . '&action=edit'));
         exit;
@@ -1906,8 +1906,8 @@ function vms_vendor_applications_handle_approve(): void
 
     $vendor_id = vms_vendor_app_get_or_create_vendor($app_id);
     if ($vendor_id <= 0) {
-        if (function_exists('vms_add_admin_notice')) {
-            vms_add_admin_notice(__('Vendor approval could not complete because the vendor profile could not be created.', 'backstage-venue-manager'), 'error');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice(__('Vendor approval could not complete because the vendor profile could not be created.', 'backstage-venue-manager'), 'error');
         }
         wp_safe_redirect(admin_url('post.php?post=' . $app_id . '&action=edit'));
         exit;
@@ -1920,8 +1920,8 @@ function vms_vendor_applications_handle_approve(): void
     $link_result = ($resolved_user instanceof WP_User)
         ? vms_vendor_app_link_submitting_user_to_vendor($app_id, $vendor_id, (int) get_current_user_id())
         : new WP_Error('vms_vendor_app_missing_confirmed_user', __('Vendor was created, but no confirmed website account is attached to this application yet.', 'backstage-venue-manager'));
-    if (is_wp_error($link_result) && function_exists('vms_add_admin_notice')) {
-        vms_add_admin_notice(
+    if (is_wp_error($link_result) && function_exists('bvmgr_add_admin_notice')) {
+        bvmgr_add_admin_notice(
             __('Vendor was created, but the confirmed website account could not be linked automatically. Review the vendor user link before notifying the applicant.', 'backstage-venue-manager'),
             'error'
         );
@@ -1948,8 +1948,8 @@ function vms_vendor_applications_handle_reject(): void
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, vms_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
     if (function_exists('vms_vendor_app_get_confirmation_state') && vms_vendor_app_get_confirmation_state($app_id) !== 'confirmed') {
-        if (function_exists('vms_add_admin_notice')) {
-            vms_add_admin_notice(__('This application cannot be rejected until the applicant confirms the application email.', 'backstage-venue-manager'), 'error');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice(__('This application cannot be rejected until the applicant confirms the application email.', 'backstage-venue-manager'), 'error');
         }
         wp_safe_redirect(admin_url('post.php?post=' . $app_id . '&action=edit'));
         exit;
@@ -1986,16 +1986,16 @@ function vms_vendor_applications_handle_repair_vendor(): void
 
     $vendor_id = vms_vendor_app_get_or_create_vendor($app_id);
     if ($vendor_id <= 0) {
-        if (function_exists('vms_add_admin_notice')) {
-            vms_add_admin_notice(__('Vendor repair could not create the missing vendor profile.', 'backstage-venue-manager'), 'error');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice(__('Vendor repair could not create the missing vendor profile.', 'backstage-venue-manager'), 'error');
         }
         wp_safe_redirect(admin_url('post.php?post=' . $app_id . '&action=edit'));
         exit;
     }
 
     $link_result = vms_vendor_app_link_submitting_user_to_vendor($app_id, $vendor_id, (int) get_current_user_id());
-    if (is_wp_error($link_result) && function_exists('vms_add_admin_notice')) {
-        vms_add_admin_notice(
+    if (is_wp_error($link_result) && function_exists('bvmgr_add_admin_notice')) {
+        bvmgr_add_admin_notice(
             __('Vendor profile was repaired, but the submitting website account could not be linked automatically.', 'backstage-venue-manager'),
             'error'
         );
@@ -2027,8 +2027,8 @@ function vms_vendor_applications_handle_resync_vendor(): void
 
     $vendor_id = vms_vendor_app_get_or_create_vendor($app_id);
     if ($vendor_id <= 0) {
-        if (function_exists('vms_add_admin_notice')) {
-            vms_add_admin_notice(__('Failed to create vendor during sync.', 'backstage-venue-manager'), 'error');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice(__('Failed to create vendor during sync.', 'backstage-venue-manager'), 'error');
         }
         wp_safe_redirect(admin_url('edit.php?post_type=' . BVMGR_VENDOR_APP_CPT));
         exit;
@@ -2038,16 +2038,16 @@ function vms_vendor_applications_handle_resync_vendor(): void
     $copied = vms_vendor_app_sync_vendor_from_application($app_id, (int)$vendor_id);
 
     $link_result = vms_vendor_app_link_submitting_user_to_vendor($app_id, (int) $vendor_id, (int) get_current_user_id());
-    if (is_wp_error($link_result) && function_exists('vms_add_admin_notice')) {
-        vms_add_admin_notice(
+    if (is_wp_error($link_result) && function_exists('bvmgr_add_admin_notice')) {
+        bvmgr_add_admin_notice(
             __('Vendor data synced, but the submitting website account could not be linked automatically.', 'backstage-venue-manager'),
             'error'
         );
     }
 
     // Optional admin notice
-    if (function_exists('vms_add_admin_notice')) {
-        vms_add_admin_notice(
+    if (function_exists('bvmgr_add_admin_notice')) {
+        bvmgr_add_admin_notice(
             sprintf('Vendor data synced. %d fields updated.', (int)$copied),
             'success'
         );

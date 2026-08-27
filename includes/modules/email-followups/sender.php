@@ -19,11 +19,11 @@ if (!function_exists('vms_email_followups_template_for')) {
 if (!function_exists('vms_email_followups_feedback_url')) {
 	function vms_email_followups_feedback_url(int $event_plan_id, array $recipient = array(), string $email_key = ''): string
 	{
-		if ($event_plan_id <= 0 || !function_exists('vms_feedback_survey_url')) {
+		if ($event_plan_id <= 0 || !function_exists('bvmgr_feedback_survey_url')) {
 			return '';
 		}
 		$source = $email_key !== '' ? 'email_followups_' . sanitize_key($email_key) : 'email_followups';
-		return esc_url_raw(vms_feedback_survey_url($event_plan_id, $recipient, $source));
+		return esc_url_raw(bvmgr_feedback_survey_url($event_plan_id, $recipient, $source));
 	}
 }
 

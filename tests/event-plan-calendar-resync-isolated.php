@@ -60,8 +60,8 @@ try {
 
     $assert(post_type_exists('tribe_events'), 'Expected The Events Calendar post type to be available.');
     $assert(current_user_can('edit_posts'), 'Expected test user to be able to edit posts.');
-    $assert(false !== has_action('admin_post_vms_resync_event_to_calendar', 'vms_handle_admin_post_resync_event_to_calendar'), 'Expected isolated Re-sync admin-post action to remain registered.');
-    $assert(function_exists('vms_event_plan_handle_resync_calendar_request'), 'Expected isolated Re-sync request helper to exist.');
+    $assert(false !== has_action('admin_post_vms_resync_event_to_calendar', 'bvmgr_handle_admin_post_resync_event_to_calendar'), 'Expected isolated Re-sync admin-post action to remain registered.');
+    $assert(function_exists('bvmgr_event_plan_handle_resync_calendar_request'), 'Expected isolated Re-sync request helper to exist.');
 
     $createVendor = static function (string $title) use ($registerPost): int {
         $vendorId = wp_insert_post(array(
@@ -145,8 +145,8 @@ try {
 
     $tecMetaKey = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
     $checkinMetaKey = function_exists('bvmgr_event_plan_checkin_close_meta_key') ? bvmgr_event_plan_checkin_close_meta_key() : '_checkin_close_at';
-    $legacyTicketKeys = function_exists('vms_event_plan_legacy_ticket_meta_keys')
-        ? (array) vms_event_plan_legacy_ticket_meta_keys()
+    $legacyTicketKeys = function_exists('bvmgr_event_plan_legacy_ticket_meta_keys')
+        ? (array) bvmgr_event_plan_legacy_ticket_meta_keys()
         : array('_vms_price_ga', '_vms_enable_tables');
     $ticketConfigKey = function_exists('vms_ticketing_v2_k') ? (string) vms_ticketing_v2_k('config') : '_vms_ticketing_v2_config';
 
@@ -296,7 +296,7 @@ try {
     $tecId = $createTecEvent('Old TEC Event Title', 'Old TEC event body.');
     $registerMaintenancePair($planId, $tecId);
     $seedValidPlan($planId, $vendorId, $staffId, $secondaryVendorId, $tecId);
-    $hasEffectiveTickets = function_exists('vms_event_plan_has_effective_tickets') && vms_event_plan_has_effective_tickets($planId);
+    $hasEffectiveTickets = function_exists('bvmgr_event_plan_has_effective_tickets') && bvmgr_event_plan_has_effective_tickets($planId);
 
     $savedHookCount = 0;
     $savedHookProbe = static function () use (&$savedHookCount): void {
@@ -308,7 +308,7 @@ try {
     $beforePlanState = $capturePlanState($planId);
     $beforeResyncState = $captureResyncOwnedState($planId, $tecId);
 
-    $successResult = vms_event_plan_handle_resync_calendar_request(array(
+    $successResult = bvmgr_event_plan_handle_resync_calendar_request(array(
         '_vms_resync_calendar_nonce' => wp_create_nonce('vms_resync_calendar'),
         'post_id' => $planId,
         'redirect_to' => admin_url('post.php?post=' . $planId . '&action=edit'),
@@ -389,7 +389,7 @@ try {
     update_post_meta($missingLinkPlanId, '_vms_flat_fee_amount', '250.00');
     $beforeMissingLinkState = $capturePlanState($missingLinkPlanId);
     $clearNotices();
-    $missingLinkResult = vms_event_plan_handle_resync_calendar_request(array(
+    $missingLinkResult = bvmgr_event_plan_handle_resync_calendar_request(array(
         '_vms_resync_calendar_nonce' => wp_create_nonce('vms_resync_calendar'),
         'post_id' => $missingLinkPlanId,
         'redirect_to' => admin_url('post.php?post=' . $missingLinkPlanId . '&action=edit'),
@@ -407,7 +407,7 @@ try {
     $beforeInvalidPlanState = $capturePlanState($invalidPlanId);
     $beforeInvalidTecState = $captureResyncOwnedState($invalidPlanId, $invalidTecId);
     $clearNotices();
-    $validationResult = vms_event_plan_handle_resync_calendar_request(array(
+    $validationResult = bvmgr_event_plan_handle_resync_calendar_request(array(
         '_vms_resync_calendar_nonce' => wp_create_nonce('vms_resync_calendar'),
         'post_id' => $invalidPlanId,
         'redirect_to' => admin_url('post.php?post=' . $invalidPlanId . '&action=edit'),

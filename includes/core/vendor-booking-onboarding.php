@@ -779,17 +779,17 @@ if (!function_exists('vms_vendor_booking_onboarding_process_plan')) {
             }
         }
 
-        if ($allow_notices && function_exists('vms_add_admin_notice')) {
+        if ($allow_notices && function_exists('bvmgr_add_admin_notice')) {
             if ($results['sent'] > 0) {
                 /* translators: %d: number of items described in this message. */
-                vms_add_admin_notice(sprintf(_n('%d booked-vendor email sent.', '%d booked-vendor emails sent.', $results['sent'], 'backstage-venue-manager'), $results['sent']), 'success');
+                bvmgr_add_admin_notice(sprintf(_n('%d booked-vendor email sent.', '%d booked-vendor emails sent.', $results['sent'], 'backstage-venue-manager'), $results['sent']), 'success');
             }
             if (!empty($results['failed'])) {
                 $labels = array();
                 foreach ($results['failed'] as $failure) {
                     $labels[] = trim(((string) ($failure['vendor_name'] ?? __('Vendor', 'backstage-venue-manager'))) . ': ' . (string) ($failure['message'] ?? ''));
                 }
-                vms_add_admin_notice(__('Booked vendor email issue(s): ', 'backstage-venue-manager') . implode(' | ', $labels), 'warning');
+                bvmgr_add_admin_notice(__('Booked vendor email issue(s): ', 'backstage-venue-manager') . implode(' | ', $labels), 'warning');
             }
         }
 

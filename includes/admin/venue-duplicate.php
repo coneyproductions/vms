@@ -74,8 +74,8 @@ function vms_handle_duplicate_venue_action(): void
     }
 
     // Optional: Set a “just duplicated” admin notice
-    if (function_exists('vms_add_admin_notice')) {
-        vms_add_admin_notice('Venue duplicated. Update the title/settings and publish when ready.', 'success');
+    if (function_exists('bvmgr_add_admin_notice')) {
+        bvmgr_add_admin_notice('Venue duplicated. Update the title/settings and publish when ready.', 'success');
     }
 
     // Go straight to edit screen for the new venue

@@ -120,7 +120,7 @@ try {
 	$vendorId = $createVendor('ADD Assign Review Dessert Vendor', array('food_truck', 'food_vendor'), 'assign-dessert@example.test');
 	$existingDessertVendorId = $createVendor('ADD Assign Review Existing Dessert Vendor', array('dessert_truck'), 'assign-existing-dessert@example.test');
 	$planId = $createPlan('ADD Assign Review Food To Dessert', $primaryVendorId);
-	$seed = vms_event_plan_write_secondary_vendor_assignments($planId, array(
+	$seed = bvmgr_event_plan_write_secondary_vendor_assignments($planId, array(
 		'food_truck' => array(
 			'mode' => 'standard',
 			'slot_limit' => 1,
@@ -155,7 +155,7 @@ try {
 
 	wp_set_object_terms($vendorId, array('dessert_truck'), 'vms_vendor_type', false);
 
-	$beforeAssignments = (array) get_post_meta($planId, vms_event_plan_secondary_vendor_assignment_meta_key(), true);
+	$beforeAssignments = (array) get_post_meta($planId, bvmgr_event_plan_secondary_vendor_assignment_meta_key(), true);
 	$review = vms_add_dispatch_assignment_review($responseId);
 	$assert(!is_wp_error($review), 'Assignment review should load.');
 	$review = (array) $review;
@@ -170,11 +170,11 @@ try {
 
 	$direct = vms_add_dispatch_assign_vendor_to_plan($responseId);
 	$assert(is_wp_error($direct) && $direct->get_error_code() === 'add_dispatch_assignment_target_required', 'Legacy direct assignment should not write without confirmation target.');
-	$assert(wp_json_encode($beforeAssignments) === wp_json_encode(get_post_meta($planId, vms_event_plan_secondary_vendor_assignment_meta_key(), true)), 'Review/direct attempt should not change assignments before confirmation.');
+	$assert(wp_json_encode($beforeAssignments) === wp_json_encode(get_post_meta($planId, bvmgr_event_plan_secondary_vendor_assignment_meta_key(), true)), 'Review/direct attempt should not change assignments before confirmation.');
 
 	$assigned = vms_add_dispatch_apply_assignment_review($responseId, 'dessert_truck', false);
 	$assert(!is_wp_error($assigned), 'Confirmed Dessert Vendor assignment should succeed.');
-	$afterAssignments = (array) get_post_meta($planId, vms_event_plan_secondary_vendor_assignment_meta_key(), true);
+	$afterAssignments = (array) get_post_meta($planId, bvmgr_event_plan_secondary_vendor_assignment_meta_key(), true);
 	$assert(in_array($vendorId, (array) ($afterAssignments['dessert_truck']['vendor_ids'] ?? array()), true), 'Confirmed assignment should write vendor into Dessert Vendor group.');
 	$assert(!in_array($vendorId, (array) ($afterAssignments['food_truck']['vendor_ids'] ?? array()), true), 'Food Vendor slot should remain open.');
 	$context = vms_add_dispatch_get_event_plan_context($planId);
@@ -192,7 +192,7 @@ try {
 	$assert(is_array($freshResponse) && trim((string) ($freshResponse['assigned_at'] ?? '')) !== '', 'ADD response should be marked assigned after confirmation.');
 
 	$fullPlanId = $createPlan('ADD Assign Review Full Dessert', $primaryVendorId);
-	$fullSeed = vms_event_plan_write_secondary_vendor_assignments($fullPlanId, array(
+	$fullSeed = bvmgr_event_plan_write_secondary_vendor_assignments($fullPlanId, array(
 		'dessert_truck' => array(
 			'mode' => 'standard',
 			'slot_limit' => 1,
@@ -220,7 +220,7 @@ try {
 	$assert(is_wp_error($blocked) && $blocked->get_error_code() === 'vms_secondary_vendor_over_capacity', 'Full target group should require over-capacity override.');
 	$override = vms_add_dispatch_apply_assignment_review($fullResponseId, 'dessert_truck', true);
 	$assert(!is_wp_error($override), 'Full target group should assign when override is confirmed.');
-	$fullAssignments = (array) get_post_meta($fullPlanId, vms_event_plan_secondary_vendor_assignment_meta_key(), true);
+	$fullAssignments = (array) get_post_meta($fullPlanId, bvmgr_event_plan_secondary_vendor_assignment_meta_key(), true);
 	$assert(!empty($fullAssignments['dessert_truck']['allow_over_capacity']), 'Override confirmation should persist allow_over_capacity.');
 	$assert(in_array($vendorId, (array) ($fullAssignments['dessert_truck']['vendor_ids'] ?? array()), true), 'Override assignment should add vendor to full Dessert Vendor group.');
 

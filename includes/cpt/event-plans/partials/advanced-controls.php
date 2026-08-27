@@ -1,7 +1,7 @@
     <?php
         defined('ABSPATH') || exit;
-        $lookup_trace = function_exists('vms_event_plan_perf_span_start')
-            ? vms_event_plan_perf_span_start('event_plan_advanced_controls_lookup', (int) $post->ID, array('section' => 'advanced_controls_lookup'))
+        $lookup_trace = function_exists('bvmgr_event_plan_perf_span_start')
+            ? bvmgr_event_plan_perf_span_start('event_plan_advanced_controls_lookup', (int) $post->ID, array('section' => 'advanced_controls_lookup'))
             : '';
         $vms_ticketing_v2_render_mode = isset($vms_ticketing_v2_render_mode) ? sanitize_key((string) $vms_ticketing_v2_render_mode) : 'full';
         $meta_bundle = method_exists($this, 'get_event_plan_meta_bundle')
@@ -55,8 +55,8 @@
         $has_stable_draft = !$is_autodraft;
         $resync_form_id = 'vms-event-plan-calendar-resync-' . (int) $post->ID;
         $resync_redirect_to = admin_url('post.php?post=' . (int) $post->ID . '&action=edit');
-        if ($has_stable_draft && function_exists('vms_event_plan_editor_register_detached_form')) {
-            vms_event_plan_editor_register_detached_form(
+        if ($has_stable_draft && function_exists('bvmgr_event_plan_editor_register_detached_form')) {
+            bvmgr_event_plan_editor_register_detached_form(
                 $resync_form_id,
                 'post',
                 admin_url('admin-post.php'),
@@ -69,8 +69,8 @@
                 )
             );
         }
-        if (function_exists('vms_event_plan_perf_span_finish')) {
-            vms_event_plan_perf_span_finish('event_plan_advanced_controls_lookup', (int) $post->ID, $lookup_trace, array(
+        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+            bvmgr_event_plan_perf_span_finish('event_plan_advanced_controls_lookup', (int) $post->ID, $lookup_trace, array(
                 'section' => 'advanced_controls_lookup',
                 'linked_tec_event_id' => $linked_tec_id,
                 'ticket_product_count' => is_array($ticket_pids) ? count($ticket_pids) : 0,
@@ -151,8 +151,8 @@
 							<h5><?php esc_html_e('GA attendance + entitlements', 'backstage-venue-manager'); ?></h5>
 
 							<?php
-								$v2_lookup_trace = function_exists('vms_event_plan_perf_span_start')
-									? vms_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', (int) $post->ID, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
+								$v2_lookup_trace = function_exists('bvmgr_event_plan_perf_span_start')
+									? bvmgr_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', (int) $post->ID, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
 									: '';
 								$can_phase_b = function_exists('vms_ticketing_b_is_event_tickets_woo_available')
 									? vms_ticketing_b_is_event_tickets_woo_available()
@@ -209,8 +209,8 @@
 								}
 								$recon_v2_warnings = (is_array($recon_v2) && !empty($recon_v2['warnings']) && is_array($recon_v2['warnings'])) ? $recon_v2['warnings'] : array();
 								$recon_v2_warnings = array_values(array_unique(array_filter(array_map('strval', $recon_v2_warnings))));
-								if (function_exists('vms_event_plan_perf_span_finish')) {
-									vms_event_plan_perf_span_finish('event_plan_ticketing_v2_lookup', (int) $post->ID, $v2_lookup_trace, array(
+								if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+									bvmgr_event_plan_perf_span_finish('event_plan_ticketing_v2_lookup', (int) $post->ID, $v2_lookup_trace, array(
 										'section' => 'ticketing_v2_lookup',
 										'linked_tec_event_id' => $linked_tec_id,
 										'ticketing_mode' => sanitize_key($mode_v2),

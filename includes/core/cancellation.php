@@ -8,8 +8,8 @@ defined('ABSPATH') || exit;
  * Provider adapters (TEC/Event Tickets/Woo) are implemented separately.
  */
 
-if (!function_exists('vms_cancellation_policy_options')) {
-	function vms_cancellation_policy_options(): array
+if (!function_exists('bvmgr_cancellation_policy_options')) {
+	function bvmgr_cancellation_policy_options(): array
 	{
 		return array(
 			'status_only' => __('Status only', 'backstage-venue-manager'),
@@ -21,8 +21,8 @@ if (!function_exists('vms_cancellation_policy_options')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_reason_options')) {
-	function vms_cancellation_reason_options(): array
+if (!function_exists('bvmgr_cancellation_reason_options')) {
+	function bvmgr_cancellation_reason_options(): array
 	{
 		return array(
 			'weather' => __('Weather', 'backstage-venue-manager'),
@@ -36,8 +36,8 @@ if (!function_exists('vms_cancellation_reason_options')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_job_statuses')) {
-	function vms_cancellation_job_statuses(): array
+if (!function_exists('bvmgr_cancellation_job_statuses')) {
+	function bvmgr_cancellation_job_statuses(): array
 	{
 		return array(
 			'queued' => __('Queued', 'backstage-venue-manager'),
@@ -49,8 +49,8 @@ if (!function_exists('vms_cancellation_job_statuses')) {
 	}
 }
  
-if (!function_exists('vms_cancellation_step_statuses')) {
-	function vms_cancellation_step_statuses(): array
+if (!function_exists('bvmgr_cancellation_step_statuses')) {
+	function bvmgr_cancellation_step_statuses(): array
 	{
 		return array(
 			'pending' => __('Pending', 'backstage-venue-manager'),
@@ -62,8 +62,8 @@ if (!function_exists('vms_cancellation_step_statuses')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_step_labels')) {
-	function vms_cancellation_step_labels(): array
+if (!function_exists('bvmgr_cancellation_step_labels')) {
+	function bvmgr_cancellation_step_labels(): array
 	{
 		return array(
 			'policy_capture' => __('Policy capture', 'backstage-venue-manager'),
@@ -75,11 +75,11 @@ if (!function_exists('vms_cancellation_step_labels')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_step_keys')) {
-	function vms_cancellation_step_keys(): array
+if (!function_exists('bvmgr_cancellation_step_keys')) {
+	function bvmgr_cancellation_step_keys(): array
 	{
-		$labels = function_exists('vms_cancellation_step_labels')
-			? (array) vms_cancellation_step_labels()
+		$labels = function_exists('bvmgr_cancellation_step_labels')
+			? (array) bvmgr_cancellation_step_labels()
 			: array(
 				'policy_capture' => '',
 				'provider_sales_stop' => '',
@@ -91,8 +91,8 @@ if (!function_exists('vms_cancellation_step_keys')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_default_steps')) {
-	function vms_cancellation_default_steps(string $policy = 'status_only'): array
+if (!function_exists('bvmgr_cancellation_default_steps')) {
+	function bvmgr_cancellation_default_steps(string $policy = 'status_only'): array
 	{
 		$policy = sanitize_key($policy);
 		$out = array(
@@ -121,8 +121,8 @@ if (!function_exists('vms_cancellation_default_steps')) {
 		);
 
 		$ordered = array();
-		$keys = function_exists('vms_cancellation_step_keys')
-			? (array) vms_cancellation_step_keys()
+		$keys = function_exists('bvmgr_cancellation_step_keys')
+			? (array) bvmgr_cancellation_step_keys()
 			: array_keys($out);
 		foreach ($keys as $key) {
 			$key = sanitize_key((string) $key);
@@ -134,11 +134,11 @@ if (!function_exists('vms_cancellation_default_steps')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_compute_step_totals')) {
+if (!function_exists('bvmgr_cancellation_compute_step_totals')) {
 	/**
 	 * @return array{done:int,failed:int,blocked:int,pending:int,running:int}
 	 */
-	function vms_cancellation_compute_step_totals(array $steps): array
+	function bvmgr_cancellation_compute_step_totals(array $steps): array
 	{
 		$totals = array(
 			'done' => 0,
@@ -162,17 +162,17 @@ if (!function_exists('vms_cancellation_compute_step_totals')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_normalize_steps')) {
+if (!function_exists('bvmgr_cancellation_normalize_steps')) {
 	/**
 	 * Repairs malformed/missing step rows into canonical order/shape.
 	 *
 	 * @return array{steps:array<int,array<string,mixed>>,changed:bool,issues:array<int,string>}
 	 */
-	function vms_cancellation_normalize_steps(array $steps, string $policy = 'status_only'): array
+	function bvmgr_cancellation_normalize_steps(array $steps, string $policy = 'status_only'): array
 	{
 		$policy = sanitize_key($policy);
-		$defaults = function_exists('vms_cancellation_default_steps')
-			? (array) vms_cancellation_default_steps($policy)
+		$defaults = function_exists('bvmgr_cancellation_default_steps')
+			? (array) bvmgr_cancellation_default_steps($policy)
 			: array();
 		$default_map = array();
 		foreach ($defaults as $row) {
@@ -267,7 +267,7 @@ if (!function_exists('vms_cancellation_normalize_steps')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_backfill_legacy_job')) {
+if (!function_exists('bvmgr_cancellation_backfill_legacy_job')) {
 	/**
 	 * Creates a safe no-op cancellation envelope for legacy cancelled plans.
 	 *
@@ -282,7 +282,7 @@ if (!function_exists('vms_cancellation_backfill_legacy_job')) {
 	 *   summary:array<string,mixed>
 	 * }
 	 */
-	function vms_cancellation_backfill_legacy_job(int $event_plan_id, array $args = array()): array
+	function bvmgr_cancellation_backfill_legacy_job(int $event_plan_id, array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -340,16 +340,16 @@ if (!function_exists('vms_cancellation_backfill_legacy_job')) {
 		}
 
 		$policy = sanitize_key((string) get_post_meta($event_plan_id, $k_cancel_policy, true));
-		$valid_policies = function_exists('vms_cancellation_policy_options')
-			? array_keys((array) vms_cancellation_policy_options())
+		$valid_policies = function_exists('bvmgr_cancellation_policy_options')
+			? array_keys((array) bvmgr_cancellation_policy_options())
 			: array('status_only');
 		if (!in_array($policy, $valid_policies, true)) {
 			$policy = 'status_only';
 		}
 
 		$reason_code = sanitize_key((string) get_post_meta($event_plan_id, $k_cancel_reason_code, true));
-		$valid_reasons = function_exists('vms_cancellation_reason_options')
-			? array_keys((array) vms_cancellation_reason_options())
+		$valid_reasons = function_exists('bvmgr_cancellation_reason_options')
+			? array_keys((array) bvmgr_cancellation_reason_options())
 			: array('other');
 		if ($reason_code !== '' && !in_array($reason_code, $valid_reasons, true)) {
 			$reason_code = 'other';
@@ -371,9 +371,9 @@ if (!function_exists('vms_cancellation_backfill_legacy_job')) {
 			? absint($args['backfill_by_user_id'])
 			: absint(get_current_user_id());
 
-		$job_id = ($existing_job_id !== '') ? $existing_job_id : vms_cancellation_generate_job_id();
-		$steps = function_exists('vms_cancellation_default_steps')
-			? (array) vms_cancellation_default_steps($policy)
+		$job_id = ($existing_job_id !== '') ? $existing_job_id : bvmgr_cancellation_generate_job_id();
+		$steps = function_exists('bvmgr_cancellation_default_steps')
+			? (array) bvmgr_cancellation_default_steps($policy)
 			: array(
 				array('key' => 'policy_capture', 'status' => 'done'),
 				array('key' => 'provider_sales_stop', 'status' => 'done'),
@@ -464,8 +464,8 @@ if (!function_exists('vms_cancellation_backfill_legacy_job')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_auto_refund_policies')) {
-	function vms_cancellation_auto_refund_policies(): array
+if (!function_exists('bvmgr_cancellation_auto_refund_policies')) {
+	function bvmgr_cancellation_auto_refund_policies(): array
 	{
 		return array(
 			'stop_sales_auto_refund',
@@ -474,7 +474,7 @@ if (!function_exists('vms_cancellation_auto_refund_policies')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_auto_refund_guard')) {
+if (!function_exists('bvmgr_cancellation_auto_refund_guard')) {
 	/**
 	 * Central guardrail for auto-refund execution.
 	 *
@@ -493,7 +493,7 @@ if (!function_exists('vms_cancellation_auto_refund_guard')) {
 	 *   user_id:int
 	 * }
 	 */
-	function vms_cancellation_auto_refund_guard(int $event_plan_id, string $policy, array $summary = array(), array $args = array()): array
+	function bvmgr_cancellation_auto_refund_guard(int $event_plan_id, string $policy, array $summary = array(), array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$policy = sanitize_key($policy);
@@ -521,8 +521,8 @@ if (!function_exists('vms_cancellation_auto_refund_guard')) {
 			$has_capability = ($user_id > 0) ? user_can($user_id, $required_capability) : current_user_can($required_capability);
 		}
 
-		$auto_policies = function_exists('vms_cancellation_auto_refund_policies')
-			? (array) vms_cancellation_auto_refund_policies()
+		$auto_policies = function_exists('bvmgr_cancellation_auto_refund_policies')
+			? (array) bvmgr_cancellation_auto_refund_policies()
 			: array('stop_sales_auto_refund', 'stop_sales_auto_refund_remove_attendees');
 		$is_auto_policy = in_array($policy, $auto_policies, true);
 
@@ -583,20 +583,20 @@ if (!function_exists('vms_cancellation_auto_refund_guard')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_generate_job_id')) {
-	function vms_cancellation_generate_job_id(): string
+if (!function_exists('bvmgr_cancellation_generate_job_id')) {
+	function bvmgr_cancellation_generate_job_id(): string
 	{
 		return 'cancel_' . wp_generate_uuid4();
 	}
 }
 
-if (!function_exists('vms_cancellation_create_job')) {
+if (!function_exists('bvmgr_cancellation_create_job')) {
 	/**
 	 * Creates a cancellation job envelope on the Event Plan.
 	 *
 	 * @return array{ok:bool,job_id:string,state:string,summary:array<string,mixed>}
 	 */
-	function vms_cancellation_create_job(int $event_plan_id, array $args = array()): array
+	function bvmgr_cancellation_create_job(int $event_plan_id, array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -610,17 +610,17 @@ if (!function_exists('vms_cancellation_create_job')) {
 
 		$job_id = isset($args['job_id']) ? sanitize_text_field((string) $args['job_id']) : '';
 		if ($job_id === '') {
-			$job_id = vms_cancellation_generate_job_id();
+			$job_id = bvmgr_cancellation_generate_job_id();
 		}
 
 		$policy = isset($args['policy']) ? sanitize_key((string) $args['policy']) : '';
-		$policies = array_keys(vms_cancellation_policy_options());
+		$policies = array_keys(bvmgr_cancellation_policy_options());
 		if (!in_array($policy, $policies, true)) {
 			$policy = 'status_only';
 		}
 
 		$reason_code = isset($args['reason_code']) ? sanitize_key((string) $args['reason_code']) : '';
-		$reason_codes = array_keys(vms_cancellation_reason_options());
+		$reason_codes = array_keys(bvmgr_cancellation_reason_options());
 		if ($reason_code !== '' && !in_array($reason_code, $reason_codes, true)) {
 			$reason_code = 'other';
 		}
@@ -628,8 +628,8 @@ if (!function_exists('vms_cancellation_create_job')) {
 		$vendor_message = isset($args['vendor_message']) ? sanitize_textarea_field((string) $args['vendor_message']) : '';
 		$cancelled_by_user_id = isset($args['cancelled_by_user_id']) ? absint($args['cancelled_by_user_id']) : absint(get_current_user_id());
 		$cancelled_at_gmt = gmdate('Y-m-d H:i:s');
-		$steps = function_exists('vms_cancellation_default_steps')
-			? (array) vms_cancellation_default_steps($policy)
+		$steps = function_exists('bvmgr_cancellation_default_steps')
+			? (array) bvmgr_cancellation_default_steps($policy)
 			: array(
 				array('key' => 'policy_capture', 'status' => 'done'),
 				array('key' => 'provider_sales_stop', 'status' => 'pending'),
@@ -637,8 +637,8 @@ if (!function_exists('vms_cancellation_create_job')) {
 				array('key' => 'refund_execution', 'status' => 'pending'),
 				array('key' => 'notifications', 'status' => 'pending'),
 			);
-		$step_totals = function_exists('vms_cancellation_compute_step_totals')
-			? (array) vms_cancellation_compute_step_totals($steps)
+		$step_totals = function_exists('bvmgr_cancellation_compute_step_totals')
+			? (array) bvmgr_cancellation_compute_step_totals($steps)
 			: array(
 				'done' => 1,
 				'failed' => 0,
@@ -700,13 +700,13 @@ if (!function_exists('vms_cancellation_create_job')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_run_step')) {
+if (!function_exists('bvmgr_cancellation_run_step')) {
 	/**
 	 * Runs one cancellation step with safe defaults.
 	 *
 	 * @return array{status:string,message:string,data:array<string,mixed>}
 	 */
-	function vms_cancellation_run_step(int $event_plan_id, string $policy, string $step_key, array $summary): array
+	function bvmgr_cancellation_run_step(int $event_plan_id, string $policy, string $step_key, array $summary): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$policy = sanitize_key($policy);
@@ -766,13 +766,13 @@ if (!function_exists('vms_cancellation_run_step')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_retry_step')) {
+if (!function_exists('bvmgr_cancellation_retry_step')) {
 	/**
 	 * Resets a failed/blocked step (and dependent downstream steps) so it can be re-run safely.
 	 *
 	 * @return array{ok:bool,state:string,step_key:string,reset_steps?:array<int,string>,error?:string,summary:array<string,mixed>}
 	 */
-	function vms_cancellation_retry_step(int $event_plan_id, string $step_key, array $args = array()): array
+	function bvmgr_cancellation_retry_step(int $event_plan_id, string $step_key, array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$step_key = sanitize_key($step_key);
@@ -797,8 +797,8 @@ if (!function_exists('vms_cancellation_retry_step')) {
 			return array('ok' => false, 'state' => 'failed', 'step_key' => $step_key, 'error' => 'job_summary_missing', 'summary' => array());
 		}
 		$policy = sanitize_key((string) ($summary['policy'] ?? 'status_only'));
-		$normalized = function_exists('vms_cancellation_normalize_steps')
-			? (array) vms_cancellation_normalize_steps(isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), $policy)
+		$normalized = function_exists('bvmgr_cancellation_normalize_steps')
+			? (array) bvmgr_cancellation_normalize_steps(isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), $policy)
 			: array('steps' => isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), 'changed' => false, 'issues' => array());
 		$steps = isset($normalized['steps']) && is_array($normalized['steps']) ? $normalized['steps'] : array();
 		if (!empty($normalized['changed'])) {
@@ -935,13 +935,13 @@ if (!function_exists('vms_cancellation_retry_step')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_retry_all_failed_steps')) {
+if (!function_exists('bvmgr_cancellation_retry_all_failed_steps')) {
 	/**
 	 * Bulk retry helper: resets from the earliest failed/blocked retryable step through downstream steps.
 	 *
 	 * @return array{ok:bool,state:string,retried_steps:array<int,string>,reset_steps?:array<int,string>,error?:string,summary:array<string,mixed>}
 	 */
-	function vms_cancellation_retry_all_failed_steps(int $event_plan_id, array $args = array()): array
+	function bvmgr_cancellation_retry_all_failed_steps(int $event_plan_id, array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -959,8 +959,8 @@ if (!function_exists('vms_cancellation_retry_all_failed_steps')) {
 			return array('ok' => false, 'state' => 'failed', 'retried_steps' => array(), 'error' => 'job_summary_missing', 'summary' => array());
 		}
 		$policy = sanitize_key((string) ($summary['policy'] ?? 'status_only'));
-		$normalized = function_exists('vms_cancellation_normalize_steps')
-			? (array) vms_cancellation_normalize_steps(isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), $policy)
+		$normalized = function_exists('bvmgr_cancellation_normalize_steps')
+			? (array) bvmgr_cancellation_normalize_steps(isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), $policy)
 			: array('steps' => isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), 'changed' => false, 'issues' => array());
 		$steps = isset($normalized['steps']) && is_array($normalized['steps']) ? $normalized['steps'] : array();
 		if (!empty($normalized['changed'])) {
@@ -1089,7 +1089,7 @@ if (!function_exists('vms_cancellation_retry_all_failed_steps')) {
 }
 
 
-if (!function_exists('vms_cancellation_request_live_refund_run')) {
+if (!function_exists('bvmgr_cancellation_request_live_refund_run')) {
 	/**
 	 * Re-queues refund discovery/execution for an already-cancelled Event Plan and immediately runs the job.
 	 *
@@ -1098,7 +1098,7 @@ if (!function_exists('vms_cancellation_request_live_refund_run')) {
 	 *
 	 * @return array{ok:bool,state:string,target_policy:string,reset_steps:array<int,string>,policy_changed?:bool,error?:string,summary:array<string,mixed>}
 	 */
-	function vms_cancellation_request_live_refund_run(int $event_plan_id, array $args = array()): array
+	function bvmgr_cancellation_request_live_refund_run(int $event_plan_id, array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -1138,8 +1138,8 @@ if (!function_exists('vms_cancellation_request_live_refund_run')) {
 
 		$current_policy = sanitize_key((string) ($summary['policy'] ?? get_post_meta($event_plan_id, $k_cancel_policy, true)));
 		$queue_only_policies = array('stop_sales_queue_refunds');
-		$auto_policies = function_exists('vms_cancellation_auto_refund_policies')
-			? array_values(array_unique(array_filter(array_map('sanitize_key', (array) vms_cancellation_auto_refund_policies()))))
+		$auto_policies = function_exists('bvmgr_cancellation_auto_refund_policies')
+			? array_values(array_unique(array_filter(array_map('sanitize_key', (array) bvmgr_cancellation_auto_refund_policies()))))
 			: array('stop_sales_auto_refund', 'stop_sales_auto_refund_remove_attendees');
 		$refund_capable_policies = array_values(array_unique(array_merge($queue_only_policies, $auto_policies)));
 		$policy_override = isset($args['policy_override']) ? sanitize_key((string) $args['policy_override']) : '';
@@ -1158,8 +1158,8 @@ if (!function_exists('vms_cancellation_request_live_refund_run')) {
 			$target_policy = 'stop_sales_auto_refund';
 		}
 
-		$normalized = function_exists('vms_cancellation_normalize_steps')
-			? (array) vms_cancellation_normalize_steps(isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), $target_policy)
+		$normalized = function_exists('bvmgr_cancellation_normalize_steps')
+			? (array) bvmgr_cancellation_normalize_steps(isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), $target_policy)
 			: array('steps' => isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), 'changed' => false, 'issues' => array());
 		$steps = isset($normalized['steps']) && is_array($normalized['steps']) ? $normalized['steps'] : array();
 		if (empty($steps)) {
@@ -1262,8 +1262,8 @@ if (!function_exists('vms_cancellation_request_live_refund_run')) {
 			update_post_meta($event_plan_id, $k_cancel_policy, $target_policy);
 		}
 
-		$run = function_exists('vms_cancellation_run_job')
-			? (array) vms_cancellation_run_job($event_plan_id, array('job_id' => $job_id_actual))
+		$run = function_exists('bvmgr_cancellation_run_job')
+			? (array) bvmgr_cancellation_run_job($event_plan_id, array('job_id' => $job_id_actual))
 			: array('ok' => false, 'state' => 'failed', 'summary' => $summary + array('error' => 'run_helper_missing'));
 		$run['target_policy'] = $target_policy;
 		$run['reset_steps'] = $reset_steps;
@@ -1272,13 +1272,13 @@ if (!function_exists('vms_cancellation_request_live_refund_run')) {
 	}
 }
 
-if (!function_exists('vms_cancellation_run_job')) {
+if (!function_exists('bvmgr_cancellation_run_job')) {
 	/**
 	 * Executes queued/pending cancellation steps in a deterministic, safe manner.
 	 *
 	 * @return array{ok:bool,state:string,summary:array<string,mixed>}
 	 */
-	function vms_cancellation_run_job(int $event_plan_id, array $args = array()): array
+	function bvmgr_cancellation_run_job(int $event_plan_id, array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -1308,14 +1308,14 @@ if (!function_exists('vms_cancellation_run_job')) {
 		}
 
 		$policy = sanitize_key((string) ($summary['policy'] ?? 'status_only'));
-		$valid_policies = array_keys(vms_cancellation_policy_options());
+		$valid_policies = array_keys(bvmgr_cancellation_policy_options());
 		$invalid_policy = !in_array($policy, $valid_policies, true);
 		if ($invalid_policy) {
 			$policy = 'status_only';
 			$summary['policy'] = $policy;
 		}
-		$normalized = function_exists('vms_cancellation_normalize_steps')
-			? (array) vms_cancellation_normalize_steps(isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), $policy)
+		$normalized = function_exists('bvmgr_cancellation_normalize_steps')
+			? (array) bvmgr_cancellation_normalize_steps(isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), $policy)
 			: array('steps' => isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array(), 'changed' => false, 'issues' => array());
 		if (!empty($normalized['changed'])) {
 			$summary['steps'] = isset($normalized['steps']) && is_array($normalized['steps']) ? $normalized['steps'] : array();
@@ -1608,7 +1608,7 @@ if (!function_exists('vms_cancellation_run_job')) {
 
 			$summary_for_step = $summary;
 			$summary_for_step['steps'] = $steps;
-			$res = vms_cancellation_run_step($event_plan_id, $policy, $step_key, $summary_for_step);
+			$res = bvmgr_cancellation_run_step($event_plan_id, $policy, $step_key, $summary_for_step);
 			$steps[$i]['status'] = (string) $res['status'];
 			$steps[$i]['message'] = (string) $res['message'];
 			$steps[$i]['data'] = (array) $res['data'];
@@ -1727,7 +1727,7 @@ add_action('vms_cancellation_job_created', function ($event_plan_id, $summary) {
 		$job_id = sanitize_text_field((string) $summary['job_id']);
 	}
 
-	if (function_exists('vms_cancellation_run_job')) {
-		vms_cancellation_run_job($event_plan_id, array('job_id' => $job_id));
+	if (function_exists('bvmgr_cancellation_run_job')) {
+		bvmgr_cancellation_run_job($event_plan_id, array('job_id' => $job_id));
 	}
 }, 10, 2);

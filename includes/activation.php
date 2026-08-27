@@ -44,7 +44,7 @@ function bvmgr_activate_plugin(): void
 		'vms_vendor_booking_onboarding_schedule_event',
 		'vms_notify_ensure_digest_cron',
 		'vms_ticket_integrity_maybe_schedule_cron',
-		'vms_integrity_schedule_daily_scan',
+		'bvmgr_integrity_schedule_daily_scan',
 		'vms_ticketing_v2_legacy_cleanup_cron_init',
 		'vms_ticketing_verification_schedule_cleanup',
 	);

@@ -168,8 +168,8 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
     $include_zero = !empty($args['include_zero']);
     $include_tax_incomplete = !empty($args['include_tax_incomplete']);
 
-    if (function_exists('vms_event_plan_allowed_statuses')) {
-        $all = vms_event_plan_allowed_statuses('payables_export', array(
+    if (function_exists('bvmgr_event_plan_allowed_statuses')) {
+        $all = bvmgr_event_plan_allowed_statuses('payables_export', array(
             'include_drafts' => true,
             'include_cancelled' => false,
             'include_archived' => false,

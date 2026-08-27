@@ -1,7 +1,7 @@
         <?php
             defined('ABSPATH') || exit;
-            $lineup_summary_trace = function_exists('vms_event_plan_perf_span_start')
-                ? vms_event_plan_perf_span_start('event_plan_time_lineup_summary_render', (int) $post->ID, array('section' => 'time_lineup_summary'))
+            $lineup_summary_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                ? bvmgr_event_plan_perf_span_start('event_plan_time_lineup_summary_render', (int) $post->ID, array('section' => 'time_lineup_summary'))
                 : '';
         ?>
         <h4 class="vms-ep-basic-span"><?php esc_html_e('Time + Lineup & Schedule', 'backstage-venue-manager'); ?></h4>
@@ -65,16 +65,16 @@
                     </div>
                 </div>
                 <?php
-                    if (function_exists('vms_event_plan_perf_span_finish')) {
-                        vms_event_plan_perf_span_finish('event_plan_time_lineup_summary_render', (int) $post->ID, $lineup_summary_trace, array(
+                    if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                        bvmgr_event_plan_perf_span_finish('event_plan_time_lineup_summary_render', (int) $post->ID, $lineup_summary_trace, array(
                             'section' => 'time_lineup_summary',
                             'supporting_vendor_count' => is_array($lineup_supporting_entries) ? count($lineup_supporting_entries) : 0,
                             'warning_count' => is_array($lineup_warning_messages) ? count($lineup_warning_messages) : 0,
                         ));
                     }
 
-                    $primary_vendor_trace = function_exists('vms_event_plan_perf_span_start')
-                        ? vms_event_plan_perf_span_start('event_plan_primary_vendor_editor_render', (int) $post->ID, array('section' => 'primary_vendor_editor'))
+                    $primary_vendor_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                        ? bvmgr_event_plan_perf_span_start('event_plan_primary_vendor_editor_render', (int) $post->ID, array('section' => 'primary_vendor_editor'))
                         : '';
                 ?>
 
@@ -250,8 +250,8 @@
                         </div>
                     </details>
                     <?php
-                        if (function_exists('vms_event_plan_perf_span_finish')) {
-                            vms_event_plan_perf_span_finish('event_plan_primary_vendor_editor_render', (int) $post->ID, $primary_vendor_trace, array(
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_primary_vendor_editor_render', (int) $post->ID, $primary_vendor_trace, array(
                                 'section' => 'primary_vendor_editor',
                                 'selected_vendor_id' => (int) $selected_band_id,
                             ));
@@ -265,8 +265,8 @@
                     <?php
                         endif;
 
-                        $supporting_cards_trace = function_exists('vms_event_plan_perf_span_start')
-                            ? vms_event_plan_perf_span_start('event_plan_supporting_act_card_render', (int) $post->ID, array(
+                        $supporting_cards_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                            ? bvmgr_event_plan_perf_span_start('event_plan_supporting_act_card_render', (int) $post->ID, array(
                                 'section' => 'supporting_act_cards',
                                 'supporting_card_count' => is_array($lineup_supporting_entries) ? count($lineup_supporting_entries) : 0,
                             ))
@@ -404,8 +404,8 @@
                         <?php endforeach; ?>
                     </div>
                     <?php
-                        if (function_exists('vms_event_plan_perf_span_finish')) {
-                            vms_event_plan_perf_span_finish('event_plan_supporting_act_card_render', (int) $post->ID, $supporting_cards_trace, array(
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_supporting_act_card_render', (int) $post->ID, $supporting_cards_trace, array(
                                 'section' => 'supporting_act_cards',
                                 'supporting_card_count' => is_array($lineup_supporting_entries) ? count($lineup_supporting_entries) : 0,
                                 'supporting_detail_body_count' => is_array($lineup_supporting_entries) ? count($lineup_supporting_entries) : 0,
@@ -517,8 +517,8 @@
                 </div>
 
                 <?php
-                    $timeline_trace = function_exists('vms_event_plan_perf_span_start')
-                        ? vms_event_plan_perf_span_start('event_plan_time_lineup_timeline_render', (int) $post->ID, array('section' => 'time_lineup_timeline'))
+                    $timeline_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                        ? bvmgr_event_plan_perf_span_start('event_plan_time_lineup_timeline_render', (int) $post->ID, array('section' => 'time_lineup_timeline'))
                         : '';
                 ?>
                 <div class="vms-lineup-insights">
@@ -543,15 +543,15 @@
                         </div>
                     </div>
                     <?php
-                        if (function_exists('vms_event_plan_perf_span_finish')) {
-                            vms_event_plan_perf_span_finish('event_plan_time_lineup_timeline_render', (int) $post->ID, $timeline_trace, array(
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_time_lineup_timeline_render', (int) $post->ID, $timeline_trace, array(
                                 'section' => 'time_lineup_timeline',
                                 'timeline_entry_count' => is_array($lineup_entries) ? count($lineup_entries) : 0,
                             ));
                         }
 
-                        $health_trace = function_exists('vms_event_plan_perf_span_start')
-                            ? vms_event_plan_perf_span_start('event_plan_time_lineup_health_render', (int) $post->ID, array('section' => 'time_lineup_health'))
+                        $health_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                            ? bvmgr_event_plan_perf_span_start('event_plan_time_lineup_health_render', (int) $post->ID, array('section' => 'time_lineup_health'))
                             : '';
                     ?>
 
@@ -570,8 +570,8 @@
                         </ul>
                     </div>
                     <?php
-                        if (function_exists('vms_event_plan_perf_span_finish')) {
-                            vms_event_plan_perf_span_finish('event_plan_time_lineup_health_render', (int) $post->ID, $health_trace, array(
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_time_lineup_health_render', (int) $post->ID, $health_trace, array(
                                 'section' => 'time_lineup_health',
                                 'warning_count' => is_array($lineup_warning_messages) ? count($lineup_warning_messages) : 0,
                             ));

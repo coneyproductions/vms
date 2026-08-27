@@ -155,7 +155,7 @@ function get_post_meta(int $id, string $key, bool $single = false)
 	unset($single);
 	return $GLOBALS['vms_goal_meta'][$id][$key] ?? '';
 }
-function vms_event_plan_should_include(int $id, string $context, array $args): bool
+function bvmgr_event_plan_should_include(int $id, string $context, array $args): bool
 {
 	unset($context, $args);
 	return !in_array($id, $GLOBALS['vms_goal_excluded_ids'] ?? array(), true);

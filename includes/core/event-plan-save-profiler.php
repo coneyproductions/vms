@@ -13,7 +13,7 @@ defined('ABSPATH') || exit;
  * for staging/local testing without storing full ticket/customer payloads.
  */
 
-function vms_event_plan_save_profiler_threshold_seconds(): float
+function bvmgr_event_plan_save_profiler_threshold_seconds(): float
 {
     // 0.2.24.661+: record every Event Plan save by default so operators/testers
     // can prove lightweight saves stayed lightweight. Sites can raise this with
@@ -31,7 +31,7 @@ function vms_event_plan_save_profiler_threshold_seconds(): float
     return max(0.0, $threshold);
 }
 
-function vms_event_plan_save_profiler_enabled(): bool
+function bvmgr_event_plan_save_profiler_enabled(): bool
 {
     if (defined('VMS_EVENT_PLAN_SAVE_PROFILER_DISABLED') && VMS_EVENT_PLAN_SAVE_PROFILER_DISABLED) {
         return false;
@@ -40,9 +40,9 @@ function vms_event_plan_save_profiler_enabled(): bool
     return (bool) apply_filters('vms_event_plan_save_profiler_enabled', true);
 }
 
-function vms_event_plan_save_profiler_recording_enabled(): bool
+function bvmgr_event_plan_save_profiler_recording_enabled(): bool
 {
-	if (!vms_event_plan_save_profiler_enabled()) {
+	if (!bvmgr_event_plan_save_profiler_enabled()) {
 		return false;
 	}
 
@@ -51,26 +51,26 @@ function vms_event_plan_save_profiler_recording_enabled(): bool
 	}
 
 	$enabled = defined('VMS_EP_PERF_TRACE') && VMS_EP_PERF_TRACE;
-	if (function_exists('vms_event_plan_perf_trace_enabled')) {
-		$enabled = vms_event_plan_perf_trace_enabled();
+	if (function_exists('bvmgr_event_plan_perf_trace_enabled')) {
+		$enabled = bvmgr_event_plan_perf_trace_enabled();
 	}
 
 	return (bool) apply_filters('vms_event_plan_save_profiler_recording_enabled', $enabled);
 }
 
-function vms_event_plan_save_profiler_state(): array
+function bvmgr_event_plan_save_profiler_state(): array
 {
     $state = $GLOBALS['bvmgr_event_plan_save_profiler_state'] ?? array();
     return is_array($state) ? $state : array();
 }
 
-function vms_event_plan_save_profiler_active(): bool
+function bvmgr_event_plan_save_profiler_active(): bool
 {
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     return !empty($state['active']);
 }
 
-function vms_event_plan_save_profiler_sanitize_note_value($value): string
+function bvmgr_event_plan_save_profiler_sanitize_note_value($value): string
 {
     if (is_scalar($value) || $value === null) {
         return sanitize_text_field((string) $value);
@@ -80,7 +80,7 @@ function vms_event_plan_save_profiler_sanitize_note_value($value): string
     return sanitize_text_field(is_string($encoded) ? $encoded : '');
 }
 
-function vms_event_plan_save_profiler_deferred_state_for_post(int $post_id): array
+function bvmgr_event_plan_save_profiler_deferred_state_for_post(int $post_id): array
 {
     $post_id = absint($post_id);
     if ($post_id <= 0) {
@@ -92,7 +92,7 @@ function vms_event_plan_save_profiler_deferred_state_for_post(int $post_id): arr
     return $state;
 }
 
-function vms_event_plan_save_profiler_save_deferred_state_for_post(int $post_id, array $state): void
+function bvmgr_event_plan_save_profiler_save_deferred_state_for_post(int $post_id, array $state): void
 {
     $post_id = absint($post_id);
     if ($post_id <= 0) {
@@ -106,7 +106,7 @@ function vms_event_plan_save_profiler_save_deferred_state_for_post(int $post_id,
     $GLOBALS['bvmgr_event_plan_save_profiler_deferred'][$post_id] = $state;
 }
 
-function vms_event_plan_save_profiler_clear_deferred_state_for_post(int $post_id): void
+function bvmgr_event_plan_save_profiler_clear_deferred_state_for_post(int $post_id): void
 {
     $post_id = absint($post_id);
     if ($post_id <= 0) {
@@ -118,14 +118,14 @@ function vms_event_plan_save_profiler_clear_deferred_state_for_post(int $post_id
     }
 }
 
-function vms_event_plan_save_profiler_defer_context_for_post(int $post_id, array $context): void
+function bvmgr_event_plan_save_profiler_defer_context_for_post(int $post_id, array $context): void
 {
     $post_id = absint($post_id);
     if ($post_id <= 0 || empty($context)) {
         return;
     }
 
-    $state = vms_event_plan_save_profiler_deferred_state_for_post($post_id);
+    $state = bvmgr_event_plan_save_profiler_deferred_state_for_post($post_id);
     if (!isset($state['context']) || !is_array($state['context'])) {
         $state['context'] = array();
     }
@@ -142,10 +142,10 @@ function vms_event_plan_save_profiler_defer_context_for_post(int $post_id, array
         }
     }
 
-    vms_event_plan_save_profiler_save_deferred_state_for_post($post_id, $state);
+    bvmgr_event_plan_save_profiler_save_deferred_state_for_post($post_id, $state);
 }
 
-function vms_event_plan_save_profiler_defer_note_for_post(int $post_id, string $key, $value): void
+function bvmgr_event_plan_save_profiler_defer_note_for_post(int $post_id, string $key, $value): void
 {
     $post_id = absint($post_id);
     $key = sanitize_key($key);
@@ -153,7 +153,7 @@ function vms_event_plan_save_profiler_defer_note_for_post(int $post_id, string $
         return;
     }
 
-    $state = vms_event_plan_save_profiler_deferred_state_for_post($post_id);
+    $state = bvmgr_event_plan_save_profiler_deferred_state_for_post($post_id);
     if (!isset($state['notes']) || !is_array($state['notes'])) {
         $state['notes'] = array();
     }
@@ -161,12 +161,12 @@ function vms_event_plan_save_profiler_defer_note_for_post(int $post_id, string $
         $state['notes'][$key] = array();
     }
 
-    $state['notes'][$key][] = vms_event_plan_save_profiler_sanitize_note_value($value);
+    $state['notes'][$key][] = bvmgr_event_plan_save_profiler_sanitize_note_value($value);
     $state['notes'][$key] = array_slice(array_values(array_unique(array_filter($state['notes'][$key]))), -10);
-    vms_event_plan_save_profiler_save_deferred_state_for_post($post_id, $state);
+    bvmgr_event_plan_save_profiler_save_deferred_state_for_post($post_id, $state);
 }
 
-function vms_event_plan_save_profiler_defer_heavy_action_for_post(int $post_id, string $action, string $status, string $reason = ''): void
+function bvmgr_event_plan_save_profiler_defer_heavy_action_for_post(int $post_id, string $action, string $status, string $reason = ''): void
 {
     $post_id = absint($post_id);
     $action = sanitize_key($action);
@@ -175,7 +175,7 @@ function vms_event_plan_save_profiler_defer_heavy_action_for_post(int $post_id, 
         return;
     }
 
-    $state = vms_event_plan_save_profiler_deferred_state_for_post($post_id);
+    $state = bvmgr_event_plan_save_profiler_deferred_state_for_post($post_id);
     if (!isset($state['heavy_actions']) || !is_array($state['heavy_actions'])) {
         $state['heavy_actions'] = array();
     }
@@ -187,18 +187,18 @@ function vms_event_plan_save_profiler_defer_heavy_action_for_post(int $post_id, 
         'deferred' => true,
     );
 
-    vms_event_plan_save_profiler_save_deferred_state_for_post($post_id, $state);
+    bvmgr_event_plan_save_profiler_save_deferred_state_for_post($post_id, $state);
 }
 
-function vms_event_plan_save_profiler_force_effective_meta_key_for_post(int $post_id, string $meta_key): void
+function bvmgr_event_plan_save_profiler_force_effective_meta_key_for_post(int $post_id, string $meta_key): void
 {
 	$post_id = absint($post_id);
 	$meta_key = sanitize_key($meta_key);
-	if ($post_id <= 0 || $meta_key === '' || vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+	if ($post_id <= 0 || $meta_key === '' || bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
 		return;
 	}
 
-	$state = vms_event_plan_save_profiler_state();
+	$state = bvmgr_event_plan_save_profiler_state();
 	if (!empty($state['active']) && absint($state['post_id'] ?? 0) === $post_id) {
 		if (!isset($state['forced_effective_meta_keys']) || !is_array($state['forced_effective_meta_keys'])) {
 			$state['forced_effective_meta_keys'] = array();
@@ -208,17 +208,17 @@ function vms_event_plan_save_profiler_force_effective_meta_key_for_post(int $pos
 		return;
 	}
 
-	$state = vms_event_plan_save_profiler_deferred_state_for_post($post_id);
+	$state = bvmgr_event_plan_save_profiler_deferred_state_for_post($post_id);
 	if (!isset($state['forced_effective_meta_keys']) || !is_array($state['forced_effective_meta_keys'])) {
 		$state['forced_effective_meta_keys'] = array();
 	}
 	$state['forced_effective_meta_keys'][$meta_key] = true;
-	vms_event_plan_save_profiler_save_deferred_state_for_post($post_id, $state);
+	bvmgr_event_plan_save_profiler_save_deferred_state_for_post($post_id, $state);
 }
 
-function vms_event_plan_save_profiler_capture_pre_update_context(int $post_id, array $data): void
+function bvmgr_event_plan_save_profiler_capture_pre_update_context(int $post_id, array $data): void
 {
-    if (!vms_event_plan_save_profiler_enabled()) {
+    if (!bvmgr_event_plan_save_profiler_enabled()) {
         return;
     }
 
@@ -252,7 +252,7 @@ function vms_event_plan_save_profiler_capture_pre_update_context(int $post_id, a
         $field_changes[] = 'excerpt';
     }
 
-    vms_event_plan_save_profiler_defer_context_for_post($post_id, array(
+    bvmgr_event_plan_save_profiler_defer_context_for_post($post_id, array(
         'previous_status' => $previous_status,
         'incoming_status' => $incoming_status,
         'previous_title_hash' => sha1((string) $before->post_title),
@@ -266,14 +266,14 @@ function vms_event_plan_save_profiler_capture_pre_update_context(int $post_id, a
     ));
 
     if (!empty($field_changes)) {
-        vms_event_plan_save_profiler_defer_note_for_post($post_id, 'post_field_changes', implode(',', $field_changes));
+        bvmgr_event_plan_save_profiler_defer_note_for_post($post_id, 'post_field_changes', implode(',', $field_changes));
     }
 }
-add_action('pre_post_update', 'vms_event_plan_save_profiler_capture_pre_update_context', 1, 2);
+add_action('pre_post_update', 'bvmgr_event_plan_save_profiler_capture_pre_update_context', 1, 2);
 
-function vms_event_plan_save_profiler_capture_status_transition(string $new_status, string $old_status, WP_Post $post): void
+function bvmgr_event_plan_save_profiler_capture_status_transition(string $new_status, string $old_status, WP_Post $post): void
 {
-    if (!vms_event_plan_save_profiler_enabled() || $post->post_type !== 'vms_event_plan') {
+    if (!bvmgr_event_plan_save_profiler_enabled() || $post->post_type !== 'vms_event_plan') {
         return;
     }
 
@@ -282,22 +282,22 @@ function vms_event_plan_save_profiler_capture_status_transition(string $new_stat
         return;
     }
 
-    vms_event_plan_save_profiler_defer_context_for_post($post_id, array(
+    bvmgr_event_plan_save_profiler_defer_context_for_post($post_id, array(
         'transition_old_status' => sanitize_key($old_status),
         'transition_new_status' => sanitize_key($new_status),
         'transition_captured_at_gmt' => gmdate('Y-m-d H:i:s'),
     ));
-    vms_event_plan_save_profiler_defer_note_for_post($post_id, 'status_transition', sanitize_key($old_status) . '_to_' . sanitize_key($new_status));
+    bvmgr_event_plan_save_profiler_defer_note_for_post($post_id, 'status_transition', sanitize_key($old_status) . '_to_' . sanitize_key($new_status));
 
     if ($new_status === 'publish' && $old_status !== 'publish') {
-        vms_event_plan_save_profiler_defer_note_for_post($post_id, 'publish_transition', 'entered_publish');
+        bvmgr_event_plan_save_profiler_defer_note_for_post($post_id, 'publish_transition', 'entered_publish');
     } elseif ($old_status === 'publish' && $new_status !== 'publish') {
-        vms_event_plan_save_profiler_defer_note_for_post($post_id, 'publish_transition', 'left_publish');
+        bvmgr_event_plan_save_profiler_defer_note_for_post($post_id, 'publish_transition', 'left_publish');
     }
 }
-add_action('transition_post_status', 'vms_event_plan_save_profiler_capture_status_transition', 1, 3);
+add_action('transition_post_status', 'bvmgr_event_plan_save_profiler_capture_status_transition', 1, 3);
 
-function vms_event_plan_save_profiler_modules(): array
+function bvmgr_event_plan_save_profiler_modules(): array
 {
     return array(
         'core' => __('Core Event Details', 'backstage-venue-manager'),
@@ -311,7 +311,7 @@ function vms_event_plan_save_profiler_modules(): array
     );
 }
 
-function vms_event_plan_save_profiler_normalize_module(string $module): string
+function bvmgr_event_plan_save_profiler_normalize_module(string $module): string
 {
     $module = sanitize_key($module);
     $aliases = array(
@@ -334,15 +334,15 @@ function vms_event_plan_save_profiler_normalize_module(string $module): string
         $module = $aliases[$module];
     }
 
-    return isset(vms_event_plan_save_profiler_modules()[$module]) ? $module : 'core';
+    return isset(bvmgr_event_plan_save_profiler_modules()[$module]) ? $module : 'core';
 }
 
-function vms_event_plan_save_profiler_empty_dirty_map(): array
+function bvmgr_event_plan_save_profiler_empty_dirty_map(): array
 {
-    return array_fill_keys(array_keys(vms_event_plan_save_profiler_modules()), false);
+    return array_fill_keys(array_keys(bvmgr_event_plan_save_profiler_modules()), false);
 }
 
-function vms_event_plan_save_profiler_post_data(): array
+function bvmgr_event_plan_save_profiler_post_data(): array
 {
     static $request = null;
     if (is_array($request)) {
@@ -354,9 +354,9 @@ function vms_event_plan_save_profiler_post_data(): array
     return is_array($request) ? $request : array();
 }
 
-function vms_event_plan_save_profiler_request_keys(): array
+function bvmgr_event_plan_save_profiler_request_keys(): array
 {
-    $request = vms_event_plan_save_profiler_post_data();
+    $request = bvmgr_event_plan_save_profiler_post_data();
     if (empty($request)) {
         return array();
     }
@@ -374,7 +374,7 @@ function vms_event_plan_save_profiler_request_keys(): array
     return array_slice($keys, 0, 80);
 }
 
-function vms_event_plan_save_profiler_classify_key(string $key): string
+function bvmgr_event_plan_save_profiler_classify_key(string $key): string
 {
     $key = strtolower($key);
 
@@ -434,16 +434,16 @@ function vms_event_plan_save_profiler_classify_key(string $key): string
     return 'core';
 }
 
-function vms_event_plan_save_profiler_mark_module(string $module, string $reason = ''): void
+function bvmgr_event_plan_save_profiler_mark_module(string $module, string $reason = ''): void
 {
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     if (empty($state['active'])) {
         return;
     }
 
-    $module = vms_event_plan_save_profiler_normalize_module($module);
+    $module = bvmgr_event_plan_save_profiler_normalize_module($module);
     if (!isset($state['dirty_map']) || !is_array($state['dirty_map'])) {
-        $state['dirty_map'] = vms_event_plan_save_profiler_empty_dirty_map();
+        $state['dirty_map'] = bvmgr_event_plan_save_profiler_empty_dirty_map();
     }
     $state['dirty_map'][$module] = true;
 
@@ -461,9 +461,9 @@ function vms_event_plan_save_profiler_mark_module(string $module, string $reason
     $GLOBALS['bvmgr_event_plan_save_profiler_state'] = $state;
 }
 
-function vms_event_plan_save_profiler_note(string $key, $value): void
+function bvmgr_event_plan_save_profiler_note(string $key, $value): void
 {
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     if (empty($state['active'])) {
         return;
     }
@@ -486,9 +486,9 @@ function vms_event_plan_save_profiler_note(string $key, $value): void
     $GLOBALS['bvmgr_event_plan_save_profiler_state'] = $state;
 }
 
-function vms_event_plan_save_profiler_note_heavy_action(string $action, string $status, string $reason = ''): void
+function bvmgr_event_plan_save_profiler_note_heavy_action(string $action, string $status, string $reason = ''): void
 {
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     if (empty($state['active'])) {
         return;
     }
@@ -512,7 +512,7 @@ function vms_event_plan_save_profiler_note_heavy_action(string $action, string $
 	$GLOBALS['bvmgr_event_plan_save_profiler_state'] = $state;
 }
 
-function vms_event_plan_save_profiler_effective_meta_keys_from_state(array $state, int $post_id = 0): array
+function bvmgr_event_plan_save_profiler_effective_meta_keys_from_state(array $state, int $post_id = 0): array
 {
 	$post_id = $post_id > 0 ? absint($post_id) : absint($state['post_id'] ?? 0);
 	if ($post_id <= 0) {
@@ -525,7 +525,7 @@ function vms_event_plan_save_profiler_effective_meta_keys_from_state(array $stat
 
 	foreach (array_keys($meta_keys) as $meta_key) {
 		$meta_key = is_string($meta_key) ? $meta_key : '';
-		if ($meta_key === '' || vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+		if ($meta_key === '' || bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
 			continue;
 		}
 
@@ -534,7 +534,7 @@ function vms_event_plan_save_profiler_effective_meta_keys_from_state(array $stat
 			continue;
 		}
 
-		$current_hash = vms_event_plan_save_profiler_meta_values_hash($post_id, $meta_key);
+		$current_hash = bvmgr_event_plan_save_profiler_meta_values_hash($post_id, $meta_key);
 		if ($current_hash !== (string) $meta_initial_hashes[$meta_key]) {
 			$effective[$meta_key] = true;
 		}
@@ -543,7 +543,7 @@ function vms_event_plan_save_profiler_effective_meta_keys_from_state(array $stat
 	$forced_effective_meta_keys = is_array($state['forced_effective_meta_keys'] ?? null) ? $state['forced_effective_meta_keys'] : array();
 	foreach (array_keys($forced_effective_meta_keys) as $meta_key) {
 		$meta_key = sanitize_key((string) $meta_key);
-		if ($meta_key === '' || vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+		if ($meta_key === '' || bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
 			continue;
 		}
 		$effective[$meta_key] = true;
@@ -552,9 +552,9 @@ function vms_event_plan_save_profiler_effective_meta_keys_from_state(array $stat
 	return array_values(array_keys($effective));
 }
 
-function vms_event_plan_save_profiler_effective_meta_keys(int $post_id = 0): array
+function bvmgr_event_plan_save_profiler_effective_meta_keys(int $post_id = 0): array
 {
-	$state = vms_event_plan_save_profiler_state();
+	$state = bvmgr_event_plan_save_profiler_state();
 	if (empty($state['active'])) {
 		return array();
 	}
@@ -562,12 +562,12 @@ function vms_event_plan_save_profiler_effective_meta_keys(int $post_id = 0): arr
 		return array();
 	}
 
-	return vms_event_plan_save_profiler_effective_meta_keys_from_state($state, $post_id);
+	return bvmgr_event_plan_save_profiler_effective_meta_keys_from_state($state, $post_id);
 }
 
-function vms_event_plan_save_profiler_current_save_scope(int $post_id = 0): string
+function bvmgr_event_plan_save_profiler_current_save_scope(int $post_id = 0): string
 {
-	$state = vms_event_plan_save_profiler_state();
+	$state = bvmgr_event_plan_save_profiler_state();
 	if (empty($state['active'])) {
 		return '';
 	}
@@ -578,8 +578,8 @@ function vms_event_plan_save_profiler_current_save_scope(int $post_id = 0): stri
 	$request_action = sanitize_key((string) ($state['request_action'] ?? ''));
 	$post_field_changes = is_array($state['post_field_changes'] ?? null) ? $state['post_field_changes'] : array();
 	$post_field_changes = array_values(array_filter(array_map('sanitize_key', $post_field_changes)));
-	$effective_meta_keys = vms_event_plan_save_profiler_effective_meta_keys_from_state($state, $post_id);
-	$effective_meta_keys = vms_event_plan_save_profiler_scope_effective_meta_keys($effective_meta_keys);
+	$effective_meta_keys = bvmgr_event_plan_save_profiler_effective_meta_keys_from_state($state, $post_id);
+	$effective_meta_keys = bvmgr_event_plan_save_profiler_scope_effective_meta_keys($effective_meta_keys);
 
 	if (empty($effective_meta_keys) && empty($post_field_changes)) {
 		return 'no_op';
@@ -592,14 +592,14 @@ function vms_event_plan_save_profiler_current_save_scope(int $post_id = 0): stri
 	return 'mixed';
 }
 
-function vms_event_plan_save_profiler_is_featured_image_only(int $post_id = 0): bool
+function bvmgr_event_plan_save_profiler_is_featured_image_only(int $post_id = 0): bool
 {
-	return vms_event_plan_save_profiler_current_save_scope($post_id) === 'featured_image_only';
+	return bvmgr_event_plan_save_profiler_current_save_scope($post_id) === 'featured_image_only';
 }
 
-function vms_event_plan_save_profiler_featured_image_sync_completed(int $post_id = 0): bool
+function bvmgr_event_plan_save_profiler_featured_image_sync_completed(int $post_id = 0): bool
 {
-	$state = vms_event_plan_save_profiler_state();
+	$state = bvmgr_event_plan_save_profiler_state();
 	if (empty($state['active'])) {
 		return false;
 	}
@@ -611,9 +611,9 @@ function vms_event_plan_save_profiler_featured_image_sync_completed(int $post_id
 	return absint($sync['completed_count'] ?? 0) > 0;
 }
 
-function vms_event_plan_save_profiler_track_featured_image_sync(string $source, array $result): void
+function bvmgr_event_plan_save_profiler_track_featured_image_sync(string $source, array $result): void
 {
-	$state = vms_event_plan_save_profiler_state();
+	$state = bvmgr_event_plan_save_profiler_state();
 	$source = sanitize_key($source);
 	if ($source === '') {
 		$source = 'unspecified';
@@ -625,7 +625,7 @@ function vms_event_plan_save_profiler_track_featured_image_sync(string $source, 
 		if ($plan_id <= 0) {
 			return;
 		}
-		$deferred = vms_event_plan_save_profiler_deferred_state_for_post($plan_id);
+		$deferred = bvmgr_event_plan_save_profiler_deferred_state_for_post($plan_id);
 		$sync = is_array($deferred['featured_image_sync'] ?? null) ? $deferred['featured_image_sync'] : array();
 	} else {
 		if (!isset($state['featured_image_sync']) || !is_array($state['featured_image_sync'])) {
@@ -666,7 +666,7 @@ function vms_event_plan_save_profiler_track_featured_image_sync(string $source, 
 
 	if (empty($state['active'])) {
 		$deferred['featured_image_sync'] = $sync;
-		vms_event_plan_save_profiler_save_deferred_state_for_post($plan_id, $deferred);
+		bvmgr_event_plan_save_profiler_save_deferred_state_for_post($plan_id, $deferred);
 		return;
 	}
 
@@ -674,19 +674,19 @@ function vms_event_plan_save_profiler_track_featured_image_sync(string $source, 
 	$GLOBALS['bvmgr_event_plan_save_profiler_state'] = $state;
 }
 
-function vms_event_plan_save_profiler_module_touched(string $module): bool
+function bvmgr_event_plan_save_profiler_module_touched(string $module): bool
 {
-    $state = vms_event_plan_save_profiler_state();
-    $module = vms_event_plan_save_profiler_normalize_module($module);
+    $state = bvmgr_event_plan_save_profiler_state();
+    $module = bvmgr_event_plan_save_profiler_normalize_module($module);
     $dirty_map = is_array($state['dirty_map'] ?? null) ? $state['dirty_map'] : array();
 
     return !empty($dirty_map[$module]);
 }
 
-function vms_event_plan_save_profiler_meta_key_touched($keys): bool
+function bvmgr_event_plan_save_profiler_meta_key_touched($keys): bool
 {
     $keys = is_array($keys) ? $keys : array($keys);
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     $meta_keys = is_array($state['meta_keys'] ?? null) ? $state['meta_keys'] : array();
 
     foreach ($keys as $key) {
@@ -699,7 +699,7 @@ function vms_event_plan_save_profiler_meta_key_touched($keys): bool
     return false;
 }
 
-function vms_event_plan_save_profiler_post_field_changes(array $deferred_context, WP_Post $post): array
+function bvmgr_event_plan_save_profiler_post_field_changes(array $deferred_context, WP_Post $post): array
 {
     $changes = array();
     $pre_changes = $deferred_context['pre_update_field_changes'] ?? array();
@@ -735,7 +735,7 @@ function vms_event_plan_save_profiler_post_field_changes(array $deferred_context
     return array_values(array_unique(array_filter($changes)));
 }
 
-function vms_event_plan_save_profiler_infer_save_type(array $state, WP_Post $post): string
+function bvmgr_event_plan_save_profiler_infer_save_type(array $state, WP_Post $post): string
 {
     $request_action = sanitize_key((string) ($state['request_action'] ?? ''));
     $wp_action = sanitize_key((string) ($state['wp_action'] ?? ''));
@@ -772,33 +772,33 @@ function vms_event_plan_save_profiler_infer_save_type(array $state, WP_Post $pos
     return $wp_action !== '' ? $wp_action : 'event_plan_save';
 }
 
-function vms_event_plan_save_profiler_start(int $post_id, WP_Post $post, bool $update): void
+function bvmgr_event_plan_save_profiler_start(int $post_id, WP_Post $post, bool $update): void
 {
-    if (!vms_event_plan_save_profiler_enabled()) {
+    if (!bvmgr_event_plan_save_profiler_enabled()) {
         return;
     }
     if ($post->post_type !== 'vms_event_plan' || wp_is_post_revision($post_id) || (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)) {
         return;
     }
 
-    $request = vms_event_plan_save_profiler_post_data();
+    $request = bvmgr_event_plan_save_profiler_post_data();
     $request_action = isset($request['vms_event_plan_action']) ? sanitize_key((string) $request['vms_event_plan_action']) : '';
     $wp_action = isset($request['action']) ? sanitize_key((string) $request['action']) : '';
     $ticketing_key = function_exists('vms_ticketing_v2_k') ? (string) vms_ticketing_v2_k('config') : '_vms_ticketing_v2_config';
     $sync_key = function_exists('vms_ticketing_v2_k') ? (string) vms_ticketing_v2_k('sync') : '_vms_ticketing_v2_sync';
 
-	$deferred = vms_event_plan_save_profiler_deferred_state_for_post($post_id);
+	$deferred = bvmgr_event_plan_save_profiler_deferred_state_for_post($post_id);
 	$deferred_context = is_array($deferred['context'] ?? null) ? $deferred['context'] : array();
 	$deferred_notes = is_array($deferred['notes'] ?? null) ? $deferred['notes'] : array();
 	$deferred_heavy_actions = is_array($deferred['heavy_actions'] ?? null) ? $deferred['heavy_actions'] : array();
 	$deferred_featured_image_sync = is_array($deferred['featured_image_sync'] ?? null) ? $deferred['featured_image_sync'] : array();
 	$deferred_forced_effective_meta_keys = is_array($deferred['forced_effective_meta_keys'] ?? null) ? $deferred['forced_effective_meta_keys'] : array();
 	$previous_status = sanitize_key((string) ($deferred_context['previous_status'] ?? ($deferred_context['transition_old_status'] ?? get_post_status($post_id))));
-    $post_field_changes = vms_event_plan_save_profiler_post_field_changes($deferred_context, $post);
-    vms_event_plan_save_profiler_clear_deferred_state_for_post($post_id);
+    $post_field_changes = bvmgr_event_plan_save_profiler_post_field_changes($deferred_context, $post);
+    bvmgr_event_plan_save_profiler_clear_deferred_state_for_post($post_id);
 
-    $request_keys = vms_event_plan_save_profiler_request_keys();
-    $dirty_map = vms_event_plan_save_profiler_empty_dirty_map();
+    $request_keys = bvmgr_event_plan_save_profiler_request_keys();
+    $dirty_map = bvmgr_event_plan_save_profiler_empty_dirty_map();
     $dirty_reasons = array();
 
     if ($wp_action === 'editpost' || isset($request['post_title']) || isset($request['content']) || isset($request['excerpt'])) {
@@ -815,7 +815,7 @@ function vms_event_plan_save_profiler_start(int $post_id, WP_Post $post, bool $u
     // may be present even during a content-only update. Module dirty state is
     // based on actual meta writes and explicit VMS actions instead.
     if ($request_action !== '') {
-        $explicit_module = vms_event_plan_save_profiler_classify_key($request_action);
+        $explicit_module = bvmgr_event_plan_save_profiler_classify_key($request_action);
         if ($explicit_module !== 'core') {
             $dirty_map[$explicit_module] = true;
             $dirty_reasons[$explicit_module] = array('request_action:' . $request_action);
@@ -837,7 +837,7 @@ function vms_event_plan_save_profiler_start(int $post_id, WP_Post $post, bool $u
         'request_keys' => $request_keys,
         'dirty_map' => $dirty_map,
         'dirty_reasons' => $dirty_reasons,
-        'module_meta_writes' => array_fill_keys(array_keys(vms_event_plan_save_profiler_modules()), 0),
+        'module_meta_writes' => array_fill_keys(array_keys(bvmgr_event_plan_save_profiler_modules()), 0),
         'heavy_actions' => $deferred_heavy_actions,
         'meta_writes' => 0,
         'meta_update_attempts' => 0,
@@ -873,14 +873,14 @@ function vms_event_plan_save_profiler_start(int $post_id, WP_Post $post, bool $u
         'notes' => $deferred_notes,
     );
 }
-add_action('save_post_vms_event_plan', 'vms_event_plan_save_profiler_start', 1, 3);
+add_action('save_post_vms_event_plan', 'bvmgr_event_plan_save_profiler_start', 1, 3);
 
-function vms_event_plan_save_profiler_ignored_meta_key(string $meta_key): bool
+function bvmgr_event_plan_save_profiler_ignored_meta_key(string $meta_key): bool
 {
     return in_array($meta_key, array('_vms_last_save_profile', '_vms_event_plan_save_profile_history'), true);
 }
 
-function vms_event_plan_save_profiler_scope_housekeeping_meta_keys(): array
+function bvmgr_event_plan_save_profiler_scope_housekeeping_meta_keys(): array
 {
 	return array(
 		'_vms_event_plan_actor_user_source',
@@ -889,9 +889,9 @@ function vms_event_plan_save_profiler_scope_housekeeping_meta_keys(): array
 	);
 }
 
-function vms_event_plan_save_profiler_scope_effective_meta_keys(array $meta_keys): array
+function bvmgr_event_plan_save_profiler_scope_effective_meta_keys(array $meta_keys): array
 {
-	$housekeeping = array_fill_keys(vms_event_plan_save_profiler_scope_housekeeping_meta_keys(), true);
+	$housekeeping = array_fill_keys(bvmgr_event_plan_save_profiler_scope_housekeeping_meta_keys(), true);
 	$scope_keys = array();
 
 	foreach ($meta_keys as $meta_key) {
@@ -907,7 +907,7 @@ function vms_event_plan_save_profiler_scope_effective_meta_keys(array $meta_keys
 	return $scope_keys;
 }
 
-function vms_event_plan_save_profiler_meta_values_hash(int $post_id, string $meta_key): string
+function bvmgr_event_plan_save_profiler_meta_values_hash(int $post_id, string $meta_key): string
 {
     if ($post_id <= 0 || $meta_key === '') {
         return '';
@@ -916,12 +916,12 @@ function vms_event_plan_save_profiler_meta_values_hash(int $post_id, string $met
     return sha1(maybe_serialize(get_post_meta($post_id, $meta_key, false)));
 }
 
-function vms_event_plan_save_profiler_capture_meta_baseline(array &$state, int $object_id, string $meta_key): void
+function bvmgr_event_plan_save_profiler_capture_meta_baseline(array &$state, int $object_id, string $meta_key): void
 {
     if (empty($state['active']) || absint($state['post_id'] ?? 0) !== absint($object_id)) {
         return;
     }
-    if (vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+    if (bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
         return;
     }
 
@@ -930,48 +930,48 @@ function vms_event_plan_save_profiler_capture_meta_baseline(array &$state, int $
     }
 
     if (!array_key_exists($meta_key, $state['meta_initial_hashes'])) {
-        $state['meta_initial_hashes'][$meta_key] = vms_event_plan_save_profiler_meta_values_hash(absint($object_id), $meta_key);
+        $state['meta_initial_hashes'][$meta_key] = bvmgr_event_plan_save_profiler_meta_values_hash(absint($object_id), $meta_key);
     }
 }
 
-function vms_event_plan_save_profiler_track_meta_add_attempt($check, int $object_id, string $meta_key, $meta_value, $unique)
+function bvmgr_event_plan_save_profiler_track_meta_add_attempt($check, int $object_id, string $meta_key, $meta_value, $unique)
 {
     unset($meta_value, $unique);
 
-    $state = vms_event_plan_save_profiler_state();
-    vms_event_plan_save_profiler_capture_meta_baseline($state, absint($object_id), $meta_key);
+    $state = bvmgr_event_plan_save_profiler_state();
+    bvmgr_event_plan_save_profiler_capture_meta_baseline($state, absint($object_id), $meta_key);
     $GLOBALS['bvmgr_event_plan_save_profiler_state'] = $state;
 
     return $check;
 }
-add_filter('add_post_metadata', 'vms_event_plan_save_profiler_track_meta_add_attempt', 1, 5);
+add_filter('add_post_metadata', 'bvmgr_event_plan_save_profiler_track_meta_add_attempt', 1, 5);
 
-function vms_event_plan_save_profiler_track_meta_delete_attempt($check, int $object_id, string $meta_key, $meta_value, $delete_all)
+function bvmgr_event_plan_save_profiler_track_meta_delete_attempt($check, int $object_id, string $meta_key, $meta_value, $delete_all)
 {
     unset($meta_value, $delete_all);
 
-    $state = vms_event_plan_save_profiler_state();
-    vms_event_plan_save_profiler_capture_meta_baseline($state, absint($object_id), $meta_key);
+    $state = bvmgr_event_plan_save_profiler_state();
+    bvmgr_event_plan_save_profiler_capture_meta_baseline($state, absint($object_id), $meta_key);
     $GLOBALS['bvmgr_event_plan_save_profiler_state'] = $state;
 
     return $check;
 }
-add_filter('delete_post_metadata', 'vms_event_plan_save_profiler_track_meta_delete_attempt', 1, 5);
+add_filter('delete_post_metadata', 'bvmgr_event_plan_save_profiler_track_meta_delete_attempt', 1, 5);
 
-function vms_event_plan_save_profiler_track_meta_update_attempt($check, int $object_id, string $meta_key, $meta_value, $prev_value)
+function bvmgr_event_plan_save_profiler_track_meta_update_attempt($check, int $object_id, string $meta_key, $meta_value, $prev_value)
 {
     unset($prev_value);
 
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     if (empty($state['active']) || absint($state['post_id'] ?? 0) !== absint($object_id)) {
         return $check;
     }
 
-    if (vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+    if (bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
         return $check;
     }
 
-    vms_event_plan_save_profiler_capture_meta_baseline($state, absint($object_id), $meta_key);
+    bvmgr_event_plan_save_profiler_capture_meta_baseline($state, absint($object_id), $meta_key);
 
     $state['meta_update_attempts'] = absint($state['meta_update_attempts'] ?? 0) + 1;
 
@@ -990,22 +990,22 @@ function vms_event_plan_save_profiler_track_meta_update_attempt($check, int $obj
     $GLOBALS['bvmgr_event_plan_save_profiler_state'] = $state;
     return $check;
 }
-add_filter('update_post_metadata', 'vms_event_plan_save_profiler_track_meta_update_attempt', 1, 5);
+add_filter('update_post_metadata', 'bvmgr_event_plan_save_profiler_track_meta_update_attempt', 1, 5);
 
-function vms_event_plan_save_profiler_track_meta_write($meta_id, int $object_id, string $meta_key, $meta_value): void
+function bvmgr_event_plan_save_profiler_track_meta_write($meta_id, int $object_id, string $meta_key, $meta_value): void
 {
     unset($meta_id, $meta_value);
 
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     if (empty($state['active']) || absint($state['post_id'] ?? 0) !== absint($object_id)) {
         return;
     }
 
-    if (vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+    if (bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
         return;
     }
 
-    vms_event_plan_save_profiler_capture_meta_baseline($state, absint($object_id), $meta_key);
+    bvmgr_event_plan_save_profiler_capture_meta_baseline($state, absint($object_id), $meta_key);
 
     $state['meta_writes'] = absint($state['meta_writes'] ?? 0) + 1;
 
@@ -1017,14 +1017,14 @@ function vms_event_plan_save_profiler_track_meta_write($meta_id, int $object_id,
     }
     $state['meta_keys'][$meta_key]++;
 
-    $module = vms_event_plan_save_profiler_classify_key($meta_key);
+    $module = bvmgr_event_plan_save_profiler_classify_key($meta_key);
     if (!isset($state['module_meta_writes']) || !is_array($state['module_meta_writes'])) {
-        $state['module_meta_writes'] = array_fill_keys(array_keys(vms_event_plan_save_profiler_modules()), 0);
+        $state['module_meta_writes'] = array_fill_keys(array_keys(bvmgr_event_plan_save_profiler_modules()), 0);
     }
     $state['module_meta_writes'][$module] = absint($state['module_meta_writes'][$module] ?? 0) + 1;
 
     if (!isset($state['dirty_map']) || !is_array($state['dirty_map'])) {
-        $state['dirty_map'] = vms_event_plan_save_profiler_empty_dirty_map();
+        $state['dirty_map'] = bvmgr_event_plan_save_profiler_empty_dirty_map();
     }
     $state['dirty_map'][$module] = true;
 
@@ -1045,7 +1045,7 @@ function vms_event_plan_save_profiler_track_meta_write($meta_id, int $object_id,
 		}
 	}
 
-	if (function_exists('vms_event_plan_perf_is_queue_meta_key') && vms_event_plan_perf_is_queue_meta_key($meta_key)) {
+	if (function_exists('bvmgr_event_plan_perf_is_queue_meta_key') && bvmgr_event_plan_perf_is_queue_meta_key($meta_key)) {
 		$state['queue_meta_writes'] = absint($state['queue_meta_writes'] ?? 0) + 1;
 		if (!isset($state['queue_meta_keys']) || !is_array($state['queue_meta_keys'])) {
 			$state['queue_meta_keys'] = array();
@@ -1058,17 +1058,17 @@ function vms_event_plan_save_profiler_track_meta_write($meta_id, int $object_id,
 
 	$GLOBALS['bvmgr_event_plan_save_profiler_state'] = $state;
 }
-add_action('added_post_meta', 'vms_event_plan_save_profiler_track_meta_write', 1, 4);
-add_action('updated_post_meta', 'vms_event_plan_save_profiler_track_meta_write', 1, 4);
-add_action('deleted_post_meta', 'vms_event_plan_save_profiler_track_meta_write', 1, 4);
+add_action('added_post_meta', 'bvmgr_event_plan_save_profiler_track_meta_write', 1, 4);
+add_action('updated_post_meta', 'bvmgr_event_plan_save_profiler_track_meta_write', 1, 4);
+add_action('deleted_post_meta', 'bvmgr_event_plan_save_profiler_track_meta_write', 1, 4);
 
-function vms_event_plan_save_profiler_track_scheduled_event($event)
+function bvmgr_event_plan_save_profiler_track_scheduled_event($event)
 {
-	if (!is_object($event) || !vms_event_plan_save_profiler_active()) {
+	if (!is_object($event) || !bvmgr_event_plan_save_profiler_active()) {
 		return $event;
 	}
 
-	$state = vms_event_plan_save_profiler_state();
+	$state = bvmgr_event_plan_save_profiler_state();
 	$post_id = absint($state['post_id'] ?? 0);
 	if ($post_id <= 0) {
 		return $event;
@@ -1089,17 +1089,17 @@ function vms_event_plan_save_profiler_track_scheduled_event($event)
 
 	return $event;
 }
-add_filter('schedule_event', 'vms_event_plan_save_profiler_track_scheduled_event', 1, 1);
+add_filter('schedule_event', 'bvmgr_event_plan_save_profiler_track_scheduled_event', 1, 1);
 
-function vms_event_plan_save_profiler_track_action_scheduler_enqueue($pre, string $hook, array $args, string $group, int $priority, bool $unique)
+function bvmgr_event_plan_save_profiler_track_action_scheduler_enqueue($pre, string $hook, array $args, string $group, int $priority, bool $unique)
 {
 	unset($args, $group, $priority, $unique);
 
-	if (!vms_event_plan_save_profiler_active()) {
+	if (!bvmgr_event_plan_save_profiler_active()) {
 		return $pre;
 	}
 
-	$state = vms_event_plan_save_profiler_state();
+	$state = bvmgr_event_plan_save_profiler_state();
 	$hook = sanitize_key($hook);
 	if ($hook === '') {
 		return $pre;
@@ -1115,17 +1115,17 @@ function vms_event_plan_save_profiler_track_action_scheduler_enqueue($pre, strin
 
 	return $pre;
 }
-add_filter('pre_as_enqueue_async_action', 'vms_event_plan_save_profiler_track_action_scheduler_enqueue', 1, 6);
+add_filter('pre_as_enqueue_async_action', 'bvmgr_event_plan_save_profiler_track_action_scheduler_enqueue', 1, 6);
 
-function vms_event_plan_save_profiler_track_action_scheduler_single($pre, int $timestamp, string $hook, array $args, string $group, int $priority)
+function bvmgr_event_plan_save_profiler_track_action_scheduler_single($pre, int $timestamp, string $hook, array $args, string $group, int $priority)
 {
 	unset($timestamp, $args, $group, $priority);
 
-	if (!vms_event_plan_save_profiler_active()) {
+	if (!bvmgr_event_plan_save_profiler_active()) {
 		return $pre;
 	}
 
-	$state = vms_event_plan_save_profiler_state();
+	$state = bvmgr_event_plan_save_profiler_state();
 	$hook = sanitize_key($hook);
 	if ($hook === '') {
 		return $pre;
@@ -1141,11 +1141,11 @@ function vms_event_plan_save_profiler_track_action_scheduler_single($pre, int $t
 
 	return $pre;
 }
-add_filter('pre_as_schedule_single_action', 'vms_event_plan_save_profiler_track_action_scheduler_single', 1, 6);
+add_filter('pre_as_schedule_single_action', 'bvmgr_event_plan_save_profiler_track_action_scheduler_single', 1, 6);
 
-function vms_event_plan_save_profiler_store_profile(int $post_id, array $profile): void
+function bvmgr_event_plan_save_profiler_store_profile(int $post_id, array $profile): void
 {
-    if ($post_id <= 0 || empty($profile) || !vms_event_plan_save_profiler_recording_enabled()) {
+    if ($post_id <= 0 || empty($profile) || !bvmgr_event_plan_save_profiler_recording_enabled()) {
         return;
     }
 
@@ -1158,20 +1158,20 @@ function vms_event_plan_save_profiler_store_profile(int $post_id, array $profile
     update_post_meta($post_id, '_vms_event_plan_save_profile_history', $history);
 }
 
-function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $update): void
+function bvmgr_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $update): void
 {
     unset($update);
 
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     if (empty($state['active']) || absint($state['post_id'] ?? 0) !== absint($post_id)) {
         return;
     }
 
     $started_at = (float) ($state['started_at'] ?? microtime(true));
     $elapsed = max(0.0, microtime(true) - $started_at);
-    $threshold = vms_event_plan_save_profiler_threshold_seconds();
+    $threshold = bvmgr_event_plan_save_profiler_threshold_seconds();
     $always = (defined('VMS_EVENT_PLAN_SAVE_PROFILER_ALWAYS') && VMS_EVENT_PLAN_SAVE_PROFILER_ALWAYS);
-	$recording_enabled = vms_event_plan_save_profiler_recording_enabled();
+	$recording_enabled = bvmgr_event_plan_save_profiler_recording_enabled();
 
     $meta_keys = is_array($state['meta_keys'] ?? null) ? $state['meta_keys'] : array();
     arsort($meta_keys);
@@ -1184,7 +1184,7 @@ function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $
     $no_effect_meta_write_keys = array();
     foreach (array_keys($meta_keys) as $meta_key) {
         $meta_key = is_string($meta_key) ? $meta_key : '';
-        if ($meta_key === '' || vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+        if ($meta_key === '' || bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
             continue;
         }
 
@@ -1193,7 +1193,7 @@ function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $
             continue;
         }
 
-        $current_hash = vms_event_plan_save_profiler_meta_values_hash(absint($post_id), $meta_key);
+        $current_hash = bvmgr_event_plan_save_profiler_meta_values_hash(absint($post_id), $meta_key);
         if ($current_hash !== (string) $meta_initial_hashes[$meta_key]) {
             $effective_meta_keys[$meta_key] = true;
         } else {
@@ -1203,17 +1203,17 @@ function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $
 	$forced_effective_meta_keys = is_array($state['forced_effective_meta_keys'] ?? null) ? $state['forced_effective_meta_keys'] : array();
 	foreach (array_keys($forced_effective_meta_keys) as $meta_key) {
 		$meta_key = sanitize_key((string) $meta_key);
-		if ($meta_key === '' || vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+		if ($meta_key === '' || bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
 			continue;
 		}
 		$effective_meta_keys[$meta_key] = true;
 	}
-	$scope_effective_meta_keys = vms_event_plan_save_profiler_scope_effective_meta_keys(array_keys($effective_meta_keys));
+	$scope_effective_meta_keys = bvmgr_event_plan_save_profiler_scope_effective_meta_keys(array_keys($effective_meta_keys));
 
-	$dirty_map = is_array($state['dirty_map'] ?? null) ? $state['dirty_map'] : vms_event_plan_save_profiler_empty_dirty_map();
-	$dirty_map = array_merge(vms_event_plan_save_profiler_empty_dirty_map(), array_intersect_key($dirty_map, vms_event_plan_save_profiler_empty_dirty_map()));
+	$dirty_map = is_array($state['dirty_map'] ?? null) ? $state['dirty_map'] : bvmgr_event_plan_save_profiler_empty_dirty_map();
+	$dirty_map = array_merge(bvmgr_event_plan_save_profiler_empty_dirty_map(), array_intersect_key($dirty_map, bvmgr_event_plan_save_profiler_empty_dirty_map()));
 	$dirty_reasons = is_array($state['dirty_reasons'] ?? null) ? $state['dirty_reasons'] : array();
-	$save_scope = vms_event_plan_save_profiler_current_save_scope((int) $post_id);
+	$save_scope = bvmgr_event_plan_save_profiler_current_save_scope((int) $post_id);
 	if ($save_scope === '') {
 		$save_scope = 'mixed';
 	}
@@ -1224,7 +1224,7 @@ function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $
     // start of this save, or the module was marked dirty by an explicit non-meta
     // reason/action. This keeps "content-only" and "title-only" saves from being
     // polluted by vendor/finance/marketing/ops no-op churn.
-    foreach (array_keys(vms_event_plan_save_profiler_modules()) as $module) {
+    foreach (array_keys(bvmgr_event_plan_save_profiler_modules()) as $module) {
         if ($module === 'core') {
             continue;
         }
@@ -1266,7 +1266,7 @@ function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $
         'recorded_at_gmt' => gmdate('Y-m-d H:i:s'),
         'post_id' => absint($post_id),
         'title' => sanitize_text_field((string) get_the_title($post_id)),
-        'save_type' => vms_event_plan_save_profiler_infer_save_type($state, $post),
+        'save_type' => bvmgr_event_plan_save_profiler_infer_save_type($state, $post),
         'elapsed_ms' => (int) round($elapsed * 1000),
         'threshold_ms' => (int) round($threshold * 1000),
         'status_at_start' => sanitize_key((string) ($state['status_at_start'] ?? '')),
@@ -1282,8 +1282,8 @@ function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $
         'no_effect_meta_write_keys' => array_slice($no_effect_meta_write_keys, 0, 40, true),
 		'heavy_actions' => is_array($state['heavy_actions'] ?? null) ? $state['heavy_actions'] : array(),
 		'meta_writes' => absint($state['meta_writes'] ?? 0),
-		'internal_wp_update_post_count' => function_exists('vms_event_plan_perf_get_plan_counter')
-			? absint(vms_event_plan_perf_get_plan_counter('internal_wp_update_post_count', (int) $post_id))
+		'internal_wp_update_post_count' => function_exists('bvmgr_event_plan_perf_get_plan_counter')
+			? absint(bvmgr_event_plan_perf_get_plan_counter('internal_wp_update_post_count', (int) $post_id))
 			: 0,
 		'ticket_config_writes' => absint($state['ticket_config_writes'] ?? 0),
 		'ticket_sync_writes' => absint($state['ticket_sync_writes'] ?? 0),
@@ -1315,19 +1315,19 @@ function vms_event_plan_save_profiler_finish(int $post_id, WP_Post $post, bool $
         return;
     }
 
-    vms_event_plan_save_profiler_store_profile($post_id, $profile);
+    bvmgr_event_plan_save_profiler_store_profile($post_id, $profile);
 }
-add_action('save_post_vms_event_plan', 'vms_event_plan_save_profiler_finish', PHP_INT_MAX, 3);
+add_action('save_post_vms_event_plan', 'bvmgr_event_plan_save_profiler_finish', PHP_INT_MAX, 3);
 
-function vms_event_plan_save_profiler_record_module_meta_profile($meta_id, int $object_id, string $meta_key, $meta_value): void
+function bvmgr_event_plan_save_profiler_record_module_meta_profile($meta_id, int $object_id, string $meta_key, $meta_value): void
 {
     unset($meta_id, $meta_value);
 
-    if (!vms_event_plan_save_profiler_recording_enabled() || vms_event_plan_save_profiler_ignored_meta_key($meta_key)) {
+    if (!bvmgr_event_plan_save_profiler_recording_enabled() || bvmgr_event_plan_save_profiler_ignored_meta_key($meta_key)) {
         return;
     }
 
-    $state = vms_event_plan_save_profiler_state();
+    $state = bvmgr_event_plan_save_profiler_state();
     if (!empty($state['active'])) {
         return;
     }
@@ -1337,7 +1337,7 @@ function vms_event_plan_save_profiler_record_module_meta_profile($meta_id, int $
         return;
     }
 
-    $module = vms_event_plan_save_profiler_classify_key($meta_key);
+    $module = bvmgr_event_plan_save_profiler_classify_key($meta_key);
     if ($module === 'core') {
         return;
     }
@@ -1346,7 +1346,7 @@ function vms_event_plan_save_profiler_record_module_meta_profile($meta_id, int $
     // save_post_vms_event_plan. Record a tiny profile when module-owned meta is
     // written outside a normal Event Plan save so the hub does not misleadingly
     // keep showing a prior "Core only" save.
-    $dirty_map = vms_event_plan_save_profiler_empty_dirty_map();
+    $dirty_map = bvmgr_event_plan_save_profiler_empty_dirty_map();
     $dirty_map[$module] = true;
 
     $profile = array(
@@ -1359,12 +1359,12 @@ function vms_event_plan_save_profiler_record_module_meta_profile($meta_id, int $
         'threshold_ms' => 0,
         'status_at_start' => sanitize_key((string) get_post_status($object_id)),
         'status_at_end' => sanitize_key((string) get_post_status($object_id)),
-        'request_action' => isset(vms_event_plan_save_profiler_post_data()['action']) ? sanitize_key((string) vms_event_plan_save_profiler_post_data()['action']) : '',
-        'wp_action' => isset(vms_event_plan_save_profiler_post_data()['action']) ? sanitize_key((string) vms_event_plan_save_profiler_post_data()['action']) : '',
+        'request_action' => isset(bvmgr_event_plan_save_profiler_post_data()['action']) ? sanitize_key((string) bvmgr_event_plan_save_profiler_post_data()['action']) : '',
+        'wp_action' => isset(bvmgr_event_plan_save_profiler_post_data()['action']) ? sanitize_key((string) bvmgr_event_plan_save_profiler_post_data()['action']) : '',
         'changed_modules' => array($module),
         'module_dirty_map' => $dirty_map,
         'dirty_reasons' => array($module => array('meta_key:' . $meta_key)),
-        'module_meta_writes' => array_merge(array_fill_keys(array_keys(vms_event_plan_save_profiler_modules()), 0), array($module => 1)),
+        'module_meta_writes' => array_merge(array_fill_keys(array_keys(bvmgr_event_plan_save_profiler_modules()), 0), array($module => 1)),
         'heavy_actions' => array(),
         'meta_writes' => 1,
         'ticket_config_writes' => $module === 'tickets' && strpos($meta_key, 'config') !== false ? 1 : 0,
@@ -1379,19 +1379,19 @@ function vms_event_plan_save_profiler_record_module_meta_profile($meta_id, int $
         'notes' => array('module_meta_update' => array('recorded_outside_save_post')),
     );
 
-    vms_event_plan_save_profiler_store_profile($object_id, $profile);
+    bvmgr_event_plan_save_profiler_store_profile($object_id, $profile);
 }
-add_action('added_post_meta', 'vms_event_plan_save_profiler_record_module_meta_profile', 100, 4);
-add_action('updated_post_meta', 'vms_event_plan_save_profiler_record_module_meta_profile', 100, 4);
+add_action('added_post_meta', 'bvmgr_event_plan_save_profiler_record_module_meta_profile', 100, 4);
+add_action('updated_post_meta', 'bvmgr_event_plan_save_profiler_record_module_meta_profile', 100, 4);
 
-function vms_event_plan_save_profiler_changed_modules_label(array $profile): string
+function bvmgr_event_plan_save_profiler_changed_modules_label(array $profile): string
 {
-    $modules = vms_event_plan_save_profiler_modules();
+    $modules = bvmgr_event_plan_save_profiler_modules();
     $changed = is_array($profile['changed_modules'] ?? null) ? $profile['changed_modules'] : array();
     $labels = array();
 
     foreach ($changed as $module) {
-        $module = vms_event_plan_save_profiler_normalize_module((string) $module);
+        $module = bvmgr_event_plan_save_profiler_normalize_module((string) $module);
         $labels[] = $modules[$module] ?? ucwords(str_replace('_', ' ', $module));
     }
 
@@ -1406,7 +1406,7 @@ function vms_event_plan_save_profiler_changed_modules_label(array $profile): str
     return implode(', ', $labels);
 }
 
-function vms_event_plan_save_profiler_heavy_action_summary(array $profile): array
+function bvmgr_event_plan_save_profiler_heavy_action_summary(array $profile): array
 {
     $heavy = is_array($profile['heavy_actions'] ?? null) ? $profile['heavy_actions'] : array();
     $summary = array(
@@ -1440,7 +1440,7 @@ function vms_event_plan_save_profiler_heavy_action_summary(array $profile): arra
  * Surface the latest profiler record in wp-admin so staging testers do not need
  * database access to confirm what happened during Event Plan saves.
  */
-function vms_event_plan_save_profiler_add_meta_box(): void
+function bvmgr_event_plan_save_profiler_add_meta_box(): void
 {
     if (!current_user_can('edit_posts')) {
         return;
@@ -1449,15 +1449,15 @@ function vms_event_plan_save_profiler_add_meta_box(): void
     add_meta_box(
         'vms_event_plan_save_profile',
         __('Backstage Venue Manager Save Profile', 'backstage-venue-manager'),
-        'vms_event_plan_save_profiler_render_meta_box',
+        'bvmgr_event_plan_save_profiler_render_meta_box',
         'vms_event_plan',
         'side',
         'low'
     );
 }
-add_action('add_meta_boxes_vms_event_plan', 'vms_event_plan_save_profiler_add_meta_box');
+add_action('add_meta_boxes_vms_event_plan', 'bvmgr_event_plan_save_profiler_add_meta_box');
 
-function vms_event_plan_save_profiler_render_meta_box(WP_Post $post): void
+function bvmgr_event_plan_save_profiler_render_meta_box(WP_Post $post): void
 {
     $profile = get_post_meta((int) $post->ID, '_vms_last_save_profile', true);
     if (!is_array($profile) || empty($profile)) {
@@ -1473,14 +1473,14 @@ function vms_event_plan_save_profiler_render_meta_box(WP_Post $post): void
     $request_action = sanitize_key((string) ($profile['request_action'] ?? ''));
     $wp_action = sanitize_key((string) ($profile['wp_action'] ?? ''));
     $save_type = sanitize_key((string) ($profile['save_type'] ?? ''));
-    $heavy_summary = vms_event_plan_save_profiler_heavy_action_summary($profile);
+    $heavy_summary = bvmgr_event_plan_save_profiler_heavy_action_summary($profile);
 
     echo '<p><strong>' . esc_html__('Last Event Plan save', 'backstage-venue-manager') . '</strong></p>';
     echo '<ul style="margin-left:1em;list-style:disc;">';
     /* translators: %s: type. */
     echo '<li>' . esc_html(sprintf(__('Type: %s', 'backstage-venue-manager'), $save_type ?: '-')) . '</li>';
     /* translators: %s: changed. */
-    echo '<li>' . esc_html(sprintf(__('Changed: %s', 'backstage-venue-manager'), vms_event_plan_save_profiler_changed_modules_label($profile))) . '</li>';
+    echo '<li>' . esc_html(sprintf(__('Changed: %s', 'backstage-venue-manager'), bvmgr_event_plan_save_profiler_changed_modules_label($profile))) . '</li>';
     /* translators: %d: elapsed. */
     echo '<li>' . esc_html(sprintf(__('Elapsed: %d ms', 'backstage-venue-manager'), $elapsed)) . '</li>';
     if ($recorded !== '') {
@@ -1545,7 +1545,7 @@ function vms_event_plan_save_profiler_render_meta_box(WP_Post $post): void
     }
 }
 
-function vms_event_plan_save_profiler_render_hub_summary(int $post_id): void
+function bvmgr_event_plan_save_profiler_render_hub_summary(int $post_id): void
 {
     $profile = get_post_meta(absint($post_id), '_vms_last_save_profile', true);
     if (!is_array($profile) || empty($profile)) {
@@ -1559,8 +1559,8 @@ function vms_event_plan_save_profiler_render_hub_summary(int $post_id): void
     $save_type = sanitize_key((string) ($profile['save_type'] ?? 'event_plan_save'));
     $elapsed = absint($profile['elapsed_ms'] ?? 0);
     $recorded = sanitize_text_field((string) ($profile['recorded_at_gmt'] ?? ''));
-    $changed = vms_event_plan_save_profiler_changed_modules_label($profile);
-    $heavy_summary = vms_event_plan_save_profiler_heavy_action_summary($profile);
+    $changed = bvmgr_event_plan_save_profiler_changed_modules_label($profile);
+    $heavy_summary = bvmgr_event_plan_save_profiler_heavy_action_summary($profile);
 
     echo '<div class="vms-ep-save-profile">';
     echo '<div class="vms-ep-save-profile__header">';

@@ -35,7 +35,7 @@ try {
 	$assert(strpos($eventPlansSource, "check_ajax_referer('vms_event_plan_secondary_vendors_save', 'nonce');") !== false, 'Secondary Vendors save handler should keep the exact nonce action and request field.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);") !== false, 'Secondary Vendors save handler should retain the exact invalid-plan response.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Not allowed'), 403);") !== false, 'Secondary Vendors save handler should retain the exact capability error response.');
-	$assert(strpos($eventPlansSource, '? vms_event_plan_save_secondary_vendors_module($post_id, (array) $_POST)') !== false, 'Secondary Vendors save handler should continue to route mutation through the existing module save helper.');
+	$assert(strpos($eventPlansSource, '? bvmgr_event_plan_save_secondary_vendors_module($post_id, (array) $_POST)') !== false, 'Secondary Vendors save handler should continue to route mutation through the existing module save helper.');
 	$assert(strpos($eventPlansSource, 'build_event_plan_secondary_vendors_save_response_payload') !== false, 'Secondary Vendors save response should route through the save-specific payload builder.');
 	$assert(strpos($eventPlansSource, 'render_event_plan_secondary_vendors_save_response_html') !== false, 'Secondary Vendors save response should route through the save-specific renderer.');
 	$assert(strpos($eventPlansSource, "capture_event_plan_partial('secondary-vendors'") !== false, 'Legacy Secondary Vendors partial capture sink should remain source-visible for the old helper / initial render paths.');
@@ -95,7 +95,7 @@ try {
 	$assert(substr_count($saveBuilderSource, 'get_event_plan_meta_bundle(') === 1, 'Secondary Vendors save response builder should resolve the Event Plan bundle exactly once.');
 	$assert(substr_count($saveBuilderSource, 'get_posts(') === 1, 'Secondary Vendors save response builder should resolve the vendor list exactly once.');
 	$assert(substr_count($saveBuilderSource, 'get_event_plan_secondary_vendor_boot_summary(') === 1, 'Secondary Vendors save response builder should resolve the secondary-vendor boot summary exactly once.');
-	$assert(substr_count($saveBuilderSource, 'vms_event_plan_collect_vendor_category_snapshot(') === 1, 'Secondary Vendors save response builder should resolve the vendor-category snapshot exactly once.');
+	$assert(substr_count($saveBuilderSource, 'bvmgr_event_plan_collect_vendor_category_snapshot(') === 1, 'Secondary Vendors save response builder should resolve the vendor-category snapshot exactly once.');
 	$assert(substr_count($saveBuilderSource, 'build_event_plan_secondary_vendors_save_response_context(') === 1, 'Secondary Vendors save response builder should normalize the save-specific context exactly once.');
 	$assert(substr_count($saveBuilderSource, 'render_event_plan_secondary_vendors_save_response_html(') === 1, 'Secondary Vendors save response builder should render the save-specific HTML exactly once.');
 	$assert(strpos($saveBuilderSource, 'capture_event_plan_partial(') === false, 'Secondary Vendors save response builder should not route through a captured partial.');
@@ -125,7 +125,7 @@ try {
 		'get_posts(',
 		'update_post_meta(',
 		'delete_post_meta(',
-		'vms_event_plan_collect_vendor_category_snapshot(',
+		'bvmgr_event_plan_collect_vendor_category_snapshot(',
 		'render_event_plan_secondary_vendors_lazy_load_html(',
 		'wp_kses_post(',
 		'wp_kses(',
@@ -146,11 +146,11 @@ try {
 	$assert(strpos($secondaryBranchSource, 'build_event_plan_secondary_vendors_save_response_payload(') === false, 'Accepted Secondary Vendors lazy-load branch should not reuse the save response builder.');
 
 	$resolverMatched = preg_match(
-		'~function vms_event_plan_resolve_secondary_vendor_submission\(int \$post_id, array \$request\): array\s*\{(?P<body>.*?)^\s*\}\s*\n\s*}\s*\n\s*if \(!function_exists\(\'vms_event_plan_get_secondary_vendor_state\'\)\)~sm',
+		'~function bvmgr_event_plan_resolve_secondary_vendor_submission\(int \$post_id, array \$request\): array\s*\{(?P<body>.*?)^\s*\}\s*\n\s*}\s*\n\s*if \(!function_exists\(\'bvmgr_event_plan_get_secondary_vendor_state\'\)\)~sm',
 		$coreSource,
 		$resolverMatch
 	);
-	$assert($resolverMatched === 1, 'Failed to isolate vms_event_plan_resolve_secondary_vendor_submission() source.');
+	$assert($resolverMatched === 1, 'Failed to isolate bvmgr_event_plan_resolve_secondary_vendor_submission() source.');
 	$resolverSource = (string) $resolverMatch['body'];
 	foreach (array(
 		'vms_secondary_vendor_assignments',
@@ -163,16 +163,16 @@ try {
 	$assert(strpos($resolverSource, 'wp_unslash($raw_assignments)') !== false, 'Secondary Vendors submission resolver should continue to unslash posted assignment arrays.');
 	$assert(strpos($resolverSource, "wp_unslash((string) \$request['vms_secondary_vendor_type'])") !== false, 'Secondary Vendors submission resolver should continue to unslash and normalize the posted type field.');
 	$assert(strpos($resolverSource, 'wp_unslash($raw_secondary)') !== false, 'Secondary Vendors submission resolver should continue to unslash posted secondary IDs.');
-	$assert(strpos($resolverSource, 'vms_event_plan_normalize_secondary_vendor_assignment_map(') !== false, 'Secondary Vendors submission resolver should continue to normalize assignment arrays through the shared canonical normalizer.');
-	$assert(strpos($resolverSource, 'vms_event_plan_normalize_secondary_vendor_type_slug(') !== false, 'Secondary Vendors submission resolver should continue to normalize posted type slugs.');
+	$assert(strpos($resolverSource, 'bvmgr_event_plan_normalize_secondary_vendor_assignment_map(') !== false, 'Secondary Vendors submission resolver should continue to normalize assignment arrays through the shared canonical normalizer.');
+	$assert(strpos($resolverSource, 'bvmgr_event_plan_normalize_secondary_vendor_type_slug(') !== false, 'Secondary Vendors submission resolver should continue to normalize posted type slugs.');
 	$assert(strpos($resolverSource, "array_map('absint', (array) \$raw_secondary)") !== false, 'Secondary Vendors submission resolver should continue to normalize posted secondary IDs with absint().');
 
 	$normalizeMapMatched = preg_match(
-		'~function vms_event_plan_normalize_secondary_vendor_assignment_map\(int \$post_id, array \$assignments, int \$primary_vendor_id = 0, array \$args = array\(\)\): array\s*\{(?P<body>.*?)^\s*\}\s*\n\s*}\s*\n\s*if \(!function_exists\(\'vms_event_plan_secondary_vendor_over_capacity_rows\'\)\)~sm',
+		'~function bvmgr_event_plan_normalize_secondary_vendor_assignment_map\(int \$post_id, array \$assignments, int \$primary_vendor_id = 0, array \$args = array\(\)\): array\s*\{(?P<body>.*?)^\s*\}\s*\n\s*}\s*\n\s*if \(!function_exists\(\'bvmgr_event_plan_secondary_vendor_over_capacity_rows\'\)\)~sm',
 		$coreSource,
 		$normalizeMapMatch
 	);
-	$assert($normalizeMapMatched === 1, 'Failed to isolate vms_event_plan_normalize_secondary_vendor_assignment_map() source.');
+	$assert($normalizeMapMatched === 1, 'Failed to isolate bvmgr_event_plan_normalize_secondary_vendor_assignment_map() source.');
 	$normalizeMapSource = (string) $normalizeMapMatch['body'];
 	foreach (array(
 		"array('type_slug', 'vendor_type', 'type', 'slug')",
@@ -180,8 +180,8 @@ try {
 		"array('needed_slots', 'target_slots', 'needed', 'target')",
 		"row['vendor_ids'] ?? (\$row['secondary_ids'] ?? array())",
 		"array_key_exists('open_for_dispatch', \$row)",
-		'vms_event_plan_parse_secondary_vendor_over_capacity_override($row[\'open_for_dispatch\'])',
-		'vms_event_plan_parse_secondary_vendor_over_capacity_override($row[$override_key])',
+		'bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($row[\'open_for_dispatch\'])',
+		'bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($row[$override_key])',
 		"array_key_exists('slot_limit', \$row)",
 		"array_key_exists('capacity', \$row)",
 		"sanitize_key((string) (\$row['mode'] ?? ''))",
@@ -190,21 +190,21 @@ try {
 	}
 
 	$saveMutationMatched = preg_match(
-		'~function vms_event_plan_save_secondary_vendors_module\(int \$post_id, array \$request\)\s*\{(?P<body>.*?)^\s*\}\s*\n\s*}\s*\n\s*if \(!function_exists\(\'vms_event_plan_secondary_vendor_group_available_slots\'\)\)~sm',
+		'~function bvmgr_event_plan_save_secondary_vendors_module\(int \$post_id, array \$request\)\s*\{(?P<body>.*?)^\s*\}\s*\n\s*}\s*\n\s*if \(!function_exists\(\'bvmgr_event_plan_secondary_vendor_group_available_slots\'\)\)~sm',
 		$coreSource,
 		$saveMutationMatch
 	);
-	$assert($saveMutationMatched === 1, 'Failed to isolate vms_event_plan_save_secondary_vendors_module() source.');
+	$assert($saveMutationMatched === 1, 'Failed to isolate bvmgr_event_plan_save_secondary_vendors_module() source.');
 	$saveMutationSource = (string) $saveMutationMatch['body'];
 	foreach (array(
-		'vms_event_plan_get_secondary_vendor_state($post_id)',
-		'vms_event_plan_resolve_secondary_vendor_submission($post_id, $request)',
-		'vms_event_plan_validate_secondary_vendor_assignment_capacity($proposed_assignments)',
-		'vms_event_plan_secondary_vendor_state_diff_fields(',
-		'vms_event_plan_secondary_vendor_rebuild_repair_reasons($post_id, $current_vendor_state)',
-		'vms_event_plan_write_secondary_vendor_assignments($post_id, $proposed_assignments)',
-		'vms_event_plan_update_vendor_category_snapshot($post_id)',
-		"vms_event_plan_schedule_calendar_maintenance(\$post_id, \$linked_tec_event_id, 'vendor_category_sync')",
+		'bvmgr_event_plan_get_secondary_vendor_state($post_id)',
+		'bvmgr_event_plan_resolve_secondary_vendor_submission($post_id, $request)',
+		'bvmgr_event_plan_validate_secondary_vendor_assignment_capacity($proposed_assignments)',
+		'bvmgr_event_plan_secondary_vendor_state_diff_fields(',
+		'bvmgr_event_plan_secondary_vendor_rebuild_repair_reasons($post_id, $current_vendor_state)',
+		'bvmgr_event_plan_write_secondary_vendor_assignments($post_id, $proposed_assignments)',
+		'bvmgr_event_plan_update_vendor_category_snapshot($post_id)',
+		"bvmgr_event_plan_schedule_calendar_maintenance(\$post_id, \$linked_tec_event_id, 'vendor_category_sync')",
 		'clean_post_cache($post_id)',
 		"'changed' => \$changed",
 		"'dirty_fields' => array_values(array_unique(array_map('sanitize_key', (array) \$vendor_dirty_fields)))",
@@ -215,11 +215,11 @@ try {
 	}
 
 	$capacityValidationMatched = preg_match(
-		'~function vms_event_plan_validate_secondary_vendor_assignment_capacity\(array \$assignments\)\s*\{(?P<body>.*?)^\s*\}\s*\n\s*}\s*\n\s*if \(!function_exists\(\'vms_event_plan_get_secondary_vendor_flat_ids_from_assignments\'\)\)~sm',
+		'~function bvmgr_event_plan_validate_secondary_vendor_assignment_capacity\(array \$assignments\)\s*\{(?P<body>.*?)^\s*\}\s*\n\s*}\s*\n\s*if \(!function_exists\(\'bvmgr_event_plan_get_secondary_vendor_flat_ids_from_assignments\'\)\)~sm',
 		$coreSource,
 		$capacityValidationMatch
 	);
-	$assert($capacityValidationMatched === 1, 'Failed to isolate vms_event_plan_validate_secondary_vendor_assignment_capacity() source.');
+	$assert($capacityValidationMatched === 1, 'Failed to isolate bvmgr_event_plan_validate_secondary_vendor_assignment_capacity() source.');
 	$capacityValidationSource = (string) $capacityValidationMatch['body'];
 	$assert(strpos($capacityValidationSource, "'vms_secondary_vendor_over_capacity'") !== false, 'Secondary Vendors capacity validator should retain the over-capacity error code.');
 	$assert(strpos($capacityValidationSource, 'Additional Vendors cannot be saved over capacity unless you check the over-capacity override for each affected group: %s.') !== false, 'Secondary Vendors capacity validator should retain the over-capacity error message.');
@@ -419,8 +419,8 @@ try {
 			return (string) json_encode($value, $flags, $depth);
 		}
 	}
-	if (!function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')) {
-		function vms_event_plan_parse_secondary_vendor_over_capacity_override($value): bool
+	if (!function_exists('bvmgr_event_plan_parse_secondary_vendor_over_capacity_override')) {
+		function bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($value): bool
 		{
 			if (is_bool($value)) {
 				return $value;
@@ -433,8 +433,8 @@ try {
 			return in_array($value, array('1', 'true', 'yes', 'on'), true);
 		}
 	}
-	if (!function_exists('vms_event_plan_additional_vendor_type_options')) {
-		function vms_event_plan_additional_vendor_type_options(): array
+	if (!function_exists('bvmgr_event_plan_additional_vendor_type_options')) {
+		function bvmgr_event_plan_additional_vendor_type_options(): array
 		{
 			return array(
 				'food_vendor' => 'Food Vendor',
@@ -442,14 +442,14 @@ try {
 			);
 		}
 	}
-	if (!function_exists('vms_event_plan_secondary_vendor_default_mode')) {
-		function vms_event_plan_secondary_vendor_default_mode(string $type_slug): string
+	if (!function_exists('bvmgr_event_plan_secondary_vendor_default_mode')) {
+		function bvmgr_event_plan_secondary_vendor_default_mode(string $type_slug): string
 		{
 			return $type_slug === 'market_vendor' ? 'market' : 'standard';
 		}
 	}
-	if (!function_exists('vms_event_plan_secondary_vendor_default_slot_limit')) {
-		function vms_event_plan_secondary_vendor_default_slot_limit(string $type_slug, string $mode): int
+	if (!function_exists('bvmgr_event_plan_secondary_vendor_default_slot_limit')) {
+		function bvmgr_event_plan_secondary_vendor_default_slot_limit(string $type_slug, string $mode): int
 		{
 			unset($mode);
 			return $type_slug === 'market_vendor' ? 4 : 1;
@@ -496,8 +496,8 @@ try {
 			return '';
 		}
 	}
-	if (!function_exists('vms_event_plan_get_secondary_vendor_assignments')) {
-		function vms_event_plan_get_secondary_vendor_assignments(int $post_id, array $args = array()): array
+	if (!function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')) {
+		function bvmgr_event_plan_get_secondary_vendor_assignments(int $post_id, array $args = array()): array
 		{
 			unset($args);
 			$assignments = isset($GLOBALS['vms_secondary_vendor_test_secondary_assignments']) && is_array($GLOBALS['vms_secondary_vendor_test_secondary_assignments'])
@@ -986,10 +986,10 @@ try {
 	$assert($hostilePoolLabel === 'Alpha </script><script>alert(1)</script> [Q⚠]', 'Secondary Vendors save renderer should preserve hostile pool labels as inert decoded JSON text.');
 	$assert($richScriptXpath->query('//*[@id="root"]//script[not(@type="application/json")]')->length === 0, 'Secondary Vendors save renderer should not create an executable script element from hostile config text.');
 
-	$assert(strpos($secondaryVendorsPartialSource, "vms_event_plan_parse_secondary_vendor_over_capacity_override(\$group['open_for_dispatch'] ?? true)") !== false, 'Legacy Secondary Vendors partial should interpret open_for_dispatch through the shared parser.');
-	$assert(strpos($secondaryVendorsPartialSource, "vms_event_plan_parse_secondary_vendor_over_capacity_override(\$group['allow_over_capacity'] ?? false)") !== false, 'Legacy Secondary Vendors partial should interpret allow_over_capacity through the shared parser.');
-	$assert(strpos($saveRendererGroupSource, "vms_event_plan_parse_secondary_vendor_over_capacity_override(\$group['open_for_dispatch'] ?? true)") !== false, 'Secondary Vendors save renderer should interpret open_for_dispatch through the shared parser.');
-	$assert(strpos($saveRendererGroupSource, "vms_event_plan_parse_secondary_vendor_over_capacity_override(\$group['allow_over_capacity'] ?? false)") !== false, 'Secondary Vendors save renderer should interpret allow_over_capacity through the shared parser.');
+	$assert(strpos($secondaryVendorsPartialSource, "bvmgr_event_plan_parse_secondary_vendor_over_capacity_override(\$group['open_for_dispatch'] ?? true)") !== false, 'Legacy Secondary Vendors partial should interpret open_for_dispatch through the shared parser.');
+	$assert(strpos($secondaryVendorsPartialSource, "bvmgr_event_plan_parse_secondary_vendor_over_capacity_override(\$group['allow_over_capacity'] ?? false)") !== false, 'Legacy Secondary Vendors partial should interpret allow_over_capacity through the shared parser.');
+	$assert(strpos($saveRendererGroupSource, "bvmgr_event_plan_parse_secondary_vendor_over_capacity_override(\$group['open_for_dispatch'] ?? true)") !== false, 'Secondary Vendors save renderer should interpret open_for_dispatch through the shared parser.');
+	$assert(strpos($saveRendererGroupSource, "bvmgr_event_plan_parse_secondary_vendor_over_capacity_override(\$group['allow_over_capacity'] ?? false)") !== false, 'Secondary Vendors save renderer should interpret allow_over_capacity through the shared parser.');
 
 	$booleanCases = array(
 		'bool_true' => array('value' => true, 'expected' => true),

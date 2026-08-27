@@ -105,8 +105,8 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
         }
 
         // Canonical inclusion (status meta, context-aware).
-        if (function_exists('vms_event_plan_should_include')) {
-            if (!vms_event_plan_should_include($pid, $context, $flags)) {
+        if (function_exists('bvmgr_event_plan_should_include')) {
+            if (!bvmgr_event_plan_should_include($pid, $context, $flags)) {
                 continue;
             }
         }
@@ -195,8 +195,8 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
         $pid = (int) $pid;
         if ($pid <= 0) continue;
 
-        if (function_exists('vms_event_plan_should_include')) {
-            if (!vms_event_plan_should_include($pid, $context, $flags)) {
+        if (function_exists('bvmgr_event_plan_should_include')) {
+            if (!bvmgr_event_plan_should_include($pid, $context, $flags)) {
                 continue;
             }
         }

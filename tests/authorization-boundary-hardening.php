@@ -478,18 +478,18 @@ function bvmgr_meta_key(string $object, string $field): string
 	return $map[$object][$field] ?? '';
 }
 
-function vms_event_plan_vendor_exists(int $vendor_id): bool
+function bvmgr_event_plan_vendor_exists(int $vendor_id): bool
 {
 	$post = get_post($vendor_id);
 	return $post instanceof WP_Post && $post->post_type === BVMGR_VENDOR_CPT && $post->post_status !== 'trash';
 }
 
-function vms_event_plan_flag_missing_vendor(int $post_id, int $vendor_id, string $title): void
+function bvmgr_event_plan_flag_missing_vendor(int $post_id, int $vendor_id, string $title): void
 {
 	update_post_meta($post_id, '_vms_integrity_issue', 'missing_vendor');
 }
 
-function vms_event_plan_perf_wp_update_post(array $data, string $context, int $post_id): void
+function bvmgr_event_plan_perf_wp_update_post(array $data, string $context, int $post_id): void
 {
 	wp_update_post(array(
 		'ID' => $post_id,
@@ -497,7 +497,7 @@ function vms_event_plan_perf_wp_update_post(array $data, string $context, int $p
 	));
 }
 
-function vms_add_admin_notice(string $message, string $type = 'success'): void
+function bvmgr_add_admin_notice(string $message, string $type = 'success'): void
 {
 	$GLOBALS['vms_test_notices'][] = array('message' => $message, 'type' => $type);
 }
@@ -699,7 +699,7 @@ eval(vms_test_extract_named_function($helpersPath, 'bvmgr_vendor_handle_mark_rev
 eval(vms_test_extract_named_function($venueTemplatesPath, 'vms_handle_create_venue_from_template'));
 eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_query_arg'));
 eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_maybe_handle_post'));
-eval(vms_test_extract_named_function($eventPlansPath, 'vms_event_plan_current_get_request'));
+eval(vms_test_extract_named_function($eventPlansPath, 'bvmgr_event_plan_current_get_request'));
 $GLOBALS['vms_test_event_plan_admin_guard'] = eval(
 	'return ' . vms_test_extract_inline_closure($eventPlansPath, "add_action('admin_init', function () {") . ';'
 );

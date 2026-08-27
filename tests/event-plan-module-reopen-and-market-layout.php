@@ -154,12 +154,12 @@ try {
 	update_post_meta($planId, '_vms_venue_id', 0);
 	update_post_meta($planId, '_vms_band_vendor_id', $primaryVendorId);
 
-	$assignmentMetaKey = function_exists('vms_event_plan_secondary_vendor_assignment_meta_key')
-		? (string) vms_event_plan_secondary_vendor_assignment_meta_key()
+	$assignmentMetaKey = function_exists('bvmgr_event_plan_secondary_vendor_assignment_meta_key')
+		? (string) bvmgr_event_plan_secondary_vendor_assignment_meta_key()
 		: '_vms_secondary_vendor_assignments_v1';
 
-	$saveResult = function_exists('vms_event_plan_save_secondary_vendors_module')
-		? vms_event_plan_save_secondary_vendors_module($planId, array(
+	$saveResult = function_exists('bvmgr_event_plan_save_secondary_vendors_module')
+		? bvmgr_event_plan_save_secondary_vendors_module($planId, array(
 			'vms_secondary_vendor_assignments' => array(
 				array(
 					'type_slug' => 'food_truck',
@@ -225,8 +225,8 @@ try {
 	$runSave($planId, array(
 		'vms_reopen_section_after_save' => 'staff',
 	));
-	$staffRedirect = function_exists('vms_event_plan_pull_runtime_redirect_target')
-		? (array) vms_event_plan_pull_runtime_redirect_target($planId)
+	$staffRedirect = function_exists('bvmgr_event_plan_pull_runtime_redirect_target')
+		? (array) bvmgr_event_plan_pull_runtime_redirect_target($planId)
 		: array();
 	$assert((string) ($staffRedirect['query_args']['vms_ep_load_section'] ?? '') === 'staff', 'Staff save should preserve the staff section reopen target.');
 	$assert((string) ($staffRedirect['fragment'] ?? '') === 'vms-staffing', 'Staff save should redirect back to the Staff anchor.');
@@ -244,8 +244,8 @@ try {
 		'vms_ticket_ui_overrides_save_intent' => '1',
 		'vms_ticket_ui_layout_override' => 'progressive',
 	));
-	$ticketRedirect = function_exists('vms_event_plan_pull_runtime_redirect_target')
-		? (array) vms_event_plan_pull_runtime_redirect_target($planId)
+	$ticketRedirect = function_exists('bvmgr_event_plan_pull_runtime_redirect_target')
+		? (array) bvmgr_event_plan_pull_runtime_redirect_target($planId)
 		: array();
 	$secondaryAfter = get_post_meta($planId, $assignmentMetaKey, true);
 	$assert((string) ($ticketRedirect['query_args']['vms_ep_load_section'] ?? '') === 'ticketing_v2', 'Ticket save should preserve the ticketing section reopen target.');

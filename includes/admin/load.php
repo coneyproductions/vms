@@ -83,4 +83,4 @@ if (file_exists($bvmgr_ref_keys_map)) {
     require_once $bvmgr_ref_keys_map;
 }
  
-add_action('admin_post_vms_save_continuity_binder', 'vms_admin_post_save_continuity_binder');
+add_action('admin_post_vms_save_continuity_binder', 'bvmgr_admin_post_save_continuity_binder');

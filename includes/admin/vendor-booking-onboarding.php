@@ -117,8 +117,8 @@ if (!function_exists('vms_vendor_booking_onboarding_handle_save_settings')) {
 	            : array();
 
         update_option(vms_vendor_booking_onboarding_settings_option_key(), $settings, false);
-        if (function_exists('vms_add_admin_notice')) {
-            vms_add_admin_notice(__('Booked vendor automation settings saved.', 'backstage-venue-manager'), 'success');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice(__('Booked vendor automation settings saved.', 'backstage-venue-manager'), 'success');
         }
         vms_vendor_booking_onboarding_redirect_admin();
     }
@@ -141,12 +141,12 @@ if (!function_exists('vms_vendor_booking_onboarding_handle_resend')) {
             : array('success' => false, 'error_message' => __('Booked-vendor automation is unavailable.', 'backstage-venue-manager'));
 
         if (!empty($result['success'])) {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Booked vendor email resent.', 'backstage-venue-manager'), 'success');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Booked vendor email resent.', 'backstage-venue-manager'), 'success');
             }
         } else {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice((string) ($result['error_message'] ?? __('Booked vendor email could not be resent.', 'backstage-venue-manager')), 'error');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice((string) ($result['error_message'] ?? __('Booked vendor email could not be resent.', 'backstage-venue-manager')), 'error');
             }
         }
 
@@ -171,8 +171,8 @@ if (!function_exists('vms_vendor_booking_onboarding_handle_toggle_waiver')) {
             vms_vendor_booking_onboarding_set_video_waiver($plan_id, $vendor_id, $waive, (int) get_current_user_id());
         }
 
-        if (function_exists('vms_add_admin_notice')) {
-            vms_add_admin_notice($waive ? __('Promo video waived for this booking.', 'backstage-venue-manager') : __('Promo video waiver removed for this booking.', 'backstage-venue-manager'), 'success');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice($waive ? __('Promo video waived for this booking.', 'backstage-venue-manager') : __('Promo video waiver removed for this booking.', 'backstage-venue-manager'), 'success');
         }
 
         vms_vendor_booking_onboarding_redirect_admin(array('vendor_id' => $vendor_id));

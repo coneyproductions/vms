@@ -102,8 +102,8 @@ if (!function_exists('vms_lineup_schedule_vendor_exists')) {
             return false;
         }
 
-        if (function_exists('vms_event_plan_vendor_exists')) {
-            return (bool) vms_event_plan_vendor_exists($vendor_id);
+        if (function_exists('bvmgr_event_plan_vendor_exists')) {
+            return (bool) bvmgr_event_plan_vendor_exists($vendor_id);
         }
 
         $post = get_post($vendor_id);

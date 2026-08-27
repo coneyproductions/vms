@@ -176,16 +176,16 @@ if (!function_exists('vms_add_dispatch_type_label')) {
 	{
 		$slug = function_exists('vms_vendor_type_normalize_slug')
 			? (string) vms_vendor_type_normalize_slug($slug)
-			: (function_exists('vms_event_plan_normalize_secondary_vendor_type_slug')
-				? (string) vms_event_plan_normalize_secondary_vendor_type_slug($slug)
+			: (function_exists('bvmgr_event_plan_normalize_secondary_vendor_type_slug')
+				? (string) bvmgr_event_plan_normalize_secondary_vendor_type_slug($slug)
 				: sanitize_title($slug));
 		$options = vms_add_dispatch_type_options();
 		if (isset($options[$slug])) {
 			return (string) $options[$slug];
 		}
 
-		$fallbacks = function_exists('vms_event_plan_secondary_vendor_type_options')
-			? (array) vms_event_plan_secondary_vendor_type_options()
+		$fallbacks = function_exists('bvmgr_event_plan_secondary_vendor_type_options')
+			? (array) bvmgr_event_plan_secondary_vendor_type_options()
 			: array(
 				'band' => __('Music Vendor', 'backstage-venue-manager'),
 				'food_truck' => __('Food Vendor', 'backstage-venue-manager'),
@@ -227,8 +227,8 @@ if (!function_exists('vms_add_dispatch_assignment_bool_value')) {
 		if (!array_key_exists($key, $assignment)) {
 			return $default;
 		}
-		if (function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')) {
-			return vms_event_plan_parse_secondary_vendor_over_capacity_override($assignment[$key]);
+		if (function_exists('bvmgr_event_plan_parse_secondary_vendor_over_capacity_override')) {
+			return bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($assignment[$key]);
 		}
 
 		$value = $assignment[$key];
@@ -247,8 +247,8 @@ if (!function_exists('vms_add_dispatch_vendor_type_slugs')) {
 			return array();
 		}
 
-		if (function_exists('vms_event_plan_secondary_vendor_terms_for_vendor')) {
-			$slugs = array_values(array_unique(array_filter(array_map('sanitize_key', (array) vms_event_plan_secondary_vendor_terms_for_vendor($vendor_id)))));
+		if (function_exists('bvmgr_event_plan_secondary_vendor_terms_for_vendor')) {
+			$slugs = array_values(array_unique(array_filter(array_map('sanitize_key', (array) bvmgr_event_plan_secondary_vendor_terms_for_vendor($vendor_id)))));
 			if (!empty($slugs)) {
 				return $slugs;
 			}
@@ -277,16 +277,16 @@ if (!function_exists('vms_add_dispatch_secondary_group_rows')) {
 			$assignment = is_array($assignment) ? $assignment : array();
 			$mode = sanitize_key((string) ($assignment['mode'] ?? ''));
 			if (!in_array($mode, array('standard', 'market'), true)) {
-				$mode = function_exists('vms_event_plan_secondary_vendor_default_mode')
-					? vms_event_plan_secondary_vendor_default_mode($type_slug)
+				$mode = function_exists('bvmgr_event_plan_secondary_vendor_default_mode')
+					? bvmgr_event_plan_secondary_vendor_default_mode($type_slug)
 					: 'standard';
 			}
 
 			$vendor_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($assignment['vendor_ids'] ?? array())), static function (int $vendor_id): bool {
 				return $vendor_id > 0;
 			})));
-			$slot_limit = function_exists('vms_event_plan_secondary_vendor_effective_slot_limit')
-				? vms_event_plan_secondary_vendor_effective_slot_limit($type_slug, $mode, $assignment['slot_limit'] ?? null)
+			$slot_limit = function_exists('bvmgr_event_plan_secondary_vendor_effective_slot_limit')
+				? bvmgr_event_plan_secondary_vendor_effective_slot_limit($type_slug, $mode, $assignment['slot_limit'] ?? null)
 				: ($assignment['slot_limit'] ?? null);
 			if ($slot_limit !== null && $slot_limit !== '') {
 				$slot_limit = max(0, (int) $slot_limit);
@@ -352,8 +352,8 @@ if (!function_exists('vms_add_dispatch_secondary_group_rows')) {
 				'status' => $status,
 				'status_label' => $status_label,
 				'open_for_dispatch' => $open_for_dispatch,
-				'allow_over_capacity' => function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')
-					? vms_event_plan_parse_secondary_vendor_over_capacity_override($assignment['allow_over_capacity'] ?? false)
+				'allow_over_capacity' => function_exists('bvmgr_event_plan_parse_secondary_vendor_over_capacity_override')
+					? bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($assignment['allow_over_capacity'] ?? false)
 					: !empty($assignment['allow_over_capacity']),
 				'vendor_ids' => $vendor_ids,
 			);
@@ -645,14 +645,14 @@ if (!function_exists('vms_add_dispatch_get_event_plan_context')) {
 		$event_date = sanitize_text_field((string) get_post_meta($event_plan_id, $date_key, true));
 		$venue_id = absint(get_post_meta($event_plan_id, $venue_key, true));
 		$primary_vendor_id = (int) get_post_meta($event_plan_id, $primary_vendor_key, true);
-		$secondary_vendor_assignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-			? (array) vms_event_plan_get_secondary_vendor_assignments($event_plan_id, array(
+		$secondary_vendor_assignments = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+			? (array) bvmgr_event_plan_get_secondary_vendor_assignments($event_plan_id, array(
 				'primary_vendor_id' => $primary_vendor_id,
 			))
 			: array();
 
-		if (!empty($secondary_vendor_assignments) && function_exists('vms_event_plan_get_secondary_vendor_flat_ids_from_assignments')) {
-			$secondary_vendor_ids = vms_event_plan_get_secondary_vendor_flat_ids_from_assignments($secondary_vendor_assignments, $primary_vendor_id);
+		if (!empty($secondary_vendor_assignments) && function_exists('bvmgr_event_plan_get_secondary_vendor_flat_ids_from_assignments')) {
+			$secondary_vendor_ids = bvmgr_event_plan_get_secondary_vendor_flat_ids_from_assignments($secondary_vendor_assignments, $primary_vendor_id);
 		} else {
 			$secondary_vendor_ids = get_post_meta($event_plan_id, $secondary_ids_key, true);
 			if (!is_array($secondary_vendor_ids)) {
@@ -680,8 +680,8 @@ if (!function_exists('vms_add_dispatch_get_event_plan_context')) {
 
 		$secondary_vendor_type = !empty($missing_secondary_types)
 			? (string) $missing_secondary_types[0]
-			: (function_exists('vms_event_plan_legacy_secondary_vendor_type_from_assignments')
-				? (string) vms_event_plan_legacy_secondary_vendor_type_from_assignments($secondary_vendor_assignments)
+			: (function_exists('bvmgr_event_plan_legacy_secondary_vendor_type_from_assignments')
+				? (string) bvmgr_event_plan_legacy_secondary_vendor_type_from_assignments($secondary_vendor_assignments)
 				: '');
 		$secondary_vendor_type_label = $secondary_vendor_type !== ''
 			? (string) vms_add_dispatch_type_label($secondary_vendor_type)
@@ -2346,13 +2346,13 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 				? (string) vms_vendor_type_normalize_slug((string) $type_slug)
 				: sanitize_key((string) $type_slug);
 		}, $current_types))));
-		$additional_options = function_exists('vms_event_plan_additional_vendor_type_options')
-			? (array) vms_event_plan_additional_vendor_type_options()
+		$additional_options = function_exists('bvmgr_event_plan_additional_vendor_type_options')
+			? (array) bvmgr_event_plan_additional_vendor_type_options()
 			: (function_exists('vms_add_dispatch_type_options') ? (array) vms_add_dispatch_type_options() : array());
 
 		$primary_vendor_id = (int) get_post_meta($event_plan_id, vms_add_dispatch_primary_vendor_key(), true);
-		$assignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-			? (array) vms_event_plan_get_secondary_vendor_assignments($event_plan_id, array('primary_vendor_id' => $primary_vendor_id))
+		$assignments = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+			? (array) bvmgr_event_plan_get_secondary_vendor_assignments($event_plan_id, array('primary_vendor_id' => $primary_vendor_id))
 			: array();
 		$group_rows = function_exists('vms_add_dispatch_secondary_group_rows')
 			? vms_add_dispatch_secondary_group_rows($assignments)
@@ -2394,17 +2394,17 @@ if (!function_exists('vms_add_dispatch_assignment_review')) {
 			$exists = !empty($assignment);
 			$mode = sanitize_key((string) ($assignment['mode'] ?? ''));
 			if (!in_array($mode, array('standard', 'market'), true)) {
-				$mode = function_exists('vms_event_plan_secondary_vendor_default_mode')
-					? (string) vms_event_plan_secondary_vendor_default_mode($type_slug)
+				$mode = function_exists('bvmgr_event_plan_secondary_vendor_default_mode')
+					? (string) bvmgr_event_plan_secondary_vendor_default_mode($type_slug)
 					: 'standard';
 			}
-			$slot_limit = function_exists('vms_event_plan_secondary_vendor_effective_slot_limit')
-				? vms_event_plan_secondary_vendor_effective_slot_limit($type_slug, $mode, $assignment['slot_limit'] ?? null)
+			$slot_limit = function_exists('bvmgr_event_plan_secondary_vendor_effective_slot_limit')
+				? bvmgr_event_plan_secondary_vendor_effective_slot_limit($type_slug, $mode, $assignment['slot_limit'] ?? null)
 				: ($assignment['slot_limit'] ?? null);
 			$vendor_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($assignment['vendor_ids'] ?? array())))));
 			$filled = count($vendor_ids);
-			$allow_over_capacity = function_exists('vms_event_plan_parse_secondary_vendor_over_capacity_override')
-				? vms_event_plan_parse_secondary_vendor_over_capacity_override($assignment['allow_over_capacity'] ?? false)
+			$allow_over_capacity = function_exists('bvmgr_event_plan_parse_secondary_vendor_over_capacity_override')
+				? bvmgr_event_plan_parse_secondary_vendor_over_capacity_override($assignment['allow_over_capacity'] ?? false)
 				: !empty($assignment['allow_over_capacity']);
 			$warnings = array();
 			if ($primary_vendor_id > 0 && $primary_vendor_id === $vendor_id) {
@@ -2517,8 +2517,8 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 			}
 
 			update_post_meta($event_plan_id, $primary_vendor_key, $vendor_id);
-			if (function_exists('vms_event_plan_clear_integrity_flags')) {
-				vms_event_plan_clear_integrity_flags($event_plan_id);
+			if (function_exists('bvmgr_event_plan_clear_integrity_flags')) {
+				bvmgr_event_plan_clear_integrity_flags($event_plan_id);
 			}
 		} else {
 			if ($raw_target_type === '') {
@@ -2545,14 +2545,14 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 				: array();
 			$mode = sanitize_key((string) ($current_assignment['mode'] ?? ''));
 			if (!in_array($mode, array('standard', 'market'), true)) {
-				$mode = function_exists('vms_event_plan_secondary_vendor_default_mode')
-					? (string) vms_event_plan_secondary_vendor_default_mode($vendor_type)
+				$mode = function_exists('bvmgr_event_plan_secondary_vendor_default_mode')
+					? (string) bvmgr_event_plan_secondary_vendor_default_mode($vendor_type)
 					: 'standard';
 			}
 			$current_assignment['mode'] = $mode;
 			if (!array_key_exists('slot_limit', $current_assignment)) {
-				$current_assignment['slot_limit'] = function_exists('vms_event_plan_secondary_vendor_default_slot_limit')
-					? vms_event_plan_secondary_vendor_default_slot_limit($vendor_type, $mode)
+				$current_assignment['slot_limit'] = function_exists('bvmgr_event_plan_secondary_vendor_default_slot_limit')
+					? bvmgr_event_plan_secondary_vendor_default_slot_limit($vendor_type, $mode)
 					: 1;
 			}
 			$current_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($current_assignment['vendor_ids'] ?? array())))));
@@ -2563,8 +2563,8 @@ if (!function_exists('vms_add_dispatch_apply_assignment_review')) {
 			}
 			$current_assignments[$vendor_type] = $current_assignment;
 
-			$assignment = function_exists('vms_event_plan_write_secondary_vendor_assignments')
-				? vms_event_plan_write_secondary_vendor_assignments($event_plan_id, $current_assignments)
+			$assignment = function_exists('bvmgr_event_plan_write_secondary_vendor_assignments')
+				? bvmgr_event_plan_write_secondary_vendor_assignments($event_plan_id, $current_assignments)
 				: new WP_Error('add_dispatch_secondary_writer_missing', __('The Additional Vendors assignment writer is not available.', 'backstage-venue-manager'));
 			if (is_wp_error($assignment)) {
 				return $assignment;

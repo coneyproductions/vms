@@ -74,7 +74,7 @@ function bvmgr_event_plan_get_status(int $plan_id, string $context = 'generic'):
 /**
  * True if status is cancelled.
  */
-function vms_event_plan_is_cancelled(string $status): bool
+function bvmgr_event_plan_is_cancelled(string $status): bool
 {
 	$status = bvmgr_event_plan_status_normalize($status);
 	return ($status === 'cancelled');
@@ -95,7 +95,7 @@ function vms_event_plan_is_cancelled(string $status): bool
  * - include_cancelled: include Cancelled plans (default varies by context)
  * - include_archived: include Archived plans (default false)
  */
-function vms_event_plan_allowed_statuses(string $context, array $flags = array()): array
+function bvmgr_event_plan_allowed_statuses(string $context, array $flags = array()): array
 {
 	$context = sanitize_key((string) $context);
 
@@ -167,12 +167,12 @@ function vms_event_plan_allowed_statuses(string $context, array $flags = array()
 /**
  * Should the plan appear in a given context?
  */
-function vms_event_plan_should_include(int $plan_id, string $context = 'generic', array $flags = array()): bool
+function bvmgr_event_plan_should_include(int $plan_id, string $context = 'generic', array $flags = array()): bool
 {
 	$context = sanitize_key((string) $context);
 	$status = bvmgr_event_plan_get_status($plan_id, $context);
 
-	$allowed = vms_event_plan_allowed_statuses($context, $flags);
+	$allowed = bvmgr_event_plan_allowed_statuses($context, $flags);
 	return in_array($status, $allowed, true);
 }
 
@@ -197,7 +197,7 @@ function bvmgr_event_plan_status_label(string $status): string
  * Status pill CSS class for admin list tables.
  * (Matches existing vms-admin.css classes.)
  */
-function vms_event_plan_status_pill_class(string $status): string
+function bvmgr_event_plan_status_pill_class(string $status): string
 {
 	$status = bvmgr_event_plan_status_normalize($status);
 

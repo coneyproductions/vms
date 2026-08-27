@@ -187,8 +187,8 @@ if (!function_exists('bvmgr_event_plan_get_rescheduled_child_plan_ids')) {
             : '_vms_rescheduled_to_plan_ids';
 
         $value = get_post_meta($plan_id, $meta_key, true);
-        if (function_exists('vms_event_plan_normalize_related_plan_ids')) {
-            return vms_event_plan_normalize_related_plan_ids($value);
+        if (function_exists('bvmgr_event_plan_normalize_related_plan_ids')) {
+            return bvmgr_event_plan_normalize_related_plan_ids($value);
         }
 
         if (!is_array($value)) {
@@ -220,8 +220,8 @@ if (!function_exists('bvmgr_event_plan_get_public_event_payload')) {
             $event_id = absint(get_post_meta($plan_id, '_vms_tec_event_id', true));
         }
 
-        $url = function_exists('vms_event_plan_resolve_public_calendar_url')
-            ? vms_event_plan_resolve_public_calendar_url($plan_id)
+        $url = function_exists('bvmgr_event_plan_resolve_public_calendar_url')
+            ? bvmgr_event_plan_resolve_public_calendar_url($plan_id)
             : '';
         if ($url === '') {
             return array();
