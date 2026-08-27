@@ -199,7 +199,7 @@ try {
 		array(
 			"current_user_can('manage_options')",
 			"check_admin_referer('vms_square_sync_protection_csv');",
-			'$report = vms_square_sync_protection_get_report();',
+			'$report = bvmgr_square_sync_protection_get_report();',
 			'nocache_headers();',
 			"header('Content-Type: text/csv; charset=utf-8');",
 			"header('Content-Disposition: attachment; filename=' . \$filename);",

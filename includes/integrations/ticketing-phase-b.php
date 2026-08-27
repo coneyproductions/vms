@@ -946,8 +946,8 @@ function bvmgr_ticketing_v2_find_ticket_title_match(array $product_ids, string $
         $plan_marker = absint(get_post_meta($pid, bvmgr_ticketing_v2_product_meta_key('event_plan_id'), true));
         $ticket_key_meta = sanitize_key((string) get_post_meta($pid, bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key'), true));
         $retired = ((string) get_post_meta($pid, '_vms_legacy_retired', true) === '1');
-        $sold_qty = function_exists('vms_ticket_integrity_authoritative_product_sales_count')
-            ? vms_ticket_integrity_authoritative_product_sales_count($pid)
+        $sold_qty = function_exists('bvmgr_ticket_integrity_authoritative_product_sales_count')
+            ? bvmgr_ticket_integrity_authoritative_product_sales_count($pid)
             : max(0, absint(get_post_meta($pid, 'total_sales', true)));
         $catalog_visibility = function_exists('bvmgr_ticketing_v2_get_product_catalog_visibility_state')
             ? (string) bvmgr_ticketing_v2_get_product_catalog_visibility_state($pid)
@@ -2520,9 +2520,9 @@ function bvmgr_ticketing_v2_apply_reporting_category(int $product_id, string $ki
         return false;
     }
 
-    if (function_exists('vms_square_firewall_is_protected_product') && vms_square_firewall_is_protected_product($product_id)) {
-        if (function_exists('vms_square_firewall_protect_product')) {
-            vms_square_firewall_protect_product($product_id, true);
+    if (function_exists('bvmgr_square_firewall_is_protected_product') && bvmgr_square_firewall_is_protected_product($product_id)) {
+        if (function_exists('bvmgr_square_firewall_protect_product')) {
+            bvmgr_square_firewall_protect_product($product_id, true);
         }
     } elseif (bvmgr_ticketing_v2_square_prepare_product($product_id)) {
         bvmgr_ticketing_v2_square_queue_manual_sync($product_id);
@@ -4672,8 +4672,8 @@ function bvmgr_ticketing_v2_templates_apply_to_plan(int $plan_id, string $templa
             (string) ($anchors['event_start'] ?? '')
         );
     }
-    if (function_exists('vms_ticket_mutation_audit_push_context')) {
-        vms_ticket_mutation_audit_push_context(array(
+    if (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+        bvmgr_ticket_mutation_audit_push_context(array(
             'trigger_source' => 'manual_action',
             'change_type' => 'ticket_template_applied',
             'summary_text' => __('Applied a saved ticket template to this event.', 'backstage-venue-manager'),
@@ -4683,8 +4683,8 @@ function bvmgr_ticketing_v2_templates_apply_to_plan(int $plan_id, string $templa
         ));
     }
     bvmgr_ticketing_v2_set_config($plan_id, $cfg);
-    if (function_exists('vms_ticket_mutation_audit_pop_context')) {
-        vms_ticket_mutation_audit_pop_context();
+    if (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+        bvmgr_ticket_mutation_audit_pop_context();
     }
     bvmgr_entitlements_sync_plan_image_changes($plan_id, $cfg_before, $cfg);
 
@@ -5466,8 +5466,8 @@ function bvmgr_ticketing_v2_stamp_product_markers(int $product_id, int $plan_id,
     update_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_source_plan_id'), $plan_id);
     update_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_source_provider'), 'tec_tickets_woo');
 
-    if (function_exists('vms_square_firewall_protect_product')) {
-        vms_square_firewall_protect_product($product_id, true);
+    if (function_exists('bvmgr_square_firewall_protect_product')) {
+        bvmgr_square_firewall_protect_product($product_id, true);
     }
 
     $kind = bvmgr_ticketing_v2_reporting_category_kind_for_role($role);
@@ -6739,7 +6739,7 @@ function bvmgr_ticketing_v2_get_product_catalog_visibility_state(int $product_id
 }
 
 function bvmgr_ticketing_v2_push_inventory_write_context(array $context): void {
-    if (!function_exists('vms_ticket_mutation_audit_push_context')) {
+    if (!function_exists('bvmgr_ticket_mutation_audit_push_context')) {
         return;
     }
 
@@ -6753,12 +6753,12 @@ function bvmgr_ticketing_v2_push_inventory_write_context(array $context): void {
         $context['summary_text'] = (string) $context['reason_text'];
     }
 
-    vms_ticket_mutation_audit_push_context($context);
+    bvmgr_ticket_mutation_audit_push_context($context);
 }
 
 function bvmgr_ticketing_v2_pop_inventory_write_context(): void {
-    if (function_exists('vms_ticket_mutation_audit_pop_context')) {
-        vms_ticket_mutation_audit_pop_context();
+    if (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+        bvmgr_ticket_mutation_audit_pop_context();
     }
 }
 
@@ -9674,8 +9674,8 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
 
     bvmgr_ticketing_v2_set_sync($plan_id, $sync_out);
 
-    $duplicate_cleanup = function_exists('vms_ticket_integrity_duplicate_cleanup_run')
-        ? vms_ticket_integrity_duplicate_cleanup_run($plan_id, array('source_function' => 'vms_ticketing_v2_commit_sync'))
+    $duplicate_cleanup = function_exists('bvmgr_ticket_integrity_duplicate_cleanup_run')
+        ? bvmgr_ticket_integrity_duplicate_cleanup_run($plan_id, array('source_function' => 'vms_ticketing_v2_commit_sync'))
         : array();
     if (!empty($duplicate_cleanup['ok'])) {
         if (!empty($duplicate_cleanup['summary_text']) && (($duplicate_cleanup['status'] ?? '') === 'complete' || ($duplicate_cleanup['status'] ?? '') === 'partial')) {
@@ -9867,8 +9867,8 @@ function bvmgr_ticketing_v2_ajax_save_config(): void {
     $image_sync_results = array();
 
     if ($config_changed) {
-        if (function_exists('vms_ticket_mutation_audit_push_context')) {
-            vms_ticket_mutation_audit_push_context(array(
+        if (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+            bvmgr_ticket_mutation_audit_push_context(array(
                 'trigger_source' => 'manual_action',
                 'change_type' => 'ticket_config_saved',
                 'summary_text' => __('Saved Ticketing v2 settings for this event.', 'backstage-venue-manager'),
@@ -9878,8 +9878,8 @@ function bvmgr_ticketing_v2_ajax_save_config(): void {
             ));
         }
         bvmgr_ticketing_v2_set_config($plan_id, $cfg);
-        if (function_exists('vms_ticket_mutation_audit_pop_context')) {
-            vms_ticket_mutation_audit_pop_context();
+        if (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+            bvmgr_ticket_mutation_audit_pop_context();
         }
         $image_sync_results = bvmgr_entitlements_sync_plan_image_changes($plan_id, $cfg_before, $cfg);
     } else {
@@ -10032,8 +10032,8 @@ function bvmgr_ticketing_v2_ajax_clear_config(): void {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-    if (function_exists('vms_ticket_mutation_audit_push_context')) {
-        vms_ticket_mutation_audit_push_context(array(
+    if (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+        bvmgr_ticket_mutation_audit_push_context(array(
             'trigger_source' => 'manual_action',
             'change_type' => 'ticket_config_cleared',
             'summary_text' => __('Cleared the saved Ticketing v2 config for this event.', 'backstage-venue-manager'),
@@ -10045,8 +10045,8 @@ function bvmgr_ticketing_v2_ajax_clear_config(): void {
     delete_post_meta($plan_id, bvmgr_ticketing_v2_k('config'));
     delete_post_meta($plan_id, '_vms_ticketing_ga_image_mode');
     delete_post_meta($plan_id, '_vms_ticketing_ga_image_id');
-    if (function_exists('vms_ticket_mutation_audit_pop_context')) {
-        vms_ticket_mutation_audit_pop_context();
+    if (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+        bvmgr_ticket_mutation_audit_pop_context();
     }
 
     bvmgr_ticketing_v2_ajax_send_success(array(
@@ -10182,8 +10182,8 @@ function bvmgr_ticketing_v2_ajax_commit_sync(): void {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_preview_id'), 400);
     }
 
-    if (function_exists('vms_ticket_mutation_audit_push_context')) {
-        vms_ticket_mutation_audit_push_context(array(
+    if (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+        bvmgr_ticket_mutation_audit_push_context(array(
             'trigger_source' => 'preview_commit',
             'change_type' => 'preview_commit_applied',
             'summary_text' => __('Applied Preview / Commit changes for this event.', 'backstage-venue-manager'),
@@ -10201,8 +10201,8 @@ function bvmgr_ticketing_v2_ajax_commit_sync(): void {
         'phase' => $commit_phase,
         'cursor' => $cursor,
     ));
-    if (function_exists('vms_ticket_mutation_audit_pop_context')) {
-        vms_ticket_mutation_audit_pop_context();
+    if (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+        bvmgr_ticket_mutation_audit_pop_context();
     }
     if (empty($res['ok'])) {
         $http = isset($res['http']) ? (int) $res['http'] : 400;

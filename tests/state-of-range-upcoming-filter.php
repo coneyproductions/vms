@@ -91,8 +91,8 @@ if (!function_exists('apply_filters')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_sort_events')) {
-	function vms_ticket_integrity_sort_events(array $events): array
+if (!function_exists('bvmgr_ticket_integrity_sort_events')) {
+	function bvmgr_ticket_integrity_sort_events(array $events): array
 	{
 		usort(
 			$events,
@@ -105,15 +105,15 @@ if (!function_exists('vms_ticket_integrity_sort_events')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_open_issues')) {
-	function vms_ticket_integrity_open_issues(array $issues): array
+if (!function_exists('bvmgr_ticket_integrity_open_issues')) {
+	function bvmgr_ticket_integrity_open_issues(array $issues): array
 	{
 		return $issues;
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_format_datetime')) {
-	function vms_ticket_integrity_format_datetime(int $timestamp): string
+if (!function_exists('bvmgr_ticket_integrity_format_datetime')) {
+	function bvmgr_ticket_integrity_format_datetime(int $timestamp): string
 	{
 		if ($timestamp <= 0) {
 			return 'Never';
@@ -158,7 +158,7 @@ try {
 			array(
 				'event_title' => 'Past May Event',
 				'event_timestamp' => $pastEventAt,
-				'event_date_local' => vms_ticket_integrity_format_datetime($pastEventAt),
+				'event_date_local' => bvmgr_ticket_integrity_format_datetime($pastEventAt),
 				'status' => 'green',
 				'ticket_snapshots' => array(),
 				'issues' => array(),
@@ -167,7 +167,7 @@ try {
 			array(
 				'event_title' => 'Same Day June Event',
 				'event_timestamp' => $sameDayEventAt,
-				'event_date_local' => vms_ticket_integrity_format_datetime($sameDayEventAt),
+				'event_date_local' => bvmgr_ticket_integrity_format_datetime($sameDayEventAt),
 				'status' => 'green',
 				'ticket_snapshots' => array(),
 				'issues' => array(),
@@ -176,7 +176,7 @@ try {
 			array(
 				'event_title' => 'Future June Event & Friends',
 				'event_timestamp' => $futureEventAt,
-				'event_date_local' => vms_ticket_integrity_format_datetime($futureEventAt),
+				'event_date_local' => bvmgr_ticket_integrity_format_datetime($futureEventAt),
 				'status' => 'green',
 				'ticket_snapshots' => array(),
 				'issues' => array(),
@@ -198,7 +198,7 @@ try {
 		),
 	);
 
-	$filteredEvents = vms_ticket_integrity_filter_state_of_range_events((array) $store['events'], $reportGeneratedAt);
+	$filteredEvents = bvmgr_ticket_integrity_filter_state_of_range_events((array) $store['events'], $reportGeneratedAt);
 	$assert(count($filteredEvents) === 2, 'Expected exactly two same-day/future events after filtering.');
 	$filteredTitles = array_map(static function (array $event): string {
 		return (string) ($event['event_title'] ?? '');
@@ -206,7 +206,7 @@ try {
 	$assert(in_array('Same Day June Event', $filteredTitles, true), 'Expected the same-day event to survive filtering.');
 	$assert(in_array('Future June Event & Friends', $filteredTitles, true), 'Expected the future June event to survive filtering.');
 
-	$email = vms_ticket_integrity_build_state_of_range_email($store);
+	$email = bvmgr_ticket_integrity_build_state_of_range_email($store);
 	$body = (string) ($email['body'] ?? '');
 
 	$assert($body !== '', 'Expected a rendered email body.');

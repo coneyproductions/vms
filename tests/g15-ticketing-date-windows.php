@@ -110,15 +110,15 @@ function g15_project_g16_phase_logging(string $source, string $label): string
 
 function g15_project_g16_monitor_logging(string $source, string $label): string
 {
-	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
-	$last = g15_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
+	$last = g15_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
 	$last_start = strpos($source, $last, (int) $start);
 	g15_assert($start !== false && $last_start !== false, $label . ' G16 monitor helper bounds changed.');
 	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
 	g15_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), $label . ' G16 monitor helper block changed.');
 	$source = str_replace($block . "\n\n", '', $source, $count);
 	g15_same(1, $count, $label . ' G16 monitor helper removal changed.');
-	$current = g15_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	$current = g15_extract_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown');
 	g15_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), $label . ' G16 monitor shutdown changed.');
 	$fixture = g15_read(__DIR__ . '/g16-operational-logging-group-c.php');
 	g15_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), $label . ' G16 historical shutdown fixture changed.');
@@ -201,7 +201,7 @@ g15_same($expected_signatures, $actual_signatures, 'G15 P2 artifact ownership mu
 g15_same(9, count($date_rows) - count($actual_owned_rows), 'Exactly nine G15 date rows must remain outside this ticketing child.');
 
 $owned_functions = array(
-	'monitor' => array('vms_ticket_integrity_format_datetime', 'vms_ticket_integrity_build_targets'),
+	'monitor' => array('bvmgr_ticket_integrity_format_datetime', 'bvmgr_ticket_integrity_build_targets'),
 	'phase_b' => array('bvmgr_ticketing_b_resolve_sales_window', 'bvmgr_ticketing_v2_get_plan_sales_window_defaults'),
 );
 foreach (array('mirror', 'shadow') as $tree) {
@@ -273,16 +273,16 @@ g15_assert(
 );
 
 $suppress_filters_annotation = "\t\t\t\t// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- Ticket Integrity scans require the canonical unfiltered event-plan dataset; query scope is bounded by published status, linked TEC event, the date window, and batch pagination.\n";
-$mirror_build = g15_extract_function($sources['mirror']['monitor'], 'vms_ticket_integrity_build_targets');
-$shadow_build = g15_extract_function($sources['shadow']['monitor'], 'vms_ticket_integrity_build_targets');
+$mirror_build = g15_extract_function($sources['mirror']['monitor'], 'bvmgr_ticket_integrity_build_targets');
+$shadow_build = g15_extract_function($sources['shadow']['monitor'], 'bvmgr_ticket_integrity_build_targets');
 g15_same(1, substr_count($mirror_build, $suppress_filters_annotation), 'Mirror must retain the mirror-only suppress_filters rationale.');
 g15_same(0, substr_count($shadow_build, $suppress_filters_annotation), 'Shadow must not gain the mirror-only suppress_filters rationale.');
 $mirror_build = str_replace($suppress_filters_annotation, '', $mirror_build, $annotation_count);
 g15_same(1, $annotation_count, 'Mirror parity projection must strip the suppress_filters rationale once.');
 g15_same($mirror_build, $shadow_build, 'Target-builder behavior must match across mirror/shadow after rationale projection.');
 g15_same(
-	g15_extract_function($sources['mirror']['monitor'], 'vms_ticket_integrity_format_datetime'),
-	g15_extract_function($sources['shadow']['monitor'], 'vms_ticket_integrity_format_datetime'),
+	g15_extract_function($sources['mirror']['monitor'], 'bvmgr_ticket_integrity_format_datetime'),
+	g15_extract_function($sources['shadow']['monitor'], 'bvmgr_ticket_integrity_format_datetime'),
 	'Monitor formatter must match across mirror/shadow.'
 );
 foreach ($owned_functions['phase_b'] as $function_name) {
@@ -353,7 +353,7 @@ function apply_filters(string $hook_name, $value)
 	return $value;
 }
 
-function vms_ticket_integrity_get_settings(): array
+function bvmgr_ticket_integrity_get_settings(): array
 {
 	return array('days_ahead' => 30);
 }
@@ -407,11 +407,11 @@ function bvmgr_ticketing_v2_get_plan_event_anchor_datetimes(int $plan_id): array
 	return is_array($anchors) ? $anchors : array();
 }
 
-eval(g15_prepare_eval_function($sources['mirror']['monitor'], 'vms_ticket_integrity_format_datetime', 'g15_ticket_integrity_format_datetime'));
+eval(g15_prepare_eval_function($sources['mirror']['monitor'], 'bvmgr_ticket_integrity_format_datetime', 'g15_ticket_integrity_format_datetime'));
 eval(
 	g15_prepare_eval_function(
 		$sources['mirror']['monitor'],
-		'vms_ticket_integrity_build_targets',
+		'bvmgr_ticket_integrity_build_targets',
 		'g15_ticket_integrity_build_targets',
 		array("\t\$now = time();" => "\t\$now = g15_now();")
 	)

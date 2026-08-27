@@ -20,7 +20,7 @@ if (!function_exists('vms_email_followups_plan_tec_event_id')) {
 		if ($event_plan_id <= 0) {
 			return 0;
 		}
-		$key = function_exists('vms_ticket_revenue_plan_tec_meta_key') ? vms_ticket_revenue_plan_tec_meta_key() : '_vms_tec_event_id';
+		$key = function_exists('bvmgr_ticket_revenue_plan_tec_meta_key') ? bvmgr_ticket_revenue_plan_tec_meta_key() : '_vms_tec_event_id';
 		$tec_event_id = absint(get_post_meta($event_plan_id, $key, true));
 		if ($tec_event_id <= 0) {
 			$tec_event_id = absint(get_post_meta($event_plan_id, '_vms_calendar_event_id', true));
@@ -134,7 +134,7 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 			'warnings' => array(),
 		);
 
-		if (!function_exists('vms_get_ticket_sales_rows')) {
+		if (!function_exists('bvmgr_get_ticket_sales_rows')) {
 			$result['warnings'][] = __('Ticket sales resolver is unavailable.', 'backstage-venue-manager');
 			return $result;
 		}
@@ -151,7 +151,7 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 			$args['tec_event_id'] = absint($context['tec_event_id']);
 		}
 
-		$rows = vms_get_ticket_sales_rows($args);
+		$rows = bvmgr_get_ticket_sales_rows($args);
 		if (!is_array($rows)) {
 			$rows = array();
 		}

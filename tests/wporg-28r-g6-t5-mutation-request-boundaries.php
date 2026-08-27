@@ -220,7 +220,7 @@ eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_gue
 eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_guest_absint_value'));
 eval(vms_t5_extract_function($sources['social_admin'], 'vms_social_template_body_from_post'));
 eval(vms_t5_extract_function($sources['vendor_category'], 'vms_vendor_type_category_label_from_post'));
-eval(vms_t5_extract_function($sources['ticket_integrity'], 'vms_ticket_integrity_plan_save_request_action'));
+eval(vms_t5_extract_function($sources['ticket_integrity'], 'bvmgr_ticket_integrity_plan_save_request_action'));
 
 vms_t5_assert_same(null, bvmgr_request_read_array(array(), 'rows'), 'Array reader should distinguish missing arrays.');
 vms_t5_assert_same(null, bvmgr_request_read_array(array('rows' => '1'), 'rows'), 'Array reader should reject scalar where array is expected.');
@@ -277,8 +277,8 @@ vms_t5_assert_same("Line 1\n{{event_title}}\\n", vms_social_template_body_from_p
 vms_t5_assert_same('', vms_social_template_body_from_post(array('body' => array('bad'))), 'Social template body should reject array-shaped values.');
 vms_t5_assert_same('Genre Label', vms_vendor_type_category_label_from_post(array('vms_vendor_type_category_label' => ' Genre\\ Label ')), 'Vendor category labels should use scalar text normalization.');
 vms_t5_assert_same('', vms_vendor_type_category_label_from_post(array('vms_vendor_type_category_label' => array('bad'))), 'Vendor category labels should reject arrays.');
-vms_t5_assert_same('publish_now', vms_ticket_integrity_plan_save_request_action(array('vms_event_plan_action' => 'Publish_Now')), 'Ticket Integrity action should preserve key normalization.');
-vms_t5_assert_same('', vms_ticket_integrity_plan_save_request_action(array('vms_event_plan_action' => array('publish_now'))), 'Ticket Integrity action should reject arrays.');
+vms_t5_assert_same('publish_now', bvmgr_ticket_integrity_plan_save_request_action(array('vms_event_plan_action' => 'Publish_Now')), 'Ticket Integrity action should preserve key normalization.');
+vms_t5_assert_same('', bvmgr_ticket_integrity_plan_save_request_action(array('vms_event_plan_action' => array('publish_now'))), 'Ticket Integrity action should reject arrays.');
 
 require $paths['tours_service'];
 $tour_reflection = new ReflectionClass('BVMGR_Tours_Service');

@@ -26,8 +26,8 @@ function wp_enqueue_style(string $handle, string $src = '', array $deps = array(
 function wp_enqueue_script(string $handle, string $src = '', array $deps = array(), $ver = false, bool $in_footer = false): void { unset($deps, $ver, $in_footer); $GLOBALS['vms_test_scripts'][$handle] = $src; }
 function wp_add_inline_script(string $handle, string $script, string $position = 'after'): void { $GLOBALS['vms_test_inline_scripts'][$handle] = array('script' => $script, 'position' => $position); }
 function wp_json_encode($value): string { return json_encode($value) ?: 'null'; }
-function vms_ticket_integrity_get_settings(): array { return $GLOBALS['vms_test_settings']; }
-function vms_ticket_integrity_get_results_store(): array { return $GLOBALS['vms_test_store']; }
+function bvmgr_ticket_integrity_get_settings(): array { return $GLOBALS['vms_test_settings']; }
+function bvmgr_ticket_integrity_get_results_store(): array { return $GLOBALS['vms_test_store']; }
 
 require_once dirname(__DIR__) . '/includes/admin/ticket-integrity-page.php';
 
@@ -58,27 +58,27 @@ $GLOBALS['vms_test_store'] = array('summary' => array('red' => 1, 'yellow' => 0)
 $GLOBALS['vms_test_settings'] = array();
 $_GET = array();
 $reset_assets();
-vms_ticket_integrity_admin_enqueue_assets('dashboard_page_tools');
+bvmgr_ticket_integrity_admin_enqueue_assets('dashboard_page_tools');
 $assert(isset($GLOBALS['vms_test_styles']['vms-admin-ticket-integrity']), 'Ticket Integrity badge styling should enqueue its external stylesheet when the menu badge is needed.');
 $assert(!isset($GLOBALS['vms_test_scripts']['vms-admin-ticket-integrity']), 'Ticket Integrity admin script should stay off non-Ticket-Integrity screens.');
 
 $_GET = array('page' => 'vms-ticket-integrity');
 $GLOBALS['vms_test_store'] = array('summary' => array('red' => 0, 'yellow' => 0));
 $reset_assets();
-vms_ticket_integrity_admin_enqueue_assets('toplevel_page_vms-dashboard');
+bvmgr_ticket_integrity_admin_enqueue_assets('toplevel_page_vms-dashboard');
 $assert(isset($GLOBALS['vms_test_styles']['vms-admin-ticket-integrity']), 'Ticket Integrity page should still enqueue its stylesheet.');
 $assert(isset($GLOBALS['vms_test_scripts']['vms-admin-ticket-integrity']), 'Ticket Integrity page should still enqueue its admin script.');
 $assert(strpos((string) ($GLOBALS['vms_test_inline_scripts']['vms-admin-ticket-integrity']['script'] ?? ''), 'window.vmsTicketIntegrityAdmin = ') !== false, 'Ticket Integrity page should retain its existing inline JS configuration.');
 
 $seed_menu();
 $GLOBALS['vms_test_store'] = array('summary' => array('red' => 1, 'yellow' => 0));
-vms_ticket_integrity_add_menu_alert_badge();
+bvmgr_ticket_integrity_add_menu_alert_badge();
 $assert(strpos((string) ($GLOBALS['menu'][0][0] ?? ''), 'vms-ticket-integrity-alert-badge') !== false, 'Ticket Integrity menu badge should still appear when alert conditions are met.');
 $assert(strpos((string) ($GLOBALS['submenu']['vms-dashboard'][0][0] ?? ''), 'vms-ticket-integrity-alert-badge') !== false, 'Ticket Integrity submenu badge should still appear when alert conditions are met.');
 
 $seed_menu();
 $GLOBALS['vms_test_store'] = array('summary' => array('red' => 0, 'yellow' => 0));
-vms_ticket_integrity_add_menu_alert_badge();
+bvmgr_ticket_integrity_add_menu_alert_badge();
 $assert(strpos((string) ($GLOBALS['menu'][0][0] ?? ''), 'vms-ticket-integrity-alert-badge') === false, 'Ticket Integrity menu badge should stay absent when alert conditions are not met.');
 $assert(strpos((string) ($GLOBALS['submenu']['vms-dashboard'][0][0] ?? ''), 'vms-ticket-integrity-alert-badge') === false, 'Ticket Integrity submenu badge should stay absent when alert conditions are not met.');
 

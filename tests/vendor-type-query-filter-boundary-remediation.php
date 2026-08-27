@@ -76,15 +76,15 @@ function vms_test_extract_function(string $source, string $name): string
 
 function vms_test_project_g16_monitor_logging(string $source): string
 {
-	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
-	$last = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
+	$last = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
 	$last_start = strpos($source, $last, (int) $start);
 	vms_test_assert_true($start !== false && $last_start !== false, 'G16 monitor helper bounds changed.');
 	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
 	vms_test_assert_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), 'G16 monitor helper block changed.');
 	$source = str_replace($block . "\n\n", '', $source, $count);
 	vms_test_assert_same(1, $count, 'G16 monitor helper removal changed.');
-	$current = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	$current = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown');
 	vms_test_assert_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), 'G16 monitor shutdown changed.');
 	$fixture = vms_test_read_file(__DIR__ . '/g16-operational-logging-group-c.php');
 	vms_test_assert_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), 'G16 historical shutdown fixture changed.');

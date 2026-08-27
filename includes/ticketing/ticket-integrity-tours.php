@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_ticket_integrity_register_tours(array $tours): array
+function bvmgr_ticket_integrity_register_tours(array $tours): array
 {
 	$tours[] = array(
 		'id' => 'vms.ticket_integrity.monitor',
@@ -75,4 +75,4 @@ function vms_ticket_integrity_register_tours(array $tours): array
 
 	return $tours;
 }
-add_filter('vms_register_tours', 'vms_ticket_integrity_register_tours');
+add_filter('vms_register_tours', 'bvmgr_ticket_integrity_register_tours');

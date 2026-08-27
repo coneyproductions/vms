@@ -544,8 +544,8 @@ function bvmgr_render_dashboard_page_content(): void
     vms_tasks_render_dashboard_cards();
   }
 
-  if (function_exists('vms_ticket_integrity_render_dashboard_panel')) {
-    vms_ticket_integrity_render_dashboard_panel();
+  if (function_exists('bvmgr_ticket_integrity_render_dashboard_panel')) {
+    bvmgr_ticket_integrity_render_dashboard_panel();
   }
 
   echo '<div id="vms-dashboard">';

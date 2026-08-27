@@ -146,7 +146,7 @@ $ticket_fallback = <<<'PHP'
 		'plan_id' => $payload['object_id'],
 	));
 PHP;
-$ticket_capture = g17c_function($sources['mirror']['ticket'], 'vms_ticket_mutation_audit_capture_source_trace');
+$ticket_capture = g17c_function($sources['mirror']['ticket'], 'bvmgr_ticket_mutation_audit_capture_source_trace');
 
 $reconstruct_staff = static function (string $source) use ($staff_schema, $staff_nightly_failure, $staff_direct): string {
 	$nightly = g17c_function($source, 'vms_tasks_run_nightly_generator');
@@ -162,7 +162,7 @@ $reconstruct_staff = static function (string $source) use ($staff_schema, $staff
 	return g17c_swap($source, 'vms_tasks_generate_for_event_safe', $direct);
 };
 $reconstruct_ticket = static function (string $source) use ($ticket_fallback): string {
-	$trace = g17c_function($source, 'vms_ticket_mutation_audit_trace');
+	$trace = g17c_function($source, 'bvmgr_ticket_mutation_audit_trace');
 	$historical = <<<'PHP'
 	$elapsed_ms = $started_at > 0 ? max(0.0, round((microtime(true) - $started_at) * 1000, 1)) : 0.0;
 	error_log('[VMS TRACE] ' . wp_json_encode(array(
@@ -182,13 +182,13 @@ $reconstruct_ticket = static function (string $source) use ($ticket_fallback): s
 	)));
 PHP;
 	$trace = g17c_once($trace, $ticket_fallback, $historical, 'Ticket fallback reverse failed.');
-	$source = g17c_swap($source, 'vms_ticket_mutation_audit_trace', $trace);
-	$capture = g17c_function($source, 'vms_ticket_mutation_audit_capture_source_trace');
+	$source = g17c_swap($source, 'bvmgr_ticket_mutation_audit_trace', $trace);
+	$capture = g17c_function($source, 'bvmgr_ticket_mutation_audit_capture_source_trace');
 	$body_start = strpos($capture, "{\n") + 2;
 	$body_end = strrpos($capture, "\n}");
 	g17c_assert($body_start >= 2 && $body_end !== false, 'Capture bounds changed.');
 	$capture = substr($capture, 0, $body_start) . "\treturn debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 40);" . substr($capture, (int) $body_end);
-	return g17c_swap($source, 'vms_ticket_mutation_audit_capture_source_trace', $capture);
+	return g17c_swap($source, 'bvmgr_ticket_mutation_audit_capture_source_trace', $capture);
 };
 
 foreach (array('mirror', 'shadow') as $tree) {
@@ -244,10 +244,10 @@ function bvmgr_admin_guard_trace(string $hook_name, string $decision, array $pay
 	$GLOBALS['g17c_guards'][] = compact('hook_name', 'decision', 'payload', 'started_at');
 }
 
-$trace_source = g17c_function($sources['mirror']['ticket'], 'vms_ticket_mutation_audit_trace');
-$delegated = g17c_once($trace_source, 'function vms_ticket_mutation_audit_trace(', 'function g17c_ticket_delegated(', 'Delegated trace rename failed.');
+$trace_source = g17c_function($sources['mirror']['ticket'], 'bvmgr_ticket_mutation_audit_trace');
+$delegated = g17c_once($trace_source, 'function bvmgr_ticket_mutation_audit_trace(', 'function g17c_ticket_delegated(', 'Delegated trace rename failed.');
 eval($delegated);
-$fallback = g17c_once($trace_source, 'function vms_ticket_mutation_audit_trace(', 'function g17c_ticket_fallback(', 'Fallback trace rename failed.');
+$fallback = g17c_once($trace_source, 'function bvmgr_ticket_mutation_audit_trace(', 'function g17c_ticket_fallback(', 'Fallback trace rename failed.');
 $fallback = g17c_once($fallback, "if (function_exists('bvmgr_admin_guard_trace')) {", 'if (false) {', 'Fallback injection failed.');
 eval($fallback);
 
@@ -290,12 +290,12 @@ g17c_same(array(
 g17c_same(null, $fallback_call['error'], 'Ticket fallback must not forward raw error data.');
 g17c_same(0, substr_count((string) json_encode($fallback_call), $sentinel), 'Ticket fallback leaked URI/meta/source/raw sentinel data.');
 
-foreach (array('vms_ticket_mutation_audit_skip_hooks', 'vms_ticket_mutation_audit_current_hook', 'vms_ticket_mutation_audit_capture_source_trace', 'vms_ticket_mutation_audit_detect_source') as $function_name) {
+foreach (array('bvmgr_ticket_mutation_audit_skip_hooks', 'bvmgr_ticket_mutation_audit_current_hook', 'bvmgr_ticket_mutation_audit_capture_source_trace', 'bvmgr_ticket_mutation_audit_detect_source') as $function_name) {
 	eval(g17c_function($sources['mirror']['ticket'], $function_name));
 }
 function g17c_capture_probe(): array
 {
-	return vms_ticket_mutation_audit_capture_source_trace();
+	return bvmgr_ticket_mutation_audit_capture_source_trace();
 }
 $frames = g17c_capture_probe();
 g17c_assert($frames !== array() && count($frames) <= 40, 'Projected trace must contain at most forty frames.');
@@ -310,17 +310,17 @@ foreach ($frames as $frame) {
 
 $GLOBALS['wp_current_filter'] = array('save_post_vms_event_plan', 'updated_post_meta');
 $injected = array(
-	array('function' => 'vms_ticket_mutation_audit_detect_source', 'file' => $sentinel, 'args' => array($sentinel)),
+	array('function' => 'bvmgr_ticket_mutation_audit_detect_source', 'file' => $sentinel, 'args' => array($sentinel)),
 	array('function' => 'apply_filters', 'class' => $sentinel),
 	array('function' => 'tribe_inventory_sync', 'object' => (object) array('secret' => $sentinel)),
 );
 $immutable = $injected;
-$detected = vms_ticket_mutation_audit_detect_source($injected);
+$detected = bvmgr_ticket_mutation_audit_detect_source($injected);
 g17c_same($immutable, $injected, 'Explicit source trace must remain immutable.');
 g17c_same(array('source_hook' => 'save_post_vms_event_plan', 'source_function' => 'tribe_inventory_sync'), $detected, 'Explicit source detection changed.');
 function vms_g17_ticket_source_probe(): array
 {
-	return vms_ticket_mutation_audit_detect_source();
+	return bvmgr_ticket_mutation_audit_detect_source();
 }
 g17c_same('vms_g17_ticket_source_probe', vms_g17_ticket_source_probe()['source_function'], 'Projected live source detection changed.');
 

@@ -30,8 +30,8 @@ if (!function_exists('vms_cancelled_cost_review_vendor_direct_cents')) {
 if (!function_exists('vms_cancelled_cost_review_labor_cents')) {
     function vms_cancelled_cost_review_labor_cents(int $event_plan_id): int
     {
-        if (function_exists('vms_event_profitability_get_labor_cost_cents')) {
-            return max(0, (int) vms_event_profitability_get_labor_cost_cents($event_plan_id));
+        if (function_exists('bvmgr_event_profitability_get_labor_cost_cents')) {
+            return max(0, (int) bvmgr_event_profitability_get_labor_cost_cents($event_plan_id));
         }
         return 0;
     }
@@ -69,8 +69,8 @@ if (!function_exists('vms_cancelled_cost_review_render_metabox')) {
         $labor_cents = vms_cancelled_cost_review_labor_cents($event_plan_id);
         $vendor_direct_cents = vms_cancelled_cost_review_vendor_direct_cents($event_plan_id);
         $total_cents = $labor_cents + $vendor_direct_cents;
-        $profitability_url = function_exists('vms_event_profitability_admin_url')
-            ? vms_event_profitability_admin_url()
+        $profitability_url = function_exists('bvmgr_event_profitability_admin_url')
+            ? bvmgr_event_profitability_admin_url()
             : admin_url('admin.php?page=vms-event-profitability');
 
         echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__('Cancelled plans should review estimated costs.', 'backstage-venue-manager') . '</strong></p>';

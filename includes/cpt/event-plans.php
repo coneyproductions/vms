@@ -9128,8 +9128,8 @@ class BVMGR_Admin_Event_Plans
 	        if (array_key_exists('vms_ticketing_enabled_override', $request)) {
 	            $ov = sanitize_text_field((string) $request['vms_ticketing_enabled_override']);
 	            $ticketing_override_audit_pushed = false;
-	            if (function_exists('vms_ticket_mutation_audit_push_context')) {
-	                vms_ticket_mutation_audit_push_context(array(
+	            if (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+	                bvmgr_ticket_mutation_audit_push_context(array(
 	                    'trigger_source' => 'save_hook',
 	                    'change_type' => 'event_save_sync',
 	                    'source_function' => 'save_event_plan_meta',
@@ -9143,8 +9143,8 @@ class BVMGR_Admin_Event_Plans
 	            } else {
 	                delete_post_meta($post_id, '_vms_ticketing_enabled_override');
 	            }
-	            if ($ticketing_override_audit_pushed && function_exists('vms_ticket_mutation_audit_pop_context')) {
-	                vms_ticket_mutation_audit_pop_context();
+	            if ($ticketing_override_audit_pushed && function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+	                bvmgr_ticket_mutation_audit_pop_context();
 	            }
 	        }
 
@@ -15933,8 +15933,8 @@ function bvmgr_upsert_plan_product(int $plan_id, int $existing_product_id, array
 
             if (function_exists('bvmgr_ticketing_v2_push_inventory_write_context')) {
                 bvmgr_ticketing_v2_push_inventory_write_context($inventory_write_context);
-            } elseif (function_exists('vms_ticket_mutation_audit_push_context')) {
-                vms_ticket_mutation_audit_push_context($inventory_write_context);
+            } elseif (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+                bvmgr_ticket_mutation_audit_push_context($inventory_write_context);
             }
 
             try {
@@ -15942,8 +15942,8 @@ function bvmgr_upsert_plan_product(int $plan_id, int $existing_product_id, array
             } finally {
                 if (function_exists('bvmgr_ticketing_v2_pop_inventory_write_context')) {
                     bvmgr_ticketing_v2_pop_inventory_write_context();
-                } elseif (function_exists('vms_ticket_mutation_audit_pop_context')) {
-                    vms_ticket_mutation_audit_pop_context();
+                } elseif (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+                    bvmgr_ticket_mutation_audit_pop_context();
                 }
             }
             if (!$product_id) return 0;

@@ -224,15 +224,15 @@ function g10_project_g15_monitor_dates(string $source, string $label): array
 
 function g10_project_g16_monitor_logging(string $source, string $label): string
 {
-	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
-	$last = g10_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
+	$last = g10_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
 	$last_start = strpos($source, $last, (int) $start);
 	g10_assert($start !== false && $last_start !== false, $label . ' G16 helper bounds changed.');
 	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
 	g10_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), $label . ' G16 helper block changed.');
 	$source = str_replace($block . "\n\n", '', $source, $count);
 	g10_same(1, $count, $label . ' G16 helper removal count changed.');
-	$current = g10_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	$current = g10_extract_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown');
 	g10_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), $label . ' G16 shutdown contract changed.');
 	$fixture = (string) file_get_contents(__DIR__ . '/g16-operational-logging-group-c.php');
 	g10_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), $label . ' G16 historical shutdown fixture changed.');
@@ -348,7 +348,7 @@ function current_time(string $format): string
 	return gmdate($format);
 }
 
-function vms_ticket_integrity_get_settings(): array
+function bvmgr_ticket_integrity_get_settings(): array
 {
 	return array('days_ahead' => $GLOBALS['g10_days_ahead']);
 }
@@ -364,13 +364,13 @@ function get_post_meta(int $post_id, string $key, bool $single = false)
 	return $GLOBALS['g10_meta'][$post_id][$key] ?? ($single ? '' : array());
 }
 
-function vms_ticket_integrity_parse_wp_datetime(string $value): int
+function bvmgr_ticket_integrity_parse_wp_datetime(string $value): int
 {
 	$timestamp = strtotime($value . ' UTC');
 	return $timestamp === false ? 0 : $timestamp;
 }
 
-function vms_ticket_integrity_event_timestamp(int $plan_id, int $tec_event_id): int
+function bvmgr_ticket_integrity_event_timestamp(int $plan_id, int $tec_event_id): int
 {
 	unset($plan_id, $tec_event_id);
 	return 0;
@@ -381,7 +381,7 @@ function bvmgr_tec_is_cancelled_event(int $tec_event_id): bool
 	return !empty($GLOBALS['g10_cancelled'][$tec_event_id]);
 }
 
-function vms_ticket_integrity_plan_uses_ticketing(int $plan_id, int $tec_event_id): bool
+function bvmgr_ticket_integrity_plan_uses_ticketing(int $plan_id, int $tec_event_id): bool
 {
 	unset($tec_event_id);
 	return !empty($GLOBALS['g10_uses_ticketing'][$plan_id]);
@@ -433,7 +433,7 @@ function bvmgr_event_plan_perf_log(string $name, int $object_id, array $context)
 	$GLOBALS['g10_perf_logs'][] = compact('name', 'object_id', 'context');
 }
 
-function vms_ticket_integrity_queue_spot_scan(int $object_id, string $reason): void
+function bvmgr_ticket_integrity_queue_spot_scan(int $object_id, string $reason): void
 {
 	$GLOBALS['g10_spot_scans'][] = compact('object_id', 'reason');
 }
@@ -569,13 +569,13 @@ if (is_file($artifact_path)) {
 $annotation_specs = array(
 	'daily' => array(
 		array(
-			'function' => 'vms_ticket_integrity_report_table_exists',
+			'function' => 'bvmgr_ticket_integrity_report_table_exists',
 			'codes' => array($d_code, $n_code),
 			'marker' => "\t// phpcs:ignore {$d_code},{$n_code} -- Schema readiness performs a prepared exact-name probe for each of two WooCommerce lookup tables; the result must reflect current schema availability.\n",
 			'fragment' => "\t// phpcs:ignore {$d_code},{$n_code} -- Schema readiness performs a prepared exact-name probe for each of two WooCommerce lookup tables; the result must reflect current schema availability.\n\treturn (\$wpdb->get_var(\$wpdb->prepare('SHOW TABLES LIKE %s', \$table_name)) === \$table_name);",
 		),
 		array(
-			'function' => 'vms_ticket_integrity_report_lookup_metrics',
+			'function' => 'bvmgr_ticket_integrity_report_lookup_metrics',
 			'codes' => array($u_code, $p_code, $d_code, $n_code),
 			'marker' => "\t// phpcs:ignore {$u_code},{$p_code},{$d_code},{$n_code} -- The daily report prepares both table identifiers and every product/status value before one request-fresh aggregate; no WooCommerce API exposes this grouped metric contract.\n",
 			'fragment' => "\t// phpcs:ignore {$u_code},{$p_code},{$d_code},{$n_code} -- The daily report prepares both table identifiers and every product/status value before one request-fresh aggregate; no WooCommerce API exposes this grouped metric contract.\n\t\$rows = \$wpdb->get_results(\$wpdb->prepare(\$sql, \$args), ARRAY_A);",
@@ -583,13 +583,13 @@ $annotation_specs = array(
 	),
 	'monitor' => array(
 		array(
-			'function' => 'vms_ticket_integrity_build_targets',
+			'function' => 'bvmgr_ticket_integrity_build_targets',
 			'codes' => array($k_code),
 			'marker' => " // phpcs:ignore {$k_code} -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.",
 			'fragment' => "'meta_key' => '_vms_event_date', // phpcs:ignore {$k_code} -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.",
 		),
 		array(
-			'function' => 'vms_ticket_integrity_build_targets',
+			'function' => 'bvmgr_ticket_integrity_build_targets',
 			'codes' => array($q_code),
 			'marker' => " // phpcs:ignore {$q_code} -- Ticket Integrity intentionally paginates the complete published, linked Event Plan set inside the configured date window before applying ticketing and activity checks.",
 			'fragment' => "'meta_query' => array( // phpcs:ignore {$q_code} -- Ticket Integrity intentionally paginates the complete published, linked Event Plan set inside the configured date window before applying ticketing and activity checks.",
@@ -597,7 +597,7 @@ $annotation_specs = array(
 	),
 	'cron' => array(
 		array(
-			'function' => 'vms_ticket_integrity_watch_ticketing_meta',
+			'function' => 'bvmgr_ticket_integrity_watch_ticketing_meta',
 			'codes' => array($k_code),
 			'marker' => " // phpcs:ignore {$k_code} -- This diagnostic payload field records the exact watched metadata key; it is not a WordPress query argument.",
 			'fragment' => "'meta_key' => \$meta_key, // phpcs:ignore {$k_code} -- This diagnostic payload field records the exact watched metadata key; it is not a WordPress query argument.",
@@ -647,7 +647,7 @@ $negative_controls = array(
 );
 foreach ($negative_controls as $label => $annotation) {
 	$mutated_functions = $function_sources;
-	$mutated_functions['cron::vms_ticket_integrity_watch_ticketing_meta'] .= "\n" . $annotation;
+	$mutated_functions['cron::bvmgr_ticket_integrity_watch_ticketing_meta'] .= "\n" . $annotation;
 	g10_assert(
 		g10_db_annotation_errors($mutated_functions, $expected_directives) !== array(),
 		'DB annotation audit must reject negative control: ' . $label
@@ -683,9 +683,9 @@ $stripped_hashes = array(
 	),
 );
 $projection_functions = array(
-	'daily' => array('vms_ticket_integrity_report_table_exists', 'vms_ticket_integrity_report_lookup_metrics'),
-	'monitor' => array('vms_ticket_integrity_build_targets'),
-	'cron' => array('vms_ticket_integrity_watch_ticketing_meta'),
+	'daily' => array('bvmgr_ticket_integrity_report_table_exists', 'bvmgr_ticket_integrity_report_lookup_metrics'),
+	'monitor' => array('bvmgr_ticket_integrity_build_targets'),
+	'cron' => array('bvmgr_ticket_integrity_watch_ticketing_meta'),
 	'add' => array('vms_add_dispatch_get_event_plan_need_scan'),
 );
 $projection_hashes = array(
@@ -748,8 +748,8 @@ g10_assert(
 
 g10_same($mirror_sources['daily'], $shadow_sources['daily'], 'Daily-report mirror/shadow files must remain exact.');
 g10_same(
-	g10_extract_function($mirror_sources['cron'], 'vms_ticket_integrity_watch_ticketing_meta'),
-	g10_extract_function($shadow_sources['cron'], 'vms_ticket_integrity_watch_ticketing_meta'),
+	g10_extract_function($mirror_sources['cron'], 'bvmgr_ticket_integrity_watch_ticketing_meta'),
+	g10_extract_function($shadow_sources['cron'], 'bvmgr_ticket_integrity_watch_ticketing_meta'),
 	'Cron owned watcher must remain exact across mirror/shadow.'
 );
 g10_same(
@@ -761,25 +761,25 @@ $monitor_prior_annotation = "\t\t\t\t// phpcs:ignore WordPressVIPMinimum.Perform
 $mirror_monitor_function = str_replace(
 	$monitor_prior_annotation,
 	'',
-	g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_build_targets'),
+	g10_extract_function($mirror_sources['monitor'], 'bvmgr_ticket_integrity_build_targets'),
 	$monitor_prior_count
 );
 g10_same(1, $monitor_prior_count, 'Mirror must retain the prior suppress_filters annotation.');
 g10_same(
 	$mirror_monitor_function,
-	g10_extract_function($shadow_sources['monitor'], 'vms_ticket_integrity_build_targets'),
+	g10_extract_function($shadow_sources['monitor'], 'bvmgr_ticket_integrity_build_targets'),
 	'Monitor owned query behavior must remain exact after removing the preserved mirror-only annotation.'
 );
 g10_assert($mirror_sources['monitor'] !== $shadow_sources['monitor'], 'Monitor whole-file divergence must remain preserved.');
 g10_assert($mirror_sources['cron'] !== $shadow_sources['cron'], 'Cron whole-file divergence must remain preserved.');
 g10_assert($mirror_sources['add'] !== $shadow_sources['add'], 'ADD whole-file divergence must remain preserved.');
 
-$monitor_shutdown_source = g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_fatal_guard_shutdown');
+$monitor_shutdown_source = g10_extract_function($mirror_sources['monitor'], 'bvmgr_ticket_integrity_fatal_guard_shutdown');
 g10_same(1, substr_count($monitor_shutdown_source, 'error_log('), 'G16 monitor direct fallback count changed.');
 g10_same(1, substr_count($monitor_shutdown_source, 'DevelopmentFunctions.error_log_error_log'), 'G16 monitor fallback must retain one exact line-local suppression.');
 g10_contains("if (function_exists('error_log'))", $monitor_shutdown_source, 'G16 monitor fallback availability guard changed.');
-$monitor_format_source = g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_format_datetime');
-$monitor_target_source = g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_build_targets');
+$monitor_format_source = g10_extract_function($mirror_sources['monitor'], 'bvmgr_ticket_integrity_format_datetime');
+$monitor_target_source = g10_extract_function($mirror_sources['monitor'], 'bvmgr_ticket_integrity_build_targets');
 g10_contains("return wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());", $monitor_format_source, 'G15 monitor formatter remediation changed.');
 g10_contains("\$tz = wp_timezone();", $monitor_target_source, 'G15 monitor target timezone resolution changed.');
 g10_contains("\$start_date = wp_date('Y-m-d', \$now, \$tz);", $monitor_target_source, 'G15 monitor start-date remediation changed.');
@@ -787,26 +787,26 @@ g10_contains("\$end_date = wp_date('Y-m-d', \$cutoff, \$tz);", $monitor_target_s
 g10_same(0, preg_match_all('/(?<![A-Za-z0-9_])date\s*\(/', $monitor_format_source . "\n" . $monitor_target_source), 'G15 monitor functions must contain zero native date() calls.');
 g10_assert(strpos($monitor_format_source . $monitor_target_source, 'WordPress.DateTime') === false, 'G15 monitor date remediation must not add DateTime suppressions.');
 
-eval(g10_extract_function($mirror_sources['daily'], 'vms_ticket_integrity_report_statuses'));
-eval(g10_extract_function($mirror_sources['daily'], 'vms_ticket_integrity_report_table_exists'));
-eval(g10_extract_function($mirror_sources['daily'], 'vms_ticket_integrity_report_lookup_metrics'));
-eval(g10_extract_function($mirror_sources['monitor'], 'vms_ticket_integrity_build_targets'));
-eval(g10_extract_function($mirror_sources['cron'], 'vms_ticket_integrity_watch_ticketing_meta'));
+eval(g10_extract_function($mirror_sources['daily'], 'bvmgr_ticket_integrity_report_statuses'));
+eval(g10_extract_function($mirror_sources['daily'], 'bvmgr_ticket_integrity_report_table_exists'));
+eval(g10_extract_function($mirror_sources['daily'], 'bvmgr_ticket_integrity_report_lookup_metrics'));
+eval(g10_extract_function($mirror_sources['monitor'], 'bvmgr_ticket_integrity_build_targets'));
+eval(g10_extract_function($mirror_sources['cron'], 'bvmgr_ticket_integrity_watch_ticketing_meta'));
 eval(g10_extract_function($mirror_sources['add'], 'vms_add_dispatch_get_event_plan_need_scan'));
 
 $wpdb = new G10_WPDB_Spy();
 $GLOBALS['wpdb'] = $wpdb;
 g10_reset_runtime($wpdb);
 
-g10_same(false, vms_ticket_integrity_report_table_exists('  '), 'Blank table probes should fail closed.');
+g10_same(false, bvmgr_ticket_integrity_report_table_exists('  '), 'Blank table probes should fail closed.');
 g10_same(array(), $wpdb->prepares, 'Blank table probes must not reach wpdb.');
 $GLOBALS['wpdb'] = null;
-g10_same(false, vms_ticket_integrity_report_table_exists('wp_wc_order_stats'), 'Missing wpdb should fail closed.');
+g10_same(false, bvmgr_ticket_integrity_report_table_exists('wp_wc_order_stats'), 'Missing wpdb should fail closed.');
 $wpdb = new G10_WPDB_Spy();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_var_queue = array('wp_wc_order_stats', 'different_table');
-g10_same(true, vms_ticket_integrity_report_table_exists('wp_wc_order_stats'), 'Exact table probe should succeed.');
-g10_same(false, vms_ticket_integrity_report_table_exists('wp_wc_order_stats'), 'Mismatched table probe should fail closed.');
+g10_same(true, bvmgr_ticket_integrity_report_table_exists('wp_wc_order_stats'), 'Exact table probe should succeed.');
+g10_same(false, bvmgr_ticket_integrity_report_table_exists('wp_wc_order_stats'), 'Mismatched table probe should fail closed.');
 g10_same(2, count($wpdb->get_var_calls), 'Schema probes must remain request-fresh rather than adding persistent caching.');
 g10_same('SHOW TABLES LIKE %s', $wpdb->prepares[0]['template'], 'Schema probe template changed.');
 g10_same(array('wp_wc_order_stats'), $wpdb->prepares[0]['args'], 'Schema probe argument changed.');
@@ -815,18 +815,18 @@ g10_same("SHOW TABLES LIKE 'wp_wc_order_stats'", $wpdb->prepares[0]['sql'], 'Sch
 g10_reset_runtime($wpdb);
 g10_same(
 	array('provider' => 'none', 'statuses' => array('wc-completed'), 'qty' => 0, 'net_revenue' => 0.0, 'gross_revenue' => 0.0, 'by_product' => array()),
-	vms_ticket_integrity_report_lookup_metrics(array(0), array('wc-completed')),
+	bvmgr_ticket_integrity_report_lookup_metrics(array(0), array('wc-completed')),
 	'Empty normalized product set should retain the empty result.'
 );
 g10_same(array(), $wpdb->get_var_calls, 'Empty product set must not query.');
 $GLOBALS['g10_woo_active'] = false;
-g10_same('none', vms_ticket_integrity_report_lookup_metrics(array(10), array('wc-completed'))['provider'], 'Inactive WooCommerce should retain empty provider.');
+g10_same('none', bvmgr_ticket_integrity_report_lookup_metrics(array(10), array('wc-completed'))['provider'], 'Inactive WooCommerce should retain empty provider.');
 g10_same(array(), $wpdb->get_var_calls, 'Inactive WooCommerce must not query.');
 
 g10_reset_runtime($wpdb);
 $GLOBALS['g10_products'][10] = new G10_Product(3, 5.5);
 $wpdb->get_var_queue = array('wp_wc_order_product_lookup', false);
-$fallback = vms_ticket_integrity_report_lookup_metrics(array(10, 20), array('wc-completed'));
+$fallback = bvmgr_ticket_integrity_report_lookup_metrics(array(10, 20), array('wc-completed'));
 g10_same(
 	array(
 		'provider' => 'woo_product_totals',
@@ -850,7 +850,7 @@ $raw_rows = array(
 );
 $wpdb->get_var_queue = array('wp_wc_order_product_lookup', 'wp_wc_order_stats');
 $wpdb->get_results_queue = array($raw_rows);
-$metrics = vms_ticket_integrity_report_lookup_metrics(array(10, 20), $statuses);
+$metrics = bvmgr_ticket_integrity_report_lookup_metrics(array(10, 20), $statuses);
 $aggregate_prepare = $wpdb->prepares[2];
 $expected_template = 'SELECT product_lookup.product_id AS product_id, COALESCE(SUM(product_lookup.product_qty), 0) AS qty, COALESCE(SUM(product_lookup.product_net_revenue), 0) AS net_revenue, COALESCE(SUM(product_lookup.product_gross_revenue), 0) AS gross_revenue FROM %i product_lookup INNER JOIN %i order_stats ON order_stats.order_id = product_lookup.order_id WHERE product_lookup.product_id IN (%d, %d) AND order_stats.status IN (%s, %s) GROUP BY product_lookup.product_id';
 g10_same($expected_template, g10_normalize_sql($aggregate_prepare['template']), 'Aggregate SQL template changed.');
@@ -882,14 +882,14 @@ g10_same(
 g10_reset_runtime($wpdb);
 $wpdb->get_var_queue = array('wp_wc_order_product_lookup', 'wp_wc_order_stats');
 $wpdb->get_results_queue = array(false);
-$failed_metrics = vms_ticket_integrity_report_lookup_metrics(array(10), array('wc-completed'));
+$failed_metrics = bvmgr_ticket_integrity_report_lookup_metrics(array(10), array('wc-completed'));
 g10_same('woo_lookup_completed', $failed_metrics['provider'], 'Aggregate failure provider changed.');
 g10_same(0, $failed_metrics['qty'], 'Aggregate failure should remain empty.');
 g10_same(false, $wpdb->get_results_calls[0]['result'], 'Aggregate failure result must be captured unchanged.');
 $prepares_before_repeat = count($wpdb->prepares);
 $wpdb->get_var_queue = array('wp_wc_order_product_lookup', 'wp_wc_order_stats');
 $wpdb->get_results_queue = array(array());
-vms_ticket_integrity_report_lookup_metrics(array(10), array('wc-completed'));
+bvmgr_ticket_integrity_report_lookup_metrics(array(10), array('wc-completed'));
 g10_same($prepares_before_repeat + 3, count($wpdb->prepares), 'Repeated report lookup must preserve request-fresh table probes and aggregate execution.');
 
 g10_reset_runtime($wpdb);
@@ -908,7 +908,7 @@ $GLOBALS['g10_wp_query_queue'] = array(
 	array('posts' => array(101, 0, 102), 'max_num_pages' => 2),
 	array('posts' => array(103), 'max_num_pages' => 2),
 );
-$targets = vms_ticket_integrity_build_targets(array('days_ahead' => 30));
+$targets = bvmgr_ticket_integrity_build_targets(array('days_ahead' => 30));
 $finished = time();
 g10_same(array(103, 101), array_column($targets, 'plan_id'), 'Monitor targets should preserve chronological ordering across pages.');
 g10_same(2, count($GLOBALS['g10_wp_query_calls']), 'Monitor should paginate through every reported page.');
@@ -945,16 +945,16 @@ g10_same(2, $GLOBALS['g10_reset_postdata_calls'], 'Monitor should reset postdata
 
 g10_reset_runtime($wpdb);
 $GLOBALS['g10_wp_query_queue'][] = array('posts' => false, 'max_num_pages' => 4);
-g10_same(array(), vms_ticket_integrity_build_targets(array('days_ahead' => 7)), 'Non-array monitor query result should fail closed.');
+g10_same(array(), bvmgr_ticket_integrity_build_targets(array('days_ahead' => 7)), 'Non-array monitor query result should fail closed.');
 g10_same(1, count($GLOBALS['g10_wp_query_calls']), 'Empty monitor result must terminate pagination.');
 
 g10_reset_runtime($wpdb);
 $GLOBALS['g10_post_types'][77] = 'vms_event_plan';
-vms_ticket_integrity_watch_ticketing_meta(1, 0, '_vms_ticketing_enabled_override', 'x');
-vms_ticket_integrity_watch_ticketing_meta(2, 77, '_unwatched', 'x');
+bvmgr_ticket_integrity_watch_ticketing_meta(1, 0, '_vms_ticketing_enabled_override', 'x');
+bvmgr_ticket_integrity_watch_ticketing_meta(2, 77, '_unwatched', 'x');
 g10_same(array(), $GLOBALS['g10_perf_logs'], 'Invalid/unwatched metadata must not log.');
 g10_same(array(), $GLOBALS['g10_spot_scans'], 'Invalid/unwatched metadata must not queue.');
-vms_ticket_integrity_watch_ticketing_meta(3, 77, '_vms_ticketing_enabled_override', 'x');
+bvmgr_ticket_integrity_watch_ticketing_meta(3, 77, '_vms_ticketing_enabled_override', 'x');
 g10_same(
 	array(array('name' => 'vms_ticket_integrity_watch_ticketing_meta', 'object_id' => 77, 'context' => array('job_name' => 'ticket_integrity_ticketing_meta', 'meta_key' => '_vms_ticketing_enabled_override'))),
 	$GLOBALS['g10_perf_logs'],

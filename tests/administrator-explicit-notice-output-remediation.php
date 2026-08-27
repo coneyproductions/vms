@@ -878,24 +878,24 @@ if (!function_exists('vms_email_followups_manual_batch_size')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_get_settings')) {
-	function vms_ticket_integrity_get_settings(): array
+if (!function_exists('bvmgr_ticket_integrity_get_settings')) {
+	function bvmgr_ticket_integrity_get_settings(): array
 	{
 		$GLOBALS['vms_test_ticket_integrity_get_settings_calls']++;
 		return is_array($GLOBALS['vms_test_ticket_integrity_get_settings_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_get_settings_value'] : array();
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_get_results_store')) {
-	function vms_ticket_integrity_get_results_store(): array
+if (!function_exists('bvmgr_ticket_integrity_get_results_store')) {
+	function bvmgr_ticket_integrity_get_results_store(): array
 	{
 		$GLOBALS['vms_test_ticket_integrity_get_results_store_calls']++;
 		return is_array($GLOBALS['vms_test_ticket_integrity_get_results_store_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_get_results_store_value'] : array();
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_prepare_payment_gateway_health')) {
-	function vms_ticket_integrity_prepare_payment_gateway_health(string $context = '', int $ttl = 0): array
+if (!function_exists('bvmgr_ticket_integrity_prepare_payment_gateway_health')) {
+	function bvmgr_ticket_integrity_prepare_payment_gateway_health(string $context = '', int $ttl = 0): array
 	{
 		$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_calls']++;
 		$GLOBALS['vms_test_ticket_integrity_prepare_payment_gateway_health_args'][] = array($context, $ttl);
@@ -903,16 +903,16 @@ if (!function_exists('vms_ticket_integrity_prepare_payment_gateway_health')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_get_sorted_events')) {
-	function vms_ticket_integrity_get_sorted_events(): array
+if (!function_exists('bvmgr_ticket_integrity_get_sorted_events')) {
+	function bvmgr_ticket_integrity_get_sorted_events(): array
 	{
 		$GLOBALS['vms_test_ticket_integrity_get_sorted_events_calls']++;
 		return is_array($GLOBALS['vms_test_ticket_integrity_get_sorted_events_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_get_sorted_events_value'] : array();
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_get_logs')) {
-	function vms_ticket_integrity_get_logs(): array
+if (!function_exists('bvmgr_ticket_integrity_get_logs')) {
+	function bvmgr_ticket_integrity_get_logs(): array
 	{
 		$GLOBALS['vms_test_ticket_integrity_get_logs_calls']++;
 		return is_array($GLOBALS['vms_test_ticket_integrity_get_logs_value'] ?? null) ? $GLOBALS['vms_test_ticket_integrity_get_logs_value'] : array();
@@ -987,8 +987,8 @@ if (!function_exists('bvmgr_feedback_get_event_context')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_format_datetime')) {
-	function vms_ticket_integrity_format_datetime(int $timestamp_gmt): string
+if (!function_exists('bvmgr_ticket_integrity_format_datetime')) {
+	function bvmgr_ticket_integrity_format_datetime(int $timestamp_gmt): string
 	{
 		if ($timestamp_gmt <= 0) {
 			return 'Never';
@@ -998,16 +998,16 @@ if (!function_exists('vms_ticket_integrity_format_datetime')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_status_css_class')) {
-	function vms_ticket_integrity_status_css_class(string $status): string
+if (!function_exists('bvmgr_ticket_integrity_status_css_class')) {
+	function bvmgr_ticket_integrity_status_css_class(string $status): string
 	{
 		$status = sanitize_html_class($status);
 		return 'vms-ticket-integrity__status vms-ticket-integrity__status--' . ($status !== '' ? $status : 'unknown');
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_status_label')) {
-	function vms_ticket_integrity_status_label(string $status): string
+if (!function_exists('bvmgr_ticket_integrity_status_label')) {
+	function bvmgr_ticket_integrity_status_label(string $status): string
 	{
 		$status = sanitize_key($status);
 		return $status !== '' ? ucwords(str_replace('_', ' ', $status)) : 'Unknown';
@@ -1259,11 +1259,11 @@ $calendarRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\
 $venueRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]vms_render_integrity_venue_reconcile_notice[\'"]~', $allIncludeSource, $unusedVenueRichMatches);
 $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
 $dueDatesNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_due_render_admin_notices[\'"]~', $allIncludeSource, $unusedDueMatches);
-$squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
+$squareSyncNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_square_sync_protection_render_admin_notice[\'"]~', $allIncludeSource, $unusedSquareMatches);
 $staffCertificationsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*function\s*\(\)\s*use\s*\(\s*\$pending\s*\)\s*:\s*void~', $staffCertificationsSource, $unusedStaffMatches);
 $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notices~', $emailFollowupsSource, $unusedEmailFollowupsMatches);
 $eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
-$ticketIntegrityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_ticket_integrity_render_notice_from_query[\'"]~', $ticketIntegritySource, $unusedTicketIntegrityMatches);
+$ticketIntegrityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_ticket_integrity_render_notice_from_query[\'"]~', $ticketIntegritySource, $unusedTicketIntegrityMatches);
 $settingsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_render_settings_page_notice_bar[\'"]~', $settingsSource, $unusedSettingsMatches);
 $passClaimsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_pass_claims_render_admin_notices[\'"]~', $passClaimsSource, $unusedPassClaimsMatches);
 $eventPlanImportNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notice~', $eventPlanImportSource, $unusedEventPlanImportMatches);
@@ -2304,16 +2304,16 @@ vms_due_render_admin_notices();
 $dueNoNotice = (string) ob_get_clean();
 $assert($dueNoNotice === '', 'Due Dates explicit notice callback should stay silent when no message slug is present.');
 
-$assert(strpos($squareSyncProtectionSource, 'function vms_square_sync_protection_render_admin_notice(): void') !== false, 'Square Sync Protection should expose a dedicated explicit notice callback.');
-$assert(substr_count($squareSyncProtectionSource, "'notices_callback' => 'vms_square_sync_protection_render_admin_notice'") === 1, 'Square Sync Protection shell call should supply its explicit notice callback exactly once.');
+$assert(strpos($squareSyncProtectionSource, 'function bvmgr_square_sync_protection_render_admin_notice(): void') !== false, 'Square Sync Protection should expose a dedicated explicit notice callback.');
+$assert(substr_count($squareSyncProtectionSource, "'notices_callback' => 'bvmgr_square_sync_protection_render_admin_notice'") === 1, 'Square Sync Protection shell call should supply its explicit notice callback exactly once.');
 $assert(strpos($squareSyncProtectionSource, 'apply_filters(') === false && strpos($squareSyncProtectionSource, 'do_action(') === false, 'Square Sync Protection notice path should not hand off explicit notice markup through hooks or filters.');
 $assert(strpos($squareSyncProtectionSource, 'settings_errors(') === false && strpos($squareSyncProtectionSource, 'do_settings_sections(') === false && strpos($squareSyncProtectionSource, 'wp_editor(') === false, 'Square Sync Protection should not route notice markup through Settings API or editor callbacks.');
-$squareNoticeStart = strpos($squareSyncProtectionSource, 'function vms_square_sync_protection_render_admin_notice(): void');
-$squareNoticeEnd = strpos($squareSyncProtectionSource, 'function vms_render_square_sync_protection_page_content(): void');
+$squareNoticeStart = strpos($squareSyncProtectionSource, 'function bvmgr_square_sync_protection_render_admin_notice(): void');
+$squareNoticeEnd = strpos($squareSyncProtectionSource, 'function bvmgr_render_square_sync_protection_page_content(): void');
 $assert($squareNoticeStart !== false && $squareNoticeEnd !== false && $squareNoticeEnd > $squareNoticeStart, 'Square Sync Protection explicit notice callback body should be locatable.');
 $squareNoticeSource = substr($squareSyncProtectionSource, (int) $squareNoticeStart, (int) $squareNoticeEnd - (int) $squareNoticeStart);
-$squareContentStart = strpos($squareSyncProtectionSource, 'function vms_render_square_sync_protection_page_content(): void');
-$squareContentEnd = strpos($squareSyncProtectionSource, 'function vms_render_square_sync_protection_page(): void');
+$squareContentStart = strpos($squareSyncProtectionSource, 'function bvmgr_render_square_sync_protection_page_content(): void');
+$squareContentEnd = strpos($squareSyncProtectionSource, 'function bvmgr_render_square_sync_protection_page(): void');
 $assert($squareContentStart !== false && $squareContentEnd !== false && $squareContentEnd > $squareContentStart, 'Square Sync Protection content callback body should be locatable.');
 $squareContentSource = substr($squareSyncProtectionSource, (int) $squareContentStart, (int) $squareContentEnd - (int) $squareContentStart);
 $assert(
@@ -2333,7 +2333,7 @@ $_GET = array(
 	'vms_square_notice' => 'scan_done',
 );
 ob_start();
-vms_square_sync_protection_render_admin_notice();
+bvmgr_square_sync_protection_render_admin_notice();
 $squareScanNotice = (string) ob_get_clean();
 $assert(
 	$squareScanNotice === '<div class="notice notice-info"><p>Square Sync Protection scan complete.</p></div>',
@@ -2348,7 +2348,7 @@ $_GET = array(
 	'vms_square_notice' => 'repair_done',
 );
 ob_start();
-vms_square_sync_protection_render_admin_notice();
+bvmgr_square_sync_protection_render_admin_notice();
 $squareRepairNotice = (string) ob_get_clean();
 $assert(
 	$squareRepairNotice === '<div class="notice notice-success"><p>Square Sync Protection repair complete.</p></div>',
@@ -2359,7 +2359,7 @@ $_GET = array(
 	'vms_square_notice' => '',
 );
 ob_start();
-vms_square_sync_protection_render_admin_notice();
+bvmgr_square_sync_protection_render_admin_notice();
 $squareNoNotice = (string) ob_get_clean();
 $assert($squareNoNotice === '', 'Square Sync Protection explicit notice callback should stay silent when no notice slug is present.');
 
@@ -2990,34 +2990,34 @@ $assert(strpos($emailNonemptyPreviewPage, 'Know Before You Go') !== false && str
 $assert(strpos($emailNonemptyPreviewPage, 'buyer@example.test') !== false && strpos($emailNonemptyPreviewPage, 'Buyer Example') !== false, 'Email Follow-Ups nonempty preview render should preserve the recipient preview output.');
 $assert(strpos($emailNonemptyPreviewPage, 'value="321" selected="selected"') !== false, 'Email Follow-Ups nonempty preview render should preserve the selected event choice in the preview form.');
 
-$assert(strpos($ticketIntegritySource, 'function vms_ticket_integrity_render_notice_from_query(): void') !== false, 'Ticket Integrity should preserve the dedicated top-level query notice helper.');
-$ticketIntegrityNoticeStart = strpos($ticketIntegritySource, 'function vms_ticket_integrity_render_notice_from_query(): void');
-$ticketIntegrityNoticeEnd = strpos($ticketIntegritySource, 'function vms_ticket_integrity_render_summary_cards(array $summary, array $last_scan): void');
+$assert(strpos($ticketIntegritySource, 'function bvmgr_ticket_integrity_render_notice_from_query(): void') !== false, 'Ticket Integrity should preserve the dedicated top-level query notice helper.');
+$ticketIntegrityNoticeStart = strpos($ticketIntegritySource, 'function bvmgr_ticket_integrity_render_notice_from_query(): void');
+$ticketIntegrityNoticeEnd = strpos($ticketIntegritySource, 'function bvmgr_ticket_integrity_render_summary_cards(array $summary, array $last_scan): void');
 $assert($ticketIntegrityNoticeStart !== false && $ticketIntegrityNoticeEnd !== false && $ticketIntegrityNoticeEnd > $ticketIntegrityNoticeStart, 'Ticket Integrity notice helper body should be locatable.');
 $ticketIntegrityNoticeSource = substr($ticketIntegritySource, (int) $ticketIntegrityNoticeStart, (int) $ticketIntegrityNoticeEnd - (int) $ticketIntegrityNoticeStart);
-$ticketIntegrityPageStart = strpos($ticketIntegritySource, 'function vms_ticket_integrity_render_admin_page(): void');
+$ticketIntegrityPageStart = strpos($ticketIntegritySource, 'function bvmgr_ticket_integrity_render_admin_page(): void');
 $assert($ticketIntegrityPageStart !== false, 'Ticket Integrity page renderer body should be locatable.');
 $ticketIntegrityPageSource = substr($ticketIntegritySource, (int) $ticketIntegrityPageStart);
 $ticketIntegrityContentStart = strpos($ticketIntegrityPageSource, 'static function () use (');
 $ticketIntegrityContentEnd = strpos($ticketIntegrityPageSource, "echo '<div class=\"wrap\"><h1>'");
 $assert($ticketIntegrityContentStart !== false && $ticketIntegrityContentEnd !== false && $ticketIntegrityContentEnd > $ticketIntegrityContentStart, 'Ticket Integrity shell content closure body should be locatable.');
 $ticketIntegrityContentSource = substr($ticketIntegrityPageSource, (int) $ticketIntegrityContentStart, (int) $ticketIntegrityContentEnd - (int) $ticketIntegrityContentStart);
-$ticketIntegrityRebuildStart = strpos($ticketIntegritySource, 'function vms_ticket_integrity_handle_rebuild(): void');
-$ticketIntegrityRebuildEnd = strpos($ticketIntegritySource, "function vms_ticket_integrity_find_ticket_config_row(array \$context, string \$ticket_key, string \$title_token = ''): array");
+$ticketIntegrityRebuildStart = strpos($ticketIntegritySource, 'function bvmgr_ticket_integrity_handle_rebuild(): void');
+$ticketIntegrityRebuildEnd = strpos($ticketIntegritySource, "function bvmgr_ticket_integrity_find_ticket_config_row(array \$context, string \$ticket_key, string \$title_token = ''): array");
 $assert($ticketIntegrityRebuildStart !== false && $ticketIntegrityRebuildEnd !== false && $ticketIntegrityRebuildEnd > $ticketIntegrityRebuildStart, 'Ticket Integrity rebuild handler body should be locatable.');
 $ticketIntegrityRebuildSource = substr($ticketIntegritySource, (int) $ticketIntegrityRebuildStart, (int) $ticketIntegrityRebuildEnd - (int) $ticketIntegrityRebuildStart);
-$ticketIntegrityDuplicateStart = strpos($ticketIntegritySource, 'function vms_ticket_integrity_handle_duplicate_cleanup(): void');
-$ticketIntegrityDuplicateEnd = strpos($ticketIntegritySource, 'function vms_ticket_integrity_report_text_value($value): string');
+$ticketIntegrityDuplicateStart = strpos($ticketIntegritySource, 'function bvmgr_ticket_integrity_handle_duplicate_cleanup(): void');
+$ticketIntegrityDuplicateEnd = strpos($ticketIntegritySource, 'function bvmgr_ticket_integrity_report_text_value($value): string');
 $assert($ticketIntegrityDuplicateStart !== false && $ticketIntegrityDuplicateEnd !== false && $ticketIntegrityDuplicateEnd > $ticketIntegrityDuplicateStart, 'Ticket Integrity duplicate-cleanup handler body should be locatable.');
 $ticketIntegrityDuplicateSource = substr($ticketIntegritySource, (int) $ticketIntegrityDuplicateStart, (int) $ticketIntegrityDuplicateEnd - (int) $ticketIntegrityDuplicateStart);
-$assert(strpos($ticketIntegrityPageSource, "'notices_callback' => 'vms_ticket_integrity_render_notice_from_query'") !== false, 'Ticket Integrity shell call should route the full notice helper through the explicit notice callback.');
-$assert(strpos($ticketIntegrityContentSource, 'vms_ticket_integrity_render_notice_from_query();') === false, 'Ticket Integrity shell content closure should no longer call the moved notice helper directly.');
+$assert(strpos($ticketIntegrityPageSource, "'notices_callback' => 'bvmgr_ticket_integrity_render_notice_from_query'") !== false, 'Ticket Integrity shell call should route the full notice helper through the explicit notice callback.');
+$assert(strpos($ticketIntegrityContentSource, 'bvmgr_ticket_integrity_render_notice_from_query();') === false, 'Ticket Integrity shell content closure should no longer call the moved notice helper directly.');
 $assert(strpos($ticketIntegrityContentSource, "echo '<section class=\"vms-ticket-integrity__panel\" data-vms-tour=\"ticket-integrity.run\">'") !== false, 'Ticket Integrity shell content closure should still begin with the run panel after the moved notice boundary.');
 $assert(strpos($ticketIntegrityPageSource, "echo '<div class=\"wrap\"><h1>' . esc_html__('Ticket Integrity', 'backstage-venue-manager') . '</h1></div>';") !== false, 'Ticket Integrity no-shell fallback should preserve the historical heading-only output path.');
-$assert(strpos($ticketIntegrityNoticeSource, "sanitize_key(vms_ticket_integrity_query_arg('tim_notice'))") !== false, 'Ticket Integrity notice helper should preserve selector sanitization.');
-$assert(strpos($ticketIntegrityNoticeSource, "sanitize_text_field(vms_ticket_integrity_query_arg('detail'))") !== false, 'Ticket Integrity notice helper should preserve detail sanitization.');
-$assert(strpos($ticketIntegrityNoticeSource, "sanitize_email(vms_ticket_integrity_query_arg('recipient'))") !== false, 'Ticket Integrity notice helper should preserve recipient sanitization.');
-$assert(strpos($ticketIntegrityNoticeSource, "absint(vms_ticket_integrity_query_arg('red'))") !== false && strpos($ticketIntegrityNoticeSource, "absint(vms_ticket_integrity_query_arg('yellow'))") !== false, 'Ticket Integrity notice helper should preserve red/yellow count normalization.');
+$assert(strpos($ticketIntegrityNoticeSource, "sanitize_key(bvmgr_ticket_integrity_query_arg('tim_notice'))") !== false, 'Ticket Integrity notice helper should preserve selector sanitization.');
+$assert(strpos($ticketIntegrityNoticeSource, "sanitize_text_field(bvmgr_ticket_integrity_query_arg('detail'))") !== false, 'Ticket Integrity notice helper should preserve detail sanitization.');
+$assert(strpos($ticketIntegrityNoticeSource, "sanitize_email(bvmgr_ticket_integrity_query_arg('recipient'))") !== false, 'Ticket Integrity notice helper should preserve recipient sanitization.');
+$assert(strpos($ticketIntegrityNoticeSource, "absint(bvmgr_ticket_integrity_query_arg('red'))") !== false && strpos($ticketIntegrityNoticeSource, "absint(bvmgr_ticket_integrity_query_arg('yellow'))") !== false, 'Ticket Integrity notice helper should preserve red/yellow count normalization.');
 $assert(substr_count($ticketIntegrityNoticeSource, "message .= ' ' . \$detail;") === 9, 'Ticket Integrity notice helper should preserve every detail-text append branch.');
 $assert(substr_count($ticketIntegrityNoticeSource, "message .= ' ' . \$notice_recipient;") === 1, 'Ticket Integrity notice helper should preserve the single recipient-text append branch.');
 $assert(strpos($ticketIntegrityNoticeSource, "echo '<div class=\"notice ' . esc_attr(\$class) . '\"><p>' . esc_html(\$message) . '</p></div>';") !== false, 'Ticket Integrity notice helper should preserve the exact non-inline, non-dismissible simple notice markup.');
@@ -3051,7 +3051,7 @@ $ticketIntegrityExpectedStatuses = array(
 	'settings_saved',
 );
 $ticketIntegrityExpectedQueryArgs = array('detail', 'recipient', 'red', 'tim_notice', 'yellow');
-preg_match_all("~vms_ticket_integrity_query_arg\\('([a-z_]+)'\\)~", $ticketIntegrityNoticeSource, $ticketIntegrityQueryArgMatches);
+preg_match_all("~bvmgr_ticket_integrity_query_arg\\('([a-z_]+)'\\)~", $ticketIntegrityNoticeSource, $ticketIntegrityQueryArgMatches);
 $ticketIntegrityQueryArgs = array_values(array_unique($ticketIntegrityQueryArgMatches[1]));
 sort($ticketIntegrityQueryArgs);
 sort($ticketIntegrityExpectedQueryArgs);
@@ -3062,7 +3062,7 @@ sort($ticketIntegrityRenderStatuses);
 $expectedRenderStatuses = $ticketIntegrityExpectedStatuses;
 sort($expectedRenderStatuses);
 $assert($ticketIntegrityRenderStatuses === $expectedRenderStatuses, 'Ticket Integrity notice helper should preserve the complete recognized selector vocabulary.');
-preg_match_all("~vms_ticket_integrity_admin_redirect\\(\\s*'([a-z_]+)'~", $ticketIntegritySource, $ticketIntegrityDirectWriterMatches);
+preg_match_all("~bvmgr_ticket_integrity_admin_redirect\\(\\s*'([a-z_]+)'~", $ticketIntegritySource, $ticketIntegrityDirectWriterMatches);
 preg_match_all('~\\$notice\\s*=\\s*\'(rebuild_[a-z_]+)\'~', $ticketIntegrityRebuildSource, $ticketIntegrityRebuildWriterMatches);
 preg_match_all('~\\$notice\\s*=\\s*\'(duplicate_cleanup_[a-z_]+)\'~', $ticketIntegrityDuplicateSource, $ticketIntegrityDuplicateWriterMatches);
 $ticketIntegrityWriterStatuses = array_values(array_unique(array_merge(
@@ -3180,7 +3180,7 @@ $ticketIntegrityRenderCases = array(
 foreach ($ticketIntegrityRenderCases as $ticketIntegrityRenderCase) {
 	$_GET = $ticketIntegrityRenderCase['query'];
 	ob_start();
-	vms_ticket_integrity_render_notice_from_query();
+	bvmgr_ticket_integrity_render_notice_from_query();
 	$ticketIntegrityNoticeHtml = (string) ob_get_clean();
 	$assert(
 		$ticketIntegrityNoticeHtml === $ticketIntegrityRenderCase['expected'],
@@ -3194,37 +3194,37 @@ foreach ($ticketIntegrityRenderCases as $ticketIntegrityRenderCase) {
 
 $_GET = array('tim_notice' => 'daily_report_failed');
 ob_start();
-vms_ticket_integrity_render_notice_from_query();
+bvmgr_ticket_integrity_render_notice_from_query();
 $ticketIntegrityNoDetailNotice = (string) ob_get_clean();
 $assert($ticketIntegrityNoDetailNotice === '<div class="notice notice-error"><p>State of the Range email failed to send.</p></div>', 'Ticket Integrity daily_report_failed should preserve its base message when detail is absent.');
 
 $_GET = array('tim_notice' => 'daily_report_test_sent');
 ob_start();
-vms_ticket_integrity_render_notice_from_query();
+bvmgr_ticket_integrity_render_notice_from_query();
 $ticketIntegrityNoRecipientNotice = (string) ob_get_clean();
 $assert($ticketIntegrityNoRecipientNotice === '<div class="notice notice-success"><p>State of the Range admin test email sent.</p></div>', 'Ticket Integrity daily_report_test_sent should preserve its base message when recipient is absent.');
 
 $_GET = array();
 ob_start();
-vms_ticket_integrity_render_notice_from_query();
+bvmgr_ticket_integrity_render_notice_from_query();
 $ticketIntegrityNoStatusNotice = (string) ob_get_clean();
 $assert($ticketIntegrityNoStatusNotice === '', 'Ticket Integrity notice helper should stay silent when the selector is absent.');
 
 $_GET = array('tim_notice' => '');
 ob_start();
-vms_ticket_integrity_render_notice_from_query();
+bvmgr_ticket_integrity_render_notice_from_query();
 $ticketIntegrityEmptyStatusNotice = (string) ob_get_clean();
 $assert($ticketIntegrityEmptyStatusNotice === '', 'Ticket Integrity notice helper should stay silent when the selector is empty.');
 
 $_GET = array('tim_notice' => 'not_real');
 ob_start();
-vms_ticket_integrity_render_notice_from_query();
+bvmgr_ticket_integrity_render_notice_from_query();
 $ticketIntegrityUnknownStatusNotice = (string) ob_get_clean();
 $assert($ticketIntegrityUnknownStatusNotice === '', 'Ticket Integrity notice helper should stay silent for unknown selectors.');
 
 $_GET = array('tim_notice' => '<strong>bogus</strong>');
 ob_start();
-vms_ticket_integrity_render_notice_from_query();
+bvmgr_ticket_integrity_render_notice_from_query();
 $ticketIntegrityMalformedStatusNotice = (string) ob_get_clean();
 $assert($ticketIntegrityMalformedStatusNotice === '', 'Ticket Integrity notice helper should stay silent when a malformed selector sanitizes to an unrecognized value.');
 
@@ -3253,7 +3253,7 @@ $_GET = array(
 	'detail' => '<strong>Mailer</strong> down',
 );
 ob_start();
-vms_ticket_integrity_render_admin_page();
+bvmgr_ticket_integrity_render_admin_page();
 $ticketIntegrityRenderedPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_ticket_integrity_get_settings_calls'] === 1, 'Ticket Integrity page render should resolve settings exactly once.');
 $assert($GLOBALS['vms_test_ticket_integrity_get_results_store_calls'] === 1, 'Ticket Integrity page render should resolve the results store exactly once.');

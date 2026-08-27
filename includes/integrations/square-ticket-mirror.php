@@ -1,26 +1,26 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_square_ticket_mirror_schema_option_key(): string
+function bvmgr_square_ticket_mirror_schema_option_key(): string
 {
     return 'vms_square_ticket_mirror_db_schema_version';
 }
 
-function vms_square_ticket_mirror_schema_target(): string
+function bvmgr_square_ticket_mirror_schema_target(): string
 {
     return 'square_ticket_mirror_log_v1';
 }
 
-function vms_square_ticket_mirror_log_table_name(): string
+function bvmgr_square_ticket_mirror_log_table_name(): string
 {
     global $wpdb;
     return $wpdb->prefix . 'vms_square_ticket_mirror_log';
 }
 
-function vms_square_ticket_mirror_maybe_upgrade_schema(): void
+function bvmgr_square_ticket_mirror_maybe_upgrade_schema(): void
 {
-    $current = (string) get_option(vms_square_ticket_mirror_schema_option_key(), '');
-    $target = vms_square_ticket_mirror_schema_target();
+    $current = (string) get_option(bvmgr_square_ticket_mirror_schema_option_key(), '');
+    $target = bvmgr_square_ticket_mirror_schema_target();
     if ($current === $target) {
         return;
     }
@@ -28,7 +28,7 @@ function vms_square_ticket_mirror_maybe_upgrade_schema(): void
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
     global $wpdb;
-    $table = vms_square_ticket_mirror_log_table_name();
+    $table = bvmgr_square_ticket_mirror_log_table_name();
     $charset_collate = $wpdb->get_charset_collate();
 
     $sql = "CREATE TABLE {$table} (
@@ -58,11 +58,11 @@ function vms_square_ticket_mirror_maybe_upgrade_schema(): void
     ) {$charset_collate};";
 
     dbDelta($sql);
-    update_option(vms_square_ticket_mirror_schema_option_key(), $target, false);
+    update_option(bvmgr_square_ticket_mirror_schema_option_key(), $target, false);
 }
-add_action('plugins_loaded', 'vms_square_ticket_mirror_maybe_upgrade_schema', 12);
+add_action('plugins_loaded', 'bvmgr_square_ticket_mirror_maybe_upgrade_schema', 12);
 
-function vms_square_ticket_mirror_product_meta_key(string $which): string
+function bvmgr_square_ticket_mirror_product_meta_key(string $which): string
 {
     if (function_exists('bvmgr_meta_key')) {
         $mapped = (string) bvmgr_meta_key('product', $which);
@@ -103,7 +103,7 @@ function vms_square_ticket_mirror_product_meta_key(string $which): string
     }
 }
 
-function vms_square_ticket_mirror_event_plan_meta_key(string $which): string
+function bvmgr_square_ticket_mirror_event_plan_meta_key(string $which): string
 {
     if (function_exists('bvmgr_meta_key')) {
         $mapped = (string) bvmgr_meta_key('event_plan', $which);
@@ -120,7 +120,7 @@ function vms_square_ticket_mirror_event_plan_meta_key(string $which): string
     }
 }
 
-function vms_square_ticket_mirror_status_labels(): array
+function bvmgr_square_ticket_mirror_status_labels(): array
 {
     return array(
         'not_mirrored' => __('Not mirrored', 'backstage-venue-manager'),
@@ -131,40 +131,40 @@ function vms_square_ticket_mirror_status_labels(): array
     );
 }
 
-function vms_square_ticket_mirror_normalize_status(string $status): string
+function bvmgr_square_ticket_mirror_normalize_status(string $status): string
 {
     $status = sanitize_key($status);
-    if (isset(vms_square_ticket_mirror_status_labels()[$status])) {
+    if (isset(bvmgr_square_ticket_mirror_status_labels()[$status])) {
         return $status;
     }
 
     return 'not_mirrored';
 }
 
-function vms_square_ticket_mirror_label_for_status(string $status): string
+function bvmgr_square_ticket_mirror_label_for_status(string $status): string
 {
-    $status = vms_square_ticket_mirror_normalize_status($status);
-    $labels = vms_square_ticket_mirror_status_labels();
+    $status = bvmgr_square_ticket_mirror_normalize_status($status);
+    $labels = bvmgr_square_ticket_mirror_status_labels();
     return (string) ($labels[$status] ?? $labels['not_mirrored']);
 }
 
-function vms_square_ticket_mirror_mode_value(): string
+function bvmgr_square_ticket_mirror_mode_value(): string
 {
     return 'ticket_mirror';
 }
 
-function vms_square_ticket_mirror_now_gmt(): string
+function bvmgr_square_ticket_mirror_now_gmt(): string
 {
     return gmdate('Y-m-d H:i:s');
 }
 
-function vms_square_ticket_mirror_json_encode($value): string
+function bvmgr_square_ticket_mirror_json_encode($value): string
 {
     $encoded = wp_json_encode($value);
     return is_string($encoded) ? $encoded : '';
 }
 
-function vms_square_ticket_mirror_limit_text(string $value, int $max = 255): string
+function bvmgr_square_ticket_mirror_limit_text(string $value, int $max = 255): string
 {
     $value = trim(wp_strip_all_tags($value));
     if ($value === '') {
@@ -185,7 +185,7 @@ function vms_square_ticket_mirror_limit_text(string $value, int $max = 255): str
     return rtrim(substr($value, 0, $max));
 }
 
-function vms_square_ticket_mirror_sanitize_label(string $value): string
+function bvmgr_square_ticket_mirror_sanitize_label(string $value): string
 {
     if (function_exists('bvmgr_ticketing_v2_sanitize_plain_text_label')) {
         return trim((string) bvmgr_ticketing_v2_sanitize_plain_text_label($value));
@@ -194,7 +194,7 @@ function vms_square_ticket_mirror_sanitize_label(string $value): string
     return trim(sanitize_text_field($value));
 }
 
-function vms_square_ticket_mirror_canonical_product_id(int $product_id): int
+function bvmgr_square_ticket_mirror_canonical_product_id(int $product_id): int
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
@@ -212,7 +212,7 @@ function vms_square_ticket_mirror_canonical_product_id(int $product_id): int
     return $product_id;
 }
 
-function vms_square_ticket_mirror_get_product(int $product_id)
+function bvmgr_square_ticket_mirror_get_product(int $product_id)
 {
     if (!function_exists('wc_get_product')) {
         return null;
@@ -232,9 +232,9 @@ function vms_square_ticket_mirror_get_product(int $product_id)
     return $product instanceof WC_Product ? $product : null;
 }
 
-function vms_square_ticket_mirror_has_mirror_meta(int $product_id): bool
+function bvmgr_square_ticket_mirror_has_mirror_meta(int $product_id): bool
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
     if ($product_id <= 0) {
         return false;
     }
@@ -248,7 +248,7 @@ function vms_square_ticket_mirror_has_mirror_meta(int $product_id): bool
         'square_mirror_location_id',
         'square_mirror_source_hash',
     ) as $field) {
-        $meta_key = vms_square_ticket_mirror_product_meta_key($field);
+        $meta_key = bvmgr_square_ticket_mirror_product_meta_key($field);
         if ($meta_key !== '' && metadata_exists('post', $product_id, $meta_key)) {
             return true;
         }
@@ -257,10 +257,10 @@ function vms_square_ticket_mirror_has_mirror_meta(int $product_id): bool
     return false;
 }
 
-function vms_square_ticket_mirror_get_meta(int $product_id, string $which): string
+function bvmgr_square_ticket_mirror_get_meta(int $product_id, string $which): string
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $meta_key = vms_square_ticket_mirror_product_meta_key($which);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $meta_key = bvmgr_square_ticket_mirror_product_meta_key($which);
     if ($product_id <= 0 || $meta_key === '') {
         return '';
     }
@@ -273,10 +273,10 @@ function vms_square_ticket_mirror_get_meta(int $product_id, string $which): stri
     return '';
 }
 
-function vms_square_ticket_mirror_update_meta(int $product_id, string $which, $value): void
+function bvmgr_square_ticket_mirror_update_meta(int $product_id, string $which, $value): void
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $meta_key = vms_square_ticket_mirror_product_meta_key($which);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $meta_key = bvmgr_square_ticket_mirror_product_meta_key($which);
     if ($product_id <= 0 || $meta_key === '') {
         return;
     }
@@ -284,10 +284,10 @@ function vms_square_ticket_mirror_update_meta(int $product_id, string $which, $v
     update_post_meta($product_id, $meta_key, $value);
 }
 
-function vms_square_ticket_mirror_delete_meta(int $product_id, string $which): void
+function bvmgr_square_ticket_mirror_delete_meta(int $product_id, string $which): void
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $meta_key = vms_square_ticket_mirror_product_meta_key($which);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $meta_key = bvmgr_square_ticket_mirror_product_meta_key($which);
     if ($product_id <= 0 || $meta_key === '') {
         return;
     }
@@ -295,7 +295,7 @@ function vms_square_ticket_mirror_delete_meta(int $product_id, string $which): v
     delete_post_meta($product_id, $meta_key);
 }
 
-function vms_square_ticket_mirror_square_error_rows($response_or_data): array
+function bvmgr_square_ticket_mirror_square_error_rows($response_or_data): array
 {
     $rows = array();
     $data = $response_or_data;
@@ -318,7 +318,7 @@ function vms_square_ticket_mirror_square_error_rows($response_or_data): array
         $code = trim((string) $code);
         $category = trim((string) $category);
         $detail = sanitize_text_field((string) $detail);
-        $field = vms_square_ticket_mirror_limit_text(trim((string) $field), 255);
+        $field = bvmgr_square_ticket_mirror_limit_text(trim((string) $field), 255);
         if ($code === '' && $detail === '') {
             return array();
         }
@@ -365,16 +365,16 @@ function vms_square_ticket_mirror_square_error_rows($response_or_data): array
 
     $unique = array();
     foreach ($rows as $row) {
-        $hash = md5(vms_square_ticket_mirror_json_encode($row));
+        $hash = md5(bvmgr_square_ticket_mirror_json_encode($row));
         $unique[$hash] = $row;
     }
 
     return array_values($unique);
 }
 
-function vms_square_ticket_mirror_square_error_summary($response_or_data): array
+function bvmgr_square_ticket_mirror_square_error_summary($response_or_data): array
 {
-    $rows = vms_square_ticket_mirror_square_error_rows($response_or_data);
+    $rows = bvmgr_square_ticket_mirror_square_error_rows($response_or_data);
     if (!empty($rows)) {
         return array(
             'code' => (string) ($rows[0]['code'] ?? 'SQUARE_ERROR'),
@@ -394,7 +394,7 @@ function vms_square_ticket_mirror_square_error_summary($response_or_data): array
     );
 }
 
-function vms_square_ticket_mirror_square_exception_debug(Throwable $exception): array
+function bvmgr_square_ticket_mirror_square_exception_debug(Throwable $exception): array
 {
     $payload = array(
         'exception_class' => get_class($exception),
@@ -410,7 +410,7 @@ function vms_square_ticket_mirror_square_exception_debug(Throwable $exception): 
             if ($raw_body !== '') {
                 $decoded = json_decode($raw_body, true);
                 if (is_array($decoded)) {
-                    $payload['errors'] = vms_square_ticket_mirror_square_error_rows($decoded);
+                    $payload['errors'] = bvmgr_square_ticket_mirror_square_error_rows($decoded);
                 }
             }
         }
@@ -440,7 +440,7 @@ function vms_square_ticket_mirror_square_exception_debug(Throwable $exception): 
     return $payload;
 }
 
-function vms_square_ticket_mirror_catalog_object_debug_shape($catalog_object): array
+function bvmgr_square_ticket_mirror_catalog_object_debug_shape($catalog_object): array
 {
     $shape = array(
         'type' => '',
@@ -543,14 +543,14 @@ function vms_square_ticket_mirror_catalog_object_debug_shape($catalog_object): a
     return $shape;
 }
 
-function vms_square_ticket_mirror_catalog_object_debug_json($catalog_object): string
+function bvmgr_square_ticket_mirror_catalog_object_debug_json($catalog_object): string
 {
-    return vms_square_ticket_mirror_json_encode(array(
-        'object' => vms_square_ticket_mirror_catalog_object_debug_shape($catalog_object),
+    return bvmgr_square_ticket_mirror_json_encode(array(
+        'object' => bvmgr_square_ticket_mirror_catalog_object_debug_shape($catalog_object),
     ));
 }
 
-function vms_square_ticket_mirror_store_square_category_mapping(int $term_id, string $square_id, int $square_version): void
+function bvmgr_square_ticket_mirror_store_square_category_mapping(int $term_id, string $square_id, int $square_version): void
 {
     $term_id = absint($term_id);
     if ($term_id <= 0 || !class_exists('\WooCommerce\Square\Handlers\Category')) {
@@ -561,7 +561,7 @@ function vms_square_ticket_mirror_store_square_category_mapping(int $term_id, st
     \WooCommerce\Square\Handlers\Category::update_square_meta($term_id, $square_id, $square_version);
 }
 
-function vms_square_ticket_mirror_get_square_context(bool $with_locations = false): array
+function bvmgr_square_ticket_mirror_get_square_context(bool $with_locations = false): array
 {
     $context = array(
         'ok' => false,
@@ -645,20 +645,20 @@ function vms_square_ticket_mirror_get_square_context(bool $with_locations = fals
     return $context;
 }
 
-function vms_square_ticket_mirror_target_category_name(): string
+function bvmgr_square_ticket_mirror_target_category_name(): string
 {
     return 'Online Ticket';
 }
 
-function vms_square_ticket_mirror_target_category_slug(): string
+function bvmgr_square_ticket_mirror_target_category_slug(): string
 {
     return 'online-ticket';
 }
 
-function vms_square_ticket_mirror_ensure_local_category_term(): array
+function bvmgr_square_ticket_mirror_ensure_local_category_term(): array
 {
-    $slug = vms_square_ticket_mirror_target_category_slug();
-    $name = vms_square_ticket_mirror_target_category_name();
+    $slug = bvmgr_square_ticket_mirror_target_category_slug();
+    $name = bvmgr_square_ticket_mirror_target_category_name();
 
     $term = get_term_by('slug', $slug, 'product_cat');
     if ($term instanceof WP_Term) {
@@ -709,13 +709,13 @@ function vms_square_ticket_mirror_ensure_local_category_term(): array
     );
 }
 
-function vms_square_ticket_mirror_find_remote_category_by_name($api, string $target_name): array
+function bvmgr_square_ticket_mirror_find_remote_category_by_name($api, string $target_name): array
 {
     $cursor = '';
 
     while (true) {
         $response = $api->list_catalog($cursor, array('CATEGORY'));
-        $summary = vms_square_ticket_mirror_square_error_summary($response);
+        $summary = bvmgr_square_ticket_mirror_square_error_summary($response);
         if ($summary['code'] !== '') {
             return array(
                 'ok' => false,
@@ -769,7 +769,7 @@ function vms_square_ticket_mirror_find_remote_category_by_name($api, string $tar
     );
 }
 
-function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_id): array
+function bvmgr_square_ticket_mirror_retrieve_remote_category($api, string $square_id): array
 {
     $square_id = trim($square_id);
     if ($square_id === '' || strpos($square_id, '#') === 0) {
@@ -785,7 +785,7 @@ function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_
     try {
         $response = $api->retrieve_catalog_object($square_id, false);
     } catch (Throwable $e) {
-        $exception = vms_square_ticket_mirror_square_exception_debug($e);
+        $exception = bvmgr_square_ticket_mirror_square_exception_debug($e);
         $rows = (array) ($exception['errors'] ?? array());
         $first = !empty($rows[0]) && is_array($rows[0]) ? $rows[0] : array();
         return array(
@@ -794,11 +794,11 @@ function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_
             'square_version' => 0,
             'error_code' => (string) ($first['code'] ?? 'square_category_retrieve_failed'),
             'error_message' => (string) ($first['detail'] ?? ($exception['message'] ?? __('Square category could not be retrieved.', 'backstage-venue-manager'))),
-            'response_json' => vms_square_ticket_mirror_json_encode($exception),
+            'response_json' => bvmgr_square_ticket_mirror_json_encode($exception),
         );
     }
 
-    $summary = vms_square_ticket_mirror_square_error_summary($response);
+    $summary = bvmgr_square_ticket_mirror_square_error_summary($response);
     if ($summary['code'] !== '') {
         return array(
             'ok' => false,
@@ -806,7 +806,7 @@ function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_
             'square_version' => 0,
             'error_code' => (string) $summary['code'],
             'error_message' => (string) $summary['message'],
-            'response_json' => vms_square_ticket_mirror_json_encode(array(
+            'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
                 'errors' => (array) ($summary['rows'] ?? array()),
             )),
         );
@@ -821,8 +821,8 @@ function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_
             'square_version' => 0,
             'error_code' => 'square_category_not_found',
             'error_message' => __('Square category was not found.', 'backstage-venue-manager'),
-            'response_json' => vms_square_ticket_mirror_json_encode(array(
-                'object' => vms_square_ticket_mirror_catalog_object_debug_shape($object),
+            'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
+                'object' => bvmgr_square_ticket_mirror_catalog_object_debug_shape($object),
             )),
         );
     }
@@ -832,26 +832,26 @@ function vms_square_ticket_mirror_retrieve_remote_category($api, string $square_
         'square_id' => trim((string) (method_exists($object, 'getId') ? $object->getId() : '')),
         'square_version' => absint(method_exists($object, 'getVersion') ? $object->getVersion() : 0),
         'object' => $object,
-        'response_json' => vms_square_ticket_mirror_json_encode(array(
-            'object' => vms_square_ticket_mirror_catalog_object_debug_shape($object),
+        'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
+            'object' => bvmgr_square_ticket_mirror_catalog_object_debug_shape($object),
         )),
     );
 }
 
-function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missing = false): array
+function bvmgr_square_ticket_mirror_resolve_square_category(bool $create_if_missing = false): array
 {
-    $local = vms_square_ticket_mirror_ensure_local_category_term();
+    $local = bvmgr_square_ticket_mirror_ensure_local_category_term();
     if (empty($local['ok'])) {
         return $local;
     }
 
     $term_id = absint($local['term_id'] ?? 0);
-    $name = (string) ($local['name'] ?? vms_square_ticket_mirror_target_category_name());
+    $name = (string) ($local['name'] ?? bvmgr_square_ticket_mirror_target_category_name());
     $result = array(
         'ok' => true,
         'term_id' => $term_id,
         'name' => $name,
-        'slug' => (string) ($local['slug'] ?? vms_square_ticket_mirror_target_category_slug()),
+        'slug' => (string) ($local['slug'] ?? bvmgr_square_ticket_mirror_target_category_slug()),
         'square_id' => '',
         'square_version' => 0,
         'created_remote' => false,
@@ -874,7 +874,7 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
         return $result;
     }
 
-    $square = vms_square_ticket_mirror_get_square_context();
+    $square = bvmgr_square_ticket_mirror_get_square_context();
     if (empty($square['ok'])) {
         if ($square_id !== '' && !$create_if_missing) {
             $result['square_id'] = $square_id;
@@ -891,9 +891,9 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
     }
 
     if ($square_id !== '' && strpos($square_id, '#') !== 0) {
-        $validated = vms_square_ticket_mirror_retrieve_remote_category($square['api'], $square_id);
+        $validated = bvmgr_square_ticket_mirror_retrieve_remote_category($square['api'], $square_id);
         if (!empty($validated['ok']) && !empty($validated['square_id'])) {
-            vms_square_ticket_mirror_store_square_category_mapping($term_id, (string) $validated['square_id'], (int) ($validated['square_version'] ?? 0));
+            bvmgr_square_ticket_mirror_store_square_category_mapping($term_id, (string) $validated['square_id'], (int) ($validated['square_version'] ?? 0));
             $result['square_id'] = (string) $validated['square_id'];
             $result['square_version'] = absint($validated['square_version'] ?? 0);
             $result['resolution_path'] = 'mapping_valid';
@@ -901,9 +901,9 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
         }
     }
 
-    $remote = vms_square_ticket_mirror_find_remote_category_by_name($square['api'], $name);
+    $remote = bvmgr_square_ticket_mirror_find_remote_category_by_name($square['api'], $name);
     if (!empty($remote['ok']) && !empty($remote['square_id'])) {
-        vms_square_ticket_mirror_store_square_category_mapping($term_id, (string) $remote['square_id'], (int) ($remote['square_version'] ?? 0));
+        bvmgr_square_ticket_mirror_store_square_category_mapping($term_id, (string) $remote['square_id'], (int) ($remote['square_version'] ?? 0));
         $result['square_id'] = (string) $remote['square_id'];
         $result['square_version'] = absint($remote['square_version'] ?? 0);
         $result['resolution_path'] = $square_id !== '' ? 'mapping_stale_name_match' : 'name_match';
@@ -912,7 +912,7 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
 
     if (!$create_if_missing) {
         if ($square_id !== '') {
-            vms_square_ticket_mirror_store_square_category_mapping($term_id, '', 0);
+            bvmgr_square_ticket_mirror_store_square_category_mapping($term_id, '', 0);
             $result['resolution_path'] = 'mapping_stale_unresolved';
         }
         return $result;
@@ -924,7 +924,7 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
     $category_data->setIsTopLevel(true);
     $category_object->setCategoryData($category_data);
 
-    $request_json = vms_square_ticket_mirror_json_encode(vms_square_ticket_mirror_catalog_object_debug_shape($category_object));
+    $request_json = bvmgr_square_ticket_mirror_json_encode(bvmgr_square_ticket_mirror_catalog_object_debug_shape($category_object));
 
     try {
         $response = $square['api']->upsert_catalog_object(
@@ -932,7 +932,7 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
             $category_object
         );
     } catch (Throwable $e) {
-        $exception = vms_square_ticket_mirror_square_exception_debug($e);
+        $exception = bvmgr_square_ticket_mirror_square_exception_debug($e);
         $rows = (array) ($exception['errors'] ?? array());
         $first = !empty($rows[0]) && is_array($rows[0]) ? $rows[0] : array();
         return array_merge($result, array(
@@ -940,18 +940,18 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
             'error_code' => (string) ($first['code'] ?? 'square_category_upsert_failed'),
             'error_message' => (string) ($first['detail'] ?? ($exception['message'] ?? sanitize_text_field($e->getMessage()))),
             'request_json' => $request_json,
-            'response_json' => vms_square_ticket_mirror_json_encode($exception),
+            'response_json' => bvmgr_square_ticket_mirror_json_encode($exception),
         ));
     }
 
-    $summary = vms_square_ticket_mirror_square_error_summary($response);
+    $summary = bvmgr_square_ticket_mirror_square_error_summary($response);
     if ($summary['code'] !== '') {
         return array_merge($result, array(
             'ok' => false,
             'error_code' => (string) $summary['code'],
             'error_message' => (string) $summary['message'],
             'request_json' => $request_json,
-            'response_json' => vms_square_ticket_mirror_json_encode(array(
+            'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
                 'errors' => (array) ($summary['rows'] ?? array()),
             )),
         ));
@@ -968,13 +968,13 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
             'error_code' => 'square_category_missing_id',
             'error_message' => __('Square did not return a category ID.', 'backstage-venue-manager'),
             'request_json' => $request_json,
-            'response_json' => vms_square_ticket_mirror_json_encode(array(
-                'object' => vms_square_ticket_mirror_catalog_object_debug_shape($remote_object),
+            'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
+                'object' => bvmgr_square_ticket_mirror_catalog_object_debug_shape($remote_object),
             )),
         ));
     }
 
-    vms_square_ticket_mirror_store_square_category_mapping($term_id, $remote_square_id, $remote_square_version);
+    bvmgr_square_ticket_mirror_store_square_category_mapping($term_id, $remote_square_id, $remote_square_version);
 
     $result['square_id'] = $remote_square_id;
     $result['square_version'] = $remote_square_version;
@@ -984,10 +984,10 @@ function vms_square_ticket_mirror_resolve_square_category(bool $create_if_missin
     return $result;
 }
 
-function vms_square_ticket_mirror_resolve_location(int $event_plan_id = 0, bool $validate_override = false): array
+function bvmgr_square_ticket_mirror_resolve_location(int $event_plan_id = 0, bool $validate_override = false): array
 {
     $event_plan_id = absint($event_plan_id);
-    $square = vms_square_ticket_mirror_get_square_context($validate_override && $event_plan_id > 0);
+    $square = bvmgr_square_ticket_mirror_get_square_context($validate_override && $event_plan_id > 0);
     $result = array(
         'ok' => false,
         'location_id' => '',
@@ -1006,7 +1006,7 @@ function vms_square_ticket_mirror_resolve_location(int $event_plan_id = 0, bool 
     $source = 'woocommerce_square_default';
     $override = '';
     if ($event_plan_id > 0) {
-        $override_key = vms_square_ticket_mirror_event_plan_meta_key('square_location_id');
+        $override_key = bvmgr_square_ticket_mirror_event_plan_meta_key('square_location_id');
         if ($override_key !== '') {
             $override = trim((string) get_post_meta($event_plan_id, $override_key, true));
         }
@@ -1047,7 +1047,7 @@ function vms_square_ticket_mirror_resolve_location(int $event_plan_id = 0, bool 
     return $result;
 }
 
-function vms_square_ticket_mirror_product_role(int $product_id): string
+function bvmgr_square_ticket_mirror_product_role(int $product_id): string
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
@@ -1068,14 +1068,14 @@ function vms_square_ticket_mirror_product_role(int $product_id): string
     return sanitize_key((string) get_post_meta($product_id, '_vms_product_role', true));
 }
 
-function vms_square_ticket_mirror_included_roles(): array
+function bvmgr_square_ticket_mirror_included_roles(): array
 {
     return array('ga_ticket', 'ticket', 'legacy_ticket');
 }
 
-function vms_square_ticket_mirror_ticket_label(int $product_id, int $plan_id = 0): string
+function bvmgr_square_ticket_mirror_ticket_label(int $product_id, int $plan_id = 0): string
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
     $plan_id = absint($plan_id);
     if ($product_id <= 0) {
         return '';
@@ -1084,17 +1084,17 @@ function vms_square_ticket_mirror_ticket_label(int $product_id, int $plan_id = 0
     $label = '';
     if ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_ticket_config_for_product')) {
         $ticket = bvmgr_ticketing_v2_ticket_config_for_product($product_id, $plan_id);
-        $label = vms_square_ticket_mirror_sanitize_label((string) ($ticket['title'] ?? ''));
+        $label = bvmgr_square_ticket_mirror_sanitize_label((string) ($ticket['title'] ?? ''));
     }
 
     if ($label === '' && function_exists('bvmgr_ticketing_v2_get_ticket_config_for_product_price')) {
         $ticket = bvmgr_ticketing_v2_get_ticket_config_for_product_price($product_id);
-        $label = vms_square_ticket_mirror_sanitize_label((string) ($ticket['title'] ?? ''));
+        $label = bvmgr_square_ticket_mirror_sanitize_label((string) ($ticket['title'] ?? ''));
     }
 
     if ($label === '' && function_exists('bvmgr_ticketing_v2_sync_ticket_row_for_product')) {
         $row = bvmgr_ticketing_v2_sync_ticket_row_for_product($product_id, $plan_id);
-        $label = vms_square_ticket_mirror_sanitize_label((string) ($row['title'] ?? ''));
+        $label = bvmgr_square_ticket_mirror_sanitize_label((string) ($row['title'] ?? ''));
     }
 
     if ($label === '') {
@@ -1102,17 +1102,17 @@ function vms_square_ticket_mirror_ticket_label(int $product_id, int $plan_id = 0
         if (function_exists('bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match')) {
             $raw_title = (string) bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match($raw_title);
         }
-        $label = vms_square_ticket_mirror_sanitize_label($raw_title);
+        $label = bvmgr_square_ticket_mirror_sanitize_label($raw_title);
     }
 
     return $label;
 }
 
-function vms_square_ticket_mirror_effective_price_context(int $product_id, $product = null): array
+function bvmgr_square_ticket_mirror_effective_price_context(int $product_id, $product = null): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
     if (!($product instanceof WC_Product)) {
-        $product = vms_square_ticket_mirror_get_product($product_id);
+        $product = bvmgr_square_ticket_mirror_get_product($product_id);
     }
 
     $price = 0.0;
@@ -1147,7 +1147,7 @@ function vms_square_ticket_mirror_effective_price_context(int $product_id, $prod
     );
 }
 
-function vms_square_ticket_mirror_is_excluded_label(string $label): bool
+function bvmgr_square_ticket_mirror_is_excluded_label(string $label): bool
 {
     $label = strtolower(trim($label));
     if ($label === '') {
@@ -1157,9 +1157,9 @@ function vms_square_ticket_mirror_is_excluded_label(string $label): bool
     return (bool) preg_match('/\b(child|children|kid|kids|comp|qualified|qualify|veteran|police|fire|emt|nurse|teacher|school|internal|door|walk[\s-]?up|pos|vip)\b/u', $label);
 }
 
-function vms_square_ticket_mirror_eligibility(int $product_id): array
+function bvmgr_square_ticket_mirror_eligibility(int $product_id): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
     $result = array(
         'eligible' => false,
         'product_id' => $product_id,
@@ -1199,9 +1199,9 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
         return $result;
     }
 
-    $role = vms_square_ticket_mirror_product_role($product_id);
+    $role = bvmgr_square_ticket_mirror_product_role($product_id);
     $result['role'] = $role;
-    if (!in_array($role, vms_square_ticket_mirror_included_roles(), true)) {
+    if (!in_array($role, bvmgr_square_ticket_mirror_included_roles(), true)) {
         $result['reason_code'] = 'role_excluded';
         $result['reason_message'] = __('Only paid public online ticket products are mirrored in Phase 1.', 'backstage-venue-manager');
         return $result;
@@ -1254,11 +1254,11 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
     }
 
     $sku = '';
-    if (function_exists('vms_square_firewall_get_sku')) {
-        $sku = trim((string) vms_square_firewall_get_sku($product_id));
+    if (function_exists('bvmgr_square_firewall_get_sku')) {
+        $sku = trim((string) bvmgr_square_firewall_get_sku($product_id));
     }
     if ($sku === '') {
-        $product = vms_square_ticket_mirror_get_product($product_id);
+        $product = bvmgr_square_ticket_mirror_get_product($product_id);
         $sku = $product instanceof WC_Product ? trim((string) $product->get_sku()) : '';
     }
     $result['sku'] = $sku;
@@ -1268,7 +1268,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
         return $result;
     }
 
-    $ticket_label = vms_square_ticket_mirror_ticket_label($product_id, $result['event_plan_id']);
+    $ticket_label = bvmgr_square_ticket_mirror_ticket_label($product_id, $result['event_plan_id']);
     $result['ticket_label'] = $ticket_label;
     if ($ticket_label === '') {
         $result['reason_code'] = 'missing_ticket_label';
@@ -1276,7 +1276,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
         return $result;
     }
 
-    if (vms_square_ticket_mirror_is_excluded_label($ticket_label)) {
+    if (bvmgr_square_ticket_mirror_is_excluded_label($ticket_label)) {
         $result['reason_code'] = 'label_excluded';
         $result['reason_message'] = __('Ticket label matches a Phase 1 exclusion rule.', 'backstage-venue-manager');
         return $result;
@@ -1288,7 +1288,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
         return $result;
     }
 
-    $price_context = vms_square_ticket_mirror_effective_price_context($product_id);
+    $price_context = bvmgr_square_ticket_mirror_effective_price_context($product_id);
     $result['price'] = (float) ($price_context['price'] ?? 0.0);
     $result['price_cents'] = max(0, absint($price_context['price_cents'] ?? 0));
     $result['currency'] = (string) ($price_context['currency'] ?? $result['currency']);
@@ -1302,7 +1302,7 @@ function vms_square_ticket_mirror_eligibility(int $product_id): array
     return $result;
 }
 
-function vms_square_ticket_mirror_compose_name(array $eligibility): string
+function bvmgr_square_ticket_mirror_compose_name(array $eligibility): string
 {
     $event_title = trim((string) ($eligibility['event_title'] ?? ''));
     $ticket_label = trim((string) ($eligibility['ticket_label'] ?? ''));
@@ -1315,15 +1315,15 @@ function vms_square_ticket_mirror_compose_name(array $eligibility): string
         $event_date,
     ));
 
-    return vms_square_ticket_mirror_limit_text(implode(' - ', $parts), 255);
+    return bvmgr_square_ticket_mirror_limit_text(implode(' - ', $parts), 255);
 }
 
-function vms_square_ticket_mirror_build_source_model(int $product_id): array
+function bvmgr_square_ticket_mirror_build_source_model(int $product_id): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $eligibility = vms_square_ticket_mirror_eligibility($product_id);
-    $category = vms_square_ticket_mirror_resolve_square_category(false);
-    $location = vms_square_ticket_mirror_resolve_location(absint($eligibility['event_plan_id'] ?? 0), false);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $eligibility = bvmgr_square_ticket_mirror_eligibility($product_id);
+    $category = bvmgr_square_ticket_mirror_resolve_square_category(false);
+    $location = bvmgr_square_ticket_mirror_resolve_location(absint($eligibility['event_plan_id'] ?? 0), false);
 
     return array(
         'product_id' => $product_id,
@@ -1338,7 +1338,7 @@ function vms_square_ticket_mirror_build_source_model(int $product_id): array
         'ticket_label' => trim((string) ($eligibility['ticket_label'] ?? '')),
         'event_title' => trim((string) ($eligibility['event_title'] ?? '')),
         'event_date' => trim((string) ($eligibility['event_date'] ?? '')),
-        'category_name' => (string) ($category['name'] ?? vms_square_ticket_mirror_target_category_name()),
+        'category_name' => (string) ($category['name'] ?? bvmgr_square_ticket_mirror_target_category_name()),
         'category_id' => trim((string) ($category['square_id'] ?? '')),
         'category_term_id' => absint($category['term_id'] ?? 0),
         'category_resolution_path' => sanitize_key((string) ($category['resolution_path'] ?? 'local_only')),
@@ -1348,11 +1348,11 @@ function vms_square_ticket_mirror_build_source_model(int $product_id): array
         'location_source' => sanitize_key((string) ($location['source'] ?? '')),
         'eligible' => !empty($eligibility['eligible']) ? 1 : 0,
         'eligibility_reason_code' => sanitize_key((string) ($eligibility['reason_code'] ?? '')),
-        'mirror_name' => vms_square_ticket_mirror_compose_name($eligibility),
+        'mirror_name' => bvmgr_square_ticket_mirror_compose_name($eligibility),
     );
 }
 
-function vms_square_ticket_mirror_source_hash(array $model): string
+function bvmgr_square_ticket_mirror_source_hash(array $model): string
 {
     $hash_input = array(
         'product_id' => absint($model['product_id'] ?? 0),
@@ -1372,22 +1372,22 @@ function vms_square_ticket_mirror_source_hash(array $model): string
         'mirror_name' => trim((string) ($model['mirror_name'] ?? '')),
     );
 
-    return hash('sha256', vms_square_ticket_mirror_json_encode($hash_input));
+    return hash('sha256', bvmgr_square_ticket_mirror_json_encode($hash_input));
 }
 
-function vms_square_ticket_mirror_status_context(int $product_id): array
+function bvmgr_square_ticket_mirror_status_context(int $product_id): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $stored_status = vms_square_ticket_mirror_normalize_status(vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_status'));
-    $item_id = vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_item_id');
-    $variation_id = vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_variation_id');
-    $stored_source_hash = vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_source_hash');
-    $last_error_code = vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_error_code');
-    $last_error_message = vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_error_message');
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $stored_status = bvmgr_square_ticket_mirror_normalize_status(bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_status'));
+    $item_id = bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_item_id');
+    $variation_id = bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_variation_id');
+    $stored_source_hash = bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_source_hash');
+    $last_error_code = bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_error_code');
+    $last_error_message = bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_error_message');
 
-    $eligibility = vms_square_ticket_mirror_eligibility($product_id);
-    $source_model = vms_square_ticket_mirror_build_source_model($product_id);
-    $current_source_hash = vms_square_ticket_mirror_source_hash($source_model);
+    $eligibility = bvmgr_square_ticket_mirror_eligibility($product_id);
+    $source_model = bvmgr_square_ticket_mirror_build_source_model($product_id);
+    $current_source_hash = bvmgr_square_ticket_mirror_source_hash($source_model);
 
     $computed = 'not_mirrored';
     if ($stored_status === 'mirror_retired') {
@@ -1395,7 +1395,7 @@ function vms_square_ticket_mirror_status_context(int $product_id): array
     } elseif ($stored_status === 'mirror_error' || $last_error_code !== '' || $last_error_message !== '') {
         $computed = 'mirror_error';
     } elseif ($item_id === '' || $variation_id === '') {
-        $computed = vms_square_ticket_mirror_has_mirror_meta($product_id) ? 'mirror_stale' : 'not_mirrored';
+        $computed = bvmgr_square_ticket_mirror_has_mirror_meta($product_id) ? 'mirror_stale' : 'not_mirrored';
     } elseif ($stored_status === 'mirror_stale') {
         $computed = 'mirror_stale';
     } elseif (empty($eligibility['eligible'])) {
@@ -1410,18 +1410,18 @@ function vms_square_ticket_mirror_status_context(int $product_id): array
         'product_id' => $product_id,
         'stored_status' => $stored_status,
         'status' => $computed,
-        'status_label' => vms_square_ticket_mirror_label_for_status($computed),
-        'mode' => vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_mode'),
+        'status_label' => bvmgr_square_ticket_mirror_label_for_status($computed),
+        'mode' => bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_mode'),
         'item_id' => $item_id,
         'variation_id' => $variation_id,
-        'category_id' => vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_category_id'),
-        'location_id' => vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_location_id'),
-        'catalog_version' => absint(vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_catalog_version')),
+        'category_id' => bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_category_id'),
+        'location_id' => bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_location_id'),
+        'catalog_version' => absint(bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_catalog_version')),
         'stored_source_hash' => $stored_source_hash,
         'current_source_hash' => $current_source_hash,
-        'last_sync_gmt' => vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_sync_gmt'),
-        'last_retired_gmt' => vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_retired_gmt'),
-        'last_order_stamp_gmt' => vms_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_order_stamp_gmt'),
+        'last_sync_gmt' => bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_sync_gmt'),
+        'last_retired_gmt' => bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_retired_gmt'),
+        'last_order_stamp_gmt' => bvmgr_square_ticket_mirror_get_meta($product_id, 'square_mirror_last_order_stamp_gmt'),
         'last_error_code' => $last_error_code,
         'last_error_message' => $last_error_message,
         'eligibility' => $eligibility,
@@ -1429,15 +1429,15 @@ function vms_square_ticket_mirror_status_context(int $product_id): array
     );
 }
 
-function vms_square_ticket_mirror_log(int $product_id, string $action, array $args = array()): void
+function bvmgr_square_ticket_mirror_log(int $product_id, string $action, array $args = array()): void
 {
     global $wpdb;
 
-    $table = vms_square_ticket_mirror_log_table_name();
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
+    $table = bvmgr_square_ticket_mirror_log_table_name();
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
     $args = is_array($args) ? $args : array();
 
-    $source_model = is_array($args['source_model'] ?? null) ? (array) $args['source_model'] : vms_square_ticket_mirror_build_source_model($product_id);
+    $source_model = is_array($args['source_model'] ?? null) ? (array) $args['source_model'] : bvmgr_square_ticket_mirror_build_source_model($product_id);
     $data = array(
         'product_id' => $product_id,
         'event_plan_id' => absint($args['event_plan_id'] ?? ($source_model['event_plan_id'] ?? 0)),
@@ -1453,7 +1453,7 @@ function vms_square_ticket_mirror_log(int $product_id, string $action, array $ar
         'error_code' => sanitize_key((string) ($args['error_code'] ?? '')),
         'error_message' => isset($args['error_message']) ? sanitize_text_field((string) $args['error_message']) : '',
         'actor_user_id' => get_current_user_id() ? absint(get_current_user_id()) : null,
-        'created_at_gmt' => vms_square_ticket_mirror_now_gmt(),
+        'created_at_gmt' => bvmgr_square_ticket_mirror_now_gmt(),
     );
 
     $format = array('%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s');
@@ -1461,17 +1461,17 @@ function vms_square_ticket_mirror_log(int $product_id, string $action, array $ar
     $wpdb->insert($table, $data, $format);
 }
 
-function vms_square_ticket_mirror_recent_logs(int $product_id, int $limit = 8): array
+function bvmgr_square_ticket_mirror_recent_logs(int $product_id, int $limit = 8): array
 {
     global $wpdb;
 
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
     $limit = max(1, min(50, absint($limit)));
     if ($product_id <= 0) {
         return array();
     }
 
-    $table = vms_square_ticket_mirror_log_table_name();
+    $table = bvmgr_square_ticket_mirror_log_table_name();
     $sql = $wpdb->prepare(
         "SELECT * FROM %i WHERE product_id = %d ORDER BY id DESC LIMIT %d",
         $table,
@@ -1484,18 +1484,18 @@ function vms_square_ticket_mirror_recent_logs(int $product_id, int $limit = 8): 
     return is_array($rows) ? $rows : array();
 }
 
-function vms_square_ticket_mirror_set_error_state(int $product_id, string $error_code, string $error_message, array $args = array()): array
+function bvmgr_square_ticket_mirror_set_error_state(int $product_id, string $error_code, string $error_message, array $args = array()): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $before = vms_square_ticket_mirror_status_context($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $before = bvmgr_square_ticket_mirror_status_context($product_id);
 
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_mode', vms_square_ticket_mirror_mode_value());
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirror_error');
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_error_code', sanitize_key($error_code));
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_error_message', sanitize_text_field($error_message));
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_mode', bvmgr_square_ticket_mirror_mode_value());
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirror_error');
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_error_code', sanitize_key($error_code));
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_error_message', sanitize_text_field($error_message));
 
-    $after = vms_square_ticket_mirror_status_context($product_id);
-    vms_square_ticket_mirror_log($product_id, (string) ($args['action'] ?? 'mirror_error'), array_merge($args, array(
+    $after = bvmgr_square_ticket_mirror_status_context($product_id);
+    bvmgr_square_ticket_mirror_log($product_id, (string) ($args['action'] ?? 'mirror_error'), array_merge($args, array(
         'status_before' => (string) ($before['status'] ?? ''),
         'status_after' => (string) ($after['status'] ?? 'mirror_error'),
         'item_id' => (string) ($args['item_id'] ?? ($before['item_id'] ?? '')),
@@ -1515,18 +1515,18 @@ function vms_square_ticket_mirror_set_error_state(int $product_id, string $error
     );
 }
 
-function vms_square_ticket_mirror_clear_error_state(int $product_id): array
+function bvmgr_square_ticket_mirror_clear_error_state(int $product_id): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $before = vms_square_ticket_mirror_status_context($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $before = bvmgr_square_ticket_mirror_status_context($product_id);
 
-    vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
-    vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
+    bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
+    bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
 
-    $after = vms_square_ticket_mirror_status_context($product_id);
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', (string) ($after['status'] ?? 'not_mirrored'));
+    $after = bvmgr_square_ticket_mirror_status_context($product_id);
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', (string) ($after['status'] ?? 'not_mirrored'));
 
-    vms_square_ticket_mirror_log($product_id, 'mirror_clear_error', array(
+    bvmgr_square_ticket_mirror_log($product_id, 'mirror_clear_error', array(
         'status_before' => (string) ($before['status'] ?? ''),
         'status_after' => (string) ($after['status'] ?? ''),
         'item_id' => (string) ($before['item_id'] ?? ''),
@@ -1542,7 +1542,7 @@ function vms_square_ticket_mirror_clear_error_state(int $product_id): array
     );
 }
 
-function vms_square_ticket_mirror_extract_remote_item_state($catalog_object): array
+function bvmgr_square_ticket_mirror_extract_remote_item_state($catalog_object): array
 {
     $item_id = is_object($catalog_object) && method_exists($catalog_object, 'getId') ? trim((string) $catalog_object->getId()) : '';
     $item_version = is_object($catalog_object) && method_exists($catalog_object, 'getVersion') ? absint($catalog_object->getVersion()) : 0;
@@ -1568,7 +1568,7 @@ function vms_square_ticket_mirror_extract_remote_item_state($catalog_object): ar
     );
 }
 
-function vms_square_ticket_mirror_retrieve_remote_item(string $item_id): array
+function bvmgr_square_ticket_mirror_retrieve_remote_item(string $item_id): array
 {
     $item_id = trim($item_id);
     if ($item_id === '') {
@@ -1579,7 +1579,7 @@ function vms_square_ticket_mirror_retrieve_remote_item(string $item_id): array
         );
     }
 
-    $square = vms_square_ticket_mirror_get_square_context();
+    $square = bvmgr_square_ticket_mirror_get_square_context();
     if (empty($square['ok'])) {
         return array(
             'ok' => false,
@@ -1591,24 +1591,24 @@ function vms_square_ticket_mirror_retrieve_remote_item(string $item_id): array
     try {
         $response = $square['api']->retrieve_catalog_object($item_id, true);
     } catch (Throwable $e) {
-        $exception = vms_square_ticket_mirror_square_exception_debug($e);
+        $exception = bvmgr_square_ticket_mirror_square_exception_debug($e);
         $rows = (array) ($exception['errors'] ?? array());
         $first = !empty($rows[0]) && is_array($rows[0]) ? $rows[0] : array();
         return array(
             'ok' => false,
             'error_code' => (string) ($first['code'] ?? 'square_retrieve_failed'),
             'error_message' => (string) ($first['detail'] ?? ($exception['message'] ?? sanitize_text_field($e->getMessage()))),
-            'response_json' => vms_square_ticket_mirror_json_encode($exception),
+            'response_json' => bvmgr_square_ticket_mirror_json_encode($exception),
         );
     }
 
-    $summary = vms_square_ticket_mirror_square_error_summary($response);
+    $summary = bvmgr_square_ticket_mirror_square_error_summary($response);
     if ($summary['code'] !== '') {
         return array(
             'ok' => false,
             'error_code' => (string) $summary['code'],
             'error_message' => (string) $summary['message'],
-            'response_json' => vms_square_ticket_mirror_json_encode(array(
+            'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
                 'errors' => (array) ($summary['rows'] ?? array()),
             )),
         );
@@ -1621,20 +1621,20 @@ function vms_square_ticket_mirror_retrieve_remote_item(string $item_id): array
             'ok' => false,
             'error_code' => 'square_item_missing',
             'error_message' => __('Square mirror item was not found.', 'backstage-venue-manager'),
-            'response_json' => vms_square_ticket_mirror_catalog_object_debug_json($object),
+            'response_json' => bvmgr_square_ticket_mirror_catalog_object_debug_json($object),
         );
     }
 
     return array_merge(
         array(
             'ok' => true,
-            'response_json' => vms_square_ticket_mirror_catalog_object_debug_json($object),
+            'response_json' => bvmgr_square_ticket_mirror_catalog_object_debug_json($object),
         ),
-        vms_square_ticket_mirror_extract_remote_item_state($object)
+        bvmgr_square_ticket_mirror_extract_remote_item_state($object)
     );
 }
 
-function vms_square_ticket_mirror_build_item_description(array $source_model): string
+function bvmgr_square_ticket_mirror_build_item_description(array $source_model): string
 {
     $parts = array_filter(array(
         'VMS-managed Square ticket mirror.',
@@ -1644,10 +1644,10 @@ function vms_square_ticket_mirror_build_item_description(array $source_model): s
         'Do not edit in Square.',
     ));
 
-    return vms_square_ticket_mirror_limit_text(implode(' ', $parts), 1000);
+    return bvmgr_square_ticket_mirror_limit_text(implode(' ', $parts), 1000);
 }
 
-function vms_square_ticket_mirror_build_item_object(int $product_id, array $source_model, array $category, array $location, array $remote_state = array())
+function bvmgr_square_ticket_mirror_build_item_object(int $product_id, array $source_model, array $category, array $location, array $remote_state = array())
 {
     $existing_item_id = trim((string) ($remote_state['item_id'] ?? ''));
     $existing_item_version = absint($remote_state['item_version'] ?? 0);
@@ -1667,7 +1667,7 @@ function vms_square_ticket_mirror_build_item_object(int $product_id, array $sour
 
     $item_data = new \Square\Models\CatalogItem();
     $item_data->setName((string) $source_model['mirror_name']);
-    $item_data->setDescriptionHtml(vms_square_ticket_mirror_build_item_description($source_model));
+    $item_data->setDescriptionHtml(bvmgr_square_ticket_mirror_build_item_description($source_model));
     $item_data->setIsArchived(false);
     $item_data->setAvailableOnline(false);
     $item_data->setAvailableForPickup(false);
@@ -1695,7 +1695,7 @@ function vms_square_ticket_mirror_build_item_object(int $product_id, array $sour
 
     $variation_data = new \Square\Models\CatalogItemVariation();
     $variation_data->setItemId($item_object->getId());
-    $variation_data->setName(vms_square_ticket_mirror_limit_text((string) ($source_model['ticket_label'] ?? 'Online Ticket'), 255));
+    $variation_data->setName(bvmgr_square_ticket_mirror_limit_text((string) ($source_model['ticket_label'] ?? 'Online Ticket'), 255));
     $variation_data->setSku((string) ($source_model['sku'] ?? ''));
     $variation_data->setPricingType(\Square\Models\CatalogPricingType::FIXED_PRICING);
     $variation_data->setTrackInventory(false);
@@ -1712,15 +1712,15 @@ function vms_square_ticket_mirror_build_item_object(int $product_id, array $sour
     return $item_object;
 }
 
-function vms_square_ticket_mirror_sync_product(int $product_id, array $args = array()): array
+function bvmgr_square_ticket_mirror_sync_product(int $product_id, array $args = array()): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $before = vms_square_ticket_mirror_status_context($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $before = bvmgr_square_ticket_mirror_status_context($product_id);
     $eligibility = (array) ($before['eligibility'] ?? array());
 
     if (empty($eligibility['eligible'])) {
         $message = (string) ($eligibility['reason_message'] ?? __('Ticket is not eligible for Square mirroring.', 'backstage-venue-manager'));
-        vms_square_ticket_mirror_log($product_id, 'mirror_skip', array(
+        bvmgr_square_ticket_mirror_log($product_id, 'mirror_skip', array(
             'status_before' => (string) ($before['status'] ?? ''),
             'status_after' => (string) ($before['status'] ?? ''),
             'item_id' => (string) ($before['item_id'] ?? ''),
@@ -1728,7 +1728,7 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
             'location_id' => (string) ($before['location_id'] ?? ''),
             'error_code' => sanitize_key((string) ($eligibility['reason_code'] ?? 'not_eligible')),
             'error_message' => $message,
-            'request_json' => vms_square_ticket_mirror_json_encode($before['source_model'] ?? array()),
+            'request_json' => bvmgr_square_ticket_mirror_json_encode($before['source_model'] ?? array()),
             'source_model' => $before['source_model'] ?? array(),
         ));
 
@@ -1740,54 +1740,54 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
         );
     }
 
-    $category = vms_square_ticket_mirror_resolve_square_category(true);
+    $category = bvmgr_square_ticket_mirror_resolve_square_category(true);
     if (empty($category['ok']) || trim((string) ($category['square_id'] ?? '')) === '') {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($category['error_code'] ?? 'square_category_unavailable')),
             (string) ($category['error_message'] ?? __('Square category could not be resolved.', 'backstage-venue-manager')),
             array(
                 'action' => 'mirror_error',
-                'request_json' => vms_square_ticket_mirror_json_encode($before['source_model'] ?? array()),
-                'response_json' => vms_square_ticket_mirror_json_encode($category),
+                'request_json' => bvmgr_square_ticket_mirror_json_encode($before['source_model'] ?? array()),
+                'response_json' => bvmgr_square_ticket_mirror_json_encode($category),
                 'source_model' => $before['source_model'] ?? array(),
             )
         );
     }
 
-    $location = vms_square_ticket_mirror_resolve_location(absint($eligibility['event_plan_id'] ?? 0), true);
+    $location = bvmgr_square_ticket_mirror_resolve_location(absint($eligibility['event_plan_id'] ?? 0), true);
     if (empty($location['ok'])) {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($location['error_code'] ?? 'square_location_unavailable')),
             (string) ($location['error_message'] ?? __('Square location could not be resolved.', 'backstage-venue-manager')),
             array(
                 'action' => 'mirror_error',
-                'request_json' => vms_square_ticket_mirror_json_encode($before['source_model'] ?? array()),
-                'response_json' => vms_square_ticket_mirror_json_encode($location),
+                'request_json' => bvmgr_square_ticket_mirror_json_encode($before['source_model'] ?? array()),
+                'response_json' => bvmgr_square_ticket_mirror_json_encode($location),
                 'source_model' => $before['source_model'] ?? array(),
             )
         );
     }
 
-    $source_model = vms_square_ticket_mirror_build_source_model($product_id);
+    $source_model = bvmgr_square_ticket_mirror_build_source_model($product_id);
     $source_model['category_id'] = (string) ($category['square_id'] ?? '');
     $source_model['category_term_id'] = absint($category['term_id'] ?? 0);
-    $source_model['category_name'] = (string) ($category['name'] ?? vms_square_ticket_mirror_target_category_name());
+    $source_model['category_name'] = (string) ($category['name'] ?? bvmgr_square_ticket_mirror_target_category_name());
     $source_model['category_resolution_path'] = sanitize_key((string) ($category['resolution_path'] ?? ''));
     $source_model['category_mapping_square_id'] = trim((string) ($category['mapping_square_id'] ?? ''));
     $source_model['category_mapping_square_version'] = absint($category['mapping_square_version'] ?? 0);
     $source_model['location_id'] = (string) ($location['location_id'] ?? '');
     $source_model['location_source'] = (string) ($location['source'] ?? '');
-    $source_hash = vms_square_ticket_mirror_source_hash($source_model);
+    $source_hash = bvmgr_square_ticket_mirror_source_hash($source_model);
 
     $remote_state = array();
     $stored_item_id = trim((string) ($before['item_id'] ?? ''));
     if ($stored_item_id !== '') {
-        $retrieved_remote_state = vms_square_ticket_mirror_retrieve_remote_item($stored_item_id);
+        $retrieved_remote_state = bvmgr_square_ticket_mirror_retrieve_remote_item($stored_item_id);
         if (empty($retrieved_remote_state['ok'])) {
             if ((string) ($retrieved_remote_state['error_code'] ?? '') !== 'square_item_missing') {
-                return vms_square_ticket_mirror_set_error_state(
+                return bvmgr_square_ticket_mirror_set_error_state(
                     $product_id,
                     sanitize_key((string) ($retrieved_remote_state['error_code'] ?? 'square_retrieve_failed')),
                     (string) ($retrieved_remote_state['error_message'] ?? __('Square mirror item could not be retrieved.', 'backstage-venue-manager')),
@@ -1795,7 +1795,7 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
                         'action' => 'mirror_error',
                         'item_id' => $stored_item_id,
                         'variation_id' => (string) ($before['variation_id'] ?? ''),
-                        'request_json' => vms_square_ticket_mirror_json_encode($source_model),
+                        'request_json' => bvmgr_square_ticket_mirror_json_encode($source_model),
                         'response_json' => isset($retrieved_remote_state['response_json']) ? (string) $retrieved_remote_state['response_json'] : '',
                         'source_model' => $source_model,
                     )
@@ -1806,22 +1806,22 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
         }
     }
 
-    $square = vms_square_ticket_mirror_get_square_context();
+    $square = bvmgr_square_ticket_mirror_get_square_context();
     if (empty($square['ok'])) {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($square['error_code'] ?? 'square_unavailable')),
             (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'backstage-venue-manager')),
             array(
                 'action' => 'mirror_error',
-                'request_json' => vms_square_ticket_mirror_json_encode($source_model),
+                'request_json' => bvmgr_square_ticket_mirror_json_encode($source_model),
                 'source_model' => $source_model,
             )
         );
     }
 
-    $catalog_object = vms_square_ticket_mirror_build_item_object($product_id, $source_model, $category, $location, $remote_state);
-    $request_json = vms_square_ticket_mirror_catalog_object_debug_json($catalog_object);
+    $catalog_object = bvmgr_square_ticket_mirror_build_item_object($product_id, $source_model, $category, $location, $remote_state);
+    $request_json = bvmgr_square_ticket_mirror_catalog_object_debug_json($catalog_object);
 
     try {
         $response = $square['api']->upsert_catalog_object(
@@ -1829,32 +1829,32 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
             $catalog_object
         );
     } catch (Throwable $e) {
-        $exception = vms_square_ticket_mirror_square_exception_debug($e);
+        $exception = bvmgr_square_ticket_mirror_square_exception_debug($e);
         $rows = (array) ($exception['errors'] ?? array());
         $first = !empty($rows[0]) && is_array($rows[0]) ? $rows[0] : array();
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($first['code'] ?? 'square_upsert_failed')),
             (string) ($first['detail'] ?? ($exception['message'] ?? sanitize_text_field($e->getMessage()))),
             array(
                 'action' => 'mirror_error',
                 'request_json' => $request_json,
-                'response_json' => vms_square_ticket_mirror_json_encode($exception),
+                'response_json' => bvmgr_square_ticket_mirror_json_encode($exception),
                 'source_model' => $source_model,
             )
         );
     }
 
-    $summary = vms_square_ticket_mirror_square_error_summary($response);
+    $summary = bvmgr_square_ticket_mirror_square_error_summary($response);
     if ($summary['code'] !== '') {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             (string) $summary['code'],
             (string) $summary['message'],
             array(
                 'action' => 'mirror_error',
                 'request_json' => $request_json,
-                'response_json' => vms_square_ticket_mirror_json_encode(array(
+                'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
                     'errors' => (array) ($summary['rows'] ?? array()),
                 )),
                 'source_model' => $source_model,
@@ -1864,43 +1864,43 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
 
     $data = $response->get_data();
     $remote_object = is_object($data) && method_exists($data, 'getCatalogObject') ? $data->getCatalogObject() : null;
-    $remote = vms_square_ticket_mirror_extract_remote_item_state($remote_object);
+    $remote = bvmgr_square_ticket_mirror_extract_remote_item_state($remote_object);
     if (empty($remote['item_id']) || empty($remote['variation_id'])) {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             'square_missing_ids',
             __('Square did not return both item and variation IDs for the ticket mirror.', 'backstage-venue-manager'),
             array(
                 'action' => 'mirror_error',
                 'request_json' => $request_json,
-                'response_json' => vms_square_ticket_mirror_catalog_object_debug_json($remote_object),
+                'response_json' => bvmgr_square_ticket_mirror_catalog_object_debug_json($remote_object),
                 'source_model' => $source_model,
             )
         );
     }
 
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_mode', vms_square_ticket_mirror_mode_value());
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_item_id', (string) $remote['item_id']);
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_variation_id', (string) $remote['variation_id']);
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_category_id', (string) ($category['square_id'] ?? ''));
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_location_id', (string) ($location['location_id'] ?? ''));
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_catalog_version', (string) absint($remote['item_version'] ?? 0));
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_source_hash', $source_hash);
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_sync_gmt', vms_square_ticket_mirror_now_gmt());
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirrored');
-    vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
-    vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_mode', bvmgr_square_ticket_mirror_mode_value());
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_item_id', (string) $remote['item_id']);
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_variation_id', (string) $remote['variation_id']);
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_category_id', (string) ($category['square_id'] ?? ''));
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_location_id', (string) ($location['location_id'] ?? ''));
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_catalog_version', (string) absint($remote['item_version'] ?? 0));
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_source_hash', $source_hash);
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_sync_gmt', bvmgr_square_ticket_mirror_now_gmt());
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirrored');
+    bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
+    bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
 
-    $after = vms_square_ticket_mirror_status_context($product_id);
+    $after = bvmgr_square_ticket_mirror_status_context($product_id);
     $action = !empty($remote_state['item_id']) ? 'mirror_update' : 'mirror_create';
-    vms_square_ticket_mirror_log($product_id, $action, array(
+    bvmgr_square_ticket_mirror_log($product_id, $action, array(
         'status_before' => (string) ($before['status'] ?? ''),
         'status_after' => (string) ($after['status'] ?? 'mirrored'),
         'item_id' => (string) ($remote['item_id'] ?? ''),
         'variation_id' => (string) ($remote['variation_id'] ?? ''),
         'location_id' => (string) ($location['location_id'] ?? ''),
         'request_json' => $request_json,
-        'response_json' => vms_square_ticket_mirror_catalog_object_debug_json($remote_object),
+        'response_json' => bvmgr_square_ticket_mirror_catalog_object_debug_json($remote_object),
         'source_model' => $source_model,
     ));
 
@@ -1916,10 +1916,10 @@ function vms_square_ticket_mirror_sync_product(int $product_id, array $args = ar
     );
 }
 
-function vms_square_ticket_mirror_retire_product(int $product_id): array
+function bvmgr_square_ticket_mirror_retire_product(int $product_id): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $before = vms_square_ticket_mirror_status_context($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $before = bvmgr_square_ticket_mirror_status_context($product_id);
     $item_id = trim((string) ($before['item_id'] ?? ''));
 
     if ($item_id === '') {
@@ -1931,15 +1931,15 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
         );
     }
 
-    $remote_state = vms_square_ticket_mirror_retrieve_remote_item($item_id);
+    $remote_state = bvmgr_square_ticket_mirror_retrieve_remote_item($item_id);
     $location_id = trim((string) ($before['location_id'] ?? ''));
     if ($location_id === '') {
-        $location = vms_square_ticket_mirror_resolve_location(absint($before['source_model']['event_plan_id'] ?? 0), true);
+        $location = bvmgr_square_ticket_mirror_resolve_location(absint($before['source_model']['event_plan_id'] ?? 0), true);
         $location_id = trim((string) ($location['location_id'] ?? ''));
     }
 
     if ($location_id === '') {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             'square_location_missing',
             __('Square mirror location is missing.', 'backstage-venue-manager'),
@@ -1952,9 +1952,9 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
         );
     }
 
-    $square = vms_square_ticket_mirror_get_square_context();
+    $square = bvmgr_square_ticket_mirror_get_square_context();
     if (empty($square['ok'])) {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($square['error_code'] ?? 'square_unavailable')),
             (string) ($square['error_message'] ?? __('WooCommerce Square is unavailable.', 'backstage-venue-manager')),
@@ -1968,14 +1968,14 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
     }
 
     if (empty($remote_state['ok']) && (string) ($remote_state['error_code'] ?? '') === 'square_item_missing') {
-        vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirror_retired');
-        vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_retired_gmt', vms_square_ticket_mirror_now_gmt());
-        vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_sync_gmt', vms_square_ticket_mirror_now_gmt());
-        vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
-        vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
+        bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirror_retired');
+        bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_retired_gmt', bvmgr_square_ticket_mirror_now_gmt());
+        bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_sync_gmt', bvmgr_square_ticket_mirror_now_gmt());
+        bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
+        bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
 
-        $after = vms_square_ticket_mirror_status_context($product_id);
-        vms_square_ticket_mirror_log($product_id, 'mirror_retire_missing_remote', array(
+        $after = bvmgr_square_ticket_mirror_status_context($product_id);
+        bvmgr_square_ticket_mirror_log($product_id, 'mirror_retire_missing_remote', array(
             'status_before' => (string) ($before['status'] ?? ''),
             'status_after' => (string) ($after['status'] ?? 'mirror_retired'),
             'item_id' => $item_id,
@@ -1998,7 +1998,7 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
     }
 
     if (empty($remote_state['ok'])) {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($remote_state['error_code'] ?? 'square_retrieve_failed')),
             (string) ($remote_state['error_message'] ?? __('Square mirror item could not be retrieved.', 'backstage-venue-manager')),
@@ -2040,7 +2040,7 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
         $catalog_object->setItemData($item_data);
     }
 
-    $request_json = vms_square_ticket_mirror_catalog_object_debug_json($catalog_object);
+    $request_json = bvmgr_square_ticket_mirror_catalog_object_debug_json($catalog_object);
 
     try {
         $response = $square['api']->upsert_catalog_object(
@@ -2048,10 +2048,10 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
             $catalog_object
         );
     } catch (Throwable $e) {
-        $exception = vms_square_ticket_mirror_square_exception_debug($e);
+        $exception = bvmgr_square_ticket_mirror_square_exception_debug($e);
         $rows = (array) ($exception['errors'] ?? array());
         $first = !empty($rows[0]) && is_array($rows[0]) ? $rows[0] : array();
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             sanitize_key((string) ($first['code'] ?? 'square_retire_failed')),
             (string) ($first['detail'] ?? ($exception['message'] ?? sanitize_text_field($e->getMessage()))),
@@ -2061,15 +2061,15 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
                 'variation_id' => (string) ($before['variation_id'] ?? ''),
                 'location_id' => $location_id,
                 'request_json' => $request_json,
-                'response_json' => vms_square_ticket_mirror_json_encode($exception),
+                'response_json' => bvmgr_square_ticket_mirror_json_encode($exception),
                 'source_model' => $before['source_model'] ?? array(),
             )
         );
     }
 
-    $summary = vms_square_ticket_mirror_square_error_summary($response);
+    $summary = bvmgr_square_ticket_mirror_square_error_summary($response);
     if ($summary['code'] !== '') {
-        return vms_square_ticket_mirror_set_error_state(
+        return bvmgr_square_ticket_mirror_set_error_state(
             $product_id,
             (string) $summary['code'],
             (string) $summary['message'],
@@ -2079,7 +2079,7 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
                 'variation_id' => (string) ($before['variation_id'] ?? ''),
                 'location_id' => $location_id,
                 'request_json' => $request_json,
-                'response_json' => vms_square_ticket_mirror_json_encode(array(
+                'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
                     'errors' => (array) ($summary['rows'] ?? array()),
                 )),
                 'source_model' => $before['source_model'] ?? array(),
@@ -2087,24 +2087,24 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
         );
     }
 
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirror_retired');
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_retired_gmt', vms_square_ticket_mirror_now_gmt());
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_sync_gmt', vms_square_ticket_mirror_now_gmt());
-    vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_location_id', $location_id);
-    vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
-    vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirror_retired');
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_retired_gmt', bvmgr_square_ticket_mirror_now_gmt());
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_sync_gmt', bvmgr_square_ticket_mirror_now_gmt());
+    bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_location_id', $location_id);
+    bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
+    bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
 
-    $after = vms_square_ticket_mirror_status_context($product_id);
+    $after = bvmgr_square_ticket_mirror_status_context($product_id);
     $retired_data = $response->get_data();
     $retired_object = is_object($retired_data) && method_exists($retired_data, 'getCatalogObject') ? $retired_data->getCatalogObject() : null;
-    vms_square_ticket_mirror_log($product_id, 'mirror_retire', array(
+    bvmgr_square_ticket_mirror_log($product_id, 'mirror_retire', array(
         'status_before' => (string) ($before['status'] ?? ''),
         'status_after' => (string) ($after['status'] ?? 'mirror_retired'),
         'item_id' => $item_id,
         'variation_id' => (string) ($before['variation_id'] ?? ''),
         'location_id' => $location_id,
         'request_json' => $request_json,
-        'response_json' => vms_square_ticket_mirror_catalog_object_debug_json($retired_object),
+        'response_json' => bvmgr_square_ticket_mirror_catalog_object_debug_json($retired_object),
         'source_model' => $before['source_model'] ?? array(),
     ));
 
@@ -2118,28 +2118,28 @@ function vms_square_ticket_mirror_retire_product(int $product_id): array
     );
 }
 
-function vms_square_ticket_mirror_should_log_order_item_skip(int $product_id): bool
+function bvmgr_square_ticket_mirror_should_log_order_item_skip(int $product_id): bool
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
     if ($product_id <= 0) {
         return false;
     }
 
-    if (vms_square_ticket_mirror_has_mirror_meta($product_id)) {
+    if (bvmgr_square_ticket_mirror_has_mirror_meta($product_id)) {
         return true;
     }
 
-    if (function_exists('vms_square_firewall_is_protected_product') && vms_square_firewall_is_protected_product($product_id)) {
+    if (function_exists('bvmgr_square_firewall_is_protected_product') && bvmgr_square_firewall_is_protected_product($product_id)) {
         return true;
     }
 
-    return in_array(vms_square_ticket_mirror_product_role($product_id), vms_square_ticket_mirror_included_roles(), true);
+    return in_array(bvmgr_square_ticket_mirror_product_role($product_id), bvmgr_square_ticket_mirror_included_roles(), true);
 }
 
-function vms_square_ticket_mirror_order_item_stamp_decision(int $product_id, string $existing_square_variation_id = ''): array
+function bvmgr_square_ticket_mirror_order_item_stamp_decision(int $product_id, string $existing_square_variation_id = ''): array
 {
-    $product_id = vms_square_ticket_mirror_canonical_product_id($product_id);
-    $state = vms_square_ticket_mirror_status_context($product_id);
+    $product_id = bvmgr_square_ticket_mirror_canonical_product_id($product_id);
+    $state = bvmgr_square_ticket_mirror_status_context($product_id);
     $eligibility = (array) ($state['eligibility'] ?? array());
 
     $decision = array(
@@ -2149,7 +2149,7 @@ function vms_square_ticket_mirror_order_item_stamp_decision(int $product_id, str
         'status' => (string) ($state['status'] ?? 'not_mirrored'),
         'reason_code' => '',
         'reason_message' => '',
-        'log_skip' => vms_square_ticket_mirror_should_log_order_item_skip($product_id),
+        'log_skip' => bvmgr_square_ticket_mirror_should_log_order_item_skip($product_id),
         'source_model' => $state['source_model'] ?? array(),
     );
 
@@ -2170,7 +2170,7 @@ function vms_square_ticket_mirror_order_item_stamp_decision(int $product_id, str
         $decision['reason_message'] = sprintf(
             /* translators: %s: status label. */
             __('Mirror status is %s, so the order item was not stamped.', 'backstage-venue-manager'),
-            vms_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored'))
+            bvmgr_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored'))
         );
         return $decision;
     }
@@ -2191,7 +2191,7 @@ function vms_square_ticket_mirror_order_item_stamp_decision(int $product_id, str
     return $decision;
 }
 
-function vms_square_ticket_mirror_maybe_stamp_checkout_item($item, array $context = array()): array
+function bvmgr_square_ticket_mirror_maybe_stamp_checkout_item($item, array $context = array()): array
 {
     if (!($item instanceof WC_Order_Item_Product)) {
         return array(
@@ -2207,23 +2207,23 @@ function vms_square_ticket_mirror_maybe_stamp_checkout_item($item, array $contex
     }
 
     $existing = trim((string) $item->get_meta('_square_item_variation_id', true));
-    $decision = vms_square_ticket_mirror_order_item_stamp_decision($product_id, $existing);
+    $decision = bvmgr_square_ticket_mirror_order_item_stamp_decision($product_id, $existing);
 
     if (!empty($decision['apply'])) {
         $item->update_meta_data('_square_item_variation_id', (string) $decision['mirror_variation_id']);
         $item->update_meta_data('_vms_square_mirror_stamped', '1');
-        vms_square_ticket_mirror_update_meta($decision['product_id'], 'square_mirror_last_order_stamp_gmt', vms_square_ticket_mirror_now_gmt());
+        bvmgr_square_ticket_mirror_update_meta($decision['product_id'], 'square_mirror_last_order_stamp_gmt', bvmgr_square_ticket_mirror_now_gmt());
 
-        vms_square_ticket_mirror_log($decision['product_id'], 'order_item_stamp', array(
+        bvmgr_square_ticket_mirror_log($decision['product_id'], 'order_item_stamp', array(
             'status_before' => (string) ($decision['status'] ?? ''),
             'status_after' => (string) ($decision['status'] ?? ''),
             'variation_id' => (string) ($decision['mirror_variation_id'] ?? ''),
             'location_id' => sanitize_text_field((string) ($context['location_id'] ?? '')),
-            'request_json' => vms_square_ticket_mirror_json_encode(array_merge($context, array(
+            'request_json' => bvmgr_square_ticket_mirror_json_encode(array_merge($context, array(
                 'existing_square_item_variation_id' => $existing,
                 'product_id' => $decision['product_id'],
             ))),
-            'response_json' => vms_square_ticket_mirror_json_encode(array(
+            'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
                 'stamped_square_item_variation_id' => (string) ($decision['mirror_variation_id'] ?? ''),
             )),
             'source_model' => $decision['source_model'] ?? array(),
@@ -2237,11 +2237,11 @@ function vms_square_ticket_mirror_maybe_stamp_checkout_item($item, array $contex
     }
 
     if (!empty($decision['log_skip'])) {
-        vms_square_ticket_mirror_log($decision['product_id'], 'order_item_skip', array(
+        bvmgr_square_ticket_mirror_log($decision['product_id'], 'order_item_skip', array(
             'status_before' => (string) ($decision['status'] ?? ''),
             'status_after' => (string) ($decision['status'] ?? ''),
             'variation_id' => (string) ($decision['mirror_variation_id'] ?? ''),
-            'request_json' => vms_square_ticket_mirror_json_encode(array_merge($context, array(
+            'request_json' => bvmgr_square_ticket_mirror_json_encode(array_merge($context, array(
                 'existing_square_item_variation_id' => $existing,
                 'product_id' => $decision['product_id'],
             ))),
@@ -2259,18 +2259,18 @@ function vms_square_ticket_mirror_maybe_stamp_checkout_item($item, array $contex
     );
 }
 
-function vms_square_ticket_mirror_stamp_checkout_line_item($item, $cart_item_key, $values, $order): void
+function bvmgr_square_ticket_mirror_stamp_checkout_line_item($item, $cart_item_key, $values, $order): void
 {
     unset($cart_item_key, $values);
     $context = array(
         'hook' => 'woocommerce_checkout_create_order_line_item',
         'order_id' => is_object($order) && method_exists($order, 'get_id') ? absint($order->get_id()) : 0,
     );
-    vms_square_ticket_mirror_maybe_stamp_checkout_item($item, $context);
+    bvmgr_square_ticket_mirror_maybe_stamp_checkout_item($item, $context);
 }
-add_action('woocommerce_checkout_create_order_line_item', 'vms_square_ticket_mirror_stamp_checkout_line_item', 5, 4);
+add_action('woocommerce_checkout_create_order_line_item', 'bvmgr_square_ticket_mirror_stamp_checkout_line_item', 5, 4);
 
-function vms_square_ticket_mirror_stamp_new_order_item($item_id, $item, $order_id): void
+function bvmgr_square_ticket_mirror_stamp_new_order_item($item_id, $item, $order_id): void
 {
     $item_id = absint($item_id);
     if ($item_id <= 0 || !($item instanceof WC_Order_Item_Product)) {
@@ -2288,24 +2288,24 @@ function vms_square_ticket_mirror_stamp_new_order_item($item_id, $item, $order_i
         $product_id = absint($item->get_product_id());
     }
 
-    $decision = vms_square_ticket_mirror_order_item_stamp_decision($product_id, $existing);
+    $decision = bvmgr_square_ticket_mirror_order_item_stamp_decision($product_id, $existing);
     if (!empty($decision['apply'])) {
         wc_update_order_item_meta($item_id, '_square_item_variation_id', (string) $decision['mirror_variation_id']);
         wc_update_order_item_meta($item_id, '_vms_square_mirror_stamped', '1');
-        vms_square_ticket_mirror_update_meta($decision['product_id'], 'square_mirror_last_order_stamp_gmt', vms_square_ticket_mirror_now_gmt());
+        bvmgr_square_ticket_mirror_update_meta($decision['product_id'], 'square_mirror_last_order_stamp_gmt', bvmgr_square_ticket_mirror_now_gmt());
 
-        vms_square_ticket_mirror_log($decision['product_id'], 'order_item_stamp', array(
+        bvmgr_square_ticket_mirror_log($decision['product_id'], 'order_item_stamp', array(
             'status_before' => (string) ($decision['status'] ?? ''),
             'status_after' => (string) ($decision['status'] ?? ''),
             'variation_id' => (string) ($decision['mirror_variation_id'] ?? ''),
-            'request_json' => vms_square_ticket_mirror_json_encode(array(
+            'request_json' => bvmgr_square_ticket_mirror_json_encode(array(
                 'hook' => 'woocommerce_new_order_item',
                 'order_id' => absint($order_id),
                 'order_item_id' => $item_id,
                 'existing_square_item_variation_id' => $existing,
                 'product_id' => $decision['product_id'],
             )),
-            'response_json' => vms_square_ticket_mirror_json_encode(array(
+            'response_json' => bvmgr_square_ticket_mirror_json_encode(array(
                 'stamped_square_item_variation_id' => (string) ($decision['mirror_variation_id'] ?? ''),
             )),
             'source_model' => $decision['source_model'] ?? array(),
@@ -2314,11 +2314,11 @@ function vms_square_ticket_mirror_stamp_new_order_item($item_id, $item, $order_i
     }
 
     if (!empty($decision['log_skip'])) {
-        vms_square_ticket_mirror_log($decision['product_id'], 'order_item_skip', array(
+        bvmgr_square_ticket_mirror_log($decision['product_id'], 'order_item_skip', array(
             'status_before' => (string) ($decision['status'] ?? ''),
             'status_after' => (string) ($decision['status'] ?? ''),
             'variation_id' => (string) ($decision['mirror_variation_id'] ?? ''),
-            'request_json' => vms_square_ticket_mirror_json_encode(array(
+            'request_json' => bvmgr_square_ticket_mirror_json_encode(array(
                 'hook' => 'woocommerce_new_order_item',
                 'order_id' => absint($order_id),
                 'order_item_id' => $item_id,
@@ -2331,4 +2331,4 @@ function vms_square_ticket_mirror_stamp_new_order_item($item_id, $item, $order_i
         ));
     }
 }
-add_action('woocommerce_new_order_item', 'vms_square_ticket_mirror_stamp_new_order_item', 1, 3);
+add_action('woocommerce_new_order_item', 'bvmgr_square_ticket_mirror_stamp_new_order_item', 1, 3);

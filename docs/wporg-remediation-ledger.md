@@ -556,9 +556,19 @@ Date: 2026-08-26
 
 ### B3 W5 ticketing boundary
 
-- Status: `verified` for the isolated W5 commit; exactly `616` functions / `616` sites migrated without a duplicate family, legacy wrapper, or dual declaration.
+- Status: `verified` at `7482df66ab0b3b6995239fb06030f1d03e7b2750`; exactly `616` functions / `616` sites migrated without a duplicate family, legacy wrapper, or dual declaration.
 - Ratchet: cumulative progress is `1,814 / 4,521` functions and `1,826 / 4,541` sites; `2,707` legacy functions / `2,715` B3 scanner rows remain with no stale/forward, unexpected, unmapped, or completed-wave residual.
 - Exact literals: two activation-bootstrap callables moved while `27` ticketing hook, action, audit, and telemetry/provenance contracts remain legacy.
 - Focused verification: Phase B/V2 output-buffer ownership, output lifecycle, claims admin/mutation/request, verification mutation/request, disabled-ticket suppression, path/search/server-mount/text, authorization/input, changed-PHP lint, diff, and all primary B3/B2/B2.5/add-on/identity/runtime/release gates pass. Heredoc/nowdoc source fixtures are now phase-aware without rewriting historical fixture bodies.
 - Checkpoint sequencing: the adjacent W5/W6 exact-ZIP package, strict scan, and supported-stack checkpoint is performed after W6; W5 remains an independent green commit.
+- Boundaries: installed/live core and add-ons remain unchanged. No B4-B8 work, push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### B3 W6 ticket-integrity boundary
+
+- Status: `verified` for the isolated W6 commit; exactly `533` functions / `533` sites migrated without a duplicate family, legacy wrapper, or dual declaration.
+- Ratchet: cumulative progress is `2,347 / 4,521` functions and `2,359 / 4,541` sites; `2,174` legacy functions / `2,182` B3 scanner rows remain with no stale/forward, unexpected, unmapped, or completed-wave residual.
+- Exact literals: `13` executable callback sites moved while `36` database, filter, audit, and telemetry contracts remain legacy; two explicit W6 test fixtures preserve retained table/telemetry values.
+- Focused verification: integrity scan lock/output, Square cleanup, State of the Range, admin output, mutation boundaries, runtime stubs, W5 continuity, changed-PHP lint, diff, and all primary B3/B2/B2.5/add-on/identity/release gates pass. Live-parity/projection, unavailable historical-artifact, and WordPress-root tests remain excluded.
+- Package/smoke: exact dev ZIP `/private/tmp/bvm-wporg-b3-w6-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `7e674bec1564059d937dc37a86a2f11ecb444fe1cb42cbe123cfef529ce5a420`, passed integrity and supported-stack smoke without a plugin fatal. Smoke report SHA-256: `105a99df44bf03152ed5f153bc7b4b9152f60d8c71ad2e21d7f86ce7faad82d2`.
+- Strict scan: `2,915` total = historical `125` errors plus B3 `2,182`, B7 `182`, method-scope `420`, and external/core `6` warnings; zero unexpected row. Strict JSON SHA-256: `a1f7e12e4a7076a11b788fd8546c73aa2b1a9126b32f8706f30b68239563fb29`.
 - Boundaries: installed/live core and add-ons remain unchanged. No B4-B8 work, push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

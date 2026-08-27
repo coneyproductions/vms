@@ -265,12 +265,12 @@ function __(string $text, string $domain = ''): string
 	return $text;
 }
 
-function vms_ticket_integrity_admin_url(array $args = array()): string
+function bvmgr_ticket_integrity_admin_url(array $args = array()): string
 {
 	return add_query_arg($args, admin_url('admin.php?page=vms-ticket-integrity'));
 }
 
-function vms_ticket_integrity_format_datetime(int $timestamp): string
+function bvmgr_ticket_integrity_format_datetime(int $timestamp): string
 {
 	return 'DATE:' . $timestamp;
 }
@@ -329,7 +329,7 @@ $seedRuntimeState = static function (): void {
 };
 
 $seedPaymentState = static function (): void {
-	$GLOBALS['vms_test_options'][vms_ticket_integrity_payment_gateway_notice_option_key()] = array(
+	$GLOBALS['vms_test_options'][bvmgr_ticket_integrity_payment_gateway_notice_option_key()] = array(
 		'active' => true,
 		'status' => 'critical',
 		'message' => 'Checkout APIs are failing.',
@@ -346,7 +346,7 @@ $assert(is_string($contextSource) && strpos($contextSource, 'function bvmgr_admi
 $assert(is_string($contextSource) && strpos($contextSource, 'return bvmgr_admin_ui_is_vms_screen($screen);') !== false, 'Admin-notice screen predicate should delegate to the established VMS screen helper.');
 $assert(is_string($adminNoticesSource) && strpos($adminNoticesSource, "add_action('admin_notices', function () {") !== false, 'First-run notice should remain hooked to admin_notices.');
 $assert(is_string($runtimeSource) && strpos($runtimeSource, "add_action('admin_notices', 'bvmgr_render_admin_diagnostics');") !== false, 'Runtime diagnostics should remain hooked to admin_notices.');
-$assert(is_string($paymentSource) && strpos($paymentSource, "add_action('admin_notices', 'vms_ticket_integrity_render_payment_gateway_admin_notice', 18);") !== false, 'Payment gateway notice should remain hooked to admin_notices at priority 18.');
+$assert(is_string($paymentSource) && strpos($paymentSource, "add_action('admin_notices', 'bvmgr_ticket_integrity_render_payment_gateway_admin_notice', 18);") !== false, 'Payment gateway notice should remain hooked to admin_notices at priority 18.');
 $assert(strpos((string) $adminNoticesSource, 'bvmgr_admin_ui_is_admin_notice_screen') !== false, 'First-run notice should use the shared admin-notice screen predicate.');
 $assert(strpos((string) $runtimeSource, 'bvmgr_admin_ui_is_admin_notice_screen') !== false, 'Runtime diagnostics should use the shared admin-notice screen predicate.');
 $assert(strpos((string) $paymentSource, 'bvmgr_admin_ui_is_admin_notice_screen') !== false, 'Payment gateway notice should use the shared admin-notice screen predicate.');
@@ -358,11 +358,11 @@ $closureCallbacks = array_values(array_filter($adminNoticeCallbacks, static func
 }));
 $assert(count($closureCallbacks) === 1, 'Exactly one anonymous first-run admin_notices callback should be registered.');
 $assert(in_array('bvmgr_render_admin_diagnostics', $adminNoticeCallbacks, true), 'Runtime diagnostics callback should remain registered.');
-$assert(in_array('vms_ticket_integrity_render_payment_gateway_admin_notice', $adminNoticeCallbacks, true), 'Payment gateway notice callback should remain registered.');
+$assert(in_array('bvmgr_ticket_integrity_render_payment_gateway_admin_notice', $adminNoticeCallbacks, true), 'Payment gateway notice callback should remain registered.');
 
 $firstRunCallback = $closureCallbacks[0];
 $runtimeCallback = 'bvmgr_render_admin_diagnostics';
-$paymentCallback = 'vms_ticket_integrity_render_payment_gateway_admin_notice';
+$paymentCallback = 'bvmgr_ticket_integrity_render_payment_gateway_admin_notice';
 
 $setScreen(array('page' => 'vms-dashboard'), null);
 $assert(bvmgr_admin_ui_is_admin_notice_screen() === false, 'Admin-notice predicate should fail closed when screen context is unavailable.');
@@ -499,7 +499,7 @@ $assert($capture($firstRunCallback) === '', 'First-run notice should still depen
 $GLOBALS['vms_test_transients']['vms_admin_diagnostic_queue'] = array();
 $assert($capture($runtimeCallback) === '', 'Runtime diagnostics should still depend on a queued diagnostic.');
 
-$GLOBALS['vms_test_options'][vms_ticket_integrity_payment_gateway_notice_option_key()] = array(
+$GLOBALS['vms_test_options'][bvmgr_ticket_integrity_payment_gateway_notice_option_key()] = array(
 	'active' => false,
 	'status' => 'ok',
 	'message' => 'healthy',

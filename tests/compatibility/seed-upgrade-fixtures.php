@@ -317,8 +317,8 @@ $admissionEntryId = $ensureAdmissionRow(
 );
 
 $scheduledHooks = array();
-$spotHook = function_exists('vms_ticket_integrity_spot_hook')
-	? (string) vms_ticket_integrity_spot_hook()
+$spotHook = function_exists('bvmgr_ticket_integrity_spot_hook')
+	? (string) bvmgr_ticket_integrity_spot_hook()
 	: 'vms_ticket_integrity_spot_scan';
 if ($spotHook !== '') {
 	wp_schedule_single_event(time() + 600, $spotHook, array($eventPlanId));

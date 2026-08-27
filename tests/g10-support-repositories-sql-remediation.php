@@ -211,18 +211,18 @@ function bvmgr_ticketing_v2_resolve_verified_ticket_context(int $product_id): ar
 	return (array) ($GLOBALS['g10_support_contexts'][$product_id] ?? array());
 }
 
-function vms_square_ticket_mirror_log_table_name(): string
+function bvmgr_square_ticket_mirror_log_table_name(): string
 {
 	global $wpdb;
 	return $wpdb->prefix . 'vms_square_ticket_mirror_log';
 }
 
-function vms_square_ticket_mirror_canonical_product_id(int $product_id): int
+function bvmgr_square_ticket_mirror_canonical_product_id(int $product_id): int
 {
 	return absint($product_id);
 }
 
-function vms_square_ticket_mirror_build_source_model(int $product_id): array
+function bvmgr_square_ticket_mirror_build_source_model(int $product_id): array
 {
 	unset($product_id);
 	return (array) $GLOBALS['g10_support_source_model'];
@@ -233,7 +233,7 @@ function get_current_user_id(): int
 	return (int) $GLOBALS['g10_support_user_id'];
 }
 
-function vms_square_ticket_mirror_now_gmt(): string
+function bvmgr_square_ticket_mirror_now_gmt(): string
 {
 	return (string) $GLOBALS['g10_support_now'];
 }
@@ -616,9 +616,9 @@ $owned_functions = array(
 	array('includes/integrations/ticketing-claims-admin.php', 'bvmgr_ticketing_claims_event_ticket_options'),
 	array('includes/integrations/ticketing-claims-admin.php', 'bvmgr_ticketing_claims_reservation_usage_map'),
 	array('includes/integrations/ticketing-claims-admin.php', 'bvmgr_ticketing_claims_get_event_verified_ticket_contexts'),
-	array('includes/integrations/square-ticket-mirror.php', 'vms_square_ticket_mirror_log'),
-	array('includes/integrations/square-ticket-mirror.php', 'vms_square_ticket_mirror_recent_logs'),
-	array('includes/integrations/square-sync-firewall.php', 'vms_square_firewall_query_product_ids'),
+	array('includes/integrations/square-ticket-mirror.php', 'bvmgr_square_ticket_mirror_log'),
+	array('includes/integrations/square-ticket-mirror.php', 'bvmgr_square_ticket_mirror_recent_logs'),
+	array('includes/integrations/square-sync-firewall.php', 'bvmgr_square_firewall_query_product_ids'),
 );
 $owned_runtime_source = $admin_query_block;
 foreach ($owned_functions as $owned_function) {
@@ -804,7 +804,7 @@ $wpdb = new G10_Support_WPDB_Spy('wp_square_');
 $wpdb->insert_queue[] = false;
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['g10_support_user_id'] = 22;
-vms_square_ticket_mirror_log(9, 'Mirror SUCCESS!', array(
+bvmgr_square_ticket_mirror_log(9, 'Mirror SUCCESS!', array(
 	'source_model' => array('event_plan_id' => 70, 'tec_event_id' => 80),
 	'status_before' => 'Mirror Stale!',
 	'status_after' => 'Mirrored',
@@ -843,16 +843,16 @@ g10_support_same(false, $insert['result'], 'Square insert failure should remain 
 // Square recent logs preserve identifier/value preparation, limit clamps, failures, results, and no cache.
 $wpdb = new G10_Support_WPDB_Spy('wp_square_');
 $GLOBALS['wpdb'] = $wpdb;
-g10_support_same(array(), vms_square_ticket_mirror_recent_logs(0, 8), 'Invalid Square product should fail closed.');
+g10_support_same(array(), bvmgr_square_ticket_mirror_recent_logs(0, 8), 'Invalid Square product should fail closed.');
 g10_support_same(array(), $wpdb->operations, 'Invalid Square product should not query.');
 $row = array('id' => 1, 'product_id' => 9, 'action' => 'mirrored');
 $wpdb->results_queue[] = array($row);
-g10_support_same(array($row), vms_square_ticket_mirror_recent_logs(-9, 999), 'Square recent-log result changed.');
+g10_support_same(array($row), bvmgr_square_ticket_mirror_recent_logs(-9, 999), 'Square recent-log result changed.');
 g10_support_same(array('wp_square_vms_square_ticket_mirror_log', 9, 50), $wpdb->prepares[0]['args'], 'Square recent-log prepare args/clamp changed.');
 g10_support_same('SELECT * FROM `wp_square_vms_square_ticket_mirror_log` WHERE product_id = 9 ORDER BY id DESC LIMIT 50', g10_support_normalize_sql($wpdb->prepares[0]['sql']), 'Square recent-log rendered SQL changed.');
 g10_support_same(array('prepare', 'get_results'), array_column($wpdb->operations, 'kind'), 'Square recent-log prepare/read ordering changed.');
 $wpdb->results_queue[] = false;
-g10_support_same(array(), vms_square_ticket_mirror_recent_logs(9, 0), 'Square recent-log failure should remain empty.');
+g10_support_same(array(), bvmgr_square_ticket_mirror_recent_logs(9, 0), 'Square recent-log failure should remain empty.');
 g10_support_same(array('wp_square_vms_square_ticket_mirror_log', 9, 1), $wpdb->prepares[1]['args'], 'Square recent-log minimum limit changed.');
 g10_support_same(2, count(array_filter($wpdb->operations, static fn(array $call): bool => $call['kind'] === 'get_results')), 'Square recent logs should remain request-fresh without persistent caching.');
 
@@ -860,12 +860,12 @@ g10_support_same(2, count(array_filter($wpdb->operations, static fn(array $call)
 $wpdb = new G10_Support_WPDB_Spy('wp_firewall_');
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->col_queue[] = array('7', 0, '-8', 'bad', 7);
-g10_support_same(array(7, 8, 7), vms_square_firewall_query_product_ids(-5, 5000), 'Firewall product ID normalization/order changed.');
+g10_support_same(array(7, 8, 7), bvmgr_square_firewall_query_product_ids(-5, 5000), 'Firewall product ID normalization/order changed.');
 g10_support_same(array(5, 1000), $wpdb->prepares[0]['args'], 'Firewall cursor/maximum limit preparation changed.');
 g10_support_same("SELECT ID FROM wp_firewall_posts WHERE post_type IN ('product', 'product_variation') AND post_status NOT IN ('trash', 'auto-draft', 'inherit') AND ID > 5 ORDER BY ID ASC LIMIT 1000", g10_support_normalize_sql($wpdb->prepares[0]['sql']), 'Firewall rendered SQL changed.');
 g10_support_same(array('prepare', 'get_col'), array_column($wpdb->operations, 'kind'), 'Firewall prepare/read ordering changed.');
 $wpdb->col_queue[] = false;
-g10_support_same(array(), vms_square_firewall_query_product_ids(0, 0), 'Firewall database failure should remain empty.');
+g10_support_same(array(), bvmgr_square_firewall_query_product_ids(0, 0), 'Firewall database failure should remain empty.');
 g10_support_same(array(0, 1), $wpdb->prepares[1]['args'], 'Firewall minimum cursor/limit preparation changed.');
 g10_support_same(2, count(array_filter($wpdb->operations, static fn(array $call): bool => $call['kind'] === 'get_col')), 'Firewall batch query should remain request-fresh without persistent caching.');
 

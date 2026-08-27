@@ -1,19 +1,19 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_ticket_mutation_audit_schema_option_key(): string
+function bvmgr_ticket_mutation_audit_schema_option_key(): string
 {
 	return defined('BVMGR_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION')
 		? (string) BVMGR_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION
 		: 'vms_ticket_mutation_audit_db_schema_version';
 }
 
-function vms_ticket_mutation_audit_schema_target(): string
+function bvmgr_ticket_mutation_audit_schema_target(): string
 {
 	return 'ticket_mutation_audit_v1';
 }
 
-function vms_ticket_mutation_audit_table_name(): string
+function bvmgr_ticket_mutation_audit_table_name(): string
 {
 	global $wpdb;
 	$suffix = defined('BVMGR_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX')
@@ -22,10 +22,10 @@ function vms_ticket_mutation_audit_table_name(): string
 	return $wpdb->prefix . $suffix;
 }
 
-function vms_ticket_mutation_audit_maybe_upgrade_schema(): void
+function bvmgr_ticket_mutation_audit_maybe_upgrade_schema(): void
 {
-	$current = (string) get_option(vms_ticket_mutation_audit_schema_option_key(), '');
-	$target = vms_ticket_mutation_audit_schema_target();
+	$current = (string) get_option(bvmgr_ticket_mutation_audit_schema_option_key(), '');
+	$target = bvmgr_ticket_mutation_audit_schema_target();
 	if ($current === $target) {
 		return;
 	}
@@ -33,7 +33,7 @@ function vms_ticket_mutation_audit_maybe_upgrade_schema(): void
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 	global $wpdb;
-	$table = vms_ticket_mutation_audit_table_name();
+	$table = bvmgr_ticket_mutation_audit_table_name();
 	$charset_collate = $wpdb->get_charset_collate();
 
 	$sql = "CREATE TABLE {$table} (
@@ -60,17 +60,17 @@ function vms_ticket_mutation_audit_maybe_upgrade_schema(): void
 	) {$charset_collate};";
 
 	dbDelta($sql);
-	update_option(vms_ticket_mutation_audit_schema_option_key(), $target, false);
+	update_option(bvmgr_ticket_mutation_audit_schema_option_key(), $target, false);
 }
-add_action('plugins_loaded', 'vms_ticket_mutation_audit_maybe_upgrade_schema', 10);
+add_action('plugins_loaded', 'bvmgr_ticket_mutation_audit_maybe_upgrade_schema', 10);
 
-function vms_ticket_mutation_audit_context_stack(): array
+function bvmgr_ticket_mutation_audit_context_stack(): array
 {
 	$stack = $GLOBALS['bvmgr_ticket_mutation_audit_context_stack'] ?? array();
 	return is_array($stack) ? $stack : array();
 }
 
-function vms_ticket_mutation_audit_sanitize_context(array $context): array
+function bvmgr_ticket_mutation_audit_sanitize_context(array $context): array
 {
 	$clean = array();
 
@@ -123,30 +123,30 @@ function vms_ticket_mutation_audit_sanitize_context(array $context): array
 	return $clean;
 }
 
-function vms_ticket_mutation_audit_push_context(array $context): void
+function bvmgr_ticket_mutation_audit_push_context(array $context): void
 {
-	$stack = vms_ticket_mutation_audit_context_stack();
+	$stack = bvmgr_ticket_mutation_audit_context_stack();
 	$current = !empty($stack) ? end($stack) : array();
 	if (!is_array($current)) {
 		$current = array();
 	}
 
-	$stack[] = array_merge($current, vms_ticket_mutation_audit_sanitize_context($context));
+	$stack[] = array_merge($current, bvmgr_ticket_mutation_audit_sanitize_context($context));
 	$GLOBALS['bvmgr_ticket_mutation_audit_context_stack'] = $stack;
 }
 
-function vms_ticket_mutation_audit_pop_context(): void
+function bvmgr_ticket_mutation_audit_pop_context(): void
 {
-	$stack = vms_ticket_mutation_audit_context_stack();
+	$stack = bvmgr_ticket_mutation_audit_context_stack();
 	if (!empty($stack)) {
 		array_pop($stack);
 	}
 	$GLOBALS['bvmgr_ticket_mutation_audit_context_stack'] = $stack;
 }
 
-function vms_ticket_mutation_audit_current_context(): array
+function bvmgr_ticket_mutation_audit_current_context(): array
 {
-	$stack = vms_ticket_mutation_audit_context_stack();
+	$stack = bvmgr_ticket_mutation_audit_context_stack();
 	if (empty($stack)) {
 		return array();
 	}
@@ -155,7 +155,7 @@ function vms_ticket_mutation_audit_current_context(): array
 	return is_array($current) ? $current : array();
 }
 
-function vms_ticket_mutation_audit_skip_hooks(): array
+function bvmgr_ticket_mutation_audit_skip_hooks(): array
 {
 	return array(
 		'add_post_metadata',
@@ -167,7 +167,7 @@ function vms_ticket_mutation_audit_skip_hooks(): array
 	);
 }
 
-function vms_ticket_mutation_audit_current_hook(): string
+function bvmgr_ticket_mutation_audit_current_hook(): string
 {
 	global $wp_current_filter;
 
@@ -175,7 +175,7 @@ function vms_ticket_mutation_audit_current_hook(): string
 		return '';
 	}
 
-	$skip = vms_ticket_mutation_audit_skip_hooks();
+	$skip = bvmgr_ticket_mutation_audit_skip_hooks();
 	for ($index = count($wp_current_filter) - 1; $index >= 0; $index--) {
 		$hook = sanitize_key((string) ($wp_current_filter[$index] ?? ''));
 		if ($hook === '' || in_array($hook, $skip, true)) {
@@ -187,17 +187,17 @@ function vms_ticket_mutation_audit_current_hook(): string
 	return '';
 }
 
-function vms_ticket_mutation_audit_guard_decision(string $hook_name, int $object_id = 0, string $meta_key = ''): array
+function bvmgr_ticket_mutation_audit_guard_decision(string $hook_name, int $object_id = 0, string $meta_key = ''): array
 {
 	$hook_name = sanitize_key($hook_name);
 	if ($hook_name === '') {
 		$hook_name = 'ticket_mutation_audit';
 	}
 
-	$context = vms_ticket_mutation_audit_current_context();
+	$context = bvmgr_ticket_mutation_audit_current_context();
 	$source_hook = sanitize_key((string) ($context['source_hook'] ?? ''));
 	if ($source_hook === '') {
-		$source_hook = vms_ticket_mutation_audit_current_hook();
+		$source_hook = bvmgr_ticket_mutation_audit_current_hook();
 	}
 
 	$result = array(
@@ -244,7 +244,7 @@ function vms_ticket_mutation_audit_guard_decision(string $hook_name, int $object
 	return $result;
 }
 
-function vms_ticket_mutation_audit_trace(string $decision, array $context = array(), float $started_at = 0.0): void
+function bvmgr_ticket_mutation_audit_trace(string $decision, array $context = array(), float $started_at = 0.0): void
 {
 	$payload = array(
 		'task' => 'ticket_mutation_audit',
@@ -276,14 +276,14 @@ function vms_ticket_mutation_audit_trace(string $decision, array $context = arra
 	));
 }
 
-function vms_ticket_mutation_audit_resolve_source(array $context = array(), string $fallback_hook = ''): array
+function bvmgr_ticket_mutation_audit_resolve_source(array $context = array(), string $fallback_hook = ''): array
 {
 	$source_hook = sanitize_key((string) ($context['source_hook'] ?? ''));
 	if ($source_hook === '') {
 		$source_hook = sanitize_key($fallback_hook);
 	}
 	if ($source_hook === '') {
-		$source_hook = vms_ticket_mutation_audit_current_hook();
+		$source_hook = bvmgr_ticket_mutation_audit_current_hook();
 	}
 
 	$source_function = sanitize_text_field((string) ($context['source_function'] ?? ''));
@@ -294,7 +294,7 @@ function vms_ticket_mutation_audit_resolve_source(array $context = array(), stri
 		);
 	}
 
-	$source = vms_ticket_mutation_audit_detect_source();
+	$source = bvmgr_ticket_mutation_audit_detect_source();
 	if ($source_hook === '') {
 		$source_hook = sanitize_key((string) ($source['source_hook'] ?? ''));
 	}
@@ -305,7 +305,7 @@ function vms_ticket_mutation_audit_resolve_source(array $context = array(), stri
 	);
 }
 
-function vms_ticket_mutation_audit_capture_source_trace(): array
+function bvmgr_ticket_mutation_audit_capture_source_trace(): array
 {
 	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- Mutation-source detection needs a bounded argument-free stack, and every frame is immediately reduced to a sanitized function identity.
 	$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 40);
@@ -323,10 +323,10 @@ function vms_ticket_mutation_audit_capture_source_trace(): array
 	return array_slice($projected, 0, 40);
 }
 
-function vms_ticket_mutation_audit_detect_source(array $trace = array()): array
+function bvmgr_ticket_mutation_audit_detect_source(array $trace = array()): array
 {
 	if (empty($trace)) {
-		$trace = vms_ticket_mutation_audit_capture_source_trace();
+		$trace = bvmgr_ticket_mutation_audit_capture_source_trace();
 	}
 
 	$skip_functions = array(
@@ -358,12 +358,12 @@ function vms_ticket_mutation_audit_detect_source(array $trace = array()): array
 	}
 
 	return array(
-		'source_hook' => vms_ticket_mutation_audit_current_hook(),
+		'source_hook' => bvmgr_ticket_mutation_audit_current_hook(),
 		'source_function' => $source_function,
 	);
 }
 
-function vms_ticket_mutation_audit_trigger_source(array $context, string $source_hook, string $source_function): string
+function bvmgr_ticket_mutation_audit_trigger_source(array $context, string $source_hook, string $source_function): string
 {
 	$trigger = sanitize_key((string) ($context['trigger_source'] ?? ''));
 	if ($trigger !== '') {
@@ -401,7 +401,7 @@ function vms_ticket_mutation_audit_trigger_source(array $context, string $source
 	return 'unknown_internal';
 }
 
-function vms_ticket_mutation_audit_relevant_meta_keys(): array
+function bvmgr_ticket_mutation_audit_relevant_meta_keys(): array
 {
 	$keys = array('_vms_ticketing_enabled_override');
 	if (function_exists('bvmgr_ticketing_v2_k')) {
@@ -412,7 +412,7 @@ function vms_ticket_mutation_audit_relevant_meta_keys(): array
 	return array_values(array_unique(array_filter(array_map('strval', $keys))));
 }
 
-function vms_ticket_mutation_audit_is_relevant_meta_write(int $object_id, string $meta_key): bool
+function bvmgr_ticket_mutation_audit_is_relevant_meta_write(int $object_id, string $meta_key): bool
 {
 	$object_id = absint($object_id);
 	if ($object_id <= 0 || $meta_key === '') {
@@ -423,18 +423,18 @@ function vms_ticket_mutation_audit_is_relevant_meta_write(int $object_id, string
 		return false;
 	}
 
-	return in_array($meta_key, vms_ticket_mutation_audit_relevant_meta_keys(), true);
+	return in_array($meta_key, bvmgr_ticket_mutation_audit_relevant_meta_keys(), true);
 }
 
-function vms_ticket_mutation_audit_pending_store(): array
+function bvmgr_ticket_mutation_audit_pending_store(): array
 {
 	$store = $GLOBALS['bvmgr_ticket_mutation_audit_pending_meta'] ?? array();
 	return is_array($store) ? $store : array();
 }
 
-function vms_ticket_mutation_audit_enqueue_pending(string $operation, int $object_id, string $meta_key, array $row): void
+function bvmgr_ticket_mutation_audit_enqueue_pending(string $operation, int $object_id, string $meta_key, array $row): void
 {
-	$store = vms_ticket_mutation_audit_pending_store();
+	$store = bvmgr_ticket_mutation_audit_pending_store();
 	$key = $operation . ':' . $object_id . ':' . $meta_key;
 	if (!isset($store[$key]) || !is_array($store[$key])) {
 		$store[$key] = array();
@@ -443,9 +443,9 @@ function vms_ticket_mutation_audit_enqueue_pending(string $operation, int $objec
 	$GLOBALS['bvmgr_ticket_mutation_audit_pending_meta'] = $store;
 }
 
-function vms_ticket_mutation_audit_dequeue_pending(string $operation, int $object_id, string $meta_key): array
+function bvmgr_ticket_mutation_audit_dequeue_pending(string $operation, int $object_id, string $meta_key): array
 {
-	$store = vms_ticket_mutation_audit_pending_store();
+	$store = bvmgr_ticket_mutation_audit_pending_store();
 	$key = $operation . ':' . $object_id . ':' . $meta_key;
 	$row = array();
 
@@ -460,22 +460,22 @@ function vms_ticket_mutation_audit_dequeue_pending(string $operation, int $objec
 	return is_array($row) ? $row : array();
 }
 
-function vms_ticket_mutation_audit_capture_pre_meta_write($check, $object_id, $meta_key, $meta_value, $prev_value)
+function bvmgr_ticket_mutation_audit_capture_pre_meta_write($check, $object_id, $meta_key, $meta_value, $prev_value)
 {
 	unset($prev_value);
 
 	$object_id = absint($object_id);
 	$meta_key = (string) $meta_key;
-	if (!vms_ticket_mutation_audit_is_relevant_meta_write($object_id, $meta_key)) {
+	if (!bvmgr_ticket_mutation_audit_is_relevant_meta_write($object_id, $meta_key)) {
 		return $check;
 	}
 
 	$started_at = microtime(true);
 	$operation = current_filter() === 'add_post_metadata' ? 'add' : 'update';
-	$guard = vms_ticket_mutation_audit_guard_decision('ticket_mutation_audit_pre', $object_id, $meta_key);
+	$guard = bvmgr_ticket_mutation_audit_guard_decision('ticket_mutation_audit_pre', $object_id, $meta_key);
 	$guard['operation'] = $operation;
 	if (empty($guard['allowed'])) {
-		vms_ticket_mutation_audit_trace('skipped', $guard, $started_at);
+		bvmgr_ticket_mutation_audit_trace('skipped', $guard, $started_at);
 		return $check;
 	}
 
@@ -494,64 +494,64 @@ function vms_ticket_mutation_audit_capture_pre_meta_write($check, $object_id, $m
 		}
 	}
 
-	$context = vms_ticket_mutation_audit_current_context();
-	$source = vms_ticket_mutation_audit_resolve_source($context, (string) ($guard['source_hook'] ?? ''));
-	vms_ticket_mutation_audit_enqueue_pending(
+	$context = bvmgr_ticket_mutation_audit_current_context();
+	$source = bvmgr_ticket_mutation_audit_resolve_source($context, (string) ($guard['source_hook'] ?? ''));
+	bvmgr_ticket_mutation_audit_enqueue_pending(
 		$operation,
 		$object_id,
 		$meta_key,
 		array(
-			'before_snapshot' => vms_ticket_mutation_audit_build_snapshot($object_id),
+			'before_snapshot' => bvmgr_ticket_mutation_audit_build_snapshot($object_id),
 			'context' => $context,
 			'source_hook' => (string) ($context['source_hook'] ?? $source['source_hook'] ?? ''),
 				'source_function' => (string) ($context['source_function'] ?? $source['source_function'] ?? ''),
 			)
 	);
-	vms_ticket_mutation_audit_trace('allowed', array_merge($guard, $source), $started_at);
+	bvmgr_ticket_mutation_audit_trace('allowed', array_merge($guard, $source), $started_at);
 
 	return $check;
 }
-add_filter('add_post_metadata', 'vms_ticket_mutation_audit_capture_pre_meta_write', 10, 5);
-add_filter('update_post_metadata', 'vms_ticket_mutation_audit_capture_pre_meta_write', 10, 5);
+add_filter('add_post_metadata', 'bvmgr_ticket_mutation_audit_capture_pre_meta_write', 10, 5);
+add_filter('update_post_metadata', 'bvmgr_ticket_mutation_audit_capture_pre_meta_write', 10, 5);
 
-function vms_ticket_mutation_audit_capture_pre_meta_delete($check, $object_id, $meta_key, $meta_value, $delete_all)
+function bvmgr_ticket_mutation_audit_capture_pre_meta_delete($check, $object_id, $meta_key, $meta_value, $delete_all)
 {
 	unset($meta_value, $delete_all);
 
 	$object_id = absint($object_id);
 	$meta_key = (string) $meta_key;
-	if (!vms_ticket_mutation_audit_is_relevant_meta_write($object_id, $meta_key)) {
+	if (!bvmgr_ticket_mutation_audit_is_relevant_meta_write($object_id, $meta_key)) {
 		return $check;
 	}
 
 	$started_at = microtime(true);
-	$guard = vms_ticket_mutation_audit_guard_decision('ticket_mutation_audit_pre_delete', $object_id, $meta_key);
+	$guard = bvmgr_ticket_mutation_audit_guard_decision('ticket_mutation_audit_pre_delete', $object_id, $meta_key);
 	$guard['operation'] = 'delete';
 	if (empty($guard['allowed'])) {
-		vms_ticket_mutation_audit_trace('skipped', $guard, $started_at);
+		bvmgr_ticket_mutation_audit_trace('skipped', $guard, $started_at);
 		return $check;
 	}
 
-	$context = vms_ticket_mutation_audit_current_context();
-	$source = vms_ticket_mutation_audit_resolve_source($context, (string) ($guard['source_hook'] ?? ''));
-	vms_ticket_mutation_audit_enqueue_pending(
+	$context = bvmgr_ticket_mutation_audit_current_context();
+	$source = bvmgr_ticket_mutation_audit_resolve_source($context, (string) ($guard['source_hook'] ?? ''));
+	bvmgr_ticket_mutation_audit_enqueue_pending(
 		'delete',
 		$object_id,
 		$meta_key,
 		array(
-			'before_snapshot' => vms_ticket_mutation_audit_build_snapshot($object_id),
+			'before_snapshot' => bvmgr_ticket_mutation_audit_build_snapshot($object_id),
 			'context' => $context,
 			'source_hook' => (string) ($context['source_hook'] ?? $source['source_hook'] ?? ''),
 				'source_function' => (string) ($context['source_function'] ?? $source['source_function'] ?? ''),
 			)
 	);
-	vms_ticket_mutation_audit_trace('allowed', array_merge($guard, $source), $started_at);
+	bvmgr_ticket_mutation_audit_trace('allowed', array_merge($guard, $source), $started_at);
 
 	return $check;
 }
-add_filter('delete_post_metadata', 'vms_ticket_mutation_audit_capture_pre_meta_delete', 10, 5);
+add_filter('delete_post_metadata', 'bvmgr_ticket_mutation_audit_capture_pre_meta_delete', 10, 5);
 
-function vms_ticket_mutation_audit_origin_label(string $classification): string
+function bvmgr_ticket_mutation_audit_origin_label(string $classification): string
 {
 	switch (sanitize_key($classification)) {
 		case 'vms_native':
@@ -565,7 +565,7 @@ function vms_ticket_mutation_audit_origin_label(string $classification): string
 	}
 }
 
-function vms_ticket_mutation_audit_result_label(string $result_status): string
+function bvmgr_ticket_mutation_audit_result_label(string $result_status): string
 {
 	switch (sanitize_key($result_status)) {
 		case 'success':
@@ -581,7 +581,7 @@ function vms_ticket_mutation_audit_result_label(string $result_status): string
 	}
 }
 
-function vms_ticket_mutation_audit_trigger_label(string $trigger_source): string
+function bvmgr_ticket_mutation_audit_trigger_label(string $trigger_source): string
 {
 	switch (sanitize_key($trigger_source)) {
 		case 'manual_action':
@@ -605,7 +605,7 @@ function vms_ticket_mutation_audit_trigger_label(string $trigger_source): string
 	}
 }
 
-function vms_ticket_mutation_audit_change_type_label(string $change_type): string
+function bvmgr_ticket_mutation_audit_change_type_label(string $change_type): string
 {
 	switch (sanitize_key($change_type)) {
 		case 'ticket_config_saved':
@@ -633,13 +633,13 @@ function vms_ticket_mutation_audit_change_type_label(string $change_type): strin
 	}
 }
 
-function vms_ticket_mutation_audit_normalize_result_status(string $result_status): string
+function bvmgr_ticket_mutation_audit_normalize_result_status(string $result_status): string
 {
 	$result_status = sanitize_key($result_status);
 	return in_array($result_status, array('success', 'no_op', 'partial', 'failed'), true) ? $result_status : 'success';
 }
 
-function vms_ticket_mutation_audit_infer_change_type(string $meta_key, array $context, string $trigger_source, string $source_function): string
+function bvmgr_ticket_mutation_audit_infer_change_type(string $meta_key, array $context, string $trigger_source, string $source_function): string
 {
 	$change_type = sanitize_key((string) ($context['change_type'] ?? ''));
 	if ($change_type !== '') {
@@ -676,7 +676,7 @@ function vms_ticket_mutation_audit_infer_change_type(string $meta_key, array $co
 	return 'ticket_config_saved';
 }
 
-function vms_ticket_mutation_audit_snapshot_signature(array $snapshot): array
+function bvmgr_ticket_mutation_audit_snapshot_signature(array $snapshot): array
 {
 	return array(
 		'config_hash' => (string) ($snapshot['config']['hash'] ?? ''),
@@ -688,17 +688,17 @@ function vms_ticket_mutation_audit_snapshot_signature(array $snapshot): array
 	);
 }
 
-function vms_ticket_mutation_audit_snapshot_hash(array $snapshot): string
+function bvmgr_ticket_mutation_audit_snapshot_hash(array $snapshot): string
 {
-	$json = wp_json_encode(vms_ticket_mutation_audit_snapshot_signature($snapshot));
+	$json = wp_json_encode(bvmgr_ticket_mutation_audit_snapshot_signature($snapshot));
 	return sha1(is_string($json) ? $json : '');
 }
 
-function vms_ticket_mutation_audit_build_summary(string $change_type, string $result_status, array $before_snapshot, array $after_snapshot, array $context): string
+function bvmgr_ticket_mutation_audit_build_summary(string $change_type, string $result_status, array $before_snapshot, array $after_snapshot, array $context): string
 {
 	$summary = trim((string) ($context['summary_text'] ?? ''));
 	if ($summary === '') {
-		$summary = vms_ticket_mutation_audit_change_type_label($change_type);
+		$summary = bvmgr_ticket_mutation_audit_change_type_label($change_type);
 	}
 
 	if ($result_status === 'no_op') {
@@ -725,30 +725,30 @@ function vms_ticket_mutation_audit_build_summary(string $change_type, string $re
 	$after_origin = sanitize_key((string) ($after_snapshot['origin']['classification'] ?? ''));
 	if ($before_origin !== '' && $after_origin !== '' && $before_origin !== $after_origin) {
 		/* translators: %s: human-readable value used in this message. */
-		$parts[] = sprintf(__('Origin now reads as %s.', 'backstage-venue-manager'), vms_ticket_mutation_audit_origin_label($after_origin));
+		$parts[] = sprintf(__('Origin now reads as %s.', 'backstage-venue-manager'), bvmgr_ticket_mutation_audit_origin_label($after_origin));
 	}
 
 	return implode(' ', array_filter(array_map('trim', $parts)));
 }
 
-function vms_ticket_mutation_audit_prune_logs(): void
+function bvmgr_ticket_mutation_audit_prune_logs(): void
 {
 	global $wpdb;
-	$table = vms_ticket_mutation_audit_table_name();
+	$table = bvmgr_ticket_mutation_audit_table_name();
 	$cutoff = gmdate('Y-m-d H:i:s', time() - (90 * DAY_IN_SECONDS));
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ninety-day retention pruning deletes expired rows from the plugin-owned mutation audit table; no core API owns this repository.
 	$wpdb->query($wpdb->prepare('DELETE FROM %i WHERE created_at_gmt < %s', $table, $cutoff));
 }
 
-function vms_ticket_mutation_audit_insert(array $row): int
+function bvmgr_ticket_mutation_audit_insert(array $row): int
 {
 	global $wpdb;
 
-	if ((string) get_option(vms_ticket_mutation_audit_schema_option_key(), '') !== vms_ticket_mutation_audit_schema_target()) {
+	if ((string) get_option(bvmgr_ticket_mutation_audit_schema_option_key(), '') !== bvmgr_ticket_mutation_audit_schema_target()) {
 		return 0;
 	}
 
-	$table = vms_ticket_mutation_audit_table_name();
+	$table = bvmgr_ticket_mutation_audit_table_name();
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Mutation auditing persists one normalized row in the plugin-owned audit table through wpdb::insert(); no core API owns this repository.
 	$ok = $wpdb->insert(
 		$table,
@@ -762,7 +762,7 @@ function vms_ticket_mutation_audit_insert(array $row): int
 			'source_hook' => sanitize_key((string) ($row['source_hook'] ?? '')),
 			'source_function' => sanitize_text_field((string) ($row['source_function'] ?? '')),
 			'change_type' => sanitize_key((string) ($row['change_type'] ?? '')),
-			'result_status' => vms_ticket_mutation_audit_normalize_result_status((string) ($row['result_status'] ?? 'success')),
+			'result_status' => bvmgr_ticket_mutation_audit_normalize_result_status((string) ($row['result_status'] ?? 'success')),
 			'summary_text' => sanitize_text_field((string) ($row['summary_text'] ?? '')),
 			'before_json' => is_string($row['before_json'] ?? null) ? $row['before_json'] : wp_json_encode($row['before_json'] ?? array()),
 			'after_json' => is_string($row['after_json'] ?? null) ? $row['after_json'] : wp_json_encode($row['after_json'] ?? array()),
@@ -774,11 +774,11 @@ function vms_ticket_mutation_audit_insert(array $row): int
 		return 0;
 	}
 
-	vms_ticket_mutation_audit_prune_logs();
+	bvmgr_ticket_mutation_audit_prune_logs();
 	return (int) $wpdb->insert_id;
 }
 
-function vms_ticket_mutation_audit_log_direct_change(int $plan_id, array $args = array()): int
+function bvmgr_ticket_mutation_audit_log_direct_change(int $plan_id, array $args = array()): int
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
@@ -786,17 +786,17 @@ function vms_ticket_mutation_audit_log_direct_change(int $plan_id, array $args =
 	}
 
 	$started_at = microtime(true);
-	$guard = vms_ticket_mutation_audit_guard_decision('ticket_mutation_audit_direct', $plan_id, (string) ($args['meta_key'] ?? ''));
+	$guard = bvmgr_ticket_mutation_audit_guard_decision('ticket_mutation_audit_direct', $plan_id, (string) ($args['meta_key'] ?? ''));
 	$guard['operation'] = 'direct_log';
 	if (empty($guard['allowed'])) {
-		vms_ticket_mutation_audit_trace('skipped', $guard, $started_at);
+		bvmgr_ticket_mutation_audit_trace('skipped', $guard, $started_at);
 		return 0;
 	}
 
-	$before_snapshot = is_array($args['before_snapshot'] ?? null) ? $args['before_snapshot'] : vms_ticket_mutation_audit_build_snapshot($plan_id);
-	$after_snapshot = is_array($args['after_snapshot'] ?? null) ? $args['after_snapshot'] : vms_ticket_mutation_audit_build_snapshot($plan_id);
-	$context = vms_ticket_mutation_audit_current_context();
-	$source = vms_ticket_mutation_audit_resolve_source(
+	$before_snapshot = is_array($args['before_snapshot'] ?? null) ? $args['before_snapshot'] : bvmgr_ticket_mutation_audit_build_snapshot($plan_id);
+	$after_snapshot = is_array($args['after_snapshot'] ?? null) ? $args['after_snapshot'] : bvmgr_ticket_mutation_audit_build_snapshot($plan_id);
+	$context = bvmgr_ticket_mutation_audit_current_context();
+	$source = bvmgr_ticket_mutation_audit_resolve_source(
 		array(
 			'source_hook' => (string) ($args['source_hook'] ?? ($context['source_hook'] ?? '')),
 			'source_function' => (string) ($args['source_function'] ?? ($context['source_function'] ?? '')),
@@ -805,12 +805,12 @@ function vms_ticket_mutation_audit_log_direct_change(int $plan_id, array $args =
 	);
 	$source_hook = sanitize_key((string) ($source['source_hook'] ?? ''));
 	$source_function = sanitize_text_field((string) ($source['source_function'] ?? ''));
-	$trigger_source = vms_ticket_mutation_audit_trigger_source($context, $source_hook, $source_function);
+	$trigger_source = bvmgr_ticket_mutation_audit_trigger_source($context, $source_hook, $source_function);
 	$change_type = sanitize_key((string) ($args['change_type'] ?? $context['change_type'] ?? 'sync_map_updated'));
-	$result_status = vms_ticket_mutation_audit_normalize_result_status((string) ($args['result_status'] ?? 'success'));
-	$summary_text = sanitize_text_field((string) ($args['summary_text'] ?? vms_ticket_mutation_audit_build_summary($change_type, $result_status, $before_snapshot, $after_snapshot, $context)));
+	$result_status = bvmgr_ticket_mutation_audit_normalize_result_status((string) ($args['result_status'] ?? 'success'));
+	$summary_text = sanitize_text_field((string) ($args['summary_text'] ?? bvmgr_ticket_mutation_audit_build_summary($change_type, $result_status, $before_snapshot, $after_snapshot, $context)));
 
-	$result = vms_ticket_mutation_audit_insert(
+	$result = bvmgr_ticket_mutation_audit_insert(
 		array(
 			'plan_id' => $plan_id,
 			'tec_event_id' => absint($after_snapshot['tec_event_id'] ?? $before_snapshot['tec_event_id'] ?? 0),
@@ -826,34 +826,34 @@ function vms_ticket_mutation_audit_log_direct_change(int $plan_id, array $args =
 				'after_json' => wp_json_encode($after_snapshot),
 			)
 	);
-	vms_ticket_mutation_audit_trace('allowed', array_merge($guard, $source), $started_at);
+	bvmgr_ticket_mutation_audit_trace('allowed', array_merge($guard, $source), $started_at);
 	return $result;
 }
 
-function vms_ticket_mutation_audit_record_post_meta_write(string $operation, int $object_id, string $meta_key): void
+function bvmgr_ticket_mutation_audit_record_post_meta_write(string $operation, int $object_id, string $meta_key): void
 {
 	$object_id = absint($object_id);
 	$meta_key = (string) $meta_key;
-	if (!vms_ticket_mutation_audit_is_relevant_meta_write($object_id, $meta_key)) {
+	if (!bvmgr_ticket_mutation_audit_is_relevant_meta_write($object_id, $meta_key)) {
 		return;
 	}
 
 	$started_at = microtime(true);
-	$guard = vms_ticket_mutation_audit_guard_decision('ticket_mutation_audit_post', $object_id, $meta_key);
+	$guard = bvmgr_ticket_mutation_audit_guard_decision('ticket_mutation_audit_post', $object_id, $meta_key);
 	$guard['operation'] = $operation;
 	if (empty($guard['allowed'])) {
-		vms_ticket_mutation_audit_trace('skipped', $guard, $started_at);
+		bvmgr_ticket_mutation_audit_trace('skipped', $guard, $started_at);
 		return;
 	}
 
-	$pending = vms_ticket_mutation_audit_dequeue_pending($operation, $object_id, $meta_key);
-	$before_snapshot = is_array($pending['before_snapshot'] ?? null) ? $pending['before_snapshot'] : vms_ticket_mutation_audit_build_snapshot($object_id);
-	$after_snapshot = vms_ticket_mutation_audit_build_snapshot($object_id);
-	$context = is_array($pending['context'] ?? null) ? $pending['context'] : vms_ticket_mutation_audit_current_context();
+	$pending = bvmgr_ticket_mutation_audit_dequeue_pending($operation, $object_id, $meta_key);
+	$before_snapshot = is_array($pending['before_snapshot'] ?? null) ? $pending['before_snapshot'] : bvmgr_ticket_mutation_audit_build_snapshot($object_id);
+	$after_snapshot = bvmgr_ticket_mutation_audit_build_snapshot($object_id);
+	$context = is_array($pending['context'] ?? null) ? $pending['context'] : bvmgr_ticket_mutation_audit_current_context();
 	$source_hook = sanitize_key((string) ($pending['source_hook'] ?? ''));
 	$source_function = sanitize_text_field((string) ($pending['source_function'] ?? ''));
 	if ($source_hook === '' || $source_function === '') {
-		$source = vms_ticket_mutation_audit_resolve_source(
+		$source = bvmgr_ticket_mutation_audit_resolve_source(
 			array(
 				'source_hook' => $source_hook,
 				'source_function' => $source_function,
@@ -864,14 +864,14 @@ function vms_ticket_mutation_audit_record_post_meta_write(string $operation, int
 		$source_function = sanitize_text_field((string) ($source['source_function'] ?? $source_function));
 	}
 
-	$trigger_source = vms_ticket_mutation_audit_trigger_source($context, $source_hook, $source_function);
-	$change_type = vms_ticket_mutation_audit_infer_change_type($meta_key, $context, $trigger_source, $source_function);
-	$result_status = vms_ticket_mutation_audit_snapshot_hash($before_snapshot) === vms_ticket_mutation_audit_snapshot_hash($after_snapshot)
+	$trigger_source = bvmgr_ticket_mutation_audit_trigger_source($context, $source_hook, $source_function);
+	$change_type = bvmgr_ticket_mutation_audit_infer_change_type($meta_key, $context, $trigger_source, $source_function);
+	$result_status = bvmgr_ticket_mutation_audit_snapshot_hash($before_snapshot) === bvmgr_ticket_mutation_audit_snapshot_hash($after_snapshot)
 		? 'no_op'
-		: vms_ticket_mutation_audit_normalize_result_status((string) ($context['requested_result_status'] ?? 'success'));
-	$summary_text = vms_ticket_mutation_audit_build_summary($change_type, $result_status, $before_snapshot, $after_snapshot, $context);
+		: bvmgr_ticket_mutation_audit_normalize_result_status((string) ($context['requested_result_status'] ?? 'success'));
+	$summary_text = bvmgr_ticket_mutation_audit_build_summary($change_type, $result_status, $before_snapshot, $after_snapshot, $context);
 
-	vms_ticket_mutation_audit_insert(
+	bvmgr_ticket_mutation_audit_insert(
 		array(
 			'plan_id' => $object_id,
 			'tec_event_id' => absint($after_snapshot['tec_event_id'] ?? 0),
@@ -887,7 +887,7 @@ function vms_ticket_mutation_audit_record_post_meta_write(string $operation, int
 				'after_json' => wp_json_encode($after_snapshot),
 			)
 	);
-	vms_ticket_mutation_audit_trace(
+	bvmgr_ticket_mutation_audit_trace(
 		'allowed',
 		array_merge(
 			$guard,
@@ -900,28 +900,28 @@ function vms_ticket_mutation_audit_record_post_meta_write(string $operation, int
 	);
 }
 
-function vms_ticket_mutation_audit_after_add_post_meta($meta_id, $object_id, $meta_key, $meta_value): void
+function bvmgr_ticket_mutation_audit_after_add_post_meta($meta_id, $object_id, $meta_key, $meta_value): void
 {
 	unset($meta_id, $meta_value);
-	vms_ticket_mutation_audit_record_post_meta_write('add', absint($object_id), (string) $meta_key);
+	bvmgr_ticket_mutation_audit_record_post_meta_write('add', absint($object_id), (string) $meta_key);
 }
-add_action('added_post_meta', 'vms_ticket_mutation_audit_after_add_post_meta', 10, 4);
+add_action('added_post_meta', 'bvmgr_ticket_mutation_audit_after_add_post_meta', 10, 4);
 
-function vms_ticket_mutation_audit_after_update_post_meta($meta_id, $object_id, $meta_key, $meta_value): void
+function bvmgr_ticket_mutation_audit_after_update_post_meta($meta_id, $object_id, $meta_key, $meta_value): void
 {
 	unset($meta_id, $meta_value);
-	vms_ticket_mutation_audit_record_post_meta_write('update', absint($object_id), (string) $meta_key);
+	bvmgr_ticket_mutation_audit_record_post_meta_write('update', absint($object_id), (string) $meta_key);
 }
-add_action('updated_post_meta', 'vms_ticket_mutation_audit_after_update_post_meta', 10, 4);
+add_action('updated_post_meta', 'bvmgr_ticket_mutation_audit_after_update_post_meta', 10, 4);
 
-function vms_ticket_mutation_audit_after_delete_post_meta($meta_ids, $object_id, $meta_key, $meta_value): void
+function bvmgr_ticket_mutation_audit_after_delete_post_meta($meta_ids, $object_id, $meta_key, $meta_value): void
 {
 	unset($meta_ids, $meta_value);
-	vms_ticket_mutation_audit_record_post_meta_write('delete', absint($object_id), (string) $meta_key);
+	bvmgr_ticket_mutation_audit_record_post_meta_write('delete', absint($object_id), (string) $meta_key);
 }
-add_action('deleted_post_meta', 'vms_ticket_mutation_audit_after_delete_post_meta', 10, 4);
+add_action('deleted_post_meta', 'bvmgr_ticket_mutation_audit_after_delete_post_meta', 10, 4);
 
-function vms_ticket_mutation_audit_sync_map_subset(array $sync_map): array
+function bvmgr_ticket_mutation_audit_sync_map_subset(array $sync_map): array
 {
 	$ticket_map = array();
 	foreach ((array) ($sync_map['tickets'] ?? array()) as $ticket_key => $row) {
@@ -970,7 +970,7 @@ function vms_ticket_mutation_audit_sync_map_subset(array $sync_map): array
 	);
 }
 
-function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
+function bvmgr_ticket_mutation_audit_build_snapshot(int $plan_id): array
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
@@ -984,7 +984,7 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 	$cfg = function_exists('bvmgr_ticketing_v2_get_saved_config') ? bvmgr_ticketing_v2_get_saved_config($plan_id) : array();
 	$sync = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($plan_id) : array();
 	$sync_map = is_array($sync['map'] ?? null) ? $sync['map'] : array();
-	$sync_subset = vms_ticket_mutation_audit_sync_map_subset($sync_map);
+	$sync_subset = bvmgr_ticket_mutation_audit_sync_map_subset($sync_map);
 
 	$ticket_rows = array();
 	$primary_ticket_keys = array();
@@ -1080,8 +1080,8 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 			? sanitize_key((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('product_role'), true))
 			: '';
 		$total_sales = $product_id > 0 ? max(0, (int) get_post_meta($product_id, 'total_sales', true)) : 0;
-		$catalog_visibility = function_exists('vms_ticket_integrity_product_catalog_visibility')
-			? (string) vms_ticket_integrity_product_catalog_visibility($product_id)
+		$catalog_visibility = function_exists('bvmgr_ticket_integrity_product_catalog_visibility')
+			? (string) bvmgr_ticket_integrity_product_catalog_visibility($product_id)
 			: '';
 		$is_public = ($post_status === 'publish' && $catalog_visibility !== 'hidden');
 		$is_attached = in_array($product_id, $attached_product_ids, true);
@@ -1170,12 +1170,12 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 		'vms_managed_product_ids' => array_values(array_unique(array_filter(array_map('absint', $vms_managed_product_ids)))),
 	);
 
-	$snapshot['origin'] = vms_ticket_mutation_audit_classify_snapshot($snapshot);
+	$snapshot['origin'] = bvmgr_ticket_mutation_audit_classify_snapshot($snapshot);
 
 	return $snapshot;
 }
 
-function vms_ticket_mutation_audit_classify_snapshot(array $snapshot): array
+function bvmgr_ticket_mutation_audit_classify_snapshot(array $snapshot): array
 {
 	$import_key = trim((string) ($snapshot['import_key'] ?? ''));
 	$legacy_identifiers = is_array($snapshot['tec_legacy_identifiers'] ?? null) ? $snapshot['tec_legacy_identifiers'] : array();
@@ -1214,13 +1214,13 @@ function vms_ticket_mutation_audit_classify_snapshot(array $snapshot): array
 
 	return array(
 		'classification' => $classification,
-		'label' => vms_ticket_mutation_audit_origin_label($classification),
+		'label' => bvmgr_ticket_mutation_audit_origin_label($classification),
 		'drift_risk' => ($classification === 'imported_legacy' || $classification === 'mixed_or_reconciled') ? 1 : 0,
 		'reasons' => $reasons,
 	);
 }
 
-function vms_ticket_mutation_audit_normalize_log_row($row): array
+function bvmgr_ticket_mutation_audit_normalize_log_row($row): array
 {
 	if (!is_array($row)) {
 		return array();
@@ -1241,23 +1241,23 @@ function vms_ticket_mutation_audit_normalize_log_row($row): array
 		'source_hook' => sanitize_key((string) ($row['source_hook'] ?? '')),
 		'source_function' => sanitize_text_field((string) ($row['source_function'] ?? '')),
 		'change_type' => sanitize_key((string) ($row['change_type'] ?? '')),
-		'change_type_label' => vms_ticket_mutation_audit_change_type_label((string) ($row['change_type'] ?? '')),
-		'result_status' => vms_ticket_mutation_audit_normalize_result_status((string) ($row['result_status'] ?? '')),
-		'result_label' => vms_ticket_mutation_audit_result_label((string) ($row['result_status'] ?? '')),
+		'change_type_label' => bvmgr_ticket_mutation_audit_change_type_label((string) ($row['change_type'] ?? '')),
+		'result_status' => bvmgr_ticket_mutation_audit_normalize_result_status((string) ($row['result_status'] ?? '')),
+		'result_label' => bvmgr_ticket_mutation_audit_result_label((string) ($row['result_status'] ?? '')),
 		'summary_text' => (string) ($row['summary_text'] ?? ''),
 	);
 }
 
-function vms_ticket_mutation_audit_recent_logs(int $plan_id, int $limit = 5): array
+function bvmgr_ticket_mutation_audit_recent_logs(int $plan_id, int $limit = 5): array
 {
 	$plan_id = absint($plan_id);
 	$limit = max(1, min(50, absint($limit)));
-	if ($plan_id <= 0 || (string) get_option(vms_ticket_mutation_audit_schema_option_key(), '') !== vms_ticket_mutation_audit_schema_target()) {
+	if ($plan_id <= 0 || (string) get_option(bvmgr_ticket_mutation_audit_schema_option_key(), '') !== bvmgr_ticket_mutation_audit_schema_target()) {
 		return array();
 	}
 
 	global $wpdb;
-	$table = vms_ticket_mutation_audit_table_name();
+	$table = bvmgr_ticket_mutation_audit_table_name();
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Mutation history must read request-fresh plugin-owned audit rows so newly recorded state is immediately visible.
 	$rows = $wpdb->get_results(
 		$wpdb->prepare('SELECT * FROM %i WHERE plan_id = %d ORDER BY id DESC LIMIT %d', $table, $plan_id, $limit),
@@ -1268,24 +1268,24 @@ function vms_ticket_mutation_audit_recent_logs(int $plan_id, int $limit = 5): ar
 		return array();
 	}
 
-	return array_values(array_filter(array_map('vms_ticket_mutation_audit_normalize_log_row', $rows)));
+	return array_values(array_filter(array_map('bvmgr_ticket_mutation_audit_normalize_log_row', $rows)));
 }
 
-function vms_ticket_mutation_audit_latest_log(int $plan_id): array
+function bvmgr_ticket_mutation_audit_latest_log(int $plan_id): array
 {
-	$logs = vms_ticket_mutation_audit_recent_logs($plan_id, 1);
+	$logs = bvmgr_ticket_mutation_audit_recent_logs($plan_id, 1);
 	return !empty($logs[0]) && is_array($logs[0]) ? $logs[0] : array();
 }
 
-function vms_ticket_mutation_audit_detect_repeated_drift(int $plan_id, array $issues, array $recent_logs = array()): array
+function bvmgr_ticket_mutation_audit_detect_repeated_drift(int $plan_id, array $issues, array $recent_logs = array()): array
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
 		return array('flagged' => false);
 	}
 
-	$open_issues = function_exists('vms_ticket_integrity_open_issues')
-		? vms_ticket_integrity_open_issues($issues)
+	$open_issues = function_exists('bvmgr_ticket_integrity_open_issues')
+		? bvmgr_ticket_integrity_open_issues($issues)
 		: array_values(array_filter($issues, static function ($issue): bool {
 			return is_array($issue) && sanitize_key((string) ($issue['status'] ?? 'open')) !== 'resolved';
 		}));
@@ -1307,7 +1307,7 @@ function vms_ticket_mutation_audit_detect_repeated_drift(int $plan_id, array $is
 	}
 
 	if (empty($recent_logs)) {
-		$recent_logs = vms_ticket_mutation_audit_recent_logs($plan_id, 12);
+		$recent_logs = bvmgr_ticket_mutation_audit_recent_logs($plan_id, 12);
 	}
 
 	$repair_logs = array_values(array_filter($recent_logs, static function (array $row): bool {
@@ -1358,15 +1358,15 @@ function vms_ticket_mutation_audit_detect_repeated_drift(int $plan_id, array $is
 	);
 }
 
-function vms_ticket_mutation_audit_build_event_diagnostics(int $plan_id, array $args = array()): array
+function bvmgr_ticket_mutation_audit_build_event_diagnostics(int $plan_id, array $args = array()): array
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
 		return array();
 	}
 
-	$snapshot = is_array($args['snapshot'] ?? null) ? $args['snapshot'] : vms_ticket_mutation_audit_build_snapshot($plan_id);
-	$recent_logs = vms_ticket_mutation_audit_recent_logs($plan_id, 6);
+	$snapshot = is_array($args['snapshot'] ?? null) ? $args['snapshot'] : bvmgr_ticket_mutation_audit_build_snapshot($plan_id);
+	$recent_logs = bvmgr_ticket_mutation_audit_recent_logs($plan_id, 6);
 	$latest_log = !empty($recent_logs[0]) ? $recent_logs[0] : array();
 	$last_repair = array();
 	foreach ($recent_logs as $row) {
@@ -1377,12 +1377,12 @@ function vms_ticket_mutation_audit_build_event_diagnostics(int $plan_id, array $
 	}
 
 	$issues = is_array($args['issues'] ?? null) ? $args['issues'] : array();
-	$repeated_drift = vms_ticket_mutation_audit_detect_repeated_drift($plan_id, $issues, $recent_logs);
+	$repeated_drift = bvmgr_ticket_mutation_audit_detect_repeated_drift($plan_id, $issues, $recent_logs);
 	$origin = is_array($snapshot['origin'] ?? null) ? $snapshot['origin'] : array();
 	$legacy_leftovers = array_values((array) ($snapshot['legacy_leftover_products'] ?? array()));
 	$untracked_products = array_values((array) ($snapshot['untracked_products'] ?? array()));
 	$mapped_tickets = array_values((array) ($snapshot['config']['ticket_rows'] ?? array()));
-	$public_path_healthy = empty(function_exists('vms_ticket_integrity_open_issues') ? vms_ticket_integrity_open_issues($issues) : $issues);
+	$public_path_healthy = empty(function_exists('bvmgr_ticket_integrity_open_issues') ? bvmgr_ticket_integrity_open_issues($issues) : $issues);
 
 	$recommended_action = __('Review the latest mutation record before running another repair.', 'backstage-venue-manager');
 	if (!empty($repeated_drift['flagged'])) {

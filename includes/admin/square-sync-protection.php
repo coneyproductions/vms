@@ -5,36 +5,36 @@ defined('ABSPATH') || exit;
  * Admin UI for VMS Square Sync Protection.
  */
 
-if (!function_exists('vms_square_sync_protection_report_key')) {
-    function vms_square_sync_protection_report_key(): string
+if (!function_exists('bvmgr_square_sync_protection_report_key')) {
+    function bvmgr_square_sync_protection_report_key(): string
     {
         return 'vms_square_sync_protection_report_' . max(1, get_current_user_id());
     }
 }
 
-if (!function_exists('vms_square_sync_protection_store_report')) {
+if (!function_exists('bvmgr_square_sync_protection_store_report')) {
     /**
      * @param array<string,mixed> $report
      */
-    function vms_square_sync_protection_store_report(array $report): void
+    function bvmgr_square_sync_protection_store_report(array $report): void
     {
-        set_transient(vms_square_sync_protection_report_key(), $report, 30 * MINUTE_IN_SECONDS);
+        set_transient(bvmgr_square_sync_protection_report_key(), $report, 30 * MINUTE_IN_SECONDS);
     }
 }
 
-if (!function_exists('vms_square_sync_protection_get_report')) {
+if (!function_exists('bvmgr_square_sync_protection_get_report')) {
     /**
      * @return array<string,mixed>
      */
-    function vms_square_sync_protection_get_report(): array
+    function bvmgr_square_sync_protection_get_report(): array
     {
-        $report = get_transient(vms_square_sync_protection_report_key());
+        $report = get_transient(bvmgr_square_sync_protection_report_key());
         return is_array($report) ? $report : array();
     }
 }
 
-if (!function_exists('vms_square_sync_protection_redirect')) {
-    function vms_square_sync_protection_redirect(string $notice): void
+if (!function_exists('bvmgr_square_sync_protection_redirect')) {
+    function bvmgr_square_sync_protection_redirect(string $notice): void
     {
         wp_safe_redirect(add_query_arg(array(
             'page' => 'vms-square-sync-protection',
@@ -51,7 +51,7 @@ add_action('admin_menu', function (): void {
         __('Square Sync Protection', 'backstage-venue-manager'),
         'manage_options',
         'vms-square-sync-protection',
-        'vms_render_square_sync_protection_page'
+        'bvmgr_render_square_sync_protection_page'
     );
 }, 60);
 
@@ -61,13 +61,13 @@ add_action('admin_post_vms_square_sync_protection_scan', function (): void {
     }
     check_admin_referer('vms_square_sync_protection_scan');
 
-    if (!function_exists('vms_square_firewall_scan_products')) {
+    if (!function_exists('bvmgr_square_firewall_scan_products')) {
         wp_die(esc_html__('Square Sync Firewall is not loaded.', 'backstage-venue-manager'));
     }
 
-    $report = vms_square_firewall_scan_products(false, 10000);
-    vms_square_sync_protection_store_report($report);
-    vms_square_sync_protection_redirect('scan_done');
+    $report = bvmgr_square_firewall_scan_products(false, 10000);
+    bvmgr_square_sync_protection_store_report($report);
+    bvmgr_square_sync_protection_redirect('scan_done');
 });
 
 add_action('admin_post_vms_square_sync_protection_repair', function (): void {
@@ -76,13 +76,13 @@ add_action('admin_post_vms_square_sync_protection_repair', function (): void {
     }
     check_admin_referer('vms_square_sync_protection_repair');
 
-    if (!function_exists('vms_square_firewall_scan_products')) {
+    if (!function_exists('bvmgr_square_firewall_scan_products')) {
         wp_die(esc_html__('Square Sync Firewall is not loaded.', 'backstage-venue-manager'));
     }
 
-    $report = vms_square_firewall_scan_products(true, 10000);
-    vms_square_sync_protection_store_report($report);
-    vms_square_sync_protection_redirect('repair_done');
+    $report = bvmgr_square_firewall_scan_products(true, 10000);
+    bvmgr_square_sync_protection_store_report($report);
+    bvmgr_square_sync_protection_redirect('repair_done');
 });
 
 add_action('admin_post_vms_square_sync_protection_csv', function (): void {
@@ -91,7 +91,7 @@ add_action('admin_post_vms_square_sync_protection_csv', function (): void {
     }
     check_admin_referer('vms_square_sync_protection_csv');
 
-    $report = vms_square_sync_protection_get_report();
+    $report = bvmgr_square_sync_protection_get_report();
     if (empty($report)) {
         wp_die(esc_html__('No Square Sync Protection report is available. Run a scan first.', 'backstage-venue-manager'));
     }
@@ -123,11 +123,11 @@ add_action('admin_post_vms_square_sync_protection_csv', function (): void {
     exit;
 });
 
-if (!function_exists('vms_render_square_sync_protection_summary_table')) {
+if (!function_exists('bvmgr_render_square_sync_protection_summary_table')) {
     /**
      * @param array<string,mixed> $report
      */
-    function vms_render_square_sync_protection_summary_table(array $report): void
+    function bvmgr_render_square_sync_protection_summary_table(array $report): void
     {
         $labels = array(
             'mode' => __('Mode', 'backstage-venue-manager'),
@@ -158,11 +158,11 @@ if (!function_exists('vms_render_square_sync_protection_summary_table')) {
     }
 }
 
-if (!function_exists('vms_render_square_sync_protection_rows')) {
+if (!function_exists('bvmgr_render_square_sync_protection_rows')) {
     /**
      * @param array<string,mixed> $report
      */
-    function vms_render_square_sync_protection_rows(array $report): void
+    function bvmgr_render_square_sync_protection_rows(array $report): void
     {
         $rows = (array) ($report['rows'] ?? array());
         if (empty($rows)) {
@@ -211,8 +211,8 @@ if (!function_exists('vms_render_square_sync_protection_rows')) {
     }
 }
 
-if (!function_exists('vms_square_sync_protection_render_admin_notice')) {
-    function vms_square_sync_protection_render_admin_notice(): void
+if (!function_exists('bvmgr_square_sync_protection_render_admin_notice')) {
+    function bvmgr_square_sync_protection_render_admin_notice(): void
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Square Sync notice state only affects admin feedback.
         $notice = bvmgr_request_read_key($_GET, 'vms_square_notice');
@@ -224,10 +224,10 @@ if (!function_exists('vms_square_sync_protection_render_admin_notice')) {
     }
 }
 
-if (!function_exists('vms_render_square_sync_protection_page_content')) {
-    function vms_render_square_sync_protection_page_content(): void
+if (!function_exists('bvmgr_render_square_sync_protection_page_content')) {
+    function bvmgr_render_square_sync_protection_page_content(): void
     {
-        $report = vms_square_sync_protection_get_report();
+        $report = bvmgr_square_sync_protection_get_report();
 
         echo '<p>' . esc_html__('Protect VMS/TEC tickets, admissions, passes, and event add-ons from Square catalog or inventory sync while leaving normal Square-owned items available for menus, merch, and inventory workflows.', 'backstage-venue-manager') . '</p>';
 
@@ -256,17 +256,17 @@ if (!function_exists('vms_render_square_sync_protection_page_content')) {
                 $readable = wp_date('Y-m-d H:i', $ts, wp_timezone());
                 echo '<p class="description">' . esc_html($readable) . '</p>';
             }
-            vms_render_square_sync_protection_summary_table($report);
+            bvmgr_render_square_sync_protection_summary_table($report);
             echo '<p><a class="button button-secondary" href="' . esc_url($csv_url) . '">' . esc_html__('Download report CSV', 'backstage-venue-manager') . '</a></p>';
             echo '<h3>' . esc_html__('Protected product details', 'backstage-venue-manager') . '</h3>';
             echo '<p class="description">' . esc_html__('Showing up to the first 200 protected products from the report.', 'backstage-venue-manager') . '</p>';
-            vms_render_square_sync_protection_rows($report);
+            bvmgr_render_square_sync_protection_rows($report);
         }
     }
 }
 
-if (!function_exists('vms_render_square_sync_protection_page')) {
-    function vms_render_square_sync_protection_page(): void
+if (!function_exists('bvmgr_render_square_sync_protection_page')) {
+    function bvmgr_render_square_sync_protection_page(): void
     {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
@@ -278,16 +278,16 @@ if (!function_exists('vms_render_square_sync_protection_page')) {
                     'title' => __('Square Sync Protection', 'backstage-venue-manager'),
                     'subtitle' => __('Protect VMS-owned products from accidental Square catalog and inventory sync.', 'backstage-venue-manager'),
                     'shell_id' => 'vms-square-sync-protection-wrap',
-                    'notices_callback' => 'vms_square_sync_protection_render_admin_notice',
+                    'notices_callback' => 'bvmgr_square_sync_protection_render_admin_notice',
                 ),
-                'vms_render_square_sync_protection_page_content'
+                'bvmgr_render_square_sync_protection_page_content'
             );
             return;
         }
 
         echo '<div class="wrap" id="vms-square-sync-protection-wrap">';
         echo '<h1>' . esc_html__('Square Sync Protection', 'backstage-venue-manager') . '</h1>';
-        vms_render_square_sync_protection_page_content();
+        bvmgr_render_square_sync_protection_page_content();
         echo '</div>';
     }
 }

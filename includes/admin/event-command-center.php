@@ -778,8 +778,8 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot')) {
         if (function_exists('bvmgr_resource_fingerprint_span_start')) {
             bvmgr_resource_fingerprint_span_start('ecc.ticket_integrity_scan', array('plan_id' => $plan_id));
         }
-        $scan = function_exists('vms_ticket_integrity_scan_event_record')
-            ? (array) vms_ticket_integrity_scan_event_record($plan_id)
+        $scan = function_exists('bvmgr_ticket_integrity_scan_event_record')
+            ? (array) bvmgr_ticket_integrity_scan_event_record($plan_id)
             : array();
         if (function_exists('bvmgr_resource_fingerprint_span_finish')) {
             bvmgr_resource_fingerprint_span_finish('ecc.ticket_integrity_scan', array(
@@ -805,15 +805,15 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot')) {
             }
 
             $capacity += max(0, (int) ($ticket_snapshot['inventory_total'] ?? 0));
-            if (function_exists('vms_ticket_integrity_ticket_remaining')) {
-                $ticket_remaining = vms_ticket_integrity_ticket_remaining($ticket_snapshot);
+            if (function_exists('bvmgr_ticket_integrity_ticket_remaining')) {
+                $ticket_remaining = bvmgr_ticket_integrity_ticket_remaining($ticket_snapshot);
                 if ($ticket_remaining !== null) {
                     $remaining += max(0, (int) $ticket_remaining);
                     $remaining_known = true;
                 }
             }
-            if (function_exists('vms_ticket_integrity_low_inventory_signal')) {
-                $signal = (array) vms_ticket_integrity_low_inventory_signal($ticket_snapshot, $event_ts);
+            if (function_exists('bvmgr_ticket_integrity_low_inventory_signal')) {
+                $signal = (array) bvmgr_ticket_integrity_low_inventory_signal($ticket_snapshot, $event_ts);
                 if (!empty($signal['flagged'])) {
                     $low_inventory_flag = true;
                     $low_inventory_severity = sanitize_key((string) ($signal['severity'] ?? $low_inventory_severity));
@@ -850,8 +850,8 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot')) {
             'event_timestamp' => $event_ts,
             'low_inventory_flag' => $low_inventory_flag,
             'low_inventory_severity' => $low_inventory_severity,
-            'status_label' => ($scan !== array() && function_exists('vms_ticket_integrity_status_label'))
-                ? (string) vms_ticket_integrity_status_label((string) ($scan['status'] ?? ''))
+            'status_label' => ($scan !== array() && function_exists('bvmgr_ticket_integrity_status_label'))
+                ? (string) bvmgr_ticket_integrity_status_label((string) ($scan['status'] ?? ''))
                 : __('Unknown', 'backstage-venue-manager'),
         );
     }
@@ -879,8 +879,8 @@ if (!function_exists('bvmgr_event_command_center_get_financial_snapshot')) {
         $vendor_cost_cents = $has_actuals
             ? max(0, (int) ($manual_actuals['direct_costs_cents'] ?? 0))
             : (function_exists('vms_goals_get_default_direct_costs_cents') ? max(0, (int) vms_goals_get_default_direct_costs_cents($plan_id)) : 0);
-        $labor_cost_cents = function_exists('vms_event_profitability_get_labor_cost_cents')
-            ? max(0, (int) vms_event_profitability_get_labor_cost_cents($plan_id))
+        $labor_cost_cents = function_exists('bvmgr_event_profitability_get_labor_cost_cents')
+            ? max(0, (int) bvmgr_event_profitability_get_labor_cost_cents($plan_id))
             : 0;
         $processing_cents = $has_actuals
             ? max(0, (int) ($manual_actuals['processing_fees_cents'] ?? 0))
@@ -2254,7 +2254,7 @@ if (!function_exists('bvmgr_event_command_center_ticket_integrity_store_entry'))
     function bvmgr_event_command_center_ticket_integrity_store_entry(int $plan_id, int $tec_event_id = 0): array
     {
         return (array) bvmgr_event_command_center_request_cache($plan_id, 'ticket_integrity_store_entry', static function () use ($plan_id, $tec_event_id): array {
-            if (!function_exists('vms_ticket_integrity_get_results_store') || !function_exists('vms_ticket_integrity_event_store_key')) {
+            if (!function_exists('bvmgr_ticket_integrity_get_results_store') || !function_exists('bvmgr_ticket_integrity_event_store_key')) {
                 return array();
             }
 
@@ -2264,9 +2264,9 @@ if (!function_exists('bvmgr_event_command_center_ticket_integrity_store_entry'))
                 $tec_event_id = absint($bundle['linked_tec_id'] ?? 0);
             }
 
-            $store = vms_ticket_integrity_get_results_store();
+            $store = bvmgr_ticket_integrity_get_results_store();
             $events = is_array($store['events'] ?? null) ? (array) $store['events'] : array();
-            $event_key = vms_ticket_integrity_event_store_key($plan_id, $tec_event_id);
+            $event_key = bvmgr_ticket_integrity_event_store_key($plan_id, $tec_event_id);
             $entry = $events[$event_key] ?? array();
 
             return is_array($entry) ? $entry : array();
@@ -2418,8 +2418,8 @@ if (!function_exists('bvmgr_event_command_center_ticket_summary_snapshot')) {
         }
 
         $status_label = __('Not configured', 'backstage-venue-manager');
-        if (in_array($integrity_status, array('red', 'yellow'), true) && function_exists('vms_ticket_integrity_status_label')) {
-            $status_label = (string) vms_ticket_integrity_status_label($integrity_status);
+        if (in_array($integrity_status, array('red', 'yellow'), true) && function_exists('bvmgr_ticket_integrity_status_label')) {
+            $status_label = (string) bvmgr_ticket_integrity_status_label($integrity_status);
         } elseif ($effective_ticket_count > 0) {
             $status_label = __('Summary ready', 'backstage-venue-manager');
         } elseif ($linked_tec_id > 0) {

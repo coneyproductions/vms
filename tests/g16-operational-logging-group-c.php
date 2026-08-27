@@ -84,8 +84,8 @@ function g16c_swap_function(string $source, string $name, string $current_hash, 
 
 function g16c_remove_ticket_helpers(string $source): string
 {
-	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
-	$last = g16c_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
+	$last = g16c_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
 	$last_start = strpos($source, $last, (int) $start);
 	g16c_assert($start !== false && $last_start !== false, 'Ticket helper projection bounds changed.');
 	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
@@ -166,7 +166,7 @@ g16c_same($g16c_sources['mirror']['notifications'], $g16c_sources['shadow']['not
 foreach (array('bvmgr_entitlements_sync_image_log', 'bvmgr_entitlements_sync_product_image_with_result', 'bvmgr_entitlements_sync_plan_image_changes') as $name) {
 	g16c_same(g16c_extract_function($g16c_sources['mirror']['phase'], $name), g16c_extract_function($g16c_sources['shadow']['phase'], $name), 'PhaseB owned parity failed: ' . $name);
 }
-foreach (array('vms_ticket_integrity_fatal_operation', 'vms_ticket_integrity_fatal_source_scope', 'vms_ticket_integrity_fatal_operational_context', 'vms_ticket_integrity_fatal_guard_shutdown') as $name) {
+foreach (array('bvmgr_ticket_integrity_fatal_operation', 'bvmgr_ticket_integrity_fatal_source_scope', 'bvmgr_ticket_integrity_fatal_operational_context', 'bvmgr_ticket_integrity_fatal_guard_shutdown') as $name) {
 	g16c_same(g16c_extract_function($g16c_sources['mirror']['ticket'], $name), g16c_extract_function($g16c_sources['shadow']['ticket'], $name), 'Ticket owned parity failed: ' . $name);
 }
 g16c_same(g16c_extract_function($g16c_sources['mirror']['settings'], 'vms_handle_sync_entitlement_images'), g16c_extract_function($g16c_sources['shadow']['settings'], 'vms_handle_sync_entitlement_images'), 'Settings owned handler parity failed.');
@@ -203,10 +203,10 @@ g16c_assert(strpos($g16c_notify, "if (!\$recorded && function_exists('error_log'
 g16c_same(0, substr_count($g16c_notify, 'last_error'), 'Notification fallback must not retain database errors.');
 g16c_same(0, substr_count($g16c_notify, 'wp_json_encode($entry)'), 'Notification fallback must not retain entry fields.');
 
-$g16c_shutdown = g16c_extract_function($g16c_sources['mirror']['ticket'], 'vms_ticket_integrity_fatal_guard_shutdown');
+$g16c_shutdown = g16c_extract_function($g16c_sources['mirror']['ticket'], 'bvmgr_ticket_integrity_fatal_guard_shutdown');
 $g16c_direct = strpos($g16c_shutdown, "'[BVM operational] event=ticket_integrity_fatal_shutdown");
-$g16c_state = strpos($g16c_shutdown, 'vms_ticket_integrity_patch_daily_report_state(');
-$g16c_option = strpos($g16c_shutdown, 'vms_ticket_integrity_log_event(');
+$g16c_state = strpos($g16c_shutdown, 'bvmgr_ticket_integrity_patch_daily_report_state(');
+$g16c_option = strpos($g16c_shutdown, 'bvmgr_ticket_integrity_log_event(');
 $g16c_final = strpos($g16c_shutdown, "['finalized'] = true");
 g16c_assert($g16c_direct !== false && $g16c_state !== false && $g16c_option !== false && $g16c_final !== false && $g16c_direct < $g16c_state && $g16c_state < $g16c_option && $g16c_option < $g16c_final, 'Ticket fatal order must remain direct -> state -> option -> finalized.');
 g16c_assert(strpos($g16c_shutdown, "if (function_exists('error_log'))") !== false, 'Ticket fatal fallback must remain safe when error_log is disabled.');
@@ -452,7 +452,7 @@ $g16c_pre_edit_hashes = array(
 $g16c_project_full = static function (string $source, string $key) use ($g16c_reverse_specs, $g16c_ticket_shutdown_historical): string {
 	if ($key === 'ticket') {
 		$source = g16c_remove_ticket_helpers($source);
-		return g16c_swap_function($source, 'vms_ticket_integrity_fatal_guard_shutdown', '3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', $g16c_ticket_shutdown_historical);
+		return g16c_swap_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown', '3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', $g16c_ticket_shutdown_historical);
 	}
 	return g16c_reverse_owned_changes($source, $g16c_reverse_specs[$key], $key);
 };
@@ -503,20 +503,20 @@ if (!function_exists('__')) {
 }
 
 foreach (array(
-	'vms_ticket_integrity_is_fatal_error',
-	'vms_ticket_integrity_is_memory_fatal',
-	'vms_ticket_integrity_fatal_operation',
-	'vms_ticket_integrity_fatal_source_scope',
-	'vms_ticket_integrity_fatal_operational_context',
+	'bvmgr_ticket_integrity_is_fatal_error',
+	'bvmgr_ticket_integrity_is_memory_fatal',
+	'bvmgr_ticket_integrity_fatal_operation',
+	'bvmgr_ticket_integrity_fatal_source_scope',
+	'bvmgr_ticket_integrity_fatal_operational_context',
 ) as $function) {
 	eval(g16c_extract_function($g16c_sources['mirror']['ticket'], $function));
 }
-g16c_same('scan', vms_ticket_integrity_fatal_operation('SCAN'), 'Ticket operation scan normalization failed.');
-g16c_same('daily_report', vms_ticket_integrity_fatal_operation('Daily_Report'), 'Ticket operation daily-report normalization failed.');
-g16c_same('unknown', vms_ticket_integrity_fatal_operation('send_email'), 'Ticket operation allowlist failed.');
-g16c_same('includes_ticketing_workerphp', vms_ticket_integrity_fatal_source_scope($g16c_root . '/includes/ticketing/worker.php'), 'Plugin-relative source token changed.');
-g16c_same('external', vms_ticket_integrity_fatal_source_scope($g16c_root . '-collision/secret.php'), 'Plugin-root prefix collision must be external.');
-g16c_same('external', vms_ticket_integrity_fatal_source_scope($g16c_root . '/includes/../secret.php'), 'Traversal-like source must be external.');
+g16c_same('scan', bvmgr_ticket_integrity_fatal_operation('SCAN'), 'Ticket operation scan normalization failed.');
+g16c_same('daily_report', bvmgr_ticket_integrity_fatal_operation('Daily_Report'), 'Ticket operation daily-report normalization failed.');
+g16c_same('unknown', bvmgr_ticket_integrity_fatal_operation('send_email'), 'Ticket operation allowlist failed.');
+g16c_same('includes_ticketing_workerphp', bvmgr_ticket_integrity_fatal_source_scope($g16c_root . '/includes/ticketing/worker.php'), 'Plugin-relative source token changed.');
+g16c_same('external', bvmgr_ticket_integrity_fatal_source_scope($g16c_root . '-collision/secret.php'), 'Plugin-root prefix collision must be external.');
+g16c_same('external', bvmgr_ticket_integrity_fatal_source_scope($g16c_root . '/includes/../secret.php'), 'Traversal-like source must be external.');
 
 $g16c_sentinel = 'recipient@example.test token=TOPSECRET uri=/private/path sql=SELECT-all';
 $g16c_fatal_error = array(
@@ -525,7 +525,7 @@ $g16c_fatal_error = array(
 	'file' => $g16c_root . '/includes/ticketing/worker.php',
 	'line' => 812,
 );
-$g16c_contexts = vms_ticket_integrity_fatal_operational_context(
+$g16c_contexts = bvmgr_ticket_integrity_fatal_operational_context(
 	'guard-secret',
 	'Daily_Report',
 	array('trigger' => 'CRON Daily', 'mode' => 'Email Now', 'recipient' => 'recipient@example.test', 'arbitrary' => $g16c_sentinel),
@@ -553,19 +553,19 @@ function g16c_capture_error_log(string $message): void
 	$GLOBALS['g16c_order'][] = 'direct';
 	$GLOBALS['g16c_direct_logs'][] = $message;
 }
-function vms_ticket_integrity_patch_daily_report_state(array $changes): void
+function bvmgr_ticket_integrity_patch_daily_report_state(array $changes): void
 {
 	$GLOBALS['g16c_order'][] = 'state';
 	$GLOBALS['g16c_state_patches'][] = $changes;
 }
-function vms_ticket_integrity_log_event(string $event, string $message, array $context): void
+function bvmgr_ticket_integrity_log_event(string $event, string $message, array $context): void
 {
 	$GLOBALS['g16c_order'][] = 'option';
 	$GLOBALS['g16c_option_logs'][] = array($event, $message, $context);
 }
 
 $g16c_shutdown_eval = $g16c_shutdown;
-$g16c_shutdown_eval = g16c_replace_once($g16c_shutdown_eval, 'function vms_ticket_integrity_fatal_guard_shutdown(', 'function g16c_ticket_integrity_fatal_guard_shutdown(', 'Ticket runtime rename failed.');
+$g16c_shutdown_eval = g16c_replace_once($g16c_shutdown_eval, 'function bvmgr_ticket_integrity_fatal_guard_shutdown(', 'function g16c_ticket_integrity_fatal_guard_shutdown(', 'Ticket runtime rename failed.');
 $g16c_shutdown_eval = g16c_replace_once($g16c_shutdown_eval, 'error_get_last()', '$GLOBALS[\'g16c_fatal_error\']', 'Ticket runtime fatal injection failed.');
 $g16c_shutdown_eval = g16c_replace_once($g16c_shutdown_eval, 'error_log(', 'g16c_capture_error_log(', 'Ticket runtime logger capture failed.');
 eval($g16c_shutdown_eval);
@@ -595,7 +595,7 @@ g16c_same(0, substr_count(json_encode($GLOBALS['g16c_option_logs']), $g16c_senti
 g16c_same(0, substr_count($GLOBALS['g16c_direct_logs'][0], $g16c_sentinel), 'Ticket direct fallback leaked sentinel data.');
 g16c_assert(preg_match('/^\[BVM operational\] event=ticket_integrity_fatal_shutdown operation=daily_report memory_exhausted=1 fatal_type=1 line=812 source_scope=includes_ticketing_workerphp correlation=[a-f0-9]{24}$/', $GLOBALS['g16c_direct_logs'][0]) === 1, 'Ticket direct payload allowlist changed.');
 
-$g16c_shutdown_no_direct = g16c_replace_once($g16c_shutdown, 'function vms_ticket_integrity_fatal_guard_shutdown(', 'function g16c_ticket_integrity_shutdown_no_direct(', 'Ticket no-direct rename failed.');
+$g16c_shutdown_no_direct = g16c_replace_once($g16c_shutdown, 'function bvmgr_ticket_integrity_fatal_guard_shutdown(', 'function g16c_ticket_integrity_shutdown_no_direct(', 'Ticket no-direct rename failed.');
 $g16c_shutdown_no_direct = g16c_replace_once($g16c_shutdown_no_direct, 'error_get_last()', '$GLOBALS[\'g16c_fatal_error\']', 'Ticket no-direct fatal injection failed.');
 $g16c_shutdown_no_direct = g16c_replace_once($g16c_shutdown_no_direct, "function_exists('error_log')", 'false', 'Ticket disabled logger injection failed.');
 eval($g16c_shutdown_no_direct);

@@ -123,11 +123,24 @@ Status: committed at `c4c1eba453ec539309be696dda2d5cf52a88d8e0`.
 
 ### W5 — ticketing runtime, rules, claims, and verifications
 
-Status: verified for the isolated W5 commit.
+Status: committed at `7482df66ab0b3b6995239fb06030f1d03e7b2750`.
 
 - Exact cutover: `616` unique functions / `616` declaration sites moved atomically; W5 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
 - Ratchet: cumulative B3 progress is `1,814 / 4,521` functions and `1,826 / 4,541` declaration sites; `2,707` legacy functions / `2,715` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
 - Literal authority: exactly two activation-bootstrap callable identities moved; `27` ticketing hooks, AJAX action values, audit labels, and performance/provenance labels remain legacy contracts.
 - Focused verification: ticketing Phase B and V2 output-buffer ownership, lifecycle characterization, claims admin/mutation/request handling, verification mutation/request handling, disabled-ticket suppression, request-path normalization, search/server-mount/text helpers, authorization/input guards, and applicable repository tests pass. The test-literal transformer now also covers heredoc/nowdoc source fixtures, while historical fixture bodies remain explicitly legacy. Mirror/live parity, unavailable historical artifacts, and explicit-WordPress-root tests remain excluded under the isolation boundary. Changed-PHP lint, diff checks, and all primary B3/B2/B2.5/add-on/identity/runtime/release gates pass.
 - Checkpoint sequencing: W5 is committed on its own green focused gate; the next exact-ZIP package, strict Plugin Check, and supported-stack checkpoint is paired with W6's adjacent ticket-integrity/forensics wave.
+- Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### W6 — ticket integrity, forensics, mutation, Square, and revenue
+
+Status: verified for the isolated W6 commit.
+
+- Exact cutover: `533` unique functions / `533` declaration sites moved atomically; W6 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
+- Ratchet: cumulative B3 progress is `2,347 / 4,521` functions and `2,359 / 4,541` declaration sites; `2,174` legacy functions / `2,182` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
+- Literal authority: `13` executable callback sites moved; `36` database-table, WordPress-filter, audit-source, and performance-telemetry sites remain legacy contracts. Two W6 test expectations explicitly retain the table suffix and telemetry name.
+- Focused verification: Ticket Integrity scan-lock recovery and inline output, legacy Square cleanup, State of the Range delivery/upcoming filters, admin notice/export output, mutation request boundaries, runtime stubs, W5 continuity, changed-PHP lint, diff checks, and all primary B3/B2/B2.5/add-on/identity/release gates pass. Live-parity/projection tests, unavailable historical artifacts, and explicit-WordPress-root scripts remain excluded under the isolation boundary.
+- Disposable package: `/private/tmp/bvm-wporg-b3-w6-checkpoint/backstage-venue-manager-1.2.0-public-release-dev.zip`, SHA-256 `7e674bec1564059d937dc37a86a2f11ecb444fe1cb42cbe123cfef529ce5a420`; the build staged `374` files, linted `271` PHP files, syntax-checked `55` JavaScript files, and passed package integrity.
+- Supported-stack smoke: the exact W6 ZIP completed activation and authenticated/public smoke requests with the supported WooCommerce/TEC/Event Tickets stack without a plugin fatal or duplicate scheduled-work owner. Report SHA-256: `105a99df44bf03152ed5f153bc7b4b9152f60d8c71ad2e21d7f86ce7faad82d2`; `WARN` is limited to dependency/PHP deprecations.
+- Strict packaged scan: `2,915` total = historical `125` errors + `2,790` warnings, categorized exactly as B3 `2,182`, B7 `182`, method scope `420`, and external/core `6`. The gate records `2,359` authoritative B3 findings removed and no regression. Strict JSON SHA-256: `a1f7e12e4a7076a11b788fd8546c73aa2b1a9126b32f8706f30b68239563fb29`.
 - Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

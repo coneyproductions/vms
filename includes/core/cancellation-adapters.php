@@ -422,8 +422,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 									'writer_branch' => 'cancellation_closeout',
 									'result_health' => 'expected_closed_state',
 								));
-							} elseif (function_exists('vms_ticket_mutation_audit_push_context')) {
-								vms_ticket_mutation_audit_push_context(array(
+							} elseif (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+								bvmgr_ticket_mutation_audit_push_context(array(
 									'trigger_source' => 'manual_action',
 									'source_function' => 'vms_tec_cancel_event_adapter',
 									'derivation_source' => 'authoritative_zero_capacity',
@@ -453,8 +453,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 						} finally {
 							if (function_exists('bvmgr_ticketing_v2_pop_inventory_write_context')) {
 								bvmgr_ticketing_v2_pop_inventory_write_context();
-							} elseif (function_exists('vms_ticket_mutation_audit_pop_context')) {
-								vms_ticket_mutation_audit_pop_context();
+							} elseif (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+								bvmgr_ticket_mutation_audit_pop_context();
 							}
 						}
 					} else {

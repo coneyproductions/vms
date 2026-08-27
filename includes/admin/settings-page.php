@@ -448,8 +448,8 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 					'writer_branch' => 'manual_entitlement_stock_reconciliation',
 					'result_health' => ($remaining > 0) ? 'expected_sellable_state' : 'expected_closed_state',
 				));
-			} elseif (function_exists('vms_ticket_mutation_audit_push_context')) {
-				vms_ticket_mutation_audit_push_context(array(
+			} elseif (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+				bvmgr_ticket_mutation_audit_push_context(array(
 					'trigger_source' => 'manual_action',
 					'source_function' => 'vms_ticketing_stock_reconcile_scan',
 					'derivation_source' => 'manual_entitlement_stock_reconciliation',
@@ -475,8 +475,8 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 			} finally {
 				if (function_exists('bvmgr_ticketing_v2_pop_inventory_write_context')) {
 					bvmgr_ticketing_v2_pop_inventory_write_context();
-				} elseif (function_exists('vms_ticket_mutation_audit_pop_context')) {
-					vms_ticket_mutation_audit_pop_context();
+				} elseif (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+					bvmgr_ticket_mutation_audit_pop_context();
 				}
 			}
 		}

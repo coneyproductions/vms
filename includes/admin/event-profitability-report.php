@@ -2,15 +2,15 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_event_profitability_admin_url')) {
-	function vms_event_profitability_admin_url(array $args = array()): string
+if (!function_exists('bvmgr_event_profitability_admin_url')) {
+	function bvmgr_event_profitability_admin_url(array $args = array()): string
 	{
 		return add_query_arg($args, admin_url('admin.php?page=vms-event-profitability'));
 	}
 }
 
-if (!function_exists('vms_event_profitability_query_arg')) {
-	function vms_event_profitability_query_arg(string $key): string
+if (!function_exists('bvmgr_event_profitability_query_arg')) {
+	function bvmgr_event_profitability_query_arg(string $key): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only report filters only change admin display state.
 		if (!isset($_GET[$key])) {
@@ -22,23 +22,23 @@ if (!function_exists('vms_event_profitability_query_arg')) {
 	}
 }
 
-if (!function_exists('vms_event_profitability_selected_filters')) {
-	function vms_event_profitability_selected_filters(): array
+if (!function_exists('bvmgr_event_profitability_selected_filters')) {
+	function bvmgr_event_profitability_selected_filters(): array
 	{
-		$view = sanitize_key(vms_event_profitability_query_arg('profit_view'));
+		$view = sanitize_key(bvmgr_event_profitability_query_arg('profit_view'));
 		if (!in_array($view, array('all', 'future', 'past'), true)) {
 			$view = 'all';
 		}
 
 		return array(
 			'view' => $view,
-			'search' => sanitize_text_field(vms_event_profitability_query_arg('s')),
+			'search' => sanitize_text_field(bvmgr_event_profitability_query_arg('s')),
 		);
 	}
 }
 
-add_action('admin_menu', 'vms_event_profitability_admin_menu', 46);
-function vms_event_profitability_admin_menu(): void
+add_action('admin_menu', 'bvmgr_event_profitability_admin_menu', 46);
+function bvmgr_event_profitability_admin_menu(): void
 {
 	add_submenu_page(
 		'vms-dashboard',
@@ -46,14 +46,14 @@ function vms_event_profitability_admin_menu(): void
 		__('Reporting: Event Profitability', 'backstage-venue-manager'),
 		'manage_options',
 		'vms-event-profitability',
-		'vms_event_profitability_render_admin_page'
+		'bvmgr_event_profitability_render_admin_page'
 	);
 }
 
-add_action('admin_enqueue_scripts', 'vms_event_profitability_enqueue_assets');
-function vms_event_profitability_enqueue_assets(string $hook): void
+add_action('admin_enqueue_scripts', 'bvmgr_event_profitability_enqueue_assets');
+function bvmgr_event_profitability_enqueue_assets(string $hook): void
 {
-	$page = sanitize_key(vms_event_profitability_query_arg('page'));
+	$page = sanitize_key(bvmgr_event_profitability_query_arg('page'));
 	if ($page !== 'vms-event-profitability') {
 		return;
 	}
@@ -66,8 +66,8 @@ function vms_event_profitability_enqueue_assets(string $hook): void
 	);
 }
 
-if (!function_exists('vms_event_profitability_readable_status')) {
-	function vms_event_profitability_readable_status(string $status): string
+if (!function_exists('bvmgr_event_profitability_readable_status')) {
+	function bvmgr_event_profitability_readable_status(string $status): string
 	{
 		$status = sanitize_key($status);
 		$labels = function_exists('bvmgr_event_plan_statuses') ? (array) bvmgr_event_plan_statuses() : array();
@@ -84,8 +84,8 @@ if (!function_exists('vms_event_profitability_readable_status')) {
 	}
 }
 
-if (!function_exists('vms_event_profitability_get_event_timestamp')) {
-	function vms_event_profitability_get_event_timestamp(int $event_plan_id): int
+if (!function_exists('bvmgr_event_profitability_get_event_timestamp')) {
+	function bvmgr_event_profitability_get_event_timestamp(int $event_plan_id): int
 	{
 		$dt = function_exists('vms_staffing_event_plan_datetime')
 			? (array) vms_staffing_event_plan_datetime($event_plan_id)
@@ -108,8 +108,8 @@ if (!function_exists('vms_event_profitability_get_event_timestamp')) {
 	}
 }
 
-if (!function_exists('vms_event_profitability_stage_label')) {
-	function vms_event_profitability_stage_label(int $event_plan_id, int $event_ts, string $status): string
+if (!function_exists('bvmgr_event_profitability_stage_label')) {
+	function bvmgr_event_profitability_stage_label(int $event_plan_id, int $event_ts, string $status): string
 	{
 		$status = sanitize_key($status);
 		if ($status === 'cancelled') {
@@ -130,8 +130,8 @@ if (!function_exists('vms_event_profitability_stage_label')) {
 	}
 }
 
-if (!function_exists('vms_event_profitability_badge')) {
-	function vms_event_profitability_badge(int $total_contribution_cents, string $status): array
+if (!function_exists('bvmgr_event_profitability_badge')) {
+	function bvmgr_event_profitability_badge(int $total_contribution_cents, string $status): array
 	{
 		$status = sanitize_key($status);
 		if ($status === 'cancelled') {
@@ -162,8 +162,8 @@ if (!function_exists('vms_event_profitability_badge')) {
 	}
 }
 
-if (!function_exists('vms_event_profitability_get_labor_cost_cents')) {
-	function vms_event_profitability_get_labor_cost_cents(int $event_plan_id): int
+if (!function_exists('bvmgr_event_profitability_get_labor_cost_cents')) {
+	function bvmgr_event_profitability_get_labor_cost_cents(int $event_plan_id): int
 	{
 		$labor_dollars = null;
 
@@ -195,8 +195,8 @@ if (!function_exists('vms_event_profitability_get_labor_cost_cents')) {
 	}
 }
 
-if (!function_exists('vms_event_profitability_get_rows')) {
-	function vms_event_profitability_get_rows(string $view = 'all', string $search = ''): array
+if (!function_exists('bvmgr_event_profitability_get_rows')) {
+	function bvmgr_event_profitability_get_rows(string $view = 'all', string $search = ''): array
 	{
 		$view = sanitize_key($view);
 		if (!in_array($view, array('all', 'future', 'past'), true)) {
@@ -245,7 +245,7 @@ if (!function_exists('vms_event_profitability_get_rows')) {
 				}
 			}
 
-			$event_ts = vms_event_profitability_get_event_timestamp($event_plan_id);
+			$event_ts = bvmgr_event_profitability_get_event_timestamp($event_plan_id);
 			$event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
 			$is_past = false;
 			if ($event_date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date)) {
@@ -289,12 +289,12 @@ if (!function_exists('vms_event_profitability_get_rows')) {
 				$vendor_cost_cents = max(0, (int) vms_goals_get_default_direct_costs_cents($event_plan_id));
 			}
 
-			$labor_cents = vms_event_profitability_get_labor_cost_cents($event_plan_id);
+			$labor_cents = bvmgr_event_profitability_get_labor_cost_cents($event_plan_id);
 			$core_profit_cents = (int) ($ticket_revenue_cents - $vendor_cost_cents - $labor_cents);
 			$estimated_bar_profit_cents = (int) round($concessions_cents * $concession_margin);
 			$total_contribution_cents = (int) ($core_profit_cents + $estimated_bar_profit_cents);
-			$badge = vms_event_profitability_badge($total_contribution_cents, $status);
-			$stage = vms_event_profitability_stage_label($event_plan_id, $event_ts, $status);
+			$badge = bvmgr_event_profitability_badge($total_contribution_cents, $status);
+			$stage = bvmgr_event_profitability_stage_label($event_plan_id, $event_ts, $status);
 			$venue_id = absint(get_post_meta($event_plan_id, '_vms_venue_id', true));
 
 			$row = array(
@@ -306,7 +306,7 @@ if (!function_exists('vms_event_profitability_get_rows')) {
 				'start_time_label' => (string) get_post_meta($event_plan_id, '_vms_start_time', true),
 				'is_past' => $is_past,
 				'status' => $status,
-				'status_label' => vms_event_profitability_readable_status($status),
+				'status_label' => bvmgr_event_profitability_readable_status($status),
 				'stage_label' => $stage,
 				'badge_label' => (string) ($badge['label'] ?? ''),
 				'badge_class' => (string) ($badge['class'] ?? ''),
@@ -363,8 +363,8 @@ if (!function_exists('vms_event_profitability_get_rows')) {
 	}
 }
 
-if (!function_exists('vms_event_profitability_money_class')) {
-	function vms_event_profitability_money_class(int $cents): string
+if (!function_exists('bvmgr_event_profitability_money_class')) {
+	function bvmgr_event_profitability_money_class(int $cents): string
 	{
 		if ($cents > 0) {
 			return 'is-positive';
@@ -376,17 +376,17 @@ if (!function_exists('vms_event_profitability_money_class')) {
 	}
 }
 
-if (!function_exists('vms_event_profitability_render_admin_page')) {
-	function vms_event_profitability_render_admin_page(): void
+if (!function_exists('bvmgr_event_profitability_render_admin_page')) {
+	function bvmgr_event_profitability_render_admin_page(): void
 	{
 		if (!current_user_can('manage_options')) {
 			return;
 		}
 
-		$filters = vms_event_profitability_selected_filters();
+		$filters = bvmgr_event_profitability_selected_filters();
 		$view = (string) ($filters['view'] ?? 'all');
 		$search = (string) ($filters['search'] ?? '');
-		$data = vms_event_profitability_get_rows($view, $search);
+		$data = bvmgr_event_profitability_get_rows($view, $search);
 		$rows = (array) ($data['rows'] ?? array());
 		$summary = (array) ($data['summary'] ?? array());
 		$margin_pct = (int) ($data['concession_margin_pct'] ?? 65);
@@ -411,7 +411,7 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 		);
 		foreach ($views as $key => $label) {
 			$class = ($view === $key) ? 'is-active' : '';
-			echo '<a class="vms-event-profitability-tab ' . esc_attr($class) . '" href="' . esc_url(vms_event_profitability_admin_url(array('profit_view' => $key, 's' => $search))) . '">' . esc_html($label) . '</a>';
+			echo '<a class="vms-event-profitability-tab ' . esc_attr($class) . '" href="' . esc_url(bvmgr_event_profitability_admin_url(array('profit_view' => $key, 's' => $search))) . '">' . esc_html($label) . '</a>';
 		}
 		echo '</div>';
 		echo '<div class="vms-event-profitability-search-row">';
@@ -419,7 +419,7 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 		echo '<input id="vms-event-profitability-search" type="search" name="s" value="' . esc_attr($search) . '" placeholder="' . esc_attr__('Search events', 'backstage-venue-manager') . '" />';
 		echo '<button type="submit" class="button button-primary">' . esc_html__('Filter', 'backstage-venue-manager') . '</button>';
 		if ($search !== '') {
-			echo '<a class="button button-secondary" href="' . esc_url(vms_event_profitability_admin_url(array('profit_view' => $view))) . '">' . esc_html__('Clear', 'backstage-venue-manager') . '</a>';
+			echo '<a class="button button-secondary" href="' . esc_url(bvmgr_event_profitability_admin_url(array('profit_view' => $view))) . '">' . esc_html__('Clear', 'backstage-venue-manager') . '</a>';
 		}
 		echo '</div>';
 		echo '</form>';
@@ -429,8 +429,8 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Ticket Revenue', 'backstage-venue-manager') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['ticket_revenue_cents'] ?? 0))) . '</strong></article>';
 		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Concession Sales', 'backstage-venue-manager') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['concessions_cents'] ?? 0))) . '</strong></article>';
 		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Labor OH', 'backstage-venue-manager') . '</span><strong>' . esc_html(vms_goals_fmt_money((int) ($summary['labor_cents'] ?? 0))) . '</strong></article>';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Core Profit', 'backstage-venue-manager') . '</span><strong class="' . esc_attr(vms_event_profitability_money_class((int) ($summary['core_profit_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($summary['core_profit_cents'] ?? 0))) . '</strong></article>';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Night Score', 'backstage-venue-manager') . '</span><strong class="' . esc_attr(vms_event_profitability_money_class((int) ($summary['total_contribution_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($summary['total_contribution_cents'] ?? 0))) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Core Profit', 'backstage-venue-manager') . '</span><strong class="' . esc_attr(bvmgr_event_profitability_money_class((int) ($summary['core_profit_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($summary['core_profit_cents'] ?? 0))) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Night Score', 'backstage-venue-manager') . '</span><strong class="' . esc_attr(bvmgr_event_profitability_money_class((int) ($summary['total_contribution_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($summary['total_contribution_cents'] ?? 0))) . '</strong></article>';
 		echo '</section>';
 
 		if (empty($rows)) {
@@ -475,11 +475,11 @@ if (!function_exists('vms_event_profitability_render_admin_page')) {
 			echo '<div class="vms-event-profitability-core">';
 			echo '<div class="vms-event-profitability-big-metric">';
 			echo '<span class="label">' . esc_html__('Core Profit', 'backstage-venue-manager') . '</span>';
-			echo '<strong class="' . esc_attr(vms_event_profitability_money_class((int) ($row['core_profit_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($row['core_profit_cents'] ?? 0))) . '</strong>';
+			echo '<strong class="' . esc_attr(bvmgr_event_profitability_money_class((int) ($row['core_profit_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($row['core_profit_cents'] ?? 0))) . '</strong>';
 			echo '</div>';
 			echo '<div class="vms-event-profitability-big-metric">';
 			echo '<span class="label">' . esc_html__('Night Score', 'backstage-venue-manager') . '</span>';
-			echo '<strong class="' . esc_attr(vms_event_profitability_money_class((int) ($row['total_contribution_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($row['total_contribution_cents'] ?? 0))) . '</strong>';
+			echo '<strong class="' . esc_attr(bvmgr_event_profitability_money_class((int) ($row['total_contribution_cents'] ?? 0))) . '">' . esc_html(vms_goals_fmt_money((int) ($row['total_contribution_cents'] ?? 0))) . '</strong>';
 			echo '</div>';
 			echo '</div>';
 

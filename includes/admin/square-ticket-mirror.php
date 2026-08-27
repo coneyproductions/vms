@@ -1,9 +1,9 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_square_ticket_mirror_admin_status_badge(string $status): string
+function bvmgr_square_ticket_mirror_admin_status_badge(string $status): string
 {
-    $status = vms_square_ticket_mirror_normalize_status($status);
+    $status = bvmgr_square_ticket_mirror_normalize_status($status);
     $tones = array(
         'not_mirrored' => '#50575e',
         'mirrored' => '#0a7d2c',
@@ -13,12 +13,12 @@ function vms_square_ticket_mirror_admin_status_badge(string $status): string
     );
 
     $color = (string) ($tones[$status] ?? '#50575e');
-    $label = vms_square_ticket_mirror_label_for_status($status);
+    $label = bvmgr_square_ticket_mirror_label_for_status($status);
 
     return '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:' . esc_attr($color) . ';color:#fff;font-size:12px;line-height:1.6;">' . esc_html($label) . '</span>';
 }
 
-function vms_square_ticket_mirror_admin_redirect_url(int $product_id): string
+function bvmgr_square_ticket_mirror_admin_redirect_url(int $product_id): string
 {
     $product_id = absint($product_id);
     $edit_link = $product_id > 0 ? get_edit_post_link($product_id, 'raw') : '';
@@ -29,16 +29,16 @@ function vms_square_ticket_mirror_admin_redirect_url(int $product_id): string
     return admin_url('edit.php?post_type=product');
 }
 
-function vms_square_ticket_mirror_register_metabox($post): void
+function bvmgr_square_ticket_mirror_register_metabox($post): void
 {
     $product_id = is_object($post) && isset($post->ID) ? absint($post->ID) : 0;
     if ($product_id <= 0) {
         return;
     }
 
-    $should_show = vms_square_ticket_mirror_has_mirror_meta($product_id)
-        || vms_square_ticket_mirror_product_role($product_id) === 'ga_ticket'
-        || (function_exists('vms_square_firewall_is_protected_product') && vms_square_firewall_is_protected_product($product_id));
+    $should_show = bvmgr_square_ticket_mirror_has_mirror_meta($product_id)
+        || bvmgr_square_ticket_mirror_product_role($product_id) === 'ga_ticket'
+        || (function_exists('bvmgr_square_firewall_is_protected_product') && bvmgr_square_firewall_is_protected_product($product_id));
 
     if (!$should_show) {
         return;
@@ -47,15 +47,15 @@ function vms_square_ticket_mirror_register_metabox($post): void
     add_meta_box(
         'vms_square_ticket_mirror',
         __('Square Ticket Mirror', 'backstage-venue-manager'),
-        'vms_square_ticket_mirror_render_metabox',
+        'bvmgr_square_ticket_mirror_render_metabox',
         'product',
         'side',
         'default'
     );
 }
-add_action('add_meta_boxes_product', 'vms_square_ticket_mirror_register_metabox', 10, 1);
+add_action('add_meta_boxes_product', 'bvmgr_square_ticket_mirror_register_metabox', 10, 1);
 
-function vms_square_ticket_mirror_render_metabox($post): void
+function bvmgr_square_ticket_mirror_render_metabox($post): void
 {
     $product_id = is_object($post) && isset($post->ID) ? absint($post->ID) : 0;
     if ($product_id <= 0) {
@@ -63,15 +63,15 @@ function vms_square_ticket_mirror_render_metabox($post): void
         return;
     }
 
-    $state = vms_square_ticket_mirror_status_context($product_id);
+    $state = bvmgr_square_ticket_mirror_status_context($product_id);
     $eligibility = (array) ($state['eligibility'] ?? array());
     $source_model = (array) ($state['source_model'] ?? array());
-    $square = vms_square_ticket_mirror_get_square_context();
+    $square = bvmgr_square_ticket_mirror_get_square_context();
     $action_url = admin_url('admin-post.php');
 
     echo '<div class="vms-square-ticket-mirror">';
     echo '<p><strong>' . esc_html__('Status', 'backstage-venue-manager') . ':</strong> ' . wp_kses(
-        vms_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')),
+        bvmgr_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')),
         array(
             'span' => array(
                 'style' => true,
@@ -90,7 +90,7 @@ function vms_square_ticket_mirror_render_metabox($post): void
     }
 
     echo '<p><strong>' . esc_html__('SKU', 'backstage-venue-manager') . ':</strong> <code>' . esc_html((string) ($eligibility['sku'] ?? '')) . '</code></p>';
-    echo '<p><strong>' . esc_html__('Square Category', 'backstage-venue-manager') . ':</strong> ' . esc_html(vms_square_ticket_mirror_target_category_name()) . '</p>';
+    echo '<p><strong>' . esc_html__('Square Category', 'backstage-venue-manager') . ':</strong> ' . esc_html(bvmgr_square_ticket_mirror_target_category_name()) . '</p>';
 
     if (!empty($state['item_id'])) {
         echo '<p><strong>' . esc_html__('Square Item ID', 'backstage-venue-manager') . ':</strong><br /><code>' . esc_html((string) $state['item_id']) . '</code></p>';
@@ -170,7 +170,7 @@ function vms_square_ticket_mirror_render_metabox($post): void
 
     echo '<p class="description">' . esc_html__('Phase 1 adds manual mirror, refresh, retire, and order-item stamping. Automatic expired-ticket archive/cleanup remains a follow-up slice.', 'backstage-venue-manager') . '</p>';
 
-    $logs = vms_square_ticket_mirror_recent_logs($product_id, 5);
+    $logs = bvmgr_square_ticket_mirror_recent_logs($product_id, 5);
     if (!empty($logs)) {
         echo '<hr />';
         echo '<p><strong>' . esc_html__('Recent Mirror Logs', 'backstage-venue-manager') . '</strong></p>';
@@ -200,7 +200,7 @@ function vms_square_ticket_mirror_render_metabox($post): void
     echo '</div>';
 }
 
-function vms_square_ticket_mirror_handle_admin_action(): void
+function bvmgr_square_ticket_mirror_handle_admin_action(): void
 {
     $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
     $mirror_action = isset($_POST['mirror_action']) ? sanitize_key((string) wp_unslash($_POST['mirror_action'])) : '';
@@ -220,7 +220,7 @@ function vms_square_ticket_mirror_handle_admin_action(): void
     $notice_message = '';
 
     if ($mirror_action === 'mirror' || $mirror_action === 'refresh') {
-        $result = vms_square_ticket_mirror_sync_product($product_id, array(
+        $result = bvmgr_square_ticket_mirror_sync_product($product_id, array(
             'manual' => true,
             'action' => $mirror_action,
         ));
@@ -234,7 +234,7 @@ function vms_square_ticket_mirror_handle_admin_action(): void
             $notice_message = (string) ($result['error_message'] ?? __('Square mirror action failed.', 'backstage-venue-manager'));
         }
     } elseif ($mirror_action === 'retire') {
-        $result = vms_square_ticket_mirror_retire_product($product_id);
+        $result = bvmgr_square_ticket_mirror_retire_product($product_id);
         if (!empty($result['ok'])) {
             $notice_message = __('Square mirror retired for this ticket.', 'backstage-venue-manager');
         } else {
@@ -242,7 +242,7 @@ function vms_square_ticket_mirror_handle_admin_action(): void
             $notice_message = (string) ($result['error_message'] ?? __('Square mirror retire failed.', 'backstage-venue-manager'));
         }
     } elseif ($mirror_action === 'clear_error') {
-        $result = vms_square_ticket_mirror_clear_error_state($product_id);
+        $result = bvmgr_square_ticket_mirror_clear_error_state($product_id);
         if (!empty($result['ok'])) {
             $notice_message = __('Square mirror error state cleared.', 'backstage-venue-manager');
         } else {
@@ -258,7 +258,7 @@ function vms_square_ticket_mirror_handle_admin_action(): void
         bvmgr_add_admin_notice($notice_message, $notice_type);
     }
 
-    wp_safe_redirect(vms_square_ticket_mirror_admin_redirect_url($product_id));
+    wp_safe_redirect(bvmgr_square_ticket_mirror_admin_redirect_url($product_id));
     exit;
 }
-add_action('admin_post_vms_square_ticket_mirror_action', 'vms_square_ticket_mirror_handle_admin_action');
+add_action('admin_post_vms_square_ticket_mirror_action', 'bvmgr_square_ticket_mirror_handle_admin_action');

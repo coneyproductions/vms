@@ -1,22 +1,22 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_ticket_integrity_payment_gateway_health_option_key(): string
+function bvmgr_ticket_integrity_payment_gateway_health_option_key(): string
 {
 	return 'vms_ticket_integrity_payment_gateway_health';
 }
 
-function vms_ticket_integrity_payment_gateway_notice_option_key(): string
+function bvmgr_ticket_integrity_payment_gateway_notice_option_key(): string
 {
 	return 'vms_ticket_integrity_payment_gateway_notice';
 }
 
-function vms_ticket_integrity_payment_gateway_health_hook(): string
+function bvmgr_ticket_integrity_payment_gateway_health_hook(): string
 {
 	return 'vms_ticket_integrity_payment_gateway_health';
 }
 
-function vms_ticket_integrity_payment_gateway_health_defaults(): array
+function bvmgr_ticket_integrity_payment_gateway_health_defaults(): array
 {
 	return array(
 		'version' => 1,
@@ -43,7 +43,7 @@ function vms_ticket_integrity_payment_gateway_health_defaults(): array
 	);
 }
 
-function vms_ticket_integrity_payment_gateway_status_label(string $status): string
+function bvmgr_ticket_integrity_payment_gateway_status_label(string $status): string
 {
 	$status = sanitize_key($status);
 	switch ($status) {
@@ -58,7 +58,7 @@ function vms_ticket_integrity_payment_gateway_status_label(string $status): stri
 	}
 }
 
-function vms_ticket_integrity_payment_gateway_status_css(string $status): string
+function bvmgr_ticket_integrity_payment_gateway_status_css(string $status): string
 {
 	$status = sanitize_key($status);
 	switch ($status) {
@@ -73,7 +73,7 @@ function vms_ticket_integrity_payment_gateway_status_css(string $status): string
 	}
 }
 
-function vms_ticket_integrity_payment_gateway_status_rank(string $status): int
+function bvmgr_ticket_integrity_payment_gateway_status_rank(string $status): int
 {
 	$status = sanitize_key($status);
 	switch ($status) {
@@ -88,7 +88,7 @@ function vms_ticket_integrity_payment_gateway_status_rank(string $status): int
 	}
 }
 
-function vms_ticket_integrity_payment_gateway_check(string $key, string $label, string $status, string $message): array
+function bvmgr_ticket_integrity_payment_gateway_check(string $key, string $label, string $status, string $message): array
 {
 	$status = sanitize_key($status);
 	if (!in_array($status, array('ok', 'warning', 'critical'), true)) {
@@ -103,13 +103,13 @@ function vms_ticket_integrity_payment_gateway_check(string $key, string $label, 
 		'key' => $key,
 		'label' => $label,
 		'status' => $status,
-		'status_label' => vms_ticket_integrity_payment_gateway_status_label($status),
-		'status_css' => vms_ticket_integrity_payment_gateway_status_css($status),
+		'status_label' => bvmgr_ticket_integrity_payment_gateway_status_label($status),
+		'status_css' => bvmgr_ticket_integrity_payment_gateway_status_css($status),
 		'message' => $message,
 	);
 }
 
-function vms_ticket_integrity_payment_gateway_descriptor($gateway): array
+function bvmgr_ticket_integrity_payment_gateway_descriptor($gateway): array
 {
 	$id = '';
 	if (is_object($gateway) && isset($gateway->id)) {
@@ -155,7 +155,7 @@ function vms_ticket_integrity_payment_gateway_descriptor($gateway): array
 	);
 }
 
-function vms_ticket_integrity_payment_gateway_ids(array $descriptors): array
+function bvmgr_ticket_integrity_payment_gateway_ids(array $descriptors): array
 {
 	$ids = array();
 	foreach ($descriptors as $descriptor) {
@@ -172,7 +172,7 @@ function vms_ticket_integrity_payment_gateway_ids(array $descriptors): array
 	return array_values(array_unique($ids));
 }
 
-function vms_ticket_integrity_payment_gateway_titles(array $descriptors): array
+function bvmgr_ticket_integrity_payment_gateway_titles(array $descriptors): array
 {
 	$titles = array();
 	foreach ($descriptors as $descriptor) {
@@ -189,7 +189,7 @@ function vms_ticket_integrity_payment_gateway_titles(array $descriptors): array
 	return array_values(array_unique($titles));
 }
 
-function vms_ticket_integrity_payment_gateway_objects(): array
+function bvmgr_ticket_integrity_payment_gateway_objects(): array
 {
 	if (!function_exists('WC') || !class_exists('WooCommerce')) {
 		return array();
@@ -219,7 +219,7 @@ function vms_ticket_integrity_payment_gateway_objects(): array
 
 		return array_filter($gateways, 'is_object');
 	} catch (Throwable $error) {
-		vms_ticket_integrity_log_event(
+		bvmgr_ticket_integrity_log_event(
 			'payment_gateway_health_error',
 			__('Payment gateway health could not load WooCommerce gateways.', 'backstage-venue-manager'),
 			array(
@@ -230,11 +230,11 @@ function vms_ticket_integrity_payment_gateway_objects(): array
 	}
 }
 
-function vms_ticket_integrity_checkout_gateway_snapshot(array $gateways): array
+function bvmgr_ticket_integrity_checkout_gateway_snapshot(array $gateways): array
 {
 	$enabled_gateways = array();
 	foreach ($gateways as $gateway) {
-		$descriptor = vms_ticket_integrity_payment_gateway_descriptor($gateway);
+		$descriptor = bvmgr_ticket_integrity_payment_gateway_descriptor($gateway);
 		if (!empty($descriptor['enabled'])) {
 			$enabled_gateways[$descriptor['id']] = $descriptor;
 		}
@@ -259,7 +259,7 @@ function vms_ticket_integrity_checkout_gateway_snapshot(array $gateways): array
 						if (!is_object($gateway)) {
 							continue;
 						}
-						$descriptor = vms_ticket_integrity_payment_gateway_descriptor($gateway);
+						$descriptor = bvmgr_ticket_integrity_payment_gateway_descriptor($gateway);
 						$available_gateways[$descriptor['id']] = $descriptor;
 					}
 				}
@@ -281,16 +281,16 @@ function vms_ticket_integrity_checkout_gateway_snapshot(array $gateways): array
 		'errors' => $errors,
 		'direct_list_obtained' => $checkout_list_obtained,
 		'enabled_gateways' => array_values($enabled_gateways),
-		'enabled_gateway_ids' => vms_ticket_integrity_payment_gateway_ids(array_values($enabled_gateways)),
-		'enabled_gateway_titles' => vms_ticket_integrity_payment_gateway_titles(array_values($enabled_gateways)),
+		'enabled_gateway_ids' => bvmgr_ticket_integrity_payment_gateway_ids(array_values($enabled_gateways)),
+		'enabled_gateway_titles' => bvmgr_ticket_integrity_payment_gateway_titles(array_values($enabled_gateways)),
 		'available_gateways' => array_values($available_gateways),
-		'available_gateway_ids' => vms_ticket_integrity_payment_gateway_ids(array_values($available_gateways)),
-		'available_gateway_titles' => vms_ticket_integrity_payment_gateway_titles(array_values($available_gateways)),
+		'available_gateway_ids' => bvmgr_ticket_integrity_payment_gateway_ids(array_values($available_gateways)),
+		'available_gateway_titles' => bvmgr_ticket_integrity_payment_gateway_titles(array_values($available_gateways)),
 		'available_count' => count($available_gateways),
 	);
 }
 
-function vms_ticket_integrity_plugin_active(string $plugin_file): bool
+function bvmgr_ticket_integrity_plugin_active(string $plugin_file): bool
 {
 	$plugin_file = trim($plugin_file);
 	if ($plugin_file === '') {
@@ -306,21 +306,21 @@ function vms_ticket_integrity_plugin_active(string $plugin_file): bool
 	return is_array($sitewide) && isset($sitewide[$plugin_file]);
 }
 
-function vms_ticket_integrity_square_gateway_ids(): array
+function bvmgr_ticket_integrity_square_gateway_ids(): array
 {
 	return array('square_credit_card', 'square');
 }
 
-function vms_ticket_integrity_square_related_gateway_ids(): array
+function bvmgr_ticket_integrity_square_related_gateway_ids(): array
 {
 	return array('square_credit_card', 'square', 'square_cash_app_pay', 'gift_cards_pay');
 }
 
-function vms_ticket_integrity_square_gateway_object(array $gateways)
+function bvmgr_ticket_integrity_square_gateway_object(array $gateways)
 {
 	foreach ($gateways as $gateway) {
-		$descriptor = vms_ticket_integrity_payment_gateway_descriptor($gateway);
-		if (in_array($descriptor['id'], vms_ticket_integrity_square_gateway_ids(), true)) {
+		$descriptor = bvmgr_ticket_integrity_payment_gateway_descriptor($gateway);
+		if (in_array($descriptor['id'], bvmgr_ticket_integrity_square_gateway_ids(), true)) {
 			return $gateway;
 		}
 	}
@@ -328,7 +328,7 @@ function vms_ticket_integrity_square_gateway_object(array $gateways)
 	return null;
 }
 
-function vms_ticket_integrity_square_gateway_settings(): array
+function bvmgr_ticket_integrity_square_gateway_settings(): array
 {
 	$legacy = get_option('woocommerce_square_settings', array());
 	$current = get_option('woocommerce_square_credit_card_settings', array());
@@ -343,13 +343,13 @@ function vms_ticket_integrity_square_gateway_settings(): array
 	return array_merge($legacy, $current);
 }
 
-function vms_ticket_integrity_square_core_settings(): array
+function bvmgr_ticket_integrity_square_core_settings(): array
 {
 	$settings = get_option('wc_square_settings', array());
 	return is_array($settings) ? $settings : array();
 }
 
-function vms_ticket_integrity_payment_gateway_site_environment(): array
+function bvmgr_ticket_integrity_payment_gateway_site_environment(): array
 {
 	$environment = function_exists('wp_get_environment_type') ? sanitize_key((string) wp_get_environment_type()) : 'production';
 	if ($environment === '') {
@@ -394,14 +394,14 @@ function vms_ticket_integrity_payment_gateway_site_environment(): array
 	);
 }
 
-function vms_ticket_integrity_square_gateway_snapshot(array $gateways, array $checkout, array $site_environment): array
+function bvmgr_ticket_integrity_square_gateway_snapshot(array $gateways, array $checkout, array $site_environment): array
 {
-	$plugin_active = function_exists('wc_square') || defined('WC_SQUARE_PLUGIN_VERSION') || vms_ticket_integrity_plugin_active('woocommerce-square/woocommerce-square.php');
+	$plugin_active = function_exists('wc_square') || defined('WC_SQUARE_PLUGIN_VERSION') || bvmgr_ticket_integrity_plugin_active('woocommerce-square/woocommerce-square.php');
 	$plugin_version = defined('WC_SQUARE_PLUGIN_VERSION') ? (string) WC_SQUARE_PLUGIN_VERSION : '';
-	$gateway = vms_ticket_integrity_square_gateway_object($gateways);
-	$gateway_descriptor = $gateway ? vms_ticket_integrity_payment_gateway_descriptor($gateway) : array();
-	$gateway_settings = vms_ticket_integrity_square_gateway_settings();
-	$core_settings = vms_ticket_integrity_square_core_settings();
+	$gateway = bvmgr_ticket_integrity_square_gateway_object($gateways);
+	$gateway_descriptor = $gateway ? bvmgr_ticket_integrity_payment_gateway_descriptor($gateway) : array();
+	$gateway_settings = bvmgr_ticket_integrity_square_gateway_settings();
+	$core_settings = bvmgr_ticket_integrity_square_core_settings();
 
 	$gateway_enabled = !empty($gateway_descriptor)
 		? !empty($gateway_descriptor['enabled'])
@@ -445,7 +445,7 @@ function vms_ticket_integrity_square_gateway_snapshot(array $gateways, array $ch
 				}
 			}
 		} catch (Throwable $error) {
-			vms_ticket_integrity_log_event(
+			bvmgr_ticket_integrity_log_event(
 				'payment_gateway_health_error',
 				__('Payment gateway health could not inspect the Square settings handler.', 'backstage-venue-manager'),
 				array(
@@ -479,13 +479,13 @@ function vms_ticket_integrity_square_gateway_snapshot(array $gateways, array $ch
 	}
 
 	$gateway_ids = array_merge(
-		vms_ticket_integrity_square_gateway_ids(),
-		array_values(array_intersect(vms_ticket_integrity_square_related_gateway_ids(), (array) ($checkout['enabled_gateway_ids'] ?? array())))
+		bvmgr_ticket_integrity_square_gateway_ids(),
+		array_values(array_intersect(bvmgr_ticket_integrity_square_related_gateway_ids(), (array) ($checkout['enabled_gateway_ids'] ?? array())))
 	);
 	$available_gateway_ids = array_map('sanitize_key', (array) ($checkout['available_gateway_ids'] ?? array()));
 	$enabled_gateway_ids = array_map('sanitize_key', (array) ($checkout['enabled_gateway_ids'] ?? array()));
-	$non_square_enabled = array_diff($enabled_gateway_ids, vms_ticket_integrity_square_related_gateway_ids());
-	$non_square_available = array_diff($available_gateway_ids, vms_ticket_integrity_square_related_gateway_ids());
+	$non_square_enabled = array_diff($enabled_gateway_ids, bvmgr_ticket_integrity_square_related_gateway_ids());
+	$non_square_available = array_diff($available_gateway_ids, bvmgr_ticket_integrity_square_related_gateway_ids());
 
 	$expected = (
 		$gateway_enabled
@@ -535,7 +535,7 @@ function vms_ticket_integrity_square_gateway_snapshot(array $gateways, array $ch
 	);
 }
 
-function vms_ticket_integrity_square_apple_pay_snapshot(array $square): array
+function bvmgr_ticket_integrity_square_apple_pay_snapshot(array $square): array
 {
 	$attempted = ('yes' === (string) ($square['apple_pay_domain_registration_attempted'] ?? 'no'));
 	$registered = ('yes' === (string) ($square['apple_pay_domain_registered'] ?? 'no'));
@@ -551,7 +551,7 @@ function vms_ticket_integrity_square_apple_pay_snapshot(array $square): array
 	);
 }
 
-function vms_ticket_integrity_payment_gateway_non_ok_checks(array $checks): array
+function bvmgr_ticket_integrity_payment_gateway_non_ok_checks(array $checks): array
 {
 	$out = array();
 	foreach ($checks as $check) {
@@ -568,10 +568,10 @@ function vms_ticket_integrity_payment_gateway_non_ok_checks(array $checks): arra
 	return $out;
 }
 
-function vms_ticket_integrity_payment_gateway_summarize_failures(array $checks): string
+function bvmgr_ticket_integrity_payment_gateway_summarize_failures(array $checks): string
 {
 	$messages = array();
-	foreach (vms_ticket_integrity_payment_gateway_non_ok_checks($checks) as $check) {
+	foreach (bvmgr_ticket_integrity_payment_gateway_non_ok_checks($checks) as $check) {
 		$message = trim((string) ($check['message'] ?? ''));
 		if ($message === '') {
 			continue;
@@ -589,7 +589,7 @@ function vms_ticket_integrity_payment_gateway_summarize_failures(array $checks):
 	return implode(' ', $messages);
 }
 
-function vms_ticket_integrity_payment_gateway_notice_defaults(): array
+function bvmgr_ticket_integrity_payment_gateway_notice_defaults(): array
 {
 	return array(
 		'active' => false,
@@ -602,26 +602,26 @@ function vms_ticket_integrity_payment_gateway_notice_defaults(): array
 	);
 }
 
-function vms_ticket_integrity_get_payment_gateway_notice(): array
+function bvmgr_ticket_integrity_get_payment_gateway_notice(): array
 {
-	$notice = get_option(vms_ticket_integrity_payment_gateway_notice_option_key(), array());
+	$notice = get_option(bvmgr_ticket_integrity_payment_gateway_notice_option_key(), array());
 	if (!is_array($notice)) {
 		$notice = array();
 	}
 
-	return array_merge(vms_ticket_integrity_payment_gateway_notice_defaults(), $notice);
+	return array_merge(bvmgr_ticket_integrity_payment_gateway_notice_defaults(), $notice);
 }
 
-function vms_ticket_integrity_update_payment_gateway_notice(array $notice): void
+function bvmgr_ticket_integrity_update_payment_gateway_notice(array $notice): void
 {
-	$payload = array_merge(vms_ticket_integrity_payment_gateway_notice_defaults(), $notice);
-	update_option(vms_ticket_integrity_payment_gateway_notice_option_key(), $payload, false);
+	$payload = array_merge(bvmgr_ticket_integrity_payment_gateway_notice_defaults(), $notice);
+	update_option(bvmgr_ticket_integrity_payment_gateway_notice_option_key(), $payload, false);
 }
 
-function vms_ticket_integrity_store_payment_gateway_health(array $health): array
+function bvmgr_ticket_integrity_store_payment_gateway_health(array $health): array
 {
-	$defaults = vms_ticket_integrity_payment_gateway_health_defaults();
-	$previous = get_option(vms_ticket_integrity_payment_gateway_health_option_key(), array());
+	$defaults = bvmgr_ticket_integrity_payment_gateway_health_defaults();
+	$previous = get_option(bvmgr_ticket_integrity_payment_gateway_health_option_key(), array());
 	if (!is_array($previous)) {
 		$previous = array();
 	}
@@ -634,7 +634,7 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 
 	$current_status = sanitize_key((string) ($health['status'] ?? 'unknown'));
 	$previous_status = sanitize_key((string) ($previous['status'] ?? 'unknown'));
-	$non_ok_checks = vms_ticket_integrity_payment_gateway_non_ok_checks((array) ($health['checks'] ?? array()));
+	$non_ok_checks = bvmgr_ticket_integrity_payment_gateway_non_ok_checks((array) ($health['checks'] ?? array()));
 	$is_problem = in_array($current_status, array('warning', 'critical'), true);
 
 	$incident = array('active' => false);
@@ -651,9 +651,9 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 			'active' => true,
 			'status' => $current_status,
 			'first_detected_failure_gmt' => $first_detected,
-			'first_detected_failure_local' => vms_ticket_integrity_format_datetime($first_detected),
+			'first_detected_failure_local' => bvmgr_ticket_integrity_format_datetime($first_detected),
 			'last_seen_gmt' => $now,
-			'last_seen_local' => vms_ticket_integrity_format_datetime($now),
+			'last_seen_local' => bvmgr_ticket_integrity_format_datetime($now),
 			'failed_checks' => $non_ok_checks,
 			'diagnostic_message' => sanitize_text_field((string) ($health['diagnostic_message'] ?? '')),
 			'summary' => sanitize_text_field((string) ($health['summary'] ?? '')),
@@ -662,7 +662,7 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 		$resolved = $previous_incident;
 		$resolved['active'] = false;
 		$resolved['resolved_at_gmt'] = $now;
-		$resolved['resolved_at_local'] = vms_ticket_integrity_format_datetime($now);
+		$resolved['resolved_at_local'] = bvmgr_ticket_integrity_format_datetime($now);
 		$last_incident = $resolved;
 	}
 
@@ -672,25 +672,25 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 	$health['warnings'] = array_values(array_filter($non_ok_checks, static function (array $check): bool {
 		return (($check['status'] ?? '') === 'warning');
 	}));
-	$health['status_label'] = vms_ticket_integrity_payment_gateway_status_label($current_status);
-	$health['last_checked_local'] = vms_ticket_integrity_format_datetime($now);
+	$health['status_label'] = bvmgr_ticket_integrity_payment_gateway_status_label($current_status);
+	$health['last_checked_local'] = bvmgr_ticket_integrity_format_datetime($now);
 
 	$status_changed = ($current_status !== $previous_status);
 	$status_changed_gmt = $status_changed ? $now : absint($previous['status_changed_gmt'] ?? $now);
 	$health['status_changed_gmt'] = $status_changed_gmt;
-	$health['status_changed_local'] = vms_ticket_integrity_format_datetime($status_changed_gmt);
+	$health['status_changed_local'] = bvmgr_ticket_integrity_format_datetime($status_changed_gmt);
 
-	update_option(vms_ticket_integrity_payment_gateway_health_option_key(), $health, false);
+	update_option(bvmgr_ticket_integrity_payment_gateway_health_option_key(), $health, false);
 
-	$store = function_exists('vms_ticket_integrity_get_results_store') ? vms_ticket_integrity_get_results_store() : array();
+	$store = function_exists('bvmgr_ticket_integrity_get_results_store') ? bvmgr_ticket_integrity_get_results_store() : array();
 	if (!is_array($store)) {
 		$store = array();
 	}
 	$store['payment_gateway_health'] = $health;
-	update_option(vms_ticket_integrity_results_option_key(), $store, false);
+	update_option(bvmgr_ticket_integrity_results_option_key(), $store, false);
 
 	if ($current_status === 'critical') {
-		vms_ticket_integrity_update_payment_gateway_notice(
+		bvmgr_ticket_integrity_update_payment_gateway_notice(
 			array(
 				'active' => true,
 				'status' => 'critical',
@@ -702,7 +702,7 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 			)
 		);
 	} else {
-		vms_ticket_integrity_update_payment_gateway_notice(
+		bvmgr_ticket_integrity_update_payment_gateway_notice(
 			array(
 				'active' => false,
 				'status' => $current_status,
@@ -716,8 +716,8 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 	}
 
 	if ($current_status === 'critical' && $previous_status !== 'critical') {
-		if (function_exists('vms_ticket_integrity_log_event')) {
-			vms_ticket_integrity_log_event(
+		if (function_exists('bvmgr_ticket_integrity_log_event')) {
+			bvmgr_ticket_integrity_log_event(
 				'payment_gateway_health_critical',
 				__('Payment gateway health entered a critical state.', 'backstage-venue-manager'),
 				array(
@@ -726,9 +726,9 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 				)
 			);
 		}
-		vms_ticket_integrity_maybe_send_payment_gateway_alert_email($health);
-	} elseif ($current_status === 'ok' && $previous_status === 'critical' && function_exists('vms_ticket_integrity_log_event')) {
-		vms_ticket_integrity_log_event(
+		bvmgr_ticket_integrity_maybe_send_payment_gateway_alert_email($health);
+	} elseif ($current_status === 'ok' && $previous_status === 'critical' && function_exists('bvmgr_ticket_integrity_log_event')) {
+		bvmgr_ticket_integrity_log_event(
 			'payment_gateway_health_recovered',
 			__('Payment gateway health recovered to OK.', 'backstage-venue-manager'),
 			array(
@@ -740,19 +740,19 @@ function vms_ticket_integrity_store_payment_gateway_health(array $health): array
 	return $health;
 }
 
-function vms_ticket_integrity_get_payment_gateway_health(): array
+function bvmgr_ticket_integrity_get_payment_gateway_health(): array
 {
-	$health = get_option(vms_ticket_integrity_payment_gateway_health_option_key(), array());
+	$health = get_option(bvmgr_ticket_integrity_payment_gateway_health_option_key(), array());
 	if (!is_array($health)) {
 		$health = array();
 	}
 
-	return array_merge(vms_ticket_integrity_payment_gateway_health_defaults(), $health);
+	return array_merge(bvmgr_ticket_integrity_payment_gateway_health_defaults(), $health);
 }
 
-function vms_ticket_integrity_payment_gateway_alert_recipient(): string
+function bvmgr_ticket_integrity_payment_gateway_alert_recipient(): string
 {
-	$settings = function_exists('vms_ticket_integrity_get_settings') ? vms_ticket_integrity_get_settings() : array();
+	$settings = function_exists('bvmgr_ticket_integrity_get_settings') ? bvmgr_ticket_integrity_get_settings() : array();
 	if (empty($settings['email_alerts_enabled'])) {
 		return '';
 	}
@@ -765,9 +765,9 @@ function vms_ticket_integrity_payment_gateway_alert_recipient(): string
 	return $recipient;
 }
 
-function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $health): void
+function bvmgr_ticket_integrity_maybe_send_payment_gateway_alert_email(array $health): void
 {
-	$recipient = vms_ticket_integrity_payment_gateway_alert_recipient();
+	$recipient = bvmgr_ticket_integrity_payment_gateway_alert_recipient();
 	if ($recipient === '') {
 		return;
 	}
@@ -779,9 +779,9 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 	$lines[] = __('Payment Gateway Health', 'backstage-venue-manager');
 	$lines[] = str_repeat('=', 22);
 	/* translators: %s: detected. */
-	$lines[] = sprintf(__('Detected: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime(absint($health['last_checked_gmt'] ?? time())));
+	$lines[] = sprintf(__('Detected: %s', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime(absint($health['last_checked_gmt'] ?? time())));
 	/* translators: %s: status. */
-	$lines[] = sprintf(__('Status: %s', 'backstage-venue-manager'), vms_ticket_integrity_payment_gateway_status_label((string) ($health['status'] ?? 'critical')));
+	$lines[] = sprintf(__('Status: %s', 'backstage-venue-manager'), bvmgr_ticket_integrity_payment_gateway_status_label((string) ($health['status'] ?? 'critical')));
 	$lines[] = '';
 	$lines[] = sanitize_text_field((string) ($health['summary'] ?? __('Payment gateway health is critical.', 'backstage-venue-manager')));
 	$diagnostic = trim((string) ($health['diagnostic_message'] ?? ''));
@@ -796,13 +796,13 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 		}
 		$lines[] = sprintf(
 			'- [%1$s] %2$s',
-			vms_ticket_integrity_payment_gateway_status_label((string) ($check['status'] ?? 'critical')),
+			bvmgr_ticket_integrity_payment_gateway_status_label((string) ($check['status'] ?? 'critical')),
 			(string) ($check['message'] ?? '')
 		);
 	}
 	$lines[] = '';
 	/* translators: %s: review the full monitor. */
-	$lines[] = sprintf(__('Review the full monitor: %s', 'backstage-venue-manager'), vms_ticket_integrity_admin_url());
+	$lines[] = sprintf(__('Review the full monitor: %s', 'backstage-venue-manager'), bvmgr_ticket_integrity_admin_url());
 
 	$body_text = implode("\n", $lines);
 	$result = function_exists('vms_notify_provider_core_email_send')
@@ -841,8 +841,8 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 		);
 	}
 
-	if (function_exists('vms_ticket_integrity_log_event')) {
-		vms_ticket_integrity_log_event(
+	if (function_exists('bvmgr_ticket_integrity_log_event')) {
+		bvmgr_ticket_integrity_log_event(
 			!empty($result['success']) ? 'payment_gateway_health_email_sent' : 'payment_gateway_health_email_failed',
 			!empty($result['success']) ? __('Payment gateway health critical email sent.', 'backstage-venue-manager') : __('Payment gateway health critical email failed to send.', 'backstage-venue-manager'),
 			array(
@@ -853,28 +853,28 @@ function vms_ticket_integrity_maybe_send_payment_gateway_alert_email(array $heal
 	}
 }
 
-function vms_ticket_integrity_run_payment_gateway_health_check(array $args = array()): array
+function bvmgr_ticket_integrity_run_payment_gateway_health_check(array $args = array()): array
 {
 	$trigger = sanitize_key((string) ($args['trigger'] ?? 'manual'));
 	$persist = !isset($args['persist']) || (bool) $args['persist'];
 	$now = time();
-	$site_environment = vms_ticket_integrity_payment_gateway_site_environment();
-	$gateways = vms_ticket_integrity_payment_gateway_objects();
-	$checkout = vms_ticket_integrity_checkout_gateway_snapshot($gateways);
-	$square = vms_ticket_integrity_square_gateway_snapshot($gateways, $checkout, $site_environment);
-	$apple_pay = vms_ticket_integrity_square_apple_pay_snapshot($square);
+	$site_environment = bvmgr_ticket_integrity_payment_gateway_site_environment();
+	$gateways = bvmgr_ticket_integrity_payment_gateway_objects();
+	$checkout = bvmgr_ticket_integrity_checkout_gateway_snapshot($gateways);
+	$square = bvmgr_ticket_integrity_square_gateway_snapshot($gateways, $checkout, $site_environment);
+	$apple_pay = bvmgr_ticket_integrity_square_apple_pay_snapshot($square);
 
 	$checks = array();
 
 	if (empty($checkout['available_count'])) {
-		$checks[] = vms_ticket_integrity_payment_gateway_check(
+		$checks[] = bvmgr_ticket_integrity_payment_gateway_check(
 			'woocommerce_payment_methods',
 			__('WooCommerce payment methods available', 'backstage-venue-manager'),
 			'critical',
 			__('No payment methods are currently available at checkout.', 'backstage-venue-manager')
 		);
 	} else {
-		$checks[] = vms_ticket_integrity_payment_gateway_check(
+		$checks[] = bvmgr_ticket_integrity_payment_gateway_check(
 			'woocommerce_payment_methods',
 			__('WooCommerce payment methods available', 'backstage-venue-manager'),
 			'ok',
@@ -905,7 +905,7 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	} elseif (empty($square['plugin_active'])) {
 		$square_gateway_message = __('WooCommerce Square is not active on this site.', 'backstage-venue-manager');
 	}
-	$checks[] = vms_ticket_integrity_payment_gateway_check(
+	$checks[] = bvmgr_ticket_integrity_payment_gateway_check(
 		'square_gateway_status',
 		__('Square gateway status', 'backstage-venue-manager'),
 		$square_gateway_status,
@@ -926,7 +926,7 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	} elseif (($square['environment'] ?? '') === 'sandbox') {
 		$square_connection_message = __('Square is connected and using Sandbox on a non-production environment.', 'backstage-venue-manager');
 	}
-	$checks[] = vms_ticket_integrity_payment_gateway_check(
+	$checks[] = bvmgr_ticket_integrity_payment_gateway_check(
 		'square_connection_health',
 		__('Square connection health', 'backstage-venue-manager'),
 		$square_connection_status,
@@ -944,7 +944,7 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	} elseif (!empty($apple_pay['enabled']) && empty($apple_pay['domain_registered']) && empty($apple_pay['registration_attempted'])) {
 		$apple_pay_message = __('Apple Pay is enabled, but the domain registration has not been attempted yet.', 'backstage-venue-manager');
 	}
-	$checks[] = vms_ticket_integrity_payment_gateway_check(
+	$checks[] = bvmgr_ticket_integrity_payment_gateway_check(
 		'apple_pay_registration',
 		__('Apple Pay registration', 'backstage-venue-manager'),
 		$apple_pay_status,
@@ -954,7 +954,7 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	$overall_status = 'ok';
 	foreach ($checks as $check) {
 		$status = sanitize_key((string) ($check['status'] ?? 'unknown'));
-		if (vms_ticket_integrity_payment_gateway_status_rank($status) > vms_ticket_integrity_payment_gateway_status_rank($overall_status)) {
+		if (bvmgr_ticket_integrity_payment_gateway_status_rank($status) > bvmgr_ticket_integrity_payment_gateway_status_rank($overall_status)) {
 			$overall_status = $status;
 		}
 	}
@@ -962,13 +962,13 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	$summary = '';
 	$diagnostic_message = '';
 	if ($overall_status === 'critical') {
-		$summary = vms_ticket_integrity_payment_gateway_summarize_failures($checks);
+		$summary = bvmgr_ticket_integrity_payment_gateway_summarize_failures($checks);
 		if ($summary === '') {
 			$summary = __('Payment gateway health is in a critical state.', 'backstage-venue-manager');
 		}
 		$diagnostic_message = __('Investigate the Square connection, enabled payment gateways, and checkout payment method availability immediately.', 'backstage-venue-manager');
 	} elseif ($overall_status === 'warning') {
-		$summary = vms_ticket_integrity_payment_gateway_summarize_failures($checks);
+		$summary = bvmgr_ticket_integrity_payment_gateway_summarize_failures($checks);
 		if ($summary === '') {
 			$summary = __('Payment gateway health has warnings.', 'backstage-venue-manager');
 		}
@@ -985,11 +985,11 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 	$health = array(
 		'version' => 1,
 		'status' => $overall_status,
-		'status_label' => vms_ticket_integrity_payment_gateway_status_label($overall_status),
+		'status_label' => bvmgr_ticket_integrity_payment_gateway_status_label($overall_status),
 		'summary' => $summary,
 		'diagnostic_message' => $diagnostic_message,
 		'last_checked_gmt' => $now,
-		'last_checked_local' => vms_ticket_integrity_format_datetime($now),
+		'last_checked_local' => bvmgr_ticket_integrity_format_datetime($now),
 		'trigger' => $trigger,
 		'site_environment' => $site_environment,
 		'checkout' => $checkout,
@@ -998,18 +998,18 @@ function vms_ticket_integrity_run_payment_gateway_health_check(array $args = arr
 		'checks' => $checks,
 	);
 
-	return $persist ? vms_ticket_integrity_store_payment_gateway_health($health) : $health;
+	return $persist ? bvmgr_ticket_integrity_store_payment_gateway_health($health) : $health;
 }
 
-function vms_ticket_integrity_prepare_payment_gateway_health(string $trigger = 'report', int $stale_after = 0): array
+function bvmgr_ticket_integrity_prepare_payment_gateway_health(string $trigger = 'report', int $stale_after = 0): array
 {
-	$health = vms_ticket_integrity_get_payment_gateway_health();
+	$health = bvmgr_ticket_integrity_get_payment_gateway_health();
 	$last_checked = absint($health['last_checked_gmt'] ?? 0);
 	$stale_after = ($stale_after > 0) ? $stale_after : (30 * MINUTE_IN_SECONDS);
 	$is_stale = ($last_checked <= 0 || ($last_checked < (time() - $stale_after)));
 
 	if ($is_stale) {
-		$health = vms_ticket_integrity_run_payment_gateway_health_check(
+		$health = bvmgr_ticket_integrity_run_payment_gateway_health_check(
 			array(
 				'trigger' => sanitize_key($trigger),
 				'persist' => true,
@@ -1020,13 +1020,13 @@ function vms_ticket_integrity_prepare_payment_gateway_health(string $trigger = '
 	return $health;
 }
 
-function vms_ticket_integrity_payment_gateway_menu_alert_needed(): bool
+function bvmgr_ticket_integrity_payment_gateway_menu_alert_needed(): bool
 {
-	$health = vms_ticket_integrity_get_payment_gateway_health();
+	$health = bvmgr_ticket_integrity_get_payment_gateway_health();
 	return (($health['status'] ?? '') === 'critical');
 }
 
-function vms_ticket_integrity_render_payment_gateway_admin_notice(): void
+function bvmgr_ticket_integrity_render_payment_gateway_admin_notice(): void
 {
 	if (!current_user_can('manage_options')) {
 		return;
@@ -1036,7 +1036,7 @@ function vms_ticket_integrity_render_payment_gateway_admin_notice(): void
 		return;
 	}
 
-	$notice = vms_ticket_integrity_get_payment_gateway_notice();
+	$notice = bvmgr_ticket_integrity_get_payment_gateway_notice();
 	if (empty($notice['active']) || ($notice['status'] ?? '') !== 'critical') {
 		return;
 	}
@@ -1052,9 +1052,9 @@ function vms_ticket_integrity_render_payment_gateway_admin_notice(): void
 	echo '<p><strong>' . esc_html__('Payment Gateway Health:', 'backstage-venue-manager') . '</strong> ' . esc_html($message) . '</p>';
 	if ($first_detected > 0) {
 		/* translators: %s: first detected. */
-		echo '<p>' . esc_html(sprintf(__('First detected: %s', 'backstage-venue-manager'), vms_ticket_integrity_format_datetime($first_detected))) . '</p>';
+		echo '<p>' . esc_html(sprintf(__('First detected: %s', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime($first_detected))) . '</p>';
 	}
-	echo '<p><a class="button button-secondary" href="' . esc_url(vms_ticket_integrity_admin_url()) . '">' . esc_html__('Open Ticket Integrity', 'backstage-venue-manager') . '</a></p>';
+	echo '<p><a class="button button-secondary" href="' . esc_url(bvmgr_ticket_integrity_admin_url()) . '">' . esc_html__('Open Ticket Integrity', 'backstage-venue-manager') . '</a></p>';
 	echo '</div>';
 }
-add_action('admin_notices', 'vms_ticket_integrity_render_payment_gateway_admin_notice', 18);
+add_action('admin_notices', 'bvmgr_ticket_integrity_render_payment_gateway_admin_notice', 18);

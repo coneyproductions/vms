@@ -817,10 +817,10 @@ g13_same($user_query_count, count($GLOBALS['g13_user_query_calls']), 'Usable dir
 
 // Calendar ticket counts retain exact linkage and configured nightly-window queries.
 g13_reset_runtime();
-g13_same(array(), vms_calendar_ticket_counts_find_plan_ids_by_tec_event(0), 'Invalid TEC identity should fail closed.');
+g13_same(array(), bvmgr_calendar_ticket_counts_find_plan_ids_by_tec_event(0), 'Invalid TEC identity should fail closed.');
 g13_same(array(), $GLOBALS['g13_query_calls'], 'Invalid TEC identity must not query Event Plans.');
 $GLOBALS['g13_query_queue'][] = array(41, 41, 0, 42);
-g13_same(array(41, 42), vms_calendar_ticket_counts_find_plan_ids_by_tec_event(77), 'TEC-linked plan lookup should preserve normalized complete results.');
+g13_same(array(41, 42), bvmgr_calendar_ticket_counts_find_plan_ids_by_tec_event(77), 'TEC-linked plan lookup should preserve normalized complete results.');
 g13_same(
 	array(
 		'post_type' => 'vms_event_plan',
@@ -837,7 +837,7 @@ g13_same(array(41, 41, 0, 42), $GLOBALS['g13_query_calls'][0]['result'], 'TEC-li
 $today = wp_date('Y-m-d', time(), wp_timezone());
 $end = gmdate('Y-m-d', strtotime('+60 days', strtotime($today)));
 $GLOBALS['g13_query_queue'][] = array(51, 52);
-vms_calendar_ticket_counts_nightly_scan();
+bvmgr_calendar_ticket_counts_nightly_scan();
 g13_same(
 	array(
 		'post_type' => 'vms_event_plan',
@@ -995,10 +995,10 @@ g13_same(0, bvmgr_feedback_existing_recent_duplicate(44, 'other-fingerprint', 'o
 // Ticket-sales resolution retains a complete exact-pair lookup and request-local cache behavior.
 g13_reset_runtime();
 $attendee_cache = array();
-g13_same(array(), vms_ticket_sales_resolver_attendee_ids_for_order_item(0, 5, $attendee_cache), 'Invalid attendee identity should fail closed.');
+g13_same(array(), bvmgr_ticket_sales_resolver_attendee_ids_for_order_item(0, 5, $attendee_cache), 'Invalid attendee identity should fail closed.');
 g13_same(array(), $GLOBALS['g13_query_calls'], 'Invalid attendee identity must not query.');
 $GLOBALS['g13_query_queue'][] = array(5, 5, 0, 6);
-g13_same(array(5, 6), vms_ticket_sales_resolver_attendee_ids_for_order_item(70, 80, $attendee_cache), 'Attendee lookup should preserve normalized complete results.');
+g13_same(array(5, 6), bvmgr_ticket_sales_resolver_attendee_ids_for_order_item(70, 80, $attendee_cache), 'Attendee lookup should preserve normalized complete results.');
 g13_same(
 	array(
 		'post_type' => 'tribe_wooticket',
@@ -1019,9 +1019,9 @@ g13_same(
 );
 g13_same(array(5, 5, 0, 6), $GLOBALS['g13_query_calls'][0]['result'], 'Attendee query result must remain unchanged before normalization.');
 $attendee_call_count = count($GLOBALS['g13_query_calls']);
-g13_same(array(5, 6), vms_ticket_sales_resolver_attendee_ids_for_order_item(70, 80, $attendee_cache), 'Attendee request-local cache should preserve normalized results.');
+g13_same(array(5, 6), bvmgr_ticket_sales_resolver_attendee_ids_for_order_item(70, 80, $attendee_cache), 'Attendee request-local cache should preserve normalized results.');
 g13_same($attendee_call_count, count($GLOBALS['g13_query_calls']), 'Attendee request-local cache hit must not repeat get_posts().');
 $GLOBALS['g13_query_queue'][] = false;
-g13_same(array(), vms_ticket_sales_resolver_attendee_ids_for_order_item(71, 81, $attendee_cache), 'Non-array attendee query failure should fail closed.');
+g13_same(array(), bvmgr_ticket_sales_resolver_attendee_ids_for_order_item(71, 81, $attendee_cache), 'Non-array attendee query failure should fail closed.');
 
 fwrite(STDOUT, "G13 core-services meta-query remediation: PASS (Wave 4 rows 18 -> projected 0; meta_key -3, meta_query -13, meta_value -2)\n");

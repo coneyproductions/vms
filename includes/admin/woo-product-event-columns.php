@@ -48,19 +48,19 @@ function vms_ticketing_v2_render_product_event_columns(string $column, int $post
     }
 
     if ($column === 'vms_square_mirror') {
-        $is_relevant = vms_square_ticket_mirror_has_mirror_meta($product_id)
-            || vms_square_ticket_mirror_product_role($product_id) === 'ga_ticket'
-            || (function_exists('vms_square_firewall_is_protected_product') && vms_square_firewall_is_protected_product($product_id));
+        $is_relevant = bvmgr_square_ticket_mirror_has_mirror_meta($product_id)
+            || bvmgr_square_ticket_mirror_product_role($product_id) === 'ga_ticket'
+            || (function_exists('bvmgr_square_firewall_is_protected_product') && bvmgr_square_firewall_is_protected_product($product_id));
 
         if (!$is_relevant) {
             echo '—';
             return;
         }
 
-        $state = vms_square_ticket_mirror_status_context($product_id);
-        if (function_exists('vms_square_ticket_mirror_admin_status_badge')) {
+        $state = bvmgr_square_ticket_mirror_status_context($product_id);
+        if (function_exists('bvmgr_square_ticket_mirror_admin_status_badge')) {
             echo wp_kses(
-                vms_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')),
+                bvmgr_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')),
                 array(
                     'span' => array(
                         'style' => true,
@@ -68,7 +68,7 @@ function vms_ticketing_v2_render_product_event_columns(string $column, int $post
                 )
             );
         } else {
-            echo esc_html(vms_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored')));
+            echo esc_html(bvmgr_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored')));
         }
         return;
     }

@@ -579,13 +579,13 @@ g14_same(
 	'Venue weekday decision function must match across mirror/shadow.'
 );
 g14_same(
-	g14_extract_function($sources['mirror']['includes/admin/ticket-integrity-page.php'], 'vms_ticket_integrity_build_event_report_markdown'),
-	g14_extract_function($sources['shadow']['includes/admin/ticket-integrity-page.php'], 'vms_ticket_integrity_build_event_report_markdown'),
+	g14_extract_function($sources['mirror']['includes/admin/ticket-integrity-page.php'], 'bvmgr_ticket_integrity_build_event_report_markdown'),
+	g14_extract_function($sources['shadow']['includes/admin/ticket-integrity-page.php'], 'bvmgr_ticket_integrity_build_event_report_markdown'),
 	'Ticket report date-label function must match across mirror/shadow.'
 );
 g14_same(
-	g14_extract_function($sources['mirror']['includes/admin/ticket-integrity-page.php'], 'vms_ticket_integrity_handle_export_report'),
-	g14_extract_function($sources['shadow']['includes/admin/ticket-integrity-page.php'], 'vms_ticket_integrity_handle_export_report'),
+	g14_extract_function($sources['mirror']['includes/admin/ticket-integrity-page.php'], 'bvmgr_ticket_integrity_handle_export_report'),
+	g14_extract_function($sources['shadow']['includes/admin/ticket-integrity-page.php'], 'bvmgr_ticket_integrity_handle_export_report'),
 	'Ticket export filename function must match across mirror/shadow.'
 );
 
@@ -683,7 +683,7 @@ if (!is_string($cli_function)) {
 	throw new RuntimeException('Unable to transform CLI fallback method.');
 }
 eval($cli_function);
-g14_assert(!function_exists('vms_ticket_integrity_format_datetime'), 'CLI test must exercise the direct fallback, not the normal helper branch.');
+g14_assert(!function_exists('bvmgr_ticket_integrity_format_datetime'), 'CLI test must exercise the direct fallback, not the normal helper branch.');
 g14_same('Never', g14_cli_format_timestamp(0), 'CLI zero timestamp behavior changed.');
 $GLOBALS['g14_site_timezone'] = new DateTimeZone('UTC');
 g14_same('2026-03-08 05:30:00', g14_cli_format_timestamp($fixed_timestamp), 'CLI UTC fallback output changed.');
@@ -692,7 +692,7 @@ g14_same('2026-03-07 23:30:00', g14_cli_format_timestamp($fixed_timestamp), 'CLI
 g14_same(
 	wp_date('Y-m-d H:i:s', $fixed_timestamp, wp_timezone()),
 	g14_cli_format_timestamp($fixed_timestamp),
-	'CLI fallback must align with the normal vms_ticket_integrity_format_datetime() site-local timezone contract.'
+	'CLI fallback must align with the normal bvmgr_ticket_integrity_format_datetime() site-local timezone contract.'
 );
 $exercised_occurrences['CLI-label'] = true;
 
