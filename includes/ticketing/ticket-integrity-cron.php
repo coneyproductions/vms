@@ -179,7 +179,7 @@ function vms_ticket_integrity_payment_gateway_schedule(array $settings = array()
 
 function vms_ticket_integrity_maybe_schedule_cron(): void
 {
-	if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+	if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
 		return;
 	}
 	$settings = function_exists('vms_ticket_integrity_get_settings')
@@ -214,7 +214,7 @@ function vms_ticket_integrity_maybe_schedule_cron(): void
 	$payment_event = function_exists('wp_get_scheduled_event') ? wp_get_scheduled_event($payment_hook) : null;
 
 	if (!empty($settings['payment_gateway_health_enabled'])) {
-		if (!function_exists('vms_schedule_exists') || !vms_schedule_exists($payment_schedule)) {
+		if (!function_exists('bvmgr_schedule_exists') || !bvmgr_schedule_exists($payment_schedule)) {
 			return;
 		}
 
@@ -504,7 +504,7 @@ add_action('vms_ticket_integrity_spot_scan', 'vms_ticket_integrity_run_spot_scan
 
 function vms_ticket_integrity_plan_save_request_action(array $source): string
 {
-	return vms_request_read_key($source, 'vms_event_plan_action');
+	return bvmgr_request_read_key($source, 'vms_event_plan_action');
 }
 
 function vms_ticket_integrity_plan_save_should_queue(int $post_id, WP_Post $post, bool $update): bool

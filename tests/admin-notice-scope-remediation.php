@@ -342,14 +342,14 @@ $adminNoticesSource = file_get_contents(dirname(__DIR__) . '/includes/admin/admi
 $runtimeSource = file_get_contents(dirname(__DIR__) . '/includes/runtime-guards.php');
 $paymentSource = file_get_contents(dirname(__DIR__) . '/includes/ticketing/ticket-integrity-payment-gateway-health.php');
 
-$assert(is_string($contextSource) && strpos($contextSource, 'function vms_admin_ui_is_admin_notice_screen') !== false, 'Context helper should define the shared admin-notice screen predicate.');
-$assert(is_string($contextSource) && strpos($contextSource, 'return vms_admin_ui_is_vms_screen($screen);') !== false, 'Admin-notice screen predicate should delegate to the established VMS screen helper.');
+$assert(is_string($contextSource) && strpos($contextSource, 'function bvmgr_admin_ui_is_admin_notice_screen') !== false, 'Context helper should define the shared admin-notice screen predicate.');
+$assert(is_string($contextSource) && strpos($contextSource, 'return bvmgr_admin_ui_is_vms_screen($screen);') !== false, 'Admin-notice screen predicate should delegate to the established VMS screen helper.');
 $assert(is_string($adminNoticesSource) && strpos($adminNoticesSource, "add_action('admin_notices', function () {") !== false, 'First-run notice should remain hooked to admin_notices.');
-$assert(is_string($runtimeSource) && strpos($runtimeSource, "add_action('admin_notices', 'vms_render_admin_diagnostics');") !== false, 'Runtime diagnostics should remain hooked to admin_notices.');
+$assert(is_string($runtimeSource) && strpos($runtimeSource, "add_action('admin_notices', 'bvmgr_render_admin_diagnostics');") !== false, 'Runtime diagnostics should remain hooked to admin_notices.');
 $assert(is_string($paymentSource) && strpos($paymentSource, "add_action('admin_notices', 'vms_ticket_integrity_render_payment_gateway_admin_notice', 18);") !== false, 'Payment gateway notice should remain hooked to admin_notices at priority 18.');
-$assert(strpos((string) $adminNoticesSource, 'vms_admin_ui_is_admin_notice_screen') !== false, 'First-run notice should use the shared admin-notice screen predicate.');
-$assert(strpos((string) $runtimeSource, 'vms_admin_ui_is_admin_notice_screen') !== false, 'Runtime diagnostics should use the shared admin-notice screen predicate.');
-$assert(strpos((string) $paymentSource, 'vms_admin_ui_is_admin_notice_screen') !== false, 'Payment gateway notice should use the shared admin-notice screen predicate.');
+$assert(strpos((string) $adminNoticesSource, 'bvmgr_admin_ui_is_admin_notice_screen') !== false, 'First-run notice should use the shared admin-notice screen predicate.');
+$assert(strpos((string) $runtimeSource, 'bvmgr_admin_ui_is_admin_notice_screen') !== false, 'Runtime diagnostics should use the shared admin-notice screen predicate.');
+$assert(strpos((string) $paymentSource, 'bvmgr_admin_ui_is_admin_notice_screen') !== false, 'Payment gateway notice should use the shared admin-notice screen predicate.');
 $assert(strpos((string) $adminNoticesSource, 'vms_dismiss_first_run_notice') !== false, 'First-run dismissal action and nonce should remain present.');
 
 $adminNoticeCallbacks = $flattenActions('admin_notices');
@@ -357,39 +357,39 @@ $closureCallbacks = array_values(array_filter($adminNoticeCallbacks, static func
 	return $callback instanceof Closure;
 }));
 $assert(count($closureCallbacks) === 1, 'Exactly one anonymous first-run admin_notices callback should be registered.');
-$assert(in_array('vms_render_admin_diagnostics', $adminNoticeCallbacks, true), 'Runtime diagnostics callback should remain registered.');
+$assert(in_array('bvmgr_render_admin_diagnostics', $adminNoticeCallbacks, true), 'Runtime diagnostics callback should remain registered.');
 $assert(in_array('vms_ticket_integrity_render_payment_gateway_admin_notice', $adminNoticeCallbacks, true), 'Payment gateway notice callback should remain registered.');
 
 $firstRunCallback = $closureCallbacks[0];
-$runtimeCallback = 'vms_render_admin_diagnostics';
+$runtimeCallback = 'bvmgr_render_admin_diagnostics';
 $paymentCallback = 'vms_ticket_integrity_render_payment_gateway_admin_notice';
 
 $setScreen(array('page' => 'vms-dashboard'), null);
-$assert(vms_admin_ui_is_admin_notice_screen() === false, 'Admin-notice predicate should fail closed when screen context is unavailable.');
+$assert(bvmgr_admin_ui_is_admin_notice_screen() === false, 'Admin-notice predicate should fail closed when screen context is unavailable.');
 
 $setScreen(
 	array('page' => 'vms-dashboard'),
 	(object) array('id' => 'toplevel_page_vms-dashboard', 'post_type' => '')
 );
-$assert(vms_admin_ui_is_admin_notice_screen() === true, 'VMS dashboard should be an allowed admin-notice screen.');
+$assert(bvmgr_admin_ui_is_admin_notice_screen() === true, 'VMS dashboard should be an allowed admin-notice screen.');
 
 $setScreen(
 	array('post_type' => 'vms_event_plan'),
 	(object) array('id' => 'vms_event_plan', 'post_type' => 'vms_event_plan')
 );
-$assert(vms_admin_ui_is_admin_notice_screen() === true, 'Event Plan edit/new screens should be allowed admin-notice screens.');
+$assert(bvmgr_admin_ui_is_admin_notice_screen() === true, 'Event Plan edit/new screens should be allowed admin-notice screens.');
 
 $setScreen(
 	array('page' => 'vms-ticket-integrity'),
 	(object) array('id' => 'vms-dashboard_page_vms-ticket-integrity', 'post_type' => '')
 );
-$assert(vms_admin_ui_is_admin_notice_screen() === true, 'Ticket Integrity screen should be an allowed admin-notice screen.');
+$assert(bvmgr_admin_ui_is_admin_notice_screen() === true, 'Ticket Integrity screen should be an allowed admin-notice screen.');
 
 $setScreen(
 	array('page' => 'plugins.php'),
 	(object) array('id' => 'plugins', 'post_type' => '')
 );
-$assert(vms_admin_ui_is_admin_notice_screen() === false, 'Unrelated admin screens should not be allowed admin-notice screens.');
+$assert(bvmgr_admin_ui_is_admin_notice_screen() === false, 'Unrelated admin screens should not be allowed admin-notice screens.');
 
 $unrelatedScreens = array(
 	array(

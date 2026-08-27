@@ -39,8 +39,8 @@ if (!function_exists('vms_events_photo_calendar_url')) {
             $url = get_permalink($page);
         }
 
-        if ($url === '' && function_exists('vms_required_public_pages')) {
-            $required = (array) vms_required_public_pages();
+        if ($url === '' && function_exists('bvmgr_required_public_pages')) {
+            $required = (array) bvmgr_required_public_pages();
             $slug = isset($required['public_calendar']['slug']) ? (string) $required['public_calendar']['slug'] : 'events-calendar';
             $page = get_page_by_path($slug);
             if ($page instanceof WP_Post) {
@@ -100,8 +100,8 @@ if (!function_exists('vms_events_photo_title_for_event')) {
         $title = trim((string) ($event['title'] ?? ''));
         $plan_id = absint($event['event_plan_id'] ?? 0);
 
-        if ($plan_id > 0 && function_exists('vms_event_plan_get_public_event_payload')) {
-            $payload = (array) vms_event_plan_get_public_event_payload($plan_id);
+        if ($plan_id > 0 && function_exists('bvmgr_event_plan_get_public_event_payload')) {
+            $payload = (array) bvmgr_event_plan_get_public_event_payload($plan_id);
             $payload_title = trim((string) ($payload['title'] ?? ''));
             if ($payload_title !== '') {
                 $title = $payload_title;

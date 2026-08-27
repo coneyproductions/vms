@@ -148,7 +148,7 @@ try {
 	$assert(strpos($primaryVendorAssetSource, 'vms_tax_bypass_set') !== false, 'Primary-vendor asset should remain the owner of tax-bypass behavior.');
 
 	$assert(
-		preg_match("/wp_enqueue_script\\(\\s*'vms-event-plan-workflow',\\s*BVMGR_PLUGIN_URL \\. 'assets\\/js\\/vms-event-plan-workflow\\.js',\\s*array\\(\\),\\s*vms_admin_ui_asset_version\\(\\),\\s*true\\s*\\);/s", $adminUiAssetsSource) === 1,
+		preg_match("/wp_enqueue_script\\(\\s*'vms-event-plan-workflow',\\s*BVMGR_PLUGIN_URL \\. 'assets\\/js\\/vms-event-plan-workflow\\.js',\\s*array\\(\\),\\s*bvmgr_admin_ui_asset_version\\(\\),\\s*true\\s*\\);/s", $adminUiAssetsSource) === 1,
 		'Admin UI assets should register the workflow asset under the dedicated handle with no dependencies.'
 	);
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Workflow asset should remain restricted to post and post-new screens.');

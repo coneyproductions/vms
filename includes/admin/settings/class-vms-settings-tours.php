@@ -58,7 +58,7 @@ if (!class_exists('BVMGR_Settings_Tours')) {
 		{
 			echo '<p>Controls for Backstage Venue Manager guided tours and drift health surfacing.</p>';
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only guided-tour reset notice only affects admin feedback.
-				if (vms_request_read_scalar($_GET, 'vms_tours_reset') === '1') {
+				if (bvmgr_request_read_scalar($_GET, 'vms_tours_reset') === '1') {
 					echo '<p><strong>' . esc_html__('Tour progress reset for current user.', 'backstage-venue-manager') . '</strong></p>';
 				}
 		}

@@ -46,7 +46,7 @@ if (!function_exists('vms_ticketing_claims_account_benefits_url')) {
 if (!function_exists('vms_ticketing_claims_account_query_absint')) {
 	function vms_ticketing_claims_account_query_absint(string $key): int
 	{
-		return vms_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Customer benefits query state only controls read-only account panel expansion.
+		return bvmgr_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Customer benefits query state only controls read-only account panel expansion.
 	}
 }
 
@@ -68,11 +68,11 @@ if (!function_exists('vms_ticketing_claims_parse_existing_counts_payload')) {
 				return array();
 			}
 
-			$json = vms_json_decode_associative($raw, 8);
+			$json = bvmgr_json_decode_associative($raw, 8);
 			if (
 				empty($json['ok'])
 				|| !is_array($json['value'])
-				|| !vms_json_decoded_is_object($json['value'], (string) ($json['top_level_token'] ?? ''))
+				|| !bvmgr_json_decoded_is_object($json['value'], (string) ($json['top_level_token'] ?? ''))
 			) {
 				return array();
 			}
@@ -355,7 +355,7 @@ if (!function_exists('vms_ticketing_claims_enqueue_account_styles')) {
 			'vms-ticketing-front',
 			plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
 			$deps,
-			function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+			function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 		);
 	}
 }

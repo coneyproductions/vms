@@ -11,7 +11,7 @@ if (!function_exists('vms_calendar_ics_query_value')) {
 			return $val;
 		}
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$query_value = array_key_exists($key, $_GET) ? vms_request_read_scalar($_GET, $key) : null;
+		$query_value = array_key_exists($key, $_GET) ? bvmgr_request_read_scalar($_GET, $key) : null;
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ($query_value !== null) {
 			return $query_value;

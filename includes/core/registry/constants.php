@@ -112,8 +112,8 @@ if (!defined('BVMGR_VERSION')) {
 	// PATCH: premium modules now fail closed until they register with VMS core.
 }
  
-if (!function_exists('vms_asset_version')) {
-	function vms_asset_version(): string
+if (!function_exists('bvmgr_asset_version')) {
+	function bvmgr_asset_version(): string
 	{
 		return defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '';
 	}

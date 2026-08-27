@@ -415,12 +415,12 @@ function update_post_meta(int $post_id, string $key, $value): bool
 	return true;
 }
 
-function vms_normalize_int_array($value): array
+function bvmgr_normalize_int_array($value): array
 {
 	return array_values(array_unique(array_map('intval', is_array($value) ? $value : array())));
 }
 
-function vms_venue_is_in_season(int $venue_id, string $ymd): bool
+function bvmgr_venue_is_in_season(int $venue_id, string $ymd): bool
 {
 	unset($venue_id, $ymd);
 	return (bool) $GLOBALS['g14_venue_in_season'];
@@ -569,13 +569,13 @@ g14_same('1969-12-31', date('Y-m-d', 0), 'Non-UTC historical invalid/epoch drift
 g14_same('1970-01-01', $helper_start('not-a-date'), 'Invalid helper input must remain stable at the UTC epoch.');
 
 g14_same(
-	g14_extract_function($sources['mirror']['includes/helpers.php'], 'vms_get_venue_schedule_config'),
-	g14_extract_function($sources['shadow']['includes/helpers.php'], 'vms_get_venue_schedule_config'),
+	g14_extract_function($sources['mirror']['includes/helpers.php'], 'bvmgr_get_venue_schedule_config'),
+	g14_extract_function($sources['shadow']['includes/helpers.php'], 'bvmgr_get_venue_schedule_config'),
 	'Venue schedule normalization function must match across mirror/shadow.'
 );
 g14_same(
-	g14_extract_function($sources['mirror']['includes/helpers.php'], 'vms_venue_is_open_on_date'),
-	g14_extract_function($sources['shadow']['includes/helpers.php'], 'vms_venue_is_open_on_date'),
+	g14_extract_function($sources['mirror']['includes/helpers.php'], 'bvmgr_venue_is_open_on_date'),
+	g14_extract_function($sources['shadow']['includes/helpers.php'], 'bvmgr_venue_is_open_on_date'),
 	'Venue weekday decision function must match across mirror/shadow.'
 );
 g14_same(
@@ -589,8 +589,8 @@ g14_same(
 	'Ticket export filename function must match across mirror/shadow.'
 );
 
-eval(g14_extract_function($mirror['includes/helpers.php'], 'vms_get_venue_schedule_config'));
-eval(g14_extract_function($mirror['includes/helpers.php'], 'vms_venue_is_open_on_date'));
+eval(g14_extract_function($mirror['includes/helpers.php'], 'bvmgr_get_venue_schedule_config'));
+eval(g14_extract_function($mirror['includes/helpers.php'], 'bvmgr_venue_is_open_on_date'));
 
 $GLOBALS['g14_post_meta'][7] = array(
 	'_vms_venue_open_days' => array(0, 4),
@@ -613,12 +613,12 @@ $expected_schedule = array(
 );
 foreach (array('UTC', 'America/Chicago') as $runtime_timezone) {
 	date_default_timezone_set($runtime_timezone);
-	g14_same($expected_schedule, vms_get_venue_schedule_config(7), 'Extracted venue schedule behavior changed: ' . $runtime_timezone);
-	g14_same(true, vms_venue_is_open_on_date(7, '2026-03-08'), 'DST-start Sunday must remain open: ' . $runtime_timezone);
-	g14_same(true, vms_venue_is_open_on_date(7, '2026-11-01'), 'DST-end Sunday must remain open: ' . $runtime_timezone);
-	g14_same(true, vms_venue_is_open_on_date(7, '1970-01-01'), 'Epoch Thursday must retain its weekday: ' . $runtime_timezone);
-	g14_same(true, vms_venue_is_open_on_date(7, 'not-a-date'), 'Invalid date must retain the historical epoch-Thursday path: ' . $runtime_timezone);
-	g14_same(false, vms_venue_is_open_on_date(7, '2026-03-07'), 'Saturday closure decision changed: ' . $runtime_timezone);
+	g14_same($expected_schedule, bvmgr_get_venue_schedule_config(7), 'Extracted venue schedule behavior changed: ' . $runtime_timezone);
+	g14_same(true, bvmgr_venue_is_open_on_date(7, '2026-03-08'), 'DST-start Sunday must remain open: ' . $runtime_timezone);
+	g14_same(true, bvmgr_venue_is_open_on_date(7, '2026-11-01'), 'DST-end Sunday must remain open: ' . $runtime_timezone);
+	g14_same(true, bvmgr_venue_is_open_on_date(7, '1970-01-01'), 'Epoch Thursday must retain its weekday: ' . $runtime_timezone);
+	g14_same(true, bvmgr_venue_is_open_on_date(7, 'not-a-date'), 'Invalid date must retain the historical epoch-Thursday path: ' . $runtime_timezone);
+	g14_same(false, bvmgr_venue_is_open_on_date(7, '2026-03-07'), 'Saturday closure decision changed: ' . $runtime_timezone);
 }
 
 $season_function = g14_extract_function($mirror['includes/schedule/season-dates.php'], 'vms_sch_season_get_blackout_notes_map');

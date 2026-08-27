@@ -86,13 +86,13 @@ if (!function_exists('vms_staff_has_verified_editor_request')) {
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the core post nonce is required before verification on this save_post boundary.
-        $post_nonce = vms_request_read_text_field($_POST, '_wpnonce');
+        $post_nonce = bvmgr_request_read_text_field($_POST, '_wpnonce');
         if ($post_nonce !== '' && wp_verify_nonce($post_nonce, 'update-post_' . $post_id)) {
             return true;
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Inline and bulk edit saves use a separate core edit nonce.
-        $inline_nonce = vms_request_read_text_field($_POST, '_inline_edit');
+        $inline_nonce = bvmgr_request_read_text_field($_POST, '_inline_edit');
         if ($inline_nonce !== '' && (wp_verify_nonce($inline_nonce, 'inlineeditnonce') || wp_verify_nonce($inline_nonce, 'taxinlineeditnonce'))) {
             return true;
         }
@@ -155,8 +155,8 @@ if (!function_exists('vms_staff_cpt_admin_enqueue_assets')) {
             return;
         }
 
-        $version = function_exists('vms_asset_version')
-            ? vms_asset_version()
+        $version = function_exists('bvmgr_asset_version')
+            ? bvmgr_asset_version()
             : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(

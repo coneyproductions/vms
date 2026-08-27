@@ -347,7 +347,7 @@ function vms_test_project_g16_admissions_logging(string $source): string
 	foreach ($historical as $eventCode => $oldStatement) {
 		vms_test_assert_same(1, substr_count($source, "'{$eventCode}'"), 'G16 admissions projection event inventory changed: ' . $eventCode);
 		$eventOffset = strpos($source, "'{$eventCode}'");
-		$callStart = strrpos(substr($source, 0, (int) $eventOffset), 'vms_record_operational_issue(');
+		$callStart = strrpos(substr($source, 0, (int) $eventOffset), 'bvmgr_record_operational_issue(');
 		vms_test_assert_true($callStart !== false, 'G16 admissions projection call missing: ' . $eventCode);
 		$open = strpos($source, '(', (int) $callStart);
 		$depth = 0;

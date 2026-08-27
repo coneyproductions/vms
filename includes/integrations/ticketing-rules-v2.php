@@ -3154,7 +3154,7 @@ function vms_ticketing_v2_claim_assignments_normalize($raw): array
 
 function vms_ticketing_v2_payload_is_object_like_array(array $value): bool
 {
-    return empty($value) || !vms_array_is_list_compat($value);
+    return empty($value) || !bvmgr_array_is_list_compat($value);
 }
 
 function vms_ticketing_v2_payload_has_scalar_value($value, int $max_length = 512): bool
@@ -3171,7 +3171,7 @@ function vms_ticketing_v2_payload_has_scalar_value($value, int $max_length = 512
 
 function vms_ticketing_v2_validate_claim_assignment_payload($rows): bool
 {
-    if (!is_array($rows) || (!empty($rows) && !vms_array_is_list_compat($rows)) || count($rows) > 100) {
+    if (!is_array($rows) || (!empty($rows) && !bvmgr_array_is_list_compat($rows)) || count($rows) > 100) {
         return false;
     }
 
@@ -3267,7 +3267,7 @@ function vms_ticketing_v2_validate_atomic_add_payload(array $data): bool
     }
 
     $ticket_lines = $data['ticket_lines'] ?? ($data['tickets'] ?? array());
-    if (!is_array($ticket_lines) || (!empty($ticket_lines) && !vms_array_is_list_compat($ticket_lines)) || count($ticket_lines) > 50) {
+    if (!is_array($ticket_lines) || (!empty($ticket_lines) && !bvmgr_array_is_list_compat($ticket_lines)) || count($ticket_lines) > 50) {
         return false;
     }
     foreach ($ticket_lines as $line) {
@@ -3277,7 +3277,7 @@ function vms_ticketing_v2_validate_atomic_add_payload(array $data): bool
     }
 
     $addon_lines = $data['addon_lines'] ?? ($data['addons'] ?? array());
-    if (!is_array($addon_lines) || (!empty($addon_lines) && !vms_array_is_list_compat($addon_lines)) || count($addon_lines) > 50) {
+    if (!is_array($addon_lines) || (!empty($addon_lines) && !bvmgr_array_is_list_compat($addon_lines)) || count($addon_lines) > 50) {
         return false;
     }
     foreach ($addon_lines as $line) {
@@ -3302,7 +3302,7 @@ function vms_ticketing_v2_validate_silent_add_payload(array $data): bool
     }
 
     $items = $data['items'] ?? array();
-    if (!is_array($items) || (!empty($items) && !vms_array_is_list_compat($items)) || count($items) > 50) {
+    if (!is_array($items) || (!empty($items) && !bvmgr_array_is_list_compat($items)) || count($items) > 50) {
         return false;
     }
     foreach ($items as $item) {
@@ -3329,7 +3329,7 @@ function vms_ticketing_v2_read_form_request_payload(array $source): array
  */
 function vms_ticketing_v2_read_json_request_payload(int $max_bytes): array
 {
-    $body = vms_read_limited_stream('php://input', $max_bytes);
+    $body = bvmgr_read_limited_stream('php://input', $max_bytes);
     if (empty($body['ok'])) {
         return array(
             'ok' => false,
@@ -3349,8 +3349,8 @@ function vms_ticketing_v2_read_json_request_payload(int $max_bytes): array
         );
     }
 
-    $content_type = strtolower(vms_request_server_value('CONTENT_TYPE'));
-    $top_level_token = vms_json_top_level_token($raw);
+    $content_type = strtolower(bvmgr_request_server_value('CONTENT_TYPE'));
+    $top_level_token = bvmgr_json_top_level_token($raw);
     $expects_json = (strpos($content_type, 'application/json') !== false || $top_level_token === '{' || $top_level_token === '[');
     if (!$expects_json) {
         return array(
@@ -3370,11 +3370,11 @@ function vms_ticketing_v2_read_json_request_payload(int $max_bytes): array
         );
     }
 
-    $decoded = vms_json_decode_associative($raw, 32);
+    $decoded = bvmgr_json_decode_associative($raw, 32);
     if (
         empty($decoded['ok'])
         || !is_array($decoded['value'])
-        || !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+        || !bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
     ) {
         return array(
             'ok' => false,
@@ -4519,8 +4519,8 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
         );
     }
 
-    $plan_status = function_exists('vms_event_plan_current_internal_status')
-        ? sanitize_key((string) vms_event_plan_current_internal_status($plan_id, 'generic'))
+    $plan_status = function_exists('bvmgr_event_plan_current_internal_status')
+        ? sanitize_key((string) bvmgr_event_plan_current_internal_status($plan_id, 'generic'))
         : 'draft';
     if ($plan_status === 'cancelled') {
         $code = 'event_cancelled';
@@ -4545,7 +4545,7 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
         );
     }
 
-    if (function_exists('vms_event_plan_is_ticketing_enabled') && !vms_event_plan_is_ticketing_enabled($plan_id)) {
+    if (function_exists('bvmgr_event_plan_is_ticketing_enabled') && !bvmgr_event_plan_is_ticketing_enabled($plan_id)) {
         $code = 'ticketing_disabled';
         return array(
             'ok' => false,
@@ -5641,7 +5641,7 @@ function vms_ticketing_v2_async_woo_ticket_email_dispatch_active(?bool $set = nu
 
 function vms_ticketing_v2_request_key(string $key): string
 {
-    return vms_request_read_key($_REQUEST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Woo request routing state only selects cart and checkout behavior.
+    return bvmgr_request_read_key($_REQUEST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Woo request routing state only selects cart and checkout behavior.
 }
 
 function vms_ticketing_v2_request_has_key(string $key): bool
@@ -5651,7 +5651,7 @@ function vms_ticketing_v2_request_has_key(string $key): bool
 
 function vms_ticketing_v2_query_text(string $key): string
 {
-    return vms_request_read_text_field($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Store API route state only selects request routing behavior.
+    return bvmgr_request_read_text_field($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Store API route state only selects request routing behavior.
 }
 
 function vms_ticketing_v2_is_wc_ajax_checkout_request(): bool
@@ -6382,13 +6382,13 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     if (!$is_event && !$is_cart && !$is_checkout) return;
 
     $front_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-front.js';
-    $front_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
+    $front_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     if (is_readable($front_script_path)) {
         $front_script_version = (string) filemtime($front_script_path);
     }
 
     $fallback_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-front-fallback.js';
-    $fallback_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
+    $fallback_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     if (is_readable($fallback_script_path)) {
         $fallback_script_version = (string) filemtime($fallback_script_path);
     }
@@ -6426,7 +6426,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         'vms-ticketing-front',
         plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
         $front_style_deps,
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+        function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
     );
 
     $tec_event_id = 0;
@@ -6937,12 +6937,12 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         'saleAvailabilityDisplay' => sanitize_key((string) ($ticket_ui['sale_availability_display'] ?? 'when_capped')),
         'saleAvailabilityLowThreshold' => max(1, absint($ticket_ui['sale_availability_low_threshold'] ?? 10)),
         'myActiveTicketCount' => (int) $my_active_ticket_count,
-        'ticketHelpText' => (function_exists('vms_ticketing_ui_help_should_render') && !vms_ticketing_ui_help_should_render((int) $plan_id_for_event, 'tickets')) ? '' : (function_exists('vms_ticketing_ui_help_effective_text') ? (string) vms_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'tickets') : ''),
-        'ticketHelpStyle' => function_exists('vms_ticketing_ui_help_global_style') ? (array) vms_ticketing_ui_help_global_style('tickets') : array(),
-        'addonHelpText' => (function_exists('vms_ticketing_ui_help_should_render') && !vms_ticketing_ui_help_should_render((int) $plan_id_for_event, 'addons')) ? '' : (function_exists('vms_ticketing_ui_help_effective_text') ? (string) vms_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'addons') : ''),
-        'addonHelpStyle' => function_exists('vms_ticketing_ui_help_global_style') ? (array) vms_ticketing_ui_help_global_style('addons') : array(),
-        'addonSectionHeading' => function_exists('vms_ticketing_ui_addons_section_heading_effective') ? (string) vms_ticketing_ui_addons_section_heading_effective((int) $plan_id_for_event) : (function_exists('vms_ticketing_ui_addons_section_heading') ? (string) vms_ticketing_ui_addons_section_heading() : __('Fire Pits & Tables', 'backstage-venue-manager')),
-        'addonSectionSubtext' => function_exists('vms_ticketing_ui_addons_section_subtext_effective') ? (string) vms_ticketing_ui_addons_section_subtext_effective((int) $plan_id_for_event) : (function_exists('vms_ticketing_ui_addons_section_subtext') ? (string) vms_ticketing_ui_addons_section_subtext() : __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager')),
+        'ticketHelpText' => (function_exists('bvmgr_ticketing_ui_help_should_render') && !bvmgr_ticketing_ui_help_should_render((int) $plan_id_for_event, 'tickets')) ? '' : (function_exists('bvmgr_ticketing_ui_help_effective_text') ? (string) bvmgr_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'tickets') : ''),
+        'ticketHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('tickets') : array(),
+        'addonHelpText' => (function_exists('bvmgr_ticketing_ui_help_should_render') && !bvmgr_ticketing_ui_help_should_render((int) $plan_id_for_event, 'addons')) ? '' : (function_exists('bvmgr_ticketing_ui_help_effective_text') ? (string) bvmgr_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'addons') : ''),
+        'addonHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('addons') : array(),
+        'addonSectionHeading' => function_exists('bvmgr_ticketing_ui_addons_section_heading_effective') ? (string) bvmgr_ticketing_ui_addons_section_heading_effective((int) $plan_id_for_event) : (function_exists('bvmgr_ticketing_ui_addons_section_heading') ? (string) bvmgr_ticketing_ui_addons_section_heading() : __('Fire Pits & Tables', 'backstage-venue-manager')),
+        'addonSectionSubtext' => function_exists('bvmgr_ticketing_ui_addons_section_subtext_effective') ? (string) bvmgr_ticketing_ui_addons_section_subtext_effective((int) $plan_id_for_event) : (function_exists('bvmgr_ticketing_ui_addons_section_subtext') ? (string) bvmgr_ticketing_ui_addons_section_subtext() : __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager')),
         'ticketRatioQualifyingLabel' => $ticket_ratio_qualifying_label,
         'loginUrl'   => wp_login_url($redirect_after_login),
         'registerUrl' => function_exists('wp_registration_url') ? wp_registration_url() : wp_login_url($redirect_after_login),
@@ -6980,7 +6980,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
     if ($is_event && !empty($ticket_ui['is_progressive'])) {
         $progressive_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-progressive-ui.js';
-        $progressive_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
+        $progressive_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
         if (is_readable($progressive_script_path)) {
             $progressive_script_version = (string) filemtime($progressive_script_path);
             wp_enqueue_script(
@@ -7024,7 +7024,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         'vms-ticketing-entitlements',
         plugins_url('assets/css/vms-entitlements-public.css', BVMGR_PLUGIN_FILE),
         $entitlements_style_deps,
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+        function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
     );
 }
 
@@ -7666,7 +7666,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
     if ($tec_event_id > 0 && bvmgr_tec_is_cancelled_event($tec_event_id)) return '';
 
     // Respect per-event ticketing override (cancellations set this to off).
-    if (function_exists('vms_event_plan_is_ticketing_enabled') && $plan_id > 0 && !vms_event_plan_is_ticketing_enabled($plan_id)) return '';
+    if (function_exists('bvmgr_event_plan_is_ticketing_enabled') && $plan_id > 0 && !bvmgr_event_plan_is_ticketing_enabled($plan_id)) return '';
     $cfg  = vms_ticketing_v2_get_config($plan_id);
     $sync = vms_ticketing_v2_get_sync($plan_id);
 
@@ -8359,7 +8359,7 @@ function vms_ticketing_v2_store_api_request_path(): string
     $route = vms_ticketing_v2_query_text('rest_route');
 
     if ($route === '') {
-        $request_path = wp_parse_url(vms_request_current_uri(), PHP_URL_PATH);
+        $request_path = wp_parse_url(bvmgr_request_current_uri(), PHP_URL_PATH);
         if (is_string($request_path)) {
             $route = $request_path;
         }
@@ -9178,7 +9178,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
     }
 
     // Respect per-event ticketing override (when turned off, no add-ons can be added).
-    if ($hint_plan_id > 0 && function_exists('vms_event_plan_is_ticketing_enabled') && !vms_event_plan_is_ticketing_enabled($hint_plan_id)) {
+    if ($hint_plan_id > 0 && function_exists('bvmgr_event_plan_is_ticketing_enabled') && !bvmgr_event_plan_is_ticketing_enabled($hint_plan_id)) {
         if ($seeded_hint_plan_id > 0) {
             vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
         }

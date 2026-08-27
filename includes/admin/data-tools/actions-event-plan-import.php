@@ -64,14 +64,14 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 
 		check_admin_referer('vms_event_plan_import_preview');
 
-		$upload = vms_upload_read_file($_FILES, 'event_plan_csv_file');
+		$upload = bvmgr_upload_read_file($_FILES, 'event_plan_csv_file');
 		if (is_wp_error($upload)) {
 			vms_event_plan_import_set_notice('error', __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'));
 			wp_safe_redirect(vms_event_plan_import_admin_page_url());
 			exit;
 		}
 
-		$validated = vms_validate_uploaded_file(
+		$validated = bvmgr_validate_uploaded_file(
 			$upload,
 			array(
 				'allowed_mimes' => vms_event_plan_import_allowed_mimes(),
@@ -164,7 +164,7 @@ if (!function_exists('vms_event_plan_import_handle_preview_action')) {
 		$preview = vms_event_plan_import_build_preview_from_csv($target_path, $source_name, $options, $token, $target_key);
 		if (is_wp_error($preview)) {
 			vms_event_plan_import_delete_stored_file($target_key);
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'event_plan_import_preview_failed',
 				array(
 					'service' => 'event_plan_import',
@@ -204,7 +204,7 @@ if (!function_exists('vms_event_plan_import_read_selected_rows_from_post')) {
 	 */
 	function vms_event_plan_import_read_selected_rows_from_post(array $source): array
 	{
-		$selected_rows_raw = vms_request_read_array($source, 'selected_rows');
+		$selected_rows_raw = bvmgr_request_read_array($source, 'selected_rows');
 		if ($selected_rows_raw === null) {
 			return array();
 		}
@@ -268,7 +268,7 @@ if (!function_exists('vms_event_plan_import_handle_commit_action')) {
 			'selected_rows' => $selected_rows,
 		));
 		if (is_wp_error($result)) {
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'event_plan_import_commit_failed',
 				array(
 					'service' => 'event_plan_import',
@@ -348,8 +348,8 @@ if (!function_exists('vms_event_plan_import_handle_download_report_action')) {
 		}
 
 		$filename = 'vms-event-plan-import-preview-' . gmdate('Ymd-His') . '.csv';
-		if (function_exists('vms_private_files_stream_path')) {
-			vms_private_files_stream_path($path, $filename, 'text/csv');
+		if (function_exists('bvmgr_private_files_stream_path')) {
+			bvmgr_private_files_stream_path($path, $filename, 'text/csv');
 		}
 
 		nocache_headers();
@@ -372,7 +372,7 @@ if (!function_exists('vms_event_plan_import_handle_revert_last_action')) {
 
 		$result = vms_event_plan_import_revert_last_run();
 		if (is_wp_error($result)) {
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'event_plan_import_revert_failed',
 				array(
 					'service' => 'event_plan_import',

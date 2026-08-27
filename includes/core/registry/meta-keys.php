@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
  * Single source of truth for all meta keys used by VMS.
  */
 
-function vms_meta_keys(): array
+function bvmgr_meta_keys(): array
 {
 	return [
 		'vendor' => [
@@ -429,14 +429,14 @@ function vms_meta_keys(): array
  */
 function bvmgr_meta_key(string $entity, string $field): string
 {
-	$map = vms_meta_keys();
+	$map = bvmgr_meta_keys();
 	return $map[$entity][$field] ?? '';
 }
 
 /**
  * Export helper for Truth Report (stable shape; no duplication elsewhere).
  */
-function vms_meta_keys_export(): array
+function bvmgr_meta_keys_export(): array
 {
-	return vms_meta_keys();
+	return bvmgr_meta_keys();
 }

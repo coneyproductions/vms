@@ -211,7 +211,7 @@ function vms_ticket_inventory_forensics_guard_decision(
 		'source_function' => $source_function,
 	);
 
-	if (function_exists('vms_admin_guard_heavy_hooks_disabled') && vms_admin_guard_heavy_hooks_disabled()) {
+	if (function_exists('bvmgr_admin_guard_heavy_hooks_disabled') && bvmgr_admin_guard_heavy_hooks_disabled()) {
 		$result['reason'] = 'constant_disabled';
 		return $result;
 	}
@@ -234,8 +234,8 @@ function vms_ticket_inventory_forensics_guard_decision(
 		return $result;
 	}
 
-	if (function_exists('vms_admin_guard_should_allow_heavy_block')) {
-		$guard = (array) vms_admin_guard_should_allow_heavy_block(
+	if (function_exists('bvmgr_admin_guard_should_allow_heavy_block')) {
+		$guard = (array) bvmgr_admin_guard_should_allow_heavy_block(
 			$hook_name,
 			array(
 				'task' => 'ticket_inventory_forensics',
@@ -263,8 +263,8 @@ function vms_ticket_inventory_forensics_trace(string $decision, array $context =
 		'source_function' => sanitize_text_field((string) ($context['source_function'] ?? '')),
 	);
 
-	if (function_exists('vms_admin_guard_trace')) {
-		vms_admin_guard_trace(
+	if (function_exists('bvmgr_admin_guard_trace')) {
+		bvmgr_admin_guard_trace(
 			sanitize_key((string) ($context['hook_name'] ?? 'ticket_inventory_forensics')),
 			$decision,
 			$payload,

@@ -74,8 +74,8 @@ if (!function_exists('vms_staff_tax_status_context')) {
         $effective_provider = ($done_at > 0 && $stored_provider !== '') ? $stored_provider : $provider;
 
         $upload_id = (int) get_post_meta($staff_id, $k_upload, true);
-        $upload_url = $upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($staff_id) : '';
-        $upload_label = $upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($staff_id) : '';
+        $upload_url = $upload_id && function_exists('bvmgr_private_w9_download_url') ? bvmgr_private_w9_download_url($staff_id) : '';
+        $upload_label = $upload_id && function_exists('bvmgr_private_w9_file_label') ? bvmgr_private_w9_file_label($staff_id) : '';
 
         $admin_confirmed_at = (int) get_post_meta($staff_id, $k_confirmed_at, true);
         if ($admin_confirmed_at <= 0 && $done_at > 0) {
@@ -85,8 +85,8 @@ if (!function_exists('vms_staff_tax_status_context')) {
         $admin_user = $admin_confirmed_by > 0 ? get_user_by('id', $admin_confirmed_by) : null;
         $admin_name = $admin_user ? (string) ($admin_user->display_name ?: $admin_user->user_login) : '';
 
-        $missing = function_exists('vms_vendor_tax_profile_missing_items')
-            ? (array) vms_vendor_tax_profile_missing_items($staff_id)
+        $missing = function_exists('bvmgr_vendor_tax_profile_missing_items')
+            ? (array) bvmgr_vendor_tax_profile_missing_items($staff_id)
             : array();
 
         $stage = 'incomplete';
@@ -146,7 +146,7 @@ if (!function_exists('vms_staff_tax_clear_complete_url')) {
 
 add_action('admin_post_vms_staff_tax_mark_complete', function (): void {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This admin-post action verifies a staff-specific nonce immediately below before mutating staff tax state.
-    $staff_id = vms_request_read_absint($_GET, 'staff_id');
+    $staff_id = bvmgr_request_read_absint($_GET, 'staff_id');
     if ($staff_id <= 0) wp_die('Invalid staff member.');
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
     check_admin_referer('vms_staff_tax_mark_complete_' . $staff_id);
@@ -166,7 +166,7 @@ add_action('admin_post_vms_staff_tax_mark_complete', function (): void {
 
 add_action('admin_post_vms_staff_tax_clear_complete', function (): void {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This admin-post action verifies a staff-specific nonce immediately below before mutating staff tax state.
-    $staff_id = vms_request_read_absint($_GET, 'staff_id');
+    $staff_id = bvmgr_request_read_absint($_GET, 'staff_id');
     if ($staff_id <= 0) wp_die('Invalid staff member.');
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
     check_admin_referer('vms_staff_tax_clear_complete_' . $staff_id);
@@ -184,7 +184,7 @@ add_action('admin_post_vms_staff_tax_clear_complete', function (): void {
 
 add_action('admin_notices', function (): void {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only staff tax notice state only affects admin feedback.
-    $notice = vms_request_read_key($_GET, 'vms_staff_tax_notice');
+    $notice = bvmgr_request_read_key($_GET, 'vms_staff_tax_notice');
     if ($notice === '') {
         return;
     }
@@ -390,7 +390,7 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
 
     $flag = static function (string $key): int {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save path verifies vms_staff_employee_packet_save before reading employee-packet flags.
-        return vms_request_read_bool_flag($_POST, $key) ? 1 : 0;
+        return bvmgr_request_read_bool_flag($_POST, $key) ? 1 : 0;
     };
 
     $w4 = $flag('vms_emp_w4');

@@ -363,9 +363,9 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 				$file = WP_CONTENT_DIR . '/plugins/vms/includes/cpt/event-plans.php';
 				$code = is_readable($file) ? (string) file_get_contents($file) : '';
 
-				$has_effective_helper = function_exists('vms_get_event_plan_effective_comp_default');
-				$has_resolver = function_exists('vms_resolve_event_plan_comp_default');
-				$has_ajax_effective_call = (strpos($code, "vms_get_event_plan_effective_comp_default") !== false);
+				$has_effective_helper = function_exists('bvmgr_get_event_plan_effective_comp_default');
+				$has_resolver = function_exists('bvmgr_resolve_event_plan_comp_default');
+				$has_ajax_effective_call = (strpos($code, "bvmgr_get_event_plan_effective_comp_default") !== false);
 				$has_event_date_payload = (strpos($code, "form.append('event_date', dateInp.value || '');") !== false);
 				$has_legacy_date_payload = (strpos($code, "form.append('date', dateInp.value || '');") !== false);
 
@@ -389,7 +389,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 				$fixture_ok = false;
 				$fixture_notes = '';
 				if ($has_resolver) {
-					$fixture = (array) vms_resolve_event_plan_comp_default(
+					$fixture = (array) bvmgr_resolve_event_plan_comp_default(
 						array(
 							'structure' => 'flat_fee',
 							'flat_fee_amount' => 777.0,
@@ -402,7 +402,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 						),
 						'Fixture Holiday'
 					);
-					$fallback = (array) vms_resolve_event_plan_comp_default(
+					$fallback = (array) bvmgr_resolve_event_plan_comp_default(
 						array(),
 						array(
 							'structure' => 'door_split',

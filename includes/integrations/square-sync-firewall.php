@@ -636,8 +636,8 @@ if (!function_exists('vms_square_firewall_auto_backfill_once')) {
         if ((string) get_option($version_option, '') === $version) {
             return;
         }
-        $guard = function_exists('vms_admin_guard_begin')
-            ? vms_admin_guard_begin('admin_init.square_firewall_backfill', array(
+        $guard = function_exists('bvmgr_admin_guard_begin')
+            ? bvmgr_admin_guard_begin('admin_init.square_firewall_backfill', array(
                 'task' => 'square_firewall_backfill',
                 'allow_action' => 'square_firewall_backfill',
                 'lock_name' => 'square_firewall_backfill',
@@ -675,8 +675,8 @@ if (!function_exists('vms_square_firewall_auto_backfill_once')) {
         } catch (Throwable $e) {
             // Best effort only. The explicit admin tool can be run if this stalls.
         } finally {
-            if (is_array($guard) && function_exists('vms_admin_guard_finish')) {
-                vms_admin_guard_finish($guard, $guard_context);
+            if (is_array($guard) && function_exists('bvmgr_admin_guard_finish')) {
+                bvmgr_admin_guard_finish($guard, $guard_context);
             }
         }
     }

@@ -112,13 +112,13 @@ function add_filter(string $hook, $callback, int $priority = 10, int $acceptedAr
 	return true;
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
 	unset($key);
 	return '';
 }
 
-function vms_request_method(): string
+function bvmgr_request_method(): string
 {
 	return 'GET';
 }
@@ -200,7 +200,7 @@ try {
 	$belowThreshold = vms_test_rotation_capture(
 		static function (): void {
 			file_put_contents(VMS_SLOW_REQUEST_LOGGER_PATH, 'small log');
-			vms_slow_request_logger_rotate_file(VMS_SLOW_REQUEST_LOGGER_PATH);
+			bvmgr_slow_request_logger_rotate_file(VMS_SLOW_REQUEST_LOGGER_PATH);
 		}
 	);
 	vms_test_rotation_assert_no_warnings($belowThreshold['warnings'], 'Below-threshold rotation');
@@ -217,7 +217,7 @@ try {
 	$GLOBALS['vms_test_rotation_force_delete_failure'] = false;
 	$rotation = vms_test_rotation_capture(
 		static function (): void {
-			vms_slow_request_logger_write_entry(array('entry' => 'next'));
+			bvmgr_slow_request_logger_write_entry(array('entry' => 'next'));
 		}
 	);
 	vms_test_rotation_assert_no_warnings($rotation['warnings'], 'Successful rotation write');
@@ -247,7 +247,7 @@ try {
 	$GLOBALS['vms_test_rotation_force_delete_failure'] = true;
 	$failedDelete = vms_test_rotation_capture(
 		static function (): void {
-			vms_slow_request_logger_write_entry(array('entry' => 'after-failed-delete'));
+			bvmgr_slow_request_logger_write_entry(array('entry' => 'after-failed-delete'));
 		}
 	);
 	vms_test_rotation_assert_no_warnings($failedDelete['warnings'], 'Failed retained-generation delete');

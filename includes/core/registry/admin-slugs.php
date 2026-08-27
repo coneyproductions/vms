@@ -11,7 +11,7 @@ defined('ABSPATH') || exit;
  *
  * @return array<string,string>
  */
-function vms_admin_menu_slugs(): array
+function bvmgr_admin_menu_slugs(): array
 {
   $slugs = [
     // Parent/top menu slug
@@ -47,8 +47,8 @@ function vms_admin_menu_slugs(): array
  * Convenience getter so code reads cleanly:
  * vms_admin_menu_slug('data_tools')
  */
-function vms_admin_menu_slug(string $key): string
+function bvmgr_admin_menu_slug(string $key): string
 {
-	$slugs = vms_admin_menu_slugs();
+	$slugs = bvmgr_admin_menu_slugs();
 	return isset($slugs[$key]) ? (string) $slugs[$key] : '';
 }

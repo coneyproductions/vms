@@ -16,12 +16,12 @@ function vms_sch_get_open_map(int $venue_id, string $start_ymd, string $end_ymd)
 
     if ($venue_id <= 0) return $open;
 
-    if (function_exists('vms_get_active_dates_for_venue')) {
+    if (function_exists('bvmgr_get_active_dates_for_venue')) {
         // Some implementations accept a range; others ignore it.
         try {
-            $dates = vms_get_active_dates_for_venue($venue_id, $start_ymd, $end_ymd);
+            $dates = bvmgr_get_active_dates_for_venue($venue_id, $start_ymd, $end_ymd);
         } catch (Throwable $e) {
-            $dates = vms_get_active_dates_for_venue($venue_id);
+            $dates = bvmgr_get_active_dates_for_venue($venue_id);
         }
 
         if (is_array($dates)) {

@@ -136,12 +136,12 @@ vms_test_assert(substr_count($portalSource, "if (vms_staff_portal_is_exact_post_
 vms_test_assert(substr_count($portalSource, "if (vms_staff_portal_is_exact_post_request() && isset(\$_POST['vms_staff_tax_save'])) {") === 1, 'Staff Portal tax-profile gate should use the exact POST helper.');
 vms_test_assert(substr_count($portalSource, 'if (vms_staff_portal_is_exact_post_request()) {') === 1, 'Staff Portal availability gate should use the exact POST helper.');
 
-vms_test_assert(strpos($seasonSource, "vms_request_method() === 'post'") === false, 'Season Dates should not use vms_request_method() for strict POST gating.');
-vms_test_assert(strpos($tasksSource, "vms_request_method() === 'post'") === false, 'Staff Tasks should not use vms_request_method() for strict POST gating.');
-vms_test_assert(strpos($portalSource, "vms_request_method() === 'post'") === false, 'Staff Portal should not use vms_request_method() for strict POST gating.');
-vms_test_assert(strpos($seasonSource, "vms_request_server_value('REQUEST_METHOD')") === false, 'Season Dates should not use vms_request_server_value() for strict POST gating.');
-vms_test_assert(strpos($tasksSource, "vms_request_server_value('REQUEST_METHOD')") === false, 'Staff Tasks should not use vms_request_server_value() for strict POST gating.');
-vms_test_assert(strpos($portalSource, "vms_request_server_value('REQUEST_METHOD')") === false, 'Staff Portal should not use vms_request_server_value() for strict POST gating.');
+vms_test_assert(strpos($seasonSource, "bvmgr_request_method() === 'post'") === false, 'Season Dates should not use bvmgr_request_method() for strict POST gating.');
+vms_test_assert(strpos($tasksSource, "bvmgr_request_method() === 'post'") === false, 'Staff Tasks should not use bvmgr_request_method() for strict POST gating.');
+vms_test_assert(strpos($portalSource, "bvmgr_request_method() === 'post'") === false, 'Staff Portal should not use bvmgr_request_method() for strict POST gating.');
+vms_test_assert(strpos($seasonSource, "bvmgr_request_server_value('REQUEST_METHOD')") === false, 'Season Dates should not use bvmgr_request_server_value() for strict POST gating.');
+vms_test_assert(strpos($tasksSource, "bvmgr_request_server_value('REQUEST_METHOD')") === false, 'Staff Tasks should not use bvmgr_request_server_value() for strict POST gating.');
+vms_test_assert(strpos($portalSource, "bvmgr_request_server_value('REQUEST_METHOD')") === false, 'Staff Portal should not use bvmgr_request_server_value() for strict POST gating.');
 
 $seasonWithoutHelper = str_replace($seasonHelperSource, '', $seasonSource);
 $tasksWithoutHelper = str_replace($tasksHelperSource, '', $tasksSource);

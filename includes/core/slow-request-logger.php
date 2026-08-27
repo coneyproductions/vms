@@ -1,26 +1,26 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_slow_request_logger_option_key')) {
-	function vms_slow_request_logger_option_key(): string
+if (!function_exists('bvmgr_slow_request_logger_option_key')) {
+	function bvmgr_slow_request_logger_option_key(): string
 	{
 		return 'vms_slow_request_logger_enabled';
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_enabled')) {
-	function vms_slow_request_logger_enabled(): bool
+if (!function_exists('bvmgr_slow_request_logger_enabled')) {
+	function bvmgr_slow_request_logger_enabled(): bool
 	{
 		if (defined('VMS_SLOW_REQUEST_LOGGER_ENABLED')) {
 			return (bool) VMS_SLOW_REQUEST_LOGGER_ENABLED;
 		}
 
-		return !empty(get_option(vms_slow_request_logger_option_key(), 0));
+		return !empty(get_option(bvmgr_slow_request_logger_option_key(), 0));
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_time_threshold_seconds')) {
-	function vms_slow_request_logger_time_threshold_seconds(): float
+if (!function_exists('bvmgr_slow_request_logger_time_threshold_seconds')) {
+	function bvmgr_slow_request_logger_time_threshold_seconds(): float
 	{
 		if (defined('VMS_SLOW_REQUEST_LOGGER_TIME_THRESHOLD')) {
 			return max(0.1, (float) VMS_SLOW_REQUEST_LOGGER_TIME_THRESHOLD);
@@ -30,8 +30,8 @@ if (!function_exists('vms_slow_request_logger_time_threshold_seconds')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_memory_threshold_bytes')) {
-	function vms_slow_request_logger_memory_threshold_bytes(): int
+if (!function_exists('bvmgr_slow_request_logger_memory_threshold_bytes')) {
+	function bvmgr_slow_request_logger_memory_threshold_bytes(): int
 	{
 		if (defined('VMS_SLOW_REQUEST_LOGGER_MEMORY_THRESHOLD')) {
 			return max(1, (int) VMS_SLOW_REQUEST_LOGGER_MEMORY_THRESHOLD);
@@ -41,8 +41,8 @@ if (!function_exists('vms_slow_request_logger_memory_threshold_bytes')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_max_bytes')) {
-	function vms_slow_request_logger_max_bytes(): int
+if (!function_exists('bvmgr_slow_request_logger_max_bytes')) {
+	function bvmgr_slow_request_logger_max_bytes(): int
 	{
 		if (defined('VMS_SLOW_REQUEST_LOGGER_MAX_BYTES')) {
 			return max(1024, (int) VMS_SLOW_REQUEST_LOGGER_MAX_BYTES);
@@ -52,8 +52,8 @@ if (!function_exists('vms_slow_request_logger_max_bytes')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_log_path')) {
-	function vms_slow_request_logger_log_path(): string
+if (!function_exists('bvmgr_slow_request_logger_log_path')) {
+	function bvmgr_slow_request_logger_log_path(): string
 	{
 		if (defined('VMS_SLOW_REQUEST_LOGGER_PATH') && is_string(VMS_SLOW_REQUEST_LOGGER_PATH) && VMS_SLOW_REQUEST_LOGGER_PATH !== '') {
 			return VMS_SLOW_REQUEST_LOGGER_PATH;
@@ -65,10 +65,10 @@ if (!function_exists('vms_slow_request_logger_log_path')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_parse_request_uri')) {
-	function vms_slow_request_logger_parse_request_uri(): array
+if (!function_exists('bvmgr_slow_request_logger_parse_request_uri')) {
+	function bvmgr_slow_request_logger_parse_request_uri(): array
 	{
-		$request_uri = vms_request_server_value('REQUEST_URI');
+		$request_uri = bvmgr_request_server_value('REQUEST_URI');
 		if ($request_uri === '') {
 			$request_uri = '/';
 		}
@@ -79,7 +79,7 @@ if (!function_exists('vms_slow_request_logger_parse_request_uri')) {
 			parse_str($query_string, $query);
 		}
 		if (!isset($query['action'])) {
-			$request_action = vms_request_read_scalar($_REQUEST, 'action'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive slow-request diagnostics only mirror read-only request routing state and remain nonce-free.
+			$request_action = bvmgr_request_read_scalar($_REQUEST, 'action'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive slow-request diagnostics only mirror read-only request routing state and remain nonce-free.
 			if ($request_action !== '') {
 				$query['action'] = $request_action;
 			}
@@ -92,12 +92,12 @@ if (!function_exists('vms_slow_request_logger_parse_request_uri')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_source_ip_hash')) {
-	function vms_slow_request_logger_source_ip_hash(): string
+if (!function_exists('bvmgr_slow_request_logger_source_ip_hash')) {
+	function bvmgr_slow_request_logger_source_ip_hash(): string
 	{
 		$ip = '';
 		foreach (array('HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR') as $key) {
-			$raw = vms_request_server_value($key);
+			$raw = bvmgr_request_server_value($key);
 			if ($raw === '') {
 				continue;
 			}
@@ -116,17 +116,17 @@ if (!function_exists('vms_slow_request_logger_source_ip_hash')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_user_agent')) {
-	function vms_slow_request_logger_user_agent(): string
+if (!function_exists('bvmgr_slow_request_logger_user_agent')) {
+	function bvmgr_slow_request_logger_user_agent(): string
 	{
-		return substr(vms_request_server_value('HTTP_USER_AGENT'), 0, 255);
+		return substr(bvmgr_request_server_value('HTTP_USER_AGENT'), 0, 255);
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_user_agent_class')) {
-	function vms_slow_request_logger_user_agent_class(): string
+if (!function_exists('bvmgr_slow_request_logger_user_agent_class')) {
+	function bvmgr_slow_request_logger_user_agent_class(): string
 	{
-		$user_agent = strtolower(vms_slow_request_logger_user_agent());
+		$user_agent = strtolower(bvmgr_slow_request_logger_user_agent());
 		if ($user_agent === '') {
 			return 'browser';
 		}
@@ -150,8 +150,8 @@ if (!function_exists('vms_slow_request_logger_user_agent_class')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_normalize_order_received_uri')) {
-	function vms_slow_request_logger_normalize_order_received_uri(string $path, array $query): string
+if (!function_exists('bvmgr_slow_request_logger_normalize_order_received_uri')) {
+	function bvmgr_slow_request_logger_normalize_order_received_uri(string $path, array $query): string
 	{
 		$normalized = preg_replace('#^/checkout/order-received/[^/]+#', '/checkout/order-received/{order_id}', $path);
 		if (!is_string($normalized) || $normalized === '') {
@@ -165,8 +165,8 @@ if (!function_exists('vms_slow_request_logger_normalize_order_received_uri')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_normalize_wallet_pdf_uri')) {
-	function vms_slow_request_logger_normalize_wallet_pdf_uri(string $path, array $query): string
+if (!function_exists('bvmgr_slow_request_logger_normalize_wallet_pdf_uri')) {
+	function bvmgr_slow_request_logger_normalize_wallet_pdf_uri(string $path, array $query): string
 	{
 		$parts = array('tec-tickets-wallet-plus-pdf=1');
 		if (!empty($query['attendee_id'])) {
@@ -180,16 +180,16 @@ if (!function_exists('vms_slow_request_logger_normalize_wallet_pdf_uri')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_normalize_admin_action_uri')) {
-	function vms_slow_request_logger_normalize_admin_action_uri(string $path, string $action): string
+if (!function_exists('bvmgr_slow_request_logger_normalize_admin_action_uri')) {
+	function bvmgr_slow_request_logger_normalize_admin_action_uri(string $path, string $action): string
 	{
 		$action = sanitize_key($action);
 		return $path . ($action !== '' ? '?action=' . $action : '');
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_normalize_loopback_uri')) {
-	function vms_slow_request_logger_normalize_loopback_uri(string $path, array $query): string
+if (!function_exists('bvmgr_slow_request_logger_normalize_loopback_uri')) {
+	function bvmgr_slow_request_logger_normalize_loopback_uri(string $path, array $query): string
 	{
 		$parts = array();
 		if (!empty($query['action'])) {
@@ -203,8 +203,8 @@ if (!function_exists('vms_slow_request_logger_normalize_loopback_uri')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_normalize_tcpdf_asset_uri')) {
-	function vms_slow_request_logger_normalize_tcpdf_asset_uri(string $path): string
+if (!function_exists('bvmgr_slow_request_logger_normalize_tcpdf_asset_uri')) {
+	function bvmgr_slow_request_logger_normalize_tcpdf_asset_uri(string $path): string
 	{
 		$asset_type = 'asset';
 		$lower = strtolower($path);
@@ -222,22 +222,22 @@ if (!function_exists('vms_slow_request_logger_normalize_tcpdf_asset_uri')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_match_request')) {
-	function vms_slow_request_logger_match_request(): array
+if (!function_exists('bvmgr_slow_request_logger_match_request')) {
+	function bvmgr_slow_request_logger_match_request(): array
 	{
-		$request = vms_slow_request_logger_parse_request_uri();
+		$request = bvmgr_slow_request_logger_parse_request_uri();
 		$path = rtrim((string) ($request['path'] ?? '/'), '/');
 		$path = $path === '' ? '/' : $path;
 		$query = is_array($request['query'] ?? null) ? $request['query'] : array();
 		$action = sanitize_key((string) ($query['action'] ?? ''));
-		$ua_class = vms_slow_request_logger_user_agent_class();
+		$ua_class = bvmgr_slow_request_logger_user_agent_class();
 
 		if (($query['tec-tickets-wallet-plus-pdf'] ?? '') === '1') {
 			return array(
 				'matched' => true,
 				'scope' => 'tec_wallet_pdf',
 				'reason' => 'wallet/pdf request',
-				'normalized_uri' => vms_slow_request_logger_normalize_wallet_pdf_uri($path, $query),
+				'normalized_uri' => bvmgr_slow_request_logger_normalize_wallet_pdf_uri($path, $query),
 			);
 		}
 
@@ -255,7 +255,7 @@ if (!function_exists('vms_slow_request_logger_match_request')) {
 				'matched' => true,
 				'scope' => 'checkout_order_received',
 				'reason' => 'order received request',
-				'normalized_uri' => vms_slow_request_logger_normalize_order_received_uri($path, $query),
+				'normalized_uri' => bvmgr_slow_request_logger_normalize_order_received_uri($path, $query),
 			);
 		}
 
@@ -291,7 +291,7 @@ if (!function_exists('vms_slow_request_logger_match_request')) {
 				'matched' => true,
 				'scope' => 'admin_post',
 				'reason' => 'admin-post request',
-				'normalized_uri' => vms_slow_request_logger_normalize_admin_action_uri('/wp-admin/admin-post.php', $action),
+				'normalized_uri' => bvmgr_slow_request_logger_normalize_admin_action_uri('/wp-admin/admin-post.php', $action),
 			);
 		}
 
@@ -318,7 +318,7 @@ if (!function_exists('vms_slow_request_logger_match_request')) {
 				'matched' => true,
 				'scope' => 'wp_loopback',
 				'reason' => 'WordPress/7.0 loopback',
-				'normalized_uri' => vms_slow_request_logger_normalize_loopback_uri($path, $query),
+				'normalized_uri' => bvmgr_slow_request_logger_normalize_loopback_uri($path, $query),
 			);
 		}
 
@@ -327,7 +327,7 @@ if (!function_exists('vms_slow_request_logger_match_request')) {
 				'matched' => true,
 				'scope' => 'tcpdf_asset',
 				'reason' => 'TCPDF asset fetch',
-				'normalized_uri' => vms_slow_request_logger_normalize_tcpdf_asset_uri($path),
+				'normalized_uri' => bvmgr_slow_request_logger_normalize_tcpdf_asset_uri($path),
 			);
 		}
 
@@ -335,8 +335,8 @@ if (!function_exists('vms_slow_request_logger_match_request')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_capture_status_header')) {
-	function vms_slow_request_logger_capture_status_header(string $status_header, int $code, string $description = '', string $protocol = ''): string
+if (!function_exists('bvmgr_slow_request_logger_capture_status_header')) {
+	function bvmgr_slow_request_logger_capture_status_header(string $status_header, int $code, string $description = '', string $protocol = ''): string
 	{
 		unset($description, $protocol);
 		if (!isset($GLOBALS['bvmgr_slow_request_logger']) || !is_array($GLOBALS['bvmgr_slow_request_logger'])) {
@@ -348,14 +348,14 @@ if (!function_exists('vms_slow_request_logger_capture_status_header')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_trigger_list')) {
-	function vms_slow_request_logger_trigger_list(float $elapsed_seconds, int $peak_memory_bytes, string $fatal_summary): array
+if (!function_exists('bvmgr_slow_request_logger_trigger_list')) {
+	function bvmgr_slow_request_logger_trigger_list(float $elapsed_seconds, int $peak_memory_bytes, string $fatal_summary): array
 	{
 		$triggers = array();
-		if ($elapsed_seconds >= vms_slow_request_logger_time_threshold_seconds()) {
+		if ($elapsed_seconds >= bvmgr_slow_request_logger_time_threshold_seconds()) {
 			$triggers[] = 'slow';
 		}
-		if ($peak_memory_bytes >= vms_slow_request_logger_memory_threshold_bytes()) {
+		if ($peak_memory_bytes >= bvmgr_slow_request_logger_memory_threshold_bytes()) {
 			$triggers[] = 'high_memory';
 		}
 		if ($fatal_summary !== '') {
@@ -366,8 +366,8 @@ if (!function_exists('vms_slow_request_logger_trigger_list')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_fatal_summary')) {
-	function vms_slow_request_logger_fatal_summary(): string
+if (!function_exists('bvmgr_slow_request_logger_fatal_summary')) {
+	function bvmgr_slow_request_logger_fatal_summary(): string
 	{
 		$error = error_get_last();
 		if (!is_array($error) || empty($error['type']) || empty($error['message'])) {
@@ -388,10 +388,10 @@ if (!function_exists('vms_slow_request_logger_fatal_summary')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_rotate_file')) {
-	function vms_slow_request_logger_rotate_file(string $path): void
+if (!function_exists('bvmgr_slow_request_logger_rotate_file')) {
+	function bvmgr_slow_request_logger_rotate_file(string $path): void
 	{
-		$max_bytes = vms_slow_request_logger_max_bytes();
+		$max_bytes = bvmgr_slow_request_logger_max_bytes();
 		$current_size = file_exists($path) ? (int) @filesize($path) : 0;
 		if ($current_size < $max_bytes) {
 			return;
@@ -405,10 +405,10 @@ if (!function_exists('vms_slow_request_logger_rotate_file')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_write_entry')) {
-	function vms_slow_request_logger_write_entry(array $entry): void
+if (!function_exists('bvmgr_slow_request_logger_write_entry')) {
+	function bvmgr_slow_request_logger_write_entry(array $entry): void
 	{
-		$path = vms_slow_request_logger_log_path();
+		$path = bvmgr_slow_request_logger_log_path();
 		$directory = dirname($path);
 		if (!is_dir($directory) && function_exists('wp_mkdir_p')) {
 			wp_mkdir_p($directory);
@@ -417,7 +417,7 @@ if (!function_exists('vms_slow_request_logger_write_entry')) {
 			return;
 		}
 
-		vms_slow_request_logger_rotate_file($path);
+		bvmgr_slow_request_logger_rotate_file($path);
 		$line = function_exists('wp_json_encode') ? wp_json_encode($entry) : json_encode($entry);
 		if (!is_string($line) || $line === '') {
 			return;
@@ -427,8 +427,8 @@ if (!function_exists('vms_slow_request_logger_write_entry')) {
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_shutdown')) {
-	function vms_slow_request_logger_shutdown(): void
+if (!function_exists('bvmgr_slow_request_logger_shutdown')) {
+	function bvmgr_slow_request_logger_shutdown(): void
 	{
 		$state = $GLOBALS['bvmgr_slow_request_logger'] ?? null;
 		if (!is_array($state) || empty($state['matched'])) {
@@ -437,8 +437,8 @@ if (!function_exists('vms_slow_request_logger_shutdown')) {
 
 		$elapsed_seconds = microtime(true) - (float) ($state['started_at'] ?? microtime(true));
 		$peak_memory_bytes = memory_get_peak_usage(true);
-		$fatal_summary = vms_slow_request_logger_fatal_summary();
-		$triggers = vms_slow_request_logger_trigger_list($elapsed_seconds, $peak_memory_bytes, $fatal_summary);
+		$fatal_summary = bvmgr_slow_request_logger_fatal_summary();
+		$triggers = bvmgr_slow_request_logger_trigger_list($elapsed_seconds, $peak_memory_bytes, $fatal_summary);
 		if (empty($triggers)) {
 			return;
 		}
@@ -465,22 +465,22 @@ if (!function_exists('vms_slow_request_logger_shutdown')) {
 			'ip_hash' => (string) ($state['ip_hash'] ?? ''),
 		);
 
-		vms_slow_request_logger_write_entry($entry);
+		bvmgr_slow_request_logger_write_entry($entry);
 	}
 }
 
-if (!function_exists('vms_slow_request_logger_bootstrap')) {
-	function vms_slow_request_logger_bootstrap(): void
+if (!function_exists('bvmgr_slow_request_logger_bootstrap')) {
+	function bvmgr_slow_request_logger_bootstrap(): void
 	{
 		static $booted = false;
-		if ($booted || !vms_slow_request_logger_enabled()) {
+		if ($booted || !bvmgr_slow_request_logger_enabled()) {
 			return;
 		}
 		if (defined('WP_CLI') && WP_CLI) {
 			return;
 		}
 
-		$match = vms_slow_request_logger_match_request();
+		$match = bvmgr_slow_request_logger_match_request();
 		if (empty($match['matched'])) {
 			return;
 		}
@@ -489,18 +489,18 @@ if (!function_exists('vms_slow_request_logger_bootstrap')) {
 		$GLOBALS['bvmgr_slow_request_logger'] = array(
 			'matched' => true,
 			'started_at' => isset($_SERVER['REQUEST_TIME_FLOAT']) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true),
-			'method' => strtoupper(vms_request_method()),
+			'method' => strtoupper(bvmgr_request_method()),
 			'normalized_uri' => (string) ($match['normalized_uri'] ?? '/'),
 			'scope' => (string) ($match['scope'] ?? ''),
 			'reason' => (string) ($match['reason'] ?? ''),
-			'user_agent_class' => vms_slow_request_logger_user_agent_class(),
-			'ip_hash' => vms_slow_request_logger_source_ip_hash(),
+			'user_agent_class' => bvmgr_slow_request_logger_user_agent_class(),
+			'ip_hash' => bvmgr_slow_request_logger_source_ip_hash(),
 			'response_status' => 0,
 		);
 
-		add_filter('status_header', 'vms_slow_request_logger_capture_status_header', 10, 4);
-		register_shutdown_function('vms_slow_request_logger_shutdown');
+		add_filter('status_header', 'bvmgr_slow_request_logger_capture_status_header', 10, 4);
+		register_shutdown_function('bvmgr_slow_request_logger_shutdown');
 	}
 }
 
-vms_slow_request_logger_bootstrap();
+bvmgr_slow_request_logger_bootstrap();

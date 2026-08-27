@@ -39,7 +39,7 @@ function vms_ticket_integrity_admin_enqueue_assets(string $hook): void
 		'vms-admin-ticket-integrity',
 		BVMGR_PLUGIN_URL . 'assets/css/admin-ticket-integrity.css',
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 	);
 
 	if ($page !== 'vms-ticket-integrity') {
@@ -50,7 +50,7 @@ function vms_ticket_integrity_admin_enqueue_assets(string $hook): void
 		'vms-admin-ticket-integrity',
 		BVMGR_PLUGIN_URL . 'assets/js/admin-ticket-integrity.js',
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
+		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
 		true
 	);
 

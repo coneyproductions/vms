@@ -158,8 +158,8 @@ if (!function_exists('vms_cancellation_get_event_refundable_product_ids')) {
 		$ticket_ids = array();
 		$sync_ids = array();
 
-		if ($tec_event_id > 0 && function_exists('vms_get_ticket_product_ids_for_event')) {
-			$ticket_ids = array_values(array_unique(array_filter(array_map('absint', (array) vms_get_ticket_product_ids_for_event($tec_event_id)))));
+		if ($tec_event_id > 0 && function_exists('bvmgr_get_ticket_product_ids_for_event')) {
+			$ticket_ids = array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id)))));
 			$ids = array_merge($ids, $ticket_ids);
 		}
 
@@ -393,7 +393,7 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 
 		$product_ids = function_exists('vms_cancellation_get_event_refundable_product_ids')
 			? array_values(array_unique(array_filter(array_map('absint', (array) vms_cancellation_get_event_refundable_product_ids($event_plan_id, $tec_event_id)))))
-			: (function_exists('vms_get_ticket_product_ids_for_event') ? array_values(array_unique(array_filter(array_map('absint', (array) vms_get_ticket_product_ids_for_event($tec_event_id))))) : array());
+			: (function_exists('bvmgr_get_ticket_product_ids_for_event') ? array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id))))) : array());
 		if (empty($product_ids)) {
 			$data['note'] = 'no_woo_event_products_found';
 		} else {
@@ -626,8 +626,8 @@ if (!empty($data['failed_products']) || !empty($data['failed_rsvp_tickets'])) {
 		);
 	}
 
-	$ticket_product_ids = function_exists('vms_get_ticket_product_ids_for_event')
-		? array_values(array_unique(array_filter(array_map('absint', (array) vms_get_ticket_product_ids_for_event($tec_event_id)))))
+	$ticket_product_ids = function_exists('bvmgr_get_ticket_product_ids_for_event')
+		? array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id)))))
 		: array();
 	$product_ids = function_exists('vms_cancellation_get_event_refundable_product_ids')
 		? array_values(array_unique(array_filter(array_map('absint', (array) vms_cancellation_get_event_refundable_product_ids($event_plan_id, $tec_event_id)))))

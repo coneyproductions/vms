@@ -633,7 +633,7 @@ $assertSame(
 		'div' => array('class' => true),
 		'p' => array(),
 	),
-	vms_admin_ui_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_explicit_notice_allowed_html(),
 	'Administrator shell simple notice contract should remain unchanged.'
 );
 $assertSame(
@@ -642,7 +642,7 @@ $assertSame(
 		'p' => array(),
 		'strong' => array(),
 	),
-	vms_admin_ui_rich_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_rich_explicit_notice_allowed_html(),
 	'Administrator shell rich notice contract should remain unchanged.'
 );
 
@@ -776,7 +776,7 @@ $assert(strpos($page_content, '<form method="post" action="https://example.test/
 $assert(strpos($page_content, 'name="_wpnonce" value="nonce:vms_tours_reset_my_state"') !== false, 'Guided Tours reset form should preserve the nonce field.');
 
 $captured_notices_html = '';
-$remaining_content_html = vms_admin_ui_extract_notice_markup($page_content, $captured_notices_html);
+$remaining_content_html = bvmgr_admin_ui_extract_notice_markup($page_content, $captured_notices_html);
 $assertSame('', $captured_notices_html, 'Guided Tours reset notice should remain page-local and should not be routed into the shell notice buffer.');
 $assert(strpos($remaining_content_html, 'guided-tours.reset-notice') !== false, 'Guided Tours reset notice should remain in the page-local content after shell notice extraction.');
 

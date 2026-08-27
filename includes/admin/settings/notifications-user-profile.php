@@ -64,20 +64,20 @@ if (!function_exists('vms_notify_save_user_profile_fields')) {
 
 		check_admin_referer('update-user_' . $user_id);
 
-		$locale = vms_request_read_text_field($_POST, 'vms_locale_preference');
+		$locale = bvmgr_request_read_text_field($_POST, 'vms_locale_preference');
 		if ($locale !== '' && !preg_match('/^[a-z]{2}_[A-Z]{2}$/', $locale)) {
 			$locale = '';
 		}
 
-		$phone = vms_request_read_text_field($_POST, 'vms_phone_e164');
+		$phone = bvmgr_request_read_text_field($_POST, 'vms_phone_e164');
 		if ($phone !== '' && !preg_match('/^\+[1-9][0-9]{7,14}$/', $phone)) {
 			$phone = '';
 		}
 
 		update_user_meta($user_id, 'vms_locale_preference', $locale);
-		update_user_meta($user_id, 'vms_notify_email_enabled', vms_request_read_bool_flag($_POST, 'vms_notify_email_enabled') ? '1' : '0');
-		update_user_meta($user_id, 'vms_notify_sms_enabled', vms_request_read_bool_flag($_POST, 'vms_notify_sms_enabled') ? '1' : '0');
-		update_user_meta($user_id, 'vms_notify_whatsapp_enabled', vms_request_read_bool_flag($_POST, 'vms_notify_whatsapp_enabled') ? '1' : '0');
+		update_user_meta($user_id, 'vms_notify_email_enabled', bvmgr_request_read_bool_flag($_POST, 'vms_notify_email_enabled') ? '1' : '0');
+		update_user_meta($user_id, 'vms_notify_sms_enabled', bvmgr_request_read_bool_flag($_POST, 'vms_notify_sms_enabled') ? '1' : '0');
+		update_user_meta($user_id, 'vms_notify_whatsapp_enabled', bvmgr_request_read_bool_flag($_POST, 'vms_notify_whatsapp_enabled') ? '1' : '0');
 		update_user_meta($user_id, 'vms_phone_e164', $phone);
 	}
 }

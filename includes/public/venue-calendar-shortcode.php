@@ -215,7 +215,7 @@ if (!function_exists('vms_public_calendar_get_requested_show_past')) {
 if (!function_exists('vms_public_calendar_get_request_user_agent')) {
 	function vms_public_calendar_get_request_user_agent(): string
 	{
-		$user_agent = vms_request_server_value('HTTP_USER_AGENT');
+		$user_agent = bvmgr_request_server_value('HTTP_USER_AGENT');
 		if ($user_agent === '') {
 			return '';
 		}
@@ -993,8 +993,8 @@ if (!function_exists('vms_public_calendar_build_day_states')) {
 				$is_past = ($ymd < $today);
 				$is_today = ($ymd === $today);
 				$is_open = null;
-				if ($show_open_closed && $venue_id > 0 && function_exists('vms_venue_is_open_on_date')) {
-					$is_open = (bool) vms_venue_is_open_on_date($venue_id, $ymd);
+				if ($show_open_closed && $venue_id > 0 && function_exists('bvmgr_venue_is_open_on_date')) {
+					$is_open = (bool) bvmgr_venue_is_open_on_date($venue_id, $ymd);
 				}
 				$out[$day] = array(
 					'is_past' => $is_past,
@@ -1547,7 +1547,7 @@ if (!function_exists('vms_public_calendar_shortcode_handler')) {
 			? vms_public_calendar_render_compact_nav($compact_context, $base)
 			: vms_public_calendar_render_nav($nav, $base, $month);
 
-		$calendar_script_ver = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null);
+		$calendar_script_ver = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null);
 		if (defined('BVMGR_PLUGIN_PATH')) {
 			$calendar_script_file = BVMGR_PLUGIN_PATH . 'assets/js/vms-public-calendar.js';
 			if (file_exists($calendar_script_file)) {

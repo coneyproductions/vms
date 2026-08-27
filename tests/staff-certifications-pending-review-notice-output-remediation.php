@@ -230,7 +230,7 @@ $assertSame(
 		'div' => array('class' => true),
 		'p' => array(),
 	),
-	vms_admin_ui_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_explicit_notice_allowed_html(),
 	'Administrator shell simple notice contract should remain unchanged.'
 );
 $assertSame(
@@ -239,7 +239,7 @@ $assertSame(
 		'p' => array(),
 		'strong' => array(),
 	),
-	vms_admin_ui_rich_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_rich_explicit_notice_allowed_html(),
 	'Administrator shell rich notice contract should remain unchanged.'
 );
 

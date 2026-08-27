@@ -49,8 +49,8 @@ function bvmgr_event_plan_get_status(int $plan_id, string $context = 'generic'):
 	$status_raw = (string) get_post_meta($plan_id, $k_status, true);
 	$status = bvmgr_event_plan_status_normalize($status_raw);
 
-	$allowed = function_exists('vms_event_plan_statuses')
-		? array_keys((array) vms_event_plan_statuses())
+	$allowed = function_exists('bvmgr_event_plan_statuses')
+		? array_keys((array) bvmgr_event_plan_statuses())
 		: array('draft', 'ready', 'published', 'tentative', 'confirmed', 'cancelled', 'archived');
 
 	if ($status === '' || !in_array($status, $allowed, true)) {
@@ -99,8 +99,8 @@ function vms_event_plan_allowed_statuses(string $context, array $flags = array()
 {
 	$context = sanitize_key((string) $context);
 
-	$all = function_exists('vms_event_plan_statuses')
-		? array_keys((array) vms_event_plan_statuses())
+	$all = function_exists('bvmgr_event_plan_statuses')
+		? array_keys((array) bvmgr_event_plan_statuses())
 		: array('draft', 'ready', 'published', 'tentative', 'confirmed', 'cancelled', 'archived');
 
 	// Published-only everywhere by default.
@@ -183,8 +183,8 @@ function bvmgr_event_plan_status_label(string $status): string
 {
 	$status = bvmgr_event_plan_status_normalize($status);
 
-	if (function_exists('vms_event_plan_statuses')) {
-		$map = (array) vms_event_plan_statuses();
+	if (function_exists('bvmgr_event_plan_statuses')) {
+		$map = (array) bvmgr_event_plan_statuses();
 		if (isset($map[$status])) {
 			return (string) $map[$status];
 		}

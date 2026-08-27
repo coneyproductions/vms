@@ -251,7 +251,7 @@ function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date):
     // Normalize output keys
     $row = $all[$dow];
 
-    $normalized_terms = function_exists('vms_normalize_comp_terms') ? vms_normalize_comp_terms($row) : array();
+    $normalized_terms = function_exists('bvmgr_normalize_comp_terms') ? bvmgr_normalize_comp_terms($row) : array();
     $out = array(
         'structure'          => isset($normalized_terms['structure']) ? (string) $normalized_terms['structure'] : (isset($row['structure']) ? (string) $row['structure'] : 'flat_fee'),
         'flat_fee_amount'    => $normalized_terms['flat_fee_amount'] ?? ($row['flat_fee_amount'] ?? ''),

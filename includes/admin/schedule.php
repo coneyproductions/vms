@@ -32,8 +32,8 @@ function vms_sch_get_window_bounds(int $venue_id): array
     $start = '';
     $end   = '';
 
-    if (function_exists('vms_get_schedule_window_bounds')) {
-        $raw = vms_get_schedule_window_bounds($venue_id);
+    if (function_exists('bvmgr_get_schedule_window_bounds')) {
+        $raw = bvmgr_get_schedule_window_bounds($venue_id);
         if (is_array($raw)) {
             $start = $raw['start_ymd'] ?? $raw['start'] ?? $raw['start_date'] ?? ($raw[0] ?? '');
             $end   = $raw['end_ymd']   ?? $raw['end']   ?? $raw['end_date']   ?? ($raw[1] ?? '');
@@ -149,8 +149,8 @@ function vms_sch_plan_label($plan_id)
     }
 
     // Single source of truth for Schedule labeling (list + calendar).
-    if (function_exists('vms_event_plan_compact_label')) {
-        return (string) vms_event_plan_compact_label($plan_id);
+    if (function_exists('bvmgr_event_plan_compact_label')) {
+        return (string) bvmgr_event_plan_compact_label($plan_id);
     }
 
     return 'Event Plan';
@@ -190,7 +190,7 @@ function vms_handle_create_event_plan(): void
     }
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The create-event-plan link verifies an action-specific nonce before any mutation occurs.
-    $ymd = vms_request_read_text_field($_GET, 'date');
+    $ymd = bvmgr_request_read_text_field($_GET, 'date');
     if (!$ymd) {
         wp_die('Missing date.');
     }
@@ -206,7 +206,7 @@ function vms_handle_create_event_plan(): void
     }
 
     // Prefer explicit venue_id from the calendar link; fallback to current selected venue.
-    $venue_id = vms_request_read_absint($_GET, 'venue_id');
+    $venue_id = bvmgr_request_read_absint($_GET, 'venue_id');
     if ($venue_id <= 0 && function_exists('vms_get_current_venue_id')) {
         $venue_id = (int) vms_get_current_venue_id();
     }
@@ -344,8 +344,8 @@ function vms_handle_create_event_plan(): void
  */
 function vms_render_schedule_page(): void
 {
-    $event_plans_url = function_exists('vms_admin_ui_post_type_url')
-        ? vms_admin_ui_post_type_url('vms_event_plan')
+    $event_plans_url = function_exists('bvmgr_admin_ui_post_type_url')
+        ? bvmgr_admin_ui_post_type_url('vms_event_plan')
         : admin_url('edit.php?post_type=vms_event_plan');
     $new_event_plan_url = admin_url('post-new.php?post_type=vms_event_plan');
     $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
@@ -384,7 +384,7 @@ function vms_render_schedule_page_content(): void
 
     // View + scope come from URL (view mode only; do NOT store as current venue).
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule view selection only changes the current admin display mode.
-    $view = vms_request_read_text_field($_GET, 'view');
+    $view = bvmgr_request_read_text_field($_GET, 'view');
     if ($view === '') {
         $view = 'calendar';
     }
@@ -397,7 +397,7 @@ function vms_render_schedule_page_content(): void
         : '_vms_schedule_scope';
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule scope selection only affects this admin view and stored user preference state.
-    $incoming_scope = vms_request_read_key($_GET, 'scope');
+    $incoming_scope = bvmgr_request_read_key($_GET, 'scope');
     if ($incoming_scope !== 'venue' && $incoming_scope !== 'all') {
         $incoming_scope = '';
     }
@@ -418,7 +418,7 @@ function vms_render_schedule_page_content(): void
     // If URL explicitly specifies a venue_id, save it as the new numeric "current venue".
     // IMPORTANT: This never saves 'all'. All-venues is controlled by $scope only.
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule venue selection only updates the viewer's own admin preference state.
-    $requested_venue_id = vms_request_read_absint($_GET, 'venue_id');
+    $requested_venue_id = bvmgr_request_read_absint($_GET, 'venue_id');
     if ($requested_venue_id > 0) {
         if (vms_sch_is_valid_venue_post_id($requested_venue_id)) {
             update_user_meta($user_id, $sch_venue_meta_key, (string) $requested_venue_id);
@@ -434,8 +434,8 @@ function vms_render_schedule_page_content(): void
     }
 
     // Fallback to Default Venue if none selected yet.
-    if ($venue_id <= 0 && function_exists('vms_get_default_venue_id')) {
-        $fallback_default = (int) vms_get_default_venue_id();
+    if ($venue_id <= 0 && function_exists('bvmgr_get_default_venue_id')) {
+        $fallback_default = (int) bvmgr_get_default_venue_id();
         if (vms_sch_is_valid_venue_post_id((int) $fallback_default)) {
             $venue_id = $fallback_default;
         }
@@ -479,7 +479,7 @@ function vms_render_schedule_page_content(): void
     }
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule lookback selection only updates the viewer's own admin preference state.
-    $requested_lb_raw = vms_request_read_scalar($_GET, 'lb');
+    $requested_lb_raw = bvmgr_request_read_scalar($_GET, 'lb');
     if ($requested_lb_raw !== '') {
         $requested_lb = absint($requested_lb_raw);
         if (in_array($requested_lb, array(0, 1, 12), true)) {
@@ -490,20 +490,20 @@ function vms_render_schedule_page_content(): void
 
     // Schedule visibility toggle: include Draft/Ready in Schedule views (persist per-user).
     // Default: ON (Draft/Ready should appear in Schedule as Draft/Ready).
-    $has_inc = function_exists('vms_user_pref_has_include_drafts')
-        ? (bool) vms_user_pref_has_include_drafts($user_id)
+    $has_inc = function_exists('bvmgr_user_pref_has_include_drafts')
+        ? (bool) bvmgr_user_pref_has_include_drafts($user_id)
         : (bool) metadata_exists('user', $user_id, '_vms_include_drafts');
 
     $include_drafts = $has_inc
-        ? ((function_exists('vms_user_pref_get_include_drafts')) ? (bool) vms_user_pref_get_include_drafts((int) $user_id) : false)
+        ? ((function_exists('bvmgr_user_pref_get_include_drafts')) ? (bool) bvmgr_user_pref_get_include_drafts((int) $user_id) : false)
         : true;
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule visibility selection only updates the viewer's own admin preference state.
-    $include_drafts_raw = vms_request_read_scalar($_GET, 'include_drafts');
+    $include_drafts_raw = bvmgr_request_read_scalar($_GET, 'include_drafts');
     if ($include_drafts_raw !== '') {
         $include_drafts = (absint($include_drafts_raw) === 1);
-        if (function_exists('vms_user_pref_set_include_drafts')) {
-            vms_user_pref_set_include_drafts((bool) $include_drafts, (int) $user_id);
+        if (function_exists('bvmgr_user_pref_set_include_drafts')) {
+            bvmgr_user_pref_set_include_drafts((bool) $include_drafts, (int) $user_id);
         } else {
             update_user_meta((int) $user_id, '_vms_include_drafts', $include_drafts ? '1' : '0');
         }
@@ -528,7 +528,7 @@ function vms_render_schedule_page_content(): void
 
     // Lookback control (mirrors vendor portal lookback selector)
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule form routing only preserves the current admin page slug.
-    $page_slug = vms_request_read_key($_GET, 'page');
+    $page_slug = bvmgr_request_read_key($_GET, 'page');
     if ($page_slug === '') {
         $page_slug = 'vms-schedule';
     }
@@ -809,9 +809,9 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
     $hide_past_default = array_key_exists('sch_hide_past_default', $opts) ? (int) $opts['sch_hide_past_default'] : 1;
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule filters only affect which dates are shown in the current admin view.
-    $show_past = vms_request_read_absint($_GET, 'show_past');
+    $show_past = bvmgr_request_read_absint($_GET, 'show_past');
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule filters only affect which dates are shown in the current admin view.
-    $force_hide_past = vms_request_read_absint($_GET, 'hide_past');
+    $force_hide_past = bvmgr_request_read_absint($_GET, 'hide_past');
 
     // show_past wins if both are present
     if ($show_past === 1) {
@@ -943,7 +943,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
             foreach ($plans_by_date[$ymd] as $row) {
 
-                $plan_id = vms_get_plan_id_from_row($row);
+                $plan_id = bvmgr_get_plan_id_from_row($row);
                 if ($plan_id <= 0) continue;
 
                 $status = '';
@@ -956,7 +956,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
                 // Fallback for legacy rows that do not carry canonical plan_status.
                 if ($status === '') {
-                    $status = sanitize_key((string) vms_map_plan_status($plan_id));
+                    $status = sanitize_key((string) bvmgr_map_plan_status($plan_id));
                     if ($status === 'canceled') {
                         $status = 'cancelled';
                     }
@@ -974,7 +974,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
                 $venue_id = (int) ($row['venue_id'] ?? 0);
                 $venue_name = ($venue_id > 0 && isset($venue_name_map[$venue_id])) ? (string) $venue_name_map[$venue_id] : '';
 
-                $html = vms_get_plan_headliner_link_html($plan_id);
+                $html = bvmgr_get_plan_headliner_link_html($plan_id);
                 if ($html !== '') {
                     if ($venue_name !== '') {
                         $html = '<span class="vms-muted">' . esc_html($venue_name) . ':</span> ' . $html;
@@ -1210,7 +1210,7 @@ $scope_key = 'single';
 
                 foreach ($plans_by_date[$ymd] as $row) {
 
-                    $pid = vms_get_plan_id_from_row($row);
+                    $pid = bvmgr_get_plan_id_from_row($row);
                     if ($pid <= 0) {
                         continue;
                     }
@@ -1383,7 +1383,7 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
             $plan_lines  = array();
 
             foreach ($plans_by_date[$ymd] as $row) {
-                $plan_id = vms_get_plan_id_from_row($row);
+                $plan_id = bvmgr_get_plan_id_from_row($row);
                 if ($plan_id <= 0) {
                     continue;
                 }
@@ -1392,7 +1392,7 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
                 $venue_name = ($venue_id > 0 && isset($venue_name_map[$venue_id])) ? (string) $venue_name_map[$venue_id] : '';
                 $venue_lines[] = ($venue_name !== '') ? esc_html($venue_name) : '<span class="vms-muted">(unknown)</span>';
 
-                $html = vms_get_plan_headliner_link_html($plan_id);
+                $html = bvmgr_get_plan_headliner_link_html($plan_id);
                 $plan_lines[] = ($html !== '') ? $html : '<span class="vms-muted">(untitled)</span>';
             }
 

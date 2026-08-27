@@ -95,8 +95,8 @@ $assert(strpos($allSource, 'copy(') === false, 'F4 should not introduce direct c
 
 $assert(strpos($previewAction, "current_user_can('manage_options')") !== false, 'Preview action should retain the manage_options capability gate.');
 $assert(strpos($previewAction, "check_admin_referer('vms_event_plan_import_preview')") !== false, 'Preview action should retain the preview nonce gate.');
-$assert(strpos($previewAction, "vms_upload_read_file(\$_FILES, 'event_plan_csv_file')") !== false, 'Preview action should retain the event_plan_csv_file upload field.');
-$assert(strpos($previewAction, 'vms_validate_uploaded_file(') !== false, 'Preview action should retain shared upload validation.');
+$assert(strpos($previewAction, "bvmgr_upload_read_file(\$_FILES, 'event_plan_csv_file')") !== false, 'Preview action should retain the event_plan_csv_file upload field.');
+$assert(strpos($previewAction, 'bvmgr_validate_uploaded_file(') !== false, 'Preview action should retain shared upload validation.');
 $assert(strpos($previewAction, "vms_event_plan_import_prepare_generated_path('csv', \$token, 'source')") !== false, 'Preview action should retain deterministic <token>-source.csv staging.');
 $assert(strpos($previewAction, 'wp_handle_upload(') !== false, 'Preview action should retain wp_handle_upload() staging.');
 $assert(strpos($previewAction, 'vms_event_plan_import_path_is_safe($handled_file)') !== false, 'Preview action should retain its safe-path guard before handled-file rollback.');
@@ -109,7 +109,7 @@ $assert(strpos($downloadReportAction, "current_user_can('manage_options')") !== 
 $assert(strpos($downloadReportAction, "wp_verify_nonce(\$nonce, 'vms_event_plan_import_download_report_' . \$token)") !== false, 'Preview report download should retain the token-scoped nonce gate.');
 $assert(strpos($downloadReportAction, "vms_event_plan_import_storage_path((string) (\$preview['report_csv_storage_key'] ?? (\$preview['report_csv_path'] ?? '')))") !== false, 'Preview report download should retain the storage-key to legacy-path fallback.');
 $assert(strpos($downloadReportAction, '!file_exists($path)') !== false && strpos($downloadReportAction, '!vms_event_plan_import_path_is_safe($path)') !== false, 'Preview report download should retain file-existence and safe-path checks.');
-$assert(strpos($downloadReportAction, "vms_private_files_stream_path(\$path, \$filename, 'text/csv');") !== false, 'Preview report download should still prefer the shared private stream helper.');
+$assert(strpos($downloadReportAction, "bvmgr_private_files_stream_path(\$path, \$filename, 'text/csv');") !== false, 'Preview report download should still prefer the shared private stream helper.');
 $assert(strpos($downloadReportAction, 'readfile($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile') !== false, 'Preview report download should retain only a line-specific readfile suppression.');
 $assert(strpos($downloadReportAction, 'file_get_contents(') === false, 'Preview report download should not switch to a full-memory read.');
 
@@ -149,12 +149,12 @@ $assert(strpos($readRowsJson, 'vms_event_plan_import_storage_path($rows_json_ref
 $assert(strpos($readRowsJson, '!vms_event_plan_import_path_is_safe($rows_json_path)') !== false, 'Rows-cache reader should still enforce the safe-path guard.');
 $assert(strpos($readRowsJson, '5 * 1024 * 1024') !== false, 'Rows-cache reader should still enforce the 5 MB JSON read cap.');
 $assert(strpos($readRowsJson, '$raw = file_get_contents($rows_json_path);') !== false, 'Rows-cache reader should still read only the validated staged JSON path.');
-$assert(strpos($readRowsJson, 'vms_json_decode_associative($raw, 64)') !== false, 'Rows-cache reader should still decode through the bounded JSON helper.');
+$assert(strpos($readRowsJson, 'bvmgr_json_decode_associative($raw, 64)') !== false, 'Rows-cache reader should still decode through the bounded JSON helper.');
 
 $assert(strpos($revertLastRun, "vms_event_plan_import_storage_path((string) (\$run['snapshot_storage_key'] ?? (\$run['snapshot_path'] ?? '')))") !== false, 'Revert should still resolve snapshot files through the storage-path helper.');
 $assert(strpos($revertLastRun, '!vms_event_plan_import_path_is_safe($snapshot_path)') !== false, 'Revert should still enforce the safe-path guard.');
 $assert(strpos($revertLastRun, '5 * 1024 * 1024') !== false, 'Revert should still enforce the 5 MB snapshot read cap.');
 $assert(strpos($revertLastRun, '$raw = file_get_contents($snapshot_path);') !== false, 'Revert should still read only the validated snapshot path.');
-$assert(strpos($revertLastRun, 'vms_json_decode_associative($raw, 64)') !== false, 'Revert should still decode through the bounded JSON helper.');
+$assert(strpos($revertLastRun, 'bvmgr_json_decode_associative($raw, 64)') !== false, 'Revert should still decode through the bounded JSON helper.');
 
 fwrite(STDOUT, "event-plan-import-file-operations-boundary-remediation: OK\n");

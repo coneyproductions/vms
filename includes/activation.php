@@ -14,21 +14,21 @@ function bvmgr_activate_plugin(): void
 		bvmgr_run_legacy_square_nightly_sync_cleanup();
 	}
 
-	if (function_exists('vms_require_internal_file') && vms_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_activation', 'Database migrations')) {
-		if (function_exists('vms_db_migrate_vendor_core_v7')) {
-			vms_db_migrate_vendor_core_v7();
-		} elseif (function_exists('vms_db_migrate_vendor_core_v6')) {
-			vms_db_migrate_vendor_core_v6();
-		} elseif (function_exists('vms_db_migrate_vendor_core_v5')) {
-			vms_db_migrate_vendor_core_v5();
-		} elseif (function_exists('vms_db_migrate_vendor_core_v4')) {
-			vms_db_migrate_vendor_core_v4();
-		} elseif (function_exists('vms_db_migrate_vendor_core_v3')) {
-			vms_db_migrate_vendor_core_v3();
-		} elseif (function_exists('vms_db_migrate_vendor_core_v2')) {
-			vms_db_migrate_vendor_core_v2();
-		} elseif (function_exists('vms_db_migrate_vendor_core_v1')) {
-			vms_db_migrate_vendor_core_v1();
+	if (function_exists('bvmgr_require_internal_file') && bvmgr_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_activation', 'Database migrations')) {
+		if (function_exists('bvmgr_db_migrate_vendor_core_v7')) {
+			bvmgr_db_migrate_vendor_core_v7();
+		} elseif (function_exists('bvmgr_db_migrate_vendor_core_v6')) {
+			bvmgr_db_migrate_vendor_core_v6();
+		} elseif (function_exists('bvmgr_db_migrate_vendor_core_v5')) {
+			bvmgr_db_migrate_vendor_core_v5();
+		} elseif (function_exists('bvmgr_db_migrate_vendor_core_v4')) {
+			bvmgr_db_migrate_vendor_core_v4();
+		} elseif (function_exists('bvmgr_db_migrate_vendor_core_v3')) {
+			bvmgr_db_migrate_vendor_core_v3();
+		} elseif (function_exists('bvmgr_db_migrate_vendor_core_v2')) {
+			bvmgr_db_migrate_vendor_core_v2();
+		} elseif (function_exists('bvmgr_db_migrate_vendor_core_v1')) {
+			bvmgr_db_migrate_vendor_core_v1();
 		}
 	}
 
@@ -71,8 +71,8 @@ function bvmgr_deactivate_plugin(): void
 		bvmgr_run_legacy_square_nightly_sync_cleanup();
 	}
 
-	if (function_exists('vms_unschedule_all_owned_cron_hooks')) {
-		vms_unschedule_all_owned_cron_hooks();
+	if (function_exists('bvmgr_unschedule_all_owned_cron_hooks')) {
+		bvmgr_unschedule_all_owned_cron_hooks();
 	}
 	flush_rewrite_rules();
 }
@@ -735,8 +735,8 @@ function bvmgr_ensure_page_exists(array $args): int
  */
 function bvmgr_install_public_pages(): void
 {
-	$pages = function_exists('vms_required_public_pages')
-		? (array) vms_required_public_pages()
+	$pages = function_exists('bvmgr_required_public_pages')
+		? (array) bvmgr_required_public_pages()
 		: array(
 			'vendor_application' => array(
 				'slug'    => 'vendor-application',

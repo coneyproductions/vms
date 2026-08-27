@@ -176,8 +176,8 @@ if (!function_exists('vms_event_plan_perf_request_id')) {
 		$seed = array(
 			(string) microtime(true),
 			(string) wp_rand(1000, 999999),
-			vms_request_server_value('REQUEST_TIME_FLOAT'),
-			vms_request_current_uri(),
+			bvmgr_request_server_value('REQUEST_TIME_FLOAT'),
+			bvmgr_request_current_uri(),
 		);
 		$request_id = substr(hash('sha256', implode('|', $seed)), 0, 12);
 		return $request_id;
@@ -532,8 +532,8 @@ if (!function_exists('vms_event_plan_perf_request_context')) {
 
 		return array(
 			'request_type' => vms_event_plan_perf_request_type(),
-			'request_method' => vms_request_method(''),
-			'request_uri' => vms_request_current_uri(),
+			'request_method' => bvmgr_request_method(''),
+			'request_uri' => bvmgr_request_current_uri(),
 			'trace_scenario' => vms_event_plan_perf_request_scenario(),
 			'wp_action' => $wp_action,
 			'plan_action' => $plan_action,
@@ -1022,7 +1022,7 @@ if (!function_exists('vms_event_plan_perf_dependency_snapshot')) {
 			'ticketing_helper_loaded' => function_exists('vms_ticketing_v2_get_saved_config') ? 1 : 0,
 			'vendor_availability_helper_loaded' => function_exists('vms_get_vendor_availability_for_date') ? 1 : 0,
 			'integrity_helper_loaded' => function_exists('vms_event_plan_clear_integrity_flags') ? 1 : 0,
-			'comp_default_helper_loaded' => function_exists('vms_get_event_plan_effective_comp_default') ? 1 : 0,
+			'comp_default_helper_loaded' => function_exists('bvmgr_get_event_plan_effective_comp_default') ? 1 : 0,
 		);
 	}
 }

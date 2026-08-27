@@ -14,7 +14,7 @@ if (function_exists('bvmgr_register_module')) {
 
 require_once __DIR__ . '/logs.php';
 
-if (function_exists('vms_is_public_frontend_request') && vms_is_public_frontend_request()) {
+if (function_exists('bvmgr_is_public_frontend_request') && bvmgr_is_public_frontend_request()) {
 	return;
 }
 

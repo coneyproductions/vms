@@ -45,11 +45,11 @@ if (!function_exists('vms_social_runner_release_lock')) {
 if (!function_exists('vms_social_schedule_cron')) {
 	function vms_social_schedule_cron(): void
 	{
-		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+		if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
 			return;
 		}
 		$hook = defined('BVMGR_SOCIAL_CRON_HOOK') ? (string) BVMGR_SOCIAL_CRON_HOOK : 'vms_social_process_queue';
-		if (!function_exists('vms_schedule_exists') || !vms_schedule_exists('vms_social_5m')) {
+		if (!function_exists('bvmgr_schedule_exists') || !bvmgr_schedule_exists('vms_social_5m')) {
 			return;
 		}
 		if (!wp_next_scheduled($hook)) {

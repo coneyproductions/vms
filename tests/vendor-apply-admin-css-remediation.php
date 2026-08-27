@@ -44,7 +44,7 @@ function wp_enqueue_script(string $handle, string $src = '', array $deps = array
 	$GLOBALS['vms_test_scripts'][$handle] = compact('src', 'deps', 'ver', 'in_footer');
 }
 
-function vms_request_read_key(array $source, string $key): string
+function bvmgr_request_read_key(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || is_array($source[$key])) {
 		return '';

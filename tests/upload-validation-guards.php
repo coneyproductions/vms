@@ -129,7 +129,7 @@ $assert = static function (bool $condition, string $message): void {
 	throw new RuntimeException($message);
 };
 
-$single = vms_upload_read_file(array(
+$single = bvmgr_upload_read_file(array(
 	'proof' => array(
 		'name' => 'notes.csv',
 		'type' => 'text/plain',
@@ -141,7 +141,7 @@ $single = vms_upload_read_file(array(
 $assert(!is_wp_error($single), 'Single upload payload should normalize cleanly.');
 $assert(is_array($single) && $single['name'] === 'notes.csv', 'Single upload normalization should preserve the original filename.');
 
-$malformed = vms_upload_read_file(array(
+$malformed = bvmgr_upload_read_file(array(
 	'proof' => array(
 		'name' => array('nested'),
 		'type' => 'text/plain',
@@ -152,7 +152,7 @@ $malformed = vms_upload_read_file(array(
 ), 'proof');
 $assert(is_wp_error($malformed) && $malformed->get_error_code() === 'upload_invalid_shape', 'Malformed single upload payloads should be rejected.');
 
-$multi = vms_upload_normalize_multi_file_array(array(
+$multi = bvmgr_upload_normalize_multi_file_array(array(
 	'docs' => array(
 		'name' => array('one.csv', 'two.csv'),
 		'type' => array('text/plain', 'text/csv'),
@@ -164,7 +164,7 @@ $multi = vms_upload_normalize_multi_file_array(array(
 $assert(!is_wp_error($multi), 'Multi-file uploads should normalize cleanly.');
 $assert(is_array($multi) && count($multi) === 2, 'Multi-file normalization should preserve every row.');
 
-$validated = vms_validate_uploaded_file(
+$validated = bvmgr_validate_uploaded_file(
 	array(
 		'name' => 'Quarterly Notes.csv',
 		'type' => 'text/plain',
@@ -199,7 +199,7 @@ $assert(is_array($validated) && ($validated['mime'] ?? '') === 'text/plain', 'Va
 $assert(is_array($validated) && ($validated['size'] ?? 0) === 512, 'Validation should prefer the measured file size.');
 $assert(is_array($validated) && ($validated['sanitized_name'] ?? '') === 'Quarterly-Notes.csv', 'Validation should sanitize the display filename.');
 
-$rejected = vms_validate_uploaded_file(
+$rejected = bvmgr_validate_uploaded_file(
 	array(
 		'name' => 'bad.csv',
 		'type' => 'text/plain',

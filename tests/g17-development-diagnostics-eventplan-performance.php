@@ -365,7 +365,7 @@ $g17a_perf_path = g17a_extract_function($g17a_perf_source, 'vms_event_plan_perf_
 g17a_contains("return defined('VMS_EP_PERF_TRACE') && VMS_EP_PERF_TRACE;", $g17a_perf_source, 'Performance trace gate changed.');
 g17a_contains("apply_filters('vms_event_plan_perf_log_path', \$path)", $g17a_perf_path, 'Legacy performance path filter must remain callable.');
 g17a_not_contains('vms_event_plan_perf_log_path()', $g17a_perf_log, 'Action-only logger must leave the legacy path helper inert.');
-g17a_not_contains('vms_record_operational_issue', $g17a_perf_log, 'Performance tracing must not persist through the operational adapter.');
+g17a_not_contains('bvmgr_record_operational_issue', $g17a_perf_log, 'Performance tracing must not persist through the operational adapter.');
 g17a_not_contains('vms_event_plan_perf_request_context', $g17a_perf_log, 'Performance action must not capture ambient request context.');
 foreach (array('request_uri', 'current_user_id', "'pid'", 'query_count', 'sql', 'meta_key', 'wp_json_encode', 'PHP_EOL') as $forbidden) {
 	g17a_not_contains($forbidden, $g17a_perf_log, 'Performance action retained forbidden field or sink.');
@@ -377,9 +377,9 @@ g17a_contains("\$timing_keys = array('elapsed_ms', 'runtime_ms', 'duration_ms', 
 $g17a_resync = g17a_extract_function($g17a_mirror_event, 'vms_resync_event_to_calendar');
 $g17a_extras = g17a_extract_function($g17a_mirror_event, 'vms_tec_sync_event_extras_from_plan');
 foreach (array('event_plan_tec_provider_unavailable', 'event_plan_tec_resync_failed') as $event_code) {
-	g17a_same(1, substr_count($g17a_resync, "vms_record_operational_issue('" . $event_code . "'"), 'TEC event code must occur exactly once: ' . $event_code);
+	g17a_same(1, substr_count($g17a_resync, "bvmgr_record_operational_issue('" . $event_code . "'"), 'TEC event code must occur exactly once: ' . $event_code);
 }
-g17a_same(1, substr_count($g17a_extras, "vms_record_operational_issue('event_plan_tec_extras_sync_failed'"), 'TEC extras event code must occur exactly once.');
+g17a_same(1, substr_count($g17a_extras, "bvmgr_record_operational_issue('event_plan_tec_extras_sync_failed'"), 'TEC extras event code must occur exactly once.');
 foreach (array($g17a_resync, $g17a_extras) as $source) {
 	g17a_not_contains('get_error_message()', $source, 'TEC operational adapter must receive error identity rather than a raw message.');
 	g17a_not_contains('error_log(', $source, 'TEC boundary must contain no direct logger.');
@@ -533,17 +533,17 @@ function delete_post_meta(int $post_id, string $key): bool
 }
 
 $g17a_runtime_guards = g17a_read($g17a_root . '/includes/runtime-guards.php');
-foreach (array('vms_operational_issue_value_is_tainted', 'vms_operational_issue_error_identity', 'vms_operational_issue_context') as $helper) {
+foreach (array('bvmgr_operational_issue_value_is_tainted', 'bvmgr_operational_issue_error_identity', 'bvmgr_operational_issue_context') as $helper) {
 	eval(g17a_extract_guarded_function($g17a_runtime_guards, $helper));
 }
 
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$record = array(
 		'event_code' => $event_code,
-		'context' => vms_operational_issue_context($context),
+		'context' => bvmgr_operational_issue_context($context),
 	);
-	$error_identity = vms_operational_issue_error_identity($error);
+	$error_identity = bvmgr_operational_issue_error_identity($error);
 	if ($error_identity !== array()) {
 		$record['error'] = $error_identity;
 	}

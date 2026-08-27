@@ -413,7 +413,7 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 		echo '<div class="notice notice-warning inline vms-notice vms-notice--warning"><p>';
 		echo esc_html__('🚩 One or more selected vendors are missing required profile items. They are still attached, but they need attention.', 'backstage-venue-manager');
 		echo '</p>';
-		if (function_exists('vms_help_is_enabled') && vms_help_is_enabled()) {
+		if (function_exists('bvmgr_help_is_enabled') && bvmgr_help_is_enabled()) {
 			echo '<ul class="vms-help-missing-list">';
 			foreach ($group_unqualified as $vendor_id) {
 				$vendor_id = (int) $vendor_id;
@@ -489,8 +489,8 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 		<p class="description vms-secondary-vendor-legend">
 			<?php
 			echo esc_html__('Availability guide: [✓] Available, [✖] Not Available, [?] Unknown. Qualification guide: [Q✓] Qualified, [Q⚠] Needs attention.', 'backstage-venue-manager');
-			if (function_exists('vms_help_icon')) {
-				vms_help_icon(__('“[Q⚠] Needs attention” means this vendor is missing required profile items (usually phone or email).', 'backstage-venue-manager'));
+			if (function_exists('bvmgr_help_icon')) {
+				bvmgr_help_icon(__('“[Q⚠] Needs attention” means this vendor is missing required profile items (usually phone or email).', 'backstage-venue-manager'));
 			}
 			?>
 		</p>

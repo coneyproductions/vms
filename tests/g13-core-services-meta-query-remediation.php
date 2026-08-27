@@ -627,7 +627,7 @@ function wc_get_coupon_id_by_code(string $code): int
 	return absint($GLOBALS['g13_coupon_ids'][$code] ?? 0);
 }
 
-function vms_get_ticket_product_ids_for_event(int $tec_event_id): array
+function bvmgr_get_ticket_product_ids_for_event(int $tec_event_id): array
 {
 	unset($tec_event_id);
 	return $GLOBALS['g13_ticket_product_ids'];

@@ -54,7 +54,7 @@ add_action('save_post', function ($post_id, $post) {
 
     $t = function ($key) {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_tax_admin_save before reading tax-profile fields.
-        return vms_request_read_text_field($_POST, (string) $key);
+        return bvmgr_request_read_text_field($_POST, (string) $key);
     };
     $k = function ($field, $fallback) {
         if (!function_exists('bvmgr_meta_key')) {
@@ -73,7 +73,7 @@ add_action('save_post', function ($post_id, $post) {
     $k_state       = $k('state', '_vms_state');
     $k_zip         = $k('zip', '_vms_zip');
     $k_w9_upload   = $k('w9_upload_id', '_vms_w9_upload_id');
-    $k_w9_upload_kind = function_exists('vms_private_w9_storage_kind_meta_key') ? vms_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
+    $k_w9_upload_kind = function_exists('bvmgr_private_w9_storage_kind_meta_key') ? bvmgr_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
     $k_w9_recv     = $k('w9_received_date', '_vms_w9_received_date');
     $k_done        = $k('tax_profile_completed_at', '_vms_tax_profile_completed_at');
 
@@ -101,26 +101,26 @@ add_action('save_post', function ($post_id, $post) {
     update_post_meta($post_id, $k_zip,   $zip);
 
     // Handle W-9 upload from admin screen
-    if (vms_upload_request_has_file($_FILES, 'vms_w9_upload')) {
+    if (bvmgr_upload_request_has_file($_FILES, 'vms_w9_upload')) {
         $previous_upload_id = (int) get_post_meta($post_id, $k_w9_upload, true);
         $previous_kind = sanitize_key((string) get_post_meta($post_id, $k_w9_upload_kind, true));
-        $file_id = function_exists('vms_private_w9_store_upload')
-            ? vms_private_w9_store_upload((int) $post_id, $_FILES)
+        $file_id = function_exists('bvmgr_private_w9_store_upload')
+            ? bvmgr_private_w9_store_upload((int) $post_id, $_FILES)
             : new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
 
         if (!is_wp_error($file_id)) {
             update_post_meta($post_id, $k_w9_upload, (int) $file_id);
             update_post_meta($post_id, $k_w9_upload_kind, 'private_file');
             update_post_meta($post_id, $k_w9_recv, wp_date('Y-m-d', time(), wp_timezone()));
-            if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
-                vms_private_files_delete($previous_upload_id);
+            if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('bvmgr_private_files_delete')) {
+                bvmgr_private_files_delete($previous_upload_id);
             }
         }
     }
 
     // Completion stamp (optional)
-    if (function_exists('vms_vendor_tax_profile_is_complete')) {
-        if (vms_vendor_tax_profile_is_complete((int)$post_id)) {
+    if (function_exists('bvmgr_vendor_tax_profile_is_complete')) {
+        if (bvmgr_vendor_tax_profile_is_complete((int)$post_id)) {
             if (!(int) get_post_meta($post_id, $k_done, true)) {
                 update_post_meta($post_id, $k_done, time());
             }
@@ -167,11 +167,11 @@ function vms_render_tax_profile_admin_metabox($post)
     $zip   = $m($k('zip', '_vms_zip'));
 
     $w9_upload_id = (int) $m($k('w9_upload_id', '_vms_w9_upload_id'), 0);
-    $w9_url = $w9_upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($id) : '';
-    $w9_label = $w9_upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($id) : '';
+    $w9_url = $w9_upload_id && function_exists('bvmgr_private_w9_download_url') ? bvmgr_private_w9_download_url($id) : '';
+    $w9_label = $w9_upload_id && function_exists('bvmgr_private_w9_file_label') ? bvmgr_private_w9_file_label($id) : '';
 
-    $is_complete = function_exists('vms_vendor_tax_profile_is_complete')
-        ? vms_vendor_tax_profile_is_complete($id)
+    $is_complete = function_exists('bvmgr_vendor_tax_profile_is_complete')
+        ? bvmgr_vendor_tax_profile_is_complete($id)
         : false;
 
     // Staff employee: show employee packet status instead of W-9 tax profile UI.

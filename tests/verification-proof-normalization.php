@@ -433,7 +433,7 @@ try {
         assertSame('image/jpeg', (string) ($webpResult['mime'] ?? ''), 'WEBP output mime');
     }
 
-    $tooLarge = vms_normalize_uploaded_image_to_jpeg($jpgSource, $root, 'too-large', array(
+    $tooLarge = bvmgr_normalize_uploaded_image_to_jpeg($jpgSource, $root, 'too-large', array(
         'max_dimension' => (int) BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION,
         'quality' => 92,
         'max_output_bytes' => 1024,

@@ -38,7 +38,7 @@ function vms_ticketing_can_manage_plan(int $plan_id): bool
 
 function vms_ticketing_admin_query_absint(string $key): int
 {
-    return vms_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin ticketing screen state only scopes asset localization.
+    return bvmgr_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin ticketing screen state only scopes asset localization.
 }
 
 
@@ -236,8 +236,8 @@ function vms_ticketing_get_ticket_product_ids_for_tec_event(int $tec_event_id): 
         return array();
     }
 
-    if (function_exists('vms_get_ticket_product_ids_for_event')) {
-        $ids = vms_get_ticket_product_ids_for_event($tec_event_id);
+    if (function_exists('bvmgr_get_ticket_product_ids_for_event')) {
+        $ids = bvmgr_get_ticket_product_ids_for_event($tec_event_id);
         return is_array($ids) ? array_values(array_unique(array_map('absint', $ids))) : array();
     }
 
@@ -388,7 +388,7 @@ function vms_ticketing_admin_enqueue_assets($hook): void
         return;
     }
 
-    $ver = function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
+    $ver = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     $handle = 'vms-admin-ticketing';
     $src = defined('BVMGR_PLUGIN_URL') ? (BVMGR_PLUGIN_URL . 'assets/admin-ticketing.js') : '';
     if ($src === '') {
@@ -521,7 +521,7 @@ function vms_ticketing_ajax_search_tec_events(): void
         vms_ticketing_ajax_send_error(array('message' => 'tec_inactive'), 400);
     }
 
-    $q = vms_request_read_text_field($_POST, 'q');
+    $q = bvmgr_request_read_text_field($_POST, 'q');
     $q = trim($q);
     if (strlen($q) < 2) {
         vms_ticketing_ajax_send_success(array('items' => array()));
@@ -593,7 +593,7 @@ function vms_ticketing_ajax_search_products(): void
         vms_ticketing_ajax_send_error(array('message' => 'woo_inactive'), 400);
     }
 
-    $q = vms_request_read_text_field($_POST, 'q');
+    $q = bvmgr_request_read_text_field($_POST, 'q');
     $q = trim($q);
     if (strlen($q) < 2) {
         vms_ticketing_ajax_send_success(array('items' => array()));

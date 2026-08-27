@@ -1990,7 +1990,7 @@ PHP;
 		}
 
 		$contents = (string) file_get_contents($migrationsFile);
-		if (preg_match_all('/function\s+(vms_db_migrate_vendor_core_v(\d+))\s*\(/', $contents, $functionMatches, PREG_SET_ORDER) > 0) {
+		if (preg_match_all('/function\s+((?:vms|bvmgr)_db_migrate_vendor_core_v(\d+))\s*\(/', $contents, $functionMatches, PREG_SET_ORDER) > 0) {
 			$latestVersion = -1;
 			$latestFunction = '';
 			foreach ($functionMatches as $functionMatch) {

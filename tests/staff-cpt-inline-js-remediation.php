@@ -57,7 +57,7 @@ function wp_localize_script(string $handle, string $name, array $data): bool
     return true;
 }
 
-function vms_asset_version(): string
+function bvmgr_asset_version(): string
 {
     return 'test-asset-version';
 }

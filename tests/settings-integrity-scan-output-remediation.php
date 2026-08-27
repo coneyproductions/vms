@@ -134,8 +134,8 @@ if (!function_exists('sanitize_email')) {
 	}
 }
 
-if (!function_exists('vms_request_read_scalar')) {
-	function vms_request_read_scalar(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_scalar')) {
+	function bvmgr_request_read_scalar(array $source, string $key): string
 	{
 		if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 			return '';
@@ -146,48 +146,48 @@ if (!function_exists('vms_request_read_scalar')) {
 	}
 }
 
-if (!function_exists('vms_request_read_text_field')) {
-	function vms_request_read_text_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_text_field')) {
+	function bvmgr_request_read_text_field(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_text_field($value);
 	}
 }
 
-if (!function_exists('vms_request_read_textarea_field')) {
-	function vms_request_read_textarea_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_textarea_field')) {
+	function bvmgr_request_read_textarea_field(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_textarea_field($value);
 	}
 }
 
-if (!function_exists('vms_request_read_email')) {
-	function vms_request_read_email(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_email')) {
+	function bvmgr_request_read_email(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_email($value);
 	}
 }
 
-if (!function_exists('vms_request_read_key')) {
-	function vms_request_read_key(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_key')) {
+	function bvmgr_request_read_key(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_key($value);
 	}
 }
 
-if (!function_exists('vms_request_read_absint')) {
-	function vms_request_read_absint(array $source, string $key): int
+if (!function_exists('bvmgr_request_read_absint')) {
+	function bvmgr_request_read_absint(array $source, string $key): int
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? 0 : absint($value);
 	}
 }
 
-if (!function_exists('vms_request_read_bool_flag')) {
-	function vms_request_read_bool_flag(array $source, string $key): bool
+if (!function_exists('bvmgr_request_read_bool_flag')) {
+	function bvmgr_request_read_bool_flag(array $source, string $key): bool
 	{
 		if (!array_key_exists($key, $source)) {
 			return false;
@@ -461,8 +461,8 @@ if (!function_exists('wp_kses')) {
 	}
 }
 
-if (!function_exists('vms_required_public_pages')) {
-	function vms_required_public_pages(): array
+if (!function_exists('bvmgr_required_public_pages')) {
+	function bvmgr_required_public_pages(): array
 	{
 		return array();
 	}
@@ -659,7 +659,7 @@ $assertSame(
 		'div' => array('class' => true),
 		'p' => array(),
 	),
-	vms_admin_ui_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_explicit_notice_allowed_html(),
 	'Administrator shell simple notice contract should remain unchanged.'
 );
 $assertSame(
@@ -668,7 +668,7 @@ $assertSame(
 		'p' => array(),
 		'strong' => array(),
 	),
-	vms_admin_ui_rich_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_rich_explicit_notice_allowed_html(),
 	'Administrator shell rich notice contract should remain unchanged.'
 );
 
@@ -907,7 +907,7 @@ ob_start();
 vms_render_settings_page_content();
 $content_html = (string) ob_get_clean();
 $captured_notices_html = '';
-$remaining_content_html = vms_admin_ui_extract_notice_markup($content_html, $captured_notices_html);
+$remaining_content_html = bvmgr_admin_ui_extract_notice_markup($content_html, $captured_notices_html);
 $assertSame(1, $GLOBALS['vms_test_transient_get_calls'], 'Settings content render should read the integrity-scan transient exactly once.');
 $assertSame(array('vms_integrity_scan_last'), $GLOBALS['vms_test_transient_get_keys'], 'Settings content render should read only the integrity-scan transient for this family.');
 $assert(strpos($captured_notices_html, 'Integrity scan complete.') === false, 'Integrity scan output should no longer be captured into the shell notice buffer.');
@@ -962,7 +962,7 @@ ob_start();
 vms_render_settings_page_content();
 $img_sync_content = (string) ob_get_clean();
 $img_sync_captured = '';
-$img_sync_remaining = vms_admin_ui_extract_notice_markup($img_sync_content, $img_sync_captured);
+$img_sync_remaining = bvmgr_admin_ui_extract_notice_markup($img_sync_content, $img_sync_captured);
 $assert(strpos($img_sync_captured, 'Entitlement image sync complete.') !== false, 'Entitlement image-sync summary notice should remain unchanged and captured separately.');
 $assert(strpos($img_sync_remaining, 'Entitlement Image Sync Errors') !== false, 'Entitlement image-sync detail card should remain unchanged.');
 

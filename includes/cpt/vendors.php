@@ -193,7 +193,7 @@ if (!function_exists('vms_vendor_availability_snapshot_month')) {
     function vms_vendor_availability_snapshot_month(): string
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only availability snapshot month only changes which calendar view is displayed.
-        return vms_request_read_text_field($_GET, 'vms_vendor_month');
+        return bvmgr_request_read_text_field($_GET, 'vms_vendor_month');
     }
 }
 
@@ -345,7 +345,7 @@ class BVMGR_Admin_Vendors
         $enabled_bool = ($enabled === '1' || $enabled === 1 || $enabled === true || $enabled === 'yes' || $enabled === 'on');
         $has_vendor_type = vms_vendor_has_public_profile_type($post_id);
 
-        $profile_url = function_exists('vms_vendor_profile_url') ? vms_vendor_profile_url($post_id) : '';
+        $profile_url = function_exists('bvmgr_vendor_profile_url') ? bvmgr_vendor_profile_url($post_id) : '';
 
         echo '<p><label><input type="checkbox" name="vms_public_profile_enabled" value="1" ' . checked($enabled_bool, true, false) . ' /> ' . esc_html__('Enable public profile', 'backstage-venue-manager') . '</label></p>';
         echo '<p class="description">' . esc_html__('When disabled, the public profile returns a 404.', 'backstage-venue-manager') . '</p>';
@@ -431,8 +431,8 @@ class BVMGR_Admin_Vendors
     public function save_vendor_meta($post_id, $post)
     {
         // Check nonce(s). Either meta box nonce should allow saving its own fields.
-        $details_nonce = vms_request_read_text_field($_POST, 'vms_vendor_details_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Details nonce is required before local verification.
-        $profile_nonce = vms_request_read_text_field($_POST, 'vms_vendor_public_profile_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Public Profile nonce is required before local verification.
+        $details_nonce = bvmgr_request_read_text_field($_POST, 'vms_vendor_details_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Details nonce is required before local verification.
+        $profile_nonce = bvmgr_request_read_text_field($_POST, 'vms_vendor_public_profile_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Public Profile nonce is required before local verification.
         $details_ok = ($details_nonce !== '' && wp_verify_nonce($details_nonce, 'vms_save_vendor_details'));
         $profile_ok = ($profile_nonce !== '' && wp_verify_nonce($profile_nonce, 'vms_save_vendor_public_profile'));
 
@@ -460,10 +460,10 @@ class BVMGR_Admin_Vendors
             // Sanitize and save Vendor Details-only fields.
             // City/State intentionally live only in Tax Profile (Admin) to avoid duplicate shared inputs.
             $fields = array(
-                $k_contact_name  => vms_request_read_text_field($_POST, 'vms_contact_name'),
-                $k_primary_email => vms_request_read_email($_POST, 'vms_primary_email'),
-                $k_primary_phone => vms_request_read_text_field($_POST, 'vms_primary_phone'),
-                $k_website       => esc_url_raw(vms_request_read_scalar($_POST, 'vms_website_url')),
+                $k_contact_name  => bvmgr_request_read_text_field($_POST, 'vms_contact_name'),
+                $k_primary_email => bvmgr_request_read_email($_POST, 'vms_primary_email'),
+                $k_primary_phone => bvmgr_request_read_text_field($_POST, 'vms_primary_phone'),
+                $k_website       => esc_url_raw(bvmgr_request_read_scalar($_POST, 'vms_website_url')),
             );
 
             foreach ($fields as $meta_key => $value) {

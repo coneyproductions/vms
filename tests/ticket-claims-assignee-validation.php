@@ -99,7 +99,7 @@ function sanitize_email(string $value): string
 	return strtolower(trim($value));
 }
 
-function vms_request_read_absint(array $source, string $key): int
+function bvmgr_request_read_absint(array $source, string $key): int
 {
 	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 		return 0;

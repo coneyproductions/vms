@@ -248,11 +248,11 @@ if (!function_exists('vms_admission_vendor_guest_bridge_context_from_claim_meta'
 	function vms_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta): array
 	{
 		if (is_string($claim_meta) && $claim_meta !== '') {
-			$decoded = vms_json_decode_associative($claim_meta, 16);
+			$decoded = bvmgr_json_decode_associative($claim_meta, 16);
 			if (
 				!empty($decoded['ok'])
 				&& is_array($decoded['value'])
-				&& vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+				&& bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
 			) {
 				$claim_meta = $decoded['value'];
 			}
@@ -519,8 +519,8 @@ if (!function_exists('vms_admission_vendor_guest_ticket_product_ids')) {
 		$product_ids = array();
 		if ($tec_event_id > 0 && function_exists('vms_ticketing_get_ticket_product_ids_for_tec_event')) {
 			$product_ids = (array) vms_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
-		} elseif ($tec_event_id > 0 && function_exists('vms_get_ticket_product_ids_for_event')) {
-			$product_ids = (array) vms_get_ticket_product_ids_for_event($tec_event_id);
+		} elseif ($tec_event_id > 0 && function_exists('bvmgr_get_ticket_product_ids_for_event')) {
+			$product_ids = (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id);
 		} elseif (function_exists('vms_vendor_portal_get_ticket_product_ids')) {
 			$product_ids = (array) vms_vendor_portal_get_ticket_product_ids($event_plan_id);
 		}
@@ -907,7 +907,7 @@ if (!function_exists('vms_admission_render_vendor_guest_config')) {
 if (!function_exists('vms_admission_vendor_guest_rules_from_post')) {
 	function vms_admission_vendor_guest_rules_from_post(array $source): ?array
 	{
-		return vms_request_read_array($source, 'vms_vendor_guest_rules');
+		return bvmgr_request_read_array($source, 'vms_vendor_guest_rules');
 	}
 }
 
@@ -1021,7 +1021,7 @@ if (!function_exists('vms_admission_vendor_guest_portal_screen_key')) {
 		if (!is_user_logged_in() || !is_page('vendor-portal')) {
 			return $screen_key;
 		}
-		$tab = vms_request_read_key($_GET, 'tab'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive vendor-portal tab navigation remains nonce-free while rejecting malformed tab values.
+		$tab = bvmgr_request_read_key($_GET, 'tab'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive vendor-portal tab navigation remains nonce-free while rejecting malformed tab values.
 		if ($tab === '') {
 			$tab = 'dashboard';
 		}
@@ -1138,7 +1138,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 			return true;
 		}
 		$max_party = max(1, (int) (vms_admission_settings()['max_party_size'] ?? 6));
-		$selected_event = vms_request_read_absint($_GET, 'guest_event'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive guest-event selection remains nonce-free while rejecting malformed identifier values.
+		$selected_event = bvmgr_request_read_absint($_GET, 'guest_event'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive guest-event selection remains nonce-free while rejecting malformed identifier values.
 		$event_index = 0;
 		foreach ($events as $event) {
 			$event_plan_id = (int) ($event['event_plan_id'] ?? 0);

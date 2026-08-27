@@ -178,7 +178,7 @@ function wp_unslash($value)
 	return $value;
 }
 
-function vms_request_read_scalar(array $source, string $key): string
+function bvmgr_request_read_scalar(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 		return '';
@@ -192,7 +192,7 @@ function vms_request_read_scalar(array $source, string $key): string
 	return trim((string) $value);
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
 	if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
 		return '';
@@ -224,7 +224,7 @@ try {
 		'Slow Request Logger should no longer contain native parse_url() calls.'
 	);
 
-	eval(vms_test_extract_guarded_function($source, 'vms_slow_request_logger_parse_request_uri'));
+	eval(vms_test_extract_guarded_function($source, 'bvmgr_slow_request_logger_parse_request_uri'));
 
 	$comparison_cases = array(
 		'absolute_https' => 'https://example.com/path?x=1#frag',
@@ -266,7 +266,7 @@ try {
 	$_REQUEST = array();
 	$relative = vms_test_capture(
 		static function (): array {
-			return vms_slow_request_logger_parse_request_uri();
+			return bvmgr_slow_request_logger_parse_request_uri();
 		}
 	);
 	vms_test_assert_no_warnings($relative['warnings'], 'Relative request URI parse');
@@ -281,7 +281,7 @@ try {
 	);
 	$fallback_action = vms_test_capture(
 		static function (): array {
-			return vms_slow_request_logger_parse_request_uri();
+			return bvmgr_slow_request_logger_parse_request_uri();
 		}
 	);
 	vms_test_assert_no_warnings($fallback_action['warnings'], 'Fallback action parse');
@@ -297,7 +297,7 @@ try {
 	$_REQUEST = array();
 	$credential_case = vms_test_capture(
 		static function (): array {
-			return vms_slow_request_logger_parse_request_uri();
+			return bvmgr_slow_request_logger_parse_request_uri();
 		}
 	);
 	vms_test_assert_no_warnings($credential_case['warnings'], 'Credential-bearing URL parse');
@@ -314,7 +314,7 @@ try {
 	$_REQUEST = array();
 	$malformed = vms_test_capture(
 		static function (): array {
-			return vms_slow_request_logger_parse_request_uri();
+			return bvmgr_slow_request_logger_parse_request_uri();
 		}
 	);
 	vms_test_assert_no_warnings($malformed['warnings'], 'Malformed request URI parse');
@@ -327,7 +327,7 @@ try {
 	$_REQUEST = array();
 	$empty = vms_test_capture(
 		static function (): array {
-			return vms_slow_request_logger_parse_request_uri();
+			return bvmgr_slow_request_logger_parse_request_uri();
 		}
 	);
 	vms_test_assert_no_warnings($empty['warnings'], 'Empty request URI parse');

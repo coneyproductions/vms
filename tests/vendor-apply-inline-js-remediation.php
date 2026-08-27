@@ -43,11 +43,11 @@ function wp_json_encode($value): string { return json_encode($value, JSON_UNESCA
 function is_user_logged_in(): bool { return false; }
 function current_user_can(string $capability): bool { unset($capability); return false; }
 function wp_get_current_user(): WP_User { return new WP_User(); }
-function vms_request_method(): string { return 'get'; }
-function vms_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
-function vms_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
-function vms_asset_url(string $asset_rel): string { return BVMGR_PLUGIN_URL . ltrim($asset_rel, '/'); }
-function vms_asset_version_for(string $asset_rel): string { unset($asset_rel); return 'test-version'; }
+function bvmgr_request_method(): string { return 'get'; }
+function bvmgr_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
+function bvmgr_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
+function bvmgr_asset_url(string $asset_rel): string { return BVMGR_PLUGIN_URL . ltrim($asset_rel, '/'); }
+function bvmgr_asset_version_for(string $asset_rel): string { unset($asset_rel); return 'test-version'; }
 function wp_enqueue_script(string $handle, string $src = '', array $deps = array(), $ver = false, bool $in_footer = false): void { $GLOBALS['vms_test_scripts'][$handle] = compact('src', 'deps', 'ver', 'in_footer'); }
 function wp_nonce_field(string $action, string $name): void { echo '<input type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr($action) . '" />'; }
 function add_query_arg(array $args, string $url): string { return $url . '?' . http_build_query($args); }

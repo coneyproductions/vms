@@ -11,7 +11,7 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_goals_log')) {
 	function vms_goals_log(string $message): void
 	{
-		vms_record_operational_issue('goals_legacy_issue', array(
+		bvmgr_record_operational_issue('goals_legacy_issue', array(
 			'service'   => 'goals_forecast',
 			'operation' => 'legacy_log',
 			'status'    => 'reported',
@@ -525,7 +525,7 @@ if (!function_exists('vms_goals_provider_has_hard_errors')) {
 			try {
 				return (bool) vms_square_actuals_has_hard_errors($raw);
 			} catch (Throwable $e) {
-				vms_record_operational_issue('goals_provider_hard_error_check_failed', array(
+				bvmgr_record_operational_issue('goals_provider_hard_error_check_failed', array(
 					'service'   => 'goals_forecast',
 					'provider'  => 'square',
 					'operation' => 'hard_error_check',
@@ -652,7 +652,7 @@ if (!function_exists('vms_pos_get_event_actuals')) {
 					}
 					return vms_goals_normalize_provider_actuals('square', $raw);
 				} catch (Throwable $e) {
-					vms_record_operational_issue('goals_provider_call_failed', array(
+					bvmgr_record_operational_issue('goals_provider_call_failed', array(
 						'service'   => 'goals_forecast',
 						'provider'  => 'square',
 						'operation' => 'fetch_actuals',
@@ -688,7 +688,7 @@ if (!function_exists('vms_goals_refresh_event_actuals')) {
 		$result = vms_pos_get_event_actuals($event_plan_id, $args);
 		if (empty($result['ok'])) {
 			$msg = !empty($result['errors']) ? implode(' | ', (array) $result['errors']) : 'Provider returned no data.';
-			vms_record_operational_issue('goals_actuals_refresh_failed', array(
+			bvmgr_record_operational_issue('goals_actuals_refresh_failed', array(
 				'service'   => 'goals_forecast',
 				'provider'  => sanitize_key((string) ($result['provider'] ?? 'none')),
 				'operation' => 'refresh_actuals',
@@ -920,8 +920,8 @@ if (!function_exists('vms_goals_get_default_direct_costs_cents')) {
 						$commission_mode = 'artist_fee';
 					}
 					if ($commission_percent !== '' && is_numeric($commission_percent) && (float) $commission_percent > 0 && $commission_mode === 'artist_fee') {
-						$commission_amount = function_exists('vms_calculate_agent_fee_amount')
-							? vms_calculate_agent_fee_amount((float) $flat, (float) $commission_percent, $commission_mode)
+						$commission_amount = function_exists('bvmgr_calculate_agent_fee_amount')
+							? bvmgr_calculate_agent_fee_amount((float) $flat, (float) $commission_percent, $commission_mode)
 							: (((float) $flat) * ((float) $commission_percent / 100));
 						$total_cents += max(0, (int) round(((float) $commission_amount) * 100));
 					}
@@ -1175,7 +1175,7 @@ if (!function_exists('vms_goals_compute_goal_progress')) {
 		$is_truncated = (count($event_ids) > $max_events);
 		if ($is_truncated) {
 			$event_ids = array_slice($event_ids, 0, $max_events);
-			vms_record_operational_issue('goals_progress_capped', array(
+			bvmgr_record_operational_issue('goals_progress_capped', array(
 				'service'     => 'goals_forecast',
 				'operation'   => 'compute_progress',
 				'status'      => 'capped',

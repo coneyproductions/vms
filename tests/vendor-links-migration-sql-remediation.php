@@ -187,7 +187,7 @@ require $runtime_path;
 
 $table = 'wp_vms_vendor_user_links';
 migration_fixture_reset($wpdb);
-vms_db_backfill_vendor_user_links_from_legacy($table);
+bvmgr_db_backfill_vendor_user_links_from_legacy($table);
 
 migration_same(1, count(WP_Query::$calls), 'Vendor legacy-pointer enumeration should execute once.');
 $vendor_args = WP_Query::$calls[0];
@@ -236,7 +236,7 @@ migration_contains('vendor_id <> 11', $wpdb->prepares[3]['sql'], 'Single-primary
 
 $first_run_sql = array_column($wpdb->queries, 'sql');
 migration_fixture_reset($wpdb);
-vms_db_backfill_vendor_user_links_from_legacy($table);
+bvmgr_db_backfill_vendor_user_links_from_legacy($table);
 migration_same($first_run_sql, array_column($wpdb->queries, 'sql'), 'Repeated idempotent backfill should retain identical SQL and ordering.');
 
 $historical_inventory = array(

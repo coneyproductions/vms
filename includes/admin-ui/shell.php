@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admin_ui_dom_outer_html')) {
-	function vms_admin_ui_dom_outer_html(DOMNode $node): string
+if (!function_exists('bvmgr_admin_ui_dom_outer_html')) {
+	function bvmgr_admin_ui_dom_outer_html(DOMNode $node): string
 	{
 		$doc = $node->ownerDocument;
 		if (!($doc instanceof DOMDocument)) {
@@ -13,8 +13,8 @@ if (!function_exists('vms_admin_ui_dom_outer_html')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_dom_inner_html')) {
-	function vms_admin_ui_dom_inner_html(DOMNode $node): string
+if (!function_exists('bvmgr_admin_ui_dom_inner_html')) {
+	function bvmgr_admin_ui_dom_inner_html(DOMNode $node): string
 	{
 		$doc = $node->ownerDocument;
 		if (!($doc instanceof DOMDocument)) {
@@ -29,8 +29,8 @@ if (!function_exists('vms_admin_ui_dom_inner_html')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_extract_notice_markup')) {
-	function vms_admin_ui_extract_notice_markup(string $markup, string &$notice_markup): string
+if (!function_exists('bvmgr_admin_ui_extract_notice_markup')) {
+	function bvmgr_admin_ui_extract_notice_markup(string $markup, string &$notice_markup): string
 	{
 		if (trim($markup) === '' || strpos($markup, 'notice') === false) {
 			return $markup;
@@ -78,19 +78,19 @@ if (!function_exists('vms_admin_ui_extract_notice_markup')) {
 		}
 
 		foreach ($to_extract as $node) {
-			$notice_markup .= vms_admin_ui_dom_outer_html($node);
+			$notice_markup .= bvmgr_admin_ui_dom_outer_html($node);
 			$parent = $node->parentNode;
 			if ($parent instanceof DOMNode) {
 				$parent->removeChild($node);
 			}
 		}
 
-		return vms_admin_ui_dom_inner_html($wrapper);
+		return bvmgr_admin_ui_dom_inner_html($wrapper);
 	}
 }
 
-if (!function_exists('vms_admin_ui_prepare_notice_markup')) {
-	function vms_admin_ui_prepare_notice_markup(string $markup): string
+if (!function_exists('bvmgr_admin_ui_prepare_notice_markup')) {
+	function bvmgr_admin_ui_prepare_notice_markup(string $markup): string
 	{
 		if (trim($markup) === '' || strpos($markup, 'notice') === false) {
 			return $markup;
@@ -126,8 +126,8 @@ if (!function_exists('vms_admin_ui_prepare_notice_markup')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_explicit_notice_allowed_html')) {
-	function vms_admin_ui_explicit_notice_allowed_html(): array
+if (!function_exists('bvmgr_admin_ui_explicit_notice_allowed_html')) {
+	function bvmgr_admin_ui_explicit_notice_allowed_html(): array
 	{
 		return array(
 			'div' => array(
@@ -138,8 +138,8 @@ if (!function_exists('vms_admin_ui_explicit_notice_allowed_html')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_rich_explicit_notice_allowed_html')) {
-	function vms_admin_ui_rich_explicit_notice_allowed_html(): array
+if (!function_exists('bvmgr_admin_ui_rich_explicit_notice_allowed_html')) {
+	function bvmgr_admin_ui_rich_explicit_notice_allowed_html(): array
 	{
 		return array(
 			'div' => array(
@@ -151,8 +151,8 @@ if (!function_exists('vms_admin_ui_rich_explicit_notice_allowed_html')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_header_actions_allowed_html')) {
-	function vms_admin_ui_header_actions_allowed_html(): array
+if (!function_exists('bvmgr_admin_ui_header_actions_allowed_html')) {
+	function bvmgr_admin_ui_header_actions_allowed_html(): array
 	{
 		return array(
 			'a' => array(
@@ -194,7 +194,7 @@ if (!function_exists('bvmgr_admin_ui_render_shell')) {
 			ob_start();
 			call_user_func($content_callback);
 			$content_html = (string) ob_get_clean();
-			$content_html = vms_admin_ui_extract_notice_markup($content_html, $captured_notices_html);
+			$content_html = bvmgr_admin_ui_extract_notice_markup($content_html, $captured_notices_html);
 
 			if (is_callable($notices_callback)) {
 				ob_start();
@@ -208,9 +208,9 @@ if (!function_exists('bvmgr_admin_ui_render_shell')) {
 				$rich_explicit_notices_html = (string) ob_get_clean();
 			}
 
-			$captured_notices_html = vms_admin_ui_prepare_notice_markup($captured_notices_html);
-			$explicit_notices_html = vms_admin_ui_prepare_notice_markup($explicit_notices_html);
-			$rich_explicit_notices_html = vms_admin_ui_prepare_notice_markup($rich_explicit_notices_html);
+			$captured_notices_html = bvmgr_admin_ui_prepare_notice_markup($captured_notices_html);
+			$explicit_notices_html = bvmgr_admin_ui_prepare_notice_markup($explicit_notices_html);
+			$rich_explicit_notices_html = bvmgr_admin_ui_prepare_notice_markup($rich_explicit_notices_html);
 
 		if (function_exists('bvmgr_admin_ui_active_cluster')) {
 			$cluster = bvmgr_admin_ui_active_cluster();
@@ -229,8 +229,8 @@ if (!function_exists('bvmgr_admin_ui_render_shell')) {
 		echo '>';
 
 		echo '<section class="vms-admin-shell__header-zone">';
-		if (function_exists('vms_admin_ui_render_top_nav')) {
-			vms_admin_ui_render_top_nav();
+		if (function_exists('bvmgr_admin_ui_render_top_nav')) {
+			bvmgr_admin_ui_render_top_nav();
 		}
 		echo '</section>';
 
@@ -241,15 +241,15 @@ if (!function_exists('bvmgr_admin_ui_render_shell')) {
 				echo '<p class="vms-admin-shell__subtitle">' . esc_html($subtitle) . '</p>';
 			}
 			echo '</div>';
-			echo '<div class="vms-admin-shell__actions">' . wp_kses($actions_html, vms_admin_ui_header_actions_allowed_html()) . '</div>';
+			echo '<div class="vms-admin-shell__actions">' . wp_kses($actions_html, bvmgr_admin_ui_header_actions_allowed_html()) . '</div>';
 			echo '</header>';
 
 			echo '<section class="vms-admin-shell__notices">';
 			if ($explicit_notices_html !== '') {
-				echo wp_kses($explicit_notices_html, vms_admin_ui_explicit_notice_allowed_html());
+				echo wp_kses($explicit_notices_html, bvmgr_admin_ui_explicit_notice_allowed_html());
 			}
 			if ($rich_explicit_notices_html !== '') {
-				echo wp_kses($rich_explicit_notices_html, vms_admin_ui_rich_explicit_notice_allowed_html());
+				echo wp_kses($rich_explicit_notices_html, bvmgr_admin_ui_rich_explicit_notice_allowed_html());
 			}
 			if ($captured_notices_html !== '') {
 				echo $captured_notices_html;

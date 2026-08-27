@@ -137,8 +137,8 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
 
         case 'vms_tax': {
             // Reuse the vendor tax validation helpers (you said staff should follow same requirements).
-            if (function_exists('vms_vendor_tax_profile_missing_items')) {
-                $missing = vms_vendor_tax_profile_missing_items((int)$post_id);
+            if (function_exists('bvmgr_vendor_tax_profile_missing_items')) {
+                $missing = bvmgr_vendor_tax_profile_missing_items((int)$post_id);
 
                 if (empty($missing)) {
                     echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>';

@@ -222,18 +222,18 @@ function vms_notify_redact_payload_for_log($value)
 	return $value;
 }
 
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$GLOBALS['g12_operational_calls'][] = array($event_code, $context, $error);
 	return (bool) ($GLOBALS['g12_operational_result'] ?? false);
 }
 
-function vms_private_files_table(): string
+function bvmgr_private_files_table(): string
 {
 	return (string) $GLOBALS['g12_private_table'];
 }
 
-function vms_private_files_validate_storage_key(string $storage_key): string
+function bvmgr_private_files_validate_storage_key(string $storage_key): string
 {
 	$storage_key = trim(str_replace('\\', '/', $storage_key));
 	if ($storage_key === '' || $storage_key[0] === '/' || strpos($storage_key, '..') !== false || strpos($storage_key, ':') !== false) {
@@ -242,7 +242,7 @@ function vms_private_files_validate_storage_key(string $storage_key): string
 	return $storage_key;
 }
 
-function vms_private_files_safe_download_name(string $filename, string $fallback_base = 'download'): string
+function bvmgr_private_files_safe_download_name(string $filename, string $fallback_base = 'download'): string
 {
 	$filename = sanitize_file_name($filename);
 	if ($filename !== '') {
@@ -252,14 +252,14 @@ function vms_private_files_safe_download_name(string $filename, string $fallback
 	return $fallback_base !== '' ? $fallback_base : 'download';
 }
 
-function vms_private_files_absolute_path(string $storage_key): string
+function bvmgr_private_files_absolute_path(string $storage_key): string
 {
 	return isset($GLOBALS['g12_private_paths'][$storage_key])
 		? (string) $GLOBALS['g12_private_paths'][$storage_key]
 		: '';
 }
 
-function vms_private_files_path_is_safe(string $path): bool
+function bvmgr_private_files_path_is_safe(string $path): bool
 {
 	return !empty($GLOBALS['g12_safe_paths'][$path]);
 }
@@ -434,10 +434,10 @@ g12_same($expected_code_delta, $historical_code_counts, 'The exact expected G12 
 
 $notify_insert_source = g12_extract_function($notify_source, 'vms_notify_insert_log');
 $notify_recent_source = g12_extract_function($notify_source, 'vms_notify_recent_logs');
-$private_get_source = g12_extract_function($private_source, 'vms_private_file_get');
-$private_register_source = g12_extract_function($private_source, 'vms_private_files_register_path');
-$private_path_source = g12_extract_function($private_source, 'vms_private_file_path');
-$private_delete_source = g12_extract_function($private_source, 'vms_private_files_delete');
+$private_get_source = g12_extract_function($private_source, 'bvmgr_private_file_get');
+$private_register_source = g12_extract_function($private_source, 'bvmgr_private_files_register_path');
+$private_path_source = g12_extract_function($private_source, 'bvmgr_private_file_path');
+$private_delete_source = g12_extract_function($private_source, 'bvmgr_private_files_delete');
 $notify_owned_source = $notify_insert_source . "\n" . $notify_recent_source;
 $private_owned_source = $private_get_source . "\n" . $private_register_source . "\n" . $private_delete_source;
 
@@ -618,10 +618,10 @@ g12_same(array(), vms_notify_recent_logs(12), 'Notification database read failur
 
 // Private-file lookup rejects invalid IDs and rereads authorization-sensitive rows without caching.
 $wpdb->reset();
-g12_same(null, vms_private_file_get(0), 'Invalid private-file IDs should fail closed.');
+g12_same(null, bvmgr_private_file_get(0), 'Invalid private-file IDs should fail closed.');
 g12_same(array(), $wpdb->calls, 'Invalid private-file IDs should not touch wpdb.');
 $wpdb->get_row_queue[] = false;
-g12_same(null, vms_private_file_get(18), 'Private-file read failure should retain a null result.');
+g12_same(null, bvmgr_private_file_get(18), 'Private-file read failure should retain a null result.');
 g12_same('SELECT * FROM %i WHERE id = %d', $wpdb->prepares[0]['template'], 'Private-file lookup SQL shape changed.');
 g12_same(array('wp_vms_private_files', 18), $wpdb->prepares[0]['args'], 'Private-file lookup preparation order changed.');
 g12_assert_no_unresolved_sql($wpdb);
@@ -631,8 +631,8 @@ $wpdb->get_row_queue = array(
 	array('id' => 19, 'stored_filename' => 'tax-docs/first.pdf', 'related_post_id' => 81),
 	array('id' => 19, 'stored_filename' => 'tax-docs/second.pdf', 'related_post_id' => 82),
 );
-$first_private = vms_private_file_get(19);
-$second_private = vms_private_file_get(19);
+$first_private = bvmgr_private_file_get(19);
+$second_private = bvmgr_private_file_get(19);
 g12_same('tax-docs/first.pdf', $first_private['stored_filename'], 'First private-file row changed.');
 g12_same('tax-docs/second.pdf', $second_private['stored_filename'], 'Repeated private-file lookup should observe current authorization metadata.');
 g12_same(2, count(g12_calls($wpdb, 'get_row')), 'Repeated private-file lookup should query twice without a persistent cache.');
@@ -643,7 +643,7 @@ g12_assert_no_unresolved_sql($wpdb);
 
 // Private-file registration retains validation/failure behavior and the exact metadata/format contract.
 $wpdb->reset();
-$invalid_registration = vms_private_files_register_path('', '', '', '', array());
+$invalid_registration = bvmgr_private_files_register_path('', '', '', '', array());
 g12_check($invalid_registration instanceof WP_Error, 'Invalid private-file registration should return WP_Error.');
 g12_same('private_upload_register_failed', $invalid_registration->get_error_code(), 'Invalid private-file registration error code changed.');
 g12_same(array(), g12_calls($wpdb, 'insert'), 'Invalid private-file registration should not insert.');
@@ -655,14 +655,14 @@ $storage_key = 'tax-docs/file.pdf';
 $GLOBALS['g12_private_paths'][$storage_key] = $registered_path;
 $GLOBALS['g12_safe_paths'][$registered_path] = true;
 $wpdb->insert_queue[] = false;
-$failed_registration = vms_private_files_register_path($storage_key, $registered_path, 'W 9.pdf', 'application/pdf', array());
+$failed_registration = bvmgr_private_files_register_path($storage_key, $registered_path, 'W 9.pdf', 'application/pdf', array());
 g12_check($failed_registration instanceof WP_Error, 'Failed private-file insert should return WP_Error.');
 g12_same('private_upload_register_failed', $failed_registration->get_error_code(), 'Failed private-file insert error code changed.');
 
 $wpdb->reset();
 $wpdb->insert_id = 909;
 $wpdb->insert_queue[] = 1;
-$registered_id = vms_private_files_register_path(
+$registered_id = bvmgr_private_files_register_path(
 	$storage_key,
 	$registered_path,
 	'<b>W 9.pdf</b>',
@@ -700,10 +700,10 @@ g12_same(count($private_insert['data']), count($private_insert['format']), 'Ever
 
 // Private-file deletion preserves lookup gates, bounded cleanup, false failure, and zero-row success semantics.
 $wpdb->reset();
-g12_same(false, vms_private_files_delete(0), 'Invalid private-file deletion should fail closed.');
+g12_same(false, bvmgr_private_files_delete(0), 'Invalid private-file deletion should fail closed.');
 g12_same(array(), $wpdb->calls, 'Invalid private-file deletion should not touch wpdb.');
 $wpdb->get_row_queue[] = null;
-g12_same(false, vms_private_files_delete(25), 'Missing private-file rows should fail closed.');
+g12_same(false, bvmgr_private_files_delete(25), 'Missing private-file rows should fail closed.');
 g12_same(0, count(g12_calls($wpdb, 'delete')), 'Missing private-file rows should not issue deletion.');
 
 $delete_failure_path = tempnam(sys_get_temp_dir(), 'bvm-g12-delete-fail-');
@@ -714,7 +714,7 @@ $GLOBALS['g12_safe_paths'][$delete_failure_path] = true;
 $wpdb->reset();
 $wpdb->get_row_queue[] = array('id' => 26, 'stored_filename' => 'tax-docs/delete-fail.pdf');
 $wpdb->delete_queue[] = false;
-g12_same(false, vms_private_files_delete(26), 'wpdb deletion failure should remain false.');
+g12_same(false, bvmgr_private_files_delete(26), 'wpdb deletion failure should remain false.');
 g12_check(!file_exists($delete_failure_path), 'Bounded local cleanup should remain complete before a database deletion failure.');
 $failed_delete = g12_calls($wpdb, 'delete')[0];
 g12_same('wp_vms_private_files', $failed_delete['table'], 'Private-file deletion table changed.');
@@ -729,7 +729,7 @@ $GLOBALS['g12_safe_paths'][$delete_success_path] = true;
 $wpdb->reset();
 $wpdb->get_row_queue[] = array('id' => 27, 'stored_filename' => 'tax-docs/delete-ok.pdf');
 $wpdb->delete_queue[] = 0;
-g12_same(true, vms_private_files_delete(27), 'A zero-row wpdb delete should retain the existing non-false success contract.');
+g12_same(true, bvmgr_private_files_delete(27), 'A zero-row wpdb delete should retain the existing non-false success contract.');
 g12_check(!file_exists($delete_success_path), 'Successful private-file deletion should retain bounded local cleanup.');
 g12_same(array('id' => 27), g12_calls($wpdb, 'delete')[0]['where'], 'Successful private-file deletion predicate changed.');
 g12_assert_no_unresolved_sql($wpdb);

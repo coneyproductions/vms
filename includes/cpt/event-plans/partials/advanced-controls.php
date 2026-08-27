@@ -184,7 +184,7 @@
 								$settings = (array) get_option('vms_settings', array());
 								$global_ticketing_default = !empty($settings['ticketing_enabled_default']);
 								$ticketing_override = (string) get_post_meta($post->ID, '_vms_ticketing_enabled_override', true);
-								$ticketing_effective = function_exists('vms_event_plan_is_ticketing_enabled') ? vms_event_plan_is_ticketing_enabled((int) $post->ID) : $global_ticketing_default;
+								$ticketing_effective = function_exists('bvmgr_event_plan_is_ticketing_enabled') ? bvmgr_event_plan_is_ticketing_enabled((int) $post->ID) : $global_ticketing_default;
 								$ticketing_global_label = $global_ticketing_default ? __('ON', 'backstage-venue-manager') : __('OFF', 'backstage-venue-manager');
 								$ticket_ui_settings = (array) get_option('vms_settings', array());
 								$ticket_ui_global_layout = isset($ticket_ui_settings['ticket_ui_layout']) ? sanitize_key((string) $ticket_ui_settings['ticket_ui_layout']) : 'classic';
@@ -249,17 +249,17 @@
 							$ticket_help_addons_override = (string) get_post_meta($post->ID, '_vms_ticket_ui_help_addons_override', true);
 							$ticket_addons_heading_override = trim(html_entity_decode((string) get_post_meta($post->ID, '_vms_ticket_ui_addons_heading_override', true), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 							$ticket_addons_subtext_override = trim(html_entity_decode((string) get_post_meta($post->ID, '_vms_ticket_ui_addons_subtext_override', true), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-							$ticket_addons_heading_placeholder = function_exists('vms_ticketing_ui_addons_section_heading')
-								? (string) vms_ticketing_ui_addons_section_heading()
+							$ticket_addons_heading_placeholder = function_exists('bvmgr_ticketing_ui_addons_section_heading')
+								? (string) bvmgr_ticketing_ui_addons_section_heading()
 								: __('Fire Pits & Tables', 'backstage-venue-manager');
-							$ticket_addons_subtext_placeholder = function_exists('vms_ticketing_ui_addons_section_subtext')
-								? (string) vms_ticketing_ui_addons_section_subtext()
+							$ticket_addons_subtext_placeholder = function_exists('bvmgr_ticketing_ui_addons_section_subtext')
+								? (string) bvmgr_ticketing_ui_addons_section_subtext()
 								: __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager');
-							$ticket_help_tickets_placeholder = function_exists('vms_ticketing_ui_help_global_text')
-								? (string) vms_ticketing_ui_help_global_text('tickets')
+							$ticket_help_tickets_placeholder = function_exists('bvmgr_ticketing_ui_help_global_text')
+								? (string) bvmgr_ticketing_ui_help_global_text('tickets')
 								: '';
-							$ticket_help_addons_placeholder = function_exists('vms_ticketing_ui_help_global_text')
-								? (string) vms_ticketing_ui_help_global_text('addons')
+							$ticket_help_addons_placeholder = function_exists('bvmgr_ticketing_ui_help_global_text')
+								? (string) bvmgr_ticketing_ui_help_global_text('addons')
 								: '';
 						?>
 						<div class="vms-ticketing__togglebar">
@@ -441,8 +441,8 @@
                     <input type="checkbox" id="vms-calendar-unpublished-suppress" value="1" <?php checked($sup_checked); ?> />
                     <strong><?php esc_html_e('Allow linked calendar event to remain unpublished', 'backstage-venue-manager'); ?></strong>
                     <?php
-                        if (function_exists('vms_help_icon')) {
-                            vms_help_icon(__('When enabled, this Event Plan will not show “calendar event is not published” as Needs attention. Missing or trashed calendar links are still flagged.', 'backstage-venue-manager'));
+                        if (function_exists('bvmgr_help_icon')) {
+                            bvmgr_help_icon(__('When enabled, this Event Plan will not show “calendar event is not published” as Needs attention. Missing or trashed calendar links are still flagged.', 'backstage-venue-manager'));
                         }
                     ?>
                 </label>

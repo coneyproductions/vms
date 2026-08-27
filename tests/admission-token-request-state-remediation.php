@@ -273,7 +273,7 @@ vms_test_assert_contains(
 	'Admission scan routing should unslash the query-string token before raw decoding.'
 );
 vms_test_assert_contains(
-	"vms_request_read_bool_flag(\$_GET, 'vms_print_pass')",
+	"bvmgr_request_read_bool_flag(\$_GET, 'vms_print_pass')",
 	$admissionTokensSource,
 	'Admission scan routing should use the shared boolean helper for print-mode state.'
 );

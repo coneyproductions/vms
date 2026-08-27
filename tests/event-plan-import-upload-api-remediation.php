@@ -32,8 +32,8 @@ $assert(strpos($actionsSource, 'wp_handle_upload(') !== false, 'Event Plan impor
 $assert(substr_count($actionsSource, "'test_form' => false") === 1, 'Event Plan import should disable test_form exactly once for this admin-post flow.');
 $assert(strpos($actionsSource, "current_user_can('manage_options')") !== false, 'Event Plan import capability should remain manage_options.');
 $assert(strpos($actionsSource, "check_admin_referer('vms_event_plan_import_preview')") !== false, 'Event Plan import nonce action should remain unchanged.');
-$assert(strpos($actionsSource, "vms_upload_read_file(\$_FILES, 'event_plan_csv_file')") !== false, 'Event Plan import should keep the event_plan_csv_file upload field.');
-$assert(strpos($actionsSource, "vms_validate_uploaded_file(\n") !== false || strpos($actionsSource, 'vms_validate_uploaded_file(') !== false, 'Event Plan import should preserve shared upload validation.');
+$assert(strpos($actionsSource, "bvmgr_upload_read_file(\$_FILES, 'event_plan_csv_file')") !== false, 'Event Plan import should keep the event_plan_csv_file upload field.');
+$assert(strpos($actionsSource, "bvmgr_validate_uploaded_file(\n") !== false || strpos($actionsSource, 'bvmgr_validate_uploaded_file(') !== false, 'Event Plan import should preserve shared upload validation.');
 $assert(strpos($actionsSource, "'Failed to store uploaded CSV file.'") !== false, 'Event Plan import should preserve the existing storage-failure notice.');
 $assert(strpos($actionsSource, "vms_event_plan_import_build_preview_from_csv(\$target_path, \$source_name, \$options, \$token, \$target_key)") !== false, 'Event Plan import should keep the existing preview-builder call signature.');
 $assert(strpos($actionsSource, "vms_event_plan_import_delete_stored_file(\$target_key);") !== false, 'Event Plan import should preserve preview-build rollback.');
@@ -46,7 +46,7 @@ $assert(strpos($actionsSource, "wp_delete_file(\$handled_file);") !== false, 'Ev
 $assert(strpos($actionsSource, '@unlink($handled_file);') === false, 'Event Plan import should not retain @unlink() for handled-file rollback.');
 $assert(strpos($actionsSource, "@chmod(\$target_path, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod") !== false, 'Event Plan import should retain only a line-specific chmod suppression for the staged CSV.');
 $assert(strpos($actionsSource, "\$handled['url']") === false && strpos($actionsSource, '$handled["url"]') === false, 'Event Plan import should not use the returned public URL from wp_handle_upload().');
-$assert(strpos($actionsSource, 'vms_private_files_store_validated_upload(') === false, 'Event Plan import should not route preview uploads through the shared private-file broker.');
+$assert(strpos($actionsSource, 'bvmgr_private_files_store_validated_upload(') === false, 'Event Plan import should not route preview uploads through the shared private-file broker.');
 
 $assert(strpos($pageSource, "wp_nonce_field('vms_event_plan_import_preview');") !== false, 'Event Plan import form should keep the existing preview nonce field.');
 $assert(strpos($pageSource, 'name="event_plan_csv_file"') !== false, 'Event Plan import form should keep the existing upload field name.');
@@ -97,9 +97,9 @@ function is_wp_error($thing): bool
 	return $thing instanceof WP_Error;
 }
 
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
-	$GLOBALS['vms_test_calls']['vms_record_operational_issue'][] = array(
+	$GLOBALS['vms_test_calls']['bvmgr_record_operational_issue'][] = array(
 		'event_code' => $event_code,
 		'context' => $context,
 		'error' => $error,
@@ -270,18 +270,18 @@ function vms_event_plan_import_make_token(): string
 	return (string) ($GLOBALS['vms_test_case']['token'] ?? 'epcsv_test_token');
 }
 
-function vms_upload_read_file(array $files, string $field)
+function bvmgr_upload_read_file(array $files, string $field)
 {
-	$GLOBALS['vms_test_calls']['vms_upload_read_file'][] = array(
+	$GLOBALS['vms_test_calls']['bvmgr_upload_read_file'][] = array(
 		'files' => $files,
 		'field' => $field,
 	);
 	return $GLOBALS['vms_test_case']['upload_return'];
 }
 
-function vms_validate_uploaded_file(array $upload, array $args = array())
+function bvmgr_validate_uploaded_file(array $upload, array $args = array())
 {
-	$GLOBALS['vms_test_calls']['vms_validate_uploaded_file'][] = array(
+	$GLOBALS['vms_test_calls']['bvmgr_validate_uploaded_file'][] = array(
 		'upload' => $upload,
 		'args' => $args,
 	);
@@ -521,15 +521,15 @@ function vms_test_reset_case(string $mode = 'success'): void
 	$GLOBALS['vms_test_calls'] = array(
 		'current_user_can' => array(),
 		'check_admin_referer' => array(),
-		'vms_upload_read_file' => array(),
-		'vms_validate_uploaded_file' => array(),
+		'bvmgr_upload_read_file' => array(),
+		'bvmgr_validate_uploaded_file' => array(),
 		'vms_event_plan_import_prepare_generated_path' => array(),
 		'wp_handle_upload' => array(),
 		'vms_event_plan_import_build_preview_from_csv' => array(),
 		'vms_event_plan_import_delete_stored_file' => array(),
 		'vms_event_plan_import_set_preview_payload' => array(),
 		'vms_event_plan_import_set_notice' => array(),
-		'vms_record_operational_issue' => array(),
+		'bvmgr_record_operational_issue' => array(),
 		'wp_safe_redirect' => array(),
 	);
 	$GLOBALS['vms_test_filters'] = array();
@@ -577,8 +577,8 @@ $successRedirect = vms_test_run_preview_action();
 $assert($successRedirect === '/wp-admin/admin.php?page=vms-import-event-plans&preview_token=epcsv_test_token', 'Successful Event Plan preview should preserve the existing preview_token redirect.');
 $assert($GLOBALS['vms_test_calls']['current_user_can'] === array('manage_options'), 'Successful Event Plan preview should preserve the manage_options capability check.');
 $assert($GLOBALS['vms_test_calls']['check_admin_referer'] === array('vms_event_plan_import_preview'), 'Successful Event Plan preview should preserve the preview nonce action.');
-$assert(count($GLOBALS['vms_test_calls']['vms_upload_read_file']) === 1 && $GLOBALS['vms_test_calls']['vms_upload_read_file'][0]['field'] === 'event_plan_csv_file', 'Successful Event Plan preview should keep the event_plan_csv_file field.');
-$validateCall = $GLOBALS['vms_test_calls']['vms_validate_uploaded_file'][0] ?? array();
+$assert(count($GLOBALS['vms_test_calls']['bvmgr_upload_read_file']) === 1 && $GLOBALS['vms_test_calls']['bvmgr_upload_read_file'][0]['field'] === 'event_plan_csv_file', 'Successful Event Plan preview should keep the event_plan_csv_file field.');
+$validateCall = $GLOBALS['vms_test_calls']['bvmgr_validate_uploaded_file'][0] ?? array();
 $assert(($validateCall['args']['allowed_mimes'] ?? null) === vms_event_plan_import_allowed_mimes(), 'Successful Event Plan preview should preserve the CSV MIME allowlist.');
 $assert(($validateCall['args']['max_bytes'] ?? null) === vms_event_plan_import_max_bytes(), 'Successful Event Plan preview should preserve the 5 MB upload cap through shared validation.');
 $handleCall = $GLOBALS['vms_test_calls']['wp_handle_upload'][0] ?? array();
@@ -641,7 +641,7 @@ $assert($previewFailureRedirect === '/wp-admin/admin.php?page=vms-import-event-p
 $assert(is_array($previewFailureNotice) && $previewFailureNotice['type'] === 'error' && $previewFailureNotice['message'] === 'Preview build failed.', 'Preview-build failures should continue surfacing the preview builder error message.');
 $assert($GLOBALS['vms_test_calls']['vms_event_plan_import_delete_stored_file'] === array('event-plan-imports/epcsv_test_token-source.csv'), 'Preview-build failures should still delete the stored source key.');
 $assert(
-	$GLOBALS['vms_test_calls']['vms_record_operational_issue'] === array(array(
+	$GLOBALS['vms_test_calls']['bvmgr_record_operational_issue'] === array(array(
 		'event_code' => 'event_plan_import_preview_failed',
 		'context' => array('service' => 'event_plan_import', 'operation' => 'preview', 'stage' => 'build_preview', 'status' => 'failed'),
 		'error' => $previewBuildError,

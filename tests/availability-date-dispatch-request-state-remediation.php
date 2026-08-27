@@ -150,7 +150,7 @@ function vms_add_dispatch_page_slug(): string
 	return 'vms-add-dispatch';
 }
 
-function vms_admin_ui_is_vms_screen(): bool
+function bvmgr_admin_ui_is_vms_screen(): bool
 {
 	return !empty($GLOBALS['vms_test_vms_screen']);
 }
@@ -185,12 +185,12 @@ eval(vms_test_extract_function($helpersSource, 'vms_add_dispatch_get_request_tok
 eval(vms_test_extract_function($helpersSource, 'vms_add_dispatch_get_request_choice'));
 
 vms_test_assert_contains(
-	"\$page = vms_request_read_key(\$_GET, 'page');",
+	"\$page = bvmgr_request_read_key(\$_GET, 'page');",
 	$adminUiSource,
 	'ADD admin UI should read page through the shared key helper for both enqueue and shell-count gates.'
 );
 vms_test_assert_contains(
-	"\$selected_type = vms_request_read_key(\$_GET, 'assign_as');",
+	"\$selected_type = bvmgr_request_read_key(\$_GET, 'assign_as');",
 	$adminUiSource,
 	'ADD assignment review should read assign_as through the shared key helper.'
 );
@@ -205,12 +205,12 @@ vms_test_assert_not_contains(
 	'ADD dashboard rendering should no longer broad-cast the whole GET array through a generic unslash path.'
 );
 vms_test_assert_contains(
-	"\$token = vms_request_read_scalar(\$_GET, 'vms_add_dispatch_token');",
+	"\$token = bvmgr_request_read_scalar(\$_GET, 'vms_add_dispatch_token');",
 	$helpersSource,
 	'ADD response-token lookup should preserve the shared scalar token helper.'
 );
 vms_test_assert_contains(
-	"\$choice = vms_request_read_key(\$_GET, 'choice');",
+	"\$choice = bvmgr_request_read_key(\$_GET, 'choice');",
 	$helpersSource,
 	'ADD response-choice lookup should preserve the shared key helper.'
 );

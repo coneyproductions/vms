@@ -15,6 +15,7 @@ final class BVMGR_WPORG_Prefix_B3
 	public const MAP_PATH = 'docs/wporg-prefix-b3-function-map.json';
 	public const GRAPH_PATH = 'docs/wporg-prefix-b3-dependency-graph.json';
 	public const PROGRESS_PATH = 'docs/wporg-prefix-b3-progress.json';
+	public const LITERAL_DECISIONS_PATH = 'docs/wporg-prefix-b3-literal-decisions.json';
 
 	private const CALLABLE_ARGUMENTS = array(
 		'add_action' => 1,
@@ -384,6 +385,7 @@ final class BVMGR_WPORG_Prefix_B3
 			$selected[$legacy] = $all[$legacy];
 			$selected[$all[$legacy]['canonical_identifier']] = $all[$legacy];
 		}
+		$literalDecisions = self::literalDecisionIndex($root, $map, $legacyNames, true);
 		$inventory = BVMGR_WPORG_Prefix_Inventory::scan($root);
 		$files = array_fill_keys((array) ($inventory['public_php_files'] ?? array()), true);
 		foreach (array('tests', 'scripts') as $directory) {
@@ -405,7 +407,7 @@ final class BVMGR_WPORG_Prefix_B3
 		foreach (array_keys($files) as $file) {
 			$absolute = $root . '/' . $file;
 			$source = (string) file_get_contents($absolute);
-			$scan = self::scanSource($source, $file, $selected, true);
+			$scan = self::scanSource($source, $file, $selected, true, false, $literalDecisions['rename_sites']);
 			$replacements = array();
 			foreach (array_merge($scan['declarations'], $scan['references']) as $candidate) {
 				$identifier = (string) $candidate['identifier'];
@@ -451,6 +453,151 @@ final class BVMGR_WPORG_Prefix_B3
 			'changed_files' => $changed,
 			'replacement_counts' => $totals,
 		);
+	}
+
+	/**
+	 * Validate frozen exact-literal decisions and return the selected-wave index.
+	 * Exact literals not already proven by function_exists/callback/reflection must
+	 * be explicitly classified before a wave can transform.
+	 */
+	public static function literalDecisionIndex(string $root, array $map, array $legacyNames = array(), bool $requireSelected = false): array
+	{
+		$root = self::root($root);
+		$artifact = self::loadJson($root . '/' . self::LITERAL_DECISIONS_PATH);
+		if (($artifact['artifact'] ?? '') !== 'wporg-prefix-b3-literal-decisions' || ($artifact['schema_version'] ?? null) !== 1) {
+			throw new RuntimeException('Invalid B3 exact-literal decision artifact header.');
+		}
+		$all = self::mappingIndex($map);
+		$selected = array_fill_keys(array_values(array_unique($legacyNames)), true);
+		$known = array();
+		$exactOnly = array();
+		foreach ((array) ($map['mappings'] ?? array()) as $mapping) {
+			$legacy = (string) ($mapping['legacy_identifier'] ?? '');
+			$proven = array();
+			foreach (array('function_exists', 'callback', 'reflection') as $kind) {
+				foreach ((array) ($mapping['baseline_dynamic_sites'][$kind] ?? array()) as $site) {
+					$proven[(string) ($site['file'] ?? '') . ':' . (int) ($site['line'] ?? 0)] = true;
+				}
+			}
+			foreach ((array) ($mapping['baseline_dynamic_sites']['exact_literal'] ?? array()) as $site) {
+				$location = (string) ($site['file'] ?? '') . ':' . (int) ($site['line'] ?? 0);
+				if (!isset($proven[$location])) {
+					$exactOnly[$legacy . '|' . (string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0)] = true;
+				}
+			}
+		}
+		$rename = array();
+		$counts = array('rename' => 0, 'retain' => 0);
+		$selectedCounts = array('rename' => 0, 'retain' => 0);
+		foreach ((array) ($artifact['decisions'] ?? array()) as $decision) {
+			$legacy = (string) ($decision['legacy_identifier'] ?? '');
+			$file = (string) ($decision['file'] ?? '');
+			$line = (int) ($decision['line'] ?? 0);
+			$action = (string) ($decision['decision'] ?? '');
+			$key = $legacy . '|' . $file . '|' . $line;
+			if (!isset($all[$legacy]) || $all[$legacy]['legacy_identifier'] !== $legacy || !isset($exactOnly[$key])) {
+				throw new RuntimeException('B3 literal decision does not match a frozen exact-only site: ' . $key);
+			}
+			if (isset($known[$key]) || !in_array($action, array('rename', 'retain'), true) || trim((string) ($decision['reason'] ?? '')) === '') {
+				throw new RuntimeException('Invalid or duplicate B3 literal decision: ' . $key);
+			}
+			$known[$key] = $action;
+			$counts[$action]++;
+			if (isset($selected[$legacy])) {
+				$selectedCounts[$action]++;
+			}
+			if ($action === 'rename') {
+				$rename[$key] = true;
+			}
+		}
+		if ($requireSelected) {
+			foreach ($exactOnly as $key => $_value) {
+				$legacy = substr($key, 0, (int) strpos($key, '|'));
+				if (isset($selected[$legacy]) && !isset($known[$key])) {
+					throw new RuntimeException('Unresolved B3 exact function-literal decision for selected wave: ' . $key);
+				}
+			}
+		}
+		ksort($rename, SORT_STRING);
+		return array('rename_sites' => $rename, 'decisions' => $known, 'counts' => $counts, 'selected_counts' => $selectedCounts);
+	}
+
+	/** Update source-introspection literals in tests that do not bind to the untouched live tree. */
+	public static function transformTestLiterals(string $root, array $map, array $legacyNames): array
+	{
+		$root = self::root($root);
+		$artifact = self::loadJson($root . '/' . self::LITERAL_DECISIONS_PATH);
+		$retainedSites = array();
+		foreach ((array) ($artifact['test_literal_retained_sites'] ?? array()) as $site) {
+			$key = (string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0) . '|' . (string) ($site['legacy_identifier'] ?? '');
+			if ($key === '|0|' || isset($retainedSites[$key]) || trim((string) ($site['reason'] ?? '')) === '') {
+				throw new RuntimeException('Invalid or duplicate B3 retained test-literal site: ' . $key);
+			}
+			$retainedSites[$key] = true;
+		}
+		$all = self::mappingIndex($map);
+		$replacements = array();
+		foreach (array_values(array_unique($legacyNames)) as $legacy) {
+			if (!isset($all[$legacy]) || $all[$legacy]['legacy_identifier'] !== $legacy) {
+				throw new RuntimeException('Unknown test-literal B3 wave symbol: ' . $legacy);
+			}
+			$replacements[$legacy] = (string) $all[$legacy]['canonical_identifier'];
+		}
+		uksort($replacements, static fn(string $a, string $b): int => strlen($b) <=> strlen($a) ?: strcmp($a, $b));
+		$pattern = '/(?<![A-Za-z0-9_])(?:' . implode('|', array_map(static fn(string $name): string => preg_quote($name, '/'), array_keys($replacements))) . ')(?![A-Za-z0-9_])/';
+		$changed = array();
+		$count = 0;
+		$testsRoot = $root . '/tests';
+		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($testsRoot, FilesystemIterator::SKIP_DOTS));
+		foreach ($iterator as $file) {
+			if (!$file->isFile() || strtolower((string) $file->getExtension()) !== 'php') {
+				continue;
+			}
+			$relative = ltrim(str_replace('\\', '/', substr((string) $file->getPathname(), strlen($root))), '/');
+			$source = (string) file_get_contents((string) $file->getPathname());
+			if (str_contains($source, '../../vms') || str_contains($source, "dirname(dirname(\$pluginRoot)) . '/vms'")) {
+				continue;
+			}
+			$tokens = token_get_all($source);
+			$offset = 0;
+			$candidates = array();
+			foreach ($tokens as $token) {
+				$text = is_array($token) ? (string) $token[1] : (string) $token;
+				if (is_array($token) && $token[0] === T_CONSTANT_ENCAPSED_STRING) {
+					$localCount = 0;
+					$line = (int) $token[2];
+					$updated = preg_replace_callback(
+						$pattern,
+						static function (array $match) use ($replacements, $retainedSites, $relative, $line, &$localCount): string {
+							if (isset($retainedSites[$relative . '|' . $line . '|' . $match[0]])) {
+								return $match[0];
+							}
+							$localCount++;
+							return $replacements[$match[0]];
+						},
+						$text
+					);
+					if (is_string($updated) && $localCount > 0) {
+						$candidates[] = array('offset' => $offset, 'length' => strlen($text), 'replacement' => $updated);
+						$count += $localCount;
+					}
+				}
+				$offset += strlen($text);
+			}
+			if ($candidates === array()) {
+				continue;
+			}
+			usort($candidates, static fn(array $a, array $b): int => $b['offset'] <=> $a['offset']);
+			foreach ($candidates as $candidate) {
+				$source = substr_replace($source, $candidate['replacement'], $candidate['offset'], $candidate['length']);
+			}
+			if (file_put_contents((string) $file->getPathname(), $source) === false) {
+				throw new RuntimeException('Unable to write transformed test literals: ' . $file->getPathname());
+			}
+			$changed[] = $relative;
+		}
+		sort($changed, SORT_STRING);
+		return array('artifact' => 'wporg-prefix-b3-test-literal-transform', 'mapped_functions' => count($legacyNames), 'changed_files' => $changed, 'replacement_count' => $count);
 	}
 
 	/** Apply selected core function identities to one disposable add-on consumer. */
@@ -587,7 +734,7 @@ final class BVMGR_WPORG_Prefix_B3
 		return self::scanSource((string) file_get_contents($absolute), $relative, $index, $forTransform);
 	}
 
-	private static function scanSource(string $source, string $file, array $index, bool $forTransform, bool $consumerMode = false): array
+	private static function scanSource(string $source, string $file, array $index, bool $forTransform, bool $consumerMode = false, array $approvedLiteralSites = array()): array
 	{
 		$tokens = token_get_all($source);
 		$offsets = array();
@@ -610,6 +757,9 @@ final class BVMGR_WPORG_Prefix_B3
 					$literalSites[$name . '|' . (string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0)] = true;
 				}
 			}
+		}
+		foreach ($approvedLiteralSites as $key => $_approved) {
+			$literalSites[$key] = true;
 		}
 		$declarations = array();
 		$references = array();

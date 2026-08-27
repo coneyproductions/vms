@@ -42,7 +42,7 @@ function wp_unslash($value)
 	return $value;
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
 	if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
 		return '';
@@ -139,8 +139,8 @@ $staffingFunctionSource = vms_test_extract_function($staffingSource, 'vms_staffi
 
 vms_test_assert(strpos($budgetSource, '$_SERVER[\'REQUEST_METHOD\']') === false, 'Budget Calculator should no longer read $_SERVER[\'REQUEST_METHOD\'] directly.');
 vms_test_assert(strpos($staffingSource, '$_SERVER[\'REQUEST_METHOD\']') === false, 'Staffing admin should no longer read $_SERVER[\'REQUEST_METHOD\'] directly.');
-vms_test_assert(substr_count($budgetFunctionSource, "vms_request_server_value('REQUEST_METHOD')") === 1, 'Budget Calculator wrapper should source REQUEST_METHOD through vms_request_server_value().');
-vms_test_assert(substr_count($staffingFunctionSource, "vms_request_server_value('REQUEST_METHOD')") === 1, 'Staffing admin wrapper should source REQUEST_METHOD through vms_request_server_value().');
+vms_test_assert(substr_count($budgetFunctionSource, "bvmgr_request_server_value('REQUEST_METHOD')") === 1, 'Budget Calculator wrapper should source REQUEST_METHOD through bvmgr_request_server_value().');
+vms_test_assert(substr_count($staffingFunctionSource, "bvmgr_request_server_value('REQUEST_METHOD')") === 1, 'Staffing admin wrapper should source REQUEST_METHOD through bvmgr_request_server_value().');
 vms_test_assert(strpos($budgetSource, "if ('POST' === vms_budget_request_method()) {") !== false, 'Budget Calculator POST route should continue to gate on the local wrapper.');
 vms_test_assert(strpos($staffingSource, "\$request_method = vms_staffing_admin_request_method();") !== false, 'Staffing admin should continue to capture the local request-method wrapper result.');
 vms_test_assert(strpos($staffingSource, "if ('POST' === \$request_method && 'save' === \$post_action) {") !== false, 'Staffing templates save route should continue to gate on POST and save action.');

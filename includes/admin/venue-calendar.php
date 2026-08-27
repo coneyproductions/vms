@@ -32,11 +32,11 @@ function vms_render_admin_venue_calendar_page(): void
     ]);
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue-calendar filters only change which venue is displayed.
-    $venue_id = vms_request_read_absint($_GET, 'venue_id');
+    $venue_id = bvmgr_request_read_absint($_GET, 'venue_id');
     if ($venue_id <= 0 && !empty($venues)) $venue_id = (int) $venues[0]->ID;
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue-calendar filters only change which month is displayed.
-    $ym = vms_request_read_text_field($_GET, 'ym');
+    $ym = bvmgr_request_read_text_field($_GET, 'ym');
     if ($ym === '') {
         $ym = gmdate('Y-m');
     }

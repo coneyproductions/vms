@@ -314,7 +314,7 @@ if (!function_exists('vms_staffing_admin_get_venues')) {
 if (!function_exists('vms_staffing_admin_request_method')) {
 	function vms_staffing_admin_request_method(): string
 	{
-		$method = vms_request_server_value('REQUEST_METHOD');
+		$method = bvmgr_request_server_value('REQUEST_METHOD');
 		if ($method === '') {
 			return '';
 		}
@@ -346,7 +346,7 @@ if (!function_exists('vms_staffing_admin_is_templates_page')) {
 	function vms_staffing_admin_is_templates_page(): bool
 	{
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Staffing templates routing only controls whether admin assets load.
-			$page = vms_request_read_key($_GET, 'page');
+			$page = bvmgr_request_read_key($_GET, 'page');
 
 		return $page === 'vms-staffing-templates';
 	}
@@ -367,8 +367,8 @@ if (!function_exists('vms_staffing_admin_enqueue_assets')) {
 			return;
 		}
 
-		$version = function_exists('vms_asset_version')
-			? vms_asset_version()
+		$version = function_exists('bvmgr_asset_version')
+			? bvmgr_asset_version()
 			: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 		if ($is_templates_page) {

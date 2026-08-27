@@ -152,7 +152,7 @@ function g16b_extract_adapter_call(string $source, string $event_code): string
 	$event_at = strpos($source, "'{$event_code}'");
 	g16b_assert($event_at !== false, 'Missing operational event: ' . $event_code);
 	$prefix = substr($source, 0, (int) $event_at);
-	$start = strrpos($prefix, 'vms_record_operational_issue(');
+	$start = strrpos($prefix, 'bvmgr_record_operational_issue(');
 	g16b_assert($start !== false, 'Missing adapter call for: ' . $event_code);
 	$open = strpos($source, '(', (int) $start);
 	$depth = 0;
@@ -214,7 +214,7 @@ function g16b_source_contract(string $root, string $shadow_root): array
 		foreach ($tree_sources as $key => $source) {
 			g16b_same(0, preg_match_all('/(?<![A-Za-z0-9_])error_log\s*\(/', $source), $tree . ' ' . $key . ' source must contain no direct server logging.');
 			g16b_same(0, preg_match_all('/phpcs:(?:ignore|disable)[^\n]*(?:DevelopmentFunctions|error_log)/i', $source), $tree . ' ' . $key . ' source must not suppress logging findings.');
-			g16b_same(count($events[$key]), substr_count($source, 'vms_record_operational_issue('), $tree . ' ' . $key . ' adapter count changed.');
+			g16b_same(count($events[$key]), substr_count($source, 'bvmgr_record_operational_issue('), $tree . ' ' . $key . ' adapter count changed.');
 			foreach ($events[$key] as $event => $arguments) {
 				$call = g16b_extract_adapter_call($source, $event);
 				$expected = "vms_record_operational_issue('{$event}',{$arguments});";
@@ -395,10 +395,10 @@ function __($text, $domain = null): string
 function g16b_load_foundation_helpers(string $runtime_source): void
 {
 	foreach (array(
-		'vms_operational_issue_value_is_tainted',
-		'vms_operational_issue_request_path',
-		'vms_operational_issue_error_identity',
-		'vms_operational_issue_context',
+		'bvmgr_operational_issue_value_is_tainted',
+		'bvmgr_operational_issue_request_path',
+		'bvmgr_operational_issue_error_identity',
+		'bvmgr_operational_issue_context',
 	) as $helper) {
 		eval(g16b_extract_guarded_function($runtime_source, $helper));
 	}
@@ -411,13 +411,13 @@ function g16b_reset_capture(bool $adapter_result = true): void
 	$GLOBALS['g16b_adapter_result'] = $adapter_result;
 }
 
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$record = array(
 		'event_code' => $event_code,
-		'context' => vms_operational_issue_context($context),
+		'context' => bvmgr_operational_issue_context($context),
 	);
-	$error_identity = vms_operational_issue_error_identity($error);
+	$error_identity = bvmgr_operational_issue_error_identity($error);
 	if ($error_identity !== array()) {
 		$record['error'] = $error_identity;
 	}

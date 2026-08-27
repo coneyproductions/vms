@@ -64,7 +64,7 @@ function wp_unslash($value)
 	return $value;
 }
 
-function vms_request_read_scalar(array $source, string $key): string
+function bvmgr_request_read_scalar(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 		return '';
@@ -78,9 +78,9 @@ function vms_request_read_scalar(array $source, string $key): string
 	return trim((string) $value);
 }
 
-function vms_request_read_key(array $source, string $key): string
+function bvmgr_request_read_key(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_key($value);
 }
 
@@ -94,7 +94,7 @@ function wp_enqueue_script(string $handle, string $src = '', array $deps = array
 	$GLOBALS['vms_test_scripts'][$handle] = compact('src', 'deps', 'ver', 'in_footer');
 }
 
-function vms_asset_version(): string
+function bvmgr_asset_version(): string
 {
 	return 'test-asset-version';
 }

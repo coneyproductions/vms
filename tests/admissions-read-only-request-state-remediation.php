@@ -322,32 +322,32 @@ eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_p
 eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_render_custom_tab'));
 
 vms_test_assert_contains(
-	"\$post_id = vms_request_read_absint(\$_GET, 'post');",
+	"\$post_id = bvmgr_request_read_absint(\$_GET, 'post');",
 	$adminUiSource,
 	'Admissions admin UI should read the Event Plan post ID through the shared integer request helper.'
 );
 vms_test_assert_contains(
-	"\$result = vms_request_read_key(\$_GET, 'result');",
+	"\$result = bvmgr_request_read_key(\$_GET, 'result');",
 	$passClaimsSource,
 	'Pass Claims admin notices should read the result filter through the shared key helper.'
 );
 vms_test_assert_contains(
-	"\$batch_id = vms_request_read_absint(\$_GET, 'batch_id');",
+	"\$batch_id = bvmgr_request_read_absint(\$_GET, 'batch_id');",
 	$passClaimsSource,
 	'Pass Claims passes-tab filtering should read batch_id through the shared integer helper.'
 );
 vms_test_assert_contains(
-	"\$tab = vms_request_read_key(\$_GET, 'tab');",
+	"\$tab = bvmgr_request_read_key(\$_GET, 'tab');",
 	$passClaimsSource,
 	'Pass Claims admin page routing should read the tab through the shared key helper.'
 );
 vms_test_assert_contains(
-	"\$tab = vms_request_read_key(\$_GET, 'tab');",
+	"\$tab = bvmgr_request_read_key(\$_GET, 'tab');",
 	$vendorGuestSource,
 	'Vendor Guest Portal screen-key routing should read tab through the shared key helper.'
 );
 vms_test_assert_contains(
-	"\$selected_event = vms_request_read_absint(\$_GET, 'guest_event');",
+	"\$selected_event = bvmgr_request_read_absint(\$_GET, 'guest_event');",
 	$vendorGuestSource,
 	'Vendor Guest Portal event selection should read guest_event through the shared integer helper.'
 );

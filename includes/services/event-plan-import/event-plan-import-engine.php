@@ -204,15 +204,15 @@ if (!function_exists('vms_event_plan_import_upload_root')) {
 	 */
 	function vms_event_plan_import_upload_root()
 	{
-		if (!function_exists('vms_private_files_ensure_dir') || !function_exists('vms_private_files_bucket_dir')) {
+		if (!function_exists('bvmgr_private_files_ensure_dir') || !function_exists('bvmgr_private_files_bucket_dir')) {
 			return new WP_Error('upload_dir_missing', __('Upload directory is unavailable.', 'backstage-venue-manager'));
 		}
 
 		$bucket = vms_event_plan_import_storage_bucket();
-		if (!vms_private_files_ensure_dir($bucket)) {
+		if (!bvmgr_private_files_ensure_dir($bucket)) {
 			return new WP_Error('upload_dir_create_failed', __('Could not create import directory in uploads.', 'backstage-venue-manager'));
 		}
-		$dir = vms_private_files_bucket_dir($bucket);
+		$dir = bvmgr_private_files_bucket_dir($bucket);
 		if ($dir === '' || !is_dir($dir)) {
 			return new WP_Error('upload_dir_create_failed', __('Could not create import directory in uploads.', 'backstage-venue-manager'));
 		}
@@ -264,17 +264,17 @@ if (!function_exists('vms_event_plan_import_storage_path')) {
 		if (file_exists($reference) && vms_event_plan_import_path_is_safe($reference)) {
 			return $reference;
 		}
-		if (!function_exists('vms_private_files_validate_storage_key') || !function_exists('vms_private_files_absolute_path')) {
+		if (!function_exists('bvmgr_private_files_validate_storage_key') || !function_exists('bvmgr_private_files_absolute_path')) {
 			return '';
 		}
 
-		$storage_key = vms_private_files_validate_storage_key($reference);
+		$storage_key = bvmgr_private_files_validate_storage_key($reference);
 		$bucket = vms_event_plan_import_storage_bucket() . '/';
 		if ($storage_key === '' || strpos($storage_key, $bucket) !== 0) {
 			return '';
 		}
 
-		$path = vms_private_files_absolute_path($storage_key);
+		$path = bvmgr_private_files_absolute_path($storage_key);
 		if ($path === '' || !vms_event_plan_import_path_is_safe($path)) {
 			return '';
 		}
@@ -312,8 +312,8 @@ if (!function_exists('vms_event_plan_import_prepare_generated_path')) {
 		}
 
 		$storage_key = vms_event_plan_import_storage_bucket() . '/' . $token . '-' . $suffix . '.' . $extension;
-		$path = function_exists('vms_private_files_absolute_path')
-			? vms_private_files_absolute_path($storage_key)
+		$path = function_exists('bvmgr_private_files_absolute_path')
+			? bvmgr_private_files_absolute_path($storage_key)
 			: '';
 		if ($path === '') {
 			return new WP_Error('upload_dir_create_failed', __('Could not prepare import file storage.', 'backstage-venue-manager'));
@@ -323,8 +323,8 @@ if (!function_exists('vms_event_plan_import_prepare_generated_path')) {
 		if (!is_dir($dir) && !wp_mkdir_p($dir)) {
 			return new WP_Error('upload_dir_create_failed', __('Could not prepare import file storage.', 'backstage-venue-manager'));
 		}
-		if (function_exists('vms_private_files_write_hardening_files')) {
-			vms_private_files_write_hardening_files($dir);
+		if (function_exists('bvmgr_private_files_write_hardening_files')) {
+			bvmgr_private_files_write_hardening_files($dir);
 		}
 
 		return array(
@@ -420,8 +420,8 @@ if (!function_exists('vms_event_plan_import_required_columns')) {
 	 */
 	function vms_event_plan_import_required_columns(): array
 	{
-		if (function_exists('vms_csv_event_plan_required_columns')) {
-			return (array) vms_csv_event_plan_required_columns();
+		if (function_exists('bvmgr_csv_event_plan_required_columns')) {
+			return (array) bvmgr_csv_event_plan_required_columns();
 		}
 
 		return array(
@@ -439,8 +439,8 @@ if (!function_exists('vms_event_plan_import_allowed_comp_structures')) {
 	 */
 	function vms_event_plan_import_allowed_comp_structures(): array
 	{
-		if (function_exists('vms_comp_supported_structures')) {
-			return (array) vms_comp_supported_structures();
+		if (function_exists('bvmgr_comp_supported_structures')) {
+			return (array) bvmgr_comp_supported_structures();
 		}
 
 		return array('flat_fee', 'door_split', 'flat_fee_door_split', 'attendance_bonus');
@@ -1540,31 +1540,31 @@ if (!function_exists('vms_event_plan_import_read_rows_json')) {
 	 */
 	function vms_event_plan_import_validate_rows_payload(array $payload, string $top_level_token): bool
 	{
-		if (!vms_json_decoded_is_object($payload, $top_level_token)) {
+		if (!bvmgr_json_decoded_is_object($payload, $top_level_token)) {
 			return false;
 		}
 
 		$columns = $payload['columns'] ?? null;
-		if (!is_array($columns) || (!empty($columns) && vms_array_is_list_compat($columns))) {
+		if (!is_array($columns) || (!empty($columns) && bvmgr_array_is_list_compat($columns))) {
 			return false;
 		}
 
 		$rows = $payload['rows'] ?? null;
-		if (!is_array($rows) || (!empty($rows) && !vms_array_is_list_compat($rows)) || count($rows) > 10000) {
+		if (!is_array($rows) || (!empty($rows) && !bvmgr_array_is_list_compat($rows)) || count($rows) > 10000) {
 			return false;
 		}
 
-		if (isset($columns['secondary_vendor_columns']) && (!is_array($columns['secondary_vendor_columns']) || (!empty($columns['secondary_vendor_columns']) && !vms_array_is_list_compat($columns['secondary_vendor_columns'])))) {
+		if (isset($columns['secondary_vendor_columns']) && (!is_array($columns['secondary_vendor_columns']) || (!empty($columns['secondary_vendor_columns']) && !bvmgr_array_is_list_compat($columns['secondary_vendor_columns'])))) {
 			return false;
 		}
 
 		foreach ($rows as $row) {
-			if (!is_array($row) || (!empty($row) && vms_array_is_list_compat($row))) {
+			if (!is_array($row) || (!empty($row) && bvmgr_array_is_list_compat($row))) {
 				return false;
 			}
 
 			foreach (array('warnings', 'errors', 'secondary_vendor_ids', 'secondary_vendor_create_names') as $list_key) {
-				if (isset($row[$list_key]) && (!is_array($row[$list_key]) || (!empty($row[$list_key]) && !vms_array_is_list_compat($row[$list_key])))) {
+				if (isset($row[$list_key]) && (!is_array($row[$list_key]) || (!empty($row[$list_key]) && !bvmgr_array_is_list_compat($row[$list_key])))) {
 					return false;
 				}
 			}
@@ -1578,17 +1578,17 @@ if (!function_exists('vms_event_plan_import_read_rows_json')) {
 	 */
 	function vms_event_plan_import_validate_snapshot_payload(array $payload, string $top_level_token): bool
 	{
-		if (!vms_json_decoded_is_object($payload, $top_level_token)) {
+		if (!bvmgr_json_decoded_is_object($payload, $top_level_token)) {
 			return false;
 		}
 
 		$entries = $payload['entries'] ?? null;
-		if (!is_array($entries) || (!empty($entries) && !vms_array_is_list_compat($entries)) || count($entries) > 10000) {
+		if (!is_array($entries) || (!empty($entries) && !bvmgr_array_is_list_compat($entries)) || count($entries) > 10000) {
 			return false;
 		}
 
 		foreach ($entries as $entry) {
-			if (!is_array($entry) || (!empty($entry) && vms_array_is_list_compat($entry))) {
+			if (!is_array($entry) || (!empty($entry) && bvmgr_array_is_list_compat($entry))) {
 				return false;
 			}
 		}
@@ -1618,7 +1618,7 @@ if (!function_exists('vms_event_plan_import_read_rows_json')) {
 			return new WP_Error('rows_json_empty', __('Preview rows cache is empty.', 'backstage-venue-manager'));
 		}
 
-		$decoded = vms_json_decode_associative($raw, 64);
+		$decoded = bvmgr_json_decode_associative($raw, 64);
 		if (
 			empty($decoded['ok'])
 			|| !is_array($decoded['value'])
@@ -2564,7 +2564,7 @@ if (!function_exists('vms_event_plan_import_revert_last_run')) {
 			return new WP_Error('snapshot_read_failed', __('Could not read snapshot file.', 'backstage-venue-manager'));
 		}
 
-		$decoded = vms_json_decode_associative($raw, 64);
+		$decoded = bvmgr_json_decode_associative($raw, 64);
 		if (
 			empty($decoded['ok'])
 			|| !is_array($decoded['value'])

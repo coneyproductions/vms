@@ -3,7 +3,7 @@ defined('ABSPATH') || exit;
 
 function vms_continuity_binder_enqueue_assets($hook) {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder admin routing only controls asset loading for the current page.
-    $page = vms_request_read_key($_GET, 'page');
+    $page = bvmgr_request_read_key($_GET, 'page');
     if ($page !== 'vms-continuity-binder') {
         return;
     }
@@ -12,7 +12,7 @@ function vms_continuity_binder_enqueue_assets($hook) {
         'vms-continuity-binder',
         plugins_url('../../assets/js/vms-continuity-binder.js', __FILE__),
         array(),
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
+        function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
         true
     );
 }
@@ -176,7 +176,7 @@ function vms_continuity_binder_render_nav($sections, $base_url) {
 
 function vms_continuity_binder_render_updated_notice(): void {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder notice state only affects admin feedback.
-    if (vms_request_read_scalar($_GET, 'updated') !== '1') {
+    if (bvmgr_request_read_scalar($_GET, 'updated') !== '1') {
         return;
     }
 
@@ -207,7 +207,7 @@ function vms_render_continuity_binder_page_content() {
 
     $data      = vms_continuity_binder_get_data();
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder mode switching only affects the current admin view.
-    $is_edit   = (vms_request_read_scalar($_GET, 'edit') === '1');
+    $is_edit   = (bvmgr_request_read_scalar($_GET, 'edit') === '1');
     $is_saved  = !empty($data['updated_at']);
     $page_slug = 'vms-continuity-binder';
 

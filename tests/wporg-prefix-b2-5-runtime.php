@@ -60,7 +60,7 @@ function setup_postdata($post): void
 {
 	$GLOBALS['bvmgr_test_setup_postdata_id'] = $post instanceof WP_Post ? $post->ID : 0;
 }
-function vms_vendor_profile_is_enabled(int $postId): bool
+function bvmgr_vendor_profile_is_enabled(int $postId): bool
 {
 	return $postId > 0;
 }

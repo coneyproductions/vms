@@ -143,18 +143,18 @@ function is_admin(): bool
 	return !empty($GLOBALS['vms_diag_is_admin']);
 }
 
-function vms_admin_guard_heavy_hooks_disabled(): bool
+function bvmgr_admin_guard_heavy_hooks_disabled(): bool
 {
 	return !empty($GLOBALS['vms_diag_heavy_disabled']);
 }
 
-function vms_admin_guard_should_allow_heavy_block(string $hook_name, array $descriptor): array
+function bvmgr_admin_guard_should_allow_heavy_block(string $hook_name, array $descriptor): array
 {
 	$GLOBALS['vms_diag_guard_calls'][] = compact('hook_name', 'descriptor');
 	return $GLOBALS['vms_diag_guard_result'];
 }
 
-function vms_admin_guard_trace(string $hook_name, string $decision, array $payload, float $started_at = 0.0): void
+function bvmgr_admin_guard_trace(string $hook_name, string $decision, array $payload, float $started_at = 0.0): void
 {
 	$GLOBALS['vms_diag_trace_calls'][] = compact('hook_name', 'decision', 'payload', 'started_at');
 }
@@ -587,7 +587,7 @@ diag_contains('Mutation history must read request-fresh', $mutation_source, 'Mut
 diag_same(0, substr_count($mutation_source, 'error_log('), 'Mutation trace fallback should use the bounded operational adapter.');
 diag_same(1, substr_count($mutation_source, 'debug_backtrace('), 'Mutation source detection should retain exactly one bounded backtrace call.');
 diag_same(1, substr_count($mutation_source, 'WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace'), 'Mutation source detection should carry exactly one narrow backtrace annotation.');
-diag_contains("vms_record_operational_issue('ticket_mutation_audit_trace'", $mutation_source, 'Mutation trace fallback should retain its fixed operational event.');
+diag_contains("bvmgr_record_operational_issue('ticket_mutation_audit_trace'", $mutation_source, 'Mutation trace fallback should retain its fixed operational event.');
 
 // Baseline and remediated shared runtime stay byte-identical across the isolated mirror/shadow pair.
 $shadow_root = dirname($plugin_root, 2) . '/vms';

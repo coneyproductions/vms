@@ -113,7 +113,7 @@ function vms_goals_admin_enqueue_assets(string $hook): void
 		'vms-goals-forecast-admin',
 		$css,
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 	);
 
 	$js = <<<'JS'

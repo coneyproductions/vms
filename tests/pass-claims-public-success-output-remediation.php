@@ -177,8 +177,8 @@ if (!function_exists('wp_unslash')) {
 	}
 }
 
-if (!function_exists('vms_request_server_value')) {
-	function vms_request_server_value(string $key): string
+if (!function_exists('bvmgr_request_server_value')) {
+	function bvmgr_request_server_value(string $key): string
 	{
 		if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
 			return '';
@@ -188,10 +188,10 @@ if (!function_exists('vms_request_server_value')) {
 	}
 }
 
-if (!function_exists('vms_request_method')) {
-	function vms_request_method(string $fallback = 'get'): string
+if (!function_exists('bvmgr_request_method')) {
+	function bvmgr_request_method(string $fallback = 'get'): string
 	{
-		$method = sanitize_key(vms_request_server_value('REQUEST_METHOD'));
+		$method = sanitize_key(bvmgr_request_server_value('REQUEST_METHOD'));
 		if ($method !== '') {
 			return $method;
 		}
@@ -201,10 +201,10 @@ if (!function_exists('vms_request_method')) {
 	}
 }
 
-if (!function_exists('vms_request_current_uri')) {
-	function vms_request_current_uri(string $fallback = ''): string
+if (!function_exists('bvmgr_request_current_uri')) {
+	function bvmgr_request_current_uri(string $fallback = ''): string
 	{
-		$uri = vms_request_server_value('REQUEST_URI');
+		$uri = bvmgr_request_server_value('REQUEST_URI');
 		if ($uri === '') {
 			return $fallback;
 		}
@@ -222,10 +222,10 @@ if (!function_exists('vms_request_current_uri')) {
 	}
 }
 
-if (!function_exists('vms_request_remote_addr')) {
-	function vms_request_remote_addr(): string
+if (!function_exists('bvmgr_request_remote_addr')) {
+	function bvmgr_request_remote_addr(): string
 	{
-		$ip = vms_request_server_value('REMOTE_ADDR');
+		$ip = bvmgr_request_server_value('REMOTE_ADDR');
 		if ($ip === '') {
 			return '';
 		}
@@ -234,10 +234,10 @@ if (!function_exists('vms_request_remote_addr')) {
 	}
 }
 
-if (!function_exists('vms_request_user_agent')) {
-	function vms_request_user_agent(): string
+if (!function_exists('bvmgr_request_user_agent')) {
+	function bvmgr_request_user_agent(): string
 	{
-		$user_agent = vms_request_server_value('HTTP_USER_AGENT');
+		$user_agent = bvmgr_request_server_value('HTTP_USER_AGENT');
 		if ($user_agent === '') {
 			return '';
 		}

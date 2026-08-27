@@ -463,7 +463,7 @@ foreach (array(
 $all_runtime_source = implode("\n", $mirror_sources);
 g13_same(0, substr_count($mirror_sources['includes/admin/settings-page.php'], 'error_log('), 'G16 settings must contain no direct logging fallback.');
 g13_contains("vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must prefer the PhaseB adapter.');
-g13_contains("vms_record_operational_issue('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must retain the foundation fallback.');
+g13_contains("bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must retain the foundation fallback.');
 g13_contains('implode(\'\', $website_rows)', $mirror_sources['includes/admin/event-feedback.php'], 'The neighboring feedback output finding should remain present.');
 g13_contains('echo vms_express_bar_action_form(', $mirror_sources['includes/admin/express-bar.php'], 'The neighboring Express Bar output findings should remain present.');
 g13_contains('echo $content_html;', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings content output finding should remain present.');

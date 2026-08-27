@@ -61,7 +61,7 @@ $assert(strpos($eventPlansSource, "wp_send_json_success(array('row' => \$row));"
 $nonceCheckPos = strpos($ajaxMethodSource, "check_ajax_referer('vms_get_venue_comp_defaults', 'nonce', false)");
 $venueReadPos = strpos($ajaxMethodSource, '$venue_id   = isset($_POST[\'venue_id\']) ? absint($_POST[\'venue_id\']) : 0;');
 $dateReadPos = strpos($ajaxMethodSource, '$event_date = isset($_POST[\'event_date\']) ? sanitize_text_field(wp_unslash($_POST[\'event_date\'])) : \'\';');
-$resolverPos = strpos($ajaxMethodSource, 'vms_get_event_plan_effective_comp_default($venue_id, $event_date)');
+$resolverPos = strpos($ajaxMethodSource, 'bvmgr_get_event_plan_effective_comp_default($venue_id, $event_date)');
 $successPos = strrpos($ajaxMethodSource, "wp_send_json_success(array('row' => \$row));");
 $capabilityPos = strpos($ajaxMethodSource, "current_user_can('manage_options')");
 
@@ -73,7 +73,7 @@ $assert($resolverPos !== false && $nonceCheckPos < $resolverPos, 'Venue-defaults
 $assert($successPos !== false && $nonceCheckPos < $successPos, 'Venue-defaults nonce verification should occur before the success response path.');
 $assert(substr_count($ajaxMethodSource, 'check_ajax_referer(') === 1, 'Venue-defaults AJAX handler should retain exactly one nonce verification call.');
 $assert(substr_count($ajaxMethodSource, 'current_user_can(') === 1, 'Venue-defaults AJAX handler should retain exactly one capability check.');
-$assert(substr_count($ajaxMethodSource, 'vms_get_event_plan_effective_comp_default(') === 1, 'Venue-defaults AJAX handler should resolve defaults exactly once.');
+$assert(substr_count($ajaxMethodSource, 'bvmgr_get_event_plan_effective_comp_default(') === 1, 'Venue-defaults AJAX handler should resolve defaults exactly once.');
 $assert(substr_count($ajaxMethodSource, 'wp_send_json_error(') === 3, 'Venue-defaults AJAX handler should retain the exact three explicit JSON error branches.');
 $assert(substr_count($ajaxMethodSource, 'wp_send_json_success(') === 2, 'Venue-defaults AJAX handler should retain the exact two success branches.');
 $assert(strpos($ajaxMethodSource, 'update_post_meta(') === false && strpos($ajaxMethodSource, 'delete_post_meta(') === false, 'Venue-defaults AJAX handler should not mutate database state.');
@@ -96,8 +96,8 @@ $assert(strpos($compensationAssetSource, 'wp_add_inline_script(') === false, 'Co
 $harnessNamespace = 'VmsEventPlanVenueCompDefaultsNonceHarness';
 $harnessStateKey = 'vms_event_plan_venue_comp_defaults_nonce_harness';
 $harnessMethodSource = str_replace(
-	"function_exists('vms_get_event_plan_effective_comp_default')",
-	"function_exists(__NAMESPACE__ . '\\\\vms_get_event_plan_effective_comp_default')",
+	"function_exists('bvmgr_get_event_plan_effective_comp_default')",
+	"function_exists(__NAMESPACE__ . '\\\\bvmgr_get_event_plan_effective_comp_default')",
 	$ajaxMethodSource
 );
 

@@ -299,8 +299,8 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
 
         if ($vendor_id > 0) {
             $tax_missing = false;
-            if (function_exists('vms_is_vendor_tax_profile_complete')) {
-                $tax_missing = !vms_is_vendor_tax_profile_complete((int) $vendor_id);
+            if (function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+                $tax_missing = !bvmgr_is_vendor_tax_profile_complete((int) $vendor_id);
             }
 
             $bypass_active = false;
@@ -368,8 +368,8 @@ function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_
             }
 
             $support_tax_missing = false;
-            if (function_exists('vms_is_vendor_tax_profile_complete')) {
-                $support_tax_missing = !vms_is_vendor_tax_profile_complete((int) $support_vendor_id);
+            if (function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+                $support_tax_missing = !bvmgr_is_vendor_tax_profile_complete((int) $support_vendor_id);
             }
             $support_bypass_active = false;
             $support_bypass_until = '';

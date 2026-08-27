@@ -571,8 +571,8 @@ function vms_ticketing_b_get_event_ticket_products(int $tec_event_id): array {
     if ($tec_event_id <= 0) {
         return array();
     }
-    if (function_exists('vms_get_ticket_product_ids_for_event')) {
-        $ids = vms_get_ticket_product_ids_for_event($tec_event_id);
+    if (function_exists('bvmgr_get_ticket_product_ids_for_event')) {
+        $ids = bvmgr_get_ticket_product_ids_for_event($tec_event_id);
         $ids = is_array($ids) ? $ids : array();
         $ids = array_values(array_unique(array_filter(array_map('absint', $ids))));
         return $ids;
@@ -1917,7 +1917,7 @@ function vms_ticketing_b_commit_sync(int $plan_id, array $preview_items): array 
  * AJAX: save ticket tiers.
  */
 function vms_ticketing_payload_is_object_like_array(array $value): bool {
-    return empty($value) || !vms_array_is_list_compat($value);
+    return empty($value) || !bvmgr_array_is_list_compat($value);
 }
 
 function vms_ticketing_b_request_payload_value(array $source, string $key, &$present = null, &$valid = null, &$raw_string_bytes = null) {
@@ -1959,11 +1959,11 @@ function vms_ticketing_b_decode_list_payload(string $raw, int $max_bytes, int $d
         return array('ok' => false, 'value' => array());
     }
 
-    $decoded = vms_json_decode_associative($raw, $depth);
+    $decoded = bvmgr_json_decode_associative($raw, $depth);
     if (
         empty($decoded['ok'])
         || !is_array($decoded['value'])
-        || !vms_json_decoded_is_list($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+        || !bvmgr_json_decoded_is_list($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
     ) {
         return array('ok' => false, 'value' => array());
     }
@@ -1975,7 +1975,7 @@ function vms_ticketing_b_decode_list_payload(string $raw, int $max_bytes, int $d
 }
 
 function vms_ticketing_b_validate_tier_rows_payload(array $tiers): bool {
-    if (!empty($tiers) && !vms_array_is_list_compat($tiers)) {
+    if (!empty($tiers) && !bvmgr_array_is_list_compat($tiers)) {
         return false;
     }
     if (count($tiers) > 25) {
@@ -2020,7 +2020,7 @@ function vms_ticketing_b_validate_tier_rows_payload(array $tiers): bool {
 }
 
 function vms_ticketing_b_validate_commit_items_payload(array $items): bool {
-    if (!empty($items) && !vms_array_is_list_compat($items)) {
+    if (!empty($items) && !bvmgr_array_is_list_compat($items)) {
         return false;
     }
     if (count($items) > 25) {
@@ -2065,7 +2065,7 @@ function vms_ticketing_v2_validate_config_payload(array $cfg): bool {
         }
 
         $rows = $cfg[$list_key];
-        if (!is_array($rows) || (!empty($rows) && !vms_array_is_list_compat($rows)) || count($rows) > 200) {
+        if (!is_array($rows) || (!empty($rows) && !bvmgr_array_is_list_compat($rows)) || count($rows) > 200) {
             return false;
         }
 
@@ -2084,7 +2084,7 @@ function vms_ticketing_b_ajax_save_tiers(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = vms_request_read_absint($_POST, 'plan_id');
+    $plan_id = bvmgr_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
@@ -2170,7 +2170,7 @@ function vms_ticketing_b_ajax_commit_sync(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = vms_request_read_absint($_POST, 'plan_id');
+    $plan_id = bvmgr_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
@@ -2607,8 +2607,8 @@ function vms_ticketing_v2_reporting_category_backfill_once(): void {
     if ((string) get_option($version_option, '') === $version) {
         return;
     }
-    $guard = function_exists('vms_admin_guard_begin')
-        ? vms_admin_guard_begin('admin_init.ticketing_reporting_category_backfill', array(
+    $guard = function_exists('bvmgr_admin_guard_begin')
+        ? bvmgr_admin_guard_begin('admin_init.ticketing_reporting_category_backfill', array(
             'task' => 'ticketing_reporting_category_backfill',
             'allow_action' => 'ticketing_reporting_category_backfill',
             'lock_name' => 'ticketing_reporting_category_backfill',
@@ -2645,8 +2645,8 @@ function vms_ticketing_v2_reporting_category_backfill_once(): void {
     } catch (Throwable $e) {
         // Best-effort migration: do not interrupt admin requests if one product is malformed.
     } finally {
-        if (is_array($guard) && function_exists('vms_admin_guard_finish')) {
-            vms_admin_guard_finish($guard, $guard_context);
+        if (is_array($guard) && function_exists('bvmgr_admin_guard_finish')) {
+            bvmgr_admin_guard_finish($guard, $guard_context);
         }
     }
 }
@@ -2662,8 +2662,8 @@ function vms_ticketing_v2_square_unsync_candidates_once(): void {
     if ((string) get_option($version_option, '') === $version) {
         return;
     }
-    $guard = function_exists('vms_admin_guard_begin')
-        ? vms_admin_guard_begin('admin_init.ticketing_square_unsync_candidates', array(
+    $guard = function_exists('bvmgr_admin_guard_begin')
+        ? bvmgr_admin_guard_begin('admin_init.ticketing_square_unsync_candidates', array(
             'task' => 'ticketing_square_unsync_candidates',
             'allow_action' => 'ticketing_square_unsync_candidates',
             'lock_name' => 'ticketing_square_unsync_candidates',
@@ -2713,8 +2713,8 @@ function vms_ticketing_v2_square_unsync_candidates_once(): void {
     } catch (Throwable $e) {
         // Best-effort remediation only. Do not interrupt admin requests.
     } finally {
-        if (is_array($guard) && function_exists('vms_admin_guard_finish')) {
-            vms_admin_guard_finish($guard, $guard_context);
+        if (is_array($guard) && function_exists('bvmgr_admin_guard_finish')) {
+            bvmgr_admin_guard_finish($guard, $guard_context);
         }
     }
 }
@@ -4708,12 +4708,12 @@ function vms_ticketing_v2_hash_entitlement(array $ent): string {
 }
 
 function vms_entitlements_sync_image_log(string $event_code, array $context = array(), $error = null): void {
-    if (!function_exists('vms_record_operational_issue')) {
+    if (!function_exists('bvmgr_record_operational_issue')) {
         return;
     }
 
     if (func_num_args() === 1) {
-        vms_record_operational_issue(
+        bvmgr_record_operational_issue(
             'entitlement_image_sync_legacy',
             array(
                 'service' => 'ticketing',
@@ -4725,7 +4725,7 @@ function vms_entitlements_sync_image_log(string $event_code, array $context = ar
         return;
     }
 
-    vms_record_operational_issue($event_code, $context, $error);
+    bvmgr_record_operational_issue($event_code, $context, $error);
 }
 
 function vms_entitlements_find_config_entitlement(int $plan_id, string $entitlement_id): array {
@@ -6379,7 +6379,7 @@ function vms_ticketing_v2_cleanup_legacy_sr_duplicates(int $plan_id, int $tec_ev
 }
 
 function vms_ticketing_v2_legacy_cleanup_cron_init(): void {
-    if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+    if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
         return;
     }
     if (!function_exists('wp_next_scheduled') || !function_exists('wp_schedule_event')) {
@@ -9815,7 +9815,7 @@ function vms_ticketing_v2_ajax_save_config(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = vms_request_read_absint($_POST, 'plan_id');
+    $plan_id = bvmgr_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
@@ -9836,11 +9836,11 @@ function vms_ticketing_v2_ajax_save_config(): void {
     } elseif (is_string($raw)) {
         $raw = trim($raw);
         if ($raw !== '' && strlen($raw) <= 262144) {
-            $decoded = vms_json_decode_associative($raw, 64);
+            $decoded = bvmgr_json_decode_associative($raw, 64);
             if (
                 !empty($decoded['ok'])
                 && is_array($decoded['value'])
-                && vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+                && bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
                 && vms_ticketing_v2_validate_config_payload($decoded['value'])
             ) {
                 $cfg_in = $decoded['value'];
@@ -9927,12 +9927,12 @@ function vms_ticketing_v2_ajax_save_template(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = vms_request_read_absint($_POST, 'plan_id');
+    $plan_id = bvmgr_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-    $name = sanitize_text_field(vms_request_read_scalar($_POST, 'name'));
+    $name = sanitize_text_field(bvmgr_request_read_scalar($_POST, 'name'));
     $config_present = false;
     $config_valid = false;
     $cfg_raw = vms_ticketing_b_request_payload_value($_POST, 'config', $config_present, $config_valid);
@@ -9944,11 +9944,11 @@ function vms_ticketing_v2_ajax_save_template(): void {
         if (strlen($cfg_raw) > 262144) {
             vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
         }
-        $decoded = vms_json_decode_associative($cfg_raw, 64);
+        $decoded = bvmgr_json_decode_associative($cfg_raw, 64);
         if (
             empty($decoded['ok'])
             || !is_array($decoded['value'])
-            || !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+            || !bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
             || !vms_ticketing_v2_validate_config_payload($decoded['value'])
         ) {
             vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);
@@ -10172,12 +10172,12 @@ function vms_ticketing_v2_ajax_commit_sync(): void {
         vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
-    $plan_id = vms_request_read_absint($_POST, 'plan_id');
+    $plan_id = bvmgr_request_read_absint($_POST, 'plan_id');
     if ($plan_id <= 0 || !current_user_can('edit_post', $plan_id)) {
         vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);
     }
 
-    $preview_id = sanitize_key(vms_request_read_scalar($_POST, 'preview_id'));
+    $preview_id = sanitize_key(bvmgr_request_read_scalar($_POST, 'preview_id'));
     if ($preview_id === '') {
         vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_preview_id'), 400);
     }

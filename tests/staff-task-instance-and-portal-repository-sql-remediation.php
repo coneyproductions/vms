@@ -386,7 +386,7 @@ function bvmgr_staffing_resolve_slot_window(int $plan_id, array $row): array
 	return array();
 }
 
-function vms_format_local_ymd(string $ymd, string $format): string
+function bvmgr_format_local_ymd(string $ymd, string $format): string
 {
 	unset($format);
 	return $ymd;

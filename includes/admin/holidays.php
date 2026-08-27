@@ -165,8 +165,8 @@ function vms_admin_holidays_enqueue_assets(): void
 		return;
 	}
 
-	$version = function_exists('vms_asset_version')
-		? vms_asset_version()
+	$version = function_exists('bvmgr_asset_version')
+		? bvmgr_asset_version()
 		: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 	wp_enqueue_script(
@@ -351,7 +351,7 @@ function vms_admin_holidays_apply_post(string $action): array
 		return array('ok' => false, 'message' => 'Venue is required.');
 	}
 
-	$all = function_exists('vms_get_holidays_option') ? (array) vms_get_holidays_option() : array();
+	$all = function_exists('bvmgr_get_holidays_option') ? (array) bvmgr_get_holidays_option() : array();
 	if (!isset($all[$venue_id]) || !is_array($all[$venue_id])) {
 		$all[$venue_id] = array();
 	}
@@ -507,7 +507,7 @@ function vms_admin_holidays_page(): void
 		update_user_meta(get_current_user_id(), '_vms_current_venue_id', $venue_id);
 	}
 
-	$all = function_exists('vms_get_holidays_option') ? (array) vms_get_holidays_option() : array();
+	$all = function_exists('bvmgr_get_holidays_option') ? (array) bvmgr_get_holidays_option() : array();
 	$venue_holidays = ($venue_id > 0 && isset($all[$venue_id]) && is_array($all[$venue_id])) ? $all[$venue_id] : array();
 
 	if (!empty($venue_holidays)) {

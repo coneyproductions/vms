@@ -71,8 +71,8 @@ $normalizeMetaValue = static function ($value) use (&$normalizeMetaValue) {
 };
 
 $vmsOwnedCronHook = static function (string $hook): bool {
-	if (function_exists('vms_is_owned_cron_hook')) {
-		return vms_is_owned_cron_hook($hook);
+	if (function_exists('bvmgr_is_owned_cron_hook')) {
+		return bvmgr_is_owned_cron_hook($hook);
 	}
 
 	return strpos($hook, 'vms_') === 0;

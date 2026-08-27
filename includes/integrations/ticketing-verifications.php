@@ -35,63 +35,63 @@ if (!function_exists('vms_ticketing_verification_manage_capability')) {
 if (!function_exists('vms_ticketing_verification_query_key')) {
     function vms_ticketing_verification_query_key(string $key): string
     {
-        return vms_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification query args only drive read-only panel, list, notice, and proof-view routing.
+        return bvmgr_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification query args only drive read-only panel, list, notice, and proof-view routing.
     }
 }
 
 if (!function_exists('vms_ticketing_verification_query_text_field')) {
     function vms_ticketing_verification_query_text_field(string $key): string
     {
-        return vms_request_read_text_field($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification query args only drive read-only panel, list, notice, and proof-view routing.
+        return bvmgr_request_read_text_field($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification query args only drive read-only panel, list, notice, and proof-view routing.
     }
 }
 
 if (!function_exists('vms_ticketing_verification_query_absint')) {
     function vms_ticketing_verification_query_absint(string $key): int
     {
-        return vms_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification query args only drive read-only panel, list, notice, and proof-view routing.
+        return bvmgr_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification query args only drive read-only panel, list, notice, and proof-view routing.
     }
 }
 
 if (!function_exists('vms_ticketing_verification_query_bool_flag')) {
     function vms_ticketing_verification_query_bool_flag(string $key): bool
     {
-        return vms_request_read_bool_flag($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification query args only drive read-only panel, list, notice, and proof-view routing.
+        return bvmgr_request_read_bool_flag($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification query args only drive read-only panel, list, notice, and proof-view routing.
     }
 }
 
 if (!function_exists('vms_ticketing_verification_query_local_redirect')) {
     function vms_ticketing_verification_query_local_redirect(string $key, string $fallback = ''): string
     {
-        return vms_request_local_redirect($fallback, vms_request_read_scalar($_GET, $key)); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification return URLs are read-only navigation state for already-gated forms and panels.
+        return bvmgr_request_local_redirect($fallback, bvmgr_request_read_scalar($_GET, $key)); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verification return URLs are read-only navigation state for already-gated forms and panels.
     }
 }
 
 if (!function_exists('vms_ticketing_verification_post_absint')) {
     function vms_ticketing_verification_post_absint(string $key): int
     {
-        return vms_request_read_absint($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verification mutations use this only within existing verified admin-post or core profile-update flows, including submitted IDs needed to resolve a dynamic nonce action.
+        return bvmgr_request_read_absint($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verification mutations use this only within existing verified admin-post or core profile-update flows, including submitted IDs needed to resolve a dynamic nonce action.
     }
 }
 
 if (!function_exists('vms_ticketing_verification_post_key')) {
     function vms_ticketing_verification_post_key(string $key): string
     {
-        return vms_request_read_key($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verification POST keys only influence behavior inside an existing verified mutation flow or choose the response format for the current submission.
+        return bvmgr_request_read_key($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verification POST keys only influence behavior inside an existing verified mutation flow or choose the response format for the current submission.
     }
 }
 
 if (!function_exists('vms_ticketing_verification_post_text_field')) {
     function vms_ticketing_verification_post_text_field(string $key): string
     {
-        return vms_request_read_text_field($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verification POST text fields are consumed only after the surrounding mutation flow has passed its existing security gate.
+        return bvmgr_request_read_text_field($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verification POST text fields are consumed only after the surrounding mutation flow has passed its existing security gate.
     }
 }
 
 if (!function_exists('vms_ticketing_verification_post_local_redirect')) {
     function vms_ticketing_verification_post_local_redirect(string $key, string $fallback = ''): string
     {
-        return vms_request_local_redirect($fallback, vms_request_read_scalar($_POST, $key)); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verification return URLs only control the local post-mutation redirect or JSON payload target for the current request.
+        return bvmgr_request_local_redirect($fallback, bvmgr_request_read_scalar($_POST, $key)); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verification return URLs only control the local post-mutation redirect or JSON payload target for the current request.
     }
 }
 
@@ -795,7 +795,7 @@ if (!function_exists('vms_ticketing_verification_optimize_image_upload')) {
      */
     function vms_ticketing_verification_optimize_image_upload(string $tmp_name, string $root, string $filename_base)
     {
-        $normalized = vms_normalize_uploaded_image_to_jpeg($tmp_name, $root, $filename_base, array(
+        $normalized = bvmgr_normalize_uploaded_image_to_jpeg($tmp_name, $root, $filename_base, array(
             'max_dimension' => (int) BVMGR_TICKETING_VERIFICATION_IMAGE_MAX_DIMENSION,
             'quality' => (int) BVMGR_TICKETING_VERIFICATION_IMAGE_QUALITY,
             'max_output_bytes' => vms_ticketing_verification_get_effective_max_upload_bytes(),
@@ -814,15 +814,15 @@ if (!function_exists('vms_ticketing_verification_optimize_image_upload')) {
 if (!function_exists('vms_ticketing_verification_upload_root')) {
     function vms_ticketing_verification_upload_root(): string
     {
-        if (!function_exists('vms_private_files_ensure_dir') || !function_exists('vms_private_files_bucket_dir')) {
+        if (!function_exists('bvmgr_private_files_ensure_dir') || !function_exists('bvmgr_private_files_bucket_dir')) {
             return '';
         }
 
-        if (!vms_private_files_ensure_dir('verifications')) {
+        if (!bvmgr_private_files_ensure_dir('verifications')) {
             return '';
         }
 
-        return vms_private_files_bucket_dir('verifications');
+        return bvmgr_private_files_bucket_dir('verifications');
     }
 }
 
@@ -915,7 +915,7 @@ if (!function_exists('vms_ticketing_verification_store_proof_file')) {
 
         $allowed_mimes = vms_ticketing_verification_allowed_mimes();
         if (!vms_ticketing_verification_is_image_mime($mime)) {
-            $file_id = vms_private_files_store_validated_upload(
+            $file_id = bvmgr_private_files_store_validated_upload(
                 $validated_upload,
                 array(
                     'allowed_mimes' => $allowed_mimes,
@@ -937,11 +937,11 @@ if (!function_exists('vms_ticketing_verification_store_proof_file')) {
 			return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
 		}
 
-        $storage_key = function_exists('vms_private_files_generate_storage_key')
-            ? vms_private_files_generate_storage_key('verifications', vms_ticketing_verification_image_extension_for_mime(vms_ticketing_verification_image_output_mime()))
+        $storage_key = function_exists('bvmgr_private_files_generate_storage_key')
+            ? bvmgr_private_files_generate_storage_key('verifications', vms_ticketing_verification_image_extension_for_mime(vms_ticketing_verification_image_output_mime()))
             : '';
-        $target_path = $storage_key !== '' && function_exists('vms_private_files_absolute_path')
-            ? vms_private_files_absolute_path($storage_key)
+        $target_path = $storage_key !== '' && function_exists('bvmgr_private_files_absolute_path')
+            ? bvmgr_private_files_absolute_path($storage_key)
             : '';
         if ($storage_key === '' || $target_path === '') {
             return new WP_Error('save_failed', __('Could not save the uploaded verification proof.', 'backstage-venue-manager'));
@@ -969,8 +969,8 @@ if (!function_exists('vms_ticketing_verification_store_proof_file')) {
             $display_base = 'proof';
         }
         $display_name = $display_base . '.jpg';
-        $file_id = function_exists('vms_private_files_register_path')
-            ? vms_private_files_register_path(
+        $file_id = function_exists('bvmgr_private_files_register_path')
+            ? bvmgr_private_files_register_path(
                 $stored_key,
                 $stored_path,
                 $display_name,
@@ -1008,12 +1008,12 @@ if (!function_exists('vms_ticketing_verification_proof_payload')) {
         $file_id = absint(get_post_meta($request_id, 'proof_file_id', true));
         $storage_kind = sanitize_key((string) get_post_meta($request_id, 'proof_storage_kind', true));
         if ($file_id > 0 && $storage_kind === 'private_file') {
-            $row = vms_private_file_get($file_id);
+            $row = bvmgr_private_file_get($file_id);
             if (!is_array($row)) {
                 return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
             }
 
-            $path = vms_private_file_path((string) ($row['stored_filename'] ?? ''));
+            $path = bvmgr_private_file_path((string) ($row['stored_filename'] ?? ''));
             if ($path === '' || !vms_ticketing_verification_path_within_root($path)) {
                 return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
             }
@@ -1053,8 +1053,8 @@ if (!function_exists('vms_ticketing_verification_delete_proof_asset_for_request'
 
         $file_id = absint(get_post_meta($request_id, 'proof_file_id', true));
         $storage_kind = sanitize_key((string) get_post_meta($request_id, 'proof_storage_kind', true));
-        if ($file_id > 0 && $storage_kind === 'private_file' && function_exists('vms_private_files_delete')) {
-            vms_private_files_delete($file_id);
+        if ($file_id > 0 && $storage_kind === 'private_file' && function_exists('bvmgr_private_files_delete')) {
+            bvmgr_private_files_delete($file_id);
         }
 
         $legacy_path = (string) get_post_meta($request_id, 'proof_file_path', true);
@@ -1688,7 +1688,7 @@ if (!function_exists('vms_ticketing_verification_render_panel')) {
         $return_to = vms_ticketing_verification_query_local_redirect('vms_return_to');
 
         $current_url = '';
-        $request_uri = vms_request_current_uri('');
+        $request_uri = bvmgr_request_current_uri('');
         if ($request_uri !== '') {
             $current_url = home_url($request_uri);
         }
@@ -1959,14 +1959,14 @@ if (!function_exists('vms_ticketing_verification_enqueue_account_styles')) {
             'vms-ticketing-front',
             plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
             $deps,
-            function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+            function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
         );
 
         wp_enqueue_script(
             'vms-image-normalize',
             plugins_url('assets/js/vms-image-normalize.js', BVMGR_PLUGIN_FILE),
             array(),
-            function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
+            function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
             true
         );
 
@@ -1974,7 +1974,7 @@ if (!function_exists('vms_ticketing_verification_enqueue_account_styles')) {
             'vms-verification-upload',
             plugins_url('assets/js/vms-verification-upload.js', BVMGR_PLUGIN_FILE),
             array('vms-image-normalize'),
-            function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
+            function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
             true
         );
 
@@ -2281,7 +2281,7 @@ if (!function_exists('vms_ticketing_verification_create_request')) {
 if (!function_exists('vms_ticketing_verification_notice_redirect_url')) {
     function vms_ticketing_verification_notice_redirect_url(string $redirect_to, string $notice): string
     {
-        $redirect_to = vms_request_local_redirect(home_url('/'), $redirect_to);
+        $redirect_to = bvmgr_request_local_redirect(home_url('/'), $redirect_to);
 
         return add_query_arg('vms_verification_notice', sanitize_key($notice), $redirect_to);
     }
@@ -2295,7 +2295,7 @@ if (!function_exists('vms_ticketing_verification_wants_json_response')) {
             return true;
         }
 
-        $accept = strtolower(vms_request_server_value('HTTP_ACCEPT'));
+        $accept = strtolower(bvmgr_request_server_value('HTTP_ACCEPT'));
         return $accept !== '' && strpos($accept, 'application/json') !== false;
     }
 }
@@ -2369,9 +2369,9 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             vms_ticketing_verification_finish_error($redirect_to, 'already_approved', 409);
         }
 
-        $program = vms_request_read_key($_POST, 'program');
-        $notes = vms_request_read_text_field($_POST, 'notes');
-        $eligibility_confirm = vms_request_read_absint($_POST, 'eligibility_confirm');
+        $program = bvmgr_request_read_key($_POST, 'program');
+        $notes = bvmgr_request_read_text_field($_POST, 'notes');
+        $eligibility_confirm = bvmgr_request_read_absint($_POST, 'eligibility_confirm');
 
         $programs = vms_ticketing_verification_programs();
         if ($program === '' || !isset($programs[$program])) {
@@ -2385,7 +2385,7 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             vms_ticketing_verification_finish_error($redirect_to, 'file_missing', 400);
         }
 
-        $upload = vms_upload_read_file($_FILES, 'proof_file');
+        $upload = bvmgr_upload_read_file($_FILES, 'proof_file');
         if (is_wp_error($upload)) {
             vms_ticketing_verification_finish_error($redirect_to, 'file_missing', 400);
         }
@@ -2408,7 +2408,7 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             vms_ticketing_verification_finish_error($redirect_to, 'heic_not_supported', 415);
         }
 
-        $validated = vms_validate_uploaded_file(
+        $validated = bvmgr_validate_uploaded_file(
             $upload,
             array(
                 'allowed_mimes' => vms_ticketing_verification_allowed_mimes(),
@@ -2461,8 +2461,8 @@ if (!function_exists('vms_ticketing_verification_handle_submit')) {
             'private_file'
         );
         if ($request_id <= 0) {
-            if (!empty($stored['file_id']) && function_exists('vms_private_files_delete')) {
-                vms_private_files_delete((int) $stored['file_id']);
+            if (!empty($stored['file_id']) && function_exists('bvmgr_private_files_delete')) {
+                bvmgr_private_files_delete((int) $stored['file_id']);
             }
             vms_ticketing_verification_finish_error($redirect_to, 'save_failed', 500);
         }
@@ -2777,7 +2777,7 @@ if (!function_exists('vms_ticketing_verification_save_user_credential_fields')) 
                 continue;
             }
 
-            $should_be_verified = vms_request_read_scalar($raw_selected, $program_key) !== '';
+            $should_be_verified = bvmgr_request_read_scalar($raw_selected, $program_key) !== '';
             $is_verified = vms_ticketing_user_is_verified_for_program($user_id, $program_key);
             if ($should_be_verified === $is_verified) {
                 continue;
@@ -3462,7 +3462,7 @@ if (!function_exists('vms_ticketing_verification_stream_proof')) {
             wp_die(esc_html($payload->get_error_message()));
         }
 
-        vms_private_files_stream_path(
+        bvmgr_private_files_stream_path(
             (string) ($payload['path'] ?? ''),
             (string) ($payload['filename'] ?? 'verification-proof'),
             (string) ($payload['mime'] ?? 'application/octet-stream')
@@ -3524,7 +3524,7 @@ add_action('vms_ticketing_verification_cleanup', 'vms_ticketing_verification_cle
 if (!function_exists('vms_ticketing_verification_schedule_cleanup')) {
     function vms_ticketing_verification_schedule_cleanup(): void
     {
-        if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+        if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
             return;
         }
         if (!function_exists('wp_next_scheduled') || !function_exists('wp_schedule_event')) {

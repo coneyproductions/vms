@@ -813,7 +813,7 @@ add_action('vms_event_plan_saved', 'vms_vendor_booking_onboarding_plan_saved', 2
 if (!function_exists('vms_vendor_booking_onboarding_schedule_event')) {
     function vms_vendor_booking_onboarding_schedule_event(): void
     {
-        if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+        if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
             return;
         }
         if (!wp_next_scheduled('vms_vendor_booking_onboarding_daily')) {

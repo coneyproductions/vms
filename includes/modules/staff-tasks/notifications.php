@@ -361,10 +361,10 @@ add_filter('cron_schedules', 'vms_tasks_notifications_register_cron_schedules');
 if (!function_exists('vms_tasks_notifications_ensure_cron')) {
 	function vms_tasks_notifications_ensure_cron(): void
 	{
-		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+		if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
 			return;
 		}
-		if (!function_exists('vms_schedule_exists') || !vms_schedule_exists('vms_tasks_fifteen_minutes')) {
+		if (!function_exists('bvmgr_schedule_exists') || !bvmgr_schedule_exists('vms_tasks_fifteen_minutes')) {
 			return;
 		}
 		if (!wp_next_scheduled('vms_tasks_notifications_tick')) {

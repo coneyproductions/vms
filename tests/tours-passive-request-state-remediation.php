@@ -205,17 +205,17 @@ vms_test_assert($screenSource !== '', 'Tours screen source should be readable.')
 vms_test_assert($coreToursSource !== '', 'Core tours source should be readable.');
 
 vms_test_assert_contains(
-	'$page = vms_request_read_key($_GET, \'page\');',
+	'$page = bvmgr_request_read_key($_GET, \'page\');',
 	$serviceSource,
 	'Tours service enqueue scope should continue to read page through the shared key helper.'
 );
 vms_test_assert_contains(
-	'$page = vms_request_read_text_field($_GET, \'page\');',
+	'$page = bvmgr_request_read_text_field($_GET, \'page\');',
 	$screenSource,
 	'Tours screen resolution should continue to read page through the shared text helper.'
 );
 vms_test_assert_contains(
-	'$page = vms_request_read_key($_GET, \'page\');',
+	'$page = bvmgr_request_read_key($_GET, \'page\');',
 	$coreToursSource,
 	'Core tours page routing should continue to read page through the shared key helper.'
 );

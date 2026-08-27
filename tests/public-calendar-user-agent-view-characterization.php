@@ -120,7 +120,7 @@ function sanitize_text_field($value): string
     return $filtered;
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
     if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
         return '';
@@ -188,7 +188,7 @@ function vms_test_public_calendar_expected_user_agent(bool $setHeader, $header):
         $_SERVER['HTTP_USER_AGENT'] = $header;
     }
 
-    $userAgent = vms_request_server_value('HTTP_USER_AGENT');
+    $userAgent = bvmgr_request_server_value('HTTP_USER_AGENT');
     if ($userAgent === '') {
         return '';
     }

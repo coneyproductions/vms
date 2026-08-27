@@ -123,7 +123,7 @@ if (!function_exists('vms_express_bar_render_admin_page')) {
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Express Bar plan selection only changes which plan is displayed.
-        $selected_plan_id = vms_request_read_absint($_GET, 'event_plan_id');
+        $selected_plan_id = bvmgr_request_read_absint($_GET, 'event_plan_id');
         $plans = get_posts(array(
             'post_type' => 'vms_event_plan',
             'post_status' => array('publish', 'draft', 'future', 'pending', 'private'),

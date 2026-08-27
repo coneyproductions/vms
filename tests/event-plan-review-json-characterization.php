@@ -262,7 +262,7 @@ function vms_event_command_center_clean_text($text): string
 	return sanitize_text_field($text);
 }
 
-function vms_admin_ui_page_url(string $slug): string
+function bvmgr_admin_ui_page_url(string $slug): string
 {
 	return '/wp-admin/admin.php?page=' . rawurlencode($slug);
 }

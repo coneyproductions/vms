@@ -677,7 +677,7 @@ function bvmgr_tec_is_cancelled_event(int $event_id): bool
 	return !empty($GLOBALS['g11_cancelled'][$event_id]);
 }
 
-function vms_format_local_ymd(string $ymd, string $format): string
+function bvmgr_format_local_ymd(string $ymd, string $format): string
 {
 	unset($format);
 	return 'Formatted ' . $ymd;

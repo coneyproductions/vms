@@ -28,7 +28,7 @@ if (!function_exists('vms_feedback_public_query_value')) {
 			return trim((string) $value);
 		}
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$query_value = array_key_exists($key, $_GET) ? vms_request_read_scalar($_GET, $key) : null;
+		$query_value = array_key_exists($key, $_GET) ? bvmgr_request_read_scalar($_GET, $key) : null;
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ($query_value !== null) {
 			return $query_value;
@@ -60,8 +60,8 @@ if (!function_exists('vms_feedback_enqueue_public_assets')) {
 		if (!vms_feedback_is_public_survey_request()) {
 			return;
 		}
-		wp_enqueue_style('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), vms_asset_version());
-		wp_enqueue_script('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/js/vms-event-feedback.js', array(), vms_asset_version(), true);
+		wp_enqueue_style('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), bvmgr_asset_version());
+		wp_enqueue_script('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/js/vms-event-feedback.js', array(), bvmgr_asset_version(), true);
 	}
 }
 add_action('wp_enqueue_scripts', 'vms_feedback_enqueue_public_assets');
@@ -330,7 +330,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 		) {
 			wp_die(esc_html__('Feedback form expired. Please refresh and try again.', 'backstage-venue-manager'));
 		}
-		$honeypot = vms_request_read_scalar($_POST, 'vms_feedback_company');
+		$honeypot = bvmgr_request_read_scalar($_POST, 'vms_feedback_company');
 		if ($honeypot !== '') {
 			wp_safe_redirect(add_query_arg('vms_feedback_submitted', '1', $redirect));
 			exit;
@@ -344,7 +344,7 @@ if (!function_exists('vms_feedback_handle_submit')) {
 		$allowed_yes_maybe_no = vms_feedback_yes_maybe_no_options();
 		$invite = isset($_POST['invite']) ? sanitize_text_field(wp_unslash((string) $_POST['invite'])) : '';
 		$recipient_hash = isset($_POST['recipient']) ? sanitize_text_field(wp_unslash((string) $_POST['recipient'])) : '';
-		$invite_source = function_exists('vms_feedback_invitation_source') ? vms_feedback_invitation_source(vms_request_read_scalar($_POST, 'source')) : 'manual';
+		$invite_source = function_exists('vms_feedback_invitation_source') ? vms_feedback_invitation_source(bvmgr_request_read_scalar($_POST, 'source')) : 'manual';
 		$submission_uid = isset($_POST['vms_feedback_submission_uid']) ? sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_submission_uid'])) : '';
 		$submission_uid_hash = function_exists('vms_feedback_submission_uid_hash') ? vms_feedback_submission_uid_hash($event_plan_id, $submission_uid) : '';
 		$request_hash = function_exists('vms_feedback_request_hash') ? vms_feedback_request_hash() : '';

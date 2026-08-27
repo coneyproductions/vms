@@ -134,7 +134,7 @@ try {
 	$ajaxMethodSource = (string) $methodMatch['body'];
 	$assert(substr_count($ajaxMethodSource, 'current_user_can(') === 1, 'Compensation-options AJAX handler should retain exactly one capability check.');
 	$assert(substr_count($ajaxMethodSource, 'check_ajax_referer(') === 1, 'Compensation-options AJAX handler should retain exactly one nonce check.');
-	$assert(substr_count($ajaxMethodSource, 'vms_get_event_plan_comp_options(') === 1, 'Compensation-options AJAX handler should resolve the provider exactly once.');
+	$assert(substr_count($ajaxMethodSource, 'bvmgr_get_event_plan_comp_options(') === 1, 'Compensation-options AJAX handler should resolve the provider exactly once.');
 	$assert(substr_count($ajaxMethodSource, 'wp_send_json_success(') === 1, 'Compensation-options AJAX handler should write exactly one success response.');
 	$assert(substr_count($ajaxMethodSource, 'wp_send_json_error(') === 2, 'Compensation-options AJAX handler should keep the exact two explicit JSON error branches.');
 	$assert(strpos($ajaxMethodSource, 'update_post_meta(') === false && strpos($ajaxMethodSource, 'delete_post_meta(') === false, 'Compensation-options AJAX handler should not mutate database state.');

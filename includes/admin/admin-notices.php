@@ -20,7 +20,7 @@ add_action('admin_notices', function () {
         return;
     }
 
-    if (!function_exists('vms_admin_ui_is_admin_notice_screen') || !vms_admin_ui_is_admin_notice_screen()) {
+    if (!function_exists('bvmgr_admin_ui_is_admin_notice_screen') || !bvmgr_admin_ui_is_admin_notice_screen()) {
         return;
     }
 

@@ -265,7 +265,7 @@ add_action('vms_vendor_type_edit_form_fields', function ($term) {
 if (!function_exists('vms_vendor_type_save_category_label_meta')) {
 	function vms_vendor_type_category_label_from_post(array $source): string
 	{
-		return vms_request_read_text_field($source, 'vms_vendor_type_category_label');
+		return bvmgr_request_read_text_field($source, 'vms_vendor_type_category_label');
 	}
 
 	function vms_vendor_type_save_category_label_meta($term_id): void

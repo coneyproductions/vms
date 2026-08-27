@@ -182,8 +182,8 @@ if (!function_exists('sanitize_email')) {
 	}
 }
 
-if (!function_exists('vms_request_read_scalar')) {
-	function vms_request_read_scalar(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_scalar')) {
+	function bvmgr_request_read_scalar(array $source, string $key): string
 	{
 		if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 			return '';
@@ -194,48 +194,48 @@ if (!function_exists('vms_request_read_scalar')) {
 	}
 }
 
-if (!function_exists('vms_request_read_text_field')) {
-	function vms_request_read_text_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_text_field')) {
+	function bvmgr_request_read_text_field(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_text_field($value);
 	}
 }
 
-if (!function_exists('vms_request_read_textarea_field')) {
-	function vms_request_read_textarea_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_textarea_field')) {
+	function bvmgr_request_read_textarea_field(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_textarea_field($value);
 	}
 }
 
-if (!function_exists('vms_request_read_email')) {
-	function vms_request_read_email(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_email')) {
+	function bvmgr_request_read_email(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_email($value);
 	}
 }
 
-if (!function_exists('vms_request_read_key')) {
-	function vms_request_read_key(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_key')) {
+	function bvmgr_request_read_key(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_key($value);
 	}
 }
 
-if (!function_exists('vms_request_read_absint')) {
-	function vms_request_read_absint(array $source, string $key): int
+if (!function_exists('bvmgr_request_read_absint')) {
+	function bvmgr_request_read_absint(array $source, string $key): int
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? 0 : absint($value);
 	}
 }
 
-if (!function_exists('vms_request_read_bool_flag')) {
-	function vms_request_read_bool_flag(array $source, string $key): bool
+if (!function_exists('bvmgr_request_read_bool_flag')) {
+	function bvmgr_request_read_bool_flag(array $source, string $key): bool
 	{
 		if (!array_key_exists($key, $source)) {
 			return false;
@@ -466,7 +466,7 @@ $assertSame(
 		'div' => array('class' => true),
 		'p' => array(),
 	),
-	vms_admin_ui_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_explicit_notice_allowed_html(),
 	'Administrator shell simple notice contract should remain unchanged.'
 );
 $assertSame(
@@ -475,7 +475,7 @@ $assertSame(
 		'p' => array(),
 		'strong' => array(),
 	),
-	vms_admin_ui_rich_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_rich_explicit_notice_allowed_html(),
 	'Administrator shell rich notice contract should remain unchanged.'
 );
 
@@ -753,7 +753,7 @@ $assert(strpos($field_with_alert, 'Fix now: set Default Venue to “Main &lt;Hal
 $assert(strpos($field_with_alert, '<script') === false && strpos($field_with_alert, '<style') === false && strpos($field_with_alert, 'onclick=') === false, 'The field output should not contain executable markup.');
 
 $captured_notices_html = '';
-$remaining_field_html = vms_admin_ui_extract_notice_markup('<table><tr><td>' . $field_with_alert . '</td></tr></table>', $captured_notices_html);
+$remaining_field_html = bvmgr_admin_ui_extract_notice_markup('<table><tr><td>' . $field_with_alert . '</td></tr></table>', $captured_notices_html);
 $assertSame('', $captured_notices_html, 'The Default Venue alert should remain page-local and should not be captured into the Administrator shell notice buffer.');
 $assert(strpos($remaining_field_html, 'vms-settings-default-venue-alert') !== false, 'The Default Venue alert should remain in page-local field content after shell notice extraction.');
 

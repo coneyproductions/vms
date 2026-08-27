@@ -379,7 +379,7 @@ if (!function_exists('vms_notify_insert_log')) {
 		);
 		if ($ok !== 1) {
 			$event_key = substr(sanitize_key((string) ($entry['event_key'] ?? 'unknown')), 0, 80);
-			$recorded = function_exists('vms_record_operational_issue') && vms_record_operational_issue(
+			$recorded = function_exists('bvmgr_record_operational_issue') && bvmgr_record_operational_issue(
 				'notification_log_insert_failed',
 				array(
 					'service' => 'notifications',
@@ -806,7 +806,7 @@ add_action('vms_notify_digest_tick_cron', 'vms_notify_run_digest_tick');
 if (!function_exists('vms_notify_ensure_digest_cron')) {
 	function vms_notify_ensure_digest_cron(): void
 	{
-		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+		if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
 			return;
 		}
 		if (!wp_next_scheduled('vms_notify_digest_tick_cron')) {

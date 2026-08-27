@@ -187,8 +187,8 @@ function vms_get_venue_health_check_issues(int $venue_id): array {
  */
 function vms_healthcheck_normalize_open_days($raw): array {
     // Prefer the canonical helper if available.
-    if (function_exists('vms_normalize_int_array')) {
-        $arr = vms_normalize_int_array($raw);
+    if (function_exists('bvmgr_normalize_int_array')) {
+        $arr = bvmgr_normalize_int_array($raw);
     } else {
         $arr = array();
         if (is_array($raw)) {

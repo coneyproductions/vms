@@ -79,7 +79,7 @@ function wp_unslash($value)
     return $value;
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
     if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
         return '';

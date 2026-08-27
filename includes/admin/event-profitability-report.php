@@ -62,7 +62,7 @@ function vms_event_profitability_enqueue_assets(string $hook): void
 		'vms-event-profitability-admin',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-event-profitability-admin.css',
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 	);
 }
 
@@ -70,7 +70,7 @@ if (!function_exists('vms_event_profitability_readable_status')) {
 	function vms_event_profitability_readable_status(string $status): string
 	{
 		$status = sanitize_key($status);
-		$labels = function_exists('vms_event_plan_statuses') ? (array) vms_event_plan_statuses() : array();
+		$labels = function_exists('bvmgr_event_plan_statuses') ? (array) bvmgr_event_plan_statuses() : array();
 		if (isset($labels[$status]) && is_string($labels[$status]) && $labels[$status] !== '') {
 			return (string) $labels[$status];
 		}

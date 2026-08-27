@@ -102,20 +102,20 @@ function g16_static_contract(string $root, string $shadow_root): array
 	}
 
 	$helper_names = array(
-		'vms_operational_issue_value_is_tainted',
-		'vms_operational_issue_request_path',
-		'vms_operational_issue_error_identity',
-		'vms_operational_issue_context',
-		'vms_record_operational_issue',
+		'bvmgr_operational_issue_value_is_tainted',
+		'bvmgr_operational_issue_request_path',
+		'bvmgr_operational_issue_error_identity',
+		'bvmgr_operational_issue_context',
+		'bvmgr_record_operational_issue',
 	);
 	foreach ($sources as $tree => $source) {
 		g16_same(0, preg_match_all('/(?<![A-Za-z0-9_])error_log\s*\(/', $source), $tree . ' must contain zero direct server-log calls.');
 		g16_same(0, preg_match_all('/phpcs:(?:ignore|disable)[^\n]*(?:DevelopmentFunctions|error_log)/i', $source), $tree . ' must not suppress logging findings.');
 		g16_same(0, preg_match_all('/(?<![A-Za-z0-9_])parse_url\s*\(/', $source), $tree . ' must not use native parse_url().');
 		g16_same(1, substr_count($source, 'wp_parse_url($request_uri, PHP_URL_PATH)'), $tree . ' must use wp_parse_url() at the owned path boundary.');
-		g16_same(3, substr_count($source, 'vms_record_operational_issue('), $tree . ' must contain one adapter definition and two owned calls.');
-		g16_same(1, substr_count($source, "vms_record_operational_issue('admin_diagnostic'"), $tree . ' must record admin diagnostics once.');
-		g16_same(1, substr_count($source, "vms_record_operational_issue('admin_guard_trace'"), $tree . ' must record admin guard traces once.');
+		g16_same(3, substr_count($source, 'bvmgr_record_operational_issue('), $tree . ' must contain one adapter definition and two owned calls.');
+		g16_same(1, substr_count($source, "bvmgr_record_operational_issue('admin_diagnostic'"), $tree . ' must record admin diagnostics once.');
+		g16_same(1, substr_count($source, "bvmgr_record_operational_issue('admin_guard_trace'"), $tree . ' must record admin guard traces once.');
 		foreach ($helper_names as $helper_name) {
 			g16_same(1, substr_count($source, "function {$helper_name}"), $tree . ' must define ' . $helper_name . ' exactly once.');
 		}
@@ -129,19 +129,19 @@ function g16_static_contract(string $root, string $shadow_root): array
 		);
 	}
 	g16_same(
-		g16_extract_guarded_function($sources['mirror'], 'vms_admin_guard_trace'),
-		g16_extract_guarded_function($sources['shadow'], 'vms_admin_guard_trace'),
+		g16_extract_guarded_function($sources['mirror'], 'bvmgr_admin_guard_trace'),
+		g16_extract_guarded_function($sources['shadow'], 'bvmgr_admin_guard_trace'),
 		'Admin guard trace owned boundary must have exact mirror/shadow parity.'
 	);
 	g16_same(
-		g16_extract_guarded_function($sources['mirror'], 'vms_resource_fingerprint_store_entry'),
-		g16_extract_guarded_function($sources['shadow'], 'vms_resource_fingerprint_store_entry'),
+		g16_extract_guarded_function($sources['mirror'], 'bvmgr_resource_fingerprint_store_entry'),
+		g16_extract_guarded_function($sources['shadow'], 'bvmgr_resource_fingerprint_store_entry'),
 		'Bounded non-autoload storage boundary must retain exact mirror/shadow parity.'
 	);
 
-	$mirror_render = g16_extract_guarded_function($sources['mirror'], 'vms_render_admin_diagnostics');
-	$shadow_render = g16_extract_guarded_function($sources['shadow'], 'vms_render_admin_diagnostics');
-	$screen_guard = "\t\tif (!function_exists('vms_admin_ui_is_admin_notice_screen') || !vms_admin_ui_is_admin_notice_screen()) {\n\t\t\treturn;\n\t\t}\n\n";
+	$mirror_render = g16_extract_guarded_function($sources['mirror'], 'bvmgr_render_admin_diagnostics');
+	$shadow_render = g16_extract_guarded_function($sources['shadow'], 'bvmgr_render_admin_diagnostics');
+	$screen_guard = "\t\tif (!function_exists('bvmgr_admin_ui_is_admin_notice_screen') || !bvmgr_admin_ui_is_admin_notice_screen()) {\n\t\t\treturn;\n\t\t}\n\n";
 	$normalized_mirror_render = g16_replace_once($screen_guard, '', $mirror_render, 'Mirror-only admin-notice screen guard must remain exactly once.');
 	g16_same($shadow_render, $normalized_mirror_render, 'Admin diagnostic target must preserve only the established mirror-only screen guard divergence.');
 
@@ -155,17 +155,17 @@ function g16_projection_contract(array $sources): void
 		'shadow' => 'bb7c0aa5bd62862b3f5fded51d9f03c82bb03ccab5cb017f51f10cad9a281d52',
 	);
 	$helper_names = array(
-		'vms_operational_issue_value_is_tainted',
-		'vms_operational_issue_request_path',
-		'vms_operational_issue_error_identity',
-		'vms_operational_issue_context',
-		'vms_record_operational_issue',
+		'bvmgr_operational_issue_value_is_tainted',
+		'bvmgr_operational_issue_request_path',
+		'bvmgr_operational_issue_error_identity',
+		'bvmgr_operational_issue_context',
+		'bvmgr_record_operational_issue',
 	);
 
 	foreach ($sources as $tree => $source) {
-		$render = g16_extract_guarded_function($source, 'vms_render_admin_diagnostics');
+		$render = g16_extract_guarded_function($source, 'bvmgr_render_admin_diagnostics');
 		$delete_position = strpos($render, "delete_transient('vms_admin_diagnostic_queue')");
-		$record_position = strpos($render, "vms_record_operational_issue('admin_diagnostic'");
+		$record_position = strpos($render, "bvmgr_record_operational_issue('admin_diagnostic'");
 		$echo_position = strpos($render, "echo '<div class=\"notice notice-warning\"");
 		$seen_position = strrpos($render, "update_option('vms_admin_diagnostic_seen'");
 		g16_assert(
@@ -174,10 +174,10 @@ function g16_projection_contract(array $sources): void
 			$tree . ' admin diagnostic order must remain delete -> record -> echo -> seen update.'
 		);
 
-		$trace = g16_extract_guarded_function($source, 'vms_admin_guard_trace');
+		$trace = g16_extract_guarded_function($source, 'bvmgr_admin_guard_trace');
 		$flag_position = strpos($trace, "vms_resource_fingerprint_flag('heavy_admin_guard'");
 		$marker_position = strpos($trace, "vms_resource_fingerprint_add_marker('heavy_admin_guard.'");
-		$trace_record_position = strpos($trace, "vms_record_operational_issue('admin_guard_trace'");
+		$trace_record_position = strpos($trace, "bvmgr_record_operational_issue('admin_guard_trace'");
 		g16_assert(
 			$flag_position !== false && $marker_position !== false && $trace_record_position !== false
 			&& $flag_position < $marker_position && $marker_position < $trace_record_position,
@@ -190,31 +190,31 @@ function g16_projection_contract(array $sources): void
 			$projection = g16_remove_guarded_function($projection, $helper_name);
 		}
 		$projection = g16_replace_once(
-			"vms_record_operational_issue('admin_diagnostic', array('diagnostic_code' => sanitize_key((string) \$code)), \$message);",
+			"bvmgr_record_operational_issue('admin_diagnostic', array('diagnostic_code' => sanitize_key((string) \$code)), \$message);",
 			"error_log('[VMS] ' . \$message);",
 			$projection,
 			$tree . ' projection must restore admin diagnostic logging.'
 		);
 		$projection = g16_replace_once(
-			"vms_record_operational_issue('admin_guard_trace', \$payload);",
+			"bvmgr_record_operational_issue('admin_guard_trace', \$payload);",
 			"error_log('[VMS TRACE] ' . wp_json_encode(\$payload));",
 			$projection,
 			$tree . ' projection must restore admin guard trace logging.'
 		);
 		$path_count = 0;
 		$projection = str_replace(
-			'vms_operational_issue_request_path(vms_admin_guard_request_uri())',
-			'vms_resource_fingerprint_compact_value(vms_admin_guard_request_uri())',
+			'bvmgr_operational_issue_request_path(vms_admin_guard_request_uri())',
+			'bvmgr_resource_fingerprint_compact_value(vms_admin_guard_request_uri())',
 			$projection,
 			$path_count
 		);
 		g16_same(2, $path_count, $tree . ' projection must restore both historical request URI expressions.');
-		$trace_privacy_block = "		\$trace_context = vms_operational_issue_context(array(\n"
+		$trace_privacy_block = "		\$trace_context = bvmgr_operational_issue_context(array(\n"
 			. "			'hook' => \$hook_name,\n"
 			. "			'action' => (string) (\$context['task'] ?? ''),\n"
 			. "			'decision' => \$decision,\n"
 			. "			'reason' => (string) (\$context['reason'] ?? ''),\n"
-			. "			'admin_page' => vms_resource_fingerprint_current_admin_page(),\n"
+			. "			'admin_page' => bvmgr_resource_fingerprint_current_admin_page(),\n"
 			. "			'screen_id' => vms_admin_guard_current_screen_id(),\n"
 			. "		));\n"
 			. "		\$hook_name = (string) (\$trace_context['hook'] ?? 'heavy_admin_block');\n"
@@ -231,17 +231,17 @@ function g16_projection_contract(array $sources): void
 		$projection = g16_replace_once("'action' => \$action,", "'action' => sanitize_key((string) (\$context['task'] ?? '')),", $projection, $tree . ' projection must restore historical action normalization.');
 		$projection = g16_replace_once("'decision' => \$decision,", "'decision' => sanitize_key(\$decision),", $projection, $tree . ' projection must restore historical decision normalization.');
 		$projection = g16_replace_once("'reason' => \$reason,", "'reason' => sanitize_key((string) (\$context['reason'] ?? '')),", $projection, $tree . ' projection must restore historical reason normalization.');
-		$projection = g16_replace_once("'admin_page' => \$admin_page,", "'admin_page' => vms_resource_fingerprint_current_admin_page(),", $projection, $tree . ' projection must restore historical admin page projection.');
+		$projection = g16_replace_once("'admin_page' => \$admin_page,", "'admin_page' => bvmgr_resource_fingerprint_current_admin_page(),", $projection, $tree . ' projection must restore historical admin page projection.');
 		$projection = g16_replace_once("'screen_id' => \$screen_id,", "'screen_id' => vms_admin_guard_current_screen_id(),", $projection, $tree . ' projection must restore historical screen projection.');
 		$projection = g16_replace_once(
-			"'error' => vms_operational_issue_error_identity(\$e),",
-			"'error' => vms_resource_fingerprint_compact_value(\$e->getMessage()),",
+			"'error' => bvmgr_operational_issue_error_identity(\$e),",
+			"'error' => bvmgr_resource_fingerprint_compact_value(\$e->getMessage()),",
 			$projection,
 			$tree . ' projection must restore the historical Action Scheduler error expression.'
 		);
 
 		$flag_anchor = "\t\tvms_resource_fingerprint_flag('heavy_admin_guard', \$payload);";
-		$historical_loop = "\t\tforeach (\$context as \$key => \$value) {\n\t\t\tif (in_array(\$key, array('task', 'reason'), true)) {\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\t\$payload[sanitize_key((string) \$key)] = vms_resource_fingerprint_compact_value(\$value);\n\t\t}\n\n" . $flag_anchor;
+		$historical_loop = "\t\tforeach (\$context as \$key => \$value) {\n\t\t\tif (in_array(\$key, array('task', 'reason'), true)) {\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\t\$payload[sanitize_key((string) \$key)] = bvmgr_resource_fingerprint_compact_value(\$value);\n\t\t}\n\n" . $flag_anchor;
 		$projection = g16_replace_once($flag_anchor, $historical_loop, $projection, $tree . ' projection must restore the arbitrary historical trace loop.');
 
 		g16_same($pre_edit_hashes[$tree], hash('sha256', $projection), $tree . ' immutable pre-edit projection hash must match.');
@@ -408,7 +408,7 @@ function update_option(string $name, $value, bool $autoload = true): bool
 	}
 	if ($name === 'vms_resource_fingerprint_log' && !empty($GLOBALS['g16_reenter_adapter'])) {
 		$GLOBALS['g16_reenter_adapter'] = false;
-		$GLOBALS['g16_reentry_result'] = vms_record_operational_issue('recursive_attempt', array('status' => 'failed'));
+		$GLOBALS['g16_reentry_result'] = bvmgr_record_operational_issue('recursive_attempt', array('status' => 'failed'));
 	}
 	$GLOBALS['g16_options'][$name] = $value;
 	$event = array(
@@ -450,7 +450,7 @@ function esc_html($value): string
 	return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-function vms_admin_ui_is_admin_notice_screen(): bool
+function bvmgr_admin_ui_is_admin_notice_screen(): bool
 {
 	return !empty($GLOBALS['g16_notice_screen']);
 }
@@ -515,37 +515,37 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 	$_SERVER['REQUEST_TIME_FLOAT'] = microtime(true);
 	require $runtime_path;
 
-	g16_same('/wp-admin/admin.php', vms_operational_issue_request_path('https://example.test/wp-admin/admin.php?page=vms&token=TOKEN-SENTINEL'), $tree . ' must retain only the request path.');
-	g16_same('/wp-json/vms/v1/status', vms_operational_issue_request_path('/wp-json/vms/v1/status?email=private.person@example.test#fragment'), $tree . ' must strip query and fragment sentinels.');
-	g16_same('', vms_operational_issue_request_path('/Users/private/SENTINEL-FILE.php'), $tree . ' must reject an absolute filesystem path.');
-	g16_same('', vms_operational_issue_request_path('/wp-admin/../private/config.php'), $tree . ' must reject parent-path traversal.');
-	g16_same('', vms_operational_issue_request_path('/reset/TOKEN-SENTINEL'), $tree . ' must reject token-like path values.');
-	g16_same('', vms_operational_issue_request_path('/staff/private.person@example.test'), $tree . ' must reject email-like path values.');
-	g16_same('', vms_operational_issue_request_path('/staff/private.person%40example.test'), $tree . ' must reject encoded email-like path values.');
-	g16_same('', vms_operational_issue_request_path('/reset/TOKEN%2DSENTINEL'), $tree . ' must reject encoded token separators.');
-	g16_same('', vms_operational_issue_request_path('/wp-admin/%2e%2e/private/config.php'), $tree . ' must reject encoded parent-path traversal.');
-	g16_same('', vms_operational_issue_request_path('/safe/%00segment'), $tree . ' must reject decoded control bytes.');
-	g16_same('', vms_operational_issue_request_path('/staff/private.person%2540example.test'), $tree . ' must reject a still-encoded email representation after one decode.');
-	g16_same('', vms_operational_issue_request_path('/wp-admin/%252e%252e/private/config.php'), $tree . ' must reject a still-encoded traversal representation after one decode.');
-	g16_same('', vms_operational_issue_request_path('/reset/TOKEN%252DSENTINEL'), $tree . ' must reject a still-encoded token separator after one decode.');
-	g16_same('/staff/My File', vms_operational_issue_request_path('/staff/My%20File'), $tree . ' must retain a normal decoded path.');
+	g16_same('/wp-admin/admin.php', bvmgr_operational_issue_request_path('https://example.test/wp-admin/admin.php?page=vms&token=TOKEN-SENTINEL'), $tree . ' must retain only the request path.');
+	g16_same('/wp-json/vms/v1/status', bvmgr_operational_issue_request_path('/wp-json/vms/v1/status?email=private.person@example.test#fragment'), $tree . ' must strip query and fragment sentinels.');
+	g16_same('', bvmgr_operational_issue_request_path('/Users/private/SENTINEL-FILE.php'), $tree . ' must reject an absolute filesystem path.');
+	g16_same('', bvmgr_operational_issue_request_path('/wp-admin/../private/config.php'), $tree . ' must reject parent-path traversal.');
+	g16_same('', bvmgr_operational_issue_request_path('/reset/TOKEN-SENTINEL'), $tree . ' must reject token-like path values.');
+	g16_same('', bvmgr_operational_issue_request_path('/staff/private.person@example.test'), $tree . ' must reject email-like path values.');
+	g16_same('', bvmgr_operational_issue_request_path('/staff/private.person%40example.test'), $tree . ' must reject encoded email-like path values.');
+	g16_same('', bvmgr_operational_issue_request_path('/reset/TOKEN%2DSENTINEL'), $tree . ' must reject encoded token separators.');
+	g16_same('', bvmgr_operational_issue_request_path('/wp-admin/%2e%2e/private/config.php'), $tree . ' must reject encoded parent-path traversal.');
+	g16_same('', bvmgr_operational_issue_request_path('/safe/%00segment'), $tree . ' must reject decoded control bytes.');
+	g16_same('', bvmgr_operational_issue_request_path('/staff/private.person%2540example.test'), $tree . ' must reject a still-encoded email representation after one decode.');
+	g16_same('', bvmgr_operational_issue_request_path('/wp-admin/%252e%252e/private/config.php'), $tree . ' must reject a still-encoded traversal representation after one decode.');
+	g16_same('', bvmgr_operational_issue_request_path('/reset/TOKEN%252DSENTINEL'), $tree . ' must reject a still-encoded token separator after one decode.');
+	g16_same('/staff/My File', bvmgr_operational_issue_request_path('/staff/My%20File'), $tree . ' must retain a normal decoded path.');
 	$long_safe_path = str_repeat('/safe-segment-123', 20);
-	g16_same(180, strlen(vms_operational_issue_request_path($long_safe_path)), $tree . ' request paths must be length-bounded.');
+	g16_same(180, strlen(bvmgr_operational_issue_request_path($long_safe_path)), $tree . ' request paths must be length-bounded.');
 
 	$raw_error = 'RAW-ERROR-SENTINEL private.person@example.test TOKEN-SENTINEL';
 	$throwable = new RuntimeException($raw_error, 73);
-	$identity_one = vms_operational_issue_error_identity($throwable);
-	$identity_two = vms_operational_issue_error_identity(new RuntimeException($raw_error, 73));
+	$identity_one = bvmgr_operational_issue_error_identity($throwable);
+	$identity_two = bvmgr_operational_issue_error_identity(new RuntimeException($raw_error, 73));
 	g16_same($identity_one, $identity_two, $tree . ' Throwable fingerprints must be deterministic.');
 	g16_same('runtimeexception', $identity_one['error_class'] ?? '', $tree . ' Throwable class must be sanitized.');
 	g16_same('73', $identity_one['error_code'] ?? '', $tree . ' Throwable code must be sanitized.');
 	g16_assert((bool) preg_match('/^[a-f0-9]{24}$/', (string) ($identity_one['error_fingerprint'] ?? '')), $tree . ' Throwable fingerprint must be truncated SHA-256.');
 
-	$wp_error_identity = vms_operational_issue_error_identity(new WP_Error('remote_failed', $raw_error));
+	$wp_error_identity = bvmgr_operational_issue_error_identity(new WP_Error('remote_failed', $raw_error));
 	g16_same('wp_error', $wp_error_identity['error_class'] ?? '', $tree . ' WP_Error class must be sanitized.');
 	g16_same('remote_failed', $wp_error_identity['error_code'] ?? '', $tree . ' WP_Error code must be retained safely.');
 	g16_assert((bool) preg_match('/^[a-f0-9]{24}$/', (string) ($wp_error_identity['error_fingerprint'] ?? '')), $tree . ' WP_Error fingerprint must be truncated SHA-256.');
-	$string_identity = vms_operational_issue_error_identity($raw_error);
+	$string_identity = bvmgr_operational_issue_error_identity($raw_error);
 	g16_same('string', $string_identity['error_class'] ?? '', $tree . ' String errors must carry only their safe type.');
 	g16_assert((bool) preg_match('/^[a-f0-9]{24}$/', (string) ($string_identity['error_fingerprint'] ?? '')), $tree . ' String fingerprint must be truncated SHA-256.');
 	$unsafe_error_codes = array(
@@ -554,18 +554,18 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 		'sk_live_1234567890abcdef',
 	);
 	foreach ($unsafe_error_codes as $unsafe_error_code) {
-		$unsafe_identity = vms_operational_issue_error_identity(new WP_Error($unsafe_error_code, 'generic failure'));
+		$unsafe_identity = bvmgr_operational_issue_error_identity(new WP_Error($unsafe_error_code, 'generic failure'));
 		g16_assert(!array_key_exists('error_code', $unsafe_identity), $tree . ' unsafe error codes must be omitted rather than sanitized: ' . $unsafe_error_code);
 		g16_assert((bool) preg_match('/^[a-f0-9]{24}$/', (string) ($unsafe_identity['error_fingerprint'] ?? '')), $tree . ' unsafe error codes must contribute only to a truncated fingerprint.');
 		g16_assert(stripos(serialize($unsafe_identity), $unsafe_error_code) === false, $tree . ' unsafe error codes must never persist raw.');
 	}
 	g16_same(
-		vms_operational_issue_error_identity(new WP_Error($unsafe_error_codes[0], 'generic failure')),
-		vms_operational_issue_error_identity(new WP_Error($unsafe_error_codes[0], 'generic failure')),
+		bvmgr_operational_issue_error_identity(new WP_Error($unsafe_error_codes[0], 'generic failure')),
+		bvmgr_operational_issue_error_identity(new WP_Error($unsafe_error_codes[0], 'generic failure')),
 		$tree . ' unsafe error-code fingerprints must remain deterministic.'
 	);
 
-	$tainted_context = vms_operational_issue_context(array(
+	$tainted_context = bvmgr_operational_issue_context(array(
 		'hook' => 'safe_hook?QUERY-SENTINEL=1',
 		'action' => '/Users/private/SENTINEL-FILE.php',
 		'decision' => 'TOKEN-SENTINEL',
@@ -595,7 +595,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 	));
 	g16_same(array(), $tainted_context, $tree . ' tainted values and non-scalars must be dropped even under allowed keys.');
 
-	$future_context = vms_operational_issue_context(array(
+	$future_context = bvmgr_operational_issue_context(array(
 		'provider' => 'Square',
 		'entity_type' => 'Vendor_Profile',
 		'trigger' => 'WP_Shutdown',
@@ -634,7 +634,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 
 	g16_reset_runtime_state();
 	$_SERVER['REQUEST_URI'] = '/wp-admin/admin.php?email=private.person@example.test&token=TOKEN-SENTINEL';
-	g16_same(true, vms_record_operational_issue('ambient_route_test', array('status' => 'failed')), $tree . ' adapter must accept an issue without explicit path context.');
+	g16_same(true, bvmgr_record_operational_issue('ambient_route_test', array('status' => 'failed')), $tree . ' adapter must accept an issue without explicit path context.');
 	$ambient_entry = $GLOBALS['g16_options']['vms_resource_fingerprint_log'][0] ?? array();
 	g16_same('', $ambient_entry['request_uri'] ?? null, $tree . ' adapter must never auto-capture the ambient request path.');
 	g16_assert(stripos(serialize($ambient_entry), 'private.person@example.test') === false, $tree . ' ambient email must not enter operational storage.');
@@ -643,7 +643,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 	g16_reset_runtime_state();
 	$GLOBALS['g16_options']['vms_resource_fingerprint_log'] = array_fill(0, 65, array('seed' => true));
 	$_SERVER['REQUEST_URI'] = '/wp-admin/admin.php?page=vms&token=TOKEN-SENTINEL&email=private.person@example.test';
-	$stored = vms_record_operational_issue('service_edge_failure', array(
+	$stored = bvmgr_record_operational_issue('service_edge_failure', array(
 		'hook' => 'safe_hook',
 		'action' => 'safe_action',
 		'decision' => 'failed',
@@ -688,17 +688,17 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 		'elapsed_ms' => 12.3,
 	), $issue['context'] ?? array(), $tree . ' issue context must retain only strict allowlisted finite scalars.');
 	g16_same($identity_one, $issue['error'] ?? array(), $tree . ' stored Throwable identity must match the deterministic safe projection.');
-	g16_same(true, vms_record_operational_issue('vendor_app_vendor_type_assignment_failed', array('status' => 'failed')), $tree . ' long semantic fixed event codes must not be mistaken for secret-shaped values.');
+	g16_same(true, bvmgr_record_operational_issue('vendor_app_vendor_type_assignment_failed', array('status' => 'failed')), $tree . ' long semantic fixed event codes must not be mistaken for secret-shaped values.');
 	$semantic_event_entry = end($GLOBALS['g16_options']['vms_resource_fingerprint_log']);
 	g16_same('vendor_app_vendor_type_assignment_failed', $semantic_event_entry['flags']['operational_issue'][0]['event_code'] ?? '', $tree . ' accepted semantic event code changed.');
 
 	$before_rejected = count($GLOBALS['g16_options']['vms_resource_fingerprint_log']);
 	foreach (array('TOKEN-SENTINEL', 'Human readable event', 'private.person@example.test', 'sk_live_1234567890abcdef', str_repeat('a', 40), str_repeat('a', 65)) as $unsafe_event_code) {
-		g16_same(false, vms_record_operational_issue($unsafe_event_code, array('status' => 'failed')), $tree . ' prose, PII, and secret-shaped event codes must be rejected: ' . $unsafe_event_code);
+		g16_same(false, bvmgr_record_operational_issue($unsafe_event_code, array('status' => 'failed')), $tree . ' prose, PII, and secret-shaped event codes must be rejected: ' . $unsafe_event_code);
 	}
 	g16_same($before_rejected, count($GLOBALS['g16_options']['vms_resource_fingerprint_log']), $tree . ' rejected events must not mutate storage.');
-	g16_same(true, vms_record_operational_issue('wp_error_failure', array('status' => 'failed'), new WP_Error('remote_failed', $raw_error)), $tree . ' adapter must accept WP_Error safely.');
-	g16_same(true, vms_record_operational_issue('string_failure', array('status' => 'failed'), $raw_error), $tree . ' adapter must accept raw strings safely.');
+	g16_same(true, bvmgr_record_operational_issue('wp_error_failure', array('status' => 'failed'), new WP_Error('remote_failed', $raw_error)), $tree . ' adapter must accept WP_Error safely.');
+	g16_same(true, bvmgr_record_operational_issue('string_failure', array('status' => 'failed'), $raw_error), $tree . ' adapter must accept raw strings safely.');
 	$entries = $GLOBALS['g16_options']['vms_resource_fingerprint_log'];
 	g16_same(60, count($entries), $tree . ' repeated adapter writes must remain bounded.');
 	$last_two = array_slice($entries, -2);
@@ -723,7 +723,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 
 	g16_reset_runtime_state();
 	$GLOBALS['g16_reenter_adapter'] = true;
-	g16_same(true, vms_record_operational_issue('outer_issue', array('status' => 'failed')), $tree . ' outer adapter call must remain successful during a recursive storage callback.');
+	g16_same(true, bvmgr_record_operational_issue('outer_issue', array('status' => 'failed')), $tree . ' outer adapter call must remain successful during a recursive storage callback.');
 	g16_same(false, $GLOBALS['g16_reentry_result'] ?? null, $tree . ' recursive adapter entry must fail closed.');
 	$reentry_entries = $GLOBALS['g16_options']['vms_resource_fingerprint_log'] ?? array();
 	g16_same(1, count($reentry_entries), $tree . ' recursion guard must prevent a nested operational entry.');
@@ -731,19 +731,19 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 
 	g16_reset_runtime_state();
 	$GLOBALS['g16_throw_get_option'] = 'vms_resource_fingerprint_log';
-	g16_same(false, vms_record_operational_issue('read_failure', array('status' => 'failed')), $tree . ' throwing option reads must be contained and return false.');
+	g16_same(false, bvmgr_record_operational_issue('read_failure', array('status' => 'failed')), $tree . ' throwing option reads must be contained and return false.');
 	g16_assert(!isset($GLOBALS['g16_options']['vms_resource_fingerprint_log']), $tree . ' failed option reads must not create operational storage.');
-	g16_same(true, vms_record_operational_issue('read_recovery', array('status' => 'recovered')), $tree . ' recursion guard must clear after a caught option-read failure.');
+	g16_same(true, bvmgr_record_operational_issue('read_recovery', array('status' => 'recovered')), $tree . ' recursion guard must clear after a caught option-read failure.');
 
 	g16_reset_runtime_state();
 	$GLOBALS['g16_throw_update_option'] = 'vms_resource_fingerprint_log';
-	g16_same(false, vms_record_operational_issue('write_failure', array('status' => 'failed')), $tree . ' throwing option writes must be contained and return false.');
+	g16_same(false, bvmgr_record_operational_issue('write_failure', array('status' => 'failed')), $tree . ' throwing option writes must be contained and return false.');
 	g16_assert(!isset($GLOBALS['g16_options']['vms_resource_fingerprint_log']), $tree . ' failed option writes must not create operational storage.');
-	g16_same(true, vms_record_operational_issue('write_recovery', array('status' => 'recovered')), $tree . ' recursion guard must clear after a caught option-write failure.');
+	g16_same(true, bvmgr_record_operational_issue('write_recovery', array('status' => 'recovered')), $tree . ' recursion guard must clear after a caught option-write failure.');
 
 	g16_reset_runtime_state();
 	$GLOBALS['g16_throw_update_option'] = 'vms_resource_fingerprint_log';
-	vms_admin_guard_trace('staff_guard', 'blocked', array('task' => 'staff_sync', 'reason' => 'passive_request'));
+	bvmgr_admin_guard_trace('staff_guard', 'blocked', array('task' => 'staff_sync', 'reason' => 'passive_request'));
 	$failed_trace_state = $GLOBALS['bvmgr_resource_fingerprint'];
 	g16_assert(!empty($failed_trace_state['flags']['heavy_admin_guard']), $tree . ' guard trace must retain its flag when operational storage throws.');
 	g16_assert(!empty($failed_trace_state['markers']), $tree . ' guard trace must retain its marker when operational storage throws.');
@@ -751,7 +751,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 
 	g16_reset_runtime_state();
 	$_SERVER['REQUEST_URI'] = '/wp-admin/admin.php?page=vms-dashboard&token=TOKEN-SENTINEL&email=private.person@example.test';
-	vms_admin_guard_trace('staff_guard', 'blocked', array(
+	bvmgr_admin_guard_trace('staff_guard', 'blocked', array(
 		'task' => 'staff_sync',
 		'reason' => 'passive_request',
 		'message' => 'MESSAGE-SENTINEL',
@@ -799,7 +799,7 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 	g16_assert(is_float($trace_issue_context['memory_mb'] ?? null) || is_int($trace_issue_context['memory_mb'] ?? null), $tree . ' operational trace memory must remain finite numeric context.');
 	g16_assert_sentinels_absent($trace_entries, $sentinels, $tree . ' trace operational entry must recursively exclude sensitive caller values.');
 
-	vms_resource_fingerprint_shutdown();
+	bvmgr_resource_fingerprint_shutdown();
 	$trace_entries = $GLOBALS['g16_options']['vms_resource_fingerprint_log'] ?? array();
 	g16_same(2, count($trace_entries), $tree . ' trace shutdown must append the compatible aggregate entry.');
 	g16_same('/wp-admin/admin.php', $trace_entries[1]['request_uri'] ?? '', $tree . ' aggregate trace URI must also be path-only.');
@@ -808,10 +808,10 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 
 	g16_reset_runtime_state();
 	$diagnostic_message = 'Privileged RAW-ERROR-SENTINEL for private.person@example.test with TOKEN-SENTINEL';
-	vms_queue_admin_diagnostic('missing_dependency', $diagnostic_message);
+	bvmgr_queue_admin_diagnostic('missing_dependency', $diagnostic_message);
 	$GLOBALS['g16_events'] = array();
 	ob_start();
-	vms_render_admin_diagnostics();
+	bvmgr_render_admin_diagnostics();
 	$notice_output = (string) ob_get_clean();
 	g16_same(
 		'<div class="notice notice-warning"><p>' . htmlspecialchars($diagnostic_message, ENT_QUOTES, 'UTF-8') . '</p></div>',
@@ -842,17 +842,17 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 
 	$GLOBALS['g16_events'] = array();
 	ob_start();
-	vms_render_admin_diagnostics();
+	bvmgr_render_admin_diagnostics();
 	g16_same('', (string) ob_get_clean(), $tree . ' empty queue must not repeat a seen diagnostic.');
 	g16_same(array(), $GLOBALS['g16_events'], $tree . ' empty queue must not mutate diagnostic state.');
 
 	g16_reset_runtime_state();
 	$failed_diagnostic_message = 'Privileged diagnostic remains visible when operational storage fails';
-	vms_queue_admin_diagnostic('storage_failure_diagnostic', $failed_diagnostic_message);
+	bvmgr_queue_admin_diagnostic('storage_failure_diagnostic', $failed_diagnostic_message);
 	$GLOBALS['g16_events'] = array();
 	$GLOBALS['g16_throw_get_option'] = 'vms_resource_fingerprint_log';
 	ob_start();
-	vms_render_admin_diagnostics();
+	bvmgr_render_admin_diagnostics();
 	$failed_notice_output = (string) ob_get_clean();
 	g16_same(
 		'<div class="notice notice-warning"><p>' . htmlspecialchars($failed_diagnostic_message, ENT_QUOTES, 'UTF-8') . '</p></div>',
@@ -864,11 +864,11 @@ function g16_runtime_adapter_contract(string $runtime_path, string $tree): void
 	g16_assert(!empty($GLOBALS['g16_options']['vms_admin_diagnostic_seen']['storage_failure_diagnostic']), $tree . ' throwing diagnostic storage must not change the seen gate.');
 
 	g16_reset_runtime_state();
-	vms_queue_admin_diagnostic('unauthorized_diagnostic', 'RAW-ERROR-SENTINEL unauthorized notice');
+	bvmgr_queue_admin_diagnostic('unauthorized_diagnostic', 'RAW-ERROR-SENTINEL unauthorized notice');
 	$GLOBALS['g16_events'] = array();
 	$GLOBALS['g16_manage_options'] = false;
 	ob_start();
-	vms_render_admin_diagnostics();
+	bvmgr_render_admin_diagnostics();
 	g16_same('', (string) ob_get_clean(), $tree . ' unauthorized users must not see diagnostics.');
 	g16_same(array(), $GLOBALS['g16_events'], $tree . ' unauthorized render must not mutate queue, issue, or seen state.');
 	g16_assert(isset($GLOBALS['g16_transients']['vms_admin_diagnostic_queue']['unauthorized_diagnostic']), $tree . ' unauthorized render must preserve the queue.');

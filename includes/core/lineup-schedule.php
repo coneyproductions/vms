@@ -128,14 +128,14 @@ if (!function_exists('vms_get_lineup_supporting_compensation_default')) {
         $venue_id = absint($venue_id);
         $event_date = trim((string) $event_date);
 
-        if ($vendor_id <= 0 || !function_exists('vms_get_vendor_supporting_default_comp_terms')) {
+        if ($vendor_id <= 0 || !function_exists('bvmgr_get_vendor_supporting_default_comp_terms')) {
             return array(
                 'guaranteed_fee' => '',
                 'structure' => '',
             );
         }
 
-        $terms = (array) vms_get_vendor_supporting_default_comp_terms($vendor_id);
+        $terms = (array) bvmgr_get_vendor_supporting_default_comp_terms($vendor_id);
         $structure = sanitize_key((string) ($terms['structure'] ?? ''));
 
         $guaranteed_fee = '';

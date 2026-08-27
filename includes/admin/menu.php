@@ -1,8 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-if (!function_exists('vms_admin_render_season_dates_page')) {
-  function vms_admin_render_season_dates_page(): void
+if (!function_exists('bvmgr_admin_render_season_dates_page')) {
+  function bvmgr_admin_render_season_dates_page(): void
   {
     if (function_exists('vms_render_season_dates_page')) {
       vms_render_season_dates_page();
@@ -16,8 +16,8 @@ if (!function_exists('vms_admin_render_season_dates_page')) {
   }
 }
 
-if (!function_exists('vms_render_dashboard_phase2_placeholder')) {
-  function vms_render_dashboard_phase2_placeholder(string $title): void
+if (!function_exists('bvmgr_render_dashboard_phase2_placeholder')) {
+  function bvmgr_render_dashboard_phase2_placeholder(string $title): void
   {
     echo '<div class="wrap">';
     echo '<h1>' . esc_html($title) . '</h1>';
@@ -26,37 +26,37 @@ if (!function_exists('vms_render_dashboard_phase2_placeholder')) {
   }
 }
 
-if (!function_exists('vms_render_dashboard_operations_page')) {
-  function vms_render_dashboard_operations_page(): void
+if (!function_exists('bvmgr_render_dashboard_operations_page')) {
+  function bvmgr_render_dashboard_operations_page(): void
   {
-    vms_render_dashboard_phase2_placeholder('Dashboard: Operations');
+    bvmgr_render_dashboard_phase2_placeholder('Dashboard: Operations');
   }
 }
 
-if (!function_exists('vms_render_dashboard_finance_page')) {
-  function vms_render_dashboard_finance_page(): void
+if (!function_exists('bvmgr_render_dashboard_finance_page')) {
+  function bvmgr_render_dashboard_finance_page(): void
   {
-    vms_render_dashboard_phase2_placeholder('Dashboard: Finance');
+    bvmgr_render_dashboard_phase2_placeholder('Dashboard: Finance');
   }
 }
 
-if (!function_exists('vms_render_dashboard_health_page')) {
-  function vms_render_dashboard_health_page(): void
+if (!function_exists('bvmgr_render_dashboard_health_page')) {
+  function bvmgr_render_dashboard_health_page(): void
   {
-    if (function_exists('vms_render_resource_fingerprint_admin_screen')) {
-      vms_render_resource_fingerprint_admin_screen();
+    if (function_exists('bvmgr_render_resource_fingerprint_admin_screen')) {
+      bvmgr_render_resource_fingerprint_admin_screen();
       return;
     }
 
-    vms_render_dashboard_phase2_placeholder('Dashboard: Onboarding & Health');
+    bvmgr_render_dashboard_phase2_placeholder('Dashboard: Onboarding & Health');
   }
 }
 
-if (!function_exists('vms_admin_menu_allowed_help_html')) {
+if (!function_exists('bvmgr_admin_menu_allowed_help_html')) {
   /**
    * @return array<string,array<string,bool>>
    */
-  function vms_admin_menu_allowed_help_html(): array
+  function bvmgr_admin_menu_allowed_help_html(): array
   {
     return array(
       'button' => array(
@@ -111,7 +111,7 @@ add_action('admin_menu', function () {
 	(function_exists('vms_staff_certifications_pending_count') && function_exists('vms_staff_certifications_admin_badge_markup') ? $top_level_menu_label . vms_staff_certifications_admin_badge_markup(vms_staff_certifications_pending_count()) : $top_level_menu_label),
     $capability,
     $parent_slug,
-    'vms_render_dashboard_page',
+    'bvmgr_render_dashboard_page',
     'dashicons-calendar-alt',
     26
   );
@@ -123,7 +123,7 @@ add_action('admin_menu', function () {
     __('Dashboard', 'backstage-venue-manager'),
     $capability,
     $parent_slug,
-    'vms_render_dashboard_page'
+    'bvmgr_render_dashboard_page'
   );
 
   add_submenu_page(
@@ -132,7 +132,7 @@ add_action('admin_menu', function () {
     __('Dashboard: Operations', 'backstage-venue-manager'),
     $capability,
     'vms-dashboard-operations',
-    'vms_render_dashboard_operations_page'
+    'bvmgr_render_dashboard_operations_page'
   );
 
   add_submenu_page(
@@ -141,7 +141,7 @@ add_action('admin_menu', function () {
     __('Dashboard: Finance', 'backstage-venue-manager'),
     $capability,
     'vms-dashboard-finance',
-    'vms_render_dashboard_finance_page'
+    'bvmgr_render_dashboard_finance_page'
   );
 
   add_submenu_page(
@@ -150,7 +150,7 @@ add_action('admin_menu', function () {
     __('Dashboard: Onboarding & Health', 'backstage-venue-manager'),
     $capability,
     'vms-dashboard-health',
-    'vms_render_dashboard_health_page'
+    'bvmgr_render_dashboard_health_page'
   );
 
   // Budget Forecast Calculator (decision-support)
@@ -276,7 +276,7 @@ add_action('admin_menu', function () {
     __('Season Dates', 'backstage-venue-manager'),
     $capability,
     'vms-season-dates',
-    'vms_admin_render_season_dates_page'
+    'bvmgr_admin_render_season_dates_page'
   );
 
   add_submenu_page(
@@ -372,7 +372,7 @@ add_submenu_page(
   __('Reference: Keys + Identifiers', 'backstage-venue-manager'),
   'manage_options',
   'vms-reference-keys-map',
-  'vms_admin_reference_keys_map_page'
+  'bvmgr_admin_reference_keys_map_page'
 );
 
 }, 5);
@@ -383,7 +383,7 @@ add_action('admin_head', function () {
   if (!is_admin()) return;
 
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin-head routing only controls which styles/scripts render.
-  $page = vms_request_read_key($_GET, 'page');
+  $page = bvmgr_request_read_key($_GET, 'page');
   if ($page === '') return;
 
   $known = [
@@ -435,7 +435,7 @@ add_action('admin_head', function () {
   $submenu_file = $known[$page];
 });
  
-function vms_render_dashboard_page(): void
+function bvmgr_render_dashboard_page(): void
 {
   if (function_exists('bvmgr_admin_ui_render_shell')) {
     bvmgr_admin_ui_render_shell(
@@ -444,31 +444,31 @@ function vms_render_dashboard_page(): void
         'subtitle' => __('Operational overview and quick launch actions for planning, staffing, and finance.', 'backstage-venue-manager'),
         'shell_id' => 'vms-dashboard-wrap',
       ),
-      'vms_render_dashboard_page_content'
+      'bvmgr_render_dashboard_page_content'
     );
     return;
   }
 
   echo '<div class="wrap" id="vms-dashboard-wrap">';
   echo '<h1>' . esc_html__('Dashboard', 'backstage-venue-manager') . '</h1>';
-  vms_render_dashboard_page_content();
+  bvmgr_render_dashboard_page_content();
   echo '</div>';
 }
 
-function vms_render_dashboard_page_content(): void
+function bvmgr_render_dashboard_page_content(): void
 {
   echo '<p class="vms-dashboard-welcome" data-vms-tour="dashboard_welcome">' . esc_html__('Welcome to the Backstage Venue Manager dashboard—tune the filters below before reviewing cards and tour health signals.', 'backstage-venue-manager') . '</p>';
 
   $user_id = (int) get_current_user_id();
-  $has_inc_drafts = (function_exists('vms_user_pref_has_include_drafts'))
-    ? (bool) vms_user_pref_has_include_drafts($user_id)
+  $has_inc_drafts = (function_exists('bvmgr_user_pref_has_include_drafts'))
+    ? (bool) bvmgr_user_pref_has_include_drafts($user_id)
     : (bool) metadata_exists('user', $user_id, '_vms_include_drafts');
 
   // Keep parity with Schedule + Event Plans list:
   // default Include Draft/Ready ON when no per-user preference exists yet.
   $inc_drafts = $has_inc_drafts
-    ? ((function_exists('vms_user_pref_get_include_drafts'))
-      ? (bool) vms_user_pref_get_include_drafts($user_id)
+    ? ((function_exists('bvmgr_user_pref_get_include_drafts'))
+      ? (bool) bvmgr_user_pref_get_include_drafts($user_id)
       : false)
     : true;
 
@@ -488,8 +488,8 @@ function vms_render_dashboard_page_content(): void
   echo '>';
 
 
-  if (function_exists('vms_dash_render_venue_selector')) {
-    vms_dash_render_venue_selector();
+  if (function_exists('bvmgr_dash_render_venue_selector')) {
+    bvmgr_dash_render_venue_selector();
   }
 
   // One canonical checkbox bar:
@@ -527,7 +527,7 @@ function vms_render_dashboard_page_content(): void
   }
   echo '<div class="vms-dashboard-health" data-vms-tour="dashboard_health">';
   echo '<p>' . esc_html__('Need help on this page? Start the tour here or use the floating Help button.', 'backstage-venue-manager') . '</p>';
-  echo '<p data-vms-tour="dashboard_help_action">' . wp_kses($dashboard_tour_button, vms_admin_menu_allowed_help_html()) . '</p>';
+  echo '<p data-vms-tour="dashboard_help_action">' . wp_kses($dashboard_tour_button, bvmgr_admin_menu_allowed_help_html()) . '</p>';
   /* translators: %s: Guided Tours settings admin URL. */
   echo '<p class="description">' . wp_kses_post(sprintf(__('Manage guided tour defaults and reset progress in <a href=\"%s\">Guided Tours settings</a>.', 'backstage-venue-manager'), esc_url($guided_tours_url))) . '</p>';
   echo '</div>';
@@ -549,6 +549,6 @@ function vms_render_dashboard_page_content(): void
   }
 
   echo '<div id="vms-dashboard">';
-  vms_dashboard_render_today_week_block();
+  bvmgr_dashboard_render_today_week_block();
   echo '</div>';
 }

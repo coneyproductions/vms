@@ -136,7 +136,7 @@ function absint($value): int
 	return abs((int) $value);
 }
 
-function vms_request_read_scalar(array $source, string $key): string
+function bvmgr_request_read_scalar(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 		return '';
@@ -150,37 +150,37 @@ function vms_request_read_scalar(array $source, string $key): string
 	return trim((string) $value);
 }
 
-function vms_request_read_text_field(array $source, string $key): string
+function bvmgr_request_read_text_field(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_text_field($value);
 }
 
-function vms_request_read_textarea_field(array $source, string $key): string
+function bvmgr_request_read_textarea_field(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_textarea_field($value);
 }
 
-function vms_request_read_email(array $source, string $key): string
+function bvmgr_request_read_email(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_email($value);
 }
 
-function vms_request_read_key(array $source, string $key): string
+function bvmgr_request_read_key(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_key($value);
 }
 
-function vms_request_read_absint(array $source, string $key): int
+function bvmgr_request_read_absint(array $source, string $key): int
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? 0 : absint($value);
 }
 
-function vms_request_read_bool_flag(array $source, string $key): bool
+function bvmgr_request_read_bool_flag(array $source, string $key): bool
 {
 	if (!array_key_exists($key, $source)) {
 		return false;
@@ -419,7 +419,7 @@ function vms_approvals_queue_record_transition(string $queue, int $object_id, st
 	);
 }
 
-function vms_vendor_mark_profile_reviewed(int $vendor_id, int $user_id): void
+function bvmgr_vendor_mark_profile_reviewed(int $vendor_id, int $user_id): void
 {
 	update_post_meta($vendor_id, '_vms_test_reviewed_by', $user_id);
 }
@@ -695,7 +695,7 @@ eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applic
 eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_handle_reject'));
 eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_handle_repair_vendor'));
 eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_handle_resync_vendor'));
-eval(vms_test_extract_named_function($helpersPath, 'vms_vendor_handle_mark_reviewed'));
+eval(vms_test_extract_named_function($helpersPath, 'bvmgr_vendor_handle_mark_reviewed'));
 eval(vms_test_extract_named_function($venueTemplatesPath, 'vms_handle_create_venue_from_template'));
 eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_query_arg'));
 eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_maybe_handle_post'));
@@ -776,7 +776,7 @@ try {
 	$_GET = array('vendor_id' => $vendorId);
 	$_REQUEST = $_GET;
 	$expectDie(static function () {
-		vms_vendor_handle_mark_reviewed();
+		bvmgr_vendor_handle_mark_reviewed();
 	}, 'Permission denied.');
 	$assert((string) get_post_meta($vendorId, '_vms_test_reviewed_by', true) === '', 'Mark reviewed should not mutate vendor review state before object authorization passes.');
 
@@ -887,7 +887,7 @@ try {
 	);
 	$_REQUEST = $_GET;
 	$expectRedirect(static function () {
-		vms_vendor_handle_mark_reviewed();
+		bvmgr_vendor_handle_mark_reviewed();
 	}, admin_url('post.php?post=' . $vendorId . '&action=edit'));
 	$assert((int) get_post_meta($vendorId, '_vms_test_reviewed_by', true) === 88, 'Mark reviewed should still stamp the acting user on success.');
 

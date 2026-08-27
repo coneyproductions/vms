@@ -18,7 +18,7 @@ add_filter('the_content', 'vms_vendor_profiles_append_event_vendor_teaser', 22);
 
 function vms_vendor_profiles_register_rewrite(): void
 {
-    $base = trim(function_exists('vms_vendor_profile_base_slug') ? vms_vendor_profile_base_slug() : 'vendor', '/');
+    $base = trim(function_exists('bvmgr_vendor_profile_base_slug') ? bvmgr_vendor_profile_base_slug() : 'vendor', '/');
     $base = $base !== '' ? $base : 'vendor';
 
     add_rewrite_rule(
@@ -47,8 +47,8 @@ function vms_vendor_profiles_public_assets(): void
         return;
     }
 
-    vms_enqueue_public_style_stack();
-    vms_enqueue_style_asset(
+    bvmgr_enqueue_public_style_stack();
+    bvmgr_enqueue_style_asset(
         'vms-vendor-profile-public',
         'assets/css/vendor-profile-public.css',
         array('vms-ui')
@@ -82,7 +82,7 @@ function vms_vendor_profiles_template_include(string $template): string
 
     $vendor = $q->posts[0];
 
-    if (function_exists('vms_vendor_profile_is_enabled') && !vms_vendor_profile_is_enabled((int) $vendor->ID)) {
+    if (function_exists('bvmgr_vendor_profile_is_enabled') && !bvmgr_vendor_profile_is_enabled((int) $vendor->ID)) {
         return vms_vendor_profiles_404($template);
     }
 
@@ -305,11 +305,11 @@ if (!function_exists('vms_vendor_profiles_public_vendor_url')) {
             return '';
         }
 
-        if (function_exists('vms_vendor_profile_is_enabled') && !vms_vendor_profile_is_enabled($vendor_id)) {
+        if (function_exists('bvmgr_vendor_profile_is_enabled') && !bvmgr_vendor_profile_is_enabled($vendor_id)) {
             return '';
         }
 
-        return function_exists('vms_vendor_profile_url') ? (string) vms_vendor_profile_url($vendor_id) : '';
+        return function_exists('bvmgr_vendor_profile_url') ? (string) bvmgr_vendor_profile_url($vendor_id) : '';
     }
 }
 
@@ -779,7 +779,7 @@ if (!function_exists('vms_vendor_profiles_find_next_upcoming_event')) {
 
                 $event_date = trim((string) get_post_meta($plan_id, $date_key, true));
                 $date_label = $event_date !== ''
-                    ? (function_exists('vms_format_local_ymd') ? vms_format_local_ymd($event_date, 'F j, Y') : $event_date)
+                    ? (function_exists('bvmgr_format_local_ymd') ? bvmgr_format_local_ymd($event_date, 'F j, Y') : $event_date)
                     : '';
 
                 $result = array(
@@ -1066,11 +1066,11 @@ if (!function_exists('vms_vendor_profiles_render_event_teaser')) {
             return '';
         }
 
-        if (function_exists('vms_vendor_profile_is_enabled') && !vms_vendor_profile_is_enabled($vendor_id)) {
+        if (function_exists('bvmgr_vendor_profile_is_enabled') && !bvmgr_vendor_profile_is_enabled($vendor_id)) {
             return '';
         }
 
-        $profile_url = function_exists('vms_vendor_profile_url') ? (string) vms_vendor_profile_url($vendor_id) : '';
+        $profile_url = function_exists('bvmgr_vendor_profile_url') ? (string) bvmgr_vendor_profile_url($vendor_id) : '';
         if ($profile_url === '') {
             return '';
         }

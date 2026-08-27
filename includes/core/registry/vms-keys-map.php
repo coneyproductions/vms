@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-function vms_keys_map_registry()
+function bvmgr_keys_map_registry()
 {
   return array(
 

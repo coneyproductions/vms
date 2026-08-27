@@ -145,8 +145,8 @@ function vms_admin_disable_required_for_tax_fields(): void
         return;
     }
 
-    $version = function_exists('vms_asset_version')
-        ? vms_asset_version()
+    $version = function_exists('bvmgr_asset_version')
+        ? bvmgr_asset_version()
         : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
     wp_enqueue_script(

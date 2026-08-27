@@ -1,26 +1,26 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
-if (!function_exists('vms_admin_reference_keys_map_page_slug')) {
-  function vms_admin_reference_keys_map_page_slug() {
+if (!function_exists('bvmgr_admin_reference_keys_map_page_slug')) {
+  function bvmgr_admin_reference_keys_map_page_slug() {
     return 'vms-reference-keys-map';
   }
 }
 
-if (!function_exists('vms_admin_reference_keys_map_enqueue_assets')) {
-  function vms_admin_reference_keys_map_enqueue_assets() {
+if (!function_exists('bvmgr_admin_reference_keys_map_enqueue_assets')) {
+  function bvmgr_admin_reference_keys_map_enqueue_assets() {
     if (!current_user_can('manage_options')) {
       return;
     }
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only reference-map routing only controls whether assets load for this admin page.
-    $page = vms_request_read_key($_GET, 'page');
-    if ($page !== vms_admin_reference_keys_map_page_slug()) {
+    $page = bvmgr_request_read_key($_GET, 'page');
+    if ($page !== bvmgr_admin_reference_keys_map_page_slug()) {
       return;
     }
 
-    $version = function_exists('vms_asset_version')
-      ? vms_asset_version()
+    $version = function_exists('bvmgr_asset_version')
+      ? bvmgr_asset_version()
       : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
     wp_enqueue_script(
@@ -32,16 +32,16 @@ if (!function_exists('vms_admin_reference_keys_map_enqueue_assets')) {
     );
   }
 }
-add_action('admin_enqueue_scripts', 'vms_admin_reference_keys_map_enqueue_assets', 50);
+add_action('admin_enqueue_scripts', 'bvmgr_admin_reference_keys_map_enqueue_assets', 50);
 
-if (!function_exists('vms_admin_reference_keys_map_page')) {
-  function vms_admin_reference_keys_map_page() {
+if (!function_exists('bvmgr_admin_reference_keys_map_page')) {
+  function bvmgr_admin_reference_keys_map_page() {
     if (!current_user_can('manage_options')) {
       wp_die(esc_html__('You do not have permission to view this page.', 'backstage-venue-manager'));
     }
 
     // Load registry
-    if (!function_exists('vms_keys_map_registry')) {
+    if (!function_exists('bvmgr_keys_map_registry')) {
       $registry_file = defined('VMS_PLUGIN_DIR')
         ? (VMS_PLUGIN_DIR . 'includes/core/registry/vms-keys-map.php')
         : (plugin_dir_path(__FILE__) . '../../core/registry/vms-keys-map.php');
@@ -51,7 +51,7 @@ if (!function_exists('vms_admin_reference_keys_map_page')) {
       }
     }
 
-    $sections = function_exists('vms_keys_map_registry') ? vms_keys_map_registry() : array();
+    $sections = function_exists('bvmgr_keys_map_registry') ? bvmgr_keys_map_registry() : array();
 
     $out = '';
     foreach ($sections as $sec) {

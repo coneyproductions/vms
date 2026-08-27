@@ -28,7 +28,7 @@ if (!function_exists('vms_pass_claims_is_admin_page')) {
 		if (!is_admin()) {
 			return false;
 		}
-		$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only Pass Claims page routing remains nonce-free while rejecting malformed page values.
+		$page = bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only Pass Claims page routing remains nonce-free while rejecting malformed page values.
 		return $page === vms_pass_claims_menu_slug();
 	}
 }
@@ -702,11 +702,11 @@ if (!function_exists('vms_pass_claims_decode_venue_ids_json')) {
 			return array();
 		}
 
-		$decoded = vms_json_decode_associative($raw, 8);
+		$decoded = bvmgr_json_decode_associative($raw, 8);
 		if (
 			empty($decoded['ok'])
 			|| !is_array($decoded['value'])
-			|| !vms_json_decoded_is_list($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+			|| !bvmgr_json_decoded_is_list($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
 		) {
 			return array();
 		}
@@ -1721,7 +1721,7 @@ add_action('admin_post_vms_pass_report_export_csv', 'vms_pass_claims_handle_repo
 if (!function_exists('vms_pass_claims_render_admin_notices')) {
 	function vms_pass_claims_render_admin_notices(): void
 	{
-		$result = vms_request_read_key($_GET, 'result'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only admin notice state remains bookmarkable and does not require a nonce.
+		$result = bvmgr_request_read_key($_GET, 'result'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only admin notice state remains bookmarkable and does not require a nonce.
 		if ($result === 'source_saved') {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Source saved.', 'backstage-venue-manager') . '</p></div>';
 		}
@@ -2083,7 +2083,7 @@ if (!function_exists('vms_pass_claims_render_preview_summary')) {
 	if (!function_exists('vms_pass_claims_render_passes_tab')) {
 	function vms_pass_claims_render_passes_tab(): void
 	{
-		$batch_id = vms_request_read_absint($_GET, 'batch_id'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only batch filtering remains nonce-free while rejecting malformed identifier shapes.
+		$batch_id = bvmgr_request_read_absint($_GET, 'batch_id'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only batch filtering remains nonce-free while rejecting malformed identifier shapes.
 		$tokens = vms_pass_claims_get_tokens($batch_id, 300);
 		$export_url = vms_pass_claims_export_url($batch_id);
 
@@ -2342,7 +2342,7 @@ if (!function_exists('vms_pass_claims_render_admin_page')) {
 			wp_die(esc_html__('You do not have permission to manage Pass Claims.', 'backstage-venue-manager'));
 		}
 
-		$tab = vms_request_read_key($_GET, 'tab'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only tab navigation remains nonce-free while rejecting malformed tab values.
+		$tab = bvmgr_request_read_key($_GET, 'tab'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only tab navigation remains nonce-free while rejecting malformed tab values.
 		if ($tab === '') {
 			$tab = 'sources';
 		}
@@ -2440,7 +2440,7 @@ if (!function_exists('vms_pass_claims_get_request_token')) {
 			return rawurldecode($token);
 		}
 
-		$uri = vms_request_current_uri();
+		$uri = bvmgr_request_current_uri();
 		if ($uri !== '' && preg_match('~^/pass/claim/([^/?#]+)~', $uri, $m)) {
 			return rawurldecode((string) $m[1]);
 		}
@@ -2730,8 +2730,8 @@ if (!function_exists('vms_pass_claims_create_claim')) {
 				}
 			}
 
-			$ip = vms_request_remote_addr();
-			$user_agent = vms_request_user_agent();
+			$ip = bvmgr_request_remote_addr();
+			$user_agent = bvmgr_request_user_agent();
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Public claim creation writes directly to the plugin-owned claims table because no core API exposes this repository.
 			$insert_claim = $wpdb->insert(
@@ -3185,7 +3185,7 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 			vms_pass_claims_render_public_claimed_card((int) ($token_row['reservation_entry_id'] ?? 0));
 		}
 
-		$ip = vms_request_remote_addr();
+		$ip = bvmgr_request_remote_addr();
 		if ($ip !== '' && vms_pass_claims_rate_limit_hit($ip, (string) ($token_row['token_public_key'] ?? ''))) {
 			vms_pass_claims_render_public_status_screen(
 				__('Claim Pass', 'backstage-venue-manager'),
@@ -3216,7 +3216,7 @@ if (!function_exists('vms_pass_claims_render_public_claim')) {
 			'opt_in' => 0,
 		);
 
-		if (vms_request_method() === 'post' && isset($_POST['vms_pass_claim_submit'])) {
+		if (bvmgr_request_method() === 'post' && isset($_POST['vms_pass_claim_submit'])) {
 			$nonce = (isset($_POST['_vms_pass_claim_nonce']) && !is_array($_POST['_vms_pass_claim_nonce']))
 				? sanitize_text_field(wp_unslash((string) $_POST['_vms_pass_claim_nonce']))
 				: '';

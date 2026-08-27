@@ -852,8 +852,8 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
                 }
 
                 $tax_missing = false;
-                if (function_exists('vms_is_vendor_tax_profile_complete')) {
-                    $tax_missing = !vms_is_vendor_tax_profile_complete($pay_vendor_id);
+                if (function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+                    $tax_missing = !bvmgr_is_vendor_tax_profile_complete($pay_vendor_id);
                 }
                 $tax_bypass_active = false;
                 if (function_exists('vms_get_tax_bypass_status')) {
@@ -1943,10 +1943,10 @@ if (!function_exists('vms_vendor_command_center_handle_send_onboarding')) {
 
         check_admin_referer('vms_vendor_command_center_send_onboarding', 'vms_vendor_command_center_nonce');
 
-	        $vendor_id = vms_request_read_absint($_POST, 'vendor_id');
-	        $to_email = vms_request_read_email($_POST, 'to_email');
-	        $subject = sanitize_text_field(vms_vendor_command_center_decode_human_text(vms_request_read_scalar($_POST, 'subject')));
-	        $message = sanitize_textarea_field(vms_vendor_command_center_decode_human_text(vms_request_read_scalar($_POST, 'message')));
+	        $vendor_id = bvmgr_request_read_absint($_POST, 'vendor_id');
+	        $to_email = bvmgr_request_read_email($_POST, 'to_email');
+	        $subject = sanitize_text_field(vms_vendor_command_center_decode_human_text(bvmgr_request_read_scalar($_POST, 'subject')));
+	        $message = sanitize_textarea_field(vms_vendor_command_center_decode_human_text(bvmgr_request_read_scalar($_POST, 'message')));
 	        $message_text = vms_vendor_command_center_prepare_plain_email_text($message);
 
         if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor')) {

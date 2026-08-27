@@ -28,6 +28,7 @@ try {
 
 	$map = BVMGR_WPORG_Prefix_B3::loadJson($mapPath);
 	BVMGR_WPORG_Prefix_B3::validateMap($map);
+	BVMGR_WPORG_Prefix_B3::literalDecisionIndex($root, $map);
 	if ($mode === '--write-graph') {
 		$graph = BVMGR_WPORG_Prefix_B3::buildGraph($root, $map);
 		if (file_put_contents($graphPath, BVMGR_WPORG_Prefix_B3::render($graph)) === false) {
@@ -74,6 +75,22 @@ try {
 		}
 		$report = BVMGR_WPORG_Prefix_B3::transform($root, $map, $names);
 		echo BVMGR_WPORG_Prefix_B3::render($report);
+		exit(0);
+	}
+	if (str_starts_with($mode, '--transform-test-literals-wave=')) {
+		$waveId = substr($mode, strlen('--transform-test-literals-wave='));
+		$plan = BVMGR_WPORG_Prefix_B3::loadJson($wavesPath);
+		$wave = null;
+		foreach ((array) ($plan['waves'] ?? array()) as $candidate) {
+			if (($candidate['wave'] ?? '') === $waveId) {
+				$wave = $candidate;
+				break;
+			}
+		}
+		if (!is_array($wave)) {
+			throw new RuntimeException('Unknown B3 test-literal wave: ' . $waveId);
+		}
+		echo BVMGR_WPORG_Prefix_B3::render(BVMGR_WPORG_Prefix_B3::transformTestLiterals($root, $map, (array) $wave['legacy_functions']));
 		exit(0);
 	}
 	if (str_starts_with($mode, '--transform-wave=')) {

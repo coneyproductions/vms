@@ -293,11 +293,11 @@ if (!function_exists('vms_admission_email_pass_result')) {
 					$current_meta = (string) ($group_row['claim_meta'] ?? '');
 					$meta = array();
 					if ($current_meta !== '') {
-						$decoded = vms_json_decode_associative($current_meta, 16);
+						$decoded = bvmgr_json_decode_associative($current_meta, 16);
 						if (
 							!empty($decoded['ok'])
 							&& is_array($decoded['value'])
-							&& vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+							&& bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
 						) {
 							$meta = $decoded['value'];
 						}
@@ -398,7 +398,7 @@ if (!function_exists('vms_admission_scan_template_router')) {
 		} else {
 			echo '<!doctype html><html><head><meta charset="' . esc_attr(get_bloginfo('charset')) . '"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>';
 		}
-		$print_class = vms_request_read_bool_flag($_GET, 'vms_print_pass') ? ' vms-pass-public-page--print' : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only print-mode state stays nonce-free while rejecting malformed array/object input.
+		$print_class = bvmgr_request_read_bool_flag($_GET, 'vms_print_pass') ? ' vms-pass-public-page--print' : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive read-only print-mode state stays nonce-free while rejecting malformed array/object input.
 		echo '<main id="primary" class="site-main vms-pass-public-page' . esc_attr($print_class) . '" role="main"><div class="vms-pass-wrap"><div class="vms-pass-card">';
 		if (!is_array($row)) {
 			echo '<h1>' . esc_html__('Pass Not Found', 'backstage-venue-manager') . '</h1><p class="vms-pass-error">' . esc_html__('This admission pass was not found.', 'backstage-venue-manager') . '</p>';

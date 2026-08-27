@@ -83,9 +83,9 @@ if (!class_exists('BVMGR_REST_Tours')) {
 		}
 
 		$raw_body = method_exists($request, 'get_body') ? (string) $request->get_body() : '';
-		$top_level_token = vms_json_top_level_token($raw_body);
+		$top_level_token = bvmgr_json_top_level_token($raw_body);
 		$params = $request->get_json_params();
-		if (!is_array($params) || !vms_json_decoded_is_object($params, $top_level_token)) {
+		if (!is_array($params) || !bvmgr_json_decoded_is_object($params, $top_level_token)) {
 			return self::invalid_json_error('vms_tours_invalid_json_payload', 'Request body must be a JSON object.');
 		}
 
@@ -112,23 +112,23 @@ if (!class_exists('BVMGR_REST_Tours')) {
 		if (!isset($params['contexts'])) {
 			return true;
 		}
-		if (!is_array($params['contexts']) || (!empty($params['contexts']) && vms_array_is_list_compat($params['contexts'])) || count($params['contexts']) > 200) {
+		if (!is_array($params['contexts']) || (!empty($params['contexts']) && bvmgr_array_is_list_compat($params['contexts'])) || count($params['contexts']) > 200) {
 			return false;
 		}
 
 		foreach ($params['contexts'] as $row) {
-			if (!is_array($row) || (!empty($row) && vms_array_is_list_compat($row))) {
+			if (!is_array($row) || (!empty($row) && bvmgr_array_is_list_compat($row))) {
 				return false;
 			}
 			if (isset($row['scan_error']) && (is_array($row['scan_error']) || is_object($row['scan_error']))) {
 				return false;
 			}
 			if (isset($row['missing_anchors'])) {
-				if (!is_array($row['missing_anchors']) || (!empty($row['missing_anchors']) && vms_array_is_list_compat($row['missing_anchors'])) || count($row['missing_anchors']) > 200) {
+				if (!is_array($row['missing_anchors']) || (!empty($row['missing_anchors']) && bvmgr_array_is_list_compat($row['missing_anchors'])) || count($row['missing_anchors']) > 200) {
 					return false;
 				}
 				foreach ($row['missing_anchors'] as $entry) {
-					if (!is_array($entry) || (!empty($entry) && vms_array_is_list_compat($entry))) {
+					if (!is_array($entry) || (!empty($entry) && bvmgr_array_is_list_compat($entry))) {
 						return false;
 					}
 				}

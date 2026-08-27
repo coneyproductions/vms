@@ -170,7 +170,7 @@ function get_post_meta(int $post_id, string $key, bool $single = false)
 	return $value;
 }
 
-function vms_format_local_ymd(string $date, string $format): string
+function bvmgr_format_local_ymd(string $date, string $format): string
 {
 	return $format . ':' . $date;
 }

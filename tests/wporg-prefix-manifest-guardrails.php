@@ -120,7 +120,7 @@ foreach ($dynamicExpected as $key => $expected) {
 	$assert(($manifest['php_inventory_counts']['dynamic_symbols'][$key] ?? null) === $expected, "Dynamic-symbol count {$key} must match the B2 intermediate state.");
 }
 $assert(
-	array_keys((array) ($manifest['dynamic_symbols']['reflection_references'] ?? array())) === array($b3Name('vms_get_active_season_dates')),
+	array_keys((array) ($manifest['dynamic_symbols']['reflection_references'] ?? array())) === array($b3Name('bvmgr_get_active_season_dates')),
 	'Reflection baseline must retain the exact current get_active_season_dates function reference.'
 );
 

@@ -177,7 +177,7 @@ if (!function_exists('vms_express_bar_validate_add_to_cart')) {
             return false;
         }
 
-        $event_plan_id = vms_request_read_absint($_POST, 'vms_express_bar_event_plan_id');
+        $event_plan_id = bvmgr_request_read_absint($_POST, 'vms_express_bar_event_plan_id');
         $cfg = vms_express_bar_get_event_meta($event_plan_id);
         if (empty($cfg['enabled']) || !in_array($product_id, (array) $cfg['product_ids'], true)) {
             wc_add_notice(__('That product is not enabled for this event’s Express Bar menu.', 'backstage-venue-manager'), 'error');
@@ -204,7 +204,7 @@ if (!function_exists('vms_express_bar_maybe_redirect_after_add')) {
             return $url;
         }
 
-        return vms_request_local_redirect($url, vms_request_read_scalar($_POST, 'vms_express_bar_redirect'));
+        return bvmgr_request_local_redirect($url, bvmgr_request_read_scalar($_POST, 'vms_express_bar_redirect'));
     }
 }
 add_filter('woocommerce_add_to_cart_redirect', 'vms_express_bar_maybe_redirect_after_add');

@@ -197,7 +197,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 }
 foreach (array(
 	array('staff', 'staff_tasks_schema_not_ready', 'staff_tasks_schema_mutated', $reconstruct_staff),
-	array('ticket', "vms_record_operational_issue('ticket_mutation_audit_trace'", "vms_record_operational_issue('ticket_mutation_audit_mutated'", $reconstruct_ticket),
+	array('ticket', "bvmgr_record_operational_issue('ticket_mutation_audit_trace'", "bvmgr_record_operational_issue('ticket_mutation_audit_mutated'", $reconstruct_ticket),
 ) as $mutation) {
 	$mutated = g17c_once($sources['mirror'][$mutation[0]], $mutation[1], $mutation[2], 'Mutation setup failed.');
 	$rejected = false;
@@ -232,13 +232,13 @@ if (!function_exists('absint')) {
 $GLOBALS['g17c_order'] = array();
 $GLOBALS['g17c_issues'] = array();
 $GLOBALS['g17c_guards'] = array();
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$GLOBALS['g17c_order'][] = 'issue:' . $event_code;
 	$GLOBALS['g17c_issues'][] = array('event_code' => $event_code, 'context' => $context, 'error' => $error);
 	return true;
 }
-function vms_admin_guard_trace(string $hook_name, string $decision, array $payload, float $started_at = 0.0): void
+function bvmgr_admin_guard_trace(string $hook_name, string $decision, array $payload, float $started_at = 0.0): void
 {
 	$GLOBALS['g17c_order'][] = 'guard';
 	$GLOBALS['g17c_guards'][] = compact('hook_name', 'decision', 'payload', 'started_at');
@@ -248,7 +248,7 @@ $trace_source = g17c_function($sources['mirror']['ticket'], 'vms_ticket_mutation
 $delegated = g17c_once($trace_source, 'function vms_ticket_mutation_audit_trace(', 'function g17c_ticket_delegated(', 'Delegated trace rename failed.');
 eval($delegated);
 $fallback = g17c_once($trace_source, 'function vms_ticket_mutation_audit_trace(', 'function g17c_ticket_fallback(', 'Fallback trace rename failed.');
-$fallback = g17c_once($fallback, "if (function_exists('vms_admin_guard_trace')) {", 'if (false) {', 'Fallback injection failed.');
+$fallback = g17c_once($fallback, "if (function_exists('bvmgr_admin_guard_trace')) {", 'if (false) {', 'Fallback injection failed.');
 eval($fallback);
 
 $sentinel = 'recipient@example.test token=TOPSECRET uri=/private/path meta=_secret source=/tmp/private.php';

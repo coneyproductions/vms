@@ -141,12 +141,12 @@ add_filter('manage_vms_vendor_posts_columns', function ($cols) {
 add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
     if ($col !== 'vms_tax_status') return;
 
-    if (!function_exists('vms_vendor_tax_profile_is_complete')) {
+    if (!function_exists('bvmgr_vendor_tax_profile_is_complete')) {
         echo '—';
         return;
     }
 
-    $complete = vms_vendor_tax_profile_is_complete((int)$post_id);
+    $complete = bvmgr_vendor_tax_profile_is_complete((int)$post_id);
 
     if ($complete) {
         $markup = '<span class="vms-vendor-tax-pill vms-vendor-tax-pill-complete">✅ ' .
@@ -154,8 +154,8 @@ add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
         '</span>';
         echo wp_kses($markup, vms_vendor_list_columns_pill_allowed_html());
     } else {
-        $missing = function_exists('vms_vendor_tax_profile_missing_items')
-            ? vms_vendor_tax_profile_missing_items((int)$post_id)
+        $missing = function_exists('bvmgr_vendor_tax_profile_missing_items')
+            ? bvmgr_vendor_tax_profile_missing_items((int)$post_id)
             : [];
 
         $title = !empty($missing)

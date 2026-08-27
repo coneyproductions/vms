@@ -226,7 +226,7 @@ function wp_validate_redirect(string $location, string $fallback = ''): string
 	return $location;
 }
 
-function vms_json_decode_associative(string $raw, int $depth = 8): array
+function bvmgr_json_decode_associative(string $raw, int $depth = 8): array
 {
 	$decoded = json_decode($raw, true, $depth);
 	return array(
@@ -236,7 +236,7 @@ function vms_json_decode_associative(string $raw, int $depth = 8): array
 	);
 }
 
-function vms_json_decoded_is_object(array $value, string $token = ''): bool
+function bvmgr_json_decoded_is_object(array $value, string $token = ''): bool
 {
 	return $token === '{';
 }

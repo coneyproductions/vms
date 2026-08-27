@@ -26,7 +26,7 @@ function wp_localize_script(string $handle, string $name, array $data): bool { $
 function wp_add_inline_style(string $handle, string $data): bool { $GLOBALS['vms_test_inline_styles'][$handle] = $data; return true; }
 function wp_add_inline_script(string $handle, string $script, string $position = 'after'): bool { $GLOBALS['vms_test_inline_scripts'][$handle] = array('script' => $script, 'position' => $position); return true; }
 function vms_add_dispatch_pending_portal_interest_count(): int { return (int) $GLOBALS['vms_test_pending_count']; }
-function vms_asset_version(): string { return 'test-asset-version'; }
+function bvmgr_asset_version(): string { return 'test-asset-version'; }
 
 require_once dirname(__DIR__) . '/includes/modules/availability-date-dispatch/admin-ui.php';
 

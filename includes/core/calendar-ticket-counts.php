@@ -62,8 +62,8 @@ if (!function_exists('vms_calendar_ticket_counts_get_product_ids_for_tec_event')
 			$ids = (array) vms_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
 		} elseif (function_exists('vms_ticketing_b_get_event_ticket_products')) {
 			$ids = (array) vms_ticketing_b_get_event_ticket_products($tec_event_id);
-		} elseif (function_exists('vms_get_ticket_product_ids_for_event')) {
-			$ids = (array) vms_get_ticket_product_ids_for_event($tec_event_id);
+		} elseif (function_exists('bvmgr_get_ticket_product_ids_for_event')) {
+			$ids = (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id);
 		}
 
 		return array_values(array_unique(array_filter(array_map('absint', $ids))));
@@ -301,7 +301,7 @@ add_action(BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK, 'vms_calendar_ticket_counts_n
 if (!function_exists('vms_calendar_ticket_counts_schedule_cron')) {
 	function vms_calendar_ticket_counts_schedule_cron(): void
 	{
-		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+		if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
 			return;
 		}
 		if (!wp_next_scheduled(BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK)) {

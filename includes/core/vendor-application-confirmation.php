@@ -152,14 +152,14 @@ add_filter('query_vars', 'vms_vendor_app_add_confirmation_query_var');
 if (!function_exists('vms_vendor_app_confirmation_query_value')) {
     function vms_vendor_app_confirmation_query_value(string $key): string
     {
-        return vms_request_read_scalar($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public confirmation links use read-only URL parameters for routing and one-time token lookup.
+        return bvmgr_request_read_scalar($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public confirmation links use read-only URL parameters for routing and one-time token lookup.
     }
 }
 
 if (!function_exists('vms_vendor_app_resend_request_text_field')) {
     function vms_vendor_app_resend_request_text_field(string $key): string
     {
-        return vms_request_read_text_field($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- The resend form lookup key only scopes the nonce action before the request is verified.
+        return bvmgr_request_read_text_field($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- The resend form lookup key only scopes the nonce action before the request is verified.
     }
 }
 
@@ -587,8 +587,8 @@ if (!function_exists('vms_vendor_app_mark_confirmation_token_consumed')) {
             return;
         }
 
-        $ip = vms_request_remote_addr();
-        $ua = vms_request_user_agent();
+        $ip = bvmgr_request_remote_addr();
+        $ua = bvmgr_request_user_agent();
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Consumption atomically records the authoritative token lifecycle result and request context before remaining open tokens are invalidated.
         $wpdb->update(
@@ -649,7 +649,7 @@ if (!function_exists('vms_vendor_app_note_confirmation_send')) {
 if (!function_exists('vms_vendor_app_confirmation_ip_bucket_key')) {
     function vms_vendor_app_confirmation_ip_bucket_key(int $app_id): string
     {
-        $ip = vms_request_remote_addr();
+        $ip = bvmgr_request_remote_addr();
         if ($ip === '') {
             $ip = 'unknown';
         }
@@ -1001,7 +1001,7 @@ if (!function_exists('vms_vendor_app_send_review_ready_admin_notification')) {
 
         $sent = wp_mail($to, $subject, implode("\n", $body_lines));
         if (!$sent) {
-            vms_record_operational_issue('vendor_app_review_ready_mail_failed', array(
+            bvmgr_record_operational_issue('vendor_app_review_ready_mail_failed', array(
                 'service'     => 'wp_mail',
                 'operation'   => 'review_ready_notification',
                 'status'      => 'failed',
@@ -1040,7 +1040,7 @@ if (!function_exists('vms_vendor_app_maybe_notify_review_ready')) {
 if (!function_exists('vms_vendor_app_confirmation_attempt_bucket_key')) {
     function vms_vendor_app_confirmation_attempt_bucket_key(string $raw_token): string
     {
-        $ip = vms_request_remote_addr();
+        $ip = bvmgr_request_remote_addr();
         if ($ip === '') {
             $ip = 'unknown';
         }
@@ -1595,7 +1595,7 @@ if (!function_exists('vms_vendor_app_render_portal_applicant_panel')) {
 if (!function_exists('vms_vendor_app_redirect_after_resend')) {
     function vms_vendor_app_redirect_after_resend(int $app_id, string $return_url, string $notice_key, string $message = '', string $type = 'success'): void
     {
-        $return_url = vms_request_local_redirect(
+        $return_url = bvmgr_request_local_redirect(
             vms_vendor_app_public_state_url('confirm_pending', $app_id, array('vms_app_notice' => $notice_key)),
             $return_url
         );
@@ -1633,7 +1633,7 @@ if (!function_exists('vms_vendor_app_redirect_after_resend')) {
 if (!function_exists('vms_vendor_app_handle_resend_confirmation')) {
     function vms_vendor_app_handle_resend_confirmation(): void
     {
-        if (strtoupper(vms_request_method('get')) !== 'POST') {
+        if (strtoupper(bvmgr_request_method('get')) !== 'POST') {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
@@ -1646,7 +1646,7 @@ if (!function_exists('vms_vendor_app_handle_resend_confirmation')) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 
-        $return_url = vms_request_local_redirect('', vms_request_read_scalar($_POST, 'return_url'));
+        $return_url = bvmgr_request_local_redirect('', bvmgr_request_read_scalar($_POST, 'return_url'));
         $app_id = vms_vendor_app_find_application_by_public_lookup_key($app_ref);
         if ($app_id <= 0) {
             wp_safe_redirect(function_exists('vms_vendor_app_get_application_page_url') ? vms_vendor_app_get_application_page_url() : home_url('/vendor-application/'));
@@ -1721,7 +1721,7 @@ if (!function_exists('vms_vendor_app_maybe_render_confirmation_page')) {
             return;
         }
 
-        $request_method = strtoupper(vms_request_method('get'));
+        $request_method = strtoupper(bvmgr_request_method('get'));
         if ($request_method === 'HEAD') {
             status_header(200);
             nocache_headers();

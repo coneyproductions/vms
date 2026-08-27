@@ -59,11 +59,11 @@ if (!function_exists('vms_calendar_parse_assoc_map')) {
 			return array();
 		}
 
-		$decoded = vms_json_decode_associative($raw, 16);
+		$decoded = bvmgr_json_decode_associative($raw, 16);
 		if (
 			!empty($decoded['ok'])
 			&& is_array($decoded['value'])
-			&& vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+			&& bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
 		) {
 			return $decoded['value'];
 		}
@@ -302,8 +302,8 @@ if (!function_exists('vms_calendar_default_statuses_for_context')) {
 	{
 		$context = sanitize_key($context);
 		if ($context === 'admin') {
-			return array_keys((array) (function_exists('vms_event_plan_statuses')
-				? vms_event_plan_statuses()
+			return array_keys((array) (function_exists('bvmgr_event_plan_statuses')
+				? bvmgr_event_plan_statuses()
 				: array('draft' => 'Draft', 'ready' => 'Ready', 'published' => 'Published', 'tentative' => 'Tentative', 'confirmed' => 'Confirmed', 'cancelled' => 'Cancelled', 'archived' => 'Archived')));
 		}
 		if ($context === 'vendor') {
@@ -524,11 +524,11 @@ if (!function_exists('vms_calendar_vendor_display_url')) {
 		if ($vendor_id <= 0) {
 			return null;
 		}
-		if (function_exists('vms_vendor_profile_is_enabled') && !vms_vendor_profile_is_enabled($vendor_id)) {
+		if (function_exists('bvmgr_vendor_profile_is_enabled') && !bvmgr_vendor_profile_is_enabled($vendor_id)) {
 			return null;
 		}
-		if (function_exists('vms_vendor_profile_url')) {
-			$url = (string) vms_vendor_profile_url($vendor_id);
+		if (function_exists('bvmgr_vendor_profile_url')) {
+			$url = (string) bvmgr_vendor_profile_url($vendor_id);
 			return $url !== '' ? $url : null;
 		}
 		return null;
@@ -1160,8 +1160,8 @@ if (!function_exists('bvmgr_get_calendar_events')) {
 			}
 
 			$is_open = null;
-			if ($include_open_close_shading && $venue_id > 0 && function_exists('vms_venue_is_open_on_date')) {
-				$is_open = (bool) vms_venue_is_open_on_date($venue_id, $date_key);
+			if ($include_open_close_shading && $venue_id > 0 && function_exists('bvmgr_venue_is_open_on_date')) {
+				$is_open = (bool) bvmgr_venue_is_open_on_date($venue_id, $date_key);
 			}
 
 			$event = array(

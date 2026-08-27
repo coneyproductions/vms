@@ -25,7 +25,7 @@ if (!function_exists('vms_admission_admin_enqueue_assets')) {
 			return;
 		}
 
-		$post_id = vms_request_read_absint($_GET, 'post'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin asset gating uses the current Event Plan post ID without changing mutation or nonce behavior.
+		$post_id = bvmgr_request_read_absint($_GET, 'post'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin asset gating uses the current Event Plan post ID without changing mutation or nonce behavior.
 		if ($post_id <= 0 && isset($GLOBALS['post']) && $GLOBALS['post'] instanceof WP_Post) {
 			$post_id = (int) $GLOBALS['post']->ID;
 		}

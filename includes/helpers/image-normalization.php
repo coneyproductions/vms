@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_normalize_uploaded_image_to_jpeg')) {
+if (!function_exists('bvmgr_normalize_uploaded_image_to_jpeg')) {
     /**
      * Normalize an uploaded image into a JPEG proof copy.
      *
@@ -11,7 +11,7 @@ if (!function_exists('vms_normalize_uploaded_image_to_jpeg')) {
      * @param array<string,mixed> $args
      * @return array{path:string,mime:string,width:int,height:int,filesize:int}|WP_Error
      */
-    function vms_normalize_uploaded_image_to_jpeg(string $source_path, string $target_dir, string $filename_base, array $args = array())
+    function bvmgr_normalize_uploaded_image_to_jpeg(string $source_path, string $target_dir, string $filename_base, array $args = array())
     {
         $source_path = trim($source_path);
         $target_dir = trim($target_dir);

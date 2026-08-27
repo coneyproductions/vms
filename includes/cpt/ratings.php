@@ -13,35 +13,35 @@ if (!function_exists('vms_rating_request_query_absint')) {
     function vms_rating_request_query_absint(string $key): int
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only rating-link query arguments only select the display context.
-        return vms_request_read_absint($_GET, $key);
+        return bvmgr_request_read_absint($_GET, $key);
     }
 }
 
 if (!function_exists('vms_rating_submitted_text_field')) {
     function vms_rating_submitted_text_field(string $key): string
     {
-        return vms_request_read_text_field(vms_rating_request_source(), $key);
+        return bvmgr_request_read_text_field(vms_rating_request_source(), $key);
     }
 }
 
 if (!function_exists('vms_rating_submitted_email')) {
     function vms_rating_submitted_email(string $key): string
     {
-        return vms_request_read_email(vms_rating_request_source(), $key);
+        return bvmgr_request_read_email(vms_rating_request_source(), $key);
     }
 }
 
 if (!function_exists('vms_rating_submitted_comment')) {
     function vms_rating_submitted_comment(): string
     {
-        return vms_request_read_textarea_field(vms_rating_request_source(), 'vms_rating_comment');
+        return bvmgr_request_read_textarea_field(vms_rating_request_source(), 'vms_rating_comment');
     }
 }
 
 if (!function_exists('vms_rating_submitted_value')) {
     function vms_rating_submitted_value(string $key): int
     {
-        $value = vms_request_read_absint(vms_rating_request_source(), $key);
+        $value = bvmgr_request_read_absint(vms_rating_request_source(), $key);
         return ($value >= 1 && $value <= 5) ? $value : 0;
     }
 }
@@ -228,8 +228,8 @@ function vms_save_rating_details_meta($post_id, $post)
 
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $band_id   = vms_request_read_absint($_POST, 'vms_band_id');
-    $event_id  = vms_request_read_absint($_POST, 'vms_event_id');
+    $band_id   = bvmgr_request_read_absint($_POST, 'vms_band_id');
+    $event_id  = bvmgr_request_read_absint($_POST, 'vms_event_id');
     $stars     = vms_rating_submitted_value('vms_rating_value');
     $rev_name  = vms_rating_submitted_text_field('vms_reviewer_name');
     $rev_email = vms_rating_submitted_email('vms_reviewer_email');
@@ -378,7 +378,7 @@ function vms_rate_band_shortcode($atts) {
 
     // Handle form submission
     $message = '';
-    if (vms_request_method() === 'post' && vms_request_read_bool_flag(vms_rating_request_source(), 'vms_rating_submit')) {
+    if (bvmgr_request_method() === 'post' && bvmgr_request_read_bool_flag(vms_rating_request_source(), 'vms_rating_submit')) {
         $result  = vms_handle_rating_submission($event_id, $band_id);
         $message = $result['message'];
     }

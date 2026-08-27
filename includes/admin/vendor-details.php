@@ -50,8 +50,8 @@ if (!function_exists('vms_vendor_defaults_admin_enqueue_assets')) {
             return;
         }
 
-        $version = function_exists('vms_asset_version')
-            ? vms_asset_version()
+        $version = function_exists('bvmgr_asset_version')
+            ? bvmgr_asset_version()
             : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(
@@ -140,7 +140,7 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
  
     $get = function ($key) {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_save_vendor_defaults before reading compensation defaults.
-        return vms_request_read_text_field($_POST, (string) $key);
+        return bvmgr_request_read_text_field($_POST, (string) $key);
     };
     $vk = function ($field, $fallback) {
         if (!function_exists('bvmgr_meta_key')) {
@@ -604,9 +604,9 @@ function vms_render_vendor_defaults_metabox($post)
                             <option value="0"><?php esc_html_e('No template selected', 'backstage-venue-manager'); ?></option>
                             <?php foreach ($comp_packages as $pkg) :
                                 $pkg_id = (int) $pkg->ID;
-                                $pkg_terms = function_exists('vms_get_comp_package_terms') ? vms_get_comp_package_terms($pkg_id) : array();
-                                $pkg_commission_percent = function_exists('vms_normalize_agent_fee_percent') ? vms_normalize_agent_fee_percent(get_post_meta($pkg_id, '_vms_commission_percent', true)) : null;
-                                $pkg_commission_mode = function_exists('vms_normalize_agent_fee_mode') ? vms_normalize_agent_fee_mode(get_post_meta($pkg_id, '_vms_commission_mode', true)) : '';
+                                $pkg_terms = function_exists('bvmgr_get_comp_package_terms') ? bvmgr_get_comp_package_terms($pkg_id) : array();
+                                $pkg_commission_percent = function_exists('bvmgr_normalize_agent_fee_percent') ? bvmgr_normalize_agent_fee_percent(get_post_meta($pkg_id, '_vms_commission_percent', true)) : null;
+                                $pkg_commission_mode = function_exists('bvmgr_normalize_agent_fee_mode') ? bvmgr_normalize_agent_fee_mode(get_post_meta($pkg_id, '_vms_commission_mode', true)) : '';
                                 if ($pkg_commission_percent !== null && $pkg_commission_percent > 0) {
                                     $pkg_terms['commission_percent'] = $pkg_commission_percent;
                                     $pkg_terms['commission_mode'] = ($pkg_commission_mode !== '') ? $pkg_commission_mode : 'artist_fee';

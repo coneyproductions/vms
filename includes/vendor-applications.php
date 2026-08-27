@@ -118,8 +118,8 @@ if (!function_exists('vms_vendor_app_get_application_page_url')) {
     function vms_vendor_app_get_application_page_url(array $query_args = array()): string
     {
         $slug = 'vendor-application';
-        if (function_exists('vms_required_public_pages')) {
-            $pages = (array) vms_required_public_pages();
+        if (function_exists('bvmgr_required_public_pages')) {
+            $pages = (array) bvmgr_required_public_pages();
             $slug = sanitize_title((string) ($pages['vendor_application']['slug'] ?? $slug));
             if ($slug === '') {
                 $slug = 'vendor-application';
@@ -223,21 +223,21 @@ if (!function_exists('vms_vendor_app_get_login_user')) {
 if (!function_exists('vms_vendor_applications_query_key')) {
     function vms_vendor_applications_query_key(string $key): string
     {
-        return vms_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- These Vendor Application query args only drive read-only admin filters and public status screens.
+        return bvmgr_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- These Vendor Application query args only drive read-only admin filters and public status screens.
     }
 }
 
 if (!function_exists('vms_vendor_applications_query_bool_flag')) {
     function vms_vendor_applications_query_bool_flag(string $key): bool
     {
-        return vms_request_read_bool_flag($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- These Vendor Application query args only drive read-only admin filters and public status screens.
+        return bvmgr_request_read_bool_flag($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- These Vendor Application query args only drive read-only admin filters and public status screens.
     }
 }
 
 if (!function_exists('vms_vendor_apply_public_lookup_key')) {
     function vms_vendor_apply_public_lookup_key(): string
     {
-        return vms_request_read_text_field($_GET, 'vms_app_ref'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The public lookup key is read-only URL state for confirmation and existing-application screens.
+        return bvmgr_request_read_text_field($_GET, 'vms_app_ref'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The public lookup key is read-only URL state for confirmation and existing-application screens.
     }
 }
 
@@ -251,7 +251,7 @@ if (!function_exists('vms_vendor_apply_has_frontend_submission_marker')) {
 if (!function_exists('vms_vendor_apply_turnstile_response_token')) {
     function vms_vendor_apply_turnstile_response_token(): string
     {
-        return vms_request_read_scalar($_POST, 'cf-turnstile-response'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Frontend submission nonce verification happens before Turnstile verification is called.
+        return bvmgr_request_read_scalar($_POST, 'cf-turnstile-response'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Frontend submission nonce verification happens before Turnstile verification is called.
     }
 }
 
@@ -761,7 +761,7 @@ if (!function_exists('vms_vendor_app_get_or_create_vendor')) {
         ), true);
 
         if (is_wp_error($vendor_id) || $vendor_id <= 0) {
-            vms_record_operational_issue('vendor_app_vendor_create_failed', array(
+            bvmgr_record_operational_issue('vendor_app_vendor_create_failed', array(
                 'service'     => 'wordpress',
                 'operation'   => 'create_vendor',
                 'status'      => 'failed',
@@ -797,7 +797,7 @@ if (!function_exists('vms_vendor_app_link_submitting_user_to_vendor')) {
 
         $user = get_userdata($user_id);
         if (!$user) {
-            vms_record_operational_issue('vendor_app_submitting_user_missing', array(
+            bvmgr_record_operational_issue('vendor_app_submitting_user_missing', array(
                 'service'     => 'wordpress',
                 'operation'   => 'link_submitting_user',
                 'status'      => 'missing',
@@ -836,7 +836,7 @@ if (!function_exists('vms_vendor_app_link_submitting_user_to_vendor')) {
             return true;
         }
 
-        vms_record_operational_issue('vendor_app_user_link_failed', array(
+        bvmgr_record_operational_issue('vendor_app_user_link_failed', array(
             'service'     => 'wordpress',
             'operation'   => 'link_submitting_user',
             'status'      => 'failed',
@@ -1795,10 +1795,10 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
             return;
         }
 
-        $internal_note = vms_request_read_textarea_field($_POST, 'vms_vendor_app_operator_internal_note');
+        $internal_note = bvmgr_request_read_textarea_field($_POST, 'vms_vendor_app_operator_internal_note');
         update_post_meta($post_id, '_vms_app_operator_internal_note', $internal_note);
 
-        $decision = vms_request_read_key($_POST, 'vms_vendor_app_decision');
+        $decision = bvmgr_request_read_key($_POST, 'vms_vendor_app_decision');
         $statuses = vms_vendor_app_statuses();
         if ($decision === '' || !isset($statuses[$decision])) {
             return;
@@ -1815,13 +1815,13 @@ if (!function_exists('vms_vendor_applications_handle_edit_screen_decision')) {
         }
 
         $from_status = vms_vendor_app_get_status($post_id);
-        $message = vms_request_read_textarea_field($_POST, 'vms_vendor_app_decision_message');
+        $message = bvmgr_request_read_textarea_field($_POST, 'vms_vendor_app_decision_message');
         $shown_default_status = ($from_status === 'pending') ? 'holding' : $from_status;
         $shown_default_message = vms_vendor_app_default_response_message($post_id, $shown_default_status);
         if (trim($message) === '' || trim($message) === trim($shown_default_message)) {
             $message = vms_vendor_app_default_response_message($post_id, $decision);
         }
-        $send_email = vms_request_read_bool_flag($_POST, 'vms_vendor_app_send_response_email');
+        $send_email = bvmgr_request_read_bool_flag($_POST, 'vms_vendor_app_send_response_email');
         $block_approved_email = false;
 
         if ($decision === 'approved') {
@@ -2174,7 +2174,7 @@ function vms_vendor_apply_turnstile_is_configured(): bool
  */
 function vms_vendor_apply_is_rate_limited(): bool
 {
-    $ip = vms_request_remote_addr();
+    $ip = bvmgr_request_remote_addr();
 
     if ($ip === '') return false;
 
@@ -2200,11 +2200,11 @@ function vms_vendor_apply_parse_turnstile_siteverify_body(string $body): array
         return array();
     }
 
-    $decoded = vms_json_decode_associative($body, 8);
+    $decoded = bvmgr_json_decode_associative($body, 8);
     if (
         empty($decoded['ok'])
         || !is_array($decoded['value'])
-        || !vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+        || !bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
     ) {
         return array();
     }
@@ -2229,7 +2229,7 @@ function vms_vendor_apply_verify_turnstile(): bool
 
     // If keys are not configured, fail closed to stop spam.
     if ($site_key === '' || $secret === '') {
-        vms_record_operational_issue('vendor_apply_turnstile_config_missing', array(
+        bvmgr_record_operational_issue('vendor_apply_turnstile_config_missing', array(
             'service'   => 'turnstile',
             'provider'  => 'cloudflare',
             'operation' => 'siteverify',
@@ -2248,7 +2248,7 @@ function vms_vendor_apply_verify_turnstile(): bool
         return false;
     }
 
-    $ip = vms_request_remote_addr();
+    $ip = bvmgr_request_remote_addr();
 
     $resp = wp_remote_post(
         'https://challenges.cloudflare.com/turnstile/v0/siteverify',
@@ -2263,7 +2263,7 @@ function vms_vendor_apply_verify_turnstile(): bool
     );
 
     if (is_wp_error($resp)) {
-        vms_record_operational_issue('vendor_apply_turnstile_request_failed', array(
+        bvmgr_record_operational_issue('vendor_apply_turnstile_request_failed', array(
             'service'   => 'turnstile',
             'provider'  => 'cloudflare',
             'operation' => 'siteverify',
@@ -2277,7 +2277,7 @@ function vms_vendor_apply_verify_turnstile(): bool
     $body = (string) wp_remote_retrieve_body($resp);
 
     if ($code < 200 || $code >= 300 || $body === '') {
-        vms_record_operational_issue('vendor_apply_turnstile_response_failed', array(
+        bvmgr_record_operational_issue('vendor_apply_turnstile_response_failed', array(
             'service'     => 'turnstile',
             'provider'    => 'cloudflare',
             'operation'   => 'siteverify',
@@ -2290,7 +2290,7 @@ function vms_vendor_apply_verify_turnstile(): bool
 
     $json = vms_vendor_apply_parse_turnstile_siteverify_body($body);
     if (empty($json)) {
-        vms_record_operational_issue('vendor_apply_turnstile_payload_invalid', array(
+        bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid', array(
             'service'   => 'turnstile',
             'provider'  => 'cloudflare',
             'operation' => 'decode_response',
@@ -2309,8 +2309,8 @@ function vms_vendor_apply_verify_turnstile(): bool
 function vms_vendor_apply_request_fingerprint(): array
 {
     return array(
-        'ip' => vms_request_remote_addr(),
-        'ua' => vms_request_user_agent(),
+        'ip' => bvmgr_request_remote_addr(),
+        'ua' => bvmgr_request_user_agent(),
     );
 }
 
@@ -2392,7 +2392,7 @@ add_shortcode('vms_vendor_apply', 'vms_vendor_apply_shortcode');
 function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
 {
     // Handle submission first
-    if (vms_request_method() === 'post' && vms_vendor_apply_has_frontend_submission_marker()) {
+    if (bvmgr_request_method() === 'post' && vms_vendor_apply_has_frontend_submission_marker()) {
         return vms_vendor_apply_handle_frontend_post();
     }
 
@@ -2474,12 +2474,12 @@ function vms_vendor_apply_shortcode($atts = array(), $content = ''): string
     );
 
     if (function_exists('wp_enqueue_script')) {
-        $apply_script_src = function_exists('vms_asset_url')
-            ? vms_asset_url('assets/js/vms-vendor-apply.js')
+        $apply_script_src = function_exists('bvmgr_asset_url')
+            ? bvmgr_asset_url('assets/js/vms-vendor-apply.js')
             : BVMGR_PLUGIN_URL . 'assets/js/vms-vendor-apply.js';
-        $apply_script_ver = function_exists('vms_asset_version_for')
-            ? vms_asset_version_for('assets/js/vms-vendor-apply.js')
-            : (function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''));
+        $apply_script_ver = function_exists('bvmgr_asset_version_for')
+            ? bvmgr_asset_version_for('assets/js/vms-vendor-apply.js')
+            : (function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''));
         wp_enqueue_script('vms-vendor-apply', $apply_script_src, array(), $apply_script_ver, true);
     }
 
@@ -2656,9 +2656,9 @@ function vms_vendor_apply_handle_frontend_post(): string
         return '';
     }
 
-    $vendor_type = vms_vendor_app_normalize_vendor_type(vms_request_read_scalar($_POST, 'vms_app_vendor_type'));
-    $name        = vms_request_read_text_field($_POST, 'vms_app_name');
-    $email       = vms_request_read_email($_POST, 'vms_app_email');
+    $vendor_type = vms_vendor_app_normalize_vendor_type(bvmgr_request_read_scalar($_POST, 'vms_app_vendor_type'));
+    $name        = bvmgr_request_read_text_field($_POST, 'vms_app_name');
+    $email       = bvmgr_request_read_email($_POST, 'vms_app_email');
 
     if (!$vendor_type || !$name || !$email) {
         vms_vendor_apply_frontend_redirect('error');
@@ -2720,24 +2720,24 @@ function vms_vendor_apply_handle_frontend_post(): string
         }
     }
 
-    $contact_name = vms_request_read_text_field($_POST, 'vms_app_contact_name');
-    $location = vms_request_read_text_field($_POST, 'vms_app_location');
-    $phone    = vms_request_read_text_field($_POST, 'vms_app_phone');
-    $website  = vms_vendor_app_sanitize_url_input(vms_request_read_scalar($_POST, 'vms_app_website'));
-    $rate     = vms_request_read_text_field($_POST, 'vms_app_rate');
-    $turnout  = vms_request_read_key($_POST, 'vms_app_turnout');
+    $contact_name = bvmgr_request_read_text_field($_POST, 'vms_app_contact_name');
+    $location = bvmgr_request_read_text_field($_POST, 'vms_app_location');
+    $phone    = bvmgr_request_read_text_field($_POST, 'vms_app_phone');
+    $website  = vms_vendor_app_sanitize_url_input(bvmgr_request_read_scalar($_POST, 'vms_app_website'));
+    $rate     = bvmgr_request_read_text_field($_POST, 'vms_app_rate');
+    $turnout  = bvmgr_request_read_key($_POST, 'vms_app_turnout');
     if ($turnout !== '' && !array_key_exists($turnout, vms_vendor_app_turnout_options())) {
         $turnout = '';
     }
-    $compensation_notes = vms_request_read_textarea_field($_POST, 'vms_app_compensation_notes');
-    $audience_notes = vms_request_read_textarea_field($_POST, 'vms_app_audience_notes');
+    $compensation_notes = bvmgr_request_read_textarea_field($_POST, 'vms_app_compensation_notes');
+    $audience_notes = bvmgr_request_read_textarea_field($_POST, 'vms_app_audience_notes');
     if ($vendor_type === 'band' && ($rate === '' || $turnout === '')) {
         vms_vendor_apply_frontend_redirect('band_required');
         return '';
     }
-    $epk      = vms_vendor_app_sanitize_url_input(vms_request_read_scalar($_POST, 'vms_app_epk'));
-    $cuisine  = vms_request_read_text_field($_POST, 'vms_app_cuisine');
-    $menu     = vms_vendor_app_sanitize_url_input(vms_request_read_scalar($_POST, 'vms_app_menu'));
+    $epk      = vms_vendor_app_sanitize_url_input(bvmgr_request_read_scalar($_POST, 'vms_app_epk'));
+    $cuisine  = bvmgr_request_read_text_field($_POST, 'vms_app_cuisine');
+    $menu     = vms_vendor_app_sanitize_url_input(bvmgr_request_read_scalar($_POST, 'vms_app_menu'));
     $social_inputs = array();
     $posted_social = vms_vendor_apply_post_social_values();
     foreach (vms_vendor_app_social_field_map() as $slug => $field) {
@@ -2746,7 +2746,7 @@ function vms_vendor_apply_handle_frontend_post(): string
             : '';
     }
     $social   = vms_vendor_app_compose_social_legacy_blob($social_inputs);
-    $notes    = vms_request_read_textarea_field($_POST, 'vms_app_notes');
+    $notes    = bvmgr_request_read_textarea_field($_POST, 'vms_app_notes');
 
     $app_id = wp_insert_post(array(
         'post_type'   => BVMGR_VENDOR_APP_CPT,
@@ -3041,7 +3041,7 @@ function vms_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id
                 continue;
             }
 
-            vms_record_operational_issue('vendor_app_vendor_type_unresolved', array(
+            bvmgr_record_operational_issue('vendor_app_vendor_type_unresolved', array(
                 'service'   => 'wordpress',
                 'operation' => 'resolve_vendor_type',
                 'status'    => 'skipped',
@@ -3053,7 +3053,7 @@ function vms_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id
         if (!empty($term_ids)) {
             $set = wp_set_object_terms($vendor_id, $term_ids, 'vms_vendor_type', false);
             if (is_wp_error($set)) {
-                vms_record_operational_issue('vendor_app_vendor_type_assignment_failed', array(
+                bvmgr_record_operational_issue('vendor_app_vendor_type_assignment_failed', array(
                     'service'   => 'wordpress',
                     'operation' => 'assign_vendor_type',
                     'status'    => 'failed',
@@ -3121,8 +3121,8 @@ if (!function_exists('vms_vendor_app_backfill_application_shape_once')) {
             'meta_updates' => 0,
             'ran_at' => (string) wp_date('Y-m-d H:i:s'),
         );
-        $guard = function_exists('vms_admin_guard_begin')
-            ? vms_admin_guard_begin('admin_init.vendor_app_application_shape_backfill', array(
+        $guard = function_exists('bvmgr_admin_guard_begin')
+            ? bvmgr_admin_guard_begin('admin_init.vendor_app_application_shape_backfill', array(
                 'task' => 'vendor_app_application_shape_backfill',
                 'allow_action' => 'vendor_app_application_shape_backfill',
                 'lock_name' => $marker,
@@ -3227,8 +3227,8 @@ if (!function_exists('vms_vendor_app_backfill_application_shape_once')) {
 
             add_option($marker, $stats, '', false);
         } finally {
-            if (is_array($guard) && function_exists('vms_admin_guard_finish')) {
-                vms_admin_guard_finish($guard, $stats);
+            if (is_array($guard) && function_exists('bvmgr_admin_guard_finish')) {
+                bvmgr_admin_guard_finish($guard, $stats);
             }
         }
     }
@@ -3250,8 +3250,8 @@ if (!function_exists('vms_vendor_app_backfill_vendor_sot_once')) {
             'links_created' => 0,
             'ran_at' => (string) wp_date('Y-m-d H:i:s'),
         );
-        $guard = function_exists('vms_admin_guard_begin')
-            ? vms_admin_guard_begin('admin_init.vendor_app_vendor_sot_backfill', array(
+        $guard = function_exists('bvmgr_admin_guard_begin')
+            ? bvmgr_admin_guard_begin('admin_init.vendor_app_vendor_sot_backfill', array(
                 'task' => 'vendor_app_vendor_sot_backfill',
                 'allow_action' => 'vendor_app_vendor_sot_backfill',
                 'lock_name' => $marker,
@@ -3304,8 +3304,8 @@ if (!function_exists('vms_vendor_app_backfill_vendor_sot_once')) {
 
             add_option($marker, $stats, '', false);
         } finally {
-            if (is_array($guard) && function_exists('vms_admin_guard_finish')) {
-                vms_admin_guard_finish($guard, $stats);
+            if (is_array($guard) && function_exists('bvmgr_admin_guard_finish')) {
+                bvmgr_admin_guard_finish($guard, $stats);
             }
         }
     }

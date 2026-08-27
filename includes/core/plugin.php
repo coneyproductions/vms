@@ -31,7 +31,7 @@ add_filter('admin_body_class', function (string $classes): string {
 	// Ensure VMS admin styling applies on:
 	// - VMS admin pages (page=vms, page=vms-*)
 	// - VMS CPT edit screens (Event Plans, Vendors, Venues)
-	$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin-body page state only scopes read-only styling and remains nonce-free.
+	$page = bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin-body page state only scopes read-only styling and remains nonce-free.
 
 	$is_vms_page = false;
 	if ($page === 'vms') {
@@ -78,7 +78,7 @@ add_filter('admin_body_class', function (string $classes): string {
  */
 add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 
-	$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin asset page state only scopes read-only styling and remains nonce-free.
+	$page = bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin asset page state only scopes read-only styling and remains nonce-free.
 
 	// Only load assets on VMS admin pages.
 	$is_vms_page = false;
@@ -233,43 +233,43 @@ add_action('wp_enqueue_scripts', function (): void {
 add_action('plugins_loaded', function (): void {
 	if (defined('WP_INSTALLING') && WP_INSTALLING) return;
 	if (!defined('BVMGR_PLUGIN_PATH')) return;
-	if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) return;
+	if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) return;
 
-	if (function_exists('vms_require_internal_file') && !vms_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_runtime', 'Database migration checks')) {
+	if (function_exists('bvmgr_require_internal_file') && !bvmgr_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_runtime', 'Database migration checks')) {
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v7')) {
-		vms_db_migrate_vendor_core_v7();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v7')) {
+		bvmgr_db_migrate_vendor_core_v7();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v6')) {
-		vms_db_migrate_vendor_core_v6();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v6')) {
+		bvmgr_db_migrate_vendor_core_v6();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v5')) {
-		vms_db_migrate_vendor_core_v5();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v5')) {
+		bvmgr_db_migrate_vendor_core_v5();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v4')) {
-		vms_db_migrate_vendor_core_v4();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v4')) {
+		bvmgr_db_migrate_vendor_core_v4();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v3')) {
-		vms_db_migrate_vendor_core_v3();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v3')) {
+		bvmgr_db_migrate_vendor_core_v3();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v2')) {
-		vms_db_migrate_vendor_core_v2();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v2')) {
+		bvmgr_db_migrate_vendor_core_v2();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v1')) {
-		vms_db_migrate_vendor_core_v1();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v1')) {
+		bvmgr_db_migrate_vendor_core_v1();
 	}
 }, 5);

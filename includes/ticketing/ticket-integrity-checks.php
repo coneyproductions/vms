@@ -427,8 +427,8 @@ function vms_ticket_integrity_build_context(int $plan_id): array
 		$mode = sanitize_key(vms_ticketing_b_get_mode($plan_id));
 	}
 
-	$ticketing_enabled = function_exists('vms_event_plan_is_ticketing_enabled')
-		? (bool) vms_event_plan_is_ticketing_enabled($plan_id)
+	$ticketing_enabled = function_exists('bvmgr_event_plan_is_ticketing_enabled')
+		? (bool) bvmgr_event_plan_is_ticketing_enabled($plan_id)
 		: true;
 
 	$verification_programs = function_exists('vms_ticketing_verification_programs')

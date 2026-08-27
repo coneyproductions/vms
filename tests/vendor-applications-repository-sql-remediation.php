@@ -158,13 +158,13 @@ function wp_date(string $format): string
 	return (string) $GLOBALS['g11_vendor_now'];
 }
 
-function vms_admin_guard_begin(string $name, array $args)
+function bvmgr_admin_guard_begin(string $name, array $args)
 {
 	$GLOBALS['g11_vendor_timeline'][] = array('kind' => 'guard_begin', 'name' => $name, 'args' => $args);
 	return $GLOBALS['g11_vendor_guard_result'];
 }
 
-function vms_admin_guard_finish(array $guard, array $stats): void
+function bvmgr_admin_guard_finish(array $guard, array $stats): void
 {
 	$GLOBALS['g11_vendor_timeline'][] = array('kind' => 'guard_finish', 'guard' => $guard, 'stats' => $stats);
 }
@@ -297,7 +297,7 @@ function g11_vendor_strip_directives(string $source, array $directives): string
 
 function g11_vendor_restore_operational_call(string $source, string $event_code, string $historical): string
 {
-	$needle = "vms_record_operational_issue('" . $event_code . "'";
+	$needle = "bvmgr_record_operational_issue('" . $event_code . "'";
 	g11_vendor_same(1, substr_count($source, $needle), 'Known G16 call count changed: ' . $event_code);
 	$call = strpos($source, $needle);
 	$line_start = strrpos(substr($source, 0, (int) $call), "\n");
@@ -325,7 +325,7 @@ function g11_vendor_restore_g16_baseline(string $source): string
 		'vendor_app_vendor_type_unresolved' => "error_log('[VMS] vendor-applications: unknown vendor type slug \"' . \$slug . '\" on app_id ' . \$app_id . '; not assigning taxonomy term.');",
 		'vendor_app_vendor_type_assignment_failed' => "error_log('[VMS] vendor-applications: failed setting vms_vendor_type terms for vendor_id ' . \$vendor_id . ' (app_id ' . \$app_id . ')');",
 	);
-	if (strpos($source, "vms_record_operational_issue('vendor_apply_turnstile_payload_invalid'") !== false) {
+	if (strpos($source, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'") !== false) {
 		$historical['vendor_apply_turnstile_payload_invalid'] = "error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');";
 	}
 	foreach ($historical as $event_code => $statement) {
@@ -496,8 +496,8 @@ foreach ($invalid_directives as $invalid_directive) {
 }
 
 g11_vendor_same(0, substr_count($source, 'error_log('), 'All nine G16 operational logging rows must be migrated without suppression.');
-g11_vendor_same(9, substr_count($source, 'vms_record_operational_issue('), 'Mirror must contain the exact nine G16 operational calls.');
-g11_vendor_same(8, substr_count($shadow_source, 'vms_record_operational_issue('), 'Shadow must contain only the eight corresponding G16 operational calls.');
+g11_vendor_same(9, substr_count($source, 'bvmgr_record_operational_issue('), 'Mirror must contain the exact nine G16 operational calls.');
+g11_vendor_same(8, substr_count($shadow_source, 'bvmgr_record_operational_issue('), 'Shadow must contain only the eight corresponding G16 operational calls.');
 g11_vendor_contains('https://challenges.cloudflare.com/turnstile/v0/api.js', $source, 'Adjacent Turnstile offloaded-content finding must remain present.');
 g11_vendor_contains('echo $msg;', $source, 'Adjacent unescaped message output must remain present.');
 g11_vendor_contains('<?php echo $variant_map_json; ?>', $source, 'Adjacent unescaped JSON output must remain present.');

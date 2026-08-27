@@ -286,8 +286,8 @@ if (!function_exists('is_wp_error')) {
 	}
 }
 
-if (!function_exists('vms_array_is_list_compat')) {
-	function vms_array_is_list_compat(array $value): bool
+if (!function_exists('bvmgr_array_is_list_compat')) {
+	function bvmgr_array_is_list_compat(array $value): bool
 	{
 		$index = 0;
 		foreach ($value as $key => $_unused) {
@@ -301,8 +301,8 @@ if (!function_exists('vms_array_is_list_compat')) {
 	}
 }
 
-if (!function_exists('vms_json_top_level_token')) {
-	function vms_json_top_level_token(string $raw): string
+if (!function_exists('bvmgr_json_top_level_token')) {
+	function bvmgr_json_top_level_token(string $raw): string
 	{
 		$raw = ltrim($raw);
 		if ($raw === '') {
@@ -313,13 +313,13 @@ if (!function_exists('vms_json_top_level_token')) {
 	}
 }
 
-if (!function_exists('vms_json_decode_associative')) {
+if (!function_exists('bvmgr_json_decode_associative')) {
 	/**
 	 * @return array{ok:bool,value:mixed,error_code:int,error_message:string,top_level_token:string}
 	 */
-	function vms_json_decode_associative(string $raw, int $depth = 32): array
+	function bvmgr_json_decode_associative(string $raw, int $depth = 32): array
 	{
-		$top_level_token = vms_json_top_level_token($raw);
+		$top_level_token = bvmgr_json_top_level_token($raw);
 		$raw = trim($raw);
 		if ($raw === '') {
 			return array(
@@ -354,14 +354,14 @@ if (!function_exists('vms_json_decode_associative')) {
 	}
 }
 
-if (!function_exists('vms_json_decoded_is_object')) {
-	function vms_json_decoded_is_object(array $decoded, string $top_level_token): bool
+if (!function_exists('bvmgr_json_decoded_is_object')) {
+	function bvmgr_json_decoded_is_object(array $decoded, string $top_level_token): bool
 	{
 		if ($top_level_token !== '{') {
 			return false;
 		}
 
-		return empty($decoded) || !vms_array_is_list_compat($decoded);
+		return empty($decoded) || !bvmgr_array_is_list_compat($decoded);
 	}
 }
 

@@ -36,42 +36,42 @@ if (!function_exists('vms_ticketing_claims_admin_page_url')) {
 if (!function_exists('vms_ticketing_claims_query_key')) {
 	function vms_ticketing_claims_query_key(string $key): string
 	{
-		return vms_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Claims admin query args only drive read-only page routing, notices, and filters.
+		return bvmgr_request_read_key($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Claims admin query args only drive read-only page routing, notices, and filters.
 	}
 }
 
 if (!function_exists('vms_ticketing_claims_query_text_field')) {
 	function vms_ticketing_claims_query_text_field(string $key): string
 	{
-		return vms_request_read_text_field($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Claims admin query args only drive read-only page routing, notices, and filters.
+		return bvmgr_request_read_text_field($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Claims admin query args only drive read-only page routing, notices, and filters.
 	}
 }
 
 if (!function_exists('vms_ticketing_claims_query_email')) {
 	function vms_ticketing_claims_query_email(string $key): string
 	{
-		return vms_request_read_email($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Claims admin query args only drive read-only page routing, notices, and filters.
+		return bvmgr_request_read_email($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Claims admin query args only drive read-only page routing, notices, and filters.
 	}
 }
 
 if (!function_exists('vms_ticketing_claims_query_absint')) {
 	function vms_ticketing_claims_query_absint(string $key): int
 	{
-		return vms_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Claims admin query args only drive read-only page routing, notices, and filters.
+		return bvmgr_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Claims admin query args only drive read-only page routing, notices, and filters.
 	}
 }
 
 if (!function_exists('vms_ticketing_claims_post_absint')) {
 	function vms_ticketing_claims_post_absint(string $key): int
 	{
-		return vms_request_read_absint($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Claims admin mutation handlers use this only after capability checks and to resolve IDs within an existing verified admin-post flow, including the submitted dynamic nonce action.
+		return bvmgr_request_read_absint($_POST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Claims admin mutation handlers use this only after capability checks and to resolve IDs within an existing verified admin-post flow, including the submitted dynamic nonce action.
 	}
 }
 
 if (!function_exists('vms_ticketing_claims_post_local_redirect')) {
 	function vms_ticketing_claims_post_local_redirect(string $key, string $fallback = ''): string
 	{
-		return vms_request_local_redirect($fallback, vms_request_read_scalar($_POST, $key)); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Claims admin referer redirects are consumed only after the caller has verified the current admin-post mutation nonce.
+		return bvmgr_request_local_redirect($fallback, bvmgr_request_read_scalar($_POST, $key)); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Claims admin referer redirects are consumed only after the caller has verified the current admin-post mutation nonce.
 	}
 }
 
@@ -1217,7 +1217,7 @@ if (!function_exists('vms_ticketing_claims_enqueue_admin_assets')) {
 			'vms-ticketing-claims-admin',
 			BVMGR_PLUGIN_URL . 'assets/css/vms-ticketing-claims-admin.css',
 			array('vms-admin'),
-			function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+			function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 		);
 	}
 }
@@ -1231,8 +1231,8 @@ if (!function_exists('vms_ticketing_claims_handle_create_grant')) {
 		}
 		check_admin_referer('vms_ticketing_claims_create_grant');
 
-		$event_plan_id = vms_request_read_absint($_POST, 'event_plan_id');
-		$event_id = vms_request_read_absint($_POST, 'event_id');
+		$event_plan_id = bvmgr_request_read_absint($_POST, 'event_plan_id');
+		$event_id = bvmgr_request_read_absint($_POST, 'event_id');
 		if ($event_id <= 0) {
 			$ctx = vms_ticketing_claims_event_context($event_plan_id);
 			$event_id = absint($ctx['event_id'] ?? 0);
@@ -1242,15 +1242,15 @@ if (!function_exists('vms_ticketing_claims_handle_create_grant')) {
 			exit;
 		}
 
-		$user_id = vms_request_read_absint($_POST, 'user_id');
-		$user_identity = vms_request_read_text_field($_POST, 'user_identity');
+		$user_id = bvmgr_request_read_absint($_POST, 'user_id');
+		$user_identity = bvmgr_request_read_text_field($_POST, 'user_identity');
 		$user = vms_ticketing_claims_resolve_user($user_identity, $user_id);
 		if (!($user instanceof WP_User)) {
 			wp_safe_redirect(vms_ticketing_claims_event_edit_url($event_plan_id, array('vms_claim_notice' => 'user_not_found')));
 			exit;
 		}
 
-		$ticket_product_id = vms_request_read_absint($_POST, 'ticket_product_id');
+		$ticket_product_id = bvmgr_request_read_absint($_POST, 'ticket_product_id');
 		$ticket_key = '';
 		if ($ticket_product_id > 0) {
 			$ticket_key = sanitize_key((string) get_post_meta($ticket_product_id, '_vms_ticket_key', true));
@@ -1259,7 +1259,7 @@ if (!function_exists('vms_ticketing_claims_handle_create_grant')) {
 			}
 		}
 
-		$grant_type = vms_request_read_key($_POST, 'grant_type');
+		$grant_type = bvmgr_request_read_key($_POST, 'grant_type');
 		if ($grant_type === '') {
 			$grant_type = 'event_grant';
 		}
@@ -1269,8 +1269,8 @@ if (!function_exists('vms_ticketing_claims_handle_create_grant')) {
 		if (!in_array($grant_type, $allowed_grant_types, true)) {
 			$grant_type = 'event_grant';
 		}
-		$credential_program = vms_request_read_key($_POST, 'credential_program');
-		$initial_status = vms_request_read_key($_POST, 'initial_status');
+		$credential_program = bvmgr_request_read_key($_POST, 'credential_program');
+		$initial_status = bvmgr_request_read_key($_POST, 'initial_status');
 		if ($initial_status === '') {
 			$initial_status = 'active';
 		}
@@ -1280,18 +1280,18 @@ if (!function_exists('vms_ticketing_claims_handle_create_grant')) {
 		if (!in_array($initial_status, $allowed_statuses, true)) {
 			$initial_status = 'active';
 		}
-		$expiration_behavior = vms_request_read_key($_POST, 'expiration_behavior');
+		$expiration_behavior = bvmgr_request_read_key($_POST, 'expiration_behavior');
 		if ($expiration_behavior === '') {
 			$expiration_behavior = 'none';
 		}
 		if (!in_array($expiration_behavior, array('none', 'event_end'), true)) {
 			$expiration_behavior = 'none';
 		}
-		$qty_limit = max(0, vms_request_read_absint($_POST, 'qty_limit'));
+		$qty_limit = max(0, bvmgr_request_read_absint($_POST, 'qty_limit'));
 		if ($qty_limit <= 0) {
 			$qty_limit = 1;
 		}
-		$note = vms_request_read_text_field($_POST, 'note');
+		$note = bvmgr_request_read_text_field($_POST, 'note');
 
 		$grant_id = function_exists('vms_ticketing_claims_create_direct_grant')
 			? vms_ticketing_claims_create_direct_grant(array(
@@ -1360,7 +1360,7 @@ if (!function_exists('vms_ticketing_claims_handle_update_grant_note')) {
 			exit;
 		}
 
-		$note = vms_request_read_text_field($_POST, 'note');
+		$note = bvmgr_request_read_text_field($_POST, 'note');
 		$ok = function_exists('vms_ticketing_claims_update_direct_grant_note')
 			? vms_ticketing_claims_update_direct_grant_note($grant_id, $note, get_current_user_id())
 			: false;
@@ -1413,7 +1413,7 @@ if (!function_exists('vms_ticketing_claims_handle_set_grant_status')) {
 			exit;
 		}
 
-		$new_status = vms_request_read_key($_POST, 'new_status');
+		$new_status = bvmgr_request_read_key($_POST, 'new_status');
 		$allowed_statuses = function_exists('vms_ticketing_claims_allowed_grant_statuses')
 			? (array) vms_ticketing_claims_allowed_grant_statuses()
 			: array('active', 'reserved', 'used', 'expired', 'revoked');

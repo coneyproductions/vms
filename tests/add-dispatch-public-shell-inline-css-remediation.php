@@ -132,7 +132,7 @@ function add_query_arg($key, $value = '', $url = '')
 
 	return $rebuilt;
 }
-function vms_asset_version(): string { return (string) $GLOBALS['vms_test_asset_version']; }
+function bvmgr_asset_version(): string { return (string) $GLOBALS['vms_test_asset_version']; }
 
 require_once dirname(__DIR__) . '/includes/modules/availability-date-dispatch/public.php';
 

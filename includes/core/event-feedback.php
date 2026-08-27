@@ -813,9 +813,9 @@ if (!function_exists('vms_feedback_request_hash')) {
 	{
 		$ip = '';
 		foreach (array(
-			vms_request_server_value('HTTP_CF_CONNECTING_IP'),
-			vms_request_server_value('HTTP_X_FORWARDED_FOR'),
-			vms_request_server_value('REMOTE_ADDR'),
+			bvmgr_request_server_value('HTTP_CF_CONNECTING_IP'),
+			bvmgr_request_server_value('HTTP_X_FORWARDED_FOR'),
+			bvmgr_request_server_value('REMOTE_ADDR'),
 		) as $raw) {
 			if ($raw === '') {
 				continue;
@@ -823,8 +823,8 @@ if (!function_exists('vms_feedback_request_hash')) {
 			$ip = trim(explode(',', $raw)[0]);
 			break;
 		}
-		$user_agent = substr(vms_request_server_value('HTTP_USER_AGENT'), 0, 255);
-		$language = substr(vms_request_server_value('HTTP_ACCEPT_LANGUAGE'), 0, 80);
+		$user_agent = substr(bvmgr_request_server_value('HTTP_USER_AGENT'), 0, 255);
+		$language = substr(bvmgr_request_server_value('HTTP_ACCEPT_LANGUAGE'), 0, 80);
 		$salt = function_exists('wp_salt') ? wp_salt('logged_in') : (defined('LOGGED_IN_SALT') ? LOGGED_IN_SALT : 'vms-feedback-request');
 		return substr(hash_hmac('sha256', strtolower($ip) . '|' . $user_agent . '|' . $language, $salt), 0, 32);
 	}

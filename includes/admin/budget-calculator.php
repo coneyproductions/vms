@@ -216,7 +216,7 @@ function vms_budget_post_array(string $key): array
 
 function vms_budget_request_method(): string
 {
-  $method = vms_request_server_value('REQUEST_METHOD');
+  $method = bvmgr_request_server_value('REQUEST_METHOD');
   if ($method === '') {
     return '';
   }

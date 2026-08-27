@@ -333,7 +333,7 @@
  
  			$created = wp_insert_term($label, 'vms_vendor_type', ['slug' => $slug]);
  			if (is_wp_error($created)) {
-				vms_record_operational_issue(
+				bvmgr_record_operational_issue(
 					'vendor_type_default_term_ensure_failed',
 					array(
 						'service' => 'vendor_taxonomy',
@@ -426,7 +426,7 @@
  
  				$deleted = wp_delete_term((int) $term->term_id, 'vms_vendor_type');
  				if (is_wp_error($deleted)) {
-					vms_record_operational_issue(
+					bvmgr_record_operational_issue(
 						'vendor_type_duplicate_term_delete_failed',
 						array(
 							'service' => 'vendor_taxonomy',

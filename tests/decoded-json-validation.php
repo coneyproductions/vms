@@ -196,7 +196,7 @@ if (!class_exists('WP_REST_Request')) {
 				return true;
 			}
 
-			$decoded = vms_json_decode_associative($this->body, 32);
+			$decoded = bvmgr_json_decode_associative($this->body, 32);
 			if (empty($decoded['ok'])) {
 				return new WP_Error(
 					'rest_invalid_json',
@@ -333,13 +333,13 @@ require dirname(__DIR__) . '/includes/integrations/ticketing-claims-customer.php
 require dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php';
 require dirname(__DIR__) . '/includes/rest/class-vms-rest-tours.php';
 
-$decodedObject = vms_json_decode_associative('{"ok":true}', 8);
+$decodedObject = bvmgr_json_decode_associative('{"ok":true}', 8);
 $assert(!empty($decodedObject['ok']), 'Expected object JSON to decode successfully.');
-$assert(vms_json_decoded_is_object((array) $decodedObject['value'], (string) ($decodedObject['top_level_token'] ?? '')), 'Expected top-level object detection to succeed.');
+$assert(bvmgr_json_decoded_is_object((array) $decodedObject['value'], (string) ($decodedObject['top_level_token'] ?? '')), 'Expected top-level object detection to succeed.');
 
-$decodedList = vms_json_decode_associative('[1,2,3]', 8);
+$decodedList = bvmgr_json_decode_associative('[1,2,3]', 8);
 $assert(!empty($decodedList['ok']), 'Expected list JSON to decode successfully.');
-$assert(vms_json_decoded_is_list((array) $decodedList['value'], (string) ($decodedList['top_level_token'] ?? '')), 'Expected top-level list detection to succeed.');
+$assert(bvmgr_json_decoded_is_list((array) $decodedList['value'], (string) ($decodedList['top_level_token'] ?? '')), 'Expected top-level list detection to succeed.');
 
 $assert(
 	vms_pass_claims_decode_venue_ids_json('[4,"2",4,0]') === array(2, 4),

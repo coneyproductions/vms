@@ -368,14 +368,14 @@ try {
 			return $type_slug === 'market_vendor' ? 4 : 1;
 		}
 	}
-	if (!function_exists('vms_help_is_enabled')) {
-		function vms_help_is_enabled(): bool
+	if (!function_exists('bvmgr_help_is_enabled')) {
+		function bvmgr_help_is_enabled(): bool
 		{
 			return true;
 		}
 	}
-	if (!function_exists('vms_help_icon')) {
-		function vms_help_icon(string $text): void
+	if (!function_exists('bvmgr_help_icon')) {
+		function bvmgr_help_icon(string $text): void
 		{
 			unset($text);
 		}

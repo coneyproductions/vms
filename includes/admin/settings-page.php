@@ -268,8 +268,8 @@ function vms_handle_sync_entitlement_images(): void
 	);
 	if (function_exists('vms_entitlements_sync_image_log')) {
 		vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
-	} elseif (function_exists('vms_record_operational_issue')) {
-		vms_record_operational_issue('entitlement_image_sync_backfill_completed', $operational_context);
+	} elseif (function_exists('bvmgr_record_operational_issue')) {
+		bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed', $operational_context);
 	}
 
 	wp_safe_redirect(add_query_arg(array(
@@ -731,8 +731,8 @@ function vms_sanitize_settings($input)
 	    if (!is_string($raw)) return array();
 	    $raw = trim($raw);
 	    if ($raw === '') return array();
-	    $decoded = vms_json_decode_associative($raw, 16);
-	    if (!empty($decoded['ok']) && is_array($decoded['value']) && vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))) {
+	    $decoded = bvmgr_json_decode_associative($raw, 16);
+	    if (!empty($decoded['ok']) && is_array($decoded['value']) && bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))) {
 	      return $decoded['value'];
 	    }
 	    $out = array();
@@ -1755,7 +1755,7 @@ if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
 function vms_render_settings_page_notices(): void
 {
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only settings notice state only affects admin feedback.
-  if (vms_request_read_key($_GET, 'vms_notice') === 'default_venue_set') {
+  if (bvmgr_request_read_key($_GET, 'vms_notice') === 'default_venue_set') {
     echo '<div class="notice notice-success"><p>' . esc_html__('Default venue updated.', 'backstage-venue-manager') . '</p></div>';
   }
 }
@@ -1833,20 +1833,20 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
     ? (!empty($settings['ticket_ui_help_addons_enabled']) ? 1 : 0)
     : 1;
   $ticket_help_tickets_default = isset($settings['ticket_ui_help_tickets_default']) ? trim((string) $settings['ticket_ui_help_tickets_default']) : '';
-  if ($ticket_help_tickets_default === '' && function_exists('vms_ticketing_ui_help_default_text')) {
-    $ticket_help_tickets_default = wpautop(esc_html((string) vms_ticketing_ui_help_default_text('tickets')));
+  if ($ticket_help_tickets_default === '' && function_exists('bvmgr_ticketing_ui_help_default_text')) {
+    $ticket_help_tickets_default = wpautop(esc_html((string) bvmgr_ticketing_ui_help_default_text('tickets')));
   }
   $ticket_help_addons_default = isset($settings['ticket_ui_help_addons_default']) ? trim((string) $settings['ticket_ui_help_addons_default']) : '';
-  if ($ticket_help_addons_default === '' && function_exists('vms_ticketing_ui_help_default_text')) {
-    $ticket_help_addons_default = wpautop(esc_html((string) vms_ticketing_ui_help_default_text('addons')));
+  if ($ticket_help_addons_default === '' && function_exists('bvmgr_ticketing_ui_help_default_text')) {
+    $ticket_help_addons_default = wpautop(esc_html((string) bvmgr_ticketing_ui_help_default_text('addons')));
   }
   $ticket_ui_addons_heading = isset($settings['ticket_ui_addons_heading']) ? trim(html_entity_decode((string) $settings['ticket_ui_addons_heading'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
   if ($ticket_ui_addons_heading === '') {
-    $ticket_ui_addons_heading = function_exists('vms_ticketing_ui_addons_section_heading_default') ? vms_ticketing_ui_addons_section_heading_default() : 'Fire Pits & Tables';
+    $ticket_ui_addons_heading = function_exists('bvmgr_ticketing_ui_addons_section_heading_default') ? bvmgr_ticketing_ui_addons_section_heading_default() : 'Fire Pits & Tables';
   }
   $ticket_ui_addons_subtext = isset($settings['ticket_ui_addons_subtext']) ? trim(html_entity_decode((string) $settings['ticket_ui_addons_subtext'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
   if ($ticket_ui_addons_subtext === '') {
-    $ticket_ui_addons_subtext = function_exists('vms_ticketing_ui_addons_section_subtext_default') ? vms_ticketing_ui_addons_section_subtext_default() : 'Click here to add a fire pit or table to your order.';
+    $ticket_ui_addons_subtext = function_exists('bvmgr_ticketing_ui_addons_section_subtext_default') ? bvmgr_ticketing_ui_addons_section_subtext_default() : 'Click here to add a fire pit or table to your order.';
   }
 
   echo '<h2 class="vms-mt-24">' . esc_html__('Ticketing', 'backstage-venue-manager') . '</h2>';
@@ -2434,7 +2434,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   echo '<h2>Public Pages</h2>';
   echo '<p class="description">Backstage Venue Manager uses these pages for vendors and staff. If any are missing, you can repair them here.</p>';
 
-  $pages = vms_required_public_pages();
+  $pages = bvmgr_required_public_pages();
 
   echo '<div class="vms-card-wide">';
   echo '<table class="widefat striped vms-mt-10">';
@@ -2489,7 +2489,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   echo '</p>';
 
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only settings notice state only affects admin feedback.
-			if (vms_request_read_scalar($_GET, 'vms_entitlement_image_sync_done') === '1') {
+			if (bvmgr_request_read_scalar($_GET, 'vms_entitlement_image_sync_done') === '1') {
 			$img_sync = get_transient('vms_entitlement_image_sync_last');
 			if (is_array($img_sync)) {
 				$ts_readable = wp_date('Y-m-d H:i', (int) ($img_sync['ts'] ?? 0), wp_timezone());
@@ -2601,9 +2601,9 @@ function vms_get_settings_page_ticketing_stock_notice_state(bool $refresh = fals
     : 'vms_ticketing_stock_preview_' . max(1, get_current_user_id());
 
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only ticketing-stock notice state only affects admin messaging.
-  $preview_done = (vms_request_read_scalar($_GET, 'vms_ticketing_stock_preview_done') === '1');
+  $preview_done = (bvmgr_request_read_scalar($_GET, 'vms_ticketing_stock_preview_done') === '1');
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only ticketing-stock notice state only affects admin messaging.
-  $commit_done = (vms_request_read_scalar($_GET, 'vms_ticketing_stock_commit_done') === '1');
+  $commit_done = (bvmgr_request_read_scalar($_GET, 'vms_ticketing_stock_commit_done') === '1');
 
   $state = array(
     'preview_done' => $preview_done,
@@ -2905,7 +2905,7 @@ function vms_get_settings_page_integrity_scan_result_context(bool $refresh = fal
   }
 
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity-scan notice state only affects admin messaging.
-  $scan_done_requested = (vms_request_read_scalar($_GET, 'vms_scan_done') === '1');
+  $scan_done_requested = (bvmgr_request_read_scalar($_GET, 'vms_scan_done') === '1');
   $stored_result = $scan_done_requested ? get_transient('vms_integrity_scan_last') : false;
   $context = vms_build_settings_page_integrity_scan_result_context($stored_result, $scan_done_requested);
 

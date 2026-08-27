@@ -219,12 +219,12 @@ function vms_vendor_app_confirmation_endpoint_url(array $args = array()): string
 	return 'https://example.test/availability-dispatch/confirm?' . http_build_query($args);
 }
 
-function vms_request_remote_addr(): string
+function bvmgr_request_remote_addr(): string
 {
 	return '203.0.113.9';
 }
 
-function vms_request_user_agent(): string
+function bvmgr_request_user_agent(): string
 {
 	return 'Repository Test Agent';
 }
@@ -466,7 +466,7 @@ vms_same(4, substr_count($source, 'WordPress.DB.SlowDBQuery.slow_db_query_meta_q
 vms_same(9, substr_count($source, 'WordPress.DB.DirectDatabaseQuery.DirectQuery'), 'Each direct custom-table operation branch should have one narrow annotation.');
 vms_same(8, substr_count($source, 'WordPress.DB.DirectDatabaseQuery.NoCaching'), 'Each request-fresh custom-table operation branch should have one narrow no-cache annotation.');
 vms_same(0, substr_count($source, 'error_log('), 'The deferred G16 logging row should be migrated without suppression.');
-vms_same(1, substr_count($source, "vms_record_operational_issue('vendor_app_review_ready_mail_failed'"), 'The G16 mail-failure event should occur exactly once.');
+vms_same(1, substr_count($source, "bvmgr_record_operational_issue('vendor_app_review_ready_mail_failed'"), 'The G16 mail-failure event should occur exactly once.');
 vms_contains("'post_id'     => \$app_id", $source, 'The mail-failure event should retain only the safe application identity.');
 vms_assert(strpos($source, "error_log('[VMS] vendor-apply: review-ready admin notification failed") === false, 'The historical raw server-log sink should be absent.');
 vms_assert(strpos($source, 'phpcs:disable') === false && strpos($source, 'phpcs:ignoreFile') === false, 'Repository remediation should not use blanket suppression.');

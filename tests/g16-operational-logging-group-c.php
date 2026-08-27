@@ -188,7 +188,7 @@ g16c_same(0, substr_count(g16c_extract_function($g16c_phase, 'vms_entitlements_s
 
 $g16c_settings_handler = g16c_extract_function($g16c_sources['mirror']['settings'], 'vms_handle_sync_entitlement_images');
 g16c_assert(strpos($g16c_settings_handler, "vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'") !== false, 'Settings must prefer the PhaseB wrapper.');
-g16c_assert(strpos($g16c_settings_handler, "vms_record_operational_issue('entitlement_image_sync_backfill_completed'") !== false, 'Settings must fall back to the foundation adapter.');
+g16c_assert(strpos($g16c_settings_handler, "bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed'") !== false, 'Settings must fall back to the foundation adapter.');
 g16c_assert(strpos($g16c_settings_handler, "'count' => (int) \$summary['errors']") !== false, 'Settings must retain only the bounded error count.');
 g16c_same(0, substr_count($g16c_settings_handler, 'error_log('), 'Settings must not retain a direct fallback.');
 $g16c_transient = strpos($g16c_settings_handler, "set_transient('vms_entitlement_image_sync_last'");
@@ -197,7 +197,7 @@ $g16c_redirect = strpos($g16c_settings_handler, 'wp_safe_redirect(');
 g16c_assert($g16c_transient !== false && $g16c_record !== false && $g16c_redirect !== false && $g16c_transient < $g16c_record && $g16c_record < $g16c_redirect, 'Settings must preserve transient -> record -> redirect order.');
 
 $g16c_notify = g16c_extract_function($g16c_sources['mirror']['notifications'], 'vms_notify_insert_log');
-g16c_same(1, substr_count($g16c_notify, 'vms_record_operational_issue('), 'Notification failure must try the adapter exactly once.');
+g16c_same(1, substr_count($g16c_notify, 'bvmgr_record_operational_issue('), 'Notification failure must try the adapter exactly once.');
 g16c_same(2, substr_count($g16c_notify, 'notification_log_insert_failed'), 'Notification fixed event must appear only in adapter and fallback payloads.');
 g16c_assert(strpos($g16c_notify, "if (!\$recorded && function_exists('error_log'))") !== false, 'Notification fallback must require adapter false and an available direct logger.');
 g16c_same(0, substr_count($g16c_notify, 'last_error'), 'Notification fallback must not retain database errors.');
@@ -210,7 +210,7 @@ $g16c_option = strpos($g16c_shutdown, 'vms_ticket_integrity_log_event(');
 $g16c_final = strpos($g16c_shutdown, "['finalized'] = true");
 g16c_assert($g16c_direct !== false && $g16c_state !== false && $g16c_option !== false && $g16c_final !== false && $g16c_direct < $g16c_state && $g16c_state < $g16c_option && $g16c_option < $g16c_final, 'Ticket fatal order must remain direct -> state -> option -> finalized.');
 g16c_assert(strpos($g16c_shutdown, "if (function_exists('error_log'))") !== false, 'Ticket fatal fallback must remain safe when error_log is disabled.');
-g16c_same(0, substr_count($g16c_shutdown, 'vms_record_operational_issue('), 'Ticket option log must remain the sole structured sink.');
+g16c_same(0, substr_count($g16c_shutdown, 'bvmgr_record_operational_issue('), 'Ticket option log must remain the sole structured sink.');
 foreach (array('fatal_message', 'fatal_file', 'context=%', 'message=%', 'file=%') as $forbidden) {
 	g16c_same(0, substr_count($g16c_shutdown, $forbidden), 'Ticket direct boundary leaked forbidden field: ' . $forbidden);
 }
@@ -606,7 +606,7 @@ g16c_same(array('state', 'option'), $GLOBALS['g16c_order'], 'Disabled error_log 
 
 $GLOBALS['g16c_adapter_result'] = true;
 $GLOBALS['g16c_adapter_calls'] = array();
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$GLOBALS['g16c_adapter_calls'][] = array($event_code, $context, $error);
 	return (bool) $GLOBALS['g16c_adapter_result'];

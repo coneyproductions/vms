@@ -39,6 +39,23 @@ try {
 	$freshWaves = BVMGR_WPORG_Prefix_B3_Waves::build($map, $graph);
 	$assert(BVMGR_WPORG_Prefix_B3::render($waves) === BVMGR_WPORG_Prefix_B3::render($freshWaves), 'B3 wave plan must exactly match the frozen map and graph.');
 	$assert(($waves['counts'] ?? array()) === array('waves' => 11, 'unique_functions' => 4521, 'declaration_sites' => 4541, 'duplicate_families' => 20), 'B3 wave plan must reconcile all authorized totals.');
+	$w3Functions = array();
+	foreach ((array) ($waves['waves'] ?? array()) as $wave) {
+		if (($wave['wave'] ?? '') === 'W3') {
+			$w3Functions = (array) ($wave['legacy_functions'] ?? array());
+		}
+	}
+	$literalDecisions = BVMGR_WPORG_Prefix_B3::literalDecisionIndex($root, $map, $w3Functions, true);
+	$assert(($literalDecisions['selected_counts'] ?? array()) === array('rename' => 13, 'retain' => 30), 'W3 must classify all 43 frozen exact-only literals as 13 function identities and 30 retained contracts.');
+	$literalArtifact = BVMGR_WPORG_Prefix_B3::loadJson($root . '/' . BVMGR_WPORG_Prefix_B3::LITERAL_DECISIONS_PATH);
+	foreach ((array) ($literalArtifact['decisions'] ?? array()) as $decision) {
+		$legacy = (string) ($decision['legacy_identifier'] ?? '');
+		$canonical = 'bvmgr_' . substr($legacy, 4);
+		$expected = ($decision['decision'] ?? '') === 'rename' && ($progress['function_states'][$legacy] ?? '') === 'migrated' ? $canonical : $legacy;
+		$lines = file($root . '/' . (string) ($decision['file'] ?? '')) ?: array();
+		$line = (string) ($lines[(int) ($decision['line'] ?? 0) - 1] ?? '');
+		$assert(str_contains($line, "'" . $expected . "'") || str_contains($line, '"' . $expected . '"'), 'B3 exact-literal decision must resolve to its current expected identity: ' . $legacy . ' at ' . ($decision['file'] ?? '') . ':' . ($decision['line'] ?? 0));
+	}
 } catch (Throwable $exception) {
 	$failures[] = $exception->getMessage();
 }

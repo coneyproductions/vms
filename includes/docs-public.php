@@ -1,24 +1,24 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
-add_action('wp_enqueue_scripts', 'vms_docs_public_assets', 15);
+add_action('wp_enqueue_scripts', 'bvmgr_docs_public_assets', 15);
 
-function vms_docs_public_assets() {
+function bvmgr_docs_public_assets() {
     if (!get_query_var('vms_doc_module')) {
         return;
     }
 
-    vms_enqueue_public_style_stack();
-    vms_enqueue_style_asset(
+    bvmgr_enqueue_public_style_stack();
+    bvmgr_enqueue_style_asset(
         'vms-docs-public',
         'assets/css/docs-public.css',
         array('vms-ui')
     );
 }
 
-add_action('init', 'vms_docs_register_rewrite');
+add_action('init', 'bvmgr_docs_register_rewrite');
 
-function vms_docs_register_rewrite() {
+function bvmgr_docs_register_rewrite() {
     add_rewrite_rule(
         '^docs/vms/([^/]+)/([^/]+)/?$',
         'index.php?vms_doc_module=$matches[1]&vms_doc_slug=$matches[2]',
@@ -38,9 +38,9 @@ add_filter('query_vars', function($vars) {
     return $vars;
 });
 
-add_action('template_redirect', 'vms_docs_public_render');
+add_action('template_redirect', 'bvmgr_docs_public_render');
 
-function vms_docs_public_render() {
+function bvmgr_docs_public_render() {
     $module = get_query_var('vms_doc_module');
     $slug   = get_query_var('vms_doc_slug');
 
@@ -77,9 +77,9 @@ function vms_docs_public_render() {
         echo '<p class="vms-docs-meta">Applies since v' . esc_html($doc['since']) . '</p>';
     }
 
-    $md = vms_docs_get_markdown($doc['file']);
-    $rendered_markdown = vms_docs_render_markdown($md);
-    echo wp_kses($rendered_markdown, vms_docs_rendered_allowed_html());
+    $md = bvmgr_docs_get_markdown($doc['file']);
+    $rendered_markdown = bvmgr_docs_render_markdown($md);
+    echo wp_kses($rendered_markdown, bvmgr_docs_rendered_allowed_html());
 
     echo '</main>';
 

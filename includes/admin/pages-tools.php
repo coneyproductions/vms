@@ -16,7 +16,7 @@ add_action('admin_post_vms_repair_pages', function () {
     // IMPORTANT: do not output anything in this handler.
     // No echo/print/var_dump, no stray whitespace outside <?php tags.
 
-    $pages = function_exists('vms_required_public_pages') ? vms_required_public_pages() : [];
+    $pages = function_exists('bvmgr_required_public_pages') ? bvmgr_required_public_pages() : [];
     $created = 0;
     $restored = 0;
     $ok = 0;

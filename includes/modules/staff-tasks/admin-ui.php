@@ -393,8 +393,8 @@ if (!function_exists('vms_tasks_admin_scope_label')) {
 if (!function_exists('vms_tasks_admin_sanitize_anchor_token')) {
 	function vms_tasks_admin_sanitize_anchor_token(string $anchor): string
 	{
-		if (function_exists('vms_tours_sanitize_anchor_token')) {
-			return vms_tours_sanitize_anchor_token($anchor);
+		if (function_exists('bvmgr_tours_sanitize_anchor_token')) {
+			return bvmgr_tours_sanitize_anchor_token($anchor);
 		}
 		$anchor = strtolower(trim($anchor));
 		if ($anchor === '') {
@@ -561,14 +561,14 @@ if (!function_exists('vms_tasks_admin_register_menu')) {
 	if (!function_exists('vms_tasks_admin_menu_fallback_capability')) {
 		function vms_tasks_admin_menu_fallback_capability(): string
 		{
-			if (function_exists('vms_admin_ui_data_tools_capability')) {
-				$cap = sanitize_text_field((string) vms_admin_ui_data_tools_capability());
+			if (function_exists('bvmgr_admin_ui_data_tools_capability')) {
+				$cap = sanitize_text_field((string) bvmgr_admin_ui_data_tools_capability());
 				if ($cap !== '') {
 					return $cap;
 				}
 			}
-			if (function_exists('vms_admin_ui_ops_capability')) {
-				$cap = sanitize_text_field((string) vms_admin_ui_ops_capability());
+			if (function_exists('bvmgr_admin_ui_ops_capability')) {
+				$cap = sanitize_text_field((string) bvmgr_admin_ui_ops_capability());
 				if ($cap !== '') {
 					return $cap;
 				}

@@ -48,8 +48,8 @@ if (!function_exists('vms_event_plan_import_enqueue_assets')) {
 			return;
 		}
 
-		$version = function_exists('vms_asset_version')
-			? vms_asset_version()
+		$version = function_exists('bvmgr_asset_version')
+			? bvmgr_asset_version()
 			: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 		wp_enqueue_script(

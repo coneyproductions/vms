@@ -930,7 +930,7 @@ class BVMGR_Admin_Event_Plans
                 $secondary_mode_options,
                 $type_pool_map
             ),
-            'help_enabled' => function_exists('vms_help_is_enabled') && vms_help_is_enabled(),
+            'help_enabled' => function_exists('bvmgr_help_is_enabled') && bvmgr_help_is_enabled(),
             'vendor_category_rows' => $vendor_category_rows,
             'vendor_category_names' => $vendor_category_names,
         );
@@ -1053,8 +1053,8 @@ class BVMGR_Admin_Event_Plans
                 <p class="description vms-secondary-vendor-legend">
                     <?php
                     echo esc_html__('Availability guide: [✓] Available, [✖] Not Available, [?] Unknown. Qualification guide: [Q✓] Qualified, [Q⚠] Needs attention.', 'backstage-venue-manager');
-                    if (function_exists('vms_help_icon')) {
-                        vms_help_icon(__('“[Q⚠] Needs attention” means this vendor is missing required profile items (usually phone or email).', 'backstage-venue-manager'));
+                    if (function_exists('bvmgr_help_icon')) {
+                        bvmgr_help_icon(__('“[Q⚠] Needs attention” means this vendor is missing required profile items (usually phone or email).', 'backstage-venue-manager'));
                     }
                     ?>
                 </p>
@@ -1767,7 +1767,7 @@ class BVMGR_Admin_Event_Plans
                 $secondary_mode_options,
                 $type_pool_map
             ),
-            'help_enabled' => function_exists('vms_help_is_enabled') && vms_help_is_enabled(),
+            'help_enabled' => function_exists('bvmgr_help_is_enabled') && bvmgr_help_is_enabled(),
             'vendor_category_rows' => $vendor_category_rows,
             'vendor_category_names' => $vendor_category_names,
         );
@@ -1890,8 +1890,8 @@ class BVMGR_Admin_Event_Plans
                 <p class="description vms-secondary-vendor-legend">
                     <?php
                     echo esc_html__('Availability guide: [✓] Available, [✖] Not Available, [?] Unknown. Qualification guide: [Q✓] Qualified, [Q⚠] Needs attention.', 'backstage-venue-manager');
-                    if (function_exists('vms_help_icon')) {
-                        vms_help_icon(__('“[Q⚠] Needs attention” means this vendor is missing required profile items (usually phone or email).', 'backstage-venue-manager'));
+                    if (function_exists('bvmgr_help_icon')) {
+                        bvmgr_help_icon(__('“[Q⚠] Needs attention” means this vendor is missing required profile items (usually phone or email).', 'backstage-venue-manager'));
                     }
                     ?>
                 </p>
@@ -2664,8 +2664,8 @@ class BVMGR_Admin_Event_Plans
             $plan_id,
             $cache_key,
             static function () use ($vendor_id): array {
-                $missing = function_exists('vms_vendor_tax_profile_missing_items')
-                    ? (array) vms_vendor_tax_profile_missing_items($vendor_id)
+                $missing = function_exists('bvmgr_vendor_tax_profile_missing_items')
+                    ? (array) bvmgr_vendor_tax_profile_missing_items($vendor_id)
                     : array();
                 $bypass = function_exists('vms_get_tax_bypass_status')
                     ? (array) vms_get_tax_bypass_status($vendor_id)
@@ -3002,8 +3002,8 @@ class BVMGR_Admin_Event_Plans
             function () use ($plan_id): array {
                 $bundle = $this->get_event_plan_meta_bundle($plan_id);
                 $linked_tec = $this->get_event_plan_linked_tec_summary($plan_id);
-                $ticketing_effective = function_exists('vms_event_plan_is_ticketing_enabled')
-                    ? (bool) vms_event_plan_is_ticketing_enabled($plan_id)
+                $ticketing_effective = function_exists('bvmgr_event_plan_is_ticketing_enabled')
+                    ? (bool) bvmgr_event_plan_is_ticketing_enabled($plan_id)
                     : true;
                 $cfg = isset($bundle['ticketing_v2_config']) && is_array($bundle['ticketing_v2_config']) ? $bundle['ticketing_v2_config'] : array();
                 $sync = isset($bundle['ticketing_v2_sync']) && is_array($bundle['ticketing_v2_sync']) ? $bundle['ticketing_v2_sync'] : array();
@@ -4194,11 +4194,11 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_success(array('row' => array()));
         }
 
-        if (!function_exists('vms_get_event_plan_effective_comp_default')) {
+        if (!function_exists('bvmgr_get_event_plan_effective_comp_default')) {
             wp_send_json_error(array('message' => 'Effective default helper not loaded'), 500);
         }
 
-        $resolved = (array) vms_get_event_plan_effective_comp_default($venue_id, $event_date);
+        $resolved = (array) bvmgr_get_event_plan_effective_comp_default($venue_id, $event_date);
         $row = array();
         $has_default = !empty($resolved['has_default']);
         $structure = isset($resolved['structure']) ? sanitize_key((string) $resolved['structure']) : '';
@@ -4251,11 +4251,11 @@ class BVMGR_Admin_Event_Plans
         $vendor_id  = isset($_POST['vendor_id']) ? absint($_POST['vendor_id']) : 0;
         $event_date = isset($_POST['event_date']) ? sanitize_text_field(wp_unslash($_POST['event_date'])) : '';
 
-        if (!function_exists('vms_get_event_plan_comp_options')) {
+        if (!function_exists('bvmgr_get_event_plan_comp_options')) {
             wp_send_json_error(array('message' => 'Comp options helper not loaded'), 500);
         }
 
-        $opts = vms_get_event_plan_comp_options($venue_id, $event_date, $vendor_id);
+        $opts = bvmgr_get_event_plan_comp_options($venue_id, $event_date, $vendor_id);
         $opts['_venue_selected'] = ($venue_id > 0);
         $opts['_date_selected'] = (!empty($event_date));
         $selected_opt = isset($_POST['selected_opt']) ? sanitize_text_field(wp_unslash($_POST['selected_opt'])) : '';
@@ -6092,7 +6092,7 @@ class BVMGR_Admin_Event_Plans
         }
 
         $render_tax_badge = function (int $sid): string {
-            $missing = function_exists('vms_vendor_tax_profile_missing_items') ? (array) vms_vendor_tax_profile_missing_items($sid) : array();
+            $missing = function_exists('bvmgr_vendor_tax_profile_missing_items') ? (array) bvmgr_vendor_tax_profile_missing_items($sid) : array();
             $tax_ok = empty($missing);
 
             $bypass_active = false;
@@ -6743,8 +6743,8 @@ class BVMGR_Admin_Event_Plans
 
     private function build_event_plan_staff_response_tax_badge_rows(int $staff_id): array
     {
-        $missing_items = function_exists('vms_vendor_tax_profile_missing_items')
-            ? (array) vms_vendor_tax_profile_missing_items($staff_id)
+        $missing_items = function_exists('bvmgr_vendor_tax_profile_missing_items')
+            ? (array) bvmgr_vendor_tax_profile_missing_items($staff_id)
             : array();
         if (empty($missing_items)) {
             return array(
@@ -7284,11 +7284,11 @@ class BVMGR_Admin_Event_Plans
         }
         $vms_show_vendor_default_drift_notice = ($vms_vendor_default_has_terms && !$vms_vendor_default_matches_draft);
         $vms_vendor_default_subtitle = isset($vms_vendor_default_tile['subtitle']) ? trim((string) $vms_vendor_default_tile['subtitle']) : '';
-        $vms_vendor_default_summary = function_exists('vms_snapshot_summary_line')
-            ? (string) vms_snapshot_summary_line($vms_vendor_default_terms)
+        $vms_vendor_default_summary = function_exists('bvmgr_snapshot_summary_line')
+            ? (string) bvmgr_snapshot_summary_line($vms_vendor_default_terms)
             : '';
-        $vms_actual_draft_summary = function_exists('vms_snapshot_summary_line')
-            ? (string) vms_snapshot_summary_line($vms_actual_terms)
+        $vms_actual_draft_summary = function_exists('bvmgr_snapshot_summary_line')
+            ? (string) bvmgr_snapshot_summary_line($vms_actual_terms)
             : '';
 
         $vms_format_comp_field_value = static function (string $field, array $terms) use ($vms_norm_num): string {
@@ -7326,12 +7326,12 @@ class BVMGR_Admin_Event_Plans
         $vms_vendor_default_source_rows = array();
         if ($selected_band_id > 0) {
             $vms_vendor_global_terms = array();
-            if (function_exists('vms_get_vendor_default_comp_package_id') && function_exists('vms_get_comp_package_terms')) {
-                $vms_vendor_package_id = (int) vms_get_vendor_default_comp_package_id($selected_band_id);
+            if (function_exists('bvmgr_get_vendor_default_comp_package_id') && function_exists('bvmgr_get_comp_package_terms')) {
+                $vms_vendor_package_id = (int) bvmgr_get_vendor_default_comp_package_id($selected_band_id);
                 if ($vms_vendor_package_id > 0) {
-                    $vms_vendor_global_terms = array_merge($vms_vendor_global_terms, (array) vms_get_comp_package_terms($vms_vendor_package_id));
-                    $vms_package_pct = function_exists('vms_normalize_agent_fee_percent') ? vms_normalize_agent_fee_percent(get_post_meta($vms_vendor_package_id, '_vms_commission_percent', true)) : null;
-                    $vms_package_mode = function_exists('vms_normalize_agent_fee_mode') ? vms_normalize_agent_fee_mode(get_post_meta($vms_vendor_package_id, '_vms_commission_mode', true)) : '';
+                    $vms_vendor_global_terms = array_merge($vms_vendor_global_terms, (array) bvmgr_get_comp_package_terms($vms_vendor_package_id));
+                    $vms_package_pct = function_exists('bvmgr_normalize_agent_fee_percent') ? bvmgr_normalize_agent_fee_percent(get_post_meta($vms_vendor_package_id, '_vms_commission_percent', true)) : null;
+                    $vms_package_mode = function_exists('bvmgr_normalize_agent_fee_mode') ? bvmgr_normalize_agent_fee_mode(get_post_meta($vms_vendor_package_id, '_vms_commission_mode', true)) : '';
                     if ($vms_package_pct !== null && $vms_package_pct > 0) {
                         $vms_vendor_global_terms['commission_percent'] = $vms_package_pct;
                         $vms_vendor_global_terms['commission_mode'] = ($vms_package_mode !== '') ? $vms_package_mode : 'artist_fee';
@@ -7360,33 +7360,33 @@ class BVMGR_Admin_Event_Plans
                 'attendance_bonus_per_ticket_rate' => get_post_meta($selected_band_id, $vms_vendor_bonus_per_ticket_key, true),
                 'attendance_bonus_max_bonus' => get_post_meta($selected_band_id, $vms_vendor_bonus_max_key, true),
             );
-            if (function_exists('vms_normalize_comp_terms')) {
-                $vms_vendor_global_meta_terms = (array) vms_normalize_comp_terms($vms_vendor_global_meta_terms);
+            if (function_exists('bvmgr_normalize_comp_terms')) {
+                $vms_vendor_global_meta_terms = (array) bvmgr_normalize_comp_terms($vms_vendor_global_meta_terms);
             }
             if (!empty($vms_vendor_global_meta_terms)) {
                 $vms_vendor_global_terms = array_merge($vms_vendor_global_terms, $vms_vendor_global_meta_terms);
             }
-            if (function_exists('vms_get_vendor_default_agent_fee_terms')) {
-                $vms_vendor_global_terms = array_merge($vms_vendor_global_terms, (array) vms_get_vendor_default_agent_fee_terms($selected_band_id));
+            if (function_exists('bvmgr_get_vendor_default_agent_fee_terms')) {
+                $vms_vendor_global_terms = array_merge($vms_vendor_global_terms, (array) bvmgr_get_vendor_default_agent_fee_terms($selected_band_id));
             }
-            if (function_exists('vms_normalize_comp_terms')) {
-                $vms_vendor_global_terms = (array) vms_normalize_comp_terms($vms_vendor_global_terms);
+            if (function_exists('bvmgr_normalize_comp_terms')) {
+                $vms_vendor_global_terms = (array) bvmgr_normalize_comp_terms($vms_vendor_global_terms);
             }
 
             $vms_vendor_venue_terms = array();
-            if ($venue_id_effective > 0 && function_exists('vms_get_vendor_default_comp_by_venue_map')) {
-                $vms_vendor_by_venue_map = (array) vms_get_vendor_default_comp_by_venue_map($selected_band_id);
+            if ($venue_id_effective > 0 && function_exists('bvmgr_get_vendor_default_comp_by_venue_map')) {
+                $vms_vendor_by_venue_map = (array) bvmgr_get_vendor_default_comp_by_venue_map($selected_band_id);
                 if (isset($vms_vendor_by_venue_map[$venue_id_effective]) && is_array($vms_vendor_by_venue_map[$venue_id_effective])) {
                     $vms_vendor_venue_terms = $vms_vendor_by_venue_map[$venue_id_effective];
-                    if (function_exists('vms_normalize_comp_terms')) {
-                        $vms_vendor_venue_terms = (array) vms_normalize_comp_terms($vms_vendor_venue_terms);
+                    if (function_exists('bvmgr_normalize_comp_terms')) {
+                        $vms_vendor_venue_terms = (array) bvmgr_normalize_comp_terms($vms_vendor_venue_terms);
                     }
                 }
             }
 
             $vms_vendor_venue_dow_terms = array();
-            if ($venue_id_effective > 0 && $event_date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date) && function_exists('vms_get_vendor_default_comp_by_venue_dow_map')) {
-                $vms_vendor_by_venue_dow_map = (array) vms_get_vendor_default_comp_by_venue_dow_map($selected_band_id);
+            if ($venue_id_effective > 0 && $event_date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date) && function_exists('bvmgr_get_vendor_default_comp_by_venue_dow_map')) {
+                $vms_vendor_by_venue_dow_map = (array) bvmgr_get_vendor_default_comp_by_venue_dow_map($selected_band_id);
                 if (isset($vms_vendor_by_venue_dow_map[$venue_id_effective]) && is_array($vms_vendor_by_venue_dow_map[$venue_id_effective])) {
                     $vms_tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
                     if (!$vms_tz instanceof DateTimeZone) {
@@ -7401,8 +7401,8 @@ class BVMGR_Admin_Event_Plans
                         $vms_dow = (int) $vms_dt->format('w');
                         if (isset($vms_vendor_by_venue_dow_map[$venue_id_effective][$vms_dow]) && is_array($vms_vendor_by_venue_dow_map[$venue_id_effective][$vms_dow])) {
                             $vms_vendor_venue_dow_terms = $vms_vendor_by_venue_dow_map[$venue_id_effective][$vms_dow];
-                            if (function_exists('vms_normalize_comp_terms')) {
-                                $vms_vendor_venue_dow_terms = (array) vms_normalize_comp_terms($vms_vendor_venue_dow_terms);
+                            if (function_exists('bvmgr_normalize_comp_terms')) {
+                                $vms_vendor_venue_dow_terms = (array) bvmgr_normalize_comp_terms($vms_vendor_venue_dow_terms);
                             }
                         }
                     }
@@ -7412,22 +7412,22 @@ class BVMGR_Admin_Event_Plans
             $vms_vendor_default_source_rows = array(
                 array(
                     'label' => __('Global vendor defaults', 'backstage-venue-manager'),
-                    'summary' => !empty($vms_vendor_global_terms) && function_exists('vms_snapshot_summary_line')
-                        ? (string) vms_snapshot_summary_line($vms_vendor_global_terms)
+                    'summary' => !empty($vms_vendor_global_terms) && function_exists('bvmgr_snapshot_summary_line')
+                        ? (string) bvmgr_snapshot_summary_line($vms_vendor_global_terms)
                         : __('Not configured', 'backstage-venue-manager'),
                     'is_active' => ($vms_vendor_default_subtitle === __('Global vendor defaults', 'backstage-venue-manager')),
                 ),
                 array(
                     'label' => __('Venue-specific defaults', 'backstage-venue-manager'),
-                    'summary' => !empty($vms_vendor_venue_terms) && function_exists('vms_snapshot_summary_line')
-                        ? (string) vms_snapshot_summary_line($vms_vendor_venue_terms)
+                    'summary' => !empty($vms_vendor_venue_terms) && function_exists('bvmgr_snapshot_summary_line')
+                        ? (string) bvmgr_snapshot_summary_line($vms_vendor_venue_terms)
                         : __('Not configured for this venue', 'backstage-venue-manager'),
                     'is_active' => ($vms_vendor_default_subtitle === __('Venue-specific defaults', 'backstage-venue-manager')),
                 ),
                 array(
                     'label' => __('Venue + day defaults', 'backstage-venue-manager'),
-                    'summary' => !empty($vms_vendor_venue_dow_terms) && function_exists('vms_snapshot_summary_line')
-                        ? (string) vms_snapshot_summary_line($vms_vendor_venue_dow_terms)
+                    'summary' => !empty($vms_vendor_venue_dow_terms) && function_exists('bvmgr_snapshot_summary_line')
+                        ? (string) bvmgr_snapshot_summary_line($vms_vendor_venue_dow_terms)
                         : __('Not configured for this venue/day', 'backstage-venue-manager'),
                     'is_active' => ($vms_vendor_default_subtitle === __('Venue + day defaults', 'backstage-venue-manager')),
                 ),
@@ -7627,8 +7627,8 @@ class BVMGR_Admin_Event_Plans
         $venue_id_effective = $venue_id_saved > 0 ? $venue_id_saved : $venue_id_ui;
 
         // Default times (use effective venue)
-        if ($venue_id_effective > 0 && (empty($start_time) || empty($end_time)) && function_exists('vms_get_venue_default_times')) {
-            $defaults = (array) vms_get_venue_default_times($venue_id_effective);
+        if ($venue_id_effective > 0 && (empty($start_time) || empty($end_time)) && function_exists('bvmgr_get_venue_default_times')) {
+            $defaults = (array) bvmgr_get_venue_default_times($venue_id_effective);
 
             if (empty($start_time) && !empty($defaults['start'])) {
                 $start_time = (string) $defaults['start'];
@@ -7636,8 +7636,8 @@ class BVMGR_Admin_Event_Plans
             if (empty($end_time)) {
                 if (!empty($defaults['end'])) {
                     $end_time = (string) $defaults['end'];
-                } elseif (!empty($start_time) && !empty($defaults['dur']) && function_exists('vms_time_add_minutes')) {
-                    $end_time = (string) vms_time_add_minutes($start_time, (int) $defaults['dur']);
+                } elseif (!empty($start_time) && !empty($defaults['dur']) && function_exists('bvmgr_time_add_minutes')) {
+                    $end_time = (string) bvmgr_time_add_minutes($start_time, (int) $defaults['dur']);
                 }
             }
         }
@@ -7681,54 +7681,54 @@ class BVMGR_Admin_Event_Plans
             $commission_mode = 'artist_fee';
         }
 
-        $deposit_terms = function_exists('vms_get_event_plan_deposit_terms')
-            ? (array) vms_get_event_plan_deposit_terms((int) $post->ID)
+        $deposit_terms = function_exists('bvmgr_get_event_plan_deposit_terms')
+            ? (array) bvmgr_get_event_plan_deposit_terms((int) $post->ID)
             : array();
         $deposit_amount = $deposit_terms['deposit_amount'] ?? '';
-        $deposit_status = function_exists('vms_normalize_comp_deposit_status')
-            ? vms_normalize_comp_deposit_status($deposit_terms['deposit_status'] ?? '')
+        $deposit_status = function_exists('bvmgr_normalize_comp_deposit_status')
+            ? bvmgr_normalize_comp_deposit_status($deposit_terms['deposit_status'] ?? '')
             : (string) ($deposit_terms['deposit_status'] ?? 'not_required');
-        $deposit_treatment = function_exists('vms_normalize_comp_deposit_treatment')
-            ? vms_normalize_comp_deposit_treatment($deposit_terms['deposit_treatment'] ?? '')
+        $deposit_treatment = function_exists('bvmgr_normalize_comp_deposit_treatment')
+            ? bvmgr_normalize_comp_deposit_treatment($deposit_terms['deposit_treatment'] ?? '')
             : (string) ($deposit_terms['deposit_treatment'] ?? 'creditable');
-        $deposit_due_date = function_exists('vms_normalize_comp_deposit_date')
-            ? vms_normalize_comp_deposit_date($deposit_terms['deposit_due_date'] ?? '')
+        $deposit_due_date = function_exists('bvmgr_normalize_comp_deposit_date')
+            ? bvmgr_normalize_comp_deposit_date($deposit_terms['deposit_due_date'] ?? '')
             : (string) ($deposit_terms['deposit_due_date'] ?? '');
-        $deposit_paid_date = function_exists('vms_normalize_comp_deposit_date')
-            ? vms_normalize_comp_deposit_date($deposit_terms['deposit_paid_date'] ?? '')
+        $deposit_paid_date = function_exists('bvmgr_normalize_comp_deposit_date')
+            ? bvmgr_normalize_comp_deposit_date($deposit_terms['deposit_paid_date'] ?? '')
             : (string) ($deposit_terms['deposit_paid_date'] ?? '');
         $deposit_notes = isset($deposit_terms['deposit_notes']) ? (string) $deposit_terms['deposit_notes'] : '';
-        $deposit_status_options = function_exists('vms_comp_deposit_status_options') ? vms_comp_deposit_status_options() : array(
+        $deposit_status_options = function_exists('bvmgr_comp_deposit_status_options') ? bvmgr_comp_deposit_status_options() : array(
             'not_required' => __('Not required', 'backstage-venue-manager'),
             'unpaid' => __('Unpaid', 'backstage-venue-manager'),
             'paid' => __('Paid', 'backstage-venue-manager'),
             'waived' => __('Waived', 'backstage-venue-manager'),
             'refunded' => __('Refunded', 'backstage-venue-manager'),
         );
-        $deposit_treatment_options = function_exists('vms_comp_deposit_treatment_options') ? vms_comp_deposit_treatment_options() : array(
+        $deposit_treatment_options = function_exists('bvmgr_comp_deposit_treatment_options') ? bvmgr_comp_deposit_treatment_options() : array(
             'creditable' => __('Applies toward total payment', 'backstage-venue-manager'),
             'refundable' => __('Refundable', 'backstage-venue-manager'),
             'nonrefundable' => __('Non-refundable', 'backstage-venue-manager'),
         );
 
-        $final_payment_terms = function_exists('vms_get_event_plan_final_payment_terms')
-            ? (array) vms_get_event_plan_final_payment_terms((int) $post->ID)
+        $final_payment_terms = function_exists('bvmgr_get_event_plan_final_payment_terms')
+            ? (array) bvmgr_get_event_plan_final_payment_terms((int) $post->ID)
             : array();
-        $final_payment_timing = function_exists('vms_normalize_comp_final_payment_timing')
-            ? vms_normalize_comp_final_payment_timing($final_payment_terms['final_payment_timing'] ?? '')
+        $final_payment_timing = function_exists('bvmgr_normalize_comp_final_payment_timing')
+            ? bvmgr_normalize_comp_final_payment_timing($final_payment_terms['final_payment_timing'] ?? '')
             : (string) ($final_payment_terms['final_payment_timing'] ?? 'not_set');
-        $final_payment_days_after = function_exists('vms_normalize_comp_final_payment_days_after')
-            ? vms_normalize_comp_final_payment_days_after($final_payment_terms['final_payment_days_after'] ?? '')
+        $final_payment_days_after = function_exists('bvmgr_normalize_comp_final_payment_days_after')
+            ? bvmgr_normalize_comp_final_payment_days_after($final_payment_terms['final_payment_days_after'] ?? '')
             : (string) ($final_payment_terms['final_payment_days_after'] ?? '');
-        $final_payment_date = function_exists('vms_normalize_comp_final_payment_date')
-            ? vms_normalize_comp_final_payment_date($final_payment_terms['final_payment_date'] ?? '')
+        $final_payment_date = function_exists('bvmgr_normalize_comp_final_payment_date')
+            ? bvmgr_normalize_comp_final_payment_date($final_payment_terms['final_payment_date'] ?? '')
             : (string) ($final_payment_terms['final_payment_date'] ?? '');
         $final_payment_custom_text = isset($final_payment_terms['final_payment_custom_text']) ? (string) $final_payment_terms['final_payment_custom_text'] : '';
-        $final_payment_method = function_exists('vms_normalize_comp_final_payment_method')
-            ? vms_normalize_comp_final_payment_method($final_payment_terms['final_payment_method'] ?? '')
+        $final_payment_method = function_exists('bvmgr_normalize_comp_final_payment_method')
+            ? bvmgr_normalize_comp_final_payment_method($final_payment_terms['final_payment_method'] ?? '')
             : (string) ($final_payment_terms['final_payment_method'] ?? 'not_set');
         $final_payment_method_other = isset($final_payment_terms['final_payment_method_other']) ? (string) $final_payment_terms['final_payment_method_other'] : '';
-        $final_payment_timing_options = function_exists('vms_comp_final_payment_timing_options') ? vms_comp_final_payment_timing_options() : array(
+        $final_payment_timing_options = function_exists('bvmgr_comp_final_payment_timing_options') ? bvmgr_comp_final_payment_timing_options() : array(
             'not_set' => __('Not set', 'backstage-venue-manager'),
             'in_advance' => __('In advance', 'backstage-venue-manager'),
             'day_of_event' => __('Day of event', 'backstage-venue-manager'),
@@ -7736,7 +7736,7 @@ class BVMGR_Admin_Event_Plans
             'fixed_date' => __('Specific date', 'backstage-venue-manager'),
             'custom' => __('Custom timing', 'backstage-venue-manager'),
         );
-        $final_payment_method_options = function_exists('vms_comp_final_payment_method_options') ? vms_comp_final_payment_method_options() : array(
+        $final_payment_method_options = function_exists('bvmgr_comp_final_payment_method_options') ? bvmgr_comp_final_payment_method_options() : array(
             'not_set' => __('Not set', 'backstage-venue-manager'),
             'check' => __('Check', 'backstage-venue-manager'),
             'cash' => __('Cash', 'backstage-venue-manager'),
@@ -7764,7 +7764,7 @@ class BVMGR_Admin_Event_Plans
 
         $needs_snapshot = (get_post_meta($post->ID, '_vms_comp_needs_snapshot', true) === '1');
 
-        $current_hash  = function_exists('vms_comp_hash_for_plan') ? (string) vms_comp_hash_for_plan((int)$post->ID) : '';
+        $current_hash  = function_exists('bvmgr_comp_hash_for_plan') ? (string) bvmgr_comp_hash_for_plan((int)$post->ID) : '';
         $snapshot_hash = isset($snapshot['comp_hash']) ? (string) $snapshot['comp_hash'] : '';
 
         $out_of_sync = false;
@@ -7775,8 +7775,8 @@ class BVMGR_Admin_Event_Plans
 
         // Load packages for effective venue (+ global)
         $packages = array();
-        if ($venue_id_effective > 0 && function_exists('vms_get_comp_packages_for_venue')) {
-            $packages = (array) vms_get_comp_packages_for_venue($venue_id_effective, true);
+        if ($venue_id_effective > 0 && function_exists('bvmgr_get_comp_packages_for_venue')) {
+            $packages = (array) bvmgr_get_comp_packages_for_venue($venue_id_effective, true);
         }
 
         // Plan status LEGACY
@@ -7787,8 +7787,8 @@ class BVMGR_Admin_Event_Plans
         // updated this during constants.php > meta-keys.php refactor
         $plan_status = (string) get_post_meta($post->ID, bvmgr_meta_key('event_plan', 'status'), true);
 
-        $allowed = function_exists('vms_event_plan_statuses')
-            ? array_keys(vms_event_plan_statuses())
+        $allowed = function_exists('bvmgr_event_plan_statuses')
+            ? array_keys(bvmgr_event_plan_statuses())
             : array('draft', 'ready', 'published', 'tentative', 'confirmed', 'cancelled', 'archived');
 
         if ($plan_status === '' || !in_array($plan_status, $allowed, true)) {
@@ -7882,8 +7882,8 @@ class BVMGR_Admin_Event_Plans
             }
         }
 
-        if (!$commission_override_none && ($commission_percent === '' || $commission_percent === null) && $selected_band_id > 0 && function_exists('vms_get_vendor_default_agent_fee_terms')) {
-            $vendor_agent_fee = (array) vms_get_vendor_default_agent_fee_terms($selected_band_id);
+        if (!$commission_override_none && ($commission_percent === '' || $commission_percent === null) && $selected_band_id > 0 && function_exists('bvmgr_get_vendor_default_agent_fee_terms')) {
+            $vendor_agent_fee = (array) bvmgr_get_vendor_default_agent_fee_terms($selected_band_id);
             if (!empty($vendor_agent_fee)) {
                 $commission_percent = $vendor_agent_fee['commission_percent'] ?? '';
                 $commission_mode = isset($vendor_agent_fee['commission_mode']) ? (string) $vendor_agent_fee['commission_mode'] : 'artist_fee';
@@ -7901,8 +7901,8 @@ class BVMGR_Admin_Event_Plans
             ? vms_event_plan_perf_span_start('event_plan_comp_options_lookup', (int) $post->ID, array('section' => 'compensation'))
             : '';
         try {
-            $comp_opts = function_exists('vms_get_event_plan_comp_options')
-                ? (array) vms_get_event_plan_comp_options($venue_id_effective, $event_date, $selected_band_id)
+            $comp_opts = function_exists('bvmgr_get_event_plan_comp_options')
+                ? (array) bvmgr_get_event_plan_comp_options($venue_id_effective, $event_date, $selected_band_id)
                 : array('defaults' => array(), 'packages' => array(), 'max_guarantee' => 0.0);
         } finally {
             if (function_exists('vms_event_plan_perf_span_finish')) {
@@ -8413,8 +8413,8 @@ class BVMGR_Admin_Event_Plans
         <?php
         // Holiday panel
         $holiday = null;
-        if ($venue_id_effective > 0 && $event_date && function_exists('vms_get_venue_holiday_for_date')) {
-            $holiday = vms_get_venue_holiday_for_date($venue_id_effective, $event_date);
+        if ($venue_id_effective > 0 && $event_date && function_exists('bvmgr_get_venue_holiday_for_date')) {
+            $holiday = bvmgr_get_venue_holiday_for_date($venue_id_effective, $event_date);
         }
 
         echo '<div class="vms-ep-basic-item vms-ep-basic-span">';
@@ -8459,8 +8459,8 @@ class BVMGR_Admin_Event_Plans
             $s = rtrim(rtrim(sprintf('%.4f', (float) $v), '0'), '.');
             return $s;
         };
-        $resolved_default = function_exists('vms_get_event_plan_effective_comp_default')
-            ? (array) vms_get_event_plan_effective_comp_default((int) $venue_id_effective, (string) $event_date)
+        $resolved_default = function_exists('bvmgr_get_event_plan_effective_comp_default')
+            ? (array) bvmgr_get_event_plan_effective_comp_default((int) $venue_id_effective, (string) $event_date)
             : array();
 
         $default_source = isset($resolved_default['source']) ? sanitize_key((string) $resolved_default['source']) : '';
@@ -9266,13 +9266,13 @@ class BVMGR_Admin_Event_Plans
                 if ($deposit_amount !== '' && $deposit_amount < 0) $deposit_amount = 0;
 
                 $deposit_status = isset($request['vms_deposit_status']) ? sanitize_key((string) $request['vms_deposit_status']) : 'not_required';
-                $deposit_status = function_exists('vms_normalize_comp_deposit_status') ? vms_normalize_comp_deposit_status($deposit_status) : $deposit_status;
+                $deposit_status = function_exists('bvmgr_normalize_comp_deposit_status') ? bvmgr_normalize_comp_deposit_status($deposit_status) : $deposit_status;
                 $deposit_treatment = isset($request['vms_deposit_treatment']) ? sanitize_key((string) $request['vms_deposit_treatment']) : 'creditable';
-                $deposit_treatment = function_exists('vms_normalize_comp_deposit_treatment') ? vms_normalize_comp_deposit_treatment($deposit_treatment) : $deposit_treatment;
+                $deposit_treatment = function_exists('bvmgr_normalize_comp_deposit_treatment') ? bvmgr_normalize_comp_deposit_treatment($deposit_treatment) : $deposit_treatment;
                 $deposit_due_date = isset($request['vms_deposit_due_date']) ? sanitize_text_field((string) $request['vms_deposit_due_date']) : '';
-                $deposit_due_date = function_exists('vms_normalize_comp_deposit_date') ? vms_normalize_comp_deposit_date($deposit_due_date) : $deposit_due_date;
+                $deposit_due_date = function_exists('bvmgr_normalize_comp_deposit_date') ? bvmgr_normalize_comp_deposit_date($deposit_due_date) : $deposit_due_date;
                 $deposit_paid_date = isset($request['vms_deposit_paid_date']) ? sanitize_text_field((string) $request['vms_deposit_paid_date']) : '';
-                $deposit_paid_date = function_exists('vms_normalize_comp_deposit_date') ? vms_normalize_comp_deposit_date($deposit_paid_date) : $deposit_paid_date;
+                $deposit_paid_date = function_exists('bvmgr_normalize_comp_deposit_date') ? bvmgr_normalize_comp_deposit_date($deposit_paid_date) : $deposit_paid_date;
                 $deposit_notes = isset($request['vms_deposit_notes']) ? sanitize_textarea_field((string) $request['vms_deposit_notes']) : '';
                 if ($deposit_amount !== '' && (float) $deposit_amount > 0 && $deposit_status === 'not_required') {
                     $deposit_status = 'unpaid';
@@ -9287,14 +9287,14 @@ class BVMGR_Admin_Event_Plans
                 );
 
                 $final_payment_timing = isset($request['vms_final_payment_timing']) ? sanitize_key((string) $request['vms_final_payment_timing']) : 'not_set';
-                $final_payment_timing = function_exists('vms_normalize_comp_final_payment_timing') ? vms_normalize_comp_final_payment_timing($final_payment_timing) : $final_payment_timing;
+                $final_payment_timing = function_exists('bvmgr_normalize_comp_final_payment_timing') ? bvmgr_normalize_comp_final_payment_timing($final_payment_timing) : $final_payment_timing;
                 $final_payment_days_after = isset($request['vms_final_payment_days_after']) ? sanitize_text_field((string) $request['vms_final_payment_days_after']) : '';
-                $final_payment_days_after = function_exists('vms_normalize_comp_final_payment_days_after') ? vms_normalize_comp_final_payment_days_after($final_payment_days_after) : $final_payment_days_after;
+                $final_payment_days_after = function_exists('bvmgr_normalize_comp_final_payment_days_after') ? bvmgr_normalize_comp_final_payment_days_after($final_payment_days_after) : $final_payment_days_after;
                 $final_payment_date = isset($request['vms_final_payment_date']) ? sanitize_text_field((string) $request['vms_final_payment_date']) : '';
-                $final_payment_date = function_exists('vms_normalize_comp_final_payment_date') ? vms_normalize_comp_final_payment_date($final_payment_date) : $final_payment_date;
+                $final_payment_date = function_exists('bvmgr_normalize_comp_final_payment_date') ? bvmgr_normalize_comp_final_payment_date($final_payment_date) : $final_payment_date;
                 $final_payment_custom_text = isset($request['vms_final_payment_custom_text']) ? sanitize_text_field((string) $request['vms_final_payment_custom_text']) : '';
                 $final_payment_method = isset($request['vms_final_payment_method']) ? sanitize_key((string) $request['vms_final_payment_method']) : 'not_set';
-                $final_payment_method = function_exists('vms_normalize_comp_final_payment_method') ? vms_normalize_comp_final_payment_method($final_payment_method) : $final_payment_method;
+                $final_payment_method = function_exists('bvmgr_normalize_comp_final_payment_method') ? bvmgr_normalize_comp_final_payment_method($final_payment_method) : $final_payment_method;
                 $final_payment_method_other = isset($request['vms_final_payment_method_other']) ? sanitize_text_field((string) $request['vms_final_payment_method_other']) : '';
                 $final_payment_terms_for_save = array(
                     'final_payment_timing' => $final_payment_timing,
@@ -9318,8 +9318,8 @@ class BVMGR_Admin_Event_Plans
 	                }
 	                if ($attendance_invalid_message !== '' && function_exists('vms_add_admin_notice')) {
 	                    vms_add_admin_notice($attendance_invalid_message, 'error');
-	                    if (function_exists('vms_admin_scroll_to_compensation')) {
-	                        vms_admin_scroll_to_compensation($post_id);
+	                    if (function_exists('bvmgr_admin_scroll_to_compensation')) {
+	                        bvmgr_admin_scroll_to_compensation($post_id);
 	                    }
 	                }
 
@@ -9352,11 +9352,11 @@ class BVMGR_Admin_Event_Plans
                     : max(0.0, (float) ($actual['flat_fee_amount'] ?? 0.0));
 
                 $guarantee_max = 0.0;
-	                if (function_exists('vms_get_event_plan_comp_options')) {
+	                if (function_exists('bvmgr_get_event_plan_comp_options')) {
 	                    $venue_for_opts = isset($request['vms_venue_id']) ? absint($request['vms_venue_id']) : 0;
 	                    $date_for_opts  = isset($request['vms_event_date']) ? sanitize_text_field((string) $request['vms_event_date']) : '';
 	                    $band_for_opts  = $effective_band_id;
-	                    $opts = (array) vms_get_event_plan_comp_options($venue_for_opts, $date_for_opts, $band_for_opts);
+	                    $opts = (array) bvmgr_get_event_plan_comp_options($venue_for_opts, $date_for_opts, $band_for_opts);
 	                    $guarantee_max = isset($opts['max_guarantee']) ? (float) $opts['max_guarantee'] : 0.0;
 	                }
                 if ($guarantee_max < 0) $guarantee_max = 0.0;
@@ -9379,8 +9379,8 @@ class BVMGR_Admin_Event_Plans
 	                );
 
                 $has_default = false;
-                if (function_exists('vms_get_event_plan_effective_comp_default')) {
-                    $resolved_default = (array) vms_get_event_plan_effective_comp_default((int) $venue_id, (string) $event_date);
+                if (function_exists('bvmgr_get_event_plan_effective_comp_default')) {
+                    $resolved_default = (array) bvmgr_get_event_plan_effective_comp_default((int) $venue_id, (string) $event_date);
                     $default['source'] = isset($resolved_default['source']) ? sanitize_key((string) $resolved_default['source']) : '';
                     $default['label'] = isset($resolved_default['label']) ? (string) $resolved_default['label'] : '';
                     $default['holiday_name'] = isset($resolved_default['holiday_name']) ? (string) $resolved_default['holiday_name'] : '';
@@ -9481,8 +9481,8 @@ if (function_exists('vms_add_admin_notice')) {
                         }
                     }
 
-                    if (function_exists('vms_admin_scroll_to_compensation')) {
-                        vms_admin_scroll_to_compensation($post_id);
+                    if (function_exists('bvmgr_admin_scroll_to_compensation')) {
+                        bvmgr_admin_scroll_to_compensation($post_id);
                     }
 
                     // Clear any prior acknowledgment so it cannot linger incorrectly
@@ -9547,8 +9547,8 @@ if (function_exists('vms_add_admin_notice')) {
                         }
                     }
 
-                    if (function_exists('vms_admin_scroll_to_compensation')) {
-                        vms_admin_scroll_to_compensation($post_id);
+                    if (function_exists('bvmgr_admin_scroll_to_compensation')) {
+                        bvmgr_admin_scroll_to_compensation($post_id);
                     }
 
                     // Clear any prior acknowledgment so it cannot linger incorrectly
@@ -10073,8 +10073,8 @@ if (function_exists('vms_add_admin_notice')) {
                     }
                 }
 
-                if (function_exists('vms_event_plan_store_checkin_close_meta')) {
-                    vms_event_plan_store_checkin_close_meta($post_id);
+                if (function_exists('bvmgr_event_plan_store_checkin_close_meta')) {
+                    bvmgr_event_plan_store_checkin_close_meta($post_id);
                 }
 
                 // Save remaining core meta
@@ -10124,8 +10124,8 @@ if (function_exists('vms_add_admin_notice')) {
                     }
                 }
 
-                if (function_exists('vms_event_plan_save_deposit_terms')) {
-                    vms_event_plan_save_deposit_terms((int) $post_id, $deposit_terms_for_save);
+                if (function_exists('bvmgr_event_plan_save_deposit_terms')) {
+                    bvmgr_event_plan_save_deposit_terms((int) $post_id, $deposit_terms_for_save);
                 } else {
                     if ($deposit_amount === '') delete_post_meta($post_id, '_vms_deposit_amount');
                     else update_post_meta($post_id, '_vms_deposit_amount', (float) $deposit_amount);
@@ -10139,8 +10139,8 @@ if (function_exists('vms_add_admin_notice')) {
                     else update_post_meta($post_id, '_vms_deposit_notes', $deposit_notes);
                 }
 
-                if (function_exists('vms_event_plan_save_final_payment_terms')) {
-                    vms_event_plan_save_final_payment_terms((int) $post_id, $final_payment_terms_for_save);
+                if (function_exists('bvmgr_event_plan_save_final_payment_terms')) {
+                    bvmgr_event_plan_save_final_payment_terms((int) $post_id, $final_payment_terms_for_save);
                 } else {
                     update_post_meta($post_id, '_vms_final_payment_timing', $final_payment_timing);
                     update_post_meta($post_id, '_vms_final_payment_method', $final_payment_method);
@@ -10424,8 +10424,8 @@ if (function_exists('vms_add_admin_notice')) {
 
                     $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
                     $band_name = $band_id ? (string) get_the_title($band_id) : '';
-                    $new_auto_title = function_exists('vms_event_plan_build_auto_title')
-                        ? vms_event_plan_build_auto_title((string) $band_name)
+                    $new_auto_title = function_exists('bvmgr_event_plan_build_auto_title')
+                        ? bvmgr_event_plan_build_auto_title((string) $band_name)
                         : trim(wp_strip_all_tags((string) $band_name));
 
                     if ($new_auto_title !== '') {
@@ -10471,8 +10471,8 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
                 // Keep existing auto-comp behavior
-                if ($auto_comp === '1' && function_exists('vms_maybe_apply_band_comp_defaults_to_plan')) {
-                    vms_maybe_apply_band_comp_defaults_to_plan($post_id);
+                if ($auto_comp === '1' && function_exists('bvmgr_maybe_apply_band_comp_defaults_to_plan')) {
+                    bvmgr_maybe_apply_band_comp_defaults_to_plan($post_id);
                 }
 
                 // Handle actions (optional; normal "Update" saves have no action)
@@ -10650,8 +10650,8 @@ if (function_exists('vms_add_admin_notice')) {
                                 true
                             );
                             $mode_v2 = is_array($cfg_v2) ? (string) ($cfg_v2['mode'] ?? '') : '';
-                            $auto_money_allowed = function_exists('vms_event_plan_ticketing_auto_money_allowed')
-                                ? vms_event_plan_ticketing_auto_money_allowed($post_id, $action, $current_status)
+                            $auto_money_allowed = function_exists('bvmgr_event_plan_ticketing_auto_money_allowed')
+                                ? bvmgr_event_plan_ticketing_auto_money_allowed($post_id, $action, $current_status)
                                 : ($action === 'publish_now');
 
                             if (!$auto_money_allowed) {
@@ -10918,19 +10918,19 @@ if (function_exists('vms_add_admin_notice')) {
 
                         if ($vendor_id_for_apply <= 0) {
                             vms_add_admin_notice(__('Select a Primary Vendor first.', 'backstage-venue-manager'), 'error');
-                            vms_admin_scroll_to_compensation($post_id);
+                            bvmgr_admin_scroll_to_compensation($post_id);
                             break;
                         }
 
-                        if (!function_exists('vms_get_vendor_default_comp_terms') || !function_exists('vms_event_plan_apply_comp_terms')) {
+                        if (!function_exists('bvmgr_get_vendor_default_comp_terms') || !function_exists('bvmgr_event_plan_apply_comp_terms')) {
                             vms_add_admin_notice(__('Vendor default helper is missing.', 'backstage-venue-manager'), 'error');
-                            vms_admin_scroll_to_compensation($post_id);
+                            bvmgr_admin_scroll_to_compensation($post_id);
                             break;
                         }
 
-                        $vendor_terms = (array) vms_get_vendor_default_comp_terms($vendor_id_for_apply, (int) $venue_id_for_apply, (string) $event_date_for_apply);
-                        if (function_exists('vms_get_vendor_default_agent_fee_terms')) {
-                            $vendor_agent_fee = (array) vms_get_vendor_default_agent_fee_terms($vendor_id_for_apply);
+                        $vendor_terms = (array) bvmgr_get_vendor_default_comp_terms($vendor_id_for_apply, (int) $venue_id_for_apply, (string) $event_date_for_apply);
+                        if (function_exists('bvmgr_get_vendor_default_agent_fee_terms')) {
+                            $vendor_agent_fee = (array) bvmgr_get_vendor_default_agent_fee_terms($vendor_id_for_apply);
                             if (!empty($vendor_agent_fee)) {
                                 $vendor_terms = array_merge($vendor_terms, $vendor_agent_fee);
                             }
@@ -10938,14 +10938,14 @@ if (function_exists('vms_add_admin_notice')) {
 
                         if (empty($vendor_terms) || empty($vendor_terms['structure'])) {
                             vms_add_admin_notice(__('No current Primary Vendor default is configured for this Event Plan context.', 'backstage-venue-manager'), 'error');
-                            vms_admin_scroll_to_compensation($post_id);
+                            bvmgr_admin_scroll_to_compensation($post_id);
                             break;
                         }
 
-                        $applied_vendor_defaults = vms_event_plan_apply_comp_terms($post_id, $vendor_terms);
+                        $applied_vendor_defaults = bvmgr_event_plan_apply_comp_terms($post_id, $vendor_terms);
                         if (!$applied_vendor_defaults) {
                             vms_add_admin_notice(__('Could not apply the current Primary Vendor default to Draft Pay.', 'backstage-venue-manager'), 'error');
-                            vms_admin_scroll_to_compensation($post_id);
+                            bvmgr_admin_scroll_to_compensation($post_id);
                             break;
                         }
 
@@ -10956,7 +10956,7 @@ if (function_exists('vms_add_admin_notice')) {
                             : '_vms_comp_selected_option';
                         update_post_meta($post_id, $k_comp_selected_option, 'default:vendor');
                         vms_add_admin_notice(__('Current Primary Vendor default applied to Draft Pay.', 'backstage-venue-manager'), 'success');
-                        vms_admin_scroll_to_compensation($post_id);
+                        bvmgr_admin_scroll_to_compensation($post_id);
                         break;
 
                     case 'apply_venue_defaults':
@@ -10967,19 +10967,19 @@ if (function_exists('vms_add_admin_notice')) {
                             vms_add_admin_notice(__('Select a Venue and Event Date first.', 'backstage-venue-manager'), 'error');
                             break;
                         }
-                        if (!function_exists('vms_get_event_plan_effective_comp_default')) {
+                        if (!function_exists('bvmgr_get_event_plan_effective_comp_default')) {
                             vms_add_admin_notice(__('Effective defaults helper is missing.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
-                        $resolved = (array) vms_get_event_plan_effective_comp_default($venue_id, $event_date);
+                        $resolved = (array) bvmgr_get_event_plan_effective_comp_default($venue_id, $event_date);
                         if (empty($resolved['has_default']) || empty($resolved['structure'])) {
                             vms_add_admin_notice(__('No date defaults found for that date/day.', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
-                        if (function_exists('vms_event_plan_apply_comp_terms')) {
-                            $applied = vms_event_plan_apply_comp_terms($post_id, $resolved);
+                        if (function_exists('bvmgr_event_plan_apply_comp_terms')) {
+                            $applied = bvmgr_event_plan_apply_comp_terms($post_id, $resolved);
                             if (!$applied) {
                                 vms_add_admin_notice(__('Could not apply date defaults because the resolved compensation terms were invalid.', 'backstage-venue-manager'), 'error');
                                 break;
@@ -11040,7 +11040,7 @@ if (function_exists('vms_add_admin_notice')) {
                         $applied_label = sanitize_text_field($applied_label);
                         /* translators: %s: applied date-default label. */
                         vms_add_admin_notice(sprintf(__('%s applied for this date.', 'backstage-venue-manager'), $applied_label), 'success');
-                        vms_admin_scroll_to_compensation($post_id);
+                        bvmgr_admin_scroll_to_compensation($post_id);
                         break;
 
                     case 'apply_comp_package':
@@ -11052,13 +11052,13 @@ if (function_exists('vms_add_admin_notice')) {
                             vms_add_admin_notice(__('Please select a comp package first.', 'backstage-venue-manager'), 'error');
                             break;
                         }
-                        if (!function_exists('vms_apply_comp_package_to_plan')) {
+                        if (!function_exists('bvmgr_apply_comp_package_to_plan')) {
                             vms_add_admin_notice(__('Package apply helper is missing (vms_apply_comp_package_to_plan).', 'backstage-venue-manager'), 'error');
                             break;
                         }
 
-                        $ok = vms_apply_comp_package_to_plan($post_id, $comp_package_id);
-                        vms_admin_scroll_to_compensation($post_id);
+                        $ok = bvmgr_apply_comp_package_to_plan($post_id, $comp_package_id);
+                        bvmgr_admin_scroll_to_compensation($post_id);
 
                         if ($ok) vms_add_admin_notice(__('Comp package applied and snapshotted for this event plan.', 'backstage-venue-manager'), 'success');
                         else vms_add_admin_notice(__('Failed to Apply Package. (Check package type/meta.)', 'backstage-venue-manager'), 'error');
@@ -11079,8 +11079,8 @@ if (function_exists('vms_add_admin_notice')) {
                         $commission_percent = get_post_meta($post_id, '_vms_commission_percent', true);
                         $commission_mode = (string) get_post_meta($post_id, '_vms_commission_mode', true);
                         if (!in_array($commission_mode, array('artist_fee', 'gross'), true)) $commission_mode = 'artist_fee';
-                        $deposit_terms = function_exists('vms_get_event_plan_deposit_terms') ? (array) vms_get_event_plan_deposit_terms((int) $post_id) : array();
-                        $final_payment_terms = function_exists('vms_get_event_plan_final_payment_terms') ? (array) vms_get_event_plan_final_payment_terms((int) $post_id) : array();
+                        $deposit_terms = function_exists('bvmgr_get_event_plan_deposit_terms') ? (array) bvmgr_get_event_plan_deposit_terms((int) $post_id) : array();
+                        $final_payment_terms = function_exists('bvmgr_get_event_plan_final_payment_terms') ? (array) bvmgr_get_event_plan_final_payment_terms((int) $post_id) : array();
 
                         $flat  = ($flat === '' || $flat === null) ? null : (float) $flat;
                         $split = ($split === '' || $split === null) ? null : (float) $split;
@@ -11157,8 +11157,8 @@ if (function_exists('vms_add_admin_notice')) {
                             $snapshot = array_merge($snapshot, $final_payment_terms);
                         }
 
-                        $hash = function_exists('vms_comp_hash_for_plan')
-                            ? (string) vms_comp_hash_for_plan($post_id)
+                        $hash = function_exists('bvmgr_comp_hash_for_plan')
+                            ? (string) bvmgr_comp_hash_for_plan($post_id)
                             : md5(wp_json_encode(array('structure' => $structure, 'flat' => $flat, 'split' => $split)));
 
                         $snapshot['comp_hash'] = $hash;
@@ -11167,7 +11167,7 @@ if (function_exists('vms_add_admin_notice')) {
                         delete_post_meta($post_id, '_vms_comp_needs_snapshot');
 
                         vms_add_admin_notice(__('Draft Pay locked for this event (snapshot created).', 'backstage-venue-manager'), 'success');
-                        vms_admin_scroll_to_compensation($post_id);
+                        bvmgr_admin_scroll_to_compensation($post_id);
                         break;
                 }
 
@@ -11183,8 +11183,8 @@ if (function_exists('vms_add_admin_notice')) {
                     $venue_id   = (int) get_post_meta($post_id, '_vms_venue_id', true);
                     $venue_name = $venue_id ? (string) get_the_title($venue_id) : '';
 
-                    $fallback = function_exists('vms_event_plan_build_fallback_title')
-                        ? vms_event_plan_build_fallback_title($post_id, (string) $band_name, (string) $venue_name)
+                    $fallback = function_exists('bvmgr_event_plan_build_fallback_title')
+                        ? bvmgr_event_plan_build_fallback_title($post_id, (string) $band_name, (string) $venue_name)
                         : ((trim((string) $band_name) !== '')
                             ? trim((string) $band_name)
                             : ((trim((string) $venue_name) !== '')
@@ -11366,12 +11366,12 @@ if (function_exists('vms_add_admin_notice')) {
 
                 // Persisted default (per-user). If the user has never set a preference,
                 // default to showing Draft/Ready so the Event Plans list matches Schedule visibility.
-                $has_pref = (function_exists('vms_user_pref_has_include_drafts'))
-                    ? (bool) vms_user_pref_has_include_drafts($user_id)
+                $has_pref = (function_exists('bvmgr_user_pref_has_include_drafts'))
+                    ? (bool) bvmgr_user_pref_has_include_drafts($user_id)
                     : (bool) metadata_exists('user', $user_id, '_vms_include_drafts');
 
                 $pref = $has_pref
-                    ? ((function_exists('vms_user_pref_get_include_drafts')) ? (bool) vms_user_pref_get_include_drafts($user_id) : false)
+                    ? ((function_exists('bvmgr_user_pref_get_include_drafts')) ? (bool) bvmgr_user_pref_get_include_drafts($user_id) : false)
                     : true;
 
                 // If explicitly set in the querystring, treat it as an intentional update and persist it.
@@ -11381,8 +11381,8 @@ if (function_exists('vms_add_admin_notice')) {
                     $val = in_array($raw, array('1', 'true', 'yes', 'on'), true);
 
                     if (vms_admin_event_plan_list_has_valid_filter_nonce()) {
-                        if (function_exists('vms_user_pref_set_include_drafts')) {
-                            vms_user_pref_set_include_drafts((bool) $val, $user_id);
+                        if (function_exists('bvmgr_user_pref_set_include_drafts')) {
+                            bvmgr_user_pref_set_include_drafts((bool) $val, $user_id);
                         } else {
                             update_user_meta($user_id, '_vms_include_drafts', $val ? '1' : '0');
                         }
@@ -11529,8 +11529,8 @@ if (function_exists('vms_add_admin_notice')) {
             }
 
             // Holiday precedence: explicit OPEN wins, explicit CLOSED blocks.
-            if (function_exists('vms_get_venue_holiday_for_date')) {
-                $holiday = vms_get_venue_holiday_for_date($venue_id, $event_date);
+            if (function_exists('bvmgr_get_venue_holiday_for_date')) {
+                $holiday = bvmgr_get_venue_holiday_for_date($venue_id, $event_date);
                 if (is_array($holiday) && !empty($holiday)) {
                     $holiday_status = sanitize_key((string) ($holiday['status'] ?? ''));
                     $holiday_name = trim((string) ($holiday['name'] ?? ''));
@@ -11706,7 +11706,7 @@ if (function_exists('vms_add_admin_notice')) {
 
             // Vendor tax profile required unless bypass is active
             if ($band_id > 0) {
-                $missing = function_exists('vms_vendor_tax_profile_missing_items') ? (array) vms_vendor_tax_profile_missing_items($band_id) : array();
+                $missing = function_exists('bvmgr_vendor_tax_profile_missing_items') ? (array) bvmgr_vendor_tax_profile_missing_items($band_id) : array();
                 if (!empty($missing)) {
                     if (function_exists('vms_tax_bypass_is_active') && vms_tax_bypass_is_active($band_id)) {
                         if (function_exists('vms_add_admin_notice')) {
@@ -11746,7 +11746,7 @@ if (function_exists('vms_add_admin_notice')) {
                         $sid = (int) $sid;
                         if ($sid <= 0) continue;
 
-                        $missing = function_exists('vms_vendor_tax_profile_missing_items') ? (array) vms_vendor_tax_profile_missing_items($sid) : array();
+                        $missing = function_exists('bvmgr_vendor_tax_profile_missing_items') ? (array) bvmgr_vendor_tax_profile_missing_items($sid) : array();
                         if (!empty($missing)) {
                             if (function_exists('vms_tax_bypass_is_active') && vms_tax_bypass_is_active($sid)) {
                                 if (function_exists('vms_add_admin_notice')) {
@@ -11818,8 +11818,8 @@ if (function_exists('vms_add_admin_notice')) {
 
             $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
             $band_name = $band_id ? (string) get_the_title($band_id) : '';
-            $new_title = function_exists('vms_event_plan_build_auto_title')
-                ? vms_event_plan_build_auto_title((string) $band_name)
+            $new_title = function_exists('bvmgr_event_plan_build_auto_title')
+                ? bvmgr_event_plan_build_auto_title((string) $band_name)
                 : trim(wp_strip_all_tags((string) $band_name));
             if ($new_title === '') return;
 
@@ -12956,7 +12956,7 @@ if (function_exists('vms_add_admin_notice')) {
         if (!function_exists('vms_integrity_schedule_daily_scan')) {
             function vms_integrity_schedule_daily_scan(): void
             {
-                if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+                if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
                     return;
                 }
                 if (!function_exists('wp_next_scheduled') || !function_exists('wp_schedule_event')) {
@@ -13923,8 +13923,8 @@ if (function_exists('vms_add_admin_notice')) {
             if ($vendor_id <= 0) return;
 
             $tax_missing = false;
-            if (function_exists('vms_is_vendor_tax_profile_complete')) {
-                $tax_missing = !vms_is_vendor_tax_profile_complete($vendor_id);
+            if (function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+                $tax_missing = !bvmgr_is_vendor_tax_profile_complete($vendor_id);
             }
 
             $st_bypass = function_exists('vms_get_tax_bypass_status') ? (array) vms_get_tax_bypass_status($vendor_id) : array();
@@ -14237,8 +14237,8 @@ if (function_exists('vms_add_admin_notice')) {
 					return;
 				}
 
-				$guard = function_exists('vms_admin_guard_begin')
-					? vms_admin_guard_begin('admin_init.event_plan_legacy_ticket_cleanup_schedule', array(
+				$guard = function_exists('bvmgr_admin_guard_begin')
+					? bvmgr_admin_guard_begin('admin_init.event_plan_legacy_ticket_cleanup_schedule', array(
 						'task' => 'event_plan_legacy_ticket_cleanup_schedule',
 						'allow_action' => 'event_plan_legacy_ticket_cleanup_schedule',
 						'lock_name' => 'event_plan_legacy_ticket_cleanup_schedule',
@@ -14255,8 +14255,8 @@ if (function_exists('vms_add_admin_notice')) {
 						$scheduled = (bool) wp_schedule_single_event(time() + 300, 'vms_event_plan_legacy_ticket_cleanup');
 					}
 				} finally {
-					if (is_array($guard) && function_exists('vms_admin_guard_finish')) {
-						vms_admin_guard_finish($guard, array('scheduled_cleanup' => $scheduled ? 1 : 0));
+					if (is_array($guard) && function_exists('bvmgr_admin_guard_finish')) {
+						bvmgr_admin_guard_finish($guard, array('scheduled_cleanup' => $scheduled ? 1 : 0));
 					}
 				}
 			}
@@ -14636,8 +14636,8 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
                 if ($tec_event_id <= 0) {
-                    if (function_exists('vms_get_plan_tec_event_id')) {
-                        $tec_event_id = absint(vms_get_plan_tec_event_id($plan_id));
+                    if (function_exists('bvmgr_get_plan_tec_event_id')) {
+                        $tec_event_id = absint(bvmgr_get_plan_tec_event_id($plan_id));
                     }
                     if ($tec_event_id <= 0) {
                         $tec_key_id = function_exists('bvmgr_meta_key')
@@ -14863,8 +14863,8 @@ if (function_exists('vms_add_admin_notice')) {
                     update_post_meta($post_id, $tec_key_url, esc_url_raw($tec_permalink));
                 }
 
-                if (function_exists('vms_event_plan_sync_checkin_close_meta_to_tec')) {
-                    vms_event_plan_sync_checkin_close_meta_to_tec($post_id, $tec_event_id);
+                if (function_exists('bvmgr_event_plan_sync_checkin_close_meta_to_tec')) {
+                    bvmgr_event_plan_sync_checkin_close_meta_to_tec($post_id, $tec_event_id);
                 }
 
                 if (function_exists('vms_event_plan_schedule_calendar_maintenance')) {
@@ -14899,8 +14899,8 @@ if (function_exists('vms_add_admin_notice')) {
                 }
 
                 if (!function_exists('tribe_update_event')) {
-                    if (function_exists('vms_record_operational_issue')) {
-                        vms_record_operational_issue('event_plan_tec_provider_unavailable', array(
+                    if (function_exists('bvmgr_record_operational_issue')) {
+                        bvmgr_record_operational_issue('event_plan_tec_provider_unavailable', array(
                             'service' => 'the_events_calendar',
                             'operation' => 'resync_event',
                             'status' => 'unavailable',
@@ -14928,8 +14928,8 @@ if (function_exists('vms_add_admin_notice')) {
 
                 $updated_id = tribe_update_event($existing_tec_id, $args);
                 if (!$updated_id || is_wp_error($updated_id)) {
-                    if (function_exists('vms_record_operational_issue')) {
-                        vms_record_operational_issue('event_plan_tec_resync_failed', array(
+                    if (function_exists('bvmgr_record_operational_issue')) {
+                        bvmgr_record_operational_issue('event_plan_tec_resync_failed', array(
                             'service' => 'the_events_calendar',
                             'operation' => 'resync_event',
                             'status' => 'failed',
@@ -14963,8 +14963,8 @@ if (function_exists('vms_add_admin_notice')) {
                     update_post_meta($post_id, '_vms_tec_last_sync_at', time());
                 }
 
-                if (function_exists('vms_event_plan_sync_checkin_close_meta_to_tec')) {
-                    vms_event_plan_sync_checkin_close_meta_to_tec($post_id, $tec_event_id);
+                if (function_exists('bvmgr_event_plan_sync_checkin_close_meta_to_tec')) {
+                    bvmgr_event_plan_sync_checkin_close_meta_to_tec($post_id, $tec_event_id);
                 }
 
                 if (function_exists('vms_event_plan_schedule_calendar_maintenance')) {
@@ -15381,8 +15381,8 @@ if (function_exists('vms_add_admin_notice')) {
             }
 
             if (!$updated || is_wp_error($updated)) {
-                if (function_exists('vms_record_operational_issue')) {
-                    vms_record_operational_issue('event_plan_tec_extras_sync_failed', array(
+                if (function_exists('bvmgr_record_operational_issue')) {
+                    bvmgr_record_operational_issue('event_plan_tec_extras_sync_failed', array(
                         'service' => 'the_events_calendar',
                         'operation' => 'sync_event_extras',
                         'status' => 'failed',

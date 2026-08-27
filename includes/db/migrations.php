@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_db_migrate_vendor_core_v1(): void
+function bvmgr_db_migrate_vendor_core_v1(): void
 {
 	global $wpdb;
 
@@ -105,7 +105,7 @@ function vms_db_migrate_vendor_core_v1(): void
 	update_option('vms_db_schema_version', 'vendor_core_v1');
 }
 
-function vms_db_migrate_vendor_core_v2(): void
+function bvmgr_db_migrate_vendor_core_v2(): void
 {
 	global $wpdb;
 
@@ -113,8 +113,8 @@ function vms_db_migrate_vendor_core_v2(): void
 	if ($ver === 'vendor_core_v2' || $ver === 'vendor_core_v3' || $ver === 'vendor_core_v4' || $ver === 'vendor_core_v5' || $ver === 'vendor_core_v6' || $ver === 'vendor_core_v7') return;
 
 	// Ensure v1 tables exist first.
-	if (function_exists('vms_db_migrate_vendor_core_v1')) {
-		vms_db_migrate_vendor_core_v1();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v1')) {
+		bvmgr_db_migrate_vendor_core_v1();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -145,12 +145,12 @@ function vms_db_migrate_vendor_core_v2(): void
 	dbDelta($sql_links);
 
 	// Best-effort backfill from legacy pointers (idempotent).
-	vms_db_backfill_vendor_user_links_from_legacy($t_links);
+	bvmgr_db_backfill_vendor_user_links_from_legacy($t_links);
 
 	update_option('vms_db_schema_version', 'vendor_core_v2');
 }
 
-function vms_db_migrate_vendor_core_v3(): void
+function bvmgr_db_migrate_vendor_core_v3(): void
 {
 	global $wpdb;
 
@@ -158,8 +158,8 @@ function vms_db_migrate_vendor_core_v3(): void
 	if ($ver === 'vendor_core_v3' || $ver === 'vendor_core_v4' || $ver === 'vendor_core_v5' || $ver === 'vendor_core_v6' || $ver === 'vendor_core_v7') return;
 
 	// Ensure v2 tables exist first.
-	if (function_exists('vms_db_migrate_vendor_core_v2')) {
-		vms_db_migrate_vendor_core_v2();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v2')) {
+		bvmgr_db_migrate_vendor_core_v2();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -331,7 +331,7 @@ function vms_db_migrate_vendor_core_v3(): void
 	update_option('vms_db_schema_version', 'vendor_core_v3');
 }
 
-function vms_db_migrate_vendor_core_v4(): void
+function bvmgr_db_migrate_vendor_core_v4(): void
 {
 	global $wpdb;
 
@@ -340,8 +340,8 @@ function vms_db_migrate_vendor_core_v4(): void
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v3')) {
-		vms_db_migrate_vendor_core_v3();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v3')) {
+		bvmgr_db_migrate_vendor_core_v3();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -374,7 +374,7 @@ function vms_db_migrate_vendor_core_v4(): void
 	update_option('vms_db_schema_version', 'vendor_core_v4');
 }
 
-function vms_db_migrate_vendor_core_v5(): void
+function bvmgr_db_migrate_vendor_core_v5(): void
 {
 	global $wpdb;
 
@@ -383,8 +383,8 @@ function vms_db_migrate_vendor_core_v5(): void
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v4')) {
-		vms_db_migrate_vendor_core_v4();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v4')) {
+		bvmgr_db_migrate_vendor_core_v4();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -421,7 +421,7 @@ function vms_db_migrate_vendor_core_v5(): void
 	update_option('vms_db_schema_version', 'vendor_core_v5');
 }
 
-function vms_db_migrate_vendor_core_v6(): void
+function bvmgr_db_migrate_vendor_core_v6(): void
 {
 	global $wpdb;
 
@@ -430,8 +430,8 @@ function vms_db_migrate_vendor_core_v6(): void
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v5')) {
-		vms_db_migrate_vendor_core_v5();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v5')) {
+		bvmgr_db_migrate_vendor_core_v5();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -472,7 +472,7 @@ function vms_db_migrate_vendor_core_v6(): void
 	update_option('vms_db_schema_version', 'vendor_core_v6');
 }
 
-function vms_db_migrate_vendor_core_v7(): void
+function bvmgr_db_migrate_vendor_core_v7(): void
 {
 	global $wpdb;
 
@@ -481,8 +481,8 @@ function vms_db_migrate_vendor_core_v7(): void
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v6')) {
-		vms_db_migrate_vendor_core_v6();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v6')) {
+		bvmgr_db_migrate_vendor_core_v6();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -527,7 +527,7 @@ function vms_db_migrate_vendor_core_v7(): void
  *
  * This is safe to run multiple times.
  */
-function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
+function bvmgr_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 {
 	global $wpdb;
 

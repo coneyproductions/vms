@@ -410,7 +410,7 @@ if (!function_exists('vms_admission_rest_create')) {
 		);
 
 		if ($insert === false) {
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'admission_create_failed',
 				array(
 					'service' => 'admissions',
@@ -553,7 +553,7 @@ if (!function_exists('vms_admission_rest_patch')) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admissions edit writes target the plugin-owned entries table directly so admin edits remain immediately visible to door and reporting flows.
 		$ok = $wpdb->update($table, $updates, array('id' => $entry_id), $formats, array('%d'));
 		if ($ok === false) {
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'admission_update_failed',
 				array(
 					'service' => 'admissions',
@@ -643,7 +643,7 @@ if (!function_exists('vms_admission_rest_checkin')) {
 			$entry_id
 		));
 		if ($updated === false) {
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'admission_checkin_failed',
 				array(
 					'service' => 'admissions',
@@ -753,7 +753,7 @@ if (!function_exists('vms_admission_rest_uncheckin')) {
 			));
 		}
 		if ($updated === false) {
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'admission_uncheckin_failed',
 				array(
 					'service' => 'admissions',

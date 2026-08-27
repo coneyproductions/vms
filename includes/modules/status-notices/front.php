@@ -4,14 +4,14 @@ defined('ABSPATH') || exit;
 if (!function_exists('vms_status_notice_admin_page_slug')) {
 	function vms_status_notice_admin_page_slug(): string
 	{
-		return vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin page routing here is read-only notice display context, not a mutation boundary.
+		return bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin page routing here is read-only notice display context, not a mutation boundary.
 	}
 }
 
 if (!function_exists('vms_status_notice_debug_requested')) {
 	function vms_status_notice_debug_requested(): bool
 	{
-		return vms_request_read_bool_flag($_GET, 'vms_notice_debug'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The runtime debug flag only changes read-only notice display diagnostics for already-authorized viewers.
+		return bvmgr_request_read_bool_flag($_GET, 'vms_notice_debug'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The runtime debug flag only changes read-only notice display diagnostics for already-authorized viewers.
 	}
 }
 
@@ -37,7 +37,7 @@ if (!function_exists('vms_status_notice_runtime_context_front')) {
 		$is_woo_account = function_exists('is_account_page') ? (bool) is_account_page() : false;
 		$has_ticketing_hint = ($is_event_single || $is_woo_product || $is_woo_cart || $is_woo_checkout) ? 1 : 0;
 
-		$request_uri = vms_request_current_uri('/');
+		$request_uri = bvmgr_request_current_uri('/');
 
 		$roles = array();
 		if (is_user_logged_in()) {
@@ -93,7 +93,7 @@ if (!function_exists('vms_status_notice_runtime_context_admin')) {
 			'post_type' => '',
 			'page_id' => 0,
 			'has_vms_ticketing_wrapper' => 0,
-			'request_uri' => vms_request_current_uri('/wp-admin/'),
+			'request_uri' => bvmgr_request_current_uri('/wp-admin/'),
 			'is_logged_in' => is_user_logged_in() ? 1 : 0,
 			'roles' => $roles,
 			'can_debug' => $can_debug,

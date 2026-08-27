@@ -53,7 +53,7 @@ function g17b_extract_adapter_call(string $source, string $event_code): string
 {
 	$event_at = strpos($source, "'" . $event_code . "'");
 	g17b_assert($event_at !== false, 'Missing operational event ' . $event_code);
-	$start = strrpos(substr($source, 0, (int) $event_at), 'vms_record_operational_issue(');
+	$start = strrpos(substr($source, 0, (int) $event_at), 'bvmgr_record_operational_issue(');
 	g17b_assert($start !== false, 'Missing adapter call for ' . $event_code);
 	$open = strpos($source, '(', (int) $start);
 	$depth = 0;
@@ -126,7 +126,7 @@ CURRENT,
 	}
 
 	if ($relative === 'includes/admin/menu.php') {
-		$current = g17b_extract_function($source, 'vms_admin_render_season_dates_page');
+		$current = g17b_extract_function($source, 'bvmgr_admin_render_season_dates_page');
 		$historical = <<<'HISTORICAL'
 function vms_admin_render_season_dates_page(): void
   {
@@ -450,13 +450,13 @@ foreach (array('mirror', 'shadow') as $tree) {
 
 	$helper_call = g17b_extract_adapter_call($g17b_sources[$tree]['helpers'], 'tax_profile_meta_shape_invalid');
 	g17b_same(
-		g17b_compact("vms_record_operational_issue('tax_profile_meta_shape_invalid',array('entity_id'=>\$id,'entity_type'=>'vendor','operation'=>'read_meta','status'=>'invalid',));"),
+		g17b_compact("bvmgr_record_operational_issue('tax_profile_meta_shape_invalid',array('entity_id'=>\$id,'entity_type'=>'vendor','operation'=>'read_meta','status'=>'invalid',));"),
 		g17b_compact($helper_call),
 		$tree . ' tax-profile adapter contract changed'
 	);
 	$vendor_call = g17b_extract_adapter_call($g17b_sources[$tree]['vendor_list'], 'vendor_list_meta_shape_invalid');
 	g17b_same(
-		g17b_compact("vms_record_operational_issue('vendor_list_meta_shape_invalid',array('vendor_id'=>\$post_id,'operation'=>'read_meta','status'=>'invalid',));"),
+		g17b_compact("bvmgr_record_operational_issue('vendor_list_meta_shape_invalid',array('vendor_id'=>\$post_id,'operation'=>'read_meta','status'=>'invalid',));"),
 		g17b_compact($vendor_call),
 		$tree . ' vendor-list adapter contract changed'
 	);
@@ -468,7 +468,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 
 	$approvals = $g17b_sources[$tree]['approvals'];
 	$logger = g17b_extract_function($approvals, 'vms_approvals_queue_log');
-	g17b_same(1, substr_count($logger, 'vms_record_operational_issue('), $tree . ' approvals wrapper must invoke the adapter once');
+	g17b_same(1, substr_count($logger, 'bvmgr_record_operational_issue('), $tree . ' approvals wrapper must invoke the adapter once');
 	g17b_same(1, substr_count($logger, "array('provider', 'operation', 'status')"), $tree . ' approvals wrapper allowlist changed');
 	foreach (array('message', 'queue_id', 'item_id', 'actor_id', 'from_status', 'to_status', 'wp_json_encode') as $forbidden) {
 		g17b_same(0, substr_count($logger, $forbidden), $tree . ' approvals wrapper retained unsafe field ' . $forbidden);
@@ -493,7 +493,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 	g17b_same(5, substr_count(g17b_extract_function($tours, 'normalize_tour'), 'return array();'), $tree . ' Tours rejection return inventory changed');
 	g17b_same(1, substr_count(g17b_extract_function($tours, 'sanitize_placement'), "return 'auto';"), $tree . ' Tours invalid-placement normalization changed');
 
-	$menu = g17b_extract_function($g17b_sources[$tree]['menu'], 'vms_admin_render_season_dates_page');
+	$menu = g17b_extract_function($g17b_sources[$tree]['menu'], 'bvmgr_admin_render_season_dates_page');
 	g17b_same(1, substr_count($menu, "echo '<div class=\"wrap\">';"), $tree . ' Season Dates fallback wrapper changed');
 	g17b_same(1, substr_count($menu, 'Season Dates page renderer is missing.'), $tree . ' Season Dates fallback copy changed');
 }
@@ -501,7 +501,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 g17b_same($g17b_sources['mirror']['tours'], $g17b_sources['shadow']['tours'], 'Tours full-file mirror/shadow parity changed');
 g17b_same($g17b_sources['mirror']['vendor_list'], $g17b_sources['shadow']['vendor_list'], 'Vendor-list full-file mirror/shadow parity changed');
 foreach (array(
-	'helpers' => array('vms_vendor_tax_profile_missing_items'),
+	'helpers' => array('bvmgr_vendor_tax_profile_missing_items'),
 	'approvals' => array(
 		'vms_approvals_queue_log',
 		'vms_approvals_queue_provider_url',
@@ -510,7 +510,7 @@ foreach (array(
 		'vms_approvals_queue_collect_snapshot',
 		'vms_approvals_queue_record_transition',
 	),
-	'menu' => array('vms_admin_render_season_dates_page'),
+	'menu' => array('bvmgr_admin_render_season_dates_page'),
 ) as $key => $functions) {
 	g17b_assert($g17b_sources['mirror'][$key] !== $g17b_sources['shadow'][$key], 'Established whole-file divergence disappeared: ' . $key);
 	foreach ($functions as $function) {
@@ -691,7 +691,7 @@ function is_wp_error($value): bool
 	return $value instanceof WP_Error;
 }
 
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$GLOBALS['g17b_events'][] = array(
 		'event_code' => $event_code,
@@ -718,7 +718,7 @@ function user_can(WP_User $user, string $capability): bool
 	return true;
 }
 
-eval(g17b_extract_function($g17b_sources['mirror']['helpers'], 'vms_vendor_tax_profile_missing_items'));
+eval(g17b_extract_function($g17b_sources['mirror']['helpers'], 'bvmgr_vendor_tax_profile_missing_items'));
 eval(g17b_extract_function($g17b_sources['mirror']['vendor_list'], 'vms_admin_vendor_list_get_meta_scalar'));
 foreach (array(
 	'vms_approvals_queue_notice_transient_key',
@@ -733,7 +733,7 @@ foreach (array(
 ) as $function) {
 	eval(g17b_extract_function($g17b_sources['mirror']['approvals'], $function));
 }
-eval(g17b_extract_function($g17b_sources['mirror']['menu'], 'vms_admin_render_season_dates_page'));
+eval(g17b_extract_function($g17b_sources['mirror']['menu'], 'bvmgr_admin_render_season_dates_page'));
 require $g17b_root . '/includes/tours/class-vms-tours-registry.php';
 
 $GLOBALS['g17b_meta'][77] = array(
@@ -749,7 +749,7 @@ $GLOBALS['g17b_meta'][77] = array(
 	'_vms_w9_attested_at' => 0,
 );
 $GLOBALS['g17b_events'] = array();
-$g17b_missing = vms_vendor_tax_profile_missing_items(77);
+$g17b_missing = bvmgr_vendor_tax_profile_missing_items(77);
 g17b_same(array('Legal/Payee Name'), $g17b_missing, 'Tax-profile invalid meta must retain blank-value fallback');
 g17b_same(
 	array(
@@ -896,7 +896,7 @@ g17b_same(
 );
 
 ob_start();
-vms_admin_render_season_dates_page();
+bvmgr_admin_render_season_dates_page();
 $g17b_menu_html = (string) ob_get_clean();
 g17b_same(
 	'<div class="wrap"><h1>Season Dates</h1><p>Season Dates page renderer is missing. Expected function <code>vms_render_season_dates_page()</code>.</p></div>',

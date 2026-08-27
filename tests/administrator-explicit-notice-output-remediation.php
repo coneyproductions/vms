@@ -144,8 +144,8 @@ if (!function_exists('sanitize_email')) {
 	}
 }
 
-if (!function_exists('vms_request_read_scalar')) {
-	function vms_request_read_scalar(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_scalar')) {
+	function bvmgr_request_read_scalar(array $source, string $key): string
 	{
 		if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 			return '';
@@ -156,48 +156,48 @@ if (!function_exists('vms_request_read_scalar')) {
 	}
 }
 
-if (!function_exists('vms_request_read_text_field')) {
-	function vms_request_read_text_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_text_field')) {
+	function bvmgr_request_read_text_field(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_text_field($value);
 	}
 }
 
-if (!function_exists('vms_request_read_textarea_field')) {
-	function vms_request_read_textarea_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_textarea_field')) {
+	function bvmgr_request_read_textarea_field(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_textarea_field($value);
 	}
 }
 
-if (!function_exists('vms_request_read_email')) {
-	function vms_request_read_email(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_email')) {
+	function bvmgr_request_read_email(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_email($value);
 	}
 }
 
-if (!function_exists('vms_request_read_key')) {
-	function vms_request_read_key(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_key')) {
+	function bvmgr_request_read_key(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_key($value);
 	}
 }
 
-if (!function_exists('vms_request_read_absint')) {
-	function vms_request_read_absint(array $source, string $key): int
+if (!function_exists('bvmgr_request_read_absint')) {
+	function bvmgr_request_read_absint(array $source, string $key): int
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? 0 : absint($value);
 	}
 }
 
-if (!function_exists('vms_request_read_bool_flag')) {
-	function vms_request_read_bool_flag(array $source, string $key): bool
+if (!function_exists('bvmgr_request_read_bool_flag')) {
+	function bvmgr_request_read_bool_flag(array $source, string $key): bool
 	{
 		if (!array_key_exists($key, $source)) {
 			return false;
@@ -493,8 +493,8 @@ if (!function_exists('vms_settings_calendar_icon_choices')) {
 	}
 }
 
-if (!function_exists('vms_required_public_pages')) {
-	function vms_required_public_pages(): array
+if (!function_exists('bvmgr_required_public_pages')) {
+	function bvmgr_required_public_pages(): array
 	{
 		return array();
 	}
@@ -1179,31 +1179,31 @@ $expectedHeaderActionsAllowed = array(
 	),
 );
 
-$assert(function_exists('vms_admin_ui_explicit_notice_allowed_html'), 'Explicit notice allowlist helper should be defined.');
-$assert(function_exists('vms_admin_ui_rich_explicit_notice_allowed_html'), 'Rich explicit notice allowlist helper should be defined.');
-$assert(function_exists('vms_admin_ui_header_actions_allowed_html'), 'Header actions allowlist helper should be defined.');
+$assert(function_exists('bvmgr_admin_ui_explicit_notice_allowed_html'), 'Explicit notice allowlist helper should be defined.');
+$assert(function_exists('bvmgr_admin_ui_rich_explicit_notice_allowed_html'), 'Rich explicit notice allowlist helper should be defined.');
+$assert(function_exists('bvmgr_admin_ui_header_actions_allowed_html'), 'Header actions allowlist helper should be defined.');
 $assert(
-	$normalizeAllowedHtml(vms_admin_ui_explicit_notice_allowed_html()) === $normalizeAllowedHtml($expectedAllowed),
+	$normalizeAllowedHtml(bvmgr_admin_ui_explicit_notice_allowed_html()) === $normalizeAllowedHtml($expectedAllowed),
 	'Explicit notice allowlist should contain only div[class] and p.'
 );
 $assert(
-	$normalizeAllowedHtml(vms_admin_ui_rich_explicit_notice_allowed_html()) === $normalizeAllowedHtml($expectedRichAllowed),
+	$normalizeAllowedHtml(bvmgr_admin_ui_rich_explicit_notice_allowed_html()) === $normalizeAllowedHtml($expectedRichAllowed),
 	'Rich explicit notice allowlist should contain only div[class], p, and strong.'
 );
 $assert(
-	$normalizeAllowedHtml(vms_admin_ui_header_actions_allowed_html()) === $normalizeAllowedHtml($expectedHeaderActionsAllowed),
+	$normalizeAllowedHtml(bvmgr_admin_ui_header_actions_allowed_html()) === $normalizeAllowedHtml($expectedHeaderActionsAllowed),
 	'Header actions allowlist should contain only the discovered action elements and attributes.'
 );
 $assert(
-	preg_match('~echo\s+wp_kses\s*\(\s*\$explicit_notices_html\s*,\s*vms_admin_ui_explicit_notice_allowed_html\s*\(\s*\)\s*\)\s*;~s', $shellSource) === 1,
+	preg_match('~echo\s+wp_kses\s*\(\s*\$explicit_notices_html\s*,\s*bvmgr_admin_ui_explicit_notice_allowed_html\s*\(\s*\)\s*\)\s*;~s', $shellSource) === 1,
 	'Admin shell should apply the dedicated allowlist at the final explicit notice sink.'
 );
 $assert(
-	preg_match('~echo\s+wp_kses\s*\(\s*\$rich_explicit_notices_html\s*,\s*vms_admin_ui_rich_explicit_notice_allowed_html\s*\(\s*\)\s*\)\s*;~s', $shellSource) === 1,
+	preg_match('~echo\s+wp_kses\s*\(\s*\$rich_explicit_notices_html\s*,\s*bvmgr_admin_ui_rich_explicit_notice_allowed_html\s*\(\s*\)\s*\)\s*;~s', $shellSource) === 1,
 	'Admin shell should apply the dedicated allowlist at the final rich explicit notice sink.'
 );
 $assert(
-	preg_match('~echo\s+[\'"]<div class="vms-admin-shell__actions">[\'"]\s*\.\s*wp_kses\s*\(\s*\$actions_html\s*,\s*vms_admin_ui_header_actions_allowed_html\s*\(\s*\)\s*\)\s*\.\s*[\'"]</div>[\'"]\s*;~s', $shellSource) === 1,
+	preg_match('~echo\s+[\'"]<div class="vms-admin-shell__actions">[\'"]\s*\.\s*wp_kses\s*\(\s*\$actions_html\s*,\s*bvmgr_admin_ui_header_actions_allowed_html\s*\(\s*\)\s*\)\s*\.\s*[\'"]</div>[\'"]\s*;~s', $shellSource) === 1,
 	'Admin shell should apply the dedicated allowlist at the final header-actions sink.'
 );
 $assert(strpos($shellSource, 'echo $explicit_notices_html;') === false, 'Admin shell should not leave a raw explicit notice echo sink.');
@@ -1218,9 +1218,9 @@ $assert(strpos($shellSource, 'esc_html($actions_html') === false, 'Admin shell s
 $assert(strpos($shellSource, 'wp_kses_post($actions_html') === false, 'Admin shell should not use wp_kses_post() for the header-actions sink.');
 $assert(strpos($shellSource, 'echo $captured_notices_html;') !== false, 'Captured notice sink should remain untouched.');
 $assert(strpos($shellSource, 'echo $content_html;') !== false, 'Shell content sink should remain untouched.');
-$assert(strpos($shellSource, 'wp_kses($actions_html, vms_admin_ui_header_actions_allowed_html())') !== false, 'Dedicated header-actions allowlist should be applied only to actions.');
-$assert(strpos($shellSource, 'wp_kses($rich_explicit_notices_html, vms_admin_ui_explicit_notice_allowed_html())') === false, 'Rich explicit notice sink should not reuse the simple notice allowlist.');
-$assert(strpos($shellSource, 'wp_kses($explicit_notices_html, vms_admin_ui_rich_explicit_notice_allowed_html())') === false, 'Simple explicit notice sink should not reuse the rich allowlist.');
+$assert(strpos($shellSource, 'wp_kses($actions_html, bvmgr_admin_ui_header_actions_allowed_html())') !== false, 'Dedicated header-actions allowlist should be applied only to actions.');
+$assert(strpos($shellSource, 'wp_kses($rich_explicit_notices_html, bvmgr_admin_ui_explicit_notice_allowed_html())') === false, 'Rich explicit notice sink should not reuse the simple notice allowlist.');
+$assert(strpos($shellSource, 'wp_kses($explicit_notices_html, bvmgr_admin_ui_rich_explicit_notice_allowed_html())') === false, 'Simple explicit notice sink should not reuse the rich allowlist.');
 $assert(strpos($shellSource, 'wp_kses($captured_notices_html') === false, 'Dedicated explicit notice allowlist should not be applied to captured notices.');
 $assert(strpos($shellSource, 'wp_kses($content_html') === false, 'Dedicated explicit notice allowlist should not be applied to shell content.');
 $assert(strpos($bootstrapSource, "require_once __DIR__ . '/tours/tours.php';") !== false, 'Canonical bootstrap should load the shared tours helper file.');
@@ -1392,12 +1392,12 @@ $assert(strpos($venueContentSource, 'vms_msg') === false && strpos($venueContent
 $assert(strpos($venueContentSource, 'Confirmation required.') === false && strpos($venueContentSource, 'Nothing selected.') === false && strpos($venueContentSource, 'Action complete.') === false, 'Venue Reconciliation content callback should no longer emit the moved rich notice family.');
 $assert(
 	strpos($venueNoticeSource, "sanitize_key((string) \$_GET['vms_msg'])") !== false
-	|| strpos($venueNoticeSource, "vms_request_read_key(\$_GET, 'vms_msg')") !== false,
+	|| strpos($venueNoticeSource, "bvmgr_request_read_key(\$_GET, 'vms_msg')") !== false,
 	'Venue Reconciliation rich notice callback should preserve sanitized message normalization for vms_msg.'
 );
 $assert(
 	strpos($venueNoticeSource, "(int) \$_GET['vms_changed']") !== false
-	|| strpos($venueNoticeSource, "vms_request_read_absint(\$_GET, 'vms_changed')") !== false,
+	|| strpos($venueNoticeSource, "bvmgr_request_read_absint(\$_GET, 'vms_changed')") !== false,
 	'Venue Reconciliation rich notice callback should preserve integer normalization for vms_changed.'
 );
 $assert(strpos($venueNoticeSource, '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>') !== false, 'Venue Reconciliation rich notice callback should preserve the confirmation-required warning fragment.');
@@ -1415,7 +1415,7 @@ ob_start();
 vms_render_integrity_venue_reconcile_notice();
 $venueConfirmNotice = (string) ob_get_clean();
 $assert($venueConfirmNotice === '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>', 'Venue Reconciliation rich notice callback should preserve the confirmation-required fragment.');
-$assert(wp_kses($venueConfirmNotice, vms_admin_ui_rich_explicit_notice_allowed_html()) === $venueConfirmNotice, 'The rich explicit notice allowlist should admit the confirmation-required Venue Reconciliation notice unchanged.');
+$assert(wp_kses($venueConfirmNotice, bvmgr_admin_ui_rich_explicit_notice_allowed_html()) === $venueConfirmNotice, 'The rich explicit notice allowlist should admit the confirmation-required Venue Reconciliation notice unchanged.');
 
 $_GET = array(
 	'vms_msg' => 'nothing_selected',
@@ -1434,7 +1434,7 @@ vms_render_integrity_venue_reconcile_notice();
 $venueDoneNotice = (string) ob_get_clean();
 $assert($venueDoneNotice === '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: 9</p></div>', 'Venue Reconciliation rich notice callback should preserve the success fragment with integer-normalized changed counts.');
 $assert(strpos($venueDoneNotice, '<script') === false, 'Venue Reconciliation changed counts should not become markup.');
-$assert(wp_kses($venueDoneNotice, vms_admin_ui_rich_explicit_notice_allowed_html()) === $venueDoneNotice, 'The rich explicit notice allowlist should admit the Venue Reconciliation success notice unchanged.');
+$assert(wp_kses($venueDoneNotice, bvmgr_admin_ui_rich_explicit_notice_allowed_html()) === $venueDoneNotice, 'The rich explicit notice allowlist should admit the Venue Reconciliation success notice unchanged.');
 
 $_GET = array(
 	'vms_msg' => 'done',
@@ -1562,12 +1562,12 @@ $assert(strpos($calendarContentSource, 'vms_msg') === false && strpos($calendarC
 $assert(strpos($calendarContentSource, 'Confirmation required.') === false && strpos($calendarContentSource, 'Nothing selected.') === false && strpos($calendarContentSource, 'Action complete.') === false, 'Calendar Reconciliation content callback should no longer emit the moved rich notice family.');
 $assert(
 	strpos($calendarNoticeSource, "sanitize_key((string) \$_GET['vms_msg'])") !== false
-	|| strpos($calendarNoticeSource, "vms_request_read_key(\$_GET, 'vms_msg')") !== false,
+	|| strpos($calendarNoticeSource, "bvmgr_request_read_key(\$_GET, 'vms_msg')") !== false,
 	'Calendar Reconciliation rich notice callback should preserve sanitized message normalization for vms_msg.'
 );
 $assert(
 	strpos($calendarNoticeSource, "(int) \$_GET['vms_changed']") !== false
-	|| strpos($calendarNoticeSource, "vms_request_read_absint(\$_GET, 'vms_changed')") !== false,
+	|| strpos($calendarNoticeSource, "bvmgr_request_read_absint(\$_GET, 'vms_changed')") !== false,
 	'Calendar Reconciliation rich notice callback should preserve integer normalization for vms_changed.'
 );
 $assert(strpos($calendarNoticeSource, '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>') !== false, 'Calendar Reconciliation rich notice callback should preserve the confirmation-required warning fragment.');
@@ -1585,7 +1585,7 @@ ob_start();
 vms_render_integrity_calendar_reconcile_notice();
 $calendarConfirmNotice = (string) ob_get_clean();
 $assert($calendarConfirmNotice === '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>', 'Calendar Reconciliation rich notice callback should preserve the confirmation-required fragment.');
-$assert(wp_kses($calendarConfirmNotice, vms_admin_ui_rich_explicit_notice_allowed_html()) === $calendarConfirmNotice, 'The rich explicit notice allowlist should admit the confirmation-required Calendar Reconciliation notice unchanged.');
+$assert(wp_kses($calendarConfirmNotice, bvmgr_admin_ui_rich_explicit_notice_allowed_html()) === $calendarConfirmNotice, 'The rich explicit notice allowlist should admit the confirmation-required Calendar Reconciliation notice unchanged.');
 
 $_GET = array(
 	'vms_msg' => 'nothing_selected',
@@ -1604,7 +1604,7 @@ vms_render_integrity_calendar_reconcile_notice();
 $calendarDoneNotice = (string) ob_get_clean();
 $assert($calendarDoneNotice === '<div class="notice notice-success"><p><strong>Action complete.</strong> Changed: 14</p></div>', 'Calendar Reconciliation rich notice callback should preserve the success fragment with integer-normalized changed counts.');
 $assert(strpos($calendarDoneNotice, '<script') === false, 'Calendar Reconciliation changed counts should not become markup.');
-$assert(wp_kses($calendarDoneNotice, vms_admin_ui_rich_explicit_notice_allowed_html()) === $calendarDoneNotice, 'The rich explicit notice allowlist should admit the Calendar Reconciliation success notice unchanged.');
+$assert(wp_kses($calendarDoneNotice, bvmgr_admin_ui_rich_explicit_notice_allowed_html()) === $calendarDoneNotice, 'The rich explicit notice allowlist should admit the Calendar Reconciliation success notice unchanged.');
 
 $_GET = array(
 	'vms_msg' => 'done',
@@ -1736,7 +1736,7 @@ $assert(strpos($settingsContentSource, 'vms_settings_page_ticketing_stock_notice
 $assert(strpos($settingsSource, "return '<!-- vms-settings-ticketing-stock-notice -->';") !== false, 'Settings should define a dedicated placeholder marker for fallback ticketing stock notice replacement.');
 $assert(
 	strpos($settingsNoticeSource, "isset(\$_GET['vms_notice']) && (string) \$_GET['vms_notice'] === 'default_venue_set'") !== false
-	|| strpos($settingsNoticeSource, "vms_request_read_key(\$_GET, 'vms_notice') === 'default_venue_set'") !== false,
+	|| strpos($settingsNoticeSource, "bvmgr_request_read_key(\$_GET, 'vms_notice') === 'default_venue_set'") !== false,
 	'Settings explicit notice callback should preserve the default-venue redirect-status comparison.'
 );
 $assert(strpos($settingsNoticeSource, "<div class=\"notice notice-success\"><p>") !== false, 'Settings explicit notice callback should preserve the fixed simple notice fragment.');
@@ -1752,8 +1752,8 @@ $assert(
 		&& strpos($settingsStateSource, "isset(\$_GET['vms_ticketing_stock_commit_done'])") !== false
 	)
 	|| (
-		strpos($settingsStateSource, "vms_request_read_scalar(\$_GET, 'vms_ticketing_stock_preview_done')") !== false
-		&& strpos($settingsStateSource, "vms_request_read_scalar(\$_GET, 'vms_ticketing_stock_commit_done')") !== false
+		strpos($settingsStateSource, "bvmgr_request_read_scalar(\$_GET, 'vms_ticketing_stock_preview_done')") !== false
+		&& strpos($settingsStateSource, "bvmgr_request_read_scalar(\$_GET, 'vms_ticketing_stock_commit_done')") !== false
 	),
 	'Settings ticketing stock notice-state resolver should preserve the preview and commit query-flag vocabulary.'
 );
@@ -1809,7 +1809,7 @@ $assert(
 	'Settings explicit notice callback should preserve the fixed default-venue notice fragment.'
 );
 $assert(
-	wp_kses($settingsDefaultVenueNotice, vms_admin_ui_explicit_notice_allowed_html()) === $settingsDefaultVenueNotice,
+	wp_kses($settingsDefaultVenueNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $settingsDefaultVenueNotice,
 	'The explicit notice allowlist should admit the Settings default-venue notice unchanged.'
 );
 
@@ -1914,7 +1914,7 @@ $assert(
 	'Settings ticketing stock notice renderer should preserve the preview fragment and integer-normalize dynamic counts.'
 );
 $assert(
-	wp_kses($settingsPreviewNotice, vms_admin_ui_explicit_notice_allowed_html()) === $settingsPreviewNotice,
+	wp_kses($settingsPreviewNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $settingsPreviewNotice,
 	'The explicit notice allowlist should admit the Settings ticketing stock preview notice unchanged.'
 );
 $assert(strpos($settingsPreviewNotice, '<script') === false, 'Settings ticketing stock preview notice should keep HTML-like dynamic input escaped as inert text via integer normalization.');
@@ -2015,7 +2015,7 @@ $assert(
 	'Settings ticketing stock notice renderer should preserve the commit fragment and integer-normalize dynamic counts.'
 );
 $assert(
-	wp_kses($settingsCommitNotice, vms_admin_ui_explicit_notice_allowed_html()) === $settingsCommitNotice,
+	wp_kses($settingsCommitNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $settingsCommitNotice,
 	'The explicit notice allowlist should admit the Settings ticketing stock commit notice unchanged.'
 );
 $assert($GLOBALS['vms_test_transient_get_calls'] === 2 && $GLOBALS['vms_test_transient_get_keys'] === array($settingsPreviewKey, 'vms_ticketing_stock_reconcile_last'), 'Settings ticketing stock commit notice should preserve the preview lookup plus the global commit transient lookup exactly once each.');
@@ -2187,7 +2187,7 @@ $assert(
 	'Status Notice callback should preserve the saved notice fragment.'
 );
 $assert(
-	wp_kses($savedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $savedNotice,
+	wp_kses($savedNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $savedNotice,
 	'The explicit notice allowlist should admit the current saved notice fragment unchanged.'
 );
 
@@ -2220,7 +2220,7 @@ $assert($contentStart !== false && $contentEnd !== false && $contentEnd > $conte
 $continuityContentSource = substr($continuitySource, (int) $contentStart, (int) $contentEnd - (int) $contentStart);
 $assert(
 	strpos($updatedNoticeSource, '$_GET[\'updated\'] !== \'1\'') !== false
-	|| strpos($updatedNoticeSource, "vms_request_read_scalar(\$_GET, 'updated') !== '1'") !== false,
+	|| strpos($updatedNoticeSource, "bvmgr_request_read_scalar(\$_GET, 'updated') !== '1'") !== false,
 	'Continuity Binder explicit notice callback should preserve the existing exact display condition.'
 );
 $assert(strpos($updatedNoticeSource, 'esc_html__(\'Binder updated.\'') !== false, 'Continuity Binder explicit notice callback should keep contextual escaping for notice text.');
@@ -2240,7 +2240,7 @@ $assert(
 	'Continuity Binder explicit notice callback should preserve the updated notice fragment.'
 );
 $assert(
-	wp_kses($continuityUpdatedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $continuityUpdatedNotice,
+	wp_kses($continuityUpdatedNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $continuityUpdatedNotice,
 	'The explicit notice allowlist should admit the Continuity Binder updated notice unchanged.'
 );
 
@@ -2281,7 +2281,7 @@ $assert(
 	'Due Dates explicit notice callback should preserve the success notice fragment and normalized message text.'
 );
 $assert(
-	wp_kses($dueSuccessNotice, vms_admin_ui_explicit_notice_allowed_html()) === $dueSuccessNotice,
+	wp_kses($dueSuccessNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $dueSuccessNotice,
 	'The explicit notice allowlist should admit the Due Dates success notice unchanged.'
 );
 
@@ -2318,7 +2318,7 @@ $assert($squareContentStart !== false && $squareContentEnd !== false && $squareC
 $squareContentSource = substr($squareSyncProtectionSource, (int) $squareContentStart, (int) $squareContentEnd - (int) $squareContentStart);
 $assert(
 	strpos($squareNoticeSource, 'sanitize_key((string) $_GET[\'vms_square_notice\'])') !== false
-	|| strpos($squareNoticeSource, "vms_request_read_key(\$_GET, 'vms_square_notice')") !== false,
+	|| strpos($squareNoticeSource, "bvmgr_request_read_key(\$_GET, 'vms_square_notice')") !== false,
 	'Square Sync Protection explicit notice callback should preserve the existing sanitized notice source.'
 );
 $assert(strpos($squareNoticeSource, 'scan_done') !== false && strpos($squareNoticeSource, 'repair_done') !== false, 'Square Sync Protection explicit notice callback should preserve the existing notice conditions.');
@@ -2340,7 +2340,7 @@ $assert(
 	'Square Sync Protection explicit notice callback should preserve the scan-complete notice fragment.'
 );
 $assert(
-	wp_kses($squareScanNotice, vms_admin_ui_explicit_notice_allowed_html()) === $squareScanNotice,
+	wp_kses($squareScanNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $squareScanNotice,
 	'The explicit notice allowlist should admit the Square Sync Protection scan notice unchanged.'
 );
 
@@ -2390,7 +2390,7 @@ $assert(
 	'Staff Certifications explicit notice helper should preserve the exact inline empty-state notice fragment.'
 );
 $assert(
-	wp_kses($staffEmptyNotice, vms_admin_ui_explicit_notice_allowed_html()) === $staffEmptyNotice,
+	wp_kses($staffEmptyNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $staffEmptyNotice,
 	'The explicit notice allowlist should admit the Staff Certifications empty-state notice unchanged.'
 );
 
@@ -2501,7 +2501,7 @@ $assert(
 	'Social Sharing explicit notice callback should preserve the warning notice fragment.'
 );
 $assert(
-	wp_kses($socialWarningNotice, vms_admin_ui_explicit_notice_allowed_html()) === $socialWarningNotice,
+	wp_kses($socialWarningNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $socialWarningNotice,
 	'The explicit notice allowlist should admit the Social Sharing warning notice unchanged.'
 );
 
@@ -2541,11 +2541,11 @@ $passClaimsPageEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_c
 $assert($passClaimsPageStart !== false && $passClaimsPageEnd !== false && $passClaimsPageEnd > $passClaimsPageStart, 'Pass Claims page renderer body should be locatable.');
 $passClaimsPageSource = substr($passClaimsSource, (int) $passClaimsPageStart, (int) $passClaimsPageEnd - (int) $passClaimsPageStart);
 $passClaimsContentStart = strpos($passClaimsPageSource, '$content = static function () use ($tab): void {');
-$passClaimsShellStart = strpos($passClaimsPageSource, "if (function_exists('vms_admin_ui_render_shell')) {");
+$passClaimsShellStart = strpos($passClaimsPageSource, "if (function_exists('bvmgr_admin_ui_render_shell')) {");
 $assert($passClaimsContentStart !== false && $passClaimsShellStart !== false && $passClaimsShellStart > $passClaimsContentStart, 'Pass Claims content callback body should be locatable.');
 $passClaimsContentSource = substr($passClaimsPageSource, (int) $passClaimsContentStart, (int) $passClaimsShellStart - (int) $passClaimsContentStart);
 $assert(
-	strpos($passClaimsNoticeSource, "\$result = vms_request_read_key(\$_GET, 'result');") !== false
+	strpos($passClaimsNoticeSource, "\$result = bvmgr_request_read_key(\$_GET, 'result');") !== false
 	&& preg_match('~\$_(?:GET|POST|REQUEST)\s*\[\s*[\'"]result[\'"]\s*\]~', $passClaimsNoticeSource) === 0,
 	'Pass Claims explicit notice callback should read the result query key through the scalar-safe request helper.'
 );
@@ -2583,7 +2583,7 @@ $assert(
 	'Pass Claims explicit notice callback should preserve the source-saved notice fragment.'
 );
 $assert(
-	wp_kses($passClaimsSourceSavedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $passClaimsSourceSavedNotice,
+	wp_kses($passClaimsSourceSavedNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $passClaimsSourceSavedNotice,
 	'The explicit notice allowlist should admit the Pass Claims source-saved notice unchanged.'
 );
 $assert($GLOBALS['vms_test_transient_set_calls'] === 0 && $GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_delete_calls'] === 1, 'Pass Claims source-saved notice rendering should perform only one destructive transient pop check.');
@@ -2627,7 +2627,7 @@ $assert(
 	'Pass Claims explicit notice callback should preserve result-first ordering and keep stored HTML-like message text inert.'
 );
 $assert(
-	wp_kses($passClaimsCombinedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $passClaimsCombinedNotice,
+	wp_kses($passClaimsCombinedNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $passClaimsCombinedNotice,
 	'The explicit notice allowlist should admit the combined Pass Claims notice family unchanged.'
 );
 $assert($GLOBALS['vms_test_transient_set_calls'] === 0 && $GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_delete_calls'] === 1, 'Pass Claims combined notice rendering should pop the stored user message exactly once.');
@@ -2740,7 +2740,7 @@ $assert(
 	'Email Follow-Ups primary redirect notice callback should preserve the success notice fragment.'
 );
 $assert(
-	wp_kses($emailSuccessNotice, vms_admin_ui_explicit_notice_allowed_html()) === $emailSuccessNotice,
+	wp_kses($emailSuccessNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $emailSuccessNotice,
 	'The explicit notice allowlist should admit the Email Follow-Ups success notice unchanged.'
 );
 
@@ -2809,7 +2809,7 @@ $assert(
 	'Email Follow-Ups preview warning helper should preserve the exact warning fragment.'
 );
 $assert(
-	wp_kses($emailPreviewWarningNotice, vms_admin_ui_explicit_notice_allowed_html()) === $emailPreviewWarningNotice,
+	wp_kses($emailPreviewWarningNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $emailPreviewWarningNotice,
 	'The explicit notice allowlist should admit the Email Follow-Ups preview warning unchanged.'
 );
 
@@ -3187,7 +3187,7 @@ foreach ($ticketIntegrityRenderCases as $ticketIntegrityRenderCase) {
 		$ticketIntegrityRenderCase['label'] . ' should preserve the exact notice fragment.'
 	);
 	$assert(
-		wp_kses($ticketIntegrityNoticeHtml, vms_admin_ui_explicit_notice_allowed_html()) === $ticketIntegrityNoticeHtml,
+		wp_kses($ticketIntegrityNoticeHtml, bvmgr_admin_ui_explicit_notice_allowed_html()) === $ticketIntegrityNoticeHtml,
 		$ticketIntegrityRenderCase['label'] . ' should remain within the explicit notice contract.'
 	);
 }
@@ -3339,7 +3339,7 @@ $assert(
 	'Event Feedback explicit notice callback should preserve the saved-settings notice fragment.'
 );
 $assert(
-	wp_kses($eventFeedbackSavedNotice, vms_admin_ui_explicit_notice_allowed_html()) === $eventFeedbackSavedNotice,
+	wp_kses($eventFeedbackSavedNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $eventFeedbackSavedNotice,
 	'The explicit notice allowlist should admit the Event Feedback saved-settings notice unchanged.'
 );
 
@@ -3413,7 +3413,7 @@ $assert(
 	'Event Feedback explicit notice callback should preserve the missing-plan notice fragment.'
 );
 $assert(
-	wp_kses($eventFeedbackMissingPlanNotice, vms_admin_ui_explicit_notice_allowed_html()) === $eventFeedbackMissingPlanNotice,
+	wp_kses($eventFeedbackMissingPlanNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $eventFeedbackMissingPlanNotice,
 	'The explicit notice allowlist should admit the Event Feedback missing-plan notice unchanged.'
 );
 $assert($GLOBALS['vms_test_feedback_event_context_calls'] === 1, 'Event Feedback missing-plan notice should resolve Event Plan context exactly once.');
@@ -3529,7 +3529,7 @@ $eventPlanImportPageStart = strpos($eventPlanImportSource, 'function vms_event_p
 $assert($eventPlanImportPageStart !== false, 'Event Plan Import page renderer body should be locatable.');
 $eventPlanImportPageSource = substr($eventPlanImportSource, (int) $eventPlanImportPageStart);
 $eventPlanImportContentStart = strpos($eventPlanImportPageSource, '$render_content = static function () use (');
-$eventPlanImportContentEnd = strpos($eventPlanImportPageSource, "if (function_exists('vms_admin_ui_render_shell')) {");
+$eventPlanImportContentEnd = strpos($eventPlanImportPageSource, "if (function_exists('bvmgr_admin_ui_render_shell')) {");
 $assert($eventPlanImportContentStart !== false && $eventPlanImportContentEnd !== false && $eventPlanImportContentEnd > $eventPlanImportContentStart, 'Event Plan Import content callback body should be locatable.');
 $eventPlanImportContentSource = substr($eventPlanImportPageSource, (int) $eventPlanImportContentStart, (int) $eventPlanImportContentEnd - (int) $eventPlanImportContentStart);
 $eventPlanImportSetStart = strpos($eventPlanImportEngineSource, 'function vms_event_plan_import_set_notice(string $type, string $message): void');
@@ -3626,7 +3626,7 @@ ob_start();
 vms_event_plan_import_render_notice(array('type' => 'unexpected', 'message' => 'Fallback to success.'));
 $eventPlanImportFallbackBranchNotice = (string) ob_get_clean();
 $assert($eventPlanImportFallbackBranchNotice === '<div class="notice notice-success inline"><p>Fallback to success.</p></div>', 'Event Plan Import explicit notice renderer should preserve the unknown-type fallback.');
-$assert(wp_kses($eventPlanImportFallbackBranchNotice, vms_admin_ui_explicit_notice_allowed_html()) === $eventPlanImportFallbackBranchNotice, 'The explicit notice allowlist should admit the Event Plan Import notice fragment unchanged.');
+$assert(wp_kses($eventPlanImportFallbackBranchNotice, bvmgr_admin_ui_explicit_notice_allowed_html()) === $eventPlanImportFallbackBranchNotice, 'The explicit notice allowlist should admit the Event Plan Import notice fragment unchanged.');
 
 ob_start();
 vms_event_plan_import_render_notice(array('type' => 'success', 'message' => ''));
@@ -3738,12 +3738,12 @@ $assert(strpos($eventPlanImportRowsErrorPage, 'Preview rows payload is unavailab
 
 $allowedHeaderActions = '<a class="button button-primary" href="https://example.test/wp-admin/post-new.php?post_type=vms_event_plan">New Event Plan</a><a class="button" href="https://example.test/wp-admin/edit.php?post_type=vms_event_plan">Event Plans</a><div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Start Guided Tour</button></div>';
 $assert(
-	wp_kses($allowedHeaderActions, vms_admin_ui_header_actions_allowed_html()) === $allowedHeaderActions,
+	wp_kses($allowedHeaderActions, bvmgr_admin_ui_header_actions_allowed_html()) === $allowedHeaderActions,
 	'Header actions allowlist should preserve the current anchor, wrapper, and guided-tour button fragments.'
 );
 
 $unsafeHeaderActions = '<div class="vms-help-menu" style="display:inline-block" data-vms-tour="ticket-integrity.help" data-vms-help-action="quick_tips"><details class="vms-help-menu" style="display:inline-block"><summary class="button button-secondary">Help</summary></details><button type="button" class="button" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help" data-vms-help-action="quick_tips" data-vms-help-open="1" onclick="alert(1)">Quick Tips</button><a class="button" href="javascript:alert(1)" target="_blank">Bad</a><script>alert(1)</script></div>';
-$sanitizedHeaderActions = wp_kses($unsafeHeaderActions, vms_admin_ui_header_actions_allowed_html());
+$sanitizedHeaderActions = wp_kses($unsafeHeaderActions, bvmgr_admin_ui_header_actions_allowed_html());
 $assert(strpos($sanitizedHeaderActions, '<div class="vms-help-menu" data-vms-tour="ticket-integrity.help">') !== false, 'Header actions allowlist should preserve approved wrapper attributes.');
 $assert(strpos($sanitizedHeaderActions, '<button type="button" class="button" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">Quick Tips</button>') !== false, 'Header actions allowlist should preserve approved button hooks.');
 $assert(strpos($sanitizedHeaderActions, '<a class="button">Bad</a>') !== false, 'Header actions allowlist should strip unsafe href protocols while preserving approved anchor markup.');
@@ -3757,7 +3757,7 @@ $assert(stripos($sanitizedHeaderActions, 'data-vms-help-open=') === false, 'Head
 $assert(preg_match('~<[^>]+\son[a-z]+\s*=~i', $sanitizedHeaderActions) === 0, 'Header actions contract should reject inline event-handler attributes.');
 
 $unsafeRichHtml = '<div class="notice notice-success is-dismissible" style="color:red" data-track="1" role="alert" onclick="alert(1)"><p class="bad" aria-live="assertive"><strong class="bad" data-bad="1">Saved</strong><span> now</span><a href="https://example.test">link</a><script>alert(1)</script></p></div>';
-$sanitizedRichHtml = wp_kses($unsafeRichHtml, vms_admin_ui_rich_explicit_notice_allowed_html());
+$sanitizedRichHtml = wp_kses($unsafeRichHtml, bvmgr_admin_ui_rich_explicit_notice_allowed_html());
 $assert(strpos($sanitizedRichHtml, '<div class="notice notice-success is-dismissible">') !== false, 'Rich explicit notice allowlist should preserve the allowed notice wrapper and class attribute.');
 $assert(strpos($sanitizedRichHtml, '<p><strong>Saved</strong>') !== false, 'Rich explicit notice allowlist should preserve strong markup inside the notice paragraph.');
 $assert(strpos($sanitizedRichHtml, ' now') !== false && strpos($sanitizedRichHtml, 'link') !== false, 'Rich explicit notice allowlist should preserve text nodes while stripping disallowed tags.');
@@ -3772,7 +3772,7 @@ $assert(preg_match('~<strong[^>]+\s(?:class|id|role|aria-[a-z-]+|data-[a-z-]+)=~
 $assert(preg_match('~<[^>]+\son[a-z]+\s*=~i', $sanitizedRichHtml) === 0, 'Rich explicit notice allowlist should reject inline event-handler attributes.');
 
 $unsafeHtml = '<div class="notice notice-success is-dismissible" style="color:red" data-track="1" role="alert" onclick="alert(1)"><p class="bad" aria-live="assertive" style="font-weight:bold">Saved<script>alert(1)</script><iframe src="https://example.test"></iframe><object data="bad"></object><embed src="bad"><form action="#"><input type="text" value="x"></form><a href="https://example.test">link</a><button type="button">button</button></p></div>';
-$sanitizedHtml = wp_kses($unsafeHtml, vms_admin_ui_explicit_notice_allowed_html());
+$sanitizedHtml = wp_kses($unsafeHtml, bvmgr_admin_ui_explicit_notice_allowed_html());
 $assert(strpos($sanitizedHtml, '<div class="notice notice-success is-dismissible">') !== false, 'Allowed div tag and class attribute should survive.');
 $assert(strpos($sanitizedHtml, '<p>') !== false, 'Allowed p tag should survive.');
 $assert(strpos($sanitizedHtml, 'Saved') !== false, 'Notice text should survive sanitization.');
@@ -3792,7 +3792,7 @@ $assert(stripos($sanitizedHtml, 'aria-live=') === false, 'ARIA attributes should
 $assert(preg_match('~<p[^>]+\s(?:class|id|role|aria-[a-z-]+)=~i', $sanitizedHtml) === 0, 'Unapproved p attributes should not survive.');
 
 $malformedHtml = '<div class="notice notice-success is-dismissible" data-bad="1"><p title="&quot; onmouseover=&quot;alert(1)">Broken</p></div>';
-$sanitizedMalformedHtml = wp_kses($malformedHtml, vms_admin_ui_explicit_notice_allowed_html());
+$sanitizedMalformedHtml = wp_kses($malformedHtml, bvmgr_admin_ui_explicit_notice_allowed_html());
 $assert(strpos($sanitizedMalformedHtml, 'onmouseover=') === false, 'Malformed attributes should not escape into executable attributes.');
 $assert(strpos($sanitizedMalformedHtml, 'title=') === false, 'Malformed p attributes should not survive.');
 $assert(strpos($sanitizedMalformedHtml, 'data-bad=') === false, 'Malformed div data attributes should not survive.');

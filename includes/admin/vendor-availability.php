@@ -925,11 +925,11 @@ if (!function_exists('vms_vendor_availability_venue_is_open_for_date')) {
         if ($venue_id <= 0 || !vms_vendor_availability_is_valid_ymd($date)) {
             return null;
         }
-        if (function_exists('vms_is_venue_closed_on_date') && vms_is_venue_closed_on_date($venue_id, $date)) {
+        if (function_exists('bvmgr_is_venue_closed_on_date') && bvmgr_is_venue_closed_on_date($venue_id, $date)) {
             return false;
         }
-        if (function_exists('vms_venue_is_open_on_date')) {
-            return (bool) vms_venue_is_open_on_date($venue_id, $date);
+        if (function_exists('bvmgr_venue_is_open_on_date')) {
+            return (bool) bvmgr_venue_is_open_on_date($venue_id, $date);
         }
         return null;
     }

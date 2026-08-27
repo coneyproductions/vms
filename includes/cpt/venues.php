@@ -122,7 +122,7 @@ if (!function_exists('vms_venue_submitted_nonce')) {
     function vms_venue_submitted_nonce(string $key): string
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted venue nonce is required before local verification.
-        return vms_request_read_text_field($_POST, $key);
+        return bvmgr_request_read_text_field($_POST, $key);
     }
 }
 
@@ -130,7 +130,7 @@ if (!function_exists('vms_venue_notice_request_post_id')) {
     function vms_venue_notice_request_post_id(): int
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue notice state only affects admin feedback.
-        return vms_request_read_absint($_GET, 'post');
+        return bvmgr_request_read_absint($_GET, 'post');
     }
 }
 
@@ -286,7 +286,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
 
     $read_text = static function (string $key): string {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_save_venue_location before reading location fields.
-        return vms_request_read_text_field($_POST, $key);
+        return bvmgr_request_read_text_field($_POST, $key);
     };
 
     $address = $read_text('vms_venue_address');
@@ -558,7 +558,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     $open_days = array_values(array_unique(array_map('intval', $open_days)));
     $open_days = array_values(array_filter($open_days, fn($d) => $d >= 0 && $d <= 6));
 
-    $year_round = vms_request_read_bool_flag($_POST, 'vms_venue_open_year_round') ? 1 : 0;
+    $year_round = bvmgr_request_read_bool_flag($_POST, 'vms_venue_open_year_round') ? 1 : 0;
 
     $starts = (isset($_POST['vms_venue_season_start']) && is_array($_POST['vms_venue_season_start']))
         ? (array) wp_unslash($_POST['vms_venue_season_start']) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Venue season dates are unslashed here and validated per entry below.

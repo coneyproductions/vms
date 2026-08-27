@@ -10,9 +10,9 @@ add_action('wp_ajax_vms_tax_bypass_set', function () {
 
   check_ajax_referer('vms_tax_bypass_ajax', 'nonce');
 
-  $post_id = vms_request_read_absint($_POST, 'post_id');
-  $until   = vms_request_read_text_field($_POST, 'until');
-  $reason  = vms_request_read_text_field($_POST, 'reason');
+  $post_id = bvmgr_request_read_absint($_POST, 'post_id');
+  $until   = bvmgr_request_read_text_field($_POST, 'until');
+  $reason  = bvmgr_request_read_text_field($_POST, 'reason');
 
   if ($post_id <= 0) {
     wp_send_json_error(['message' => 'Missing post_id'], 400);
@@ -42,7 +42,7 @@ add_action('wp_ajax_vms_tax_bypass_clear', function () {
 
   check_ajax_referer('vms_tax_bypass_ajax', 'nonce');
 
-  $post_id = vms_request_read_absint($_POST, 'post_id');
+  $post_id = bvmgr_request_read_absint($_POST, 'post_id');
   if ($post_id <= 0) {
     wp_send_json_error(['message' => 'Missing post_id'], 400);
   }

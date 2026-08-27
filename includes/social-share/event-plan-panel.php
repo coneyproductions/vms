@@ -777,8 +777,8 @@ if (!function_exists('vms_social_save_event_panel')) {
 		}
 		vms_social_update_event_panel_meta_if_changed($post_id, vms_social_event_panel_meta_key('template_overrides'), $tpl, $tpl_default);
 
-		$status = function_exists('vms_event_plan_current_internal_status')
-			? (string) vms_event_plan_current_internal_status($post_id, 'financial')
+		$status = function_exists('bvmgr_event_plan_current_internal_status')
+			? (string) bvmgr_event_plan_current_internal_status($post_id, 'financial')
 			: sanitize_key((string) get_post_meta($post_id, vms_social_event_panel_meta_key('status'), true));
 		$status = sanitize_key($status);
 		$flag = ($status === 'draft' && vms_social_event_has_posted_queue($post_id)) ? 1 : 0;

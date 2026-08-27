@@ -53,7 +53,7 @@ if (!function_exists('vms_add_dispatch_public_shell_stylesheet_url')) {
 		}
 
 		$stylesheet_url = BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-public-shell.css';
-		$version = function_exists('vms_asset_version') ? trim((string) vms_asset_version()) : '';
+		$version = function_exists('bvmgr_asset_version') ? trim((string) bvmgr_asset_version()) : '';
 		if ($version === '' && defined('BVMGR_VERSION')) {
 			$version = (string) BVMGR_VERSION;
 		}

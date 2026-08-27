@@ -66,7 +66,7 @@ function bvmgr_docs_index() {
         }
 
         foreach ($files as $file) {
-            $parsed = vms_docs_parse_file($file);
+            $parsed = bvmgr_docs_parse_file($file);
 
             // Require at least a title and slug; fallback to filename-based slug.
             $slug = $parsed['slug'];
@@ -107,7 +107,7 @@ function bvmgr_docs_index() {
  * since: 0.1.0
  * ---
  */
-function vms_docs_parse_file($file_path) {
+function bvmgr_docs_parse_file($file_path) {
     $out = [
         'title' => '',
         'slug'  => '',
@@ -144,7 +144,7 @@ function vms_docs_parse_file($file_path) {
 /**
  * Load raw markdown body (without front matter).
  */
-function vms_docs_get_markdown($file_path) {
+function bvmgr_docs_get_markdown($file_path) {
     $raw = @file_get_contents($file_path);
     if (!is_string($raw)) { return ''; }
 

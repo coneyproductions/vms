@@ -10,7 +10,7 @@ defined('ABSPATH') || exit;
  *
  * @return array<string,string> key => human label
  */
-function vms_event_plan_statuses(): array {
+function bvmgr_event_plan_statuses(): array {
 	$statuses = [
 		'draft'     => __('Draft', 'backstage-venue-manager'),
 		'ready'     => __('Ready', 'backstage-venue-manager'),
@@ -29,7 +29,7 @@ function vms_event_plan_statuses(): array {
  *
  * @return array<string,string>
  */
-function vms_vendor_availability_statuses(): array {
+function bvmgr_vendor_availability_statuses(): array {
 	$statuses = [
 		'available'   => __('Available', 'backstage-venue-manager'),
 		'unavailable' => __('Unavailable', 'backstage-venue-manager'),
@@ -45,7 +45,7 @@ function vms_vendor_availability_statuses(): array {
  *
  * @return array<string,string>
  */
-function vms_payment_statuses(): array {
+function bvmgr_payment_statuses(): array {
 	$statuses = [
 		'unpaid'   => __('Unpaid', 'backstage-venue-manager'),
 		'partial'  => __('Partial', 'backstage-venue-manager'),
@@ -61,7 +61,7 @@ function vms_payment_statuses(): array {
  *
  * @return array<string,string>
  */
-function vms_cancellation_reasons(): array {
+function bvmgr_cancellation_reasons(): array {
 	$reasons = [
 		'weather'         => __('Weather', 'backstage-venue-manager'),
 		'low_sales'       => __('Low sales', 'backstage-venue-manager'),

@@ -16,7 +16,7 @@ if (!function_exists('vms_approvals_queue_log')) {
 	 */
 	function vms_approvals_queue_log(string $event_code, array $context = array(), $error = null): void
 	{
-		if (!function_exists('vms_record_operational_issue')) {
+		if (!function_exists('bvmgr_record_operational_issue')) {
 			return;
 		}
 
@@ -29,7 +29,7 @@ if (!function_exists('vms_approvals_queue_log')) {
 			$safe_context[$key] = substr(sanitize_key((string) $value), 0, 80);
 		}
 
-		vms_record_operational_issue(
+		bvmgr_record_operational_issue(
 			$event_code,
 			$safe_context,
 			$error
@@ -583,8 +583,8 @@ if (!function_exists('vms_approvals_queue_default_vendor_post_type')) {
 	function vms_approvals_queue_default_vendor_post_type(): string
 	{
 		$post_type = '';
-		if (function_exists('vms_admin_ui_vendor_application_post_type')) {
-			$post_type = sanitize_key((string) vms_admin_ui_vendor_application_post_type());
+		if (function_exists('bvmgr_admin_ui_vendor_application_post_type')) {
+			$post_type = sanitize_key((string) bvmgr_admin_ui_vendor_application_post_type());
 		}
 		if ($post_type === '' && defined('BVMGR_VENDOR_APP_CPT')) {
 			$post_type = sanitize_key((string) BVMGR_VENDOR_APP_CPT);
@@ -1079,7 +1079,7 @@ if (!function_exists('vms_approvals_queue_print_styles')) {
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only approvals queue routing only affects admin display state.
-		$page = vms_request_read_key($_GET, 'page');
+		$page = bvmgr_request_read_key($_GET, 'page');
 		if ($page !== 'vms-approvals' && $page !== 'vms-dashboard' && $page !== 'vms-verifications') {
 			return;
 		}

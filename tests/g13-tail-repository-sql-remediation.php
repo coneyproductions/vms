@@ -289,7 +289,7 @@ function g13_tail_extract_assignment_call(string $source, string $marker): strin
 function g13_tail_restore_g17_logging(string $source): string
 {
 	$specs = array(
-		'vms_vendor_tax_profile_missing_items' => array(
+		'bvmgr_vendor_tax_profile_missing_items' => array(
 			'current_hash' => 'd455fc35e3361dcf4f94e7827800eb65d5ecf3fe580d30d5265d632981da659e',
 			'historical_hash' => 'c873dd6e83043bb7626c2916e450ce8bc3d4abebc37912d9c223081b4b30be6b',
 			'historical_base64' => 'ZnVuY3Rpb24gdm1zX3ZlbmRvcl90YXhfcHJvZmlsZV9taXNzaW5nX2l0ZW1zKGludCAkdmVuZG9yX2lkKTogYXJyYXkKewogICAgLy8gTk9URToKICAgIC8vIFRoaXMgZnVuY3Rpb24gaXMgdXNlZCBieSBhZG1pbi1vbmx5IHJlYWRpbmVzcyBjaGVja3MgKGV2ZW50IHBsYW4gZWRpdG9yKS4KICAgIC8vIEl0IE1VU1Qgc3RheSBhbGlnbmVkIHdpdGggdGhlIGFkbWluIHZlbmRvciBsaXN0IGNoZWNrcy4KCiAgICAkbWlzc2luZyA9IGFycmF5KCk7CiAgICAvLyBTdGFmZiBlbXBsb3llZTogdXNlIEVtcGxveWVlIFBhY2tldCByZXF1aXJlbWVudHMgKFctNCArIEktOSkuIENvbnRyYWN0b3JzIHVzZSBXLTkgdGF4IHByb2ZpbGUuCiAgICBpZiAoZ2V0X3Bvc3RfdHlwZSgkdmVuZG9yX2lkKSA9PT0gJ3Ztc19zdGFmZicpIHsKICAgICAgICAka193b3JrZXIgPSBmdW5jdGlvbl9leGlzdHMoJ3Ztc19tZXRhX2tleScpID8gKHN0cmluZykgdm1zX21ldGFfa2V5KCdzdGFmZicsICd3b3JrZXJfdHlwZScpIDogJ192bXNfc3RhZmZfd29ya2VyX3R5cGUnOwogICAgICAgIGlmICgka193b3JrZXIgPT09ICcnKSAka193b3JrZXIgPSAnX3Ztc19zdGFmZl93b3JrZXJfdHlwZSc7CiAgICAgICAgJHd0ID0gc2FuaXRpemVfa2V5KChzdHJpbmcpIGdldF9wb3N0X21ldGEoJHZlbmRvcl9pZCwgJGtfd29ya2VyLCB0cnVlKSk7CiAgICAgICAgaWYgKCR3dCA9PT0gJ2VtcGxveWVlJykgewogICAgICAgICAgICAkZW1wX21pc3NpbmcgPSBhcnJheSgpOwogICAgICAgICAgICAkdzQgPSAoaW50KSBnZXRfcG9zdF9tZXRhKCR2ZW5kb3JfaWQsICdfdm1zX2VtcGxveWVlX3c0X3JlY2VpdmVkJywgdHJ1ZSkgPyAxIDogMDsKICAgICAgICAgICAgJGk5ID0gKGludCkgZ2V0X3Bvc3RfbWV0YSgkdmVuZG9yX2lkLCAnX3Ztc19lbXBsb3llZV9pOV92ZXJpZmllZCcsIHRydWUpID8gMSA6IDA7CiAgICAgICAgICAgIGlmICghJHc0KSAkZW1wX21pc3NpbmdbXSA9IF9fKCdXLTQgcmVjZWl2ZWQnLCAnYmFja3N0YWdlLXZlbnVlLW1hbmFnZXInKTsKICAgICAgICAgICAgaWYgKCEkaTkpICRlbXBfbWlzc2luZ1tdID0gX18oJ0ktOSB2ZXJpZmllZCcsICdiYWNrc3RhZ2UtdmVudWUtbWFuYWdlcicpOwogICAgICAgICAgICByZXR1cm4gJGVtcF9taXNzaW5nOwogICAgICAgIH0KICAgIH0KCgogICAgLy8gTWV0YSBrZXlzIChjYW5vbmljYWwpCiAgICAka19kb25lICAgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICd0YXhfcHJvZmlsZV9jb21wbGV0ZWRfYXQnKTsKCiAgICAka19sZWdhbCAgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICdwYXllZV9sZWdhbF9uYW1lJyk7CiAgICAka19lbnRpdHkgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICdlbnRpdHlfdHlwZScpOwoKICAgICRrX2FkZHIxID0gdm1zX21ldGFfa2V5KCd2ZW5kb3InLCAnYWRkcjEnKTsKICAgICRrX2NpdHkgID0gdm1zX21ldGFfa2V5KCd2ZW5kb3InLCAnY2l0eScpOwogICAgJGtfc3RhdGUgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICdzdGF0ZScpOwogICAgJGtfemlwICAgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICd6aXAnKTsKCiAgICAka191cGxvYWQgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICd3OV91cGxvYWRfaWQnKTsKICAgICRrX3JlY3YgICA9IHZtc19tZXRhX2tleSgndmVuZG9yJywgJ3c5X3JlY2VpdmVkX2RhdGUnKTsKICAgICRrX2F0dGVzdCA9IHZtc19tZXRhX2tleSgndmVuZG9yJywgJ3c5X2F0dGVzdGVkX2F0Jyk7CiAgICAka19wcm92ICAgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICd3OV9wcm92aWRlcicpOwoKICAgIC8vIElmIGFuIGFkbWluIGV4cGxpY2l0bHkgbWFya2VkIHRoZSBwcm9maWxlIGNvbXBsZXRlLCB0cmVhdCBpdCBhcyBjb21wbGV0ZS4KICAgIC8vIFRoaXMgc3VwcG9ydHMgZW1haWwtYmFzZWQgVy05IHdvcmtmbG93cyB3aGVyZSB0aGUgc2lnbmVkIFctOSBpcyBub3QgdXBsb2FkZWQgaW50byBWTVMuCiAgICAkZG9uZV9hdCA9IChpbnQpIGdldF9wb3N0X21ldGEoJHZlbmRvcl9pZCwgKHN0cmluZykgJGtfZG9uZSwgdHJ1ZSk7CiAgICBpZiAoJGRvbmVfYXQgPiAwKSB7CiAgICAgICAgcmV0dXJuIGFycmF5KCk7CiAgICB9CgogICAgLy8gSGVscGVyOiBzYWZlIHNjYWxhciBtZXRhIHJlYWQKICAgICRtID0gZnVuY3Rpb24gKGludCAkaWQsIHN0cmluZyAka2V5KTogc3RyaW5nIHsKICAgICAgICAkdiA9IGdldF9wb3N0X21ldGEoJGlkLCAka2V5LCB0cnVlKTsKICAgICAgICBpZiAoaXNfYXJyYXkoJHYpIHx8IGlzX29iamVjdCgkdikpIHsKICAgICAgICAgICAgZXJyb3JfbG9nKCdbVk1TXSB0YXggbWlzc2luZ19pdGVtczogbm9uLXNjYWxhciBtZXRhIGZvciBrZXkgJyAuICRrZXkgLiAnIG9uIHBvc3RfaWQgJyAuICRpZCk7CiAgICAgICAgICAgIHJldHVybiAnJzsKICAgICAgICB9CiAgICAgICAgcmV0dXJuIHRyaW0oKHN0cmluZykgJHYpOwogICAgfTsKCiAgICAkbGVnYWwgID0gJG0oJHZlbmRvcl9pZCwgKHN0cmluZykgJGtfbGVnYWwpOwogICAgJGVudGl0eSA9ICRtKCR2ZW5kb3JfaWQsIChzdHJpbmcpICRrX2VudGl0eSk7CgogICAgJGFkZHIxID0gJG0oJHZlbmRvcl9pZCwgKHN0cmluZykgJGtfYWRkcjEpOwogICAgJGNpdHkgID0gJG0oJHZlbmRvcl9pZCwgKHN0cmluZykgJGtfY2l0eSk7CiAgICAkc3RhdGUgPSAkbSgkdmVuZG9yX2lkLCAoc3RyaW5nKSAka19zdGF0ZSk7CiAgICAkemlwICAgPSAkbSgkdmVuZG9yX2lkLCAoc3RyaW5nKSAka196aXApOwoKICAgIGlmICgkbGVnYWwgPT09ICcnKSAgJG1pc3NpbmdbXSA9ICdMZWdhbC9QYXllZSBOYW1lJzsKICAgIGlmICgkZW50aXR5ID09PSAnJykgJG1pc3NpbmdbXSA9ICdFbnRpdHkgVHlwZSc7CgogICAgaWYgKCRhZGRyMSA9PT0gJycpICRtaXNzaW5nW10gPSAnTWFpbGluZyBBZGRyZXNzIChsaW5lIDEpJzsKICAgIGlmICgkY2l0eSA9PT0gJycpICAkbWlzc2luZ1tdID0gJ01haWxpbmcgQWRkcmVzcyAoY2l0eSknOwogICAgaWYgKCRzdGF0ZSA9PT0gJycpICRtaXNzaW5nW10gPSAnTWFpbGluZyBBZGRyZXNzIChzdGF0ZSknOwogICAgaWYgKCR6aXAgPT09ICcnKSAgICRtaXNzaW5nW10gPSAnTWFpbGluZyBBZGRyZXNzIChaSVApJzsKCiAgICAvLyBXLTkgcmVxdWlyZW1lbnQgZGVwZW5kcyBvbiBwcm92aWRlciBtb2RlIChnbG9iYWwgc2V0dGluZykKICAgICRzZXR0aW5ncyA9IGdldF9vcHRpb24oJ3Ztc19zZXR0aW5ncycsIGFycmF5KCkpOwogICAgJHNldHRpbmdzID0gaXNfYXJyYXkoJHNldHRpbmdzKSA/ICRzZXR0aW5ncyA6IGFycmF5KCk7CgogICAgJHByb3ZpZGVyID0gaXNzZXQoJHNldHRpbmdzWyd0YXhfdzlfcHJvdmlkZXInXSkgPyAoc3RyaW5nKSAkc2V0dGluZ3NbJ3RheF93OV9wcm92aWRlciddIDogJyc7CiAgICBpZiAoIWluX2FycmF5KCRwcm92aWRlciwgYXJyYXkoJ3VwbG9hZCcsICdxdWlja2Jvb2tzX2VtYWlsJywgJ3RheDEwOTlfZW1haWwnKSwgdHJ1ZSkpIHsKICAgICAgICAkcHJvdmlkZXIgPSAndXBsb2FkJzsKICAgIH0KCiAgICAkdXBsb2FkX2lkID0gKGludCkgZ2V0X3Bvc3RfbWV0YSgkdmVuZG9yX2lkLCAoc3RyaW5nKSAka191cGxvYWQsIHRydWUpOwogICAgJHJlY3ZfZGF0ZSA9ICRtKCR2ZW5kb3JfaWQsIChzdHJpbmcpICRrX3JlY3YpOwogICAgJGF0dGVzdGVkX2F0ID0gKGludCkgZ2V0X3Bvc3RfbWV0YSgkdmVuZG9yX2lkLCAoc3RyaW5nKSAka19hdHRlc3QsIHRydWUpOwoKICAgICRwcm92aWRlcl9sYWJlbCA9ICdVcGxvYWQnOwogICAgaWYgKCRwcm92aWRlciA9PT0gJ3F1aWNrYm9va3NfZW1haWwnKSB7CiAgICAgICAgJHByb3ZpZGVyX2xhYmVsID0gJ1F1aWNrQm9va3MgT25saW5lJzsKICAgIH0gZWxzZWlmICgkcHJvdmlkZXIgPT09ICd0YXgxMDk5X2VtYWlsJykgewogICAgICAgICRwcm92aWRlcl9sYWJlbCA9ICdUYXgxMDk5JzsKICAgIH0KCiAgICBpZiAoJHByb3ZpZGVyID09PSAndXBsb2FkJykgewogICAgICAgIGlmICgkdXBsb2FkX2lkIDw9IDAgJiYgJHJlY3ZfZGF0ZSA9PT0gJycpIHsKICAgICAgICAgICAgJG1pc3NpbmdbXSA9ICdTaWduZWQgVy05IFVwbG9hZCAob3IgUmVjZWl2ZWQgRGF0ZSknOwogICAgICAgIH0KICAgIH0gZWxzZSB7CiAgICAgICAgLy8gT2ZmLXNpdGUgcHJvdmlkZXJzIHJlbWFpbiBpbmNvbXBsZXRlIHVudGlsIHRoZSB2ZW51ZSBjb25maXJtcyBjb21wbGV0aW9uLAogICAgICAgIC8vIHVubGVzcyBhIHJlYWwgcmVjZWl2ZWQtZGF0ZSBzeW5jIG9yIHVwbG9hZCBleGlzdHMuCiAgICAgICAgaWYgKCR1cGxvYWRfaWQgPD0gMCAmJiAkcmVjdl9kYXRlID09PSAnJykgewogICAgICAgICAgICBpZiAoJGF0dGVzdGVkX2F0ID4gMCkgewogICAgICAgICAgICAgICAgJG1pc3NpbmdbXSA9IHNwcmludGYoJyVzIGNvbXBsZXRpb24gcGVuZGluZyBhZG1pbiBjb25maXJtYXRpb24nLCAkcHJvdmlkZXJfbGFiZWwpOwogICAgICAgICAgICB9IGVsc2UgewogICAgICAgICAgICAgICAgJG1pc3NpbmdbXSA9IHNwcmludGYoJyVzIGNvbXBsZXRpb24gbm90IHlldCBjb25maXJtZWQgYnkgc3RhZmYnLCAkcHJvdmlkZXJfbGFiZWwpOwogICAgICAgICAgICB9CiAgICAgICAgfQogICAgfQoKICAgIHJldHVybiAkbWlzc2luZzsKfQ==',
@@ -327,7 +327,7 @@ function g13_tail_restore_g17_logging(string $source): string
 	);
 	$selected = array();
 	if (strpos($source, "'tax_profile_meta_shape_invalid'") !== false) {
-		$selected[] = 'vms_vendor_tax_profile_missing_items';
+		$selected[] = 'bvmgr_vendor_tax_profile_missing_items';
 	}
 	if (strpos($source, "'approvals_provider_pending_callback_failed'") !== false) {
 		$selected = array_merge(
@@ -461,7 +461,7 @@ foreach (array_diff($relative_files, array('includes/schedule/schedule.php')) as
 
 $owned_function_map = array(
 	'includes/cpt/ratings.php' => array('vms_get_band_rating_summary', 'vms_handle_rating_submission'),
-	'includes/helpers.php' => array('bvmgr_resolve_event_plan_for_tec_event', 'vms_get_ticket_product_ids_for_event', 'vms_get_event_titles_by_date', 'vms_get_comp_packages_for_venue'),
+	'includes/helpers.php' => array('bvmgr_resolve_event_plan_for_tec_event', 'bvmgr_get_ticket_product_ids_for_event', 'bvmgr_get_event_titles_by_date', 'bvmgr_get_comp_packages_for_venue'),
 	'includes/schedule/schedule.php' => array('vms_sch_get_plans_by_date', 'vms_sch_get_plans_by_date_all'),
 	'includes/admin/approvals-review-queue.php' => array('vms_approvals_queue_vendor_summary'),
 );
@@ -648,17 +648,17 @@ g13_tail_same(102, bvmgr_resolve_event_plan_for_tec_event(88), 'TEC resolver lif
 
 // Ticket-product lookup retains invalid/empty behavior, complete exact linkage, and integer results.
 g13_tail_reset();
-g13_tail_same(array(), vms_get_ticket_product_ids_for_event(0), 'Invalid ticket-event result changed.');
+g13_tail_same(array(), bvmgr_get_ticket_product_ids_for_event(0), 'Invalid ticket-event result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid ticket-event ID should not query products.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array('401', 402));
-g13_tail_same(array(401, 402), vms_get_ticket_product_ids_for_event(90), 'Ticket product ID normalization changed.');
+g13_tail_same(array(401, 402), bvmgr_get_ticket_product_ids_for_event(90), 'Ticket product ID normalization changed.');
 $ticket_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $ticket_args['posts_per_page'], 'Ticket lookup must return every linked product.');
 g13_tail_same(array('key' => '_tribe_wooticket_for_event', 'value' => 90), $ticket_args['meta_query'][0], 'Ticket product linkage filter changed.');
 
 // Legacy TEC title mapping executes WP_Query, preserves the whole dated-event scan, then filters in PHP.
 g13_tail_reset();
-g13_tail_same(array(), vms_get_event_titles_by_date(array()), 'Empty active-date title map changed.');
+g13_tail_same(array(), bvmgr_get_event_titles_by_date(array()), 'Empty active-date title map changed.');
 g13_tail_same(0, count(WP_Query::$calls), 'Empty active dates should not execute WP_Query.');
 WP_Query::$queue = array(array(501, 502, 503));
 $GLOBALS['g13_tail_meta'] = array(
@@ -667,7 +667,7 @@ $GLOBALS['g13_tail_meta'] = array(
 	503 => array('_EventStartDate' => 'This is not a date'),
 );
 $GLOBALS['g13_tail_titles'] = array(501 => 'Included Event', 502 => 'Outside Event');
-g13_tail_same(array('2026-09-10' => 'Included Event'), vms_get_event_titles_by_date(array(' 2026-09-10 ')), 'TEC title PHP date filtering changed.');
+g13_tail_same(array('2026-09-10' => 'Included Event'), bvmgr_get_event_titles_by_date(array(' 2026-09-10 ')), 'TEC title PHP date filtering changed.');
 $title_args = WP_Query::$calls[0];
 g13_tail_same(-1, $title_args['posts_per_page'], 'Legacy title helper must retain its whole dated-event scan.');
 g13_tail_same('ids', $title_args['fields'], 'Legacy title query result shape changed.');
@@ -678,12 +678,12 @@ g13_tail_same(1, $GLOBALS['g13_tail_reset_postdata'], 'Legacy title query should
 g13_tail_reset();
 $package = new WP_Post(601, 'vms_comp_package', 'publish');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array($package), array());
-g13_tail_same(array($package), vms_get_comp_packages_for_venue(12, true), 'Venue/global package results changed.');
+g13_tail_same(array($package), bvmgr_get_comp_packages_for_venue(12, true), 'Venue/global package results changed.');
 $package_global_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $package_global_args['posts_per_page'], 'Comp-package choices must remain complete.');
 g13_tail_same('OR', $package_global_args['meta_query']['relation'], 'Venue/global package relation changed.');
 g13_tail_same(array(12, 0), array_column(array_slice($package_global_args['meta_query'], 1, 2), 'value'), 'Venue/global package values changed.');
-g13_tail_same(array(), vms_get_comp_packages_for_venue(12, false), 'Empty venue-only package result changed.');
+g13_tail_same(array(), bvmgr_get_comp_packages_for_venue(12, false), 'Empty venue-only package result changed.');
 $package_venue_args = $GLOBALS['g13_tail_get_posts_calls'][1];
 g13_tail_same(array(array('key' => '_vms_venue_id', 'value' => 12, 'compare' => '=', 'type' => 'NUMERIC')), $package_venue_args['meta_query'], 'Venue-only package scope changed.');
 

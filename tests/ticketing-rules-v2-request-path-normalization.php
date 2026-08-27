@@ -79,7 +79,7 @@ function wp_unslash($value)
 	return is_string($value) ? stripslashes($value) : $value;
 }
 
-function vms_request_read_text_field(array $source, string $key): string
+function bvmgr_request_read_text_field(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 		return '';
@@ -93,7 +93,7 @@ function vms_request_read_text_field(array $source, string $key): string
 	return sanitize_text_field((string) $value);
 }
 
-function vms_request_read_key(array $source, string $key): string
+function bvmgr_request_read_key(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 		return '';
@@ -115,7 +115,7 @@ function wp_parse_url(string $url, int $component = -1)
 $GLOBALS['vms_test_ticketing_request_path_current_uri'] = '';
 $GLOBALS['vms_test_ticketing_request_path_current_uri_calls'] = 0;
 
-function vms_request_current_uri(string $fallback = ''): string
+function bvmgr_request_current_uri(string $fallback = ''): string
 {
 	$GLOBALS['vms_test_ticketing_request_path_current_uri_calls']++;
 	$current = $GLOBALS['vms_test_ticketing_request_path_current_uri'];
@@ -135,14 +135,14 @@ vms_test_ticketing_request_path_assert(is_string($mirrorSource) && $mirrorSource
 
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, '$_SERVER') === false, 'Mirror Ticketing Rules V2 source should not retain direct $_SERVER reads.');
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'function vms_ticketing_v2_request_key(string $key): string') !== false, 'Mirror Ticketing Rules V2 should expose the read-only wc-ajax helper.');
-vms_test_ticketing_request_path_assert(strpos($mirrorSource, "return vms_request_read_key(\$_REQUEST, \$key);") !== false, 'Mirror Ticketing Rules V2 should route wc-ajax reads through the shared scalar helper.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, "return bvmgr_request_read_key(\$_REQUEST, \$key);") !== false, 'Mirror Ticketing Rules V2 should route wc-ajax reads through the shared scalar helper.');
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'function vms_ticketing_v2_request_has_key(string $key): bool') !== false, 'Mirror Ticketing Rules V2 should expose the presence-only request probe helper.');
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, "return isset(\$_REQUEST[\$key]);") !== false, 'Mirror Ticketing Rules V2 should preserve the presence-only add-to-cart probe.');
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'function vms_ticketing_v2_query_text(string $key): string') !== false, 'Mirror Ticketing Rules V2 should expose the read-only rest_route helper.');
-vms_test_ticketing_request_path_assert(strpos($mirrorSource, "return vms_request_read_text_field(\$_GET, \$key);") !== false, 'Mirror Ticketing Rules V2 should route rest_route through the shared text helper.');
-vms_test_ticketing_request_path_assert(substr_count($mirrorSource, 'vms_request_current_uri()') === 1, 'Mirror Ticketing Rules V2 should own one helper-backed URI fallback.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, "return bvmgr_request_read_text_field(\$_GET, \$key);") !== false, 'Mirror Ticketing Rules V2 should route rest_route through the shared text helper.');
+vms_test_ticketing_request_path_assert(substr_count($mirrorSource, 'bvmgr_request_current_uri()') === 1, 'Mirror Ticketing Rules V2 should own one helper-backed URI fallback.');
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, "vms_ticketing_v2_query_text('rest_route')") !== false, 'Mirror Ticketing Rules V2 should preserve the rest_route precedence branch through the local helper.');
-vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'wp_parse_url(vms_request_current_uri(), PHP_URL_PATH)') !== false, 'Mirror Ticketing Rules V2 should derive the fallback path from the shared request URI helper.');
+vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'wp_parse_url(bvmgr_request_current_uri(), PHP_URL_PATH)') !== false, 'Mirror Ticketing Rules V2 should derive the fallback path from the shared request URI helper.');
 vms_test_ticketing_request_path_assert(strpos($mirrorSource, 'return strtolower(trim((string) $route));') !== false, 'Mirror Ticketing Rules V2 should preserve lowercase and trim normalization.');
 
 eval(vms_test_ticketing_request_path_extract_named_function($mirrorPath, 'vms_ticketing_v2_request_key'));

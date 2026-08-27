@@ -42,7 +42,7 @@ if (!function_exists('vms_email_followups_scheduled_timestamp')) {
 if (!function_exists('vms_email_followups_schedule_cron')) {
 	function vms_email_followups_schedule_cron(): void
 	{
-		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+		if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
 			return;
 		}
 		if (!wp_next_scheduled(vms_email_followups_cron_hook())) {

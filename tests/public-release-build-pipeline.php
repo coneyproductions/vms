@@ -169,8 +169,8 @@ PHP,
 <?php
 defined('ABSPATH') || exit;
 
-if (function_exists('vms_db_migrate_vendor_core_v1')) {
-	vms_db_migrate_vendor_core_v1();
+if (function_exists('bvmgr_db_migrate_vendor_core_v1')) {
+	bvmgr_db_migrate_vendor_core_v1();
 }
 PHP,
 		'includes/bootstrap.php' => "<?php\ndefined('ABSPATH') || exit;\nrequire_once __DIR__ . '/core/plugin.php';\n",
@@ -191,7 +191,7 @@ PHP,
 <?php
 defined('ABSPATH') || exit;
 
-function vms_db_migrate_vendor_core_v1(): void
+function bvmgr_db_migrate_vendor_core_v1(): void
 {
 	if (function_exists('update_option')) {
 		update_option('vms_db_schema_version', 'vendor_core_v1');
@@ -384,7 +384,7 @@ PHP,
 		$publicSlug . '/includes/bootstrap.php' => "<?php\n",
 		$publicSlug . '/includes/core/plugin.php' => "<?php\n",
 		$publicSlug . '/includes/core/registry/constants.php' => "<?php\ndefine('BVMGR_PLUGIN_SLUG', '" . addslashes($internalPluginSlug) . "');\ndefine('BVMGR_VERSION', '{$constantsVersion}');\n",
-		$publicSlug . '/includes/db/migrations.php' => "<?php\nfunction vms_db_migrate_vendor_core_v1(): void {}\n",
+		$publicSlug . '/includes/db/migrations.php' => "<?php\nfunction bvmgr_db_migrate_vendor_core_v1(): void {}\n",
 		$publicSlug . '/assets/js/app.js' => "console.log('ok');\n",
 		$publicSlug . '/uninstall.php' => "<?php\ndefined('WP_UNINSTALL_PLUGIN') || exit;\n",
 		$publicSlug . '/vms-build.txt' => $buildVersion . "\n",

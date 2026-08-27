@@ -79,13 +79,13 @@ function wp_get_current_user(): WP_User
 	$user->user_email = (string) $GLOBALS['vms_test_user_email'];
 	return $user;
 }
-function vms_request_method(): string { return 'get'; }
-function vms_request_read_scalar(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? trim((string) $source[$key]) : ''; }
-function vms_request_read_text_field(array $source, string $key): string { return sanitize_text_field(vms_request_read_scalar($source, $key)); }
-function vms_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
-function vms_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
-function vms_asset_url(string $asset_rel): string { return BVMGR_PLUGIN_URL . ltrim($asset_rel, '/'); }
-function vms_asset_version_for(string $asset_rel): string { unset($asset_rel); return BVMGR_VERSION; }
+function bvmgr_request_method(): string { return 'get'; }
+function bvmgr_request_read_scalar(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? trim((string) $source[$key]) : ''; }
+function bvmgr_request_read_text_field(array $source, string $key): string { return sanitize_text_field(bvmgr_request_read_scalar($source, $key)); }
+function bvmgr_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
+function bvmgr_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
+function bvmgr_asset_url(string $asset_rel): string { return BVMGR_PLUGIN_URL . ltrim($asset_rel, '/'); }
+function bvmgr_asset_version_for(string $asset_rel): string { unset($asset_rel); return BVMGR_VERSION; }
 function wp_enqueue_script(string $handle, string $src = '', array $deps = array(), $ver = false, bool $in_footer = false): void
 {
 	$record = compact('handle', 'src', 'deps', 'ver', 'in_footer');
@@ -217,7 +217,7 @@ $restoreTurnstileLoggingBaseline = static function (string $source) use ($assert
 		'vendor_apply_turnstile_payload_invalid' => "error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');",
 	);
 	foreach ($historical as $eventCode => $statement) {
-		$needle = "vms_record_operational_issue('" . $eventCode . "'";
+		$needle = "bvmgr_record_operational_issue('" . $eventCode . "'";
 		$assert(substr_count($source, $needle) === 1, 'Known G16 Turnstile call count changed: ' . $eventCode);
 		$call = strpos($source, $needle);
 		$lineStart = strrpos(substr($source, 0, (int) $call), "\n");
@@ -293,7 +293,7 @@ $turnstileHistoricalProjection = $restoreTurnstileLoggingBaseline($turnstileVeri
 $assert(hash('sha256', $turnstileHistoricalProjection) === '5802d9b120a3434857a72ce4160b54aefc46ea31e1e816b7d292c05d3e57b8af', 'Turnstile verification should differ from its immutable baseline only by the known G16 logging migration.');
 $turnstileMutation = str_replace("'timeout' => 8", "'timeout' => 9", $turnstileHistoricalProjection, $turnstileMutationCount);
 $assert($turnstileMutationCount === 1 && hash('sha256', $turnstileMutation) !== '5802d9b120a3434857a72ce4160b54aefc46ea31e1e816b7d292c05d3e57b8af', 'Turnstile immutable projection must reject a non-logging runtime mutation.');
-$assert(substr_count($turnstileVerifySource, 'vms_record_operational_issue(') === 4, 'Mirror Turnstile verification should contain exactly four structured operational branches.');
+$assert(substr_count($turnstileVerifySource, 'bvmgr_record_operational_issue(') === 4, 'Mirror Turnstile verification should contain exactly four structured operational branches.');
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_request_fingerprint')) === 'e6700ad7ba8ff855318160c10640fb4443f1f832384276cd5b49cbc160d06827', 'Request fingerprinting should remain unchanged.');
 $assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_handle_frontend_post')) === '375e812b9016e3200c4e2dc8c14f69a8ae6f8f7b72f068949d2e5508543530d4', 'Frontend POST handler should remain unchanged.');
 $assert(hash('sha256', $assetSource) === '1856166b2a3785803148bc9019867e7b9e387e6b953f2099959ebb2af99e685c', 'Unrelated Vendor Application asset should remain unchanged.');

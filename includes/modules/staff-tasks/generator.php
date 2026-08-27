@@ -602,7 +602,7 @@ if (!function_exists('vms_tasks_run_nightly_generator')) {
 	function vms_tasks_run_nightly_generator(): void
 	{
 		if (!vms_tasks_db_ready()) {
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'staff_tasks_schema_not_ready',
 				array(
 					'service' => 'staff_tasks',
@@ -627,7 +627,7 @@ if (!function_exists('vms_tasks_run_nightly_generator')) {
 		foreach ($plan_ids as $event_id) {
 			$run = vms_tasks_generate_for_event($event_id, array('allow_supersede' => false));
 			if (is_wp_error($run)) {
-				vms_record_operational_issue(
+				bvmgr_record_operational_issue(
 					'staff_tasks_nightly_event_failed',
 					array(
 						'service' => 'staff_tasks',
@@ -653,7 +653,7 @@ if (!function_exists('vms_tasks_run_nightly_generator')) {
 if (!function_exists('vms_tasks_schedule_nightly_generator')) {
 	function vms_tasks_schedule_nightly_generator(): void
 	{
-		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+		if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
 			return;
 		}
 		$hook = defined('BVMGR_CRON_TASKS_NIGHTLY') ? (string) BVMGR_CRON_TASKS_NIGHTLY : 'vms_tasks_nightly_generator';
@@ -690,7 +690,7 @@ if (!function_exists('vms_tasks_generate_for_event_safe')) {
 			'actor_user_id' => $actor_user_id,
 		));
 		if (is_wp_error($run)) {
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'staff_tasks_event_generation_failed',
 				array(
 					'service' => 'staff_tasks',

@@ -12,7 +12,7 @@ defined('ABSPATH') || exit;
  *
  * @return string[]
  */
-function vms_csv_vendor_required_columns(): array {
+function bvmgr_csv_vendor_required_columns(): array {
 	$required = [
 		'display_name',
 	];
@@ -25,7 +25,7 @@ function vms_csv_vendor_required_columns(): array {
  *
  * @return string[]
  */
-function vms_csv_vendor_recommended_columns(): array {
+function bvmgr_csv_vendor_recommended_columns(): array {
 	$recommended = [
 		'email',
 		'phone',
@@ -43,7 +43,7 @@ function vms_csv_vendor_recommended_columns(): array {
  *
  * @return array<string,string>
  */
-function vms_csv_vendor_column_map(): array {
+function bvmgr_csv_vendor_column_map(): array {
 	$map = [
 		'display_name' => BVMGR_META_VENDOR_DISPLAY_NAME,
 		'contact_name' => BVMGR_META_VENDOR_CONTACT_NAME,
@@ -60,7 +60,7 @@ function vms_csv_vendor_column_map(): array {
  *
  * @return string[]
  */
-function vms_csv_event_plan_required_columns(): array {
+function bvmgr_csv_event_plan_required_columns(): array {
 	$required = [
 		'event_key',
 		'event_date',
@@ -76,7 +76,7 @@ function vms_csv_event_plan_required_columns(): array {
  *
  * @return string[]
  */
-function vms_csv_event_plan_recommended_columns(): array {
+function bvmgr_csv_event_plan_recommended_columns(): array {
 	$recommended = [
 		'event_title',
 		'start_time',

@@ -43,11 +43,11 @@ if (!function_exists('vms_tasks_current_user_has_admin_fallback')) {
 			return true;
 		}
 
-		if (function_exists('vms_admin_ui_current_user_can_data_tools') && vms_admin_ui_current_user_can_data_tools()) {
+		if (function_exists('bvmgr_admin_ui_current_user_can_data_tools') && bvmgr_admin_ui_current_user_can_data_tools()) {
 			return true;
 		}
 
-		if (function_exists('vms_admin_ui_current_user_can_ops') && vms_admin_ui_current_user_can_ops()) {
+		if (function_exists('bvmgr_admin_ui_current_user_can_ops') && bvmgr_admin_ui_current_user_can_ops()) {
 			return true;
 		}
 

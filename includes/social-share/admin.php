@@ -674,8 +674,8 @@ if (!function_exists('vms_social_handle_save_template')) {
 		check_admin_referer('vms_social_save_template');
 
 		$id = vms_social_template_save(array(
-			'platform' => vms_request_read_key($_POST, 'platform'),
-			'name' => vms_request_read_text_field($_POST, 'name'),
+			'platform' => bvmgr_request_read_key($_POST, 'platform'),
+			'name' => bvmgr_request_read_text_field($_POST, 'name'),
 			'body' => vms_social_template_body_from_post($_POST),
 			'is_default' => isset($_POST['is_default']) ? 1 : 0,
 			'settings_json' => array(),

@@ -19,7 +19,7 @@ function vms_handle_integrity_venue_links_action(): void
 
   check_admin_referer('vms_integrity_venue_links_action');
 
-  $action = vms_request_read_key($_POST, 'vms_action');
+  $action = bvmgr_request_read_key($_POST, 'vms_action');
   $plan_ids = (isset($_POST['plan_ids']) && is_array($_POST['plan_ids']))
     ? array_values(array_filter(array_map('absint', (array) wp_unslash($_POST['plan_ids']))))
     : array();
@@ -37,7 +37,7 @@ function vms_handle_integrity_venue_links_action(): void
   }
 
   // Step gate: require explicit confirm checkbox for any writes.
-  $confirmed = vms_request_read_bool_flag($_POST, 'vms_confirm');
+  $confirmed = bvmgr_request_read_bool_flag($_POST, 'vms_confirm');
   if (!$confirmed) {
     wp_safe_redirect(add_query_arg(array('vms_msg' => 'confirm_required'), $redirect_base));
     exit;
@@ -100,9 +100,9 @@ function vms_handle_integrity_venue_links_action(): void
 function vms_render_integrity_venue_reconcile_notice(): void
 {
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity notice state only affects admin messaging.
-  $msg = vms_request_read_key($_GET, 'vms_msg');
+  $msg = bvmgr_request_read_key($_GET, 'vms_msg');
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity notice state only affects admin messaging.
-  $changed = vms_request_read_absint($_GET, 'vms_changed');
+  $changed = bvmgr_request_read_absint($_GET, 'vms_changed');
 
   if ($msg === 'confirm_required') {
     echo '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>';
@@ -124,11 +124,11 @@ function vms_render_integrity_venue_reconcile_page(): void
     wp_die('Insufficient permissions.');
   }
 
-  $event_plans_url = function_exists('vms_admin_ui_post_type_url')
-    ? vms_admin_ui_post_type_url('vms_event_plan')
+  $event_plans_url = function_exists('bvmgr_admin_ui_post_type_url')
+    ? bvmgr_admin_ui_post_type_url('vms_event_plan')
     : admin_url('edit.php?post_type=vms_event_plan');
-  $settings_url = function_exists('vms_admin_ui_page_url')
-    ? vms_admin_ui_page_url('vms-settings')
+  $settings_url = function_exists('bvmgr_admin_ui_page_url')
+    ? bvmgr_admin_ui_page_url('vms-settings')
     : admin_url('admin.php?page=vms-settings');
   $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
   $actions_html .= '<a class="button button-primary" href="' . esc_url($settings_url) . '">' . esc_html__('Settings & Scan', 'backstage-venue-manager') . '</a>';
@@ -162,7 +162,7 @@ function vms_render_integrity_venue_reconcile_page_content(): void
 function vms_render_integrity_venue_reconcile_page_sections(): void
 {
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity filters only bound the diagnostic result size.
-  $limit = vms_request_read_absint($_GET, 'limit');
+  $limit = bvmgr_request_read_absint($_GET, 'limit');
   if ($limit < 1) $limit = 500;
   if ($limit > 5000) $limit = 5000;
 

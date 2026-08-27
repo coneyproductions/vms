@@ -191,7 +191,7 @@ function check_ajax_referer(string $action, string $query_arg): bool
 }
 
 /** @param array<string,mixed> $source */
-function vms_request_read_text_field(array $source, string $key): string
+function bvmgr_request_read_text_field(array $source, string $key): string
 {
 	$value = $source[$key] ?? '';
 	return is_scalar($value) ? trim(strip_tags((string) $value)) : '';
@@ -647,7 +647,7 @@ $expected_ticket_query = array(
 ticketing_core_same(array($expected_ticket_query), WP_Query::$calls, 'Ticket-product WP_Query arguments must remain exact, including no added cache or limit arguments.');
 
 $GLOBALS['ticketing_core_helper_calls'] = array();
-eval('function vms_get_ticket_product_ids_for_event(int $event_id): array { $GLOBALS[\'ticketing_core_helper_calls\'][] = $event_id; return $GLOBALS[\'ticketing_core_helper_ids\']; }');
+eval('function bvmgr_get_ticket_product_ids_for_event(int $event_id): array { $GLOBALS[\'ticketing_core_helper_calls\'][] = $event_id; return $GLOBALS[\'ticketing_core_helper_ids\']; }');
 $GLOBALS['ticketing_core_helper_ids'] = array(9, '9', -3, 'bad');
 ticketing_core_same(array(9, 3, 0), vms_ticketing_get_ticket_product_ids_for_tec_event(52), 'Preferred helper ticket-product normalization changed.');
 ticketing_core_same(array(52), $GLOBALS['ticketing_core_helper_calls'], 'Preferred helper event ID changed.');

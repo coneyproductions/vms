@@ -13,7 +13,7 @@ if (!function_exists('vms_event_command_center_page_slug')) {
 if (!function_exists('vms_event_command_center_admin_url')) {
     function vms_event_command_center_admin_url(array $args = array()): string
     {
-        return vms_admin_ui_page_url(vms_event_command_center_page_slug(), $args);
+        return bvmgr_admin_ui_page_url(vms_event_command_center_page_slug(), $args);
     }
 }
 
@@ -21,7 +21,7 @@ if (!function_exists('vms_event_command_center_query_arg')) {
     function vms_event_command_center_query_arg(string $key): string
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Event Command Center admin routing and display state only.
-        return vms_request_read_scalar($_GET, $key);
+        return bvmgr_request_read_scalar($_GET, $key);
     }
 }
 
@@ -491,8 +491,8 @@ if (!function_exists('vms_event_command_center_resolve_plan_id')) {
 if (!function_exists('vms_event_command_center_is_weather_addon_active')) {
     function vms_event_command_center_is_weather_addon_active(): bool
     {
-        if (function_exists('vms_admin_ui_registered_page_url')) {
-            return vms_admin_ui_registered_page_url('vmsx-weather-risk-settings') !== '';
+        if (function_exists('bvmgr_admin_ui_registered_page_url')) {
+            return bvmgr_admin_ui_registered_page_url('vmsx-weather-risk-settings') !== '';
         }
 
         return false;
@@ -502,8 +502,8 @@ if (!function_exists('vms_event_command_center_is_weather_addon_active')) {
 if (!function_exists('vms_event_command_center_get_weather_url')) {
     function vms_event_command_center_get_weather_url(): string
     {
-        if (function_exists('vms_admin_ui_registered_page_url')) {
-            $registered = vms_admin_ui_registered_page_url('vmsx-weather-risk-settings');
+        if (function_exists('bvmgr_admin_ui_registered_page_url')) {
+            $registered = bvmgr_admin_ui_registered_page_url('vmsx-weather-risk-settings');
             if ($registered !== '') {
                 return $registered;
             }
@@ -568,10 +568,10 @@ if (!function_exists('vms_event_command_center_get_plan_header')) {
             'ticket_url' => $ticket_url,
             'tec_event_id' => $tec_event_id,
             'modified_label' => get_post_modified_time('M j, Y g:i A', false, $plan_id, true),
-            'marketing_url' => function_exists('vms_admin_ui_meta_ads_urls')
-                ? (string) (vms_admin_ui_meta_ads_urls(vms_admin_ui_page_url('vms-marketing-social'))['builder'] ?? vms_admin_ui_page_url('vms-marketing-social'))
-                : vms_admin_ui_page_url('vms-marketing-social'),
-            'social_url' => vms_admin_ui_page_url('vms-social-sharing'),
+            'marketing_url' => function_exists('bvmgr_admin_ui_meta_ads_urls')
+                ? (string) (bvmgr_admin_ui_meta_ads_urls(bvmgr_admin_ui_page_url('vms-marketing-social'))['builder'] ?? bvmgr_admin_ui_page_url('vms-marketing-social'))
+                : bvmgr_admin_ui_page_url('vms-marketing-social'),
+            'social_url' => bvmgr_admin_ui_page_url('vms-social-sharing'),
             'weather_url' => vms_event_command_center_get_weather_url(),
         );
     }
@@ -898,8 +898,8 @@ if (!function_exists('vms_event_command_center_get_financial_snapshot')) {
             'has_actuals' => $has_actuals,
             'ad_spend_cents' => null,
             'ad_spend_available' => false,
-            'ad_spend_url' => function_exists('vms_admin_ui_meta_ads_urls')
-                ? (string) (vms_admin_ui_meta_ads_urls(vms_admin_ui_page_url('vms-marketing-social'))['performance'] ?? '')
+            'ad_spend_url' => function_exists('bvmgr_admin_ui_meta_ads_urls')
+                ? (string) (bvmgr_admin_ui_meta_ads_urls(bvmgr_admin_ui_page_url('vms-marketing-social'))['performance'] ?? '')
                 : '',
         );
     }
@@ -1141,13 +1141,13 @@ if (!function_exists('vms_event_command_center_get_marketing_snapshot')) {
             $promo_label = __('Missing', 'backstage-venue-manager');
         }
 
-        $meta_ads_urls = function_exists('vms_admin_ui_meta_ads_urls')
-            ? (array) vms_admin_ui_meta_ads_urls(vms_admin_ui_page_url('vms-marketing-social'))
+        $meta_ads_urls = function_exists('bvmgr_admin_ui_meta_ads_urls')
+            ? (array) bvmgr_admin_ui_meta_ads_urls(bvmgr_admin_ui_page_url('vms-marketing-social'))
             : array();
         $meta_ads_builder_url = (string) ($meta_ads_urls['builder'] ?? '');
         $meta_ads_performance_url = (string) ($meta_ads_urls['performance'] ?? '');
-        $meta_ads_registered = function_exists('vms_admin_ui_registered_page_url')
-            ? (vms_admin_ui_registered_page_url('vms-ma-ads-builder') !== '' || vms_admin_ui_registered_page_url('vms-ma-ads-performance') !== '')
+        $meta_ads_registered = function_exists('bvmgr_admin_ui_registered_page_url')
+            ? (bvmgr_admin_ui_registered_page_url('vms-ma-ads-builder') !== '' || bvmgr_admin_ui_registered_page_url('vms-ma-ads-performance') !== '')
             : false;
 
         return array(
@@ -1165,10 +1165,10 @@ if (!function_exists('vms_event_command_center_get_marketing_snapshot')) {
             'promo_submission_uploaded_label' => !empty($submitted['uploaded_at_gmt']) ? vms_event_command_center_time_ago_label((string) $submitted['uploaded_at_gmt'], true) : '',
             'meta_ads_registered' => $meta_ads_registered,
             'meta_ads_label' => $meta_ads_registered ? __('Builder available', 'backstage-venue-manager') : __('Meta Ads Builder not active', 'backstage-venue-manager'),
-            'social_url' => vms_admin_ui_page_url('vms-social-sharing'),
-            'marketing_hub_url' => vms_admin_ui_page_url('vms-marketing-social'),
-            'meta_ads_builder_url' => $meta_ads_builder_url !== '' ? $meta_ads_builder_url : vms_admin_ui_page_url('vms-marketing-social'),
-            'meta_ads_performance_url' => $meta_ads_performance_url !== '' ? $meta_ads_performance_url : vms_admin_ui_page_url('vms-marketing-social'),
+            'social_url' => bvmgr_admin_ui_page_url('vms-social-sharing'),
+            'marketing_hub_url' => bvmgr_admin_ui_page_url('vms-marketing-social'),
+            'meta_ads_builder_url' => $meta_ads_builder_url !== '' ? $meta_ads_builder_url : bvmgr_admin_ui_page_url('vms-marketing-social'),
+            'meta_ads_performance_url' => $meta_ads_performance_url !== '' ? $meta_ads_performance_url : bvmgr_admin_ui_page_url('vms-marketing-social'),
         );
     }
 }
@@ -1441,7 +1441,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
                 'title' => __('Ticket path needs attention', 'backstage-venue-manager'),
                 'detail' => trim((string) ($ticket['issue_summary'] ?? '')) ?: __('Ticket integrity checks found a live-risk problem.', 'backstage-venue-manager'),
                 'action_label' => __('Open Ticket Integrity', 'backstage-venue-manager'),
-                'action_url' => vms_admin_ui_page_url('vms-ticket-integrity'),
+                'action_url' => bvmgr_admin_ui_page_url('vms-ticket-integrity'),
             );
         } elseif (($ticket['integrity_status'] ?? '') === 'yellow') {
             $alerts[] = array(
@@ -1449,7 +1449,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
                 'title' => __('Ticketing needs review', 'backstage-venue-manager'),
                 'detail' => trim((string) ($ticket['issue_summary'] ?? '')) ?: __('Ticket integrity checks found a warning worth reviewing.', 'backstage-venue-manager'),
                 'action_label' => __('Open Ticket Integrity', 'backstage-venue-manager'),
-                'action_url' => vms_admin_ui_page_url('vms-ticket-integrity'),
+                'action_url' => bvmgr_admin_ui_page_url('vms-ticket-integrity'),
             );
         }
 
@@ -1459,7 +1459,7 @@ if (!function_exists('vms_event_command_center_build_alerts')) {
                 'title' => __('Low ticket inventory', 'backstage-venue-manager'),
                 'detail' => __('A paid ticket tier is nearing its configured remaining-inventory threshold.', 'backstage-venue-manager'),
                 'action_label' => !empty($header['ticket_url']) ? __('Open Ticket Page', 'backstage-venue-manager') : __('Open Ticket Integrity', 'backstage-venue-manager'),
-                'action_url' => !empty($header['ticket_url']) ? (string) $header['ticket_url'] : vms_admin_ui_page_url('vms-ticket-integrity'),
+                'action_url' => !empty($header['ticket_url']) ? (string) $header['ticket_url'] : bvmgr_admin_ui_page_url('vms-ticket-integrity'),
             );
         }
 
@@ -2468,7 +2468,7 @@ if (!function_exists('vms_event_command_center_ticket_summary_snapshot')) {
             'stats_computed_at_gmt' => $computed_at_gmt,
             'stats_age_label' => $stats_age_label,
             'full_detail_url' => vms_event_command_center_admin_url(array('plan_id' => $plan_id)),
-            'integrity_url' => function_exists('vms_admin_ui_page_url') ? vms_admin_ui_page_url('vms-ticket-integrity') : '',
+            'integrity_url' => function_exists('bvmgr_admin_ui_page_url') ? bvmgr_admin_ui_page_url('vms-ticket-integrity') : '',
         );
 
         return $cache[$plan_id];
@@ -2993,7 +2993,7 @@ if (!function_exists('vms_event_command_center_enqueue_assets')) {
             'vms-event-command-center',
             BVMGR_PLUGIN_URL . 'assets/css/vms-event-command-center.css',
             array('vms-admin-ui'),
-            function_exists('vms_asset_version') ? vms_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
+            function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
         );
     }
 }

@@ -48,8 +48,8 @@ function vms_admin_vendor_list_get_meta_scalar(int $post_id, string $meta_key): 
 
     // If a plugin/theme accidentally stored an array/object, do NOT render garbage.
     if (is_array($v) || is_object($v)) {
-        if (function_exists('vms_record_operational_issue')) {
-            vms_record_operational_issue(
+        if (function_exists('bvmgr_record_operational_issue')) {
+            bvmgr_record_operational_issue(
                 'vendor_list_meta_shape_invalid',
                 array(
                     'vendor_id' => $post_id,
