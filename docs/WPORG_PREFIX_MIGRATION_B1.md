@@ -16,7 +16,7 @@ This checkpoint implements inventory, compatibility preparation, and migration g
 - Semantic inventory library: `scripts/lib/wporg-prefix-inventory.php`
 - Scope: `271` public-package PHP files; release-excluded tests, scripts, documentation, historical evidence, fixtures, and `includes/safety/` are not treated as public runtime declarations.
 - Categories: all `25` B0 categories A-Y. Each category carries the current identifier/family, canonical target, B0 strategy, compatibility class, persistence or external-contract status, planned batch, explicit retention decision, and risk.
-- Semantic PHP inventory: `4,521` functions at `4,541` declaration sites, `23` classes, `1` interface, `107` constants at `116` definition sites, no namespaces/traits/enums, and `44` global slots at `232` sites.
+- Semantic PHP inventory at the historical B1 checkpoint: `4,521` functions at `4,541` declaration sites, `23` classes, `1` interface, `107` constants at `116` definition sites, no namespaces/traits/enums, and `44` global slots at `232` sites. B2.5 later corrected this incomplete global inventory to `85` current canonical slots at `426` token sites while preserving the original B1/B2 map and ratchet as historical evidence.
 - Ratchet baseline: `4,696` B1-era prohibited short-prefix PHP declarations/slots. Later removals are allowed; new names are not.
 - Public extension surface: exactly `13` entry points/types in six families.
 - Known add-ons: exactly `5` contract maps.
@@ -127,3 +127,11 @@ Every B1 implementation file is under `docs/`, `scripts/`, or `tests/`, all of w
 B2 may implement only its authorized class/interface, constant, and request-global batch using this manifest and the controlling B0 strategies. Before core cutover it must prepare isolated copies or worktrees for the three affected add-ons and update exactly the seven mapped consumers to their canonical symbols. It must preserve the physical-storage and external-contract retention decisions, including the retained `vms_calendar_feed_cache_bust`, `_vms_vendor_user_id`, `_vms_vendor_id`, and `vms_venue` values, update the manifest through the generator, and keep the dynamic-resolution and collision tests green. B3 procedural migration, all persistence batches, public hook/HTTP transitions, tooling residual cleanup, and any private bridge remain outside B2 unless separately authorized.
 
 Phase B1 changes no B0 risk classification.
+
+## B2.5 semantic-inventory correction
+
+The B2.5 global-scope audit found `41` plugin-owned semantic slots omitted by this original inventory: `38` variables in the globally executed vendor-profile template and three loader variables. They account for `194` token sites and `57` Plugin Check rows; the template loop variable `$tag` is a real semantic slot that Plugin Check did not report. The correction is additive at `docs/wporg-prefix-migration-manifest.json#/completed_batches/B2_5` and does not rewrite the original `175`-entry B2 map or its immutable `4,696 -> 4,521` historical ratchet.
+
+The complete semantic ledger is therefore `4,737` prohibited slots before B2, `4,562` after the original B2 map, and `4,521` after B2.5. Those figures count unique semantic identifiers/slots. They are intentionally separate from Plugin Check row counts. The current deterministic inventory contains `85` canonical global slots at `426` token sites: the original `44 / 232` B2 set plus the additive `41 / 194` B2.5 set.
+
+The companion scanner inventory is `docs/wporg-prefix-scanner-inventory.json`. It records every packaged prefix row individually and applies a migration-aware gate: historical residuals remain immutable, mapped B3/B7 findings may reduce monotonically, method-scope and external-contract exceptions remain exact, and any unexpected, unmapped, category-increasing, or completed-batch residual fails. See `docs/WPORG_PREFIX_MIGRATION_B2_5.md` for the authoritative correction and fresh-scan evidence.

@@ -21,6 +21,7 @@ $assert(in_array('docs/', $releaseExcludes, true), 'B1 manifest and documentatio
 $assert(in_array('scripts/', $releaseExcludes, true), 'B1 migration infrastructure must remain outside the public package.');
 $assert(in_array('tests/', $releaseExcludes, true), 'B1 test infrastructure must remain outside the public package.');
 $releaseTestIds = array_column(VMS_Public_Release_Tooling::defaultReleaseTests(), 'id');
+$assert(in_array('wporg-prefix-scanner-inventory', $releaseTestIds, true), 'Prefix scanner inventory and migration-aware gate coverage must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b2-5-runtime', $releaseTestIds, true), 'B2.5 runtime correction coverage must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-manifest-guardrails', $releaseTestIds, true), 'Prefix guardrails must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b2-foundation', $releaseTestIds, true), 'B2 foundation coverage must remain a required default release precondition.');
@@ -138,7 +139,7 @@ foreach ((array) ($manifest['symbols'] ?? array()) as $kind => $entries) {
 			$assert(!isset($targets[$target]), "Canonical target {$target} must be unique within {$kind}.");
 			$targets[$target] = true;
 		}
-		$plain = (string) preg_replace('/^(?:GLOBALS:|global:|loader:)/', '', $current);
+		$plain = (string) preg_replace('/^(?:GLOBALS:|global:|loader:|template:)/', '', $current);
 		if (preg_match('/^[A-Za-z][A-Za-z0-9]{1,2}_/', $plain) === 1) {
 			$currentProhibited[] = $kind . ':' . $current;
 		}

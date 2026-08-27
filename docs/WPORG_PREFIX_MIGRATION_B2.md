@@ -4,7 +4,7 @@ Date: 2026-08-26
 
 ## Status
 
-B2 implementation is complete at core commit `d781aa4ef8f0941384502d4a8740e5c9176ef957`, but the required strict Plugin Check delta gate is not green. The canonical scan exposed a material B0/B1 intermediate-package contradiction and five loader-scope sites omitted from the frozen B1 global inventory. Do not begin B3 until that evidence receives an architecture decision.
+B2 implementation is complete at core commit `d781aa4ef8f0941384502d4a8740e5c9176ef957`. This document preserves the B2-time package and scan evidence, but its architecture-review hold and incomplete global interpretation are superseded by the verified B2.5 correction in `docs/WPORG_PREFIX_MIGRATION_B2_5.md`. B3 still requires separate explicit authorization.
 
 This checkpoint does not authorize or implement B3 functions, B4 browser identifiers, B5 persistent keys, B6 schedules/storage, B7 public contracts, or B8 final-package cleanup.
 
@@ -94,25 +94,20 @@ The full scan nevertheless reports `5,331` rows: `125` errors and `5,206` warnin
 - `NonPrefixedFunctionFound 4,541`: exact match to the frozen B3 declaration-site count.
 - `NonPrefixedHooknameFound 187`: `181` `vms_*` hook sites assigned to later hook/schedule batches plus six retained third-party hook sites.
 - `DynamicHooknameFound 1`: the B7 dynamic custom-hook family.
-- `NonPrefixedVariableFound 477`: `472` include-template locals that are function-scoped at runtime plus five true loader-scope sites.
+- `NonPrefixedVariableFound 477`: a later runtime-scope audit corrected this B2-time interpretation to `420` Event Plan partial rows that execute in method scope, `52` genuine vendor-profile template globals, and five genuine loader globals.
 
 This occurs because Plugin Check discards prefixes shorter than four characters. Before B2 it found no valid prefix and did not activate the WPCS global-prefix sniff. B2 introduces `BVMGR`, which activates the sniff while B3/B6/B7 are intentionally unfinished. A canonical intermediate-package scan therefore cannot both preserve the approved batch boundary and report zero new Plugin Check codes.
 
-The five true loader-scope rows are an additional B1 inventory contradiction: `$tax_file` at `includes/portal/vendor-portal.php:32`, `$pt` at `includes/vendor-applications.php:1266`, `1286`, and `1328`, and `$hook` at `includes/social-share/queue-runner.php:452`. They are three identifiers at five sites, were not among the frozen `44` B2 slots / `232` sites, and cannot be appended ad hoc without changing the authoritative map and ratchet evidence.
+The five true loader-scope rows are an additional B1 inventory contradiction: `$tax_file` at `includes/portal/vendor-portal.php:32`, `$pt` at `includes/vendor-applications.php:1266`, `1286`, and `1328`, and `$hook` at `includes/social-share/queue-runner.php:452`. They are three identifiers at five scanner sites, were not among the frozen `44` B2 slots / `232` sites, and were subsequently handled by the additive B2.5 map rather than being folded into the immutable B2 record. The same audit found `52` scanner rows across `37` names in the globally executed vendor-profile template plus the scanner-missed `$tag`, yielding `41` omitted semantic slots and `194` token sites in total.
 
-Accordingly the requested strict delta gate is not satisfied: four new Plugin Check codes and `5,206` newly surfaced warnings exist. Of those warnings, `4,723` map to already planned later batches, `478` are understood template/external-hook nonblocking rows, and five loader-scope sites require an architecture decision. Do not represent this as `NEW_FINDING=0`, `UNMAPPED=0`, or `SUBMISSION_BLOCKER=0`, and do not overwrite the historical final-submission baseline in `docs/wporg-current-scan-state.json` with this intermediate package.
+At this historical B2 checkpoint the requested strict delta gate was not satisfied: four new Plugin Check codes and `5,206` newly surfaced warnings existed. The B2.5 migration-aware gate now supersedes that misleading historical comparison without weakening final release requirements. It keeps the `125` historical rows separate, classifies every remaining prefix row, and requires both `UNEXPECTED_PREFIX_FINDING=0` and `UNMAPPED_PREFIX_FINDING=0` while completed batches remain scanner-zero.
 
-## Required architecture decision before B3
+## Architecture decision resolved by B2.5
 
-Choose and document one approach before further migration:
-
-1. Accept that strict Plugin Check will expose mapped transient prefix rows throughout B2-B7, define a phase-aware scanner classification, and correct the B1 global map for the three omitted loader identifiers/five sites; or
-2. Redefine packaging so prefix-sensitive runtime batches are integrated atomically before the next canonical strict scan.
-
-Any correction must also retain the `472` include-template locals as runtime-scope false positives or add narrowly justified scanner annotations; they must not be mechanically renamed as shared globals. No B0/B1 risk class was changed by implementation, but the intermediate-package scanner risk and the B1 global-inventory completeness claim both require review.
+The authorized decision was the phase-aware approach. B2.5 prefixes the `38` globally executed vendor-profile template variables and the three loader globals without a closure/template-loader redesign; preserves all `420` Event Plan partial rows as individually inventoried method-scope exceptions; preserves the exact six external/core hook contracts; and records the corrected complete semantic ledger separately from the original B1/B2 ratchet. The fresh B2.5 scan and gate are authoritative for B3 readiness.
 
 ## Handoff
 
-Verdict: `B2 COMPLETE — ARCHITECTURE REVIEW REQUIRED BEFORE B3`.
+Historical B2 verdict: `B2 COMPLETE — ARCHITECTURE REVIEW REQUIRED BEFORE B3`. Superseded current verdict: `B2.5 COMPLETE — SCANNER MODEL RECONCILED — READY FOR B3`.
 
 No push, merge, upload, tag, deployment, staging/production change, primary-worktree change, installed/live add-on change, sibling live-core sync, production convergence, or protected-stash mutation occurred.
