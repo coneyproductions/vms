@@ -171,11 +171,22 @@ Status: committed at `f53107c90574d4a2ae4d79a44395553f9fc228b1`.
 
 ### W9 — staffing, staff tasks, schedule, season, and due dates
 
-Status: verified for the isolated W9 commit.
+Status: committed at `71c747f75dcb06940ac8c606c9de3894b909d3bf`.
 
 - Exact cutover: `441` unique functions / `445` declaration sites moved atomically, including all four W9 two-site duplicate families; no wrapper, alias, trampoline, or dual declaration ships.
 - Ratchet: cumulative B3 progress is `3,731 / 4,521` functions and `3,747 / 4,541` declaration sites; `790` legacy functions / `794` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, split-duplicate, or completed-wave residual.
 - Literal authority: ten admin-shell, REST, activation-bootstrap, and source-introspection callable identities moved; `43` database-table, cron-hook, and performance-telemetry sites remain legacy contracts.
 - Focused verification: schedule invalid-bound, unpublished-venue, and warning output; Staff Certification notices; strict POST boundaries; Administrator shell and authorization boundaries; changed-PHP lint; diff checks; and all primary B3/B2/B2.5/add-on/identity/runtime/release gates pass. Explicit-WordPress-root tests and tests whose terminal assertion requires the intentionally untouched live/shadow tree remain excluded rather than weakened.
 - Checkpoint sequencing: W9 is committed on its independent green focused gate; final exact-ZIP package, strict scan, and full lifecycle proof follow W11.
+- Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### W10 — admissions, pass claims, email, status notices, and public event details
+
+Status: verified for the isolated W10 commit.
+
+- Exact cutover: `428` unique functions / `428` declaration sites moved atomically; W10 contains no duplicate family and ships no wrapper, alias, trampoline, or dual declaration.
+- Ratchet: cumulative B3 progress is `4,159 / 4,521` functions and `4,175 / 4,541` declaration sites; `362` legacy functions / `366` B3 scanner rows remain. All phase-aware gates report zero stale/forward, unexpected, unmapped, or completed-wave residual.
+- Literal authority: eight array-map, activation-bootstrap, notification-provider, and admin-shell callback sites moved; `13` filter-hook, nonce-action, database-table, and option-key sites remain legacy contracts. Three test-only collision/filter-hook values are explicitly retained while surrounding executable function identities are canonical.
+- Focused verification: export-stream, Administrator shell, admission request state and REST permissions/restore, JSON validation, Event Details schema/JSON-LD, nonce normalization, Pass Claims claimed-card/shell/status/success output, Plan Your Visit, public Event Sidebar, mutation boundaries, changed-PHP lint, diff checks, and all primary B3/B2/B2.5/add-on/identity/runtime/release gates pass. Tests that bind to the intentionally untouched live/shadow tree or unavailable historical artifacts remain excluded rather than weakened.
+- Checkpoint sequencing: W10 is committed on its independent green focused gate; W11 carries the final exact-ZIP package, strict scan, full lifecycle, and closeout proof.
 - Boundaries: installed/live core and all five add-on trees remain unchanged. No B4-B8 identifier family changed; no push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

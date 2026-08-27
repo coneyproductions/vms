@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_notify_render_user_profile_fields')) {
-	function vms_notify_render_user_profile_fields(WP_User $user): void
+if (!function_exists('bvmgr_notify_render_user_profile_fields')) {
+	function bvmgr_notify_render_user_profile_fields(WP_User $user): void
 	{
 		if (!current_user_can('edit_user', $user->ID)) {
 			return;
@@ -52,11 +52,11 @@ if (!function_exists('vms_notify_render_user_profile_fields')) {
 		echo '</table>';
 	}
 }
-add_action('show_user_profile', 'vms_notify_render_user_profile_fields');
-add_action('edit_user_profile', 'vms_notify_render_user_profile_fields');
+add_action('show_user_profile', 'bvmgr_notify_render_user_profile_fields');
+add_action('edit_user_profile', 'bvmgr_notify_render_user_profile_fields');
 
-if (!function_exists('vms_notify_save_user_profile_fields')) {
-	function vms_notify_save_user_profile_fields(int $user_id): void
+if (!function_exists('bvmgr_notify_save_user_profile_fields')) {
+	function bvmgr_notify_save_user_profile_fields(int $user_id): void
 	{
 		if (!current_user_can('edit_user', $user_id)) {
 			return;
@@ -81,5 +81,5 @@ if (!function_exists('vms_notify_save_user_profile_fields')) {
 		update_user_meta($user_id, 'vms_phone_e164', $phone);
 	}
 }
-add_action('personal_options_update', 'vms_notify_save_user_profile_fields');
-add_action('edit_user_profile_update', 'vms_notify_save_user_profile_fields');
+add_action('personal_options_update', 'bvmgr_notify_save_user_profile_fields');
+add_action('edit_user_profile_update', 'bvmgr_notify_save_user_profile_fields');

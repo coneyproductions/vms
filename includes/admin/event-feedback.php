@@ -564,7 +564,7 @@ if (!function_exists('bvmgr_feedback_admin_render_link_card')) {
 		echo '<div class="vms-feedback-link-row"><input type="text" class="large-text code" readonly value="' . esc_attr($survey_url) . '"></div>';
 		echo '<p class="description">' . esc_html__('Tip: copy the full URL above and send it by email, text, or a private post-event message.', 'backstage-venue-manager') . '</p>';
 		$email_preview_url = add_query_arg(array(
-			'page' => function_exists('vms_email_followups_admin_slug') ? vms_email_followups_admin_slug() : 'vms-email-followups',
+			'page' => function_exists('bvmgr_email_followups_admin_slug') ? bvmgr_email_followups_admin_slug() : 'vms-email-followups',
 			'tab' => 'preview',
 			'event_plan_id' => $event_plan_id,
 			'email_key' => 'post_event',

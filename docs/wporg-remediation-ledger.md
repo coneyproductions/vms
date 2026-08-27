@@ -594,9 +594,18 @@ Date: 2026-08-26
 
 ### B3 W9 staffing/schedule boundary
 
-- Status: `verified` for the isolated W9 commit; exactly `441` functions / `445` sites and all four W9 duplicate families migrated without a legacy wrapper or dual declaration.
+- Status: `verified` at `71c747f75dcb06940ac8c606c9de3894b909d3bf`; exactly `441` functions / `445` sites and all four W9 duplicate families migrated without a legacy wrapper or dual declaration.
 - Ratchet: cumulative progress is `3,731 / 4,521` functions and `3,747 / 4,541` sites; `790` legacy functions / `794` B3 scanner rows remain with no stale/forward, unexpected, unmapped, split-duplicate, or completed-wave residual.
 - Exact literals: ten admin-shell, REST, activation-bootstrap, and source-introspection identities moved while `43` database-table, cron-hook, and performance-telemetry contracts remain legacy.
 - Focused verification: schedule output, Staff Certification notices, strict POST behavior, Administrator shell, authorization, changed-PHP lint, diff, and all primary phase gates pass. Isolation-incompatible live/shadow parity and explicit-WordPress-root tests remain excluded.
 - Checkpoint sequencing: W9 remains an independent green commit; W11 carries the final exact-ZIP package, strict scan, and full lifecycle proof.
+- Boundaries: installed/live core and add-ons remain unchanged. No B4-B8 work, push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.
+
+### B3 W10 admissions/email boundary
+
+- Status: `verified` for the isolated W10 commit; exactly `428` functions / `428` sites migrated without a duplicate family, legacy wrapper, or dual declaration.
+- Ratchet: cumulative progress is `4,159 / 4,521` functions and `4,175 / 4,541` sites; `362` legacy functions / `366` B3 scanner rows remain with no stale/forward, unexpected, unmapped, or completed-wave residual.
+- Exact literals: eight array-map, activation-bootstrap, provider-registry, and admin-shell callback sites moved while `13` filter-hook, nonce-action, table, and option contracts remain legacy; three test-only collision/filter values are explicitly retained.
+- Focused verification: admission request/REST, Event Details JSON-LD/schema, nonce, Pass Claims output, public Event Sidebar, mutation, changed-PHP lint, diff, and all primary phase gates pass. Isolation-incompatible live/shadow parity and unavailable historical-artifact tests remain excluded.
+- Checkpoint sequencing: W10 remains an independent green commit; W11 carries the final exact-ZIP package, strict scan, full lifecycle, and closeout proof.
 - Boundaries: installed/live core and add-ons remain unchanged. No B4-B8 work, push, merge, upload, tag, deployment, live sync, staging/production change, WordPress.org action, reviewer reply, or protected-stash mutation occurred.

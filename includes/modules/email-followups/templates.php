@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_email_followups_builtin_template_definitions')) {
-	function vms_email_followups_builtin_template_definitions(): array
+if (!function_exists('bvmgr_email_followups_builtin_template_definitions')) {
+	function bvmgr_email_followups_builtin_template_definitions(): array
 	{
 		return array(
 			'know_before' => array(
@@ -45,11 +45,11 @@ if (!function_exists('vms_email_followups_builtin_template_definitions')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_template_definitions')) {
-	function vms_email_followups_template_definitions(): array
+if (!function_exists('bvmgr_email_followups_template_definitions')) {
+	function bvmgr_email_followups_template_definitions(): array
 	{
-		$defs = vms_email_followups_builtin_template_definitions();
-		$stored = get_option(function_exists('vms_email_followups_option_key') ? vms_email_followups_option_key() : 'vms_email_followups_settings', array());
+		$defs = bvmgr_email_followups_builtin_template_definitions();
+		$stored = get_option(function_exists('bvmgr_email_followups_option_key') ? bvmgr_email_followups_option_key() : 'vms_email_followups_settings', array());
 		if (!is_array($stored)) {
 			$stored = array();
 		}
@@ -91,8 +91,8 @@ if (!function_exists('vms_email_followups_template_definitions')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_default_templates')) {
-	function vms_email_followups_default_templates(): array
+if (!function_exists('bvmgr_email_followups_default_templates')) {
+	function bvmgr_email_followups_default_templates(): array
 	{
 		return array(
 			'know_before' => array(
@@ -115,8 +115,8 @@ if (!function_exists('vms_email_followups_default_templates')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_tokens_help')) {
-	function vms_email_followups_tokens_help(): array
+if (!function_exists('bvmgr_email_followups_tokens_help')) {
+	function bvmgr_email_followups_tokens_help(): array
 	{
 		return array(
 			'{event_name}' => __('Event title', 'backstage-venue-manager'),
@@ -137,8 +137,8 @@ if (!function_exists('vms_email_followups_tokens_help')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_template_schedule_mode')) {
-	function vms_email_followups_template_schedule_mode(array $def): string
+if (!function_exists('bvmgr_email_followups_template_schedule_mode')) {
+	function bvmgr_email_followups_template_schedule_mode(array $def): string
 	{
 		if (($def['kind'] ?? '') === 'manual') {
 			return 'manual';
@@ -154,10 +154,10 @@ if (!function_exists('vms_email_followups_template_schedule_mode')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_template_timing_label')) {
-	function vms_email_followups_template_timing_label(array $def): string
+if (!function_exists('bvmgr_email_followups_template_timing_label')) {
+	function bvmgr_email_followups_template_timing_label(array $def): string
 	{
-		$mode = vms_email_followups_template_schedule_mode($def);
+		$mode = bvmgr_email_followups_template_schedule_mode($def);
 		$days = abs((int) ($def['offset_days'] ?? 0));
 		$hour = min(23, max(0, (int) ($def['send_hour'] ?? 9)));
 		$display_hour = $hour % 12;

@@ -813,8 +813,8 @@ if (!function_exists('bvmgr_vendor_user_link_notify_admin')) {
         $body_html = nl2br(esc_html($body_text));
 
         foreach ($recipients as $email) {
-            $result = function_exists('vms_notify_provider_core_email_send')
-                ? (array) vms_notify_provider_core_email_send(array(
+            $result = function_exists('bvmgr_notify_provider_core_email_send')
+                ? (array) bvmgr_notify_provider_core_email_send(array(
                     'to' => $email,
                     'subject' => $subject,
                     'body_text' => $body_text,
@@ -826,8 +826,8 @@ if (!function_exists('bvmgr_vendor_user_link_notify_admin')) {
                     'error_message' => '',
                 );
 
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vms_vendor_user_links',
                     'event_key' => 'vendor_user_link_created',
                     'recipient_address' => $email,
@@ -935,8 +935,8 @@ if (!function_exists('bvmgr_vendor_user_link_request_notify_admin')) {
         $body_html = nl2br(esc_html($body_text));
 
         foreach ($recipients as $email) {
-            $result = function_exists('vms_notify_provider_core_email_send')
-                ? (array) vms_notify_provider_core_email_send(array(
+            $result = function_exists('bvmgr_notify_provider_core_email_send')
+                ? (array) bvmgr_notify_provider_core_email_send(array(
                     'to' => $email,
                     'subject' => $subject,
                     'body_text' => $body_text,
@@ -948,8 +948,8 @@ if (!function_exists('bvmgr_vendor_user_link_request_notify_admin')) {
                     'error_message' => '',
                 );
 
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vms_vendor_user_link_requests',
                     'event_key' => 'vendor_user_link_requested',
                     'recipient_address' => $email,

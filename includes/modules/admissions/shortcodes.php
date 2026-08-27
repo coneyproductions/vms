@@ -1,14 +1,14 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_door_checkin_shortcode')) {
-	function vms_door_checkin_shortcode($atts = array()): string
+if (!function_exists('bvmgr_door_checkin_shortcode')) {
+	function bvmgr_door_checkin_shortcode($atts = array()): string
 	{
-		if (!is_user_logged_in() || !vms_admission_current_user_can_checkin()) {
+		if (!is_user_logged_in() || !bvmgr_admission_current_user_can_checkin()) {
 			return '<div class="vms-door-checkin-denied">' . esc_html__('Access denied.', 'backstage-venue-manager') . '</div>';
 		}
 
-		$settings = vms_admission_settings();
+		$settings = bvmgr_admission_settings();
 		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
 			'vms-door-checkin',
@@ -27,8 +27,8 @@ if (!function_exists('vms_door_checkin_shortcode')) {
 		wp_localize_script('vms-door-checkin', 'vmsDoorCheckin', array(
 			'restUrl' => esc_url_raw(rest_url('vms/v1')),
 			'nonce' => wp_create_nonce('wp_rest'),
-			'canManage' => current_user_can(vms_admission_manage_capability()) ? 1 : 0,
-			'canDoor' => current_user_can(vms_admission_door_capability()) ? 1 : 0,
+			'canManage' => current_user_can(bvmgr_admission_manage_capability()) ? 1 : 0,
+			'canDoor' => current_user_can(bvmgr_admission_door_capability()) ? 1 : 0,
 			'settings' => array(
 				'allowUncheckin' => !empty($settings['allow_uncheckin']) ? 1 : 0,
 				'allowUncheckinForDoor' => !empty($settings['allow_uncheckin_for_door']) ? 1 : 0,
@@ -59,4 +59,4 @@ if (!function_exists('vms_door_checkin_shortcode')) {
 		return (string) ob_get_clean();
 	}
 }
-add_shortcode('vms_door_checkin', 'vms_door_checkin_shortcode');
+add_shortcode('vms_door_checkin', 'bvmgr_door_checkin_shortcode');

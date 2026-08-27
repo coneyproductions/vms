@@ -574,12 +574,12 @@ if (!function_exists('bvmgr_vendor_portal_get_admissions_headcount')) {
     function bvmgr_vendor_portal_get_admissions_headcount(int $plan_id): int
     {
         $plan_id = absint($plan_id);
-        if ($plan_id <= 0 || !function_exists('vms_admission_table_entries')) {
+        if ($plan_id <= 0 || !function_exists('bvmgr_admission_table_entries')) {
             return 0;
         }
 
         global $wpdb;
-        $table = vms_admission_table_entries();
+        $table = bvmgr_admission_table_entries();
         if (!$wpdb || !is_string($table) || $table === '') {
             return 0;
         }
@@ -963,7 +963,7 @@ if (!function_exists('bvmgr_vendor_portal_get_guest_admissions_count')) {
     function bvmgr_vendor_portal_get_guest_admissions_count(int $plan_id): int
     {
         $plan_id = absint($plan_id);
-        if ($plan_id <= 0 || !function_exists('vms_admission_table_entries')) {
+        if ($plan_id <= 0 || !function_exists('bvmgr_admission_table_entries')) {
             return 0;
         }
 
@@ -974,7 +974,7 @@ if (!function_exists('bvmgr_vendor_portal_get_guest_admissions_count')) {
 
         global $wpdb;
         $guest_qty = 0;
-        $table = vms_admission_table_entries();
+        $table = bvmgr_admission_table_entries();
         if ($wpdb && is_string($table) && $table !== '') {
             static $table_exists_cache = array();
             if (!array_key_exists($table, $table_exists_cache)) {

@@ -1973,8 +1973,8 @@ if (!function_exists('bvmgr_vendor_command_center_handle_send_onboarding')) {
             exit;
         }
 
-        $result = function_exists('vms_notify_provider_core_email_send')
-            ? (array) vms_notify_provider_core_email_send(array(
+        $result = function_exists('bvmgr_notify_provider_core_email_send')
+            ? (array) bvmgr_notify_provider_core_email_send(array(
                 'to' => $to_email,
                 'subject' => $subject,
                 'body_text' => $message_text,
@@ -1983,8 +1983,8 @@ if (!function_exists('bvmgr_vendor_command_center_handle_send_onboarding')) {
 
         $sent = !empty($result['success']);
         if (!$sent) {
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vendor_command_center',
                     'event_key' => 'vendor_onboarding_manual',
                     'recipient_user_id' => 0,
@@ -2014,8 +2014,8 @@ if (!function_exists('bvmgr_vendor_command_center_handle_send_onboarding')) {
         $count = (int) get_post_meta($vendor_id, $count_key, true);
         update_post_meta($vendor_id, $count_key, max(0, $count) + 1);
 
-        if (function_exists('vms_notify_insert_log')) {
-            vms_notify_insert_log(array(
+        if (function_exists('bvmgr_notify_insert_log')) {
+            bvmgr_notify_insert_log(array(
                 'source' => 'vendor_command_center',
                 'event_key' => 'vendor_onboarding_manual',
                 'recipient_user_id' => 0,

@@ -117,7 +117,7 @@ function __(string $text, string $domain = ''): string
 	return $text;
 }
 
-function vms_admission_table_entries(): string
+function bvmgr_admission_table_entries(): string
 {
 	return (string) $GLOBALS['portal_admissions_table'];
 }

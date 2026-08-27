@@ -24,7 +24,10 @@
         {"legacy_identifier":"vms_square_ticket_mirror_log","file":"tests/g10-support-repositories-sql-remediation.php","line":217,"reason":"retained database table suffix fixture"},
         {"legacy_identifier":"vms_ticket_integrity_watch_ticketing_meta","file":"tests/g10-integrity-repositories-db-remediation.php","line":959,"reason":"retained performance telemetry name expectation"},
         {"legacy_identifier":"vms_ticket_mutation_audit_context_stack","file":"tests/wporg-prefix-b2-foundation.php","line":89,"reason":"B2 global-slot/function-suffix collision inventory"},
-        {"legacy_identifier":"vms_vendor_profiles_event_sidebar_rendered","file":"tests/wporg-prefix-b2-foundation.php","line":90,"reason":"B2 global-slot/function-suffix collision inventory"}
+        {"legacy_identifier":"vms_vendor_profiles_event_sidebar_rendered","file":"tests/wporg-prefix-b2-foundation.php","line":90,"reason":"B2 global-slot/function-suffix collision inventory"},
+        {"legacy_identifier":"vms_event_details_sidebar_manual_rendered","file":"tests/wporg-prefix-b2-foundation.php","line":84,"reason":"B2 global-slot/function-suffix collision inventory"},
+        {"legacy_identifier":"vms_event_details_sidebar_rendered","file":"tests/wporg-prefix-b2-foundation.php","line":85,"reason":"B2 global-slot/function-suffix collision inventory"},
+        {"legacy_identifier":"vms_event_details_print_json_ld","file":"tests/event-details-fallback-json-ld-output-remediation.php","line":329,"reason":"retained WordPress filter hook runtime expectation"}
     ],
     "decisions": [
         {"legacy_identifier":"vms_admin_guard_hook_probe_shutdown","file":"includes/runtime-guards.php","line":1638,"decision":"rename","reason":"register_shutdown_function callable"},
@@ -264,6 +267,27 @@
         {"legacy_identifier":"vms_tasks_run_queued_event_generation","file":"includes/modules/staff-tasks/generator.php","line":879,"decision":"retain","reason":"performance telemetry name"},
         {"legacy_identifier":"vms_tasks_run_queued_event_generation","file":"includes/modules/staff-tasks/generator.php","line":892,"decision":"retain","reason":"performance telemetry name"},
         {"legacy_identifier":"vms_tasks_run_queued_event_generation","file":"includes/modules/staff-tasks/generator.php","line":913,"decision":"retain","reason":"performance telemetry name"},
-        {"legacy_identifier":"vms_tasks_schedule_nightly_generator","file":"includes/activation.php","line":41,"decision":"rename","reason":"activation bootstrap callable"}
+        {"legacy_identifier":"vms_tasks_schedule_nightly_generator","file":"includes/activation.php","line":41,"decision":"rename","reason":"activation bootstrap callable"},
+        {"legacy_identifier":"vms_admission_prepare_row","file":"includes/modules/admissions/rest.php","line":337,"decision":"rename","reason":"array_map callable"},
+        {"legacy_identifier":"vms_admission_settings","file":"includes/modules/admissions/audit.php","line":29,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_email_followups_clear_logs","file":"includes/modules/email-followups/admin-ui.php","line":543,"decision":"retain","reason":"nonce action"},
+        {"legacy_identifier":"vms_email_followups_clear_logs","file":"includes/modules/email-followups/admin-ui.php","line":716,"decision":"retain","reason":"nonce action"},
+        {"legacy_identifier":"vms_email_followups_log","file":"includes/modules/email-followups/logs.php","line":7,"decision":"retain","reason":"database table suffix"},
+        {"legacy_identifier":"vms_email_followups_manual_batch_size","file":"includes/modules/email-followups/admin-ui.php","line":581,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_email_followups_schedule_cron","file":"includes/activation.php","line":42,"decision":"rename","reason":"activation bootstrap callable"},
+        {"legacy_identifier":"vms_email_followups_send_test","file":"includes/modules/email-followups/admin-ui.php","line":497,"decision":"retain","reason":"nonce action"},
+        {"legacy_identifier":"vms_email_followups_send_test","file":"includes/modules/email-followups/admin-ui.php","line":638,"decision":"retain","reason":"nonce action"},
+        {"legacy_identifier":"vms_email_followups_settings","file":"includes/modules/email-followups/settings.php","line":7,"decision":"retain","reason":"option key"},
+        {"legacy_identifier":"vms_email_followups_settings","file":"includes/modules/email-followups/templates.php","line":52,"decision":"retain","reason":"option key fallback"},
+        {"legacy_identifier":"vms_event_details_print_json_ld","file":"includes/public/event-details.php","line":810,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_event_details_schema","file":"includes/public/event-details.php","line":1192,"decision":"retain","reason":"WordPress filter hook"},
+        {"legacy_identifier":"vms_notify_ensure_digest_cron","file":"includes/activation.php","line":45,"decision":"rename","reason":"activation bootstrap callable"},
+        {"legacy_identifier":"vms_notify_provider_core_email_send","file":"includes/core/notifications.php","line":242,"decision":"rename","reason":"notification provider callable registry"},
+        {"legacy_identifier":"vms_pass_claims_render_admin_notices","file":"includes/modules/admissions/pass-claims.php","line":2376,"decision":"rename","reason":"admin shell notices callable"},
+        {"legacy_identifier":"vms_status_notice_notice_bar","file":"includes/modules/status-notices/admin-ui.php","line":229,"decision":"rename","reason":"admin shell notices callable"},
+        {"legacy_identifier":"vms_status_notice_notice_bar","file":"includes/modules/status-notices/admin-ui.php","line":542,"decision":"rename","reason":"admin shell notices callable"},
+        {"legacy_identifier":"vms_status_notice_prepare_runtime_notice","file":"includes/modules/status-notices/front.php","line":171,"decision":"rename","reason":"array_map callable"},
+        {"legacy_identifier":"vms_status_notice_save","file":"includes/modules/status-notices/admin-ui.php","line":378,"decision":"retain","reason":"nonce action"},
+        {"legacy_identifier":"vms_status_notice_save","file":"includes/modules/status-notices/admin-ui.php","line":570,"decision":"retain","reason":"nonce action"}
     ]
 }

@@ -215,9 +215,9 @@ foreach ($paths as $key => $path) {
 eval(vms_t5_extract_function($sources['event_import'], 'bvmgr_event_plan_import_read_selected_rows_from_post'));
 eval(vms_t5_extract_function($sources['phase_b'], 'bvmgr_ticketing_b_request_payload_value'));
 eval(vms_t5_extract_function($sources['rules_v2'], 'bvmgr_ticketing_v2_read_form_request_payload'));
-eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_guest_rules_from_post'));
-eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_guest_flag_value'));
-eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_guest_absint_value'));
+eval(vms_t5_extract_function($sources['vendor_guest'], 'bvmgr_admission_vendor_guest_rules_from_post'));
+eval(vms_t5_extract_function($sources['vendor_guest'], 'bvmgr_admission_vendor_guest_flag_value'));
+eval(vms_t5_extract_function($sources['vendor_guest'], 'bvmgr_admission_vendor_guest_absint_value'));
 eval(vms_t5_extract_function($sources['social_admin'], 'vms_social_template_body_from_post'));
 eval(vms_t5_extract_function($sources['vendor_category'], 'bvmgr_vendor_type_category_label_from_post'));
 eval(vms_t5_extract_function($sources['ticket_integrity'], 'bvmgr_ticket_integrity_plan_save_request_action'));
@@ -265,13 +265,13 @@ vms_t5_assert_same(null, $payload, 'Payload reader should return null for malfor
 vms_t5_assert_same(array('nonce' => "good'value", 'ticket_lines' => array(array('qty' => '1'))), bvmgr_ticketing_v2_read_form_request_payload(array('nonce' => 'good\\\'value', 'ticket_lines' => array(array('qty' => '1')))), 'Form fallback should unslash whole request arrays once.');
 vms_t5_assert_same(array(), bvmgr_ticketing_v2_read_form_request_payload(array()), 'Form fallback should preserve empty POST fallback.');
 
-vms_t5_assert_same(array('enabled' => '1'), vms_admission_vendor_guest_rules_from_post(array('vms_vendor_guest_rules' => array('enabled' => '1'))), 'Vendor Guest rules should accept array-shaped top-level rules.');
-vms_t5_assert_same(null, vms_admission_vendor_guest_rules_from_post(array('vms_vendor_guest_rules' => '1')), 'Vendor Guest rules should reject scalar top-level rules.');
-vms_t5_assert_same(1, vms_admission_vendor_guest_flag_value('1'), 'Vendor Guest flags should accept scalar truthy values.');
-vms_t5_assert_same(0, vms_admission_vendor_guest_flag_value(array('1')), 'Vendor Guest flags should reject nested arrays.');
-vms_t5_assert_same(42, vms_admission_vendor_guest_absint_value('42'), 'Vendor Guest allotments should accept unsigned integer strings.');
-vms_t5_assert_same(0, vms_admission_vendor_guest_absint_value('-42'), 'Vendor Guest allotments should reject negative strings instead of flipping sign.');
-vms_t5_assert_same(0, vms_admission_vendor_guest_absint_value(array('42')), 'Vendor Guest allotments should reject arrays.');
+vms_t5_assert_same(array('enabled' => '1'), bvmgr_admission_vendor_guest_rules_from_post(array('vms_vendor_guest_rules' => array('enabled' => '1'))), 'Vendor Guest rules should accept array-shaped top-level rules.');
+vms_t5_assert_same(null, bvmgr_admission_vendor_guest_rules_from_post(array('vms_vendor_guest_rules' => '1')), 'Vendor Guest rules should reject scalar top-level rules.');
+vms_t5_assert_same(1, bvmgr_admission_vendor_guest_flag_value('1'), 'Vendor Guest flags should accept scalar truthy values.');
+vms_t5_assert_same(0, bvmgr_admission_vendor_guest_flag_value(array('1')), 'Vendor Guest flags should reject nested arrays.');
+vms_t5_assert_same(42, bvmgr_admission_vendor_guest_absint_value('42'), 'Vendor Guest allotments should accept unsigned integer strings.');
+vms_t5_assert_same(0, bvmgr_admission_vendor_guest_absint_value('-42'), 'Vendor Guest allotments should reject negative strings instead of flipping sign.');
+vms_t5_assert_same(0, bvmgr_admission_vendor_guest_absint_value(array('42')), 'Vendor Guest allotments should reject arrays.');
 
 vms_t5_assert_same("Line 1\n{{event_title}}\\n", vms_social_template_body_from_post(array('body' => "Line 1\n{{event_title}}\\\\n")), 'Social template body should preserve text, newlines, and tokens after unslashing.');
 vms_t5_assert_same('', vms_social_template_body_from_post(array('body' => array('bad'))), 'Social template body should reject array-shaped values.');

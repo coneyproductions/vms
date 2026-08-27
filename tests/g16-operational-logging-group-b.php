@@ -532,7 +532,7 @@ function g16b_import_behavior(string $source): void
 	g16b_assert_no_sentinels($GLOBALS['g16b_records'], $sentinels, 'Revert storage leaked raw error data');
 }
 
-function vms_admission_rest_error(string $code, string $message, int $status = 400, $data = null): WP_REST_Response
+function bvmgr_admission_rest_error(string $code, string $message, int $status = 400, $data = null): WP_REST_Response
 {
 	$GLOBALS['g16b_trace'][] = 'response:' . $code;
 	$response = new WP_REST_Response(array(
@@ -544,7 +544,7 @@ function vms_admission_rest_error(string $code, string $message, int $status = 4
 	return $response;
 }
 
-function vms_admission_audit_log(...$args): void
+function bvmgr_admission_audit_log(...$args): void
 {
 	unset($args);
 	$GLOBALS['g16b_trace'][] = 'audit';
@@ -567,7 +567,7 @@ function g16b_admissions_behavior(string $source): void
 	);
 	$cases = array(
 		array(
-			'function' => 'vms_admission_rest_create',
+			'function' => 'bvmgr_admission_rest_create',
 			'needle' => 'if ($insert === false)',
 			'event' => 'admission_create_failed',
 			'operation' => 'create',
@@ -581,7 +581,7 @@ function g16b_admissions_behavior(string $source): void
 			'ids' => array('plan_id' => 73),
 		),
 		array(
-			'function' => 'vms_admission_rest_patch',
+			'function' => 'bvmgr_admission_rest_patch',
 			'needle' => 'if ($ok === false)',
 			'event' => 'admission_update_failed',
 			'operation' => 'update',
@@ -590,7 +590,7 @@ function g16b_admissions_behavior(string $source): void
 			'ids' => array('plan_id' => 74, 'entity_id' => 81),
 		),
 		array(
-			'function' => 'vms_admission_rest_checkin',
+			'function' => 'bvmgr_admission_rest_checkin',
 			'needle' => 'if ($updated === false)',
 			'event' => 'admission_checkin_failed',
 			'operation' => 'checkin',
@@ -599,7 +599,7 @@ function g16b_admissions_behavior(string $source): void
 			'ids' => array('plan_id' => 75, 'entity_id' => 82),
 		),
 		array(
-			'function' => 'vms_admission_rest_uncheckin',
+			'function' => 'bvmgr_admission_rest_uncheckin',
 			'needle' => 'if ($updated === false)',
 			'event' => 'admission_uncheckin_failed',
 			'operation' => 'uncheckin',

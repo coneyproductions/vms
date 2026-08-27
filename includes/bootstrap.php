@@ -64,8 +64,8 @@ unset($bvmgr_optional_bootstrap_file, $bvmgr_optional_bootstrap_files);
  * Modules
  */
 require_once __DIR__ . '/modules/load.php';
-if (function_exists('vms_load_modules')) {
-	vms_load_modules();
+if (function_exists('bvmgr_load_modules')) {
+	bvmgr_load_modules();
 }
 
 do_action('vms_loaded');

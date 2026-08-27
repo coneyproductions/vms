@@ -299,25 +299,25 @@ add_action('admin_menu', function () {
     );
   }
 
-  if (function_exists('vms_status_notice_render_admin_page')) {
+  if (function_exists('bvmgr_status_notice_render_admin_page')) {
     add_submenu_page(
       $parent_slug,
       __('Status Notices', 'backstage-venue-manager'),
       __('Status Notices', 'backstage-venue-manager'),
       $capability,
       'vms-status-notices',
-      'vms_status_notice_render_admin_page'
+      'bvmgr_status_notice_render_admin_page'
     );
   }
 
-  if (function_exists('vms_pass_claims_render_admin_page')) {
+  if (function_exists('bvmgr_pass_claims_render_admin_page')) {
     add_submenu_page(
       $parent_slug,
       __('Guest Passes', 'backstage-venue-manager'),
       __('Guest Passes', 'backstage-venue-manager'),
       $capability,
       'vms-passes',
-      'vms_pass_claims_render_admin_page'
+      'bvmgr_pass_claims_render_admin_page'
     );
   }
 

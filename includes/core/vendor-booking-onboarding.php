@@ -626,10 +626,10 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_touch_vendor_contact_meta'
 if (!function_exists('bvmgr_vendor_booking_onboarding_log_email')) {
     function bvmgr_vendor_booking_onboarding_log_email(string $event_key, string $recipient, array $payload, array $result): void
     {
-        if (!function_exists('vms_notify_insert_log')) {
+        if (!function_exists('bvmgr_notify_insert_log')) {
             return;
         }
-        vms_notify_insert_log(array(
+        bvmgr_notify_insert_log(array(
             'source' => 'vendor_booking_onboarding',
             'event_key' => $event_key,
             'recipient_user_id' => 0,
@@ -670,8 +670,8 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_send_booked_email')) {
         $subject = bvmgr_vendor_booking_onboarding_resolve_text((string) $settings['subject'], $tokens);
         $body = bvmgr_vendor_booking_onboarding_resolve_text((string) $settings['body'], $tokens);
 
-        $result = function_exists('vms_notify_provider_core_email_send')
-            ? (array) vms_notify_provider_core_email_send(array(
+        $result = function_exists('bvmgr_notify_provider_core_email_send')
+            ? (array) bvmgr_notify_provider_core_email_send(array(
                 'to' => $vendor_email,
                 'subject' => $subject,
                 'body_text' => $body,
@@ -859,8 +859,8 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_send_reminder')) {
         ));
         $body = bvmgr_vendor_booking_onboarding_resolve_text($body, $tokens);
 
-        $result = function_exists('vms_notify_provider_core_email_send')
-            ? (array) vms_notify_provider_core_email_send(array(
+        $result = function_exists('bvmgr_notify_provider_core_email_send')
+            ? (array) bvmgr_notify_provider_core_email_send(array(
                 'to' => $vendor_email,
                 'subject' => $subject,
                 'body_text' => $body,

@@ -533,8 +533,8 @@ if (!function_exists('bvmgr_feedback_handle_submit')) {
 		if ($recipient_hash !== '') {
 			update_post_meta($response_id, bvmgr_feedback_meta_key('recipient'), $recipient_hash);
 		}
-		if (function_exists('vms_email_followups_log')) {
-			vms_email_followups_log(array(
+		if (function_exists('bvmgr_email_followups_log')) {
+			bvmgr_email_followups_log(array(
 				'action' => 'feedback_submission',
 				'email_key' => 'post_event',
 				'event_plan_id' => $event_plan_id,

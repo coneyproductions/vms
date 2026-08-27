@@ -61,7 +61,7 @@ $createPost = static function (array $postarr, string $label): int {
 };
 
 $ensureAdmissionRow = static function (int $eventPlanId, int $venueId, int $actorUserId, string $guestName, string $guestEmail) use ($wpdb): int {
-	$table = function_exists('vms_admission_table_entries') ? vms_admission_table_entries() : ($wpdb->prefix . 'vms_admission_entries');
+	$table = function_exists('bvmgr_admission_table_entries') ? bvmgr_admission_table_entries() : ($wpdb->prefix . 'vms_admission_entries');
 	$createdAt = current_time('mysql', true);
 	$guestNameNorm = sanitize_title($guestName);
 	$guestEmailNorm = sanitize_email($guestEmail);
@@ -107,8 +107,8 @@ $ensureAdmissionRow = static function (int $eventPlanId, int $venueId, int $acto
 	}
 
 	$entryId = (int) $wpdb->insert_id;
-	if ($entryId > 0 && function_exists('vms_admission_ensure_entry_token')) {
-		vms_admission_ensure_entry_token($entryId);
+	if ($entryId > 0 && function_exists('bvmgr_admission_ensure_entry_token')) {
+		bvmgr_admission_ensure_entry_token($entryId);
 	}
 
 	return $entryId;

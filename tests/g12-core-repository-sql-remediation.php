@@ -206,18 +206,18 @@ function wp_normalize_path(string $path): string
 	return str_replace('\\', '/', $path);
 }
 
-function vms_notify_log_table_name(): string
+function bvmgr_notify_log_table_name(): string
 {
 	return (string) $GLOBALS['g12_notify_table'];
 }
 
-function vms_notify_sanitize_template_key(string $template_key): string
+function bvmgr_notify_sanitize_template_key(string $template_key): string
 {
 	$template_key = strtolower(trim($template_key));
 	return (string) preg_replace('/[^a-z0-9._-]/', '', $template_key);
 }
 
-function vms_notify_redact_payload_for_log($value)
+function bvmgr_notify_redact_payload_for_log($value)
 {
 	return $value;
 }
@@ -432,8 +432,8 @@ ksort($expected_code_delta);
 g12_same($expected_file_counts, $historical_file_counts, 'The historical per-file row inventory changed.');
 g12_same($expected_code_delta, $historical_code_counts, 'The exact expected G12 core rule delta changed.');
 
-$notify_insert_source = g12_extract_function($notify_source, 'vms_notify_insert_log');
-$notify_recent_source = g12_extract_function($notify_source, 'vms_notify_recent_logs');
+$notify_insert_source = g12_extract_function($notify_source, 'bvmgr_notify_insert_log');
+$notify_recent_source = g12_extract_function($notify_source, 'bvmgr_notify_recent_logs');
 $private_get_source = g12_extract_function($private_source, 'bvmgr_private_file_get');
 $private_register_source = g12_extract_function($private_source, 'bvmgr_private_files_register_path');
 $private_path_source = g12_extract_function($private_source, 'bvmgr_private_file_path');
@@ -502,16 +502,16 @@ $GLOBALS['g12_operational_calls'] = array();
 $GLOBALS['g12_operational_result'] = false;
 
 // Invalid notification repository state fails closed before any database access.
-vms_notify_insert_log(array('event_key' => 'ignored'));
+bvmgr_notify_insert_log(array('event_key' => 'ignored'));
 g12_same(array(), $wpdb->calls, 'An unavailable notification table should reject inserts without touching wpdb.');
-g12_same(array(), vms_notify_recent_logs(10), 'An unavailable notification table should reject history reads.');
+g12_same(array(), bvmgr_notify_recent_logs(10), 'An unavailable notification table should reject history reads.');
 g12_same(array(), $wpdb->calls, 'Rejected notification history should not touch wpdb.');
 
 // Notification insertion retains sanitization, payload, UTC timestamp, field order, and exact formats.
 $wpdb->reset();
 $GLOBALS['g12_notify_table'] = 'wp_vms_notify_log';
 $wpdb->insert_queue[] = 1;
-vms_notify_insert_log(
+bvmgr_notify_insert_log(
 	array(
 		'source' => 'Core Source!',
 		'event_key' => 'Task Assigned!',
@@ -567,7 +567,7 @@ $previous_error_log = ini_get('error_log');
 $previous_log_errors = ini_get('log_errors');
 ini_set('error_log', $log_path);
 ini_set('log_errors', '1');
-vms_notify_insert_log(array('event_key' => 'Failed Event!'));
+bvmgr_notify_insert_log(array('event_key' => 'Failed Event!'));
 ini_set('error_log', is_string($previous_error_log) ? $previous_error_log : '');
 ini_set('log_errors', is_string($previous_log_errors) ? $previous_log_errors : '1');
 $failure_log = (string) file_get_contents($log_path);
@@ -578,7 +578,7 @@ g12_same('notification_log_insert_failed', $GLOBALS['g12_operational_calls'][0][
 // Schema failure stops before history reads and preserves the prepared SHOW probe.
 $wpdb->reset();
 $wpdb->get_var_queue[] = null;
-g12_same(array(), vms_notify_recent_logs(8), 'Missing notification schema should fail closed.');
+g12_same(array(), bvmgr_notify_recent_logs(8), 'Missing notification schema should fail closed.');
 g12_same(1, count($wpdb->prepares), 'Missing notification schema should perform only one prepare.');
 g12_same('SHOW TABLES LIKE %s', $wpdb->prepares[0]['template'], 'Notification schema probe SQL changed.');
 g12_same(array('wp_vms_notify_log'), $wpdb->prepares[0]['args'], 'Notification schema probe arguments changed.');
@@ -589,7 +589,7 @@ g12_assert_no_unresolved_sql($wpdb);
 $wpdb->reset();
 $wpdb->get_var_queue[] = 'wp_vms_notify_log';
 $wpdb->get_results_queue[] = array(array('id' => 71, 'status' => 'sent'));
-$minimum_rows = vms_notify_recent_logs(0);
+$minimum_rows = bvmgr_notify_recent_logs(0);
 g12_same(array(array('id' => 71, 'status' => 'sent')), $minimum_rows, 'Notification history row shape changed.');
 g12_same('SELECT * FROM %i ORDER BY id DESC LIMIT %d', $wpdb->prepares[1]['template'], 'Notification history SQL shape changed.');
 g12_same(array('wp_vms_notify_log', 1), $wpdb->prepares[1]['args'], 'Notification minimum-limit preparation changed.');
@@ -602,8 +602,8 @@ $wpdb->get_results_queue = array(
 	array(array('id' => 72, 'status' => 'failed')),
 	array(array('id' => 73, 'status' => 'skipped')),
 );
-$first_history = vms_notify_recent_logs(-500);
-$second_history = vms_notify_recent_logs(500);
+$first_history = bvmgr_notify_recent_logs(-500);
+$second_history = bvmgr_notify_recent_logs(500);
 g12_same(72, $first_history[0]['id'], 'First notification history read changed.');
 g12_same(73, $second_history[0]['id'], 'Repeated notification history should remain request-fresh.');
 g12_same(2, count(g12_calls($wpdb, 'get_results')), 'Repeated notification history should query twice without a persistent cache.');
@@ -614,7 +614,7 @@ g12_assert_no_unresolved_sql($wpdb);
 $wpdb->reset();
 $wpdb->get_var_queue[] = 'wp_vms_notify_log';
 $wpdb->get_results_queue[] = false;
-g12_same(array(), vms_notify_recent_logs(12), 'Notification database read failure should retain an empty-array result.');
+g12_same(array(), bvmgr_notify_recent_logs(12), 'Notification database read failure should retain an empty-array result.');
 
 // Private-file lookup rejects invalid IDs and rereads authorization-sensitive rows without caching.
 $wpdb->reset();

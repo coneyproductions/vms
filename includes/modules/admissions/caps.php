@@ -1,33 +1,33 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admission_manage_capability')) {
-	function vms_admission_manage_capability(): string
+if (!function_exists('bvmgr_admission_manage_capability')) {
+	function bvmgr_admission_manage_capability(): string
 	{
 		return 'vms_admission_manage';
 	}
 }
 
-if (!function_exists('vms_admission_door_capability')) {
-	function vms_admission_door_capability(): string
+if (!function_exists('bvmgr_admission_door_capability')) {
+	function bvmgr_admission_door_capability(): string
 	{
 		return 'vms_door_checkin';
 	}
 }
 
-if (!function_exists('vms_admission_phone_view_capability')) {
-	function vms_admission_phone_view_capability(): string
+if (!function_exists('bvmgr_admission_phone_view_capability')) {
+	function bvmgr_admission_phone_view_capability(): string
 	{
 		return 'vms_admission_view_phone';
 	}
 }
 
-if (!function_exists('vms_admission_ensure_capability_mapping')) {
-	function vms_admission_ensure_capability_mapping(): void
+if (!function_exists('bvmgr_admission_ensure_capability_mapping')) {
+	function bvmgr_admission_ensure_capability_mapping(): void
 	{
-		$manage_cap = vms_admission_manage_capability();
-		$door_cap = vms_admission_door_capability();
-		$phone_cap = vms_admission_phone_view_capability();
+		$manage_cap = bvmgr_admission_manage_capability();
+		$door_cap = bvmgr_admission_door_capability();
+		$phone_cap = bvmgr_admission_phone_view_capability();
 
 		$admin = get_role('administrator');
 		if ($admin instanceof WP_Role) {
@@ -67,16 +67,16 @@ if (!function_exists('vms_admission_ensure_capability_mapping')) {
 	}
 }
 
-if (!function_exists('vms_admission_current_user_can_manage')) {
-	function vms_admission_current_user_can_manage(): bool
+if (!function_exists('bvmgr_admission_current_user_can_manage')) {
+	function bvmgr_admission_current_user_can_manage(): bool
 	{
-		return current_user_can(vms_admission_manage_capability());
+		return current_user_can(bvmgr_admission_manage_capability());
 	}
 }
 
-if (!function_exists('vms_admission_current_user_can_checkin')) {
-	function vms_admission_current_user_can_checkin(): bool
+if (!function_exists('bvmgr_admission_current_user_can_checkin')) {
+	function bvmgr_admission_current_user_can_checkin(): bool
 	{
-		return current_user_can(vms_admission_door_capability()) || vms_admission_current_user_can_manage();
+		return current_user_can(bvmgr_admission_door_capability()) || bvmgr_admission_current_user_can_manage();
 	}
 }

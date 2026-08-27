@@ -805,8 +805,8 @@ function bvmgr_ticket_integrity_maybe_send_payment_gateway_alert_email(array $he
 	$lines[] = sprintf(__('Review the full monitor: %s', 'backstage-venue-manager'), bvmgr_ticket_integrity_admin_url());
 
 	$body_text = implode("\n", $lines);
-	$result = function_exists('vms_notify_provider_core_email_send')
-		? (array) vms_notify_provider_core_email_send(
+	$result = function_exists('bvmgr_notify_provider_core_email_send')
+		? (array) bvmgr_notify_provider_core_email_send(
 			array(
 				'to' => $recipient,
 				'subject' => $subject,
@@ -819,8 +819,8 @@ function bvmgr_ticket_integrity_maybe_send_payment_gateway_alert_email(array $he
 			'error_message' => '',
 		);
 
-	if (function_exists('vms_notify_insert_log')) {
-		vms_notify_insert_log(
+	if (function_exists('bvmgr_notify_insert_log')) {
+		bvmgr_notify_insert_log(
 			array(
 				'source' => 'ticket_integrity',
 				'event_key' => 'payment_gateway_health_critical',

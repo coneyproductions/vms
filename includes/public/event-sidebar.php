@@ -123,14 +123,14 @@ if (!function_exists('bvmgr_public_event_sidebar_render_stack')) {
 
         $modules = array();
 
-        $details_rendered = function_exists('vms_event_details_sidebar_rendered') && vms_event_details_sidebar_rendered($event_id);
-        $details_manual = function_exists('vms_event_details_sidebar_manual_rendered') && vms_event_details_sidebar_manual_rendered($event_id);
+        $details_rendered = function_exists('bvmgr_event_details_sidebar_rendered') && bvmgr_event_details_sidebar_rendered($event_id);
+        $details_manual = function_exists('bvmgr_event_details_sidebar_manual_rendered') && bvmgr_event_details_sidebar_manual_rendered($event_id);
         if (!$details_rendered && !$details_manual) {
-            $details_markup = function_exists('vms_event_details_render_card')
-                ? (string) vms_event_details_render_card($event_id, true, '', 'sidebar')
+            $details_markup = function_exists('bvmgr_event_details_render_card')
+                ? (string) bvmgr_event_details_render_card($event_id, true, '', 'sidebar')
                 : '';
             if ($details_markup !== '') {
-                vms_event_details_mark_sidebar_rendered($event_id);
+                bvmgr_event_details_mark_sidebar_rendered($event_id);
                 $modules[] = bvmgr_public_event_sidebar_wrap_module($details_markup, 'event-details');
             }
         }

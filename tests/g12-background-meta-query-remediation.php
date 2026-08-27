@@ -202,7 +202,7 @@ function bvmgr_meta_key(string $scope, string $field): string
 	return '_vms_' . $scope . '_' . $field;
 }
 
-function vms_email_followups_settings(): array
+function bvmgr_email_followups_settings(): array
 {
 	return array(
 		'enabled' => true,
@@ -212,7 +212,7 @@ function vms_email_followups_settings(): array
 	);
 }
 
-function vms_email_followups_template_definitions(): array
+function bvmgr_email_followups_template_definitions(): array
 {
 	return array(
 		'scheduled_notice' => array(
@@ -223,7 +223,7 @@ function vms_email_followups_template_definitions(): array
 	);
 }
 
-function vms_email_followups_event_context(int $event_plan_id): array
+function bvmgr_email_followups_event_context(int $event_plan_id): array
 {
 	return array(
 		'valid' => $event_plan_id > 0,
@@ -233,7 +233,7 @@ function vms_email_followups_event_context(int $event_plan_id): array
 	);
 }
 
-function vms_email_followups_was_sent(int $event_plan_id, string $email_key): bool
+function bvmgr_email_followups_was_sent(int $event_plan_id, string $email_key): bool
 {
 	unset($event_plan_id, $email_key);
 	return false;
@@ -474,7 +474,7 @@ require $plugin_root . '/' . $relative_paths['scheduler'];
 require $plugin_root . '/' . $relative_paths['import'];
 
 $choice_started = time();
-$choices = vms_email_followups_event_choices(2);
+$choices = bvmgr_email_followups_event_choices(2);
 $choice_finished = time();
 g12_same(array(202, 201), g12_post_ids($choices), 'Recipient choices should preserve nearest-date ordering and the requested result limit.');
 g12_same('recipient_choices', $GLOBALS['g12_get_posts_calls'][0]['label'] ?? null, 'First captured query should be the recipient-choice query.');
@@ -500,7 +500,7 @@ g12_same(
 g12_same(array(201, 202, 203), g12_post_ids($GLOBALS['g12_get_posts_calls'][0]['result']), 'Captured recipient get_posts() result should pass through unchanged before local ordering.');
 
 $scheduler_started = time();
-$due_items = vms_email_followups_due_items();
+$due_items = bvmgr_email_followups_due_items();
 $scheduler_finished = time();
 g12_same(array(301, 302), array_column($due_items, 'event_plan_id'), 'Scheduler should preserve every due plan returned by its bounded query.');
 g12_same('scheduler_due_items', $GLOBALS['g12_get_posts_calls'][1]['label'] ?? null, 'Second captured query should be the scheduler query.');

@@ -183,8 +183,8 @@ if (!function_exists('bvmgr_add_dispatch_send_operator_interest_notification')) 
 
 		$success = true;
 		foreach ($recipients as $email) {
-			$result = function_exists('vms_notify_provider_core_email_send')
-				? (array) vms_notify_provider_core_email_send(array(
+			$result = function_exists('bvmgr_notify_provider_core_email_send')
+				? (array) bvmgr_notify_provider_core_email_send(array(
 					'to' => $email,
 					'subject' => $subject,
 					'body_text' => $body_text,
@@ -198,8 +198,8 @@ if (!function_exists('bvmgr_add_dispatch_send_operator_interest_notification')) 
 
 			$success = $success && !empty($result['success']);
 
-			if (function_exists('vms_notify_insert_log')) {
-				vms_notify_insert_log(array(
+			if (function_exists('bvmgr_notify_insert_log')) {
+				bvmgr_notify_insert_log(array(
 					'source' => 'availability_date_dispatch',
 					'event_key' => 'portal_interest',
 					'recipient_user_id' => 0,
@@ -287,8 +287,8 @@ if (!function_exists('bvmgr_add_dispatch_send_operator_interest_withdraw_notific
 
 		$success = true;
 		foreach ($recipients as $email) {
-			$result = function_exists('vms_notify_provider_core_email_send')
-				? (array) vms_notify_provider_core_email_send(array(
+			$result = function_exists('bvmgr_notify_provider_core_email_send')
+				? (array) bvmgr_notify_provider_core_email_send(array(
 					'to' => $email,
 					'subject' => $subject,
 					'body_text' => $body_text,
@@ -302,8 +302,8 @@ if (!function_exists('bvmgr_add_dispatch_send_operator_interest_withdraw_notific
 
 			$success = $success && !empty($result['success']);
 
-			if (function_exists('vms_notify_insert_log')) {
-				vms_notify_insert_log(array(
+			if (function_exists('bvmgr_notify_insert_log')) {
+				bvmgr_notify_insert_log(array(
 					'source' => 'availability_date_dispatch',
 					'event_key' => 'portal_interest_withdrawn',
 					'recipient_user_id' => 0,
@@ -336,8 +336,8 @@ if (!function_exists('bvmgr_add_dispatch_send_response_email')) {
 		$body_text = bvmgr_add_dispatch_email_body_text($request, $response, $context);
 		$body_html = bvmgr_add_dispatch_email_body_html($request, $response, $context);
 
-		$result = function_exists('vms_notify_provider_core_email_send')
-			? (array) vms_notify_provider_core_email_send(array(
+		$result = function_exists('bvmgr_notify_provider_core_email_send')
+			? (array) bvmgr_notify_provider_core_email_send(array(
 				'to' => $email,
 				'subject' => $subject,
 				'body_text' => $body_text,
@@ -349,8 +349,8 @@ if (!function_exists('bvmgr_add_dispatch_send_response_email')) {
 				'error_message' => '',
 			);
 
-		if (function_exists('vms_notify_insert_log')) {
-			vms_notify_insert_log(array(
+		if (function_exists('bvmgr_notify_insert_log')) {
+			bvmgr_notify_insert_log(array(
 				'source' => 'availability_date_dispatch',
 				'event_key' => 'availability_request',
 				'recipient_user_id' => 0,

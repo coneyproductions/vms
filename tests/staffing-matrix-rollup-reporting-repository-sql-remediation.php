@@ -354,7 +354,7 @@ function bvmgr_staffing_get_event_plan_ticket_sales_snapshot(int $event_plan_id)
 	return $GLOBALS['vms_test_ticket_snapshots'][$event_plan_id] ?? array();
 }
 
-function vms_admission_table_entries(): string
+function bvmgr_admission_table_entries(): string
 {
 	return $GLOBALS['vms_test_admissions_table'] ?? '';
 }

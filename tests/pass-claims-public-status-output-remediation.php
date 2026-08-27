@@ -387,8 +387,8 @@ if (!function_exists('wp_kses')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_render_public_shell')) {
-	function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void
+if (!function_exists('bvmgr_pass_claims_render_public_shell')) {
+	function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void
 	{
 		ob_start();
 		$render_content();
@@ -401,8 +401,8 @@ if (!function_exists('vms_pass_claims_render_public_shell')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_find_token_by_raw')) {
-	function vms_pass_claims_find_token_by_raw(string $raw_token): ?array
+if (!function_exists('bvmgr_pass_claims_find_token_by_raw')) {
+	function bvmgr_pass_claims_find_token_by_raw(string $raw_token): ?array
 	{
 		$GLOBALS['vms_test_find_token_calls']++;
 		$GLOBALS['vms_test_find_token_tokens'][] = $raw_token;
@@ -411,8 +411,8 @@ if (!function_exists('vms_pass_claims_find_token_by_raw')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_get_batch_by_id')) {
-	function vms_pass_claims_get_batch_by_id(int $batch_id): ?array
+if (!function_exists('bvmgr_pass_claims_get_batch_by_id')) {
+	function bvmgr_pass_claims_get_batch_by_id(int $batch_id): ?array
 	{
 		$GLOBALS['vms_test_get_batch_calls']++;
 		$GLOBALS['vms_test_get_batch_ids'][] = $batch_id;
@@ -421,8 +421,8 @@ if (!function_exists('vms_pass_claims_get_batch_by_id')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_rate_limit_hit')) {
-	function vms_pass_claims_rate_limit_hit(string $ip, string $token_public_key): bool
+if (!function_exists('bvmgr_pass_claims_rate_limit_hit')) {
+	function bvmgr_pass_claims_rate_limit_hit(string $ip, string $token_public_key): bool
 	{
 		$GLOBALS['vms_test_rate_limit_calls']++;
 		$GLOBALS['vms_test_rate_limit_args'][] = array($ip, $token_public_key);
@@ -430,8 +430,8 @@ if (!function_exists('vms_pass_claims_rate_limit_hit')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
-	function vms_pass_claims_eligible_events_for_batch(array $batch): array
+if (!function_exists('bvmgr_pass_claims_eligible_events_for_batch')) {
+	function bvmgr_pass_claims_eligible_events_for_batch(array $batch): array
 	{
 		$GLOBALS['vms_test_eligible_calls']++;
 		$GLOBALS['vms_test_eligible_batches'][] = $batch;
@@ -439,8 +439,8 @@ if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_empty_events_notice')) {
-	function vms_pass_claims_empty_events_notice(array $batch): array
+if (!function_exists('bvmgr_pass_claims_empty_events_notice')) {
+	function bvmgr_pass_claims_empty_events_notice(array $batch): array
 	{
 		$GLOBALS['vms_test_empty_notice_calls']++;
 		$GLOBALS['vms_test_empty_notice_batches'][] = $batch;
@@ -521,38 +521,38 @@ $captureShellRender = static function (callable $callback) use ($assert): array 
 $assert(is_string($passClaimsSource) && $passClaimsSource !== '', 'Pass Claims source should be readable.');
 $assert(is_string($adminShellSource) && $adminShellSource !== '', 'Administrator shell source should be readable.');
 
-$assert(isset($GLOBALS['vms_test_actions']['init'][30]) && in_array('vms_pass_claims_register_rewrite', $GLOBALS['vms_test_actions']['init'][30], true), 'Pass Claims should register its public rewrite callback on init at priority 30.');
-$assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array('vms_pass_claims_template_router', $GLOBALS['vms_test_actions']['template_redirect'][0], true), 'Pass Claims should register its public template router on template_redirect at priority 0.');
+$assert(isset($GLOBALS['vms_test_actions']['init'][30]) && in_array('bvmgr_pass_claims_register_rewrite', $GLOBALS['vms_test_actions']['init'][30], true), 'Pass Claims should register its public rewrite callback on init at priority 30.');
+$assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array('bvmgr_pass_claims_template_router', $GLOBALS['vms_test_actions']['template_redirect'][0], true), 'Pass Claims should register its public template router on template_redirect at priority 0.');
 
 $GLOBALS['vms_test_rewrite_tags'] = array();
 $GLOBALS['vms_test_rewrite_rules'] = array();
-vms_pass_claims_register_rewrite();
+bvmgr_pass_claims_register_rewrite();
 $assert($GLOBALS['vms_test_rewrite_tags'] === array(array('%vms_pass_claim_token%', '([^&]+)')), 'Pass Claims rewrite registration should preserve the claim-token tag.');
 $assert($GLOBALS['vms_test_rewrite_rules'] === array(array('^pass/claim/([^/]+)/?$', 'index.php?vms_pass_claim_token=$matches[1]', 'top')), 'Pass Claims rewrite registration should preserve the public claim route.');
 
 $resetRuntime();
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'query-token';
-$assert(vms_pass_claims_get_request_token() === 'query-token', 'Pass Claims request token helper should prefer the registered query var.');
+$assert(bvmgr_pass_claims_get_request_token() === 'query-token', 'Pass Claims request token helper should prefer the registered query var.');
 
 $resetRuntime();
 $_GET['vms_pass_claim_token'] = 'get%20token';
-$assert(vms_pass_claims_get_request_token() === 'get token', 'Pass Claims request token helper should fall back to the query-string token.');
+$assert(bvmgr_pass_claims_get_request_token() === 'get token', 'Pass Claims request token helper should fall back to the query-string token.');
 
 $resetRuntime();
 $_SERVER['REQUEST_URI'] = '/pass/claim/uri%20token?ref=1';
-$assert(vms_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
+$assert(bvmgr_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
 
 $resetRuntime();
 $GLOBALS['vms_test_is_admin'] = true;
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'ignored';
-vms_pass_claims_template_router();
+bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay inactive in wp-admin contexts.');
 
 $resetRuntime();
-vms_pass_claims_template_router();
+bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay silent when no claim token is present.');
 
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
 $assert(strpos($passClaimsSource, "echo '<main id=\"primary\" class=\"site-main vms-pass-public-page\" role=\"main\">';") !== false, 'Pass Claims public shell should preserve the outer main wrapper.');
 $assert(strpos($passClaimsSource, "echo '<div class=\"vms-pass-wrap\"><div class=\"vms-pass-card\">';") !== false, 'Pass Claims public shell should preserve the nested pass wrappers.');
 $assert(strpos($passClaimsSource, '$render_content();') !== false, 'Pass Claims public shell should invoke the renderer callback at the content insertion point.');
@@ -560,20 +560,20 @@ $assert(strpos($passClaimsSource, 'echo $content_html;') === false, 'Pass Claims
 $assert(strpos($passClaimsSource, "echo '</div></div>';") !== false && strpos($passClaimsSource, "echo '</main>';") !== false, 'Pass Claims public shell should preserve the closing wrappers.');
 $assert(strpos($adminShellSource, 'echo $captured_notices_html;') !== false && strpos($adminShellSource, 'echo $content_html;') !== false, 'Administrator shell raw captured and content sinks should remain unchanged.');
 
-$statusHelperStart = strpos($passClaimsSource, 'function vms_pass_claims_public_status_allowed_html(): array');
-$statusHelperEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_render_public_shell'))");
+$statusHelperStart = strpos($passClaimsSource, 'function bvmgr_pass_claims_public_status_allowed_html(): array');
+$statusHelperEnd = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_render_public_shell'))");
 $assert($statusHelperStart !== false && $statusHelperEnd !== false && $statusHelperEnd > $statusHelperStart, 'Pass Claims public status helper block should be locatable.');
 $statusHelperSource = substr($passClaimsSource, (int) $statusHelperStart, (int) $statusHelperEnd - (int) $statusHelperStart);
 
-$assert(strpos($statusHelperSource, 'function vms_pass_claims_public_status_allowed_html(): array') !== false, 'Pass Claims should define a dedicated public status allowlist helper.');
-$assert(strpos($statusHelperSource, 'function vms_pass_claims_public_status_fragment(string $title, string $message): string') !== false, 'Pass Claims should define a dedicated public status fragment helper.');
-$assert(strpos($statusHelperSource, 'function vms_pass_claims_render_public_status_screen(string $headline, string $title, string $message): void') !== false, 'Pass Claims should define a dedicated public status screen renderer.');
-$assert(preg_match('~return\s+wp_kses\s*\(\s*\$html\s*,\s*vms_pass_claims_public_status_allowed_html\s*\(\s*\)\s*\)\s*;~', $statusHelperSource) === 1, 'Pass Claims public status fragment should apply its dedicated allowlist at the local family boundary.');
+$assert(strpos($statusHelperSource, 'function bvmgr_pass_claims_public_status_allowed_html(): array') !== false, 'Pass Claims should define a dedicated public status allowlist helper.');
+$assert(strpos($statusHelperSource, 'function bvmgr_pass_claims_public_status_fragment(string $title, string $message): string') !== false, 'Pass Claims should define a dedicated public status fragment helper.');
+$assert(strpos($statusHelperSource, 'function bvmgr_pass_claims_render_public_status_screen(string $headline, string $title, string $message): void') !== false, 'Pass Claims should define a dedicated public status screen renderer.');
+$assert(preg_match('~return\s+wp_kses\s*\(\s*\$html\s*,\s*bvmgr_pass_claims_public_status_allowed_html\s*\(\s*\)\s*\)\s*;~', $statusHelperSource) === 1, 'Pass Claims public status fragment should apply its dedicated allowlist at the local family boundary.');
 $assert(strpos($statusHelperSource, 'wp_kses_post(') === false, 'Pass Claims public status fragment should not use wp_kses_post().');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $statusHelperSource), 'Pass Claims public status fragment should not use the broad post allowlist.');
 $assert(strpos($statusHelperSource, '$wpdb') === false && strpos($statusHelperSource, 'get_post(') === false && strpos($statusHelperSource, 'get_posts(') === false && strpos($statusHelperSource, 'get_transient(') === false && strpos($statusHelperSource, 'set_transient(') === false && strpos($statusHelperSource, 'delete_transient(') === false, 'Pass Claims public status helper should not add new provider or storage operations.');
 
-$assert(vms_pass_claims_public_status_allowed_html() === array(
+$assert(bvmgr_pass_claims_public_status_allowed_html() === array(
 	'h1' => array(),
 	'p' => array(
 		'class' => true,
@@ -581,13 +581,13 @@ $assert(vms_pass_claims_public_status_allowed_html() === array(
 ), 'Pass Claims public status allowlist should contain only h1 and p[class].');
 
 $expectedStatusFragment = '<h1>Pass Not Found</h1><p class="vms-pass-error">This pass link is invalid or has expired.</p>';
-$assert(vms_pass_claims_public_status_fragment('Pass Not Found', 'This pass link is invalid or has expired.') === $expectedStatusFragment, 'Pass Claims public status fragment should preserve the fixed invalid-link markup.');
+$assert(bvmgr_pass_claims_public_status_fragment('Pass Not Found', 'This pass link is invalid or has expired.') === $expectedStatusFragment, 'Pass Claims public status fragment should preserve the fixed invalid-link markup.');
 
-$escapedStatusFragment = vms_pass_claims_public_status_fragment('<strong>Bad</strong>', '<script>alert(1)</script>');
+$escapedStatusFragment = bvmgr_pass_claims_public_status_fragment('<strong>Bad</strong>', '<script>alert(1)</script>');
 $assert($escapedStatusFragment === '<h1>&lt;strong&gt;Bad&lt;/strong&gt;</h1><p class="vms-pass-error">&lt;script&gt;alert(1)&lt;/script&gt;</p>', 'Pass Claims public status fragment should keep HTML-like title and message text inert.');
 
 $unsafeStatusHtml = '<h1 onclick="evil()">Please Wait</h1><p class="vms-pass-error" data-note="x" aria-live="assertive">Too many<script>alert(1)</script><span>bad</span></p><form><input type="hidden" value="1"></form>';
-$filteredStatusHtml = wp_kses($unsafeStatusHtml, vms_pass_claims_public_status_allowed_html());
+$filteredStatusHtml = wp_kses($unsafeStatusHtml, bvmgr_pass_claims_public_status_allowed_html());
 $assert(strpos($filteredStatusHtml, '<h1>Please Wait</h1>') !== false, 'Pass Claims public status contract should preserve the heading.');
 $assert(strpos($filteredStatusHtml, '<p class="vms-pass-error">Too manyalert(1)bad</p>') !== false, 'Pass Claims public status contract should preserve only the allowed paragraph wrapper and text.');
 foreach (array('onclick=', 'data-note=', 'aria-live=', '<script', '<span', '<form', '<input') as $forbidden) {
@@ -596,21 +596,21 @@ foreach (array('onclick=', 'data-note=', 'aria-live=', '<script', '<span', '<for
 
 $allowlistUseLines = array();
 foreach ((array) preg_split('/\R/', $statusHelperSource) as $line) {
-	if (strpos($line, 'vms_pass_claims_public_status_allowed_html()') === false || strpos($line, 'function vms_pass_claims_public_status_allowed_html') !== false) {
+	if (strpos($line, 'bvmgr_pass_claims_public_status_allowed_html()') === false || strpos($line, 'function bvmgr_pass_claims_public_status_allowed_html') !== false) {
 		continue;
 	}
 	$allowlistUseLines[] = $line;
-	$assert(preg_match('~wp_kses\s*\(\s*\$html\s*,\s*vms_pass_claims_public_status_allowed_html\s*\(\s*\)\s*\)~', $line) === 1, 'Pass Claims public status allowlist should only be applied directly to the local status fragment.');
+	$assert(preg_match('~wp_kses\s*\(\s*\$html\s*,\s*bvmgr_pass_claims_public_status_allowed_html\s*\(\s*\)\s*\)~', $line) === 1, 'Pass Claims public status allowlist should only be applied directly to the local status fragment.');
 }
 $assert(count($allowlistUseLines) === 1, 'Pass Claims public status allowlist should be used exactly once outside its definition.');
 
-$assert(substr_count($passClaimsSource, 'vms_pass_claims_render_public_status_screen(') === 7, 'Pass Claims should route exactly the six selected public status branches through the dedicated status renderer.');
-$assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Pass Not Found'") === false, 'The invalid-token status branch should no longer hand raw concatenated status HTML directly to the public shell.');
+$assert(substr_count($passClaimsSource, 'bvmgr_pass_claims_render_public_status_screen(') === 7, 'Pass Claims should route exactly the six selected public status branches through the dedicated status renderer.');
+$assert(strpos($passClaimsSource, "bvmgr_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Pass Not Found'") === false, 'The invalid-token status branch should no longer hand raw concatenated status HTML directly to the public shell.');
 
 $resetRuntime();
 $routeInvalid = $captureShellRender(static function (): void {
 	$GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'route-token';
-	vms_pass_claims_template_router();
+	bvmgr_pass_claims_template_router();
 });
 $assert($routeInvalid['headline'] === 'Claim Pass', 'Pass Claims template router should preserve the status-screen headline.');
 $assert($routeInvalid['content_html'] === $expectedStatusFragment, 'Pass Claims template router should route invalid tokens to the preserved public status fragment.');
@@ -620,7 +620,7 @@ $assert($GLOBALS['vms_test_find_token_tokens'] === array('route-token'), 'Pass C
 $resetRuntime();
 $GLOBALS['vms_test_find_token_return'] = $baseToken();
 $batchMissing = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('batch-missing');
+	bvmgr_pass_claims_render_public_claim('batch-missing');
 });
 $assert($batchMissing['content_html'] === '<h1>Batch Not Found</h1><p class="vms-pass-error">This pass batch is no longer available.</p>', 'Pass Claims batch-missing status screen should preserve its markup and wording.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_eligible_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0, 'Batch-missing Pass Claims status rendering should stop after the batch lookup.');
@@ -629,7 +629,7 @@ $resetRuntime();
 $GLOBALS['vms_test_find_token_return'] = $baseToken();
 $GLOBALS['vms_test_get_batch_return'] = $baseBatch(array('status' => 'paused'));
 $inactiveBatch = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('inactive-token');
+	bvmgr_pass_claims_render_public_claim('inactive-token');
 });
 $assert($inactiveBatch['content_html'] === '<h1>Pass Unavailable</h1><p class="vms-pass-error">This pass is not currently active.</p>', 'Pass Claims unavailable status screen should preserve its markup and wording.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_eligible_calls'] === 0, 'Unavailable Pass Claims status rendering should stop before rate limiting and event-eligibility checks.');
@@ -638,7 +638,7 @@ $resetRuntime();
 $GLOBALS['vms_test_find_token_return'] = $baseToken();
 $GLOBALS['vms_test_get_batch_return'] = $baseBatch(array('expires_at' => gmdate('Y-m-d H:i:s', time() - 3600)));
 $expiredBatch = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('expired-token');
+	bvmgr_pass_claims_render_public_claim('expired-token');
 });
 $assert($expiredBatch['content_html'] === '<h1>Pass Expired</h1><p class="vms-pass-error">This pass link has expired.</p>', 'Pass Claims expired-token status screen should preserve its markup and wording.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_eligible_calls'] === 0, 'Expired Pass Claims status rendering should stop before rate-limiting and event-eligibility checks.');
@@ -649,7 +649,7 @@ $GLOBALS['vms_test_get_batch_return'] = $baseBatch(array('expires_at' => gmdate(
 $GLOBALS['vms_test_rate_limit_return'] = true;
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 $rateLimited = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('rate-limited-token');
+	bvmgr_pass_claims_render_public_claim('rate-limited-token');
 });
 $assert($rateLimited['content_html'] === '<h1>Please Wait</h1><p class="vms-pass-error">Too many attempts. Please try again shortly.</p>', 'Pass Claims rate-limit status screen should preserve its markup and wording.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_rate_limit_calls'] === 1 && $GLOBALS['vms_test_eligible_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0, 'Rate-limited Pass Claims status rendering should stop after the rate-limit check.');
@@ -660,7 +660,7 @@ $GLOBALS['vms_test_find_token_return'] = $baseToken();
 $GLOBALS['vms_test_get_batch_return'] = $baseBatch(array('expires_at' => gmdate('Y-m-d H:i:s', time() + 3600)));
 $GLOBALS['vms_test_eligible_return'] = array();
 $emptyEligible = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('empty-events-token');
+	bvmgr_pass_claims_render_public_claim('empty-events-token');
 });
 $assert($emptyEligible['content_html'] === '<h1>No Eligible Events</h1><p class="vms-pass-error">There are no eligible published events for this pass right now.</p>', 'Pass Claims empty-events status screen should preserve its default markup and wording.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_eligible_calls'] === 1 && $GLOBALS['vms_test_empty_notice_calls'] === 1, 'Empty-events Pass Claims status rendering should stop after the eligibility and empty-notice lookups.');
@@ -674,7 +674,7 @@ $GLOBALS['vms_test_empty_notice_return'] = array(
 	'message' => '<script>alert(1)</script>',
 );
 $escapedEmptyEligible = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('empty-events-escaped-token');
+	bvmgr_pass_claims_render_public_claim('empty-events-escaped-token');
 });
 $assert($escapedEmptyEligible['content_html'] === '<h1>&lt;strong&gt;Event Cancelled&lt;/strong&gt;</h1><p class="vms-pass-error">&lt;script&gt;alert(1)&lt;/script&gt;</p>', 'Pass Claims empty-events status rendering should keep provider-supplied HTML-like notice text inert.');
 

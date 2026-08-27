@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_email_followups_mailpoet_api')) {
-	function vms_email_followups_mailpoet_api()
+if (!function_exists('bvmgr_email_followups_mailpoet_api')) {
+	function bvmgr_email_followups_mailpoet_api()
 	{
 		if (!class_exists('\\MailPoet\\API\\API')) {
 			return null;
@@ -15,8 +15,8 @@ if (!function_exists('vms_email_followups_mailpoet_api')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_mailpoet_status')) {
-	function vms_email_followups_mailpoet_status(): array
+if (!function_exists('bvmgr_email_followups_mailpoet_status')) {
+	function bvmgr_email_followups_mailpoet_status(): array
 	{
 		$status = array(
 			'available' => false,
@@ -25,7 +25,7 @@ if (!function_exists('vms_email_followups_mailpoet_status')) {
 			'message' => __('MailPoet API is not available. Backstage Venue Manager can still use WordPress email delivery for tests/manual sends.', 'backstage-venue-manager'),
 		);
 
-		$api = vms_email_followups_mailpoet_api();
+		$api = bvmgr_email_followups_mailpoet_api();
 		if (!$api) {
 			return $status;
 		}
@@ -65,10 +65,10 @@ if (!function_exists('vms_email_followups_mailpoet_status')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_maybe_sync_mailpoet_subscriber')) {
-	function vms_email_followups_maybe_sync_mailpoet_subscriber(string $email, string $name, array $tags = array()): array
+if (!function_exists('bvmgr_email_followups_maybe_sync_mailpoet_subscriber')) {
+	function bvmgr_email_followups_maybe_sync_mailpoet_subscriber(string $email, string $name, array $tags = array()): array
 	{
-		$settings = vms_email_followups_settings();
+		$settings = bvmgr_email_followups_settings();
 		if (empty($settings['mailpoet_sync_enabled'])) {
 			return array('ok' => true, 'skipped' => true, 'message' => 'mailpoet_sync_disabled');
 		}
@@ -78,7 +78,7 @@ if (!function_exists('vms_email_followups_maybe_sync_mailpoet_subscriber')) {
 			return array('ok' => false, 'skipped' => false, 'message' => 'invalid_email');
 		}
 
-		$api = vms_email_followups_mailpoet_api();
+		$api = bvmgr_email_followups_mailpoet_api();
 		if (!$api) {
 			return array('ok' => false, 'skipped' => false, 'message' => 'mailpoet_api_unavailable');
 		}

@@ -454,8 +454,8 @@ if (!function_exists('is_wp_error')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_render_public_shell')) {
-	function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void
+if (!function_exists('bvmgr_pass_claims_render_public_shell')) {
+	function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void
 	{
 		ob_start();
 		$render_content();
@@ -468,8 +468,8 @@ if (!function_exists('vms_pass_claims_render_public_shell')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_find_token_by_raw')) {
-	function vms_pass_claims_find_token_by_raw(string $raw_token): ?array
+if (!function_exists('bvmgr_pass_claims_find_token_by_raw')) {
+	function bvmgr_pass_claims_find_token_by_raw(string $raw_token): ?array
 	{
 		$GLOBALS['vms_test_find_token_calls']++;
 		$GLOBALS['vms_test_find_token_tokens'][] = $raw_token;
@@ -478,8 +478,8 @@ if (!function_exists('vms_pass_claims_find_token_by_raw')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_get_batch_by_id')) {
-	function vms_pass_claims_get_batch_by_id(int $batch_id): ?array
+if (!function_exists('bvmgr_pass_claims_get_batch_by_id')) {
+	function bvmgr_pass_claims_get_batch_by_id(int $batch_id): ?array
 	{
 		$GLOBALS['vms_test_get_batch_calls']++;
 		$GLOBALS['vms_test_get_batch_ids'][] = $batch_id;
@@ -488,8 +488,8 @@ if (!function_exists('vms_pass_claims_get_batch_by_id')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_rate_limit_hit')) {
-	function vms_pass_claims_rate_limit_hit(string $ip, string $token_public_key): bool
+if (!function_exists('bvmgr_pass_claims_rate_limit_hit')) {
+	function bvmgr_pass_claims_rate_limit_hit(string $ip, string $token_public_key): bool
 	{
 		$GLOBALS['vms_test_rate_limit_calls']++;
 		$GLOBALS['vms_test_rate_limit_args'][] = array($ip, $token_public_key);
@@ -497,8 +497,8 @@ if (!function_exists('vms_pass_claims_rate_limit_hit')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
-	function vms_pass_claims_eligible_events_for_batch(array $batch): array
+if (!function_exists('bvmgr_pass_claims_eligible_events_for_batch')) {
+	function bvmgr_pass_claims_eligible_events_for_batch(array $batch): array
 	{
 		$GLOBALS['vms_test_eligible_calls']++;
 		$GLOBALS['vms_test_eligible_batches'][] = $batch;
@@ -506,8 +506,8 @@ if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_empty_events_notice')) {
-	function vms_pass_claims_empty_events_notice(array $batch): array
+if (!function_exists('bvmgr_pass_claims_empty_events_notice')) {
+	function bvmgr_pass_claims_empty_events_notice(array $batch): array
 	{
 		$GLOBALS['vms_test_empty_notice_calls']++;
 		$GLOBALS['vms_test_empty_notice_batches'][] = $batch;
@@ -515,8 +515,8 @@ if (!function_exists('vms_pass_claims_empty_events_notice')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_create_claim')) {
-	function vms_pass_claims_create_claim(array $token_row, array $batch, array $event_plan, array $input)
+if (!function_exists('bvmgr_pass_claims_create_claim')) {
+	function bvmgr_pass_claims_create_claim(array $token_row, array $batch, array $event_plan, array $input)
 	{
 		$GLOBALS['vms_test_create_claim_calls']++;
 		$GLOBALS['vms_test_create_claim_args'][] = array($token_row, $batch, $event_plan, $input);
@@ -635,7 +635,7 @@ $expectedFormHtml = static function (array $batch, array $eligibleEvents, array 
 			$eventId = (int) ($event['id'] ?? 0);
 			$label = (string) ($event['title'] ?? 'Event');
 			if (!empty($event['event_date'])) {
-				$label .= ' (' . vms_pass_claims_format_public_date((string) $event['event_date']) . ')';
+				$label .= ' (' . bvmgr_pass_claims_format_public_date((string) $event['event_date']) . ')';
 			}
 			if (!empty($event['venue_name'])) {
 				$label .= ' - ' . (string) $event['venue_name'];
@@ -672,21 +672,21 @@ $assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array(
 
 $GLOBALS['vms_test_rewrite_tags'] = array();
 $GLOBALS['vms_test_rewrite_rules'] = array();
-vms_pass_claims_register_rewrite();
+bvmgr_pass_claims_register_rewrite();
 $assert($GLOBALS['vms_test_rewrite_tags'] === array(array('%vms_pass_claim_token%', '([^&]+)')), 'Pass Claims rewrite registration should preserve the claim-token tag.');
 $assert($GLOBALS['vms_test_rewrite_rules'] === array(array('^pass/claim/([^/]+)/?$', 'index.php?vms_pass_claim_token=$matches[1]', 'top')), 'Pass Claims rewrite registration should preserve the public claim route.');
 
 $resetRuntime();
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'query-token';
-$assert(vms_pass_claims_get_request_token() === 'query-token', 'Pass Claims request token helper should prefer the registered query var.');
+$assert(bvmgr_pass_claims_get_request_token() === 'query-token', 'Pass Claims request token helper should prefer the registered query var.');
 
 $resetRuntime();
 $_GET['vms_pass_claim_token'] = 'get%20token';
-$assert(vms_pass_claims_get_request_token() === 'get token', 'Pass Claims request token helper should fall back to the query-string token.');
+$assert(bvmgr_pass_claims_get_request_token() === 'get token', 'Pass Claims request token helper should fall back to the query-string token.');
 
 $resetRuntime();
 $_SERVER['REQUEST_URI'] = '/pass/claim/uri%20token?ref=1';
-$assert(vms_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
+$assert(bvmgr_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
 
 $assert(strpos($passClaimsSource, '$_SERVER') === false, 'Mirror Pass Claims runtime should not retain direct $_SERVER reads.');
 $assert(strpos($livePassClaimsSource, '$_SERVER') === false, 'Live Pass Claims runtime should not retain direct $_SERVER reads.');
@@ -704,11 +704,11 @@ $assert(strpos($livePassClaimsSource, "vms_pass_claims_rate_limit_hit(\$ip, (str
 $resetRuntime();
 $GLOBALS['vms_test_is_admin'] = true;
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'ignored';
-vms_pass_claims_template_router();
+bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay inactive in wp-admin contexts.');
 
 $resetRuntime();
-vms_pass_claims_template_router();
+bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay silent when no claim token is present.');
 
 $assert(strpos($passClaimsSource, 'function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
@@ -760,7 +760,7 @@ $defaultPosted = array(
 );
 $expectedInitialForm = $expectedFormHtml($batch, $events, $defaultPosted, '', $maxPartySize);
 
-$assert(vms_pass_claims_public_form_html($batch, $events, $defaultPosted, '', $maxPartySize) === $expectedInitialForm, 'Pass Claims public form helper should preserve the initial GET form markup exactly.');
+$assert(bvmgr_pass_claims_public_form_html($batch, $events, $defaultPosted, '', $maxPartySize) === $expectedInitialForm, 'Pass Claims public form helper should preserve the initial GET form markup exactly.');
 foreach (array('<a', 'href=', 'action=', 'id=', 'style=', 'onclick=', 'onchange=', 'data-extra=', 'aria-describedby=', '<script', '<img', '<ul', '<table') as $forbidden) {
 	$assert(strpos($expectedInitialForm, $forbidden) === false, 'Pass Claims public form contract should not introduce unsupported markup or attributes: ' . $forbidden);
 }
@@ -774,7 +774,7 @@ $assert($GLOBALS['vms_test_find_token_calls'] === 0 && $GLOBALS['vms_test_get_ba
 
 $resetRuntime();
 $directFormRender = $captureShellRender(static function () use ($batch, $events, $defaultPosted, $maxPartySize): void {
-	vms_pass_claims_render_public_form($batch, $events, $defaultPosted, '', $maxPartySize);
+	bvmgr_pass_claims_render_public_form($batch, $events, $defaultPosted, '', $maxPartySize);
 });
 $assert($directFormRender['headline'] === 'Claim Your Pass', 'Pass Claims public form renderer should preserve the public shell headline.');
 $assert($directFormRender['content_html'] === $expectedInitialForm, 'Pass Claims public form renderer should hand the exact form markup to the public shell.');
@@ -785,7 +785,7 @@ $GLOBALS['vms_test_find_token_return'] = $baseToken();
 $GLOBALS['vms_test_get_batch_return'] = $batch;
 $GLOBALS['vms_test_eligible_return'] = $events;
 $initialGetRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('initial-get-token');
+	bvmgr_pass_claims_render_public_claim('initial-get-token');
 });
 $assert($initialGetRender['headline'] === 'Claim Your Pass', 'Initial GET Pass Claims route should enter the interactive form family.');
 $assert($initialGetRender['content_html'] === $expectedInitialForm, 'Initial GET Pass Claims route should preserve the complete default form markup.');
@@ -810,7 +810,7 @@ $_POST = array(
 	'opt_in' => '1',
 );
 $invalidNonceRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('invalid-nonce-token');
+	bvmgr_pass_claims_render_public_claim('invalid-nonce-token');
 });
 $assert($invalidNonceRender['headline'] === 'Claim Your Pass', 'Invalid nonce Pass Claims submission should remain in the interactive form family.');
 $assert($invalidNonceRender['content_html'] === $invalidNonceExpected, 'Invalid nonce Pass Claims submission should preserve the exact error form markup without reposted values.');
@@ -844,7 +844,7 @@ $_POST = array(
 	'opt_in' => '1',
 );
 $invalidEventRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('invalid-event-token');
+	bvmgr_pass_claims_render_public_claim('invalid-event-token');
 });
 $assert($invalidEventRender['content_html'] === $invalidEventExpected, 'Invalid-event Pass Claims submission should preserve exact repopulated form markup and error ordering.');
 $assert(strpos($invalidEventRender['content_html'], 'selected="selected"') === false, 'Invalid-event Pass Claims submission should not force a selected event when the submitted event is not eligible.');
@@ -877,7 +877,7 @@ $_POST = array(
 	'party_size' => '9',
 );
 $partySizeRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('party-size-token');
+	bvmgr_pass_claims_render_public_claim('party-size-token');
 });
 $assert($partySizeRender['content_html'] === $partySizeExpected, 'Party-size validation should preserve the exact form markup, selected event, and clamped quantity output.');
 $assert(strpos($partySizeRender['content_html'], 'value="3"') !== false, 'Party-size validation should clamp the rendered party-size value to the existing maximum.');
@@ -912,7 +912,7 @@ $_POST = array(
 	'opt_in' => '1',
 );
 $claimFailureRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('claim-failure-token');
+	bvmgr_pass_claims_render_public_claim('claim-failure-token');
 });
 $assert($claimFailureRender['content_html'] === $claimFailureExpected, 'Claim-failure Pass Claims submission should preserve the exact repopulated form markup and escaped error message.');
 $assert(strpos($claimFailureRender['content_html'], '&lt;b&gt;Need first name.&lt;/b&gt;') !== false, 'Claim-failure Pass Claims submission should keep HTML-like error text inert.');
@@ -933,7 +933,7 @@ $resetRuntime();
 $GLOBALS['vms_test_find_token_return'] = null;
 $invalidTokenRender = $captureShellRender(static function (): void {
 	$GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'invalid-token';
-	vms_pass_claims_template_router();
+	bvmgr_pass_claims_template_router();
 });
 $assert($invalidTokenRender['headline'] === 'Claim Pass', 'Invalid-token Pass Claims route should remain outside the interactive form family.');
 $assert(strpos($invalidTokenRender['content_html'], '<form method="post">') === false, 'Invalid-token Pass Claims route should not fall through into the form family.');
@@ -945,7 +945,7 @@ $GLOBALS['vms_test_find_token_return'] = $baseToken(array(
 ));
 $GLOBALS['vms_test_get_batch_return'] = $batch;
 $alreadyClaimedRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('claimed-token');
+	bvmgr_pass_claims_render_public_claim('claimed-token');
 });
 $assert($alreadyClaimedRender['headline'] === 'Already Claimed', 'Already-claimed Pass Claims route should remain outside the interactive form family.');
 $assert(strpos($alreadyClaimedRender['content_html'], '<form method="post">') === false, 'Already-claimed Pass Claims route should not fall through into the form family.');
@@ -978,7 +978,7 @@ $_POST = array(
 	'party_size' => '1',
 );
 $successOutsideFormRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('success-token');
+	bvmgr_pass_claims_render_public_claim('success-token');
 });
 $assert($successOutsideFormRender['headline'] === 'Pass Claimed', 'Successful Pass Claims submission should remain outside the interactive form family.');
 $assert(strpos($successOutsideFormRender['content_html'], '<form method="post">') === false && strpos($successOutsideFormRender['content_html'], 'You Are Confirmed') !== false, 'Successful Pass Claims submission should hand off to the accepted success family rather than falling through into the form.');

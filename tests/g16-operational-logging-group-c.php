@@ -196,7 +196,7 @@ $g16c_record = strpos($g16c_settings_handler, "'entitlement_image_sync_backfill_
 $g16c_redirect = strpos($g16c_settings_handler, 'wp_safe_redirect(');
 g16c_assert($g16c_transient !== false && $g16c_record !== false && $g16c_redirect !== false && $g16c_transient < $g16c_record && $g16c_record < $g16c_redirect, 'Settings must preserve transient -> record -> redirect order.');
 
-$g16c_notify = g16c_extract_function($g16c_sources['mirror']['notifications'], 'vms_notify_insert_log');
+$g16c_notify = g16c_extract_function($g16c_sources['mirror']['notifications'], 'bvmgr_notify_insert_log');
 g16c_same(1, substr_count($g16c_notify, 'bvmgr_record_operational_issue('), 'Notification failure must try the adapter exactly once.');
 g16c_same(2, substr_count($g16c_notify, 'notification_log_insert_failed'), 'Notification fixed event must appear only in adapter and fallback payloads.');
 g16c_assert(strpos($g16c_notify, "if (!\$recorded && function_exists('error_log'))") !== false, 'Notification fallback must require adapter false and an available direct logger.');
@@ -626,9 +626,9 @@ if (!function_exists('current_time')) {
 if (!function_exists('wp_json_encode')) {
 	function wp_json_encode($value): string { return (string) json_encode($value); }
 }
-function vms_notify_log_table_name(): string { return 'wp_vms_notification_log'; }
-function vms_notify_sanitize_template_key(string $value): string { return sanitize_key($value); }
-function vms_notify_redact_payload_for_log($value): array { return array(); }
+function bvmgr_notify_log_table_name(): string { return 'wp_vms_notification_log'; }
+function bvmgr_notify_sanitize_template_key(string $value): string { return sanitize_key($value); }
+function bvmgr_notify_redact_payload_for_log($value): array { return array(); }
 
 final class G16CNotificationWPDB
 {
@@ -640,7 +640,7 @@ final class G16CNotificationWPDB
 		return $this->insert_result;
 	}
 }
-$g16c_notify_eval = g16c_replace_once($g16c_notify, 'function vms_notify_insert_log(', 'function g16c_notify_insert_log(', 'Notification runtime rename failed.');
+$g16c_notify_eval = g16c_replace_once($g16c_notify, 'function bvmgr_notify_insert_log(', 'function g16c_notify_insert_log(', 'Notification runtime rename failed.');
 $g16c_notify_eval = g16c_replace_once($g16c_notify_eval, 'error_log(', 'g16c_capture_error_log(', 'Notification runtime logger capture failed.');
 eval($g16c_notify_eval);
 $wpdb = new G16CNotificationWPDB();

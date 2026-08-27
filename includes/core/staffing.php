@@ -2482,9 +2482,9 @@ if (!function_exists('bvmgr_staffing_get_event_plan_headcount_context')) {
 		$ticket_resolved = !empty($ticket_snapshot['resolved']);
 
 		$admissions_headcount = 0;
-			if (function_exists('vms_admission_table_entries')) {
+			if (function_exists('bvmgr_admission_table_entries')) {
 				global $wpdb;
-				$table = vms_admission_table_entries();
+				$table = bvmgr_admission_table_entries();
 				if ($wpdb && is_string($table) && $table !== '') {
 					static $table_exists_cache = array();
 					if (!array_key_exists($table, $table_exists_cache)) {

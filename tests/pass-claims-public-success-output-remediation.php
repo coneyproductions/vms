@@ -402,8 +402,8 @@ if (!function_exists('is_wp_error')) {
 	}
 }
 
-if (!function_exists('vms_admission_public_pass_url')) {
-	function vms_admission_public_pass_url(string $token, bool $for_print = false): string
+if (!function_exists('bvmgr_admission_public_pass_url')) {
+	function bvmgr_admission_public_pass_url(string $token, bool $for_print = false): string
 	{
 		$GLOBALS['vms_test_public_pass_url_calls']++;
 		$GLOBALS['vms_test_public_pass_url_args'][] = array($token, $for_print);
@@ -416,8 +416,8 @@ if (!function_exists('vms_admission_public_pass_url')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_render_public_shell')) {
-	function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void
+if (!function_exists('bvmgr_pass_claims_render_public_shell')) {
+	function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void
 	{
 		ob_start();
 		$render_content();
@@ -430,8 +430,8 @@ if (!function_exists('vms_pass_claims_render_public_shell')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_find_token_by_raw')) {
-	function vms_pass_claims_find_token_by_raw(string $raw_token): ?array
+if (!function_exists('bvmgr_pass_claims_find_token_by_raw')) {
+	function bvmgr_pass_claims_find_token_by_raw(string $raw_token): ?array
 	{
 		$GLOBALS['vms_test_find_token_calls']++;
 		$GLOBALS['vms_test_find_token_tokens'][] = $raw_token;
@@ -440,8 +440,8 @@ if (!function_exists('vms_pass_claims_find_token_by_raw')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_get_batch_by_id')) {
-	function vms_pass_claims_get_batch_by_id(int $batch_id): ?array
+if (!function_exists('bvmgr_pass_claims_get_batch_by_id')) {
+	function bvmgr_pass_claims_get_batch_by_id(int $batch_id): ?array
 	{
 		$GLOBALS['vms_test_get_batch_calls']++;
 		$GLOBALS['vms_test_get_batch_ids'][] = $batch_id;
@@ -450,8 +450,8 @@ if (!function_exists('vms_pass_claims_get_batch_by_id')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_rate_limit_hit')) {
-	function vms_pass_claims_rate_limit_hit(string $ip, string $token_public_key): bool
+if (!function_exists('bvmgr_pass_claims_rate_limit_hit')) {
+	function bvmgr_pass_claims_rate_limit_hit(string $ip, string $token_public_key): bool
 	{
 		$GLOBALS['vms_test_rate_limit_calls']++;
 		$GLOBALS['vms_test_rate_limit_args'][] = array($ip, $token_public_key);
@@ -459,8 +459,8 @@ if (!function_exists('vms_pass_claims_rate_limit_hit')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
-	function vms_pass_claims_eligible_events_for_batch(array $batch): array
+if (!function_exists('bvmgr_pass_claims_eligible_events_for_batch')) {
+	function bvmgr_pass_claims_eligible_events_for_batch(array $batch): array
 	{
 		$GLOBALS['vms_test_eligible_calls']++;
 		$GLOBALS['vms_test_eligible_batches'][] = $batch;
@@ -468,8 +468,8 @@ if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_empty_events_notice')) {
-	function vms_pass_claims_empty_events_notice(array $batch): array
+if (!function_exists('bvmgr_pass_claims_empty_events_notice')) {
+	function bvmgr_pass_claims_empty_events_notice(array $batch): array
 	{
 		$GLOBALS['vms_test_empty_notice_calls']++;
 		$GLOBALS['vms_test_empty_notice_batches'][] = $batch;
@@ -477,8 +477,8 @@ if (!function_exists('vms_pass_claims_empty_events_notice')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_create_claim')) {
-	function vms_pass_claims_create_claim(array $token_row, array $batch, array $event_plan, array $input)
+if (!function_exists('bvmgr_pass_claims_create_claim')) {
+	function bvmgr_pass_claims_create_claim(array $token_row, array $batch, array $event_plan, array $input)
 	{
 		$GLOBALS['vms_test_create_claim_calls']++;
 		$GLOBALS['vms_test_create_claim_args'][] = array($token_row, $batch, $event_plan, $input);
@@ -569,38 +569,38 @@ $captureShellRender = static function (callable $callback) use ($assert): array 
 $assert(is_string($passClaimsSource) && $passClaimsSource !== '', 'Pass Claims source should be readable.');
 $assert(is_string($adminShellSource) && $adminShellSource !== '', 'Administrator shell source should be readable.');
 
-$assert(isset($GLOBALS['vms_test_actions']['init'][30]) && in_array('vms_pass_claims_register_rewrite', $GLOBALS['vms_test_actions']['init'][30], true), 'Pass Claims should register its public rewrite callback on init at priority 30.');
-$assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array('vms_pass_claims_template_router', $GLOBALS['vms_test_actions']['template_redirect'][0], true), 'Pass Claims should register its public template router on template_redirect at priority 0.');
+$assert(isset($GLOBALS['vms_test_actions']['init'][30]) && in_array('bvmgr_pass_claims_register_rewrite', $GLOBALS['vms_test_actions']['init'][30], true), 'Pass Claims should register its public rewrite callback on init at priority 30.');
+$assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array('bvmgr_pass_claims_template_router', $GLOBALS['vms_test_actions']['template_redirect'][0], true), 'Pass Claims should register its public template router on template_redirect at priority 0.');
 
 $GLOBALS['vms_test_rewrite_tags'] = array();
 $GLOBALS['vms_test_rewrite_rules'] = array();
-vms_pass_claims_register_rewrite();
+bvmgr_pass_claims_register_rewrite();
 $assert($GLOBALS['vms_test_rewrite_tags'] === array(array('%vms_pass_claim_token%', '([^&]+)')), 'Pass Claims rewrite registration should preserve the claim-token tag.');
 $assert($GLOBALS['vms_test_rewrite_rules'] === array(array('^pass/claim/([^/]+)/?$', 'index.php?vms_pass_claim_token=$matches[1]', 'top')), 'Pass Claims rewrite registration should preserve the public claim route.');
 
 $resetRuntime();
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'query-token';
-$assert(vms_pass_claims_get_request_token() === 'query-token', 'Pass Claims request token helper should prefer the registered query var.');
+$assert(bvmgr_pass_claims_get_request_token() === 'query-token', 'Pass Claims request token helper should prefer the registered query var.');
 
 $resetRuntime();
 $_GET['vms_pass_claim_token'] = 'get%20token';
-$assert(vms_pass_claims_get_request_token() === 'get token', 'Pass Claims request token helper should fall back to the query-string token.');
+$assert(bvmgr_pass_claims_get_request_token() === 'get token', 'Pass Claims request token helper should fall back to the query-string token.');
 
 $resetRuntime();
 $_SERVER['REQUEST_URI'] = '/pass/claim/uri%20token?ref=1';
-$assert(vms_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
+$assert(bvmgr_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
 
 $resetRuntime();
 $GLOBALS['vms_test_is_admin'] = true;
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'ignored';
-vms_pass_claims_template_router();
+bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay inactive in wp-admin contexts.');
 
 $resetRuntime();
-vms_pass_claims_template_router();
+bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay silent when no claim token is present.');
 
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
 $assert(strpos($passClaimsSource, "echo '<main id=\"primary\" class=\"site-main vms-pass-public-page\" role=\"main\">';") !== false, 'Pass Claims public shell should preserve the outer main wrapper.');
 $assert(strpos($passClaimsSource, "echo '<div class=\"vms-pass-wrap\"><div class=\"vms-pass-card\">';") !== false, 'Pass Claims public shell should preserve the nested pass wrappers.');
 $assert(strpos($passClaimsSource, '$render_content();') !== false, 'Pass Claims public shell should invoke the renderer callback at the content insertion point.');
@@ -608,23 +608,23 @@ $assert(strpos($passClaimsSource, 'echo $content_html;') === false, 'Pass Claims
 $assert(strpos($passClaimsSource, "echo '</div></div>';") !== false && strpos($passClaimsSource, "echo '</main>';") !== false, 'Pass Claims public shell should preserve the closing wrappers.');
 $assert(strpos($adminShellSource, 'echo $captured_notices_html;') !== false && strpos($adminShellSource, 'echo $content_html;') !== false, 'Administrator shell raw captured and content sinks should remain unchanged.');
 
-$successHelperStart = strpos($passClaimsSource, 'function vms_pass_claims_public_success_confirmation_html(array $success, string $posted_email): string');
-$successHelperEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_render_public_shell'))");
+$successHelperStart = strpos($passClaimsSource, 'function bvmgr_pass_claims_public_success_confirmation_html(array $success, string $posted_email): string');
+$successHelperEnd = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_render_public_shell'))");
 $assert($successHelperStart !== false && $successHelperEnd !== false && $successHelperEnd > $successHelperStart, 'Pass Claims success helper block should be locatable.');
 $successHelperSource = substr($passClaimsSource, (int) $successHelperStart, (int) $successHelperEnd - (int) $successHelperStart);
 
-$assert(strpos($successHelperSource, 'function vms_pass_claims_public_success_confirmation_html(array $success, string $posted_email): string') !== false, 'Pass Claims should define a dedicated success-confirmation HTML helper.');
-$assert(strpos($successHelperSource, 'function vms_pass_claims_render_public_success_confirmation(array $success, string $posted_email): void') !== false, 'Pass Claims should define a dedicated success-confirmation renderer.');
+$assert(strpos($successHelperSource, 'function bvmgr_pass_claims_public_success_confirmation_html(array $success, string $posted_email): string') !== false, 'Pass Claims should define a dedicated success-confirmation HTML helper.');
+$assert(strpos($successHelperSource, 'function bvmgr_pass_claims_render_public_success_confirmation(array $success, string $posted_email): void') !== false, 'Pass Claims should define a dedicated success-confirmation renderer.');
 $assert(strpos($successHelperSource, 'wp_kses(') === false, 'Pass Claims success-confirmation family should rely on direct escaping rather than a local KSES contract.');
 $assert(strpos($successHelperSource, 'wp_kses_post(') === false, 'Pass Claims success-confirmation family should not use wp_kses_post().');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $successHelperSource), 'Pass Claims success-confirmation family should not use the broad post allowlist.');
 $assert(strpos($successHelperSource, '$wpdb') === false && strpos($successHelperSource, 'get_post(') === false && strpos($successHelperSource, 'get_posts(') === false && strpos($successHelperSource, 'get_transient(') === false && strpos($successHelperSource, 'set_transient(') === false && strpos($successHelperSource, 'delete_transient(') === false, 'Pass Claims success-confirmation helper should not add new provider or storage operations.');
-$assert(strpos($successHelperSource, 'wp_verify_nonce(') === false && strpos($successHelperSource, 'vms_pass_claims_create_claim(') === false && strpos($successHelperSource, '$_POST') === false, 'Pass Claims success-confirmation helper should stay outside nonce validation, claim mutation, and direct request parsing.');
+$assert(strpos($successHelperSource, 'wp_verify_nonce(') === false && strpos($successHelperSource, 'bvmgr_pass_claims_create_claim(') === false && strpos($successHelperSource, '$_POST') === false, 'Pass Claims success-confirmation helper should stay outside nonce validation, claim mutation, and direct request parsing.');
 
-$assert(strpos($passClaimsSource, "vms_pass_claims_render_public_success_confirmation(\$success, (string) \$posted['email']);") !== false, 'Pass Claims should route successful claims through the dedicated success-confirmation renderer.');
-$assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Pass Claimed', 'backstage-venue-manager'), \$html);") === false, 'Pass Claims should remove the old raw success html handoff.');
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_public_status_allowed_html(): array') !== false, 'The accepted Pass Claims public status family should remain defined.');
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_public_claimed_card_html(int $entry_id): string') !== false, 'The accepted Pass Claims already-claimed family should remain defined.');
+$assert(strpos($passClaimsSource, "bvmgr_pass_claims_render_public_success_confirmation(\$success, (string) \$posted['email']);") !== false, 'Pass Claims should route successful claims through the dedicated success-confirmation renderer.');
+$assert(strpos($passClaimsSource, "bvmgr_pass_claims_render_public_shell(__('Pass Claimed', 'backstage-venue-manager'), \$html);") === false, 'Pass Claims should remove the old raw success html handoff.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_public_status_allowed_html(): array') !== false, 'The accepted Pass Claims public status family should remain defined.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_public_claimed_card_html(int $entry_id): string') !== false, 'The accepted Pass Claims already-claimed family should remain defined.');
 
 $singleSuccess = array(
 	'event_title' => 'Summer Fest',
@@ -646,7 +646,7 @@ $singleSuccess = array(
 );
 $singlePassUrl = 'https://passes.example.test/view?token=primary token"><script>&context="quoted"<tag>';
 $GLOBALS['vms_test_public_pass_url_return'] = $singlePassUrl;
-$singleQrUrl = vms_pass_claims_qr_image_url('vms-admission:' . (string) $singleSuccess['admission_token']);
+$singleQrUrl = bvmgr_pass_claims_qr_image_url('vms-admission:' . (string) $singleSuccess['admission_token']);
 $expectedSingleSuccess = '<h1>You Are Confirmed</h1>';
 $expectedSingleSuccess .= '<div class="vms-pass-success">Your pass has been claimed and your reservation is confirmed.</div>';
 $expectedSingleSuccess .= '<div class="vms-pass-ticket">';
@@ -663,14 +663,14 @@ $expectedSingleSuccess .= '<p class="vms-pass-note">We also emailed a copy of th
 
 $resetRuntime();
 $GLOBALS['vms_test_public_pass_url_return'] = $singlePassUrl;
-$assert(vms_pass_claims_public_success_confirmation_html($singleSuccess, 'guest@example.test') === $expectedSingleSuccess, 'Pass Claims success-confirmation helper should preserve the single-pass success markup exactly.');
+$assert(bvmgr_pass_claims_public_success_confirmation_html($singleSuccess, 'guest@example.test') === $expectedSingleSuccess, 'Pass Claims success-confirmation helper should preserve the single-pass success markup exactly.');
 $assert($GLOBALS['vms_test_public_pass_url_calls'] === 1 && $GLOBALS['vms_test_public_pass_url_args'] === array(array('primary token"><script>', true)), 'Pass Claims success-confirmation helper should preserve the public pass URL lookup inputs.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 0 && $GLOBALS['vms_test_get_batch_calls'] === 0 && $GLOBALS['vms_test_create_claim_calls'] === 0 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_eligible_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0 && $GLOBALS['vms_test_nonce_calls'] === 0, 'Pass Claims success-confirmation helper should not perform token, batch, nonce, eligibility, rate-limit, or mutation work on its own.');
 
 $resetRuntime();
 $GLOBALS['vms_test_public_pass_url_return'] = $singlePassUrl;
 $directSuccessRender = $captureShellRender(static function () use ($singleSuccess): void {
-	vms_pass_claims_render_public_success_confirmation($singleSuccess, 'guest@example.test');
+	bvmgr_pass_claims_render_public_success_confirmation($singleSuccess, 'guest@example.test');
 });
 $assert($directSuccessRender['headline'] === 'Pass Claimed', 'Pass Claims success renderer should preserve the success headline.');
 $assert($directSuccessRender['content_html'] === $expectedSingleSuccess, 'Pass Claims success renderer should hand the exact single-pass markup to the public shell.');
@@ -705,8 +705,8 @@ $multiSuccess = array(
 		'message' => '<a href="javascript:bad()">Mailbox full</a>',
 	),
 );
-$multiQrOne = vms_pass_claims_qr_image_url('vms-admission:group one<script>');
-$multiQrThree = vms_pass_claims_qr_image_url('vms-admission:group three');
+$multiQrOne = bvmgr_pass_claims_qr_image_url('vms-admission:group one<script>');
+$multiQrThree = bvmgr_pass_claims_qr_image_url('vms-admission:group three');
 $multiEmailMessage = sprintf(
 	'Your pass is confirmed, but the email was not sent: %s. Screenshot this page and use it at the gate.',
 	'<a href="javascript:bad()">Mailbox full</a>'
@@ -730,7 +730,7 @@ $expectedMultiSuccess .= '</div>';
 $expectedMultiSuccess .= '<p class="vms-pass-note vms-pass-note-warning">' . esc_html($multiEmailMessage) . '</p>';
 
 $resetRuntime();
-$assert(vms_pass_claims_public_success_confirmation_html($multiSuccess, 'group@example.test') === $expectedMultiSuccess, 'Pass Claims success-confirmation helper should preserve the multi-pass success markup and warning branch exactly.');
+$assert(bvmgr_pass_claims_public_success_confirmation_html($multiSuccess, 'group@example.test') === $expectedMultiSuccess, 'Pass Claims success-confirmation helper should preserve the multi-pass success markup and warning branch exactly.');
 $assert($GLOBALS['vms_test_public_pass_url_calls'] === 0, 'Pass Claims multi-pass success rendering without a scan URL should not request a public pass URL.');
 $assert(strpos($expectedMultiSuccess, 'Pass 2 of 3') === false, 'Pass Claims multi-pass success rendering should continue skipping empty admission-token rows.');
 foreach (array('<form', '<input', '<button', 'onclick=', 'onerror=', 'data-', 'aria-', '<script', '<style') as $forbidden) {
@@ -760,7 +760,7 @@ $expectedMinimalSuccess .= '<p class="vms-pass-hint">Screenshot this page or ope
 $expectedMinimalSuccess .= '</div>';
 
 $resetRuntime();
-$assert(vms_pass_claims_public_success_confirmation_html($minimalSuccess, '') === $expectedMinimalSuccess, 'Pass Claims success-confirmation helper should preserve the minimal success markup when optional data is absent.');
+$assert(bvmgr_pass_claims_public_success_confirmation_html($minimalSuccess, '') === $expectedMinimalSuccess, 'Pass Claims success-confirmation helper should preserve the minimal success markup when optional data is absent.');
 $assert(strpos($expectedMinimalSuccess, 'vms-pass-qr') === false && strpos($expectedMinimalSuccess, 'vms-pass-actions') === false && strpos($expectedMinimalSuccess, 'Admissions:') === false && strpos($expectedMinimalSuccess, 'Date:') === false && strpos($expectedMinimalSuccess, 'Venue:') === false && strpos($expectedMinimalSuccess, 'We also emailed') === false && strpos($expectedMinimalSuccess, 'email was not sent') === false, 'Pass Claims minimal success rendering should omit QR, actions, optional metadata, and email notes when the source data is absent.');
 
 $resetRuntime();
@@ -790,7 +790,7 @@ $_POST = array(
 	'opt_in' => '1',
 );
 $invalidNonceRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('invalid-nonce-token');
+	bvmgr_pass_claims_render_public_claim('invalid-nonce-token');
 });
 $assert($invalidNonceRender['headline'] === 'Claim Your Pass', 'Invalid nonce Pass Claims submission should remain on the interactive claim-form family.');
 $assert(strpos($invalidNonceRender['content_html'], 'Invalid request. Please refresh and try again.') !== false && strpos($invalidNonceRender['content_html'], '<form method="post">') !== false, 'Invalid nonce Pass Claims submission should preserve the form family and its validation message.');
@@ -826,7 +826,7 @@ $_POST = array(
 	'opt_in' => '1',
 );
 $claimFailureRender = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('claim-failure-token');
+	bvmgr_pass_claims_render_public_claim('claim-failure-token');
 });
 $assert($claimFailureRender['headline'] === 'Claim Your Pass', 'Failed Pass Claims submission should remain on the interactive claim-form family.');
 $assert(strpos($claimFailureRender['content_html'], '&lt;b&gt;Could not claim.&lt;/b&gt;') !== false && strpos($claimFailureRender['content_html'], '<form method="post">') !== false, 'Failed Pass Claims submission should preserve the form family and escape the returned error message.');
@@ -854,7 +854,7 @@ $routeSuccess = array(
 	),
 );
 $routePassUrl = 'https://passes.example.test/route?token=route token&unsafe="quote"<tag>';
-$routeQrUrl = vms_pass_claims_qr_image_url('vms-admission:route token');
+$routeQrUrl = bvmgr_pass_claims_qr_image_url('vms-admission:route token');
 $routeWarning = sprintf(
 	'Your pass is confirmed, but the email was not sent: %s. Screenshot this page and use it at the gate.',
 	'Mailbox <full>'
@@ -903,7 +903,7 @@ $_POST = array(
 );
 $successfulRouteRender = $captureShellRender(static function (): void {
 	$GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'success-route-token';
-	vms_pass_claims_template_router();
+	bvmgr_pass_claims_template_router();
 });
 $assert($successfulRouteRender['headline'] === 'Pass Claimed', 'Successful Pass Claims submission should preserve the success headline.');
 $assert($successfulRouteRender['content_html'] === $expectedRouteSuccess, 'Successful Pass Claims submission should preserve the exact success-confirmation markup.');

@@ -1,13 +1,13 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_email_followups_template_for')) {
-	function vms_email_followups_template_for(string $email_key): array
+if (!function_exists('bvmgr_email_followups_template_for')) {
+	function bvmgr_email_followups_template_for(string $email_key): array
 	{
 		$email_key = sanitize_key($email_key);
-		$settings = vms_email_followups_settings();
+		$settings = bvmgr_email_followups_settings();
 		$templates = is_array($settings['templates'] ?? null) ? (array) $settings['templates'] : array();
-		$defaults = vms_email_followups_default_templates();
+		$defaults = bvmgr_email_followups_default_templates();
 		$template = is_array($templates[$email_key] ?? null) ? (array) $templates[$email_key] : (array) ($defaults[$email_key] ?? array());
 		return array(
 			'subject' => (string) ($template['subject'] ?? ''),
@@ -16,8 +16,8 @@ if (!function_exists('vms_email_followups_template_for')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_feedback_url')) {
-	function vms_email_followups_feedback_url(int $event_plan_id, array $recipient = array(), string $email_key = ''): string
+if (!function_exists('bvmgr_email_followups_feedback_url')) {
+	function bvmgr_email_followups_feedback_url(int $event_plan_id, array $recipient = array(), string $email_key = ''): string
 	{
 		if ($event_plan_id <= 0 || !function_exists('bvmgr_feedback_survey_url')) {
 			return '';
@@ -27,8 +27,8 @@ if (!function_exists('vms_email_followups_feedback_url')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_customer_first_name')) {
-	function vms_email_followups_customer_first_name(array $recipient = array()): string
+if (!function_exists('bvmgr_email_followups_customer_first_name')) {
+	function bvmgr_email_followups_customer_first_name(array $recipient = array()): string
 	{
 		$name = trim((string) ($recipient['first_name'] ?? ''));
 		if ($name === '') {
@@ -52,23 +52,23 @@ if (!function_exists('vms_email_followups_customer_first_name')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_customer_greeting')) {
-	function vms_email_followups_customer_greeting(array $recipient = array()): string
+if (!function_exists('bvmgr_email_followups_customer_greeting')) {
+	function bvmgr_email_followups_customer_greeting(array $recipient = array()): string
 	{
-		$first_name = vms_email_followups_customer_first_name($recipient);
+		$first_name = bvmgr_email_followups_customer_first_name($recipient);
 		/* translators: %s: human-readable value used in this message. */
 		return $first_name !== '' ? sprintf(__('Hi %s,', 'backstage-venue-manager'), $first_name) : __('Hi there,', 'backstage-venue-manager');
 	}
 }
 
-if (!function_exists('vms_email_followups_token_map')) {
-	function vms_email_followups_token_map(array $context, array $recipient = array(), string $email_key = ''): array
+if (!function_exists('bvmgr_email_followups_token_map')) {
+	function bvmgr_email_followups_token_map(array $context, array $recipient = array(), string $email_key = ''): array
 	{
 		$event_plan_id = absint($context['event_plan_id'] ?? 0);
-		$feedback_url = vms_email_followups_feedback_url($event_plan_id, $recipient, $email_key);
-		$settings = function_exists('vms_email_followups_settings') ? vms_email_followups_settings() : array();
+		$feedback_url = bvmgr_email_followups_feedback_url($event_plan_id, $recipient, $email_key);
+		$settings = function_exists('bvmgr_email_followups_settings') ? bvmgr_email_followups_settings() : array();
 		$customer_name = sanitize_text_field((string) ($recipient['name'] ?? ''));
-		$customer_first_name = vms_email_followups_customer_first_name($recipient);
+		$customer_first_name = bvmgr_email_followups_customer_first_name($recipient);
 		$signature = trim(wp_strip_all_tags((string) ($settings['signature'] ?? '')));
 		return array(
 			'{event_name}' => (string) ($context['event_name'] ?? ''),
@@ -84,17 +84,17 @@ if (!function_exists('vms_email_followups_token_map')) {
 			'{signature}' => $signature,
 			'{customer_name}' => $customer_name,
 			'{customer_first_name}' => $customer_first_name,
-			'{customer_greeting}' => vms_email_followups_customer_greeting($recipient),
+			'{customer_greeting}' => bvmgr_email_followups_customer_greeting($recipient),
 		);
 	}
 }
 
-if (!function_exists('vms_email_followups_render_message')) {
-	function vms_email_followups_render_message(string $email_key, int $event_plan_id, array $recipient = array()): array
+if (!function_exists('bvmgr_email_followups_render_message')) {
+	function bvmgr_email_followups_render_message(string $email_key, int $event_plan_id, array $recipient = array()): array
 	{
-		$template = vms_email_followups_template_for($email_key);
-		$context = vms_email_followups_event_context($event_plan_id);
-		$tokens = vms_email_followups_token_map($context, $recipient, $email_key);
+		$template = bvmgr_email_followups_template_for($email_key);
+		$context = bvmgr_email_followups_event_context($event_plan_id);
+		$tokens = bvmgr_email_followups_token_map($context, $recipient, $email_key);
 		$subject = strtr((string) $template['subject'], $tokens);
 		$body_text = strtr((string) $template['body'], $tokens);
 
@@ -112,10 +112,10 @@ if (!function_exists('vms_email_followups_render_message')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_headers')) {
-	function vms_email_followups_headers(): array
+if (!function_exists('bvmgr_email_followups_headers')) {
+	function bvmgr_email_followups_headers(): array
 	{
-		$settings = vms_email_followups_settings();
+		$settings = bvmgr_email_followups_settings();
 		$headers = array('Content-Type: text/html; charset=UTF-8');
 		$from_email = sanitize_email((string) ($settings['from_email'] ?? ''));
 		$from_name = sanitize_text_field((string) ($settings['from_name'] ?? ''));
@@ -130,22 +130,22 @@ if (!function_exists('vms_email_followups_headers')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_send_test')) {
-	function vms_email_followups_send_test(string $email_key, int $event_plan_id, string $to): array
+if (!function_exists('bvmgr_email_followups_send_test')) {
+	function bvmgr_email_followups_send_test(string $email_key, int $event_plan_id, string $to): array
 	{
 		$email_key = sanitize_key($email_key);
 		$to = sanitize_email($to);
 		if (!is_email($to)) {
 			return array('ok' => false, 'message' => __('Invalid test recipient.', 'backstage-venue-manager'));
 		}
-		$rendered = vms_email_followups_render_message($email_key, $event_plan_id, array('email' => $to, 'name' => __('Test Recipient', 'backstage-venue-manager')));
-		list($allowed, $reason) = vms_email_followups_context_allows_send((array) ($rendered['context'] ?? array()));
+		$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, array('email' => $to, 'name' => __('Test Recipient', 'backstage-venue-manager')));
+		list($allowed, $reason) = bvmgr_email_followups_context_allows_send((array) ($rendered['context'] ?? array()));
 		if (!$allowed) {
 			/* translators: %s: test blocked. */
 			return array('ok' => false, 'message' => sprintf(__('Test blocked: %s', 'backstage-venue-manager'), $reason));
 		}
-		$ok = wp_mail($to, '[TEST] ' . (string) $rendered['subject'], (string) $rendered['body_html'], vms_email_followups_headers());
-		vms_email_followups_log(array(
+		$ok = wp_mail($to, '[TEST] ' . (string) $rendered['subject'], (string) $rendered['body_html'], bvmgr_email_followups_headers());
+		bvmgr_email_followups_log(array(
 			'action' => 'test_send',
 			'email_key' => $email_key,
 			'event_plan_id' => $event_plan_id,
@@ -158,8 +158,8 @@ if (!function_exists('vms_email_followups_send_test')) {
 }
 
 
-if (!function_exists('vms_email_followups_normalize_recipient_emails')) {
-	function vms_email_followups_normalize_recipient_emails(array $emails): array
+if (!function_exists('bvmgr_email_followups_normalize_recipient_emails')) {
+	function bvmgr_email_followups_normalize_recipient_emails(array $emails): array
 	{
 		$normalized = array();
 		foreach ($emails as $email) {
@@ -173,10 +173,10 @@ if (!function_exists('vms_email_followups_normalize_recipient_emails')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_filter_recipients_by_email')) {
-	function vms_email_followups_filter_recipients_by_email(array $recipients, array $emails): array
+if (!function_exists('bvmgr_email_followups_filter_recipients_by_email')) {
+	function bvmgr_email_followups_filter_recipients_by_email(array $recipients, array $emails): array
 	{
-		$emails = vms_email_followups_normalize_recipient_emails($emails);
+		$emails = bvmgr_email_followups_normalize_recipient_emails($emails);
 		if (empty($emails)) {
 			return $recipients;
 		}
@@ -195,26 +195,26 @@ if (!function_exists('vms_email_followups_filter_recipients_by_email')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_send_event_email')) {
-	function vms_email_followups_send_event_email(string $email_key, int $event_plan_id, string $mode = 'manual', array $args = array()): array
+if (!function_exists('bvmgr_email_followups_send_event_email')) {
+	function bvmgr_email_followups_send_event_email(string $email_key, int $event_plan_id, string $mode = 'manual', array $args = array()): array
 	{
 		$email_key = sanitize_key($email_key);
 		$mode = sanitize_key($mode);
-		$definitions = vms_email_followups_template_definitions();
+		$definitions = bvmgr_email_followups_template_definitions();
 		if (!isset($definitions[$email_key])) {
 			return array('ok' => false, 'sent' => 0, 'errors' => 0, 'skipped' => 0, 'message' => 'unknown_email_key');
 		}
 
-		$settings = vms_email_followups_settings();
+		$settings = bvmgr_email_followups_settings();
 		$enabled = is_array($settings['templates_enabled'] ?? null) ? (array) $settings['templates_enabled'] : array();
 		if (empty($enabled[$email_key])) {
 			return array('ok' => false, 'sent' => 0, 'errors' => 0, 'skipped' => 0, 'message' => 'template_disabled');
 		}
 
-		$context = vms_email_followups_event_context($event_plan_id);
-		list($allowed, $reason) = vms_email_followups_context_allows_send($context);
+		$context = bvmgr_email_followups_event_context($event_plan_id);
+		list($allowed, $reason) = bvmgr_email_followups_context_allows_send($context);
 		if (!$allowed) {
-			vms_email_followups_log(array(
+			bvmgr_email_followups_log(array(
 				'action' => $mode,
 				'email_key' => $email_key,
 				'event_plan_id' => $event_plan_id,
@@ -224,14 +224,14 @@ if (!function_exists('vms_email_followups_send_event_email')) {
 			return array('ok' => false, 'sent' => 0, 'errors' => 0, 'skipped' => 1, 'message' => $reason);
 		}
 
-		$recipient_result = vms_email_followups_event_recipients($event_plan_id);
+		$recipient_result = bvmgr_email_followups_event_recipients($event_plan_id);
 		$recipients = (array) ($recipient_result['recipients'] ?? array());
-		$requested_emails = isset($args['recipient_emails']) && is_array($args['recipient_emails']) ? vms_email_followups_normalize_recipient_emails((array) $args['recipient_emails']) : array();
+		$requested_emails = isset($args['recipient_emails']) && is_array($args['recipient_emails']) ? bvmgr_email_followups_normalize_recipient_emails((array) $args['recipient_emails']) : array();
 		if (!empty($requested_emails)) {
-			$recipients = vms_email_followups_filter_recipients_by_email($recipients, $requested_emails);
+			$recipients = bvmgr_email_followups_filter_recipients_by_email($recipients, $requested_emails);
 		}
 		if (empty($recipients)) {
-			vms_email_followups_log(array(
+			bvmgr_email_followups_log(array(
 				'action' => $mode,
 				'email_key' => $email_key,
 				'event_plan_id' => $event_plan_id,
@@ -263,9 +263,9 @@ if (!function_exists('vms_email_followups_send_event_email')) {
 				$skipped++;
 				continue;
 			}
-			if (vms_email_followups_was_sent($event_plan_id, $email_key, $email)) {
+			if (bvmgr_email_followups_was_sent($event_plan_id, $email_key, $email)) {
 				$skipped++;
-				vms_email_followups_log(array(
+				bvmgr_email_followups_log(array(
 					'action' => $mode,
 					'email_key' => $email_key,
 					'event_plan_id' => $event_plan_id,
@@ -276,10 +276,10 @@ if (!function_exists('vms_email_followups_send_event_email')) {
 				continue;
 			}
 
-			$rendered = vms_email_followups_render_message($email_key, $event_plan_id, $recipient);
-			$sync = vms_email_followups_maybe_sync_mailpoet_subscriber($email, (string) ($recipient['name'] ?? ''), array('ticket-buyer', 'vms-event-buyer'));
-			$ok = wp_mail($email, (string) $rendered['subject'], (string) $rendered['body_html'], vms_email_followups_headers());
-			vms_email_followups_log(array(
+			$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, $recipient);
+			$sync = bvmgr_email_followups_maybe_sync_mailpoet_subscriber($email, (string) ($recipient['name'] ?? ''), array('ticket-buyer', 'vms-event-buyer'));
+			$ok = wp_mail($email, (string) $rendered['subject'], (string) $rendered['body_html'], bvmgr_email_followups_headers());
+			bvmgr_email_followups_log(array(
 				'action' => $mode,
 				'email_key' => $email_key,
 				'event_plan_id' => $event_plan_id,
@@ -308,7 +308,7 @@ if (!function_exists('vms_email_followups_send_event_email')) {
 			'attempted' => count($recipients),
 			'total_selected' => $total_selected,
 			'remaining' => count($remaining_emails),
-			'remaining_emails' => vms_email_followups_normalize_recipient_emails($remaining_emails),
+			'remaining_emails' => bvmgr_email_followups_normalize_recipient_emails($remaining_emails),
 		);
 	}
 }

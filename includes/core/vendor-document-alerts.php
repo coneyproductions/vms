@@ -253,8 +253,8 @@ if (!function_exists('bvmgr_vendor_submission_dispatch_alert')) {
         $event_key = 'vendor_document_submission';
 
         if (empty($settings['vendor_doc_submission_notify_enabled'])) {
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vms_vendor_portal',
                     'event_key' => $event_key,
                     'recipient_user_id' => 0,
@@ -272,8 +272,8 @@ if (!function_exists('bvmgr_vendor_submission_dispatch_alert')) {
 
         $recipients = bvmgr_vendor_submission_resolve_recipients($settings);
         if (empty($recipients)) {
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vms_vendor_portal',
                     'event_key' => $event_key,
                     'recipient_user_id' => 0,
@@ -338,8 +338,8 @@ if (!function_exists('bvmgr_vendor_submission_dispatch_alert')) {
             if (!is_email($to)) {
                 continue;
             }
-            $result = function_exists('vms_notify_provider_core_email_send')
-                ? (array) vms_notify_provider_core_email_send(array(
+            $result = function_exists('bvmgr_notify_provider_core_email_send')
+                ? (array) bvmgr_notify_provider_core_email_send(array(
                     'to' => $to,
                     'subject' => $subject,
                     'body_text' => $body_text,
@@ -351,8 +351,8 @@ if (!function_exists('bvmgr_vendor_submission_dispatch_alert')) {
                     'error_message' => '',
                 );
 
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vms_vendor_portal',
                     'event_key' => $event_key,
                     'recipient_user_id' => absint($recipient['user_id'] ?? 0),

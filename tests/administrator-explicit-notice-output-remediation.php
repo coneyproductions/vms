@@ -712,8 +712,8 @@ if (!function_exists('bvmgr_staffing_get_staff_qualification_review_items')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_settings')) {
-	function vms_email_followups_settings(): array
+if (!function_exists('bvmgr_email_followups_settings')) {
+	function bvmgr_email_followups_settings(): array
 	{
 		$GLOBALS['vms_test_email_followups_settings_calls']++;
 		return array(
@@ -774,8 +774,8 @@ if (!function_exists('bvmgr_event_plan_import_read_rows_json')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_mailpoet_status')) {
-	function vms_email_followups_mailpoet_status(): array
+if (!function_exists('bvmgr_email_followups_mailpoet_status')) {
+	function bvmgr_email_followups_mailpoet_status(): array
 	{
 		$GLOBALS['vms_test_email_followups_mailpoet_status_calls']++;
 		return array(
@@ -785,16 +785,16 @@ if (!function_exists('vms_email_followups_mailpoet_status')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_due_items')) {
-	function vms_email_followups_due_items(): array
+if (!function_exists('bvmgr_email_followups_due_items')) {
+	function bvmgr_email_followups_due_items(): array
 	{
 		$GLOBALS['vms_test_email_followups_due_items_calls']++;
 		return array('first', 'second');
 	}
 }
 
-if (!function_exists('vms_email_followups_event_choices')) {
-	function vms_email_followups_event_choices(int $limit = 0, int $selected_id = 0): array
+if (!function_exists('bvmgr_email_followups_event_choices')) {
+	function bvmgr_email_followups_event_choices(int $limit = 0, int $selected_id = 0): array
 	{
 		$GLOBALS['vms_test_email_followups_event_choices_calls']++;
 		$GLOBALS['vms_test_email_followups_event_choices_args'][] = array($limit, $selected_id);
@@ -802,15 +802,15 @@ if (!function_exists('vms_email_followups_event_choices')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_choice_label')) {
-	function vms_email_followups_event_choice_label(WP_Post $plan): string
+if (!function_exists('bvmgr_email_followups_event_choice_label')) {
+	function bvmgr_email_followups_event_choice_label(WP_Post $plan): string
 	{
 		return (string) ($GLOBALS['vms_test_email_followups_event_choice_labels'][$plan->ID] ?? ('Event ' . $plan->ID));
 	}
 }
 
-if (!function_exists('vms_email_followups_template_definitions')) {
-	function vms_email_followups_template_definitions(): array
+if (!function_exists('bvmgr_email_followups_template_definitions')) {
+	function bvmgr_email_followups_template_definitions(): array
 	{
 		$GLOBALS['vms_test_email_followups_template_definitions_calls']++;
 		return array(
@@ -824,8 +824,8 @@ if (!function_exists('vms_email_followups_template_definitions')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_context')) {
-	function vms_email_followups_event_context(int $event_plan_id): array
+if (!function_exists('bvmgr_email_followups_event_context')) {
+	function bvmgr_email_followups_event_context(int $event_plan_id): array
 	{
 		$GLOBALS['vms_test_email_followups_event_context_calls']++;
 		$context = $GLOBALS['vms_test_email_followups_event_context_value'];
@@ -834,8 +834,8 @@ if (!function_exists('vms_email_followups_event_context')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_recipients')) {
-	function vms_email_followups_event_recipients(int $event_plan_id): array
+if (!function_exists('bvmgr_email_followups_event_recipients')) {
+	function bvmgr_email_followups_event_recipients(int $event_plan_id): array
 	{
 		unset($event_plan_id);
 		$GLOBALS['vms_test_email_followups_event_recipients_calls']++;
@@ -843,8 +843,8 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_render_message')) {
-	function vms_email_followups_render_message(string $email_key, int $event_plan_id, array $recipient = array()): array
+if (!function_exists('bvmgr_email_followups_render_message')) {
+	function bvmgr_email_followups_render_message(string $email_key, int $event_plan_id, array $recipient = array()): array
 	{
 		unset($email_key, $event_plan_id, $recipient);
 		$GLOBALS['vms_test_email_followups_render_message_calls']++;
@@ -852,8 +852,8 @@ if (!function_exists('vms_email_followups_render_message')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_scheduled_timestamp')) {
-	function vms_email_followups_scheduled_timestamp(int $event_plan_id, string $email_key): int
+if (!function_exists('bvmgr_email_followups_scheduled_timestamp')) {
+	function bvmgr_email_followups_scheduled_timestamp(int $event_plan_id, string $email_key): int
 	{
 		unset($event_plan_id, $email_key);
 		$GLOBALS['vms_test_email_followups_scheduled_timestamp_calls']++;
@@ -861,8 +861,8 @@ if (!function_exists('vms_email_followups_scheduled_timestamp')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_context_allows_send')) {
-	function vms_email_followups_context_allows_send(array $context): array
+if (!function_exists('bvmgr_email_followups_context_allows_send')) {
+	function bvmgr_email_followups_context_allows_send(array $context): array
 	{
 		unset($context);
 		$GLOBALS['vms_test_email_followups_context_allows_send_calls']++;
@@ -870,8 +870,8 @@ if (!function_exists('vms_email_followups_context_allows_send')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_manual_batch_size')) {
-	function vms_email_followups_manual_batch_size(): int
+if (!function_exists('bvmgr_email_followups_manual_batch_size')) {
+	function bvmgr_email_followups_manual_batch_size(): int
 	{
 		$GLOBALS['vms_test_email_followups_manual_batch_size_calls']++;
 		return 50;
@@ -1254,7 +1254,7 @@ foreach ($iterator as $file) {
 
 $noticesCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedMatches);
 $richNoticesCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>~', $allIncludeSource, $unusedRichMatches);
-$statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
+$statusNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_status_notice_notice_bar[\'"]~', $allIncludeSource, $unusedStatusMatches);
 $calendarRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]bvmgr_render_integrity_calendar_reconcile_notice[\'"]~', $allIncludeSource, $unusedCalendarRichMatches);
 $venueRichNoticeCallbackCount = preg_match_all('~[\'"]rich_notices_callback[\'"]\s*=>\s*[\'"]bvmgr_render_integrity_venue_reconcile_notice[\'"]~', $allIncludeSource, $unusedVenueRichMatches);
 $continuityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_continuity_binder_render_updated_notice[\'"]~', $allIncludeSource, $unusedContinuityMatches);
@@ -1265,7 +1265,7 @@ $emailFollowupsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]
 $eventFeedbackNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_feedback_admin_render_notices[\'"]~', $eventFeedbackSource, $unusedEventFeedbackMatches);
 $ticketIntegrityNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_ticket_integrity_render_notice_from_query[\'"]~', $ticketIntegritySource, $unusedTicketIntegrityMatches);
 $settingsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_render_settings_page_notice_bar[\'"]~', $settingsSource, $unusedSettingsMatches);
-$passClaimsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_pass_claims_render_admin_notices[\'"]~', $passClaimsSource, $unusedPassClaimsMatches);
+$passClaimsNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]bvmgr_pass_claims_render_admin_notices[\'"]~', $passClaimsSource, $unusedPassClaimsMatches);
 $eventPlanImportNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*\$render_notice~', $eventPlanImportSource, $unusedEventPlanImportMatches);
 $socialNoticeCallbackCount = preg_match_all('~[\'"]notices_callback[\'"]\s*=>\s*[\'"]vms_social_render_notices[\'"]~', $allIncludeSource, $unusedSocialMatches);
 $expectedActionCallerFiles = array(
@@ -2166,10 +2166,10 @@ $assert(strpos($settingsFallbackPage, 'Enable ticketing features by default for 
 $assert(strpos($settingsFallbackPage, 'Ticketing stock preview ready: checked=12 would_update=5 skipped=3 errors=1') < strpos($settingsFallbackPage, 'Ticketing inventory tools'), 'Settings fallback composition should preserve the historical stock-notice position before the inventory tools heading.');
 $assert(strpos($settingsFallbackPage, vms_settings_page_ticketing_stock_notice_placeholder()) === false, 'Settings fallback composition should fully replace the dedicated ticketing stock placeholder.');
 $assert($GLOBALS['vms_test_transient_get_calls'] === 1 && $GLOBALS['vms_test_transient_get_keys'] === array($settingsPreviewKey), 'Settings fallback composition should preserve the existing single preview transient lookup.');
-$assert(strpos($statusSource, 'function vms_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
-$assert(substr_count($statusSource, "'notices_callback' => 'vms_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
-$noticeBarStart = strpos($statusSource, 'function vms_status_notice_notice_bar(): void');
-$noticeBarEnd = strpos($statusSource, "if (!function_exists('vms_status_notice_render_list_screen'))");
+$assert(strpos($statusSource, 'function bvmgr_status_notice_notice_bar(): void') !== false, 'Status Notices explicit fragment owner should keep a void callback signature.');
+$assert(substr_count($statusSource, "'notices_callback' => 'bvmgr_status_notice_notice_bar'") === 2, 'Status Notices list and edit screens should both supply the explicit notice callback.');
+$noticeBarStart = strpos($statusSource, 'function bvmgr_status_notice_notice_bar(): void');
+$noticeBarEnd = strpos($statusSource, "if (!function_exists('bvmgr_status_notice_render_list_screen'))");
 $assert($noticeBarStart !== false && $noticeBarEnd !== false && $noticeBarEnd > $noticeBarStart, 'Status Notice callback body should be locatable.');
 $noticeBarSource = substr($statusSource, (int) $noticeBarStart, (int) $noticeBarEnd - (int) $noticeBarStart);
 $assert(strpos($noticeBarSource, 'apply_filters(') === false && strpos($noticeBarSource, 'do_action(') === false, 'Status Notice callback should not hand off explicit notice markup through hooks or filters.');
@@ -2180,7 +2180,7 @@ $_GET = array(
 	'vms_status_notice_result' => 'saved',
 );
 ob_start();
-vms_status_notice_notice_bar();
+bvmgr_status_notice_notice_bar();
 $savedNotice = (string) ob_get_clean();
 $assert(
 	$savedNotice === '<div class="notice notice-success is-dismissible"><p>Status Notice saved.</p></div>',
@@ -2196,7 +2196,7 @@ $_GET = array(
 	'bulk_count' => '2',
 );
 ob_start();
-vms_status_notice_notice_bar();
+bvmgr_status_notice_notice_bar();
 $bulkNotice = (string) ob_get_clean();
 $assert(
 	$bulkNotice === '<div class="notice notice-success is-dismissible"><p>2 notices updated.</p></div>',
@@ -2526,18 +2526,18 @@ vms_social_render_notices();
 $socialNoNotice = (string) ob_get_clean();
 $assert($socialNoNotice === '', 'Social Sharing explicit notice callback should stay silent when no notice text is present.');
 
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_render_admin_notices(): void') !== false, 'Pass Claims should expose a dedicated explicit notice callback.');
-$assert(substr_count($passClaimsSource, "'notices_callback' => 'vms_pass_claims_render_admin_notices'") === 1, 'Pass Claims shell call should supply its explicit notice callback exactly once.');
-$passClaimsNoticeStart = strpos($passClaimsSource, 'function vms_pass_claims_render_admin_notices(): void');
-$passClaimsNoticeEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_render_tab_nav'))");
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_render_admin_notices(): void') !== false, 'Pass Claims should expose a dedicated explicit notice callback.');
+$assert(substr_count($passClaimsSource, "'notices_callback' => 'bvmgr_pass_claims_render_admin_notices'") === 1, 'Pass Claims shell call should supply its explicit notice callback exactly once.');
+$passClaimsNoticeStart = strpos($passClaimsSource, 'function bvmgr_pass_claims_render_admin_notices(): void');
+$passClaimsNoticeEnd = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_render_tab_nav'))");
 $assert($passClaimsNoticeStart !== false && $passClaimsNoticeEnd !== false && $passClaimsNoticeEnd > $passClaimsNoticeStart, 'Pass Claims explicit notice callback body should be locatable.');
 $passClaimsNoticeSource = substr($passClaimsSource, (int) $passClaimsNoticeStart, (int) $passClaimsNoticeEnd - (int) $passClaimsNoticeStart);
-$passClaimsPopStart = strpos($passClaimsSource, 'function vms_pass_claims_pop_user_message(): array');
-$passClaimsPopEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_handle_source_save'))");
+$passClaimsPopStart = strpos($passClaimsSource, 'function bvmgr_pass_claims_pop_user_message(): array');
+$passClaimsPopEnd = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_handle_source_save'))");
 $assert($passClaimsPopStart !== false && $passClaimsPopEnd !== false && $passClaimsPopEnd > $passClaimsPopStart, 'Pass Claims transient pop helper body should be locatable.');
 $passClaimsPopSource = substr($passClaimsSource, (int) $passClaimsPopStart, (int) $passClaimsPopEnd - (int) $passClaimsPopStart);
-$passClaimsPageStart = strpos($passClaimsSource, 'function vms_pass_claims_render_admin_page(): void');
-$passClaimsPageEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_admin_enqueue_assets'))");
+$passClaimsPageStart = strpos($passClaimsSource, 'function bvmgr_pass_claims_render_admin_page(): void');
+$passClaimsPageEnd = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_admin_enqueue_assets'))");
 $assert($passClaimsPageStart !== false && $passClaimsPageEnd !== false && $passClaimsPageEnd > $passClaimsPageStart, 'Pass Claims page renderer body should be locatable.');
 $passClaimsPageSource = substr($passClaimsSource, (int) $passClaimsPageStart, (int) $passClaimsPageEnd - (int) $passClaimsPageStart);
 $passClaimsContentStart = strpos($passClaimsPageSource, '$content = static function () use ($tab): void {');
@@ -2549,18 +2549,18 @@ $assert(
 	&& preg_match('~\$_(?:GET|POST|REQUEST)\s*\[\s*[\'"]result[\'"]\s*\]~', $passClaimsNoticeSource) === 0,
 	'Pass Claims explicit notice callback should read the result query key through the scalar-safe request helper.'
 );
-$assert(strpos($passClaimsNoticeSource, 'vms_pass_claims_pop_user_message();') !== false, 'Pass Claims explicit notice callback should preserve the destructive user-message pop source.');
+$assert(strpos($passClaimsNoticeSource, 'bvmgr_pass_claims_pop_user_message();') !== false, 'Pass Claims explicit notice callback should preserve the destructive user-message pop source.');
 $assert(strpos($passClaimsPopSource, 'get_transient($key);') !== false && strpos($passClaimsPopSource, 'delete_transient($key);') !== false, 'Pass Claims user-message pop should remain a transient read-and-delete operation.');
 $assert(strpos($passClaimsNoticeSource, '<div class="notice notice-success is-dismissible"><p>') !== false, 'Pass Claims explicit notice callback should preserve the fixed dismissible success notice fragments.');
 $assert(strpos($passClaimsNoticeSource, '<div class="notice notice-info is-dismissible"><p>') !== false, 'Pass Claims explicit notice callback should preserve the fixed dismissible info notice fragment.');
 $assert(strpos($passClaimsNoticeSource, 'esc_attr($class)') !== false && strpos($passClaimsNoticeSource, 'esc_html((string) $msg[\'message\'])') !== false, 'Pass Claims explicit notice callback should preserve contextual escaping for dynamic notices.');
 $assert(strpos($passClaimsNoticeSource, '\'notice notice-error\' : \'notice notice-info\'') !== false, 'Pass Claims explicit notice callback should preserve the error-vs-info class mapping for stored messages.');
 $assert(strpos($passClaimsNoticeSource, '<strong>') === false && strpos($passClaimsNoticeSource, '<a ') === false && strpos($passClaimsNoticeSource, '<button') === false && strpos($passClaimsNoticeSource, '<span') === false, 'Pass Claims explicit notice callback should stay within the simple fragment contract.');
-$assert(strpos($passClaimsNoticeSource, '$wpdb') === false && strpos($passClaimsNoticeSource, 'get_posts(') === false && strpos($passClaimsNoticeSource, 'vms_pass_claims_get_sources(') === false, 'Pass Claims explicit notice callback should not add provider reads beyond the existing transient pop.');
-$assert(strpos($passClaimsPageSource, 'current_user_can(vms_pass_claims_capability())') !== false, 'Pass Claims page renderer should preserve the capability gate before rendering through the shell.');
-$assert(strpos($passClaimsPageSource, "'notices_callback' => 'vms_pass_claims_render_admin_notices'") !== false, 'Pass Claims page renderer should pass the explicit notice callback through the Administrator shell.');
-$assert(strpos($passClaimsPageSource, "echo '<h1>'") !== false && substr_count($passClaimsPageSource, 'vms_pass_claims_render_admin_notices();') === 1, 'Pass Claims no-shell fallback should preserve the pre-content notice ordering exactly once.');
-$assert(strpos($passClaimsContentSource, 'vms_pass_claims_render_admin_notices();') === false, 'Pass Claims content callback should no longer emit the moved page-local notice family.');
+$assert(strpos($passClaimsNoticeSource, '$wpdb') === false && strpos($passClaimsNoticeSource, 'get_posts(') === false && strpos($passClaimsNoticeSource, 'bvmgr_pass_claims_get_sources(') === false, 'Pass Claims explicit notice callback should not add provider reads beyond the existing transient pop.');
+$assert(strpos($passClaimsPageSource, 'current_user_can(bvmgr_pass_claims_capability())') !== false, 'Pass Claims page renderer should preserve the capability gate before rendering through the shell.');
+$assert(strpos($passClaimsPageSource, "'notices_callback' => 'bvmgr_pass_claims_render_admin_notices'") !== false, 'Pass Claims page renderer should pass the explicit notice callback through the Administrator shell.');
+$assert(strpos($passClaimsPageSource, "echo '<h1>'") !== false && substr_count($passClaimsPageSource, 'bvmgr_pass_claims_render_admin_notices();') === 1, 'Pass Claims no-shell fallback should preserve the pre-content notice ordering exactly once.');
+$assert(strpos($passClaimsContentSource, 'bvmgr_pass_claims_render_admin_notices();') === false, 'Pass Claims content callback should no longer emit the moved page-local notice family.');
 
 $renderPassClaimsNotices = static function (array $query = array(), array $transients = array(), int $user_id = 7): string {
 	$_GET = $query;
@@ -2573,7 +2573,7 @@ $renderPassClaimsNotices = static function (array $query = array(), array $trans
 	$GLOBALS['vms_test_transient_set_calls'] = 0;
 	$GLOBALS['vms_test_transient_delete_calls'] = 0;
 	ob_start();
-	vms_pass_claims_render_admin_notices();
+	bvmgr_pass_claims_render_admin_notices();
 	return (string) ob_get_clean();
 };
 
@@ -2612,7 +2612,7 @@ $assert(
 	'Pass Claims explicit notice callback should preserve the token-restored notice fragment.'
 );
 
-$passClaimsMessageKey = vms_pass_claims_error_transient_key(7);
+$passClaimsMessageKey = bvmgr_pass_claims_error_transient_key(7);
 $passClaimsCombinedNotice = $renderPassClaimsNotices(
 	array('result' => 'token_voided'),
 	array(
@@ -2666,65 +2666,65 @@ $passClaimsLoggedOutNotice = $renderPassClaimsNotices(
 $assert($passClaimsLoggedOutNotice === '', 'Pass Claims explicit notice callback should stay silent when no user is available for the stored-message family.');
 $assert($GLOBALS['vms_test_transient_get_calls'] === 0 && $GLOBALS['vms_test_transient_delete_calls'] === 0, 'Pass Claims stored-message rendering should not touch transients when no user is available.');
 
-$assert(strpos($emailFollowupsSource, 'function vms_email_followups_query_arg(string $key): string') !== false, 'Email Follow-Ups should expose a dedicated read-only query helper for page state.');
-$assert(strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void') !== false, 'Email Follow-Ups should preserve the dedicated primary redirect notice callback.');
-$emailNoticeStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_notices(): void');
-$emailNoticeEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_tabs'))");
+$assert(strpos($emailFollowupsSource, 'function bvmgr_email_followups_query_arg(string $key): string') !== false, 'Email Follow-Ups should expose a dedicated read-only query helper for page state.');
+$assert(strpos($emailFollowupsSource, 'function bvmgr_email_followups_render_notices(): void') !== false, 'Email Follow-Ups should preserve the dedicated primary redirect notice callback.');
+$emailNoticeStart = strpos($emailFollowupsSource, 'function bvmgr_email_followups_render_notices(): void');
+$emailNoticeEnd = strpos($emailFollowupsSource, "if (!function_exists('bvmgr_email_followups_render_tabs'))");
 $assert($emailNoticeStart !== false && $emailNoticeEnd !== false && $emailNoticeEnd > $emailNoticeStart, 'Email Follow-Ups primary redirect notice callback body should be locatable.');
 $emailNoticeSource = substr($emailFollowupsSource, (int) $emailNoticeStart, (int) $emailNoticeEnd - (int) $emailNoticeStart);
-$emailPageStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_admin_page(): void');
-$emailPageEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_overview_tab'))");
+$emailPageStart = strpos($emailFollowupsSource, 'function bvmgr_email_followups_render_admin_page(): void');
+$emailPageEnd = strpos($emailFollowupsSource, "if (!function_exists('bvmgr_email_followups_render_overview_tab'))");
 $assert($emailPageStart !== false && $emailPageEnd !== false && $emailPageEnd > $emailPageStart, 'Email Follow-Ups page renderer body should be locatable.');
 $emailPageSource = substr($emailFollowupsSource, (int) $emailPageStart, (int) $emailPageEnd - (int) $emailPageStart);
-$emailSelectedPlanStart = strpos($emailFollowupsSource, 'function vms_email_followups_selected_plan_id(?array $event_choices = null): int');
-$emailSelectedPlanEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_resolve_preview_state'))");
+$emailSelectedPlanStart = strpos($emailFollowupsSource, 'function bvmgr_email_followups_selected_plan_id(?array $event_choices = null): int');
+$emailSelectedPlanEnd = strpos($emailFollowupsSource, "if (!function_exists('bvmgr_email_followups_resolve_preview_state'))");
 $assert($emailSelectedPlanStart !== false && $emailSelectedPlanEnd !== false && $emailSelectedPlanEnd > $emailSelectedPlanStart, 'Email Follow-Ups selected-plan helper body should be locatable.');
 $emailSelectedPlanSource = substr($emailFollowupsSource, (int) $emailSelectedPlanStart, (int) $emailSelectedPlanEnd - (int) $emailSelectedPlanStart);
-$emailPreviewStateStart = strpos($emailFollowupsSource, 'function vms_email_followups_resolve_preview_state(): array');
-$emailPreviewStateEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_preview_empty_state_notice'))");
+$emailPreviewStateStart = strpos($emailFollowupsSource, 'function bvmgr_email_followups_resolve_preview_state(): array');
+$emailPreviewStateEnd = strpos($emailFollowupsSource, "if (!function_exists('bvmgr_email_followups_render_preview_empty_state_notice'))");
 $assert($emailPreviewStateStart !== false && $emailPreviewStateEnd !== false && $emailPreviewStateEnd > $emailPreviewStateStart, 'Email Follow-Ups preview-state resolver body should be locatable.');
 $emailPreviewStateSource = substr($emailFollowupsSource, (int) $emailPreviewStateStart, (int) $emailPreviewStateEnd - (int) $emailPreviewStateStart);
-$emailPreviewWarningStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_preview_empty_state_notice(array $preview_state): void');
-$emailPreviewWarningEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_page_notices'))");
+$emailPreviewWarningStart = strpos($emailFollowupsSource, 'function bvmgr_email_followups_render_preview_empty_state_notice(array $preview_state): void');
+$emailPreviewWarningEnd = strpos($emailFollowupsSource, "if (!function_exists('bvmgr_email_followups_render_page_notices'))");
 $assert($emailPreviewWarningStart !== false && $emailPreviewWarningEnd !== false && $emailPreviewWarningEnd > $emailPreviewWarningStart, 'Email Follow-Ups preview warning helper body should be locatable.');
 $emailPreviewWarningSource = substr($emailFollowupsSource, (int) $emailPreviewWarningStart, (int) $emailPreviewWarningEnd - (int) $emailPreviewWarningStart);
-$emailPageNoticesStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_page_notices(string $tab, array $preview_state = array()): void');
-$emailPageNoticesEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_preview_tab'))");
+$emailPageNoticesStart = strpos($emailFollowupsSource, 'function bvmgr_email_followups_render_page_notices(string $tab, array $preview_state = array()): void');
+$emailPageNoticesEnd = strpos($emailFollowupsSource, "if (!function_exists('bvmgr_email_followups_render_preview_tab'))");
 $assert($emailPageNoticesStart !== false && $emailPageNoticesEnd !== false && $emailPageNoticesEnd > $emailPageNoticesStart, 'Email Follow-Ups page-notices helper body should be locatable.');
 $emailPageNoticesSource = substr($emailFollowupsSource, (int) $emailPageNoticesStart, (int) $emailPageNoticesEnd - (int) $emailPageNoticesStart);
-$emailPreviewTabStart = strpos($emailFollowupsSource, 'function vms_email_followups_render_preview_tab(array $preview_state = array()): void');
-$emailPreviewTabEnd = strpos($emailFollowupsSource, "if (!function_exists('vms_email_followups_render_logs_tab'))");
+$emailPreviewTabStart = strpos($emailFollowupsSource, 'function bvmgr_email_followups_render_preview_tab(array $preview_state = array()): void');
+$emailPreviewTabEnd = strpos($emailFollowupsSource, "if (!function_exists('bvmgr_email_followups_render_logs_tab'))");
 $assert($emailPreviewTabStart !== false && $emailPreviewTabEnd !== false && $emailPreviewTabEnd > $emailPreviewTabStart, 'Email Follow-Ups preview renderer body should be locatable.');
 $emailPreviewTabSource = substr($emailFollowupsSource, (int) $emailPreviewTabStart, (int) $emailPreviewTabEnd - (int) $emailPreviewTabStart);
-$assert(strpos($emailNoticeSource, 'sanitize_text_field(vms_email_followups_query_arg(\'vms_efu_notice\'))') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the sanitized redirect notice source.');
-$assert(strpos($emailNoticeSource, 'sanitize_key(vms_email_followups_query_arg(\'vms_efu_notice_type\'))') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the sanitized redirect notice type source.');
+$assert(strpos($emailNoticeSource, 'sanitize_text_field(bvmgr_email_followups_query_arg(\'vms_efu_notice\'))') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the sanitized redirect notice source.');
+$assert(strpos($emailNoticeSource, 'sanitize_key(bvmgr_email_followups_query_arg(\'vms_efu_notice_type\'))') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the sanitized redirect notice type source.');
 $assert(strpos($emailNoticeSource, "array('success', 'error', 'warning', 'info')") !== false, 'Email Follow-Ups primary redirect notice callback should preserve the existing severity allowlist.');
 $assert(strpos($emailNoticeSource, '<div class="notice notice-') !== false && strpos($emailNoticeSource, 'is-dismissible') !== false, 'Email Follow-Ups primary redirect notice callback should preserve the dismissible notice class family.');
 $assert(strpos($emailNoticeSource, 'esc_attr($type)') !== false && strpos($emailNoticeSource, 'esc_html($notice)') !== false, 'Email Follow-Ups primary redirect notice callback should preserve contextual escaping.');
 $assert(strpos($emailNoticeSource, '<strong>') === false && strpos($emailNoticeSource, '<a ') === false && strpos($emailNoticeSource, '<button') === false && strpos($emailNoticeSource, '<span') === false, 'Email Follow-Ups primary redirect notice callback should stay within the simple fragment contract.');
-$assert(strpos($emailNoticeSource, 'vms_email_followups_settings(') === false && strpos($emailNoticeSource, 'vms_email_followups_due_items(') === false && strpos($emailNoticeSource, 'vms_email_followups_mailpoet_status(') === false, 'Email Follow-Ups primary redirect notice callback should not resolve page providers or stored state.');
-$assert(strpos($emailSelectedPlanSource, 'absint(vms_email_followups_query_arg(\'event_plan_id\'))') !== false, 'Email Follow-Ups selected-plan helper should preserve the existing event plan input sanitation.');
-$assert(strpos($emailSelectedPlanSource, 'vms_email_followups_event_choices(1)') !== false || strpos($emailSelectedPlanSource, 'vms_email_followups_upcoming_event_choices(1)') !== false, 'Email Follow-Ups selected-plan helper should preserve the original default-choice fallback path.');
-$assert(strpos($emailPreviewStateSource, 'absint(vms_email_followups_query_arg(\'event_plan_id\'))') !== false, 'Email Follow-Ups preview-state resolver should preserve the existing event selection sanitation.');
-$assert(strpos($emailPreviewStateSource, 'vms_email_followups_event_choices(120, $selected_event_plan_id)') !== false, 'Email Follow-Ups preview-state resolver should preserve the full preview choice provider call.');
-$assert(strpos($emailPreviewStateSource, 'vms_email_followups_selected_plan_id($event_choices)') !== false, 'Email Follow-Ups preview-state resolver should derive the selected plan from the shared choice list.');
-$assert(strpos($emailPreviewStateSource, 'sanitize_key(vms_email_followups_query_arg(\'email_key\'))') !== false, 'Email Follow-Ups preview-state resolver should preserve the existing email-key sanitation.');
-$assert(strpos($emailPreviewStateSource, 'vms_email_followups_template_definitions()') !== false, 'Email Follow-Ups preview-state resolver should preserve the template-definition provider.');
+$assert(strpos($emailNoticeSource, 'bvmgr_email_followups_settings(') === false && strpos($emailNoticeSource, 'bvmgr_email_followups_due_items(') === false && strpos($emailNoticeSource, 'bvmgr_email_followups_mailpoet_status(') === false, 'Email Follow-Ups primary redirect notice callback should not resolve page providers or stored state.');
+$assert(strpos($emailSelectedPlanSource, 'absint(bvmgr_email_followups_query_arg(\'event_plan_id\'))') !== false, 'Email Follow-Ups selected-plan helper should preserve the existing event plan input sanitation.');
+$assert(strpos($emailSelectedPlanSource, 'bvmgr_email_followups_event_choices(1)') !== false || strpos($emailSelectedPlanSource, 'bvmgr_email_followups_upcoming_event_choices(1)') !== false, 'Email Follow-Ups selected-plan helper should preserve the original default-choice fallback path.');
+$assert(strpos($emailPreviewStateSource, 'absint(bvmgr_email_followups_query_arg(\'event_plan_id\'))') !== false, 'Email Follow-Ups preview-state resolver should preserve the existing event selection sanitation.');
+$assert(strpos($emailPreviewStateSource, 'bvmgr_email_followups_event_choices(120, $selected_event_plan_id)') !== false, 'Email Follow-Ups preview-state resolver should preserve the full preview choice provider call.');
+$assert(strpos($emailPreviewStateSource, 'bvmgr_email_followups_selected_plan_id($event_choices)') !== false, 'Email Follow-Ups preview-state resolver should derive the selected plan from the shared choice list.');
+$assert(strpos($emailPreviewStateSource, 'sanitize_key(bvmgr_email_followups_query_arg(\'email_key\'))') !== false, 'Email Follow-Ups preview-state resolver should preserve the existing email-key sanitation.');
+$assert(strpos($emailPreviewStateSource, 'bvmgr_email_followups_template_definitions()') !== false, 'Email Follow-Ups preview-state resolver should preserve the template-definition provider.');
 $assert(strpos($emailPreviewStateSource, 'if (!isset($template_definitions[$email_key])) {') !== false, 'Email Follow-Ups preview-state resolver should preserve the unknown-template fallback.');
 $assert(strpos($emailPreviewWarningSource, 'if ($event_plan_id > 0) {') !== false, 'Email Follow-Ups preview warning helper should preserve the exact empty-state condition inverse.');
 $assert(strpos($emailPreviewWarningSource, '<div class="notice notice-warning inline"><p>') !== false, 'Email Follow-Ups preview warning helper should preserve the exact inline warning fragment.');
 $assert(strpos($emailPreviewWarningSource, 'esc_html__(\'No Event Plans found for preview/testing.\'') !== false, 'Email Follow-Ups preview warning helper should preserve the exact message translation and escaping.');
-$assert(strpos($emailPageNoticesSource, 'vms_email_followups_render_notices();') !== false, 'Email Follow-Ups page-notices helper should keep the primary redirect notices first.');
+$assert(strpos($emailPageNoticesSource, 'bvmgr_email_followups_render_notices();') !== false, 'Email Follow-Ups page-notices helper should keep the primary redirect notices first.');
 $assert(strpos($emailPageNoticesSource, 'if ($tab !== \'preview\') {') !== false, 'Email Follow-Ups page-notices helper should keep the preview warning preview-tab-specific.');
-$assert(strpos($emailPageNoticesSource, 'vms_email_followups_render_preview_empty_state_notice($preview_state);') !== false, 'Email Follow-Ups page-notices helper should compose the preview warning after the primary redirect notices.');
-$assert(preg_match('~\$preview_state\s*=\s*array\(\);\s*if\s*\(\s*\$tab\s*===\s*[\'"]preview[\'"]\s*\)\s*\{\s*\$preview_state\s*=\s*vms_email_followups_resolve_preview_state\(\);\s*\}~s', $emailPageSource) === 1, 'Email Follow-Ups page renderer should resolve preview state lazily only on the preview tab.');
-$assert(preg_match('~\$render_notices\s*=\s*static function \(\) use \(\$tab,\s*\$preview_state\): void \{\s*vms_email_followups_render_page_notices\(\$tab,\s*\$preview_state\);~s', $emailPageSource) === 1, 'Email Follow-Ups page renderer should route page notices through a page-local composed callback.');
-$assert(preg_match('~\$render\s*=\s*static function \(\) use \(\$tab,\s*\$preview_state\): void \{.*?elseif \(\$tab === [\'"]preview[\'"]\) \{\s*vms_email_followups_render_preview_tab\(\$preview_state\);~s', $emailPageSource) === 1, 'Email Follow-Ups page renderer should pass the same resolved preview state into the preview content path.');
+$assert(strpos($emailPageNoticesSource, 'bvmgr_email_followups_render_preview_empty_state_notice($preview_state);') !== false, 'Email Follow-Ups page-notices helper should compose the preview warning after the primary redirect notices.');
+$assert(preg_match('~\$preview_state\s*=\s*array\(\);\s*if\s*\(\s*\$tab\s*===\s*[\'"]preview[\'"]\s*\)\s*\{\s*\$preview_state\s*=\s*bvmgr_email_followups_resolve_preview_state\(\);\s*\}~s', $emailPageSource) === 1, 'Email Follow-Ups page renderer should resolve preview state lazily only on the preview tab.');
+$assert(preg_match('~\$render_notices\s*=\s*static function \(\) use \(\$tab,\s*\$preview_state\): void \{\s*bvmgr_email_followups_render_page_notices\(\$tab,\s*\$preview_state\);~s', $emailPageSource) === 1, 'Email Follow-Ups page renderer should route page notices through a page-local composed callback.');
+$assert(preg_match('~\$render\s*=\s*static function \(\) use \(\$tab,\s*\$preview_state\): void \{.*?elseif \(\$tab === [\'"]preview[\'"]\) \{\s*bvmgr_email_followups_render_preview_tab\(\$preview_state\);~s', $emailPageSource) === 1, 'Email Follow-Ups page renderer should pass the same resolved preview state into the preview content path.');
 $assert(strpos($emailPageSource, "'notices_callback' => \$render_notices") !== false, 'Email Follow-Ups shell call should pass the composed page-local notices callback.');
 $assert(preg_match('~echo\s+[\'"]<div class="wrap" id="vms-email-followups-admin"><h1>[\'"].*?\$render_notices\(\);\s*\$render\(\);~s', $emailPageSource) === 1, 'Email Follow-Ups no-shell fallback should preserve heading, notices, then content ordering.');
-$assert(strpos($emailPreviewTabSource, 'if (empty($preview_state)) {') !== false && strpos($emailPreviewTabSource, 'vms_email_followups_resolve_preview_state();') !== false, 'Email Follow-Ups preview renderer should preserve standalone compatibility by resolving preview state when none is passed.');
-$assert(preg_match('~\$template_definitions\s*=\s*isset\(\$preview_state\[\'template_definitions\'\]\)\s*&&\s*is_array\(\$preview_state\[\'template_definitions\'\]\)\s*\?\s*\$preview_state\[\'template_definitions\'\]\s*:\s*vms_email_followups_template_definitions\(\);~s', $emailPreviewTabSource) === 1, 'Email Follow-Ups preview renderer should prefer the shared preview state data when it is provided.');
-$assert(strpos($emailPreviewTabSource, 'vms_email_followups_render_preview_empty_state_notice') === false, 'Email Follow-Ups preview renderer should not emit the moved empty-state warning directly.');
+$assert(strpos($emailPreviewTabSource, 'if (empty($preview_state)) {') !== false && strpos($emailPreviewTabSource, 'bvmgr_email_followups_resolve_preview_state();') !== false, 'Email Follow-Ups preview renderer should preserve standalone compatibility by resolving preview state when none is passed.');
+$assert(preg_match('~\$template_definitions\s*=\s*isset\(\$preview_state\[\'template_definitions\'\]\)\s*&&\s*is_array\(\$preview_state\[\'template_definitions\'\]\)\s*\?\s*\$preview_state\[\'template_definitions\'\]\s*:\s*bvmgr_email_followups_template_definitions\(\);~s', $emailPreviewTabSource) === 1, 'Email Follow-Ups preview renderer should prefer the shared preview state data when it is provided.');
+$assert(strpos($emailPreviewTabSource, 'bvmgr_email_followups_render_preview_empty_state_notice') === false, 'Email Follow-Ups preview renderer should not emit the moved empty-state warning directly.');
 $assert(strpos($emailPreviewTabSource, 'No Event Plans found for preview/testing.') === false, 'Email Follow-Ups preview renderer should no longer emit the moved warning message from the content path.');
 $assert(strpos($emailPreviewTabSource, 'if ($event_plan_id <= 0) {') !== false && strpos($emailPreviewTabSource, 'return;') !== false, 'Email Follow-Ups preview renderer should preserve the exact empty-state early return without the moved warning emission.');
 
@@ -2733,7 +2733,7 @@ $_GET = array(
 	'vms_efu_notice_type' => 'success',
 );
 ob_start();
-vms_email_followups_render_notices();
+bvmgr_email_followups_render_notices();
 $emailSuccessNotice = (string) ob_get_clean();
 $assert(
 	$emailSuccessNotice === '<div class="notice notice-success is-dismissible"><p>Email follow-up settings saved.</p></div>',
@@ -2749,7 +2749,7 @@ $_GET = array(
 	'vms_efu_notice_type' => 'error',
 );
 ob_start();
-vms_email_followups_render_notices();
+bvmgr_email_followups_render_notices();
 $emailErrorNotice = (string) ob_get_clean();
 $assert(
 	$emailErrorNotice === '<div class="notice notice-error is-dismissible"><p>Test send failed.</p></div>',
@@ -2761,7 +2761,7 @@ $_GET = array(
 	'vms_efu_notice_type' => 'warning',
 );
 ob_start();
-vms_email_followups_render_notices();
+bvmgr_email_followups_render_notices();
 $emailWarningNotice = (string) ob_get_clean();
 $assert(
 	$emailWarningNotice === '<div class="notice notice-warning is-dismissible"><p>Manual send was not confirmed, so no recipient emails were sent.</p></div>',
@@ -2773,7 +2773,7 @@ $_GET = array(
 	'vms_efu_notice_type' => 'info',
 );
 ob_start();
-vms_email_followups_render_notices();
+bvmgr_email_followups_render_notices();
 $emailInfoNotice = (string) ob_get_clean();
 $assert(
 	$emailInfoNotice === '<div class="notice notice-info is-dismissible"><p>Preview batch ready.</p></div>',
@@ -2785,7 +2785,7 @@ $_GET = array(
 	'vms_efu_notice_type' => 'danger',
 );
 ob_start();
-vms_email_followups_render_notices();
+bvmgr_email_followups_render_notices();
 $emailFallbackNotice = (string) ob_get_clean();
 $assert(
 	$emailFallbackNotice === '<div class="notice notice-success is-dismissible"><p>Queue run complete.</p></div>',
@@ -2797,12 +2797,12 @@ $_GET = array(
 	'vms_efu_notice_type' => 'warning',
 );
 ob_start();
-vms_email_followups_render_notices();
+bvmgr_email_followups_render_notices();
 $emailNoNotice = (string) ob_get_clean();
 $assert($emailNoNotice === '', 'Email Follow-Ups primary redirect notice callback should stay silent when no notice text is present.');
 
 ob_start();
-vms_email_followups_render_preview_empty_state_notice(array('event_plan_id' => 0));
+bvmgr_email_followups_render_preview_empty_state_notice(array('event_plan_id' => 0));
 $emailPreviewWarningNotice = (string) ob_get_clean();
 $assert(
 	$emailPreviewWarningNotice === '<div class="notice notice-warning inline"><p>No Event Plans found for preview/testing.</p></div>',
@@ -2814,7 +2814,7 @@ $assert(
 );
 
 ob_start();
-vms_email_followups_render_preview_empty_state_notice(array('event_plan_id' => 44));
+bvmgr_email_followups_render_preview_empty_state_notice(array('event_plan_id' => 44));
 $emailNoPreviewWarning = (string) ob_get_clean();
 $assert($emailNoPreviewWarning === '', 'Email Follow-Ups preview warning helper should stay silent when the preview state is nonempty.');
 
@@ -2823,7 +2823,7 @@ $_GET = array(
 	'vms_efu_notice_type' => 'success',
 );
 ob_start();
-vms_email_followups_render_page_notices('preview', array('event_plan_id' => 0));
+bvmgr_email_followups_render_page_notices('preview', array('event_plan_id' => 0));
 $emailComposedPreviewNotices = (string) ob_get_clean();
 $assert(
 	$emailComposedPreviewNotices === '<div class="notice notice-success is-dismissible"><p>Email follow-up settings saved.</p></div><div class="notice notice-warning inline"><p>No Event Plans found for preview/testing.</p></div>',
@@ -2831,7 +2831,7 @@ $assert(
 );
 
 ob_start();
-vms_email_followups_render_page_notices('overview', array('event_plan_id' => 0));
+bvmgr_email_followups_render_page_notices('overview', array('event_plan_id' => 0));
 $emailComposedOverviewNotices = (string) ob_get_clean();
 $assert(
 	$emailComposedOverviewNotices === '<div class="notice notice-success is-dismissible"><p>Email follow-up settings saved.</p></div>',
@@ -2851,7 +2851,7 @@ $_GET = array(
 	'tab' => 'preview',
 	'email_key' => 'not-real',
 );
-$emailPreviewState = vms_email_followups_resolve_preview_state();
+$emailPreviewState = bvmgr_email_followups_resolve_preview_state();
 $assert($GLOBALS['vms_test_email_followups_event_choices_calls'] === 1, 'Email Follow-Ups preview-state resolver should resolve event choices exactly once.');
 $assert($GLOBALS['vms_test_email_followups_event_choices_args'] === array(array(120, 0)), 'Email Follow-Ups preview-state resolver should preserve the original empty selection provider arguments.');
 $assert($GLOBALS['vms_test_email_followups_template_definitions_calls'] === 1, 'Email Follow-Ups preview-state resolver should resolve template definitions exactly once.');
@@ -2876,7 +2876,7 @@ $_GET = array(
 	'vms_efu_notice_type' => 'success',
 );
 ob_start();
-vms_email_followups_render_admin_page();
+bvmgr_email_followups_render_admin_page();
 $emailOverviewPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_email_followups_settings_calls'] === 1, 'Email Follow-Ups overview render should resolve settings exactly once.');
 $assert($GLOBALS['vms_test_email_followups_mailpoet_status_calls'] === 1, 'Email Follow-Ups overview render should resolve MailPoet status exactly once.');
@@ -2907,7 +2907,7 @@ $_GET = array(
 	'email_key' => 'know_before',
 );
 ob_start();
-vms_email_followups_render_admin_page();
+bvmgr_email_followups_render_admin_page();
 $emailEmptyPreviewPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_email_followups_event_choices_calls'] === 1, 'Email Follow-Ups empty preview render should resolve event choices exactly once.');
 $assert($GLOBALS['vms_test_email_followups_event_choices_args'] === array(array(120, 0)), 'Email Follow-Ups empty preview render should keep the original preview choice provider arguments.');
@@ -2973,7 +2973,7 @@ $_GET = array(
 	'email_key' => 'know_before',
 );
 ob_start();
-vms_email_followups_render_admin_page();
+bvmgr_email_followups_render_admin_page();
 $emailNonemptyPreviewPage = (string) ob_get_clean();
 $assert($GLOBALS['vms_test_email_followups_event_choices_calls'] === 1, 'Email Follow-Ups nonempty preview render should resolve event choices exactly once.');
 $assert($GLOBALS['vms_test_email_followups_template_definitions_calls'] === 1, 'Email Follow-Ups nonempty preview render should resolve template definitions exactly once.');

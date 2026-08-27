@@ -11,7 +11,7 @@
         "source_commit": "d1f9a0e441fc496793052132a6fe62b2b55a2337",
         "package_sha256": "26f550399fb43ae8628a61f1f33d1ebb4fcfdd792ee7c05f975d44a0385c7156",
         "strict_json_sha256": "e09ed3d9f43dc0b8553888300a8aa1f8185b59b2c31ec8f7fd97645aeddcad62",
-        "manifest_sha256": "a942b1731c44c66ff2d564505b2f40624e62f90d21274dea748c5a0b203c734d"
+        "manifest_sha256": "d035e7c5f3228ff9d5c72acfd9576e46eb428425da51c142c768368066002c96"
     },
     "classification_definitions": {
         "REQUIRED_MIGRATION_B3": {
@@ -88756,12 +88756,12 @@
             "B2_5"
         ],
         "current_category_counts": {
-            "REQUIRED_MIGRATION_B3": 794,
+            "REQUIRED_MIGRATION_B3": 366,
             "REQUIRED_MIGRATION_B7": 182,
             "SCANNER_FALSE_POSITIVE_METHOD_SCOPE": 420,
             "THIRD_PARTY_OR_CORE_CONTRACT": 6
         },
-        "expected_remaining_prefix_migration_findings": 976,
+        "expected_remaining_prefix_migration_findings": 548,
         "approved_scanner_exceptions": 426,
         "unexpected": 0,
         "unexpected_finding_ids": [],
@@ -88775,19 +88775,19 @@
         "counts": {
             "baseline_unique_functions": 4521,
             "baseline_declaration_sites": 4541,
-            "migrated_unique_functions": 3731,
-            "migrated_declaration_sites": 3747,
-            "remaining_legacy_unique_functions": 790,
-            "remaining_legacy_declaration_sites": 794,
-            "prohibited_semantic_surface": 790
+            "migrated_unique_functions": 4159,
+            "migrated_declaration_sites": 4175,
+            "remaining_legacy_unique_functions": 362,
+            "remaining_legacy_declaration_sites": 366,
+            "prohibited_semantic_surface": 362
         },
         "status": "PASS"
     },
     "current_expected_prefix_findings": {
-        "count": 1402,
-        "finding_ids_sha256": "1f7db21c0f135d1edc1efb54281bf054d3688b213a9b35d2a9e96704ce6ca23b",
+        "count": 974,
+        "finding_ids_sha256": "f25bf31440d9011eadd074fa1749fe4f321b8d621507d1fb07391e3350b5f4d0",
         "category_counts": {
-            "REQUIRED_MIGRATION_B3": 794,
+            "REQUIRED_MIGRATION_B3": 366,
             "REQUIRED_MIGRATION_B7": 182,
             "SCANNER_FALSE_POSITIVE_METHOD_SCOPE": 420,
             "THIRD_PARTY_OR_CORE_CONTRACT": 6

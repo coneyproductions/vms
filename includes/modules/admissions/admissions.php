@@ -12,8 +12,8 @@ require_once __DIR__ . '/admin-ui.php';
 require_once __DIR__ . '/shortcodes.php';
 require_once __DIR__ . '/pass-claims.php';
 
-if (!function_exists('vms_admission_module_boot')) {
-	function vms_admission_module_boot(): void
+if (!function_exists('bvmgr_admission_module_boot')) {
+	function bvmgr_admission_module_boot(): void
 	{
 		if (function_exists('bvmgr_register_module')) {
 			bvmgr_register_module(array(
@@ -26,8 +26,8 @@ if (!function_exists('vms_admission_module_boot')) {
 			));
 		}
 
-		vms_admission_ensure_capability_mapping();
-		vms_admission_maybe_upgrade_schema();
+		bvmgr_admission_ensure_capability_mapping();
+		bvmgr_admission_maybe_upgrade_schema();
 	}
 }
-add_action('plugins_loaded', 'vms_admission_module_boot', 8);
+add_action('plugins_loaded', 'bvmgr_admission_module_boot', 8);

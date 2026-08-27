@@ -342,11 +342,11 @@ $assert(!empty($decodedList['ok']), 'Expected list JSON to decode successfully.'
 $assert(bvmgr_json_decoded_is_list((array) $decodedList['value'], (string) ($decodedList['top_level_token'] ?? '')), 'Expected top-level list detection to succeed.');
 
 $assert(
-	vms_pass_claims_decode_venue_ids_json('[4,"2",4,0]') === array(2, 4),
+	bvmgr_pass_claims_decode_venue_ids_json('[4,"2",4,0]') === array(2, 4),
 	'Venue ID JSON should normalize a JSON list of venue IDs.'
 );
 $assert(
-	vms_pass_claims_decode_venue_ids_json('{"venue_id":4}') === array(),
+	bvmgr_pass_claims_decode_venue_ids_json('{"venue_id":4}') === array(),
 	'Venue ID JSON should reject object-shaped payloads.'
 );
 

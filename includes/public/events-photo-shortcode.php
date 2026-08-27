@@ -3,11 +3,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-if (!function_exists('vms_events_photo_parse_id_list')) {
+if (!function_exists('bvmgr_events_photo_parse_id_list')) {
     /**
      * @return array<int,int>
      */
-    function vms_events_photo_parse_id_list($raw): array
+    function bvmgr_events_photo_parse_id_list($raw): array
     {
         if (is_array($raw)) {
             $parts = $raw;
@@ -29,8 +29,8 @@ if (!function_exists('vms_events_photo_parse_id_list')) {
 }
 
 
-if (!function_exists('vms_events_photo_calendar_url')) {
-    function vms_events_photo_calendar_url(array $venue_ids = array()): string
+if (!function_exists('bvmgr_events_photo_calendar_url')) {
+    function bvmgr_events_photo_calendar_url(array $venue_ids = array()): string
     {
         $url = '';
 
@@ -61,11 +61,11 @@ if (!function_exists('vms_events_photo_calendar_url')) {
     }
 }
 
-if (!function_exists('vms_events_photo_overlay_context')) {
+if (!function_exists('bvmgr_events_photo_overlay_context')) {
     /**
      * @return array<string,mixed>
      */
-    function vms_events_photo_overlay_context(int $plan_id, string $plan_status): array
+    function bvmgr_events_photo_overlay_context(int $plan_id, string $plan_status): array
     {
         $plan_id = absint($plan_id);
         $plan_status = sanitize_key($plan_status);
@@ -94,8 +94,8 @@ if (!function_exists('vms_events_photo_overlay_context')) {
     }
 }
 
-if (!function_exists('vms_events_photo_title_for_event')) {
-    function vms_events_photo_title_for_event(array $event): string
+if (!function_exists('bvmgr_events_photo_title_for_event')) {
+    function bvmgr_events_photo_title_for_event(array $event): string
     {
         $title = trim((string) ($event['title'] ?? ''));
         $plan_id = absint($event['event_plan_id'] ?? 0);
@@ -116,8 +116,8 @@ if (!function_exists('vms_events_photo_title_for_event')) {
     }
 }
 
-if (!function_exists('vms_events_photo_format_time_label')) {
-    function vms_events_photo_format_time_label(array $event): string
+if (!function_exists('bvmgr_events_photo_format_time_label')) {
+    function bvmgr_events_photo_format_time_label(array $event): string
     {
         $start_label = function_exists('bvmgr_public_calendar_time_label')
             ? bvmgr_public_calendar_time_label((string) ($event['start_local'] ?? ''))
@@ -134,13 +134,13 @@ if (!function_exists('vms_events_photo_format_time_label')) {
     }
 }
 
-if (!function_exists('vms_events_photo_cta_context')) {
+if (!function_exists('bvmgr_events_photo_cta_context')) {
     /**
      * @param array<string,mixed> $event
      * @param array<string,mixed> $overlay
      * @return array<string,string>
      */
-    function vms_events_photo_cta_context(array $event, array $overlay): array
+    function bvmgr_events_photo_cta_context(array $event, array $overlay): array
     {
         $event_url = trim((string) ($event['public_url'] ?? ''));
         $label = __('Get Tickets', 'backstage-venue-manager');
@@ -163,17 +163,17 @@ if (!function_exists('vms_events_photo_cta_context')) {
     }
 }
 
-if (!function_exists('vms_events_photo_register_shortcodes')) {
-    function vms_events_photo_register_shortcodes(): void
+if (!function_exists('bvmgr_events_photo_register_shortcodes')) {
+    function bvmgr_events_photo_register_shortcodes(): void
     {
-        add_shortcode('vms_events_photo', 'vms_events_photo_shortcode');
-        add_shortcode('vms_events_photo_grid', 'vms_events_photo_shortcode');
+        add_shortcode('vms_events_photo', 'bvmgr_events_photo_shortcode');
+        add_shortcode('vms_events_photo_grid', 'bvmgr_events_photo_shortcode');
     }
-    add_action('init', 'vms_events_photo_register_shortcodes', 12);
+    add_action('init', 'bvmgr_events_photo_register_shortcodes', 12);
 }
 
-if (!function_exists('vms_events_photo_shortcode')) {
-    function vms_events_photo_shortcode(array $atts = array()): string
+if (!function_exists('bvmgr_events_photo_shortcode')) {
+    function bvmgr_events_photo_shortcode(array $atts = array()): string
     {
         if (!function_exists('bvmgr_get_calendar_events')) {
             return '';
@@ -242,9 +242,9 @@ if (!function_exists('vms_events_photo_shortcode')) {
             $end_date = (string) wp_date('Y-m-d', strtotime('+' . $days_ahead . ' days', time()), $timezone);
         }
 
-        $venue_ids = vms_events_photo_parse_id_list($atts['venue_ids']);
+        $venue_ids = bvmgr_events_photo_parse_id_list($atts['venue_ids']);
         if (empty($venue_ids)) {
-            $venue_ids = vms_events_photo_parse_id_list($atts['venue_id']);
+            $venue_ids = bvmgr_events_photo_parse_id_list($atts['venue_id']);
         }
 
         $statuses = array('published');
@@ -308,7 +308,7 @@ if (!function_exists('vms_events_photo_shortcode')) {
 
         $more_url = trim((string) $atts['more_url']);
         if ($show_more_link && $more_url === '') {
-            $more_url = vms_events_photo_calendar_url($venue_ids);
+            $more_url = bvmgr_events_photo_calendar_url($venue_ids);
         }
         $more_label = trim((string) $atts['more_label']);
         if ($more_label === '') {
@@ -320,10 +320,10 @@ if (!function_exists('vms_events_photo_shortcode')) {
         foreach ($items as $event) {
             $plan_id = absint($event['event_plan_id'] ?? 0);
             $plan_status = sanitize_key((string) ($event['plan_status'] ?? ''));
-            $overlay = vms_events_photo_overlay_context($plan_id, $plan_status);
+            $overlay = bvmgr_events_photo_overlay_context($plan_id, $plan_status);
             $event_url = trim((string) ($event['public_url'] ?? ''));
             $image_url = trim((string) ($event['image_url'] ?? ''));
-            $title = vms_events_photo_title_for_event($event);
+            $title = bvmgr_events_photo_title_for_event($event);
             $venue_name = trim((string) ($event['venue_name'] ?? ''));
             $excerpt = trim((string) ($event['excerpt'] ?? ''));
             $date_key = trim((string) ($event['date_key'] ?? ''));
@@ -336,10 +336,10 @@ if (!function_exists('vms_events_photo_shortcode')) {
                     $day_label = (string) wp_date('j', $timestamp, $timezone);
                 }
             }
-            $time_label = $show_time ? vms_events_photo_format_time_label($event) : '';
+            $time_label = $show_time ? bvmgr_events_photo_format_time_label($event) : '';
             $replacement = isset($overlay['replacement']) && is_array($overlay['replacement']) ? $overlay['replacement'] : array();
             $replacement_date = trim((string) ($replacement['date_label'] ?? $replacement['date_raw'] ?? ''));
-            $cta = vms_events_photo_cta_context($event, $overlay);
+            $cta = bvmgr_events_photo_cta_context($event, $overlay);
 
             $card_classes = array('vms-events-photo-card');
             if (!empty($overlay['is_cancelled'])) {

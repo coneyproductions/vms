@@ -209,12 +209,12 @@ try {
 		)
 	);
 
-	$admissionsFunction = vms_test_extract_function($admissionsSource, 'vms_admission_export_csv');
+	$admissionsFunction = vms_test_extract_function($admissionsSource, 'bvmgr_admission_export_csv');
 	vms_test_assert_stream_boundary(
 		'Admissions door-list CSV export',
 		$admissionsFunction,
 		array(
-			'current_user_can(vms_admission_manage_capability())',
+			'current_user_can(bvmgr_admission_manage_capability())',
 			"wp_verify_nonce(\$nonce, 'vms_admissions_export_csv_' . \$event_plan_id)",
 			'$rows = $wpdb->get_results($wpdb->prepare(',
 			'FROM %i WHERE event_plan_id = %d ORDER BY guest_name ASC, id ASC',
@@ -224,19 +224,19 @@ try {
 			"header('Content-Disposition: attachment; filename=' . \$filename);",
 			"fclose(\$fh); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.",
 			"fputcsv(\$fh, array('Guest Name', 'Guest Email', 'Party Size', 'Phone', 'Notes', 'Status', 'Source', 'Owner Vendor'));",
-			"vms_admission_audit_log(\$event_plan_id, null, 'export_csv', get_current_user_id(), 'admin', array(",
+			"bvmgr_admission_audit_log(\$event_plan_id, null, 'export_csv', get_current_user_id(), 'admin', array(",
 			'exit;',
 		)
 	);
 
-	$passExportFunction = vms_test_extract_function($passClaimsSource, 'vms_pass_claims_handle_export_csv');
+	$passExportFunction = vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_handle_export_csv');
 	vms_test_assert_stream_boundary(
 		'Pass token CSV export',
 		$passExportFunction,
 		array(
-			'current_user_can(vms_pass_claims_capability())',
+			'current_user_can(bvmgr_pass_claims_capability())',
 			"wp_verify_nonce(\$nonce, 'vms_pass_export_' . \$batch_id)",
-			'vms_pass_claims_get_tokens($batch_id, 10000)',
+			'bvmgr_pass_claims_get_tokens($batch_id, 10000)',
 			'if (!headers_sent()) {',
 			'nocache_headers();',
 			"header('Content-Type: text/csv; charset=utf-8');",
@@ -245,23 +245,23 @@ try {
 			"fputcsv(\$out, array(",
 			"'token_id',",
 			"'created_at',",
-			"vms_admission_audit_log(0, null, 'pass_tokens_export_csv', get_current_user_id(), 'admin', array(",
+			"bvmgr_admission_audit_log(0, null, 'pass_tokens_export_csv', get_current_user_id(), 'admin', array(",
 			'exit;',
 		)
 	);
 
-	$passReportFunction = vms_test_extract_function($passClaimsSource, 'vms_pass_claims_handle_report_export_csv');
+	$passReportFunction = vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_handle_report_export_csv');
 	vms_test_assert_stream_boundary(
 		'Pass report CSV export',
 		$passReportFunction,
 		array(
-			'current_user_can(vms_pass_claims_capability())',
+			'current_user_can(bvmgr_pass_claims_capability())',
 			"wp_verify_nonce(\$nonce, 'vms_pass_report_export_' . \$scope)",
 			"if (!in_array(\$scope, array('source', 'batch', 'source_event', 'event'), true)) {",
-			'$rows = vms_pass_claims_reports_by_batch();',
-			'$rows = vms_pass_claims_reports_source_events();',
-			'$rows = vms_pass_claims_reports_by_event();',
-			'$rows = vms_pass_claims_reports_by_source();',
+			'$rows = bvmgr_pass_claims_reports_by_batch();',
+			'$rows = bvmgr_pass_claims_reports_source_events();',
+			'$rows = bvmgr_pass_claims_reports_by_event();',
+			'$rows = bvmgr_pass_claims_reports_by_source();',
 			'if (!headers_sent()) {',
 			'nocache_headers();',
 			"header('Content-Type: text/csv; charset=utf-8');",
@@ -270,7 +270,7 @@ try {
 			"'batch_id',",
 			"'source_id',",
 			"'event_plan_id',",
-			"vms_admission_audit_log(0, null, 'pass_reports_export_csv', get_current_user_id(), 'admin', array(",
+			"bvmgr_admission_audit_log(0, null, 'pass_reports_export_csv', get_current_user_id(), 'admin', array(",
 			'exit;',
 		)
 	);

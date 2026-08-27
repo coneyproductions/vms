@@ -133,12 +133,12 @@ $assert = static function (bool $condition, string $message): void {
 $assert(is_string($passClaimsSource) && $passClaimsSource !== '', 'Pass Claims source should be readable.');
 $assert(is_string($adminShellSource) && $adminShellSource !== '', 'Administrator shell source should be readable.');
 
-$shellStart = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_render_public_shell'))");
-$shellEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_render_public_claim'))");
+$shellStart = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_render_public_shell'))");
+$shellEnd = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_render_public_claim'))");
 $assert($shellStart !== false && $shellEnd !== false && $shellEnd > $shellStart, 'Pass Claims public shell block should be locatable.');
 $shellSource = substr($passClaimsSource, (int) $shellStart, (int) $shellEnd - (int) $shellStart);
 
-$assert(strpos($shellSource, 'function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a callable renderer.');
+$assert(strpos($shellSource, 'function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a callable renderer.');
 $assert(strpos($shellSource, '@param callable():void $render_content Package-owned renderer callback that echoes one accepted Pass Claims public family.') !== false, 'Pass Claims public shell should document the package-owned renderer contract.');
 $assert(strpos($shellSource, 'string $content_html') === false, 'Pass Claims public shell should no longer expose a raw content_html string parameter.');
 $assert(strpos($shellSource, 'echo $content_html;') === false, 'Pass Claims public shell should remove the raw content_html sink.');
@@ -154,11 +154,11 @@ $assert(strpos($shellSource, "echo '</div></div>';") !== false && strpos($shellS
 $assert(strpos($shellSource, "echo '</body></html>';") !== false, 'Pass Claims public shell should preserve the fallback document closer.');
 $assert(strpos($shellSource, 'exit;') !== false, 'Pass Claims public shell should preserve explicit termination.');
 
-$assert(substr_count($passClaimsSource, 'vms_pass_claims_render_public_shell(') === 5, 'Pass Claims public shell should have exactly four production call sites plus its definition.');
-$assert(preg_match('~function vms_pass_claims_render_public_status_screen\(string \$headline, string \$title, string \$message\): void\s*\{\s*vms_pass_claims_render_public_shell\(\$headline,\s*static function \(\) use \(\$title, \$message\): void \{\s*echo vms_pass_claims_public_status_fragment\(\$title, \$message\);\s*\}\);\s*\}~s', $passClaimsSource) === 1, 'Pass Claims public status renderer should pass a package-owned closure into the public shell.');
-$assert(preg_match('~function vms_pass_claims_render_public_claimed_card\(int \$entry_id\): void\s*\{\s*vms_pass_claims_render_public_shell\(__\(\'Already Claimed\', \'backstage-venue-manager\'\),\s*static function \(\) use \(\$entry_id\): void \{\s*echo vms_pass_claims_public_claimed_card_html\(\$entry_id\);\s*\}\);\s*\}~s', $passClaimsSource) === 1, 'Pass Claims already-claimed renderer should pass a package-owned closure into the public shell.');
-$assert(preg_match('~function vms_pass_claims_render_public_success_confirmation\(array \$success, string \$posted_email\): void\s*\{\s*vms_pass_claims_render_public_shell\(__\(\'Pass Claimed\', \'backstage-venue-manager\'\),\s*static function \(\) use \(\$success, \$posted_email\): void \{\s*echo vms_pass_claims_public_success_confirmation_html\(\$success, \$posted_email\);\s*\}\);\s*\}~s', $passClaimsSource) === 1, 'Pass Claims success renderer should pass a package-owned closure into the public shell.');
-$assert(preg_match('~function vms_pass_claims_render_public_form\(array \$batch, array \$eligible_events, array \$posted, string \$error, int \$max_party_size\): void\s*\{\s*vms_pass_claims_render_public_shell\(__\(\'Claim Your Pass\', \'backstage-venue-manager\'\),\s*static function \(\) use \(\$batch, \$eligible_events, \$posted, \$error, \$max_party_size\): void \{\s*echo vms_pass_claims_public_form_html\(\$batch, \$eligible_events, \$posted, \$error, \$max_party_size\);\s*\}\);\s*\}~s', $passClaimsSource) === 1, 'Pass Claims public form renderer should pass a package-owned closure into the public shell.');
+$assert(substr_count($passClaimsSource, 'bvmgr_pass_claims_render_public_shell(') === 5, 'Pass Claims public shell should have exactly four production call sites plus its definition.');
+$assert(preg_match('~function bvmgr_pass_claims_render_public_status_screen\(string \$headline, string \$title, string \$message\): void\s*\{\s*bvmgr_pass_claims_render_public_shell\(\$headline,\s*static function \(\) use \(\$title, \$message\): void \{\s*echo bvmgr_pass_claims_public_status_fragment\(\$title, \$message\);\s*\}\);\s*\}~s', $passClaimsSource) === 1, 'Pass Claims public status renderer should pass a package-owned closure into the public shell.');
+$assert(preg_match('~function bvmgr_pass_claims_render_public_claimed_card\(int \$entry_id\): void\s*\{\s*bvmgr_pass_claims_render_public_shell\(__\(\'Already Claimed\', \'backstage-venue-manager\'\),\s*static function \(\) use \(\$entry_id\): void \{\s*echo bvmgr_pass_claims_public_claimed_card_html\(\$entry_id\);\s*\}\);\s*\}~s', $passClaimsSource) === 1, 'Pass Claims already-claimed renderer should pass a package-owned closure into the public shell.');
+$assert(preg_match('~function bvmgr_pass_claims_render_public_success_confirmation\(array \$success, string \$posted_email\): void\s*\{\s*bvmgr_pass_claims_render_public_shell\(__\(\'Pass Claimed\', \'backstage-venue-manager\'\),\s*static function \(\) use \(\$success, \$posted_email\): void \{\s*echo bvmgr_pass_claims_public_success_confirmation_html\(\$success, \$posted_email\);\s*\}\);\s*\}~s', $passClaimsSource) === 1, 'Pass Claims success renderer should pass a package-owned closure into the public shell.');
+$assert(preg_match('~function bvmgr_pass_claims_render_public_form\(array \$batch, array \$eligible_events, array \$posted, string \$error, int \$max_party_size\): void\s*\{\s*bvmgr_pass_claims_render_public_shell\(__\(\'Claim Your Pass\', \'backstage-venue-manager\'\),\s*static function \(\) use \(\$batch, \$eligible_events, \$posted, \$error, \$max_party_size\): void \{\s*echo bvmgr_pass_claims_public_form_html\(\$batch, \$eligible_events, \$posted, \$error, \$max_party_size\);\s*\}\);\s*\}~s', $passClaimsSource) === 1, 'Pass Claims public form renderer should pass a package-owned closure into the public shell.');
 $assert(strpos($adminShellSource, 'echo $captured_notices_html;') !== false && strpos($adminShellSource, 'echo $content_html;') !== false, 'Administrator shell raw captured and content sinks should remain unchanged.');
 
 $renderCount = 0;
@@ -173,7 +173,7 @@ $GLOBALS['vms_test_footer_calls'] = 0;
 
 ob_start();
 try {
-	vms_pass_claims_render_public_shell('Shell Headline', static function () use (&$renderCount, &$renderOutput): void {
+	bvmgr_pass_claims_render_public_shell('Shell Headline', static function () use (&$renderCount, &$renderOutput): void {
 		$renderCount++;
 		$renderOutput = '<section class="payload">Rendered payload</section>';
 		echo $renderOutput;

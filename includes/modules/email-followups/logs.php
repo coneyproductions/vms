@@ -1,17 +1,17 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_email_followups_log_option_key')) {
-	function vms_email_followups_log_option_key(): string
+if (!function_exists('bvmgr_email_followups_log_option_key')) {
+	function bvmgr_email_followups_log_option_key(): string
 	{
 		return 'vms_email_followups_log';
 	}
 }
 
-if (!function_exists('vms_email_followups_get_logs')) {
-	function vms_email_followups_get_logs(int $limit = 100): array
+if (!function_exists('bvmgr_email_followups_get_logs')) {
+	function bvmgr_email_followups_get_logs(int $limit = 100): array
 	{
-		$rows = get_option(vms_email_followups_log_option_key(), array());
+		$rows = get_option(bvmgr_email_followups_log_option_key(), array());
 		if (!is_array($rows)) {
 			$rows = array();
 		}
@@ -21,10 +21,10 @@ if (!function_exists('vms_email_followups_get_logs')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_log')) {
-	function vms_email_followups_log(array $entry): void
+if (!function_exists('bvmgr_email_followups_log')) {
+	function bvmgr_email_followups_log(array $entry): void
 	{
-		$logs = vms_email_followups_get_logs(500);
+		$logs = bvmgr_email_followups_get_logs(500);
 		$entry = array_merge(array(
 			'id' => wp_generate_uuid4(),
 			'created_at' => current_time('mysql'),
@@ -48,24 +48,24 @@ if (!function_exists('vms_email_followups_log')) {
 
 		array_unshift($logs, $entry);
 		$logs = array_slice($logs, 0, 500);
-		update_option(vms_email_followups_log_option_key(), $logs, false);
+		update_option(bvmgr_email_followups_log_option_key(), $logs, false);
 	}
 }
 
-if (!function_exists('vms_email_followups_clear_logs')) {
-	function vms_email_followups_clear_logs(): void
+if (!function_exists('bvmgr_email_followups_clear_logs')) {
+	function bvmgr_email_followups_clear_logs(): void
 	{
-		delete_option(vms_email_followups_log_option_key());
+		delete_option(bvmgr_email_followups_log_option_key());
 	}
 }
 
-if (!function_exists('vms_email_followups_was_sent')) {
-	function vms_email_followups_was_sent(int $event_plan_id, string $email_key, string $recipient = ''): bool
+if (!function_exists('bvmgr_email_followups_was_sent')) {
+	function bvmgr_email_followups_was_sent(int $event_plan_id, string $email_key, string $recipient = ''): bool
 	{
 		$event_plan_id = absint($event_plan_id);
 		$email_key = sanitize_key($email_key);
 		$recipient = sanitize_email($recipient);
-		foreach (vms_email_followups_get_logs(500) as $row) {
+		foreach (bvmgr_email_followups_get_logs(500) as $row) {
 			if ((int) ($row['event_plan_id'] ?? 0) !== $event_plan_id) {
 				continue;
 			}

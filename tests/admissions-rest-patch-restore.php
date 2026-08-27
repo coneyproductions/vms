@@ -185,32 +185,32 @@ function get_current_user_id(): int
 	return 777;
 }
 
-function vms_admission_current_user_can_manage(): bool
+function bvmgr_admission_current_user_can_manage(): bool
 {
 	return true;
 }
 
-function vms_admission_settings(): array
+function bvmgr_admission_settings(): array
 {
 	return array('max_party_size' => 8);
 }
 
-function vms_admission_table_entries(): string
+function bvmgr_admission_table_entries(): string
 {
 	return 'wp_vms_admission_entries';
 }
 
-function vms_admission_now_mysql(): string
+function bvmgr_admission_now_mysql(): string
 {
 	return '2026-06-19 01:03:00';
 }
 
-function vms_admission_prepare_row(array $row): array
+function bvmgr_admission_prepare_row(array $row): array
 {
 	return $row;
 }
 
-function vms_admission_audit_log(int $event_plan_id, ?int $entry_id, string $action, int $actor_user_id, string $actor_context, array $details = array()): bool
+function bvmgr_admission_audit_log(int $event_plan_id, ?int $entry_id, string $action, int $actor_user_id, string $actor_context, array $details = array()): bool
 {
 	$GLOBALS['vms_test_admission_audit'][] = array(
 		'event_plan_id' => $event_plan_id,
@@ -223,17 +223,17 @@ function vms_admission_audit_log(int $event_plan_id, ?int $entry_id, string $act
 	return true;
 }
 
-function vms_admission_normalize_name(string $value): string
+function bvmgr_admission_normalize_name(string $value): string
 {
 	return strtolower(trim($value));
 }
 
-function vms_admission_normalize_email(string $value): string
+function bvmgr_admission_normalize_email(string $value): string
 {
 	return strtolower(trim($value));
 }
 
-function vms_admission_normalize_phone(string $value): string
+function bvmgr_admission_normalize_phone(string $value): string
 {
 	return preg_replace('/\D+/', '', $value) ?? '';
 }
@@ -261,7 +261,7 @@ $wpdb->rows[77] = array(
 	'guest_name_norm' => 'canceled guest',
 );
 
-$restoreResponse = vms_admission_rest_patch(new WP_REST_Request(array(), array(
+$restoreResponse = bvmgr_admission_rest_patch(new WP_REST_Request(array(), array(
 	'id' => 77,
 	'status' => 'active',
 )));
@@ -282,7 +282,7 @@ $wpdb->rows[78] = array(
 	'guest_name_norm' => 'still canceled',
 );
 
-$blockedEdit = vms_admission_rest_patch(new WP_REST_Request(array(), array(
+$blockedEdit = bvmgr_admission_rest_patch(new WP_REST_Request(array(), array(
 	'id' => 78,
 	'notes' => 'should stay blocked',
 )));
@@ -302,7 +302,7 @@ $wpdb->rows[79] = array(
 	'guest_name_norm' => 'canceled combo',
 );
 
-$blockedCombo = vms_admission_rest_patch(new WP_REST_Request(array(), array(
+$blockedCombo = bvmgr_admission_rest_patch(new WP_REST_Request(array(), array(
 	'id' => 79,
 	'status' => 'active',
 	'notes' => 'should stay blocked',

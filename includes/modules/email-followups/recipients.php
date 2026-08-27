@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_email_followups_time_label')) {
-	function vms_email_followups_time_label(string $hhmm): string
+if (!function_exists('bvmgr_email_followups_time_label')) {
+	function bvmgr_email_followups_time_label(string $hhmm): string
 	{
 		$hhmm = trim($hhmm);
 		if ($hhmm === '') {
@@ -13,8 +13,8 @@ if (!function_exists('vms_email_followups_time_label')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_plan_tec_event_id')) {
-	function vms_email_followups_plan_tec_event_id(int $event_plan_id): int
+if (!function_exists('bvmgr_email_followups_plan_tec_event_id')) {
+	function bvmgr_email_followups_plan_tec_event_id(int $event_plan_id): int
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -29,8 +29,8 @@ if (!function_exists('vms_email_followups_plan_tec_event_id')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_context')) {
-	function vms_email_followups_event_context(int $event_plan_id): array
+if (!function_exists('bvmgr_email_followups_event_context')) {
+	function bvmgr_email_followups_event_context(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$post = $event_plan_id > 0 ? get_post($event_plan_id) : null;
@@ -69,7 +69,7 @@ if (!function_exists('vms_email_followups_event_context')) {
 			$venue_name = sanitize_text_field((string) get_bloginfo('name'));
 		}
 
-		$tec_event_id = vms_email_followups_plan_tec_event_id($event_plan_id);
+		$tec_event_id = bvmgr_email_followups_plan_tec_event_id($event_plan_id);
 		$event_url = $tec_event_id > 0 ? get_permalink($tec_event_id) : '';
 		if (!$event_url && $event_plan_id > 0) {
 			$event_url = home_url('/');
@@ -85,9 +85,9 @@ if (!function_exists('vms_email_followups_event_context')) {
 			'event_date' => $date,
 			'event_date_label' => $start_ts > 0 ? wp_date('l, F j, Y', $start_ts, wp_timezone()) : $date,
 			'start_time' => $start_time,
-			'start_time_label' => vms_email_followups_time_label($start_time),
+			'start_time_label' => bvmgr_email_followups_time_label($start_time),
 			'end_time' => $end_time,
-			'end_time_label' => vms_email_followups_time_label($end_time),
+			'end_time_label' => bvmgr_email_followups_time_label($end_time),
 			'gates_time_label' => $gates_ts > 0 ? wp_date('g:ia', $gates_ts, wp_timezone()) : '',
 			'start_ts' => $start_ts,
 			'venue_id' => $venue_id,
@@ -99,8 +99,8 @@ if (!function_exists('vms_email_followups_event_context')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_context_allows_send')) {
-	function vms_email_followups_context_allows_send(array $context): array
+if (!function_exists('bvmgr_email_followups_context_allows_send')) {
+	function bvmgr_email_followups_context_allows_send(array $context): array
 	{
 		if (empty($context['valid'])) {
 			return array(false, (string) ($context['message'] ?? 'invalid_event'));
@@ -118,8 +118,8 @@ if (!function_exists('vms_email_followups_context_allows_send')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_recipients')) {
-	function vms_email_followups_event_recipients(int $event_plan_id): array
+if (!function_exists('bvmgr_email_followups_event_recipients')) {
+	function bvmgr_email_followups_event_recipients(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$result = array(
@@ -139,7 +139,7 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 			return $result;
 		}
 
-		$context = vms_email_followups_event_context($event_plan_id);
+		$context = bvmgr_email_followups_event_context($event_plan_id);
 		$args = array(
 			'event_plan_id' => $event_plan_id,
 			'order_statuses' => array('processing', 'completed', 'on-hold'),
@@ -205,8 +205,8 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_choices')) {
-	function vms_email_followups_event_choices(int $limit = 80, int $selected_event_plan_id = 0): array
+if (!function_exists('bvmgr_email_followups_event_choices')) {
+	function bvmgr_email_followups_event_choices(int $limit = 80, int $selected_event_plan_id = 0): array
 	{
 		$limit = max(1, min(200, $limit));
 		$now = time();
@@ -267,15 +267,15 @@ if (!function_exists('vms_email_followups_event_choices')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_upcoming_event_choices')) {
-	function vms_email_followups_upcoming_event_choices(int $limit = 50): array
+if (!function_exists('bvmgr_email_followups_upcoming_event_choices')) {
+	function bvmgr_email_followups_upcoming_event_choices(int $limit = 50): array
 	{
-		return vms_email_followups_event_choices($limit);
+		return bvmgr_email_followups_event_choices($limit);
 	}
 }
 
-if (!function_exists('vms_email_followups_event_choice_label')) {
-	function vms_email_followups_event_choice_label(WP_Post $plan): string
+if (!function_exists('bvmgr_email_followups_event_choice_label')) {
+	function bvmgr_email_followups_event_choice_label(WP_Post $plan): string
 	{
 		$date = (string) get_post_meta($plan->ID, '_vms_event_date', true);
 		$today = wp_date('Y-m-d', time(), wp_timezone());

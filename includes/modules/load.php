@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_core_module_toggle_enabled')) {
-	function vms_core_module_toggle_enabled(string $slug): bool
+if (!function_exists('bvmgr_core_module_toggle_enabled')) {
+	function bvmgr_core_module_toggle_enabled(string $slug): bool
 	{
 		$slug = sanitize_key($slug);
 		if ($slug === '') {
@@ -27,8 +27,8 @@ if (!function_exists('vms_core_module_toggle_enabled')) {
 	}
 }
 
-if (!function_exists('vms_module_registry')) {
-	function &vms_module_registry(): array
+if (!function_exists('bvmgr_module_registry')) {
+	function &bvmgr_module_registry(): array
 	{
 		static $registry = array();
 		return $registry;
@@ -52,41 +52,41 @@ if (!function_exists('bvmgr_register_module')) {
 			'source' => sanitize_text_field((string) ($module['source'] ?? '')),
 		);
 
-		$registry = &vms_module_registry();
+		$registry = &bvmgr_module_registry();
 		$registry[$slug] = $normalized;
 		return true;
 	}
 }
 
-if (!function_exists('vms_get_registered_modules')) {
-	function vms_get_registered_modules(): array
+if (!function_exists('bvmgr_get_registered_modules')) {
+	function bvmgr_get_registered_modules(): array
 	{
-		$registry = vms_module_registry();
+		$registry = bvmgr_module_registry();
 		ksort($registry);
 		return $registry;
 	}
 }
 
-if (!function_exists('vms_get_registered_module')) {
-	function vms_get_registered_module(string $slug): ?array
+if (!function_exists('bvmgr_get_registered_module')) {
+	function bvmgr_get_registered_module(string $slug): ?array
 	{
 		$slug = sanitize_key($slug);
-		$registry = vms_module_registry();
+		$registry = bvmgr_module_registry();
 		return isset($registry[$slug]) ? $registry[$slug] : null;
 	}
 }
 
-if (!function_exists('vms_module_is_registered')) {
-	function vms_module_is_registered(string $slug): bool
+if (!function_exists('bvmgr_module_is_registered')) {
+	function bvmgr_module_is_registered(string $slug): bool
 	{
-		return vms_get_registered_module($slug) !== null;
+		return bvmgr_get_registered_module($slug) !== null;
 	}
 }
 
-if (!function_exists('vms_module_is_licensed')) {
-	function vms_module_is_licensed(string $slug): bool
+if (!function_exists('bvmgr_module_is_licensed')) {
+	function bvmgr_module_is_licensed(string $slug): bool
 	{
-		$module = vms_get_registered_module($slug);
+		$module = bvmgr_get_registered_module($slug);
 		if (!$module) {
 			return false;
 		}
@@ -108,17 +108,17 @@ if (!function_exists('vms_module_is_licensed')) {
 	}
 }
 
-if (!function_exists('vms_module_is_enabled')) {
-	function vms_module_is_enabled(string $slug): bool
+if (!function_exists('bvmgr_module_is_enabled')) {
+	function bvmgr_module_is_enabled(string $slug): bool
 	{
 		$slug = sanitize_key($slug);
-		$module = vms_get_registered_module($slug);
+		$module = bvmgr_get_registered_module($slug);
 		if (!$module) {
 			// Fail closed until the module has registered itself with VMS.
 			return false;
 		}
 
-		$enabled = vms_module_is_licensed($slug);
+		$enabled = bvmgr_module_is_licensed($slug);
 
 		/**
 		 * Filter module enablement after companion-availability checks.
@@ -131,13 +131,13 @@ if (!function_exists('vms_module_is_enabled')) {
 	}
 }
 
-function vms_load_modules(): void {
+function bvmgr_load_modules(): void {
 	require_once __DIR__ . '/admissions/admissions.php';
 	require_once __DIR__ . '/status-notices/status-notices.php';
 	require_once __DIR__ . '/staff-tasks/staff-tasks.php';
 	require_once __DIR__ . '/email-followups/email-followups.php';
 	$add_dispatch_bootstrap = __DIR__ . '/availability-date-dispatch/availability-date-dispatch.php';
-	if (file_exists($add_dispatch_bootstrap) && vms_core_module_toggle_enabled('availability_date_dispatch')) {
+	if (file_exists($add_dispatch_bootstrap) && bvmgr_core_module_toggle_enabled('availability_date_dispatch')) {
 		require_once $add_dispatch_bootstrap;
 	}
 	do_action('vms_modules_loaded');
