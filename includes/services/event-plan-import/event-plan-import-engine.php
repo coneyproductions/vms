@@ -2024,8 +2024,8 @@ if (!function_exists('bvmgr_event_plan_import_update_secondary_meta')) {
 if (!function_exists('bvmgr_event_plan_import_ticketing_config_missing')) {
 	function bvmgr_event_plan_import_ticketing_config_missing(int $plan_id): bool
 	{
-		$key = function_exists('vms_ticketing_v2_k')
-			? (string) vms_ticketing_v2_k('config')
+		$key = function_exists('bvmgr_ticketing_v2_k')
+			? (string) bvmgr_ticketing_v2_k('config')
 			: bvmgr_event_plan_import_meta_key('ticketing_config_v2', '_vms_ticketing_config_v2');
 
 		if ($key === '') {
@@ -2059,14 +2059,14 @@ if (!function_exists('bvmgr_event_plan_import_apply_default_template_if_needed')
 			return array('applied' => false, 'warning' => '');
 		}
 
-		if (!function_exists('vms_ticketing_v2_get_default_template_id') || !function_exists('vms_ticketing_v2_templates_apply_to_plan')) {
+		if (!function_exists('bvmgr_ticketing_v2_get_default_template_id') || !function_exists('bvmgr_ticketing_v2_templates_apply_to_plan')) {
 			return array(
 				'applied' => false,
 				'warning' => __('Ticketing template not applied (template helpers unavailable).', 'backstage-venue-manager'),
 			);
 		}
 
-		$template_id = (string) vms_ticketing_v2_get_default_template_id();
+		$template_id = (string) bvmgr_ticketing_v2_get_default_template_id();
 		if ($template_id === '') {
 			return array(
 				'applied' => false,
@@ -2074,7 +2074,7 @@ if (!function_exists('bvmgr_event_plan_import_apply_default_template_if_needed')
 			);
 		}
 
-		$result = vms_ticketing_v2_templates_apply_to_plan($plan_id, $template_id);
+		$result = bvmgr_ticketing_v2_templates_apply_to_plan($plan_id, $template_id);
 		if (empty($result['ok'])) {
 			$message = sanitize_text_field((string) ($result['message'] ?? 'template_apply_failed'));
 			return array(

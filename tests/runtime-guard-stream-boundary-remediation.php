@@ -292,13 +292,13 @@ try {
 		'The bounded stream helper should retain its 8 KB capped chunk reads.'
 	);
 	vms_test_runtime_guard_assert(
-		strpos($ticketingSource, "function vms_ticketing_v2_read_json_request_payload(int \$max_bytes): array") !== false
+		strpos($ticketingSource, "function bvmgr_ticketing_v2_read_json_request_payload(int \$max_bytes): array") !== false
 			&& strpos($ticketingSource, "bvmgr_read_limited_stream('php://input', \$max_bytes)") !== false,
 		'The JSON request reader should keep the hardcoded php://input caller.'
 	);
 	vms_test_runtime_guard_assert_same(
 		2,
-		substr_count($ticketingSource, 'vms_ticketing_v2_read_json_request_payload(65536)'),
+		substr_count($ticketingSource, 'bvmgr_ticketing_v2_read_json_request_payload(65536)'),
 		'The ticketing AJAX handlers should keep the 65,536-byte request-body cap.'
 	);
 

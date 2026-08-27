@@ -148,7 +148,7 @@ try {
     $legacyTicketKeys = function_exists('bvmgr_event_plan_legacy_ticket_meta_keys')
         ? (array) bvmgr_event_plan_legacy_ticket_meta_keys()
         : array('_vms_price_ga', '_vms_enable_tables');
-    $ticketConfigKey = function_exists('vms_ticketing_v2_k') ? (string) vms_ticketing_v2_k('config') : '_vms_ticketing_v2_config';
+    $ticketConfigKey = function_exists('bvmgr_ticketing_v2_k') ? (string) bvmgr_ticketing_v2_k('config') : '_vms_ticketing_v2_config';
 
     $capturePlanState = static function (int $planId) use ($legacyTicketKeys, $ticketConfigKey, $normalizeValue): array {
         $legacyMeta = array();

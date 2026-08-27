@@ -151,18 +151,18 @@ function update_option(string $key, $value, $autoload = null): bool
 	return true;
 }
 
-function vms_ticketing_verification_request_post_type_legacy(): string
+function bvmgr_ticketing_verification_request_post_type_legacy(): string
 {
 	return (string) $GLOBALS['g10_support_legacy_type'];
 }
 
-function vms_ticketing_verification_request_post_type(): string
+function bvmgr_ticketing_verification_request_post_type(): string
 {
 	return (string) $GLOBALS['g10_support_canonical_type'];
 }
 
 /** @return string[] */
-function vms_ticketing_verification_request_post_types(): array
+function bvmgr_ticketing_verification_request_post_types(): array
 {
 	return array('vms_verify_req', 'vms_verification_request');
 }
@@ -173,19 +173,19 @@ function get_posts(array $args)
 	return $GLOBALS['g10_support_get_posts_queue'] === array() ? array() : array_shift($GLOBALS['g10_support_get_posts_queue']);
 }
 
-function vms_ticketing_v2_get_config(int $event_plan_id): array
+function bvmgr_ticketing_v2_get_config(int $event_plan_id): array
 {
 	unset($event_plan_id);
 	return (array) $GLOBALS['g10_support_config'];
 }
 
-function vms_ticketing_v2_get_sync(int $event_plan_id): array
+function bvmgr_ticketing_v2_get_sync(int $event_plan_id): array
 {
 	unset($event_plan_id);
 	return (array) $GLOBALS['g10_support_sync'];
 }
 
-function vms_ticketing_v2_product_meta_key(string $field): string
+function bvmgr_ticketing_v2_product_meta_key(string $field): string
 {
 	return '_vms_' . $field;
 }
@@ -200,13 +200,13 @@ function get_the_title(int $post_id): string
 	return (string) ($GLOBALS['g10_support_titles'][$post_id] ?? ('Product #' . $post_id));
 }
 
-function vms_ticketing_claims_table_reservations(): string
+function bvmgr_ticketing_claims_table_reservations(): string
 {
 	global $wpdb;
 	return $wpdb->prefix . 'vms_ticketing_claim_reservations';
 }
 
-function vms_ticketing_v2_resolve_verified_ticket_context(int $product_id): array
+function bvmgr_ticketing_v2_resolve_verified_ticket_context(int $product_id): array
 {
 	return (array) ($GLOBALS['g10_support_contexts'][$product_id] ?? array());
 }
@@ -593,8 +593,8 @@ g10_support_same($mirror_sources['includes/integrations/square-sync-firewall.php
 g10_support_assert($mirror_sources['includes/integrations/ticketing-verifications.php'] !== $shadow_sources['includes/integrations/ticketing-verifications.php'], 'Verification whole-file divergence should remain intentional.');
 g10_support_assert($mirror_sources['includes/integrations/ticketing-claims-admin.php'] !== $shadow_sources['includes/integrations/ticketing-claims-admin.php'], 'Claims-admin whole-file divergence should remain intentional.');
 foreach (array(
-	'includes/integrations/ticketing-verifications.php' => array('vms_ticketing_verification_migrate_legacy_post_type_once', 'vms_ticketing_verification_get_latest_request'),
-	'includes/integrations/ticketing-claims-admin.php' => array('vms_ticketing_claims_event_ticket_options', 'vms_ticketing_claims_reservation_usage_map', 'vms_ticketing_claims_get_event_verified_ticket_contexts'),
+	'includes/integrations/ticketing-verifications.php' => array('bvmgr_ticketing_verification_migrate_legacy_post_type_once', 'bvmgr_ticketing_verification_get_latest_request'),
+	'includes/integrations/ticketing-claims-admin.php' => array('bvmgr_ticketing_claims_event_ticket_options', 'bvmgr_ticketing_claims_reservation_usage_map', 'bvmgr_ticketing_claims_get_event_verified_ticket_contexts'),
 ) as $relative_file => $functions) {
 	foreach ($functions as $function) {
 		g10_support_same(g10_support_extract_function($mirror_sources[$relative_file], $function), g10_support_extract_function($shadow_sources[$relative_file], $function), 'Owned function mirror/shadow parity changed: ' . $function);
@@ -602,7 +602,7 @@ foreach (array(
 }
 $admin_query_block = g10_support_extract_block($mirror_sources['includes/integrations/ticketing-verifications.php'], '$query_status = ($status_filter === \'all\')', '$requests = get_posts($query_args);');
 g10_support_same($admin_query_block, g10_support_extract_block($shadow_sources['includes/integrations/ticketing-verifications.php'], '$query_status = ($status_filter === \'all\')', '$requests = get_posts($query_args);'), 'Owned verification admin query block parity changed.');
-$shadow_cleanup = g10_support_extract_function($shadow_sources['includes/integrations/ticketing-verifications.php'], 'vms_ticketing_verification_cleanup_old_proofs');
+$shadow_cleanup = g10_support_extract_function($shadow_sources['includes/integrations/ticketing-verifications.php'], 'bvmgr_ticketing_verification_cleanup_old_proofs');
 g10_support_contains("'key'     => 'proof_file_path'", $shadow_cleanup, 'Live-only cleanup meta-query boundary should remain present.');
 g10_support_contains("'compare' => 'EXISTS'", $shadow_cleanup, 'Live-only cleanup EXISTS semantics changed.');
 g10_support_not_contains('WordPress.DB.SlowDBQuery.slow_db_query_meta_query', $shadow_cleanup, 'Out-of-scope live-only cleanup meta query must remain unsuppressed.');
@@ -611,11 +611,11 @@ g10_support_contains("\$action . '\" class=\"vms-claims-detached-form\"", $mirro
 g10_support_not_contains('WordPress.Security.EscapeOutput.OutputNotEscaped', $mirror_sources['includes/integrations/ticketing-claims-admin.php'], 'Adjacent claims-admin OutputNotEscaped finding must remain unsuppressed.');
 
 $owned_functions = array(
-	array('includes/integrations/ticketing-verifications.php', 'vms_ticketing_verification_migrate_legacy_post_type_once'),
-	array('includes/integrations/ticketing-verifications.php', 'vms_ticketing_verification_get_latest_request'),
-	array('includes/integrations/ticketing-claims-admin.php', 'vms_ticketing_claims_event_ticket_options'),
-	array('includes/integrations/ticketing-claims-admin.php', 'vms_ticketing_claims_reservation_usage_map'),
-	array('includes/integrations/ticketing-claims-admin.php', 'vms_ticketing_claims_get_event_verified_ticket_contexts'),
+	array('includes/integrations/ticketing-verifications.php', 'bvmgr_ticketing_verification_migrate_legacy_post_type_once'),
+	array('includes/integrations/ticketing-verifications.php', 'bvmgr_ticketing_verification_get_latest_request'),
+	array('includes/integrations/ticketing-claims-admin.php', 'bvmgr_ticketing_claims_event_ticket_options'),
+	array('includes/integrations/ticketing-claims-admin.php', 'bvmgr_ticketing_claims_reservation_usage_map'),
+	array('includes/integrations/ticketing-claims-admin.php', 'bvmgr_ticketing_claims_get_event_verified_ticket_contexts'),
 	array('includes/integrations/square-ticket-mirror.php', 'vms_square_ticket_mirror_log'),
 	array('includes/integrations/square-ticket-mirror.php', 'vms_square_ticket_mirror_recent_logs'),
 	array('includes/integrations/square-sync-firewall.php', 'vms_square_firewall_query_product_ids'),
@@ -642,7 +642,7 @@ g10_support_reset_runtime();
 $wpdb = new G10_Support_WPDB_Spy('wp_migrate_');
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['g10_support_options'] = array('vms_ticketing_verification_pt_migrated_v1' => '1');
-vms_ticketing_verification_migrate_legacy_post_type_once();
+bvmgr_ticketing_verification_migrate_legacy_post_type_once();
 g10_support_same(array(), $wpdb->operations, 'Completed migration marker should avoid database work.');
 g10_support_same(array(), $GLOBALS['g10_support_option_updates'], 'Completed migration marker should remain unchanged.');
 
@@ -651,7 +651,7 @@ $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['g10_support_options'] = array();
 $GLOBALS['g10_support_legacy_type'] = 'same_type';
 $GLOBALS['g10_support_canonical_type'] = 'same_type';
-vms_ticketing_verification_migrate_legacy_post_type_once();
+bvmgr_ticketing_verification_migrate_legacy_post_type_once();
 g10_support_same(array(), $wpdb->operations, 'Equal post types should avoid an UPDATE.');
 g10_support_same(array(array('vms_ticketing_verification_pt_migrated_v1', '1', false)), $GLOBALS['g10_support_option_updates'], 'Equal post types should retain lifecycle-marker behavior.');
 
@@ -662,7 +662,7 @@ $GLOBALS['g10_support_options'] = array();
 $GLOBALS['g10_support_option_updates'] = array();
 $GLOBALS['g10_support_legacy_type'] = 'vms_verification_request';
 $GLOBALS['g10_support_canonical_type'] = 'vms_verify_req';
-vms_ticketing_verification_migrate_legacy_post_type_once();
+bvmgr_ticketing_verification_migrate_legacy_post_type_once();
 g10_support_same(1, count($wpdb->prepares), 'Migration should prepare exactly once.');
 g10_support_same(array('vms_verify_req', 'vms_verification_request'), $wpdb->prepares[0]['args'], 'Migration value argument order changed.');
 g10_support_same("UPDATE wp_migrate_posts SET post_type = 'vms_verify_req' WHERE post_type = 'vms_verification_request'", g10_support_normalize_sql($wpdb->prepares[0]['sql']), 'Migration rendered SQL changed.');
@@ -672,13 +672,13 @@ g10_support_same(array(array('vms_ticketing_verification_pt_migrated_v1', '1', f
 
 // Latest verification request remains an exact-user, one-row query with empty/failure/result branches.
 g10_support_reset_runtime();
-g10_support_same(null, vms_ticketing_verification_get_latest_request(0), 'Invalid verification user should fail closed.');
+g10_support_same(null, bvmgr_ticketing_verification_get_latest_request(0), 'Invalid verification user should fail closed.');
 g10_support_same(array(), $GLOBALS['g10_support_get_posts_calls'], 'Invalid verification user should not query.');
-g10_support_same(null, vms_ticketing_verification_get_latest_request(7, array('', '!!!')), 'Empty sanitized statuses should fail closed.');
+g10_support_same(null, bvmgr_ticketing_verification_get_latest_request(7, array('', '!!!')), 'Empty sanitized statuses should fail closed.');
 g10_support_same(array(), $GLOBALS['g10_support_get_posts_calls'], 'Empty statuses should not query.');
 $latest = new WP_Post(501);
 $GLOBALS['g10_support_get_posts_queue'][] = array($latest);
-g10_support_same($latest, vms_ticketing_verification_get_latest_request(-7, array('Pending!', 'pending', 'Denied!')), 'Latest verification result changed.');
+g10_support_same($latest, bvmgr_ticketing_verification_get_latest_request(-7, array('Pending!', 'pending', 'Denied!')), 'Latest verification result changed.');
 g10_support_same(array(
 	'post_type' => array('vms_verify_req', 'vms_verification_request'),
 	'post_status' => array('pending', 'denied'),
@@ -690,7 +690,7 @@ g10_support_same(array(
 	'meta_value' => '7',
 ), $GLOBALS['g10_support_get_posts_calls'][0], 'Latest verification get_posts arguments changed.');
 $GLOBALS['g10_support_get_posts_queue'][] = array('not-a-post');
-g10_support_same(null, vms_ticketing_verification_get_latest_request(7, array('pending')), 'Non-post result should fail closed.');
+g10_support_same(null, bvmgr_ticketing_verification_get_latest_request(7, array('pending')), 'Non-post result should fail closed.');
 g10_support_same(2, count($GLOBALS['g10_support_get_posts_calls']), 'Latest verification lookup should remain request-fresh without a new cache.');
 
 // Verification admin listing executes the exact owned production query block for filtered and unfiltered cases.
@@ -730,7 +730,7 @@ $GLOBALS['g10_support_get_posts_queue'][] = array(101, 103, 0, 103);
 $GLOBALS['g10_support_meta'][103]['_vms_ticket_key'] = '';
 $GLOBALS['g10_support_meta'][103]['_vms_ticketing_ticket_key'] = 'legacy-key';
 $GLOBALS['g10_support_titles'][103] = 'Legacy Product';
-$options = vms_ticketing_claims_event_ticket_options(44, 55);
+$options = bvmgr_ticketing_claims_event_ticket_options(44, 55);
 g10_support_same(array(
 	array('product_id' => 101, 'ticket_key' => 'vip', 'label' => 'VIP Pass'),
 	array('product_id' => 102, 'ticket_key' => 'ga', 'label' => 'General Admission'),
@@ -749,13 +749,13 @@ g10_support_same(array(
 	'meta_query' => $event_link_query,
 ), $GLOBALS['g10_support_get_posts_calls'][0], 'Event-ticket fallback get_posts arguments changed.');
 g10_support_reset_runtime();
-g10_support_same(array(), vms_ticketing_claims_event_ticket_options(0, 0), 'Empty ticket-option inputs should return empty.');
+g10_support_same(array(), bvmgr_ticketing_claims_event_ticket_options(0, 0), 'Empty ticket-option inputs should return empty.');
 g10_support_same(array(), $GLOBALS['g10_support_get_posts_calls'], 'Empty ticket-option inputs should not query.');
 
 // Reservation usage prepares the identifier/value, preserves grouped results/failures, and stays request-fresh.
 $wpdb = new G10_Support_WPDB_Spy('wp_claims_');
 $GLOBALS['wpdb'] = $wpdb;
-g10_support_same(array(), vms_ticketing_claims_reservation_usage_map(0), 'Invalid reservation event should fail closed.');
+g10_support_same(array(), bvmgr_ticketing_claims_reservation_usage_map(0), 'Invalid reservation event should fail closed.');
 g10_support_same(array(), $wpdb->operations, 'Invalid reservation event should not touch the database.');
 $wpdb->results_queue[] = array(
 	array('direct_grant_id' => '4', 'status' => 'reserved', 'cnt' => '2'),
@@ -763,17 +763,17 @@ $wpdb->results_queue[] = array(
 	array('direct_grant_id' => '0', 'status' => 'reserved', 'cnt' => '9'),
 	array('direct_grant_id' => '5', 'status' => '', 'cnt' => '4'),
 );
-g10_support_same(array(4 => array('reserved' => 2, 'claimed' => 3)), vms_ticketing_claims_reservation_usage_map(77), 'Reservation grouped result mapping changed.');
+g10_support_same(array(4 => array('reserved' => 2, 'claimed' => 3)), bvmgr_ticketing_claims_reservation_usage_map(77), 'Reservation grouped result mapping changed.');
 g10_support_same(array('wp_claims_vms_ticketing_claim_reservations', 77), $wpdb->prepares[0]['args'], 'Reservation prepare identifier/value order changed.');
 g10_support_same('SELECT direct_grant_id, status, COUNT(1) AS cnt FROM `wp_claims_vms_ticketing_claim_reservations` WHERE event_id = 77 AND direct_grant_id > 0 GROUP BY direct_grant_id, status', g10_support_normalize_sql($wpdb->prepares[0]['sql']), 'Reservation rendered SQL changed.');
 g10_support_same(array('prepare', 'get_results'), array_column($wpdb->operations, 'kind'), 'Reservation prepare/read ordering changed.');
 $wpdb->results_queue[] = false;
-g10_support_same(array(), vms_ticketing_claims_reservation_usage_map(77), 'Reservation database failure should remain an empty map.');
+g10_support_same(array(), bvmgr_ticketing_claims_reservation_usage_map(77), 'Reservation database failure should remain an empty map.');
 g10_support_same(2, count(array_filter($wpdb->operations, static fn(array $call): bool => $call['kind'] === 'get_results')), 'Reservation aggregate should remain request-fresh without persistent caching.');
 
 // Verified-ticket contexts preserve exact query arguments, filtering, invalid and empty result branches.
 g10_support_reset_runtime();
-g10_support_same(array(), vms_ticketing_claims_get_event_verified_ticket_contexts(0), 'Invalid verified-ticket event should fail closed.');
+g10_support_same(array(), bvmgr_ticketing_claims_get_event_verified_ticket_contexts(0), 'Invalid verified-ticket event should fail closed.');
 g10_support_same(array(), $GLOBALS['g10_support_get_posts_calls'], 'Invalid verified-ticket event should not query.');
 $GLOBALS['g10_support_get_posts_queue'][] = array(201, 0, 202, 203);
 $GLOBALS['g10_support_contexts'] = array(
@@ -782,7 +782,7 @@ $GLOBALS['g10_support_contexts'] = array(
 	203 => array('visibility_mode' => 'verified', 'ticket_key' => 'artist'),
 );
 $GLOBALS['g10_support_titles'] = array(201 => 'VIP Product', 203 => 'Artist Product');
-$contexts = vms_ticketing_claims_get_event_verified_ticket_contexts(88);
+$contexts = bvmgr_ticketing_claims_get_event_verified_ticket_contexts(88);
 g10_support_same(array(
 	array('visibility_mode' => 'verified', 'ticket_key' => 'vip', 'product_id' => 201, 'product_title' => 'VIP Product'),
 	array('visibility_mode' => 'verified', 'ticket_key' => 'artist', 'product_id' => 203, 'product_title' => 'Artist Product'),
@@ -796,7 +796,7 @@ g10_support_same(array(
 ), $verified_query['meta_query'], 'Verified-ticket meta query changed.');
 g10_support_same(array('post_type', 'post_status', 'fields', 'posts_per_page', 'meta_query'), array_keys($verified_query), 'Verified-ticket query gained or lost arguments.');
 $GLOBALS['g10_support_get_posts_queue'][] = array();
-g10_support_same(array(), vms_ticketing_claims_get_event_verified_ticket_contexts(88), 'Empty verified-ticket result changed.');
+g10_support_same(array(), bvmgr_ticketing_claims_get_event_verified_ticket_contexts(88), 'Empty verified-ticket result changed.');
 
 // Square log insert preserves typed data/order and ignores the immediate insert failure as before.
 g10_support_reset_runtime();

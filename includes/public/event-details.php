@@ -675,8 +675,8 @@ if (!function_exists('vms_event_details_ticket_context')) {
         $prices = array();
         $free_labels = array();
 
-        if ($plan_id > 0 && function_exists('vms_ticketing_v2_get_config')) {
-            $cfg = vms_ticketing_v2_get_config($plan_id);
+        if ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_get_config')) {
+            $cfg = bvmgr_ticketing_v2_get_config($plan_id);
             $tickets = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
             foreach ($tickets as $row) {
                 if (!is_array($row)) {
@@ -688,8 +688,8 @@ if (!function_exists('vms_event_details_ticket_context')) {
                 $visibility = sanitize_key((string) ($row['visibility_mode'] ?? 'public'));
                 $title = trim(wp_strip_all_tags((string) ($row['title'] ?? $row['label'] ?? '')));
                 $price = isset($row['price']) && is_numeric($row['price']) ? (float) $row['price'] : 0.0;
-                if (function_exists('vms_ticketing_v2_get_ticket_effective_price')) {
-                    $price = (float) vms_ticketing_v2_get_ticket_effective_price($row);
+                if (function_exists('bvmgr_ticketing_v2_get_ticket_effective_price')) {
+                    $price = (float) bvmgr_ticketing_v2_get_ticket_effective_price($row);
                 }
                 if ($price > 0 && $visibility === 'public') {
                     $prices[] = $price;

@@ -443,8 +443,8 @@ function vms_ticket_integrity_report_table_exists(string $table_name): bool
 		return false;
 	}
 
-	if (function_exists('vms_ticketing_v2_table_exists')) {
-		return vms_ticketing_v2_table_exists($table_name);
+	if (function_exists('bvmgr_ticketing_v2_table_exists')) {
+		return bvmgr_ticketing_v2_table_exists($table_name);
 	}
 
 	global $wpdb;
@@ -470,7 +470,7 @@ function vms_ticket_integrity_report_lookup_metrics(array $product_ids, array $s
 		'by_product' => array(),
 	);
 
-	if (empty($product_ids) || !function_exists('vms_ticketing_is_woo_active') || !vms_ticketing_is_woo_active()) {
+	if (empty($product_ids) || !function_exists('bvmgr_ticketing_is_woo_active') || !bvmgr_ticketing_is_woo_active()) {
 		return $empty;
 	}
 

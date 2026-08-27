@@ -139,7 +139,7 @@ function wp_send_json_success(array $data, int $statusCode = 200, int $flags = 0
 	throw new Vms_Test_Json_Response(true, $data, $statusCode, $flags, func_num_args());
 }
 
-function vms_ticketing_v2_ajax_send_error(array $data, ?int $httpStatus = null, int $flags = 0): void
+function bvmgr_ticketing_v2_ajax_send_error(array $data, ?int $httpStatus = null, int $flags = 0): void
 {
 	if (func_num_args() >= 3) {
 		wp_send_json_error($data, $httpStatus ?? 200, $flags);
@@ -154,7 +154,7 @@ function vms_ticketing_v2_ajax_send_error(array $data, ?int $httpStatus = null, 
 	wp_send_json_error($data);
 }
 
-function vms_ticketing_v2_ajax_send_success(array $data, ?int $httpStatus = null, int $flags = 0): void
+function bvmgr_ticketing_v2_ajax_send_success(array $data, ?int $httpStatus = null, int $flags = 0): void
 {
 	if (func_num_args() >= 3) {
 		wp_send_json_success($data, $httpStatus ?? 200, $flags);
@@ -169,7 +169,7 @@ function vms_ticketing_v2_ajax_send_success(array $data, ?int $httpStatus = null
 	wp_send_json_success($data);
 }
 
-function vms_ticketing_v2_resolve_verified_ticket_context(int $productId): array
+function bvmgr_ticketing_v2_resolve_verified_ticket_context(int $productId): array
 {
 	return array(
 		'visibility_mode' => 'verified',
@@ -183,22 +183,22 @@ function vms_ticketing_v2_resolve_verified_ticket_context(int $productId): array
 	);
 }
 
-function vms_ticketing_claims_normalize_allowed_programs(array $allowedPrograms, string $legacyProgram): array
+function bvmgr_ticketing_claims_normalize_allowed_programs(array $allowedPrograms, string $legacyProgram): array
 {
 	return $allowedPrograms;
 }
 
-function vms_ticketing_claims_truthy($value, bool $default = false): bool
+function bvmgr_ticketing_claims_truthy($value, bool $default = false): bool
 {
 	return (bool) $value;
 }
 
-function vms_ticketing_v2_ticket_group_product_ids_from_context(array $context, int $productId): array
+function bvmgr_ticketing_v2_ticket_group_product_ids_from_context(array $context, int $productId): array
 {
 	return array($productId);
 }
 
-function vms_ticketing_claims_resolve_eligibility(array $args): array
+function bvmgr_ticketing_claims_resolve_eligibility(array $args): array
 {
 	return array(
 		'eligible' => true,
@@ -209,17 +209,17 @@ function vms_ticketing_claims_resolve_eligibility(array $args): array
 	);
 }
 
-function vms_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_User $user, array $resolved): int
+function bvmgr_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_User $user, array $resolved): int
 {
 	return 2;
 }
 
-function vms_ticketing_v2_assignee_consumed_qty_for_event(int $eventId, string $assigneeEmail, array $groupProductIds): int
+function bvmgr_ticketing_v2_assignee_consumed_qty_for_event(int $eventId, string $assigneeEmail, array $groupProductIds): int
 {
 	return 0;
 }
 
-function vms_ticketing_v2_cart_assignee_usage_for_event(int $eventId, string $ticketKey): array
+function bvmgr_ticketing_v2_cart_assignee_usage_for_event(int $eventId, string $ticketKey): array
 {
 	return array();
 }
@@ -235,20 +235,20 @@ $assert = static function (bool $condition, string $message): void {
 require dirname(__DIR__) . '/includes/integrations/ticketing-claims-customer.php';
 
 $_GET = array();
-$assert(vms_ticketing_claims_account_should_expand() === false, 'Benefits panel should stay collapsed when the flag is missing.');
+$assert(bvmgr_ticketing_claims_account_should_expand() === false, 'Benefits panel should stay collapsed when the flag is missing.');
 
 $_GET['vms_benefits'] = '1';
-$assert(vms_ticketing_claims_account_should_expand() === true, 'Benefits panel should expand when the scalar benefits flag is 1.');
+$assert(bvmgr_ticketing_claims_account_should_expand() === true, 'Benefits panel should expand when the scalar benefits flag is 1.');
 
 $_GET['vms_benefits'] = array('1');
-$assert(vms_ticketing_claims_account_should_expand() === false, 'Benefits panel should reject array-shaped benefits flags.');
+$assert(bvmgr_ticketing_claims_account_should_expand() === false, 'Benefits panel should reject array-shaped benefits flags.');
 
 $runHandler = static function (array $post, bool $loggedIn): Vms_Test_Json_Response {
 	$_POST = $post;
 	$GLOBALS['vms_test_logged_in'] = $loggedIn;
 
 	try {
-		vms_ticketing_claims_handle_validate_assignee();
+		bvmgr_ticketing_claims_handle_validate_assignee();
 	} catch (Vms_Test_Json_Response $response) {
 		return $response;
 	}

@@ -399,7 +399,7 @@ try {
     createFixtureImage($jpgSource, 'jpg', 3200, 2100);
     $cleanup[] = $jpgSource;
 
-    $jpgResult = vms_ticketing_verification_optimize_image_upload($jpgSource, $root, 'jpg-large');
+    $jpgResult = bvmgr_ticketing_verification_optimize_image_upload($jpgSource, $root, 'jpg-large');
     assertTrue(is_array($jpgResult), 'Large JPG did not normalize successfully.');
     $jpgPath = (string) ($jpgResult['path'] ?? '');
     $cleanup[] = $jpgPath;
@@ -413,7 +413,7 @@ try {
     createFixtureImage($pngSource, 'png', 2400, 1800);
     $cleanup[] = $pngSource;
 
-    $pngResult = vms_ticketing_verification_optimize_image_upload($pngSource, $root, 'png-proof');
+    $pngResult = bvmgr_ticketing_verification_optimize_image_upload($pngSource, $root, 'png-proof');
     assertTrue(is_array($pngResult), 'PNG proof did not normalize successfully.');
     $pngPath = (string) ($pngResult['path'] ?? '');
     $cleanup[] = $pngPath;
@@ -425,7 +425,7 @@ try {
         createFixtureImage($webpSource, 'webp', 2600, 1700);
         $cleanup[] = $webpSource;
 
-        $webpResult = vms_ticketing_verification_optimize_image_upload($webpSource, $root, 'webp-proof');
+        $webpResult = bvmgr_ticketing_verification_optimize_image_upload($webpSource, $root, 'webp-proof');
         assertTrue(is_array($webpResult), 'WEBP proof did not normalize successfully.');
         $webpPath = (string) ($webpResult['path'] ?? '');
         $cleanup[] = $webpPath;
@@ -441,10 +441,10 @@ try {
     assertTrue(is_wp_error($tooLarge), 'Oversized normalized output should return a WP_Error.');
     assertSame('file_too_large', $tooLarge->get_error_code(), 'Oversized output error code');
 
-    assertSame('pdf', vms_ticketing_verification_guess_upload_kind('fixture.pdf', 'application/pdf'), 'PDF upload kind');
-    assertSame('heic', vms_ticketing_verification_guess_upload_kind('fixture.heic', 'image/heic'), 'HEIC upload kind');
-    assertTrue(stripos(vms_ticketing_verification_notice_message('pdf_too_large'), 'PDF') !== false, 'PDF too large notice should mention PDF.');
-    assertTrue(stripos(vms_ticketing_verification_notice_message('heic_not_supported'), 'HEIC') !== false, 'HEIC notice should mention HEIC.');
+    assertSame('pdf', bvmgr_ticketing_verification_guess_upload_kind('fixture.pdf', 'application/pdf'), 'PDF upload kind');
+    assertSame('heic', bvmgr_ticketing_verification_guess_upload_kind('fixture.heic', 'image/heic'), 'HEIC upload kind');
+    assertTrue(stripos(bvmgr_ticketing_verification_notice_message('pdf_too_large'), 'PDF') !== false, 'PDF too large notice should mention PDF.');
+    assertTrue(stripos(bvmgr_ticketing_verification_notice_message('heic_not_supported'), 'HEIC') !== false, 'HEIC notice should mention HEIC.');
 
     fwrite(STDOUT, "verification proof normalization smoke: PASS\n");
     exit(0);

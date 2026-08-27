@@ -213,8 +213,8 @@ if (!function_exists('bvmgr_event_plan_get_public_event_payload')) {
         }
 
         $event_id = 0;
-        if (function_exists('vms_ticketing_b_get_linked_tec_event_id')) {
-            $event_id = absint(vms_ticketing_b_get_linked_tec_event_id($plan_id));
+        if (function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')) {
+            $event_id = absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id));
         }
         if ($event_id <= 0) {
             $event_id = absint(get_post_meta($plan_id, '_vms_tec_event_id', true));

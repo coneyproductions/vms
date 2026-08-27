@@ -29,8 +29,8 @@
 
         // Optional: show legacy/import IDs (if present) to avoid confusing operators.
         $linked_tec_legacy = array();
-        if ($linked_tec_id > 0 && function_exists('vms_ticketing_get_tec_legacy_identifiers')) {
-            $linked_tec_legacy = vms_ticketing_get_tec_legacy_identifiers($linked_tec_id);
+        if ($linked_tec_id > 0 && function_exists('bvmgr_ticketing_get_tec_legacy_identifiers')) {
+            $linked_tec_legacy = bvmgr_ticketing_get_tec_legacy_identifiers($linked_tec_id);
         }
         $linked_tec_legacy_str = '';
         if (!empty($linked_tec_legacy)) {
@@ -154,13 +154,13 @@
 								$v2_lookup_trace = function_exists('bvmgr_event_plan_perf_span_start')
 									? bvmgr_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', (int) $post->ID, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
 									: '';
-								$can_phase_b = function_exists('vms_ticketing_b_is_event_tickets_woo_available')
-									? vms_ticketing_b_is_event_tickets_woo_available()
+								$can_phase_b = function_exists('bvmgr_ticketing_b_is_event_tickets_woo_available')
+									? bvmgr_ticketing_b_is_event_tickets_woo_available()
 									: false;
-								$cfg_v2 = function_exists('vms_ticketing_v2_get_admin_config')
-									? vms_ticketing_v2_get_admin_config($post->ID)
-									: (function_exists('vms_ticketing_v2_get_config') ? vms_ticketing_v2_get_config($post->ID) : array());
-								$sync_v2 = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($post->ID) : array();
+								$cfg_v2 = function_exists('bvmgr_ticketing_v2_get_admin_config')
+									? bvmgr_ticketing_v2_get_admin_config($post->ID)
+									: (function_exists('bvmgr_ticketing_v2_get_config') ? bvmgr_ticketing_v2_get_config($post->ID) : array());
+								$sync_v2 = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($post->ID) : array();
 								$mode_v2 = is_array($cfg_v2) ? (string) ($cfg_v2['mode'] ?? 'read_only') : 'read_only';
 								$sync_map_v2 = (is_array($sync_v2) && !empty($sync_v2['map']) && is_array($sync_v2['map'])) ? $sync_v2['map'] : array();
 								$last_commit_ts = 0;
@@ -172,11 +172,11 @@
 										$last_commit_at = wp_date('Y-m-d H:i', $last_commit_ts, wp_timezone());
 									}
 								}
-								$cfg_v2_exists = (function_exists('metadata_exists') && function_exists('vms_ticketing_v2_k'))
-									? (metadata_exists('post', $post->ID, vms_ticketing_v2_k('config')) ? '1' : '0')
+								$cfg_v2_exists = (function_exists('metadata_exists') && function_exists('bvmgr_ticketing_v2_k'))
+									? (metadata_exists('post', $post->ID, bvmgr_ticketing_v2_k('config')) ? '1' : '0')
 									: '0';
-								$templates_v2 = function_exists('vms_ticketing_v2_templates_get_all') ? vms_ticketing_v2_templates_get_all() : array();
-								$default_tpl_id = function_exists('vms_ticketing_v2_get_default_template_id') ? vms_ticketing_v2_get_default_template_id() : '';
+								$templates_v2 = function_exists('bvmgr_ticketing_v2_templates_get_all') ? bvmgr_ticketing_v2_templates_get_all() : array();
+								$default_tpl_id = function_exists('bvmgr_ticketing_v2_get_default_template_id') ? bvmgr_ticketing_v2_get_default_template_id() : '';
 								$default_tpl_name = '';
 								if ($default_tpl_id && !empty($templates_v2[$default_tpl_id]) && is_array($templates_v2[$default_tpl_id])) {
 									$default_tpl_name = (string) (($templates_v2[$default_tpl_id]['name'] ?? '') ?: $default_tpl_id);
@@ -204,8 +204,8 @@
 								$stats_computed_ts = (is_array($ticket_stats) && isset($ticket_stats['computed_at_gmt'])) ? absint($ticket_stats['computed_at_gmt']) : 0;
 								$stats_stale_after_commit = ($last_commit_ts > 0 && $stats_computed_ts < $last_commit_ts);
 								$recon_v2 = array();
-								if ($linked_tec_id > 0 && $mode_v2 === 'vms_managed' && function_exists('vms_ticketing_v2_reconcile_event_plan_ticket_cache')) {
-									$recon_v2 = vms_ticketing_v2_reconcile_event_plan_ticket_cache((int) $post->ID, (int) $linked_tec_id, $sync_map_v2, false);
+								if ($linked_tec_id > 0 && $mode_v2 === 'vms_managed' && function_exists('bvmgr_ticketing_v2_reconcile_event_plan_ticket_cache')) {
+									$recon_v2 = bvmgr_ticketing_v2_reconcile_event_plan_ticket_cache((int) $post->ID, (int) $linked_tec_id, $sync_map_v2, false);
 								}
 								$recon_v2_warnings = (is_array($recon_v2) && !empty($recon_v2['warnings']) && is_array($recon_v2['warnings'])) ? $recon_v2['warnings'] : array();
 								$recon_v2_warnings = array_values(array_unique(array_filter(array_map('strval', $recon_v2_warnings))));

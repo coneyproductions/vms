@@ -80,7 +80,7 @@ $runCommand = static function (string $command) use ($repoRoot): string {
 
 $brokerFunction = $extractFunction($privateFilesSource, 'bvmgr_private_files_store_validated_upload');
 $staffCertFunction = $extractFunction($staffPortalSource, 'vms_staff_portal_handle_certification_submission');
-$verificationStoreFunction = $extractFunction($ticketingSource, 'vms_ticketing_verification_store_proof_file');
+$verificationStoreFunction = $extractFunction($ticketingSource, 'bvmgr_ticketing_verification_store_proof_file');
 
 $assert(strpos($brokerFunction, 'move_uploaded_file(') === false, 'The shared private-file broker should no longer call move_uploaded_file() directly.');
 $assert(strpos($brokerFunction, 'copy(') === false, 'The shared private-file broker should not introduce copy().');
@@ -105,7 +105,7 @@ $assert(strpos($privateFilesSource, "'allowed_mimes' => bvmgr_private_w9_allowed
 $assert(strpos($privateFilesSource, "'allowed_mimes' => bvmgr_private_staff_cert_allowed_mimes()") !== false, 'The staff-cert wrapper should pass its exact MIME map into the broker.');
 $assert(strpos($vendorPortalSource, '$allowed_mimes = vms_vendor_portal_tech_doc_allowed_mimes();') !== false, 'Vendor tech docs should reuse the same MIME map for validation and storage.');
 $assert(substr_count($vendorPortalSource, "'allowed_mimes' => \$allowed_mimes") >= 2, 'Vendor tech docs should pass the exact same MIME map to validation and storage.');
-$assert(strpos($ticketingSource, '$allowed_mimes = vms_ticketing_verification_allowed_mimes();') !== false, 'Ticket verification proofs should reuse the same MIME map for storage.');
+$assert(strpos($ticketingSource, '$allowed_mimes = bvmgr_ticketing_verification_allowed_mimes();') !== false, 'Ticket verification proofs should reuse the same MIME map for storage.');
 $assert(strpos($verificationStoreFunction, "'allowed_mimes' => \$allowed_mimes") !== false, 'The non-image verification proof branch should pass the exact validation MIME map into the broker.');
 $assert(strpos($privateFilesSource, 'get_allowed_mime_types(') === false, 'The broker should not fall back to the global WordPress MIME allowlist.');
 $assert(strpos($privateFilesSource, 'wp_get_mime_types(') === false, 'The broker should not widen the MIME boundary through a global MIME helper.');
@@ -117,7 +117,7 @@ $assert(strpos($staffPortalSource, 'bvmgr_private_files_delete($previous_upload_
 $assert(strpos($staffCertFunction, 'bvmgr_private_files_delete(') === false, 'The staff certification submission flow should preserve its existing downstream no-rollback behavior.');
 $assert(strpos($vendorPortalSource, 'bvmgr_private_files_delete($previous_id);') !== false, 'Vendor tech-document replacement cleanup should remain unchanged.');
 $assert(strpos($ticketingSource, 'bvmgr_private_files_delete((int) $stored[\'file_id\']);') !== false, 'Ticket verification request-creation rollback should remain unchanged.');
-$assert(strpos($verificationStoreFunction, 'vms_ticketing_verification_optimize_image_upload(') !== false, 'The verification image branch should remain intact.');
+$assert(strpos($verificationStoreFunction, 'bvmgr_ticketing_verification_optimize_image_upload(') !== false, 'The verification image branch should remain intact.');
 $assert(strpos($verificationStoreFunction, 'bvmgr_private_files_register_path(') !== false, 'The verification image branch should still register files directly.');
 $assert(strpos($verificationStoreFunction, 'bvmgr_private_files_store_validated_upload(') !== false, 'The verification non-image branch should still use the shared broker.');
 $assert(strpos($eventPlanSource, 'bvmgr_event_plan_import_with_scoped_upload_dir(') !== false, 'The Event Plan upload API implementation should remain unchanged.');

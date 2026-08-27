@@ -563,7 +563,7 @@ final class BVMGR_WPORG_Prefix_B3
 			$candidates = array();
 			foreach ($tokens as $token) {
 				$text = is_array($token) ? (string) $token[1] : (string) $token;
-				if (is_array($token) && $token[0] === T_CONSTANT_ENCAPSED_STRING) {
+				if (is_array($token) && in_array($token[0], array(T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE), true)) {
 					$localCount = 0;
 					$line = (int) $token[2];
 					$updated = preg_replace_callback(

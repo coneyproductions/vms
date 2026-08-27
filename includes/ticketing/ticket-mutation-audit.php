@@ -404,9 +404,9 @@ function vms_ticket_mutation_audit_trigger_source(array $context, string $source
 function vms_ticket_mutation_audit_relevant_meta_keys(): array
 {
 	$keys = array('_vms_ticketing_enabled_override');
-	if (function_exists('vms_ticketing_v2_k')) {
-		$keys[] = vms_ticketing_v2_k('config');
-		$keys[] = vms_ticketing_v2_k('sync');
+	if (function_exists('bvmgr_ticketing_v2_k')) {
+		$keys[] = bvmgr_ticketing_v2_k('config');
+		$keys[] = bvmgr_ticketing_v2_k('sync');
 	}
 
 	return array_values(array_unique(array_filter(array_map('strval', $keys))));
@@ -646,7 +646,7 @@ function vms_ticket_mutation_audit_infer_change_type(string $meta_key, array $co
 		return $change_type;
 	}
 
-	if (function_exists('vms_ticketing_v2_k') && $meta_key === vms_ticketing_v2_k('config')) {
+	if (function_exists('bvmgr_ticketing_v2_k') && $meta_key === bvmgr_ticketing_v2_k('config')) {
 		if (strpos($source_function, 'template') !== false) {
 			return 'ticket_template_applied';
 		}
@@ -656,7 +656,7 @@ function vms_ticket_mutation_audit_infer_change_type(string $meta_key, array $co
 		return 'ticket_config_saved';
 	}
 
-	if (function_exists('vms_ticketing_v2_k') && $meta_key === vms_ticketing_v2_k('sync')) {
+	if (function_exists('bvmgr_ticketing_v2_k') && $meta_key === bvmgr_ticketing_v2_k('sync')) {
 		if ($trigger_source === 'reconciliation') {
 			return 'tec_ticket_reconciliation';
 		}
@@ -977,12 +977,12 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 		return array();
 	}
 
-	$tec_event_id = function_exists('vms_ticketing_b_get_linked_tec_event_id')
-		? absint(vms_ticketing_b_get_linked_tec_event_id($plan_id))
+	$tec_event_id = function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')
+		? absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id))
 		: absint(get_post_meta($plan_id, '_vms_tec_event_id', true));
 	$event_title = $tec_event_id > 0 ? (string) get_the_title($tec_event_id) : (string) get_the_title($plan_id);
-	$cfg = function_exists('vms_ticketing_v2_get_saved_config') ? vms_ticketing_v2_get_saved_config($plan_id) : array();
-	$sync = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($plan_id) : array();
+	$cfg = function_exists('bvmgr_ticketing_v2_get_saved_config') ? bvmgr_ticketing_v2_get_saved_config($plan_id) : array();
+	$sync = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($plan_id) : array();
 	$sync_map = is_array($sync['map'] ?? null) ? $sync['map'] : array();
 	$sync_subset = vms_ticket_mutation_audit_sync_map_subset($sync_map);
 
@@ -1036,8 +1036,8 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 	}
 
 	$attached_product_ids = array();
-	if ($tec_event_id > 0 && function_exists('vms_ticketing_b_get_event_ticket_products')) {
-		$attached_product_ids = array_values(array_unique(array_filter(array_map('absint', (array) vms_ticketing_b_get_event_ticket_products($tec_event_id)))));
+	if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_b_get_event_ticket_products')) {
+		$attached_product_ids = array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_ticketing_b_get_event_ticket_products($tec_event_id)))));
 		sort($attached_product_ids, SORT_NUMERIC);
 	}
 
@@ -1064,20 +1064,20 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 		$post_type = ($post instanceof WP_Post) ? (string) $post->post_type : '';
 		$sku = $product_id > 0 ? trim((string) get_post_meta($product_id, '_sku', true)) : '';
 		$linked_event_id = $product_id > 0 ? absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true)) : 0;
-		$source_provider = ($product_id > 0 && function_exists('vms_ticketing_v2_product_meta_key'))
-			? sanitize_key((string) get_post_meta($product_id, vms_ticketing_v2_product_meta_key('ticketing_source_provider'), true))
+		$source_provider = ($product_id > 0 && function_exists('bvmgr_ticketing_v2_product_meta_key'))
+			? sanitize_key((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_source_provider'), true))
 			: '';
-		$source_plan_id = ($product_id > 0 && function_exists('vms_ticketing_v2_product_meta_key'))
-			? absint(get_post_meta($product_id, vms_ticketing_v2_product_meta_key('ticketing_source_plan_id'), true))
+		$source_plan_id = ($product_id > 0 && function_exists('bvmgr_ticketing_v2_product_meta_key'))
+			? absint(get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_source_plan_id'), true))
 			: 0;
-		$ticket_key = ($product_id > 0 && function_exists('vms_ticketing_v2_product_meta_key'))
-			? sanitize_key((string) get_post_meta($product_id, vms_ticketing_v2_product_meta_key('ticketing_ticket_key'), true))
+		$ticket_key = ($product_id > 0 && function_exists('bvmgr_ticketing_v2_product_meta_key'))
+			? sanitize_key((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key'), true))
 			: '';
-		$entitlement_id = ($product_id > 0 && function_exists('vms_ticketing_v2_product_meta_key'))
-			? sanitize_key((string) get_post_meta($product_id, vms_ticketing_v2_product_meta_key('ticketing_entitlement_id'), true))
+		$entitlement_id = ($product_id > 0 && function_exists('bvmgr_ticketing_v2_product_meta_key'))
+			? sanitize_key((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id'), true))
 			: '';
-		$product_role = ($product_id > 0 && function_exists('vms_ticketing_v2_product_meta_key'))
-			? sanitize_key((string) get_post_meta($product_id, vms_ticketing_v2_product_meta_key('product_role'), true))
+		$product_role = ($product_id > 0 && function_exists('bvmgr_ticketing_v2_product_meta_key'))
+			? sanitize_key((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('product_role'), true))
 			: '';
 		$total_sales = $product_id > 0 ? max(0, (int) get_post_meta($product_id, 'total_sales', true)) : 0;
 		$catalog_visibility = function_exists('vms_ticket_integrity_product_catalog_visibility')
@@ -1133,8 +1133,8 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 	$import_key = function_exists('bvmgr_event_plan_import_meta_key_import_key')
 		? trim((string) get_post_meta($plan_id, bvmgr_event_plan_import_meta_key_import_key(), true))
 		: trim((string) get_post_meta($plan_id, '_vms_import_event_key', true));
-	$tec_legacy_identifiers = ($tec_event_id > 0 && function_exists('vms_ticketing_get_tec_legacy_identifiers'))
-		? (array) vms_ticketing_get_tec_legacy_identifiers($tec_event_id)
+	$tec_legacy_identifiers = ($tec_event_id > 0 && function_exists('bvmgr_ticketing_get_tec_legacy_identifiers'))
+		? (array) bvmgr_ticketing_get_tec_legacy_identifiers($tec_event_id)
 		: array();
 
 	$config_json = wp_json_encode(
@@ -1153,8 +1153,8 @@ function vms_ticket_mutation_audit_build_snapshot(int $plan_id): array
 		'import_key' => $import_key,
 		'tec_legacy_identifiers' => $tec_legacy_identifiers,
 		'config' => array(
-			'hash' => function_exists('vms_ticketing_v2_hash_config_for_sync')
-				? (string) vms_ticketing_v2_hash_config_for_sync($cfg)
+			'hash' => function_exists('bvmgr_ticketing_v2_hash_config_for_sync')
+				? (string) bvmgr_ticketing_v2_hash_config_for_sync($cfg)
 				: sha1(is_string($config_json) ? $config_json : ''),
 			'ticket_rows' => $ticket_rows,
 			'entitlement_rows' => $entitlement_rows,

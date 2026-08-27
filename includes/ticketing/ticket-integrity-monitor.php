@@ -725,12 +725,12 @@ function vms_ticket_integrity_plan_uses_ticketing(int $plan_id, int $tec_event_i
 		return false;
 	}
 
-	$mode = function_exists('vms_ticketing_b_get_mode')
-		? sanitize_key((string) vms_ticketing_b_get_mode($plan_id))
+	$mode = function_exists('bvmgr_ticketing_b_get_mode')
+		? sanitize_key((string) bvmgr_ticketing_b_get_mode($plan_id))
 		: 'read_only';
 
-	if ($mode === 'vms_managed' && function_exists('vms_ticketing_v2_k')) {
-		$raw_config = get_post_meta($plan_id, vms_ticketing_v2_k('config'), true);
+	if ($mode === 'vms_managed' && function_exists('bvmgr_ticketing_v2_k')) {
+		$raw_config = get_post_meta($plan_id, bvmgr_ticketing_v2_k('config'), true);
 		if (is_array($raw_config)) {
 			foreach ((array) ($raw_config['tickets'] ?? array()) as $ticket_row) {
 				if (!is_array($ticket_row) || empty($ticket_row['enabled'])) {
@@ -762,8 +762,8 @@ function vms_ticket_integrity_plan_uses_ticketing(int $plan_id, int $tec_event_i
 		}
 	}
 
-	if (function_exists('vms_ticketing_v2_get_sync')) {
-		$sync = (array) vms_ticketing_v2_get_sync($plan_id);
+	if (function_exists('bvmgr_ticketing_v2_get_sync')) {
+		$sync = (array) bvmgr_ticketing_v2_get_sync($plan_id);
 		foreach ((array) ($sync['map']['entitlements'] ?? array()) as $row) {
 			if (!is_array($row)) {
 				continue;
@@ -774,8 +774,8 @@ function vms_ticket_integrity_plan_uses_ticketing(int $plan_id, int $tec_event_i
 		}
 	}
 
-	if ($tec_event_id > 0 && function_exists('vms_ticketing_b_get_event_ticket_products')) {
-		$product_ids = vms_ticketing_b_get_event_ticket_products($tec_event_id);
+	if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_b_get_event_ticket_products')) {
+		$product_ids = bvmgr_ticketing_b_get_event_ticket_products($tec_event_id);
 		if (!empty($product_ids)) {
 			return true;
 		}
@@ -844,8 +844,8 @@ function vms_ticket_integrity_build_targets(array $args = array()): array
 				continue;
 			}
 
-			$tec_event_id = function_exists('vms_ticketing_b_get_linked_tec_event_id')
-				? absint(vms_ticketing_b_get_linked_tec_event_id($plan_id))
+			$tec_event_id = function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')
+				? absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id))
 				: absint(get_post_meta($plan_id, '_vms_tec_event_id', true));
 			if ($tec_event_id <= 0) {
 				continue;

@@ -676,9 +676,9 @@ function vms_ticket_integrity_watch_ticketing_meta(int $meta_id, int $object_id,
 	$watched_keys = array(
 		'_vms_ticketing_enabled_override',
 	);
-	if (function_exists('vms_ticketing_v2_k')) {
-		$watched_keys[] = vms_ticketing_v2_k('config');
-		$watched_keys[] = vms_ticketing_v2_k('sync');
+	if (function_exists('bvmgr_ticketing_v2_k')) {
+		$watched_keys[] = bvmgr_ticketing_v2_k('config');
+		$watched_keys[] = bvmgr_ticketing_v2_k('sync');
 	}
 
 	$meta_key = (string) $meta_key;

@@ -36,8 +36,8 @@ if (!function_exists('vms_calendar_ticket_counts_get_tec_event_id_for_plan')) {
 		if ($plan_id <= 0) {
 			return 0;
 		}
-		if (function_exists('vms_ticketing_b_get_linked_tec_event_id')) {
-			$tec = absint(vms_ticketing_b_get_linked_tec_event_id($plan_id));
+		if (function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')) {
+			$tec = absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id));
 			if ($tec > 0) {
 				return $tec;
 			}
@@ -58,10 +58,10 @@ if (!function_exists('vms_calendar_ticket_counts_get_product_ids_for_tec_event')
 		}
 
 		$ids = array();
-		if (function_exists('vms_ticketing_get_ticket_product_ids_for_tec_event')) {
-			$ids = (array) vms_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
-		} elseif (function_exists('vms_ticketing_b_get_event_ticket_products')) {
-			$ids = (array) vms_ticketing_b_get_event_ticket_products($tec_event_id);
+		if (function_exists('bvmgr_ticketing_get_ticket_product_ids_for_tec_event')) {
+			$ids = (array) bvmgr_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
+		} elseif (function_exists('bvmgr_ticketing_b_get_event_ticket_products')) {
+			$ids = (array) bvmgr_ticketing_b_get_event_ticket_products($tec_event_id);
 		} elseif (function_exists('bvmgr_get_ticket_product_ids_for_event')) {
 			$ids = (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id);
 		}
@@ -78,8 +78,8 @@ if (!function_exists('vms_calendar_ticket_counts_compute_qty')) {
 			return 0;
 		}
 
-		if (function_exists('vms_ticketing_compute_stats')) {
-			$stats = (array) vms_ticketing_compute_stats($product_ids);
+		if (function_exists('bvmgr_ticketing_compute_stats')) {
+			$stats = (array) bvmgr_ticketing_compute_stats($product_ids);
 			return max(0, (int) ($stats['qty_sold'] ?? 0));
 		}
 
@@ -209,8 +209,8 @@ if (!function_exists('vms_calendar_ticket_counts_collect_plan_ids_from_order')) 
 			'_vms_ticket_event_id',
 			vms_calendar_ticket_counts_tec_key(),
 		);
-		if (function_exists('vms_ticketing_v2_product_meta_key')) {
-			$k = (string) vms_ticketing_v2_product_meta_key('tec_event_id');
+		if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+			$k = (string) bvmgr_ticketing_v2_product_meta_key('tec_event_id');
 			if ($k !== '') {
 				$product_to_tec_keys[] = $k;
 			}

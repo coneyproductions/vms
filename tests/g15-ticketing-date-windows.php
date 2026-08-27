@@ -202,7 +202,7 @@ g15_same(9, count($date_rows) - count($actual_owned_rows), 'Exactly nine G15 dat
 
 $owned_functions = array(
 	'monitor' => array('vms_ticket_integrity_format_datetime', 'vms_ticket_integrity_build_targets'),
-	'phase_b' => array('vms_ticketing_b_resolve_sales_window', 'vms_ticketing_v2_get_plan_sales_window_defaults'),
+	'phase_b' => array('bvmgr_ticketing_b_resolve_sales_window', 'bvmgr_ticketing_v2_get_plan_sales_window_defaults'),
 );
 foreach (array('mirror', 'shadow') as $tree) {
 	$owned_source = '';
@@ -391,17 +391,17 @@ final class WP_Query
 	}
 }
 
-function vms_ticketing_b_get_tec_event_start(int $tec_event_id): string
+function bvmgr_ticketing_b_get_tec_event_start(int $tec_event_id): string
 {
 	return (string) ($GLOBALS['g15_event_starts'][$tec_event_id] ?? '');
 }
 
-function vms_ticketing_b_get_tec_event_end(int $tec_event_id): string
+function bvmgr_ticketing_b_get_tec_event_end(int $tec_event_id): string
 {
 	return (string) ($GLOBALS['g15_event_ends'][$tec_event_id] ?? '');
 }
 
-function vms_ticketing_v2_get_plan_event_anchor_datetimes(int $plan_id): array
+function bvmgr_ticketing_v2_get_plan_event_anchor_datetimes(int $plan_id): array
 {
 	$anchors = $GLOBALS['g15_plan_anchors'][$plan_id] ?? array();
 	return is_array($anchors) ? $anchors : array();
@@ -416,13 +416,13 @@ eval(
 		array("\t\$now = time();" => "\t\$now = g15_now();")
 	)
 );
-eval(g15_extract_function($sources['mirror']['phase_b'], 'vms_ticketing_v2_normalize_sales_window_value'));
-eval(g15_extract_function($sources['mirror']['phase_b'], 'vms_ticketing_v2_normalize_relative_days'));
-eval(g15_extract_function($sources['mirror']['phase_b'], 'vms_ticketing_v2_relative_days_before_datetime'));
+eval(g15_extract_function($sources['mirror']['phase_b'], 'bvmgr_ticketing_v2_normalize_sales_window_value'));
+eval(g15_extract_function($sources['mirror']['phase_b'], 'bvmgr_ticketing_v2_normalize_relative_days'));
+eval(g15_extract_function($sources['mirror']['phase_b'], 'bvmgr_ticketing_v2_relative_days_before_datetime'));
 eval(
 	g15_prepare_eval_function(
 		$sources['mirror']['phase_b'],
-		'vms_ticketing_b_resolve_sales_window',
+		'bvmgr_ticketing_b_resolve_sales_window',
 		'g15_ticketing_b_resolve_sales_window',
 		array("wp_date('Y-m-d H:i:s', time(), \$tz)" => "wp_date('Y-m-d H:i:s', g15_now(), \$tz)")
 	)
@@ -430,7 +430,7 @@ eval(
 eval(
 	g15_prepare_eval_function(
 		$sources['mirror']['phase_b'],
-		'vms_ticketing_v2_get_plan_sales_window_defaults',
+		'bvmgr_ticketing_v2_get_plan_sales_window_defaults',
 		'g15_ticketing_v2_get_plan_sales_window_defaults',
 		array("wp_date('Y-m-d H:i:s', time(), \$tz)" => "wp_date('Y-m-d H:i:s', g15_now(), \$tz)")
 	)

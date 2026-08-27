@@ -289,8 +289,8 @@ if (!empty($fixture)) {
 
 	$currentUserPrograms = array();
 	if ($userId > 0) {
-		if (function_exists('vms_ticketing_get_user_verified_programs')) {
-			$currentUserPrograms = array_values(array_map('sanitize_key', vms_ticketing_get_user_verified_programs($userId)));
+		if (function_exists('bvmgr_ticketing_get_user_verified_programs')) {
+			$currentUserPrograms = array_values(array_map('sanitize_key', bvmgr_ticketing_get_user_verified_programs($userId)));
 		} else {
 			$currentUserPrograms = array_values(array_map('sanitize_key', (array) get_user_meta($userId, 'vms_verified_programs', true)));
 		}

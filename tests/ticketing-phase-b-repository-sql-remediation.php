@@ -82,7 +82,7 @@ function sanitize_key($value): string
 	return is_string($value) ? $value : '';
 }
 
-function vms_ticketing_v2_product_meta_key(string $suffix): string
+function bvmgr_ticketing_v2_product_meta_key(string $suffix): string
 {
 	return '_vms_' . sanitize_key($suffix);
 }
@@ -155,11 +155,11 @@ if (!is_string($source)) {
 }
 
 $runtime_functions = array(
-	'vms_ticketing_v2_reporting_category_candidate_ids',
-	'vms_ticketing_v2_table_exists',
-	'vms_ticketing_v2_paid_order_statuses_with_prefix',
-	'vms_ticketing_v2_calc_sold_qty_for_product_via_lookup',
-	'vms_ticketing_v2_calc_sold_qty_for_product_via_order_items',
+	'bvmgr_ticketing_v2_reporting_category_candidate_ids',
+	'bvmgr_ticketing_v2_table_exists',
+	'bvmgr_ticketing_v2_paid_order_statuses_with_prefix',
+	'bvmgr_ticketing_v2_calc_sold_qty_for_product_via_lookup',
+	'bvmgr_ticketing_v2_calc_sold_qty_for_product_via_order_items',
 );
 foreach ($runtime_functions as $function) {
 	eval(vms_test_extract_function($source, $function));
@@ -176,19 +176,19 @@ $owned_inventory = array(
 vms_test_same(21, array_sum($owned_inventory), 'Owned scanner inventory should remain exactly 21 baseline rows.');
 $covered_owned_rows = 0;
 $execution_suppressions = array(
-	'vms_ticketing_v2_reporting_category_candidate_ids' => array(
+	'bvmgr_ticketing_v2_reporting_category_candidate_ids' => array(
 		'fragment' => 'phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared',
 		'rows' => 3,
 	),
-	'vms_ticketing_v2_table_exists' => array(
+	'bvmgr_ticketing_v2_table_exists' => array(
 		'fragment' => 'phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 		'rows' => 2,
 	),
-	'vms_ticketing_v2_calc_sold_qty_for_product_via_lookup' => array(
+	'bvmgr_ticketing_v2_calc_sold_qty_for_product_via_lookup' => array(
 		'fragment' => 'phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 		'rows' => 4,
 	),
-	'vms_ticketing_v2_calc_sold_qty_for_product_via_order_items' => array(
+	'bvmgr_ticketing_v2_calc_sold_qty_for_product_via_order_items' => array(
 		'fragment' => 'phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 		'rows' => 4,
 	),
@@ -203,14 +203,14 @@ foreach ($execution_suppressions as $function => $suppression) {
 }
 
 $slow_functions = array(
-	'vms_entitlements_get_entitlement_image_context',
-	'vms_ticketing_v2_find_product_ids_by_sku',
-	'vms_ticketing_v2_calc_sold_qty_for_entitlement_scope',
-	'vms_ticketing_v2_find_entitlement_product',
-	'vms_ticketing_v2_find_plan_id_by_tec_event',
-	'vms_ticketing_v2_find_legacy_entitlement_product_by_key',
-	'vms_ticketing_v2_cleanup_legacy_sr_duplicates',
-	'vms_ticketing_v2_legacy_cleanup_runner',
+	'bvmgr_entitlements_get_entitlement_image_context',
+	'bvmgr_ticketing_v2_find_product_ids_by_sku',
+	'bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope',
+	'bvmgr_ticketing_v2_find_entitlement_product',
+	'bvmgr_ticketing_v2_find_plan_id_by_tec_event',
+	'bvmgr_ticketing_v2_find_legacy_entitlement_product_by_key',
+	'bvmgr_ticketing_v2_cleanup_legacy_sr_duplicates',
+	'bvmgr_ticketing_v2_legacy_cleanup_runner',
 );
 foreach ($slow_functions as $function) {
 	$body = vms_test_extract_function($source, $function);
@@ -223,7 +223,7 @@ vms_test_same(0, array_sum($owned_inventory) - $covered_owned_rows, 'All 21 owne
 $wpdb = new VMS_Phase_B_WPDB_Spy('wp_report_');
 $wpdb->get_col_queue[] = array(0, '31', '-4', '31');
 $GLOBALS['wpdb'] = $wpdb;
-vms_test_same(array(31, 4, 31), vms_ticketing_v2_reporting_category_candidate_ids(-7, 999), 'Reporting IDs should preserve order/duplicates while normalizing positive IDs.');
+vms_test_same(array(31, 4, 31), bvmgr_ticketing_v2_reporting_category_candidate_ids(-7, 999), 'Reporting IDs should preserve order/duplicates while normalizing positive IDs.');
 $call = vms_test_prepare_containing($wpdb, 'SELECT DISTINCT p.ID');
 vms_test_same(array('wp_report_posts', 'wp_report_postmeta', 7, '_vms_product_role', '_vms_ticketing_entitlement_id', '_vms_event_plan_id', '_vms_tec_event_id', 250), $call['args'], 'Reporting query prepare arguments changed.');
 $sql = vms_test_execution_containing($wpdb, 'SELECT DISTINCT p.ID')['sql'];
@@ -235,8 +235,8 @@ vms_test_no_placeholders($sql);
 $wpdb = new VMS_Phase_B_WPDB_Spy('wp_probe_');
 $wpdb->get_var_queue[] = 'wp_probe_wc_order_stats';
 $GLOBALS['wpdb'] = $wpdb;
-vms_test_assert(vms_ticketing_v2_table_exists('wp_probe_wc_order_stats'), 'Exact table probe should succeed.');
-vms_test_assert(vms_ticketing_v2_table_exists('wp_probe_wc_order_stats'), 'Cached table probe should succeed.');
+vms_test_assert(bvmgr_ticketing_v2_table_exists('wp_probe_wc_order_stats'), 'Exact table probe should succeed.');
+vms_test_assert(bvmgr_ticketing_v2_table_exists('wp_probe_wc_order_stats'), 'Cached table probe should succeed.');
 vms_test_same(1, count($wpdb->executions), 'Table probe should execute once per request/table.');
 vms_test_same(array('wp_probe_wc_order_stats'), vms_test_prepare_containing($wpdb, 'SHOW TABLES LIKE %s')['args'], 'Table probe argument changed.');
 vms_test_no_placeholders($wpdb->executions[0]['sql']);
@@ -247,7 +247,7 @@ $lookup = 'wp_lookup_wc_order_product_lookup';
 $stats = 'wp_lookup_wc_order_stats';
 $wpdb->get_var_queue = array($lookup, $stats, 3.6);
 $GLOBALS['wpdb'] = $wpdb;
-vms_test_same(4, vms_ticketing_v2_calc_sold_qty_for_product_via_lookup(42, array('completed', 'wc-processing')), 'Lookup aggregate rounding changed.');
+vms_test_same(4, bvmgr_ticketing_v2_calc_sold_qty_for_product_via_lookup(42, array('completed', 'wc-processing')), 'Lookup aggregate rounding changed.');
 $call = vms_test_prepare_containing($wpdb, 'SUM(product_lookup.product_qty)');
 vms_test_same(array($lookup, $stats, 42, 42, 'wc-completed', 'wc-processing'), $call['args'], 'Lookup aggregate prepare arguments changed.');
 $sql = vms_test_execution_containing($wpdb, 'SUM(product_lookup.product_qty)')['sql'];
@@ -259,7 +259,7 @@ vms_test_no_placeholders($sql);
 $wpdb = new VMS_Phase_B_WPDB_Spy('wp_lookup_missing_');
 $wpdb->get_var_queue[] = null;
 $GLOBALS['wpdb'] = $wpdb;
-vms_test_same(null, vms_ticketing_v2_calc_sold_qty_for_product_via_lookup(43, array('completed')), 'Missing lookup table should retain the null fallback.');
+vms_test_same(null, bvmgr_ticketing_v2_calc_sold_qty_for_product_via_lookup(43, array('completed')), 'Missing lookup table should retain the null fallback.');
 
 // Order-item aggregate: HPOS and CPT status branches retain refunds and product/variation matching.
 $wpdb = new VMS_Phase_B_WPDB_Spy('wp_hpos_');
@@ -268,7 +268,7 @@ $oim = 'wp_hpos_woocommerce_order_itemmeta';
 $stats = 'wp_hpos_wc_order_stats';
 $wpdb->get_var_queue = array($oi, $oim, $stats, 5.2);
 $GLOBALS['wpdb'] = $wpdb;
-vms_test_same(5, vms_ticketing_v2_calc_sold_qty_for_product_via_order_items(77, array('completed', 'on-hold')), 'HPOS order-item result changed.');
+vms_test_same(5, bvmgr_ticketing_v2_calc_sold_qty_for_product_via_order_items(77, array('completed', 'on-hold')), 'HPOS order-item result changed.');
 $call = vms_test_prepare_containing($wpdb, 'GREATEST(0, line_items.qty');
 vms_test_same(array($oi, $oim, 77, 77, $oi, $oim, $oim, 'wp_hpos_posts', 'wc-completed', 'wc-on-hold'), $call['args'], 'Order-item aggregate prepare arguments changed.');
 $sql = vms_test_execution_containing($wpdb, 'GREATEST(0, line_items.qty')['sql'];
@@ -282,7 +282,7 @@ $oi = 'wp_cpt_woocommerce_order_items';
 $oim = 'wp_cpt_woocommerce_order_itemmeta';
 $wpdb->get_var_queue = array($oi, $oim, null, 2.8);
 $GLOBALS['wpdb'] = $wpdb;
-vms_test_same(3, vms_ticketing_v2_calc_sold_qty_for_product_via_order_items(78, array('processing')), 'CPT order-item result changed.');
+vms_test_same(3, bvmgr_ticketing_v2_calc_sold_qty_for_product_via_order_items(78, array('processing')), 'CPT order-item result changed.');
 $sql = vms_test_execution_containing($wpdb, 'GREATEST(0, line_items.qty')['sql'];
 vms_test_contains("INNER JOIN `wp_cpt_posts` orders ON orders.ID = line_items.order_id AND orders.post_type = 'shop_order'", $sql, 'CPT order join changed.');
 vms_test_contains("orders.post_status IN ('wc-processing')", $sql, 'CPT paid-status branch changed.');
@@ -291,6 +291,6 @@ vms_test_no_placeholders($sql);
 $wpdb = new VMS_Phase_B_WPDB_Spy('wp_items_missing_');
 $wpdb->get_var_queue[] = null;
 $GLOBALS['wpdb'] = $wpdb;
-vms_test_same(null, vms_ticketing_v2_calc_sold_qty_for_product_via_order_items(79, array('completed')), 'Missing order-item table should retain the null fallback.');
+vms_test_same(null, bvmgr_ticketing_v2_calc_sold_qty_for_product_via_order_items(79, array('completed')), 'Missing order-item table should retain the null fallback.');
 
 fwrite(STDOUT, "PASS: Phase B SQL preparation, HPOS/CPT/refund/product-variation behavior, fallbacks, and the exact 21-row scanner inventory are covered.\n");

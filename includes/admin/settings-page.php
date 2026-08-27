@@ -136,14 +136,14 @@ function vms_handle_sync_entitlement_images(): void
 
 	check_admin_referer('vms_sync_entitlement_images');
 
-	$ent_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('ticketing_entitlement_id')
+	$ent_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id')
 		: '_vms_ticketing_entitlement_id';
-	$role_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('product_role')
+	$role_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('product_role')
 		: '_vms_product_role';
-	$plan_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('event_plan_id')
+	$plan_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('event_plan_id')
 		: '_vms_event_plan_id';
 
 	$product_ids = get_posts(array(
@@ -202,8 +202,8 @@ function vms_handle_sync_entitlement_images(): void
 		}
 
 		if ($role === 'ga_ticket') {
-			if ($plan_id > 0 && function_exists('vms_ticketing_v2_sync_ticket_product_image_with_result')) {
-				$res = vms_ticketing_v2_sync_ticket_product_image_with_result($pid, $plan_id);
+			if ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_sync_ticket_product_image_with_result')) {
+				$res = bvmgr_ticketing_v2_sync_ticket_product_image_with_result($pid, $plan_id);
 			} else {
 				$res = array(
 					'status' => $plan_id > 0 ? 'error_missing_sync_function' : 'error_missing_plan',
@@ -215,8 +215,8 @@ function vms_handle_sync_entitlement_images(): void
 			}
 		} else {
 			$entitlement_id = '';
-			if (function_exists('vms_entitlements_get_product_entitlement_id')) {
-				$entitlement_id = vms_entitlements_get_product_entitlement_id($pid);
+			if (function_exists('bvmgr_entitlements_get_product_entitlement_id')) {
+				$entitlement_id = bvmgr_entitlements_get_product_entitlement_id($pid);
 			}
 			if ($entitlement_id === '') {
 				$entitlement_id = sanitize_key((string) get_post_meta($pid, $ent_meta_key, true));
@@ -231,8 +231,8 @@ function vms_handle_sync_entitlement_images(): void
 					'image_id' => 0,
 					'message' => ($role === 'entitlement') ? 'missing_entitlement_marker' : 'not_a_vms_ticket_or_entitlement_image_product',
 				);
-			} elseif (function_exists('vms_entitlements_sync_product_image_with_result')) {
-				$res = vms_entitlements_sync_product_image_with_result($pid, $entitlement_id);
+			} elseif (function_exists('bvmgr_entitlements_sync_product_image_with_result')) {
+				$res = bvmgr_entitlements_sync_product_image_with_result($pid, $entitlement_id);
 			} else {
 				$res = array(
 					'status' => 'error_missing_sync_function',
@@ -266,8 +266,8 @@ function vms_handle_sync_entitlement_images(): void
 		'status' => ((int) $summary['errors'] > 0) ? 'completed_with_errors' : 'completed',
 		'count' => (int) $summary['errors'],
 	);
-	if (function_exists('vms_entitlements_sync_image_log')) {
-		vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
+	if (function_exists('bvmgr_entitlements_sync_image_log')) {
+		bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
 	} elseif (function_exists('bvmgr_record_operational_issue')) {
 		bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed', $operational_context);
 	}
@@ -302,20 +302,20 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 		'results' => array(),
 	);
 
-	if (!function_exists('wc_get_product') || !function_exists('vms_ticketing_v2_calc_sold_qty_for_entitlement_scope')) {
+	if (!function_exists('wc_get_product') || !function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope')) {
 		$summary['errors'] = 1;
 		$summary['message'] = 'woocommerce_or_ticketing_helpers_unavailable';
 		return $summary;
 	}
 
-	$k_ent = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('ticketing_entitlement_id')
+	$k_ent = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id')
 		: '_vms_ticketing_entitlement_id';
-	$k_role = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('product_role')
+	$k_role = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('product_role')
 		: '_vms_product_role';
-	$k_plan = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('event_plan_id')
+	$k_plan = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('event_plan_id')
 		: '_vms_event_plan_id';
 
 	$product_ids = get_posts(array(
@@ -353,9 +353,9 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 		$name = get_the_title($pid);
 
 		$capacity = absint(get_post_meta($pid, '_vms_ticketing_entitlement_capacity_v2', true));
-		if ($capacity <= 0 && $plan_id > 0 && function_exists('vms_ticketing_v2_get_config') && function_exists('vms_ticketing_v2_find_entitlement_cfg')) {
-			$cfg = vms_ticketing_v2_get_config($plan_id);
-			$ent_cfg = ($ent_id !== '') ? vms_ticketing_v2_find_entitlement_cfg((array) $cfg, $ent_id) : null;
+		if ($capacity <= 0 && $plan_id > 0 && function_exists('bvmgr_ticketing_v2_get_config') && function_exists('bvmgr_ticketing_v2_find_entitlement_cfg')) {
+			$cfg = bvmgr_ticketing_v2_get_config($plan_id);
+			$ent_cfg = ($ent_id !== '') ? bvmgr_ticketing_v2_find_entitlement_cfg((array) $cfg, $ent_id) : null;
 			if (is_array($ent_cfg)) {
 				$capacity = max(0, (int) ($ent_cfg['capacity'] ?? 0));
 			}
@@ -378,7 +378,7 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 			continue;
 		}
 
-		$sold_res = vms_ticketing_v2_calc_sold_qty_for_entitlement_scope($plan_id, $ent_id, $sku, $pid);
+		$sold_res = bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope($plan_id, $ent_id, $sku, $pid);
 		if (empty($sold_res['ok'])) {
 			$summary['errors']++;
 			$summary['results'][] = array(
@@ -437,8 +437,8 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 				);
 			}
 
-			if (function_exists('vms_ticketing_v2_push_inventory_write_context')) {
-				vms_ticketing_v2_push_inventory_write_context(array(
+			if (function_exists('bvmgr_ticketing_v2_push_inventory_write_context')) {
+				bvmgr_ticketing_v2_push_inventory_write_context(array(
 					'trigger_source' => 'manual_action',
 					'source_function' => 'vms_ticketing_stock_reconcile_scan',
 					'derivation_source' => 'manual_entitlement_stock_reconciliation',
@@ -473,8 +473,8 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 				update_post_meta($pid, '_vms_ticketing_entitlement_remaining_v2', $remaining);
 				update_post_meta($pid, '_vms_ticketing_entitlement_stock_reconciled_at_gmt', time());
 			} finally {
-				if (function_exists('vms_ticketing_v2_pop_inventory_write_context')) {
-					vms_ticketing_v2_pop_inventory_write_context();
+				if (function_exists('bvmgr_ticketing_v2_pop_inventory_write_context')) {
+					bvmgr_ticketing_v2_pop_inventory_write_context();
 				} elseif (function_exists('vms_ticket_mutation_audit_pop_context')) {
 					vms_ticket_mutation_audit_pop_context();
 				}

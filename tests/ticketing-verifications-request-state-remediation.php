@@ -191,16 +191,16 @@ vms_test_assert($source !== '', 'Ticketing verifications source should be readab
 vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, 'vms_submit_verification_request')") !== false, 'Verification submit nonce action should remain unchanged.');
 vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, 'vms_verification_decision_' . \$request_id)") !== false, 'Verification decision nonce action should remain unchanged.');
 vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, 'vms_verification_proof_' . \$request_id)") !== false, 'Verification proof nonce action should remain unchanged.');
-vms_test_assert(strpos($source, 'vms_ticketing_verification_proof_payload($request_id)') !== false, 'Verification proof payload authorization flow should remain unchanged.');
+vms_test_assert(strpos($source, 'bvmgr_ticketing_verification_proof_payload($request_id)') !== false, 'Verification proof payload authorization flow should remain unchanged.');
 vms_test_assert(strpos($source, "'vms_verification_program_allowances'") !== false, 'Verification program allowances request key should remain unchanged.');
 vms_test_assert(strpos($source, "'vms_verification_upload_settings'") !== false, 'Verification upload settings request key should remain unchanged.');
 vms_test_assert(strpos($source, "'vms_verified_programs_profile'") !== false, 'Verification profile request key should remain unchanged.');
 vms_test_assert(strpos($source, "'vms_verified_allowance'") !== false, 'Verification allowance request key should remain unchanged.');
 
 $actions = $GLOBALS['vms_test_actions'] ?? array();
-vms_test_assert(in_array('vms_ticketing_verification_handle_submit', $actions['admin_post_vms_submit_verification'] ?? array(), true), 'Verification submit admin-post hook should remain registered.');
-vms_test_assert(in_array('vms_ticketing_verification_handle_decision', $actions['admin_post_vms_verification_decision'] ?? array(), true), 'Verification decision admin-post hook should remain registered.');
-vms_test_assert(in_array('vms_ticketing_verification_stream_proof', $actions['admin_post_vms_view_verification_proof'] ?? array(), true), 'Verification proof-view admin-post hook should remain registered.');
+vms_test_assert(in_array('bvmgr_ticketing_verification_handle_submit', $actions['admin_post_vms_submit_verification'] ?? array(), true), 'Verification submit admin-post hook should remain registered.');
+vms_test_assert(in_array('bvmgr_ticketing_verification_handle_decision', $actions['admin_post_vms_verification_decision'] ?? array(), true), 'Verification decision admin-post hook should remain registered.');
+vms_test_assert(in_array('bvmgr_ticketing_verification_stream_proof', $actions['admin_post_vms_view_verification_proof'] ?? array(), true), 'Verification proof-view admin-post hook should remain registered.');
 
 $GLOBALS['vms_test_capabilities'] = array(
 	'vms_manage_verifications' => false,
@@ -210,48 +210,48 @@ $GLOBALS['vms_test_logged_in'] = true;
 $_GET = array();
 $fallback = 'https://example.test/my-account/';
 
-vms_test_assert(vms_ticketing_verification_query_key('vms_verification_notice') === '', 'Verification notice helper should return an empty string when state is missing.');
-vms_test_assert(vms_ticketing_verification_query_text_field('s') === '', 'Verification text helper should return an empty string when state is missing.');
-vms_test_assert(vms_ticketing_verification_query_absint('request_id') === 0, 'Verification integer helper should return zero when state is missing.');
-vms_test_assert(vms_ticketing_verification_query_bool_flag('vms_debug') === false, 'Verification debug helper should return false when state is missing.');
-vms_test_assert(vms_ticketing_verification_query_local_redirect('vms_return_to', $fallback) === $fallback, 'Verification redirect helper should preserve the fallback when state is missing.');
+vms_test_assert(bvmgr_ticketing_verification_query_key('vms_verification_notice') === '', 'Verification notice helper should return an empty string when state is missing.');
+vms_test_assert(bvmgr_ticketing_verification_query_text_field('s') === '', 'Verification text helper should return an empty string when state is missing.');
+vms_test_assert(bvmgr_ticketing_verification_query_absint('request_id') === 0, 'Verification integer helper should return zero when state is missing.');
+vms_test_assert(bvmgr_ticketing_verification_query_bool_flag('vms_debug') === false, 'Verification debug helper should return false when state is missing.');
+vms_test_assert(bvmgr_ticketing_verification_query_local_redirect('vms_return_to', $fallback) === $fallback, 'Verification redirect helper should preserve the fallback when state is missing.');
 
 $_GET['vms_verification_notice'] = ' submitted ';
-vms_test_assert(vms_ticketing_verification_query_key('vms_verification_notice') === 'submitted', 'Verification notice helper should sanitize scalar notice state.');
+vms_test_assert(bvmgr_ticketing_verification_query_key('vms_verification_notice') === 'submitted', 'Verification notice helper should sanitize scalar notice state.');
 
 $_GET['vms_verify_program'] = 'First Responder';
-vms_test_assert(vms_ticketing_verification_query_key('vms_verify_program') === 'firstresponder', 'Verification program helper should sanitize scalar program state.');
+vms_test_assert(bvmgr_ticketing_verification_query_key('vms_verify_program') === 'firstresponder', 'Verification program helper should sanitize scalar program state.');
 
 $_GET['s'] = ' Search ';
-vms_test_assert(vms_ticketing_verification_query_text_field('s') === 'Search', 'Verification text helper should sanitize scalar search state.');
+vms_test_assert(bvmgr_ticketing_verification_query_text_field('s') === 'Search', 'Verification text helper should sanitize scalar search state.');
 
 $_GET['request_id'] = '37';
-vms_test_assert(vms_ticketing_verification_query_absint('request_id') === 37, 'Verification integer helper should preserve scalar request IDs.');
+vms_test_assert(bvmgr_ticketing_verification_query_absint('request_id') === 37, 'Verification integer helper should preserve scalar request IDs.');
 
 $_GET['vms_debug'] = '1';
-vms_test_assert(vms_ticketing_verification_query_bool_flag('vms_debug') === true, 'Verification debug helper should preserve scalar boolean flags.');
+vms_test_assert(bvmgr_ticketing_verification_query_bool_flag('vms_debug') === true, 'Verification debug helper should preserve scalar boolean flags.');
 
 $_GET['vms_return_to'] = '/my-account/?vms_verification=1';
-vms_test_assert(vms_ticketing_verification_query_local_redirect('vms_return_to', $fallback) === '/my-account/?vms_verification=1', 'Verification redirect helper should preserve scalar local redirect state.');
+vms_test_assert(bvmgr_ticketing_verification_query_local_redirect('vms_return_to', $fallback) === '/my-account/?vms_verification=1', 'Verification redirect helper should preserve scalar local redirect state.');
 
 $_GET['vms_verification_notice'] = array('submitted');
-vms_test_assert(vms_ticketing_verification_query_key('vms_verification_notice') === '', 'Verification notice helper should reject array-shaped notice state.');
+vms_test_assert(bvmgr_ticketing_verification_query_key('vms_verification_notice') === '', 'Verification notice helper should reject array-shaped notice state.');
 
 $_GET['request_id'] = array('37');
-vms_test_assert(vms_ticketing_verification_query_absint('request_id') === 0, 'Verification integer helper should reject array-shaped request IDs.');
+vms_test_assert(bvmgr_ticketing_verification_query_absint('request_id') === 0, 'Verification integer helper should reject array-shaped request IDs.');
 
 $_GET['vms_debug'] = array('1');
-vms_test_assert(vms_ticketing_verification_query_bool_flag('vms_debug') === false, 'Verification debug helper should reject array-shaped boolean flags.');
+vms_test_assert(bvmgr_ticketing_verification_query_bool_flag('vms_debug') === false, 'Verification debug helper should reject array-shaped boolean flags.');
 
 $_GET['vms_return_to'] = array('/my-account/');
-vms_test_assert(vms_ticketing_verification_query_local_redirect('vms_return_to', $fallback) === $fallback, 'Verification redirect helper should reject array-shaped redirect state.');
+vms_test_assert(bvmgr_ticketing_verification_query_local_redirect('vms_return_to', $fallback) === $fallback, 'Verification redirect helper should reject array-shaped redirect state.');
 
-$uploadSettings = vms_ticketing_verification_sanitize_upload_settings(array('max_upload_mb' => '40'));
+$uploadSettings = bvmgr_ticketing_verification_sanitize_upload_settings(array('max_upload_mb' => '40'));
 vms_test_assert(($uploadSettings['max_upload_mb'] ?? 0) === 40, 'Verification structured settings arrays should remain accepted and sanitized.');
 
 $_GET = array();
 try {
-	vms_ticketing_verification_stream_proof();
+	bvmgr_ticketing_verification_stream_proof();
 	throw new RuntimeException('Verification proof stream should have stopped on the capability gate.');
 } catch (VMS_Ticketing_Verifications_Test_Wp_Die $exception) {
 	vms_test_assert(strpos($exception->getMessage(), 'Insufficient permissions.') !== false, 'Verification proof stream should preserve capability and private-file authorization gates.');

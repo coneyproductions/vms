@@ -350,7 +350,7 @@ $assert(
 	'Venue ID JSON should reject object-shaped payloads.'
 );
 
-$existingCounts = vms_ticketing_claims_parse_existing_counts_payload('{"buyer@example.com":2,"Guest@example.com":"3","bad":[] }');
+$existingCounts = bvmgr_ticketing_claims_parse_existing_counts_payload('{"buyer@example.com":2,"Guest@example.com":"3","bad":[] }');
 $assert(
 	$existingCounts === array(
 		'buyer@example.com' => 2,
@@ -360,7 +360,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_b_validate_tier_rows_payload(array(
+	bvmgr_ticketing_b_validate_tier_rows_payload(array(
 		array(
 			'tier_key' => 'ga',
 			'name' => 'General Admission',
@@ -370,7 +370,7 @@ $assert(
 	'Phase B tier payload validator should accept a well-formed tier list.'
 );
 $assert(
-	!vms_ticketing_b_validate_tier_rows_payload(array(
+	!bvmgr_ticketing_b_validate_tier_rows_payload(array(
 		array(
 			'name' => array('bad'),
 		),
@@ -379,7 +379,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_b_validate_commit_items_payload(array(
+	bvmgr_ticketing_b_validate_commit_items_payload(array(
 		array(
 			'tier_key' => 'ga',
 			'action' => 'create',
@@ -389,7 +389,7 @@ $assert(
 	'Phase B commit payload validator should accept a well-formed commit item list.'
 );
 $assert(
-	!vms_ticketing_b_validate_commit_items_payload(array(
+	!bvmgr_ticketing_b_validate_commit_items_payload(array(
 		array(
 			'tier_key' => 'ga',
 			'action' => 'explode',
@@ -399,7 +399,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_v2_validate_config_payload(array(
+	bvmgr_ticketing_v2_validate_config_payload(array(
 		'mode' => 'vms_managed',
 		'tickets' => array(
 			array(
@@ -416,7 +416,7 @@ $assert(
 	'Ticketing v2 config validator should accept object payloads with list-based tickets and entitlements.'
 );
 $assert(
-	!vms_ticketing_v2_validate_config_payload(array(
+	!bvmgr_ticketing_v2_validate_config_payload(array(
 		'tickets' => array(
 			'not_a_list' => array('ticket_key' => 'ga'),
 		),
@@ -425,7 +425,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_v2_validate_atomic_add_payload(array(
+	bvmgr_ticketing_v2_validate_atomic_add_payload(array(
 		'nonce' => 'abc123',
 		'ticket_lines' => array(
 			array(
@@ -452,7 +452,7 @@ $assert(
 	'Atomic add payload validator should accept well-formed ticket and add-on lines.'
 );
 $assert(
-	!vms_ticketing_v2_validate_atomic_add_payload(array(
+	!bvmgr_ticketing_v2_validate_atomic_add_payload(array(
 		'ticket_lines' => array(
 			array(
 				'product_id' => 55,
@@ -467,7 +467,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_v2_validate_silent_add_payload(array(
+	bvmgr_ticketing_v2_validate_silent_add_payload(array(
 		'items' => array(
 			array(
 				'productId' => 77,
@@ -478,7 +478,7 @@ $assert(
 	'Silent-add payload validator should accept a list of simple add-on rows.'
 );
 $assert(
-	!vms_ticketing_v2_validate_silent_add_payload(array(
+	!bvmgr_ticketing_v2_validate_silent_add_payload(array(
 		'items' => array(
 			'broken' => array(
 				'productId' => 77,
@@ -735,10 +735,10 @@ $liveTicketingRulesSource = file_get_contents($liveTicketingRulesPath);
 $assert(is_string($mirrorTicketingRulesSource) && $mirrorTicketingRulesSource !== '', 'Expected to load the mirror Ticketing Rules V2 runtime source.');
 $assert(is_string($liveTicketingRulesSource) && $liveTicketingRulesSource !== '', 'Expected to load the live Ticketing Rules V2 runtime source.');
 
-$mirrorDecodeHelperSource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'vms_ticketing_v2_decode_stored_claim_assignment_rows');
-$liveDecodeHelperSource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'vms_ticketing_v2_decode_stored_claim_assignment_rows');
-$mirrorConsumedQtySource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'vms_ticketing_v2_assignee_consumed_qty_for_event');
-$liveConsumedQtySource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'vms_ticketing_v2_assignee_consumed_qty_for_event');
+$mirrorDecodeHelperSource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows');
+$liveDecodeHelperSource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows');
+$mirrorConsumedQtySource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'bvmgr_ticketing_v2_assignee_consumed_qty_for_event');
+$liveConsumedQtySource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'bvmgr_ticketing_v2_assignee_consumed_qty_for_event');
 $normalizeSource = static function (string $source): string {
 	$normalized = preg_replace('/\s+/', ' ', trim($source));
 	return is_string($normalized) ? $normalized : trim($source);
@@ -784,7 +784,7 @@ $withoutWarnings = static function (callable $callback) {
 
 $decodeRowsWithoutWarnings = static function ($raw) use ($withoutWarnings): array {
 	$decoded = $withoutWarnings(static function () use ($raw): array {
-		return vms_ticketing_v2_decode_stored_claim_assignment_rows($raw);
+		return bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($raw);
 	});
 
 	return is_array($decoded) ? $decoded : array();

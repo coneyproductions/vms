@@ -279,7 +279,7 @@ function tribe_get_ticket_label_plural(string $context = ''): string
 	return (string) ($GLOBALS['vms_test_context']['ticket_plural'] ?? 'Tickets');
 }
 
-function vms_ticketing_v2_active_ticket_count_for_event_user(int $eventId, int $userId): int
+function bvmgr_ticketing_v2_active_ticket_count_for_event_user(int $eventId, int $userId): int
 {
 	$GLOBALS['vms_test_context']['helper_calls'][] = array($eventId, $userId);
 	return (int) ($GLOBALS['vms_test_context']['active_count'] ?? -1);
@@ -296,7 +296,7 @@ function vms_test_run_case(array $overrides, array $countByType, int $eventId, i
 	$GLOBALS['vms_test_context'] = array_replace($GLOBALS['vms_test_context'], $overrides);
 
 	ob_start();
-	$result = vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type($countByType, $eventId, $userId);
+	$result = bvmgr_ticketing_v2_filter_my_tickets_link_ticket_count_by_type($countByType, $eventId, $userId);
 	$output = ob_get_clean();
 	if (!is_string($output)) {
 		$output = '';
@@ -334,7 +334,7 @@ try {
 	$registration = vms_test_find_filter_registration(
 		$source,
 		'tec_tickets_my_tickets_link_ticket_count_by_type',
-		'vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type'
+		'bvmgr_ticketing_v2_filter_my_tickets_link_ticket_count_by_type'
 	);
 	vms_test_assert_true(is_array($registration), 'The native TEC My Tickets filter registration should exist.');
 	vms_test_assert_same(99, $registration['priority'], 'The native TEC My Tickets filter should run at the expected late priority.');
@@ -354,8 +354,8 @@ try {
 	vms_test_assert_not_contains("ob_start('vms_ticketing_v2_filter_my_tickets_notice_html')", $source, 'No My Tickets callback-based output buffer should remain.');
 	vms_test_assert_not_contains('You\s+have\s+\d+\s+Tickets?\s+for\s+this\s+Event', $source, 'No My Tickets full-page regex transformation should remain.');
 
-	$callbackSource = vms_test_extract_function($source, 'vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type');
-	vms_test_assert_contains('vms_ticketing_v2_active_ticket_count_for_event_user(', $callbackSource, 'The new callback should call the existing active-ticket-count helper.');
+	$callbackSource = vms_test_extract_function($source, 'bvmgr_ticketing_v2_filter_my_tickets_link_ticket_count_by_type');
+	vms_test_assert_contains('bvmgr_ticketing_v2_active_ticket_count_for_event_user(', $callbackSource, 'The new callback should call the existing active-ticket-count helper.');
 	vms_test_assert_not_contains('$GLOBALS', $callbackSource, 'The new callback should not write globals.');
 	vms_test_assert_not_contains('ob_start(', $callbackSource, 'The new callback should not open output buffers.');
 	vms_test_assert_not_contains('echo ', $callbackSource, 'The new callback should not echo output.');

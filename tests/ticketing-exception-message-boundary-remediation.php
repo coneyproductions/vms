@@ -181,63 +181,63 @@ function WC(): object
 	return $wc;
 }
 
-function vms_ticketing_v2_enforce_live_event_items_in_cart(): void
+function bvmgr_ticketing_v2_enforce_live_event_items_in_cart(): void
 {
 	foreach ((array) ($GLOBALS['vms_test_checkout_blocker_seed']['live'] ?? array()) as $message) {
 		wc_add_notice($message, 'error');
 	}
 }
 
-function vms_ticketing_v2_enforce_early_price_caps_in_cart(): void
+function bvmgr_ticketing_v2_enforce_early_price_caps_in_cart(): void
 {
 	foreach ((array) ($GLOBALS['vms_test_checkout_blocker_seed']['early_caps'] ?? array()) as $message) {
 		wc_add_notice($message, 'error');
 	}
 }
 
-function vms_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
+function bvmgr_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
 {
 	foreach ((array) ($GLOBALS['vms_test_checkout_blocker_seed']['max_qty'] ?? array()) as $message) {
 		wc_add_notice($message, 'error');
 	}
 }
 
-function vms_ticketing_v2_enforce_verified_ticket_limits_in_cart(): void
+function bvmgr_ticketing_v2_enforce_verified_ticket_limits_in_cart(): void
 {
 	foreach ((array) ($GLOBALS['vms_test_checkout_blocker_seed']['verified_limits'] ?? array()) as $message) {
 		wc_add_notice($message, 'error');
 	}
 }
 
-function vms_ticketing_v2_enforce_ticket_ratio_rules_in_cart(): void
+function bvmgr_ticketing_v2_enforce_ticket_ratio_rules_in_cart(): void
 {
 	foreach ((array) ($GLOBALS['vms_test_checkout_blocker_seed']['ratio'] ?? array()) as $message) {
 		wc_add_notice($message, 'error');
 	}
 }
 
-function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
+function bvmgr_ticketing_v2_enforce_claim_assignments_in_cart(): void
 {
 	foreach ((array) ($GLOBALS['vms_test_checkout_blocker_seed']['claim_assignments'] ?? array()) as $message) {
 		wc_add_notice($message, 'error');
 	}
 }
 
-function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
+function bvmgr_ticketing_v2_enforce_ticket_visibility_rules(): void
 {
 	foreach ((array) ($GLOBALS['vms_test_checkout_blocker_seed']['visibility'] ?? array()) as $message) {
 		wc_add_notice($message, 'error');
 	}
 }
 
-function vms_ticketing_v2_enforce_cart_rules(): void
+function bvmgr_ticketing_v2_enforce_cart_rules(): void
 {
 	foreach ((array) ($GLOBALS['vms_test_checkout_blocker_seed']['cart_rules'] ?? array()) as $message) {
 		wc_add_notice($message, 'error');
 	}
 }
 
-function vms_ticketing_v2_store_api_request_is_checkout(): bool
+function bvmgr_ticketing_v2_store_api_request_is_checkout(): bool
 {
 	return !empty($GLOBALS['vms_test_store_api_request_is_checkout']);
 }
@@ -251,7 +251,7 @@ function vms_ticketing_v2_store_api_request_is_checkout(): bool
  * @param mixed $cart_item_data
  * @return mixed
  */
-function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, $variation_id = 0, $variations = array(), $cart_item_data = array())
+function bvmgr_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, $variation_id = 0, $variations = array(), $cart_item_data = array())
 {
 	$GLOBALS['vms_test_validate_add_to_cart_calls'][] = array(
 		'passed' => $passed,
@@ -370,23 +370,23 @@ try {
 		'Webhook exception diagnostics should remain JSON-encoded in Social Sharing audit details.'
 	);
 
-	$checkoutUpdateSource = vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_store_api_checkout_update_order_meta');
+	$checkoutUpdateSource = vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_store_api_checkout_update_order_meta');
 	vms_test_assert_contains(
 		'throw new Exception(implode("\\n", $messages)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped',
 		$checkoutUpdateSource,
 		'Checkout blocker Store API throw should keep the bounded line-specific suppression on the plain-text exception sink.'
 	);
 
-	$validateAddSource = vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_store_api_validate_add_to_cart');
+	$validateAddSource = vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_store_api_validate_add_to_cart');
 	vms_test_assert_contains(
 		'throw new Exception($message); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped',
 		$validateAddSource,
 		'Store API add-to-cart throw should keep the bounded line-specific suppression on the plain-text exception sink.'
 	);
 
-	eval(vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_atomic_error_notices'));
-	eval(vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_capture_checkout_blocker_error_messages'));
-	eval(vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_store_api_add_checkout_blocker_errors'));
+	eval(vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_atomic_error_notices'));
+	eval(vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_capture_checkout_blocker_error_messages'));
+	eval(vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_store_api_add_checkout_blocker_errors'));
 	eval($checkoutUpdateSource);
 	eval($validateAddSource);
 
@@ -401,7 +401,7 @@ try {
 		'claim_assignments' => array(' Buyer <em>must</em> verify '),
 	);
 
-	$messages = vms_ticketing_v2_capture_checkout_blocker_error_messages();
+	$messages = bvmgr_ticketing_v2_capture_checkout_blocker_error_messages();
 	vms_test_assert_same(
 		array('Seat 1 assignment missing', 'Buyer must verify'),
 		$messages,
@@ -417,7 +417,7 @@ try {
 	);
 
 	$wpError = new WP_Error();
-	vms_ticketing_v2_store_api_add_checkout_blocker_errors($wpError, null);
+	bvmgr_ticketing_v2_store_api_add_checkout_blocker_errors($wpError, null);
 	vms_test_assert_same(
 		array('Seat 1 assignment missing', 'Buyer must verify'),
 		$wpError->get_error_messages(),
@@ -425,7 +425,7 @@ try {
 	);
 
 	try {
-		vms_ticketing_v2_store_api_checkout_update_order_meta((object) array('id' => 99));
+		bvmgr_ticketing_v2_store_api_checkout_update_order_meta((object) array('id' => 99));
 		vms_test_fail('Checkout update should throw when plain-text blocker messages exist.');
 	} catch (Exception $exception) {
 		vms_test_assert_same(
@@ -443,7 +443,7 @@ try {
 	$GLOBALS['vms_test_validate_add_to_cart_notices'] = array('<span>Buyer <em>must</em> log in</span>');
 
 	try {
-		vms_ticketing_v2_store_api_validate_add_to_cart(null, array('id' => 77, 'quantity' => 2));
+		bvmgr_ticketing_v2_store_api_validate_add_to_cart(null, array('id' => 77, 'quantity' => 2));
 		vms_test_fail('Store API add-to-cart validation should throw when the underlying Woo notice stack contains an error.');
 	} catch (Exception $exception) {
 		vms_test_assert_same(
@@ -471,7 +471,7 @@ try {
 	$GLOBALS['vms_test_validate_add_to_cart_notices'] = array();
 
 	try {
-		vms_ticketing_v2_store_api_validate_add_to_cart(null, array('id' => 55));
+		bvmgr_ticketing_v2_store_api_validate_add_to_cart(null, array('id' => 55));
 		vms_test_fail('Store API add-to-cart validation should throw its fallback message when validation fails without a harvested notice.');
 	} catch (Exception $exception) {
 		vms_test_assert_same(

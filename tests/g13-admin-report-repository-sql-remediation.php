@@ -107,13 +107,13 @@ function wc_get_product(int $product_id)
 	return null;
 }
 
-function vms_ticketing_v2_calc_sold_qty_for_entitlement_scope(int $plan_id, string $entitlement_id, string $sku, int $product_id): array
+function bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope(int $plan_id, string $entitlement_id, string $sku, int $product_id): array
 {
 	unset($plan_id, $entitlement_id, $sku, $product_id);
 	return array('ok' => true, 'sold_qty' => 0);
 }
 
-function vms_ticketing_v2_product_meta_key(string $field): string
+function bvmgr_ticketing_v2_product_meta_key(string $field): string
 {
 	return '_vms_' . $field;
 }
@@ -462,7 +462,7 @@ foreach (array(
 
 $all_runtime_source = implode("\n", $mirror_sources);
 g13_same(0, substr_count($mirror_sources['includes/admin/settings-page.php'], 'error_log('), 'G16 settings must contain no direct logging fallback.');
-g13_contains("vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must prefer the PhaseB adapter.');
+g13_contains("bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must prefer the PhaseB adapter.');
 g13_contains("bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must retain the foundation fallback.');
 g13_contains('implode(\'\', $website_rows)', $mirror_sources['includes/admin/event-feedback.php'], 'The neighboring feedback output finding should remain present.');
 g13_contains('echo vms_express_bar_action_form(', $mirror_sources['includes/admin/express-bar.php'], 'The neighboring Express Bar output findings should remain present.');

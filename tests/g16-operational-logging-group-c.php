@@ -163,7 +163,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 }
 
 g16c_same($g16c_sources['mirror']['notifications'], $g16c_sources['shadow']['notifications'], 'Notification file must retain full parity.');
-foreach (array('vms_entitlements_sync_image_log', 'vms_entitlements_sync_product_image_with_result', 'vms_entitlements_sync_plan_image_changes') as $name) {
+foreach (array('bvmgr_entitlements_sync_image_log', 'bvmgr_entitlements_sync_product_image_with_result', 'bvmgr_entitlements_sync_plan_image_changes') as $name) {
 	g16c_same(g16c_extract_function($g16c_sources['mirror']['phase'], $name), g16c_extract_function($g16c_sources['shadow']['phase'], $name), 'PhaseB owned parity failed: ' . $name);
 }
 foreach (array('vms_ticket_integrity_fatal_operation', 'vms_ticket_integrity_fatal_source_scope', 'vms_ticket_integrity_fatal_operational_context', 'vms_ticket_integrity_fatal_guard_shutdown') as $name) {
@@ -172,7 +172,7 @@ foreach (array('vms_ticket_integrity_fatal_operation', 'vms_ticket_integrity_fat
 g16c_same(g16c_extract_function($g16c_sources['mirror']['settings'], 'vms_handle_sync_entitlement_images'), g16c_extract_function($g16c_sources['shadow']['settings'], 'vms_handle_sync_entitlement_images'), 'Settings owned handler parity failed.');
 
 $g16c_phase = $g16c_sources['mirror']['phase'];
-g16c_same(6, substr_count($g16c_phase, 'vms_entitlements_sync_image_log('), 'PhaseB must contain the wrapper definition and five internal producers.');
+g16c_same(6, substr_count($g16c_phase, 'bvmgr_entitlements_sync_image_log('), 'PhaseB must contain the wrapper definition and five internal producers.');
 foreach (array(
 	'entitlement_image_sync_legacy',
 	'entitlement_image_sync_product_failed',
@@ -184,10 +184,10 @@ foreach (array(
 	g16c_same(1, substr_count($g16c_phase, "'{$event_code}'"), 'PhaseB event-code count changed: ' . $event_code);
 }
 g16c_same(1, preg_match('/\x27entitlement_image_sync_product_save_failed\x27.{0,700}\$e\s*\n\s*\);/s', $g16c_phase), 'Caught Throwable must travel only through the adapter error argument.');
-g16c_same(0, substr_count(g16c_extract_function($g16c_phase, 'vms_entitlements_sync_image_log'), "'message'"), 'PhaseB wrapper must never put a raw message in context.');
+g16c_same(0, substr_count(g16c_extract_function($g16c_phase, 'bvmgr_entitlements_sync_image_log'), "'message'"), 'PhaseB wrapper must never put a raw message in context.');
 
 $g16c_settings_handler = g16c_extract_function($g16c_sources['mirror']['settings'], 'vms_handle_sync_entitlement_images');
-g16c_assert(strpos($g16c_settings_handler, "vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'") !== false, 'Settings must prefer the PhaseB wrapper.');
+g16c_assert(strpos($g16c_settings_handler, "bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'") !== false, 'Settings must prefer the PhaseB wrapper.');
 g16c_assert(strpos($g16c_settings_handler, "bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed'") !== false, 'Settings must fall back to the foundation adapter.');
 g16c_assert(strpos($g16c_settings_handler, "'count' => (int) \$summary['errors']") !== false, 'Settings must retain only the bounded error count.');
 g16c_same(0, substr_count($g16c_settings_handler, 'error_log('), 'Settings must not retain a direct fallback.');
@@ -225,8 +225,8 @@ $g16c_reverse_specs['settings'] = array(array(
 		'status' => ((int) $summary['errors'] > 0) ? 'completed_with_errors' : 'completed',
 		'count' => (int) $summary['errors'],
 	);
-	if (function_exists('vms_entitlements_sync_image_log')) {
-		vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
+	if (function_exists('bvmgr_entitlements_sync_image_log')) {
+		bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
 	} elseif (function_exists('vms_record_operational_issue')) {
 		vms_record_operational_issue('entitlement_image_sync_backfill_completed', $operational_context);
 	}
@@ -274,7 +274,7 @@ PHP,
 $g16c_reverse_specs['phase'] = array(
 	array(
 		'current' => <<<'PHP'
-function vms_entitlements_sync_image_log(string $event_code, array $context = array(), $error = null): void {
+function bvmgr_entitlements_sync_image_log(string $event_code, array $context = array(), $error = null): void {
     if (!function_exists('vms_record_operational_issue')) {
         return;
     }
@@ -315,7 +315,7 @@ PHP,
         );
 PHP,
 		'historical' => <<<'PHP'
-        vms_entitlements_sync_image_log(
+        bvmgr_entitlements_sync_image_log(
             sprintf('status=%s product_id=%d entitlement_id=%s', $result['status'], $product_id, $entitlement_id)
         );
 PHP,
@@ -337,7 +337,7 @@ PHP,
                 );
 PHP,
 		'historical' => <<<'PHP'
-                vms_entitlements_sync_image_log(
+                bvmgr_entitlements_sync_image_log(
                     sprintf(
                         'status=warning_wc_save_failed product_id=%d entitlement_id=%s image_id=%d detail=%s',
                         $product_id,
@@ -364,7 +364,7 @@ PHP,
         );
 PHP,
 		'historical' => <<<'PHP'
-        vms_entitlements_sync_image_log(
+        bvmgr_entitlements_sync_image_log(
             sprintf(
                 'status=%s product_id=%d entitlement_id=%s plan_id=%d image_id=%d',
                 $result['status'],
@@ -392,7 +392,7 @@ PHP,
     );
 PHP,
 		'historical' => <<<'PHP'
-    vms_entitlements_sync_image_log(
+    bvmgr_entitlements_sync_image_log(
         sprintf(
             'status=%s product_id=%d entitlement_id=%s plan_id=%d image_id=%d detail=%s',
             (string) $result['status'],
@@ -419,7 +419,7 @@ PHP,
             );
 PHP,
 		'historical' => <<<'PHP'
-            vms_entitlements_sync_image_log(
+            bvmgr_entitlements_sync_image_log(
                 sprintf(
                     'status=%s product_id=%d entitlement_id=%s plan_id=%d detail=%s',
                     $res['status'],
@@ -667,16 +667,16 @@ g16c_same(1, count($GLOBALS['g16c_direct_logs']), 'False notification adapter mu
 g16c_same(0, substr_count($GLOBALS['g16c_direct_logs'][0], $g16c_sentinel), 'Notification fallback leaked sentinel data.');
 g16c_assert(preg_match('/^\[BVM operational\] event=notification_log_insert_failed event_key=[a-z0-9_-]{1,80}$/', $GLOBALS['g16c_direct_logs'][0]) === 1, 'Notification fallback payload changed.');
 
-$g16c_phase_logger = g16c_extract_function($g16c_sources['mirror']['phase'], 'vms_entitlements_sync_image_log');
+$g16c_phase_logger = g16c_extract_function($g16c_sources['mirror']['phase'], 'bvmgr_entitlements_sync_image_log');
 eval($g16c_phase_logger);
 $GLOBALS['g16c_adapter_calls'] = array();
 $GLOBALS['g16c_adapter_result'] = false;
-vms_entitlements_sync_image_log('legacy detail ' . $g16c_sentinel);
+bvmgr_entitlements_sync_image_log('legacy detail ' . $g16c_sentinel);
 g16c_same('entitlement_image_sync_legacy', $GLOBALS['g16c_adapter_calls'][0][0], 'PhaseB legacy event changed.');
 g16c_same(array('service' => 'ticketing', 'operation' => 'sync_image', 'status' => 'legacy'), $GLOBALS['g16c_adapter_calls'][0][1], 'PhaseB legacy context changed.');
 g16c_same('legacy detail ' . $g16c_sentinel, $GLOBALS['g16c_adapter_calls'][0][2], 'PhaseB legacy string must travel only as adapter error identity input.');
 $phase_error = new RuntimeException($g16c_sentinel, 77);
-vms_entitlements_sync_image_log('entitlement_image_sync_product_save_failed', array('service' => 'ticketing', 'operation' => 'sync_image', 'stage' => 'product_save', 'status' => 'warning_wc_save_failed', 'product_id' => 12, 'plan_id' => 34, 'post_id' => 56), $phase_error);
+bvmgr_entitlements_sync_image_log('entitlement_image_sync_product_save_failed', array('service' => 'ticketing', 'operation' => 'sync_image', 'stage' => 'product_save', 'status' => 'warning_wc_save_failed', 'product_id' => 12, 'plan_id' => 34, 'post_id' => 56), $phase_error);
 g16c_same($phase_error, $GLOBALS['g16c_adapter_calls'][1][2], 'PhaseB Throwable must travel only as adapter error identity input.');
 g16c_same(array('product_id' => 12, 'plan_id' => 34, 'post_id' => 56), array_intersect_key($GLOBALS['g16c_adapter_calls'][1][1], array_flip(array('product_id', 'plan_id', 'post_id'))), 'PhaseB safe IDs changed.');
 
@@ -705,7 +705,7 @@ final class G16CSettingsExit extends RuntimeException {}
 
 $g16c_settings_eval = $g16c_settings_handler;
 $g16c_settings_eval = g16c_replace_once($g16c_settings_eval, 'function vms_handle_sync_entitlement_images(', 'function g16c_handle_sync_entitlement_images(', 'Settings runtime rename failed.');
-$g16c_settings_eval = g16c_replace_once($g16c_settings_eval, "function_exists('vms_entitlements_sync_image_log')", 'false', 'Settings PhaseB-unavailable injection failed.');
+$g16c_settings_eval = g16c_replace_once($g16c_settings_eval, "function_exists('bvmgr_entitlements_sync_image_log')", 'false', 'Settings PhaseB-unavailable injection failed.');
 $g16c_settings_eval = g16c_replace_once($g16c_settings_eval, 'exit;', 'throw new G16CSettingsExit();', 'Settings exit capture failed.');
 eval($g16c_settings_eval);
 $GLOBALS['g16c_adapter_calls'] = array();

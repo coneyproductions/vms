@@ -216,16 +216,16 @@ if (!is_string($source)) {
 	throw new RuntimeException('Unable to read rules-v2 source.');
 }
 
-$purchased_source = vms_test_extract_function($source, 'vms_ticketing_v2_purchased_ticket_qty_for_user');
-$decode_source = vms_test_extract_function($source, 'vms_ticketing_v2_decode_stored_claim_assignment_rows');
-$assignee_source = vms_test_extract_function($source, 'vms_ticketing_v2_assignee_consumed_qty_for_event');
+$purchased_source = vms_test_extract_function($source, 'bvmgr_ticketing_v2_purchased_ticket_qty_for_user');
+$decode_source = vms_test_extract_function($source, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows');
+$assignee_source = vms_test_extract_function($source, 'bvmgr_ticketing_v2_assignee_consumed_qty_for_event');
 $plan_source = vms_test_extract_function($source, 'bvmgr_ticketing_v2_find_plan_id_by_tec_event_id');
 eval($purchased_source);
 eval($decode_source);
 eval($assignee_source);
 eval($plan_source);
 $fallback_assignee_source = preg_replace(
-	'/function vms_ticketing_v2_assignee_consumed_qty_for_event\(/',
+	'/function bvmgr_ticketing_v2_assignee_consumed_qty_for_event\(/',
 	'function vms_ticketing_v2_assignee_consumed_qty_for_event_fallback(',
 	$assignee_source,
 	1
@@ -255,7 +255,7 @@ $coverage = array(
 	array('body' => $assignee_source, 'fragment' => 'stats-table name', 'rows' => 2),
 	array('body' => $assignee_source, 'fragment' => 'itemmeta-table name', 'rows' => 2),
 	array('body' => $assignee_source, 'fragment' => 'phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching', 'rows' => 4),
-	array('body' => vms_test_extract_function($source, 'vms_ticketing_v2_resolve_ticket_max_context'), 'fragment' => 'WordPress.DB.SlowDBQuery.slow_db_query_meta_query', 'rows' => 1),
+	array('body' => vms_test_extract_function($source, 'bvmgr_ticketing_v2_resolve_ticket_max_context'), 'fragment' => 'WordPress.DB.SlowDBQuery.slow_db_query_meta_query', 'rows' => 1),
 	array('body' => $plan_source, 'fragment' => 'WordPress.DB.SlowDBQuery.slow_db_query_meta_query', 'rows' => 1),
 );
 foreach ($coverage as $boundary) {
@@ -272,7 +272,7 @@ $stats = 'wp_hpos_wc_order_stats';
 $orders = 'wp_hpos_wc_orders';
 $wpdb->get_var_queue = array($oi, $oim, $stats, $orders, 6);
 $GLOBALS['wpdb'] = $wpdb;
-$purchased = vms_ticketing_v2_purchased_ticket_qty_for_user(101, array(9, 8, 9, 0));
+$purchased = bvmgr_ticketing_v2_purchased_ticket_qty_for_user(101, array(9, 8, 9, 0));
 vms_test_same(6, $purchased, 'HPOS purchased-ticket aggregate result changed.');
 $call = vms_test_prepare_containing($wpdb, 'GREATEST(0, line_items.qty');
 vms_test_same(
@@ -287,7 +287,7 @@ vms_test_contains('HAVING product_id IN (8,9) OR variation_id IN (8,9)', $sql, '
 vms_test_contains("stats.status IN ('wc-processing','wc-completed','wc-on-hold')", $sql, 'Purchased-ticket paid statuses changed.');
 vms_test_no_placeholders($sql);
 $read_count = count($wpdb->reads);
-vms_test_same(6, vms_ticketing_v2_purchased_ticket_qty_for_user(101, array(8, 9)), 'Request-cached purchased-ticket result changed.');
+vms_test_same(6, bvmgr_ticketing_v2_purchased_ticket_qty_for_user(101, array(8, 9)), 'Request-cached purchased-ticket result changed.');
 vms_test_same($read_count, count($wpdb->reads), 'Repeated purchased-ticket lookup should use its request cache.');
 vms_test_same(array(), $wpdb->mutations, 'Purchased-ticket lookup must remain read-only.');
 
@@ -298,7 +298,7 @@ $oim = 'wp_cpt_woocommerce_order_itemmeta';
 $stats = 'wp_cpt_wc_order_stats';
 $wpdb->get_var_queue = array($oi, $oim, $stats, null, 3);
 $GLOBALS['wpdb'] = $wpdb;
-vms_test_same(3, vms_ticketing_v2_purchased_ticket_qty_for_user(102, array(11)), 'CPT purchased-ticket aggregate result changed.');
+vms_test_same(3, bvmgr_ticketing_v2_purchased_ticket_qty_for_user(102, array(11)), 'CPT purchased-ticket aggregate result changed.');
 $sql = vms_test_read_containing($wpdb, 'GREATEST(0, line_items.qty')['sql'];
 vms_test_not_contains('refund_orders', $sql, 'CPT refund branch should not reference unavailable HPOS orders.');
 vms_test_contains("AND (refund_posts.post_type = 'shop_order_refund')", $sql, 'CPT refund type condition changed.');
@@ -309,7 +309,7 @@ $wpdb = new VMS_Rules_V2_WPDB_Spy('wp_missing_');
 $wpdb->get_var_queue = array(null, null);
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['vms_rules_v2_wc_orders_queue'][] = array();
-vms_test_same(0, vms_ticketing_v2_purchased_ticket_qty_for_user(103, array(12)), 'Missing purchased-ticket tables should preserve the WooCommerce API fallback.');
+vms_test_same(0, bvmgr_ticketing_v2_purchased_ticket_qty_for_user(103, array(12)), 'Missing purchased-ticket tables should preserve the WooCommerce API fallback.');
 
 // Assignee lookup: identifiers/values, decoded result count, and lookup-support caching.
 $wpdb = new VMS_Rules_V2_WPDB_Spy('wp_claim_');
@@ -322,7 +322,7 @@ $wpdb->get_results_queue[] = array(
 	array('assignments_json' => '[{"email":"GUEST@example.com"}]'),
 );
 $GLOBALS['wpdb'] = $wpdb;
-$consumed = vms_ticketing_v2_assignee_consumed_qty_for_event(55, 'Guest@Example.com', array(3, 4, 3));
+$consumed = bvmgr_ticketing_v2_assignee_consumed_qty_for_event(55, 'Guest@Example.com', array(3, 4, 3));
 vms_test_same(2, $consumed, 'Assignee consumed quantity should count matching stored assignment rows.');
 $call = vms_test_prepare_containing($wpdb, 'SELECT lookup.order_item_id');
 vms_test_same(

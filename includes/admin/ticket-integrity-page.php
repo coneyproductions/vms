@@ -786,8 +786,8 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 			}
 			$details = is_array($mutation_row['details'] ?? null) ? $mutation_row['details'] : array();
 			$result_health = sanitize_key((string) ($mutation_row['result_health'] ?? ''));
-			$result_health_label = $result_health !== '' && function_exists('vms_ticketing_v2_inventory_result_health_label')
-				? (string) vms_ticketing_v2_inventory_result_health_label($result_health)
+			$result_health_label = $result_health !== '' && function_exists('bvmgr_ticketing_v2_inventory_result_health_label')
+				? (string) bvmgr_ticketing_v2_inventory_result_health_label($result_health)
 				: trim((string) ($details['result_health'] ?? ''));
 			$lines[] = '- ' . trim((string) ($mutation_row['change_type_label'] ?? __('Inventory mutation', 'backstage-venue-manager'))) . ' / ' . vms_ticket_integrity_format_datetime(absint($mutation_row['timestamp_gmt'] ?? 0));
 			$lines[] = '  - Source: ' . trim((string) ($mutation_row['source_function'] ?? $mutation_row['source_hook'] ?? ''));
@@ -1578,8 +1578,8 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 				$derivation_text = trim((string) ($mutation['derivation_source_label'] ?? $mutation['derivation_source'] ?? ''));
 				$writer_branch_text = trim((string) ($details['writer_branch'] ?? $mutation['writer_branch'] ?? ''));
 				$result_health = sanitize_key((string) ($mutation['result_health'] ?? ''));
-				$result_health_text = $result_health !== '' && function_exists('vms_ticketing_v2_inventory_result_health_label')
-					? (string) vms_ticketing_v2_inventory_result_health_label($result_health)
+				$result_health_text = $result_health !== '' && function_exists('bvmgr_ticketing_v2_inventory_result_health_label')
+					? (string) bvmgr_ticketing_v2_inventory_result_health_label($result_health)
 					: '';
 				$stock_transition = vms_ticket_integrity_report_text_value($details['old_stock_qty'] ?? null) . ' -> ' . vms_ticket_integrity_report_text_value($details['new_stock_qty'] ?? null);
 				$status_transition = trim((string) ($details['old_stock_status'] ?? '—')) . ' -> ' . trim((string) ($details['new_stock_status'] ?? '—'));

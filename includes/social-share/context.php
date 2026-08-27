@@ -198,8 +198,8 @@ if (!function_exists('vms_social_event_plan_context')) {
 		}
 
 		$price_text = '';
-		$from_price = function_exists('vms_ticketing_v2_get_from_price_for_display')
-			? vms_ticketing_v2_get_from_price_for_display($event_plan_id)
+		$from_price = function_exists('bvmgr_ticketing_v2_get_from_price_for_display')
+			? bvmgr_ticketing_v2_get_from_price_for_display($event_plan_id)
 			: null;
 		if ($from_price !== null && $from_price > 0) {
 			$price_text = 'From $' . number_format_i18n((float) $from_price, 2);

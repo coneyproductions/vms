@@ -492,8 +492,8 @@ function vms_ticket_inventory_forensics_post_type(int $object_id): string
 
 function vms_ticket_inventory_forensics_product_meta_key(string $which, string $fallback): string
 {
-	if (function_exists('vms_ticketing_v2_product_meta_key')) {
-		$key = (string) vms_ticketing_v2_product_meta_key($which);
+	if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+		$key = (string) bvmgr_ticketing_v2_product_meta_key($which);
 		if ($key !== '') {
 			return $key;
 		}
@@ -1802,10 +1802,10 @@ function vms_ticket_inventory_forensics_resolve_sold_context(int $plan_id, array
 
 	if ($product_id > 0) {
 		$scan_result = array('ok' => false, 'message' => 'sold_qty_helper_unavailable');
-		if ($role === 'add_on' && $plan_id > 0 && $entitlement_id !== '' && function_exists('vms_ticketing_v2_calc_sold_qty_for_entitlement_scope')) {
-			$scan_result = vms_ticketing_v2_calc_sold_qty_for_entitlement_scope($plan_id, $entitlement_id, $sku, $product_id);
-		} elseif (function_exists('vms_ticketing_v2_calc_sold_qty_for_product')) {
-			$scan_result = vms_ticketing_v2_calc_sold_qty_for_product($product_id);
+		if ($role === 'add_on' && $plan_id > 0 && $entitlement_id !== '' && function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope')) {
+			$scan_result = bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope($plan_id, $entitlement_id, $sku, $product_id);
+		} elseif (function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_product')) {
+			$scan_result = bvmgr_ticketing_v2_calc_sold_qty_for_product($product_id);
 		}
 
 		if (!empty($scan_result['ok'])) {

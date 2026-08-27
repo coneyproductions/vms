@@ -2184,20 +2184,20 @@ if (!function_exists('bvmgr_event_command_center_ticket_summary_meta_bundle')) {
             if ($ticket_product_ids_key === '') {
                 $ticket_product_ids_key = '_vms_ticket_product_ids_v1';
             }
-            $ticketing_config_key = function_exists('vms_ticketing_v2_k')
-                ? (string) vms_ticketing_v2_k('config')
+            $ticketing_config_key = function_exists('bvmgr_ticketing_v2_k')
+                ? (string) bvmgr_ticketing_v2_k('config')
                 : '_vms_ticketing_v2_config';
             if ($ticketing_config_key === '') {
                 $ticketing_config_key = '_vms_ticketing_v2_config';
             }
-            $ticketing_sync_key = function_exists('vms_ticketing_v2_k')
-                ? (string) vms_ticketing_v2_k('sync')
+            $ticketing_sync_key = function_exists('bvmgr_ticketing_v2_k')
+                ? (string) bvmgr_ticketing_v2_k('sync')
                 : '_vms_ticketing_v2_sync';
             if ($ticketing_sync_key === '') {
                 $ticketing_sync_key = '_vms_ticketing_v2_sync';
             }
-            $ticketing_stats_v2_key = function_exists('vms_ticketing_v2_k')
-                ? (string) vms_ticketing_v2_k('stats')
+            $ticketing_stats_v2_key = function_exists('bvmgr_ticketing_v2_k')
+                ? (string) bvmgr_ticketing_v2_k('stats')
                 : '_vms_ticketing_stats_v2';
             if ($ticketing_stats_v2_key === '') {
                 $ticketing_stats_v2_key = '_vms_ticketing_stats_v2';

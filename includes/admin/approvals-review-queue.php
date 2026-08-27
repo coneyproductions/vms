@@ -599,12 +599,12 @@ if (!function_exists('vms_approvals_queue_default_vendor_post_type')) {
 if (!function_exists('vms_approvals_queue_verification_pending_count')) {
 	function vms_approvals_queue_verification_pending_count(): int
 	{
-		if (!function_exists('vms_ticketing_verification_request_post_types')) {
+		if (!function_exists('bvmgr_ticketing_verification_request_post_types')) {
 			return 0;
 		}
 
 		$query = new WP_Query(array(
-			'post_type' => vms_ticketing_verification_request_post_types(),
+			'post_type' => bvmgr_ticketing_verification_request_post_types(),
 			'post_status' => array('pending'),
 			'posts_per_page' => 1,
 			'fields' => 'ids',
@@ -620,12 +620,12 @@ if (!function_exists('vms_approvals_queue_verification_summary')) {
 	 */
 	function vms_approvals_queue_verification_summary(): array
 	{
-		if (!function_exists('vms_ticketing_verification_request_post_types')) {
+		if (!function_exists('bvmgr_ticketing_verification_request_post_types')) {
 			return array();
 		}
 
 		$rows = get_posts(array(
-			'post_type' => vms_ticketing_verification_request_post_types(),
+			'post_type' => bvmgr_ticketing_verification_request_post_types(),
 			'post_status' => array('pending'),
 			'posts_per_page' => 5,
 			'orderby' => 'date',
@@ -654,8 +654,8 @@ if (!function_exists('vms_approvals_queue_verification_summary')) {
 				$name = sprintf(__('Request #%d', 'backstage-venue-manager'), $request_id);
 			}
 
-			$program_label = function_exists('vms_ticketing_verification_program_label')
-				? (string) vms_ticketing_verification_program_label($program)
+			$program_label = function_exists('bvmgr_ticketing_verification_program_label')
+				? (string) bvmgr_ticketing_verification_program_label($program)
 				: ucwords(str_replace('_', ' ', $program));
 			$meta_bits = array_filter(array($program_label, $submitted_at));
 			$items[] = array(
@@ -744,8 +744,8 @@ if (!function_exists('vms_approvals_queue_vendor_summary')) {
 if (!function_exists('vms_approvals_queue_register_default_providers')) {
 	function vms_approvals_queue_register_default_providers(): void
 	{
-		$verification_cap = function_exists('vms_ticketing_verification_manage_capability')
-			? (string) vms_ticketing_verification_manage_capability()
+		$verification_cap = function_exists('bvmgr_ticketing_verification_manage_capability')
+			? (string) bvmgr_ticketing_verification_manage_capability()
 			: 'manage_options';
 
 		vms_approvals_queue_register_provider(

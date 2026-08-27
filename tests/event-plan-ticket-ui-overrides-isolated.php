@@ -227,11 +227,11 @@ try {
     $primaryVendorId = $createVendor('Ticket UI Primary Vendor');
     $secondaryVendorId = $createVendor('Ticket UI Secondary Vendor', $secondaryTypeSlug);
 
-    $ticketConfigKey = function_exists('vms_ticketing_v2_k')
-        ? (string) vms_ticketing_v2_k('config')
+    $ticketConfigKey = function_exists('bvmgr_ticketing_v2_k')
+        ? (string) bvmgr_ticketing_v2_k('config')
         : '_vms_ticketing_config_v2';
-    $tecMetaKey = function_exists('vms_ticketing_meta_key')
-        ? (string) vms_ticketing_meta_key('tec_event_id', '_vms_tec_event_id')
+    $tecMetaKey = function_exists('bvmgr_ticketing_meta_key')
+        ? (string) bvmgr_ticketing_meta_key('tec_event_id', '_vms_tec_event_id')
         : '_vms_tec_event_id';
     $suppressMetaKey = function_exists('bvmgr_meta_key')
         ? (string) (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')

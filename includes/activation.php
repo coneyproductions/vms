@@ -45,8 +45,8 @@ function bvmgr_activate_plugin(): void
 		'vms_notify_ensure_digest_cron',
 		'vms_ticket_integrity_maybe_schedule_cron',
 		'bvmgr_integrity_schedule_daily_scan',
-		'vms_ticketing_v2_legacy_cleanup_cron_init',
-		'vms_ticketing_verification_schedule_cleanup',
+		'bvmgr_ticketing_v2_legacy_cleanup_cron_init',
+		'bvmgr_ticketing_verification_schedule_cleanup',
 	);
 	foreach ($recurring_bootstraps as $bootstrap) {
 		if (function_exists($bootstrap)) {

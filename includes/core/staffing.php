@@ -2344,8 +2344,8 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
 			$pids = array_merge($pids, $stored);
 		}
 
-		if (function_exists('vms_ticketing_get_manual_product_ids')) {
-			$pids = array_merge($pids, (array) vms_ticketing_get_manual_product_ids($event_plan_id));
+		if (function_exists('bvmgr_ticketing_get_manual_product_ids')) {
+			$pids = array_merge($pids, (array) bvmgr_ticketing_get_manual_product_ids($event_plan_id));
 		} else {
 			$k_manual = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_manual_product_ids') : '_vms_ticket_manual_product_ids_v1';
 			if ($k_manual === '') {
@@ -2358,8 +2358,8 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
 		}
 
 		$tec_id = 0;
-		if (function_exists('vms_ticketing_b_get_linked_tec_event_id')) {
-			$tec_id = (int) vms_ticketing_b_get_linked_tec_event_id($event_plan_id);
+		if (function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')) {
+			$tec_id = (int) bvmgr_ticketing_b_get_linked_tec_event_id($event_plan_id);
 		}
 		if ($tec_id <= 0) {
 			$k_tec = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
@@ -2370,10 +2370,10 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_product_ids')) {
 		}
 
 		if ($tec_id > 0) {
-			if (function_exists('vms_ticketing_b_get_event_ticket_products')) {
-				$pids = array_merge($pids, (array) vms_ticketing_b_get_event_ticket_products($tec_id));
-			} elseif (function_exists('vms_ticketing_get_ticket_product_ids_for_tec_event')) {
-				$pids = array_merge($pids, (array) vms_ticketing_get_ticket_product_ids_for_tec_event($tec_id));
+			if (function_exists('bvmgr_ticketing_b_get_event_ticket_products')) {
+				$pids = array_merge($pids, (array) bvmgr_ticketing_b_get_event_ticket_products($tec_id));
+			} elseif (function_exists('bvmgr_ticketing_get_ticket_product_ids_for_tec_event')) {
+				$pids = array_merge($pids, (array) bvmgr_ticketing_get_ticket_product_ids_for_tec_event($tec_id));
 			}
 		}
 
@@ -2434,8 +2434,8 @@ if (!function_exists('vms_staffing_get_event_plan_ticket_sales_snapshot')) {
 		}
 
 		$product_ids = vms_staffing_get_paid_ticket_product_ids(vms_staffing_get_event_plan_ticket_product_ids($event_plan_id));
-		if (!empty($product_ids) && function_exists('vms_ticketing_compute_stats')) {
-			$live = (array) vms_ticketing_compute_stats($product_ids);
+		if (!empty($product_ids) && function_exists('bvmgr_ticketing_compute_stats')) {
+			$live = (array) bvmgr_ticketing_compute_stats($product_ids);
 			$qty_meta = vms_staffing_extract_ticket_qty($live);
 			return array(
 				'resolved' => true,

@@ -784,7 +784,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			$fixture_ok = false;
 			$fixture_notes = '';
 			$runtime_available = (
-				function_exists('vms_ticketing_v2_clear_success_notices')
+				function_exists('bvmgr_ticketing_v2_clear_success_notices')
 				&& function_exists('wc_get_notices')
 				&& function_exists('wc_set_notices')
 				&& function_exists('WC')
@@ -805,7 +805,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 				);
 
 				wc_set_notices($fixture);
-				vms_ticketing_v2_clear_success_notices();
+				bvmgr_ticketing_v2_clear_success_notices();
 				$after = wc_get_notices();
 
 				$success_cleared = empty($after['success']);
@@ -896,11 +896,11 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			$fixture_ok = false;
 			$fixture_notes = '';
 			$runtime_available = (
-				function_exists('vms_ticketing_v2_session_get_ga_hints')
-				&& function_exists('vms_ticketing_v2_session_set_ga_hints')
-				&& function_exists('vms_ticketing_v2_session_seed_ga_hint')
-				&& function_exists('vms_ticketing_v2_session_clear_ga_hint')
-				&& function_exists('vms_ticketing_v2_effective_ga_qty_for_plan')
+				function_exists('bvmgr_ticketing_v2_session_get_ga_hints')
+				&& function_exists('bvmgr_ticketing_v2_session_set_ga_hints')
+				&& function_exists('bvmgr_ticketing_v2_session_seed_ga_hint')
+				&& function_exists('bvmgr_ticketing_v2_session_clear_ga_hint')
+				&& function_exists('bvmgr_ticketing_v2_effective_ga_qty_for_plan')
 				&& function_exists('WC')
 				&& WC()
 				&& isset(WC()->session)
@@ -912,17 +912,17 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 				$fixture_notes = 'Runtime fixture skipped (Woo session unavailable in this CLI context); static guard markers evaluated.';
 			} else {
 				$fixture_plan_id = 999991;
-				$before_hints = (array) vms_ticketing_v2_session_get_ga_hints();
+				$before_hints = (array) bvmgr_ticketing_v2_session_get_ga_hints();
 
-					vms_ticketing_v2_session_clear_ga_hint($fixture_plan_id);
-					vms_ticketing_v2_session_seed_ga_hint($fixture_plan_id, 4, 'stale_check_tick01');
+					bvmgr_ticketing_v2_session_clear_ga_hint($fixture_plan_id);
+					bvmgr_ticketing_v2_session_seed_ga_hint($fixture_plan_id, 4, 'stale_check_tick01');
 
-					$hint_only_qty = (int) vms_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 0);
-					$cart_partial_qty = (int) vms_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 2);
-					$mid_hints = (array) vms_ticketing_v2_session_get_ga_hints();
+					$hint_only_qty = (int) bvmgr_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 0);
+					$cart_partial_qty = (int) bvmgr_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 2);
+					$mid_hints = (array) bvmgr_ticketing_v2_session_get_ga_hints();
 					$hint_retained = !empty($mid_hints[$fixture_plan_id]);
-					$cart_caught_up_qty = (int) vms_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 4);
-					$after_hints = (array) vms_ticketing_v2_session_get_ga_hints();
+					$cart_caught_up_qty = (int) bvmgr_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 4);
+					$after_hints = (array) bvmgr_ticketing_v2_session_get_ga_hints();
 					$hint_cleared = empty($after_hints[$fixture_plan_id]);
 
 					$fixture_ok = (
@@ -945,7 +945,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 						$fixture_notes = 'Runtime fixture passed: hinted GA total is used while cart quantity catches up and is cleared once cart quantity reaches the hinted total.';
 					}
 
-				vms_ticketing_v2_session_set_ga_hints(is_array($before_hints) ? $before_hints : array());
+				bvmgr_ticketing_v2_session_set_ga_hints(is_array($before_hints) ? $before_hints : array());
 			}
 
 			$signal = (empty($issues) && $fixture_ok) ? 'pass' : 'warn';

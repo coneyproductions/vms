@@ -517,8 +517,8 @@ if (!function_exists('vms_admission_vendor_guest_ticket_product_ids')) {
 	{
 		$tec_event_id = (int) get_post_meta($event_plan_id, '_vms_tec_event_id', true);
 		$product_ids = array();
-		if ($tec_event_id > 0 && function_exists('vms_ticketing_get_ticket_product_ids_for_tec_event')) {
-			$product_ids = (array) vms_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
+		if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_get_ticket_product_ids_for_tec_event')) {
+			$product_ids = (array) bvmgr_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
 		} elseif ($tec_event_id > 0 && function_exists('bvmgr_get_ticket_product_ids_for_event')) {
 			$product_ids = (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id);
 		} elseif (function_exists('vms_vendor_portal_get_ticket_product_ids')) {

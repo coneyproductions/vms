@@ -44,8 +44,8 @@ if (!function_exists('vms_square_firewall_protected_category_slugs')) {
 if (!function_exists('vms_square_firewall_product_meta_key')) {
     function vms_square_firewall_product_meta_key(string $which): string
     {
-        if (function_exists('vms_ticketing_v2_product_meta_key')) {
-            $key = vms_ticketing_v2_product_meta_key($which);
+        if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+            $key = bvmgr_ticketing_v2_product_meta_key($which);
             if (is_string($key) && $key !== '') {
                 return $key;
             }

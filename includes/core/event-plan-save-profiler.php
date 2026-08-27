@@ -784,8 +784,8 @@ function bvmgr_event_plan_save_profiler_start(int $post_id, WP_Post $post, bool 
     $request = bvmgr_event_plan_save_profiler_post_data();
     $request_action = isset($request['vms_event_plan_action']) ? sanitize_key((string) $request['vms_event_plan_action']) : '';
     $wp_action = isset($request['action']) ? sanitize_key((string) $request['action']) : '';
-    $ticketing_key = function_exists('vms_ticketing_v2_k') ? (string) vms_ticketing_v2_k('config') : '_vms_ticketing_v2_config';
-    $sync_key = function_exists('vms_ticketing_v2_k') ? (string) vms_ticketing_v2_k('sync') : '_vms_ticketing_v2_sync';
+    $ticketing_key = function_exists('bvmgr_ticketing_v2_k') ? (string) bvmgr_ticketing_v2_k('config') : '_vms_ticketing_v2_config';
+    $sync_key = function_exists('bvmgr_ticketing_v2_k') ? (string) bvmgr_ticketing_v2_k('sync') : '_vms_ticketing_v2_sync';
 
 	$deferred = bvmgr_event_plan_save_profiler_deferred_state_for_post($post_id);
 	$deferred_context = is_array($deferred['context'] ?? null) ? $deferred['context'] : array();

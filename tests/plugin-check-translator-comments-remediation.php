@@ -287,7 +287,7 @@ $runtime_files = array(
             ),
         ),
         'snippets'  => array(
-            "echoesc_html(sprintf(__('Configured limit: %1\$s. Effective limit on this server: %2\$s.','backstage-venue-manager'),vms_ticketing_verification_format_bytes(\$configured_upload_bytes),vms_ticketing_verification_format_bytes(\$effective_upload_bytes)));" => 1,
+            "echoesc_html(sprintf(__('Configured limit: %1\$s. Effective limit on this server: %2\$s.','backstage-venue-manager'),bvmgr_ticketing_verification_format_bytes(\$configured_upload_bytes),bvmgr_ticketing_verification_format_bytes(\$effective_upload_bytes)));" => 1,
         ),
     ),
     'includes/portal/vendor-portal.php' => array(

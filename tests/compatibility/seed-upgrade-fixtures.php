@@ -35,8 +35,8 @@ $eventPlanMetaKey = static function (string $field, string $fallback): string {
 };
 
 $productMetaKey = static function (string $field, string $fallback): string {
-	if (function_exists('vms_ticketing_v2_product_meta_key')) {
-		$key = (string) vms_ticketing_v2_product_meta_key($field);
+	if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+		$key = (string) bvmgr_ticketing_v2_product_meta_key($field);
 		if ($key !== '') {
 			return $key;
 		}
@@ -298,8 +298,8 @@ if (function_exists('vms_vendor_user_link_upsert')) {
 	update_post_meta($vendorId, '_vms_vendor_user_id', $userId);
 }
 
-if (function_exists('vms_ticketing_verification_assign_program')) {
-	vms_ticketing_verification_assign_program($userId, 'veteran', 'Compatibility fixture', 1);
+if (function_exists('bvmgr_ticketing_verification_assign_program')) {
+	bvmgr_ticketing_verification_assign_program($userId, 'veteran', 'Compatibility fixture', 1);
 } else {
 	update_user_meta($userId, 'vms_verified_programs', array('veteran'));
 	$user = get_user_by('id', $userId);

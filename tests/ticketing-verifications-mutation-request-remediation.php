@@ -200,65 +200,65 @@ require_once $verificationFile;
 $source = (string) file_get_contents($verificationFile);
 vms_test_assert($source !== '', 'Ticketing verifications source should be readable.');
 
-$decisionBody = vms_test_extract_function($source, 'vms_ticketing_verification_handle_decision');
-$submitBody = vms_test_extract_function($source, 'vms_ticketing_verification_handle_submit');
+$decisionBody = vms_test_extract_function($source, 'bvmgr_ticketing_verification_handle_decision');
+$submitBody = vms_test_extract_function($source, 'bvmgr_ticketing_verification_handle_submit');
 
 vms_test_assert_code_order(
-	"\$request_id = vms_ticketing_verification_post_absint('request_id');",
+	"\$request_id = bvmgr_ticketing_verification_post_absint('request_id');",
 	"wp_verify_nonce(\$nonce, 'vms_verification_decision_' . \$request_id)",
 	$decisionBody,
 	'Verification decisions should derive the dynamic nonce action from the sanitized request ID before verifying the existing nonce.'
 );
 vms_test_assert_code_order(
 	"wp_verify_nonce(\$nonce, 'vms_verification_decision_' . \$request_id)",
-	"\$decision = vms_ticketing_verification_post_key('decision');",
+	"\$decision = bvmgr_ticketing_verification_post_key('decision');",
 	$decisionBody,
 	'Verification decisions should not read the decision value until after the existing nonce passes.'
 );
 vms_test_assert_code_order(
-	"\$decision = vms_ticketing_verification_post_key('decision');",
-	"\$review_notes = vms_ticketing_verification_post_text_field('review_notes');",
+	"\$decision = bvmgr_ticketing_verification_post_key('decision');",
+	"\$review_notes = bvmgr_ticketing_verification_post_text_field('review_notes');",
 	$decisionBody,
 	'Verification decisions should continue to read review notes only after the decision value has been sanitized.'
 );
 vms_test_assert_code_order(
 	"if (!is_user_logged_in()) {",
-	"\$redirect_to = vms_ticketing_verification_post_local_redirect('redirect_to', home_url('/'));",
+	"\$redirect_to = bvmgr_ticketing_verification_post_local_redirect('redirect_to', home_url('/'));",
 	$submitBody,
 	'Verification submit handlers should continue to derive the redirect target inside the login-required branch.'
 );
 
 $_POST = array('response_mode' => ' JSON ');
-vms_test_assert_same('json', vms_ticketing_verification_post_key('response_mode'), 'Verification POST key reads should sanitize scalar response modes.');
+vms_test_assert_same('json', bvmgr_ticketing_verification_post_key('response_mode'), 'Verification POST key reads should sanitize scalar response modes.');
 $_POST = array('response_mode' => array('json'));
-vms_test_assert_same('', vms_ticketing_verification_post_key('response_mode'), 'Verification POST key reads should reject array-shaped response modes.');
+vms_test_assert_same('', bvmgr_ticketing_verification_post_key('response_mode'), 'Verification POST key reads should reject array-shaped response modes.');
 
 $_POST = array('review_notes' => "  Needs follow-up  ");
-vms_test_assert_same('Needs follow-up', vms_ticketing_verification_post_text_field('review_notes'), 'Verification POST text reads should sanitize scalar review notes.');
+vms_test_assert_same('Needs follow-up', bvmgr_ticketing_verification_post_text_field('review_notes'), 'Verification POST text reads should sanitize scalar review notes.');
 $_POST = array('review_notes' => array('bad'));
-vms_test_assert_same('', vms_ticketing_verification_post_text_field('review_notes'), 'Verification POST text reads should reject array-shaped review notes.');
+vms_test_assert_same('', bvmgr_ticketing_verification_post_text_field('review_notes'), 'Verification POST text reads should reject array-shaped review notes.');
 
 $_POST = array('redirect_to' => '/my-account/?view=verification');
-vms_test_assert_same('/my-account/?view=verification', vms_ticketing_verification_post_local_redirect('redirect_to', '/fallback'), 'Verification POST redirects should preserve local redirects.');
+vms_test_assert_same('/my-account/?view=verification', bvmgr_ticketing_verification_post_local_redirect('redirect_to', '/fallback'), 'Verification POST redirects should preserve local redirects.');
 $_POST = array('redirect_to' => array('/my-account/'));
-vms_test_assert_same('/fallback', vms_ticketing_verification_post_local_redirect('redirect_to', '/fallback'), 'Verification POST redirects should reject array-shaped redirect targets.');
+vms_test_assert_same('/fallback', bvmgr_ticketing_verification_post_local_redirect('redirect_to', '/fallback'), 'Verification POST redirects should reject array-shaped redirect targets.');
 $_POST = array('redirect_to' => 'https://evil.example/out');
-vms_test_assert_same('/fallback', vms_ticketing_verification_post_local_redirect('redirect_to', '/fallback'), 'Verification POST redirects should reject external redirect targets.');
+vms_test_assert_same('/fallback', bvmgr_ticketing_verification_post_local_redirect('redirect_to', '/fallback'), 'Verification POST redirects should reject external redirect targets.');
 
 $_POST = array('request_id' => '57');
-vms_test_assert_same(57, vms_ticketing_verification_post_absint('request_id'), 'Verification POST integer reads should preserve scalar request IDs.');
+vms_test_assert_same(57, bvmgr_ticketing_verification_post_absint('request_id'), 'Verification POST integer reads should preserve scalar request IDs.');
 $_POST = array('request_id' => array('57'));
-vms_test_assert_same(0, vms_ticketing_verification_post_absint('request_id'), 'Verification POST integer reads should reject array-shaped request IDs.');
+vms_test_assert_same(0, bvmgr_ticketing_verification_post_absint('request_id'), 'Verification POST integer reads should reject array-shaped request IDs.');
 
 $_POST = array('vms_verified_programs_profile_present' => '1');
-vms_test_assert_same(true, vms_ticketing_verification_post_has_scalar('vms_verified_programs_profile_present'), 'Verification profile-present flags should accept scalar presence markers.');
+vms_test_assert_same(true, bvmgr_ticketing_verification_post_has_scalar('vms_verified_programs_profile_present'), 'Verification profile-present flags should accept scalar presence markers.');
 $_POST = array('vms_verified_programs_profile_present' => array('1'));
-vms_test_assert_same(false, vms_ticketing_verification_post_has_scalar('vms_verified_programs_profile_present'), 'Verification profile-present flags should reject array-shaped presence markers.');
+vms_test_assert_same(false, bvmgr_ticketing_verification_post_has_scalar('vms_verified_programs_profile_present'), 'Verification profile-present flags should reject array-shaped presence markers.');
 
 $_POST = array('vms_verified_allowance' => array('veteran' => '3'));
-vms_test_assert_same(true, vms_ticketing_verification_post_has_array('vms_verified_allowance'), 'Verification allowance mutations should accept array-shaped payloads.');
+vms_test_assert_same(true, bvmgr_ticketing_verification_post_has_array('vms_verified_allowance'), 'Verification allowance mutations should accept array-shaped payloads.');
 $_POST = array('vms_verified_allowance' => '3');
-vms_test_assert_same(false, vms_ticketing_verification_post_has_array('vms_verified_allowance'), 'Verification allowance mutations should reject scalar-shaped payloads.');
+vms_test_assert_same(false, bvmgr_ticketing_verification_post_has_array('vms_verified_allowance'), 'Verification allowance mutations should reject scalar-shaped payloads.');
 
 $_POST = array(
 	'vms_verification_program_allowances' => array(
@@ -271,18 +271,18 @@ vms_test_assert_same(
 		'veteran' => '5',
 		'teacher' => array('7'),
 	),
-	vms_ticketing_verification_post_array('vms_verification_program_allowances'),
+	bvmgr_ticketing_verification_post_array('vms_verification_program_allowances'),
 	'Verification POST arrays should preserve the unslashed top-level array for schema-specific sanitizers.'
 );
 
-$allowances = vms_ticketing_verification_sanitize_allowances(array(
+$allowances = bvmgr_ticketing_verification_sanitize_allowances(array(
 	'veteran' => '5',
 	'teacher' => array('7'),
 ));
 vms_test_assert_same(5, $allowances['veteran'] ?? 0, 'Verification allowance sanitization should preserve scalar numeric allowances.');
 vms_test_assert_same(2, $allowances['teacher'] ?? 0, 'Verification allowance sanitization should reject nested allowance arrays and fall back to the default allowance.');
 
-$uploadSettings = vms_ticketing_verification_sanitize_upload_settings(array('max_upload_mb' => array('9')));
+$uploadSettings = bvmgr_ticketing_verification_sanitize_upload_settings(array('max_upload_mb' => array('9')));
 vms_test_assert_same(20, $uploadSettings['max_upload_mb'] ?? 0, 'Verification upload settings should reject nested upload-size arrays and fall back to the default max upload size.');
 
 fwrite(STDOUT, "ticketing verifications mutation request remediation: PASS\n");

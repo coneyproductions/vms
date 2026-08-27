@@ -196,7 +196,7 @@ function vms_test_run_attach_noise(string $noise, bool $owns_buffer, bool $is_ad
 	}
 
 	try {
-		$data = vms_ticketing_ajax_attach_noise(array('ok' => true));
+		$data = bvmgr_ticketing_ajax_attach_noise(array('ok' => true));
 		$end_level = ob_get_level();
 	} finally {
 		while (ob_get_level() > $start_level) {
@@ -216,7 +216,7 @@ try {
 	$plugin_root = dirname(__DIR__);
 	$source_path = $plugin_root . '/includes/integrations/ticketing.php';
 	$source = vms_test_read_file($source_path);
-	$function_body = vms_test_extract_function($source, 'vms_ticketing_ajax_attach_noise');
+	$function_body = vms_test_extract_function($source, 'bvmgr_ticketing_ajax_attach_noise');
 
 	vms_test_assert_true(
 		strpos($function_body, "wp_strip_all_tags((string) \$noise, false)") !== false,

@@ -27,8 +27,8 @@ if (!function_exists('bvmgr_cancellation_refund_product_roles')) {
 if (!function_exists('bvmgr_cancellation_refund_product_meta_key')) {
 	function bvmgr_cancellation_refund_product_meta_key(string $which): string
 	{
-		if (function_exists('vms_ticketing_v2_product_meta_key')) {
-			$key = vms_ticketing_v2_product_meta_key($which);
+		if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+			$key = bvmgr_ticketing_v2_product_meta_key($which);
 			if (is_string($key) && $key !== '') {
 				return $key;
 			}
@@ -95,18 +95,18 @@ if (!function_exists('bvmgr_cancellation_refund_collect_sync_product_ids')) {
 	function bvmgr_cancellation_refund_collect_sync_product_ids(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
-		if ($event_plan_id <= 0 || !function_exists('vms_ticketing_v2_get_sync')) {
+		if ($event_plan_id <= 0 || !function_exists('bvmgr_ticketing_v2_get_sync')) {
 			return array();
 		}
 
-		$sync = vms_ticketing_v2_get_sync($event_plan_id);
+		$sync = bvmgr_ticketing_v2_get_sync($event_plan_id);
 		if (!is_array($sync)) {
 			return array();
 		}
 		$map = isset($sync['map']) && is_array($sync['map']) ? $sync['map'] : $sync;
 
-		if (function_exists('vms_ticketing_v2_collect_sync_map_product_ids')) {
-			$ids = vms_ticketing_v2_collect_sync_map_product_ids($map);
+		if (function_exists('bvmgr_ticketing_v2_collect_sync_map_product_ids')) {
+			$ids = bvmgr_ticketing_v2_collect_sync_map_product_ids($map);
 			return array_values(array_unique(array_filter(array_map('absint', (array) $ids))));
 		}
 
@@ -411,8 +411,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 					$product = wc_get_product($product_id);
 					if ($product && is_object($product)) {
 						try {
-							if (function_exists('vms_ticketing_v2_push_inventory_write_context')) {
-								vms_ticketing_v2_push_inventory_write_context(array(
+							if (function_exists('bvmgr_ticketing_v2_push_inventory_write_context')) {
+								bvmgr_ticketing_v2_push_inventory_write_context(array(
 									'trigger_source' => 'manual_action',
 									'source_function' => 'vms_tec_cancel_event_adapter',
 									'derivation_source' => 'authoritative_zero_capacity',
@@ -451,8 +451,8 @@ add_filter('vms_cancellation_run_step', function ($result, $event_plan_id, $poli
 						} catch (Throwable $e) {
 							$err = $e->getMessage();
 						} finally {
-							if (function_exists('vms_ticketing_v2_pop_inventory_write_context')) {
-								vms_ticketing_v2_pop_inventory_write_context();
+							if (function_exists('bvmgr_ticketing_v2_pop_inventory_write_context')) {
+								bvmgr_ticketing_v2_pop_inventory_write_context();
 							} elseif (function_exists('vms_ticket_mutation_audit_pop_context')) {
 								vms_ticket_mutation_audit_pop_context();
 							}

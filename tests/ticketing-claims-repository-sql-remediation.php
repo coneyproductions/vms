@@ -342,24 +342,24 @@ vms_test_assert($frameworkSource !== '', 'Mirror ticketing claims framework sour
 vms_test_assert($liveFrameworkSource !== '', 'Live ticketing claims framework source should be readable.');
 
 $targetFunctions = array(
-	'vms_ticketing_claims_table_direct_grants',
-	'vms_ticketing_claims_table_reservations',
-	'vms_ticketing_claims_table_log',
-	'vms_ticketing_claims_sanitize_program_list',
-	'vms_ticketing_claims_grant_reservation_counts',
-	'vms_ticketing_claims_find_active_direct_grant',
-	'vms_ticketing_claims_log_result',
-	'vms_ticketing_claims_create_direct_grant',
-	'vms_ticketing_claims_allowed_grant_statuses',
-	'vms_ticketing_claims_get_direct_grant',
-	'vms_ticketing_claims_get_direct_grants',
-	'vms_ticketing_claims_update_direct_grant_note',
-	'vms_ticketing_claims_set_direct_grant_status',
-	'vms_ticketing_claims_get_reservation',
-	'vms_ticketing_claims_get_reservations',
-	'vms_ticketing_claims_release_reservation',
-	'vms_ticketing_claims_get_logs',
-	'vms_ticketing_claims_recent_assignee_emails_for_buyer',
+	'bvmgr_ticketing_claims_table_direct_grants',
+	'bvmgr_ticketing_claims_table_reservations',
+	'bvmgr_ticketing_claims_table_log',
+	'bvmgr_ticketing_claims_sanitize_program_list',
+	'bvmgr_ticketing_claims_grant_reservation_counts',
+	'bvmgr_ticketing_claims_find_active_direct_grant',
+	'bvmgr_ticketing_claims_log_result',
+	'bvmgr_ticketing_claims_create_direct_grant',
+	'bvmgr_ticketing_claims_allowed_grant_statuses',
+	'bvmgr_ticketing_claims_get_direct_grant',
+	'bvmgr_ticketing_claims_get_direct_grants',
+	'bvmgr_ticketing_claims_update_direct_grant_note',
+	'bvmgr_ticketing_claims_set_direct_grant_status',
+	'bvmgr_ticketing_claims_get_reservation',
+	'bvmgr_ticketing_claims_get_reservations',
+	'bvmgr_ticketing_claims_release_reservation',
+	'bvmgr_ticketing_claims_get_logs',
+	'bvmgr_ticketing_claims_recent_assignee_emails_for_buyer',
 );
 
 foreach ($targetFunctions as $functionName) {
@@ -370,11 +370,11 @@ foreach ($targetFunctions as $functionName) {
 	);
 }
 
-$logSource = vms_test_extract_function($frameworkSource, 'vms_ticketing_claims_log_result');
-$createGrantSource = vms_test_extract_function($frameworkSource, 'vms_ticketing_claims_create_direct_grant');
-$updateNoteSource = vms_test_extract_function($frameworkSource, 'vms_ticketing_claims_update_direct_grant_note');
-$setStatusSource = vms_test_extract_function($frameworkSource, 'vms_ticketing_claims_set_direct_grant_status');
-$releaseReservationSource = vms_test_extract_function($frameworkSource, 'vms_ticketing_claims_release_reservation');
+$logSource = vms_test_extract_function($frameworkSource, 'bvmgr_ticketing_claims_log_result');
+$createGrantSource = vms_test_extract_function($frameworkSource, 'bvmgr_ticketing_claims_create_direct_grant');
+$updateNoteSource = vms_test_extract_function($frameworkSource, 'bvmgr_ticketing_claims_update_direct_grant_note');
+$setStatusSource = vms_test_extract_function($frameworkSource, 'bvmgr_ticketing_claims_set_direct_grant_status');
+$releaseReservationSource = vms_test_extract_function($frameworkSource, 'bvmgr_ticketing_claims_release_reservation');
 
 vms_test_assert_contains('audit logging persists normalized custom-table rows', $logSource, 'Claims audit logging should document its direct custom-table insert boundary.');
 vms_test_assert_contains('direct grant creation persists normalized custom-table rows', $createGrantSource, 'Claims direct grant creation should document its direct custom-table insert boundary.');
@@ -397,7 +397,7 @@ $wpdb->get_results_queue[] = array(
 );
 vms_test_assert_same(
 	array('reserved' => 2, 'used' => 1),
-	vms_ticketing_claims_grant_reservation_counts(44),
+	bvmgr_ticketing_claims_grant_reservation_counts(44),
 	'Grant reservation counts should normalize keyed count rows.'
 );
 $prepare = vms_test_last_prepare($wpdb);
@@ -415,7 +415,7 @@ vms_test_assert_no_placeholders(vms_test_last_call($wpdb, 'get_results')['query'
 
 vms_test_reset_db($wpdb);
 $wpdb->get_row_queue[] = array('id' => 71, 'status' => 'active');
-$grant = vms_ticketing_claims_find_active_direct_grant(array(
+$grant = bvmgr_ticketing_claims_find_active_direct_grant(array(
 	'user_id' => 19,
 	'event_id' => 77,
 	'ticket_product_id' => 88,
@@ -440,7 +440,7 @@ vms_test_reset_db($wpdb);
 $wpdb->insert_id = 321;
 vms_test_assert_same(
 	321,
-	vms_ticketing_claims_log_result(array(
+	bvmgr_ticketing_claims_log_result(array(
 		'event_id' => 12,
 		'ticket_product_id' => 45,
 		'ticket_key' => 'vip access',
@@ -467,7 +467,7 @@ vms_test_reset_db($wpdb);
 $wpdb->insert_id = 654;
 vms_test_assert_same(
 	654,
-	vms_ticketing_claims_create_direct_grant(array(
+	bvmgr_ticketing_claims_create_direct_grant(array(
 		'event_id' => 12,
 		'user_id' => 19,
 		'grant_type' => 'event_grant',
@@ -490,7 +490,7 @@ vms_test_assert_same('2026-08-07 09:45:00', $insert['data']['created_at'], 'Dire
 
 vms_test_reset_db($wpdb);
 $wpdb->get_row_queue[] = array('id' => 55, 'status' => 'active');
-vms_test_assert_same(array('id' => 55, 'status' => 'active'), vms_ticketing_claims_get_direct_grant(55), 'Single direct grant reads should return the queued row.');
+vms_test_assert_same(array('id' => 55, 'status' => 'active'), bvmgr_ticketing_claims_get_direct_grant(55), 'Single direct grant reads should return the queued row.');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same('SELECT * FROM %i WHERE id = %d', $prepare['query'], 'Single direct grant reads should prepare the grants table identifier and grant ID.');
 vms_test_assert_same(array('wp_vms_ticketing_direct_grants', 55), $prepare['args'], 'Single direct grant reads should pass the grants table identifier and grant ID to prepare().');
@@ -498,7 +498,7 @@ vms_test_assert_no_placeholders(vms_test_last_call($wpdb, 'get_row')['query'], '
 
 vms_test_reset_db($wpdb);
 $wpdb->get_results_queue[] = array(array('id' => 55, 'status' => 'active'));
-$rows = vms_ticketing_claims_get_direct_grants(array(
+$rows = bvmgr_ticketing_claims_get_direct_grants(array(
 	'event_id' => 12,
 	'user_id' => 19,
 	'status' => 'active',
@@ -524,7 +524,7 @@ vms_test_assert_same(
 vms_test_assert_no_placeholders(vms_test_last_call($wpdb, 'get_results')['query'], 'Direct grant lists should execute fully prepared SQL.');
 
 vms_test_reset_db($wpdb);
-vms_test_assert_same(true, vms_ticketing_claims_update_direct_grant_note(17, '<strong>Operator note</strong>', 77), 'Direct grant note updates should report success when wpdb::update() succeeds.');
+vms_test_assert_same(true, bvmgr_ticketing_claims_update_direct_grant_note(17, '<strong>Operator note</strong>', 77), 'Direct grant note updates should report success when wpdb::update() succeeds.');
 $update = vms_test_last_call($wpdb, 'update');
 vms_test_assert_same('wp_vms_ticketing_direct_grants', $update['table'], 'Direct grant note updates should target the custom grants table.');
 vms_test_assert_same('Operator note', $update['data']['note'], 'Direct grant note updates should sanitize the stored note.');
@@ -532,7 +532,7 @@ vms_test_assert_same(array('id' => 17), $update['where'], 'Direct grant note upd
 
 vms_test_reset_db($wpdb);
 $wpdb->get_row_queue[] = array('id' => 91, 'status' => 'reserved', 'qty_limit' => 2, 'qty_used' => 1);
-vms_test_assert_same(true, vms_ticketing_claims_set_direct_grant_status(91, 'used', 77), 'Grant status transitions should report success for allowed state changes.');
+vms_test_assert_same(true, bvmgr_ticketing_claims_set_direct_grant_status(91, 'used', 77), 'Grant status transitions should report success for allowed state changes.');
 $update = vms_test_last_call($wpdb, 'update');
 vms_test_assert_same('wp_vms_ticketing_direct_grants', $update['table'], 'Grant status transitions should target the custom grants table.');
 vms_test_assert_same('used', $update['data']['status'], 'Grant status transitions should persist the requested normalized status.');
@@ -541,7 +541,7 @@ vms_test_assert_same(array('id' => 91), $update['where'], 'Grant status transiti
 
 vms_test_reset_db($wpdb);
 $wpdb->get_row_queue[] = array('id' => 23, 'status' => 'reserved');
-vms_test_assert_same(array('id' => 23, 'status' => 'reserved'), vms_ticketing_claims_get_reservation(23), 'Single reservation reads should return the queued row.');
+vms_test_assert_same(array('id' => 23, 'status' => 'reserved'), bvmgr_ticketing_claims_get_reservation(23), 'Single reservation reads should return the queued row.');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same('SELECT * FROM %i WHERE id = %d', $prepare['query'], 'Single reservation reads should prepare the reservations table identifier and reservation ID.');
 vms_test_assert_same(array('wp_vms_ticketing_claim_reservations', 23), $prepare['args'], 'Single reservation reads should pass the reservations table identifier and reservation ID to prepare().');
@@ -549,7 +549,7 @@ vms_test_assert_no_placeholders(vms_test_last_call($wpdb, 'get_row')['query'], '
 
 vms_test_reset_db($wpdb);
 $wpdb->get_results_queue[] = array(array('id' => 44, 'status' => 'reserved'));
-$rows = vms_ticketing_claims_get_reservations(array(
+$rows = bvmgr_ticketing_claims_get_reservations(array(
 	'event_id' => 12,
 	'buyer_user_id' => 19,
 	'assignee_user_id' => 21,
@@ -577,7 +577,7 @@ vms_test_assert_no_placeholders(vms_test_last_call($wpdb, 'get_results')['query'
 
 vms_test_reset_db($wpdb);
 $wpdb->get_row_queue[] = array('id' => 66, 'status' => 'reserved', 'direct_grant_id' => 91);
-vms_test_assert_same(true, vms_ticketing_claims_release_reservation(66, 77), 'Reservation releases should report success when both repository writes succeed.');
+vms_test_assert_same(true, bvmgr_ticketing_claims_release_reservation(66, 77), 'Reservation releases should report success when both repository writes succeed.');
 $update = vms_test_last_call($wpdb, 'update');
 vms_test_assert_same('wp_vms_ticketing_claim_reservations', $update['table'], 'Reservation releases should update the custom reservations table.');
 vms_test_assert_same('released', $update['data']['status'], 'Reservation releases should persist the released status.');
@@ -588,7 +588,7 @@ vms_test_assert_no_placeholders($query['query'], 'Reservation releases should ex
 
 vms_test_reset_db($wpdb);
 $wpdb->get_results_queue[] = array(array('id' => 87, 'result' => 'success'));
-$rows = vms_ticketing_claims_get_logs(array(
+$rows = bvmgr_ticketing_claims_get_logs(array(
 	'event_id' => 12,
 	'ticket_product_id' => 45,
 	'ticket_key' => 'VIP',
@@ -636,7 +636,7 @@ vms_test_assert_no_placeholders(vms_test_last_call($wpdb, 'get_results')['query'
 
 vms_test_reset_db($wpdb);
 $wpdb->get_col_queue[] = array('Guest@Example.com', 'guest@example.com', '', 'Second@Example.com', 'Third@Example.com');
-$emails = vms_ticketing_claims_recent_assignee_emails_for_buyer(19, 2, 12);
+$emails = bvmgr_ticketing_claims_recent_assignee_emails_for_buyer(19, 2, 12);
 vms_test_assert_same(array('guest@example.com', 'second@example.com'), $emails, 'Recent helper-email lookups should sanitize, de-duplicate, and cap the returned assignee emails.');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same(

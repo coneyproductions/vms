@@ -75,8 +75,8 @@ function vms_ticketing_v2_render_product_event_columns(string $column, int $post
 
     // Resolve TEC event ID for this product.
     $tec_event_id = 0;
-    if (function_exists('vms_ticketing_v2_resolve_event_id_for_product')) {
-        $tec_event_id = absint(vms_ticketing_v2_resolve_event_id_for_product($product_id));
+    if (function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')) {
+        $tec_event_id = absint(bvmgr_ticketing_v2_resolve_event_id_for_product($product_id));
     }
     if ($tec_event_id <= 0) {
         $tec_event_id = absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true));
@@ -104,8 +104,8 @@ function vms_ticketing_v2_render_product_event_columns(string $column, int $post
 
     // Event date
     $date = '';
-    if (function_exists('vms_ticketing_v2_format_event_date_for_product_title')) {
-        $date = (string) vms_ticketing_v2_format_event_date_for_product_title($tec_event_id);
+    if (function_exists('bvmgr_ticketing_v2_format_event_date_for_product_title')) {
+        $date = (string) bvmgr_ticketing_v2_format_event_date_for_product_title($tec_event_id);
     }
     $date = trim($date);
 

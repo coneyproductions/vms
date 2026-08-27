@@ -213,8 +213,8 @@ foreach ($paths as $key => $path) {
 }
 
 eval(vms_t5_extract_function($sources['event_import'], 'bvmgr_event_plan_import_read_selected_rows_from_post'));
-eval(vms_t5_extract_function($sources['phase_b'], 'vms_ticketing_b_request_payload_value'));
-eval(vms_t5_extract_function($sources['rules_v2'], 'vms_ticketing_v2_read_form_request_payload'));
+eval(vms_t5_extract_function($sources['phase_b'], 'bvmgr_ticketing_b_request_payload_value'));
+eval(vms_t5_extract_function($sources['rules_v2'], 'bvmgr_ticketing_v2_read_form_request_payload'));
 eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_guest_rules_from_post'));
 eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_guest_flag_value'));
 eval(vms_t5_extract_function($sources['vendor_guest'], 'vms_admission_vendor_guest_absint_value'));
@@ -245,25 +245,25 @@ vms_t5_assert_same(array(), bvmgr_event_plan_import_read_selected_rows_from_post
 
 $present = null;
 $valid = null;
-$payload = vms_ticketing_b_request_payload_value(array('tiers' => array(array('tier_key' => 'ga\\\'1'))), 'tiers', $present, $valid);
+$payload = bvmgr_ticketing_b_request_payload_value(array('tiers' => array(array('tier_key' => 'ga\\\'1'))), 'tiers', $present, $valid);
 vms_t5_assert_same(true, $present, 'Payload reader should report present array keys.');
 vms_t5_assert_same(true, $valid, 'Payload reader should accept array-shaped payloads.');
 vms_t5_assert_same(array(array('tier_key' => "ga'1")), $payload, 'Payload reader should unslash array payloads exactly once.');
-$payload = vms_ticketing_b_request_payload_value(array('tiers' => '[{\"tier_key\":\"ga\"}]'), 'tiers', $present, $valid);
+$payload = bvmgr_ticketing_b_request_payload_value(array('tiers' => '[{\"tier_key\":\"ga\"}]'), 'tiers', $present, $valid);
 vms_t5_assert_same(true, $valid, 'Payload reader should accept scalar JSON payloads.');
 vms_t5_assert_same('[{"tier_key":"ga"}]', $payload, 'Payload reader should unslash scalar JSON payloads exactly once.');
 $raw_string_bytes = null;
-$payload = vms_ticketing_b_request_payload_value(array('config' => '[{\"ticket_key\":\"ga\"}]'), 'config', $present, $valid, $raw_string_bytes);
+$payload = bvmgr_ticketing_b_request_payload_value(array('config' => '[{\"ticket_key\":\"ga\"}]'), 'config', $present, $valid, $raw_string_bytes);
 vms_t5_assert_same(true, $valid, 'Payload reader should accept scalar config payloads.');
 vms_t5_assert_same(strlen('[{\"ticket_key\":\"ga\"}]'), $raw_string_bytes, 'Payload reader should preserve pre-unslash raw string byte counts.');
 vms_t5_assert_same('[{"ticket_key":"ga"}]', $payload, 'Payload reader should still return unslashed scalar strings.');
-$payload = vms_ticketing_b_request_payload_value(array('tiers' => new stdClass()), 'tiers', $present, $valid);
+$payload = bvmgr_ticketing_b_request_payload_value(array('tiers' => new stdClass()), 'tiers', $present, $valid);
 vms_t5_assert_same(true, $present, 'Payload reader should report present malformed keys.');
 vms_t5_assert_same(false, $valid, 'Payload reader should reject object payloads.');
 vms_t5_assert_same(null, $payload, 'Payload reader should return null for malformed payloads.');
 
-vms_t5_assert_same(array('nonce' => "good'value", 'ticket_lines' => array(array('qty' => '1'))), vms_ticketing_v2_read_form_request_payload(array('nonce' => 'good\\\'value', 'ticket_lines' => array(array('qty' => '1')))), 'Form fallback should unslash whole request arrays once.');
-vms_t5_assert_same(array(), vms_ticketing_v2_read_form_request_payload(array()), 'Form fallback should preserve empty POST fallback.');
+vms_t5_assert_same(array('nonce' => "good'value", 'ticket_lines' => array(array('qty' => '1'))), bvmgr_ticketing_v2_read_form_request_payload(array('nonce' => 'good\\\'value', 'ticket_lines' => array(array('qty' => '1')))), 'Form fallback should unslash whole request arrays once.');
+vms_t5_assert_same(array(), bvmgr_ticketing_v2_read_form_request_payload(array()), 'Form fallback should preserve empty POST fallback.');
 
 vms_t5_assert_same(array('enabled' => '1'), vms_admission_vendor_guest_rules_from_post(array('vms_vendor_guest_rules' => array('enabled' => '1'))), 'Vendor Guest rules should accept array-shaped top-level rules.');
 vms_t5_assert_same(null, vms_admission_vendor_guest_rules_from_post(array('vms_vendor_guest_rules' => '1')), 'Vendor Guest rules should reject scalar top-level rules.');
@@ -288,10 +288,10 @@ vms_t5_assert_same(array(), $prefs_method->invoke($tour_service, array('prefs' =
 vms_t5_assert_same(array('level' => 'advanced', 'dismissed_tours' => array('intro' => '1')), $prefs_method->invoke($tour_service, array('prefs' => array('level' => 'advanced', 'dismissed_tours' => array('intro' => '1')))), 'Tours prefs reader should unslash and preserve array-shaped prefs.');
 
 vms_t5_assert_order("check_admin_referer('vms_event_plan_import_commit');", 'bvmgr_event_plan_import_read_selected_rows_from_post($_POST)', $sources['event_import'], 'Event Plan Import should keep nonce verification before selected-row reads.');
-vms_t5_assert_order("check_ajax_referer('vms_ticketing_nonce', 'nonce', false)", 'vms_ticketing_b_request_payload_value($_POST, \'tiers\'', $sources['phase_b'], 'Phase-B tiers should keep nonce verification before payload reads.');
-vms_t5_assert_order("check_ajax_referer('vms_ticketing_nonce', 'nonce', false)", 'vms_ticketing_b_request_payload_value($_POST, \'config\'', $sources['phase_b'], 'Ticketing V2 config should keep nonce verification before payload reads.');
+vms_t5_assert_order("check_ajax_referer('vms_ticketing_nonce', 'nonce', false)", 'bvmgr_ticketing_b_request_payload_value($_POST, \'tiers\'', $sources['phase_b'], 'Phase-B tiers should keep nonce verification before payload reads.');
+vms_t5_assert_order("check_ajax_referer('vms_ticketing_nonce', 'nonce', false)", 'bvmgr_ticketing_b_request_payload_value($_POST, \'config\'', $sources['phase_b'], 'Ticketing V2 config should keep nonce verification before payload reads.');
 vms_t5_assert_order("check_ajax_referer('vms_tours', 'nonce');", '$this->read_ajax_prefs_from_request($_POST)', $sources['tours_service'], 'Tours prefs should keep nonce verification before prefs reads.');
-vms_t5_assert_contains('vms_ticketing_v2_read_form_request_payload($_POST)', $sources['rules_v2'], 'Ticketing Rules V2 should route form fallback through the normalized form-payload helper.');
+vms_t5_assert_contains('bvmgr_ticketing_v2_read_form_request_payload($_POST)', $sources['rules_v2'], 'Ticketing Rules V2 should route form fallback through the normalized form-payload helper.');
 vms_t5_assert_contains('bvmgr_request_has_post_data()', $sources['event_import'] . $sources['phase_b'] . $sources['rules_v2'] . $sources['vendor_guest'] . $sources['social_admin'] . $sources['vendor_category'] . $sources['ticket_integrity'] . $sources['tours_service'] . vms_t5_read_file($root . '/includes/runtime-guards.php'), 'Runtime guard passive POST probes should route through the helper.');
 
 fwrite(STDOUT, "WPORG-28R-G6-T5 mutation request boundaries: PASS\n");

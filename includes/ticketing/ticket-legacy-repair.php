@@ -85,8 +85,8 @@ function vms_ticket_integrity_repair_source_value(array $cfg_row, string $role_k
 function vms_ticket_integrity_repair_result_health_label(string $health): string
 {
 	$health = sanitize_key($health);
-	if ($health !== '' && function_exists('vms_ticketing_v2_inventory_result_health_label')) {
-		return (string) vms_ticketing_v2_inventory_result_health_label($health);
+	if ($health !== '' && function_exists('bvmgr_ticketing_v2_inventory_result_health_label')) {
+		return (string) bvmgr_ticketing_v2_inventory_result_health_label($health);
 	}
 
 	switch ($health) {
@@ -323,8 +323,8 @@ function vms_ticket_integrity_build_repair_report(int $plan_id, array $args = ar
 	$diagnostic_scan = is_array($args['diagnostic_scan'] ?? null) ? $args['diagnostic_scan'] : array();
 	$repair_status = sanitize_key((string) ($args['repair_status'] ?? 'blocked'));
 	$summary_text = trim((string) ($args['summary_text'] ?? ''));
-	$tec_event_id = function_exists('vms_ticketing_b_get_linked_tec_event_id')
-		? absint(vms_ticketing_b_get_linked_tec_event_id($plan_id))
+	$tec_event_id = function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')
+		? absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id))
 		: absint(get_post_meta($plan_id, '_vms_tec_event_id', true));
 	$event_title = $tec_event_id > 0 ? (string) get_the_title($tec_event_id) : (string) get_the_title($plan_id);
 
@@ -611,8 +611,8 @@ function vms_ticket_integrity_authoritative_product_sales_count(int $product_id)
 		return 0;
 	}
 
-	if (function_exists('vms_ticketing_v2_calc_sold_qty_for_product')) {
-		$result = vms_ticketing_v2_calc_sold_qty_for_product($product_id);
+	if (function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_product')) {
+		$result = bvmgr_ticketing_v2_calc_sold_qty_for_product($product_id);
 		if (!empty($result['ok'])) {
 			return max(0, absint($result['sold_qty'] ?? 0));
 		}
@@ -869,7 +869,7 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 
 	$plan_id = absint($context['plan_id'] ?? $plan_id);
 	$tec_event_id = absint($context['tec_event_id'] ?? 0);
-	$sync = function_exists('vms_ticketing_v2_get_sync') ? (array) vms_ticketing_v2_get_sync($plan_id) : array();
+	$sync = function_exists('bvmgr_ticketing_v2_get_sync') ? (array) bvmgr_ticketing_v2_get_sync($plan_id) : array();
 	if (!is_array($sync['map'] ?? null)) {
 		$sync['map'] = array();
 	}
@@ -906,8 +906,8 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 				continue;
 			}
 
-			$ok = function_exists('vms_ticketing_v2_retire_legacy_duplicate_product')
-				? vms_ticketing_v2_retire_legacy_duplicate_product($legacy_product_id, $active_product_id, 'ticket_integrity_duplicate_cleanup')
+			$ok = function_exists('bvmgr_ticketing_v2_retire_legacy_duplicate_product')
+				? bvmgr_ticketing_v2_retire_legacy_duplicate_product($legacy_product_id, $active_product_id, 'ticket_integrity_duplicate_cleanup')
 				: false;
 			if ($ok) {
 				$retired[] = array(
@@ -955,15 +955,15 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 			$current_row['max_qty_per_order'] = max(0, absint($cfg_ticket['max_qty_per_order'] ?? 0));
 			$current_row['visibility_mode'] = sanitize_key((string) ($cfg_ticket['visibility_mode'] ?? 'public'));
 			$current_row['verified_program'] = sanitize_key((string) ($cfg_ticket['verified_program'] ?? ''));
-			$current_row['allowed_programs'] = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-				? vms_ticketing_v2_normalize_allowed_programs($cfg_ticket['allowed_programs'] ?? array(), $current_row['verified_program'])
+			$current_row['allowed_programs'] = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+				? bvmgr_ticketing_v2_normalize_allowed_programs($cfg_ticket['allowed_programs'] ?? array(), $current_row['verified_program'])
 				: array_values(array_filter(array_map('sanitize_key', (array) ($cfg_ticket['allowed_programs'] ?? array()))));
 			$current_row['allow_direct_grants'] = !empty($cfg_ticket['allow_direct_grants']) ? 1 : 0;
 			$current_row['claim_grant_type'] = sanitize_key((string) ($cfg_ticket['claim_grant_type'] ?? 'event_ticket_eligibility'));
 			$current_row['claims_per_assignee'] = max(0, absint($cfg_ticket['claims_per_assignee'] ?? 1));
 			$current_row['require_assignee_email'] = !empty($cfg_ticket['require_assignee_email']) ? 1 : 0;
-			if (function_exists('vms_ticketing_v2_hash_ticket')) {
-				$current_row['last_sync_hash'] = (string) vms_ticketing_v2_hash_ticket($cfg_ticket);
+			if (function_exists('bvmgr_ticketing_v2_hash_ticket')) {
+				$current_row['last_sync_hash'] = (string) bvmgr_ticketing_v2_hash_ticket($cfg_ticket);
 			}
 		}
 		$sync['map']['tickets'][$ticket_key] = $current_row;
@@ -975,11 +975,11 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 			$sync_changed = true;
 		}
 
-		if (function_exists('vms_ticketing_v2_stamp_product_markers')) {
-			vms_ticketing_v2_stamp_product_markers($legacy_product_id, $plan_id, $tec_event_id, 'ticket');
+		if (function_exists('bvmgr_ticketing_v2_stamp_product_markers')) {
+			bvmgr_ticketing_v2_stamp_product_markers($legacy_product_id, $plan_id, $tec_event_id, 'ticket');
 		}
-		if (!empty($cfg_ticket) && function_exists('vms_ticketing_v2_stamp_ticket_runtime_meta')) {
-			vms_ticketing_v2_stamp_ticket_runtime_meta($legacy_product_id, $tec_event_id, $cfg_ticket);
+		if (!empty($cfg_ticket) && function_exists('bvmgr_ticketing_v2_stamp_ticket_runtime_meta')) {
+			bvmgr_ticketing_v2_stamp_ticket_runtime_meta($legacy_product_id, $tec_event_id, $cfg_ticket);
 		}
 		update_post_meta($legacy_product_id, '_tribe_wooticket_for_event', $tec_event_id);
 		delete_post_meta($legacy_product_id, '_vms_legacy_retired');
@@ -993,8 +993,8 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 		);
 
 		if ($action === 'adopt_extra_retire_active' && $active_product_id > 0 && $active_product_id !== $legacy_product_id) {
-			$ok = function_exists('vms_ticketing_v2_retire_legacy_duplicate_product')
-				? vms_ticketing_v2_retire_legacy_duplicate_product($active_product_id, $legacy_product_id, 'ticket_integrity_superseded_active_duplicate')
+			$ok = function_exists('bvmgr_ticketing_v2_retire_legacy_duplicate_product')
+				? bvmgr_ticketing_v2_retire_legacy_duplicate_product($active_product_id, $legacy_product_id, 'ticket_integrity_superseded_active_duplicate')
 				: false;
 			if ($ok) {
 				$retired[] = array(
@@ -1015,7 +1015,7 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 		}
 	}
 
-	if ($sync_changed && function_exists('vms_ticketing_v2_set_sync')) {
+	if ($sync_changed && function_exists('bvmgr_ticketing_v2_set_sync')) {
 		$sync_audit_pushed = false;
 		if (function_exists('vms_ticket_mutation_audit_push_context')) {
 			vms_ticket_mutation_audit_push_context(array(
@@ -1027,7 +1027,7 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 			));
 			$sync_audit_pushed = true;
 		}
-		vms_ticketing_v2_set_sync($plan_id, $sync);
+		bvmgr_ticketing_v2_set_sync($plan_id, $sync);
 		if ($sync_audit_pushed && function_exists('vms_ticket_mutation_audit_pop_context')) {
 			vms_ticket_mutation_audit_pop_context();
 		}
@@ -1081,8 +1081,8 @@ function vms_ticket_integrity_duplicate_cleanup_run(int $plan_id, array $args = 
 function vms_ticket_integrity_repair_normalize_sync_map(int $plan_id, array $cfg, array $sync): array
 {
 	$plan_id = absint($plan_id);
-	$tec_event_id = function_exists('vms_ticketing_b_get_linked_tec_event_id')
-		? absint(vms_ticketing_b_get_linked_tec_event_id($plan_id))
+	$tec_event_id = function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')
+		? absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id))
 		: absint(get_post_meta($plan_id, '_vms_tec_event_id', true));
 	$sync = is_array($sync) ? $sync : array();
 	$sync_map = is_array($sync['map'] ?? null) ? $sync['map'] : array();
@@ -1181,14 +1181,14 @@ function vms_ticket_integrity_repair_event(int $plan_id, array $args = array()):
 		return array('ok' => false, 'message' => 'invalid_plan');
 	}
 
-	if (!function_exists('vms_ticketing_v2_get_config') || !function_exists('vms_ticketing_v2_get_sync') || !function_exists('vms_ticketing_v2_preview_sync') || !function_exists('vms_ticketing_v2_commit_sync')) {
+	if (!function_exists('bvmgr_ticketing_v2_get_config') || !function_exists('bvmgr_ticketing_v2_get_sync') || !function_exists('bvmgr_ticketing_v2_preview_sync') || !function_exists('bvmgr_ticketing_v2_commit_sync')) {
 		return array('ok' => false, 'message' => 'sync_helpers_missing');
 	}
 
 	$before_snapshot = function_exists('vms_ticket_mutation_audit_build_snapshot')
 		? vms_ticket_mutation_audit_build_snapshot($plan_id)
 		: array();
-	$cfg = vms_ticketing_v2_get_config($plan_id);
+	$cfg = bvmgr_ticketing_v2_get_config($plan_id);
 	$mode = sanitize_key((string) ($cfg['mode'] ?? ''));
 	if ($mode !== 'vms_managed') {
 		$after_snapshot = function_exists('vms_ticket_mutation_audit_build_snapshot')
@@ -1229,7 +1229,7 @@ function vms_ticket_integrity_repair_event(int $plan_id, array $args = array()):
 		);
 	}
 
-	$sync = vms_ticketing_v2_get_sync($plan_id);
+	$sync = bvmgr_ticketing_v2_get_sync($plan_id);
 	$normalization = vms_ticket_integrity_repair_normalize_sync_map($plan_id, $cfg, $sync);
 	$changed = false;
 	if (!empty($normalization['changed'])) {
@@ -1245,7 +1245,7 @@ function vms_ticket_integrity_repair_event(int $plan_id, array $args = array()):
 			);
 		}
 
-		vms_ticketing_v2_set_sync($plan_id, (array) ($normalization['sync'] ?? array()));
+		bvmgr_ticketing_v2_set_sync($plan_id, (array) ($normalization['sync'] ?? array()));
 
 		if (function_exists('vms_ticket_mutation_audit_pop_context')) {
 			vms_ticket_mutation_audit_pop_context();
@@ -1254,7 +1254,7 @@ function vms_ticket_integrity_repair_event(int $plan_id, array $args = array()):
 		$changed = true;
 	}
 
-	$preview = vms_ticketing_v2_preview_sync($plan_id);
+	$preview = bvmgr_ticketing_v2_preview_sync($plan_id);
 	if (empty($preview['ok'])) {
 		$after_snapshot = function_exists('vms_ticket_mutation_audit_build_snapshot')
 			? vms_ticket_mutation_audit_build_snapshot($plan_id)
@@ -1357,7 +1357,7 @@ function vms_ticket_integrity_repair_event(int $plan_id, array $args = array()):
 		return array('ok' => false, 'message' => 'missing_preview_id');
 	}
 
-	$commit = vms_ticketing_v2_commit_sync($plan_id, $preview_id);
+	$commit = bvmgr_ticketing_v2_commit_sync($plan_id, $preview_id);
 	if (empty($commit['ok'])) {
 		$after_snapshot = function_exists('vms_ticket_mutation_audit_build_snapshot')
 			? vms_ticket_mutation_audit_build_snapshot($plan_id)

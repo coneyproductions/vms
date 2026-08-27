@@ -175,7 +175,7 @@ function vms_test_find_direct_json_calls(string $functionBody): array
  */
 function vms_test_find_v2_wrapper_calls(string $functionBody): array
 {
-	if (!preg_match_all('/\b(vms_ticketing_v2_ajax_send_(success|error))\s*\(/', $functionBody, $matches)) {
+	if (!preg_match_all('/\b(bvmgr_ticketing_v2_ajax_send_(success|error))\s*\(/', $functionBody, $matches)) {
 		return array();
 	}
 
@@ -230,50 +230,50 @@ try {
 		'load.php should still open the AJAX buffer only inside the DOING_AJAX gate.'
 	);
 
-	$legacyAttachBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_attach_noise');
-	$legacySuccessBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_send_success');
-	$legacyErrorBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_send_error');
-	$v2DiscardBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_discard_owned_buffer');
-	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_success');
-	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_error');
+	$legacyAttachBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_attach_noise');
+	$legacySuccessBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_send_success');
+	$legacyErrorBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_send_error');
+	$v2DiscardBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_discard_owned_buffer');
+	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_success');
+	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_error');
 
 	vms_test_assert_contains("!empty(\$GLOBALS['bvmgr_ajax_ob_started'])", $legacyAttachBody, 'Legacy cleanup helper should still consult the shared AJAX buffer ownership flag.');
 	vms_test_assert_contains('ob_get_contents()', $legacyAttachBody, 'Legacy cleanup helper should still read buffered AJAX noise before closing.');
 	vms_test_assert_contains('@ob_end_clean();', $legacyAttachBody, 'Legacy cleanup helper should still explicitly close the owned AJAX buffer.');
 	vms_test_assert_contains("\$GLOBALS['bvmgr_ajax_ob_started'] = false;", $legacyAttachBody, 'Legacy cleanup helper should still reset shared AJAX buffer ownership to false.');
-	vms_test_assert_contains('vms_ticketing_ajax_attach_noise($data)', $legacySuccessBody, 'Legacy success wrapper should still route through the cleanup helper.');
+	vms_test_assert_contains('bvmgr_ticketing_ajax_attach_noise($data)', $legacySuccessBody, 'Legacy success wrapper should still route through the cleanup helper.');
 	vms_test_assert_contains('wp_send_json_success($data, $http_status)', $legacySuccessBody, 'Legacy success wrapper should still send JSON through wp_send_json_success().');
-	vms_test_assert_contains('vms_ticketing_ajax_attach_noise($data)', $legacyErrorBody, 'Legacy error wrapper should still route through the cleanup helper.');
+	vms_test_assert_contains('bvmgr_ticketing_ajax_attach_noise($data)', $legacyErrorBody, 'Legacy error wrapper should still route through the cleanup helper.');
 	vms_test_assert_contains('wp_send_json_error($data, $http_status)', $legacyErrorBody, 'Legacy error wrapper should still send JSON through wp_send_json_error().');
 	vms_test_assert_contains("empty(\$GLOBALS['bvmgr_ajax_ob_started'])", $v2DiscardBody, 'The V2 cleanup-only helper should still guard on the shared AJAX buffer ownership flag.');
 	vms_test_assert_contains('ob_get_level() > 0', $v2DiscardBody, 'The V2 cleanup-only helper should still only close a current buffer when one exists.');
 	vms_test_assert_contains('@ob_end_clean();', $v2DiscardBody, 'The V2 cleanup-only helper should still suppress compatibility-level close warnings.');
 	vms_test_assert_contains("\$GLOBALS['bvmgr_ajax_ob_started'] = false;", $v2DiscardBody, 'The V2 cleanup-only helper should still clear AJAX buffer ownership after cleanup.');
-	vms_test_assert_contains('vms_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still invoke the cleanup-only helper.');
+	vms_test_assert_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still invoke the cleanup-only helper.');
 	vms_test_assert_contains('wp_send_json_success(', $v2SuccessWrapperBody, 'The V2 success wrapper should still delegate to wp_send_json_success().');
 	vms_test_assert_true(
-		strpos($v2SuccessWrapperBody, 'vms_ticketing_ajax_discard_owned_buffer();') < strpos($v2SuccessWrapperBody, 'wp_send_json_success('),
+		strpos($v2SuccessWrapperBody, 'bvmgr_ticketing_ajax_discard_owned_buffer();') < strpos($v2SuccessWrapperBody, 'wp_send_json_success('),
 		'The V2 success wrapper should still clean up the owned buffer before delegating to WordPress JSON output.'
 	);
-	vms_test_assert_contains('vms_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still invoke the cleanup-only helper.');
+	vms_test_assert_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still invoke the cleanup-only helper.');
 	vms_test_assert_contains('wp_send_json_error(', $v2ErrorWrapperBody, 'The V2 error wrapper should still delegate to wp_send_json_error().');
 	vms_test_assert_true(
-		strpos($v2ErrorWrapperBody, 'vms_ticketing_ajax_discard_owned_buffer();') < strpos($v2ErrorWrapperBody, 'wp_send_json_error('),
+		strpos($v2ErrorWrapperBody, 'bvmgr_ticketing_ajax_discard_owned_buffer();') < strpos($v2ErrorWrapperBody, 'wp_send_json_error('),
 		'The V2 error wrapper should still clean up the owned buffer before delegating to WordPress JSON output.'
 	);
 
 	$v2AjaxExpectations = array(
-		'vms_ticketing_v2_ajax_silent_add' => array(
+		'bvmgr_ticketing_v2_ajax_silent_add' => array(
 			'hooks' => array('wp_ajax_nopriv_vms_ticketing_v2_silent_add', 'wp_ajax_vms_ticketing_v2_silent_add'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_atomic_add_to_cart' => array(
+		'bvmgr_ticketing_v2_ajax_atomic_add_to_cart' => array(
 			'hooks' => array('wp_ajax_nopriv_vms_ticketing_v2_atomic_add_to_cart', 'wp_ajax_vms_ticketing_v2_atomic_add_to_cart'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_cart_context' => array(
+		'bvmgr_ticketing_v2_ajax_cart_context' => array(
 			'hooks' => array('wp_ajax_nopriv_vms_ticketing_v2_cart_context', 'wp_ajax_vms_ticketing_v2_cart_context'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
 	);
 
@@ -288,57 +288,57 @@ try {
 		$directCalls = vms_test_find_direct_json_calls($body);
 		vms_test_assert_same(array(), $directCalls, $callback . ' should no longer terminate through direct wp_send_json_* calls.');
 
-		vms_test_assert_not_contains('vms_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy success wrapper.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy error wrapper.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy cleanup helper directly.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy success wrapper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy error wrapper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy cleanup helper directly.');
 	}
 
 	$phaseBAjaxExpectations = array(
-		'vms_ticketing_b_ajax_save_tiers' => array(
+		'bvmgr_ticketing_b_ajax_save_tiers' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_save_tiers'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_b_ajax_preview_sync' => array(
+		'bvmgr_ticketing_b_ajax_preview_sync' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_preview_sync'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_b_ajax_commit_sync' => array(
+		'bvmgr_ticketing_b_ajax_commit_sync' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_commit_sync'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_save_config' => array(
+		'bvmgr_ticketing_v2_ajax_save_config' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_save_config'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error'),
-			'fast_success_call' => "vms_ticketing_v2_ajax_send_json_success_fast(\$response, 'ticketing-v2-save-config');",
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error'),
+			'fast_success_call' => "bvmgr_ticketing_v2_ajax_send_json_success_fast(\$response, 'ticketing-v2-save-config');",
 		),
-		'vms_ticketing_v2_ajax_save_template' => array(
+		'bvmgr_ticketing_v2_ajax_save_template' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_save_template'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_apply_template' => array(
+		'bvmgr_ticketing_v2_ajax_apply_template' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_apply_template'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_clear_config' => array(
+		'bvmgr_ticketing_v2_ajax_clear_config' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_clear_config'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_init_from_legacy' => array(
+		'bvmgr_ticketing_v2_ajax_init_from_legacy' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_init_from_legacy'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error'),
 		),
-		'vms_ticketing_v2_ajax_set_default_template' => array(
+		'bvmgr_ticketing_v2_ajax_set_default_template' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_set_default_template'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_preview_sync' => array(
+		'bvmgr_ticketing_v2_ajax_preview_sync' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_preview_sync'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error'),
-			'fast_success_call' => "vms_ticketing_v2_ajax_send_json_success_fast(\$preview, 'ticketing-v2-preview-sync');",
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error'),
+			'fast_success_call' => "bvmgr_ticketing_v2_ajax_send_json_success_fast(\$preview, 'ticketing-v2-preview-sync');",
 		),
-		'vms_ticketing_v2_ajax_commit_sync' => array(
+		'bvmgr_ticketing_v2_ajax_commit_sync' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_commit_sync'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
 	);
 
@@ -353,32 +353,32 @@ try {
 		$directCalls = vms_test_find_direct_json_calls($body);
 		vms_test_assert_same(array(), $directCalls, $callback . ' should no longer terminate through direct wp_send_json_* calls.');
 
-		vms_test_assert_not_contains('vms_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy success wrapper.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy error wrapper.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy cleanup helper directly.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy success wrapper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy error wrapper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy cleanup helper directly.');
 
 		if (isset($expectation['fast_success_call'])) {
 			vms_test_assert_contains($expectation['fast_success_call'], $body, $callback . ' should preserve its fast success responder.');
-			vms_test_assert_not_contains('vms_ticketing_v2_ajax_send_success(', $body, $callback . ' should not replace the fast success path with the ordinary V2 success wrapper.');
+			vms_test_assert_not_contains('bvmgr_ticketing_v2_ajax_send_success(', $body, $callback . ' should not replace the fast success path with the ordinary V2 success wrapper.');
 		} else {
-			vms_test_assert_not_contains('vms_ticketing_v2_ajax_send_json_success_fast(', $body, $callback . ' should not unexpectedly gain a fast success responder.');
+			vms_test_assert_not_contains('bvmgr_ticketing_v2_ajax_send_json_success_fast(', $body, $callback . ' should not unexpectedly gain a fast success responder.');
 		}
 	}
 
-	$phaseBSaveConfigBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_save_config');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_json_success_fast(\$response, 'ticketing-v2-save-config');", $phaseBSaveConfigBody, 'Phase B save config should still own its fast success path through the dedicated fast responder.');
+	$phaseBSaveConfigBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_save_config');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_json_success_fast(\$response, 'ticketing-v2-save-config');", $phaseBSaveConfigBody, 'Phase B save config should still own its fast success path through the dedicated fast responder.');
 
-	$phaseBV2PreviewBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_preview_sync');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_json_success_fast(\$preview, 'ticketing-v2-preview-sync');", $phaseBV2PreviewBody, 'Phase B preview sync should still own its fast success path through the dedicated fast responder.');
+	$phaseBV2PreviewBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_preview_sync');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_json_success_fast(\$preview, 'ticketing-v2-preview-sync');", $phaseBV2PreviewBody, 'Phase B preview sync should still own its fast success path through the dedicated fast responder.');
 
 	$claimsAjaxExpectations = array(
-		'vms_ticketing_claims_handle_client_log_action' => array(
+		'bvmgr_ticketing_claims_handle_client_log_action' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_claims_log_client_action'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_claims_handle_validate_assignee' => array(
+		'bvmgr_ticketing_claims_handle_validate_assignee' => array(
 			'hooks' => array('wp_ajax_nopriv_vms_ticketing_claims_validate_assignee', 'wp_ajax_vms_ticketing_claims_validate_assignee'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
 	);
 
@@ -388,12 +388,12 @@ try {
 		vms_test_assert_same($expectation['hooks'], $hooks, $callback . ' should retain its existing customer-claims AJAX action registrations.');
 		vms_test_assert_same($expectation['wrapper_calls'], vms_test_find_v2_wrapper_calls($body), $callback . ' should now terminate through the V2 cleanup wrappers.');
 		vms_test_assert_same(array(), vms_test_find_direct_json_calls($body), $callback . ' should no longer remain a direct-send residual under the request-global AJAX opener.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy success wrapper.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy error wrapper.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy cleanup helper directly.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy success wrapper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy error wrapper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy cleanup helper directly.');
 	}
 
-	$myTicketsRegistration = vms_test_find_filter_registration($v2Source, 'tec_tickets_my_tickets_link_ticket_count_by_type', 'vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type');
+	$myTicketsRegistration = vms_test_find_filter_registration($v2Source, 'tec_tickets_my_tickets_link_ticket_count_by_type', 'bvmgr_ticketing_v2_filter_my_tickets_link_ticket_count_by_type');
 	vms_test_assert_true(is_array($myTicketsRegistration), 'My Tickets should now be registered through the native TEC count-source filter.');
 	vms_test_assert_same(99, $myTicketsRegistration['priority'], 'The My Tickets native count-source filter should run after installed TEC callbacks.');
 	vms_test_assert_same(3, $myTicketsRegistration['accepted_args'], 'The My Tickets native count-source filter should retain the installed TEC accepted-argument count.');
@@ -405,26 +405,26 @@ try {
 	vms_test_assert_not_contains("ob_start('vms_ticketing_v2_filter_my_tickets_notice_html')", $v2Source, 'No My Tickets callback-based full-response buffer should remain.');
 	vms_test_assert_not_contains('You\s+have\s+\d+\s+Tickets?\s+for\s+this\s+Event', $v2Source, 'The My Tickets full-page regex transformation should be removed.');
 
-	$myTicketsFilterBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_filter_my_tickets_link_ticket_count_by_type');
+	$myTicketsFilterBody = vms_test_extract_function($v2Source, 'bvmgr_ticketing_v2_filter_my_tickets_link_ticket_count_by_type');
 	vms_test_assert_contains(
-		'vms_ticketing_v2_active_ticket_count_for_event_user(',
+		'bvmgr_ticketing_v2_active_ticket_count_for_event_user(',
 		$myTicketsFilterBody,
 		'The My Tickets native filter callback should still route through the existing VMS active-ticket-count helper.'
 	);
 	vms_test_assert_not_contains('ob_start(', $myTicketsFilterBody, 'The My Tickets native filter callback should not open any output buffer.');
 	vms_test_assert_not_contains('$GLOBALS', $myTicketsFilterBody, 'The My Tickets native filter callback should not own any request-global buffer state.');
 
-	$footerMountRegistration = vms_test_find_filter_registration($v2Source, 'tribe_template_before_include_html:tickets/v2/tickets/footer', 'vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount');
+	$footerMountRegistration = vms_test_find_filter_registration($v2Source, 'tribe_template_before_include_html:tickets/v2/tickets/footer', 'bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount');
 	vms_test_assert_true(is_array($footerMountRegistration), 'Reserved add-ons should now be registered through the native TEC footer seam.');
 	vms_test_assert_same(20, $footerMountRegistration['priority'], 'The native TEC footer placement should run after installed ET+/TEC footer filters.');
 	vms_test_assert_same(4, $footerMountRegistration['accepted_args'], 'The native TEC footer placement should retain the installed four-argument footer filter contract.');
 
-	$cancelledFilterRegistration = vms_test_find_filter_registration($v2Source, 'tribe_tickets_get_tickets_query_args', 'vms_tec_suppress_tickets_for_cancelled_events');
+	$cancelledFilterRegistration = vms_test_find_filter_registration($v2Source, 'tribe_tickets_get_tickets_query_args', 'bvmgr_tec_suppress_tickets_for_cancelled_events');
 	vms_test_assert_true(is_array($cancelledFilterRegistration), 'Cancelled-event ticket suppression should remain registered on the native tickets query filter.');
 	vms_test_assert_same(20, $cancelledFilterRegistration['priority'], 'Cancelled-event ticket suppression should remain at priority 20.');
 	vms_test_assert_same(1, $cancelledFilterRegistration['accepted_args'], 'Cancelled-event ticket suppression should retain the installed one-argument query filter contract.');
 
-	$disabledFilterRegistration = vms_test_find_filter_registration($v2Source, 'tribe_tickets_get_tickets_query_args', 'vms_ticketing_v2_filter_disabled_ticket_query_args');
+	$disabledFilterRegistration = vms_test_find_filter_registration($v2Source, 'tribe_tickets_get_tickets_query_args', 'bvmgr_ticketing_v2_filter_disabled_ticket_query_args');
 	vms_test_assert_true(is_array($disabledFilterRegistration), 'Disabled-ticket suppression should now be registered on the native tickets query filter.');
 	vms_test_assert_same(30, $disabledFilterRegistration['priority'], 'Disabled-ticket suppression should run after cancelled-event suppression.');
 	vms_test_assert_same(1, $disabledFilterRegistration['accepted_args'], 'Disabled-ticket suppression should retain the installed one-argument query filter contract.');
@@ -440,21 +440,21 @@ try {
 	vms_test_assert_not_contains('function vms_ticketing_v2_strip_cancelled_event_purchase_blocks(', $v2Source, 'The obsolete server-mount cancellation stripping helper should be removed.');
 	vms_test_assert_not_contains("ob_start('vms_ticketing_v2_server_mount_callback')", $v2Source, 'The obsolete server-mount callback buffer should be removed.');
 
-	$footerMountBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount');
-	$disabledFilterBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_filter_disabled_ticket_query_args');
-	$appendBody = vms_test_extract_function($v2Source, 'vms_ticketing_v2_append_entitlements_to_tec_event');
+	$footerMountBody = vms_test_extract_function($v2Source, 'bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount');
+	$disabledFilterBody = vms_test_extract_function($v2Source, 'bvmgr_ticketing_v2_filter_disabled_ticket_query_args');
+	$appendBody = vms_test_extract_function($v2Source, 'bvmgr_ticketing_v2_append_entitlements_to_tec_event');
 
 	vms_test_assert_contains("\$template->get('post_id', 0)", $footerMountBody, 'The native footer placement should source the authoritative event ID from the template context.');
-	vms_test_assert_contains('vms_ticketing_v2_render_entitlements_block($tec_event_id, $plan_id)', $footerMountBody, 'The native footer placement should continue to reuse the shared entitlements renderer.');
+	vms_test_assert_contains('bvmgr_ticketing_v2_render_entitlements_block($tec_event_id, $plan_id)', $footerMountBody, 'The native footer placement should continue to reuse the shared entitlements renderer.');
 	vms_test_assert_contains('id=\"vms-addon-mount\"', $footerMountBody, 'The native footer placement should prepend the dedicated add-on mount host.');
-	vms_test_assert_contains('vms_ticketing_v2_native_footer_mount_placed($tec_event_id)', $footerMountBody, 'The native footer placement should guard against duplicate insertion within the same request.');
+	vms_test_assert_contains('bvmgr_ticketing_v2_native_footer_mount_placed($tec_event_id)', $footerMountBody, 'The native footer placement should guard against duplicate insertion within the same request.');
 	vms_test_assert_not_contains('ob_start(', $footerMountBody, 'The native footer placement should not open any output buffer.');
 
-	vms_test_assert_contains('vms_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)', $appendBody, 'The automatic append fallback should suppress duplicate output after successful native footer placement.');
+	vms_test_assert_contains('bvmgr_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)', $appendBody, 'The automatic append fallback should suppress duplicate output after successful native footer placement.');
 	vms_test_assert_not_contains('ob_start(', $appendBody, 'The automatic append fallback should not open any output buffer.');
 
-	vms_test_assert_contains('vms_ticketing_v2_event_id_from_ticket_query_args($args)', $disabledFilterBody, 'Disabled-ticket suppression should resolve the authoritative event ID from the native query-filter contract.');
-	vms_test_assert_contains('vms_ticketing_v2_disabled_ticket_products_for_plan($plan_id)', $disabledFilterBody, 'Disabled-ticket suppression should continue to reuse the existing disabled-product helper.');
+	vms_test_assert_contains('bvmgr_ticketing_v2_event_id_from_ticket_query_args($args)', $disabledFilterBody, 'Disabled-ticket suppression should resolve the authoritative event ID from the native query-filter contract.');
+	vms_test_assert_contains('bvmgr_ticketing_v2_disabled_ticket_products_for_plan($plan_id)', $disabledFilterBody, 'Disabled-ticket suppression should continue to reuse the existing disabled-product helper.');
 	vms_test_assert_contains("\$args['post__not_in']", $disabledFilterBody, 'Disabled-ticket suppression should use the native ticket exclusion query key.');
 	vms_test_assert_not_contains('ob_start(', $disabledFilterBody, 'Disabled-ticket suppression should not open any output buffer.');
 

@@ -80,10 +80,10 @@ $pathSafeFunction = $extractFunction($privateFilesSource, 'bvmgr_private_files_p
 $w9DownloadFunction = $extractFunction($privateFilesSource, 'bvmgr_private_w9_download_handler');
 $staffDownloadFunction = $extractFunction($privateFilesSource, 'bvmgr_private_staff_cert_download_handler');
 $safetyDownloadFunction = $extractFunction($safetySource, 'vms_safety_private_file_download_handler');
-$ticketingPathFunction = $extractFunction($ticketingSource, 'vms_ticketing_verification_path_within_root');
-$ticketingDeleteFunction = $extractFunction($ticketingSource, 'vms_ticketing_verification_delete_proof_file');
-$ticketingStoreFunction = $extractFunction($ticketingSource, 'vms_ticketing_verification_store_proof_file');
-$ticketingStreamFunction = $extractFunction($ticketingSource, 'vms_ticketing_verification_stream_proof');
+$ticketingPathFunction = $extractFunction($ticketingSource, 'bvmgr_ticketing_verification_path_within_root');
+$ticketingDeleteFunction = $extractFunction($ticketingSource, 'bvmgr_ticketing_verification_delete_proof_file');
+$ticketingStoreFunction = $extractFunction($ticketingSource, 'bvmgr_ticketing_verification_store_proof_file');
+$ticketingStreamFunction = $extractFunction($ticketingSource, 'bvmgr_ticketing_verification_stream_proof');
 $imageNormalizeFunction = $extractFunction($imageSource, 'bvmgr_normalize_uploaded_image_to_jpeg');
 
 $allSource = implode("\n", $sources);
@@ -136,22 +136,22 @@ $assert(strpos($safetyDownloadFunction, 'vms_private_files_stream_path($path, $n
 $assert(strpos($safetyDownloadFunction, "readfile(\$path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile") !== false, 'The safety fallback stream should use a line-specific readfile suppression.');
 $assert(strpos($safetyDownloadFunction, 'exit;') !== false, 'The safety download handler should terminate after streaming.');
 
-$assert(strpos($ticketingPathFunction, '$current_root = vms_ticketing_verification_upload_root();') !== false, 'The verification path guard should include the current private root.');
+$assert(strpos($ticketingPathFunction, '$current_root = bvmgr_ticketing_verification_upload_root();') !== false, 'The verification path guard should include the current private root.');
 $assert(strpos($ticketingPathFunction, "trailingslashit(\$base) . 'vms-verification-proofs'") !== false, 'The verification path guard should preserve the legacy proof root.');
 $assert(strpos($ticketingPathFunction, '$real_path = realpath($path);') !== false, 'The verification path guard should canonicalize candidate paths.');
 $assert(strpos($ticketingPathFunction, 'strpos($real_path, trailingslashit($real_root)) === 0 || $real_path === $real_root') !== false, 'The verification path guard should enforce root prefix matching.');
 
-$assert(strpos($ticketingDeleteFunction, '!vms_ticketing_verification_path_within_root($path)') !== false, 'Verification proof cleanup should retain root enforcement.');
+$assert(strpos($ticketingDeleteFunction, '!bvmgr_ticketing_verification_path_within_root($path)') !== false, 'Verification proof cleanup should retain root enforcement.');
 $assert(strpos($ticketingDeleteFunction, 'wp_delete_file($path);') !== false, 'Verification proof cleanup should use wp_delete_file().');
 
 $assert(strpos($ticketingStoreFunction, '!wp_is_writable($root)') !== false, 'Verification proof storage should use wp_is_writable() for the root check.');
-$assert(strpos($ticketingStoreFunction, 'vms_ticketing_verification_optimize_image_upload(') !== false, 'Verification proof storage should preserve image normalization.');
+$assert(strpos($ticketingStoreFunction, 'bvmgr_ticketing_verification_optimize_image_upload(') !== false, 'Verification proof storage should preserve image normalization.');
 $assert(strpos($ticketingStoreFunction, 'bvmgr_private_files_register_path(') !== false, 'Verification proof storage should preserve private-file registration.');
 $assert(strpos($ticketingStoreFunction, 'wp_delete_file($stored_path);') !== false, 'Verification proof storage should use wp_delete_file() for failed registration cleanup.');
 
-$assert(strpos($ticketingStreamFunction, '!vms_ticketing_verification_current_user_can_manage()') !== false, 'Verification proof streaming should retain its capability gate.');
+$assert(strpos($ticketingStreamFunction, '!bvmgr_ticketing_verification_current_user_can_manage()') !== false, 'Verification proof streaming should retain its capability gate.');
 $assert(strpos($ticketingStreamFunction, "!wp_verify_nonce(\$nonce, 'vms_verification_proof_' . \$request_id)") !== false, 'Verification proof streaming should retain nonce verification.');
-$assert(strpos($ticketingStreamFunction, 'vms_ticketing_verification_proof_payload($request_id)') !== false, 'Verification proof streaming should still resolve through the payload helper.');
+$assert(strpos($ticketingStreamFunction, 'bvmgr_ticketing_verification_proof_payload($request_id)') !== false, 'Verification proof streaming should still resolve through the payload helper.');
 $assert(strpos($ticketingStreamFunction, 'bvmgr_private_files_stream_path(') !== false, 'Verification proof streaming should still use the shared stream helper.');
 
 $assert(strpos($imageNormalizeFunction, '!wp_is_writable($target_dir)') !== false, 'Image normalization should use wp_is_writable() for the target directory.');

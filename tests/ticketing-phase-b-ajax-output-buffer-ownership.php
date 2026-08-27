@@ -200,7 +200,7 @@ function vms_test_find_direct_json_calls(string $functionBody): array
  */
 function vms_test_find_v2_wrapper_calls(string $functionBody): array
 {
-	if (!preg_match_all('/\b(vms_ticketing_v2_ajax_send_(success|error))\s*\(/', $functionBody, $matches)) {
+	if (!preg_match_all('/\b(bvmgr_ticketing_v2_ajax_send_(success|error))\s*\(/', $functionBody, $matches)) {
 		return array();
 	}
 
@@ -308,17 +308,17 @@ try {
 	$ticketingSource = vms_test_read_file($ticketingPath);
 	$phaseBSource = vms_test_read_file($phaseBPath);
 
-	$discardBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_discard_owned_buffer');
-	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_success');
-	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_error');
-	$fastHelperBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_send_json_success_fast');
+	$discardBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_discard_owned_buffer');
+	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_success');
+	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_error');
+	$fastHelperBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_send_json_success_fast');
 
 	eval($discardBody . "\n" . $v2SuccessWrapperBody . "\n" . $v2ErrorWrapperBody);
 
-	vms_test_assert_code_contains('vms_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still invoke the cleanup-only helper.');
-	vms_test_assert_code_contains('vms_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still invoke the cleanup-only helper.');
+	vms_test_assert_code_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still invoke the cleanup-only helper.');
+	vms_test_assert_code_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still invoke the cleanup-only helper.');
 
-	$successResult = vms_test_run_wrapper('vms_ticketing_v2_ajax_send_success', array(array('ok' => true, 'scope' => 'phase-b'), 201), 'phase-b-success-noise');
+	$successResult = vms_test_run_wrapper('bvmgr_ticketing_v2_ajax_send_success', array(array('ok' => true, 'scope' => 'phase-b'), 201), 'phase-b-success-noise');
 	vms_test_assert_same(true, $successResult['call']['success'], 'The V2 success wrapper should still terminate through the success sender.');
 	vms_test_assert_same(array('ok' => true, 'scope' => 'phase-b'), $successResult['call']['data'], 'The V2 success wrapper should forward Phase B payloads unchanged.');
 	vms_test_assert_same(201, $successResult['call']['status_code'], 'The V2 success wrapper should preserve explicit HTTP statuses.');
@@ -327,7 +327,7 @@ try {
 	vms_test_assert_same($successResult['call']['json'], $successResult['output'], 'The V2 success wrapper should discard owned buffer noise before emitting JSON.');
 	vms_test_assert_not_contains('phase-b-success-noise', $successResult['output'], 'Owned Phase B success noise should not leak into the JSON response.');
 
-	$errorResult = vms_test_run_wrapper('vms_ticketing_v2_ajax_send_error', array(array('message' => 'bad_nonce'), 403), 'phase-b-error-noise');
+	$errorResult = vms_test_run_wrapper('bvmgr_ticketing_v2_ajax_send_error', array(array('message' => 'bad_nonce'), 403), 'phase-b-error-noise');
 	vms_test_assert_same(false, $errorResult['call']['success'], 'The V2 error wrapper should still terminate through the error sender.');
 	vms_test_assert_same(array('message' => 'bad_nonce'), $errorResult['call']['data'], 'The V2 error wrapper should forward Phase B error payloads unchanged.');
 	vms_test_assert_same(403, $errorResult['call']['status_code'], 'The V2 error wrapper should preserve explicit HTTP statuses.');
@@ -343,51 +343,51 @@ try {
 	vms_test_assert_code_contains('exit;', $fastHelperBody, 'The fast success helper should still terminate immediately after the fast response path.');
 
 	$phaseBAjaxExpectations = array(
-		'vms_ticketing_b_ajax_save_tiers' => array(
+		'bvmgr_ticketing_b_ajax_save_tiers' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_save_tiers'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_b_ajax_preview_sync' => array(
+		'bvmgr_ticketing_b_ajax_preview_sync' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_preview_sync'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_b_ajax_commit_sync' => array(
+		'bvmgr_ticketing_b_ajax_commit_sync' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_commit_sync'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_save_config' => array(
+		'bvmgr_ticketing_v2_ajax_save_config' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_save_config'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error'),
-			'fast_success_call' => "vms_ticketing_v2_ajax_send_json_success_fast(\$response, 'ticketing-v2-save-config');",
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error'),
+			'fast_success_call' => "bvmgr_ticketing_v2_ajax_send_json_success_fast(\$response, 'ticketing-v2-save-config');",
 		),
-		'vms_ticketing_v2_ajax_save_template' => array(
+		'bvmgr_ticketing_v2_ajax_save_template' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_save_template'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_apply_template' => array(
+		'bvmgr_ticketing_v2_ajax_apply_template' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_apply_template'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_clear_config' => array(
+		'bvmgr_ticketing_v2_ajax_clear_config' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_clear_config'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_init_from_legacy' => array(
+		'bvmgr_ticketing_v2_ajax_init_from_legacy' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_init_from_legacy'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error'),
 		),
-		'vms_ticketing_v2_ajax_set_default_template' => array(
+		'bvmgr_ticketing_v2_ajax_set_default_template' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_set_default_template'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
-		'vms_ticketing_v2_ajax_preview_sync' => array(
+		'bvmgr_ticketing_v2_ajax_preview_sync' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_preview_sync'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error'),
-			'fast_success_call' => "vms_ticketing_v2_ajax_send_json_success_fast(\$preview, 'ticketing-v2-preview-sync');",
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error'),
+			'fast_success_call' => "bvmgr_ticketing_v2_ajax_send_json_success_fast(\$preview, 'ticketing-v2-preview-sync');",
 		),
-		'vms_ticketing_v2_ajax_commit_sync' => array(
+		'bvmgr_ticketing_v2_ajax_commit_sync' => array(
 			'hooks' => array('wp_ajax_vms_ticketing_v2_commit_sync'),
-			'wrapper_calls' => array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success'),
+			'wrapper_calls' => array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success'),
 		),
 	);
 
@@ -403,87 +403,87 @@ try {
 
 		vms_test_assert_same($expectation['wrapper_calls'], vms_test_find_v2_wrapper_calls($body), $callback . ' should terminate only through the expected V2 cleanup wrappers.');
 		vms_test_assert_same(array(), vms_test_find_direct_json_calls($body), $callback . ' should not retain direct wp_send_json_* calls.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy AJAX success wrapper.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy AJAX error wrapper.');
-		vms_test_assert_not_contains('vms_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy AJAX noise helper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_success(', $body, $callback . ' should not route through the legacy AJAX success wrapper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_error(', $body, $callback . ' should not route through the legacy AJAX error wrapper.');
+		vms_test_assert_not_contains('bvmgr_ticketing_ajax_attach_noise(', $body, $callback . ' should not route through the legacy AJAX noise helper.');
 
 		if (isset($expectation['fast_success_call'])) {
 			vms_test_assert_contains($expectation['fast_success_call'], $body, $callback . ' should preserve its fast success responder.');
-			vms_test_assert_not_contains('vms_ticketing_v2_ajax_send_success(', $body, $callback . ' should not replace the fast success path with the ordinary V2 success wrapper.');
+			vms_test_assert_not_contains('bvmgr_ticketing_v2_ajax_send_success(', $body, $callback . ' should not replace the fast success path with the ordinary V2 success wrapper.');
 		} else {
-			vms_test_assert_not_contains('vms_ticketing_v2_ajax_send_json_success_fast(', $body, $callback . ' should not gain a fast success responder.');
+			vms_test_assert_not_contains('bvmgr_ticketing_v2_ajax_send_json_success_fast(', $body, $callback . ' should not gain a fast success responder.');
 		}
 	}
 
-	$saveTiersBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_b_ajax_save_tiers');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $saveTiersBody, 'Save tiers should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $saveTiersBody, 'Save tiers should keep the forbidden 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_tiers'), 400);", $saveTiersBody, 'Save tiers should keep the invalid_payload_tiers 400 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(array('tiers' => \$tiers_out));", $saveTiersBody, 'Save tiers should keep the final tiers success payload.');
+	$saveTiersBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_b_ajax_save_tiers');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $saveTiersBody, 'Save tiers should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $saveTiersBody, 'Save tiers should keep the forbidden 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_tiers'), 400);", $saveTiersBody, 'Save tiers should keep the invalid_payload_tiers 400 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_success(array('tiers' => \$tiers_out));", $saveTiersBody, 'Save tiers should keep the final tiers success payload.');
 
-	$previewSyncBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_b_ajax_preview_sync');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $previewSyncBody, 'Legacy preview sync should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $previewSyncBody, 'Legacy preview sync should keep the forbidden 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => \$preview['message'] ?? 'error'), 400);", $previewSyncBody, 'Legacy preview sync should still forward preview_fail-style messages unchanged.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(\$preview);", $previewSyncBody, 'Legacy preview sync should keep the preview success payload unchanged.');
+	$previewSyncBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_b_ajax_preview_sync');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $previewSyncBody, 'Legacy preview sync should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $previewSyncBody, 'Legacy preview sync should keep the forbidden 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => \$preview['message'] ?? 'error'), 400);", $previewSyncBody, 'Legacy preview sync should still forward preview_fail-style messages unchanged.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_success(\$preview);", $previewSyncBody, 'Legacy preview sync should keep the preview success payload unchanged.');
 
-	$commitSyncBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_b_ajax_commit_sync');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $commitSyncBody, 'Legacy commit sync should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $commitSyncBody, 'Legacy commit sync should keep the forbidden 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_items'), 400);", $commitSyncBody, 'Legacy commit sync should keep the invalid_payload_items 400 contract.');
+	$commitSyncBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_b_ajax_commit_sync');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $commitSyncBody, 'Legacy commit sync should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $commitSyncBody, 'Legacy commit sync should keep the forbidden 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_items'), 400);", $commitSyncBody, 'Legacy commit sync should keep the invalid_payload_items 400 contract.');
 	vms_test_assert_code_contains('$http = isset($res[\'http\']) ? (int) $res[\'http\'] : 400;', $commitSyncBody, 'Legacy commit sync should still derive the dynamic HTTP status from the commit_fail result.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array( 'message' => \$res['message'] ?? 'error', 'error_code' => \$res['error_code'] ?? (\$res['message'] ?? 'error'), 'error_summary' => \$res['error_summary'] ?? '', 'diagnostics' => is_array(\$res['diagnostics'] ?? null) ? \$res['diagnostics'] : array(), ), \$http);", $commitSyncBody, 'Legacy commit sync should keep the dynamic commit_fail error payload and status forwarding.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(\$res);", $commitSyncBody, 'Legacy commit sync should keep the final commit success payload.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array( 'message' => \$res['message'] ?? 'error', 'error_code' => \$res['error_code'] ?? (\$res['message'] ?? 'error'), 'error_summary' => \$res['error_summary'] ?? '', 'diagnostics' => is_array(\$res['diagnostics'] ?? null) ? \$res['diagnostics'] : array(), ), \$http);", $commitSyncBody, 'Legacy commit sync should keep the dynamic commit_fail error payload and status forwarding.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_success(\$res);", $commitSyncBody, 'Legacy commit sync should keep the final commit success payload.');
 
-	$saveConfigBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_save_config');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $saveConfigBody, 'Save config should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $saveConfigBody, 'Save config should keep the forbidden 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);", $saveConfigBody, 'Save config should keep the invalid_payload_config 400 contract.');
-	vms_test_assert_contains("vms_ticketing_v2_ajax_send_json_success_fast(\$response, 'ticketing-v2-save-config');", $saveConfigBody, 'Save config should keep its fast success responder.');
+	$saveConfigBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_save_config');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $saveConfigBody, 'Save config should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $saveConfigBody, 'Save config should keep the forbidden 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);", $saveConfigBody, 'Save config should keep the invalid_payload_config 400 contract.');
+	vms_test_assert_contains("bvmgr_ticketing_v2_ajax_send_json_success_fast(\$response, 'ticketing-v2-save-config');", $saveConfigBody, 'Save config should keep its fast success responder.');
 
-	$saveTemplateBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_save_template');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $saveTemplateBody, 'Save template should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $saveTemplateBody, 'Save template should keep the forbidden 403 contract.');
-	vms_test_assert_code_count(4, "vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);", $saveTemplateBody, 'Save template should keep all invalid_payload_config 400 branches, including malformed request-shape rejection.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => \$res['message'] ?? 'error'), 400);", $saveTemplateBody, 'Save template should still forward save_fail-style messages unchanged.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(array( 'template_id' => (string) (\$res['template_id'] ?? ''), 'templates' => \$list, ));", $saveTemplateBody, 'Save template should keep the final template success payload.');
+	$saveTemplateBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_save_template');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $saveTemplateBody, 'Save template should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $saveTemplateBody, 'Save template should keep the forbidden 403 contract.');
+	vms_test_assert_code_count(4, "bvmgr_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_config'), 400);", $saveTemplateBody, 'Save template should keep all invalid_payload_config 400 branches, including malformed request-shape rejection.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => \$res['message'] ?? 'error'), 400);", $saveTemplateBody, 'Save template should still forward save_fail-style messages unchanged.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_success(array( 'template_id' => (string) (\$res['template_id'] ?? ''), 'templates' => \$list, ));", $saveTemplateBody, 'Save template should keep the final template success payload.');
 
-	$applyTemplateBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_apply_template');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $applyTemplateBody, 'Apply template should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $applyTemplateBody, 'Apply template should keep the forbidden 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => \$res['message'] ?? 'error'), 400);", $applyTemplateBody, 'Apply template should still forward apply_fail-style messages unchanged.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(array( 'config' => \$res['config'], 'config_hash' => vms_ticketing_v2_hash_config_for_sync(\$res['config']), 'applied_show_datetime' => (string) (\$res['applied_show_datetime'] ?? ''), ));", $applyTemplateBody, 'Apply template should keep the final apply-template success payload.');
+	$applyTemplateBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_apply_template');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $applyTemplateBody, 'Apply template should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $applyTemplateBody, 'Apply template should keep the forbidden 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => \$res['message'] ?? 'error'), 400);", $applyTemplateBody, 'Apply template should still forward apply_fail-style messages unchanged.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_success(array( 'config' => \$res['config'], 'config_hash' => bvmgr_ticketing_v2_hash_config_for_sync(\$res['config']), 'applied_show_datetime' => (string) (\$res['applied_show_datetime'] ?? ''), ));", $applyTemplateBody, 'Apply template should keep the final apply-template success payload.');
 
-	$clearConfigBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_clear_config');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $clearConfigBody, 'Clear config should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $clearConfigBody, 'Clear config should keep the forbidden 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(array( 'config' => vms_ticketing_v2_default_config(\$plan_id), ));", $clearConfigBody, 'Clear config should keep the final reset success payload.');
+	$clearConfigBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_clear_config');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $clearConfigBody, 'Clear config should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $clearConfigBody, 'Clear config should keep the forbidden 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_success(array( 'config' => bvmgr_ticketing_v2_default_config(\$plan_id), ));", $clearConfigBody, 'Clear config should keep the final reset success payload.');
 
-	$initFromLegacyBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_init_from_legacy');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $initFromLegacyBody, 'Init from legacy should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $initFromLegacyBody, 'Init from legacy should keep the forbidden 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array( 'message' => 'legacy_init_retired', 'detail' => __('Legacy Ticketing initializer is retired. Configure Ticketing v2 directly and use Preview → Commit.', 'backstage-venue-manager'), ), 400);", $initFromLegacyBody, 'Init from legacy should keep the retired initializer error payload unchanged.');
+	$initFromLegacyBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_init_from_legacy');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $initFromLegacyBody, 'Init from legacy should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $initFromLegacyBody, 'Init from legacy should keep the forbidden 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array( 'message' => 'legacy_init_retired', 'detail' => __('Legacy Ticketing initializer is retired. Configure Ticketing v2 directly and use Preview → Commit.', 'backstage-venue-manager'), ), 400);", $initFromLegacyBody, 'Init from legacy should keep the retired initializer error payload unchanged.');
 
-	$setDefaultTemplateBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_set_default_template');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $setDefaultTemplateBody, 'Set default template should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $setDefaultTemplateBody, 'Set default template should keep the forbidden 403 contract.');
-	vms_test_assert_code_count(2, "vms_ticketing_v2_ajax_send_error(array('message' => 'template_not_found'), 400);", $setDefaultTemplateBody, 'Set default template should keep both template_not_found 400 branches.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(array( 'default_template_id' => \$template_id, 'default_template_name' => \$name, ));", $setDefaultTemplateBody, 'Set default template should keep the final default-template success payload.');
+	$setDefaultTemplateBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_set_default_template');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $setDefaultTemplateBody, 'Set default template should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $setDefaultTemplateBody, 'Set default template should keep the forbidden 403 contract.');
+	vms_test_assert_code_count(2, "bvmgr_ticketing_v2_ajax_send_error(array('message' => 'template_not_found'), 400);", $setDefaultTemplateBody, 'Set default template should keep both template_not_found 400 branches.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_success(array( 'default_template_id' => \$template_id, 'default_template_name' => \$name, ));", $setDefaultTemplateBody, 'Set default template should keep the final default-template success payload.');
 
-	$v2PreviewSyncBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_preview_sync');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $v2PreviewSyncBody, 'V2 preview sync should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $v2PreviewSyncBody, 'V2 preview sync should keep the forbidden 403 contract.');
+	$v2PreviewSyncBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_preview_sync');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $v2PreviewSyncBody, 'V2 preview sync should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $v2PreviewSyncBody, 'V2 preview sync should keep the forbidden 403 contract.');
 	vms_test_assert_code_contains('$http = isset($preview[\'http\']) ? (int) $preview[\'http\'] : 400;', $v2PreviewSyncBody, 'V2 preview sync should still derive the dynamic HTTP status from the preview_fail result.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array( 'message' => \$preview['message'] ?? 'error', 'preview_elapsed_ms' => \$preview_elapsed_ms, 'request_age_at_handler_ms' => \$request_age_at_handler_ms, ), \$http);", $v2PreviewSyncBody, 'V2 preview sync should keep the preview_fail payload and dynamic status forwarding.');
-	vms_test_assert_contains("vms_ticketing_v2_ajax_send_json_success_fast(\$preview, 'ticketing-v2-preview-sync');", $v2PreviewSyncBody, 'V2 preview sync should keep its fast success responder.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array( 'message' => \$preview['message'] ?? 'error', 'preview_elapsed_ms' => \$preview_elapsed_ms, 'request_age_at_handler_ms' => \$request_age_at_handler_ms, ), \$http);", $v2PreviewSyncBody, 'V2 preview sync should keep the preview_fail payload and dynamic status forwarding.');
+	vms_test_assert_contains("bvmgr_ticketing_v2_ajax_send_json_success_fast(\$preview, 'ticketing-v2-preview-sync');", $v2PreviewSyncBody, 'V2 preview sync should keep its fast success responder.');
 
-	$v2CommitSyncBody = vms_test_extract_function($phaseBSource, 'vms_ticketing_v2_ajax_commit_sync');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $v2CommitSyncBody, 'V2 commit sync should keep the bad_nonce 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $v2CommitSyncBody, 'V2 commit sync should keep the forbidden 403 contract.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_preview_id'), 400);", $v2CommitSyncBody, 'V2 commit sync should keep the invalid_payload_preview_id 400 contract.');
+	$v2CommitSyncBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_commit_sync');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);", $v2CommitSyncBody, 'V2 commit sync should keep the bad_nonce 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'forbidden'), 403);", $v2CommitSyncBody, 'V2 commit sync should keep the forbidden 403 contract.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array('message' => 'invalid_payload_preview_id'), 400);", $v2CommitSyncBody, 'V2 commit sync should keep the invalid_payload_preview_id 400 contract.');
 	vms_test_assert_code_contains('$http = isset($res[\'http\']) ? (int) $res[\'http\'] : 400;', $v2CommitSyncBody, 'V2 commit sync should still derive the dynamic HTTP status from the commit_fail result.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_error(array( 'message' => \$res['message'] ?? 'error', 'error_code' => \$res['error_code'] ?? (\$res['message'] ?? 'error'), 'error_summary' => \$res['error_summary'] ?? '', 'diagnostics' => is_array(\$res['diagnostics'] ?? null) ? \$res['diagnostics'] : array(), ), \$http);", $v2CommitSyncBody, 'V2 commit sync should keep the dynamic commit_fail error payload and status forwarding.');
-	vms_test_assert_code_contains("vms_ticketing_v2_ajax_send_success(\$res);", $v2CommitSyncBody, 'V2 commit sync should keep the final commit success payload.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_error(array( 'message' => \$res['message'] ?? 'error', 'error_code' => \$res['error_code'] ?? (\$res['message'] ?? 'error'), 'error_summary' => \$res['error_summary'] ?? '', 'diagnostics' => is_array(\$res['diagnostics'] ?? null) ? \$res['diagnostics'] : array(), ), \$http);", $v2CommitSyncBody, 'V2 commit sync should keep the dynamic commit_fail error payload and status forwarding.');
+	vms_test_assert_code_contains("bvmgr_ticketing_v2_ajax_send_success(\$res);", $v2CommitSyncBody, 'V2 commit sync should keep the final commit success payload.');
 
 	fwrite(STDOUT, "ticketing Phase B AJAX output buffer ownership: PASS\n");
 } catch (Throwable $throwable) {

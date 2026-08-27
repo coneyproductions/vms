@@ -45,7 +45,7 @@ $manual_ticket_pids = isset($manual_ticket_pids) && is_array($manual_ticket_pids
                     if ($provider === 'none' || $provider === '') { $provider_label = 'N/A'; }
                     $rev_str = '';
                     if ($rev !== null) {
-                        $rev_str = function_exists('vms_ticketing_format_money') ? vms_ticketing_format_money($rev) : (string) $rev;
+                        $rev_str = function_exists('bvmgr_ticketing_format_money') ? bvmgr_ticketing_format_money($rev) : (string) $rev;
                     }
                 ?>
 

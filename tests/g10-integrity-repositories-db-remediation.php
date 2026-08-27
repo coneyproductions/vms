@@ -438,7 +438,7 @@ function vms_ticket_integrity_queue_spot_scan(int $object_id, string $reason): v
 	$GLOBALS['g10_spot_scans'][] = compact('object_id', 'reason');
 }
 
-function vms_ticketing_v2_k(string $name): string
+function bvmgr_ticketing_v2_k(string $name): string
 {
 	return '_vms_v2_' . $name;
 }
@@ -448,7 +448,7 @@ function get_post_type(int $post_id): string
 	return $GLOBALS['g10_post_types'][$post_id] ?? '';
 }
 
-function vms_ticketing_is_woo_active(): bool
+function bvmgr_ticketing_is_woo_active(): bool
 {
 	return $GLOBALS['g10_woo_active'];
 }
