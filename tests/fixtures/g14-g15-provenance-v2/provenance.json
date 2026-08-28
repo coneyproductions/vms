@@ -1,0 +1,211 @@
+{
+    "schema_version": 2,
+    "fixture_version": "g14-g15-provenance-v2",
+    "historical_source": {
+        "commit": "2c8f790b9128d547b8bc0a27a714253fb6671bea",
+        "public_release_version": "1.2.0"
+    },
+    "historical_artifacts": {
+        "original_zip": {
+            "filename": "backstage-venue-manager-1.2.0-public-release.zip",
+            "recorded_size_bytes": 2054980,
+            "recorded_sha256": "fec238a519108c7013659b4114e69e9aad93c5c6f864551d4290737d30a609e5",
+            "status": "original artifact unavailable / byte-identical reconstruction impossible from retained evidence"
+        },
+        "strict_plugin_check_json": {
+            "recorded_sha256": "c5fe4d23b3cdf632f239632a23f2c58f9ccf7b8e293ff4b9e71f65101527aa17",
+            "status": "original artifact unavailable"
+        }
+    },
+    "reproducible_content": {
+        "manifest_file": "historical-package-content-manifest.json",
+        "manifest_schema_version": 1,
+        "manifest_sha256": "567acf156c2e3f8d9a06a97913eedf5a0513c91e76dd11e59f1d7dcf37adc1c5",
+        "package_root": "backstage-venue-manager",
+        "file_count": 372,
+        "identity_scope": "normalized paths, regular-file modes, sizes, and SHA-256 content hashes; filesystem mtimes excluded"
+    },
+    "historical_scan_evidence": {
+        "source_commit": "2c8f790b9128d547b8bc0a27a714253fb6671bea",
+        "tool": "WordPress Plugin Check via WP-CLI",
+        "tool_version": {
+            "status": "not retained in project-controlled evidence"
+        },
+        "command": {
+            "status": "retained verbatim in developer documentation; not an executable fixture dependency"
+        },
+        "field_retention": {
+            "retained": [
+                "file",
+                "line",
+                "column",
+                "type",
+                "code",
+                "message"
+            ],
+            "message": "retained verbatim for the DateTime rule and not used by the G15 ticketing ownership classification"
+        },
+        "totals": {
+            "findings": 181,
+            "severity": {
+                "ERROR": 139,
+                "WARNING": 42
+            },
+            "rule_codes": {
+                "PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent": 1,
+                "WordPress.DateTime.RestrictedFunctions.date_date": 14,
+                "WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace": 1,
+                "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 41,
+                "WordPress.Security.EscapeOutput.OutputNotEscaped": 123,
+                "WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet": 1
+            },
+            "database_sql_blockers": 0,
+            "datetime_findings": 14,
+            "logging_findings": 42,
+            "ticketing_owned_datetime_findings": 5,
+            "out_of_scope_datetime_findings": 9
+        },
+        "datetime_findings": [
+            {
+                "file": "/privateincludes/integrations/ticketing-phase-b.php",
+                "line": 1616,
+                "column": 79,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "ticketing_owned",
+                "classification_basis": "path suffix includes/integrations/ticketing-phase-b.php"
+            },
+            {
+                "file": "/privateincludes/integrations/ticketing-phase-b.php",
+                "line": 3087,
+                "column": 11,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "ticketing_owned",
+                "classification_basis": "path suffix includes/integrations/ticketing-phase-b.php"
+            },
+            {
+                "file": "/privateincludes/portal/vendor-tax-profile.php",
+                "line": 158,
+                "column": 116,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/core/payables.php",
+                "line": 88,
+                "column": 16,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/core/payables.php",
+                "line": 119,
+                "column": 12,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/core/event-credits.php",
+                "line": 844,
+                "column": 84,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/modules/staff-tasks/notifications.php",
+                "line": 147,
+                "column": 17,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/modules/staff-tasks/notifications.php",
+                "line": 234,
+                "column": 11,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/modules/staff-tasks/notifications.php",
+                "line": 237,
+                "column": 11,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/modules/staff-tasks/notifications.php",
+                "line": 239,
+                "column": 10,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/modules/staff-tasks/notifications.php",
+                "line": 252,
+                "column": 12,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "out_of_scope",
+                "classification_basis": "not owned by the G15 ticketing child"
+            },
+            {
+                "file": "/privateincludes/ticketing/ticket-integrity-monitor.php",
+                "line": 621,
+                "column": 9,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "ticketing_owned",
+                "classification_basis": "path suffix includes/ticketing/ticket-integrity-monitor.php"
+            },
+            {
+                "file": "/privateincludes/ticketing/ticket-integrity-monitor.php",
+                "line": 747,
+                "column": 75,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "ticketing_owned",
+                "classification_basis": "path suffix includes/ticketing/ticket-integrity-monitor.php"
+            },
+            {
+                "file": "/privateincludes/ticketing/ticket-integrity-monitor.php",
+                "line": 748,
+                "column": 76,
+                "type": "ERROR",
+                "code": "WordPress.DateTime.RestrictedFunctions.date_date",
+                "message": "date() is affected by runtime timezone changes which can cause date/time to be incorrectly displayed. Use gmdate() instead.",
+                "classification": "ticketing_owned",
+                "classification_basis": "path suffix includes/ticketing/ticket-integrity-monitor.php"
+            }
+        ]
+    }
+}

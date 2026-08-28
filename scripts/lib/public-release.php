@@ -49,6 +49,9 @@ final class VMS_Public_Release_Tooling
 	);
 
 	private const PUBLIC_PLUGIN_SLUG = 'backstage-venue-manager';
+	private const ZIP_TIMESTAMP_POLICY = 'source-date-epoch-or-git-commit-v1';
+	private const ZIP_MIN_TIMESTAMP = 315532800;
+	private const ZIP_MAX_TIMESTAMP = 4354819198;
 
 	private const OPTIONAL_LOAD_SMOKE_SCENARIOS = array(
 		array(
@@ -87,6 +90,8 @@ final class VMS_Public_Release_Tooling
 			self::assertWritableOutputTargets($config, $reportSeed);
 
 			$report['git'] = self::detectGitState($config['plugin_root']);
+			$archiveTimestamp = self::resolveArchiveTimestamp($report['git']);
+			$report['artifact']['timestamp_policy'] = $archiveTimestamp;
 			if ($config['provenance_manifest_path'] !== '') {
 				$provenanceManifest = self::loadProvenanceManifest($config['provenance_manifest_path']);
 				$report['metadata']['provenance_manifest_path'] = (string) ($provenanceManifest['path'] ?? '');
@@ -184,7 +189,7 @@ final class VMS_Public_Release_Tooling
 					self::buildZipArtifact(
 						$stagedRoot,
 						$report['artifact']['zip_path'],
-						isset($provenanceManifest['artifact']['root_mtime_unix']) ? (int) $provenanceManifest['artifact']['root_mtime_unix'] : null
+						(int) $archiveTimestamp['effective_timestamp_unix']
 					);
 					$report['artifact']['created'] = true;
 					$report['artifact']['size_bytes'] = filesize($report['artifact']['zip_path']) ?: 0;
@@ -408,6 +413,9 @@ final class VMS_Public_Release_Tooling
 		$lines[] = 'Artifact Size: ' . self::formatSize((int) ($report['artifact']['size_bytes'] ?? 0));
 		$lines[] = 'SHA-256: ' . (string) (($report['artifact']['sha256'] ?? '') !== '' ? $report['artifact']['sha256'] : 'n/a');
 		$lines[] = 'Build Timestamp (UTC): ' . (string) ($report['finished_at_utc'] ?? ($report['started_at_utc'] ?? 'n/a'));
+		$lines[] = 'ZIP Timestamp Policy: ' . (string) (($report['artifact']['timestamp_policy']['policy'] ?? '') ?: 'n/a');
+		$lines[] = 'ZIP Timestamp Source: ' . (string) (($report['artifact']['timestamp_policy']['source'] ?? '') ?: 'n/a');
+		$lines[] = 'ZIP Timestamp (UTC): ' . (string) (($report['artifact']['timestamp_policy']['effective_timestamp_utc'] ?? '') ?: 'n/a');
 		$lines[] = 'Plugin Version: ' . (string) (($report['metadata']['version'] ?? '') !== '' ? $report['metadata']['version'] : 'unknown');
 		$lines[] = 'Plugin Slug: ' . (string) (($report['metadata']['slug'] ?? '') !== '' ? $report['metadata']['slug'] : 'unknown');
 		$lines[] = 'Git Commit: ' . (string) (($report['git']['commit'] ?? '') !== '' ? $report['git']['commit'] : 'n/a');
@@ -461,6 +469,18 @@ final class VMS_Public_Release_Tooling
 	public static function defaultReleaseTests(): array
 	{
 		return array(
+			array(
+				'id' => 'g14-g15-provenance-v2',
+				'label' => 'G14/G15 reproducible historical provenance migration',
+				'path' => 'tests/g14-g15-provenance-v2.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'public-release-reproducibility',
+				'label' => 'Byte-reproducible public-release ZIP metadata',
+				'path' => 'tests/public-release-reproducibility.php',
+				'required' => true,
+			),
 			array(
 				'id' => 'wporg-prefix-b4-addon-compatibility',
 				'label' => 'WordPress.org B4 disposable add-on compatibility and provenance',
@@ -658,6 +678,7 @@ final class VMS_Public_Release_Tooling
 				'report_text_path' => $config['output_dir'] . DIRECTORY_SEPARATOR . $baseName . '.report.txt',
 				'size_bytes' => 0,
 				'sha256' => '',
+				'timestamp_policy' => array(),
 			),
 			'checks' => array(),
 			'warnings' => array(),
@@ -722,6 +743,7 @@ final class VMS_Public_Release_Tooling
 		}
 
 		$commit = trim(self::runCommand(array('git', '-C', $pluginRoot, 'rev-parse', 'HEAD'))['stdout']);
+		$commitTimestamp = trim(self::runCommand(array('git', '-C', $pluginRoot, 'show', '-s', '--format=%ct', 'HEAD'))['stdout']);
 		$statusOutput = self::runCommand(array('git', '-C', $pluginRoot, 'status', '--short', '--untracked-files=all'));
 		$dirty = trim($statusOutput['stdout']) !== '';
 
@@ -729,10 +751,48 @@ final class VMS_Public_Release_Tooling
 			'available' => true,
 			'state' => $dirty ? 'dirty' : 'clean',
 			'commit' => $commit,
+			'commit_timestamp_unix' => ctype_digit($commitTimestamp) ? (int) $commitTimestamp : 0,
 			'repo_root' => $repoRoot,
 			'message' => $dirty
 				? 'Git worktree contains uncommitted or untracked changes.'
 				: 'Git worktree is clean.',
+		);
+	}
+
+	private static function resolveArchiveTimestamp(array $git): array
+	{
+		$sourceDateEpoch = getenv('SOURCE_DATE_EPOCH');
+		if ($sourceDateEpoch !== false) {
+			if ($sourceDateEpoch === '' || preg_match('/^[0-9]+$/', $sourceDateEpoch) !== 1) {
+				throw new RuntimeException('SOURCE_DATE_EPOCH must be an unsigned integer Unix timestamp.');
+			}
+			$rawTimestamp = (int) $sourceDateEpoch;
+			if ((string) $rawTimestamp !== ltrim($sourceDateEpoch, '0') && !preg_match('/^0+$/', $sourceDateEpoch)) {
+				throw new RuntimeException('SOURCE_DATE_EPOCH is outside the supported integer range.');
+			}
+			$source = 'SOURCE_DATE_EPOCH';
+		} elseif ((int) ($git['commit_timestamp_unix'] ?? 0) > 0) {
+			$rawTimestamp = (int) $git['commit_timestamp_unix'];
+			$source = 'git-commit-timestamp';
+		} else {
+			$rawTimestamp = self::ZIP_MIN_TIMESTAMP;
+			$source = 'non-git-deterministic-fallback';
+		}
+
+		if ($rawTimestamp < self::ZIP_MIN_TIMESTAMP || $rawTimestamp > self::ZIP_MAX_TIMESTAMP) {
+			throw new RuntimeException('Canonical ZIP timestamp must be within the DOS-safe 1980-01-01 through 2107-12-31 range.');
+		}
+
+		$effectiveTimestamp = $rawTimestamp - ($rawTimestamp % 2);
+
+		return array(
+			'policy' => self::ZIP_TIMESTAMP_POLICY,
+			'source' => $source,
+			'input_timestamp_unix' => $rawTimestamp,
+			'effective_timestamp_unix' => $effectiveTimestamp,
+			'effective_timestamp_utc' => gmdate('Y-m-d\TH:i:s\Z', $effectiveTimestamp),
+			'timezone' => 'UTC',
+			'dos_even_second' => true,
 		);
 	}
 
@@ -1290,42 +1350,52 @@ PHP;
 		);
 	}
 
-	private static function buildZipArtifact(string $stagedRoot, string $zipPath, ?int $rootMtimeUnix = null): void
+	private static function buildZipArtifact(string $stagedRoot, string $zipPath, int $canonicalMtimeUnix): void
 	{
 		if (!class_exists('ZipArchive')) {
 			throw new RuntimeException('ZipArchive is required to create public-release artifacts.');
 		}
+		if (!method_exists('ZipArchive', 'setMtimeName')) {
+			throw new RuntimeException('ZipArchive::setMtimeName() is required for reproducible public-release artifacts.');
+		}
 
 		$zip = new ZipArchive();
-		$result = $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-		if ($result !== true) {
-			throw new RuntimeException('Could not open zip artifact for writing.');
-		}
-
-		$slug = basename($stagedRoot);
-		$zip->addEmptyDir($slug);
-		if (method_exists($zip, 'setMtimeName') && is_int($rootMtimeUnix) && $rootMtimeUnix > 0) {
-			$zip->setMtimeName($slug . '/', $rootMtimeUnix);
-		}
-
-		$files = self::listAllFiles($stagedRoot);
-		sort($files, SORT_STRING);
-		foreach ($files as $absolutePath) {
-			$relativePath = self::pathRelativeToOrBasename($absolutePath, $stagedRoot);
-			$zipPathName = $slug . '/' . $relativePath;
-			if (!$zip->addFile($absolutePath, $zipPathName)) {
-				$zip->close();
-				throw new RuntimeException('Could not add staged file to zip: ' . $relativePath);
+		$zipOpen = false;
+		$previousTimezone = date_default_timezone_get();
+		date_default_timezone_set('UTC');
+		try {
+			$result = $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+			if ($result !== true) {
+				throw new RuntimeException('Could not open zip artifact for writing.');
 			}
-			if (method_exists($zip, 'setMtimeName')) {
-				$mtime = @filemtime($absolutePath);
-				if (is_int($mtime) && $mtime > 0) {
-					$zip->setMtimeName($zipPathName, $mtime);
+			$zipOpen = true;
+
+			$slug = basename($stagedRoot);
+			if (!$zip->addEmptyDir($slug)) {
+				throw new RuntimeException('Could not add the package root directory to the ZIP artifact.');
+			}
+			if (!$zip->setMtimeName($slug . '/', $canonicalMtimeUnix)) {
+				throw new RuntimeException('Could not normalize the package root ZIP timestamp.');
+			}
+
+			$files = self::listAllFiles($stagedRoot);
+			sort($files, SORT_STRING);
+			foreach ($files as $absolutePath) {
+				$relativePath = self::pathRelativeToOrBasename($absolutePath, $stagedRoot);
+				$zipPathName = $slug . '/' . $relativePath;
+				if (!$zip->addFile($absolutePath, $zipPathName)) {
+					throw new RuntimeException('Could not add staged file to zip: ' . $relativePath);
+				}
+				if (!$zip->setMtimeName($zipPathName, $canonicalMtimeUnix)) {
+					throw new RuntimeException('Could not normalize the ZIP timestamp for: ' . $relativePath);
 				}
 			}
+		} finally {
+			if ($zipOpen) {
+				$zip->close();
+			}
+			date_default_timezone_set($previousTimezone);
 		}
-
-		$zip->close();
 	}
 
 	private static function validateDirectoryPackageRoot(string $packageRoot, string $pluginSlug, array $manifestPatterns): array

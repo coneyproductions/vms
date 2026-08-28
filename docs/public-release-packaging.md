@@ -57,6 +57,21 @@ Default filenames:
 
 The ZIP is not uploaded or deployed by this command.
 
+## Reproducible ZIP timestamps
+
+Public-release ZIP entry metadata uses the `source-date-epoch-or-git-commit-v1` policy:
+
+- an explicitly supplied `SOURCE_DATE_EPOCH` is authoritative
+- otherwise, a Git checkout uses the exact source commit timestamp
+- a non-Git source uses the fixed DOS epoch fallback `1980-01-01T00:00:00Z`
+- the selected timestamp must fit ZIP's DOS-safe `1980-01-01` through `2107-12-31` range
+- an odd input second is rounded down to an even second because the ZIP DOS timestamp format has two-second precision
+- the package root and every file entry receive the same timestamp under UTC
+
+Source filesystem mtimes, checkout time, temporary-directory creation time, the PHP default timezone, and current wall-clock time do not affect archive bytes. The JSON and text reports record the timestamp policy, source, normalized Unix timestamp, and UTC representation. `SOURCE_DATE_EPOCH` intentionally changes ZIP metadata and therefore the archive hash while leaving paths and extracted runtime bytes unchanged.
+
+Reproducibility is supported within the release environment's PHP/libzip implementation. Identical clean source, builder implementation, compression library, and canonical timestamp produce byte-identical ZIPs. See [`docs/release-provenance-v2.md`](./release-provenance-v2.md) for the historical reason for this policy and [`tests/public-release-reproducibility.php`](../tests/public-release-reproducibility.php) for the executable regression.
+
 ## Public package identity
 
 - Public slug, public ZIP root, and plugin header `Text Domain`: `backstage-venue-manager`

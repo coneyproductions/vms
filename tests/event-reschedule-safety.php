@@ -4,11 +4,18 @@ declare(strict_types=1);
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!function_exists('bvmgr_ticketing_v2_get_config')) {
-    require_once dirname(__DIR__) . '/vendor-management-system.php';
+$plugin_root_env = getenv('BVMGR_TEST_PLUGIN_ROOT');
+$plugin_root = is_string($plugin_root_env) && $plugin_root_env !== '' ? realpath($plugin_root_env) : dirname(__DIR__);
+if (!is_string($plugin_root) || !is_dir($plugin_root)) {
+    throw new RuntimeException('BVMGR_TEST_PLUGIN_ROOT must identify the exact plugin package under test.');
 }
-require_once dirname(__DIR__) . '/includes/core/event-reschedule.php';
-require_once dirname(__DIR__) . '/includes/admin/event-reschedule.php';
+
+if (!function_exists('bvmgr_ticketing_v2_get_config')) {
+    require_once $plugin_root . '/vendor-management-system.php';
+}
+require_once $plugin_root . '/includes/core/event-reschedule.php';
+require_once $plugin_root . '/includes/admin/event-reschedule.php';
+require_once $plugin_root . '/includes/admin/event-day-report.php';
 
 $assertions = 0;
 $assert = static function (bool $condition, string $message) use (&$assertions): void {
@@ -290,6 +297,7 @@ try {
     $assert((int) $preview['counts']['multi_quantity_lines'] === 2, 'Multi-quantity line impact changed.');
     $integrity_before = bvmgr_event_occurrence_integrity($plan_id);
     $assert((int) $integrity_before['mismatch_admission_units'] === 2 && (int) $integrity_before['mismatch_reservation_units'] === 4, 'Integrity checker did not report stale units by type.');
+    $event_day_before = bvmgr_event_day_report_build_model($plan_id);
 
     $approved_fingerprint = bvmgr_event_occurrence_preview_fingerprint($preview);
     wp_update_post(array('ID' => $addon_id, 'post_title' => $old_date . ' 19:00 - Fire Table #01 changed after preview'));
@@ -347,19 +355,28 @@ try {
     $assert(absint(get_post_meta($attendee_ids[0], '_tribe_wooticket_event', true)) === $event_id, 'Attendee calendar linkage changed.');
     $assert(count(bvmgr_event_occurrence_history($plan_id)) === 1, 'Repair did not append exactly one audit entry.');
     $integrity_after = bvmgr_event_occurrence_integrity($plan_id);
-    $assert(!empty($integrity_after['ok']) && (int) $integrity_after['mismatch_units'] === 0, 'Post-repair integrity did not pass.');
+    $event_day_after = bvmgr_event_day_report_build_model($plan_id);
+    $event_day_codes_before = array_column((array) ($event_day_before['issues'] ?? array()), 'code');
+    $event_day_codes_after = array_column((array) ($event_day_after['issues'] ?? array()), 'code');
+    $assert(
+        !empty($integrity_after['ok'])
+        && (int) $integrity_after['mismatch_units'] === 0
+        && in_array('event_occurrence_date_mismatch', $event_day_codes_before, true)
+        && !in_array('event_occurrence_date_mismatch', $event_day_codes_after, true),
+        'Post-repair integrity did not pass or the Event-Day occurrence warning did not clear.'
+    );
     $post_preview = bvmgr_event_occurrence_preview($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction');
     $assert(!empty($post_preview['allowed']) && (int) $post_preview['counts']['line_items'] === 0, 'Post-repair dry run still targets current entitlements.');
     $repeat = bvmgr_event_occurrence_apply($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction', 1);
     $assert(!empty($repeat['ok']) && !empty($repeat['noop']) && count(bvmgr_event_occurrence_history($plan_id)) === 1, 'Repair replay was not idempotent.');
 
-    $service_source = (string) file_get_contents(dirname(__DIR__) . '/includes/core/event-reschedule.php');
-    $admin_source = (string) file_get_contents(dirname(__DIR__) . '/includes/admin/event-reschedule.php');
-    $editor_source = (string) file_get_contents(dirname(__DIR__) . '/includes/cpt/event-plans.php');
-    $report_source = (string) file_get_contents(dirname(__DIR__) . '/includes/admin/event-day-report.php');
-    $report_script_source = (string) file_get_contents(dirname(__DIR__) . '/assets/js/vms-event-day-report.js');
-    $report_style_source = (string) file_get_contents(dirname(__DIR__) . '/assets/css/vms-event-day-report.css');
-    $cli_source = (string) file_get_contents(dirname(__DIR__) . '/includes/core/cli/event-reschedule.php');
+    $service_source = (string) file_get_contents($plugin_root . '/includes/core/event-reschedule.php');
+    $admin_source = (string) file_get_contents($plugin_root . '/includes/admin/event-reschedule.php');
+    $editor_source = (string) file_get_contents($plugin_root . '/includes/cpt/event-plans.php');
+    $report_source = (string) file_get_contents($plugin_root . '/includes/admin/event-day-report.php');
+    $report_script_source = (string) file_get_contents($plugin_root . '/assets/js/vms-event-day-report.js');
+    $report_style_source = (string) file_get_contents($plugin_root . '/assets/css/vms-event-day-report.css');
+    $cli_source = (string) file_get_contents($plugin_root . '/includes/core/cli/event-reschedule.php');
     $assert(strpos($service_source, 'START TRANSACTION') !== false && strpos($service_source, 'ROLLBACK') !== false, 'Canonical service lacks explicit transaction/rollback semantics.');
     $assert(strpos($admin_source, 'check_admin_referer') !== false && strpos($admin_source, 'vms_occurrence_confirm') !== false, 'Admin workflow lacks nonce/confirmation enforcement.');
     $assert(strpos($editor_source, 'bvmgr_event_occurrence_lock_editor_request') !== false, 'Event Plan ordinary save is not wired to the server lock.');
