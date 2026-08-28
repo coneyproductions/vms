@@ -161,8 +161,9 @@ try {
 	};
 
 	$runSave = static function (int $planId, array $overrides = array()): void {
+		$GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
 		$defaults = array(
-			'vms_event_plan_details_nonce' => wp_create_nonce('vms_save_event_plan_details'),
+			'bvmgr_event_plan_details_nonce' => wp_create_nonce('bvmgr_save_event_plan_details'),
 			'post_ID' => $planId,
 			'original_post_status' => 'publish',
 			'vms_event_plan_action' => 'save_draft',

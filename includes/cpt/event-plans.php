@@ -376,12 +376,15 @@ if (!function_exists('bvmgr_event_plan_current_post_request')) {
     function bvmgr_event_plan_current_post_request(): array
     {
         static $request = null;
-        if (is_array($request)) {
+        static $cache_generation = null;
+        $current_generation = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0));
+        if (is_array($request) && $cache_generation === $current_generation) {
             return $request;
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Event Plan save handlers validate nonce/capability before acting on these normalized values.
         $request = (isset($_POST) && is_array($_POST)) ? wp_unslash($_POST) : array();
+        $cache_generation = $current_generation;
         return is_array($request) ? $request : array();
     }
 }
@@ -404,7 +407,9 @@ if (!function_exists('bvmgr_event_plan_editor_verified_post_data')) {
     function bvmgr_event_plan_editor_verified_post_data(): array
     {
         static $request = null;
-        if (is_array($request)) {
+        static $cache_generation = null;
+        $current_generation = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0));
+        if (is_array($request) && $cache_generation === $current_generation) {
             return $request;
         }
 
@@ -415,6 +420,7 @@ if (!function_exists('bvmgr_event_plan_editor_verified_post_data')) {
         if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_event_plan_details'))) {
             $request = array();
         }
+        $cache_generation = $current_generation;
 
         return $request;
     }
@@ -15187,7 +15193,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 return true;
             } finally {
                 if (function_exists('bvmgr_event_plan_perf_span_finish')) {
-                    bvmgr_event_plan_perf_span_finish('vms_resync_event_to_calendar', $post_id, $trace, array('job_name' => 'calendar_resync', 'linked_tec_event_id' => $existing_tec_id));
+                    bvmgr_event_plan_perf_span_finish('vms_resync_event_to_calendar', $post_id, $trace, array('job_name' => 'calendar_resync', 'linked_tec_event_id' => $existing_tec_event_id));
                 }
             }
         }

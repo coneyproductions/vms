@@ -11,7 +11,7 @@
         "source_commit": "9d031cc38f64e65e8e0d95d948887be49a64b5a4",
         "package_sha256": "367d534ede2e8c6ced2c8576e3ca8c8044abacc662c1ad1266006203c554b660",
         "strict_json_sha256": "738c37c327175e2cb44b985d4b1b439e8822440101cb928fbf00b195c08389dd",
-        "manifest_sha256": "02d5cd4975eec7ab8f20f409db82c2afdd27257431f12ea898f92bff921703a0"
+        "manifest_sha256": "8ab7347bb124e21e72e195417d3bf2307c6f39c0d59037154e0d7c94ffb891b0"
     },
     "classification_definitions": {
         "REQUIRED_MIGRATION_B3": {

@@ -131,13 +131,13 @@ $assert(count($categoriesById) === 25, 'Manifest must retain all 25 B0 categorie
 $assert(isset($categoriesById['namespaces'], $categoriesById['tests_tooling_assets']), 'Manifest must retain the namespace and tests/tooling categories.');
 
 $expectedCounts = array(
-	'public_php_files' => 272,
-	'functions' => array('unique' => 4529, 'occurrences' => 4549),
-	'classes' => array('unique' => 23, 'occurrences' => 23),
+	'public_php_files' => 276,
+	'functions' => array('unique' => 4644, 'occurrences' => 4664),
+	'classes' => array('unique' => 25, 'occurrences' => 25),
 	'interfaces' => array('unique' => 1, 'occurrences' => 1),
 	'constants' => array('unique' => 107, 'occurrences' => 116),
 	'namespaces' => array('unique' => 0, 'occurrences' => 0),
-	'global_slots' => array('unique' => 85, 'occurrences' => 426),
+	'global_slots' => array('unique' => 90, 'occurrences' => 445),
 );
 foreach ($expectedCounts as $key => $expected) {
 	$assert(($manifest['php_inventory_counts'][$key] ?? null) === $expected, "Semantic count {$key} must match the B1 baseline.");
@@ -146,12 +146,12 @@ foreach ($expectedCounts as $key => $expected) {
 $dynamicExpected = array(
 	'exact_function_literals_unique' => 3645,
 	'exact_function_literals_occurrences' => 7363,
-	'function_exists_unique' => 3318,
-	'function_exists_occurrences' => 6346,
-	'direct_literal_callbacks_unique' => 712,
-	'direct_literal_callbacks_occurrences' => 768,
-	'exact_type_literals_unique' => 16,
-	'exact_type_literals_occurrences' => 28,
+	'function_exists_unique' => 3427,
+	'function_exists_occurrences' => 6492,
+	'direct_literal_callbacks_unique' => 724,
+	'direct_literal_callbacks_occurrences' => 780,
+	'exact_type_literals_unique' => 18,
+	'exact_type_literals_occurrences' => 37,
 	'duplicate_function_families' => 20,
 	'duplicate_constant_families' => 9,
 );
@@ -386,14 +386,21 @@ $assert($externalDynamicContracts === array(
 	'vms_ops_admin_render_teams_page',
 	'vms_ops_default_settings',
 	'vms_ops_ticket_apply_post_show_buffer',
+	'vms_ops_ticket_get_event_attendees',
 	'vms_ops_ticket_post_show_scan_buffer_hours',
 	'vms_render_docs_admin_page',
 	'vms_sch_season_is_blackout_date',
+	'vms_season_passes_count_successful_checkins_for_passholder_event',
+	'vms_season_passes_get_passholder_usage_summary',
+	'vms_season_passes_is_event_eligible_for_type',
+	'vms_season_passes_normalize_pass_type_row',
+	'vms_season_passes_table_pass_types',
+	'vms_season_passes_table_passholders',
 	'vms_square_actuals_has_hard_errors',
 	'vms_square_get_event_actuals',
 	'vms_sync_tec_status_from_plan',
 	'vms_vendor_flag_updated',
-), 'External or dynamic function contracts must remain an exact reviewed 20-entry baseline.');
+), 'External or dynamic function contracts must remain the exact reviewed 27-entry integrated baseline.');
 
 $fixture = <<<'PHP'
 <?php

@@ -275,7 +275,7 @@ try {
         /** @var BVMGR_Admin_Event_Plans $admin */
         $admin = $reflection->newInstanceWithoutConstructor();
         $defaults = array(
-            'vms_event_plan_details_nonce' => wp_create_nonce('vms_save_event_plan_details'),
+            'bvmgr_event_plan_details_nonce' => wp_create_nonce('bvmgr_save_event_plan_details'),
             'post_ID' => $planId,
             'original_post_status' => 'publish',
             'vms_event_plan_action' => 'resync_to_calendar',
@@ -309,7 +309,7 @@ try {
     $beforeResyncState = $captureResyncOwnedState($planId, $tecId);
 
     $successResult = bvmgr_event_plan_handle_resync_calendar_request(array(
-        '_vms_resync_calendar_nonce' => wp_create_nonce('vms_resync_calendar'),
+        '_bvmgr_resync_calendar_nonce' => wp_create_nonce('bvmgr_resync_calendar'),
         'post_id' => $planId,
         'redirect_to' => admin_url('post.php?post=' . $planId . '&action=edit'),
         'source' => 'advanced_controls',
@@ -390,7 +390,7 @@ try {
     $beforeMissingLinkState = $capturePlanState($missingLinkPlanId);
     $clearNotices();
     $missingLinkResult = bvmgr_event_plan_handle_resync_calendar_request(array(
-        '_vms_resync_calendar_nonce' => wp_create_nonce('vms_resync_calendar'),
+        '_bvmgr_resync_calendar_nonce' => wp_create_nonce('bvmgr_resync_calendar'),
         'post_id' => $missingLinkPlanId,
         'redirect_to' => admin_url('post.php?post=' . $missingLinkPlanId . '&action=edit'),
         'source' => 'advanced_controls',
@@ -408,7 +408,7 @@ try {
     $beforeInvalidTecState = $captureResyncOwnedState($invalidPlanId, $invalidTecId);
     $clearNotices();
     $validationResult = bvmgr_event_plan_handle_resync_calendar_request(array(
-        '_vms_resync_calendar_nonce' => wp_create_nonce('vms_resync_calendar'),
+        '_bvmgr_resync_calendar_nonce' => wp_create_nonce('bvmgr_resync_calendar'),
         'post_id' => $invalidPlanId,
         'redirect_to' => admin_url('post.php?post=' . $invalidPlanId . '&action=edit'),
         'source' => 'advanced_controls',

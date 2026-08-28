@@ -212,6 +212,7 @@ if (!function_exists('bvmgr_event_occurrence_admin_handle_change')) {
             'new_start' => $new_start,
             'reason' => $reason,
             'signature' => bvmgr_event_occurrence_admin_signature($plan_id, $old_start, $new_start, $reason),
+            'preview_fingerprint' => bvmgr_event_occurrence_preview_fingerprint($preview),
             'preview' => $preview,
         );
 
@@ -219,11 +220,18 @@ if (!function_exists('bvmgr_event_occurrence_admin_handle_change')) {
             $prior = get_transient($key);
             $confirmed = isset($_POST['vms_occurrence_confirm']) && (string) wp_unslash($_POST['vms_occurrence_confirm']) === '1';
             $prior_signature = is_array($prior) ? (string) ($prior['signature'] ?? '') : '';
-            if (!$confirmed || $prior_signature === '' || !hash_equals($prior_signature, $state['signature']) || empty($prior['preview']['allowed'])) {
+            $prior_fingerprint = is_array($prior) ? (string) ($prior['preview_fingerprint'] ?? '') : '';
+            if (!$confirmed
+                || $prior_signature === ''
+                || !hash_equals($prior_signature, $state['signature'])
+                || $prior_fingerprint === ''
+                || !hash_equals($prior_fingerprint, $state['preview_fingerprint'])
+                || empty($prior['preview']['allowed'])) {
                 $state['result'] = array('ok' => false, 'message' => __('Apply was blocked. Preview these exact values and check the confirmation first.', 'backstage-venue-manager'));
             } else {
-                $state['result'] = bvmgr_event_occurrence_apply($plan_id, $old_start, $new_start, $reason, get_current_user_id());
+                $state['result'] = bvmgr_event_occurrence_apply($plan_id, $old_start, $new_start, $reason, get_current_user_id(), $prior_fingerprint);
                 $state['preview'] = bvmgr_event_occurrence_preview($plan_id, $old_start, $new_start, $reason);
+                $state['preview_fingerprint'] = bvmgr_event_occurrence_preview_fingerprint($state['preview']);
             }
         } elseif ($action !== 'preview') {
             $state['result'] = array('ok' => false, 'message' => __('Unknown occurrence action.', 'backstage-venue-manager'));

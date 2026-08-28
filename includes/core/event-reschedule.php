@@ -418,6 +418,7 @@ if (!function_exists('bvmgr_event_occurrence_preview')) {
             'product_ids' => array(),
             'attendee_ids' => array(),
             'notification_rows' => array(),
+            'fingerprint_state' => array(),
             'counts' => array(
                 'orders' => 0,
                 'line_items' => 0,
@@ -654,7 +655,135 @@ if (!function_exists('bvmgr_event_occurrence_preview')) {
         $preview['warnings'] = array_values(array_unique($preview['warnings']));
         $preview['ambiguities'] = array_values(array_unique($preview['ambiguities']));
         $preview['allowed'] = empty($preview['ambiguities']);
+        $preview['fingerprint_state'] = bvmgr_event_occurrence_preview_fingerprint_state($preview);
         return $preview;
+    }
+}
+
+if (!function_exists('bvmgr_event_occurrence_preview_fingerprint_state')) {
+    function bvmgr_event_occurrence_preview_fingerprint_state(array $preview): array
+    {
+        $plan_id = absint($preview['plan_id'] ?? 0);
+        $tec_event_id = absint($preview['tec_event_id'] ?? 0);
+        $state = array(
+            'plan' => array(),
+            'calendar' => array(),
+            'ticket_config' => array(),
+            'history' => array(),
+            'products' => array(),
+            'order_items' => array(),
+            'attendees' => array(),
+        );
+
+        foreach (bvmgr_event_occurrence_protected_meta_keys() as $meta_key) {
+            $state['plan'][$meta_key] = get_post_meta($plan_id, $meta_key, true);
+        }
+        $state['plan']['_vms_event_plan_status'] = get_post_meta($plan_id, '_vms_event_plan_status', true);
+        $state['plan']['_vms_tec_event_id'] = get_post_meta($plan_id, '_vms_tec_event_id', true);
+        $state['history'] = bvmgr_event_occurrence_history($plan_id);
+        if (function_exists('bvmgr_ticketing_v2_get_config')) {
+            $state['ticket_config'] = bvmgr_ticketing_v2_get_config($plan_id);
+        }
+
+        foreach (array('_EventStartDate', '_EventEndDate', '_EventStartDateUTC', '_EventEndDateUTC', '_EventTimezone') as $meta_key) {
+            $state['calendar'][$meta_key] = get_post_meta($tec_event_id, $meta_key, true);
+        }
+
+        $product_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($preview['product_ids'] ?? array())))));
+        sort($product_ids, SORT_NUMERIC);
+        foreach ($product_ids as $product_id) {
+            $state['products'][$product_id] = array(
+                'title' => (string) get_post_field('post_title', $product_id, 'raw'),
+                'modified_gmt' => (string) get_post_field('post_modified_gmt', $product_id, 'raw'),
+                'event_plan_id' => get_post_meta($product_id, '_vms_event_plan_id', true),
+                'tec_event_id' => get_post_meta($product_id, '_vms_tec_event_id', true),
+                'native_event_id' => get_post_meta($product_id, '_tribe_wooticket_for_event', true),
+                'role' => get_post_meta($product_id, '_vms_product_role', true),
+                'ticket_start' => get_post_meta($product_id, '_ticket_start_date', true),
+                'ticket_end' => get_post_meta($product_id, '_ticket_end_date', true),
+            );
+        }
+
+        $rows = (array) ($preview['rows'] ?? array());
+        usort($rows, static function (array $left, array $right): int {
+            return absint($left['order_item_id'] ?? 0) <=> absint($right['order_item_id'] ?? 0);
+        });
+        foreach ($rows as $row) {
+            $item_id = absint($row['order_item_id'] ?? 0);
+            if ($item_id <= 0 || !class_exists('WC_Order_Item_Product')) {
+                continue;
+            }
+            $item = new WC_Order_Item_Product($item_id);
+            $state['order_items'][$item_id] = array(
+                'order_id' => absint($item->get_order_id()),
+                'product_id' => absint($item->get_product_id()),
+                'variation_id' => absint($item->get_variation_id()),
+                'name' => (string) $item->get_name(),
+                'quantity' => (int) $item->get_quantity(),
+                'subtotal' => (string) $item->get_subtotal(),
+                'subtotal_tax' => (string) $item->get_subtotal_tax(),
+                'total' => (string) $item->get_total(),
+                'total_tax' => (string) $item->get_total_tax(),
+                'assignments' => (string) $item->get_meta('_vms_claim_assignments', true),
+                'date_snapshot' => (string) $item->get_meta('_vms_event_date_snapshot', true),
+                'when_snapshot' => (string) $item->get_meta('_vms_event_when_snapshot', true),
+                'effective_start' => (string) $item->get_meta('_vms_effective_event_start_local', true),
+                'effective_end' => (string) $item->get_meta('_vms_effective_event_end_local', true),
+            );
+        }
+
+        $attendee_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($preview['attendee_ids'] ?? array())))));
+        sort($attendee_ids, SORT_NUMERIC);
+        foreach ($attendee_ids as $attendee_id) {
+            $state['attendees'][$attendee_id] = array(
+                'event_id' => get_post_meta($attendee_id, '_tribe_wooticket_event', true),
+                'rsvp_event_id' => get_post_meta($attendee_id, '_tribe_rsvp_event', true),
+                'product_id' => get_post_meta($attendee_id, '_tribe_wooticket_product', true),
+                'order_id' => get_post_meta($attendee_id, '_tribe_wooticket_order', true),
+                'order_item_id' => get_post_meta($attendee_id, '_tribe_wooticket_order_item', true),
+                'checkedin' => get_post_meta($attendee_id, '_tribe_wooticket_checkedin', true),
+                'security_code' => get_post_meta($attendee_id, '_tribe_wooticket_security_code', true),
+            );
+        }
+
+        return $state;
+    }
+}
+
+if (!function_exists('bvmgr_event_occurrence_normalize_fingerprint_value')) {
+    function bvmgr_event_occurrence_normalize_fingerprint_value($value)
+    {
+        if (!is_array($value)) {
+            return $value;
+        }
+        $is_list = $value === array() || array_keys($value) === range(0, count($value) - 1);
+        if (!$is_list) {
+            ksort($value, SORT_STRING);
+        }
+        foreach ($value as $key => $item) {
+            $value[$key] = bvmgr_event_occurrence_normalize_fingerprint_value($item);
+        }
+        return $value;
+    }
+}
+
+if (!function_exists('bvmgr_event_occurrence_preview_fingerprint')) {
+    function bvmgr_event_occurrence_preview_fingerprint(array $preview): string
+    {
+        $keys = array('allowed', 'reason', 'mode', 'canonical', 'old', 'new', 'tec_event_id', 'external_ticketing', 'rows', 'product_ids', 'attendee_ids', 'counts', 'fingerprint_state');
+        $payload = array_intersect_key($preview, array_fill_keys($keys, true));
+        if (isset($payload['rows']) && is_array($payload['rows'])) {
+            usort($payload['rows'], static function (array $left, array $right): int {
+                return absint($left['order_item_id'] ?? 0) <=> absint($right['order_item_id'] ?? 0);
+            });
+        }
+        foreach (array('product_ids', 'attendee_ids') as $id_key) {
+            if (isset($payload[$id_key]) && is_array($payload[$id_key])) {
+                $payload[$id_key] = array_values(array_unique(array_filter(array_map('absint', $payload[$id_key]))));
+                sort($payload[$id_key], SORT_NUMERIC);
+            }
+        }
+        return hash('sha256', (string) wp_json_encode(bvmgr_event_occurrence_normalize_fingerprint_value($payload)));
     }
 }
 
@@ -1117,7 +1246,7 @@ if (!function_exists('bvmgr_event_occurrence_clear_runtime_caches')) {
 }
 
 if (!function_exists('bvmgr_event_occurrence_apply')) {
-    function bvmgr_event_occurrence_apply(int $plan_id, string $expected_old_start, string $new_start, string $reason, int $actor_user_id): array
+    function bvmgr_event_occurrence_apply(int $plan_id, string $expected_old_start, string $new_start, string $reason, int $actor_user_id, string $expected_preview_fingerprint = ''): array
     {
         global $wpdb;
         $plan_id = absint($plan_id);
@@ -1126,6 +1255,10 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
         $result = array('ok' => false, 'noop' => false, 'rolled_back' => false, 'message' => '', 'preview' => $preview, 'integrity' => array(), 'operation_id' => '');
         if (empty($preview['allowed'])) {
             $result['message'] = 'Operation is blocked by unresolved ambiguity.';
+            return $result;
+        }
+        if ($expected_preview_fingerprint !== '' && !hash_equals($expected_preview_fingerprint, bvmgr_event_occurrence_preview_fingerprint($preview))) {
+            $result['message'] = 'The approved preview is stale because relevant occurrence data changed; rerun the preview.';
             return $result;
         }
         if ($actor_user_id <= 0 || !user_can($actor_user_id, 'edit_post', $plan_id)) {
@@ -1152,12 +1285,9 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
                 throw new RuntimeException('Database transaction could not be started.');
             }
             $transaction_started = true;
+            bvmgr_event_occurrence_clear_runtime_caches($preview);
             $revalidated = bvmgr_event_occurrence_preview($plan_id, $expected_old_start, $new_start, $reason);
-            $fingerprint_keys = array('canonical', 'old', 'new', 'tec_event_id', 'rows', 'product_ids', 'attendee_ids', 'counts');
-            $fingerprint = static function (array $candidate) use ($fingerprint_keys): string {
-                return (string) wp_json_encode(array_intersect_key($candidate, array_fill_keys($fingerprint_keys, true)));
-            };
-            if (empty($revalidated['allowed']) || $fingerprint($revalidated) !== $fingerprint($preview)) {
+            if (empty($revalidated['allowed']) || !hash_equals(bvmgr_event_occurrence_preview_fingerprint($preview), bvmgr_event_occurrence_preview_fingerprint($revalidated))) {
                 throw new RuntimeException('Affected entitlement set changed after preview; rerun the preview.');
             }
 

@@ -120,10 +120,10 @@ try {
 
 	$status_key = function_exists('bvmgr_meta_key') ? (string) (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
 	$tec_key = function_exists('bvmgr_meta_key') ? (string) (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
-	update_post_meta($plan_id, $status_key, 'published');
 	update_post_meta($plan_id, '_vms_event_date', $event_date);
 	update_post_meta($plan_id, '_vms_start_time', wp_date('H:i', $future_start));
 	update_post_meta($plan_id, '_vms_end_time', wp_date('H:i', $future_end));
+	update_post_meta($plan_id, $status_key, 'published');
 	update_post_meta($plan_id, '_vms_comp_structure', 'flat_fee');
 	update_post_meta($plan_id, '_vms_flat_fee_amount', '100');
 	update_post_meta($plan_id, '_vms_band_vendor_id', $vendor_id);
@@ -179,7 +179,11 @@ try {
 	};
 	$set_event_query($event_id);
 
+	bvmgr_event_details_register_external_ticketing_panel();
 	$commerce_hook = bvmgr_event_details_commerce_hook();
+	if (function_exists('vms_event_details_render_external_ticketing_at_commerce_location')) {
+		remove_action($commerce_hook, 'vms_event_details_render_external_ticketing_at_commerce_location', 5);
+	}
 	$assert($commerce_hook === bvmgr_event_details_external_ticketing_commerce_hook(), 'External ticketing no longer uses the canonical BVM commerce location.');
 	$assert(bvmgr_event_details_before_commerce_priority() < bvmgr_event_details_commerce_priority(), 'The canonical sponsor priority must precede commerce.');
 	$native_provider = Tribe__Tickets_Plus__Commerce__WooCommerce__Main::get_instance();
@@ -228,11 +232,20 @@ try {
 		$ticket_debug = $ticket ? array('price' => $ticket->price ?? null, 'start_date' => $ticket->start_date ?? null, 'end_date' => $ticket->end_date ?? null) : array();
 		$assert(strpos(wp_strip_all_tags($markup), '20.00') !== false, $state . ': native $20 price is missing from commerce output (' . substr(preg_replace('/\s+/', ' ', wp_strip_all_tags($markup)), 0, 1200) . '; ticket ' . wp_json_encode($ticket_debug) . ').');
 	};
-	$assert_external_order = static function (string $markup, string $state) use ($assert, $external_url, $presenter_url): void {
+	$assert_external_order = static function (string $markup, string $state) use ($assert, $external_url, $presenter_url, $event_id, $plan_id): void {
 		$sponsor_position = strpos($markup, 'data-vms-sponsor-banner=');
 		$commerce_position = strpos($markup, 'data-vms-external-ticketing-panel="1"');
 		$assert(substr_count($markup, 'data-vms-sponsor-banner=') === 1, $state . ': sponsor placement did not render exactly once.');
-		$assert(substr_count($markup, 'data-vms-external-ticketing-panel="1"') === 1, $state . ': external ticket commerce did not render exactly once.');
+		$assert(
+			substr_count($markup, 'data-vms-external-ticketing-panel="1"') === 1,
+			$state . ': external ticket commerce did not render exactly once: ' . wp_json_encode(array(
+				'output' => substr(preg_replace('/\s+/', ' ', wp_strip_all_tags($markup)), 0, 600),
+				'resolved_plan_id' => bvmgr_get_event_plan_for_tec_event($event_id),
+				'expected_plan_id' => $plan_id,
+				'is_external' => bvmgr_event_plan_is_externally_ticketed($plan_id),
+				'direct_panel_count' => substr_count(bvmgr_event_details_render_external_ticketing_panel($event_id, $plan_id), 'data-vms-external-ticketing-panel="1"'),
+			))
+		);
 		$assert(substr_count($markup, 'id="tribe-tickets__tickets-form"') === 0, $state . ': native ticket selector rendered in external mode.');
 		$assert($sponsor_position !== false && $commerce_position !== false && $sponsor_position < $commerce_position, $state . ': sponsor does not precede external commerce in semantic output.');
 		$assert(strpos($markup, $external_url) !== false && strpos($markup, 'Buy Tickets') !== false, $state . ': external CTA is incomplete.');
@@ -249,7 +262,15 @@ try {
 	$native_sale = bvmgr_ticketing_v2_validate_product_sale_context($product_id, $plan_id, $event_id, 'ga_ticket');
 	$assert(!empty($native_sale['ok']), 'Existing native ticket sale context should remain valid.');
 	$native_args = bvmgr_build_tec_event_args($plan_id, $event_id);
-	$assert(strpos((string) ($native_args['EventCost'] ?? ''), '$20') !== false, 'Native TEC payload did not expose the expected $20 price.');
+	$assert(
+		strpos((string) ($native_args['EventCost'] ?? ''), '$20') !== false,
+		'Native TEC payload did not expose the expected $20 price: ' . wp_json_encode(array(
+			'config_key' => bvmgr_ticketing_v2_k('config'),
+			'config' => bvmgr_ticketing_v2_get_saved_config($plan_id),
+			'from_price' => bvmgr_ticketing_v2_get_from_price_for_display($plan_id),
+			'event_cost' => $native_args['EventCost'] ?? null,
+		))
+	);
 	$assert(bvmgr_publish_event_to_calendar($plan_id, get_post($plan_id)), 'Initial native Event Plan sync failed.');
 	$make_native_ticket_available();
 	$assert(strpos((string) tribe_get_cost($event_id, true), '20') !== false, 'Initial native public cost did not expose $20.');
@@ -278,6 +299,7 @@ try {
 	}
 
 	// Persist external mode through the real nonce/capability-protected Event Plan save path.
+	$GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
 	$_POST = array(
 		'bvmgr_event_plan_details_nonce' => wp_create_nonce('bvmgr_save_event_plan_details'),
 		'post_ID' => $plan_id,

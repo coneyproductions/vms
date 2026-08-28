@@ -87,7 +87,14 @@ if (!class_exists('BVMGR_CLI_Event_Reschedule_Command')) {
                 WP_CLI::error('APPLY blocked by preview ambiguity. No changes were made.');
             }
 
-            $result = bvmgr_event_occurrence_apply($plan_id, $old_start, $new_start, $reason, (int) $user->ID);
+            $result = bvmgr_event_occurrence_apply(
+                $plan_id,
+                $old_start,
+                $new_start,
+                $reason,
+                (int) $user->ID,
+                bvmgr_event_occurrence_preview_fingerprint($preview)
+            );
             if (empty($result['ok'])) {
                 $rollback = !empty($result['rolled_back']) ? ' Transaction rolled back.' : '';
                 WP_CLI::error((string) ($result['message'] ?? 'Occurrence operation failed.') . $rollback);

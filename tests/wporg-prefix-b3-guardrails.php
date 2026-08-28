@@ -49,6 +49,43 @@ try {
 	$literalDecisions = BVMGR_WPORG_Prefix_B3::literalDecisionIndex($root, $map, $w3Functions, true);
 	$assert(($literalDecisions['selected_counts'] ?? array()) === array('rename' => 13, 'retain' => 30), 'W3 must classify all 43 frozen exact-only literals as 13 function identities and 30 retained contracts.');
 	$literalArtifact = BVMGR_WPORG_Prefix_B3::loadJson($root . '/' . BVMGR_WPORG_Prefix_B3::LITERAL_DECISIONS_PATH);
+	$postB4IntegratedLineReconciliations = array(
+		'includes/cpt/event-plans.php:14317' => 14439,
+		'includes/cpt/event-plans.php:14358' => 14480,
+		'includes/cpt/event-plans.php:14514' => 14636,
+		'includes/cpt/event-plans.php:14774' => 14946,
+		'includes/cpt/event-plans.php:14800' => 14982,
+		'includes/cpt/event-plans.php:14847' => 15030,
+		'includes/cpt/event-plans.php:14877' => 15073,
+		'includes/cpt/event-plans.php:14889' => 15085,
+		'includes/cpt/event-plans.php:14920' => 15116,
+		'includes/cpt/event-plans.php:14946' => 15152,
+		'includes/cpt/event-plans.php:14977' => 15196,
+		'includes/cpt/event-plans.php:15373' => 15596,
+		'includes/cpt/event-plans.php:15380' => 15603,
+		'includes/cpt/event-plans.php:15912' => 16234,
+		'includes/cpt/event-plans.php:15924' => 16246,
+		'includes/integrations/ticketing-phase-b.php:2383' => 2623,
+		'includes/integrations/ticketing-phase-b.php:2805' => 3045,
+		'includes/integrations/ticketing-phase-b.php:2823' => 3070,
+		'includes/integrations/ticketing-phase-b.php:2857' => 3104,
+		'includes/integrations/ticketing-phase-b.php:2875' => 3122,
+		'includes/integrations/ticketing-phase-b.php:2890' => 3137,
+		'includes/integrations/ticketing-phase-b.php:4680' => 4927,
+		'includes/integrations/ticketing-phase-b.php:7323' => 7600,
+		'includes/integrations/ticketing-phase-b.php:7391' => 7668,
+		'includes/integrations/ticketing-phase-b.php:7458' => 7735,
+		'includes/integrations/ticketing-phase-b.php:7526' => 7803,
+		'includes/integrations/ticketing-phase-b.php:9678' => 10054,
+		'includes/integrations/ticketing-phase-b.php:9875' => 10251,
+		'includes/integrations/ticketing-phase-b.php:10040' => 10416,
+		'includes/integrations/ticketing-phase-b.php:10190' => 10566,
+		'includes/integrations/ticketing-rules-v2.php:2336' => 2429,
+		'includes/integrations/ticketing-rules-v2.php:5434' => 5557,
+		'includes/public/event-details.php:810' => 978,
+		'includes/public/event-details.php:1192' => 1400,
+	);
+	$assert(count($postB4IntegratedLineReconciliations) === 34, 'Post-B4 integration must reconcile exactly 34 shifted frozen literal sites.');
 	$b4Map = BVMGR_WPORG_Prefix_B4::loadJson($root . '/' . BVMGR_WPORG_Prefix_B4::MAP_PATH);
 	$b4NonceSites = array();
 	foreach ((array) ($b4Map['categories']['nonce_actions'] ?? array()) as $row) {
@@ -62,11 +99,15 @@ try {
 	foreach ((array) ($literalArtifact['decisions'] ?? array()) as $decision) {
 		$legacy = (string) ($decision['legacy_identifier'] ?? '');
 		$canonical = 'bvmgr_' . substr($legacy, 4);
-		$siteKey = (string) ($decision['file'] ?? '') . ':' . (int) ($decision['line'] ?? 0) . ':' . $legacy;
+		$file = (string) ($decision['file'] ?? '');
+		$frozenLine = (int) ($decision['line'] ?? 0);
+		$frozenLocation = $file . ':' . $frozenLine;
+		$currentLine = $postB4IntegratedLineReconciliations[$frozenLocation] ?? $frozenLine;
+		$siteKey = $frozenLocation . ':' . $legacy;
 		$expected = $b4NonceSites[$siteKey] ?? (($decision['decision'] ?? '') === 'rename' && ($progress['function_states'][$legacy] ?? '') === 'migrated' ? $canonical : $legacy);
-		$lines = file($root . '/' . (string) ($decision['file'] ?? '')) ?: array();
-		$line = (string) ($lines[(int) ($decision['line'] ?? 0) - 1] ?? '');
-		$assert(str_contains($line, "'" . $expected . "'") || str_contains($line, '"' . $expected . '"'), 'B3 exact-literal decision must resolve to its current expected identity: ' . $legacy . ' at ' . ($decision['file'] ?? '') . ':' . ($decision['line'] ?? 0));
+		$lines = file($root . '/' . $file) ?: array();
+		$line = (string) ($lines[$currentLine - 1] ?? '');
+		$assert(str_contains($line, "'" . $expected . "'") || str_contains($line, '"' . $expected . '"'), 'B3 exact-literal decision must resolve to its current expected identity: ' . $legacy . ' at ' . $file . ':' . $currentLine . ' (frozen line ' . $frozenLine . ')');
 	}
 } catch (Throwable $exception) {
 	$failures[] = $exception->getMessage();

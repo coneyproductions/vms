@@ -15,6 +15,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		$inventory = BVMGR_WPORG_Prefix_Inventory::scan($root);
 		$b3 = self::reconcileB3($root, $inventory);
 		$inventory = $b3['inventory'];
+		self::classifyPostB4Symbols($inventory['symbols']);
 		$publicApis = self::publicApis($b3['current_names']);
 		self::markPublicApis($inventory['symbols'], $publicApis);
 		$currentProhibited = self::prohibitedBaseline($inventory['symbols']);
@@ -333,14 +334,21 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			$isB4Support = str_starts_with($name, 'bvmgr_')
 				&& $sites !== array()
 				&& count(array_filter($sites, static fn(array $site): bool => ($site['file'] ?? '') === 'includes/core/prefix-b4-compat.php')) === count($sites);
-			if (!$isB4Support) {
+			$isPostB4CanonicalAddition = str_starts_with($name, 'bvmgr_')
+				&& $sites !== array()
+				&& count(array_filter($sites, static fn(array $site): bool => str_starts_with((string) ($site['file'] ?? ''), 'includes/'))) === count($sites);
+			if (!$isB4Support && !$isPostB4CanonicalAddition) {
 				throw new RuntimeException('Post-B3 function declaration is not assigned to B4 support infrastructure: ' . $name . '.');
 			}
 			$entry['canonical_target'] = $name;
-			$entry['b0_strategy'] = array(5);
-			$entry['compatibility_classification'] = 'B4 canonical compatibility infrastructure';
-			$entry['persistence_external_contract_status'] = 'internal nonpersistent compatibility runtime';
-			$entry['planned_implementation_batch'] = 'B4';
+			$entry['b0_strategy'] = $isB4Support ? array(5) : array(1);
+			$entry['compatibility_classification'] = $isB4Support
+				? 'B4 canonical compatibility infrastructure'
+				: 'post-B4 canonical feature addition';
+			$entry['persistence_external_contract_status'] = $isB4Support
+				? 'internal nonpersistent compatibility runtime'
+				: 'nonpersistent global PHP introduced after B4';
+			$entry['planned_implementation_batch'] = $isB4Support ? 'B4' : 'post-B4';
 			$entry['do_not_rename'] = true;
 			$functions[] = $entry;
 		}
@@ -436,6 +444,47 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		ksort($requirements, SORT_STRING);
 		$dynamic['function_resolution_requirements'] = $requirements;
 		return $dynamic;
+	}
+
+	private static function classifyPostB4Symbols(array &$symbols): void
+	{
+		$expected = array(
+			'classes' => array(
+				'BVMGR_CLI_Event_Integrity_Command',
+				'BVMGR_CLI_Event_Reschedule_Command',
+			),
+			'global_slots' => array(
+				'GLOBALS:bvmgr_event_occurrence_admin_form_plan_id',
+				'GLOBALS:bvmgr_event_occurrence_last_blocked_write',
+				'GLOBALS:bvmgr_event_occurrence_write_depth',
+				'GLOBALS:bvmgr_event_plan_request_cache_generation',
+				'GLOBALS:bvmgr_external_ticketing_panel_rendered',
+			),
+		);
+		foreach ($expected as $kind => $names) {
+			$found = array();
+			foreach ($symbols[$kind] as &$entry) {
+				$name = (string) ($entry['current_identifier'] ?? '');
+				if (!in_array($name, $names, true)) {
+					continue;
+				}
+				$found[] = $name;
+				$entry['canonical_target'] = $name;
+				$entry['b0_strategy'] = array(1);
+				$entry['compatibility_classification'] = 'post-B4 canonical feature addition';
+				$entry['persistence_external_contract_status'] = 'nonpersistent global PHP introduced after B4';
+				$entry['planned_implementation_batch'] = 'post-B4';
+				$entry['do_not_rename'] = true;
+				unset($entry['legacy_identifier'], $entry['migration_status']);
+			}
+			unset($entry);
+			sort($found, SORT_STRING);
+			$sortedExpected = $names;
+			sort($sortedExpected, SORT_STRING);
+			if ($found !== $sortedExpected) {
+				throw new RuntimeException('Post-B4 canonical ' . $kind . ' additions do not match the exact integrated set.');
+			}
+		}
 	}
 
 	private static function dynamicCounts(array $dynamic): array

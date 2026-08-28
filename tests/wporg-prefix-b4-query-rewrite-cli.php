@@ -118,11 +118,15 @@ $expectedCli = array(
 	'vms square-ticket-mirror' => 'BVMGR_CLI_Square_Ticket_Mirror_Command',
 	'bvmgr state-of-range' => 'BVMGR_CLI_State_Of_Range_Command',
 	'vms state-of-range' => 'BVMGR_CLI_State_Of_Range_Command',
+	'bvmgr event reschedule' => 'BVMGR_CLI_Event_Reschedule_Command',
+	'vms event reschedule' => 'BVMGR_CLI_Event_Reschedule_Command',
+	'bvmgr event integrity' => 'BVMGR_CLI_Event_Integrity_Command',
+	'vms event integrity' => 'BVMGR_CLI_Event_Integrity_Command',
 );
 foreach ($expectedCli as $path => $callback) {
 	$assert(str_contains($source, "WP_CLI::add_command('{$path}', '{$callback}')"), "WP-CLI path {$path} must resolve to the reviewed command class.");
 }
-$assert(substr_count($source, "WP_CLI::add_command('") === 6, 'B4 must register exactly three canonical WP-CLI paths and three deprecated legacy aliases.');
+$assert(substr_count($source, "WP_CLI::add_command('") === 10, 'Runtime must retain the exact three B4 command pairs plus the two post-B4 event-occurrence command pairs.');
 
 $assert(str_contains($source, "|vms_vendor_app_confirm|"), 'B4 must preserve the historical vendor-confirmation token-hash salt.');
 $assert(str_contains($source, "^docs/vms/"), 'B4 must preserve the physical documentation route regex.');

@@ -239,7 +239,7 @@ try {
     $assert(strpos($advancedHtml, '<form') === false, 'Advanced Controls should not introduce a nested form.');
     $assert(strpos($detachedFormsHtml, 'id="vms-event-plan-calendar-resync-' . $planId . '"') !== false, 'Detached Re-sync form should render in the admin footer output.');
     $assert(strpos($detachedFormsHtml, 'name="action" value="vms_resync_event_to_calendar"') !== false, 'Detached Re-sync form should target the isolated admin-post action.');
-    $assert(strpos($detachedFormsHtml, 'name="_vms_resync_calendar_nonce"') !== false, 'Detached Re-sync form should include the dedicated resync nonce field.');
+    $assert(strpos($detachedFormsHtml, 'name="_bvmgr_resync_calendar_nonce"') !== false, 'Detached Re-sync form should include the canonical dedicated resync nonce field.');
     $assert(strpos($detachedFormsHtml, 'name="post_id" value="' . $planId . '"') !== false, 'Detached Re-sync form should include the Event Plan ID only once as payload state.');
     $assert(strpos($detachedFormsHtml, 'name="source" value="advanced_controls"') !== false, 'Detached Re-sync form should mark the Advanced Controls source.');
     $assert(strpos($detachedFormsHtml, 'name="redirect_to"') !== false, 'Detached Re-sync form should include a redirect target back to the Event Plan editor.');

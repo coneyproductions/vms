@@ -151,6 +151,7 @@ try {
     ));
     $assert($event_date_mid > 0 && update_metadata_by_mid('post', $event_date_mid, '2026-10-04') === false, 'Published occurrence metadata-by-ID update was not blocked.');
     $assert(delete_metadata_by_mid('post', $event_date_mid) === false, 'Published occurrence metadata-by-ID deletion was not blocked.');
+    $assert(update_post_meta($draft_plan_id, '_vms_occurrence_unrelated_fixture', 'preserved') !== false, 'Published occurrence guard blocked an unrelated metadata write.');
     $locked_request = bvmgr_event_occurrence_lock_editor_request($draft_plan_id, array(
         'vms_event_date' => '2026-10-04',
         'vms_start_time' => '18:00',
@@ -289,6 +290,13 @@ try {
     $assert((int) $preview['counts']['multi_quantity_lines'] === 2, 'Multi-quantity line impact changed.');
     $integrity_before = bvmgr_event_occurrence_integrity($plan_id);
     $assert((int) $integrity_before['mismatch_admission_units'] === 2 && (int) $integrity_before['mismatch_reservation_units'] === 4, 'Integrity checker did not report stale units by type.');
+
+    $approved_fingerprint = bvmgr_event_occurrence_preview_fingerprint($preview);
+    wp_update_post(array('ID' => $addon_id, 'post_title' => $old_date . ' 19:00 - Fire Table #01 changed after preview'));
+    $stale_apply = bvmgr_event_occurrence_apply($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction', 1, $approved_fingerprint);
+    $assert(empty($stale_apply['ok']) && strpos((string) ($stale_apply['message'] ?? ''), 'stale') !== false, 'Apply accepted an approved preview after relevant product state changed.');
+    $assert((string) wc_get_order_item_meta($ticket_item_id, '_vms_effective_event_start_local', true) === '' && bvmgr_event_occurrence_history($plan_id) === array(), 'Stale-preview refusal changed effective occurrence state or audit history.');
+    wp_update_post(array('ID' => $addon_id, 'post_title' => $old_date . ' 19:00 - Fire Table #01'));
 
     // Inject a failure at the last possible pre-commit point to prove rollback of all writes.
     $throw_for_rollback = static function (): void {
