@@ -1089,7 +1089,7 @@ if (!function_exists('bvmgr_pass_claims_handle_source_save')) {
 		if (!current_user_can(bvmgr_pass_claims_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_pass_source_save');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_pass_source_save', '_wpnonce'), '_wpnonce');
 
 		$source_name = sanitize_text_field((string) wp_unslash($_POST['source_name'] ?? ''));
 		$contact_name = sanitize_text_field((string) wp_unslash($_POST['contact_name'] ?? ''));
@@ -1152,7 +1152,7 @@ if (!function_exists('bvmgr_pass_claims_handle_batch_generate')) {
 		if (!current_user_can(bvmgr_pass_claims_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_pass_batch_generate');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_pass_batch_generate', '_wpnonce'), '_wpnonce');
 
 		$mode = sanitize_key((string) wp_unslash($_POST['generation_mode'] ?? 'preview'));
 		$user_id = get_current_user_id();
@@ -1307,7 +1307,7 @@ if (!function_exists('bvmgr_pass_claims_handle_token_status_change')) {
 			wp_safe_redirect(bvmgr_pass_claims_admin_page_url(array('tab' => 'passes', 'batch_id' => $batch_id)));
 			exit;
 		}
-		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_pass_token_status_' . $token_id . '_' . $target_status)) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_pass_token_status_' . $token_id . '_' . $target_status))) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
 
@@ -1412,7 +1412,7 @@ if (!function_exists('bvmgr_pass_claims_handle_resend_email')) {
 		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
 			: '';
-		if ($token_id <= 0 || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_pass_resend_email_' . $token_id)) {
+		if ($token_id <= 0 || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_pass_resend_email_' . $token_id))) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
 		$token_row = bvmgr_pass_claims_get_token_by_id($token_id);
@@ -1451,7 +1451,7 @@ if (!function_exists('bvmgr_pass_claims_handle_export_csv')) {
 		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
 			: '';
-		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_pass_export_' . $batch_id)) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_pass_export_' . $batch_id))) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
 
@@ -1544,7 +1544,7 @@ if (!function_exists('bvmgr_pass_claims_handle_report_export_csv')) {
 		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
 			: '';
-		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_pass_report_export_' . $scope)) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_pass_report_export_' . $scope))) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
 
@@ -3210,7 +3210,7 @@ if (!function_exists('bvmgr_pass_claims_render_public_claim')) {
 			$nonce = (isset($_POST['_bvmgr_pass_claim_nonce']) && !is_array($_POST['_bvmgr_pass_claim_nonce']))
 				? sanitize_text_field(wp_unslash((string) $_POST['_bvmgr_pass_claim_nonce']))
 				: '';
-			if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_pass_claim_submit')) {
+			if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_pass_claim_submit'))) {
 				$error = __('Invalid request. Please refresh and try again.', 'backstage-venue-manager');
 			} else {
 				$posted['first_name'] = sanitize_text_field((string) wp_unslash($_POST['first_name'] ?? ''));

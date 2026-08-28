@@ -123,7 +123,7 @@ if (!function_exists('bvmgr_admission_export_csv')) {
 		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
 			: '';
-		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_admissions_export_csv_' . $event_plan_id)) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_admissions_export_csv_' . $event_plan_id))) {
 			wp_die(esc_html__('Invalid request.', 'backstage-venue-manager'));
 		}
 

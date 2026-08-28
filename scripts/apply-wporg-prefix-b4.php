@@ -5,12 +5,148 @@ require_once __DIR__ . '/lib/wporg-prefix-b4.php';
 
 $root = dirname(__DIR__);
 $mode = $argv[1] ?? '--check-browser-assets';
-if (!in_array($mode, array('--plan-browser-assets', '--apply-browser-assets', '--check-browser-assets', '--plan-nonces', '--apply-nonces', '--check-nonces'), true)) {
-	fwrite(STDERR, "Usage: php scripts/apply-wporg-prefix-b4.php [--plan-browser-assets|--apply-browser-assets|--check-browser-assets|--plan-nonces|--apply-nonces|--check-nonces]\n");
+if (!in_array($mode, array('--plan-browser-assets', '--apply-browser-assets', '--check-browser-assets', '--plan-nonces', '--apply-nonces', '--check-nonces', '--repair-native-nonce-verifiers', '--check-native-nonce-verifiers'), true)) {
+	fwrite(STDERR, "Usage: php scripts/apply-wporg-prefix-b4.php [--plan-browser-assets|--apply-browser-assets|--check-browser-assets|--plan-nonces|--apply-nonces|--check-nonces|--repair-native-nonce-verifiers|--check-native-nonce-verifiers]\n");
 	exit(2);
 }
 
 $map = BVMGR_WPORG_Prefix_B4::loadJson($root . '/' . BVMGR_WPORG_Prefix_B4::MAP_PATH);
+
+if (str_ends_with($mode, '-native-nonce-verifiers')) {
+	$inventory = BVMGR_WPORG_Prefix_Inventory::scan($root);
+	$phpFiles = array_values(array_filter(
+		(array) ($inventory['public_php_files'] ?? array()),
+		static fn(string $file): bool => $file !== 'includes/core/prefix-b4-compat.php'
+	));
+	$targets = array(
+		'bvmgr_verify_nonce_compat' => 'verify',
+		'bvmgr_check_admin_referer_compat' => 'admin',
+		'bvmgr_check_ajax_referer_compat' => 'ajax',
+	);
+	$nextSignificant = static function (array $tokens, int $index): int {
+		for ($i = $index + 1, $count = count($tokens); $i < $count; $i++) {
+			if (!is_array($tokens[$i]) || !in_array($tokens[$i][0], array(T_WHITESPACE, T_COMMENT, T_DOC_COMMENT), true)) {
+				return $i;
+			}
+		}
+		return count($tokens);
+	};
+	$parseCall = static function (array $tokens, int $open): ?array {
+		$args = array();
+		$current = array();
+		$paren = 1;
+		$bracket = 0;
+		$brace = 0;
+		for ($i = $open + 1, $count = count($tokens); $i < $count; $i++) {
+			$text = is_array($tokens[$i]) ? $tokens[$i][1] : $tokens[$i];
+			if ($text === '(') {
+				$paren++;
+			} elseif ($text === ')') {
+				$paren--;
+				if ($paren === 0) {
+					$args[] = $current;
+					return array('args' => $args, 'close' => $i);
+				}
+			} elseif ($text === '[') {
+				$bracket++;
+			} elseif ($text === ']') {
+				$bracket--;
+			} elseif ($text === '{') {
+				$brace++;
+			} elseif ($text === '}') {
+				$brace--;
+			}
+			if ($text === ',' && $paren === 1 && $bracket === 0 && $brace === 0) {
+				$args[] = $current;
+				$current = array();
+				continue;
+			}
+			$current[] = $i;
+		}
+		return null;
+	};
+	$indexText = static function (array $tokens, array $indices): string {
+		$text = '';
+		foreach ($indices as $index) {
+			$text .= is_array($tokens[$index]) ? $tokens[$index][1] : $tokens[$index];
+		}
+		return trim($text);
+	};
+	$changed = array();
+	$counts = array('verify' => 0, 'admin' => 0, 'ajax' => 0);
+	foreach ($phpFiles as $relative) {
+		$path = $root . '/' . $relative;
+		$source = (string) file_get_contents($path);
+		$tokens = token_get_all($source);
+		$replacements = array();
+		for ($i = 0, $count = count($tokens); $i < $count; $i++) {
+			$token = $tokens[$i];
+			if (!is_array($token) || $token[0] !== T_STRING) {
+				continue;
+			}
+			$name = strtolower((string) $token[1]);
+			$kind = $targets[$name] ?? null;
+			if ($kind === null) {
+				continue;
+			}
+			$open = $nextSignificant($tokens, $i);
+			if (($tokens[$open] ?? null) !== '(') {
+				continue;
+			}
+			$call = $parseCall($tokens, $open);
+			if ($call === null) {
+				throw new RuntimeException('Unable to parse B4 nonce verifier call in ' . $relative);
+			}
+			$args = array_map(static fn(array $indices): string => $indexText($tokens, $indices), $call['args']);
+			if ($kind === 'verify' && count($args) === 2) {
+				$replacement = 'wp_verify_nonce(' . $args[0] . ', bvmgr_nonce_action_for_value(' . $args[0] . ', ' . $args[1] . '))';
+			} elseif ($kind === 'admin' && count($args) >= 1 && count($args) <= 2) {
+				$queryArg = $args[1] ?? "'_wpnonce'";
+				$replacement = 'check_admin_referer(bvmgr_nonce_action_for_request(' . $args[0] . ', ' . $queryArg . '), ' . $queryArg . ')';
+			} elseif ($kind === 'ajax' && count($args) >= 1 && count($args) <= 3) {
+				$queryArg = $args[1] ?? 'false';
+				$stop = $args[2] ?? 'true';
+				$replacement = 'check_ajax_referer(bvmgr_nonce_action_for_request(' . $args[0] . ', ' . $queryArg . '), ' . $queryArg . ', ' . $stop . ')';
+			} else {
+				throw new RuntimeException('Unexpected B4 nonce verifier signature in ' . $relative . ': ' . $name);
+			}
+			$replacements[$i] = $replacement;
+			for ($cursor = $i + 1; $cursor <= $call['close']; $cursor++) {
+				$replacements[$cursor] = '';
+			}
+			$counts[$kind]++;
+			$i = $call['close'];
+		}
+		if ($replacements === array()) {
+			continue;
+		}
+		$rewritten = '';
+		foreach ($tokens as $index => $token) {
+			$rewritten .= $replacements[$index] ?? (is_array($token) ? $token[1] : $token);
+		}
+		$changed[$relative] = $rewritten;
+	}
+	if ($mode === '--check-native-nonce-verifiers') {
+		if ($changed !== array()) {
+			fwrite(STDERR, 'B4 native nonce verifier cutover is incomplete in ' . count($changed) . " files.\n");
+			exit(1);
+		}
+		$helperSource = (string) file_get_contents($root . '/includes/core/prefix-b4-compat.php');
+		if (!str_contains($helperSource, 'bvmgr_nonce_action_for_value') || !str_contains($helperSource, 'bvmgr_nonce_action_for_request')) {
+			fwrite(STDERR, "B4 native nonce verifier action selectors are missing.\n");
+			exit(1);
+		}
+		echo "B4 native nonce verifier visibility check passed.\n";
+		exit(0);
+	}
+	foreach ($changed as $relative => $rewritten) {
+		if (file_put_contents($root . '/' . $relative, $rewritten) === false) {
+			throw new RuntimeException('Unable to write ' . $relative);
+		}
+	}
+	echo 'B4 native nonce verifier repair: files=' . count($changed) . ' verify=' . $counts['verify'] . ' admin=' . $counts['admin'] . ' ajax=' . $counts['ajax'] . PHP_EOL;
+	exit(0);
+}
 
 if (str_ends_with($mode, '-nonces')) {
 	$fieldMap = array();
@@ -36,9 +172,9 @@ if (str_ends_with($mode, '-nonces')) {
 		'wp_create_nonce' => array('action_arg' => 0, 'verifier' => false),
 		'wp_nonce_field' => array('action_arg' => 0, 'verifier' => false),
 		'wp_nonce_url' => array('action_arg' => 1, 'verifier' => false),
-		'check_admin_referer' => array('action_arg' => 0, 'verifier' => true, 'canonical' => 'bvmgr_check_admin_referer_compat'),
-		'check_ajax_referer' => array('action_arg' => 0, 'verifier' => true, 'canonical' => 'bvmgr_check_ajax_referer_compat'),
-		'wp_verify_nonce' => array('action_arg' => 1, 'verifier' => true, 'canonical' => 'bvmgr_verify_nonce_compat'),
+		'check_admin_referer' => array('action_arg' => 0, 'verifier' => true, 'canonical' => 'check_admin_referer'),
+		'check_ajax_referer' => array('action_arg' => 0, 'verifier' => true, 'canonical' => 'check_ajax_referer'),
+		'wp_verify_nonce' => array('action_arg' => 1, 'verifier' => true, 'canonical' => 'wp_verify_nonce'),
 		'bvmgr_check_admin_referer_compat' => array('action_arg' => 0, 'verifier' => true, 'canonical' => 'bvmgr_check_admin_referer_compat'),
 		'bvmgr_check_ajax_referer_compat' => array('action_arg' => 0, 'verifier' => true, 'canonical' => 'bvmgr_check_ajax_referer_compat'),
 		'bvmgr_verify_nonce_compat' => array('action_arg' => 1, 'verifier' => true, 'canonical' => 'bvmgr_verify_nonce_compat'),

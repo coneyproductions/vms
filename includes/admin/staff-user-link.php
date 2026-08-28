@@ -86,7 +86,7 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     $nonce = (isset($_POST['bvmgr_staff_user_link_nonce']) && !is_array($_POST['bvmgr_staff_user_link_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_user_link_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_user_link_save')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_user_link_save'))) {
         return;
     }
 

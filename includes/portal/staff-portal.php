@@ -208,7 +208,7 @@ if (!function_exists('bvmgr_staff_portal_handle_certification_submission')) {
         $nonce = (isset($_POST['bvmgr_staff_certification_nonce']) && !is_array($_POST['bvmgr_staff_certification_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_certification_nonce']))
             : '';
-        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_certification_submit')) {
+        if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_certification_submit'))) {
             return bvmgr_staff_portal_notice_html('error', __('Could not verify the certification upload. Please refresh and try again.', 'backstage-venue-manager'));
         }
 
@@ -2015,7 +2015,7 @@ function bvmgr_staff_portal_render_employee_packet(int $staff_id): void
         $nonce = (isset($_POST['bvmgr_employee_packet_nonce']) && !is_array($_POST['bvmgr_employee_packet_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_employee_packet_nonce']))
             : '';
-        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_employee_packet_ack')) {
+        if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_employee_packet_ack'))) {
             echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
         } else {
             $now = time();
@@ -2090,7 +2090,7 @@ function bvmgr_staff_portal_render_tax_profile($staff_id)
         $nonce = (isset($_POST['bvmgr_staff_tax_nonce']) && !is_array($_POST['bvmgr_staff_tax_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_tax_nonce']))
             : '';
-        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_tax_save')) {
+        if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_tax_save'))) {
             echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
         } else {
             $t = static function ($key) {
@@ -2375,7 +2375,7 @@ function bvmgr_staff_portal_render_availability_manual($staff_id)
             $nonce = (isset($_POST['bvmgr_staff_ics_nonce']) && !is_array($_POST['bvmgr_staff_ics_nonce']))
                 ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_ics_nonce']))
                 : '';
-            if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_ics_settings')) {
+            if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_ics_settings'))) {
                 echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             } else {
                 $new_url = esc_url_raw(bvmgr_staff_portal_post_scalar('vms_staff_ics_url'));
@@ -2398,7 +2398,7 @@ function bvmgr_staff_portal_render_availability_manual($staff_id)
             $nonce = (isset($_POST['bvmgr_staff_ics_nonce']) && !is_array($_POST['bvmgr_staff_ics_nonce']))
                 ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_ics_nonce']))
                 : '';
-            if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_ics_settings')) {
+            if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_ics_settings'))) {
                 echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             } else {
                 update_post_meta($staff_id, '_vms_availability_preferred_method', 'ics');
@@ -2433,7 +2433,7 @@ function bvmgr_staff_portal_render_availability_manual($staff_id)
             $nonce = (isset($_POST['bvmgr_staff_pattern_nonce']) && !is_array($_POST['bvmgr_staff_pattern_nonce']))
                 ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_pattern_nonce']))
                 : '';
-            if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_pattern_settings')) {
+            if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_pattern_settings'))) {
                 echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             } else {
                 $days = array();
@@ -2480,7 +2480,7 @@ function bvmgr_staff_portal_render_availability_manual($staff_id)
             $nonce = (isset($_POST['bvmgr_staff_avail_nonce']) && !is_array($_POST['bvmgr_staff_avail_nonce']))
                 ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_avail_nonce']))
                 : '';
-            if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_save_availability')) {
+            if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_save_availability'))) {
                 echo wp_kses(bvmgr_staff_portal_notice_html('error', __('Security check failed.', 'backstage-venue-manager')), bvmgr_staff_portal_safe_html_allowed_html());
             } else {
                 $incoming = bvmgr_staff_portal_post_array('vms_availability');
@@ -2857,7 +2857,7 @@ function bvmgr_staff_save_manual_availability_day_ajax(): void
         wp_send_json_error(array('message' => 'Not logged in.'), 403);
     }
 
-    bvmgr_check_ajax_referer_compat('bvmgr_staff_avail_ajax', 'nonce');
+    check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_staff_avail_ajax', 'nonce'), 'nonce', true);
 
     $user_id = (int) get_current_user_id();
     $staff_id = (int) get_user_meta($user_id, '_vms_staff_id', true);

@@ -53,7 +53,7 @@ function bvmgr_handle_duplicate_venue_action(): void
     if ($source_id <= 0) return;
 
     // Verify nonce
-    bvmgr_check_admin_referer_compat('bvmgr_duplicate_venue_' . $source_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_duplicate_venue_' . $source_id, '_wpnonce'), '_wpnonce');
 
     $source = get_post($source_id);
     if (!$source || $source->post_type !== 'vms_venue') {

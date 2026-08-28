@@ -433,8 +433,8 @@ class BVMGR_Admin_Vendors
         // Check nonce(s). Either meta box nonce should allow saving its own fields.
         $details_nonce = bvmgr_request_read_text_field($_POST, 'bvmgr_vendor_details_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Details nonce is required before local verification.
         $profile_nonce = bvmgr_request_read_text_field($_POST, 'bvmgr_vendor_public_profile_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Public Profile nonce is required before local verification.
-        $details_ok = ($details_nonce !== '' && bvmgr_verify_nonce_compat($details_nonce, 'bvmgr_save_vendor_details'));
-        $profile_ok = ($profile_nonce !== '' && bvmgr_verify_nonce_compat($profile_nonce, 'bvmgr_save_vendor_public_profile'));
+        $details_ok = ($details_nonce !== '' && wp_verify_nonce($details_nonce, bvmgr_nonce_action_for_value($details_nonce, 'bvmgr_save_vendor_details')));
+        $profile_ok = ($profile_nonce !== '' && wp_verify_nonce($profile_nonce, bvmgr_nonce_action_for_value($profile_nonce, 'bvmgr_save_vendor_public_profile')));
 
         if (!$details_ok && !$profile_ok) {
             return;

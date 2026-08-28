@@ -116,7 +116,7 @@ function bvmgr_vendor_tax_adminpost_mark_complete()
 	if ($vendor_id <= 0) wp_die('Invalid vendor.');
 	if (!current_user_can('edit_post', $vendor_id)) wp_die('Permission denied.');
 
-	bvmgr_check_admin_referer_compat('bvmgr_vendor_tax_mark_complete_' . $vendor_id);
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_tax_mark_complete_' . $vendor_id, '_wpnonce'), '_wpnonce');
 
 	$k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 	$k_recv = bvmgr_meta_key('vendor', 'w9_received_date');
@@ -151,7 +151,7 @@ function bvmgr_vendor_tax_adminpost_mark_incomplete()
 	if ($vendor_id <= 0) wp_die('Invalid vendor.');
 	if (!current_user_can('edit_post', $vendor_id)) wp_die('Permission denied.');
 
-	bvmgr_check_admin_referer_compat('bvmgr_vendor_tax_mark_incomplete_' . $vendor_id);
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_tax_mark_incomplete_' . $vendor_id, '_wpnonce'), '_wpnonce');
 
 	$k_done   = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 	$k_attest = bvmgr_meta_key('vendor', 'w9_attested_at');

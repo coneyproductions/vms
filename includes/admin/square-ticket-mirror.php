@@ -214,7 +214,7 @@ function bvmgr_square_ticket_mirror_handle_admin_action(): void
         wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
 
-    bvmgr_check_admin_referer_compat('bvmgr_square_ticket_mirror_action_' . $product_id . '_' . $mirror_action);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_square_ticket_mirror_action_' . $product_id . '_' . $mirror_action, '_wpnonce'), '_wpnonce');
 
     $notice_type = 'success';
     $notice_message = '';

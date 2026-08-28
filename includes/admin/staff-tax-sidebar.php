@@ -149,7 +149,7 @@ add_action('admin_post_vms_staff_tax_mark_complete', function (): void {
     $staff_id = bvmgr_request_read_absint($_GET, 'staff_id');
     if ($staff_id <= 0) wp_die('Invalid staff member.');
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
-    bvmgr_check_admin_referer_compat('bvmgr_staff_tax_mark_complete_' . $staff_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_staff_tax_mark_complete_' . $staff_id, '_wpnonce'), '_wpnonce');
 
     $provider = bvmgr_staff_tax_provider();
     $ctx = bvmgr_staff_tax_status_context($staff_id);
@@ -169,7 +169,7 @@ add_action('admin_post_vms_staff_tax_clear_complete', function (): void {
     $staff_id = bvmgr_request_read_absint($_GET, 'staff_id');
     if ($staff_id <= 0) wp_die('Invalid staff member.');
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
-    bvmgr_check_admin_referer_compat('bvmgr_staff_tax_clear_complete_' . $staff_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_staff_tax_clear_complete_' . $staff_id, '_wpnonce'), '_wpnonce');
 
     $ctx = bvmgr_staff_tax_status_context($staff_id);
     $keys = isset($ctx['keys']) && is_array($ctx['keys']) ? $ctx['keys'] : array();
@@ -378,7 +378,7 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     $nonce = (isset($_POST['bvmgr_staff_employee_packet_nonce']) && !is_array($_POST['bvmgr_staff_employee_packet_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_employee_packet_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_employee_packet_save')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_employee_packet_save'))) {
         return;
     }
 

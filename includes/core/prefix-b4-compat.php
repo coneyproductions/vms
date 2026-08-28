@@ -10,68 +10,49 @@ if (!function_exists('bvmgr_nonce_legacy_action')) {
 	}
 }
 
-if (!function_exists('bvmgr_verify_nonce_compat')) {
-	/** @return int|false */
-	function bvmgr_verify_nonce_compat($nonce, $canonical_action)
-	{
-		$result = wp_verify_nonce($nonce, $canonical_action);
-		if ($result !== false || !is_string($canonical_action)) {
-			return $result;
-		}
-
-		$legacy_action = bvmgr_nonce_legacy_action($canonical_action);
-		return $legacy_action !== $canonical_action
-			? wp_verify_nonce($nonce, $legacy_action)
-			: false;
-	}
-}
-
 if (!function_exists('bvmgr_nonce_request_value')) {
 	function bvmgr_nonce_request_value(string $key): string
 	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This helper reads the nonce value that the immediate caller verifies with a native WordPress nonce API.
 		if (!isset($_REQUEST[$key]) || is_array($_REQUEST[$key])) {
 			return '';
 		}
-		return (string) wp_unslash($_REQUEST[$key]);
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The returned value is used only as input to the immediate native nonce verification call.
+		return sanitize_text_field((string) wp_unslash($_REQUEST[$key]));
 	}
 }
 
-if (!function_exists('bvmgr_check_admin_referer_compat')) {
-	/** @return int|false */
-	function bvmgr_check_admin_referer_compat($canonical_action = -1, $query_arg = '_wpnonce')
+if (!function_exists('bvmgr_nonce_action_for_value')) {
+	function bvmgr_nonce_action_for_value($nonce, string $canonical_action): string
 	{
-		$nonce = is_string($query_arg) ? bvmgr_nonce_request_value($query_arg) : '';
-		$result = bvmgr_verify_nonce_compat($nonce, $canonical_action);
-		do_action('check_admin_referer', $canonical_action, $result);
-		if ($result === false) {
-			wp_nonce_ays($canonical_action);
+		if (wp_verify_nonce($nonce, $canonical_action) !== false) {
+			return $canonical_action;
 		}
-		return $result;
+
+		$legacy_action = bvmgr_nonce_legacy_action($canonical_action);
+		if ($legacy_action !== $canonical_action && wp_verify_nonce($nonce, $legacy_action) !== false) {
+			return $legacy_action;
+		}
+
+		return $canonical_action;
 	}
 }
 
-if (!function_exists('bvmgr_check_ajax_referer_compat')) {
-	/** @return int|false */
-	function bvmgr_check_ajax_referer_compat($canonical_action = -1, $query_arg = false, $stop = true)
+if (!function_exists('bvmgr_nonce_action_for_request')) {
+	function bvmgr_nonce_action_for_request(string $canonical_action, $query_arg = false): string
 	{
 		$nonce = '';
 		if (is_string($query_arg) && $query_arg !== '') {
 			$nonce = bvmgr_nonce_request_value($query_arg);
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This branch selects the request field that the immediate native AJAX nonce verifier checks.
 		} elseif (isset($_REQUEST['_ajax_nonce'])) {
 			$nonce = bvmgr_nonce_request_value('_ajax_nonce');
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This branch preserves the native AJAX verifier's documented fallback field order.
 		} elseif (isset($_REQUEST['_wpnonce'])) {
 			$nonce = bvmgr_nonce_request_value('_wpnonce');
 		}
 
-		$result = bvmgr_verify_nonce_compat($nonce, $canonical_action);
-		do_action('check_ajax_referer', $canonical_action, $result);
-		if ($stop && $result === false) {
-			if (wp_doing_ajax()) {
-				wp_die(-1, 403);
-			}
-			die('-1');
-		}
-		return $result;
+		return bvmgr_nonce_action_for_value($nonce, $canonical_action);
 	}
 }
 
@@ -160,15 +141,15 @@ if (!function_exists('bvmgr_prefix_b4_nonce_field_map')) {
 if (!function_exists('bvmgr_prefix_b4_normalize_nonce_fields')) {
 	function bvmgr_prefix_b4_normalize_nonce_fields(): void
 	{
-		foreach (bvmgr_prefix_b4_nonce_field_map() as $legacy => $canonical) {
-			foreach (array('_GET', '_POST', '_REQUEST') as $bag_name) {
-				if (!isset($GLOBALS[$bag_name]) || !is_array($GLOBALS[$bag_name])) {
-					continue;
-				}
-				if (!array_key_exists($canonical, $GLOBALS[$bag_name]) && array_key_exists($legacy, $GLOBALS[$bag_name])) {
-					$GLOBALS[$bag_name][$canonical] = $GLOBALS[$bag_name][$legacy];
-				}
+		$normalize_bag = static function (array &$bag, string $legacy, string $canonical): void {
+			if (!array_key_exists($canonical, $bag) && array_key_exists($legacy, $bag)) {
+				$bag[$canonical] = $bag[$legacy];
 			}
+		};
+		foreach (bvmgr_prefix_b4_nonce_field_map() as $legacy => $canonical) {
+			$normalize_bag($GLOBALS['_GET'], $legacy, $canonical);
+			$normalize_bag($GLOBALS['_POST'], $legacy, $canonical);
+			$normalize_bag($GLOBALS['_REQUEST'], $legacy, $canonical);
 		}
 	}
 }

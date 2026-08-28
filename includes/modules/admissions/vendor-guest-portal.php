@@ -949,7 +949,7 @@ if (!function_exists('bvmgr_admission_save_vendor_guest_config')) {
 		$nonce = (isset($_POST['bvmgr_event_plan_details_nonce']) && !is_array($_POST['bvmgr_event_plan_details_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_event_plan_details_nonce']))
 			: '';
-		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_plan_details')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_event_plan_details'))) {
 			return;
 		}
 		if (!current_user_can('edit_post', $post_id)) {
@@ -1259,7 +1259,7 @@ if (!function_exists('bvmgr_admission_vendor_guest_handle_submit')) {
 		$nonce = (isset($_POST['_bvmgr_vendor_guest_nonce']) && !is_array($_POST['_bvmgr_vendor_guest_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_bvmgr_vendor_guest_nonce']))
 			: '';
-		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_guest_portal_submit')) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_vendor_guest_portal_submit'))) {
 			wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
 		}
 		$user_id = get_current_user_id();

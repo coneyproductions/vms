@@ -1639,7 +1639,7 @@ if (!function_exists('bvmgr_vendor_app_handle_resend_confirmation')) {
             ? sanitize_text_field(wp_unslash((string) $_POST['_bvmgr_vendor_app_resend_nonce']))
             : '';
 
-        if ($app_ref === '' || !$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_app_resend_confirmation_' . $app_ref)) {
+        if ($app_ref === '' || !$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_vendor_app_resend_confirmation_' . $app_ref))) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 

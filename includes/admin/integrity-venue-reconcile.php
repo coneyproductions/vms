@@ -17,7 +17,7 @@ function bvmgr_handle_integrity_venue_links_action(): void
     wp_die('Insufficient permissions.');
   }
 
-  bvmgr_check_admin_referer_compat('bvmgr_integrity_venue_links_action');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_integrity_venue_links_action', '_wpnonce'), '_wpnonce');
 
   $action = bvmgr_request_read_key($_POST, 'vms_action');
   $plan_ids = (isset($_POST['plan_ids']) && is_array($_POST['plan_ids']))

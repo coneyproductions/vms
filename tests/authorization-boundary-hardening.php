@@ -239,20 +239,27 @@ function wp_verify_nonce(string $nonce, string $action): bool
 	return $nonce === vms_test_nonce($action);
 }
 
-function bvmgr_verify_nonce_compat(string $nonce, string $action): bool
+function bvmgr_nonce_action_for_value($nonce, string $action): string
 {
 	if (wp_verify_nonce($nonce, $action)) {
-		return true;
+		return $action;
 	}
 	$legacy = str_starts_with($action, 'bvmgr_') ? 'vms_' . substr($action, 6) : $action;
-	return $legacy !== $action && wp_verify_nonce($nonce, $legacy);
+	return $legacy !== $action && wp_verify_nonce($nonce, $legacy) ? $legacy : $action;
 }
 
-function check_admin_referer(string $action): bool
+function bvmgr_nonce_action_for_request(string $action, $queryArg = false): string
+{
+	$key = is_string($queryArg) && $queryArg !== '' ? $queryArg : '_wpnonce';
+	$nonce = isset($_REQUEST[$key]) && !is_array($_REQUEST[$key]) ? sanitize_text_field((string) $_REQUEST[$key]) : '';
+	return bvmgr_nonce_action_for_value($nonce, $action);
+}
+
+function check_admin_referer(string $action, string $queryArg = '_wpnonce'): bool
 {
 	$nonce = '';
-	if (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce'])) {
-		$nonce = sanitize_text_field((string) $_REQUEST['_wpnonce']);
+	if (isset($_REQUEST[$queryArg]) && !is_array($_REQUEST[$queryArg])) {
+		$nonce = sanitize_text_field((string) $_REQUEST[$queryArg]);
 	}
 
 	if (!wp_verify_nonce($nonce, $action)) {
@@ -260,11 +267,6 @@ function check_admin_referer(string $action): bool
 	}
 
 	return true;
-}
-
-function bvmgr_check_admin_referer_compat(string $action): bool
-{
-	return check_admin_referer($action);
 }
 
 function wp_nonce_field(string $action, string $name): void

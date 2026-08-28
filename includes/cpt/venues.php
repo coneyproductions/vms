@@ -280,7 +280,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (!current_user_can('edit_post', $post_id)) return;
 
     $nonce = bvmgr_venue_submitted_nonce('bvmgr_venue_location_nonce');
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_location')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_venue_location'))) {
         return;
     }
 
@@ -395,7 +395,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     $nonce = (isset($_POST['bvmgr_venue_default_times_nonce']) && !is_array($_POST['bvmgr_venue_default_times_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_default_times_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_default_times')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_venue_default_times'))) {
         return;
     }
 
@@ -548,7 +548,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (!current_user_can('edit_post', $post_id)) return;
 
     $nonce = bvmgr_venue_submitted_nonce('bvmgr_venue_schedule_nonce');
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_schedule')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_venue_schedule'))) {
         return;
     }
 
@@ -612,7 +612,7 @@ add_filter('wp_insert_post_data', function ($data, $postarr) {
     $submitted_open_days = array();
     $has_submitted_open_days = false;
     $schedule_nonce = bvmgr_venue_submitted_nonce('bvmgr_venue_schedule_nonce');
-    $has_verified_schedule_request = ($schedule_nonce !== '' && bvmgr_verify_nonce_compat($schedule_nonce, 'bvmgr_save_venue_schedule'));
+    $has_verified_schedule_request = ($schedule_nonce !== '' && wp_verify_nonce($schedule_nonce, bvmgr_nonce_action_for_value($schedule_nonce, 'bvmgr_save_venue_schedule')));
 
     if ($has_verified_schedule_request) {
         $submitted_open_days = (isset($_POST['vms_venue_open_days']) && is_array($_POST['vms_venue_open_days']))

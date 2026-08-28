@@ -16,6 +16,10 @@ function wp_unslash($value)
 {
 	return $value;
 }
+function sanitize_text_field($value): string
+{
+	return is_scalar($value) ? trim((string) $value) : '';
+}
 function do_action($hook, ...$args): void
 {
 	$GLOBALS['bvmgr_test_nonce_actions'][] = array($hook, $args);
@@ -73,40 +77,33 @@ $assert(count(array_unique($runtimeFields)) === 72, 'Runtime nonce fields must p
 
 $GLOBALS['bvmgr_test_nonce_calls'] = array();
 $GLOBALS['bvmgr_test_nonce_results'] = array('bvmgr_example_action' => 2, 'vms_example_action' => 1);
-$assert(bvmgr_verify_nonce_compat('canonical-token', 'bvmgr_example_action') === 2, 'Canonical nonce verification must succeed first.');
-$assert($GLOBALS['bvmgr_test_nonce_calls'] === array(array('canonical-token', 'bvmgr_example_action')), 'A valid canonical nonce must not trigger a legacy retry.');
+$canonicalAction = bvmgr_nonce_action_for_value('canonical-token', 'bvmgr_example_action');
+$assert($canonicalAction === 'bvmgr_example_action', 'Canonical nonce verification must select the canonical action first.');
+$assert(wp_verify_nonce('canonical-token', $canonicalAction) === 2, 'The native verifier must accept the selected canonical action.');
+$assert($GLOBALS['bvmgr_test_nonce_calls'] === array(array('canonical-token', 'bvmgr_example_action'), array('canonical-token', 'bvmgr_example_action')), 'A valid canonical nonce must not trigger a legacy retry before the native verifier runs.');
 
 $GLOBALS['bvmgr_test_nonce_calls'] = array();
 $GLOBALS['bvmgr_test_nonce_results'] = array('vms_example_action' => 1);
-$assert(bvmgr_verify_nonce_compat('legacy-token', 'bvmgr_example_action') === 1, 'A valid legacy nonce must succeed through the exact fallback action.');
-$assert($GLOBALS['bvmgr_test_nonce_calls'] === array(array('legacy-token', 'bvmgr_example_action'), array('legacy-token', 'vms_example_action')), 'Legacy verification must occur only after the canonical action fails.');
+$legacyAction = bvmgr_nonce_action_for_value('legacy-token', 'bvmgr_example_action');
+$assert($legacyAction === 'vms_example_action', 'A valid legacy nonce must select only its exact fallback action.');
+$assert(wp_verify_nonce('legacy-token', $legacyAction) === 1, 'The native verifier must accept the selected legacy action.');
+$assert($GLOBALS['bvmgr_test_nonce_calls'] === array(array('legacy-token', 'bvmgr_example_action'), array('legacy-token', 'vms_example_action'), array('legacy-token', 'vms_example_action')), 'Legacy verification must occur only after the canonical action fails and then pass through the native verifier.');
 
 $GLOBALS['bvmgr_test_nonce_calls'] = array();
 $GLOBALS['bvmgr_test_nonce_results'] = array('vms_other_action' => 1);
-$assert(bvmgr_verify_nonce_compat('wrong-action-token', 'bvmgr_example_action') === false, 'A nonce valid for a different action must remain invalid.');
-$assert($GLOBALS['bvmgr_test_nonce_calls'] === array(array('wrong-action-token', 'bvmgr_example_action'), array('wrong-action-token', 'vms_example_action')), 'Wrong-action verification must stay bounded to the exact canonical/legacy pair.');
+$wrongAction = bvmgr_nonce_action_for_value('wrong-action-token', 'bvmgr_example_action');
+$assert($wrongAction === 'bvmgr_example_action' && wp_verify_nonce('wrong-action-token', $wrongAction) === false, 'A nonce valid for a different action must remain invalid through the native verifier.');
+$assert($GLOBALS['bvmgr_test_nonce_calls'] === array(array('wrong-action-token', 'bvmgr_example_action'), array('wrong-action-token', 'vms_example_action'), array('wrong-action-token', 'bvmgr_example_action')), 'Wrong-action verification must stay bounded to the exact canonical/legacy pair.');
 
 $_REQUEST = array('_bvmgr_test_nonce' => 'admin-token');
 $GLOBALS['bvmgr_test_nonce_results'] = array('vms_admin_test' => 1);
-$assert(bvmgr_check_admin_referer_compat('bvmgr_admin_test', '_bvmgr_test_nonce') === 1, 'Admin referer compatibility must accept a still-valid legacy action nonce.');
-$assert(end($GLOBALS['bvmgr_test_nonce_actions'])[0] === 'check_admin_referer', 'Admin compatibility must preserve the core verification hook.');
-
-$_REQUEST = array('_bvmgr_test_nonce' => array('bad'));
-$GLOBALS['bvmgr_test_nonce_results'] = array();
-$adminRejected = false;
-try {
-	bvmgr_check_admin_referer_compat('bvmgr_admin_test', '_bvmgr_test_nonce');
-} catch (RuntimeException $exception) {
-	$adminRejected = $exception->getMessage() === 'nonce-ays:bvmgr_admin_test';
-}
-$assert($adminRejected, 'Array-shaped or invalid admin nonces must retain the rejection path.');
-
+$assert(bvmgr_nonce_action_for_request('bvmgr_admin_test', '_bvmgr_test_nonce') === 'vms_admin_test', 'Admin referer compatibility must select a still-valid legacy action nonce for the native core verifier.');
 $_REQUEST = array('_ajax_nonce' => 'ajax-token');
 $GLOBALS['bvmgr_test_nonce_results'] = array('bvmgr_ajax_test' => 2);
-$assert(bvmgr_check_ajax_referer_compat('bvmgr_ajax_test', false, false) === 2, 'AJAX compatibility must accept a canonical action nonce.');
-$_REQUEST = array('_ajax_nonce' => 'bad-token');
+$assert(bvmgr_nonce_action_for_request('bvmgr_ajax_test', false) === 'bvmgr_ajax_test', 'AJAX compatibility must select a valid canonical action for the native core verifier.');
+$_REQUEST = array('_ajax_nonce' => array('bad'));
 $GLOBALS['bvmgr_test_nonce_results'] = array();
-$assert(bvmgr_check_ajax_referer_compat('bvmgr_ajax_test', false, false) === false, 'Invalid AJAX nonces must remain false when the caller disables the stop path.');
+$assert(bvmgr_nonce_action_for_request('bvmgr_ajax_test', false) === 'bvmgr_ajax_test', 'Array-shaped or invalid AJAX nonce input must return the canonical action so the native verifier rejects it.');
 
 $root = dirname(__DIR__);
 $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/scripts/apply-wporg-prefix-b4.php') . ' --check-nonces 2>&1';
@@ -114,6 +111,11 @@ $output = array();
 $status = 0;
 exec($command, $output, $status);
 $assert($status === 0, 'Every frozen nonce action and field site must use its canonical identifier/helper: ' . implode(' ', $output));
+$nativeCommand = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/scripts/apply-wporg-prefix-b4.php') . ' --check-native-nonce-verifiers 2>&1';
+$nativeOutput = array();
+$nativeStatus = 0;
+exec($nativeCommand, $nativeOutput, $nativeStatus);
+$assert($nativeStatus === 0, 'Every B4 nonce verifier must remain visible to native WordPressCS analysis: ' . implode(' ', $nativeOutput));
 
 $b7Overlap = array(
 	'vms_get_venue_comp_defaults',

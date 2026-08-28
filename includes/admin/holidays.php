@@ -215,7 +215,7 @@ function bvmgr_admin_holidays_adminpost_handle(string $expected_action): void
 		: '';
 
 	$nonce_action = 'bvmgr_holidays_' . $expected_action;
-	if (!$nonce || !bvmgr_verify_nonce_compat($nonce, $nonce_action)) {
+	if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, $nonce_action))) {
 		wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
 	}
 

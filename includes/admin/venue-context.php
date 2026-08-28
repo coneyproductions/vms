@@ -175,7 +175,7 @@ add_action('admin_post_vms_set_current_venue', function () {
     $nonce = (isset($_POST['bvmgr_current_venue_nonce']) && !is_array($_POST['bvmgr_current_venue_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_current_venue_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_set_current_venue')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_set_current_venue'))) {
         wp_die('Bad nonce');
     }
 
@@ -234,7 +234,7 @@ add_action('admin_post_vms_set_dashboard_venue', function () {
     $nonce = (isset($_POST['bvmgr_dash_venue_nonce']) && !is_array($_POST['bvmgr_dash_venue_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_dash_venue_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_set_dashboard_venue')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_set_dashboard_venue'))) {
         wp_die('Bad nonce');
     }
 
@@ -291,7 +291,7 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
     $nonce = (isset($_POST['nonce']) && !is_array($_POST['nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['nonce']))
         : '';
-    if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_set_dashboard_prefs')) {
+    if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_set_dashboard_prefs'))) {
         wp_send_json_error(array('message' => 'Bad nonce'), 403);
     }
 

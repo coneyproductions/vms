@@ -354,7 +354,7 @@ add_action('save_post_vms_comp_package', function ($post_id, $post) {
     $nonce = (isset($_POST['bvmgr_comp_package_nonce']) && !is_array($_POST['bvmgr_comp_package_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_comp_package_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_comp_package')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_comp_package'))) {
         return;
     }
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;

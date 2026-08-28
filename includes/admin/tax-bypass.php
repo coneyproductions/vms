@@ -276,7 +276,7 @@ add_action('save_post', function ($post_id, $post) {
     $nonce = (isset($_POST['bvmgr_tax_bypass_nonce']) && !is_array($_POST['bvmgr_tax_bypass_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_tax_bypass_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_tax_bypass')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_tax_bypass'))) {
         return;
     }
 

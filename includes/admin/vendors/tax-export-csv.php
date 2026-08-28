@@ -30,7 +30,7 @@ add_action('restrict_manage_posts', 'bvmgr_vendor_tax_export_button', 20);
 function bvmgr_vendor_tax_export_csv_adminpost()
 {
 	if (!current_user_can('manage_options')) wp_die('Permission denied.');
-	bvmgr_check_admin_referer_compat('bvmgr_vendor_tax_export_csv');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_tax_export_csv', '_wpnonce'), '_wpnonce');
 
 	$k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 

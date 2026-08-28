@@ -53,7 +53,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     $nonce = (isset($_POST['bvmgr_venue_comp_defaults_nonce']) && !is_array($_POST['bvmgr_venue_comp_defaults_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_comp_defaults_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_comp_defaults')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_venue_comp_defaults'))) {
         return;
     }
 

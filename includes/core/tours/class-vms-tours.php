@@ -580,7 +580,7 @@ if (!class_exists('BVMGR_Tours')) {
 			if (!current_user_can('manage_options')) {
 				wp_die('Insufficient permissions.');
 			}
-			bvmgr_check_admin_referer_compat('bvmgr_tours_dismiss_notice');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tours_dismiss_notice', '_wpnonce'), '_wpnonce');
 			$hash = bvmgr_request_read_text_field($_GET, 'hash');
 			if ($hash !== '') {
 				update_user_meta(get_current_user_id(), self::USER_META_NOTICE_DISMISSED, $hash);
@@ -627,7 +627,7 @@ if (!class_exists('BVMGR_Tours')) {
 			if (!is_user_logged_in() || !self::can_run_tours()) {
 				wp_send_json_error(array('message' => 'Forbidden'), 403);
 			}
-			bvmgr_check_ajax_referer_compat('bvmgr_tours_state', 'nonce');
+			check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_tours_state', 'nonce'), 'nonce', true);
 
 			$tour_id = bvmgr_request_read_key($_POST, 'tour_id');
 			$status  = bvmgr_request_read_key($_POST, 'status');

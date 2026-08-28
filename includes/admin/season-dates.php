@@ -239,7 +239,7 @@ function bvmgr_sd_maybe_handle_post(): void
 	$nonce = (isset($post['bvmgr_season_dates_nonce']) && !is_array($post['bvmgr_season_dates_nonce']))
 		? sanitize_text_field((string) $post['bvmgr_season_dates_nonce'])
 		: '';
-	if (!$venue_id || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_season_dates_' . $venue_id)) {
+	if (!$venue_id || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_season_dates_' . $venue_id))) {
 		bvmgr_sd_redirect(add_query_arg('vms_error', 'bad_nonce', $redirect));
 		return;
 	}

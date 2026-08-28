@@ -142,6 +142,11 @@ if (in_array($implementationState, array('nonce_complete', 'complete'), true)) {
 	$nonceStatus = 0;
 	exec($nonceCommand, $nonceOutput, $nonceStatus);
 	$assert($nonceStatus === 0, 'B4 nonce semantic cutover must be complete: ' . implode(' ', $nonceOutput));
+	$nativeNonceCommand = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/scripts/apply-wporg-prefix-b4.php') . ' --check-native-nonce-verifiers 2>&1';
+	$nativeNonceOutput = array();
+	$nativeNonceStatus = 0;
+	exec($nativeNonceCommand, $nativeNonceOutput, $nativeNonceStatus);
+	$assert($nativeNonceStatus === 0, 'B4 nonce verification must remain visible to native WordPressCS analysis: ' . implode(' ', $nativeNonceOutput));
 }
 if ($implementationState === 'complete') {
 	$transitionCommand = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/tests/wporg-prefix-b4-query-rewrite-cli.php') . ' 2>&1';

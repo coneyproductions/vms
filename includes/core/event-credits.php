@@ -513,7 +513,7 @@ if (!function_exists('bvmgr_event_credits_handle_event_plan_save')) {
 		$nonce = (isset($_POST['bvmgr_event_plan_details_nonce']) && !is_array($_POST['bvmgr_event_plan_details_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_event_plan_details_nonce']))
 			: '';
-		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_plan_details')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_event_plan_details'))) {
 			return;
 		}
 		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
@@ -970,7 +970,7 @@ if (!function_exists('bvmgr_event_credit_save_metabox')) {
 		$nonce = (isset($_POST['bvmgr_event_credit_nonce']) && !is_array($_POST['bvmgr_event_credit_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_event_credit_nonce']))
 			: '';
-		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_credit')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_event_credit'))) {
 			return;
 		}
 		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {

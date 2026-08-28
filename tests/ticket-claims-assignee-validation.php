@@ -69,9 +69,9 @@ function check_ajax_referer(string $action, $queryArg = false, bool $stop = true
 	return true;
 }
 
-function bvmgr_check_ajax_referer_compat(string $action, $queryArg = false, bool $stop = true): bool
+function bvmgr_nonce_action_for_request(string $action, $queryArg = false): string
 {
-	return check_ajax_referer($action, $queryArg, $stop);
+	return $action;
 }
 
 function is_user_logged_in(): bool

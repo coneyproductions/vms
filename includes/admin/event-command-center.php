@@ -112,7 +112,7 @@ if (!function_exists('bvmgr_event_command_center_handle_promo_video_action')) {
             ? sanitize_text_field(wp_unslash((string) $_POST['_bvmgr_cc_promo_nonce']))
             : '';
         $promo_action = isset($_POST['promo_action']) ? sanitize_key((string) wp_unslash($_POST['promo_action'])) : '';
-        if ($plan_id <= 0 || $nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_cc_promo_video_' . $plan_id)) {
+        if ($plan_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_cc_promo_video_' . $plan_id))) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
         if (!bvmgr_event_command_center_can_manage_promo_video($plan_id)) {

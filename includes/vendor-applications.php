@@ -1791,7 +1791,7 @@ if (!function_exists('bvmgr_vendor_applications_handle_edit_screen_decision')) {
         $nonce = (isset($_POST['bvmgr_vendor_app_decision_nonce']) && !is_array($_POST['bvmgr_vendor_app_decision_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_app_decision_nonce']))
             : '';
-        if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_app_decision_' . (int) $post_id)) {
+        if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_vendor_app_decision_' . (int) $post_id))) {
             return;
         }
 
@@ -1891,7 +1891,7 @@ function bvmgr_vendor_applications_handle_approve(): void
     if ($app_id <= 0) wp_die('Missing app_id');
     if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
-    bvmgr_check_admin_referer_compat('bvmgr_vendor_app_approve_' . $app_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_app_approve_' . $app_id, '_wpnonce'), '_wpnonce');
 
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, bvmgr_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
@@ -1943,7 +1943,7 @@ function bvmgr_vendor_applications_handle_reject(): void
     if ($app_id <= 0) wp_die('Missing app_id');
     if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
-    bvmgr_check_admin_referer_compat('bvmgr_vendor_app_reject_' . $app_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_app_reject_' . $app_id, '_wpnonce'), '_wpnonce');
 
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, bvmgr_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
@@ -1972,7 +1972,7 @@ function bvmgr_vendor_applications_handle_repair_vendor(): void
     if ($app_id <= 0) wp_die('Missing app_id');
     if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
-    bvmgr_check_admin_referer_compat('bvmgr_vendor_app_repair_vendor_' . $app_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_app_repair_vendor_' . $app_id, '_wpnonce'), '_wpnonce');
 
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, bvmgr_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
@@ -2013,7 +2013,7 @@ function bvmgr_vendor_applications_handle_resync_vendor(): void
     if ($app_id <= 0) wp_die('Missing app_id');
     if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
-    bvmgr_check_admin_referer_compat('bvmgr_vendor_app_resync_vendor_' . $app_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_app_resync_vendor_' . $app_id, '_wpnonce'), '_wpnonce');
 
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, bvmgr_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
@@ -2640,7 +2640,7 @@ function bvmgr_vendor_apply_handle_frontend_post(): string
     $nonce = (isset($_POST['bvmgr_vendor_apply_nonce']) && !is_array($_POST['bvmgr_vendor_apply_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_apply_nonce']))
         : '';
-    if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_apply')) {
+    if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_vendor_apply'))) {
         bvmgr_vendor_apply_frontend_redirect('nonce');
         return '';
     }

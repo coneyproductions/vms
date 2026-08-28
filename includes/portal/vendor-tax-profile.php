@@ -118,7 +118,7 @@ function bvmgr_vendor_portal_render_tax_profile($vendor_id)
 		$nonce = (isset($_POST['bvmgr_vendor_tax_nonce']) && !is_array($_POST['bvmgr_vendor_tax_nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_tax_nonce']))
 			: '';
-		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_tax_save')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_vendor_tax_save'))) {
 			echo wp_kses_post(bvmgr_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
 		} else {
 

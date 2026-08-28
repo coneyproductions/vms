@@ -1857,7 +1857,7 @@ if (!function_exists('bvmgr_vendor_command_center_handle_save_template')) {
             wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
         }
 
-        bvmgr_check_admin_referer_compat('bvmgr_vendor_command_center_save_template', 'bvmgr_vendor_command_center_template_nonce');
+        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_command_center_save_template', 'bvmgr_vendor_command_center_template_nonce'), 'bvmgr_vendor_command_center_template_nonce');
 
         $vendor_id = absint(wp_unslash((string) ($_POST['vendor_id'] ?? 0)));
         $template_scope = isset($_POST['template_scope']) ? sanitize_text_field((string) wp_unslash($_POST['template_scope'])) : bvmgr_vendor_command_center_template_default_scope();
@@ -1941,7 +1941,7 @@ if (!function_exists('bvmgr_vendor_command_center_handle_send_onboarding')) {
             wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
         }
 
-        bvmgr_check_admin_referer_compat('bvmgr_vendor_command_center_send_onboarding', 'bvmgr_vendor_command_center_nonce');
+        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_command_center_send_onboarding', 'bvmgr_vendor_command_center_nonce'), 'bvmgr_vendor_command_center_nonce');
 
 	        $vendor_id = bvmgr_request_read_absint($_POST, 'vendor_id');
 	        $to_email = bvmgr_request_read_email($_POST, 'to_email');
@@ -2051,7 +2051,7 @@ if (!function_exists('bvmgr_vendor_command_center_handle_link_matching_user')) {
         }
 
         $vendor_id = absint(wp_unslash((string) ($_POST['vendor_id'] ?? 0)));
-        bvmgr_check_admin_referer_compat('bvmgr_vendor_command_center_link_matching_user_' . $vendor_id, 'bvmgr_vendor_command_center_link_nonce');
+        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_command_center_link_matching_user_' . $vendor_id, 'bvmgr_vendor_command_center_link_nonce'), 'bvmgr_vendor_command_center_link_nonce');
 
         if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor')) {
             if (function_exists('bvmgr_add_admin_notice')) {

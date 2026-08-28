@@ -1218,7 +1218,7 @@ function bvmgr_render_budget_calculator_page(): void
   $did_calc = false;
 
   if ('POST' === bvmgr_budget_request_method()) {
-    bvmgr_check_admin_referer_compat('bvmgr_budget_calc');
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_budget_calc', '_wpnonce'), '_wpnonce');
 
     $in = bvmgr_budget_calculator_read_input($defaults);
 

@@ -1369,7 +1369,7 @@ if (!function_exists('bvmgr_event_plan_review_editor_action')) {
         }
 
         $nonce = sanitize_text_field((string) $request['bvmgr_event_plan_details_nonce']);
-        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_plan_details')) {
+        if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_event_plan_details'))) {
             return '';
         }
 

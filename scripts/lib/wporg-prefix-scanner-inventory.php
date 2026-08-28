@@ -249,6 +249,76 @@ final class BVMGR_WPORG_Prefix_Scanner_Inventory
 	}
 
 	/**
+	 * Record a later exact-package scan after completed batches have removed
+	 * findings. Historical source coordinates may relocate when an authorized
+	 * edit changes surrounding lines, but their semantic rows must remain exact.
+	 *
+	 * @param array<string,mixed>            $artifact
+	 * @param array<int,array<string,mixed>> $strictRows
+	 * @param array<string,mixed>            $manifest
+	 * @param array<string,string>           $source
+	 * @return array<string,mixed>
+	 */
+	public static function recordCurrentScan(
+		string $root,
+		array $artifact,
+		array $strictRows,
+		array $manifest,
+		array $source
+	): array {
+		$root = self::root($root);
+		self::validateArtifact($root, $artifact, $manifest);
+		$strictRows = self::normalizeRows($strictRows);
+		$historicalRows = array_values(array_filter(
+			$strictRows,
+			static fn(array $row): bool => !str_starts_with((string) $row['code'], self::PREFIX_CODE)
+		));
+		$historicalRows = self::normalizeCompletedB3HistoricalMessages($historicalRows, $manifest);
+		$prefixRows = array_values(array_filter(
+			$strictRows,
+			static fn(array $row): bool => str_starts_with((string) $row['code'], self::PREFIX_CODE)
+		));
+
+		$historicalBaseline = (array) ($artifact['historical_residual']['rows'] ?? array());
+		if (self::historicalSemanticRows($historicalRows) !== self::historicalSemanticRows($historicalBaseline)) {
+			throw new RuntimeException('Historical residual semantics changed; current strict scan recording refused.');
+		}
+
+		$currentFindings = self::classifyPrefixRows($root, $prefixRows, $manifest);
+		$activeBaseline = self::activeFindings((array) ($artifact['authoritative_prefix_findings'] ?? array()), $manifest);
+		$currentById = self::indexFindings($currentFindings);
+		$activeById = self::indexFindings($activeBaseline);
+		if (array_keys($currentById) !== array_keys($activeById)) {
+			throw new RuntimeException('Current prefix finding identities differ from the phase-aware scanner ratchet.');
+		}
+
+		$authoritative = array();
+		foreach ((array) ($artifact['authoritative_prefix_findings'] ?? array()) as $finding) {
+			$id = (string) ($finding['finding_id'] ?? '');
+			$authoritative[] = isset($currentById[$id]) ? $currentById[$id] : $finding;
+		}
+		usort($authoritative, static fn(array $a, array $b): int => strcmp((string) $a['finding_id'], (string) $b['finding_id']));
+
+		$artifact['source'] = array(
+			'source_commit' => (string) ($source['source_commit'] ?? ''),
+			'package_sha256' => (string) ($source['package_sha256'] ?? ''),
+			'strict_json_sha256' => (string) ($source['strict_json_sha256'] ?? ''),
+			'manifest_sha256' => hash('sha256', self::encode($manifest)),
+		);
+		$artifact['historical_residual'] = self::historicalEvidence($historicalRows);
+		$artifact['authoritative_prefix_findings'] = $authoritative;
+		$artifact['summary'] = self::summary($authoritative, $historicalRows);
+		$artifact['current_expected_prefix_findings'] = array(
+			'count' => count($currentFindings),
+			'finding_ids_sha256' => hash('sha256', self::encode(array_column($currentFindings, 'finding_id'))),
+			'category_counts' => self::countsBy($currentFindings, 'category'),
+		);
+		$artifact['migration_gate'] = self::gateSummary($currentFindings, $manifest, array(), array());
+		self::validateArtifact($root, $artifact, $manifest);
+		return $artifact;
+	}
+
+	/**
 	 * Structural validation remains valid after later batches remove findings
 	 * and update the semantic manifest.
 	 *
@@ -496,6 +566,23 @@ final class BVMGR_WPORG_Prefix_Scanner_Inventory
 			'code_counts' => self::countsBy($rows, 'code'),
 			'rows' => $rows,
 		);
+	}
+
+	/**
+	 * Compare historical findings independently of source coordinates so an
+	 * authorized in-file edit cannot masquerade as a new or removed finding.
+	 *
+	 * @param array<int,array<string,mixed>> $rows
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function historicalSemanticRows(array $rows): array
+	{
+		$semantic = array_map(static function (array $row): array {
+			unset($row['line'], $row['column']);
+			return $row;
+		}, self::normalizeRows($rows));
+		usort($semantic, static fn(array $a, array $b): int => array_values($a) <=> array_values($b));
+		return $semantic;
 	}
 
 	/**

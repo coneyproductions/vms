@@ -201,7 +201,7 @@ function bvmgr_handle_create_event_plan(): void
     $nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
         ? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
         : '';
-    if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_create_event_plan_' . $ymd)) {
+    if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_create_event_plan_' . $ymd))) {
         wp_die('Invalid nonce.');
     }
 

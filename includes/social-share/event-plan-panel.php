@@ -724,7 +724,7 @@ if (!function_exists('bvmgr_social_ajax_load_event_panel')) {
 			wp_send_json_error(array('message' => 'Not allowed.'), 403);
 		}
 
-		bvmgr_check_ajax_referer_compat('bvmgr_social_load_event_panel', 'nonce');
+		check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_social_load_event_panel', 'nonce'), 'nonce', true);
 
 		$payload = bvmgr_social_event_panel_markup($event_plan_id);
 		wp_send_json_success(array(
@@ -752,7 +752,7 @@ if (!function_exists('bvmgr_social_save_event_panel')) {
 		}
 
 		$panel_nonce = sanitize_text_field(bvmgr_social_post_value('bvmgr_social_event_panel_nonce'));
-		if ($panel_nonce === '' || !bvmgr_verify_nonce_compat($panel_nonce, 'bvmgr_social_event_panel_save')) {
+		if ($panel_nonce === '' || !wp_verify_nonce($panel_nonce, bvmgr_nonce_action_for_value($panel_nonce, 'bvmgr_social_event_panel_save'))) {
 			return;
 		}
 
@@ -808,7 +808,7 @@ if (!function_exists('bvmgr_social_handle_event_queue')) {
 	function bvmgr_social_handle_event_queue(): void
 	{
 		bvmgr_social_require_manage_capability();
-		bvmgr_check_admin_referer_compat('bvmgr_social_event_queue');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_social_event_queue', '_wpnonce'), '_wpnonce');
 
 		$event_plan_id = absint(bvmgr_social_post_value('event_plan_id'));
 		if ($event_plan_id <= 0) {

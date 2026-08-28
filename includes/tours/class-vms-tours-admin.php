@@ -120,7 +120,7 @@ if (!class_exists('BVMGR_Tours_Admin')) {
 				wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 			}
 
-			bvmgr_check_admin_referer_compat('bvmgr_tours_reset_my_state');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tours_reset_my_state', '_wpnonce'), '_wpnonce');
 			$this->storage->reset_user_state(get_current_user_id());
 
 			$redirect = add_query_arg(

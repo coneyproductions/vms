@@ -97,7 +97,7 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_handle_save_settings')) {
 	        if (!current_user_can('manage_options')) {
 	            wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
 	        }
-	        bvmgr_check_admin_referer_compat('bvmgr_vendor_booking_onboarding_save_settings', 'bvmgr_vendor_booking_onboarding_nonce');
+	        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_booking_onboarding_save_settings', 'bvmgr_vendor_booking_onboarding_nonce'), 'bvmgr_vendor_booking_onboarding_nonce');
 
 	        $settings = function_exists('bvmgr_vendor_booking_onboarding_normalize_settings')
 	            ? bvmgr_vendor_booking_onboarding_normalize_settings(array(
@@ -134,7 +134,7 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_handle_resend')) {
 
         $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
         $vendor_id = isset($_POST['vendor_id']) ? absint($_POST['vendor_id']) : 0;
-        bvmgr_check_admin_referer_compat('bvmgr_vendor_booking_onboarding_resend_' . $plan_id . '_' . $vendor_id);
+        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_booking_onboarding_resend_' . $plan_id . '_' . $vendor_id, '_wpnonce'), '_wpnonce');
 
         $result = function_exists('bvmgr_vendor_booking_onboarding_send_booked_email')
             ? bvmgr_vendor_booking_onboarding_send_booked_email($plan_id, $vendor_id, 'manual_resend', (int) get_current_user_id())
@@ -165,7 +165,7 @@ if (!function_exists('bvmgr_vendor_booking_onboarding_handle_toggle_waiver')) {
         $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
         $vendor_id = isset($_POST['vendor_id']) ? absint($_POST['vendor_id']) : 0;
         $waive = !empty($_POST['waive']);
-        bvmgr_check_admin_referer_compat('bvmgr_vendor_booking_onboarding_toggle_waiver_' . $plan_id . '_' . $vendor_id);
+        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_booking_onboarding_toggle_waiver_' . $plan_id . '_' . $vendor_id, '_wpnonce'), '_wpnonce');
 
         if (function_exists('bvmgr_vendor_booking_onboarding_set_video_waiver')) {
             bvmgr_vendor_booking_onboarding_set_video_waiver($plan_id, $vendor_id, $waive, (int) get_current_user_id());

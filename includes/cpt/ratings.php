@@ -222,7 +222,7 @@ function bvmgr_save_rating_details_meta($post_id, $post)
     $nonce = (isset($_POST['bvmgr_rating_details_nonce']) && !is_array($_POST['bvmgr_rating_details_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_rating_details_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_rating_details')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_rating_details'))) {
         return;
     }
 
@@ -455,7 +455,7 @@ function bvmgr_handle_rating_submission($event_id, $band_id)
     $nonce = (isset($_POST['bvmgr_rating_nonce']) && !is_array($_POST['bvmgr_rating_nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_rating_nonce']))
         : '';
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_submit_rating')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_submit_rating'))) {
 
         return array(
             'success' => false,

@@ -62,7 +62,7 @@ if (!function_exists('bvmgr_event_plan_import_handle_preview_action')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
-		bvmgr_check_admin_referer_compat('bvmgr_event_plan_import_preview');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_preview', '_wpnonce'), '_wpnonce');
 
 		$upload = bvmgr_upload_read_file($_FILES, 'event_plan_csv_file');
 		if (is_wp_error($upload)) {
@@ -237,7 +237,7 @@ if (!function_exists('bvmgr_event_plan_import_handle_commit_action')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
-		bvmgr_check_admin_referer_compat('bvmgr_event_plan_import_commit');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_commit', '_wpnonce'), '_wpnonce');
 
 		$token = isset($_POST['preview_token']) ? sanitize_key((string) $_POST['preview_token']) : '';
 		if ($token === '') {
@@ -333,7 +333,7 @@ if (!function_exists('bvmgr_event_plan_import_handle_download_report_action')) {
 		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
 			: '';
-		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_event_plan_import_download_report_' . $token)) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_event_plan_import_download_report_' . $token))) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
 		}
 
@@ -368,7 +368,7 @@ if (!function_exists('bvmgr_event_plan_import_handle_revert_last_action')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
-		bvmgr_check_admin_referer_compat('bvmgr_event_plan_import_revert_last');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_revert_last', '_wpnonce'), '_wpnonce');
 
 		$result = bvmgr_event_plan_import_revert_last_run();
 		if (is_wp_error($result)) {
@@ -407,7 +407,7 @@ if (!function_exists('bvmgr_event_plan_import_handle_download_sample_csv')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 
-		bvmgr_check_admin_referer_compat('bvmgr_event_plan_import_download_sample_csv');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_download_sample_csv', '_wpnonce'), '_wpnonce');
 
 		nocache_headers();
 		$filename = 'vms-event-plan-import-sample-' . gmdate('Ymd-His') . '.csv';

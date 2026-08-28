@@ -154,13 +154,13 @@ function wp_verify_nonce(string $nonce, string $action): bool
 	return $nonce === 'good:' . $action;
 }
 
-function bvmgr_verify_nonce_compat(string $nonce, string $action): bool
+function bvmgr_nonce_action_for_value($nonce, string $action): string
 {
 	if (wp_verify_nonce($nonce, $action)) {
-		return true;
+		return $action;
 	}
 	$legacy = str_starts_with($action, 'bvmgr_') ? 'vms_' . substr($action, 6) : $action;
-	return $legacy !== $action && wp_verify_nonce($nonce, $legacy);
+	return $legacy !== $action && wp_verify_nonce($nonce, $legacy) ? $legacy : $action;
 }
 
 function current_time(string $type): string

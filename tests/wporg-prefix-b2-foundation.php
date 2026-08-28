@@ -68,9 +68,9 @@ foreach (array_keys((array) ($declared['global_slots'] ?? array())) as $slot) {
 
 $functionNames = array_keys((array) ($declared['functions'] ?? array()));
 $b4SupportFunctions = array_values(array_filter((array) ($manifest['symbols']['functions'] ?? array()), static fn(array $entry): bool => ($entry['planned_implementation_batch'] ?? '') === 'B4'));
-$assert(count($b4SupportFunctions) === 9, 'B4 must add exactly seven nonce and two query/rewrite compatibility functions after the frozen 4,521-function B3 map.');
-$assert(count($functionNames) === 4530, 'B2/B3 plus B4 support must contain exactly 4,530 procedural function identities.');
-$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === (int) ($b3Counts['migrated_unique_functions'] ?? -1) + 9, 'Canonical procedural declarations must equal exact B3 progress plus nine B4 support functions.');
+$assert(count($b4SupportFunctions) === 8, 'B4 must add exactly six nonce and two query/rewrite compatibility functions after the frozen 4,521-function B3 map.');
+$assert(count($functionNames) === 4529, 'B2/B3 plus B4 support must contain exactly 4,529 procedural function identities.');
+$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === (int) ($b3Counts['migrated_unique_functions'] ?? -1) + 8, 'Canonical procedural declarations must equal exact B3 progress plus eight B4 support functions.');
 $assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'vms_'))) === (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1), 'Legacy procedural declarations must equal the exact B3 remainder.');
 
 $collisionFunctions = array();
@@ -106,7 +106,7 @@ $assert($duplicates === array(
 ), 'All nine guarded duplicate constant families must resolve under BVMGR_ symbols.');
 
 $dynamicCounts = (array) ($manifest['php_inventory_counts']['dynamic_symbols'] ?? array());
-$assert(($dynamicCounts['function_exists_unique'] ?? null) === 3319 && ($dynamicCounts['function_exists_occurrences'] ?? null) === 6347, 'B4 must add exactly nine guarded compatibility declarations to the B3 function_exists baseline.');
+$assert(($dynamicCounts['function_exists_unique'] ?? null) === 3318 && ($dynamicCounts['function_exists_occurrences'] ?? null) === 6346, 'B4 must add exactly eight guarded compatibility declarations to the B3 function_exists baseline.');
 $assert(($dynamicCounts['direct_literal_callbacks_unique'] ?? null) === 712 && ($dynamicCounts['direct_literal_callbacks_occurrences'] ?? null) === 768, 'B4 must add only its one reviewed rewrite-flush callback to the B3 literal callback baseline.');
 $assert(($dynamicCounts['exact_type_literals_unique'] ?? null) === 16 && ($dynamicCounts['exact_type_literals_occurrences'] ?? null) === 28, 'The three canonical WP-CLI registrations must add only their reviewed existing command-class literals.');
 

@@ -86,7 +86,7 @@ function bvmgr_ticket_integrity_handle_manual_scan(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_run_scan');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_run_scan', '_wpnonce'), '_wpnonce');
 	$include_inactive = !empty($_POST['include_inactive']);
 	$result = function_exists('bvmgr_ticket_integrity_scan_all')
 		? bvmgr_ticket_integrity_scan_all(
@@ -124,7 +124,7 @@ function bvmgr_ticket_integrity_handle_event_scan(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_run_event_scan');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_run_event_scan', '_wpnonce'), '_wpnonce');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 	$result = function_exists('bvmgr_ticket_integrity_scan_event_now')
 		? bvmgr_ticket_integrity_scan_event_now($plan_id, array('trigger' => 'manual_event_admin'))
@@ -155,7 +155,7 @@ function bvmgr_ticket_integrity_handle_save_settings(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_save_settings');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_save_settings', '_wpnonce'), '_wpnonce');
 	$settings = function_exists('bvmgr_ticket_integrity_update_settings')
 		? bvmgr_ticket_integrity_update_settings(
 			array(
@@ -204,7 +204,7 @@ function bvmgr_ticket_integrity_handle_send_daily_report(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_send_daily_report');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_send_daily_report', '_wpnonce'), '_wpnonce');
 	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
@@ -252,7 +252,7 @@ function bvmgr_ticket_integrity_handle_daily_report_preview(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_preview_daily_report');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_preview_daily_report', '_wpnonce'), '_wpnonce');
 	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
@@ -290,7 +290,7 @@ function bvmgr_ticket_integrity_handle_daily_report_dry_run(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_dry_run_daily_report');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_dry_run_daily_report', '_wpnonce'), '_wpnonce');
 	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
@@ -317,7 +317,7 @@ function bvmgr_ticket_integrity_handle_send_daily_report_test(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_send_daily_report_test');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_send_daily_report_test', '_wpnonce'), '_wpnonce');
 	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
@@ -366,7 +366,7 @@ function bvmgr_ticket_integrity_handle_rebuild(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_rebuild');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_rebuild', '_wpnonce'), '_wpnonce');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 
 	if (function_exists('bvmgr_ticket_integrity_log_event')) {
@@ -511,7 +511,7 @@ function bvmgr_ticket_integrity_handle_duplicate_cleanup(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_cleanup_duplicates');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_cleanup_duplicates', '_wpnonce'), '_wpnonce');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 
 	if (function_exists('bvmgr_ticket_integrity_log_event')) {
@@ -811,7 +811,7 @@ function bvmgr_ticket_integrity_handle_export_report(): void
 		wp_die('Forbidden', 403);
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_export_report');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_export_report', '_wpnonce'), '_wpnonce');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 	$event = function_exists('bvmgr_ticket_integrity_scan_event_record')
 		? bvmgr_ticket_integrity_scan_event_record($plan_id, array('trigger' => 'manual_export'))

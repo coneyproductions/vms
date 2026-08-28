@@ -994,7 +994,7 @@ if (!function_exists('bvmgr_add_dispatch_render_admin_page_content')) {
 	{
 		$assignment_response_id = isset($_GET['add_assignment_response_id']) ? absint((string) $_GET['add_assignment_response_id']) : 0;
 		if ($assignment_response_id > 0) {
-			bvmgr_check_admin_referer_compat('bvmgr_add_dispatch_assignment_review_' . $assignment_response_id);
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_add_dispatch_assignment_review_' . $assignment_response_id, '_wpnonce'), '_wpnonce');
 			bvmgr_add_dispatch_render_assignment_review($assignment_response_id);
 			return;
 		}
@@ -1063,7 +1063,7 @@ if (!function_exists('bvmgr_add_dispatch_handle_send_request')) {
 			wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
 		}
 
-		bvmgr_check_admin_referer_compat('bvmgr_add_dispatch_send_request', 'bvmgr_add_dispatch_nonce');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_add_dispatch_send_request', 'bvmgr_add_dispatch_nonce'), 'bvmgr_add_dispatch_nonce');
 
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint((string) $_POST['event_plan_id']) : 0;
 		$context = bvmgr_add_dispatch_get_event_plan_context($event_plan_id);
@@ -1137,7 +1137,7 @@ if (!function_exists('bvmgr_add_dispatch_handle_assign_vendor')) {
 		}
 
 		$response_id = isset($_GET['response_id']) ? absint((string) $_GET['response_id']) : 0;
-		bvmgr_check_admin_referer_compat('bvmgr_add_dispatch_assign_vendor_' . $response_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_add_dispatch_assign_vendor_' . $response_id, '_wpnonce'), '_wpnonce');
 		$event_plan_id = isset($_GET['event_plan_id']) ? absint((string) $_GET['event_plan_id']) : 0;
 		wp_safe_redirect(bvmgr_add_dispatch_assignment_review_url($response_id, $event_plan_id));
 		exit;
@@ -1153,7 +1153,7 @@ if (!function_exists('bvmgr_add_dispatch_handle_confirm_assignment')) {
 		}
 
 		$response_id = isset($_POST['response_id']) ? absint((string) $_POST['response_id']) : 0;
-		bvmgr_check_admin_referer_compat('bvmgr_add_dispatch_confirm_assignment_' . $response_id, 'bvmgr_add_dispatch_assignment_nonce');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_add_dispatch_confirm_assignment_' . $response_id, 'bvmgr_add_dispatch_assignment_nonce'), 'bvmgr_add_dispatch_assignment_nonce');
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint((string) $_POST['event_plan_id']) : 0;
 		$target_type = isset($_POST['target_type']) ? sanitize_key((string) wp_unslash($_POST['target_type'])) : '';
 		$allow_over_capacity = !empty($_POST['allow_over_capacity']);
@@ -1185,7 +1185,7 @@ if (!function_exists('bvmgr_add_dispatch_handle_close_request')) {
 		}
 
 		$request_id = isset($_GET['request_id']) ? absint((string) $_GET['request_id']) : 0;
-		bvmgr_check_admin_referer_compat('bvmgr_add_dispatch_close_request_' . $request_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_add_dispatch_close_request_' . $request_id, '_wpnonce'), '_wpnonce');
 		$result = bvmgr_add_dispatch_close_request($request_id);
 		if (function_exists('bvmgr_add_admin_notice')) {
 			if (is_wp_error($result)) {
@@ -1210,7 +1210,7 @@ if (!function_exists('bvmgr_add_dispatch_handle_resend_response')) {
 		}
 
 		$response_id = isset($_GET['response_id']) ? absint((string) $_GET['response_id']) : 0;
-		bvmgr_check_admin_referer_compat('bvmgr_add_dispatch_resend_response_' . $response_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_add_dispatch_resend_response_' . $response_id, '_wpnonce'), '_wpnonce');
 
 		$prepared = bvmgr_add_dispatch_prepare_resend($response_id);
 		if (is_wp_error($prepared)) {

@@ -662,7 +662,7 @@ if (!function_exists('bvmgr_staffing_admin_render_templates_page')) {
 		$post_action = isset($post_data['vms_tpl_action']) ? sanitize_key((string) $post_data['vms_tpl_action']) : '';
 
 		if ('POST' === $request_method && 'save' === $post_action) {
-			bvmgr_check_admin_referer_compat('bvmgr_staffing_template_save');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_staffing_template_save', '_wpnonce'), '_wpnonce');
 			$payload = bvmgr_staffing_admin_build_template_payload_from_post($post_data);
 			$res = function_exists('bvmgr_staffing_save_template') ? bvmgr_staffing_save_template($payload, get_current_user_id()) : array('ok' => false, 'error' => 'core_missing');
 			$next = admin_url('admin.php?page=vms-staffing-templates');
@@ -681,7 +681,7 @@ if (!function_exists('bvmgr_staffing_admin_render_templates_page')) {
 		}
 
 		if ('POST' === $request_method && 'delete' === $post_action) {
-			bvmgr_check_admin_referer_compat('bvmgr_staffing_template_delete');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_staffing_template_delete', '_wpnonce'), '_wpnonce');
 			$template_id = isset($post_data['vms_tpl_template_id']) ? absint($post_data['vms_tpl_template_id']) : 0;
 			$ok = $template_id > 0 && function_exists('bvmgr_staffing_delete_template') ? bvmgr_staffing_delete_template($template_id, get_current_user_id()) : false;
 			$next = admin_url('admin.php?page=vms-staffing-templates');
@@ -846,7 +846,7 @@ if (!function_exists('bvmgr_staffing_admin_render_rollups_page')) {
 
 		$request_method = bvmgr_staffing_admin_request_method();
 		if ('POST' === $request_method) {
-			bvmgr_check_admin_referer_compat('bvmgr_staffing_rollups_run');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_staffing_rollups_run', '_wpnonce'), '_wpnonce');
 			$post_data = wp_unslash($_POST);
 			$filters = array(
 				'start_date'        => isset($post_data['vms_staffing_start_date']) ? sanitize_text_field((string) $post_data['vms_staffing_start_date']) : '',

@@ -1362,7 +1362,7 @@ if (!function_exists('bvmgr_admin_guard_is_verified_action')) {
 			return false;
 		}
 
-		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_admin_heavy:' . $request_action)) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_admin_heavy:' . $request_action))) {
 			return false;
 		}
 
@@ -2192,7 +2192,7 @@ if (!function_exists('bvmgr_render_resource_fingerprint_admin_screen')) {
 
 		$cleared = false;
 		if (bvmgr_admin_guard_request_method() === 'post' && isset($_POST['vms_clear_resource_fingerprints'])) {
-			bvmgr_check_admin_referer_compat('bvmgr_clear_resource_fingerprints');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_clear_resource_fingerprints', '_wpnonce'), '_wpnonce');
 			bvmgr_resource_fingerprint_clear_entries();
 			$cleared = true;
 		}

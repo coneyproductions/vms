@@ -184,7 +184,7 @@ function bvmgr_due_admin_query_arg(string $key): string {
 
 function bvmgr_due_admin_post_add_payee(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_add_payee');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_add_payee', '_wpnonce'), '_wpnonce');
 
   $name = sanitize_text_field(wp_unslash((string) ($_POST['payee_name'] ?? '')));
   $account_number = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_number'] ?? '')));
@@ -215,7 +215,7 @@ function bvmgr_due_admin_post_add_payee(): void {
 
 function bvmgr_due_admin_post_edit_payee(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_edit_payee');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_edit_payee', '_wpnonce'), '_wpnonce');
 
   $id = sanitize_key(wp_unslash((string) ($_POST['payee_id'] ?? '')));
   if ($id === '') {
@@ -254,7 +254,7 @@ function bvmgr_due_admin_post_edit_payee(): void {
 
 function bvmgr_due_admin_post_archive_payee(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_archive_payee');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_archive_payee', '_wpnonce'), '_wpnonce');
 
   $id = sanitize_key((string) ($_GET['id'] ?? ''));
   $payees = bvmgr_due_get_payees();
@@ -268,7 +268,7 @@ function bvmgr_due_admin_post_archive_payee(): void {
 
 function bvmgr_due_admin_post_add_obligation(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_add_obligation');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_add_obligation', '_wpnonce'), '_wpnonce');
 
   $title = sanitize_text_field(wp_unslash((string) ($_POST['ob_title'] ?? '')));
   $payee_id = sanitize_key(wp_unslash((string) ($_POST['ob_payee_id'] ?? '')));
@@ -362,7 +362,7 @@ function bvmgr_due_admin_post_add_obligation(): void {
 
 function bvmgr_due_admin_post_edit_obligation(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_edit_obligation');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_edit_obligation', '_wpnonce'), '_wpnonce');
 
   $id = sanitize_key(wp_unslash((string) ($_POST['ob_id'] ?? '')));
   if ($id === '') {
@@ -458,7 +458,7 @@ function bvmgr_due_admin_post_edit_obligation(): void {
 
 function bvmgr_due_admin_post_archive_obligation(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_archive_obligation');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_archive_obligation', '_wpnonce'), '_wpnonce');
 
   $id = sanitize_key((string) ($_GET['id'] ?? ''));
   $obs = bvmgr_due_get_obligations();
@@ -472,7 +472,7 @@ function bvmgr_due_admin_post_archive_obligation(): void {
 
 function bvmgr_due_admin_post_complete(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_complete');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_complete', '_wpnonce'), '_wpnonce');
 
   $oid = sanitize_key(wp_unslash((string) ($_POST['obligation_id'] ?? '')));
   $due = sanitize_text_field(wp_unslash((string) ($_POST['due_date'] ?? '')));
@@ -500,7 +500,7 @@ function bvmgr_due_admin_post_complete(): void {
 
 function bvmgr_due_admin_post_uncomplete(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_uncomplete');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_uncomplete', '_wpnonce'), '_wpnonce');
 
   $oid = sanitize_key(wp_unslash((string) ($_POST['obligation_id'] ?? '')));
   $due = sanitize_text_field(wp_unslash((string) ($_POST['due_date'] ?? '')));
@@ -528,7 +528,7 @@ function bvmgr_due_admin_post_uncomplete(): void {
 
 function bvmgr_due_admin_post_seed_templates(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  bvmgr_check_admin_referer_compat('bvmgr_due_seed_templates');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_seed_templates', '_wpnonce'), '_wpnonce');
 
   // Seed a few safe, generic templates. Operator can edit later.
   $payees = bvmgr_due_get_payees();

@@ -59,7 +59,7 @@ add_action('admin_post_vms_square_sync_protection_scan', function (): void {
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
-    bvmgr_check_admin_referer_compat('bvmgr_square_sync_protection_scan');
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_square_sync_protection_scan', '_wpnonce'), '_wpnonce');
 
     if (!function_exists('bvmgr_square_firewall_scan_products')) {
         wp_die(esc_html__('Square Sync Firewall is not loaded.', 'backstage-venue-manager'));
@@ -74,7 +74,7 @@ add_action('admin_post_vms_square_sync_protection_repair', function (): void {
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
-    bvmgr_check_admin_referer_compat('bvmgr_square_sync_protection_repair');
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_square_sync_protection_repair', '_wpnonce'), '_wpnonce');
 
     if (!function_exists('bvmgr_square_firewall_scan_products')) {
         wp_die(esc_html__('Square Sync Firewall is not loaded.', 'backstage-venue-manager'));
@@ -89,7 +89,7 @@ add_action('admin_post_vms_square_sync_protection_csv', function (): void {
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
-    bvmgr_check_admin_referer_compat('bvmgr_square_sync_protection_csv');
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_square_sync_protection_csv', '_wpnonce'), '_wpnonce');
 
     $report = bvmgr_square_sync_protection_get_report();
     if (empty($report)) {

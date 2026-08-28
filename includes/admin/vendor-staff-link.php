@@ -108,7 +108,7 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 	$nonce = (isset($_POST['bvmgr_vendor_staff_link_nonce']) && !is_array($_POST['bvmgr_vendor_staff_link_nonce']))
 		? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_staff_link_nonce']))
 		: '';
-	if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_staff_link_save')) {
+	if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_vendor_staff_link_save'))) {
 		return;
 	}
 
@@ -189,7 +189,7 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 		wp_die(esc_html__('You do not have permission to do that.', 'backstage-venue-manager'));
 	}
 
-	bvmgr_check_admin_referer_compat('bvmgr_create_staff_from_vendor_' . (string) $vendor_id);
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_create_staff_from_vendor_' . (string) $vendor_id, '_wpnonce'), '_wpnonce');
 
 	$vendor = get_post($vendor_id);
 	if (!$vendor || $vendor->post_type !== 'vms_vendor') {

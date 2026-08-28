@@ -318,7 +318,7 @@ if (!function_exists('bvmgr_feedback_handle_submit')) {
 		if (
 			!isset($_POST['bvmgr_feedback_nonce'])
 			|| is_array($_POST['bvmgr_feedback_nonce'])
-			|| !bvmgr_verify_nonce_compat(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_feedback_nonce'])), 'bvmgr_feedback_submit_' . $event_plan_id)
+			|| !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_feedback_nonce'])), bvmgr_nonce_action_for_value(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_feedback_nonce'])), 'bvmgr_feedback_submit_' . $event_plan_id))
 		) {
 			wp_die(esc_html__('Feedback form expired. Please refresh and try again.', 'backstage-venue-manager'));
 		}

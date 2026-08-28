@@ -91,6 +91,45 @@ try {
 	$assert(($baselineGate['unexpected'] ?? null) === 0, 'Authoritative gate must have zero unexpected findings.');
 	$assert(($baselineGate['unmapped'] ?? null) === 0, 'Authoritative gate must have zero unmapped findings.');
 
+	$relocatedStrict = $strictRows;
+	foreach ($relocatedStrict as &$row) {
+		if (!str_starts_with((string) ($row['code'] ?? ''), 'WordPress.NamingConventions.PrefixAllGlobals.')) {
+			$row['line'] = (int) ($row['line'] ?? 0) + 10;
+			break;
+		}
+	}
+	unset($row);
+	$relocatedInventory = BVMGR_WPORG_Prefix_Scanner_Inventory::recordCurrentScan(
+		$root,
+		$inventory,
+		$relocatedStrict,
+		$manifest,
+		array('source_commit' => 'test', 'package_sha256' => str_repeat('a', 64), 'strict_json_sha256' => str_repeat('b', 64))
+	);
+	$relocatedGate = BVMGR_WPORG_Prefix_Scanner_Inventory::gate($root, $relocatedInventory, $relocatedStrict, $manifest);
+	$assert(($relocatedGate['status'] ?? '') === 'PASS', 'A source-coordinate-only relocation of the exact historical rows must remain recordable and gate cleanly.');
+	$changedHistorical = $relocatedStrict;
+	foreach ($changedHistorical as &$row) {
+		if (!str_starts_with((string) ($row['code'] ?? ''), 'WordPress.NamingConventions.PrefixAllGlobals.')) {
+			$row['message'] = (string) ($row['message'] ?? '') . ' changed';
+			break;
+		}
+	}
+	unset($row);
+	$historicalChangeRejected = false;
+	try {
+		BVMGR_WPORG_Prefix_Scanner_Inventory::recordCurrentScan(
+			$root,
+			$inventory,
+			$changedHistorical,
+			$manifest,
+			array('source_commit' => 'test', 'package_sha256' => str_repeat('a', 64), 'strict_json_sha256' => str_repeat('b', 64))
+		);
+	} catch (RuntimeException $exception) {
+		$historicalChangeRejected = str_contains($exception->getMessage(), 'Historical residual semantics changed');
+	}
+	$assert($historicalChangeRejected, 'A semantic change to any historical residual row must be rejected when recording a later scan.');
+
 	$withoutOneB3 = $strictRows;
 	foreach ($withoutOneB3 as $index => $row) {
 		if (($row['code'] ?? '') === 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound') {

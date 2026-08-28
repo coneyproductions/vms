@@ -79,7 +79,7 @@ if (!function_exists('bvmgr_express_bar_save_metabox')) {
             return;
         }
         $nonce = isset($_POST['bvmgr_express_bar_nonce']) ? sanitize_text_field(wp_unslash($_POST['bvmgr_express_bar_nonce'])) : '';
-        if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_express_bar_save_' . $post_id)) {
+        if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_save_' . $post_id))) {
             return;
         }
 
@@ -277,7 +277,7 @@ if (!function_exists('bvmgr_express_bar_handle_order_update')) {
         $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
         $queue_action = isset($_POST['queue_action']) ? sanitize_key(wp_unslash($_POST['queue_action'])) : '';
         $nonce = isset($_POST['bvmgr_express_bar_order_nonce']) ? sanitize_text_field(wp_unslash($_POST['bvmgr_express_bar_order_nonce'])) : '';
-        if ($order_id <= 0 || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_express_bar_update_order_' . $order_id . '_' . $queue_action)) {
+        if ($order_id <= 0 || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_update_order_' . $order_id . '_' . $queue_action))) {
             wp_die(esc_html__('Invalid request.', 'backstage-venue-manager'));
         }
 

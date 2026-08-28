@@ -3788,7 +3788,7 @@ function bvmgr_vendor_handle_mark_reviewed()
         wp_die('Permission denied.');
     }
 
-    bvmgr_check_admin_referer_compat('bvmgr_vendor_mark_reviewed_' . $vendor_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_mark_reviewed_' . $vendor_id, '_wpnonce'), '_wpnonce');
 
     bvmgr_vendor_mark_profile_reviewed($vendor_id, get_current_user_id());
 

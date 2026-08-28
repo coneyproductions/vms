@@ -80,7 +80,7 @@ add_action('admin_init', function () {
         return;
     }
 
-    bvmgr_check_admin_referer_compat('bvmgr_dismiss_first_run_notice');
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_dismiss_first_run_notice', '_wpnonce'), '_wpnonce');
 
     delete_option('vms_show_first_run_notice');
 

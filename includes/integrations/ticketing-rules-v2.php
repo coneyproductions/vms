@@ -8728,7 +8728,7 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
     } elseif (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
-    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_v2_atomic_add_to_cart')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_v2_atomic_add_to_cart'))) {
         bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
@@ -9125,7 +9125,7 @@ function bvmgr_ticketing_v2_ajax_silent_add(): void
     }
 
     // If a nonce is provided, validate it. (We don’t hard-require one to avoid caching edge cases.)
-    if ($nonce !== '' && !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_v2_silent_add')) {
+    if ($nonce !== '' && !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_v2_silent_add'))) {
         bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
@@ -9264,7 +9264,7 @@ function bvmgr_ticketing_v2_ajax_cart_context(): void
     if (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
-    if ($nonce !== '' && !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_v2_cart_context')) {
+    if ($nonce !== '' && !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_v2_cart_context'))) {
         bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 

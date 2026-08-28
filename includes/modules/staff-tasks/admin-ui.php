@@ -730,7 +730,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_transition')) {
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_transition')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_transition'))) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 
@@ -776,7 +776,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_generate_event')) {
 		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
 			: '';
-		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_generate_event_' . $event_id)) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_generate_event_' . $event_id))) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 
@@ -809,7 +809,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_update_assignment')) {
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_update_assignment')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_update_assignment'))) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 			}
 
@@ -877,7 +877,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_create_one_off')) {
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_create_one_off')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_create_one_off'))) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 		if (!bvmgr_tasks_db_ready()) {
@@ -1146,7 +1146,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_create_one_off_ajax')) {
 		$nonce = (isset($_POST['nonce']) && !is_array($_POST['nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['nonce']))
 			: '';
-		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_create_one_off')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_create_one_off'))) {
 			wp_send_json_error(array('message' => __('Security check failed.', 'backstage-venue-manager')), 403);
 		}
 		if (!bvmgr_tasks_db_ready()) {
@@ -1649,7 +1649,7 @@ if (!function_exists('bvmgr_tasks_render_task_templates_page')) {
 		$clone_instance_id = isset($_GET['clone_instance_id']) ? absint($_GET['clone_instance_id']) : 0;
 
 		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_template_action'])) {
-			bvmgr_check_admin_referer_compat('bvmgr_tasks_save_template');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tasks_save_template', '_wpnonce'), '_wpnonce');
 			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_template_action']));
 			$template_id = absint($_POST['template_id'] ?? 0);
 			if ($action === 'save') {
@@ -1804,7 +1804,7 @@ if (!function_exists('bvmgr_tasks_render_checklist_templates_page')) {
 		$edit_id = isset($_GET['checklist_id']) ? absint($_GET['checklist_id']) : 0;
 
 		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_checklist_action'])) {
-			bvmgr_check_admin_referer_compat('bvmgr_tasks_save_checklist');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tasks_save_checklist', '_wpnonce'), '_wpnonce');
 			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_checklist_action']));
 			$checklist_id = absint($_POST['checklist_id'] ?? 0);
 				if ($action === 'save') {
@@ -1951,7 +1951,7 @@ if (!function_exists('bvmgr_tasks_render_settings_page')) {
 
 		$saved = false;
 		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_settings_action'])) {
-			bvmgr_check_admin_referer_compat('bvmgr_tasks_save_settings');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tasks_save_settings', '_wpnonce'), '_wpnonce');
 			$input = array(
 				'horizon_days' => absint($_POST['horizon_days'] ?? 60),
 				'regenerate_on_event_date_change' => !empty($_POST['regenerate_on_event_date_change']) ? 1 : 0,

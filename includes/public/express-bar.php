@@ -126,7 +126,7 @@ if (!function_exists('bvmgr_express_bar_capture_cart_item_data')) {
         }
 
         $nonce = isset($_POST['bvmgr_express_bar_nonce']) ? sanitize_text_field(wp_unslash($_POST['bvmgr_express_bar_nonce'])) : '';
-        if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_express_bar_add_' . $product_id)) {
+        if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_add_' . $product_id))) {
             return $cart_item_data;
         }
 
@@ -172,7 +172,7 @@ if (!function_exists('bvmgr_express_bar_validate_add_to_cart')) {
         $nonce = (isset($_POST['bvmgr_express_bar_nonce']) && !is_array($_POST['bvmgr_express_bar_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_express_bar_nonce']))
             : '';
-        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_express_bar_add_' . $product_id)) {
+        if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_add_' . $product_id))) {
             wc_add_notice(__('That Express Bar request could not be verified. Please try again.', 'backstage-venue-manager'), 'error');
             return false;
         }
@@ -200,7 +200,7 @@ if (!function_exists('bvmgr_express_bar_maybe_redirect_after_add')) {
         $nonce = (isset($_POST['bvmgr_express_bar_nonce']) && !is_array($_POST['bvmgr_express_bar_nonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_express_bar_nonce']))
             : '';
-        if ($product_id <= 0 || $nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_express_bar_add_' . $product_id)) {
+        if ($product_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_add_' . $product_id))) {
             return $url;
         }
 

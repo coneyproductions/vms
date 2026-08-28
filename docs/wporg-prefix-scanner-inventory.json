@@ -8,10 +8,10 @@
         "description": "Semantic identifiers, scanner finding sites, and historical non-prefix residuals remain distinct evidence sets."
     },
     "source": {
-        "source_commit": "d1f9a0e441fc496793052132a6fe62b2b55a2337",
-        "package_sha256": "26f550399fb43ae8628a61f1f33d1ebb4fcfdd792ee7c05f975d44a0385c7156",
-        "strict_json_sha256": "e09ed3d9f43dc0b8553888300a8aa1f8185b59b2c31ec8f7fd97645aeddcad62",
-        "manifest_sha256": "5240ec27ad3f2c8e6c86906a860c921f984adede8ac76ceb1eb10bf819f68610"
+        "source_commit": "9d031cc38f64e65e8e0d95d948887be49a64b5a4",
+        "package_sha256": "367d534ede2e8c6ced2c8576e3ca8c8044abacc662c1ad1266006203c554b660",
+        "strict_json_sha256": "738c37c327175e2cb44b985d4b1b439e8822440101cb928fbf00b195c08389dd",
+        "manifest_sha256": "02d5cd4975eec7ab8f20f409db82c2afdd27257431f12ea898f92bff921703a0"
     },
     "classification_definitions": {
         "REQUIRED_MIGRATION_B3": {
@@ -33,7 +33,7 @@
     },
     "historical_residual": {
         "count": 125,
-        "rows_sha256": "e141441b264e6c5ad7f5f5f296445d20157f135f59a524f2cd048af55a56e496",
+        "rows_sha256": "fc492dca9771e3a130572caedd277a28b44609562bbac431854cfec76b4234e4",
         "code_counts": {
             "PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent": 1,
             "WordPress.Security.EscapeOutput.OutputNotEscaped": 123,
@@ -924,7 +924,7 @@
             },
             {
                 "file": "includes/modules/admissions/pass-claims.php",
-                "line": 2939,
+                "line": 2929,
                 "column": 18,
                 "type": "ERROR",
                 "code": "WordPress.Security.EscapeOutput.OutputNotEscaped",
@@ -933,7 +933,7 @@
             },
             {
                 "file": "includes/modules/admissions/pass-claims.php",
-                "line": 2960,
+                "line": 2950,
                 "column": 18,
                 "type": "ERROR",
                 "code": "WordPress.Security.EscapeOutput.OutputNotEscaped",
@@ -942,7 +942,7 @@
             },
             {
                 "file": "includes/modules/admissions/pass-claims.php",
-                "line": 3036,
+                "line": 3026,
                 "column": 18,
                 "type": "ERROR",
                 "code": "WordPress.Security.EscapeOutput.OutputNotEscaped",
@@ -951,7 +951,7 @@
             },
             {
                 "file": "includes/modules/admissions/pass-claims.php",
-                "line": 3087,
+                "line": 3077,
                 "column": 18,
                 "type": "ERROR",
                 "code": "WordPress.Security.EscapeOutput.OutputNotEscaped",
@@ -1059,7 +1059,7 @@
             },
             {
                 "file": "includes/modules/availability-date-dispatch/public.php",
-                "line": 79,
+                "line": 80,
                 "column": 18,
                 "type": "ERROR",
                 "code": "WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet",
@@ -1113,7 +1113,7 @@
             },
             {
                 "file": "includes/public/calendar-ics.php",
-                "line": 410,
+                "line": 405,
                 "column": 14,
                 "type": "ERROR",
                 "code": "WordPress.Security.EscapeOutput.OutputNotEscaped",
@@ -33098,7 +33098,7 @@
             "finding_id": "5e204d32f345642767bbd282a9d48ac4f34691bb4c759e5fa0a4e874cb392d0f",
             "code": "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound",
             "file": "includes/public/vendor-profiles.php",
-            "line": 1323,
+            "line": 1324,
             "column": 31,
             "type": "WARNING",
             "identifier": "vms_vendor_profiles_auto_append_event_teaser",
@@ -34849,7 +34849,7 @@
             "finding_id": "638c4094aba78e06587465d38ac38ac9b92a5bdfdfc9f5e77d43295149e3c788",
             "code": "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound",
             "file": "includes/public/vendor-profiles.php",
-            "line": 289,
+            "line": 290,
             "column": 41,
             "type": "WARNING",
             "identifier": "vms_vendor_profiles_use_grouped_event_sidebar",
@@ -39728,7 +39728,7 @@
             "finding_id": "72442f8e04b6987a30db5601fcf8d1d76c2626984a94ba4bda97f846ce09d5e3",
             "code": "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound",
             "file": "includes/core/vendor-application-confirmation.php",
-            "line": 969,
+            "line": 966,
             "column": 29,
             "type": "WARNING",
             "identifier": "vms_vendor_app_notify_email",
@@ -75547,7 +75547,7 @@
             "finding_id": "d89aaed75a51c11aa6ba01827bff9a813f6aeae34d1e962e99ef64209655a820",
             "code": "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound",
             "file": "includes/public/vendor-profiles.php",
-            "line": 611,
+            "line": 612,
             "column": 38,
             "type": "WARNING",
             "identifier": "vms_vendor_profiles_event_vendor_groups",

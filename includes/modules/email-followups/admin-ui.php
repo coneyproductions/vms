@@ -563,7 +563,7 @@ if (!function_exists('bvmgr_email_followups_save_settings_post')) {
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_email_followups_save_settings');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_email_followups_save_settings', '_wpnonce'), '_wpnonce');
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured settings arrays are fully sanitized by vms_email_followups_sanitize_settings().
 		$input = isset($_POST['vms_email_followups']) && is_array($_POST['vms_email_followups']) ? (array) wp_unslash($_POST['vms_email_followups']) : array();
 		$tab = isset($_POST['tab']) ? sanitize_key((string) wp_unslash($_POST['tab'])) : 'overview';
@@ -635,7 +635,7 @@ if (!function_exists('bvmgr_email_followups_send_test_post')) {
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_email_followups_send_test');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_email_followups_send_test', '_wpnonce'), '_wpnonce');
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
 		$email_key = isset($_POST['email_key']) ? sanitize_key((string) $_POST['email_key']) : 'know_before';
 		$to = isset($_POST['test_recipient']) ? sanitize_email((string) wp_unslash($_POST['test_recipient'])) : '';
@@ -651,7 +651,7 @@ if (!function_exists('bvmgr_email_followups_manual_send_post')) {
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_email_followups_manual_send');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_email_followups_manual_send', '_wpnonce'), '_wpnonce');
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
 		$email_key = isset($_POST['email_key']) ? sanitize_key((string) $_POST['email_key']) : 'know_before';
 		$batch_token = isset($_POST['batch_token']) ? sanitize_key((string) $_POST['batch_token']) : '';
@@ -713,7 +713,7 @@ if (!function_exists('bvmgr_email_followups_clear_logs_post')) {
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_email_followups_clear_logs');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_email_followups_clear_logs', '_wpnonce'), '_wpnonce');
 		bvmgr_email_followups_clear_logs();
 		bvmgr_email_followups_redirect_notice('logs', __('Email follow-up logs cleared.', 'backstage-venue-manager'));
 	}

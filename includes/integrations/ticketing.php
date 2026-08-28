@@ -509,7 +509,7 @@ function bvmgr_ticketing_get_tec_legacy_identifiers(int $tec_event_id): array
  */
 function bvmgr_ticketing_ajax_search_tec_events(): void
 {
-    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
+    if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_nonce', 'nonce'), 'nonce', false)) {
         bvmgr_ticketing_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -581,7 +581,7 @@ add_action('wp_ajax_vms_ticketing_search_tec_events', 'bvmgr_ticketing_ajax_sear
  */
 function bvmgr_ticketing_ajax_search_products(): void
 {
-    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
+    if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_nonce', 'nonce'), 'nonce', false)) {
         bvmgr_ticketing_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -676,7 +676,7 @@ function bvmgr_ticketing_set_manual_product_ids(int $plan_id, array $pids): void
  */
 function bvmgr_ticketing_ajax_attach_product(): void
 {
-    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
+    if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_nonce', 'nonce'), 'nonce', false)) {
         bvmgr_ticketing_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -708,7 +708,7 @@ add_action('wp_ajax_vms_ticketing_attach_product', 'bvmgr_ticketing_ajax_attach_
  */
 function bvmgr_ticketing_ajax_detach_product(): void
 {
-    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
+    if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_nonce', 'nonce'), 'nonce', false)) {
         bvmgr_ticketing_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -737,7 +737,7 @@ add_action('wp_ajax_vms_ticketing_detach_product', 'bvmgr_ticketing_ajax_detach_
  */
 function bvmgr_ticketing_ajax_link_tec_event(): void
 {
-    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
+    if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_nonce', 'nonce'), 'nonce', false)) {
         bvmgr_ticketing_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -795,7 +795,7 @@ add_action('wp_ajax_vms_ticketing_link_tec_event', 'bvmgr_ticketing_ajax_link_te
  */
 function bvmgr_ticketing_ajax_unlink_tec_event(): void
 {
-    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
+    if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_nonce', 'nonce'), 'nonce', false)) {
         bvmgr_ticketing_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -828,7 +828,7 @@ add_action('wp_ajax_vms_ticketing_unlink_tec_event', 'bvmgr_ticketing_ajax_unlin
  */
 function bvmgr_ticketing_ajax_refresh_stats(): void
 {
-    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
+    if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_nonce', 'nonce'), 'nonce', false)) {
         bvmgr_ticketing_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 

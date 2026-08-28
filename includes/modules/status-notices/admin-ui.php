@@ -567,7 +567,7 @@ if (!function_exists('bvmgr_status_notice_handle_save')) {
 		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_status_notice_save');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_save', '_wpnonce'), '_wpnonce');
 
 		$notice_id = isset($_POST['notice_id']) ? absint(wp_unslash((string) $_POST['notice_id'])) : 0;
 		$raw = isset($_POST) ? (array) wp_unslash($_POST) : array();
@@ -588,7 +588,7 @@ if (!function_exists('bvmgr_status_notice_handle_duplicate')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		bvmgr_check_admin_referer_compat('bvmgr_status_notice_duplicate_' . $notice_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_duplicate_' . $notice_id, '_wpnonce'), '_wpnonce');
 
 		$notice = bvmgr_status_notice_get($notice_id);
 		if (!is_array($notice)) {
@@ -620,7 +620,7 @@ if (!function_exists('bvmgr_status_notice_handle_toggle')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		bvmgr_check_admin_referer_compat('bvmgr_status_notice_toggle_' . $notice_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_toggle_' . $notice_id, '_wpnonce'), '_wpnonce');
 			if ($notice_id > 0) {
 				$enabled = isset($_GET['enabled']) ? absint(wp_unslash((string) $_GET['enabled'])) : 0;
 				update_post_meta($notice_id, '_vms_notice_enabled', $enabled ? 1 : 0);
@@ -638,7 +638,7 @@ if (!function_exists('bvmgr_status_notice_handle_trash')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		bvmgr_check_admin_referer_compat('bvmgr_status_notice_trash_' . $notice_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_trash_' . $notice_id, '_wpnonce'), '_wpnonce');
 			if ($notice_id > 0) {
 				wp_trash_post($notice_id);
 			}
@@ -653,7 +653,7 @@ if (!function_exists('bvmgr_status_notice_handle_bulk')) {
 		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_status_notice_bulk');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_bulk', '_wpnonce'), '_wpnonce');
 
 		$bulk_action = isset($_POST['bulk_action']) ? sanitize_key((string) wp_unslash($_POST['bulk_action'])) : '';
 		$notice_ids = isset($_POST['notice_ids']) ? array_map('absint', (array) wp_unslash($_POST['notice_ids'])) : array();
@@ -725,7 +725,7 @@ if (!function_exists('bvmgr_status_notice_handle_object_search')) {
 		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_send_json_error(array('message' => __('Access denied.', 'backstage-venue-manager')), 403);
 		}
-		bvmgr_check_ajax_referer_compat('bvmgr_status_notice_object_search', 'nonce');
+		check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_object_search', 'nonce'), 'nonce', true);
 
 		$query = isset($_GET['q']) ? sanitize_text_field((string) wp_unslash($_GET['q'])) : '';
 		$query_length = function_exists('mb_strlen') ? mb_strlen($query, 'UTF-8') : strlen($query);

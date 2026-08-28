@@ -1229,7 +1229,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_create_grant')) {
 		if (!bvmgr_ticketing_claims_current_user_can_manage()) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		bvmgr_check_admin_referer_compat('bvmgr_ticketing_claims_create_grant');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_create_grant', '_wpnonce'), '_wpnonce');
 
 		$event_plan_id = bvmgr_request_read_absint($_POST, 'event_plan_id');
 		$event_id = bvmgr_request_read_absint($_POST, 'event_id');
@@ -1347,7 +1347,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_update_grant_note')) {
 		}
 
 		$grant_id = bvmgr_ticketing_claims_post_absint('grant_id');
-		bvmgr_check_admin_referer_compat('bvmgr_ticketing_claims_update_grant_note_' . $grant_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_update_grant_note_' . $grant_id, '_wpnonce'), '_wpnonce');
 		$event_plan_id = bvmgr_ticketing_claims_post_absint('event_plan_id');
 		if ($grant_id <= 0) {
 			wp_safe_redirect(bvmgr_ticketing_claims_event_edit_url($event_plan_id, array('vms_claim_notice' => 'invalid_request')));
@@ -1400,7 +1400,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_set_grant_status')) {
 		}
 
 		$grant_id = bvmgr_ticketing_claims_post_absint('grant_id');
-		bvmgr_check_admin_referer_compat('bvmgr_ticketing_claims_set_grant_status_' . $grant_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_set_grant_status_' . $grant_id, '_wpnonce'), '_wpnonce');
 		$event_plan_id = bvmgr_ticketing_claims_post_absint('event_plan_id');
 		if ($grant_id <= 0) {
 			wp_safe_redirect(bvmgr_ticketing_claims_event_edit_url($event_plan_id, array('vms_claim_notice' => 'invalid_request')));
@@ -1487,7 +1487,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_release_reservation')) {
 
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
 		$reservation_id = isset($_POST['reservation_id']) ? absint($_POST['reservation_id']) : 0;
-		bvmgr_check_admin_referer_compat('bvmgr_ticketing_claims_release_reservation_' . $reservation_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_release_reservation_' . $reservation_id, '_wpnonce'), '_wpnonce');
 		if ($reservation_id <= 0) {
 			bvmgr_ticketing_claims_redirect_after_post_action($event_plan_id, 'invalid_request');
 		}

@@ -14,7 +14,7 @@ $options = array(
 );
 
 foreach (array_slice($argv, 1) as $argument) {
-		if (in_array($argument, array('--check', '--write', '--print', '--gate', '--refresh-b3'), true)) {
+		if (in_array($argument, array('--check', '--write', '--print', '--gate', '--refresh-b3', '--record-current-scan'), true)) {
 		$options['mode'] = $argument;
 		continue;
 	}
@@ -36,6 +36,7 @@ $usage = static function (): void {
 		'  php scripts/generate-wporg-prefix-scanner-inventory.php --write|--print --strict-json=PATH --historical-baseline=PATH --source-commit=SHA --package-sha256=SHA256',
 		'  php scripts/generate-wporg-prefix-scanner-inventory.php --gate --strict-json=PATH',
 		'  php scripts/generate-wporg-prefix-scanner-inventory.php --refresh-b3',
+		'  php scripts/generate-wporg-prefix-scanner-inventory.php --record-current-scan --strict-json=PATH --source-commit=SHA --package-sha256=SHA256',
 	)) . PHP_EOL);
 };
 
@@ -69,6 +70,33 @@ try {
 		$gate = BVMGR_WPORG_Prefix_Scanner_Inventory::gate($root, $inventory, $strictRows, $manifest);
 		echo BVMGR_WPORG_Prefix_Scanner_Inventory::render($gate);
 		exit(($gate['status'] ?? '') === 'PASS' ? 0 : 1);
+	}
+	if ($mode === '--record-current-scan') {
+		foreach (array('strict_json', 'source_commit', 'package_sha256') as $required) {
+			if ($options[$required] === '') {
+				$usage();
+				exit(2);
+			}
+		}
+		$strictPath = (string) $options['strict_json'];
+		$inventory = BVMGR_WPORG_Prefix_Scanner_Inventory::loadJsonFile($artifactPath);
+		$strictRows = BVMGR_WPORG_Prefix_Scanner_Inventory::loadJsonFile($strictPath);
+		$inventory = BVMGR_WPORG_Prefix_Scanner_Inventory::recordCurrentScan(
+			$root,
+			$inventory,
+			$strictRows,
+			$manifest,
+			array(
+				'source_commit' => (string) $options['source_commit'],
+				'package_sha256' => (string) $options['package_sha256'],
+				'strict_json_sha256' => hash_file('sha256', $strictPath) ?: '',
+			)
+		);
+		if (file_put_contents($artifactPath, BVMGR_WPORG_Prefix_Scanner_Inventory::render($inventory)) === false) {
+			throw new RuntimeException('Unable to record the current strict scan in ' . BVMGR_WPORG_Prefix_Scanner_Inventory::ARTIFACT_PATH . '.');
+		}
+		echo 'Recorded current strict scan in ' . BVMGR_WPORG_Prefix_Scanner_Inventory::ARTIFACT_PATH . ".\n";
+		exit(0);
 	}
 
 	foreach (array('strict_json', 'historical_baseline', 'source_commit', 'package_sha256') as $required) {

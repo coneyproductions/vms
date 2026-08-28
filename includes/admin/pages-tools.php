@@ -11,7 +11,7 @@ add_action('admin_post_vms_repair_pages', function () {
     }
 
     // Nonce check first (before doing anything)
-    bvmgr_check_admin_referer_compat('bvmgr_repair_pages');
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_repair_pages', '_wpnonce'), '_wpnonce');
 
     // IMPORTANT: do not output anything in this handler.
     // No echo/print/var_dump, no stray whitespace outside <?php tags.
