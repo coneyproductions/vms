@@ -100,6 +100,18 @@ try {
     $futureEndTs = strtotime('+21 days 10:00pm');
     $pastStartTs = strtotime('-7 days 7:00pm');
     $pastEndTs = strtotime('-7 days 10:00pm');
+    $setPlanOccurrence = static function (int $targetPlanId, int $startTs, int $endTs): void {
+        $write = static function () use ($targetPlanId, $startTs, $endTs): void {
+            update_post_meta($targetPlanId, '_vms_event_date', wp_date('Y-m-d', $startTs));
+            update_post_meta($targetPlanId, '_vms_start_time', wp_date('H:i', $startTs));
+            update_post_meta($targetPlanId, '_vms_end_time', wp_date('H:i', $endTs));
+        };
+        if (function_exists('bvmgr_event_occurrence_authorized_write')) {
+            bvmgr_event_occurrence_authorized_write($write);
+            return;
+        }
+        $write();
+    };
 
     $planId = wp_insert_post(array(
         'post_type' => 'vms_event_plan',
@@ -110,9 +122,7 @@ try {
     $planId = $registerPost((int) $planId);
 
     update_post_meta($planId, $planStatusKey, 'published');
-    update_post_meta($planId, '_vms_event_date', wp_date('Y-m-d', $futureStartTs));
-    update_post_meta($planId, '_vms_start_time', wp_date('H:i', $futureStartTs));
-    update_post_meta($planId, '_vms_end_time', wp_date('H:i', $futureEndTs));
+    $setPlanOccurrence($planId, $futureStartTs, $futureEndTs);
 
     $eventId = wp_insert_post(array(
         'post_type' => 'tribe_events',
@@ -240,16 +250,12 @@ try {
     ));
     clean_post_cache($eventId);
 
-    update_post_meta($planId, '_vms_event_date', wp_date('Y-m-d', $pastStartTs));
-    update_post_meta($planId, '_vms_start_time', wp_date('H:i', $pastStartTs));
-    update_post_meta($planId, '_vms_end_time', wp_date('H:i', $pastEndTs));
+    $setPlanOccurrence($planId, $pastStartTs, $pastEndTs);
     update_post_meta($eventId, '_EventStartDate', wp_date('Y-m-d H:i:s', $pastStartTs));
     update_post_meta($eventId, '_EventEndDate', wp_date('Y-m-d H:i:s', $pastEndTs));
     $pastContext = bvmgr_ticketing_v2_validate_product_sale_context($productId, $planId, $eventId, 'ga_ticket');
     $assert(($pastContext['code'] ?? '') === 'event_past', 'Past events should block ticket sales.');
-    update_post_meta($planId, '_vms_event_date', wp_date('Y-m-d', $futureStartTs));
-    update_post_meta($planId, '_vms_start_time', wp_date('H:i', $futureStartTs));
-    update_post_meta($planId, '_vms_end_time', wp_date('H:i', $futureEndTs));
+    $setPlanOccurrence($planId, $futureStartTs, $futureEndTs);
     update_post_meta($eventId, '_EventStartDate', wp_date('Y-m-d H:i:s', $futureStartTs));
     update_post_meta($eventId, '_EventEndDate', wp_date('Y-m-d H:i:s', $futureEndTs));
 

@@ -215,6 +215,10 @@ try {
         $_POST = array_merge($defaults, $overrides);
         $_GET = array();
         $_REQUEST = $_POST;
+        $GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
+        if (function_exists('bvmgr_prefix_b4_normalize_nonce_fields')) {
+            bvmgr_prefix_b4_normalize_nonce_fields();
+        }
 
         $reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
         /** @var BVMGR_Admin_Event_Plans $admin */
@@ -454,7 +458,7 @@ try {
 
     $ticketingBootstrapPhp = (string) file_get_contents(dirname(__DIR__) . '/includes/integrations/ticketing.php');
     $assert(strpos($ticketingBootstrapPhp, "ticketUiOverridesNonce") !== false, 'Ticketing bootstrap should localize the dedicated Ticket UI override nonce.');
-    $assert(strpos($ticketingBootstrapPhp, "vms_event_plan_ticket_ui_overrides_save") !== false, 'Ticketing bootstrap should use the dedicated Ticket UI override nonce action.');
+    $assert(strpos($ticketingBootstrapPhp, "bvmgr_event_plan_ticket_ui_overrides_save") !== false, 'Ticketing bootstrap should use the canonical dedicated Ticket UI override nonce action.');
 
     fwrite(STDOUT, "Ticket UI override isolation test passed.\n");
 } catch (Throwable $e) {
