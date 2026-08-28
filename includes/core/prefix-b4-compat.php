@@ -174,3 +174,45 @@ if (!function_exists('bvmgr_prefix_b4_normalize_nonce_fields')) {
 }
 
 bvmgr_prefix_b4_normalize_nonce_fields();
+
+if (!function_exists('bvmgr_get_query_var_compat')) {
+	function bvmgr_get_query_var_compat(string $canonical, string $default = ''): string
+	{
+		$legacy = str_starts_with($canonical, 'bvmgr_')
+			? 'vms_' . substr($canonical, 6)
+			: $canonical;
+
+		foreach (array_unique(array($canonical, $legacy)) as $key) {
+			$value = get_query_var($key, null);
+			if (is_scalar($value) && (string) $value !== '') {
+				return (string) $value;
+			}
+
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- B4 compatibility reads public routing values without mutating state.
+			if (array_key_exists($key, $_GET) && is_scalar($_GET[$key])) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Callers retain their context-specific token/text sanitization after canonical-first lookup.
+				return (string) wp_unslash($_GET[$key]);
+			}
+		}
+
+		return $default;
+	}
+}
+
+if (!function_exists('bvmgr_prefix_b4_maybe_flush_rewrite_rules')) {
+	function bvmgr_prefix_b4_maybe_flush_rewrite_rules(): void
+	{
+		$marker = 'bvmgr_prefix_b4_rewrite_version';
+		$target = '1';
+		if ((string) get_option($marker, '') === $target) {
+			return;
+		}
+
+		flush_rewrite_rules(false);
+		update_option($marker, $target, false);
+	}
+}
+
+if (function_exists('add_action')) {
+	add_action('init', 'bvmgr_prefix_b4_maybe_flush_rewrite_rules', 100);
+}

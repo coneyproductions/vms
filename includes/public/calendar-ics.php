@@ -6,17 +6,7 @@ if (!defined('ABSPATH')) {
 if (!function_exists('bvmgr_calendar_ics_query_value')) {
 	function bvmgr_calendar_ics_query_value(string $key, string $default = ''): string
 	{
-		$val = get_query_var($key, null);
-		if (is_string($val) && $val !== '') {
-			return $val;
-		}
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$query_value = array_key_exists($key, $_GET) ? bvmgr_request_read_scalar($_GET, $key) : null;
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
-		if ($query_value !== null) {
-			return $query_value;
-		}
-		return $default;
+		return bvmgr_get_query_var_compat($key, $default);
 	}
 }
 
@@ -109,7 +99,7 @@ if (!function_exists('bvmgr_calendar_ics_vendor_id_for_request')) {
 			return 0;
 		}
 
-		$requested_raw = bvmgr_calendar_ics_query_value('vms_calendar_vendor_id', '');
+		$requested_raw = bvmgr_calendar_ics_query_value('bvmgr_calendar_vendor_id', '');
 		if ($requested_raw === '') {
 			$requested_raw = bvmgr_calendar_ics_query_value('vendor_id', '0');
 		}
@@ -146,11 +136,11 @@ if (!function_exists('bvmgr_calendar_ics_normalize_range')) {
 		$default_start = $today;
 		$default_end = gmdate('Y-m-d', strtotime('+365 days', strtotime($default_start)));
 
-		$start = sanitize_text_field(bvmgr_calendar_ics_query_value('vms_calendar_start', ''));
+		$start = sanitize_text_field(bvmgr_calendar_ics_query_value('bvmgr_calendar_start', ''));
 		if ($start === '') {
 			$start = sanitize_text_field(bvmgr_calendar_ics_query_value('start', $default_start));
 		}
-		$end = sanitize_text_field(bvmgr_calendar_ics_query_value('vms_calendar_end', ''));
+		$end = sanitize_text_field(bvmgr_calendar_ics_query_value('bvmgr_calendar_end', ''));
 		if ($end === '') {
 			$end = sanitize_text_field(bvmgr_calendar_ics_query_value('end', $default_end));
 		}
@@ -187,7 +177,7 @@ if (!function_exists('bvmgr_calendar_ics_collect_events')) {
 	{
 		$range = bvmgr_calendar_ics_normalize_range();
 
-		$venue_raw = sanitize_text_field(bvmgr_calendar_ics_query_value('vms_calendar_venue', ''));
+		$venue_raw = sanitize_text_field(bvmgr_calendar_ics_query_value('bvmgr_calendar_venue', ''));
 		if ($venue_raw === '') {
 			$venue_raw = sanitize_text_field(bvmgr_calendar_ics_query_value('venue', ''));
 		}
@@ -355,6 +345,11 @@ if (!function_exists('bvmgr_calendar_ics_build')) {
 if (!function_exists('bvmgr_calendar_ics_add_query_vars')) {
 	function bvmgr_calendar_ics_add_query_vars(array $vars): array
 	{
+		$vars[] = 'bvmgr_calendar_ics';
+		$vars[] = 'bvmgr_calendar_start';
+		$vars[] = 'bvmgr_calendar_end';
+		$vars[] = 'bvmgr_calendar_venue';
+		$vars[] = 'bvmgr_calendar_vendor_id';
 		$vars[] = 'vms_calendar_ics';
 		$vars[] = 'vms_calendar_start';
 		$vars[] = 'vms_calendar_end';
@@ -368,7 +363,7 @@ add_filter('query_vars', 'bvmgr_calendar_ics_add_query_vars', 12);
 if (!function_exists('bvmgr_calendar_ics_render')) {
 	function bvmgr_calendar_ics_render(): void
 	{
-		$mode = sanitize_key(bvmgr_calendar_ics_query_value('vms_calendar_ics', ''));
+		$mode = sanitize_key(bvmgr_calendar_ics_query_value('bvmgr_calendar_ics', ''));
 		if ($mode === '') {
 			return;
 		}

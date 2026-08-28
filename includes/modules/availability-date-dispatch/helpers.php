@@ -1075,12 +1075,7 @@ if (!function_exists('bvmgr_add_dispatch_build_response_url')) {
 if (!function_exists('bvmgr_add_dispatch_get_request_token')) {
 	function bvmgr_add_dispatch_get_request_token(): string
 	{
-		$token = get_query_var('vms_add_dispatch_token');
-		if (is_string($token) && $token !== '') {
-			return rawurldecode($token);
-		}
-
-		$token = bvmgr_request_read_scalar($_GET, 'vms_add_dispatch_token'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public response-token fallback preserves the established scalar token contract before verification.
+		$token = bvmgr_get_query_var_compat('bvmgr_add_dispatch_token');
 		if ($token !== '') {
 			return rawurldecode($token);
 		}

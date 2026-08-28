@@ -8,12 +8,14 @@ defined('ABSPATH') || exit;
 if (!function_exists('bvmgr_feedback_public_query_vars')) {
 	function bvmgr_feedback_public_query_vars(array $vars): array
 	{
+		$vars[] = 'bvmgr_event_feedback';
 		$vars[] = 'vms_event_feedback';
 		$vars[] = 'event_plan_id';
 		$vars[] = 'key';
 		$vars[] = 'invite';
 		$vars[] = 'recipient';
 		$vars[] = 'source';
+		$vars[] = 'bvmgr_feedback_submitted';
 		$vars[] = 'vms_feedback_submitted';
 		return $vars;
 	}
@@ -23,17 +25,7 @@ add_filter('query_vars', 'bvmgr_feedback_public_query_vars');
 if (!function_exists('bvmgr_feedback_public_query_value')) {
 	function bvmgr_feedback_public_query_value(string $key): string
 	{
-		$value = get_query_var($key, '');
-		if (is_scalar($value) && (string) $value !== '') {
-			return trim((string) $value);
-		}
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$query_value = array_key_exists($key, $_GET) ? bvmgr_request_read_scalar($_GET, $key) : null;
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
-		if ($query_value !== null) {
-			return $query_value;
-		}
-		return '';
+		return trim(bvmgr_get_query_var_compat($key));
 	}
 }
 
@@ -50,7 +42,7 @@ if (!function_exists('bvmgr_feedback_post_array')) {
 if (!function_exists('bvmgr_feedback_is_public_survey_request')) {
 	function bvmgr_feedback_is_public_survey_request(): bool
 	{
-		return bvmgr_feedback_public_query_value('vms_event_feedback') === '1';
+		return bvmgr_feedback_public_query_value('bvmgr_event_feedback') === '1';
 	}
 }
 
@@ -136,7 +128,7 @@ if (!function_exists('bvmgr_feedback_render_public_survey')) {
 			return;
 		}
 
-		$submitted = bvmgr_feedback_public_query_value('vms_feedback_submitted') === '1';
+		$submitted = bvmgr_feedback_public_query_value('bvmgr_feedback_submitted') === '1';
 		$event_title = (string) ($context['event_title'] ?? '');
 		$event_date = (string) ($context['event_date'] ?? '');
 		$venue_title = (string) ($context['venue_title'] ?? get_bloginfo('name'));
@@ -332,7 +324,7 @@ if (!function_exists('bvmgr_feedback_handle_submit')) {
 		}
 		$honeypot = bvmgr_request_read_scalar($_POST, 'vms_feedback_company');
 		if ($honeypot !== '') {
-			wp_safe_redirect(add_query_arg('vms_feedback_submitted', '1', $redirect));
+			wp_safe_redirect(add_query_arg('bvmgr_feedback_submitted', '1', $redirect));
 			exit;
 		}
 
@@ -552,7 +544,7 @@ if (!function_exists('bvmgr_feedback_handle_submit')) {
 			bvmgr_feedback_send_new_submission_notification($response_id, $payload);
 		}
 
-		wp_safe_redirect(add_query_arg('vms_feedback_submitted', '1', $redirect));
+		wp_safe_redirect(add_query_arg('bvmgr_feedback_submitted', '1', $redirect));
 		exit;
 	}
 }

@@ -236,6 +236,7 @@ class vms_test_wpdb
 }
 
 require_once dirname(__DIR__) . '/includes/runtime-guards.php';
+require_once dirname(__DIR__) . '/includes/core/prefix-b4-compat.php';
 
 $pluginRoot = dirname(__DIR__);
 $admissionTokensPath = $pluginRoot . '/includes/modules/admissions/admission-tokens.php';
@@ -253,24 +254,14 @@ $scanRouterSource = str_replace("exit;", 'return;', $scanRouterSource);
 eval($scanRouterSource);
 
 vms_test_assert_contains(
-	"array_key_exists('vms_pass_claim_token', \$_GET) && is_scalar(\$_GET['vms_pass_claim_token'])",
+	"bvmgr_get_query_var_compat('bvmgr_pass_claim_token')",
 	$passClaimsSource,
-	'Pass Claims token fallback should reject array/object query-string tokens before unslashing.'
+	'Pass Claims token lookup should use the canonical-first B4 query compatibility helper.'
 );
 vms_test_assert_contains(
-	"\$raw_token = wp_unslash(\$_GET['vms_pass_claim_token']);",
-	$passClaimsSource,
-	'Pass Claims token fallback should unslash the query-string token before raw decoding.'
-);
-vms_test_assert_contains(
-	"array_key_exists('vms_admission_scan_token', \$_GET) && is_scalar(\$_GET['vms_admission_scan_token'])",
+	"bvmgr_get_query_var_compat('bvmgr_admission_scan_token')",
 	$admissionTokensSource,
-	'Admission scan routing should reject array/object query-string tokens before unslashing.'
-);
-vms_test_assert_contains(
-	"\$raw_token = wp_unslash(\$_GET['vms_admission_scan_token']);",
-	$admissionTokensSource,
-	'Admission scan routing should unslash the query-string token before raw decoding.'
+	'Admission scan routing should use the canonical-first B4 query compatibility helper.'
 );
 vms_test_assert_contains(
 	"bvmgr_request_read_bool_flag(\$_GET, 'vms_print_pass')",

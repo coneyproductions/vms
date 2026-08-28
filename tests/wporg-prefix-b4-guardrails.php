@@ -143,6 +143,13 @@ if (in_array($implementationState, array('nonce_complete', 'complete'), true)) {
 	exec($nonceCommand, $nonceOutput, $nonceStatus);
 	$assert($nonceStatus === 0, 'B4 nonce semantic cutover must be complete: ' . implode(' ', $nonceOutput));
 }
+if ($implementationState === 'complete') {
+	$transitionCommand = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/tests/wporg-prefix-b4-query-rewrite-cli.php') . ' 2>&1';
+	$transitionOutput = array();
+	$transitionStatus = 0;
+	exec($transitionCommand, $transitionOutput, $transitionStatus);
+	$assert($transitionStatus === 0, 'B4 query/rewrite/CLI transition must be complete: ' . implode(' ', $transitionOutput));
+}
 
 $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/scripts/generate-wporg-prefix-b4.php') . ' --check 2>&1';
 $output = array();

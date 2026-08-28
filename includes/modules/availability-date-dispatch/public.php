@@ -4,8 +4,9 @@ defined('ABSPATH') || exit;
 if (!function_exists('bvmgr_add_dispatch_register_rewrite')) {
 	function bvmgr_add_dispatch_register_rewrite(): void
 	{
+		add_rewrite_tag('%bvmgr_add_dispatch_token%', '([^&]+)');
 		add_rewrite_tag('%vms_add_dispatch_token%', '([^&]+)');
-		add_rewrite_rule('^availability-dispatch/respond/([^/]+)/?$', 'index.php?vms_add_dispatch_token=$matches[1]', 'top');
+		add_rewrite_rule('^availability-dispatch/respond/([^/]+)/?$', 'index.php?bvmgr_add_dispatch_token=$matches[1]', 'top');
 	}
 }
 add_action('init', 'bvmgr_add_dispatch_register_rewrite', 30);

@@ -18,8 +18,8 @@ if (!class_exists('BVMGR_CLI_State_Of_Range_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms state-of-range status
-		 *     wp vms state-of-range status --format=json
+		 *     wp bvmgr state-of-range status
+		 *     wp bvmgr state-of-range status --format=json
 		 *
 		 * @subcommand status
 		 * @when after_wp_load
@@ -65,8 +65,8 @@ if (!class_exists('BVMGR_CLI_State_Of_Range_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms state-of-range render --dry-run
-		 *     wp vms state-of-range render --date=2026-06-02 --print-body
+		 *     wp bvmgr state-of-range render --dry-run
+		 *     wp bvmgr state-of-range render --date=2026-06-02 --print-body
 		 *
 		 * @subcommand render
 		 * @when after_wp_load
@@ -117,7 +117,7 @@ if (!class_exists('BVMGR_CLI_State_Of_Range_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms state-of-range send-test --to=admin@example.com
+		 *     wp bvmgr state-of-range send-test --to=admin@example.com
 		 *
 		 * @subcommand send-test
 		 * @when after_wp_load
@@ -156,7 +156,7 @@ if (!class_exists('BVMGR_CLI_State_Of_Range_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms state-of-range reschedule
+		 *     wp bvmgr state-of-range reschedule
 		 *
 		 * @subcommand reschedule
 		 * @when after_wp_load
@@ -257,5 +257,7 @@ if (!class_exists('BVMGR_CLI_State_Of_Range_Command')) {
 		}
 	}
 
+	WP_CLI::add_command('bvmgr state-of-range', 'BVMGR_CLI_State_Of_Range_Command');
+	// Deprecated B4 compatibility alias; retain until the CLI retirement gate is met.
 	WP_CLI::add_command('vms state-of-range', 'BVMGR_CLI_State_Of_Range_Command');
 }

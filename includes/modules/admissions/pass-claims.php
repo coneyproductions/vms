@@ -2415,8 +2415,9 @@ add_action('admin_enqueue_scripts', 'bvmgr_pass_claims_admin_enqueue_assets', 50
 if (!function_exists('bvmgr_pass_claims_register_rewrite')) {
 	function bvmgr_pass_claims_register_rewrite(): void
 	{
+		add_rewrite_tag('%bvmgr_pass_claim_token%', '([^&]+)');
 		add_rewrite_tag('%vms_pass_claim_token%', '([^&]+)');
-		add_rewrite_rule('^pass/claim/([^/]+)/?$', 'index.php?vms_pass_claim_token=$matches[1]', 'top');
+		add_rewrite_rule('^pass/claim/([^/]+)/?$', 'index.php?bvmgr_pass_claim_token=$matches[1]', 'top');
 	}
 }
 add_action('init', 'bvmgr_pass_claims_register_rewrite', 30);
@@ -2424,18 +2425,7 @@ add_action('init', 'bvmgr_pass_claims_register_rewrite', 30);
 if (!function_exists('bvmgr_pass_claims_get_request_token')) {
 	function bvmgr_pass_claims_get_request_token(): string
 	{
-		$token = get_query_var('vms_pass_claim_token');
-		if (is_string($token) && $token !== '') {
-			return rawurldecode($token);
-		}
-
-		$token = '';
-		if (array_key_exists('vms_pass_claim_token', $_GET) && is_scalar($_GET['vms_pass_claim_token'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public claim-token fallback preserves the existing token lookup contract without adding a nonce to navigation.
-			$raw_token = wp_unslash($_GET['vms_pass_claim_token']); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Preserve the exact unslashed claim token before raw decoding and verification.
-			if (is_scalar($raw_token)) {
-				$token = (string) $raw_token;
-			}
-		}
+		$token = bvmgr_get_query_var_compat('bvmgr_pass_claim_token');
 		if ($token !== '') {
 			return rawurldecode($token);
 		}

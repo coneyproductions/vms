@@ -134,8 +134,9 @@ if (!function_exists('bvmgr_vendor_app_confirmation_reset_url')) {
 if (!function_exists('bvmgr_vendor_app_register_confirmation_endpoint')) {
     function bvmgr_vendor_app_register_confirmation_endpoint(): void
     {
+        add_rewrite_tag('%bvmgr_vendor_app_confirm%', '([^&]+)');
         add_rewrite_tag('%vms_vendor_app_confirm%', '([^&]+)');
-        add_rewrite_rule('^' . preg_quote(bvmgr_vendor_app_confirmation_endpoint_slug(), '/') . '/?$', 'index.php?vms_vendor_app_confirm=1', 'top');
+        add_rewrite_rule('^' . preg_quote(bvmgr_vendor_app_confirmation_endpoint_slug(), '/') . '/?$', 'index.php?bvmgr_vendor_app_confirm=1', 'top');
     }
 }
 add_action('init', 'bvmgr_vendor_app_register_confirmation_endpoint');
@@ -143,6 +144,7 @@ add_action('init', 'bvmgr_vendor_app_register_confirmation_endpoint');
 if (!function_exists('bvmgr_vendor_app_add_confirmation_query_var')) {
     function bvmgr_vendor_app_add_confirmation_query_var(array $vars): array
     {
+        $vars[] = 'bvmgr_vendor_app_confirm';
         $vars[] = 'vms_vendor_app_confirm';
         return $vars;
     }
@@ -152,7 +154,7 @@ add_filter('query_vars', 'bvmgr_vendor_app_add_confirmation_query_var');
 if (!function_exists('bvmgr_vendor_app_confirmation_query_value')) {
     function bvmgr_vendor_app_confirmation_query_value(string $key): string
     {
-        return bvmgr_request_read_scalar($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public confirmation links use read-only URL parameters for routing and one-time token lookup.
+        return bvmgr_get_query_var_compat($key);
     }
 }
 
@@ -182,12 +184,7 @@ add_action('init', 'bvmgr_vendor_app_maybe_flush_confirmation_rewrite', 20);
 if (!function_exists('bvmgr_vendor_app_is_confirmation_request')) {
     function bvmgr_vendor_app_is_confirmation_request(): bool
     {
-        $qv = get_query_var('vms_vendor_app_confirm');
-        if ((string) $qv === '1') {
-            return true;
-        }
-
-        return bvmgr_vendor_app_confirmation_query_value('vms_vendor_app_confirm') === '1';
+        return bvmgr_vendor_app_confirmation_query_value('bvmgr_vendor_app_confirm') === '1';
     }
 }
 

@@ -29,7 +29,7 @@ if (!function_exists('bvmgr_admission_scan_url')) {
 
 		// Query-var URLs work immediately after plugin updates without requiring
 		// a Permalinks save / rewrite flush.
-		return add_query_arg('vms_admission_scan_token', rawurlencode($token), home_url('/'));
+		return add_query_arg('bvmgr_admission_scan_token', rawurlencode($token), home_url('/'));
 	}
 }
 
@@ -105,6 +105,9 @@ if (!function_exists('bvmgr_admission_extract_scan_token')) {
 		$parts = wp_parse_url($raw);
 		if (is_array($parts) && !empty($parts['query'])) {
 			parse_str((string) $parts['query'], $query);
+			if (!empty($query['bvmgr_admission_scan_token'])) {
+				return sanitize_text_field(rawurldecode((string) $query['bvmgr_admission_scan_token']));
+			}
 			if (!empty($query['vms_admission_scan_token'])) {
 				return sanitize_text_field(rawurldecode((string) $query['vms_admission_scan_token']));
 			}
@@ -332,8 +335,9 @@ if (!function_exists('bvmgr_admission_email_pass')) {
 if (!function_exists('bvmgr_admission_scan_rewrite')) {
 	function bvmgr_admission_scan_rewrite(): void
 	{
+		add_rewrite_tag('%bvmgr_admission_scan_token%', '([^&]+)');
 		add_rewrite_tag('%vms_admission_scan_token%', '([^&]+)');
-		add_rewrite_rule('^admission/scan/([^/]+)/?$', 'index.php?vms_admission_scan_token=$matches[1]', 'top');
+		add_rewrite_rule('^admission/scan/([^/]+)/?$', 'index.php?bvmgr_admission_scan_token=$matches[1]', 'top');
 	}
 }
 add_action('init', 'bvmgr_admission_scan_rewrite', 31);
@@ -344,16 +348,7 @@ if (!function_exists('bvmgr_admission_scan_template_router')) {
 		if (is_admin()) {
 			return;
 		}
-		$token = get_query_var('vms_admission_scan_token');
-		if (!is_string($token) || $token === '') {
-			$token = '';
-			if (array_key_exists('vms_admission_scan_token', $_GET) && is_scalar($_GET['vms_admission_scan_token'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public scan-token fallback preserves the existing token lookup contract without adding a nonce to navigation.
-				$raw_token = wp_unslash($_GET['vms_admission_scan_token']); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Preserve the exact unslashed scan token before raw decoding and token lookup.
-				if (is_scalar($raw_token)) {
-					$token = (string) $raw_token;
-				}
-			}
-		}
+		$token = bvmgr_get_query_var_compat('bvmgr_admission_scan_token');
 		$token = sanitize_text_field(rawurldecode($token));
 		if ($token === '') {
 			return;

@@ -10,8 +10,8 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 	 * Built-in stale-check helper for historical bug + cancellation-health probes.
 	 * 
 	 * Usage:
-	 *   wp vms stale-check
-	 *   wp vms stale-check --bugs=BUG-01,BUG-03
+	 *   wp bvmgr stale-check
+	 *   wp bvmgr stale-check --bugs=BUG-01,BUG-03
 	 */
 		class BVMGR_CLI_Stale_Check_Command
 		{
@@ -33,9 +33,9 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms stale-check
-		 *     wp vms stale_check
-		 *     wp vms stale-check --bugs=BUG-01,BUG-03,CAN-01
+		 *     wp bvmgr stale-check
+		 *     wp bvmgr stale_check
+		 *     wp bvmgr stale-check --bugs=BUG-01,BUG-03,CAN-01
 		 *
 		 * @subcommand stale-check
 		 * @when after_wp_load
@@ -110,8 +110,8 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms stale_check
-		 *     wp vms stale_check --bugs=BUG-01,BUG-03
+		 *     wp bvmgr stale_check
+		 *     wp bvmgr stale_check --bugs=BUG-01,BUG-03
 		 *
 		 * @subcommand stale_check
 		 * @when after_wp_load
@@ -1461,4 +1461,6 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 	}
 }
 
+WP_CLI::add_command('bvmgr', 'BVMGR_CLI_Stale_Check_Command');
+// Deprecated B4 compatibility alias; retain until the CLI retirement gate is met.
 WP_CLI::add_command('vms', 'BVMGR_CLI_Stale_Check_Command');

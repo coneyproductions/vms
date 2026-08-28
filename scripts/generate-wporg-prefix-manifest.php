@@ -54,6 +54,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			),
 			'b4_evidence_corrections' => self::b4EvidenceCorrections(),
 			'b4_identifier_inventory' => self::b4IdentifierInventory($root),
+			'b4_addon_compatibility' => self::b4AddonCompatibility($root),
 			'canonical_prefix_family' => array(
 				'procedural_php_hooks_options' => 'bvmgr_',
 				'constants_low_churn_classes' => 'BVMGR_',
@@ -157,7 +158,25 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			'sha256' => hash_file('sha256', $path),
 			'summary' => $decoded['summary'],
 			'frozen_from_head' => 'bdd84df7bcbfcec65ee57fedf561bf4e167761f6',
-			'implementation_state' => 'nonce_complete',
+			'implementation_state' => 'complete',
+		);
+	}
+
+	private static function b4AddonCompatibility(string $root): array
+	{
+		$relative = 'docs/wporg-prefix-b4-addon-compatibility.json';
+		$path = $root . '/' . $relative;
+		if (!is_file($path)) {
+			throw new RuntimeException('Missing B4 add-on compatibility evidence: ' . $relative);
+		}
+		$decoded = json_decode((string) file_get_contents($path), true);
+		if (!is_array($decoded) || !isset($decoded['summary'])) {
+			throw new RuntimeException('Invalid B4 add-on compatibility evidence: ' . $relative);
+		}
+		return array(
+			'artifact' => $relative,
+			'sha256' => hash_file('sha256', $path),
+			'summary' => $decoded['summary'],
 		);
 	}
 

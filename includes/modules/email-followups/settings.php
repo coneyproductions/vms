@@ -373,7 +373,7 @@ if (!function_exists('bvmgr_email_followups_migrate_feedback_template_605')) {
 		$templates = is_array($settings['templates'] ?? null) ? (array) $settings['templates'] : array();
 		$post_event = is_array($templates['post_event'] ?? null) ? (array) $templates['post_event'] : array();
 		$body = (string) ($post_event['body'] ?? '');
-		if ($body !== '' && strpos($body, '{feedback_url}') === false && strpos($body, 'vms_event_feedback') === false) {
+		if ($body !== '' && strpos($body, '{feedback_url}') === false && strpos($body, 'bvmgr_event_feedback') === false && strpos($body, 'vms_event_feedback') === false) {
 			$body = rtrim($body) . "\n\nLeave private feedback: {feedback_url}";
 			$post_event['body'] = $body;
 			$templates['post_event'] = $post_event;

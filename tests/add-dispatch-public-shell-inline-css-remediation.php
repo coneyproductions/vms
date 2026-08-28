@@ -242,8 +242,8 @@ try {
 	$assert(has_action('admin_init', 'vms_add_dispatch_maybe_flush_rewrites') === 30, 'ADD public response flush guard should remain on admin_init priority 30.');
 	$assert(has_action('template_redirect', 'vms_add_dispatch_template_router') === 0, 'ADD public response router should remain on template_redirect priority 0.');
 
-	$assert(strpos($rewriteSource, "add_rewrite_tag('%vms_add_dispatch_token%', '([^&]+)');") !== false, 'ADD public response rewrite tag should remain unchanged.');
-	$assert(strpos($rewriteSource, "add_rewrite_rule('^availability-dispatch/respond/([^/]+)/?$', 'index.php?vms_add_dispatch_token=\$matches[1]', 'top');") !== false, 'ADD public response rewrite rule should remain unchanged.');
+	$assert(strpos($rewriteSource, "add_rewrite_tag('%bvmgr_add_dispatch_token%', '([^&]+)');") !== false && strpos($rewriteSource, "add_rewrite_tag('%vms_add_dispatch_token%', '([^&]+)');") !== false, 'ADD public response must register the canonical tag and retain the legacy inbound tag.');
+	$assert(strpos($rewriteSource, "add_rewrite_rule('^availability-dispatch/respond/([^/]+)/?$', 'index.php?bvmgr_add_dispatch_token=\$matches[1]', 'top');") !== false, 'ADD public response must preserve the physical route and target the canonical query var.');
 	$assert(strpos($flushSource, "\$key = 'vms_rewrite_flushed_add_dispatch_v1';") !== false, 'ADD public response flush key should remain unchanged.');
 	$assert(strpos($flushSource, 'flush_rewrite_rules(false);') !== false, 'ADD public response flush behavior should remain unchanged.');
 	$assert(strpos($flushSource, "update_option(\$key, '1', false);") !== false, 'ADD public response flush persistence should remain unchanged.');

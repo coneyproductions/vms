@@ -23,13 +23,14 @@ function bvmgr_vendor_profiles_register_rewrite(): void
 
     add_rewrite_rule(
         '^' . $base . '/([^/]+)/?$',
-        'index.php?vms_vendor_profile=$matches[1]',
+        'index.php?bvmgr_vendor_profile=$matches[1]',
         'top'
     );
 }
 
 function bvmgr_vendor_profiles_register_query_vars(array $vars): array
 {
+    $vars[] = 'bvmgr_vendor_profile';
     $vars[] = 'vms_vendor_profile';
     return $vars;
 }
@@ -43,7 +44,7 @@ function bvmgr_vendor_profiles_register_shortcodes(): void
 
 function bvmgr_vendor_profiles_public_assets(): void
 {
-    if (!get_query_var('vms_vendor_profile') && !is_singular('tribe_events') && !is_singular('page') && !is_singular('post')) {
+    if (!bvmgr_get_query_var_compat('bvmgr_vendor_profile') && !is_singular('tribe_events') && !is_singular('page') && !is_singular('post')) {
         return;
     }
 
@@ -57,7 +58,7 @@ function bvmgr_vendor_profiles_public_assets(): void
 
 function bvmgr_vendor_profiles_template_include(string $template): string
 {
-    $raw = get_query_var('vms_vendor_profile');
+    $raw = bvmgr_get_query_var_compat('bvmgr_vendor_profile');
     if (!$raw) {
         return $template;
     }
@@ -814,8 +815,8 @@ if (!function_exists('bvmgr_vendor_profiles_resolve_vendor_id')) {
                 return $global_vendor;
             }
 
-            if (get_query_var('vms_vendor_profile')) {
-                $slug = sanitize_title((string) get_query_var('vms_vendor_profile'));
+            if (bvmgr_get_query_var_compat('bvmgr_vendor_profile')) {
+                $slug = sanitize_title(bvmgr_get_query_var_compat('bvmgr_vendor_profile'));
                 if ($slug !== '') {
                     $post = get_page_by_path($slug, OBJECT, defined('BVMGR_CPT_VENDOR') ? BVMGR_CPT_VENDOR : 'vms_vendor');
                     if ($post instanceof WP_Post) {

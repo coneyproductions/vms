@@ -21,6 +21,8 @@ $assert(in_array('docs/', $releaseExcludes, true), 'B1 manifest and documentatio
 $assert(in_array('scripts/', $releaseExcludes, true), 'B1 migration infrastructure must remain outside the public package.');
 $assert(in_array('tests/', $releaseExcludes, true), 'B1 test infrastructure must remain outside the public package.');
 $releaseTestIds = array_column(VMS_Public_Release_Tooling::defaultReleaseTests(), 'id');
+$assert(in_array('wporg-prefix-b4-addon-compatibility', $releaseTestIds, true), 'B4 disposable add-on compatibility must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b4-query-rewrite-cli', $releaseTestIds, true), 'B4 query, rewrite, and WP-CLI transition tests must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b4-nonces', $releaseTestIds, true), 'B4 nonce transition tests must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b4-browser-assets', $releaseTestIds, true), 'B4 browser-global and asset-handle transition tests must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b4-guardrails', $releaseTestIds, true), 'B4 exact identifier-map and compatibility guardrails must remain a required default release precondition.');
@@ -61,6 +63,8 @@ $assert(is_file($b4MapPath), 'B4 frozen identifier map must exist at its manifes
 $assert(is_file($b4MapPath) && hash_file('sha256', $b4MapPath) === ($b4Inventory['sha256'] ?? null), 'B4 frozen identifier map hash must match the controlling manifest.');
 $b4Map = is_file($b4MapPath) ? json_decode((string) file_get_contents($b4MapPath), true) : null;
 $assert(is_array($b4Map) && ($b4Map['summary'] ?? null) === $expectedB4Summary, 'B4 frozen identifier map must decode with the exact reviewed summary.');
+$assert(($manifest['b4_addon_compatibility']['sha256'] ?? null) === hash_file('sha256', $root . '/docs/wporg-prefix-b4-addon-compatibility.json'), 'Manifest must bind the exact B4 add-on compatibility evidence hash.');
+$assert(($manifest['b4_addon_compatibility']['summary'] ?? null) === array('addons' => 5, 'b4_semantic_consumers' => 0, 'patches_required' => 0, 'installed_trees_modified' => 0), 'Manifest must retain the exact five-add-on zero-impact B4 result.');
 $corrections = array_column((array) ($manifest['b4_evidence_corrections'] ?? array()), null, 'id');
 $assert(array_keys($corrections) === array(
 	'complete-browser-global-inventory',
@@ -128,7 +132,7 @@ $assert(isset($categoriesById['namespaces'], $categoriesById['tests_tooling_asse
 
 $expectedCounts = array(
 	'public_php_files' => 272,
-	'functions' => array('unique' => 4528, 'occurrences' => 4548),
+	'functions' => array('unique' => 4530, 'occurrences' => 4550),
 	'classes' => array('unique' => 23, 'occurrences' => 23),
 	'interfaces' => array('unique' => 1, 'occurrences' => 1),
 	'constants' => array('unique' => 107, 'occurrences' => 116),
@@ -142,12 +146,12 @@ foreach ($expectedCounts as $key => $expected) {
 $dynamicExpected = array(
 	'exact_function_literals_unique' => 3645,
 	'exact_function_literals_occurrences' => 7363,
-	'function_exists_unique' => 3317,
-	'function_exists_occurrences' => 6345,
-	'direct_literal_callbacks_unique' => 711,
-	'direct_literal_callbacks_occurrences' => 767,
+	'function_exists_unique' => 3319,
+	'function_exists_occurrences' => 6347,
+	'direct_literal_callbacks_unique' => 712,
+	'direct_literal_callbacks_occurrences' => 768,
 	'exact_type_literals_unique' => 16,
-	'exact_type_literals_occurrences' => 25,
+	'exact_type_literals_occurrences' => 28,
 	'duplicate_function_families' => 20,
 	'duplicate_constant_families' => 9,
 );

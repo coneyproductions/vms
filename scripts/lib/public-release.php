@@ -462,6 +462,18 @@ final class VMS_Public_Release_Tooling
 	{
 		return array(
 			array(
+				'id' => 'wporg-prefix-b4-addon-compatibility',
+				'label' => 'WordPress.org B4 disposable add-on compatibility and provenance',
+				'path' => 'tests/wporg-prefix-b4-addon-compatibility.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b4-query-rewrite-cli',
+				'label' => 'WordPress.org B4 query, rewrite, and WP-CLI compatibility',
+				'path' => 'tests/wporg-prefix-b4-query-rewrite-cli.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'wporg-prefix-b4-nonces',
 				'label' => 'WordPress.org B4 nonce action and field compatibility',
 				'path' => 'tests/wporg-prefix-b4-nonces.php',

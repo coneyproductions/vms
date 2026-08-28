@@ -52,6 +52,10 @@ function get_query_var(string $name)
 {
 	return $GLOBALS['bvmgr_test_query_vars'][$name] ?? '';
 }
+function wp_unslash($value)
+{
+	return $value;
+}
 function sanitize_title(string $value): string
 {
 	return strtolower(trim((string) preg_replace('/[^a-z0-9]+/i', '-', $value), '-'));
@@ -162,6 +166,7 @@ function status_header(int $status): void {}
 function nocache_headers(): void {}
 function get_404_template(): string { return ''; }
 
+require_once $root . '/includes/core/prefix-b4-compat.php';
 require_once $root . '/includes/public/vendor-profiles.php';
 
 /**

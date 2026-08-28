@@ -524,6 +524,7 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 	}
 }
 
+require_once dirname(__DIR__) . '/includes/core/prefix-b4-compat.php';
 require_once dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php';
 
 $pluginRoot = dirname(__DIR__);
@@ -667,14 +668,14 @@ $assert(is_string($adminShellSource) && $adminShellSource !== '', 'Administrator
 $assert(is_string($publicJsSource) && $publicJsSource !== '', 'Pass Claims public JS source should be readable.');
 $assert(is_string($publicCssSource) && $publicCssSource !== '', 'Pass Claims public CSS source should be readable.');
 
-$assert(isset($GLOBALS['vms_test_actions']['init'][30]) && in_array('vms_pass_claims_register_rewrite', $GLOBALS['vms_test_actions']['init'][30], true), 'Pass Claims should register its public rewrite callback on init at priority 30.');
-$assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array('vms_pass_claims_template_router', $GLOBALS['vms_test_actions']['template_redirect'][0], true), 'Pass Claims should register its public template router on template_redirect at priority 0.');
+$assert(isset($GLOBALS['vms_test_actions']['init'][30]) && in_array('bvmgr_pass_claims_register_rewrite', $GLOBALS['vms_test_actions']['init'][30], true), 'Pass Claims should register its public rewrite callback on init at priority 30.');
+$assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array('bvmgr_pass_claims_template_router', $GLOBALS['vms_test_actions']['template_redirect'][0], true), 'Pass Claims should register its public template router on template_redirect at priority 0.');
 
 $GLOBALS['vms_test_rewrite_tags'] = array();
 $GLOBALS['vms_test_rewrite_rules'] = array();
 bvmgr_pass_claims_register_rewrite();
-$assert($GLOBALS['vms_test_rewrite_tags'] === array(array('%vms_pass_claim_token%', '([^&]+)')), 'Pass Claims rewrite registration should preserve the claim-token tag.');
-$assert($GLOBALS['vms_test_rewrite_rules'] === array(array('^pass/claim/([^/]+)/?$', 'index.php?vms_pass_claim_token=$matches[1]', 'top')), 'Pass Claims rewrite registration should preserve the public claim route.');
+$assert($GLOBALS['vms_test_rewrite_tags'] === array(array('%bvmgr_pass_claim_token%', '([^&]+)'), array('%vms_pass_claim_token%', '([^&]+)')), 'Pass Claims rewrite registration should expose the canonical tag and retain the legacy inbound tag.');
+$assert($GLOBALS['vms_test_rewrite_rules'] === array(array('^pass/claim/([^/]+)/?$', 'index.php?bvmgr_pass_claim_token=$matches[1]', 'top')), 'Pass Claims rewrite registration should route the unchanged public path to the canonical query var.');
 
 $resetRuntime();
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'query-token';

@@ -125,7 +125,7 @@ if (!function_exists('bvmgr_feedback_survey_url')) {
 		}
 
 		$args = array(
-			'vms_event_feedback' => '1',
+			'bvmgr_event_feedback' => '1',
 			'event_plan_id' => $event_plan_id,
 			'key' => bvmgr_feedback_public_token($event_plan_id),
 		);
@@ -965,7 +965,7 @@ if (!function_exists('bvmgr_feedback_dedupe_redirect')) {
 	function bvmgr_feedback_dedupe_redirect(string $redirect, string $reason = 'duplicate'): void
 	{
 		wp_safe_redirect(add_query_arg(array(
-			'vms_feedback_submitted' => '1',
+			'bvmgr_feedback_submitted' => '1',
 			'vms_feedback_dedupe' => sanitize_key($reason),
 		), $redirect));
 		exit;

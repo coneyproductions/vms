@@ -21,8 +21,8 @@ if (!class_exists('BVMGR_CLI_Square_Ticket_Mirror_Command')) {
          *
          * ## EXAMPLES
          *
-         *     wp vms square-ticket-mirror status --product=123
-         *     wp vms square-ticket-mirror status --product=123 --format=json
+         *     wp bvmgr square-ticket-mirror status --product=123
+         *     wp bvmgr square-ticket-mirror status --product=123 --format=json
          *
          * @subcommand status
          * @when after_wp_load
@@ -102,8 +102,8 @@ if (!class_exists('BVMGR_CLI_Square_Ticket_Mirror_Command')) {
          *
          * ## EXAMPLES
          *
-         *     wp vms square-ticket-mirror stamp-test --product=123
-         *     wp vms square-ticket-mirror stamp-test --product=123 --variation-id=VARIATION_TEST_123 --format=json
+         *     wp bvmgr square-ticket-mirror stamp-test --product=123
+         *     wp bvmgr square-ticket-mirror stamp-test --product=123 --variation-id=VARIATION_TEST_123 --format=json
          *
          * @subcommand stamp-test
          * @when after_wp_load
@@ -257,5 +257,7 @@ if (!class_exists('BVMGR_CLI_Square_Ticket_Mirror_Command')) {
         }
     }
 
+    WP_CLI::add_command('bvmgr square-ticket-mirror', 'BVMGR_CLI_Square_Ticket_Mirror_Command');
+    // Deprecated B4 compatibility alias; retain until the CLI retirement gate is met.
     WP_CLI::add_command('vms square-ticket-mirror', 'BVMGR_CLI_Square_Ticket_Mirror_Command');
 }

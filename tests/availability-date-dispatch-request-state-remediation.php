@@ -166,6 +166,7 @@ function absint($value): int
 }
 
 require_once dirname(__DIR__) . '/includes/runtime-guards.php';
+require_once dirname(__DIR__) . '/includes/core/prefix-b4-compat.php';
 
 $pluginRoot = dirname(__DIR__);
 $adminUiPath = $pluginRoot . '/includes/modules/availability-date-dispatch/admin-ui.php';
@@ -205,9 +206,9 @@ vms_test_assert_not_contains(
 	'ADD dashboard rendering should no longer broad-cast the whole GET array through a generic unslash path.'
 );
 vms_test_assert_contains(
-	"\$token = bvmgr_request_read_scalar(\$_GET, 'vms_add_dispatch_token');",
+	"\$token = bvmgr_get_query_var_compat('bvmgr_add_dispatch_token');",
 	$helpersSource,
-	'ADD response-token lookup should preserve the shared scalar token helper.'
+	'ADD response-token lookup should use the canonical-first B4 query compatibility helper.'
 );
 vms_test_assert_contains(
 	"\$choice = bvmgr_request_read_key(\$_GET, 'choice');",
