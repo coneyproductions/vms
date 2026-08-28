@@ -31,6 +31,7 @@ require_once __DIR__ . '/season-dates.php';
 require_once __DIR__ . '/season-board.php';
 require_once __DIR__ . '/continuity-binder.php';
 require_once __DIR__ . '/ticket-integrity-page.php';
+require_once __DIR__ . '/event-day-report.php';
 require_once __DIR__ . '/../ticketing/ticket-integrity-tours.php';
 require_once __DIR__ . '/docs-page.php';
 
@@ -47,6 +48,7 @@ require_once __DIR__ . '/vendor-comp-packages.php';
 require_once __DIR__ . '/vendor-details.php';
 require_once __DIR__ . '/vendor-command-center.php';
 require_once __DIR__ . '/event-command-center.php';
+require_once __DIR__ . '/event-reschedule.php';
 require_once __DIR__ . '/vendor-booking-onboarding.php';
 require_once __DIR__ . '/vendor-availability.php';
 require_once __DIR__ . '/staffing.php';

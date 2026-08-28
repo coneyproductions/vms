@@ -7,6 +7,7 @@ vms_tests_require_wordpress(__DIR__);
 if (!class_exists('BVMGR_Admin_Event_Plans')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
+require_once dirname(__DIR__) . '/includes/core/event-reschedule.php';
 
 $assert = static function (bool $condition, string $message): void {
 	if ($condition) {
@@ -107,10 +108,12 @@ try {
 	};
 
 	$seedPlanState = static function (int $planId, int $primaryVendorId, string $secondaryType, array $secondaryVendorIds) use ($getPrimaryLineupEntry): void {
+		bvmgr_event_occurrence_authorized_write(static function () use ($planId): void {
+			update_post_meta($planId, '_vms_event_date', '2026-06-12');
+			update_post_meta($planId, '_vms_start_time', '19:00');
+			update_post_meta($planId, '_vms_end_time', '21:00');
+		});
 		update_post_meta($planId, '_vms_event_plan_status', 'published');
-		update_post_meta($planId, '_vms_event_date', '2026-06-12');
-		update_post_meta($planId, '_vms_start_time', '19:00');
-		update_post_meta($planId, '_vms_end_time', '21:00');
 		update_post_meta($planId, '_vms_venue_id', 0);
 		update_post_meta($planId, '_vms_band_vendor_id', $primaryVendorId);
 		update_post_meta($planId, '_vms_secondary_vendor_type', $secondaryType);
@@ -419,11 +422,11 @@ try {
 	$coreSaveAfter = $getRelevantState($planId);
 	$coreSaveDiff = $diffState($coreSaveBefore, $coreSaveAfter);
 	$printDiff('Core save with detached Secondary Vendors', $coreSaveDiff);
-	$assert(($coreSaveAfter['core_details']['event_date'] ?? '') === '2026-06-19', 'Core details save did not persist the updated event date.');
+	$assert(($coreSaveAfter['core_details']['event_date'] ?? '') === '2026-06-12', 'Ordinary save changed the protected published event date.');
 	$assert(($coreSaveAfter['secondary_vendors'] ?? array()) === ($coreSaveBefore['secondary_vendors'] ?? array()), 'Core details save altered Secondary Vendors while the detached module was loaded.');
 	$assert(($coreSaveAfter['staffing'] ?? array()) === ($coreSaveBefore['staffing'] ?? array()), 'Core details save altered staffing while the detached Secondary Vendors module was loaded.');
 	$assert(($coreSaveAfter['ticketing'] ?? array()) === ($coreSaveBefore['ticketing'] ?? array()), 'Core details save altered ticketing overrides while the detached Secondary Vendors module was loaded.');
-	$assert(isset($coreSaveDiff['core_details']) && count($coreSaveDiff) === 1, 'Core details save should only change the core module diff.');
+	$assert(empty($coreSaveDiff), 'Protected published occurrence save should be a no-op across detached modules.');
 
 	$seedPlanState($planId, $primaryVendorId, $foodTruckSlug, array($foodTruckVendorId));
 	$moduleSaveBefore = $getRelevantState($planId);

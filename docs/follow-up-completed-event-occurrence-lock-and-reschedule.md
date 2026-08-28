@@ -22,6 +22,8 @@ Add a separate, deliberate **Reschedule** workflow for the exceptional case wher
 5. re-derive TEC and ticket sale-window state only after those choices are explicit;
 6. avoid silently converting a completed event into a new sale.
 
-## Current boundary
+## Current status
 
-The date-synchronization repair intentionally supports legitimate Event Plan date/time changes made before the linked occurrence closes. It deliberately skips automatic ticket-window reopening when the previously linked TEC occurrence has already ended. The full field lock and exceptional Reschedule workflow remain follow-up product work.
+The published date/time lock and canonical preview/apply workflow are now implemented. The workflow preserves the existing Event Plan and TEC identity, carries current/effective occurrence values across native Woo entitlements, retains purchase-time snapshots, verifies financial/inventory/attendee invariants, and supports repair mode when the Event Plan is already on the new occurrence. See `docs/event-reschedule-safety.md`.
+
+Venue/location changes remain outside this date/time workflow and retain the separate product boundary described above.

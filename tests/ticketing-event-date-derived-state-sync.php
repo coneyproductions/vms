@@ -65,10 +65,10 @@ try {
     $assert(!is_wp_error($eventId) && (int) $eventId > 0, 'Could not create TEC fixture.');
     $eventId = $registerPost((int) $eventId);
 
-    update_post_meta($planId, '_vms_event_plan_status', 'published');
     update_post_meta($planId, '_vms_event_date', $oldDate);
     update_post_meta($planId, '_vms_start_time', '19:00');
     update_post_meta($planId, '_vms_end_time', '22:00');
+    update_post_meta($planId, '_vms_event_plan_status', 'published');
     update_post_meta($planId, '_vms_ticketing_enabled_override', 'on');
     update_post_meta($planId, '_vms_ticketing_sales_mode', 'serenade_range');
     update_post_meta($planId, '_vms_tec_event_id', $eventId);
@@ -172,7 +172,13 @@ try {
     $assert(strpos($availableMarkup, 'Gated Table') !== false && strpos($availableMarkup, 'Ungated Pool') !== false, 'Available native GA should expose gated and ungated add-ons.');
 
     // Reproduce the defect: the plan/config move, while TEC and product windows remain old.
-    update_post_meta($planId, '_vms_event_date', $newDate);
+    if (function_exists('bvmgr_event_occurrence_authorized_write')) {
+        bvmgr_event_occurrence_authorized_write(static function () use ($planId, $newDate): void {
+            update_post_meta($planId, '_vms_event_date', $newDate);
+        });
+    } else {
+        update_post_meta($planId, '_vms_event_date', $newDate);
+    }
     bvmgr_ticketing_v2_set_config($planId, $configForEnd($newEnd));
     $mismatched = bvmgr_ticketing_v2_plan_calendar_alignment($planId, $eventId);
     $assert(!empty($mismatched['checkable']) && empty($mismatched['aligned']), 'Changed Event Plan should be detected as out of sync with TEC.');

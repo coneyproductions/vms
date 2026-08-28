@@ -7596,6 +7596,8 @@ class BVMGR_Admin_Event_Plans
         $event_date     = (string) get_post_meta($post->ID, '_vms_event_date', true);
         $start_time     = (string) get_post_meta($post->ID, '_vms_start_time', true);
         $end_time       = (string) get_post_meta($post->ID, '_vms_end_time', true);
+        $occurrence_locked = function_exists('bvmgr_event_occurrence_is_published')
+            && bvmgr_event_occurrence_is_published((int) $post->ID);
 
         // Venue: saved vs UI default (important for "packages show on first load")
         $venue_id_saved = (int) get_post_meta($post->ID, '_vms_venue_id', true);
@@ -8394,8 +8396,17 @@ class BVMGR_Admin_Event_Plans
         >
         <p class="vms-ep-basic-item">
             <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'backstage-venue-manager'); ?></strong></label><br />
-            <input type="date" id="vms_event_date" name="vms_event_date" value="<?php echo esc_attr($event_date); ?>" />
+            <input type="date" id="vms_event_date" name="vms_event_date" value="<?php echo esc_attr($event_date); ?>"<?php echo $occurrence_locked ? ' disabled aria-disabled="true"' : ''; ?> />
+            <?php if ($occurrence_locked) : ?>
+                <br /><span class="description"><?php esc_html_e('Published event dates are protected. Use the controlled change below.', 'backstage-venue-manager'); ?></span>
+            <?php endif; ?>
         </p>
+
+        <?php if ($occurrence_locked && function_exists('bvmgr_event_occurrence_render_admin_panel')) : ?>
+            <div class="vms-ep-basic-item vms-ep-basic-span">
+                <?php bvmgr_event_occurrence_render_admin_panel((int) $post->ID); ?>
+            </div>
+        <?php endif; ?>
 
         <p class="vms-ep-basic-item">
             <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'backstage-venue-manager'); ?></strong></label><br />
@@ -8832,6 +8843,17 @@ class BVMGR_Admin_Event_Plans
         if (!current_user_can('edit_post', $post_id)) return;
         if (isset($request['post_ID']) && absint($request['post_ID']) > 0 && absint($request['post_ID']) !== $post_id) {
             return;
+        }
+
+        if (function_exists('bvmgr_event_occurrence_lock_editor_request')) {
+            $occurrence_lock = bvmgr_event_occurrence_lock_editor_request($post_id, $request);
+            $request = (array) ($occurrence_lock['request'] ?? $request);
+            if (!empty($occurrence_lock['blocked']) && function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(
+                    __('The published event date/time was not changed. Use “Change event date…” so linked tickets and reservations can be migrated safely.', 'backstage-venue-manager'),
+                    'error'
+                );
+            }
         }
 
         $original_status = isset($request['original_post_status']) ? sanitize_key((string) $request['original_post_status']) : sanitize_key((string) $post->post_status);

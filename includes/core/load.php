@@ -7,6 +7,7 @@ require_once __DIR__ . '/../helpers.php';
 require_once __DIR__ . '/private-files.php';
 require_once __DIR__ . '/../helpers/schedule-helpers.php';
 require_once __DIR__ . '/../helpers/checkin-close.php';
+require_once __DIR__ . '/event-reschedule.php';
 require_once __DIR__ . '/../helpers/image-normalization.php';
 require_once __DIR__ . '/../calendar-queries.php';
 require_once __DIR__ . '/../activation.php';
@@ -58,6 +59,7 @@ if (defined('WP_CLI') && WP_CLI) {
 	require_once __DIR__ . '/cli/stale-check.php';
 	require_once __DIR__ . '/cli/state-of-range.php';
 	require_once __DIR__ . '/cli/square-ticket-mirror.php';
+	require_once __DIR__ . '/cli/event-reschedule.php';
 }
 
 do_action('vms_core_loaded');
