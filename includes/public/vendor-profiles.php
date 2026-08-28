@@ -49,9 +49,9 @@ function bvmgr_vendor_profiles_public_assets(): void
 
     bvmgr_enqueue_public_style_stack();
     bvmgr_enqueue_style_asset(
-        'vms-vendor-profile-public',
+        'bvmgr-vendor-profile-public',
         'assets/css/vendor-profile-public.css',
-        array('vms-ui')
+        array('bvmgr-ui')
     );
 }
 

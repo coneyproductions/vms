@@ -150,7 +150,7 @@ function bvmgr_admin_disable_required_for_tax_fields(): void
         : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
     wp_enqueue_script(
-        'vms-tax-bypass-admin',
+        'bvmgr-tax-bypass-admin',
         BVMGR_PLUGIN_URL . 'assets/js/vms-tax-bypass-admin.js',
         array(),
         $version,

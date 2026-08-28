@@ -1,6 +1,6 @@
 (() => {
-  const config = window.vmsVerificationUpload || {};
-  const imageTools = window.VmsImageNormalize || {};
+  const config = window.BVMGR_VERIFICATION_UPLOAD || {};
+  const imageTools = window.BVMGR_IMAGE_NORMALIZE || {};
   const forms = Array.from(document.querySelectorAll('.vms-verification-form[data-vms-photo-upload="1"]'));
   if (!forms.length) {
     return;

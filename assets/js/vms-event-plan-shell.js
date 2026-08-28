@@ -329,11 +329,11 @@
         section.classList.remove('is-loading');
         delete section.dataset.vmsLazyLoading;
         initExistingSection(section);
-        if (typeof window.vmsEventPlanInitSecondaryVendors === 'function') {
-          window.vmsEventPlanInitSecondaryVendors(body);
+        if (typeof window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS === 'function') {
+          window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);
         }
-        if (typeof window.vmsEventPlanInitStaff === 'function') {
-          window.vmsEventPlanInitStaff(body);
+        if (typeof window.BVMGR_EVENT_PLAN_INIT_STAFF === 'function') {
+          window.BVMGR_EVENT_PLAN_INIT_STAFF(body);
         }
         return true;
       } catch (error) {
@@ -474,10 +474,10 @@
       revealRequestedSection();
     }
 
-    window.vmsEventPlanInitCollapsibleSection = initExistingSection;
-    window.vmsEventPlanInitCollapsibleSections = initCollapsibleSections;
-    window.vmsEventPlanPersistRequestedSection = persistRequestedSection;
-    window.vmsEventPlanRevealRequestedSection = revealRequestedSection;
+    window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION = initExistingSection;
+    window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTIONS = initCollapsibleSections;
+    window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION = persistRequestedSection;
+    window.BVMGR_EVENT_PLAN_REVEAL_REQUESTED_SECTION = revealRequestedSection;
 
     shellController = {
       initCollapsibleSections: initCollapsibleSections

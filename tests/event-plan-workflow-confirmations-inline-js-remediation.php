@@ -119,7 +119,7 @@ try {
 		'Refund execution is currently failed or blocked. Retrying all steps may attempt refund execution again. Continue?',
 		'button.dataset.vmsWorkflowRetryBound === \'1\'',
 		'vms_run_live_refunds_now_button',
-		'Run LIVE refunds now for this already-cancelled event? This does not save the Event Plan. VMS will attempt WooCommerce gateway refunds for remaining eligible ticket lines and queue anything unsafe for manual review.',
+		'Run LIVE refunds now for this already-cancelled event? This does not save the Event Plan. Backstage Venue Manager will attempt WooCommerce gateway refunds for remaining eligible ticket lines and queue anything unsafe for manual review.',
 		'window.alert(\'Unable to start the live refund action because the request link is missing.\');',
 		'button.classList.add(\'disabled\');',
 		'button.setAttribute(\'aria-disabled\', \'true\');',
@@ -133,7 +133,7 @@ try {
 		'stop_sales_auto_refund',
 		'stop_sales_auto_refund_remove_attendees',
 		'Are you sure you want to mark this event as Cancelled?',
-		'VMS will also create a linked Draft Event Plan for ',
+		'Backstage Venue Manager will also create a linked Draft Event Plan for ',
 		'This will attempt LIVE payment refunds for matching ticket orders through WooCommerce. Mixed orders will refund only the cancelled event ticket lines when possible, and anything unsafe will be queued for manual review.',
 		'button.dataset.vmsWorkflowMarkCancelledBound === \'1\'',
 		'event.preventDefault();',
@@ -148,7 +148,7 @@ try {
 	$assert(strpos($primaryVendorAssetSource, 'vms_tax_bypass_set') !== false, 'Primary-vendor asset should remain the owner of tax-bypass behavior.');
 
 	$assert(
-		preg_match("/wp_enqueue_script\\(\\s*'vms-event-plan-workflow',\\s*BVMGR_PLUGIN_URL \\. 'assets\\/js\\/vms-event-plan-workflow\\.js',\\s*array\\(\\),\\s*bvmgr_admin_ui_asset_version\\(\\),\\s*true\\s*\\);/s", $adminUiAssetsSource) === 1,
+		preg_match("/wp_enqueue_script\\(\\s*'bvmgr-event-plan-workflow',\\s*BVMGR_PLUGIN_URL \\. 'assets\\/js\\/vms-event-plan-workflow\\.js',\\s*array\\(\\),\\s*bvmgr_admin_ui_asset_version\\(\\),\\s*true\\s*\\);/s", $adminUiAssetsSource) === 1,
 		'Admin UI assets should register the workflow asset under the dedicated handle with no dependencies.'
 	);
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Workflow asset should remain restricted to post and post-new screens.');

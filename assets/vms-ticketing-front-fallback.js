@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var cfg = window.vmsTicketingFront || {};
+  var cfg = window.BVMGR_TICKETING_FRONT || {};
   function configFlag(value) {
     if (value === true || value === 1) {
       return true;
@@ -16,7 +16,7 @@
   }
 
   function activeBundleOwnsPage() {
-    var bundle = window.__vmsTicketingFrontBundle || {};
+    var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
     var state = bundle.state || null;
     return !!(bundle.loaded && state && state.form && state.form.ownerDocument === document && state.form.isConnected);
   }
@@ -91,7 +91,7 @@
   }
 
   function getBundleState() {
-    return (window.__vmsTicketingFrontBundle && window.__vmsTicketingFrontBundle.state) || null;
+    return (window.BVMGR_TICKETING_FRONT_BUNDLE && window.BVMGR_TICKETING_FRONT_BUNDLE.state) || null;
   }
 
   function alreadyHandled(block) {

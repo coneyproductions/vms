@@ -113,30 +113,30 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
  
 	// Shared foundation
 	wp_enqueue_style(
-		'vms-shared',
+		'bvmgr-shared',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-shared.css',
 		[],
 		$ver
 	);
 
 	wp_enqueue_style(
-		'vms-ui',
+		'bvmgr-ui',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-ui.css',
-		['vms-shared'],
+		['bvmgr-shared'],
 		$ver
 	);
 
 	// Admin-specific
 	wp_enqueue_style(
-		'vms-admin',
+		'bvmgr-admin',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-admin.css',
-		['vms-ui'],
+		['bvmgr-ui'],
 		$ver
 	);
 
 	// Prevent accidental mouse-wheel changes on number fields across VMS screens.
 	wp_enqueue_script(
-		'vms-number-input-guard',
+		'bvmgr-number-input-guard',
 		BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js',
 		[],
 		$ver,
@@ -151,7 +151,7 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 	}
 	if ($help_mode !== 'off') {
 		wp_enqueue_script(
-			'vms-help-tooltips',
+			'bvmgr-help-tooltips',
 			BVMGR_PLUGIN_URL . 'assets/admin-help-tooltips.js',
 			[],
 			$ver,
@@ -173,22 +173,22 @@ add_action('wp_enqueue_scripts', function (): void {
 
 	// Shared foundation
 	wp_enqueue_style(
-		'vms-shared',
+		'bvmgr-shared',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-shared.css',
 		[],
 		$ver
 	);
 
 	wp_enqueue_style(
-		'vms-ui',
+		'bvmgr-ui',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-ui.css',
-		['vms-shared'],
+		['bvmgr-shared'],
 		$ver
 	);
 
 	// Prevent accidental mouse-wheel changes on number fields across VMS public forms.
 	wp_enqueue_script(
-		'vms-number-input-guard',
+		'bvmgr-number-input-guard',
 		BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js',
 		[],
 		$ver,
@@ -206,9 +206,9 @@ add_action('wp_enqueue_scripts', function (): void {
 	}
 
 	wp_register_style(
-		'vms-portal',
+		'bvmgr-portal',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-portal.css',
-		['vms-ui'],
+		['bvmgr-ui'],
 		$portal_ver
 	);
 	// Portal stylesheet
@@ -219,7 +219,7 @@ add_action('wp_enqueue_scripts', function (): void {
 	// will not affect other public pages.
 	$should = apply_filters('vms_should_enqueue_portal_assets', true);
 	if ($should !== false) {
-		wp_enqueue_style('vms-portal');
+		wp_enqueue_style('bvmgr-portal');
 	}
 }, 20);
 

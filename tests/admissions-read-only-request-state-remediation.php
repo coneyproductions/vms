@@ -370,7 +370,7 @@ $GLOBALS['vms_test_localized'] = array();
 $GLOBALS['post'] = null;
 $_GET = array('post' => '17');
 bvmgr_admission_admin_enqueue_assets();
-vms_test_assert_same(17, $GLOBALS['vms_test_localized']['vms-admissions-admin']['data']['eventPlanId'] ?? null, 'Admissions admin assets should preserve scalar post IDs.');
+vms_test_assert_same(17, $GLOBALS['vms_test_localized']['bvmgr-admissions-admin']['data']['eventPlanId'] ?? null, 'Admissions admin assets should preserve scalar post IDs.');
 
 $GLOBALS['vms_test_styles'] = array();
 $GLOBALS['vms_test_scripts'] = array();
@@ -378,7 +378,7 @@ $GLOBALS['vms_test_localized'] = array();
 $GLOBALS['post'] = new WP_Post(25);
 $_GET = array('post' => array('17'));
 bvmgr_admission_admin_enqueue_assets();
-vms_test_assert_same(25, $GLOBALS['vms_test_localized']['vms-admissions-admin']['data']['eventPlanId'] ?? null, 'Admissions admin assets should reject array-shaped post IDs and fall back to the current post object.');
+vms_test_assert_same(25, $GLOBALS['vms_test_localized']['bvmgr-admissions-admin']['data']['eventPlanId'] ?? null, 'Admissions admin assets should reject array-shaped post IDs and fall back to the current post object.');
 
 $_GET = array('page' => 'vms-passes');
 vms_test_assert_same(true, bvmgr_pass_claims_is_admin_page(), 'Pass Claims admin-page detection should preserve the valid scalar page slug.');

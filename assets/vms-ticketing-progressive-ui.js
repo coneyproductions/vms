@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var cfg = window.vmsTicketingFront || {};
+  var cfg = window.BVMGR_TICKETING_FRONT || {};
   var layout = String(cfg.uiLayout || '').trim().toLowerCase();
   var progressiveEnabled = String(cfg.uiProgressive || '') === '1' || layout === 'progressive';
   if (!progressiveEnabled) {

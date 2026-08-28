@@ -1555,7 +1555,7 @@ if (!function_exists('bvmgr_public_calendar_shortcode_handler')) {
 			}
 		}
 		wp_enqueue_script(
-			'vms-public-calendar',
+			'bvmgr-public-calendar',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-public-calendar.js',
 			array(),
 			$calendar_script_ver,

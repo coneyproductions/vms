@@ -105,8 +105,8 @@ if (!function_exists('bvmgr_enqueue_style_asset')) {
 if (!function_exists('bvmgr_enqueue_public_style_stack')) {
     function bvmgr_enqueue_public_style_stack(): void
     {
-        bvmgr_enqueue_style_asset('vms-shared', 'assets/css/vms-shared.css');
-        bvmgr_enqueue_style_asset('vms-ui', 'assets/css/vms-ui.css', array('vms-shared'));
+        bvmgr_enqueue_style_asset('bvmgr-shared', 'assets/css/vms-shared.css');
+        bvmgr_enqueue_style_asset('bvmgr-ui', 'assets/css/vms-ui.css', array('bvmgr-shared'));
     }
 }
 
@@ -114,7 +114,7 @@ if (!function_exists('bvmgr_enqueue_admin_style_stack')) {
     function bvmgr_enqueue_admin_style_stack(): void
     {
         bvmgr_enqueue_public_style_stack();
-        bvmgr_enqueue_style_asset('vms-admin', 'assets/css/vms-admin.css', array('vms-ui'));
+        bvmgr_enqueue_style_asset('bvmgr-admin', 'assets/css/vms-admin.css', array('bvmgr-ui'));
     }
 }
 
@@ -122,7 +122,7 @@ if (!function_exists('bvmgr_enqueue_portal_style_stack')) {
     function bvmgr_enqueue_portal_style_stack(): void
     {
         bvmgr_enqueue_public_style_stack();
-        bvmgr_enqueue_style_asset('vms-portal', 'assets/css/vms-portal.css', array('vms-ui'));
+        bvmgr_enqueue_style_asset('bvmgr-portal', 'assets/css/vms-portal.css', array('bvmgr-ui'));
     }
 }
 

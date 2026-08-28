@@ -1,0 +1,2783 @@
+{
+    "schema_version": 1,
+    "authority": "docs/wporg-prefix-b4-identifier-map.json",
+    "items": [
+        {
+            "compatibility_identifier": "vms",
+            "canonical_replacement": "bvmgr",
+            "compatibility_type": "legacy_cli_alias",
+            "reason_retained": "Operator scripts may still invoke the legacy path.",
+            "minimum_safe_lifetime": "At least one public compatibility release with a documented deprecation notice.",
+            "removal_condition": "Operator automation audit confirms canonical paths and the deprecation window has elapsed.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms square-ticket-mirror",
+            "canonical_replacement": "bvmgr square-ticket-mirror",
+            "compatibility_type": "legacy_cli_alias",
+            "reason_retained": "Operator scripts may still invoke the legacy path.",
+            "minimum_safe_lifetime": "At least one public compatibility release with a documented deprecation notice.",
+            "removal_condition": "Operator automation audit confirms canonical paths and the deprecation window has elapsed.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms state-of-range",
+            "canonical_replacement": "bvmgr state-of-range",
+            "compatibility_type": "legacy_cli_alias",
+            "reason_retained": "Operator scripts may still invoke the legacy path.",
+            "minimum_safe_lifetime": "At least one public compatibility release with a documented deprecation notice.",
+            "removal_condition": "Operator automation audit confirms canonical paths and the deprecation window has elapsed.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_admin_heavy_nonce",
+            "canonical_replacement": "_bvmgr_admin_heavy_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_cb_nonce",
+            "canonical_replacement": "_bvmgr_cb_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_cc_promo_nonce",
+            "canonical_replacement": "_bvmgr_cc_promo_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_ep_list_nonce",
+            "canonical_replacement": "_bvmgr_ep_list_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_headliner_promo_video_nonce",
+            "canonical_replacement": "_bvmgr_headliner_promo_video_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_headliner_promo_video_remove_nonce",
+            "canonical_replacement": "_bvmgr_headliner_promo_video_remove_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_pass_claim_nonce",
+            "canonical_replacement": "_bvmgr_pass_claim_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_resync_calendar_nonce",
+            "canonical_replacement": "_bvmgr_resync_calendar_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_vendor_app_resend_nonce",
+            "canonical_replacement": "_bvmgr_vendor_app_resend_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_vendor_guest_nonce",
+            "canonical_replacement": "_bvmgr_vendor_guest_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_vendor_interest_nonce",
+            "canonical_replacement": "_bvmgr_vendor_interest_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_vendor_link_request_nonce",
+            "canonical_replacement": "_bvmgr_vendor_link_request_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "_vms_vendor_withdraw_nonce",
+            "canonical_replacement": "_bvmgr_vendor_withdraw_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_assignment_nonce",
+            "canonical_replacement": "bvmgr_add_dispatch_assignment_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_nonce",
+            "canonical_replacement": "bvmgr_add_dispatch_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_admin_heavy_nonce",
+            "canonical_replacement": "_bvmgr_admin_heavy_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_avail_nonce",
+            "canonical_replacement": "bvmgr_avail_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_comp_package_nonce",
+            "canonical_replacement": "bvmgr_comp_package_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_create_venue_from_template_nonce",
+            "canonical_replacement": "bvmgr_create_venue_from_template_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_current_venue_nonce",
+            "canonical_replacement": "bvmgr_current_venue_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_dash_venue_nonce",
+            "canonical_replacement": "bvmgr_dash_venue_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_employee_packet_nonce",
+            "canonical_replacement": "bvmgr_employee_packet_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_credit_nonce",
+            "canonical_replacement": "bvmgr_event_credit_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_details_nonce",
+            "canonical_replacement": "bvmgr_event_plan_details_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_express_bar_nonce",
+            "canonical_replacement": "bvmgr_express_bar_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_express_bar_order_nonce",
+            "canonical_replacement": "bvmgr_express_bar_order_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_feedback_delete_nonce",
+            "canonical_replacement": "bvmgr_feedback_delete_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_feedback_nonce",
+            "canonical_replacement": "bvmgr_feedback_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_feedback_settings_nonce",
+            "canonical_replacement": "bvmgr_feedback_settings_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_goals_event_finance_nonce",
+            "canonical_replacement": "bvmgr_goals_event_finance_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_holidays_nonce",
+            "canonical_replacement": "bvmgr_holidays_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ics_nonce",
+            "canonical_replacement": "bvmgr_ics_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pattern_nonce",
+            "canonical_replacement": "bvmgr_pattern_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_preview_nonce",
+            "canonical_replacement": "bvmgr_preview_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_rating_details_nonce",
+            "canonical_replacement": "bvmgr_rating_details_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_rating_nonce",
+            "canonical_replacement": "bvmgr_rating_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_season_dates_nonce",
+            "canonical_replacement": "bvmgr_season_dates_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_event_panel_nonce",
+            "canonical_replacement": "bvmgr_social_event_panel_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_avail_nonce",
+            "canonical_replacement": "bvmgr_staff_avail_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_certification_nonce",
+            "canonical_replacement": "bvmgr_staff_certification_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_employee_packet_nonce",
+            "canonical_replacement": "bvmgr_staff_employee_packet_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_ics_nonce",
+            "canonical_replacement": "bvmgr_staff_ics_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_pattern_nonce",
+            "canonical_replacement": "bvmgr_staff_pattern_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_qualifications_nonce",
+            "canonical_replacement": "bvmgr_staff_qualifications_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_tax_nonce",
+            "canonical_replacement": "bvmgr_staff_tax_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_user_link_nonce",
+            "canonical_replacement": "bvmgr_staff_user_link_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_vendor_link_nonce",
+            "canonical_replacement": "bvmgr_staff_vendor_link_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_worker_type_nonce",
+            "canonical_replacement": "bvmgr_staff_worker_type_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tax_admin_nonce",
+            "canonical_replacement": "bvmgr_tax_admin_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tax_bypass_nonce",
+            "canonical_replacement": "bvmgr_tax_bypass_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_techdocs_nonce",
+            "canonical_replacement": "bvmgr_techdocs_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_app_decision_nonce",
+            "canonical_replacement": "bvmgr_vendor_app_decision_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_apply_nonce",
+            "canonical_replacement": "bvmgr_vendor_apply_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_booking_onboarding_nonce",
+            "canonical_replacement": "bvmgr_vendor_booking_onboarding_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_command_center_link_nonce",
+            "canonical_replacement": "bvmgr_vendor_command_center_link_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_command_center_nonce",
+            "canonical_replacement": "bvmgr_vendor_command_center_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_command_center_template_nonce",
+            "canonical_replacement": "bvmgr_vendor_command_center_template_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_defaults_nonce",
+            "canonical_replacement": "bvmgr_vendor_defaults_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_details_nonce",
+            "canonical_replacement": "bvmgr_vendor_details_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_profile_nonce",
+            "canonical_replacement": "bvmgr_vendor_profile_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_public_profile_nonce",
+            "canonical_replacement": "bvmgr_vendor_public_profile_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_staff_link_nonce",
+            "canonical_replacement": "bvmgr_vendor_staff_link_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_tax_nonce",
+            "canonical_replacement": "bvmgr_vendor_tax_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_user_links_nonce",
+            "canonical_replacement": "bvmgr_vendor_user_links_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_venue_comp_defaults_nonce",
+            "canonical_replacement": "bvmgr_venue_comp_defaults_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_venue_default_times_nonce",
+            "canonical_replacement": "bvmgr_venue_default_times_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_venue_location_nonce",
+            "canonical_replacement": "bvmgr_venue_location_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_venue_schedule_nonce",
+            "canonical_replacement": "bvmgr_venue_schedule_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_venue_template_nonce",
+            "canonical_replacement": "bvmgr_venue_template_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_verification_allowances_nonce",
+            "canonical_replacement": "bvmgr_verification_allowances_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_verification_nonce",
+            "canonical_replacement": "bvmgr_verification_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_verification_programs_nonce",
+            "canonical_replacement": "bvmgr_verification_programs_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_verification_upload_settings_nonce",
+            "canonical_replacement": "bvmgr_verification_upload_settings_nonce",
+            "compatibility_type": "legacy_nonce_field_read",
+            "reason_retained": "Already-rendered or cached forms can submit the legacy request-field name.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical field producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_assign_vendor_{*}",
+            "canonical_replacement": "bvmgr_add_dispatch_assign_vendor_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_assignment_review_{*}",
+            "canonical_replacement": "bvmgr_add_dispatch_assignment_review_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_close_request_{*}",
+            "canonical_replacement": "bvmgr_add_dispatch_close_request_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_confirm_assignment_{*}",
+            "canonical_replacement": "bvmgr_add_dispatch_confirm_assignment_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_resend_response_{*}",
+            "canonical_replacement": "bvmgr_add_dispatch_resend_response_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_send_request",
+            "canonical_replacement": "bvmgr_add_dispatch_send_request",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_admin_heavy:{*}",
+            "canonical_replacement": "bvmgr_admin_heavy:{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_admissions_export_csv_{*}",
+            "canonical_replacement": "bvmgr_admissions_export_csv_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_avail_ajax",
+            "canonical_replacement": "bvmgr_avail_ajax",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_budget_calc",
+            "canonical_replacement": "bvmgr_budget_calc",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_cc_promo_video_{*}",
+            "canonical_replacement": "bvmgr_cc_promo_video_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_clear_resource_fingerprints",
+            "canonical_replacement": "bvmgr_clear_resource_fingerprints",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_comp_options",
+            "canonical_replacement": "bvmgr_comp_options",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_create_event_plan_{*}",
+            "canonical_replacement": "bvmgr_create_event_plan_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_create_staff_from_vendor_{*}",
+            "canonical_replacement": "bvmgr_create_staff_from_vendor_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_create_venue_from_template",
+            "canonical_replacement": "bvmgr_create_venue_from_template",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_dismiss_first_run_notice",
+            "canonical_replacement": "bvmgr_dismiss_first_run_notice",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_add_obligation",
+            "canonical_replacement": "bvmgr_due_add_obligation",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_add_payee",
+            "canonical_replacement": "bvmgr_due_add_payee",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_archive_obligation",
+            "canonical_replacement": "bvmgr_due_archive_obligation",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_archive_payee",
+            "canonical_replacement": "bvmgr_due_archive_payee",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_complete",
+            "canonical_replacement": "bvmgr_due_complete",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_edit_obligation",
+            "canonical_replacement": "bvmgr_due_edit_obligation",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_edit_payee",
+            "canonical_replacement": "bvmgr_due_edit_payee",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_seed_templates",
+            "canonical_replacement": "bvmgr_due_seed_templates",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_due_uncomplete",
+            "canonical_replacement": "bvmgr_due_uncomplete",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_duplicate_venue_{*}",
+            "canonical_replacement": "bvmgr_duplicate_venue_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_email_followups_clear_logs",
+            "canonical_replacement": "bvmgr_email_followups_clear_logs",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_email_followups_manual_send",
+            "canonical_replacement": "bvmgr_email_followups_manual_send",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_email_followups_save_settings",
+            "canonical_replacement": "bvmgr_email_followups_save_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_email_followups_send_test",
+            "canonical_replacement": "bvmgr_email_followups_send_test",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_employee_packet_ack",
+            "canonical_replacement": "bvmgr_employee_packet_ack",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_admin_section",
+            "canonical_replacement": "bvmgr_event_plan_admin_section",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_calendar_unpublished_suppress_save",
+            "canonical_replacement": "bvmgr_event_plan_calendar_unpublished_suppress_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_import_commit",
+            "canonical_replacement": "bvmgr_event_plan_import_commit",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_import_download_report_{*}",
+            "canonical_replacement": "bvmgr_event_plan_import_download_report_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_import_download_sample_csv",
+            "canonical_replacement": "bvmgr_event_plan_import_download_sample_csv",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_import_preview",
+            "canonical_replacement": "bvmgr_event_plan_import_preview",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_import_revert_last",
+            "canonical_replacement": "bvmgr_event_plan_import_revert_last",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_list_filters",
+            "canonical_replacement": "bvmgr_event_plan_list_filters",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_secondary_vendors_save",
+            "canonical_replacement": "bvmgr_event_plan_secondary_vendors_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_event_plan_ticket_ui_overrides_save",
+            "canonical_replacement": "bvmgr_event_plan_ticket_ui_overrides_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_express_bar_add_{*}",
+            "canonical_replacement": "bvmgr_express_bar_add_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_express_bar_save_{*}",
+            "canonical_replacement": "bvmgr_express_bar_save_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_express_bar_update_order_{*}_{*}",
+            "canonical_replacement": "bvmgr_express_bar_update_order_{*}_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_feedback_delete_response_{*}",
+            "canonical_replacement": "bvmgr_feedback_delete_response_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_feedback_save_settings",
+            "canonical_replacement": "bvmgr_feedback_save_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_feedback_submit_{*}",
+            "canonical_replacement": "bvmgr_feedback_submit_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_get_venue_comp_defaults",
+            "canonical_replacement": "bvmgr_get_venue_comp_defaults",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_goals_activate_goal_{*}",
+            "canonical_replacement": "bvmgr_goals_activate_goal_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_goals_delete_goal_{*}",
+            "canonical_replacement": "bvmgr_goals_delete_goal_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_goals_event_finance_save",
+            "canonical_replacement": "bvmgr_goals_event_finance_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_goals_refresh_event_actuals_{*}",
+            "canonical_replacement": "bvmgr_goals_refresh_event_actuals_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_goals_save_goal",
+            "canonical_replacement": "bvmgr_goals_save_goal",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_goals_save_settings",
+            "canonical_replacement": "bvmgr_goals_save_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_holidays_bulk_delete",
+            "canonical_replacement": "bvmgr_holidays_bulk_delete",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_holidays_delete",
+            "canonical_replacement": "bvmgr_holidays_delete",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_holidays_save",
+            "canonical_replacement": "bvmgr_holidays_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_holidays_{*}",
+            "canonical_replacement": "bvmgr_holidays_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ics_settings",
+            "canonical_replacement": "bvmgr_ics_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_integrity_calendar_links_action",
+            "canonical_replacement": "bvmgr_integrity_calendar_links_action",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_integrity_scan",
+            "canonical_replacement": "bvmgr_integrity_scan",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_integrity_venue_links_action",
+            "canonical_replacement": "bvmgr_integrity_venue_links_action",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_batch_generate",
+            "canonical_replacement": "bvmgr_pass_batch_generate",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_claim_submit",
+            "canonical_replacement": "bvmgr_pass_claim_submit",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_export_{*}",
+            "canonical_replacement": "bvmgr_pass_export_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_report_export_{*}",
+            "canonical_replacement": "bvmgr_pass_report_export_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_resend_email_{*}",
+            "canonical_replacement": "bvmgr_pass_resend_email_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_source_save",
+            "canonical_replacement": "bvmgr_pass_source_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_token_status_{*}_unclaimed",
+            "canonical_replacement": "bvmgr_pass_token_status_{*}_unclaimed",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_token_status_{*}_void",
+            "canonical_replacement": "bvmgr_pass_token_status_{*}_void",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pass_token_status_{*}_{*}",
+            "canonical_replacement": "bvmgr_pass_token_status_{*}_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_pattern_settings",
+            "canonical_replacement": "bvmgr_pattern_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_preview_vendor_portal_{*}",
+            "canonical_replacement": "bvmgr_preview_vendor_portal_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_private_staff_cert_download_{*}_{*}",
+            "canonical_replacement": "bvmgr_private_staff_cert_download_{*}_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_private_w9_download_{*}",
+            "canonical_replacement": "bvmgr_private_w9_download_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_reconcile_ticketing_stock",
+            "canonical_replacement": "bvmgr_reconcile_ticketing_stock",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_repair_pages",
+            "canonical_replacement": "bvmgr_repair_pages",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_resync_calendar",
+            "canonical_replacement": "bvmgr_resync_calendar",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_run_live_refunds_now_{*}",
+            "canonical_replacement": "bvmgr_run_live_refunds_now_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_availability",
+            "canonical_replacement": "bvmgr_save_availability",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_comp_package",
+            "canonical_replacement": "bvmgr_save_comp_package",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_continuity_binder",
+            "canonical_replacement": "bvmgr_save_continuity_binder",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_event_credit",
+            "canonical_replacement": "bvmgr_save_event_credit",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_event_plan_details",
+            "canonical_replacement": "bvmgr_save_event_plan_details",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_rating_details",
+            "canonical_replacement": "bvmgr_save_rating_details",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_tax_bypass",
+            "canonical_replacement": "bvmgr_save_tax_bypass",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_vendor_defaults",
+            "canonical_replacement": "bvmgr_save_vendor_defaults",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_vendor_details",
+            "canonical_replacement": "bvmgr_save_vendor_details",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_vendor_public_profile",
+            "canonical_replacement": "bvmgr_save_vendor_public_profile",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_venue_comp_defaults",
+            "canonical_replacement": "bvmgr_save_venue_comp_defaults",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_venue_default_times",
+            "canonical_replacement": "bvmgr_save_venue_default_times",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_venue_location",
+            "canonical_replacement": "bvmgr_save_venue_location",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_venue_schedule",
+            "canonical_replacement": "bvmgr_save_venue_schedule",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_venue_template",
+            "canonical_replacement": "bvmgr_save_venue_template",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_verification_allowances",
+            "canonical_replacement": "bvmgr_save_verification_allowances",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_verification_programs",
+            "canonical_replacement": "bvmgr_save_verification_programs",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_save_verification_upload_settings",
+            "canonical_replacement": "bvmgr_save_verification_upload_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_season_dates_{*}",
+            "canonical_replacement": "bvmgr_season_dates_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_set_current_venue",
+            "canonical_replacement": "bvmgr_set_current_venue",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_set_dashboard_prefs",
+            "canonical_replacement": "bvmgr_set_dashboard_prefs",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_set_dashboard_venue",
+            "canonical_replacement": "bvmgr_set_dashboard_venue",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_set_default_venue_{*}",
+            "canonical_replacement": "bvmgr_set_default_venue_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_delete_account",
+            "canonical_replacement": "bvmgr_social_delete_account",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_delete_template",
+            "canonical_replacement": "bvmgr_social_delete_template",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_delete_venue_map",
+            "canonical_replacement": "bvmgr_social_delete_venue_map",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_event_panel_save",
+            "canonical_replacement": "bvmgr_social_event_panel_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_event_queue",
+            "canonical_replacement": "bvmgr_social_event_queue",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_load_event_panel",
+            "canonical_replacement": "bvmgr_social_load_event_panel",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_queue_cancel",
+            "canonical_replacement": "bvmgr_social_queue_cancel",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_queue_retry",
+            "canonical_replacement": "bvmgr_social_queue_retry",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_run_queue_now",
+            "canonical_replacement": "bvmgr_social_run_queue_now",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_save_account",
+            "canonical_replacement": "bvmgr_social_save_account",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_save_settings",
+            "canonical_replacement": "bvmgr_social_save_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_save_template",
+            "canonical_replacement": "bvmgr_social_save_template",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_social_save_venue_map",
+            "canonical_replacement": "bvmgr_social_save_venue_map",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_square_sync_protection_csv",
+            "canonical_replacement": "bvmgr_square_sync_protection_csv",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_square_sync_protection_repair",
+            "canonical_replacement": "bvmgr_square_sync_protection_repair",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_square_sync_protection_scan",
+            "canonical_replacement": "bvmgr_square_sync_protection_scan",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_square_ticket_mirror_action_{*}_clear_error",
+            "canonical_replacement": "bvmgr_square_ticket_mirror_action_{*}_clear_error",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_square_ticket_mirror_action_{*}_mirror",
+            "canonical_replacement": "bvmgr_square_ticket_mirror_action_{*}_mirror",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_square_ticket_mirror_action_{*}_refresh",
+            "canonical_replacement": "bvmgr_square_ticket_mirror_action_{*}_refresh",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_square_ticket_mirror_action_{*}_retire",
+            "canonical_replacement": "bvmgr_square_ticket_mirror_action_{*}_retire",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_square_ticket_mirror_action_{*}_{*}",
+            "canonical_replacement": "bvmgr_square_ticket_mirror_action_{*}_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_avail_ajax",
+            "canonical_replacement": "bvmgr_staff_avail_ajax",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_certification_submit",
+            "canonical_replacement": "bvmgr_staff_certification_submit",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_employee_packet_save",
+            "canonical_replacement": "bvmgr_staff_employee_packet_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_ics_settings",
+            "canonical_replacement": "bvmgr_staff_ics_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_pattern_settings",
+            "canonical_replacement": "bvmgr_staff_pattern_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_qualifications_save",
+            "canonical_replacement": "bvmgr_staff_qualifications_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_save_availability",
+            "canonical_replacement": "bvmgr_staff_save_availability",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_tax_clear_complete_{*}",
+            "canonical_replacement": "bvmgr_staff_tax_clear_complete_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_tax_mark_complete_{*}",
+            "canonical_replacement": "bvmgr_staff_tax_mark_complete_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_tax_save",
+            "canonical_replacement": "bvmgr_staff_tax_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_user_link_save",
+            "canonical_replacement": "bvmgr_staff_user_link_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_vendor_link_save",
+            "canonical_replacement": "bvmgr_staff_vendor_link_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staff_worker_type_save",
+            "canonical_replacement": "bvmgr_staff_worker_type_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staffing_rollups_run",
+            "canonical_replacement": "bvmgr_staffing_rollups_run",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staffing_template_delete",
+            "canonical_replacement": "bvmgr_staffing_template_delete",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_staffing_template_save",
+            "canonical_replacement": "bvmgr_staffing_template_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_status_notice_bulk",
+            "canonical_replacement": "bvmgr_status_notice_bulk",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_status_notice_duplicate_{*}",
+            "canonical_replacement": "bvmgr_status_notice_duplicate_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_status_notice_object_search",
+            "canonical_replacement": "bvmgr_status_notice_object_search",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_status_notice_save",
+            "canonical_replacement": "bvmgr_status_notice_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_status_notice_toggle_{*}",
+            "canonical_replacement": "bvmgr_status_notice_toggle_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_status_notice_trash_{*}",
+            "canonical_replacement": "bvmgr_status_notice_trash_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_submit_rating",
+            "canonical_replacement": "bvmgr_submit_rating",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_submit_verification_request",
+            "canonical_replacement": "bvmgr_submit_verification_request",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_sync_entitlement_images",
+            "canonical_replacement": "bvmgr_sync_entitlement_images",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tasks_create_one_off",
+            "canonical_replacement": "bvmgr_tasks_create_one_off",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tasks_generate_event_{*}",
+            "canonical_replacement": "bvmgr_tasks_generate_event_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tasks_save_checklist",
+            "canonical_replacement": "bvmgr_tasks_save_checklist",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tasks_save_settings",
+            "canonical_replacement": "bvmgr_tasks_save_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tasks_save_template",
+            "canonical_replacement": "bvmgr_tasks_save_template",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tasks_transition",
+            "canonical_replacement": "bvmgr_tasks_transition",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tasks_update_assignment",
+            "canonical_replacement": "bvmgr_tasks_update_assignment",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tax_admin_save",
+            "canonical_replacement": "bvmgr_tax_admin_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tax_bypass_ajax",
+            "canonical_replacement": "bvmgr_tax_bypass_ajax",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_techdocs_save",
+            "canonical_replacement": "bvmgr_techdocs_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_cleanup_duplicates",
+            "canonical_replacement": "bvmgr_ticket_integrity_cleanup_duplicates",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_dry_run_daily_report",
+            "canonical_replacement": "bvmgr_ticket_integrity_dry_run_daily_report",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_export_report",
+            "canonical_replacement": "bvmgr_ticket_integrity_export_report",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_preview_daily_report",
+            "canonical_replacement": "bvmgr_ticket_integrity_preview_daily_report",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_rebuild",
+            "canonical_replacement": "bvmgr_ticket_integrity_rebuild",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_run_event_scan",
+            "canonical_replacement": "bvmgr_ticket_integrity_run_event_scan",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_run_scan",
+            "canonical_replacement": "bvmgr_ticket_integrity_run_scan",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_save_settings",
+            "canonical_replacement": "bvmgr_ticket_integrity_save_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_send_daily_report",
+            "canonical_replacement": "bvmgr_ticket_integrity_send_daily_report",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticket_integrity_send_daily_report_test",
+            "canonical_replacement": "bvmgr_ticket_integrity_send_daily_report_test",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_claims_create_grant",
+            "canonical_replacement": "bvmgr_ticketing_claims_create_grant",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_claims_log_client_action",
+            "canonical_replacement": "bvmgr_ticketing_claims_log_client_action",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_claims_release_reservation_{*}",
+            "canonical_replacement": "bvmgr_ticketing_claims_release_reservation_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_claims_set_grant_status_{*}",
+            "canonical_replacement": "bvmgr_ticketing_claims_set_grant_status_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_claims_update_grant_note_{*}",
+            "canonical_replacement": "bvmgr_ticketing_claims_update_grant_note_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_claims_validate_assignee",
+            "canonical_replacement": "bvmgr_ticketing_claims_validate_assignee",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_nonce",
+            "canonical_replacement": "bvmgr_ticketing_nonce",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_stock_clear_preview",
+            "canonical_replacement": "bvmgr_ticketing_stock_clear_preview",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_stock_commit",
+            "canonical_replacement": "bvmgr_ticketing_stock_commit",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_stock_csv",
+            "canonical_replacement": "bvmgr_ticketing_stock_csv",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_stock_preview",
+            "canonical_replacement": "bvmgr_ticketing_stock_preview",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_v2_atomic_add_to_cart",
+            "canonical_replacement": "bvmgr_ticketing_v2_atomic_add_to_cart",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_v2_cart_context",
+            "canonical_replacement": "bvmgr_ticketing_v2_cart_context",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_ticketing_v2_silent_add",
+            "canonical_replacement": "bvmgr_ticketing_v2_silent_add",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tours",
+            "canonical_replacement": "bvmgr_tours",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tours_dismiss_notice",
+            "canonical_replacement": "bvmgr_tours_dismiss_notice",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tours_reset_current_user",
+            "canonical_replacement": "bvmgr_tours_reset_current_user",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tours_reset_my_state",
+            "canonical_replacement": "bvmgr_tours_reset_my_state",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_tours_state",
+            "canonical_replacement": "bvmgr_tours_state",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_app_approve_{*}",
+            "canonical_replacement": "bvmgr_vendor_app_approve_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_app_decision_{*}",
+            "canonical_replacement": "bvmgr_vendor_app_decision_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_app_reject_{*}",
+            "canonical_replacement": "bvmgr_vendor_app_reject_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_app_repair_vendor_{*}",
+            "canonical_replacement": "bvmgr_vendor_app_repair_vendor_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_app_resend_confirmation_{*}",
+            "canonical_replacement": "bvmgr_vendor_app_resend_confirmation_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_app_resync_vendor_{*}",
+            "canonical_replacement": "bvmgr_vendor_app_resync_vendor_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_apply",
+            "canonical_replacement": "bvmgr_vendor_apply",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_booking_onboarding_resend_{*}_{*}",
+            "canonical_replacement": "bvmgr_vendor_booking_onboarding_resend_{*}_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_booking_onboarding_save_settings",
+            "canonical_replacement": "bvmgr_vendor_booking_onboarding_save_settings",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_booking_onboarding_toggle_waiver_{*}_{*}",
+            "canonical_replacement": "bvmgr_vendor_booking_onboarding_toggle_waiver_{*}_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_command_center_link_matching_user_{*}",
+            "canonical_replacement": "bvmgr_vendor_command_center_link_matching_user_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_command_center_save_template",
+            "canonical_replacement": "bvmgr_vendor_command_center_save_template",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_command_center_send_onboarding",
+            "canonical_replacement": "bvmgr_vendor_command_center_send_onboarding",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_guest_portal_submit",
+            "canonical_replacement": "bvmgr_vendor_guest_portal_submit",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_mark_reviewed_{*}",
+            "canonical_replacement": "bvmgr_vendor_mark_reviewed_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_portal_download_tech_doc_{*}_{*}_{*}",
+            "canonical_replacement": "bvmgr_vendor_portal_download_tech_doc_{*}_{*}_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_portal_headliner_promo_video_remove_{*}",
+            "canonical_replacement": "bvmgr_vendor_portal_headliner_promo_video_remove_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_portal_headliner_promo_video_upload_{*}",
+            "canonical_replacement": "bvmgr_vendor_portal_headliner_promo_video_upload_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_portal_interest_submit",
+            "canonical_replacement": "bvmgr_vendor_portal_interest_submit",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_portal_interest_withdraw",
+            "canonical_replacement": "bvmgr_vendor_portal_interest_withdraw",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_portal_link_request_submit",
+            "canonical_replacement": "bvmgr_vendor_portal_link_request_submit",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_profile_save",
+            "canonical_replacement": "bvmgr_vendor_profile_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_staff_link_save",
+            "canonical_replacement": "bvmgr_vendor_staff_link_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_tax_export_csv",
+            "canonical_replacement": "bvmgr_vendor_tax_export_csv",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_tax_mark_complete_{*}",
+            "canonical_replacement": "bvmgr_vendor_tax_mark_complete_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_tax_mark_incomplete_{*}",
+            "canonical_replacement": "bvmgr_vendor_tax_mark_incomplete_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_tax_save",
+            "canonical_replacement": "bvmgr_vendor_tax_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_vendor_user_links_save",
+            "canonical_replacement": "bvmgr_vendor_user_links_save",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_verification_decision_{*}",
+            "canonical_replacement": "bvmgr_verification_decision_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_verification_proof_{*}",
+            "canonical_replacement": "bvmgr_verification_proof_{*}",
+            "compatibility_type": "legacy_nonce_verification",
+            "reason_retained": "Already-rendered or cached forms can contain a still-valid legacy nonce.",
+            "minimum_safe_lifetime": "The maximum WordPress nonce validity window plus the longest known full-page/form cache TTL.",
+            "removal_condition": "That bounded nonce/cache window has elapsed after all canonical producers shipped.",
+            "must_survive_indefinitely": false
+        },
+        {
+            "compatibility_identifier": "vms_add_dispatch_token",
+            "canonical_replacement": "bvmgr_add_dispatch_token",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_admission_scan_token",
+            "canonical_replacement": "bvmgr_admission_scan_token",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_calendar_end",
+            "canonical_replacement": "bvmgr_calendar_end",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_calendar_ics",
+            "canonical_replacement": "bvmgr_calendar_ics",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_calendar_start",
+            "canonical_replacement": "bvmgr_calendar_start",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_calendar_vendor_id",
+            "canonical_replacement": "bvmgr_calendar_vendor_id",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_calendar_venue",
+            "canonical_replacement": "bvmgr_calendar_venue",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_doc_module",
+            "canonical_replacement": "bvmgr_doc_module",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_doc_slug",
+            "canonical_replacement": "bvmgr_doc_slug",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_event_feedback",
+            "canonical_replacement": "bvmgr_event_feedback",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_feedback_submitted",
+            "canonical_replacement": "bvmgr_feedback_submitted",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_pass_claim_token",
+            "canonical_replacement": "bvmgr_pass_claim_token",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_vendor_app_confirm",
+            "canonical_replacement": "bvmgr_vendor_app_confirm",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        },
+        {
+            "compatibility_identifier": "vms_vendor_profile",
+            "canonical_replacement": "bvmgr_vendor_profile",
+            "compatibility_type": "legacy_query_inbound",
+            "reason_retained": "Existing bookmarks, cached URLs, emails, and content may contain the legacy inbound query identifier.",
+            "minimum_safe_lifetime": "Indefinite until a content/log/bookmark audit proves the legacy route unused.",
+            "removal_condition": "A separately authorized compatibility review proves no supported inbound legacy URL remains.",
+            "must_survive_indefinitely": true
+        }
+    ],
+    "summary": {
+        "total": 308,
+        "temporary": 294,
+        "indefinite": 14
+    }
+}

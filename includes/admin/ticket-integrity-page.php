@@ -36,7 +36,7 @@ function bvmgr_ticket_integrity_admin_enqueue_assets(string $hook): void
 	}
 
 	wp_enqueue_style(
-		'vms-admin-ticket-integrity',
+		'bvmgr-admin-ticket-integrity',
 		BVMGR_PLUGIN_URL . 'assets/css/admin-ticket-integrity.css',
 		array(),
 		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
@@ -47,7 +47,7 @@ function bvmgr_ticket_integrity_admin_enqueue_assets(string $hook): void
 	}
 
 	wp_enqueue_script(
-		'vms-admin-ticket-integrity',
+		'bvmgr-admin-ticket-integrity',
 		BVMGR_PLUGIN_URL . 'assets/js/admin-ticket-integrity.js',
 		array(),
 		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
@@ -55,8 +55,8 @@ function bvmgr_ticket_integrity_admin_enqueue_assets(string $hook): void
 	);
 
 	wp_add_inline_script(
-		'vms-admin-ticket-integrity',
-		'window.vmsTicketIntegrityAdmin = ' . wp_json_encode(
+		'bvmgr-admin-ticket-integrity',
+		'window.BVMGR_TICKET_INTEGRITY_ADMIN = ' . wp_json_encode(
 			array(
 				'confirmRebuild' => __('Rebuild Ticket Config will attempt a real ticket repair for this Event Plan, may update live ticket mappings, and will log what changed. Continue?', 'backstage-venue-manager'),
 				'confirmCleanupDuplicates' => __('Resolve Duplicate Legacy Tickets will not delete sold tickets. It will retire unsold duplicate products and, when safer, promote the sold legacy product back into the active map while retiring the newer unsold duplicate. Continue?', 'backstage-venue-manager'),

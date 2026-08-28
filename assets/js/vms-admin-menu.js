@@ -1,7 +1,7 @@
 (function () {
   function getAddDispatchBadgeConfig() {
-    var root = window.vmsAdminMenu && window.vmsAdminMenu.addDispatchBadge
-      ? window.vmsAdminMenu.addDispatchBadge
+    var root = window.BVMGR_ADMIN_MENU && window.BVMGR_ADMIN_MENU.addDispatchBadge
+      ? window.BVMGR_ADMIN_MENU.addDispatchBadge
       : null;
     var pendingCount;
 

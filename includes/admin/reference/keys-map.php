@@ -24,7 +24,7 @@ if (!function_exists('bvmgr_admin_reference_keys_map_enqueue_assets')) {
       : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
     wp_enqueue_script(
-      'vms-reference-keys-map',
+      'bvmgr-reference-keys-map',
       BVMGR_PLUGIN_URL . 'assets/js/vms-reference-keys-map.js',
       array(),
       $version,

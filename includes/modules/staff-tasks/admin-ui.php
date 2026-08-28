@@ -1098,7 +1098,7 @@ add_action('admin_post_vms_tasks_create_one_off', 'bvmgr_tasks_admin_handle_crea
 			}
 
 			wp_enqueue_script(
-				'vms-tasks-admin-pages',
+				'bvmgr-tasks-admin-pages',
 				BVMGR_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js',
 				array(),
 				defined('BVMGR_VERSION') ? BVMGR_VERSION : null,
@@ -1122,7 +1122,7 @@ add_action('admin_post_vms_tasks_create_one_off', 'bvmgr_tasks_admin_handle_crea
 		}
 
 		wp_enqueue_script(
-			'vms-tasks-event-plan-metabox',
+			'bvmgr-tasks-event-plan-metabox',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-tasks-event-plan-metabox.js',
 			array(),
 			defined('BVMGR_VERSION') ? BVMGR_VERSION : null,

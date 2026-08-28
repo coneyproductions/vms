@@ -42,8 +42,8 @@
 
     if (!alsoServer) return;
 
-    var ajaxUrl = (window.VMS_DASH && window.VMS_DASH.ajaxUrl) ? window.VMS_DASH.ajaxUrl : '';
-    var nonce = (window.VMS_DASH && window.VMS_DASH.dashPrefNonce) ? window.VMS_DASH.dashPrefNonce : '';
+    var ajaxUrl = (window.BVMGR_DASH && window.BVMGR_DASH.ajaxUrl) ? window.BVMGR_DASH.ajaxUrl : '';
+    var nonce = (window.BVMGR_DASH && window.BVMGR_DASH.dashPrefNonce) ? window.BVMGR_DASH.dashPrefNonce : '';
     if (!ajaxUrl || !nonce) return;
 
     $.ajax({
@@ -150,8 +150,8 @@
   }
 
   function saveIncludeDraftsServer(wantOn) {
-    var ajaxUrl = (window.VMS_DASH && window.VMS_DASH.ajaxUrl) ? window.VMS_DASH.ajaxUrl : '';
-    var nonce = (window.VMS_DASH && window.VMS_DASH.dashPrefNonce) ? window.VMS_DASH.dashPrefNonce : '';
+    var ajaxUrl = (window.BVMGR_DASH && window.BVMGR_DASH.ajaxUrl) ? window.BVMGR_DASH.ajaxUrl : '';
+    var nonce = (window.BVMGR_DASH && window.BVMGR_DASH.dashPrefNonce) ? window.BVMGR_DASH.dashPrefNonce : '';
     if (!ajaxUrl || !nonce) return;
 
     $.ajax({
@@ -166,8 +166,8 @@
   }
 
   function saveIncludeCanceledServer(wantOn) {
-    var ajaxUrl = (window.VMS_DASH && window.VMS_DASH.ajaxUrl) ? window.VMS_DASH.ajaxUrl : '';
-    var nonce = (window.VMS_DASH && window.VMS_DASH.dashPrefNonce) ? window.VMS_DASH.dashPrefNonce : '';
+    var ajaxUrl = (window.BVMGR_DASH && window.BVMGR_DASH.ajaxUrl) ? window.BVMGR_DASH.ajaxUrl : '';
+    var nonce = (window.BVMGR_DASH && window.BVMGR_DASH.dashPrefNonce) ? window.BVMGR_DASH.dashPrefNonce : '';
     if (!ajaxUrl || !nonce) return;
 
     $.ajax({

@@ -53,7 +53,7 @@ if (!function_exists('bvmgr_event_plan_import_enqueue_assets')) {
 			: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 		wp_enqueue_script(
-			'vms-event-plan-import',
+			'bvmgr-event-plan-import',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-import.js',
 			array(),
 			$version,

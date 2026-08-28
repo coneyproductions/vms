@@ -6397,7 +6397,7 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
 
     // Bundle loads on event/cart/checkout pages for ticketing UI state + cart consistency guards.
     wp_enqueue_script(
-        'vms-ticketing-front',
+        'bvmgr-ticketing-front',
         plugins_url('assets/vms-ticketing-front.js', BVMGR_PLUGIN_FILE),
         array(),
         $front_script_version,
@@ -6405,7 +6405,7 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
     );
 
     wp_enqueue_script(
-        'vms-ticketing-front-fallback',
+        'bvmgr-ticketing-front-fallback',
         plugins_url('assets/vms-ticketing-front-fallback.js', BVMGR_PLUGIN_FILE),
         array(),
         $fallback_script_version,
@@ -6423,7 +6423,7 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
     }
 
     wp_enqueue_style(
-        'vms-ticketing-front',
+        'bvmgr-ticketing-front',
         plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
         $front_style_deps,
         function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
@@ -6917,7 +6917,7 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         ? (string) bvmgr_ticketing_v2_resolve_qualifying_ticket_label((int) $plan_id_for_event)
         : __('qualifying tickets', 'backstage-venue-manager');
 
-    wp_localize_script('vms-ticketing-front', 'vmsTicketingFront', array(
+    wp_localize_script('bvmgr-ticketing-front', 'BVMGR_TICKETING_FRONT', array(
         'tecEventId' => (int) $tec_event_id,
         'eventPlanId' => (int) $plan_id_for_event,
         'isCart'     => $is_cart ? 1 : 0,
@@ -6984,9 +6984,9 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         if (is_readable($progressive_script_path)) {
             $progressive_script_version = (string) filemtime($progressive_script_path);
             wp_enqueue_script(
-                'vms-ticketing-progressive-ui',
+                'bvmgr-ticketing-progressive-ui',
                 plugins_url('assets/vms-ticketing-progressive-ui.js', BVMGR_PLUGIN_FILE),
-                array('vms-ticketing-front'),
+                array('bvmgr-ticketing-front'),
                 $progressive_script_version,
                 true
             );
@@ -7019,9 +7019,9 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
 
     if (!$has_enabled) return;
 
-    $entitlements_style_deps = array_values(array_unique(array_merge(array('vms-ticketing-front'), $front_style_deps)));
+    $entitlements_style_deps = array_values(array_unique(array_merge(array('bvmgr-ticketing-front'), $front_style_deps)));
     wp_enqueue_style(
-        'vms-ticketing-entitlements',
+        'bvmgr-ticketing-entitlements',
         plugins_url('assets/css/vms-entitlements-public.css', BVMGR_PLUGIN_FILE),
         $entitlements_style_deps,
         function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')

@@ -265,8 +265,8 @@ $GLOBALS['vms_test_scripts'] = array();
 $GLOBALS['vms_test_screen'] = (object) array('post_type' => '');
 $_GET = array('page' => 'vms-add-dispatch');
 bvmgr_add_dispatch_enqueue_admin_assets();
-vms_test_assert(isset($GLOBALS['vms_test_styles']['vms-add-dispatch-admin']), 'ADD admin enqueue should still load the stylesheet for the valid page slug.');
-vms_test_assert(isset($GLOBALS['vms_test_scripts']['vms-add-dispatch-admin']), 'ADD admin enqueue should still load the script for the valid page slug.');
+vms_test_assert(isset($GLOBALS['vms_test_styles']['bvmgr-add-dispatch-admin']), 'ADD admin enqueue should load the canonical stylesheet for the valid page slug.');
+vms_test_assert(isset($GLOBALS['vms_test_scripts']['bvmgr-add-dispatch-admin']), 'ADD admin enqueue should load the canonical script for the valid page slug.');
 
 $GLOBALS['vms_test_styles'] = array();
 $GLOBALS['vms_test_scripts'] = array();

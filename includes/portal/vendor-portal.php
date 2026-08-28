@@ -4630,7 +4630,7 @@ function bvmgr_vendor_portal_shortcode($atts = []): string
     // Enqueue portal assets when the shortcode renders.
     // This avoids fragile has_shortcode() detection in themes/page builders.
     if (function_exists('wp_enqueue_style')) {
-        wp_enqueue_style('vms-portal');
+        wp_enqueue_style('bvmgr-portal');
     }
     if (function_exists('wp_enqueue_script')) {
         $calendar_script_ver = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null);
@@ -4641,7 +4641,7 @@ function bvmgr_vendor_portal_shortcode($atts = []): string
             }
         }
         wp_enqueue_script(
-            'vms-public-calendar',
+            'bvmgr-public-calendar',
             BVMGR_PLUGIN_URL . 'assets/js/vms-public-calendar.js',
             array(),
             $calendar_script_ver,
@@ -4653,7 +4653,7 @@ function bvmgr_vendor_portal_shortcode($atts = []): string
         $portal_script_ver = function_exists('bvmgr_asset_version_for')
             ? bvmgr_asset_version_for('assets/js/vms-vendor-portal.js')
             : (function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''));
-        wp_enqueue_script('vms-vendor-portal', $portal_script_src, array(), $portal_script_ver, true);
+        wp_enqueue_script('bvmgr-vendor-portal', $portal_script_src, array(), $portal_script_ver, true);
     }
 
     $base_url = get_permalink(); // page where shortcode lives
@@ -4819,12 +4819,12 @@ function bvmgr_vendor_portal_shortcode($atts = []): string
 
     // Header + nav (shown on all tabs)
     // Fallback: if theme/builder skipped normal wp_head style output, print canonical CSS handles here.
-    if (function_exists('wp_style_is') && !wp_style_is('vms-portal', 'done') && !wp_style_is('vms-portal', 'enqueued')) {
+    if (function_exists('wp_style_is') && !wp_style_is('bvmgr-portal', 'done') && !wp_style_is('bvmgr-portal', 'enqueued')) {
         if (function_exists('wp_enqueue_style')) {
-            wp_enqueue_style('vms-portal');
+            wp_enqueue_style('bvmgr-portal');
         }
         if (function_exists('wp_print_styles')) {
-            wp_print_styles(array('vms-shared', 'vms-ui', 'vms-portal'));
+            wp_print_styles(array('bvmgr-shared', 'bvmgr-ui', 'bvmgr-portal'));
         }
     }
 

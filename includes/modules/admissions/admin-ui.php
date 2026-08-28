@@ -32,20 +32,20 @@ if (!function_exists('bvmgr_admission_admin_enqueue_assets')) {
 
 		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
-			'vms-admissions-admin',
+			'bvmgr-admissions-admin',
 			BVMGR_PLUGIN_URL . 'assets/css/vms-admissions-admin.css',
-			array('vms-admin'),
+			array('bvmgr-admin'),
 			$ver
 		);
 		wp_enqueue_script(
-			'vms-admissions-admin',
+			'bvmgr-admissions-admin',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-admissions-admin.js',
 			array(),
 			$ver,
 			true
 		);
 
-		wp_localize_script('vms-admissions-admin', 'vmsAdmissionsAdmin', array(
+		wp_localize_script('bvmgr-admissions-admin', 'BVMGR_ADMISSIONS_ADMIN', array(
 			'restUrl' => esc_url_raw(rest_url('vms/v1')),
 			'nonce' => wp_create_nonce('wp_rest'),
 			'eventPlanId' => $post_id,

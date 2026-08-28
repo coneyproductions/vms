@@ -21,6 +21,8 @@ $assert(in_array('docs/', $releaseExcludes, true), 'B1 manifest and documentatio
 $assert(in_array('scripts/', $releaseExcludes, true), 'B1 migration infrastructure must remain outside the public package.');
 $assert(in_array('tests/', $releaseExcludes, true), 'B1 test infrastructure must remain outside the public package.');
 $releaseTestIds = array_column(VMS_Public_Release_Tooling::defaultReleaseTests(), 'id');
+$assert(in_array('wporg-prefix-b4-browser-assets', $releaseTestIds, true), 'B4 browser-global and asset-handle transition tests must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b4-guardrails', $releaseTestIds, true), 'B4 exact identifier-map and compatibility guardrails must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b3-guardrails', $releaseTestIds, true), 'B3 frozen-map and exact-resolution guardrails must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-scanner-inventory', $releaseTestIds, true), 'Prefix scanner inventory and migration-aware gate coverage must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b2-5-runtime', $releaseTestIds, true), 'B2.5 runtime correction coverage must remain a required default release precondition.');
@@ -32,7 +34,39 @@ if (!is_array($manifest)) {
 	fwrite(STDERR, "Prefix manifest guardrail failures:\n- Manifest did not decode.\n");
 	exit(1);
 }
-$assert(($manifest['schema_version'] ?? null) === 4, 'B3 hybrid manifest schema must be version 4.');
+$assert(($manifest['schema_version'] ?? null) === 5, 'B4 exact-identifier manifest schema must be version 5.');
+
+$expectedB4Summary = array(
+	'browser_globals' => 29,
+	'asset_handles' => 64,
+	'asset_registration_call_sites' => 99,
+	'asset_resolved_source_sites' => 105,
+	'asset_dependency_sites' => 34,
+	'asset_consumer_sites' => 19,
+	'nonce_static_actions' => 154,
+	'nonce_dynamic_action_families' => 64,
+	'nonce_fields' => 73,
+	'query_vars' => 14,
+	'rewrite_tags' => 4,
+	'rewrite_rules' => 7,
+	'cli_paths' => 3,
+);
+$b4Inventory = (array) ($manifest['b4_identifier_inventory'] ?? array());
+$b4MapPath = $root . '/' . (string) ($b4Inventory['artifact'] ?? '');
+$assert(($b4Inventory['summary'] ?? null) === $expectedB4Summary, 'B4 manifest summary must retain the exact frozen identifier inventory.');
+$assert(($b4Inventory['frozen_from_head'] ?? null) === 'bdd84df7bcbfcec65ee57fedf561bf4e167761f6', 'B4 identifier inventory must remain tied to the authorized starting HEAD.');
+$assert(in_array(($b4Inventory['implementation_state'] ?? null), array('not_started', 'browser_assets_complete', 'nonce_complete', 'complete'), true), 'B4 implementation state must use one reviewed checkpoint value.');
+$assert(is_file($b4MapPath), 'B4 frozen identifier map must exist at its manifest path.');
+$assert(is_file($b4MapPath) && hash_file('sha256', $b4MapPath) === ($b4Inventory['sha256'] ?? null), 'B4 frozen identifier map hash must match the controlling manifest.');
+$b4Map = is_file($b4MapPath) ? json_decode((string) file_get_contents($b4MapPath), true) : null;
+$assert(is_array($b4Map) && ($b4Map['summary'] ?? null) === $expectedB4Summary, 'B4 frozen identifier map must decode with the exact reviewed summary.');
+$corrections = array_column((array) ($manifest['b4_evidence_corrections'] ?? array()), null, 'id');
+$assert(array_keys($corrections) === array(
+	'complete-browser-global-inventory',
+	'semantic-asset-handle-inventory',
+	'refer-a-friend-admin-slug-not-handle',
+	'exact-nonce-action-inventory',
+), 'B4 evidence corrections must retain the exact reviewed order and membership.');
 
 $completedB3 = (array) ($manifest['completed_batches']['B3'] ?? array());
 $b3Counts = (array) ($completedB3['counts'] ?? array());
@@ -394,8 +428,10 @@ $assert(array_column($addons, 'remaining_batch_dependencies') === array(
 	array('B3', 'B7'),
 	array('B2', 'B3', 'B7'),
 	array('B2', 'B3', 'B7'),
-	array('B3', 'B4', 'B7'),
+	array('B3', 'B7'),
 ), 'Known add-on later-batch dependencies must match their exact consumed contract classes.');
+$referAFriend = $addons[4] ?? array();
+$assert(($referAFriend['consumed_contracts']['asset_handles'] ?? null) === array(), 'Refer a Friend must not misclassify its retained vms-admin parent slug as a B4 asset-handle dependency.');
 $b2AddonMap = array();
 foreach ($addons as $addon) {
 	$assert(($addon['external_tree_modified'] ?? null) === false, 'B1 must not claim external add-on edits.');

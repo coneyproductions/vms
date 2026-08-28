@@ -1956,14 +1956,14 @@ if (!function_exists('bvmgr_ticketing_verification_enqueue_account_styles')) {
         }
 
         wp_enqueue_style(
-            'vms-ticketing-front',
+            'bvmgr-ticketing-front',
             plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
             $deps,
             function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
         );
 
         wp_enqueue_script(
-            'vms-image-normalize',
+            'bvmgr-image-normalize',
             plugins_url('assets/js/vms-image-normalize.js', BVMGR_PLUGIN_FILE),
             array(),
             function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
@@ -1971,17 +1971,17 @@ if (!function_exists('bvmgr_ticketing_verification_enqueue_account_styles')) {
         );
 
         wp_enqueue_script(
-            'vms-verification-upload',
+            'bvmgr-verification-upload',
             plugins_url('assets/js/vms-verification-upload.js', BVMGR_PLUGIN_FILE),
-            array('vms-image-normalize'),
+            array('bvmgr-image-normalize'),
             function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
             true
         );
 
         $debug_mode = current_user_can('manage_options') && bvmgr_ticketing_verification_query_bool_flag('vms_debug');
         wp_add_inline_script(
-            'vms-verification-upload',
-            'window.vmsVerificationUpload = ' . wp_json_encode(array(
+            'bvmgr-verification-upload',
+            'window.BVMGR_VERIFICATION_UPLOAD = ' . wp_json_encode(array(
                 'debug' => $debug_mode ? 1 : 0,
                 'maxUploadBytes' => bvmgr_ticketing_verification_get_effective_max_upload_bytes(),
                 'warnUploadBytes' => bvmgr_ticketing_verification_get_warn_upload_bytes(),

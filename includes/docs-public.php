@@ -10,9 +10,9 @@ function bvmgr_docs_public_assets() {
 
     bvmgr_enqueue_public_style_stack();
     bvmgr_enqueue_style_asset(
-        'vms-docs-public',
+        'bvmgr-docs-public',
         'assets/css/docs-public.css',
-        array('vms-ui')
+        array('bvmgr-ui')
     );
 }
 

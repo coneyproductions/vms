@@ -1,5 +1,5 @@
 {
-    "schema_version": 4,
+    "schema_version": 5,
     "authority": {
         "document": "docs/WPORG_PREFIX_MIGRATION_B0.md",
         "supplied_b0_sha256": "7893dc878cff48e86a981771c0e52f3119a4a3202307c73ab24817bb863f3dc9",
@@ -39,6 +39,77 @@
             "architecture_impact": "The historical B2 map and ratchet remain immutable; a separate complete semantic ledger and scanner-row inventory govern B2.5 and later batches."
         }
     ],
+    "b4_evidence_corrections": [
+        {
+            "id": "complete-browser-global-inventory",
+            "previous_summary": {
+                "confirmed_window_VMS_globals": 5
+            },
+            "corrected_inventory": {
+                "plugin_owned_browser_globals": 29
+            },
+            "cause": "B0 counted only uppercase window.VMS_* contracts and omitted shipped localized, camel-case API, and request-local window properties.",
+            "architecture_impact": "Additive B4 producer/consumer inventory only; no B0-B3 runtime architecture changes."
+        },
+        {
+            "id": "semantic-asset-handle-inventory",
+            "previous_summary": {
+                "unique": 66,
+                "registration_sites": 99,
+                "concrete_consumers": 27
+            },
+            "corrected_inventory": {
+                "unique": 64,
+                "registration_sites": 99,
+                "dependency_sites": 34
+            },
+            "cause": "The historical probe did not freeze row-level handle membership, missed seven data-flow dependency sites, and overcounted two identities.",
+            "architecture_impact": "The approved bvmgr-* target remains; only exact membership and consumer accounting change."
+        },
+        {
+            "id": "refer-a-friend-admin-slug-not-handle",
+            "previous_classification": "vms-refer-a-friend consumes asset handle vms-admin",
+            "corrected_classification": "The sole exact occurrence is a retained admin-page parent slug; semantic asset-API consumers are zero.",
+            "evidence": "Disposable add-on includes/class-vms-raf-plugin.php detect_vms_parent_slug() candidate list; enqueue dependency arrays are empty.",
+            "architecture_impact": "No B4 add-on patch and no dependency-only legacy handle alias are required."
+        },
+        {
+            "id": "exact-nonce-action-inventory",
+            "previous_summary": {
+                "static_actions": 156,
+                "dynamic_action_families": 64,
+                "total": 220
+            },
+            "corrected_inventory": {
+                "static_actions": 154,
+                "dynamic_action_families": 64,
+                "total": 218
+            },
+            "cause": "The historical total was hard-coded without row identities. Token scans at the manifest-introduction commit and authorized B4 starting HEAD both produce the same 154 static actions; no two missing identifiers exist.",
+            "architecture_impact": "The approved nonce compatibility strategy remains unchanged; invented rows are forbidden."
+        }
+    ],
+    "b4_identifier_inventory": {
+        "artifact": "docs/wporg-prefix-b4-identifier-map.json",
+        "sha256": "d7c67987a332ac3355d6bb61c6e155f3ea4fbf61db97ee21b2f01087ed8067f0",
+        "summary": {
+            "browser_globals": 29,
+            "asset_handles": 64,
+            "asset_registration_call_sites": 99,
+            "asset_resolved_source_sites": 105,
+            "asset_dependency_sites": 34,
+            "asset_consumer_sites": 19,
+            "nonce_static_actions": 154,
+            "nonce_dynamic_action_families": 64,
+            "nonce_fields": 73,
+            "query_vars": 14,
+            "rewrite_tags": 4,
+            "rewrite_rules": 7,
+            "cli_paths": 3
+        },
+        "frozen_from_head": "bdd84df7bcbfcec65ee57fedf561bf4e167761f6",
+        "implementation_state": "browser_assets_complete"
+    },
     "canonical_prefix_family": {
         "procedural_php_hooks_options": "bvmgr_",
         "constants_low_churn_classes": "BVMGR_",
@@ -378,16 +449,16 @@
             "id": "handles",
             "b0_category": "Q",
             "semantic_inventory": {
-                "unique": 66,
+                "unique": 64,
                 "registration_sites": 99,
-                "concrete_consumers": 27
+                "dependency_sites": 34
             },
             "current_identifier": "vms-*",
             "canonical_target": "bvmgr-*",
             "b0_strategy": [
                 2
             ],
-            "compatibility_classification": "dependency-only aliases for externally consumed handles",
+            "compatibility_classification": "dependency-only aliases only where a semantic external asset-API consumer is proven; current known-add-on set has none",
             "persistence_external_contract_status": "public dependency graph contract",
             "planned_implementation_batch": "B4",
             "do_not_rename_current": true,
@@ -436,9 +507,9 @@
             "id": "nonces",
             "b0_category": "T",
             "semantic_inventory": {
-                "static_actions": 156,
+                "static_actions": 154,
                 "dynamic_action_families": 64,
-                "action_families_total": 220,
+                "action_families_total": 218,
                 "custom_field_names": 73
             },
             "current_identifier": "vms_* actions and custom fields",
@@ -538,7 +609,8 @@
                 "scripts": 5,
                 "docs": 147,
                 "root_historical_tooling_files": 150,
-                "shipped_assets": 27
+                "shipped_assets": 27,
+                "browser_globals_assigned_to_B4": 29
             },
             "current_identifier": "mixed current and historical identifiers",
             "canonical_target": "canonical current tooling; retained historical evidence/fixtures",
@@ -547,9 +619,9 @@
                 6,
                 7
             ],
-            "compatibility_classification": "reason-coded residuals only",
+            "compatibility_classification": "reason-coded residuals only; browser-global contracts are carved into B4 by the controlling B4 authorization",
             "persistence_external_contract_status": "mixed release-excluded and shipped clients",
-            "planned_implementation_batch": "B8",
+            "planned_implementation_batch": "B8 except browser globals in B4",
             "do_not_rename_current": true,
             "risk": "High"
         }
@@ -250781,9 +250853,7 @@
                     "vms_admin_register_pages"
                 ],
                 "physical_cpt_taxonomy_identifiers": [],
-                "asset_handles": [
-                    "vms-admin"
-                ]
+                "asset_handles": []
             },
             "preparation_performed": "Frozen exact consumers through a token-based semantic scan and canonical compatibility policy; external add-on source remains unchanged.",
             "future_tolerance": {
@@ -250795,7 +250865,6 @@
             },
             "remaining_batch_dependencies": [
                 "B3",
-                "B4",
                 "B7"
             ],
             "external_tree_modified": false,

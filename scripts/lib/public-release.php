@@ -462,6 +462,18 @@ final class VMS_Public_Release_Tooling
 	{
 		return array(
 			array(
+				'id' => 'wporg-prefix-b4-browser-assets',
+				'label' => 'WordPress.org B4 browser-global and asset-handle cutover',
+				'path' => 'tests/wporg-prefix-b4-browser-assets.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b4-guardrails',
+				'label' => 'WordPress.org B4 exact identifier map and compatibility guardrails',
+				'path' => 'tests/wporg-prefix-b4-guardrails.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'wporg-prefix-b3-guardrails',
 				'label' => 'WordPress.org B3 frozen function map, dependency waves, and exact resolution gate',
 				'path' => 'tests/wporg-prefix-b3-guardrails.php',

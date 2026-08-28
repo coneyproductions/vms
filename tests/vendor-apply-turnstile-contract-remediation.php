@@ -336,7 +336,7 @@ foreach ($incompleteCases as $label => $options) {
 	$public = $renderShortcode($options);
 	$assert(!bvmgr_vendor_apply_turnstile_is_configured(), $label . ' should not count as a complete Turnstile configuration.');
 	$assert(!isset($public['scripts']['cf-turnstile']), $label . ' should not enqueue the Cloudflare Turnstile client.');
-	$assert(!isset($public['scripts']['vms-vendor-apply']), $label . ' should not enqueue the active form asset when the form is unavailable.');
+	$assert(!isset($public['scripts']['bvmgr-vendor-apply']), $label . ' should not enqueue the active form asset when the form is unavailable.');
 	$assert(strpos($public['html'], 'https://challenges.cloudflare.com/turnstile/v0/api.js') === false, $label . ' should not expose the Cloudflare client URL in rendered output.');
 	$assert(strpos($public['html'], 'class="cf-turnstile"') === false, $label . ' should not render the Turnstile widget markup.');
 	$assert(strpos($public['html'], 'class="vms-vendor-apply-form"') === false, $label . ' should not render the active Vendor Application form.');
@@ -349,7 +349,7 @@ foreach ($incompleteCases as $label => $options) {
 
 	$admin = $renderShortcode($options, true);
 	$assert(!isset($admin['scripts']['cf-turnstile']), $label . ' admin view should not enqueue the Cloudflare Turnstile client.');
-	$assert(!isset($admin['scripts']['vms-vendor-apply']), $label . ' admin view should not enqueue the active form asset when the form is unavailable.');
+	$assert(!isset($admin['scripts']['bvmgr-vendor-apply']), $label . ' admin view should not enqueue the active form asset when the form is unavailable.');
 	$assert(strpos($admin['html'], 'Vendor applications are temporarily unavailable.') !== false, $label . ' admin view should still render the public unavailable notice.');
 	$assert(strpos($admin['html'], 'Turnstile requires both a site key and a secret key before the Vendor Application form can be used.') !== false, $label . ' admin view should render the bounded administrator diagnostic.');
 	foreach ($options as $value) {
@@ -367,7 +367,7 @@ $configured = $renderShortcode(
 );
 
 $assert(bvmgr_vendor_apply_turnstile_is_configured(), 'Both keys should count as a complete Turnstile configuration.');
-$assert(isset($configured['scripts']['vms-vendor-apply']), 'Configured form should enqueue the Vendor Applications asset.');
+$assert(isset($configured['scripts']['bvmgr-vendor-apply']), 'Configured form should enqueue the canonical Vendor Applications asset.');
 $assert(isset($configured['scripts']['cf-turnstile']), 'Configured form should enqueue the Cloudflare Turnstile client.');
 $assert(count($scriptCallsForHandle('cf-turnstile')) === 1, 'Configured form should enqueue the Cloudflare Turnstile client exactly once.');
 $assert(($configured['scripts']['cf-turnstile']['src'] ?? '') === 'https://challenges.cloudflare.com/turnstile/v0/api.js', 'Configured form should keep the explicit Cloudflare Turnstile client URL.');

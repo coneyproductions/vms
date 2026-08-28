@@ -44,26 +44,26 @@ if (!function_exists('bvmgr_status_notice_admin_enqueue_assets')) {
 
 		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
-			'vms-notices-front',
+			'bvmgr-notices-front',
 			BVMGR_PLUGIN_URL . 'assets/css/vms-notices-front.css',
-			array('vms-ui'),
+			array('bvmgr-ui'),
 			$ver
 		);
 		wp_enqueue_style(
-			'vms-status-notices-admin',
+			'bvmgr-status-notices-admin',
 			BVMGR_PLUGIN_URL . 'assets/css/vms-status-notices-admin.css',
-			array('vms-admin', 'vms-admin-ui', 'vms-notices-front'),
+			array('bvmgr-admin', 'bvmgr-admin-ui', 'bvmgr-notices-front'),
 			$ver
 		);
 		wp_enqueue_script(
-			'vms-status-notices-admin',
+			'bvmgr-status-notices-admin',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-status-notices-admin.js',
 			array(),
 			$ver,
 			true
 		);
 
-		wp_localize_script('vms-status-notices-admin', 'vmsStatusNoticesAdmin', array(
+		wp_localize_script('bvmgr-status-notices-admin', 'BVMGR_STATUS_NOTICES_ADMIN', array(
 			'pageTypeLabels' => bvmgr_status_notice_page_type_labels(),
 			'deviceLabels' => bvmgr_status_notice_device_labels(),
 			'browserLabels' => bvmgr_status_notice_browser_labels(),

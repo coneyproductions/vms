@@ -2990,9 +2990,9 @@ if (!function_exists('bvmgr_event_command_center_enqueue_assets')) {
         }
 
         wp_enqueue_style(
-            'vms-event-command-center',
+            'bvmgr-event-command-center',
             BVMGR_PLUGIN_URL . 'assets/css/vms-event-command-center.css',
-            array('vms-admin-ui'),
+            array('bvmgr-admin-ui'),
             function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
         );
     }

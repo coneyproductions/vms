@@ -682,7 +682,7 @@ try {
 
 	$assert(strpos($socialAdminSource, 'wp_localize_script(') === false, 'Social Sharing admin enqueue should remain localization-free.');
 	$assert(strpos($socialAdminSource, '$should_load = ($page === \'vms-social-sharing\') || ($post_type === \'vms_event_plan\');') !== false, 'Social Sharing admin enqueue should preserve the page/post-type load gate.');
-	$assert(strpos($socialAdminSource, "'vms-social-admin'") !== false, 'Social Sharing admin enqueue should preserve the vms-social-admin handle.');
+	$assert(strpos($socialAdminSource, "'bvmgr-social-admin'") !== false, 'Social Sharing admin enqueue should use the canonical bvmgr-social-admin handle.');
 	$assert(strpos($socialAdminSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-social-admin.js'") !== false, 'Social Sharing admin enqueue should preserve the current script path.');
 
 	$renderSource = $extractSource(
@@ -777,7 +777,7 @@ try {
 	bvmgr_social_enqueue_admin_assets();
 	$assert(count($GLOBALS['vms_test_scripts']) === 1, 'Social Sharing admin page should enqueue the shared social admin script exactly once.');
 	$assert($GLOBALS['vms_test_scripts'][0] === array(
-		'handle' => 'vms-social-admin',
+		'handle' => 'bvmgr-social-admin',
 		'src' => BVMGR_PLUGIN_URL . 'assets/js/vms-social-admin.js',
 		'deps' => array(),
 		'ver' => BVMGR_VERSION,

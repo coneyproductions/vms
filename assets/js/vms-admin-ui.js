@@ -295,12 +295,12 @@
   }
 
   function initScheduleMonthAccordion() {
-    if (window.__vmsMonthAccordionInit) return;
+    if (window.BVMGR_MONTH_ACCORDION_INIT) return;
 
     var hasSchedulePanels = document.querySelector('details[data-vms-scope][data-vms-month]');
     if (!hasSchedulePanels) return;
 
-    window.__vmsMonthAccordionInit = true;
+    window.BVMGR_MONTH_ACCORDION_INIT = true;
 
     function closeAllExcept(openEl, scope) {
       var all = document.querySelectorAll('details[data-vms-scope="' + scope + '"]');
@@ -466,8 +466,8 @@
       });
     });
 
-    if (window.__vmsTopNavQuickMenuGlobalBound) return;
-    window.__vmsTopNavQuickMenuGlobalBound = true;
+    if (window.BVMGR_TOP_NAV_QUICK_MENU_GLOBAL_BOUND) return;
+    window.BVMGR_TOP_NAV_QUICK_MENU_GLOBAL_BOUND = true;
 
     document.addEventListener('click', function (event) {
       var target = event.target;
@@ -853,8 +853,8 @@
     window.setTimeout(normalizeAllNotices, 0);
     window.setTimeout(normalizeAllNotices, 100);
     window.setTimeout(normalizeAllNotices, 350);
-    if (!window.__vmsNoticeLoadBound) {
-      window.__vmsNoticeLoadBound = true;
+    if (!window.BVMGR_NOTICE_LOAD_BOUND) {
+      window.BVMGR_NOTICE_LOAD_BOUND = true;
       window.addEventListener('load', normalizeAllNotices);
     }
     initBulkSelectToggles();

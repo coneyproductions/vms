@@ -55,7 +55,7 @@ if (!function_exists('bvmgr_vendor_defaults_admin_enqueue_assets')) {
             : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(
-            'vms-compensation-admin',
+            'bvmgr-compensation-admin',
             BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js',
             array(),
             $version,
@@ -63,8 +63,8 @@ if (!function_exists('bvmgr_vendor_defaults_admin_enqueue_assets')) {
         );
 
         wp_localize_script(
-            'vms-compensation-admin',
-            'vmsVendorDefaultsAdmin',
+            'bvmgr-compensation-admin',
+            'BVMGR_VENDOR_DEFAULTS_ADMIN',
             array(
                 'strings' => array(
                     'flatFeeOnly' => __('Flat Fee Only', 'backstage-venue-manager'),

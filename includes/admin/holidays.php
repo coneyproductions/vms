@@ -170,7 +170,7 @@ function bvmgr_admin_holidays_enqueue_assets(): void
 		: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 	wp_enqueue_script(
-		'vms-holidays-admin',
+		'bvmgr-holidays-admin',
 		BVMGR_PLUGIN_URL . 'assets/js/vms-holidays-admin.js',
 		array(),
 		$version,

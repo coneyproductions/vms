@@ -230,7 +230,7 @@
   function renderDue($panel, res) {
     const items = (res && res.items) ? res.items : [];
     const c = (res && res.counts) ? res.counts : {};
-    const allUrl = vmsGet(window, 'VMS_DASH.dueAllUrl', '');
+    const allUrl = vmsGet(window, 'BVMGR_DASH.dueAllUrl', '');
 
     const topActions = allUrl
       ? ('<div class="vms-due-actions"><a class="button button-small" href="' + allUrl + '">View all / configure</a></div>')
@@ -332,7 +332,7 @@
     const dueNeeds = parseInt(s.due_needs_attention || 0, 10) || 0;
     const dueWindow = parseInt(s.due_window_days || 0, 10) || 0;
 
-    const allUrl = vmsGet(window, 'VMS_DASH.dueAllUrl', '');
+    const allUrl = vmsGet(window, 'BVMGR_DASH.dueAllUrl', '');
 
     function card(title, value, meta, tone, linkHtml) {
       const toneClass = tone ? (' vms-fin-card--' + tone) : '';
@@ -600,8 +600,8 @@
   const seq = { financial: 0, today: 0, week: 0, staffing: 0, bills: 0, due: 0 };
 
   function fetchPanel(range) {
-    const restUrl = vmsGet(window, 'VMS_DASH.restUrl', '');
-    const nonce = vmsGet(window, 'VMS_DASH.nonce', '');
+    const restUrl = vmsGet(window, 'BVMGR_DASH.restUrl', '');
+    const nonce = vmsGet(window, 'BVMGR_DASH.nonce', '');
     const debugFlag = getDebugFlag();
 
     const $panel = $('.vms-panel-body[data-panel="' + range + '"]');
@@ -701,8 +701,8 @@
       const proofUrl = window.prompt('Optional proof URL (receipt/document link):', '');
       if (proofUrl === null) return;
 
-      const url = vmsGet(window, 'VMS_DASH.dueCompleteUrl', '');
-      const nonce = vmsGet(window, 'VMS_DASH.nonce', '');
+      const url = vmsGet(window, 'BVMGR_DASH.dueCompleteUrl', '');
+      const nonce = vmsGet(window, 'BVMGR_DASH.nonce', '');
       if (!url || !nonce) {
         window.alert('Missing endpoint configuration.');
         return;

@@ -391,7 +391,7 @@ if (!function_exists('bvmgr_admission_scan_template_router')) {
 			return $parts;
 		}, 20);
 		if (function_exists('wp_enqueue_style') && defined('BVMGR_PLUGIN_URL')) {
-			wp_enqueue_style('vms-pass-claims-public', BVMGR_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : null);
+			wp_enqueue_style('bvmgr-pass-claims-public', BVMGR_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : null);
 		}
 		if (function_exists('get_header')) {
 			get_header();

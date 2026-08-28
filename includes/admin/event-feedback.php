@@ -41,7 +41,7 @@ if (!function_exists('bvmgr_feedback_admin_enqueue_assets')) {
 		if ($page !== 'vms-event-feedback') {
 			return;
 		}
-		wp_enqueue_style('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), bvmgr_asset_version());
+		wp_enqueue_style('bvmgr-event-feedback', BVMGR_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), bvmgr_asset_version());
 	}
 }
 add_action('admin_enqueue_scripts', 'bvmgr_feedback_admin_enqueue_assets');

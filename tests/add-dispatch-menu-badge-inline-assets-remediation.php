@@ -224,13 +224,13 @@ try {
 	$GLOBALS['vms_test_pending_count'] = 7;
 	bvmgr_add_dispatch_render_menu_badge_css();
 	bvmgr_add_dispatch_render_menu_badge_js();
-	$assert(isset($GLOBALS['vms_test_styles']['vms-admin-menu']), 'Positive-count authorized runs should enqueue the shared admin-menu stylesheet.');
-	$assert(isset($GLOBALS['vms_test_scripts']['vms-admin-menu']), 'Positive-count authorized runs should enqueue the ADD menu-badge script.');
-	$assert(($GLOBALS['vms_test_scripts']['vms-admin-menu']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/js/vms-admin-menu.js', 'ADD menu-badge script should use the expected asset path.');
-	$assert(($GLOBALS['vms_test_scripts']['vms-admin-menu']['ver'] ?? '') === 'test-asset-version', 'ADD menu-badge script should use the asset-version helper fallback pattern.');
-	$assert(($GLOBALS['vms_test_scripts']['vms-admin-menu']['in_footer'] ?? false) === true, 'ADD menu-badge script should remain footer-loaded.');
-	$assert(($GLOBALS['vms_test_localized_scripts']['vms-admin-menu']['name'] ?? '') === 'vmsAdminMenu', 'ADD menu-badge config should use the inert localized object name.');
-	$assert(($GLOBALS['vms_test_localized_scripts']['vms-admin-menu']['data']['addDispatchBadge']['pendingCount'] ?? 0) === 7, 'ADD menu-badge config should pass only the positive pending count.');
+	$assert(isset($GLOBALS['vms_test_styles']['bvmgr-admin-menu']), 'Positive-count authorized runs should enqueue the shared canonical admin-menu stylesheet.');
+	$assert(isset($GLOBALS['vms_test_scripts']['bvmgr-admin-menu']), 'Positive-count authorized runs should enqueue the canonical ADD menu-badge script.');
+	$assert(($GLOBALS['vms_test_scripts']['bvmgr-admin-menu']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/js/vms-admin-menu.js', 'ADD menu-badge script should use the expected asset path.');
+	$assert(($GLOBALS['vms_test_scripts']['bvmgr-admin-menu']['ver'] ?? '') === 'test-asset-version', 'ADD menu-badge script should use the asset-version helper fallback pattern.');
+	$assert(($GLOBALS['vms_test_scripts']['bvmgr-admin-menu']['in_footer'] ?? false) === true, 'ADD menu-badge script should remain footer-loaded.');
+	$assert(($GLOBALS['vms_test_localized_scripts']['bvmgr-admin-menu']['name'] ?? '') === 'BVMGR_ADMIN_MENU', 'ADD menu-badge config should use the canonical inert localized object name.');
+	$assert(($GLOBALS['vms_test_localized_scripts']['bvmgr-admin-menu']['data']['addDispatchBadge']['pendingCount'] ?? 0) === 7, 'ADD menu-badge config should pass only the positive pending count.');
 	$assert($GLOBALS['vms_test_inline_styles'] === array(), 'ADD menu-badge remediation should not rely on wp_add_inline_style().');
 	$assert($GLOBALS['vms_test_inline_scripts'] === array(), 'ADD menu-badge remediation should not rely on wp_add_inline_script().');
 

@@ -159,7 +159,7 @@
     return;
   }
 
-  const cfg = globalScope.vmsAdmissionsAdmin || null;
+  const cfg = globalScope.BVMGR_ADMISSIONS_ADMIN || null;
   if (!cfg || !cfg.eventPlanId) return;
 
   const root = globalScope.document.querySelector('.vms-adm-box');

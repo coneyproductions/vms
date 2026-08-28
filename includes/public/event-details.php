@@ -97,7 +97,7 @@ if (!function_exists('bvmgr_event_details_enqueue_assets')) {
             $ver = (string) $file_ver;
         }
 
-        wp_enqueue_style('vms-event-details', $asset_url, array('vms-ui'), $ver);
+        wp_enqueue_style('bvmgr-event-details', $asset_url, array('bvmgr-ui'), $ver);
     }
 }
 

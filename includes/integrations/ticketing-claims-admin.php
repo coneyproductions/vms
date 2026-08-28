@@ -1214,9 +1214,9 @@ if (!function_exists('bvmgr_ticketing_claims_enqueue_admin_assets')) {
 			return;
 		}
 		wp_enqueue_style(
-			'vms-ticketing-claims-admin',
+			'bvmgr-ticketing-claims-admin',
 			BVMGR_PLUGIN_URL . 'assets/css/vms-ticketing-claims-admin.css',
-			array('vms-admin'),
+			array('bvmgr-admin'),
 			function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 		);
 	}

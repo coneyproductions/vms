@@ -262,22 +262,22 @@ try {
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'post', 'post_type' => 'vms_comp_package');
     bvmgr_comp_package_admin_enqueue_assets();
     bvmgr_vendor_defaults_admin_enqueue_assets();
-    $assert(isset($GLOBALS['vms_test_scripts']['vms-compensation-admin']), 'Comp Package screen should enqueue the shared compensation asset.');
-    $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js', 'Comp Package screen should use the expected compensation asset path.');
-    $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['ver'] ?? '') === 'test-asset-version', 'Comp Package screen should use the asset-version helper fallback pattern.');
-    $assert(($GLOBALS['vms_test_scripts']['vms-compensation-admin']['in_footer'] ?? false) === true, 'Comp Package screen should keep the shared compensation asset footer-loaded.');
-    $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['name'] ?? '') === 'vmsCompPackageAdmin', 'Comp Package screen should localize only the comp-package labels.');
-    $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['data']['labels']['basePay'] ?? '') === 'Base Pay', 'Comp Package screen should pass the Base Pay label through inert config.');
-    $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['data']['labels']['flatFeeAmount'] ?? '') === 'Flat Fee Amount', 'Comp Package screen should pass the Flat Fee label through inert config.');
+    $assert(isset($GLOBALS['vms_test_scripts']['bvmgr-compensation-admin']), 'Comp Package screen should enqueue the shared compensation asset.');
+    $assert(($GLOBALS['vms_test_scripts']['bvmgr-compensation-admin']['src'] ?? '') === BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js', 'Comp Package screen should use the expected compensation asset path.');
+    $assert(($GLOBALS['vms_test_scripts']['bvmgr-compensation-admin']['ver'] ?? '') === 'test-asset-version', 'Comp Package screen should use the asset-version helper fallback pattern.');
+    $assert(($GLOBALS['vms_test_scripts']['bvmgr-compensation-admin']['in_footer'] ?? false) === true, 'Comp Package screen should keep the shared compensation asset footer-loaded.');
+    $assert(($GLOBALS['vms_test_localized_scripts']['bvmgr-compensation-admin']['name'] ?? '') === 'BVMGR_COMP_PACKAGE_ADMIN', 'Comp Package screen should localize only the comp-package labels.');
+    $assert(($GLOBALS['vms_test_localized_scripts']['bvmgr-compensation-admin']['data']['labels']['basePay'] ?? '') === 'Base Pay', 'Comp Package screen should pass the Base Pay label through inert config.');
+    $assert(($GLOBALS['vms_test_localized_scripts']['bvmgr-compensation-admin']['data']['labels']['flatFeeAmount'] ?? '') === 'Flat Fee Amount', 'Comp Package screen should pass the Flat Fee label through inert config.');
 
     $resetRuntime();
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'post-new', 'post_type' => 'vms_vendor');
     bvmgr_comp_package_admin_enqueue_assets();
     bvmgr_vendor_defaults_admin_enqueue_assets();
-    $assert(isset($GLOBALS['vms_test_scripts']['vms-compensation-admin']), 'Vendor screen should enqueue the shared compensation asset.');
-    $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['name'] ?? '') === 'vmsVendorDefaultsAdmin', 'Vendor screen should localize only the vendor-defaults strings.');
-    $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['data']['strings']['selectedTemplateTitle'] ?? '') === 'Selected Template', 'Vendor screen should pass the vendor-defaults preview strings through inert config.');
-    $assert(($GLOBALS['vms_test_localized_scripts']['vms-compensation-admin']['data']['strings']['basePayMoney'] ?? '') === 'Base Pay ($)', 'Vendor screen should pass the Base Pay field label through inert config.');
+    $assert(isset($GLOBALS['vms_test_scripts']['bvmgr-compensation-admin']), 'Vendor screen should enqueue the shared compensation asset.');
+    $assert(($GLOBALS['vms_test_localized_scripts']['bvmgr-compensation-admin']['name'] ?? '') === 'BVMGR_VENDOR_DEFAULTS_ADMIN', 'Vendor screen should localize only the vendor-defaults strings.');
+    $assert(($GLOBALS['vms_test_localized_scripts']['bvmgr-compensation-admin']['data']['strings']['selectedTemplateTitle'] ?? '') === 'Selected Template', 'Vendor screen should pass the vendor-defaults preview strings through inert config.');
+    $assert(($GLOBALS['vms_test_localized_scripts']['bvmgr-compensation-admin']['data']['strings']['basePayMoney'] ?? '') === 'Base Pay ($)', 'Vendor screen should pass the Base Pay field label through inert config.');
 
     $assert(strpos($ledgerSource, 'WPORG-22R-F') !== false, 'Ledger should document the new WPORG-22R-F closeout.');
     $assert(strpos($prereviewSource, 'WPORG-22R-F') !== false, 'Prereview doc should document the new WPORG-22R-F closeout.');

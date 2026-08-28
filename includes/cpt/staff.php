@@ -160,7 +160,7 @@ if (!function_exists('bvmgr_staff_cpt_admin_enqueue_assets')) {
             : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(
-            'vms-staff-cpt-admin',
+            'bvmgr-staff-cpt-admin',
             BVMGR_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js',
             array(),
             $version,
@@ -168,8 +168,8 @@ if (!function_exists('bvmgr_staff_cpt_admin_enqueue_assets')) {
         );
 
         wp_localize_script(
-            'vms-staff-cpt-admin',
-            'vmsStaffCptAdmin',
+            'bvmgr-staff-cpt-admin',
+            'BVMGR_STAFF_CPT_ADMIN',
             array(
                 'labels' => array(
                     'qualification' => __('Qualification', 'backstage-venue-manager'),

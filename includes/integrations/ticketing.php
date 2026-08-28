@@ -389,7 +389,7 @@ function bvmgr_ticketing_admin_enqueue_assets($hook): void
     }
 
     $ver = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
-    $handle = 'vms-admin-ticketing';
+    $handle = 'bvmgr-admin-ticketing';
     $src = defined('BVMGR_PLUGIN_URL') ? (BVMGR_PLUGIN_URL . 'assets/admin-ticketing.js') : '';
     if ($src === '') {
         return;
@@ -419,7 +419,7 @@ function bvmgr_ticketing_admin_enqueue_assets($hook): void
 
     wp_add_inline_script(
         $handle,
-        'window.VMS_TICKETING = ' . wp_json_encode(array(
+        'window.BVMGR_TICKETING = ' . wp_json_encode(array(
             'planId' => $plan_id,
             'nonce'  => wp_create_nonce('vms_ticketing_nonce'),
             'ticketUiOverridesNonce' => wp_create_nonce('vms_event_plan_ticket_ui_overrides_save'),

@@ -11,20 +11,20 @@ if (!function_exists('bvmgr_door_checkin_shortcode')) {
 		$settings = bvmgr_admission_settings();
 		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
-			'vms-door-checkin',
+			'bvmgr-door-checkin',
 			BVMGR_PLUGIN_URL . 'assets/css/vms-door-checkin.css',
-			array('vms-ui'),
+			array('bvmgr-ui'),
 			$ver
 		);
 		wp_enqueue_script(
-			'vms-door-checkin',
+			'bvmgr-door-checkin',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-door-checkin.js',
 			array(),
 			$ver,
 			true
 		);
 
-		wp_localize_script('vms-door-checkin', 'vmsDoorCheckin', array(
+		wp_localize_script('bvmgr-door-checkin', 'BVMGR_DOOR_CHECKIN', array(
 			'restUrl' => esc_url_raw(rest_url('vms/v1')),
 			'nonce' => wp_create_nonce('wp_rest'),
 			'canManage' => current_user_can(bvmgr_admission_manage_capability()) ? 1 : 0,

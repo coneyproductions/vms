@@ -1,11 +1,11 @@
-/* global ajaxurl, VMS_TICKETING */
+/* global ajaxurl, BVMGR_TICKETING */
 (function () {
-  if (typeof window === 'undefined' || !window.VMS_TICKETING) return;
+  if (typeof window === 'undefined' || !window.BVMGR_TICKETING) return;
 
-  let planId = parseInt(window.VMS_TICKETING.planId || 0, 10);
-  const nonce = String(window.VMS_TICKETING.nonce || '');
-  const ticketUiOverridesNonce = String(window.VMS_TICKETING.ticketUiOverridesNonce || '');
-  const editUrlBase = String(window.VMS_TICKETING.editUrlBase || '');
+  let planId = parseInt(window.BVMGR_TICKETING.planId || 0, 10);
+  const nonce = String(window.BVMGR_TICKETING.nonce || '');
+  const ticketUiOverridesNonce = String(window.BVMGR_TICKETING.ticketUiOverridesNonce || '');
+  const editUrlBase = String(window.BVMGR_TICKETING.editUrlBase || '');
   const postForm = document.getElementById('post');
   let lastPostFormSubmitter = null;
 
@@ -153,8 +153,8 @@
     const normalized = String(sectionKey || '').trim();
     if (!normalized) return window.location.href;
 
-    if (typeof window.vmsEventPlanPersistRequestedSection === 'function') {
-      return window.vmsEventPlanPersistRequestedSection(normalized);
+    if (typeof window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION === 'function') {
+      return window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION(normalized);
     }
 
     try {
@@ -3308,8 +3308,8 @@
     program.className = 'vms-ticketing-v2-ticket-program';
     const programOptions = [{ value: '', label: 'Select group' }];
     try {
-      const map = window.VMS_TICKETING && window.VMS_TICKETING.verificationPrograms
-        ? window.VMS_TICKETING.verificationPrograms
+      const map = window.BVMGR_TICKETING && window.BVMGR_TICKETING.verificationPrograms
+        ? window.BVMGR_TICKETING.verificationPrograms
         : null;
 
       if (map && typeof map === 'object') {

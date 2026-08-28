@@ -123,10 +123,10 @@ try {
 	$assert(strpos($taxBypassAssetSource, 'DOMContentLoaded') === false, 'Tax Bypass asset should preserve the immediate post-markup execution model.');
 	$assert(strpos($taxBypassAssetSource, 'setAttribute(') === false, 'Tax Bypass asset should not add new required or ARIA attribute mutations.');
 
-	$assert(strpos($corePluginSource, 'vms-holidays-admin') === false, 'Holidays asset should not be registered through the global core admin asset loader.');
-	$assert(strpos($corePluginSource, 'vms-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the global core admin asset loader.');
-	$assert(strpos($adminUiAssetsSource, 'vms-holidays-admin') === false, 'Holidays asset should not be registered through the shared VMS admin UI asset loader.');
-	$assert(strpos($adminUiAssetsSource, 'vms-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the shared VMS admin UI asset loader.');
+	$assert(strpos($corePluginSource, 'bvmgr-holidays-admin') === false, 'Holidays asset should not be registered through the global core admin asset loader.');
+	$assert(strpos($corePluginSource, 'bvmgr-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the global core admin asset loader.');
+	$assert(strpos($adminUiAssetsSource, 'bvmgr-holidays-admin') === false, 'Holidays asset should not be registered through the shared admin UI asset loader.');
+	$assert(strpos($adminUiAssetsSource, 'bvmgr-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the shared admin UI asset loader.');
 
 	$assert(strpos($eventPlanImportSource, 'vms-epcsv-select-all') !== false, 'Event Plan Import should retain its current select-all control contract.');
 	$assert(strpos($eventPlanImportSource, 'Select at least one eligible row before committing selected rows.') !== false, 'Event Plan Import should retain its current preview-selection contract.');

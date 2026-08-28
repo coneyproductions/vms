@@ -43,7 +43,7 @@ function bvmgr_dashboard_enqueue_assets($hook)
   $src         = plugin_dir_url($plugin_file) . 'assets/admin-dashboard.js';
   $ver         = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
   wp_enqueue_script(
-    'vms-admin-dashboard',
+    'bvmgr-admin-dashboard',
     $src,
     ['jquery'],
     $ver,
@@ -54,14 +54,14 @@ function bvmgr_dashboard_enqueue_assets($hook)
   // script so persistence stays reliable even if the main dashboard script evolves.
   $prefs_src        = plugin_dir_url($plugin_file) . 'assets/admin-dashboard-prefs.js';
   wp_enqueue_script(
-    'vms-admin-dashboard-prefs',
+    'bvmgr-admin-dashboard-prefs',
     $prefs_src,
-    ['jquery', 'vms-admin-dashboard'],
+    ['jquery', 'bvmgr-admin-dashboard'],
     $ver,
     true
   );
 
-  wp_localize_script('vms-admin-dashboard', 'VMS_DASH', [
+  wp_localize_script('bvmgr-admin-dashboard', 'BVMGR_DASH', [
     'restUrl' => esc_url_raw(rest_url('vms/v1/dashboard')),
     'dueCompleteUrl' => esc_url_raw(rest_url('vms/v1/due-dates/complete')),
     'dueAllUrl' => esc_url_raw(admin_url('admin.php?page=vms-due-dates')),

@@ -153,9 +153,9 @@ if (!function_exists('bvmgr_status_notice_enqueue_runtime_assets')) {
 
 		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
-			'vms-notices-front',
+			'bvmgr-notices-front',
 			BVMGR_PLUGIN_URL . 'assets/css/vms-notices-front.css',
-			array('vms-ui'),
+			array('bvmgr-ui'),
 			$ver
 		);
 
@@ -167,7 +167,7 @@ if (!function_exists('bvmgr_status_notice_enqueue_runtime_assets')) {
 			true
 		);
 
-		wp_localize_script($script_handle, 'vmsStatusNoticesData', array(
+		wp_localize_script($script_handle, 'BVMGR_STATUS_NOTICES_DATA', array(
 			'notices' => array_values(array_map('bvmgr_status_notice_prepare_runtime_notice', $notices)),
 			'context' => $context,
 		));
@@ -184,7 +184,7 @@ if (!function_exists('bvmgr_status_notice_maybe_enqueue_front')) {
 		if (empty($notices)) {
 			return;
 		}
-		bvmgr_status_notice_enqueue_runtime_assets($notices, bvmgr_status_notice_runtime_context_front(), 'vms-notices-front-runtime');
+		bvmgr_status_notice_enqueue_runtime_assets($notices, bvmgr_status_notice_runtime_context_front(), 'bvmgr-notices-front-runtime');
 	}
 }
 add_action('wp_enqueue_scripts', 'bvmgr_status_notice_maybe_enqueue_front', 45);
@@ -199,7 +199,7 @@ if (!function_exists('bvmgr_status_notice_maybe_enqueue_admin_runtime')) {
 		if (empty($notices)) {
 			return;
 		}
-		bvmgr_status_notice_enqueue_runtime_assets($notices, bvmgr_status_notice_runtime_context_admin(), 'vms-notices-admin-runtime');
+		bvmgr_status_notice_enqueue_runtime_assets($notices, bvmgr_status_notice_runtime_context_admin(), 'bvmgr-notices-admin-runtime');
 	}
 }
 add_action('admin_enqueue_scripts', 'bvmgr_status_notice_maybe_enqueue_admin_runtime', 55);

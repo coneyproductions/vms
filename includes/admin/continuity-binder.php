@@ -9,7 +9,7 @@ function bvmgr_continuity_binder_enqueue_assets($hook) {
     }
 
     wp_enqueue_script(
-        'vms-continuity-binder',
+        'bvmgr-continuity-binder',
         plugins_url('../../assets/js/vms-continuity-binder.js', __FILE__),
         array(),
         function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),

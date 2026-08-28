@@ -164,8 +164,8 @@ $GLOBALS['vms_test_enqueued_scripts'] = array();
 $_GET = array('page' => array('vms-dashboard'));
 $GLOBALS['vms_test_current_screen'] = (object) array('post_type' => 'vms_event_plan');
 $adminEnqueueAction();
-vms_test_assert(isset($GLOBALS['vms_test_enqueued_styles']['vms-admin']), 'CPT fallback should still enqueue VMS admin assets when page state is malformed.');
-vms_test_assert(isset($GLOBALS['vms_test_enqueued_scripts']['vms-number-input-guard']), 'CPT fallback should still enqueue the shared admin number-input guard.');
+vms_test_assert(isset($GLOBALS['vms_test_enqueued_styles']['bvmgr-admin']), 'CPT fallback should enqueue canonical admin assets when page state is malformed.');
+vms_test_assert(isset($GLOBALS['vms_test_enqueued_scripts']['bvmgr-number-input-guard']), 'CPT fallback should enqueue the canonical shared admin number-input guard.');
 
 ob_start();
 $_GET = array('page' => array('vms-broken-page'));

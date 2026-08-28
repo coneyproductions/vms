@@ -59,16 +59,16 @@ $GLOBALS['vms_test_settings'] = array();
 $_GET = array();
 $reset_assets();
 bvmgr_ticket_integrity_admin_enqueue_assets('dashboard_page_tools');
-$assert(isset($GLOBALS['vms_test_styles']['vms-admin-ticket-integrity']), 'Ticket Integrity badge styling should enqueue its external stylesheet when the menu badge is needed.');
-$assert(!isset($GLOBALS['vms_test_scripts']['vms-admin-ticket-integrity']), 'Ticket Integrity admin script should stay off non-Ticket-Integrity screens.');
+$assert(isset($GLOBALS['vms_test_styles']['bvmgr-admin-ticket-integrity']), 'Ticket Integrity badge styling should enqueue its canonical external stylesheet when the menu badge is needed.');
+$assert(!isset($GLOBALS['vms_test_scripts']['bvmgr-admin-ticket-integrity']), 'Ticket Integrity admin script should stay off non-Ticket-Integrity screens.');
 
 $_GET = array('page' => 'vms-ticket-integrity');
 $GLOBALS['vms_test_store'] = array('summary' => array('red' => 0, 'yellow' => 0));
 $reset_assets();
 bvmgr_ticket_integrity_admin_enqueue_assets('toplevel_page_vms-dashboard');
-$assert(isset($GLOBALS['vms_test_styles']['vms-admin-ticket-integrity']), 'Ticket Integrity page should still enqueue its stylesheet.');
-$assert(isset($GLOBALS['vms_test_scripts']['vms-admin-ticket-integrity']), 'Ticket Integrity page should still enqueue its admin script.');
-$assert(strpos((string) ($GLOBALS['vms_test_inline_scripts']['vms-admin-ticket-integrity']['script'] ?? ''), 'window.vmsTicketIntegrityAdmin = ') !== false, 'Ticket Integrity page should retain its existing inline JS configuration.');
+$assert(isset($GLOBALS['vms_test_styles']['bvmgr-admin-ticket-integrity']), 'Ticket Integrity page should enqueue its canonical stylesheet.');
+$assert(isset($GLOBALS['vms_test_scripts']['bvmgr-admin-ticket-integrity']), 'Ticket Integrity page should enqueue its canonical admin script.');
+$assert(strpos((string) ($GLOBALS['vms_test_inline_scripts']['bvmgr-admin-ticket-integrity']['script'] ?? ''), 'window.BVMGR_TICKET_INTEGRITY_ADMIN = ') !== false, 'Ticket Integrity page should emit its canonical inline JS configuration.');
 
 $seed_menu();
 $GLOBALS['vms_test_store'] = array('summary' => array('red' => 1, 'yellow' => 0));

@@ -2480,7 +2480,7 @@ function bvmgr_vendor_apply_shortcode($atts = array(), $content = ''): string
         $apply_script_ver = function_exists('bvmgr_asset_version_for')
             ? bvmgr_asset_version_for('assets/js/vms-vendor-apply.js')
             : (function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''));
-        wp_enqueue_script('vms-vendor-apply', $apply_script_src, array(), $apply_script_ver, true);
+        wp_enqueue_script('bvmgr-vendor-apply', $apply_script_src, array(), $apply_script_ver, true);
     }
 
     $variant_map_json = wp_json_encode(bvmgr_vendor_app_form_variant_map());

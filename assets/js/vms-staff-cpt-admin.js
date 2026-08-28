@@ -21,7 +21,7 @@
   };
 
   function getConfig() {
-    var config = window.vmsStaffCptAdmin || {};
+    var config = window.BVMGR_STAFF_CPT_ADMIN || {};
     var labels = {};
     var key;
 

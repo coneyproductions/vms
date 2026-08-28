@@ -1,5 +1,5 @@
 (function () {
-  const cfg = window.vmsDoorCheckin || null;
+  const cfg = window.BVMGR_DOOR_CHECKIN || null;
   const root = document.getElementById('vms-door-checkin-root');
   if (!cfg || !root) return;
 

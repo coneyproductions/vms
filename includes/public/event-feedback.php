@@ -60,8 +60,8 @@ if (!function_exists('bvmgr_feedback_enqueue_public_assets')) {
 		if (!bvmgr_feedback_is_public_survey_request()) {
 			return;
 		}
-		wp_enqueue_style('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), bvmgr_asset_version());
-		wp_enqueue_script('vms-event-feedback', BVMGR_PLUGIN_URL . 'assets/js/vms-event-feedback.js', array(), bvmgr_asset_version(), true);
+		wp_enqueue_style('bvmgr-event-feedback', BVMGR_PLUGIN_URL . 'assets/css/vms-event-feedback.css', array(), bvmgr_asset_version());
+		wp_enqueue_script('bvmgr-event-feedback', BVMGR_PLUGIN_URL . 'assets/js/vms-event-feedback.js', array(), bvmgr_asset_version(), true);
 	}
 }
 add_action('wp_enqueue_scripts', 'bvmgr_feedback_enqueue_public_assets');

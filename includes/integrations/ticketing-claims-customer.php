@@ -352,7 +352,7 @@ if (!function_exists('bvmgr_ticketing_claims_enqueue_account_styles')) {
 		}
 
 		wp_enqueue_style(
-			'vms-ticketing-front',
+			'bvmgr-ticketing-front',
 			plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
 			$deps,
 			function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')

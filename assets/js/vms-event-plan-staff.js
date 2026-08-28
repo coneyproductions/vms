@@ -187,7 +187,7 @@
     });
   }
 
-  window.vmsEventPlanInitStaff = initStaff;
+  window.BVMGR_EVENT_PLAN_INIT_STAFF = initStaff;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {

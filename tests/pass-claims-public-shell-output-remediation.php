@@ -188,7 +188,7 @@ $assert($GLOBALS['vms_test_nocache_headers'] === array(true), 'Pass Claims publi
 $assert($GLOBALS['vms_test_header_calls'] === 1 && $GLOBALS['vms_test_footer_calls'] === 1, 'Pass Claims public shell should preserve get_header() and get_footer() execution.');
 $assert($GLOBALS['vms_test_enqueued_styles'] === array(
 	array(
-		'handle' => 'vms-pass-claims-public',
+		'handle' => 'bvmgr-pass-claims-public',
 		'src' => BVMGR_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css',
 		'deps' => array(),
 		'ver' => BVMGR_VERSION,
@@ -197,7 +197,7 @@ $assert($GLOBALS['vms_test_enqueued_styles'] === array(
 ), 'Pass Claims public shell should preserve the public stylesheet enqueue.');
 $assert($GLOBALS['vms_test_enqueued_scripts'] === array(
 	array(
-		'handle' => 'vms-pass-claims-public',
+		'handle' => 'bvmgr-pass-claims-public',
 		'src' => BVMGR_PLUGIN_URL . 'assets/js/vms-pass-claims-public.js',
 		'deps' => array(),
 		'ver' => BVMGR_VERSION,

@@ -99,7 +99,7 @@ if (!function_exists('bvmgr_social_enqueue_admin_assets')) {
 
 		$ver = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null;
 		wp_enqueue_script(
-			'vms-social-admin',
+			'bvmgr-social-admin',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-social-admin.js',
 			array(),
 			$ver,

@@ -1161,7 +1161,7 @@ if (!function_exists('bvmgr_admission_vendor_guest_render_custom_tab')) {
 			echo '<div class="vms-vendor-guest-meta"><span>' . implode('</span><span>', $meta) . '</span></div>';
 			if (!$is_preview) {
 				if (function_exists('wp_enqueue_script')) {
-					wp_enqueue_script('vms-vendor-guest-portal', BVMGR_PLUGIN_URL . 'assets/js/vms-vendor-guest-portal.js', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : false, true);
+					wp_enqueue_script('bvmgr-vendor-guest-portal', BVMGR_PLUGIN_URL . 'assets/js/vms-vendor-guest-portal.js', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : false, true);
 				}
 				$form_anchor = ($selected_event === $event_plan_id || $event_index === 0) ? ' data-vms-tour="vendor-portal-guest.form"' : '';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vendor-guest-form" data-vms-vendor-guest-form data-max-party="' . esc_attr((string) $max_party) . '"' . $form_anchor . '>';

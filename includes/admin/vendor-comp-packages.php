@@ -65,7 +65,7 @@ if (!function_exists('bvmgr_comp_package_admin_enqueue_assets')) {
             : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(
-            'vms-compensation-admin',
+            'bvmgr-compensation-admin',
             BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js',
             array(),
             $version,
@@ -73,8 +73,8 @@ if (!function_exists('bvmgr_comp_package_admin_enqueue_assets')) {
         );
 
         wp_localize_script(
-            'vms-compensation-admin',
-            'vmsCompPackageAdmin',
+            'bvmgr-compensation-admin',
+            'BVMGR_COMP_PACKAGE_ADMIN',
             array(
                 'labels' => array(
                     'basePay' => __('Base Pay', 'backstage-venue-manager'),

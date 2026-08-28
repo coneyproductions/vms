@@ -83,7 +83,7 @@
       modal.__lastTrigger.focus();
     }
   }
-  window.VMSPortalCalendarModalOpen = function(trigger){
+  window.BVMGR_PORTAL_CALENDAR_MODAL_OPEN = function(trigger){
     return openModal(trigger);
   };
 

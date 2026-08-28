@@ -1690,7 +1690,7 @@ if (!function_exists('bvmgr_vendor_app_render_confirmation_shell')) {
         nocache_headers();
 
         if (function_exists('wp_enqueue_style')) {
-            wp_enqueue_style('vms-portal');
+            wp_enqueue_style('bvmgr-portal');
         }
 
         echo '<!doctype html>';

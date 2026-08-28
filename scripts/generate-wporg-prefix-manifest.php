@@ -21,7 +21,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		$prohibitedBaseline = self::loadProhibitedBaseline($root);
 
 		return array(
-			'schema_version' => 4,
+			'schema_version' => 5,
 			'authority' => array(
 				'document' => 'docs/WPORG_PREFIX_MIGRATION_B0.md',
 				'supplied_b0_sha256' => '7893dc878cff48e86a981771c0e52f3119a4a3202307c73ab24817bb863f3dc9',
@@ -52,6 +52,8 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 					'architecture_impact' => 'The historical B2 map and ratchet remain immutable; a separate complete semantic ledger and scanner-row inventory govern B2.5 and later batches.',
 				),
 			),
+			'b4_evidence_corrections' => self::b4EvidenceCorrections(),
+			'b4_identifier_inventory' => self::b4IdentifierInventory($root),
 			'canonical_prefix_family' => array(
 				'procedural_php_hooks_options' => 'bvmgr_',
 				'constants_low_churn_classes' => 'BVMGR_',
@@ -105,6 +107,60 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		return $json . PHP_EOL;
 	}
 
+	private static function b4EvidenceCorrections(): array
+	{
+		return array(
+			array(
+				'id' => 'complete-browser-global-inventory',
+				'previous_summary' => array('confirmed_window_VMS_globals' => 5),
+				'corrected_inventory' => array('plugin_owned_browser_globals' => 29),
+				'cause' => 'B0 counted only uppercase window.VMS_* contracts and omitted shipped localized, camel-case API, and request-local window properties.',
+				'architecture_impact' => 'Additive B4 producer/consumer inventory only; no B0-B3 runtime architecture changes.',
+			),
+			array(
+				'id' => 'semantic-asset-handle-inventory',
+				'previous_summary' => array('unique' => 66, 'registration_sites' => 99, 'concrete_consumers' => 27),
+				'corrected_inventory' => array('unique' => 64, 'registration_sites' => 99, 'dependency_sites' => 34),
+				'cause' => 'The historical probe did not freeze row-level handle membership, missed seven data-flow dependency sites, and overcounted two identities.',
+				'architecture_impact' => 'The approved bvmgr-* target remains; only exact membership and consumer accounting change.',
+			),
+			array(
+				'id' => 'refer-a-friend-admin-slug-not-handle',
+				'previous_classification' => 'vms-refer-a-friend consumes asset handle vms-admin',
+				'corrected_classification' => 'The sole exact occurrence is a retained admin-page parent slug; semantic asset-API consumers are zero.',
+				'evidence' => 'Disposable add-on includes/class-vms-raf-plugin.php detect_vms_parent_slug() candidate list; enqueue dependency arrays are empty.',
+				'architecture_impact' => 'No B4 add-on patch and no dependency-only legacy handle alias are required.',
+			),
+			array(
+				'id' => 'exact-nonce-action-inventory',
+				'previous_summary' => array('static_actions' => 156, 'dynamic_action_families' => 64, 'total' => 220),
+				'corrected_inventory' => array('static_actions' => 154, 'dynamic_action_families' => 64, 'total' => 218),
+				'cause' => 'The historical total was hard-coded without row identities. Token scans at the manifest-introduction commit and authorized B4 starting HEAD both produce the same 154 static actions; no two missing identifiers exist.',
+				'architecture_impact' => 'The approved nonce compatibility strategy remains unchanged; invented rows are forbidden.',
+			),
+		);
+	}
+
+	private static function b4IdentifierInventory(string $root): array
+	{
+		$relative = 'docs/wporg-prefix-b4-identifier-map.json';
+		$path = $root . '/' . $relative;
+		if (!is_file($path)) {
+			throw new RuntimeException('Missing frozen B4 identifier map: ' . $relative);
+		}
+		$decoded = json_decode((string) file_get_contents($path), true);
+		if (!is_array($decoded) || !isset($decoded['summary'])) {
+			throw new RuntimeException('Invalid frozen B4 identifier map: ' . $relative);
+		}
+		return array(
+			'artifact' => $relative,
+			'sha256' => hash_file('sha256', $path),
+			'summary' => $decoded['summary'],
+			'frozen_from_head' => 'bdd84df7bcbfcec65ee57fedf561bf4e167761f6',
+			'implementation_state' => 'browser_assets_complete',
+		);
+	}
+
 	private static function strategies(): array
 	{
 		return array(
@@ -138,15 +194,15 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			self::category('rest', 'N', array('namespaces' => 1, 'routes' => 16, 'registrations' => 17), 'vms/v1', 'backstage-venue-manager/v1', array(5), 'dual-register identical handlers, permissions, and schemas', 'public HTTP contract', 'B7', true, 'High'),
 			self::category('ajax', 'O', array('actions' => 41, 'registrations' => 45, 'nopriv' => 4), 'vms_* action values', 'bvmgr_*', array(5), 'dual-register identical callbacks and preserve auth/nonces/responses', 'public/admin HTTP contract', 'B7', true, 'High'),
 			self::category('shortcodes', 'P', array('total' => 17, 'legacy_prefixed' => 16, 'unprefixed_legacy_noop' => 1), 'vms_* plus event_ticket_button', 'add bvmgr_* aliases', array(5, 6), 'retain stored legacy tags indefinitely pending content audit', 'stored public content contract', 'B7', true, 'High'),
-			self::category('handles', 'Q', array('unique' => 66, 'registration_sites' => 99, 'concrete_consumers' => 27), 'vms-*', 'bvmgr-*', array(2), 'dependency-only aliases for externally consumed handles', 'public dependency graph contract', 'B4', true, 'Medium-High'),
+			self::category('handles', 'Q', array('unique' => 64, 'registration_sites' => 99, 'dependency_sites' => 34), 'vms-*', 'bvmgr-*', array(2), 'dependency-only aliases only where a semantic external asset-API consumer is proven; current known-add-on set has none', 'public dependency graph contract', 'B4', true, 'Medium-High'),
 			self::category('cpt_taxonomy', 'R', array('cpts' => 15, 'taxonomies' => 3, 'legacy_cpt_aliases' => 2, 'further_semantic_uses' => 651), 'vms_* physical identifiers', 'canonical accessors returning retained values', array(6), 'do not physically rename', 'persistent WordPress storage and URL contract', 'B6', true, 'Critical'),
 			self::category('capabilities_roles', 'S', array('capabilities' => 15, 'static_roles' => 3, 'dynamic_role_families' => 1), 'vms_* grants and roles', 'bvmgr_*', array(4), 'temporary dual authorization; retain legacy grants for rollback', 'persistent authorization state', 'B5', true, 'Critical'),
-			self::category('nonces', 'T', array('static_actions' => 156, 'dynamic_action_families' => 64, 'action_families_total' => 220, 'custom_field_names' => 73), 'vms_* actions and custom fields', 'bvmgr_* actions and _bvmgr_* fields', array(3, 5), 'canonical generation with bounded legacy verification/read', 'cached form/security contract; not durable data', 'B4', true, 'Medium'),
+			self::category('nonces', 'T', array('static_actions' => 154, 'dynamic_action_families' => 64, 'action_families_total' => 218, 'custom_field_names' => 73), 'vms_* actions and custom fields', 'bvmgr_* actions and _bvmgr_* fields', array(3, 5), 'canonical generation with bounded legacy verification/read', 'cached form/security contract; not durable data', 'B4', true, 'Medium'),
 			self::category('query_rewrite', 'U', array('query_vars' => 14, 'registrations' => 15, 'rules' => 7, 'rewrite_tags' => 4, 'consumers' => 27), 'vms_* inbound identifiers', 'bvmgr_*', array(5), 'keep legacy inbound URLs and flush once under migration guard', 'public URL contract and rewrite state', 'B4', true, 'High'),
 			self::category('cli', 'V', array('command_paths' => 3), 'vms command paths', 'bvmgr command paths', array(5), 'temporary deprecated legacy command aliases', 'operator-facing external contract', 'B4', true, 'Low-Medium'),
 			self::category('protocol_headers', 'W', array('headers' => 5, 'protocol_markers' => 1), 'X-VMS-* and vms-admission:', 'X-Backstage-Venue-Manager-* and canonical admission marker', array(3, 5, 6), 'permanently accept issued QR protocol values', 'external protocol/signature contract', 'B7', true, 'High'),
 			self::category('public_extension_apis', 'X', array('semantic_families' => 6, 'entry_points_types' => 13), '13 named vms_*/VMS_* PHP contracts', 'bvmgr_*/BVMGR_*', array(1, 8), 'coordinated cutover; private bridge only if proven necessary', 'plausible external PHP API', 'B2/B3 coordinated', false, 'High'),
-			self::category('tests_tooling_assets', 'Y', array('identifier_bearing_tests' => 195, 'scripts' => 5, 'docs' => 147, 'root_historical_tooling_files' => 150, 'shipped_assets' => 27), 'mixed current and historical identifiers', 'canonical current tooling; retained historical evidence/fixtures', array(1, 6, 7), 'reason-coded residuals only', 'mixed release-excluded and shipped clients', 'B8', true, 'High'),
+			self::category('tests_tooling_assets', 'Y', array('identifier_bearing_tests' => 195, 'scripts' => 5, 'docs' => 147, 'root_historical_tooling_files' => 150, 'shipped_assets' => 27, 'browser_globals_assigned_to_B4' => 29), 'mixed current and historical identifiers', 'canonical current tooling; retained historical evidence/fixtures', array(1, 6, 7), 'reason-coded residuals only; browser-global contracts are carved into B4 by the controlling B4 authorization', 'mixed release-excluded and shipped clients', 'B8 except browser globals in B4', true, 'High'),
 		);
 	}
 
@@ -650,9 +706,9 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 				array('vms_admin_ui_render_shell', 'vms_get_public_event_calendar_url', 'vms_register_admin_page'),
 				array('vms_admin_register_pages'),
 				array(),
-				array('vms-admin'),
+				array(),
 				array('includes/class-vms-raf-plugin.php'),
-				array('B3', 'B4', 'B7')
+				array('B3', 'B7')
 			),
 		);
 		foreach ($addons as &$addon) {

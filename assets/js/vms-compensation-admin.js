@@ -54,7 +54,7 @@
 
     root.dataset.vmsCompPackageBound = '1';
 
-    const labels = getLabels(getConfig('vmsCompPackageAdmin'));
+    const labels = getLabels(getConfig('BVMGR_COMP_PACKAGE_ADMIN'));
     const flatFeeInput = byId(root, 'vms_flat_fee');
     const flatFeeRow = flatFeeInput ? flatFeeInput.closest('p') : null;
     const flatLabelText = byId(root, 'vms_flat_fee_label_text');
@@ -114,7 +114,7 @@
 
     root.dataset.vmsVendorDefaultsBound = '1';
 
-    const strings = getStrings(getConfig('vmsVendorDefaultsAdmin'));
+    const strings = getStrings(getConfig('BVMGR_VENDOR_DEFAULTS_ADMIN'));
     const bonusMode = byId(root, 'vms_default_attendance_bonus_mode');
     const flatField = byId(root, 'vms_default_flat_fee_amount');
     const supportingFlatField = byId(root, 'vms_default_supporting_flat_fee_amount');

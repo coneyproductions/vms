@@ -149,7 +149,7 @@ if (!class_exists('BVMGR_Tours_Service')) {
 
 		public function render_help_mount(): void
 		{
-			if (!wp_script_is('vms-tours-runtime', 'enqueued')) {
+			if (!wp_script_is('bvmgr-tours-runtime', 'enqueued')) {
 				return;
 			}
 
@@ -329,24 +329,24 @@ if (!class_exists('BVMGR_Tours_Service')) {
 			$runtime_css = 'assets/css/vms-tours.css';
 
 			if (file_exists(BVMGR_PLUGIN_PATH . $driver_css)) {
-				wp_enqueue_style('vms-driverjs', BVMGR_PLUGIN_URL . $driver_css, array(), $version);
+				wp_enqueue_style('bvmgr-driverjs', BVMGR_PLUGIN_URL . $driver_css, array(), $version);
 			}
 			if (file_exists(BVMGR_PLUGIN_PATH . $driver_js)) {
-				wp_enqueue_script('vms-driverjs', BVMGR_PLUGIN_URL . $driver_js, array(), $version, true);
+				wp_enqueue_script('bvmgr-driverjs', BVMGR_PLUGIN_URL . $driver_js, array(), $version, true);
 			}
 
-			wp_enqueue_style('vms-tours', BVMGR_PLUGIN_URL . $runtime_css, array('vms-driverjs'), $version);
-			wp_enqueue_script('vms-tours-runtime', BVMGR_PLUGIN_URL . $runtime_js, array('vms-driverjs'), $version, true);
+			wp_enqueue_style('bvmgr-tours', BVMGR_PLUGIN_URL . $runtime_css, array('bvmgr-driverjs'), $version);
+			wp_enqueue_script('bvmgr-tours-runtime', BVMGR_PLUGIN_URL . $runtime_js, array('bvmgr-driverjs'), $version, true);
 
 			$payload = $this->build_payload($screen_key);
-			wp_add_inline_script('vms-tours-runtime', 'window.VMS_TOURS_PAYLOAD = ' . wp_json_encode($payload) . ';', 'before');
+			wp_add_inline_script('bvmgr-tours-runtime', 'window.BVMGR_TOURS_PAYLOAD = ' . wp_json_encode($payload) . ';', 'before');
 		}
 
 		private function enqueue_admin_ui_assets(): void
 		{
 			$version = $this->asset_version();
-			wp_enqueue_style('vms-tours-admin', BVMGR_PLUGIN_URL . 'assets/css/vms-tours-admin.css', array('vms-tours'), $version);
-			wp_enqueue_script('vms-tours-admin', BVMGR_PLUGIN_URL . 'assets/js/vms-tours-admin.js', array('vms-tours-runtime'), $version, true);
+			wp_enqueue_style('bvmgr-tours-admin', BVMGR_PLUGIN_URL . 'assets/css/vms-tours-admin.css', array('bvmgr-tours'), $version);
+			wp_enqueue_script('bvmgr-tours-admin', BVMGR_PLUGIN_URL . 'assets/js/vms-tours-admin.js', array('bvmgr-tours-runtime'), $version, true);
 		}
 
 		/**

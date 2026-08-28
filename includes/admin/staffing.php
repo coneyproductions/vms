@@ -373,7 +373,7 @@ if (!function_exists('bvmgr_staffing_admin_enqueue_assets')) {
 
 		if ($is_templates_page) {
 			wp_enqueue_style(
-				'vms-staffing-admin',
+				'bvmgr-staffing-admin',
 				BVMGR_PLUGIN_URL . 'assets/css/vms-staffing-admin.css',
 				array(),
 				$version
@@ -381,7 +381,7 @@ if (!function_exists('bvmgr_staffing_admin_enqueue_assets')) {
 		}
 
 		wp_enqueue_script(
-			'vms-staffing-admin',
+			'bvmgr-staffing-admin',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js',
 			array(),
 			$version,
