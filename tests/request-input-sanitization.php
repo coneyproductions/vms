@@ -154,6 +154,15 @@ function wp_verify_nonce(string $nonce, string $action): bool
 	return $nonce === 'good:' . $action;
 }
 
+function bvmgr_verify_nonce_compat(string $nonce, string $action): bool
+{
+	if (wp_verify_nonce($nonce, $action)) {
+		return true;
+	}
+	$legacy = str_starts_with($action, 'bvmgr_') ? 'vms_' . substr($action, 6) : $action;
+	return $legacy !== $action && wp_verify_nonce($nonce, $legacy);
+}
+
 function current_time(string $type): string
 {
 	return $type === 'Y-m-d' ? '2026-07-11' : '2026-07-11 12:00:00';
@@ -359,12 +368,12 @@ $assertContains('value="alice@example.test"', $html, 'Email repopulation should 
 $assertContains('&lt;b&gt;one&lt;/b&gt;', $html, 'Comment repopulation should remain escaped in textarea output.');
 $assertContains('value="4"', $html, 'Rating repopulation should preserve valid scalar values.');
 $assertContains('selected="selected"', $html, 'Rating repopulation should preserve the selected option.');
-$assertContains('name="vms_rating_nonce"', $html, 'The shortcode should preserve the nonce field in the rendered form.');
+$assertContains('name="bvmgr_rating_nonce"', $html, 'The shortcode should render the canonical nonce field.');
 $assertNotContains('<script>alert(1)</script>', $html, 'Rendered repopulation output must not emit raw script tags.');
 
 $GLOBALS['vms_test_insert_post_calls'] = array();
 $_POST = array(
-	'vms_rating_nonce' => 'good:vms_submit_rating',
+	'bvmgr_rating_nonce' => 'good:bvmgr_submit_rating',
 	'vms_reviewer_name' => array('bad'),
 	'vms_reviewer_email' => 'alice@example.test',
 	'vms_rating_value' => '4',

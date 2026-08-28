@@ -258,7 +258,7 @@ if (!function_exists('bvmgr_event_plan_import_render_main_content')) {
 		echo '<section class="vms-pass-card">';
 		echo '<h2>' . esc_html__('Preview Import', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" enctype="multipart/form-data">';
-		wp_nonce_field('vms_event_plan_import_preview');
+		wp_nonce_field('bvmgr_event_plan_import_preview');
 		echo '<input type="hidden" name="action" value="vms_event_plan_import_preview" />';
 		echo '<p><label><strong>' . esc_html__('CSV file', 'backstage-venue-manager') . '</strong><br />';
 		echo '<input type="file" name="event_plan_csv_file" accept=".csv,text/csv,text/plain" />';
@@ -282,7 +282,7 @@ if (!function_exists('bvmgr_event_plan_import_render_main_content')) {
 		echo '<button type="submit" class="button button-primary">' . esc_html__('Preview changes', 'backstage-venue-manager') . '</button> ';
 		$sample_url = wp_nonce_url(
 			add_query_arg(array('action' => 'vms_event_plan_import_download_sample_csv'), admin_url('admin-post.php')),
-			'vms_event_plan_import_download_sample_csv'
+			'bvmgr_event_plan_import_download_sample_csv'
 		);
 		echo '<a class="button" href="' . esc_url($sample_url) . '">' . esc_html__('Download sample CSV', 'backstage-venue-manager') . '</a>';
 		echo '</p>';
@@ -334,7 +334,7 @@ if (!function_exists('bvmgr_event_plan_import_render_main_content')) {
 
 			$selected_required_message = __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager');
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="vms-epcsv-commit-form" data-vms-selected-required-message="' . esc_attr($selected_required_message) . '" style="margin-top:16px;">';
-			wp_nonce_field('vms_event_plan_import_commit');
+			wp_nonce_field('bvmgr_event_plan_import_commit');
 			echo '<input type="hidden" name="action" value="vms_event_plan_import_commit" />';
 			echo '<input type="hidden" name="preview_token" value="' . esc_attr($preview_token) . '" />';
 
@@ -368,7 +368,7 @@ if (!function_exists('bvmgr_event_plan_import_render_main_content')) {
 					),
 					admin_url('admin-post.php')
 				),
-				'vms_event_plan_import_download_report_' . $preview_token
+				'bvmgr_event_plan_import_download_report_' . $preview_token
 			);
 			echo '<p class="vms-pass-actions">';
 			echo '<a class="button" href="' . esc_url($report_url) . '">' . esc_html__('Download full report CSV', 'backstage-venue-manager') . '</a>';
@@ -412,7 +412,7 @@ if (!function_exists('bvmgr_event_plan_import_render_main_content')) {
 			echo '</p>';
 			echo '<p><strong>' . esc_html__('Revert candidate:', 'backstage-venue-manager') . '</strong> <code>' . esc_html($revert_run_id) . '</code></p>';
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-			wp_nonce_field('vms_event_plan_import_revert_last');
+			wp_nonce_field('bvmgr_event_plan_import_revert_last');
 			echo '<input type="hidden" name="action" value="vms_event_plan_import_revert_last" />';
 			echo '<button type="submit" class="button button-secondary">' . esc_html__('Revert last import', 'backstage-venue-manager') . '</button>';
 			echo '</form>';

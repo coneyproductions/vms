@@ -228,7 +228,7 @@ function bvmgr_render_continuity_binder_page_content() {
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         echo '<input type="hidden" name="action" value="vms_save_continuity_binder" />';
-        wp_nonce_field('vms_save_continuity_binder', '_vms_cb_nonce');
+        wp_nonce_field('bvmgr_save_continuity_binder', '_bvmgr_cb_nonce');
 
         echo '<div class="vms-cb-form-actions">';
         echo get_submit_button(__('Save Binder', 'backstage-venue-manager'), 'primary', 'submit', false);
@@ -294,7 +294,7 @@ function bvmgr_admin_post_save_continuity_binder() {
         wp_die(esc_html__('Unauthorized.', 'backstage-venue-manager'));
     }
 
-    if (!isset($_POST['_vms_cb_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_vms_cb_nonce'])), 'vms_save_continuity_binder')) {
+    if (!isset($_POST['_bvmgr_cb_nonce']) || !bvmgr_verify_nonce_compat(sanitize_text_field(wp_unslash($_POST['_bvmgr_cb_nonce'])), 'bvmgr_save_continuity_binder')) {
         wp_die(esc_html__('Invalid nonce.', 'backstage-venue-manager'));
     }
 

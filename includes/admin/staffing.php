@@ -662,7 +662,7 @@ if (!function_exists('bvmgr_staffing_admin_render_templates_page')) {
 		$post_action = isset($post_data['vms_tpl_action']) ? sanitize_key((string) $post_data['vms_tpl_action']) : '';
 
 		if ('POST' === $request_method && 'save' === $post_action) {
-			check_admin_referer('vms_staffing_template_save');
+			bvmgr_check_admin_referer_compat('bvmgr_staffing_template_save');
 			$payload = bvmgr_staffing_admin_build_template_payload_from_post($post_data);
 			$res = function_exists('bvmgr_staffing_save_template') ? bvmgr_staffing_save_template($payload, get_current_user_id()) : array('ok' => false, 'error' => 'core_missing');
 			$next = admin_url('admin.php?page=vms-staffing-templates');
@@ -681,7 +681,7 @@ if (!function_exists('bvmgr_staffing_admin_render_templates_page')) {
 		}
 
 		if ('POST' === $request_method && 'delete' === $post_action) {
-			check_admin_referer('vms_staffing_template_delete');
+			bvmgr_check_admin_referer_compat('bvmgr_staffing_template_delete');
 			$template_id = isset($post_data['vms_tpl_template_id']) ? absint($post_data['vms_tpl_template_id']) : 0;
 			$ok = $template_id > 0 && function_exists('bvmgr_staffing_delete_template') ? bvmgr_staffing_delete_template($template_id, get_current_user_id()) : false;
 			$next = admin_url('admin.php?page=vms-staffing-templates');
@@ -772,7 +772,7 @@ if (!function_exists('bvmgr_staffing_admin_render_templates_page')) {
 		echo '<hr>';
 		echo '<h2>' . esc_html($title) . '</h2>';
 		echo '<form method="post">';
-		wp_nonce_field('vms_staffing_template_save');
+		wp_nonce_field('bvmgr_staffing_template_save');
 		echo '<input type="hidden" name="vms_tpl_action" value="save">';
 		echo '<input type="hidden" name="vms_tpl_template_id" value="' . esc_attr((string) (is_array($current) ? absint($current['template_id']) : 0)) . '">';
 		echo '<table class="form-table" role="presentation">';
@@ -813,7 +813,7 @@ if (!function_exists('bvmgr_staffing_admin_render_templates_page')) {
 
 		if (is_array($current) && !empty($current['template_id'])) {
 			echo '<form method="post" onsubmit="return confirm(\'' . esc_js(__('Delete this template?', 'backstage-venue-manager')) . '\');">';
-			wp_nonce_field('vms_staffing_template_delete');
+			wp_nonce_field('bvmgr_staffing_template_delete');
 			echo '<input type="hidden" name="vms_tpl_action" value="delete">';
 			echo '<input type="hidden" name="vms_tpl_template_id" value="' . esc_attr((string) absint($current['template_id'])) . '">';
 			echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Delete Template', 'backstage-venue-manager') . '</button></p>';
@@ -846,7 +846,7 @@ if (!function_exists('bvmgr_staffing_admin_render_rollups_page')) {
 
 		$request_method = bvmgr_staffing_admin_request_method();
 		if ('POST' === $request_method) {
-			check_admin_referer('vms_staffing_rollups_run');
+			bvmgr_check_admin_referer_compat('bvmgr_staffing_rollups_run');
 			$post_data = wp_unslash($_POST);
 			$filters = array(
 				'start_date'        => isset($post_data['vms_staffing_start_date']) ? sanitize_text_field((string) $post_data['vms_staffing_start_date']) : '',
@@ -879,7 +879,7 @@ if (!function_exists('bvmgr_staffing_admin_render_rollups_page')) {
 		echo '<p><strong>' . esc_html__('Dirty rollups:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $dirty_count) . '</p>';
 
 		echo '<form method="post">';
-		wp_nonce_field('vms_staffing_rollups_run');
+		wp_nonce_field('bvmgr_staffing_rollups_run');
 		echo '<table class="form-table" role="presentation">';
 		echo '<tr><th><label for="vms_staffing_start_date">' . esc_html__('Start date', 'backstage-venue-manager') . '</label></th><td><input type="date" id="vms_staffing_start_date" name="vms_staffing_start_date" value="' . esc_attr((string) $filters['start_date']) . '"></td></tr>';
 		echo '<tr><th><label for="vms_staffing_end_date">' . esc_html__('End date', 'backstage-venue-manager') . '</label></th><td><input type="date" id="vms_staffing_end_date" name="vms_staffing_end_date" value="' . esc_attr((string) $filters['end_date']) . '"></td></tr>';

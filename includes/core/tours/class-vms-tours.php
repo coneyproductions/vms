@@ -429,7 +429,7 @@ if (!class_exists('BVMGR_Tours')) {
 				),
 				'ajax'            => array(
 					'url'   => esc_url_raw(admin_url('admin-ajax.php')),
-					'nonce' => wp_create_nonce('vms_tours_state'),
+					'nonce' => wp_create_nonce('bvmgr_tours_state'),
 				),
 				'userState'       => self::get_current_user_state(),
 				'canManage'       => current_user_can('manage_options'),
@@ -525,7 +525,7 @@ if (!class_exists('BVMGR_Tours')) {
 
 			$dismiss_url = wp_nonce_url(
 				admin_url('admin-post.php?action=vms_tours_dismiss_notice&hash=' . rawurlencode($hash)),
-				'vms_tours_dismiss_notice'
+				'bvmgr_tours_dismiss_notice'
 			);
 
 			echo '<div class="notice notice-warning is-dismissible vms-tours-notice">';
@@ -580,7 +580,7 @@ if (!class_exists('BVMGR_Tours')) {
 			if (!current_user_can('manage_options')) {
 				wp_die('Insufficient permissions.');
 			}
-			check_admin_referer('vms_tours_dismiss_notice');
+			bvmgr_check_admin_referer_compat('bvmgr_tours_dismiss_notice');
 			$hash = bvmgr_request_read_text_field($_GET, 'hash');
 			if ($hash !== '') {
 				update_user_meta(get_current_user_id(), self::USER_META_NOTICE_DISMISSED, $hash);
@@ -627,7 +627,7 @@ if (!class_exists('BVMGR_Tours')) {
 			if (!is_user_logged_in() || !self::can_run_tours()) {
 				wp_send_json_error(array('message' => 'Forbidden'), 403);
 			}
-			check_ajax_referer('vms_tours_state', 'nonce');
+			bvmgr_check_ajax_referer_compat('bvmgr_tours_state', 'nonce');
 
 			$tour_id = bvmgr_request_read_key($_POST, 'tour_id');
 			$status  = bvmgr_request_read_key($_POST, 'status');

@@ -1242,8 +1242,8 @@ if (!function_exists('bvmgr_admin_guard_request_value')) {
 			'action',
 			'action2',
 			'vms_admin_heavy_action',
-			'vms_admin_heavy_nonce',
-			'_vms_admin_heavy_nonce',
+			'_bvmgr_admin_heavy_nonce',
+			'_bvmgr_admin_heavy_nonce',
 			'_wpnonce',
 		);
 
@@ -1349,9 +1349,9 @@ if (!function_exists('bvmgr_admin_guard_is_verified_action')) {
 			return false;
 		}
 
-		$nonce = bvmgr_admin_guard_request_value('vms_admin_heavy_nonce');
+		$nonce = bvmgr_admin_guard_request_value('_bvmgr_admin_heavy_nonce');
 		if ($nonce === '') {
-			$nonce = bvmgr_admin_guard_request_value('_vms_admin_heavy_nonce');
+			$nonce = bvmgr_admin_guard_request_value('_bvmgr_admin_heavy_nonce');
 		}
 		if ($nonce === '') {
 			$nonce = bvmgr_admin_guard_request_value('_wpnonce');
@@ -1362,7 +1362,7 @@ if (!function_exists('bvmgr_admin_guard_is_verified_action')) {
 			return false;
 		}
 
-		if (!wp_verify_nonce($nonce, 'vms_admin_heavy:' . $request_action)) {
+		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_admin_heavy:' . $request_action)) {
 			return false;
 		}
 
@@ -2192,7 +2192,7 @@ if (!function_exists('bvmgr_render_resource_fingerprint_admin_screen')) {
 
 		$cleared = false;
 		if (bvmgr_admin_guard_request_method() === 'post' && isset($_POST['vms_clear_resource_fingerprints'])) {
-			check_admin_referer('vms_clear_resource_fingerprints');
+			bvmgr_check_admin_referer_compat('bvmgr_clear_resource_fingerprints');
 			bvmgr_resource_fingerprint_clear_entries();
 			$cleared = true;
 		}
@@ -2213,7 +2213,7 @@ if (!function_exists('bvmgr_render_resource_fingerprint_admin_screen')) {
 		));
 		echo '</p>';
 		echo '<form method="post" action="">';
-		wp_nonce_field('vms_clear_resource_fingerprints');
+		wp_nonce_field('bvmgr_clear_resource_fingerprints');
 		echo '<p><button type="submit" class="button" name="vms_clear_resource_fingerprints" value="1">' . esc_html__('Clear Log', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 

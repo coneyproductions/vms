@@ -69,7 +69,7 @@ if (!function_exists('bvmgr_status_notice_admin_enqueue_assets')) {
 			'browserLabels' => bvmgr_status_notice_browser_labels(),
 			'osLabels' => bvmgr_status_notice_os_labels(),
 			'ajaxUrl' => admin_url('admin-ajax.php'),
-			'searchNonce' => wp_create_nonce('vms_status_notice_object_search'),
+			'searchNonce' => wp_create_nonce('bvmgr_status_notice_object_search'),
 			'searchMinChars' => 2,
 			'strings' => array(
 				'pass' => __('PASS', 'backstage-venue-manager'),
@@ -261,7 +261,7 @@ if (!function_exists('bvmgr_status_notice_render_list_screen')) {
 
 					echo '<form class="vms-status-bulk-actions" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
 					echo '<input type="hidden" name="action" value="vms_status_notice_bulk">';
-					wp_nonce_field('vms_status_notice_bulk');
+					wp_nonce_field('bvmgr_status_notice_bulk');
 					echo '<div class="vms-status-bulk-actions__row">';
 					echo '<label>' . esc_html__('Bulk Action', 'backstage-venue-manager') . ' ';
 					echo '<select name="bulk_action">';
@@ -294,9 +294,9 @@ if (!function_exists('bvmgr_status_notice_render_list_screen')) {
 						foreach ($items as $item) {
 							$id = (int) ($item['id'] ?? 0);
 							$edit_url = bvmgr_status_notice_admin_page_url(array('view' => 'edit', 'id' => $id));
-							$toggle_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_toggle&id=' . $id . '&enabled=' . (empty($item['enabled']) ? '1' : '0')), 'vms_status_notice_toggle_' . $id);
-							$duplicate_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_duplicate&id=' . $id), 'vms_status_notice_duplicate_' . $id);
-							$trash_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_trash&id=' . $id), 'vms_status_notice_trash_' . $id);
+							$toggle_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_toggle&id=' . $id . '&enabled=' . (empty($item['enabled']) ? '1' : '0')), 'bvmgr_status_notice_toggle_' . $id);
+							$duplicate_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_duplicate&id=' . $id), 'bvmgr_status_notice_duplicate_' . $id);
+							$trash_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_trash&id=' . $id), 'bvmgr_status_notice_trash_' . $id);
 
 							$window = __('Always', 'backstage-venue-manager');
 							if ((string) ($item['schedule_mode'] ?? 'always') === 'scheduled') {
@@ -375,7 +375,7 @@ if (!function_exists('bvmgr_status_notice_render_edit_screen')) {
 		$content = static function () use ($notice, $notice_id, $scope_labels, $severity_labels, $page_type_labels, $device_labels, $browser_labels, $os_labels, $role_labels): void {
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-status-notice-form" id="vms-status-notice-form">';
 			echo '<input type="hidden" name="action" value="vms_status_notice_save">';
-			wp_nonce_field('vms_status_notice_save');
+			wp_nonce_field('bvmgr_status_notice_save');
 			echo '<input type="hidden" name="notice_id" value="' . esc_attr((string) $notice_id) . '">';
 
 			echo '<section class="vms-status-card">';
@@ -567,7 +567,7 @@ if (!function_exists('bvmgr_status_notice_handle_save')) {
 		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_status_notice_save');
+		bvmgr_check_admin_referer_compat('bvmgr_status_notice_save');
 
 		$notice_id = isset($_POST['notice_id']) ? absint(wp_unslash((string) $_POST['notice_id'])) : 0;
 		$raw = isset($_POST) ? (array) wp_unslash($_POST) : array();
@@ -588,7 +588,7 @@ if (!function_exists('bvmgr_status_notice_handle_duplicate')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		check_admin_referer('vms_status_notice_duplicate_' . $notice_id);
+		bvmgr_check_admin_referer_compat('bvmgr_status_notice_duplicate_' . $notice_id);
 
 		$notice = bvmgr_status_notice_get($notice_id);
 		if (!is_array($notice)) {
@@ -620,7 +620,7 @@ if (!function_exists('bvmgr_status_notice_handle_toggle')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		check_admin_referer('vms_status_notice_toggle_' . $notice_id);
+		bvmgr_check_admin_referer_compat('bvmgr_status_notice_toggle_' . $notice_id);
 			if ($notice_id > 0) {
 				$enabled = isset($_GET['enabled']) ? absint(wp_unslash((string) $_GET['enabled'])) : 0;
 				update_post_meta($notice_id, '_vms_notice_enabled', $enabled ? 1 : 0);
@@ -638,7 +638,7 @@ if (!function_exists('bvmgr_status_notice_handle_trash')) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		check_admin_referer('vms_status_notice_trash_' . $notice_id);
+		bvmgr_check_admin_referer_compat('bvmgr_status_notice_trash_' . $notice_id);
 			if ($notice_id > 0) {
 				wp_trash_post($notice_id);
 			}
@@ -653,7 +653,7 @@ if (!function_exists('bvmgr_status_notice_handle_bulk')) {
 		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_status_notice_bulk');
+		bvmgr_check_admin_referer_compat('bvmgr_status_notice_bulk');
 
 		$bulk_action = isset($_POST['bulk_action']) ? sanitize_key((string) wp_unslash($_POST['bulk_action'])) : '';
 		$notice_ids = isset($_POST['notice_ids']) ? array_map('absint', (array) wp_unslash($_POST['notice_ids'])) : array();
@@ -725,7 +725,7 @@ if (!function_exists('bvmgr_status_notice_handle_object_search')) {
 		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_send_json_error(array('message' => __('Access denied.', 'backstage-venue-manager')), 403);
 		}
-		check_ajax_referer('vms_status_notice_object_search', 'nonce');
+		bvmgr_check_ajax_referer_compat('bvmgr_status_notice_object_search', 'nonce');
 
 		$query = isset($_GET['q']) ? sanitize_text_field((string) wp_unslash($_GET['q'])) : '';
 		$query_length = function_exists('mb_strlen') ? mb_strlen($query, 'UTF-8') : strlen($query);

@@ -251,7 +251,7 @@ if (!function_exists('bvmgr_social_render_overview_tab')) {
 		echo '</p>';
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_social_run_queue_now');
+		wp_nonce_field('bvmgr_social_run_queue_now');
 		echo '<input type="hidden" name="action" value="vms_social_run_queue_now" />';
 		echo '<button type="submit" class="button button-secondary">' . esc_html__('Run Queue Now', 'backstage-venue-manager') . '</button>';
 		echo '</form>';
@@ -284,7 +284,7 @@ if (!function_exists('bvmgr_social_render_settings_tab')) {
 		$settings = bvmgr_social_get_settings();
 		echo '<h2>' . esc_html__('Global Settings', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_social_save_settings');
+		wp_nonce_field('bvmgr_social_save_settings');
 		echo '<input type="hidden" name="action" value="vms_social_save_settings" />';
 		echo '<input type="hidden" name="tab" value="settings" />';
 		echo '<p><label><input type="checkbox" name="enabled" value="1" ' . checked(1, (int) $settings['enabled'], false) . ' /> ' . esc_html__('Enable social sharing module', 'backstage-venue-manager') . '</label></p>';
@@ -315,7 +315,7 @@ if (!function_exists('bvmgr_social_render_accounts_tab')) {
 				echo '<td>' . esc_html((string) $row['auth_state']) . '</td>';
 				echo '<td>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" onsubmit="return window.confirm(\'' . esc_js(__('Delete this account?', 'backstage-venue-manager')) . '\');">';
-				wp_nonce_field('vms_social_delete_account');
+				wp_nonce_field('bvmgr_social_delete_account');
 				echo '<input type="hidden" name="action" value="vms_social_delete_account" />';
 				echo '<input type="hidden" name="tab" value="accounts" />';
 				echo '<input type="hidden" name="id" value="' . (int) $row['id'] . '" />';
@@ -329,7 +329,7 @@ if (!function_exists('bvmgr_social_render_accounts_tab')) {
 
 		echo '<h3>' . esc_html__('Add Account', 'backstage-venue-manager') . '</h3>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_social_save_account');
+		wp_nonce_field('bvmgr_social_save_account');
 		echo '<input type="hidden" name="action" value="vms_social_save_account" />';
 		echo '<input type="hidden" name="tab" value="accounts" />';
 		echo '<p><label>' . esc_html__('Platform', 'backstage-venue-manager') . ' <select name="platform">';
@@ -372,7 +372,7 @@ if (!function_exists('bvmgr_social_render_venue_map_tab')) {
 				echo '<td>' . (!empty($row['is_enabled']) ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</td>';
 				echo '<td>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" onsubmit="return window.confirm(\'' . esc_js(__('Delete this mapping?', 'backstage-venue-manager')) . '\');">';
-				wp_nonce_field('vms_social_delete_venue_map');
+				wp_nonce_field('bvmgr_social_delete_venue_map');
 				echo '<input type="hidden" name="action" value="vms_social_delete_venue_map" />';
 				echo '<input type="hidden" name="tab" value="venue_map" />';
 				echo '<input type="hidden" name="id" value="' . (int) $row['id'] . '" />';
@@ -386,7 +386,7 @@ if (!function_exists('bvmgr_social_render_venue_map_tab')) {
 
 		echo '<h3>' . esc_html__('Add Venue Mapping', 'backstage-venue-manager') . '</h3>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_social_save_venue_map');
+		wp_nonce_field('bvmgr_social_save_venue_map');
 		echo '<input type="hidden" name="action" value="vms_social_save_venue_map" />';
 		echo '<input type="hidden" name="tab" value="venue_map" />';
 		echo '<p><label>' . esc_html__('Venue', 'backstage-venue-manager') . ' <select name="venue_id" required>';
@@ -439,7 +439,7 @@ if (!function_exists('bvmgr_social_render_templates_tab')) {
 				echo '<td><code>' . esc_html(bvmgr_social_trim_preview((string) $tpl['body'], 120)) . '</code></td>';
 				echo '<td>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" onsubmit="return window.confirm(\'' . esc_js(__('Delete this template?', 'backstage-venue-manager')) . '\');">';
-				wp_nonce_field('vms_social_delete_template');
+				wp_nonce_field('bvmgr_social_delete_template');
 				echo '<input type="hidden" name="action" value="vms_social_delete_template" />';
 				echo '<input type="hidden" name="tab" value="templates" />';
 				echo '<input type="hidden" name="id" value="' . (int) $tpl['id'] . '" />';
@@ -453,7 +453,7 @@ if (!function_exists('bvmgr_social_render_templates_tab')) {
 
 		echo '<h3>' . esc_html__('Add Template', 'backstage-venue-manager') . '</h3>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_social_save_template');
+		wp_nonce_field('bvmgr_social_save_template');
 		echo '<input type="hidden" name="action" value="vms_social_save_template" />';
 		echo '<input type="hidden" name="tab" value="templates" />';
 		echo '<p><label>' . esc_html__('Platform', 'backstage-venue-manager') . ' <select name="platform">';
@@ -506,14 +506,14 @@ if (!function_exists('bvmgr_social_render_queue_tab')) {
 				echo '<td>' . esc_html((string) $row['last_error_message']) . '</td>';
 				echo '<td class="vms-social-queue-actions">';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-				wp_nonce_field('vms_social_queue_retry');
+				wp_nonce_field('bvmgr_social_queue_retry');
 				echo '<input type="hidden" name="action" value="vms_social_queue_retry" />';
 				echo '<input type="hidden" name="tab" value="queue" />';
 				echo '<input type="hidden" name="queue_id" value="' . (int) $row['id'] . '" />';
 				echo '<button class="button button-small" type="submit">' . esc_html__('Retry', 'backstage-venue-manager') . '</button>';
 				echo '</form>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-				wp_nonce_field('vms_social_queue_cancel');
+				wp_nonce_field('bvmgr_social_queue_cancel');
 				echo '<input type="hidden" name="action" value="vms_social_queue_cancel" />';
 				echo '<input type="hidden" name="tab" value="queue" />';
 				echo '<input type="hidden" name="queue_id" value="' . (int) $row['id'] . '" />';
@@ -565,7 +565,7 @@ if (!function_exists('bvmgr_social_handle_save_settings')) {
 	function bvmgr_social_handle_save_settings(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_save_settings');
+		bvmgr_check_admin_referer_compat('bvmgr_social_save_settings');
 		$settings = bvmgr_social_update_settings(array(
 			'enabled' => isset($_POST['enabled']) ? 1 : 0,
 			'kill_switch' => isset($_POST['kill_switch']) ? 1 : 0,
@@ -582,7 +582,7 @@ if (!function_exists('bvmgr_social_handle_save_account')) {
 	function bvmgr_social_handle_save_account(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_save_account');
+		bvmgr_check_admin_referer_compat('bvmgr_social_save_account');
 
 		$platform = sanitize_key(wp_unslash((string) ($_POST['platform'] ?? '')));
 		$label = sanitize_text_field(wp_unslash((string) ($_POST['label'] ?? '')));
@@ -610,7 +610,7 @@ if (!function_exists('bvmgr_social_handle_delete_account')) {
 	function bvmgr_social_handle_delete_account(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_delete_account');
+		bvmgr_check_admin_referer_compat('bvmgr_social_delete_account');
 		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
 			bvmgr_social_account_delete($id);
@@ -625,7 +625,7 @@ if (!function_exists('bvmgr_social_handle_save_venue_map')) {
 	function bvmgr_social_handle_save_venue_map(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_save_venue_map');
+		bvmgr_check_admin_referer_compat('bvmgr_social_save_venue_map');
 		$id = bvmgr_social_venue_map_save(array(
 			'venue_id' => absint(wp_unslash((string) ($_POST['venue_id'] ?? 0))),
 			'platform' => sanitize_key(wp_unslash((string) ($_POST['platform'] ?? ''))),
@@ -644,7 +644,7 @@ if (!function_exists('bvmgr_social_handle_delete_venue_map')) {
 	function bvmgr_social_handle_delete_venue_map(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_delete_venue_map');
+		bvmgr_check_admin_referer_compat('bvmgr_social_delete_venue_map');
 		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
 			bvmgr_social_venue_map_delete($id);
@@ -671,7 +671,7 @@ if (!function_exists('bvmgr_social_handle_save_template')) {
 	function bvmgr_social_handle_save_template(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_save_template');
+		bvmgr_check_admin_referer_compat('bvmgr_social_save_template');
 
 		$id = bvmgr_social_template_save(array(
 			'platform' => bvmgr_request_read_key($_POST, 'platform'),
@@ -690,7 +690,7 @@ if (!function_exists('bvmgr_social_handle_delete_template')) {
 	function bvmgr_social_handle_delete_template(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_delete_template');
+		bvmgr_check_admin_referer_compat('bvmgr_social_delete_template');
 		$id = absint(wp_unslash((string) ($_POST['id'] ?? 0)));
 		if ($id > 0) {
 			bvmgr_social_template_delete($id);
@@ -705,7 +705,7 @@ if (!function_exists('bvmgr_social_handle_queue_retry')) {
 	function bvmgr_social_handle_queue_retry(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_queue_retry');
+		bvmgr_check_admin_referer_compat('bvmgr_social_queue_retry');
 		$queue_id = absint(wp_unslash((string) ($_POST['queue_id'] ?? 0)));
 		$event_plan_id = absint(wp_unslash((string) ($_POST['event_plan_id'] ?? 0)));
 		if ($queue_id > 0) {
@@ -724,7 +724,7 @@ if (!function_exists('bvmgr_social_handle_queue_cancel')) {
 	function bvmgr_social_handle_queue_cancel(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_queue_cancel');
+		bvmgr_check_admin_referer_compat('bvmgr_social_queue_cancel');
 		$queue_id = absint(wp_unslash((string) ($_POST['queue_id'] ?? 0)));
 		$event_plan_id = absint(wp_unslash((string) ($_POST['event_plan_id'] ?? 0)));
 		if ($queue_id > 0) {
@@ -743,7 +743,7 @@ if (!function_exists('bvmgr_social_handle_run_queue_now')) {
 	function bvmgr_social_handle_run_queue_now(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_run_queue_now');
+		bvmgr_check_admin_referer_compat('bvmgr_social_run_queue_now');
 		$summary = bvmgr_social_process_queue(50);
 		$message = sprintf(
 			/* translators: 1: processed count */

@@ -92,7 +92,7 @@ if (!class_exists('BVMGR_Settings_Tours')) {
 		{
 			$url = wp_nonce_url(
 				admin_url('admin-post.php?action=vms_tours_reset_current_user'),
-				'vms_tours_reset_current_user'
+				'bvmgr_tours_reset_current_user'
 			);
 			echo '<a class="button button-secondary" href="' . esc_url($url) . '">' . esc_html__('Reset Tour Progress', 'backstage-venue-manager') . '</a>';
 			echo '<p class="description">' . esc_html__('Clears current user tour progress and version-seen state so tours can auto-launch again.', 'backstage-venue-manager') . '</p>';
@@ -103,7 +103,7 @@ if (!class_exists('BVMGR_Settings_Tours')) {
 			if (!current_user_can('manage_options')) {
 				wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 			}
-			check_admin_referer('vms_tours_reset_current_user');
+			bvmgr_check_admin_referer_compat('bvmgr_tours_reset_current_user');
 
 			$user_id = get_current_user_id();
 			if ($user_id > 0) {

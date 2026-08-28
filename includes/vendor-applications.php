@@ -1486,7 +1486,7 @@ function bvmgr_vendor_applications_row_actions($actions, $post)
     if ($status === 'approved' && !$vendor_ok) {
         $repair_url = wp_nonce_url(
             admin_url('admin-post.php?action=vms_vendor_app_repair_vendor&app_id=' . $app_id),
-            'vms_vendor_app_repair_vendor_' . $app_id
+            'bvmgr_vendor_app_repair_vendor_' . $app_id
         );
 
         $actions['vms_repair_vendor'] = '<a href="' . esc_url($repair_url) . '">' . esc_html__('Create Vendor', 'backstage-venue-manager') . '</a>';
@@ -1496,7 +1496,7 @@ function bvmgr_vendor_applications_row_actions($actions, $post)
     if ($status === 'approved' && $vendor_ok) {
         $resync_url = wp_nonce_url(
             admin_url('admin-post.php?action=vms_vendor_app_resync_vendor&app_id=' . $app_id),
-            'vms_vendor_app_resync_vendor_' . $app_id
+            'bvmgr_vendor_app_resync_vendor_' . $app_id
         );
         $actions['vms_resync_vendor'] = '<a href="' . esc_url($resync_url) . '">' . esc_html__('Re-sync Vendor Data', 'backstage-venue-manager') . '</a>';
     }
@@ -1505,7 +1505,7 @@ function bvmgr_vendor_applications_row_actions($actions, $post)
     if ($status === 'approved' && !$vendor_ok) {
         $resync_url = wp_nonce_url(
             admin_url('admin-post.php?action=vms_vendor_app_resync_vendor&app_id=' . $app_id),
-            'vms_vendor_app_resync_vendor_' . $app_id
+            'bvmgr_vendor_app_resync_vendor_' . $app_id
         );
         $actions['vms_resync_vendor'] = '<a href="' . esc_url($resync_url) . '">' . esc_html__('Create + Sync Vendor', 'backstage-venue-manager') . '</a>';
     }
@@ -1695,7 +1695,7 @@ function bvmgr_vendor_applications_metabox_actions($post): void
     if ($status === 'approved' && !$vendor_ok) {
         $repair_url = wp_nonce_url(
             admin_url('admin-post.php?action=vms_vendor_app_repair_vendor&app_id=' . $post_id),
-            'vms_vendor_app_repair_vendor_' . $post_id
+            'bvmgr_vendor_app_repair_vendor_' . $post_id
         );
         echo '<p><a class="button button-primary" href="' . esc_url($repair_url) . '">'
             . esc_html__('Create Vendor Now', 'backstage-venue-manager')
@@ -1718,7 +1718,7 @@ function bvmgr_vendor_applications_metabox_actions($post): void
         echo '<p class="description" style="color:#92400e;">' . esc_html__('This application is not review-ready yet. The applicant must confirm their email before operators can approve, hold, or reject it.', 'backstage-venue-manager') . '</p>';
     }
 
-    wp_nonce_field('vms_vendor_app_decision_' . $post_id, 'vms_vendor_app_decision_nonce');
+    wp_nonce_field('bvmgr_vendor_app_decision_' . $post_id, 'bvmgr_vendor_app_decision_nonce');
     echo '<input type="hidden" name="vms_vendor_app_admin_fields_present" value="1">';
 
     echo '<p><label for="vms-app-decision-message"><strong>' . esc_html__('Message to applicant', 'backstage-venue-manager') . '</strong></label></p>';
@@ -1788,10 +1788,10 @@ if (!function_exists('bvmgr_vendor_applications_handle_edit_screen_decision')) {
         if (empty($_POST['vms_vendor_app_admin_fields_present'])) {
             return;
         }
-        $nonce = (isset($_POST['vms_vendor_app_decision_nonce']) && !is_array($_POST['vms_vendor_app_decision_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_app_decision_nonce']))
+        $nonce = (isset($_POST['bvmgr_vendor_app_decision_nonce']) && !is_array($_POST['bvmgr_vendor_app_decision_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_app_decision_nonce']))
             : '';
-        if (!$nonce || !wp_verify_nonce($nonce, 'vms_vendor_app_decision_' . (int) $post_id)) {
+        if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_app_decision_' . (int) $post_id)) {
             return;
         }
 
@@ -1891,7 +1891,7 @@ function bvmgr_vendor_applications_handle_approve(): void
     if ($app_id <= 0) wp_die('Missing app_id');
     if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
-    check_admin_referer('vms_vendor_app_approve_' . $app_id);
+    bvmgr_check_admin_referer_compat('bvmgr_vendor_app_approve_' . $app_id);
 
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, bvmgr_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
@@ -1943,7 +1943,7 @@ function bvmgr_vendor_applications_handle_reject(): void
     if ($app_id <= 0) wp_die('Missing app_id');
     if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
-    check_admin_referer('vms_vendor_app_reject_' . $app_id);
+    bvmgr_check_admin_referer_compat('bvmgr_vendor_app_reject_' . $app_id);
 
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, bvmgr_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
@@ -1972,7 +1972,7 @@ function bvmgr_vendor_applications_handle_repair_vendor(): void
     if ($app_id <= 0) wp_die('Missing app_id');
     if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
-    check_admin_referer('vms_vendor_app_repair_vendor_' . $app_id);
+    bvmgr_check_admin_referer_compat('bvmgr_vendor_app_repair_vendor_' . $app_id);
 
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, bvmgr_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
@@ -2013,7 +2013,7 @@ function bvmgr_vendor_applications_handle_resync_vendor(): void
     if ($app_id <= 0) wp_die('Missing app_id');
     if (!current_user_can('edit_post', $app_id)) wp_die('Forbidden');
 
-    check_admin_referer('vms_vendor_app_resync_vendor_' . $app_id);
+    bvmgr_check_admin_referer_compat('bvmgr_vendor_app_resync_vendor_' . $app_id);
 
     $app = get_post($app_id);
     if (!$app || empty($app->post_type) || !in_array($app->post_type, bvmgr_vendor_app_cpt_slugs(), true)) wp_die('Invalid application');
@@ -2494,7 +2494,7 @@ function bvmgr_vendor_apply_shortcode($atts = array(), $content = ''): string
     ?>
     <script type="application/json" id="vms-vendor-apply-variant-map"><?php echo $variant_map_json; ?></script>
     <form method="post" class="vms-vendor-apply-form">
-        <?php wp_nonce_field('vms_vendor_apply', 'vms_vendor_apply_nonce'); ?>
+        <?php wp_nonce_field('bvmgr_vendor_apply', 'bvmgr_vendor_apply_nonce'); ?>
 
         <p>
             <label><strong><?php echo esc_html__('Vendor Type', 'backstage-venue-manager'); ?></strong></label><br>
@@ -2637,10 +2637,10 @@ function bvmgr_vendor_apply_shortcode($atts = array(), $content = ''): string
  */
 function bvmgr_vendor_apply_handle_frontend_post(): string
 {
-    $nonce = (isset($_POST['vms_vendor_apply_nonce']) && !is_array($_POST['vms_vendor_apply_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_apply_nonce']))
+    $nonce = (isset($_POST['bvmgr_vendor_apply_nonce']) && !is_array($_POST['bvmgr_vendor_apply_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_apply_nonce']))
         : '';
-    if (!$nonce || !wp_verify_nonce($nonce, 'vms_vendor_apply')) {
+    if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_apply')) {
         bvmgr_vendor_apply_frontend_redirect('nonce');
         return '';
     }

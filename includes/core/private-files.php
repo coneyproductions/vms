@@ -700,7 +700,7 @@ if (!function_exists('bvmgr_private_w9_download_url')) {
 				),
 				admin_url('admin-post.php')
 			),
-			'vms_private_w9_download_' . $post_id
+			'bvmgr_private_w9_download_' . $post_id
 		);
 	}
 }
@@ -857,7 +857,7 @@ if (!function_exists('bvmgr_private_w9_download_handler')) {
 			wp_die(esc_html__('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		check_admin_referer('vms_private_w9_download_' . $post_id);
+		bvmgr_check_admin_referer_compat('bvmgr_private_w9_download_' . $post_id);
 		if (!bvmgr_private_w9_user_can_download($post_id)) {
 			wp_die(esc_html__('You do not have permission to download this file.', 'backstage-venue-manager'));
 		}
@@ -963,7 +963,7 @@ if (!function_exists('bvmgr_private_staff_cert_download_url')) {
 				),
 				admin_url('admin-post.php')
 			),
-			'vms_private_staff_cert_download_' . $staff_id . '_' . $qualification_id
+			'bvmgr_private_staff_cert_download_' . $staff_id . '_' . $qualification_id
 		);
 	}
 }
@@ -1047,7 +1047,7 @@ if (!function_exists('bvmgr_private_staff_cert_download_handler')) {
 			wp_die(esc_html__('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		check_admin_referer('vms_private_staff_cert_download_' . $staff_id . '_' . $qualification_id);
+		bvmgr_check_admin_referer_compat('bvmgr_private_staff_cert_download_' . $staff_id . '_' . $qualification_id);
 		if (!bvmgr_private_staff_cert_user_can_download($staff_id)) {
 			wp_die(esc_html__('You do not have permission to download this file.', 'backstage-venue-manager'));
 		}

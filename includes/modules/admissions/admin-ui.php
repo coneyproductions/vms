@@ -55,7 +55,7 @@ if (!function_exists('bvmgr_admission_admin_enqueue_assets')) {
 			'allowUncheckin' => !empty(bvmgr_admission_settings()['allow_uncheckin']) ? 1 : 0,
 			'exportCsvUrl' => wp_nonce_url(
 				admin_url('admin-post.php?action=vms_admissions_export_csv&event_plan_id=' . $post_id),
-				'vms_admissions_export_csv_' . $post_id
+				'bvmgr_admissions_export_csv_' . $post_id
 			),
 		));
 	}
@@ -123,7 +123,7 @@ if (!function_exists('bvmgr_admission_export_csv')) {
 		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
 			: '';
-		if (!wp_verify_nonce($nonce, 'vms_admissions_export_csv_' . $event_plan_id)) {
+		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_admissions_export_csv_' . $event_plan_id)) {
 			wp_die(esc_html__('Invalid request.', 'backstage-venue-manager'));
 		}
 

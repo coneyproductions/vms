@@ -1430,7 +1430,7 @@ if (!function_exists('bvmgr_vendor_app_render_resend_confirmation_form')) {
             <input type="hidden" name="action" value="vms_vendor_app_resend_confirmation">
             <input type="hidden" name="vms_app_ref" value="<?php echo esc_attr($app_ref); ?>">
             <input type="hidden" name="return_url" value="<?php echo esc_attr($return_url); ?>">
-            <?php wp_nonce_field('vms_vendor_app_resend_confirmation_' . $app_ref, '_vms_vendor_app_resend_nonce'); ?>
+            <?php wp_nonce_field('bvmgr_vendor_app_resend_confirmation_' . $app_ref, '_bvmgr_vendor_app_resend_nonce'); ?>
             <button type="submit" class="button button-secondary"><?php echo esc_html($button_label); ?></button>
         </form>
         <?php
@@ -1638,11 +1638,11 @@ if (!function_exists('bvmgr_vendor_app_handle_resend_confirmation')) {
         }
 
         $app_ref = bvmgr_vendor_app_resend_request_text_field('vms_app_ref');
-        $nonce = (isset($_POST['_vms_vendor_app_resend_nonce']) && !is_array($_POST['_vms_vendor_app_resend_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_POST['_vms_vendor_app_resend_nonce']))
+        $nonce = (isset($_POST['_bvmgr_vendor_app_resend_nonce']) && !is_array($_POST['_bvmgr_vendor_app_resend_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['_bvmgr_vendor_app_resend_nonce']))
             : '';
 
-        if ($app_ref === '' || !$nonce || !wp_verify_nonce($nonce, 'vms_vendor_app_resend_confirmation_' . $app_ref)) {
+        if ($app_ref === '' || !$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_app_resend_confirmation_' . $app_ref)) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
 

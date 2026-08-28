@@ -66,7 +66,7 @@ function bvmgr_dashboard_enqueue_assets($hook)
     'dueCompleteUrl' => esc_url_raw(rest_url('vms/v1/due-dates/complete')),
     'dueAllUrl' => esc_url_raw(admin_url('admin.php?page=vms-due-dates')),
     'ajaxUrl' => esc_url_raw(admin_url('admin-ajax.php')),
-    'dashPrefNonce' => wp_create_nonce('vms_set_dashboard_prefs'),
+    'dashPrefNonce' => wp_create_nonce('bvmgr_set_dashboard_prefs'),
     'nonce'   => wp_create_nonce('wp_rest'),
   ]);
 }

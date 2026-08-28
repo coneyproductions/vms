@@ -87,9 +87,9 @@ if (!function_exists('bvmgr_feedback_admin_handle_save_settings')) {
 		}
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
 		if (
-			!isset($_POST['vms_feedback_settings_nonce'])
-			|| is_array($_POST['vms_feedback_settings_nonce'])
-			|| !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_settings_nonce'])), 'vms_feedback_save_settings')
+			!isset($_POST['bvmgr_feedback_settings_nonce'])
+			|| is_array($_POST['bvmgr_feedback_settings_nonce'])
+			|| !bvmgr_verify_nonce_compat(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_feedback_settings_nonce'])), 'bvmgr_feedback_save_settings')
 		) {
 			wp_die(esc_html__('Settings form expired. Please try again.', 'backstage-venue-manager'));
 		}
@@ -117,9 +117,9 @@ if (!function_exists('bvmgr_feedback_admin_handle_delete_response')) {
 			exit;
 		}
 		if (
-			!isset($_POST['vms_feedback_delete_nonce'])
-			|| is_array($_POST['vms_feedback_delete_nonce'])
-			|| !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_delete_nonce'])), 'vms_feedback_delete_response_' . $response_id)
+			!isset($_POST['bvmgr_feedback_delete_nonce'])
+			|| is_array($_POST['bvmgr_feedback_delete_nonce'])
+			|| !bvmgr_verify_nonce_compat(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_feedback_delete_nonce'])), 'bvmgr_feedback_delete_response_' . $response_id)
 		) {
 			wp_die(esc_html__('Delete request expired. Please try again.', 'backstage-venue-manager'));
 		}
@@ -218,7 +218,7 @@ if (!function_exists('bvmgr_feedback_admin_render_notification_settings')) {
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-feedback-settings-form">';
 		echo '<input type="hidden" name="action" value="vms_save_event_feedback_settings">';
 		echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) absint($event_plan_id)) . '">';
-		wp_nonce_field('vms_feedback_save_settings', 'vms_feedback_settings_nonce');
+		wp_nonce_field('bvmgr_feedback_save_settings', 'bvmgr_feedback_settings_nonce');
 		echo '<label class="vms-feedback-checkbox-inline"><input type="checkbox" name="notify_enabled" value="1"' . checked(!empty($settings['enabled']), true, false) . '> ' . esc_html__('Email me new submissions', 'backstage-venue-manager') . '</label>';
 		echo '<label class="vms-feedback-settings-label" for="vms-feedback-notify-recipients">' . esc_html__('Recipient emails', 'backstage-venue-manager') . '</label>';
 		echo '<textarea id="vms-feedback-notify-recipients" name="notify_recipients" rows="3" class="widefat code" placeholder="' . esc_attr((string) get_option('admin_email')) . '">' . esc_textarea($recipients) . '</textarea>';
@@ -608,7 +608,7 @@ if (!function_exists('bvmgr_feedback_admin_render_response')) {
 		echo '<input type="hidden" name="action" value="vms_delete_event_feedback_response">';
 		echo '<input type="hidden" name="response_id" value="' . esc_attr((string) absint($response->ID)) . '">';
 		echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '">';
-		wp_nonce_field('vms_feedback_delete_response_' . absint($response->ID), 'vms_feedback_delete_nonce');
+		wp_nonce_field('bvmgr_feedback_delete_response_' . absint($response->ID), 'bvmgr_feedback_delete_nonce');
 		$confirm = "return confirm('" . esc_js(__('Delete this feedback response? This cannot be undone.', 'backstage-venue-manager')) . "');";
 		echo '<button type="submit" class="button button-link-delete" onclick="' . esc_attr($confirm) . '">' . esc_html__('Delete response', 'backstage-venue-manager') . '</button>';
 		echo '</form>';

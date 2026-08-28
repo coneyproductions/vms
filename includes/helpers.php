@@ -3765,7 +3765,7 @@ function bvmgr_vendor_change_tracking_metabox_cb($post)
     }
 
     if ($needs) {
-        $nonce = wp_create_nonce('vms_vendor_mark_reviewed_' . $vendor_id);
+        $nonce = wp_create_nonce('bvmgr_vendor_mark_reviewed_' . $vendor_id);
         $url = admin_url('admin-post.php?action=vms_vendor_mark_reviewed&vendor_id=' . $vendor_id . '&_wpnonce=' . $nonce);
 
         echo '<p style="margin:0;"><a class="button button-primary" href="' . esc_url($url) . '">Mark as Reviewed</a></p>';
@@ -3788,7 +3788,7 @@ function bvmgr_vendor_handle_mark_reviewed()
         wp_die('Permission denied.');
     }
 
-    check_admin_referer('vms_vendor_mark_reviewed_' . $vendor_id);
+    bvmgr_check_admin_referer_compat('bvmgr_vendor_mark_reviewed_' . $vendor_id);
 
     bvmgr_vendor_mark_profile_reviewed($vendor_id, get_current_user_id());
 
@@ -4089,7 +4089,7 @@ function bvmgr_render_schedule_day_cell(int $venue_id, string $ymd, bool $in_win
         // Even if closed, you can decide whether to allow "Create"
         $url = wp_nonce_url(
             admin_url('admin-post.php?action=vms_create_event_plan&date=' . rawurlencode($ymd)),
-            'vms_create_event_plan_' . $ymd
+            'bvmgr_create_event_plan_' . $ymd
         );
         echo '<div class="vms-sch-badge ' . ($is_open ? 'is-open' : 'is-closed') . '">' . ($is_open ? 'Open' : 'Closed') . '</div>';
         echo '<a class="button button-small" href="' . esc_url($url) . '">Create</a>';
@@ -4199,7 +4199,7 @@ function bvmgr_dash_render_venue_selector(): void
     );
     echo '<form method="post" action="' . $action . '" class="vms-dash-selector__row" id="vms-dash-pref-form">';
     echo '<input type="hidden" name="action" value="vms_set_dashboard_venue">';
-    wp_nonce_field('vms_set_dashboard_venue', 'vms_dash_venue_nonce');
+    wp_nonce_field('bvmgr_set_dashboard_venue', 'bvmgr_dash_venue_nonce');
     echo '<input type="hidden" name="redirect_to" value="' . esc_attr($current_redirect) . '">';
 
     echo '<label class="vms-dash-selector__label">Dashboard:</label>';

@@ -86,7 +86,7 @@ function bvmgr_ticket_integrity_handle_manual_scan(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_run_scan');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_run_scan');
 	$include_inactive = !empty($_POST['include_inactive']);
 	$result = function_exists('bvmgr_ticket_integrity_scan_all')
 		? bvmgr_ticket_integrity_scan_all(
@@ -124,7 +124,7 @@ function bvmgr_ticket_integrity_handle_event_scan(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_run_event_scan');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_run_event_scan');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 	$result = function_exists('bvmgr_ticket_integrity_scan_event_now')
 		? bvmgr_ticket_integrity_scan_event_now($plan_id, array('trigger' => 'manual_event_admin'))
@@ -155,7 +155,7 @@ function bvmgr_ticket_integrity_handle_save_settings(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_save_settings');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_save_settings');
 	$settings = function_exists('bvmgr_ticket_integrity_update_settings')
 		? bvmgr_ticket_integrity_update_settings(
 			array(
@@ -204,7 +204,7 @@ function bvmgr_ticket_integrity_handle_send_daily_report(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_send_daily_report');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_send_daily_report');
 	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
@@ -252,7 +252,7 @@ function bvmgr_ticket_integrity_handle_daily_report_preview(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_preview_daily_report');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_preview_daily_report');
 	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
@@ -290,7 +290,7 @@ function bvmgr_ticket_integrity_handle_daily_report_dry_run(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_dry_run_daily_report');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_dry_run_daily_report');
 	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
@@ -317,7 +317,7 @@ function bvmgr_ticket_integrity_handle_send_daily_report_test(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_send_daily_report_test');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_send_daily_report_test');
 	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
@@ -366,7 +366,7 @@ function bvmgr_ticket_integrity_handle_rebuild(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_rebuild');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_rebuild');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 
 	if (function_exists('bvmgr_ticket_integrity_log_event')) {
@@ -511,7 +511,7 @@ function bvmgr_ticket_integrity_handle_duplicate_cleanup(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_cleanup_duplicates');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_cleanup_duplicates');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 
 	if (function_exists('bvmgr_ticket_integrity_log_event')) {
@@ -811,7 +811,7 @@ function bvmgr_ticket_integrity_handle_export_report(): void
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_export_report');
+	bvmgr_check_admin_referer_compat('bvmgr_ticket_integrity_export_report');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 	$event = function_exists('bvmgr_ticket_integrity_scan_event_record')
 		? bvmgr_ticket_integrity_scan_event_record($plan_id, array('trigger' => 'manual_export'))
@@ -1221,7 +1221,7 @@ function bvmgr_ticket_integrity_render_settings_form(array $settings): void
 	echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.settings">';
 	echo '<h2>' . esc_html__('Monitor Settings', 'backstage-venue-manager') . '</h2>';
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form">';
-	wp_nonce_field('vms_ticket_integrity_save_settings');
+	wp_nonce_field('bvmgr_ticket_integrity_save_settings');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_save_settings" />';
 
 	echo '<label><input type="checkbox" name="nightly_enabled" value="1"' . checked(!empty($settings['nightly_enabled']), true, false) . ' /> ' . esc_html__('Enable nightly integrity scan', 'backstage-venue-manager') . '</label>';
@@ -1250,26 +1250,26 @@ function bvmgr_ticket_integrity_render_settings_form(array $settings): void
 	echo '</form>';
 
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form" style="margin-top:12px;">';
-	wp_nonce_field('vms_ticket_integrity_send_daily_report');
+	wp_nonce_field('bvmgr_ticket_integrity_send_daily_report');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_send_daily_report" />';
 	submit_button(__('Send State of the Range Now', 'backstage-venue-manager'), 'secondary', 'submit', false);
 	echo '</form>';
 
 	echo '<div class="vms-ticket-integrity__diagnostic-columns">';
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form">';
-	wp_nonce_field('vms_ticket_integrity_preview_daily_report');
+	wp_nonce_field('bvmgr_ticket_integrity_preview_daily_report');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_preview_daily_report" />';
 	submit_button(__('Preview Today’s Report', 'backstage-venue-manager'), 'secondary', 'submit', false);
 	echo '</form>';
 
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form">';
-	wp_nonce_field('vms_ticket_integrity_dry_run_daily_report');
+	wp_nonce_field('bvmgr_ticket_integrity_dry_run_daily_report');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_dry_run_daily_report" />';
 	submit_button(__('Dry-Run Diagnostic', 'backstage-venue-manager'), 'secondary', 'submit', false);
 	echo '</form>';
 
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form">';
-	wp_nonce_field('vms_ticket_integrity_send_daily_report_test');
+	wp_nonce_field('bvmgr_ticket_integrity_send_daily_report_test');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_send_daily_report_test" />';
 	echo '<label>' . esc_html__('Admin test recipient', 'backstage-venue-manager') . '<input type="email" name="test_recipient" value="' . esc_attr($test_recipient) . '" placeholder="' . esc_attr($test_recipient) . '" /></label>';
 	submit_button(__('Send Test to Admin', 'backstage-venue-manager'), 'secondary', 'submit', false);
@@ -2212,14 +2212,14 @@ function bvmgr_ticket_integrity_render_results_table(array $events, int $focused
 		}
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__inline-form">';
-		wp_nonce_field('vms_ticket_integrity_run_event_scan');
+		wp_nonce_field('bvmgr_ticket_integrity_run_event_scan');
 		echo '<input type="hidden" name="action" value="vms_ticket_integrity_run_event_scan" />';
 		echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '" />';
 		echo '<button type="submit" class="button button-small">' . esc_html__('Re-run Scan', 'backstage-venue-manager') . '</button>';
 		echo '</form>';
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__inline-form">';
-		wp_nonce_field('vms_ticket_integrity_export_report');
+		wp_nonce_field('bvmgr_ticket_integrity_export_report');
 		echo '<input type="hidden" name="action" value="vms_ticket_integrity_export_report" />';
 		echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '" />';
 		echo '<button type="submit" class="button button-small">' . esc_html__('Download Report', 'backstage-venue-manager') . '</button>';
@@ -2236,7 +2236,7 @@ function bvmgr_ticket_integrity_render_results_table(array $events, int $focused
 
 		if ($mode === 'vms_managed') {
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__inline-form" data-vms-ticket-integrity-confirm="rebuild">';
-			wp_nonce_field('vms_ticket_integrity_rebuild');
+			wp_nonce_field('bvmgr_ticket_integrity_rebuild');
 			echo '<input type="hidden" name="action" value="vms_ticket_integrity_rebuild" />';
 			echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '" />';
 			echo '<button type="submit" class="button button-small button-secondary" data-vms-tour="ticket-integrity.rebuild">' . esc_html__('Rebuild Ticket Config', 'backstage-venue-manager') . '</button>';
@@ -2244,7 +2244,7 @@ function bvmgr_ticket_integrity_render_results_table(array $events, int $focused
 
 			if ($has_duplicate_cleanup_issue) {
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__inline-form" data-vms-ticket-integrity-confirm="cleanup-duplicates">';
-				wp_nonce_field('vms_ticket_integrity_cleanup_duplicates');
+				wp_nonce_field('bvmgr_ticket_integrity_cleanup_duplicates');
 				echo '<input type="hidden" name="action" value="vms_ticket_integrity_cleanup_duplicates" />';
 				echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '" />';
 				echo '<button type="submit" class="button button-small button-link-delete">' . esc_html__('Resolve Duplicate Legacy Tickets', 'backstage-venue-manager') . '</button>';
@@ -2449,7 +2449,7 @@ function bvmgr_ticket_integrity_render_admin_page(): void
 					echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.run">';
 				echo '<h2>' . esc_html__('Run Ticket Integrity Check Now', 'backstage-venue-manager') . '</h2>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__run-form">';
-				wp_nonce_field('vms_ticket_integrity_run_scan');
+				wp_nonce_field('bvmgr_ticket_integrity_run_scan');
 				echo '<input type="hidden" name="action" value="vms_ticket_integrity_run_scan" />';
 				echo '<label><input type="checkbox" name="include_inactive" value="1" /> ' . esc_html__('Include cancelled / inactive events on this manual run', 'backstage-venue-manager') . '</label>';
 				echo '<button type="submit" class="button button-primary">' . esc_html__('Run Check Now', 'backstage-venue-manager') . '</button>';

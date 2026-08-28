@@ -115,10 +115,10 @@ function bvmgr_vendor_portal_render_tax_profile($vendor_id)
 	// Save handler
 	if (bvmgr_vendor_tax_is_exact_post_request() && isset($_POST['vms_vendor_tax_save'])) {
 
-		$nonce = (isset($_POST['vms_vendor_tax_nonce']) && !is_array($_POST['vms_vendor_tax_nonce']))
-			? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_tax_nonce']))
+		$nonce = (isset($_POST['bvmgr_vendor_tax_nonce']) && !is_array($_POST['bvmgr_vendor_tax_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_tax_nonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_tax_save')) {
+		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_tax_save')) {
 			echo wp_kses_post(bvmgr_portal_notice('error', __('Security check failed.', 'backstage-venue-manager')));
 		} else {
 
@@ -251,7 +251,7 @@ function bvmgr_vendor_portal_render_tax_profile($vendor_id)
 		'</p>';
 
 	echo '<form method="post" enctype="multipart/form-data">';
-	wp_nonce_field('vms_vendor_tax_save', 'vms_vendor_tax_nonce');
+	wp_nonce_field('bvmgr_vendor_tax_save', 'bvmgr_vendor_tax_nonce');
 
 	echo '<div class="vms-note"><strong>' . esc_html__('Privacy note:', 'backstage-venue-manager') . '</strong> ' .
 		esc_html__('Do not type SSN/EIN here.', 'backstage-venue-manager') .

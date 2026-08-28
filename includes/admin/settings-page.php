@@ -64,7 +64,7 @@ function bvmgr_handle_set_default_venue(): void
   }
 
   $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-  if (!wp_verify_nonce($nonce, 'vms_set_default_venue_' . $venue_id)) {
+  if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_set_default_venue_' . $venue_id)) {
     wp_die('Invalid nonce.');
   }
 
@@ -93,7 +93,7 @@ function bvmgr_handle_integrity_scan(): void
 		wp_die('Insufficient permissions.');
 	}
 
-	check_admin_referer('vms_integrity_scan');
+	bvmgr_check_admin_referer_compat('bvmgr_integrity_scan');
 
 	$mode  = isset($_POST['mode']) ? sanitize_key((string) $_POST['mode']) : 'all';
 	$limit = isset($_POST['limit']) ? (int) $_POST['limit'] : 500;
@@ -134,7 +134,7 @@ function bvmgr_handle_sync_entitlement_images(): void
 		wp_die('Insufficient permissions.');
 	}
 
-	check_admin_referer('vms_sync_entitlement_images');
+	bvmgr_check_admin_referer_compat('bvmgr_sync_entitlement_images');
 
 	$ent_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
 		? bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id')
@@ -508,7 +508,7 @@ function bvmgr_handle_ticketing_stock_preview(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_preview')) wp_die('Invalid nonce.');
+	if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_stock_preview')) wp_die('Invalid nonce.');
 
 	$rep = bvmgr_ticketing_stock_reconcile_scan(false);
 	set_transient(bvmgr_ticketing_stock_preview_transient_key(get_current_user_id()), $rep, 30 * MINUTE_IN_SECONDS);
@@ -524,7 +524,7 @@ function bvmgr_handle_ticketing_stock_commit(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_commit')) wp_die('Invalid nonce.');
+	if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_stock_commit')) wp_die('Invalid nonce.');
 
 	// Always re-scan right before applying (orders may have changed since preview).
 	$rep = bvmgr_ticketing_stock_reconcile_scan(true);
@@ -542,7 +542,7 @@ function bvmgr_handle_ticketing_stock_clear_preview(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_clear_preview')) wp_die('Invalid nonce.');
+	if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_stock_clear_preview')) wp_die('Invalid nonce.');
 	delete_transient(bvmgr_ticketing_stock_preview_transient_key(get_current_user_id()));
 	wp_safe_redirect(add_query_arg(array('page' => 'vms-settings'), admin_url('admin.php')));
 	exit;
@@ -552,7 +552,7 @@ function bvmgr_handle_ticketing_stock_csv(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_csv')) wp_die('Invalid nonce.');
+	if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_stock_csv')) wp_die('Invalid nonce.');
 
 	$mode = isset($_GET['mode']) ? sanitize_key(wp_unslash($_GET['mode'])) : 'preview';
 	$rep = null;
@@ -603,7 +603,7 @@ function bvmgr_handle_reconcile_ticketing_stock(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_reconcile_ticketing_stock')) wp_die('Invalid nonce.');
+	if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_reconcile_ticketing_stock')) wp_die('Invalid nonce.');
 
 	$rep = bvmgr_ticketing_stock_reconcile_scan(true);
 	set_transient('vms_ticketing_stock_reconcile_last', $rep, 30 * MINUTE_IN_SECONDS);
@@ -1069,7 +1069,7 @@ function bvmgr_build_settings_default_venue_alert_context(int $saved, array $ven
       'label' => 'Fix now: set Default Venue to “' . get_the_title($vid) . '”',
       'href' => wp_nonce_url(
         admin_url('admin-post.php?action=vms_set_default_venue&venue_id=' . $vid),
-        'vms_set_default_venue_' . $vid
+        'bvmgr_set_default_venue_' . $vid
       ),
       'target' => '',
       'rel' => '',
@@ -1988,14 +1988,14 @@ function bvmgr_render_settings_page_content(bool $include_ticketing_stock_notice
   $preview_url = add_query_arg(
     array(
       'action' => 'vms_ticketing_stock_preview',
-      '_wpnonce' => wp_create_nonce('vms_ticketing_stock_preview'),
+      '_wpnonce' => wp_create_nonce('bvmgr_ticketing_stock_preview'),
     ),
     admin_url('admin-post.php')
   );
   $commit_url = add_query_arg(
     array(
       'action' => 'vms_ticketing_stock_commit',
-      '_wpnonce' => wp_create_nonce('vms_ticketing_stock_commit'),
+      '_wpnonce' => wp_create_nonce('bvmgr_ticketing_stock_commit'),
     ),
     admin_url('admin-post.php')
   );
@@ -2003,14 +2003,14 @@ function bvmgr_render_settings_page_content(bool $include_ticketing_stock_notice
     array(
       'action' => 'vms_ticketing_stock_csv',
       'mode' => 'preview',
-      '_wpnonce' => wp_create_nonce('vms_ticketing_stock_csv'),
+      '_wpnonce' => wp_create_nonce('bvmgr_ticketing_stock_csv'),
     ),
     admin_url('admin-post.php')
   );
   $clear_preview_url = add_query_arg(
     array(
       'action' => 'vms_ticketing_stock_clear_preview',
-      '_wpnonce' => wp_create_nonce('vms_ticketing_stock_clear_preview'),
+      '_wpnonce' => wp_create_nonce('bvmgr_ticketing_stock_clear_preview'),
     ),
     admin_url('admin-post.php')
   );
@@ -2480,7 +2480,7 @@ function bvmgr_render_settings_page_content(bool $include_ticketing_stock_notice
 
   $repair_url = wp_nonce_url(
     admin_url('admin-post.php?action=vms_repair_pages'),
-    'vms_repair_pages'
+    'bvmgr_repair_pages'
   );
 
   echo '<p class="vms-mt-14">';
@@ -2539,7 +2539,7 @@ function bvmgr_render_settings_page_content(bool $include_ticketing_stock_notice
 		echo '<h2>Ticketing Image Tools</h2>';
 		echo '<p>Sync GA ticket and entitlement/add-on images from Ticketing v2 config to WooCommerce product featured images so cart, checkout, and order thumbnails stay aligned.</p>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_sync_entitlement_images');
+		wp_nonce_field('bvmgr_sync_entitlement_images');
 		echo '<input type="hidden" name="action" value="vms_sync_entitlement_images" />';
 		submit_button('Sync Ticket Images to Woo Products', 'secondary', 'submit', false);
 		echo '</form>';
@@ -2557,7 +2557,7 @@ function bvmgr_render_settings_page_content(bool $include_ticketing_stock_notice
 		echo '<p>Scan Event Plans for broken links: missing or trashed Vendors, orphaned Venues, and missing or trashed calendar events. Published Event Plans with a linked calendar event that is not published (and not scheduled) are flagged as <strong>Needs attention</strong> unless suppressed per plan. Event Plans are forced back to Draft only for broken links (missing, trashed, or invalid references).</p>';
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_integrity_scan');
+		wp_nonce_field('bvmgr_integrity_scan');
 		echo '<input type="hidden" name="action" value="vms_integrity_scan" />';
 
 		echo '<p><label for="vms_integrity_mode"><strong>Mode</strong></label><br />';

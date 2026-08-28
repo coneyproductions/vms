@@ -2080,7 +2080,7 @@ function bvmgr_ticketing_v2_validate_config_payload(array $cfg): bool {
 }
 
 function bvmgr_ticketing_b_ajax_save_tiers(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -2144,7 +2144,7 @@ add_action('wp_ajax_vms_ticketing_save_tiers', 'bvmgr_ticketing_b_ajax_save_tier
  * AJAX: preview sync.
  */
 function bvmgr_ticketing_b_ajax_preview_sync(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -2166,7 +2166,7 @@ add_action('wp_ajax_vms_ticketing_preview_sync', 'bvmgr_ticketing_b_ajax_preview
  * AJAX: commit sync.
  */
 function bvmgr_ticketing_b_ajax_commit_sync(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -9811,7 +9811,7 @@ function bvmgr_ticketing_v2_ajax_save_config(): void {
         ? (int) round(max(0.0, $handler_entered_at - $request_started_at) * 1000)
         : 0;
 
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -9923,7 +9923,7 @@ function bvmgr_ticketing_v2_ajax_save_config(): void {
  * AJAX: save current plan config as a reusable template.
  */
 function bvmgr_ticketing_v2_ajax_save_template(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -9991,7 +9991,7 @@ function bvmgr_ticketing_v2_ajax_save_template(): void {
  * AJAX: apply a saved template to a plan (saves immediately).
  */
 function bvmgr_ticketing_v2_ajax_apply_template(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -10023,7 +10023,7 @@ function bvmgr_ticketing_v2_ajax_apply_template(): void {
  * AJAX: clear the saved v2 config for this plan (returns to uninitialized).
  */
 function bvmgr_ticketing_v2_ajax_clear_config(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
  
@@ -10058,7 +10058,7 @@ function bvmgr_ticketing_v2_ajax_clear_config(): void {
  * AJAX: initialize v2 config from legacy add-on fields (saves immediately).
  */
 function bvmgr_ticketing_v2_ajax_init_from_legacy(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -10082,7 +10082,7 @@ add_action('wp_ajax_vms_ticketing_v2_init_from_legacy', 'bvmgr_ticketing_v2_ajax
  * AJAX: set the operator default Ticketing v2 template id.
  */
 function bvmgr_ticketing_v2_ajax_set_default_template(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -10131,7 +10131,7 @@ function bvmgr_ticketing_v2_ajax_preview_sync(): void {
         ? (int) round(max(0.0, $handler_entered_at - $request_started_at) * 1000)
         : 0;
 
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 
@@ -10168,7 +10168,7 @@ add_action('wp_ajax_vms_ticketing_v2_preview_sync', 'bvmgr_ticketing_v2_ajax_pre
  * AJAX: commit Ticketing v2 sync.
  */
 function bvmgr_ticketing_v2_ajax_commit_sync(): void {
-    if (!check_ajax_referer('vms_ticketing_nonce', 'nonce', false)) {
+    if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_nonce', 'nonce', false)) {
         bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
     }
 

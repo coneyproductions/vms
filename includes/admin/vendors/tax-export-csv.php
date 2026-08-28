@@ -20,7 +20,7 @@ function bvmgr_vendor_tax_export_button()
 
 	$url = wp_nonce_url(
 		add_query_arg(array('action' => 'vms_vendor_tax_export_csv'), admin_url('admin-post.php')),
-		'vms_vendor_tax_export_csv'
+		'bvmgr_vendor_tax_export_csv'
 	);
 
 	echo '<a class="button vms-vendor-tax-export-btn" href="' . esc_url($url) . '">Export 1099-ready CSV</a>';
@@ -30,7 +30,7 @@ add_action('restrict_manage_posts', 'bvmgr_vendor_tax_export_button', 20);
 function bvmgr_vendor_tax_export_csv_adminpost()
 {
 	if (!current_user_can('manage_options')) wp_die('Permission denied.');
-	check_admin_referer('vms_vendor_tax_export_csv');
+	bvmgr_check_admin_referer_compat('bvmgr_vendor_tax_export_csv');
 
 	$k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 

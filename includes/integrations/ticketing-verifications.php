@@ -1787,7 +1787,7 @@ if (!function_exists('bvmgr_ticketing_verification_render_panel')) {
                     </p>
 
                     <form class="vms-verification-form" action="<?php echo esc_url($form_action); ?>" method="post" enctype="multipart/form-data" data-vms-photo-upload="1">
-                        <?php wp_nonce_field('vms_submit_verification_request', 'vms_verification_nonce'); ?>
+                        <?php wp_nonce_field('bvmgr_submit_verification_request', 'bvmgr_verification_nonce'); ?>
                         <input type="hidden" name="action" value="vms_submit_verification" />
                         <input type="hidden" name="redirect_to" value="<?php echo esc_attr($redirect_to); ?>" />
                         <input type="hidden" name="tec_event_id" value="<?php echo esc_attr((string) $tec_event_id); ?>" />
@@ -2075,7 +2075,7 @@ if (!function_exists('bvmgr_ticketing_verification_send_submission_notification'
                 'action' => 'vms_view_verification_proof',
                 'request_id' => $request_id,
             ), admin_url('admin-post.php')),
-            'vms_verification_proof_' . $request_id
+            'bvmgr_verification_proof_' . $request_id
         );
 
         /* translators: %d: user ID. */
@@ -2353,10 +2353,10 @@ if (!function_exists('bvmgr_ticketing_verification_handle_submit')) {
             bvmgr_ticketing_verification_finish_error($redirect_to, 'login_required', 401);
         }
 
-        $nonce = (isset($_POST['vms_verification_nonce']) && !is_array($_POST['vms_verification_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_POST['vms_verification_nonce']))
+        $nonce = (isset($_POST['bvmgr_verification_nonce']) && !is_array($_POST['bvmgr_verification_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_verification_nonce']))
             : '';
-        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_submit_verification_request')) {
+        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_submit_verification_request')) {
             wp_die(esc_html__('Invalid verification request.', 'backstage-venue-manager'));
         }
 
@@ -2498,9 +2498,9 @@ if (!function_exists('bvmgr_ticketing_verification_handle_save_programs')) {
         }
 
         if (
-            !isset($_POST['vms_verification_programs_nonce'])
-            || is_array($_POST['vms_verification_programs_nonce'])
-            || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_verification_programs_nonce'])), 'vms_save_verification_programs')
+            !isset($_POST['bvmgr_verification_programs_nonce'])
+            || is_array($_POST['bvmgr_verification_programs_nonce'])
+            || !bvmgr_verify_nonce_compat(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_verification_programs_nonce'])), 'bvmgr_save_verification_programs')
         ) {
             wp_die(esc_html__('Invalid verification program settings request.', 'backstage-venue-manager'));
         }
@@ -2597,9 +2597,9 @@ if (!function_exists('bvmgr_ticketing_verification_handle_save_allowances')) {
         }
 
         if (
-            !isset($_POST['vms_verification_allowances_nonce'])
-            || is_array($_POST['vms_verification_allowances_nonce'])
-            || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_verification_allowances_nonce'])), 'vms_save_verification_allowances')
+            !isset($_POST['bvmgr_verification_allowances_nonce'])
+            || is_array($_POST['bvmgr_verification_allowances_nonce'])
+            || !bvmgr_verify_nonce_compat(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_verification_allowances_nonce'])), 'bvmgr_save_verification_allowances')
         ) {
             wp_die(esc_html__('Invalid allowance settings request.', 'backstage-venue-manager'));
         }
@@ -2634,9 +2634,9 @@ if (!function_exists('bvmgr_ticketing_verification_handle_save_upload_settings')
         }
 
         if (
-            !isset($_POST['vms_verification_upload_settings_nonce'])
-            || is_array($_POST['vms_verification_upload_settings_nonce'])
-            || !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_verification_upload_settings_nonce'])), 'vms_save_verification_upload_settings')
+            !isset($_POST['bvmgr_verification_upload_settings_nonce'])
+            || is_array($_POST['bvmgr_verification_upload_settings_nonce'])
+            || !bvmgr_verify_nonce_compat(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_verification_upload_settings_nonce'])), 'bvmgr_save_verification_upload_settings')
         ) {
             wp_die(esc_html__('Invalid upload settings request.', 'backstage-venue-manager'));
         }
@@ -3081,7 +3081,7 @@ if (!function_exists('bvmgr_ticketing_verification_render_admin_page')) {
             <h2><?php echo esc_html__('Verified Ticket Programs', 'backstage-venue-manager'); ?></h2>
             <p class="description"><?php echo esc_html__('Rename the customer-facing verified groups here and add new ones without code. These labels feed the approval queue and the Event Plan ticket "Verified group" dropdown.', 'backstage-venue-manager'); ?></p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 10px 0 16px; max-width: 780px;">
-                <?php wp_nonce_field('vms_save_verification_programs', 'vms_verification_programs_nonce'); ?>
+                <?php wp_nonce_field('bvmgr_save_verification_programs', 'bvmgr_verification_programs_nonce'); ?>
                 <input type="hidden" name="action" value="vms_save_verification_programs" />
                 <table class="form-table" role="presentation">
                     <tbody>
@@ -3133,7 +3133,7 @@ if (!function_exists('bvmgr_ticketing_verification_render_admin_page')) {
             <h2><?php echo esc_html__('Verified Ticket Allowance Defaults', 'backstage-venue-manager'); ?></h2>
             <p class="description"><?php echo esc_html__('Set how many verified tickets each customer can buy per event, by program. User-specific overrides can be set on each user profile.', 'backstage-venue-manager'); ?></p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 10px 0 16px; max-width: 680px;">
-                <?php wp_nonce_field('vms_save_verification_allowances', 'vms_verification_allowances_nonce'); ?>
+                <?php wp_nonce_field('bvmgr_save_verification_allowances', 'bvmgr_verification_allowances_nonce'); ?>
                 <input type="hidden" name="action" value="vms_save_verification_allowances" />
                 <table class="form-table" role="presentation">
                     <tbody>
@@ -3171,7 +3171,7 @@ if (!function_exists('bvmgr_ticketing_verification_render_admin_page')) {
             <h2><?php echo esc_html__('Verification Upload Settings', 'backstage-venue-manager'); ?></h2>
             <p class="description"><?php echo esc_html__('Verification images are normalized into readable JPG proofs at review time. PDFs bypass image normalization and stay as PDFs.', 'backstage-venue-manager'); ?></p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 10px 0 16px; max-width: 680px;">
-                <?php wp_nonce_field('vms_save_verification_upload_settings', 'vms_verification_upload_settings_nonce'); ?>
+                <?php wp_nonce_field('bvmgr_save_verification_upload_settings', 'bvmgr_verification_upload_settings_nonce'); ?>
                 <input type="hidden" name="action" value="vms_save_verification_upload_settings" />
                 <table class="form-table" role="presentation">
                     <tbody>
@@ -3269,8 +3269,8 @@ if (!function_exists('bvmgr_ticketing_verification_render_admin_page')) {
                             $user = $user_id > 0 ? get_userdata($user_id) : null;
                             $proof_payload = bvmgr_ticketing_verification_proof_payload($request_id);
                             $proof_exists = !is_wp_error($proof_payload);
-                            $decision_nonce = wp_create_nonce('vms_verification_decision_' . $request_id);
-                            $proof_nonce = wp_create_nonce('vms_verification_proof_' . $request_id);
+                            $decision_nonce = wp_create_nonce('bvmgr_verification_decision_' . $request_id);
+                            $proof_nonce = wp_create_nonce('bvmgr_verification_proof_' . $request_id);
                             ?>
                             <tr>
                                 <td><?php echo esc_html($submitted_at !== '' ? $submitted_at : (string) $request->post_date); ?></td>
@@ -3343,7 +3343,7 @@ if (!function_exists('bvmgr_ticketing_verification_handle_decision')) {
         $nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
             ? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
             : '';
-        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_verification_decision_' . $request_id)) {
+        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_verification_decision_' . $request_id)) {
             wp_die(esc_html__('Invalid verification decision nonce.', 'backstage-venue-manager'));
         }
 
@@ -3448,7 +3448,7 @@ if (!function_exists('bvmgr_ticketing_verification_stream_proof')) {
         $nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
             ? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
             : '';
-        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_verification_proof_' . $request_id)) {
+        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_verification_proof_' . $request_id)) {
             wp_die(esc_html__('Invalid proof request nonce.', 'backstage-venue-manager'));
         }
 

@@ -67,8 +67,10 @@ foreach (array_keys((array) ($declared['global_slots'] ?? array())) as $slot) {
 }
 
 $functionNames = array_keys((array) ($declared['functions'] ?? array()));
-$assert(count($functionNames) === 4521, 'B2/B3 must retain exactly 4,521 procedural function identities.');
-$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === (int) ($b3Counts['migrated_unique_functions'] ?? -1), 'Canonical procedural declarations must equal exact B3 progress.');
+$b4SupportFunctions = array_values(array_filter((array) ($manifest['symbols']['functions'] ?? array()), static fn(array $entry): bool => ($entry['planned_implementation_batch'] ?? '') === 'B4'));
+$assert(count($b4SupportFunctions) === 7, 'B4 must add exactly seven canonical nonce compatibility functions after the frozen 4,521-function B3 map.');
+$assert(count($functionNames) === 4528, 'B2/B3 plus B4 support must contain exactly 4,528 procedural function identities.');
+$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === (int) ($b3Counts['migrated_unique_functions'] ?? -1) + 7, 'Canonical procedural declarations must equal exact B3 progress plus seven B4 support functions.');
 $assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'vms_'))) === (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1), 'Legacy procedural declarations must equal the exact B3 remainder.');
 
 $collisionFunctions = array();
@@ -104,7 +106,7 @@ $assert($duplicates === array(
 ), 'All nine guarded duplicate constant families must resolve under BVMGR_ symbols.');
 
 $dynamicCounts = (array) ($manifest['php_inventory_counts']['dynamic_symbols'] ?? array());
-$assert(($dynamicCounts['function_exists_unique'] ?? null) === 3310 && ($dynamicCounts['function_exists_occurrences'] ?? null) === 6338, 'B2 must leave B3 function_exists resolution unchanged.');
+$assert(($dynamicCounts['function_exists_unique'] ?? null) === 3317 && ($dynamicCounts['function_exists_occurrences'] ?? null) === 6345, 'B4 must add exactly seven guarded compatibility declarations to the B3 function_exists baseline.');
 $assert(($dynamicCounts['direct_literal_callbacks_unique'] ?? null) === 711 && ($dynamicCounts['direct_literal_callbacks_occurrences'] ?? null) === 767, 'B2 must leave B3 literal callback registration unchanged.');
 $assert(($dynamicCounts['exact_type_literals_unique'] ?? null) === 16 && ($dynamicCounts['exact_type_literals_occurrences'] ?? null) === 25, 'All 25 exact type-literal sites must remain resolvable after B2.');
 

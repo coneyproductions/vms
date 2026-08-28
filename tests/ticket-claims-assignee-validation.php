@@ -69,6 +69,11 @@ function check_ajax_referer(string $action, $queryArg = false, bool $stop = true
 	return true;
 }
 
+function bvmgr_check_ajax_referer_compat(string $action, $queryArg = false, bool $stop = true): bool
+{
+	return check_ajax_referer($action, $queryArg, $stop);
+}
+
 function is_user_logged_in(): bool
 {
 	return !empty($GLOBALS['vms_test_logged_in']);

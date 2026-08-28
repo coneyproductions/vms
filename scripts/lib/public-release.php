@@ -462,6 +462,12 @@ final class VMS_Public_Release_Tooling
 	{
 		return array(
 			array(
+				'id' => 'wporg-prefix-b4-nonces',
+				'label' => 'WordPress.org B4 nonce action and field compatibility',
+				'path' => 'tests/wporg-prefix-b4-nonces.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'wporg-prefix-b4-browser-assets',
 				'label' => 'WordPress.org B4 browser-global and asset-handle cutover',
 				'path' => 'tests/wporg-prefix-b4-browser-assets.php',

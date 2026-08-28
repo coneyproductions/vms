@@ -8,7 +8,7 @@ add_action('wp_ajax_vms_tax_bypass_set', function () {
     wp_send_json_error(['message' => 'Forbidden'], 403);
   }
 
-  check_ajax_referer('vms_tax_bypass_ajax', 'nonce');
+  bvmgr_check_ajax_referer_compat('bvmgr_tax_bypass_ajax', 'nonce');
 
   $post_id = bvmgr_request_read_absint($_POST, 'post_id');
   $until   = bvmgr_request_read_text_field($_POST, 'until');
@@ -40,7 +40,7 @@ add_action('wp_ajax_vms_tax_bypass_clear', function () {
     wp_send_json_error(['message' => 'Forbidden'], 403);
   }
 
-  check_ajax_referer('vms_tax_bypass_ajax', 'nonce');
+  bvmgr_check_ajax_referer_compat('bvmgr_tax_bypass_ajax', 'nonce');
 
   $post_id = bvmgr_request_read_absint($_POST, 'post_id');
   if ($post_id <= 0) {

@@ -103,7 +103,7 @@ function bvmgr_add_rating_details_metabox()
 
 function bvmgr_render_rating_details_metabox($post)
 {
-    wp_nonce_field('vms_save_rating_details', 'vms_rating_details_nonce');
+    wp_nonce_field('bvmgr_save_rating_details', 'bvmgr_rating_details_nonce');
 
     $band_id    = (int) get_post_meta($post->ID, '_vms_band_id', true);
     $event_id   = (int) get_post_meta($post->ID, '_vms_event_id', true);
@@ -219,10 +219,10 @@ function bvmgr_save_rating_details_meta($post_id, $post)
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if ($post->post_type !== 'vms_rating') return;
 
-    $nonce = (isset($_POST['vms_rating_details_nonce']) && !is_array($_POST['vms_rating_details_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_rating_details_nonce']))
+    $nonce = (isset($_POST['bvmgr_rating_details_nonce']) && !is_array($_POST['bvmgr_rating_details_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_rating_details_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_rating_details')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_rating_details')) {
         return;
     }
 
@@ -395,7 +395,7 @@ function bvmgr_rate_band_shortcode($atts) {
         <p><?php echo esc_html("Event: {$event_title}"); ?></p>
 
         <form method="post">
-            <?php wp_nonce_field('vms_submit_rating', 'vms_rating_nonce'); ?>
+            <?php wp_nonce_field('bvmgr_submit_rating', 'bvmgr_rating_nonce'); ?>
 
             <p>
                 <label for="vms_reviewer_name"><strong>Your Name</strong></label><br>
@@ -452,10 +452,10 @@ function bvmgr_rate_band_shortcode($atts) {
  */
 function bvmgr_handle_rating_submission($event_id, $band_id)
 {
-    $nonce = (isset($_POST['vms_rating_nonce']) && !is_array($_POST['vms_rating_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_rating_nonce']))
+    $nonce = (isset($_POST['bvmgr_rating_nonce']) && !is_array($_POST['bvmgr_rating_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_rating_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_submit_rating')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_submit_rating')) {
 
         return array(
             'success' => false,

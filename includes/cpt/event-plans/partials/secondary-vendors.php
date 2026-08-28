@@ -471,7 +471,7 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 <div id="vms-secondary-vendors-section"
 	data-vms-module-owner="<?php echo esc_attr($vms_module_owner); ?>"
 	data-vms-save-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
-	data-vms-save-nonce="<?php echo esc_attr(wp_create_nonce('vms_event_plan_secondary_vendors_save')); ?>"
+	data-vms-save-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_secondary_vendors_save')); ?>"
 	data-vms-save-post-id="<?php echo (int) $post->ID; ?>">
 	<input type="hidden" name="vms_secondary_vendors_module_detached" value="1" />
 	<input type="hidden" name="vms_clear_secondary_vendors" value="0" id="vms-clear-secondary-vendors-intent" />

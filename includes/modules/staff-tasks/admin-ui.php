@@ -730,7 +730,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_transition')) {
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_transition')) {
+		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_transition')) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 
@@ -776,7 +776,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_generate_event')) {
 		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
 			: '';
-		if (!wp_verify_nonce($nonce, 'vms_tasks_generate_event_' . $event_id)) {
+		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_generate_event_' . $event_id)) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 
@@ -809,7 +809,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_update_assignment')) {
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_update_assignment')) {
+		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_update_assignment')) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 			}
 
@@ -877,7 +877,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_create_one_off')) {
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_create_one_off')) {
+		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_create_one_off')) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 		if (!bvmgr_tasks_db_ready()) {
@@ -1146,7 +1146,7 @@ if (!function_exists('bvmgr_tasks_admin_handle_create_one_off_ajax')) {
 		$nonce = (isset($_POST['nonce']) && !is_array($_POST['nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['nonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_create_one_off')) {
+		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tasks_create_one_off')) {
 			wp_send_json_error(array('message' => __('Security check failed.', 'backstage-venue-manager')), 403);
 		}
 		if (!bvmgr_tasks_db_ready()) {
@@ -1423,7 +1423,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 		echo '</p>';
 		echo '<h2 style="margin-top:16px;">' . esc_html__('Add Task', 'backstage-venue-manager') . '</h2>';
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:8px 0 16px 0;padding:12px;border:1px solid #ccd0d4;background:#fff;" data-vms-tour="tasks.add">';
-			wp_nonce_field('vms_tasks_create_one_off');
+			wp_nonce_field('bvmgr_tasks_create_one_off');
 			echo '<input type="hidden" name="action" value="vms_tasks_create_one_off">';
 			echo '<input type="hidden" name="return_page" value="vms-tasks">';
 			echo '<p>';
@@ -1561,7 +1561,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 
 				if ($status === 'open') {
 					echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:0 0 6px 0;">';
-					wp_nonce_field('vms_tasks_transition');
+					wp_nonce_field('bvmgr_tasks_transition');
 					echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 					echo '<input type="hidden" name="return_page" value="vms-tasks">';
 					echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
@@ -1572,7 +1572,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 					echo '</form>';
 				} else {
 					echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:0;">';
-					wp_nonce_field('vms_tasks_transition');
+					wp_nonce_field('bvmgr_tasks_transition');
 					echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 					echo '<input type="hidden" name="return_page" value="vms-tasks">';
 					echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
@@ -1582,7 +1582,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 				}
 
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:6px 0 0;" data-vms-tour="tasks.assignment">';
-				wp_nonce_field('vms_tasks_update_assignment');
+				wp_nonce_field('bvmgr_tasks_update_assignment');
 				echo '<input type="hidden" name="action" value="vms_tasks_update_assignment">';
 				echo '<input type="hidden" name="return_page" value="vms-tasks">';
 				echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
@@ -1649,7 +1649,7 @@ if (!function_exists('bvmgr_tasks_render_task_templates_page')) {
 		$clone_instance_id = isset($_GET['clone_instance_id']) ? absint($_GET['clone_instance_id']) : 0;
 
 		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_template_action'])) {
-			check_admin_referer('vms_tasks_save_template');
+			bvmgr_check_admin_referer_compat('bvmgr_tasks_save_template');
 			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_template_action']));
 			$template_id = absint($_POST['template_id'] ?? 0);
 			if ($action === 'save') {
@@ -1721,7 +1721,7 @@ if (!function_exists('bvmgr_tasks_render_task_templates_page')) {
 		}
 
 		echo '<form method="post">';
-		wp_nonce_field('vms_tasks_save_template');
+		wp_nonce_field('bvmgr_tasks_save_template');
 		echo '<input type="hidden" name="vms_tasks_template_action" value="save">';
 		echo '<input type="hidden" name="template_id" value="' . esc_attr((string) ($current['id'] ?? 0)) . '">';
 		echo '<table class="form-table" role="presentation"><tbody>';
@@ -1804,7 +1804,7 @@ if (!function_exists('bvmgr_tasks_render_checklist_templates_page')) {
 		$edit_id = isset($_GET['checklist_id']) ? absint($_GET['checklist_id']) : 0;
 
 		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_checklist_action'])) {
-			check_admin_referer('vms_tasks_save_checklist');
+			bvmgr_check_admin_referer_compat('bvmgr_tasks_save_checklist');
 			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_checklist_action']));
 			$checklist_id = absint($_POST['checklist_id'] ?? 0);
 				if ($action === 'save') {
@@ -1870,7 +1870,7 @@ if (!function_exists('bvmgr_tasks_render_checklist_templates_page')) {
 		}
 
 		echo '<form method="post">';
-		wp_nonce_field('vms_tasks_save_checklist');
+		wp_nonce_field('bvmgr_tasks_save_checklist');
 		echo '<input type="hidden" name="vms_tasks_checklist_action" value="save">';
 		echo '<input type="hidden" name="checklist_id" value="' . esc_attr((string) ($current['id'] ?? 0)) . '">';
 		echo '<table class="form-table" role="presentation"><tbody>';
@@ -1951,7 +1951,7 @@ if (!function_exists('bvmgr_tasks_render_settings_page')) {
 
 		$saved = false;
 		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_settings_action'])) {
-			check_admin_referer('vms_tasks_save_settings');
+			bvmgr_check_admin_referer_compat('bvmgr_tasks_save_settings');
 			$input = array(
 				'horizon_days' => absint($_POST['horizon_days'] ?? 60),
 				'regenerate_on_event_date_change' => !empty($_POST['regenerate_on_event_date_change']) ? 1 : 0,
@@ -1980,7 +1980,7 @@ if (!function_exists('bvmgr_tasks_render_settings_page')) {
 		}
 
 		echo '<form method="post">';
-		wp_nonce_field('vms_tasks_save_settings');
+		wp_nonce_field('bvmgr_tasks_save_settings');
 		echo '<input type="hidden" name="vms_tasks_settings_action" value="save">';
 		echo '<table class="form-table" role="presentation"><tbody>';
 		echo '<tr data-vms-tour="task-settings.generation"><th><label for="vms_tasks_horizon_days">' . esc_html__('Horizon days', 'backstage-venue-manager') . '</label></th><td><input type="number" id="vms_tasks_horizon_days" name="horizon_days" min="1" max="365" value="' . esc_attr((string) ($settings['horizon_days'] ?? 60)) . '"></td></tr>';
@@ -2086,7 +2086,7 @@ if (!function_exists('bvmgr_tasks_render_my_tasks_page')) {
 				echo '<p><strong>' . esc_html__('Repeats:', 'backstage-venue-manager') . '</strong> ' . esc_html(bvmgr_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days)) . '</p>';
 			}
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-			wp_nonce_field('vms_tasks_transition');
+			wp_nonce_field('bvmgr_tasks_transition');
 			echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 			echo '<input type="hidden" name="return_page" value="vms-my-tasks">';
 			echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
@@ -2400,7 +2400,7 @@ if (!function_exists('bvmgr_tasks_render_event_plan_tasks_table')) {
 				if ($status === 'open') {
 					$done_form_id = bvmgr_tasks_event_plan_metabox_form_id($event_id, 'transition-done', $instance_id);
 					bvmgr_tasks_event_plan_metabox_register_form($done_form_id, 'post', $form_action, array(
-						'_wpnonce' => wp_create_nonce('vms_tasks_transition'),
+						'_wpnonce' => wp_create_nonce('bvmgr_tasks_transition'),
 						'action' => 'vms_tasks_transition',
 						'return_page' => 'event-plan',
 						'event_id' => $event_id,
@@ -2412,7 +2412,7 @@ if (!function_exists('bvmgr_tasks_render_event_plan_tasks_table')) {
 				if ($status === 'open' && $is_one_off) {
 					$remove_form_id = bvmgr_tasks_event_plan_metabox_form_id($event_id, 'transition-canceled', $instance_id);
 					bvmgr_tasks_event_plan_metabox_register_form($remove_form_id, 'post', $form_action, array(
-						'_wpnonce' => wp_create_nonce('vms_tasks_transition'),
+						'_wpnonce' => wp_create_nonce('bvmgr_tasks_transition'),
 						'action' => 'vms_tasks_transition',
 						'return_page' => 'event-plan',
 						'event_id' => $event_id,
@@ -2424,7 +2424,7 @@ if (!function_exists('bvmgr_tasks_render_event_plan_tasks_table')) {
 
 				$assignment_form_id = bvmgr_tasks_event_plan_metabox_form_id($event_id, 'assignment', $instance_id);
 				bvmgr_tasks_event_plan_metabox_register_form($assignment_form_id, 'post', $form_action, array(
-					'_wpnonce' => wp_create_nonce('vms_tasks_update_assignment'),
+					'_wpnonce' => wp_create_nonce('bvmgr_tasks_update_assignment'),
 					'action' => 'vms_tasks_update_assignment',
 					'return_page' => 'event-plan',
 					'event_id' => $event_id,
@@ -2495,7 +2495,7 @@ if (!function_exists('bvmgr_tasks_render_event_plan_metabox')) {
 		$can_manage_all = bvmgr_tasks_current_user_can_manage_all();
 		$generate_url = wp_nonce_url(
 			admin_url('admin-post.php?action=vms_tasks_generate_event&event_id=' . $event_id . '&return_page=event-plan'),
-			'vms_tasks_generate_event_' . $event_id
+			'bvmgr_tasks_generate_event_' . $event_id
 		);
 		bvmgr_tasks_admin_render_notices();
 
@@ -2550,7 +2550,7 @@ if (!function_exists('bvmgr_tasks_render_event_plan_metabox')) {
 			// Nested <form> tags can corrupt the DOM and block unrelated actions
 			// (including cancellation) via browser required-field validation.
 			// Use an AJAX submit button instead.
-			$nonce = wp_create_nonce('vms_tasks_create_one_off');
+			$nonce = wp_create_nonce('bvmgr_tasks_create_one_off');
 			echo '<div class="vms-tasks-event-plan-addtask" data-vms-event-id="' . esc_attr((string) $event_id) . '" data-vms-nonce="' . esc_attr($nonce) . '">';
 			echo '<p><input type="text" class="widefat" data-vms-tasks-field="title" placeholder="' . esc_attr__('Task title', 'backstage-venue-manager') . '"></p>';
 			echo '<p><textarea class="widefat" rows="2" data-vms-tasks-field="instructions" placeholder="' . esc_attr__('Instructions (optional)', 'backstage-venue-manager') . '"></textarea></p>';

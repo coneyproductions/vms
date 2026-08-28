@@ -368,7 +368,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_client_log_action')) {
 			bvmgr_ticketing_v2_ajax_send_error(array('message' => 'login_required'), 401);
 		}
 
-		if (!check_ajax_referer('vms_ticketing_claims_log_client_action', 'nonce', false)) {
+		if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_claims_log_client_action', 'nonce', false)) {
 			bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
 		}
 
@@ -412,7 +412,7 @@ add_action('wp_ajax_vms_ticketing_claims_log_client_action', 'bvmgr_ticketing_cl
 if (!function_exists('bvmgr_ticketing_claims_handle_validate_assignee')) {
 	function bvmgr_ticketing_claims_handle_validate_assignee(): void
 	{
-		if (!check_ajax_referer('vms_ticketing_claims_validate_assignee', 'nonce', false)) {
+		if (!bvmgr_check_ajax_referer_compat('bvmgr_ticketing_claims_validate_assignee', 'nonce', false)) {
 			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => __('Session expired. Please refresh and try again.', 'backstage-venue-manager'),

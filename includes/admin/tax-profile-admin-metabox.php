@@ -32,10 +32,10 @@ add_action('save_post', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_tax_admin_nonce']) && !is_array($_POST['vms_tax_admin_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_tax_admin_nonce']))
+    $nonce = (isset($_POST['bvmgr_tax_admin_nonce']) && !is_array($_POST['bvmgr_tax_admin_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_tax_admin_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tax_admin_save')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_tax_admin_save')) {
         return;
     }
 
@@ -216,7 +216,7 @@ function bvmgr_render_tax_profile_admin_metabox($post)
         'other'       => __('Other', 'backstage-venue-manager'),
     ];
 
-    wp_nonce_field('vms_tax_admin_save', 'vms_tax_admin_nonce');
+    wp_nonce_field('bvmgr_tax_admin_save', 'bvmgr_tax_admin_nonce');
 
     $provider = function_exists('bvmgr_tax_settings_get_provider') ? (string) bvmgr_tax_settings_get_provider() : 'upload';
     if (!in_array($provider, array('upload', 'quickbooks_email', 'tax1099_email'), true)) {

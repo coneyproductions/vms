@@ -202,7 +202,7 @@ add_action('add_meta_boxes', function () {
 
 function bvmgr_render_venue_location_box($post)
 {
-    wp_nonce_field('vms_save_venue_location', 'vms_venue_location_nonce');
+    wp_nonce_field('bvmgr_save_venue_location', 'bvmgr_venue_location_nonce');
 
     $location = function_exists('bvmgr_get_venue_location_data')
         ? bvmgr_get_venue_location_data((int) $post->ID)
@@ -279,8 +279,8 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = bvmgr_venue_submitted_nonce('vms_venue_location_nonce');
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_location')) {
+    $nonce = bvmgr_venue_submitted_nonce('bvmgr_venue_location_nonce');
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_location')) {
         return;
     }
 
@@ -354,7 +354,7 @@ add_action('add_meta_boxes', function () {
 });
 
 function bvmgr_render_venue_default_times_box($post) {
-    wp_nonce_field('vms_save_venue_default_times', 'vms_venue_default_times_nonce');
+    wp_nonce_field('bvmgr_save_venue_default_times', 'bvmgr_venue_default_times_nonce');
 
     $start = (string) get_post_meta($post->ID, '_vms_default_start_time', true);
     $dur   = (string) get_post_meta($post->ID, '_vms_default_duration_min', true);
@@ -392,10 +392,10 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_venue_default_times_nonce']) && !is_array($_POST['vms_venue_default_times_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_default_times_nonce']))
+    $nonce = (isset($_POST['bvmgr_venue_default_times_nonce']) && !is_array($_POST['bvmgr_venue_default_times_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_default_times_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_default_times')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_default_times')) {
         return;
     }
 
@@ -438,7 +438,7 @@ add_action('add_meta_boxes', function () {
 
 function bvmgr_render_venue_schedule_box($post)
 {
-    wp_nonce_field('vms_save_venue_schedule', 'vms_venue_schedule_nonce');
+    wp_nonce_field('bvmgr_save_venue_schedule', 'bvmgr_venue_schedule_nonce');
 
     $open_days = get_post_meta($post->ID, '_vms_venue_open_days', true);
     if (!is_array($open_days)) $open_days = array();
@@ -547,8 +547,8 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = bvmgr_venue_submitted_nonce('vms_venue_schedule_nonce');
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_schedule')) {
+    $nonce = bvmgr_venue_submitted_nonce('bvmgr_venue_schedule_nonce');
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_schedule')) {
         return;
     }
 
@@ -611,8 +611,8 @@ add_filter('wp_insert_post_data', function ($data, $postarr) {
     $open_days_raw = null;
     $submitted_open_days = array();
     $has_submitted_open_days = false;
-    $schedule_nonce = bvmgr_venue_submitted_nonce('vms_venue_schedule_nonce');
-    $has_verified_schedule_request = ($schedule_nonce !== '' && wp_verify_nonce($schedule_nonce, 'vms_save_venue_schedule'));
+    $schedule_nonce = bvmgr_venue_submitted_nonce('bvmgr_venue_schedule_nonce');
+    $has_verified_schedule_request = ($schedule_nonce !== '' && bvmgr_verify_nonce_compat($schedule_nonce, 'bvmgr_save_venue_schedule'));
 
     if ($has_verified_schedule_request) {
         $submitted_open_days = (isset($_POST['vms_venue_open_days']) && is_array($_POST['vms_venue_open_days']))

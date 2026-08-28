@@ -510,10 +510,10 @@ add_action('save_post_vms_event_plan', 'bvmgr_event_credits_handle_event_plan_sa
 if (!function_exists('bvmgr_event_credits_handle_event_plan_save')) {
 	function bvmgr_event_credits_handle_event_plan_save(int $post_id, WP_Post $post): void
 	{
-		$nonce = (isset($_POST['vms_event_plan_details_nonce']) && !is_array($_POST['vms_event_plan_details_nonce']))
-			? sanitize_text_field(wp_unslash((string) $_POST['vms_event_plan_details_nonce']))
+		$nonce = (isset($_POST['bvmgr_event_plan_details_nonce']) && !is_array($_POST['bvmgr_event_plan_details_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_event_plan_details_nonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
+		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_plan_details')) {
 			return;
 		}
 		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
@@ -892,7 +892,7 @@ if (!function_exists('bvmgr_event_credit_add_meta_boxes')) {
 if (!function_exists('bvmgr_event_credit_render_details_metabox')) {
 	function bvmgr_event_credit_render_details_metabox(WP_Post $post): void
 	{
-		wp_nonce_field('vms_save_event_credit', 'vms_event_credit_nonce');
+		wp_nonce_field('bvmgr_save_event_credit', 'bvmgr_event_credit_nonce');
 		$keys = bvmgr_event_credit_meta_keys();
 		$status = sanitize_key((string) get_post_meta($post->ID, $keys['status'], true));
 		if ($status === '') {
@@ -967,10 +967,10 @@ add_action('save_post_' . BVMGR_CPT_EVENT_CREDIT, 'bvmgr_event_credit_save_metab
 if (!function_exists('bvmgr_event_credit_save_metabox')) {
 	function bvmgr_event_credit_save_metabox(int $post_id, WP_Post $post): void
 	{
-		$nonce = (isset($_POST['vms_event_credit_nonce']) && !is_array($_POST['vms_event_credit_nonce']))
-			? sanitize_text_field(wp_unslash((string) $_POST['vms_event_credit_nonce']))
+		$nonce = (isset($_POST['bvmgr_event_credit_nonce']) && !is_array($_POST['bvmgr_event_credit_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_event_credit_nonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_credit')) {
+		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_credit')) {
 			return;
 		}
 		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {

@@ -151,7 +151,7 @@ function bvmgr_goals_admin_post_save_settings(): void
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
-	check_admin_referer('vms_goals_save_settings');
+	bvmgr_check_admin_referer_compat('bvmgr_goals_save_settings');
 
 	$tab = sanitize_key(bvmgr_goals_post_value('tab'));
 	if ($tab === '') {
@@ -241,7 +241,7 @@ function bvmgr_goals_admin_post_save_goal(): void
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
-	check_admin_referer('vms_goals_save_goal');
+	bvmgr_check_admin_referer_compat('bvmgr_goals_save_goal');
 
 	$goal_id = absint(bvmgr_goals_post_value('goal_id'));
 	$payload = array(
@@ -284,7 +284,7 @@ function bvmgr_goals_admin_post_delete_goal(): void
 	}
 	$goal_id = absint(bvmgr_goals_query_value('goal_id'));
 	$nonce = sanitize_text_field(bvmgr_goals_query_value('_wpnonce'));
-	if ($goal_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_delete_goal_' . $goal_id)) {
+	if ($goal_id <= 0 || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_goals_delete_goal_' . $goal_id)) {
 		bvmgr_goals_admin_redirect_with_notice('error', 'Delete request failed security checks.', array('tab' => 'goals'));
 	}
 
@@ -300,7 +300,7 @@ function bvmgr_goals_admin_post_activate_goal(): void
 	}
 	$goal_id = absint(bvmgr_goals_query_value('goal_id'));
 	$nonce = sanitize_text_field(bvmgr_goals_query_value('_wpnonce'));
-	if ($goal_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_activate_goal_' . $goal_id)) {
+	if ($goal_id <= 0 || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_goals_activate_goal_' . $goal_id)) {
 		bvmgr_goals_admin_redirect_with_notice('error', 'Activate request failed security checks.', array('tab' => 'goals'));
 	}
 
@@ -394,11 +394,11 @@ if (!function_exists('bvmgr_goals_render_goals_tab')) {
 				$edit_url = bvmgr_goals_admin_url(array('tab' => 'goals', 'edit_goal_id' => $goal_id));
 				$delete_url = wp_nonce_url(
 					admin_url('admin-post.php?action=vms_goals_delete_goal&goal_id=' . $goal_id),
-					'vms_goals_delete_goal_' . $goal_id
+					'bvmgr_goals_delete_goal_' . $goal_id
 				);
 				$activate_url = wp_nonce_url(
 					admin_url('admin-post.php?action=vms_goals_activate_goal&goal_id=' . $goal_id),
-					'vms_goals_activate_goal_' . $goal_id
+					'bvmgr_goals_activate_goal_' . $goal_id
 				);
 
 				echo '<tr>';
@@ -436,7 +436,7 @@ if (!function_exists('bvmgr_goals_render_goals_tab')) {
 		echo '<section class="vms-goals-card">';
 		echo '<h2>' . esc_html($goal_id > 0 ? __('Edit Goal', 'backstage-venue-manager') : __('Add Goal', 'backstage-venue-manager')) . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
-		wp_nonce_field('vms_goals_save_goal');
+		wp_nonce_field('bvmgr_goals_save_goal');
 		echo '<input type="hidden" name="action" value="vms_goals_save_goal" />';
 		echo '<input type="hidden" name="goal_id" value="' . (int) $goal_id . '" />';
 
@@ -498,7 +498,7 @@ if (!function_exists('bvmgr_goals_render_overhead_tab')) {
 		echo '<section class="vms-goals-card">';
 		echo '<h2>' . esc_html__('Overhead Rules', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
-		wp_nonce_field('vms_goals_save_settings');
+		wp_nonce_field('bvmgr_goals_save_settings');
 		echo '<input type="hidden" name="action" value="vms_goals_save_settings" />';
 		echo '<input type="hidden" name="tab" value="overhead-rules" />';
 
@@ -540,7 +540,7 @@ if (!function_exists('bvmgr_goals_render_forecast_defaults_tab')) {
 		echo '<section class="vms-goals-card">';
 		echo '<h2>' . esc_html__('Forecast Defaults', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
-		wp_nonce_field('vms_goals_save_settings');
+		wp_nonce_field('bvmgr_goals_save_settings');
 		echo '<input type="hidden" name="action" value="vms_goals_save_settings" />';
 		echo '<input type="hidden" name="tab" value="forecast-defaults" />';
 
@@ -644,7 +644,7 @@ if (!function_exists('bvmgr_goals_event_plan_refresh_url')) {
 			),
 			admin_url('admin-post.php')
 		);
-		return wp_nonce_url($url, 'vms_goals_refresh_event_actuals_' . $event_plan_id);
+		return wp_nonce_url($url, 'bvmgr_goals_refresh_event_actuals_' . $event_plan_id);
 	}
 }
 
@@ -695,7 +695,7 @@ if (!function_exists('bvmgr_goals_event_plan_metabox_html')) {
 		$notice_event = absint(bvmgr_goals_query_value('vms_goals_actuals_event'));
 		$notice_msg = sanitize_text_field(bvmgr_goals_query_value('vms_goals_actuals_message'));
 
-		wp_nonce_field('vms_goals_event_finance_save', 'vms_goals_event_finance_nonce');
+		wp_nonce_field('bvmgr_goals_event_finance_save', 'bvmgr_goals_event_finance_nonce');
 
 		echo '<div class="vms-goals-finance">';
 		if ($notice_event === (int) $post->ID && $notice_msg !== '' && in_array($notice_status, array('success', 'error'), true)) {
@@ -803,8 +803,8 @@ function bvmgr_goals_event_plan_save_meta(int $post_id, WP_Post $post): void
 	if (!current_user_can('edit_post', $post_id)) {
 		return;
 	}
-	$nonce = sanitize_text_field(bvmgr_goals_post_value('vms_goals_event_finance_nonce'));
-	if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_goals_event_finance_save')) {
+	$nonce = sanitize_text_field(bvmgr_goals_post_value('bvmgr_goals_event_finance_nonce'));
+	if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_goals_event_finance_save')) {
 		return;
 	}
 
@@ -863,7 +863,7 @@ function bvmgr_goals_admin_post_refresh_event_actuals(): void
 	$redirect = wp_validate_redirect($redirect, admin_url('edit.php?post_type=vms_event_plan'));
 	$nonce = sanitize_text_field(bvmgr_goals_request_value('_wpnonce'));
 
-	if ($event_plan_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_refresh_event_actuals_' . $event_plan_id)) {
+	if ($event_plan_id <= 0 || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_goals_refresh_event_actuals_' . $event_plan_id)) {
 		$redirect = add_query_arg(array(
 			'vms_goals_actuals_status' => 'error',
 			'vms_goals_actuals_event' => $event_plan_id,

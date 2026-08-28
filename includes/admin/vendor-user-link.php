@@ -45,7 +45,7 @@ if (!function_exists('bvmgr_vendor_portal_admin_preview_url')) {
 			'tab' => 'dashboard',
 			'vendor_id' => $vendor_id,
 			'vms_preview_vendor' => $vendor_id,
-			'vms_preview_nonce' => wp_create_nonce('vms_preview_vendor_portal_' . $vendor_id),
+			'bvmgr_preview_nonce' => wp_create_nonce('bvmgr_preview_vendor_portal_' . $vendor_id),
 		), $base_url);
 	}
 }
@@ -66,7 +66,7 @@ function bvmgr_vendor_user_links_metabox_render($post): void
 {
 	if (!($post instanceof WP_Post)) return;
 
-	wp_nonce_field('vms_vendor_user_links_save', 'vms_vendor_user_links_nonce');
+	wp_nonce_field('bvmgr_vendor_user_links_save', 'bvmgr_vendor_user_links_nonce');
 
 	$vendor_id = (int) $post->ID;
 
@@ -266,10 +266,10 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 
 	if (!current_user_can('edit_post', $post_id)) return;
 
-	$nonce = (isset($_POST['vms_vendor_user_links_nonce']) && !is_array($_POST['vms_vendor_user_links_nonce']))
-		? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_user_links_nonce']))
+	$nonce = (isset($_POST['bvmgr_vendor_user_links_nonce']) && !is_array($_POST['bvmgr_vendor_user_links_nonce']))
+		? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_user_links_nonce']))
 		: '';
-	if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_user_links_save')) {
+	if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_user_links_save')) {
 		return;
 	}
 

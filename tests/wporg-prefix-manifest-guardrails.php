@@ -21,6 +21,7 @@ $assert(in_array('docs/', $releaseExcludes, true), 'B1 manifest and documentatio
 $assert(in_array('scripts/', $releaseExcludes, true), 'B1 migration infrastructure must remain outside the public package.');
 $assert(in_array('tests/', $releaseExcludes, true), 'B1 test infrastructure must remain outside the public package.');
 $releaseTestIds = array_column(VMS_Public_Release_Tooling::defaultReleaseTests(), 'id');
+$assert(in_array('wporg-prefix-b4-nonces', $releaseTestIds, true), 'B4 nonce transition tests must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b4-browser-assets', $releaseTestIds, true), 'B4 browser-global and asset-handle transition tests must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b4-guardrails', $releaseTestIds, true), 'B4 exact identifier-map and compatibility guardrails must remain a required default release precondition.');
 $assert(in_array('wporg-prefix-b3-guardrails', $releaseTestIds, true), 'B3 frozen-map and exact-resolution guardrails must remain a required default release precondition.');
@@ -126,8 +127,8 @@ $assert(count($categoriesById) === 25, 'Manifest must retain all 25 B0 categorie
 $assert(isset($categoriesById['namespaces'], $categoriesById['tests_tooling_assets']), 'Manifest must retain the namespace and tests/tooling categories.');
 
 $expectedCounts = array(
-	'public_php_files' => 271,
-	'functions' => array('unique' => 4521, 'occurrences' => 4541),
+	'public_php_files' => 272,
+	'functions' => array('unique' => 4528, 'occurrences' => 4548),
 	'classes' => array('unique' => 23, 'occurrences' => 23),
 	'interfaces' => array('unique' => 1, 'occurrences' => 1),
 	'constants' => array('unique' => 107, 'occurrences' => 116),
@@ -141,8 +142,8 @@ foreach ($expectedCounts as $key => $expected) {
 $dynamicExpected = array(
 	'exact_function_literals_unique' => 3645,
 	'exact_function_literals_occurrences' => 7363,
-	'function_exists_unique' => 3310,
-	'function_exists_occurrences' => 6338,
+	'function_exists_unique' => 3317,
+	'function_exists_occurrences' => 6345,
 	'direct_literal_callbacks_unique' => 711,
 	'direct_literal_callbacks_occurrences' => 767,
 	'exact_type_literals_unique' => 16,

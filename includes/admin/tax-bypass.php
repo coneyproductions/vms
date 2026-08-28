@@ -184,7 +184,7 @@ function bvmgr_render_tax_bypass_box($post)
         return;
     }
 
-    wp_nonce_field('vms_save_tax_bypass', 'vms_tax_bypass_nonce');
+    wp_nonce_field('bvmgr_save_tax_bypass', 'bvmgr_tax_bypass_nonce');
 
     $s = bvmgr_get_tax_bypass_status((int)$post->ID);
 
@@ -273,10 +273,10 @@ add_action('save_post', function ($post_id, $post) {
 
     if (!current_user_can('manage_options')) return;
 
-    $nonce = (isset($_POST['vms_tax_bypass_nonce']) && !is_array($_POST['vms_tax_bypass_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_tax_bypass_nonce']))
+    $nonce = (isset($_POST['bvmgr_tax_bypass_nonce']) && !is_array($_POST['bvmgr_tax_bypass_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_tax_bypass_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_tax_bypass')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_tax_bypass')) {
         return;
     }
 

@@ -131,10 +131,10 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_vendor_defaults_nonce']) && !is_array($_POST['vms_vendor_defaults_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_defaults_nonce']))
+    $nonce = (isset($_POST['bvmgr_vendor_defaults_nonce']) && !is_array($_POST['bvmgr_vendor_defaults_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_defaults_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_vendor_defaults')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_vendor_defaults')) {
         return;
     }
  
@@ -498,7 +498,7 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
  */
 function bvmgr_render_vendor_defaults_metabox($post)
 {
-    wp_nonce_field('vms_save_vendor_defaults', 'vms_vendor_defaults_nonce');
+    wp_nonce_field('bvmgr_save_vendor_defaults', 'bvmgr_vendor_defaults_nonce');
     $vk = function ($field, $fallback) {
         if (!function_exists('bvmgr_meta_key')) {
             return $fallback;

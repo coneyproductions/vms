@@ -31,7 +31,7 @@ add_action('admin_notices', function () {
 
     $dismiss_url = wp_nonce_url(
         add_query_arg(array('vms_dismiss_first_run_notice' => '1')),
-        'vms_dismiss_first_run_notice'
+        'bvmgr_dismiss_first_run_notice'
     );
 
     echo '<div class="notice notice-success vms-first-run-notice" style="padding:14px 16px;">';
@@ -80,7 +80,7 @@ add_action('admin_init', function () {
         return;
     }
 
-    check_admin_referer('vms_dismiss_first_run_notice');
+    bvmgr_check_admin_referer_compat('bvmgr_dismiss_first_run_notice');
 
     delete_option('vms_show_first_run_notice');
 

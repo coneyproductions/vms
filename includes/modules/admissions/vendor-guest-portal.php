@@ -946,10 +946,10 @@ if (!function_exists('bvmgr_admission_save_vendor_guest_config')) {
 		if (wp_is_post_revision($post_id)) {
 			return;
 		}
-		$nonce = (isset($_POST['vms_event_plan_details_nonce']) && !is_array($_POST['vms_event_plan_details_nonce']))
-			? sanitize_text_field(wp_unslash((string) $_POST['vms_event_plan_details_nonce']))
+		$nonce = (isset($_POST['bvmgr_event_plan_details_nonce']) && !is_array($_POST['bvmgr_event_plan_details_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_event_plan_details_nonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
+		if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_plan_details')) {
 			return;
 		}
 		if (!current_user_can('edit_post', $post_id)) {
@@ -1170,7 +1170,7 @@ if (!function_exists('bvmgr_admission_vendor_guest_render_custom_tab')) {
 				echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '">';
 				echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
 				echo '<input type="hidden" name="return_url" value="' . esc_attr(bvmgr_admission_vendor_guest_portal_url($portal_context, $event_plan_id)) . '">';
-				wp_nonce_field('vms_vendor_guest_portal_submit', '_vms_vendor_guest_nonce');
+				wp_nonce_field('bvmgr_vendor_guest_portal_submit', '_bvmgr_vendor_guest_nonce');
 				echo '<div class="vms-vendor-guest-party-list">';
 				echo '<fieldset class="vms-vendor-guest-person is-primary" data-vms-guest-slot="1">';
 				echo '<legend data-vms-guest-legend>' . esc_html__('Guest Pass', 'backstage-venue-manager') . '</legend>';
@@ -1233,7 +1233,7 @@ if (!function_exists('bvmgr_admission_vendor_guest_render_custom_tab')) {
 						echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '">';
 						echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
 						echo '<input type="hidden" name="return_url" value="' . esc_attr(bvmgr_admission_vendor_guest_portal_url($portal_context, $event_plan_id)) . '">';
-						wp_nonce_field('vms_vendor_guest_portal_submit', '_vms_vendor_guest_nonce');
+						wp_nonce_field('bvmgr_vendor_guest_portal_submit', '_bvmgr_vendor_guest_nonce');
 						echo '<button type="submit" class="button">' . esc_html__('Remove Guest', 'backstage-venue-manager') . '</button>';
 						echo '</form></div>';
 					}
@@ -1256,10 +1256,10 @@ if (!function_exists('bvmgr_admission_vendor_guest_handle_submit')) {
 		if (!is_user_logged_in()) {
 			wp_die(esc_html__('Please log in to manage guest entries.', 'backstage-venue-manager'));
 		}
-		$nonce = (isset($_POST['_vms_vendor_guest_nonce']) && !is_array($_POST['_vms_vendor_guest_nonce']))
-			? sanitize_text_field(wp_unslash((string) $_POST['_vms_vendor_guest_nonce']))
+		$nonce = (isset($_POST['_bvmgr_vendor_guest_nonce']) && !is_array($_POST['_bvmgr_vendor_guest_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['_bvmgr_vendor_guest_nonce']))
 			: '';
-		if (!wp_verify_nonce($nonce, 'vms_vendor_guest_portal_submit')) {
+		if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_guest_portal_submit')) {
 			wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
 		}
 		$user_id = get_current_user_id();

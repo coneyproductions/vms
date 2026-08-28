@@ -486,6 +486,7 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 	}
 }
 
+require_once dirname(__DIR__) . '/includes/core/prefix-b4-compat.php';
 require_once dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php';
 
 $pluginRoot = dirname(__DIR__);
@@ -780,7 +781,7 @@ $GLOBALS['vms_test_nonce_return'] = false;
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = array(
 	'vms_pass_claim_submit' => '1',
-	'_vms_pass_claim_nonce' => 'bad-nonce',
+	'_bvmgr_pass_claim_nonce' => 'bad-nonce',
 	'first_name' => 'Ada',
 	'last_name' => 'Lovelace',
 	'phone' => '555-0100',
@@ -795,7 +796,7 @@ $invalidNonceRender = $captureShellRender(static function (): void {
 $assert($invalidNonceRender['headline'] === 'Claim Your Pass', 'Invalid nonce Pass Claims submission should remain on the interactive claim-form family.');
 $assert(strpos($invalidNonceRender['content_html'], 'Invalid request. Please refresh and try again.') !== false && strpos($invalidNonceRender['content_html'], '<form method="post">') !== false, 'Invalid nonce Pass Claims submission should preserve the form family and its validation message.');
 $assert(strpos($invalidNonceRender['content_html'], 'You Are Confirmed') === false, 'Invalid nonce Pass Claims submission should stay outside the success-confirmation family.');
-$assert($GLOBALS['vms_test_nonce_calls'] === 1 && $GLOBALS['vms_test_nonce_args'] === array(array('bad-nonce', 'vms_pass_claim_submit')), 'Invalid nonce Pass Claims submission should preserve the nonce-validation action.');
+$assert($GLOBALS['vms_test_nonce_calls'] === 2 && $GLOBALS['vms_test_nonce_args'] === array(array('bad-nonce', 'bvmgr_pass_claim_submit'), array('bad-nonce', 'vms_pass_claim_submit')), 'Invalid nonce Pass Claims submission should try the exact canonical action before its legacy fallback.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_eligible_calls'] === 1 && $GLOBALS['vms_test_create_claim_calls'] === 0 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0, 'Invalid nonce Pass Claims submission should stop before claim mutation while preserving the pre-form reads.');
 
 $resetRuntime();
@@ -816,7 +817,7 @@ $GLOBALS['vms_test_create_claim_return'] = new WP_Error('claim_failed', '<b>Coul
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = array(
 	'vms_pass_claim_submit' => '1',
-	'_vms_pass_claim_nonce' => 'ok-nonce',
+	'_bvmgr_pass_claim_nonce' => 'ok-nonce',
 	'first_name' => 'Ada',
 	'last_name' => 'Lovelace',
 	'phone' => '555-0100',
@@ -892,7 +893,7 @@ $GLOBALS['vms_test_public_pass_url_return'] = $routePassUrl;
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = array(
 	'vms_pass_claim_submit' => '1',
-	'_vms_pass_claim_nonce' => 'ok-nonce',
+	'_bvmgr_pass_claim_nonce' => 'ok-nonce',
 	'first_name' => 'Ada',
 	'last_name' => 'Lovelace',
 	'phone' => '555-0100',
@@ -908,7 +909,7 @@ $successfulRouteRender = $captureShellRender(static function (): void {
 $assert($successfulRouteRender['headline'] === 'Pass Claimed', 'Successful Pass Claims submission should preserve the success headline.');
 $assert($successfulRouteRender['content_html'] === $expectedRouteSuccess, 'Successful Pass Claims submission should preserve the exact success-confirmation markup.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_eligible_calls'] === 1 && $GLOBALS['vms_test_create_claim_calls'] === 1 && $GLOBALS['vms_test_nonce_calls'] === 1 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0, 'Successful Pass Claims submission should preserve the existing success-path read and mutation counts.');
-$assert($GLOBALS['vms_test_nonce_args'] === array(array('ok-nonce', 'vms_pass_claim_submit')), 'Successful Pass Claims submission should preserve the nonce-validation action.');
+$assert($GLOBALS['vms_test_nonce_args'] === array(array('ok-nonce', 'bvmgr_pass_claim_submit')), 'Successful Pass Claims submission should validate the canonical nonce action without a legacy retry.');
 $assert($GLOBALS['vms_test_public_pass_url_calls'] === 1 && $GLOBALS['vms_test_public_pass_url_args'] === array(array('route token', true)), 'Successful Pass Claims submission should preserve the public-pass URL lookup inputs.');
 $assert($GLOBALS['vms_test_find_token_tokens'] === array('success-route-token'), 'Pass Claims template router should pass the resolved success-route token unchanged into the token lookup.');
 $assert($GLOBALS['vms_test_get_batch_ids'] === array(9), 'Successful Pass Claims submission should preserve the batch lookup input.');

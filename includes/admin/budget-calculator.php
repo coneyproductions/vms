@@ -1218,7 +1218,7 @@ function bvmgr_render_budget_calculator_page(): void
   $did_calc = false;
 
   if ('POST' === bvmgr_budget_request_method()) {
-    check_admin_referer('vms_budget_calc');
+    bvmgr_check_admin_referer_compat('bvmgr_budget_calc');
 
     $in = bvmgr_budget_calculator_read_input($defaults);
 
@@ -1244,7 +1244,7 @@ function bvmgr_render_budget_calculator_page(): void
   echo '<p class="description">' . esc_html__('Decision-support only. Use this to sanity-check band pay and ticket pricing before committing.', 'backstage-venue-manager') . '</p>';
 
   echo '<form method="post" action="' . esc_url(admin_url('admin.php?page=vms-budget-calculator')) . '">';
-  wp_nonce_field('vms_budget_calc');
+  wp_nonce_field('bvmgr_budget_calc');
 
   echo '<h2 class="title">' . esc_html__('Inputs', 'backstage-venue-manager') . '</h2>';
 

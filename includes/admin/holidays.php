@@ -210,12 +210,12 @@ function bvmgr_admin_holidays_adminpost_handle(string $expected_action): void
 	}
 
 	// Read from REQUEST so this works for POST forms and GET delete links
-	$nonce = (isset($_REQUEST['vms_holidays_nonce']) && !is_array($_REQUEST['vms_holidays_nonce']))
-		? sanitize_text_field(wp_unslash((string) $_REQUEST['vms_holidays_nonce']))
+	$nonce = (isset($_REQUEST['bvmgr_holidays_nonce']) && !is_array($_REQUEST['bvmgr_holidays_nonce']))
+		? sanitize_text_field(wp_unslash((string) $_REQUEST['bvmgr_holidays_nonce']))
 		: '';
 
-	$nonce_action = 'vms_holidays_' . $expected_action;
-	if (!$nonce || !wp_verify_nonce($nonce, $nonce_action)) {
+	$nonce_action = 'bvmgr_holidays_' . $expected_action;
+	if (!$nonce || !bvmgr_verify_nonce_compat($nonce, $nonce_action)) {
 		wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
 	}
 
@@ -591,7 +591,7 @@ function bvmgr_admin_holidays_page(): void
 		echo '<h2 class="vms-holidays-editor-title">' . esc_html($edit_row ? __('Edit Holiday', 'backstage-venue-manager') : __('Add Holiday', 'backstage-venue-manager')) . '</h2>';
 
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-	wp_nonce_field('vms_holidays_save', 'vms_holidays_nonce');
+	wp_nonce_field('bvmgr_holidays_save', 'bvmgr_holidays_nonce');
 
 	echo '<input type="hidden" name="action" value="vms_holidays_save" />';
 	echo '<input type="hidden" name="vms_holidays_action" value="save" />';
@@ -663,7 +663,7 @@ function bvmgr_admin_holidays_page(): void
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
 
 	// Action-specific nonce for bulk delete
-	wp_nonce_field('vms_holidays_bulk_delete', 'vms_holidays_nonce');
+	wp_nonce_field('bvmgr_holidays_bulk_delete', 'bvmgr_holidays_nonce');
 
 	echo '<input type="hidden" name="action" value="vms_holidays_bulk_delete" />';
 	echo '<input type="hidden" name="vms_holidays_action" value="bulk_delete" />';
@@ -733,7 +733,7 @@ function bvmgr_admin_holidays_page(): void
 			'confirm' => '1',
 		), admin_url('admin-post.php'));
 
-		$delete_url = wp_nonce_url($delete_url, 'vms_holidays_delete', 'vms_holidays_nonce');
+		$delete_url = wp_nonce_url($delete_url, 'bvmgr_holidays_delete', 'bvmgr_holidays_nonce');
 
 		echo '<tr>';
 

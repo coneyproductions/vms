@@ -251,7 +251,7 @@ class BVMGR_Admin_Vendors
     public function render_vendor_details_meta_box($post)
     {
         // Security nonce.
-        wp_nonce_field('vms_save_vendor_details', 'vms_vendor_details_nonce');
+        wp_nonce_field('bvmgr_save_vendor_details', 'bvmgr_vendor_details_nonce');
 
         $k_contact_name  = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_name') : '_vms_contact_name';
         $k_primary_email = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
@@ -326,7 +326,7 @@ class BVMGR_Admin_Vendors
     public function render_vendor_public_profile_meta_box($post)
     {
         // Security nonce for this meta box.
-        wp_nonce_field('vms_save_vendor_public_profile', 'vms_vendor_public_profile_nonce');
+        wp_nonce_field('bvmgr_save_vendor_public_profile', 'bvmgr_vendor_public_profile_nonce');
 
         $post_id = (int) $post->ID;
 
@@ -431,10 +431,10 @@ class BVMGR_Admin_Vendors
     public function save_vendor_meta($post_id, $post)
     {
         // Check nonce(s). Either meta box nonce should allow saving its own fields.
-        $details_nonce = bvmgr_request_read_text_field($_POST, 'vms_vendor_details_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Details nonce is required before local verification.
-        $profile_nonce = bvmgr_request_read_text_field($_POST, 'vms_vendor_public_profile_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Public Profile nonce is required before local verification.
-        $details_ok = ($details_nonce !== '' && wp_verify_nonce($details_nonce, 'vms_save_vendor_details'));
-        $profile_ok = ($profile_nonce !== '' && wp_verify_nonce($profile_nonce, 'vms_save_vendor_public_profile'));
+        $details_nonce = bvmgr_request_read_text_field($_POST, 'bvmgr_vendor_details_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Details nonce is required before local verification.
+        $profile_nonce = bvmgr_request_read_text_field($_POST, 'bvmgr_vendor_public_profile_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Public Profile nonce is required before local verification.
+        $details_ok = ($details_nonce !== '' && bvmgr_verify_nonce_compat($details_nonce, 'bvmgr_save_vendor_details'));
+        $profile_ok = ($profile_nonce !== '' && bvmgr_verify_nonce_compat($profile_nonce, 'bvmgr_save_vendor_public_profile'));
 
         if (!$details_ok && !$profile_ok) {
             return;

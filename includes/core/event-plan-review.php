@@ -1364,12 +1364,12 @@ if (!function_exists('bvmgr_event_plan_review_editor_action')) {
         }
 
         $request = bvmgr_event_plan_review_post_data();
-        if (!isset($request['vms_event_plan_details_nonce']) || is_array($request['vms_event_plan_details_nonce'])) {
+        if (!isset($request['bvmgr_event_plan_details_nonce']) || is_array($request['bvmgr_event_plan_details_nonce'])) {
             return '';
         }
 
-        $nonce = sanitize_text_field((string) $request['vms_event_plan_details_nonce']);
-        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
+        $nonce = sanitize_text_field((string) $request['bvmgr_event_plan_details_nonce']);
+        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_plan_details')) {
             return '';
         }
 

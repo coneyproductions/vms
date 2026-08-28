@@ -1500,7 +1500,7 @@ if (!function_exists('bvmgr_render_vendor_command_center_page_content')) {
         echo '<script type="application/json" id="vms-vcc-vendor-map">' . wp_json_encode($vendor_form_map) . '</script>';
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-compose__form">';
-        wp_nonce_field('vms_vendor_command_center_send_onboarding', 'vms_vendor_command_center_nonce');
+        wp_nonce_field('bvmgr_vendor_command_center_send_onboarding', 'bvmgr_vendor_command_center_nonce');
         echo '<input type="hidden" name="action" value="vms_vendor_command_center_send_onboarding">';
 
         echo '<div class="vms-vcc-compose__grid">';
@@ -1557,7 +1557,7 @@ if (!function_exists('bvmgr_render_vendor_command_center_page_content')) {
         echo '<div class="vms-vcc-panel__body">';
         echo '<script type="application/json" id="vms-vcc-template-map">' . wp_json_encode($template_editor_payload) . '</script>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-compose__form">';
-        wp_nonce_field('vms_vendor_command_center_save_template', 'vms_vendor_command_center_template_nonce');
+        wp_nonce_field('bvmgr_vendor_command_center_save_template', 'bvmgr_vendor_command_center_template_nonce');
         echo '<input type="hidden" name="action" value="vms_vendor_command_center_save_template">';
         echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $selected_vendor_id) . '">';
 
@@ -1809,7 +1809,7 @@ if (!function_exists('bvmgr_render_vendor_command_center_page_content')) {
 
                 if (!empty($next_item['plan_id']) && function_exists('bvmgr_vendor_booking_onboarding_send_booked_email')) {
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-inline-form">';
-                    wp_nonce_field('vms_vendor_booking_onboarding_resend_' . (int) $next_item['plan_id'] . '_' . $vendor_id);
+                    wp_nonce_field('bvmgr_vendor_booking_onboarding_resend_' . (int) $next_item['plan_id'] . '_' . $vendor_id);
                     echo '<input type="hidden" name="action" value="vms_vendor_booking_onboarding_resend">';
                     echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) ((int) $next_item['plan_id'])) . '">';
                     echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
@@ -1820,7 +1820,7 @@ if (!function_exists('bvmgr_render_vendor_command_center_page_content')) {
                 if (!empty($booking_status['video_required']) && !empty($next_item['plan_id']) && function_exists('bvmgr_vendor_booking_onboarding_set_video_waiver') && ((string) ($booking_status['video_status'] ?? '') !== 'uploaded' || !empty($booking_status['video_waived']))) {
                     $waive_now = empty($booking_status['video_waived']);
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-inline-form">';
-                    wp_nonce_field('vms_vendor_booking_onboarding_toggle_waiver_' . (int) $next_item['plan_id'] . '_' . $vendor_id);
+                    wp_nonce_field('bvmgr_vendor_booking_onboarding_toggle_waiver_' . (int) $next_item['plan_id'] . '_' . $vendor_id);
                     echo '<input type="hidden" name="action" value="vms_vendor_booking_onboarding_toggle_waiver">';
                     echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) ((int) $next_item['plan_id'])) . '">';
                     echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
@@ -1831,7 +1831,7 @@ if (!function_exists('bvmgr_render_vendor_command_center_page_content')) {
 
                 if ($candidate_user_id > 0 && $linked_user_id <= 0) {
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-inline-form">';
-                    wp_nonce_field('vms_vendor_command_center_link_matching_user_' . $vendor_id, 'vms_vendor_command_center_link_nonce');
+                    wp_nonce_field('bvmgr_vendor_command_center_link_matching_user_' . $vendor_id, 'bvmgr_vendor_command_center_link_nonce');
                     echo '<input type="hidden" name="action" value="vms_vendor_command_center_link_matching_user">';
                     echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
                     submit_button(__('Link account', 'backstage-venue-manager'), 'secondary small vms-vcc-action-link vms-vcc-action-link--link', 'submit', false);
@@ -1857,7 +1857,7 @@ if (!function_exists('bvmgr_vendor_command_center_handle_save_template')) {
             wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
         }
 
-        check_admin_referer('vms_vendor_command_center_save_template', 'vms_vendor_command_center_template_nonce');
+        bvmgr_check_admin_referer_compat('bvmgr_vendor_command_center_save_template', 'bvmgr_vendor_command_center_template_nonce');
 
         $vendor_id = absint(wp_unslash((string) ($_POST['vendor_id'] ?? 0)));
         $template_scope = isset($_POST['template_scope']) ? sanitize_text_field((string) wp_unslash($_POST['template_scope'])) : bvmgr_vendor_command_center_template_default_scope();
@@ -1941,7 +1941,7 @@ if (!function_exists('bvmgr_vendor_command_center_handle_send_onboarding')) {
             wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
         }
 
-        check_admin_referer('vms_vendor_command_center_send_onboarding', 'vms_vendor_command_center_nonce');
+        bvmgr_check_admin_referer_compat('bvmgr_vendor_command_center_send_onboarding', 'bvmgr_vendor_command_center_nonce');
 
 	        $vendor_id = bvmgr_request_read_absint($_POST, 'vendor_id');
 	        $to_email = bvmgr_request_read_email($_POST, 'to_email');
@@ -2051,7 +2051,7 @@ if (!function_exists('bvmgr_vendor_command_center_handle_link_matching_user')) {
         }
 
         $vendor_id = absint(wp_unslash((string) ($_POST['vendor_id'] ?? 0)));
-        check_admin_referer('vms_vendor_command_center_link_matching_user_' . $vendor_id, 'vms_vendor_command_center_link_nonce');
+        bvmgr_check_admin_referer_compat('bvmgr_vendor_command_center_link_matching_user_' . $vendor_id, 'bvmgr_vendor_command_center_link_nonce');
 
         if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor')) {
             if (function_exists('bvmgr_add_admin_notice')) {

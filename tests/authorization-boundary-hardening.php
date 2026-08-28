@@ -239,6 +239,15 @@ function wp_verify_nonce(string $nonce, string $action): bool
 	return $nonce === vms_test_nonce($action);
 }
 
+function bvmgr_verify_nonce_compat(string $nonce, string $action): bool
+{
+	if (wp_verify_nonce($nonce, $action)) {
+		return true;
+	}
+	$legacy = str_starts_with($action, 'bvmgr_') ? 'vms_' . substr($action, 6) : $action;
+	return $legacy !== $action && wp_verify_nonce($nonce, $legacy);
+}
+
 function check_admin_referer(string $action): bool
 {
 	$nonce = '';
@@ -251,6 +260,11 @@ function check_admin_referer(string $action): bool
 	}
 
 	return true;
+}
+
+function bvmgr_check_admin_referer_compat(string $action): bool
+{
+	return check_admin_referer($action);
 }
 
 function wp_nonce_field(string $action, string $name): void
@@ -747,11 +761,11 @@ try {
 	bvmgr_vendor_applications_metabox_actions($vendorPost);
 	$limitedMetabox = (string) ob_get_clean();
 	$assert(strpos($limitedMetabox, 'You do not have permission to update applications.') !== false, 'Metabox should render the permission warning when object-level access is missing.');
-	$assert(strpos($limitedMetabox, 'vms_vendor_app_decision_nonce') === false, 'Metabox should not render decision controls without object-level access.');
+	$assert(strpos($limitedMetabox, 'bvmgr_vendor_app_decision_nonce') === false, 'Metabox should not render decision controls without object-level access.');
 
 	$_POST = array(
 		'vms_vendor_app_admin_fields_present' => '1',
-		'vms_vendor_app_decision_nonce' => vms_test_nonce('vms_vendor_app_decision_' . $appId),
+		'bvmgr_vendor_app_decision_nonce' => vms_test_nonce('bvmgr_vendor_app_decision_' . $appId),
 		'vms_vendor_app_operator_internal_note' => 'Unauthorized change',
 		'vms_vendor_app_decision_message' => 'Unauthorized response',
 		'vms_vendor_app_decision' => 'holding',
@@ -783,7 +797,7 @@ try {
 	$templateId = vms_test_register_post('vms_venue', 'Template Venue Fixture');
 	update_post_meta($templateId, BVMGR_VENUE_TEMPLATE_META_KEY, '1');
 	$_POST = array(
-		'vms_create_venue_from_template_nonce' => vms_test_nonce('vms_create_venue_from_template'),
+		'bvmgr_create_venue_from_template_nonce' => vms_test_nonce('bvmgr_create_venue_from_template'),
 		'vms_template_id' => $templateId,
 	);
 	$_REQUEST = $_POST;
@@ -804,12 +818,12 @@ try {
 	ob_start();
 	bvmgr_vendor_applications_metabox_actions($vendorPost);
 	$authorizedMetabox = (string) ob_get_clean();
-	$assert(strpos($authorizedMetabox, 'vms_vendor_app_decision_nonce') !== false, 'Metabox should render the decision nonce for authorized users.');
+	$assert(strpos($authorizedMetabox, 'bvmgr_vendor_app_decision_nonce') !== false, 'Metabox should render the canonical decision nonce for authorized users.');
 	$assert(strpos($authorizedMetabox, 'Approve') !== false, 'Metabox should still render decision buttons for authorized users.');
 
 	$_POST = array(
 		'vms_vendor_app_admin_fields_present' => '1',
-		'vms_vendor_app_decision_nonce' => vms_test_nonce('vms_vendor_app_decision_' . $appId),
+		'bvmgr_vendor_app_decision_nonce' => vms_test_nonce('bvmgr_vendor_app_decision_' . $appId),
 		'vms_vendor_app_operator_internal_note' => 'Authorized note',
 		'vms_vendor_app_decision_message' => 'Hold this for later review.',
 		'vms_vendor_app_decision' => 'holding',
@@ -839,7 +853,7 @@ try {
 
 	$_POST = array(
 		'vms_vendor_app_admin_fields_present' => '1',
-		'vms_vendor_app_decision_nonce' => 'expired',
+		'bvmgr_vendor_app_decision_nonce' => 'expired',
 		'vms_vendor_app_operator_internal_note' => 'Invalid nonce change',
 		'vms_vendor_app_decision_message' => 'Invalid nonce',
 		'vms_vendor_app_decision' => 'holding',
@@ -850,7 +864,7 @@ try {
 
 	$_POST = array(
 		'vms_vendor_app_admin_fields_present' => '1',
-		'vms_vendor_app_decision_nonce' => array('expired'),
+		'bvmgr_vendor_app_decision_nonce' => array('expired'),
 		'vms_vendor_app_operator_internal_note' => 'Malformed nonce change',
 		'vms_vendor_app_decision_message' => 'Malformed nonce',
 		'vms_vendor_app_decision' => 'holding',
@@ -871,7 +885,7 @@ try {
 
 	$_GET = array(
 		'app_id' => $appId,
-		'_wpnonce' => vms_test_nonce('vms_vendor_app_reject_' . $appId),
+		'_wpnonce' => vms_test_nonce('bvmgr_vendor_app_reject_' . $appId),
 	);
 	$_REQUEST = $_GET;
 	$GLOBALS['vms_test_transition_log'] = array();
@@ -883,7 +897,7 @@ try {
 
 	$_GET = array(
 		'vendor_id' => $vendorId,
-		'_wpnonce' => vms_test_nonce('vms_vendor_mark_reviewed_' . $vendorId),
+		'_wpnonce' => vms_test_nonce('bvmgr_vendor_mark_reviewed_' . $vendorId),
 	);
 	$_REQUEST = $_GET;
 	$expectRedirect(static function () {
@@ -893,7 +907,7 @@ try {
 
 	$expectRedirect(static function () use ($templateId) {
 		$_POST = array(
-			'vms_create_venue_from_template_nonce' => vms_test_nonce('vms_create_venue_from_template'),
+			'bvmgr_create_venue_from_template_nonce' => vms_test_nonce('bvmgr_create_venue_from_template'),
 			'vms_template_id' => $templateId,
 		);
 		$_REQUEST = $_POST;
@@ -938,7 +952,7 @@ try {
 	$_SERVER['REQUEST_METHOD'] = 'POST';
 	$_GET = array('page' => 'vms-season-dates');
 	$_POST = array(
-		'vms_season_dates_nonce' => vms_test_nonce('vms_season_dates_55'),
+		'bvmgr_season_dates_nonce' => vms_test_nonce('bvmgr_season_dates_55'),
 		'vms_action' => 'save_rules',
 		'venue_id' => 55,
 	);

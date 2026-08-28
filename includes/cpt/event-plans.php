@@ -409,10 +409,10 @@ if (!function_exists('bvmgr_event_plan_editor_verified_post_data')) {
         }
 
         $request = bvmgr_event_plan_current_post_request();
-        $nonce = isset($request['vms_event_plan_details_nonce']) && !is_array($request['vms_event_plan_details_nonce'])
-            ? sanitize_text_field((string) $request['vms_event_plan_details_nonce'])
+        $nonce = isset($request['bvmgr_event_plan_details_nonce']) && !is_array($request['bvmgr_event_plan_details_nonce'])
+            ? sanitize_text_field((string) $request['bvmgr_event_plan_details_nonce'])
             : '';
-        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
+        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_event_plan_details')) {
             $request = array();
         }
 
@@ -1035,7 +1035,7 @@ class BVMGR_Admin_Event_Plans
         <div id="vms-secondary-vendors-section"
             data-vms-module-owner="<?php echo esc_attr((string) ($context['module_owner'] ?? 'vendors')); ?>"
             data-vms-save-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
-            data-vms-save-nonce="<?php echo esc_attr(wp_create_nonce('vms_event_plan_secondary_vendors_save')); ?>"
+            data-vms-save-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_secondary_vendors_save')); ?>"
             data-vms-save-post-id="<?php echo (int) ($context['post_id'] ?? 0); ?>">
             <input type="hidden" name="vms_secondary_vendors_module_detached" value="1" />
             <input type="hidden" name="vms_clear_secondary_vendors" value="0" id="vms-clear-secondary-vendors-intent" />
@@ -1872,7 +1872,7 @@ class BVMGR_Admin_Event_Plans
         <div id="vms-secondary-vendors-section"
             data-vms-module-owner="<?php echo esc_attr((string) ($context['module_owner'] ?? 'vendors')); ?>"
             data-vms-save-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
-            data-vms-save-nonce="<?php echo esc_attr(wp_create_nonce('vms_event_plan_secondary_vendors_save')); ?>"
+            data-vms-save-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_secondary_vendors_save')); ?>"
             data-vms-save-post-id="<?php echo (int) ($context['post_id'] ?? 0); ?>">
             <input type="hidden" name="vms_secondary_vendors_module_detached" value="1" />
             <input type="hidden" name="vms_clear_secondary_vendors" value="0" id="vms-clear-secondary-vendors-intent" />
@@ -4183,7 +4183,7 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_error(array('message' => 'Not allowed'), 403);
         }
 
-        if (false === check_ajax_referer('vms_get_venue_comp_defaults', 'nonce', false)) {
+        if (false === bvmgr_check_ajax_referer_compat('bvmgr_get_venue_comp_defaults', 'nonce', false)) {
             wp_send_json_error(array('message' => __('Security check failed. Please refresh the page and try again.', 'backstage-venue-manager')), 403);
         }
 
@@ -4245,7 +4245,7 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_error(array('message' => 'Not allowed'), 403);
         }
 
-        check_ajax_referer('vms_comp_options', 'nonce');
+        bvmgr_check_ajax_referer_compat('bvmgr_comp_options', 'nonce');
 
         $venue_id   = isset($_POST['venue_id']) ? absint($_POST['venue_id']) : 0;
         $vendor_id  = isset($_POST['vendor_id']) ? absint($_POST['vendor_id']) : 0;
@@ -4280,7 +4280,7 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_error(array('message' => 'Not allowed'), 403);
         }
 
-        check_ajax_referer('vms_event_plan_admin_section', 'nonce');
+        bvmgr_check_ajax_referer_compat('bvmgr_event_plan_admin_section', 'nonce');
 
         if (!$this->event_plan_admin_section_supports_lazy_load($section)) {
             wp_send_json_error(array('message' => 'Section not supported.'), 400);
@@ -4402,7 +4402,7 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_error(array('message' => 'Not allowed'), 403);
         }
 
-        check_ajax_referer('vms_event_plan_secondary_vendors_save', 'nonce');
+        bvmgr_check_ajax_referer_compat('bvmgr_event_plan_secondary_vendors_save', 'nonce');
 
         $result = function_exists('bvmgr_event_plan_save_secondary_vendors_module')
             ? bvmgr_event_plan_save_secondary_vendors_module($post_id, (array) $_POST)
@@ -4538,7 +4538,7 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_error(array('message' => 'Not allowed'), 403);
         }
 
-        check_ajax_referer('vms_event_plan_ticket_ui_overrides_save', 'nonce');
+        bvmgr_check_ajax_referer_compat('bvmgr_event_plan_ticket_ui_overrides_save', 'nonce');
 
         $result = $this->save_event_plan_ticket_ui_overrides($post_id, (array) $_POST);
 
@@ -4591,7 +4591,7 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_error(array('message' => 'Not allowed'), 403);
         }
 
-        check_ajax_referer('vms_event_plan_calendar_unpublished_suppress_save', 'nonce');
+        bvmgr_check_ajax_referer_compat('bvmgr_event_plan_calendar_unpublished_suppress_save', 'nonce');
 
         $suppress = !empty($_POST['suppress']);
         $result = $this->save_event_plan_calendar_unpublished_suppress($post_id, $suppress);
@@ -4616,7 +4616,7 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_error(array('message' => 'Not allowed'), 403);
         }
 
-        check_ajax_referer('vms_event_plan_admin_section', 'nonce');
+        bvmgr_check_ajax_referer_compat('bvmgr_event_plan_admin_section', 'nonce');
 
         $trace = function_exists('bvmgr_event_plan_perf_span_start')
             ? bvmgr_event_plan_perf_span_start('event_plan_supporting_vendor_options_lazy_load', $post_id, array(
@@ -5902,7 +5902,7 @@ class BVMGR_Admin_Event_Plans
                             'event_plan_id'       => $live_refund_plan_id,
                             'source_post_id'      => $live_refund_source_post_id,
                             'post_id'             => (int) $post_id,
-                            '_wpnonce'            => wp_create_nonce('vms_run_live_refunds_now_' . $live_refund_nonce_post_id),
+                            '_wpnonce'            => wp_create_nonce('bvmgr_run_live_refunds_now_' . $live_refund_nonce_post_id),
                         ),
                         admin_url('post.php')
                     );
@@ -7586,7 +7586,7 @@ class BVMGR_Admin_Event_Plans
                 'capture_dependency_snapshot' => 1,
             ), 'details_meta_box');
         }
-        wp_nonce_field('vms_save_event_plan_details', 'vms_event_plan_details_nonce');
+        wp_nonce_field('bvmgr_save_event_plan_details', 'bvmgr_event_plan_details_nonce');
         echo '<input type="hidden" name="vms_reopen_section_after_save" id="vms-reopen-section-after-save" value="" />';
         $scroll_to = (string) get_post_meta($post->ID, '_vms_admin_scroll_to', true);
 
@@ -7896,7 +7896,7 @@ class BVMGR_Admin_Event_Plans
         $lock_pay_basics_state = $this->get_lock_pay_basics_state((int) $post->ID);
         $lock_pay_enabled = !empty($lock_pay_basics_state['ok']);
 
-        $comp_options_nonce = wp_create_nonce('vms_comp_options');
+        $comp_options_nonce = wp_create_nonce('bvmgr_comp_options');
         $comp_opts_trace = function_exists('bvmgr_event_plan_perf_span_start')
             ? bvmgr_event_plan_perf_span_start('event_plan_comp_options_lookup', (int) $post->ID, array('section' => 'compensation'))
             : '';
@@ -8532,7 +8532,7 @@ class BVMGR_Admin_Event_Plans
     <?php $vms_title_html = $this->capture_event_plan_partial('title', get_defined_vars()); ?>
     <?php echo $vms_title_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
-    <?php $vms_comp_defaults_nonce = wp_create_nonce('vms_get_venue_comp_defaults'); ?>
+    <?php $vms_comp_defaults_nonce = wp_create_nonce('bvmgr_get_venue_comp_defaults'); ?>
     <?php $vms_compensation_html = $this->capture_event_plan_partial('compensation', get_defined_vars()); ?>
     <?php $vms_compensation_html = str_replace('id="vms-comp-options" data-nonce="', 'id="vms-comp-options" data-defaults-nonce="' . esc_attr($vms_comp_defaults_nonce) . '" data-nonce="', $vms_compensation_html); ?>
     <?php echo $vms_compensation_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -8592,7 +8592,7 @@ class BVMGR_Admin_Event_Plans
             data-vms-lazy-loaded="0"
             data-vms-lazy-post-id="<?php echo (int) $post->ID; ?>"
             data-vms-lazy-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
-            data-vms-lazy-nonce="<?php echo esc_attr(wp_create_nonce('vms_event_plan_admin_section')); ?>"
+            data-vms-lazy-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_admin_section')); ?>"
         >
             <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
@@ -8628,7 +8628,7 @@ class BVMGR_Admin_Event_Plans
 
     <?php
         $vms_staff_lazy_enabled = $this->should_defer_event_plan_admin_section((int) $post->ID, 'staff');
-        $vms_staff_nonce = wp_create_nonce('vms_event_plan_admin_section');
+        $vms_staff_nonce = wp_create_nonce('bvmgr_event_plan_admin_section');
         $vms_staff_has_data_hint = !empty($staff_assignments);
     ?>
     <?php if ($vms_staff_lazy_enabled) : ?>
@@ -8778,7 +8778,7 @@ class BVMGR_Admin_Event_Plans
             data-vms-lazy-loaded="0"
             data-vms-lazy-post-id="<?php echo (int) $post->ID; ?>"
             data-vms-lazy-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
-            data-vms-lazy-nonce="<?php echo esc_attr(wp_create_nonce('vms_event_plan_admin_section')); ?>"
+            data-vms-lazy-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_admin_section')); ?>"
         >
             <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
@@ -11351,13 +11351,13 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
             function bvmgr_admin_event_plan_list_has_valid_filter_nonce(): bool
             {
-                $nonce = bvmgr_admin_event_plan_list_query_value('_vms_ep_list_nonce');
+                $nonce = bvmgr_admin_event_plan_list_query_value('_bvmgr_ep_list_nonce');
                 if ($nonce === '') {
                     return false;
                 }
 
 	                $nonce = sanitize_text_field($nonce);
-	                return (bool) wp_verify_nonce($nonce, 'vms_event_plan_list_filters');
+	                return (bool) bvmgr_verify_nonce_compat($nonce, 'bvmgr_event_plan_list_filters');
             }
     
             function bvmgr_admin_event_plan_list_include_drafts_requested(): bool
@@ -11404,7 +11404,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $checked = bvmgr_admin_event_plan_list_include_drafts_requested();
 
                 echo '<input type="hidden" name="include_drafts" value="0">';
-                wp_nonce_field('vms_event_plan_list_filters', '_vms_ep_list_nonce', false);
+                wp_nonce_field('bvmgr_event_plan_list_filters', '_bvmgr_ep_list_nonce', false);
 
                 echo '<label class="vms-ep-list-toggle" data-vms-tour="event-plans.include-drafts">';
                 echo '<input type="checkbox" name="include_drafts" value="1"' . checked(true, $checked, false) . '>';
@@ -11958,10 +11958,10 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     $result['redirect_url'] = $redirect_url !== ''
                         ? $redirect_url
                         : bvmgr_event_plan_edit_screen_url($post_id);
-	                    $nonce = (isset($request['_vms_resync_calendar_nonce']) && !is_array($request['_vms_resync_calendar_nonce']))
-	                        ? sanitize_text_field((string) $request['_vms_resync_calendar_nonce'])
+	                    $nonce = (isset($request['_bvmgr_resync_calendar_nonce']) && !is_array($request['_bvmgr_resync_calendar_nonce']))
+	                        ? sanitize_text_field((string) $request['_bvmgr_resync_calendar_nonce'])
 	                        : '';
-                    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_resync_calendar')) {
+                    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_resync_calendar')) {
                         $result['notice_message'] = __('Calendar re-sync request could not be verified. Please reload the Event Plan and try again.', 'backstage-venue-manager');
                     } else {
                         $tec_key_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
@@ -12126,7 +12126,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
 	                    : '';
                 $nonce_ok = false;
                 foreach (array_unique(array_filter(array(absint($post_id), absint($request_candidate_id), absint($requested_source_post_id), absint($requested_post_id)))) as $nonce_post_id) {
-                    if (wp_verify_nonce($nonce, 'vms_run_live_refunds_now_' . $nonce_post_id)) {
+                    if (bvmgr_verify_nonce_compat($nonce, 'bvmgr_run_live_refunds_now_' . $nonce_post_id)) {
                         $nonce_ok = true;
                         break;
                     }

@@ -33,7 +33,7 @@ function bvmgr_add_duplicate_venue_row_action(array $actions, WP_Post $post): ar
             'vms_action' => 'duplicate_venue',
             'post_id'    => $post->ID,
         ), admin_url('admin.php')),
-        'vms_duplicate_venue_' . $post->ID
+        'bvmgr_duplicate_venue_' . $post->ID
     );
 
     $actions['vms_duplicate_venue'] = '<a href="' . esc_url($url) . '">Duplicate</a>';
@@ -53,7 +53,7 @@ function bvmgr_handle_duplicate_venue_action(): void
     if ($source_id <= 0) return;
 
     // Verify nonce
-    check_admin_referer('vms_duplicate_venue_' . $source_id);
+    bvmgr_check_admin_referer_compat('bvmgr_duplicate_venue_' . $source_id);
 
     $source = get_post($source_id);
     if (!$source || $source->post_type !== 'vms_venue') {

@@ -46,7 +46,7 @@ function bvmgr_render_staff_worker_type_metabox($post): void
 	$staff_id = (int) $post->ID;
 	$current = bvmgr_staff_get_worker_type($staff_id);
 
-	wp_nonce_field('vms_staff_worker_type_save', 'vms_staff_worker_type_nonce');
+	wp_nonce_field('bvmgr_staff_worker_type_save', 'bvmgr_staff_worker_type_nonce');
 
 	echo '<p class="description">' . esc_html__('Choose how this person is paid for compliance flows.', 'backstage-venue-manager') . '</p>';
 
@@ -72,10 +72,10 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
 	if (wp_is_post_revision($post_id)) return;
 	if (!current_user_can('edit_post', $post_id)) return;
 
-	$nonce = (isset($_POST['vms_staff_worker_type_nonce']) && !is_array($_POST['vms_staff_worker_type_nonce']))
-		? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_worker_type_nonce']))
+	$nonce = (isset($_POST['bvmgr_staff_worker_type_nonce']) && !is_array($_POST['bvmgr_staff_worker_type_nonce']))
+		? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_worker_type_nonce']))
 		: '';
-	if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_worker_type_save')) {
+	if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_worker_type_save')) {
 		return;
 	}
 

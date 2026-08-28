@@ -50,10 +50,10 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
 
     // Nonce
-    $nonce = (isset($_POST['vms_venue_comp_defaults_nonce']) && !is_array($_POST['vms_venue_comp_defaults_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_comp_defaults_nonce']))
+    $nonce = (isset($_POST['bvmgr_venue_comp_defaults_nonce']) && !is_array($_POST['bvmgr_venue_comp_defaults_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_comp_defaults_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_comp_defaults')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_comp_defaults')) {
         return;
     }
 
@@ -114,7 +114,7 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
  */
 function bvmgr_render_venue_comp_defaults_metabox($post) {
 
-    wp_nonce_field('vms_save_venue_comp_defaults', 'vms_venue_comp_defaults_nonce');
+    wp_nonce_field('bvmgr_save_venue_comp_defaults', 'bvmgr_venue_comp_defaults_nonce');
 
     $saved = get_post_meta($post->ID, '_vms_default_comp_by_dow', true);
     if (!is_array($saved)) $saved = array();

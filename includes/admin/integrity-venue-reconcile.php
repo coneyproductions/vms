@@ -17,7 +17,7 @@ function bvmgr_handle_integrity_venue_links_action(): void
     wp_die('Insufficient permissions.');
   }
 
-  check_admin_referer('vms_integrity_venue_links_action');
+  bvmgr_check_admin_referer_compat('bvmgr_integrity_venue_links_action');
 
   $action = bvmgr_request_read_key($_POST, 'vms_action');
   $plan_ids = (isset($_POST['plan_ids']) && is_array($_POST['plan_ids']))
@@ -189,7 +189,7 @@ function bvmgr_render_integrity_venue_reconcile_page_sections(): void
   $action_url = admin_url('admin-post.php');
 
   echo '<form method="post" action="' . esc_url($action_url) . '">';
-  wp_nonce_field('vms_integrity_venue_links_action');
+  wp_nonce_field('bvmgr_integrity_venue_links_action');
   echo '<input type="hidden" name="action" value="vms_integrity_venue_links_action" />';
 
   echo '<div class="vms-card-wide">';

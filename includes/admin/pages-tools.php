@@ -11,7 +11,7 @@ add_action('admin_post_vms_repair_pages', function () {
     }
 
     // Nonce check first (before doing anything)
-    check_admin_referer('vms_repair_pages');
+    bvmgr_check_admin_referer_compat('bvmgr_repair_pages');
 
     // IMPORTANT: do not output anything in this handler.
     // No echo/print/var_dump, no stray whitespace outside <?php tags.

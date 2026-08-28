@@ -6966,15 +6966,15 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         'cartUrl' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
         'wcAjaxAddToCartUrl' => (class_exists('WC_AJAX') ? WC_AJAX::get_endpoint('add_to_cart') : home_url('/?wc-ajax=add_to_cart')),
         'cartContextUrl' => admin_url('admin-ajax.php?action=vms_ticketing_v2_cart_context'),
-        'cartContextNonce' => wp_create_nonce('vms_ticketing_v2_cart_context'),
+        'cartContextNonce' => wp_create_nonce('bvmgr_ticketing_v2_cart_context'),
         'silentAddUrl' => admin_url('admin-ajax.php?action=vms_ticketing_v2_silent_add'),
-        'silentAddNonce' => wp_create_nonce('vms_ticketing_v2_silent_add'),
+        'silentAddNonce' => wp_create_nonce('bvmgr_ticketing_v2_silent_add'),
         'atomicAddUrl' => admin_url('admin-ajax.php?action=vms_ticketing_v2_atomic_add_to_cart'),
-        'atomicAddNonce' => wp_create_nonce('vms_ticketing_v2_atomic_add_to_cart'),
+        'atomicAddNonce' => wp_create_nonce('bvmgr_ticketing_v2_atomic_add_to_cart'),
         'claimsClientLogUrl' => admin_url('admin-ajax.php?action=vms_ticketing_claims_log_client_action'),
-        'claimsClientLogNonce' => wp_create_nonce('vms_ticketing_claims_log_client_action'),
+        'claimsClientLogNonce' => wp_create_nonce('bvmgr_ticketing_claims_log_client_action'),
         'claimsValidateUrl' => admin_url('admin-ajax.php?action=vms_ticketing_claims_validate_assignee'),
-        'claimsValidateNonce' => wp_create_nonce('vms_ticketing_claims_validate_assignee'),
+        'claimsValidateNonce' => wp_create_nonce('bvmgr_ticketing_claims_validate_assignee'),
         'legacyReplayEnabled' => apply_filters('vms_ticketing_v2_legacy_replay_enabled', false) ? 1 : 0,
     ));
 
@@ -8728,7 +8728,7 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
     } elseif (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_ticketing_v2_atomic_add_to_cart')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_v2_atomic_add_to_cart')) {
         bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
@@ -9125,7 +9125,7 @@ function bvmgr_ticketing_v2_ajax_silent_add(): void
     }
 
     // If a nonce is provided, validate it. (We don’t hard-require one to avoid caching edge cases.)
-    if ($nonce !== '' && !wp_verify_nonce($nonce, 'vms_ticketing_v2_silent_add')) {
+    if ($nonce !== '' && !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_v2_silent_add')) {
         bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
@@ -9264,7 +9264,7 @@ function bvmgr_ticketing_v2_ajax_cart_context(): void
     if (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
-    if ($nonce !== '' && !wp_verify_nonce($nonce, 'vms_ticketing_v2_cart_context')) {
+    if ($nonce !== '' && !bvmgr_verify_nonce_compat($nonce, 'bvmgr_ticketing_v2_cart_context')) {
         bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 

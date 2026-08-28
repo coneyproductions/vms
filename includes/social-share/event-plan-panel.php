@@ -228,10 +228,10 @@ if (!function_exists('bvmgr_social_build_event_panel_nonce_view')) {
 	 */
 	function bvmgr_social_build_event_panel_nonce_view(): array
 	{
-		$nonce_html = wp_nonce_field('vms_social_event_panel_save', 'vms_social_event_panel_nonce', true, false);
+		$nonce_html = wp_nonce_field('bvmgr_social_event_panel_save', 'bvmgr_social_event_panel_nonce', true, false);
 
 		return array(
-			'nonce_value' => bvmgr_social_extract_event_panel_hidden_input_value($nonce_html, 'vms_social_event_panel_nonce'),
+			'nonce_value' => bvmgr_social_extract_event_panel_hidden_input_value($nonce_html, 'bvmgr_social_event_panel_nonce'),
 			'referer_value' => bvmgr_social_extract_event_panel_hidden_input_value($nonce_html, '_wp_http_referer'),
 		);
 	}
@@ -420,7 +420,7 @@ if (!function_exists('bvmgr_social_render_event_panel_html')) {
 		$queue_retry_form_id = (string) ($view['queue_retry_form_id'] ?? '');
 
 		ob_start();
-		echo '<input type="hidden" id="vms_social_event_panel_nonce" name="vms_social_event_panel_nonce" value="' . esc_attr($nonce_value) . '" />';
+		echo '<input type="hidden" id="bvmgr_social_event_panel_nonce" name="bvmgr_social_event_panel_nonce" value="' . esc_attr($nonce_value) . '" />';
 		echo '<input type="hidden" name="_wp_http_referer" value="' . esc_attr($referer_value) . '" />';
 		echo '<p class="description">' . esc_html__('Phase 1 manual toolkit: copy caption/link and open share dialogs. Queue actions currently use the Phase 0 provider framework.', 'backstage-venue-manager') . '</p>';
 		echo '<p><label><input type="checkbox" name="vms_social_do_not_post" value="1" ' . checked(true, $do_not_post, false) . ' /> ' . esc_html__('Do not post this event', 'backstage-venue-manager') . '</label></p>';
@@ -504,9 +504,9 @@ if (!function_exists('bvmgr_social_build_event_panel_footer_forms_view')) {
 			'queue_form_id' => bvmgr_social_event_panel_form_id($event_plan_id, 'event-queue'),
 			'queue_cancel_form_id' => bvmgr_social_event_panel_form_id($event_plan_id, 'queue-cancel'),
 			'queue_retry_form_id' => bvmgr_social_event_panel_form_id($event_plan_id, 'queue-retry'),
-			'queue_nonce_value' => wp_create_nonce('vms_social_event_queue'),
-			'queue_cancel_nonce_value' => wp_create_nonce('vms_social_queue_cancel'),
-			'queue_retry_nonce_value' => wp_create_nonce('vms_social_queue_retry'),
+			'queue_nonce_value' => wp_create_nonce('bvmgr_social_event_queue'),
+			'queue_cancel_nonce_value' => wp_create_nonce('bvmgr_social_queue_cancel'),
+			'queue_retry_nonce_value' => wp_create_nonce('bvmgr_social_queue_retry'),
 		);
 	}
 }
@@ -701,7 +701,7 @@ if (!function_exists('bvmgr_social_render_event_panel')) {
 
 		$event_plan_id = (int) $post->ID;
 		if (bvmgr_social_event_panel_is_collapsed_for_user($post)) {
-			echo '<div class="vms-social-event-panel-shell" data-vms-social-lazy="1" data-vms-social-post-id="' . esc_attr((string) $event_plan_id) . '" data-vms-social-url="' . esc_url(admin_url('admin-ajax.php')) . '" data-vms-social-nonce="' . esc_attr(wp_create_nonce('vms_social_load_event_panel')) . '">';
+			echo '<div class="vms-social-event-panel-shell" data-vms-social-lazy="1" data-vms-social-post-id="' . esc_attr((string) $event_plan_id) . '" data-vms-social-url="' . esc_url(admin_url('admin-ajax.php')) . '" data-vms-social-nonce="' . esc_attr(wp_create_nonce('bvmgr_social_load_event_panel')) . '">';
 			echo '<p class="description">' . esc_html__('Open this panel to load social templates, previews, and queue actions.', 'backstage-venue-manager') . '</p>';
 			echo '</div>';
 			return;
@@ -724,7 +724,7 @@ if (!function_exists('bvmgr_social_ajax_load_event_panel')) {
 			wp_send_json_error(array('message' => 'Not allowed.'), 403);
 		}
 
-		check_ajax_referer('vms_social_load_event_panel', 'nonce');
+		bvmgr_check_ajax_referer_compat('bvmgr_social_load_event_panel', 'nonce');
 
 		$payload = bvmgr_social_event_panel_markup($event_plan_id);
 		wp_send_json_success(array(
@@ -751,8 +751,8 @@ if (!function_exists('bvmgr_social_save_event_panel')) {
 			return;
 		}
 
-		$panel_nonce = sanitize_text_field(bvmgr_social_post_value('vms_social_event_panel_nonce'));
-		if ($panel_nonce === '' || !wp_verify_nonce($panel_nonce, 'vms_social_event_panel_save')) {
+		$panel_nonce = sanitize_text_field(bvmgr_social_post_value('bvmgr_social_event_panel_nonce'));
+		if ($panel_nonce === '' || !bvmgr_verify_nonce_compat($panel_nonce, 'bvmgr_social_event_panel_save')) {
 			return;
 		}
 
@@ -808,7 +808,7 @@ if (!function_exists('bvmgr_social_handle_event_queue')) {
 	function bvmgr_social_handle_event_queue(): void
 	{
 		bvmgr_social_require_manage_capability();
-		check_admin_referer('vms_social_event_queue');
+		bvmgr_check_admin_referer_compat('bvmgr_social_event_queue');
 
 		$event_plan_id = absint(bvmgr_social_post_value('event_plan_id'));
 		if ($event_plan_id <= 0) {

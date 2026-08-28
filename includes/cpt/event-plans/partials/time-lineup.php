@@ -36,7 +36,7 @@
                 data-lineup-storage-scope="<?php echo esc_attr((string) $post->ID); ?>"
                 data-lineup-post-id="<?php echo esc_attr((string) $post->ID); ?>"
                 data-lineup-vendor-options-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
-                data-lineup-vendor-options-nonce="<?php echo esc_attr(wp_create_nonce('vms_event_plan_admin_section')); ?>"
+                data-lineup-vendor-options-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_admin_section')); ?>"
             >
                 <div class="vms-lineup-summary">
                     <div class="vms-lineup-summary__item">
@@ -228,7 +228,7 @@
                                 ?>
                                 <div id="vms-tax-bypass-inline"
                                      class="vms-tax-bypass-inline"
-                                     data-nonce="<?php echo esc_attr(wp_create_nonce('vms_tax_bypass_ajax')); ?>"
+                                     data-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_tax_bypass_ajax')); ?>"
                                      data-default-until="<?php echo esc_attr($tax_bypass_default_until); ?>">
                                     <p class="description vms-mt-8">
                                         <?php esc_html_e('Tax bypass (temporary): set an expiration + reason for the selected vendor without leaving this page.', 'backstage-venue-manager'); ?>

@@ -108,11 +108,11 @@ if (!function_exists('bvmgr_event_command_center_handle_promo_video_action')) {
         }
 
         $plan_id = isset($_POST['plan_id']) ? absint($_POST['plan_id']) : 0;
-        $nonce = (isset($_POST['_vms_cc_promo_nonce']) && !is_array($_POST['_vms_cc_promo_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_POST['_vms_cc_promo_nonce']))
+        $nonce = (isset($_POST['_bvmgr_cc_promo_nonce']) && !is_array($_POST['_bvmgr_cc_promo_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['_bvmgr_cc_promo_nonce']))
             : '';
         $promo_action = isset($_POST['promo_action']) ? sanitize_key((string) wp_unslash($_POST['promo_action'])) : '';
-        if ($plan_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_cc_promo_video_' . $plan_id)) {
+        if ($plan_id <= 0 || $nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_cc_promo_video_' . $plan_id)) {
             wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
         }
         if (!bvmgr_event_command_center_can_manage_promo_video($plan_id)) {
@@ -1211,7 +1211,7 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
         echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
         echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
         echo '<input type="hidden" name="promo_action" value="clear_live">';
-        wp_nonce_field('vms_cc_promo_video_' . $plan_id, '_vms_cc_promo_nonce');
+        wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
         echo '<button type="submit" class="button button-secondary">' . esc_html__('Clear Current Public Video', 'backstage-venue-manager') . '</button>';
         echo '</form>';
         echo '</div>';
@@ -1233,14 +1233,14 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
             echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
             echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
             echo '<input type="hidden" name="promo_action" value="use_submission">';
-            wp_nonce_field('vms_cc_promo_video_' . $plan_id, '_vms_cc_promo_nonce');
+            wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
             echo '<button type="submit" class="button button-primary">' . esc_html__('Use Submitted Clip', 'backstage-venue-manager') . '</button>';
             echo '</form>';
             echo '<form class="vms-cc-promo-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
             echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
             echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
             echo '<input type="hidden" name="promo_action" value="remove_submission">';
-            wp_nonce_field('vms_cc_promo_video_' . $plan_id, '_vms_cc_promo_nonce');
+            wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
             echo '<button type="submit" class="button button-secondary">' . esc_html__('Remove Submitted Clip', 'backstage-venue-manager') . '</button>';
             echo '</form>';
             echo '</div>';
@@ -1255,7 +1255,7 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
         echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
         echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
         echo '<input type="hidden" name="promo_action" value="upload_public">';
-        wp_nonce_field('vms_cc_promo_video_' . $plan_id, '_vms_cc_promo_nonce');
+        wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
         echo '<label class="vms-cc-promo-field"><span><strong>' . esc_html__('Upload a replacement video', 'backstage-venue-manager') . '</strong></span><input type="file" name="vms_cc_headliner_promo_video" accept="video/mp4,video/quicktime,video/webm,.mp4,.m4v,.mov,.webm" required></label>';
         echo '<button type="submit" class="button">' . esc_html__('Upload Public Video', 'backstage-venue-manager') . '</button>';
         echo '</form>';
@@ -1263,7 +1263,7 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
         echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
         echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
         echo '<input type="hidden" name="promo_action" value="use_external">';
-        wp_nonce_field('vms_cc_promo_video_' . $plan_id, '_vms_cc_promo_nonce');
+        wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
         echo '<label class="vms-cc-promo-field"><span><strong>' . esc_html__('Use a YouTube, Vimeo, Facebook, or Instagram link', 'backstage-venue-manager') . '</strong></span><input type="url" name="external_url" value="' . esc_attr((string) ($marketing['promo_external_url'] ?? '')) . '" placeholder="https://www.youtube.com/watch?v=..." required></label>';
         echo '<button type="submit" class="button">' . esc_html__('Save External Video Link', 'backstage-venue-manager') . '</button>';
         echo '</form>';

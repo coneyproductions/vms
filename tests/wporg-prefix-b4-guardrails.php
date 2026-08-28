@@ -136,6 +136,13 @@ if (in_array($implementationState, array('browser_assets_complete', 'nonce_compl
 		}
 	}
 }
+if (in_array($implementationState, array('nonce_complete', 'complete'), true)) {
+	$nonceCommand = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/scripts/apply-wporg-prefix-b4.php') . ' --check-nonces 2>&1';
+	$nonceOutput = array();
+	$nonceStatus = 0;
+	exec($nonceCommand, $nonceOutput, $nonceStatus);
+	$assert($nonceStatus === 0, 'B4 nonce semantic cutover must be complete: ' . implode(' ', $nonceOutput));
+}
 
 $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/scripts/generate-wporg-prefix-b4.php') . ' --check 2>&1';
 $output = array();

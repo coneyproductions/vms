@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-b3.php';
 require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-b3-waves.php';
+require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-b4.php';
 
 $root = dirname(__DIR__);
 $failures = array();
@@ -48,10 +49,21 @@ try {
 	$literalDecisions = BVMGR_WPORG_Prefix_B3::literalDecisionIndex($root, $map, $w3Functions, true);
 	$assert(($literalDecisions['selected_counts'] ?? array()) === array('rename' => 13, 'retain' => 30), 'W3 must classify all 43 frozen exact-only literals as 13 function identities and 30 retained contracts.');
 	$literalArtifact = BVMGR_WPORG_Prefix_B3::loadJson($root . '/' . BVMGR_WPORG_Prefix_B3::LITERAL_DECISIONS_PATH);
+	$b4Map = BVMGR_WPORG_Prefix_B4::loadJson($root . '/' . BVMGR_WPORG_Prefix_B4::MAP_PATH);
+	$b4NonceSites = array();
+	foreach ((array) ($b4Map['categories']['nonce_actions'] ?? array()) as $row) {
+		if (($row['family_kind'] ?? '') !== 'static') {
+			continue;
+		}
+		foreach (array_merge((array) ($row['producer_sites'] ?? array()), (array) ($row['verifier_sites'] ?? array())) as $site) {
+			$b4NonceSites[(string) $site['file'] . ':' . (int) $site['line'] . ':' . (string) $row['legacy_identifier']] = (string) $row['canonical_identifier'];
+		}
+	}
 	foreach ((array) ($literalArtifact['decisions'] ?? array()) as $decision) {
 		$legacy = (string) ($decision['legacy_identifier'] ?? '');
 		$canonical = 'bvmgr_' . substr($legacy, 4);
-		$expected = ($decision['decision'] ?? '') === 'rename' && ($progress['function_states'][$legacy] ?? '') === 'migrated' ? $canonical : $legacy;
+		$siteKey = (string) ($decision['file'] ?? '') . ':' . (int) ($decision['line'] ?? 0) . ':' . $legacy;
+		$expected = $b4NonceSites[$siteKey] ?? (($decision['decision'] ?? '') === 'rename' && ($progress['function_states'][$legacy] ?? '') === 'migrated' ? $canonical : $legacy);
 		$lines = file($root . '/' . (string) ($decision['file'] ?? '')) ?: array();
 		$line = (string) ($lines[(int) ($decision['line'] ?? 0) - 1] ?? '');
 		$assert(str_contains($line, "'" . $expected . "'") || str_contains($line, '"' . $expected . '"'), 'B3 exact-literal decision must resolve to its current expected identity: ' . $legacy . ' at ' . ($decision['file'] ?? '') . ':' . ($decision['line'] ?? 0));

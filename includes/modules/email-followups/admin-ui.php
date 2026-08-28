@@ -202,7 +202,7 @@ if (!function_exists('bvmgr_email_followups_render_overview_tab')) {
 		echo '</section>';
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-efu-settings-form" data-vms-tour="email-followups.settings">';
-		wp_nonce_field('vms_email_followups_save_settings');
+		wp_nonce_field('bvmgr_email_followups_save_settings');
 		echo '<input type="hidden" name="action" value="vms_email_followups_save_settings" />';
 		echo '<input type="hidden" name="tab" value="overview" />';
 		echo '<h2>' . esc_html__('Global Settings', 'backstage-venue-manager') . '</h2>';
@@ -269,7 +269,7 @@ if (!function_exists('bvmgr_email_followups_render_templates_tab')) {
 		$templates = (array) ($settings['templates'] ?? array());
 		$enabled = (array) ($settings['templates_enabled'] ?? array());
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-tour="email-followups.templates">';
-		wp_nonce_field('vms_email_followups_save_settings');
+		wp_nonce_field('bvmgr_email_followups_save_settings');
 		echo '<input type="hidden" name="action" value="vms_email_followups_save_settings" />';
 		echo '<input type="hidden" name="tab" value="templates" />';
 		echo '<div class="vms-efu-token-box"><h2>' . esc_html__('Available Tokens', 'backstage-venue-manager') . '</h2><p class="description">' . esc_html__('Use {customer_greeting} and {signature} for the safest human-feeling opening and closing.', 'backstage-venue-manager') . '</p><div class="vms-efu-token-list">';
@@ -480,7 +480,7 @@ if (!function_exists('bvmgr_email_followups_render_preview_tab')) {
 			/* translators: %d: number of items described in this message. */
 			echo '<p>' . esc_html(sprintf(_n('%d selected recipient is waiting for the next send step.', '%d selected recipients are waiting for the next send step.', $remaining_count, 'backstage-venue-manager'), $remaining_count)) . '</p>';
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-efu-batch-continue-form">';
-			wp_nonce_field('vms_email_followups_manual_send');
+			wp_nonce_field('bvmgr_email_followups_manual_send');
 			echo '<input type="hidden" name="action" value="vms_email_followups_manual_send" />';
 			echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '" />';
 			echo '<input type="hidden" name="email_key" value="' . esc_attr($email_key) . '" />';
@@ -494,7 +494,7 @@ if (!function_exists('bvmgr_email_followups_render_preview_tab')) {
 
 		echo '<section class="vms-efu-actions" data-vms-tour="email-followups.test-send">';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_email_followups_send_test');
+		wp_nonce_field('bvmgr_email_followups_send_test');
 		echo '<input type="hidden" name="action" value="vms_email_followups_send_test" />';
 		echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '" />';
 		echo '<input type="hidden" name="email_key" value="' . esc_attr($email_key) . '" />';
@@ -503,7 +503,7 @@ if (!function_exists('bvmgr_email_followups_render_preview_tab')) {
 		echo '</form>';
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-efu-manual-send-form">';
-		wp_nonce_field('vms_email_followups_manual_send');
+		wp_nonce_field('bvmgr_email_followups_manual_send');
 		echo '<input type="hidden" name="action" value="vms_email_followups_manual_send" />';
 		echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '" />';
 		echo '<input type="hidden" name="email_key" value="' . esc_attr($email_key) . '" />';
@@ -540,7 +540,7 @@ if (!function_exists('bvmgr_email_followups_render_logs_tab')) {
 		$logs = bvmgr_email_followups_get_logs(200);
 		echo '<section data-vms-tour="email-followups.logs">';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-efu-clear-logs">';
-		wp_nonce_field('vms_email_followups_clear_logs');
+		wp_nonce_field('bvmgr_email_followups_clear_logs');
 		echo '<input type="hidden" name="action" value="vms_email_followups_clear_logs" />';
 		echo '<button type="submit" class="button">' . esc_html__('Clear Logs', 'backstage-venue-manager') . '</button>';
 		echo '</form>';
@@ -563,7 +563,7 @@ if (!function_exists('bvmgr_email_followups_save_settings_post')) {
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_email_followups_save_settings');
+		bvmgr_check_admin_referer_compat('bvmgr_email_followups_save_settings');
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured settings arrays are fully sanitized by vms_email_followups_sanitize_settings().
 		$input = isset($_POST['vms_email_followups']) && is_array($_POST['vms_email_followups']) ? (array) wp_unslash($_POST['vms_email_followups']) : array();
 		$tab = isset($_POST['tab']) ? sanitize_key((string) wp_unslash($_POST['tab'])) : 'overview';
@@ -635,7 +635,7 @@ if (!function_exists('bvmgr_email_followups_send_test_post')) {
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_email_followups_send_test');
+		bvmgr_check_admin_referer_compat('bvmgr_email_followups_send_test');
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
 		$email_key = isset($_POST['email_key']) ? sanitize_key((string) $_POST['email_key']) : 'know_before';
 		$to = isset($_POST['test_recipient']) ? sanitize_email((string) wp_unslash($_POST['test_recipient'])) : '';
@@ -651,7 +651,7 @@ if (!function_exists('bvmgr_email_followups_manual_send_post')) {
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_email_followups_manual_send');
+		bvmgr_check_admin_referer_compat('bvmgr_email_followups_manual_send');
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
 		$email_key = isset($_POST['email_key']) ? sanitize_key((string) $_POST['email_key']) : 'know_before';
 		$batch_token = isset($_POST['batch_token']) ? sanitize_key((string) $_POST['batch_token']) : '';
@@ -713,7 +713,7 @@ if (!function_exists('bvmgr_email_followups_clear_logs_post')) {
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_email_followups_clear_logs');
+		bvmgr_check_admin_referer_compat('bvmgr_email_followups_clear_logs');
 		bvmgr_email_followups_clear_logs();
 		bvmgr_email_followups_redirect_notice('logs', __('Email follow-up logs cleared.', 'backstage-venue-manager'));
 	}

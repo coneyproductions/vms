@@ -108,7 +108,7 @@
             "cli_paths": 3
         },
         "frozen_from_head": "bdd84df7bcbfcec65ee57fedf561bf4e167761f6",
-        "implementation_state": "browser_assets_complete"
+        "implementation_state": "nonce_complete"
     },
     "canonical_prefix_family": {
         "procedural_php_hooks_options": "bvmgr_",
@@ -627,10 +627,10 @@
         }
     ],
     "php_inventory_counts": {
-        "public_php_files": 271,
+        "public_php_files": 272,
         "functions": {
-            "unique": 4521,
-            "occurrences": 4541
+            "unique": 4528,
+            "occurrences": 4548
         },
         "classes": {
             "unique": 23,
@@ -663,8 +663,8 @@
         "dynamic_symbols": {
             "exact_function_literals_unique": 3645,
             "exact_function_literals_occurrences": 7363,
-            "function_exists_unique": 3310,
-            "function_exists_occurrences": 6338,
+            "function_exists_unique": 3317,
+            "function_exists_occurrences": 6345,
             "direct_literal_callbacks_unique": 711,
             "direct_literal_callbacks_occurrences": 767,
             "exact_type_literals_unique": 16,
@@ -11789,6 +11789,40 @@
                 ],
                 "legacy_identifier": "vms_cancelled_cost_review_vendor_direct_cents",
                 "migration_status": "complete"
+            },
+            {
+                "current_identifier": "bvmgr_check_admin_referer_compat",
+                "canonical_target": "bvmgr_check_admin_referer_compat",
+                "b0_strategy": [
+                    5
+                ],
+                "compatibility_classification": "B4 canonical compatibility infrastructure",
+                "persistence_external_contract_status": "internal nonpersistent compatibility runtime",
+                "planned_implementation_batch": "B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/prefix-b4-compat.php",
+                        "line": 41
+                    }
+                ]
+            },
+            {
+                "current_identifier": "bvmgr_check_ajax_referer_compat",
+                "canonical_target": "bvmgr_check_ajax_referer_compat",
+                "b0_strategy": [
+                    5
+                ],
+                "compatibility_classification": "B4 canonical compatibility infrastructure",
+                "persistence_external_contract_status": "internal nonpersistent compatibility runtime",
+                "planned_implementation_batch": "B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/prefix-b4-compat.php",
+                        "line": 55
+                    }
+                ]
             },
             {
                 "current_identifier": "bvmgr_check_woo_tickets_for_attendance",
@@ -32652,6 +32686,40 @@
                 "migration_status": "complete"
             },
             {
+                "current_identifier": "bvmgr_nonce_legacy_action",
+                "canonical_target": "bvmgr_nonce_legacy_action",
+                "b0_strategy": [
+                    5
+                ],
+                "compatibility_classification": "B4 canonical compatibility infrastructure",
+                "persistence_external_contract_status": "internal nonpersistent compatibility runtime",
+                "planned_implementation_batch": "B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/prefix-b4-compat.php",
+                        "line": 5
+                    }
+                ]
+            },
+            {
+                "current_identifier": "bvmgr_nonce_request_value",
+                "canonical_target": "bvmgr_nonce_request_value",
+                "b0_strategy": [
+                    5
+                ],
+                "compatibility_classification": "B4 canonical compatibility infrastructure",
+                "persistence_external_contract_status": "internal nonpersistent compatibility runtime",
+                "planned_implementation_batch": "B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/prefix-b4-compat.php",
+                        "line": 30
+                    }
+                ]
+            },
+            {
                 "current_identifier": "bvmgr_norm_dow",
                 "canonical_target": "bvmgr_norm_dow",
                 "b0_strategy": [
@@ -35768,6 +35836,40 @@
                 ],
                 "legacy_identifier": "vms_pos_provider_detect",
                 "migration_status": "complete"
+            },
+            {
+                "current_identifier": "bvmgr_prefix_b4_nonce_field_map",
+                "canonical_target": "bvmgr_prefix_b4_nonce_field_map",
+                "b0_strategy": [
+                    5
+                ],
+                "compatibility_classification": "B4 canonical compatibility infrastructure",
+                "persistence_external_contract_status": "internal nonpersistent compatibility runtime",
+                "planned_implementation_batch": "B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/prefix-b4-compat.php",
+                        "line": 80
+                    }
+                ]
+            },
+            {
+                "current_identifier": "bvmgr_prefix_b4_normalize_nonce_fields",
+                "canonical_target": "bvmgr_prefix_b4_normalize_nonce_fields",
+                "b0_strategy": [
+                    5
+                ],
+                "compatibility_classification": "B4 canonical compatibility infrastructure",
+                "persistence_external_contract_status": "internal nonpersistent compatibility runtime",
+                "planned_implementation_batch": "B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/prefix-b4-compat.php",
+                        "line": 161
+                    }
+                ]
             },
             {
                 "current_identifier": "bvmgr_pretty_structure_label",
@@ -86629,6 +86731,23 @@
                 "migration_status": "complete"
             },
             {
+                "current_identifier": "bvmgr_verify_nonce_compat",
+                "canonical_target": "bvmgr_verify_nonce_compat",
+                "b0_strategy": [
+                    5
+                ],
+                "compatibility_classification": "B4 canonical compatibility infrastructure",
+                "persistence_external_contract_status": "internal nonpersistent compatibility runtime",
+                "planned_implementation_batch": "B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/prefix-b4-compat.php",
+                        "line": 15
+                    }
+                ]
+            },
+            {
                 "current_identifier": "bvmgr_wc_units_sold_for_product",
                 "canonical_target": "bvmgr_wc_units_sold_for_product",
                 "b0_strategy": [
@@ -133401,6 +133520,18 @@
                     "line": 19
                 }
             ],
+            "bvmgr_check_admin_referer_compat": [
+                {
+                    "file": "includes/core/prefix-b4-compat.php",
+                    "line": 39
+                }
+            ],
+            "bvmgr_check_ajax_referer_compat": [
+                {
+                    "file": "includes/core/prefix-b4-compat.php",
+                    "line": 53
+                }
+            ],
             "bvmgr_cleanup_legacy_square_nightly_sync_action_scheduler": [
                 {
                     "file": "includes/activation.php",
@@ -144197,6 +144328,18 @@
                     "line": 30
                 }
             ],
+            "bvmgr_nonce_legacy_action": [
+                {
+                    "file": "includes/core/prefix-b4-compat.php",
+                    "line": 4
+                }
+            ],
+            "bvmgr_nonce_request_value": [
+                {
+                    "file": "includes/core/prefix-b4-compat.php",
+                    "line": 29
+                }
+            ],
             "bvmgr_normalize_agent_fee_mode": [
                 {
                     "file": "includes/admin/vendor-details.php",
@@ -145347,6 +145490,18 @@
                 {
                     "file": "includes/core/goals-forecast.php",
                     "line": 495
+                }
+            ],
+            "bvmgr_prefix_b4_nonce_field_map": [
+                {
+                    "file": "includes/core/prefix-b4-compat.php",
+                    "line": 78
+                }
+            ],
+            "bvmgr_prefix_b4_normalize_nonce_fields": [
+                {
+                    "file": "includes/core/prefix-b4-compat.php",
+                    "line": 160
                 }
             ],
             "bvmgr_pretty_structure_label": [
@@ -160721,6 +160876,12 @@
                     "line": 121
                 }
             ],
+            "bvmgr_verify_nonce_compat": [
+                {
+                    "file": "includes/core/prefix-b4-compat.php",
+                    "line": 13
+                }
+            ],
             "vms_dt_render_tools_home": [
                 {
                     "file": "includes/admin-ui/nav.php",
@@ -170210,6 +170371,20 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
+            "bvmgr_check_admin_referer_compat": [
+                {
+                    "current_identifier": "bvmgr_check_admin_referer_compat",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_check_ajax_referer_compat": [
+                {
+                    "current_identifier": "bvmgr_check_ajax_referer_compat",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
             "bvmgr_check_woo_tickets_for_attendance": [
                 {
                     "current_identifier": "bvmgr_check_woo_tickets_for_attendance",
@@ -176923,6 +177098,20 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
+            "bvmgr_nonce_legacy_action": [
+                {
+                    "current_identifier": "bvmgr_nonce_legacy_action",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_nonce_request_value": [
+                {
+                    "current_identifier": "bvmgr_nonce_request_value",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
             "bvmgr_normalize_agent_fee_mode": [
                 {
                     "current_identifier": "bvmgr_normalize_agent_fee_mode",
@@ -177984,6 +178173,20 @@
                 {
                     "current_identifier": "bvmgr_pos_provider_detect",
                     "canonical_target": "bvmgr_pos_provider_detect",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_prefix_b4_nonce_field_map": [
+                {
+                    "current_identifier": "bvmgr_prefix_b4_nonce_field_map",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_prefix_b4_normalize_nonce_fields": [
+                {
+                    "current_identifier": "bvmgr_prefix_b4_normalize_nonce_fields",
+                    "canonical_target": null,
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
@@ -191746,6 +191949,13 @@
                 {
                     "current_identifier": "bvmgr_venue_submitted_nonce",
                     "canonical_target": "bvmgr_venue_submitted_nonce",
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_verify_nonce_compat": [
+                {
+                    "current_identifier": "bvmgr_verify_nonce_compat",
+                    "canonical_target": null,
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],

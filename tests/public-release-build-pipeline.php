@@ -835,7 +835,7 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		$packagedFiles = array_values(array_filter($zipEntries, static function (string $entryName): bool {
 			return substr($entryName, -1) !== '/';
 		}));
-		vms_public_release_test_assert(count($packagedFiles) === 374, 'Expected the current repository public package to contain 374 files after adding the canonical bootstrap and basename compatibility layer.');
+		vms_public_release_test_assert(count($packagedFiles) === 375, 'Expected the B4 repository public package to contain 375 files after adding the nonce compatibility runtime.');
 
 		foreach ($zipEntries as $entryName) {
 			vms_public_release_test_assert(substr($entryName, -10) !== '/AGENTS.md', 'Expected AGENTS.md to stay out of the packaged public ZIP.');

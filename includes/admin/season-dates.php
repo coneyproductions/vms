@@ -216,7 +216,7 @@ function bvmgr_sd_maybe_handle_post(): void
 	}
 
 	if (!bvmgr_sd_is_exact_post_request()) return;
-	if (empty($_POST['vms_season_dates_nonce']) || empty($_POST['vms_action'])) return;
+	if (empty($_POST['bvmgr_season_dates_nonce']) || empty($_POST['vms_action'])) return;
 
 	$page_slug = sanitize_key(bvmgr_sd_query_arg('page'));
 	if ($page_slug === '') return;
@@ -236,10 +236,10 @@ function bvmgr_sd_maybe_handle_post(): void
 	$venue_id = absint($post['venue_id'] ?? ($_GET['venue_id'] ?? 0));
 	$redirect = bvmgr_sd_base_url($page_slug, $venue_id);
 
-	$nonce = (isset($post['vms_season_dates_nonce']) && !is_array($post['vms_season_dates_nonce']))
-		? sanitize_text_field((string) $post['vms_season_dates_nonce'])
+	$nonce = (isset($post['bvmgr_season_dates_nonce']) && !is_array($post['bvmgr_season_dates_nonce']))
+		? sanitize_text_field((string) $post['bvmgr_season_dates_nonce'])
 		: '';
-	if (!$venue_id || !wp_verify_nonce($nonce, 'vms_season_dates_' . $venue_id)) {
+	if (!$venue_id || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_season_dates_' . $venue_id)) {
 		bvmgr_sd_redirect(add_query_arg('vms_error', 'bad_nonce', $redirect));
 		return;
 	}
@@ -686,7 +686,7 @@ function bvmgr_render_season_dates_page(): void
 	echo '<hr><h2>' . esc_html__('Season Rules', 'backstage-venue-manager') . '</h2>';
 
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
-	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
+	wp_nonce_field('bvmgr_season_dates_' . $selected_venue_id, 'bvmgr_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="save_rules">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
@@ -780,7 +780,7 @@ function bvmgr_render_season_dates_page(): void
 	// Add Open Window
 	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Open Window', 'backstage-venue-manager') . '</h3>';
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
-	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
+	wp_nonce_field('bvmgr_season_dates_' . $selected_venue_id, 'bvmgr_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="add_open_window">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
@@ -809,7 +809,7 @@ function bvmgr_render_season_dates_page(): void
 	// Add Blackout
 	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Blackout Date', 'backstage-venue-manager') . '</h3>';
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
-	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
+	wp_nonce_field('bvmgr_season_dates_' . $selected_venue_id, 'bvmgr_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="add_blackout">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
@@ -826,7 +826,7 @@ function bvmgr_render_season_dates_page(): void
 	// Add Blackout Range
 	echo '<h3 class="vms-sd-subhead-gap">' . esc_html__('Add Blackout Range', 'backstage-venue-manager') . '</h3>';
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
-	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
+	wp_nonce_field('bvmgr_season_dates_' . $selected_venue_id, 'bvmgr_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="add_blackout_range">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
@@ -848,7 +848,7 @@ function bvmgr_render_season_dates_page(): void
 	$default_to   = gmdate('Y') . '-12-31';
 
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
-	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
+	wp_nonce_field('bvmgr_season_dates_' . $selected_venue_id, 'bvmgr_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="generate_active">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 
@@ -864,7 +864,7 @@ function bvmgr_render_season_dates_page(): void
 
 	echo '<h3 class="vms-sd-subhead-gap-sm">' . esc_html__('Clear Generated Dates', 'backstage-venue-manager') . '</h3>';
 	echo '<form method="post" action="' . esc_url($rules_action_url) . '">';
-	wp_nonce_field('vms_season_dates_' . $selected_venue_id, 'vms_season_dates_nonce');
+	wp_nonce_field('bvmgr_season_dates_' . $selected_venue_id, 'bvmgr_season_dates_nonce');
 	echo '<input type="hidden" name="vms_action" value="clear_generated">';
 	echo '<input type="hidden" name="venue_id" value="' . esc_attr((string)$selected_venue_id) . '">';
 	echo '<p><label><input type="checkbox" name="clear_confirm" value="1"> ' . esc_html__('I understand this will delete generated dates for this venue.', 'backstage-venue-manager') . '</label></p>';

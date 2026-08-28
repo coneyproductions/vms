@@ -201,7 +201,7 @@ function bvmgr_handle_create_event_plan(): void
     $nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
         ? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
         : '';
-    if (!wp_verify_nonce($nonce, 'vms_create_event_plan_' . $ymd)) {
+    if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_create_event_plan_' . $ymd)) {
         wp_die('Invalid nonce.');
     }
 
@@ -1008,7 +1008,7 @@ function bvmgr_render_schedule_list_view(int $venue_id, string $start_ymd, strin
                 'action'    => 'vms_create_event_plan',
                 'date'      => (string) $ymd,
                 'venue_id'  => (int) $venue_id_param,
-                '_wpnonce'  => wp_create_nonce('vms_create_event_plan_' . $ymd),
+                '_wpnonce'  => wp_create_nonce('bvmgr_create_event_plan_' . $ymd),
             );
 
             if ($has_plans) {
@@ -1243,7 +1243,7 @@ $scope_key = 'single';
                     'action'    => 'vms_create_event_plan',
                     'date'      => (string) $ymd,
                     'venue_id'  => (int) $venue_id,
-                    '_wpnonce'  => wp_create_nonce('vms_create_event_plan_' . $ymd),
+                    '_wpnonce'  => wp_create_nonce('bvmgr_create_event_plan_' . $ymd),
                 );
 
                 if ($has_plans) {

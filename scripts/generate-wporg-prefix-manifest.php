@@ -157,7 +157,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			'sha256' => hash_file('sha256', $path),
 			'summary' => $decoded['summary'],
 			'frozen_from_head' => 'bdd84df7bcbfcec65ee57fedf561bf4e167761f6',
-			'implementation_state' => 'browser_assets_complete',
+			'implementation_state' => 'nonce_complete',
 		);
 	}
 
@@ -267,9 +267,12 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 		$migratedSites = 0;
 		$remainingUnique = 0;
 		$remainingSites = 0;
+		$mappedFunctionNames = array();
 		foreach ((array) ($map['mappings'] ?? array()) as $mapping) {
 			$legacy = (string) $mapping['legacy_identifier'];
 			$canonical = (string) $mapping['canonical_identifier'];
+			$mappedFunctionNames[$legacy] = true;
+			$mappedFunctionNames[$canonical] = true;
 			$legacyEntry = $currentFunctions[$legacy] ?? null;
 			$canonicalEntry = $currentFunctions[$canonical] ?? null;
 			if (is_array($legacyEntry) === is_array($canonicalEntry)) {
@@ -303,6 +306,26 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 			}
 			$functions[] = $entry;
 		}
+		foreach ($currentFunctions as $name => $entry) {
+			if (isset($mappedFunctionNames[$name])) {
+				continue;
+			}
+			$sites = (array) ($entry['declaration_sites'] ?? array());
+			$isB4Support = str_starts_with($name, 'bvmgr_')
+				&& $sites !== array()
+				&& count(array_filter($sites, static fn(array $site): bool => ($site['file'] ?? '') === 'includes/core/prefix-b4-compat.php')) === count($sites);
+			if (!$isB4Support) {
+				throw new RuntimeException('Post-B3 function declaration is not assigned to B4 support infrastructure: ' . $name . '.');
+			}
+			$entry['canonical_target'] = $name;
+			$entry['b0_strategy'] = array(5);
+			$entry['compatibility_classification'] = 'B4 canonical compatibility infrastructure';
+			$entry['persistence_external_contract_status'] = 'internal nonpersistent compatibility runtime';
+			$entry['planned_implementation_batch'] = 'B4';
+			$entry['do_not_rename'] = true;
+			$functions[] = $entry;
+		}
+		usort($functions, static fn(array $a, array $b): int => (string) $a['current_identifier'] <=> (string) $b['current_identifier']);
 		$inventory['symbols']['functions'] = $functions;
 		$inventory['dynamic_symbols'] = self::reconcileB3Dynamic((array) $inventory['dynamic_symbols'], $map, $currentNames);
 		$inventory['counts']['dynamic_symbols'] = self::dynamicCounts($inventory['dynamic_symbols']);

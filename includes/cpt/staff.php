@@ -245,7 +245,7 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                 'expired' => __('Expired', 'backstage-venue-manager'),
                 'inactive' => __('Inactive', 'backstage-venue-manager'),
             );
-            wp_nonce_field('vms_staff_qualifications_save', 'vms_staff_qualifications_nonce');
+            wp_nonce_field('bvmgr_staff_qualifications_save', 'bvmgr_staff_qualifications_nonce');
             $pending_review_count = 0;
             foreach ($rows as $pending_row) {
                 if (is_array($pending_row) && sanitize_key((string) ($pending_row['status'] ?? '')) === 'pending_verification') {
@@ -355,10 +355,10 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
-    $nonce = (isset($_POST['vms_staff_qualifications_nonce']) && !is_array($_POST['vms_staff_qualifications_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_qualifications_nonce']))
+    $nonce = (isset($_POST['bvmgr_staff_qualifications_nonce']) && !is_array($_POST['bvmgr_staff_qualifications_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_qualifications_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_qualifications_save')) return;
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_qualifications_save')) return;
 
     $rows = array();
     if (isset($_POST['vms_staff_qualifications']) && is_array($_POST['vms_staff_qualifications'])) {

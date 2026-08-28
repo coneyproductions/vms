@@ -128,7 +128,7 @@ function bvmgr_render_current_venue_selector(): void
     echo '<input type="hidden" name="action" value="vms_set_current_venue">';
     echo '<input type="hidden" name="vms_context" value="schedule">';
 
-    wp_nonce_field('vms_set_current_venue', 'vms_current_venue_nonce');
+    wp_nonce_field('bvmgr_set_current_venue', 'bvmgr_current_venue_nonce');
 
     echo '<label for="vms-venue-select" class="vms-venue-selector__label">Current Venue:</label>';
 
@@ -172,10 +172,10 @@ add_action('admin_post_vms_set_current_venue', function () {
         wp_die('Not allowed');
     }
 
-    $nonce = (isset($_POST['vms_current_venue_nonce']) && !is_array($_POST['vms_current_venue_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_current_venue_nonce']))
+    $nonce = (isset($_POST['bvmgr_current_venue_nonce']) && !is_array($_POST['bvmgr_current_venue_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_current_venue_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_set_current_venue')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_set_current_venue')) {
         wp_die('Bad nonce');
     }
 
@@ -231,10 +231,10 @@ add_action('admin_post_vms_set_dashboard_venue', function () {
         wp_die('Not allowed');
     }
 
-    $nonce = (isset($_POST['vms_dash_venue_nonce']) && !is_array($_POST['vms_dash_venue_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_dash_venue_nonce']))
+    $nonce = (isset($_POST['bvmgr_dash_venue_nonce']) && !is_array($_POST['bvmgr_dash_venue_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_dash_venue_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_set_dashboard_venue')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_set_dashboard_venue')) {
         wp_die('Bad nonce');
     }
 
@@ -278,7 +278,7 @@ add_action('admin_post_vms_set_dashboard_venue', function () {
  *  - _vms_dash_venue_id = numeric string (only meaningful when scope=venue)
  *
  * POST params:
- *  - nonce (required) wp_create_nonce('vms_set_dashboard_prefs')
+ *  - nonce (required) wp_create_nonce('bvmgr_set_dashboard_prefs')
  *  - dash_scope ('venue' | 'all')
  *  - dash_venue_id (numeric string; ignored when scope=all)
  */
@@ -291,7 +291,7 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
     $nonce = (isset($_POST['nonce']) && !is_array($_POST['nonce']))
         ? sanitize_text_field(wp_unslash((string) $_POST['nonce']))
         : '';
-    if (!$nonce || !wp_verify_nonce($nonce, 'vms_set_dashboard_prefs')) {
+    if (!$nonce || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_set_dashboard_prefs')) {
         wp_send_json_error(array('message' => 'Bad nonce'), 403);
     }
 

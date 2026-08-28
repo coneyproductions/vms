@@ -59,7 +59,7 @@ add_action('admin_post_vms_square_sync_protection_scan', function (): void {
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
-    check_admin_referer('vms_square_sync_protection_scan');
+    bvmgr_check_admin_referer_compat('bvmgr_square_sync_protection_scan');
 
     if (!function_exists('bvmgr_square_firewall_scan_products')) {
         wp_die(esc_html__('Square Sync Firewall is not loaded.', 'backstage-venue-manager'));
@@ -74,7 +74,7 @@ add_action('admin_post_vms_square_sync_protection_repair', function (): void {
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
-    check_admin_referer('vms_square_sync_protection_repair');
+    bvmgr_check_admin_referer_compat('bvmgr_square_sync_protection_repair');
 
     if (!function_exists('bvmgr_square_firewall_scan_products')) {
         wp_die(esc_html__('Square Sync Firewall is not loaded.', 'backstage-venue-manager'));
@@ -89,7 +89,7 @@ add_action('admin_post_vms_square_sync_protection_csv', function (): void {
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
-    check_admin_referer('vms_square_sync_protection_csv');
+    bvmgr_check_admin_referer_compat('bvmgr_square_sync_protection_csv');
 
     $report = bvmgr_square_sync_protection_get_report();
     if (empty($report)) {
@@ -235,13 +235,13 @@ if (!function_exists('bvmgr_render_square_sync_protection_page_content')) {
         echo '<h2>' . esc_html__('Run protection tools', 'backstage-venue-manager') . '</h2>';
         echo '<p>' . esc_html__('Scan shows what would be protected. Repair forces protected products to Sync with Square = no and removes stale Square item IDs from those products.', 'backstage-venue-manager') . '</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-        wp_nonce_field('vms_square_sync_protection_scan');
+        wp_nonce_field('bvmgr_square_sync_protection_scan');
         echo '<input type="hidden" name="action" value="vms_square_sync_protection_scan" />';
         submit_button(__('Scan protected products', 'backstage-venue-manager'), 'secondary', 'submit', false);
         echo '</form>';
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-        wp_nonce_field('vms_square_sync_protection_repair');
+        wp_nonce_field('bvmgr_square_sync_protection_repair');
         echo '<input type="hidden" name="action" value="vms_square_sync_protection_repair" />';
         submit_button(__('Repair protected products', 'backstage-venue-manager'), 'primary', 'submit', false);
         echo '</form>';
@@ -249,7 +249,7 @@ if (!function_exists('bvmgr_render_square_sync_protection_page_content')) {
         echo '</div>';
 
         if (!empty($report)) {
-            $csv_url = wp_nonce_url(admin_url('admin-post.php?action=vms_square_sync_protection_csv'), 'vms_square_sync_protection_csv');
+            $csv_url = wp_nonce_url(admin_url('admin-post.php?action=vms_square_sync_protection_csv'), 'bvmgr_square_sync_protection_csv');
             echo '<h2>' . esc_html__('Last report', 'backstage-venue-manager') . '</h2>';
             if (!empty($report['ts'])) {
                 $ts = (int) $report['ts'];

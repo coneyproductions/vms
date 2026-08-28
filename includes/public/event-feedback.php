@@ -179,7 +179,7 @@ if (!function_exists('bvmgr_feedback_render_public_survey')) {
 			echo '<input type="hidden" name="source" value="' . esc_attr((string) $invitation['source']) . '">';
 		}
 		echo '<div class="vms-feedback-hp" aria-hidden="true"><label>Leave this field blank <input type="text" name="vms_feedback_company" tabindex="-1" autocomplete="off"></label></div>';
-		wp_nonce_field('vms_feedback_submit_' . $event_plan_id, 'vms_feedback_nonce');
+		wp_nonce_field('bvmgr_feedback_submit_' . $event_plan_id, 'bvmgr_feedback_nonce');
 
 		echo '<section class="vms-feedback-section">';
 		echo '<h2>' . esc_html__('Quick info', 'backstage-venue-manager') . '</h2>';
@@ -324,9 +324,9 @@ if (!function_exists('bvmgr_feedback_handle_submit')) {
 			wp_die(esc_html__('Invalid feedback link.', 'backstage-venue-manager'));
 		}
 		if (
-			!isset($_POST['vms_feedback_nonce'])
-			|| is_array($_POST['vms_feedback_nonce'])
-			|| !wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['vms_feedback_nonce'])), 'vms_feedback_submit_' . $event_plan_id)
+			!isset($_POST['bvmgr_feedback_nonce'])
+			|| is_array($_POST['bvmgr_feedback_nonce'])
+			|| !bvmgr_verify_nonce_compat(sanitize_text_field(wp_unslash((string) $_POST['bvmgr_feedback_nonce'])), 'bvmgr_feedback_submit_' . $event_plan_id)
 		) {
 			wp_die(esc_html__('Feedback form expired. Please refresh and try again.', 'backstage-venue-manager'));
 		}

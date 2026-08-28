@@ -65,7 +65,7 @@
                     'post_id' => (int) $post->ID,
                     'redirect_to' => $resync_redirect_to,
                     'source' => 'advanced_controls',
-                    '_vms_resync_calendar_nonce' => wp_create_nonce('vms_resync_calendar'),
+                    '_bvmgr_resync_calendar_nonce' => wp_create_nonce('bvmgr_resync_calendar'),
                 )
             );
         }
@@ -427,7 +427,7 @@
                     : '_vms_calendar_unpublished_suppress';
                 $sup_val = (string) get_post_meta($post->ID, $k_sup, true);
                 $sup_checked = in_array($sup_val, array('1', 'yes', 'true'), true);
-                $sup_nonce = wp_create_nonce('vms_event_plan_calendar_unpublished_suppress_save');
+                $sup_nonce = wp_create_nonce('bvmgr_event_plan_calendar_unpublished_suppress_save');
             ?>
 
             <div

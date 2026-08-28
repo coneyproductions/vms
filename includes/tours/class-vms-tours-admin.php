@@ -120,7 +120,7 @@ if (!class_exists('BVMGR_Tours_Admin')) {
 				wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 			}
 
-			check_admin_referer('vms_tours_reset_my_state');
+			bvmgr_check_admin_referer_compat('bvmgr_tours_reset_my_state');
 			$this->storage->reset_user_state(get_current_user_id());
 
 			$redirect = add_query_arg(
@@ -249,7 +249,7 @@ if (!class_exists('BVMGR_Tours_Admin')) {
 
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-tours-admin-reset-form" data-vms-tour="guided-tours.reset-progress">';
 			echo '<input type="hidden" name="action" value="vms_tours_reset_my_state" />';
-			wp_nonce_field('vms_tours_reset_my_state');
+			wp_nonce_field('bvmgr_tours_reset_my_state');
 			submit_button(__('Reset my tour progress', 'backstage-venue-manager'), 'secondary', 'submit', false);
 			echo '</form>';
 

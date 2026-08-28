@@ -25,6 +25,7 @@ define('BVMGR_PLUGIN_URL', plugin_dir_url(__FILE__));
  */
 
 require_once BVMGR_PLUGIN_PATH . 'includes/plugin-basename-compat.php';
+require_once BVMGR_PLUGIN_PATH . 'includes/core/prefix-b4-compat.php';
 require_once BVMGR_PLUGIN_PATH . 'includes/runtime-guards.php';
 require_once BVMGR_PLUGIN_PATH . 'includes/activation.php';
 register_activation_hook(__FILE__, 'bvmgr_activate_plugin');

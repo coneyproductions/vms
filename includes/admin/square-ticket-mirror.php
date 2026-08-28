@@ -126,7 +126,7 @@ function bvmgr_square_ticket_mirror_render_metabox($post): void
 
     if (!empty($eligibility['eligible']) && empty($state['item_id'])) {
         echo '<form method="post" action="' . esc_url($action_url) . '">';
-        wp_nonce_field('vms_square_ticket_mirror_action_' . $product_id . '_mirror');
+        wp_nonce_field('bvmgr_square_ticket_mirror_action_' . $product_id . '_mirror');
         echo '<input type="hidden" name="action" value="vms_square_ticket_mirror_action" />';
         echo '<input type="hidden" name="mirror_action" value="mirror" />';
         echo '<input type="hidden" name="product_id" value="' . esc_attr((string) $product_id) . '" />';
@@ -136,7 +136,7 @@ function bvmgr_square_ticket_mirror_render_metabox($post): void
 
     if (!empty($eligibility['eligible']) && (!empty($state['item_id']) || in_array((string) ($state['status'] ?? ''), array('mirror_stale', 'mirror_error', 'mirror_retired'), true))) {
         echo '<form method="post" action="' . esc_url($action_url) . '">';
-        wp_nonce_field('vms_square_ticket_mirror_action_' . $product_id . '_refresh');
+        wp_nonce_field('bvmgr_square_ticket_mirror_action_' . $product_id . '_refresh');
         echo '<input type="hidden" name="action" value="vms_square_ticket_mirror_action" />';
         echo '<input type="hidden" name="mirror_action" value="refresh" />';
         echo '<input type="hidden" name="product_id" value="' . esc_attr((string) $product_id) . '" />';
@@ -146,7 +146,7 @@ function bvmgr_square_ticket_mirror_render_metabox($post): void
 
     if (!empty($state['item_id']) && (string) ($state['status'] ?? '') !== 'mirror_retired') {
         echo '<form method="post" action="' . esc_url($action_url) . '">';
-        wp_nonce_field('vms_square_ticket_mirror_action_' . $product_id . '_retire');
+        wp_nonce_field('bvmgr_square_ticket_mirror_action_' . $product_id . '_retire');
         echo '<input type="hidden" name="action" value="vms_square_ticket_mirror_action" />';
         echo '<input type="hidden" name="mirror_action" value="retire" />';
         echo '<input type="hidden" name="product_id" value="' . esc_attr((string) $product_id) . '" />';
@@ -158,7 +158,7 @@ function bvmgr_square_ticket_mirror_render_metabox($post): void
 
     if ((string) ($state['status'] ?? '') === 'mirror_error' || !empty($state['last_error_code']) || !empty($state['last_error_message'])) {
         echo '<form method="post" action="' . esc_url($action_url) . '">';
-        wp_nonce_field('vms_square_ticket_mirror_action_' . $product_id . '_clear_error');
+        wp_nonce_field('bvmgr_square_ticket_mirror_action_' . $product_id . '_clear_error');
         echo '<input type="hidden" name="action" value="vms_square_ticket_mirror_action" />';
         echo '<input type="hidden" name="mirror_action" value="clear_error" />';
         echo '<input type="hidden" name="product_id" value="' . esc_attr((string) $product_id) . '" />';
@@ -214,7 +214,7 @@ function bvmgr_square_ticket_mirror_handle_admin_action(): void
         wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
     }
 
-    check_admin_referer('vms_square_ticket_mirror_action_' . $product_id . '_' . $mirror_action);
+    bvmgr_check_admin_referer_compat('bvmgr_square_ticket_mirror_action_' . $product_id . '_' . $mirror_action);
 
     $notice_type = 'success';
     $notice_message = '';

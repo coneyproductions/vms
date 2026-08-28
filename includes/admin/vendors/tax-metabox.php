@@ -96,12 +96,12 @@ function bvmgr_vendor_tax_metabox_render($post)
 
 	$complete_url = wp_nonce_url(
 		add_query_arg(array('action' => 'vms_vendor_tax_mark_complete', 'vendor_id' => $vendor_id), admin_url('admin-post.php')),
-		'vms_vendor_tax_mark_complete_' . $vendor_id
+		'bvmgr_vendor_tax_mark_complete_' . $vendor_id
 	);
 
 	$incomplete_url = wp_nonce_url(
 		add_query_arg(array('action' => 'vms_vendor_tax_mark_incomplete', 'vendor_id' => $vendor_id), admin_url('admin-post.php')),
-		'vms_vendor_tax_mark_incomplete_' . $vendor_id
+		'bvmgr_vendor_tax_mark_incomplete_' . $vendor_id
 	);
 
 	echo '<p class="vms-tax-actions"><a class="button button-primary" href="' . esc_url($complete_url) . '">Mark Complete</a></p>';
@@ -116,7 +116,7 @@ function bvmgr_vendor_tax_adminpost_mark_complete()
 	if ($vendor_id <= 0) wp_die('Invalid vendor.');
 	if (!current_user_can('edit_post', $vendor_id)) wp_die('Permission denied.');
 
-	check_admin_referer('vms_vendor_tax_mark_complete_' . $vendor_id);
+	bvmgr_check_admin_referer_compat('bvmgr_vendor_tax_mark_complete_' . $vendor_id);
 
 	$k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 	$k_recv = bvmgr_meta_key('vendor', 'w9_received_date');
@@ -151,7 +151,7 @@ function bvmgr_vendor_tax_adminpost_mark_incomplete()
 	if ($vendor_id <= 0) wp_die('Invalid vendor.');
 	if (!current_user_can('edit_post', $vendor_id)) wp_die('Permission denied.');
 
-	check_admin_referer('vms_vendor_tax_mark_incomplete_' . $vendor_id);
+	bvmgr_check_admin_referer_compat('bvmgr_vendor_tax_mark_incomplete_' . $vendor_id);
 
 	$k_done   = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 	$k_attest = bvmgr_meta_key('vendor', 'w9_attested_at');

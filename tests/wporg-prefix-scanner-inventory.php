@@ -22,7 +22,7 @@ try {
 	$categoryCounts = (array) ($inventory['summary']['category_counts'] ?? array());
 	$functionSites = array_sum(array_map(
 		static fn(array $entry): int => count((array) ($entry['declaration_sites'] ?? array())),
-		(array) ($manifest['symbols']['functions'] ?? array())
+		array_values(array_filter((array) ($manifest['symbols']['functions'] ?? array()), static fn(array $entry): bool => ($entry['planned_implementation_batch'] ?? '') === 'B3'))
 	));
 	$hookCategory = array_values(array_filter(
 		(array) ($manifest['categories'] ?? array()),

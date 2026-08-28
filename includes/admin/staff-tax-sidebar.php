@@ -129,7 +129,7 @@ if (!function_exists('bvmgr_staff_tax_mark_complete_url')) {
     {
         return wp_nonce_url(
             add_query_arg(array('action' => 'vms_staff_tax_mark_complete', 'staff_id' => $staff_id), admin_url('admin-post.php')),
-            'vms_staff_tax_mark_complete_' . $staff_id
+            'bvmgr_staff_tax_mark_complete_' . $staff_id
         );
     }
 }
@@ -139,7 +139,7 @@ if (!function_exists('bvmgr_staff_tax_clear_complete_url')) {
     {
         return wp_nonce_url(
             add_query_arg(array('action' => 'vms_staff_tax_clear_complete', 'staff_id' => $staff_id), admin_url('admin-post.php')),
-            'vms_staff_tax_clear_complete_' . $staff_id
+            'bvmgr_staff_tax_clear_complete_' . $staff_id
         );
     }
 }
@@ -149,7 +149,7 @@ add_action('admin_post_vms_staff_tax_mark_complete', function (): void {
     $staff_id = bvmgr_request_read_absint($_GET, 'staff_id');
     if ($staff_id <= 0) wp_die('Invalid staff member.');
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
-    check_admin_referer('vms_staff_tax_mark_complete_' . $staff_id);
+    bvmgr_check_admin_referer_compat('bvmgr_staff_tax_mark_complete_' . $staff_id);
 
     $provider = bvmgr_staff_tax_provider();
     $ctx = bvmgr_staff_tax_status_context($staff_id);
@@ -169,7 +169,7 @@ add_action('admin_post_vms_staff_tax_clear_complete', function (): void {
     $staff_id = bvmgr_request_read_absint($_GET, 'staff_id');
     if ($staff_id <= 0) wp_die('Invalid staff member.');
     if (!current_user_can('edit_post', $staff_id)) wp_die('Permission denied.');
-    check_admin_referer('vms_staff_tax_clear_complete_' . $staff_id);
+    bvmgr_check_admin_referer_compat('bvmgr_staff_tax_clear_complete_' . $staff_id);
 
     $ctx = bvmgr_staff_tax_status_context($staff_id);
     $keys = isset($ctx['keys']) && is_array($ctx['keys']) ? $ctx['keys'] : array();
@@ -223,7 +223,7 @@ function bvmgr_render_staff_tax_status_metabox($post)
     }
 
     if ($worker_type === 'employee') {
-        wp_nonce_field('vms_staff_employee_packet_save', 'vms_staff_employee_packet_nonce');
+        wp_nonce_field('bvmgr_staff_employee_packet_save', 'bvmgr_staff_employee_packet_nonce');
 
         $missing = bvmgr_staff_employee_packet_missing_items($staff_id);
         $is_complete = empty($missing);
@@ -375,10 +375,10 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_staff_employee_packet_nonce']) && !is_array($_POST['vms_staff_employee_packet_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_employee_packet_nonce']))
+    $nonce = (isset($_POST['bvmgr_staff_employee_packet_nonce']) && !is_array($_POST['bvmgr_staff_employee_packet_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_employee_packet_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_employee_packet_save')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_staff_employee_packet_save')) {
         return;
     }
 

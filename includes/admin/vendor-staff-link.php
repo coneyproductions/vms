@@ -47,7 +47,7 @@ function bvmgr_vendor_staff_link_metabox_render($post): void
 	$vendor_id = (int) $post->ID;
 	$current_staff_id = (int) get_post_meta($vendor_id, bvmgr_vendor_linked_staff_meta_key(), true);
 
-	wp_nonce_field('vms_vendor_staff_link_save', 'vms_vendor_staff_link_nonce');
+	wp_nonce_field('bvmgr_vendor_staff_link_save', 'bvmgr_vendor_staff_link_nonce');
 
 	echo '<p class="description">' . esc_html__('Link this vendor to a Staff profile so they can be assigned Staff Roles and use staff-only console areas.', 'backstage-venue-manager') . '</p>';
 
@@ -88,7 +88,7 @@ function bvmgr_vendor_staff_link_metabox_render($post): void
 		}
 	} else {
 		$action_url = admin_url('admin-post.php?action=vms_create_staff_from_vendor&vendor_id=' . (string) $vendor_id);
-		$action_url = wp_nonce_url($action_url, 'vms_create_staff_from_vendor_' . (string) $vendor_id);
+		$action_url = wp_nonce_url($action_url, 'bvmgr_create_staff_from_vendor_' . (string) $vendor_id);
 
 		echo '<p style="margin-top:10px;">';
 		echo '<a class="button button-primary" href="' . esc_url($action_url) . '">' . esc_html__('Create staff profile from this vendor', 'backstage-venue-manager') . '</a>';
@@ -105,10 +105,10 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 	if (wp_is_post_revision($post_id)) return;
 	if (!current_user_can('edit_post', $post_id)) return;
 
-	$nonce = (isset($_POST['vms_vendor_staff_link_nonce']) && !is_array($_POST['vms_vendor_staff_link_nonce']))
-		? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_staff_link_nonce']))
+	$nonce = (isset($_POST['bvmgr_vendor_staff_link_nonce']) && !is_array($_POST['bvmgr_vendor_staff_link_nonce']))
+		? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_staff_link_nonce']))
 		: '';
-	if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_vendor_staff_link_save')) {
+	if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_vendor_staff_link_save')) {
 		return;
 	}
 
@@ -189,7 +189,7 @@ add_action('admin_post_vms_create_staff_from_vendor', function (): void {
 		wp_die(esc_html__('You do not have permission to do that.', 'backstage-venue-manager'));
 	}
 
-	check_admin_referer('vms_create_staff_from_vendor_' . (string) $vendor_id);
+	bvmgr_check_admin_referer_compat('bvmgr_create_staff_from_vendor_' . (string) $vendor_id);
 
 	$vendor = get_post($vendor_id);
 	if (!$vendor || $vendor->post_type !== 'vms_vendor') {

@@ -119,7 +119,7 @@ function bvmgr_add_duplicate_row_action(array $actions, $post): array
 
     $url = wp_nonce_url(
         admin_url('admin-post.php?action=vms_duplicate_venue&post=' . (int)$post->ID),
-        'vms_duplicate_venue_' . (int)$post->ID
+        'bvmgr_duplicate_venue_' . (int)$post->ID
     );
 
     $new = [];
@@ -142,7 +142,7 @@ function bvmgr_add_duplicate_submitbox_button(): void
 
     $url = wp_nonce_url(
         admin_url('admin-post.php?action=vms_duplicate_venue&post=' . (int)$post->ID),
-        'vms_duplicate_venue_' . (int)$post->ID
+        'bvmgr_duplicate_venue_' . (int)$post->ID
     );
 
     echo '<div class="misc-pub-section vms-venue-dup-submit-section">';
@@ -163,7 +163,7 @@ function bvmgr_handle_duplicate_venue(): void
     $source_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
     if ($source_id <= 0) wp_die('Missing venue ID.');
 
-    check_admin_referer('vms_duplicate_venue_' . $source_id);
+    bvmgr_check_admin_referer_compat('bvmgr_duplicate_venue_' . $source_id);
 
     $source = get_post($source_id);
     if (!$source || $source->post_type !== 'vms_venue') wp_die('Invalid venue.');
@@ -262,7 +262,7 @@ function bvmgr_add_template_metabox(): void
 
 function bvmgr_render_template_metabox(WP_Post $post): void
 {
-    wp_nonce_field('vms_save_venue_template', 'vms_venue_template_nonce');
+    wp_nonce_field('bvmgr_save_venue_template', 'bvmgr_venue_template_nonce');
 
     $is_template = get_post_meta($post->ID, BVMGR_VENUE_TEMPLATE_META_KEY, true) === '1';
 
@@ -282,10 +282,10 @@ function bvmgr_save_template_metabox(int $post_id, WP_Post $post): void
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_venue_template_nonce']) && !is_array($_POST['vms_venue_template_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_template_nonce']))
+    $nonce = (isset($_POST['bvmgr_venue_template_nonce']) && !is_array($_POST['bvmgr_venue_template_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_template_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_template')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_save_venue_template')) {
         return;
     }
 
@@ -340,7 +340,7 @@ function bvmgr_render_create_from_template_panel(WP_Post $post): void
 
     echo '<form method="post" action="' . esc_url($action_url) . '">';
     echo '<input type="hidden" name="action" value="vms_create_venue_from_template" />';
-    wp_nonce_field('vms_create_venue_from_template', 'vms_create_venue_from_template_nonce');
+    wp_nonce_field('bvmgr_create_venue_from_template', 'bvmgr_create_venue_from_template_nonce');
 
     echo '<label><strong>Template:</strong> ';
     echo '<select name="vms_template_id" class="vms-venue-template-select">';
@@ -362,10 +362,10 @@ function bvmgr_handle_create_venue_from_template(): void
 {
     if (!current_user_can('edit_posts')) wp_die('Not allowed.');
 
-    $nonce = (isset($_POST['vms_create_venue_from_template_nonce']) && !is_array($_POST['vms_create_venue_from_template_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_create_venue_from_template_nonce']))
+    $nonce = (isset($_POST['bvmgr_create_venue_from_template_nonce']) && !is_array($_POST['bvmgr_create_venue_from_template_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_create_venue_from_template_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_create_venue_from_template')) {
+    if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_create_venue_from_template')) {
         wp_die('Invalid nonce.');
     }
 

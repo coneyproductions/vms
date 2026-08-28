@@ -780,7 +780,7 @@ if (!function_exists('bvmgr_ticketing_claims_render_event_plan_metabox')) {
 			'action' => 'vms_ticketing_claims_create_grant',
 			'event_plan_id' => (string) $post->ID,
 			'event_id' => (string) $event_id,
-			'_wpnonce' => wp_create_nonce('vms_ticketing_claims_create_grant'),
+			'_wpnonce' => wp_create_nonce('bvmgr_ticketing_claims_create_grant'),
 		);
 		if ($selected_user instanceof WP_User) {
 			$grant_hidden_fields['user_id'] = (string) $selected_user->ID;
@@ -995,7 +995,7 @@ if (!function_exists('bvmgr_ticketing_claims_render_event_plan_metabox')) {
 						'action' => 'vms_ticketing_claims_update_grant_note',
 						'event_plan_id' => (string) $post->ID,
 						'grant_id' => (string) $grant_id,
-						'_wpnonce' => wp_create_nonce('vms_ticketing_claims_update_grant_note_' . $grant_id),
+						'_wpnonce' => wp_create_nonce('bvmgr_ticketing_claims_update_grant_note_' . $grant_id),
 					)
 				);
 				echo '<div class="vms-claims-note-form">';
@@ -1013,7 +1013,7 @@ if (!function_exists('bvmgr_ticketing_claims_render_event_plan_metabox')) {
 						'action' => 'vms_ticketing_claims_set_grant_status',
 						'event_plan_id' => (string) $post->ID,
 						'grant_id' => (string) $grant_id,
-						'_wpnonce' => wp_create_nonce('vms_ticketing_claims_set_grant_status_' . $grant_id),
+						'_wpnonce' => wp_create_nonce('bvmgr_ticketing_claims_set_grant_status_' . $grant_id),
 					)
 				);
 				echo '<div class="vms-claims-action-form">';
@@ -1105,7 +1105,7 @@ if (!function_exists('bvmgr_ticketing_claims_render_event_plan_metabox')) {
 							'action' => 'vms_ticketing_claims_release_reservation',
 							'event_plan_id' => (string) $post->ID,
 							'reservation_id' => (string) $reservation_id,
-							'_wpnonce' => wp_create_nonce('vms_ticketing_claims_release_reservation_' . $reservation_id),
+							'_wpnonce' => wp_create_nonce('bvmgr_ticketing_claims_release_reservation_' . $reservation_id),
 						)
 					);
 					echo '<div class="vms-claims-action-form">';
@@ -1229,7 +1229,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_create_grant')) {
 		if (!bvmgr_ticketing_claims_current_user_can_manage()) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_ticketing_claims_create_grant');
+		bvmgr_check_admin_referer_compat('bvmgr_ticketing_claims_create_grant');
 
 		$event_plan_id = bvmgr_request_read_absint($_POST, 'event_plan_id');
 		$event_id = bvmgr_request_read_absint($_POST, 'event_id');
@@ -1347,7 +1347,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_update_grant_note')) {
 		}
 
 		$grant_id = bvmgr_ticketing_claims_post_absint('grant_id');
-		check_admin_referer('vms_ticketing_claims_update_grant_note_' . $grant_id);
+		bvmgr_check_admin_referer_compat('bvmgr_ticketing_claims_update_grant_note_' . $grant_id);
 		$event_plan_id = bvmgr_ticketing_claims_post_absint('event_plan_id');
 		if ($grant_id <= 0) {
 			wp_safe_redirect(bvmgr_ticketing_claims_event_edit_url($event_plan_id, array('vms_claim_notice' => 'invalid_request')));
@@ -1400,7 +1400,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_set_grant_status')) {
 		}
 
 		$grant_id = bvmgr_ticketing_claims_post_absint('grant_id');
-		check_admin_referer('vms_ticketing_claims_set_grant_status_' . $grant_id);
+		bvmgr_check_admin_referer_compat('bvmgr_ticketing_claims_set_grant_status_' . $grant_id);
 		$event_plan_id = bvmgr_ticketing_claims_post_absint('event_plan_id');
 		if ($grant_id <= 0) {
 			wp_safe_redirect(bvmgr_ticketing_claims_event_edit_url($event_plan_id, array('vms_claim_notice' => 'invalid_request')));
@@ -1487,7 +1487,7 @@ if (!function_exists('bvmgr_ticketing_claims_handle_release_reservation')) {
 
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
 		$reservation_id = isset($_POST['reservation_id']) ? absint($_POST['reservation_id']) : 0;
-		check_admin_referer('vms_ticketing_claims_release_reservation_' . $reservation_id);
+		bvmgr_check_admin_referer_compat('bvmgr_ticketing_claims_release_reservation_' . $reservation_id);
 		if ($reservation_id <= 0) {
 			bvmgr_ticketing_claims_redirect_after_post_action($event_plan_id, 'invalid_request');
 		}
@@ -1983,7 +1983,7 @@ if (!function_exists('bvmgr_ticketing_claims_render_admin_page')) {
 					echo '<option value="' . esc_attr($option_status) . '" ' . selected($status_key, $option_status, false) . '>' . esc_html((string) $option_label) . '</option>';
 				}
 				echo '</select> ';
-				wp_nonce_field('vms_ticketing_claims_set_grant_status_' . $grant_id);
+				wp_nonce_field('bvmgr_ticketing_claims_set_grant_status_' . $grant_id);
 				echo '<button type="submit" class="button button-small">' . esc_html__('Apply', 'backstage-venue-manager') . '</button>';
 				echo '</form>';
 				echo '</td>';
@@ -2056,7 +2056,7 @@ if (!function_exists('bvmgr_ticketing_claims_render_admin_page')) {
 					echo '<input type="hidden" name="action" value="vms_ticketing_claims_release_reservation" />';
 					echo '<input type="hidden" name="event_plan_id" value="0" />';
 					echo '<input type="hidden" name="reservation_id" value="' . esc_attr((string) $reservation_id) . '" />';
-					wp_nonce_field('vms_ticketing_claims_release_reservation_' . $reservation_id);
+					wp_nonce_field('bvmgr_ticketing_claims_release_reservation_' . $reservation_id);
 					echo '<button type="submit" class="button button-small" onclick="return confirm(' . esc_attr(wp_json_encode(__('Release this reservation? History will be preserved in the activity log.', 'backstage-venue-manager'))) . ');">' . esc_html__('Release Reservation', 'backstage-venue-manager') . '</button>';
 					echo '</form>';
 				} else {

@@ -91,7 +91,7 @@ if (!function_exists('bvmgr_express_bar_shortcode')) {
                             <input type="hidden" name="vms_express_bar" value="1" />
                             <input type="hidden" name="vms_express_bar_event_plan_id" value="<?php echo (int) $event_plan_id; ?>" />
                             <input type="hidden" name="vms_express_bar_redirect" value="<?php echo esc_url($permalink ?: ''); ?>" />
-                            <?php wp_nonce_field('vms_express_bar_add_' . $product_id, 'vms_express_bar_nonce'); ?>
+                            <?php wp_nonce_field('bvmgr_express_bar_add_' . $product_id, 'bvmgr_express_bar_nonce'); ?>
                             <label>
                                 <span><?php echo esc_html__('Quantity', 'backstage-venue-manager'); ?></span><br />
                                 <input type="number" name="vms_express_bar_quantity" min="1" max="20" step="1" value="1" inputmode="numeric" />
@@ -125,8 +125,8 @@ if (!function_exists('bvmgr_express_bar_capture_cart_item_data')) {
             return $cart_item_data;
         }
 
-        $nonce = isset($_POST['vms_express_bar_nonce']) ? sanitize_text_field(wp_unslash($_POST['vms_express_bar_nonce'])) : '';
-        if (!wp_verify_nonce($nonce, 'vms_express_bar_add_' . $product_id)) {
+        $nonce = isset($_POST['bvmgr_express_bar_nonce']) ? sanitize_text_field(wp_unslash($_POST['bvmgr_express_bar_nonce'])) : '';
+        if (!bvmgr_verify_nonce_compat($nonce, 'bvmgr_express_bar_add_' . $product_id)) {
             return $cart_item_data;
         }
 
@@ -169,10 +169,10 @@ if (!function_exists('bvmgr_express_bar_validate_add_to_cart')) {
             return $passed;
         }
 
-        $nonce = (isset($_POST['vms_express_bar_nonce']) && !is_array($_POST['vms_express_bar_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_POST['vms_express_bar_nonce']))
+        $nonce = (isset($_POST['bvmgr_express_bar_nonce']) && !is_array($_POST['bvmgr_express_bar_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_express_bar_nonce']))
             : '';
-        if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_express_bar_add_' . $product_id)) {
+        if ($nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_express_bar_add_' . $product_id)) {
             wc_add_notice(__('That Express Bar request could not be verified. Please try again.', 'backstage-venue-manager'), 'error');
             return false;
         }
@@ -197,10 +197,10 @@ if (!function_exists('bvmgr_express_bar_maybe_redirect_after_add')) {
         }
 
         $product_id = isset($_POST['add-to-cart']) ? absint($_POST['add-to-cart']) : 0;
-        $nonce = (isset($_POST['vms_express_bar_nonce']) && !is_array($_POST['vms_express_bar_nonce']))
-            ? sanitize_text_field(wp_unslash((string) $_POST['vms_express_bar_nonce']))
+        $nonce = (isset($_POST['bvmgr_express_bar_nonce']) && !is_array($_POST['bvmgr_express_bar_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_express_bar_nonce']))
             : '';
-        if ($product_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, 'vms_express_bar_add_' . $product_id)) {
+        if ($product_id <= 0 || $nonce === '' || !bvmgr_verify_nonce_compat($nonce, 'bvmgr_express_bar_add_' . $product_id)) {
             return $url;
         }
 
