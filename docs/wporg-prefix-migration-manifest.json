@@ -88837,7 +88837,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/cli/event-reschedule.php",
-                        "line": 175
+                        "line": 165
                     }
                 ]
             },
@@ -169419,15 +169419,15 @@
             "BVMGR_CLI_Event_Integrity_Command": [
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 174
+                    "line": 164
                 },
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 219
+                    "line": 209
                 },
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 221
+                    "line": 211
                 }
             ],
             "BVMGR_CLI_Event_Reschedule_Command": [
@@ -169437,11 +169437,11 @@
                 },
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 218
+                    "line": 208
                 },
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 220
+                    "line": 210
                 }
             ],
             "BVMGR_CLI_Square_Ticket_Mirror_Command": [

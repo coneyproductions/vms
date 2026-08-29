@@ -32,25 +32,23 @@ The standalone Event-Day document uses `assets/css/vms-event-day-report.css` and
 
 ## WP-CLI
 
-Always preview first with an explicit user who can edit the Event Plan:
+Always preview first with an explicit user who can edit the Event Plan. `--user` is a WP-CLI global parameter and must appear before the BVM command path:
 
 ```bash
-wp bvmgr event reschedule EVENT_PLAN_ID \
+wp --user=ADMIN_ID bvmgr event reschedule EVENT_PLAN_ID \
   --old-start='YYYY-MM-DD HH:MM' \
   --new-start='YYYY-MM-DD HH:MM' \
   --reason=date_correction \
-  --user=ADMIN_ID \
   --dry-run
 ```
 
 After reviewing an allowed preview, apply the identical inputs with the explicit token:
 
 ```bash
-wp bvmgr event reschedule EVENT_PLAN_ID \
+wp --user=ADMIN_ID bvmgr event reschedule EVENT_PLAN_ID \
   --old-start='YYYY-MM-DD HH:MM' \
   --new-start='YYYY-MM-DD HH:MM' \
   --reason=date_correction \
-  --user=ADMIN_ID \
   --apply --confirm=RESCHEDULE
 ```
 

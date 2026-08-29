@@ -26,9 +26,6 @@ if (!class_exists('BVMGR_CLI_Event_Reschedule_Command')) {
          * --reason=<reason>
          * : date_correction or rescheduled.
          *
-         * --user=<id-or-login>
-         * : Existing administrator/operator who can edit the Event Plan.
-         *
          * [--dry-run]
          * : Analyze only. Exactly one of --dry-run or --apply is required.
          *
@@ -40,8 +37,8 @@ if (!class_exists('BVMGR_CLI_Event_Reschedule_Command')) {
          *
          * ## EXAMPLES
          *
-         *     wp vms event reschedule 5568 --old-start="2026-09-19 19:00" --new-start="2026-09-12 19:00" --reason=date_correction --user=1 --dry-run
-         *     wp vms event reschedule 5568 --old-start="2026-09-19 19:00" --new-start="2026-09-12 19:00" --reason=date_correction --user=1 --apply --confirm=RESCHEDULE
+         *     wp --user=1 bvmgr event reschedule 5568 --old-start="2026-09-19 19:00" --new-start="2026-09-12 19:00" --reason=date_correction --dry-run
+         *     wp --user=1 bvmgr event reschedule 5568 --old-start="2026-09-19 19:00" --new-start="2026-09-12 19:00" --reason=date_correction --apply --confirm=RESCHEDULE
          *
          * @when after_wp_load
          *
@@ -58,16 +55,19 @@ if (!class_exists('BVMGR_CLI_Event_Reschedule_Command')) {
             $apply = array_key_exists('apply', $assoc_args);
 
             if ($plan_id <= 0 || $old_start === '' || $new_start === '' || $reason === '') {
-                WP_CLI::error('Event Plan ID, --old-start, --new-start, --reason, and --user are required.');
+                WP_CLI::error('Event Plan ID, --old-start, --new-start, and --reason are required.');
             }
             if ($dry_run === $apply) {
                 WP_CLI::error('Specify exactly one of --dry-run or --apply.');
             }
-            $user = $this->resolve_user((string) ($assoc_args['user'] ?? ''));
-            if (!$user instanceof WP_User || !user_can($user, 'edit_post', $plan_id)) {
-                WP_CLI::error('The --user value must identify a user who can edit this Event Plan.');
+            $user = wp_get_current_user();
+            if (!$user instanceof WP_User || (int) $user->ID <= 0) {
+                WP_CLI::error('An authenticated WordPress user is required. Pass WP-CLI global --user=<id|login|email> before the bvmgr command.');
             }
-            wp_set_current_user((int) $user->ID);
+            if (!user_can($user, 'edit_post', $plan_id)) {
+                WP_CLI::error('The authenticated WordPress user cannot edit this Event Plan.');
+            }
+            WP_CLI::log('Actor user ID: ' . (int) $user->ID);
 
             $preview = bvmgr_event_occurrence_preview($plan_id, $old_start, $new_start, $reason);
             $this->render_preview($preview);
@@ -102,16 +102,6 @@ if (!class_exists('BVMGR_CLI_Event_Reschedule_Command')) {
             WP_CLI::success((string) ($result['message'] ?? 'Occurrence operation applied.'));
             WP_CLI::log('Operation ID: ' . (string) ($result['operation_id'] ?? 'existing'));
             $this->render_integrity((array) ($result['integrity'] ?? array()));
-        }
-
-        private function resolve_user(string $raw): ?WP_User
-        {
-            $raw = trim($raw);
-            if ($raw === '') {
-                return null;
-            }
-            $user = ctype_digit($raw) ? get_user_by('id', (int) $raw) : get_user_by('login', $raw);
-            return $user instanceof WP_User ? $user : null;
         }
 
         private function render_preview(array $preview): void
