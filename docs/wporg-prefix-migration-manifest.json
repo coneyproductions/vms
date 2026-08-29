@@ -639,12 +639,12 @@
     "php_inventory_counts": {
         "public_php_files": 276,
         "functions": {
-            "unique": 4646,
-            "occurrences": 4666
+            "unique": 4651,
+            "occurrences": 4671
         },
         "classes": {
-            "unique": 25,
-            "occurrences": 25
+            "unique": 26,
+            "occurrences": 26
         },
         "interfaces": {
             "unique": 1,
@@ -673,12 +673,12 @@
         "dynamic_symbols": {
             "exact_function_literals_unique": 3645,
             "exact_function_literals_occurrences": 7363,
-            "function_exists_unique": 3429,
-            "function_exists_occurrences": 6495,
+            "function_exists_unique": 3434,
+            "function_exists_occurrences": 6500,
             "direct_literal_callbacks_unique": 724,
             "direct_literal_callbacks_occurrences": 780,
-            "exact_type_literals_unique": 18,
-            "exact_type_literals_occurrences": 37,
+            "exact_type_literals_unique": 19,
+            "exact_type_literals_occurrences": 41,
             "duplicate_function_families": 20,
             "duplicate_constant_families": 9
         }
@@ -19416,7 +19416,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1272
+                        "line": 1756
                     }
                 ]
             },
@@ -19438,6 +19438,23 @@
                 ]
             },
             {
+                "current_identifier": "bvmgr_event_occurrence_canonical_order_item_name",
+                "canonical_target": "bvmgr_event_occurrence_canonical_order_item_name",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "post-B4 canonical feature addition",
+                "persistence_external_contract_status": "nonpersistent global PHP introduced after B4",
+                "planned_implementation_batch": "post-B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/event-reschedule.php",
+                        "line": 886
+                    }
+                ]
+            },
+            {
                 "current_identifier": "bvmgr_event_occurrence_clear_runtime_caches",
                 "canonical_target": "bvmgr_event_occurrence_clear_runtime_caches",
                 "b0_strategy": [
@@ -19450,7 +19467,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1236
+                        "line": 1353
                     }
                 ]
             },
@@ -19637,7 +19654,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1211
+                        "line": 1328
                     }
                 ]
             },
@@ -19654,7 +19671,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1092
+                        "line": 1209
                     }
                 ]
             },
@@ -19671,7 +19688,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 916
+                        "line": 1033
                     }
                 ]
             },
@@ -19710,6 +19727,57 @@
                 ]
             },
             {
+                "current_identifier": "bvmgr_event_occurrence_name_reconciliation_apply",
+                "canonical_target": "bvmgr_event_occurrence_name_reconciliation_apply",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "post-B4 canonical feature addition",
+                "persistence_external_contract_status": "nonpersistent global PHP introduced after B4",
+                "planned_implementation_batch": "post-B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/event-reschedule.php",
+                        "line": 1614
+                    }
+                ]
+            },
+            {
+                "current_identifier": "bvmgr_event_occurrence_name_reconciliation_fingerprint",
+                "canonical_target": "bvmgr_event_occurrence_name_reconciliation_fingerprint",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "post-B4 canonical feature addition",
+                "persistence_external_contract_status": "nonpersistent global PHP introduced after B4",
+                "planned_implementation_batch": "post-B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/event-reschedule.php",
+                        "line": 1595
+                    }
+                ]
+            },
+            {
+                "current_identifier": "bvmgr_event_occurrence_name_reconciliation_preview",
+                "canonical_target": "bvmgr_event_occurrence_name_reconciliation_preview",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "post-B4 canonical feature addition",
+                "persistence_external_contract_status": "nonpersistent global PHP introduced after B4",
+                "planned_implementation_batch": "post-B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/event-reschedule.php",
+                        "line": 1389
+                    }
+                ]
+            },
+            {
                 "current_identifier": "bvmgr_event_occurrence_normalize_fingerprint_value",
                 "canonical_target": "bvmgr_event_occurrence_normalize_fingerprint_value",
                 "b0_strategy": [
@@ -19723,6 +19791,23 @@
                     {
                         "file": "includes/core/event-reschedule.php",
                         "line": 777
+                    }
+                ]
+            },
+            {
+                "current_identifier": "bvmgr_event_occurrence_normalize_item_identity",
+                "canonical_target": "bvmgr_event_occurrence_normalize_item_identity",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "post-B4 canonical feature addition",
+                "persistence_external_contract_status": "nonpersistent global PHP introduced after B4",
+                "planned_implementation_batch": "post-B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/event-reschedule.php",
+                        "line": 871
                     }
                 ]
             },
@@ -19756,7 +19841,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1219
+                        "line": 1336
                     }
                 ]
             },
@@ -19960,7 +20045,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 871
+                        "line": 976
                     }
                 ]
             },
@@ -19977,7 +20062,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 998
+                        "line": 1115
                     }
                 ]
             },
@@ -88859,6 +88944,23 @@
                 ]
             },
             {
+                "current_identifier": "BVMGR_CLI_Event_Item_Name_Reconcile_Command",
+                "canonical_target": "BVMGR_CLI_Event_Item_Name_Reconcile_Command",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "post-B4 canonical feature addition",
+                "persistence_external_contract_status": "nonpersistent global PHP introduced after B4",
+                "planned_implementation_batch": "post-B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/cli/event-reschedule.php",
+                        "line": 209
+                    }
+                ]
+            },
+            {
                 "current_identifier": "BVMGR_CLI_Event_Reschedule_Command",
                 "canonical_target": "BVMGR_CLI_Event_Reschedule_Command",
                 "b0_strategy": [
@@ -137934,7 +138036,7 @@
             "bvmgr_event_occurrence_apply": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1271
+                    "line": 1755
                 }
             ],
             "bvmgr_event_occurrence_authorized_write": [
@@ -137943,10 +138045,16 @@
                     "line": 44
                 }
             ],
+            "bvmgr_event_occurrence_canonical_order_item_name": [
+                {
+                    "file": "includes/core/event-reschedule.php",
+                    "line": 885
+                }
+            ],
             "bvmgr_event_occurrence_clear_runtime_caches": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1235
+                    "line": 1352
                 }
             ],
             "bvmgr_event_occurrence_collect_product_ids": [
@@ -138012,7 +138120,7 @@
             "bvmgr_event_occurrence_history": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1210
+                    "line": 1327
                 }
             ],
             "bvmgr_event_occurrence_integrity": [
@@ -138022,13 +138130,13 @@
                 },
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1091
+                    "line": 1208
                 }
             ],
             "bvmgr_event_occurrence_invariant_snapshot": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 915
+                    "line": 1032
                 }
             ],
             "bvmgr_event_occurrence_is_published": [
@@ -138051,10 +138159,34 @@
                     "line": 8854
                 }
             ],
+            "bvmgr_event_occurrence_name_reconciliation_apply": [
+                {
+                    "file": "includes/core/event-reschedule.php",
+                    "line": 1613
+                }
+            ],
+            "bvmgr_event_occurrence_name_reconciliation_fingerprint": [
+                {
+                    "file": "includes/core/event-reschedule.php",
+                    "line": 1594
+                }
+            ],
+            "bvmgr_event_occurrence_name_reconciliation_preview": [
+                {
+                    "file": "includes/core/event-reschedule.php",
+                    "line": 1388
+                }
+            ],
             "bvmgr_event_occurrence_normalize_fingerprint_value": [
                 {
                     "file": "includes/core/event-reschedule.php",
                     "line": 776
+                }
+            ],
+            "bvmgr_event_occurrence_normalize_item_identity": [
+                {
+                    "file": "includes/core/event-reschedule.php",
+                    "line": 870
                 }
             ],
             "bvmgr_event_occurrence_normalize_snapshot_date": [
@@ -138070,7 +138202,7 @@
             "bvmgr_event_occurrence_operation_already_recorded": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1218
+                    "line": 1335
                 }
             ],
             "bvmgr_event_occurrence_order_item_name_date": [
@@ -138146,13 +138278,13 @@
             "bvmgr_event_occurrence_update_order_item": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 870
+                    "line": 975
                 }
             ],
             "bvmgr_event_occurrence_verify_invariants": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 997
+                    "line": 1114
                 }
             ],
             "bvmgr_event_occurrence_write_is_authorized": [
@@ -158662,7 +158794,7 @@
             "bvmgr_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1358
+                    "line": 1842
                 },
                 {
                     "file": "includes/cpt/event-plans.php",
@@ -169450,11 +169582,25 @@
                 },
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 209
+                    "line": 327
                 },
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 211
+                    "line": 330
+                }
+            ],
+            "BVMGR_CLI_Event_Item_Name_Reconcile_Command": [
+                {
+                    "file": "includes/core/cli/event-reschedule.php",
+                    "line": 208
+                },
+                {
+                    "file": "includes/core/cli/event-reschedule.php",
+                    "line": 328
+                },
+                {
+                    "file": "includes/core/cli/event-reschedule.php",
+                    "line": 331
                 }
             ],
             "BVMGR_CLI_Event_Reschedule_Command": [
@@ -169464,11 +169610,11 @@
                 },
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 208
+                    "line": 326
                 },
                 {
                     "file": "includes/core/cli/event-reschedule.php",
-                    "line": 210
+                    "line": 329
                 }
             ],
             "BVMGR_CLI_Square_Ticket_Mirror_Command": [
@@ -169542,7 +169688,11 @@
                 },
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1123
+                    "line": 1240
+                },
+                {
+                    "file": "includes/core/event-reschedule.php",
+                    "line": 1464
                 },
                 {
                     "file": "includes/core/ticket-revenue.php",
@@ -176000,6 +176150,13 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
+            "bvmgr_event_occurrence_canonical_order_item_name": [
+                {
+                    "current_identifier": "bvmgr_event_occurrence_canonical_order_item_name",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
             "bvmgr_event_occurrence_clear_runtime_caches": [
                 {
                     "current_identifier": "bvmgr_event_occurrence_clear_runtime_caches",
@@ -176112,9 +176269,37 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
+            "bvmgr_event_occurrence_name_reconciliation_apply": [
+                {
+                    "current_identifier": "bvmgr_event_occurrence_name_reconciliation_apply",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_event_occurrence_name_reconciliation_fingerprint": [
+                {
+                    "current_identifier": "bvmgr_event_occurrence_name_reconciliation_fingerprint",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_event_occurrence_name_reconciliation_preview": [
+                {
+                    "current_identifier": "bvmgr_event_occurrence_name_reconciliation_preview",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
             "bvmgr_event_occurrence_normalize_fingerprint_value": [
                 {
                     "current_identifier": "bvmgr_event_occurrence_normalize_fingerprint_value",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_event_occurrence_normalize_item_identity": [
+                {
+                    "current_identifier": "bvmgr_event_occurrence_normalize_item_identity",
                     "canonical_target": null,
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }

@@ -205,7 +205,127 @@ if (!class_exists('BVMGR_CLI_Event_Integrity_Command')) {
     }
 }
 
+if (!class_exists('BVMGR_CLI_Event_Item_Name_Reconcile_Command')) {
+    final class BVMGR_CLI_Event_Item_Name_Reconcile_Command
+    {
+        /**
+         * Preview or apply current Woo order-item name reconciliation.
+         *
+         * ## OPTIONS
+         *
+         * <event-plan-id>
+         * : Exact Event Plan post ID.
+         *
+         * [--operation-id=<uuid>]
+         * : Restrict candidates to items stamped by one recorded occurrence operation.
+         *
+         * [--dry-run]
+         * : Analyze only. Exactly one of --dry-run or --apply is required.
+         *
+         * [--apply]
+         * : Change only eligible current Woo order-item display names.
+         *
+         * [--confirm=<token>]
+         * : Required with --apply. Must be RECONCILE-NAMES.
+         *
+         * ## EXAMPLES
+         *
+         *     wp --user=1 bvmgr event reconcile-current-item-names 5568 --operation-id=de1814a7-5ada-4e6e-b587-46c1e80eff89 --dry-run
+         *     wp --user=1 bvmgr event reconcile-current-item-names 5568 --operation-id=de1814a7-5ada-4e6e-b587-46c1e80eff89 --apply --confirm=RECONCILE-NAMES
+         *
+         * @when after_wp_load
+         *
+         * @param array<int,string> $args
+         * @param array<string,mixed> $assoc_args
+         */
+        public function __invoke(array $args, array $assoc_args): void
+        {
+            $plan_id = absint($args[0] ?? 0);
+            $operation_id = sanitize_text_field((string) ($assoc_args['operation-id'] ?? ''));
+            $dry_run = array_key_exists('dry-run', $assoc_args);
+            $apply = array_key_exists('apply', $assoc_args);
+            if ($plan_id <= 0) {
+                WP_CLI::error('Event Plan ID is required.');
+            }
+            if ($dry_run === $apply) {
+                WP_CLI::error('Specify exactly one of --dry-run or --apply.');
+            }
+            $user = wp_get_current_user();
+            if (!$user instanceof WP_User || (int) $user->ID <= 0) {
+                WP_CLI::error('An authenticated WordPress user is required. Pass WP-CLI global --user=<id|login|email> before the bvmgr command.');
+            }
+            if (!user_can($user, 'edit_post', $plan_id)) {
+                WP_CLI::error('The authenticated WordPress user cannot edit this Event Plan.');
+            }
+            WP_CLI::log('Actor user ID: ' . (int) $user->ID);
+
+            $preview = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, $operation_id);
+            $this->render_preview($preview);
+            if (!$apply) {
+                if (empty($preview['allowed'])) {
+                    WP_CLI::warning('APPLY WOULD BE BLOCKED. Resolve every ambiguity before continuing.');
+                    return;
+                }
+                WP_CLI::success('Dry run complete. APPLY would be allowed with the same inputs and --apply --confirm=RECONCILE-NAMES.');
+                return;
+            }
+            if ((string) ($assoc_args['confirm'] ?? '') !== 'RECONCILE-NAMES') {
+                WP_CLI::error('--apply requires --confirm=RECONCILE-NAMES.');
+            }
+            if (empty($preview['allowed'])) {
+                WP_CLI::error('APPLY blocked by preview ambiguity. No changes were made.');
+            }
+
+            $result = bvmgr_event_occurrence_name_reconciliation_apply(
+                $plan_id,
+                $operation_id,
+                (int) $user->ID,
+                bvmgr_event_occurrence_name_reconciliation_fingerprint($preview)
+            );
+            if (empty($result['ok'])) {
+                $rollback = !empty($result['rolled_back']) ? ' Transaction rolled back.' : '';
+                WP_CLI::error((string) ($result['message'] ?? 'Name reconciliation failed.') . $rollback);
+            }
+            WP_CLI::success((string) ($result['message'] ?? 'Current order-item names reconciled.'));
+            WP_CLI::log('Changed order-item IDs: ' . implode(', ', array_map('strval', (array) ($result['changed_order_item_ids'] ?? array()))));
+            WP_CLI::log('Integrity: ' . (!empty($result['integrity']['ok']) ? 'PASS' : 'FAIL'));
+        }
+
+        private function render_preview(array $preview): void
+        {
+            WP_CLI::log('Event Plan: #' . (int) ($preview['plan_id'] ?? 0) . ' ' . (string) ($preview['plan_title'] ?? ''));
+            WP_CLI::log('Operation ID: ' . ((string) ($preview['operation_id'] ?? '') ?: 'not restricted'));
+            WP_CLI::log('Current occurrence: ' . (string) ($preview['current_occurrence']['start_local'] ?? 'invalid'));
+            foreach ((array) ($preview['counts'] ?? array()) as $label => $value) {
+                WP_CLI::log(str_replace('_', ' ', ucfirst((string) $label)) . ': ' . (int) $value);
+            }
+            foreach ((array) ($preview['rows'] ?? array()) as $row) {
+                WP_CLI::log(sprintf(
+                    'Order #%1$d | item #%2$d | current: %3$s | proposed: %4$s | effective: %5$s | original snapshot: %6$s | safe: %7$s (%8$s)',
+                    (int) ($row['order_id'] ?? 0),
+                    (int) ($row['order_item_id'] ?? 0),
+                    (string) ($row['current_name'] ?? ''),
+                    (string) ($row['proposed_name'] ?? ''),
+                    (string) ($row['current_effective_occurrence'] ?? ''),
+                    (string) ($row['historical_original_name_snapshot'] ?? ''),
+                    !empty($row['safe']) ? 'yes' : 'NO',
+                    (string) ($row['safety_reason'] ?? '')
+                ));
+            }
+            foreach ((array) ($preview['warnings'] ?? array()) as $warning) {
+                WP_CLI::warning((string) $warning);
+            }
+            foreach ((array) ($preview['ambiguities'] ?? array()) as $ambiguity) {
+                WP_CLI::warning('AMBIGUITY: ' . (string) $ambiguity);
+            }
+            WP_CLI::log('Apply allowed: ' . (!empty($preview['allowed']) ? 'yes' : 'NO'));
+        }
+    }
+}
+
 WP_CLI::add_command('bvmgr event reschedule', 'BVMGR_CLI_Event_Reschedule_Command');
 WP_CLI::add_command('bvmgr event integrity', 'BVMGR_CLI_Event_Integrity_Command');
+WP_CLI::add_command('bvmgr event reconcile-current-item-names', 'BVMGR_CLI_Event_Item_Name_Reconcile_Command');
 WP_CLI::add_command('vms event reschedule', 'BVMGR_CLI_Event_Reschedule_Command');
 WP_CLI::add_command('vms event integrity', 'BVMGR_CLI_Event_Integrity_Command');
+WP_CLI::add_command('vms event reconcile-current-item-names', 'BVMGR_CLI_Event_Item_Name_Reconcile_Command');

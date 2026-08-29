@@ -144,6 +144,7 @@ $add_legacy_order_item = static function ($order, int $product_id, int $quantity
 
 $cleanup = static function () use (&$created_orders, &$created_posts): void {
     remove_all_actions('bvmgr_event_occurrence_before_verify');
+    remove_all_actions('bvmgr_event_occurrence_name_reconciliation_before_verify');
     foreach (array_reverse($created_orders) as $order_id) {
         $order = function_exists('wc_get_order') ? wc_get_order((int) $order_id) : null;
         if ($order && method_exists($order, 'delete')) {
@@ -589,6 +590,10 @@ try {
     $addon_title_after = (string) get_the_title($addon_id);
     $assert(strpos($ticket_title_after, $old_date) === false && strpos($ticket_title_after, 'Veteran / Youth Admission') !== false, 'Ticket product title still exposes the old occurrence: ' . $ticket_title_after);
     $assert(strpos($addon_title_after, $old_date) === false && strpos($addon_title_after, 'Fire Table #01') !== false, 'Numbered reservation identity was not preserved in the updated title: ' . $addon_title_after);
+    $assert((string) (new WC_Order_Item_Product($ticket_item_id))->get_name() === $new_date . ' 19:00 - Veteran / Youth Admission', 'Future reschedule APPLY did not set the canonical current ticket line name.');
+    $assert((string) (new WC_Order_Item_Product($addon_item_id))->get_name() === $new_date . ' 19:00 - Fire Table #01', 'Future reschedule APPLY did not set the canonical numbered reservation line name.');
+    $assert((string) wc_get_order_item_meta($ticket_item_id, '_vms_original_order_item_name_snapshot', true) === $old_date . ' 19:00 - Veteran / Youth Admission', 'Future reschedule APPLY did not preserve the original ticket line name snapshot.');
+    $assert((string) wc_get_order_item_meta($addon_item_id, '_vms_original_order_item_name_snapshot', true) === $old_date . ' 19:00 - Fire Table #01', 'Future reschedule APPLY did not preserve the original reservation line name snapshot.');
     $assert(strpos((string) wc_get_order_item_meta($ticket_item_id, __('When', 'backstage-venue-manager'), true), 'Sep 12, 2026') !== false, 'Current order-item When display did not move to the new occurrence.');
 
     $order_after = wc_get_order((int) $order->get_id());
@@ -638,6 +643,237 @@ try {
         && count((array) ($event_day_source_model_after['reservations'] ?? array())) === count((array) ($event_day_source_model_before['reservations'] ?? array())),
         'Event-Day guest or reservation calculations changed across repair.'
     );
+
+    // Reproduce already-repaired items whose effective occurrence and immutable
+    // snapshots are correct but whose current Woo display name lost its date prefix.
+    $operation_id = (string) ($applied['operation_id'] ?? '');
+    $new_payload = (array) ($applied['preview']['new'] ?? array());
+    $reconcile_types = array(
+        'ga' => array('label' => 'General Admission', 'role' => 'ga_ticket', 'price' => '20', 'stock' => 100),
+        'youth' => array('label' => 'Youth Ticket', 'role' => 'ga_ticket', 'price' => '12', 'stock' => 80),
+        'child' => array('label' => "Children's Admission", 'role' => 'ga_ticket', 'price' => '8', 'stock' => 60),
+        'veteran' => array('label' => 'Veteran Admission', 'role' => 'ga_ticket', 'price' => '15', 'stock' => 70),
+        'kiddie_pool' => array('label' => 'Kiddie Pool', 'role' => 'entitlement', 'price' => '10', 'stock' => 20),
+        'fire_table' => array('label' => 'Fire Table #02', 'role' => 'entitlement', 'price' => '25', 'stock' => 12),
+    );
+    $reconcile_order = $register_order(wc_create_order());
+    $reconcile_order->set_status('completed');
+    $reconcile_order->set_billing_first_name('Name');
+    $reconcile_order->set_billing_last_name('Reconciliation Fixture');
+    $reconcile_order->set_billing_email('name-reconciliation@example.test');
+    $reconcile_items = array();
+    foreach ($reconcile_types as $key => $fixture) {
+        $product_id = $create_product(
+            $new_date . ' 19:00 - ' . (string) $fixture['label'],
+            $plan_id,
+            $event_id,
+            (string) $fixture['role'],
+            (string) $fixture['price'],
+            (int) $fixture['stock']
+        );
+        $item = $add_order_item(
+            $reconcile_order,
+            $product_id,
+            1,
+            $old_date,
+            'Sat, Sep 19, 2026 7:00pm'
+        );
+        $reconcile_items[$key] = array(
+            'item' => $item,
+            'product_id' => $product_id,
+            'label' => (string) $fixture['label'],
+        );
+    }
+    $reconcile_order->calculate_totals(false);
+    $reconcile_order->save();
+    $reconcile_effective_start = bvmgr_event_occurrence_parse_local($new_date . ' 19:00');
+    if (!($reconcile_effective_start instanceof DateTimeImmutable)) {
+        throw new RuntimeException('Could not build the reconciliation effective-occurrence fixture.');
+    }
+    foreach ($reconcile_items as $key => &$fixture) {
+        $fixture['item_id'] = (int) $fixture['item']->get_id();
+        $fixture['expected_name'] = $new_date . ' 19:00 - ' . $fixture['label'];
+        $fixture['original_name'] = $old_date . ' 19:00 - ' . $fixture['label'];
+        wc_update_order_item_meta($fixture['item_id'], '_vms_original_order_item_name_snapshot', $fixture['original_name']);
+        wc_update_order_item_meta($fixture['item_id'], '_vms_effective_event_date', (string) ($new_payload['date'] ?? ''));
+        wc_update_order_item_meta($fixture['item_id'], '_vms_effective_event_when', bvmgr_event_occurrence_effective_when_label($reconcile_effective_start));
+        wc_update_order_item_meta($fixture['item_id'], '_vms_effective_event_start_local', (string) ($new_payload['start_local'] ?? ''));
+        wc_update_order_item_meta($fixture['item_id'], '_vms_effective_event_end_local', (string) ($new_payload['end_local'] ?? ''));
+        wc_update_order_item_meta($fixture['item_id'], '_vms_effective_event_start_utc', (string) ($new_payload['start_utc'] ?? ''));
+        wc_update_order_item_meta($fixture['item_id'], '_vms_effective_event_end_utc', (string) ($new_payload['end_utc'] ?? ''));
+        wc_update_order_item_meta($fixture['item_id'], '_vms_occurrence_operation_id', $operation_id);
+        wc_update_order_item_meta($fixture['item_id'], __('When', 'backstage-venue-manager'), bvmgr_event_occurrence_effective_when_label($reconcile_effective_start));
+        $incorrect_item = new WC_Order_Item_Product($fixture['item_id']);
+        $incorrect_item->set_name($fixture['label']);
+        $incorrect_item->save();
+    }
+    unset($fixture);
+
+    $ordinary_order = $register_order(wc_create_order());
+    $ordinary_order->set_status('completed');
+    $ordinary_ga = $add_order_item(
+        $ordinary_order,
+        (int) $reconcile_items['ga']['product_id'],
+        1,
+        $new_date,
+        'Sat, Sep 12, 2026 7:00pm'
+    );
+    $ordinary_fire = $add_order_item(
+        $ordinary_order,
+        (int) $reconcile_items['fire_table']['product_id'],
+        1,
+        $new_date,
+        'Sat, Sep 12, 2026 7:00pm'
+    );
+    $ordinary_order->calculate_totals(false);
+    $ordinary_order->save();
+    $ordinary_ga_id = (int) $ordinary_ga->get_id();
+    $ordinary_fire_id = (int) $ordinary_fire->get_id();
+    $ordinary_state_before = array(
+        $ordinary_ga_id => (new WC_Order_Item_Product($ordinary_ga_id))->get_name(),
+        $ordinary_fire_id => (new WC_Order_Item_Product($ordinary_fire_id))->get_name(),
+    );
+
+    $wrong_operation_preview = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, '11111111-1111-4111-8111-111111111111');
+    $assert(empty($wrong_operation_preview['allowed']) && !empty($wrong_operation_preview['ambiguities']), 'Name reconciliation accepted an operation ID not recorded for the Event Plan.');
+
+    $fire_item_id = (int) $reconcile_items['fire_table']['item_id'];
+    $number_conflict_item = new WC_Order_Item_Product($fire_item_id);
+    $number_conflict_item->set_name('Fire Table #03');
+    $number_conflict_item->save();
+    $number_conflict_preview = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, $operation_id);
+    $assert(empty($number_conflict_preview['allowed']) && (int) $number_conflict_preview['counts']['unsafe_rows'] >= 1, 'Numbered reservation identity conflict did not fail closed.');
+    $number_conflict_item = new WC_Order_Item_Product($fire_item_id);
+    $number_conflict_item->set_name((string) $reconcile_items['fire_table']['label']);
+    $number_conflict_item->save();
+
+    $ga_item_id = (int) $reconcile_items['ga']['item_id'];
+    wc_update_order_item_meta($ga_item_id, '_vms_original_order_item_name_snapshot', $old_date . ' 19:00 - Youth Ticket');
+    $historical_conflict_preview = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, $operation_id);
+    $assert(empty($historical_conflict_preview['allowed']) && (int) $historical_conflict_preview['counts']['unsafe_rows'] >= 1, 'Historical original-name identity conflict did not fail closed.');
+    wc_update_order_item_meta($ga_item_id, '_vms_original_order_item_name_snapshot', (string) $reconcile_items['ga']['original_name']);
+
+    $youth_item_id = (int) $reconcile_items['youth']['item_id'];
+    wc_update_order_item_meta($youth_item_id, '_vms_effective_event_start_local', '2026-09-26 19:00:00');
+    $occurrence_conflict_preview = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, $operation_id);
+    $assert(empty($occurrence_conflict_preview['allowed']) && (int) $occurrence_conflict_preview['counts']['unsafe_rows'] >= 1, 'Conflicting effective occurrence did not fail closed.');
+    wc_update_order_item_meta($youth_item_id, '_vms_effective_event_start_local', (string) $new_payload['start_local']);
+
+    $reconciliation_preview = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, $operation_id);
+    $assert(
+        !empty($reconciliation_preview['allowed'])
+        && (int) $reconciliation_preview['counts']['eligible_changes'] === 6
+        && (int) $reconciliation_preview['counts']['already_canonical'] === 2
+        && (int) $reconciliation_preview['counts']['ignored_operation_rows'] >= 2,
+        'Operation-scoped name reconciliation did not distinguish eligible, canonical, and unrelated legacy/current rows: ' . wp_json_encode($reconciliation_preview)
+    );
+    foreach ($reconcile_items as $fixture) {
+        $preview_rows = array_values(array_filter((array) $reconciliation_preview['rows'], static function (array $row) use ($fixture): bool {
+            return (int) ($row['order_item_id'] ?? 0) === (int) $fixture['item_id'];
+        }));
+        $preview_row = (array) ($preview_rows[0] ?? array());
+        $assert(
+            (string) ($preview_row['current_name'] ?? '') === (string) $fixture['label']
+            && (string) ($preview_row['proposed_name'] ?? '') === (string) $fixture['expected_name']
+            && (string) ($preview_row['current_effective_occurrence'] ?? '') === $new_date . ' 19:00:00'
+            && (string) ($preview_row['historical_original_name_snapshot'] ?? '') === (string) $fixture['original_name']
+            && !empty($preview_row['safe']),
+            'Required reconciliation preview fields changed for ' . (string) $fixture['label'] . ': ' . wp_json_encode($preview_row)
+        );
+    }
+
+    $resolver_before_reconciliation = BVMGR_Ticket_Revenue_Service::get_sales_result(array(
+        'event_plan_ids' => array($plan_id),
+        'order_statuses' => array('completed'),
+        'include_unresolved' => true,
+        'include_refunded_lines' => true,
+    ));
+    $entitlement_shape_before = array(
+        'rows' => count((array) ($resolver_before_reconciliation['rows'] ?? array())),
+        'quantity' => array_sum(array_map(static fn(array $row): int => (int) ($row['qty'] ?? 0), (array) ($resolver_before_reconciliation['rows'] ?? array()))),
+    );
+    $reconciliation_fingerprint = bvmgr_event_occurrence_name_reconciliation_fingerprint($reconciliation_preview);
+    $rollback_reconciliation = static function (): void {
+        throw new RuntimeException('Fixture name-reconciliation rollback injection.');
+    };
+    add_action('bvmgr_event_occurrence_name_reconciliation_before_verify', $rollback_reconciliation, 10, 0);
+    $rolled_back_reconciliation = bvmgr_event_occurrence_name_reconciliation_apply($plan_id, $operation_id, 1, $reconciliation_fingerprint);
+    remove_action('bvmgr_event_occurrence_name_reconciliation_before_verify', $rollback_reconciliation, 10);
+    $assert(empty($rolled_back_reconciliation['ok']) && !empty($rolled_back_reconciliation['rolled_back']), 'Injected name-reconciliation failure did not roll back.');
+    foreach ($reconcile_items as $fixture) {
+        $assert((string) (new WC_Order_Item_Product((int) $fixture['item_id']))->get_name() === (string) $fixture['label'], 'Rollback left a partial current-name change for ' . (string) $fixture['label'] . '.');
+    }
+
+    $reconciliation_preview = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, $operation_id);
+    $reconciled = bvmgr_event_occurrence_name_reconciliation_apply(
+        $plan_id,
+        $operation_id,
+        1,
+        bvmgr_event_occurrence_name_reconciliation_fingerprint($reconciliation_preview)
+    );
+    $assert(!empty($reconciled['ok']) && count((array) $reconciled['changed_order_item_ids']) === 6, 'Current-name reconciliation did not apply all six representative changes: ' . (string) ($reconciled['message'] ?? ''));
+    foreach ($reconcile_items as $fixture) {
+        $item_id = (int) $fixture['item_id'];
+        $assert((string) (new WC_Order_Item_Product($item_id))->get_name() === (string) $fixture['expected_name'], 'Canonical reconciled name changed for ' . (string) $fixture['label'] . '.');
+        $assert((string) wc_get_order_item_meta($item_id, '_vms_original_order_item_name_snapshot', true) === (string) $fixture['original_name'], 'Historical original name was overwritten for ' . (string) $fixture['label'] . '.');
+        $assert((string) wc_get_order_item_meta($item_id, '_vms_effective_event_start_local', true) === $new_date . ' 19:00:00', 'Effective occurrence changed during name reconciliation for ' . (string) $fixture['label'] . '.');
+    }
+    $assert(
+        (new WC_Order_Item_Product($ordinary_ga_id))->get_name() === $ordinary_state_before[$ordinary_ga_id]
+        && (new WC_Order_Item_Product($ordinary_fire_id))->get_name() === $ordinary_state_before[$ordinary_fire_id],
+        'Operation-scoped reconciliation touched ordinary current-occurrence lines.'
+    );
+    $assert(
+        (new WC_Order_Item_Product((int) $reconcile_items['ga']['item_id']))->get_name() === (new WC_Order_Item_Product($ordinary_ga_id))->get_name(),
+        'Repaired and ordinary GA lines do not share the canonical current display name.'
+    );
+    $assert(
+        (new WC_Order_Item_Product((int) $reconcile_items['fire_table']['item_id']))->get_name() === (new WC_Order_Item_Product($ordinary_fire_id))->get_name(),
+        'Repaired and ordinary numbered reservations do not share the canonical current display name.'
+    );
+
+    $resolver_after_reconciliation = BVMGR_Ticket_Revenue_Service::get_sales_result(array(
+        'event_plan_ids' => array($plan_id),
+        'order_statuses' => array('completed'),
+        'include_unresolved' => true,
+        'include_refunded_lines' => true,
+    ));
+    $entitlement_shape_after = array(
+        'rows' => count((array) ($resolver_after_reconciliation['rows'] ?? array())),
+        'quantity' => array_sum(array_map(static fn(array $row): int => (int) ($row['qty'] ?? 0), (array) ($resolver_after_reconciliation['rows'] ?? array()))),
+    );
+    $assert($entitlement_shape_after === $entitlement_shape_before, 'Name reconciliation created or removed an entitlement.');
+    $resolver_names = array();
+    foreach ((array) ($resolver_after_reconciliation['rows'] ?? array()) as $resolver_row) {
+        $resolver_names[(int) ($resolver_row['order_item_id'] ?? 0)] = (string) ($resolver_row['product_name'] ?? '');
+    }
+    $assert(
+        ($resolver_names[(int) $reconcile_items['ga']['item_id']] ?? '') === ($resolver_names[$ordinary_ga_id] ?? '')
+        && ($resolver_names[(int) $reconcile_items['fire_table']['item_id']] ?? '') === ($resolver_names[$ordinary_fire_id] ?? ''),
+        'Canonical sales resolver still exposes split GA or reservation labels after reconciliation.'
+    );
+    $revenue_report = bvmgr_ticket_revenue_build_report(array(
+        'event_plan_id' => $plan_id,
+        'order_statuses' => array('completed'),
+    ));
+    $revenue_names = array();
+    foreach ((array) ($revenue_report['rows'] ?? array()) as $revenue_row) {
+        $revenue_names[(int) ($revenue_row['line_item_id'] ?? 0)] = (string) ($revenue_row['item_name'] ?? '');
+    }
+    $assert(
+        ($revenue_names[(int) $reconcile_items['ga']['item_id']] ?? '') === ($revenue_names[$ordinary_ga_id] ?? '')
+        && ($revenue_names[(int) $reconcile_items['fire_table']['item_id']] ?? '') === ($revenue_names[$ordinary_fire_id] ?? ''),
+        'BVM revenue/export rows still expose split GA or reservation labels after reconciliation.'
+    );
+    $reconciliation_repeat = bvmgr_event_occurrence_name_reconciliation_apply($plan_id, $operation_id, 1);
+    $assert(
+        !empty($reconciliation_repeat['ok'])
+        && !empty($reconciliation_repeat['noop'])
+        && empty($reconciliation_repeat['changed_order_item_ids'])
+        && count(bvmgr_event_occurrence_history($plan_id)) === 1,
+        'Name reconciliation replay was not an audit-preserving no-op.'
+    );
+
     $post_preview = bvmgr_event_occurrence_preview($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction');
     $assert(!empty($post_preview['allowed']) && (int) $post_preview['counts']['line_items'] === 0, 'Post-repair dry run still targets current entitlements.');
     $repeat = bvmgr_event_occurrence_apply($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction', 1);

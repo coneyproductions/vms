@@ -132,8 +132,8 @@ $assert(isset($categoriesById['namespaces'], $categoriesById['tests_tooling_asse
 
 $expectedCounts = array(
 	'public_php_files' => 276,
-	'functions' => array('unique' => 4646, 'occurrences' => 4666),
-	'classes' => array('unique' => 25, 'occurrences' => 25),
+	'functions' => array('unique' => 4651, 'occurrences' => 4671),
+	'classes' => array('unique' => 26, 'occurrences' => 26),
 	'interfaces' => array('unique' => 1, 'occurrences' => 1),
 	'constants' => array('unique' => 107, 'occurrences' => 116),
 	'namespaces' => array('unique' => 0, 'occurrences' => 0),
@@ -146,12 +146,12 @@ foreach ($expectedCounts as $key => $expected) {
 $dynamicExpected = array(
 	'exact_function_literals_unique' => 3645,
 	'exact_function_literals_occurrences' => 7363,
-	'function_exists_unique' => 3429,
-	'function_exists_occurrences' => 6495,
+	'function_exists_unique' => 3434,
+	'function_exists_occurrences' => 6500,
 	'direct_literal_callbacks_unique' => 724,
 	'direct_literal_callbacks_occurrences' => 780,
-	'exact_type_literals_unique' => 18,
-	'exact_type_literals_occurrences' => 37,
+	'exact_type_literals_unique' => 19,
+	'exact_type_literals_occurrences' => 41,
 	'duplicate_function_families' => 20,
 	'duplicate_constant_families' => 9,
 );

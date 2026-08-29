@@ -11,7 +11,7 @@
         "source_commit": "d38c08139e79160b21780fc81e614751051463b8-dirty-final-blockers",
         "package_sha256": "aab39969602d3ff711621667971d98408d4e27fe1631234ecb568ce1ef586307",
         "strict_json_sha256": "c1902438a99d670a2b74039583beae8c01879eb5c5e00eb00b625334795cf4b5",
-        "manifest_sha256": "f4d153488cccca11a7e719210c311197b91ba10cc2f31bb08c100851d5caaf13"
+        "manifest_sha256": "2a58da66897e1568d837909c697aa50862540c9b63f5cc0596c6a572a6d227c1"
     },
     "classification_definitions": {
         "REQUIRED_MIGRATION_B3": {

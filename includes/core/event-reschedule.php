@@ -867,8 +867,113 @@ if (!function_exists('bvmgr_event_occurrence_product_base_title')) {
     }
 }
 
+if (!function_exists('bvmgr_event_occurrence_normalize_item_identity')) {
+    function bvmgr_event_occurrence_normalize_item_identity(string $name): string
+    {
+        $identity = trim(html_entity_decode(wp_strip_all_tags($name), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if (function_exists('bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match')) {
+            $identity = bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match($identity);
+        }
+        do {
+            $before = $identity;
+            $identity = trim((string) preg_replace('/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+(?:-|–|—)\s+/u', '', $identity));
+        } while ($identity !== $before);
+        return $identity;
+    }
+}
+
+if (!function_exists('bvmgr_event_occurrence_canonical_order_item_name')) {
+    function bvmgr_event_occurrence_canonical_order_item_name($item, int $plan_id, int $tec_event_id, bool $require_original_snapshot = true): array
+    {
+        $result = array(
+            'safe' => false,
+            'reason' => '',
+            'current_name' => '',
+            'current_identity' => '',
+            'product_name' => '',
+            'product_identity' => '',
+            'original_name' => '',
+            'original_identity' => '',
+            'proposed_name' => '',
+        );
+        if (!is_object($item) || !method_exists($item, 'get_id') || !method_exists($item, 'get_name')) {
+            $result['reason'] = 'order_item_unavailable';
+            return $result;
+        }
+
+        $item_id = absint($item->get_id());
+        $product_id = method_exists($item, 'get_product_id') ? absint($item->get_product_id()) : 0;
+        $result['current_name'] = trim((string) $item->get_name());
+        $result['current_identity'] = bvmgr_event_occurrence_normalize_item_identity($result['current_name']);
+        $result['original_name'] = $item_id > 0 && function_exists('wc_get_order_item_meta')
+            ? trim((string) wc_get_order_item_meta($item_id, '_vms_original_order_item_name_snapshot', true))
+            : '';
+        $result['original_identity'] = bvmgr_event_occurrence_normalize_item_identity($result['original_name']);
+        $result['product_name'] = $product_id > 0 ? trim((string) get_post_field('post_title', $product_id, 'raw')) : '';
+        $result['product_identity'] = $product_id > 0 ? bvmgr_event_occurrence_product_base_title($product_id) : '';
+
+        if ($item_id <= 0 || $product_id <= 0 || get_post_type($product_id) !== 'product') {
+            $result['reason'] = 'product_link_unavailable';
+            return $result;
+        }
+        if ($result['current_identity'] === '' || $result['product_identity'] === '') {
+            $result['reason'] = 'item_identity_unavailable';
+            return $result;
+        }
+
+        $product_plan_id = absint(get_post_meta($product_id, '_vms_event_plan_id', true));
+        $product_event_id = absint(get_post_meta($product_id, '_vms_tec_event_id', true));
+        if ($product_event_id <= 0) {
+            $product_event_id = absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true));
+        }
+        if (($product_plan_id > 0 && $product_plan_id !== $plan_id)
+            || ($product_event_id > 0 && $product_event_id !== $tec_event_id)) {
+            $result['reason'] = 'product_occurrence_link_conflict';
+            return $result;
+        }
+        if ($result['current_identity'] !== $result['product_identity']) {
+            $result['reason'] = 'current_product_identity_conflict';
+            return $result;
+        }
+        if ($result['original_name'] === '' && $require_original_snapshot) {
+            $result['reason'] = 'original_name_snapshot_missing';
+            return $result;
+        }
+        if ($result['original_name'] !== '' && $result['original_identity'] !== $result['product_identity']) {
+            $result['reason'] = 'original_product_identity_conflict';
+            return $result;
+        }
+        if (!function_exists('bvmgr_ticketing_v2_compose_product_admin_title')) {
+            $result['reason'] = 'canonical_formatter_unavailable';
+            return $result;
+        }
+
+        $result['proposed_name'] = trim((string) bvmgr_ticketing_v2_compose_product_admin_title($result['product_identity'], $tec_event_id));
+        if ($result['proposed_name'] === ''
+            || bvmgr_event_occurrence_normalize_item_identity($result['proposed_name']) !== $result['product_identity']) {
+            $result['reason'] = 'canonical_name_unavailable';
+            return $result;
+        }
+        if ($result['product_name'] !== $result['proposed_name']) {
+            $result['reason'] = 'product_name_not_canonical';
+            return $result;
+        }
+
+        preg_match_all('/(?:#\s*0*\d+|\b(?:table|seat|space|spot)\s*#?\s*0*\d+)/iu', $result['current_identity'], $current_numbers);
+        preg_match_all('/(?:#\s*0*\d+|\b(?:table|seat|space|spot)\s*#?\s*0*\d+)/iu', $result['proposed_name'], $proposed_numbers);
+        if ((array) ($current_numbers[0] ?? array()) !== (array) ($proposed_numbers[0] ?? array())) {
+            $result['reason'] = 'numbered_reservation_identity_conflict';
+            return $result;
+        }
+
+        $result['safe'] = true;
+        $result['reason'] = 'canonical_name_derived';
+        return $result;
+    }
+}
+
 if (!function_exists('bvmgr_event_occurrence_update_order_item')) {
-    function bvmgr_event_occurrence_update_order_item(array $row, array $new_payload, string $operation_id): void
+    function bvmgr_event_occurrence_update_order_item(array $row, array $new_payload, int $plan_id, int $tec_event_id, string $operation_id): void
     {
         $item_id = absint($row['order_item_id'] ?? 0);
         if ($item_id <= 0 || !function_exists('wc_update_order_item_meta')) {
@@ -884,11 +989,19 @@ if (!function_exists('bvmgr_event_occurrence_update_order_item')) {
         if ((string) wc_get_order_item_meta($item_id, '_vms_original_order_item_name_snapshot', true) === '') {
             wc_update_order_item_meta($item_id, '_vms_original_order_item_name_snapshot', $current_name);
         }
-        $base_name = function_exists('bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match')
-            ? bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match($current_name)
-            : trim((string) preg_replace('/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+(?:-|–|—)\s+/u', '', $current_name));
-        if ($base_name !== '' && $base_name !== $current_name) {
-            $item->set_name($base_name);
+
+        $canonical_name = bvmgr_event_occurrence_canonical_order_item_name($item, $plan_id, $tec_event_id, true);
+        if (empty($canonical_name['safe'])) {
+            // Internal plain-text exception contains an absint order-item ID and a sanitized reason code; callers escape or JSON-encode the message at the output boundary.
+            throw new RuntimeException(sprintf(
+                'Order item %1$d current name could not be derived safely (%2$s).',
+                $item_id, // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+                sanitize_key((string) ($canonical_name['reason'] ?? 'unknown'))
+            ));
+        }
+        $proposed_name = (string) $canonical_name['proposed_name'];
+        if ($proposed_name !== $current_name) {
+            $item->set_name($proposed_name);
             $item->save();
         }
 
@@ -908,6 +1021,10 @@ if (!function_exists('bvmgr_event_occurrence_update_order_item')) {
 
         if ((string) wc_get_order_item_meta($item_id, '_vms_effective_event_start_local', true) !== (string) $new_payload['start_local']) {
             throw new RuntimeException(sprintf('Order item %d failed effective-occurrence verification.', $item_id)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text exception contains only an absint order-item ID; callers escape or JSON-encode the message at the output boundary.
+        }
+        $verified_item = new WC_Order_Item_Product($item_id);
+        if ((string) $verified_item->get_name() !== $proposed_name) {
+            throw new RuntimeException(sprintf('Order item %d failed canonical-name verification.', $item_id)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text exception contains only an absint order-item ID; callers escape or JSON-encode the message at the output boundary.
         }
     }
 }
@@ -1268,6 +1385,373 @@ if (!function_exists('bvmgr_event_occurrence_clear_runtime_caches')) {
     }
 }
 
+if (!function_exists('bvmgr_event_occurrence_name_reconciliation_preview')) {
+    function bvmgr_event_occurrence_name_reconciliation_preview(int $plan_id, string $operation_id = ''): array
+    {
+        $plan_id = absint($plan_id);
+        $operation_id = trim(sanitize_text_field($operation_id));
+        $preview = array(
+            'allowed' => false,
+            'plan_id' => $plan_id,
+            'plan_title' => $plan_id > 0 ? (string) get_the_title($plan_id) : '',
+            'operation_id' => $operation_id,
+            'tec_event_id' => 0,
+            'current_occurrence' => array(),
+            'rows' => array(),
+            'product_ids' => array(),
+            'attendee_ids' => array(),
+            'warnings' => array(),
+            'ambiguities' => array(),
+            'counts' => array(
+                'resolver_rows' => 0,
+                'operation_rows' => 0,
+                'eligible_changes' => 0,
+                'already_canonical' => 0,
+                'unsafe_rows' => 0,
+                'ignored_operation_rows' => 0,
+            ),
+            'fingerprint_state' => array(),
+        );
+
+        $post = get_post($plan_id);
+        if (!$post || $post->post_type !== 'vms_event_plan') {
+            $preview['ambiguities'][] = 'Event Plan not found.';
+            return $preview;
+        }
+        if (!bvmgr_event_occurrence_is_published($plan_id)) {
+            $preview['ambiguities'][] = 'The Event Plan is not in the published workflow state.';
+            return $preview;
+        }
+        if ($operation_id !== '' && !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $operation_id)) {
+            $preview['ambiguities'][] = 'Operation ID must be a canonical UUID.';
+            return $preview;
+        }
+
+        $occurrence = bvmgr_event_occurrence_for_plan($plan_id);
+        if (empty($occurrence['valid'])) {
+            $preview['ambiguities'][] = 'The current Event Plan occurrence is invalid.';
+            return $preview;
+        }
+        $payload = bvmgr_event_occurrence_payload($occurrence['start'], $occurrence['end']);
+        $preview['current_occurrence'] = $payload;
+        $tec_event_id = absint(get_post_meta($plan_id, '_vms_tec_event_id', true));
+        $preview['tec_event_id'] = $tec_event_id;
+        if ($tec_event_id <= 0 || get_post_type($tec_event_id) !== 'tribe_events') {
+            $preview['ambiguities'][] = 'The linked calendar event is missing or invalid.';
+            return $preview;
+        }
+        if (trim((string) get_post_meta($tec_event_id, '_EventStartDate', true)) !== (string) $payload['start_local']
+            || trim((string) get_post_meta($tec_event_id, '_EventEndDate', true)) !== (string) $payload['end_local']) {
+            $preview['ambiguities'][] = 'The linked calendar occurrence conflicts with the current Event Plan occurrence.';
+        }
+
+        $history_entry = array();
+        if ($operation_id !== '') {
+            foreach (array_reverse(bvmgr_event_occurrence_history($plan_id)) as $entry) {
+                if (is_array($entry) && hash_equals($operation_id, (string) ($entry['operation_id'] ?? ''))) {
+                    $history_entry = $entry;
+                    break;
+                }
+            }
+            if (empty($history_entry)) {
+                $preview['ambiguities'][] = 'The requested operation ID is not recorded for this Event Plan.';
+            } elseif ((string) ($history_entry['new_start_local'] ?? '') !== (string) $payload['start_local']
+                || (string) ($history_entry['new_end_local'] ?? '') !== (string) $payload['end_local']) {
+                $preview['ambiguities'][] = 'The requested operation ID does not target the current Event Plan occurrence.';
+            }
+        }
+
+        $resolver_available = class_exists('BVMGR_Ticket_Revenue_Service')
+            && function_exists('wc_get_orders')
+            && class_exists('WooCommerce');
+        if (!$resolver_available) {
+            $preview['ambiguities'][] = 'Ticket and order impact cannot be resolved because WooCommerce or the sales resolver is unavailable.';
+            return $preview;
+        }
+        $result = BVMGR_Ticket_Revenue_Service::get_sales_result(array(
+            'event_plan_ids' => array($plan_id),
+            'order_statuses' => array('processing', 'completed', 'refunded'),
+            'include_unresolved' => true,
+            'include_refunded_lines' => true,
+        ));
+        foreach ((array) ($result['warnings'] ?? array()) as $warning) {
+            if (trim((string) $warning) !== '') {
+                $preview['warnings'][] = trim((string) $warning);
+            }
+        }
+        if ((int) ($result['counts']['line_items_unresolved'] ?? 0) > 0) {
+            $preview['ambiguities'][] = 'The ticket sales resolver returned one or more unresolved linked line items.';
+        }
+
+        $seen_items = array();
+        foreach ((array) ($result['rows'] ?? array()) as $source_row) {
+            $preview['counts']['resolver_rows']++;
+            if ((int) ($source_row['event_plan_id'] ?? 0) !== $plan_id) {
+                $preview['ambiguities'][] = 'The ticket sales resolver returned a line item linked to a different Event Plan.';
+                continue;
+            }
+            $item_id = absint($source_row['order_item_id'] ?? 0);
+            if ($item_id <= 0 || isset($seen_items[$item_id])) {
+                continue;
+            }
+            $seen_items[$item_id] = true;
+            $item_operation_id = trim((string) wc_get_order_item_meta($item_id, '_vms_occurrence_operation_id', true));
+            if ($operation_id !== '' && !hash_equals($operation_id, $item_operation_id)) {
+                $preview['counts']['ignored_operation_rows']++;
+                continue;
+            }
+            $preview['counts']['operation_rows']++;
+
+            $item = class_exists('WC_Order_Item_Product') ? new WC_Order_Item_Product($item_id) : null;
+            $line_kind = sanitize_key((string) ($source_row['line_kind'] ?? ''));
+            $effective_start_raw = trim((string) wc_get_order_item_meta($item_id, '_vms_effective_event_start_local', true));
+            $effective_end_raw = trim((string) wc_get_order_item_meta($item_id, '_vms_effective_event_end_local', true));
+            $effective_start = bvmgr_event_occurrence_parse_local($effective_start_raw);
+            $effective_end = bvmgr_event_occurrence_parse_local($effective_end_raw);
+            $occurrence_safe = false;
+            $occurrence_source = '';
+            $safety_reason = '';
+            if ($effective_start instanceof DateTimeImmutable || $effective_end instanceof DateTimeImmutable) {
+                if ($effective_start instanceof DateTimeImmutable
+                    && $effective_end instanceof DateTimeImmutable
+                    && $effective_start->getTimestamp() === $occurrence['start']->getTimestamp()
+                    && $effective_end->getTimestamp() === $occurrence['end']->getTimestamp()) {
+                    $occurrence_safe = true;
+                    $occurrence_source = 'effective_metadata';
+                } else {
+                    $safety_reason = 'effective_occurrence_conflict';
+                }
+            } else {
+                $snapshot_date = bvmgr_event_occurrence_snapshot_date($item_id);
+                if ($snapshot_date === (string) $payload['date']) {
+                    $occurrence_safe = true;
+                    $occurrence_source = 'current_snapshot_and_plan';
+                } else {
+                    $safety_reason = 'effective_occurrence_ambiguous';
+                }
+            }
+
+            $name = bvmgr_event_occurrence_canonical_order_item_name($item, $plan_id, $tec_event_id, $operation_id !== '');
+            if (!in_array($line_kind, array('ticket', 'addon'), true)) {
+                $name['safe'] = false;
+                $name['reason'] = 'entitlement_type_ambiguous';
+            }
+            $safe = $occurrence_safe && !empty($name['safe']);
+            if (!$safe && $safety_reason === '') {
+                $safety_reason = (string) ($name['reason'] ?? 'canonical_name_unsafe');
+            }
+            if ($safe) {
+                $safety_reason = 'safe';
+            }
+            $change_required = $safe && (string) ($name['current_name'] ?? '') !== (string) ($name['proposed_name'] ?? '');
+            if (!$safe) {
+                $preview['counts']['unsafe_rows']++;
+            } elseif ($change_required) {
+                $preview['counts']['eligible_changes']++;
+            } else {
+                $preview['counts']['already_canonical']++;
+            }
+
+            $preview['rows'][] = array(
+                'order_id' => absint($source_row['order_id'] ?? 0),
+                'order_item_id' => $item_id,
+                'product_id' => absint($source_row['product_id'] ?? 0),
+                'line_kind' => $line_kind,
+                'quantity' => (int) ($source_row['qty'] ?? 0),
+                'current_name' => (string) ($name['current_name'] ?? ''),
+                'proposed_name' => (string) ($name['proposed_name'] ?? ''),
+                'current_effective_occurrence' => $effective_start_raw !== '' ? $effective_start_raw : (string) $payload['start_local'],
+                'occurrence_source' => $occurrence_source,
+                'historical_original_name_snapshot' => (string) ($name['original_name'] ?? ''),
+                'operation_id' => $item_operation_id,
+                'safe' => $safe,
+                'safety_reason' => $safety_reason,
+                'change_required' => $change_required,
+            );
+            $preview['product_ids'][] = absint($source_row['product_id'] ?? 0);
+            $preview['attendee_ids'] = array_merge($preview['attendee_ids'], (array) ($source_row['attendee_ids'] ?? array()));
+        }
+
+        $preview['product_ids'] = array_values(array_unique(array_filter(array_map('absint', $preview['product_ids']))));
+        $preview['attendee_ids'] = array_values(array_unique(array_filter(array_map('absint', $preview['attendee_ids']))));
+        $preview['warnings'] = array_values(array_unique($preview['warnings']));
+        if ((int) $preview['counts']['unsafe_rows'] > 0) {
+            $preview['ambiguities'][] = sprintf('%d targeted order item(s) could not be reconciled safely.', (int) $preview['counts']['unsafe_rows']);
+        }
+        $preview['ambiguities'] = array_values(array_unique($preview['ambiguities']));
+        $preview['allowed'] = empty($preview['ambiguities']);
+        $preview['fingerprint_state'] = array(
+            'plan_status' => (string) get_post_meta($plan_id, '_vms_event_plan_status', true),
+            'plan_occurrence' => $payload,
+            'calendar_start_local' => (string) get_post_meta($tec_event_id, '_EventStartDate', true),
+            'calendar_end_local' => (string) get_post_meta($tec_event_id, '_EventEndDate', true),
+            'operation_history_entry' => $history_entry,
+        );
+        return $preview;
+    }
+}
+
+if (!function_exists('bvmgr_event_occurrence_name_reconciliation_fingerprint')) {
+    function bvmgr_event_occurrence_name_reconciliation_fingerprint(array $preview): string
+    {
+        $keys = array('allowed', 'plan_id', 'operation_id', 'tec_event_id', 'current_occurrence', 'rows', 'product_ids', 'attendee_ids', 'counts', 'fingerprint_state');
+        $payload = array_intersect_key($preview, array_fill_keys($keys, true));
+        if (isset($payload['rows']) && is_array($payload['rows'])) {
+            usort($payload['rows'], static function (array $left, array $right): int {
+                return absint($left['order_item_id'] ?? 0) <=> absint($right['order_item_id'] ?? 0);
+            });
+        }
+        foreach (array('product_ids', 'attendee_ids') as $id_key) {
+            if (isset($payload[$id_key]) && is_array($payload[$id_key])) {
+                sort($payload[$id_key], SORT_NUMERIC);
+            }
+        }
+        return hash('sha256', (string) wp_json_encode(bvmgr_event_occurrence_normalize_fingerprint_value($payload)));
+    }
+}
+
+if (!function_exists('bvmgr_event_occurrence_name_reconciliation_apply')) {
+    function bvmgr_event_occurrence_name_reconciliation_apply(int $plan_id, string $operation_id, int $actor_user_id, string $expected_preview_fingerprint = ''): array
+    {
+        global $wpdb;
+        $plan_id = absint($plan_id);
+        $actor_user_id = absint($actor_user_id);
+        $preview = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, $operation_id);
+        $result = array(
+            'ok' => false,
+            'noop' => false,
+            'rolled_back' => false,
+            'message' => '',
+            'preview' => $preview,
+            'integrity' => array(),
+            'changed_order_item_ids' => array(),
+        );
+        if (empty($preview['allowed'])) {
+            $result['message'] = 'Name reconciliation is blocked by unresolved ambiguity.';
+            return $result;
+        }
+        if ($expected_preview_fingerprint !== ''
+            && !hash_equals($expected_preview_fingerprint, bvmgr_event_occurrence_name_reconciliation_fingerprint($preview))) {
+            $result['message'] = 'The approved name-reconciliation preview is stale; rerun the preview.';
+            return $result;
+        }
+        if ($actor_user_id <= 0 || !user_can($actor_user_id, 'edit_post', $plan_id)) {
+            $result['message'] = 'An authenticated user who can edit this Event Plan is required.';
+            return $result;
+        }
+
+        $eligible_rows = array_values(array_filter((array) $preview['rows'], static function (array $row): bool {
+            return !empty($row['safe']) && !empty($row['change_required']);
+        }));
+        if (empty($eligible_rows)) {
+            $integrity = bvmgr_event_occurrence_integrity($plan_id);
+            $result['ok'] = !empty($integrity['ok']);
+            $result['noop'] = true;
+            $result['message'] = $result['ok']
+                ? 'All targeted current order-item names are already canonical; no changes were made.'
+                : 'No name changes were required, but occurrence integrity verification is not clean.';
+            $result['integrity'] = $integrity;
+            return $result;
+        }
+
+        $capture_item_state = static function ($item): array {
+            $data = is_object($item) && method_exists($item, 'get_data') ? (array) $item->get_data() : array();
+            unset($data['name'], $data['meta_data']);
+            $meta_rows = array();
+            if (is_object($item) && method_exists($item, 'get_meta_data')) {
+                foreach ((array) $item->get_meta_data() as $meta) {
+                    if (!is_object($meta) || !method_exists($meta, 'get_data')) {
+                        continue;
+                    }
+                    $meta_data = (array) $meta->get_data();
+                    $meta_rows[] = array(
+                        'id' => (int) ($meta_data['id'] ?? 0),
+                        'key' => (string) ($meta_data['key'] ?? ''),
+                        'value' => $meta_data['value'] ?? null,
+                    );
+                }
+            }
+            usort($meta_rows, static function (array $left, array $right): int {
+                return ((int) $left['id'] <=> (int) $right['id']) ?: strcmp((string) $left['key'], (string) $right['key']);
+            });
+            return array('data' => $data, 'meta' => $meta_rows);
+        };
+
+        $transaction_started = false;
+        try {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Narrow multi-item name reconciliation requires one transaction; caching does not apply to transaction control.
+            if ($wpdb->query('START TRANSACTION') === false) {
+                throw new RuntimeException('Database transaction could not be started.');
+            }
+            $transaction_started = true;
+            bvmgr_event_occurrence_clear_runtime_caches($preview);
+            $revalidated = bvmgr_event_occurrence_name_reconciliation_preview($plan_id, $operation_id);
+            if (empty($revalidated['allowed'])
+                || !hash_equals(
+                    bvmgr_event_occurrence_name_reconciliation_fingerprint($preview),
+                    bvmgr_event_occurrence_name_reconciliation_fingerprint($revalidated)
+                )) {
+                throw new RuntimeException('Targeted order-item naming state changed after preview; rerun the preview.');
+            }
+
+            $invariants = bvmgr_event_occurrence_invariant_snapshot($preview);
+            $immutable_item_state = array();
+            foreach ($eligible_rows as $row) {
+                $item_id = absint($row['order_item_id'] ?? 0);
+                $item = new WC_Order_Item_Product($item_id);
+                $immutable_item_state[$item_id] = $capture_item_state($item);
+                if ((string) $item->get_name() !== (string) ($row['current_name'] ?? '')) {
+                    throw new RuntimeException(sprintf('Order item %d changed after preview.', $item_id)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text exception contains only an absint order-item ID; callers escape or JSON-encode the message at the output boundary.
+                }
+                $item->set_name((string) $row['proposed_name']);
+                $item->save();
+                $verified_item = new WC_Order_Item_Product($item_id);
+                if ((string) $verified_item->get_name() !== (string) $row['proposed_name']) {
+                    throw new RuntimeException(sprintf('Order item %d failed canonical-name verification.', $item_id)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text exception contains only an absint order-item ID; callers escape or JSON-encode the message at the output boundary.
+                }
+                $result['changed_order_item_ids'][] = $item_id;
+            }
+
+            do_action('bvmgr_event_occurrence_name_reconciliation_before_verify', $plan_id, $operation_id, $preview);
+            bvmgr_event_occurrence_clear_runtime_caches($preview);
+            $invariant_errors = bvmgr_event_occurrence_verify_invariants($invariants);
+            foreach ($immutable_item_state as $item_id => $expected_state) {
+                $actual_state = $capture_item_state(new WC_Order_Item_Product((int) $item_id));
+                if ($actual_state !== $expected_state) {
+                    $invariant_errors[] = sprintf('Order item %d changed outside its current display name.', $item_id);
+                }
+            }
+            if (!empty($invariant_errors)) {
+                throw new RuntimeException(implode(' ', $invariant_errors));
+            }
+            $integrity = bvmgr_event_occurrence_integrity($plan_id);
+            if (empty($integrity['ok'])) {
+                throw new RuntimeException('Post-reconciliation occurrence integrity verification failed: ' . implode(' ', (array) ($integrity['messages'] ?? array())));
+            }
+
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Commit follows complete invariant and integrity verification; caching does not apply to transaction control.
+            if ($wpdb->query('COMMIT') === false) {
+                throw new RuntimeException('Database commit failed.');
+            }
+            $transaction_started = false;
+            bvmgr_event_occurrence_clear_runtime_caches($preview);
+            $result['ok'] = true;
+            $result['message'] = sprintf('%d current order-item name(s) reconciled and verified.', count($result['changed_order_item_ids']));
+            $result['integrity'] = $integrity;
+            return $result;
+        } catch (Throwable $throwable) {
+            if ($transaction_started) {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Every failure after transaction start must roll back the entire name reconciliation; caching does not apply to transaction control.
+                $wpdb->query('ROLLBACK');
+                $result['rolled_back'] = true;
+            }
+            bvmgr_event_occurrence_clear_runtime_caches($preview);
+            $result['message'] = $throwable->getMessage();
+            return $result;
+        }
+    }
+}
+
 if (!function_exists('bvmgr_event_occurrence_apply')) {
     function bvmgr_event_occurrence_apply(int $plan_id, string $expected_old_start, string $new_start, string $reason, int $actor_user_id, string $expected_preview_fingerprint = ''): array
     {
@@ -1363,7 +1847,7 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
             }
 
             foreach ((array) $preview['rows'] as $row) {
-                bvmgr_event_occurrence_update_order_item($row, $new_payload, $operation_id);
+                bvmgr_event_occurrence_update_order_item($row, $new_payload, $plan_id, $tec_event_id, $operation_id);
             }
 
             if (function_exists('bvmgr_event_plan_sync_checkin_close_meta_to_tec')) {
