@@ -450,6 +450,7 @@ final class BVMGR_WPORG_Prefix_Manifest_Generator
 	{
 		$expected = array(
 			'classes' => array(
+				'BVMGR_CLI_Event_Communication_Command',
 				'BVMGR_CLI_Event_Integrity_Command',
 				'BVMGR_CLI_Event_Item_Name_Reconcile_Command',
 				'BVMGR_CLI_Event_Reschedule_Command',

@@ -49,6 +49,7 @@ require_once __DIR__ . '/vendor-details.php';
 require_once __DIR__ . '/vendor-command-center.php';
 require_once __DIR__ . '/event-command-center.php';
 require_once __DIR__ . '/event-reschedule.php';
+require_once __DIR__ . '/event-communications.php';
 require_once __DIR__ . '/vendor-booking-onboarding.php';
 require_once __DIR__ . '/vendor-availability.php';
 require_once __DIR__ . '/staffing.php';

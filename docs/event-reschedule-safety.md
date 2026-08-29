@@ -33,6 +33,8 @@ This compatibility is read-only. Integrity checks and reschedule previews do not
 
 Apply starts a database transaction, re-runs the preview, writes the whole current occurrence, appends audit history, verifies invariants and current-occurrence integrity, then commits. Any exception or failed verification rolls back. Repeating an already recorded operation is a no-op.
 
+When affected customer entitlements exist, APPLY also creates and verifies the immutable operation communication audience inside that same transaction before history and commit. A failed audience write rolls back the occurrence change. No email is sent by APPLY; reviewed written notice happens later through the operation-linked ledger described in `docs/event-reschedule-communications.md`.
+
 The Event-Day Guest & Reservations Report and Event Plan editor show a calculated mismatch warning. Preserved purchase snapshots and event history do not count as mismatches after an effective occurrence is present.
 The standalone Event-Day document uses `assets/css/vms-event-day-report.css` and `assets/js/vms-event-day-report.js`; it does not emit executable inline assets.
 

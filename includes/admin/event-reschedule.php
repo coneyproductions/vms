@@ -112,18 +112,21 @@ if (!function_exists('bvmgr_event_occurrence_render_admin_panel')) {
             }
             if (!empty($preview['notification_rows'])) {
                 echo '<h5>' . esc_html__('Affected customer notification list', 'backstage-venue-manager') . '</h5>';
-                echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Order', 'backstage-venue-manager') . '</th><th>' . esc_html__('Customer', 'backstage-venue-manager') . '</th><th>' . esc_html__('Email', 'backstage-venue-manager') . '</th><th>' . esc_html__('Affected entitlements', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
+                echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Orders', 'backstage-venue-manager') . '</th><th>' . esc_html__('Customer', 'backstage-venue-manager') . '</th><th>' . esc_html__('Email', 'backstage-venue-manager') . '</th><th>' . esc_html__('Affected entitlements', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
                 foreach ((array) $preview['notification_rows'] as $notification) {
                     $entitlements = array_map(static function (array $entitlement): string {
-                        return sprintf(
-                            /* translators: 1: Entitlement label, 2: Quantity, 3: WooCommerce order-item ID. */
-                            __('%1$s ×%2$d (item #%3$d)', 'backstage-venue-manager'),
-                            (string) ($entitlement['label'] ?? __('Entitlement', 'backstage-venue-manager')),
-                            (int) ($entitlement['quantity'] ?? 0),
-                            (int) ($entitlement['order_item_id'] ?? 0)
-                        );
+                        if (absint($entitlement['order_item_id'] ?? 0) > 0) {
+                            /* translators: %d: WooCommerce order-item ID. */
+                            $identity = sprintf(__('item #%d', 'backstage-venue-manager'), absint($entitlement['order_item_id']));
+                        } else {
+                            /* translators: %d: Custom admission record ID. */
+                            $identity = sprintf(__('admission #%d', 'backstage-venue-manager'), absint($entitlement['admission_entry_id'] ?? 0));
+                        }
+                        /* translators: 1: Entitlement label, 2: Quantity, 3: Entitlement record identity. */
+                        return sprintf(__('%1$s ×%2$d (%3$s)', 'backstage-venue-manager'), (string) ($entitlement['label'] ?? __('Entitlement', 'backstage-venue-manager')), (int) ($entitlement['quantity'] ?? 0), $identity);
                     }, (array) ($notification['entitlements'] ?? array()));
-                    echo '<tr><td>#' . esc_html((string) ((int) ($notification['order_id'] ?? 0))) . '</td>';
+                    $order_labels = array_map(static fn($order_id): string => '#' . absint($order_id), (array) ($notification['order_ids'] ?? array()));
+                    echo '<tr><td>' . esc_html(implode(', ', $order_labels)) . '</td>';
                     echo '<td>' . esc_html((string) (($notification['customer_name'] ?? '') ?: __('Customer', 'backstage-venue-manager'))) . '</td>';
                     echo '<td>' . esc_html((string) (($notification['customer_email'] ?? '') ?: '—')) . '</td>';
                     echo '<td>' . esc_html(implode('; ', $entitlements)) . '</td></tr>';
@@ -152,20 +155,37 @@ if (!function_exists('bvmgr_event_occurrence_render_admin_panel')) {
                 if (!is_array($entry)) {
                     continue;
                 }
-                printf(
-                    '<li><code>%1$s</code> → <code>%2$s</code> — %3$s — %4$s — %5$s</li>',
-                    esc_html((string) ($entry['old_start_local'] ?? '')),
-                    esc_html((string) ($entry['new_start_local'] ?? '')),
-                    esc_html((string) ($entry['reason'] ?? '')),
-                    esc_html((string) ($entry['created_at_utc'] ?? '') . ' UTC'),
-                    esc_html(sprintf(
-                        /* translators: %d: WordPress user ID. */
-                        __('user #%d', 'backstage-venue-manager'),
-                        (int) ($entry['actor_user_id'] ?? 0)
-                    ))
-                );
+                $operation_id = (string) ($entry['operation_id'] ?? '');
+                $communication_summary = function_exists('bvmgr_event_communication_operation_summary')
+                    ? bvmgr_event_communication_operation_summary($plan_id, $operation_id)
+                    : array();
+                $impact = (array) ($entry['impact_counts'] ?? array());
+                $communication_text = !empty($communication_summary) && function_exists('bvmgr_event_communication_summary_text')
+                    ? bvmgr_event_communication_summary_text($communication_summary)
+                    : ((int) ($impact['customers'] ?? 0) > 0 ? __('Communication ledger missing', 'backstage-venue-manager') : __('No affected customer notice required', 'backstage-venue-manager'));
+                echo '<li><code>' . esc_html((string) ($entry['old_start_local'] ?? '')) . '</code> → <code>' . esc_html((string) ($entry['new_start_local'] ?? '')) . '</code> — ';
+                echo esc_html((string) ($entry['reason'] ?? '')) . ' — ' . esc_html((string) ($entry['created_at_utc'] ?? '') . ' UTC') . ' — ';
+                echo esc_html(sprintf(
+                    /* translators: %d: WordPress user ID. */
+                    __('user #%d', 'backstage-venue-manager'),
+                    (int) ($entry['actor_user_id'] ?? 0)
+                ));
+                echo '<br>' . esc_html(sprintf(
+                    /* translators: 1: Affected order count, 2: Deduplicated affected customer count. */
+                    __('%1$d orders / %2$d customers', 'backstage-venue-manager'),
+                    (int) ($impact['orders'] ?? 0),
+                    !empty($communication_summary) ? (int) ($communication_summary['recipient_count'] ?? 0) : (int) ($impact['customers'] ?? 0)
+                ));
+                echo '<br><strong>' . esc_html__('Communication', 'backstage-venue-manager') . '</strong>: ' . esc_html($communication_text) . ' ';
+                if ($operation_id !== '' && function_exists('bvmgr_event_communication_admin_url')) {
+                    echo '<a href="' . esc_url(bvmgr_event_communication_admin_url($plan_id, $operation_id)) . '">' . esc_html__('Open recipient ledger', 'backstage-venue-manager') . '</a>';
+                }
+                echo '</li>';
             }
             echo '</ul></details>';
+            if (function_exists('bvmgr_event_communication_render_admin_section')) {
+                bvmgr_event_communication_render_admin_section($plan_id, $history, !empty($result['ok']) ? (string) ($result['operation_id'] ?? '') : '');
+            }
         }
     }
 }

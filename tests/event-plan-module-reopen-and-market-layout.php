@@ -101,8 +101,9 @@ try {
 	};
 
 	$runSave = static function (int $planId, array $overrides = array()): void {
+		$GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
 		$_POST = array_merge(array(
-			'vms_event_plan_details_nonce' => wp_create_nonce('vms_save_event_plan_details'),
+			'bvmgr_event_plan_details_nonce' => wp_create_nonce('bvmgr_save_event_plan_details'),
 			'post_ID' => $planId,
 			'original_post_status' => 'publish',
 			'vms_event_plan_action' => 'save_draft',
@@ -258,9 +259,9 @@ try {
 	$adminTicketingJs = (string) file_get_contents(dirname(__DIR__) . '/assets/admin-ticketing.js');
 	$assert(strpos($eventPlansPhp, "createGroup('');") === false, 'Event Plan PHP should no longer own the Additional Vendors create-group runtime.');
 	$assert(strpos($secondaryVendorsJs, "createGroup('');") !== false, 'Adding a vendor group should start from the compact empty state instead of auto-selecting a type.');
-	$assert(strpos($shellAssetJs, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'Event Plan shell asset should expose the saved-section URL helper.');
-	$assert(strpos($shellAssetJs, 'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;') !== false, 'Event Plan shell asset should expose the requested-section reopen helper.');
-	$assert(strpos($secondaryVendorsJs, "window.vmsEventPlanPersistRequestedSection('secondary_vendors');") !== false, 'Additional Vendors save should persist the saved module target.');
+	$assert(strpos($shellAssetJs, 'window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION = persistRequestedSection;') !== false, 'Event Plan shell asset should expose the saved-section URL helper.');
+	$assert(strpos($shellAssetJs, 'window.BVMGR_EVENT_PLAN_REVEAL_REQUESTED_SECTION = revealRequestedSection;') !== false, 'Event Plan shell asset should expose the requested-section reopen helper.');
+	$assert(strpos($secondaryVendorsJs, "window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION('secondary_vendors');") !== false, 'Additional Vendors save should persist the saved module target.');
 	$assert(strpos($adminTicketingJs, "persistRequestedSectionTarget('ticketing_v2');") !== false, 'Ticketing saves should persist the saved module target.');
 
 	fwrite(STDOUT, "event plan module reopen + market layout regression: PASS\n");

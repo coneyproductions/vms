@@ -131,9 +131,9 @@ $assert(count($categoriesById) === 25, 'Manifest must retain all 25 B0 categorie
 $assert(isset($categoriesById['namespaces'], $categoriesById['tests_tooling_assets']), 'Manifest must retain the namespace and tests/tooling categories.');
 
 $expectedCounts = array(
-	'public_php_files' => 276,
-	'functions' => array('unique' => 4651, 'occurrences' => 4671),
-	'classes' => array('unique' => 26, 'occurrences' => 26),
+	'public_php_files' => 278,
+	'functions' => array('unique' => 4701, 'occurrences' => 4721),
+	'classes' => array('unique' => 27, 'occurrences' => 27),
 	'interfaces' => array('unique' => 1, 'occurrences' => 1),
 	'constants' => array('unique' => 107, 'occurrences' => 116),
 	'namespaces' => array('unique' => 0, 'occurrences' => 0),
@@ -146,12 +146,12 @@ foreach ($expectedCounts as $key => $expected) {
 $dynamicExpected = array(
 	'exact_function_literals_unique' => 3645,
 	'exact_function_literals_occurrences' => 7363,
-	'function_exists_unique' => 3434,
-	'function_exists_occurrences' => 6500,
-	'direct_literal_callbacks_unique' => 724,
-	'direct_literal_callbacks_occurrences' => 780,
-	'exact_type_literals_unique' => 19,
-	'exact_type_literals_occurrences' => 41,
+	'function_exists_unique' => 3484,
+	'function_exists_occurrences' => 6559,
+	'direct_literal_callbacks_unique' => 726,
+	'direct_literal_callbacks_occurrences' => 782,
+	'exact_type_literals_unique' => 20,
+	'exact_type_literals_occurrences' => 45,
 	'duplicate_function_families' => 20,
 	'duplicate_constant_families' => 9,
 );

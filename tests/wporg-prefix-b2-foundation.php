@@ -70,9 +70,9 @@ $functionNames = array_keys((array) ($declared['functions'] ?? array()));
 $b4SupportFunctions = array_values(array_filter((array) ($manifest['symbols']['functions'] ?? array()), static fn(array $entry): bool => ($entry['planned_implementation_batch'] ?? '') === 'B4'));
 $postB4Functions = array_values(array_filter((array) ($manifest['symbols']['functions'] ?? array()), static fn(array $entry): bool => ($entry['planned_implementation_batch'] ?? '') === 'post-B4'));
 $assert(count($b4SupportFunctions) === 8, 'B4 must add exactly six nonce and two query/rewrite compatibility functions after the frozen 4,521-function B3 map.');
-$assert(count($postB4Functions) === 122, 'The integrated ticketing/reschedule lineage must add exactly 122 canonical procedural functions after B4.');
-$assert(count($functionNames) === 4651, 'B2/B3 plus B4 support and the integrated post-B4 features must contain exactly 4,651 procedural function identities.');
-$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === (int) ($b3Counts['migrated_unique_functions'] ?? -1) + 130, 'Canonical procedural declarations must equal exact B3 progress plus eight B4 support and 122 post-B4 functions.');
+$assert(count($postB4Functions) === 172, 'The integrated ticketing/reschedule/communications lineage must add exactly 172 canonical procedural functions after B4.');
+$assert(count($functionNames) === 4701, 'B2/B3 plus B4 support and the integrated post-B4 features must contain exactly 4,701 procedural function identities.');
+$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === (int) ($b3Counts['migrated_unique_functions'] ?? -1) + 180, 'Canonical procedural declarations must equal exact B3 progress plus eight B4 support and 172 post-B4 functions.');
 $assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'vms_'))) === (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1), 'Legacy procedural declarations must equal the exact B3 remainder.');
 
 $collisionFunctions = array();
@@ -108,9 +108,9 @@ $assert($duplicates === array(
 ), 'All nine guarded duplicate constant families must resolve under BVMGR_ symbols.');
 
 $dynamicCounts = (array) ($manifest['php_inventory_counts']['dynamic_symbols'] ?? array());
-$assert(($dynamicCounts['function_exists_unique'] ?? null) === 3434 && ($dynamicCounts['function_exists_occurrences'] ?? null) === 6500, 'Integrated post-B4 function_exists inventory must match the exact current feature lineage.');
-$assert(($dynamicCounts['direct_literal_callbacks_unique'] ?? null) === 724 && ($dynamicCounts['direct_literal_callbacks_occurrences'] ?? null) === 780, 'Integrated post-B4 callback inventory must match the exact current feature lineage.');
-$assert(($dynamicCounts['exact_type_literals_unique'] ?? null) === 19 && ($dynamicCounts['exact_type_literals_occurrences'] ?? null) === 41, 'Integrated WP-CLI class/type literals must match the exact current feature lineage.');
+$assert(($dynamicCounts['function_exists_unique'] ?? null) === 3484 && ($dynamicCounts['function_exists_occurrences'] ?? null) === 6559, 'Integrated post-B4 function_exists inventory must match the exact current feature lineage.');
+$assert(($dynamicCounts['direct_literal_callbacks_unique'] ?? null) === 726 && ($dynamicCounts['direct_literal_callbacks_occurrences'] ?? null) === 782, 'Integrated post-B4 callback inventory must match the exact current feature lineage.');
+$assert(($dynamicCounts['exact_type_literals_unique'] ?? null) === 20 && ($dynamicCounts['exact_type_literals_occurrences'] ?? null) === 45, 'Integrated WP-CLI class/type literals must match the exact current feature lineage.');
 
 $publicSource = '';
 foreach ((array) ($scan['public_php_files'] ?? array()) as $file) {

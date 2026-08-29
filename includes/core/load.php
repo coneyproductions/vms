@@ -8,6 +8,7 @@ require_once __DIR__ . '/private-files.php';
 require_once __DIR__ . '/../helpers/schedule-helpers.php';
 require_once __DIR__ . '/../helpers/checkin-close.php';
 require_once __DIR__ . '/event-reschedule.php';
+require_once __DIR__ . '/event-communications.php';
 require_once __DIR__ . '/../helpers/image-normalization.php';
 require_once __DIR__ . '/../calendar-queries.php';
 require_once __DIR__ . '/../activation.php';

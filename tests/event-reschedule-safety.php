@@ -577,6 +577,7 @@ try {
     $assert((string) wc_get_order_item_meta($ticket_item_id, '_vms_effective_event_start_local', true) === '', 'Rollback left effective order-item occurrence metadata behind.');
     $assert(strpos((string) get_the_title($ticket_id), $old_date) === 0, 'Rollback left the product title partially migrated.');
     $assert(bvmgr_event_occurrence_history($plan_id) === array(), 'Rollback left an audit entry behind.');
+    $assert(function_exists('bvmgr_event_communication_get_ledger') && bvmgr_event_communication_get_ledger($plan_id, (string) ($rolled_back['operation_id'] ?? '')) === array(), 'Rollback left a communication ledger behind.');
 
     $applied = bvmgr_event_occurrence_apply($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction', 1);
     $assert(!empty($applied['ok']), 'Repair apply failed: ' . (string) ($applied['message'] ?? ''));

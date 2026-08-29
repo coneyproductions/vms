@@ -835,7 +835,15 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		$packagedFiles = array_values(array_filter($zipEntries, static function (string $entryName): bool {
 			return substr($entryName, -1) !== '/';
 		}));
-		vms_public_release_test_assert(count($packagedFiles) === 381, 'Expected the integrated repository public package boundary to contain the 375 B4 files plus exactly six event-occurrence runtime files.');
+		vms_public_release_test_assert(count($packagedFiles) === 383, 'Expected the integrated repository public package boundary to contain the 375 B4 files plus exactly eight event-occurrence and communication runtime files.');
+		vms_public_release_test_assert(
+			in_array(vms_public_release_test_public_slug() . '/includes/core/event-communications.php', $packagedFiles, true),
+			'Expected the customer communication ledger runtime to be present in the public package.'
+		);
+		vms_public_release_test_assert(
+			in_array(vms_public_release_test_public_slug() . '/includes/admin/event-communications.php', $packagedFiles, true),
+			'Expected the customer communication workflow UI to be present in the public package.'
+		);
 
 		foreach ($zipEntries as $entryName) {
 			vms_public_release_test_assert(substr($entryName, -10) !== '/AGENTS.md', 'Expected AGENTS.md to stay out of the packaged public ZIP.');

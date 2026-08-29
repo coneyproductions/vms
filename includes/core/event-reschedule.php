@@ -675,6 +675,15 @@ if (!function_exists('bvmgr_event_occurrence_preview')) {
         $custom = bvmgr_event_occurrence_custom_admissions_impact($plan_id);
         $preview['counts']['custom_admission_rows'] = (int) $custom['rows'];
         $preview['counts']['custom_admission_units'] = (int) $custom['admission_units'];
+        if (function_exists('bvmgr_event_communication_preview_rows')) {
+            $communication = bvmgr_event_communication_preview_rows($preview);
+            if (empty($communication['ok'])) {
+                $preview['ambiguities'][] = (string) (($communication['error'] ?? '') ?: 'The affected communication audience could not be resolved.');
+            }
+            $preview['notification_rows'] = (array) ($communication['rows'] ?? array());
+            $preview['contacts'] = (array) ($communication['contacts'] ?? array());
+            $preview['counts']['customers'] = count($preview['notification_rows']);
+        }
         $preview['warnings'] = array_values(array_unique($preview['warnings']));
         $preview['ambiguities'] = array_values(array_unique($preview['ambiguities']));
         $preview['allowed'] = empty($preview['ambiguities']);
@@ -696,6 +705,7 @@ if (!function_exists('bvmgr_event_occurrence_preview_fingerprint_state')) {
             'products' => array(),
             'order_items' => array(),
             'attendees' => array(),
+            'custom_admissions' => array(),
         );
 
         foreach (bvmgr_event_occurrence_protected_meta_keys() as $meta_key) {
@@ -767,6 +777,11 @@ if (!function_exists('bvmgr_event_occurrence_preview_fingerprint_state')) {
                 'checkedin' => get_post_meta($attendee_id, '_tribe_wooticket_checkedin', true),
                 'security_code' => get_post_meta($attendee_id, '_tribe_wooticket_security_code', true),
             );
+        }
+
+        if (function_exists('bvmgr_event_communication_custom_admission_rows')) {
+            $custom = bvmgr_event_communication_custom_admission_rows($plan_id);
+            $state['custom_admissions'] = !empty($custom['ok']) ? (array) ($custom['rows'] ?? array()) : array('error' => (string) ($custom['error'] ?? 'unavailable'));
         }
 
         return $state;
@@ -1759,7 +1774,7 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
         $plan_id = absint($plan_id);
         $actor_user_id = absint($actor_user_id);
         $preview = bvmgr_event_occurrence_preview($plan_id, $expected_old_start, $new_start, $reason);
-        $result = array('ok' => false, 'noop' => false, 'rolled_back' => false, 'message' => '', 'preview' => $preview, 'integrity' => array(), 'operation_id' => '');
+        $result = array('ok' => false, 'noop' => false, 'rolled_back' => false, 'message' => '', 'preview' => $preview, 'integrity' => array(), 'operation_id' => '', 'communication' => array());
         if (empty($preview['allowed'])) {
             $result['message'] = 'Operation is blocked by unresolved ambiguity.';
             return $result;
@@ -1857,6 +1872,15 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
             }
             delete_post_meta($plan_id, '_vms_ticketing_reschedule_required_v1');
 
+            $has_affected_audience = !empty($preview['rows']) || (int) ($preview['counts']['custom_admission_rows'] ?? 0) > 0;
+            if ($has_affected_audience && !function_exists('bvmgr_event_communication_persist_for_operation')) {
+                throw new RuntimeException('Communication audience service is unavailable; the occurrence operation cannot complete safely.');
+            }
+            $communication = $has_affected_audience
+                ? bvmgr_event_communication_persist_for_operation($plan_id, $operation_id, $preview, $actor_user_id)
+                : array('created' => false, 'recipient_count' => 0, 'order_count' => 0, 'status' => 'not_required');
+            $result['communication'] = $communication;
+
             $history = bvmgr_event_occurrence_history($plan_id);
             $history[] = array(
                 'operation_id' => $operation_id,
@@ -1878,8 +1902,13 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
                 'order_ids' => array_values(array_unique(array_filter(array_map(static function (array $row): int {
                     return absint($row['order_id'] ?? 0);
                 }, (array) $preview['rows'])))),
+                'communication_recipient_count' => (int) ($communication['recipient_count'] ?? 0),
+                'communication_ledger_created' => !empty($communication['created']),
             );
             update_post_meta($plan_id, '_vms_event_occurrence_history_v1', $history);
+            if (bvmgr_event_occurrence_history($plan_id) !== $history) {
+                throw new RuntimeException('Occurrence history persistence failed.');
+            }
 
             do_action('bvmgr_event_occurrence_before_verify', $plan_id, $operation_id, $preview);
             $invariant_errors = bvmgr_event_occurrence_verify_invariants($invariants);
@@ -1898,7 +1927,10 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
             $transaction_started = false;
             bvmgr_event_occurrence_clear_runtime_caches($preview);
             $result['ok'] = true;
-            $result['message'] = 'Occurrence operation applied and verified.';
+            $recipient_count = (int) ($communication['recipient_count'] ?? 0);
+            $result['message'] = $recipient_count > 0
+                ? sprintf('Date change complete. %d affected customers need written notice.', $recipient_count)
+                : 'Occurrence operation applied and verified.';
             $result['integrity'] = $integrity;
             return $result;
         } catch (Throwable $throwable) {
