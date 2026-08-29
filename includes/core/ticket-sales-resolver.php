@@ -212,7 +212,9 @@ if (!function_exists('bvmgr_ticket_sales_resolver_resolve_line_context')) {
         $item_tec_event_id = absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id')));
         $item_plan_id = absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id')));
         $snapshot_title = bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event'));
-        $snapshot_date = bvmgr_ticket_revenue_normalize_ymd(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date')));
+        $snapshot_date = bvmgr_event_occurrence_normalize_snapshot_date(
+            bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date'))
+        );
 
         $resolved = array(
             'product_id' => !empty($candidate_product_ids) ? (int) $candidate_product_ids[0] : 0,

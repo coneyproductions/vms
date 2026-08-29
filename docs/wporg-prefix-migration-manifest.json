@@ -639,8 +639,8 @@
     "php_inventory_counts": {
         "public_php_files": 276,
         "functions": {
-            "unique": 4645,
-            "occurrences": 4665
+            "unique": 4646,
+            "occurrences": 4666
         },
         "classes": {
             "unique": 25,
@@ -673,8 +673,8 @@
         "dynamic_symbols": {
             "exact_function_literals_unique": 3645,
             "exact_function_literals_occurrences": 7363,
-            "function_exists_unique": 3428,
-            "function_exists_occurrences": 6493,
+            "function_exists_unique": 3429,
+            "function_exists_occurrences": 6495,
             "direct_literal_callbacks_unique": 724,
             "direct_literal_callbacks_occurrences": 780,
             "exact_type_literals_unique": 18,
@@ -19416,7 +19416,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1249
+                        "line": 1272
                     }
                 ]
             },
@@ -19450,7 +19450,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1213
+                        "line": 1236
                     }
                 ]
             },
@@ -19467,7 +19467,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 345
+                        "line": 368
                     }
                 ]
             },
@@ -19484,7 +19484,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 370
+                        "line": 393
                     }
                 ]
             },
@@ -19501,7 +19501,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 825
+                        "line": 848
                     }
                 ]
             },
@@ -19637,7 +19637,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1188
+                        "line": 1211
                     }
                 ]
             },
@@ -19654,7 +19654,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1069
+                        "line": 1092
                     }
                 ]
             },
@@ -19671,7 +19671,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 893
+                        "line": 916
                     }
                 ]
             },
@@ -19722,7 +19722,24 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 754
+                        "line": 777
+                    }
+                ]
+            },
+            {
+                "current_identifier": "bvmgr_event_occurrence_normalize_snapshot_date",
+                "canonical_target": "bvmgr_event_occurrence_normalize_snapshot_date",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "post-B4 canonical feature addition",
+                "persistence_external_contract_status": "nonpersistent global PHP introduced after B4",
+                "planned_implementation_batch": "post-B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/event-reschedule.php",
+                        "line": 296
                     }
                 ]
             },
@@ -19739,7 +19756,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 1196
+                        "line": 1219
                     }
                 ]
             },
@@ -19756,7 +19773,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 323
+                        "line": 350
                     }
                 ]
             },
@@ -19807,7 +19824,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 399
+                        "line": 422
                     }
                 ]
             },
@@ -19824,7 +19841,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 771
+                        "line": 794
                     }
                 ]
             },
@@ -19841,7 +19858,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 664
+                        "line": 687
                     }
                 ]
             },
@@ -19858,7 +19875,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 832
+                        "line": 855
                     }
                 ]
             },
@@ -19909,7 +19926,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 791
+                        "line": 814
                     }
                 ]
             },
@@ -19926,7 +19943,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 296
+                        "line": 321
                     }
                 ]
             },
@@ -19943,7 +19960,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 848
+                        "line": 871
                     }
                 ]
             },
@@ -19960,7 +19977,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/event-reschedule.php",
-                        "line": 975
+                        "line": 998
                     }
                 ]
             },
@@ -31150,7 +31167,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 750
+                        "line": 752
                     }
                 ],
                 "legacy_identifier": "vms_get_ticket_sales_rows",
@@ -64652,7 +64669,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 195
+                        "line": 202
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_build_order_query",
@@ -64671,7 +64688,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 920
+                        "line": 931
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_build_report",
@@ -64690,7 +64707,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 886
+                        "line": 895
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_build_unresolved_row",
@@ -64747,7 +64764,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 848
+                        "line": 857
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_event_key",
@@ -64766,7 +64783,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 486
+                        "line": 493
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_event_payload_for_tec_event",
@@ -64785,7 +64802,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 820
+                        "line": 829
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_filter_match",
@@ -64804,7 +64821,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 693
+                        "line": 700
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_get_item_meta_first",
@@ -64823,7 +64840,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 863
+                        "line": 872
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_is_resolved_event_link",
@@ -64880,7 +64897,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 148
+                        "line": 155
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_normalize_args",
@@ -64899,7 +64916,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 128
+                        "line": 135
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_normalize_statuses",
@@ -64937,7 +64954,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 665
+                        "line": 672
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_order_item_candidate_product_ids",
@@ -64956,7 +64973,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 222
+                        "line": 229
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_order_refund_map",
@@ -64975,7 +64992,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 98
+                        "line": 105
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_plan_tec_meta_key",
@@ -64994,7 +65011,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 548
+                        "line": 555
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_product_context",
@@ -65013,7 +65030,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 108
+                        "line": 115
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_product_event_plan_meta_key",
@@ -65032,7 +65049,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 118
+                        "line": 125
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_product_tec_meta_key",
@@ -65051,7 +65068,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 809
+                        "line": 818
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_recognition_for_date",
@@ -65070,7 +65087,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 711
+                        "line": 718
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_resolve_event_for_order_item",
@@ -65089,7 +65106,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 873
+                        "line": 882
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_unresolved_reason",
@@ -65108,7 +65125,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 91
+                        "line": 98
                     }
                 ],
                 "legacy_identifier": "vms_ticket_revenue_wp_now_ymd",
@@ -65127,7 +65144,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 719
+                        "line": 721
                     }
                 ]
             },
@@ -65182,7 +65199,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 449
+                        "line": 451
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_build_row",
@@ -65201,7 +65218,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 369
+                        "line": 376
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_collect_order_ids",
@@ -65277,7 +65294,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 618
+                        "line": 620
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_get_result",
@@ -65296,7 +65313,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 425
+                        "line": 432
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_line_kind_for_product",
@@ -65315,7 +65332,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 329
+                        "line": 336
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_normalize_args",
@@ -65334,7 +65351,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 302
+                        "line": 309
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_normalize_bool",
@@ -65353,7 +65370,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 275
+                        "line": 282
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_normalize_int_list",
@@ -65410,7 +65427,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 553
+                        "line": 555
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_row_matches",
@@ -65429,7 +65446,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 594
+                        "line": 596
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_sort_rows",
@@ -65448,7 +65465,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-revenue.php",
-                        "line": 262
+                        "line": 269
                     }
                 ],
                 "legacy_identifier": "vms_ticket_sales_resolver_utc_timezone",
@@ -89061,7 +89078,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 730
+                        "line": 732
                     }
                 ],
                 "legacy_identifier": "VMS_Ticket_Revenue_Service",
@@ -137917,7 +137934,7 @@
             "bvmgr_event_occurrence_apply": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1248
+                    "line": 1271
                 }
             ],
             "bvmgr_event_occurrence_authorized_write": [
@@ -137929,25 +137946,25 @@
             "bvmgr_event_occurrence_clear_runtime_caches": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1212
+                    "line": 1235
                 }
             ],
             "bvmgr_event_occurrence_collect_product_ids": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 344
+                    "line": 367
                 }
             ],
             "bvmgr_event_occurrence_custom_admissions_impact": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 369
+                    "line": 392
                 }
             ],
             "bvmgr_event_occurrence_effective_when_label": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 824
+                    "line": 847
                 }
             ],
             "bvmgr_event_occurrence_for_plan": [
@@ -137995,7 +138012,7 @@
             "bvmgr_event_occurrence_history": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1187
+                    "line": 1210
                 }
             ],
             "bvmgr_event_occurrence_integrity": [
@@ -138005,13 +138022,13 @@
                 },
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1068
+                    "line": 1091
                 }
             ],
             "bvmgr_event_occurrence_invariant_snapshot": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 892
+                    "line": 915
                 }
             ],
             "bvmgr_event_occurrence_is_published": [
@@ -138037,19 +138054,29 @@
             "bvmgr_event_occurrence_normalize_fingerprint_value": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 753
+                    "line": 776
+                }
+            ],
+            "bvmgr_event_occurrence_normalize_snapshot_date": [
+                {
+                    "file": "includes/core/event-reschedule.php",
+                    "line": 295
+                },
+                {
+                    "file": "includes/core/ticket-revenue.php",
+                    "line": 73
                 }
             ],
             "bvmgr_event_occurrence_operation_already_recorded": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1195
+                    "line": 1218
                 }
             ],
             "bvmgr_event_occurrence_order_item_name_date": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 322
+                    "line": 349
                 }
             ],
             "bvmgr_event_occurrence_parse_local": [
@@ -138067,25 +138094,25 @@
             "bvmgr_event_occurrence_preview": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 398
+                    "line": 421
                 }
             ],
             "bvmgr_event_occurrence_preview_fingerprint": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 770
+                    "line": 793
                 }
             ],
             "bvmgr_event_occurrence_preview_fingerprint_state": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 663
+                    "line": 686
                 }
             ],
             "bvmgr_event_occurrence_product_base_title": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 831
+                    "line": 854
                 }
             ],
             "bvmgr_event_occurrence_protected_meta_keys": [
@@ -138107,25 +138134,25 @@
             "bvmgr_event_occurrence_shift_ticket_schedule": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 790
+                    "line": 813
                 }
             ],
             "bvmgr_event_occurrence_snapshot_date": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 295
+                    "line": 320
                 }
             ],
             "bvmgr_event_occurrence_update_order_item": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 847
+                    "line": 870
                 }
             ],
             "bvmgr_event_occurrence_verify_invariants": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 974
+                    "line": 997
                 }
             ],
             "bvmgr_event_occurrence_write_is_authorized": [
@@ -139511,7 +139538,7 @@
             "bvmgr_event_plan_is_externally_ticketed": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 488
+                    "line": 511
                 },
                 {
                     "file": "includes/cpt/event-plans.php",
@@ -155601,7 +155628,7 @@
             "bvmgr_ticket_sales_resolver_active_attendee_post_statuses": [
                 {
                     "file": "includes/core/ticket-sales-resolver.php",
-                    "line": 713
+                    "line": 715
                 }
             ],
             "bvmgr_ticket_sales_resolver_attendee_context": [
@@ -158635,7 +158662,7 @@
             "bvmgr_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change": [
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1335
+                    "line": 1358
                 },
                 {
                     "file": "includes/cpt/event-plans.php",
@@ -169511,23 +169538,23 @@
                 },
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 494
+                    "line": 517
                 },
                 {
                     "file": "includes/core/event-reschedule.php",
-                    "line": 1100
+                    "line": 1123
                 },
                 {
                     "file": "includes/core/ticket-revenue.php",
-                    "line": 933
+                    "line": 944
                 },
                 {
                     "file": "includes/core/ticket-revenue.php",
-                    "line": 974
+                    "line": 985
                 },
                 {
                     "file": "includes/core/ticket-sales-resolver.php",
-                    "line": 729
+                    "line": 731
                 }
             ],
             "BVMGR_Tours": [
@@ -176088,6 +176115,13 @@
             "bvmgr_event_occurrence_normalize_fingerprint_value": [
                 {
                     "current_identifier": "bvmgr_event_occurrence_normalize_fingerprint_value",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
+            "bvmgr_event_occurrence_normalize_snapshot_date": [
+                {
+                    "current_identifier": "bvmgr_event_occurrence_normalize_snapshot_date",
                     "canonical_target": null,
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
@@ -200905,7 +200939,7 @@
                     "declaration_sites": [
                         {
                             "file": "includes/core/ticket-sales-resolver.php",
-                            "line": 730
+                            "line": 732
                         }
                     ]
                 },

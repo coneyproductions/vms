@@ -125,6 +125,23 @@ $add_order_item = static function ($order, int $product_id, int $quantity, strin
     return $item;
 };
 
+$add_legacy_order_item = static function ($order, int $product_id, int $quantity, string $line_name, string $snapshot_date): WC_Order_Item_Product {
+    $product = wc_get_product($product_id);
+    $item = new WC_Order_Item_Product();
+    $item->set_product($product);
+    $item->set_name($line_name);
+    $item->set_quantity($quantity);
+    $line_total = (float) $product->get_price() * $quantity;
+    $item->set_subtotal((string) $line_total);
+    $item->set_total((string) $line_total);
+    $item->add_meta_data('_vms_event_plan_id', (string) get_post_meta($product_id, '_vms_event_plan_id', true), true);
+    $item->add_meta_data('_vms_tec_event_post_id', (string) get_post_meta($product_id, '_vms_tec_event_id', true), true);
+    $item->add_meta_data('_vms_event_date_snapshot', $snapshot_date, true);
+    $item->add_meta_data('_vms_event_title_snapshot', 'Synthetic legacy fixture event', true);
+    $order->add_item($item);
+    return $item;
+};
+
 $cleanup = static function () use (&$created_orders, &$created_posts): void {
     remove_all_actions('bvmgr_event_occurrence_before_verify');
     foreach (array_reverse($created_orders) as $order_id) {
@@ -220,6 +237,192 @@ try {
     $no_sales_repeat = bvmgr_event_occurrence_apply($draft_plan_id, '2026-10-02 19:00', '2026-10-03 19:00', 'date_correction', 1);
     $assert(!empty($no_sales_repeat['ok']) && !empty($no_sales_repeat['noop']), 'Repeated no-sales operation was not idempotent.');
     $assert(count(bvmgr_event_occurrence_history($draft_plan_id)) === 1, 'Idempotent replay duplicated audit history.');
+
+    // Legacy date-only snapshots are interpreted in place, per item, without order-note inference.
+    $legacy_old_date = '2026-09-19';
+    $legacy_current_date = '2026-09-12';
+    $legacy_event_id = $create_event('Legacy snapshot calendar fixture', $legacy_current_date);
+    $legacy_plan_id = $create_plan('Legacy snapshot Event Plan fixture', $legacy_event_id, $legacy_current_date);
+    $legacy_ticket_id = $create_product($legacy_current_date . ' 19:00 - General Admission', $legacy_plan_id, $legacy_event_id, 'ga_ticket', '20', 100);
+    $legacy_addon_id = $create_product($legacy_current_date . ' 19:00 - Kiddie Pool', $legacy_plan_id, $legacy_event_id, 'entitlement', '10', 20);
+
+    $legacy_order = $register_order(wc_create_order());
+    $legacy_order->set_status('completed');
+    $legacy_order->set_billing_first_name('Mixed');
+    $legacy_order->set_billing_last_name('Legacy Fixture');
+    $legacy_order->set_billing_email('mixed-legacy@example.test');
+    $legacy_current_item = $add_legacy_order_item(
+        $legacy_order,
+        $legacy_ticket_id,
+        10,
+        $legacy_current_date . ' 19:00 - General Admission',
+        'Sep 12, 2026'
+    );
+    $legacy_stale_item = $add_legacy_order_item(
+        $legacy_order,
+        $legacy_addon_id,
+        4,
+        $legacy_old_date . ' 19:00 - Kiddie Pool',
+        'Sep 19, 2026'
+    );
+    $legacy_order->calculate_totals(false);
+    $legacy_order->save();
+    $legacy_order->add_order_note('Synthetic history mentions Sep 12, 2026 admissions.');
+    $legacy_order->add_order_note('Synthetic history also mentions Sep 19, 2026 reservations.');
+    $legacy_current_item_id = (int) $legacy_current_item->get_id();
+    $legacy_stale_item_id = (int) $legacy_stale_item->get_id();
+
+    $legacy_item_state = static function (int $item_id): array {
+        $item = new WC_Order_Item_Product($item_id);
+        return array(
+            'name' => (string) $item->get_name(),
+            'snapshot' => (string) wc_get_order_item_meta($item_id, '_vms_event_date_snapshot', true),
+            'when_snapshot' => (string) wc_get_order_item_meta($item_id, '_vms_event_when_snapshot', true),
+            'when' => (string) wc_get_order_item_meta($item_id, __('When', 'backstage-venue-manager'), true),
+            'effective_start' => (string) wc_get_order_item_meta($item_id, '_vms_effective_event_start_local', true),
+            'effective_end' => (string) wc_get_order_item_meta($item_id, '_vms_effective_event_end_local', true),
+            'effective_timezone' => (string) wc_get_order_item_meta($item_id, '_vms_effective_event_timezone', true),
+            'original_name' => (string) wc_get_order_item_meta($item_id, '_vms_original_order_item_name_snapshot', true),
+            'operation_id' => (string) wc_get_order_item_meta($item_id, '_vms_occurrence_operation_id', true),
+        );
+    };
+    $legacy_current_state_before = $legacy_item_state($legacy_current_item_id);
+    $legacy_stale_state_before = $legacy_item_state($legacy_stale_item_id);
+    $assert(
+        $legacy_current_state_before['when_snapshot'] === ''
+        && $legacy_current_state_before['when'] === ''
+        && $legacy_current_state_before['effective_start'] === ''
+        && $legacy_current_state_before['original_name'] === ''
+        && $legacy_current_state_before['operation_id'] === '',
+        'Synthetic current item does not reproduce the legacy production metadata shape.'
+    );
+
+    $legacy_notes = wc_get_order_notes(array('order_id' => (int) $legacy_order->get_id()));
+    $legacy_note_text = implode(' ', array_map(
+        static fn($note): string => is_object($note) ? (string) ($note->content ?? '') : '',
+        (array) $legacy_notes
+    ));
+    $assert(
+        strpos($legacy_note_text, 'Sep 12, 2026') !== false && strpos($legacy_note_text, 'Sep 19, 2026') !== false,
+        'Mixed-order fixture does not contain both order-level historical dates.'
+    );
+
+    $legacy_sales = BVMGR_Ticket_Revenue_Service::get_sales_result(array(
+        'event_plan_ids' => array($legacy_plan_id),
+        'order_statuses' => array('completed'),
+        'include_unresolved' => true,
+        'include_refunded_lines' => true,
+    ));
+    $legacy_rows_by_item = array();
+    foreach ((array) ($legacy_sales['rows'] ?? array()) as $legacy_row) {
+        $legacy_rows_by_item[(int) ($legacy_row['order_item_id'] ?? 0)] = $legacy_row;
+    }
+    $legacy_current_resolver_snapshot = (string) ($legacy_rows_by_item[$legacy_current_item_id]['raw_linkage_snapshot']['event_date_snapshot'] ?? '');
+    $assert(
+        $legacy_current_resolver_snapshot === $legacy_current_date
+        && $legacy_current_resolver_snapshot !== '2026-09-11',
+        'Resolver diagnostic timezone-shifted the legacy September 12 snapshot: ' . $legacy_current_resolver_snapshot
+    );
+    $assert(
+        (string) ($legacy_rows_by_item[$legacy_current_item_id]['line_kind'] ?? '') === 'ticket'
+        && (string) ($legacy_rows_by_item[$legacy_stale_item_id]['line_kind'] ?? '') === 'addon',
+        'Legacy mixed-order items lost their admission/reservation resolver classifications.'
+    );
+
+    $legacy_integrity = bvmgr_event_occurrence_integrity($legacy_plan_id);
+    $assert(
+        (int) $legacy_integrity['mismatch_units'] === 4
+        && (int) $legacy_integrity['mismatch_admission_units'] === 0
+        && (int) $legacy_integrity['mismatch_reservation_units'] === 4,
+        'Integrity did not classify the legacy current admissions independently from the stale reservation: ' . wp_json_encode($legacy_integrity)
+    );
+
+    $legacy_preview = bvmgr_event_occurrence_preview(
+        $legacy_plan_id,
+        $legacy_old_date . ' 19:00',
+        $legacy_current_date . ' 19:00',
+        'date_correction'
+    );
+    $legacy_target_ids = array_values(array_map(
+        static fn(array $row): int => (int) ($row['order_item_id'] ?? 0),
+        (array) ($legacy_preview['rows'] ?? array())
+    ));
+    $assert(
+        !empty($legacy_preview['allowed'])
+        && empty($legacy_preview['ambiguities'])
+        && (int) $legacy_preview['counts']['admission_units'] === 0
+        && (int) $legacy_preview['counts']['reservation_units'] === 4
+        && !in_array($legacy_current_item_id, $legacy_target_ids, true)
+        && in_array($legacy_stale_item_id, $legacy_target_ids, true),
+        'Backward preview did not leave the legacy-current admission untouched while targeting the stale reservation: ' . wp_json_encode($legacy_preview)
+    );
+    $assert(
+        $legacy_item_state($legacy_current_item_id) === $legacy_current_state_before
+        && $legacy_item_state($legacy_stale_item_id) === $legacy_stale_state_before,
+        'Integrity or dry-run inspection rewrote legacy order-item metadata.'
+    );
+
+    $legacy_event_day_model = bvmgr_event_day_report_build_model($legacy_plan_id);
+    $assert(
+        (int) ($legacy_event_day_model['occurrence_integrity']['mismatch_admission_units'] ?? -1) === 0
+        && (int) ($legacy_event_day_model['occurrence_integrity']['mismatch_reservation_units'] ?? -1) === 4,
+        'Event-Day integrity did not preserve mixed-order item-level classification.'
+    );
+
+    wc_update_order_item_meta($legacy_current_item_id, '_vms_event_date_snapshot', 'Sep 19, 2026');
+    $legacy_current_as_old = new WC_Order_Item_Product($legacy_current_item_id);
+    $legacy_current_as_old->set_name($legacy_old_date . ' 19:00 - General Admission');
+    $legacy_current_as_old->save();
+    $legacy_old_admission_preview = bvmgr_event_occurrence_preview(
+        $legacy_plan_id,
+        $legacy_old_date . ' 19:00',
+        $legacy_current_date . ' 19:00',
+        'date_correction'
+    );
+    $assert(
+        !empty($legacy_old_admission_preview['allowed'])
+        && (int) $legacy_old_admission_preview['counts']['admission_units'] === 10
+        && (int) $legacy_old_admission_preview['counts']['reservation_units'] === 4,
+        'Supported legacy September 19 admission snapshot was not eligible under existing repair rules.'
+    );
+
+    wc_update_order_item_meta($legacy_current_item_id, '_vms_event_date_snapshot', 'Sep 12, 2026');
+    $legacy_conflicting_name = new WC_Order_Item_Product($legacy_current_item_id);
+    $legacy_conflicting_name->set_name($legacy_old_date . ' 19:00 - General Admission');
+    $legacy_conflicting_name->save();
+    $legacy_conflict_integrity = bvmgr_event_occurrence_integrity($legacy_plan_id);
+    $assert(
+        (int) $legacy_conflict_integrity['mismatch_admission_units'] === 10,
+        'A conflicting retained line-name date did not fail safely through integrity.'
+    );
+
+    $legacy_restored_current = new WC_Order_Item_Product($legacy_current_item_id);
+    $legacy_restored_current->set_name($legacy_current_date . ' 19:00 - General Admission');
+    $legacy_restored_current->save();
+    wc_update_order_item_meta($legacy_stale_item_id, '_vms_event_date_snapshot', '');
+    $legacy_unknown_item = new WC_Order_Item_Product($legacy_stale_item_id);
+    $legacy_unknown_item->set_name('Kiddie Pool');
+    $legacy_unknown_item->save();
+    $legacy_unknown_preview = bvmgr_event_occurrence_preview(
+        $legacy_plan_id,
+        $legacy_old_date . ' 19:00',
+        $legacy_current_date . ' 19:00',
+        'date_correction'
+    );
+    $assert(
+        empty($legacy_unknown_preview['allowed']) && !empty($legacy_unknown_preview['ambiguities']),
+        'A truly unknown item occurrence was inferred from mixed order-level notes instead of failing closed.'
+    );
+
+    wc_update_order_item_meta($legacy_stale_item_id, '_vms_event_date_snapshot', 'Sep 19, 2026');
+    $legacy_restored_stale = new WC_Order_Item_Product($legacy_stale_item_id);
+    $legacy_restored_stale->set_name($legacy_old_date . ' 19:00 - Kiddie Pool');
+    $legacy_restored_stale->save();
+    $assert(
+        $legacy_item_state($legacy_current_item_id) === $legacy_current_state_before
+        && $legacy_item_state($legacy_stale_item_id) === $legacy_stale_state_before,
+        'Legacy mixed-order fixtures were not restored after conflict/unknown safety checks.'
+    );
 
     // Repair mode with paid/free-capable tickets, guest assignments, numbered reservations, and quantities.
     $old_date = '2026-09-19';

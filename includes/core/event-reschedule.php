@@ -292,6 +292,31 @@ if (!function_exists('bvmgr_event_occurrence_payload')) {
     }
 }
 
+if (!function_exists('bvmgr_event_occurrence_normalize_snapshot_date')) {
+    function bvmgr_event_occurrence_normalize_snapshot_date(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        $timezone = new DateTimeZone('UTC');
+        foreach (array('Y-m-d', 'M j, Y') as $format) {
+            $parsed = DateTimeImmutable::createFromFormat('!' . $format, $value, $timezone);
+            $errors = DateTimeImmutable::getLastErrors();
+            if (!($parsed instanceof DateTimeImmutable)
+                || ($errors !== false && (!empty($errors['warning_count']) || !empty($errors['error_count'])))
+                || $parsed->format($format) !== $value) {
+                continue;
+            }
+
+            return $parsed->format('Y-m-d');
+        }
+
+        return '';
+    }
+}
+
 if (!function_exists('bvmgr_event_occurrence_snapshot_date')) {
     function bvmgr_event_occurrence_snapshot_date(int $order_item_id): string
     {
@@ -303,8 +328,10 @@ if (!function_exists('bvmgr_event_occurrence_snapshot_date')) {
         if ($effective_dt instanceof DateTimeImmutable) {
             return $effective_dt->format('Y-m-d');
         }
-        $date = trim((string) wc_get_order_item_meta($order_item_id, '_vms_event_date_snapshot', true));
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        $date = bvmgr_event_occurrence_normalize_snapshot_date(
+            (string) wc_get_order_item_meta($order_item_id, '_vms_event_date_snapshot', true)
+        );
+        if ($date !== '') {
             return $date;
         }
         $when = trim((string) wc_get_order_item_meta($order_item_id, '_vms_event_when_snapshot', true));
@@ -331,11 +358,7 @@ if (!function_exists('bvmgr_event_occurrence_order_item_name_date')) {
             return (string) $matches[1];
         }
         if (preg_match('/\(([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})\)$/u', $name, $matches)) {
-            try {
-                return (new DateTimeImmutable((string) $matches[1], wp_timezone()))->format('Y-m-d');
-            } catch (Throwable $throwable) {
-                return '';
-            }
+            return bvmgr_event_occurrence_normalize_snapshot_date((string) $matches[1]);
         }
         return '';
     }

@@ -70,6 +70,13 @@ if (!function_exists('bvmgr_ticket_revenue_normalize_ymd')) {
             return '';
         }
 
+        if (function_exists('bvmgr_event_occurrence_normalize_snapshot_date')) {
+            $calendar_date = bvmgr_event_occurrence_normalize_snapshot_date($value);
+            if ($calendar_date !== '') {
+                return $calendar_date;
+            }
+        }
+
         if (bvmgr_ticket_revenue_is_valid_ymd($value)) {
             return $value;
         }
@@ -774,7 +781,9 @@ if (!function_exists('bvmgr_ticket_revenue_resolve_event_for_order_item')) {
         }
 
         $snapshot_title = bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event'));
-        $snapshot_date = bvmgr_ticket_revenue_normalize_ymd(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date')));
+        $snapshot_date = bvmgr_event_occurrence_normalize_snapshot_date(
+            bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date'))
+        );
         if ($snapshot_title !== '') {
             $resolved['event_title'] = $snapshot_title;
             if ($resolved['resolution_source'] === '') {
@@ -907,7 +916,9 @@ if (!function_exists('bvmgr_ticket_revenue_build_unresolved_row')) {
             'product_id' => (int) ($event['product_id'] ?? 0),
             'product_sku' => (string) ($event['product_sku'] ?? ''),
             'event_title_snapshot' => bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event')),
-            'event_date_snapshot' => bvmgr_ticket_revenue_normalize_ymd(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date'))),
+            'event_date_snapshot' => bvmgr_event_occurrence_normalize_snapshot_date(
+                bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date'))
+            ),
             'item_tec_event_id' => absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id'))),
             'item_event_plan_id' => absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id'))),
             'resolution_source' => (string) ($event['resolution_source'] ?? ''),

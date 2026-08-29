@@ -15,6 +15,12 @@ Published Event Plans no longer accept ordinary date/time edits. Draft plans rem
 
 Order IDs, order/item IDs, order status, payments, prices, discounts, taxes, quantities, inventory, attendee identities, reservation identities, refunds, purchaser details, and check-in values are invariants. Apply aborts and rolls back if they change.
 
+## Legacy purchase-snapshot compatibility
+
+Occurrence reads accept strictly validated date-only purchase snapshots in `Y-m-d` and the evidenced historical `M j, Y` form (for example, `Sep 12, 2026`). These values are interpreted as calendar dates without creating a time or converting between timezones, so September 12 cannot shift to September 11 or 13. Impossible dates, ambiguous numeric forms, arbitrary prose, partial dates, and unsupported formats remain unrecognized.
+
+This compatibility is read-only. Integrity checks and reschedule previews do not backfill or normalize historical order-item metadata, and order-level notes are never used as authority for an individual line item's occurrence. Effective-occurrence metadata retains precedence, followed by the immutable date snapshot and the existing `When` fallback.
+
 ## Date correction and reschedule
 
 - **Date correction** records that the stored occurrence was wrong.
