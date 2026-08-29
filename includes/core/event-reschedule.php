@@ -73,7 +73,7 @@ if (!function_exists('bvmgr_event_occurrence_guard_meta_update')) {
 
         $GLOBALS['bvmgr_event_occurrence_last_blocked_write'] = array(
             'plan_id' => $object_id,
-            'meta_key' => $meta_key,
+            'meta_key' => $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This blocked-write diagnostic payload records the protected metadata key; it is not a query argument.
             'attempted_value' => is_scalar($meta_value) ? (string) $meta_value : '',
         );
         do_action('bvmgr_event_occurrence_blocked_write', $object_id, $meta_key, $meta_value, $current);
@@ -97,7 +97,7 @@ if (!function_exists('bvmgr_event_occurrence_guard_meta_add')) {
 
         $GLOBALS['bvmgr_event_occurrence_last_blocked_write'] = array(
             'plan_id' => $object_id,
-            'meta_key' => $meta_key,
+            'meta_key' => $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This blocked-write diagnostic payload records the protected metadata key; it is not a query argument.
             'attempted_value' => is_scalar($meta_value) ? (string) $meta_value : '',
         );
         do_action('bvmgr_event_occurrence_blocked_write', $object_id, $meta_key, $meta_value, get_post_meta($object_id, $meta_key, true));
@@ -119,7 +119,7 @@ if (!function_exists('bvmgr_event_occurrence_guard_meta_delete')) {
             if (bvmgr_event_occurrence_is_published(absint($object_id))) {
                 $GLOBALS['bvmgr_event_occurrence_last_blocked_write'] = array(
                     'plan_id' => absint($object_id),
-                    'meta_key' => $meta_key,
+                    'meta_key' => $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This blocked-delete diagnostic payload records the protected metadata key; it is not a query argument.
                     'attempted_value' => '[delete]',
                 );
                 return false;
@@ -156,7 +156,7 @@ if (!function_exists('bvmgr_event_occurrence_guard_meta_update_by_mid')) {
 
         $GLOBALS['bvmgr_event_occurrence_last_blocked_write'] = array(
             'plan_id' => $object_id,
-            'meta_key' => $target_key,
+            'meta_key' => $target_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This blocked-write diagnostic payload records the protected metadata key; it is not a query argument.
             'attempted_value' => is_scalar($meta_value) ? (string) $meta_value : '',
         );
         do_action('bvmgr_event_occurrence_blocked_write', $object_id, $target_key, $meta_value, $meta->meta_value ?? '');
@@ -184,7 +184,7 @@ if (!function_exists('bvmgr_event_occurrence_guard_meta_delete_by_mid')) {
 
         $GLOBALS['bvmgr_event_occurrence_last_blocked_write'] = array(
             'plan_id' => $object_id,
-            'meta_key' => $meta_key,
+            'meta_key' => $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This blocked-delete diagnostic payload records the protected metadata key; it is not a query argument.
             'attempted_value' => '[delete-by-mid]',
         );
         return false;
@@ -357,7 +357,7 @@ if (!function_exists('bvmgr_event_occurrence_collect_product_ids')) {
             'fields' => 'ids',
             'posts_per_page' => -1,
             'no_found_rows' => true,
-            'meta_query' => array(
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Reschedule preview must include every product linked to this one Event Plan so affected inventory cannot be omitted.
                 array('key' => '_vms_event_plan_id', 'value' => $plan_id, 'compare' => '='),
             ),
         ));
@@ -854,7 +854,7 @@ if (!function_exists('bvmgr_event_occurrence_update_order_item')) {
 
         $item = class_exists('WC_Order_Item_Product') ? new WC_Order_Item_Product($item_id) : null;
         if (!$item || !method_exists($item, 'get_id') || (int) $item->get_id() !== $item_id) {
-            throw new RuntimeException(sprintf('Order item %d could not be loaded.', $item_id));
+            throw new RuntimeException(sprintf('Order item %d could not be loaded.', $item_id)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text exception contains only an absint order-item ID; callers escape or JSON-encode the message at the output boundary.
         }
 
         $current_name = (string) $item->get_name();
@@ -884,7 +884,7 @@ if (!function_exists('bvmgr_event_occurrence_update_order_item')) {
         wc_update_order_item_meta($item_id, __('When', 'backstage-venue-manager'), $when);
 
         if ((string) wc_get_order_item_meta($item_id, '_vms_effective_event_start_local', true) !== (string) $new_payload['start_local']) {
-            throw new RuntimeException(sprintf('Order item %d failed effective-occurrence verification.', $item_id));
+            throw new RuntimeException(sprintf('Order item %d failed effective-occurrence verification.', $item_id)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text exception contains only an absint order-item ID; callers escape or JSON-encode the message at the output boundary.
         }
     }
 }

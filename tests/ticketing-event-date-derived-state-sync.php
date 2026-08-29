@@ -205,10 +205,35 @@ try {
     update_post_meta($eventId, '_EventStartDate', $newDate . ' 19:00:00');
     update_post_meta($eventId, '_EventEndDate', $newEnd);
     clean_post_cache($eventId);
+
+    $canonicalHookCalls = array();
+    $legacyHookCalls = 0;
+    $canonicalHook = static function (int $hookPlanId, int $hookEventId, array $result) use (&$canonicalHookCalls): void {
+        $canonicalHookCalls[] = array($hookPlanId, $hookEventId, $result);
+    };
+    $legacyHook = static function () use (&$legacyHookCalls): void {
+        $legacyHookCalls++;
+    };
+    add_action('bvmgr_ticketing_v2_calendar_sales_windows_synced', $canonicalHook, 10, 3);
+    add_action('vms_ticketing_v2_calendar_sales_windows_synced', $legacyHook, 10, 0);
+    try {
+        $calendarSyncOk = bvmgr_event_plan_sync_ticket_windows_after_calendar_change($planId, $eventId, true, false);
+    } finally {
+        remove_action('bvmgr_ticketing_v2_calendar_sales_windows_synced', $canonicalHook, 10);
+        remove_action('vms_ticketing_v2_calendar_sales_windows_synced', $legacyHook, 10);
+    }
     $assert(
-        bvmgr_event_plan_sync_ticket_windows_after_calendar_change($planId, $eventId, true, false),
+        $calendarSyncOk,
         'Pre-closure calendar-derived ticket synchronization failed.'
     );
+    $assert(
+        count($canonicalHookCalls) === 1
+        && (int) $canonicalHookCalls[0][0] === $planId
+        && (int) $canonicalHookCalls[0][1] === $eventId
+        && !empty($canonicalHookCalls[0][2]['ok']),
+        'Canonical sales-window synchronization hook did not fire exactly once with the expected payload.'
+    );
+    $assert($legacyHookCalls === 0, 'Legacy sales-window synchronization hook fired unexpectedly.');
     $alignedAfterPublish = bvmgr_ticketing_v2_plan_calendar_alignment($planId, $eventId);
     $assert(!empty($alignedAfterPublish['aligned']), 'Calendar occurrence did not align after Publish Now: ' . wp_json_encode($alignedAfterPublish));
     $assert((string) get_post_meta($ticketId, '_ticket_end_date', true) === $newEnd, 'Publish Now did not re-derive the mapped ticket sale end.');

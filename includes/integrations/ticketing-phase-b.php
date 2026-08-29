@@ -1905,7 +1905,7 @@ function bvmgr_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change
     }
 
     bvmgr_ticketing_v2_invalidate_calendar_ticket_caches($tec_event_id, $out['checked_product_ids']);
-    do_action('vms_ticketing_v2_calendar_sales_windows_synced', $plan_id, $tec_event_id, $out);
+    do_action('bvmgr_ticketing_v2_calendar_sales_windows_synced', $plan_id, $tec_event_id, $out);
 
     return $out;
 }

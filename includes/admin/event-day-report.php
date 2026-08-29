@@ -412,7 +412,7 @@ if (!function_exists('bvmgr_event_day_report_collect_woo_sources')) {
             foreach ((array) ($row['attendee_ids'] ?? array()) as $attendee_id) {
                 $attendee_id = absint($attendee_id);
                 $post = $attendee_id > 0 ? get_post($attendee_id) : null;
-                if (!($post instanceof WP_Post) || !in_array((string) $post->post_status, vms_ticket_sales_resolver_active_attendee_post_statuses(), true)) {
+                if (!($post instanceof WP_Post) || !in_array((string) $post->post_status, bvmgr_ticket_sales_resolver_active_attendee_post_statuses(), true)) {
                     continue;
                 }
                 $name = trim((string) get_post_meta($attendee_id, '_tribe_tickets_full_name', true));
@@ -496,7 +496,7 @@ if (!function_exists('bvmgr_event_day_report_collect_admissions')) {
             foreach ((array) ($bridge['attendee_ids'] ?? array()) as $attendee_id) {
                 $attendee_id = absint($attendee_id);
                 $post = $attendee_id > 0 ? get_post($attendee_id) : null;
-                if (!($post instanceof WP_Post) || !in_array((string) $post->post_status, vms_ticket_sales_resolver_active_attendee_post_statuses(), true)) {
+                if (!($post instanceof WP_Post) || !in_array((string) $post->post_status, bvmgr_ticket_sales_resolver_active_attendee_post_statuses(), true)) {
                     continue;
                 }
                 $row['bridge_found_qty']++;
@@ -599,7 +599,7 @@ if (!function_exists('bvmgr_event_day_report_collect_rsvps')) {
             'no_found_rows' => true,
             'orderby' => 'ID',
             'order' => 'ASC',
-            'meta_query' => array(array('key' => '_tribe_rsvp_event', 'value' => (string) $tec_event_id)),
+            'meta_query' => array(array('key' => '_tribe_rsvp_event', 'value' => (string) $tec_event_id)), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Event-Day must retrieve the complete RSVP attendee ID set for this one exact TEC event before applying active-status checks.
         ));
         $rows = array();
         foreach ((array) $ids as $attendee_id) {

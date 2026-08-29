@@ -15,12 +15,21 @@ if (!function_exists('bvmgr_ticketing_v2_get_config')) {
 }
 require_once $plugin_root . '/includes/core/event-reschedule.php';
 require_once $plugin_root . '/includes/admin/event-reschedule.php';
+require_once $plugin_root . '/includes/admin/event-day-report.php';
 
 $assertions = 0;
 $assert = static function (bool $condition, string $message) use (&$assertions): void {
     $assertions++;
     if (!$condition) {
         throw new RuntimeException('Assertion ' . $assertions . ' failed: ' . $message);
+    }
+};
+
+$event_day_assertions = 0;
+$event_day_assert = static function (bool $condition, string $message) use (&$event_day_assertions): void {
+    $event_day_assertions++;
+    if (!$condition) {
+        throw new RuntimeException('Event-Day assertion ' . $event_day_assertions . ' failed: ' . $message);
     }
 };
 
@@ -297,6 +306,55 @@ try {
     $integrity_before = bvmgr_event_occurrence_integrity($plan_id);
     $assert((int) $integrity_before['mismatch_admission_units'] === 2 && (int) $integrity_before['mismatch_reservation_units'] === 4, 'Integrity checker did not report stale units by type.');
 
+    $event_day_assert(
+        function_exists('bvmgr_ticket_sales_resolver_active_attendee_post_statuses')
+        && function_exists('bvmgr_event_day_report_build_model')
+        && function_exists('bvmgr_event_day_report_render_document'),
+        'Canonical resolver and Event-Day report runtime did not load.'
+    );
+    $active_attendee_statuses = bvmgr_ticket_sales_resolver_active_attendee_post_statuses();
+    $event_day_assert(
+        in_array('publish', $active_attendee_statuses, true)
+        && in_array('private', $active_attendee_statuses, true)
+        && !in_array('trash', $active_attendee_statuses, true),
+        'Canonical active-attendee resolver changed the supported status boundary.'
+    );
+    $event_day_woo_before = bvmgr_event_day_report_collect_woo_sources($plan_id, array('ids' => array(), 'references' => array()));
+    $event_day_source_model_before = bvmgr_event_day_report_build_model_from_sources(array(
+        'event_plan_id' => $plan_id,
+        'title' => 'Reputation repair Event Plan fixture',
+        'event_date' => $new_date,
+        'schedule_label' => $new_date . ' · 19:00–21:00',
+    ), array('woo_result' => $event_day_woo_before));
+    $event_day_assert(
+        (int) ($event_day_source_model_before['totals']['expected'] ?? 0) === 2
+        && (int) ($event_day_source_model_before['totals']['reservation_units'] ?? 0) === 4,
+        'Event-Day guest or reservation calculations changed before repair.'
+    );
+    $event_day_model_before = bvmgr_event_day_report_build_model($plan_id);
+    $event_day_issue_codes_before = array_values(array_filter(array_map(
+        static fn($issue): string => is_array($issue) ? (string) ($issue['code'] ?? '') : '',
+        (array) ($event_day_model_before['issues'] ?? array())
+    )));
+    $event_day_assert(
+        in_array('event_occurrence_date_mismatch', $event_day_issue_codes_before, true)
+        && (int) ($event_day_model_before['occurrence_integrity']['mismatch_admission_units'] ?? 0) === 2
+        && (int) ($event_day_model_before['occurrence_integrity']['mismatch_reservation_units'] ?? 0) === 4,
+        'Event-Day report lost the reschedule-integrity mismatch warning.'
+    );
+    ob_start();
+    bvmgr_event_day_report_render_document($event_day_model_before, 'full', false);
+    $event_day_markup_before = (string) ob_get_clean();
+    $event_day_assert(
+        strpos($event_day_markup_before, 'Fixture Purchaser') !== false
+        && strpos($event_day_markup_before, 'Fire Table #01') !== false,
+        'Event-Day render lost guest or reservation rows.'
+    );
+    $event_day_assert(
+        strpos($event_day_markup_before, 'Date mismatch detected: 2 admissions and 4 reservations') !== false,
+        'Event-Day render did not expose the occurrence mismatch warning.'
+    );
+
     $approved_fingerprint = bvmgr_event_occurrence_preview_fingerprint($preview);
     wp_update_post(array('ID' => $addon_id, 'post_title' => $old_date . ' 19:00 - Fire Table #01 changed after preview'));
     $stale_apply = bvmgr_event_occurrence_apply($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction', 1, $approved_fingerprint);
@@ -354,6 +412,29 @@ try {
     $assert(count(bvmgr_event_occurrence_history($plan_id)) === 1, 'Repair did not append exactly one audit entry.');
     $integrity_after = bvmgr_event_occurrence_integrity($plan_id);
     $assert(!empty($integrity_after['ok']) && (int) $integrity_after['mismatch_units'] === 0, 'Post-repair integrity did not pass.');
+    $event_day_model_after = bvmgr_event_day_report_build_model($plan_id);
+    $event_day_issue_codes_after = array_values(array_filter(array_map(
+        static fn($issue): string => is_array($issue) ? (string) ($issue['code'] ?? '') : '',
+        (array) ($event_day_model_after['issues'] ?? array())
+    )));
+    $event_day_assert(
+        !in_array('event_occurrence_date_mismatch', $event_day_issue_codes_after, true)
+        && !empty($event_day_model_after['occurrence_integrity']['ok']),
+        'Event-Day mismatch warning did not clear after the controlled repair.'
+    );
+    $event_day_woo_after = bvmgr_event_day_report_collect_woo_sources($plan_id, array('ids' => array(), 'references' => array()));
+    $event_day_source_model_after = bvmgr_event_day_report_build_model_from_sources(array(
+        'event_plan_id' => $plan_id,
+        'title' => 'Reputation repair Event Plan fixture',
+        'event_date' => $new_date,
+        'schedule_label' => $new_date . ' · 19:00–21:00',
+    ), array('woo_result' => $event_day_woo_after));
+    $event_day_assert(
+        ($event_day_source_model_after['totals'] ?? array()) === ($event_day_source_model_before['totals'] ?? array())
+        && count((array) ($event_day_source_model_after['parties'] ?? array())) === count((array) ($event_day_source_model_before['parties'] ?? array()))
+        && count((array) ($event_day_source_model_after['reservations'] ?? array())) === count((array) ($event_day_source_model_before['reservations'] ?? array())),
+        'Event-Day guest or reservation calculations changed across repair.'
+    );
     $post_preview = bvmgr_event_occurrence_preview($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction');
     $assert(!empty($post_preview['allowed']) && (int) $post_preview['counts']['line_items'] === 0, 'Post-repair dry run still targets current entitlements.');
     $repeat = bvmgr_event_occurrence_apply($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction', 1);
@@ -375,6 +456,7 @@ try {
     $assert(strpos($cli_source, "WP_CLI::add_command('bvmgr event reschedule'") !== false && strpos($cli_source, "WP_CLI::add_command('vms event reschedule'") !== false && strpos($cli_source, '--confirm=RESCHEDULE') !== false, 'CLI dry-run/apply interface is incomplete.');
 
     fwrite(STDOUT, 'PASS: ' . $assertions . " published-date lock/reschedule assertions.\n");
+    fwrite(STDOUT, 'PASS: ' . $event_day_assertions . " Event-Day load/render assertions.\n");
 } finally {
     $cleanup();
 }

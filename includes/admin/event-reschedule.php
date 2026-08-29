@@ -47,7 +47,7 @@ if (!function_exists('bvmgr_event_occurrence_render_admin_panel')) {
             printf(
                 /* translators: %d: Number of active admission and reservation units with a mismatched occurrence. */
                 esc_html__('%d active admission/reservation units reference a different effective occurrence. Preview the controlled repair before applying it.', 'backstage-venue-manager'),
-                $unit_count
+                esc_html((string) $unit_count)
             );
             echo '</p></div>';
         }
@@ -218,7 +218,7 @@ if (!function_exists('bvmgr_event_occurrence_admin_handle_change')) {
 
         if ($action === 'apply') {
             $prior = get_transient($key);
-            $confirmed = isset($_POST['vms_occurrence_confirm']) && (string) wp_unslash($_POST['vms_occurrence_confirm']) === '1';
+            $confirmed = isset($_POST['vms_occurrence_confirm']) && sanitize_text_field(wp_unslash((string) $_POST['vms_occurrence_confirm'])) === '1';
             $prior_signature = is_array($prior) ? (string) ($prior['signature'] ?? '') : '';
             $prior_fingerprint = is_array($prior) ? (string) ($prior['preview_fingerprint'] ?? '') : '';
             if (!$confirmed

@@ -639,8 +639,8 @@
     "php_inventory_counts": {
         "public_php_files": 276,
         "functions": {
-            "unique": 4644,
-            "occurrences": 4664
+            "unique": 4645,
+            "occurrences": 4665
         },
         "classes": {
             "unique": 25,
@@ -673,8 +673,8 @@
         "dynamic_symbols": {
             "exact_function_literals_unique": 3645,
             "exact_function_literals_occurrences": 7363,
-            "function_exists_unique": 3427,
-            "function_exists_occurrences": 6492,
+            "function_exists_unique": 3428,
+            "function_exists_occurrences": 6493,
             "direct_literal_callbacks_unique": 724,
             "direct_literal_callbacks_occurrences": 780,
             "exact_type_literals_unique": 18,
@@ -31150,7 +31150,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 734
+                        "line": 750
                     }
                 ],
                 "legacy_identifier": "vms_get_ticket_sales_rows",
@@ -65115,6 +65115,23 @@
                 "migration_status": "complete"
             },
             {
+                "current_identifier": "bvmgr_ticket_sales_resolver_active_attendee_post_statuses",
+                "canonical_target": "bvmgr_ticket_sales_resolver_active_attendee_post_statuses",
+                "b0_strategy": [
+                    1
+                ],
+                "compatibility_classification": "post-B4 canonical feature addition",
+                "persistence_external_contract_status": "nonpersistent global PHP introduced after B4",
+                "planned_implementation_batch": "post-B4",
+                "do_not_rename": true,
+                "declaration_sites": [
+                    {
+                        "file": "includes/core/ticket-sales-resolver.php",
+                        "line": 719
+                    }
+                ]
+            },
+            {
                 "current_identifier": "bvmgr_ticket_sales_resolver_attendee_context",
                 "canonical_target": "bvmgr_ticket_sales_resolver_attendee_context",
                 "b0_strategy": [
@@ -89044,7 +89061,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/core/ticket-sales-resolver.php",
-                        "line": 714
+                        "line": 730
                     }
                 ],
                 "legacy_identifier": "VMS_Ticket_Revenue_Service",
@@ -155581,6 +155598,12 @@
                     "line": 90
                 }
             ],
+            "bvmgr_ticket_sales_resolver_active_attendee_post_statuses": [
+                {
+                    "file": "includes/core/ticket-sales-resolver.php",
+                    "line": 713
+                }
+            ],
             "bvmgr_ticket_sales_resolver_attendee_context": [
                 {
                     "file": "includes/core/ticket-sales-resolver.php",
@@ -169504,7 +169527,7 @@
                 },
                 {
                     "file": "includes/core/ticket-sales-resolver.php",
-                    "line": 713
+                    "line": 729
                 }
             ],
             "BVMGR_Tours": [
@@ -189068,6 +189091,13 @@
                     "resolution_policy": "core-current-or-canonical-must-resolve"
                 }
             ],
+            "bvmgr_ticket_sales_resolver_active_attendee_post_statuses": [
+                {
+                    "current_identifier": "bvmgr_ticket_sales_resolver_active_attendee_post_statuses",
+                    "canonical_target": null,
+                    "resolution_policy": "core-current-or-canonical-must-resolve"
+                }
+            ],
             "bvmgr_ticket_sales_resolver_attendee_context": [
                 {
                     "current_identifier": "bvmgr_ticket_sales_resolver_attendee_context",
@@ -200875,7 +200905,7 @@
                     "declaration_sites": [
                         {
                             "file": "includes/core/ticket-sales-resolver.php",
-                            "line": 714
+                            "line": 730
                         }
                     ]
                 },

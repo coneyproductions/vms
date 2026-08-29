@@ -398,7 +398,7 @@ if (!function_exists('bvmgr_events_photo_shortcode')) {
             }
             if (!empty($cta['url'])) {
 				$external_attrs = !empty($cta['is_external']) ? ' target="_blank" rel="noopener noreferrer external"' : '';
-                echo '<a class="vms-events-photo-card__cta" href="' . esc_url((string) $cta['url']) . '"' . $external_attrs . '>' . esc_html((string) ($cta['label'] ?? __('Get Tickets', 'backstage-venue-manager'))) . '</a>';
+                echo '<a class="vms-events-photo-card__cta" href="' . esc_url((string) $cta['url']) . '"' . $external_attrs . '>' . esc_html((string) ($cta['label'] ?? __('Get Tickets', 'backstage-venue-manager'))) . '</a>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $external_attrs is one exact plugin-owned target/rel attribute fragment or an empty string.
             }
 
             if (!empty($overlay['is_rescheduled']) && $replacement_date !== '') {

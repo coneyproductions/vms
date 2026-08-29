@@ -863,7 +863,7 @@ if (!function_exists('bvmgr_public_calendar_render_list_view')) {
 			if ($action_url !== '' && !$is_past_event) {
 				$action_label = $is_cancelled ? __('View Details', 'backstage-venue-manager') : ($ticket_is_external ? __('Buy Tickets', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager'));
 				$external_attrs = (!$is_cancelled && $ticket_is_external) ? ' target="_blank" rel="noopener noreferrer external"' : '';
-				echo '<div class="vms-public-cal-rich-actions"><a class="vms-public-cal-rich-ticket" href="' . esc_url($action_url) . '"' . $external_attrs . '>' . esc_html($action_label) . '</a></div>';
+				echo '<div class="vms-public-cal-rich-actions"><a class="vms-public-cal-rich-ticket" href="' . esc_url($action_url) . '"' . $external_attrs . '>' . esc_html($action_label) . '</a></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $external_attrs is one exact plugin-owned target/rel attribute fragment or an empty string.
 			}
 			echo '</div>';
 			echo '</article>';
@@ -1174,7 +1174,7 @@ if (!function_exists('bvmgr_public_calendar_render_day_entries')) {
 			if ($action_url !== '' && !$is_past_event) {
 				$action_label = $is_cancelled ? __('View Details', 'backstage-venue-manager') : ($ticket_is_external ? __('Buy Tickets', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager'));
 				$external_attrs = (!$is_cancelled && $ticket_is_external) ? ' target="_blank" rel="noopener noreferrer external"' : '';
-				echo '<div class="vms-cal-pop-actions"><a class="vms-cal-pop-ticket" href="' . esc_url($action_url) . '"' . $external_attrs . '>' . esc_html($action_label) . '</a></div>';
+				echo '<div class="vms-cal-pop-actions"><a class="vms-cal-pop-ticket" href="' . esc_url($action_url) . '"' . $external_attrs . '>' . esc_html($action_label) . '</a></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $external_attrs is one exact plugin-owned target/rel attribute fragment or an empty string.
 			}
 			echo '</div></div>';
 			echo '</div>';

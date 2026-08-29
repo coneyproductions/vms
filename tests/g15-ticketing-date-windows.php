@@ -395,8 +395,8 @@ $phase_specs = array(
 	),
 );
 $historical_hashes = array(
-	'mirror' => array('monitor' => '59a49889939ee901146eda2a8bc044438ca6923213dd0f449a800c646af3b1f7', 'phase_b' => '22e4b7e2f35da1011ae344774131efcf78c34fc48d377e45b2a70df8f825d1f0'),
-	'shadow' => array('monitor' => '1b5c31b238cc6dc0ddb8a03409d8fab69d070c4e447faf47705b30b7dbd41e7c', 'phase_b' => 'fc42278ef05f8067dbe786c9d2fb6fc80ccfa9287e46d050a6aa612d1931e93c'),
+	'mirror' => array('monitor' => '59a49889939ee901146eda2a8bc044438ca6923213dd0f449a800c646af3b1f7', 'phase_b' => '2621df5d27cf64200eabc6f5ece2cc6fec144c5b707baa7fb6597cf20923412b'),
+	'shadow' => array('monitor' => '1b5c31b238cc6dc0ddb8a03409d8fab69d070c4e447faf47705b30b7dbd41e7c', 'phase_b' => '4e501fdb014ab1416ea8b8db1ad2944cd675ff0d2c00d84daf0262c78a9aa78c'),
 );
 
 foreach (array('mirror', 'shadow') as $tree) {

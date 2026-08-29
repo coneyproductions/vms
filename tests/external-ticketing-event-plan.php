@@ -349,6 +349,20 @@ try {
 	update_post_meta($plan_id, '_vms_external_event_producer_website', $presenter_url);
 	$assert(bvmgr_event_plan_get_external_event_producer_website($plan_id) === $presenter_url, 'Valid presenter website did not persist.');
 
+	$event_plans_reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+	/** @var BVMGR_Admin_Event_Plans $event_plans_admin */
+	$event_plans_admin = $event_plans_reflection->newInstanceWithoutConstructor();
+	ob_start();
+	$event_plans_admin->render_event_plan_ticketing_v2_host_meta_box(get_post($plan_id));
+	$ticketing_metabox = (string) ob_get_clean();
+	$assert((bool) preg_match('/<option\s+value="external"\s+selected=\'selected\'>/', $ticketing_metabox), 'Ticketing metabox did not preserve the external sales mode selection.');
+	$assert(strpos($ticketing_metabox, 'name="vms_external_ticket_url" value="' . esc_attr($external_url) . '"') !== false, 'Ticketing metabox did not preserve the external purchase URL.');
+	$assert(strpos($ticketing_metabox, 'name="vms_external_ticket_provider" value="Test Tickets"') !== false, 'Ticketing metabox did not preserve the external provider.');
+	$assert((bool) preg_match('/<option\s+value="hosted_third_party"\s+selected=\'selected\'>/', $ticketing_metabox), 'Ticketing metabox did not preserve the hosted relationship.');
+	$assert(strpos($ticketing_metabox, 'name="vms_external_event_producer" value="Rehearsal Room Tyler"') !== false, 'Ticketing metabox did not preserve the external producer.');
+	$assert(strpos($ticketing_metabox, 'name="vms_external_event_producer_website" value="' . esc_attr($presenter_url) . '"') !== false, 'Ticketing metabox did not preserve the producer website.');
+	$assert(strpos($ticketing_metabox, 'Existing native ticket records are preserved.') !== false, 'Ticketing metabox lost the native-record preservation warning.');
+
 	$destination = bvmgr_event_plan_get_ticket_destination($plan_id, (string) get_permalink($event_id));
 	$assert(!empty($destination['is_external']) && $destination['url'] === $external_url, 'Canonical destination did not resolve externally.');
 	$assert(!bvmgr_event_plan_native_ticket_purchasing_allowed($plan_id), 'External mode still allows native ticket purchasing.');

@@ -4529,7 +4529,7 @@ function bvmgr_event_plan_sanitize_http_url($value): string
 	}
 
 	$url = function_exists('esc_url_raw') ? (string) esc_url_raw($value, array('http', 'https')) : (string) filter_var($value, FILTER_SANITIZE_URL);
-	$parts = function_exists('wp_parse_url') ? wp_parse_url($url) : parse_url($url);
+	$parts = function_exists('wp_parse_url') ? wp_parse_url($url) : parse_url($url); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Supported runtime always provides wp_parse_url(); this fallback keeps the pure helper fail-closed outside WordPress.
 	if (!is_array($parts)) {
 		return '';
 	}
@@ -4563,7 +4563,7 @@ function bvmgr_event_plan_get_external_ticket_provider(int $event_plan_id, bool 
 	$raw_label = get_post_meta($event_plan_id, $key, true);
 	$label = is_scalar($raw_label) ? trim((string) $raw_label) : '';
 	if ($label !== '') {
-		return function_exists('sanitize_text_field') ? sanitize_text_field($label) : strip_tags($label);
+		return function_exists('sanitize_text_field') ? sanitize_text_field($label) : strip_tags($label); // phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- Supported runtime always provides sanitize_text_field(); this fallback keeps the pure helper fail-closed outside WordPress.
 	}
 
 	return $with_fallback ? (string) __('external ticket provider', 'backstage-venue-manager') : '';
@@ -4594,7 +4594,7 @@ function bvmgr_event_plan_get_external_event_producer(int $event_plan_id): strin
 	$key = bvmgr_event_plan_ticketing_meta_key('external_event_producer', '_vms_external_event_producer');
 	$raw_label = get_post_meta($event_plan_id, $key, true);
 	$label = is_scalar($raw_label) ? trim((string) $raw_label) : '';
-	return function_exists('sanitize_text_field') ? sanitize_text_field($label) : strip_tags($label);
+	return function_exists('sanitize_text_field') ? sanitize_text_field($label) : strip_tags($label); // phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- Supported runtime always provides sanitize_text_field(); this fallback keeps the pure helper fail-closed outside WordPress.
 }
 
 function bvmgr_event_plan_sanitize_external_event_producer_website($value): string

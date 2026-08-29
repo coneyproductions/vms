@@ -710,6 +710,22 @@ if (!function_exists('bvmgr_ticket_sales_resolver_get_result')) {
     }
 }
 
+if (!function_exists('bvmgr_ticket_sales_resolver_active_attendee_post_statuses')) {
+    /**
+     * Return the attendee post statuses that represent active admission records.
+     *
+     * @return string[]
+     */
+    function bvmgr_ticket_sales_resolver_active_attendee_post_statuses(): array
+    {
+        $statuses = array('publish', 'private');
+        $statuses = (array) apply_filters('bvmgr_ticket_sales_resolver_active_attendee_post_statuses', $statuses);
+        $statuses = array_values(array_unique(array_filter(array_map('sanitize_key', $statuses))));
+
+        return !empty($statuses) ? $statuses : array('publish');
+    }
+}
+
 if (!class_exists('BVMGR_Ticket_Revenue_Service')) {
     final class BVMGR_Ticket_Revenue_Service
     {
