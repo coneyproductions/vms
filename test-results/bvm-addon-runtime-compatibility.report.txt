@@ -1,0 +1,38 @@
+BVM-Only Add-on Runtime Compatibility
+Overall: PASS
+
+WordPress: 7.1
+BVM: 1.2.0
+Database cleanup: PASS
+Runtime cleanup: PASS
+Normal active plugins unchanged: PASS
+
+| Add-on | BVM Recognized | No Fatal | Menu | Notices | Core-Absent Behavior | Load Order | Overall |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| events-slider | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| fill-dates | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| data-tools | PASS | PASS | PASS | PASS | PASS | PASS | PASS WITH DEBT — works through the current late menu bridge cleanup |
+| express-bar | PASS | PASS | PASS | PASS | PASS | PASS | PASS WITH DEBT — works but reconstructs current menu hooks |
+| refer-a-friend | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+
+Cross-add-on scenarios: PASS
+
+Scenario results:
+- bvm-only-events-slider-core-first: PASS
+- bvm-only-events-slider-addon-first: PASS
+- bvm-only-fill-dates-core-first: PASS
+- bvm-only-fill-dates-addon-first: PASS
+- bvm-only-data-tools-core-first: PASS
+- bvm-only-data-tools-addon-first: PASS
+- bvm-only-express-bar-core-first: PASS
+- bvm-only-express-bar-addon-first: PASS
+- bvm-only-refer-a-friend-core-first: PASS
+- bvm-only-refer-a-friend-addon-first: PASS
+- bvm-all-official-five-core-first: PASS
+- bvm-all-official-five-addons-first: PASS
+- core-absent-events-slider: PASS
+- core-absent-fill-dates: PASS
+- core-absent-data-tools: PASS
+- core-absent-express-bar: PASS
+- core-absent-refer-a-friend: PASS
+- bvm-without-woocommerce-express-bar: PASS
