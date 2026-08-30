@@ -1,0 +1,107 @@
+# Apply from the WordPress plugins directory with: git apply --unidiff-zero <path-to-this-file>
+diff --git a/vms-fill-dates/includes/admin-page.php b/vms-fill-dates/includes/admin-page.php
+index b0ab009..1174cea 100644
+--- a/vms-fill-dates/includes/admin-page.php
++++ b/vms-fill-dates/includes/admin-page.php
+@@ -4,0 +5,45 @@ defined('ABSPATH') || exit;
++if (!function_exists('vms_fd_admin_page_hook')) {
++    /**
++     * Store or retrieve the hook returned by WordPress for the Fill Dates page.
++     *
++     * @param string|false|null $hook
++     */
++    function vms_fd_admin_page_hook($hook = null): string
++    {
++        static $registered_hook = '';
++
++        if (func_num_args() > 0) {
++            $registered_hook = is_string($hook) ? $hook : '';
++        }
++
++        return $registered_hook;
++    }
++}
++
++if (!function_exists('vms_fd_is_current_admin_screen')) {
++    function vms_fd_is_current_admin_screen(): bool
++    {
++        $registered_hook = vms_fd_admin_page_hook();
++        if ($registered_hook === '') {
++            return false;
++        }
++
++        $hook_suffix = isset($GLOBALS['hook_suffix']) && is_string($GLOBALS['hook_suffix'])
++            ? $GLOBALS['hook_suffix']
++            : '';
++        if ($hook_suffix === $registered_hook) {
++            return true;
++        }
++
++        if (!function_exists('get_current_screen')) {
++            return false;
++        }
++
++        $screen = get_current_screen();
++        return is_object($screen)
++            && isset($screen->id)
++            && is_string($screen->id)
++            && $screen->id === $registered_hook;
++    }
++}
++
+@@ -8 +53 @@ if (!function_exists('vms_fd_register_menu')) {
+-        add_submenu_page(
++        $hook = add_submenu_page(
+@@ -15,0 +61,9 @@ if (!function_exists('vms_fd_register_menu')) {
++
++        vms_fd_admin_page_hook($hook);
++
++        if (is_string($hook) && $hook !== '' && class_exists('VMS_Tours_Service')) {
++            $tour_service = VMS_Tours_Service::instance();
++            if (method_exists($tour_service, 'refresh_filter_tours')) {
++                $tour_service->refresh_filter_tours();
++            }
++        }
+@@ -23 +77,2 @@ if (!function_exists('vms_fd_enqueue_admin_assets')) {
+-        if ($hook !== 'vms-dashboard_page_vms-fill-dates') {
++        $registered_hook = vms_fd_admin_page_hook();
++        if ($registered_hook === '' || $hook !== $registered_hook) {
+@@ -36,0 +92,12 @@ add_action('admin_enqueue_scripts', 'vms_fd_enqueue_admin_assets');
++if (!function_exists('vms_fd_render_dependency_notice')) {
++    function vms_fd_render_dependency_notice(): void
++    {
++        if (!current_user_can('manage_options') || vms_fd_vms_ready()) {
++            return;
++        }
++
++        echo '<div class="notice notice-error"><p>' . esc_html__('Fill Dates requires Backstage Venue Manager (BVM). Activate it before using Fill Dates.', 'vms-fill-dates') . '</p></div>';
++    }
++}
++add_action('admin_notices', 'vms_fd_render_dependency_notice');
++
+@@ -190,0 +258,4 @@ if (!function_exists('vms_fd_render_notice')) {
++        if (!current_user_can('manage_options') || !vms_fd_is_current_admin_screen()) {
++            return;
++        }
++
+@@ -208,0 +280 @@ if (!function_exists('vms_fd_render_notice')) {
++add_action('admin_notices', 'vms_fd_render_notice');
+@@ -718 +789,0 @@ if (!function_exists('vms_fd_render_admin_page_content')) {
+-            echo '<div class="notice notice-error"><p>' . esc_html__('VMS core post types were not found. Activate VMS before using Fill Dates.', 'vms-fill-dates') . '</p></div>';
+@@ -724 +794,0 @@ if (!function_exists('vms_fd_render_admin_page_content')) {
+-        vms_fd_render_notice();
+diff --git a/vms-fill-dates/includes/tours.php b/vms-fill-dates/includes/tours.php
+index 0a70f82..55638ca 100644
+--- a/vms-fill-dates/includes/tours.php
++++ b/vms-fill-dates/includes/tours.php
+@@ -22,0 +23,5 @@ if (!function_exists('vms_fd_register_tours')) {
++        $registered_hook = function_exists('vms_fd_admin_page_hook') ? vms_fd_admin_page_hook() : '';
++        if ($registered_hook === '') {
++            return $tours;
++        }
++
+@@ -30,2 +35,2 @@ if (!function_exists('vms_fd_register_tours')) {
+-                    'screen_id' => 'vms-dashboard_page_vms-fill-dates',
+-                    'page_hook' => 'vms-dashboard_page_vms-fill-dates',
++                    'screen_id' => $registered_hook,
++                    'page_hook' => $registered_hook,

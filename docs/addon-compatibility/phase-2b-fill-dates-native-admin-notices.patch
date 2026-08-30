@@ -1,0 +1,57 @@
+# Apply from the WordPress plugins directory with: git apply --unidiff-zero <path-to-this-file>
+diff --git a/vms-fill-dates/includes/admin-page.php b/vms-fill-dates/includes/admin-page.php
+index 4abaf82..1174cea 100644
+--- a/vms-fill-dates/includes/admin-page.php
++++ b/vms-fill-dates/includes/admin-page.php
+@@ -22,0 +23,27 @@ if (!function_exists('vms_fd_admin_page_hook')) {
++if (!function_exists('vms_fd_is_current_admin_screen')) {
++    function vms_fd_is_current_admin_screen(): bool
++    {
++        $registered_hook = vms_fd_admin_page_hook();
++        if ($registered_hook === '') {
++            return false;
++        }
++
++        $hook_suffix = isset($GLOBALS['hook_suffix']) && is_string($GLOBALS['hook_suffix'])
++            ? $GLOBALS['hook_suffix']
++            : '';
++        if ($hook_suffix === $registered_hook) {
++            return true;
++        }
++
++        if (!function_exists('get_current_screen')) {
++            return false;
++        }
++
++        $screen = get_current_screen();
++        return is_object($screen)
++            && isset($screen->id)
++            && is_string($screen->id)
++            && $screen->id === $registered_hook;
++    }
++}
++
+@@ -64,0 +92,12 @@ add_action('admin_enqueue_scripts', 'vms_fd_enqueue_admin_assets');
++if (!function_exists('vms_fd_render_dependency_notice')) {
++    function vms_fd_render_dependency_notice(): void
++    {
++        if (!current_user_can('manage_options') || vms_fd_vms_ready()) {
++            return;
++        }
++
++        echo '<div class="notice notice-error"><p>' . esc_html__('Fill Dates requires Backstage Venue Manager (BVM). Activate it before using Fill Dates.', 'vms-fill-dates') . '</p></div>';
++    }
++}
++add_action('admin_notices', 'vms_fd_render_dependency_notice');
++
+@@ -218,0 +258,4 @@ if (!function_exists('vms_fd_render_notice')) {
++        if (!current_user_can('manage_options') || !vms_fd_is_current_admin_screen()) {
++            return;
++        }
++
+@@ -236,0 +280 @@ if (!function_exists('vms_fd_render_notice')) {
++add_action('admin_notices', 'vms_fd_render_notice');
+@@ -746 +789,0 @@ if (!function_exists('vms_fd_render_admin_page_content')) {
+-            echo '<div class="notice notice-error"><p>' . esc_html__('VMS core post types were not found. Activate VMS before using Fill Dates.', 'vms-fill-dates') . '</p></div>';
+@@ -752 +794,0 @@ if (!function_exists('vms_fd_render_admin_page_content')) {
+-        vms_fd_render_notice();
