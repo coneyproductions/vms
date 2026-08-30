@@ -8,12 +8,22 @@ backstage-venue-manager/vendor-management-system.php
 
 It does not use the normal Local database, change the normal site's active plugins, expose `vms/vendor-management-system.php`, or modify add-on production source.
 
+The default `official_five` suite remains the Phase 3 baseline. Phase 4 adds a separately identified `additional_first_party` suite without changing the original scenario definitions or canonical Phase 3 reports.
+
 ## Run
 
 From the repository root:
 
 ```sh
 BVM_COMPAT_PHP_BIN=/path/to/php scripts/test-bvm-addon-runtime-compatibility.sh
+```
+
+Run the Phase 4 additional-integration suite explicitly:
+
+```sh
+BVM_COMPAT_SUITE=additional_first_party \
+BVM_COMPAT_PHP_BIN=/path/to/php \
+scripts/test-bvm-addon-runtime-compatibility.sh
 ```
 
 The harness auto-discovers the surrounding Local WordPress root and installed plugin directory. Override discovery only when needed:
@@ -100,3 +110,7 @@ php tests/fill-dates-admin-notice-placement.php
 ```
 
 Run the complete shell harness twice and compare both normalized reports with `cmp` or SHA-256 before treating the matrix as repeatable.
+
+## Phase 4 extension
+
+The `additional_first_party` suite uses `scripts/test-bvm-additional-runtime-compatibility.sh` and the `additional-*` PHP files beside the Phase 3 probe. It freezes ten additional direct integrations, records DRM Events Bridge as blocked rather than copying its concurrently dirty source, stages the original five for supported-coexistence scenarios, and keeps external HTTP blocked. Its activation, BVM-present, BVM-absent, load-order, third-party-dependency, REST/AJAX/cron-registration, and coexistence evidence is written under the distinct `bvm-additional-runtime-compatibility` report name.

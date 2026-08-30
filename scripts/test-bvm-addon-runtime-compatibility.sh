@@ -3,6 +3,17 @@
 set -eu
 
 repo_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+compatibility_suite=${BVM_COMPAT_SUITE:-official_five}
+case "$compatibility_suite" in
+	official_five) ;;
+	additional_first_party)
+		exec "$repo_root/scripts/test-bvm-additional-runtime-compatibility.sh"
+		;;
+	*)
+		printf 'Unknown BVM compatibility suite: %s\n' "$compatibility_suite" >&2
+		exit 2
+		;;
+esac
 wordpress_source_root=${BVM_COMPAT_WP_ROOT:-$(CDPATH= cd -- "$repo_root/../../../.." && pwd)}
 source_plugins_root=${BVM_COMPAT_ADDON_ROOT:-$wordpress_source_root/wp-content/plugins}
 php_bin=${BVM_COMPAT_PHP_BIN:-$(command -v php)}
