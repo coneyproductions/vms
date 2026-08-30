@@ -88,6 +88,11 @@ foreach ($indexLines as $line) {
 		$decoded = base64_decode($match[1], true);
 		$payload = is_string($decoded) ? json_decode($decoded, true) : null;
 	}
+	$activationState = null;
+	if (preg_match('/^BVM_COMPAT_ACTIVATION_STATE_JSON=([A-Za-z0-9+\/=]+)$/m', $raw, $match) === 1) {
+		$decoded = base64_decode($match[1], true);
+		$activationState = is_string($decoded) ? json_decode($decoded, true) : null;
+	}
 	$debugSummary = $classifyDebug($debug);
 	$checkFailures = array();
 	if (is_array($payload)) {
@@ -97,14 +102,15 @@ foreach ($indexLines as $line) {
 			}
 		}
 	}
+	$isActivationScenario = $order === 'activation';
 	$passed = (int) $exitCode === 0
-		&& is_array($payload)
+		&& (($isActivationScenario && is_array($activationState)) || (!$isActivationScenario && is_array($payload)))
 		&& $checkFailures === array()
 		&& $debugSummary['fatal'] === array()
 		&& $debugSummary['database_error'] === array()
 		&& $debugSummary['owned_warning_or_notice'] === array();
 	$probeOutput = array();
-	foreach (preg_split('/\R/', preg_replace('/^BVM_COMPAT_RESULT_JSON=.*$/m', '', trim($raw)) ?: '') ?: array() as $outputLine) {
+	foreach (preg_split('/\R/', preg_replace('/^BVM_COMPAT_(?:RESULT|ACTIVATION_STATE)_JSON=.*$/m', '', trim($raw)) ?: '') ?: array() as $outputLine) {
 		$outputLine = $normalizeLogLine($outputLine);
 		if ($outputLine !== '') {
 			$probeOutput[] = $outputLine;
@@ -120,6 +126,7 @@ foreach ($indexLines as $line) {
 		'exit_code' => (int) $exitCode,
 		'passed' => $passed,
 		'payload' => is_array($payload) ? $payload : null,
+		'activation_state' => is_array($activationState) ? $activationState : null,
 		'check_failures' => $checkFailures,
 		'debug' => $debugSummary,
 		'probe_output_without_payload' => array_values(array_unique($probeOutput)),

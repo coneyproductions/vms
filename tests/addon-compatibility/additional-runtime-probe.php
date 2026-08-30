@@ -298,7 +298,27 @@ if ($scenarioId === 'third-party-absent-vms-commerce-discounts') {
 	$check('commerce-missing-woocommerce-notice', 'Notices', 'vms-commerce-discounts', stripos($nativeNotices, 'requires WooCommerce to be active') !== false && count($allSlugRows('vms-commerce-discounts')) === 0, 'Commerce Discounts emitted its WooCommerce-only dependency notice and registered no settings menu.');
 }
 if ($scenarioId === 'third-party-absent-square-vms-commerce-discounts') {
-	$check('commerce-missing-square-fails-closed', 'Notices', 'vms-commerce-discounts', stripos($nativeNotices, 'failed to initialize') !== false && count($allSlugRows('vms-commerce-discounts')) === 0, 'Commerce Discounts failed closed at runtime when WooCommerce Square was missing.', array('notice' => $result['notices']));
+	if (getenv('BVM_COMPAT_COMMERCE_SQUARE_CONTRACT') === 'phase5a') {
+		$squareCallbacks = array(
+			'wc_payment_gateway_square_credit_card_get_order' => has_filter('wc_payment_gateway_square_credit_card_get_order'),
+			'wc_payment_gateway_square_cash_app_pay_get_order' => has_filter('wc_payment_gateway_square_cash_app_pay_get_order'),
+		);
+		$check(
+			'commerce-missing-square-integration-unavailable',
+			'Notices',
+			'vms-commerce-discounts',
+			stripos($nativeNotices, 'WooCommerce Square integration is unavailable') !== false
+				&& count($allSlugRows('vms-commerce-discounts')) === 1
+				&& !class_exists('VMS_Discounts_Square_Bridge', false)
+				&& !class_exists('VMS_Discounts_Square_Order_Request', false)
+				&& !in_array(true, $squareCallbacks, true)
+				&& has_action('wp_ajax_vms_discounts_search_products') !== false,
+			'Commerce Discounts kept its non-Square runtime available while declaring the Square-specific integration unavailable.',
+			array('notice' => $result['notices'], 'square_callbacks' => $squareCallbacks)
+		);
+	} else {
+		$check('commerce-missing-square-fails-closed', 'Notices', 'vms-commerce-discounts', stripos($nativeNotices, 'failed to initialize') !== false && count($allSlugRows('vms-commerce-discounts')) === 0, 'Commerce Discounts failed closed at runtime when WooCommerce Square was missing.', array('notice' => $result['notices']));
+	}
 }
 if ($scenarioId === 'third-party-absent-vmsx-checkout-policies') {
 	$check('checkout-policies-no-woocommerce-menu', 'Menu/UI', 'vmsx-checkout-policies', count($allSlugRows('vmsx-checkout-policies')) === 0, 'Checkout Policies registered no fallback menu without WooCommerce.');

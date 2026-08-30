@@ -1,0 +1,91 @@
+{
+  "schema": "bvm-commerce-discounts-phase5a-evidence-v1",
+  "generated_at": "2026-08-30",
+  "bvm_baseline": {
+    "repository": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/packages/vms-github-reconcile",
+    "branch": "work/unreleased-2026-06-18",
+    "head": "a9c31145ddbb1abb3bb1837d2a6fbda3dff4eccb",
+    "worktree": "clean before Phase 5A",
+    "protected_stash": "stash@{0}: WPORG-16D preserve unrelated sidebar+doc work"
+  },
+  "phase4_evidence": {
+    "json_sha256": "c27d8f7ba54de6274dd5d603c13c6322cc7fe9600cbe023c707becaa54109383",
+    "text_sha256": "9c1ef8dc3a7358f6261db1564b197e62065878a1034f887cb0d81d680a1e9a34",
+    "narrative_sha256": "09ba74f831c4fa15edd452db68e5ba32a683146ba318aa086b313cc395331951"
+  },
+  "commerce_0_2_11_baseline": {
+    "source": "wp-content/plugins/vms-commerce-discounts-0.2.11.zip",
+    "git_controlled": false,
+    "archive_sha256": "4f06637af51f06c576588c6a0d74e31f01b4c9a4a2da9b01ac5cfd8a654ea0b7",
+    "file_count": 25,
+    "tree_sha256": "cdc3d7cdbbce0e5383ba54e1247ef27b3fe237cacbf00b646c139e2dbc18e3bf",
+    "entry_sha256": "01648834536998aeb44deba7c59b22cbb5d1714c6c0fed3d5841f7dc523cf341",
+    "loader_sha256": "b258ede4843199f10f3193d581e3a3528fff9bc7ad71c71f2463d3ce85277df5",
+    "square_bridge_sha256": "0772e154d112ab08bfb7d6afd3177b65971adce03ce13cea277011d412b6cda0"
+  },
+  "pre_fix_reproduction": {
+    "scenario": "BVM and WooCommerce available; WooCommerce Square absent; activate Commerce Discounts 0.2.11",
+    "exit_code": 255,
+    "error": "Class WooCommerce\\Square\\Gateway\\API\\Requests\\Orders not found",
+    "file": "vms-commerce-discounts/includes/class-vms-discounts-square-bridge.php",
+    "line": 295,
+    "commerce_active_after_failure": false,
+    "migration_marker_after_failure": null,
+    "partial_activation_state": "none observed; activation stopped before the legacy-migration marker mutation",
+    "raw_log_sha256": "0836477528c89ef4765a88b16850b6b990d59af8aaa66b90f562027ff8e045eb",
+    "phase5a_pre_fix_report_sha256": "45ec8c208ae4517184fef7d96cc2c387c83e0de311716972206779f913ef3628"
+  },
+  "square_dependency_inventory": {
+    "classes_declared_in_bridge_file": [
+      "VMS_Discounts_Square_Bridge",
+      "VMS_Discounts_Square_Order_Request"
+    ],
+    "unsafe_declaration_time_dependencies_before_fix": [
+      "VMS_Discounts_Square_Order_Request extends WooCommerce\\Square\\Gateway\\API\\Requests\\Orders"
+    ],
+    "guarded_runtime_dependencies": [
+      "Square\\SquareClient",
+      "WooCommerce\\Square\\Gateway\\API\\Requests\\Orders"
+    ],
+    "safe_runtime_references": [
+      "Square\\Http\\ApiResponse",
+      "Square\\Models\\CreateOrderRequest",
+      "Square\\Models\\Order",
+      "Square\\Models\\OrderLineItem",
+      "Square\\Models\\OrderLineItemAppliedDiscount",
+      "Square\\Models\\OrderLineItemDiscount",
+      "Square\\Environment"
+    ],
+    "other_unsafe_declaration_time_dependencies": []
+  },
+  "commerce_0_2_12_corrected": {
+    "artifact": "docs/addon-compatibility/artifacts/vms-commerce-discounts-0.2.12.zip",
+    "archive_sha256": "0cd5f4d2d0ce3dd9484d85442dff38783bfa45f17f46bdd942d1e9ba9962b001",
+    "file_count": 26,
+    "tree_sha256": "3a3528dfa1ed5d76608f27504ffed4990d1c2c320f1897d4c0cb49200531a060",
+    "entry_sha256": "b2f8e43c542af7ae30b3c29ef71896555eeb635e3d94023bea4fac31785dfb18",
+    "loader_sha256": "6ff7f44117fcab853a13cd76fd6da61ebbb8af87daeb4eb8cf7b52907b62fec3",
+    "square_bridge_sha256": "0772e154d112ab08bfb7d6afd3177b65971adce03ce13cea277011d412b6cda0",
+    "patch": "docs/addon-compatibility/vms-commerce-discounts-0.2.11-to-0.2.12.patch",
+    "patch_sha256": "026eb45df397d987538915cc24be6cd45d62f99ab468f746f635c9e8554cdb0e",
+    "reconstructed_tree_sha256": "3a3528dfa1ed5d76608f27504ffed4990d1c2c320f1897d4c0cb49200531a060",
+    "reconstruction_byte_identical": true
+  },
+  "post_fix_runtime_evidence": {
+    "json": "test-results/bvm-commerce-discounts-phase5a-runtime.report.json",
+    "json_sha256": "12b3f0f2755def0a79f7904d5b5d15a33e0438974df5b1147b46c2f1f5c39df2",
+    "text": "test-results/bvm-commerce-discounts-phase5a-runtime.report.txt",
+    "text_sha256": "f973afd5c1706406985ad3efda334b602d81cb77f23673e0857c6279eadb572a",
+    "source_manifest": "test-results/bvm-commerce-discounts-phase5a-source-manifest.json",
+    "source_manifest_sha256": "4d9081e3ec6ebee08ef674e3f614b21dc471a267020b32e79b2eb0ade1721adc",
+    "independent_runs": 2,
+    "byte_identical_across_runs": true,
+    "commerce_overall": "PASS — BVM-only runtime compatible",
+    "known_suite_overall": "FAIL because Safety Toolkit Pro remains an intentionally represented unresolved defect"
+  },
+  "phase3_official_five": {
+    "json_sha256": "3b9d63787c2048771491b82664e74c38d1f9c4bed9b782294ac79f8fb44218d2",
+    "text_sha256": "979ae95aa5687fd7666c77bcd6a6330adbadbe615856b47a3ce562cacd8da587",
+    "result": "PASS"
+  }
+}

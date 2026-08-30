@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+$commercePhase5a = getenv('BVM_COMPAT_COMMERCE_SQUARE_CONTRACT') === 'phase5a';
+$commerceVersion = getenv('BVM_COMPAT_COMMERCE_VERSION') ?: '0.2.11';
+
 /**
  * Phase 4 direct first-party integration contracts.
  *
@@ -40,11 +43,13 @@ return array(
 		),
 		'vms-commerce-discounts' => array(
 			'name' => 'VMS Commerce Discounts',
-			'version' => '0.2.11',
+			'version' => $commerceVersion,
 			'entry' => 'vms-commerce-discounts/vms-commerce-discounts.php',
 			'dependency' => 'data-contract only',
-			'companions' => array('required' => array('woocommerce', 'woocommerce-square'), 'optional' => array('the-events-calendar', 'event-tickets', 'event-tickets-plus')),
-			'marker' => array('constant' => 'VMS_DISCOUNTS_VERSION', 'value' => '0.2.11'),
+			'companions' => $commercePhase5a
+				? array('required' => array('woocommerce'), 'optional' => array('woocommerce-square', 'the-events-calendar', 'event-tickets', 'event-tickets-plus'))
+				: array('required' => array('woocommerce', 'woocommerce-square'), 'optional' => array('the-events-calendar', 'event-tickets', 'event-tickets-plus')),
+			'marker' => array('constant' => 'VMS_DISCOUNTS_VERSION', 'value' => $commerceVersion),
 			'detection' => array('No BVM identity check; reads BVM-shaped post/meta contracts.'),
 			'functions' => array(),
 			'classes' => array(),
@@ -52,7 +57,11 @@ return array(
 			'hook_callbacks' => array(),
 			'menus' => array(array('parent' => 'woocommerce', 'slug' => 'vms-commerce-discounts', 'capability' => 'manage_options')),
 			'fallback_menus' => array('without_woocommerce' => 'none'),
-			'notice' => array('present' => '', 'missing_companion' => 'requires WooCommerce to be active', 'missing_square' => 'fatal before a native notice can register'),
+			'notice' => array(
+				'present' => '',
+				'missing_companion' => 'requires WooCommerce to be active',
+				'missing_square' => $commercePhase5a ? 'WooCommerce Square integration is unavailable' : 'fatal before a native notice can register',
+			),
 			'post_types' => array('vms_event_plan', 'tribe_events', 'product'),
 			'taxonomies' => array(),
 			'meta' => array('_vms_event_plan_id', '_vms_product_role', '_vms_entitlement_event_id', '_vms_event_id', '_vms_parent_event_id'),

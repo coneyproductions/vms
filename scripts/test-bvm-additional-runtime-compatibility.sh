@@ -82,7 +82,7 @@ cleanup_on_exit() {
 }
 trap cleanup_on_exit EXIT HUP INT TERM
 
-commerce_archive=$source_plugins_root/vms-commerce-discounts-0.2.11.zip
+commerce_archive=${BVM_COMPAT_COMMERCE_ARCHIVE:-$source_plugins_root/vms-commerce-discounts-0.2.11.zip}
 weather_archive=$source_plugins_root/VMS\ WEATHER\ RISK\ ZIP\ ARCHIVES/vmsx-weather-risk-0.1.12-title-cleanup.zip
 
 for required_path in \
@@ -251,21 +251,30 @@ wp_fixture core install \
 fixture_foundation_plugins='backstage-venue-manager woocommerce the-events-calendar event-tickets event-tickets-plus vms-events-slider vms-fill-dates vms-data-tools vms-express-bar vms-refer-a-friend'
 fixture_additional_plugins='drm-calendar-intake vms-investor-portal vms-meta-ads vms-ops-console-premium vms-safety-pro vms-season-passes vms-sponsorships vmsx-checkout-policies vmsx-weather-risk'
 all_fixture_plugins="$fixture_foundation_plugins woocommerce-square $fixture_additional_plugins vms-commerce-discounts"
-# Activate in separate fresh processes. Commerce Discounts declares a subclass
-# of a WooCommerce Square class while its activation files load, so Square's
-# already-active autoloader is a genuine prerequisite for valid setup.
+# Activate in separate fresh processes so Commerce Discounts activation can be
+# observed first with Square absent and then with Square present.
 # shellcheck disable=SC2086 -- the fixed lists intentionally expand to WP-CLI arguments.
 wp_fixture plugin activate $fixture_foundation_plugins --quiet >"$output_dir/activation-setup.log" 2>&1
-# Preserve the activation-time missing-Square failure as explicit evidence.
+# Preserve the missing-Square activation outcome as explicit evidence. The
+# Phase 4 baseline fails here; the Phase 5A repair must activate successfully.
 commerce_missing_square_activation_log=$output_dir/third-party-activation-absent-square-vms-commerce-discounts.raw.log
 set +e
 wp_fixture plugin activate vms-commerce-discounts --quiet >"$commerce_missing_square_activation_log" 2>&1
 commerce_missing_square_activation_exit=$?
 set -e
-if [ "$commerce_missing_square_activation_exit" -eq 0 ]; then
-	printf 'Commerce Discounts unexpectedly activated without WooCommerce Square.\n' >&2
-	exit 2
-fi
+commerce_activation_active_plugins=$(wp_fixture option get active_plugins --format=json --skip-plugins --skip-themes --quiet)
+commerce_activation_migration_marker=$(wp_fixture option get _vms_discounts_migrated --skip-plugins --skip-themes --quiet 2>/dev/null || printf '__missing__')
+commerce_activation_state_json=$("$php_bin" -r '
+$active = json_decode($argv[1], true);
+$plugin = "vms-commerce-discounts/vms-commerce-discounts.php";
+echo json_encode([
+	"active_plugins" => is_array($active) ? array_values($active) : [],
+	"commerce_active" => is_array($active) && in_array($plugin, $active, true),
+	"migration_marker" => $argv[2] === "__missing__" ? null : $argv[2],
+], JSON_UNESCAPED_SLASHES);
+' "$commerce_activation_active_plugins" "$commerce_activation_migration_marker")
+commerce_activation_state_base64=$("$php_bin" -r 'echo base64_encode($argv[1]);' "$commerce_activation_state_json")
+printf '\nBVM_COMPAT_ACTIVATION_STATE_JSON=%s\n' "$commerce_activation_state_base64" >> "$commerce_missing_square_activation_log"
 wp_fixture plugin activate woocommerce-square --quiet >>"$output_dir/activation-setup.log" 2>&1
 # shellcheck disable=SC2086 -- the fixed lists intentionally expand to WP-CLI arguments.
 wp_fixture plugin activate $fixture_additional_plugins --quiet >>"$output_dir/activation-setup.log" 2>&1

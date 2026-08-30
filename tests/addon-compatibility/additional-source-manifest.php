@@ -70,7 +70,9 @@ $manifest = array(
 	'wordpress_version' => '',
 	'plugins' => array(),
 	'source_selection' => array(
-		'vms-commerce-discounts' => 'versioned installable archive 0.2.11; installed 0.2.4 and active temporary 0.2.9 copies excluded as stale',
+		'vms-commerce-discounts' => getenv('BVM_COMPAT_COMMERCE_SQUARE_CONTRACT') === 'phase5a'
+			? 'Phase 5A corrected archive ' . (getenv('BVM_COMPAT_COMMERCE_VERSION') ?: '0.2.12') . ' reconstructed from authoritative 0.2.11; installed 0.2.4 and temporary 0.2.9 copies excluded as stale'
+			: 'versioned installable archive 0.2.11; installed 0.2.4 and active temporary 0.2.9 copies excluded as stale',
 		'vmsx-weather-risk' => 'latest versioned installable archive 0.1.12; installed active 0.1.3 copy excluded as stale',
 		'drm-events-bridge' => 'not staged: blocked because the authoritative Git worktree is concurrently dirty',
 	),

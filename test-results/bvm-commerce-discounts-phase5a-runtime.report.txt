@@ -1,0 +1,77 @@
+BVM Additional First-Party Integration Runtime Compatibility
+Overall: FAIL
+
+WordPress: 7.1
+BVM: 1.2.0
+Database cleanup: PASS
+Runtime cleanup: PASS
+External HTTP: BLOCKED
+Normal active plugins unchanged: PASS
+
+| Plugin | Version | BVM Detection | APIs | Menu/UI | Notices | BVM-Absent | Load Order | Overall |
+| --- | ---: | --- | --- | --- | --- | --- | --- | --- |
+| DRM Calendar Intake | 0.2.4 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| VMS Commerce Discounts | 0.2.12 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| VMS Investor Portal | 0.2.2 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| VMS Meta Ads Builder | 0.1.106 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| VMS Ops Console Premium | 0.1.66 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| VMS Safety Toolkit Pro | 0.1.0 | PASS | FAIL | PASS | PASS | PASS | FAIL | FAIL — effectively incompatible with BVM-only core |
+| VMS Season Passes | 0.1.0 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| VMS Sponsorships | 0.1.27 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| VMS Checkout Policies | 0.1.8 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| VMSX Weather Risk | 0.1.12 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+| DRM Events Bridge | 0.2.1 | BLOCKED | BLOCKED | BLOCKED | BLOCKED | BLOCKED | BLOCKED | BLOCKED — concurrent source movement |
+
+Cross-ecosystem scenarios: PASS
+
+Scenario results:
+- third-party-activation-absent-square-vms-commerce-discounts: PASS
+- additional-drm-calendar-intake-core-first: PASS
+- additional-drm-calendar-intake-addon-first: PASS
+- additional-vms-commerce-discounts-core-first: PASS
+- additional-vms-commerce-discounts-addon-first: PASS
+- additional-vms-investor-portal-core-first: PASS
+- additional-vms-investor-portal-addon-first: PASS
+- additional-vms-meta-ads-core-first: PASS
+- additional-vms-meta-ads-addon-first: PASS
+- additional-vms-ops-console-premium-core-first: PASS
+- additional-vms-ops-console-premium-addon-first: PASS
+- additional-vms-safety-pro-core-first: FAIL
+  - runtime-functions-vms-safety-pro: Consumed BVM function contracts were declared at runtime.
+    {"missing":["vms_safety_admin_url","vms_safety_audit_log","vms_safety_manage_capability"],"checked":3}
+  - runtime-constants-vms-safety-pro: Consumed BVM constant contracts were declared at runtime.
+    {"missing":["VMS_CAP_SAFETY_TEMPLATES"]}
+  - data-contracts-vms-safety-pro: Required live BVM post-type contracts were registered.
+    {"missing":["vms_doc"]}
+- additional-vms-safety-pro-addon-first: FAIL
+  - runtime-functions-vms-safety-pro: Consumed BVM function contracts were declared at runtime.
+    {"missing":["vms_safety_admin_url","vms_safety_audit_log","vms_safety_manage_capability"],"checked":3}
+  - runtime-constants-vms-safety-pro: Consumed BVM constant contracts were declared at runtime.
+    {"missing":["VMS_CAP_SAFETY_TEMPLATES"]}
+  - data-contracts-vms-safety-pro: Required live BVM post-type contracts were registered.
+    {"missing":["vms_doc"]}
+- additional-vms-season-passes-core-first: PASS
+- additional-vms-season-passes-addon-first: PASS
+- additional-vms-sponsorships-core-first: PASS
+- additional-vms-sponsorships-addon-first: PASS
+- additional-vmsx-checkout-policies-core-first: PASS
+- additional-vmsx-checkout-policies-addon-first: PASS
+- additional-vmsx-weather-risk-core-first: PASS
+- additional-vmsx-weather-risk-addon-first: PASS
+- additional-core-absent-drm-calendar-intake: PASS
+- additional-core-absent-vms-commerce-discounts: PASS
+- additional-core-absent-vms-investor-portal: PASS
+- additional-core-absent-vms-meta-ads: PASS
+- additional-core-absent-vms-ops-console-premium: PASS
+- additional-core-absent-vms-safety-pro: PASS
+- additional-core-absent-vms-season-passes: PASS
+- additional-core-absent-vms-sponsorships: PASS
+- additional-core-absent-vmsx-checkout-policies: PASS
+- additional-core-absent-vmsx-weather-risk: PASS
+- third-party-absent-vms-commerce-discounts: PASS
+- third-party-absent-square-vms-commerce-discounts: PASS
+- third-party-absent-vmsx-checkout-policies: PASS
+- third-party-absent-vms-season-passes: PASS
+- third-party-absent-vms-sponsorships: PASS
+- additional-coexistence-core-first: PASS
+- additional-coexistence-addons-first: PASS
