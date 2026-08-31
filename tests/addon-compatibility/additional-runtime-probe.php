@@ -108,7 +108,9 @@ try {
 	}
 	do_action('admin_menu', '');
 	if (did_action('rest_api_init') === 0) {
-		do_action('rest_api_init', rest_get_server());
+		// rest_get_server() initializes the server and fires rest_api_init.
+		// Calling the action around it would register every route twice.
+		rest_get_server();
 	}
 } catch (Throwable $throwable) {
 	$lifecycleException = array(
@@ -169,6 +171,14 @@ $result['identity'] = array(
 		'vms/vms.php' => is_file(WP_PLUGIN_DIR . '/vms/vms.php'),
 		'backstage-venue-manager.php' => is_file(WP_PLUGIN_DIR . '/backstage-venue-manager.php'),
 	),
+	'bridge_bvm_detection' => in_array('drm-events-bridge', $targetAddons, true)
+		? array(
+			'mode' => 'none',
+			'public_basename_required' => false,
+			'historical_basename_required' => false,
+			'optional_runtime_api_guards' => array('vms_event_plan_statuses', 'vms_meta_key', 'vms_event_plan_status_normalize'),
+		)
+		: null,
 );
 
 $check('core-presence', 'BVM Detection', $addon, $coreLoaded === $coreExpected, 'BVM runtime presence matched the scenario.');
@@ -187,6 +197,79 @@ foreach (array_keys($routes) as $route) {
 }
 $result['rest_namespaces'] = array_keys($result['rest_namespaces']);
 sort($result['rest_namespaces'], SORT_STRING);
+
+if (in_array('drm-events-bridge', $targetAddons, true)) {
+	$bridgeFunctions = array(
+		'drm_events_bridge_get_router_status',
+		'drm_events_bridge_get_upcoming_events',
+		'drm_events_bridge_get_events_from_router',
+		'drm_events_bridge_local_public_event_provider',
+	);
+	$missingBridgeFunctions = array_values(array_filter($bridgeFunctions, static fn(string $function): bool => !function_exists($function)));
+	$check('bridge-runtime-api', 'APIs', 'drm-events-bridge', $missingBridgeFunctions === array(), 'Bridge runtime APIs loaded.', array('missing' => $missingBridgeFunctions));
+
+	$routerExpected = $companionState !== 'missing-router';
+	$routerStatus = function_exists('drm_events_bridge_get_router_status') ? drm_events_bridge_get_router_status() : array();
+	$check(
+		'bridge-router-state',
+		'APIs',
+		'drm-events-bridge',
+		(bool) ($routerStatus['available'] ?? false) === $routerExpected
+			&& (bool) ($routerStatus['compatible'] ?? false) === $routerExpected
+			&& (int) ($routerStatus['contract_version'] ?? 0) === ($routerExpected ? 2 : 0),
+		'Bridge recognized the exact Router contract or its intentional absence.',
+		array('expected' => $routerExpected, 'actual' => $routerStatus)
+	);
+
+	$bridgeEvents = function_exists('drm_events_bridge_get_upcoming_events') ? drm_events_bridge_get_upcoming_events('', 12) : null;
+	$check('bridge-empty-provider-safe', 'APIs', 'drm-events-bridge', is_array($bridgeEvents) && $bridgeEvents === array(), 'A fresh or missing Router returned a safe empty public feed without legacy BVM fallback.');
+
+	$syntheticCandidate = array(
+		'id' => 'drm-0123456789abcdef0123456789abcdef',
+		'act_slug' => 'dalene-richelle-solo',
+		'public_title' => 'Synthetic compatibility event',
+		'start_datetime' => '2099-01-02T19:00:00-06:00',
+		'end_datetime' => '2099-01-02T21:00:00-06:00',
+		'timezone' => 'America/Chicago',
+		'presentation' => 'normal',
+		'venue_key' => 'compatibility-venue',
+		'venue_name' => 'Compatibility Venue',
+		'city' => 'Test City',
+		'state' => 'TX',
+	);
+	$mapped = function_exists('drm_events_bridge_get_events_from_router')
+		? drm_events_bridge_get_events_from_router('', 12, 2, static fn(): array => array($syntheticCandidate))
+		: array();
+	$expectedFields = array('id', 'act_slug', 'act_label', 'presentation', 'public_title', 'venue_name', 'city', 'state', 'start_datetime', 'end_datetime', 'timezone', 'ticket_url', 'event_url');
+	$check(
+		'bridge-router-mapping-contract',
+		'APIs',
+		'drm-events-bridge',
+		count($mapped) === 1 && array_keys($mapped[0]) === $expectedFields && ($mapped[0]['presentation'] ?? '') === 'normal',
+		'Bridge mapped one synthetic Router-approved candidate to the exact 13-field public contract.',
+		array('actual_fields' => isset($mapped[0]) && is_array($mapped[0]) ? array_keys($mapped[0]) : array())
+	);
+	$syntheticCandidate['presentation'] = 'public';
+	$aliasResult = function_exists('drm_events_bridge_get_events_from_router')
+		? drm_events_bridge_get_events_from_router('', 12, 2, static fn(): array => array($syntheticCandidate))
+		: null;
+	$throwResult = function_exists('drm_events_bridge_get_events_from_router')
+		? drm_events_bridge_get_events_from_router('', 12, 2, static function (): array { throw new RuntimeException('synthetic-provider-failure'); })
+		: null;
+	$check('bridge-provider-fail-closed', 'APIs', 'drm-events-bridge', $aliasResult === array() && $throwResult === array(), 'Presentation aliases and provider exceptions failed closed.');
+
+	$routeEndpoints = (array) ($routes['/drm-events/v1/upcoming'] ?? array());
+	$check('bridge-rest-route-single', 'APIs', 'drm-events-bridge', count($routeEndpoints) === 1, 'Bridge registered its public REST route exactly once.', array('endpoint_count' => count($routeEndpoints)));
+	$check('bridge-provider-filter-priority', 'APIs', 'drm-events-bridge', has_filter('dalene_richelle_site_public_event_provider', 'drm_events_bridge_local_public_event_provider') === 5, 'Bridge registered its local provider adapter once at priority 5.');
+
+	$settingsRows = $menuRows('options-general.php', 'drm-events-bridge');
+	$allSettingsRows = $allSlugRows('drm-events-bridge');
+	$check('bridge-settings-menu-single', 'Menu/UI', 'drm-events-bridge', count($settingsRows) === 1 && count($allSettingsRows) === 1, 'Bridge registered one Settings page without a menu collision.');
+	$check('bridge-no-bvm-dependency-notice', 'Notices', 'drm-events-bridge', stripos($nativeNotices, 'Bridge requires') === false && stripos($nativeNotices, 'Activate BVM') === false, 'Bridge emitted no BVM dependency warning.');
+	if (!$coreExpected) {
+		$check('bridge-bvm-absent-supported', 'BVM-Absent', 'drm-events-bridge', !$coreLoaded && is_array($bridgeEvents), 'Bridge initialized without local BVM under its Router-authoritative architecture.');
+	}
+}
 
 foreach ($targetAddons as $targetAddon) {
 	$contract = $manifest['plugins'][$targetAddon] ?? null;

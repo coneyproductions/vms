@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $commercePhase5a = getenv('BVM_COMPAT_COMMERCE_SQUARE_CONTRACT') === 'phase5a';
 $commerceVersion = getenv('BVM_COMPAT_COMMERCE_VERSION') ?: '0.2.11';
+$compatibilityPhase = getenv('BVM_COMPAT_PHASE') ?: 'phase5a';
 
 /**
  * Phase 4 direct first-party integration contracts.
@@ -11,7 +12,7 @@ $commerceVersion = getenv('BVM_COMPAT_COMMERCE_VERSION') ?: '0.2.11';
  * frozen source selected for the disposable runtime and the observable
  * contracts that can be exercised without operational data or network I/O.
  */
-return array(
+$contracts = array(
 	'plugins' => array(
 		'drm-calendar-intake' => array(
 			'name' => 'DRM Calendar Intake',
@@ -303,3 +304,46 @@ return array(
 		'event-venue-map-modal' => array('reason' => 'Integrates with The Events Calendar presentation only; no direct BVM runtime contract was found.'),
 	),
 );
+
+if ($compatibilityPhase === 'phase6a') {
+	$safety = $contracts['plugins']['vms-safety-pro'];
+	unset($contracts['plugins']['vms-safety-pro']);
+
+	$contracts['plugins']['drm-events-bridge'] = array(
+		'name' => 'DRM Events Bridge',
+		'version' => '0.2.2',
+		'entry' => 'drm-events-bridge/drm-events-bridge.php',
+		'dependency' => 'Router-authoritative public adapter; BVM is optional legacy/future enrichment only',
+		'companions' => array('required' => array('drm-calendar-intake', 'drm-event-router'), 'optional' => array()),
+		'marker' => array('constant' => 'DRM_EVENTS_BRIDGE_VERSION', 'value' => '0.2.2'),
+		'detection' => array('No BVM identity detection; optional vms_* enrichment APIs are guarded with function_exists().'),
+		'functions' => array('vms_event_plan_statuses', 'vms_meta_key', 'vms_event_plan_status_normalize'),
+		'classes' => array(),
+		'constants' => array(),
+		'hook_callbacks' => array(
+			'dalene_richelle_site_public_event_provider' => 'drm_events_bridge_local_public_event_provider',
+			'admin_post_drm_events_bridge_save_vendor_map' => 'drm_events_bridge_handle_save_vendor_map',
+		),
+		'menus' => array(array('parent' => 'options-general.php', 'slug' => 'drm-events-bridge', 'capability' => 'manage_options')),
+		'fallback_menus' => array('without_bvm' => 'same WordPress Settings page'),
+		'notice' => array('present' => '', 'absent' => ''),
+		'post_types' => array('vms_event_plan', 'vms_vendor'),
+		'taxonomies' => array(),
+		'meta' => array('_vms_event_plan_status', '_drm_publish_to_dalene_site'),
+		'options' => array('drm_events_bridge_vendor_map'),
+		'tables' => array(),
+		'rest_namespaces' => array('drm-events/v1'),
+		'ajax_actions' => array(),
+		'cron_hooks' => array(),
+	);
+	$contracts['blocked'] = array();
+	$contracts['retired'] = array(
+		'vms-safety-pro' => array(
+			'name' => $safety['name'],
+			'version' => $safety['version'],
+			'status' => 'RETIRED — excluded from Phase 6A runtime and coexistence scenarios',
+		),
+	);
+}
+
+return $contracts;

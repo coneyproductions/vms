@@ -10,6 +10,7 @@ if ($argc !== 9) {
 unset($script);
 
 $contracts = require __DIR__ . '/additional-runtime-contracts.php';
+$phase6a = getenv('BVM_COMPAT_PHASE') === 'phase6a';
 $sourceManifest = json_decode((string) file_get_contents($sourcePath), true);
 if (!is_array($sourceManifest)) {
 	fwrite(STDERR, "Could not decode the isolated source manifest.\n");
@@ -135,7 +136,10 @@ foreach ($indexLines as $line) {
 
 $dimensions = array('BVM Detection', 'APIs', 'Menu/UI', 'Notices', 'BVM-Absent');
 $matrix = array();
-foreach ($contracts['plugins'] as $addon => $contract) {
+$matrixContracts = $phase6a
+	? array('drm-events-bridge' => $contracts['plugins']['drm-events-bridge'])
+	: $contracts['plugins'];
+foreach ($matrixContracts as $addon => $contract) {
 	$dimensionResults = array();
 	foreach ($dimensions as $dimension) {
 		$relevant = array();
@@ -215,7 +219,7 @@ $overallPass = $scenarioPass && $crossAddonPassed && $cleanupPassed && $normalSi
 
 $report = array(
 	'schema_version' => 1,
-	'suite' => 'additional_first_party',
+	'suite' => $phase6a ? 'drm_events_bridge_phase6a' : 'additional_first_party',
 	'overall' => $overallPass ? 'PASS' : 'FAIL',
 	'isolation' => array(
 		'wordpress' => 'Local WordPress core copied to a temporary tree',
@@ -230,6 +234,14 @@ $report = array(
 	),
 	'source_manifest' => $sourceManifest,
 	'contract_manifest' => $contracts,
+	'forensic_source_integrity' => $phase6a ? array(
+		'bridge_dirty_status_before_sha256' => getenv('BVM_COMPAT_BRIDGE_STATUS_BEFORE_SHA256') ?: '',
+		'bridge_dirty_status_after_sha256' => getenv('BVM_COMPAT_BRIDGE_STATUS_AFTER_SHA256') ?: '',
+		'bridge_dirty_status_unchanged' => ($before = getenv('BVM_COMPAT_BRIDGE_STATUS_BEFORE_SHA256')) !== false
+			&& ($after = getenv('BVM_COMPAT_BRIDGE_STATUS_AFTER_SHA256')) !== false
+			&& $before !== ''
+			&& hash_equals($before, $after),
+	) : array(),
 	'bvm_only_identity_proof' => $firstIdentity,
 	'matrix' => $matrix,
 	'cross_ecosystem' => array('scenarios' => $crossScenarioIds, 'passed' => $crossAddonPassed),
@@ -244,7 +256,7 @@ if (file_put_contents($jsonPath, $json) === false) {
 
 $status = static fn($value): string => $value === null ? 'BLOCKED' : ($value ? 'PASS' : 'FAIL');
 $text = array(
-	'BVM Additional First-Party Integration Runtime Compatibility',
+	$phase6a ? 'BVM / DRM Events Bridge Phase 6A Runtime Compatibility' : 'BVM Additional First-Party Integration Runtime Compatibility',
 	'Overall: ' . $report['overall'],
 	'',
 	'WordPress: ' . ($sourceManifest['wordpress_version'] ?? ''),
@@ -253,6 +265,7 @@ $text = array(
 	'Runtime cleanup: ' . strtoupper($runtimeCleanup),
 	'External HTTP: BLOCKED',
 	'Normal active plugins unchanged: ' . $status($normalSiteUnchanged),
+	...($phase6a ? array('Bridge forensic worktree unchanged: ' . $status($report['forensic_source_integrity']['bridge_dirty_status_unchanged'])) : array()),
 	'',
 	'| Plugin | Version | BVM Detection | APIs | Menu/UI | Notices | BVM-Absent | Load Order | Overall |',
 	'| --- | ---: | --- | --- | --- | --- | --- | --- | --- |',

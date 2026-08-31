@@ -1,0 +1,26 @@
+BVM / DRM Events Bridge Phase 6A Runtime Compatibility
+Overall: PASS
+
+WordPress: 7.1
+BVM: 1.2.0
+Database cleanup: PASS
+Runtime cleanup: PASS
+External HTTP: BLOCKED
+Normal active plugins unchanged: PASS
+Bridge forensic worktree unchanged: PASS
+
+| Plugin | Version | BVM Detection | APIs | Menu/UI | Notices | BVM-Absent | Load Order | Overall |
+| --- | ---: | --- | --- | --- | --- | --- | --- | --- |
+| DRM Events Bridge | 0.2.2 | PASS | PASS | PASS | PASS | PASS | PASS | PASS — BVM-only runtime compatible |
+
+Cross-ecosystem scenarios: PASS
+
+Scenario results:
+- third-party-activation-absent-square-vms-commerce-discounts: PASS
+- additional-core-absent-drm-events-bridge: PASS
+- additional-drm-events-bridge-public-bvm: PASS
+- additional-drm-events-bridge-core-first: PASS
+- additional-drm-events-bridge-addon-first: PASS
+- additional-provider-absent-drm-events-bridge: PASS
+- additional-coexistence-core-first: PASS
+- additional-coexistence-addons-first: PASS

@@ -114,3 +114,15 @@ Run the complete shell harness twice and compare both normalized reports with `c
 ## Phase 4 extension
 
 The `additional_first_party` suite uses `scripts/test-bvm-additional-runtime-compatibility.sh` and the `additional-*` PHP files beside the Phase 3 probe. It freezes ten additional direct integrations, records DRM Events Bridge as blocked rather than copying its concurrently dirty source, stages the original five for supported-coexistence scenarios, and keeps external HTTP blocked. Its activation, BVM-present, BVM-absent, load-order, third-party-dependency, REST/AJAX/cron-registration, and coexistence evidence is written under the distinct `bvm-additional-runtime-compatibility` report name.
+
+## Phase 6A Bridge mode
+
+Phase 6A preserves the default historical Phase 4/5 behavior and adds an explicit immutable-source mode:
+
+```sh
+BVM_COMPAT_PHASE=phase6a \
+BVM_COMPAT_PHP_BIN=/path/to/php-8.3 \
+scripts/test-bvm-additional-runtime-compatibility.sh
+```
+
+This mode extracts DRM Events Bridge 0.2.2 commit `b1efcc974233a3b43c2a9efa30533c6688f87320` and DRM Event Router 0.1.4 commit `7a4232ee327e2b5385e257cd7d20bf48e19d67fd` with `git archive`. It verifies their Git trees and bootstrap hashes, fingerprints the dirty Bridge worktree before and after, uses Commerce Discounts 0.2.12, excludes retired Safety Pro, and runs the Bridge/BVM/provider/coexistence matrix. Reports use the distinct `bvm-drm-events-bridge-phase6a-runtime` basename. Optional `BVM_COMPAT_DRM_ROUTER_REPO`, `BVM_COMPAT_BRIDGE_COMMIT`, and `BVM_COMPAT_ROUTER_COMMIT` overrides must still resolve to the hard-gated expected release trees.

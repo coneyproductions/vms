@@ -34,7 +34,7 @@ source_manifest_builder=$repo_root/tests/addon-compatibility/source-manifest.php
 source_manifest=$output_dir/source-manifest.json
 scenario_index=$output_dir/scenarios.tsv
 debug_log=$runtime_root/wp-content/bvm-compat-debug.log
-database_name=bvm_compat_$($php_bin -r 'echo bin2hex(random_bytes(6));')
+database_name=bvm_compat_$("$php_bin" -r 'echo bin2hex(random_bytes(6));')
 database_created=no
 database_cleanup=pending
 runtime_cleanup=pending
@@ -205,7 +205,7 @@ wp_fixture core install \
 	--url='http://bvm-compat.test' \
 	--title='BVM Compatibility Fixture' \
 	--admin_user='bvm_compat_admin' \
-	--admin_password="$($php_bin -r 'echo bin2hex(random_bytes(16));')" \
+	--admin_password="$("$php_bin" -r 'echo bin2hex(random_bytes(16));')" \
 	--admin_email='bvm-compat@example.test' \
 	--skip-email \
 	--quiet

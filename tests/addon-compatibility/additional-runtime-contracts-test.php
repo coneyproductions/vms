@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 $contracts = require __DIR__ . '/additional-runtime-contracts.php';
+$phase6a = getenv('BVM_COMPAT_PHASE') === 'phase6a';
 $failures = array();
 $assert = static function (bool $condition, string $message) use (&$failures): void {
 	if (!$condition) {
@@ -22,9 +23,12 @@ $expected = array(
 	'vmsx-weather-risk',
 );
 
-$assert(array_keys((array) ($contracts['plugins'] ?? array())) === $expected, 'The runnable direct-integration set must remain explicit and ordered.');
-$assert(array_keys((array) ($contracts['blocked'] ?? array())) === array('drm-events-bridge'), 'DRM Events Bridge must remain an explicit blocked candidate until its source is frozen.');
+$phase6aExpected = array_values(array_filter($expected, static fn(string $slug): bool => $slug !== 'vms-safety-pro'));
+$phase6aExpected[] = 'drm-events-bridge';
+$assert(array_keys((array) ($contracts['plugins'] ?? array())) === ($phase6a ? $phase6aExpected : $expected), 'The runnable direct-integration set must remain explicit and ordered for the selected campaign phase.');
+$assert(array_keys((array) ($contracts['blocked'] ?? array())) === ($phase6a ? array() : array('drm-events-bridge')), 'DRM Events Bridge blocking state must match the selected campaign phase.');
 $assert(isset($contracts['indirect']['drm-event-router']), 'DRM Event Router must remain outside the direct runtime matrix.');
+$assert(!$phase6a || isset($contracts['retired']['vms-safety-pro']), 'Safety Pro must remain explicitly retired in Phase 6A.');
 
 $requiredFields = array(
 	'name', 'version', 'entry', 'dependency', 'companions', 'marker', 'detection',
@@ -80,8 +84,9 @@ foreach ($contracts['plugins'] as $plugin) {
 }
 
 echo sprintf(
-	"Additional first-party runtime contracts passed: %d runnable / 1 blocked / %d required function entries / %d unique required functions.\n",
+	"Additional first-party runtime contracts passed: %d runnable / %d blocked / %d required function entries / %d unique required functions.\n",
 	count($contracts['plugins']),
+	count($contracts['blocked']),
 	$functionEntries,
 	count($uniqueFunctions)
 );

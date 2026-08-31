@@ -14,6 +14,7 @@ if (!is_string($wordpressRoot) || !is_file($wordpressRoot . '/wp-includes/versio
 }
 
 $contracts = require __DIR__ . '/additional-runtime-contracts.php';
+$phase6a = getenv('BVM_COMPAT_PHASE') === 'phase6a';
 $pluginsRoot = $wordpressRoot . '/wp-content/plugins';
 $entries = array(
 	'backstage-venue-manager' => 'vendor-management-system.php',
@@ -30,6 +31,9 @@ $entries = array(
 );
 foreach ($contracts['plugins'] as $slug => $contract) {
 	$entries[$slug] = basename((string) $contract['entry']);
+}
+if ($phase6a) {
+	$entries['drm-event-router'] = 'drm-event-router.php';
 }
 
 $treeHash = static function (string $root): array {
@@ -74,10 +78,29 @@ $manifest = array(
 			? 'Phase 5A corrected archive ' . (getenv('BVM_COMPAT_COMMERCE_VERSION') ?: '0.2.12') . ' reconstructed from authoritative 0.2.11; installed 0.2.4 and temporary 0.2.9 copies excluded as stale'
 			: 'versioned installable archive 0.2.11; installed 0.2.4 and active temporary 0.2.9 copies excluded as stale',
 		'vmsx-weather-risk' => 'latest versioned installable archive 0.1.12; installed active 0.1.3 copy excluded as stale',
-		'drm-events-bridge' => 'not staged: blocked because the authoritative Git worktree is concurrently dirty',
+		'drm-events-bridge' => $phase6a
+			? 'immutable git archive of deployed release commit ' . (getenv('BVM_COMPAT_BRIDGE_COMMIT') ?: 'unknown') . '; dirty worktree excluded'
+			: 'not staged: blocked because the authoritative Git worktree is concurrently dirty',
+		'drm-event-router' => $phase6a
+			? 'immutable git archive of production-matched commit ' . (getenv('BVM_COMPAT_ROUTER_COMMIT') ?: 'unknown')
+			: 'indirect integration outside this runtime phase',
 	),
 	'blocked' => $contracts['blocked'],
+	'retired' => $contracts['retired'] ?? array(),
 	'indirect' => $contracts['indirect'],
+	'git_provenance' => $phase6a ? array(
+		'drm-events-bridge' => array(
+			'commit' => getenv('BVM_COMPAT_BRIDGE_COMMIT') ?: '',
+			'git_tree' => getenv('BVM_COMPAT_BRIDGE_TREE') ?: '',
+			'bootstrap_sha256' => getenv('BVM_COMPAT_BRIDGE_BOOTSTRAP_SHA256') ?: '',
+			'dirty_source_status_before_sha256' => getenv('BVM_COMPAT_BRIDGE_STATUS_BEFORE_SHA256') ?: '',
+		),
+		'drm-event-router' => array(
+			'commit' => getenv('BVM_COMPAT_ROUTER_COMMIT') ?: '',
+			'git_tree' => getenv('BVM_COMPAT_ROUTER_TREE') ?: '',
+			'bootstrap_sha256' => getenv('BVM_COMPAT_ROUTER_BOOTSTRAP_SHA256') ?: '',
+		),
+	) : array(),
 );
 
 $versionSource = (string) file_get_contents($wordpressRoot . '/wp-includes/version.php');

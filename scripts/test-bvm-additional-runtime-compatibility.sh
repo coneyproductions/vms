@@ -3,6 +3,12 @@
 set -eu
 
 repo_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+compatibility_phase=${BVM_COMPAT_PHASE:-phase5a}
+case "$compatibility_phase" in
+	phase5a|phase6a) ;;
+	*) printf 'Unknown additional compatibility phase: %s\n' "$compatibility_phase" >&2; exit 2 ;;
+esac
+export BVM_COMPAT_PHASE=$compatibility_phase
 wordpress_source_root=${BVM_COMPAT_WP_ROOT:-$(CDPATH= cd -- "$repo_root/../../../.." && pwd)}
 source_plugins_root=${BVM_COMPAT_ADDON_ROOT:-$wordpress_source_root/wp-content/plugins}
 php_bin=${BVM_COMPAT_PHP_BIN:-$(command -v php)}
@@ -23,10 +29,11 @@ source_manifest_builder=$repo_root/tests/addon-compatibility/additional-source-m
 source_manifest=$output_dir/source-manifest.json
 scenario_index=$output_dir/scenarios.tsv
 debug_log=$runtime_root/wp-content/bvm-compat-debug.log
-database_name=bvm_compat_$($php_bin -r 'echo bin2hex(random_bytes(6));')
+database_name=bvm_compat_$("$php_bin" -r 'echo bin2hex(random_bytes(6));')
 database_created=no
 database_cleanup=pending
 runtime_cleanup=pending
+report_basename=${BVM_COMPAT_REPORT_BASENAME:-bvm-additional-runtime-compatibility}
 
 validate_database_name() {
 	case "$database_name" in
@@ -82,8 +89,25 @@ cleanup_on_exit() {
 }
 trap cleanup_on_exit EXIT HUP INT TERM
 
-commerce_archive=${BVM_COMPAT_COMMERCE_ARCHIVE:-$source_plugins_root/vms-commerce-discounts-0.2.11.zip}
+if [ "$compatibility_phase" = phase6a ]; then
+	: "${BVM_COMPAT_COMMERCE_SQUARE_CONTRACT:=phase5a}"
+	: "${BVM_COMPAT_COMMERCE_VERSION:=0.2.12}"
+	: "${BVM_COMPAT_REPORT_BASENAME:=bvm-drm-events-bridge-phase6a-runtime}"
+	report_basename=$BVM_COMPAT_REPORT_BASENAME
+	export BVM_COMPAT_COMMERCE_SQUARE_CONTRACT BVM_COMPAT_COMMERCE_VERSION BVM_COMPAT_REPORT_BASENAME
+	commerce_archive=${BVM_COMPAT_COMMERCE_ARCHIVE:-$repo_root/docs/addon-compatibility/artifacts/vms-commerce-discounts-0.2.12.zip}
+else
+	commerce_archive=${BVM_COMPAT_COMMERCE_ARCHIVE:-$source_plugins_root/vms-commerce-discounts-0.2.11.zip}
+fi
 weather_archive=$source_plugins_root/VMS\ WEATHER\ RISK\ ZIP\ ARCHIVES/vmsx-weather-risk-0.1.12-title-cleanup.zip
+bridge_repo=$source_plugins_root/drm-events-bridge
+router_repo=${BVM_COMPAT_DRM_ROUTER_REPO:-/Users/treyconey/Downloads/drm-event-router-source/drm-event-router}
+bridge_commit=${BVM_COMPAT_BRIDGE_COMMIT:-b1efcc974233a3b43c2a9efa30533c6688f87320}
+router_commit=${BVM_COMPAT_ROUTER_COMMIT:-7a4232ee327e2b5385e257cd7d20bf48e19d67fd}
+bridge_expected_tree=3e2c1e49411c6811065f7f8eacca8fdaf736ed60
+router_expected_tree=a9c3fb75bb59b6b24426ea3a93a3b581c21aebba
+bridge_expected_bootstrap=90ded5e059fe0974d465ae9627f8b12d36154b2b83a384b85238d6767028efed
+router_expected_bootstrap=e5cb839c969756fafc04f1ec6e8ec1e1b658ef3f08b6fc7e3ea7ed90480d8372
 
 for required_path in \
 	"$wordpress_source_root/wp-settings.php" \
@@ -126,11 +150,40 @@ if [ -n "$(git -C "$source_plugins_root/drm-calendar-intake" status --short)" ];
 fi
 calendar_intake_head_before=$(git -C "$source_plugins_root/drm-calendar-intake" rev-parse HEAD)
 
-# DRM Events Bridge is deliberately not staged. Its authoritative repository
-# was found dirty and behind its remote, so Phase 4 records it as BLOCKED.
-if [ ! -d "$source_plugins_root/drm-events-bridge/.git" ]; then
+# The Bridge source worktree is forensic/read-only in every phase.
+if ! git -C "$bridge_repo" rev-parse --git-dir >/dev/null 2>&1; then
 	printf 'Expected authoritative DRM Events Bridge Git worktree is missing.\n' >&2
 	exit 2
+fi
+bridge_status_before=$(git -C "$bridge_repo" status --porcelain=v1 --untracked-files=all)
+bridge_status_before_sha256=$(printf '%s\n' "$bridge_status_before" | shasum -a 256 | awk '{print $1}')
+
+if [ "$compatibility_phase" = phase6a ]; then
+	if ! git -C "$router_repo" rev-parse --git-dir >/dev/null 2>&1; then
+		printf 'Expected clean DRM Event Router Git repository is missing.\n' >&2
+		exit 2
+	fi
+	if ! git -C "$bridge_repo" diff --cached --quiet; then
+		printf 'DRM Events Bridge index is not clean; refusing to use it as a source object store.\n' >&2
+		exit 2
+	fi
+	if [ -n "$(git -C "$router_repo" status --porcelain=v1 --untracked-files=all)" ]; then
+		printf 'DRM Event Router source repository is dirty; refusing to freeze it.\n' >&2
+		exit 2
+	fi
+	bridge_tree=$(git -C "$bridge_repo" rev-parse "$bridge_commit^{tree}")
+	router_tree=$(git -C "$router_repo" rev-parse "$router_commit^{tree}")
+	if [ "$bridge_tree" != "$bridge_expected_tree" ] || [ "$router_tree" != "$router_expected_tree" ]; then
+		printf 'A frozen DRM Git object did not match its expected release tree.\n' >&2
+		exit 2
+	fi
+	export BVM_COMPAT_BRIDGE_COMMIT=$bridge_commit
+	export BVM_COMPAT_BRIDGE_TREE=$bridge_tree
+	export BVM_COMPAT_BRIDGE_BOOTSTRAP_SHA256=$bridge_expected_bootstrap
+	export BVM_COMPAT_BRIDGE_STATUS_BEFORE_SHA256=$bridge_status_before_sha256
+	export BVM_COMPAT_ROUTER_COMMIT=$router_commit
+	export BVM_COMPAT_ROUTER_TREE=$router_tree
+	export BVM_COMPAT_ROUTER_BOOTSTRAP_SHA256=$router_expected_bootstrap
 fi
 
 normal_active_plugins_hash() {
@@ -185,11 +238,14 @@ rsync -a \
 	"$repo_root/" \
 	"$runtime_root/wp-content/plugins/backstage-venue-manager/"
 
+additional_copy_slugs='drm-calendar-intake vms-investor-portal vms-meta-ads vms-ops-console-premium vms-season-passes vms-sponsorships vmsx-checkout-policies'
+if [ "$compatibility_phase" != phase6a ]; then
+	additional_copy_slugs="$additional_copy_slugs vms-safety-pro"
+fi
 for plugin_slug in \
 	vms-events-slider vms-fill-dates vms-data-tools vms-express-bar vms-refer-a-friend \
 	woocommerce woocommerce-square the-events-calendar event-tickets event-tickets-plus \
-	drm-calendar-intake vms-investor-portal vms-meta-ads vms-ops-console-premium \
-	vms-safety-pro vms-season-passes vms-sponsorships vmsx-checkout-policies
+	$additional_copy_slugs
 do
 	rsync -a \
 		--exclude='/.git/' \
@@ -198,6 +254,23 @@ do
 		"$source_plugins_root/$plugin_slug/" \
 		"$runtime_root/wp-content/plugins/$plugin_slug/"
 done
+
+if [ "$compatibility_phase" = phase6a ]; then
+	mkdir -p "$runtime_root/wp-content/plugins/drm-events-bridge" "$runtime_root/wp-content/plugins/drm-event-router"
+	git -C "$bridge_repo" archive --format=tar "$bridge_commit" | tar -xf - -C "$runtime_root/wp-content/plugins/drm-events-bridge"
+	git -C "$router_repo" archive --format=tar "$router_commit" | tar -xf - -C "$runtime_root/wp-content/plugins/drm-event-router"
+	bridge_staged_bootstrap=$(shasum -a 256 "$runtime_root/wp-content/plugins/drm-events-bridge/drm-events-bridge.php" | awk '{print $1}')
+	router_staged_bootstrap=$(shasum -a 256 "$runtime_root/wp-content/plugins/drm-event-router/drm-event-router.php" | awk '{print $1}')
+	if [ "$bridge_staged_bootstrap" != "$bridge_expected_bootstrap" ] || [ "$router_staged_bootstrap" != "$router_expected_bootstrap" ]; then
+		printf 'A staged DRM bootstrap did not match its immutable Git object.\n' >&2
+		exit 2
+	fi
+	bridge_status_after_freeze=$(git -C "$bridge_repo" status --porcelain=v1 --untracked-files=all)
+	if [ "$bridge_status_before" != "$bridge_status_after_freeze" ]; then
+		printf 'DRM Events Bridge worktree changed while the isolated snapshot was frozen.\n' >&2
+		exit 2
+	fi
+fi
 
 unzip -q "$commerce_archive" -d "$runtime_root/wp-content/plugins"
 unzip -q "$weather_archive" -d "$runtime_root/wp-content/plugins"
@@ -249,7 +322,11 @@ wp_fixture core install \
 	--quiet
 
 fixture_foundation_plugins='backstage-venue-manager woocommerce the-events-calendar event-tickets event-tickets-plus vms-events-slider vms-fill-dates vms-data-tools vms-express-bar vms-refer-a-friend'
-fixture_additional_plugins='drm-calendar-intake vms-investor-portal vms-meta-ads vms-ops-console-premium vms-safety-pro vms-season-passes vms-sponsorships vmsx-checkout-policies vmsx-weather-risk'
+if [ "$compatibility_phase" = phase6a ]; then
+	fixture_additional_plugins='drm-calendar-intake drm-event-router drm-events-bridge vms-investor-portal vms-meta-ads vms-ops-console-premium vms-season-passes vms-sponsorships vmsx-checkout-policies vmsx-weather-risk'
+else
+	fixture_additional_plugins='drm-calendar-intake vms-investor-portal vms-meta-ads vms-ops-console-premium vms-safety-pro vms-season-passes vms-sponsorships vmsx-checkout-policies vmsx-weather-risk'
+fi
 all_fixture_plugins="$fixture_foundation_plugins woocommerce-square $fixture_additional_plugins vms-commerce-discounts"
 # Activate in separate fresh processes so Commerce Discounts activation can be
 # observed first with Square absent and then with Square present.
@@ -310,6 +387,8 @@ data_tools_plugin=vms-data-tools/vms-data-tools.php
 express_bar_plugin=vms-express-bar/vms-express-bar.php
 raf_plugin=vms-refer-a-friend/vms-refer-a-friend.php
 calendar_plugin=drm-calendar-intake/drm-calendar-intake.php
+router_plugin=drm-event-router/drm-event-router.php
+bridge_plugin=drm-events-bridge/drm-events-bridge.php
 commerce_plugin=vms-commerce-discounts/vms-commerce-discounts.php
 investor_plugin=vms-investor-portal/vms-investor-portal.php
 meta_ads_plugin=vms-meta-ads/vms-meta-ads.php
@@ -356,6 +435,7 @@ run_scenario() {
 		>> "$scenario_index"
 }
 
+if [ "$compatibility_phase" != phase6a ]; then
 run_scenario additional-drm-calendar-intake-core-first drm-calendar-intake yes no normal core-first drm-calendar-intake-settings "$bvm_plugin" "$calendar_plugin"
 run_scenario additional-drm-calendar-intake-addon-first drm-calendar-intake yes no normal addon-first drm-calendar-intake-settings "$calendar_plugin" "$bvm_plugin"
 run_scenario additional-vms-commerce-discounts-core-first vms-commerce-discounts yes yes normal core-first vms-commerce-discounts "$bvm_plugin" "$woocommerce_plugin" "$square_plugin" "$tec_plugin" "$tickets_plugin" "$tickets_plus_plugin" "$commerce_plugin"
@@ -393,7 +473,15 @@ run_scenario third-party-absent-square-vms-commerce-discounts vms-commerce-disco
 run_scenario third-party-absent-vmsx-checkout-policies vmsx-checkout-policies yes no missing-woocommerce core-first vms-settings "$bvm_plugin" "$checkout_plugin"
 run_scenario third-party-absent-vms-season-passes vms-season-passes yes no missing-woocommerce core-first vms-season-passes "$bvm_plugin" "$season_plugin"
 run_scenario third-party-absent-vms-sponsorships vms-sponsorships yes no missing-tec core-first vms-sponsorships "$bvm_plugin" "$sponsorships_plugin"
+else
+run_scenario additional-core-absent-drm-events-bridge drm-events-bridge no no normal normal-drm-architecture drm-events-bridge "$calendar_plugin" "$router_plugin" "$bridge_plugin"
+run_scenario additional-drm-events-bridge-public-bvm drm-events-bridge yes no normal public-bvm drm-events-bridge "$bvm_plugin" "$calendar_plugin" "$router_plugin" "$bridge_plugin"
+run_scenario additional-drm-events-bridge-core-first drm-events-bridge yes no normal core-first drm-events-bridge "$bvm_plugin" "$calendar_plugin" "$router_plugin" "$bridge_plugin"
+run_scenario additional-drm-events-bridge-addon-first drm-events-bridge yes no normal provider-first drm-events-bridge "$calendar_plugin" "$router_plugin" "$bridge_plugin" "$bvm_plugin"
+run_scenario additional-provider-absent-drm-events-bridge drm-events-bridge no no missing-router missing-provider drm-events-bridge "$calendar_plugin" "$bridge_plugin"
+fi
 
+if [ "$compatibility_phase" != phase6a ]; then
 run_scenario additional-coexistence-core-first all yes yes full core-first vms-dashboard \
 	"$bvm_plugin" "$woocommerce_plugin" "$square_plugin" "$tec_plugin" "$tickets_plugin" "$tickets_plus_plugin" \
 	"$events_plugin" "$fill_dates_plugin" "$data_tools_plugin" "$express_bar_plugin" "$raf_plugin" \
@@ -404,6 +492,18 @@ run_scenario additional-coexistence-addons-first all yes yes full addons-first v
 	"$season_plugin" "$sponsorships_plugin" "$checkout_plugin" "$weather_plugin" \
 	"$events_plugin" "$fill_dates_plugin" "$data_tools_plugin" "$express_bar_plugin" "$raf_plugin" \
 	"$woocommerce_plugin" "$square_plugin" "$tec_plugin" "$tickets_plugin" "$tickets_plus_plugin" "$bvm_plugin"
+else
+run_scenario additional-coexistence-core-first all yes yes full core-first vms-dashboard \
+	"$bvm_plugin" "$woocommerce_plugin" "$square_plugin" "$tec_plugin" "$tickets_plugin" "$tickets_plus_plugin" \
+	"$events_plugin" "$fill_dates_plugin" "$data_tools_plugin" "$express_bar_plugin" "$raf_plugin" \
+	"$calendar_plugin" "$router_plugin" "$bridge_plugin" "$commerce_plugin" "$investor_plugin" "$meta_ads_plugin" "$ops_plugin" \
+	"$season_plugin" "$sponsorships_plugin" "$checkout_plugin" "$weather_plugin"
+run_scenario additional-coexistence-addons-first all yes yes full addons-first vms-dashboard \
+	"$calendar_plugin" "$router_plugin" "$bridge_plugin" "$commerce_plugin" "$investor_plugin" "$meta_ads_plugin" "$ops_plugin" \
+	"$season_plugin" "$sponsorships_plugin" "$checkout_plugin" "$weather_plugin" \
+	"$events_plugin" "$fill_dates_plugin" "$data_tools_plugin" "$express_bar_plugin" "$raf_plugin" \
+	"$woocommerce_plugin" "$square_plugin" "$tec_plugin" "$tickets_plugin" "$tickets_plus_plugin" "$bvm_plugin"
+fi
 
 wp_fixture option update active_plugins '[]' --format=json --skip-plugins --skip-themes --quiet >/dev/null
 if validate_database_name && wp_fixture db drop --yes --quiet >/dev/null; then
@@ -426,9 +526,18 @@ if [ "$normal_config_before" != "$normal_config_after" ]; then
 	printf 'Normal wp-config.php changed during the isolated harness.\n' >&2
 	exit 1
 fi
+bridge_status_after=$(git -C "$bridge_repo" status --porcelain=v1 --untracked-files=all)
+bridge_status_after_sha256=$(printf '%s\n' "$bridge_status_after" | shasum -a 256 | awk '{print $1}')
+if [ "$bridge_status_before" != "$bridge_status_after" ]; then
+	printf 'DRM Events Bridge forensic worktree changed during the isolated harness.\n' >&2
+	exit 1
+fi
+if [ "$compatibility_phase" = phase6a ]; then
+	export BVM_COMPAT_BRIDGE_STATUS_AFTER_SHA256=$bridge_status_after_sha256
+fi
 
-report_json=$output_dir/bvm-additional-runtime-compatibility.report.json
-report_text=$output_dir/bvm-additional-runtime-compatibility.report.txt
+report_json=$output_dir/$report_basename.report.json
+report_text=$output_dir/$report_basename.report.txt
 set +e
 "$php_bin" "$report_builder" \
 	"$scenario_index" \
