@@ -1,0 +1,1384 @@
+diff -ruN --exclude=error_log a/vms-data-tools/docs/TEST-PLAN-0.5.54.md b/vms-data-tools/docs/TEST-PLAN-0.5.54.md
+--- a/vms-data-tools/docs/TEST-PLAN-0.5.54.md	1969-12-31 18:00:00
++++ b/vms-data-tools/docs/TEST-PLAN-0.5.54.md	2026-09-01 08:54:52
+@@ -0,0 +1,7 @@
++# VMS Data Tools 0.5.54 Test Plan
++
++- Load with public Backstage Venue Manager 1.2.0 and no active historical VMS plugin.
++- Confirm dependency recognition succeeds and the missing-core notice is absent.
++- Confirm Data Tools menus, reporting helpers, vendor import schema adapter, REST routes, and guarded runtime modules register.
++- Repeat with legacy VMS runtime stubs to confirm fallback resolution.
++- Confirm production option hashes and relevant table counts remain unchanged across the in-place update.
+diff -ruN --exclude=error_log a/vms-data-tools/includes/admin/menu.php b/vms-data-tools/includes/admin/menu.php
+--- a/vms-data-tools/includes/admin/menu.php	2026-05-27 22:06:43
++++ b/vms-data-tools/includes/admin/menu.php	2026-09-01 08:44:22
+@@ -156,11 +156,11 @@
+ 
+ function vms_dt_render_tools_home(): void
+ {
+-	if (function_exists('vms_resource_fingerprint_flag')) {
+-		vms_resource_fingerprint_flag('dt_report', array('page' => 'data_tools_home'));
++	if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++		vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_report', array('page' => 'data_tools_home'));
+ 	}
+-	if (function_exists('vms_resource_fingerprint_span_start')) {
+-		vms_resource_fingerprint_span_start('dt.tools_home', array('page' => 'vms-data-tools'));
++	if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++		vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.tools_home', array('page' => 'vms-data-tools'));
+ 	}
+ 
+ 	$default_cap = vms_dt_manage_capability();
+@@ -533,8 +533,8 @@
+ 	do_action('vms_dt_tools_home_render_after');
+ 
+ 	echo '</div>'; // wrap
+-	if (function_exists('vms_resource_fingerprint_span_finish')) {
+-		vms_resource_fingerprint_span_finish('dt.tools_home', array('page' => 'vms-data-tools'));
++	if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++		vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.tools_home', array('page' => 'vms-data-tools'));
+ 	}
+ }
+ 
+diff -ruN --exclude=error_log a/vms-data-tools/includes/admin/page-payables-export.php b/vms-data-tools/includes/admin/page-payables-export.php
+--- a/vms-data-tools/includes/admin/page-payables-export.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/admin/page-payables-export.php	2026-09-01 08:45:06
+@@ -58,7 +58,10 @@
+     echo '</div>';
+ 
+     // Build venue list
+-    $venue_post_type = defined('VMS_VENUE_CPT') ? VMS_VENUE_CPT : (defined('VMS_CPT_VENUE') ? VMS_CPT_VENUE : 'vms_venue');
++    $venue_post_type = (string) vms_dt_core_constant(
++        'VMS_VENUE_CPT',
++        vms_dt_core_constant('VMS_CPT_VENUE', 'vms_venue')
++    );
+     $venues = get_posts([
+         'post_type'      => $venue_post_type,
+         'post_status'    => ['publish', 'draft', 'private'],
+@@ -129,13 +132,13 @@
+         return;
+     }
+ 
+-    if (!function_exists('vms_payables_build_bills_for_export')) {
++    if (!vms_dt_has_core_function('vms_payables_build_bills_for_export')) {
+         echo '<div class="notice notice-error"><p>' . esc_html__('VMS core payables builder is missing. Please update/activate the VMS core plugin.', 'vms-data-tools') . '</p></div>';
+         echo '</div>';
+         return;
+     }
+ 
+-    $result = vms_payables_build_bills_for_export($event_date, $venue_ids, [
++    $result = vms_dt_call_core_function('vms_payables_build_bills_for_export', $event_date, $venue_ids, [
+         'terms_days' => $terms_days,
+     ]);
+ 
+@@ -244,11 +247,11 @@
+     $default_account = isset($_POST['default_account']) ? sanitize_text_field((string) wp_unslash($_POST['default_account'])) : 'Contract Labor';
+     $default_tax_code = isset($_POST['default_tax_code']) ? sanitize_text_field((string) wp_unslash($_POST['default_tax_code'])) : '';
+ 
+-    if (!function_exists('vms_payables_build_bills_for_export')) {
++    if (!vms_dt_has_core_function('vms_payables_build_bills_for_export')) {
+         wp_die('VMS core payables builder missing.');
+     }
+ 
+-    $result = vms_payables_build_bills_for_export($event_date, $venue_ids, [
++    $result = vms_dt_call_core_function('vms_payables_build_bills_for_export', $event_date, $venue_ids, [
+         'terms_days' => $terms_days,
+     ]);
+ 
+diff -ruN --exclude=error_log a/vms-data-tools/includes/admin/page-reporting-module.php b/vms-data-tools/includes/admin/page-reporting-module.php
+--- a/vms-data-tools/includes/admin/page-reporting-module.php	2026-06-15 16:03:02
++++ b/vms-data-tools/includes/admin/page-reporting-module.php	2026-09-01 08:44:22
+@@ -173,9 +173,9 @@
+         }
+ 
+         $elapsed_ms = $started_at > 0 ? max(0.0, round((microtime(true) - $started_at) * 1000, 1)) : 0.0;
+-        $screen_id = function_exists('vms_admin_guard_current_screen_id') ? vms_admin_guard_current_screen_id() : '';
+-        $request_uri = function_exists('vms_admin_guard_request_uri')
+-            ? vms_admin_guard_request_uri()
++        $screen_id = vms_dt_has_core_function('vms_admin_guard_current_screen_id') ? vms_dt_call_core_function('vms_admin_guard_current_screen_id') : '';
++        $request_uri = vms_dt_has_core_function('vms_admin_guard_request_uri')
++            ? vms_dt_call_core_function('vms_admin_guard_request_uri')
+             : trim((string) ($_SERVER['REQUEST_URI'] ?? ''));
+ 
+         $payload = array(
+@@ -191,11 +191,11 @@
+             $payload[sanitize_key((string) $key)] = is_scalar($value) ? $value : wp_json_encode($value);
+         }
+ 
+-        if (function_exists('vms_resource_fingerprint_flag')) {
+-            vms_resource_fingerprint_flag('dt_admin_trace', $payload);
++        if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_admin_trace', $payload);
+         }
+-        if (function_exists('vms_resource_fingerprint_add_marker')) {
+-            vms_resource_fingerprint_add_marker('dt.' . $hook_name, $elapsed_ms, $payload);
++        if (vms_dt_has_core_function('vms_resource_fingerprint_add_marker')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_add_marker', 'dt.' . $hook_name, $elapsed_ms, $payload);
+         }
+ 
+         error_log('[VMS DT TRACE] ' . wp_json_encode($payload));
+@@ -969,8 +969,8 @@
+ 
+         static $memory_cache = array();
+         if (isset($memory_cache[$event_plan_id]) && is_array($memory_cache[$event_plan_id])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_lifetime_website_truth_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_lifetime_website_truth_cache', 'memory_hit');
+             }
+             return $memory_cache[$event_plan_id];
+         }
+@@ -1092,14 +1092,14 @@
+         $event_plan_id = absint($event_plan_id);
+         if (
+             $event_plan_id <= 0
+-            || !function_exists('vms_vendor_portal_get_progress_headcount_context')
+-            || !function_exists('vms_vendor_portal_get_count_breakdown')
++            || !vms_dt_has_core_function('vms_vendor_portal_get_progress_headcount_context')
++            || !vms_dt_has_core_function('vms_vendor_portal_get_count_breakdown')
+         ) {
+             return $snapshot;
+         }
+ 
+-        $headcount_context = (array) vms_vendor_portal_get_progress_headcount_context($event_plan_id);
+-        $count_breakdown = (array) vms_vendor_portal_get_count_breakdown($event_plan_id, $headcount_context);
++        $headcount_context = (array) vms_dt_call_core_function('vms_vendor_portal_get_progress_headcount_context', $event_plan_id);
++        $count_breakdown = (array) vms_dt_call_core_function('vms_vendor_portal_get_count_breakdown', $event_plan_id, $headcount_context);
+ 
+         $presales_qty = max(0, (int) ($count_breakdown['presales'] ?? 0));
+         $eligible_door_qty = max(0, (int) ($count_breakdown['door_sales'] ?? 0));
+@@ -1270,20 +1270,20 @@
+         $cache_key = md5(wp_json_encode($filters));
+         static $memory_cache = array();
+         if (isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_event_model_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_event_model_cache', 'memory_hit');
+             }
+             return $memory_cache[$cache_key];
+         }
+ 
+-        if (function_exists('vms_resource_fingerprint_flag')) {
+-            vms_resource_fingerprint_flag('dt_report', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_report', array(
+                 'kind' => 'event_model',
+                 'event_plan_id' => (int) ($filters['event_plan_id'] ?? 0),
+             ));
+         }
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.event_model', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.event_model', array(
+                 'event_plan_id' => (int) ($filters['event_plan_id'] ?? 0),
+                 'sold_from' => (string) ($filters['sold_from'] ?? ''),
+                 'sold_to' => (string) ($filters['sold_to'] ?? ''),
+@@ -1375,8 +1375,8 @@
+             $memory_cache[$cache_key] = $model;
+             return $model;
+         } finally {
+-            if (function_exists('vms_resource_fingerprint_span_finish')) {
+-                vms_resource_fingerprint_span_finish('dt.event_model', array(
++            if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.event_model', array(
+                     'event_plan_id' => (int) ($filters['event_plan_id'] ?? 0),
+                 ));
+             }
+@@ -1747,33 +1747,33 @@
+         )));
+         static $memory_cache = array();
+         if (isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_single_event_evidence_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_single_event_evidence_cache', 'memory_hit');
+             }
+             return $memory_cache[$cache_key];
+         }
+ 
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.single_event_evidence', array('event_plan_id' => $event_plan_id));
+-            vms_resource_fingerprint_span_start('dt.website_detail_rows', array('event_plan_id' => $event_plan_id));
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.single_event_evidence', array('event_plan_id' => $event_plan_id));
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.website_detail_rows', array('event_plan_id' => $event_plan_id));
+         }
+         $website = vms_dt_reporting_build_website_detail_rows($event_plan_id);
+-        if (function_exists('vms_resource_fingerprint_span_finish')) {
+-            vms_resource_fingerprint_span_finish('dt.website_detail_rows', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.website_detail_rows', array(
+                 'event_plan_id' => $event_plan_id,
+                 'ticket_rows' => count((array) ($website['ticket_rows'] ?? array())),
+                 'addon_rows' => count((array) ($website['addon_rows'] ?? array())),
+             ));
+-            vms_resource_fingerprint_span_start('dt.square_line_evidence', array('event_plan_id' => $event_plan_id));
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.square_line_evidence', array('event_plan_id' => $event_plan_id));
+         }
+         $square = vms_dt_reporting_build_square_line_evidence($event_plan_id, $filters);
+-        if (function_exists('vms_resource_fingerprint_span_finish')) {
+-            vms_resource_fingerprint_span_finish('dt.square_line_evidence', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.square_line_evidence', array(
+                 'event_plan_id' => $event_plan_id,
+                 'ticket_rows' => count((array) ($square['ticket_rows'] ?? array())),
+                 'onsite_rows' => count((array) ($square['onsite_rows'] ?? array())),
+             ));
+-            vms_resource_fingerprint_span_finish('dt.single_event_evidence', array('event_plan_id' => $event_plan_id));
++            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.single_event_evidence', array('event_plan_id' => $event_plan_id));
+         }
+ 
+         $result = array(
+@@ -1939,8 +1939,8 @@
+                 'door_split_percent' => 0,
+             );
+         }
+-        if (function_exists('vms_get_event_plan_comp_terms')) {
+-            return (array) vms_get_event_plan_comp_terms($event_plan_id);
++        if (vms_dt_has_core_function('vms_get_event_plan_comp_terms')) {
++            return (array) vms_dt_call_core_function('vms_get_event_plan_comp_terms', $event_plan_id);
+         }
+         return array(
+             'structure' => (string) get_post_meta($event_plan_id, '_vms_comp_structure', true),
+@@ -2000,8 +2000,8 @@
+         $raw_end = isset($slot['shift_end_local']) ? trim((string) $slot['shift_end_local']) : '';
+         $partial_absolute = ($time_mode === 'absolute' && (($raw_start !== '' && $raw_end === '') || ($raw_start === '' && $raw_end !== '')));
+ 
+-        $window = function_exists('vms_staffing_resolve_slot_window')
+-            ? (array) vms_staffing_resolve_slot_window($event_plan_id, $slot)
++        $window = vms_dt_has_core_function('vms_staffing_resolve_slot_window')
++            ? (array) vms_dt_call_core_function('vms_staffing_resolve_slot_window', $event_plan_id, $slot)
+             : array();
+ 
+         $window_source = 'none';
+@@ -2095,8 +2095,8 @@
+         $event_plan_id = absint($event_plan_id);
+         static $memory_cache = array();
+         if ($event_plan_id > 0 && isset($memory_cache[$event_plan_id]) && is_array($memory_cache[$event_plan_id])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_labor_overhead_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_labor_overhead_cache', 'memory_hit');
+             }
+             return $memory_cache[$event_plan_id];
+         }
+@@ -2110,7 +2110,7 @@
+                 'warnings' => array(),
+             );
+         }
+-        if (!function_exists('vms_staffing_get_event_slots')) {
++        if (!vms_dt_has_core_function('vms_staffing_get_event_slots')) {
+             return array(
+                 'labor_overhead_cents' => 0,
+                 'assigned_staff_count' => 0,
+@@ -2121,10 +2121,10 @@
+             );
+         }
+ 
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.labor_overhead', array('event_plan_id' => $event_plan_id));
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.labor_overhead', array('event_plan_id' => $event_plan_id));
+         }
+-        $slots = (array) vms_staffing_get_event_slots($event_plan_id, true);
++        $slots = (array) vms_dt_call_core_function('vms_staffing_get_event_slots', $event_plan_id, true);
+         $labor_total_cents = 0;
+         $assigned_staff_count = 0;
+         $included_assignment_count = 0;
+@@ -2183,8 +2183,8 @@
+                 $end_label = trim((string) ($detail['shift_end'] ?? ''));
+                 $start_ts = null;
+                 $end_ts = null;
+-                if ($staff_id > 0 && !empty($detail['included']) && function_exists('vms_staffing_resolve_slot_window')) {
+-                    $window = (array) vms_staffing_resolve_slot_window($event_plan_id, $slot);
++                if ($staff_id > 0 && !empty($detail['included']) && vms_dt_has_core_function('vms_staffing_resolve_slot_window')) {
++                    $window = (array) vms_dt_call_core_function('vms_staffing_resolve_slot_window', $event_plan_id, $slot);
+                     $start_ts = isset($window['start_ts']) && is_numeric($window['start_ts']) ? (int) $window['start_ts'] : null;
+                     $end_ts = isset($window['end_ts']) && is_numeric($window['end_ts']) ? (int) $window['end_ts'] : null;
+                     if (is_int($start_ts) && is_int($end_ts) && $end_ts > $start_ts) {
+@@ -2240,8 +2240,8 @@
+             'warnings' => array_values(array_unique(array_filter(array_map('strval', $warnings)))),
+         );
+         $memory_cache[$event_plan_id] = $result;
+-        if (function_exists('vms_resource_fingerprint_span_finish')) {
+-            vms_resource_fingerprint_span_finish('dt.labor_overhead', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.labor_overhead', array(
+                 'event_plan_id' => $event_plan_id,
+                 'included_assignment_count' => $included_assignment_count,
+                 'assigned_slot_count' => $assigned_slot_count,
+@@ -2255,8 +2255,8 @@
+     function vms_dt_reporting_calculate_event_costs(array $row, array $evidence = array()): array
+     {
+         $event_plan_id = (int) ($row['event_plan_id'] ?? 0);
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.event_costs', array('event_plan_id' => $event_plan_id));
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.event_costs', array('event_plan_id' => $event_plan_id));
+         }
+         $ticket_sources = vms_dt_reporting_build_ticket_source_rollup($row, $evidence);
+         $ticket_sales_total_cents = max(0, (int) ($ticket_sources['paid_ticket_revenue_cents'] ?? 0));
+@@ -2282,12 +2282,12 @@
+         $door_split_cents = (int) round($ticket_sales_total_cents * ($split_pct / 100));
+         $base_payout_cents = 0;
+         $bonus_cents = 0;
+-        $structure_label = function_exists('vms_pretty_structure_label') ? (string) vms_pretty_structure_label($structure) : ucwords(str_replace('_', ' ', $structure));
++        $structure_label = vms_dt_has_core_function('vms_pretty_structure_label') ? (string) vms_dt_call_core_function('vms_pretty_structure_label', $structure) : ucwords(str_replace('_', ' ', $structure));
+         $bonus_hit = false;
+         $bonus_note = '';
+ 
+-        if ($structure === 'attendance_bonus' && function_exists('vms_calculate_attendance_bonus_payout')) {
+-            $bonus_calc = (array) vms_calculate_attendance_bonus_payout($terms, $paid_ticket_qty_total);
++        if ($structure === 'attendance_bonus' && vms_dt_has_core_function('vms_calculate_attendance_bonus_payout')) {
++            $bonus_calc = (array) vms_dt_call_core_function('vms_calculate_attendance_bonus_payout', $terms, $paid_ticket_qty_total);
+             $base_payout_cents = (int) round(((float) ($bonus_calc['base_pay'] ?? 0.0)) * 100);
+             $bonus_cents = (int) round(((float) ($bonus_calc['bonus'] ?? 0.0)) * 100);
+             $bonus_hit = $bonus_cents > 0;
+@@ -2350,8 +2350,8 @@
+             'collected_net_after_known_costs_cents' => $total_collected_cents - $known_cost_total_cents,
+             'terms' => $terms,
+         );
+-        if (function_exists('vms_resource_fingerprint_span_finish')) {
+-            vms_resource_fingerprint_span_finish('dt.event_costs', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.event_costs', array(
+                 'event_plan_id' => $event_plan_id,
+                 'ticket_sales_total_cents' => $ticket_sales_total_cents,
+                 'labor_overhead_cents' => $labor_overhead_cents,
+@@ -3644,13 +3644,13 @@
+             return;
+         }
+         $started_at = microtime(true);
+-        if (function_exists('vms_resource_fingerprint_flag')) {
+-            vms_resource_fingerprint_flag('dt_report', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_report', array(
+                 'page' => 'single_event',
+             ));
+         }
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.single_event_page', array('page' => 'single_event'));
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.single_event_page', array('page' => 'single_event'));
+         }
+         $row = array();
+ 
+@@ -3689,8 +3689,8 @@
+             echo '</details>';
+             echo '</div>';
+         } finally {
+-            if (function_exists('vms_resource_fingerprint_span_finish')) {
+-                vms_resource_fingerprint_span_finish('dt.single_event_page', array(
++            if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.single_event_page', array(
+                     'page' => 'single_event',
+                 ));
+             }
+@@ -3973,8 +3973,8 @@
+         $cache_key = vms_dt_reporting_ticket_pace_cache_key($event_plan_id, $filters);
+         static $memory_cache = array();
+         if ($cache_key !== '' && isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_ticket_pace_rows_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_ticket_pace_rows_cache', 'memory_hit');
+             }
+             return $memory_cache[$cache_key];
+         }
+@@ -3982,8 +3982,8 @@
+         if ($use_transient_cache && $cache_key !== '') {
+             $cached_rows = get_transient($cache_key);
+             if (is_array($cached_rows)) {
+-                if (function_exists('vms_resource_fingerprint_flag')) {
+-                    vms_resource_fingerprint_flag('dt_ticket_pace_rows_cache', 'transient_hit');
++                if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                    vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_ticket_pace_rows_cache', 'transient_hit');
+                 }
+                 $memory_cache[$cache_key] = $cached_rows;
+                 return $memory_cache[$cache_key];
+@@ -4310,13 +4310,13 @@
+         }
+ 
+         $candidates = array();
+-        if (function_exists('vms_event_plan_get_status')) {
+-            $candidates[] = (string) vms_event_plan_get_status($event_plan_id, 'dashboard');
+-            $candidates[] = (string) vms_event_plan_get_status($event_plan_id, 'raw');
++        if (vms_dt_has_core_function('vms_event_plan_get_status')) {
++            $candidates[] = (string) vms_dt_call_core_function('vms_event_plan_get_status', $event_plan_id, 'dashboard');
++            $candidates[] = (string) vms_dt_call_core_function('vms_event_plan_get_status', $event_plan_id, 'raw');
+         }
+         $candidates[] = (string) get_post_meta($event_plan_id, '_vms_event_plan_status', true);
+-        if (function_exists('vms_meta_key')) {
+-            $meta_key = (string) vms_meta_key('event_plan', 'status');
++        if (vms_dt_has_core_function('vms_meta_key')) {
++            $meta_key = (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'status');
+             if ($meta_key !== '' && $meta_key !== '_vms_event_plan_status') {
+                 $candidates[] = (string) get_post_meta($event_plan_id, $meta_key, true);
+             }
+@@ -4327,8 +4327,8 @@
+             if ($status === '') {
+                 continue;
+             }
+-            if (function_exists('vms_event_plan_status_normalize')) {
+-                $status = (string) vms_event_plan_status_normalize($status);
++            if (vms_dt_has_core_function('vms_event_plan_status_normalize')) {
++                $status = (string) vms_dt_call_core_function('vms_event_plan_status_normalize', $status);
+             }
+             $normalized = sanitize_key(strtolower($status));
+             if (in_array($normalized, array('cancelled', 'canceled'), true)) {
+@@ -4603,8 +4603,8 @@
+             return;
+         }
+         $started_at = microtime(true);
+-        if (function_exists('vms_resource_fingerprint_flag')) {
+-            vms_resource_fingerprint_flag('dt_report', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_report', array(
+                 'page' => 'ticket_pace',
+             ));
+         }
+diff -ruN --exclude=error_log a/vms-data-tools/includes/admin/page-revenue-intelligence.php b/vms-data-tools/includes/admin/page-revenue-intelligence.php
+--- a/vms-data-tools/includes/admin/page-revenue-intelligence.php	2026-06-15 16:03:56
++++ b/vms-data-tools/includes/admin/page-revenue-intelligence.php	2026-09-01 08:45:06
+@@ -166,7 +166,10 @@
+ if (!function_exists('vms_dt_rr_get_venue_options')) {
+     function vms_dt_rr_get_venue_options(): array
+     {
+-        $venue_post_type = defined('VMS_VENUE_CPT') ? VMS_VENUE_CPT : (defined('VMS_CPT_VENUE') ? VMS_CPT_VENUE : 'vms_venue');
++        $venue_post_type = (string) vms_dt_core_constant(
++            'VMS_VENUE_CPT',
++            vms_dt_core_constant('VMS_CPT_VENUE', 'vms_venue')
++        );
+         $ids = get_posts(array(
+             'post_type' => $venue_post_type,
+             'post_status' => array('publish', 'private', 'draft'),
+@@ -676,7 +679,7 @@
+ if (!function_exists('vms_dt_rr_build_ticket_report')) {
+     function vms_dt_rr_build_ticket_report(array $filters): array
+     {
+-        if (!function_exists('vms_ticket_revenue_build_report')) {
++        if (!vms_dt_has_core_function('vms_ticket_revenue_build_report')) {
+             return array(
+                 'rows' => array(),
+                 'event_summary' => array(),
+@@ -703,8 +706,8 @@
+         $cache_key = md5(wp_json_encode($args));
+         static $memory_cache = array();
+         if (isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_ticket_report_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_ticket_report_cache', 'memory_hit');
+             }
+             return $memory_cache[$cache_key];
+         }
+@@ -717,8 +720,8 @@
+                 $transient_key = 'vms_dt_tix_' . $cache_key;
+                 $cached = get_transient($transient_key);
+                 if (is_array($cached)) {
+-                    if (function_exists('vms_resource_fingerprint_flag')) {
+-                        vms_resource_fingerprint_flag('dt_ticket_report_cache', 'transient_hit');
++                    if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                        vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_ticket_report_cache', 'transient_hit');
+                     }
+                     $memory_cache[$cache_key] = $cached;
+                     return $cached;
+@@ -726,8 +729,8 @@
+             }
+         }
+ 
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.ticket_report', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.ticket_report', array(
+                 'event_plan_id' => (int) ($args['event_plan_id'] ?? 0),
+                 'sold_from' => (string) ($args['sold_from'] ?? ''),
+                 'sold_to' => (string) ($args['sold_to'] ?? ''),
+@@ -735,7 +738,7 @@
+         }
+ 
+         try {
+-            $report = (array) vms_ticket_revenue_build_report($args);
++            $report = (array) vms_dt_call_core_function('vms_ticket_revenue_build_report', $args);
+             $report['_vms_dt_cache_key'] = $cache_key;
+             $memory_cache[$cache_key] = $report;
+             if ($transient_key !== '') {
+@@ -743,10 +746,10 @@
+             }
+             return $report;
+         } finally {
+-            if (function_exists('vms_resource_fingerprint_span_finish')) {
++            if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
+                 $report_rows = isset($report['rows']) && is_array($report['rows']) ? count($report['rows']) : 0;
+                 $warnings = isset($report['warnings']) && is_array($report['warnings']) ? count($report['warnings']) : 0;
+-                vms_resource_fingerprint_span_finish('dt.ticket_report', array(
++                vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.ticket_report', array(
+                     'event_plan_id' => (int) ($args['event_plan_id'] ?? 0),
+                     'row_count' => $report_rows,
+                     'warning_count' => $warnings,
+@@ -766,14 +769,14 @@
+             : '';
+         static $memory_cache = array();
+         if ($cache_key !== '' && isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_website_map_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_website_map_cache', 'memory_hit');
+             }
+             return $memory_cache[$cache_key];
+         }
+ 
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.website_event_map', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.website_event_map', array(
+                 'event_count' => count($allowed_event_ids),
+                 'ticket_rows' => count((array) ($ticket_report['rows'] ?? array())),
+             ));
+@@ -874,8 +877,8 @@
+         if ($cache_key !== '') {
+             $memory_cache[$cache_key] = $result;
+         }
+-        if (function_exists('vms_resource_fingerprint_span_finish')) {
+-            vms_resource_fingerprint_span_finish('dt.website_event_map', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.website_event_map', array(
+                 'event_count' => count($map),
+                 'unassigned_rows' => $unassigned_rows,
+             ));
+@@ -1653,22 +1656,22 @@
+         )));
+         static $memory_cache = array();
+         if (isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_square_orders_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_square_orders_cache', 'memory_hit');
+             }
+             return $memory_cache[$cache_key];
+         }
+         $cached = get_transient($cache_key);
+         if (is_array($cached)) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_square_orders_cache', 'transient_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_square_orders_cache', 'transient_hit');
+             }
+             $memory_cache[$cache_key] = $cached;
+             return $cached;
+         }
+ 
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.square_fetch_scope_orders', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.square_fetch_scope_orders', array(
+                 'location_count' => count($location_ids),
+                 'window_start_utc' => $window_start_utc,
+                 'window_end_utc' => $window_end_utc,
+@@ -1739,8 +1742,8 @@
+ 
+         $memory_cache[$cache_key] = $rows;
+         set_transient($cache_key, $rows, 10 * MINUTE_IN_SECONDS);
+-        if (function_exists('vms_resource_fingerprint_span_finish')) {
+-            vms_resource_fingerprint_span_finish('dt.square_fetch_scope_orders', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.square_fetch_scope_orders', array(
+                 'row_count' => count($rows),
+                 'location_count' => count($location_ids),
+             ));
+@@ -1813,8 +1816,8 @@
+ if (!function_exists('vms_dt_rr_build_square_event_maps')) {
+     function vms_dt_rr_build_square_event_maps(array $event_ids, array $filters): array
+     {
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.square_event_maps', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.square_event_maps', array(
+                 'event_count' => count($event_ids),
+                 'square_scope_mode' => (string) ($filters['square_scope_mode'] ?? 'full_day'),
+             ));
+@@ -2231,8 +2234,8 @@
+ 
+             return $result;
+         } finally {
+-            if (function_exists('vms_resource_fingerprint_span_finish')) {
+-                vms_resource_fingerprint_span_finish('dt.square_event_maps', array(
++            if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.square_event_maps', array(
+                     'event_count' => count($event_ids),
+                 ));
+             }
+@@ -2243,8 +2246,8 @@
+ if (!function_exists('vms_dt_rr_event_status_label')) {
+     function vms_dt_rr_event_status_label(int $event_plan_id): string
+     {
+-        if (function_exists('vms_event_plan_get_status')) {
+-            return (string) vms_event_plan_get_status($event_plan_id, 'dashboard');
++        if (vms_dt_has_core_function('vms_event_plan_get_status')) {
++            return (string) vms_dt_call_core_function('vms_event_plan_get_status', $event_plan_id, 'dashboard');
+         }
+         return sanitize_key((string) get_post_meta($event_plan_id, '_vms_event_plan_status', true));
+     }
+@@ -2276,14 +2279,14 @@
+         $cache_key = md5(wp_json_encode($filters));
+         static $memory_cache = array();
+         if (isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+-            if (function_exists('vms_resource_fingerprint_flag')) {
+-                vms_resource_fingerprint_flag('dt_report_dataset_cache', 'memory_hit');
++            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_report_dataset_cache', 'memory_hit');
+             }
+             return $memory_cache[$cache_key];
+         }
+ 
+-        if (function_exists('vms_resource_fingerprint_span_start')) {
+-            vms_resource_fingerprint_span_start('dt.report_dataset', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.report_dataset', array(
+                 'event_plan_id' => (int) ($filters['event_plan_id'] ?? 0),
+                 'event_from' => (string) ($filters['event_from'] ?? ''),
+                 'event_to' => (string) ($filters['event_to'] ?? ''),
+@@ -2445,8 +2448,8 @@
+             'square_meta' => $square_meta,
+         );
+         $memory_cache[$cache_key] = $result;
+-        if (function_exists('vms_resource_fingerprint_span_finish')) {
+-            vms_resource_fingerprint_span_finish('dt.report_dataset', array(
++        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
++            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.report_dataset', array(
+                 'event_count' => count($event_ids),
+                 'row_count' => count($event_rows),
+             ));
+diff -ruN --exclude=error_log a/vms-data-tools/includes/admin/page-square-ticket-merge.php b/vms-data-tools/includes/admin/page-square-ticket-merge.php
+--- a/vms-data-tools/includes/admin/page-square-ticket-merge.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/admin/page-square-ticket-merge.php	2026-09-01 08:44:22
+@@ -40,15 +40,15 @@
+         $payout_to = $sold_to;
+     }
+ 
+-    if (function_exists('vms_ticket_revenue_normalize_ymd')) {
+-        $payout_from = vms_ticket_revenue_normalize_ymd($payout_from);
+-        $payout_to = vms_ticket_revenue_normalize_ymd($payout_to);
++    if (vms_dt_has_core_function('vms_ticket_revenue_normalize_ymd')) {
++        $payout_from = vms_dt_call_core_function('vms_ticket_revenue_normalize_ymd', $payout_from);
++        $payout_to = vms_dt_call_core_function('vms_ticket_revenue_normalize_ymd', $payout_to);
+     }
+ 
+-    if (!function_exists('vms_ticket_revenue_is_valid_ymd') || !vms_ticket_revenue_is_valid_ymd((string) $payout_from)) {
++    if (!vms_dt_has_core_function('vms_ticket_revenue_is_valid_ymd') || !vms_dt_call_core_function('vms_ticket_revenue_is_valid_ymd', (string) $payout_from)) {
+         $payout_from = '';
+     }
+-    if (!function_exists('vms_ticket_revenue_is_valid_ymd') || !vms_ticket_revenue_is_valid_ymd((string) $payout_to)) {
++    if (!vms_dt_has_core_function('vms_ticket_revenue_is_valid_ymd') || !vms_dt_call_core_function('vms_ticket_revenue_is_valid_ymd', (string) $payout_to)) {
+         $payout_to = '';
+     }
+ 
+@@ -80,7 +80,7 @@
+ 
+ function vms_dt_square_ticket_merge_date_to_rfc3339(string $ymd, bool $end_of_day = false): string
+ {
+-    if (!function_exists('vms_ticket_revenue_is_valid_ymd') || !vms_ticket_revenue_is_valid_ymd($ymd)) {
++    if (!vms_dt_has_core_function('vms_ticket_revenue_is_valid_ymd') || !vms_dt_call_core_function('vms_ticket_revenue_is_valid_ymd', $ymd)) {
+         return '';
+     }
+ 
+@@ -451,14 +451,14 @@
+         'unallocated_adjustment_entries' => array(),
+     );
+ 
+-    if (!function_exists('vms_ticket_revenue_build_report')) {
++    if (!vms_dt_has_core_function('vms_ticket_revenue_build_report')) {
+         $report['warnings'][] = __('Ticket revenue service is unavailable.', 'vms-data-tools');
+         return $report;
+     }
+ 
+     $ticket_args = $args;
+     unset($ticket_args['square_location_id'], $ticket_args['payout_from'], $ticket_args['payout_to']);
+-    $ticket = vms_ticket_revenue_build_report($ticket_args);
++    $ticket = vms_dt_call_core_function('vms_ticket_revenue_build_report', $ticket_args);
+     $report['ticket'] = $ticket;
+     $report['warnings'] = array_merge($report['warnings'], (array) ($ticket['warnings'] ?? array()));
+ 
+@@ -630,7 +630,7 @@
+             $row['square_matched'] = !empty($orders[$order_id]['matched_square_entry_ids']);
+             $rows[] = $row;
+ 
+-            $event_key = function_exists('vms_ticket_revenue_event_key') ? vms_ticket_revenue_event_key($row) : ((string) ($row['event_date'] ?? '') . '|' . (string) ($row['event_title'] ?? '') . '|' . (string) ($row['event_plan_title'] ?? ''));
++            $event_key = vms_dt_has_core_function('vms_ticket_revenue_event_key') ? vms_dt_call_core_function('vms_ticket_revenue_event_key', $row) : ((string) ($row['event_date'] ?? '') . '|' . (string) ($row['event_title'] ?? '') . '|' . (string) ($row['event_plan_title'] ?? ''));
+             if (!isset($event_summary[$event_key])) {
+                 $event_summary[$event_key] = array(
+                     'event_plan_id' => (int) ($row['event_plan_id'] ?? 0),
+@@ -815,8 +815,8 @@
+ 
+ function vms_dt_square_ticket_merge_decimal(int $cents): string
+ {
+-    if (function_exists('vms_ticket_revenue_cents_to_decimal')) {
+-        return (string) vms_ticket_revenue_cents_to_decimal($cents);
++    if (vms_dt_has_core_function('vms_ticket_revenue_cents_to_decimal')) {
++        return (string) vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', $cents);
+     }
+ 
+     return number_format($cents / 100, 2, '.', '');
+@@ -830,7 +830,7 @@
+ 
+     check_admin_referer($nonce_action, 'nonce');
+ 
+-    if (!function_exists('vms_ticket_revenue_build_report')) {
++    if (!vms_dt_has_core_function('vms_ticket_revenue_build_report')) {
+         wp_die(esc_html__('VMS core ticket revenue service is missing.', 'vms-data-tools'));
+     }
+ }
+@@ -1355,8 +1355,8 @@
+     }
+ 
+     $args = vms_dt_square_ticket_merge_request_args();
+-    $available_statuses = function_exists('vms_ticket_revenue_available_statuses')
+-        ? vms_ticket_revenue_available_statuses()
++    $available_statuses = vms_dt_has_core_function('vms_ticket_revenue_available_statuses')
++        ? vms_dt_call_core_function('vms_ticket_revenue_available_statuses')
+         : array();
+     $location_options = vms_dt_square_ticket_merge_location_options();
+     if ((string) ($args['square_location_id'] ?? '') === '' && count($location_options) === 1) {
+diff -ruN --exclude=error_log a/vms-data-tools/includes/admin/page-ticket-revenue-export.php b/vms-data-tools/includes/admin/page-ticket-revenue-export.php
+--- a/vms-data-tools/includes/admin/page-ticket-revenue-export.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/admin/page-ticket-revenue-export.php	2026-09-01 08:44:22
+@@ -39,8 +39,8 @@
+ 
+ function vms_dt_ticket_revenue_today_ymd(): string
+ {
+-    return function_exists('vms_ticket_revenue_wp_now_ymd')
+-        ? vms_ticket_revenue_wp_now_ymd()
++    return vms_dt_has_core_function('vms_ticket_revenue_wp_now_ymd')
++        ? vms_dt_call_core_function('vms_ticket_revenue_wp_now_ymd')
+         : wp_date('Y-m-d', time(), wp_timezone());
+ }
+ 
+@@ -299,13 +299,13 @@
+ 
+     $page_slug = vms_dt_get_menu_slug_ticket_revenue_export();
+     $raw_args = vms_dt_ticket_revenue_request_args('get');
+-    $args = function_exists('vms_ticket_revenue_normalize_args')
+-        ? vms_ticket_revenue_normalize_args($raw_args)
++    $args = vms_dt_has_core_function('vms_ticket_revenue_normalize_args')
++        ? vms_dt_call_core_function('vms_ticket_revenue_normalize_args', $raw_args)
+         : $raw_args;
+     $args['date_preset'] = (string) ($raw_args['date_preset'] ?? 'custom');
+ 
+-    $available_statuses = function_exists('vms_ticket_revenue_available_statuses')
+-        ? vms_ticket_revenue_available_statuses()
++    $available_statuses = vms_dt_has_core_function('vms_ticket_revenue_available_statuses')
++        ? vms_dt_call_core_function('vms_ticket_revenue_available_statuses')
+         : array();
+ 
+     $do_preview = isset($_GET['vms_dt_preview']) && (string) $_GET['vms_dt_preview'] === '1';
+@@ -375,13 +375,13 @@
+         return;
+     }
+ 
+-    if (!function_exists('vms_ticket_revenue_build_report')) {
++    if (!vms_dt_has_core_function('vms_ticket_revenue_build_report')) {
+         echo '<div class="notice notice-error"><p>' . esc_html__('VMS core ticket revenue service is missing. Please update/activate the VMS core plugin.', 'vms-data-tools') . '</p></div>';
+         echo '</div>';
+         return;
+     }
+ 
+-    $report = vms_ticket_revenue_build_report($args);
++    $report = vms_dt_call_core_function('vms_ticket_revenue_build_report', $args);
+     $summary = (array) ($report['summary'] ?? array());
+     $rows = (array) ($report['rows'] ?? array());
+     $event_summary = (array) ($report['event_summary'] ?? array());
+@@ -482,11 +482,11 @@
+ 
+     check_admin_referer('vms_dt_ticket_revenue_export_lines_csv', 'nonce');
+ 
+-    if (!function_exists('vms_ticket_revenue_build_report')) {
++    if (!vms_dt_has_core_function('vms_ticket_revenue_build_report')) {
+         wp_die(esc_html__('VMS core ticket revenue service is missing.', 'vms-data-tools'));
+     }
+ 
+-    $report = vms_ticket_revenue_build_report(vms_dt_ticket_revenue_post_args());
++    $report = vms_dt_call_core_function('vms_ticket_revenue_build_report', vms_dt_ticket_revenue_post_args());
+     $fh = fopen('php://temp', 'w+');
+     fputcsv($fh, array(
+         'order_id',
+@@ -538,13 +538,13 @@
+             (string) ($row['item_name'] ?? ''),
+             (int) ($row['quantity'] ?? 0),
+             (int) ($row['refunded_quantity'] ?? 0),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['gross_subtotal_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['discount_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['net_subtotal_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['tax_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['refunded_subtotal_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['refunded_tax_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['cash_total_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['gross_subtotal_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['discount_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['net_subtotal_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['tax_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['refunded_subtotal_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['refunded_tax_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['cash_total_cents'] ?? 0)),
+             (int) ($row['tec_event_id'] ?? 0),
+             (string) ($row['event_title'] ?? ''),
+             (string) ($row['event_slug'] ?? ''),
+@@ -575,11 +575,11 @@
+ 
+     check_admin_referer('vms_dt_ticket_revenue_export_event_summary_csv', 'nonce');
+ 
+-    if (!function_exists('vms_ticket_revenue_build_report')) {
++    if (!vms_dt_has_core_function('vms_ticket_revenue_build_report')) {
+         wp_die(esc_html__('VMS core ticket revenue service is missing.', 'vms-data-tools'));
+     }
+ 
+-    $report = vms_ticket_revenue_build_report(vms_dt_ticket_revenue_post_args());
++    $report = vms_dt_call_core_function('vms_ticket_revenue_build_report', vms_dt_ticket_revenue_post_args());
+     $fh = fopen('php://temp', 'w+');
+     fputcsv($fh, array(
+         'event_plan_id',
+@@ -611,13 +611,13 @@
+             (string) ($row['recognition_status'] ?? ''),
+             (int) ($row['order_count'] ?? 0),
+             (int) ($row['line_count'] ?? 0),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['gross_subtotal_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['discount_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['net_subtotal_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['tax_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['refunded_subtotal_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['refunded_tax_cents'] ?? 0)),
+-            vms_ticket_revenue_cents_to_decimal((int) ($row['cash_total_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['gross_subtotal_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['discount_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['net_subtotal_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['tax_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['refunded_subtotal_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['refunded_tax_cents'] ?? 0)),
++            vms_dt_call_core_function('vms_ticket_revenue_cents_to_decimal', (int) ($row['cash_total_cents'] ?? 0)),
+         ));
+     }
+ 
+diff -ruN --exclude=error_log a/vms-data-tools/includes/admin/page-vendor-import.php b/vms-data-tools/includes/admin/page-vendor-import.php
+--- a/vms-data-tools/includes/admin/page-vendor-import.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/admin/page-vendor-import.php	2026-09-01 08:45:06
+@@ -104,8 +104,9 @@
+ 		'notes',
+ 	];
+ 
+-	if (class_exists('VMS_Vendor_Schema_Registry') && method_exists('VMS_Vendor_Schema_Registry', 'resolve_fields')) {
+-		$resolved = VMS_Vendor_Schema_Registry::resolve_fields($headers);
++	$schema_registry = vms_dt_core_class('VMS_Vendor_Schema_Registry');
++	if ($schema_registry !== '' && method_exists($schema_registry, 'resolve_fields')) {
++		$resolved = $schema_registry::resolve_fields($headers);
+ 		if (is_array($resolved)) {
+ 			foreach ($allowed_fields as $f) {
+ 				$h = isset($resolved[$f]) ? (string) $resolved[$f] : '';
+diff -ruN --exclude=error_log a/vms-data-tools/includes/bootstrap.php b/vms-data-tools/includes/bootstrap.php
+--- a/vms-data-tools/includes/bootstrap.php	2026-05-28 21:31:17
++++ b/vms-data-tools/includes/bootstrap.php	2026-09-01 08:44:22
+@@ -298,8 +298,8 @@
+ 
+ function vms_dt_activate(): void
+ {
+-	if (function_exists('vms_resource_fingerprint_flag')) {
+-		vms_resource_fingerprint_flag('plugin_activation', 'vms-data-tools/vms-data-tools.php');
++	if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++		vms_dt_call_core_function('vms_resource_fingerprint_flag', 'plugin_activation', 'vms-data-tools/vms-data-tools.php');
+ 	}
+ 
+ 	// Ensure roles/caps are registered even if init hasn't run yet.
+@@ -309,8 +309,8 @@
+ 
+ function vms_dt_deactivate(): void
+ {
+-	if (function_exists('vms_resource_fingerprint_flag')) {
+-		vms_resource_fingerprint_flag('plugin_deactivation', 'vms-data-tools/vms-data-tools.php');
++	if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
++		vms_dt_call_core_function('vms_resource_fingerprint_flag', 'plugin_deactivation', 'vms-data-tools/vms-data-tools.php');
+ 	}
+ 
+ 	// Keep capabilities by default (non-destructive).
+diff -ruN --exclude=error_log a/vms-data-tools/includes/core-compat.php b/vms-data-tools/includes/core-compat.php
+--- a/vms-data-tools/includes/core-compat.php	1969-12-31 18:00:00
++++ b/vms-data-tools/includes/core-compat.php	2026-09-01 08:43:27
+@@ -0,0 +1,59 @@
++<?php
++defined('ABSPATH') || exit;
++
++/**
++ * Resolve a public BVM runtime function, retaining legacy VMS fallback.
++ */
++function vms_dt_core_function(string $legacy_name): string {
++	$public_name = strpos($legacy_name, 'vms_') === 0
++		? 'bvmgr_' . substr($legacy_name, 4)
++		: $legacy_name;
++
++	if (function_exists($public_name)) {
++		return $public_name;
++	}
++
++	return function_exists($legacy_name) ? $legacy_name : '';
++}
++
++function vms_dt_has_core_function(string $legacy_name): bool {
++	return vms_dt_core_function($legacy_name) !== '';
++}
++
++function vms_dt_call_core_function(string $legacy_name, ...$args) {
++	$function = vms_dt_core_function($legacy_name);
++	return $function !== '' ? $function(...$args) : null;
++}
++
++/**
++ * Resolve a public BVM runtime constant, retaining legacy VMS fallback.
++ */
++function vms_dt_core_constant(string $legacy_name, $default = null) {
++	$public_name = strpos($legacy_name, 'VMS_') === 0
++		? 'BVMGR_' . substr($legacy_name, 4)
++		: $legacy_name;
++
++	if (defined($public_name)) {
++		return constant($public_name);
++	}
++	if (defined($legacy_name)) {
++		return constant($legacy_name);
++	}
++
++	return $default;
++}
++
++/**
++ * Resolve a public BVM runtime class, retaining legacy VMS fallback.
++ */
++function vms_dt_core_class(string $legacy_name): string {
++	$public_name = strpos($legacy_name, 'VMS_') === 0
++		? 'BVMGR_' . substr($legacy_name, 4)
++		: $legacy_name;
++
++	if (class_exists($public_name)) {
++		return $public_name;
++	}
++
++	return class_exists($legacy_name) ? $legacy_name : '';
++}
+diff -ruN --exclude=error_log a/vms-data-tools/includes/deps.php b/vms-data-tools/includes/deps.php
+--- a/vms-data-tools/includes/deps.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/deps.php	2026-09-01 08:43:27
+@@ -2,7 +2,7 @@
+ defined('ABSPATH') || exit;
+ 
+ /**
+- * Dependency check for VMS Core.
++ * Dependency check for Backstage Venue Manager or legacy VMS Core.
+  *
+  * We use a simple “capability/feature function exists” check instead of relying on plugin slug,
+  * because your core may move or be renamed.
+@@ -12,12 +12,12 @@
+ 	 * Choose ONE canonical function to represent “VMS Core loaded”.
+ 	 * Update this when core exposes its public API.
+ 	 */
+-	if (function_exists('vms_core')) {
++	if (vms_dt_has_core_function('vms_core')) {
+ 		return true;
+ 	}
+ 
+ 	// Alternate “public API” function names you may introduce in core:
+-	if (function_exists('vms_vendor_upsert')) {
++	if (vms_dt_has_core_function('vms_vendor_upsert')) {
+ 		return true;
+ 	}
+ 
+@@ -33,7 +33,7 @@
+ 	<div class="notice notice-warning">
+ 		<p>
+ 			<strong>VMS Data Tools</strong> is installed but inactive by dependency:
+-			VMS Core is not detected. Activate VMS Core to enable Data Tools.
++			Backstage Venue Manager or legacy VMS Core is not detected. Activate the venue-management core to enable Data Tools.
+ 		</p>
+ 	</div>
+ 	<?php
+diff -ruN --exclude=error_log a/vms-data-tools/includes/helpers.php b/vms-data-tools/includes/helpers.php
+--- a/vms-data-tools/includes/helpers.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/helpers.php	2026-09-01 08:45:06
+@@ -9,8 +9,9 @@
+ }
+ 
+ function vms_dt_manage_capability(): string {
+-	if (defined('VMS_CAP_MANAGE_DATA_TOOLS') && is_string(VMS_CAP_MANAGE_DATA_TOOLS) && VMS_CAP_MANAGE_DATA_TOOLS !== '') {
+-		return (string) VMS_CAP_MANAGE_DATA_TOOLS;
++	$core_capability = vms_dt_core_constant('VMS_CAP_MANAGE_DATA_TOOLS', '');
++	if (is_string($core_capability) && $core_capability !== '') {
++		return $core_capability;
+ 	}
+ 	if (defined('VMS_DT_CAP_IMPORT_VENDORS') && is_string(VMS_DT_CAP_IMPORT_VENDORS) && VMS_DT_CAP_IMPORT_VENDORS !== '') {
+ 		return (string) VMS_DT_CAP_IMPORT_VENDORS;
+diff -ruN --exclude=error_log a/vms-data-tools/includes/integrations/square/vms-square-sync.php b/vms-data-tools/includes/integrations/square/vms-square-sync.php
+--- a/vms-data-tools/includes/integrations/square/vms-square-sync.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/integrations/square/vms-square-sync.php	2026-09-01 08:45:06
+@@ -222,8 +222,9 @@
+   if (function_exists('vms_dt_manage_capability')) {
+     return vms_dt_manage_capability();
+   }
+-  if (defined('VMS_CAP_MANAGE_DATA_TOOLS') && is_string(VMS_CAP_MANAGE_DATA_TOOLS) && VMS_CAP_MANAGE_DATA_TOOLS !== '') {
+-    return (string)VMS_CAP_MANAGE_DATA_TOOLS;
++  $core_capability = vms_dt_core_constant('VMS_CAP_MANAGE_DATA_TOOLS', '');
++  if (is_string($core_capability) && $core_capability !== '') {
++    return $core_capability;
+   }
+   if (defined('VMS_DT_CAP_IMPORT_VENDORS') && is_string(VMS_DT_CAP_IMPORT_VENDORS) && VMS_DT_CAP_IMPORT_VENDORS !== '') {
+     return (string)VMS_DT_CAP_IMPORT_VENDORS;
+diff -ruN --exclude=error_log a/vms-data-tools/includes/services/vendor-import/vendor-import-engine.php b/vms-data-tools/includes/services/vendor-import/vendor-import-engine.php
+--- a/vms-data-tools/includes/services/vendor-import/vendor-import-engine.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/services/vendor-import/vendor-import-engine.php	2026-09-01 08:45:06
+@@ -157,8 +157,9 @@
+ 			'notes',
+ 		];
+ 
+-		if (class_exists('VMS_Vendor_Schema_Registry') && method_exists('VMS_Vendor_Schema_Registry', 'resolve_fields')) {
+-			$resolved = VMS_Vendor_Schema_Registry::resolve_fields($headers);
++		$schema_registry = vms_dt_core_class('VMS_Vendor_Schema_Registry');
++		if ($schema_registry !== '' && method_exists($schema_registry, 'resolve_fields')) {
++			$resolved = $schema_registry::resolve_fields($headers);
+ 			if (is_array($resolved)) {
+ 				foreach ($allowed_fields as $f) {
+ 					$h = isset($resolved[$f]) ? (string) $resolved[$f] : '';
+@@ -333,7 +334,7 @@
+ 
+ 	private function run_import(array $parsed, string $batch_id, string $filename, bool $dry_run): array
+ 	{
+-		if (!function_exists('vms_normalize_email_cell')) {
++		if (!vms_dt_has_core_function('vms_normalize_email_cell')) {
+ 			return [
+ 				'batch_id' => $batch_id,
+ 				'filename' => $filename,
+@@ -352,7 +353,7 @@
+ 			];
+ 		}
+ 
+-		if (!function_exists('vms_vendor_schema')) {
++		if (!vms_dt_has_core_function('vms_vendor_schema')) {
+ 			return [
+ 				'batch_id' => $batch_id,
+ 				'filename' => $filename,
+@@ -371,7 +372,8 @@
+ 			];
+ 		}
+ 
+-		if (!class_exists('VMS_Vendor_Schema_Registry')) {
++		$schema_registry = vms_dt_core_class('VMS_Vendor_Schema_Registry');
++		if ($schema_registry === '') {
+ 			return [
+ 				'batch_id' => $batch_id,
+ 				'filename' => $filename,
+@@ -390,12 +392,12 @@
+ 			];
+ 		}
+ 
+-		$schema       = vms_vendor_schema();
++		$schema       = vms_dt_call_core_function('vms_vendor_schema');
+ 		$headers      = $parsed['headers'];
+ 		$header_index = $this->header_index_map($headers);
+ 
+-		$resolved = VMS_Vendor_Schema_Registry::resolve_fields($headers);
+-		$contract = VMS_Vendor_Schema_Registry::get('v1');
++		$resolved = $schema_registry::resolve_fields($headers);
++		$contract = $schema_registry::get('v1');
+ 		$preferred_lang_header = $this->find_preferred_language_header($headers);
+ 
+ 		$summary     = ['processed' => 0, 'create' => 0, 'update' => 0, 'skip' => 0, 'fail' => 0];
+@@ -446,7 +448,7 @@
+ 			$h_email    = $resolved['primary_email'] ?? '';
+ 			$cell_email = $this->cell_ref($h_email, $header_index, $row_num);
+ 
+-			$email_norm    = vms_normalize_email_cell($primary_email);
++			$email_norm    = vms_dt_call_core_function('vms_normalize_email_cell', $primary_email);
+ 			$primary_email = (string) ($email_norm['email'] ?? '');
+ 
+ 			// Enforce canonical normalization for matching + reporting.
+diff -ruN --exclude=error_log a/vms-data-tools/includes/vendor-invites/admin-page.php b/vms-data-tools/includes/vendor-invites/admin-page.php
+--- a/vms-data-tools/includes/vendor-invites/admin-page.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/vendor-invites/admin-page.php	2026-09-01 08:44:22
+@@ -861,7 +861,7 @@
+ 
+         $rows = vms_dt_vio_list_opportunity_submissions($filters);
+         $groups = vms_dt_vio_group_opportunity_submissions_by_event($rows);
+-        $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
++        $tz = vms_dt_has_core_function('vms_get_timezone') ? vms_dt_call_core_function('vms_get_timezone') : wp_timezone();
+         $date_format = (string) get_option('date_format', 'M j, Y');
+ 
+         $render_hidden_filters = static function () use ($filters): void {
+diff -ruN --exclude=error_log a/vms-data-tools/includes/vendor-invites/helpers.php b/vms-data-tools/includes/vendor-invites/helpers.php
+--- a/vms-data-tools/includes/vendor-invites/helpers.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/vendor-invites/helpers.php	2026-09-01 08:45:06
+@@ -35,8 +35,9 @@
+             return vms_dt_manage_capability();
+         }
+ 
+-        if (defined('VMS_CAP_MANAGE_DATA_TOOLS') && is_string(VMS_CAP_MANAGE_DATA_TOOLS) && VMS_CAP_MANAGE_DATA_TOOLS !== '') {
+-            return (string) VMS_CAP_MANAGE_DATA_TOOLS;
++        $core_capability = vms_dt_core_constant('VMS_CAP_MANAGE_DATA_TOOLS', '');
++        if (is_string($core_capability) && $core_capability !== '') {
++            return $core_capability;
+         }
+ 
+         if (defined('VMS_DT_CAP_IMPORT_VENDORS') && is_string(VMS_DT_CAP_IMPORT_VENDORS) && VMS_DT_CAP_IMPORT_VENDORS !== '') {
+@@ -215,9 +216,7 @@
+         $keys = vms_dt_vio_vendor_meta_keys();
+         $status = (string) get_post_meta($vendor_id, $keys['portal_status'], true);
+         if ($status === '') {
+-            $legacy_user_link_key = defined('VMS_VENDOR_PRIMARY_USER_META_KEY')
+-                ? (string) VMS_VENDOR_PRIMARY_USER_META_KEY
+-                : '_vms_vendor_user_id';
++            $legacy_user_link_key = (string) vms_dt_core_constant('VMS_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
+             $linked = (int) get_post_meta($vendor_id, $legacy_user_link_key, true);
+             if ($linked > 0) {
+                 return 'claimed';
+@@ -301,8 +300,8 @@
+             return '';
+         }
+ 
+-        $k_primary = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+-        $k_legacy = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'email') : '_vms_vendor_email';
++        $k_primary = vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'vendor', 'primary_email') : '_vms_vendor_primary_email';
++        $k_legacy = vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'vendor', 'email') : '_vms_vendor_email';
+ 
+         $email = trim((string) get_post_meta($vendor_id, $k_primary, true));
+         if ($email === '') {
+diff -ruN --exclude=error_log a/vms-data-tools/includes/vendor-invites/open-dates.php b/vms-data-tools/includes/vendor-invites/open-dates.php
+--- a/vms-data-tools/includes/vendor-invites/open-dates.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/vendor-invites/open-dates.php	2026-09-01 08:44:22
+@@ -25,8 +25,8 @@
+ 
+         $limit = 0;
+ 
+-        if (function_exists('vms_calendar_get_event_slot_limits')) {
+-            $map = (array) vms_calendar_get_event_slot_limits($event_plan_id, $venue_id);
++        if (vms_dt_has_core_function('vms_calendar_get_event_slot_limits')) {
++            $map = (array) vms_dt_call_core_function('vms_calendar_get_event_slot_limits', $event_plan_id, $venue_id);
+             if (isset($map[$vendor_type]) && is_numeric($map[$vendor_type])) {
+                 $limit = max(0, (int) $map[$vendor_type]);
+             }
+@@ -36,7 +36,7 @@
+             return $limit;
+         }
+ 
+-        $k_slot_limits = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'slot_limits') : '_vms_slot_limits';
++        $k_slot_limits = vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'slot_limits') : '_vms_slot_limits';
+         if ($k_slot_limits === '') {
+             $k_slot_limits = '_vms_slot_limits';
+         }
+@@ -61,13 +61,13 @@
+     function vms_dt_vio_event_plan_meta_keys(): array
+     {
+         $keys = array(
+-            'date' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date',
+-            'venue_id' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'venue_id') : '_vms_venue_id',
+-            'secondary_vendor_ids' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids',
+-            'secondary_vendor_id' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id',
+-            'secondary_vendor_type' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_type') : '_vms_secondary_vendor_type',
+-            'primary_vendor_id' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id',
+-            'status' => function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status',
++            'date' => vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'date') : '_vms_event_date',
++            'venue_id' => vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'venue_id') : '_vms_venue_id',
++            'secondary_vendor_ids' => vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids',
++            'secondary_vendor_id' => vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id',
++            'secondary_vendor_type' => vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'secondary_vendor_type') : '_vms_secondary_vendor_type',
++            'primary_vendor_id' => vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'band_vendor_id') : '_vms_band_vendor_id',
++            'status' => vms_dt_has_core_function('vms_meta_key') ? (string) vms_dt_call_core_function('vms_meta_key', 'event_plan', 'status') : '_vms_event_plan_status',
+         );
+ 
+         foreach ($keys as $key => $value) {
+@@ -113,7 +113,7 @@
+             ? array_values(array_unique(array_filter(array_map('sanitize_key', (array) $args['allowed_statuses']))))
+             : vms_dt_vio_open_dates_allowed_statuses($include_tentative);
+ 
+-        $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
++        $tz = vms_dt_has_core_function('vms_get_timezone') ? vms_dt_call_core_function('vms_get_timezone') : wp_timezone();
+         $today = isset($args['today']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $args['today'])
+             ? (string) $args['today']
+             : wp_date('Y-m-d', time(), $tz);
+@@ -124,11 +124,11 @@
+         }
+ 
+         $keys = vms_dt_vio_event_plan_meta_keys();
+-        $status = function_exists('vms_event_plan_get_status')
+-            ? (string) vms_event_plan_get_status($event_plan_id, 'schedule_admin')
++        $status = vms_dt_has_core_function('vms_event_plan_get_status')
++            ? (string) vms_dt_call_core_function('vms_event_plan_get_status', $event_plan_id, 'schedule_admin')
+             : sanitize_key((string) get_post_meta($event_plan_id, $keys['status'], true));
+-        if (function_exists('vms_event_plan_status_normalize')) {
+-            $status = (string) vms_event_plan_status_normalize($status);
++        if (vms_dt_has_core_function('vms_event_plan_status_normalize')) {
++            $status = (string) vms_dt_call_core_function('vms_event_plan_status_normalize', $status);
+         } else {
+             $status = sanitize_key($status);
+         }
+@@ -177,8 +177,8 @@
+             'date_ymd' => $date_ymd,
+             'date_ts' => (int) $ts,
+             'status' => $status,
+-            'status_label' => function_exists('vms_event_plan_status_label')
+-                ? (string) vms_event_plan_status_label($status)
++            'status_label' => vms_dt_has_core_function('vms_event_plan_status_label')
++                ? (string) vms_dt_call_core_function('vms_event_plan_status_label', $status)
+                 : ucfirst($status),
+             'venue_id' => $venue_id,
+             'venue_name' => ($venue_id > 0) ? (string) get_the_title($venue_id) : '',
+@@ -218,7 +218,7 @@
+         $include_tentative = !empty($args['include_tentative']);
+         $venue_ids = vms_dt_vio_parse_id_list($args['venue_ids'] ?? array());
+ 
+-        $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
++        $tz = vms_dt_has_core_function('vms_get_timezone') ? vms_dt_call_core_function('vms_get_timezone') : wp_timezone();
+         $today = wp_date('Y-m-d', time(), $tz);
+         $end_date = wp_date('Y-m-d', time() + ($lookahead_days * DAY_IN_SECONDS), $tz);
+         $keys = vms_dt_vio_event_plan_meta_keys();
+@@ -312,7 +312,7 @@
+         $include_tentative = !empty($args['include_tentative']);
+ 
+         return (string) vms_dt_vio_with_language_locale($lang, static function () use ($open_dates, $include_primary_vendor, $include_tentative): string {
+-            $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
++            $tz = vms_dt_has_core_function('vms_get_timezone') ? vms_dt_call_core_function('vms_get_timezone') : wp_timezone();
+             $date_format = (string) get_option('date_format', 'M j, Y');
+ 
+             $out = '<p><strong>' . esc_html__('Upcoming open dates', 'vms-data-tools') . '</strong></p>';
+diff -ruN --exclude=error_log a/vms-data-tools/includes/vendor-invites/opportunities.php b/vms-data-tools/includes/vendor-invites/opportunities.php
+--- a/vms-data-tools/includes/vendor-invites/opportunities.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/vendor-invites/opportunities.php	2026-09-01 08:44:22
+@@ -82,11 +82,11 @@
+         $venue_id = ($event_plan_id > 0) ? absint(get_post_meta($event_plan_id, $keys['venue_id'], true)) : 0;
+         $event_status = '';
+         if ($event_plan_id > 0) {
+-            $event_status = function_exists('vms_event_plan_get_status')
+-                ? (string) vms_event_plan_get_status($event_plan_id, 'schedule_admin')
++            $event_status = vms_dt_has_core_function('vms_event_plan_get_status')
++                ? (string) vms_dt_call_core_function('vms_event_plan_get_status', $event_plan_id, 'schedule_admin')
+                 : sanitize_key((string) get_post_meta($event_plan_id, $keys['status'], true));
+-            if (function_exists('vms_event_plan_status_normalize')) {
+-                $event_status = (string) vms_event_plan_status_normalize($event_status);
++            if (vms_dt_has_core_function('vms_event_plan_status_normalize')) {
++                $event_status = (string) vms_dt_call_core_function('vms_event_plan_status_normalize', $event_status);
+             } else {
+                 $event_status = sanitize_key($event_status);
+             }
+@@ -118,8 +118,8 @@
+         $row['venue_id'] = $venue_id;
+         $row['venue_name'] = ($venue_id > 0) ? (string) get_the_title($venue_id) : '';
+         $row['event_status'] = $event_status;
+-        $row['event_status_label'] = ($event_status !== '' && function_exists('vms_event_plan_status_label'))
+-            ? (string) vms_event_plan_status_label($event_status)
++        $row['event_status_label'] = ($event_status !== '' && vms_dt_has_core_function('vms_event_plan_status_label'))
++            ? (string) vms_dt_call_core_function('vms_event_plan_status_label', $event_status)
+             : ucfirst((string) $event_status);
+         $row['note'] = trim((string) ($row['note'] ?? ''));
+         $row['submitted_at'] = trim((string) ($row['submitted_at'] ?? ''));
+@@ -517,7 +517,7 @@
+             return new WP_Error('vms_dt_vio_interest_assign_invalid', __('The selected submission is missing required vendor or event details.', 'vms-data-tools'));
+         }
+ 
+-        if (!function_exists('vms_event_plan_set_secondary_vendors')) {
++        if (!vms_dt_has_core_function('vms_event_plan_set_secondary_vendors')) {
+             return new WP_Error('vms_dt_vio_interest_assign_helper_missing', __('The core Event Plan assignment helper is unavailable.', 'vms-data-tools'));
+         }
+ 
+@@ -549,7 +549,7 @@
+         }
+         $target_ids = array_values(array_unique(array_filter(array_map('absint', $target_ids))));
+ 
+-        $assigned = vms_event_plan_set_secondary_vendors($event_plan_id, $vendor_type, $target_ids);
++        $assigned = vms_dt_call_core_function('vms_event_plan_set_secondary_vendors', $event_plan_id, $vendor_type, $target_ids);
+         if (is_wp_error($assigned)) {
+             return $assigned;
+         }
+diff -ruN --exclude=error_log a/vms-data-tools/includes/vendor-invites/orchestrator.php b/vms-data-tools/includes/vendor-invites/orchestrator.php
+--- a/vms-data-tools/includes/vendor-invites/orchestrator.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/vendor-invites/orchestrator.php	2026-09-01 08:45:06
+@@ -676,16 +676,15 @@
+         vms_dt_vio_set_vendor_portal_status($vendor_id, 'claimed');
+ 
+         // Keep compatibility with VMS portal linkage.
+-        if (defined('VMS_VENDOR_PRIMARY_USER_META_KEY')) {
+-            update_post_meta($vendor_id, (string) VMS_VENDOR_PRIMARY_USER_META_KEY, $user_id);
+-        } else {
+-            update_post_meta($vendor_id, '_vms_vendor_user_id', $user_id);
+-        }
+-
+-        if (defined('VMS_USER_PRIMARY_VENDOR_META_KEY')) {
+-            update_user_meta($user_id, (string) VMS_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
+-        } else {
+-            update_user_meta($user_id, '_vms_vendor_id', $vendor_id);
+-        }
++        update_post_meta(
++            $vendor_id,
++            (string) vms_dt_core_constant('VMS_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id'),
++            $user_id
++        );
++        update_user_meta(
++            $user_id,
++            (string) vms_dt_core_constant('VMS_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id'),
++            $vendor_id
++        );
+     }
+ }
+diff -ruN --exclude=error_log a/vms-data-tools/includes/vendor-invites/portal.php b/vms-data-tools/includes/vendor-invites/portal.php
+--- a/vms-data-tools/includes/vendor-invites/portal.php	2026-03-25 18:46:52
++++ b/vms-data-tools/includes/vendor-invites/portal.php	2026-09-01 08:44:22
+@@ -4,8 +4,8 @@
+ if (!function_exists('vms_dt_vio_portal_notice_html')) {
+     function vms_dt_vio_portal_notice_html(string $type, string $message): string
+     {
+-        if (function_exists('vms_portal_notice')) {
+-            return vms_portal_notice($type, $message);
++        if (vms_dt_has_core_function('vms_portal_notice')) {
++            return vms_dt_call_core_function('vms_portal_notice', $type, $message);
+         }
+ 
+         $class = ($type === 'success' || $type === 'warning') ? $type : 'error';
+@@ -129,7 +129,7 @@
+             return;
+         }
+ 
+-        $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
++        $tz = vms_dt_has_core_function('vms_get_timezone') ? vms_dt_call_core_function('vms_get_timezone') : wp_timezone();
+         $date_format = (string) get_option('date_format', 'M j, Y');
+ 
+         echo '<div class="vms-vio-opps-list">';
+diff -ruN --exclude=error_log a/vms-data-tools/vms-build.txt b/vms-data-tools/vms-build.txt
+--- a/vms-data-tools/vms-build.txt	2026-05-28 21:34:53
++++ b/vms-data-tools/vms-build.txt	2026-09-01 08:54:52
+@@ -1,4 +1,4 @@
+ VMS Data Tools
+-Build: 0.5.53
+-Slug: lazy-load-runtime-modules
+-Notes: Limit VMS Data Tools runtime module loading to actual Data Tools admin pages, Data Tools REST routes, vendor invite/portal requests, event-plan admin work, and cron so normal public, Woo checkout, Ops REST, and unrelated ajax requests do not eagerly bootstrap import, invite, or Square sync modules.
++Build: 0.5.54
++Slug: public-bvm-runtime-compatibility
++Notes: Resolve supported public Backstage Venue Manager functions, constants, and vendor-schema class first while retaining legacy VMS fallback. Data Tools business behavior is unchanged.
+diff -ruN --exclude=error_log a/vms-data-tools/vms-data-tools.php b/vms-data-tools/vms-data-tools.php
+--- a/vms-data-tools/vms-data-tools.php	2026-05-28 21:34:53
++++ b/vms-data-tools/vms-data-tools.php	2026-09-01 08:43:27
+@@ -3,7 +3,7 @@
+ /**
+  * Plugin Name: VMS Data Tools
+  * Description: Data movement tools for VMS (Vendor Import, exports, sync, etc.).
+- * Version: 0.5.53
++ * Version: 0.5.54
+  * Author: Coney Productions LLC
+  * Text Domain: vms-data-tools
+  */
+@@ -20,7 +20,7 @@
+     return;
+ }
+ 
+-define('VMS_DT_VERSION', '0.5.53');
++define('VMS_DT_VERSION', '0.5.54');
+ define('VMS_DT_PLUGIN_FILE', __FILE__);
+ define('VMS_DT_PLUGIN_DIR', plugin_dir_path(__FILE__));
+ define('VMS_DT_PLUGIN_URL', plugin_dir_url(__FILE__));
+@@ -28,6 +28,7 @@
+ define('VMS_DT_ADMIN_DIR', VMS_DT_PLUGIN_DIR . 'includes/admin/');
+ define('VMS_DT_SERVICES_DIR', VMS_DT_PLUGIN_DIR . 'includes/services/');
+ 
++require_once VMS_DT_INCLUDES_DIR . 'core-compat.php';
+ require_once VMS_DT_INCLUDES_DIR . 'bootstrap.php';
+ 
+ register_activation_hook(__FILE__, 'vms_dt_activate');

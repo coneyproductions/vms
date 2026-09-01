@@ -1,0 +1,268 @@
+diff -ruN --exclude=error_log a/vms-events-slider/TEST-PLAN-1.0.10.md b/vms-events-slider/TEST-PLAN-1.0.10.md
+--- a/vms-events-slider/TEST-PLAN-1.0.10.md	1969-12-31 18:00:00
++++ b/vms-events-slider/TEST-PLAN-1.0.10.md	2026-09-01 08:54:52
+@@ -0,0 +1,6 @@
++# VMS Events Slider 1.0.10 Test Plan
++
++- Load with public Backstage Venue Manager 1.2.0 and no active historical VMS plugin.
++- Confirm both slider shortcodes register and resolve public calendar/status/reschedule/cancellation/ticketing APIs.
++- Request the exact anonymous canonical homepage twice and confirm the expected slider markup and identical cached response.
++- Confirm cancelled/rescheduled filtering and existing slider cache keys remain intact.
+diff -ruN --exclude=error_log a/vms-events-slider/vms-build.txt b/vms-events-slider/vms-build.txt
+--- a/vms-events-slider/vms-build.txt	1969-12-31 18:00:00
++++ b/vms-events-slider/vms-build.txt	2026-09-01 08:48:53
+@@ -0,0 +1,6 @@
++VMS Events Slider
++Build: 1.0.10
++Date: 2026-09-01
++Summary:
++- Uses public Backstage Venue Manager calendar, status, reschedule, cancellation, ticketing, and meta APIs first.
++- Retains legacy VMS fallback and leaves slider layout, cache keys, shortcode names, and query behavior unchanged.
+diff -ruN --exclude=error_log a/vms-events-slider/vms-events-slider.php b/vms-events-slider/vms-events-slider.php
+--- a/vms-events-slider/vms-events-slider.php	2026-05-25 22:26:50
++++ b/vms-events-slider/vms-events-slider.php	2026-09-01 08:49:03
+@@ -3,7 +3,7 @@
+  * Plugin Name: VMS Events Slider
+  * Description: Cached slider that shows upcoming visible event featured images from The Events Calendar.
+  * Author: VMS
+- * Version: 1.0.9
++ * Version: 1.0.10
+  */
+ 
+ if ( ! defined( 'ABSPATH' ) ) {
+@@ -11,7 +11,7 @@
+ }
+ 
+ if ( ! defined( 'VMS_EVENTS_SLIDER_VERSION' ) ) {
+-    define( 'VMS_EVENTS_SLIDER_VERSION', '1.0.9' );
++    define( 'VMS_EVENTS_SLIDER_VERSION', '1.0.10' );
+ }
+ 
+ if ( ! defined( 'VMS_EVENTS_SLIDER_CACHE_TTL' ) ) {
+@@ -43,6 +43,45 @@
+ }
+ 
+ /**
++ * Resolve public BVM runtime symbols while retaining legacy VMS fallback.
++ */
++function vms_events_slider_core_function( $legacy_name ) {
++    $public_name = 0 === strpos( $legacy_name, 'vms_' )
++        ? 'bvmgr_' . substr( $legacy_name, 4 )
++        : $legacy_name;
++
++    if ( function_exists( $public_name ) ) {
++        return $public_name;
++    }
++
++    return function_exists( $legacy_name ) ? $legacy_name : '';
++}
++
++function vms_events_slider_has_core_function( $legacy_name ) {
++    return '' !== vms_events_slider_core_function( $legacy_name );
++}
++
++function vms_events_slider_call_core_function( $legacy_name, ...$args ) {
++    $function = vms_events_slider_core_function( $legacy_name );
++    return '' !== $function ? $function( ...$args ) : null;
++}
++
++function vms_events_slider_core_constant( $legacy_name, $default = null ) {
++    $public_name = 0 === strpos( $legacy_name, 'VMS_' )
++        ? 'BVMGR_' . substr( $legacy_name, 4 )
++        : $legacy_name;
++
++    if ( defined( $public_name ) ) {
++        return constant( $public_name );
++    }
++    if ( defined( $legacy_name ) ) {
++        return constant( $legacy_name );
++    }
++
++    return $default;
++}
++
++/**
+  * Register the dedicated slider image size.
+  */
+ function vms_events_slider_register_image_size() {
+@@ -326,21 +365,21 @@
+  */
+ function vms_events_slider_plan_meta_keys() {
+     $keys = array(
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'status' ) : '_vms_event_plan_status',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'date' ) : '_vms_event_date',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'tec_event_id' ) : '_vms_tec_event_id',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancel_policy' ) : '_vms_cancel_policy',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancel_reason_code' ) : '_vms_cancel_reason_code',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancel_reason_note' ) : '_vms_cancel_reason_note',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancel_vendor_message' ) : '_vms_cancel_vendor_message',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancelled_at_gmt' ) : '_vms_cancelled_at_gmt',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancelled_by_user_id' ) : '_vms_cancelled_by_user_id',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancel_job_id' ) : '_vms_cancel_job_id',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancel_job_state' ) : '_vms_cancel_job_state',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancel_job_summary' ) : '_vms_cancel_job_summary',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'cancel_requires_operator_review' ) : '_vms_cancel_requires_operator_review',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'rescheduled_from_plan_id' ) : '_vms_rescheduled_from_plan_id',
+-        function_exists( 'vms_meta_key' ) ? (string) vms_meta_key( 'event_plan', 'rescheduled_to_plan_ids' ) : '_vms_rescheduled_to_plan_ids',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'status' ) : '_vms_event_plan_status',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'date' ) : '_vms_event_date',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'tec_event_id' ) : '_vms_tec_event_id',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancel_policy' ) : '_vms_cancel_policy',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancel_reason_code' ) : '_vms_cancel_reason_code',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancel_reason_note' ) : '_vms_cancel_reason_note',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancel_vendor_message' ) : '_vms_cancel_vendor_message',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancelled_at_gmt' ) : '_vms_cancelled_at_gmt',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancelled_by_user_id' ) : '_vms_cancelled_by_user_id',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancel_job_id' ) : '_vms_cancel_job_id',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancel_job_state' ) : '_vms_cancel_job_state',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancel_job_summary' ) : '_vms_cancel_job_summary',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'cancel_requires_operator_review' ) : '_vms_cancel_requires_operator_review',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'rescheduled_from_plan_id' ) : '_vms_rescheduled_from_plan_id',
++        vms_events_slider_has_core_function( 'vms_meta_key' ) ? (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'rescheduled_to_plan_ids' ) : '_vms_rescheduled_to_plan_ids',
+     );
+ 
+     return array_values(
+@@ -363,9 +402,10 @@
+         'local'  => (string) get_option( VMS_EVENTS_SLIDER_CACHE_BUST_OPTION, '1' ),
+     );
+ 
+-    $shared_option = defined( 'VMS_CALENDAR_FEED_CACHE_BUST_OPTION' )
+-        ? VMS_CALENDAR_FEED_CACHE_BUST_OPTION
+-        : 'vms_calendar_feed_cache_bust';
++    $shared_option = (string) vms_events_slider_core_constant(
++        'VMS_CALENDAR_FEED_CACHE_BUST_OPTION',
++        'vms_calendar_feed_cache_bust'
++    );
+ 
+     $shared_value = (string) get_option( $shared_option, '' );
+     if ( '' !== $shared_value ) {
+@@ -419,8 +459,8 @@
+ function vms_events_slider_bust_cache() {
+     update_option( VMS_EVENTS_SLIDER_CACHE_BUST_OPTION, sprintf( '%.6F', microtime( true ) ), false );
+ 
+-    if ( function_exists( 'vms_calendar_feed_cache_bust' ) ) {
+-        vms_calendar_feed_cache_bust();
++    if ( vms_events_slider_has_core_function( 'vms_calendar_feed_cache_bust' ) ) {
++        vms_events_slider_call_core_function('vms_calendar_feed_cache_bust');
+     }
+ }
+ 
+@@ -439,22 +479,22 @@
+ 
+     $plan_ids = array();
+ 
+-    if ( function_exists( 'vms_get_event_plan_for_tec_event' ) ) {
+-        $maybe = absint( vms_get_event_plan_for_tec_event( $event_id ) );
++    if ( vms_events_slider_has_core_function( 'vms_get_event_plan_for_tec_event' ) ) {
++        $maybe = absint( vms_events_slider_call_core_function('vms_get_event_plan_for_tec_event',  $event_id ) );
+         if ( $maybe > 0 && 'vms_event_plan' === get_post_type( $maybe ) ) {
+             $plan_ids[] = $maybe;
+         }
+     }
+ 
+-    if ( function_exists( 'vms_resolve_event_plan_for_tec_event' ) ) {
+-        $maybe = absint( vms_resolve_event_plan_for_tec_event( $event_id ) );
++    if ( vms_events_slider_has_core_function( 'vms_resolve_event_plan_for_tec_event' ) ) {
++        $maybe = absint( vms_events_slider_call_core_function('vms_resolve_event_plan_for_tec_event',  $event_id ) );
+         if ( $maybe > 0 && 'vms_event_plan' === get_post_type( $maybe ) ) {
+             $plan_ids[] = $maybe;
+         }
+     }
+ 
+-    if ( function_exists( 'vms_ticketing_v2_find_plan_id_by_tec_event_id' ) ) {
+-        $maybe = absint( vms_ticketing_v2_find_plan_id_by_tec_event_id( $event_id ) );
++    if ( vms_events_slider_has_core_function( 'vms_ticketing_v2_find_plan_id_by_tec_event_id' ) ) {
++        $maybe = absint( vms_events_slider_call_core_function('vms_ticketing_v2_find_plan_id_by_tec_event_id',  $event_id ) );
+         if ( $maybe > 0 && 'vms_event_plan' === get_post_type( $maybe ) ) {
+             $plan_ids[] = $maybe;
+         }
+@@ -468,14 +508,14 @@
+     }
+ 
+     $tec_meta_keys = array( '_vms_tec_event_id' );
+-    if ( function_exists( 'vms_meta_key' ) ) {
+-        $key = (string) vms_meta_key( 'event_plan', 'tec_event_id' );
++    if ( vms_events_slider_has_core_function( 'vms_meta_key' ) ) {
++        $key = (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'tec_event_id' );
+         if ( '' !== $key ) {
+             $tec_meta_keys[] = $key;
+         }
+     }
+-    if ( function_exists( 'vms_ticketing_b_meta_key' ) ) {
+-        $key = (string) vms_ticketing_b_meta_key( 'tec_event_id', '_vms_tec_event_id' );
++    if ( vms_events_slider_has_core_function( 'vms_ticketing_b_meta_key' ) ) {
++        $key = (string) vms_events_slider_call_core_function('vms_ticketing_b_meta_key',  'tec_event_id', '_vms_tec_event_id' );
+         if ( '' !== $key ) {
+             $tec_meta_keys[] = $key;
+         }
+@@ -526,22 +566,22 @@
+         return 0;
+     }
+ 
+-    if ( function_exists( 'vms_resolve_event_plan_for_tec_event' ) ) {
+-        $plan_id = absint( vms_resolve_event_plan_for_tec_event( $event_id ) );
++    if ( vms_events_slider_has_core_function( 'vms_resolve_event_plan_for_tec_event' ) ) {
++        $plan_id = absint( vms_events_slider_call_core_function('vms_resolve_event_plan_for_tec_event',  $event_id ) );
+         if ( $plan_id > 0 && 'vms_event_plan' === get_post_type( $plan_id ) ) {
+             return $plan_id;
+         }
+     }
+ 
+-    if ( function_exists( 'vms_get_event_plan_for_tec_event' ) ) {
+-        $plan_id = absint( vms_get_event_plan_for_tec_event( $event_id ) );
++    if ( vms_events_slider_has_core_function( 'vms_get_event_plan_for_tec_event' ) ) {
++        $plan_id = absint( vms_events_slider_call_core_function('vms_get_event_plan_for_tec_event',  $event_id ) );
+         if ( $plan_id > 0 && 'vms_event_plan' === get_post_type( $plan_id ) ) {
+             return $plan_id;
+         }
+     }
+ 
+-    if ( function_exists( 'vms_ticketing_v2_find_plan_id_by_tec_event_id' ) ) {
+-        $plan_id = absint( vms_ticketing_v2_find_plan_id_by_tec_event_id( $event_id ) );
++    if ( vms_events_slider_has_core_function( 'vms_ticketing_v2_find_plan_id_by_tec_event_id' ) ) {
++        $plan_id = absint( vms_events_slider_call_core_function('vms_ticketing_v2_find_plan_id_by_tec_event_id',  $event_id ) );
+         if ( $plan_id > 0 && 'vms_event_plan' === get_post_type( $plan_id ) ) {
+             return $plan_id;
+         }
+@@ -585,14 +625,14 @@
+ 
+     $status = '';
+ 
+-    if ( function_exists( 'vms_event_plan_get_status' ) ) {
+-        $status = (string) vms_event_plan_get_status( $plan_id, 'generic' );
++    if ( vms_events_slider_has_core_function( 'vms_event_plan_get_status' ) ) {
++        $status = (string) vms_events_slider_call_core_function('vms_event_plan_get_status',  $plan_id, 'generic' );
+     }
+ 
+     if ( '' === $status ) {
+         $status_key = '_vms_event_plan_status';
+-        if ( function_exists( 'vms_meta_key' ) ) {
+-            $maybe_key = (string) vms_meta_key( 'event_plan', 'status' );
++        if ( vms_events_slider_has_core_function( 'vms_meta_key' ) ) {
++            $maybe_key = (string) vms_events_slider_call_core_function('vms_meta_key',  'event_plan', 'status' );
+             if ( '' !== $maybe_key ) {
+                 $status_key = $maybe_key;
+             }
+@@ -616,11 +656,11 @@
+ function vms_events_slider_plan_has_public_reschedule_destination( $plan_id ) {
+     $plan_id = absint( $plan_id );
+ 
+-    if ( ! $plan_id || ! function_exists( 'vms_event_plan_get_public_reschedule_destination' ) ) {
++    if ( ! $plan_id || ! vms_events_slider_has_core_function( 'vms_event_plan_get_public_reschedule_destination' ) ) {
+         return false;
+     }
+ 
+-    $destination = (array) vms_event_plan_get_public_reschedule_destination( $plan_id );
++    $destination = (array) vms_events_slider_call_core_function('vms_event_plan_get_public_reschedule_destination',  $plan_id );
+ 
+     return ! empty( $destination['url'] );
+ }
+@@ -640,7 +680,7 @@
+         return false;
+     }
+ 
+-    if ( function_exists( 'vms_tec_is_cancelled_event' ) && vms_tec_is_cancelled_event( $event_id ) ) {
++    if ( vms_events_slider_has_core_function( 'vms_tec_is_cancelled_event' ) && vms_events_slider_call_core_function('vms_tec_is_cancelled_event',  $event_id ) ) {
+         return true;
+     }
+ 

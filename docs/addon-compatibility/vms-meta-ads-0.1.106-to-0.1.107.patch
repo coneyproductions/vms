@@ -1,0 +1,294 @@
+diff -ruN --exclude=error_log a/vms-meta-ads/TEST-PLAN-0.1.107.md b/vms-meta-ads/TEST-PLAN-0.1.107.md
+--- a/vms-meta-ads/TEST-PLAN-0.1.107.md	1969-12-31 18:00:00
++++ b/vms-meta-ads/TEST-PLAN-0.1.107.md	2026-09-01 09:02:19
+@@ -0,0 +1,7 @@
++# VMS Meta Ads Builder 0.1.107 Test Plan
++
++- Load with public Backstage Venue Manager 1.2.0 and no active historical VMS plugin.
++- Confirm `meta_ads_builder` registers and is enabled through the public module registry.
++- Confirm builder, promote, performance, logs, and settings screens plus REST, tour, and cron hooks register.
++- Confirm the legacy core-unavailable/reactivation notice is absent.
++- Re-run the 0.1.106 limited-budget usability checks and confirm Meta campaign behavior remains unchanged by the compatibility bridge.
+diff -ruN --exclude=error_log a/vms-meta-ads/assets/ads-builder.js b/vms-meta-ads/assets/ads-builder.js
+--- a/vms-meta-ads/assets/ads-builder.js	2026-06-09 11:02:54
++++ b/vms-meta-ads/assets/ads-builder.js	2026-09-01 08:52:25
+@@ -5433,7 +5433,7 @@
+     var effectiveHasMetaIds = metaStatusState.hasIds || buildAlreadyLinkedInMeta;
+     var createBlockers = getCreatePausedBlockers();
+     var goLiveReasons = [];
+-    goLiveReasons.push('Go Live is not part of the 0.1.106 self-service paused-create release.');
++    goLiveReasons.push('Go Live is not part of the 0.1.107 self-service paused-create release.');
+     if (!hasSavedDraft) {
+       goLiveReasons.push('Load a saved build first.');
+     }
+@@ -7406,7 +7406,7 @@
+ 
+   function goLive() {
+     if (isActionGated('vms-ma-go-live')) {
+-      modalOpen('Go Live is disabled in 0.1.106. This release supports owner-confirmed paused Meta draft creation only.');
++      modalOpen('Go Live is disabled in 0.1.107. This release supports owner-confirmed paused Meta draft creation only.');
+       emitFeedback('warning', 'Go Live is disabled in this release.', 'g');
+       return;
+     }
+diff -ruN --exclude=error_log a/vms-meta-ads/includes/admin/enqueue.php b/vms-meta-ads/includes/admin/enqueue.php
+--- a/vms-meta-ads/includes/admin/enqueue.php	2026-06-06 00:13:46
++++ b/vms-meta-ads/includes/admin/enqueue.php	2026-09-01 08:52:31
+@@ -18,8 +18,8 @@
+ 			if ($page === 'vms-ma-ads-builder') {
+ 				wp_enqueue_media();
+ 			}
+-			if (in_array($page, array('vms-ma-ads-builder', 'vms-ma-ads-settings'), true) && function_exists('vms_enqueue_tour_assets')) {
+-				vms_enqueue_tour_assets();
++			if (in_array($page, array('vms-ma-ads-builder', 'vms-ma-ads-settings'), true) && vms_ma_has_core_function('vms_enqueue_tour_assets')) {
++				vms_ma_call_core_function('vms_enqueue_tour_assets');
+ 			}
+ 			$settings = VMS_Meta_Ads_Utils::get_settings();
+ 			$social_connection = apply_filters('vms_social_meta_connection', null);
+diff -ruN --exclude=error_log a/vms-meta-ads/includes/bootstrap.php b/vms-meta-ads/includes/bootstrap.php
+--- a/vms-meta-ads/includes/bootstrap.php	2026-06-06 00:13:38
++++ b/vms-meta-ads/includes/bootstrap.php	2026-09-01 08:52:57
+@@ -23,7 +23,7 @@
+ 			if (class_exists('VMS_API_Attempts')) {
+ 				VMS_API_Attempts::init();
+ 			}
+-			if (function_exists('vms_register_module')) {
++			if (vms_ma_has_core_function('vms_register_module')) {
+ 				self::register_module();
+ 			}
+ 			add_action('plugins_loaded', array(__CLASS__, 'register_module'), 20);
+@@ -55,7 +55,7 @@
+ 
+ 		public static function register_module(): void
+ 		{
+-			if (!function_exists('vms_register_module')) {
++			if (!vms_ma_has_core_function('vms_register_module')) {
+ 				return;
+ 			}
+ 			if (!self::$docs_source_hook_registered) {
+@@ -66,7 +66,7 @@
+ 				return;
+ 			}
+ 
+-			self::$module_registered = vms_register_module(array(
++			self::$module_registered = vms_ma_call_core_function('vms_register_module', array(
+ 				'slug' => self::MODULE_SLUG,
+ 				'name' => 'Meta Ads Builder',
+ 				'version' => VMS_MA_VERSION,
+@@ -93,13 +93,13 @@
+ 
+ 		public static function module_gate_status(): string
+ 		{
+-			if (!function_exists('vms_module_is_enabled') || !function_exists('vms_module_is_registered')) {
++			if (!vms_ma_has_core_function('vms_module_is_enabled') || !vms_ma_has_core_function('vms_module_is_registered')) {
+ 				return self::GATE_CORE_UNAVAILABLE;
+ 			}
+-			if (!vms_module_is_registered(self::MODULE_SLUG)) {
++			if (!vms_ma_call_core_function('vms_module_is_registered', self::MODULE_SLUG)) {
+ 				return self::GATE_UNREGISTERED;
+ 			}
+-			return vms_module_is_enabled(self::MODULE_SLUG) ? self::GATE_ENABLED : self::GATE_LOCKED;
++			return vms_ma_call_core_function('vms_module_is_enabled', self::MODULE_SLUG) ? self::GATE_ENABLED : self::GATE_LOCKED;
+ 		}
+ 
+ 		public static function render_locked_notice(): void
+@@ -121,7 +121,7 @@
+ 			}
+ 			$message = __('VMS Meta Ads Builder is installed but locked. Enable premium license access for module slug "meta_ads_builder" to activate it.', 'vms-meta-ads');
+ 			if (self::$gate_status === self::GATE_CORE_UNAVAILABLE) {
+-				$message = __('VMS Meta Ads Builder stayed locked because the VMS core module system is unavailable. Reactivate VMS core before using MAB.', 'vms-meta-ads');
++				$message = __('VMS Meta Ads Builder stayed locked because the Backstage Venue Manager or legacy VMS module system is unavailable. Activate the venue-management core before using MAB.', 'vms-meta-ads');
+ 			} elseif (self::$gate_status === self::GATE_UNREGISTERED) {
+ 				$message = __('VMS Meta Ads Builder stayed locked because its VMS module registration could not be verified. The plugin will fail closed until the module registry is available.', 'vms-meta-ads');
+ 			}
+@@ -193,18 +193,22 @@
+ 				wp_enqueue_script('vms-ma-settings', VMS_MA_URL . 'assets/settings.js', array('jquery'), VMS_MA_VERSION, true);
+ 			}
+ 			if (in_array($page, array('vms-ma-ads-builder', 'vms-ma-ads-settings'), true)) {
+-				if (function_exists('vms_enqueue_tour_assets')) {
+-					vms_enqueue_tour_assets();
+-				} elseif (defined('VMS_PLUGIN_URL') && defined('VMS_PLUGIN_PATH')) {
+-					$version = defined('VMS_VERSION') ? (string) VMS_VERSION : VMS_MA_VERSION;
+-					if (file_exists(VMS_PLUGIN_PATH . 'assets/vendor/driverjs/driver.min.css')) {
+-						wp_enqueue_style('vms-driverjs', VMS_PLUGIN_URL . 'assets/vendor/driverjs/driver.min.css', array(), $version);
++				if (vms_ma_has_core_function('vms_enqueue_tour_assets')) {
++					vms_ma_call_core_function('vms_enqueue_tour_assets');
++				} else {
++					$core_url = (string) vms_ma_core_constant('VMS_PLUGIN_URL', '');
++					$core_path = (string) vms_ma_core_constant('VMS_PLUGIN_PATH', '');
++					$version = (string) vms_ma_core_constant('VMS_VERSION', VMS_MA_VERSION);
++					if ($core_url !== '' && $core_path !== '' && file_exists($core_path . 'assets/vendor/driverjs/driver.min.css')) {
++						wp_enqueue_style('vms-driverjs', $core_url . 'assets/vendor/driverjs/driver.min.css', array(), $version);
+ 					}
+-					if (file_exists(VMS_PLUGIN_PATH . 'assets/vendor/driverjs/driver.min.js')) {
+-						wp_enqueue_script('vms-driverjs', VMS_PLUGIN_URL . 'assets/vendor/driverjs/driver.min.js', array(), $version, true);
++					if ($core_url !== '' && $core_path !== '' && file_exists($core_path . 'assets/vendor/driverjs/driver.min.js')) {
++						wp_enqueue_script('vms-driverjs', $core_url . 'assets/vendor/driverjs/driver.min.js', array(), $version, true);
+ 					}
+-					wp_enqueue_style('vms-tours', VMS_PLUGIN_URL . 'assets/css/vms-tours.css', array('vms-admin'), $version);
+-					wp_enqueue_script('vms-tours', VMS_PLUGIN_URL . 'assets/js/vms-tours.js', array(), $version, true);
++					if ($core_url !== '' && $core_path !== '') {
++						wp_enqueue_style('vms-tours', $core_url . 'assets/css/vms-tours.css', array('vms-admin'), $version);
++						wp_enqueue_script('vms-tours', $core_url . 'assets/js/vms-tours.js', array(), $version, true);
++					}
+ 				}
+ 				wp_enqueue_script('vms-ma-tours', VMS_MA_URL . 'assets/tours.js', array('jquery', 'vms-ma-ads-builder'), $tours_ver, true);
+ 			}
+diff -ruN --exclude=error_log a/vms-meta-ads/includes/caps.php b/vms-meta-ads/includes/caps.php
+--- a/vms-meta-ads/includes/caps.php	2026-06-05 10:33:10
++++ b/vms-meta-ads/includes/caps.php	2026-09-01 08:52:57
+@@ -11,20 +11,20 @@
+ 
+ 		public static function get_manage_capability(): string
+ 		{
+-			if (defined('VMS_CAP_MANAGE') && VMS_CAP_MANAGE !== '') {
+-				return VMS_CAP_MANAGE;
++			foreach (array('VMS_CAP_MANAGE', 'VMS_CAP_MANAGE_VMS') as $constant_name) {
++				$capability = vms_ma_core_constant($constant_name, '');
++				if (is_string($capability) && $capability !== '') {
++					return $capability;
++				}
+ 			}
+-			if (defined('VMS_CAP_MANAGE_VMS') && VMS_CAP_MANAGE_VMS !== '') {
+-				return VMS_CAP_MANAGE_VMS;
+-			}
+ 			if (current_user_can('manage_vms')) {
+ 				return 'manage_vms';
+ 			}
+-			if (defined('VMS_CAP_SOCIAL_MANAGE') && VMS_CAP_SOCIAL_MANAGE !== '') {
+-				return VMS_CAP_SOCIAL_MANAGE;
+-			}
+-			if (defined('VMS_CAP_MANAGE_EVENT_PLANS') && VMS_CAP_MANAGE_EVENT_PLANS !== '') {
+-				return VMS_CAP_MANAGE_EVENT_PLANS;
++			foreach (array('VMS_CAP_SOCIAL_MANAGE', 'VMS_CAP_MANAGE_EVENT_PLANS') as $constant_name) {
++				$capability = vms_ma_core_constant($constant_name, '');
++				if (is_string($capability) && $capability !== '') {
++					return $capability;
++				}
+ 			}
+ 			return 'manage_options';
+ 		}
+diff -ruN --exclude=error_log a/vms-meta-ads/includes/core-compat.php b/vms-meta-ads/includes/core-compat.php
+--- a/vms-meta-ads/includes/core-compat.php	1969-12-31 18:00:00
++++ b/vms-meta-ads/includes/core-compat.php	2026-09-01 08:52:25
+@@ -0,0 +1,41 @@
++<?php
++defined('ABSPATH') || exit;
++
++/**
++ * Resolve public BVM runtime symbols while retaining legacy VMS fallback.
++ */
++function vms_ma_core_function(string $legacy_name): string {
++	$public_name = strpos($legacy_name, 'vms_') === 0
++		? 'bvmgr_' . substr($legacy_name, 4)
++		: $legacy_name;
++
++	if (function_exists($public_name)) {
++		return $public_name;
++	}
++
++	return function_exists($legacy_name) ? $legacy_name : '';
++}
++
++function vms_ma_has_core_function(string $legacy_name): bool {
++	return vms_ma_core_function($legacy_name) !== '';
++}
++
++function vms_ma_call_core_function(string $legacy_name, ...$args) {
++	$function = vms_ma_core_function($legacy_name);
++	return $function !== '' ? $function(...$args) : null;
++}
++
++function vms_ma_core_constant(string $legacy_name, $default = null) {
++	$public_name = strpos($legacy_name, 'VMS_') === 0
++		? 'BVMGR_' . substr($legacy_name, 4)
++		: $legacy_name;
++
++	if (defined($public_name)) {
++		return constant($public_name);
++	}
++	if (defined($legacy_name)) {
++		return constant($legacy_name);
++	}
++
++	return $default;
++}
+diff -ruN --exclude=error_log a/vms-meta-ads/includes/services-event-plans.php b/vms-meta-ads/includes/services-event-plans.php
+--- a/vms-meta-ads/includes/services-event-plans.php	2026-06-05 18:38:30
++++ b/vms-meta-ads/includes/services-event-plans.php	2026-09-01 08:52:31
+@@ -273,8 +273,8 @@
+ 		private static function infer_internal_status(int $event_plan_id): string
+ 		{
+ 			$status = '';
+-			if (function_exists('vms_event_plan_get_status')) {
+-				$status = sanitize_key((string) vms_event_plan_get_status($event_plan_id, 'event_list'));
++			if (vms_ma_has_core_function('vms_event_plan_get_status')) {
++				$status = sanitize_key((string) vms_ma_call_core_function('vms_event_plan_get_status', $event_plan_id, 'event_list'));
+ 			}
+ 			if ($status === '') {
+ 				$status = sanitize_key((string) get_post_meta($event_plan_id, '_vms_event_plan_status', true));
+@@ -567,9 +567,9 @@
+ 		private static function resolve_read_only_tec_venue_id(int $event_plan_id, int $venue_id, int $tec_event_id): int
+ 		{
+ 			if ($venue_id > 0) {
+-				$meta_key = function_exists('vms_venue_meta_key')
+-					? vms_venue_meta_key('tec_venue_id', '_vms_tec_venue_id')
+-					: (function_exists('vms_meta_key') ? vms_meta_key('venue', 'tec_venue_id') : '_vms_tec_venue_id');
++				$meta_key = vms_ma_has_core_function('vms_venue_meta_key')
++					? vms_ma_call_core_function('vms_venue_meta_key', 'tec_venue_id', '_vms_tec_venue_id')
++					: (vms_ma_has_core_function('vms_meta_key') ? vms_ma_call_core_function('vms_meta_key', 'venue', 'tec_venue_id') : '_vms_tec_venue_id');
+ 				$stored_tec_venue_id = absint(get_post_meta($venue_id, $meta_key, true));
+ 				if ($stored_tec_venue_id > 0 && get_post_status($stored_tec_venue_id)) {
+ 					return $stored_tec_venue_id;
+diff -ruN --exclude=error_log a/vms-meta-ads/module.json b/vms-meta-ads/module.json
+--- a/vms-meta-ads/module.json	2026-06-09 10:46:28
++++ b/vms-meta-ads/module.json	2026-09-01 08:52:25
+@@ -1,7 +1,7 @@
+ {
+   "name": "Meta Ads Builder",
+   "slug": "meta_ads_builder",
+-  "version": "0.1.106",
++  "version": "0.1.107",
+   "premium": true,
+   "requires": {
+     "core": "0.2.24.711"
+diff -ruN --exclude=error_log a/vms-meta-ads/vms-build.txt b/vms-meta-ads/vms-build.txt
+--- a/vms-meta-ads/vms-build.txt	2026-06-09 10:46:40
++++ b/vms-meta-ads/vms-build.txt	2026-09-01 08:52:25
+@@ -1,6 +1,10 @@
+-VMS Meta Ads Builder build 0.1.106
+-Version: 0.1.106
+-Date: 2026-06-09
++VMS Meta Ads Builder build 0.1.107
++Version: 0.1.107
++Date: 2026-09-01
++
++Changes in 0.1.107:
++- Recognizes the public Backstage Venue Manager module registry and runtime APIs while retaining legacy VMS fallback.
++- Restores normal module-gated admin, REST, tour, and cron registration under BVM 1.2.0 without changing campaign behavior.
+ 
+ Changes in 0.1.106:
+ - Preserves focus and typed text in clean-room budget inputs while the builder rerenders, so multi-digit dollar entry no longer drops the cursor after each keystroke.
+diff -ruN --exclude=error_log a/vms-meta-ads/vms-meta-ads.php b/vms-meta-ads/vms-meta-ads.php
+--- a/vms-meta-ads/vms-meta-ads.php	2026-06-09 10:46:24
++++ b/vms-meta-ads/vms-meta-ads.php	2026-09-01 08:52:25
+@@ -2,7 +2,7 @@
+ /**
+  * Plugin Name: VMS Meta Ads Builder
+  * Description: Guided Meta (Facebook + Instagram) ads builder for VMS event plans, featuring copy packs, drift-safe tours, and optional API creation.
+- * Version: 0.1.106
++ * Version: 0.1.107
+  * Author: Serenade Range
+  * Text Domain: vms-meta-ads
+  */
+@@ -16,9 +16,10 @@
+     define('VMS_MA_URL', plugin_dir_url(__FILE__));
+ }
+ if (!defined('VMS_MA_VERSION')) {
+-define('VMS_MA_VERSION', '0.1.106');
++define('VMS_MA_VERSION', '0.1.107');
+ }
+ 
++require_once VMS_MA_PATH . 'includes/core-compat.php';
+ require_once VMS_MA_PATH . 'includes/bootstrap.php';
+ 
+ register_activation_hook(__FILE__, array('VMS_Meta_Ads', 'activate'));

@@ -1,0 +1,144 @@
+diff -ruN --exclude=error_log a/vms-refer-a-friend/docs/test-plan-0.2.6-public-bvm-registry.md b/vms-refer-a-friend/docs/test-plan-0.2.6-public-bvm-registry.md
+--- a/vms-refer-a-friend/docs/test-plan-0.2.6-public-bvm-registry.md	1969-12-31 18:00:00
++++ b/vms-refer-a-friend/docs/test-plan-0.2.6-public-bvm-registry.md	2026-09-01 08:54:52
+@@ -0,0 +1,6 @@
++# VMS Refer-a-Friend 0.2.6 Test Plan
++
++- Load with public Backstage Venue Manager 1.2.0 and no active historical VMS plugin.
++- Confirm all Refer-a-Friend admin pages enter the public BVM registry without duplicate standalone menus.
++- Confirm the BVM shell and public event-calendar URL resolve through public APIs.
++- Confirm referral, reward, claim, settings, and existing database data remain unchanged.
+diff -ruN --exclude=error_log a/vms-refer-a-friend/includes/class-vms-raf-plugin.php b/vms-refer-a-friend/includes/class-vms-raf-plugin.php
+--- a/vms-refer-a-friend/includes/class-vms-raf-plugin.php	2026-07-06 23:56:44
++++ b/vms-refer-a-friend/includes/class-vms-raf-plugin.php	2026-09-01 08:47:10
+@@ -393,8 +393,8 @@
+     {
+         $candidates = [];
+ 
+-        if (function_exists('vms_get_public_event_calendar_url')) {
+-            $candidates[] = (string) vms_get_public_event_calendar_url();
++        if (vms_raf_has_core_function('vms_get_public_event_calendar_url')) {
++            $candidates[] = (string) vms_raf_call_core_function('vms_get_public_event_calendar_url');
+         }
+ 
+         if (function_exists('tribe_get_events_link')) {
+@@ -514,8 +514,8 @@
+     {
+         $candidates = [];
+ 
+-        if (function_exists('vms_get_public_event_calendar_url')) {
+-            $candidates[] = (string) vms_get_public_event_calendar_url();
++        if (vms_raf_has_core_function('vms_get_public_event_calendar_url')) {
++            $candidates[] = (string) vms_raf_call_core_function('vms_get_public_event_calendar_url');
+         }
+ 
+         if (function_exists('tribe_get_events_link')) {
+@@ -1533,12 +1533,12 @@
+      */
+     public function register_vms_admin_pages()
+     {
+-        if (! function_exists('vms_register_admin_page')) {
++        if (! vms_raf_has_core_function('vms_register_admin_page')) {
+             return;
+         }
+ 
+         foreach ($this->get_admin_page_definitions() as $page) {
+-            vms_register_admin_page([
++            vms_raf_call_core_function('vms_register_admin_page', [
+                 'id'          => $page['slug'],
+                 'slug'        => $page['slug'],
+                 'page_title'  => $page['page_title'],
+@@ -1666,8 +1666,8 @@
+             echo '</div>';
+         };
+ 
+-        if (function_exists('vms_admin_ui_render_shell')) {
+-            vms_admin_ui_render_shell([
++        if (vms_raf_has_core_function('vms_admin_ui_render_shell')) {
++            vms_raf_call_core_function('vms_admin_ui_render_shell', [
+                 'title'    => $title,
+                 'subtitle' => $subtitle,
+                 'shell_id' => 'vms-raf-admin-shell',
+@@ -1721,7 +1721,7 @@
+ 
+     public function register_admin_menu()
+     {
+-        if (function_exists('vms_register_admin_page')) {
++        if (vms_raf_has_core_function('vms_register_admin_page')) {
+             return;
+         }
+ 
+diff -ruN --exclude=error_log a/vms-refer-a-friend/includes/core-compat.php b/vms-refer-a-friend/includes/core-compat.php
+--- a/vms-refer-a-friend/includes/core-compat.php	1969-12-31 18:00:00
++++ b/vms-refer-a-friend/includes/core-compat.php	2026-09-01 08:47:03
+@@ -0,0 +1,26 @@
++<?php
++defined('ABSPATH') || exit;
++
++function vms_raf_core_function(string $legacy_name): string
++{
++    $public_name = strpos($legacy_name, 'vms_') === 0
++        ? 'bvmgr_' . substr($legacy_name, 4)
++        : $legacy_name;
++
++    if (function_exists($public_name)) {
++        return $public_name;
++    }
++
++    return function_exists($legacy_name) ? $legacy_name : '';
++}
++
++function vms_raf_has_core_function(string $legacy_name): bool
++{
++    return vms_raf_core_function($legacy_name) !== '';
++}
++
++function vms_raf_call_core_function(string $legacy_name, ...$args)
++{
++    $function = vms_raf_core_function($legacy_name);
++    return $function !== '' ? $function(...$args) : null;
++}
+diff -ruN --exclude=error_log a/vms-refer-a-friend/vms-build.txt b/vms-refer-a-friend/vms-build.txt
+--- a/vms-refer-a-friend/vms-build.txt	2026-07-06 23:56:44
++++ b/vms-refer-a-friend/vms-build.txt	2026-09-01 08:47:03
+@@ -1,7 +1,9 @@
+ VMS Refer-a-Friend
+-Build: 0.2.5
+-Date: 2026-07-06
++Build: 0.2.6
++Date: 2026-09-01
+ Summary:
++- Registers its admin pages and renders its shell through public Backstage Venue Manager APIs, retaining legacy VMS fallback
++- Resolves the public event calendar URL through BVM under the public package basename
+ - Hides coupon-only reward fields unless the reward type is `Future ticket discount coupon`, adds clearer reward-type helper copy, and keeps saved coupon values intact when admins switch reward types
+ - Adds reward-form guidance so credit cost and individual reward coupon settings are easier to understand, while keeping the friend checkout discount controlled in RAF Settings
+ - Uses a safer referral landing URL fallback chain that prefers the detected public calendar/events page when available and otherwise falls back to home URL
+diff -ruN --exclude=error_log a/vms-refer-a-friend/vms-refer-a-friend.php b/vms-refer-a-friend/vms-refer-a-friend.php
+--- a/vms-refer-a-friend/vms-refer-a-friend.php	2026-07-06 23:56:44
++++ b/vms-refer-a-friend/vms-refer-a-friend.php	2026-09-01 08:47:03
+@@ -3,7 +3,7 @@
+  * Plugin Name: VMS Refer-a-Friend
+  * Plugin URI: https://example.com/
+  * Description: Ticket-only refer-a-friend add-on for VMS-powered venues. Earn referral credits from qualifying ticket purchases and redeem them for venue-defined rewards.
+- * Version: 0.2.5
++ * Version: 0.2.6
+  * Author: OpenAI
+  * Requires at least: 6.4
+  * Requires PHP: 7.4
+@@ -15,7 +15,7 @@
+ }
+ 
+ if (! defined('VMS_RAF_VERSION')) {
+-    define('VMS_RAF_VERSION', '0.2.5');
++    define('VMS_RAF_VERSION', '0.2.6');
+ }
+ 
+ if (! defined('VMS_RAF_FILE')) {
+@@ -30,6 +30,7 @@
+     define('VMS_RAF_URL', plugin_dir_url(__FILE__));
+ }
+ 
++require_once VMS_RAF_DIR . 'includes/core-compat.php';
+ require_once VMS_RAF_DIR . 'includes/class-vms-raf-db.php';
+ require_once VMS_RAF_DIR . 'includes/class-vms-raf-plugin.php';
+ 
