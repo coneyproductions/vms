@@ -1,0 +1,79 @@
+# Apply with git apply --unidiff-zero after fill-dates-compatibility-phase-2a-2b.patch from the WordPress plugins directory.
+diff --git a/vms-fill-dates/docs/CODEX-HANDOFF-0.1.8.md b/vms-fill-dates/docs/CODEX-HANDOFF-0.1.8.md
+new file mode 100644
+index 0000000..f48e034
+--- /dev/null
++++ b/vms-fill-dates/docs/CODEX-HANDOFF-0.1.8.md
+@@ -0,0 +1,29 @@
++# Codex Handoff - VMS Fill Dates 0.1.8
++
++## Build
++
++- Plugin: `vms-fill-dates`
++- Version: `0.1.8`
++- Focus: BVM submenu-hook compatibility and native WordPress admin notices
++- Baseline: untouched `0.1.7`
++
++## Purpose
++
++This patch release preserves existing Fill Dates workflows while completing the two confirmed BVM compatibility repairs:
++
++- consume the exact submenu hook returned by WordPress for assets and tour context;
++- render dependency and action-result messages in the native WordPress admin-notice area.
++
++## Functional Files Changed From 0.1.7
++
++- `includes/admin-page.php`
++- `includes/tours.php`
++
++## Release Metadata
++
++- `vms-fill-dates.php`
++- `vms-build.txt`
++- `docs/CODEX-HANDOFF-0.1.8.md`
++- `docs/TEST-PLAN-0.1.8.md`
++
++No database migration or activation-state change is introduced by this release.
+diff --git a/vms-fill-dates/docs/TEST-PLAN-0.1.8.md b/vms-fill-dates/docs/TEST-PLAN-0.1.8.md
+new file mode 100644
+index 0000000..abc168c
+--- /dev/null
++++ b/vms-fill-dates/docs/TEST-PLAN-0.1.8.md
+@@ -0,0 +1,12 @@
++# VMS Fill Dates 0.1.8 Test Plan
++
++1. Confirm the plugin header and `VMS_FILL_DATES_VERSION` report `0.1.8`.
++2. Confirm `vms-build.txt` reports `Version: 0.1.8`.
++3. Run the returned menu-hook compatibility test against the exact release tree.
++4. Run the native admin-notice placement test against the exact release tree.
++5. Run the official-five BVM-only runtime suite against the exact release tree.
++6. Confirm Fill Dates registers one BVM submenu in both load orders.
++7. Confirm its assets and guided tour use the hook returned by WordPress.
++8. Confirm the missing-BVM warning appears once in the native admin-notice area.
++9. Confirm action-result notices appear only on the Fill Dates screen.
++10. Confirm activation state is preserved and no database migration runs during replacement.
+diff --git a/vms-fill-dates/vms-build.txt b/vms-fill-dates/vms-build.txt
+index 9c1a4ea..e3b6bdf 100644
+--- a/vms-fill-dates/vms-build.txt
++++ b/vms-fill-dates/vms-build.txt
+@@ -1,6 +1,8 @@
+ VMS Fill Dates Build
+-Version: 0.1.7
+-Date (UTC): 2026-05-03
++Version: 0.1.8
++Date (UTC): 2026-08-31
++Notes: Fill Dates now stores and consumes the exact submenu hook returned by WordPress so its assets and guided-tour context follow the registered BVM page.
++Notes: Dependency and action-result messages now render through the native WordPress admin-notice area without duplicating notices inside the Fill Dates workspace.
+ Notes: Guided-tour labels now defer translation work until after WordPress theme setup so debug logging does not refill with early `vms-fill-dates` translation notices during normal admin/public traffic.
+ Notes: Fill Dates now flags Event Plans that have changed since last publish and surfaces the pending review count directly in the board and plan detail screen.
+ Notes: Assignments made from Fill Dates now call the core published-snapshot diff helper so changing a published plan from this module immediately marks it as Needs Review instead of silently drifting.
+diff --git a/vms-fill-dates/vms-fill-dates.php b/vms-fill-dates/vms-fill-dates.php
+index 93b1837..3f2c349 100644
+--- a/vms-fill-dates/vms-fill-dates.php
++++ b/vms-fill-dates/vms-fill-dates.php
+@@ -5 +5 @@
+- * Version: 0.1.7
++ * Version: 0.1.8
+@@ -12 +12 @@ defined('ABSPATH') || exit;
+-define('VMS_FILL_DATES_VERSION', '0.1.7');
++define('VMS_FILL_DATES_VERSION', '0.1.8');
