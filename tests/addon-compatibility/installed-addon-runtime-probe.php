@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) {
 
 $scenario = isset($args[0]) ? (string) $args[0] : 'unknown';
 $expectedOpsVersion = getenv('BVM_SWEEP_EXPECTED_OPS_VERSION') ?: '0.1.65.1';
+$expectedAgreementsVersion = getenv('BVM_SWEEP_EXPECTED_AGREEMENTS_VERSION') ?: '0.3.48';
 $checks = array();
 $runtimeErrors = array();
 
@@ -107,7 +108,16 @@ $check('investor-registry', isset($registry['vms-investor-portal']), array('regi
 $check('ops-version-and-resolution', defined('VMS_OPS_CONSOLE_VERSION') && (string) VMS_OPS_CONSOLE_VERSION === $expectedOpsVersion && vms_ops_core_function('vms_get_event_plan_for_tec_event') === 'bvmgr_get_event_plan_for_tec_event');
 $check('ops-runtime', $routeCount('/vms-ops/v1') > 0 && in_array('vms-ops-console-members', $allMenuSlugs, true), array('route_count' => $routeCount('/vms-ops/v1')));
 
-$check('agreements-regression', defined('VMSA_VERSION') && (string) VMSA_VERSION === '0.3.47' && in_array('vms-agreements', $allMenuSlugs, true));
+$agreementTabs = function_exists('bvmgr_vendor_portal_allowed_tabs') ? bvmgr_vendor_portal_allowed_tabs() : array();
+$check(
+	'agreements-regression',
+	defined('VMSA_VERSION')
+		&& (string) VMSA_VERSION === $expectedAgreementsVersion
+		&& in_array('vms-agreements', $allMenuSlugs, true)
+		&& has_filter('vms_vendor_portal_allowed_tabs', 'vmsa_register_vendor_portal_tab') !== false
+		&& in_array('agreements', $agreementTabs, true),
+	array('allowed_tabs' => $agreementTabs)
+);
 $check('express-bar-regression', defined('VMSEB_VERSION') && (string) VMSEB_VERSION === '0.6.24' && in_array('vms-express-bar', $allMenuSlugs, true) && in_array('vms-bar-menu', $allMenuSlugs, true));
 $check('sponsorships-standalone-regression', defined('VMS_SPONSORSHIPS_VERSION') && (string) VMS_SPONSORSHIPS_VERSION === '0.1.7.1' && in_array('vms-sponsorships', $allMenuSlugs, true) && shortcode_exists('vms_sponsor_inquiry'));
 $check('event-venue-map-regression', class_exists('Event_Venue_Map_Modal') && (string) Event_Venue_Map_Modal::VERSION === '1.2.4' && has_filter('the_content') !== false && has_action('wp_footer') !== false);
