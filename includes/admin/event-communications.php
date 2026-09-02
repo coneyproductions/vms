@@ -83,18 +83,57 @@ if (!function_exists('bvmgr_event_communication_summary_text')) {
 }
 
 if (!function_exists('bvmgr_event_communication_render_action_fields')) {
-	function bvmgr_event_communication_render_action_fields(int $plan_id, string $operation_id, string $communication_action, string $recipient_id = ''): void
+	function bvmgr_event_communication_render_action_fields(int $plan_id, string $operation_id, string $communication_action, string $recipient_id = ''): string
 	{
-		echo '<input type="hidden" name="action" value="bvmgr_event_communication_action">';
-		echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $plan_id) . '">';
-		echo '<input type="hidden" name="operation_id" value="' . esc_attr($operation_id) . '">';
-		echo '<input type="hidden" name="communication_action" value="' . esc_attr($communication_action) . '">';
-		if ($recipient_id !== '') {
-			echo '<input type="hidden" name="recipient_id" value="' . esc_attr($recipient_id) . '">';
+		static $forms = array();
+		$communication_action = sanitize_key($communication_action);
+		if ($communication_action === 'render_registered_forms') {
+			foreach ($forms as $form) {
+				$form = is_array($form) ? $form : array();
+				$form_id = (string) ($form['form_id'] ?? '');
+				$registered_plan_id = absint($form['plan_id'] ?? 0);
+				$registered_operation_id = (string) ($form['operation_id'] ?? '');
+				$registered_action = sanitize_key((string) ($form['communication_action'] ?? ''));
+				$registered_recipient_id = sanitize_key((string) ($form['recipient_id'] ?? ''));
+				if ($form_id === '' || $registered_plan_id <= 0 || $registered_operation_id === '' || $registered_action === '') {
+					continue;
+				}
+
+				echo '<form id="' . esc_attr($form_id) . '" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+				if ($registered_action === 'export') {
+					echo '<input type="hidden" name="action" value="bvmgr_event_communication_export">';
+					echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $registered_plan_id) . '">';
+					echo '<input type="hidden" name="operation_id" value="' . esc_attr($registered_operation_id) . '">';
+					wp_nonce_field('bvmgr_event_communication_export_' . $registered_plan_id . '_' . $registered_operation_id, 'bvmgr_event_communication_export_nonce');
+				} else {
+					echo '<input type="hidden" name="action" value="bvmgr_event_communication_action">';
+					echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $registered_plan_id) . '">';
+					echo '<input type="hidden" name="operation_id" value="' . esc_attr($registered_operation_id) . '">';
+					echo '<input type="hidden" name="communication_action" value="' . esc_attr($registered_action) . '">';
+					if ($registered_recipient_id !== '') {
+						echo '<input type="hidden" name="recipient_id" value="' . esc_attr($registered_recipient_id) . '">';
+					}
+					wp_nonce_field('bvmgr_event_communication_' . $registered_plan_id . '_' . $registered_operation_id, 'bvmgr_event_communication_nonce');
+				}
+				echo '</form>';
+			}
+			return '';
 		}
-		wp_nonce_field('bvmgr_event_communication_' . $plan_id . '_' . $operation_id, 'bvmgr_event_communication_nonce');
+		$form_id = 'bvmgr-event-communication-form-' . absint($plan_id) . '-' . substr(hash('sha256', $operation_id . '|' . $communication_action . '|' . $recipient_id), 0, 16);
+		$forms[$form_id] = array(
+			'form_id' => $form_id,
+			'plan_id' => absint($plan_id),
+			'operation_id' => $operation_id,
+			'communication_action' => $communication_action,
+			'recipient_id' => $recipient_id,
+		);
+		return $form_id;
 	}
 }
+
+add_action('admin_footer-post.php', static function (): void {
+	bvmgr_event_communication_render_action_fields(0, '', 'render_registered_forms');
+});
 
 if (!function_exists('bvmgr_event_communication_entitlement_text')) {
 	function bvmgr_event_communication_entitlement_text(array $recipient): string
@@ -143,9 +182,8 @@ if (!function_exists('bvmgr_event_communication_render_missing_ledger')) {
 		}
 		echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__('Communication ledger missing', 'backstage-venue-manager') . '</strong><br>';
 		echo esc_html__('This historical occurrence operation has affected customers but no durable written-notice ledger. Preview an operation-specific bootstrap.', 'backstage-venue-manager') . '</p></div>';
-		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'bootstrap_preview');
-		echo '<button type="submit" class="button button-secondary">' . esc_html__('Preview communication bootstrap', 'backstage-venue-manager') . '</button></form>';
+		$form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'bootstrap_preview');
+		echo '<button form="' . esc_attr($form_id) . '" type="submit" class="button button-secondary">' . esc_html__('Preview communication bootstrap', 'backstage-venue-manager') . '</button>';
 
 		$stored = get_transient(bvmgr_event_communication_admin_bootstrap_key($plan_id, $operation_id));
 		$preview = is_array($stored) ? $stored : array();
@@ -164,11 +202,10 @@ if (!function_exists('bvmgr_event_communication_render_missing_ledger')) {
 			echo '<div class="notice notice-error inline"><p>' . esc_html((string) $ambiguity) . '</p></div>';
 		}
 		if (!empty($preview['allowed'])) {
-			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-			bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'bootstrap_apply');
-			echo '<input type="hidden" name="preview_fingerprint" value="' . esc_attr((string) ($preview['fingerprint'] ?? '')) . '">';
-			echo '<p><label><input type="checkbox" name="confirm_bootstrap" value="BOOTSTRAP-COMMUNICATIONS" required> ' . esc_html__('Create this durable audience ledger. Send no email.', 'backstage-venue-manager') . '</label></p>';
-			echo '<button type="submit" class="button button-primary">' . esc_html__('Apply communication bootstrap', 'backstage-venue-manager') . '</button></form>';
+			$form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'bootstrap_apply');
+			echo '<input form="' . esc_attr($form_id) . '" type="hidden" name="preview_fingerprint" value="' . esc_attr((string) ($preview['fingerprint'] ?? '')) . '">';
+			echo '<p><label><input form="' . esc_attr($form_id) . '" type="checkbox" name="confirm_bootstrap" value="BOOTSTRAP-COMMUNICATIONS" required> ' . esc_html__('Create this durable audience ledger. Send no email.', 'backstage-venue-manager') . '</label></p>';
+			echo '<button form="' . esc_attr($form_id) . '" type="submit" class="button button-primary">' . esc_html__('Apply communication bootstrap', 'backstage-venue-manager') . '</button>';
 		}
 	}
 }
@@ -194,24 +231,19 @@ if (!function_exists('bvmgr_event_communication_render_ledger')) {
 			echo '<div class="notice notice-success inline"><p>' . esc_html__('Every affected recipient has a resolved written-notice state.', 'backstage-venue-manager') . '</p></div>';
 		}
 
-		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'send_bulk');
-		echo '<p><label><strong>' . esc_html__('Subject', 'backstage-venue-manager') . '</strong><br><input type="text" class="widefat" name="subject" value="' . esc_attr((string) $message['subject']) . '" required></label></p>';
-		echo '<p><label><strong>' . esc_html__('Message', 'backstage-venue-manager') . '</strong><br><textarea class="widefat" rows="10" name="body" required>' . esc_textarea((string) $message['body']) . '</textarea></label></p>';
-		echo '<p><label><input type="checkbox" name="confirm_send" value="1" required> ' . esc_html__('I reviewed the final subject and message.', 'backstage-venue-manager') . '</label></p>';
-		echo '<p><button type="submit" class="button button-primary" name="send_mode" value="pending">' . esc_html__('Send to Included Pending Customers', 'backstage-venue-manager') . '</button> ';
-		echo '<button type="submit" class="button button-secondary" name="send_mode" value="failed">' . esc_html__('Retry Failed', 'backstage-venue-manager') . '</button></p>';
-		echo '<p><label>' . esc_html__('Administrator test address', 'backstage-venue-manager') . ' <input type="email" name="test_email" value="' . esc_attr((string) wp_get_current_user()->user_email) . '"></label> ';
-		echo '<button type="submit" class="button" name="send_mode" value="test">' . esc_html__('Send Test to Administrator', 'backstage-venue-manager') . '</button></p></form>';
+		$form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'send_bulk');
+		echo '<p><label><strong>' . esc_html__('Subject', 'backstage-venue-manager') . '</strong><br><input form="' . esc_attr($form_id) . '" type="text" class="widefat" name="subject" value="' . esc_attr((string) $message['subject']) . '" required></label></p>';
+		echo '<p><label><strong>' . esc_html__('Message', 'backstage-venue-manager') . '</strong><br><textarea form="' . esc_attr($form_id) . '" class="widefat" rows="10" name="body" required>' . esc_textarea((string) $message['body']) . '</textarea></label></p>';
+		echo '<p><label><input form="' . esc_attr($form_id) . '" type="checkbox" name="confirm_send" value="1" required> ' . esc_html__('I reviewed the final subject and message.', 'backstage-venue-manager') . '</label></p>';
+		echo '<p><button form="' . esc_attr($form_id) . '" type="submit" class="button button-primary" name="send_mode" value="pending">' . esc_html__('Send to Included Pending Customers', 'backstage-venue-manager') . '</button> ';
+		echo '<button form="' . esc_attr($form_id) . '" type="submit" class="button button-secondary" name="send_mode" value="failed">' . esc_html__('Retry Failed', 'backstage-venue-manager') . '</button></p>';
+		echo '<p><label>' . esc_html__('Administrator test address', 'backstage-venue-manager') . ' <input form="' . esc_attr($form_id) . '" type="email" name="test_email" value="' . esc_attr((string) wp_get_current_user()->user_email) . '"></label> ';
+		echo '<button form="' . esc_attr($form_id) . '" type="submit" class="button" name="send_mode" value="test">' . esc_html__('Send Test to Administrator', 'backstage-venue-manager') . '</button></p>';
 
 		echo '<div class="vms-ep-basic-grid">';
 		echo '<p class="vms-ep-basic-item"><label><strong>' . esc_html__('Copy included email addresses', 'backstage-venue-manager') . '</strong><br><textarea readonly rows="4" class="widefat">' . esc_textarea(implode("\n", array_values(array_unique($included_emails)))) . '</textarea></label></p>';
-		echo '<form class="vms-ep-basic-item" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		echo '<input type="hidden" name="action" value="bvmgr_event_communication_export">';
-		echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $plan_id) . '">';
-		echo '<input type="hidden" name="operation_id" value="' . esc_attr($operation_id) . '">';
-		wp_nonce_field('bvmgr_event_communication_export_' . $plan_id . '_' . $operation_id, 'bvmgr_event_communication_export_nonce');
-		echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Export recipient CSV', 'backstage-venue-manager') . '</button></p></form></div>';
+		$export_form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'export');
+		echo '<div class="vms-ep-basic-item"><p><button form="' . esc_attr($export_form_id) . '" type="submit" class="button button-secondary">' . esc_html__('Export recipient CSV', 'backstage-venue-manager') . '</button></p></div></div>';
 
 		echo '<table class="widefat striped"><thead><tr>';
 		foreach (array(__('Include', 'backstage-venue-manager'), __('Customer', 'backstage-venue-manager'), __('Email', 'backstage-venue-manager'), __('Orders', 'backstage-venue-manager'), __('Affected items', 'backstage-venue-manager'), __('Contact status', 'backstage-venue-manager'), __('Written notice', 'backstage-venue-manager'), __('Actions', 'backstage-venue-manager')) as $heading) {
@@ -227,18 +259,16 @@ if (!function_exists('bvmgr_event_communication_render_ledger')) {
 			echo '<tr>';
 			echo '<td>';
 			if (!empty($state['included']) && !bvmgr_event_communication_status_is_resolved((string) ($written['status'] ?? 'pending'))) {
-				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-				bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'exclude', (string) $recipient_id);
-				echo '<label><input type="checkbox" name="include_recipient" value="1" checked> ' . esc_html__('Included', 'backstage-venue-manager') . '</label>';
+				$form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'exclude', (string) $recipient_id);
+				echo '<label><input form="' . esc_attr($form_id) . '" type="checkbox" name="include_recipient" value="1" checked> ' . esc_html__('Included', 'backstage-venue-manager') . '</label>';
 				echo '<p class="description">' . esc_html__('To exclude, uncheck Include and provide the required reason and confirmation.', 'backstage-venue-manager') . '</p>';
-				echo '<textarea name="reason" rows="2" required placeholder="' . esc_attr__('Reason required', 'backstage-venue-manager') . '"></textarea>';
-				echo '<label><input type="checkbox" name="confirm_exclusion" value="1" required> ' . esc_html__('Exclude this affected customer from written notification?', 'backstage-venue-manager') . '</label>';
-				echo '<button class="button" type="submit">' . esc_html__('Save exclusion', 'backstage-venue-manager') . '</button></form>';
+				echo '<textarea form="' . esc_attr($form_id) . '" name="reason" rows="2" required placeholder="' . esc_attr__('Reason required', 'backstage-venue-manager') . '"></textarea>';
+				echo '<label><input form="' . esc_attr($form_id) . '" type="checkbox" name="confirm_exclusion" value="1" required> ' . esc_html__('Exclude this affected customer from written notification?', 'backstage-venue-manager') . '</label>';
+				echo '<button form="' . esc_attr($form_id) . '" class="button" type="submit">' . esc_html__('Save exclusion', 'backstage-venue-manager') . '</button>';
 			} elseif (empty($state['included'])) {
 				echo '<input type="checkbox" disabled> ' . esc_html__('Excluded', 'backstage-venue-manager');
-				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-				bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'reinclude', (string) $recipient_id);
-				echo '<button class="button" type="submit">' . esc_html__('Re-include', 'backstage-venue-manager') . '</button></form>';
+				$form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'reinclude', (string) $recipient_id);
+				echo '<button form="' . esc_attr($form_id) . '" class="button" type="submit">' . esc_html__('Re-include', 'backstage-venue-manager') . '</button>';
 			} else {
 				echo '<input type="checkbox" checked disabled> ' . esc_html__('Included', 'backstage-venue-manager');
 			}
@@ -260,23 +290,23 @@ if (!function_exists('bvmgr_event_communication_render_ledger')) {
 				echo '<br><span class="description">' . esc_html((string) $written['error_information']) . '</span>';
 			}
 			echo '</td><td>';
-			echo '<details><summary>' . esc_html__('Record contact', 'backstage-venue-manager') . '</summary><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-			bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'contact', (string) $recipient_id);
-			echo '<select name="contact_method"><option value="phone">' . esc_html__('Phone', 'backstage-venue-manager') . '</option><option value="in_person">' . esc_html__('In person', 'backstage-venue-manager') . '</option><option value="other">' . esc_html__('Other', 'backstage-venue-manager') . '</option></select>';
-			echo '<textarea name="note" rows="2" placeholder="' . esc_attr__('Optional note', 'backstage-venue-manager') . '"></textarea><button class="button" type="submit">' . esc_html__('Record', 'backstage-venue-manager') . '</button></form></details>';
+			$form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'contact', (string) $recipient_id);
+			echo '<details><summary>' . esc_html__('Record contact', 'backstage-venue-manager') . '</summary>';
+			echo '<select form="' . esc_attr($form_id) . '" name="contact_method"><option value="phone">' . esc_html__('Phone', 'backstage-venue-manager') . '</option><option value="in_person">' . esc_html__('In person', 'backstage-venue-manager') . '</option><option value="other">' . esc_html__('Other', 'backstage-venue-manager') . '</option></select>';
+			echo '<textarea form="' . esc_attr($form_id) . '" name="note" rows="2" placeholder="' . esc_attr__('Optional note', 'backstage-venue-manager') . '"></textarea><button form="' . esc_attr($form_id) . '" class="button" type="submit">' . esc_html__('Record', 'backstage-venue-manager') . '</button></details>';
 
 			if (!bvmgr_event_communication_status_is_resolved((string) ($written['status'] ?? 'pending'))) {
-				echo '<details><summary>' . esc_html__('Manual written notice', 'backstage-venue-manager') . '</summary><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-				bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'manual', (string) $recipient_id);
-				echo '<select name="manual_channel"><option value="email_outside_bvm">' . esc_html__('Email outside BVM', 'backstage-venue-manager') . '</option><option value="letter">' . esc_html__('Letter', 'backstage-venue-manager') . '</option><option value="other_written">' . esc_html__('Other written channel', 'backstage-venue-manager') . '</option></select>';
-				echo '<input type="text" name="address_used" placeholder="' . esc_attr__('Address used (optional)', 'backstage-venue-manager') . '"><textarea name="note" rows="2" placeholder="' . esc_attr__('Optional note', 'backstage-venue-manager') . '"></textarea><button class="button" type="submit">' . esc_html__('Mark written notice sent manually', 'backstage-venue-manager') . '</button></form></details>';
+				$form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'manual', (string) $recipient_id);
+				echo '<details><summary>' . esc_html__('Manual written notice', 'backstage-venue-manager') . '</summary>';
+				echo '<select form="' . esc_attr($form_id) . '" name="manual_channel"><option value="email_outside_bvm">' . esc_html__('Email outside BVM', 'backstage-venue-manager') . '</option><option value="letter">' . esc_html__('Letter', 'backstage-venue-manager') . '</option><option value="other_written">' . esc_html__('Other written channel', 'backstage-venue-manager') . '</option></select>';
+				echo '<input form="' . esc_attr($form_id) . '" type="text" name="address_used" placeholder="' . esc_attr__('Address used (optional)', 'backstage-venue-manager') . '"><textarea form="' . esc_attr($form_id) . '" name="note" rows="2" placeholder="' . esc_attr__('Optional note', 'backstage-venue-manager') . '"></textarea><button form="' . esc_attr($form_id) . '" class="button" type="submit">' . esc_html__('Mark written notice sent manually', 'backstage-venue-manager') . '</button></details>';
 			}
 
 			if (bvmgr_event_communication_status_is_resolved((string) ($written['status'] ?? 'pending')) && !empty($state['included']) && !empty($recipient['email_valid'])) {
-				echo '<details><summary>' . esc_html__('Explicit resend', 'backstage-venue-manager') . '</summary><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-				bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'resend', (string) $recipient_id);
-				echo '<input type="text" name="subject" value="' . esc_attr((string) $message['subject']) . '" required><textarea name="body" rows="5" required>' . esc_textarea((string) $message['body']) . '</textarea>';
-				echo '<label><input type="checkbox" name="confirm_resend" value="1" required> ' . esc_html__('Create a new audited send attempt.', 'backstage-venue-manager') . '</label><button class="button" type="submit">' . esc_html__('Resend', 'backstage-venue-manager') . '</button></form></details>';
+				$form_id = bvmgr_event_communication_render_action_fields($plan_id, $operation_id, 'resend', (string) $recipient_id);
+				echo '<details><summary>' . esc_html__('Explicit resend', 'backstage-venue-manager') . '</summary>';
+				echo '<input form="' . esc_attr($form_id) . '" type="text" name="subject" value="' . esc_attr((string) $message['subject']) . '" required><textarea form="' . esc_attr($form_id) . '" name="body" rows="5" required>' . esc_textarea((string) $message['body']) . '</textarea>';
+				echo '<label><input form="' . esc_attr($form_id) . '" type="checkbox" name="confirm_resend" value="1" required> ' . esc_html__('Create a new audited send attempt.', 'backstage-venue-manager') . '</label><button form="' . esc_attr($form_id) . '" class="button" type="submit">' . esc_html__('Resend', 'backstage-venue-manager') . '</button></details>';
 			}
 			echo '</td></tr>';
 		}
@@ -296,10 +326,18 @@ if (!function_exists('bvmgr_event_communication_render_admin_section')) {
 		if ($selected === '') {
 			foreach (array_reverse($history) as $entry) {
 				$operation_id = (string) ($entry['operation_id'] ?? '');
-				$summary = bvmgr_event_communication_operation_summary($plan_id, $operation_id);
+				$operation_ledger = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
+				$summary = empty($operation_ledger) ? array() : bvmgr_event_communication_summary($operation_ledger);
 				$impact = (array) ($entry['impact_counts'] ?? array());
 				$missing_affected_ledger = empty($summary) && ((int) ($impact['customers'] ?? 0) > 0 || (int) ($impact['custom_admission_rows'] ?? 0) > 0);
-				if ((!empty($summary) && (int) ($summary['unresolved'] ?? 0) > 0) || $missing_affected_ledger) {
+				$has_unfinished_attempt = false;
+				foreach ((array) ($operation_ledger['recipient_states'] ?? array()) as $recipient_state) {
+					if (bvmgr_event_communication_has_unfinished_attempt((array) $recipient_state)) {
+						$has_unfinished_attempt = true;
+						break;
+					}
+				}
+				if ((!empty($summary) && (int) ($summary['unresolved'] ?? 0) > 0) || $missing_affected_ledger || $has_unfinished_attempt) {
 					$selected = $operation_id;
 					break;
 				}
@@ -320,20 +358,82 @@ if (!function_exists('bvmgr_event_communication_render_admin_section')) {
 			return;
 		}
 
-		echo '<section id="bvmgr-event-communications" class="vms-ep-card vms-mt-12">';
-		echo '<h3>' . esc_html__('Customer communications', 'backstage-venue-manager') . '</h3>';
+		$ledger = bvmgr_event_communication_get_ledger($plan_id, $selected);
+		$summary = empty($ledger) ? array() : bvmgr_event_communication_summary($ledger);
+		$impact = (array) ($selected_entry['impact_counts'] ?? array());
+		$missing_affected_ledger = empty($ledger) && ((int) ($impact['customers'] ?? 0) > 0 || (int) ($impact['custom_admission_rows'] ?? 0) > 0);
+		$unfinished_attempts = 0;
+		foreach ((array) ($ledger['recipient_states'] ?? array()) as $recipient_state) {
+			if (bvmgr_event_communication_has_unfinished_attempt((array) $recipient_state)) {
+				$unfinished_attempts++;
+			}
+		}
+		$requires_attention = $missing_affected_ledger
+			|| $unfinished_attempts > 0
+			|| (int) ($summary['unresolved'] ?? 0) > 0
+			|| (int) ($summary['failed'] ?? 0) > 0;
+		if ($missing_affected_ledger) {
+			$panel_summary = __('ledger review required', 'backstage-venue-manager');
+		} elseif ($unfinished_attempts > 0) {
+			$panel_summary = sprintf(
+				/* translators: %d: Number of customer communication send attempts requiring review. */
+				_n('%d send attempt needs review', '%d send attempts need review', $unfinished_attempts, 'backstage-venue-manager'),
+				$unfinished_attempts
+			);
+		} elseif ((int) ($summary['failed'] ?? 0) > 0) {
+			$failed = (int) $summary['failed'];
+			$pending = (int) ($summary['pending'] ?? 0);
+			if ($pending > 0) {
+				$panel_summary = sprintf(
+					/* translators: 1: Number of failed customer communications, 2: Number of pending customer communications. */
+					__('%1$d failed / %2$d pending', 'backstage-venue-manager'),
+					$failed,
+					$pending
+				);
+			} else {
+				$panel_summary = sprintf(
+					/* translators: %d: Number of failed customer communications. */
+					_n('%d failed', '%d failed', $failed, 'backstage-venue-manager'),
+					$failed
+				);
+			}
+		} elseif ((int) ($summary['unresolved'] ?? 0) > 0) {
+			$unresolved = (int) $summary['unresolved'];
+			$panel_summary = sprintf(
+				/* translators: %d: Number of affected customer recipients requiring administrator review. */
+				_n('%d recipient needs review', '%d recipients need review', $unresolved, 'backstage-venue-manager'),
+				$unresolved
+			);
+		} elseif ((int) ($summary['recipient_count'] ?? 0) > 0) {
+			$panel_summary = sprintf(
+				/* translators: 1: Completed written notices, 2: Total written notices. */
+				__('%1$d of %2$d complete', 'backstage-venue-manager'),
+				(int) ($summary['resolved'] ?? 0),
+				(int) ($summary['recipient_count'] ?? 0)
+			);
+		} else {
+			$panel_summary = __('no affected customer notice required', 'backstage-venue-manager');
+		}
+
 		$notice = get_transient(bvmgr_event_communication_admin_notice_key($plan_id));
 		if (is_array($notice)) {
 			delete_transient(bvmgr_event_communication_admin_notice_key($plan_id));
+			if (empty($notice['ok'])) {
+				$requires_attention = true;
+			}
+		}
+		echo '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12"' . ($requires_attention ? ' open' : '') . '>';
+		echo '<summary><strong>' . esc_html__('Customer communications', 'backstage-venue-manager') . '</strong> — ' . esc_html($panel_summary) . '</summary>';
+		echo '<div class="vms-mt-12">';
+		if (is_array($notice)) {
 			echo '<div class="notice ' . esc_attr(!empty($notice['ok']) ? 'notice-success' : 'notice-error') . ' inline"><p>' . esc_html((string) ($notice['message'] ?? '')) . '</p></div>';
 		}
-		$ledger = bvmgr_event_communication_get_ledger($plan_id, $selected);
 		if (empty($ledger)) {
 			bvmgr_event_communication_render_missing_ledger($plan_id, $selected_entry);
 		} else {
 			bvmgr_event_communication_render_ledger($plan_id, $selected, $ledger);
 		}
-		echo '</section>';
+		echo '</div></details>';
 	}
 }
 

@@ -17515,7 +17515,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/admin/event-communications.php",
-                        "line": 435
+                        "line": 535
                     }
                 ]
             },
@@ -17532,7 +17532,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/admin/event-communications.php",
-                        "line": 349
+                        "line": 449
                     }
                 ]
             },
@@ -17566,7 +17566,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/admin/event-communications.php",
-                        "line": 341
+                        "line": 441
                     }
                 ]
             },
@@ -17685,7 +17685,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/admin/event-communications.php",
-                        "line": 118
+                        "line": 157
                     }
                 ]
             },
@@ -17753,7 +17753,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/admin/event-communications.php",
-                        "line": 100
+                        "line": 139
                     }
                 ]
             },
@@ -18127,7 +18127,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/admin/event-communications.php",
-                        "line": 288
+                        "line": 318
                     }
                 ]
             },
@@ -18144,7 +18144,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/admin/event-communications.php",
-                        "line": 177
+                        "line": 214
                     }
                 ]
             },
@@ -18161,7 +18161,7 @@
                 "declaration_sites": [
                     {
                         "file": "includes/admin/event-communications.php",
-                        "line": 136
+                        "line": 175
                     }
                 ]
             },
@@ -138257,13 +138257,13 @@
             "bvmgr_event_communication_admin_export": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 434
+                    "line": 534
                 }
             ],
             "bvmgr_event_communication_admin_handle_action": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 348
+                    "line": 448
                 }
             ],
             "bvmgr_event_communication_admin_notice_key": [
@@ -138275,7 +138275,7 @@
             "bvmgr_event_communication_admin_redirect": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 340
+                    "line": 440
                 }
             ],
             "bvmgr_event_communication_admin_set_notice": [
@@ -138321,7 +138321,7 @@
             "bvmgr_event_communication_contact_text": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 117
+                    "line": 156
                 }
             ],
             "bvmgr_event_communication_custom_admission_rows": [
@@ -138349,7 +138349,7 @@
             "bvmgr_event_communication_entitlement_text": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 99
+                    "line": 138
                 }
             ],
             "bvmgr_event_communication_export_rows": [
@@ -138493,7 +138493,7 @@
             "bvmgr_event_communication_render_admin_section": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 287
+                    "line": 317
                 },
                 {
                     "file": "includes/admin/event-reschedule.php",
@@ -138503,13 +138503,13 @@
             "bvmgr_event_communication_render_ledger": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 176
+                    "line": 213
                 }
             ],
             "bvmgr_event_communication_render_missing_ledger": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 135
+                    "line": 174
                 }
             ],
             "bvmgr_event_communication_save_mutation": [
@@ -166646,14 +166646,14 @@
             "bvmgr_event_communication_admin_export": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 462,
+                    "line": 562,
                     "registrar": "add_action"
                 }
             ],
             "bvmgr_event_communication_admin_handle_action": [
                 {
                     "file": "includes/admin/event-communications.php",
-                    "line": 432,
+                    "line": 532,
                     "registrar": "add_action"
                 }
             ],

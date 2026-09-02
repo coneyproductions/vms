@@ -34,6 +34,12 @@ The Event Plan history shows orders, deduplicated customers, aggregate written-n
 
 Date-correction copy says the event was incorrectly listed on the old date. Rescheduled copy says the event moved from the old date. Both include event/venue, new date/time, transfer/no-repurchase assurance, and venue-contact guidance. Customer messages are individual. The final subject/body and transport acceptance or failure are stored for each attempt. Normal sending refuses sent/manual/excluded recipients; explicit resend requires confirmation and appends another attempt.
 
+## Event Plan editor isolation
+
+Customer communication controls render inside the Event Plan editor, but they do not belong to WordPress's ordinary post-update form. Every preview, bootstrap, send, retry, test, export, recipient-state, contact, manual-notice, and resend control explicitly targets its own detached `admin-post.php` form rendered in the administrator footer. Communication-specific HTML `required` checks therefore run only when that communication action is submitted. An ordinary Event Plan Update neither validates those controls nor includes their action, nonce, approval, subject, message, or recipient fields.
+
+The Customer communications area uses the same native collapsible-section pattern as Change event date and Event date history. Its collapsed summary is derived from the selected operation's durable state. Fully resolved ledgers and no-impact operations default collapsed. Pending or failed recipients, an affected historical operation with a missing ledger, an unfinished send attempt, or a failed administrator action default expanded. Opening or closing the section is browser-only presentation state and does not write the ledger or occurrence history.
+
 ## Retroactive operation bootstrap
 
 Historical bootstrap is scoped to one Event Plan and operation UUID. It requires matching occurrence history and reconstructs only the exact audit order IDs whose items carry that operation UUID and target effective occurrence. Counts and order IDs must match the operation audit. Refund ambiguity, missing/mismatched items, or historical custom admissions that were not operation-stamped fail closed. Preview writes nothing; apply revalidates the fingerprint in a transaction and is idempotent.

@@ -25,6 +25,34 @@ $assert = static function (bool $condition, string $message) use (&$assertions):
 	}
 };
 
+$invoke_communication_action = static function (array $request): void {
+	$saved_post = $_POST;
+	$saved_request = $_REQUEST;
+	$redirect_trapped = false;
+	$trap_redirect = static function (string $location, int $status): string {
+		unset($location, $status);
+		throw new RuntimeException('bvmgr_test_redirect');
+	};
+	$_POST = $request;
+	$_REQUEST = array_merge($saved_request, $request);
+	add_filter('wp_redirect', $trap_redirect, PHP_INT_MAX, 2);
+	try {
+		bvmgr_event_communication_admin_handle_action();
+	} catch (RuntimeException $exception) {
+		if ($exception->getMessage() !== 'bvmgr_test_redirect') {
+			throw $exception;
+		}
+		$redirect_trapped = true;
+	} finally {
+		remove_filter('wp_redirect', $trap_redirect, PHP_INT_MAX);
+		$_POST = $saved_post;
+		$_REQUEST = $saved_request;
+	}
+	if (!$redirect_trapped) {
+		throw new RuntimeException('Communication action did not reach its protected redirect boundary.');
+	}
+};
+
 $created_posts = array();
 $created_orders = array();
 $register_post = static function (int $post_id) use (&$created_posts): int {
@@ -190,6 +218,99 @@ try {
 	$assert((int) $summary['recipient_count'] === 4 && (int) $summary['order_count'] === 5 && (int) $summary['pending'] === 4, 'Automatic audience summary changed.');
 	$assert(count((array) ($ledger['audience_order_item_ids'] ?? array())) === 5, 'Automatic audience lost an affected order item.');
 
+	$ledger_before_panel_render = $ledger;
+	$history_before_panel_render = bvmgr_event_occurrence_history($plan_id);
+	ob_start();
+	bvmgr_event_communication_render_admin_section($plan_id, $history_before_panel_render, $operation_id);
+	$pending_panel_markup = (string) ob_get_clean();
+	ob_start();
+	do_action('admin_footer-post.php');
+	$pending_footer_markup = (string) ob_get_clean();
+	$assert(strpos($pending_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" open>') !== false && strpos($pending_panel_markup, '4 recipients need review') !== false, 'A newly actionable pending communication operation did not default expanded with an attention summary.');
+	$assert(strpos($pending_panel_markup, '<form') === false && strpos($pending_panel_markup, '</form>') === false, 'Customer communications still emitted a form inside the WordPress Event Plan post form.');
+	$required_controls = array();
+	preg_match_all('/<(?:input|textarea)\b[^>]*\brequired\b[^>]*>/i', $pending_panel_markup, $required_controls);
+	$assert(!empty($required_controls[0]), 'Customer communication action controls unexpectedly lost action-specific required validation.');
+	foreach ($required_controls[0] as $required_control) {
+		$form_match = array();
+		$has_form_owner = preg_match('/\bform="([^"]+)"/', $required_control, $form_match) === 1;
+		$assert($has_form_owner && strpos($pending_footer_markup, '<form id="' . (string) ($form_match[1] ?? '') . '"') !== false, 'A required communication control is not owned by its detached action form.');
+	}
+	$submit_controls = array();
+	preg_match_all('/<button\b[^>]*\btype="submit"[^>]*>/i', $pending_panel_markup, $submit_controls);
+	foreach ($submit_controls[0] as $submit_control) {
+		$form_match = array();
+		$has_form_owner = preg_match('/\bform="([^"]+)"/', $submit_control, $form_match) === 1;
+		$assert($has_form_owner && strpos($pending_footer_markup, '<form id="' . (string) ($form_match[1] ?? '') . '"') !== false, 'A communication submit control is not owned by its detached action form.');
+	}
+	$assert(strpos($pending_footer_markup, 'name="action" value="bvmgr_event_communication_action"') !== false && strpos($pending_footer_markup, 'name="bvmgr_event_communication_nonce"') !== false, 'Detached communication forms lost their admin-post action or nonce.');
+	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $ledger_before_panel_render && bvmgr_event_occurrence_history($plan_id) === $history_before_panel_render, 'Rendering or expanding/collapsing Customer communications mutated the ledger or occurrence history.');
+
+	$assert(function_exists('bvmgr_admission_save_vendor_guest_config') && function_exists('bvmgr_admission_vendor_guest_meta_key'), 'Vendor-managed guest Event Plan save boundary is unavailable.');
+	$ordinary_save_mail = array();
+	$ordinary_save_transport = static function ($pre, array $message) use (&$ordinary_save_mail): array {
+		unset($pre);
+		$ordinary_save_mail[] = $message;
+		return array('success' => true, 'provider' => 'fixture');
+	};
+	add_filter('bvmgr_event_communication_mail_transport', $ordinary_save_transport, 10, 2);
+	$saved_post = $_POST;
+	$_POST = array(
+		'bvmgr_event_plan_details_nonce' => wp_create_nonce('bvmgr_save_event_plan_details'),
+		'vms_vendor_guest_rules' => array('enabled' => '1'),
+	);
+	bvmgr_admission_save_vendor_guest_config($plan_id, get_post($plan_id));
+	$_POST = $saved_post;
+	remove_filter('bvmgr_event_communication_mail_transport', $ordinary_save_transport, 10);
+	$vendor_guest_rules = get_post_meta($plan_id, bvmgr_admission_vendor_guest_meta_key(), true);
+	$assert(is_array($vendor_guest_rules) && (int) ($vendor_guest_rules['enabled'] ?? 0) === 1, 'An unrelated vendor-managed guest Event Plan field did not save while communication review remained unchecked.');
+	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $ledger_before_panel_render && bvmgr_event_occurrence_history($plan_id) === $history_before_panel_render && empty($ordinary_save_mail), 'An unrelated Event Plan save dispatched communication or changed ledger/history/audit state.');
+
+	$blocked_handler_mail = array();
+	$block_handler_transport = static function ($pre, array $message) use (&$blocked_handler_mail): array {
+		unset($pre);
+		$blocked_handler_mail[] = $message;
+		return array('success' => true, 'provider' => 'fixture');
+	};
+	add_filter('bvmgr_event_communication_mail_transport', $block_handler_transport, 10, 2);
+	$invoke_communication_action(array(
+		'event_plan_id' => (string) $plan_id,
+		'operation_id' => $operation_id,
+		'communication_action' => 'send_bulk',
+		'send_mode' => 'pending',
+		'subject' => 'Unchecked review subject',
+		'body' => 'Unchecked review body',
+		'bvmgr_event_communication_nonce' => wp_create_nonce('bvmgr_event_communication_' . $plan_id . '_' . $operation_id),
+	));
+	remove_filter('bvmgr_event_communication_mail_transport', $block_handler_transport, 10);
+	$blocked_send_notice = get_transient(bvmgr_event_communication_admin_notice_key($plan_id));
+	$assert(empty($blocked_handler_mail) && bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $ledger_before_panel_render && is_array($blocked_send_notice) && empty($blocked_send_notice['ok']) && strpos((string) ($blocked_send_notice['message'] ?? ''), 'Review confirmation is required') !== false, 'Explicit customer send did not require the server-side review acknowledgment.');
+	delete_transient(bvmgr_event_communication_admin_notice_key($plan_id));
+	$reviewed_handler_mail = array();
+	$reviewed_handler_transport = static function ($pre, array $message) use (&$reviewed_handler_mail): array {
+		unset($pre);
+		$reviewed_handler_mail[] = $message;
+		return array('success' => true, 'provider' => 'fixture', 'provider_message_id' => 'reviewed-' . count($reviewed_handler_mail));
+	};
+	add_filter('bvmgr_event_communication_mail_transport', $reviewed_handler_transport, 10, 2);
+	$invoke_communication_action(array(
+		'event_plan_id' => (string) $plan_id,
+		'operation_id' => $operation_id,
+		'communication_action' => 'send_bulk',
+		'send_mode' => 'pending',
+		'subject' => 'Reviewed subject',
+		'body' => 'Reviewed message body',
+		'confirm_send' => '1',
+		'bvmgr_event_communication_nonce' => wp_create_nonce('bvmgr_event_communication_' . $plan_id . '_' . $operation_id),
+	));
+	remove_filter('bvmgr_event_communication_mail_transport', $reviewed_handler_transport, 10);
+	$reviewed_handler_ledger = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
+	$reviewed_handler_summary = bvmgr_event_communication_summary($reviewed_handler_ledger);
+	$reviewed_send_notice = get_transient(bvmgr_event_communication_admin_notice_key($plan_id));
+	$assert(count($reviewed_handler_mail) === 3 && (int) $reviewed_handler_summary['sent_bvm'] === 3 && (int) $reviewed_handler_summary['pending'] === 1 && is_array($reviewed_send_notice) && !empty($reviewed_send_notice['ok']), 'A reviewed explicit customer-send action did not reach only the eligible fake transport recipients.');
+	$assert(bvmgr_event_communication_save_mutation($plan_id, $operation_id, $reviewed_handler_ledger, $ledger_before_panel_render), 'Could not restore the communication fixture after reviewed handler dispatch coverage.');
+	delete_transient(bvmgr_event_communication_admin_notice_key($plan_id));
+
 	$recipient_by_name = array();
 	foreach ((array) $ledger['audience'] as $recipient_id_key => $recipient) {
 		$recipient_by_name[(string) ($recipient['customer_name'] ?? '')] = (string) $recipient_id_key;
@@ -266,9 +387,44 @@ try {
 	$ledger = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
 	$assert((string) $ledger['recipient_states'][$c_id]['written_notice']['status'] === 'failed' && (string) $ledger['recipient_states'][$c_id]['written_notice']['error_information'] === 'synthetic_failure', 'Failed recipient was marked sent or lost its safe error.');
 	$assert((string) $ledger['recipient_states'][$b_id]['written_notice']['subject'] === $correction_message['subject'] && (string) $ledger['recipient_states'][$b_id]['written_notice']['body'] === $correction_message['body'], 'Exact final BVM subject/body was not stored.');
+	$failed_ledger_before_panel = $ledger;
+	$failed_history_before_panel = bvmgr_event_occurrence_history($plan_id);
+	ob_start();
+	bvmgr_event_communication_render_admin_section($plan_id, $failed_history_before_panel, $operation_id);
+	$failed_panel_markup = (string) ob_get_clean();
+	$assert(strpos($failed_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" open>') !== false && strpos($failed_panel_markup, '1 failed') !== false, 'A failed communication state did not default expanded with a failed summary.');
+	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $failed_ledger_before_panel && bvmgr_event_occurrence_history($plan_id) === $failed_history_before_panel, 'Rendering the failed communication panel mutated ledger/history/audit state.');
 
-	$retry = bvmgr_event_communication_send_bulk($plan_id, $operation_id, 1, $correction_message['subject'], $correction_message['body'], 'failed');
-	$assert((int) $retry['attempted'] === 1 && (int) $retry['accepted'] === 1, 'Retry Failed did not target only the failed recipient.');
+	$messages_before_unconfirmed_retry = count($sent_messages);
+	$invoke_communication_action(array(
+		'event_plan_id' => (string) $plan_id,
+		'operation_id' => $operation_id,
+		'communication_action' => 'send_bulk',
+		'send_mode' => 'failed',
+		'subject' => $correction_message['subject'],
+		'body' => $correction_message['body'],
+		'bvmgr_event_communication_nonce' => wp_create_nonce('bvmgr_event_communication_' . $plan_id . '_' . $operation_id),
+	));
+	$retry_blocked_ledger = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
+	$retry_blocked_notice = get_transient(bvmgr_event_communication_admin_notice_key($plan_id));
+	$assert(count($sent_messages) === $messages_before_unconfirmed_retry && $retry_blocked_ledger === $failed_ledger_before_panel && is_array($retry_blocked_notice) && empty($retry_blocked_notice['ok']), 'Explicit Retry Failed did not retain its server-side review acknowledgment and no-send guard.');
+	delete_transient(bvmgr_event_communication_admin_notice_key($plan_id));
+
+	$messages_before_confirmed_retry = count($sent_messages);
+	$invoke_communication_action(array(
+		'event_plan_id' => (string) $plan_id,
+		'operation_id' => $operation_id,
+		'communication_action' => 'send_bulk',
+		'send_mode' => 'failed',
+		'subject' => $correction_message['subject'],
+		'body' => $correction_message['body'],
+		'confirm_send' => '1',
+		'bvmgr_event_communication_nonce' => wp_create_nonce('bvmgr_event_communication_' . $plan_id . '_' . $operation_id),
+	));
+	$confirmed_retry_ledger = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
+	$confirmed_retry_notice = get_transient(bvmgr_event_communication_admin_notice_key($plan_id));
+	$assert(count($sent_messages) === $messages_before_confirmed_retry + 1 && (string) $confirmed_retry_ledger['recipient_states'][$c_id]['written_notice']['status'] === 'sent_bvm' && is_array($confirmed_retry_notice) && !empty($confirmed_retry_notice['ok']), 'Reviewed Retry Failed did not target and resolve only the failed recipient through the protected handler.');
+	delete_transient(bvmgr_event_communication_admin_notice_key($plan_id));
 	$duplicate = bvmgr_event_communication_send_bulk($plan_id, $operation_id, 1, $correction_message['subject'], $correction_message['body'], 'pending');
 	$assert((int) $duplicate['attempted'] === 0, 'Normal sending duplicated sent/manual/excluded recipients.');
 	$before_attempts = count((array) bvmgr_event_communication_get_ledger($plan_id, $operation_id)['recipient_states'][$b_id]['attempts']);
@@ -284,13 +440,34 @@ try {
 	$assert(empty($manual_overwrite['ok']) && empty($exclude_overwrite['ok']) && (string) bvmgr_event_communication_get_ledger($plan_id, $operation_id)['recipient_states'][$b_id]['written_notice']['status'] === 'sent_bvm', 'Resolved written notice was overwritten by manual or exclusion state.');
 	$export = bvmgr_event_communication_export_rows(bvmgr_event_communication_get_ledger($plan_id, $operation_id));
 	$assert(count($export) === 4 && array_keys($export[0]) === array('name', 'email', 'affected_orders', 'affected_entitlements', 'written_notice_status'), 'CSV export rows include unexpected or missing fields.');
+	$resolved_without_unfinished_attempt = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
+	$unfinished_attempt_ledger = $resolved_without_unfinished_attempt;
+	$unfinished_attempt_ledger['recipient_states'][$b_id]['attempts'][] = array(
+		'attempt_id' => wp_generate_uuid4(),
+		'type' => 'explicit_resend',
+		'started_at_utc' => gmdate('Y-m-d H:i:s'),
+		'completed_at_utc' => '',
+		'result' => 'initiated',
+	);
+	$assert(bvmgr_event_communication_save_mutation($plan_id, $operation_id, $resolved_without_unfinished_attempt, $unfinished_attempt_ledger), 'Could not create the synthetic unfinished-attempt attention fixture.');
+	$unfinished_before_panel = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
+	ob_start();
+	bvmgr_event_communication_render_admin_section($plan_id, bvmgr_event_occurrence_history($plan_id), $operation_id);
+	$unfinished_panel_markup = (string) ob_get_clean();
+	$assert(strpos($unfinished_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" open>') !== false && strpos($unfinished_panel_markup, '1 send attempt needs review') !== false, 'An unfinished communication attempt did not default expanded for explicit administrator review.');
+	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $unfinished_before_panel, 'Rendering an unfinished-attempt attention state mutated communication state.');
+	$assert(bvmgr_event_communication_save_mutation($plan_id, $operation_id, $unfinished_before_panel, $resolved_without_unfinished_attempt), 'Could not restore the fully resolved communication fixture after unfinished-attempt coverage.');
+	$resolved_ledger_before_panel = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
+	$resolved_history_before_panel = bvmgr_event_occurrence_history($plan_id);
 	$saved_get = $_GET;
 	$_GET['bvmgr_communication_operation'] = $operation_id;
 	ob_start();
-	bvmgr_event_communication_render_admin_section($plan_id, bvmgr_event_occurrence_history($plan_id), $operation_id);
+	bvmgr_event_communication_render_admin_section($plan_id, $resolved_history_before_panel, $operation_id);
 	$markup = (string) ob_get_clean();
 	$_GET = $saved_get;
 	$assert(strpos($markup, 'Review &amp; Send Notification') !== false && strpos($markup, 'Every affected recipient has a resolved written-notice state') !== false && strpos($markup, 'Written notice remains unresolved') === false, 'Resolved recipient ledger UI or reminder state changed.');
+	$assert(strpos($markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12">') !== false && strpos($markup, 'Customer communications</strong> — 4 of 4 complete') !== false, 'A fully resolved communication ledger did not default collapsed with a completed summary.');
+	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $resolved_ledger_before_panel && bvmgr_event_occurrence_history($plan_id) === $resolved_history_before_panel, 'Rendering the collapsed resolved panel mutated recipients, sent states, attempts, audit data, or history.');
 	ob_start();
 	bvmgr_event_occurrence_render_admin_panel($plan_id);
 	$history_markup = (string) ob_get_clean();
@@ -340,6 +517,12 @@ try {
 		'impact_counts' => array('orders' => 3, 'line_items' => 3, 'customers' => 2, 'custom_admission_rows' => 0),
 		'order_ids' => $bootstrap_orders,
 	)));
+	$bootstrap_history_before_panel = bvmgr_event_occurrence_history($bootstrap_plan_id);
+	ob_start();
+	bvmgr_event_communication_render_admin_section($bootstrap_plan_id, $bootstrap_history_before_panel, $bootstrap_operation_id);
+	$missing_ledger_panel_markup = (string) ob_get_clean();
+	$assert(strpos($missing_ledger_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" open>') !== false && strpos($missing_ledger_panel_markup, 'ledger review required') !== false, 'An affected historical operation with a missing communication ledger did not default expanded for administrator attention.');
+	$assert(bvmgr_event_occurrence_history($bootstrap_plan_id) === $bootstrap_history_before_panel && bvmgr_event_communication_get_ledger($bootstrap_plan_id, $bootstrap_operation_id) === array(), 'Rendering a missing-ledger attention state mutated operation history or created communication state.');
 	$bootstrap_preview = bvmgr_event_communication_bootstrap_preview($bootstrap_plan_id, $bootstrap_operation_id);
 	$assert(!empty($bootstrap_preview['allowed']) && (int) $bootstrap_preview['counts']['customers'] === 2 && (int) $bootstrap_preview['counts']['orders'] === 3 && (int) $bootstrap_preview['counts']['line_items'] === 3, 'Retroactive preview did not reconstruct the exact operation audience.');
 	$bootstrap_apply = bvmgr_event_communication_bootstrap_apply($bootstrap_plan_id, $bootstrap_operation_id, 1, (string) $bootstrap_preview['fingerprint']);
