@@ -809,14 +809,14 @@
                 if (meta && typeof payload.data.summary_meta === 'string') {
                     meta.textContent = payload.data.summary_meta;
                 }
-                if (typeof window.vmsEventPlanPersistRequestedSection === 'function') {
-                    window.vmsEventPlanPersistRequestedSection('secondary_vendors');
+                if (typeof window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION === 'function') {
+                    window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION('secondary_vendors');
                 }
-                if (typeof window.vmsEventPlanInitCollapsibleSection === 'function') {
-                    window.vmsEventPlanInitCollapsibleSection(collapsibleSection);
+                if (typeof window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION === 'function') {
+                    window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION(collapsibleSection);
                 }
-                if (typeof window.vmsEventPlanInitSecondaryVendors === 'function') {
-                    window.vmsEventPlanInitSecondaryVendors(body);
+                if (typeof window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS === 'function') {
+                    window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);
                 }
                 const nextSection = body.querySelector('#vms-secondary-vendors-section');
                 const nextStatus = nextSection ? nextSection.querySelector('[data-vms-secondary-save-status]') : null;
@@ -850,7 +850,7 @@
         section.dataset.vmsSecondaryInitBound = '1';
     }
 
-    window.vmsEventPlanInitSecondaryVendors = initSecondaryVendors;
+    window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS = initSecondaryVendors;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {

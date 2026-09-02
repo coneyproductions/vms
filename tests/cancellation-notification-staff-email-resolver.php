@@ -10,8 +10,8 @@ if (!defined('ABSPATH')) {
 	require_once $wpLoad;
 }
 
-if (!function_exists('vms_cancellation_run_step')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!function_exists('bvmgr_cancellation_run_step')) {
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 $assert = static function (bool $condition, string $message): void {
@@ -51,10 +51,10 @@ $cleanup = static function () use (&$createdPosts, &$createdUsers, &$createdTerm
 	global $wpdb;
 
 	foreach (array_reverse($createdPlanIds) as $planId) {
-		$slotTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('event_slots') : '';
-		$assignmentTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('assignments') : '';
-		$rollupTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('rollups') : '';
-		$auditTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('audit') : '';
+		$slotTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('event_slots') : '';
+		$assignmentTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('assignments') : '';
+		$rollupTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('rollups') : '';
+		$auditTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('audit') : '';
 		$slotIds = array();
 		if ($slotTable !== '') {
 			$slotIds = $wpdb->get_col($wpdb->prepare("SELECT slot_id FROM {$slotTable} WHERE event_plan_id = %d", (int) $planId));
@@ -106,7 +106,7 @@ try {
 		}
 
 		$vendorId = $registerPost((int) $vendorId);
-		$key = function_exists('vms_meta_key') ? (vms_meta_key('vendor', 'primary_email') ?: '_vms_vendor_primary_email') : '_vms_vendor_primary_email';
+		$key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('vendor', 'primary_email') ?: '_vms_vendor_primary_email') : '_vms_vendor_primary_email';
 		update_post_meta($vendorId, $key, $email);
 
 		return $vendorId;
@@ -157,8 +157,8 @@ try {
 	$registerPost($eventPlanId);
 	$registerPlan($eventPlanId);
 
-	$bandKey = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
-	$secondaryKey = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+	$bandKey = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
+	$secondaryKey = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids') : '_vms_secondary_vendor_ids';
 	update_post_meta($eventPlanId, $bandKey, $primaryVendorId);
 	update_post_meta($eventPlanId, $secondaryKey, array($secondaryVendorId));
 	update_post_meta($eventPlanId, '_vms_event_date', '2026-07-04');
@@ -178,8 +178,8 @@ try {
 	update_user_meta($conflictUserId, '_vms_staff_id', $staffLinkedId);
 	update_user_meta($metaOnlyUserId, '_vms_staff_id', $staffMetaOnlyId);
 
-	$seedResult = function_exists('vms_staffing_save_event_roles_matrix')
-		? vms_staffing_save_event_roles_matrix(
+	$seedResult = function_exists('bvmgr_staffing_save_event_roles_matrix')
+		? bvmgr_staffing_save_event_roles_matrix(
 			$eventPlanId,
 			array($roleId => 3),
 			array($roleId => array($staffLinkedId, $staffMetaOnlyId, $staffMissingId))
@@ -194,7 +194,7 @@ try {
 		'steps' => array(),
 		'vendor_message' => '',
 	);
-	$result = vms_cancellation_run_step($eventPlanId, 'status_only', 'notifications', $summary);
+	$result = bvmgr_cancellation_run_step($eventPlanId, 'status_only', 'notifications', $summary);
 	$assert(($result['status'] ?? '') === 'done', 'Expected dry-run notifications step to return done.');
 	$assert(($result['message'] ?? '') === 'notifications_dry_run_only', 'Expected dry-run notifications step message.');
 

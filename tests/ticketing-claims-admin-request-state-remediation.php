@@ -234,8 +234,8 @@ vms_test_assert(strpos($source, "'vms_claim_user_id'") !== false, 'Claims admin 
 
 $footerHooks = $GLOBALS['vms_test_actions']['admin_footer'] ?? array();
 $noticeHooks = $GLOBALS['vms_test_actions']['admin_notices'] ?? array();
-vms_test_assert(in_array('vms_ticketing_claims_render_event_metabox_footer_forms', $footerHooks, true), 'Claims admin footer forms hook should remain registered.');
-vms_test_assert(in_array('vms_ticketing_claims_render_admin_notices', $noticeHooks, true), 'Claims admin notices hook should remain registered.');
+vms_test_assert(in_array('bvmgr_ticketing_claims_render_event_metabox_footer_forms', $footerHooks, true), 'Claims admin footer forms hook should remain registered.');
+vms_test_assert(in_array('bvmgr_ticketing_claims_render_admin_notices', $noticeHooks, true), 'Claims admin notices hook should remain registered.');
 
 $GLOBALS['vms_test_is_admin'] = true;
 $GLOBALS['vms_test_capabilities'] = array(
@@ -244,47 +244,47 @@ $GLOBALS['vms_test_capabilities'] = array(
 );
 $_GET = array();
 
-vms_test_assert(vms_ticketing_claims_query_key('page') === '', 'Claims admin page helper should return an empty string when the page key is missing.');
-vms_test_assert(vms_ticketing_claims_is_admin_page() === false, 'Claims admin page detection should be false when the page key is missing.');
+vms_test_assert(bvmgr_ticketing_claims_query_key('page') === '', 'Claims admin page helper should return an empty string when the page key is missing.');
+vms_test_assert(bvmgr_ticketing_claims_is_admin_page() === false, 'Claims admin page detection should be false when the page key is missing.');
 
 $_GET['page'] = 'VMS-Credential-Claims';
-vms_test_assert(vms_ticketing_claims_query_key('page') === 'vms-credential-claims', 'Claims admin page helper should sanitize the current page slug.');
-vms_test_assert(vms_ticketing_claims_is_admin_page() === true, 'Claims admin page detection should recognize the claims page slug.');
+vms_test_assert(bvmgr_ticketing_claims_query_key('page') === 'vms-credential-claims', 'Claims admin page helper should sanitize the current page slug.');
+vms_test_assert(bvmgr_ticketing_claims_is_admin_page() === true, 'Claims admin page detection should recognize the claims page slug.');
 
 $_GET['page'] = array('vms-credential-claims');
-vms_test_assert(vms_ticketing_claims_query_key('page') === '', 'Claims admin page helper should reject array-shaped page values.');
-vms_test_assert(vms_ticketing_claims_is_admin_page() === false, 'Claims admin page detection should reject array-shaped page values.');
+vms_test_assert(bvmgr_ticketing_claims_query_key('page') === '', 'Claims admin page helper should reject array-shaped page values.');
+vms_test_assert(bvmgr_ticketing_claims_is_admin_page() === false, 'Claims admin page detection should reject array-shaped page values.');
 
 $_GET['vms_claim_lookup'] = ' Alpha ';
-vms_test_assert(vms_ticketing_claims_query_text_field('vms_claim_lookup') === 'Alpha', 'Claims admin text helper should sanitize scalar lookup text.');
+vms_test_assert(bvmgr_ticketing_claims_query_text_field('vms_claim_lookup') === 'Alpha', 'Claims admin text helper should sanitize scalar lookup text.');
 $_GET['vms_claim_lookup'] = array('Alpha');
-vms_test_assert(vms_ticketing_claims_query_text_field('vms_claim_lookup') === '', 'Claims admin text helper should reject array-shaped lookup text.');
+vms_test_assert(bvmgr_ticketing_claims_query_text_field('vms_claim_lookup') === '', 'Claims admin text helper should reject array-shaped lookup text.');
 
 $_GET['vms_claim_user_id'] = '42';
-vms_test_assert(vms_ticketing_claims_query_absint('vms_claim_user_id') === 42, 'Claims admin integer helper should preserve scalar user IDs.');
+vms_test_assert(bvmgr_ticketing_claims_query_absint('vms_claim_user_id') === 42, 'Claims admin integer helper should preserve scalar user IDs.');
 $_GET['vms_claim_user_id'] = array('42');
-vms_test_assert(vms_ticketing_claims_query_absint('vms_claim_user_id') === 0, 'Claims admin integer helper should reject array-shaped user IDs.');
+vms_test_assert(bvmgr_ticketing_claims_query_absint('vms_claim_user_id') === 0, 'Claims admin integer helper should reject array-shaped user IDs.');
 
 $_GET['vms_claim_res_email'] = 'USER@example.com ';
-vms_test_assert(vms_ticketing_claims_query_email('vms_claim_res_email') === 'user@example.com', 'Claims admin email helper should sanitize scalar email filters.');
+vms_test_assert(bvmgr_ticketing_claims_query_email('vms_claim_res_email') === 'user@example.com', 'Claims admin email helper should sanitize scalar email filters.');
 $_GET['vms_claim_res_email'] = array('user@example.com');
-vms_test_assert(vms_ticketing_claims_query_email('vms_claim_res_email') === '', 'Claims admin email helper should reject array-shaped email filters.');
+vms_test_assert(bvmgr_ticketing_claims_query_email('vms_claim_res_email') === '', 'Claims admin email helper should reject array-shaped email filters.');
 
 $_GET = array('page' => 'vms-credential-claims', 'vms_claim_notice' => 'grant_created');
 ob_start();
-vms_ticketing_claims_render_admin_notices();
+bvmgr_ticketing_claims_render_admin_notices();
 $noticeMarkup = (string) ob_get_clean();
 vms_test_assert(strpos($noticeMarkup, 'Direct event grant created.') !== false, 'Claims admin notices should still render the existing success message for scalar notice state.');
 
 $_GET = array('page' => 'vms-credential-claims', 'vms_claim_notice' => array('grant_created'));
 ob_start();
-vms_ticketing_claims_render_admin_notices();
+bvmgr_ticketing_claims_render_admin_notices();
 $arrayNoticeMarkup = (string) ob_get_clean();
 vms_test_assert($arrayNoticeMarkup === '', 'Claims admin notices should reject array-shaped notice state.');
 
-global $vms_ticketing_claims_event_metabox_forms;
-$vms_ticketing_claims_event_metabox_forms = array();
-vms_ticketing_claims_event_metabox_register_form(
+global $bvmgr_ticketing_claims_event_metabox_forms;
+$bvmgr_ticketing_claims_event_metabox_forms = array();
+bvmgr_ticketing_claims_event_metabox_register_form(
 	'claims-structured',
 	'get',
 	'https://example.test/wp-admin/post.php',
@@ -293,8 +293,8 @@ vms_ticketing_claims_event_metabox_register_form(
 		'filters' => array('status' => 'reserved'),
 	)
 );
-vms_test_assert(is_array($vms_ticketing_claims_event_metabox_forms['claims-structured']['hidden_fields']['ids'] ?? null), 'Claims admin should continue to preserve legitimate structured hidden-field arrays.');
-vms_test_assert(($vms_ticketing_claims_event_metabox_forms['claims-structured']['hidden_fields']['filters']['status'] ?? '') === 'reserved', 'Claims admin should preserve nested structured hidden-field values.');
+vms_test_assert(is_array($bvmgr_ticketing_claims_event_metabox_forms['claims-structured']['hidden_fields']['ids'] ?? null), 'Claims admin should continue to preserve legitimate structured hidden-field arrays.');
+vms_test_assert(($bvmgr_ticketing_claims_event_metabox_forms['claims-structured']['hidden_fields']['filters']['status'] ?? '') === 'reserved', 'Claims admin should preserve nested structured hidden-field values.');
 
 $GLOBALS['vms_test_capabilities'] = array(
 	'vms_manage_verifications' => false,
@@ -302,7 +302,7 @@ $GLOBALS['vms_test_capabilities'] = array(
 );
 $_GET = array();
 try {
-	vms_ticketing_claims_render_admin_page();
+	bvmgr_ticketing_claims_render_admin_page();
 	throw new RuntimeException('Claims admin page should have stopped on the capability gate.');
 } catch (VMS_Ticketing_Claims_Admin_Test_Wp_Die $exception) {
 	vms_test_assert(strpos($exception->getMessage(), 'Insufficient permissions.') !== false, 'Claims admin page should preserve the capability gate before request-state processing.');

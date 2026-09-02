@@ -12,8 +12,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-if (!function_exists('vms_render_season_board_page')) {
-    function vms_render_season_board_page()
+if (!function_exists('bvmgr_render_season_board_page')) {
+    function bvmgr_render_season_board_page()
     {
         if (!current_user_can('manage_options')) {
             wp_die('Insufficient permissions.');

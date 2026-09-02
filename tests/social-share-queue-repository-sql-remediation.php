@@ -103,13 +103,13 @@ function sanitize_key($value): string
 function sanitize_text_field($value): string { return is_scalar($value) ? trim(strip_tags((string) $value)) : ''; }
 function wp_json_encode($value) { return json_encode($value); }
 function get_current_user_id(): int { return 44; }
-function vms_social_now_mysql_utc(): string { return '2026-08-08 01:02:03'; }
-function vms_social_table_accounts(): string { return 'wp_vms_social_accounts'; }
-function vms_social_table_venue_map(): string { return 'wp_vms_social_venue_map'; }
-function vms_social_table_templates(): string { return 'wp_vms_social_templates'; }
-function vms_social_table_queue(): string { return 'wp_vms_social_queue'; }
-function vms_social_encrypt_json(array $value): string { return 'encrypted:' . (string) json_encode($value); }
-function vms_social_decrypt_json(string $value): array
+function bvmgr_social_now_mysql_utc(): string { return '2026-08-08 01:02:03'; }
+function bvmgr_social_table_accounts(): string { return 'wp_vms_social_accounts'; }
+function bvmgr_social_table_venue_map(): string { return 'wp_vms_social_venue_map'; }
+function bvmgr_social_table_templates(): string { return 'wp_vms_social_templates'; }
+function bvmgr_social_table_queue(): string { return 'wp_vms_social_queue'; }
+function bvmgr_social_encrypt_json(array $value): string { return 'encrypted:' . (string) json_encode($value); }
+function bvmgr_social_decrypt_json(string $value): array
 {
 	$decoded = json_decode(str_replace('encrypted:', '', $value), true);
 	return is_array($decoded) ? $decoded : array();
@@ -173,17 +173,17 @@ require $source_path;
 
 // Invalid IDs fail closed without executing SQL.
 reset_db($wpdb);
-same(null, vms_social_account_get(0), 'Account reads should reject zero IDs.');
-same(null, vms_social_queue_get(0), 'Queue reads should reject zero IDs.');
-same(null, vms_social_queue_latest_for_event(0), 'Latest-event reads should reject zero IDs.');
-same(false, vms_social_queue_claim(0), 'Claims should reject zero IDs.');
-same(false, vms_social_queue_update(0, array('status' => 'queued')), 'Updates should reject zero IDs.');
+same(null, bvmgr_social_account_get(0), 'Account reads should reject zero IDs.');
+same(null, bvmgr_social_queue_get(0), 'Queue reads should reject zero IDs.');
+same(null, bvmgr_social_queue_latest_for_event(0), 'Latest-event reads should reject zero IDs.');
+same(false, bvmgr_social_queue_claim(0), 'Claims should reject zero IDs.');
+same(false, bvmgr_social_queue_update(0, array('status' => 'queued')), 'Updates should reject zero IDs.');
 same(array(), $wpdb->log, 'Invalid IDs must not touch the database.');
 
 // Account/venue/template read branches prepare identifiers and values.
 reset_db($wpdb);
 $wpdb->row_queue[] = array('id' => 17, 'platform' => 'webhook');
-same(array('id' => 17, 'platform' => 'webhook'), vms_social_account_get(17), 'Account get should preserve its result.');
+same(array('id' => 17, 'platform' => 'webhook'), bvmgr_social_account_get(17), 'Account get should preserve its result.');
 $prepare = last_prepare($wpdb);
 same(array('wp_vms_social_accounts', 17), $prepare['args'], 'Account get should prepare table and ID.');
 same('SELECT * FROM `wp_vms_social_accounts` WHERE id = 17', $prepare['final'], 'Account get SQL should be fully rendered.');
@@ -191,43 +191,43 @@ same(array('prepare', 'get_row'), kinds($wpdb), 'Account get should prepare befo
 
 reset_db($wpdb);
 $wpdb->rows_queue[] = array(array('id' => 9));
-same(array(array('id' => 9)), vms_social_account_rows(''), 'Unfiltered accounts should preserve rows.');
+same(array(array('id' => 9)), bvmgr_social_account_rows(''), 'Unfiltered accounts should preserve rows.');
 $prepare = last_prepare($wpdb);
 same(array('wp_vms_social_accounts'), $prepare['args'], 'Unfiltered accounts should prepare the table.');
 contains('ORDER BY id DESC', $prepare['final'], 'Unfiltered accounts should retain ordering.');
 
 reset_db($wpdb);
 $wpdb->rows_queue[] = array();
-vms_social_account_rows('Web Hook!');
+bvmgr_social_account_rows('Web Hook!');
 same(array('wp_vms_social_accounts', 'webhook'), last_prepare($wpdb)['args'], 'Filtered accounts should sanitize and prepare platform.');
 
 reset_db($wpdb);
 $wpdb->rows_queue[] = array(array('venue_id' => 21));
-vms_social_venue_map_rows(21);
+bvmgr_social_venue_map_rows(21);
 $prepare = last_prepare($wpdb);
 same(array('wp_vms_social_venue_map', 21), $prepare['args'], 'Venue rows should prepare table and venue ID.');
 contains('ORDER BY id DESC', $prepare['final'], 'Venue rows should retain ordering.');
 
 reset_db($wpdb);
 $wpdb->rows_queue[] = array();
-vms_social_venue_map_rows();
+bvmgr_social_venue_map_rows();
 same(array('wp_vms_social_venue_map'), last_prepare($wpdb)['args'], 'Unfiltered venue rows should still prepare the table.');
 
 reset_db($wpdb);
 $wpdb->row_queue[] = array('id' => 3, 'is_enabled' => 1);
-same(array('id' => 3, 'is_enabled' => 1), vms_social_venue_map_for_platform(21, 'Web Hook!'), 'Venue platform lookup should preserve its result.');
+same(array('id' => 3, 'is_enabled' => 1), bvmgr_social_venue_map_for_platform(21, 'Web Hook!'), 'Venue platform lookup should preserve its result.');
 $prepare = last_prepare($wpdb);
 same(array('wp_vms_social_venue_map', 21, 'webhook'), $prepare['args'], 'Venue platform lookup should prepare its routing boundary.');
 contains('is_enabled = 1 ORDER BY id DESC LIMIT 1', $prepare['final'], 'Venue platform lookup should retain enabled/latest selection.');
 
 reset_db($wpdb);
 $wpdb->rows_queue[] = array(array('id' => 4));
-vms_social_templates_all('');
+bvmgr_social_templates_all('');
 same(array('wp_vms_social_templates'), last_prepare($wpdb)['args'], 'Unfiltered templates should prepare the table.');
 
 reset_db($wpdb);
 $wpdb->rows_queue[] = array();
-vms_social_templates_all('Web Hook!');
+bvmgr_social_templates_all('Web Hook!');
 $prepare = last_prepare($wpdb);
 same(array('wp_vms_social_templates', 'webhook'), $prepare['args'], 'Filtered templates should prepare the platform.');
 contains('ORDER BY id DESC', $prepare['final'], 'Filtered templates should retain ordering.');
@@ -235,19 +235,19 @@ contains('ORDER BY id DESC', $prepare['final'], 'Filtered templates should retai
 // Queue get/latest/list/due paths retain result, filter, limit, and ordering contracts.
 reset_db($wpdb);
 $wpdb->row_queue[] = array('id' => 71, 'status' => 'queued');
-same(array('id' => 71, 'status' => 'queued'), vms_social_queue_get(71), 'Queue get should preserve its result.');
+same(array('id' => 71, 'status' => 'queued'), bvmgr_social_queue_get(71), 'Queue get should preserve its result.');
 same(array('wp_vms_social_queue', 71), last_prepare($wpdb)['args'], 'Queue get should prepare table and ID.');
 
 reset_db($wpdb);
 $wpdb->row_queue[] = array('id' => 72);
-vms_social_queue_latest_for_event(31);
+bvmgr_social_queue_latest_for_event(31);
 $prepare = last_prepare($wpdb);
 same(array('wp_vms_social_queue', 31), $prepare['args'], 'Latest-event lookup should prepare its boundary.');
 contains('ORDER BY id DESC LIMIT 1', $prepare['final'], 'Latest-event lookup should remain newest-first.');
 
 reset_db($wpdb);
 $wpdb->rows_queue[] = array(array('id' => 99));
-$listed = vms_social_queue_list(
+$listed = bvmgr_social_queue_list(
 	array('status' => 'Queued!', 'platform' => 'Web Hook!', 'venue_id' => 8, 'event_plan_id' => 9),
 	999
 );
@@ -260,7 +260,7 @@ same(array('prepare', 'get_results'), kinds($wpdb), 'Queue list should prepare b
 
 reset_db($wpdb);
 $wpdb->rows_queue[] = array(array('id' => 101));
-same(array(array('id' => 101)), vms_social_queue_due_items(0), 'Due-item reads should preserve results.');
+same(array(array('id' => 101)), bvmgr_social_queue_due_items(0), 'Due-item reads should preserve results.');
 $prepare = last_prepare($wpdb);
 same(array('wp_vms_social_queue', '2026-08-08 01:02:03', '2026-08-08 01:02:03', 1), $prepare['args'], 'Due-item reads should prepare table, clocks, and bounded limit.');
 contains("WHERE status = 'queued'", $prepare['final'], 'Due-item reads should remain queued-only.');
@@ -269,20 +269,20 @@ contains('ORDER BY scheduled_at_utc ASC, id ASC', $prepare['final'], 'Due-item r
 // Atomic claiming retains queued-state compare-and-set and affected-row semantics.
 reset_db($wpdb);
 $wpdb->query_return = 1;
-same(true, vms_social_queue_claim(88), 'One-row compare-and-set should claim the item.');
+same(true, bvmgr_social_queue_claim(88), 'One-row compare-and-set should claim the item.');
 $prepare = last_prepare($wpdb);
 same(array('wp_vms_social_queue', '2026-08-08 01:02:03', 88), $prepare['args'], 'Claim should prepare table, timestamp, and ID.');
 contains("WHERE id = 88 AND status = 'queued'", $prepare['final'], 'Claim must retain its atomic queued predicate.');
 same(array('prepare', 'query'), kinds($wpdb), 'Claim should prepare before mutation.');
 $wpdb->query_return = 0;
-same(false, vms_social_queue_claim(88), 'Zero affected rows should report an already-claimed item.');
+same(false, bvmgr_social_queue_claim(88), 'Zero affected rows should report an already-claimed item.');
 $wpdb->query_return = false;
-same(false, vms_social_queue_claim(88), 'Query failure should report claim failure.');
+same(false, bvmgr_social_queue_claim(88), 'Query failure should report claim failure.');
 
 // Queue creation preserves IDs, snapshots, scheduling, audit fields, and insert identity.
 reset_db($wpdb);
 $wpdb->insert_id = 812;
-$queue_id = vms_social_queue_create(
+$queue_id = bvmgr_social_queue_create(
 	array(
 		'event_plan_id' => -51,
 		'tec_event_id' => 61,
@@ -315,7 +315,7 @@ reset_db($wpdb);
 $wpdb->update_return = 0;
 same(
 	true,
-	vms_social_queue_update(
+	bvmgr_social_queue_update(
 		90,
 		array(
 			'status' => 'invalid-state',
@@ -342,12 +342,12 @@ same(
 same(array('%s', '%d', '%s', '%s', '%s'), $update['format'], 'Queue update should preserve format order.');
 same(array('id' => 90), $update['where'], 'Queue update should retain exact ID boundary.');
 $wpdb->update_return = false;
-same(false, vms_social_queue_update(90, array('status' => 'posted')), 'wpdb failure should remain false.');
-same(false, vms_social_queue_update(90, array('event_plan_id' => 2)), 'Disallowed-only update should fail closed.');
+same(false, bvmgr_social_queue_update(90, array('status' => 'posted')), 'wpdb failure should remain false.');
+same(false, bvmgr_social_queue_update(90, array('event_plan_id' => 2)), 'Disallowed-only update should fail closed.');
 
 // Cancel/retry retain distinct scheduling, error, and audit-retention semantics.
 reset_db($wpdb);
-same(true, vms_social_queue_cancel(91), 'Cancel should persist.');
+same(true, bvmgr_social_queue_cancel(91), 'Cancel should persist.');
 $cancel = last_call($wpdb, 'update');
 same(
 	array(
@@ -361,7 +361,7 @@ same(
 );
 
 reset_db($wpdb);
-same(true, vms_social_queue_retry(92), 'Retry should persist.');
+same(true, bvmgr_social_queue_retry(92), 'Retry should persist.');
 $retry = last_call($wpdb, 'update');
 same(
 	array(
@@ -385,7 +385,7 @@ $wpdb->row_queue[] = array(
 	'token_blob_enc' => 'keep-token',
 	'meta_json' => '{"keep":"yes","last_error":"old"}',
 );
-same(true, vms_social_account_set_auth_state(23, 'Needs Review!', array('last_error' => 'new', 'audit' => 'retained')), 'Auth-state patch should save.');
+same(true, bvmgr_social_account_set_auth_state(23, 'Needs Review!', array('last_error' => 'new', 'audit' => 'retained')), 'Auth-state patch should save.');
 $account_update = last_call($wpdb, 'update');
 $meta = json_decode((string) $account_update['data']['meta_json'], true);
 same(array('keep' => 'yes', 'last_error' => 'new', 'audit' => 'retained'), $meta, 'Auth-state patch should merge metadata.');
@@ -397,7 +397,7 @@ reset_db($wpdb);
 $wpdb->insert_id = 333;
 same(
 	333,
-	vms_social_template_save(
+	bvmgr_social_template_save(
 		array(
 			'platform' => 'Web Hook!',
 			'name' => 'Primary',
@@ -416,31 +416,31 @@ contains('UPDATE `wp_vms_social_templates` SET is_default = 0', $prepare['final'
 // CRUD IDs, formats, and failure semantics remain stable.
 reset_db($wpdb);
 $wpdb->insert_id = 444;
-same(444, vms_social_account_save(array('platform' => 'webhook', 'token_json' => array('token' => 'secret'))), 'Account creation should return insert_id.');
+same(444, bvmgr_social_account_save(array('platform' => 'webhook', 'token_json' => array('token' => 'secret'))), 'Account creation should return insert_id.');
 $account_insert = last_call($wpdb, 'insert');
 contains('encrypted:', (string) $account_insert['data']['token_blob_enc'], 'Account token should remain encrypted.');
 same(count($account_insert['data']), count($account_insert['format']), 'Account insert should retain full format coverage.');
 
 reset_db($wpdb);
 $wpdb->insert_id = 555;
-same(555, vms_social_venue_map_save(array('venue_id' => 7, 'platform' => 'webhook')), 'Venue-map creation should return insert_id.');
+same(555, bvmgr_social_venue_map_save(array('venue_id' => 7, 'platform' => 'webhook')), 'Venue-map creation should return insert_id.');
 $venue_insert = last_call($wpdb, 'insert');
 same(count($venue_insert['data']), count($venue_insert['format']), 'Venue-map insert should retain full format coverage.');
 
 reset_db($wpdb);
 $wpdb->update_return = false;
-same(19, vms_social_venue_map_save(array('id' => 19, 'venue_id' => 7, 'platform' => 'webhook')), 'Venue-map update should retain ID return contract even when wpdb reports failure.');
+same(19, bvmgr_social_venue_map_save(array('id' => 19, 'venue_id' => 7, 'platform' => 'webhook')), 'Venue-map update should retain ID return contract even when wpdb reports failure.');
 $venue_update = last_call($wpdb, 'update');
 same(array('id' => 19), $venue_update['where'], 'Venue-map update should retain ID boundary.');
 
 reset_db($wpdb);
 $wpdb->delete_return = 0;
-same(false, vms_social_account_delete(4), 'Zero-row account delete should remain false.');
+same(false, bvmgr_social_account_delete(4), 'Zero-row account delete should remain false.');
 $wpdb->delete_return = 1;
-same(true, vms_social_venue_map_delete(-5), 'One-row venue delete should remain true after ID normalization.');
+same(true, bvmgr_social_venue_map_delete(-5), 'One-row venue delete should remain true after ID normalization.');
 same(array('id' => 5), last_call($wpdb, 'delete')['where'], 'Venue delete should use normalized ID.');
 $wpdb->delete_return = false;
-same(false, vms_social_template_delete(6), 'Failed template delete should remain false.');
+same(false, bvmgr_social_template_delete(6), 'Failed template delete should remain false.');
 
 // Scanner-target inventory: each of the 22 direct custom-table operations has one narrow annotation.
 preg_match_all('/\\$wpdb->(?:get_row|get_results|query|insert|update|delete)\\s*\\(/', $source, $execution_matches);

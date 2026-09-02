@@ -15,7 +15,7 @@ add_action('add_meta_boxes', function () {
         add_meta_box(
             'vms_tax_profile_admin_box',
             __('Tax Profile (Admin)', 'backstage-venue-manager'),
-            'vms_render_tax_profile_admin_metabox',
+            'bvmgr_render_tax_profile_admin_metabox',
             $screen,
             'normal',
             'default' 
@@ -32,18 +32,18 @@ add_action('save_post', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_tax_admin_nonce']) && !is_array($_POST['vms_tax_admin_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_tax_admin_nonce']))
+    $nonce = (isset($_POST['bvmgr_tax_admin_nonce']) && !is_array($_POST['bvmgr_tax_admin_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_tax_admin_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tax_admin_save')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tax_admin_save'))) {
         return;
     }
 
     // Staff employees use the Employee Packet workflow; do not save W-9 fields here.
     if ($post->post_type === 'vms_staff') {
-        $wt = function_exists('vms_staff_get_worker_type') ? (string) vms_staff_get_worker_type((int) $post_id) : '';
+        $wt = function_exists('bvmgr_staff_get_worker_type') ? (string) bvmgr_staff_get_worker_type((int) $post_id) : '';
         if ($wt === '') {
-            $k_wt = function_exists('vms_meta_key') ? (string) vms_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
+            $k_wt = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
             if ($k_wt === '') $k_wt = '_vms_staff_worker_type';
             $wt = sanitize_key((string) get_post_meta((int) $post_id, $k_wt, true));
         }
@@ -54,13 +54,13 @@ add_action('save_post', function ($post_id, $post) {
 
     $t = function ($key) {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_tax_admin_save before reading tax-profile fields.
-        return vms_request_read_text_field($_POST, (string) $key);
+        return bvmgr_request_read_text_field($_POST, (string) $key);
     };
     $k = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 
@@ -73,7 +73,7 @@ add_action('save_post', function ($post_id, $post) {
     $k_state       = $k('state', '_vms_state');
     $k_zip         = $k('zip', '_vms_zip');
     $k_w9_upload   = $k('w9_upload_id', '_vms_w9_upload_id');
-    $k_w9_upload_kind = function_exists('vms_private_w9_storage_kind_meta_key') ? vms_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
+    $k_w9_upload_kind = function_exists('bvmgr_private_w9_storage_kind_meta_key') ? bvmgr_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
     $k_w9_recv     = $k('w9_received_date', '_vms_w9_received_date');
     $k_done        = $k('tax_profile_completed_at', '_vms_tax_profile_completed_at');
 
@@ -101,26 +101,26 @@ add_action('save_post', function ($post_id, $post) {
     update_post_meta($post_id, $k_zip,   $zip);
 
     // Handle W-9 upload from admin screen
-    if (vms_upload_request_has_file($_FILES, 'vms_w9_upload')) {
+    if (bvmgr_upload_request_has_file($_FILES, 'vms_w9_upload')) {
         $previous_upload_id = (int) get_post_meta($post_id, $k_w9_upload, true);
         $previous_kind = sanitize_key((string) get_post_meta($post_id, $k_w9_upload_kind, true));
-        $file_id = function_exists('vms_private_w9_store_upload')
-            ? vms_private_w9_store_upload((int) $post_id, $_FILES)
+        $file_id = function_exists('bvmgr_private_w9_store_upload')
+            ? bvmgr_private_w9_store_upload((int) $post_id, $_FILES)
             : new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
 
         if (!is_wp_error($file_id)) {
             update_post_meta($post_id, $k_w9_upload, (int) $file_id);
             update_post_meta($post_id, $k_w9_upload_kind, 'private_file');
             update_post_meta($post_id, $k_w9_recv, wp_date('Y-m-d', time(), wp_timezone()));
-            if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('vms_private_files_delete')) {
-                vms_private_files_delete($previous_upload_id);
+            if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('bvmgr_private_files_delete')) {
+                bvmgr_private_files_delete($previous_upload_id);
             }
         }
     }
 
     // Completion stamp (optional)
-    if (function_exists('vms_vendor_tax_profile_is_complete')) {
-        if (vms_vendor_tax_profile_is_complete((int)$post_id)) {
+    if (function_exists('bvmgr_vendor_tax_profile_is_complete')) {
+        if (bvmgr_vendor_tax_profile_is_complete((int)$post_id)) {
             if (!(int) get_post_meta($post_id, $k_done, true)) {
                 update_post_meta($post_id, $k_done, time());
             }
@@ -129,14 +129,14 @@ add_action('save_post', function ($post_id, $post) {
 
 }, 20, 2);
 
-function vms_render_tax_profile_admin_metabox($post)
+function bvmgr_render_tax_profile_admin_metabox($post)
 {
     $id = (int) $post->ID;
     $is_staff_employee = false;
     if (($post instanceof WP_Post) && $post->post_type === "vms_staff") {
-        $wt = function_exists("vms_staff_get_worker_type") ? (string) vms_staff_get_worker_type($id) : "";
+        $wt = function_exists("bvmgr_staff_get_worker_type") ? (string) bvmgr_staff_get_worker_type($id) : "";
         if ($wt === "") {
-            $k_wt = function_exists("vms_meta_key") ? (string) vms_meta_key("staff", "worker_type") : "_vms_staff_worker_type";
+            $k_wt = function_exists("bvmgr_meta_key") ? (string) bvmgr_meta_key("staff", "worker_type") : "_vms_staff_worker_type";
             if ($k_wt === "") $k_wt = "_vms_staff_worker_type";
             $wt = sanitize_key((string) get_post_meta($id, $k_wt, true));
         }
@@ -144,10 +144,10 @@ function vms_render_tax_profile_admin_metabox($post)
     }
 
     $k = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 
@@ -167,17 +167,17 @@ function vms_render_tax_profile_admin_metabox($post)
     $zip   = $m($k('zip', '_vms_zip'));
 
     $w9_upload_id = (int) $m($k('w9_upload_id', '_vms_w9_upload_id'), 0);
-    $w9_url = $w9_upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($id) : '';
-    $w9_label = $w9_upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($id) : '';
+    $w9_url = $w9_upload_id && function_exists('bvmgr_private_w9_download_url') ? bvmgr_private_w9_download_url($id) : '';
+    $w9_label = $w9_upload_id && function_exists('bvmgr_private_w9_file_label') ? bvmgr_private_w9_file_label($id) : '';
 
-    $is_complete = function_exists('vms_vendor_tax_profile_is_complete')
-        ? vms_vendor_tax_profile_is_complete($id)
+    $is_complete = function_exists('bvmgr_vendor_tax_profile_is_complete')
+        ? bvmgr_vendor_tax_profile_is_complete($id)
         : false;
 
     // Staff employee: show employee packet status instead of W-9 tax profile UI.
     if ($is_staff_employee) {
-        $missing_emp = function_exists('vms_staff_employee_packet_missing_items')
-            ? (array) vms_staff_employee_packet_missing_items($id)
+        $missing_emp = function_exists('bvmgr_staff_employee_packet_missing_items')
+            ? (array) bvmgr_staff_employee_packet_missing_items($id)
             : array(__('W-4 received', 'backstage-venue-manager'), __('I-9 verified', 'backstage-venue-manager'));
 
         $emp_complete = empty($missing_emp);
@@ -216,14 +216,14 @@ function vms_render_tax_profile_admin_metabox($post)
         'other'       => __('Other', 'backstage-venue-manager'),
     ];
 
-    wp_nonce_field('vms_tax_admin_save', 'vms_tax_admin_nonce');
+    wp_nonce_field('bvmgr_tax_admin_save', 'bvmgr_tax_admin_nonce');
 
-    $provider = function_exists('vms_tax_settings_get_provider') ? (string) vms_tax_settings_get_provider() : 'upload';
+    $provider = function_exists('bvmgr_tax_settings_get_provider') ? (string) bvmgr_tax_settings_get_provider() : 'upload';
     if (!in_array($provider, array('upload', 'quickbooks_email', 'tax1099_email'), true)) {
         $provider = 'upload';
     }
-    $provider_label = function_exists('vms_tax_provider_label')
-        ? (string) vms_tax_provider_label($provider)
+    $provider_label = function_exists('bvmgr_tax_provider_label')
+        ? (string) bvmgr_tax_provider_label($provider)
         : (($provider === 'quickbooks_email') ? 'QuickBooks Online' : (($provider === 'tax1099_email') ? 'Tax1099' : 'Upload'));
 
     $k_attest = $k('w9_attested_at', '_vms_w9_external_vendor_attested_at');

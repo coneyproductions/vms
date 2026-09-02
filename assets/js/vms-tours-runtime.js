@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var payload = window.VMS_TOURS_PAYLOAD || null;
+  var payload = window.BVMGR_TOURS_PAYLOAD || null;
   if (!payload) {
     return;
   }
@@ -1089,8 +1089,8 @@
   }
 
   function initCompatibilityApi() {
-    window.VMS_Tour = window.VMS_Tour || {};
-    window.VMS_Tour.start = startAdHocTour;
+    window.BVMGR_TOUR = window.BVMGR_TOUR || {};
+    window.BVMGR_TOUR.start = startAdHocTour;
   }
 
   function init() {

@@ -1,11 +1,11 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_add_dispatch_email_subject')) {
-	function vms_add_dispatch_email_subject(array $request, array $context): string
+if (!function_exists('bvmgr_add_dispatch_email_subject')) {
+	function bvmgr_add_dispatch_email_subject(array $request, array $context): string
 	{
 		$title = trim((string) ($context['event_title'] ?? ''));
-		$date = trim((string) vms_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
+		$date = trim((string) bvmgr_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
 		if ($title !== '' && $date !== '') {
 			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			return sprintf(__('Availability Request: %1$s on %2$s', 'backstage-venue-manager'), $title, $date);
@@ -19,18 +19,18 @@ if (!function_exists('vms_add_dispatch_email_subject')) {
 	}
 }
 
-if (!function_exists('vms_add_dispatch_email_body_text')) {
-	function vms_add_dispatch_email_body_text(array $request, array $response, array $context): string
+if (!function_exists('bvmgr_add_dispatch_email_body_text')) {
+	function bvmgr_add_dispatch_email_body_text(array $request, array $response, array $context): string
 	{
 		$title = trim((string) ($context['event_title'] ?? ''));
-		$date = trim((string) vms_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
+		$date = trim((string) bvmgr_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
 		$venue = trim((string) ($context['venue_name'] ?? ''));
 		$message = trim((string) ($request['message'] ?? ''));
-		$yes_url = vms_add_dispatch_build_response_url($response, 'available');
-		$no_url = vms_add_dispatch_build_response_url($response, 'unavailable');
+		$yes_url = bvmgr_add_dispatch_build_response_url($response, 'available');
+		$no_url = bvmgr_add_dispatch_build_response_url($response, 'unavailable');
 
 		$lines = array(
-			__('Availability request from VMS', 'backstage-venue-manager'),
+			__('Availability request from Backstage Venue Manager', 'backstage-venue-manager'),
 			'',
 		);
 
@@ -49,8 +49,8 @@ if (!function_exists('vms_add_dispatch_email_body_text')) {
 		}
 		if (!empty($request['include_unknown']) || !empty($request['include_no_response'])) {
 			$lines[] = '';
-			$lines[] = function_exists('vms_add_dispatch_no_response_explanation')
-				? vms_add_dispatch_no_response_explanation()
+			$lines[] = function_exists('bvmgr_add_dispatch_no_response_explanation')
+				? bvmgr_add_dispatch_no_response_explanation()
 				: __('We’re reaching out because your availability for this date is not currently marked unavailable in the vendor portal.', 'backstage-venue-manager');
 		}
 
@@ -64,15 +64,15 @@ if (!function_exists('vms_add_dispatch_email_body_text')) {
 	}
 }
 
-if (!function_exists('vms_add_dispatch_email_body_html')) {
-	function vms_add_dispatch_email_body_html(array $request, array $response, array $context): string
+if (!function_exists('bvmgr_add_dispatch_email_body_html')) {
+	function bvmgr_add_dispatch_email_body_html(array $request, array $response, array $context): string
 	{
 		$title = trim((string) ($context['event_title'] ?? ''));
-		$date = trim((string) vms_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
+		$date = trim((string) bvmgr_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
 		$venue = trim((string) ($context['venue_name'] ?? ''));
 		$message = trim((string) ($request['message'] ?? ''));
-		$yes_url = vms_add_dispatch_build_response_url($response, 'available');
-		$no_url = vms_add_dispatch_build_response_url($response, 'unavailable');
+		$yes_url = bvmgr_add_dispatch_build_response_url($response, 'available');
+		$no_url = bvmgr_add_dispatch_build_response_url($response, 'unavailable');
 
 		$html = '<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#15243d;line-height:1.5;">';
 		$html .= '<h2 style="margin:0 0 12px;">' . esc_html__('Availability Request', 'backstage-venue-manager') . '</h2>';
@@ -91,8 +91,8 @@ if (!function_exists('vms_add_dispatch_email_body_html')) {
 			$html .= '<p>' . nl2br(esc_html($message)) . '</p>';
 		}
 		if (!empty($request['include_unknown']) || !empty($request['include_no_response'])) {
-			$html .= '<p>' . esc_html(function_exists('vms_add_dispatch_no_response_explanation')
-				? vms_add_dispatch_no_response_explanation()
+			$html .= '<p>' . esc_html(function_exists('bvmgr_add_dispatch_no_response_explanation')
+				? bvmgr_add_dispatch_no_response_explanation()
 				: __('We’re reaching out because your availability for this date is not currently marked unavailable in the vendor portal.', 'backstage-venue-manager')) . '</p>';
 		}
 		$html .= '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 10px;">';
@@ -106,8 +106,8 @@ if (!function_exists('vms_add_dispatch_email_body_html')) {
 	}
 }
 
-if (!function_exists('vms_add_dispatch_operator_interest_recipients')) {
-	function vms_add_dispatch_operator_interest_recipients(): array
+if (!function_exists('bvmgr_add_dispatch_operator_interest_recipients')) {
+	function bvmgr_add_dispatch_operator_interest_recipients(): array
 	{
 		$emails = array();
 		$admin_email = sanitize_email((string) get_option('admin_email', ''));
@@ -120,24 +120,24 @@ if (!function_exists('vms_add_dispatch_operator_interest_recipients')) {
 	}
 }
 
-if (!function_exists('vms_add_dispatch_send_operator_interest_notification')) {
-	function vms_add_dispatch_send_operator_interest_notification(array $request, array $response, array $context): array
+if (!function_exists('bvmgr_add_dispatch_send_operator_interest_notification')) {
+	function bvmgr_add_dispatch_send_operator_interest_notification(array $request, array $response, array $context): array
 	{
-		$recipients = vms_add_dispatch_operator_interest_recipients();
+		$recipients = bvmgr_add_dispatch_operator_interest_recipients();
 		if (empty($recipients)) {
 			return array('success' => false, 'reason' => 'no_recipients');
 		}
 
 		$vendor_name = (string) get_the_title((int) ($response['vendor_id'] ?? 0));
 		$event_title = trim((string) ($context['event_title'] ?? ''));
-		$event_date = trim((string) vms_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
+		$event_date = trim((string) bvmgr_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
 		$venue_name = trim((string) ($context['venue_name'] ?? ''));
 		$subject = $event_title !== ''
 			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			? sprintf(__('Vendor Interest: %1$s for %2$s', 'backstage-venue-manager'), $vendor_name !== '' ? $vendor_name : __('Vendor', 'backstage-venue-manager'), $event_title)
 			: __('Vendor Interest Submitted', 'backstage-venue-manager');
 
-		$add_url = vms_add_dispatch_admin_url(array(
+		$add_url = bvmgr_add_dispatch_admin_url(array(
 			'event_plan_id' => (int) ($context['event_plan_id'] ?? 0),
 		));
 
@@ -183,8 +183,8 @@ if (!function_exists('vms_add_dispatch_send_operator_interest_notification')) {
 
 		$success = true;
 		foreach ($recipients as $email) {
-			$result = function_exists('vms_notify_provider_core_email_send')
-				? (array) vms_notify_provider_core_email_send(array(
+			$result = function_exists('bvmgr_notify_provider_core_email_send')
+				? (array) bvmgr_notify_provider_core_email_send(array(
 					'to' => $email,
 					'subject' => $subject,
 					'body_text' => $body_text,
@@ -198,8 +198,8 @@ if (!function_exists('vms_add_dispatch_send_operator_interest_notification')) {
 
 			$success = $success && !empty($result['success']);
 
-			if (function_exists('vms_notify_insert_log')) {
-				vms_notify_insert_log(array(
+			if (function_exists('bvmgr_notify_insert_log')) {
+				bvmgr_notify_insert_log(array(
 					'source' => 'availability_date_dispatch',
 					'event_key' => 'portal_interest',
 					'recipient_user_id' => 0,
@@ -224,24 +224,24 @@ if (!function_exists('vms_add_dispatch_send_operator_interest_notification')) {
 	}
 }
 
-if (!function_exists('vms_add_dispatch_send_operator_interest_withdraw_notification')) {
-	function vms_add_dispatch_send_operator_interest_withdraw_notification(array $request, array $response, array $context): array
+if (!function_exists('bvmgr_add_dispatch_send_operator_interest_withdraw_notification')) {
+	function bvmgr_add_dispatch_send_operator_interest_withdraw_notification(array $request, array $response, array $context): array
 	{
-		$recipients = vms_add_dispatch_operator_interest_recipients();
+		$recipients = bvmgr_add_dispatch_operator_interest_recipients();
 		if (empty($recipients)) {
 			return array('success' => false, 'reason' => 'no_recipients');
 		}
 
 		$vendor_name = (string) get_the_title((int) ($response['vendor_id'] ?? 0));
 		$event_title = trim((string) ($context['event_title'] ?? ''));
-		$event_date = trim((string) vms_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
+		$event_date = trim((string) bvmgr_add_dispatch_format_date((string) ($context['event_date'] ?? '')));
 		$venue_name = trim((string) ($context['venue_name'] ?? ''));
 		$subject = $event_title !== ''
 			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
 			? sprintf(__('Vendor Interest Withdrawn: %1$s for %2$s', 'backstage-venue-manager'), $vendor_name !== '' ? $vendor_name : __('Vendor', 'backstage-venue-manager'), $event_title)
 			: __('Vendor Interest Withdrawn', 'backstage-venue-manager');
 
-		$add_url = vms_add_dispatch_admin_url(array(
+		$add_url = bvmgr_add_dispatch_admin_url(array(
 			'event_plan_id' => (int) ($context['event_plan_id'] ?? 0),
 		));
 
@@ -287,8 +287,8 @@ if (!function_exists('vms_add_dispatch_send_operator_interest_withdraw_notificat
 
 		$success = true;
 		foreach ($recipients as $email) {
-			$result = function_exists('vms_notify_provider_core_email_send')
-				? (array) vms_notify_provider_core_email_send(array(
+			$result = function_exists('bvmgr_notify_provider_core_email_send')
+				? (array) bvmgr_notify_provider_core_email_send(array(
 					'to' => $email,
 					'subject' => $subject,
 					'body_text' => $body_text,
@@ -302,8 +302,8 @@ if (!function_exists('vms_add_dispatch_send_operator_interest_withdraw_notificat
 
 			$success = $success && !empty($result['success']);
 
-			if (function_exists('vms_notify_insert_log')) {
-				vms_notify_insert_log(array(
+			if (function_exists('bvmgr_notify_insert_log')) {
+				bvmgr_notify_insert_log(array(
 					'source' => 'availability_date_dispatch',
 					'event_key' => 'portal_interest_withdrawn',
 					'recipient_user_id' => 0,
@@ -328,16 +328,16 @@ if (!function_exists('vms_add_dispatch_send_operator_interest_withdraw_notificat
 	}
 }
 
-if (!function_exists('vms_add_dispatch_send_response_email')) {
-	function vms_add_dispatch_send_response_email(array $request, array $response, array $context): array
+if (!function_exists('bvmgr_add_dispatch_send_response_email')) {
+	function bvmgr_add_dispatch_send_response_email(array $request, array $response, array $context): array
 	{
 		$email = sanitize_email((string) ($response['vendor_email'] ?? ''));
-		$subject = vms_add_dispatch_email_subject($request, $context);
-		$body_text = vms_add_dispatch_email_body_text($request, $response, $context);
-		$body_html = vms_add_dispatch_email_body_html($request, $response, $context);
+		$subject = bvmgr_add_dispatch_email_subject($request, $context);
+		$body_text = bvmgr_add_dispatch_email_body_text($request, $response, $context);
+		$body_html = bvmgr_add_dispatch_email_body_html($request, $response, $context);
 
-		$result = function_exists('vms_notify_provider_core_email_send')
-			? (array) vms_notify_provider_core_email_send(array(
+		$result = function_exists('bvmgr_notify_provider_core_email_send')
+			? (array) bvmgr_notify_provider_core_email_send(array(
 				'to' => $email,
 				'subject' => $subject,
 				'body_text' => $body_text,
@@ -349,8 +349,8 @@ if (!function_exists('vms_add_dispatch_send_response_email')) {
 				'error_message' => '',
 			);
 
-		if (function_exists('vms_notify_insert_log')) {
-			vms_notify_insert_log(array(
+		if (function_exists('bvmgr_notify_insert_log')) {
+			bvmgr_notify_insert_log(array(
 				'source' => 'availability_date_dispatch',
 				'event_key' => 'availability_request',
 				'recipient_user_id' => 0,
@@ -362,8 +362,8 @@ if (!function_exists('vms_add_dispatch_send_response_email')) {
 					'request_id' => (int) ($request['id'] ?? 0),
 					'response_id' => (int) ($response['id'] ?? 0),
 					'event_plan_id' => (int) ($request['event_plan_id'] ?? 0),
-					'choice_url_available' => vms_add_dispatch_build_response_url($response, 'available'),
-					'choice_url_unavailable' => vms_add_dispatch_build_response_url($response, 'unavailable'),
+					'choice_url_available' => bvmgr_add_dispatch_build_response_url($response, 'available'),
+					'choice_url_unavailable' => bvmgr_add_dispatch_build_response_url($response, 'unavailable'),
 				),
 				'provider' => 'core_email',
 				'provider_message_id' => (string) ($result['provider_message_id'] ?? ''),
@@ -372,7 +372,7 @@ if (!function_exists('vms_add_dispatch_send_response_email')) {
 			));
 		}
 
-		vms_add_dispatch_log(!empty($result['success']) ? 'email_sent' : 'email_failed', array(
+		bvmgr_add_dispatch_log(!empty($result['success']) ? 'email_sent' : 'email_failed', array(
 			'request_id' => (int) ($request['id'] ?? 0),
 			'response_id' => (int) ($response['id'] ?? 0),
 			'vendor_id' => (int) ($response['vendor_id'] ?? 0),

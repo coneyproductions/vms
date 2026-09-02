@@ -143,18 +143,18 @@ function is_admin(): bool
 	return !empty($GLOBALS['vms_diag_is_admin']);
 }
 
-function vms_admin_guard_heavy_hooks_disabled(): bool
+function bvmgr_admin_guard_heavy_hooks_disabled(): bool
 {
 	return !empty($GLOBALS['vms_diag_heavy_disabled']);
 }
 
-function vms_admin_guard_should_allow_heavy_block(string $hook_name, array $descriptor): array
+function bvmgr_admin_guard_should_allow_heavy_block(string $hook_name, array $descriptor): array
 {
 	$GLOBALS['vms_diag_guard_calls'][] = compact('hook_name', 'descriptor');
 	return $GLOBALS['vms_diag_guard_result'];
 }
 
-function vms_admin_guard_trace(string $hook_name, string $decision, array $payload, float $started_at = 0.0): void
+function bvmgr_admin_guard_trace(string $hook_name, string $decision, array $payload, float $started_at = 0.0): void
 {
 	$GLOBALS['vms_diag_trace_calls'][] = compact('hook_name', 'decision', 'payload', 'started_at');
 }
@@ -197,7 +197,7 @@ function diag_reset(VMS_Ticket_Diagnostics_WPDB_Spy $db): void
 	$GLOBALS['vms_diag_guard_result'] = array('allowed' => true, 'reason' => 'allowed_action');
 	$GLOBALS['vms_diag_guard_calls'] = array();
 	$GLOBALS['vms_diag_trace_calls'] = array();
-	$GLOBALS['vms_ticket_mutation_audit_context_stack'] = array();
+	$GLOBALS['bvmgr_ticket_mutation_audit_context_stack'] = array();
 }
 
 function diag_calls(VMS_Ticket_Diagnostics_WPDB_Spy $db, string $kind): array
@@ -250,7 +250,7 @@ require $inventory_path;
 // Guard decisions retain disabled, explicit-context, and delegated allow/deny semantics.
 diag_reset($wpdb);
 $GLOBALS['vms_diag_heavy_disabled'] = true;
-$guard = vms_ticket_mutation_audit_guard_decision('Ticket Mutation Audit', -17, '_stock');
+$guard = bvmgr_ticket_mutation_audit_guard_decision('Ticket Mutation Audit', -17, '_stock');
 diag_same(false, $guard['allowed'], 'Mutation guard should fail closed when heavy hooks are disabled.');
 diag_same('constant_disabled', $guard['reason'], 'Mutation guard should retain its disabled reason.');
 diag_same('ticketmutationaudit', $guard['hook_name'], 'Mutation guard should sanitize its hook descriptor.');
@@ -258,15 +258,15 @@ diag_same(17, $guard['object_id'], 'Mutation guard should normalize object IDs.'
 diag_same('_stock', $guard['meta_key'], 'Mutation guard should preserve its diagnostic metadata key.');
 
 diag_reset($wpdb);
-vms_ticket_mutation_audit_push_context(array('source_hook' => 'save_post', 'source_function' => 'save_ticket'));
-$guard = vms_ticket_mutation_audit_guard_decision('ticket_mutation_audit', 22, '_stock');
+bvmgr_ticket_mutation_audit_push_context(array('source_hook' => 'save_post', 'source_function' => 'save_ticket'));
+$guard = bvmgr_ticket_mutation_audit_guard_decision('ticket_mutation_audit', 22, '_stock');
 diag_same(true, $guard['allowed'], 'Explicit mutation context should allow mutation auditing.');
 diag_same('explicit_mutation_context', $guard['reason'], 'Explicit context should retain its reason.');
-vms_ticket_mutation_audit_pop_context();
+bvmgr_ticket_mutation_audit_pop_context();
 
 diag_reset($wpdb);
 $GLOBALS['vms_diag_guard_result'] = array('allowed' => false, 'reason' => 'passive_admin_request');
-$guard = vms_ticket_mutation_audit_guard_decision('ticket_mutation_audit', 23, '_manage_stock');
+$guard = bvmgr_ticket_mutation_audit_guard_decision('ticket_mutation_audit', 23, '_manage_stock');
 diag_same(false, $guard['allowed'], 'Delegated mutation guard denial should remain authoritative.');
 diag_same('passive_admin_request', $guard['reason'], 'Delegated mutation guard reason should remain intact.');
 diag_same(
@@ -276,7 +276,7 @@ diag_same(
 );
 
 diag_reset($wpdb);
-$guard = vms_ticket_inventory_forensics_guard_decision(
+$guard = bvmgr_ticket_inventory_forensics_guard_decision(
 	'ticket_inventory_forensics',
 	24,
 	'_stock_status',
@@ -288,7 +288,7 @@ diag_same('_stock_status', $guard['meta_key'], 'Inventory guard should preserve 
 
 diag_reset($wpdb);
 $GLOBALS['vms_diag_guard_result'] = array('allowed' => true, 'reason' => 'allowed_action');
-$guard = vms_ticket_inventory_forensics_guard_decision('ticket_inventory_forensics', 25, '_stock');
+$guard = bvmgr_ticket_inventory_forensics_guard_decision('ticket_inventory_forensics', 25, '_stock');
 diag_same(true, $guard['allowed'], 'Delegated inventory guard approval should remain authoritative.');
 diag_same(
 	array('task' => 'ticket_inventory_forensics', 'allow_action' => 'ticket_inventory_forensics'),
@@ -299,7 +299,7 @@ diag_same(
 // Trace boundaries preserve mutation descriptors without treating meta_key as query configuration.
 diag_reset($wpdb);
 $started_at = microtime(true) - 0.25;
-vms_ticket_mutation_audit_trace(
+bvmgr_ticket_mutation_audit_trace(
 	'allowed',
 	array(
 		'hook_name' => 'Ticket Mutation Audit',
@@ -320,7 +320,7 @@ diag_same('update', $trace['payload']['operation'], 'Mutation trace should sanit
 diag_same($started_at, $trace['started_at'], 'Mutation trace should preserve its timing boundary.');
 
 diag_reset($wpdb);
-vms_ticket_inventory_forensics_trace(
+bvmgr_ticket_inventory_forensics_trace(
 	'finished',
 	array(
 		'hook_name' => 'Ticket Inventory Forensics',
@@ -342,7 +342,7 @@ diag_same('directlog', $trace['payload']['operation'], 'Forensics trace should s
 // Both prune paths retain the exact 90-day cutoff and prepare identifier/value arguments in order.
 diag_reset($wpdb);
 $before_prune = time() - (90 * DAY_IN_SECONDS);
-vms_ticket_inventory_forensics_prune_logs();
+bvmgr_ticket_inventory_forensics_prune_logs();
 $after_prune = time() - (90 * DAY_IN_SECONDS);
 $prepare = $wpdb->prepares[0];
 diag_same('DELETE FROM %i WHERE created_at_gmt < %s', $prepare['sql'], 'Forensics prune should prepare identifier then cutoff.');
@@ -354,7 +354,7 @@ diag_assert_no_unresolved_sql($wpdb);
 
 diag_reset($wpdb);
 $before_prune = time() - (90 * DAY_IN_SECONDS);
-vms_ticket_mutation_audit_prune_logs();
+bvmgr_ticket_mutation_audit_prune_logs();
 $after_prune = time() - (90 * DAY_IN_SECONDS);
 $prepare = $wpdb->prepares[0];
 diag_same('DELETE FROM %i WHERE created_at_gmt < %s', $prepare['sql'], 'Mutation prune should prepare identifier then cutoff.');
@@ -367,18 +367,18 @@ diag_assert_no_unresolved_sql($wpdb);
 // Insert gates preserve schema checks, false-vs-zero behavior, formats, identities, and post-success pruning.
 diag_reset($wpdb);
 unset($GLOBALS['vms_diag_options']['vms_ticket_inventory_audit_db_schema_version']);
-diag_same(0, vms_ticket_inventory_forensics_insert(array('plan_id' => 4)), 'Forensics insert should fail closed before schema readiness.');
+diag_same(0, bvmgr_ticket_inventory_forensics_insert(array('plan_id' => 4)), 'Forensics insert should fail closed before schema readiness.');
 diag_same(array(), $wpdb->log, 'Unavailable forensics schema should not touch wpdb.');
 
 diag_reset($wpdb);
 $wpdb->insert_queue[] = false;
-diag_same(0, vms_ticket_inventory_forensics_insert(array('plan_id' => 4)), 'Forensics insert should preserve wpdb failure.');
+diag_same(0, bvmgr_ticket_inventory_forensics_insert(array('plan_id' => 4)), 'Forensics insert should preserve wpdb failure.');
 diag_same(0, count(diag_calls($wpdb, 'query')), 'Failed forensics inserts must not prune history.');
 
 diag_reset($wpdb);
 $wpdb->insert_id = 701;
 $wpdb->insert_queue[] = 0;
-$forensics_id = vms_ticket_inventory_forensics_insert(
+$forensics_id = bvmgr_ticket_inventory_forensics_insert(
 	array(
 		'plan_id' => 4,
 		'tec_event_id' => 5,
@@ -421,18 +421,18 @@ diag_assert_no_unresolved_sql($wpdb);
 
 diag_reset($wpdb);
 unset($GLOBALS['vms_diag_options']['vms_ticket_mutation_audit_db_schema_version']);
-diag_same(0, vms_ticket_mutation_audit_insert(array('plan_id' => 7)), 'Mutation insert should fail closed before schema readiness.');
+diag_same(0, bvmgr_ticket_mutation_audit_insert(array('plan_id' => 7)), 'Mutation insert should fail closed before schema readiness.');
 diag_same(array(), $wpdb->log, 'Unavailable mutation schema should not touch wpdb.');
 
 diag_reset($wpdb);
 $wpdb->insert_queue[] = false;
-diag_same(0, vms_ticket_mutation_audit_insert(array('plan_id' => 7)), 'Mutation insert should preserve wpdb failure.');
+diag_same(0, bvmgr_ticket_mutation_audit_insert(array('plan_id' => 7)), 'Mutation insert should preserve wpdb failure.');
 diag_same(0, count(diag_calls($wpdb, 'query')), 'Failed mutation inserts must not prune history.');
 
 diag_reset($wpdb);
 $wpdb->insert_id = 702;
 $wpdb->insert_queue[] = 0;
-$mutation_id = vms_ticket_mutation_audit_insert(
+$mutation_id = bvmgr_ticket_mutation_audit_insert(
 	array(
 		'plan_id' => 7,
 		'tec_event_id' => 8,
@@ -464,17 +464,17 @@ diag_same(count($insert['data']), count($insert['format']), 'Every mutation inse
 diag_same(1, count(diag_calls($wpdb, 'query')), 'Successful mutation insert should prune once.');
 diag_assert_no_unresolved_sql($wpdb);
 
-diag_same('partial', vms_ticket_inventory_forensics_normalize_result_status('Partial'), 'Forensics result normalization should preserve partial.');
-diag_same('skipped', vms_ticket_inventory_forensics_normalize_result_status('Skipped'), 'Forensics result normalization should preserve skipped.');
-diag_same('success', vms_ticket_inventory_forensics_normalize_result_status('unexpected'), 'Forensics result normalization should preserve success fallback.');
-diag_same('no_op', vms_ticket_mutation_audit_normalize_result_status('no_op'), 'Mutation result normalization should preserve no-op.');
-diag_same('success', vms_ticket_mutation_audit_normalize_result_status('skipped'), 'Mutation result normalization should preserve success fallback.');
+diag_same('partial', bvmgr_ticket_inventory_forensics_normalize_result_status('Partial'), 'Forensics result normalization should preserve partial.');
+diag_same('skipped', bvmgr_ticket_inventory_forensics_normalize_result_status('Skipped'), 'Forensics result normalization should preserve skipped.');
+diag_same('success', bvmgr_ticket_inventory_forensics_normalize_result_status('unexpected'), 'Forensics result normalization should preserve success fallback.');
+diag_same('no_op', bvmgr_ticket_mutation_audit_normalize_result_status('no_op'), 'Mutation result normalization should preserve no-op.');
+diag_same('success', bvmgr_ticket_mutation_audit_normalize_result_status('skipped'), 'Mutation result normalization should preserve success fallback.');
 
 // Recent-log repositories preserve invalid/schema gates, fresh reads, DESC limits, and the optional product filter.
 diag_reset($wpdb);
-diag_same(array(), vms_ticket_inventory_forensics_recent_logs(0, 8, 4), 'Forensics recent logs should reject invalid plan IDs.');
+diag_same(array(), bvmgr_ticket_inventory_forensics_recent_logs(0, 8, 4), 'Forensics recent logs should reject invalid plan IDs.');
 unset($GLOBALS['vms_diag_options']['vms_ticket_inventory_audit_db_schema_version']);
-diag_same(array(), vms_ticket_inventory_forensics_recent_logs(4, 8, 4), 'Forensics recent logs should fail closed before schema readiness.');
+diag_same(array(), bvmgr_ticket_inventory_forensics_recent_logs(4, 8, 4), 'Forensics recent logs should fail closed before schema readiness.');
 diag_same(array(), $wpdb->log, 'Rejected forensics reads should not touch wpdb.');
 
 diag_reset($wpdb);
@@ -482,8 +482,8 @@ $wpdb->get_results_queue = array(
 	array(array('id' => 81, 'plan_id' => 4, 'product_id' => 9, 'result_status' => 'success')),
 	array(array('id' => 82, 'plan_id' => 4, 'product_id' => 9, 'result_status' => 'partial')),
 );
-$first = vms_ticket_inventory_forensics_recent_logs(4, 500, 9);
-$second = vms_ticket_inventory_forensics_recent_logs(4, 500, 9);
+$first = bvmgr_ticket_inventory_forensics_recent_logs(4, 500, 9);
+$second = bvmgr_ticket_inventory_forensics_recent_logs(4, 500, 9);
 diag_same(81, $first[0]['id'], 'First product-filtered forensics read should preserve its database result.');
 diag_same(82, $second[0]['id'], 'Repeated product-filtered forensics read should remain fresh.');
 diag_same(2, count(diag_calls($wpdb, 'get_results')), 'Repeated product-filtered forensics reads should query twice.');
@@ -500,7 +500,7 @@ diag_assert_no_unresolved_sql($wpdb);
 
 diag_reset($wpdb);
 $wpdb->get_results_queue[] = array(array('id' => 83, 'plan_id' => 4, 'result_status' => 'no_op'));
-$rows = vms_ticket_inventory_forensics_recent_logs(4, 0, 0);
+$rows = bvmgr_ticket_inventory_forensics_recent_logs(4, 0, 0);
 diag_same(83, $rows[0]['id'], 'Plan-wide forensics read should preserve its result.');
 $prepare = $wpdb->prepares[0];
 diag_same('SELECT * FROM %i WHERE plan_id = %d ORDER BY id DESC LIMIT %d', $prepare['sql'], 'Plan-wide forensics SQL should retain its exact prepared shape.');
@@ -509,9 +509,9 @@ diag_same('SELECT * FROM `wp_vms_ticket_inventory_audit` WHERE plan_id = 4 ORDER
 diag_assert_no_unresolved_sql($wpdb);
 
 diag_reset($wpdb);
-diag_same(array(), vms_ticket_mutation_audit_recent_logs(0, 5), 'Mutation recent logs should reject invalid plan IDs.');
+diag_same(array(), bvmgr_ticket_mutation_audit_recent_logs(0, 5), 'Mutation recent logs should reject invalid plan IDs.');
 unset($GLOBALS['vms_diag_options']['vms_ticket_mutation_audit_db_schema_version']);
-diag_same(array(), vms_ticket_mutation_audit_recent_logs(7, 5), 'Mutation recent logs should fail closed before schema readiness.');
+diag_same(array(), bvmgr_ticket_mutation_audit_recent_logs(7, 5), 'Mutation recent logs should fail closed before schema readiness.');
 diag_same(array(), $wpdb->log, 'Rejected mutation reads should not touch wpdb.');
 
 diag_reset($wpdb);
@@ -519,8 +519,8 @@ $wpdb->get_results_queue = array(
 	array(array('id' => 91, 'plan_id' => 7, 'result_status' => 'success')),
 	array(array('id' => 92, 'plan_id' => 7, 'result_status' => 'failed')),
 );
-$first = vms_ticket_mutation_audit_recent_logs(7, 500);
-$second = vms_ticket_mutation_audit_recent_logs(7, 500);
+$first = bvmgr_ticket_mutation_audit_recent_logs(7, 500);
+$second = bvmgr_ticket_mutation_audit_recent_logs(7, 500);
 diag_same(91, $first[0]['id'], 'First mutation history read should preserve its database result.');
 diag_same(92, $second[0]['id'], 'Repeated mutation history read should remain fresh.');
 diag_same(2, count(diag_calls($wpdb, 'get_results')), 'Repeated mutation history reads should query twice.');
@@ -587,7 +587,7 @@ diag_contains('Mutation history must read request-fresh', $mutation_source, 'Mut
 diag_same(0, substr_count($mutation_source, 'error_log('), 'Mutation trace fallback should use the bounded operational adapter.');
 diag_same(1, substr_count($mutation_source, 'debug_backtrace('), 'Mutation source detection should retain exactly one bounded backtrace call.');
 diag_same(1, substr_count($mutation_source, 'WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace'), 'Mutation source detection should carry exactly one narrow backtrace annotation.');
-diag_contains("vms_record_operational_issue('ticket_mutation_audit_trace'", $mutation_source, 'Mutation trace fallback should retain its fixed operational event.');
+diag_contains("bvmgr_record_operational_issue('ticket_mutation_audit_trace'", $mutation_source, 'Mutation trace fallback should retain its fixed operational event.');
 
 // Baseline and remediated shared runtime stay byte-identical across the isolated mirror/shadow pair.
 $shadow_root = dirname($plugin_root, 2) . '/vms';

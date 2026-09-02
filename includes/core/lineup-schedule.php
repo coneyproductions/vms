@@ -1,11 +1,11 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_lineup_schedule_meta_key')) {
-    function vms_lineup_schedule_meta_key(string $slot, string $fallback): string
+if (!function_exists('bvmgr_lineup_schedule_meta_key')) {
+    function bvmgr_lineup_schedule_meta_key(string $slot, string $fallback): string
     {
-        if (function_exists('vms_meta_key')) {
-            $resolved = (string) vms_meta_key('event_plan', $slot);
+        if (function_exists('bvmgr_meta_key')) {
+            $resolved = (string) bvmgr_meta_key('event_plan', $slot);
             if ($resolved !== '') {
                 return $resolved;
             }
@@ -15,8 +15,8 @@ if (!function_exists('vms_lineup_schedule_meta_key')) {
     }
 }
 
-if (!function_exists('vms_lineup_schedule_sanitize_time')) {
-    function vms_lineup_schedule_sanitize_time(string $value): string
+if (!function_exists('bvmgr_lineup_schedule_sanitize_time')) {
+    function bvmgr_lineup_schedule_sanitize_time(string $value): string
     {
         $value = trim((string) $value);
         if ($value === '') {
@@ -36,10 +36,10 @@ if (!function_exists('vms_lineup_schedule_sanitize_time')) {
     }
 }
 
-if (!function_exists('vms_lineup_schedule_time_to_minutes')) {
-    function vms_lineup_schedule_time_to_minutes(string $value): ?int
+if (!function_exists('bvmgr_lineup_schedule_time_to_minutes')) {
+    function bvmgr_lineup_schedule_time_to_minutes(string $value): ?int
     {
-        $value = vms_lineup_schedule_sanitize_time($value);
+        $value = bvmgr_lineup_schedule_sanitize_time($value);
         if ($value === '') {
             return null;
         }
@@ -53,8 +53,8 @@ if (!function_exists('vms_lineup_schedule_time_to_minutes')) {
     }
 }
 
-if (!function_exists('vms_lineup_schedule_minutes_to_label')) {
-    function vms_lineup_schedule_minutes_to_label(?int $minutes): string
+if (!function_exists('bvmgr_lineup_schedule_minutes_to_label')) {
+    function bvmgr_lineup_schedule_minutes_to_label(?int $minutes): string
     {
         if ($minutes === null || $minutes < 0) {
             return '';
@@ -76,10 +76,10 @@ if (!function_exists('vms_lineup_schedule_minutes_to_label')) {
     }
 }
 
-if (!function_exists('vms_lineup_schedule_format_time_label')) {
-    function vms_lineup_schedule_format_time_label(string $value): string
+if (!function_exists('bvmgr_lineup_schedule_format_time_label')) {
+    function bvmgr_lineup_schedule_format_time_label(string $value): string
     {
-        $value = vms_lineup_schedule_sanitize_time($value);
+        $value = bvmgr_lineup_schedule_sanitize_time($value);
         if ($value === '') {
             return '';
         }
@@ -94,16 +94,16 @@ if (!function_exists('vms_lineup_schedule_format_time_label')) {
     }
 }
 
-if (!function_exists('vms_lineup_schedule_vendor_exists')) {
-    function vms_lineup_schedule_vendor_exists(int $vendor_id): bool
+if (!function_exists('bvmgr_lineup_schedule_vendor_exists')) {
+    function bvmgr_lineup_schedule_vendor_exists(int $vendor_id): bool
     {
         $vendor_id = absint($vendor_id);
         if ($vendor_id <= 0) {
             return false;
         }
 
-        if (function_exists('vms_event_plan_vendor_exists')) {
-            return (bool) vms_event_plan_vendor_exists($vendor_id);
+        if (function_exists('bvmgr_event_plan_vendor_exists')) {
+            return (bool) bvmgr_event_plan_vendor_exists($vendor_id);
         }
 
         $post = get_post($vendor_id);
@@ -112,7 +112,7 @@ if (!function_exists('vms_lineup_schedule_vendor_exists')) {
 }
 
 
-if (!function_exists('vms_get_lineup_supporting_compensation_default')) {
+if (!function_exists('bvmgr_get_lineup_supporting_compensation_default')) {
     /**
      * Resolve the default guaranteed fee for a supporting lineup entry.
      *
@@ -122,20 +122,20 @@ if (!function_exists('vms_get_lineup_supporting_compensation_default')) {
      *
      * @return array{guaranteed_fee:float|string,structure:string}
      */
-    function vms_get_lineup_supporting_compensation_default(int $vendor_id, int $venue_id = 0, string $event_date = ''): array
+    function bvmgr_get_lineup_supporting_compensation_default(int $vendor_id, int $venue_id = 0, string $event_date = ''): array
     {
         $vendor_id = absint($vendor_id);
         $venue_id = absint($venue_id);
         $event_date = trim((string) $event_date);
 
-        if ($vendor_id <= 0 || !function_exists('vms_get_vendor_supporting_default_comp_terms')) {
+        if ($vendor_id <= 0 || !function_exists('bvmgr_get_vendor_supporting_default_comp_terms')) {
             return array(
                 'guaranteed_fee' => '',
                 'structure' => '',
             );
         }
 
-        $terms = (array) vms_get_vendor_supporting_default_comp_terms($vendor_id);
+        $terms = (array) bvmgr_get_vendor_supporting_default_comp_terms($vendor_id);
         $structure = sanitize_key((string) ($terms['structure'] ?? ''));
 
         $guaranteed_fee = '';
@@ -153,24 +153,24 @@ if (!function_exists('vms_get_lineup_supporting_compensation_default')) {
     }
 }
 
-if (!function_exists('vms_lineup_schedule_make_row_id')) {
-    function vms_lineup_schedule_make_row_id(): string
+if (!function_exists('bvmgr_lineup_schedule_make_row_id')) {
+    function bvmgr_lineup_schedule_make_row_id(): string
     {
         return 'lineup_' . wp_generate_password(10, false, false);
     }
 }
 
-if (!function_exists('vms_normalize_event_plan_lineup_entries')) {
+if (!function_exists('bvmgr_normalize_event_plan_lineup_entries')) {
     /**
      * @param array<int,mixed> $raw_rows
      * @param array<string,mixed> $context
      * @return array<int,array<string,mixed>>
      */
-    function vms_normalize_event_plan_lineup_entries(array $raw_rows, array $context = array()): array
+    function bvmgr_normalize_event_plan_lineup_entries(array $raw_rows, array $context = array()): array
     {
         $legacy_primary_vendor_id = absint($context['legacy_primary_vendor_id'] ?? 0);
-        $event_start = vms_lineup_schedule_sanitize_time((string) ($context['event_start'] ?? ''));
-        $event_end = vms_lineup_schedule_sanitize_time((string) ($context['event_end'] ?? ''));
+        $event_start = bvmgr_lineup_schedule_sanitize_time((string) ($context['event_start'] ?? ''));
+        $event_end = bvmgr_lineup_schedule_sanitize_time((string) ($context['event_end'] ?? ''));
         $venue_id = absint($context['venue_id'] ?? 0);
         $event_date = trim((string) ($context['event_date'] ?? ''));
 
@@ -183,7 +183,7 @@ if (!function_exists('vms_normalize_event_plan_lineup_entries')) {
             }
 
             $vendor_id = absint($raw_row['vendor_id'] ?? 0);
-            if ($vendor_id > 0 && !vms_lineup_schedule_vendor_exists($vendor_id)) {
+            if ($vendor_id > 0 && !bvmgr_lineup_schedule_vendor_exists($vendor_id)) {
                 $vendor_id = 0;
             }
 
@@ -195,8 +195,8 @@ if (!function_exists('vms_normalize_event_plan_lineup_entries')) {
             $public_name_override = sanitize_text_field((string) ($raw_row['public_name_override'] ?? ''));
             $show_public = !empty($raw_row['show_public']) ? '1' : '';
             $show_portal = !empty($raw_row['show_portal']) ? '1' : '';
-            $set_start = vms_lineup_schedule_sanitize_time((string) ($raw_row['set_start'] ?? ''));
-            $set_end = vms_lineup_schedule_sanitize_time((string) ($raw_row['set_end'] ?? ''));
+            $set_start = bvmgr_lineup_schedule_sanitize_time((string) ($raw_row['set_start'] ?? ''));
+            $set_end = bvmgr_lineup_schedule_sanitize_time((string) ($raw_row['set_end'] ?? ''));
             $guaranteed_fee_raw = trim((string) ($raw_row['guaranteed_fee'] ?? ''));
             $guaranteed_fee_raw = preg_replace('/[^0-9.\-]/', '', $guaranteed_fee_raw);
             $guaranteed_fee = ($guaranteed_fee_raw !== '' && is_numeric($guaranteed_fee_raw)) ? round((float) $guaranteed_fee_raw, 2) : '';
@@ -204,8 +204,8 @@ if (!function_exists('vms_normalize_event_plan_lineup_entries')) {
                 $guaranteed_fee = 0.0;
             }
 
-            if ($role === 'supporting' && $guaranteed_fee === '' && $vendor_id > 0 && function_exists('vms_get_lineup_supporting_compensation_default')) {
-                $support_defaults = (array) vms_get_lineup_supporting_compensation_default($vendor_id, $venue_id, $event_date);
+            if ($role === 'supporting' && $guaranteed_fee === '' && $vendor_id > 0 && function_exists('bvmgr_get_lineup_supporting_compensation_default')) {
+                $support_defaults = (array) bvmgr_get_lineup_supporting_compensation_default($vendor_id, $venue_id, $event_date);
                 if (array_key_exists('guaranteed_fee', $support_defaults) && $support_defaults['guaranteed_fee'] !== '' && $support_defaults['guaranteed_fee'] !== null && is_numeric($support_defaults['guaranteed_fee'])) {
                     $guaranteed_fee = round((float) $support_defaults['guaranteed_fee'], 2);
                 }
@@ -217,7 +217,7 @@ if (!function_exists('vms_normalize_event_plan_lineup_entries')) {
             $sort_order = array_key_exists('sort_order', $raw_row) ? (int) $raw_row['sort_order'] : (int) $index;
             $row_id = sanitize_key((string) ($raw_row['row_id'] ?? ''));
             if ($row_id === '') {
-                $row_id = vms_lineup_schedule_make_row_id();
+                $row_id = bvmgr_lineup_schedule_make_row_id();
             }
 
             $has_content = ($vendor_id > 0)
@@ -267,7 +267,7 @@ if (!function_exists('vms_normalize_event_plan_lineup_entries')) {
 
         if (empty($rows) && ($legacy_primary_vendor_id > 0 || $event_start !== '' || $event_end !== '')) {
             $rows[] = array(
-                'row_id' => vms_lineup_schedule_make_row_id(),
+                'row_id' => bvmgr_lineup_schedule_make_row_id(),
                 'vendor_id' => $legacy_primary_vendor_id,
                 'role' => 'primary',
                 'sort_order' => 0,
@@ -311,17 +311,17 @@ if (!function_exists('vms_normalize_event_plan_lineup_entries')) {
     }
 }
 
-if (!function_exists('vms_lineup_schedule_enrich_entries')) {
+if (!function_exists('bvmgr_lineup_schedule_enrich_entries')) {
     /**
      * @param array<int,array<string,mixed>> $entries
      * @return array{entries:array<int,array<string,mixed>>,warnings:array<int,array<string,mixed>>,summary:array<string,mixed>}
      */
-    function vms_lineup_schedule_enrich_entries(array $entries, array $context = array()): array
+    function bvmgr_lineup_schedule_enrich_entries(array $entries, array $context = array()): array
     {
-        $event_start = vms_lineup_schedule_sanitize_time((string) ($context['event_start'] ?? ''));
-        $event_end = vms_lineup_schedule_sanitize_time((string) ($context['event_end'] ?? ''));
-        $event_start_minutes = vms_lineup_schedule_time_to_minutes($event_start);
-        $event_end_minutes = vms_lineup_schedule_time_to_minutes($event_end);
+        $event_start = bvmgr_lineup_schedule_sanitize_time((string) ($context['event_start'] ?? ''));
+        $event_end = bvmgr_lineup_schedule_sanitize_time((string) ($context['event_end'] ?? ''));
+        $event_start_minutes = bvmgr_lineup_schedule_time_to_minutes($event_start);
+        $event_end_minutes = bvmgr_lineup_schedule_time_to_minutes($event_end);
 
         $warnings = array();
         $warning_dedupe = array();
@@ -358,10 +358,10 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                 $display_name = __('Unassigned lineup entry', 'backstage-venue-manager');
             }
 
-            $set_start = vms_lineup_schedule_sanitize_time((string) ($entry['set_start'] ?? ''));
-            $set_end = vms_lineup_schedule_sanitize_time((string) ($entry['set_end'] ?? ''));
-            $start_minutes = vms_lineup_schedule_time_to_minutes($set_start);
-            $end_minutes = vms_lineup_schedule_time_to_minutes($set_end);
+            $set_start = bvmgr_lineup_schedule_sanitize_time((string) ($entry['set_start'] ?? ''));
+            $set_end = bvmgr_lineup_schedule_sanitize_time((string) ($entry['set_end'] ?? ''));
+            $start_minutes = bvmgr_lineup_schedule_time_to_minutes($set_start);
+            $end_minutes = bvmgr_lineup_schedule_time_to_minutes($set_end);
             $duration_minutes = null;
             if ($start_minutes !== null && $end_minutes !== null) {
                 $duration_minutes = $end_minutes - $start_minutes;
@@ -441,12 +441,12 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
             $entry['display_name'] = $display_name;
             $entry['set_start'] = $set_start;
             $entry['set_end'] = $set_end;
-            $entry['set_start_label'] = vms_lineup_schedule_format_time_label($set_start);
-            $entry['set_end_label'] = vms_lineup_schedule_format_time_label($set_end);
+            $entry['set_start_label'] = bvmgr_lineup_schedule_format_time_label($set_start);
+            $entry['set_end_label'] = bvmgr_lineup_schedule_format_time_label($set_end);
             $entry['start_minutes'] = $start_minutes;
             $entry['end_minutes'] = $end_minutes;
             $entry['duration_minutes'] = ($duration_minutes !== null && $duration_minutes > 0) ? (int) $duration_minutes : null;
-            $entry['duration_label'] = ($duration_minutes !== null && $duration_minutes > 0) ? vms_lineup_schedule_minutes_to_label((int) $duration_minutes) : '';
+            $entry['duration_label'] = ($duration_minutes !== null && $duration_minutes > 0) ? bvmgr_lineup_schedule_minutes_to_label((int) $duration_minutes) : '';
             $entry['downtime_before_minutes'] = null;
             $entry['downtime_before_label'] = '';
             $entry['warning_count'] = 0;
@@ -489,7 +489,7 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
                     );
                 } else {
                     $entry['downtime_before_minutes'] = $delta;
-                    $entry['downtime_before_label'] = vms_lineup_schedule_minutes_to_label($delta);
+                    $entry['downtime_before_label'] = bvmgr_lineup_schedule_minutes_to_label($delta);
                     if ($delta >= 45) {
                         $push_warning(
                             'large_gap',
@@ -526,10 +526,10 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
             'primary_vendor_id' => $primary_vendor_id,
             'primary_vendor_label' => $primary_vendor_id > 0 ? trim((string) get_the_title($primary_vendor_id)) : __('Unassigned primary vendor', 'backstage-venue-manager'),
             'supporting_count' => max(0, count($entries) - 1),
-            'earliest_start' => $earliest_start !== null ? vms_lineup_schedule_format_time_label(sprintf('%02d:%02d', (int) floor($earliest_start / 60), (int) ($earliest_start % 60))) : '',
+            'earliest_start' => $earliest_start !== null ? bvmgr_lineup_schedule_format_time_label(sprintf('%02d:%02d', (int) floor($earliest_start / 60), (int) ($earliest_start % 60))) : '',
             'primary_start' => $primary_start,
             'total_runtime_minutes' => $total_runtime,
-            'total_runtime_label' => vms_lineup_schedule_minutes_to_label($total_runtime),
+            'total_runtime_label' => bvmgr_lineup_schedule_minutes_to_label($total_runtime),
             'warning_count' => count($warnings),
             'entry_count' => count($entries),
         );
@@ -542,19 +542,19 @@ if (!function_exists('vms_lineup_schedule_enrich_entries')) {
     }
 }
 
-if (!function_exists('vms_get_event_plan_lineup_entries')) {
+if (!function_exists('bvmgr_get_event_plan_lineup_entries')) {
     /**
      * @return array<int,array<string,mixed>>
      */
-    function vms_get_event_plan_lineup_entries(int $post_id, array $context = array()): array
+    function bvmgr_get_event_plan_lineup_entries(int $post_id, array $context = array()): array
     {
         $post_id = absint($post_id);
         if ($post_id <= 0) {
             return array();
         }
 
-        $lineup_key = vms_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1');
-        $band_key = vms_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id');
+        $lineup_key = bvmgr_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1');
+        $band_key = bvmgr_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id');
         $raw = get_post_meta($post_id, $lineup_key, true);
         if (!is_array($raw)) {
             $raw = array();
@@ -566,17 +566,17 @@ if (!function_exists('vms_get_event_plan_lineup_entries')) {
         $context['venue_id'] = absint($context['venue_id'] ?? get_post_meta($post_id, '_vms_venue_id', true));
         $context['event_date'] = (string) ($context['event_date'] ?? get_post_meta($post_id, '_vms_event_date', true));
 
-        $normalized = vms_normalize_event_plan_lineup_entries((array) $raw, $context);
-        $enriched = vms_lineup_schedule_enrich_entries($normalized, $context);
+        $normalized = bvmgr_normalize_event_plan_lineup_entries((array) $raw, $context);
+        $enriched = bvmgr_lineup_schedule_enrich_entries($normalized, $context);
 
         return (array) ($enriched['entries'] ?? array());
     }
 }
 
-if (!function_exists('vms_get_event_plan_lineup_primary_entry')) {
-    function vms_get_event_plan_lineup_primary_entry(int $post_id, array $context = array()): array
+if (!function_exists('bvmgr_get_event_plan_lineup_primary_entry')) {
+    function bvmgr_get_event_plan_lineup_primary_entry(int $post_id, array $context = array()): array
     {
-        $entries = vms_get_event_plan_lineup_entries($post_id, $context);
+        $entries = bvmgr_get_event_plan_lineup_entries($post_id, $context);
         foreach ($entries as $entry) {
             if (sanitize_key((string) ($entry['role'] ?? '')) === 'primary') {
                 return $entry;
@@ -586,21 +586,21 @@ if (!function_exists('vms_get_event_plan_lineup_primary_entry')) {
     }
 }
 
-if (!function_exists('vms_get_event_plan_lineup_supporting_entries')) {
-    function vms_get_event_plan_lineup_supporting_entries(int $post_id, array $context = array()): array
+if (!function_exists('bvmgr_get_event_plan_lineup_supporting_entries')) {
+    function bvmgr_get_event_plan_lineup_supporting_entries(int $post_id, array $context = array()): array
     {
-        $entries = vms_get_event_plan_lineup_entries($post_id, $context);
+        $entries = bvmgr_get_event_plan_lineup_entries($post_id, $context);
         return array_values(array_filter($entries, static function (array $entry): bool {
             return sanitize_key((string) ($entry['role'] ?? '')) === 'supporting';
         }));
     }
 }
 
-if (!function_exists('vms_get_event_plan_lineup_vendor_ids')) {
-    function vms_get_event_plan_lineup_vendor_ids(int $post_id, array $context = array()): array
+if (!function_exists('bvmgr_get_event_plan_lineup_vendor_ids')) {
+    function bvmgr_get_event_plan_lineup_vendor_ids(int $post_id, array $context = array()): array
     {
         $ids = array();
-        foreach (vms_get_event_plan_lineup_entries($post_id, $context) as $entry) {
+        foreach (bvmgr_get_event_plan_lineup_entries($post_id, $context) as $entry) {
             $vendor_id = absint($entry['vendor_id'] ?? 0);
             if ($vendor_id > 0 && !in_array($vendor_id, $ids, true)) {
                 $ids[] = $vendor_id;
@@ -610,11 +610,11 @@ if (!function_exists('vms_get_event_plan_lineup_vendor_ids')) {
     }
 }
 
-if (!function_exists('vms_get_event_plan_lineup_supporting_guaranteed_total')) {
-    function vms_get_event_plan_lineup_supporting_guaranteed_total(int $post_id, array $context = array()): float
+if (!function_exists('bvmgr_get_event_plan_lineup_supporting_guaranteed_total')) {
+    function bvmgr_get_event_plan_lineup_supporting_guaranteed_total(int $post_id, array $context = array()): float
     {
         $total = 0.0;
-        foreach (vms_get_event_plan_lineup_supporting_entries($post_id, $context) as $entry) {
+        foreach (bvmgr_get_event_plan_lineup_supporting_entries($post_id, $context) as $entry) {
             $fee = $entry['guaranteed_fee'] ?? '';
             if ($fee !== '' && $fee !== null && is_numeric($fee)) {
                 $total += max(0.0, (float) $fee);
@@ -624,26 +624,26 @@ if (!function_exists('vms_get_event_plan_lineup_supporting_guaranteed_total')) {
     }
 }
 
-if (!function_exists('vms_get_event_plan_lineup_summary')) {
-    function vms_get_event_plan_lineup_summary(int $post_id, array $context = array()): array
+if (!function_exists('bvmgr_get_event_plan_lineup_summary')) {
+    function bvmgr_get_event_plan_lineup_summary(int $post_id, array $context = array()): array
     {
-        $entries = vms_get_event_plan_lineup_entries($post_id, $context);
-        $enriched = vms_lineup_schedule_enrich_entries($entries, $context);
+        $entries = bvmgr_get_event_plan_lineup_entries($post_id, $context);
+        $enriched = bvmgr_lineup_schedule_enrich_entries($entries, $context);
         return (array) ($enriched['summary'] ?? array());
     }
 }
 
-if (!function_exists('vms_get_event_plan_lineup_warnings')) {
-    function vms_get_event_plan_lineup_warnings(int $post_id, array $context = array()): array
+if (!function_exists('bvmgr_get_event_plan_lineup_warnings')) {
+    function bvmgr_get_event_plan_lineup_warnings(int $post_id, array $context = array()): array
     {
-        $entries = vms_get_event_plan_lineup_entries($post_id, $context);
-        $enriched = vms_lineup_schedule_enrich_entries($entries, $context);
+        $entries = bvmgr_get_event_plan_lineup_entries($post_id, $context);
+        $enriched = bvmgr_lineup_schedule_enrich_entries($entries, $context);
         return (array) ($enriched['warnings'] ?? array());
     }
 }
 
-if (!function_exists('vms_rebuild_event_plan_lineup_indexes')) {
-    function vms_rebuild_event_plan_lineup_indexes(int $post_id, array $entries = array()): void
+if (!function_exists('bvmgr_rebuild_event_plan_lineup_indexes')) {
+    function bvmgr_rebuild_event_plan_lineup_indexes(int $post_id, array $entries = array()): void
     {
         $post_id = absint($post_id);
         if ($post_id <= 0) {
@@ -651,10 +651,10 @@ if (!function_exists('vms_rebuild_event_plan_lineup_indexes')) {
         }
 
         if (empty($entries)) {
-            $entries = vms_get_event_plan_lineup_entries($post_id);
+            $entries = bvmgr_get_event_plan_lineup_entries($post_id);
         }
 
-        $index_key = vms_lineup_schedule_meta_key('lineup_entry_vendor_id', '_vms_lineup_entry_vendor_id');
+        $index_key = bvmgr_lineup_schedule_meta_key('lineup_entry_vendor_id', '_vms_lineup_entry_vendor_id');
 
         $seen = array();
         $next_vendor_ids = array();
@@ -682,8 +682,8 @@ if (!function_exists('vms_rebuild_event_plan_lineup_indexes')) {
     }
 }
 
-if (!function_exists('vms_sync_event_plan_lineup_legacy_primary')) {
-    function vms_sync_event_plan_lineup_legacy_primary(int $post_id, array $entries = array()): int
+if (!function_exists('bvmgr_sync_event_plan_lineup_legacy_primary')) {
+    function bvmgr_sync_event_plan_lineup_legacy_primary(int $post_id, array $entries = array()): int
     {
         $post_id = absint($post_id);
         if ($post_id <= 0) {
@@ -691,7 +691,7 @@ if (!function_exists('vms_sync_event_plan_lineup_legacy_primary')) {
         }
 
         if (empty($entries)) {
-            $entries = vms_get_event_plan_lineup_entries($post_id);
+            $entries = bvmgr_get_event_plan_lineup_entries($post_id);
         }
 
         $primary_vendor_id = 0;
@@ -705,8 +705,8 @@ if (!function_exists('vms_sync_event_plan_lineup_legacy_primary')) {
             break;
         }
 
-        $band_key = vms_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id');
-        $primary_entry_key = vms_lineup_schedule_meta_key('lineup_primary_entry_id', '_vms_lineup_primary_entry_id');
+        $band_key = bvmgr_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id');
+        $primary_entry_key = bvmgr_lineup_schedule_meta_key('lineup_primary_entry_id', '_vms_lineup_primary_entry_id');
 
         update_post_meta($post_id, $band_key, $primary_vendor_id);
         if ($primary_entry_id !== '') {
@@ -719,12 +719,12 @@ if (!function_exists('vms_sync_event_plan_lineup_legacy_primary')) {
     }
 }
 
-if (!function_exists('vms_save_event_plan_lineup_entries')) {
+if (!function_exists('bvmgr_save_event_plan_lineup_entries')) {
     /**
      * @param array<int,mixed> $posted_rows
      * @return array{entries:array<int,array<string,mixed>>,warnings:array<int,array<string,mixed>>,summary:array<string,mixed>,primary_vendor_id:int}
      */
-    function vms_save_event_plan_lineup_entries(int $post_id, array $posted_rows, array $context = array()): array
+    function bvmgr_save_event_plan_lineup_entries(int $post_id, array $posted_rows, array $context = array()): array
     {
         $post_id = absint($post_id);
         if ($post_id <= 0) {
@@ -736,14 +736,14 @@ if (!function_exists('vms_save_event_plan_lineup_entries')) {
             );
         }
 
-        $lineup_key = vms_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1');
-        $context['legacy_primary_vendor_id'] = absint($context['legacy_primary_vendor_id'] ?? get_post_meta($post_id, vms_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id'), true));
+        $lineup_key = bvmgr_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1');
+        $context['legacy_primary_vendor_id'] = absint($context['legacy_primary_vendor_id'] ?? get_post_meta($post_id, bvmgr_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id'), true));
         $context['event_start'] = (string) ($context['event_start'] ?? get_post_meta($post_id, '_vms_start_time', true));
         $context['event_end'] = (string) ($context['event_end'] ?? get_post_meta($post_id, '_vms_end_time', true));
         $context['venue_id'] = absint($context['venue_id'] ?? get_post_meta($post_id, '_vms_venue_id', true));
         $context['event_date'] = (string) ($context['event_date'] ?? get_post_meta($post_id, '_vms_event_date', true));
 
-        $normalized = vms_normalize_event_plan_lineup_entries($posted_rows, $context);
+        $normalized = bvmgr_normalize_event_plan_lineup_entries($posted_rows, $context);
 
         if (!empty($normalized)) {
             update_post_meta($post_id, $lineup_key, $normalized);
@@ -751,10 +751,10 @@ if (!function_exists('vms_save_event_plan_lineup_entries')) {
             delete_post_meta($post_id, $lineup_key);
         }
 
-        $enriched = vms_lineup_schedule_enrich_entries($normalized, $context);
+        $enriched = bvmgr_lineup_schedule_enrich_entries($normalized, $context);
         $entries = (array) ($enriched['entries'] ?? array());
-        $primary_vendor_id = vms_sync_event_plan_lineup_legacy_primary($post_id, $entries);
-        vms_rebuild_event_plan_lineup_indexes($post_id, $entries);
+        $primary_vendor_id = bvmgr_sync_event_plan_lineup_legacy_primary($post_id, $entries);
+        bvmgr_rebuild_event_plan_lineup_indexes($post_id, $entries);
 
         return array(
             'entries' => $entries,

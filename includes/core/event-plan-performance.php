@@ -1,15 +1,15 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_event_plan_perf_trace_enabled')) {
-	function vms_event_plan_perf_trace_enabled(): bool
+if (!function_exists('bvmgr_event_plan_perf_trace_enabled')) {
+	function bvmgr_event_plan_perf_trace_enabled(): bool
 	{
 		return defined('VMS_EP_PERF_TRACE') && VMS_EP_PERF_TRACE;
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_log_path')) {
-	function vms_event_plan_perf_log_path(): string
+if (!function_exists('bvmgr_event_plan_perf_log_path')) {
+	function bvmgr_event_plan_perf_log_path(): string
 	{
 		$path = defined('WP_CONTENT_DIR')
 			? WP_CONTENT_DIR . '/vms-event-plan-perf-trace.log'
@@ -19,23 +19,23 @@ if (!function_exists('vms_event_plan_perf_log_path')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_request_state')) {
-	function vms_event_plan_perf_request_state(): array
+if (!function_exists('bvmgr_event_plan_perf_request_state')) {
+	function bvmgr_event_plan_perf_request_state(): array
 	{
-		$state = $GLOBALS['vms_event_plan_perf_request_state'] ?? array();
+		$state = $GLOBALS['bvmgr_event_plan_perf_request_state'] ?? array();
 		return is_array($state) ? $state : array();
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_save_request_state')) {
-	function vms_event_plan_perf_save_request_state(array $state): void
+if (!function_exists('bvmgr_event_plan_perf_save_request_state')) {
+	function bvmgr_event_plan_perf_save_request_state(array $state): void
 	{
-		$GLOBALS['vms_event_plan_perf_request_state'] = $state;
+		$GLOBALS['bvmgr_event_plan_perf_request_state'] = $state;
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_request_data')) {
-	function vms_event_plan_perf_request_data(): array
+if (!function_exists('bvmgr_event_plan_perf_request_data')) {
+	function bvmgr_event_plan_perf_request_data(): array
 	{
 		static $request = null;
 		if (is_array($request)) {
@@ -48,8 +48,8 @@ if (!function_exists('vms_event_plan_perf_request_data')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_get_data')) {
-	function vms_event_plan_perf_get_data(): array
+if (!function_exists('bvmgr_event_plan_perf_get_data')) {
+	function bvmgr_event_plan_perf_get_data(): array
 	{
 		static $request = null;
 		if (is_array($request)) {
@@ -62,8 +62,8 @@ if (!function_exists('vms_event_plan_perf_get_data')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_post_data')) {
-	function vms_event_plan_perf_post_data(): array
+if (!function_exists('bvmgr_event_plan_perf_post_data')) {
+	function bvmgr_event_plan_perf_post_data(): array
 	{
 		static $request = null;
 		if (is_array($request)) {
@@ -76,45 +76,45 @@ if (!function_exists('vms_event_plan_perf_post_data')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_get_plan_counter')) {
-	function vms_event_plan_perf_get_plan_counter(string $key, int $plan_id): int
+if (!function_exists('bvmgr_event_plan_perf_get_plan_counter')) {
+	function bvmgr_event_plan_perf_get_plan_counter(string $key, int $plan_id): int
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
 			return 0;
 		}
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		$bucket = is_array($state[$key] ?? null) ? $state[$key] : array();
 		return absint($bucket[$plan_id] ?? 0);
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_increment_plan_counter')) {
-	function vms_event_plan_perf_increment_plan_counter(string $key, int $plan_id): int
+if (!function_exists('bvmgr_event_plan_perf_increment_plan_counter')) {
+	function bvmgr_event_plan_perf_increment_plan_counter(string $key, int $plan_id): int
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
 			return 0;
 		}
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		if (!isset($state[$key]) || !is_array($state[$key])) {
 			$state[$key] = array();
 		}
 
 		$state[$key][$plan_id] = absint($state[$key][$plan_id] ?? 0) + 1;
-		vms_event_plan_perf_save_request_state($state);
+		bvmgr_event_plan_perf_save_request_state($state);
 		return absint($state[$key][$plan_id]);
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_current_plan_id')) {
-	function vms_event_plan_perf_current_plan_id(): int
+if (!function_exists('bvmgr_event_plan_perf_current_plan_id')) {
+	function bvmgr_event_plan_perf_current_plan_id(): int
 	{
-		$request = vms_event_plan_perf_request_data();
-		$get_request = vms_event_plan_perf_get_data();
-		$post_request = vms_event_plan_perf_post_data();
+		$request = bvmgr_event_plan_perf_request_data();
+		$get_request = bvmgr_event_plan_perf_get_data();
+		$post_request = bvmgr_event_plan_perf_post_data();
 		$candidates = array(
 			$request['post'] ?? 0,
 			$request['post_ID'] ?? 0,
@@ -133,40 +133,40 @@ if (!function_exists('vms_event_plan_perf_current_plan_id')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_request_scenario')) {
-	function vms_event_plan_perf_request_scenario(): string
+if (!function_exists('bvmgr_event_plan_perf_request_scenario')) {
+	function bvmgr_event_plan_perf_request_scenario(): string
 	{
-		$request = vms_event_plan_perf_request_data();
+		$request = bvmgr_event_plan_perf_request_data();
 		$scenario = $request['_vms_ep_perf_trace_scenario'] ?? '';
 		return sanitize_key((string) $scenario);
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_baseline_screen')) {
-	function vms_event_plan_perf_baseline_screen(): string
+if (!function_exists('bvmgr_event_plan_perf_baseline_screen')) {
+	function bvmgr_event_plan_perf_baseline_screen(): string
 	{
-		$request = vms_event_plan_perf_request_data();
+		$request = bvmgr_event_plan_perf_request_data();
 		$screen = $request['_vms_ep_perf_baseline_screen'] ?? '';
 		return sanitize_key((string) $screen);
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_actor_user_meta_key')) {
-	function vms_event_plan_perf_actor_user_meta_key(): string
+if (!function_exists('bvmgr_event_plan_perf_actor_user_meta_key')) {
+	function bvmgr_event_plan_perf_actor_user_meta_key(): string
 	{
 		return '_vms_event_plan_actor_user_id';
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_actor_source_meta_key')) {
-	function vms_event_plan_perf_actor_source_meta_key(): string
+if (!function_exists('bvmgr_event_plan_perf_actor_source_meta_key')) {
+	function bvmgr_event_plan_perf_actor_source_meta_key(): string
 	{
 		return '_vms_event_plan_actor_user_source';
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_request_id')) {
-	function vms_event_plan_perf_request_id(): string
+if (!function_exists('bvmgr_event_plan_perf_request_id')) {
+	function bvmgr_event_plan_perf_request_id(): string
 	{
 		static $request_id = '';
 		if ($request_id !== '') {
@@ -176,16 +176,16 @@ if (!function_exists('vms_event_plan_perf_request_id')) {
 		$seed = array(
 			(string) microtime(true),
 			(string) wp_rand(1000, 999999),
-			vms_request_server_value('REQUEST_TIME_FLOAT'),
-			vms_request_current_uri(),
+			bvmgr_request_server_value('REQUEST_TIME_FLOAT'),
+			bvmgr_request_current_uri(),
 		);
 		$request_id = substr(hash('sha256', implode('|', $seed)), 0, 12);
 		return $request_id;
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_user_is_valid')) {
-	function vms_event_plan_perf_user_is_valid(int $user_id): bool
+if (!function_exists('bvmgr_event_plan_perf_user_is_valid')) {
+	function bvmgr_event_plan_perf_user_is_valid(int $user_id): bool
 	{
 		$user_id = absint($user_id);
 		if ($user_id <= 0) {
@@ -196,8 +196,8 @@ if (!function_exists('vms_event_plan_perf_user_is_valid')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_first_admin_user_id')) {
-	function vms_event_plan_perf_first_admin_user_id(): int
+if (!function_exists('bvmgr_event_plan_perf_first_admin_user_id')) {
+	function bvmgr_event_plan_perf_first_admin_user_id(): int
 	{
 		static $cached = null;
 		if ($cached !== null) {
@@ -216,8 +216,8 @@ if (!function_exists('vms_event_plan_perf_first_admin_user_id')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_capture_actor_user_id')) {
-	function vms_event_plan_capture_actor_user_id(int $plan_id, int $actor_user_id = 0, string $source = ''): int
+if (!function_exists('bvmgr_event_plan_capture_actor_user_id')) {
+	function bvmgr_event_plan_capture_actor_user_id(int $plan_id, int $actor_user_id = 0, string $source = ''): int
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0 || get_post_type($plan_id) !== 'vms_event_plan') {
@@ -225,35 +225,35 @@ if (!function_exists('vms_event_plan_capture_actor_user_id')) {
 		}
 
 		$actor_user_id = $actor_user_id > 0 ? absint($actor_user_id) : absint(get_current_user_id());
-		if (!vms_event_plan_perf_user_is_valid($actor_user_id)) {
-			$existing = absint(get_post_meta($plan_id, vms_event_plan_perf_actor_user_meta_key(), true));
-			return vms_event_plan_perf_user_is_valid($existing) ? $existing : 0;
+		if (!bvmgr_event_plan_perf_user_is_valid($actor_user_id)) {
+			$existing = absint(get_post_meta($plan_id, bvmgr_event_plan_perf_actor_user_meta_key(), true));
+			return bvmgr_event_plan_perf_user_is_valid($existing) ? $existing : 0;
 		}
 
-		update_post_meta($plan_id, vms_event_plan_perf_actor_user_meta_key(), $actor_user_id);
+		update_post_meta($plan_id, bvmgr_event_plan_perf_actor_user_meta_key(), $actor_user_id);
 		if ($source !== '') {
-			update_post_meta($plan_id, vms_event_plan_perf_actor_source_meta_key(), sanitize_key($source));
+			update_post_meta($plan_id, bvmgr_event_plan_perf_actor_source_meta_key(), sanitize_key($source));
 		}
 
 		return $actor_user_id;
 	}
 }
 
-if (!function_exists('vms_event_plan_get_captured_actor_user_id')) {
-	function vms_event_plan_get_captured_actor_user_id(int $plan_id): int
+if (!function_exists('bvmgr_event_plan_get_captured_actor_user_id')) {
+	function bvmgr_event_plan_get_captured_actor_user_id(int $plan_id): int
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
 			return 0;
 		}
 
-		$actor_user_id = absint(get_post_meta($plan_id, vms_event_plan_perf_actor_user_meta_key(), true));
-		return vms_event_plan_perf_user_is_valid($actor_user_id) ? $actor_user_id : 0;
+		$actor_user_id = absint(get_post_meta($plan_id, bvmgr_event_plan_perf_actor_user_meta_key(), true));
+		return bvmgr_event_plan_perf_user_is_valid($actor_user_id) ? $actor_user_id : 0;
 	}
 }
 
-if (!function_exists('vms_event_plan_resolve_tec_post_author')) {
-	function vms_event_plan_resolve_tec_post_author(int $plan_id, int $actor_user_id = 0): int
+if (!function_exists('bvmgr_event_plan_resolve_tec_post_author')) {
+	function bvmgr_event_plan_resolve_tec_post_author(int $plan_id, int $actor_user_id = 0): int
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
@@ -261,26 +261,26 @@ if (!function_exists('vms_event_plan_resolve_tec_post_author')) {
 		}
 
 		$plan_author_id = absint(get_post_field('post_author', $plan_id));
-		if (vms_event_plan_perf_user_is_valid($plan_author_id)) {
+		if (bvmgr_event_plan_perf_user_is_valid($plan_author_id)) {
 			return $plan_author_id;
 		}
 
-		$actor_user_id = $actor_user_id > 0 ? absint($actor_user_id) : vms_event_plan_get_captured_actor_user_id($plan_id);
-		if (vms_event_plan_perf_user_is_valid($actor_user_id)) {
+		$actor_user_id = $actor_user_id > 0 ? absint($actor_user_id) : bvmgr_event_plan_get_captured_actor_user_id($plan_id);
+		if (bvmgr_event_plan_perf_user_is_valid($actor_user_id)) {
 			return $actor_user_id;
 		}
 
 		$current_user_id = absint(get_current_user_id());
-		if (vms_event_plan_perf_user_is_valid($current_user_id)) {
+		if (bvmgr_event_plan_perf_user_is_valid($current_user_id)) {
 			return $current_user_id;
 		}
 
-		return vms_event_plan_perf_first_admin_user_id();
+		return bvmgr_event_plan_perf_first_admin_user_id();
 	}
 }
 
-if (!function_exists('vms_event_plan_ticketing_snapshot')) {
-	function vms_event_plan_ticketing_snapshot(int $plan_id): array
+if (!function_exists('bvmgr_event_plan_ticketing_snapshot')) {
+	function bvmgr_event_plan_ticketing_snapshot(int $plan_id): array
 	{
 		static $cache = array();
 
@@ -304,8 +304,8 @@ if (!function_exists('vms_event_plan_ticketing_snapshot')) {
 			return $cache[$plan_id];
 		}
 
-		$cfg = function_exists('vms_ticketing_v2_get_saved_config')
-			? (array) vms_ticketing_v2_get_saved_config($plan_id)
+		$cfg = function_exists('bvmgr_ticketing_v2_get_saved_config')
+			? (array) bvmgr_ticketing_v2_get_saved_config($plan_id)
 			: array();
 		if (!empty($cfg)) {
 			$snapshot['saved_config_present'] = true;
@@ -341,24 +341,24 @@ if (!function_exists('vms_event_plan_ticketing_snapshot')) {
 			}
 		}
 
-		if (!$snapshot['saved_config_present'] && function_exists('vms_ticketing_b_get_mode')) {
-			$snapshot['mode'] = sanitize_key((string) vms_ticketing_b_get_mode($plan_id));
+		if (!$snapshot['saved_config_present'] && function_exists('bvmgr_ticketing_b_get_mode')) {
+			$snapshot['mode'] = sanitize_key((string) bvmgr_ticketing_b_get_mode($plan_id));
 			if ($snapshot['mode'] === '') {
 				$snapshot['mode'] = 'read_only';
 			}
 		}
 
-		$tec_event_id = function_exists('vms_ticketing_b_get_linked_tec_event_id')
-			? absint(vms_ticketing_b_get_linked_tec_event_id($plan_id))
+		$tec_event_id = function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')
+			? absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id))
 			: absint(get_post_meta($plan_id, '_vms_tec_event_id', true));
 
-		if ($tec_event_id > 0 && function_exists('vms_ticketing_b_get_event_ticket_products')) {
-			$product_ids = array_values(array_unique(array_filter(array_map('absint', (array) vms_ticketing_b_get_event_ticket_products($tec_event_id)))));
+		if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_b_get_event_ticket_products')) {
+			$product_ids = array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_ticketing_b_get_event_ticket_products($tec_event_id)))));
 			$snapshot['linked_ticket_product_count'] = count($product_ids);
 		}
 
-		if (function_exists('vms_ticketing_v2_get_sync')) {
-			$sync = (array) vms_ticketing_v2_get_sync($plan_id);
+		if (function_exists('bvmgr_ticketing_v2_get_sync')) {
+			$sync = (array) bvmgr_ticketing_v2_get_sync($plan_id);
 			$entitlements = is_array($sync['map']['entitlements'] ?? null) ? (array) $sync['map']['entitlements'] : array();
 			foreach ($entitlements as $row) {
 				if (!is_array($row)) {
@@ -382,24 +382,24 @@ if (!function_exists('vms_event_plan_ticketing_snapshot')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_has_effective_tickets')) {
-	function vms_event_plan_has_effective_tickets(int $plan_id): bool
+if (!function_exists('bvmgr_event_plan_has_effective_tickets')) {
+	function bvmgr_event_plan_has_effective_tickets(int $plan_id): bool
 	{
-		$snapshot = vms_event_plan_ticketing_snapshot($plan_id);
+		$snapshot = bvmgr_event_plan_ticketing_snapshot($plan_id);
 		return !empty($snapshot['has_effective_tickets']);
 	}
 }
 
-if (!function_exists('vms_event_plan_resolve_public_calendar_url')) {
-	function vms_event_plan_resolve_public_calendar_url(int $plan_id): string
+if (!function_exists('bvmgr_event_plan_resolve_public_calendar_url')) {
+	function bvmgr_event_plan_resolve_public_calendar_url(int $plan_id): string
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0 || get_post_type($plan_id) !== 'vms_event_plan') {
 			return '';
 		}
 
-		$tec_event_id = function_exists('vms_ticketing_b_get_linked_tec_event_id')
-			? absint(vms_ticketing_b_get_linked_tec_event_id($plan_id))
+		$tec_event_id = function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')
+			? absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id))
 			: absint(get_post_meta($plan_id, '_vms_tec_event_id', true));
 		if ($tec_event_id <= 0 || get_post_type($tec_event_id) !== 'tribe_events') {
 			return '';
@@ -415,22 +415,22 @@ if (!function_exists('vms_event_plan_resolve_public_calendar_url')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_public_calendar_is_ready')) {
-	function vms_event_plan_public_calendar_is_ready(int $plan_id): bool
+if (!function_exists('bvmgr_event_plan_public_calendar_is_ready')) {
+	function bvmgr_event_plan_public_calendar_is_ready(int $plan_id): bool
 	{
-		return vms_event_plan_resolve_public_calendar_url($plan_id) !== '';
+		return bvmgr_event_plan_resolve_public_calendar_url($plan_id) !== '';
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_pid')) {
-	function vms_event_plan_perf_pid(): int
+if (!function_exists('bvmgr_event_plan_perf_pid')) {
+	function bvmgr_event_plan_perf_pid(): int
 	{
 		return function_exists('getmypid') ? absint(getmypid()) : 0;
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_request_type')) {
-	function vms_event_plan_perf_request_type(): string
+if (!function_exists('bvmgr_event_plan_perf_request_type')) {
+	function bvmgr_event_plan_perf_request_type(): string
 	{
 		if (defined('WP_CLI') && WP_CLI) {
 			return 'wp_cli';
@@ -452,8 +452,8 @@ if (!function_exists('vms_event_plan_perf_request_type')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_current_screen_context')) {
-	function vms_event_plan_perf_current_screen_context(): array
+if (!function_exists('bvmgr_event_plan_perf_current_screen_context')) {
+	function bvmgr_event_plan_perf_current_screen_context(): array
 	{
 		$screen_id = '';
 		$screen_base = '';
@@ -478,8 +478,8 @@ if (!function_exists('vms_event_plan_perf_current_screen_context')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_extract_plan_id_from_args')) {
-	function vms_event_plan_perf_extract_plan_id_from_args($args): int
+if (!function_exists('bvmgr_event_plan_perf_extract_plan_id_from_args')) {
+	function bvmgr_event_plan_perf_extract_plan_id_from_args($args): int
 	{
 		if (is_scalar($args)) {
 			$candidate = absint($args);
@@ -500,7 +500,7 @@ if (!function_exists('vms_event_plan_perf_extract_plan_id_from_args')) {
 		}
 
 		foreach ($args as $value) {
-			$plan_id = vms_event_plan_perf_extract_plan_id_from_args($value);
+			$plan_id = bvmgr_event_plan_perf_extract_plan_id_from_args($value);
 			if ($plan_id > 0) {
 				return $plan_id;
 			}
@@ -510,18 +510,18 @@ if (!function_exists('vms_event_plan_perf_extract_plan_id_from_args')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_request_context')) {
-	function vms_event_plan_perf_request_context(int $plan_id = 0): array
+if (!function_exists('bvmgr_event_plan_perf_request_context')) {
+	function bvmgr_event_plan_perf_request_context(int $plan_id = 0): array
 	{
 		global $wpdb;
 
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
-			$plan_id = vms_event_plan_perf_current_plan_id();
+			$plan_id = bvmgr_event_plan_perf_current_plan_id();
 		}
 
-		$screen = vms_event_plan_perf_current_screen_context();
-		$request = vms_event_plan_perf_request_data();
+		$screen = bvmgr_event_plan_perf_current_screen_context();
+		$request = bvmgr_event_plan_perf_request_data();
 		$plan_action = isset($request['vms_event_plan_action']) ? sanitize_key((string) $request['vms_event_plan_action']) : '';
 		$wp_action = isset($request['action']) ? sanitize_key((string) $request['action']) : '';
 		$post_status = $plan_id > 0 ? sanitize_key((string) get_post_status($plan_id)) : '';
@@ -531,10 +531,10 @@ if (!function_exists('vms_event_plan_perf_request_context')) {
 		}
 
 		return array(
-			'request_type' => vms_event_plan_perf_request_type(),
-			'request_method' => vms_request_method(''),
-			'request_uri' => vms_request_current_uri(),
-			'trace_scenario' => vms_event_plan_perf_request_scenario(),
+			'request_type' => bvmgr_event_plan_perf_request_type(),
+			'request_method' => bvmgr_request_method(''),
+			'request_uri' => bvmgr_request_current_uri(),
+			'trace_scenario' => bvmgr_event_plan_perf_request_scenario(),
 			'wp_action' => $wp_action,
 			'plan_action' => $plan_action,
 			'is_autosave' => $autosave,
@@ -546,24 +546,24 @@ if (!function_exists('vms_event_plan_perf_request_context')) {
 			'query_count' => isset($wpdb->num_queries) ? absint($wpdb->num_queries) : 0,
 			'peak_memory_bytes' => function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0,
 			'peak_memory_mb' => function_exists('memory_get_peak_usage') ? round((float) memory_get_peak_usage(true) / 1048576, 2) : 0,
-			'save_pass_count' => vms_event_plan_perf_get_plan_counter('save_pass_count', $plan_id),
-			'internal_wp_update_post_count' => vms_event_plan_perf_get_plan_counter('internal_wp_update_post_count', $plan_id),
+			'save_pass_count' => bvmgr_event_plan_perf_get_plan_counter('save_pass_count', $plan_id),
+			'internal_wp_update_post_count' => bvmgr_event_plan_perf_get_plan_counter('internal_wp_update_post_count', $plan_id),
 		) + $screen;
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_log')) {
-	function vms_event_plan_perf_log(string $hook_name, int $plan_id = 0, array $context = array()): void
+if (!function_exists('bvmgr_event_plan_perf_log')) {
+	function bvmgr_event_plan_perf_log(string $hook_name, int $plan_id = 0, array $context = array()): void
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 
 		$plan_id = absint($plan_id);
-		$ticket_snapshot = vms_event_plan_ticketing_snapshot($plan_id);
+		$ticket_snapshot = bvmgr_event_plan_ticketing_snapshot($plan_id);
 		$entry = array(
 			'logged_at_gmt' => gmdate('Y-m-d H:i:s'),
-			'request_id' => vms_event_plan_perf_request_id(),
+			'request_id' => bvmgr_event_plan_perf_request_id(),
 			'hook_name' => substr(sanitize_key($hook_name), 0, 80),
 			'event_plan_id' => $plan_id,
 			'ticket_count' => absint($ticket_snapshot['effective_ticket_count'] ?? 0),
@@ -593,8 +593,8 @@ if (!function_exists('vms_event_plan_perf_log')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_query_count')) {
-	function vms_event_plan_perf_query_count(): int
+if (!function_exists('bvmgr_event_plan_perf_query_count')) {
+	function bvmgr_event_plan_perf_query_count(): int
 	{
 		global $wpdb;
 
@@ -602,34 +602,34 @@ if (!function_exists('vms_event_plan_perf_query_count')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_should_capture_queries')) {
-	function vms_event_plan_perf_should_capture_queries(): bool
+if (!function_exists('bvmgr_event_plan_perf_should_capture_queries')) {
+	function bvmgr_event_plan_perf_should_capture_queries(): bool
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return false;
 		}
 		if (function_exists('is_admin') && !is_admin()) {
 			return false;
 		}
-		if (vms_event_plan_perf_baseline_screen() !== '') {
+		if (bvmgr_event_plan_perf_baseline_screen() !== '') {
 			return true;
 		}
-		if (vms_event_plan_perf_current_plan_id() > 0) {
+		if (bvmgr_event_plan_perf_current_plan_id() > 0) {
 			return true;
 		}
 
-		$request = vms_event_plan_perf_request_data();
+		$request = bvmgr_event_plan_perf_request_data();
 		$post_type = isset($request['post_type']) ? sanitize_key((string) $request['post_type']) : '';
 		return $post_type === 'vms_event_plan';
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_maybe_enable_query_capture')) {
-	function vms_event_plan_perf_maybe_enable_query_capture(): void
+if (!function_exists('bvmgr_event_plan_perf_maybe_enable_query_capture')) {
+	function bvmgr_event_plan_perf_maybe_enable_query_capture(): void
 	{
 		global $wpdb;
 
-		if (!vms_event_plan_perf_should_capture_queries() || !is_object($wpdb)) {
+		if (!bvmgr_event_plan_perf_should_capture_queries() || !is_object($wpdb)) {
 			return;
 		}
 
@@ -645,10 +645,10 @@ if (!function_exists('vms_event_plan_perf_maybe_enable_query_capture')) {
 		}
 	}
 }
-vms_event_plan_perf_maybe_enable_query_capture();
+bvmgr_event_plan_perf_maybe_enable_query_capture();
 
-if (!function_exists('vms_event_plan_perf_query_entries')) {
-	function vms_event_plan_perf_query_entries(): array
+if (!function_exists('bvmgr_event_plan_perf_query_entries')) {
+	function bvmgr_event_plan_perf_query_entries(): array
 	{
 		global $wpdb;
 
@@ -661,8 +661,8 @@ if (!function_exists('vms_event_plan_perf_query_entries')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_sanitize_query_caller')) {
-	function vms_event_plan_perf_sanitize_query_caller(string $caller): string
+if (!function_exists('bvmgr_event_plan_perf_sanitize_query_caller')) {
+	function bvmgr_event_plan_perf_sanitize_query_caller(string $caller): string
 	{
 		$caller = preg_replace('/\s+/', ' ', trim($caller));
 		$caller = is_string($caller) ? $caller : '';
@@ -678,8 +678,8 @@ if (!function_exists('vms_event_plan_perf_sanitize_query_caller')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_classify_query_source')) {
-	function vms_event_plan_perf_classify_query_source(string $caller, string $sql): string
+if (!function_exists('bvmgr_event_plan_perf_classify_query_source')) {
+	function bvmgr_event_plan_perf_classify_query_source(string $caller, string $sql): string
 	{
 		$caller = strtolower($caller);
 		$sql = strtolower($sql);
@@ -730,8 +730,8 @@ if (!function_exists('vms_event_plan_perf_classify_query_source')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_normalize_query_pattern')) {
-	function vms_event_plan_perf_normalize_query_pattern(string $sql): string
+if (!function_exists('bvmgr_event_plan_perf_normalize_query_pattern')) {
+	function bvmgr_event_plan_perf_normalize_query_pattern(string $sql): string
 	{
 		$sql = preg_replace('/\/\*.*?\*\//s', ' ', $sql);
 		$sql = preg_replace('/--[^\r\n]*/', ' ', $sql);
@@ -751,8 +751,8 @@ if (!function_exists('vms_event_plan_perf_normalize_query_pattern')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_query_descriptor')) {
-	function vms_event_plan_perf_query_descriptor(string $sql): array
+if (!function_exists('bvmgr_event_plan_perf_query_descriptor')) {
+	function bvmgr_event_plan_perf_query_descriptor(string $sql): array
 	{
 		$table = '';
 		if (preg_match('/\b(?:FROM|UPDATE|INTO|JOIN)\s+`?([a-z0-9_]+)`?/i', $sql, $matches)) {
@@ -795,10 +795,10 @@ if (!function_exists('vms_event_plan_perf_query_descriptor')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_emit_query_fingerprints')) {
-	function vms_event_plan_perf_emit_query_fingerprints(int $plan_id, string $phase, array $query_entries, array $context = array(), int $limit = 8): void
+if (!function_exists('bvmgr_event_plan_perf_emit_query_fingerprints')) {
+	function bvmgr_event_plan_perf_emit_query_fingerprints(int $plan_id, string $phase, array $query_entries, array $context = array(), int $limit = 8): void
 	{
-		if (!vms_event_plan_perf_trace_enabled() || empty($query_entries)) {
+		if (!bvmgr_event_plan_perf_trace_enabled() || empty($query_entries)) {
 			return;
 		}
 
@@ -810,14 +810,14 @@ if (!function_exists('vms_event_plan_perf_emit_query_fingerprints')) {
 
 			$sql = (string) ($query_entry[0] ?? '');
 			$elapsed_seconds = (float) ($query_entry[1] ?? 0.0);
-			$caller = vms_event_plan_perf_sanitize_query_caller((string) ($query_entry[2] ?? ''));
+			$caller = bvmgr_event_plan_perf_sanitize_query_caller((string) ($query_entry[2] ?? ''));
 			if ($sql === '') {
 				continue;
 			}
 
-			$pattern = vms_event_plan_perf_normalize_query_pattern($sql);
-			$source = vms_event_plan_perf_classify_query_source($caller, $sql);
-			$descriptor = vms_event_plan_perf_query_descriptor($sql);
+			$pattern = bvmgr_event_plan_perf_normalize_query_pattern($sql);
+			$source = bvmgr_event_plan_perf_classify_query_source($caller, $sql);
+			$descriptor = bvmgr_event_plan_perf_query_descriptor($sql);
 			$bucket_key = md5($source . '|' . $pattern);
 
 			if (!isset($fingerprints[$bucket_key])) {
@@ -865,7 +865,7 @@ if (!function_exists('vms_event_plan_perf_emit_query_fingerprints')) {
 			}
 
 			$unique_object_count = count((array) ($fingerprint['object_ids'] ?? array()));
-			vms_event_plan_perf_log('event_plan_query_fingerprint', $plan_id, $context + array(
+			bvmgr_event_plan_perf_log('event_plan_query_fingerprint', $plan_id, $context + array(
 				'phase' => $phase,
 				'fingerprint_rank' => $rank,
 				'source' => sanitize_key((string) ($fingerprint['source'] ?? 'unknown')),
@@ -883,14 +883,14 @@ if (!function_exists('vms_event_plan_perf_emit_query_fingerprints')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_query_checkpoint')) {
-	function vms_event_plan_perf_query_checkpoint(int $plan_id, string $phase, array $context = array(), string $group = 'admin_boot', bool $emit_fingerprints = true): void
+if (!function_exists('bvmgr_event_plan_perf_query_checkpoint')) {
+	function bvmgr_event_plan_perf_query_checkpoint(int $plan_id, string $phase, array $context = array(), string $group = 'admin_boot', bool $emit_fingerprints = true): void
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 
-		vms_event_plan_perf_maybe_enable_query_capture();
+		bvmgr_event_plan_perf_maybe_enable_query_capture();
 
 		$plan_id = absint($plan_id);
 		$phase = sanitize_key($phase);
@@ -902,11 +902,11 @@ if (!function_exists('vms_event_plan_perf_query_checkpoint')) {
 			$group = 'default';
 		}
 
-		$query_entries = vms_event_plan_perf_query_entries();
+		$query_entries = bvmgr_event_plan_perf_query_entries();
 		$query_index = count($query_entries);
-		$query_count = vms_event_plan_perf_query_count();
+		$query_count = bvmgr_event_plan_perf_query_count();
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		if (!isset($state['query_checkpoints']) || !is_array($state['query_checkpoints'])) {
 			$state['query_checkpoints'] = array();
 		}
@@ -943,10 +943,10 @@ if (!function_exists('vms_event_plan_perf_query_checkpoint')) {
 		$context['previous_phase'] = $previous_phase !== '' ? $previous_phase : 'none';
 		$context['query_trace_enabled'] = !empty($query_entries) ? 1 : 0;
 
-		vms_event_plan_perf_log('event_plan_admin_boot_hook', $plan_id, $context);
+		bvmgr_event_plan_perf_log('event_plan_admin_boot_hook', $plan_id, $context);
 
 		if ($emit_fingerprints && !empty($delta_entries)) {
-			vms_event_plan_perf_emit_query_fingerprints($plan_id, $phase, $delta_entries, $context);
+			bvmgr_event_plan_perf_emit_query_fingerprints($plan_id, $phase, $delta_entries, $context);
 		}
 
 		$state['query_checkpoints'][$checkpoint_key] = array(
@@ -954,12 +954,12 @@ if (!function_exists('vms_event_plan_perf_query_checkpoint')) {
 			'query_index' => $query_index,
 			'query_count' => $query_count,
 		);
-		vms_event_plan_perf_save_request_state($state);
+		bvmgr_event_plan_perf_save_request_state($state);
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_dependency_snapshot')) {
-	function vms_event_plan_perf_dependency_snapshot(): array
+if (!function_exists('bvmgr_event_plan_perf_dependency_snapshot')) {
+	function bvmgr_event_plan_perf_dependency_snapshot(): array
 	{
 		$included_files = function_exists('get_included_files') ? (array) get_included_files() : array();
 		$included_file_count = count($included_files);
@@ -1019,18 +1019,18 @@ if (!function_exists('vms_event_plan_perf_dependency_snapshot')) {
 			'woo_loaded' => class_exists('WooCommerce', false) ? 1 : 0,
 			'woo_order_loaded' => class_exists('WC_Order', false) ? 1 : 0,
 			'tec_loaded' => (class_exists('Tribe__Events__Main', false) || function_exists('tribe_get_events')) ? 1 : 0,
-			'ticketing_helper_loaded' => function_exists('vms_ticketing_v2_get_saved_config') ? 1 : 0,
-			'vendor_availability_helper_loaded' => function_exists('vms_get_vendor_availability_for_date') ? 1 : 0,
-			'integrity_helper_loaded' => function_exists('vms_event_plan_clear_integrity_flags') ? 1 : 0,
-			'comp_default_helper_loaded' => function_exists('vms_get_event_plan_effective_comp_default') ? 1 : 0,
+			'ticketing_helper_loaded' => function_exists('bvmgr_ticketing_v2_get_saved_config') ? 1 : 0,
+			'vendor_availability_helper_loaded' => function_exists('bvmgr_get_vendor_availability_for_date') ? 1 : 0,
+			'integrity_helper_loaded' => function_exists('bvmgr_event_plan_clear_integrity_flags') ? 1 : 0,
+			'comp_default_helper_loaded' => function_exists('bvmgr_get_event_plan_effective_comp_default') ? 1 : 0,
 		);
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_memory_checkpoint')) {
-	function vms_event_plan_perf_memory_checkpoint(int $plan_id, string $phase, array $context = array(), string $group = 'default'): void
+if (!function_exists('bvmgr_event_plan_perf_memory_checkpoint')) {
+	function bvmgr_event_plan_perf_memory_checkpoint(int $plan_id, string $phase, array $context = array(), string $group = 'default'): void
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 
@@ -1046,9 +1046,9 @@ if (!function_exists('vms_event_plan_perf_memory_checkpoint')) {
 
 		$memory_usage_bytes = function_exists('memory_get_usage') ? (int) memory_get_usage(true) : 0;
 		$peak_memory_bytes = function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0;
-		$query_count = vms_event_plan_perf_query_count();
+		$query_count = bvmgr_event_plan_perf_query_count();
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		if (!isset($state['memory_checkpoints']) || !is_array($state['memory_checkpoints'])) {
 			$state['memory_checkpoints'] = array();
 		}
@@ -1080,10 +1080,10 @@ if (!function_exists('vms_event_plan_perf_memory_checkpoint')) {
 		$capture_dependency_snapshot = !empty($context['capture_dependency_snapshot']);
 		unset($context['capture_dependency_snapshot']);
 		if ($capture_dependency_snapshot) {
-			$context += vms_event_plan_perf_dependency_snapshot();
+			$context += bvmgr_event_plan_perf_dependency_snapshot();
 		}
 
-		vms_event_plan_perf_log('event_plan_memory_checkpoint', $plan_id, $context);
+		bvmgr_event_plan_perf_log('event_plan_memory_checkpoint', $plan_id, $context);
 
 		$state['memory_checkpoints'][$checkpoint_key] = array(
 			'phase' => $phase,
@@ -1091,47 +1091,47 @@ if (!function_exists('vms_event_plan_perf_memory_checkpoint')) {
 			'peak_memory_bytes' => $peak_memory_bytes,
 			'query_count' => $query_count,
 		);
-		vms_event_plan_perf_save_request_state($state);
+		bvmgr_event_plan_perf_save_request_state($state);
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_span_start')) {
-	function vms_event_plan_perf_span_start(string $hook_name, int $plan_id = 0, array $context = array()): string
+if (!function_exists('bvmgr_event_plan_perf_span_start')) {
+	function bvmgr_event_plan_perf_span_start(string $hook_name, int $plan_id = 0, array $context = array()): string
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return '';
 		}
 
 		$token = sanitize_key(str_replace(array('.', ':'), '_', $hook_name)) . '_' . wp_generate_password(12, false, false);
-		if (!isset($GLOBALS['vms_event_plan_perf_spans']) || !is_array($GLOBALS['vms_event_plan_perf_spans'])) {
-			$GLOBALS['vms_event_plan_perf_spans'] = array();
+		if (!isset($GLOBALS['bvmgr_event_plan_perf_spans']) || !is_array($GLOBALS['bvmgr_event_plan_perf_spans'])) {
+			$GLOBALS['bvmgr_event_plan_perf_spans'] = array();
 		}
 
-		$GLOBALS['vms_event_plan_perf_spans'][$token] = array(
+		$GLOBALS['bvmgr_event_plan_perf_spans'][$token] = array(
 			'started_at' => microtime(true),
-			'query_count_start' => vms_event_plan_perf_query_count(),
+			'query_count_start' => bvmgr_event_plan_perf_query_count(),
 			'memory_usage_start_bytes' => function_exists('memory_get_usage') ? (int) memory_get_usage(true) : 0,
 			'peak_memory_start_bytes' => function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0,
 		);
 		$context['phase'] = 'start';
-		vms_event_plan_perf_log($hook_name, $plan_id, $context);
+		bvmgr_event_plan_perf_log($hook_name, $plan_id, $context);
 		return $token;
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_span_finish')) {
-	function vms_event_plan_perf_span_finish(string $hook_name, int $plan_id, string $token, array $context = array()): void
+if (!function_exists('bvmgr_event_plan_perf_span_finish')) {
+	function bvmgr_event_plan_perf_span_finish(string $hook_name, int $plan_id, string $token, array $context = array()): void
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 
 		$started_at = microtime(true);
-		$query_count_start = vms_event_plan_perf_query_count();
+		$query_count_start = bvmgr_event_plan_perf_query_count();
 		$memory_usage_start_bytes = function_exists('memory_get_usage') ? (int) memory_get_usage(true) : 0;
 		$peak_memory_start_bytes = function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0;
-		if (isset($GLOBALS['vms_event_plan_perf_spans'][$token])) {
-			$span_state = $GLOBALS['vms_event_plan_perf_spans'][$token];
+		if (isset($GLOBALS['bvmgr_event_plan_perf_spans'][$token])) {
+			$span_state = $GLOBALS['bvmgr_event_plan_perf_spans'][$token];
 			if (is_array($span_state)) {
 				$started_at = (float) ($span_state['started_at'] ?? $started_at);
 				$query_count_start = absint($span_state['query_count_start'] ?? $query_count_start);
@@ -1140,10 +1140,10 @@ if (!function_exists('vms_event_plan_perf_span_finish')) {
 			} else {
 				$started_at = (float) $span_state;
 			}
-			unset($GLOBALS['vms_event_plan_perf_spans'][$token]);
+			unset($GLOBALS['bvmgr_event_plan_perf_spans'][$token]);
 		}
 
-		$query_count_end = vms_event_plan_perf_query_count();
+		$query_count_end = bvmgr_event_plan_perf_query_count();
 		$memory_usage_end_bytes = function_exists('memory_get_usage') ? (int) memory_get_usage(true) : 0;
 		$peak_memory_end_bytes = function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0;
 		$context['phase'] = 'end';
@@ -1155,12 +1155,12 @@ if (!function_exists('vms_event_plan_perf_span_finish')) {
 		$context['memory_usage_delta_mb'] = round(max(0, $memory_usage_end_bytes - $memory_usage_start_bytes) / 1048576, 2);
 		$context['peak_memory_delta_bytes'] = max(0, $peak_memory_end_bytes - $peak_memory_start_bytes);
 		$context['peak_memory_delta_mb'] = round(max(0, $peak_memory_end_bytes - $peak_memory_start_bytes) / 1048576, 2);
-		vms_event_plan_perf_log($hook_name, $plan_id, $context);
+		bvmgr_event_plan_perf_log($hook_name, $plan_id, $context);
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_post_update_changed_fields')) {
-	function vms_event_plan_perf_post_update_changed_fields(int $post_id, array $postarr): array
+if (!function_exists('bvmgr_event_plan_perf_post_update_changed_fields')) {
+	function bvmgr_event_plan_perf_post_update_changed_fields(int $post_id, array $postarr): array
 	{
 		$post_id = absint($post_id);
 		if ($post_id <= 0) {
@@ -1201,8 +1201,8 @@ if (!function_exists('vms_event_plan_perf_post_update_changed_fields')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_wp_update_post')) {
-	function vms_event_plan_perf_wp_update_post(array $postarr, string $reason = '', int $plan_id = 0)
+if (!function_exists('bvmgr_event_plan_perf_wp_update_post')) {
+	function bvmgr_event_plan_perf_wp_update_post(array $postarr, string $reason = '', int $plan_id = 0)
 	{
 		$target_post_id = absint($postarr['ID'] ?? 0);
 		$plan_id = absint($plan_id);
@@ -1210,7 +1210,7 @@ if (!function_exists('vms_event_plan_perf_wp_update_post')) {
 			$plan_id = $target_post_id;
 		}
 
-		if (!vms_event_plan_perf_trace_enabled() || $plan_id <= 0) {
+		if (!bvmgr_event_plan_perf_trace_enabled() || $plan_id <= 0) {
 			return wp_update_post($postarr);
 		}
 
@@ -1218,7 +1218,7 @@ if (!function_exists('vms_event_plan_perf_wp_update_post')) {
 		$fields = array_values(array_filter(array_map('sanitize_key', array_keys($postarr)), static function ($field) {
 			return $field !== 'id' && $field !== '';
 		}));
-		$trace = vms_event_plan_perf_span_start(
+		$trace = bvmgr_event_plan_perf_span_start(
 			'vms_internal_wp_update_post',
 			$plan_id,
 			array(
@@ -1226,14 +1226,14 @@ if (!function_exists('vms_event_plan_perf_wp_update_post')) {
 				'target_post_id' => $target_post_id,
 				'target_post_type' => $target_post_type,
 				'fields' => $fields,
-				'internal_wp_update_post_count' => vms_event_plan_perf_increment_plan_counter('internal_wp_update_post_count', $plan_id),
+				'internal_wp_update_post_count' => bvmgr_event_plan_perf_increment_plan_counter('internal_wp_update_post_count', $plan_id),
 			)
 		);
 
 		try {
 			return wp_update_post($postarr);
 		} finally {
-			vms_event_plan_perf_span_finish(
+			bvmgr_event_plan_perf_span_finish(
 				'vms_internal_wp_update_post',
 				$plan_id,
 				$trace,
@@ -1248,37 +1248,37 @@ if (!function_exists('vms_event_plan_perf_wp_update_post')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_track_save_pass')) {
-	function vms_event_plan_perf_track_save_pass(int $post_id, WP_Post $post, bool $update): void
+if (!function_exists('bvmgr_event_plan_perf_track_save_pass')) {
+	function bvmgr_event_plan_perf_track_save_pass(int $post_id, WP_Post $post, bool $update): void
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 		if ($post->post_type !== 'vms_event_plan' || wp_is_post_revision($post_id) || (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)) {
 			return;
 		}
 
-		$pass = vms_event_plan_perf_increment_plan_counter('save_pass_count', $post_id);
-		vms_event_plan_perf_log(
+		$pass = bvmgr_event_plan_perf_increment_plan_counter('save_pass_count', $post_id);
+		bvmgr_event_plan_perf_log(
 			'save_post_vms_event_plan_pass',
 			$post_id,
 			array(
 				'phase' => 'pass',
 				'save_pass' => $pass,
 				'update' => $update ? 1 : 0,
-				'post_status_before' => isset(vms_event_plan_perf_post_data()['original_post_status']) ? sanitize_key((string) vms_event_plan_perf_post_data()['original_post_status']) : '',
+				'post_status_before' => isset(bvmgr_event_plan_perf_post_data()['original_post_status']) ? sanitize_key((string) bvmgr_event_plan_perf_post_data()['original_post_status']) : '',
 				'post_status_after' => sanitize_key((string) $post->post_status),
 			)
 		);
 	}
 }
-add_action('save_post_vms_event_plan', 'vms_event_plan_perf_track_save_pass', 0, 3);
+add_action('save_post_vms_event_plan', 'bvmgr_event_plan_perf_track_save_pass', 0, 3);
 
-if (!function_exists('vms_event_plan_perf_detect_admin_request')) {
-	function vms_event_plan_perf_detect_admin_request(): array
+if (!function_exists('bvmgr_event_plan_perf_detect_admin_request')) {
+	function bvmgr_event_plan_perf_detect_admin_request(): array
 	{
-		$plan_id = vms_event_plan_perf_current_plan_id();
-		$request = vms_event_plan_perf_request_data();
+		$plan_id = bvmgr_event_plan_perf_current_plan_id();
+		$request = bvmgr_event_plan_perf_request_data();
 		$post_type = isset($request['post_type']) ? sanitize_key((string) $request['post_type']) : '';
 		if ($post_type === '' && $plan_id > 0) {
 			$post_type = sanitize_key((string) get_post_type($plan_id));
@@ -1292,25 +1292,25 @@ if (!function_exists('vms_event_plan_perf_detect_admin_request')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_start_admin_screen_baseline')) {
-	function vms_event_plan_perf_start_admin_screen_baseline(): void
+if (!function_exists('bvmgr_event_plan_perf_start_admin_screen_baseline')) {
+	function bvmgr_event_plan_perf_start_admin_screen_baseline(): void
 	{
-		if (!vms_event_plan_perf_trace_enabled() || !is_admin()) {
+		if (!bvmgr_event_plan_perf_trace_enabled() || !is_admin()) {
 			return;
 		}
 
-		$baseline_screen = vms_event_plan_perf_baseline_screen();
+		$baseline_screen = bvmgr_event_plan_perf_baseline_screen();
 		if ($baseline_screen === '') {
 			return;
 		}
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		if (!empty($state['admin_screen_baseline'])) {
 			return;
 		}
 
-		$plan_id = vms_event_plan_perf_current_plan_id();
-		$token = vms_event_plan_perf_span_start(
+		$plan_id = bvmgr_event_plan_perf_current_plan_id();
+		$token = bvmgr_event_plan_perf_span_start(
 			'event_plan_memory_baseline',
 			$plan_id,
 			array(
@@ -1319,7 +1319,7 @@ if (!function_exists('vms_event_plan_perf_start_admin_screen_baseline')) {
 			)
 		);
 
-		vms_event_plan_perf_memory_checkpoint(
+		bvmgr_event_plan_perf_memory_checkpoint(
 			$plan_id,
 			'baseline_start',
 			array(
@@ -1335,19 +1335,19 @@ if (!function_exists('vms_event_plan_perf_start_admin_screen_baseline')) {
 			'plan_id' => $plan_id,
 			'screen' => $baseline_screen,
 		);
-		vms_event_plan_perf_save_request_state($state);
+		bvmgr_event_plan_perf_save_request_state($state);
 	}
 }
-add_action('current_screen', 'vms_event_plan_perf_start_admin_screen_baseline', 1);
+add_action('current_screen', 'bvmgr_event_plan_perf_start_admin_screen_baseline', 1);
 
-if (!function_exists('vms_event_plan_perf_finish_admin_screen_baseline')) {
-	function vms_event_plan_perf_finish_admin_screen_baseline(): void
+if (!function_exists('bvmgr_event_plan_perf_finish_admin_screen_baseline')) {
+	function bvmgr_event_plan_perf_finish_admin_screen_baseline(): void
 	{
-		if (!vms_event_plan_perf_trace_enabled() || !is_admin()) {
+		if (!bvmgr_event_plan_perf_trace_enabled() || !is_admin()) {
 			return;
 		}
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		$baseline = is_array($state['admin_screen_baseline'] ?? null) ? $state['admin_screen_baseline'] : array();
 		$token = sanitize_text_field((string) ($baseline['token'] ?? ''));
 		$screen = sanitize_key((string) ($baseline['screen'] ?? ''));
@@ -1356,7 +1356,7 @@ if (!function_exists('vms_event_plan_perf_finish_admin_screen_baseline')) {
 		}
 
 		$plan_id = absint($baseline['plan_id'] ?? 0);
-		vms_event_plan_perf_span_finish(
+		bvmgr_event_plan_perf_span_finish(
 			'event_plan_memory_baseline',
 			$plan_id,
 			$token,
@@ -1366,7 +1366,7 @@ if (!function_exists('vms_event_plan_perf_finish_admin_screen_baseline')) {
 			)
 		);
 
-		vms_event_plan_perf_memory_checkpoint(
+		bvmgr_event_plan_perf_memory_checkpoint(
 			$plan_id,
 			'baseline_end',
 			array(
@@ -1379,7 +1379,7 @@ if (!function_exists('vms_event_plan_perf_finish_admin_screen_baseline')) {
 
 		$memory_usage_bytes = function_exists('memory_get_usage') ? (int) memory_get_usage(true) : 0;
 		$peak_memory_bytes = function_exists('memory_get_peak_usage') ? (int) memory_get_peak_usage(true) : 0;
-		vms_event_plan_perf_log(
+		bvmgr_event_plan_perf_log(
 			'event_plan_memory_baseline',
 			$plan_id,
 			array(
@@ -1390,29 +1390,29 @@ if (!function_exists('vms_event_plan_perf_finish_admin_screen_baseline')) {
 				'memory_usage_mb' => round((float) $memory_usage_bytes / 1048576, 2),
 				'peak_memory_bytes' => $peak_memory_bytes,
 				'peak_memory_mb' => round((float) $peak_memory_bytes / 1048576, 2),
-				'query_count_total' => vms_event_plan_perf_query_count(),
-			) + vms_event_plan_perf_dependency_snapshot()
+				'query_count_total' => bvmgr_event_plan_perf_query_count(),
+			) + bvmgr_event_plan_perf_dependency_snapshot()
 		);
 
 		unset($state['admin_screen_baseline']);
-		vms_event_plan_perf_save_request_state($state);
+		bvmgr_event_plan_perf_save_request_state($state);
 	}
 }
-add_action('shutdown', 'vms_event_plan_perf_finish_admin_screen_baseline', 999);
+add_action('shutdown', 'bvmgr_event_plan_perf_finish_admin_screen_baseline', 999);
 
-if (!function_exists('vms_event_plan_perf_start_admin_screen_boot')) {
-	function vms_event_plan_perf_start_admin_screen_boot(): void
+if (!function_exists('bvmgr_event_plan_perf_start_admin_screen_boot')) {
+	function bvmgr_event_plan_perf_start_admin_screen_boot(): void
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 
-		$context = vms_event_plan_perf_detect_admin_request();
+		$context = bvmgr_event_plan_perf_detect_admin_request();
 		if (($context['post_type'] ?? '') !== 'vms_event_plan') {
 			return;
 		}
 
-		$token = vms_event_plan_perf_span_start(
+		$token = bvmgr_event_plan_perf_span_start(
 			'event_plan_admin_screen_boot',
 			(int) ($context['plan_id'] ?? 0),
 			array(
@@ -1421,7 +1421,7 @@ if (!function_exists('vms_event_plan_perf_start_admin_screen_boot')) {
 			)
 		);
 
-		vms_event_plan_perf_memory_checkpoint(
+		bvmgr_event_plan_perf_memory_checkpoint(
 			(int) ($context['plan_id'] ?? 0),
 			'admin_boot_start',
 			array(
@@ -1431,15 +1431,15 @@ if (!function_exists('vms_event_plan_perf_start_admin_screen_boot')) {
 			'admin_boot'
 		);
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		$state['admin_screen_boot'] = array(
 			'token' => $token,
 			'plan_id' => absint($context['plan_id'] ?? 0),
 			'screen_action' => sanitize_key((string) ($context['screen_action'] ?? '')),
 		);
-		vms_event_plan_perf_save_request_state($state);
+		bvmgr_event_plan_perf_save_request_state($state);
 
-		vms_event_plan_perf_query_checkpoint(
+		bvmgr_event_plan_perf_query_checkpoint(
 			(int) ($context['plan_id'] ?? 0),
 			'load_post',
 			array(
@@ -1451,24 +1451,24 @@ if (!function_exists('vms_event_plan_perf_start_admin_screen_boot')) {
 		);
 	}
 }
-add_action('load-post.php', 'vms_event_plan_perf_start_admin_screen_boot', 1);
-add_action('load-post-new.php', 'vms_event_plan_perf_start_admin_screen_boot', 1);
+add_action('load-post.php', 'bvmgr_event_plan_perf_start_admin_screen_boot', 1);
+add_action('load-post-new.php', 'bvmgr_event_plan_perf_start_admin_screen_boot', 1);
 
-if (!function_exists('vms_event_plan_perf_track_admin_boot_phase')) {
-	function vms_event_plan_perf_track_admin_boot_phase(string $phase, array $context = array()): void
+if (!function_exists('bvmgr_event_plan_perf_track_admin_boot_phase')) {
+	function bvmgr_event_plan_perf_track_admin_boot_phase(string $phase, array $context = array()): void
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		$boot = is_array($state['admin_screen_boot'] ?? null) ? $state['admin_screen_boot'] : array();
 		$plan_id = absint($boot['plan_id'] ?? 0);
-		if ($plan_id <= 0 && (vms_event_plan_perf_detect_admin_request()['post_type'] ?? '') !== 'vms_event_plan') {
+		if ($plan_id <= 0 && (bvmgr_event_plan_perf_detect_admin_request()['post_type'] ?? '') !== 'vms_event_plan') {
 			return;
 		}
 
-		vms_event_plan_perf_query_checkpoint(
+		bvmgr_event_plan_perf_query_checkpoint(
 			$plan_id,
 			$phase,
 			$context + array(
@@ -1479,8 +1479,8 @@ if (!function_exists('vms_event_plan_perf_track_admin_boot_phase')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_track_current_screen_phase')) {
-	function vms_event_plan_perf_track_current_screen_phase($screen): void
+if (!function_exists('bvmgr_event_plan_perf_track_current_screen_phase')) {
+	function bvmgr_event_plan_perf_track_current_screen_phase($screen): void
 	{
 		$screen_id = '';
 		$screen_base = '';
@@ -1495,7 +1495,7 @@ if (!function_exists('vms_event_plan_perf_track_current_screen_phase')) {
 			return;
 		}
 
-		vms_event_plan_perf_track_admin_boot_phase('current_screen', array(
+		bvmgr_event_plan_perf_track_admin_boot_phase('current_screen', array(
 			'section' => 'admin_screen_boot',
 			'screen_id' => $screen_id,
 			'screen_base' => $screen_base,
@@ -1503,73 +1503,73 @@ if (!function_exists('vms_event_plan_perf_track_current_screen_phase')) {
 		));
 	}
 }
-add_action('current_screen', 'vms_event_plan_perf_track_current_screen_phase', 999);
+add_action('current_screen', 'bvmgr_event_plan_perf_track_current_screen_phase', 999);
 
-if (!function_exists('vms_event_plan_perf_track_admin_enqueue_phase')) {
-	function vms_event_plan_perf_track_admin_enqueue_phase($hook_suffix = ''): void
+if (!function_exists('bvmgr_event_plan_perf_track_admin_enqueue_phase')) {
+	function bvmgr_event_plan_perf_track_admin_enqueue_phase($hook_suffix = ''): void
 	{
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 		if (!$screen instanceof WP_Screen || sanitize_key((string) $screen->post_type) !== 'vms_event_plan') {
 			return;
 		}
 
-		vms_event_plan_perf_track_admin_boot_phase('admin_enqueue', array(
+		bvmgr_event_plan_perf_track_admin_boot_phase('admin_enqueue', array(
 			'section' => 'admin_screen_boot',
 			'hook_suffix' => sanitize_key((string) $hook_suffix),
 			'screen_id' => sanitize_key((string) $screen->id),
 		));
 	}
 }
-add_action('admin_enqueue_scripts', 'vms_event_plan_perf_track_admin_enqueue_phase', 999);
+add_action('admin_enqueue_scripts', 'bvmgr_event_plan_perf_track_admin_enqueue_phase', 999);
 
-if (!function_exists('vms_event_plan_perf_track_metabox_phase')) {
-	function vms_event_plan_perf_track_metabox_phase($post): void
+if (!function_exists('bvmgr_event_plan_perf_track_metabox_phase')) {
+	function bvmgr_event_plan_perf_track_metabox_phase($post): void
 	{
 		$post = $post instanceof WP_Post ? $post : get_post($post);
 		if (!$post instanceof WP_Post || $post->post_type !== 'vms_event_plan') {
 			return;
 		}
 
-		vms_event_plan_perf_track_admin_boot_phase('metabox_registration', array(
+		bvmgr_event_plan_perf_track_admin_boot_phase('metabox_registration', array(
 			'section' => 'admin_screen_boot',
 			'post_id' => (int) $post->ID,
 		));
 	}
 }
-add_action('add_meta_boxes_vms_event_plan', 'vms_event_plan_perf_track_metabox_phase', 999);
+add_action('add_meta_boxes_vms_event_plan', 'bvmgr_event_plan_perf_track_metabox_phase', 999);
 
-if (!function_exists('vms_event_plan_perf_track_admin_head_phase')) {
-	function vms_event_plan_perf_track_admin_head_phase(): void
+if (!function_exists('bvmgr_event_plan_perf_track_admin_head_phase')) {
+	function bvmgr_event_plan_perf_track_admin_head_phase(): void
 	{
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 		if (!$screen instanceof WP_Screen || sanitize_key((string) $screen->post_type) !== 'vms_event_plan') {
 			return;
 		}
 
-		vms_event_plan_perf_track_admin_boot_phase('admin_head', array(
+		bvmgr_event_plan_perf_track_admin_boot_phase('admin_head', array(
 			'section' => 'admin_screen_boot',
 			'screen_id' => sanitize_key((string) $screen->id),
 		));
 	}
 }
-add_action('admin_head-post.php', 'vms_event_plan_perf_track_admin_head_phase', 999);
-add_action('admin_head-post-new.php', 'vms_event_plan_perf_track_admin_head_phase', 999);
+add_action('admin_head-post.php', 'bvmgr_event_plan_perf_track_admin_head_phase', 999);
+add_action('admin_head-post-new.php', 'bvmgr_event_plan_perf_track_admin_head_phase', 999);
 
-if (!function_exists('vms_event_plan_perf_finish_admin_screen_boot')) {
-	function vms_event_plan_perf_finish_admin_screen_boot(): void
+if (!function_exists('bvmgr_event_plan_perf_finish_admin_screen_boot')) {
+	function bvmgr_event_plan_perf_finish_admin_screen_boot(): void
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 
-		$state = vms_event_plan_perf_request_state();
+		$state = bvmgr_event_plan_perf_request_state();
 		$boot = is_array($state['admin_screen_boot'] ?? null) ? $state['admin_screen_boot'] : array();
 		$token = sanitize_text_field((string) ($boot['token'] ?? ''));
 		if ($token === '') {
 			return;
 		}
 
-		vms_event_plan_perf_span_finish(
+		bvmgr_event_plan_perf_span_finish(
 			'event_plan_admin_screen_boot',
 			absint($boot['plan_id'] ?? 0),
 			$token,
@@ -1579,7 +1579,7 @@ if (!function_exists('vms_event_plan_perf_finish_admin_screen_boot')) {
 			)
 		);
 
-		vms_event_plan_perf_memory_checkpoint(
+		bvmgr_event_plan_perf_memory_checkpoint(
 			absint($boot['plan_id'] ?? 0),
 			'admin_boot_end',
 			array(
@@ -1590,28 +1590,28 @@ if (!function_exists('vms_event_plan_perf_finish_admin_screen_boot')) {
 		);
 
 		unset($state['admin_screen_boot']);
-		vms_event_plan_perf_save_request_state($state);
+		bvmgr_event_plan_perf_save_request_state($state);
 	}
 }
-add_action('admin_footer-post.php', 'vms_event_plan_perf_finish_admin_screen_boot', 999);
-add_action('admin_footer-post-new.php', 'vms_event_plan_perf_finish_admin_screen_boot', 999);
+add_action('admin_footer-post.php', 'bvmgr_event_plan_perf_finish_admin_screen_boot', 999);
+add_action('admin_footer-post-new.php', 'bvmgr_event_plan_perf_finish_admin_screen_boot', 999);
 
-if (!function_exists('vms_event_plan_perf_track_scheduled_event')) {
-	function vms_event_plan_perf_track_scheduled_event($event)
+if (!function_exists('bvmgr_event_plan_perf_track_scheduled_event')) {
+	function bvmgr_event_plan_perf_track_scheduled_event($event)
 	{
-		if (!vms_event_plan_perf_trace_enabled() || !is_object($event)) {
+		if (!bvmgr_event_plan_perf_trace_enabled() || !is_object($event)) {
 			return $event;
 		}
 
-		$plan_id = vms_event_plan_perf_extract_plan_id_from_args($event->args ?? array());
+		$plan_id = bvmgr_event_plan_perf_extract_plan_id_from_args($event->args ?? array());
 		if ($plan_id <= 0) {
-			$plan_id = vms_event_plan_perf_current_plan_id();
+			$plan_id = bvmgr_event_plan_perf_current_plan_id();
 		}
 		if ($plan_id <= 0) {
 			return $event;
 		}
 
-		vms_event_plan_perf_log(
+		bvmgr_event_plan_perf_log(
 			'wp_cron_schedule',
 			$plan_id,
 			array(
@@ -1626,24 +1626,24 @@ if (!function_exists('vms_event_plan_perf_track_scheduled_event')) {
 		return $event;
 	}
 }
-add_filter('schedule_event', 'vms_event_plan_perf_track_scheduled_event', PHP_INT_MAX, 1);
+add_filter('schedule_event', 'bvmgr_event_plan_perf_track_scheduled_event', PHP_INT_MAX, 1);
 
-if (!function_exists('vms_event_plan_perf_track_action_scheduler_enqueue')) {
-	function vms_event_plan_perf_track_action_scheduler_enqueue($pre, string $hook, array $args, string $group, int $priority, bool $unique)
+if (!function_exists('bvmgr_event_plan_perf_track_action_scheduler_enqueue')) {
+	function bvmgr_event_plan_perf_track_action_scheduler_enqueue($pre, string $hook, array $args, string $group, int $priority, bool $unique)
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return $pre;
 		}
 
-		$plan_id = vms_event_plan_perf_extract_plan_id_from_args($args);
+		$plan_id = bvmgr_event_plan_perf_extract_plan_id_from_args($args);
 		if ($plan_id <= 0) {
-			$plan_id = vms_event_plan_perf_current_plan_id();
+			$plan_id = bvmgr_event_plan_perf_current_plan_id();
 		}
 		if ($plan_id <= 0) {
 			return $pre;
 		}
 
-		vms_event_plan_perf_log(
+		bvmgr_event_plan_perf_log(
 			'action_scheduler_enqueue_async',
 			$plan_id,
 			array(
@@ -1659,24 +1659,24 @@ if (!function_exists('vms_event_plan_perf_track_action_scheduler_enqueue')) {
 		return $pre;
 	}
 }
-add_filter('pre_as_enqueue_async_action', 'vms_event_plan_perf_track_action_scheduler_enqueue', PHP_INT_MAX, 6);
+add_filter('pre_as_enqueue_async_action', 'bvmgr_event_plan_perf_track_action_scheduler_enqueue', PHP_INT_MAX, 6);
 
-if (!function_exists('vms_event_plan_perf_track_action_scheduler_single')) {
-	function vms_event_plan_perf_track_action_scheduler_single($pre, int $timestamp, string $hook, array $args, string $group, int $priority)
+if (!function_exists('bvmgr_event_plan_perf_track_action_scheduler_single')) {
+	function bvmgr_event_plan_perf_track_action_scheduler_single($pre, int $timestamp, string $hook, array $args, string $group, int $priority)
 	{
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return $pre;
 		}
 
-		$plan_id = vms_event_plan_perf_extract_plan_id_from_args($args);
+		$plan_id = bvmgr_event_plan_perf_extract_plan_id_from_args($args);
 		if ($plan_id <= 0) {
-			$plan_id = vms_event_plan_perf_current_plan_id();
+			$plan_id = bvmgr_event_plan_perf_current_plan_id();
 		}
 		if ($plan_id <= 0) {
 			return $pre;
 		}
 
-		vms_event_plan_perf_log(
+		bvmgr_event_plan_perf_log(
 			'action_scheduler_schedule_single',
 			$plan_id,
 			array(
@@ -1692,10 +1692,10 @@ if (!function_exists('vms_event_plan_perf_track_action_scheduler_single')) {
 		return $pre;
 	}
 }
-add_filter('pre_as_schedule_single_action', 'vms_event_plan_perf_track_action_scheduler_single', PHP_INT_MAX, 6);
+add_filter('pre_as_schedule_single_action', 'bvmgr_event_plan_perf_track_action_scheduler_single', PHP_INT_MAX, 6);
 
-if (!function_exists('vms_event_plan_perf_is_queue_meta_key')) {
-	function vms_event_plan_perf_is_queue_meta_key(string $meta_key): bool
+if (!function_exists('bvmgr_event_plan_perf_is_queue_meta_key')) {
+	function bvmgr_event_plan_perf_is_queue_meta_key(string $meta_key): bool
 	{
 		foreach (array(
 			'_vms_calendar_maintenance_',
@@ -1712,18 +1712,18 @@ if (!function_exists('vms_event_plan_perf_is_queue_meta_key')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_trace_queue_meta_write')) {
-	function vms_event_plan_perf_trace_queue_meta_write($meta_id, int $object_id, string $meta_key, $meta_value): void
+if (!function_exists('bvmgr_event_plan_perf_trace_queue_meta_write')) {
+	function bvmgr_event_plan_perf_trace_queue_meta_write($meta_id, int $object_id, string $meta_key, $meta_value): void
 	{
 		unset($meta_id);
 
-		if (!vms_event_plan_perf_trace_enabled()) {
+		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
 		if ($object_id <= 0 || get_post_type($object_id) !== 'vms_event_plan') {
 			return;
 		}
-		if (!vms_event_plan_perf_is_queue_meta_key($meta_key)) {
+		if (!bvmgr_event_plan_perf_is_queue_meta_key($meta_key)) {
 			return;
 		}
 
@@ -1734,7 +1734,7 @@ if (!function_exists('vms_event_plan_perf_trace_queue_meta_write')) {
 			$value_summary = sha1(maybe_serialize($meta_value));
 		}
 
-		vms_event_plan_perf_log(
+		bvmgr_event_plan_perf_log(
 			'queue_meta_write',
 			$object_id,
 			array(
@@ -1746,12 +1746,12 @@ if (!function_exists('vms_event_plan_perf_trace_queue_meta_write')) {
 		);
 	}
 }
-add_action('added_post_meta', 'vms_event_plan_perf_trace_queue_meta_write', PHP_INT_MAX, 4);
-add_action('updated_post_meta', 'vms_event_plan_perf_trace_queue_meta_write', PHP_INT_MAX, 4);
-add_action('deleted_post_meta', 'vms_event_plan_perf_trace_queue_meta_write', PHP_INT_MAX, 4);
+add_action('added_post_meta', 'bvmgr_event_plan_perf_trace_queue_meta_write', PHP_INT_MAX, 4);
+add_action('updated_post_meta', 'bvmgr_event_plan_perf_trace_queue_meta_write', PHP_INT_MAX, 4);
+add_action('deleted_post_meta', 'bvmgr_event_plan_perf_trace_queue_meta_write', PHP_INT_MAX, 4);
 
-if (!function_exists('vms_event_plan_perf_job_lock_key')) {
-	function vms_event_plan_perf_job_lock_key(string $job_name, int $plan_id): string
+if (!function_exists('bvmgr_event_plan_perf_job_lock_key')) {
+	function bvmgr_event_plan_perf_job_lock_key(string $job_name, int $plan_id): string
 	{
 		$job_name = sanitize_key($job_name);
 		$plan_id = absint($plan_id);
@@ -1759,33 +1759,33 @@ if (!function_exists('vms_event_plan_perf_job_lock_key')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_job_has_lock')) {
-	function vms_event_plan_perf_job_has_lock(string $job_name, int $plan_id): bool
+if (!function_exists('bvmgr_event_plan_perf_job_has_lock')) {
+	function bvmgr_event_plan_perf_job_has_lock(string $job_name, int $plan_id): bool
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
 			return false;
 		}
 
-		return !empty(get_transient(vms_event_plan_perf_job_lock_key($job_name, $plan_id)));
+		return !empty(get_transient(bvmgr_event_plan_perf_job_lock_key($job_name, $plan_id)));
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_job_get_lock')) {
-	function vms_event_plan_perf_job_get_lock(string $job_name, int $plan_id): array
+if (!function_exists('bvmgr_event_plan_perf_job_get_lock')) {
+	function bvmgr_event_plan_perf_job_get_lock(string $job_name, int $plan_id): array
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
 			return array();
 		}
 
-		$lock = get_transient(vms_event_plan_perf_job_lock_key($job_name, $plan_id));
+		$lock = get_transient(bvmgr_event_plan_perf_job_lock_key($job_name, $plan_id));
 		return is_array($lock) ? $lock : array();
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_job_set_lock')) {
-	function vms_event_plan_perf_job_set_lock(string $job_name, int $plan_id, string $state = 'pending', int $ttl = 900): void
+if (!function_exists('bvmgr_event_plan_perf_job_set_lock')) {
+	function bvmgr_event_plan_perf_job_set_lock(string $job_name, int $plan_id, string $state = 'pending', int $ttl = 900): void
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
@@ -1793,10 +1793,10 @@ if (!function_exists('vms_event_plan_perf_job_set_lock')) {
 		}
 
 		set_transient(
-			vms_event_plan_perf_job_lock_key($job_name, $plan_id),
+			bvmgr_event_plan_perf_job_lock_key($job_name, $plan_id),
 			array(
 				'state' => sanitize_key($state),
-				'request_id' => vms_event_plan_perf_request_id(),
+				'request_id' => bvmgr_event_plan_perf_request_id(),
 				'updated_at_gmt' => gmdate('Y-m-d H:i:s'),
 			),
 			max(60, absint($ttl))
@@ -1804,20 +1804,20 @@ if (!function_exists('vms_event_plan_perf_job_set_lock')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_perf_job_clear_lock')) {
-	function vms_event_plan_perf_job_clear_lock(string $job_name, int $plan_id): void
+if (!function_exists('bvmgr_event_plan_perf_job_clear_lock')) {
+	function bvmgr_event_plan_perf_job_clear_lock(string $job_name, int $plan_id): void
 	{
 		$plan_id = absint($plan_id);
 		if ($plan_id <= 0) {
 			return;
 		}
 
-		delete_transient(vms_event_plan_perf_job_lock_key($job_name, $plan_id));
+		delete_transient(bvmgr_event_plan_perf_job_lock_key($job_name, $plan_id));
 	}
 }
 
-if (!function_exists('vms_event_plan_apply_tec_author_args')) {
-	function vms_event_plan_apply_tec_author_args(int $plan_id, array $args, int $existing_tec_event_id = 0, string $hook_name = ''): array
+if (!function_exists('bvmgr_event_plan_apply_tec_author_args')) {
+	function bvmgr_event_plan_apply_tec_author_args(int $plan_id, array $args, int $existing_tec_event_id = 0, string $hook_name = ''): array
 	{
 		$plan_id = absint($plan_id);
 		$existing_tec_event_id = absint($existing_tec_event_id);
@@ -1826,18 +1826,18 @@ if (!function_exists('vms_event_plan_apply_tec_author_args')) {
 		}
 
 		$before_author = $existing_tec_event_id > 0 ? absint(get_post_field('post_author', $existing_tec_event_id)) : 0;
-		$needs_author = ($existing_tec_event_id <= 0) || !vms_event_plan_perf_user_is_valid($before_author);
+		$needs_author = ($existing_tec_event_id <= 0) || !bvmgr_event_plan_perf_user_is_valid($before_author);
 		if (!$needs_author) {
 			return $args;
 		}
 
-		$actor_user_id = vms_event_plan_get_captured_actor_user_id($plan_id);
-		$resolved_author = vms_event_plan_resolve_tec_post_author($plan_id, $actor_user_id);
+		$actor_user_id = bvmgr_event_plan_get_captured_actor_user_id($plan_id);
+		$resolved_author = bvmgr_event_plan_resolve_tec_post_author($plan_id, $actor_user_id);
 		if ($resolved_author > 0) {
 			$args['post_author'] = $resolved_author;
 		}
 
-		vms_event_plan_perf_log(
+		bvmgr_event_plan_perf_log(
 			$hook_name !== '' ? $hook_name : 'tec_author_prepare',
 			$plan_id,
 			array(
@@ -1854,8 +1854,8 @@ if (!function_exists('vms_event_plan_apply_tec_author_args')) {
 	}
 }
 
-if (!function_exists('vms_event_plan_backfill_tec_event_author')) {
-	function vms_event_plan_backfill_tec_event_author(int $plan_id, int $tec_event_id, string $hook_name = ''): int
+if (!function_exists('bvmgr_event_plan_backfill_tec_event_author')) {
+	function bvmgr_event_plan_backfill_tec_event_author(int $plan_id, int $tec_event_id, string $hook_name = ''): int
 	{
 		$plan_id = absint($plan_id);
 		$tec_event_id = absint($tec_event_id);
@@ -1864,12 +1864,12 @@ if (!function_exists('vms_event_plan_backfill_tec_event_author')) {
 		}
 
 		$before_author = absint(get_post_field('post_author', $tec_event_id));
-		$actor_user_id = vms_event_plan_get_captured_actor_user_id($plan_id);
+		$actor_user_id = bvmgr_event_plan_get_captured_actor_user_id($plan_id);
 		$after_author = $before_author;
-		if (!vms_event_plan_perf_user_is_valid($before_author)) {
-			$resolved_author = vms_event_plan_resolve_tec_post_author($plan_id, $actor_user_id);
+		if (!bvmgr_event_plan_perf_user_is_valid($before_author)) {
+			$resolved_author = bvmgr_event_plan_resolve_tec_post_author($plan_id, $actor_user_id);
 			if ($resolved_author > 0) {
-				vms_event_plan_perf_wp_update_post(array(
+				bvmgr_event_plan_perf_wp_update_post(array(
 					'ID' => $tec_event_id,
 					'post_author' => $resolved_author,
 				), $hook_name !== '' ? $hook_name . '_tec_author_backfill' : 'tec_author_backfill', $plan_id);
@@ -1878,7 +1878,7 @@ if (!function_exists('vms_event_plan_backfill_tec_event_author')) {
 			}
 		}
 
-		vms_event_plan_perf_log(
+		bvmgr_event_plan_perf_log(
 			$hook_name !== '' ? $hook_name : 'tec_author_backfill',
 			$plan_id,
 			array(

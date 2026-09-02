@@ -1,22 +1,22 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_status_notice_admin_page_slug')) {
-	function vms_status_notice_admin_page_slug(): string
+if (!function_exists('bvmgr_status_notice_admin_page_slug')) {
+	function bvmgr_status_notice_admin_page_slug(): string
 	{
-		return vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin page routing here is read-only notice display context, not a mutation boundary.
+		return bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin page routing here is read-only notice display context, not a mutation boundary.
 	}
 }
 
-if (!function_exists('vms_status_notice_debug_requested')) {
-	function vms_status_notice_debug_requested(): bool
+if (!function_exists('bvmgr_status_notice_debug_requested')) {
+	function bvmgr_status_notice_debug_requested(): bool
 	{
-		return vms_request_read_bool_flag($_GET, 'vms_notice_debug'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The runtime debug flag only changes read-only notice display diagnostics for already-authorized viewers.
+		return bvmgr_request_read_bool_flag($_GET, 'vms_notice_debug'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The runtime debug flag only changes read-only notice display diagnostics for already-authorized viewers.
 	}
 }
 
-if (!function_exists('vms_status_notice_runtime_context_front')) {
-	function vms_status_notice_runtime_context_front(): array
+if (!function_exists('bvmgr_status_notice_runtime_context_front')) {
+	function bvmgr_status_notice_runtime_context_front(): array
 	{
 		$post_id = (int) get_queried_object_id();
 		$post_type = '';
@@ -37,7 +37,7 @@ if (!function_exists('vms_status_notice_runtime_context_front')) {
 		$is_woo_account = function_exists('is_account_page') ? (bool) is_account_page() : false;
 		$has_ticketing_hint = ($is_event_single || $is_woo_product || $is_woo_cart || $is_woo_checkout) ? 1 : 0;
 
-		$request_uri = vms_request_current_uri('/');
+		$request_uri = bvmgr_request_current_uri('/');
 
 		$roles = array();
 		if (is_user_logged_in()) {
@@ -47,8 +47,8 @@ if (!function_exists('vms_status_notice_runtime_context_front')) {
 			}
 		}
 
-		$can_debug = current_user_can(vms_status_notices_capability()) ? 1 : 0;
-		$debug_enabled = ($can_debug && vms_status_notice_debug_requested()) ? 1 : 0;
+		$can_debug = current_user_can(bvmgr_status_notices_capability()) ? 1 : 0;
+		$debug_enabled = ($can_debug && bvmgr_status_notice_debug_requested()) ? 1 : 0;
 
 		return array(
 			'is_admin' => 0,
@@ -70,17 +70,17 @@ if (!function_exists('vms_status_notice_runtime_context_front')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_runtime_context_admin')) {
-	function vms_status_notice_runtime_context_admin(): array
+if (!function_exists('bvmgr_status_notice_runtime_context_admin')) {
+	function bvmgr_status_notice_runtime_context_admin(): array
 	{
-		$page = vms_status_notice_admin_page_slug();
+		$page = bvmgr_status_notice_admin_page_slug();
 		$roles = array();
 		$user = wp_get_current_user();
 		if ($user instanceof WP_User) {
 			$roles = array_values(array_map('sanitize_key', (array) $user->roles));
 		}
-		$can_debug = current_user_can(vms_status_notices_capability()) ? 1 : 0;
-		$debug_enabled = ($can_debug && vms_status_notice_debug_requested()) ? 1 : 0;
+		$can_debug = current_user_can(bvmgr_status_notices_capability()) ? 1 : 0;
+		$debug_enabled = ($can_debug && bvmgr_status_notice_debug_requested()) ? 1 : 0;
 
 		return array(
 			'is_admin' => 1,
@@ -93,7 +93,7 @@ if (!function_exists('vms_status_notice_runtime_context_admin')) {
 			'post_type' => '',
 			'page_id' => 0,
 			'has_vms_ticketing_wrapper' => 0,
-			'request_uri' => vms_request_current_uri('/wp-admin/'),
+			'request_uri' => bvmgr_request_current_uri('/wp-admin/'),
 			'is_logged_in' => is_user_logged_in() ? 1 : 0,
 			'roles' => $roles,
 			'can_debug' => $can_debug,
@@ -102,8 +102,8 @@ if (!function_exists('vms_status_notice_runtime_context_admin')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_prepare_runtime_notice')) {
-	function vms_status_notice_prepare_runtime_notice(array $notice): array
+if (!function_exists('bvmgr_status_notice_prepare_runtime_notice')) {
+	function bvmgr_status_notice_prepare_runtime_notice(array $notice): array
 	{
 		$out = $notice;
 		$out['id'] = (int) ($notice['id'] ?? 0);
@@ -144,62 +144,62 @@ if (!function_exists('vms_status_notice_prepare_runtime_notice')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_enqueue_runtime_assets')) {
-	function vms_status_notice_enqueue_runtime_assets(array $notices, array $context, string $script_handle): void
+if (!function_exists('bvmgr_status_notice_enqueue_runtime_assets')) {
+	function bvmgr_status_notice_enqueue_runtime_assets(array $notices, array $context, string $script_handle): void
 	{
 		if (empty($notices)) {
 			return;
 		}
 
-		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
-			'vms-notices-front',
-			VMS_PLUGIN_URL . 'assets/css/vms-notices-front.css',
-			array('vms-ui'),
+			'bvmgr-notices-front',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-notices-front.css',
+			array('bvmgr-ui'),
 			$ver
 		);
 
 		wp_enqueue_script(
 			$script_handle,
-			VMS_PLUGIN_URL . 'assets/js/vms-notices-front.js',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-notices-front.js',
 			array(),
 			$ver,
 			true
 		);
 
-		wp_localize_script($script_handle, 'vmsStatusNoticesData', array(
-			'notices' => array_values(array_map('vms_status_notice_prepare_runtime_notice', $notices)),
+		wp_localize_script($script_handle, 'BVMGR_STATUS_NOTICES_DATA', array(
+			'notices' => array_values(array_map('bvmgr_status_notice_prepare_runtime_notice', $notices)),
 			'context' => $context,
 		));
 	}
 }
 
-if (!function_exists('vms_status_notice_maybe_enqueue_front')) {
-	function vms_status_notice_maybe_enqueue_front(): void
+if (!function_exists('bvmgr_status_notice_maybe_enqueue_front')) {
+	function bvmgr_status_notice_maybe_enqueue_front(): void
 	{
 		if (is_admin()) {
 			return;
 		}
-		$notices = vms_status_notice_enabled_for_scope('front');
+		$notices = bvmgr_status_notice_enabled_for_scope('front');
 		if (empty($notices)) {
 			return;
 		}
-		vms_status_notice_enqueue_runtime_assets($notices, vms_status_notice_runtime_context_front(), 'vms-notices-front-runtime');
+		bvmgr_status_notice_enqueue_runtime_assets($notices, bvmgr_status_notice_runtime_context_front(), 'bvmgr-notices-front-runtime');
 	}
 }
-add_action('wp_enqueue_scripts', 'vms_status_notice_maybe_enqueue_front', 45);
+add_action('wp_enqueue_scripts', 'bvmgr_status_notice_maybe_enqueue_front', 45);
 
-if (!function_exists('vms_status_notice_maybe_enqueue_admin_runtime')) {
-	function vms_status_notice_maybe_enqueue_admin_runtime(): void
+if (!function_exists('bvmgr_status_notice_maybe_enqueue_admin_runtime')) {
+	function bvmgr_status_notice_maybe_enqueue_admin_runtime(): void
 	{
-		if (!is_admin() || !current_user_can(vms_status_notices_capability())) {
+		if (!is_admin() || !current_user_can(bvmgr_status_notices_capability())) {
 			return;
 		}
-		$notices = vms_status_notice_enabled_for_scope('admin');
+		$notices = bvmgr_status_notice_enabled_for_scope('admin');
 		if (empty($notices)) {
 			return;
 		}
-		vms_status_notice_enqueue_runtime_assets($notices, vms_status_notice_runtime_context_admin(), 'vms-notices-admin-runtime');
+		bvmgr_status_notice_enqueue_runtime_assets($notices, bvmgr_status_notice_runtime_context_admin(), 'bvmgr-notices-admin-runtime');
 	}
 }
-add_action('admin_enqueue_scripts', 'vms_status_notice_maybe_enqueue_admin_runtime', 55);
+add_action('admin_enqueue_scripts', 'bvmgr_status_notice_maybe_enqueue_admin_runtime', 55);

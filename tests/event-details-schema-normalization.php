@@ -187,13 +187,13 @@ function tribe_get_cost($eventId, bool $withCurrency = false): string
 	return (string) ($GLOBALS['vms_event_details_test_cost'] ?? '');
 }
 
-function vms_tec_is_cancelled_event(int $eventId): bool
+function bvmgr_tec_is_cancelled_event(int $eventId): bool
 {
 	unset($eventId);
 	return false;
 }
 
-function vms_event_details_context(int $eventId): array
+function bvmgr_event_details_context(int $eventId): array
 {
 	unset($eventId);
 	return (array) ($GLOBALS['vms_event_details_test_context'] ?? array());
@@ -215,18 +215,18 @@ try {
 
 	foreach ($priceCases as $case) {
 		$GLOBALS['vms_event_details_test_cost'] = $case[0];
-		$context = vms_event_details_ticket_context(123, 0);
+		$context = bvmgr_event_details_ticket_context(123, 0);
 		vms_event_details_schema_assert_same($case[1], $context['min_price'], 'Unexpected minimum price for cost string: ' . $case[0]);
 	}
 
 	$GLOBALS['vms_event_details_test_cost'] = '';
-	vms_event_details_schema_assert_null(vms_event_details_ticket_context(123, 0)['min_price'], 'Empty cost string should not fabricate a price.');
+	vms_event_details_schema_assert_null(bvmgr_event_details_ticket_context(123, 0)['min_price'], 'Empty cost string should not fabricate a price.');
 	$GLOBALS['vms_event_details_test_cost'] = 'Price TBA';
-	vms_event_details_schema_assert_null(vms_event_details_ticket_context(123, 0)['min_price'], 'Malformed cost string should not fabricate a price.');
+	vms_event_details_schema_assert_null(bvmgr_event_details_ticket_context(123, 0)['min_price'], 'Malformed cost string should not fabricate a price.');
 
 	vms_event_details_schema_assert_same(
 		'ABBA tribute – Super Trouper',
-		vms_event_details_normalize_schema_name('ABBA tribute &#8211; Super Trouper'),
+		bvmgr_event_details_normalize_schema_name('ABBA tribute &#8211; Super Trouper'),
 		'Schema name normalization should decode entities and preserve Unicode punctuation.'
 	);
 
@@ -234,7 +234,7 @@ try {
 	$GLOBALS['vms_event_details_test_post_content'] = '';
 	vms_event_details_schema_assert_same(
 		'Description',
-		vms_event_details_plain_description(123),
+		bvmgr_event_details_plain_description(123),
 		'Plain description should decode encoded markup before stripping tags.'
 	);
 
@@ -301,7 +301,7 @@ try {
 		),
 	);
 
-	$filtered = vms_event_details_filter_tec_event_schema($inputEvent, array(), new WP_Post(123));
+	$filtered = bvmgr_event_details_filter_tec_event_schema($inputEvent, array(), new WP_Post(123));
 	$filteredJson = wp_json_encode($filtered, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 	vms_event_details_schema_assert_true(is_string($filteredJson) && $filteredJson !== '', 'Filtered schema should encode as JSON.');
 	vms_event_details_schema_assert_true(is_array(json_decode((string) $filteredJson, true)), 'Filtered schema JSON should decode successfully.');
@@ -326,7 +326,7 @@ try {
 	$GLOBALS['vms_event_details_test_context'] = array_merge($sharedContext, array(
 		'min_ticket_price' => 15.00,
 	));
-	$fallbackSchema = vms_event_details_schema(123);
+	$fallbackSchema = bvmgr_event_details_schema(123);
 	$fallbackJson = wp_json_encode($fallbackSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 	vms_event_details_schema_assert_true(is_string($fallbackJson) && $fallbackJson !== '', 'Fallback schema should encode as JSON.');
 	vms_event_details_schema_assert_true(is_array(json_decode((string) $fallbackJson, true)), 'Fallback schema JSON should decode successfully.');

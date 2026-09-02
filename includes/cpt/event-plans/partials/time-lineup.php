@@ -1,7 +1,7 @@
         <?php
             defined('ABSPATH') || exit;
-            $lineup_summary_trace = function_exists('vms_event_plan_perf_span_start')
-                ? vms_event_plan_perf_span_start('event_plan_time_lineup_summary_render', (int) $post->ID, array('section' => 'time_lineup_summary'))
+            $lineup_summary_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                ? bvmgr_event_plan_perf_span_start('event_plan_time_lineup_summary_render', (int) $post->ID, array('section' => 'time_lineup_summary'))
                 : '';
         ?>
         <h4 class="vms-ep-basic-span"><?php esc_html_e('Time + Lineup & Schedule', 'backstage-venue-manager'); ?></h4>
@@ -9,7 +9,7 @@
         <div class="vms-ep-basic-item">
             <label for="vms_start_time"><strong><?php esc_html_e('Event Start / End', 'backstage-venue-manager'); ?></strong></label><br />
             <div class="vms-ep-time-row">
-                <select id="vms_start_time" name="vms_start_time" class="vms-ep-time-select">
+                <select id="vms_start_time" name="vms_start_time" class="vms-ep-time-select"<?php echo !empty($occurrence_locked) ? ' disabled aria-disabled="true"' : ''; ?>>
                     <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                         <option value="<?php echo esc_attr($time_value); ?>" <?php selected($start_time_current, (string) $time_value); ?>>
                             <?php echo esc_html((string) $time_label); ?>
@@ -17,7 +17,7 @@
                     <?php endforeach; ?>
                 </select>
                 <span class="vms-ep-time-sep"><?php esc_html_e('to', 'backstage-venue-manager'); ?></span>
-                <select id="vms_end_time" name="vms_end_time" class="vms-ep-time-select">
+                <select id="vms_end_time" name="vms_end_time" class="vms-ep-time-select"<?php echo !empty($occurrence_locked) ? ' disabled aria-disabled="true"' : ''; ?>>
                     <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                         <option value="<?php echo esc_attr($time_value); ?>" <?php selected($end_time_current, (string) $time_value); ?>>
                             <?php echo esc_html((string) $time_label); ?>
@@ -25,7 +25,9 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-            <span class="description"><?php esc_html_e('Event-level bounds stay operator-controlled. Lineup times below are checked against these bounds and warnings are shown instead of silently rewriting anything.', 'backstage-venue-manager'); ?></span>
+            <span class="description"><?php echo !empty($occurrence_locked)
+                ? esc_html__('Published event times are protected. Use “Change event date…” in Event Date above.', 'backstage-venue-manager')
+                : esc_html__('Event-level bounds stay operator-controlled. Lineup times below are checked against these bounds and warnings are shown instead of silently rewriting anything.', 'backstage-venue-manager'); ?></span>
         </div>
 
         <div class="vms-ep-basic-item vms-ep-basic-span">
@@ -36,7 +38,7 @@
                 data-lineup-storage-scope="<?php echo esc_attr((string) $post->ID); ?>"
                 data-lineup-post-id="<?php echo esc_attr((string) $post->ID); ?>"
                 data-lineup-vendor-options-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
-                data-lineup-vendor-options-nonce="<?php echo esc_attr(wp_create_nonce('vms_event_plan_admin_section')); ?>"
+                data-lineup-vendor-options-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_admin_section')); ?>"
             >
                 <div class="vms-lineup-summary">
                     <div class="vms-lineup-summary__item">
@@ -65,16 +67,16 @@
                     </div>
                 </div>
                 <?php
-                    if (function_exists('vms_event_plan_perf_span_finish')) {
-                        vms_event_plan_perf_span_finish('event_plan_time_lineup_summary_render', (int) $post->ID, $lineup_summary_trace, array(
+                    if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                        bvmgr_event_plan_perf_span_finish('event_plan_time_lineup_summary_render', (int) $post->ID, $lineup_summary_trace, array(
                             'section' => 'time_lineup_summary',
                             'supporting_vendor_count' => is_array($lineup_supporting_entries) ? count($lineup_supporting_entries) : 0,
                             'warning_count' => is_array($lineup_warning_messages) ? count($lineup_warning_messages) : 0,
                         ));
                     }
 
-                    $primary_vendor_trace = function_exists('vms_event_plan_perf_span_start')
-                        ? vms_event_plan_perf_span_start('event_plan_primary_vendor_editor_render', (int) $post->ID, array('section' => 'primary_vendor_editor'))
+                    $primary_vendor_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                        ? bvmgr_event_plan_perf_span_start('event_plan_primary_vendor_editor_render', (int) $post->ID, array('section' => 'primary_vendor_editor'))
                         : '';
                 ?>
 
@@ -228,7 +230,7 @@
                                 ?>
                                 <div id="vms-tax-bypass-inline"
                                      class="vms-tax-bypass-inline"
-                                     data-nonce="<?php echo esc_attr(wp_create_nonce('vms_tax_bypass_ajax')); ?>"
+                                     data-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_tax_bypass_ajax')); ?>"
                                      data-default-until="<?php echo esc_attr($tax_bypass_default_until); ?>">
                                     <p class="description vms-mt-8">
                                         <?php esc_html_e('Tax bypass (temporary): set an expiration + reason for the selected vendor without leaving this page.', 'backstage-venue-manager'); ?>
@@ -250,8 +252,8 @@
                         </div>
                     </details>
                     <?php
-                        if (function_exists('vms_event_plan_perf_span_finish')) {
-                            vms_event_plan_perf_span_finish('event_plan_primary_vendor_editor_render', (int) $post->ID, $primary_vendor_trace, array(
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_primary_vendor_editor_render', (int) $post->ID, $primary_vendor_trace, array(
                                 'section' => 'primary_vendor_editor',
                                 'selected_vendor_id' => (int) $selected_band_id,
                             ));
@@ -265,8 +267,8 @@
                     <?php
                         endif;
 
-                        $supporting_cards_trace = function_exists('vms_event_plan_perf_span_start')
-                            ? vms_event_plan_perf_span_start('event_plan_supporting_act_card_render', (int) $post->ID, array(
+                        $supporting_cards_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                            ? bvmgr_event_plan_perf_span_start('event_plan_supporting_act_card_render', (int) $post->ID, array(
                                 'section' => 'supporting_act_cards',
                                 'supporting_card_count' => is_array($lineup_supporting_entries) ? count($lineup_supporting_entries) : 0,
                             ))
@@ -404,8 +406,8 @@
                         <?php endforeach; ?>
                     </div>
                     <?php
-                        if (function_exists('vms_event_plan_perf_span_finish')) {
-                            vms_event_plan_perf_span_finish('event_plan_supporting_act_card_render', (int) $post->ID, $supporting_cards_trace, array(
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_supporting_act_card_render', (int) $post->ID, $supporting_cards_trace, array(
                                 'section' => 'supporting_act_cards',
                                 'supporting_card_count' => is_array($lineup_supporting_entries) ? count($lineup_supporting_entries) : 0,
                                 'supporting_detail_body_count' => is_array($lineup_supporting_entries) ? count($lineup_supporting_entries) : 0,
@@ -517,8 +519,8 @@
                 </div>
 
                 <?php
-                    $timeline_trace = function_exists('vms_event_plan_perf_span_start')
-                        ? vms_event_plan_perf_span_start('event_plan_time_lineup_timeline_render', (int) $post->ID, array('section' => 'time_lineup_timeline'))
+                    $timeline_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                        ? bvmgr_event_plan_perf_span_start('event_plan_time_lineup_timeline_render', (int) $post->ID, array('section' => 'time_lineup_timeline'))
                         : '';
                 ?>
                 <div class="vms-lineup-insights">
@@ -543,15 +545,15 @@
                         </div>
                     </div>
                     <?php
-                        if (function_exists('vms_event_plan_perf_span_finish')) {
-                            vms_event_plan_perf_span_finish('event_plan_time_lineup_timeline_render', (int) $post->ID, $timeline_trace, array(
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_time_lineup_timeline_render', (int) $post->ID, $timeline_trace, array(
                                 'section' => 'time_lineup_timeline',
                                 'timeline_entry_count' => is_array($lineup_entries) ? count($lineup_entries) : 0,
                             ));
                         }
 
-                        $health_trace = function_exists('vms_event_plan_perf_span_start')
-                            ? vms_event_plan_perf_span_start('event_plan_time_lineup_health_render', (int) $post->ID, array('section' => 'time_lineup_health'))
+                        $health_trace = function_exists('bvmgr_event_plan_perf_span_start')
+                            ? bvmgr_event_plan_perf_span_start('event_plan_time_lineup_health_render', (int) $post->ID, array('section' => 'time_lineup_health'))
                             : '';
                     ?>
 
@@ -570,8 +572,8 @@
                         </ul>
                     </div>
                     <?php
-                        if (function_exists('vms_event_plan_perf_span_finish')) {
-                            vms_event_plan_perf_span_finish('event_plan_time_lineup_health_render', (int) $post->ID, $health_trace, array(
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_time_lineup_health_render', (int) $post->ID, $health_trace, array(
                                 'section' => 'time_lineup_health',
                                 'warning_count' => is_array($lineup_warning_messages) ? count($lineup_warning_messages) : 0,
                             ));

@@ -1,18 +1,18 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_tasks_admin_parent_slug')) {
-	function vms_tasks_admin_parent_slug(): string
+if (!function_exists('bvmgr_tasks_admin_parent_slug')) {
+	function bvmgr_tasks_admin_parent_slug(): string
 	{
 		return 'vms-dashboard';
 	}
 }
 
-if (!function_exists('vms_tasks_admin_page_url')) {
+if (!function_exists('bvmgr_tasks_admin_page_url')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_tasks_admin_page_url(string $page_slug, array $args = array()): string
+	function bvmgr_tasks_admin_page_url(string $page_slug, array $args = array()): string
 	{
 		$base = admin_url('admin.php?page=' . urlencode($page_slug));
 		if (empty($args)) {
@@ -22,8 +22,8 @@ if (!function_exists('vms_tasks_admin_page_url')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_query_arg')) {
-	function vms_tasks_admin_query_arg(string $key): string
+if (!function_exists('bvmgr_tasks_admin_query_arg')) {
+	function bvmgr_tasks_admin_query_arg(string $key): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin display/filter state only; no mutation depends on these query args.
 		if (!isset($_GET[$key])) {
@@ -35,8 +35,8 @@ if (!function_exists('vms_tasks_admin_query_arg')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_request_arg')) {
-	function vms_tasks_admin_request_arg(string $key): string
+if (!function_exists('bvmgr_tasks_admin_request_arg')) {
+	function bvmgr_tasks_admin_request_arg(string $key): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Redirect-only return context is allowlisted to known admin destinations and does not mutate state on its own.
 		if (!isset($_REQUEST[$key])) {
@@ -48,8 +48,8 @@ if (!function_exists('vms_tasks_admin_request_arg')) {
 	}
 }
 
-if (!function_exists('vms_tasks_is_event_plan_edit_screen')) {
-	function vms_tasks_is_event_plan_edit_screen(): bool
+if (!function_exists('bvmgr_tasks_is_event_plan_edit_screen')) {
+	function bvmgr_tasks_is_event_plan_edit_screen(): bool
 	{
 		if (!is_admin() || !function_exists('get_current_screen')) {
 			return false;
@@ -62,8 +62,8 @@ if (!function_exists('vms_tasks_is_event_plan_edit_screen')) {
 	}
 }
 
-if (!function_exists('vms_tasks_event_plan_metabox_form_id')) {
-	function vms_tasks_event_plan_metabox_form_id(int $event_plan_id, string $suffix, int $instance_id = 0): string
+if (!function_exists('bvmgr_tasks_event_plan_metabox_form_id')) {
+	function bvmgr_tasks_event_plan_metabox_form_id(int $event_plan_id, string $suffix, int $instance_id = 0): string
 	{
 		$event_plan_id = absint($event_plan_id);
 		$instance_id = absint($instance_id);
@@ -80,19 +80,19 @@ if (!function_exists('vms_tasks_event_plan_metabox_form_id')) {
 	}
 }
 
-if (!function_exists('vms_tasks_event_plan_metabox_register_form')) {
+if (!function_exists('bvmgr_tasks_event_plan_metabox_register_form')) {
 	/**
 	 * Register a detached footer form for the Event Plan editor.
 	 *
 	 * @param array<string,mixed> $hidden_fields
 	 */
-	function vms_tasks_event_plan_metabox_register_form(string $form_id, string $method, string $action, array $hidden_fields = array()): void
+	function bvmgr_tasks_event_plan_metabox_register_form(string $form_id, string $method, string $action, array $hidden_fields = array()): void
 	{
-		global $vms_tasks_event_plan_metabox_forms;
-		if (!is_array($vms_tasks_event_plan_metabox_forms)) {
-			$vms_tasks_event_plan_metabox_forms = array();
+		global $bvmgr_tasks_event_plan_metabox_forms;
+		if (!is_array($bvmgr_tasks_event_plan_metabox_forms)) {
+			$bvmgr_tasks_event_plan_metabox_forms = array();
 		}
-		$vms_tasks_event_plan_metabox_forms[$form_id] = array(
+		$bvmgr_tasks_event_plan_metabox_forms[$form_id] = array(
 			'method' => (strtolower($method) === 'get') ? 'get' : 'post',
 			'action' => esc_url_raw($action),
 			'hidden_fields' => $hidden_fields,
@@ -100,19 +100,19 @@ if (!function_exists('vms_tasks_event_plan_metabox_register_form')) {
 	}
 }
 
-if (!function_exists('vms_tasks_render_event_plan_metabox_footer_forms')) {
-	function vms_tasks_render_event_plan_metabox_footer_forms(): void
+if (!function_exists('bvmgr_tasks_render_event_plan_metabox_footer_forms')) {
+	function bvmgr_tasks_render_event_plan_metabox_footer_forms(): void
 	{
-		if (!vms_tasks_is_event_plan_edit_screen()) {
+		if (!bvmgr_tasks_is_event_plan_edit_screen()) {
 			return;
 		}
 
-		global $vms_tasks_event_plan_metabox_forms;
-		if (!is_array($vms_tasks_event_plan_metabox_forms) || empty($vms_tasks_event_plan_metabox_forms)) {
+		global $bvmgr_tasks_event_plan_metabox_forms;
+		if (!is_array($bvmgr_tasks_event_plan_metabox_forms) || empty($bvmgr_tasks_event_plan_metabox_forms)) {
 			return;
 		}
 
-		foreach ($vms_tasks_event_plan_metabox_forms as $form_id => $form) {
+		foreach ($bvmgr_tasks_event_plan_metabox_forms as $form_id => $form) {
 			$form_id = sanitize_html_class((string) $form_id);
 			$method = (($form['method'] ?? 'post') === 'get') ? 'get' : 'post';
 			$action = (string) ($form['action'] ?? '');
@@ -128,13 +128,13 @@ if (!function_exists('vms_tasks_render_event_plan_metabox_footer_forms')) {
 		}
 	}
 }
-add_action('admin_footer', 'vms_tasks_render_event_plan_metabox_footer_forms', 45);
+add_action('admin_footer', 'bvmgr_tasks_render_event_plan_metabox_footer_forms', 45);
 
-if (!function_exists('vms_tasks_admin_render_notices')) {
-	function vms_tasks_admin_render_notices(): void
+if (!function_exists('bvmgr_tasks_admin_render_notices')) {
+	function bvmgr_tasks_admin_render_notices(): void
 	{
-		$notice = sanitize_key(vms_tasks_admin_query_arg('vms_tasks_notice'));
-		$message = sanitize_text_field(vms_tasks_admin_query_arg('vms_tasks_message'));
+		$notice = sanitize_key(bvmgr_tasks_admin_query_arg('vms_tasks_notice'));
+		$message = sanitize_text_field(bvmgr_tasks_admin_query_arg('vms_tasks_message'));
 		if ($notice === '' && $message === '') {
 			return;
 		}
@@ -152,9 +152,9 @@ if (!function_exists('vms_tasks_admin_render_notices')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_get_venues')) {
+if (!function_exists('bvmgr_tasks_admin_get_venues')) {
 	/** @return array<int,string> */
-	function vms_tasks_admin_get_venues(): array
+	function bvmgr_tasks_admin_get_venues(): array
 	{
 		$ids = get_posts(array(
 			'post_type' => 'vms_venue',
@@ -189,9 +189,9 @@ if (!function_exists('vms_tasks_admin_get_venues')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_get_user_options')) {
+if (!function_exists('bvmgr_tasks_admin_get_user_options')) {
 	/** @return array<int,string> */
-	function vms_tasks_admin_get_user_options(): array
+	function bvmgr_tasks_admin_get_user_options(): array
 	{
 		$users = get_users(array(
 			'orderby' => 'display_name',
@@ -215,14 +215,14 @@ if (!function_exists('vms_tasks_admin_get_user_options')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_get_role_options')) {
+if (!function_exists('bvmgr_tasks_admin_get_role_options')) {
 	/** @return array<string,string> */
-	function vms_tasks_admin_get_role_options(bool $include_inactive = true): array
+	function bvmgr_tasks_admin_get_role_options(bool $include_inactive = true): array
 	{
 		$out = array();
 
-		if (function_exists('vms_staffing_get_role_catalog')) {
-			$rows = vms_staffing_get_role_catalog($include_inactive);
+		if (function_exists('bvmgr_staffing_get_role_catalog')) {
+			$rows = bvmgr_staffing_get_role_catalog($include_inactive);
 			foreach ((array) $rows as $row) {
 				$slug = sanitize_key((string) ($row['slug'] ?? ''));
 				if ($slug === '') {
@@ -264,9 +264,9 @@ if (!function_exists('vms_tasks_admin_get_role_options')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_get_event_type_options')) {
+if (!function_exists('bvmgr_tasks_admin_get_event_type_options')) {
 	/** @return array<string,string> */
-	function vms_tasks_admin_get_event_type_options(): array
+	function bvmgr_tasks_admin_get_event_type_options(): array
 	{
 		global $wpdb;
 		$postmeta = $wpdb->postmeta;
@@ -290,17 +290,17 @@ if (!function_exists('vms_tasks_admin_get_event_type_options')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_get_checklist_options')) {
+if (!function_exists('bvmgr_tasks_admin_get_checklist_options')) {
 	/** @return array<int,string> */
-	function vms_tasks_admin_get_checklist_options(bool $active_only = true, string $scope = ''): array
+	function bvmgr_tasks_admin_get_checklist_options(bool $active_only = true, string $scope = ''): array
 	{
 		$filters = $active_only ? array('is_active' => 1) : array();
 		$scope = sanitize_key($scope);
 		if ($scope !== '') {
-			$scope = vms_tasks_sanitize_scope($scope);
+			$scope = bvmgr_tasks_sanitize_scope($scope);
 			$filters['scope'] = $scope;
 		}
-		$rows = vms_tasks_get_checklist_templates($filters);
+		$rows = bvmgr_tasks_get_checklist_templates($filters);
 		$options = array();
 		foreach ($rows as $row) {
 			$checklist_id = absint($row['id'] ?? 0);
@@ -315,7 +315,7 @@ if (!function_exists('vms_tasks_admin_get_checklist_options')) {
 					$checklist_id
 				);
 			}
-			$apply_mode = vms_tasks_sanitize_apply_mode((string) ($row['apply_mode'] ?? 'default_all_events'));
+			$apply_mode = bvmgr_tasks_sanitize_apply_mode((string) ($row['apply_mode'] ?? 'default_all_events'));
 			$label = $name;
 			if ($apply_mode === 'by_venue') {
 				$label .= ' (' . __('By venue', 'backstage-venue-manager') . ')';
@@ -324,17 +324,17 @@ if (!function_exists('vms_tasks_admin_get_checklist_options')) {
 			} else {
 				$label .= ' (' . __('Default', 'backstage-venue-manager') . ')';
 			}
-			$label .= ' - ' . vms_tasks_admin_scope_label((string) ($row['scope'] ?? 'event'));
+			$label .= ' - ' . bvmgr_tasks_admin_scope_label((string) ($row['scope'] ?? 'event'));
 			$options[$checklist_id] = $label;
 		}
 		return $options;
 	}
 }
 
-if (!function_exists('vms_tasks_admin_assignment_mode_label')) {
-	function vms_tasks_admin_assignment_mode_label(string $mode): string
+if (!function_exists('bvmgr_tasks_admin_assignment_mode_label')) {
+	function bvmgr_tasks_admin_assignment_mode_label(string $mode): string
 	{
-		$mode = vms_tasks_sanitize_assignment_mode($mode);
+		$mode = bvmgr_tasks_sanitize_assignment_mode($mode);
 		if ($mode === 'person') {
 			return __('Person', 'backstage-venue-manager');
 		}
@@ -345,15 +345,15 @@ if (!function_exists('vms_tasks_admin_assignment_mode_label')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_assignment_summary')) {
+if (!function_exists('bvmgr_tasks_admin_assignment_summary')) {
 	/**
 	 * @param array<string,mixed> $row
 	 * @param array<int,string> $users
 	 * @param array<string,string> $role_options
 	 */
-	function vms_tasks_admin_assignment_summary(array $row, array $users, array $role_options): string
+	function bvmgr_tasks_admin_assignment_summary(array $row, array $users, array $role_options): string
 	{
-		$mode = vms_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
+		$mode = bvmgr_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
 		$role_key = sanitize_key((string) ($row['role_key'] ?? ''));
 		$assignee_id = absint($row['assignee_user_id'] ?? 0);
 		$assignee_label = ($assignee_id > 0 && isset($users[$assignee_id]))
@@ -361,14 +361,14 @@ if (!function_exists('vms_tasks_admin_assignment_summary')) {
 			: __('Unassigned', 'backstage-venue-manager');
 
 		if ($mode === 'person') {
-			return vms_tasks_admin_assignment_mode_label($mode) . ': ' . $assignee_label;
+			return bvmgr_tasks_admin_assignment_mode_label($mode) . ': ' . $assignee_label;
 		}
 
 		$role_label = ($role_key !== '' && isset($role_options[$role_key]))
 			? $role_options[$role_key]
 			: ($role_key !== '' ? $role_key : __('Unspecified role', 'backstage-venue-manager'));
 
-		$summary = vms_tasks_admin_assignment_mode_label($mode) . ': ' . $role_label;
+		$summary = bvmgr_tasks_admin_assignment_mode_label($mode) . ': ' . $role_label;
 		if ($assignee_id > 0) {
 			$summary .= '; ' . __('Assigned', 'backstage-venue-manager') . ': ' . $assignee_label;
 		} else {
@@ -379,10 +379,10 @@ if (!function_exists('vms_tasks_admin_assignment_summary')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_scope_label')) {
-	function vms_tasks_admin_scope_label(string $scope): string
+if (!function_exists('bvmgr_tasks_admin_scope_label')) {
+	function bvmgr_tasks_admin_scope_label(string $scope): string
 	{
-		$scope = vms_tasks_sanitize_scope($scope);
+		$scope = bvmgr_tasks_sanitize_scope($scope);
 		if ($scope === 'general') {
 			return __('Not linked to an event', 'backstage-venue-manager');
 		}
@@ -390,11 +390,11 @@ if (!function_exists('vms_tasks_admin_scope_label')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_sanitize_anchor_token')) {
-	function vms_tasks_admin_sanitize_anchor_token(string $anchor): string
+if (!function_exists('bvmgr_tasks_admin_sanitize_anchor_token')) {
+	function bvmgr_tasks_admin_sanitize_anchor_token(string $anchor): string
 	{
-		if (function_exists('vms_tours_sanitize_anchor_token')) {
-			return vms_tours_sanitize_anchor_token($anchor);
+		if (function_exists('bvmgr_tours_sanitize_anchor_token')) {
+			return bvmgr_tours_sanitize_anchor_token($anchor);
 		}
 		$anchor = strtolower(trim($anchor));
 		if ($anchor === '') {
@@ -405,18 +405,18 @@ if (!function_exists('vms_tasks_admin_sanitize_anchor_token')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_hover_tip_map')) {
+if (!function_exists('bvmgr_tasks_admin_hover_tip_map')) {
 	/**
 	 * @return array<string,string>
 	 */
-	function vms_tasks_admin_hover_tip_map(): array
+	function bvmgr_tasks_admin_hover_tip_map(): array
 	{
 		$map = array();
-		if (!function_exists('vms_get_tour_registry')) {
+		if (!function_exists('bvmgr_get_tour_registry')) {
 			return $map;
 		}
 
-		foreach ((array) vms_get_tour_registry() as $tour) {
+		foreach ((array) bvmgr_get_tour_registry() as $tour) {
 			if (!is_array($tour)) {
 				continue;
 			}
@@ -428,7 +428,7 @@ if (!function_exists('vms_tasks_admin_hover_tip_map')) {
 				if (!is_array($step)) {
 					continue;
 				}
-				$anchor = vms_tasks_admin_sanitize_anchor_token((string) ($step['anchor'] ?? ''));
+				$anchor = bvmgr_tasks_admin_sanitize_anchor_token((string) ($step['anchor'] ?? ''));
 				if ($anchor === '' || isset($map[$anchor])) {
 					continue;
 				}
@@ -447,8 +447,8 @@ if (!function_exists('vms_tasks_admin_hover_tip_map')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_render_hover_tip_assets')) {
-	function vms_tasks_admin_render_hover_tip_assets(): void
+if (!function_exists('bvmgr_tasks_admin_render_hover_tip_assets')) {
+	function bvmgr_tasks_admin_render_hover_tip_assets(): void
 	{
 		// Inline icon assets were replaced by the standardized tours runtime
 		// so all modules share one help icon style + behavior path.
@@ -456,16 +456,16 @@ if (!function_exists('vms_tasks_admin_render_hover_tip_assets')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_help_button')) {
-	function vms_tasks_admin_help_button(string $tour_id, string $anchor = 'tasks.help'): string
+if (!function_exists('bvmgr_tasks_admin_help_button')) {
+	function bvmgr_tasks_admin_help_button(string $tour_id, string $anchor = 'tasks.help'): string
 	{
 		$tour_id = sanitize_key($tour_id);
-		$anchor = vms_tasks_admin_sanitize_anchor_token($anchor);
+		$anchor = bvmgr_tasks_admin_sanitize_anchor_token($anchor);
 		if ($tour_id === '') {
 			return '';
 		}
-		if (function_exists('vms_render_help_button')) {
-			return vms_render_help_button(array(
+		if (function_exists('bvmgr_render_help_button')) {
+			return bvmgr_render_help_button(array(
 				'tour_id' => $tour_id,
 				'anchor' => $anchor,
 				'class' => 'vms-staff-tasks-help-menu',
@@ -476,17 +476,17 @@ if (!function_exists('vms_tasks_admin_help_button')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_get_event_options')) {
+if (!function_exists('bvmgr_tasks_admin_get_event_options')) {
 	/** @return array<int,string> */
-	function vms_tasks_admin_get_event_options(int $horizon_days = 120): array
+	function bvmgr_tasks_admin_get_event_options(int $horizon_days = 120): array
 	{
 		$horizon_days = max(1, min(365, $horizon_days));
-		$event_ids = function_exists('vms_tasks_collect_upcoming_event_ids')
-			? vms_tasks_collect_upcoming_event_ids($horizon_days)
+		$event_ids = function_exists('bvmgr_tasks_collect_upcoming_event_ids')
+			? bvmgr_tasks_collect_upcoming_event_ids($horizon_days)
 			: array();
 
 		if (empty($event_ids)) {
-			$k_date = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
+			$k_date = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
 			if ($k_date === '') {
 				$k_date = '_vms_event_date';
 			}
@@ -517,7 +517,7 @@ if (!function_exists('vms_tasks_admin_get_event_options')) {
 			});
 		}
 
-		$venues = vms_tasks_admin_get_venues();
+		$venues = bvmgr_tasks_admin_get_venues();
 		$options = array();
 		foreach ($event_ids as $raw_event_id) {
 			$event_id = absint($raw_event_id);
@@ -525,7 +525,7 @@ if (!function_exists('vms_tasks_admin_get_event_options')) {
 				continue;
 			}
 
-			$context = vms_tasks_get_event_context($event_id);
+			$context = bvmgr_tasks_get_event_context($event_id);
 			if (!is_array($context)) {
 				continue;
 			}
@@ -557,18 +557,18 @@ if (!function_exists('vms_tasks_admin_get_event_options')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_register_menu')) {
-	if (!function_exists('vms_tasks_admin_menu_fallback_capability')) {
-		function vms_tasks_admin_menu_fallback_capability(): string
+if (!function_exists('bvmgr_tasks_admin_register_menu')) {
+	if (!function_exists('bvmgr_tasks_admin_menu_fallback_capability')) {
+		function bvmgr_tasks_admin_menu_fallback_capability(): string
 		{
-			if (function_exists('vms_admin_ui_data_tools_capability')) {
-				$cap = sanitize_text_field((string) vms_admin_ui_data_tools_capability());
+			if (function_exists('bvmgr_admin_ui_data_tools_capability')) {
+				$cap = sanitize_text_field((string) bvmgr_admin_ui_data_tools_capability());
 				if ($cap !== '') {
 					return $cap;
 				}
 			}
-			if (function_exists('vms_admin_ui_ops_capability')) {
-				$cap = sanitize_text_field((string) vms_admin_ui_ops_capability());
+			if (function_exists('bvmgr_admin_ui_ops_capability')) {
+				$cap = sanitize_text_field((string) bvmgr_admin_ui_ops_capability());
 				if ($cap !== '') {
 					return $cap;
 				}
@@ -577,14 +577,14 @@ if (!function_exists('vms_tasks_admin_register_menu')) {
 		}
 	}
 
-	if (!function_exists('vms_tasks_admin_menu_capability')) {
-		function vms_tasks_admin_menu_capability(string $preferred_cap): string
+	if (!function_exists('bvmgr_tasks_admin_menu_capability')) {
+		function bvmgr_tasks_admin_menu_capability(string $preferred_cap): string
 		{
 			$preferred_cap = sanitize_text_field($preferred_cap);
 			if ($preferred_cap !== '' && current_user_can($preferred_cap)) {
 				return $preferred_cap;
 			}
-			$fallback_cap = vms_tasks_admin_menu_fallback_capability();
+			$fallback_cap = bvmgr_tasks_admin_menu_fallback_capability();
 			if ($fallback_cap !== '' && current_user_can($fallback_cap)) {
 				return $fallback_cap;
 			}
@@ -592,19 +592,19 @@ if (!function_exists('vms_tasks_admin_register_menu')) {
 		}
 	}
 
-	function vms_tasks_admin_register_menu(): void
+	function bvmgr_tasks_admin_register_menu(): void
 	{
-		$parent = vms_tasks_admin_parent_slug();
+		$parent = bvmgr_tasks_admin_parent_slug();
 		$menu_cap = 'read';
 
-		if (vms_tasks_current_user_can_manage_all()) {
+		if (bvmgr_tasks_current_user_can_manage_all()) {
 			add_submenu_page(
 				$parent,
 				__('Tasks', 'backstage-venue-manager'),
 				__('Tasks', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-tasks',
-				'vms_tasks_render_tasks_page'
+				'bvmgr_tasks_render_tasks_page'
 			);
 
 			add_submenu_page(
@@ -613,7 +613,7 @@ if (!function_exists('vms_tasks_admin_register_menu')) {
 				__('Task Templates', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-task-templates',
-				'vms_tasks_render_task_templates_page'
+				'bvmgr_tasks_render_task_templates_page'
 			);
 
 			add_submenu_page(
@@ -622,7 +622,7 @@ if (!function_exists('vms_tasks_admin_register_menu')) {
 				__('Checklist Templates', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-checklist-templates',
-				'vms_tasks_render_checklist_templates_page'
+				'bvmgr_tasks_render_checklist_templates_page'
 			);
 
 			add_submenu_page(
@@ -631,37 +631,37 @@ if (!function_exists('vms_tasks_admin_register_menu')) {
 				__('Task Settings', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-task-settings',
-				'vms_tasks_render_settings_page'
+				'bvmgr_tasks_render_settings_page'
 			);
 		}
 
-		if (vms_tasks_current_user_can_view_self()) {
+		if (bvmgr_tasks_current_user_can_view_self()) {
 			add_submenu_page(
 				$parent,
 				__('My Tasks', 'backstage-venue-manager'),
 				__('My Tasks', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-my-tasks',
-				'vms_tasks_render_my_tasks_page'
+				'bvmgr_tasks_render_my_tasks_page'
 			);
 		}
 	}
 }
-add_action('admin_menu', 'vms_tasks_admin_register_menu', 40);
+add_action('admin_menu', 'bvmgr_tasks_admin_register_menu', 40);
 
-if (!function_exists('vms_tasks_admin_post_redirect')) {
+if (!function_exists('bvmgr_tasks_admin_post_redirect')) {
 	/**
 	 * @param array<string,mixed> $query
 	 */
-	function vms_tasks_admin_post_redirect(string $page_slug, array $query = array()): void
+	function bvmgr_tasks_admin_post_redirect(string $page_slug, array $query = array()): void
 	{
-		wp_safe_redirect(vms_tasks_admin_page_url($page_slug, $query));
+		wp_safe_redirect(bvmgr_tasks_admin_page_url($page_slug, $query));
 		exit;
 	}
 }
 
-if (!function_exists('vms_tasks_admin_notice_url')) {
-	function vms_tasks_admin_notice_url(string $url, string $notice, string $message): string
+if (!function_exists('bvmgr_tasks_admin_notice_url')) {
+	function bvmgr_tasks_admin_notice_url(string $url, string $notice, string $message): string
 	{
 		return add_query_arg(array(
 			'vms_tasks_notice' => sanitize_key($notice),
@@ -670,23 +670,23 @@ if (!function_exists('vms_tasks_admin_notice_url')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_redirect_url_with_notice')) {
-	function vms_tasks_admin_redirect_url_with_notice(string $url, string $notice, string $message): void
+if (!function_exists('bvmgr_tasks_admin_redirect_url_with_notice')) {
+	function bvmgr_tasks_admin_redirect_url_with_notice(string $url, string $notice, string $message): void
 	{
-		wp_safe_redirect(vms_tasks_admin_notice_url($url, $notice, $message));
+		wp_safe_redirect(bvmgr_tasks_admin_notice_url($url, $notice, $message));
 		exit;
 	}
 }
 
-if (!function_exists('vms_tasks_admin_resolve_return_url')) {
-	function vms_tasks_admin_resolve_return_url(string $default_page = 'vms-tasks'): string
+if (!function_exists('bvmgr_tasks_admin_resolve_return_url')) {
+	function bvmgr_tasks_admin_resolve_return_url(string $default_page = 'vms-tasks'): string
 	{
-		$return_page = sanitize_key(vms_tasks_admin_request_arg('return_page'));
+		$return_page = sanitize_key(bvmgr_tasks_admin_request_arg('return_page'));
 		if (in_array($return_page, array('vms-tasks', 'vms-my-tasks'), true)) {
-			return vms_tasks_admin_page_url($return_page);
+			return bvmgr_tasks_admin_page_url($return_page);
 		}
 		if ($return_page === 'event-plan') {
-			$event_id = absint(vms_tasks_admin_request_arg('event_id'));
+			$event_id = absint(bvmgr_tasks_admin_request_arg('event_id'));
 			if ($event_id > 0) {
 				$edit_url = get_edit_post_link($event_id, 'url');
 				if (is_string($edit_url) && $edit_url !== '') {
@@ -695,12 +695,12 @@ if (!function_exists('vms_tasks_admin_resolve_return_url')) {
 			}
 		}
 
-		return vms_tasks_admin_page_url($default_page);
+		return bvmgr_tasks_admin_page_url($default_page);
 	}
 }
 
-if (!function_exists('vms_tasks_admin_parse_due_input')) {
-	function vms_tasks_admin_parse_due_input(string $raw): ?string
+if (!function_exists('bvmgr_tasks_admin_parse_due_input')) {
+	function bvmgr_tasks_admin_parse_due_input(string $raw): ?string
 	{
 		$raw = trim($raw);
 		if ($raw === '') {
@@ -723,69 +723,69 @@ if (!function_exists('vms_tasks_admin_parse_due_input')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_handle_transition')) {
-	function vms_tasks_admin_handle_transition(): void
+if (!function_exists('bvmgr_tasks_admin_handle_transition')) {
+	function bvmgr_tasks_admin_handle_transition(): void
 	{
-		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
+		$return_url = bvmgr_tasks_admin_resolve_return_url('vms-tasks');
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_transition')) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_transition'))) {
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 
 		$instance_id = absint($_POST['instance_id'] ?? 0);
 		$target_status = sanitize_key((string) ($_POST['target_status'] ?? 'open'));
 		$reason = isset($_POST['reason']) ? sanitize_text_field((string) wp_unslash($_POST['reason'])) : '';
 
-		$row = vms_tasks_get_instance($instance_id);
+		$row = bvmgr_tasks_get_instance($instance_id);
 		if (!is_array($row)) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Task was not found.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Task was not found.', 'backstage-venue-manager'));
 		}
 
 		$current_user_id = absint(get_current_user_id());
-		$can_manage_all = vms_tasks_current_user_can_manage_all();
-		$can_self = vms_tasks_current_user_can_complete_self() && absint($row['assignee_user_id'] ?? 0) === $current_user_id;
+		$can_manage_all = bvmgr_tasks_current_user_can_manage_all();
+		$can_self = bvmgr_tasks_current_user_can_complete_self() && absint($row['assignee_user_id'] ?? 0) === $current_user_id;
 
 		if (!$can_manage_all && !$can_self) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('You do not have permission to update this task.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('You do not have permission to update this task.', 'backstage-venue-manager'));
 		}
 
 		if (!$can_manage_all && in_array($target_status, array('canceled', 'open'), true)) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Only admins can cancel or reopen tasks.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Only admins can cancel or reopen tasks.', 'backstage-venue-manager'));
 		}
 
-		$updated = vms_tasks_transition_instance_status($instance_id, $target_status, $reason, $current_user_id);
+		$updated = bvmgr_tasks_transition_instance_status($instance_id, $target_status, $reason, $current_user_id);
 		if (is_wp_error($updated)) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $updated->get_error_message());
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $updated->get_error_message());
 		}
 
-		vms_tasks_admin_redirect_url_with_notice($return_url, 'success', __('Task updated.', 'backstage-venue-manager'));
+		bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'success', __('Task updated.', 'backstage-venue-manager'));
 	}
 }
-add_action('admin_post_vms_tasks_transition', 'vms_tasks_admin_handle_transition');
+add_action('admin_post_vms_tasks_transition', 'bvmgr_tasks_admin_handle_transition');
 
-if (!function_exists('vms_tasks_admin_handle_generate_event')) {
-	function vms_tasks_admin_handle_generate_event(): void
+if (!function_exists('bvmgr_tasks_admin_handle_generate_event')) {
+	function bvmgr_tasks_admin_handle_generate_event(): void
 	{
-		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
-		if (!vms_tasks_current_user_can_manage_all()) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
+		$return_url = bvmgr_tasks_admin_resolve_return_url('vms-tasks');
+		if (!bvmgr_tasks_current_user_can_manage_all()) {
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		$event_id = absint($_GET['event_id'] ?? 0);
 		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
 			: '';
-		if (!wp_verify_nonce($nonce, 'vms_tasks_generate_event_' . $event_id)) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_generate_event_' . $event_id))) {
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
 
-		$result = vms_tasks_generate_for_event($event_id, array(
+		$result = bvmgr_tasks_generate_for_event($event_id, array(
 			'allow_supersede' => true,
 			'actor_user_id' => get_current_user_id(),
 		));
 		if (is_wp_error($result)) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $result->get_error_message());
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $result->get_error_message());
 		}
 
 		$message = sprintf(
@@ -794,28 +794,28 @@ if (!function_exists('vms_tasks_admin_handle_generate_event')) {
 			absint($result['instances_created'] ?? 0),
 			absint($result['instances_superseded'] ?? 0)
 		);
-		vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $message);
+		bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'success', $message);
 	}
 }
-add_action('admin_post_vms_tasks_generate_event', 'vms_tasks_admin_handle_generate_event');
+add_action('admin_post_vms_tasks_generate_event', 'bvmgr_tasks_admin_handle_generate_event');
 
-if (!function_exists('vms_tasks_admin_handle_update_assignment')) {
-	function vms_tasks_admin_handle_update_assignment(): void
+if (!function_exists('bvmgr_tasks_admin_handle_update_assignment')) {
+	function bvmgr_tasks_admin_handle_update_assignment(): void
 	{
-		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
-		if (!vms_tasks_current_user_can_manage_all()) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
+		$return_url = bvmgr_tasks_admin_resolve_return_url('vms-tasks');
+		if (!bvmgr_tasks_current_user_can_manage_all()) {
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_update_assignment')) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_update_assignment'))) {
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 			}
 
 			$instance_id = absint($_POST['instance_id'] ?? 0);
 			$event_id = absint($_POST['event_id'] ?? 0);
-			$assignment_mode = vms_tasks_sanitize_assignment_mode(sanitize_key((string) wp_unslash($_POST['assignment_mode'] ?? 'person')));
+			$assignment_mode = bvmgr_tasks_sanitize_assignment_mode(sanitize_key((string) wp_unslash($_POST['assignment_mode'] ?? 'person')));
 			$role_key = sanitize_key((string) wp_unslash($_POST['role_key'] ?? ''));
 			$assignee_user_id = absint($_POST['assignee_user_id'] ?? 0);
 			$resolution_message = '';
@@ -826,11 +826,11 @@ if (!function_exists('vms_tasks_admin_handle_update_assignment')) {
 		}
 
 		if (in_array($assignment_mode, array('role', 'scheduled_role'), true) && $role_key === '') {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Role key is required for role-based assignment modes.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Role key is required for role-based assignment modes.', 'backstage-venue-manager'));
 		}
 
-		if ($assignment_mode === 'scheduled_role' && $assignee_user_id <= 0 && $event_id > 0 && function_exists('vms_tasks_resolve_scheduled_role_user_id')) {
-			$resolved = vms_tasks_resolve_scheduled_role_user_id($event_id, $role_key);
+		if ($assignment_mode === 'scheduled_role' && $assignee_user_id <= 0 && $event_id > 0 && function_exists('bvmgr_tasks_resolve_scheduled_role_user_id')) {
+			$resolved = bvmgr_tasks_resolve_scheduled_role_user_id($event_id, $role_key);
 			$status = (string) ($resolved['status'] ?? 'none');
 			if ($status === 'single') {
 				$assignee_user_id = absint($resolved['assignee_user_id'] ?? 0);
@@ -846,7 +846,7 @@ if (!function_exists('vms_tasks_admin_handle_update_assignment')) {
 
 		$assignment_locked = !empty($_POST['assignment_locked']) && $assignee_user_id > 0;
 
-		$updated = vms_tasks_set_instance_assignment(
+		$updated = bvmgr_tasks_set_instance_assignment(
 			$instance_id,
 			$assignee_user_id,
 			$assignment_locked,
@@ -855,64 +855,64 @@ if (!function_exists('vms_tasks_admin_handle_update_assignment')) {
 			$role_key
 		);
 		if (is_wp_error($updated)) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $updated->get_error_message());
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $updated->get_error_message());
 		}
 
 		$message = __('Assignment updated.', 'backstage-venue-manager');
 		if ($resolution_message !== '') {
 			$message .= ' ' . $resolution_message;
 		}
-		vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $message);
+		bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'success', $message);
 	}
 }
-add_action('admin_post_vms_tasks_update_assignment', 'vms_tasks_admin_handle_update_assignment');
+add_action('admin_post_vms_tasks_update_assignment', 'bvmgr_tasks_admin_handle_update_assignment');
 
-if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
-	function vms_tasks_admin_handle_create_one_off(): void
+if (!function_exists('bvmgr_tasks_admin_handle_create_one_off')) {
+	function bvmgr_tasks_admin_handle_create_one_off(): void
 	{
-		$return_url = vms_tasks_admin_resolve_return_url('vms-tasks');
-		if (!vms_tasks_current_user_can_manage_all()) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
+		$return_url = bvmgr_tasks_admin_resolve_return_url('vms-tasks');
+		if (!bvmgr_tasks_current_user_can_manage_all()) {
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_create_one_off')) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_create_one_off'))) {
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
 		}
-		if (!vms_tasks_db_ready()) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Staff Tasks tables are unavailable.', 'backstage-venue-manager'));
+		if (!bvmgr_tasks_db_ready()) {
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Staff Tasks tables are unavailable.', 'backstage-venue-manager'));
 		}
 
 		$event_id = absint($_POST['event_id'] ?? 0);
 		$venue_id_input = absint($_POST['venue_id'] ?? 0);
 		$event = null;
 		if ($event_id > 0) {
-			$event = vms_tasks_get_event_context($event_id);
+			$event = bvmgr_tasks_get_event_context($event_id);
 			if (!is_array($event)) {
-				vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Event context is unavailable for task creation.', 'backstage-venue-manager'));
+				bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Event context is unavailable for task creation.', 'backstage-venue-manager'));
 			}
 		}
 
 			$title = sanitize_text_field((string) wp_unslash($_POST['title'] ?? ''));
 			if ($title === '') {
-				vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Task title is required.', 'backstage-venue-manager'));
+				bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Task title is required.', 'backstage-venue-manager'));
 			}
 			$instructions = wp_kses_post((string) wp_unslash($_POST['instructions'] ?? ''));
-			$priority = vms_tasks_sanitize_priority(sanitize_key((string) wp_unslash($_POST['priority'] ?? 'normal')));
+			$priority = bvmgr_tasks_sanitize_priority(sanitize_key((string) wp_unslash($_POST['priority'] ?? 'normal')));
 			$is_required = !empty($_POST['is_required']) ? 1 : 0;
 			$due_raw = sanitize_text_field((string) wp_unslash($_POST['due_at_local'] ?? ''));
-			$due_at_local = vms_tasks_admin_parse_due_input($due_raw);
-			$assignment_mode = vms_tasks_sanitize_assignment_mode(sanitize_key((string) wp_unslash($_POST['assignment_mode'] ?? 'person')));
+			$due_at_local = bvmgr_tasks_admin_parse_due_input($due_raw);
+			$assignment_mode = bvmgr_tasks_sanitize_assignment_mode(sanitize_key((string) wp_unslash($_POST['assignment_mode'] ?? 'person')));
 			$role_key = sanitize_key((string) wp_unslash($_POST['role_key'] ?? ''));
 			$assignee_user_id = absint($_POST['assignee_user_id'] ?? 0);
-			$recurrence_pattern = vms_tasks_sanitize_recurrence_pattern(sanitize_key((string) wp_unslash($_POST['recurrence_pattern'] ?? 'none')));
+			$recurrence_pattern = bvmgr_tasks_sanitize_recurrence_pattern(sanitize_key((string) wp_unslash($_POST['recurrence_pattern'] ?? 'none')));
 			$recurrence_every_n_days = absint($_POST['recurrence_every_n_days'] ?? 0);
 			$assignment_locked = !empty($_POST['assignment_locked']) && $assignee_user_id > 0;
 			$make_repeatable_now = !empty($_POST['make_repeatable_now']);
 		$repeatable_checklist_id = absint($_POST['repeatable_checklist_id'] ?? 0);
 		if ($due_raw !== '' && $due_at_local === null) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Due date is invalid. Use date and time format from the picker.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Due date is invalid. Use date and time format from the picker.', 'backstage-venue-manager'));
 		}
 
 		if ($assignee_user_id > 0) {
@@ -920,23 +920,23 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
 			$role_key = '';
 		}
 		if (in_array($assignment_mode, array('role', 'scheduled_role'), true) && $role_key === '') {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Role key is required for role-based assignment modes.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Role key is required for role-based assignment modes.', 'backstage-venue-manager'));
 		}
 		if ($assignment_mode === 'person') {
 			$role_key = '';
 		}
 		if ($event_id <= 0 && $assignment_mode === 'scheduled_role') {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Scheduled role assignment requires an event-linked task.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Scheduled role assignment requires an event-linked task.', 'backstage-venue-manager'));
 		}
 		if ($event_id > 0) {
 			$recurrence_pattern = 'none';
 			$recurrence_every_n_days = 0;
 		}
 		if ($recurrence_pattern !== 'none' && $due_at_local === null) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Recurring tasks require a due date/time.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Recurring tasks require a due date/time.', 'backstage-venue-manager'));
 		}
 		if ($recurrence_pattern === 'every_n_days' && ($recurrence_every_n_days < 2 || $recurrence_every_n_days > 365)) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Every N days recurrence must be between 2 and 365.', 'backstage-venue-manager'));
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Every N days recurrence must be between 2 and 365.', 'backstage-venue-manager'));
 		}
 
 		$resolved_venue_id = 0;
@@ -948,7 +948,7 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
 			$resolved_venue_id = $venue_id_input > 0 ? $venue_id_input : 0;
 		}
 
-		$created = vms_tasks_insert_instance(array(
+		$created = bvmgr_tasks_insert_instance(array(
 			'event_id' => $event_id > 0 ? $event_id : null,
 			'venue_id' => $resolved_venue_id > 0 ? $resolved_venue_id : null,
 			'event_type' => $resolved_event_type,
@@ -966,11 +966,11 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
 			'recurrence_every_n_days' => $recurrence_every_n_days,
 		));
 		if (is_wp_error($created)) {
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $created->get_error_message());
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $created->get_error_message());
 		}
 
 		$instance_id = absint($created);
-		vms_tasks_log_task_action($instance_id, 'created_ad_hoc', get_current_user_id(), wp_json_encode(array(
+		bvmgr_tasks_log_task_action($instance_id, 'created_ad_hoc', get_current_user_id(), wp_json_encode(array(
 			'event_id' => $event_id,
 			'title' => $title,
 			'is_required' => $is_required ? 1 : 0,
@@ -980,10 +980,10 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
 			'recurrence_pattern' => $recurrence_pattern,
 			'recurrence_every_n_days' => $recurrence_every_n_days,
 		)));
-		if ($assignee_user_id > 0 && function_exists('vms_tasks_emit_assignment_notification')) {
-			$latest = vms_tasks_get_instance($instance_id);
+		if ($assignee_user_id > 0 && function_exists('bvmgr_tasks_emit_assignment_notification')) {
+			$latest = bvmgr_tasks_get_instance($instance_id);
 			if (is_array($latest)) {
-				vms_tasks_emit_assignment_notification($latest);
+				bvmgr_tasks_emit_assignment_notification($latest);
 			}
 		}
 
@@ -1009,52 +1009,52 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
 				'role_key' => $role_key,
 				'assignee_user_id' => $assignee_user_id,
 			);
-			$template_id = vms_tasks_upsert_task_template($template_payload, 0);
+			$template_id = bvmgr_tasks_upsert_task_template($template_payload, 0);
 			if (is_wp_error($template_id)) {
 				$message = sprintf(
 					/* translators: %s is an error string from template save. */
 					__('Task was created, but repeatable template save failed: %s', 'backstage-venue-manager'),
 					$template_id->get_error_message()
 				);
-				vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
+				bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
 			}
 
 			$template_id = absint($template_id);
 			if ($repeatable_checklist_id > 0) {
-				$target_checklist = vms_tasks_get_checklist_template($repeatable_checklist_id);
+				$target_checklist = bvmgr_tasks_get_checklist_template($repeatable_checklist_id);
 				if (!is_array($target_checklist)) {
 					$message = __('Task and repeatable template were created, but selected checklist was not found.', 'backstage-venue-manager');
-					vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
+					bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
 				}
 
-				$items = vms_tasks_get_checklist_items($repeatable_checklist_id);
+				$items = bvmgr_tasks_get_checklist_items($repeatable_checklist_id);
 				$sort = count($items) + 1;
 				$items[] = array(
 					'task_template_id' => $template_id,
 					'sort_order' => $sort,
 					'overrides' => array(),
 				);
-				$replace = vms_tasks_replace_checklist_items($repeatable_checklist_id, $items);
+				$replace = bvmgr_tasks_replace_checklist_items($repeatable_checklist_id, $items);
 				if (is_wp_error($replace)) {
 					$message = sprintf(
 						/* translators: %s is an error string from checklist update. */
 						__('Task and repeatable template were created, but checklist update failed: %s', 'backstage-venue-manager'),
 						$replace->get_error_message()
 					);
-					vms_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
+					bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
 				}
 
 				$success = __('Task created and saved as a repeatable template. It was added to the selected checklist.', 'backstage-venue-manager');
-				vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $success);
+				bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'success', $success);
 			}
 
 			$success = __('Task created and saved as a repeatable template. Add it to a checklist template to activate automatic generation.', 'backstage-venue-manager');
-			vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $success);
+			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'success', $success);
 		}
 
 		if (!empty($_POST['open_repeatable_template'])) {
-			$template_url = vms_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
-			vms_tasks_admin_redirect_url_with_notice($template_url, 'success', __('Task created. Template draft loaded from this task. Save it and add it to a checklist to make it repeatable.', 'backstage-venue-manager'));
+			$template_url = bvmgr_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
+			bvmgr_tasks_admin_redirect_url_with_notice($template_url, 'success', __('Task created. Template draft loaded from this task. Save it and add it to a checklist to make it repeatable.', 'backstage-venue-manager'));
 		}
 
 		$success_message = __('Task created.', 'backstage-venue-manager');
@@ -1062,19 +1062,19 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off')) {
 			$success_message .= ' ' . sprintf(
 				/* translators: %s is the recurrence label. */
 				__('Recurring schedule: %s.', 'backstage-venue-manager'),
-				vms_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days)
+				bvmgr_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days)
 			);
 		}
-		vms_tasks_admin_redirect_url_with_notice($return_url, 'success', $success_message);
+		bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'success', $success_message);
 	}
 }
-add_action('admin_post_vms_tasks_create_one_off', 'vms_tasks_admin_handle_create_one_off');
+add_action('admin_post_vms_tasks_create_one_off', 'bvmgr_tasks_admin_handle_create_one_off');
 
-	if (!function_exists('vms_tasks_admin_page_asset_pages')) {
+	if (!function_exists('bvmgr_tasks_admin_page_asset_pages')) {
 		/**
 		 * @return array<int,string>
 		 */
-		function vms_tasks_admin_page_asset_pages(): array
+		function bvmgr_tasks_admin_page_asset_pages(): array
 		{
 			return array(
 				'vms-tasks',
@@ -1083,73 +1083,73 @@ add_action('admin_post_vms_tasks_create_one_off', 'vms_tasks_admin_handle_create
 		}
 	}
 
-	if (!function_exists('vms_tasks_admin_enqueue_page_assets')) {
+	if (!function_exists('bvmgr_tasks_admin_enqueue_page_assets')) {
 		/**
 		 * Enqueue Staff Tasks admin-page helpers only on the supported pages.
 		 */
-		function vms_tasks_admin_enqueue_page_assets(): void
+		function bvmgr_tasks_admin_enqueue_page_assets(): void
 		{
-			$page = sanitize_key(vms_tasks_admin_query_arg('page'));
-			if (!in_array($page, vms_tasks_admin_page_asset_pages(), true)) {
+			$page = sanitize_key(bvmgr_tasks_admin_query_arg('page'));
+			if (!in_array($page, bvmgr_tasks_admin_page_asset_pages(), true)) {
 				return;
 			}
-			if (!vms_tasks_current_user_can_manage_all()) {
+			if (!bvmgr_tasks_current_user_can_manage_all()) {
 				return;
 			}
 
 			wp_enqueue_script(
-				'vms-tasks-admin-pages',
-				VMS_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js',
+				'bvmgr-tasks-admin-pages',
+				BVMGR_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js',
 				array(),
-				defined('VMS_VERSION') ? VMS_VERSION : null,
+				defined('BVMGR_VERSION') ? BVMGR_VERSION : null,
 				true
 			);
 		}
 	}
-	add_action('admin_enqueue_scripts', 'vms_tasks_admin_enqueue_page_assets', 60);
+	add_action('admin_enqueue_scripts', 'bvmgr_tasks_admin_enqueue_page_assets', 60);
 
-	if (!function_exists('vms_tasks_admin_enqueue_event_plan_metabox_assets')) {
+	if (!function_exists('bvmgr_tasks_admin_enqueue_event_plan_metabox_assets')) {
 		/**
 		 * Enqueue Staff Tasks metabox JS on the Event Plan edit screen.
 	 */
-	function vms_tasks_admin_enqueue_event_plan_metabox_assets(): void
+	function bvmgr_tasks_admin_enqueue_event_plan_metabox_assets(): void
 	{
-		if (!vms_tasks_is_event_plan_edit_screen()) {
+		if (!bvmgr_tasks_is_event_plan_edit_screen()) {
 			return;
 		}
-		if (!vms_tasks_current_user_can_manage_all()) {
+		if (!bvmgr_tasks_current_user_can_manage_all()) {
 			return;
 		}
 
 		wp_enqueue_script(
-			'vms-tasks-event-plan-metabox',
-			VMS_PLUGIN_URL . 'assets/js/vms-tasks-event-plan-metabox.js',
+			'bvmgr-tasks-event-plan-metabox',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-tasks-event-plan-metabox.js',
 			array(),
-			defined('VMS_VERSION') ? VMS_VERSION : null,
+			defined('BVMGR_VERSION') ? BVMGR_VERSION : null,
 			true
 		);
 	}
 }
-add_action('admin_enqueue_scripts', 'vms_tasks_admin_enqueue_event_plan_metabox_assets', 60);
+add_action('admin_enqueue_scripts', 'bvmgr_tasks_admin_enqueue_event_plan_metabox_assets', 60);
 
-if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
+if (!function_exists('bvmgr_tasks_admin_handle_create_one_off_ajax')) {
 	/**
 	 * AJAX endpoint for the Event Plan Tasks metabox.
 	 *
 	 * Uses the same rules as admin_post_vms_tasks_create_one_off but returns JSON.
 	 */
-	function vms_tasks_admin_handle_create_one_off_ajax(): void
+	function bvmgr_tasks_admin_handle_create_one_off_ajax(): void
 	{
-		if (!vms_tasks_current_user_can_manage_all()) {
+		if (!bvmgr_tasks_current_user_can_manage_all()) {
 			wp_send_json_error(array('message' => __('Insufficient permissions.', 'backstage-venue-manager')), 403);
 		}
 		$nonce = (isset($_POST['nonce']) && !is_array($_POST['nonce']))
 			? sanitize_text_field(wp_unslash((string) $_POST['nonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_tasks_create_one_off')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_create_one_off'))) {
 			wp_send_json_error(array('message' => __('Security check failed.', 'backstage-venue-manager')), 403);
 		}
-		if (!vms_tasks_db_ready()) {
+		if (!bvmgr_tasks_db_ready()) {
 			wp_send_json_error(array('message' => __('Staff Tasks tables are unavailable.', 'backstage-venue-manager')), 500);
 		}
 
@@ -1157,7 +1157,7 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
 		if ($event_id <= 0) {
 			wp_send_json_error(array('message' => __('Event ID is required.', 'backstage-venue-manager')), 400);
 		}
-		$event = vms_tasks_get_event_context($event_id);
+		$event = bvmgr_tasks_get_event_context($event_id);
 		if (!is_array($event)) {
 			wp_send_json_error(array('message' => __('Event context is unavailable for task creation.', 'backstage-venue-manager')), 400);
 		}
@@ -1167,14 +1167,14 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
 				wp_send_json_error(array('message' => __('Task title is required.', 'backstage-venue-manager')), 400);
 			}
 			$instructions = wp_kses_post((string) wp_unslash($_POST['instructions'] ?? ''));
-			$priority = vms_tasks_sanitize_priority(sanitize_key((string) wp_unslash($_POST['priority'] ?? 'normal')));
+			$priority = bvmgr_tasks_sanitize_priority(sanitize_key((string) wp_unslash($_POST['priority'] ?? 'normal')));
 			$is_required = !empty($_POST['is_required']) ? 1 : 0;
 			$due_raw = sanitize_text_field((string) wp_unslash($_POST['due_at_local'] ?? ''));
-			$due_at_local = vms_tasks_admin_parse_due_input($due_raw);
+			$due_at_local = bvmgr_tasks_admin_parse_due_input($due_raw);
 			if ($due_raw !== '' && $due_at_local === null) {
 				wp_send_json_error(array('message' => __('Due date is invalid. Use date and time format from the picker.', 'backstage-venue-manager')), 400);
 			}
-			$assignment_mode = vms_tasks_sanitize_assignment_mode(sanitize_key((string) wp_unslash($_POST['assignment_mode'] ?? 'person')));
+			$assignment_mode = bvmgr_tasks_sanitize_assignment_mode(sanitize_key((string) wp_unslash($_POST['assignment_mode'] ?? 'person')));
 			$role_key = sanitize_key((string) wp_unslash($_POST['role_key'] ?? ''));
 			$assignee_user_id = absint($_POST['assignee_user_id'] ?? 0);
 			$assignment_locked = !empty($_POST['assignment_locked']) && $assignee_user_id > 0;
@@ -1192,7 +1192,7 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
 			$role_key = '';
 		}
 
-		$created = vms_tasks_insert_instance(array(
+		$created = bvmgr_tasks_insert_instance(array(
 			'event_id' => $event_id,
 			'venue_id' => absint($event['venue_id'] ?? 0) ?: null,
 			'event_type' => (string) ($event['event_type'] ?? ''),
@@ -1214,7 +1214,7 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
 		}
 
 		$instance_id = absint($created);
-		vms_tasks_log_task_action($instance_id, 'created_ad_hoc', get_current_user_id(), wp_json_encode(array(
+		bvmgr_tasks_log_task_action($instance_id, 'created_ad_hoc', get_current_user_id(), wp_json_encode(array(
 			'event_id' => $event_id,
 			'title' => $title,
 			'is_required' => $is_required ? 1 : 0,
@@ -1222,10 +1222,10 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
 			'role_key' => $role_key,
 			'assignee_user_id' => $assignee_user_id,
 		)));
-		if ($assignee_user_id > 0 && function_exists('vms_tasks_emit_assignment_notification')) {
-			$latest = vms_tasks_get_instance($instance_id);
+		if ($assignee_user_id > 0 && function_exists('bvmgr_tasks_emit_assignment_notification')) {
+			$latest = bvmgr_tasks_get_instance($instance_id);
 			if (is_array($latest)) {
-				vms_tasks_emit_assignment_notification($latest);
+				bvmgr_tasks_emit_assignment_notification($latest);
 			}
 		}
 
@@ -1252,33 +1252,33 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
 				'role_key' => $role_key,
 				'assignee_user_id' => $assignee_user_id,
 			);
-			$template_id = vms_tasks_upsert_task_template($template_payload, 0);
+			$template_id = bvmgr_tasks_upsert_task_template($template_payload, 0);
 			if (is_wp_error($template_id)) {
 				wp_send_json_error(array('message' => $template_id->get_error_message()), 500);
 			}
 
 			$template_id = absint($template_id);
 			if ($repeatable_checklist_id > 0) {
-				$target_checklist = vms_tasks_get_checklist_template($repeatable_checklist_id);
+				$target_checklist = bvmgr_tasks_get_checklist_template($repeatable_checklist_id);
 				if (!is_array($target_checklist)) {
 					wp_send_json_error(array('message' => __('Selected checklist was not found.', 'backstage-venue-manager')), 400);
 				}
 
-				$items = vms_tasks_get_checklist_items($repeatable_checklist_id);
+				$items = bvmgr_tasks_get_checklist_items($repeatable_checklist_id);
 				$sort = count($items) + 1;
 				$items[] = array(
 					'task_template_id' => $template_id,
 					'sort_order' => $sort,
 					'overrides' => array(),
 				);
-				$replace = vms_tasks_replace_checklist_items($repeatable_checklist_id, $items);
+				$replace = bvmgr_tasks_replace_checklist_items($repeatable_checklist_id, $items);
 				if (is_wp_error($replace)) {
 					wp_send_json_error(array('message' => $replace->get_error_message()), 500);
 				}
 			}
 		}
 
-		$tasks_url = vms_tasks_admin_page_url('vms-tasks', array('event_id' => $event_id));
+		$tasks_url = bvmgr_tasks_admin_page_url('vms-tasks', array('event_id' => $event_id));
 		wp_send_json_success(array(
 			'instance_id' => $instance_id,
 			'tasks_url' => $tasks_url,
@@ -1286,63 +1286,63 @@ if (!function_exists('vms_tasks_admin_handle_create_one_off_ajax')) {
 		));
 	}
 }
-add_action('wp_ajax_vms_tasks_create_one_off_ajax', 'vms_tasks_admin_handle_create_one_off_ajax');
+add_action('wp_ajax_vms_tasks_create_one_off_ajax', 'bvmgr_tasks_admin_handle_create_one_off_ajax');
 
-if (!function_exists('vms_tasks_render_tasks_page')) {
-	function vms_tasks_render_tasks_page(): void
+if (!function_exists('bvmgr_tasks_render_tasks_page')) {
+	function bvmgr_tasks_render_tasks_page(): void
 	{
-		if (!vms_tasks_current_user_can_manage_all()) {
+		if (!bvmgr_tasks_current_user_can_manage_all()) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		vms_tasks_admin_render_hover_tip_assets();
+		bvmgr_tasks_admin_render_hover_tip_assets();
 
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__('Tasks', 'backstage-venue-manager') . ' ' . vms_tasks_admin_help_button('vms_staff_tasks_overview', 'tasks.help') . '</h1>';
-		vms_tasks_admin_render_notices();
+		echo '<h1>' . esc_html__('Tasks', 'backstage-venue-manager') . ' ' . bvmgr_tasks_admin_help_button('vms_staff_tasks_overview', 'tasks.help') . '</h1>';
+		bvmgr_tasks_admin_render_notices();
 
-		if (!vms_tasks_db_ready()) {
+		if (!bvmgr_tasks_db_ready()) {
 			echo '<div class="notice notice-error"><p>' . esc_html__('Staff Tasks tables are unavailable. Tasks are disabled until schema setup succeeds.', 'backstage-venue-manager') . '</p></div>';
 			echo '</div>';
 			return;
 		}
 
 		$filters = array(
-			'task_instance_id' => absint(vms_tasks_admin_query_arg('task_instance_id')),
-			'status' => sanitize_key(vms_tasks_admin_query_arg('status')),
-			'event_id' => absint(vms_tasks_admin_query_arg('event_id')),
-			'event_linkage' => sanitize_key(vms_tasks_admin_query_arg('event_linkage')),
-			'assignee_user_id' => absint(vms_tasks_admin_query_arg('assignee_user_id')),
-			'role_key' => sanitize_key(vms_tasks_admin_query_arg('role_key')),
-			'venue_id' => absint(vms_tasks_admin_query_arg('venue_id')),
-			'required_only' => !empty(vms_tasks_admin_query_arg('required_only')) ? 1 : 0,
-			'due_bucket' => sanitize_key(vms_tasks_admin_query_arg('due_bucket')),
+			'task_instance_id' => absint(bvmgr_tasks_admin_query_arg('task_instance_id')),
+			'status' => sanitize_key(bvmgr_tasks_admin_query_arg('status')),
+			'event_id' => absint(bvmgr_tasks_admin_query_arg('event_id')),
+			'event_linkage' => sanitize_key(bvmgr_tasks_admin_query_arg('event_linkage')),
+			'assignee_user_id' => absint(bvmgr_tasks_admin_query_arg('assignee_user_id')),
+			'role_key' => sanitize_key(bvmgr_tasks_admin_query_arg('role_key')),
+			'venue_id' => absint(bvmgr_tasks_admin_query_arg('venue_id')),
+			'required_only' => !empty(bvmgr_tasks_admin_query_arg('required_only')) ? 1 : 0,
+			'due_bucket' => sanitize_key(bvmgr_tasks_admin_query_arg('due_bucket')),
 			'limit' => 500,
 		);
-		$now_local = vms_tasks_now_local_mysql();
+		$now_local = bvmgr_tasks_now_local_mysql();
 		if ($filters['due_bucket'] === 'overdue') {
 			$filters['due_before'] = $now_local;
 			$filters['exclude_status'] = 'superseded';
 		}
 
-		$rows = vms_tasks_get_instances($filters);
-		$users = vms_tasks_admin_get_user_options();
-		$role_options = vms_tasks_admin_get_role_options(true);
-		$checklist_options = vms_tasks_admin_get_checklist_options(true);
-		$checklist_rows = vms_tasks_get_checklist_templates(array('is_active' => 1));
+		$rows = bvmgr_tasks_get_instances($filters);
+		$users = bvmgr_tasks_admin_get_user_options();
+		$role_options = bvmgr_tasks_admin_get_role_options(true);
+		$checklist_options = bvmgr_tasks_admin_get_checklist_options(true);
+		$checklist_rows = bvmgr_tasks_get_checklist_templates(array('is_active' => 1));
 		$checklist_scope_by_id = array();
 		foreach ($checklist_rows as $checklist_row) {
 			$checklist_id = absint($checklist_row['id'] ?? 0);
 			if ($checklist_id <= 0) {
 				continue;
 			}
-			$checklist_scope_by_id[$checklist_id] = vms_tasks_sanitize_scope((string) ($checklist_row['scope'] ?? 'event'));
+			$checklist_scope_by_id[$checklist_id] = bvmgr_tasks_sanitize_scope((string) ($checklist_row['scope'] ?? 'event'));
 		}
-		$venues = vms_tasks_admin_get_venues();
-		$settings = vms_tasks_get_settings();
-		$event_options = vms_tasks_admin_get_event_options((int) ($settings['horizon_days'] ?? 120));
+		$venues = bvmgr_tasks_admin_get_venues();
+		$settings = bvmgr_tasks_get_settings();
+		$event_options = bvmgr_tasks_admin_get_event_options((int) ($settings['horizon_days'] ?? 120));
 		$default_event_id = absint($filters['event_id']);
 		if ($default_event_id > 0 && !isset($event_options[$default_event_id])) {
-			$context = vms_tasks_get_event_context($default_event_id);
+			$context = bvmgr_tasks_get_event_context($default_event_id);
 			if (is_array($context)) {
 				$event_label = trim((string) ($context['event_title'] ?? get_the_title($default_event_id)));
 				$date_ymd = trim((string) ($context['date_ymd'] ?? ''));
@@ -1403,7 +1403,7 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 		echo '<button class="button" type="submit">' . esc_html__('Filter', 'backstage-venue-manager') . '</button>';
 		echo '</form>';
 		if (!empty($filters['task_instance_id'])) {
-			$clear_focus_url = vms_tasks_admin_page_url('vms-tasks');
+			$clear_focus_url = bvmgr_tasks_admin_page_url('vms-tasks');
 			echo '<p class="description">';
 			echo esc_html(sprintf(
 				/* translators: %d is a task instance id. */
@@ -1418,12 +1418,12 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 		echo '<p style="margin:10px 0;padding:10px;border-left:4px solid #2271b1;background:#f0f6fc;" data-vms-tour="tasks.repeatable">';
 		echo '<strong>' . esc_html__('Repeatable Tasks Setup:', 'backstage-venue-manager') . '</strong> ';
 		echo esc_html__('Create role-based task templates, then include them in checklist templates (default, venue, or event type) so events generate tasks automatically.', 'backstage-venue-manager') . ' ';
-		echo '<a class="button button-small" href="' . esc_url(vms_tasks_admin_page_url('vms-task-templates')) . '">' . esc_html__('Task Templates', 'backstage-venue-manager') . '</a> ';
-		echo '<a class="button button-small" href="' . esc_url(vms_tasks_admin_page_url('vms-checklist-templates')) . '">' . esc_html__('Checklist Templates', 'backstage-venue-manager') . '</a>';
+		echo '<a class="button button-small" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-task-templates')) . '">' . esc_html__('Task Templates', 'backstage-venue-manager') . '</a> ';
+		echo '<a class="button button-small" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-checklist-templates')) . '">' . esc_html__('Checklist Templates', 'backstage-venue-manager') . '</a>';
 		echo '</p>';
 		echo '<h2 style="margin-top:16px;">' . esc_html__('Add Task', 'backstage-venue-manager') . '</h2>';
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:8px 0 16px 0;padding:12px;border:1px solid #ccd0d4;background:#fff;" data-vms-tour="tasks.add">';
-			wp_nonce_field('vms_tasks_create_one_off');
+			wp_nonce_field('bvmgr_tasks_create_one_off');
 			echo '<input type="hidden" name="action" value="vms_tasks_create_one_off">';
 			echo '<input type="hidden" name="return_page" value="vms-tasks">';
 			echo '<p>';
@@ -1530,15 +1530,15 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 				$instance_id = absint($row['id'] ?? 0);
 				$event_id = absint($row['event_id'] ?? 0);
 				$due_at = (string) ($row['due_at_local'] ?? '');
-				$assignment_mode = vms_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
+				$assignment_mode = bvmgr_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
 				$current_role_key = sanitize_key((string) ($row['role_key'] ?? ''));
 				$assignee_id = absint($row['assignee_user_id'] ?? 0);
-				$assignment_summary = vms_tasks_admin_assignment_summary($row, $users, $role_options);
-				$status = vms_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
-				$clone_url = vms_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
-				$recurrence_pattern = vms_tasks_sanitize_recurrence_pattern((string) ($row['recurrence_pattern'] ?? 'none'));
+				$assignment_summary = bvmgr_tasks_admin_assignment_summary($row, $users, $role_options);
+				$status = bvmgr_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
+				$clone_url = bvmgr_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
+				$recurrence_pattern = bvmgr_tasks_sanitize_recurrence_pattern((string) ($row['recurrence_pattern'] ?? 'none'));
 				$recurrence_every_n_days = absint($row['recurrence_every_n_days'] ?? 0);
-				$recurrence_label = vms_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days);
+				$recurrence_label = bvmgr_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days);
 
 				echo '<tr>';
 				echo '<td><strong>' . esc_html((string) ($row['title'] ?? '')) . '</strong><br><span class="description">' . esc_html((string) ($row['priority'] ?? 'normal')) . '</span>';
@@ -1561,7 +1561,7 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 
 				if ($status === 'open') {
 					echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:0 0 6px 0;">';
-					wp_nonce_field('vms_tasks_transition');
+					wp_nonce_field('bvmgr_tasks_transition');
 					echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 					echo '<input type="hidden" name="return_page" value="vms-tasks">';
 					echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
@@ -1572,7 +1572,7 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 					echo '</form>';
 				} else {
 					echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:0;">';
-					wp_nonce_field('vms_tasks_transition');
+					wp_nonce_field('bvmgr_tasks_transition');
 					echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 					echo '<input type="hidden" name="return_page" value="vms-tasks">';
 					echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
@@ -1582,7 +1582,7 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 				}
 
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:6px 0 0;" data-vms-tour="tasks.assignment">';
-				wp_nonce_field('vms_tasks_update_assignment');
+				wp_nonce_field('bvmgr_tasks_update_assignment');
 				echo '<input type="hidden" name="action" value="vms_tasks_update_assignment">';
 				echo '<input type="hidden" name="return_page" value="vms-tasks">';
 				echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
@@ -1622,8 +1622,8 @@ if (!function_exists('vms_tasks_render_tasks_page')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_is_exact_post_request')) {
-	function vms_tasks_admin_is_exact_post_request(): bool
+if (!function_exists('bvmgr_tasks_admin_is_exact_post_request')) {
+	function bvmgr_tasks_admin_is_exact_post_request(): bool
 	{
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Exact POST gate intentionally accepts only the literal REQUEST_METHOD value "POST".
 		$request_method = $_SERVER['REQUEST_METHOD'] ?? null;
@@ -1635,21 +1635,21 @@ if (!function_exists('vms_tasks_admin_is_exact_post_request')) {
 	}
 }
 
-if (!function_exists('vms_tasks_render_task_templates_page')) {
-	function vms_tasks_render_task_templates_page(): void
+if (!function_exists('bvmgr_tasks_render_task_templates_page')) {
+	function bvmgr_tasks_render_task_templates_page(): void
 	{
-		if (!vms_tasks_current_user_can_manage_templates()) {
+		if (!bvmgr_tasks_current_user_can_manage_templates()) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		vms_tasks_admin_render_hover_tip_assets();
+		bvmgr_tasks_admin_render_hover_tip_assets();
 
 		$messages = array();
 		$errors = array();
 		$edit_id = isset($_GET['template_id']) ? absint($_GET['template_id']) : 0;
 		$clone_instance_id = isset($_GET['clone_instance_id']) ? absint($_GET['clone_instance_id']) : 0;
 
-		if (vms_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_template_action'])) {
-			check_admin_referer('vms_tasks_save_template');
+		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_template_action'])) {
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tasks_save_template', '_wpnonce'), '_wpnonce');
 			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_template_action']));
 			$template_id = absint($_POST['template_id'] ?? 0);
 			if ($action === 'save') {
@@ -1667,7 +1667,7 @@ if (!function_exists('vms_tasks_render_task_templates_page')) {
 					'role_key' => sanitize_key((string) wp_unslash($_POST['role_key'] ?? '')),
 					'assignee_user_id' => absint($_POST['assignee_user_id'] ?? 0),
 				);
-				$saved = vms_tasks_upsert_task_template($payload, $template_id);
+				$saved = bvmgr_tasks_upsert_task_template($payload, $template_id);
 				if (is_wp_error($saved)) {
 					$errors[] = $saved->get_error_message();
 				} else {
@@ -1677,9 +1677,9 @@ if (!function_exists('vms_tasks_render_task_templates_page')) {
 			}
 		}
 
-		$current = $edit_id > 0 ? vms_tasks_get_task_template($edit_id) : null;
+		$current = $edit_id > 0 ? bvmgr_tasks_get_task_template($edit_id) : null;
 		if (!is_array($current) && $clone_instance_id > 0) {
-			$source = vms_tasks_get_instance($clone_instance_id);
+			$source = bvmgr_tasks_get_instance($clone_instance_id);
 			if (is_array($source)) {
 				$due_at_local = trim((string) ($source['due_at_local'] ?? ''));
 				$due_time_local = '';
@@ -1690,13 +1690,13 @@ if (!function_exists('vms_tasks_render_task_templates_page')) {
 					'title' => sanitize_text_field((string) ($source['title'] ?? '')),
 					'instructions' => (string) ($source['instructions'] ?? ''),
 					'is_active' => 1,
-					'priority' => vms_tasks_sanitize_priority((string) ($source['priority'] ?? 'normal')),
+					'priority' => bvmgr_tasks_sanitize_priority((string) ($source['priority'] ?? 'normal')),
 					'required_default' => !empty($source['is_required']) ? 1 : 0,
 					'scope' => (absint($source['event_id'] ?? 0) > 0 ? 'event' : 'general'),
 					'due_mode' => ($due_time_local !== '' ? 'fixed_datetime' : 'none'),
 					'due_offset_minutes' => '',
 					'due_time_local' => $due_time_local,
-					'assignment_mode' => vms_tasks_sanitize_assignment_mode((string) ($source['assignment_mode'] ?? 'person')),
+					'assignment_mode' => bvmgr_tasks_sanitize_assignment_mode((string) ($source['assignment_mode'] ?? 'person')),
 					'role_key' => sanitize_key((string) ($source['role_key'] ?? '')),
 					'assignee_user_id' => absint($source['assignee_user_id'] ?? 0),
 				);
@@ -1705,14 +1705,14 @@ if (!function_exists('vms_tasks_render_task_templates_page')) {
 				$errors[] = __('Could not load the source task for template prefill.', 'backstage-venue-manager');
 			}
 		}
-		$templates = vms_tasks_get_task_templates();
-		$users = vms_tasks_admin_get_user_options();
-		$role_options = vms_tasks_admin_get_role_options(true);
+		$templates = bvmgr_tasks_get_task_templates();
+		$users = bvmgr_tasks_admin_get_user_options();
+		$role_options = bvmgr_tasks_admin_get_role_options(true);
 
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__('Task Templates', 'backstage-venue-manager') . ' ' . vms_tasks_admin_help_button('vms_staff_tasks_templates', 'templates.help') . '</h1>';
+		echo '<h1>' . esc_html__('Task Templates', 'backstage-venue-manager') . ' ' . bvmgr_tasks_admin_help_button('vms_staff_tasks_templates', 'templates.help') . '</h1>';
 		echo '<p class="description" data-vms-tour="templates.repeatable">' . esc_html__('Repeatable flow: save a task template here, then include it in a checklist template so it auto-generates for matching events.', 'backstage-venue-manager') . ' ';
-		echo '<a class="button button-small" href="' . esc_url(vms_tasks_admin_page_url('vms-checklist-templates')) . '">' . esc_html__('Open Checklist Templates', 'backstage-venue-manager') . '</a></p>';
+		echo '<a class="button button-small" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-checklist-templates')) . '">' . esc_html__('Open Checklist Templates', 'backstage-venue-manager') . '</a></p>';
 		foreach ($errors as $error) {
 			echo '<div class="notice notice-error"><p>' . esc_html((string) $error) . '</p></div>';
 		}
@@ -1721,7 +1721,7 @@ if (!function_exists('vms_tasks_render_task_templates_page')) {
 		}
 
 		echo '<form method="post">';
-		wp_nonce_field('vms_tasks_save_template');
+		wp_nonce_field('bvmgr_tasks_save_template');
 		echo '<input type="hidden" name="vms_tasks_template_action" value="save">';
 		echo '<input type="hidden" name="template_id" value="' . esc_attr((string) ($current['id'] ?? 0)) . '">';
 		echo '<table class="form-table" role="presentation"><tbody>';
@@ -1778,8 +1778,8 @@ if (!function_exists('vms_tasks_render_task_templates_page')) {
 			foreach ($templates as $template) {
 				$tid = absint($template['id'] ?? 0);
 				echo '<tr>';
-				echo '<td><a href="' . esc_url(vms_tasks_admin_page_url('vms-task-templates', array('template_id' => $tid))) . '">' . esc_html((string) ($template['title'] ?? '')) . '</a></td>';
-				echo '<td>' . esc_html(vms_tasks_admin_scope_label((string) ($template['scope'] ?? 'event'))) . '</td>';
+				echo '<td><a href="' . esc_url(bvmgr_tasks_admin_page_url('vms-task-templates', array('template_id' => $tid))) . '">' . esc_html((string) ($template['title'] ?? '')) . '</a></td>';
+				echo '<td>' . esc_html(bvmgr_tasks_admin_scope_label((string) ($template['scope'] ?? 'event'))) . '</td>';
 				echo '<td>' . esc_html((string) ($template['assignment_mode'] ?? 'role')) . '</td>';
 				echo '<td>' . (!empty($template['required_default']) ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</td>';
 				echo '<td>' . (!empty($template['is_active']) ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</td>';
@@ -1791,20 +1791,20 @@ if (!function_exists('vms_tasks_render_task_templates_page')) {
 	}
 }
 
-if (!function_exists('vms_tasks_render_checklist_templates_page')) {
-	function vms_tasks_render_checklist_templates_page(): void
+if (!function_exists('bvmgr_tasks_render_checklist_templates_page')) {
+	function bvmgr_tasks_render_checklist_templates_page(): void
 	{
-		if (!vms_tasks_current_user_can_manage_checklists()) {
+		if (!bvmgr_tasks_current_user_can_manage_checklists()) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		vms_tasks_admin_render_hover_tip_assets();
+		bvmgr_tasks_admin_render_hover_tip_assets();
 
 		$messages = array();
 		$errors = array();
 		$edit_id = isset($_GET['checklist_id']) ? absint($_GET['checklist_id']) : 0;
 
-		if (vms_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_checklist_action'])) {
-			check_admin_referer('vms_tasks_save_checklist');
+		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_checklist_action'])) {
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tasks_save_checklist', '_wpnonce'), '_wpnonce');
 			$action = sanitize_key((string) wp_unslash($_POST['vms_tasks_checklist_action']));
 			$checklist_id = absint($_POST['checklist_id'] ?? 0);
 				if ($action === 'save') {
@@ -1817,7 +1817,7 @@ if (!function_exists('vms_tasks_render_checklist_templates_page')) {
 						'venue_id' => absint($_POST['venue_id'] ?? 0),
 					'event_type' => sanitize_key((string) wp_unslash($_POST['event_type'] ?? '')),
 				);
-				$saved = vms_tasks_upsert_checklist_template($payload, $checklist_id);
+				$saved = bvmgr_tasks_upsert_checklist_template($payload, $checklist_id);
 				if (is_wp_error($saved)) {
 					$errors[] = $saved->get_error_message();
 				} else {
@@ -1837,7 +1837,7 @@ if (!function_exists('vms_tasks_render_checklist_templates_page')) {
 							'overrides' => array(),
 						);
 					}
-					$replace = vms_tasks_replace_checklist_items((int) $saved, $items);
+					$replace = bvmgr_tasks_replace_checklist_items((int) $saved, $items);
 					if (is_wp_error($replace)) {
 						$errors[] = $replace->get_error_message();
 					} else {
@@ -1848,20 +1848,20 @@ if (!function_exists('vms_tasks_render_checklist_templates_page')) {
 			}
 		}
 
-		$current = $edit_id > 0 ? vms_tasks_get_checklist_template($edit_id) : null;
-		$current_items = $edit_id > 0 ? vms_tasks_get_checklist_items($edit_id) : array();
+		$current = $edit_id > 0 ? bvmgr_tasks_get_checklist_template($edit_id) : null;
+		$current_items = $edit_id > 0 ? bvmgr_tasks_get_checklist_items($edit_id) : array();
 		$selected_template_ids = array_values(array_unique(array_filter(array_map(static function ($item): int {
 			return absint($item['task_template_id'] ?? 0);
 		}, $current_items))));
-		$current_scope = vms_tasks_sanitize_scope((string) ($current['scope'] ?? 'event'));
+		$current_scope = bvmgr_tasks_sanitize_scope((string) ($current['scope'] ?? 'event'));
 
-		$checklists = vms_tasks_get_checklist_templates();
-		$templates = vms_tasks_get_task_templates(array('is_active' => 1, 'scope' => $current_scope));
-		$venues = vms_tasks_admin_get_venues();
-		$event_type_options = vms_tasks_admin_get_event_type_options();
+		$checklists = bvmgr_tasks_get_checklist_templates();
+		$templates = bvmgr_tasks_get_task_templates(array('is_active' => 1, 'scope' => $current_scope));
+		$venues = bvmgr_tasks_admin_get_venues();
+		$event_type_options = bvmgr_tasks_admin_get_event_type_options();
 
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__('Checklist Templates', 'backstage-venue-manager') . ' ' . vms_tasks_admin_help_button('vms_staff_tasks_checklists', 'checklists.help') . '</h1>';
+		echo '<h1>' . esc_html__('Checklist Templates', 'backstage-venue-manager') . ' ' . bvmgr_tasks_admin_help_button('vms_staff_tasks_checklists', 'checklists.help') . '</h1>';
 		foreach ($errors as $error) {
 			echo '<div class="notice notice-error"><p>' . esc_html((string) $error) . '</p></div>';
 		}
@@ -1870,7 +1870,7 @@ if (!function_exists('vms_tasks_render_checklist_templates_page')) {
 		}
 
 		echo '<form method="post">';
-		wp_nonce_field('vms_tasks_save_checklist');
+		wp_nonce_field('bvmgr_tasks_save_checklist');
 		echo '<input type="hidden" name="vms_tasks_checklist_action" value="save">';
 		echo '<input type="hidden" name="checklist_id" value="' . esc_attr((string) ($current['id'] ?? 0)) . '">';
 		echo '<table class="form-table" role="presentation"><tbody>';
@@ -1928,8 +1928,8 @@ if (!function_exists('vms_tasks_render_checklist_templates_page')) {
 			foreach ($checklists as $checklist) {
 				$cid = absint($checklist['id'] ?? 0);
 				echo '<tr>';
-				echo '<td><a href="' . esc_url(vms_tasks_admin_page_url('vms-checklist-templates', array('checklist_id' => $cid))) . '">' . esc_html((string) ($checklist['name'] ?? '')) . '</a></td>';
-				echo '<td>' . esc_html(vms_tasks_admin_scope_label((string) ($checklist['scope'] ?? 'event'))) . '</td>';
+				echo '<td><a href="' . esc_url(bvmgr_tasks_admin_page_url('vms-checklist-templates', array('checklist_id' => $cid))) . '">' . esc_html((string) ($checklist['name'] ?? '')) . '</a></td>';
+				echo '<td>' . esc_html(bvmgr_tasks_admin_scope_label((string) ($checklist['scope'] ?? 'event'))) . '</td>';
 				echo '<td>' . esc_html((string) ($checklist['apply_mode'] ?? 'default_all_events')) . '</td>';
 				echo '<td>' . esc_html((string) ($checklist['priority_order'] ?? '100')) . '</td>';
 				echo '<td>' . (!empty($checklist['is_active']) ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</td>';
@@ -1941,17 +1941,17 @@ if (!function_exists('vms_tasks_render_checklist_templates_page')) {
 	}
 }
 
-if (!function_exists('vms_tasks_render_settings_page')) {
-	function vms_tasks_render_settings_page(): void
+if (!function_exists('bvmgr_tasks_render_settings_page')) {
+	function bvmgr_tasks_render_settings_page(): void
 	{
-		if (!vms_tasks_current_user_can_manage_all()) {
+		if (!bvmgr_tasks_current_user_can_manage_all()) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		vms_tasks_admin_render_hover_tip_assets();
+		bvmgr_tasks_admin_render_hover_tip_assets();
 
 		$saved = false;
-		if (vms_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_settings_action'])) {
-			check_admin_referer('vms_tasks_save_settings');
+		if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST['vms_tasks_settings_action'])) {
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tasks_save_settings', '_wpnonce'), '_wpnonce');
 			$input = array(
 				'horizon_days' => absint($_POST['horizon_days'] ?? 60),
 				'regenerate_on_event_date_change' => !empty($_POST['regenerate_on_event_date_change']) ? 1 : 0,
@@ -1967,20 +1967,20 @@ if (!function_exists('vms_tasks_render_settings_page')) {
 					'notify_digest_time' => sanitize_text_field((string) wp_unslash($_POST['notify_digest_time'] ?? '08:00')),
 					'notify_digest_window' => sanitize_key((string) ($_POST['notify_digest_window'] ?? 'next3')),
 				);
-			vms_tasks_update_settings($input);
+			bvmgr_tasks_update_settings($input);
 			$saved = true;
 		}
 
-		$settings = vms_tasks_get_settings();
+		$settings = bvmgr_tasks_get_settings();
 
 		echo '<div class="wrap">';
-		echo '<h1>' . esc_html__('Task Settings', 'backstage-venue-manager') . ' ' . vms_tasks_admin_help_button('vms_staff_tasks_settings', 'task-settings.help') . '</h1>';
+		echo '<h1>' . esc_html__('Task Settings', 'backstage-venue-manager') . ' ' . bvmgr_tasks_admin_help_button('vms_staff_tasks_settings', 'task-settings.help') . '</h1>';
 		if ($saved) {
 			echo '<div class="notice notice-success"><p>' . esc_html__('Task settings saved.', 'backstage-venue-manager') . '</p></div>';
 		}
 
 		echo '<form method="post">';
-		wp_nonce_field('vms_tasks_save_settings');
+		wp_nonce_field('bvmgr_tasks_save_settings');
 		echo '<input type="hidden" name="vms_tasks_settings_action" value="save">';
 		echo '<table class="form-table" role="presentation"><tbody>';
 		echo '<tr data-vms-tour="task-settings.generation"><th><label for="vms_tasks_horizon_days">' . esc_html__('Horizon days', 'backstage-venue-manager') . '</label></th><td><input type="number" id="vms_tasks_horizon_days" name="horizon_days" min="1" max="365" value="' . esc_attr((string) ($settings['horizon_days'] ?? 60)) . '"></td></tr>';
@@ -2016,14 +2016,14 @@ if (!function_exists('vms_tasks_render_settings_page')) {
 	}
 }
 
-if (!function_exists('vms_tasks_render_my_tasks_page')) {
-	function vms_tasks_render_my_tasks_page(): void
+if (!function_exists('bvmgr_tasks_render_my_tasks_page')) {
+	function bvmgr_tasks_render_my_tasks_page(): void
 	{
-		if (!vms_tasks_current_user_can_view_self()) {
+		if (!bvmgr_tasks_current_user_can_view_self()) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 		$user_id = absint(get_current_user_id());
-		$tab = sanitize_key(vms_tasks_admin_query_arg('tab'));
+		$tab = sanitize_key(bvmgr_tasks_admin_query_arg('tab'));
 		if ($tab === '') {
 			$tab = 'today';
 		}
@@ -2041,7 +2041,7 @@ if (!function_exists('vms_tasks_render_my_tasks_page')) {
 		$today_start = $today . ' 00:00:00';
 		$today_end = $today . ' 23:59:59';
 		if ($tab === 'overdue') {
-			$filters['due_before'] = vms_tasks_now_local_mysql();
+			$filters['due_before'] = bvmgr_tasks_now_local_mysql();
 		} elseif ($tab === 'today') {
 			$filters['due_after'] = $today_start;
 			$filters['due_before'] = $today_end;
@@ -2049,18 +2049,18 @@ if (!function_exists('vms_tasks_render_my_tasks_page')) {
 			$filters['due_after'] = $today_end;
 		}
 
-		$rows = vms_tasks_get_instances($filters);
+		$rows = bvmgr_tasks_get_instances($filters);
 
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__('My Tasks', 'backstage-venue-manager') . '</h1>';
-		vms_tasks_admin_render_notices();
+		bvmgr_tasks_admin_render_notices();
 		echo '<nav class="nav-tab-wrapper">';
 		foreach (array(
 			'overdue' => __('Overdue', 'backstage-venue-manager'),
 			'today' => __('Today', 'backstage-venue-manager'),
 			'upcoming' => __('Upcoming', 'backstage-venue-manager'),
 		) as $slug => $label) {
-			echo '<a class="nav-tab ' . ($tab === $slug ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_tasks_admin_page_url('vms-my-tasks', array('tab' => $slug))) . '">' . esc_html($label) . '</a>';
+			echo '<a class="nav-tab ' . ($tab === $slug ? 'nav-tab-active' : '') . '" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-my-tasks', array('tab' => $slug))) . '">' . esc_html($label) . '</a>';
 		}
 		echo '</nav>';
 
@@ -2074,7 +2074,7 @@ if (!function_exists('vms_tasks_render_my_tasks_page')) {
 		foreach ($rows as $row) {
 			$instance_id = absint($row['id'] ?? 0);
 			$event_id = absint($row['event_id'] ?? 0);
-			$recurrence_pattern = vms_tasks_sanitize_recurrence_pattern((string) ($row['recurrence_pattern'] ?? 'none'));
+			$recurrence_pattern = bvmgr_tasks_sanitize_recurrence_pattern((string) ($row['recurrence_pattern'] ?? 'none'));
 			$recurrence_every_n_days = absint($row['recurrence_every_n_days'] ?? 0);
 			echo '<div class="postbox" style="padding:12px;">';
 			echo '<h2 style="margin:0 0 8px;">' . esc_html((string) ($row['title'] ?? '')) . '</h2>';
@@ -2083,10 +2083,10 @@ if (!function_exists('vms_tasks_render_my_tasks_page')) {
 			}
 			echo '<p><strong>' . esc_html__('Due:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($row['due_at_local'] ?? __('No due date', 'backstage-venue-manager'))) . '</p>';
 			if ($recurrence_pattern !== 'none') {
-				echo '<p><strong>' . esc_html__('Repeats:', 'backstage-venue-manager') . '</strong> ' . esc_html(vms_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days)) . '</p>';
+				echo '<p><strong>' . esc_html__('Repeats:', 'backstage-venue-manager') . '</strong> ' . esc_html(bvmgr_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days)) . '</p>';
 			}
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-			wp_nonce_field('vms_tasks_transition');
+			wp_nonce_field('bvmgr_tasks_transition');
 			echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 			echo '<input type="hidden" name="return_page" value="vms-my-tasks">';
 			echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
@@ -2101,21 +2101,21 @@ if (!function_exists('vms_tasks_render_my_tasks_page')) {
 	}
 }
 
-if (!function_exists('vms_tasks_collect_dashboard_red_flags')) {
+if (!function_exists('bvmgr_tasks_collect_dashboard_red_flags')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_tasks_collect_dashboard_red_flags(int $lookahead_days, int $max_events): array
+	function bvmgr_tasks_collect_dashboard_red_flags(int $lookahead_days, int $max_events): array
 	{
 		$lookahead_days = max(1, min(90, $lookahead_days));
 		$max_events = max(1, min(50, $max_events));
-		$event_ids = array_slice(vms_tasks_collect_upcoming_event_ids($lookahead_days), 0, $max_events);
+		$event_ids = array_slice(bvmgr_tasks_collect_upcoming_event_ids($lookahead_days), 0, $max_events);
 		if (empty($event_ids)) {
 			return array();
 		}
 
 		$flags = array();
-		$now_local = vms_tasks_now_local_mysql();
+		$now_local = bvmgr_tasks_now_local_mysql();
 		$tz = wp_timezone();
 		$soon_cutoff = (new DateTimeImmutable('now', $tz))->modify('+24 hours')->format('Y-m-d H:i:s');
 
@@ -2125,7 +2125,7 @@ if (!function_exists('vms_tasks_collect_dashboard_red_flags')) {
 				continue;
 			}
 
-			$required_open = vms_tasks_count_instances(array(
+			$required_open = bvmgr_tasks_count_instances(array(
 				'event_id' => $event_id,
 				'status' => 'open',
 				'required_only' => 1,
@@ -2134,7 +2134,7 @@ if (!function_exists('vms_tasks_collect_dashboard_red_flags')) {
 				continue;
 			}
 
-			$required_overdue = vms_tasks_count_instances(array(
+			$required_overdue = bvmgr_tasks_count_instances(array(
 				'event_id' => $event_id,
 				'status' => 'open',
 				'required_only' => 1,
@@ -2152,7 +2152,7 @@ if (!function_exists('vms_tasks_collect_dashboard_red_flags')) {
 				continue;
 			}
 
-			$event = vms_tasks_get_event_context($event_id);
+			$event = bvmgr_tasks_get_event_context($event_id);
 			$event_start_local = is_array($event) ? (string) ($event['event_start_local'] ?? '') : '';
 			if ($event_start_local !== '' && $event_start_local <= $soon_cutoff) {
 				$flags[] = array(
@@ -2170,14 +2170,14 @@ if (!function_exists('vms_tasks_collect_dashboard_red_flags')) {
 	}
 }
 
-if (!function_exists('vms_tasks_render_dashboard_cards')) {
-	function vms_tasks_render_dashboard_cards(): void
+if (!function_exists('bvmgr_tasks_render_dashboard_cards')) {
+	function bvmgr_tasks_render_dashboard_cards(): void
 	{
-		if (!vms_tasks_current_user_can_manage_all()) {
+		if (!bvmgr_tasks_current_user_can_manage_all()) {
 			return;
 		}
 
-		$settings = vms_tasks_get_settings();
+		$settings = bvmgr_tasks_get_settings();
 		if (empty($settings['show_dashboard_cards'])) {
 			return;
 		}
@@ -2185,7 +2185,7 @@ if (!function_exists('vms_tasks_render_dashboard_cards')) {
 		echo '<section id="vms-dashboard-staff-tasks" style="margin:16px 0;">';
 		echo '<h2>' . esc_html__('Staff Tasks', 'backstage-venue-manager') . '</h2>';
 
-		if (!vms_tasks_db_ready()) {
+		if (!bvmgr_tasks_db_ready()) {
 			echo '<p class="description">' . esc_html__('Staff Tasks tables are unavailable. Run schema setup before using task dashboards.', 'backstage-venue-manager') . '</p>';
 			echo '</section>';
 			return;
@@ -2195,36 +2195,36 @@ if (!function_exists('vms_tasks_render_dashboard_cards')) {
 		$today = wp_date('Y-m-d', time(), $tz);
 		$today_start = $today . ' 00:00:00';
 		$today_end = $today . ' 23:59:59';
-		$now_local = vms_tasks_now_local_mysql();
+		$now_local = bvmgr_tasks_now_local_mysql();
 
-		$due_today = vms_tasks_count_instances(array(
+		$due_today = bvmgr_tasks_count_instances(array(
 			'status' => 'open',
 			'due_after' => $today_start,
 			'due_before' => $today_end,
 		));
-		$overdue = vms_tasks_count_instances(array(
+		$overdue = bvmgr_tasks_count_instances(array(
 			'status' => 'open',
 			'due_before' => $now_local,
 		));
 
 		$lookahead_days = max(1, min(90, absint($settings['dashboard_events_lookahead_days'] ?? 14)));
 		$max_events = max(1, min(50, absint($settings['dashboard_max_events'] ?? 10)));
-		$red_flags = vms_tasks_collect_dashboard_red_flags($lookahead_days, $max_events);
+		$red_flags = bvmgr_tasks_collect_dashboard_red_flags($lookahead_days, $max_events);
 		$red_flag_count = count($red_flags);
 
 		echo '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;max-width:760px;">';
 
-		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(vms_tasks_admin_page_url('vms-tasks', array('status' => 'open'))) . '">';
+		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-tasks', array('status' => 'open'))) . '">';
 		echo '<strong style="display:block;">' . esc_html__('Tasks Due Today', 'backstage-venue-manager') . '</strong>';
 		echo '<span style="font-size:24px;line-height:1.1;">' . esc_html((string) $due_today) . '</span>';
 		echo '</a>';
 
-		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(vms_tasks_admin_page_url('vms-tasks', array('status' => 'open', 'due_bucket' => 'overdue'))) . '">';
+		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-tasks', array('status' => 'open', 'due_bucket' => 'overdue'))) . '">';
 		echo '<strong style="display:block;">' . esc_html__('Overdue Tasks', 'backstage-venue-manager') . '</strong>';
 		echo '<span style="font-size:24px;line-height:1.1;">' . esc_html((string) $overdue) . '</span>';
 		echo '</a>';
 
-		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(vms_tasks_admin_page_url('vms-tasks', array('status' => 'open', 'required_only' => 1))) . '">';
+		echo '<a class="postbox" style="display:block;padding:10px;text-decoration:none;" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-tasks', array('status' => 'open', 'required_only' => 1))) . '">';
 		echo '<strong style="display:block;">' . esc_html__('Upcoming Event Red Flags', 'backstage-venue-manager') . '</strong>';
 		echo '<span style="font-size:24px;line-height:1.1;">' . esc_html((string) $red_flag_count) . '</span>';
 		echo '</a>';
@@ -2250,30 +2250,30 @@ if (!function_exists('vms_tasks_render_dashboard_cards')) {
 	}
 }
 
-if (!function_exists('vms_tasks_register_event_plan_metabox')) {
-	function vms_tasks_register_event_plan_metabox(): void
+if (!function_exists('bvmgr_tasks_register_event_plan_metabox')) {
+	function bvmgr_tasks_register_event_plan_metabox(): void
 	{
 		add_meta_box(
 			'vms-event-plan-tasks',
 			__('Tasks', 'backstage-venue-manager'),
-			'vms_tasks_render_event_plan_metabox',
+			'bvmgr_tasks_render_event_plan_metabox',
 			'vms_event_plan',
 			'normal',
 			'default'
 		);
 	}
 }
-add_action('add_meta_boxes_vms_event_plan', 'vms_tasks_register_event_plan_metabox');
+add_action('add_meta_boxes_vms_event_plan', 'bvmgr_tasks_register_event_plan_metabox');
 
-if (!function_exists('vms_tasks_admin_event_plan_checklist_reason')) {
+if (!function_exists('bvmgr_tasks_admin_event_plan_checklist_reason')) {
 	/**
 	 * @param array<string,mixed> $checklist
 	 * @param array<string,mixed> $event_context
 	 * @param array<int,string> $venues
 	 */
-	function vms_tasks_admin_event_plan_checklist_reason(array $checklist, array $event_context, array $venues): string
+	function bvmgr_tasks_admin_event_plan_checklist_reason(array $checklist, array $event_context, array $venues): string
 	{
-		$apply_mode = vms_tasks_sanitize_apply_mode((string) ($checklist['apply_mode'] ?? 'default_all_events'));
+		$apply_mode = bvmgr_tasks_sanitize_apply_mode((string) ($checklist['apply_mode'] ?? 'default_all_events'));
 		if ($apply_mode === 'by_venue') {
 			$venue_id = absint($checklist['venue_id'] ?? 0);
 			if ($venue_id > 0 && isset($venues[$venue_id])) {
@@ -2308,13 +2308,13 @@ if (!function_exists('vms_tasks_admin_event_plan_checklist_reason')) {
 	}
 }
 
-if (!function_exists('vms_tasks_admin_group_event_plan_rows')) {
+if (!function_exists('bvmgr_tasks_admin_group_event_plan_rows')) {
 	/**
 	 * @param array<int,array<string,mixed>> $rows
 	 * @param array<string,mixed> $event_context
 	 * @return array<string,array<int,array<string,mixed>>>
 	 */
-	function vms_tasks_admin_group_event_plan_rows(array $rows, array $event_context): array
+	function bvmgr_tasks_admin_group_event_plan_rows(array $rows, array $event_context): array
 	{
 		$groups = array(
 			'pre_event' => array(),
@@ -2354,13 +2354,13 @@ if (!function_exists('vms_tasks_admin_group_event_plan_rows')) {
 	}
 }
 
-if (!function_exists('vms_tasks_render_event_plan_tasks_table')) {
+if (!function_exists('bvmgr_tasks_render_event_plan_tasks_table')) {
 	/**
 	 * @param array<int,array<string,mixed>> $rows
 	 * @param array<int,string> $users
 	 * @param array<string,string> $role_options
 	 */
-	function vms_tasks_render_event_plan_tasks_table(array $rows, array $users, array $role_options, bool $can_manage_all, int $event_id): void
+	function bvmgr_tasks_render_event_plan_tasks_table(array $rows, array $users, array $role_options, bool $can_manage_all, int $event_id): void
 	{
 		$form_action = admin_url('admin-post.php');
 		echo '<table class="widefat striped"><thead><tr>';
@@ -2375,14 +2375,14 @@ if (!function_exists('vms_tasks_render_event_plan_tasks_table')) {
 
 		foreach ($rows as $row) {
 			$instance_id = absint($row['id'] ?? 0);
-			$status = vms_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
+			$status = bvmgr_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
 			$is_one_off = absint($row['task_template_id'] ?? 0) <= 0;
-			$assignment_mode = vms_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
+			$assignment_mode = bvmgr_tasks_sanitize_assignment_mode((string) ($row['assignment_mode'] ?? 'person'));
 			$current_role_key = sanitize_key((string) ($row['role_key'] ?? ''));
 			$assignee_id = absint($row['assignee_user_id'] ?? 0);
-			$assignment_summary = vms_tasks_admin_assignment_summary($row, $users, $role_options);
+			$assignment_summary = bvmgr_tasks_admin_assignment_summary($row, $users, $role_options);
 			$due_raw = (string) ($row['due_at_local'] ?? '');
-			$clone_url = vms_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
+			$clone_url = bvmgr_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
 			$done_form_id = '';
 			$remove_form_id = '';
 			$assignment_form_id = '';
@@ -2398,9 +2398,9 @@ if (!function_exists('vms_tasks_render_event_plan_tasks_table')) {
 			echo '<td>' . esc_html(strtoupper($status)) . '</td>';
 			if ($can_manage_all) {
 				if ($status === 'open') {
-					$done_form_id = vms_tasks_event_plan_metabox_form_id($event_id, 'transition-done', $instance_id);
-					vms_tasks_event_plan_metabox_register_form($done_form_id, 'post', $form_action, array(
-						'_wpnonce' => wp_create_nonce('vms_tasks_transition'),
+					$done_form_id = bvmgr_tasks_event_plan_metabox_form_id($event_id, 'transition-done', $instance_id);
+					bvmgr_tasks_event_plan_metabox_register_form($done_form_id, 'post', $form_action, array(
+						'_wpnonce' => wp_create_nonce('bvmgr_tasks_transition'),
 						'action' => 'vms_tasks_transition',
 						'return_page' => 'event-plan',
 						'event_id' => $event_id,
@@ -2410,9 +2410,9 @@ if (!function_exists('vms_tasks_render_event_plan_tasks_table')) {
 				}
 
 				if ($status === 'open' && $is_one_off) {
-					$remove_form_id = vms_tasks_event_plan_metabox_form_id($event_id, 'transition-canceled', $instance_id);
-					vms_tasks_event_plan_metabox_register_form($remove_form_id, 'post', $form_action, array(
-						'_wpnonce' => wp_create_nonce('vms_tasks_transition'),
+					$remove_form_id = bvmgr_tasks_event_plan_metabox_form_id($event_id, 'transition-canceled', $instance_id);
+					bvmgr_tasks_event_plan_metabox_register_form($remove_form_id, 'post', $form_action, array(
+						'_wpnonce' => wp_create_nonce('bvmgr_tasks_transition'),
 						'action' => 'vms_tasks_transition',
 						'return_page' => 'event-plan',
 						'event_id' => $event_id,
@@ -2422,9 +2422,9 @@ if (!function_exists('vms_tasks_render_event_plan_tasks_table')) {
 					));
 				}
 
-				$assignment_form_id = vms_tasks_event_plan_metabox_form_id($event_id, 'assignment', $instance_id);
-				vms_tasks_event_plan_metabox_register_form($assignment_form_id, 'post', $form_action, array(
-					'_wpnonce' => wp_create_nonce('vms_tasks_update_assignment'),
+				$assignment_form_id = bvmgr_tasks_event_plan_metabox_form_id($event_id, 'assignment', $instance_id);
+				bvmgr_tasks_event_plan_metabox_register_form($assignment_form_id, 'post', $form_action, array(
+					'_wpnonce' => wp_create_nonce('bvmgr_tasks_update_assignment'),
 					'action' => 'vms_tasks_update_assignment',
 					'return_page' => 'event-plan',
 					'event_id' => $event_id,
@@ -2472,8 +2472,8 @@ if (!function_exists('vms_tasks_render_event_plan_tasks_table')) {
 	}
 }
 
-if (!function_exists('vms_tasks_render_event_plan_metabox')) {
-	function vms_tasks_render_event_plan_metabox(WP_Post $post): void
+if (!function_exists('bvmgr_tasks_render_event_plan_metabox')) {
+	function bvmgr_tasks_render_event_plan_metabox(WP_Post $post): void
 	{
 		$event_id = absint($post->ID);
 		if ($event_id <= 0) {
@@ -2481,25 +2481,25 @@ if (!function_exists('vms_tasks_render_event_plan_metabox')) {
 			return;
 		}
 
-		if (!vms_tasks_db_ready()) {
+		if (!bvmgr_tasks_db_ready()) {
 			echo '<p>' . esc_html__('Staff Tasks tables are unavailable. Run schema setup first.', 'backstage-venue-manager') . '</p>';
 			return;
 		}
 
-		$rows = vms_tasks_get_instances_for_event($event_id, true);
-		$event_context = vms_tasks_get_event_context($event_id);
-		$users = vms_tasks_admin_get_user_options();
-		$role_options = vms_tasks_admin_get_role_options(true);
-		$checklist_options = vms_tasks_admin_get_checklist_options(true, 'event');
-		$venues = vms_tasks_admin_get_venues();
-		$can_manage_all = vms_tasks_current_user_can_manage_all();
+		$rows = bvmgr_tasks_get_instances_for_event($event_id, true);
+		$event_context = bvmgr_tasks_get_event_context($event_id);
+		$users = bvmgr_tasks_admin_get_user_options();
+		$role_options = bvmgr_tasks_admin_get_role_options(true);
+		$checklist_options = bvmgr_tasks_admin_get_checklist_options(true, 'event');
+		$venues = bvmgr_tasks_admin_get_venues();
+		$can_manage_all = bvmgr_tasks_current_user_can_manage_all();
 		$generate_url = wp_nonce_url(
 			admin_url('admin-post.php?action=vms_tasks_generate_event&event_id=' . $event_id . '&return_page=event-plan'),
-			'vms_tasks_generate_event_' . $event_id
+			'bvmgr_tasks_generate_event_' . $event_id
 		);
-		vms_tasks_admin_render_notices();
+		bvmgr_tasks_admin_render_notices();
 
-		echo '<p><a class="button" href="' . esc_url(vms_tasks_admin_page_url('vms-tasks', array('event_id' => $event_id))) . '">' . esc_html__('Open Tasks Page For This Event', 'backstage-venue-manager') . '</a> ';
+		echo '<p><a class="button" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-tasks', array('event_id' => $event_id))) . '">' . esc_html__('Open Tasks Page For This Event', 'backstage-venue-manager') . '</a> ';
 		if ($can_manage_all) {
 			echo '<a class="button button-secondary" href="' . esc_url($generate_url) . '">' . esc_html__('Regenerate Tasks Now', 'backstage-venue-manager') . '</a>';
 		}
@@ -2509,7 +2509,7 @@ if (!function_exists('vms_tasks_render_event_plan_metabox')) {
 		if (!is_array($event_context)) {
 			echo '<p class="description">' . esc_html__('Checklist context is unavailable for this event.', 'backstage-venue-manager') . '</p>';
 		} else {
-			$applied_checklists = vms_tasks_get_applicable_checklists(
+			$applied_checklists = bvmgr_tasks_get_applicable_checklists(
 				absint($event_context['venue_id'] ?? 0),
 				(string) ($event_context['event_type'] ?? '')
 			);
@@ -2530,7 +2530,7 @@ if (!function_exists('vms_tasks_render_event_plan_metabox')) {
 							$checklist_id
 						);
 					}
-					$reason = vms_tasks_admin_event_plan_checklist_reason($checklist, $event_context, $venues);
+					$reason = bvmgr_tasks_admin_event_plan_checklist_reason($checklist, $event_context, $venues);
 					echo '<li><strong>' . esc_html($checklist_name) . '</strong> ';
 					echo '<span class="description">' . esc_html(sprintf(
 						/* translators: %s is the checklist applicability reason. */
@@ -2550,7 +2550,7 @@ if (!function_exists('vms_tasks_render_event_plan_metabox')) {
 			// Nested <form> tags can corrupt the DOM and block unrelated actions
 			// (including cancellation) via browser required-field validation.
 			// Use an AJAX submit button instead.
-			$nonce = wp_create_nonce('vms_tasks_create_one_off');
+			$nonce = wp_create_nonce('bvmgr_tasks_create_one_off');
 			echo '<div class="vms-tasks-event-plan-addtask" data-vms-event-id="' . esc_attr((string) $event_id) . '" data-vms-nonce="' . esc_attr($nonce) . '">';
 			echo '<p><input type="text" class="widefat" data-vms-tasks-field="title" placeholder="' . esc_attr__('Task title', 'backstage-venue-manager') . '"></p>';
 			echo '<p><textarea class="widefat" rows="2" data-vms-tasks-field="instructions" placeholder="' . esc_attr__('Instructions (optional)', 'backstage-venue-manager') . '"></textarea></p>';
@@ -2604,7 +2604,7 @@ if (!function_exists('vms_tasks_render_event_plan_metabox')) {
 		}
 
 		$grouped = is_array($event_context)
-			? vms_tasks_admin_group_event_plan_rows($rows, $event_context)
+			? bvmgr_tasks_admin_group_event_plan_rows($rows, $event_context)
 			: array(
 				'pre_event' => array(),
 				'day_of' => $rows,
@@ -2624,7 +2624,7 @@ if (!function_exists('vms_tasks_render_event_plan_metabox')) {
 				continue;
 			}
 			echo '<h4 style="margin-top:14px;">' . esc_html($heading) . '</h4>';
-			vms_tasks_render_event_plan_tasks_table($section_rows, $users, $role_options, $can_manage_all, $event_id);
+			bvmgr_tasks_render_event_plan_tasks_table($section_rows, $users, $role_options, $can_manage_all, $event_id);
 		}
 	}
 }

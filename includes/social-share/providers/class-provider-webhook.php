@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
+class BVMGR_Social_Provider_Webhook implements BVMGR_Social_Provider_Interface
 {
 	public function get_platform_key(): string
 	{
@@ -43,7 +43,7 @@ class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
 
 	public function validate_connection(int $account_id): array
 	{
-		$cfg = function_exists('vms_social_account_token_json') ? vms_social_account_token_json($account_id) : array();
+		$cfg = function_exists('bvmgr_social_account_token_json') ? bvmgr_social_account_token_json($account_id) : array();
 		$url = esc_url_raw((string) ($cfg['webhook_url'] ?? ''));
 		$ok = $url !== '';
 		return array(
@@ -82,7 +82,7 @@ class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
 
 	public function publish(int $account_id, string $destination_id, array $rendered_payload): array
 	{
-		$cfg = function_exists('vms_social_account_token_json') ? vms_social_account_token_json($account_id) : array();
+		$cfg = function_exists('bvmgr_social_account_token_json') ? bvmgr_social_account_token_json($account_id) : array();
 		$url = esc_url_raw((string) ($cfg['webhook_url'] ?? ''));
 		if ($url === '') {
 			throw new RuntimeException('Webhook URL is missing.');

@@ -12,30 +12,30 @@ if (!defined('ABSPATH')) exit;
 require_once __DIR__ . '/../../core/registry/meta-keys.php';
 require_once __DIR__ . '/../../core/registry/constants.php';
 
-function vms_vendor_tax_export_button()
+function bvmgr_vendor_tax_export_button()
 {
 	global $typenow;
-	if ($typenow !== VMS_CPT_VENDOR) return;
+	if ($typenow !== BVMGR_CPT_VENDOR) return;
 	if (!current_user_can('manage_options')) return;
 
 	$url = wp_nonce_url(
 		add_query_arg(array('action' => 'vms_vendor_tax_export_csv'), admin_url('admin-post.php')),
-		'vms_vendor_tax_export_csv'
+		'bvmgr_vendor_tax_export_csv'
 	);
 
 	echo '<a class="button vms-vendor-tax-export-btn" href="' . esc_url($url) . '">Export 1099-ready CSV</a>';
 }
-add_action('restrict_manage_posts', 'vms_vendor_tax_export_button', 20);
+add_action('restrict_manage_posts', 'bvmgr_vendor_tax_export_button', 20);
 
-function vms_vendor_tax_export_csv_adminpost()
+function bvmgr_vendor_tax_export_csv_adminpost()
 {
 	if (!current_user_can('manage_options')) wp_die('Permission denied.');
-	check_admin_referer('vms_vendor_tax_export_csv');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_tax_export_csv', '_wpnonce'), '_wpnonce');
 
-	$k_done = vms_meta_key('vendor', 'tax_profile_completed_at');
+	$k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 
 	$vendor_ids = get_posts(array(
-		'post_type'      => VMS_CPT_VENDOR,
+		'post_type'      => BVMGR_CPT_VENDOR,
 		'post_status'    => 'any',
 		'posts_per_page' => -1,
 		'orderby'        => 'title',
@@ -71,19 +71,19 @@ function vms_vendor_tax_export_csv_adminpost()
 		'w9_file_on_site',
 	));
 
-	$k_legal  = vms_meta_key('vendor', 'payee_legal_name');
-	$k_dba    = vms_meta_key('vendor', 'payee_dba');
-	$k_entity = vms_meta_key('vendor', 'entity_type');
+	$k_legal  = bvmgr_meta_key('vendor', 'payee_legal_name');
+	$k_dba    = bvmgr_meta_key('vendor', 'payee_dba');
+	$k_entity = bvmgr_meta_key('vendor', 'entity_type');
 
-	$k_addr1  = vms_meta_key('vendor', 'addr1');
-	$k_addr2  = vms_meta_key('vendor', 'addr2');
-	$k_city   = vms_meta_key('vendor', 'city');
-	$k_state  = vms_meta_key('vendor', 'state');
-	$k_zip    = vms_meta_key('vendor', 'zip');
+	$k_addr1  = bvmgr_meta_key('vendor', 'addr1');
+	$k_addr2  = bvmgr_meta_key('vendor', 'addr2');
+	$k_city   = bvmgr_meta_key('vendor', 'city');
+	$k_state  = bvmgr_meta_key('vendor', 'state');
+	$k_zip    = bvmgr_meta_key('vendor', 'zip');
 
-	$k_attest = vms_meta_key('vendor', 'w9_attested_at');
-	$k_prov   = vms_meta_key('vendor', 'w9_provider');
-	$k_upload = vms_meta_key('vendor', 'w9_upload_id');
+	$k_attest = bvmgr_meta_key('vendor', 'w9_attested_at');
+	$k_prov   = bvmgr_meta_key('vendor', 'w9_provider');
+	$k_upload = bvmgr_meta_key('vendor', 'w9_upload_id');
 
 	foreach ((array) $vendor_ids as $vendor_id) {
 		$vendor_id = (int) $vendor_id;
@@ -123,4 +123,4 @@ function vms_vendor_tax_export_csv_adminpost()
 	fclose($out);
 	exit;
 }
-add_action('admin_post_vms_vendor_tax_export_csv', 'vms_vendor_tax_export_csv_adminpost');
+add_action('admin_post_vms_vendor_tax_export_csv', 'bvmgr_vendor_tax_export_csv_adminpost');

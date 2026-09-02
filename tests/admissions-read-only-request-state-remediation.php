@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 function vms_test_assert(bool $condition, string $message): void
 {
@@ -215,68 +215,68 @@ function wp_localize_script(string $handle, string $name, array $data): void
 	$GLOBALS['vms_test_localized'][$handle] = array('name' => $name, 'data' => $data);
 }
 
-function vms_admission_settings(): array
+function bvmgr_admission_settings(): array
 {
 	return array('allow_uncheckin' => true, 'max_party_size' => 6);
 }
 
-function vms_admission_manage_capability(): string
+function bvmgr_admission_manage_capability(): string
 {
 	return 'manage_vms_admissions';
 }
 
-function vms_admission_door_capability(): string
+function bvmgr_admission_door_capability(): string
 {
 	return 'checkin_vms_admissions';
 }
 
-function vms_admission_admin_should_load(): bool
+function bvmgr_admission_admin_should_load(): bool
 {
 	return !empty($GLOBALS['vms_test_admission_admin_should_load']);
 }
 
-function vms_pass_claims_capability(): string
+function bvmgr_pass_claims_capability(): string
 {
 	return 'manage_vms_pass_claims';
 }
 
-function vms_pass_claims_menu_slug(): string
+function bvmgr_pass_claims_menu_slug(): string
 {
 	return 'vms-passes';
 }
 
-function vms_pass_claims_pop_user_message(): array
+function bvmgr_pass_claims_pop_user_message(): array
 {
 	return array();
 }
 
-function vms_pass_claims_get_tokens(int $batch_id, int $limit): array
+function bvmgr_pass_claims_get_tokens(int $batch_id, int $limit): array
 {
 	$GLOBALS['vms_test_pass_claim_token_args'] = array($batch_id, $limit);
 	return array();
 }
 
-function vms_pass_claims_export_url(int $batch_id): string
+function bvmgr_pass_claims_export_url(int $batch_id): string
 {
 	return 'https://example.test/export?batch_id=' . $batch_id;
 }
 
-function vms_pass_claims_render_tab_nav(string $tab): void
+function bvmgr_pass_claims_render_tab_nav(string $tab): void
 {
 	$GLOBALS['vms_test_pass_claim_render_log'][] = 'tab:' . $tab;
 }
 
-function vms_pass_claims_render_sources_tab(): void
+function bvmgr_pass_claims_render_sources_tab(): void
 {
 	$GLOBALS['vms_test_pass_claim_render_log'][] = 'sources';
 }
 
-function vms_pass_claims_render_batches_tab(): void
+function bvmgr_pass_claims_render_batches_tab(): void
 {
 	$GLOBALS['vms_test_pass_claim_render_log'][] = 'batches';
 }
 
-function vms_pass_claims_render_reports_tab(): void
+function bvmgr_pass_claims_render_reports_tab(): void
 {
 	$GLOBALS['vms_test_pass_claim_render_log'][] = 'reports';
 }
@@ -286,19 +286,19 @@ function get_current_user_id(): int
 	return 77;
 }
 
-function vms_admission_vendor_guest_pull_flash(int $user_id): array
+function bvmgr_admission_vendor_guest_pull_flash(int $user_id): array
 {
 	unset($user_id);
 	return array();
 }
 
-function vms_admission_vendor_guest_portal_events(int $vendor_id): array
+function bvmgr_admission_vendor_guest_portal_events(int $vendor_id): array
 {
 	unset($vendor_id);
 	return (array) ($GLOBALS['vms_test_guest_events'] ?? array());
 }
 
-function vms_portal_notice(string $type, string $message): string
+function bvmgr_portal_notice(string $type, string $message): string
 {
 	return '<div class="' . esc_attr($type) . '">' . esc_html($message) . '</div>';
 }
@@ -336,23 +336,23 @@ vms_test_assert($passClaimsSource !== '', 'Pass Claims source should be readable
 vms_test_assert($vendorGuestSource !== '', 'Vendor Guest Portal source should be readable.');
 vms_test_assert($vendorPortalSource !== '', 'Vendor Portal source should be readable.');
 
-eval(vms_test_extract_function($adminUiSource, 'vms_admission_admin_enqueue_assets'));
-eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_is_admin_page'));
-eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_render_admin_notices'));
-eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_render_passes_tab'));
-eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_render_admin_page'));
-eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_query_key'));
-eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_query_absint'));
-eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_allowed_tabs'));
-eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_get_requested_tab'));
-eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_get_requested_vendor_id'));
-eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_register_portal_tab'));
-eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_portal_url'));
-eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_add_nav_link'));
-eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_portal_screen_key'));
-eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_render_custom_tab'));
+eval(vms_test_extract_function($adminUiSource, 'bvmgr_admission_admin_enqueue_assets'));
+eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_is_admin_page'));
+eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_render_admin_notices'));
+eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_render_passes_tab'));
+eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_render_admin_page'));
+eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_query_key'));
+eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_query_absint'));
+eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_allowed_tabs'));
+eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_get_requested_tab'));
+eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_get_requested_vendor_id'));
+eval(vms_test_extract_function($vendorGuestSource, 'bvmgr_admission_vendor_guest_register_portal_tab'));
+eval(vms_test_extract_function($vendorGuestSource, 'bvmgr_admission_vendor_guest_portal_url'));
+eval(vms_test_extract_function($vendorGuestSource, 'bvmgr_admission_vendor_guest_add_nav_link'));
+eval(vms_test_extract_function($vendorGuestSource, 'bvmgr_admission_vendor_guest_portal_screen_key'));
+eval(vms_test_extract_function($vendorGuestSource, 'bvmgr_admission_vendor_guest_render_custom_tab'));
 
-add_filter('vms_vendor_portal_allowed_tabs', 'vms_admission_vendor_guest_register_portal_tab', 20);
+add_filter('vms_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);
 add_filter('vms_vendor_portal_allowed_tabs', static function ($tabs) {
 	if (!is_array($tabs)) {
 		return $tabs;
@@ -362,32 +362,32 @@ add_filter('vms_vendor_portal_allowed_tabs', static function ($tabs) {
 }, 20);
 
 vms_test_assert_contains(
-	"\$post_id = vms_request_read_absint(\$_GET, 'post');",
+	"\$post_id = bvmgr_request_read_absint(\$_GET, 'post');",
 	$adminUiSource,
 	'Admissions admin UI should read the Event Plan post ID through the shared integer request helper.'
 );
 vms_test_assert_contains(
-	"\$result = vms_request_read_key(\$_GET, 'result');",
+	"\$result = bvmgr_request_read_key(\$_GET, 'result');",
 	$passClaimsSource,
 	'Pass Claims admin notices should read the result filter through the shared key helper.'
 );
 vms_test_assert_contains(
-	"\$batch_id = vms_request_read_absint(\$_GET, 'batch_id');",
+	"\$batch_id = bvmgr_request_read_absint(\$_GET, 'batch_id');",
 	$passClaimsSource,
 	'Pass Claims passes-tab filtering should read batch_id through the shared integer helper.'
 );
 vms_test_assert_contains(
-	"\$tab = vms_request_read_key(\$_GET, 'tab');",
+	"\$tab = bvmgr_request_read_key(\$_GET, 'tab');",
 	$passClaimsSource,
 	'Pass Claims admin page routing should read the tab through the shared key helper.'
 );
 vms_test_assert_contains(
-	"\$tab = vms_request_read_key(\$_GET, 'tab');",
+	"\$tab = bvmgr_request_read_key(\$_GET, 'tab');",
 	$vendorGuestSource,
 	'Vendor Guest Portal screen-key routing should read tab through the shared key helper.'
 );
 vms_test_assert_contains(
-	"\$selected_event = vms_request_read_absint(\$_GET, 'guest_event');",
+	"\$selected_event = bvmgr_request_read_absint(\$_GET, 'guest_event');",
 	$vendorGuestSource,
 	'Vendor Guest Portal event selection should read guest_event through the shared integer helper.'
 );
@@ -397,26 +397,26 @@ vms_test_assert_not_contains(
 	'Vendor Guest Portal should no longer broad-cast guest_event through a string coercion path.'
 );
 vms_test_assert_contains(
-	"add_filter('vms_vendor_portal_allowed_tabs', 'vms_admission_vendor_guest_register_portal_tab', 20);",
+	"add_filter('vms_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);",
 	$vendorGuestSource,
 	'Vendor Guest Portal should register its canonical slug with the portal allowlist.'
 );
 
 $requiredPortalTabs = array('dashboard', 'profile', 'tax-profile', 'history', 'availability', 'opportunities', 'all-vendors', 'tech', 'guest-list', 'agreements');
-$allowedPortalTabs = vms_vendor_portal_allowed_tabs();
+$allowedPortalTabs = bvmgr_vendor_portal_allowed_tabs();
 vms_test_assert_same(array(), array_values(array_diff($requiredPortalTabs, $allowedPortalTabs)), 'Guest List and Agreements should preserve the complete Vendor Portal routing matrix.');
 
 foreach ($requiredPortalTabs as $requiredPortalTab) {
 	$_GET = array('tab' => $requiredPortalTab);
-	vms_test_assert_same($requiredPortalTab, vms_vendor_portal_get_requested_tab('dashboard'), 'Vendor Portal direct routing should preserve the allowed tab: ' . $requiredPortalTab);
+	vms_test_assert_same($requiredPortalTab, bvmgr_vendor_portal_get_requested_tab('dashboard'), 'Vendor Portal direct routing should preserve the allowed tab: ' . $requiredPortalTab);
 }
 
 $_GET = array('tab' => 'guest_list');
-vms_test_assert_same('dashboard', vms_vendor_portal_get_requested_tab('dashboard'), 'The noncanonical guest_list alias should continue to fail closed to Dashboard.');
+vms_test_assert_same('dashboard', bvmgr_vendor_portal_get_requested_tab('dashboard'), 'The noncanonical guest_list alias should continue to fail closed to Dashboard.');
 
 $_GET = array('tab' => 'guest-list', 'vendor_id' => '5505');
-vms_test_assert_same('guest-list', vms_vendor_portal_get_requested_tab('dashboard'), 'Direct tab=guest-list should survive Vendor Portal validation.');
-vms_test_assert_same(5505, vms_vendor_portal_get_requested_vendor_id(), 'Direct Guest List routing should preserve vendor_id=5505.');
+vms_test_assert_same('guest-list', bvmgr_vendor_portal_get_requested_tab('dashboard'), 'Direct tab=guest-list should survive Vendor Portal validation.');
+vms_test_assert_same(5505, bvmgr_vendor_portal_get_requested_vendor_id(), 'Direct Guest List routing should preserve vendor_id=5505.');
 
 $routingPortalContext = array(
 	'base_url' => 'https://example.test/vendor-portal/',
@@ -424,7 +424,7 @@ $routingPortalContext = array(
 	'is_preview' => false,
 );
 ob_start();
-vms_admission_vendor_guest_add_nav_link('guest-list', $routingPortalContext);
+bvmgr_admission_vendor_guest_add_nav_link('guest-list', $routingPortalContext);
 $guestListNavHtml = (string) ob_get_clean();
 vms_test_assert_contains('class="is-active"', $guestListNavHtml, 'Guest List should receive active navigation styling.');
 vms_test_assert_contains('tab=guest-list', $guestListNavHtml, 'Guest List navigation should use the canonical route slug.');
@@ -434,16 +434,16 @@ preg_match('/href="([^"]+)"/', $guestListNavHtml, $guestListNavMatch);
 $clickedGuestListUrl = html_entity_decode((string) ($guestListNavMatch[1] ?? ''), ENT_QUOTES);
 parse_str((string) parse_url($clickedGuestListUrl, PHP_URL_QUERY), $clickedGuestListQuery);
 $_GET = $clickedGuestListQuery;
-vms_test_assert_same('guest-list', vms_vendor_portal_get_requested_tab('dashboard'), 'Clicking the normal Guest List link should route to Guest List.');
-vms_test_assert_same(5505, vms_vendor_portal_get_requested_vendor_id(), 'Clicked Guest List navigation should preserve vendor_id=5505.');
-vms_test_assert(vms_vendor_portal_get_requested_tab('dashboard') !== 'dashboard', 'Dashboard should not remain selected for Guest List requests.');
+vms_test_assert_same('guest-list', bvmgr_vendor_portal_get_requested_tab('dashboard'), 'Clicking the normal Guest List link should route to Guest List.');
+vms_test_assert_same(5505, bvmgr_vendor_portal_get_requested_vendor_id(), 'Clicked Guest List navigation should preserve vendor_id=5505.');
+vms_test_assert(bvmgr_vendor_portal_get_requested_tab('dashboard') !== 'dashboard', 'Dashboard should not remain selected for Guest List requests.');
 
 $_GET = array('tab' => 'agreements', 'vendor_id' => '5505');
-vms_test_assert_same('agreements', vms_vendor_portal_get_requested_tab('dashboard'), 'Direct tab=agreements should continue to survive Vendor Portal validation.');
-vms_test_assert_same(5505, vms_vendor_portal_get_requested_vendor_id(), 'Direct Agreements routing should preserve vendor_id=5505.');
+vms_test_assert_same('agreements', bvmgr_vendor_portal_get_requested_tab('dashboard'), 'Direct tab=agreements should continue to survive Vendor Portal validation.');
+vms_test_assert_same(5505, bvmgr_vendor_portal_get_requested_vendor_id(), 'Direct Agreements routing should preserve vendor_id=5505.');
 
 $_GET = array('tab' => 'not-a-real-section');
-vms_test_assert_same('dashboard', vms_vendor_portal_get_requested_tab('dashboard'), 'Unknown portal tabs should continue to fail closed to Dashboard.');
+vms_test_assert_same('dashboard', bvmgr_vendor_portal_get_requested_tab('dashboard'), 'Unknown portal tabs should continue to fail closed to Dashboard.');
 
 $GLOBALS['vms_test_is_admin'] = true;
 $GLOBALS['vms_test_admission_admin_should_load'] = true;
@@ -457,54 +457,54 @@ $GLOBALS['vms_test_scripts'] = array();
 $GLOBALS['vms_test_localized'] = array();
 $GLOBALS['post'] = null;
 $_GET = array('post' => '17');
-vms_admission_admin_enqueue_assets();
-vms_test_assert_same(17, $GLOBALS['vms_test_localized']['vms-admissions-admin']['data']['eventPlanId'] ?? null, 'Admissions admin assets should preserve scalar post IDs.');
+bvmgr_admission_admin_enqueue_assets();
+vms_test_assert_same(17, $GLOBALS['vms_test_localized']['bvmgr-admissions-admin']['data']['eventPlanId'] ?? null, 'Admissions admin assets should preserve scalar post IDs.');
 
 $GLOBALS['vms_test_styles'] = array();
 $GLOBALS['vms_test_scripts'] = array();
 $GLOBALS['vms_test_localized'] = array();
 $GLOBALS['post'] = new WP_Post(25);
 $_GET = array('post' => array('17'));
-vms_admission_admin_enqueue_assets();
-vms_test_assert_same(25, $GLOBALS['vms_test_localized']['vms-admissions-admin']['data']['eventPlanId'] ?? null, 'Admissions admin assets should reject array-shaped post IDs and fall back to the current post object.');
+bvmgr_admission_admin_enqueue_assets();
+vms_test_assert_same(25, $GLOBALS['vms_test_localized']['bvmgr-admissions-admin']['data']['eventPlanId'] ?? null, 'Admissions admin assets should reject array-shaped post IDs and fall back to the current post object.');
 
 $_GET = array('page' => 'vms-passes');
-vms_test_assert_same(true, vms_pass_claims_is_admin_page(), 'Pass Claims admin-page detection should preserve the valid scalar page slug.');
+vms_test_assert_same(true, bvmgr_pass_claims_is_admin_page(), 'Pass Claims admin-page detection should preserve the valid scalar page slug.');
 $_GET = array('page' => array('vms-passes'));
-vms_test_assert_same(false, vms_pass_claims_is_admin_page(), 'Pass Claims admin-page detection should reject array-shaped page values.');
+vms_test_assert_same(false, bvmgr_pass_claims_is_admin_page(), 'Pass Claims admin-page detection should reject array-shaped page values.');
 
 ob_start();
 $_GET = array('result' => 'token_voided');
-vms_pass_claims_render_admin_notices();
+bvmgr_pass_claims_render_admin_notices();
 $noticesHtml = (string) ob_get_clean();
 vms_test_assert_contains('Pass voided.', $noticesHtml, 'Pass Claims admin notices should preserve valid result notices.');
 
 ob_start();
 $_GET = array('result' => array('token_voided'));
-vms_pass_claims_render_admin_notices();
+bvmgr_pass_claims_render_admin_notices();
 $noticesHtml = (string) ob_get_clean();
 vms_test_assert_not_contains('Pass voided.', $noticesHtml, 'Pass Claims admin notices should reject array-shaped result values.');
 
 $GLOBALS['vms_test_pass_claim_token_args'] = array();
 ob_start();
 $_GET = array('batch_id' => array('9'));
-vms_pass_claims_render_passes_tab();
+bvmgr_pass_claims_render_passes_tab();
 ob_end_clean();
 vms_test_assert_same(array(0, 300), $GLOBALS['vms_test_pass_claim_token_args'], 'Pass Claims passes-tab filtering should reject array-shaped batch IDs.');
 
 $GLOBALS['vms_test_pass_claim_render_log'] = array();
 ob_start();
 $_GET = array('tab' => array('passes'));
-vms_pass_claims_render_admin_page();
+bvmgr_pass_claims_render_admin_page();
 ob_end_clean();
 vms_test_assert_same(array('tab:sources', 'sources'), $GLOBALS['vms_test_pass_claim_render_log'], 'Pass Claims admin-page routing should fall back to the default tab when tab is malformed.');
 
 $GLOBALS['vms_test_logged_in'] = true;
 $GLOBALS['vms_test_page_slug'] = 'vendor-portal';
 $_GET = array('tab' => 'guest-list');
-vms_test_assert_same('frontend:vms-vendor-portal-guest-list', vms_admission_vendor_guest_portal_screen_key('frontend:base'), 'Vendor Guest Portal should preserve the guest-list tab routing.');
+vms_test_assert_same('frontend:vms-vendor-portal-guest-list', bvmgr_admission_vendor_guest_portal_screen_key('frontend:base'), 'Vendor Guest Portal should preserve the guest-list tab routing.');
 $_GET = array('tab' => array('guest-list'));
-vms_test_assert_same('frontend:base', vms_admission_vendor_guest_portal_screen_key('frontend:base'), 'Vendor Guest Portal should reject array-shaped tab values.');
+vms_test_assert_same('frontend:base', bvmgr_admission_vendor_guest_portal_screen_key('frontend:base'), 'Vendor Guest Portal should reject array-shaped tab values.');
 
 $GLOBALS['vms_test_guest_events'] = array(
 	array('event_plan_id' => 41, 'title' => 'Event One', 'remaining' => 3, 'allotment' => 5, 'used' => 2, 'event_date' => '2026-08-01', 'venue_name' => 'Room One'),
@@ -514,8 +514,8 @@ $portalContext = array('vendor_id' => 5505, 'is_preview' => true);
 
 ob_start();
 $_GET = array('tab' => 'guest-list', 'vendor_id' => '5505', 'guest_event' => '73');
-$resolvedGuestListTab = vms_vendor_portal_get_requested_tab('dashboard');
-$guestListRendered = vms_admission_vendor_guest_render_custom_tab(false, $resolvedGuestListTab, $portalContext);
+$resolvedGuestListTab = bvmgr_vendor_portal_get_requested_tab('dashboard');
+$guestListRendered = bvmgr_admission_vendor_guest_render_custom_tab(false, $resolvedGuestListTab, $portalContext);
 $guestHtml = (string) ob_get_clean();
 vms_test_assert_same(true, $guestListRendered, 'The Guest List content provider should claim the validated Guest List route.');
 vms_test_assert_contains('class="vms-vendor-guest-root"', $guestHtml, 'The existing Guest List UI should render for a validated direct route.');
@@ -523,7 +523,7 @@ vms_test_assert_same(2, substr_count($guestHtml, 'data-vms-tour="vendor-portal-g
 
 ob_start();
 $_GET = array('guest_event' => array('73'));
-vms_admission_vendor_guest_render_custom_tab(false, 'guest-list', $portalContext);
+bvmgr_admission_vendor_guest_render_custom_tab(false, 'guest-list', $portalContext);
 $guestHtml = (string) ob_get_clean();
 vms_test_assert_same(1, substr_count($guestHtml, 'data-vms-tour="vendor-portal-guest.card"'), 'Vendor Guest Portal should reject array-shaped guest_event values and fall back to the first event card.');
 

@@ -8,7 +8,7 @@ defined('ABSPATH') || exit;
  * - Return non-empty email ONLY if is_email(email) is true.
  * - Otherwise return email='' with a non-empty warning.
  */
-function vms_normalize_email_cell(string $raw): array
+function bvmgr_normalize_email_cell(string $raw): array
 {
 	$raw = trim($raw);
 

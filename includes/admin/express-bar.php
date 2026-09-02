@@ -1,24 +1,24 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_express_bar_admin_boot')) {
-    function vms_express_bar_admin_boot(): void
+if (!function_exists('bvmgr_express_bar_admin_boot')) {
+    function bvmgr_express_bar_admin_boot(): void
     {
-        add_action('add_meta_boxes_vms_event_plan', 'vms_express_bar_add_metabox');
-        add_action('save_post_vms_event_plan', 'vms_express_bar_save_metabox', 20, 2);
-        add_action('admin_menu', 'vms_express_bar_admin_menu', 40);
-        add_action('admin_post_vms_express_bar_update_order', 'vms_express_bar_handle_order_update');
+        add_action('add_meta_boxes_vms_event_plan', 'bvmgr_express_bar_add_metabox');
+        add_action('save_post_vms_event_plan', 'bvmgr_express_bar_save_metabox', 20, 2);
+        add_action('admin_menu', 'bvmgr_express_bar_admin_menu', 40);
+        add_action('admin_post_vms_express_bar_update_order', 'bvmgr_express_bar_handle_order_update');
     }
 }
-add_action('init', 'vms_express_bar_admin_boot');
+add_action('init', 'bvmgr_express_bar_admin_boot');
 
-if (!function_exists('vms_express_bar_add_metabox')) {
-    function vms_express_bar_add_metabox(): void
+if (!function_exists('bvmgr_express_bar_add_metabox')) {
+    function bvmgr_express_bar_add_metabox(): void
     {
         add_meta_box(
             'vms_express_bar',
             __('Express Bar', 'backstage-venue-manager'),
-            'vms_express_bar_render_metabox',
+            'bvmgr_express_bar_render_metabox',
             'vms_event_plan',
             'normal',
             'default'
@@ -26,15 +26,15 @@ if (!function_exists('vms_express_bar_add_metabox')) {
     }
 }
 
-if (!function_exists('vms_express_bar_render_metabox')) {
-    function vms_express_bar_render_metabox(WP_Post $post): void
+if (!function_exists('bvmgr_express_bar_render_metabox')) {
+    function bvmgr_express_bar_render_metabox(WP_Post $post): void
     {
         $enabled = (string) get_post_meta($post->ID, '_vms_express_bar_enabled', true) === '1';
         $product_ids = (string) get_post_meta($post->ID, '_vms_express_bar_product_ids', true);
         $headline = (string) get_post_meta($post->ID, '_vms_express_bar_headline', true);
         $pickup = (string) get_post_meta($post->ID, '_vms_express_bar_pickup_instructions', true);
         $shortcode = '[vms_express_bar_menu event_plan_id="' . (int) $post->ID . '"]';
-        wp_nonce_field('vms_express_bar_save_' . $post->ID, 'vms_express_bar_nonce');
+        wp_nonce_field('bvmgr_express_bar_save_' . $post->ID, 'bvmgr_express_bar_nonce');
         ?>
         <p>
             <label>
@@ -66,8 +66,8 @@ if (!function_exists('vms_express_bar_render_metabox')) {
     }
 }
 
-if (!function_exists('vms_express_bar_save_metabox')) {
-    function vms_express_bar_save_metabox(int $post_id, WP_Post $post): void
+if (!function_exists('bvmgr_express_bar_save_metabox')) {
+    function bvmgr_express_bar_save_metabox(int $post_id, WP_Post $post): void
     {
         if ($post->post_type !== 'vms_event_plan') {
             return;
@@ -78,8 +78,8 @@ if (!function_exists('vms_express_bar_save_metabox')) {
         if (!current_user_can('edit_post', $post_id)) {
             return;
         }
-        $nonce = isset($_POST['vms_express_bar_nonce']) ? sanitize_text_field(wp_unslash($_POST['vms_express_bar_nonce'])) : '';
-        if (!wp_verify_nonce($nonce, 'vms_express_bar_save_' . $post_id)) {
+        $nonce = isset($_POST['bvmgr_express_bar_nonce']) ? sanitize_text_field(wp_unslash($_POST['bvmgr_express_bar_nonce'])) : '';
+        if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_save_' . $post_id))) {
             return;
         }
 
@@ -97,8 +97,8 @@ if (!function_exists('vms_express_bar_save_metabox')) {
     }
 }
 
-if (!function_exists('vms_express_bar_admin_menu')) {
-    function vms_express_bar_admin_menu(): void
+if (!function_exists('bvmgr_express_bar_admin_menu')) {
+    function bvmgr_express_bar_admin_menu(): void
     {
         add_submenu_page(
             'vms-dashboard',
@@ -106,13 +106,13 @@ if (!function_exists('vms_express_bar_admin_menu')) {
             __('Express Bar', 'backstage-venue-manager'),
             'manage_options',
             'vms-express-bar',
-            'vms_express_bar_render_admin_page'
+            'bvmgr_express_bar_render_admin_page'
         );
     }
 }
 
-if (!function_exists('vms_express_bar_render_admin_page')) {
-    function vms_express_bar_render_admin_page(): void
+if (!function_exists('bvmgr_express_bar_render_admin_page')) {
+    function bvmgr_express_bar_render_admin_page(): void
     {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have permission to view this page.', 'backstage-venue-manager'));
@@ -123,7 +123,7 @@ if (!function_exists('vms_express_bar_render_admin_page')) {
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Express Bar plan selection only changes which plan is displayed.
-        $selected_plan_id = vms_request_read_absint($_GET, 'event_plan_id');
+        $selected_plan_id = bvmgr_request_read_absint($_GET, 'event_plan_id');
         $plans = get_posts(array(
             'post_type' => 'vms_event_plan',
             'post_status' => array('publish', 'draft', 'future', 'pending', 'private'),
@@ -234,9 +234,9 @@ if (!function_exists('vms_express_bar_render_admin_page')) {
             echo '<td>' . esc_html(ucfirst($queue_status)) . '</td>';
             echo '<td>' . ($id_verified ? 'Yes' : 'No') . '</td>';
             echo '<td>';
-            echo vms_express_bar_action_form($order->get_id(), 'ready', __('Mark Ready', 'backstage-venue-manager')) . ' ';
-            echo vms_express_bar_action_form($order->get_id(), 'completed', __('Mark Completed', 'backstage-venue-manager')) . ' ';
-            echo vms_express_bar_action_form($order->get_id(), 'verify_id', $id_verified ? __('Undo ID Check', 'backstage-venue-manager') : __('ID Verified', 'backstage-venue-manager'));
+            echo bvmgr_express_bar_action_form($order->get_id(), 'ready', __('Mark Ready', 'backstage-venue-manager')) . ' ';
+            echo bvmgr_express_bar_action_form($order->get_id(), 'completed', __('Mark Completed', 'backstage-venue-manager')) . ' ';
+            echo bvmgr_express_bar_action_form($order->get_id(), 'verify_id', $id_verified ? __('Undo ID Check', 'backstage-venue-manager') : __('ID Verified', 'backstage-venue-manager'));
             echo '</td>';
             echo '</tr>';
         }
@@ -250,8 +250,8 @@ if (!function_exists('vms_express_bar_render_admin_page')) {
     }
 }
 
-if (!function_exists('vms_express_bar_action_form')) {
-    function vms_express_bar_action_form(int $order_id, string $action_name, string $label): string
+if (!function_exists('bvmgr_express_bar_action_form')) {
+    function bvmgr_express_bar_action_form(int $order_id, string $action_name, string $label): string
     {
         $url = admin_url('admin-post.php');
         ob_start();
@@ -260,7 +260,7 @@ if (!function_exists('vms_express_bar_action_form')) {
             <input type="hidden" name="action" value="vms_express_bar_update_order" />
             <input type="hidden" name="order_id" value="<?php echo (int) $order_id; ?>" />
             <input type="hidden" name="queue_action" value="<?php echo esc_attr($action_name); ?>" />
-            <?php wp_nonce_field('vms_express_bar_update_order_' . $order_id . '_' . $action_name, 'vms_express_bar_order_nonce'); ?>
+            <?php wp_nonce_field('bvmgr_express_bar_update_order_' . $order_id . '_' . $action_name, 'bvmgr_express_bar_order_nonce'); ?>
             <button type="submit" class="button button-secondary"><?php echo esc_html($label); ?></button>
         </form>
         <?php
@@ -268,16 +268,16 @@ if (!function_exists('vms_express_bar_action_form')) {
     }
 }
 
-if (!function_exists('vms_express_bar_handle_order_update')) {
-    function vms_express_bar_handle_order_update(): void
+if (!function_exists('bvmgr_express_bar_handle_order_update')) {
+    function bvmgr_express_bar_handle_order_update(): void
     {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('Not allowed.', 'backstage-venue-manager'));
         }
         $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
         $queue_action = isset($_POST['queue_action']) ? sanitize_key(wp_unslash($_POST['queue_action'])) : '';
-        $nonce = isset($_POST['vms_express_bar_order_nonce']) ? sanitize_text_field(wp_unslash($_POST['vms_express_bar_order_nonce'])) : '';
-        if ($order_id <= 0 || !wp_verify_nonce($nonce, 'vms_express_bar_update_order_' . $order_id . '_' . $queue_action)) {
+        $nonce = isset($_POST['bvmgr_express_bar_order_nonce']) ? sanitize_text_field(wp_unslash($_POST['bvmgr_express_bar_order_nonce'])) : '';
+        if ($order_id <= 0 || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_update_order_' . $order_id . '_' . $queue_action))) {
             wp_die(esc_html__('Invalid request.', 'backstage-venue-manager'));
         }
 

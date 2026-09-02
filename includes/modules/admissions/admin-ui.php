@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admission_admin_should_load')) {
-	function vms_admission_admin_should_load(): bool
+if (!function_exists('bvmgr_admission_admin_should_load')) {
+	function bvmgr_admission_admin_should_load(): bool
 	{
 		if (!is_admin()) {
 			return false;
@@ -18,69 +18,69 @@ if (!function_exists('vms_admission_admin_should_load')) {
 	}
 }
 
-if (!function_exists('vms_admission_admin_enqueue_assets')) {
-	function vms_admission_admin_enqueue_assets(): void
+if (!function_exists('bvmgr_admission_admin_enqueue_assets')) {
+	function bvmgr_admission_admin_enqueue_assets(): void
 	{
-		if (!vms_admission_admin_should_load()) {
+		if (!bvmgr_admission_admin_should_load()) {
 			return;
 		}
 
-		$post_id = vms_request_read_absint($_GET, 'post'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin asset gating uses the current Event Plan post ID without changing mutation or nonce behavior.
+		$post_id = bvmgr_request_read_absint($_GET, 'post'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin asset gating uses the current Event Plan post ID without changing mutation or nonce behavior.
 		if ($post_id <= 0 && isset($GLOBALS['post']) && $GLOBALS['post'] instanceof WP_Post) {
 			$post_id = (int) $GLOBALS['post']->ID;
 		}
 
-		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
-			'vms-admissions-admin',
-			VMS_PLUGIN_URL . 'assets/css/vms-admissions-admin.css',
-			array('vms-admin'),
+			'bvmgr-admissions-admin',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-admissions-admin.css',
+			array('bvmgr-admin'),
 			$ver
 		);
 		wp_enqueue_script(
-			'vms-admissions-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-admissions-admin.js',
+			'bvmgr-admissions-admin',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-admissions-admin.js',
 			array(),
 			$ver,
 			true
 		);
 
-		wp_localize_script('vms-admissions-admin', 'vmsAdmissionsAdmin', array(
+		wp_localize_script('bvmgr-admissions-admin', 'BVMGR_ADMISSIONS_ADMIN', array(
 			'restUrl' => esc_url_raw(rest_url('vms/v1')),
 			'nonce' => wp_create_nonce('wp_rest'),
 			'eventPlanId' => $post_id,
-			'settings' => vms_admission_settings(),
-			'canManage' => current_user_can(vms_admission_manage_capability()) ? 1 : 0,
-			'canCheckin' => current_user_can(vms_admission_door_capability()) ? 1 : 0,
-			'allowUncheckin' => !empty(vms_admission_settings()['allow_uncheckin']) ? 1 : 0,
+			'settings' => bvmgr_admission_settings(),
+			'canManage' => current_user_can(bvmgr_admission_manage_capability()) ? 1 : 0,
+			'canCheckin' => current_user_can(bvmgr_admission_door_capability()) ? 1 : 0,
+			'allowUncheckin' => !empty(bvmgr_admission_settings()['allow_uncheckin']) ? 1 : 0,
 			'exportCsvUrl' => wp_nonce_url(
 				admin_url('admin-post.php?action=vms_admissions_export_csv&event_plan_id=' . $post_id),
-				'vms_admissions_export_csv_' . $post_id
+				'bvmgr_admissions_export_csv_' . $post_id
 			),
 		));
 	}
 }
-add_action('admin_enqueue_scripts', 'vms_admission_admin_enqueue_assets', 30);
+add_action('admin_enqueue_scripts', 'bvmgr_admission_admin_enqueue_assets', 30);
 
-if (!function_exists('vms_admission_add_event_plan_metabox')) {
-	function vms_admission_add_event_plan_metabox(): void
+if (!function_exists('bvmgr_admission_add_event_plan_metabox')) {
+	function bvmgr_admission_add_event_plan_metabox(): void
 	{
 		add_meta_box(
 			'vms_guest_list_comp_admission',
 			__('Guest List / Comp Admission', 'backstage-venue-manager'),
-			'vms_admission_render_event_plan_metabox',
+			'bvmgr_admission_render_event_plan_metabox',
 			'vms_event_plan',
 			'normal',
 			'default'
 		);
 	}
 }
-add_action('add_meta_boxes_vms_event_plan', 'vms_admission_add_event_plan_metabox', 20);
+add_action('add_meta_boxes_vms_event_plan', 'bvmgr_admission_add_event_plan_metabox', 20);
 
-if (!function_exists('vms_admission_render_event_plan_metabox')) {
-	function vms_admission_render_event_plan_metabox(WP_Post $post): void
+if (!function_exists('bvmgr_admission_render_event_plan_metabox')) {
+	function bvmgr_admission_render_event_plan_metabox(WP_Post $post): void
 	{
-		if (!current_user_can(vms_admission_manage_capability())) {
+		if (!current_user_can(bvmgr_admission_manage_capability())) {
 			echo '<p>' . esc_html__('You do not have permission to manage Guest List entries.', 'backstage-venue-manager') . '</p>';
 			return;
 		}
@@ -103,18 +103,18 @@ if (!function_exists('vms_admission_render_event_plan_metabox')) {
 		echo '<p id="vms-adm-feedback" class="vms-adm-feedback" aria-live="polite"></p>';
 		echo '<div id="vms-adm-summary" class="vms-adm-summary"></div>';
 		echo '<div id="vms-adm-list" class="vms-adm-list"></div>';
-		if (function_exists('vms_admission_render_vendor_guest_config')) {
-			vms_admission_render_vendor_guest_config($post);
+		if (function_exists('bvmgr_admission_render_vendor_guest_config')) {
+			bvmgr_admission_render_vendor_guest_config($post);
 		}
 		echo '</div>';
 	}
 }
 
-if (!function_exists('vms_admission_export_csv')) {
-	function vms_admission_export_csv(): void
+if (!function_exists('bvmgr_admission_export_csv')) {
+	function bvmgr_admission_export_csv(): void
 	{
 		$event_plan_id = isset($_GET['event_plan_id']) ? absint($_GET['event_plan_id']) : 0;
-		if (!current_user_can(vms_admission_manage_capability())) {
+		if (!current_user_can(bvmgr_admission_manage_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		if ($event_plan_id <= 0) {
@@ -123,17 +123,17 @@ if (!function_exists('vms_admission_export_csv')) {
 		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
 			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
 			: '';
-		if (!wp_verify_nonce($nonce, 'vms_admissions_export_csv_' . $event_plan_id)) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_admissions_export_csv_' . $event_plan_id))) {
 			wp_die(esc_html__('Invalid request.', 'backstage-venue-manager'));
 		}
 
-		$plan = vms_admission_event_plan_context($event_plan_id);
+		$plan = bvmgr_admission_event_plan_context($event_plan_id);
 		if (!$plan) {
 			wp_die(esc_html__('Event plan not found.', 'backstage-venue-manager'));
 		}
 
 		global $wpdb;
-		$table = vms_admission_table_entries();
+		$table = bvmgr_admission_table_entries();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CSV exports read the plugin-owned admissions repository with a %i/%d-prepared identifier and filter, and the download must reflect request-fresh event-plan state.
 		$rows = $wpdb->get_results($wpdb->prepare(
 			'SELECT guest_name, guest_email, party_size, phone, notes, status, source, owner_vendor_id FROM %i WHERE event_plan_id = %d ORDER BY guest_name ASC, id ASC',
@@ -167,10 +167,10 @@ if (!function_exists('vms_admission_export_csv')) {
 		}
 		fclose($fh); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.
 
-		vms_admission_audit_log($event_plan_id, null, 'export_csv', get_current_user_id(), 'admin', array(
+		bvmgr_admission_audit_log($event_plan_id, null, 'export_csv', get_current_user_id(), 'admin', array(
 			'row_count' => is_array($rows) ? count($rows) : 0,
 		));
 		exit;
 	}
 }
-add_action('admin_post_vms_admissions_export_csv', 'vms_admission_export_csv');
+add_action('admin_post_vms_admissions_export_csv', 'bvmgr_admission_export_csv');

@@ -214,7 +214,7 @@ function vms_test_find_direct_json_calls(string $functionBody): array
  */
 function vms_test_find_v2_wrapper_calls(string $functionBody): array
 {
-	if (!preg_match_all('/\b(vms_ticketing_v2_ajax_send_(success|error))\s*\(/', $functionBody, $matches)) {
+	if (!preg_match_all('/\b(bvmgr_ticketing_v2_ajax_send_(success|error))\s*\(/', $functionBody, $matches)) {
 		return array();
 	}
 
@@ -247,7 +247,7 @@ function vms_test_record_json_call(bool $success, $data, $statusCode, int $flags
 		'status_code' => $statusCode,
 		'flags' => $flags,
 		'num_args' => $numArgs,
-		'flag_state_at_send' => $GLOBALS['vms_ajax_ob_started'] ?? null,
+		'flag_state_at_send' => $GLOBALS['bvmgr_ajax_ob_started'] ?? null,
 		'ob_level_at_send' => ob_get_level(),
 		'json' => $json,
 	);
@@ -282,11 +282,11 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		$collectorLevel = ob_get_level();
 
 		if ($noise !== '') {
-			$GLOBALS['vms_ajax_ob_started'] = true;
+			$GLOBALS['bvmgr_ajax_ob_started'] = true;
 			ob_start();
 			echo $noise;
 		} else {
-			$GLOBALS['vms_ajax_ob_started'] = false;
+			$GLOBALS['bvmgr_ajax_ob_started'] = false;
 		}
 
 		try {
@@ -297,7 +297,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		}
 
 		$output = (string) ob_get_contents();
-		$flagAfter = $GLOBALS['vms_ajax_ob_started'] ?? null;
+		$flagAfter = $GLOBALS['bvmgr_ajax_ob_started'] ?? null;
 		$call = $GLOBALS['vms_test_wp_json_calls'][0] ?? null;
 		vms_test_assert_true(is_array($call), 'Expected the stub JSON sender to capture exactly one call for ' . $callable . '.');
 
@@ -310,7 +310,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		);
 	} finally {
 		vms_test_cleanup_output_buffers($startLevel);
-		unset($GLOBALS['vms_ajax_ob_started'], $GLOBALS['vms_test_wp_json_calls']);
+		unset($GLOBALS['bvmgr_ajax_ob_started'], $GLOBALS['vms_test_wp_json_calls']);
 	}
 }
 
@@ -322,29 +322,29 @@ try {
 	$ticketingSource = vms_test_read_file($ticketingPath);
 	$claimsSource = vms_test_read_file($claimsPath);
 
-	$discardBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_ajax_discard_owned_buffer');
-	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_success');
-	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'vms_ticketing_v2_ajax_send_error');
-	$clientLogBody = vms_test_extract_function($claimsSource, 'vms_ticketing_claims_handle_client_log_action');
-	$assigneeBody = vms_test_extract_function($claimsSource, 'vms_ticketing_claims_handle_validate_assignee');
-	$existingCountsHelperBody = vms_test_extract_function($claimsSource, 'vms_ticketing_claims_post_existing_counts');
+	$discardBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_discard_owned_buffer');
+	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_success');
+	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_error');
+	$clientLogBody = vms_test_extract_function($claimsSource, 'bvmgr_ticketing_claims_handle_client_log_action');
+	$assigneeBody = vms_test_extract_function($claimsSource, 'bvmgr_ticketing_claims_handle_validate_assignee');
+	$existingCountsHelperBody = vms_test_extract_function($claimsSource, 'bvmgr_ticketing_claims_post_existing_counts');
 
 	eval($discardBody . "\n" . $v2SuccessWrapperBody . "\n" . $v2ErrorWrapperBody);
 
 	vms_test_assert_code_contains(
-		'vms_ticketing_ajax_discard_owned_buffer();',
+		'bvmgr_ticketing_ajax_discard_owned_buffer();',
 		$v2SuccessWrapperBody,
 		'The V2 success wrapper should still invoke the cleanup-only helper.'
 	);
 	vms_test_assert_code_contains(
-		'vms_ticketing_ajax_discard_owned_buffer();',
+		'bvmgr_ticketing_ajax_discard_owned_buffer();',
 		$v2ErrorWrapperBody,
 		'The V2 error wrapper should still invoke the cleanup-only helper.'
 	);
 
 	vms_test_assert_same(
 		array('wp_ajax_vms_ticketing_claims_log_client_action'),
-		vms_test_find_action_hooks_for_callback($claimsSource, 'vms_ticketing_claims_handle_client_log_action'),
+		vms_test_find_action_hooks_for_callback($claimsSource, 'bvmgr_ticketing_claims_handle_client_log_action'),
 		'The client-log action should remain authenticated-only and map to the same callback.'
 	);
 	vms_test_assert_not_contains(
@@ -354,25 +354,25 @@ try {
 	);
 	vms_test_assert_same(
 		array('wp_ajax_nopriv_vms_ticketing_claims_validate_assignee', 'wp_ajax_vms_ticketing_claims_validate_assignee'),
-		vms_test_find_action_hooks_for_callback($claimsSource, 'vms_ticketing_claims_handle_validate_assignee'),
+		vms_test_find_action_hooks_for_callback($claimsSource, 'bvmgr_ticketing_claims_handle_validate_assignee'),
 		'Assignee validation should retain both authenticated and nopriv registrations on the same callback.'
 	);
 
-	$expectedWrapperCalls = array('vms_ticketing_v2_ajax_send_error', 'vms_ticketing_v2_ajax_send_success');
+	$expectedWrapperCalls = array('bvmgr_ticketing_v2_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success');
 	vms_test_assert_same(array(), vms_test_find_direct_json_calls($clientLogBody), 'Client logging should no longer terminate through direct wp_send_json_* calls.');
 	vms_test_assert_same(array(), vms_test_find_direct_json_calls($assigneeBody), 'Assignee validation should no longer terminate through direct wp_send_json_* calls.');
 	vms_test_assert_same($expectedWrapperCalls, vms_test_find_v2_wrapper_calls($clientLogBody), 'Client logging should now terminate through the cleanup wrappers.');
 	vms_test_assert_same($expectedWrapperCalls, vms_test_find_v2_wrapper_calls($assigneeBody), 'Assignee validation should now terminate through the cleanup wrappers.');
-	vms_test_assert_not_contains('vms_ticketing_ajax_send_success(', $clientLogBody, 'Client logging should not route through the legacy success wrapper.');
-	vms_test_assert_not_contains('vms_ticketing_ajax_send_error(', $clientLogBody, 'Client logging should not route through the legacy error wrapper.');
-	vms_test_assert_not_contains('vms_ticketing_ajax_attach_noise(', $clientLogBody, 'Client logging should not route through the legacy noise helper.');
-	vms_test_assert_not_contains('vms_ticketing_ajax_send_success(', $assigneeBody, 'Assignee validation should not route through the legacy success wrapper.');
-	vms_test_assert_not_contains('vms_ticketing_ajax_send_error(', $assigneeBody, 'Assignee validation should not route through the legacy error wrapper.');
-	vms_test_assert_not_contains('vms_ticketing_ajax_attach_noise(', $assigneeBody, 'Assignee validation should not route through the legacy noise helper.');
-	vms_test_assert_code_count(3, 'vms_ticketing_v2_ajax_send_error(', $clientLogBody, 'Client logging should keep its three error exits.');
-	vms_test_assert_code_count(1, 'vms_ticketing_v2_ajax_send_success(', $clientLogBody, 'Client logging should keep its single success exit.');
-	vms_test_assert_code_count(8, 'vms_ticketing_v2_ajax_send_error(', $assigneeBody, 'Assignee validation should keep its eight error exits.');
-	vms_test_assert_code_count(1, 'vms_ticketing_v2_ajax_send_success(', $assigneeBody, 'Assignee validation should keep its single success exit.');
+	vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_success(', $clientLogBody, 'Client logging should not route through the legacy success wrapper.');
+	vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_error(', $clientLogBody, 'Client logging should not route through the legacy error wrapper.');
+	vms_test_assert_not_contains('bvmgr_ticketing_ajax_attach_noise(', $clientLogBody, 'Client logging should not route through the legacy noise helper.');
+	vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_success(', $assigneeBody, 'Assignee validation should not route through the legacy success wrapper.');
+	vms_test_assert_not_contains('bvmgr_ticketing_ajax_send_error(', $assigneeBody, 'Assignee validation should not route through the legacy error wrapper.');
+	vms_test_assert_not_contains('bvmgr_ticketing_ajax_attach_noise(', $assigneeBody, 'Assignee validation should not route through the legacy noise helper.');
+	vms_test_assert_code_count(3, 'bvmgr_ticketing_v2_ajax_send_error(', $clientLogBody, 'Client logging should keep its three error exits.');
+	vms_test_assert_code_count(1, 'bvmgr_ticketing_v2_ajax_send_success(', $clientLogBody, 'Client logging should keep its single success exit.');
+	vms_test_assert_code_count(8, 'bvmgr_ticketing_v2_ajax_send_error(', $assigneeBody, 'Assignee validation should keep its eight error exits.');
+	vms_test_assert_code_count(1, 'bvmgr_ticketing_v2_ajax_send_success(', $assigneeBody, 'Assignee validation should keep its single success exit.');
 
 	vms_test_assert_code_order(
 		'if (!is_user_logged_in()) {',
@@ -387,19 +387,19 @@ try {
 		'Client logging should still validate the nonce before reason validation.'
 	);
 	vms_test_assert_code_order(
-		'vms_ticketing_claims_log_result(array(',
-		"vms_ticketing_v2_ajax_send_success(array('ok' => true));",
+		'bvmgr_ticketing_claims_log_result(array(',
+		"bvmgr_ticketing_v2_ajax_send_success(array('ok' => true));",
 		$clientLogBody,
 		'Client logging should still record the result before emitting the final success response.'
 	);
-	vms_test_assert_code_count(1, 'vms_ticketing_claims_log_result(array(', $clientLogBody, 'Client logging should still perform exactly one log mutation.');
+	vms_test_assert_code_count(1, 'bvmgr_ticketing_claims_log_result(array(', $clientLogBody, 'Client logging should still perform exactly one log mutation.');
 	vms_test_assert_not_contains('set_transient(', $clientLogBody, 'Client logging should not gain transient-based deduplication.');
 	vms_test_assert_not_contains('wp_schedule_single_event(', $clientLogBody, 'Client logging should not gain retry scheduling.');
 	vms_test_assert_not_contains('JSON_', $clientLogBody, 'Client logging should not gain JSON flags.');
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if (!is_user_logged_in()) {
-	vms_ticketing_v2_ajax_send_error(array('message' => 'login_required'), 401);
+	bvmgr_ticketing_v2_ajax_send_error(array('message' => 'login_required'), 401);
 }
 PHP,
 		$clientLogBody,
@@ -408,7 +408,7 @@ PHP,
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if (!check_ajax_referer('vms_ticketing_claims_log_client_action', 'nonce', false)) {
-	vms_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
+	bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
 }
 PHP,
 		$clientLogBody,
@@ -417,14 +417,14 @@ PHP,
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if (!in_array($reason_code, $allowed, true)) {
-	vms_ticketing_v2_ajax_send_error(array('message' => 'invalid_reason'), 400);
+	bvmgr_ticketing_v2_ajax_send_error(array('message' => 'invalid_reason'), 400);
 }
 PHP,
 		$clientLogBody,
 		'Client logging should keep the invalid_reason 400 contract.'
 	);
 	vms_test_assert_code_contains(
-		"vms_ticketing_v2_ajax_send_success(array('ok' => true));",
+		"bvmgr_ticketing_v2_ajax_send_success(array('ok' => true));",
 		$clientLogBody,
 		'Client logging should keep the final ok=true success payload.'
 	);
@@ -441,11 +441,11 @@ PHP,
 		$assigneeBody,
 		'Assignee validation should still perform the logged-in check before request-shape validation.'
 	);
-	vms_test_assert_not_contains('vms_ticketing_claims_log_result(', $assigneeBody, 'Assignee validation should remain read-only.');
+	vms_test_assert_not_contains('bvmgr_ticketing_claims_log_result(', $assigneeBody, 'Assignee validation should remain read-only.');
 	vms_test_assert_not_contains('JSON_', $assigneeBody, 'Assignee validation should not gain JSON flags.');
 	vms_test_assert_not_contains('json_decode(', $assigneeBody, 'Mirror assignee validation should keep helper-backed existing_counts parsing.');
 	vms_test_assert_code_contains(
-		"\$existing_counts = vms_ticketing_claims_post_existing_counts();",
+		"\$existing_counts = bvmgr_ticketing_claims_post_existing_counts();",
 		$assigneeBody,
 		'Mirror assignee validation should keep helper-backed existing_counts parsing.'
 	);
@@ -468,14 +468,14 @@ PHP,
 		'Mirror assignee validation should unslash existing_counts only after confirming the top-level array shape.'
 	);
 	vms_test_assert_code_contains(
-		"return vms_ticketing_claims_parse_existing_counts_payload(\$raw_existing_counts);",
+		"return bvmgr_ticketing_claims_parse_existing_counts_payload(\$raw_existing_counts);",
 		$existingCountsHelperBody,
 		'Mirror assignee validation should keep the shared existing_counts normalization helper.'
 	);
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if (!check_ajax_referer('vms_ticketing_claims_validate_assignee', 'nonce', false)) {
-	vms_ticketing_v2_ajax_send_error(array(
+	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
 		'message' => __('Session expired. Please refresh and try again.', 'backstage-venue-manager'),
 		'reason_code' => 'bad_nonce',
@@ -488,7 +488,7 @@ PHP,
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if (!is_user_logged_in()) {
-	vms_ticketing_v2_ajax_send_error(array(
+	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
 		'message' => __('Log in before checking approved guest emails for this ticket.', 'backstage-venue-manager'),
 		'reason_code' => 'login_required',
@@ -501,7 +501,7 @@ PHP,
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if ($product_id <= 0 || $assignee_email === '') {
-	vms_ticketing_v2_ajax_send_error(array(
+	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
 		'message' => __('Enter a valid registered email address first.', 'backstage-venue-manager'),
 		'reason_code' => 'invalid_request',
@@ -513,8 +513,8 @@ PHP,
 	);
 	vms_test_assert_code_contains(
 		<<<'PHP'
-if (!function_exists('vms_ticketing_v2_resolve_verified_ticket_context')) {
-	vms_ticketing_v2_ajax_send_error(array(
+if (!function_exists('bvmgr_ticketing_v2_resolve_verified_ticket_context')) {
+	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
 		'message' => __('Ticket validation is temporarily unavailable.', 'backstage-venue-manager'),
 		'reason_code' => 'context_unavailable',
@@ -527,7 +527,7 @@ PHP,
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if ($visibility_mode !== 'verified') {
-	vms_ticketing_v2_ajax_send_error(array(
+	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
 		'message' => __('This ticket does not support claim-ticket assignment.', 'backstage-venue-manager'),
 		'reason_code' => 'ticket_not_verified',
@@ -540,7 +540,7 @@ PHP,
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if ($event_id <= 0) {
-	vms_ticketing_v2_ajax_send_error(array(
+	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
 		'message' => __('Could not determine the event for this ticket.', 'backstage-venue-manager'),
 		'reason_code' => 'event_missing',
@@ -553,10 +553,10 @@ PHP,
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if (!($user instanceof WP_User)) {
-	vms_ticketing_v2_ajax_send_error(array(
+	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
-		'message' => function_exists('vms_ticketing_v2_claim_assignment_unknown_guest_message')
-			? vms_ticketing_v2_claim_assignment_unknown_guest_message()
+		'message' => function_exists('bvmgr_ticketing_v2_claim_assignment_unknown_guest_message')
+			? bvmgr_ticketing_v2_claim_assignment_unknown_guest_message()
 			: __("We couldn't find an approved qualified guest account for this email. The guest needs to register and be approved before this ticket can be claimed.", 'backstage-venue-manager'),
 		'reason_code' => 'account_not_found',
 		'ticket_label' => $ticket_label,
@@ -578,7 +578,7 @@ PHP,
 	vms_test_assert_code_contains(
 		<<<'PHP'
 if (!$eligible) {
-	vms_ticketing_v2_ajax_send_error(array(
+	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
 		'message' => $message,
 		'reason_code' => $reason_code,
@@ -592,7 +592,7 @@ PHP,
 	);
 	vms_test_assert_code_contains(
 		<<<'PHP'
-vms_ticketing_v2_ajax_send_success(array(
+bvmgr_ticketing_v2_ajax_send_success(array(
 	'ok' => true,
 	'message' => $message,
 	'reason_code' => $reason_code,
@@ -605,7 +605,7 @@ PHP,
 	);
 
 	$loginRequiredResult = vms_test_run_wrapper(
-		'vms_ticketing_v2_ajax_send_error',
+		'bvmgr_ticketing_v2_ajax_send_error',
 		array(array('message' => 'login_required'), 401),
 		'claims-login-noise'
 	);
@@ -618,7 +618,7 @@ PHP,
 	vms_test_assert_not_contains('claims-login-noise', $loginRequiredResult['output'], 'Owned 401 noise should not leak into the JSON response.');
 
 	$badNonceResult = vms_test_run_wrapper(
-		'vms_ticketing_v2_ajax_send_error',
+		'bvmgr_ticketing_v2_ajax_send_error',
 		array(array('ok' => false, 'message' => 'bad_nonce', 'reason_code' => 'bad_nonce'), 403),
 		'claims-nonce-noise'
 	);
@@ -629,7 +629,7 @@ PHP,
 	vms_test_assert_not_contains('claims-nonce-noise', $badNonceResult['output'], 'Owned 403 noise should not leak into the JSON response.');
 
 	$invalidRequestResult = vms_test_run_wrapper(
-		'vms_ticketing_v2_ajax_send_error',
+		'bvmgr_ticketing_v2_ajax_send_error',
 		array(array('ok' => false, 'message' => 'invalid_request', 'reason_code' => 'invalid_request'), 400),
 		'claims-invalid-noise'
 	);
@@ -647,7 +647,7 @@ PHP,
 		'ticket_label' => 'VIP Admission',
 	);
 	$deliberate200Result = vms_test_run_wrapper(
-		'vms_ticketing_v2_ajax_send_error',
+		'bvmgr_ticketing_v2_ajax_send_error',
 		array($deliberate200Payload, 200),
 		'claims-200-noise'
 	);
@@ -672,7 +672,7 @@ PHP,
 		),
 	);
 	$successResult = vms_test_run_wrapper(
-		'vms_ticketing_v2_ajax_send_success',
+		'bvmgr_ticketing_v2_ajax_send_success',
 		array($successPayload),
 		'claims-success-noise'
 	);

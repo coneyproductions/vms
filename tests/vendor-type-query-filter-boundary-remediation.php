@@ -76,15 +76,15 @@ function vms_test_extract_function(string $source, string $name): string
 
 function vms_test_project_g16_monitor_logging(string $source): string
 {
-	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
-	$last = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
+	$last = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
 	$last_start = strpos($source, $last, (int) $start);
 	vms_test_assert_true($start !== false && $last_start !== false, 'G16 monitor helper bounds changed.');
 	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
 	vms_test_assert_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), 'G16 monitor helper block changed.');
 	$source = str_replace($block . "\n\n", '', $source, $count);
 	vms_test_assert_same(1, $count, 'G16 monitor helper removal changed.');
-	$current = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	$current = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown');
 	vms_test_assert_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), 'G16 monitor shutdown changed.');
 	$fixture = vms_test_read_file(__DIR__ . '/g16-operational-logging-group-c.php');
 	vms_test_assert_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), 'G16 historical shutdown fixture changed.');
@@ -474,8 +474,8 @@ if (!function_exists('is_wp_error')) {
 	}
 }
 
-if (!function_exists('vms_meta_key')) {
-	function vms_meta_key(string $group, string $field): string
+if (!function_exists('bvmgr_meta_key')) {
+	function bvmgr_meta_key(string $group, string $field): string
 	{
 		if ($group === 'event_plan' && $field === 'secondary_vendor_type') {
 			return '_vms_secondary_vendor_type';
@@ -543,7 +543,7 @@ vms_test_assert_same(
 	'vendor-type.php should contain exactly one suppress_filters ignore token.'
 );
 vms_test_assert_true(
-	strpos($source, "add_action('init', 'vms_vendor_type_maybe_canonicalize_terms', 22);") !== false,
+	strpos($source, "add_action('init', 'bvmgr_vendor_type_maybe_canonicalize_terms', 22);") !== false,
 	'The canonicalization hook registration must remain on init priority 22.'
 );
 
@@ -701,12 +701,12 @@ vms_test_assert_true(
 	'Boundary semantic projection must reject a non-owned assertion mutation.'
 );
 
-eval(vms_test_extract_function($source, 'vms_vendor_type_registry'));
-eval(vms_test_extract_function($source, 'vms_vendor_type_alias_map'));
-eval(vms_test_extract_function($source, 'vms_vendor_type_normalize_slug'));
-eval(vms_test_extract_function($source, 'vms_vendor_type_select_options'));
-eval(vms_test_extract_function($source, 'vms_vendor_type_canonical_slug_for_term'));
-eval(vms_test_extract_function($source, 'vms_vendor_type_maybe_canonicalize_terms'));
+eval(vms_test_extract_function($source, 'bvmgr_vendor_type_registry'));
+eval(vms_test_extract_function($source, 'bvmgr_vendor_type_alias_map'));
+eval(vms_test_extract_function($source, 'bvmgr_vendor_type_normalize_slug'));
+eval(vms_test_extract_function($source, 'bvmgr_vendor_type_select_options'));
+eval(vms_test_extract_function($source, 'bvmgr_vendor_type_canonical_slug_for_term'));
+eval(vms_test_extract_function($source, 'bvmgr_vendor_type_maybe_canonicalize_terms'));
 
 vms_test_reset_runtime_state();
 
@@ -721,7 +721,7 @@ $GLOBALS['vms_test_post_meta'][701]['_vms_secondary_vendor_type'] = 'bands';
 $GLOBALS['vms_test_post_meta'][702]['_vms_secondary_vendor_type'] = 'food-truck';
 $GLOBALS['vms_test_post_meta'][703]['_vms_secondary_vendor_type'] = '';
 
-vms_vendor_type_maybe_canonicalize_terms();
+bvmgr_vendor_type_maybe_canonicalize_terms();
 
 $expected_query_args = array(
 	'post_type' => 'vms_event_plan',
@@ -796,7 +796,7 @@ vms_test_assert_same(
 );
 
 $initial_query_count = count($GLOBALS['vms_test_get_posts_args']);
-vms_vendor_type_maybe_canonicalize_terms();
+bvmgr_vendor_type_maybe_canonicalize_terms();
 vms_test_assert_same(
 	$initial_query_count,
 	count($GLOBALS['vms_test_get_posts_args']),

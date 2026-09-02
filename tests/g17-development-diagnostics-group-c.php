@@ -146,23 +146,23 @@ $ticket_fallback = <<<'PHP'
 		'plan_id' => $payload['object_id'],
 	));
 PHP;
-$ticket_capture = g17c_function($sources['mirror']['ticket'], 'vms_ticket_mutation_audit_capture_source_trace');
+$ticket_capture = g17c_function($sources['mirror']['ticket'], 'bvmgr_ticket_mutation_audit_capture_source_trace');
 
 $reconstruct_staff = static function (string $source) use ($staff_schema, $staff_nightly_failure, $staff_direct): string {
-	$nightly = g17c_function($source, 'vms_tasks_run_nightly_generator');
+	$nightly = g17c_function($source, 'bvmgr_tasks_run_nightly_generator');
 	$nightly = g17c_once($nightly, $staff_schema, "\t\t\terror_log('[VMS Tasks] Nightly generator skipped: DB schema not ready.');", 'Schema reverse failed.');
 	$nightly = g17c_once($nightly, $staff_nightly_failure, '', 'Nightly failure reverse failed.');
 	$nightly = g17c_once($nightly, "\t\t\tif (is_wp_error(\$run)) {\n\n\t\t\t\t\$summary['warnings']++;", "\t\t\tif (is_wp_error(\$run)) {\n\t\t\t\t\$summary['warnings']++;", 'Nightly reverse whitespace failed.');
 	$close = strrpos($nightly, "\n\t}");
 	g17c_assert($close !== false, 'Nightly close missing.');
 	$nightly = substr($nightly, 0, (int) $close) . "\n\t\terror_log('[VMS Tasks] nightly_generator ' . wp_json_encode(\$summary));" . substr($nightly, (int) $close);
-	$source = g17c_swap($source, 'vms_tasks_run_nightly_generator', $nightly);
-	$direct = g17c_function($source, 'vms_tasks_generate_for_event_safe');
+	$source = g17c_swap($source, 'bvmgr_tasks_run_nightly_generator', $nightly);
+	$direct = g17c_function($source, 'bvmgr_tasks_generate_for_event_safe');
 	$direct = g17c_once($direct, $staff_direct, "\t\t\terror_log('[VMS Tasks] event generation failed: ' . \$run->get_error_message());", 'Direct reverse failed.');
-	return g17c_swap($source, 'vms_tasks_generate_for_event_safe', $direct);
+	return g17c_swap($source, 'bvmgr_tasks_generate_for_event_safe', $direct);
 };
 $reconstruct_ticket = static function (string $source) use ($ticket_fallback): string {
-	$trace = g17c_function($source, 'vms_ticket_mutation_audit_trace');
+	$trace = g17c_function($source, 'bvmgr_ticket_mutation_audit_trace');
 	$historical = <<<'PHP'
 	$elapsed_ms = $started_at > 0 ? max(0.0, round((microtime(true) - $started_at) * 1000, 1)) : 0.0;
 	error_log('[VMS TRACE] ' . wp_json_encode(array(
@@ -182,13 +182,13 @@ $reconstruct_ticket = static function (string $source) use ($ticket_fallback): s
 	)));
 PHP;
 	$trace = g17c_once($trace, $ticket_fallback, $historical, 'Ticket fallback reverse failed.');
-	$source = g17c_swap($source, 'vms_ticket_mutation_audit_trace', $trace);
-	$capture = g17c_function($source, 'vms_ticket_mutation_audit_capture_source_trace');
+	$source = g17c_swap($source, 'bvmgr_ticket_mutation_audit_trace', $trace);
+	$capture = g17c_function($source, 'bvmgr_ticket_mutation_audit_capture_source_trace');
 	$body_start = strpos($capture, "{\n") + 2;
 	$body_end = strrpos($capture, "\n}");
 	g17c_assert($body_start >= 2 && $body_end !== false, 'Capture bounds changed.');
 	$capture = substr($capture, 0, $body_start) . "\treturn debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 40);" . substr($capture, (int) $body_end);
-	return g17c_swap($source, 'vms_ticket_mutation_audit_capture_source_trace', $capture);
+	return g17c_swap($source, 'bvmgr_ticket_mutation_audit_capture_source_trace', $capture);
 };
 
 foreach (array('mirror', 'shadow') as $tree) {
@@ -197,7 +197,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 }
 foreach (array(
 	array('staff', 'staff_tasks_schema_not_ready', 'staff_tasks_schema_mutated', $reconstruct_staff),
-	array('ticket', "vms_record_operational_issue('ticket_mutation_audit_trace'", "vms_record_operational_issue('ticket_mutation_audit_mutated'", $reconstruct_ticket),
+	array('ticket', "bvmgr_record_operational_issue('ticket_mutation_audit_trace'", "bvmgr_record_operational_issue('ticket_mutation_audit_mutated'", $reconstruct_ticket),
 ) as $mutation) {
 	$mutated = g17c_once($sources['mirror'][$mutation[0]], $mutation[1], $mutation[2], 'Mutation setup failed.');
 	$rejected = false;
@@ -232,23 +232,23 @@ if (!function_exists('absint')) {
 $GLOBALS['g17c_order'] = array();
 $GLOBALS['g17c_issues'] = array();
 $GLOBALS['g17c_guards'] = array();
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$GLOBALS['g17c_order'][] = 'issue:' . $event_code;
 	$GLOBALS['g17c_issues'][] = array('event_code' => $event_code, 'context' => $context, 'error' => $error);
 	return true;
 }
-function vms_admin_guard_trace(string $hook_name, string $decision, array $payload, float $started_at = 0.0): void
+function bvmgr_admin_guard_trace(string $hook_name, string $decision, array $payload, float $started_at = 0.0): void
 {
 	$GLOBALS['g17c_order'][] = 'guard';
 	$GLOBALS['g17c_guards'][] = compact('hook_name', 'decision', 'payload', 'started_at');
 }
 
-$trace_source = g17c_function($sources['mirror']['ticket'], 'vms_ticket_mutation_audit_trace');
-$delegated = g17c_once($trace_source, 'function vms_ticket_mutation_audit_trace(', 'function g17c_ticket_delegated(', 'Delegated trace rename failed.');
+$trace_source = g17c_function($sources['mirror']['ticket'], 'bvmgr_ticket_mutation_audit_trace');
+$delegated = g17c_once($trace_source, 'function bvmgr_ticket_mutation_audit_trace(', 'function g17c_ticket_delegated(', 'Delegated trace rename failed.');
 eval($delegated);
-$fallback = g17c_once($trace_source, 'function vms_ticket_mutation_audit_trace(', 'function g17c_ticket_fallback(', 'Fallback trace rename failed.');
-$fallback = g17c_once($fallback, "if (function_exists('vms_admin_guard_trace')) {", 'if (false) {', 'Fallback injection failed.');
+$fallback = g17c_once($trace_source, 'function bvmgr_ticket_mutation_audit_trace(', 'function g17c_ticket_fallback(', 'Fallback trace rename failed.');
+$fallback = g17c_once($fallback, "if (function_exists('bvmgr_admin_guard_trace')) {", 'if (false) {', 'Fallback injection failed.');
 eval($fallback);
 
 $sentinel = 'recipient@example.test token=TOPSECRET uri=/private/path meta=_secret source=/tmp/private.php';
@@ -290,12 +290,12 @@ g17c_same(array(
 g17c_same(null, $fallback_call['error'], 'Ticket fallback must not forward raw error data.');
 g17c_same(0, substr_count((string) json_encode($fallback_call), $sentinel), 'Ticket fallback leaked URI/meta/source/raw sentinel data.');
 
-foreach (array('vms_ticket_mutation_audit_skip_hooks', 'vms_ticket_mutation_audit_current_hook', 'vms_ticket_mutation_audit_capture_source_trace', 'vms_ticket_mutation_audit_detect_source') as $function_name) {
+foreach (array('bvmgr_ticket_mutation_audit_skip_hooks', 'bvmgr_ticket_mutation_audit_current_hook', 'bvmgr_ticket_mutation_audit_capture_source_trace', 'bvmgr_ticket_mutation_audit_detect_source') as $function_name) {
 	eval(g17c_function($sources['mirror']['ticket'], $function_name));
 }
 function g17c_capture_probe(): array
 {
-	return vms_ticket_mutation_audit_capture_source_trace();
+	return bvmgr_ticket_mutation_audit_capture_source_trace();
 }
 $frames = g17c_capture_probe();
 g17c_assert($frames !== array() && count($frames) <= 40, 'Projected trace must contain at most forty frames.');
@@ -310,17 +310,17 @@ foreach ($frames as $frame) {
 
 $GLOBALS['wp_current_filter'] = array('save_post_vms_event_plan', 'updated_post_meta');
 $injected = array(
-	array('function' => 'vms_ticket_mutation_audit_detect_source', 'file' => $sentinel, 'args' => array($sentinel)),
+	array('function' => 'bvmgr_ticket_mutation_audit_detect_source', 'file' => $sentinel, 'args' => array($sentinel)),
 	array('function' => 'apply_filters', 'class' => $sentinel),
 	array('function' => 'tribe_inventory_sync', 'object' => (object) array('secret' => $sentinel)),
 );
 $immutable = $injected;
-$detected = vms_ticket_mutation_audit_detect_source($injected);
+$detected = bvmgr_ticket_mutation_audit_detect_source($injected);
 g17c_same($immutable, $injected, 'Explicit source trace must remain immutable.');
 g17c_same(array('source_hook' => 'save_post_vms_event_plan', 'source_function' => 'tribe_inventory_sync'), $detected, 'Explicit source detection changed.');
 function vms_g17_ticket_source_probe(): array
 {
-	return vms_ticket_mutation_audit_detect_source();
+	return bvmgr_ticket_mutation_audit_detect_source();
 }
 g17c_same('vms_g17_ticket_source_probe', vms_g17_ticket_source_probe()['source_function'], 'Projected live source detection changed.');
 
@@ -355,22 +355,22 @@ $GLOBALS['g17c_generate_calls'] = array();
 $GLOBALS['g17c_event_contexts'] = array();
 $GLOBALS['g17c_allow_supersede'] = false;
 $GLOBALS['g17c_summary'] = null;
-function vms_tasks_db_ready(): bool
+function bvmgr_tasks_db_ready(): bool
 {
 	$GLOBALS['g17c_order'][] = 'db_ready';
 	return (bool) $GLOBALS['g17c_db_ready'];
 }
-function vms_tasks_get_settings(): array
+function bvmgr_tasks_get_settings(): array
 {
 	$GLOBALS['g17c_order'][] = 'settings';
 	return $GLOBALS['g17c_settings'];
 }
-function vms_tasks_collect_upcoming_event_ids(int $horizon_days): array
+function bvmgr_tasks_collect_upcoming_event_ids(int $horizon_days): array
 {
 	$GLOBALS['g17c_order'][] = 'collect:' . $horizon_days;
 	return $GLOBALS['g17c_plan_ids'];
 }
-function vms_tasks_generate_for_event(int $post_id, array $args = array())
+function bvmgr_tasks_generate_for_event(int $post_id, array $args = array())
 {
 	$GLOBALS['g17c_order'][] = 'generate:' . $post_id;
 	$GLOBALS['g17c_generate_calls'][] = array($post_id, $args);
@@ -382,26 +382,26 @@ function vms_tasks_generate_for_event(int $post_id, array $args = array())
 		'warnings' => array(),
 	);
 }
-function vms_tasks_get_event_context(int $post_id)
+function bvmgr_tasks_get_event_context(int $post_id)
 {
 	$GLOBALS['g17c_order'][] = 'context:' . $post_id;
 	return $GLOBALS['g17c_event_contexts'][$post_id] ?? null;
 }
-function vms_tasks_should_allow_supersede(int $post_id, array $event_context, array $settings): bool
+function bvmgr_tasks_should_allow_supersede(int $post_id, array $event_context, array $settings): bool
 {
 	unset($event_context, $settings);
 	$GLOBALS['g17c_order'][] = 'supersede:' . $post_id;
 	return (bool) $GLOBALS['g17c_allow_supersede'];
 }
 
-$nightly_probe = g17c_function($sources['mirror']['staff'], 'vms_tasks_run_nightly_generator');
-$nightly_probe = g17c_once($nightly_probe, 'function vms_tasks_run_nightly_generator(', 'function g17c_tasks_run_nightly_generator(', 'Nightly probe rename failed.');
+$nightly_probe = g17c_function($sources['mirror']['staff'], 'bvmgr_tasks_run_nightly_generator');
+$nightly_probe = g17c_once($nightly_probe, 'function bvmgr_tasks_run_nightly_generator(', 'function g17c_tasks_run_nightly_generator(', 'Nightly probe rename failed.');
 $nightly_close = strrpos($nightly_probe, "\n\t}");
 g17c_assert($nightly_close !== false, 'Nightly probe close changed.');
 $nightly_probe = substr($nightly_probe, 0, (int) $nightly_close) . "\n\t\t\$GLOBALS['g17c_summary'] = \$summary;" . substr($nightly_probe, (int) $nightly_close);
 eval($nightly_probe);
-$direct_probe = g17c_function($sources['mirror']['staff'], 'vms_tasks_generate_for_event_safe');
-$direct_probe = g17c_once($direct_probe, 'function vms_tasks_generate_for_event_safe(', 'function g17c_tasks_generate_for_event_safe(', 'Direct probe rename failed.');
+$direct_probe = g17c_function($sources['mirror']['staff'], 'bvmgr_tasks_generate_for_event_safe');
+$direct_probe = g17c_once($direct_probe, 'function bvmgr_tasks_generate_for_event_safe(', 'function g17c_tasks_generate_for_event_safe(', 'Direct probe rename failed.');
 eval($direct_probe);
 
 $GLOBALS['g17c_db_ready'] = false;
@@ -466,6 +466,6 @@ $GLOBALS['g17c_order'] = $GLOBALS['g17c_issues'] = $GLOBALS['g17c_generate_calls
 g17c_same(null, g17c_tasks_generate_for_event_safe(21, 7), 'Successful direct return changed.');
 g17c_same(0, count($GLOBALS['g17c_issues']), 'Successful direct generation must not log a failure.');
 
-g17c_same(g17c_function($sources['mirror']['staff'], 'vms_tasks_run_queued_event_generation'), g17c_function($sources['shadow']['staff'], 'vms_tasks_run_queued_event_generation'), 'Queued generation parity changed.');
+g17c_same(g17c_function($sources['mirror']['staff'], 'bvmgr_tasks_run_queued_event_generation'), g17c_function($sources['shadow']['staff'], 'bvmgr_tasks_run_queued_event_generation'), 'Queued generation parity changed.');
 
 fwrite(STDOUT, "G17 development diagnostics group C: PASS\n");

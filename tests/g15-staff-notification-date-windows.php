@@ -100,8 +100,8 @@ g15_assert_true(is_string($g15_sources['shadow']), 'Shadow notification source m
 g15_assert_same($g15_sources['mirror'], $g15_sources['shadow'], 'Mirror and shadow notification source must match exactly.');
 
 $g15_helper_block = <<<'PHP'
-if (!function_exists('vms_tasks_notification_format_floating_local_datetime')) {
-	function vms_tasks_notification_format_floating_local_datetime(string $format, string $expression): string
+if (!function_exists('bvmgr_tasks_notification_format_floating_local_datetime')) {
+	function bvmgr_tasks_notification_format_floating_local_datetime(string $format, string $expression): string
 	{
 		$utc = new DateTimeZone('UTC');
 		try {
@@ -118,17 +118,17 @@ if (!function_exists('vms_tasks_notification_format_floating_local_datetime')) {
 PHP;
 
 $g15_replacements = array(
-    "vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', \$now . ' +' . \$window_minutes . ' minutes')" => "date('Y-m-d H:i:s', strtotime(\$now . ' +' . \$window_minutes . ' minutes'))",
-    "vms_tasks_notification_format_floating_local_datetime('Y-m-d 23:59:59', \$now)" => "date('Y-m-d 23:59:59', strtotime(\$now))",
-    "vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', \$now . ' +7 days')" => "date('Y-m-d H:i:s', strtotime(\$now . ' +7 days'))",
-    "vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', \$now . ' +3 days')" => "date('Y-m-d H:i:s', strtotime(\$now . ' +3 days'))",
-    "vms_tasks_notification_format_floating_local_datetime('Y-m-d', \$now)" => "date('Y-m-d', strtotime(\$now))",
+    "bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', \$now . ' +' . \$window_minutes . ' minutes')" => "date('Y-m-d H:i:s', strtotime(\$now . ' +' . \$window_minutes . ' minutes'))",
+    "bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d 23:59:59', \$now)" => "date('Y-m-d 23:59:59', strtotime(\$now))",
+    "bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', \$now . ' +7 days')" => "date('Y-m-d H:i:s', strtotime(\$now . ' +7 days'))",
+    "bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', \$now . ' +3 days')" => "date('Y-m-d H:i:s', strtotime(\$now . ' +3 days'))",
+    "bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d', \$now)" => "date('Y-m-d', strtotime(\$now))",
 );
 
 foreach ($g15_sources as $g15_tree => $g15_source) {
     g15_assert_same(0, preg_match_all('/(?<![A-Za-z0-9_])date\s*\(/', $g15_source), $g15_tree . ' must contain zero native date() calls.');
     g15_assert_same(0, preg_match_all('/phpcs:(?:ignore|disable)[^\n]*WordPress\.DateTime/i', $g15_source), $g15_tree . ' must not suppress DateTime findings.');
-    g15_assert_same(7, substr_count($g15_source, 'vms_tasks_notification_format_floating_local_datetime'), $g15_tree . ' must contain one guard, one helper definition, and five calls.');
+    g15_assert_same(7, substr_count($g15_source, 'bvmgr_tasks_notification_format_floating_local_datetime'), $g15_tree . ' must contain one guard, one helper definition, and five calls.');
     g15_assert_same(1, substr_count($g15_source, "new DateTimeZone('UTC')"), $g15_tree . ' helper must use one explicit UTC zone.');
     g15_assert_same(2, substr_count($g15_source, "new DateTimeImmutable('@0')"), $g15_tree . ' helper must preserve blank and invalid epoch fallbacks.');
     g15_assert_same(1, substr_count($g15_source, 'new DateTimeImmutable($expression, $utc)'), $g15_tree . ' helper must parse floating expressions in explicit UTC.');
@@ -224,33 +224,33 @@ function wp_json_encode(mixed $value): string|false
     return json_encode($value);
 }
 
-function vms_tasks_get_settings(): array
+function bvmgr_tasks_get_settings(): array
 {
     return $GLOBALS['g15_settings'];
 }
 
-function vms_tasks_now_local_mysql(): string
+function bvmgr_tasks_now_local_mysql(): string
 {
     return $GLOBALS['g15_now'];
 }
 
-function vms_tasks_get_instances(array $args): array
+function bvmgr_tasks_get_instances(array $args): array
 {
     $GLOBALS['g15_queries'][] = $args;
     return $GLOBALS['g15_rows'];
 }
 
-function vms_tasks_has_task_action_log(int $instance_id, string $action): bool
+function bvmgr_tasks_has_task_action_log(int $instance_id, string $action): bool
 {
     return false;
 }
 
-function vms_tasks_log_task_action(int $instance_id, string $action, mixed $actor_id = null, ?string $details = null): void
+function bvmgr_tasks_log_task_action(int $instance_id, string $action, mixed $actor_id = null, ?string $details = null): void
 {
     $GLOBALS['g15_logs'][] = array($instance_id, $action, $actor_id, $details);
 }
 
-function vms_notify_user(int $user_id, string $event_key, string $template_key, array $vars): void
+function bvmgr_notify_user(int $user_id, string $event_key, string $template_key, array $vars): void
 {
     $GLOBALS['g15_notifications'][] = array($user_id, $event_key, $template_key, $vars);
 }
@@ -294,35 +294,35 @@ $g15_legacy_cases = array(
 foreach ($g15_legacy_cases as [$g15_format, $g15_expression]) {
     g15_assert_same(
         $g15_legacy_utc($g15_format, $g15_expression),
-        vms_tasks_notification_format_floating_local_datetime($g15_format, $g15_expression),
+        bvmgr_tasks_notification_format_floating_local_datetime($g15_format, $g15_expression),
         'Helper must preserve the supported WordPress-UTC result for ' . var_export($g15_expression, true) . '.'
     );
 }
 
-g15_assert_same('1970-01-01 00:00:00', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', ''), 'Blank direct input must preserve the epoch fallback.');
-g15_assert_same('1970-01-01 00:00:00', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', 'not-a-date'), 'Invalid direct input must preserve the epoch fallback.');
-g15_assert_same('1970-01-01 00:00:00', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '@0'), 'Explicit epoch input must remain valid.');
-g15_assert_same('1969-12-31 23:59:59', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '1969-12-31 23:59:59'), 'Pre-epoch input must remain representable.');
-g15_assert_same('2026-03-02 10:00:00', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '2026-02-30 10:00:00'), 'Lenient calendar normalization must remain supported.');
-g15_assert_same('2026-01-15 17:00:00', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '2026-01-15 10:00:00-05:00 +120 minutes'), 'Explicit-offset input must normalize to UTC.');
+g15_assert_same('1970-01-01 00:00:00', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', ''), 'Blank direct input must preserve the epoch fallback.');
+g15_assert_same('1970-01-01 00:00:00', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', 'not-a-date'), 'Invalid direct input must preserve the epoch fallback.');
+g15_assert_same('1970-01-01 00:00:00', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '@0'), 'Explicit epoch input must remain valid.');
+g15_assert_same('1969-12-31 23:59:59', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '1969-12-31 23:59:59'), 'Pre-epoch input must remain representable.');
+g15_assert_same('2026-03-02 10:00:00', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '2026-02-30 10:00:00'), 'Lenient calendar normalization must remain supported.');
+g15_assert_same('2026-01-15 17:00:00', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '2026-01-15 10:00:00-05:00 +120 minutes'), 'Explicit-offset input must normalize to UTC.');
 
 foreach (array('UTC', 'America/Chicago', 'Asia/Tokyo') as $g15_runtime_timezone) {
     date_default_timezone_set($g15_runtime_timezone);
-    g15_assert_same('2026-03-08 03:30:00', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '2026-03-08 01:30:00 +120 minutes'), $g15_runtime_timezone . ' must preserve nominal spring-forward wall arithmetic.');
-    g15_assert_same('2026-11-01 02:30:00', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '2026-11-01 00:30:00 +120 minutes'), $g15_runtime_timezone . ' must preserve nominal fall-back wall arithmetic.');
-    g15_assert_same('1970-01-01 00:00:00', vms_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', 'invalid'), $g15_runtime_timezone . ' must preserve invalid-input epoch behavior.');
+    g15_assert_same('2026-03-08 03:30:00', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '2026-03-08 01:30:00 +120 minutes'), $g15_runtime_timezone . ' must preserve nominal spring-forward wall arithmetic.');
+    g15_assert_same('2026-11-01 02:30:00', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', '2026-11-01 00:30:00 +120 minutes'), $g15_runtime_timezone . ' must preserve nominal fall-back wall arithmetic.');
+    g15_assert_same('1970-01-01 00:00:00', bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', 'invalid'), $g15_runtime_timezone . ' must preserve invalid-input epoch behavior.');
 }
 
-g15_assert_same('2026-06-18 23:59:59', vms_tasks_notification_digest_window_end('today', '2026-06-18 09:15:00'), 'Today digest must end at local-wall end of day.');
-g15_assert_same('2026-06-25 09:15:00', vms_tasks_notification_digest_window_end('next7', '2026-06-18 09:15:00'), 'Next-seven digest must retain nominal wall time.');
-g15_assert_same('2026-06-21 09:15:00', vms_tasks_notification_digest_window_end('next3', '2026-06-18 09:15:00'), 'Next-three digest must retain nominal wall time.');
-g15_assert_same('2026-06-21 09:15:00', vms_tasks_notification_digest_window_end('unknown', '2026-06-18 09:15:00'), 'Unknown digest windows must retain the next-three default.');
-g15_assert_same('1970-01-01 23:59:59', vms_tasks_notification_digest_window_end('today', ''), 'Blank today input must preserve epoch end-of-day behavior.');
-g15_assert_same('1970-01-01 23:59:59', vms_tasks_notification_digest_window_end('today', 'invalid'), 'Invalid today input must preserve epoch end-of-day behavior.');
-g15_assert_same('1970-01-08 00:00:00', vms_tasks_notification_digest_window_end('next7', '@0'), 'Next-seven must preserve explicit epoch-relative behavior.');
+g15_assert_same('2026-06-18 23:59:59', bvmgr_tasks_notification_digest_window_end('today', '2026-06-18 09:15:00'), 'Today digest must end at local-wall end of day.');
+g15_assert_same('2026-06-25 09:15:00', bvmgr_tasks_notification_digest_window_end('next7', '2026-06-18 09:15:00'), 'Next-seven digest must retain nominal wall time.');
+g15_assert_same('2026-06-21 09:15:00', bvmgr_tasks_notification_digest_window_end('next3', '2026-06-18 09:15:00'), 'Next-three digest must retain nominal wall time.');
+g15_assert_same('2026-06-21 09:15:00', bvmgr_tasks_notification_digest_window_end('unknown', '2026-06-18 09:15:00'), 'Unknown digest windows must retain the next-three default.');
+g15_assert_same('1970-01-01 23:59:59', bvmgr_tasks_notification_digest_window_end('today', ''), 'Blank today input must preserve epoch end-of-day behavior.');
+g15_assert_same('1970-01-01 23:59:59', bvmgr_tasks_notification_digest_window_end('today', 'invalid'), 'Invalid today input must preserve epoch end-of-day behavior.');
+g15_assert_same('1970-01-08 00:00:00', bvmgr_tasks_notification_digest_window_end('next7', '@0'), 'Next-seven must preserve explicit epoch-relative behavior.');
 
 $g15_blank_window_started = time() + (7 * 86400) - 2;
-$g15_blank_window_result = strtotime(vms_tasks_notification_digest_window_end('next7', '') . ' UTC');
+$g15_blank_window_result = strtotime(bvmgr_tasks_notification_digest_window_end('next7', '') . ' UTC');
 $g15_blank_window_finished = time() + (7 * 86400) + 2;
 g15_assert_true(is_int($g15_blank_window_result), 'Blank next-seven output must remain parseable.');
 g15_assert_true($g15_blank_window_result >= $g15_blank_window_started && $g15_blank_window_result <= $g15_blank_window_finished, 'Blank next-seven must preserve current-time-relative behavior.');
@@ -334,7 +334,7 @@ foreach (array('UTC', 'America/Chicago', 'Asia/Tokyo') as $g15_runtime_timezone)
     date_default_timezone_set($g15_runtime_timezone);
     $GLOBALS['g15_settings'] = array('notify_due_soon_alerts' => true);
     $GLOBALS['g15_now'] = '2026-03-08 01:30:00';
-    vms_tasks_notification_scan_due_soon();
+    bvmgr_tasks_notification_scan_due_soon();
     g15_assert_same(
         array(array(
             'status' => 'open',
@@ -354,7 +354,7 @@ $GLOBALS['g15_settings'] = array(
     'notify_digest_time' => '08:00',
 );
 $GLOBALS['g15_now'] = '2026-06-18 07:59:59';
-vms_tasks_notification_run_digest();
+bvmgr_tasks_notification_run_digest();
 g15_assert_same(array(), $GLOBALS['g15_queries'], 'Digest must not query before its configured local-wall run time.');
 g15_assert_same(array(), $GLOBALS['g15_updates'], 'Digest must not update its gate before the configured run time.');
 
@@ -366,7 +366,7 @@ $GLOBALS['g15_rows'] = array(array(
     'due_at_local' => '2026-06-20 18:00:00',
     'assignee_user_id' => 42,
 ));
-vms_tasks_notification_run_digest();
+bvmgr_tasks_notification_run_digest();
 
 g15_assert_same(
     array(array(
@@ -406,7 +406,7 @@ g15_assert_same(
     'Digest must preserve its exact recipient and payload contract.'
 );
 
-vms_tasks_notification_run_digest();
+bvmgr_tasks_notification_run_digest();
 g15_assert_same(1, count($GLOBALS['g15_queries']), 'A second digest on the same local date must not query again.');
 g15_assert_same(1, count($GLOBALS['g15_updates']), 'A second digest on the same local date must not rewrite its gate.');
 g15_assert_same(1, count($GLOBALS['g15_notifications']), 'A second digest on the same local date must not notify again.');

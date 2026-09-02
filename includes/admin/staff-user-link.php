@@ -16,14 +16,14 @@ add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_staff_user_link',
         __('Portal User', 'backstage-venue-manager'),
-        'vms_staff_user_link_metabox_render',
+        'bvmgr_staff_user_link_metabox_render',
         'vms_staff',
         'side',
         'default'
     );
 });
 
-function vms_staff_user_link_metabox_render($post): void
+function bvmgr_staff_user_link_metabox_render($post): void
 {
     if (!($post instanceof WP_Post)) return;
 
@@ -42,7 +42,7 @@ function vms_staff_user_link_metabox_render($post): void
         }
     }
 
-    wp_nonce_field('vms_staff_user_link_save', 'vms_staff_user_link_nonce');
+    wp_nonce_field('bvmgr_staff_user_link_save', 'bvmgr_staff_user_link_nonce');
 
     echo '<p class="description">' . esc_html__('Pick the WordPress user account that logs in as this staff member (Ops Console, Staff Portal, alerts).', 'backstage-venue-manager') . '</p>';
 
@@ -83,10 +83,10 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_staff_user_link_nonce']) && !is_array($_POST['vms_staff_user_link_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_user_link_nonce']))
+    $nonce = (isset($_POST['bvmgr_staff_user_link_nonce']) && !is_array($_POST['bvmgr_staff_user_link_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_user_link_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_user_link_save')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_user_link_save'))) {
         return;
     }
 

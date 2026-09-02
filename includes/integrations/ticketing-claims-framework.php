@@ -1,62 +1,62 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_ticketing_claims_db_schema_option_key')) {
-	function vms_ticketing_claims_db_schema_option_key(): string
+if (!function_exists('bvmgr_ticketing_claims_db_schema_option_key')) {
+	function bvmgr_ticketing_claims_db_schema_option_key(): string
 	{
-		return defined('VMS_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION')
-			? (string) VMS_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION
+		return defined('BVMGR_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION')
+			? (string) BVMGR_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION
 			: 'vms_ticketing_claims_db_schema_version';
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_db_schema_target')) {
-	function vms_ticketing_claims_db_schema_target(): string
+if (!function_exists('bvmgr_ticketing_claims_db_schema_target')) {
+	function bvmgr_ticketing_claims_db_schema_target(): string
 	{
-		return defined('VMS_TICKETING_CLAIMS_DB_SCHEMA_VERSION')
-			? (string) VMS_TICKETING_CLAIMS_DB_SCHEMA_VERSION
+		return defined('BVMGR_TICKETING_CLAIMS_DB_SCHEMA_VERSION')
+			? (string) BVMGR_TICKETING_CLAIMS_DB_SCHEMA_VERSION
 			: 'ticketing_claims_v1';
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_table_direct_grants')) {
-	function vms_ticketing_claims_table_direct_grants(): string
+if (!function_exists('bvmgr_ticketing_claims_table_direct_grants')) {
+	function bvmgr_ticketing_claims_table_direct_grants(): string
 	{
 		global $wpdb;
-		$suffix = defined('VMS_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX')
-			? (string) VMS_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX
+		$suffix = defined('BVMGR_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX')
+			? (string) BVMGR_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX
 			: 'vms_ticketing_direct_grants';
 		return $wpdb->prefix . $suffix;
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_table_reservations')) {
-	function vms_ticketing_claims_table_reservations(): string
+if (!function_exists('bvmgr_ticketing_claims_table_reservations')) {
+	function bvmgr_ticketing_claims_table_reservations(): string
 	{
 		global $wpdb;
-		$suffix = defined('VMS_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX')
-			? (string) VMS_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX
+		$suffix = defined('BVMGR_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX')
+			? (string) BVMGR_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX
 			: 'vms_ticketing_claim_reservations';
 		return $wpdb->prefix . $suffix;
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_table_log')) {
-	function vms_ticketing_claims_table_log(): string
+if (!function_exists('bvmgr_ticketing_claims_table_log')) {
+	function bvmgr_ticketing_claims_table_log(): string
 	{
 		global $wpdb;
-		$suffix = defined('VMS_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX')
-			? (string) VMS_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX
+		$suffix = defined('BVMGR_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX')
+			? (string) BVMGR_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX
 			: 'vms_ticketing_claim_log';
 		return $wpdb->prefix . $suffix;
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_maybe_upgrade_schema')) {
-	function vms_ticketing_claims_maybe_upgrade_schema(): void
+if (!function_exists('bvmgr_ticketing_claims_maybe_upgrade_schema')) {
+	function bvmgr_ticketing_claims_maybe_upgrade_schema(): void
 	{
-		$current = (string) get_option(vms_ticketing_claims_db_schema_option_key(), '');
-		$target = vms_ticketing_claims_db_schema_target();
+		$current = (string) get_option(bvmgr_ticketing_claims_db_schema_option_key(), '');
+		$target = bvmgr_ticketing_claims_db_schema_target();
 		if ($current === $target) {
 			return;
 		}
@@ -65,9 +65,9 @@ if (!function_exists('vms_ticketing_claims_maybe_upgrade_schema')) {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$charset = $wpdb->get_charset_collate();
 
-		$grants = vms_ticketing_claims_table_direct_grants();
-		$reservations = vms_ticketing_claims_table_reservations();
-		$claim_log = vms_ticketing_claims_table_log();
+		$grants = bvmgr_ticketing_claims_table_direct_grants();
+		$reservations = bvmgr_ticketing_claims_table_reservations();
+		$claim_log = bvmgr_ticketing_claims_table_log();
 
 		$sql_grants = "CREATE TABLE {$grants} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -147,17 +147,17 @@ if (!function_exists('vms_ticketing_claims_maybe_upgrade_schema')) {
 		dbDelta($sql_reservations);
 		dbDelta($sql_log);
 
-		update_option(vms_ticketing_claims_db_schema_option_key(), $target, false);
+		update_option(bvmgr_ticketing_claims_db_schema_option_key(), $target, false);
 	}
 }
-add_action('plugins_loaded', 'vms_ticketing_claims_maybe_upgrade_schema', 9);
+add_action('plugins_loaded', 'bvmgr_ticketing_claims_maybe_upgrade_schema', 9);
 
-if (!function_exists('vms_ticketing_claims_sanitize_program_list')) {
+if (!function_exists('bvmgr_ticketing_claims_sanitize_program_list')) {
 	/**
 	 * @param mixed $raw
 	 * @return string[]
 	 */
-	function vms_ticketing_claims_sanitize_program_list($raw): array
+	function bvmgr_ticketing_claims_sanitize_program_list($raw): array
 	{
 		$list = array();
 		if (is_array($raw)) {
@@ -175,8 +175,8 @@ if (!function_exists('vms_ticketing_claims_sanitize_program_list')) {
 			$out[$key] = $key;
 		}
 
-		if (function_exists('vms_ticketing_verification_programs')) {
-			$known = array_keys((array) vms_ticketing_verification_programs());
+		if (function_exists('bvmgr_ticketing_verification_programs')) {
+			$known = array_keys((array) bvmgr_ticketing_verification_programs());
 			$known_map = array();
 			foreach ($known as $known_program) {
 				$known_key = sanitize_key((string) $known_program);
@@ -198,31 +198,31 @@ if (!function_exists('vms_ticketing_claims_sanitize_program_list')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_normalize_allowed_programs')) {
+if (!function_exists('bvmgr_ticketing_claims_normalize_allowed_programs')) {
 	/**
 	 * @param mixed $raw
 	 * @return string[]
 	 */
-	function vms_ticketing_claims_normalize_allowed_programs($raw, string $legacy_program = ''): array
+	function bvmgr_ticketing_claims_normalize_allowed_programs($raw, string $legacy_program = ''): array
 	{
-		$programs = vms_ticketing_claims_sanitize_program_list($raw);
+		$programs = bvmgr_ticketing_claims_sanitize_program_list($raw);
 		if (!empty($programs)) {
 			return $programs;
 		}
 
 		$legacy = sanitize_key($legacy_program);
 		if ($legacy !== '') {
-			$programs = vms_ticketing_claims_sanitize_program_list(array($legacy));
+			$programs = bvmgr_ticketing_claims_sanitize_program_list(array($legacy));
 		}
 		return $programs;
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_truthy')) {
+if (!function_exists('bvmgr_ticketing_claims_truthy')) {
 	/**
 	 * @param mixed $value
 	 */
-	function vms_ticketing_claims_truthy($value, bool $default = false): bool
+	function bvmgr_ticketing_claims_truthy($value, bool $default = false): bool
 	{
 		$raw = strtolower(trim((string) $value));
 		if ($raw === '') {
@@ -235,12 +235,12 @@ if (!function_exists('vms_ticketing_claims_truthy')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_program_labels')) {
+if (!function_exists('bvmgr_ticketing_claims_program_labels')) {
 	/**
 	 * @param string[] $programs
 	 * @return string[]
 	 */
-	function vms_ticketing_claims_program_labels(array $programs): array
+	function bvmgr_ticketing_claims_program_labels(array $programs): array
 	{
 		$labels = array();
 		foreach ($programs as $program) {
@@ -248,8 +248,8 @@ if (!function_exists('vms_ticketing_claims_program_labels')) {
 			if ($key === '') {
 				continue;
 			}
-			if (function_exists('vms_ticketing_verification_program_label')) {
-				$labels[] = vms_ticketing_verification_program_label($key);
+			if (function_exists('bvmgr_ticketing_verification_program_label')) {
+				$labels[] = bvmgr_ticketing_verification_program_label($key);
 			} else {
 				$labels[] = ucwords(str_replace('_', ' ', $key));
 			}
@@ -258,11 +258,11 @@ if (!function_exists('vms_ticketing_claims_program_labels')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_allowed_grant_types')) {
+if (!function_exists('bvmgr_ticketing_claims_allowed_grant_types')) {
 	/**
 	 * @return string[]
 	 */
-	function vms_ticketing_claims_allowed_grant_types(): array
+	function bvmgr_ticketing_claims_allowed_grant_types(): array
 	{
 		return array(
 			'event_ticket_eligibility',
@@ -273,11 +273,11 @@ if (!function_exists('vms_ticketing_claims_allowed_grant_types')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_grant_type_labels')) {
+if (!function_exists('bvmgr_ticketing_claims_grant_type_labels')) {
 	/**
 	 * @return array<string,string>
 	 */
-	function vms_ticketing_claims_grant_type_labels(): array
+	function bvmgr_ticketing_claims_grant_type_labels(): array
 	{
 		return array(
 			'event_ticket_eligibility' => __('Event Ticket Eligibility', 'backstage-venue-manager'),
@@ -288,11 +288,11 @@ if (!function_exists('vms_ticketing_claims_grant_type_labels')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_grant_type_label')) {
-	function vms_ticketing_claims_grant_type_label(string $grant_type): string
+if (!function_exists('bvmgr_ticketing_claims_grant_type_label')) {
+	function bvmgr_ticketing_claims_grant_type_label(string $grant_type): string
 	{
 		$grant_type = sanitize_key($grant_type);
-		$labels = vms_ticketing_claims_grant_type_labels();
+		$labels = bvmgr_ticketing_claims_grant_type_labels();
 		if ($grant_type !== '' && isset($labels[$grant_type])) {
 			return (string) $labels[$grant_type];
 		}
@@ -300,8 +300,8 @@ if (!function_exists('vms_ticketing_claims_grant_type_label')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_grant_status_label')) {
-	function vms_ticketing_claims_grant_status_label(string $status): string
+if (!function_exists('bvmgr_ticketing_claims_grant_status_label')) {
+	function bvmgr_ticketing_claims_grant_status_label(string $status): string
 	{
 		$status = sanitize_key($status);
 		$labels = array(
@@ -315,8 +315,8 @@ if (!function_exists('vms_ticketing_claims_grant_status_label')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_grant_status_explanation')) {
-	function vms_ticketing_claims_grant_status_explanation(string $status): string
+if (!function_exists('bvmgr_ticketing_claims_grant_status_explanation')) {
+	function bvmgr_ticketing_claims_grant_status_explanation(string $status): string
 	{
 		$status = sanitize_key($status);
 		$map = array(
@@ -330,11 +330,11 @@ if (!function_exists('vms_ticketing_claims_grant_status_explanation')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_grant_reservation_counts')) {
+if (!function_exists('bvmgr_ticketing_claims_grant_reservation_counts')) {
 	/**
 	 * @return array<string,int>
 	 */
-	function vms_ticketing_claims_grant_reservation_counts(int $grant_id): array
+	function bvmgr_ticketing_claims_grant_reservation_counts(int $grant_id): array
 	{
 		$grant_id = absint($grant_id);
 		if ($grant_id <= 0) {
@@ -342,7 +342,7 @@ if (!function_exists('vms_ticketing_claims_grant_reservation_counts')) {
 		}
 
 		global $wpdb;
-		$table = vms_ticketing_claims_table_reservations();
+		$table = bvmgr_ticketing_claims_table_reservations();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation counts read the plugin-owned reservations table with %i/%d-prepared values so grant state reflects immediate reservation mutations.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
@@ -372,12 +372,12 @@ if (!function_exists('vms_ticketing_claims_grant_reservation_counts')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_resolve_grant_status')) {
+if (!function_exists('bvmgr_ticketing_claims_resolve_grant_status')) {
 	/**
 	 * @param array<string,mixed> $grant
 	 * @param array<string,int>|null $reservation_counts
 	 */
-	function vms_ticketing_claims_resolve_grant_status(array $grant, ?array $reservation_counts = null): string
+	function bvmgr_ticketing_claims_resolve_grant_status(array $grant, ?array $reservation_counts = null): string
 	{
 		$raw_status = sanitize_key((string) ($grant['status'] ?? 'active'));
 		$qty_limit = max(0, absint($grant['qty_limit'] ?? 0));
@@ -391,7 +391,7 @@ if (!function_exists('vms_ticketing_claims_resolve_grant_status')) {
 		}
 
 		if ($reservation_counts === null) {
-			$reservation_counts = vms_ticketing_claims_grant_reservation_counts(absint($grant['id'] ?? 0));
+			$reservation_counts = bvmgr_ticketing_claims_grant_reservation_counts(absint($grant['id'] ?? 0));
 		}
 		$reserved_count = max(0, absint($reservation_counts['reserved'] ?? 0));
 		if ($reserved_count > 0 || $raw_status === 'reserved') {
@@ -402,28 +402,28 @@ if (!function_exists('vms_ticketing_claims_resolve_grant_status')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_find_direct_grant_diagnostic')) {
+if (!function_exists('bvmgr_ticketing_claims_find_direct_grant_diagnostic')) {
 	/**
 	 * @param array<string,mixed> $args
 	 * @return array<string,mixed>|null
 	 */
-	function vms_ticketing_claims_find_direct_grant_diagnostic(array $args): ?array
+	function bvmgr_ticketing_claims_find_direct_grant_diagnostic(array $args): ?array
 	{
 		$user_id = absint($args['user_id'] ?? 0);
 		$event_id = absint($args['event_id'] ?? 0);
 		$product_id = absint($args['ticket_product_id'] ?? 0);
 		$ticket_key = sanitize_key((string) ($args['ticket_key'] ?? ''));
 		$grant_type = sanitize_key((string) ($args['grant_type'] ?? 'event_ticket_eligibility'));
-		$allowed_programs = vms_ticketing_claims_sanitize_program_list($args['allowed_programs'] ?? array());
+		$allowed_programs = bvmgr_ticketing_claims_sanitize_program_list($args['allowed_programs'] ?? array());
 
-		if ($user_id <= 0 || $event_id <= 0 || !function_exists('vms_ticketing_claims_get_direct_grants')) {
+		if ($user_id <= 0 || $event_id <= 0 || !function_exists('bvmgr_ticketing_claims_get_direct_grants')) {
 			return null;
 		}
 		if ($grant_type === '') {
 			$grant_type = 'event_ticket_eligibility';
 		}
 
-		$rows = vms_ticketing_claims_get_direct_grants(array(
+		$rows = bvmgr_ticketing_claims_get_direct_grants(array(
 			'user_id' => $user_id,
 			'event_id' => $event_id,
 			'status' => 'any',
@@ -483,22 +483,22 @@ if (!function_exists('vms_ticketing_claims_find_direct_grant_diagnostic')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_find_active_direct_grant')) {
+if (!function_exists('bvmgr_ticketing_claims_find_active_direct_grant')) {
 	/**
 	 * @param array<string,mixed> $args
 	 * @return array<string,mixed>|null
 	 */
-	function vms_ticketing_claims_find_active_direct_grant(array $args): ?array
+	function bvmgr_ticketing_claims_find_active_direct_grant(array $args): ?array
 	{
 		global $wpdb;
-		$table = vms_ticketing_claims_table_direct_grants();
+		$table = bvmgr_ticketing_claims_table_direct_grants();
 
 		$user_id = absint($args['user_id'] ?? 0);
 		$event_id = absint($args['event_id'] ?? 0);
 		$product_id = absint($args['ticket_product_id'] ?? 0);
 		$ticket_key = sanitize_key((string) ($args['ticket_key'] ?? ''));
 		$grant_type = sanitize_key((string) ($args['grant_type'] ?? 'event_ticket_eligibility'));
-		$allowed_programs = vms_ticketing_claims_sanitize_program_list($args['allowed_programs'] ?? array());
+		$allowed_programs = bvmgr_ticketing_claims_sanitize_program_list($args['allowed_programs'] ?? array());
 
 		if ($user_id <= 0 || $event_id <= 0) {
 			return null;
@@ -547,20 +547,20 @@ if (!function_exists('vms_ticketing_claims_find_active_direct_grant')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
+if (!function_exists('bvmgr_ticketing_claims_resolve_eligibility')) {
 	/**
 	 * @param array<string,mixed> $args
 	 * @return array<string,mixed>
 	 */
-	function vms_ticketing_claims_resolve_eligibility(array $args): array
+	function bvmgr_ticketing_claims_resolve_eligibility(array $args): array
 	{
 		$user_id = absint($args['user_id'] ?? 0);
 		$event_id = absint($args['event_id'] ?? 0);
 		$product_id = absint($args['ticket_product_id'] ?? 0);
 		$ticket_key = sanitize_key((string) ($args['ticket_key'] ?? ''));
 		$legacy_program = sanitize_key((string) ($args['legacy_program'] ?? ''));
-		$allowed_programs = vms_ticketing_claims_normalize_allowed_programs($args['allowed_programs'] ?? array(), $legacy_program);
-		$allow_direct_grants = vms_ticketing_claims_truthy($args['allow_direct_grants'] ?? false, false);
+		$allowed_programs = bvmgr_ticketing_claims_normalize_allowed_programs($args['allowed_programs'] ?? array(), $legacy_program);
+		$allow_direct_grants = bvmgr_ticketing_claims_truthy($args['allow_direct_grants'] ?? false, false);
 		$grant_type = sanitize_key((string) ($args['grant_type'] ?? 'event_ticket_eligibility'));
 		if ($grant_type === '') {
 			$grant_type = 'event_ticket_eligibility';
@@ -596,8 +596,8 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 			return $result;
 		}
 
-		if (!empty($allowed_programs) && function_exists('vms_ticketing_get_user_verified_programs')) {
-			$verified_programs = array_values(array_unique(array_filter(array_map('sanitize_key', (array) vms_ticketing_get_user_verified_programs($user_id)))));
+		if (!empty($allowed_programs) && function_exists('bvmgr_ticketing_get_user_verified_programs')) {
+			$verified_programs = array_values(array_unique(array_filter(array_map('sanitize_key', (array) bvmgr_ticketing_get_user_verified_programs($user_id)))));
 			foreach ($allowed_programs as $program) {
 				if (in_array($program, $verified_programs, true)) {
 					$result['eligible'] = true;
@@ -611,7 +611,7 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 		}
 
 		if ($allow_direct_grants && $event_id > 0) {
-			$grant = vms_ticketing_claims_find_active_direct_grant(array(
+			$grant = bvmgr_ticketing_claims_find_active_direct_grant(array(
 				'user_id' => $user_id,
 				'event_id' => $event_id,
 				'ticket_product_id' => $product_id,
@@ -630,8 +630,8 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 		}
 
 		$direct_grant_diagnostic = null;
-		if ($allow_direct_grants && $event_id > 0 && function_exists('vms_ticketing_claims_find_direct_grant_diagnostic')) {
-			$direct_grant_diagnostic = vms_ticketing_claims_find_direct_grant_diagnostic(array(
+		if ($allow_direct_grants && $event_id > 0 && function_exists('bvmgr_ticketing_claims_find_direct_grant_diagnostic')) {
+			$direct_grant_diagnostic = bvmgr_ticketing_claims_find_direct_grant_diagnostic(array(
 				'user_id' => $user_id,
 				'event_id' => $event_id,
 				'ticket_product_id' => $product_id,
@@ -640,8 +640,8 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 				'allowed_programs' => $allowed_programs,
 			));
 			if (is_array($direct_grant_diagnostic) && !empty($direct_grant_diagnostic['id'])) {
-				$resolved_status = function_exists('vms_ticketing_claims_resolve_grant_status')
-					? vms_ticketing_claims_resolve_grant_status($direct_grant_diagnostic)
+				$resolved_status = function_exists('bvmgr_ticketing_claims_resolve_grant_status')
+					? bvmgr_ticketing_claims_resolve_grant_status($direct_grant_diagnostic)
 					: sanitize_key((string) ($direct_grant_diagnostic['status'] ?? ''));
 				$result['matched_grant_id'] = absint($direct_grant_diagnostic['id']);
 				$result['matched_rule_path'] = 'event_direct_grant';
@@ -669,7 +669,7 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 		}
 
 		if (!empty($allowed_programs) && !$allow_direct_grants) {
-			$labels = vms_ticketing_claims_program_labels($allowed_programs);
+			$labels = bvmgr_ticketing_claims_program_labels($allowed_programs);
 			$label_text = !empty($labels) ? implode(', ', $labels) : __('required credential', 'backstage-venue-manager');
 			$result['reason_code'] = 'credential_not_approved';
 			/* translators: %s: human-readable value used in this message. */
@@ -689,14 +689,14 @@ if (!function_exists('vms_ticketing_claims_resolve_eligibility')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_log_result')) {
+if (!function_exists('bvmgr_ticketing_claims_log_result')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_ticketing_claims_log_result(array $args): int
+	function bvmgr_ticketing_claims_log_result(array $args): int
 	{
 		global $wpdb;
-		$table = vms_ticketing_claims_table_log();
+		$table = bvmgr_ticketing_claims_table_log();
 
 		$event_id = absint($args['event_id'] ?? 0);
 		$product_id = absint($args['ticket_product_id'] ?? 0);
@@ -754,14 +754,14 @@ if (!function_exists('vms_ticketing_claims_log_result')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_create_direct_grant')) {
+if (!function_exists('bvmgr_ticketing_claims_create_direct_grant')) {
 	/**
 	 * @param array<string,mixed> $grant
 	 */
-	function vms_ticketing_claims_create_direct_grant(array $grant): int
+	function bvmgr_ticketing_claims_create_direct_grant(array $grant): int
 	{
 		global $wpdb;
-		$table = vms_ticketing_claims_table_direct_grants();
+		$table = bvmgr_ticketing_claims_table_direct_grants();
 
 		$event_id = absint($grant['event_id'] ?? 0);
 		$user_id = absint($grant['user_id'] ?? 0);
@@ -779,7 +779,7 @@ if (!function_exists('vms_ticketing_claims_create_direct_grant')) {
 		$credential_program = sanitize_key((string) ($grant['credential_program'] ?? ''));
 		$qty_limit = max(0, absint($grant['qty_limit'] ?? 1));
 		$status = sanitize_key((string) ($grant['status'] ?? 'active'));
-		if (!in_array($status, vms_ticketing_claims_allowed_grant_statuses(), true)) {
+		if (!in_array($status, bvmgr_ticketing_claims_allowed_grant_statuses(), true)) {
 			$status = 'active';
 		}
 		$note = sanitize_text_field((string) ($grant['note'] ?? ''));
@@ -830,21 +830,21 @@ if (!function_exists('vms_ticketing_claims_create_direct_grant')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_allowed_grant_statuses')) {
+if (!function_exists('bvmgr_ticketing_claims_allowed_grant_statuses')) {
 	/**
 	 * @return string[]
 	 */
-	function vms_ticketing_claims_allowed_grant_statuses(): array
+	function bvmgr_ticketing_claims_allowed_grant_statuses(): array
 	{
 		return array('active', 'reserved', 'used', 'revoked', 'expired');
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_get_direct_grant')) {
+if (!function_exists('bvmgr_ticketing_claims_get_direct_grant')) {
 	/**
 	 * @return array<string,mixed>|null
 	 */
-	function vms_ticketing_claims_get_direct_grant(int $grant_id): ?array
+	function bvmgr_ticketing_claims_get_direct_grant(int $grant_id): ?array
 	{
 		$grant_id = absint($grant_id);
 		if ($grant_id <= 0) {
@@ -852,22 +852,22 @@ if (!function_exists('vms_ticketing_claims_get_direct_grant')) {
 		}
 
 		global $wpdb;
-		$table = vms_ticketing_claims_table_direct_grants();
+		$table = bvmgr_ticketing_claims_table_direct_grants();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims grant reads query the plugin-owned grants table with %i/%d-prepared values so admin and runtime flows reload fresh grant state after writes.
 		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $grant_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_get_direct_grants')) {
+if (!function_exists('bvmgr_ticketing_claims_get_direct_grants')) {
 	/**
 	 * @param array<string,mixed> $args
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_ticketing_claims_get_direct_grants(array $args = array()): array
+	function bvmgr_ticketing_claims_get_direct_grants(array $args = array()): array
 	{
 		global $wpdb;
-		$table = vms_ticketing_claims_table_direct_grants();
+		$table = bvmgr_ticketing_claims_table_direct_grants();
 
 		$event_id = absint($args['event_id'] ?? 0);
 		$user_id = absint($args['user_id'] ?? 0);
@@ -889,7 +889,7 @@ if (!function_exists('vms_ticketing_claims_get_direct_grants')) {
 			$where[] = 'user_id = %d';
 			$params[] = $user_id;
 		}
-		if ($status !== '' && $status !== 'any' && in_array($status, vms_ticketing_claims_allowed_grant_statuses(), true)) {
+		if ($status !== '' && $status !== 'any' && in_array($status, bvmgr_ticketing_claims_allowed_grant_statuses(), true)) {
 			$where[] = 'status = %s';
 			$params[] = $status;
 		}
@@ -919,8 +919,8 @@ if (!function_exists('vms_ticketing_claims_get_direct_grants')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_update_direct_grant_note')) {
-	function vms_ticketing_claims_update_direct_grant_note(int $grant_id, string $note, int $actor_user_id = 0): bool
+if (!function_exists('bvmgr_ticketing_claims_update_direct_grant_note')) {
+	function bvmgr_ticketing_claims_update_direct_grant_note(int $grant_id, string $note, int $actor_user_id = 0): bool
 	{
 		$grant_id = absint($grant_id);
 		if ($grant_id <= 0) {
@@ -928,7 +928,7 @@ if (!function_exists('vms_ticketing_claims_update_direct_grant_note')) {
 		}
 
 		global $wpdb;
-		$table = vms_ticketing_claims_table_direct_grants();
+		$table = bvmgr_ticketing_claims_table_direct_grants();
 		$note = sanitize_text_field($note);
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims grant-note updates write the plugin-owned grants table directly through wpdb::update(); no core API preserves this repository lifecycle.
 		$ok = $wpdb->update(
@@ -947,16 +947,16 @@ if (!function_exists('vms_ticketing_claims_update_direct_grant_note')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_set_direct_grant_status')) {
-	function vms_ticketing_claims_set_direct_grant_status(int $grant_id, string $status, int $actor_user_id = 0): bool
+if (!function_exists('bvmgr_ticketing_claims_set_direct_grant_status')) {
+	function bvmgr_ticketing_claims_set_direct_grant_status(int $grant_id, string $status, int $actor_user_id = 0): bool
 	{
 		$grant_id = absint($grant_id);
 		$status = sanitize_key($status);
-		if ($grant_id <= 0 || !in_array($status, vms_ticketing_claims_allowed_grant_statuses(), true)) {
+		if ($grant_id <= 0 || !in_array($status, bvmgr_ticketing_claims_allowed_grant_statuses(), true)) {
 			return false;
 		}
 
-		$current = vms_ticketing_claims_get_direct_grant($grant_id);
+		$current = bvmgr_ticketing_claims_get_direct_grant($grant_id);
 		if (!is_array($current)) {
 			return false;
 		}
@@ -974,7 +974,7 @@ if (!function_exists('vms_ticketing_claims_set_direct_grant_status')) {
 		}
 
 		global $wpdb;
-		$table = vms_ticketing_claims_table_direct_grants();
+		$table = bvmgr_ticketing_claims_table_direct_grants();
 		$update = array(
 			'status' => $status,
 			'updated_at' => current_time('mysql', true),
@@ -1000,33 +1000,33 @@ if (!function_exists('vms_ticketing_claims_set_direct_grant_status')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_get_reservation')) {
+if (!function_exists('bvmgr_ticketing_claims_get_reservation')) {
 	/**
 	 * @return array<string,mixed>|null
 	 */
-	function vms_ticketing_claims_get_reservation(int $reservation_id): ?array
+	function bvmgr_ticketing_claims_get_reservation(int $reservation_id): ?array
 	{
 		$reservation_id = absint($reservation_id);
 		if ($reservation_id <= 0) {
 			return null;
 		}
 		global $wpdb;
-		$table = vms_ticketing_claims_table_reservations();
+		$table = bvmgr_ticketing_claims_table_reservations();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation reads query the plugin-owned reservations table with %i/%d-prepared values so admin/runtime flows reload fresh reservation state after writes.
 		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $reservation_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_get_reservations')) {
+if (!function_exists('bvmgr_ticketing_claims_get_reservations')) {
 	/**
 	 * @param array<string,mixed> $args
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_ticketing_claims_get_reservations(array $args = array()): array
+	function bvmgr_ticketing_claims_get_reservations(array $args = array()): array
 	{
 		global $wpdb;
-		$table = vms_ticketing_claims_table_reservations();
+		$table = bvmgr_ticketing_claims_table_reservations();
 
 		$event_id = absint($args['event_id'] ?? 0);
 		$buyer_user_id = absint($args['buyer_user_id'] ?? 0);
@@ -1083,16 +1083,16 @@ if (!function_exists('vms_ticketing_claims_get_reservations')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_release_reservation')) {
-	function vms_ticketing_claims_release_reservation(int $reservation_id, int $actor_user_id = 0): bool
+if (!function_exists('bvmgr_ticketing_claims_release_reservation')) {
+	function bvmgr_ticketing_claims_release_reservation(int $reservation_id, int $actor_user_id = 0): bool
 	{
-		$row = vms_ticketing_claims_get_reservation($reservation_id);
+		$row = bvmgr_ticketing_claims_get_reservation($reservation_id);
 		if (!$row || sanitize_key((string) ($row['status'] ?? '')) !== 'reserved') {
 			return false;
 		}
 
 		global $wpdb;
-		$table = vms_ticketing_claims_table_reservations();
+		$table = bvmgr_ticketing_claims_table_reservations();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation releases write the plugin-owned reservations table directly through wpdb::update(); no core API preserves this repository lifecycle.
 		$ok = $wpdb->update(
 			$table,
@@ -1110,7 +1110,7 @@ if (!function_exists('vms_ticketing_claims_release_reservation')) {
 
 		$grant_id = absint($row['direct_grant_id'] ?? 0);
 		if ($grant_id > 0) {
-			$grants_table = vms_ticketing_claims_table_direct_grants();
+			$grants_table = bvmgr_ticketing_claims_table_direct_grants();
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticketing Claims reservation releases write the plugin-owned grants table directly with %i/%s/%d-prepared values so grant usage is restored in the same request.
 			$wpdb->query(
 				$wpdb->prepare(
@@ -1131,15 +1131,15 @@ if (!function_exists('vms_ticketing_claims_release_reservation')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_get_logs')) {
+if (!function_exists('bvmgr_ticketing_claims_get_logs')) {
 	/**
 	 * @param array<string,mixed> $args
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_ticketing_claims_get_logs(array $args = array()): array
+	function bvmgr_ticketing_claims_get_logs(array $args = array()): array
 	{
 		global $wpdb;
-		$table = vms_ticketing_claims_table_log();
+		$table = bvmgr_ticketing_claims_table_log();
 
 		$event_id = absint($args['event_id'] ?? 0);
 		$ticket_product_id = absint($args['ticket_product_id'] ?? 0);
@@ -1217,11 +1217,11 @@ if (!function_exists('vms_ticketing_claims_get_logs')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_decode_context_json')) {
+if (!function_exists('bvmgr_ticketing_claims_decode_context_json')) {
 	/**
 	 * @return array<string,mixed>
 	 */
-	function vms_ticketing_claims_decode_context_json(string $raw): array
+	function bvmgr_ticketing_claims_decode_context_json(string $raw): array
 	{
 		$raw = trim($raw);
 		if ($raw === '') {
@@ -1232,8 +1232,8 @@ if (!function_exists('vms_ticketing_claims_decode_context_json')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_friendly_reason')) {
-	function vms_ticketing_claims_friendly_reason(string $reason_code, string $message = ''): string
+if (!function_exists('bvmgr_ticketing_claims_friendly_reason')) {
+	function bvmgr_ticketing_claims_friendly_reason(string $reason_code, string $message = ''): string
 	{
 		$reason_code = sanitize_key($reason_code);
 		$message = trim(sanitize_text_field($message));
@@ -1270,11 +1270,11 @@ if (!function_exists('vms_ticketing_claims_friendly_reason')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_recent_assignee_emails_for_buyer')) {
+if (!function_exists('bvmgr_ticketing_claims_recent_assignee_emails_for_buyer')) {
 	/**
 	 * @return string[]
 	 */
-	function vms_ticketing_claims_recent_assignee_emails_for_buyer(int $buyer_user_id, int $limit = 5, int $event_id = 0): array
+	function bvmgr_ticketing_claims_recent_assignee_emails_for_buyer(int $buyer_user_id, int $limit = 5, int $event_id = 0): array
 	{
 		$buyer_user_id = absint($buyer_user_id);
 		$event_id = absint($event_id);
@@ -1285,7 +1285,7 @@ if (!function_exists('vms_ticketing_claims_recent_assignee_emails_for_buyer')) {
 		$limit = max(1, min(30, absint($limit)));
 
 		global $wpdb;
-		$table = vms_ticketing_claims_table_log();
+		$table = bvmgr_ticketing_claims_table_log();
 		$where = array(
 			'buyer_user_id = %d',
 			"assignee_email <> ''",

@@ -61,24 +61,24 @@
 
     <?php $this->render_cancellation_job_panel((int) $post->ID, (string) $plan_status); ?>
 
-    <?php if (function_exists('vms_event_credits_render_event_plan_panel')) { vms_event_credits_render_event_plan_panel((int) $post->ID, (string) $plan_status); } ?>
+    <?php if (function_exists('bvmgr_event_credits_render_event_plan_panel')) { bvmgr_event_credits_render_event_plan_panel((int) $post->ID, (string) $plan_status); } ?>
 
     <?php
-        $k_rescheduled_from = function_exists('vms_meta_key')
-            ? (vms_meta_key('event_plan', 'rescheduled_from_plan_id') ?: '_vms_rescheduled_from_plan_id')
+        $k_rescheduled_from = function_exists('bvmgr_meta_key')
+            ? (bvmgr_meta_key('event_plan', 'rescheduled_from_plan_id') ?: '_vms_rescheduled_from_plan_id')
             : '_vms_rescheduled_from_plan_id';
-        $k_rescheduled_to = function_exists('vms_meta_key')
-            ? (vms_meta_key('event_plan', 'rescheduled_to_plan_ids') ?: '_vms_rescheduled_to_plan_ids')
+        $k_rescheduled_to = function_exists('bvmgr_meta_key')
+            ? (bvmgr_meta_key('event_plan', 'rescheduled_to_plan_ids') ?: '_vms_rescheduled_to_plan_ids')
             : '_vms_rescheduled_to_plan_ids';
         $rescheduled_from_id = absint(get_post_meta($post->ID, $k_rescheduled_from, true));
-        $rescheduled_to_ids = function_exists('vms_event_plan_normalize_related_plan_ids')
-            ? vms_event_plan_normalize_related_plan_ids(get_post_meta($post->ID, $k_rescheduled_to, true))
+        $rescheduled_to_ids = function_exists('bvmgr_event_plan_normalize_related_plan_ids')
+            ? bvmgr_event_plan_normalize_related_plan_ids(get_post_meta($post->ID, $k_rescheduled_to, true))
             : array();
     ?>
 
     <?php
-        $workflow_request = function_exists('vms_event_plan_editor_verified_post_data')
-            ? vms_event_plan_editor_verified_post_data()
+        $workflow_request = function_exists('bvmgr_event_plan_editor_verified_post_data')
+            ? bvmgr_event_plan_editor_verified_post_data()
             : array();
         $reschedule_date_value = isset($workflow_request['vms_reschedule_event_date']) ? sanitize_text_field((string) $workflow_request['vms_reschedule_event_date']) : '';
     ?>
@@ -90,7 +90,7 @@
     </p>
 
     <?php if ($plan_status !== 'cancelled') : ?>
-        <p class="description"><?php esc_html_e('Optional. If you enter a replacement date and click “Mark Cancelled,” VMS will cancel this plan and immediately create a linked Draft Event Plan for the new date.', 'backstage-venue-manager'); ?></p>
+        <p class="description"><?php esc_html_e('Optional. If you enter a replacement date and click “Mark Cancelled,” Backstage Venue Manager will cancel this plan and immediately create a linked Draft Event Plan for the new date.', 'backstage-venue-manager'); ?></p>
     <?php endif; ?>
 
     <?php if ($plan_status === 'cancelled') : ?>
@@ -113,7 +113,7 @@
                         if ($linked_date !== '') {
                             $linked_label .= ' — ' . $linked_date;
                         }
-                        $links[] = '<a href="' . esc_url(vms_event_plan_admin_edit_url($linked_plan_id)) . '">' . esc_html($linked_label) . '</a>';
+                        $links[] = '<a href="' . esc_url(bvmgr_event_plan_admin_edit_url($linked_plan_id)) . '">' . esc_html($linked_label) . '</a>';
                     }
                     echo wp_kses_post(implode(' • ', $links));
                 ?>
@@ -125,7 +125,7 @@
                 <?php esc_html_e('Create Rescheduled Draft', 'backstage-venue-manager'); ?>
             </button>
         </p>
-        <p class="description"><?php esc_html_e('Creates a new Draft Event Plan linked to this cancelled one. VMS copies the useful planning details, but clears live calendar, ticket, sales, and cancellation state so you can review safely before republishing.', 'backstage-venue-manager'); ?></p>
+        <p class="description"><?php esc_html_e('Creates a new Draft Event Plan linked to this cancelled one. Backstage Venue Manager copies the useful planning details, but clears live calendar, ticket, sales, and cancellation state so you can review safely before republishing.', 'backstage-venue-manager'); ?></p>
     <?php endif; ?>
     </div>
     <div data-vms-collapsible-break="1"></div>
@@ -133,8 +133,8 @@
     <p class="vms-ep-status-current">
         <strong><?php esc_html_e('Status:', 'backstage-venue-manager'); ?></strong>
         <?php
-            $plan_status_label = function_exists('vms_event_plan_status_label')
-                ? (string) vms_event_plan_status_label((string) $plan_status)
+            $plan_status_label = function_exists('bvmgr_event_plan_status_label')
+                ? (string) bvmgr_event_plan_status_label((string) $plan_status)
                 : ucwords(str_replace(array('_', '-'), ' ', (string) $plan_status));
             echo esc_html($plan_status_label);
         ?>
@@ -164,7 +164,7 @@
         <p class="description">
             <strong><?php esc_html_e('Rescheduled from:', 'backstage-venue-manager'); ?></strong>
             <?php /* translators: %d: event plan ID. */ ?>
-            <a href="<?php echo esc_url(vms_event_plan_admin_edit_url($rescheduled_from_id)); ?>"><?php echo esc_html(get_the_title($rescheduled_from_id) ?: sprintf(__('Event Plan #%d', 'backstage-venue-manager'), $rescheduled_from_id)); ?></a>
+            <a href="<?php echo esc_url(bvmgr_event_plan_admin_edit_url($rescheduled_from_id)); ?>"><?php echo esc_html(get_the_title($rescheduled_from_id) ?: sprintf(__('Event Plan #%d', 'backstage-venue-manager'), $rescheduled_from_id)); ?></a>
         </p>
     <?php endif; ?>
 

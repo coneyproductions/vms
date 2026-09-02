@@ -152,7 +152,7 @@ $assert = static function (bool $condition, string $message): void {
 try {
 	$staleStartedAt = time() - ((15 * MINUTE_IN_SECONDS) + MINUTE_IN_SECONDS + 30);
 	set_transient(
-		vms_ticket_integrity_scan_lock_key(),
+		bvmgr_ticket_integrity_scan_lock_key(),
 		array(
 			'owner' => 'stale_job',
 			'started_at_gmt' => $staleStartedAt,
@@ -160,9 +160,9 @@ try {
 		15 * MINUTE_IN_SECONDS
 	);
 
-	$acquired = vms_ticket_integrity_acquire_scan_lock('fresh_job');
-	$current = get_transient(vms_ticket_integrity_scan_lock_key());
-	$logs = vms_ticket_integrity_get_logs();
+	$acquired = bvmgr_ticket_integrity_acquire_scan_lock('fresh_job');
+	$current = get_transient(bvmgr_ticket_integrity_scan_lock_key());
+	$logs = bvmgr_ticket_integrity_get_logs();
 
 	$assert($acquired === true, 'Expected a stale scan lock to be cleared and reacquired.');
 	$assert(is_array($current), 'Expected a fresh scan lock array after reacquiring.');

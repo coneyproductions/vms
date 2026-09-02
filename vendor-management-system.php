@@ -1,34 +1,24 @@
 <?php
-/**
- * Plugin Name: Backstage Venue Manager
- * Plugin URI: https://coneyproductions.booklivetalent.com/vms/
- * Description: Manage venue operations, event plans, vendor records, and optional ticketing workflows from WordPress.
- * Version: 1.2.0
- * Requires at least: 6.8
- * Requires PHP: 8.3
- * Author: Coney Productions
- * Author URI: https://coneyproductions.booklivetalent.com/
- * License: GPLv2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: backstage-venue-manager
- */
-
 defined('ABSPATH') || exit;
- 
-define('VMS_PLUGIN_FILE', __FILE__);
-define('VMS_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('VMS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 /**
- * Activation hooks are allowed here, but the functions they call must be loaded.
- * If your activation function lives in includes/activation.php, keep it loaded via bootstrap.
+ * Legacy main-filename bridge.
+ *
+ * This file intentionally has no WordPress plugin header, so the package exposes
+ * one plugin entry only. Existing same-directory installations whose active
+ * basename still points here load the canonical bootstrap and migrate that
+ * active basename to backstage-venue-manager.php.
  */
 
-require_once VMS_PLUGIN_PATH . 'includes/runtime-guards.php';
-require_once VMS_PLUGIN_PATH . 'includes/activation.php';
-register_activation_hook(__FILE__, 'vms_activate_plugin');
-register_deactivation_hook(__FILE__, 'vms_deactivate_plugin');
+if (!defined('BVMGR_LEGACY_PLUGIN_FILE')) {
+	define('BVMGR_LEGACY_PLUGIN_FILE', __FILE__);
+}
 
-require_once VMS_PLUGIN_PATH . 'includes/bootstrap.php';
-  
- 
+$bvmgr_canonical_plugin_file = __DIR__ . '/backstage-venue-manager.php';
+require_once $bvmgr_canonical_plugin_file;
+
+bvmgr_register_legacy_plugin_basename_compatibility(__FILE__, $bvmgr_canonical_plugin_file);
+register_activation_hook(__FILE__, 'bvmgr_activate_plugin');
+register_deactivation_hook(__FILE__, 'bvmgr_deactivate_plugin');
+
+unset($bvmgr_canonical_plugin_file);

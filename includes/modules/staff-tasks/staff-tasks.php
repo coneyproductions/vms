@@ -13,11 +13,11 @@ if (is_admin()) {
 	require_once __DIR__ . '/admin-ui.php';
 }
 
-if (!function_exists('vms_staff_tasks_module_boot')) {
-	function vms_staff_tasks_module_boot(): void
+if (!function_exists('bvmgr_staff_tasks_module_boot')) {
+	function bvmgr_staff_tasks_module_boot(): void
 	{
-		if (function_exists('vms_register_module')) {
-			vms_register_module(array(
+		if (function_exists('bvmgr_register_module')) {
+			bvmgr_register_module(array(
 				'slug' => 'staff_tasks',
 				'name' => 'Staff Tasks',
 				'version' => '1.2.0',
@@ -27,8 +27,8 @@ if (!function_exists('vms_staff_tasks_module_boot')) {
 			));
 		}
 
-		vms_tasks_ensure_capability_mapping();
-		vms_tasks_maybe_upgrade_schema();
+		bvmgr_tasks_ensure_capability_mapping();
+		bvmgr_tasks_maybe_upgrade_schema();
 	}
 }
-add_action('plugins_loaded', 'vms_staff_tasks_module_boot', 8);
+add_action('plugins_loaded', 'bvmgr_staff_tasks_module_boot', 8);

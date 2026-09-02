@@ -19,9 +19,9 @@ $GLOBALS['vms_test_runtime_calls'] = array(
     'get_post_status' => 0,
     'get_the_title' => 0,
     'get_edit_post_link' => 0,
-    'vms_sch_get_holidays_for_date' => 0,
-    'vms_sch_holiday_forces_open' => 0,
-    'vms_sch_season_get_blackout_notes_map' => 0,
+    'bvmgr_sch_get_holidays_for_date' => 0,
+    'bvmgr_sch_holiday_forces_open' => 0,
+    'bvmgr_sch_season_get_blackout_notes_map' => 0,
     'vms_get_all_venue_ids' => 0,
 );
 $GLOBALS['vms_test_mutation_calls'] = array(
@@ -141,8 +141,8 @@ if (!function_exists('sanitize_email')) {
     }
 }
 
-if (!function_exists('vms_request_read_scalar')) {
-    function vms_request_read_scalar(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_scalar')) {
+    function bvmgr_request_read_scalar(array $source, string $key): string
     {
         if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
             return '';
@@ -153,26 +153,26 @@ if (!function_exists('vms_request_read_scalar')) {
     }
 }
 
-if (!function_exists('vms_request_read_text_field')) {
-    function vms_request_read_text_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_text_field')) {
+    function bvmgr_request_read_text_field(array $source, string $key): string
     {
-        $value = vms_request_read_scalar($source, $key);
+        $value = bvmgr_request_read_scalar($source, $key);
         return $value === '' ? '' : sanitize_text_field($value);
     }
 }
 
-if (!function_exists('vms_request_read_key')) {
-    function vms_request_read_key(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_key')) {
+    function bvmgr_request_read_key(array $source, string $key): string
     {
-        $value = vms_request_read_scalar($source, $key);
+        $value = bvmgr_request_read_scalar($source, $key);
         return $value === '' ? '' : sanitize_key($value);
     }
 }
 
-if (!function_exists('vms_request_read_absint')) {
-    function vms_request_read_absint(array $source, string $key): int
+if (!function_exists('bvmgr_request_read_absint')) {
+    function bvmgr_request_read_absint(array $source, string $key): int
     {
-        $value = vms_request_read_scalar($source, $key);
+        $value = bvmgr_request_read_scalar($source, $key);
         return $value === '' ? 0 : absint($value);
     }
 }
@@ -409,29 +409,29 @@ if (!function_exists('vms_get_all_venue_ids')) {
     }
 }
 
-if (!function_exists('vms_sch_get_holidays_for_date')) {
-    function vms_sch_get_holidays_for_date(int $venue_id, string $ymd): array
+if (!function_exists('bvmgr_sch_get_holidays_for_date')) {
+    function bvmgr_sch_get_holidays_for_date(int $venue_id, string $ymd): array
     {
         unset($venue_id, $ymd);
-        $GLOBALS['vms_test_runtime_calls']['vms_sch_get_holidays_for_date']++;
+        $GLOBALS['vms_test_runtime_calls']['bvmgr_sch_get_holidays_for_date']++;
         return array();
     }
 }
 
-if (!function_exists('vms_sch_holiday_forces_open')) {
-    function vms_sch_holiday_forces_open(int $venue_id, string $ymd): bool
+if (!function_exists('bvmgr_sch_holiday_forces_open')) {
+    function bvmgr_sch_holiday_forces_open(int $venue_id, string $ymd): bool
     {
         unset($venue_id, $ymd);
-        $GLOBALS['vms_test_runtime_calls']['vms_sch_holiday_forces_open']++;
+        $GLOBALS['vms_test_runtime_calls']['bvmgr_sch_holiday_forces_open']++;
         return false;
     }
 }
 
-if (!function_exists('vms_sch_season_get_blackout_notes_map')) {
-    function vms_sch_season_get_blackout_notes_map(int $venue_id, string $from_ymd, string $to_ymd): array
+if (!function_exists('bvmgr_sch_season_get_blackout_notes_map')) {
+    function bvmgr_sch_season_get_blackout_notes_map(int $venue_id, string $from_ymd, string $to_ymd): array
     {
         unset($venue_id, $from_ymd, $to_ymd);
-        $GLOBALS['vms_test_runtime_calls']['vms_sch_season_get_blackout_notes_map']++;
+        $GLOBALS['vms_test_runtime_calls']['bvmgr_sch_season_get_blackout_notes_map']++;
         return array();
     }
 }
@@ -491,41 +491,41 @@ try {
 
     $expectedNoticeHtml = '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
 
-    $assert(function_exists('vms_schedule_get_invalid_bounds_notice_context'), 'Schedule should define the invalid-bounds notice context builder.');
-    $assert(function_exists('vms_schedule_render_invalid_bounds_notice'), 'Schedule should define the invalid-bounds notice renderer.');
-    $assert(function_exists('vms_schedule_get_unpublished_venue_notice_context'), 'Schedule should define the unpublished-venue notice context builder.');
-    $assert(function_exists('vms_schedule_render_unpublished_venue_notice'), 'Schedule should define the unpublished-venue notice renderer.');
-    $assert(function_exists('vms_render_schedule_list_view'), 'Schedule should still define the selected-venue list view renderer.');
-    $assert(function_exists('vms_render_schedule_calendar_view'), 'Schedule should still define the selected-venue calendar view renderer.');
-    $assert(function_exists('vms_render_schedule_list_view_all'), 'Schedule should still define the all-venues list view renderer.');
-    $assert(function_exists('vms_render_schedule_calendar_view_all'), 'Schedule should still define the all-venues calendar view renderer.');
+    $assert(function_exists('bvmgr_schedule_get_invalid_bounds_notice_context'), 'Schedule should define the invalid-bounds notice context builder.');
+    $assert(function_exists('bvmgr_schedule_render_invalid_bounds_notice'), 'Schedule should define the invalid-bounds notice renderer.');
+    $assert(function_exists('bvmgr_schedule_get_unpublished_venue_notice_context'), 'Schedule should define the unpublished-venue notice context builder.');
+    $assert(function_exists('bvmgr_schedule_render_unpublished_venue_notice'), 'Schedule should define the unpublished-venue notice renderer.');
+    $assert(function_exists('bvmgr_render_schedule_list_view'), 'Schedule should still define the selected-venue list view renderer.');
+    $assert(function_exists('bvmgr_render_schedule_calendar_view'), 'Schedule should still define the selected-venue calendar view renderer.');
+    $assert(function_exists('bvmgr_render_schedule_list_view_all'), 'Schedule should still define the all-venues list view renderer.');
+    $assert(function_exists('bvmgr_render_schedule_calendar_view_all'), 'Schedule should still define the all-venues calendar view renderer.');
 
-    $builderSource = $functionSource('vms_schedule_get_invalid_bounds_notice_context');
-    $rendererSource = $functionSource('vms_schedule_render_invalid_bounds_notice');
-    $selectedListSource = $functionSource('vms_render_schedule_list_view');
-    $selectedCalendarSource = $functionSource('vms_render_schedule_calendar_view');
-    $allListSource = $functionSource('vms_render_schedule_list_view_all');
-    $allCalendarSource = $functionSource('vms_render_schedule_calendar_view_all');
+    $builderSource = $functionSource('bvmgr_schedule_get_invalid_bounds_notice_context');
+    $rendererSource = $functionSource('bvmgr_schedule_render_invalid_bounds_notice');
+    $selectedListSource = $functionSource('bvmgr_render_schedule_list_view');
+    $selectedCalendarSource = $functionSource('bvmgr_render_schedule_calendar_view');
+    $allListSource = $functionSource('bvmgr_render_schedule_list_view_all');
+    $allCalendarSource = $functionSource('bvmgr_render_schedule_calendar_view_all');
 
     $assert(strpos($builderSource, "'show' => \$show") !== false, 'Schedule invalid-bounds builder should return only the finite show flag.');
-    $assert(strpos($builderSource, 'vms_sch_parse_ymd(') === false && strpos($builderSource, 'strtotime(') === false, 'Schedule invalid-bounds builder should not perform parsing.');
+    $assert(strpos($builderSource, 'bvmgr_sch_parse_ymd(') === false && strpos($builderSource, 'strtotime(') === false, 'Schedule invalid-bounds builder should not perform parsing.');
     $assert(strpos($builderSource, 'get_option(') === false && strpos($builderSource, 'get_posts(') === false && strpos($builderSource, 'get_post_meta(') === false && strpos($builderSource, 'current_user_can(') === false, 'Schedule invalid-bounds builder should not perform provider or capability reads.');
     $assert(strpos($builderSource, 'admin_url(') === false && strpos($builderSource, 'get_edit_post_link(') === false && strpos($builderSource, 'wp_create_nonce(') === false, 'Schedule invalid-bounds builder should not perform URL or nonce work.');
     $assert(strpos($builderSource, 'update_option(') === false && strpos($builderSource, 'update_post_meta(') === false && strpos($builderSource, 'delete_post_meta(') === false, 'Schedule invalid-bounds builder should not perform mutations.');
 
     $assert(strpos($rendererSource, $expectedNoticeHtml) !== false, 'Schedule invalid-bounds renderer should preserve the exact finite fragment.');
     $assert(strpos($rendererSource, 'esc_html__(') === false && strpos($rendererSource, '__(') === false, 'Schedule invalid-bounds renderer should preserve the lack of a translation wrapper.');
-    $assert(strpos($rendererSource, 'vms_sch_parse_ymd(') === false && strpos($rendererSource, 'strtotime(') === false, 'Schedule invalid-bounds renderer should not perform parsing.');
+    $assert(strpos($rendererSource, 'bvmgr_sch_parse_ymd(') === false && strpos($rendererSource, 'strtotime(') === false, 'Schedule invalid-bounds renderer should not perform parsing.');
     $assert(strpos($rendererSource, 'get_option(') === false && strpos($rendererSource, 'get_posts(') === false && strpos($rendererSource, 'get_post_meta(') === false && strpos($rendererSource, 'current_user_can(') === false, 'Schedule invalid-bounds renderer should not perform provider or capability reads.');
     $assert(strpos($rendererSource, 'admin_url(') === false && strpos($rendererSource, 'get_edit_post_link(') === false && strpos($rendererSource, 'wp_create_nonce(') === false, 'Schedule invalid-bounds renderer should not perform URL or nonce work.');
     $assert(strpos($rendererSource, 'update_option(') === false && strpos($rendererSource, 'update_post_meta(') === false && strpos($rendererSource, 'delete_post_meta(') === false, 'Schedule invalid-bounds renderer should not perform mutations.');
 
     $assert(substr_count($scheduleSource, $expectedNoticeHtml) === 1, 'Schedule should keep exactly one direct invalid-bounds fragment source after normalization.');
-    $assert(substr_count($scheduleSource, 'vms_schedule_render_invalid_bounds_notice(') === 5, 'Schedule should use the invalid-bounds renderer exactly four times plus its own declaration.');
-    $assert(substr_count($scheduleSource, 'vms_schedule_render_unpublished_venue_notice($unpublished_notice_context);') === 2, 'Schedule should keep routing the richer unpublished-venue branches through their separate shared renderer.');
+    $assert(substr_count($scheduleSource, 'bvmgr_schedule_render_invalid_bounds_notice(') === 5, 'Schedule should use the invalid-bounds renderer exactly four times plus its own declaration.');
+    $assert(substr_count($scheduleSource, 'bvmgr_schedule_render_unpublished_venue_notice($unpublished_notice_context);') === 2, 'Schedule should keep routing the richer unpublished-venue branches through their separate shared renderer.');
     $assert(strpos($scheduleSource, "'notices_callback' =>") === false, 'Schedule invalid-bounds output should remain content-local and outside the Administrator shell.');
 
-    $invalidBranchPattern = '~if\s*\(\s*!empty\(\$invalid_bounds_notice_context\[\'show\'\]\)\s*\)\s*\{\s*vms_schedule_render_invalid_bounds_notice\(\$invalid_bounds_notice_context\);\s*return;\s*\}~s';
+    $invalidBranchPattern = '~if\s*\(\s*!empty\(\$invalid_bounds_notice_context\[\'show\'\]\)\s*\)\s*\{\s*bvmgr_schedule_render_invalid_bounds_notice\(\$invalid_bounds_notice_context\);\s*return;\s*\}~s';
     foreach (array(
         'selected list' => $selectedListSource,
         'selected calendar' => $selectedCalendarSource,
@@ -535,29 +535,29 @@ try {
         $assert(preg_match($invalidBranchPattern, $source) === 1, 'Schedule ' . $label . ' invalid branch should render through the shared renderer and return immediately.');
     }
 
-    $assert(strpos($selectedListSource, '$start_dt = vms_sch_parse_ymd($start_ymd);') !== false && strpos($selectedListSource, '$end_dt   = vms_sch_parse_ymd($end_ymd);') !== false, 'Selected-venue list view should preserve its vms_sch_parse_ymd() validation path.');
-    $assert(strpos($selectedListSource, 'vms_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);') !== false, 'Selected-venue list view should preserve the exact invalid-bounds condition.');
+    $assert(strpos($selectedListSource, '$start_dt = bvmgr_sch_parse_ymd($start_ymd);') !== false && strpos($selectedListSource, '$end_dt   = bvmgr_sch_parse_ymd($end_ymd);') !== false, 'Selected-venue list view should preserve its bvmgr_sch_parse_ymd() validation path.');
+    $assert(strpos($selectedListSource, 'bvmgr_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);') !== false, 'Selected-venue list view should preserve the exact invalid-bounds condition.');
     $assert(strpos($selectedCalendarSource, '$start_ts = strtotime($start_ymd);') !== false && strpos($selectedCalendarSource, '$end_ts   = strtotime($end_ymd);') !== false, 'Selected-venue calendar view should preserve its strtotime() validation path.');
-    $assert(strpos($selectedCalendarSource, 'vms_schedule_get_invalid_bounds_notice_context(!$start_ts || !$end_ts);') !== false, 'Selected-venue calendar view should preserve the exact invalid-bounds condition.');
-    $assert(strpos($allListSource, '$start_dt = vms_sch_parse_ymd($start_ymd);') !== false && strpos($allListSource, '$end_dt   = vms_sch_parse_ymd($end_ymd);') !== false, 'All-venues list view should preserve its vms_sch_parse_ymd() validation path.');
-    $assert(strpos($allListSource, 'vms_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);') !== false, 'All-venues list view should preserve the exact invalid-bounds condition.');
-    $assert(strpos($allCalendarSource, '$start_dt = vms_sch_parse_ymd($start_ymd);') !== false && strpos($allCalendarSource, '$end_dt   = vms_sch_parse_ymd($end_ymd);') !== false, 'All-venues calendar view should preserve its existing vms_sch_parse_ymd() validation path.');
-    $assert(strpos($allCalendarSource, 'vms_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);') !== false, 'All-venues calendar view should preserve the exact invalid-bounds condition.');
+    $assert(strpos($selectedCalendarSource, 'bvmgr_schedule_get_invalid_bounds_notice_context(!$start_ts || !$end_ts);') !== false, 'Selected-venue calendar view should preserve the exact invalid-bounds condition.');
+    $assert(strpos($allListSource, '$start_dt = bvmgr_sch_parse_ymd($start_ymd);') !== false && strpos($allListSource, '$end_dt   = bvmgr_sch_parse_ymd($end_ymd);') !== false, 'All-venues list view should preserve its bvmgr_sch_parse_ymd() validation path.');
+    $assert(strpos($allListSource, 'bvmgr_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);') !== false, 'All-venues list view should preserve the exact invalid-bounds condition.');
+    $assert(strpos($allCalendarSource, '$start_dt = bvmgr_sch_parse_ymd($start_ymd);') !== false && strpos($allCalendarSource, '$end_dt   = bvmgr_sch_parse_ymd($end_ymd);') !== false, 'All-venues calendar view should preserve its existing bvmgr_sch_parse_ymd() validation path.');
+    $assert(strpos($allCalendarSource, 'bvmgr_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);') !== false, 'All-venues calendar view should preserve the exact invalid-bounds condition.');
 
     $assert(strpos($scheduleSource, 'Select a venue to view its schedule.') !== false, 'Schedule should preserve the untouched no-selection warning family.');
     $assert(strpos($scheduleSource, 'No venues found to display.') !== false, 'Schedule should preserve the untouched no-venues warning family.');
     $assert(strpos($scheduleSource, 'Action required:') !== false && strpos($scheduleSource, 'Venue is not published:') !== false, 'Schedule should preserve the untouched richer unpublished-venue notice families.');
     $assert(strpos($rendererSource, 'Select a venue to view its schedule.') === false && strpos($rendererSource, 'No venues found to display.') === false && strpos($rendererSource, 'Action required:') === false && strpos($rendererSource, 'Venue is not published:') === false, 'Schedule invalid-bounds renderer should remain isolated from other Schedule notice families.');
 
-    $visibleContext = vms_schedule_get_invalid_bounds_notice_context(true);
-    $hiddenContext = vms_schedule_get_invalid_bounds_notice_context(false);
+    $visibleContext = bvmgr_schedule_get_invalid_bounds_notice_context(true);
+    $hiddenContext = bvmgr_schedule_get_invalid_bounds_notice_context(false);
     $assertSame(array('show'), array_keys($visibleContext), 'Schedule invalid-bounds builder should return only the finite show key.');
     $assertSame(array('show' => true), $visibleContext, 'Schedule invalid-bounds builder should preserve visible context exactly.');
     $assertSame(array('show' => false), $hiddenContext, 'Schedule invalid-bounds builder should preserve hidden context exactly.');
 
     $beforeHiddenRenderer = $snapshotCounters();
     $hiddenHtml = $captureOutput(static function (): void {
-        vms_schedule_render_invalid_bounds_notice(array('show' => false));
+        bvmgr_schedule_render_invalid_bounds_notice(array('show' => false));
     });
     $afterHiddenRenderer = $snapshotCounters();
     $assertSame('', $hiddenHtml, 'Schedule invalid-bounds renderer should emit nothing for hidden context.');
@@ -565,7 +565,7 @@ try {
 
     $beforeVisibleRenderer = $snapshotCounters();
     $visibleHtml = $captureOutput(static function (): void {
-        vms_schedule_render_invalid_bounds_notice(array(
+        bvmgr_schedule_render_invalid_bounds_notice(array(
             'show' => true,
             'message' => '</p><script>alert(1)</script><p>',
             'class' => 'notice notice-danger',
@@ -596,25 +596,25 @@ try {
     $invalidCases = array(
         'selected list' => array(
             'render' => static function (): void {
-                vms_render_schedule_list_view(7, 'invalid-start', '2026-07-17', array(), array(), '2026-07-17', '2026-07-17');
+                bvmgr_render_schedule_list_view(7, 'invalid-start', '2026-07-17', array(), array(), '2026-07-17', '2026-07-17');
             },
             'body_markers' => array('vms-sch-past-toggle', 'vms-sch-list'),
         ),
         'selected calendar' => array(
             'render' => static function (): void {
-                vms_render_schedule_calendar_view(7, 'invalid-start', '2026-07-17', array(), array(), '2026-07-17', '2026-07-17');
+                bvmgr_render_schedule_calendar_view(7, 'invalid-start', '2026-07-17', array(), array(), '2026-07-17', '2026-07-17');
             },
             'body_markers' => array('vms-panel-month', 'data-vms-scope="single"'),
         ),
         'all list' => array(
             'render' => static function (): void {
-                vms_render_schedule_list_view_all('invalid-start', '2026-07-17', array(), array());
+                bvmgr_render_schedule_list_view_all('invalid-start', '2026-07-17', array(), array());
             },
             'body_markers' => array('vms-sch-list-all', 'vms-col-venue'),
         ),
         'all calendar' => array(
             'render' => static function (): void {
-                vms_render_schedule_calendar_view_all('invalid-start', '2026-07-17', array(), array());
+                bvmgr_render_schedule_calendar_view_all('invalid-start', '2026-07-17', array(), array());
             },
             'body_markers' => array('vms-av-method vms-sch-month', 'data-vms-scope="all"'),
         ),
@@ -628,22 +628,22 @@ try {
     }
 
     $validSelectedListHtml = $captureOutput(static function (): void {
-        vms_render_schedule_list_view(7, '2026-07-17', '2026-07-17', array(), array(), '2026-07-17', '2026-07-17');
+        bvmgr_render_schedule_list_view(7, '2026-07-17', '2026-07-17', array(), array(), '2026-07-17', '2026-07-17');
     });
     $assert(strpos($validSelectedListHtml, 'vms-sch-past-toggle') !== false && strpos($validSelectedListHtml, 'vms-sch-list') !== false, 'Selected-venue list view should continue into the existing body path for valid bounds.');
 
     $validSelectedCalendarHtml = $captureOutput(static function (): void {
-        vms_render_schedule_calendar_view(7, '2026-07-17', '2026-07-17', array(), array(), '2026-07-17', '2026-07-17');
+        bvmgr_render_schedule_calendar_view(7, '2026-07-17', '2026-07-17', array(), array(), '2026-07-17', '2026-07-17');
     });
     $assert(strpos($validSelectedCalendarHtml, 'vms-panel-month') !== false && strpos($validSelectedCalendarHtml, 'data-vms-scope="single"') !== false, 'Selected-venue calendar view should continue into the existing body path for valid bounds.');
 
     $validAllListHtml = $captureOutput(static function (): void {
-        vms_render_schedule_list_view_all('2026-07-17', '2026-07-17', array(), array());
+        bvmgr_render_schedule_list_view_all('2026-07-17', '2026-07-17', array(), array());
     });
     $assert(strpos($validAllListHtml, 'vms-sch-list-all') !== false && strpos($validAllListHtml, 'vms-col-venue') !== false, 'All-venues list view should continue into the existing body path for valid bounds.');
 
     $validAllCalendarHtml = $captureOutput(static function (): void {
-        vms_render_schedule_calendar_view_all('2026-07-17', '2026-07-17', array(), array());
+        bvmgr_render_schedule_calendar_view_all('2026-07-17', '2026-07-17', array(), array());
     });
     $assert(strpos($validAllCalendarHtml, 'vms-av-method vms-sch-month') !== false && strpos($validAllCalendarHtml, 'data-vms-scope="all"') !== false, 'All-venues calendar view should continue into the existing body path for valid bounds.');
 

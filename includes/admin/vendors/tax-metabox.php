@@ -12,36 +12,36 @@ if (!defined('ABSPATH')) exit;
 require_once __DIR__ . '/../../core/registry/meta-keys.php';
 require_once __DIR__ . '/../../core/registry/constants.php';
  
-function vms_vendor_tax_metabox_register()
+function bvmgr_vendor_tax_metabox_register()
 {
 	add_meta_box(
 		'vms_vendor_tax_status',
 		'Tax Status',
-		'vms_vendor_tax_metabox_render',
-		VMS_CPT_VENDOR,
+		'bvmgr_vendor_tax_metabox_render',
+		BVMGR_CPT_VENDOR,
 		'side',
 		'high'
 	);
 }
-add_action('add_meta_boxes', 'vms_vendor_tax_metabox_register');
+add_action('add_meta_boxes', 'bvmgr_vendor_tax_metabox_register');
 
-function vms_vendor_tax_provider_label($provider)
+function bvmgr_vendor_tax_provider_label($provider)
 {
 	if ($provider === 'quickbooks_email') return 'QuickBooks Online';
 	if ($provider === 'tax1099_email') return 'Tax1099';
 	return 'Upload';
 }
 
-function vms_vendor_tax_metabox_render($post)
+function bvmgr_vendor_tax_metabox_render($post)
 {
-	if (!$post || $post->post_type !== VMS_CPT_VENDOR) return;
+	if (!$post || $post->post_type !== BVMGR_CPT_VENDOR) return;
 
 	$vendor_id = (int) $post->ID;
 
-	$k_done    = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_attest  = vms_meta_key('vendor', 'w9_attested_at');
-	$k_prov    = vms_meta_key('vendor', 'w9_provider');
-	$k_upload  = vms_meta_key('vendor', 'w9_upload_id');
+	$k_done    = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_attest  = bvmgr_meta_key('vendor', 'w9_attested_at');
+	$k_prov    = bvmgr_meta_key('vendor', 'w9_provider');
+	$k_upload  = bvmgr_meta_key('vendor', 'w9_upload_id');
 
 	$done_at    = (int) get_post_meta($vendor_id, $k_done, true);
 	$attest_at  = (int) get_post_meta($vendor_id, $k_attest, true);
@@ -65,8 +65,8 @@ function vms_vendor_tax_metabox_render($post)
 	$effective_provider = ($done_at > 0 && $stored_provider !== '') ? $stored_provider : $global_provider;
 
 	$upload_id  = (int) get_post_meta($vendor_id, $k_upload, true);
-	$upload_url = $upload_id && function_exists('vms_private_w9_download_url') ? vms_private_w9_download_url($vendor_id) : '';
-	$upload_label = $upload_id && function_exists('vms_private_w9_file_label') ? vms_private_w9_file_label($vendor_id) : '';
+	$upload_url = $upload_id && function_exists('bvmgr_private_w9_download_url') ? bvmgr_private_w9_download_url($vendor_id) : '';
+	$upload_label = $upload_id && function_exists('bvmgr_private_w9_file_label') ? bvmgr_private_w9_file_label($vendor_id) : '';
 
 	echo '<div class="vms-tax-box">';
 
@@ -78,11 +78,11 @@ function vms_vendor_tax_metabox_render($post)
 		echo '<div class="vms-tax-pill-wrap"><span class="vms-tax-pill vms-tax-pill--incomplete">Incomplete</span></div>';
 	}
 
-	echo '<p class="vms-tax-row"><strong>Provider:</strong> ' . esc_html(vms_vendor_tax_provider_label($effective_provider)) . '</p>';
+	echo '<p class="vms-tax-row"><strong>Provider:</strong> ' . esc_html(bvmgr_vendor_tax_provider_label($effective_provider)) . '</p>';
 	if ($done_at <= 0) {
 		echo '<p class="vms-tax-subrow">Uses current global setting</p>';
 	} elseif ($stored_provider !== '' && $stored_provider !== $global_provider) {
-		echo '<p class="vms-tax-subrow">Current global setting: ' . esc_html(vms_vendor_tax_provider_label($global_provider)) . '</p>';
+		echo '<p class="vms-tax-subrow">Current global setting: ' . esc_html(bvmgr_vendor_tax_provider_label($global_provider)) . '</p>';
 	}
 
 	echo '<p class="vms-tax-row"><strong>Completed:</strong> ' . ($done_at > 0 ? esc_html(wp_date('Y-m-d', $done_at, $tz)) : '—') . '</p>';
@@ -96,12 +96,12 @@ function vms_vendor_tax_metabox_render($post)
 
 	$complete_url = wp_nonce_url(
 		add_query_arg(array('action' => 'vms_vendor_tax_mark_complete', 'vendor_id' => $vendor_id), admin_url('admin-post.php')),
-		'vms_vendor_tax_mark_complete_' . $vendor_id
+		'bvmgr_vendor_tax_mark_complete_' . $vendor_id
 	);
 
 	$incomplete_url = wp_nonce_url(
 		add_query_arg(array('action' => 'vms_vendor_tax_mark_incomplete', 'vendor_id' => $vendor_id), admin_url('admin-post.php')),
-		'vms_vendor_tax_mark_incomplete_' . $vendor_id
+		'bvmgr_vendor_tax_mark_incomplete_' . $vendor_id
 	);
 
 	echo '<p class="vms-tax-actions"><a class="button button-primary" href="' . esc_url($complete_url) . '">Mark Complete</a></p>';
@@ -110,17 +110,17 @@ function vms_vendor_tax_metabox_render($post)
 	echo '</div>';
 }
 
-function vms_vendor_tax_adminpost_mark_complete()
+function bvmgr_vendor_tax_adminpost_mark_complete()
 {
 	$vendor_id = isset($_GET['vendor_id']) ? (int) $_GET['vendor_id'] : 0;
 	if ($vendor_id <= 0) wp_die('Invalid vendor.');
 	if (!current_user_can('edit_post', $vendor_id)) wp_die('Permission denied.');
 
-	check_admin_referer('vms_vendor_tax_mark_complete_' . $vendor_id);
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_tax_mark_complete_' . $vendor_id, '_wpnonce'), '_wpnonce');
 
-	$k_done = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_recv = vms_meta_key('vendor', 'w9_received_date');
-	$k_prov = vms_meta_key('vendor', 'w9_provider');
+	$k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_recv = bvmgr_meta_key('vendor', 'w9_received_date');
+	$k_prov = bvmgr_meta_key('vendor', 'w9_provider');
 
 	update_post_meta($vendor_id, $k_done, time());
 
@@ -143,19 +143,19 @@ function vms_vendor_tax_adminpost_mark_complete()
 	exit;
 }
 
-add_action('admin_post_vms_vendor_tax_mark_complete', 'vms_vendor_tax_adminpost_mark_complete');
+add_action('admin_post_vms_vendor_tax_mark_complete', 'bvmgr_vendor_tax_adminpost_mark_complete');
 
-function vms_vendor_tax_adminpost_mark_incomplete()
+function bvmgr_vendor_tax_adminpost_mark_incomplete()
 {
 	$vendor_id = isset($_GET['vendor_id']) ? (int) $_GET['vendor_id'] : 0;
 	if ($vendor_id <= 0) wp_die('Invalid vendor.');
 	if (!current_user_can('edit_post', $vendor_id)) wp_die('Permission denied.');
 
-	check_admin_referer('vms_vendor_tax_mark_incomplete_' . $vendor_id);
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_tax_mark_incomplete_' . $vendor_id, '_wpnonce'), '_wpnonce');
 
-	$k_done   = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_attest = vms_meta_key('vendor', 'w9_attested_at');
-	$k_prov   = vms_meta_key('vendor', 'w9_provider');
+	$k_done   = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_attest = bvmgr_meta_key('vendor', 'w9_attested_at');
+	$k_prov   = bvmgr_meta_key('vendor', 'w9_provider');
 
 	delete_post_meta($vendor_id, $k_done);
 	delete_post_meta($vendor_id, $k_attest);
@@ -164,9 +164,9 @@ function vms_vendor_tax_adminpost_mark_incomplete()
 	wp_safe_redirect(add_query_arg(array('post' => $vendor_id, 'action' => 'edit', 'vms_tax_notice' => 'incomplete'), admin_url('post.php')));
 	exit;
 }
-add_action('admin_post_vms_vendor_tax_mark_incomplete', 'vms_vendor_tax_adminpost_mark_incomplete');
+add_action('admin_post_vms_vendor_tax_mark_incomplete', 'bvmgr_vendor_tax_adminpost_mark_incomplete');
 
-function vms_vendor_tax_metabox_admin_notice()
+function bvmgr_vendor_tax_metabox_admin_notice()
 {
 	if (empty($_GET['vms_tax_notice'])) return;
 	$v = sanitize_text_field(wp_unslash($_GET['vms_tax_notice']));
@@ -177,4 +177,4 @@ function vms_vendor_tax_metabox_admin_notice()
 		echo '<div class="notice notice-success is-dismissible"><p>Vendor tax profile marked incomplete.</p></div>';
 	}
 }
-add_action('admin_notices', 'vms_vendor_tax_metabox_admin_notice');
+add_action('admin_notices', 'bvmgr_vendor_tax_metabox_admin_notice');

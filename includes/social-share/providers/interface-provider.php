@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-interface VMS_Social_Provider_Interface
+interface BVMGR_Social_Provider_Interface
 {
 	public function get_platform_key(): string;
 

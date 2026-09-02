@@ -11,8 +11,8 @@ if (!defined('WP_ADMIN')) {
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 final class VMS_Comp_Options_Test_Ajax_Exit extends RuntimeException
@@ -134,7 +134,7 @@ try {
 	$ajaxMethodSource = (string) $methodMatch['body'];
 	$assert(substr_count($ajaxMethodSource, 'current_user_can(') === 1, 'Compensation-options AJAX handler should retain exactly one capability check.');
 	$assert(substr_count($ajaxMethodSource, 'check_ajax_referer(') === 1, 'Compensation-options AJAX handler should retain exactly one nonce check.');
-	$assert(substr_count($ajaxMethodSource, 'vms_get_event_plan_comp_options(') === 1, 'Compensation-options AJAX handler should resolve the provider exactly once.');
+	$assert(substr_count($ajaxMethodSource, 'bvmgr_get_event_plan_comp_options(') === 1, 'Compensation-options AJAX handler should resolve the provider exactly once.');
 	$assert(substr_count($ajaxMethodSource, 'wp_send_json_success(') === 1, 'Compensation-options AJAX handler should write exactly one success response.');
 	$assert(substr_count($ajaxMethodSource, 'wp_send_json_error(') === 2, 'Compensation-options AJAX handler should keep the exact two explicit JSON error branches.');
 	$assert(strpos($ajaxMethodSource, 'update_post_meta(') === false && strpos($ajaxMethodSource, 'delete_post_meta(') === false, 'Compensation-options AJAX handler should not mutate database state.');
@@ -280,8 +280,8 @@ try {
 	$disabledPackageId = $createPost('vms_comp_package', 'Disabled <img src=x onerror=alert(1)>');
 
 	$vendorMetaKey = static function (string $field, string $fallback): string {
-		return function_exists('vms_meta_key')
-			? (string) (vms_meta_key('vendor', $field) ?: $fallback)
+		return function_exists('bvmgr_meta_key')
+			? (string) (bvmgr_meta_key('vendor', $field) ?: $fallback)
 			: $fallback;
 	};
 

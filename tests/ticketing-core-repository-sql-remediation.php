@@ -158,12 +158,12 @@ function absint($value): int
 	return abs((int) $value);
 }
 
-function vms_ticketing_is_woo_active(): bool
+function bvmgr_ticketing_is_woo_active(): bool
 {
 	return (bool) $GLOBALS['ticketing_core_woo_active'];
 }
 
-function vms_ticketing_is_tec_active(): bool
+function bvmgr_ticketing_is_tec_active(): bool
 {
 	return (bool) $GLOBALS['ticketing_core_tec_active'];
 }
@@ -191,7 +191,7 @@ function check_ajax_referer(string $action, string $query_arg): bool
 }
 
 /** @param array<string,mixed> $source */
-function vms_request_read_text_field(array $source, string $key): string
+function bvmgr_request_read_text_field(array $source, string $key): string
 {
 	$value = $source[$key] ?? '';
 	return is_scalar($value) ? trim(strip_tags((string) $value)) : '';
@@ -213,19 +213,19 @@ function get_permalink(int $post_id): string
 	return (string) ($GLOBALS['ticketing_core_permalinks'][$post_id] ?? '');
 }
 
-function vms_ticketing_get_tec_legacy_identifiers(int $post_id): array
+function bvmgr_ticketing_get_tec_legacy_identifiers(int $post_id): array
 {
 	return array('legacy_id' => 'legacy-' . $post_id);
 }
 
 /** @param array<string,mixed> $data */
-function vms_ticketing_ajax_send_success(array $data): void
+function bvmgr_ticketing_ajax_send_success(array $data): void
 {
 	throw new VMS_Ticketing_Core_Ajax_Response(true, $data, 200);
 }
 
 /** @param array<string,mixed> $data */
-function vms_ticketing_ajax_send_error(array $data, int $status = 400): void
+function bvmgr_ticketing_ajax_send_error(array $data, int $status = 400): void
 {
 	throw new VMS_Ticketing_Core_Ajax_Response(false, $data, $status);
 }
@@ -450,17 +450,17 @@ foreach (array('mirror' => $source, 'shadow' => $shadow_source) as $tree => $tre
 }
 
 ticketing_core_same(
-	ticketing_core_extract_function($source, 'vms_ticketing_get_ticket_product_ids_for_tec_event'),
-	ticketing_core_extract_function($shadow_source, 'vms_ticketing_get_ticket_product_ids_for_tec_event'),
+	ticketing_core_extract_function($source, 'bvmgr_ticketing_get_ticket_product_ids_for_tec_event'),
+	ticketing_core_extract_function($shadow_source, 'bvmgr_ticketing_get_ticket_product_ids_for_tec_event'),
 	'Ticket-product query boundary must match across mirror/shadow.'
 );
 ticketing_core_same(
-	ticketing_core_extract_function($source, 'vms_ticketing_compute_stats'),
-	ticketing_core_extract_function($shadow_source, 'vms_ticketing_compute_stats'),
+	ticketing_core_extract_function($source, 'bvmgr_ticketing_compute_stats'),
+	ticketing_core_extract_function($shadow_source, 'bvmgr_ticketing_compute_stats'),
 	'Ticket statistics repository boundary must match across mirror/shadow.'
 );
-$mirror_search = ticketing_core_extract_function($source, 'vms_ticketing_ajax_search_tec_events');
-$shadow_search = ticketing_core_extract_function($shadow_source, 'vms_ticketing_ajax_search_tec_events');
+$mirror_search = ticketing_core_extract_function($source, 'bvmgr_ticketing_ajax_search_tec_events');
+$shadow_search = ticketing_core_extract_function($shadow_source, 'bvmgr_ticketing_ajax_search_tec_events');
 ticketing_core_assert($mirror_search !== $shadow_search, 'Pre-existing search request-reader divergence must remain preserved.');
 ticketing_core_same(
 	ticketing_core_extract_between($mirror_search, '$like =', '$items = array();'),
@@ -507,8 +507,8 @@ ksort($expected_artifact_counts);
 ticketing_core_same($expected_artifact_counts, $artifact_counts, 'Artifact rows must derive the exact U2/D4/N4/I1/P2/Q1 inventory.');
 ticketing_core_same(14, count($artifact_rows), 'Ticketing core artifact inventory must remain exactly fourteen rows.');
 
-$ticket_ids_source = ticketing_core_extract_function($source, 'vms_ticketing_get_ticket_product_ids_for_tec_event');
-$stats_source = ticketing_core_extract_function($source, 'vms_ticketing_compute_stats');
+$ticket_ids_source = ticketing_core_extract_function($source, 'bvmgr_ticketing_get_ticket_product_ids_for_tec_event');
+$stats_source = ticketing_core_extract_function($source, 'bvmgr_ticketing_compute_stats');
 $occurrence_proof = array(
 	'Q1' => array(
 		'body' => $ticket_ids_source,
@@ -616,9 +616,9 @@ function ticketing_core_capture_ajax(callable $callback): VMS_Ticketing_Core_Aja
 }
 
 foreach (array(
-	'vms_ticketing_get_ticket_product_ids_for_tec_event',
-	'vms_ticketing_compute_stats',
-	'vms_ticketing_ajax_search_tec_events',
+	'bvmgr_ticketing_get_ticket_product_ids_for_tec_event',
+	'bvmgr_ticketing_compute_stats',
+	'bvmgr_ticketing_ajax_search_tec_events',
 ) as $runtime_function) {
 	eval(ticketing_core_extract_function($source, $runtime_function));
 }
@@ -626,11 +626,11 @@ foreach (array(
 // The fallback WP_Query remains exhaustive, ID-only, and preserves normalized order/duplicates semantics.
 WP_Query::$calls = array();
 WP_Query::$queue = array();
-ticketing_core_same(array(), vms_ticketing_get_ticket_product_ids_for_tec_event(0), 'Invalid TEC event IDs must still avoid querying.');
+ticketing_core_same(array(), bvmgr_ticketing_get_ticket_product_ids_for_tec_event(0), 'Invalid TEC event IDs must still avoid querying.');
 ticketing_core_same(array(), WP_Query::$calls, 'Invalid TEC event IDs must not instantiate WP_Query.');
 
 WP_Query::$queue[] = array(7, '0', 7, -8, 'bad');
-ticketing_core_same(array(7, 0, 8), vms_ticketing_get_ticket_product_ids_for_tec_event(-44), 'Fallback ticket-product ID normalization changed.');
+ticketing_core_same(array(7, 0, 8), bvmgr_ticketing_get_ticket_product_ids_for_tec_event(-44), 'Fallback ticket-product ID normalization changed.');
 $expected_ticket_query = array(
 	'post_type' => 'product',
 	'post_status' => array('publish', 'draft', 'private'),
@@ -647,9 +647,9 @@ $expected_ticket_query = array(
 ticketing_core_same(array($expected_ticket_query), WP_Query::$calls, 'Ticket-product WP_Query arguments must remain exact, including no added cache or limit arguments.');
 
 $GLOBALS['ticketing_core_helper_calls'] = array();
-eval('function vms_get_ticket_product_ids_for_event(int $event_id): array { $GLOBALS[\'ticketing_core_helper_calls\'][] = $event_id; return $GLOBALS[\'ticketing_core_helper_ids\']; }');
+eval('function bvmgr_get_ticket_product_ids_for_event(int $event_id): array { $GLOBALS[\'ticketing_core_helper_calls\'][] = $event_id; return $GLOBALS[\'ticketing_core_helper_ids\']; }');
 $GLOBALS['ticketing_core_helper_ids'] = array(9, '9', -3, 'bad');
-ticketing_core_same(array(9, 3, 0), vms_ticketing_get_ticket_product_ids_for_tec_event(52), 'Preferred helper ticket-product normalization changed.');
+ticketing_core_same(array(9, 3, 0), bvmgr_ticketing_get_ticket_product_ids_for_tec_event(52), 'Preferred helper ticket-product normalization changed.');
 ticketing_core_same(array(52), $GLOBALS['ticketing_core_helper_calls'], 'Preferred helper event ID changed.');
 ticketing_core_same(1, count(WP_Query::$calls), 'Preferred helper branch must not add a fallback query.');
 
@@ -659,7 +659,7 @@ $wpdb = new VMS_Ticketing_Core_WPDB_Spy('wp_none_');
 $GLOBALS['wpdb'] = $wpdb;
 ticketing_core_same(
 	array('provider' => 'none', 'qty_sold' => 0, 'revenue' => 0.0, 'revenue_label' => 'N/A', 'currency' => ''),
-	ticketing_core_without_computed_time(vms_ticketing_compute_stats(array(0, 'bad'))),
+	ticketing_core_without_computed_time(bvmgr_ticketing_compute_stats(array(0, 'bad'))),
 	'Empty product IDs should retain the no-provider result.'
 );
 ticketing_core_same(array(), $wpdb->executions, 'Empty product IDs must not touch the database.');
@@ -667,7 +667,7 @@ ticketing_core_same(array(), $wpdb->executions, 'Empty product IDs must not touc
 $GLOBALS['ticketing_core_woo_active'] = false;
 ticketing_core_same(
 	array('provider' => 'none', 'qty_sold' => 0, 'revenue' => 0.0, 'revenue_label' => 'N/A', 'currency' => ''),
-	ticketing_core_without_computed_time(vms_ticketing_compute_stats(array(6))),
+	ticketing_core_without_computed_time(bvmgr_ticketing_compute_stats(array(6))),
 	'Inactive WooCommerce should retain the no-provider result.'
 );
 $GLOBALS['ticketing_core_woo_active'] = true;
@@ -680,7 +680,7 @@ $wpdb->get_col_queue[] = array('product_qty', 'product_gross_revenue', 'product_
 $wpdb->get_row_queue[] = array('qty' => '12', 'revenue' => '345.67');
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['ticketing_core_currency'] = 'USD';
-$gross_stats = vms_ticketing_compute_stats(array(5, '0', -7, '5', 'bad'));
+$gross_stats = bvmgr_ticketing_compute_stats(array(5, '0', -7, '5', 'bad'));
 ticketing_core_same(
 	array('provider' => 'woo_analytics', 'qty_sold' => 12, 'revenue' => 345.67, 'revenue_label' => 'Gross revenue (Woo analytics)', 'currency' => 'USD'),
 	ticketing_core_without_computed_time($gross_stats),
@@ -706,7 +706,7 @@ $wpdb->get_var_queue[] = $lookup_table;
 $wpdb->get_col_queue[] = array('PRODUCT_QTY', 'PRODUCT_NET_REVENUE');
 $wpdb->get_row_queue[] = array('qty' => '2', 'revenue' => '-4.50');
 $GLOBALS['wpdb'] = $wpdb;
-$net_stats = vms_ticketing_compute_stats(array(11));
+$net_stats = bvmgr_ticketing_compute_stats(array(11));
 ticketing_core_same(
 	array('provider' => 'woo_analytics', 'qty_sold' => 2, 'revenue' => 0.0, 'revenue_label' => 'Net revenue (Woo analytics)', 'currency' => 'USD'),
 	ticketing_core_without_computed_time($net_stats),
@@ -722,7 +722,7 @@ $wpdb->get_row_queue[] = null;
 $GLOBALS['wpdb'] = $wpdb;
 ticketing_core_same(
 	array('provider' => 'woo_analytics', 'qty_sold' => 0, 'revenue' => 0.0, 'revenue_label' => 'Gross revenue (Woo analytics)', 'currency' => 'USD'),
-	ticketing_core_without_computed_time(vms_ticketing_compute_stats(array(13))),
+	ticketing_core_without_computed_time(bvmgr_ticketing_compute_stats(array(13))),
 	'Null aggregate row fallback changed.'
 );
 
@@ -732,7 +732,7 @@ $wpdb->get_var_queue[] = null;
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['ticketing_core_products'] = array(5 => new VMS_Ticketing_Core_Product_Stub(3, '10.50'));
 $GLOBALS['ticketing_core_product_calls'] = array();
-$fallback_stats = vms_ticketing_compute_stats(array(5, 5, 7));
+$fallback_stats = bvmgr_ticketing_compute_stats(array(5, 5, 7));
 ticketing_core_same(
 	array('provider' => 'woo_product_totals', 'qty_sold' => 6, 'revenue' => 63.0, 'revenue_label' => 'Estimated revenue (price × sold; excludes discounts, taxes, refunds)', 'currency' => 'USD'),
 	ticketing_core_without_computed_time($fallback_stats),
@@ -756,7 +756,7 @@ $GLOBALS['ticketing_core_titles'] = array(9 => 'Ninth Event', 4 => 'Fourth Event
 $GLOBALS['ticketing_core_permalinks'] = array(9 => 'https://example.test/event/9', 4 => 'https://example.test/event/4');
 $_POST = array('q' => ' 42 ');
 $numeric_response = ticketing_core_capture_ajax(static function (): void {
-	vms_ticketing_ajax_search_tec_events();
+	bvmgr_ticketing_ajax_search_tec_events();
 });
 ticketing_core_same(true, $numeric_response->success, 'Numeric TEC search should retain a success response.');
 ticketing_core_same(200, $numeric_response->status, 'Numeric TEC search success status changed.');
@@ -795,7 +795,7 @@ $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['ticketing_core_nonce_calls'] = array();
 $_POST = array('q' => 'Oak_100%');
 $text_response = ticketing_core_capture_ajax(static function (): void {
-	vms_ticketing_ajax_search_tec_events();
+	bvmgr_ticketing_ajax_search_tec_events();
 });
 ticketing_core_same(true, $text_response->success, 'Text TEC search should retain a success response.');
 ticketing_core_same(array('items' => array()), $text_response->payload, 'Null TEC search read should retain an empty result.');
@@ -812,7 +812,7 @@ $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['ticketing_core_nonce_calls'] = array();
 $_POST = array('q' => 'x');
 $short_response = ticketing_core_capture_ajax(static function (): void {
-	vms_ticketing_ajax_search_tec_events();
+	bvmgr_ticketing_ajax_search_tec_events();
 });
 ticketing_core_same(array('items' => array()), $short_response->payload, 'Short TEC query response changed.');
 ticketing_core_same(array(), $wpdb->prepares, 'Short TEC query must remain DB-free.');
@@ -824,7 +824,7 @@ $GLOBALS['ticketing_core_can_edit_posts'] = false;
 $GLOBALS['ticketing_core_nonce_calls'] = array();
 $_POST = array('q' => 'blocked');
 $forbidden_response = ticketing_core_capture_ajax(static function (): void {
-	vms_ticketing_ajax_search_tec_events();
+	bvmgr_ticketing_ajax_search_tec_events();
 });
 ticketing_core_same(false, $forbidden_response->success, 'Forbidden TEC search response kind changed.');
 ticketing_core_same(array('message' => 'forbidden'), $forbidden_response->payload, 'Forbidden TEC search message changed.');
@@ -839,7 +839,7 @@ $GLOBALS['ticketing_core_tec_active'] = false;
 $GLOBALS['ticketing_core_nonce_calls'] = array();
 $_POST = array('q' => 'offline');
 $tec_off_response = ticketing_core_capture_ajax(static function (): void {
-	vms_ticketing_ajax_search_tec_events();
+	bvmgr_ticketing_ajax_search_tec_events();
 });
 ticketing_core_same(false, $tec_off_response->success, 'Inactive TEC response kind changed.');
 ticketing_core_same(array('message' => 'tec_inactive'), $tec_off_response->payload, 'Inactive TEC response message changed.');

@@ -7,14 +7,14 @@
 
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_CPT_FEEDBACK_RESPONSE')) {
-	define('VMS_CPT_FEEDBACK_RESPONSE', 'vms_feedback');
+if (!defined('BVMGR_CPT_FEEDBACK_RESPONSE')) {
+	define('BVMGR_CPT_FEEDBACK_RESPONSE', 'vms_feedback');
 }
 
-if (!function_exists('vms_register_feedback_response_cpt')) {
-	function vms_register_feedback_response_cpt(): void
+if (!function_exists('bvmgr_register_feedback_response_cpt')) {
+	function bvmgr_register_feedback_response_cpt(): void
 	{
-		register_post_type(VMS_CPT_FEEDBACK_RESPONSE, array(
+		register_post_type(BVMGR_CPT_FEEDBACK_RESPONSE, array(
 			'labels' => array(
 				'name' => __('Event Feedback', 'backstage-venue-manager'),
 				'singular_name' => __('Event Feedback Response', 'backstage-venue-manager'),
@@ -28,18 +28,18 @@ if (!function_exists('vms_register_feedback_response_cpt')) {
 		));
 	}
 }
-add_action('init', 'vms_register_feedback_response_cpt');
+add_action('init', 'bvmgr_register_feedback_response_cpt');
 
-if (!function_exists('vms_feedback_meta_key')) {
-	function vms_feedback_meta_key(string $key): string
+if (!function_exists('bvmgr_feedback_meta_key')) {
+	function bvmgr_feedback_meta_key(string $key): string
 	{
 		$key = sanitize_key($key);
 		return $key !== '' ? '_vms_feedback_' . $key : '_vms_feedback';
 	}
 }
 
-if (!function_exists('vms_feedback_public_token')) {
-	function vms_feedback_public_token(int $event_plan_id): string
+if (!function_exists('bvmgr_feedback_public_token')) {
+	function bvmgr_feedback_public_token(int $event_plan_id): string
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -51,10 +51,10 @@ if (!function_exists('vms_feedback_public_token')) {
 	}
 }
 
-if (!function_exists('vms_feedback_verify_public_token')) {
-	function vms_feedback_verify_public_token(int $event_plan_id, string $token): bool
+if (!function_exists('bvmgr_feedback_verify_public_token')) {
+	function bvmgr_feedback_verify_public_token(int $event_plan_id, string $token): bool
 	{
-		$expected = vms_feedback_public_token($event_plan_id);
+		$expected = bvmgr_feedback_public_token($event_plan_id);
 		$token = trim($token);
 		if ($expected === '' || $token === '') {
 			return false;
@@ -64,16 +64,16 @@ if (!function_exists('vms_feedback_verify_public_token')) {
 	}
 }
 
-if (!function_exists('vms_feedback_invitation_source')) {
-	function vms_feedback_invitation_source(string $source): string
+if (!function_exists('bvmgr_feedback_invitation_source')) {
+	function bvmgr_feedback_invitation_source(string $source): string
 	{
 		$source = sanitize_key($source);
 		return $source !== '' ? $source : 'manual';
 	}
 }
 
-if (!function_exists('vms_feedback_recipient_hash')) {
-	function vms_feedback_recipient_hash(string $email): string
+if (!function_exists('bvmgr_feedback_recipient_hash')) {
+	function bvmgr_feedback_recipient_hash(string $email): string
 	{
 		$email = strtolower(sanitize_email($email));
 		if (!is_email($email)) {
@@ -85,7 +85,7 @@ if (!function_exists('vms_feedback_recipient_hash')) {
 	}
 }
 
-if (!function_exists('vms_feedback_invitation_token')) {
+if (!function_exists('bvmgr_feedback_invitation_token')) {
 	/**
 	 * Build a deterministic, non-guessable invitation marker for post-event email links.
 	 *
@@ -95,7 +95,7 @@ if (!function_exists('vms_feedback_invitation_token')) {
 	 *
 	 * @param array<string,mixed> $recipient
 	 */
-	function vms_feedback_invitation_token(int $event_plan_id, array $recipient = array()): string
+	function bvmgr_feedback_invitation_token(int $event_plan_id, array $recipient = array()): string
 	{
 		$event_plan_id = absint($event_plan_id);
 		$email = strtolower(sanitize_email((string) ($recipient['email'] ?? '')));
@@ -113,11 +113,11 @@ if (!function_exists('vms_feedback_invitation_token')) {
 	}
 }
 
-if (!function_exists('vms_feedback_survey_url')) {
+if (!function_exists('bvmgr_feedback_survey_url')) {
 	/**
 	 * @param array<string,mixed> $recipient Optional recipient context for email invitations.
 	 */
-	function vms_feedback_survey_url(int $event_plan_id, array $recipient = array(), string $source = 'manual'): string
+	function bvmgr_feedback_survey_url(int $event_plan_id, array $recipient = array(), string $source = 'manual'): string
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -125,32 +125,32 @@ if (!function_exists('vms_feedback_survey_url')) {
 		}
 
 		$args = array(
-			'vms_event_feedback' => '1',
+			'bvmgr_event_feedback' => '1',
 			'event_plan_id' => $event_plan_id,
-			'key' => vms_feedback_public_token($event_plan_id),
+			'key' => bvmgr_feedback_public_token($event_plan_id),
 		);
 
 		$email = sanitize_email((string) ($recipient['email'] ?? ''));
 		if (is_email($email)) {
-			$invite = vms_feedback_invitation_token($event_plan_id, $recipient);
-			$recipient_hash = vms_feedback_recipient_hash($email);
+			$invite = bvmgr_feedback_invitation_token($event_plan_id, $recipient);
+			$recipient_hash = bvmgr_feedback_recipient_hash($email);
 			if ($invite !== '') {
 				$args['invite'] = $invite;
 			}
 			if ($recipient_hash !== '') {
 				$args['recipient'] = $recipient_hash;
 			}
-			$args['source'] = vms_feedback_invitation_source($source);
+			$args['source'] = bvmgr_feedback_invitation_source($source);
 		}
 
 		return add_query_arg($args, home_url('/'));
 	}
 }
 
-if (!function_exists('vms_feedback_get_event_plan_date')) {
-	function vms_feedback_get_event_plan_date(int $event_plan_id): string
+if (!function_exists('bvmgr_feedback_get_event_plan_date')) {
+	function bvmgr_feedback_get_event_plan_date(int $event_plan_id): string
 	{
-		$key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'date') : '_vms_event_date';
+		$key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
 		$date = trim((string) get_post_meta($event_plan_id, $key, true));
 		if ($date === '') {
 			$date = trim((string) get_post_meta($event_plan_id, '_vms_event_date', true));
@@ -159,10 +159,10 @@ if (!function_exists('vms_feedback_get_event_plan_date')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_event_plan_venue_id')) {
-	function vms_feedback_get_event_plan_venue_id(int $event_plan_id): int
+if (!function_exists('bvmgr_feedback_get_event_plan_venue_id')) {
+	function bvmgr_feedback_get_event_plan_venue_id(int $event_plan_id): int
 	{
-		$key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
+		$key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
 		$venue_id = absint(get_post_meta($event_plan_id, $key, true));
 		if ($venue_id <= 0) {
 			$venue_id = absint(get_post_meta($event_plan_id, '_vms_event_plan_venue_id', true));
@@ -171,16 +171,16 @@ if (!function_exists('vms_feedback_get_event_plan_venue_id')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_primary_vendor_id')) {
-	function vms_feedback_get_primary_vendor_id(int $event_plan_id): int
+if (!function_exists('bvmgr_feedback_get_primary_vendor_id')) {
+	function bvmgr_feedback_get_primary_vendor_id(int $event_plan_id): int
 	{
-		$key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+		$key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
 		$vendor_id = absint(get_post_meta($event_plan_id, $key, true));
 		if ($vendor_id > 0) {
 			return $vendor_id;
 		}
 
-		$lineup_entries_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'lineup_entries_v1') : '_vms_lineup_entries_v1';
+		$lineup_entries_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'lineup_entries_v1') : '_vms_lineup_entries_v1';
 		$entries = get_post_meta($event_plan_id, $lineup_entries_key, true);
 		if (is_array($entries)) {
 			foreach ($entries as $entry) {
@@ -199,13 +199,13 @@ if (!function_exists('vms_feedback_get_primary_vendor_id')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_secondary_vendor_ids')) {
+if (!function_exists('bvmgr_feedback_get_secondary_vendor_ids')) {
 	/**
 	 * @return int[]
 	 */
-	function vms_feedback_get_secondary_vendor_ids(int $event_plan_id): array
+	function bvmgr_feedback_get_secondary_vendor_ids(int $event_plan_id): array
 	{
-		$key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+		$key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
 		$ids = get_post_meta($event_plan_id, $key, true);
 		if (!is_array($ids)) {
 			$ids = get_post_meta($event_plan_id, '_vms_secondary_vendor_id', false);
@@ -215,7 +215,7 @@ if (!function_exists('vms_feedback_get_secondary_vendor_ids')) {
 			return $vendor_id > 0 && get_post_type($vendor_id) === 'vms_vendor' && get_post_status($vendor_id) !== 'trash';
 		})));
 
-		$primary_id = vms_feedback_get_primary_vendor_id($event_plan_id);
+		$primary_id = bvmgr_feedback_get_primary_vendor_id($event_plan_id);
 		if ($primary_id > 0) {
 			$ids = array_values(array_filter($ids, static function ($vendor_id) use ($primary_id): bool {
 				return (int) $vendor_id !== (int) $primary_id;
@@ -226,8 +226,8 @@ if (!function_exists('vms_feedback_get_secondary_vendor_ids')) {
 	}
 }
 
-if (!function_exists('vms_feedback_vendor_type_label')) {
-	function vms_feedback_vendor_type_label(int $vendor_id, string $fallback = ''): string
+if (!function_exists('bvmgr_feedback_vendor_type_label')) {
+	function bvmgr_feedback_vendor_type_label(int $vendor_id, string $fallback = ''): string
 	{
 		$vendor_id = absint($vendor_id);
 		$labels = array();
@@ -246,11 +246,11 @@ if (!function_exists('vms_feedback_vendor_type_label')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_event_context')) {
+if (!function_exists('bvmgr_feedback_get_event_context')) {
 	/**
 	 * @return array<string,mixed>
 	 */
-	function vms_feedback_get_event_context(int $event_plan_id): array
+	function bvmgr_feedback_get_event_context(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$plan = $event_plan_id > 0 ? get_post($event_plan_id) : null;
@@ -258,9 +258,9 @@ if (!function_exists('vms_feedback_get_event_context')) {
 			return array();
 		}
 
-		$venue_id = vms_feedback_get_event_plan_venue_id($event_plan_id);
-		$primary_vendor_id = vms_feedback_get_primary_vendor_id($event_plan_id);
-		$secondary_vendor_ids = vms_feedback_get_secondary_vendor_ids($event_plan_id);
+		$venue_id = bvmgr_feedback_get_event_plan_venue_id($event_plan_id);
+		$primary_vendor_id = bvmgr_feedback_get_primary_vendor_id($event_plan_id);
+		$secondary_vendor_ids = bvmgr_feedback_get_secondary_vendor_ids($event_plan_id);
 		$venue_title = $venue_id > 0 ? get_the_title($venue_id) : '';
 		if (!is_string($venue_title) || trim($venue_title) === '') {
 			$venue_title = get_bloginfo('name');
@@ -271,31 +271,31 @@ if (!function_exists('vms_feedback_get_event_context')) {
 			$secondary_vendors[] = array(
 				'id' => $vendor_id,
 				'name' => get_the_title($vendor_id),
-				'type_label' => vms_feedback_vendor_type_label($vendor_id, __('Vendor', 'backstage-venue-manager')),
+				'type_label' => bvmgr_feedback_vendor_type_label($vendor_id, __('Vendor', 'backstage-venue-manager')),
 			);
 		}
 
 		return array(
 			'event_plan_id' => $event_plan_id,
 			'event_title' => get_the_title($event_plan_id),
-			'event_date' => vms_feedback_get_event_plan_date($event_plan_id),
+			'event_date' => bvmgr_feedback_get_event_plan_date($event_plan_id),
 			'venue_id' => $venue_id,
 			'venue_title' => $venue_title,
 			'primary_vendor' => $primary_vendor_id > 0 ? array(
 				'id' => $primary_vendor_id,
 				'name' => get_the_title($primary_vendor_id),
-				'type_label' => vms_feedback_vendor_type_label($primary_vendor_id, __('Primary vendor', 'backstage-venue-manager')),
+				'type_label' => bvmgr_feedback_vendor_type_label($primary_vendor_id, __('Primary vendor', 'backstage-venue-manager')),
 			) : null,
 			'secondary_vendors' => $secondary_vendors,
 		);
 	}
 }
 
-if (!function_exists('vms_feedback_rating_options')) {
+if (!function_exists('bvmgr_feedback_rating_options')) {
 	/**
 	 * @return array<int,string>
 	 */
-	function vms_feedback_rating_options(): array
+	function bvmgr_feedback_rating_options(): array
 	{
 		return array(
 			5 => __('Excellent', 'backstage-venue-manager'),
@@ -307,11 +307,11 @@ if (!function_exists('vms_feedback_rating_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_yes_maybe_no_options')) {
+if (!function_exists('bvmgr_feedback_yes_maybe_no_options')) {
 	/**
 	 * @return array<string,string>
 	 */
-	function vms_feedback_yes_maybe_no_options(): array
+	function bvmgr_feedback_yes_maybe_no_options(): array
 	{
 		return array(
 			'yes' => __('Yes', 'backstage-venue-manager'),
@@ -321,11 +321,11 @@ if (!function_exists('vms_feedback_yes_maybe_no_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_secondary_vendor_order_options')) {
+if (!function_exists('bvmgr_feedback_secondary_vendor_order_options')) {
 	/**
 	 * @return array<string,string>
 	 */
-	function vms_feedback_secondary_vendor_order_options(): array
+	function bvmgr_feedback_secondary_vendor_order_options(): array
 	{
 		return array(
 			'yes' => __('Yes', 'backstage-venue-manager'),
@@ -336,11 +336,11 @@ if (!function_exists('vms_feedback_secondary_vendor_order_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_website_usage_options')) {
+if (!function_exists('bvmgr_feedback_website_usage_options')) {
 	/**
 	 * @return array<string,string>
 	 */
-	function vms_feedback_website_usage_options(): array
+	function bvmgr_feedback_website_usage_options(): array
 	{
 		return array(
 			'bought_online' => __('Yes, I bought tickets online', 'backstage-venue-manager'),
@@ -351,11 +351,11 @@ if (!function_exists('vms_feedback_website_usage_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_website_payment_issue_options')) {
+if (!function_exists('bvmgr_feedback_website_payment_issue_options')) {
 	/**
 	 * @return array<string,string>
 	 */
-	function vms_feedback_website_payment_issue_options(): array
+	function bvmgr_feedback_website_payment_issue_options(): array
 	{
 		return array(
 			'no_issues' => __('No issues', 'backstage-venue-manager'),
@@ -368,42 +368,42 @@ if (!function_exists('vms_feedback_website_payment_issue_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_website_details_enabled')) {
-	function vms_feedback_website_details_enabled(string $website_used): bool
+if (!function_exists('bvmgr_feedback_website_details_enabled')) {
+	function bvmgr_feedback_website_details_enabled(string $website_used): bool
 	{
 		$website_used = sanitize_key($website_used);
 		return $website_used !== '' && $website_used !== 'did_not_use';
 	}
 }
 
-if (!function_exists('vms_feedback_secondary_vendor_details_enabled')) {
-	function vms_feedback_secondary_vendor_details_enabled(string $did_order): bool
+if (!function_exists('bvmgr_feedback_secondary_vendor_details_enabled')) {
+	function bvmgr_feedback_secondary_vendor_details_enabled(string $did_order): bool
 	{
 		return sanitize_key($did_order) === 'yes';
 	}
 }
 
-if (!function_exists('vms_feedback_sanitize_rating')) {
-	function vms_feedback_sanitize_rating($value): int
+if (!function_exists('bvmgr_feedback_sanitize_rating')) {
+	function bvmgr_feedback_sanitize_rating($value): int
 	{
 		$value = absint($value);
 		return ($value >= 1 && $value <= 5) ? $value : 0;
 	}
 }
 
-if (!function_exists('vms_feedback_sanitize_choice')) {
-	function vms_feedback_sanitize_choice($value, array $allowed): string
+if (!function_exists('bvmgr_feedback_sanitize_choice')) {
+	function bvmgr_feedback_sanitize_choice($value, array $allowed): string
 	{
 		$value = sanitize_key((string) $value);
 		return isset($allowed[$value]) ? $value : '';
 	}
 }
 
-if (!function_exists('vms_feedback_sanitize_checkbox_list')) {
+if (!function_exists('bvmgr_feedback_sanitize_checkbox_list')) {
 	/**
 	 * @return string[]
 	 */
-	function vms_feedback_sanitize_checkbox_list($values, array $allowed): array
+	function bvmgr_feedback_sanitize_checkbox_list($values, array $allowed): array
 	{
 		$clean = array();
 		foreach ((array) $values as $value) {
@@ -416,9 +416,9 @@ if (!function_exists('vms_feedback_sanitize_checkbox_list')) {
 	}
 }
 
-if (!function_exists('vms_feedback_bar_detail_options')) {
+if (!function_exists('bvmgr_feedback_bar_detail_options')) {
 	/** @return array<string,string> */
-	function vms_feedback_bar_detail_options(): array
+	function bvmgr_feedback_bar_detail_options(): array
 	{
 		return array(
 			'fast_service' => __('Fast service / short wait', 'backstage-venue-manager'),
@@ -436,9 +436,9 @@ if (!function_exists('vms_feedback_bar_detail_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_legacy_bar_detail_options')) {
+if (!function_exists('bvmgr_feedback_legacy_bar_detail_options')) {
 	/** @return array<string,string> */
-	function vms_feedback_legacy_bar_detail_options(): array
+	function bvmgr_feedback_legacy_bar_detail_options(): array
 	{
 		return array(
 			'wait_time' => __('Wait time', 'backstage-venue-manager'),
@@ -451,17 +451,17 @@ if (!function_exists('vms_feedback_legacy_bar_detail_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_bar_detail_allowed_options')) {
+if (!function_exists('bvmgr_feedback_bar_detail_allowed_options')) {
 	/** @return array<string,string> */
-	function vms_feedback_bar_detail_allowed_options(): array
+	function bvmgr_feedback_bar_detail_allowed_options(): array
 	{
-		return vms_feedback_bar_detail_options() + vms_feedback_legacy_bar_detail_options();
+		return bvmgr_feedback_bar_detail_options() + bvmgr_feedback_legacy_bar_detail_options();
 	}
 }
 
-if (!function_exists('vms_feedback_bathroom_detail_options')) {
+if (!function_exists('bvmgr_feedback_bathroom_detail_options')) {
 	/** @return array<string,string> */
-	function vms_feedback_bathroom_detail_options(): array
+	function bvmgr_feedback_bathroom_detail_options(): array
 	{
 		return array(
 			'clean_and_well_kept' => __('Clean and well-kept', 'backstage-venue-manager'),
@@ -479,9 +479,9 @@ if (!function_exists('vms_feedback_bathroom_detail_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_legacy_bathroom_detail_options')) {
+if (!function_exists('bvmgr_feedback_legacy_bathroom_detail_options')) {
 	/** @return array<string,string> */
-	function vms_feedback_legacy_bathroom_detail_options(): array
+	function bvmgr_feedback_legacy_bathroom_detail_options(): array
 	{
 		return array(
 			'cleanliness' => __('Cleanliness', 'backstage-venue-manager'),
@@ -494,17 +494,17 @@ if (!function_exists('vms_feedback_legacy_bathroom_detail_options')) {
 	}
 }
 
-if (!function_exists('vms_feedback_bathroom_detail_allowed_options')) {
+if (!function_exists('bvmgr_feedback_bathroom_detail_allowed_options')) {
 	/** @return array<string,string> */
-	function vms_feedback_bathroom_detail_allowed_options(): array
+	function bvmgr_feedback_bathroom_detail_allowed_options(): array
 	{
-		return vms_feedback_bathroom_detail_options() + vms_feedback_legacy_bathroom_detail_options();
+		return bvmgr_feedback_bathroom_detail_options() + bvmgr_feedback_legacy_bathroom_detail_options();
 	}
 }
 
-if (!function_exists('vms_feedback_vendor_wait_cause_options')) {
+if (!function_exists('bvmgr_feedback_vendor_wait_cause_options')) {
 	/** @return array<string,string> */
-	function vms_feedback_vendor_wait_cause_options(): array
+	function bvmgr_feedback_vendor_wait_cause_options(): array
 	{
 		return array(
 			'line_before_ordering' => __('Long line before ordering', 'backstage-venue-manager'),
@@ -521,11 +521,11 @@ if (!function_exists('vms_feedback_vendor_wait_cause_options')) {
 
 
 
-if (!function_exists('vms_feedback_notification_defaults')) {
+if (!function_exists('bvmgr_feedback_notification_defaults')) {
 	/**
 	 * @return array{enabled:bool,recipients:string[]}
 	 */
-	function vms_feedback_notification_defaults(): array
+	function bvmgr_feedback_notification_defaults(): array
 	{
 		$admin_email = sanitize_email((string) get_option('admin_email'));
 		return array(
@@ -535,11 +535,11 @@ if (!function_exists('vms_feedback_notification_defaults')) {
 	}
 }
 
-if (!function_exists('vms_feedback_parse_notification_recipients')) {
+if (!function_exists('bvmgr_feedback_parse_notification_recipients')) {
 	/**
 	 * @return string[]
 	 */
-	function vms_feedback_parse_notification_recipients($raw): array
+	function bvmgr_feedback_parse_notification_recipients($raw): array
 	{
 		$parts = is_array($raw) ? $raw : preg_split('/[\s,;]+/', (string) $raw);
 		$emails = array();
@@ -553,16 +553,16 @@ if (!function_exists('vms_feedback_parse_notification_recipients')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_notification_settings')) {
+if (!function_exists('bvmgr_feedback_get_notification_settings')) {
 	/**
 	 * @return array{enabled:bool,recipients:string[]}
 	 */
-	function vms_feedback_get_notification_settings(): array
+	function bvmgr_feedback_get_notification_settings(): array
 	{
-		$defaults = vms_feedback_notification_defaults();
+		$defaults = bvmgr_feedback_notification_defaults();
 		$enabled = (string) get_option('vms_feedback_notify_enabled', '0') === '1';
 		$stored_recipients = get_option('vms_feedback_notify_recipients', '');
-		$recipients = vms_feedback_parse_notification_recipients($stored_recipients);
+		$recipients = bvmgr_feedback_parse_notification_recipients($stored_recipients);
 		if (empty($recipients)) {
 			$recipients = $defaults['recipients'];
 		}
@@ -573,12 +573,12 @@ if (!function_exists('vms_feedback_get_notification_settings')) {
 	}
 }
 
-if (!function_exists('vms_feedback_save_notification_settings')) {
-	function vms_feedback_save_notification_settings(bool $enabled, $recipients): bool
+if (!function_exists('bvmgr_feedback_save_notification_settings')) {
+	function bvmgr_feedback_save_notification_settings(bool $enabled, $recipients): bool
 	{
-		$emails = vms_feedback_parse_notification_recipients($recipients);
+		$emails = bvmgr_feedback_parse_notification_recipients($recipients);
 		if (empty($emails)) {
-			$emails = vms_feedback_notification_defaults()['recipients'];
+			$emails = bvmgr_feedback_notification_defaults()['recipients'];
 		}
 		update_option('vms_feedback_notify_enabled', $enabled ? '1' : '0', false);
 		update_option('vms_feedback_notify_recipients', implode(', ', $emails), false);
@@ -586,8 +586,8 @@ if (!function_exists('vms_feedback_save_notification_settings')) {
 	}
 }
 
-if (!function_exists('vms_feedback_response_admin_url')) {
-	function vms_feedback_response_admin_url(int $event_plan_id, int $response_id = 0): string
+if (!function_exists('bvmgr_feedback_response_admin_url')) {
+	function bvmgr_feedback_response_admin_url(int $event_plan_id, int $response_id = 0): string
 	{
 		$args = array(
 			'page' => 'vms-event-feedback',
@@ -601,20 +601,20 @@ if (!function_exists('vms_feedback_response_admin_url')) {
 	}
 }
 
-if (!function_exists('vms_feedback_send_new_submission_notification')) {
+if (!function_exists('bvmgr_feedback_send_new_submission_notification')) {
 	/**
 	 * @param array<string,mixed> $payload
 	 */
-	function vms_feedback_send_new_submission_notification(int $response_id, array $payload): bool
+	function bvmgr_feedback_send_new_submission_notification(int $response_id, array $payload): bool
 	{
-		$settings = vms_feedback_get_notification_settings();
+		$settings = bvmgr_feedback_get_notification_settings();
 		if (empty($settings['enabled']) || empty($settings['recipients'])) {
 			return false;
 		}
 
 		$context = isset($payload['context']) && is_array($payload['context']) ? $payload['context'] : array();
 		$attendee = isset($payload['attendee']) && is_array($payload['attendee']) ? $payload['attendee'] : array();
-		$event_plan_id = absint($context['event_plan_id'] ?? get_post_meta($response_id, vms_feedback_meta_key('event_plan_id'), true));
+		$event_plan_id = absint($context['event_plan_id'] ?? get_post_meta($response_id, bvmgr_feedback_meta_key('event_plan_id'), true));
 		$event_title = trim((string) ($context['event_title'] ?? ''));
 		if ($event_title === '' && $event_plan_id > 0) {
 			$event_title = get_the_title($event_plan_id);
@@ -624,8 +624,8 @@ if (!function_exists('vms_feedback_send_new_submission_notification')) {
 		}
 		$attendee_name = trim((string) ($attendee['name'] ?? ''));
 		$attendee_email = trim((string) ($attendee['email'] ?? ''));
-		$overall_rating = vms_feedback_payload_rating($payload, 'overall.event_rating');
-		$admin_url = vms_feedback_response_admin_url($event_plan_id, $response_id);
+		$overall_rating = bvmgr_feedback_payload_rating($payload, 'overall.event_rating');
+		$admin_url = bvmgr_feedback_response_admin_url($event_plan_id, $response_id);
 		/* translators: %s: new event feedback. */
 		$subject = sprintf(__('New event feedback: %s', 'backstage-venue-manager'), wp_strip_all_tags($event_title));
 		$lines = array(
@@ -650,7 +650,7 @@ if (!function_exists('vms_feedback_send_new_submission_notification')) {
 			$lines[] = wp_strip_all_tags($final_comment);
 		}
 		$lines[] = '';
-		$lines[] = __('Review privately in VMS:', 'backstage-venue-manager');
+		$lines[] = __('Review privately in Backstage Venue Manager:', 'backstage-venue-manager');
 		$lines[] = $admin_url;
 		$lines[] = '';
 		$lines[] = __('Reminder: keep raw comments private unless you intentionally curate or anonymize them.', 'backstage-venue-manager');
@@ -659,14 +659,14 @@ if (!function_exists('vms_feedback_send_new_submission_notification')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_responses')) {
+if (!function_exists('bvmgr_feedback_get_responses')) {
 	/**
 	 * @return WP_Post[]
 	 */
-	function vms_feedback_get_responses(int $event_plan_id = 0, int $limit = 200): array
+	function bvmgr_feedback_get_responses(int $event_plan_id = 0, int $limit = 200): array
 	{
 		$args = array(
-			'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+			'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 			'post_status' => array('private', 'publish'),
 			'posts_per_page' => $limit,
 			'orderby' => 'date',
@@ -676,7 +676,7 @@ if (!function_exists('vms_feedback_get_responses')) {
 		if ($event_plan_id > 0) {
 			$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The response list applies this exact Event Plan metadata filter only when requested; the caller-supplied limit continues to control result scope.
 				array(
-					'key' => vms_feedback_meta_key('event_plan_id'),
+					'key' => bvmgr_feedback_meta_key('event_plan_id'),
 					'value' => absint($event_plan_id),
 					'compare' => '=',
 				),
@@ -686,22 +686,22 @@ if (!function_exists('vms_feedback_get_responses')) {
 	}
 }
 
-if (!function_exists('vms_feedback_get_response_payload')) {
+if (!function_exists('bvmgr_feedback_get_response_payload')) {
 	/**
 	 * @return array<string,mixed>
 	 */
-	function vms_feedback_get_response_payload(int $response_id): array
+	function bvmgr_feedback_get_response_payload(int $response_id): array
 	{
-		$payload = get_post_meta($response_id, vms_feedback_meta_key('payload'), true);
+		$payload = get_post_meta($response_id, bvmgr_feedback_meta_key('payload'), true);
 		return is_array($payload) ? $payload : array();
 	}
 }
 
-if (!function_exists('vms_feedback_payload_path_value')) {
+if (!function_exists('bvmgr_feedback_payload_path_value')) {
 	/**
 	 * @return mixed
 	 */
-	function vms_feedback_payload_path_value(array $payload, string $path)
+	function bvmgr_feedback_payload_path_value(array $payload, string $path)
 	{
 		$value = $payload;
 		foreach (explode('.', $path) as $part) {
@@ -714,28 +714,28 @@ if (!function_exists('vms_feedback_payload_path_value')) {
 	}
 }
 
-if (!function_exists('vms_feedback_payload_rating')) {
-	function vms_feedback_payload_rating(array $payload, string $path): int
+if (!function_exists('bvmgr_feedback_payload_rating')) {
+	function bvmgr_feedback_payload_rating(array $payload, string $path): int
 	{
-		$value = vms_feedback_payload_path_value($payload, $path);
+		$value = bvmgr_feedback_payload_path_value($payload, $path);
 		if ($value === null) {
 			return 0;
 		}
-		return vms_feedback_sanitize_rating($value);
+		return bvmgr_feedback_sanitize_rating($value);
 	}
 }
 
-if (!function_exists('vms_feedback_average')) {
+if (!function_exists('bvmgr_feedback_average')) {
 	/**
 	 * @param WP_Post[] $responses
 	 */
-	function vms_feedback_average(array $responses, string $path): array
+	function bvmgr_feedback_average(array $responses, string $path): array
 	{
 		$sum = 0;
 		$count = 0;
 		foreach ($responses as $response) {
-			$payload = vms_feedback_get_response_payload((int) $response->ID);
-			$rating = vms_feedback_payload_rating($payload, $path);
+			$payload = bvmgr_feedback_get_response_payload((int) $response->ID);
+			$rating = bvmgr_feedback_payload_rating($payload, $path);
 			if ($rating > 0) {
 				$sum += $rating;
 				$count++;
@@ -748,22 +748,22 @@ if (!function_exists('vms_feedback_average')) {
 	}
 }
 
-if (!function_exists('vms_feedback_average_filtered')) {
+if (!function_exists('bvmgr_feedback_average_filtered')) {
 	/**
 	 * @param WP_Post[] $responses
 	 * @param callable  $include_response Receives the response payload and returns true when it should count.
 	 * @return array{average:float|null,count:int}
 	 */
-	function vms_feedback_average_filtered(array $responses, string $path, callable $include_response): array
+	function bvmgr_feedback_average_filtered(array $responses, string $path, callable $include_response): array
 	{
 		$sum = 0;
 		$count = 0;
 		foreach ($responses as $response) {
-			$payload = vms_feedback_get_response_payload((int) $response->ID);
+			$payload = bvmgr_feedback_get_response_payload((int) $response->ID);
 			if (!$include_response($payload)) {
 				continue;
 			}
-			$rating = vms_feedback_payload_rating($payload, $path);
+			$rating = bvmgr_feedback_payload_rating($payload, $path);
 			if ($rating > 0) {
 				$sum += $rating;
 				$count++;
@@ -777,45 +777,45 @@ if (!function_exists('vms_feedback_average_filtered')) {
 }
 
 
-if (!function_exists('vms_feedback_array_for_hash')) {
+if (!function_exists('bvmgr_feedback_array_for_hash')) {
 	/**
 	 * @param mixed $value
 	 * @return mixed
 	 */
-	function vms_feedback_array_for_hash($value)
+	function bvmgr_feedback_array_for_hash($value)
 	{
 		if (!is_array($value)) {
 			return $value;
 		}
 		ksort($value);
 		foreach ($value as $key => $child) {
-			$value[$key] = vms_feedback_array_for_hash($child);
+			$value[$key] = bvmgr_feedback_array_for_hash($child);
 		}
 		return $value;
 	}
 }
 
-if (!function_exists('vms_feedback_payload_duplicate_key')) {
-	function vms_feedback_payload_duplicate_key(array $payload): string
+if (!function_exists('bvmgr_feedback_payload_duplicate_key')) {
+	function bvmgr_feedback_payload_duplicate_key(array $payload): string
 	{
 		$copy = $payload;
 		unset($copy['submitted_at_gmt']);
 		if (isset($copy['context']) && is_array($copy['context'])) {
 			unset($copy['context']['event_title'], $copy['context']['event_date'], $copy['context']['venue_title']);
 		}
-		$json = wp_json_encode(vms_feedback_array_for_hash($copy));
+		$json = wp_json_encode(bvmgr_feedback_array_for_hash($copy));
 		return is_string($json) && $json !== '' ? hash('sha256', $json) : '';
 	}
 }
 
-if (!function_exists('vms_feedback_request_hash')) {
-	function vms_feedback_request_hash(): string
+if (!function_exists('bvmgr_feedback_request_hash')) {
+	function bvmgr_feedback_request_hash(): string
 	{
 		$ip = '';
 		foreach (array(
-			vms_request_server_value('HTTP_CF_CONNECTING_IP'),
-			vms_request_server_value('HTTP_X_FORWARDED_FOR'),
-			vms_request_server_value('REMOTE_ADDR'),
+			bvmgr_request_server_value('HTTP_CF_CONNECTING_IP'),
+			bvmgr_request_server_value('HTTP_X_FORWARDED_FOR'),
+			bvmgr_request_server_value('REMOTE_ADDR'),
 		) as $raw) {
 			if ($raw === '') {
 				continue;
@@ -823,31 +823,31 @@ if (!function_exists('vms_feedback_request_hash')) {
 			$ip = trim(explode(',', $raw)[0]);
 			break;
 		}
-		$user_agent = substr(vms_request_server_value('HTTP_USER_AGENT'), 0, 255);
-		$language = substr(vms_request_server_value('HTTP_ACCEPT_LANGUAGE'), 0, 80);
+		$user_agent = substr(bvmgr_request_server_value('HTTP_USER_AGENT'), 0, 255);
+		$language = substr(bvmgr_request_server_value('HTTP_ACCEPT_LANGUAGE'), 0, 80);
 		$salt = function_exists('wp_salt') ? wp_salt('logged_in') : (defined('LOGGED_IN_SALT') ? LOGGED_IN_SALT : 'vms-feedback-request');
 		return substr(hash_hmac('sha256', strtolower($ip) . '|' . $user_agent . '|' . $language, $salt), 0, 32);
 	}
 }
 
-if (!function_exists('vms_feedback_response_duplicate_key')) {
-	function vms_feedback_response_duplicate_key(WP_Post $response): string
+if (!function_exists('bvmgr_feedback_response_duplicate_key')) {
+	function bvmgr_feedback_response_duplicate_key(WP_Post $response): string
 	{
-		$stored = (string) get_post_meta((int) $response->ID, vms_feedback_meta_key('duplicate_fingerprint'), true);
+		$stored = (string) get_post_meta((int) $response->ID, bvmgr_feedback_meta_key('duplicate_fingerprint'), true);
 		if ($stored !== '') {
 			return $stored;
 		}
-		$payload = vms_feedback_get_response_payload((int) $response->ID);
-		return !empty($payload) ? vms_feedback_payload_duplicate_key($payload) : '';
+		$payload = bvmgr_feedback_get_response_payload((int) $response->ID);
+		return !empty($payload) ? bvmgr_feedback_payload_duplicate_key($payload) : '';
 	}
 }
 
-if (!function_exists('vms_feedback_partition_duplicate_responses')) {
+if (!function_exists('bvmgr_feedback_partition_duplicate_responses')) {
 	/**
 	 * @param WP_Post[] $responses
 	 * @return array{unique:WP_Post[], duplicate_ids:int[]}
 	 */
-	function vms_feedback_partition_duplicate_responses(array $responses): array
+	function bvmgr_feedback_partition_duplicate_responses(array $responses): array
 	{
 		$seen = array();
 		$unique = array();
@@ -856,7 +856,7 @@ if (!function_exists('vms_feedback_partition_duplicate_responses')) {
 			if (!$response instanceof WP_Post) {
 				continue;
 			}
-			$key = vms_feedback_response_duplicate_key($response);
+			$key = bvmgr_feedback_response_duplicate_key($response);
 			if ($key !== '' && isset($seen[$key])) {
 				$duplicate_ids[] = (int) $response->ID;
 				continue;
@@ -870,8 +870,8 @@ if (!function_exists('vms_feedback_partition_duplicate_responses')) {
 	}
 }
 
-if (!function_exists('vms_feedback_submission_uid_hash')) {
-	function vms_feedback_submission_uid_hash(int $event_plan_id, string $submission_uid): string
+if (!function_exists('bvmgr_feedback_submission_uid_hash')) {
+	function bvmgr_feedback_submission_uid_hash(int $event_plan_id, string $submission_uid): string
 	{
 		$event_plan_id = absint($event_plan_id);
 		$submission_uid = sanitize_text_field($submission_uid);
@@ -883,8 +883,8 @@ if (!function_exists('vms_feedback_submission_uid_hash')) {
 	}
 }
 
-if (!function_exists('vms_feedback_existing_response_by_meta')) {
-	function vms_feedback_existing_response_by_meta(int $event_plan_id, string $meta_key, string $meta_value): int
+if (!function_exists('bvmgr_feedback_existing_response_by_meta')) {
+	function bvmgr_feedback_existing_response_by_meta(int $event_plan_id, string $meta_key, string $meta_value): int
 	{
 		$event_plan_id = absint($event_plan_id);
 		$meta_key = sanitize_key($meta_key);
@@ -893,7 +893,7 @@ if (!function_exists('vms_feedback_existing_response_by_meta')) {
 			return 0;
 		}
 		$matches = get_posts(array(
-			'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+			'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 			'post_status' => array('private', 'publish'),
 			'posts_per_page' => 1,
 			'fields' => 'ids',
@@ -901,12 +901,12 @@ if (!function_exists('vms_feedback_existing_response_by_meta')) {
 			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Submission deduplication performs one single-ID response lookup by the exact Event Plan and selected metadata token.
 				'relation' => 'AND',
 				array(
-					'key' => vms_feedback_meta_key('event_plan_id'),
+					'key' => bvmgr_feedback_meta_key('event_plan_id'),
 					'value' => $event_plan_id,
 					'compare' => '=',
 				),
 				array(
-					'key' => vms_feedback_meta_key($meta_key),
+					'key' => bvmgr_feedback_meta_key($meta_key),
 					'value' => $meta_value,
 					'compare' => '=',
 				),
@@ -916,8 +916,8 @@ if (!function_exists('vms_feedback_existing_response_by_meta')) {
 	}
 }
 
-if (!function_exists('vms_feedback_existing_recent_duplicate')) {
-	function vms_feedback_existing_recent_duplicate(int $event_plan_id, string $duplicate_fingerprint, string $request_hash, int $window_seconds = 7200): int
+if (!function_exists('bvmgr_feedback_existing_recent_duplicate')) {
+	function bvmgr_feedback_existing_recent_duplicate(int $event_plan_id, string $duplicate_fingerprint, string $request_hash, int $window_seconds = 7200): int
 	{
 		$event_plan_id = absint($event_plan_id);
 		$duplicate_fingerprint = trim($duplicate_fingerprint);
@@ -927,7 +927,7 @@ if (!function_exists('vms_feedback_existing_recent_duplicate')) {
 		}
 
 		$matches = get_posts(array(
-			'post_type' => VMS_CPT_FEEDBACK_RESPONSE,
+			'post_type' => BVMGR_CPT_FEEDBACK_RESPONSE,
 			'post_status' => array('private', 'publish'),
 			'posts_per_page' => 1,
 			'fields' => 'ids',
@@ -935,22 +935,22 @@ if (!function_exists('vms_feedback_existing_recent_duplicate')) {
 			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Recent-submission deduplication performs one single-ID lookup by exact identity fingerprints inside the configured UTC window.
 				'relation' => 'AND',
 				array(
-					'key' => vms_feedback_meta_key('event_plan_id'),
+					'key' => bvmgr_feedback_meta_key('event_plan_id'),
 					'value' => $event_plan_id,
 					'compare' => '=',
 				),
 				array(
-					'key' => vms_feedback_meta_key('duplicate_fingerprint'),
+					'key' => bvmgr_feedback_meta_key('duplicate_fingerprint'),
 					'value' => $duplicate_fingerprint,
 					'compare' => '=',
 				),
 				array(
-					'key' => vms_feedback_meta_key('request_hash'),
+					'key' => bvmgr_feedback_meta_key('request_hash'),
 					'value' => $request_hash,
 					'compare' => '=',
 				),
 				array(
-					'key' => vms_feedback_meta_key('submitted_at_gmt'),
+					'key' => bvmgr_feedback_meta_key('submitted_at_gmt'),
 					'value' => gmdate('Y-m-d H:i:s', time() - max(60, $window_seconds)),
 					'compare' => '>=',
 					'type' => 'DATETIME',
@@ -961,19 +961,19 @@ if (!function_exists('vms_feedback_existing_recent_duplicate')) {
 	}
 }
 
-if (!function_exists('vms_feedback_dedupe_redirect')) {
-	function vms_feedback_dedupe_redirect(string $redirect, string $reason = 'duplicate'): void
+if (!function_exists('bvmgr_feedback_dedupe_redirect')) {
+	function bvmgr_feedback_dedupe_redirect(string $redirect, string $reason = 'duplicate'): void
 	{
 		wp_safe_redirect(add_query_arg(array(
-			'vms_feedback_submitted' => '1',
+			'bvmgr_feedback_submitted' => '1',
 			'vms_feedback_dedupe' => sanitize_key($reason),
 		), $redirect));
 		exit;
 	}
 }
 
-if (!function_exists('vms_feedback_claim_submission_lock')) {
-	function vms_feedback_claim_submission_lock(string $lock_key, int $ttl = 300): bool
+if (!function_exists('bvmgr_feedback_claim_submission_lock')) {
+	function bvmgr_feedback_claim_submission_lock(string $lock_key, int $ttl = 300): bool
 	{
 		$lock_key = preg_replace('/[^a-zA-Z0-9_\-]/', '', $lock_key);
 		if (!is_string($lock_key) || $lock_key === '') {
@@ -989,8 +989,8 @@ if (!function_exists('vms_feedback_claim_submission_lock')) {
 	}
 }
 
-if (!function_exists('vms_feedback_release_submission_lock')) {
-	function vms_feedback_release_submission_lock(string $lock_key): void
+if (!function_exists('bvmgr_feedback_release_submission_lock')) {
+	function bvmgr_feedback_release_submission_lock(string $lock_key): void
 	{
 		$lock_key = preg_replace('/[^a-zA-Z0-9_\-]/', '', $lock_key);
 		if (!is_string($lock_key) || $lock_key === '') {

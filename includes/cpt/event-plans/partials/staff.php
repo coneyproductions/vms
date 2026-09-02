@@ -346,8 +346,8 @@
                                     /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
                                     __('%1$s (%2$s)', 'backstage-venue-manager'),
                                     (string) $qualification_rule['name'],
-                                    function_exists('vms_staffing_admin_qualification_mode_label')
-                                        ? vms_staffing_admin_qualification_mode_label((string) ($qualification_rule['mode'] ?? 'warn'))
+                                    function_exists('bvmgr_staffing_admin_qualification_mode_label')
+                                        ? bvmgr_staffing_admin_qualification_mode_label((string) ($qualification_rule['mode'] ?? 'warn'))
                                         : (string) ($qualification_rule['mode'] ?? 'warn')
                                 );
                             }
@@ -388,8 +388,8 @@
                                     $sid = is_object($sp) && isset($sp->ID) ? (int) $sp->ID : 0;
                                     if ($sid <= 0) continue;
                                     $checked = in_array($sid, $assigned, true);
-                                    $candidate_status = function_exists('vms_staffing_staff_candidate_status_for_role')
-                                        ? (array) vms_staffing_staff_candidate_status_for_role($sid, $rid)
+                                    $candidate_status = function_exists('bvmgr_staffing_staff_candidate_status_for_role')
+                                        ? (array) bvmgr_staffing_staff_candidate_status_for_role($sid, $rid)
                                         : array(
                                             'eligible' => true,
                                             'qualification' => array('ok' => true, 'mode' => 'warn', 'missing' => array(), 'expired' => array()),

@@ -152,7 +152,7 @@ function g16b_extract_adapter_call(string $source, string $event_code): string
 	$event_at = strpos($source, "'{$event_code}'");
 	g16b_assert($event_at !== false, 'Missing operational event: ' . $event_code);
 	$prefix = substr($source, 0, (int) $event_at);
-	$start = strrpos($prefix, 'vms_record_operational_issue(');
+	$start = strrpos($prefix, 'bvmgr_record_operational_issue(');
 	g16b_assert($start !== false, 'Missing adapter call for: ' . $event_code);
 	$open = strpos($source, '(', (int) $start);
 	$depth = 0;
@@ -214,7 +214,7 @@ function g16b_source_contract(string $root, string $shadow_root): array
 		foreach ($tree_sources as $key => $source) {
 			g16b_same(0, preg_match_all('/(?<![A-Za-z0-9_])error_log\s*\(/', $source), $tree . ' ' . $key . ' source must contain no direct server logging.');
 			g16b_same(0, preg_match_all('/phpcs:(?:ignore|disable)[^\n]*(?:DevelopmentFunctions|error_log)/i', $source), $tree . ' ' . $key . ' source must not suppress logging findings.');
-			g16b_same(count($events[$key]), substr_count($source, 'vms_record_operational_issue('), $tree . ' ' . $key . ' adapter count changed.');
+			g16b_same(count($events[$key]), substr_count($source, 'bvmgr_record_operational_issue('), $tree . ' ' . $key . ' adapter count changed.');
 			foreach ($events[$key] as $event => $arguments) {
 				$call = g16b_extract_adapter_call($source, $event);
 				$expected = "vms_record_operational_issue('{$event}',{$arguments});";
@@ -395,10 +395,10 @@ function __($text, $domain = null): string
 function g16b_load_foundation_helpers(string $runtime_source): void
 {
 	foreach (array(
-		'vms_operational_issue_value_is_tainted',
-		'vms_operational_issue_request_path',
-		'vms_operational_issue_error_identity',
-		'vms_operational_issue_context',
+		'bvmgr_operational_issue_value_is_tainted',
+		'bvmgr_operational_issue_request_path',
+		'bvmgr_operational_issue_error_identity',
+		'bvmgr_operational_issue_context',
 	) as $helper) {
 		eval(g16b_extract_guarded_function($runtime_source, $helper));
 	}
@@ -411,13 +411,13 @@ function g16b_reset_capture(bool $adapter_result = true): void
 	$GLOBALS['g16b_adapter_result'] = $adapter_result;
 }
 
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$record = array(
 		'event_code' => $event_code,
-		'context' => vms_operational_issue_context($context),
+		'context' => bvmgr_operational_issue_context($context),
 	);
-	$error_identity = vms_operational_issue_error_identity($error);
+	$error_identity = bvmgr_operational_issue_error_identity($error);
 	if ($error_identity !== array()) {
 		$record['error'] = $error_identity;
 	}
@@ -434,18 +434,18 @@ function g16b_assert_no_sentinels(array $records, array $sentinels, string $mess
 	}
 }
 
-function vms_event_plan_import_delete_stored_file(string $target_key): void
+function bvmgr_event_plan_import_delete_stored_file(string $target_key): void
 {
 	$GLOBALS['g16b_trace'][] = 'delete:' . $target_key;
 }
 
-function vms_event_plan_import_set_notice(string $type, string $message): void
+function bvmgr_event_plan_import_set_notice(string $type, string $message): void
 {
 	$GLOBALS['g16b_trace'][] = 'notice:' . $type;
 	$GLOBALS['g16b_notice'] = array($type, $message);
 }
 
-function vms_event_plan_import_admin_page_url(array $args = array()): string
+function bvmgr_event_plan_import_admin_page_url(array $args = array()): string
 {
 	return '/wp-admin/tools.php?' . http_build_query($args);
 }
@@ -479,7 +479,7 @@ function g16b_import_behavior(string $source): void
 		'ua_sentinel',
 	);
 	$preview_error = new WP_Error('preview_failed', $raw_message);
-	$preview_function = g16b_extract_guarded_function($source, 'vms_event_plan_import_handle_preview_action');
+	$preview_function = g16b_extract_guarded_function($source, 'bvmgr_event_plan_import_handle_preview_action');
 	$preview_block = g16b_extract_if_block($preview_function, 'if (is_wp_error($preview))');
 
 	g16b_reset_capture(false);
@@ -504,7 +504,7 @@ function g16b_import_behavior(string $source): void
 	g16b_same($preview_record['error'], $GLOBALS['g16b_records'][0]['error'] ?? array(), 'Identical WP_Error identity must produce a deterministic fingerprint.');
 	g16b_same(array('error', $raw_message), $GLOBALS['g16b_notice'], 'Adapter return value must not change preview notice behavior.');
 
-	$commit_function = g16b_extract_guarded_function($source, 'vms_event_plan_import_handle_commit_action');
+	$commit_function = g16b_extract_guarded_function($source, 'bvmgr_event_plan_import_handle_commit_action');
 	$commit_block = g16b_extract_if_block($commit_function, 'if (is_wp_error($result))');
 	g16b_reset_capture(false);
 	g16b_eval_failure_branch($commit_block, array(
@@ -519,7 +519,7 @@ function g16b_import_behavior(string $source): void
 	g16b_same(array('error', $raw_message), $GLOBALS['g16b_notice'], 'Commit failure must retain exact privileged raw notice.');
 	g16b_assert_no_sentinels($GLOBALS['g16b_records'], $sentinels, 'Commit storage leaked raw error data');
 
-	$revert_function = g16b_extract_guarded_function($source, 'vms_event_plan_import_handle_revert_last_action');
+	$revert_function = g16b_extract_guarded_function($source, 'bvmgr_event_plan_import_handle_revert_last_action');
 	$revert_block = g16b_extract_if_block($revert_function, 'if (is_wp_error($result))');
 	g16b_reset_capture(false);
 	g16b_eval_failure_branch($revert_block, array('result' => new WP_Error('revert_failed', $raw_message)));
@@ -532,7 +532,7 @@ function g16b_import_behavior(string $source): void
 	g16b_assert_no_sentinels($GLOBALS['g16b_records'], $sentinels, 'Revert storage leaked raw error data');
 }
 
-function vms_admission_rest_error(string $code, string $message, int $status = 400, $data = null): WP_REST_Response
+function bvmgr_admission_rest_error(string $code, string $message, int $status = 400, $data = null): WP_REST_Response
 {
 	$GLOBALS['g16b_trace'][] = 'response:' . $code;
 	$response = new WP_REST_Response(array(
@@ -544,7 +544,7 @@ function vms_admission_rest_error(string $code, string $message, int $status = 4
 	return $response;
 }
 
-function vms_admission_audit_log(...$args): void
+function bvmgr_admission_audit_log(...$args): void
 {
 	unset($args);
 	$GLOBALS['g16b_trace'][] = 'audit';
@@ -567,7 +567,7 @@ function g16b_admissions_behavior(string $source): void
 	);
 	$cases = array(
 		array(
-			'function' => 'vms_admission_rest_create',
+			'function' => 'bvmgr_admission_rest_create',
 			'needle' => 'if ($insert === false)',
 			'event' => 'admission_create_failed',
 			'operation' => 'create',
@@ -581,7 +581,7 @@ function g16b_admissions_behavior(string $source): void
 			'ids' => array('plan_id' => 73),
 		),
 		array(
-			'function' => 'vms_admission_rest_patch',
+			'function' => 'bvmgr_admission_rest_patch',
 			'needle' => 'if ($ok === false)',
 			'event' => 'admission_update_failed',
 			'operation' => 'update',
@@ -590,7 +590,7 @@ function g16b_admissions_behavior(string $source): void
 			'ids' => array('plan_id' => 74, 'entity_id' => 81),
 		),
 		array(
-			'function' => 'vms_admission_rest_checkin',
+			'function' => 'bvmgr_admission_rest_checkin',
 			'needle' => 'if ($updated === false)',
 			'event' => 'admission_checkin_failed',
 			'operation' => 'checkin',
@@ -599,7 +599,7 @@ function g16b_admissions_behavior(string $source): void
 			'ids' => array('plan_id' => 75, 'entity_id' => 82),
 		),
 		array(
-			'function' => 'vms_admission_rest_uncheckin',
+			'function' => 'bvmgr_admission_rest_uncheckin',
 			'needle' => 'if ($updated === false)',
 			'event' => 'admission_uncheckin_failed',
 			'operation' => 'uncheckin',
@@ -637,7 +637,7 @@ function taxonomy_exists(string $taxonomy): bool
 	return $taxonomy === 'vms_vendor_type';
 }
 
-function vms_vendor_type_select_options(): array
+function bvmgr_vendor_type_select_options(): array
 {
 	return ($GLOBALS['g16b_vendor_mode'] ?? '') === 'ensure'
 		? array('band' => 'Music Vendor', 'food_truck' => 'Food Vendor')
@@ -690,7 +690,7 @@ function get_terms(array $args): array
 		: array();
 }
 
-function vms_vendor_type_canonical_slug_for_term(WP_Term $term): string
+function bvmgr_vendor_type_canonical_slug_for_term(WP_Term $term): string
 {
 	unset($term);
 	return 'band';
@@ -756,8 +756,8 @@ function update_option(string $key, $value, bool $autoload = false): bool
 
 function g16b_vendor_behavior(string $source): void
 {
-	$ensure_block = g16b_extract_guarded_function($source, 'vms_vendor_type_ensure_default_terms');
-	$canonicalize_block = g16b_extract_guarded_function($source, 'vms_vendor_type_maybe_canonicalize_terms');
+	$ensure_block = g16b_extract_guarded_function($source, 'bvmgr_vendor_type_ensure_default_terms');
+	$canonicalize_block = g16b_extract_guarded_function($source, 'bvmgr_vendor_type_maybe_canonicalize_terms');
 	eval($ensure_block);
 	eval($canonicalize_block);
 
@@ -777,7 +777,7 @@ function g16b_vendor_behavior(string $source): void
 
 	$GLOBALS['g16b_vendor_mode'] = 'ensure';
 	g16b_reset_capture(false);
-	vms_vendor_type_ensure_default_terms();
+	bvmgr_vendor_type_ensure_default_terms();
 	g16b_same(
 		array('insert:band', 'record:vendor_type_default_term_ensure_failed', 'insert:food_truck'),
 		$GLOBALS['g16b_trace'],
@@ -802,7 +802,7 @@ function g16b_vendor_behavior(string $source): void
 	$GLOBALS['g16b_vendor_mode'] = 'canonicalize';
 	g16b_reset_capture(false);
 	unset($GLOBALS['g16b_option_update']);
-	vms_vendor_type_maybe_canonicalize_terms();
+	bvmgr_vendor_type_maybe_canonicalize_terms();
 	g16b_same(
 		array('delete:99', 'record:vendor_type_duplicate_term_delete_failed', 'option:vms_vendor_type_canonicalized_v1'),
 		$GLOBALS['g16b_trace'],

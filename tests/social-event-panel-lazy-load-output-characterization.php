@@ -5,12 +5,12 @@ if (!defined('ABSPATH')) {
 	define('ABSPATH', dirname(__DIR__) . '/');
 }
 
-if (!defined('VMS_PLUGIN_URL')) {
-	define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+if (!defined('BVMGR_PLUGIN_URL')) {
+	define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', 'test-version');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', 'test-version');
 }
 
 final class VMS_Social_Event_Panel_Ajax_Exit extends RuntimeException
@@ -126,14 +126,14 @@ $GLOBALS['vms_test_runtime_reads'] = array(
 	'get_post_type' => 0,
 	'get_user_option' => 0,
 	'current_user_can' => 0,
-	'vms_social_current_user_can_manage' => 0,
-	'vms_social_event_plan_context' => 0,
-	'vms_social_queue_latest_for_event' => 0,
-	'vms_social_templates_all' => 0,
-	'vms_social_template_default_for_platform' => 0,
-	'vms_social_template_for_platform' => 0,
-	'vms_social_render_template_payload' => 0,
-	'vms_social_get_settings' => 0,
+	'bvmgr_social_current_user_can_manage' => 0,
+	'bvmgr_social_event_plan_context' => 0,
+	'bvmgr_social_queue_latest_for_event' => 0,
+	'bvmgr_social_templates_all' => 0,
+	'bvmgr_social_template_default_for_platform' => 0,
+	'bvmgr_social_template_for_platform' => 0,
+	'bvmgr_social_render_template_payload' => 0,
+	'bvmgr_social_get_settings' => 0,
 	'wp_create_nonce' => 0,
 	'check_ajax_referer' => 0,
 );
@@ -508,50 +508,50 @@ if (!function_exists('get_posts')) {
 	}
 }
 
-if (!function_exists('vms_social_current_user_can_manage')) {
-	function vms_social_current_user_can_manage(): bool
+if (!function_exists('bvmgr_social_current_user_can_manage')) {
+	function bvmgr_social_current_user_can_manage(): bool
 	{
-		$GLOBALS['vms_test_runtime_reads']['vms_social_current_user_can_manage']++;
+		$GLOBALS['vms_test_runtime_reads']['bvmgr_social_current_user_can_manage']++;
 		return !empty($GLOBALS['vms_test_social_manage']);
 	}
 }
 
-if (!function_exists('vms_social_event_plan_context')) {
-	function vms_social_event_plan_context(int $event_plan_id): array
+if (!function_exists('bvmgr_social_event_plan_context')) {
+	function bvmgr_social_event_plan_context(int $event_plan_id): array
 	{
-		$GLOBALS['vms_test_runtime_reads']['vms_social_event_plan_context']++;
+		$GLOBALS['vms_test_runtime_reads']['bvmgr_social_event_plan_context']++;
 		return (array) ($GLOBALS['vms_test_social_contexts'][$event_plan_id] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_queue_latest_for_event')) {
-	function vms_social_queue_latest_for_event(int $event_plan_id): array
+if (!function_exists('bvmgr_social_queue_latest_for_event')) {
+	function bvmgr_social_queue_latest_for_event(int $event_plan_id): array
 	{
-		$GLOBALS['vms_test_runtime_reads']['vms_social_queue_latest_for_event']++;
+		$GLOBALS['vms_test_runtime_reads']['bvmgr_social_queue_latest_for_event']++;
 		return (array) ($GLOBALS['vms_test_social_queue_latest'][$event_plan_id] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_templates_all')) {
-	function vms_social_templates_all(string $platform): array
+if (!function_exists('bvmgr_social_templates_all')) {
+	function bvmgr_social_templates_all(string $platform): array
 	{
-		$GLOBALS['vms_test_runtime_reads']['vms_social_templates_all']++;
+		$GLOBALS['vms_test_runtime_reads']['bvmgr_social_templates_all']++;
 		return (array) ($GLOBALS['vms_test_social_templates'][$platform] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_template_default_for_platform')) {
-	function vms_social_template_default_for_platform(string $platform): array
+if (!function_exists('bvmgr_social_template_default_for_platform')) {
+	function bvmgr_social_template_default_for_platform(string $platform): array
 	{
-		$GLOBALS['vms_test_runtime_reads']['vms_social_template_default_for_platform']++;
+		$GLOBALS['vms_test_runtime_reads']['bvmgr_social_template_default_for_platform']++;
 		return (array) ($GLOBALS['vms_test_social_default_templates'][$platform] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_template_for_platform')) {
-	function vms_social_template_for_platform(string $platform, int $template_id): array
+if (!function_exists('bvmgr_social_template_for_platform')) {
+	function bvmgr_social_template_for_platform(string $platform, int $template_id): array
 	{
-		$GLOBALS['vms_test_runtime_reads']['vms_social_template_for_platform']++;
+		$GLOBALS['vms_test_runtime_reads']['bvmgr_social_template_for_platform']++;
 		foreach ((array) ($GLOBALS['vms_test_social_templates'][$platform] ?? array()) as $template) {
 			if ((int) ($template['id'] ?? 0) === $template_id) {
 				return (array) $template;
@@ -561,25 +561,25 @@ if (!function_exists('vms_social_template_for_platform')) {
 	}
 }
 
-if (!function_exists('vms_social_render_template_payload')) {
-	function vms_social_render_template_payload(string $platform, string $body, array $context, bool $utm_enabled): array
+if (!function_exists('bvmgr_social_render_template_payload')) {
+	function bvmgr_social_render_template_payload(string $platform, string $body, array $context, bool $utm_enabled): array
 	{
 		unset($body, $context, $utm_enabled);
-		$GLOBALS['vms_test_runtime_reads']['vms_social_render_template_payload']++;
+		$GLOBALS['vms_test_runtime_reads']['bvmgr_social_render_template_payload']++;
 		return (array) ($GLOBALS['vms_test_social_rendered_payloads'][$platform] ?? array('caption' => '', 'final_url' => ''));
 	}
 }
 
-if (!function_exists('vms_social_get_settings')) {
-	function vms_social_get_settings(): array
+if (!function_exists('bvmgr_social_get_settings')) {
+	function bvmgr_social_get_settings(): array
 	{
-		$GLOBALS['vms_test_runtime_reads']['vms_social_get_settings']++;
+		$GLOBALS['vms_test_runtime_reads']['bvmgr_social_get_settings']++;
 		return (array) $GLOBALS['vms_test_social_settings'];
 	}
 }
 
-if (!function_exists('vms_social_trim_preview')) {
-	function vms_social_trim_preview(string $text, int $limit = 180): string
+if (!function_exists('bvmgr_social_trim_preview')) {
+	function bvmgr_social_trim_preview(string $text, int $limit = 180): string
 	{
 		return mb_substr($text, 0, $limit);
 	}
@@ -648,7 +648,7 @@ $dispatchAjax = static function (array $payload): array {
 	$_REQUEST = $payload;
 
 	try {
-		vms_social_ajax_load_event_panel();
+		bvmgr_social_ajax_load_event_panel();
 	} catch (VMS_Social_Event_Panel_Ajax_Exit $exit) {
 		$_POST = $previousPost;
 		$_REQUEST = $previousRequest;
@@ -675,68 +675,68 @@ try {
 	require_once $socialAdminPath;
 	require_once $eventPanelPath;
 
-	$assert(has_action('admin_enqueue_scripts', 'vms_social_enqueue_admin_assets') === 30, 'Social Sharing should keep the admin_enqueue_scripts registration at priority 30.');
-	$assert(has_action('add_meta_boxes_vms_event_plan', 'vms_social_add_event_panel') === 10, 'Social Sharing should keep the Event Plan metabox registration hook.');
-	$assert(has_action('admin_footer', 'vms_social_event_panel_render_footer_forms') === 40, 'Social Sharing should keep the detached footer-form renderer registration at priority 40.');
-	$assert(has_action('wp_ajax_vms_social_load_event_panel', 'vms_social_ajax_load_event_panel') === 10, 'Social Sharing should keep the authenticated lazy-load AJAX registration.');
+	$assert(has_action('admin_enqueue_scripts', 'bvmgr_social_enqueue_admin_assets') === 30, 'Social Sharing should keep the admin_enqueue_scripts registration at priority 30.');
+	$assert(has_action('add_meta_boxes_vms_event_plan', 'bvmgr_social_add_event_panel') === 10, 'Social Sharing should keep the Event Plan metabox registration hook.');
+	$assert(has_action('admin_footer', 'bvmgr_social_event_panel_render_footer_forms') === 40, 'Social Sharing should keep the detached footer-form renderer registration at priority 40.');
+	$assert(has_action('wp_ajax_vms_social_load_event_panel', 'bvmgr_social_ajax_load_event_panel') === 10, 'Social Sharing should keep the authenticated lazy-load AJAX registration.');
 
 	$assert(strpos($socialAdminSource, 'wp_localize_script(') === false, 'Social Sharing admin enqueue should remain localization-free.');
 	$assert(strpos($socialAdminSource, '$should_load = ($page === \'vms-social-sharing\') || ($post_type === \'vms_event_plan\');') !== false, 'Social Sharing admin enqueue should preserve the page/post-type load gate.');
-	$assert(strpos($socialAdminSource, "'vms-social-admin'") !== false, 'Social Sharing admin enqueue should preserve the vms-social-admin handle.');
-	$assert(strpos($socialAdminSource, "VMS_PLUGIN_URL . 'assets/js/vms-social-admin.js'") !== false, 'Social Sharing admin enqueue should preserve the current script path.');
+	$assert(strpos($socialAdminSource, "'bvmgr-social-admin'") !== false, 'Social Sharing admin enqueue should use the canonical bvmgr-social-admin handle.');
+	$assert(strpos($socialAdminSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-social-admin.js'") !== false, 'Social Sharing admin enqueue should preserve the current script path.');
 
 	$renderSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_render_event_panel(WP_Post $post): void',
-		"if (!function_exists('vms_social_ajax_load_event_panel'))",
-		'vms_social_render_event_panel()'
+		'function bvmgr_social_render_event_panel(WP_Post $post): void',
+		"if (!function_exists('bvmgr_social_ajax_load_event_panel'))",
+		'bvmgr_social_render_event_panel()'
 	);
 	$ajaxSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_ajax_load_event_panel(): void',
-		"if (!function_exists('vms_social_save_event_panel'))",
-		'vms_social_ajax_load_event_panel()'
+		'function bvmgr_social_ajax_load_event_panel(): void',
+		"if (!function_exists('bvmgr_social_save_event_panel'))",
+		'bvmgr_social_ajax_load_event_panel()'
 	);
 	$markupSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_event_panel_markup(int $event_plan_id): array',
-		"if (!function_exists('vms_social_add_event_panel'))",
-		'vms_social_event_panel_markup()'
+		'function bvmgr_social_event_panel_markup(int $event_plan_id): array',
+		"if (!function_exists('bvmgr_social_add_event_panel'))",
+		'bvmgr_social_event_panel_markup()'
 	);
 	$footerHtmlSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_event_panel_footer_forms_html(int $event_plan_id, int $queue_id = 0): string',
-		"if (!function_exists('vms_social_event_panel_render_footer_forms'))",
-		'vms_social_event_panel_footer_forms_html()'
+		'function bvmgr_social_event_panel_footer_forms_html(int $event_plan_id, int $queue_id = 0): string',
+		"if (!function_exists('bvmgr_social_event_panel_render_footer_forms'))",
+		'bvmgr_social_event_panel_footer_forms_html()'
 	);
 	$footerRenderSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_event_panel_render_footer_forms(): void',
-		"if (!function_exists('vms_social_event_panel_is_collapsed_for_user'))",
-		'vms_social_event_panel_render_footer_forms()'
+		'function bvmgr_social_event_panel_render_footer_forms(): void',
+		"if (!function_exists('bvmgr_social_event_panel_is_collapsed_for_user'))",
+		'bvmgr_social_event_panel_render_footer_forms()'
 	);
 
-	$assert(substr_count($renderSource, 'vms_social_event_panel_markup(') === 1, 'Synchronous panel render should resolve the event-panel markup producer exactly once.');
-	$assert(strpos($renderSource, 'vms_social_event_panel_register_footer_forms($event_plan_id, (int) ($payload[\'queue_id\'] ?? 0));') !== false, 'Synchronous panel render should preserve the detached footer-form registry handoff.');
-	$assert(substr_count($ajaxSource, 'vms_social_event_panel_markup(') === 1, 'AJAX lazy load should resolve the same event-panel markup producer exactly once.');
-	$assert(strpos($ajaxSource, "'footer_forms_html' => vms_social_event_panel_footer_forms_html(\$event_plan_id, (int) (\$payload['queue_id'] ?? 0)),") !== false, 'AJAX lazy load should preserve the footer_forms_html producer call.');
+	$assert(substr_count($renderSource, 'bvmgr_social_event_panel_markup(') === 1, 'Synchronous panel render should resolve the event-panel markup producer exactly once.');
+	$assert(strpos($renderSource, 'bvmgr_social_event_panel_register_footer_forms($event_plan_id, (int) ($payload[\'queue_id\'] ?? 0));') !== false, 'Synchronous panel render should preserve the detached footer-form registry handoff.');
+	$assert(substr_count($ajaxSource, 'bvmgr_social_event_panel_markup(') === 1, 'AJAX lazy load should resolve the same event-panel markup producer exactly once.');
+	$assert(strpos($ajaxSource, "'footer_forms_html' => bvmgr_social_event_panel_footer_forms_html(\$event_plan_id, (int) (\$payload['queue_id'] ?? 0)),") !== false, 'AJAX lazy load should preserve the footer_forms_html producer call.');
 	$assert(strpos($ajaxSource, "wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);") !== false, 'AJAX lazy load should preserve the explicit invalid-plan response.');
 	$assert(strpos($ajaxSource, "wp_send_json_error(array('message' => 'Not allowed.'), 403);") !== false, 'AJAX lazy load should preserve the explicit capability response.');
 	$assert(strpos($ajaxSource, "check_ajax_referer('vms_social_load_event_panel', 'nonce');") !== false, 'AJAX lazy load should preserve the exact nonce action and request field.');
-	$assert(strpos($ajaxSource, '$event_plan_id = absint(vms_social_post_value(\'post_id\'));') !== false, 'AJAX lazy load should continue to normalize post_id through vms_social_post_value() and absint().');
+	$assert(strpos($ajaxSource, '$event_plan_id = absint(bvmgr_social_post_value(\'post_id\'));') !== false, 'AJAX lazy load should continue to normalize post_id through bvmgr_social_post_value() and absint().');
 
 	foreach (array(
-		'vms_social_event_plan_context(',
-		'vms_social_event_meta_enabled_platforms(',
-		'vms_social_event_meta_template_overrides(',
+		'bvmgr_social_event_plan_context(',
+		'bvmgr_social_event_meta_enabled_platforms(',
+		'bvmgr_social_event_meta_template_overrides(',
 		'get_post_meta(',
-		'vms_social_queue_latest_for_event(',
-		'vms_social_templates_all(',
-		'vms_social_template_default_for_platform(',
-		'vms_social_template_for_platform(',
-		'vms_social_render_template_payload(',
-		'vms_social_get_settings(',
-		'vms_social_event_share_url(',
+		'bvmgr_social_queue_latest_for_event(',
+		'bvmgr_social_templates_all(',
+		'bvmgr_social_template_default_for_platform(',
+		'bvmgr_social_template_for_platform(',
+		'bvmgr_social_render_template_payload(',
+		'bvmgr_social_get_settings(',
+		'bvmgr_social_event_share_url(',
 		'wp_nonce_field(',
 	) as $requiredReadMarker) {
 		$assert(strpos($markupSource, $requiredReadMarker) !== false, 'Event-panel markup should preserve the external-read marker: ' . $requiredReadMarker);
@@ -761,12 +761,12 @@ try {
 	}
 
 	$GLOBALS['vms_test_meta_boxes'] = array();
-	vms_social_add_event_panel();
+	bvmgr_social_add_event_panel();
 	$assert(count($GLOBALS['vms_test_meta_boxes']) === 1, 'Social Sharing should register exactly one Event Plan metabox.');
 	$metaBox = $GLOBALS['vms_test_meta_boxes'][0];
 	$assert($metaBox['id'] === 'vms_social_promotion', 'Social Sharing metabox ID should remain vms_social_promotion.');
 	$assert($metaBox['title'] === 'Promotion (Social Sharing)', 'Social Sharing metabox title should remain unchanged.');
-	$assert($metaBox['callback'] === 'vms_social_render_event_panel', 'Social Sharing metabox callback should remain vms_social_render_event_panel.');
+	$assert($metaBox['callback'] === 'bvmgr_social_render_event_panel', 'Social Sharing metabox callback should remain bvmgr_social_render_event_panel.');
 	$assert($metaBox['screen'] === 'vms_event_plan', 'Social Sharing metabox should stay on the Event Plan edit screen.');
 	$assert($metaBox['context'] === 'normal', 'Social Sharing metabox context should remain normal.');
 	$assert($metaBox['priority'] === 'high', 'Social Sharing metabox priority should remain high.');
@@ -774,38 +774,38 @@ try {
 	$GLOBALS['vms_test_scripts'] = array();
 	$_GET = array('page' => 'vms-social-sharing');
 	$GLOBALS['vms_test_current_screen'] = (object) array('id' => 'social_page_vms-social-sharing', 'post_type' => '');
-	vms_social_enqueue_admin_assets();
+	bvmgr_social_enqueue_admin_assets();
 	$assert(count($GLOBALS['vms_test_scripts']) === 1, 'Social Sharing admin page should enqueue the shared social admin script exactly once.');
 	$assert($GLOBALS['vms_test_scripts'][0] === array(
-		'handle' => 'vms-social-admin',
-		'src' => VMS_PLUGIN_URL . 'assets/js/vms-social-admin.js',
+		'handle' => 'bvmgr-social-admin',
+		'src' => BVMGR_PLUGIN_URL . 'assets/js/vms-social-admin.js',
 		'deps' => array(),
-		'ver' => VMS_VERSION,
+		'ver' => BVMGR_VERSION,
 		'in_footer' => true,
 	), 'Social Sharing admin page should preserve the exact script enqueue contract.');
 
 	$GLOBALS['vms_test_scripts'] = array();
 	$_GET = array();
 	$GLOBALS['vms_test_current_screen'] = (object) array('id' => 'post', 'post_type' => 'vms_event_plan');
-	vms_social_enqueue_admin_assets();
+	bvmgr_social_enqueue_admin_assets();
 	$assert(count($GLOBALS['vms_test_scripts']) === 1, 'Event Plan edit screens should also enqueue the shared social admin script.');
 
 	$GLOBALS['vms_test_scripts'] = array();
 	$_GET = array();
 	$GLOBALS['vms_test_current_screen'] = (object) array('id' => 'dashboard', 'post_type' => 'post');
-	vms_social_enqueue_admin_assets();
+	bvmgr_social_enqueue_admin_assets();
 	$assert($GLOBALS['vms_test_scripts'] === array(), 'Unrelated admin screens should not enqueue the Social Sharing admin script.');
 	$assert($GLOBALS['vms_test_localized_scripts'] === array(), 'Social Sharing enqueue path should not localize the admin script.');
 
-	$GLOBALS['vms_social_event_panel_footer_forms'] = array();
+	$GLOBALS['bvmgr_social_event_panel_footer_forms'] = array();
 	$GLOBALS['vms_test_current_screen'] = (object) array('id' => 'post', 'post_type' => 'vms_event_plan');
 	$GLOBALS['vms_test_user_options'] = array(
 		'closedpostboxes_post' => array('vms_social_promotion'),
 	);
 	ob_start();
-	vms_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
+	bvmgr_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
 	$collapsedShellHtml = (string) ob_get_clean();
-	$assert($GLOBALS['vms_social_event_panel_footer_forms'] === array(), 'Collapsed lazy shell render should not register detached footer forms before the panel loads.');
+	$assert($GLOBALS['bvmgr_social_event_panel_footer_forms'] === array(), 'Collapsed lazy shell render should not register detached footer forms before the panel loads.');
 
 	list($collapsedDoc, $collapsedXPath, $collapsedRoot) = $parseFragment($collapsedShellHtml, 'collapsed social shell');
 	unset($collapsedDoc);
@@ -828,28 +828,28 @@ try {
 	$assert($collapsedXPath->query('//*[@id="vms-root"]/div//@*[name()!="class" and name()!="data-vms-social-lazy" and name()!="data-vms-social-post-id" and name()!="data-vms-social-url" and name()!="data-vms-social-nonce"]')->length === 0, 'Collapsed Social Sharing shell should not introduce uncharacterized attributes.');
 
 	$GLOBALS['vms_test_user_options'] = array();
-	$GLOBALS['vms_social_event_panel_footer_forms'] = array();
+	$GLOBALS['bvmgr_social_event_panel_footer_forms'] = array();
 	foreach (array_keys($GLOBALS['vms_test_mutation_calls']) as $mutationKey) {
 		$GLOBALS['vms_test_mutation_calls'][$mutationKey] = 0;
 	}
-	$payload = vms_social_event_panel_markup(42);
+	$payload = bvmgr_social_event_panel_markup(42);
 	$assert(array_keys($payload) === array('html', 'queue_id'), 'Event-panel markup producer should preserve the exact payload keys.');
 	$assert((int) $payload['queue_id'] === 314, 'Event-panel markup producer should preserve the latest queue ID.');
 
 	ob_start();
-	vms_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
+	bvmgr_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
 	$synchronousHtml = (string) ob_get_clean();
 	$assert($synchronousHtml === (string) $payload['html'], 'Synchronous panel render should echo the exact shared event-panel markup producer output.');
-	$assert(isset($GLOBALS['vms_social_event_panel_footer_forms'][42]), 'Synchronous panel render should register detached footer forms for the current Event Plan.');
-	$assert($GLOBALS['vms_social_event_panel_footer_forms'][42] === array(
+	$assert(isset($GLOBALS['bvmgr_social_event_panel_footer_forms'][42]), 'Synchronous panel render should register detached footer forms for the current Event Plan.');
+	$assert($GLOBALS['bvmgr_social_event_panel_footer_forms'][42] === array(
 		'event_plan_id' => 42,
 		'queue_id' => 314,
 	), 'Synchronous panel render should preserve the request-local footer-form registry payload.');
 
-	$footerFormsHtmlNoQueue = vms_social_event_panel_footer_forms_html(42, 0);
-	$footerFormsHtml = vms_social_event_panel_footer_forms_html(42, 314);
+	$footerFormsHtmlNoQueue = bvmgr_social_event_panel_footer_forms_html(42, 0);
+	$footerFormsHtml = bvmgr_social_event_panel_footer_forms_html(42, 314);
 	ob_start();
-	vms_social_event_panel_render_footer_forms();
+	bvmgr_social_event_panel_render_footer_forms();
 	$registeredFooterFormsHtml = (string) ob_get_clean();
 	$assert($registeredFooterFormsHtml === $footerFormsHtml, 'Detached footer-form renderer should emit the exact shared footer-form producer output for the registered Event Plan.');
 
@@ -970,7 +970,7 @@ try {
 		$assert(trim((string) $copyLinkButton->textContent) === 'Copy Link', 'Copy Link button label should remain unchanged for ' . $platform . '.');
 		$assertAttributesExact($shareAnchor, array(
 			'class' => 'button button-secondary',
-			'href' => vms_social_event_share_url($platform, $expectedRendered['final_url'], $expectedRendered['caption']),
+			'href' => bvmgr_social_event_share_url($platform, $expectedRendered['final_url'], $expectedRendered['caption']),
 			'rel' => 'noopener',
 			'target' => '_blank',
 		), 'Open Share Dialog link for ' . $platform);
@@ -989,9 +989,9 @@ try {
 	$assertAttributesExact($topLevelChildren[9], array('class' => 'description'), 'Social event-panel latest queue error paragraph');
 	$assert(trim((string) $topLevelChildren[9]->textContent) === 'Rate limit <strong>retry</strong>', 'Social event-panel latest queue error paragraph should escape stored error markup.');
 
-	$queueFormId = vms_social_event_panel_form_id(42, 'event-queue');
-	$queueCancelFormId = vms_social_event_panel_form_id(42, 'queue-cancel');
-	$queueRetryFormId = vms_social_event_panel_form_id(42, 'queue-retry');
+	$queueFormId = bvmgr_social_event_panel_form_id(42, 'event-queue');
+	$queueCancelFormId = bvmgr_social_event_panel_form_id(42, 'queue-cancel');
+	$queueRetryFormId = bvmgr_social_event_panel_form_id(42, 'queue-retry');
 	$assert($queueFormId === 'vms-social-event-queue-form-42', 'Queue form ID derivation should preserve the exact current naming scheme.');
 	$assert($queueCancelFormId === 'vms-social-queue-cancel-form-42', 'Cancel form ID derivation should preserve the exact current naming scheme.');
 	$assert($queueRetryFormId === 'vms-social-queue-retry-form-42', 'Retry form ID derivation should preserve the exact current naming scheme.');
@@ -1142,15 +1142,15 @@ try {
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 	), 'Queue detached form should preserve the exact hidden-field contract.');
 	$assert($getHiddenInputMap($footerForms[1]) === array(
-		array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_cancel'),
-		array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_cancel'),
+	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_cancel'),
+	array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_cancel'),
 		array('name' => 'queue_id', 'type' => 'hidden', 'value' => '314'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 		array('name' => 'tab', 'type' => 'hidden', 'value' => 'queue'),
 	), 'Cancel detached form should preserve the exact hidden-field contract.');
 	$assert($getHiddenInputMap($footerForms[2]) === array(
-		array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_retry'),
-		array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_retry'),
+	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_retry'),
+	array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_retry'),
 		array('name' => 'queue_id', 'type' => 'hidden', 'value' => '314'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 		array('name' => 'tab', 'type' => 'hidden', 'value' => 'queue'),

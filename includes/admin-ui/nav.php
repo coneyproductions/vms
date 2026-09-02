@@ -2,11 +2,11 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admin_ui_vendor_application_post_type')) {
-	function vms_admin_ui_vendor_application_post_type(): string
+if (!function_exists('bvmgr_admin_ui_vendor_application_post_type')) {
+	function bvmgr_admin_ui_vendor_application_post_type(): string
 	{
-		if (defined('VMS_VENDOR_APP_CPT') && VMS_VENDOR_APP_CPT !== '') {
-			return sanitize_key((string) VMS_VENDOR_APP_CPT);
+		if (defined('BVMGR_VENDOR_APP_CPT') && BVMGR_VENDOR_APP_CPT !== '') {
+			return sanitize_key((string) BVMGR_VENDOR_APP_CPT);
 		}
 
 		if (post_type_exists('vms_vendor_application')) {
@@ -17,8 +17,8 @@ if (!function_exists('vms_admin_ui_vendor_application_post_type')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_registered_page_url')) {
-	function vms_admin_ui_registered_page_url(string $slug): string
+if (!function_exists('bvmgr_admin_ui_registered_page_url')) {
+	function bvmgr_admin_ui_registered_page_url(string $slug): string
 	{
 		if (!function_exists('menu_page_url')) {
 			return '';
@@ -33,11 +33,11 @@ if (!function_exists('vms_admin_ui_registered_page_url')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_meta_ads_urls')) {
+if (!function_exists('bvmgr_admin_ui_meta_ads_urls')) {
 	/**
 	 * @return array<string,string>
 	 */
-	function vms_admin_ui_meta_ads_urls(string $fallback_url): array
+	function bvmgr_admin_ui_meta_ads_urls(string $fallback_url): array
 	{
 		$urls = array(
 			'builder' => add_query_arg(array('section' => 'meta-ads-builder'), $fallback_url),
@@ -56,7 +56,7 @@ if (!function_exists('vms_admin_ui_meta_ads_urls')) {
 		);
 
 		foreach ($slugs as $key => $slug) {
-			$registered = vms_admin_ui_registered_page_url($slug);
+			$registered = bvmgr_admin_ui_registered_page_url($slug);
 			if ($registered !== '') {
 				$urls[$key] = $registered;
 			}
@@ -66,20 +66,20 @@ if (!function_exists('vms_admin_ui_meta_ads_urls')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_registered_or_page_url')) {
-	function vms_admin_ui_registered_or_page_url(string $registered_slug, string $fallback_slug): string
+if (!function_exists('bvmgr_admin_ui_registered_or_page_url')) {
+	function bvmgr_admin_ui_registered_or_page_url(string $registered_slug, string $fallback_slug): string
 	{
-		$registered = vms_admin_ui_registered_page_url($registered_slug);
+		$registered = bvmgr_admin_ui_registered_page_url($registered_slug);
 		if ($registered !== '') {
 			return $registered;
 		}
 
-		return vms_admin_ui_page_url($fallback_slug);
+		return bvmgr_admin_ui_page_url($fallback_slug);
 	}
 }
 
-if (!function_exists('vms_admin_ui_data_tools_capability')) {
-	function vms_admin_ui_data_tools_capability(): string
+if (!function_exists('bvmgr_admin_ui_data_tools_capability')) {
+	function bvmgr_admin_ui_data_tools_capability(): string
 	{
 		if (defined('VMS_CAP_MANAGE_DATA_TOOLS') && is_string(VMS_CAP_MANAGE_DATA_TOOLS) && VMS_CAP_MANAGE_DATA_TOOLS !== '') {
 			return (string) VMS_CAP_MANAGE_DATA_TOOLS;
@@ -93,17 +93,17 @@ if (!function_exists('vms_admin_ui_data_tools_capability')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_current_user_can_data_tools')) {
-	function vms_admin_ui_current_user_can_data_tools(): bool
+if (!function_exists('bvmgr_admin_ui_current_user_can_data_tools')) {
+	function bvmgr_admin_ui_current_user_can_data_tools(): bool
 	{
-		return current_user_can(vms_admin_ui_data_tools_capability()) || current_user_can('manage_options');
+		return current_user_can(bvmgr_admin_ui_data_tools_capability()) || current_user_can('manage_options');
 	}
 }
 
-if (!function_exists('vms_admin_ui_ops_capability')) {
-	function vms_admin_ui_ops_capability(): string
+if (!function_exists('bvmgr_admin_ui_ops_capability')) {
+	function bvmgr_admin_ui_ops_capability(): string
 	{
-		$cap = vms_admin_ui_data_tools_capability();
+		$cap = bvmgr_admin_ui_data_tools_capability();
 		$cap = apply_filters('vms_admin_ui_ops_capability', $cap);
 		if (!is_string($cap) || $cap === '') {
 			$cap = 'manage_options';
@@ -112,82 +112,82 @@ if (!function_exists('vms_admin_ui_ops_capability')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_current_user_can_ops')) {
-	function vms_admin_ui_current_user_can_ops(): bool
+if (!function_exists('bvmgr_admin_ui_current_user_can_ops')) {
+	function bvmgr_admin_ui_current_user_can_ops(): bool
 	{
-		return current_user_can(vms_admin_ui_ops_capability()) || current_user_can('manage_options');
+		return current_user_can(bvmgr_admin_ui_ops_capability()) || current_user_can('manage_options');
 	}
 }
 
-if (!function_exists('vms_admin_ui_nav_clusters')) {
+if (!function_exists('bvmgr_admin_ui_nav_clusters')) {
 	/**
 	 * @return array<string,array<string,mixed>>
 	 */
-	function vms_admin_ui_nav_clusters(): array
+	function bvmgr_admin_ui_nav_clusters(): array
 	{
-		$vendor_app_pt = vms_admin_ui_vendor_application_post_type();
+		$vendor_app_pt = bvmgr_admin_ui_vendor_application_post_type();
 		$rating_url = post_type_exists('vms_rating')
-			? vms_admin_ui_post_type_url('vms_rating')
-			: vms_admin_ui_post_type_url('vms_vendor');
+			? bvmgr_admin_ui_post_type_url('vms_rating')
+			: bvmgr_admin_ui_post_type_url('vms_vendor');
 		$vendor_app_url = post_type_exists($vendor_app_pt)
-			? vms_admin_ui_post_type_url($vendor_app_pt)
-			: vms_admin_ui_post_type_url('vms_vendor');
-		$planning_landing = vms_admin_ui_get_planning_landing_url();
-		$marketing_landing = vms_admin_ui_page_url('vms-marketing-social');
-		$meta_ads_urls = vms_admin_ui_meta_ads_urls($marketing_landing);
+			? bvmgr_admin_ui_post_type_url($vendor_app_pt)
+			: bvmgr_admin_ui_post_type_url('vms_vendor');
+		$planning_landing = bvmgr_admin_ui_get_planning_landing_url();
+		$marketing_landing = bvmgr_admin_ui_page_url('vms-marketing-social');
+		$meta_ads_urls = bvmgr_admin_ui_meta_ads_urls($marketing_landing);
 		$ops_console_url = function_exists('vms_ops_admin_render_settings_page')
 			? admin_url('admin.php?page=vms-ops-console')
-			: vms_admin_ui_registered_or_page_url('vms-ops-console', 'vms-ops-console-hub');
-		$teams_url = vms_admin_ui_registered_or_page_url('vms-ops-console-teams', 'vms-teams');
-		$alert_presets_url = vms_admin_ui_registered_or_page_url('vms-ops-console-presets', 'vms-alert-presets');
+			: bvmgr_admin_ui_registered_or_page_url('vms-ops-console', 'vms-ops-console-hub');
+		$teams_url = bvmgr_admin_ui_registered_or_page_url('vms-ops-console-teams', 'vms-teams');
+		$alert_presets_url = bvmgr_admin_ui_registered_or_page_url('vms-ops-console-presets', 'vms-alert-presets');
 
 		$clusters = array(
 			'dashboard' => array(
 				'label' => 'Dashboard',
-				'url'   => vms_admin_ui_page_url('vms-dashboard'),
+				'url'   => bvmgr_admin_ui_page_url('vms-dashboard'),
 				'items' => array(
-					array('label' => 'Dashboard', 'url' => vms_admin_ui_page_url('vms-dashboard')),
-					array('label' => 'Approvals', 'url' => vms_admin_ui_page_url('vms-approvals')),
-					array('label' => 'Dashboard: Operations', 'url' => vms_admin_ui_page_url('vms-dashboard-operations')),
-					array('label' => 'Dashboard: Finance', 'url' => vms_admin_ui_page_url('vms-dashboard-finance')),
-					array('label' => 'Dashboard: Onboarding & Health', 'url' => vms_admin_ui_page_url('vms-dashboard-health')),
-					array('label' => 'Budget Calculator', 'url' => vms_admin_ui_page_url('vms-budget-calculator')),
-					array('label' => 'Due Dates', 'url' => vms_admin_ui_page_url('vms-due-dates')),
+					array('label' => 'Dashboard', 'url' => bvmgr_admin_ui_page_url('vms-dashboard')),
+					array('label' => 'Approvals', 'url' => bvmgr_admin_ui_page_url('vms-approvals')),
+					array('label' => 'Dashboard: Operations', 'url' => bvmgr_admin_ui_page_url('vms-dashboard-operations')),
+					array('label' => 'Dashboard: Finance', 'url' => bvmgr_admin_ui_page_url('vms-dashboard-finance')),
+					array('label' => 'Dashboard: Onboarding & Health', 'url' => bvmgr_admin_ui_page_url('vms-dashboard-health')),
+					array('label' => 'Budget Calculator', 'url' => bvmgr_admin_ui_page_url('vms-budget-calculator')),
+					array('label' => 'Due Dates', 'url' => bvmgr_admin_ui_page_url('vms-due-dates')),
 				),
 			),
 			'planning' => array(
 				'label' => 'Planning',
 				'url'   => $planning_landing,
 				'items' => array(
-					array('label' => 'Schedule', 'url' => vms_admin_ui_page_url('vms-schedule')),
-					array('label' => 'Event Plans', 'url' => vms_admin_ui_post_type_url('vms_event_plan')),
-					array('label' => 'Guest Passes', 'url' => vms_admin_ui_page_url('vms-passes')),
-					array('label' => 'Season Dates', 'url' => vms_admin_ui_page_url('vms-season-dates')),
-					array('label' => 'Holidays', 'url' => vms_admin_ui_page_url('vms-holidays')),
+					array('label' => 'Schedule', 'url' => bvmgr_admin_ui_page_url('vms-schedule')),
+					array('label' => 'Event Plans', 'url' => bvmgr_admin_ui_post_type_url('vms_event_plan')),
+					array('label' => 'Guest Passes', 'url' => bvmgr_admin_ui_page_url('vms-passes')),
+					array('label' => 'Season Dates', 'url' => bvmgr_admin_ui_page_url('vms-season-dates')),
+					array('label' => 'Holidays', 'url' => bvmgr_admin_ui_page_url('vms-holidays')),
 				),
 			),
 			'vendors_staff' => array(
 				'label' => 'Vendors & Staff',
-				'url'   => vms_admin_ui_page_url('vms-vendor-command-center'),
+				'url'   => bvmgr_admin_ui_page_url('vms-vendor-command-center'),
 				'items' => array(
-					array('label' => 'Vendor Command Center', 'url' => vms_admin_ui_page_url('vms-vendor-command-center')),
-					array('label' => 'Vendor Availability', 'url' => vms_admin_ui_page_url('vms-vendor-availability')),
-					array('label' => 'Vendors', 'url' => vms_admin_ui_post_type_url('vms_vendor')),
+					array('label' => 'Vendor Command Center', 'url' => bvmgr_admin_ui_page_url('vms-vendor-command-center')),
+					array('label' => 'Vendor Availability', 'url' => bvmgr_admin_ui_page_url('vms-vendor-availability')),
+					array('label' => 'Vendors', 'url' => bvmgr_admin_ui_post_type_url('vms_vendor')),
 					array('label' => 'Vendor Types', 'url' => add_query_arg(array('taxonomy' => 'vms_vendor_type', 'post_type' => 'vms_vendor'), admin_url('edit-tags.php'))),
 					array('label' => 'Vendor Categories', 'url' => add_query_arg(array('taxonomy' => 'vms_vendor_category', 'post_type' => 'vms_vendor'), admin_url('edit-tags.php'))),
-					array('label' => 'Staff', 'url' => vms_admin_ui_post_type_url('vms_staff')),
-					array('label' => 'Staff Tasks', 'url' => vms_admin_ui_page_url('vms-tasks')),
-					array('label' => 'Task Templates', 'url' => vms_admin_ui_page_url('vms-task-templates')),
-					array('label' => 'Checklist Templates', 'url' => vms_admin_ui_page_url('vms-checklist-templates')),
-					array('label' => 'Task Settings', 'url' => vms_admin_ui_page_url('vms-task-settings')),
-					array('label' => 'My Tasks', 'url' => vms_admin_ui_page_url('vms-my-tasks')),
-					array('label' => 'Comp Packages', 'url' => vms_admin_ui_post_type_url('vms_comp_package')),
+					array('label' => 'Staff', 'url' => bvmgr_admin_ui_post_type_url('vms_staff')),
+					array('label' => 'Staff Tasks', 'url' => bvmgr_admin_ui_page_url('vms-tasks')),
+					array('label' => 'Task Templates', 'url' => bvmgr_admin_ui_page_url('vms-task-templates')),
+					array('label' => 'Checklist Templates', 'url' => bvmgr_admin_ui_page_url('vms-checklist-templates')),
+					array('label' => 'Task Settings', 'url' => bvmgr_admin_ui_page_url('vms-task-settings')),
+					array('label' => 'My Tasks', 'url' => bvmgr_admin_ui_page_url('vms-my-tasks')),
+					array('label' => 'Comp Packages', 'url' => bvmgr_admin_ui_post_type_url('vms_comp_package')),
 					array('label' => 'Ratings', 'url' => $rating_url),
 					array('label' => 'Vendor Applications', 'url' => $vendor_app_url),
-					array('label' => 'Eligibility Approvals', 'url' => vms_admin_ui_page_url('vms-verifications')),
+					array('label' => 'Eligibility Approvals', 'url' => bvmgr_admin_ui_page_url('vms-verifications')),
 					array('label' => 'Staff Roles', 'url' => add_query_arg(array('taxonomy' => 'vms_staff_role', 'post_type' => 'vms_staff'), admin_url('edit-tags.php'))),
-					array('label' => 'Staffing Templates', 'url' => vms_admin_ui_page_url('vms-staffing-templates')),
-					array('label' => 'Staffing Rollups', 'url' => vms_admin_ui_page_url('vms-staffing-rollups')),
+					array('label' => 'Staffing Templates', 'url' => bvmgr_admin_ui_page_url('vms-staffing-templates')),
+					array('label' => 'Staffing Rollups', 'url' => bvmgr_admin_ui_page_url('vms-staffing-rollups')),
 					array('label' => 'Teams', 'url' => $teams_url),
 					array('label' => 'Alert Presets', 'url' => $alert_presets_url),
 				),
@@ -196,8 +196,8 @@ if (!function_exists('vms_admin_ui_nav_clusters')) {
 				'label' => 'Marketing & Social',
 				'url'   => $marketing_landing,
 				'items' => array(
-					array('label' => 'Social Sharing', 'url' => vms_admin_ui_page_url('vms-social-sharing')),
-					array('label' => 'Email Follow-Ups', 'url' => vms_admin_ui_page_url('vms-email-followups')),
+					array('label' => 'Social Sharing', 'url' => bvmgr_admin_ui_page_url('vms-social-sharing')),
+					array('label' => 'Email Follow-Ups', 'url' => bvmgr_admin_ui_page_url('vms-email-followups')),
 					array('label' => 'Meta Ads Builder', 'url' => $meta_ads_urls['builder']),
 					array('label' => 'Promotable Events', 'url' => $meta_ads_urls['promote']),
 					array('label' => 'Meta Ads Performance', 'url' => $meta_ads_urls['performance']),
@@ -207,40 +207,40 @@ if (!function_exists('vms_admin_ui_nav_clusters')) {
 			),
 			'venues' => array(
 				'label' => 'Venues',
-				'url'   => vms_admin_ui_post_type_url('vms_venue'),
+				'url'   => bvmgr_admin_ui_post_type_url('vms_venue'),
 				'items' => array(
-					array('label' => 'Venues', 'url' => vms_admin_ui_post_type_url('vms_venue')),
-					array('label' => 'Integrity: Venue Links', 'url' => vms_admin_ui_page_url('vms-integrity-venue-links')),
-					array('label' => 'Integrity: Calendar Links', 'url' => vms_admin_ui_page_url('vms-integrity-calendar-links')),
-					array('label' => 'Guided Tours', 'url' => vms_admin_ui_page_url('vms-guided-tours')),
+					array('label' => 'Venues', 'url' => bvmgr_admin_ui_post_type_url('vms_venue')),
+					array('label' => 'Integrity: Venue Links', 'url' => bvmgr_admin_ui_page_url('vms-integrity-venue-links')),
+					array('label' => 'Integrity: Calendar Links', 'url' => bvmgr_admin_ui_page_url('vms-integrity-calendar-links')),
+					array('label' => 'Guided Tours', 'url' => bvmgr_admin_ui_page_url('vms-guided-tours')),
 				),
 			),
 			'settings' => array(
 				'label' => 'Settings',
-				'url'   => vms_admin_ui_page_url('vms-settings'),
+				'url'   => bvmgr_admin_ui_page_url('vms-settings'),
 				'items' => array(
-					array('label' => 'Settings', 'url' => vms_admin_ui_page_url('vms-settings')),
-					array('label' => 'Guided Tours', 'url' => vms_admin_ui_page_url('vms-guided-tours')),
-					array('label' => 'Status Notices', 'url' => vms_admin_ui_page_url('vms-status-notices')),
-					array('label' => 'Import Event Plans (CSV)', 'url' => vms_admin_ui_page_url('vms-import-event-plans')),
-					array('label' => 'Reference: Keys + Identifiers', 'url' => vms_admin_ui_page_url('vms-reference-keys-map')),
-					array('label' => 'Continuity Binder', 'url' => vms_admin_ui_page_url('vms-continuity-binder')),
-					array('label' => 'Docs', 'url' => vms_admin_ui_page_url('vms-docs')),
+					array('label' => 'Settings', 'url' => bvmgr_admin_ui_page_url('vms-settings')),
+					array('label' => 'Guided Tours', 'url' => bvmgr_admin_ui_page_url('vms-guided-tours')),
+					array('label' => 'Status Notices', 'url' => bvmgr_admin_ui_page_url('vms-status-notices')),
+					array('label' => 'Import Event Plans (CSV)', 'url' => bvmgr_admin_ui_page_url('vms-import-event-plans')),
+					array('label' => 'Reference: Keys + Identifiers', 'url' => bvmgr_admin_ui_page_url('vms-reference-keys-map')),
+					array('label' => 'Continuity Binder', 'url' => bvmgr_admin_ui_page_url('vms-continuity-binder')),
+					array('label' => 'Docs', 'url' => bvmgr_admin_ui_page_url('vms-docs')),
 				),
 			),
 			'tools' => array(
 				'label' => 'Tools',
-				'url'   => vms_admin_ui_page_url('vms-admin-pages'),
+				'url'   => bvmgr_admin_ui_page_url('vms-admin-pages'),
 				'items' => array(
-					array('label' => 'Data Tools', 'url' => vms_admin_ui_page_url('vms-data-tools')),
-					array('label' => 'Ticket Integrity', 'url' => vms_admin_ui_page_url('vms-ticket-integrity')),
-					array('label' => 'VMS Ops Console', 'url' => $ops_console_url),
+					array('label' => 'Data Tools', 'url' => bvmgr_admin_ui_page_url('vms-data-tools')),
+					array('label' => 'Ticket Integrity', 'url' => bvmgr_admin_ui_page_url('vms-ticket-integrity')),
+					array('label' => 'Ops Console', 'url' => $ops_console_url),
 				),
 			),
 		);
 
-		if (function_exists('vms_admin_menu_apply_registry_to_nav_clusters')) {
-			$clusters = vms_admin_menu_apply_registry_to_nav_clusters($clusters);
+		if (function_exists('bvmgr_admin_menu_apply_registry_to_nav_clusters')) {
+			$clusters = bvmgr_admin_menu_apply_registry_to_nav_clusters($clusters);
 		}
 
 		/**
@@ -287,9 +287,9 @@ if (!function_exists('vms_admin_ui_nav_clusters')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_render_top_nav')) {
-	if (!function_exists('vms_admin_ui_nav_cluster_icon_class')) {
-		function vms_admin_ui_nav_cluster_icon_class(string $cluster_key): string
+if (!function_exists('bvmgr_admin_ui_render_top_nav')) {
+	if (!function_exists('bvmgr_admin_ui_nav_cluster_icon_class')) {
+		function bvmgr_admin_ui_nav_cluster_icon_class(string $cluster_key): string
 		{
 			$map = array(
 				'dashboard' => 'dashicons-chart-pie',
@@ -308,7 +308,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 	/**
 	 * @param array<string,string> $current
 	 */
-	function vms_admin_ui_nav_item_is_current(array $item, array $current): bool
+	function bvmgr_admin_ui_nav_item_is_current(array $item, array $current): bool
 	{
 		$url = isset($item['url']) ? (string) $item['url'] : '';
 		if ($url === '') {
@@ -378,15 +378,15 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 		return true;
 	}
 
-		function vms_admin_ui_render_top_nav(): void
+		function bvmgr_admin_ui_render_top_nav(): void
 		{
-			$clusters = vms_admin_ui_nav_clusters();
-			$active = vms_admin_ui_active_cluster();
-		$current_page = vms_admin_ui_get_page_slug();
-		$current_post_type = vms_admin_ui_get_post_type();
-		$current_taxonomy = sanitize_key(vms_admin_ui_query_arg('taxonomy'));
-		$current_tab = sanitize_key(vms_admin_ui_query_arg('tab'));
-		$current_section = sanitize_key(vms_admin_ui_query_arg('section'));
+			$clusters = bvmgr_admin_ui_nav_clusters();
+			$active = bvmgr_admin_ui_active_cluster();
+		$current_page = bvmgr_admin_ui_get_page_slug();
+		$current_post_type = bvmgr_admin_ui_get_post_type();
+		$current_taxonomy = sanitize_key(bvmgr_admin_ui_query_arg('taxonomy'));
+		$current_tab = sanitize_key(bvmgr_admin_ui_query_arg('tab'));
+		$current_section = sanitize_key(bvmgr_admin_ui_query_arg('section'));
 
 		global $pagenow;
 		$current_context = array(
@@ -402,7 +402,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 			foreach ($clusters as $key => $cluster) {
 				$items = isset($cluster['items']) && is_array($cluster['items']) ? $cluster['items'] : array();
 				foreach ($items as $item) {
-					if (vms_admin_ui_nav_item_is_current($item, $current_context)) {
+					if (bvmgr_admin_ui_nav_item_is_current($item, $current_context)) {
 						$active = $key;
 						break 2;
 					}
@@ -415,7 +415,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 			$active_cluster = (string) $active;
 		}
 
-		echo '<nav class="vms-admin-topnav" aria-label="VMS top navigation"';
+		echo '<nav class="vms-admin-topnav" aria-label="Backstage Venue Manager top navigation"';
 		if ($active_cluster !== '') {
 			echo ' data-vms-cluster="' . esc_attr($active_cluster) . '"';
 		}
@@ -425,7 +425,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 			$label = isset($cluster['label']) ? (string) $cluster['label'] : '';
 			$url = isset($cluster['url']) ? (string) $cluster['url'] : '#';
 			$items = isset($cluster['items']) && is_array($cluster['items']) ? $cluster['items'] : array();
-			$icon_class = vms_admin_ui_nav_cluster_icon_class((string) $key);
+			$icon_class = bvmgr_admin_ui_nav_cluster_icon_class((string) $key);
 			$item_class = 'vms-admin-topnav__primary';
 			$is_active = ($key === $active);
 			if ($is_active) {
@@ -464,7 +464,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 					$quick_label = isset($quick_item['label']) ? (string) $quick_item['label'] : '';
 					$quick_url = isset($quick_item['url']) ? (string) $quick_item['url'] : '#';
 					$quick_class = 'vms-admin-topnav__quick-link';
-					$quick_current = vms_admin_ui_nav_item_is_current($quick_item, $current_context);
+					$quick_current = bvmgr_admin_ui_nav_item_is_current($quick_item, $current_context);
 					if ($quick_current) {
 						$quick_class .= ' is-current';
 					}
@@ -490,7 +490,7 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 					$item_label = isset($item['label']) ? (string) $item['label'] : '';
 					$item_url = isset($item['url']) ? (string) $item['url'] : '#';
 					$item_class = 'vms-admin-topnav__sublink';
-					$is_current = vms_admin_ui_nav_item_is_current($item, $current_context);
+					$is_current = bvmgr_admin_ui_nav_item_is_current($item, $current_context);
 					if ($is_current) {
 						$item_class .= ' is-current';
 					}
@@ -504,29 +504,29 @@ if (!function_exists('vms_admin_ui_render_top_nav')) {
 				}
 			}
 
-			$version = defined('VMS_VERSION') ? trim((string) VMS_VERSION) : '';
+			$version = defined('BVMGR_VERSION') ? trim((string) BVMGR_VERSION) : '';
 			if ($version !== '') {
-				echo '<div class="vms-admin-topnav__build">VMS v' . esc_html($version) . '</div>';
+				echo '<div class="vms-admin-topnav__build">Backstage Venue Manager v' . esc_html($version) . '</div>';
 			}
 
 			echo '</nav>';
 		}
 	}
 
-if (!function_exists('vms_admin_ui_render_global_top_nav')) {
-	function vms_admin_ui_render_global_top_nav(): void
+if (!function_exists('bvmgr_admin_ui_render_global_top_nav')) {
+	function bvmgr_admin_ui_render_global_top_nav(): void
 	{
-		if (!vms_admin_ui_is_vms_screen()) {
+		if (!bvmgr_admin_ui_is_vms_screen()) {
 			return;
 		}
 
-		if (vms_admin_ui_is_shell_page()) {
+		if (bvmgr_admin_ui_is_shell_page()) {
 			return;
 		}
 
 		$active_cluster = '';
-		if (function_exists('vms_admin_ui_active_cluster')) {
-			$cluster = vms_admin_ui_active_cluster();
+		if (function_exists('bvmgr_admin_ui_active_cluster')) {
+			$cluster = bvmgr_admin_ui_active_cluster();
 			if (is_string($cluster) && $cluster !== '') {
 				$active_cluster = sanitize_html_class($cluster);
 			}
@@ -538,15 +538,15 @@ if (!function_exists('vms_admin_ui_render_global_top_nav')) {
 		}
 		echo '>';
 		echo '<div class="vms-admin-global-topnav">';
-		vms_admin_ui_render_top_nav();
+		bvmgr_admin_ui_render_top_nav();
 		echo '</div>';
 		echo '</div>';
 	}
 }
-add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
+add_action('all_admin_notices', 'bvmgr_admin_ui_render_global_top_nav', 100);
 
-	if (!function_exists('vms_admin_ui_register_hub_pages')) {
-	function vms_admin_ui_register_hub_pages(): void
+	if (!function_exists('bvmgr_admin_ui_register_hub_pages')) {
+	function bvmgr_admin_ui_register_hub_pages(): void
 	{
 		$capability = 'manage_options';
 		$menu_cap = 'read';
@@ -557,32 +557,32 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 			__('Marketing & Social', 'backstage-venue-manager'),
 			$capability,
 			'vms-marketing-social',
-			'vms_admin_ui_render_marketing_social_hub_page'
+			'bvmgr_admin_ui_render_marketing_social_hub_page'
 		);
 
-		if (vms_admin_ui_current_user_can_data_tools()) {
+		if (bvmgr_admin_ui_current_user_can_data_tools()) {
 			add_submenu_page(
 				'vms-dashboard',
 				__('Data Tools', 'backstage-venue-manager'),
 				__('Data Tools', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-data-tools',
-				'vms_admin_ui_render_data_tools_page'
+				'bvmgr_admin_ui_render_data_tools_page'
 			);
 		}
 
-		if (vms_admin_ui_current_user_can_ops()) {
+		if (bvmgr_admin_ui_current_user_can_ops()) {
 			$ops_slug = function_exists('vms_ops_admin_render_settings_page')
 				? 'vms-ops-console'
 				: 'vms-ops-console-hub';
 			$ops_callback = function_exists('vms_ops_admin_render_settings_page')
-				? 'vms_admin_ui_render_ops_console_settings_page'
-				: 'vms_admin_ui_render_ops_console_page';
+				? 'bvmgr_admin_ui_render_ops_console_settings_page'
+				: 'bvmgr_admin_ui_render_ops_console_page';
 
 			add_submenu_page(
 				'vms-dashboard',
-				__('VMS Ops Console', 'backstage-venue-manager'),
-				__('VMS Ops Console', 'backstage-venue-manager'),
+				__('Ops Console', 'backstage-venue-manager'),
+				__('Ops Console', 'backstage-venue-manager'),
 				$menu_cap,
 				$ops_slug,
 				$ops_callback
@@ -594,7 +594,7 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 				__('Teams', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-teams',
-				'vms_admin_ui_render_teams_page'
+				'bvmgr_admin_ui_render_teams_page'
 			);
 
 			add_submenu_page(
@@ -603,28 +603,28 @@ add_action('all_admin_notices', 'vms_admin_ui_render_global_top_nav', 100);
 				__('Alert Presets', 'backstage-venue-manager'),
 				$menu_cap,
 				'vms-alert-presets',
-				'vms_admin_ui_render_alert_presets_page'
+				'bvmgr_admin_ui_render_alert_presets_page'
 			);
 
 			// Hidden bridge route so legacy Ops hub URLs continue to resolve.
 			if (function_exists('vms_ops_admin_render_settings_page')) {
 				add_submenu_page(
 					'vms-dashboard',
-					__('VMS Ops Console Hub', 'backstage-venue-manager'),
-					__('VMS Ops Console Hub', 'backstage-venue-manager'),
+					__('Ops Console Hub', 'backstage-venue-manager'),
+					__('Ops Console Hub', 'backstage-venue-manager'),
 					$menu_cap,
 					'vms-ops-console-hub',
-					'vms_admin_ui_render_ops_console_page'
+					'bvmgr_admin_ui_render_ops_console_page'
 				);
 			}
 		}
 	}
 }
-add_action('admin_menu', 'vms_admin_ui_register_hub_pages', 20);
+add_action('admin_menu', 'bvmgr_admin_ui_register_hub_pages', 20);
 
 
-if (!function_exists('vms_admin_ui_compact_left_menu_hide_known_secondary')) {
-	function vms_admin_ui_compact_left_menu_hide_known_secondary(string $slug): bool
+if (!function_exists('bvmgr_admin_ui_compact_left_menu_hide_known_secondary')) {
+	function bvmgr_admin_ui_compact_left_menu_hide_known_secondary(string $slug): bool
 	{
 		$known_secondary = array(
 			'vms-dashboard-operations',
@@ -679,8 +679,8 @@ if (!function_exists('vms_admin_ui_compact_left_menu_hide_known_secondary')) {
 			$known_secondary = array();
 		}
 
-		if (function_exists('vms_admin_menu_left_menu_visible_slugs')) {
-			$registry_visible = vms_admin_menu_left_menu_visible_slugs();
+		if (function_exists('bvmgr_admin_menu_left_menu_visible_slugs')) {
+			$registry_visible = bvmgr_admin_menu_left_menu_visible_slugs();
 			if (in_array($slug, $registry_visible, true)) {
 				return false;
 			}
@@ -690,7 +690,7 @@ if (!function_exists('vms_admin_ui_compact_left_menu_hide_known_secondary')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_default_force_visible_secondary_slugs')) {
+if (!function_exists('bvmgr_admin_ui_default_force_visible_secondary_slugs')) {
 	/**
 	 * Compact-menu safety valve.
 	 *
@@ -699,15 +699,15 @@ if (!function_exists('vms_admin_ui_default_force_visible_secondary_slugs')) {
 	 * directory metadata for discovery; only section-level menu changes should
 	 * use the vms_admin_menu_left_rail_specs filter.
 	 */
-	function vms_admin_ui_default_force_visible_secondary_slugs(array $slugs): array
+	function bvmgr_admin_ui_default_force_visible_secondary_slugs(array $slugs): array
 	{
 		return array_values(array_unique(array_filter(array_map('strval', $slugs))));
 	}
 }
-add_filter('vms_admin_ui_compact_left_menu_force_visible_secondary_slugs', 'vms_admin_ui_default_force_visible_secondary_slugs', 5);
+add_filter('vms_admin_ui_compact_left_menu_force_visible_secondary_slugs', 'bvmgr_admin_ui_default_force_visible_secondary_slugs', 5);
 
-if (!function_exists('vms_admin_ui_menu_item_label_text')) {
-	function vms_admin_ui_menu_item_label_text($label): string
+if (!function_exists('bvmgr_admin_ui_menu_item_label_text')) {
+	function bvmgr_admin_ui_menu_item_label_text($label): string
 	{
 		$label = wp_strip_all_tags((string) $label);
 		$label = preg_replace('/\s+/', ' ', $label);
@@ -715,15 +715,15 @@ if (!function_exists('vms_admin_ui_menu_item_label_text')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_grouped_left_menu_cluster_for_page')) {
+if (!function_exists('bvmgr_admin_ui_grouped_left_menu_cluster_for_page')) {
 	/**
 	 * @param array<string,mixed> $page
 	 */
-	function vms_admin_ui_grouped_left_menu_cluster_for_page(array $page): string
+	function bvmgr_admin_ui_grouped_left_menu_cluster_for_page(array $page): string
 	{
 		$section = isset($page['section']) ? sanitize_key((string) $page['section']) : '';
-		if ($section !== '' && function_exists('vms_admin_menu_cluster_for_section')) {
-			$cluster = vms_admin_menu_cluster_for_section($section);
+		if ($section !== '' && function_exists('bvmgr_admin_menu_cluster_for_section')) {
+			$cluster = bvmgr_admin_menu_cluster_for_section($section);
 			if (is_string($cluster) && $cluster !== '') {
 				return sanitize_key($cluster);
 			}
@@ -731,9 +731,9 @@ if (!function_exists('vms_admin_ui_grouped_left_menu_cluster_for_page')) {
 
 		$slug = isset($page['slug']) ? (string) $page['slug'] : '';
 		$label = isset($page['label']) ? (string) $page['label'] : '';
-		if (function_exists('vms_admin_menu_guess_section') && function_exists('vms_admin_menu_cluster_for_section')) {
-			$guess = vms_admin_menu_guess_section($slug, $label);
-			$cluster = vms_admin_menu_cluster_for_section($guess);
+		if (function_exists('bvmgr_admin_menu_guess_section') && function_exists('bvmgr_admin_menu_cluster_for_section')) {
+			$guess = bvmgr_admin_menu_guess_section($slug, $label);
+			$cluster = bvmgr_admin_menu_cluster_for_section($guess);
 			if (is_string($cluster) && $cluster !== '') {
 				return sanitize_key($cluster);
 			}
@@ -743,16 +743,16 @@ if (!function_exists('vms_admin_ui_grouped_left_menu_cluster_for_page')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_grouped_left_menu_default_clusters')) {
+if (!function_exists('bvmgr_admin_ui_grouped_left_menu_default_clusters')) {
 	/**
 	 * @return array<string,array<string,mixed>>
 	 */
-	function vms_admin_ui_grouped_left_menu_default_clusters(): array
+	function bvmgr_admin_ui_grouped_left_menu_default_clusters(): array
 	{
 		$clusters = array();
 
-		if (function_exists('vms_admin_menu_left_rail_specs')) {
-			foreach (vms_admin_menu_left_rail_specs() as $spec) {
+		if (function_exists('bvmgr_admin_menu_left_rail_specs')) {
+			foreach (bvmgr_admin_menu_left_rail_specs() as $spec) {
 				if (!is_array($spec)) {
 					continue;
 				}
@@ -791,17 +791,17 @@ if (!function_exists('vms_admin_ui_grouped_left_menu_default_clusters')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_compact_left_menu')) {
+if (!function_exists('bvmgr_admin_ui_compact_left_menu')) {
 	/**
 	 * Keep the WordPress VMS flyout short.
 	 *
 	 * The left rail is only a launcher list for the primary VMS categories.
 	 * Registered pages/modules still belong to their declared sections, but
 	 * those detailed lists live inside VMS top navigation, section hubs, and
-	 * All VMS Pages. This prevents the WP sidebar from becoming a full module
+	 * All Backstage Venue Manager Pages. This prevents the WP sidebar from becoming a full module
 	 * directory again.
 	 */
-	function vms_admin_ui_compact_left_menu(): void
+	function bvmgr_admin_ui_compact_left_menu(): void
 	{
 		global $submenu;
 
@@ -815,11 +815,11 @@ if (!function_exists('vms_admin_ui_compact_left_menu')) {
 		}
 
 		if (
-			!isset($GLOBALS['vms_admin_menu_all_submenu_items'])
-			|| !is_array($GLOBALS['vms_admin_menu_all_submenu_items'])
-			|| count($existing_items) > count($GLOBALS['vms_admin_menu_all_submenu_items'])
+			!isset($GLOBALS['bvmgr_admin_menu_all_submenu_items'])
+			|| !is_array($GLOBALS['bvmgr_admin_menu_all_submenu_items'])
+			|| count($existing_items) > count($GLOBALS['bvmgr_admin_menu_all_submenu_items'])
 		) {
-			$GLOBALS['vms_admin_menu_all_submenu_items'] = $existing_items;
+			$GLOBALS['bvmgr_admin_menu_all_submenu_items'] = $existing_items;
 		}
 
 		$items_by_slug = array();
@@ -836,7 +836,7 @@ if (!function_exists('vms_admin_ui_compact_left_menu')) {
 			$items_by_slug[$slug] = $item;
 		}
 
-		$specs = function_exists('vms_admin_menu_left_rail_specs') ? vms_admin_menu_left_rail_specs() : array();
+		$specs = function_exists('bvmgr_admin_menu_left_rail_specs') ? bvmgr_admin_menu_left_rail_specs() : array();
 		if (!is_array($specs) || empty($specs)) {
 			return;
 		}
@@ -849,7 +849,7 @@ if (!function_exists('vms_admin_ui_compact_left_menu')) {
 				continue;
 			}
 
-			$label = isset($spec['label']) ? vms_admin_ui_menu_item_label_text($spec['label']) : '';
+			$label = isset($spec['label']) ? bvmgr_admin_ui_menu_item_label_text($spec['label']) : '';
 			if ($label === '') {
 				$label = isset($spec['section']) ? ucwords(str_replace('_', ' ', (string) $spec['section'])) : '';
 			}
@@ -904,22 +904,22 @@ if (!function_exists('vms_admin_ui_compact_left_menu')) {
 // admin_menu removes/rewrites submenu pages too early and can make valid
 // direct URLs look unauthorized. admin_head fires before the left admin menu
 // is rendered, so the visible flyout can be rebuilt without breaking access.
-add_action('admin_head', 'vms_admin_ui_compact_left_menu', 1);
+add_action('admin_head', 'bvmgr_admin_ui_compact_left_menu', 1);
 
-if (!function_exists('vms_admin_ui_render_compact_left_menu_styles')) {
-	function vms_admin_ui_render_compact_left_menu_styles(): void
+if (!function_exists('bvmgr_admin_ui_render_compact_left_menu_styles')) {
+	function bvmgr_admin_ui_render_compact_left_menu_styles(): void
 	{
 		return;
 	}
 }
-add_action('admin_head', 'vms_admin_ui_render_compact_left_menu_styles', 2);
+add_action('admin_head', 'bvmgr_admin_ui_render_compact_left_menu_styles', 2);
 
 
-if (!function_exists('vms_admin_ui_current_page_registry_section')) {
-	function vms_admin_ui_current_page_registry_section(): string
+if (!function_exists('bvmgr_admin_ui_current_page_registry_section')) {
+	function bvmgr_admin_ui_current_page_registry_section(): string
 	{
-		$page = vms_admin_ui_get_page_slug();
-		$post_type = vms_admin_ui_get_post_type();
+		$page = bvmgr_admin_ui_get_page_slug();
+		$post_type = bvmgr_admin_ui_get_post_type();
 
 		if ($post_type === 'vms_event_plan') {
 			return 'events_schedule';
@@ -931,8 +931,8 @@ if (!function_exists('vms_admin_ui_current_page_registry_section')) {
 			return 'venue_setup';
 		}
 
-		if ($page !== '' && function_exists('vms_admin_menu_registry')) {
-			$registry = vms_admin_menu_registry();
+		if ($page !== '' && function_exists('bvmgr_admin_menu_registry')) {
+			$registry = bvmgr_admin_menu_registry();
 			if (isset($registry[$page]['section']) && is_string($registry[$page]['section']) && $registry[$page]['section'] !== '') {
 				return sanitize_key((string) $registry[$page]['section']);
 			}
@@ -942,11 +942,11 @@ if (!function_exists('vms_admin_ui_current_page_registry_section')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_current_left_rail_slug')) {
-	function vms_admin_ui_current_left_rail_slug(): string
+if (!function_exists('bvmgr_admin_ui_current_left_rail_slug')) {
+	function bvmgr_admin_ui_current_left_rail_slug(): string
 	{
-		$current_page = vms_admin_ui_get_page_slug();
-		$current_post_type = vms_admin_ui_get_post_type();
+		$current_page = bvmgr_admin_ui_get_page_slug();
+		$current_post_type = bvmgr_admin_ui_get_post_type();
 
 		$current_menu_slug = $current_page;
 		if ($current_menu_slug === '' && $current_post_type !== '') {
@@ -970,12 +970,12 @@ if (!function_exists('vms_admin_ui_current_left_rail_slug')) {
 			return $current_menu_slug;
 		}
 
-		$section = vms_admin_ui_current_page_registry_section();
-		if ($section === '' || !function_exists('vms_admin_menu_left_rail_specs')) {
+		$section = bvmgr_admin_ui_current_page_registry_section();
+		if ($section === '' || !function_exists('bvmgr_admin_menu_left_rail_specs')) {
 			return $current_menu_slug;
 		}
 
-		foreach (vms_admin_menu_left_rail_specs() as $spec) {
+		foreach (bvmgr_admin_menu_left_rail_specs() as $spec) {
 			if (!is_array($spec)) {
 				continue;
 			}
@@ -1003,23 +1003,23 @@ if (!function_exists('vms_admin_ui_current_left_rail_slug')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_force_vms_parent_file')) {
-	function vms_admin_ui_force_vms_parent_file($parent_file)
+if (!function_exists('bvmgr_admin_ui_force_vms_parent_file')) {
+	function bvmgr_admin_ui_force_vms_parent_file($parent_file)
 	{
-		if (is_admin() && function_exists('vms_admin_ui_is_vms_screen') && vms_admin_ui_is_vms_screen()) {
+		if (is_admin() && function_exists('bvmgr_admin_ui_is_vms_screen') && bvmgr_admin_ui_is_vms_screen()) {
 			return 'vms-dashboard';
 		}
 
 		return $parent_file;
 	}
 }
-add_filter('parent_file', 'vms_admin_ui_force_vms_parent_file', 99);
+add_filter('parent_file', 'bvmgr_admin_ui_force_vms_parent_file', 99);
 
-if (!function_exists('vms_admin_ui_force_vms_submenu_file')) {
-	function vms_admin_ui_force_vms_submenu_file($submenu_file, $parent_file)
+if (!function_exists('bvmgr_admin_ui_force_vms_submenu_file')) {
+	function bvmgr_admin_ui_force_vms_submenu_file($submenu_file, $parent_file)
 	{
-		if (is_admin() && function_exists('vms_admin_ui_is_vms_screen') && vms_admin_ui_is_vms_screen()) {
-			$slug = vms_admin_ui_current_left_rail_slug();
+		if (is_admin() && function_exists('bvmgr_admin_ui_is_vms_screen') && bvmgr_admin_ui_is_vms_screen()) {
+			$slug = bvmgr_admin_ui_current_left_rail_slug();
 			if ($slug !== '') {
 				return $slug;
 			}
@@ -1028,29 +1028,29 @@ if (!function_exists('vms_admin_ui_force_vms_submenu_file')) {
 		return $submenu_file;
 	}
 }
-add_filter('submenu_file', 'vms_admin_ui_force_vms_submenu_file', 99, 2);
+add_filter('submenu_file', 'bvmgr_admin_ui_force_vms_submenu_file', 99, 2);
 
-if (!function_exists('vms_admin_ui_remove_legacy_data_tools_tools_menu')) {
-	function vms_admin_ui_remove_legacy_data_tools_tools_menu(): void
+if (!function_exists('bvmgr_admin_ui_remove_legacy_data_tools_tools_menu')) {
+	function bvmgr_admin_ui_remove_legacy_data_tools_tools_menu(): void
 	{
 		remove_submenu_page('tools.php', 'vms-data-tools');
 	}
 }
-add_action('admin_menu', 'vms_admin_ui_remove_legacy_data_tools_tools_menu', 1001);
+add_action('admin_menu', 'bvmgr_admin_ui_remove_legacy_data_tools_tools_menu', 1001);
 
-if (!function_exists('vms_admin_ui_handle_legacy_ops_console_slug')) {
-	function vms_admin_ui_handle_legacy_ops_console_slug(): void
+if (!function_exists('bvmgr_admin_ui_handle_legacy_ops_console_slug')) {
+	function bvmgr_admin_ui_handle_legacy_ops_console_slug(): void
 	{
 		if (!is_admin()) {
 			return;
 		}
 
-		$page = sanitize_key(vms_admin_ui_query_arg('page'));
+		$page = sanitize_key(bvmgr_admin_ui_query_arg('page'));
 		if ($page !== 'vms-ops-console') {
 			return;
 		}
 
-		if (!vms_admin_ui_current_user_can_ops()) {
+		if (!bvmgr_admin_ui_current_user_can_ops()) {
 			return;
 		}
 
@@ -1059,39 +1059,39 @@ if (!function_exists('vms_admin_ui_handle_legacy_ops_console_slug')) {
 			return;
 		}
 
-		$target = vms_admin_ui_page_url('vms-ops-console-hub');
+		$target = bvmgr_admin_ui_page_url('vms-ops-console-hub');
 		wp_safe_redirect($target);
 		exit;
 	}
 }
-add_action('admin_init', 'vms_admin_ui_handle_legacy_ops_console_slug', 5);
+add_action('admin_init', 'bvmgr_admin_ui_handle_legacy_ops_console_slug', 5);
 
-if (!function_exists('vms_admin_ui_handle_ops_console_hub_alias')) {
-	function vms_admin_ui_handle_ops_console_hub_alias(): void
+if (!function_exists('bvmgr_admin_ui_handle_ops_console_hub_alias')) {
+	function bvmgr_admin_ui_handle_ops_console_hub_alias(): void
 	{
-		if (!is_admin() || !vms_admin_ui_current_user_can_ops()) {
+		if (!is_admin() || !bvmgr_admin_ui_current_user_can_ops()) {
 			return;
 		}
 
-		$page = sanitize_key(vms_admin_ui_query_arg('page'));
+		$page = sanitize_key(bvmgr_admin_ui_query_arg('page'));
 		if ($page !== 'vms-ops-console-hub' || !function_exists('vms_ops_admin_render_settings_page')) {
 			return;
 		}
 
-		wp_safe_redirect(vms_admin_ui_page_url('vms-ops-console'));
+		wp_safe_redirect(bvmgr_admin_ui_page_url('vms-ops-console'));
 		exit;
 	}
 }
-add_action('admin_init', 'vms_admin_ui_handle_ops_console_hub_alias', 6);
+add_action('admin_init', 'bvmgr_admin_ui_handle_ops_console_hub_alias', 6);
 
-if (!function_exists('vms_admin_ui_maybe_redirect_ops_alias_pages')) {
-	function vms_admin_ui_maybe_redirect_ops_alias_pages(): void
+if (!function_exists('bvmgr_admin_ui_maybe_redirect_ops_alias_pages')) {
+	function bvmgr_admin_ui_maybe_redirect_ops_alias_pages(): void
 	{
-		if (!is_admin() || !vms_admin_ui_current_user_can_ops()) {
+		if (!is_admin() || !bvmgr_admin_ui_current_user_can_ops()) {
 			return;
 		}
 
-		$page = sanitize_key(vms_admin_ui_query_arg('page'));
+		$page = sanitize_key(bvmgr_admin_ui_query_arg('page'));
 		if ($page === '') {
 			return;
 		}
@@ -1105,9 +1105,9 @@ if (!function_exists('vms_admin_ui_maybe_redirect_ops_alias_pages')) {
 		}
 
 		$target_slug = (string) $aliases[$page];
-		$target = vms_admin_ui_registered_page_url($target_slug);
+		$target = bvmgr_admin_ui_registered_page_url($target_slug);
 		if ($target === '') {
-			$target = vms_admin_ui_page_url($target_slug);
+			$target = bvmgr_admin_ui_page_url($target_slug);
 		}
 		if ($target === '') {
 			return;
@@ -1117,17 +1117,17 @@ if (!function_exists('vms_admin_ui_maybe_redirect_ops_alias_pages')) {
 		exit;
 	}
 }
-add_action('admin_init', 'vms_admin_ui_maybe_redirect_ops_alias_pages', 6);
+add_action('admin_init', 'bvmgr_admin_ui_maybe_redirect_ops_alias_pages', 6);
 
-if (!function_exists('vms_admin_ui_render_marketing_social_hub_page')) {
-	function vms_admin_ui_render_marketing_social_hub_page(): void
+if (!function_exists('bvmgr_admin_ui_render_marketing_social_hub_page')) {
+	function bvmgr_admin_ui_render_marketing_social_hub_page(): void
 	{
 		if (!current_user_can('manage_options')) {
 			wp_die('Insufficient permissions.');
 		}
 
-		$meta_ads_urls = vms_admin_ui_meta_ads_urls(vms_admin_ui_page_url('vms-marketing-social'));
-		$meta_ads_builder_registered = (vms_admin_ui_registered_page_url('vms-ma-ads-builder') !== '');
+		$meta_ads_urls = bvmgr_admin_ui_meta_ads_urls(bvmgr_admin_ui_page_url('vms-marketing-social'));
+		$meta_ads_builder_registered = (bvmgr_admin_ui_registered_page_url('vms-ma-ads-builder') !== '');
 
 		$render_content = static function () use ($meta_ads_urls, $meta_ads_builder_registered): void {
 			echo '<p class="vms-admin-hub-intro">Open the core marketing tools from one place.</p>';
@@ -1135,8 +1135,8 @@ if (!function_exists('vms_admin_ui_render_marketing_social_hub_page')) {
 				echo '<div class="notice notice-warning inline"><p>Meta Ads Builder screens are currently unavailable on this site. Use Social Sharing tools below, or enable the Meta Ads module.</p></div>';
 			}
 			echo '<div class="vms-admin-hub-grid">';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-social-sharing')) . '"><strong>Social Sharing</strong><span>Queue, account mapping, templates, and logs.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-email-followups')) . '"><strong>Email Follow-Ups</strong><span>Preview event-aware buyer reminders, send tests, and manage follow-up templates.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-social-sharing')) . '"><strong>Social Sharing</strong><span>Queue, account mapping, templates, and logs.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-email-followups')) . '"><strong>Email Follow-Ups</strong><span>Preview event-aware buyer reminders, send tests, and manage follow-up templates.</span></a>';
 			echo '<a class="vms-admin-hub-card" href="' . esc_url($meta_ads_urls['builder']) . '"><strong>Meta Ads Builder</strong><span>Create or edit ad build drafts and copy packs.</span></a>';
 			echo '<a class="vms-admin-hub-card" href="' . esc_url($meta_ads_urls['promote']) . '"><strong>Promotable Events</strong><span>Review upcoming plans and jump into promotion workflows.</span></a>';
 			echo '<a class="vms-admin-hub-card" href="' . esc_url($meta_ads_urls['performance']) . '"><strong>Meta Ads Performance</strong><span>Inspect ad-delivery metrics and campaign health.</span></a>';
@@ -1145,8 +1145,8 @@ if (!function_exists('vms_admin_ui_render_marketing_social_hub_page')) {
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Marketing & Social', 'backstage-venue-manager')),
 				$render_content
 			);
@@ -1159,10 +1159,10 @@ if (!function_exists('vms_admin_ui_render_marketing_social_hub_page')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_render_data_tools_page')) {
-	function vms_admin_ui_render_data_tools_page(): void
+if (!function_exists('bvmgr_admin_ui_render_data_tools_page')) {
+	function bvmgr_admin_ui_render_data_tools_page(): void
 	{
-		if (!vms_admin_ui_current_user_can_data_tools()) {
+		if (!bvmgr_admin_ui_current_user_can_data_tools()) {
 			wp_die('Insufficient permissions.');
 		}
 
@@ -1171,11 +1171,11 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 				vms_dt_render_tools_home();
 			};
 
-			if (function_exists('vms_admin_ui_render_shell')) {
-				vms_admin_ui_render_shell(
+			if (function_exists('bvmgr_admin_ui_render_shell')) {
+				bvmgr_admin_ui_render_shell(
 					array(
 						'title' => __('Data Tools', 'backstage-venue-manager'),
-						'subtitle' => __('Importers, reports, reconciliation, and maintenance tools inside the VMS admin shell.', 'backstage-venue-manager'),
+						'subtitle' => __('Importers, reports, reconciliation, and maintenance tools inside the Backstage Venue Manager admin shell.', 'backstage-venue-manager'),
 						'shell_id' => 'vms-data-tools-wrap',
 					),
 					$render_content
@@ -1190,16 +1190,16 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 		$render_content = static function (): void {
 			echo '<p class="vms-admin-hub-intro">Run integrity and operational maintenance workflows.</p>';
 			echo '<div class="vms-admin-hub-grid">';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-settings')) . '"><strong>Settings</strong><span>Global VMS settings and integrity scan controls.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-import-event-plans')) . '"><strong>Import Event Plans (CSV)</strong><span>Preview and commit VMS-only Event Plan upserts from CSV.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-integrity-venue-links')) . '"><strong>Integrity: Venue Links</strong><span>Reconcile broken Event Plan venue links.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-integrity-calendar-links')) . '"><strong>Integrity: Calendar Links</strong><span>Reconcile missing or stale calendar event links.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-guided-tours')) . '"><strong>Guided Tours</strong><span>Manage global tour defaults, per-user resets, and run tours on demand.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-settings')) . '"><strong>Settings</strong><span>Global Backstage Venue Manager settings and integrity scan controls.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-import-event-plans')) . '"><strong>Import Event Plans (CSV)</strong><span>Preview and commit VMS-only Event Plan upserts from CSV.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-integrity-venue-links')) . '"><strong>Integrity: Venue Links</strong><span>Reconcile broken Event Plan venue links.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-integrity-calendar-links')) . '"><strong>Integrity: Calendar Links</strong><span>Reconcile missing or stale calendar event links.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-guided-tours')) . '"><strong>Guided Tours</strong><span>Manage global tour defaults, per-user resets, and run tours on demand.</span></a>';
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Data Tools', 'backstage-venue-manager')),
 				$render_content
 			);
@@ -1212,10 +1212,10 @@ if (!function_exists('vms_admin_ui_render_data_tools_page')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_render_teams_page')) {
-	function vms_admin_ui_render_teams_page(): void
+if (!function_exists('bvmgr_admin_ui_render_teams_page')) {
+	function bvmgr_admin_ui_render_teams_page(): void
 	{
-		if (!vms_admin_ui_current_user_can_ops()) {
+		if (!bvmgr_admin_ui_current_user_can_ops()) {
 			wp_die('Insufficient permissions.');
 		}
 
@@ -1227,13 +1227,13 @@ if (!function_exists('vms_admin_ui_render_teams_page')) {
 		$render_content = static function (): void {
 			echo '<p class="vms-admin-hub-intro">Teams configuration is staged for a later phase.</p>';
 			echo '<div class="vms-admin-hub-grid">';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-staffing-templates')) . '"><strong>Staffing Templates</strong><span>Manage reusable staffing templates and slot structures.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-staffing-rollups')) . '"><strong>Staffing Rollups</strong><span>Review staffing readiness rollups and rebuild jobs.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-staffing-templates')) . '"><strong>Staffing Templates</strong><span>Manage reusable staffing templates and slot structures.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-staffing-rollups')) . '"><strong>Staffing Rollups</strong><span>Review staffing readiness rollups and rebuild jobs.</span></a>';
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Teams', 'backstage-venue-manager')),
 				$render_content
 			);
@@ -1246,10 +1246,10 @@ if (!function_exists('vms_admin_ui_render_teams_page')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_render_alert_presets_page')) {
-	function vms_admin_ui_render_alert_presets_page(): void
+if (!function_exists('bvmgr_admin_ui_render_alert_presets_page')) {
+	function bvmgr_admin_ui_render_alert_presets_page(): void
 	{
-		if (!vms_admin_ui_current_user_can_ops()) {
+		if (!bvmgr_admin_ui_current_user_can_ops()) {
 			wp_die('Insufficient permissions.');
 		}
 
@@ -1261,13 +1261,13 @@ if (!function_exists('vms_admin_ui_render_alert_presets_page')) {
 		$render_content = static function (): void {
 			echo '<p class="vms-admin-hub-intro">Alert Presets are staged for a later phase.</p>';
 			echo '<div class="vms-admin-hub-grid">';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-staffing-rollups')) . '"><strong>Staffing Rollups</strong><span>Use rollup rebuild and readiness diagnostics today.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-data-tools')) . '"><strong>Data Tools</strong><span>Run integrity and operational checks while presets are phased in.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-staffing-rollups')) . '"><strong>Staffing Rollups</strong><span>Use rollup rebuild and readiness diagnostics today.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-data-tools')) . '"><strong>Data Tools</strong><span>Run integrity and operational checks while presets are phased in.</span></a>';
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array('title' => __('Alert Presets', 'backstage-venue-manager')),
 				$render_content
 			);
@@ -1280,41 +1280,41 @@ if (!function_exists('vms_admin_ui_render_alert_presets_page')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_render_ops_console_page')) {
-	function vms_admin_ui_render_ops_console_page(): void
+if (!function_exists('bvmgr_admin_ui_render_ops_console_page')) {
+	function bvmgr_admin_ui_render_ops_console_page(): void
 	{
-		if (!vms_admin_ui_current_user_can_ops()) {
+		if (!bvmgr_admin_ui_current_user_can_ops()) {
 			wp_die('Insufficient permissions.');
 		}
 
 		$render_content = static function (): void {
 			echo '<p class="vms-admin-hub-intro">Operational tools and integrity workflows.</p>';
 			echo '<div class="vms-admin-hub-grid">';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-guided-tours')) . '"><strong>Guided Tours</strong><span>Manage tour defaults and launch tours directly from the registry.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-integrity-venue-links')) . '"><strong>Integrity: Venue Links</strong><span>Resolve broken Event Plan venue references.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-integrity-calendar-links')) . '"><strong>Integrity: Calendar Links</strong><span>Resolve missing or stale calendar event links.</span></a>';
-			echo '<a class="vms-admin-hub-card" href="' . esc_url(vms_admin_ui_page_url('vms-data-tools')) . '"><strong>Data Tools</strong><span>Run integrity scan and global operational checks.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-guided-tours')) . '"><strong>Guided Tours</strong><span>Manage tour defaults and launch tours directly from the registry.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-integrity-venue-links')) . '"><strong>Integrity: Venue Links</strong><span>Resolve broken Event Plan venue references.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-integrity-calendar-links')) . '"><strong>Integrity: Calendar Links</strong><span>Resolve missing or stale calendar event links.</span></a>';
+			echo '<a class="vms-admin-hub-card" href="' . esc_url(bvmgr_admin_ui_page_url('vms-data-tools')) . '"><strong>Data Tools</strong><span>Run integrity scan and global operational checks.</span></a>';
 			echo '</div>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
-				array('title' => __('VMS Ops Console', 'backstage-venue-manager')),
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
+				array('title' => __('Backstage Venue Manager Ops Console', 'backstage-venue-manager')),
 				$render_content
 			);
 			return;
 		}
 
-		echo '<div class="wrap"><h1>' . esc_html__('VMS Ops Console', 'backstage-venue-manager') . '</h1>';
+		echo '<div class="wrap"><h1>' . esc_html__('Backstage Venue Manager Ops Console', 'backstage-venue-manager') . '</h1>';
 		$render_content();
 		echo '</div>';
 	}
 }
 
-if (!function_exists('vms_admin_ui_render_ops_console_settings_page')) {
-	function vms_admin_ui_render_ops_console_settings_page(): void
+if (!function_exists('bvmgr_admin_ui_render_ops_console_settings_page')) {
+	function bvmgr_admin_ui_render_ops_console_settings_page(): void
 	{
-		if (!vms_admin_ui_current_user_can_ops()) {
+		if (!bvmgr_admin_ui_current_user_can_ops()) {
 			wp_die('Insufficient permissions.');
 		}
 
@@ -1323,6 +1323,6 @@ if (!function_exists('vms_admin_ui_render_ops_console_settings_page')) {
 			return;
 		}
 
-		vms_admin_ui_render_ops_console_page();
+		bvmgr_admin_ui_render_ops_console_page();
 	}
 }

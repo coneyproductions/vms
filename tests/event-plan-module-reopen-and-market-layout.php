@@ -4,8 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 $assert = static function (bool $condition, string $message): void {
@@ -101,8 +101,9 @@ try {
 	};
 
 	$runSave = static function (int $planId, array $overrides = array()): void {
+		$GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
 		$_POST = array_merge(array(
-			'vms_event_plan_details_nonce' => wp_create_nonce('vms_save_event_plan_details'),
+			'bvmgr_event_plan_details_nonce' => wp_create_nonce('bvmgr_save_event_plan_details'),
 			'post_ID' => $planId,
 			'original_post_status' => 'publish',
 			'vms_event_plan_action' => 'save_draft',
@@ -113,16 +114,16 @@ try {
 		$_GET = array();
 		$_REQUEST = $_POST;
 
-		$reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-		/** @var VMS_Admin_Event_Plans $admin */
+		$reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+		/** @var BVMGR_Admin_Event_Plans $admin */
 		$admin = $reflection->newInstanceWithoutConstructor();
 		$admin->save_event_plan_meta($planId, get_post($planId));
 		clean_post_cache($planId);
 	};
 
 	$getSecondaryPayload = static function (int $planId): array {
-		$reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-		/** @var VMS_Admin_Event_Plans $admin */
+		$reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+		/** @var BVMGR_Admin_Event_Plans $admin */
 		$admin = $reflection->newInstanceWithoutConstructor();
 		$method = $reflection->getMethod('get_event_plan_secondary_vendors_module_payload');
 		$method->setAccessible(true);
@@ -154,12 +155,12 @@ try {
 	update_post_meta($planId, '_vms_venue_id', 0);
 	update_post_meta($planId, '_vms_band_vendor_id', $primaryVendorId);
 
-	$assignmentMetaKey = function_exists('vms_event_plan_secondary_vendor_assignment_meta_key')
-		? (string) vms_event_plan_secondary_vendor_assignment_meta_key()
+	$assignmentMetaKey = function_exists('bvmgr_event_plan_secondary_vendor_assignment_meta_key')
+		? (string) bvmgr_event_plan_secondary_vendor_assignment_meta_key()
 		: '_vms_secondary_vendor_assignments_v1';
 
-	$saveResult = function_exists('vms_event_plan_save_secondary_vendors_module')
-		? vms_event_plan_save_secondary_vendors_module($planId, array(
+	$saveResult = function_exists('bvmgr_event_plan_save_secondary_vendors_module')
+		? bvmgr_event_plan_save_secondary_vendors_module($planId, array(
 			'vms_secondary_vendor_assignments' => array(
 				array(
 					'type_slug' => 'food_truck',
@@ -225,8 +226,8 @@ try {
 	$runSave($planId, array(
 		'vms_reopen_section_after_save' => 'staff',
 	));
-	$staffRedirect = function_exists('vms_event_plan_pull_runtime_redirect_target')
-		? (array) vms_event_plan_pull_runtime_redirect_target($planId)
+	$staffRedirect = function_exists('bvmgr_event_plan_pull_runtime_redirect_target')
+		? (array) bvmgr_event_plan_pull_runtime_redirect_target($planId)
 		: array();
 	$assert((string) ($staffRedirect['query_args']['vms_ep_load_section'] ?? '') === 'staff', 'Staff save should preserve the staff section reopen target.');
 	$assert((string) ($staffRedirect['fragment'] ?? '') === 'vms-staffing', 'Staff save should redirect back to the Staff anchor.');
@@ -244,8 +245,8 @@ try {
 		'vms_ticket_ui_overrides_save_intent' => '1',
 		'vms_ticket_ui_layout_override' => 'progressive',
 	));
-	$ticketRedirect = function_exists('vms_event_plan_pull_runtime_redirect_target')
-		? (array) vms_event_plan_pull_runtime_redirect_target($planId)
+	$ticketRedirect = function_exists('bvmgr_event_plan_pull_runtime_redirect_target')
+		? (array) bvmgr_event_plan_pull_runtime_redirect_target($planId)
 		: array();
 	$secondaryAfter = get_post_meta($planId, $assignmentMetaKey, true);
 	$assert((string) ($ticketRedirect['query_args']['vms_ep_load_section'] ?? '') === 'ticketing_v2', 'Ticket save should preserve the ticketing section reopen target.');
@@ -258,9 +259,9 @@ try {
 	$adminTicketingJs = (string) file_get_contents(dirname(__DIR__) . '/assets/admin-ticketing.js');
 	$assert(strpos($eventPlansPhp, "createGroup('');") === false, 'Event Plan PHP should no longer own the Additional Vendors create-group runtime.');
 	$assert(strpos($secondaryVendorsJs, "createGroup('');") !== false, 'Adding a vendor group should start from the compact empty state instead of auto-selecting a type.');
-	$assert(strpos($shellAssetJs, 'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;') !== false, 'Event Plan shell asset should expose the saved-section URL helper.');
-	$assert(strpos($shellAssetJs, 'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;') !== false, 'Event Plan shell asset should expose the requested-section reopen helper.');
-	$assert(strpos($secondaryVendorsJs, "window.vmsEventPlanPersistRequestedSection('secondary_vendors');") !== false, 'Additional Vendors save should persist the saved module target.');
+	$assert(strpos($shellAssetJs, 'window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION = persistRequestedSection;') !== false, 'Event Plan shell asset should expose the saved-section URL helper.');
+	$assert(strpos($shellAssetJs, 'window.BVMGR_EVENT_PLAN_REVEAL_REQUESTED_SECTION = revealRequestedSection;') !== false, 'Event Plan shell asset should expose the requested-section reopen helper.');
+	$assert(strpos($secondaryVendorsJs, "window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION('secondary_vendors');") !== false, 'Additional Vendors save should persist the saved module target.');
 	$assert(strpos($adminTicketingJs, "persistRequestedSectionTarget('ticketing_v2');") !== false, 'Ticketing saves should persist the saved module target.');
 
 	fwrite(STDOUT, "event plan module reopen + market layout regression: PASS\n");

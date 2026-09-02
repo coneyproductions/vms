@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_status_notice_parse_list')) {
-	function vms_status_notice_parse_list(string $raw): array
+if (!function_exists('bvmgr_status_notice_parse_list')) {
+	function bvmgr_status_notice_parse_list(string $raw): array
 	{
 		$raw = str_replace(array("\r\n", "\r"), "\n", $raw);
 		$parts = array_map('trim', explode("\n", $raw));
@@ -17,8 +17,8 @@ if (!function_exists('vms_status_notice_parse_list')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_parse_int_list')) {
-	function vms_status_notice_parse_int_list(string $raw): array
+if (!function_exists('bvmgr_status_notice_parse_int_list')) {
+	function bvmgr_status_notice_parse_int_list(string $raw): array
 	{
 		$raw = str_replace(array("\r\n", "\r", ';', '|'), "\n", $raw);
 		$raw = str_replace(',', "\n", $raw);
@@ -37,8 +37,8 @@ if (!function_exists('vms_status_notice_parse_int_list')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_parse_local_datetime')) {
-	function vms_status_notice_parse_local_datetime(string $raw): int
+if (!function_exists('bvmgr_status_notice_parse_local_datetime')) {
+	function bvmgr_status_notice_parse_local_datetime(string $raw): int
 	{
 		$raw = trim($raw);
 		if ($raw === '') {
@@ -55,8 +55,8 @@ if (!function_exists('vms_status_notice_parse_local_datetime')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_format_local_datetime')) {
-	function vms_status_notice_format_local_datetime(string $raw, int $ts): string
+if (!function_exists('bvmgr_status_notice_format_local_datetime')) {
+	function bvmgr_status_notice_format_local_datetime(string $raw, int $ts): string
 	{
 		$raw = trim($raw);
 		if ($raw !== '') {
@@ -69,8 +69,8 @@ if (!function_exists('vms_status_notice_format_local_datetime')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_sanitize_in_set')) {
-	function vms_status_notice_sanitize_in_set(string $value, array $allowed, string $fallback): string
+if (!function_exists('bvmgr_status_notice_sanitize_in_set')) {
+	function bvmgr_status_notice_sanitize_in_set(string $value, array $allowed, string $fallback): string
 	{
 		$value = sanitize_key($value);
 		if (!in_array($value, $allowed, true)) {
@@ -80,10 +80,10 @@ if (!function_exists('vms_status_notice_sanitize_in_set')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_sanitize_payload')) {
-	function vms_status_notice_sanitize_payload(array $raw): array
+if (!function_exists('bvmgr_status_notice_sanitize_payload')) {
+	function bvmgr_status_notice_sanitize_payload(array $raw): array
 	{
-		$defaults = vms_status_notice_default_notice();
+		$defaults = bvmgr_status_notice_default_notice();
 
 		$title = sanitize_text_field((string) ($raw['title'] ?? ''));
 		if ($title === '') {
@@ -91,8 +91,8 @@ if (!function_exists('vms_status_notice_sanitize_payload')) {
 		}
 
 		$enabled = !empty($raw['enabled']) ? 1 : 0;
-		$scope = vms_status_notice_sanitize_in_set((string) ($raw['scope'] ?? ''), vms_status_notice_allowed_scopes(), 'front');
-		$severity = vms_status_notice_sanitize_in_set((string) ($raw['severity'] ?? ''), vms_status_notice_allowed_severities(), 'warning');
+		$scope = bvmgr_status_notice_sanitize_in_set((string) ($raw['scope'] ?? ''), bvmgr_status_notice_allowed_scopes(), 'front');
+		$severity = bvmgr_status_notice_sanitize_in_set((string) ($raw['severity'] ?? ''), bvmgr_status_notice_allowed_severities(), 'warning');
 		$priority = (int) ($raw['priority'] ?? 0);
 		if ($priority > 10000) {
 			$priority = 10000;
@@ -113,49 +113,49 @@ if (!function_exists('vms_status_notice_sanitize_payload')) {
 			$intensity = 2;
 		}
 
-		$placement = vms_status_notice_sanitize_in_set((string) ($raw['placement'] ?? ''), vms_status_notice_allowed_placements(), 'top');
+		$placement = bvmgr_status_notice_sanitize_in_set((string) ($raw['placement'] ?? ''), bvmgr_status_notice_allowed_placements(), 'top');
 		$dismissible = !empty($raw['dismissible']) ? 1 : 0;
-		$dismiss_ttl = vms_status_notice_sanitize_in_set((string) ($raw['dismiss_ttl'] ?? ''), vms_status_notice_allowed_dismiss_ttls(), '1d');
-		$trigger = vms_status_notice_sanitize_in_set((string) ($raw['trigger'] ?? ''), vms_status_notice_allowed_triggers(), 'on_load');
+		$dismiss_ttl = bvmgr_status_notice_sanitize_in_set((string) ($raw['dismiss_ttl'] ?? ''), bvmgr_status_notice_allowed_dismiss_ttls(), '1d');
+		$trigger = bvmgr_status_notice_sanitize_in_set((string) ($raw['trigger'] ?? ''), bvmgr_status_notice_allowed_triggers(), 'on_load');
 		$trigger_delay_ms = absint((string) ($raw['trigger_delay_ms'] ?? '0'));
 		if ($trigger_delay_ms > 60000) {
 			$trigger_delay_ms = 60000;
 		}
 		$trigger_selector = trim(sanitize_text_field((string) ($raw['trigger_selector'] ?? '')));
 
-		$pages_mode = vms_status_notice_sanitize_in_set((string) ($raw['pages_mode'] ?? ''), vms_status_notice_allowed_pages_mode(), 'all');
+		$pages_mode = bvmgr_status_notice_sanitize_in_set((string) ($raw['pages_mode'] ?? ''), bvmgr_status_notice_allowed_pages_mode(), 'all');
 		$include_page_types = array_values(array_intersect(
 			array_map('sanitize_key', (array) ($raw['include_page_types'] ?? array())),
-			vms_status_notice_allowed_page_types()
+			bvmgr_status_notice_allowed_page_types()
 		));
-		$include_object_ids = vms_status_notice_parse_int_list((string) ($raw['include_object_ids_raw'] ?? ''));
-		$exclude_object_ids = vms_status_notice_parse_int_list((string) ($raw['exclude_object_ids_raw'] ?? ''));
-		$url_contains = vms_status_notice_parse_list((string) ($raw['url_contains_raw'] ?? ''));
-		$url_excludes = vms_status_notice_parse_list((string) ($raw['url_excludes_raw'] ?? ''));
+		$include_object_ids = bvmgr_status_notice_parse_int_list((string) ($raw['include_object_ids_raw'] ?? ''));
+		$exclude_object_ids = bvmgr_status_notice_parse_int_list((string) ($raw['exclude_object_ids_raw'] ?? ''));
+		$url_contains = bvmgr_status_notice_parse_list((string) ($raw['url_contains_raw'] ?? ''));
+		$url_excludes = bvmgr_status_notice_parse_list((string) ($raw['url_excludes_raw'] ?? ''));
 
-		$user_mode = vms_status_notice_sanitize_in_set((string) ($raw['user_mode'] ?? ''), vms_status_notice_allowed_user_mode(), 'everyone');
+		$user_mode = bvmgr_status_notice_sanitize_in_set((string) ($raw['user_mode'] ?? ''), bvmgr_status_notice_allowed_user_mode(), 'everyone');
 		$roles_include = array_values(array_map('sanitize_key', (array) ($raw['roles_include'] ?? array())));
 		$roles_exclude = array_values(array_map('sanitize_key', (array) ($raw['roles_exclude'] ?? array())));
-		$user_ids_include = vms_status_notice_parse_int_list((string) ($raw['user_ids_include_raw'] ?? ''));
+		$user_ids_include = bvmgr_status_notice_parse_int_list((string) ($raw['user_ids_include_raw'] ?? ''));
 
-		$device_mode = vms_status_notice_sanitize_in_set((string) ($raw['device_mode'] ?? ''), vms_status_notice_allowed_device_mode(), 'any');
+		$device_mode = bvmgr_status_notice_sanitize_in_set((string) ($raw['device_mode'] ?? ''), bvmgr_status_notice_allowed_device_mode(), 'any');
 		$browser_include = array_values(array_intersect(
 			array_map('sanitize_key', (array) ($raw['browser_include'] ?? array())),
-			vms_status_notice_allowed_browsers()
+			bvmgr_status_notice_allowed_browsers()
 		));
 		$os_include = array_values(array_intersect(
 			array_map('sanitize_key', (array) ($raw['os_include'] ?? array())),
-			vms_status_notice_allowed_os()
+			bvmgr_status_notice_allowed_os()
 		));
 
-		$schedule_mode = vms_status_notice_sanitize_in_set((string) ($raw['schedule_mode'] ?? ''), vms_status_notice_allowed_schedule_mode(), 'always');
+		$schedule_mode = bvmgr_status_notice_sanitize_in_set((string) ($raw['schedule_mode'] ?? ''), bvmgr_status_notice_allowed_schedule_mode(), 'always');
 		$start_at_input = trim((string) ($raw['start_at'] ?? ''));
 		$end_at_input = trim((string) ($raw['end_at'] ?? ''));
-		$start_ts = vms_status_notice_parse_local_datetime($start_at_input);
-		$end_ts = vms_status_notice_parse_local_datetime($end_at_input);
+		$start_ts = bvmgr_status_notice_parse_local_datetime($start_at_input);
+		$end_ts = bvmgr_status_notice_parse_local_datetime($end_at_input);
 		$start_at = $start_ts > 0 ? (string) wp_date('Y-m-d H:i:s', $start_ts, wp_timezone()) : '';
 		$end_at = $end_ts > 0 ? (string) wp_date('Y-m-d H:i:s', $end_ts, wp_timezone()) : '';
-		$frequency = vms_status_notice_sanitize_in_set((string) ($raw['frequency'] ?? ''), vms_status_notice_allowed_frequency(), 'every_load');
+		$frequency = bvmgr_status_notice_sanitize_in_set((string) ($raw['frequency'] ?? ''), bvmgr_status_notice_allowed_frequency(), 'every_load');
 
 		$metrics_enabled = !empty($raw['metrics_enabled']) ? 1 : 0;
 
@@ -201,13 +201,13 @@ if (!function_exists('vms_status_notice_sanitize_payload')) {
 			'metrics_enabled' => $metrics_enabled,
 		));
 
-		$payload['audience_summary'] = vms_status_notice_build_audience_summary($payload);
+		$payload['audience_summary'] = bvmgr_status_notice_build_audience_summary($payload);
 		return $payload;
 	}
 }
 
-if (!function_exists('vms_status_notice_meta_map')) {
-	function vms_status_notice_meta_map(): array
+if (!function_exists('bvmgr_status_notice_meta_map')) {
+	function bvmgr_status_notice_meta_map(): array
 	{
 		return array(
 			'enabled' => '_vms_notice_enabled',
@@ -257,14 +257,14 @@ if (!function_exists('vms_status_notice_meta_map')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_build_audience_summary')) {
-	function vms_status_notice_build_audience_summary(array $notice): string
+if (!function_exists('bvmgr_status_notice_build_audience_summary')) {
+	function bvmgr_status_notice_build_audience_summary(array $notice): string
 	{
-		$scope_labels = vms_status_notice_scope_labels();
-		$page_labels = vms_status_notice_page_type_labels();
-		$device_labels = vms_status_notice_device_labels();
-		$browser_labels = vms_status_notice_browser_labels();
-		$os_labels = vms_status_notice_os_labels();
+		$scope_labels = bvmgr_status_notice_scope_labels();
+		$page_labels = bvmgr_status_notice_page_type_labels();
+		$device_labels = bvmgr_status_notice_device_labels();
+		$browser_labels = bvmgr_status_notice_browser_labels();
+		$os_labels = bvmgr_status_notice_os_labels();
 
 		$parts = array();
 		$scope = (string) ($notice['scope'] ?? 'front');
@@ -327,16 +327,16 @@ if (!function_exists('vms_status_notice_build_audience_summary')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_get')) {
-	function vms_status_notice_get(int $notice_id): ?array
+if (!function_exists('bvmgr_status_notice_get')) {
+	function bvmgr_status_notice_get(int $notice_id): ?array
 	{
 		$post = get_post($notice_id);
-		if (!($post instanceof WP_Post) || $post->post_type !== vms_status_notice_post_type()) {
+		if (!($post instanceof WP_Post) || $post->post_type !== bvmgr_status_notice_post_type()) {
 			return null;
 		}
 
-		$map = vms_status_notice_meta_map();
-		$notice = vms_status_notice_default_notice();
+		$map = bvmgr_status_notice_meta_map();
+		$notice = bvmgr_status_notice_default_notice();
 		$notice['id'] = (int) $notice_id;
 		$notice['title'] = (string) $post->post_title;
 		foreach ($map as $field => $meta_key) {
@@ -355,19 +355,19 @@ if (!function_exists('vms_status_notice_get')) {
 			$notice[$array_key] = array_values($value);
 		}
 
-		$notice['start_at'] = vms_status_notice_format_local_datetime((string) ($notice['start_at'] ?? ''), (int) ($notice['start_ts'] ?? 0));
-		$notice['end_at'] = vms_status_notice_format_local_datetime((string) ($notice['end_at'] ?? ''), (int) ($notice['end_ts'] ?? 0));
-		$notice['audience_summary'] = vms_status_notice_build_audience_summary($notice);
+		$notice['start_at'] = bvmgr_status_notice_format_local_datetime((string) ($notice['start_at'] ?? ''), (int) ($notice['start_ts'] ?? 0));
+		$notice['end_at'] = bvmgr_status_notice_format_local_datetime((string) ($notice['end_at'] ?? ''), (int) ($notice['end_ts'] ?? 0));
+		$notice['audience_summary'] = bvmgr_status_notice_build_audience_summary($notice);
 		return $notice;
 	}
 }
 
-if (!function_exists('vms_status_notice_save')) {
-	function vms_status_notice_save(int $notice_id, array $raw_payload): int
+if (!function_exists('bvmgr_status_notice_save')) {
+	function bvmgr_status_notice_save(int $notice_id, array $raw_payload): int
 	{
-		$payload = vms_status_notice_sanitize_payload($raw_payload);
+		$payload = bvmgr_status_notice_sanitize_payload($raw_payload);
 		$postarr = array(
-			'post_type' => vms_status_notice_post_type(),
+			'post_type' => bvmgr_status_notice_post_type(),
 			'post_title' => $payload['title'],
 			'post_status' => 'publish',
 		);
@@ -386,7 +386,7 @@ if (!function_exists('vms_status_notice_save')) {
 		$notice_id = (int) $result;
 		$payload['id'] = $notice_id;
 
-		$map = vms_status_notice_meta_map();
+		$map = bvmgr_status_notice_meta_map();
 		foreach ($map as $field => $meta_key) {
 			if (!array_key_exists($field, $payload)) {
 				continue;
@@ -398,11 +398,11 @@ if (!function_exists('vms_status_notice_save')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_query_all')) {
-	function vms_status_notice_query_all(): array
+if (!function_exists('bvmgr_status_notice_query_all')) {
+	function bvmgr_status_notice_query_all(): array
 	{
 		$posts = get_posts(array(
-			'post_type' => vms_status_notice_post_type(),
+			'post_type' => bvmgr_status_notice_post_type(),
 			'post_status' => array('publish', 'draft'),
 			'posts_per_page' => -1,
 			'orderby' => 'date',
@@ -414,7 +414,7 @@ if (!function_exists('vms_status_notice_query_all')) {
 			if (!($post instanceof WP_Post)) {
 				continue;
 			}
-			$notice = vms_status_notice_get((int) $post->ID);
+			$notice = bvmgr_status_notice_get((int) $post->ID);
 			if (is_array($notice)) {
 				$out[] = $notice;
 			}
@@ -423,11 +423,11 @@ if (!function_exists('vms_status_notice_query_all')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_enabled_for_scope')) {
-	function vms_status_notice_enabled_for_scope(string $scope): array
+if (!function_exists('bvmgr_status_notice_enabled_for_scope')) {
+	function bvmgr_status_notice_enabled_for_scope(string $scope): array
 	{
 		$scope = sanitize_key($scope);
-		$notices = vms_status_notice_query_all();
+		$notices = bvmgr_status_notice_query_all();
 		$out = array();
 		foreach ($notices as $notice) {
 			if (empty($notice['enabled'])) {

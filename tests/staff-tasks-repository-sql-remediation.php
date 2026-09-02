@@ -543,19 +543,19 @@ function vms_test_assert_no_placeholders(string $sql, string $message): void
 function vms_test_target_functions(): array
 {
 	return array(
-		'vms_tasks_admin_get_event_type_options',
-		'vms_tasks_db_ready',
-		'vms_tasks_log_task_action',
-		'vms_tasks_has_task_action_log',
-		'vms_tasks_get_task_template',
-		'vms_tasks_get_task_templates',
-		'vms_tasks_upsert_task_template',
-		'vms_tasks_get_checklist_template',
-		'vms_tasks_get_checklist_templates',
-		'vms_tasks_upsert_checklist_template',
-		'vms_tasks_replace_checklist_items',
-		'vms_tasks_get_checklist_items',
-		'vms_tasks_get_applicable_checklists',
+		'bvmgr_tasks_admin_get_event_type_options',
+		'bvmgr_tasks_db_ready',
+		'bvmgr_tasks_log_task_action',
+		'bvmgr_tasks_has_task_action_log',
+		'bvmgr_tasks_get_task_template',
+		'bvmgr_tasks_get_task_templates',
+		'bvmgr_tasks_upsert_task_template',
+		'bvmgr_tasks_get_checklist_template',
+		'bvmgr_tasks_get_checklist_templates',
+		'bvmgr_tasks_upsert_checklist_template',
+		'bvmgr_tasks_replace_checklist_items',
+		'bvmgr_tasks_get_checklist_items',
+		'bvmgr_tasks_get_applicable_checklists',
 	);
 }
 
@@ -651,13 +651,13 @@ vms_test_assert_true(strpos($db_source, 'phpcs:disable') === false, 'No file-lev
 $target_functions = vms_test_target_functions();
 $mirror_hashes = array_merge(
 	vms_test_collect_target_hashes($store_source, array_slice($target_functions, 2)),
-	vms_test_collect_target_hashes($db_source, array('vms_tasks_db_ready')),
-	vms_test_collect_target_hashes($admin_ui_source, array('vms_tasks_admin_get_event_type_options'))
+	vms_test_collect_target_hashes($db_source, array('bvmgr_tasks_db_ready')),
+	vms_test_collect_target_hashes($admin_ui_source, array('bvmgr_tasks_admin_get_event_type_options'))
 );
 $live_hashes = array_merge(
 	vms_test_collect_target_hashes($live_store_source, array_slice($target_functions, 2)),
-	vms_test_collect_target_hashes($live_db_source, array('vms_tasks_db_ready')),
-	vms_test_collect_target_hashes($live_admin_ui_source, array('vms_tasks_admin_get_event_type_options'))
+	vms_test_collect_target_hashes($live_db_source, array('bvmgr_tasks_db_ready')),
+	vms_test_collect_target_hashes($live_admin_ui_source, array('bvmgr_tasks_admin_get_event_type_options'))
 );
 vms_test_assert_same($mirror_hashes, $live_hashes, 'All edited T1 target functions should remain byte-identical across mirror and live.');
 vms_test_assert_true(
@@ -666,38 +666,38 @@ vms_test_assert_true(
 );
 
 foreach (array(
-	'vms_tasks_now_utc_mysql',
-	'vms_tasks_allowed_priorities',
-	'vms_tasks_sanitize_priority',
-	'vms_tasks_sanitize_scope',
-	'vms_tasks_sanitize_due_mode',
-	'vms_tasks_sanitize_assignment_mode',
-	'vms_tasks_sanitize_apply_mode',
-	'vms_tasks_log_task_action',
-	'vms_tasks_has_task_action_log',
-	'vms_tasks_get_task_template',
-	'vms_tasks_get_task_templates',
-	'vms_tasks_upsert_task_template',
-	'vms_tasks_get_checklist_template',
-	'vms_tasks_get_checklist_templates',
-	'vms_tasks_upsert_checklist_template',
-	'vms_tasks_replace_checklist_items',
-	'vms_tasks_decode_checklist_overrides',
-	'vms_tasks_get_checklist_items',
-	'vms_tasks_get_applicable_checklists',
+	'bvmgr_tasks_now_utc_mysql',
+	'bvmgr_tasks_allowed_priorities',
+	'bvmgr_tasks_sanitize_priority',
+	'bvmgr_tasks_sanitize_scope',
+	'bvmgr_tasks_sanitize_due_mode',
+	'bvmgr_tasks_sanitize_assignment_mode',
+	'bvmgr_tasks_sanitize_apply_mode',
+	'bvmgr_tasks_log_task_action',
+	'bvmgr_tasks_has_task_action_log',
+	'bvmgr_tasks_get_task_template',
+	'bvmgr_tasks_get_task_templates',
+	'bvmgr_tasks_upsert_task_template',
+	'bvmgr_tasks_get_checklist_template',
+	'bvmgr_tasks_get_checklist_templates',
+	'bvmgr_tasks_upsert_checklist_template',
+	'bvmgr_tasks_replace_checklist_items',
+	'bvmgr_tasks_decode_checklist_overrides',
+	'bvmgr_tasks_get_checklist_items',
+	'bvmgr_tasks_get_applicable_checklists',
 ) as $function_name) {
 	eval(vms_test_extract_function($store_source, $function_name));
 }
-foreach (array('vms_tasks_table_name', 'vms_tasks_db_ready') as $function_name) {
+foreach (array('bvmgr_tasks_table_name', 'bvmgr_tasks_db_ready') as $function_name) {
 	eval(vms_test_extract_function($db_source, $function_name));
 }
-eval(vms_test_extract_function($admin_ui_source, 'vms_tasks_admin_get_event_type_options'));
+eval(vms_test_extract_function($admin_ui_source, 'bvmgr_tasks_admin_get_event_type_options'));
 
 $GLOBALS['wpdb'] = new VMS_Test_WPDB();
 
 $wpdb = $GLOBALS['wpdb'];
 $wpdb->get_col_queue[] = array('Rock Show', 'VIP Night', 'rock-show', '', 'VIP Night');
-$types = vms_tasks_admin_get_event_type_options();
+$types = bvmgr_tasks_admin_get_event_type_options();
 vms_test_assert_same(
 	array(
 		'rockshow' => 'rockshow',
@@ -728,7 +728,7 @@ $expected_tables = array(
 	'wp_vms_task_logs',
 );
 $wpdb->get_var_queue = $expected_tables;
-vms_test_assert_true(vms_tasks_db_ready(), 'DB readiness should return true when every required table probe matches exactly.');
+vms_test_assert_true(bvmgr_tasks_db_ready(), 'DB readiness should return true when every required table probe matches exactly.');
 vms_test_assert_same($expected_tables, $wpdb->esc_like_calls, 'DB readiness should escape each literal table name before SHOW TABLES LIKE probes.');
 vms_test_assert_same(5, count(array_filter($wpdb->call_log, static fn(array $entry): bool => ($entry['kind'] ?? '') === 'get_var')), 'DB readiness should execute one get_var() probe per required table.');
 $prepare = vms_test_last_prepare($wpdb);
@@ -738,11 +738,11 @@ vms_test_assert_same(array(addcslashes('wp_vms_task_logs', '_%\\')), $prepare['a
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_var_queue = array($expected_tables[0], 'not_the_checklist_templates_table');
-vms_test_assert_true(!vms_tasks_db_ready(), 'DB readiness should fail closed when any required table probe misses.');
+vms_test_assert_true(!bvmgr_tasks_db_ready(), 'DB readiness should fail closed when any required table probe misses.');
 
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
-vms_tasks_log_task_action(12, '!!!', null, '');
+bvmgr_tasks_log_task_action(12, '!!!', null, '');
 $insert = vms_test_last_call($wpdb, 'insert');
 vms_test_assert_same('wp_vms_task_logs', $insert['table'], 'Task-action logs should target the task_logs repository table.');
 vms_test_assert_same('unknown', $insert['data']['action'], 'Task-action logs should fall back to the bounded unknown action key.');
@@ -753,7 +753,7 @@ vms_test_assert_same('2026-08-01 12:34:56', $insert['data']['created_at'], 'Task
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_var_queue[] = '99';
-vms_test_assert_true(vms_tasks_has_task_action_log(12, 'Needs Review'), 'Task-action existence lookups should return true when a row is present.');
+vms_test_assert_true(bvmgr_tasks_has_task_action_log(12, 'Needs Review'), 'Task-action existence lookups should return true when a row is present.');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same(
 	'SELECT id FROM %i WHERE task_instance_id = %d AND action = %s LIMIT 1',
@@ -766,15 +766,15 @@ vms_test_assert_no_placeholders($prepare['final_sql'], 'Task-action existence lo
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_row_queue[] = array('id' => 14, 'title' => 'Load In');
-vms_test_assert_same(array('id' => 14, 'title' => 'Load In'), vms_tasks_get_task_template(14), 'Single task-template reads should return the repository row as an associative array.');
+vms_test_assert_same(array('id' => 14, 'title' => 'Load In'), bvmgr_tasks_get_task_template(14), 'Single task-template reads should return the repository row as an associative array.');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same('SELECT * FROM %i WHERE id = %d LIMIT 1', $prepare['query'], 'Single task-template reads should prepare the identifier and integer template ID.');
-vms_test_assert_same(null, vms_tasks_get_task_template(0), 'Single task-template reads should fail closed on a non-positive template ID.');
+vms_test_assert_same(null, bvmgr_tasks_get_task_template(0), 'Single task-template reads should fail closed on a non-positive template ID.');
 
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_results_queue[] = array(array('id' => 1), array('id' => 2));
-$rows = vms_tasks_get_task_templates(array('is_active' => 1, 'scope' => 'Calendar'));
+$rows = bvmgr_tasks_get_task_templates(array('is_active' => 1, 'scope' => 'Calendar'));
 vms_test_assert_same(array(array('id' => 1), array('id' => 2)), $rows, 'Task-template list repositories should return the row set unchanged when get_results() yields an array.');
 $prepare = vms_test_last_prepare($wpdb);
 	vms_test_assert_same(
@@ -786,7 +786,7 @@ $prepare = vms_test_last_prepare($wpdb);
 
 	$wpdb = new VMS_Test_WPDB();
 	$GLOBALS['wpdb'] = $wpdb;
-	vms_tasks_get_task_templates(array('scope' => 'Calendar'));
+	bvmgr_tasks_get_task_templates(array('scope' => 'Calendar'));
 	$prepare = vms_test_last_prepare($wpdb);
 	vms_test_assert_same(
 		'SELECT * FROM %i WHERE 1=1 AND scope = %s ORDER BY is_active DESC, title ASC, id ASC',
@@ -798,7 +798,7 @@ $prepare = vms_test_last_prepare($wpdb);
 	$wpdb = new VMS_Test_WPDB();
 	$GLOBALS['wpdb'] = $wpdb;
 	$wpdb->get_results_queue[] = false;
-	vms_test_assert_same(array(), vms_tasks_get_task_templates(), 'Task-template lists should fail closed to an empty array on database failure.');
+	vms_test_assert_same(array(), bvmgr_tasks_get_task_templates(), 'Task-template lists should fail closed to an empty array on database failure.');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same(
 	'SELECT * FROM %i WHERE 1=1 ORDER BY is_active DESC, title ASC, id ASC',
@@ -809,7 +809,7 @@ vms_test_assert_same(array('wp_vms_task_templates'), $prepare['args'], 'Task-tem
 
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
-$update_result = vms_tasks_upsert_task_template(
+$update_result = bvmgr_tasks_upsert_task_template(
 	array(
 		'title' => ' Load In ',
 		'instructions' => '<em>Doors</em>',
@@ -839,7 +839,7 @@ vms_test_assert_same(null, $update['data']['assignee_user_id'], 'Task-template u
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->insert_id = 944;
-$insert_result = vms_tasks_upsert_task_template(
+$insert_result = bvmgr_tasks_upsert_task_template(
 	array(
 		'title' => 'Soundcheck',
 		'due_offset_minutes' => null,
@@ -853,14 +853,14 @@ vms_test_assert_true(isset($insert['data']['created_at']), 'Task-template insert
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_row_queue[] = array('id' => 4, 'name' => 'Doors Checklist');
-vms_test_assert_same(array('id' => 4, 'name' => 'Doors Checklist'), vms_tasks_get_checklist_template(4), 'Single checklist-template reads should return the repository row as an associative array.');
+vms_test_assert_same(array('id' => 4, 'name' => 'Doors Checklist'), bvmgr_tasks_get_checklist_template(4), 'Single checklist-template reads should return the repository row as an associative array.');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same('SELECT * FROM %i WHERE id = %d LIMIT 1', $prepare['query'], 'Single checklist-template reads should prepare the identifier and integer checklist ID.');
 
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_results_queue[] = array(array('id' => 7));
-$rows = vms_tasks_get_checklist_templates(array('is_active' => 0, 'apply_mode' => 'bogus', 'scope' => 'Calendar'));
+$rows = bvmgr_tasks_get_checklist_templates(array('is_active' => 0, 'apply_mode' => 'bogus', 'scope' => 'Calendar'));
 vms_test_assert_same(array(array('id' => 7)), $rows, 'Checklist-template list repositories should return the row set unchanged when get_results() yields an array.');
 $prepare = vms_test_last_prepare($wpdb);
 	vms_test_assert_same(
@@ -872,7 +872,7 @@ $prepare = vms_test_last_prepare($wpdb);
 
 	$wpdb = new VMS_Test_WPDB();
 	$GLOBALS['wpdb'] = $wpdb;
-	vms_tasks_get_checklist_templates(array('apply_mode' => 'bogus'));
+	bvmgr_tasks_get_checklist_templates(array('apply_mode' => 'bogus'));
 	$prepare = vms_test_last_prepare($wpdb);
 	vms_test_assert_same(
 		'SELECT * FROM %i WHERE 1=1 AND apply_mode = %s ORDER BY is_active DESC, priority_order ASC, id ASC',
@@ -883,7 +883,7 @@ $prepare = vms_test_last_prepare($wpdb);
 
 	$wpdb = new VMS_Test_WPDB();
 	$GLOBALS['wpdb'] = $wpdb;
-	$update_result = vms_tasks_upsert_checklist_template(
+	$update_result = bvmgr_tasks_upsert_checklist_template(
 	array(
 		'name' => ' Doors ',
 		'is_active' => 1,
@@ -906,7 +906,7 @@ vms_test_assert_same(null, $update['data']['event_type'], 'General-scope checkli
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->insert_id = 222;
-$insert_result = vms_tasks_upsert_checklist_template(
+$insert_result = bvmgr_tasks_upsert_checklist_template(
 	array(
 		'name' => 'VIP',
 		'apply_mode' => 'by_event_type',
@@ -924,7 +924,7 @@ $wpdb->get_row_queue = array(
 	array('id' => 21, 'scope' => 'event'),
 	array('id' => 22, 'scope' => 'general'),
 );
-$items_result = vms_tasks_replace_checklist_items(
+$items_result = bvmgr_tasks_replace_checklist_items(
 	7,
 	array(
 		array(
@@ -982,7 +982,7 @@ $wpdb->get_results_queue[] = array(
 		'template_title' => 'Doors',
 	),
 );
-$rows = vms_tasks_get_checklist_items(7);
+$rows = bvmgr_tasks_get_checklist_items(7);
 vms_test_assert_same('Load In', $rows[0]['template_title'], 'Checklist-item joined reads should preserve the selected joined columns.');
 vms_test_assert_same(array('priority' => 'high', 'required_default' => 0), $rows[0]['overrides'], 'Checklist-item joined reads should decode valid override payloads.');
 vms_test_assert_same('valid', $rows[0]['overrides_state'], 'Checklist-item joined reads should expose the valid override state.');
@@ -1005,12 +1005,12 @@ vms_test_assert_contains('ORDER BY ci.sort_order ASC, ci.id ASC', $prepare['fina
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_results_queue[] = false;
-vms_test_assert_same(array(), vms_tasks_get_checklist_items(7), 'Checklist-item joined reads should fail closed to an empty array on database failure.');
+vms_test_assert_same(array(), bvmgr_tasks_get_checklist_items(7), 'Checklist-item joined reads should fail closed to an empty array on database failure.');
 
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_results_queue[] = array(array('id' => 1));
-$rows = vms_tasks_get_applicable_checklists(0, '');
+$rows = bvmgr_tasks_get_applicable_checklists(0, '');
 vms_test_assert_same(array(array('id' => 1)), $rows, 'Applicable checklist selection should return the row set unchanged when get_results() yields an array.');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same(
@@ -1023,7 +1023,7 @@ vms_test_assert_same(array('wp_vms_checklist_templates'), $prepare['args'], 'Def
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_results_queue[] = array();
-vms_tasks_get_applicable_checklists(15, '');
+bvmgr_tasks_get_applicable_checklists(15, '');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same(array('wp_vms_checklist_templates', 'by_venue', 15), $prepare['args'], 'Venue-specific applicable checklist selection should preserve identifier, mode, then venue ID ordering.');
 vms_test_assert_contains("(apply_mode = 'by_venue' AND venue_id = 15)", $prepare['final_sql'], 'Venue-specific applicable checklist selection should preserve the venue branch.');
@@ -1031,7 +1031,7 @@ vms_test_assert_contains("(apply_mode = 'by_venue' AND venue_id = 15)", $prepare
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_results_queue[] = array();
-vms_tasks_get_applicable_checklists(0, 'VIP Night');
+bvmgr_tasks_get_applicable_checklists(0, 'VIP Night');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same(array('wp_vms_checklist_templates', 'by_event_type', 'vipnight'), $prepare['args'], 'Event-type applicable checklist selection should sanitize the event_type before prepare().');
 vms_test_assert_contains("(apply_mode = 'by_event_type' AND event_type = 'vipnight')", $prepare['final_sql'], 'Event-type applicable checklist selection should preserve the event-type branch.');
@@ -1039,7 +1039,7 @@ vms_test_assert_contains("(apply_mode = 'by_event_type' AND event_type = 'vipnig
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_results_queue[] = array();
-vms_tasks_get_applicable_checklists(15, 'VIP Night');
+bvmgr_tasks_get_applicable_checklists(15, 'VIP Night');
 $prepare = vms_test_last_prepare($wpdb);
 vms_test_assert_same(
 	array('wp_vms_checklist_templates', 'by_venue', 15, 'by_event_type', 'vipnight'),

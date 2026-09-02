@@ -57,7 +57,7 @@ try {
 	$assert(strpos($holidaysSource, 'function vms_admin_holidays_enqueue_assets(): void') !== false, 'Holidays should declare a dedicated asset enqueue callback.');
 	$assert(strpos($holidaysSource, "add_action('admin_enqueue_scripts', 'vms_admin_holidays_enqueue_assets', 50);") !== false, 'Holidays should register its page-specific enqueue callback.');
 	$assert(preg_match('~\$page\s*!==\s*vms_admin_holidays_page_slug\(\)~', $holidaysSource) === 1, 'Holidays enqueue should bail unless the current admin page matches the exact Holidays slug.');
-	$assert(strpos($holidaysSource, "VMS_PLUGIN_URL . 'assets/js/vms-holidays-admin.js'") !== false, 'Holidays should enqueue the external asset from assets/js/vms-holidays-admin.js.');
+	$assert(strpos($holidaysSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-holidays-admin.js'") !== false, 'Holidays should enqueue the external asset from assets/js/vms-holidays-admin.js.');
 	$assert(substr_count($holidaysSource, "current_user_can('manage_options')") >= 2, 'Holidays should keep both the page capability guard and the enqueue capability guard.');
 	$assert(
 		preg_match(
@@ -91,7 +91,7 @@ try {
 	$assert(strpos($taxBypassSource, "in_array((string) (\$screen->base ?? ''), array('post', 'post-new'), true)") !== false, 'Tax Bypass should remain restricted to post and post-new screens.');
 	$assert(strpos($taxBypassSource, "in_array((string) (\$screen->post_type ?? ''), vms_tax_bypass_supported_post_types(), true)") !== false, 'Tax Bypass should remain restricted to the supported Vendor/Staff post types.');
 	$assert(strpos($taxBypassSource, 'add_action(\'admin_enqueue_scripts\', \'vms_admin_disable_required_for_tax_fields\', 50);') !== false, 'Tax Bypass should register the external asset gate on admin_enqueue_scripts.');
-	$assert(strpos($taxBypassSource, "VMS_PLUGIN_URL . 'assets/js/vms-tax-bypass-admin.js'") !== false, 'Tax Bypass should enqueue the external asset from assets/js/vms-tax-bypass-admin.js.');
+	$assert(strpos($taxBypassSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-tax-bypass-admin.js'") !== false, 'Tax Bypass should enqueue the external asset from assets/js/vms-tax-bypass-admin.js.');
 	$assert(substr_count($taxBypassSource, "current_user_can('manage_options')") >= 3, 'Tax Bypass should keep its existing admin capability boundaries plus the enqueue capability guard.');
 	foreach (array(
 		'name="vms_tax_bypass_enabled"',
@@ -123,10 +123,10 @@ try {
 	$assert(strpos($taxBypassAssetSource, 'DOMContentLoaded') === false, 'Tax Bypass asset should preserve the immediate post-markup execution model.');
 	$assert(strpos($taxBypassAssetSource, 'setAttribute(') === false, 'Tax Bypass asset should not add new required or ARIA attribute mutations.');
 
-	$assert(strpos($corePluginSource, 'vms-holidays-admin') === false, 'Holidays asset should not be registered through the global core admin asset loader.');
-	$assert(strpos($corePluginSource, 'vms-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the global core admin asset loader.');
-	$assert(strpos($adminUiAssetsSource, 'vms-holidays-admin') === false, 'Holidays asset should not be registered through the shared VMS admin UI asset loader.');
-	$assert(strpos($adminUiAssetsSource, 'vms-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the shared VMS admin UI asset loader.');
+	$assert(strpos($corePluginSource, 'bvmgr-holidays-admin') === false, 'Holidays asset should not be registered through the global core admin asset loader.');
+	$assert(strpos($corePluginSource, 'bvmgr-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the global core admin asset loader.');
+	$assert(strpos($adminUiAssetsSource, 'bvmgr-holidays-admin') === false, 'Holidays asset should not be registered through the shared admin UI asset loader.');
+	$assert(strpos($adminUiAssetsSource, 'bvmgr-tax-bypass-admin') === false, 'Tax Bypass asset should not be registered through the shared admin UI asset loader.');
 
 	$assert(strpos($eventPlanImportSource, 'vms-epcsv-select-all') !== false, 'Event Plan Import should retain its current select-all control contract.');
 	$assert(strpos($eventPlanImportSource, 'Select at least one eligible row before committing selected rows.') !== false, 'Event Plan Import should retain its current preview-selection contract.');

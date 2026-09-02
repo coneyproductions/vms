@@ -162,7 +162,7 @@ function add_post_meta(int $post_id, string $key, $value, bool $unique = false):
 	return count($GLOBALS['event_plan_adds']);
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	$keys = array(
@@ -173,22 +173,22 @@ function vms_meta_key(string $scope, string $field): string
 	return $keys[$field] ?? ('_vms_' . $field);
 }
 
-function vms_event_plan_get_venue_state(int $venue_id): string
+function bvmgr_event_plan_get_venue_state(int $venue_id): string
 {
 	return $GLOBALS['event_plan_venue_states'][$venue_id] ?? 'ok';
 }
 
-function vms_event_plan_get_calendar_event_state(int $event_id): string
+function bvmgr_event_plan_get_calendar_event_state(int $event_id): string
 {
 	return $GLOBALS['event_plan_calendar_states'][$event_id] ?? 'ok';
 }
 
-function vms_integrity_calendar_unpublished_applies_for_status(string $status): bool
+function bvmgr_integrity_calendar_unpublished_applies_for_status(string $status): bool
 {
 	return $status === 'published';
 }
 
-function vms_event_plan_calendar_unpublished_suppressed(int $plan_id): bool
+function bvmgr_event_plan_calendar_unpublished_suppressed(int $plan_id): bool
 {
 	return !empty($GLOBALS['event_plan_calendar_suppressed'][$plan_id]);
 }
@@ -198,48 +198,48 @@ function event_plan_record_flag(string $kind, array $args): void
 	$GLOBALS['event_plan_flags'][] = array($kind, $args);
 }
 
-function vms_event_plan_flag_missing_venue(int $plan_id, int $venue_id, string $title = ''): void
+function bvmgr_event_plan_flag_missing_venue(int $plan_id, int $venue_id, string $title = ''): void
 {
 	event_plan_record_flag('missing_venue', array($plan_id, $venue_id, $title));
 }
 
-function vms_event_plan_flag_trashed_venue(int $plan_id, int $venue_id, string $title = ''): void
+function bvmgr_event_plan_flag_trashed_venue(int $plan_id, int $venue_id, string $title = ''): void
 {
 	event_plan_record_flag('trashed_venue', array($plan_id, $venue_id, $title));
 }
 
-function vms_event_plan_flag_venue_unpublished(int $plan_id, int $venue_id, string $title = ''): void
+function bvmgr_event_plan_flag_venue_unpublished(int $plan_id, int $venue_id, string $title = ''): void
 {
 	event_plan_record_flag('venue_unpublished', array($plan_id, $venue_id, $title));
 }
 
-function vms_event_plan_flag_missing_vendor(int $plan_id, int $vendor_id, string $title = ''): void
+function bvmgr_event_plan_flag_missing_vendor(int $plan_id, int $vendor_id, string $title = ''): void
 {
 	event_plan_record_flag('missing_vendor', array($plan_id, $vendor_id, $title));
 }
 
-function vms_event_plan_flag_trashed_vendor(int $plan_id, int $vendor_id, string $title = ''): void
+function bvmgr_event_plan_flag_trashed_vendor(int $plan_id, int $vendor_id, string $title = ''): void
 {
 	event_plan_record_flag('trashed_vendor', array($plan_id, $vendor_id, $title));
 }
 
-function vms_event_plan_flag_missing_secondary_vendor(int $plan_id, array $vendor_ids, array $titles): void
+function bvmgr_event_plan_flag_missing_secondary_vendor(int $plan_id, array $vendor_ids, array $titles): void
 {
 	event_plan_record_flag('missing_secondary_vendor', array($plan_id, $vendor_ids, $titles));
 }
 
-function vms_event_plan_flag_trashed_secondary_vendor(int $plan_id, int $vendor_id, string $title = ''): void
+function bvmgr_event_plan_flag_trashed_secondary_vendor(int $plan_id, int $vendor_id, string $title = ''): void
 {
 	event_plan_record_flag('trashed_secondary_vendor', array($plan_id, $vendor_id, $title));
 }
 
-function vms_event_plan_perf_wp_update_post(array $data, string $context, int $plan_id): int
+function bvmgr_event_plan_perf_wp_update_post(array $data, string $context, int $plan_id): int
 {
 	$GLOBALS['event_plan_perf_updates'][] = array('data' => $data, 'context' => $context, 'plan_id' => $plan_id);
 	return $plan_id;
 }
 
-function vms_event_plan_legacy_ticket_meta_keys(): array
+function bvmgr_event_plan_legacy_ticket_meta_keys(): array
 {
 	return $GLOBALS['event_plan_legacy_keys'];
 }
@@ -372,12 +372,12 @@ $shadow_source = (string) file_get_contents($shadow_path);
 event_plan_assert($source !== '' && $shadow_source !== '', 'Mirror and shadow-live Event Plan sources should be readable.');
 
 $owned_functions = array(
-	'vms_integrity_scan_event_plans_for_orphaned_venues',
-	'vms_integrity_list_event_plans_with_venue_issues',
-	'vms_integrity_list_event_plans_with_calendar_issues',
-	'vms_integrity_scan_event_plans_for_orphaned_calendar_events',
-	'vms_integrity_scan_event_plans_for_missing_vendors',
-	'vms_event_plan_legacy_ticket_meta_candidate_ids',
+	'bvmgr_integrity_scan_event_plans_for_orphaned_venues',
+	'bvmgr_integrity_list_event_plans_with_venue_issues',
+	'bvmgr_integrity_list_event_plans_with_calendar_issues',
+	'bvmgr_integrity_scan_event_plans_for_orphaned_calendar_events',
+	'bvmgr_integrity_scan_event_plans_for_missing_vendors',
+	'bvmgr_event_plan_legacy_ticket_meta_candidate_ids',
 );
 $slow_query_code = 'WordPress.DB.SlowDBQuery.slow_db_query_meta_query';
 $prepared_code = 'WordPress.DB.PreparedSQL.NotPrepared';
@@ -385,43 +385,43 @@ $direct_code = 'WordPress.DB.DirectDatabaseQuery.DirectQuery';
 $no_cache_code = 'WordPress.DB.DirectDatabaseQuery.NoCaching';
 $owned_occurrences = array(
 	'Q1' => array(
-		'function' => 'vms_integrity_scan_event_plans_for_orphaned_venues',
+		'function' => 'bvmgr_integrity_scan_event_plans_for_orphaned_venues',
 		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate positive Venue references before repairing broken links.',
 		'target' => "'meta_query' => array(",
 		'context' => "'key' => '_vms_venue_id'",
 	),
 	'Q2' => array(
-		'function' => 'vms_integrity_list_event_plans_with_venue_issues',
+		'function' => 'bvmgr_integrity_list_event_plans_with_venue_issues',
 		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only reconciliation list must locate positive Venue references for operator review.',
 		'target' => "'meta_query' => array(",
 		'context' => "'key' => '_vms_venue_id'",
 	),
 	'Q3' => array(
-		'function' => 'vms_integrity_list_event_plans_with_calendar_issues',
+		'function' => 'bvmgr_integrity_list_event_plans_with_calendar_issues',
 		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only reconciliation list must combine linked calendar IDs with publish-ready plans to report integrity issues.',
 		'target' => "'meta_query' => array(",
 		'context' => "'key' => '_vms_tec_event_id'",
 	),
 	'Q4' => array(
-		'function' => 'vms_integrity_scan_event_plans_for_orphaned_calendar_events',
+		'function' => 'bvmgr_integrity_scan_event_plans_for_orphaned_calendar_events',
 		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must combine linked calendar IDs with publish-ready plans before repairs.',
 		'target' => "'meta_query' => array(",
 		'context' => "'key' => '_vms_tec_event_id'",
 	),
 	'Q5' => array(
-		'function' => 'vms_integrity_scan_event_plans_for_missing_vendors',
+		'function' => 'bvmgr_integrity_scan_event_plans_for_missing_vendors',
 		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate positive primary Vendor references before repairing broken links.',
 		'target' => "'meta_query' => array(",
 		'context' => "'key' => '_vms_band_vendor_id'",
 	),
 	'Q6' => array(
-		'function' => 'vms_integrity_scan_event_plans_for_missing_vendors',
+		'function' => 'bvmgr_integrity_scan_event_plans_for_missing_vendors',
 		'directive' => '// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- This finite ID-only integrity batch must locate serialized secondary Vendor assignments before validating each ID.',
 		'target' => "'meta_query' => array(",
 		'context' => "'key' => '_vms_secondary_vendor_ids'",
 	),
 	'D1/N1/P1' => array(
-		'function' => 'vms_event_plan_legacy_ticket_meta_candidate_ids',
+		'function' => 'bvmgr_event_plan_legacy_ticket_meta_candidate_ids',
 		'directive' => '// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Legacy-ticket cleanup executes this immediately prepared ID batch and must read current metadata before deleting it.',
 		'target' => '$rows = $wpdb->get_col($wpdb->prepare($sql, ...$params));',
 		'context' => '$wpdb->prepare($sql, ...$params)',
@@ -519,11 +519,11 @@ foreach ($owned_functions as $function) {
 // Whole-source hashes above are authoritative for every runtime query/SQL token; spies below also lock exact calls and behavioral results.
 event_plan_reset_runtime();
 WP_Query::$queue = array(array(), array(), array(), array(), array(), array());
-$empty_venue_scan = vms_integrity_scan_event_plans_for_orphaned_venues(17);
-$empty_venue_list = vms_integrity_list_event_plans_with_venue_issues(0);
-$empty_calendar_list = vms_integrity_list_event_plans_with_calendar_issues(19);
-$empty_calendar_scan = vms_integrity_scan_event_plans_for_orphaned_calendar_events(-4);
-$empty_vendor_scan = vms_integrity_scan_event_plans_for_missing_vendors(23);
+$empty_venue_scan = bvmgr_integrity_scan_event_plans_for_orphaned_venues(17);
+$empty_venue_list = bvmgr_integrity_list_event_plans_with_venue_issues(0);
+$empty_calendar_list = bvmgr_integrity_list_event_plans_with_calendar_issues(19);
+$empty_calendar_scan = bvmgr_integrity_scan_event_plans_for_orphaned_calendar_events(-4);
+$empty_vendor_scan = bvmgr_integrity_scan_event_plans_for_missing_vendors(23);
 event_plan_same(6, count(WP_Query::$calls), 'The five integrity functions should retain six query occurrences.');
 $venue_meta_query = array(array('key' => '_vms_venue_id', 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC'));
 $calendar_meta_query = array(
@@ -569,7 +569,7 @@ $GLOBALS['event_plan_posts'] = array(
 	202 => new WP_Post(202, 'vms_venue', 'trash', 'Trashed Venue'),
 	203 => new WP_Post(203, 'vms_venue', 'draft', 'Draft Venue'),
 );
-$venue_issues = vms_integrity_list_event_plans_with_venue_issues(4);
+$venue_issues = bvmgr_integrity_list_event_plans_with_venue_issues(4);
 event_plan_same(array(101), array_column($venue_issues['missing'], 'plan_id'), 'Missing Venue categorization changed.');
 event_plan_same(array(102), array_column($venue_issues['trashed'], 'plan_id'), 'Trashed Venue categorization changed.');
 event_plan_same(array(103), array_column($venue_issues['unpublished'], 'plan_id'), 'Unpublished Venue categorization changed.');
@@ -590,7 +590,7 @@ $GLOBALS['event_plan_posts'][107] = new WP_Post(107, 'vms_event_plan', 'publish'
 $GLOBALS['event_plan_posts'][108] = new WP_Post(108, 'vms_event_plan', 'publish', 'Unpublished Venue Plan');
 $GLOBALS['event_plan_posts'][207] = new WP_Post(207, 'vms_venue', 'trash', 'Trashed Scan Venue');
 $GLOBALS['event_plan_posts'][208] = new WP_Post(208, 'vms_venue', 'draft', 'Draft Scan Venue');
-$venue_scan = vms_integrity_scan_event_plans_for_orphaned_venues(4);
+$venue_scan = bvmgr_integrity_scan_event_plans_for_orphaned_venues(4);
 event_plan_same(array('checked' => 4, 'flagged_missing_venue' => 1, 'flagged_trashed_venue' => 1, 'flagged_venue_unpublished' => 1, 'cleared_venue_refs' => 1, 'forced_draft' => 3), $venue_scan, 'Venue repair scan counters changed.');
 event_plan_same(0, $GLOBALS['event_plan_meta'][105]['_vms_venue_id'], 'Missing Venue reference should still be cleared.');
 event_plan_same('draft', $GLOBALS['event_plan_meta'][105]['_vms_event_plan_status'], 'Broken published plan should still be forced to Draft.');
@@ -624,7 +624,7 @@ $GLOBALS['event_plan_meta'] = array(
 );
 $GLOBALS['event_plan_calendar_states'] = array(402 => 'missing', 403 => 'trashed', 404 => 'unpublished', 405 => 'unpublished', 406 => 'unpublished');
 $GLOBALS['event_plan_calendar_suppressed'][306] = true;
-$calendar_issues = vms_integrity_list_event_plans_with_calendar_issues(6);
+$calendar_issues = bvmgr_integrity_list_event_plans_with_calendar_issues(6);
 event_plan_same(array(301), array_column($calendar_issues['unlinked'], 'plan_id'), 'Unlinked calendar categorization changed.');
 event_plan_same(array(302), array_column($calendar_issues['missing'], 'plan_id'), 'Missing calendar categorization changed.');
 event_plan_same(array(303), array_column($calendar_issues['trashed'], 'plan_id'), 'Trashed calendar categorization changed.');
@@ -646,7 +646,7 @@ $GLOBALS['event_plan_meta'] = array(
 	314 => array('_vms_event_plan_status' => 'published', '_vms_tec_event_id' => 414, '_vms_tec_event_url' => '', '_vms_integrity_issue' => ''),
 	315 => array('_vms_event_plan_status' => 'draft', '_vms_tec_event_id' => 415, '_vms_tec_event_url' => '', '_vms_integrity_issue' => 'calendar_event_unpublished', '_vms_integrity_ts' => 123),
 );
-$calendar_scan = vms_integrity_scan_event_plans_for_orphaned_calendar_events(5);
+$calendar_scan = bvmgr_integrity_scan_event_plans_for_orphaned_calendar_events(5);
 event_plan_same(array('checked' => 5, 'flagged_calendar_event_unlinked' => 1, 'flagged_missing_calendar_event' => 1, 'flagged_trashed_calendar_event' => 1, 'flagged_calendar_event_unpublished' => 1, 'cleared_calendar_event_refs' => 1, 'forced_draft' => 3), $calendar_scan, 'Calendar integrity scan counters changed.');
 event_plan_same(0, $GLOBALS['event_plan_meta'][312]['_vms_tec_event_id'], 'Missing calendar ID should still be cleared.');
 event_plan_same('', $GLOBALS['event_plan_meta'][311]['_vms_tec_event_url'], 'Unlinked stale calendar URL should still be cleared.');
@@ -670,7 +670,7 @@ $GLOBALS['event_plan_posts'][602] = new WP_Post(602, 'vms_vendor', 'trash', 'Tra
 $GLOBALS['event_plan_posts'][604] = new WP_Post(604, 'vms_vendor', 'trash', 'Trashed Secondary');
 $GLOBALS['event_plan_posts'][605] = new WP_Post(605, 'vms_vendor', 'publish', 'Good Secondary');
 $GLOBALS['event_plan_posts'][606] = new WP_Post(606, 'vms_vendor', 'publish', 'Good Primary');
-$vendor_scan = vms_integrity_scan_event_plans_for_missing_vendors(3);
+$vendor_scan = bvmgr_integrity_scan_event_plans_for_missing_vendors(3);
 event_plan_same(array('checked' => 3, 'flagged_missing_vendor' => 1, 'flagged_trashed_vendor' => 1, 'flagged_missing_secondary_vendor' => 1, 'flagged_trashed_secondary_vendor' => 1, 'removed_missing_secondary_vendor_ids' => 1, 'forced_draft' => 2), $vendor_scan, 'Vendor integrity scan counters changed.');
 event_plan_same(0, $GLOBALS['event_plan_meta'][501]['_vms_band_vendor_id'], 'Missing primary Vendor reference should still be cleared.');
 event_plan_same(array(604, 605), $GLOBALS['event_plan_meta'][502]['_vms_secondary_vendor_ids'], 'Missing/duplicate secondary Vendor normalization changed.');
@@ -683,7 +683,7 @@ event_plan_reset_runtime();
 $wpdb = new VMS_Event_Plans_WPDB_Spy('wp_empty_');
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['event_plan_legacy_keys'] = array('', '');
-event_plan_same(array(), vms_event_plan_legacy_ticket_meta_candidate_ids(9, 20), 'Empty legacy-key set should still fail closed.');
+event_plan_same(array(), bvmgr_event_plan_legacy_ticket_meta_candidate_ids(9, 20), 'Empty legacy-key set should still fail closed.');
 event_plan_same(array(), $wpdb->prepares, 'Empty legacy-key set should not prepare SQL.');
 event_plan_same(array(), $wpdb->reads, 'Empty legacy-key set should not execute SQL.');
 
@@ -691,7 +691,7 @@ $wpdb = new VMS_Event_Plans_WPDB_Spy('wp_cleanup_');
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['event_plan_legacy_keys'] = array('_vms_legacy_ticket_product_id', '', '_vms_legacy_ticket_price');
 $wpdb->get_col_queue[] = array('7', '0', '9', 'bad', '-2', '7');
-event_plan_same(array(7, 9, 2, 7), vms_event_plan_legacy_ticket_meta_candidate_ids(-5, 999), 'Legacy candidate ID normalization/order changed.');
+event_plan_same(array(7, 9, 2, 7), bvmgr_event_plan_legacy_ticket_meta_candidate_ids(-5, 999), 'Legacy candidate ID normalization/order changed.');
 event_plan_same(1, count($wpdb->prepares), 'Legacy candidate query should prepare exactly once.');
 event_plan_same(1, count($wpdb->reads), 'Legacy candidate query should execute exactly once.');
 $expected_prepare_args = array('publish', 'private', 'draft', 'pending', 'future', '_vms_legacy_ticket_product_id', '_vms_legacy_ticket_price', 0, 200);
@@ -711,7 +711,7 @@ event_plan_assert(preg_match('/(?<!%)%(?:\d+\$)?[sdi]/', $wpdb->reads[0]['sql'])
 $wpdb = new VMS_Event_Plans_WPDB_Spy('wp_failure_');
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->get_col_queue[] = false;
-event_plan_same(array(), vms_event_plan_legacy_ticket_meta_candidate_ids(12, 0), 'Non-array database failure should still fail closed.');
+event_plan_same(array(), bvmgr_event_plan_legacy_ticket_meta_candidate_ids(12, 0), 'Non-array database failure should still fail closed.');
 event_plan_same(array('publish', 'private', 'draft', 'pending', 'future', '_vms_legacy_ticket_product_id', '_vms_legacy_ticket_price', 12, 1), $wpdb->prepares[0]['args'], 'Legacy minimum batch/cursor preparation changed.');
 
 fwrite(STDOUT, "PASS: Event Plan integrity queries, repair results, legacy cleanup preparation/failures, exact nine-row inventory, narrow suppressions, and mirror/shadow projections are covered.\n");

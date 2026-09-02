@@ -31,7 +31,7 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_comp_defaults',
         __('Default Pay (By Day)', 'backstage-venue-manager'),
-        'vms_render_venue_comp_defaults_metabox',
+        'bvmgr_render_venue_comp_defaults_metabox',
         'vms_venue',
         'normal',
         'default'
@@ -50,10 +50,10 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
 
     // Nonce
-    $nonce = (isset($_POST['vms_venue_comp_defaults_nonce']) && !is_array($_POST['vms_venue_comp_defaults_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_venue_comp_defaults_nonce']))
+    $nonce = (isset($_POST['bvmgr_venue_comp_defaults_nonce']) && !is_array($_POST['bvmgr_venue_comp_defaults_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_comp_defaults_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_venue_comp_defaults')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_venue_comp_defaults'))) {
         return;
     }
 
@@ -112,9 +112,9 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
 /**
  * Render metabox UI.
  */
-function vms_render_venue_comp_defaults_metabox($post) {
+function bvmgr_render_venue_comp_defaults_metabox($post) {
 
-    wp_nonce_field('vms_save_venue_comp_defaults', 'vms_venue_comp_defaults_nonce');
+    wp_nonce_field('bvmgr_save_venue_comp_defaults', 'bvmgr_venue_comp_defaults_nonce');
 
     $saved = get_post_meta($post->ID, '_vms_default_comp_by_dow', true);
     if (!is_array($saved)) $saved = array();
@@ -212,8 +212,8 @@ function vms_render_venue_comp_defaults_metabox($post) {
  * Helper: get all per-day defaults for a venue.
  */
 
-if (!function_exists('vms_get_venue_default_comp_by_dow')) {
-function vms_get_venue_default_comp_by_dow(int $venue_id): array {
+if (!function_exists('bvmgr_get_venue_default_comp_by_dow')) {
+function bvmgr_get_venue_default_comp_by_dow(int $venue_id): array {
     $saved = get_post_meta($venue_id, '_vms_default_comp_by_dow', true);
     return is_array($saved) ? $saved : array();
 }
@@ -222,15 +222,15 @@ function vms_get_venue_default_comp_by_dow(int $venue_id): array {
 
 
 
-if (!function_exists('vms_get_venue_default_comp_for_date')) {
-function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
+if (!function_exists('bvmgr_get_venue_default_comp_for_date')) {
+function bvmgr_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
     $event_date = trim($event_date);
     if ($venue_id <= 0 || $event_date === '') return array();
 
     // Use VMS timezone helper if you have it; fallback to WP timezone.
     $tz = null;
-    if (function_exists('vms_get_timezone')) {
-        $tz = vms_get_timezone(); // expected DateTimeZone
+    if (function_exists('bvmgr_get_timezone')) {
+        $tz = bvmgr_get_timezone(); // expected DateTimeZone
     }
     if (!$tz instanceof DateTimeZone) {
         $tz = wp_timezone();
@@ -245,13 +245,13 @@ function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date):
 
     $dow = (int) $dt->format('w'); // 0..6 (Sun..Sat)
 
-    $all = vms_get_venue_default_comp_by_dow($venue_id);
+    $all = bvmgr_get_venue_default_comp_by_dow($venue_id);
     if (!isset($all[$dow]) || !is_array($all[$dow])) return array();
 
     // Normalize output keys
     $row = $all[$dow];
 
-    $normalized_terms = function_exists('vms_normalize_comp_terms') ? vms_normalize_comp_terms($row) : array();
+    $normalized_terms = function_exists('bvmgr_normalize_comp_terms') ? bvmgr_normalize_comp_terms($row) : array();
     $out = array(
         'structure'          => isset($normalized_terms['structure']) ? (string) $normalized_terms['structure'] : (isset($row['structure']) ? (string) $row['structure'] : 'flat_fee'),
         'flat_fee_amount'    => $normalized_terms['flat_fee_amount'] ?? ($row['flat_fee_amount'] ?? ''),

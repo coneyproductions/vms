@@ -2,11 +2,11 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * VMS Docs Registry
+ * Backstage Venue Manager Docs Registry
  * Stores sources (core + addons) and the discovered docs in those sources.
  */
 
-function vms_docs_sources() {
+function bvmgr_docs_sources() {
     static $sources = null;
 
     if ($sources !== null) {
@@ -18,7 +18,7 @@ function vms_docs_sources() {
     // Register core docs by default.
     $sources[] = [
         'module' => 'vms',
-        'label'  => 'VMS Core',
+        'label'  => 'Backstage Venue Manager Core',
         'path'   => trailingslashit(plugin_dir_path(__DIR__)) . 'docs',
         'public_base' => 'vms',
     ];
@@ -50,10 +50,10 @@ function vms_docs_sources() {
  * Discover markdown docs in registered sources.
  * Returns array keyed by module, each item is an array of docs.
  */
-function vms_docs_index() {
+function bvmgr_docs_index() {
     $index = [];
 
-    foreach (vms_docs_sources() as $src) {
+    foreach (bvmgr_docs_sources() as $src) {
         $path = $src['path'];
 
         if (!is_dir($path)) {
@@ -66,7 +66,7 @@ function vms_docs_index() {
         }
 
         foreach ($files as $file) {
-            $parsed = vms_docs_parse_file($file);
+            $parsed = bvmgr_docs_parse_file($file);
 
             // Require at least a title and slug; fallback to filename-based slug.
             $slug = $parsed['slug'];
@@ -107,7 +107,7 @@ function vms_docs_index() {
  * since: 0.1.0
  * ---
  */
-function vms_docs_parse_file($file_path) {
+function bvmgr_docs_parse_file($file_path) {
     $out = [
         'title' => '',
         'slug'  => '',
@@ -144,7 +144,7 @@ function vms_docs_parse_file($file_path) {
 /**
  * Load raw markdown body (without front matter).
  */
-function vms_docs_get_markdown($file_path) {
+function bvmgr_docs_get_markdown($file_path) {
     $raw = @file_get_contents($file_path);
     if (!is_string($raw)) { return ''; }
 

@@ -202,8 +202,8 @@ if (!function_exists('wp_mail')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_sort_events')) {
-	function vms_ticket_integrity_sort_events(array $events): array
+if (!function_exists('bvmgr_ticket_integrity_sort_events')) {
+	function bvmgr_ticket_integrity_sort_events(array $events): array
 	{
 		usort(
 			$events,
@@ -216,15 +216,15 @@ if (!function_exists('vms_ticket_integrity_sort_events')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_open_issues')) {
-	function vms_ticket_integrity_open_issues(array $issues): array
+if (!function_exists('bvmgr_ticket_integrity_open_issues')) {
+	function bvmgr_ticket_integrity_open_issues(array $issues): array
 	{
 		return $issues;
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_format_datetime')) {
-	function vms_ticket_integrity_format_datetime(int $timestamp): string
+if (!function_exists('bvmgr_ticket_integrity_format_datetime')) {
+	function bvmgr_ticket_integrity_format_datetime(int $timestamp): string
 	{
 		if ($timestamp <= 0) {
 			return 'Never';
@@ -234,8 +234,8 @@ if (!function_exists('vms_ticket_integrity_format_datetime')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_get_settings')) {
-	function vms_ticket_integrity_get_settings(): array
+if (!function_exists('bvmgr_ticket_integrity_get_settings')) {
+	function bvmgr_ticket_integrity_get_settings(): array
 	{
 		return array(
 			'daily_report_enabled' => 1,
@@ -245,15 +245,15 @@ if (!function_exists('vms_ticket_integrity_get_settings')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_get_results_store')) {
-	function vms_ticket_integrity_get_results_store(): array
+if (!function_exists('bvmgr_ticket_integrity_get_results_store')) {
+	function bvmgr_ticket_integrity_get_results_store(): array
 	{
 		return $GLOBALS['vms_test_results_store'];
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_scan_all')) {
-	function vms_ticket_integrity_scan_all(array $args = array()): array
+if (!function_exists('bvmgr_ticket_integrity_scan_all')) {
+	function bvmgr_ticket_integrity_scan_all(array $args = array()): array
 	{
 		unset($args);
 		$GLOBALS['vms_test_scan_calls']++;
@@ -268,16 +268,16 @@ if (!function_exists('vms_ticket_integrity_scan_all')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_prepare_payment_gateway_health')) {
-	function vms_ticket_integrity_prepare_payment_gateway_health(string $trigger = '', int $cache_ttl = 0): array
+if (!function_exists('bvmgr_ticket_integrity_prepare_payment_gateway_health')) {
+	function bvmgr_ticket_integrity_prepare_payment_gateway_health(string $trigger = '', int $cache_ttl = 0): array
 	{
 		unset($trigger, $cache_ttl);
 		return array();
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_log_event')) {
-	function vms_ticket_integrity_log_event(string $type, string $message, array $context = array()): void
+if (!function_exists('bvmgr_ticket_integrity_log_event')) {
+	function bvmgr_ticket_integrity_log_event(string $type, string $message, array $context = array()): void
 	{
 		$GLOBALS['vms_test_log_events'][] = array(
 			'type' => $type,
@@ -287,16 +287,16 @@ if (!function_exists('vms_ticket_integrity_log_event')) {
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_begin_fatal_guard')) {
-	function vms_ticket_integrity_begin_fatal_guard(string $type, array $context = array()): string
+if (!function_exists('bvmgr_ticket_integrity_begin_fatal_guard')) {
+	function bvmgr_ticket_integrity_begin_fatal_guard(string $type, array $context = array()): string
 	{
 		unset($type, $context);
 		return 'guard';
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_end_fatal_guard')) {
-	function vms_ticket_integrity_end_fatal_guard(string $guard_id): void
+if (!function_exists('bvmgr_ticket_integrity_end_fatal_guard')) {
+	function bvmgr_ticket_integrity_end_fatal_guard(string $guard_id): void
 	{
 		unset($guard_id);
 	}
@@ -328,7 +328,7 @@ $resetState = static function (): void {
 	$GLOBALS['vms_test_log_events'] = array();
 	$GLOBALS['vms_test_scan_calls'] = 0;
 	$GLOBALS['vms_test_scan_result'] = null;
-	vms_ticket_integrity_update_daily_report_state(array());
+	bvmgr_ticket_integrity_update_daily_report_state(array());
 };
 
 try {
@@ -343,7 +343,7 @@ try {
 				array(
 					'event_title' => 'Future June Event',
 					'event_timestamp' => $eventAt,
-					'event_date_local' => vms_ticket_integrity_format_datetime($eventAt),
+					'event_date_local' => bvmgr_ticket_integrity_format_datetime($eventAt),
 					'status' => 'green',
 					'ticket_snapshots' => array(),
 					'issues' => array(),
@@ -373,14 +373,14 @@ try {
 	$resetState();
 	$staleScanAt = $generatedAt - (21 * HOUR_IN_SECONDS);
 	$GLOBALS['vms_test_results_store'] = $buildStore($staleScanAt);
-	$staleCron = vms_ticket_integrity_send_state_of_range_report(
+	$staleCron = bvmgr_ticket_integrity_send_state_of_range_report(
 		'cron',
 		array(
 			'mode' => 'test_cron_stale',
 			'generated_at_gmt' => $generatedAt,
 		)
 	);
-	$staleCronState = vms_ticket_integrity_get_daily_report_state();
+	$staleCronState = bvmgr_ticket_integrity_get_daily_report_state();
 	$assert(!empty($staleCron['ok']), 'Expected cron report to send from a stale snapshot.');
 	$assert($GLOBALS['vms_test_scan_calls'] === 0, 'Cron report should not run a full inline scan.');
 	$assert(($staleCronState['last_result'] ?? '') === 'send_success', 'Cron stale send should record send_success.');
@@ -405,14 +405,14 @@ try {
 			'generated_at_gmt' => $generatedAt,
 		),
 	);
-	$noSnapshot = vms_ticket_integrity_send_state_of_range_report(
+	$noSnapshot = bvmgr_ticket_integrity_send_state_of_range_report(
 		'cron',
 		array(
 			'mode' => 'test_cron_no_snapshot',
 			'generated_at_gmt' => $generatedAt,
 		)
 	);
-	$noSnapshotState = vms_ticket_integrity_get_daily_report_state();
+	$noSnapshotState = bvmgr_ticket_integrity_get_daily_report_state();
 	$assert(empty($noSnapshot['ok']), 'Expected cron report to fail fast without a usable snapshot.');
 	$assert($GLOBALS['vms_test_scan_calls'] === 0, 'Cron no-snapshot failure should not run an inline scan.');
 	$assert(($noSnapshotState['last_result'] ?? '') === 'skipped_no_snapshot', 'Cron no-snapshot failure should record skipped_no_snapshot.');
@@ -435,14 +435,14 @@ try {
 		'ok' => false,
 		'message' => 'scan_failed',
 	);
-	$manualScanFailure = vms_ticket_integrity_send_state_of_range_report(
+	$manualScanFailure = bvmgr_ticket_integrity_send_state_of_range_report(
 		'manual',
 		array(
 			'mode' => 'test_manual_scan_failure',
 			'generated_at_gmt' => $generatedAt,
 		)
 	);
-	$manualScanFailureState = vms_ticket_integrity_get_daily_report_state();
+	$manualScanFailureState = bvmgr_ticket_integrity_get_daily_report_state();
 	$assert(empty($manualScanFailure['ok']), 'Expected manual report to fail when the inline refresh scan fails without a usable snapshot.');
 	$assert($GLOBALS['vms_test_scan_calls'] === 1, 'Manual no-snapshot failure should attempt one inline refresh scan.');
 	$assert(($manualScanFailureState['last_result'] ?? '') === 'skipped_scan_failed', 'Manual scan failure should record skipped_scan_failed.');
@@ -462,7 +462,7 @@ try {
 
 	$resetState();
 	$GLOBALS['vms_test_results_store'] = $buildStore($generatedAt);
-	$dryRun = vms_ticket_integrity_send_state_of_range_report(
+	$dryRun = bvmgr_ticket_integrity_send_state_of_range_report(
 		'manual',
 		array(
 			'dry_run' => true,
@@ -470,7 +470,7 @@ try {
 			'generated_at_gmt' => $generatedAt,
 		)
 	);
-	$dryRunState = vms_ticket_integrity_get_daily_report_state();
+	$dryRunState = bvmgr_ticket_integrity_get_daily_report_state();
 	$assert(!empty($dryRun['ok']), 'Expected dry-run render to succeed.');
 	$assert(($dryRunState['last_result'] ?? '') === 'dry_run_rendered', 'Dry-run should record dry_run_rendered result.');
 	$assert(absint($dryRunState['last_successful_send_at'] ?? 0) === 0, 'Dry-run should not mark a successful send timestamp.');
@@ -479,14 +479,14 @@ try {
 
 	$resetState();
 	$GLOBALS['vms_test_mail_should_send'] = false;
-	$failure = vms_ticket_integrity_send_state_of_range_report(
+	$failure = bvmgr_ticket_integrity_send_state_of_range_report(
 		'manual',
 		array(
 			'mode' => 'test_failure',
 			'generated_at_gmt' => $generatedAt,
 		)
 	);
-	$failureState = vms_ticket_integrity_get_daily_report_state();
+	$failureState = bvmgr_ticket_integrity_get_daily_report_state();
 	$assert(empty($failure['ok']), 'Expected simulated mail failure to return not-ok.');
 	$assert(($failureState['last_result'] ?? '') === 'send_failed', 'Failed send should record send_failed result.');
 	$assert(($failureState['last_status'] ?? '') === 'failed', 'Failed send should record failed status.');
@@ -494,14 +494,14 @@ try {
 	$assert(($failureState['last_error'] ?? '') === 'simulated_mail_failure', 'Failed send should capture the mailer error.');
 
 	$resetState();
-	$success = vms_ticket_integrity_send_state_of_range_report(
+	$success = bvmgr_ticket_integrity_send_state_of_range_report(
 		'manual',
 		array(
 			'mode' => 'test_success',
 			'generated_at_gmt' => $generatedAt,
 		)
 	);
-	$successState = vms_ticket_integrity_get_daily_report_state();
+	$successState = bvmgr_ticket_integrity_get_daily_report_state();
 	$assert(!empty($success['ok']), 'Expected simulated mail send to succeed.');
 	$assert(($successState['last_result'] ?? '') === 'send_success', 'Successful send should record send_success result.');
 	$assert(($successState['last_status'] ?? '') === 'sent', 'Successful send should record sent status.');

@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Settings_Tours')) {
-	class VMS_Settings_Tours
+if (!class_exists('BVMGR_Settings_Tours')) {
+	class BVMGR_Settings_Tours
 	{
 		public static function init(): void
 		{
@@ -13,27 +13,27 @@ if (!class_exists('VMS_Settings_Tours')) {
 
 		public static function register_settings(): void
 		{
-			register_setting('vms_settings_group', VMS_Tours::OPT_ENABLED, array(
+			register_setting('vms_settings_group', BVMGR_Tours::OPT_ENABLED, array(
 				'type'              => 'integer',
 				'sanitize_callback' => array(__CLASS__, 'sanitize_bool_int'),
 				'default'           => 1,
 			));
-			register_setting('vms_settings_group', VMS_Tours::OPT_AUTOSTART, array(
+			register_setting('vms_settings_group', BVMGR_Tours::OPT_AUTOSTART, array(
 				'type'              => 'integer',
 				'sanitize_callback' => array(__CLASS__, 'sanitize_bool_int'),
 				'default'           => 1,
 			));
-			register_setting('vms_settings_group', VMS_Tours::OPT_DRIFT_NOTICE_ENABLED, array(
+			register_setting('vms_settings_group', BVMGR_Tours::OPT_DRIFT_NOTICE_ENABLED, array(
 				'type'              => 'integer',
 				'sanitize_callback' => array(__CLASS__, 'sanitize_bool_int'),
 				'default'           => 1,
 			));
-			register_setting('vms_settings_group', VMS_Tours::OPT_DRIFT_BADGE_ENABLED, array(
+			register_setting('vms_settings_group', BVMGR_Tours::OPT_DRIFT_BADGE_ENABLED, array(
 				'type'              => 'integer',
 				'sanitize_callback' => array(__CLASS__, 'sanitize_bool_int'),
 				'default'           => 1,
 			));
-			register_setting('vms_settings_group', VMS_Tours::OPT_AUTO_SCAN_ON_UPDATE, array(
+			register_setting('vms_settings_group', BVMGR_Tours::OPT_AUTO_SCAN_ON_UPDATE, array(
 				'type'              => 'integer',
 				'sanitize_callback' => array(__CLASS__, 'sanitize_bool_int'),
 				'default'           => 1,
@@ -56,43 +56,43 @@ if (!class_exists('VMS_Settings_Tours')) {
 
 		public static function render_section_intro(): void
 		{
-			echo '<p>Controls for VMS guided tours and drift health surfacing.</p>';
+			echo '<p>Controls for Backstage Venue Manager guided tours and drift health surfacing.</p>';
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only guided-tour reset notice only affects admin feedback.
-				if (vms_request_read_scalar($_GET, 'vms_tours_reset') === '1') {
+				if (bvmgr_request_read_scalar($_GET, 'vms_tours_reset') === '1') {
 					echo '<p><strong>' . esc_html__('Tour progress reset for current user.', 'backstage-venue-manager') . '</strong></p>';
 				}
 		}
 
 		public static function render_enabled_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_ENABLED, 'Enable guided tours across VMS admin screens.');
+			self::render_checkbox(BVMGR_Tours::OPT_ENABLED, 'Enable guided tours across Backstage Venue Manager admin screens.');
 		}
 
 		public static function render_autostart_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_AUTOSTART, 'Auto-launch guided tours when a page tour version has not been seen yet.');
+			self::render_checkbox(BVMGR_Tours::OPT_AUTOSTART, 'Auto-launch guided tours when a page tour version has not been seen yet.');
 		}
 
 		public static function render_notice_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_DRIFT_NOTICE_ENABLED, 'Show admin drift notice on VMS pages when anchors are missing.');
+			self::render_checkbox(BVMGR_Tours::OPT_DRIFT_NOTICE_ENABLED, 'Show admin drift notice on Backstage Venue Manager pages when anchors are missing.');
 		}
 
 		public static function render_badge_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_DRIFT_BADGE_ENABLED, 'Show red badge on VMS menu when anchor drift exists.');
+			self::render_checkbox(BVMGR_Tours::OPT_DRIFT_BADGE_ENABLED, 'Show red badge on the Backstage Venue Manager menu when anchor drift exists.');
 		}
 
 		public static function render_autoscan_field(): void
 		{
-			self::render_checkbox(VMS_Tours::OPT_AUTO_SCAN_ON_UPDATE, 'Set pending scan automatically when VMS version changes.');
+			self::render_checkbox(BVMGR_Tours::OPT_AUTO_SCAN_ON_UPDATE, 'Set pending scan automatically when the Backstage Venue Manager version changes.');
 		}
 
 		public static function render_reset_field(): void
 		{
 			$url = wp_nonce_url(
 				admin_url('admin-post.php?action=vms_tours_reset_current_user'),
-				'vms_tours_reset_current_user'
+				'bvmgr_tours_reset_current_user'
 			);
 			echo '<a class="button button-secondary" href="' . esc_url($url) . '">' . esc_html__('Reset Tour Progress', 'backstage-venue-manager') . '</a>';
 			echo '<p class="description">' . esc_html__('Clears current user tour progress and version-seen state so tours can auto-launch again.', 'backstage-venue-manager') . '</p>';
@@ -103,12 +103,12 @@ if (!class_exists('VMS_Settings_Tours')) {
 			if (!current_user_can('manage_options')) {
 				wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 			}
-			check_admin_referer('vms_tours_reset_current_user');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tours_reset_current_user', '_wpnonce'), '_wpnonce');
 
 			$user_id = get_current_user_id();
 			if ($user_id > 0) {
-				delete_user_meta($user_id, VMS_Tours::USER_META_STATE);
-				delete_user_meta($user_id, VMS_Tours::USER_META_NOTICE_DISMISSED);
+				delete_user_meta($user_id, BVMGR_Tours::USER_META_STATE);
+				delete_user_meta($user_id, BVMGR_Tours::USER_META_NOTICE_DISMISSED);
 
 				global $wpdb;
 				if (isset($wpdb->usermeta)) {
@@ -147,4 +147,4 @@ if (!class_exists('VMS_Settings_Tours')) {
 	}
 }
 
-VMS_Settings_Tours::init();
+BVMGR_Settings_Tours::init();

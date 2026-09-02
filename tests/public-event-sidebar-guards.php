@@ -132,7 +132,7 @@ function esc_html_e(string $text, string $domain = ''): void
 	echo $text;
 }
 
-function vms_event_details_context(int $event_id): array
+function bvmgr_event_details_context(int $event_id): array
 {
 	return array(
 		'event_id' => $event_id,
@@ -149,7 +149,7 @@ function vms_event_details_context(int $event_id): array
 	);
 }
 
-function vms_vendor_profiles_render_event_vendor_sidebar(int $event_id): string
+function bvmgr_vendor_profiles_render_event_vendor_sidebar(int $event_id): string
 {
 	unset($event_id);
 	return '';
@@ -159,25 +159,25 @@ require dirname(__DIR__) . '/includes/public/event-details.php';
 require dirname(__DIR__) . '/includes/public/event-sidebar.php';
 
 $GLOBALS['vms_test_event_id'] = 101;
-$manualMarkup = vms_event_details_shortcode(array('layout' => 'sidebar'));
+$manualMarkup = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 vms_public_event_sidebar_guard_assert($manualMarkup !== '', 'Manual current-event sidebar shortcode should render.');
-$autoAfterManual = vms_public_event_sidebar_render_stack(101);
+$autoAfterManual = bvmgr_public_event_sidebar_render_stack(101);
 vms_public_event_sidebar_guard_assert($autoAfterManual === '', 'Auto sidebar should skip Event Details after a manual current-event sidebar render.');
 
-unset($GLOBALS['vms_event_details_sidebar_rendered'], $GLOBALS['vms_event_details_sidebar_manual_rendered'], $GLOBALS['vms_public_event_sidebar_active_indexes']);
+unset($GLOBALS['bvmgr_event_details_sidebar_rendered'], $GLOBALS['bvmgr_event_details_sidebar_manual_rendered'], $GLOBALS['bvmgr_public_event_sidebar_active_indexes']);
 $GLOBALS['vms_test_event_id'] = 202;
-$autoMarkup = vms_public_event_sidebar_render_stack(202);
+$autoMarkup = bvmgr_public_event_sidebar_render_stack(202);
 vms_public_event_sidebar_guard_assert($autoMarkup !== '', 'Auto sidebar should render Event Details when no manual sidebar render happened first.');
-$manualAfterAuto = vms_event_details_shortcode(array('layout' => 'sidebar'));
+$manualAfterAuto = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 vms_public_event_sidebar_guard_assert($manualAfterAuto !== '', 'Explicit manual sidebar shortcode should still render outside the target sidebar after auto render.');
 
-unset($GLOBALS['vms_event_details_sidebar_rendered'], $GLOBALS['vms_event_details_sidebar_manual_rendered'], $GLOBALS['vms_public_event_sidebar_active_indexes']);
+unset($GLOBALS['bvmgr_event_details_sidebar_rendered'], $GLOBALS['bvmgr_event_details_sidebar_manual_rendered'], $GLOBALS['bvmgr_public_event_sidebar_active_indexes']);
 $GLOBALS['vms_test_event_id'] = 303;
-$autoMarkup = vms_public_event_sidebar_render_stack(303);
+$autoMarkup = bvmgr_public_event_sidebar_render_stack(303);
 vms_public_event_sidebar_guard_assert($autoMarkup !== '', 'Auto sidebar should render for duplicate-suppression test.');
-vms_public_event_sidebar_track_context_before('sidebar-primary', true);
-$duplicateTargetSidebar = vms_event_details_shortcode(array('layout' => 'sidebar'));
-vms_public_event_sidebar_track_context_after('sidebar-primary', true);
+bvmgr_public_event_sidebar_track_context_before('sidebar-primary', true);
+$duplicateTargetSidebar = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
+bvmgr_public_event_sidebar_track_context_after('sidebar-primary', true);
 vms_public_event_sidebar_guard_assert($duplicateTargetSidebar === '', 'Target sidebar shortcode should stay suppressed after the auto sidebar already rendered.');
 
 fwrite(STDOUT, "Public event sidebar guards OK.\n");

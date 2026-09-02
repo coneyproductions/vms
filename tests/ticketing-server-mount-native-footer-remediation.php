@@ -213,17 +213,17 @@ function get_post_type($post = null): string
 	return (string) ($GLOBALS['vms_test_context']['post_types'][$postId] ?? '');
 }
 
-function vms_tec_is_cancelled_event(int $eventId): bool
+function bvmgr_tec_is_cancelled_event(int $eventId): bool
 {
 	return in_array($eventId, (array) ($GLOBALS['vms_test_context']['cancelled_event_ids'] ?? array()), true);
 }
 
-function vms_ticketing_v2_find_plan_id_by_tec_event_id(int $eventId): int
+function bvmgr_ticketing_v2_find_plan_id_by_tec_event_id(int $eventId): int
 {
 	return (int) ($GLOBALS['vms_test_context']['plan_ids'][$eventId] ?? 0);
 }
 
-function vms_ticketing_v2_render_entitlements_block(int $tecEventId, int $planId): string
+function bvmgr_ticketing_v2_render_entitlements_block(int $tecEventId, int $planId): string
 {
 	$GLOBALS['vms_test_context']['render_calls'][] = array($tecEventId, $planId);
 	return (string) ($GLOBALS['vms_test_context']['render_output'][$tecEventId] ?? '');
@@ -301,7 +301,7 @@ try {
 	$footerRegistration = vms_test_find_filter_registration(
 		$ticketingRulesSource,
 		'tribe_template_before_include_html:tickets/v2/tickets/footer',
-		'vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount'
+		'bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount'
 	);
 	vms_test_assert_true(is_array($footerRegistration), 'Native footer placement should be registered on the TEC footer seam.');
 	vms_test_assert_same(20, $footerRegistration['priority'], 'Native footer placement should run at priority 20.');
@@ -318,8 +318,8 @@ try {
 	vms_test_assert_not_contains('function vms_ticketing_v2_opening_div_has_class(', $ticketingRulesSource, 'The obsolete server-mount class matcher should be removed.');
 	vms_test_assert_not_contains("ob_start('vms_ticketing_v2_server_mount_callback')", $ticketingRulesSource, 'The obsolete server-mount callback buffer should be removed.');
 
-	$footerFunctionSource = vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount');
-	$appendFunctionSource = vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_append_entitlements_to_tec_event');
+	$footerFunctionSource = vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount');
+	$appendFunctionSource = vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_append_entitlements_to_tec_event');
 	vms_test_assert_not_contains('ob_start(', $footerFunctionSource, 'The native footer callback should not open any output buffer.');
 	vms_test_assert_not_contains('ob_start(', $appendFunctionSource, 'The automatic append fallback should not open any output buffer.');
 
@@ -329,7 +329,7 @@ try {
 	vms_test_assert_not_contains('data-vms-inline-controller-owner', $ticketingRulesSource, 'The declarative renderer contract should not retain the removed inline-controller owner marker.');
 	vms_test_assert_not_contains('assets/vms-ticketing-front-server-controls.js', $ticketingRulesSource, 'The declarative renderer contract should not retain the dormant sidecar as a runtime dependency.');
 
-	eval(vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_native_footer_mount_placed'));
+	eval(vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_native_footer_mount_placed'));
 	eval($footerFunctionSource);
 	eval($appendFunctionSource);
 
@@ -350,7 +350,7 @@ try {
 	$GLOBALS['vms_test_context']['render_output'][101] = $renderedMarkup;
 	[$result, $output, $beforeLevel, $afterLevel] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array('tickets', 'v2', 'tickets', 'footer'), new Vms_Test_Ticketing_Template(array('post_id' => 101)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array('tickets', 'v2', 'tickets', 'footer'), new Vms_Test_Ticketing_Template(array('post_id' => 101)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'Admin requests should leave the native footer unchanged.');
@@ -371,7 +371,7 @@ try {
 		$GLOBALS['vms_test_context']['render_output'][102] = $renderedMarkup;
 		[$result, $output, $beforeLevel, $afterLevel] = vms_test_call_with_capture(
 			static function () use ($footerHtml, $validFooterPath): string {
-				return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array('tickets', 'v2', 'tickets', 'footer'), new Vms_Test_Ticketing_Template(array('post_id' => 102)));
+				return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array('tickets', 'v2', 'tickets', 'footer'), new Vms_Test_Ticketing_Template(array('post_id' => 102)));
 			}
 		);
 		vms_test_assert_same($footerHtml, $result, strtoupper($label) . ' requests should leave the native footer unchanged.');
@@ -383,7 +383,7 @@ try {
 	$GLOBALS['vms_test_context']['is_singular'] = false;
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 0)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 0)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'Invalid event targets should leave the native footer unchanged.');
@@ -392,7 +392,7 @@ try {
 	$GLOBALS['vms_test_context']['post_types'][103] = 'post';
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 103)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 103)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'Non-event targets should leave the native footer unchanged.');
@@ -402,7 +402,7 @@ try {
 	$GLOBALS['vms_test_context']['cancelled_event_ids'][] = 104;
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 104)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 104)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'Cancelled events should leave the native footer unchanged.');
@@ -411,7 +411,7 @@ try {
 	$GLOBALS['vms_test_context']['post_types'][105] = 'tribe_events';
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 105)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 105)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'Events without a VMS plan should leave the native footer unchanged.');
@@ -423,7 +423,7 @@ try {
 	$GLOBALS['vms_test_context']['render_output'][106] = $renderedMarkup;
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 106)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 106)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'Manual shortcode placement should keep precedence over native footer placement.');
@@ -434,7 +434,7 @@ try {
 	$GLOBALS['vms_test_context']['render_output'][107] = '';
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 107)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 107)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'Empty renderer output should leave the native footer unchanged.');
@@ -446,7 +446,7 @@ try {
 	$GLOBALS['vms_test_context']['render_output'][120] = $renderedMarkup;
 	[$result, $output, $beforeLevel, $afterLevel] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 120)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 120)));
 		}
 	);
 	vms_test_assert_same($expectedMount . $footerHtml, $result, 'Valid footer placement should prepend exactly one add-on mount ahead of the original footer.');
@@ -458,7 +458,7 @@ try {
 
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 120)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 120)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'Repeated invocation for the same event should not duplicate the native footer mount.');
@@ -469,7 +469,7 @@ try {
 	$GLOBALS['vms_test_context']['render_output'][121] = $renderedMarkup;
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath, $expectedMount): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 121)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 121)));
 		}
 	);
 	vms_test_assert_same($expectedMount . $footerHtml, $result, 'Different event IDs should remain independently renderable after another event has already mounted.');
@@ -483,7 +483,7 @@ try {
 	$content = "<article>Event body</article>";
 	[$result] = vms_test_call_with_capture(
 		static function () use ($content): string {
-			return vms_ticketing_v2_append_entitlements_to_tec_event($content);
+			return bvmgr_ticketing_v2_append_entitlements_to_tec_event($content);
 		}
 	);
 	vms_test_assert_same($content, $result, 'Successful native footer placement should suppress the later automatic append fallback for the same event.');
@@ -496,7 +496,7 @@ try {
 	$GLOBALS['vms_test_context']['render_output'][122] = $renderedMarkup;
 	[$result] = vms_test_call_with_capture(
 		static function () use ($content): string {
-			return vms_ticketing_v2_append_entitlements_to_tec_event($content);
+			return bvmgr_ticketing_v2_append_entitlements_to_tec_event($content);
 		}
 	);
 	vms_test_assert_same($content . $renderedMarkup, $result, 'Absent native footer placement should preserve the automatic append fallback.');
@@ -512,7 +512,7 @@ try {
 	$GLOBALS['vms_test_context']['render_output'][123] = $renderedMarkup;
 	[$result] = vms_test_call_with_capture(
 		static function () use ($content): string {
-			return vms_ticketing_v2_append_entitlements_to_tec_event($content . ' [vms_reserved_add_ons]');
+			return bvmgr_ticketing_v2_append_entitlements_to_tec_event($content . ' [vms_reserved_add_ons]');
 		}
 	);
 	vms_test_assert_same($content . ' [vms_reserved_add_ons]', $result, 'Automatic append should preserve shortcode precedence.');
@@ -526,7 +526,7 @@ try {
 	$GLOBALS['vms_test_context']['render_output'][124] = $renderedMarkup;
 	[$result] = vms_test_call_with_capture(
 		static function () use ($content): string {
-			return vms_ticketing_v2_append_entitlements_to_tec_event($content);
+			return bvmgr_ticketing_v2_append_entitlements_to_tec_event($content);
 		}
 	);
 	vms_test_assert_same($content, $result, 'Cancelled events should still suppress the append fallback.');
@@ -538,7 +538,7 @@ try {
 	define('REST_REQUEST', true);
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
-			return vms_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 125)));
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 125)));
 		}
 	);
 	vms_test_assert_same($footerHtml, $result, 'REST requests should leave the native footer unchanged.');

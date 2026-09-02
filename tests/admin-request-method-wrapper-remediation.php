@@ -42,7 +42,7 @@ function wp_unslash($value)
 	return $value;
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
 	if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
 		return '';
@@ -97,7 +97,7 @@ function vms_test_extract_function(string $source, string $name): string
 
 function vms_test_budget_route(array $post): bool
 {
-	if ('POST' !== vms_budget_request_method()) {
+	if ('POST' !== bvmgr_budget_request_method()) {
 		return false;
 	}
 
@@ -107,7 +107,7 @@ function vms_test_budget_route(array $post): bool
 
 function vms_test_staffing_template_save_route(array $post): bool
 {
-	$request_method = vms_staffing_admin_request_method();
+	$request_method = bvmgr_staffing_admin_request_method();
 	$post_data = 'POST' === $request_method ? wp_unslash($post) : array();
 	$post_action = isset($post_data['vms_tpl_action']) ? sanitize_key((string) $post_data['vms_tpl_action']) : '';
 
@@ -134,15 +134,15 @@ $staffTasksSource = (string) file_get_contents($pluginRoot . '/includes/modules/
 $vendorTaxSource = (string) file_get_contents($pluginRoot . '/includes/portal/vendor-tax-profile.php');
 $staffPortalSource = (string) file_get_contents($pluginRoot . '/includes/portal/staff-portal.php');
 
-$budgetFunctionSource = vms_test_extract_function($budgetSource, 'vms_budget_request_method');
-$staffingFunctionSource = vms_test_extract_function($staffingSource, 'vms_staffing_admin_request_method');
+$budgetFunctionSource = vms_test_extract_function($budgetSource, 'bvmgr_budget_request_method');
+$staffingFunctionSource = vms_test_extract_function($staffingSource, 'bvmgr_staffing_admin_request_method');
 
 vms_test_assert(strpos($budgetSource, '$_SERVER[\'REQUEST_METHOD\']') === false, 'Budget Calculator should no longer read $_SERVER[\'REQUEST_METHOD\'] directly.');
 vms_test_assert(strpos($staffingSource, '$_SERVER[\'REQUEST_METHOD\']') === false, 'Staffing admin should no longer read $_SERVER[\'REQUEST_METHOD\'] directly.');
-vms_test_assert(substr_count($budgetFunctionSource, "vms_request_server_value('REQUEST_METHOD')") === 1, 'Budget Calculator wrapper should source REQUEST_METHOD through vms_request_server_value().');
-vms_test_assert(substr_count($staffingFunctionSource, "vms_request_server_value('REQUEST_METHOD')") === 1, 'Staffing admin wrapper should source REQUEST_METHOD through vms_request_server_value().');
-vms_test_assert(strpos($budgetSource, "if ('POST' === vms_budget_request_method()) {") !== false, 'Budget Calculator POST route should continue to gate on the local wrapper.');
-vms_test_assert(strpos($staffingSource, "\$request_method = vms_staffing_admin_request_method();") !== false, 'Staffing admin should continue to capture the local request-method wrapper result.');
+vms_test_assert(substr_count($budgetFunctionSource, "bvmgr_request_server_value('REQUEST_METHOD')") === 1, 'Budget Calculator wrapper should source REQUEST_METHOD through bvmgr_request_server_value().');
+vms_test_assert(substr_count($staffingFunctionSource, "bvmgr_request_server_value('REQUEST_METHOD')") === 1, 'Staffing admin wrapper should source REQUEST_METHOD through bvmgr_request_server_value().');
+vms_test_assert(strpos($budgetSource, "if ('POST' === bvmgr_budget_request_method()) {") !== false, 'Budget Calculator POST route should continue to gate on the local wrapper.');
+vms_test_assert(strpos($staffingSource, "\$request_method = bvmgr_staffing_admin_request_method();") !== false, 'Staffing admin should continue to capture the local request-method wrapper result.');
 vms_test_assert(strpos($staffingSource, "if ('POST' === \$request_method && 'save' === \$post_action) {") !== false, 'Staffing templates save route should continue to gate on POST and save action.');
 
 eval($budgetFunctionSource);
@@ -269,8 +269,8 @@ $postPayloads = array(
 foreach ($cases as $case) {
 	$_SERVER = $case['server'];
 
-	$budgetMethod = vms_budget_request_method();
-	$staffingMethod = vms_staffing_admin_request_method();
+	$budgetMethod = bvmgr_budget_request_method();
+	$staffingMethod = bvmgr_staffing_admin_request_method();
 
 	vms_test_assert($budgetMethod === $case['budget'], 'Unexpected Budget Calculator method result for ' . $case['label'] . '.');
 	vms_test_assert($staffingMethod === $case['staffing'], 'Unexpected Staffing admin method result for ' . $case['label'] . '.');

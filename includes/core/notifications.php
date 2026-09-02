@@ -1,92 +1,92 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_notify_log_table_name')) {
-	function vms_notify_log_table_name(): string
+if (!function_exists('bvmgr_notify_log_table_name')) {
+	function bvmgr_notify_log_table_name(): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'vms_notify_log';
 	}
 }
 
-if (!function_exists('vms_notify_db_schema_option_key')) {
-	function vms_notify_db_schema_option_key(): string
+if (!function_exists('bvmgr_notify_db_schema_option_key')) {
+	function bvmgr_notify_db_schema_option_key(): string
 	{
 		return 'vms_notify_db_schema_version';
 	}
 }
 
-if (!function_exists('vms_notify_db_schema_target')) {
-	function vms_notify_db_schema_target(): string
+if (!function_exists('bvmgr_notify_db_schema_target')) {
+	function bvmgr_notify_db_schema_target(): string
 	{
 		return '1.0.0';
 	}
 }
 
-if (!function_exists('vms_notify_digest_enabled_option_key')) {
-	function vms_notify_digest_enabled_option_key(): string
+if (!function_exists('bvmgr_notify_digest_enabled_option_key')) {
+	function bvmgr_notify_digest_enabled_option_key(): string
 	{
 		return 'vms_notify_digest_enabled';
 	}
 }
 
-if (!function_exists('vms_notify_digest_time_option_key')) {
-	function vms_notify_digest_time_option_key(): string
+if (!function_exists('bvmgr_notify_digest_time_option_key')) {
+	function bvmgr_notify_digest_time_option_key(): string
 	{
 		return 'vms_notify_digest_time';
 	}
 }
 
-if (!function_exists('vms_notify_digest_window_option_key')) {
-	function vms_notify_digest_window_option_key(): string
+if (!function_exists('bvmgr_notify_digest_window_option_key')) {
+	function bvmgr_notify_digest_window_option_key(): string
 	{
 		return 'vms_notify_digest_window';
 	}
 }
 
-if (!function_exists('vms_notify_digest_last_run_option_key')) {
-	function vms_notify_digest_last_run_option_key(): string
+if (!function_exists('bvmgr_notify_digest_last_run_option_key')) {
+	function bvmgr_notify_digest_last_run_option_key(): string
 	{
 		return 'vms_notify_digest_last_run_day';
 	}
 }
 
-if (!function_exists('vms_notify_valid_digest_window')) {
-	function vms_notify_valid_digest_window(string $window): string
+if (!function_exists('bvmgr_notify_valid_digest_window')) {
+	function bvmgr_notify_valid_digest_window(string $window): string
 	{
 		$window = sanitize_key($window);
 		return in_array($window, array('today', 'next3', 'next7'), true) ? $window : 'next3';
 	}
 }
 
-if (!function_exists('vms_notify_valid_channel')) {
-	function vms_notify_valid_channel(string $channel): string
+if (!function_exists('bvmgr_notify_valid_channel')) {
+	function bvmgr_notify_valid_channel(string $channel): string
 	{
 		$channel = sanitize_key($channel);
 		return in_array($channel, array('email', 'sms', 'whatsapp'), true) ? $channel : '';
 	}
 }
 
-if (!function_exists('vms_notify_sanitize_template_key')) {
-	function vms_notify_sanitize_template_key(string $template_key): string
+if (!function_exists('bvmgr_notify_sanitize_template_key')) {
+	function bvmgr_notify_sanitize_template_key(string $template_key): string
 	{
 		$template_key = strtolower(trim($template_key));
 		return preg_replace('/[^a-z0-9._-]/', '', $template_key) ?? '';
 	}
 }
 
-if (!function_exists('vms_notify_maybe_upgrade_schema')) {
-	function vms_notify_maybe_upgrade_schema(): void
+if (!function_exists('bvmgr_notify_maybe_upgrade_schema')) {
+	function bvmgr_notify_maybe_upgrade_schema(): void
 	{
-		$current = (string) get_option(vms_notify_db_schema_option_key(), '');
-		$target = vms_notify_db_schema_target();
+		$current = (string) get_option(bvmgr_notify_db_schema_option_key(), '');
+		$target = bvmgr_notify_db_schema_target();
 		if ($current === $target) {
 			return;
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		global $wpdb;
-		$table = vms_notify_log_table_name();
+		$table = bvmgr_notify_log_table_name();
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE {$table} (
@@ -112,23 +112,23 @@ if (!function_exists('vms_notify_maybe_upgrade_schema')) {
 		) {$charset_collate};";
 
 		dbDelta($sql);
-		update_option(vms_notify_db_schema_option_key(), $target, false);
+		update_option(bvmgr_notify_db_schema_option_key(), $target, false);
 	}
 }
-add_action('plugins_loaded', 'vms_notify_maybe_upgrade_schema', 9);
+add_action('plugins_loaded', 'bvmgr_notify_maybe_upgrade_schema', 9);
 
-if (!function_exists('vms_notify_register_default_options')) {
-	function vms_notify_register_default_options(): void
+if (!function_exists('bvmgr_notify_register_default_options')) {
+	function bvmgr_notify_register_default_options(): void
 	{
-		add_option(vms_notify_digest_enabled_option_key(), 0);
-		add_option(vms_notify_digest_time_option_key(), '08:00');
-		add_option(vms_notify_digest_window_option_key(), 'next3');
+		add_option(bvmgr_notify_digest_enabled_option_key(), 0);
+		add_option(bvmgr_notify_digest_time_option_key(), '08:00');
+		add_option(bvmgr_notify_digest_window_option_key(), 'next3');
 	}
 }
-add_action('admin_init', 'vms_notify_register_default_options', 1);
+add_action('admin_init', 'bvmgr_notify_register_default_options', 1);
 
-if (!function_exists('vms_notify_seed_user_defaults')) {
-	function vms_notify_seed_user_defaults(int $user_id): void
+if (!function_exists('bvmgr_notify_seed_user_defaults')) {
+	function bvmgr_notify_seed_user_defaults(int $user_id): void
 	{
 		$user_id = absint($user_id);
 		if ($user_id <= 0) {
@@ -148,10 +148,10 @@ if (!function_exists('vms_notify_seed_user_defaults')) {
 		}
 	}
 }
-add_action('user_register', 'vms_notify_seed_user_defaults');
+add_action('user_register', 'bvmgr_notify_seed_user_defaults');
 
-if (!function_exists('vms_notify_user_locale')) {
-	function vms_notify_user_locale(int $user_id): string
+if (!function_exists('bvmgr_notify_user_locale')) {
+	function bvmgr_notify_user_locale(int $user_id): string
 	{
 		$user_id = absint($user_id);
 		$preferred = sanitize_text_field((string) get_user_meta($user_id, 'vms_locale_preference', true));
@@ -163,11 +163,11 @@ if (!function_exists('vms_notify_user_locale')) {
 	}
 }
 
-if (!function_exists('vms_notify_user_channel_enabled')) {
-	function vms_notify_user_channel_enabled(int $user_id, string $channel): bool
+if (!function_exists('bvmgr_notify_user_channel_enabled')) {
+	function bvmgr_notify_user_channel_enabled(int $user_id, string $channel): bool
 	{
 		$user_id = absint($user_id);
-		$channel = vms_notify_valid_channel($channel);
+		$channel = bvmgr_notify_valid_channel($channel);
 		if ($user_id <= 0 || $channel === '') {
 			return false;
 		}
@@ -186,8 +186,8 @@ if (!function_exists('vms_notify_user_channel_enabled')) {
 	}
 }
 
-if (!function_exists('vms_notify_user_phone_e164')) {
-	function vms_notify_user_phone_e164(int $user_id): string
+if (!function_exists('bvmgr_notify_user_phone_e164')) {
+	function bvmgr_notify_user_phone_e164(int $user_id): string
 	{
 		$user_id = absint($user_id);
 		if ($user_id <= 0) {
@@ -201,13 +201,13 @@ if (!function_exists('vms_notify_user_phone_e164')) {
 	}
 }
 
-if (!function_exists('vms_notify_default_channels_for_user')) {
+if (!function_exists('bvmgr_notify_default_channels_for_user')) {
 	/** @return string[] */
-	function vms_notify_default_channels_for_user(int $user_id): array
+	function bvmgr_notify_default_channels_for_user(int $user_id): array
 	{
 		$channels = array();
 		foreach (array('email', 'sms', 'whatsapp') as $channel) {
-			if (vms_notify_user_channel_enabled($user_id, $channel)) {
+			if (bvmgr_notify_user_channel_enabled($user_id, $channel)) {
 				$channels[] = $channel;
 			}
 		}
@@ -215,10 +215,10 @@ if (!function_exists('vms_notify_default_channels_for_user')) {
 	}
 }
 
-if (!function_exists('vms_notify_channel_provider_key')) {
-	function vms_notify_channel_provider_key(string $channel): string
+if (!function_exists('bvmgr_notify_channel_provider_key')) {
+	function bvmgr_notify_channel_provider_key(string $channel): string
 	{
-		$channel = vms_notify_valid_channel($channel);
+		$channel = bvmgr_notify_valid_channel($channel);
 		if ($channel === 'email') {
 			return 'core_email';
 		}
@@ -232,14 +232,14 @@ if (!function_exists('vms_notify_channel_provider_key')) {
 	}
 }
 
-if (!function_exists('vms_notify_get_providers')) {
+if (!function_exists('bvmgr_notify_get_providers')) {
 	/**
 	 * @return array<string,callable>
 	 */
-	function vms_notify_get_providers(): array
+	function bvmgr_notify_get_providers(): array
 	{
 		$providers = array(
-			'core_email' => 'vms_notify_provider_core_email_send',
+			'core_email' => 'bvmgr_notify_provider_core_email_send',
 		);
 		$providers = (array) apply_filters('vms_notify_providers', $providers);
 
@@ -255,12 +255,12 @@ if (!function_exists('vms_notify_get_providers')) {
 	}
 }
 
-if (!function_exists('vms_notify_provider_core_email_send')) {
+if (!function_exists('bvmgr_notify_provider_core_email_send')) {
 	/**
 	 * @param array<string,mixed> $message
 	 * @return array<string,mixed>
 	 */
-	function vms_notify_provider_core_email_send(array $message): array
+	function bvmgr_notify_provider_core_email_send(array $message): array
 	{
 		$to = sanitize_email((string) ($message['to'] ?? ''));
 		if (!is_email($to)) {
@@ -300,12 +300,12 @@ if (!function_exists('vms_notify_provider_core_email_send')) {
 	}
 }
 
-if (!function_exists('vms_notify_redact_payload_for_log')) {
+if (!function_exists('bvmgr_notify_redact_payload_for_log')) {
 	/**
 	 * @param mixed $value
 	 * @return mixed
 	 */
-	function vms_notify_redact_payload_for_log($value)
+	function bvmgr_notify_redact_payload_for_log($value)
 	{
 		if (is_array($value)) {
 			$out = array();
@@ -315,12 +315,12 @@ if (!function_exists('vms_notify_redact_payload_for_log')) {
 					$out[$key] = '[redacted]';
 					continue;
 				}
-				$out[$key !== '' ? $key : $k] = vms_notify_redact_payload_for_log($v);
+				$out[$key !== '' ? $key : $k] = bvmgr_notify_redact_payload_for_log($v);
 			}
 			return $out;
 		}
 		if (is_object($value)) {
-			return vms_notify_redact_payload_for_log((array) $value);
+			return bvmgr_notify_redact_payload_for_log((array) $value);
 		}
 		if (is_bool($value) || is_int($value) || is_float($value) || $value === null) {
 			return $value;
@@ -334,16 +334,16 @@ if (!function_exists('vms_notify_redact_payload_for_log')) {
 	}
 }
 
-if (!function_exists('vms_notify_insert_log')) {
+if (!function_exists('bvmgr_notify_insert_log')) {
 	/**
 	 * created_at is stored in UTC (WordPress current_time with GMT=true).
 	 *
 	 * @param array<string,mixed> $entry
 	 */
-	function vms_notify_insert_log(array $entry): void
+	function bvmgr_notify_insert_log(array $entry): void
 	{
 		global $wpdb;
-		$table = vms_notify_log_table_name();
+		$table = bvmgr_notify_log_table_name();
 		if ($table === '') {
 			return;
 		}
@@ -368,8 +368,8 @@ if (!function_exists('vms_notify_insert_log')) {
 				'recipient_address' => sanitize_text_field((string) ($entry['recipient_address'] ?? '')),
 				'channel' => $channel,
 				'locale' => sanitize_text_field((string) ($entry['locale'] ?? '')),
-				'template_key' => vms_notify_sanitize_template_key((string) ($entry['template_key'] ?? 'unknown')),
-				'payload_json' => wp_json_encode(vms_notify_redact_payload_for_log($entry['payload'] ?? array())),
+				'template_key' => bvmgr_notify_sanitize_template_key((string) ($entry['template_key'] ?? 'unknown')),
+				'payload_json' => wp_json_encode(bvmgr_notify_redact_payload_for_log($entry['payload'] ?? array())),
 				'provider' => sanitize_key((string) ($entry['provider'] ?? 'unknown')),
 				'provider_message_id' => sanitize_text_field((string) ($entry['provider_message_id'] ?? '')),
 				'status' => $status,
@@ -379,7 +379,7 @@ if (!function_exists('vms_notify_insert_log')) {
 		);
 		if ($ok !== 1) {
 			$event_key = substr(sanitize_key((string) ($entry['event_key'] ?? 'unknown')), 0, 80);
-			$recorded = function_exists('vms_record_operational_issue') && vms_record_operational_issue(
+			$recorded = function_exists('bvmgr_record_operational_issue') && bvmgr_record_operational_issue(
 				'notification_log_insert_failed',
 				array(
 					'service' => 'notifications',
@@ -396,22 +396,22 @@ if (!function_exists('vms_notify_insert_log')) {
 	}
 }
 
-if (!function_exists('vms_notify_locale_is_spanish')) {
-	function vms_notify_locale_is_spanish(string $locale): bool
+if (!function_exists('bvmgr_notify_locale_is_spanish')) {
+	function bvmgr_notify_locale_is_spanish(string $locale): bool
 	{
 		$locale = strtolower(trim($locale));
 		return strpos($locale, 'es') === 0;
 	}
 }
 
-if (!function_exists('vms_notify_default_template_payload')) {
+if (!function_exists('bvmgr_notify_default_template_payload')) {
 	/**
 	 * @param array<string,mixed> $vars
 	 * @return array<string,string>|null
 	 */
-	function vms_notify_default_template_payload(string $template_key, string $locale, array $vars): ?array
+	function bvmgr_notify_default_template_payload(string $template_key, string $locale, array $vars): ?array
 	{
-		$is_es = vms_notify_locale_is_spanish($locale);
+		$is_es = bvmgr_notify_locale_is_spanish($locale);
 		$title = trim((string) ($vars['task_title'] ?? ''));
 		$due = trim((string) ($vars['due_datetime'] ?? ''));
 		$event = trim((string) ($vars['event_context'] ?? ''));
@@ -504,12 +504,12 @@ if (!function_exists('vms_notify_default_template_payload')) {
 	}
 }
 
-if (!function_exists('vms_notify_resolve_template_payload')) {
+if (!function_exists('bvmgr_notify_resolve_template_payload')) {
 	/**
 	 * @param array<string,mixed> $vars
 	 * @return array<string,string>|WP_Error
 	 */
-	function vms_notify_resolve_template_payload(string $event_key, string $template_key, string $locale, array $vars, int $user_id)
+	function bvmgr_notify_resolve_template_payload(string $event_key, string $template_key, string $locale, array $vars, int $user_id)
 	{
 		$custom = apply_filters('vms_notify_template_payload', null, $event_key, $template_key, $locale, $vars, $user_id);
 		if (is_array($custom)) {
@@ -521,7 +521,7 @@ if (!function_exists('vms_notify_resolve_template_payload')) {
 			);
 		}
 
-		$fallback = vms_notify_default_template_payload($template_key, $locale, $vars);
+		$fallback = bvmgr_notify_default_template_payload($template_key, $locale, $vars);
 		if (is_array($fallback)) {
 			return $fallback;
 		}
@@ -530,10 +530,10 @@ if (!function_exists('vms_notify_resolve_template_payload')) {
 	}
 }
 
-if (!function_exists('vms_notify_get_recipient_for_channel')) {
-	function vms_notify_get_recipient_for_channel(int $user_id, string $channel): string
+if (!function_exists('bvmgr_notify_get_recipient_for_channel')) {
+	function bvmgr_notify_get_recipient_for_channel(int $user_id, string $channel): string
 	{
-		$channel = vms_notify_valid_channel($channel);
+		$channel = bvmgr_notify_valid_channel($channel);
 		if ($channel === '') {
 			return '';
 		}
@@ -542,21 +542,21 @@ if (!function_exists('vms_notify_get_recipient_for_channel')) {
 			$email = $user && isset($user->user_email) ? sanitize_email((string) $user->user_email) : '';
 			return is_email($email) ? $email : '';
 		}
-		return vms_notify_user_phone_e164($user_id);
+		return bvmgr_notify_user_phone_e164($user_id);
 	}
 }
 
-if (!function_exists('vms_notify_user')) {
+if (!function_exists('bvmgr_notify_user')) {
 	/**
 	 * @param array<string,mixed> $vars
 	 * @param string[] $channels
 	 * @return array<string,mixed>
 	 */
-	function vms_notify_user(int $user_id, string $event_key, string $template_key, array $vars, array $channels = array()): array
+	function bvmgr_notify_user(int $user_id, string $event_key, string $template_key, array $vars, array $channels = array()): array
 	{
 		$user_id = absint($user_id);
 		$event_key = sanitize_key($event_key);
-		$template_key = vms_notify_sanitize_template_key($template_key);
+		$template_key = bvmgr_notify_sanitize_template_key($template_key);
 		if ($user_id <= 0 || $event_key === '' || $template_key === '') {
 			return array(
 				'ok' => false,
@@ -567,10 +567,10 @@ if (!function_exists('vms_notify_user')) {
 			);
 		}
 
-		$locale = vms_notify_user_locale($user_id);
-		$payload = vms_notify_resolve_template_payload($event_key, $template_key, $locale, $vars, $user_id);
+		$locale = bvmgr_notify_user_locale($user_id);
+		$payload = bvmgr_notify_resolve_template_payload($event_key, $template_key, $locale, $vars, $user_id);
 		if (is_wp_error($payload)) {
-			vms_notify_insert_log(array(
+			bvmgr_notify_insert_log(array(
 				'source' => 'vms_core',
 				'event_key' => $event_key,
 				'recipient_user_id' => $user_id,
@@ -595,19 +595,19 @@ if (!function_exists('vms_notify_user')) {
 		$selected_channels = array();
 		if (!empty($channels)) {
 			foreach ($channels as $channel) {
-				$key = vms_notify_valid_channel((string) $channel);
+				$key = bvmgr_notify_valid_channel((string) $channel);
 				if ($key !== '') {
 					$selected_channels[$key] = $key;
 				}
 			}
 		} else {
-			foreach (vms_notify_default_channels_for_user($user_id) as $channel) {
+			foreach (bvmgr_notify_default_channels_for_user($user_id) as $channel) {
 				$selected_channels[$channel] = $channel;
 			}
 		}
 		$selected_channels = array_values($selected_channels);
 		if (empty($selected_channels)) {
-			vms_notify_insert_log(array(
+			bvmgr_notify_insert_log(array(
 				'source' => (string) ($payload['source'] ?? 'vms_module'),
 				'event_key' => $event_key,
 				'recipient_user_id' => $user_id,
@@ -629,20 +629,20 @@ if (!function_exists('vms_notify_user')) {
 			);
 		}
 
-		$providers = vms_notify_get_providers();
+		$providers = bvmgr_notify_get_providers();
 		$results = array();
 		$sent = 0;
 		$failed = 0;
 		$skipped = 0;
 
 		foreach ($selected_channels as $channel) {
-			$provider_key = vms_notify_channel_provider_key($channel);
-			$recipient = vms_notify_get_recipient_for_channel($user_id, $channel);
+			$provider_key = bvmgr_notify_channel_provider_key($channel);
+			$recipient = bvmgr_notify_get_recipient_for_channel($user_id, $channel);
 
 			if ($recipient === '') {
 				$skipped++;
 				$error = __('Recipient address is missing for this channel.', 'backstage-venue-manager');
-				vms_notify_insert_log(array(
+				bvmgr_notify_insert_log(array(
 					'source' => (string) ($payload['source'] ?? 'vms_module'),
 					'event_key' => $event_key,
 					'recipient_user_id' => $user_id,
@@ -662,7 +662,7 @@ if (!function_exists('vms_notify_user')) {
 			if ($provider_key === '' || !isset($providers[$provider_key])) {
 				$skipped++;
 				$error = __('Channel provider is not installed.', 'backstage-venue-manager');
-				vms_notify_insert_log(array(
+				bvmgr_notify_insert_log(array(
 					'source' => (string) ($payload['source'] ?? 'vms_module'),
 					'event_key' => $event_key,
 					'recipient_user_id' => $user_id,
@@ -700,7 +700,7 @@ if (!function_exists('vms_notify_user')) {
 
 			if ($provider_ok) {
 				$sent++;
-				vms_notify_insert_log(array(
+				bvmgr_notify_insert_log(array(
 					'source' => (string) ($payload['source'] ?? 'vms_module'),
 					'event_key' => $event_key,
 					'recipient_user_id' => $user_id,
@@ -717,7 +717,7 @@ if (!function_exists('vms_notify_user')) {
 				$results[] = array('channel' => $channel, 'status' => 'sent', 'provider' => $provider_key);
 			} else {
 				$failed++;
-				vms_notify_insert_log(array(
+				bvmgr_notify_insert_log(array(
 					'source' => (string) ($payload['source'] ?? 'vms_module'),
 					'event_key' => $event_key,
 					'recipient_user_id' => $user_id,
@@ -745,14 +745,14 @@ if (!function_exists('vms_notify_user')) {
 	}
 }
 
-if (!function_exists('vms_notify_recent_logs')) {
+if (!function_exists('bvmgr_notify_recent_logs')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_notify_recent_logs(int $limit = 10): array
+	function bvmgr_notify_recent_logs(int $limit = 10): array
 	{
 		global $wpdb;
-		$table = vms_notify_log_table_name();
+		$table = bvmgr_notify_log_table_name();
 		if ($table === '') {
 			return array();
 		}
@@ -768,17 +768,17 @@ if (!function_exists('vms_notify_recent_logs')) {
 	}
 }
 
-if (!function_exists('vms_notify_run_digest_tick')) {
-	function vms_notify_run_digest_tick(): void
+if (!function_exists('bvmgr_notify_run_digest_tick')) {
+	function bvmgr_notify_run_digest_tick(): void
 	{
-		$enabled = !empty(get_option(vms_notify_digest_enabled_option_key(), 0));
+		$enabled = !empty(get_option(bvmgr_notify_digest_enabled_option_key(), 0));
 		if (!$enabled) {
 			return;
 		}
 
 		$now_local = current_time('mysql', false);
 		$today = wp_date('Y-m-d', time(), wp_timezone());
-		$time = sanitize_text_field((string) get_option(vms_notify_digest_time_option_key(), '08:00'));
+		$time = sanitize_text_field((string) get_option(bvmgr_notify_digest_time_option_key(), '08:00'));
 		if (!preg_match('/^\d{2}:\d{2}$/', $time)) {
 			$time = '08:00';
 		}
@@ -787,26 +787,26 @@ if (!function_exists('vms_notify_run_digest_tick')) {
 			return;
 		}
 
-		$last_run = sanitize_text_field((string) get_option(vms_notify_digest_last_run_option_key(), ''));
+		$last_run = sanitize_text_field((string) get_option(bvmgr_notify_digest_last_run_option_key(), ''));
 		if ($last_run === $today) {
 			return;
 		}
 
-		$window = vms_notify_valid_digest_window((string) get_option(vms_notify_digest_window_option_key(), 'next3'));
+		$window = bvmgr_notify_valid_digest_window((string) get_option(bvmgr_notify_digest_window_option_key(), 'next3'));
 		do_action('vms_notify_digest_tick', array(
 			'run_day' => $today,
 			'run_at_local' => $now_local,
 			'window' => $window,
 		));
-		update_option(vms_notify_digest_last_run_option_key(), $today, false);
+		update_option(bvmgr_notify_digest_last_run_option_key(), $today, false);
 	}
 }
-add_action('vms_notify_digest_tick_cron', 'vms_notify_run_digest_tick');
+add_action('vms_notify_digest_tick_cron', 'bvmgr_notify_run_digest_tick');
 
-if (!function_exists('vms_notify_ensure_digest_cron')) {
-	function vms_notify_ensure_digest_cron(): void
+if (!function_exists('bvmgr_notify_ensure_digest_cron')) {
+	function bvmgr_notify_ensure_digest_cron(): void
 	{
-		if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) {
+		if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
 			return;
 		}
 		if (!wp_next_scheduled('vms_notify_digest_tick_cron')) {
@@ -814,4 +814,4 @@ if (!function_exists('vms_notify_ensure_digest_cron')) {
 		}
 	}
 }
-add_action('init', 'vms_notify_ensure_digest_cron', 30);
+add_action('init', 'bvmgr_notify_ensure_digest_cron', 30);

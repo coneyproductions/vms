@@ -1,29 +1,29 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_PRIVATE_FILES_TABLE_SUFFIX')) {
-	define('VMS_PRIVATE_FILES_TABLE_SUFFIX', 'vms_private_files');
+if (!defined('BVMGR_PRIVATE_FILES_TABLE_SUFFIX')) {
+	define('BVMGR_PRIVATE_FILES_TABLE_SUFFIX', 'vms_private_files');
 }
-if (!defined('VMS_PRIVATE_FILES_SCHEMA_VERSION')) {
-	define('VMS_PRIVATE_FILES_SCHEMA_VERSION', '1');
+if (!defined('BVMGR_PRIVATE_FILES_SCHEMA_VERSION')) {
+	define('BVMGR_PRIVATE_FILES_SCHEMA_VERSION', '1');
 }
-if (!defined('VMS_PRIVATE_FILES_SCHEMA_OPTION')) {
-	define('VMS_PRIVATE_FILES_SCHEMA_OPTION', 'vms_private_files_schema_version');
+if (!defined('BVMGR_PRIVATE_FILES_SCHEMA_OPTION')) {
+	define('BVMGR_PRIVATE_FILES_SCHEMA_OPTION', 'vms_private_files_schema_version');
 }
 
-if (!function_exists('vms_private_files_table')) {
-	function vms_private_files_table(): string
+if (!function_exists('bvmgr_private_files_table')) {
+	function bvmgr_private_files_table(): string
 	{
 		global $wpdb;
-		return $wpdb->prefix . VMS_PRIVATE_FILES_TABLE_SUFFIX;
+		return $wpdb->prefix . BVMGR_PRIVATE_FILES_TABLE_SUFFIX;
 	}
 }
 
-if (!function_exists('vms_private_files_upload_dir')) {
+if (!function_exists('bvmgr_private_files_upload_dir')) {
 	/**
 	 * @return array{dir:string,base_dir:string}
 	 */
-	function vms_private_files_upload_dir(): array
+	function bvmgr_private_files_upload_dir(): array
 	{
 		$uploads = wp_upload_dir(null, false);
 		$base_dir = isset($uploads['basedir']) ? trim((string) $uploads['basedir']) : '';
@@ -36,8 +36,8 @@ if (!function_exists('vms_private_files_upload_dir')) {
 	}
 }
 
-if (!function_exists('vms_private_files_write_hardening_files')) {
-	function vms_private_files_write_hardening_files(string $dir): void
+if (!function_exists('bvmgr_private_files_write_hardening_files')) {
+	function bvmgr_private_files_write_hardening_files(string $dir): void
 	{
 		$dir = trim($dir);
 		if ($dir === '' || !is_dir($dir)) {
@@ -61,10 +61,10 @@ if (!function_exists('vms_private_files_write_hardening_files')) {
 	}
 }
 
-if (!function_exists('vms_private_files_ensure_dir')) {
-	function vms_private_files_ensure_dir(string $bucket = ''): bool
+if (!function_exists('bvmgr_private_files_ensure_dir')) {
+	function bvmgr_private_files_ensure_dir(string $bucket = ''): bool
 	{
-		$paths = vms_private_files_upload_dir();
+		$paths = bvmgr_private_files_upload_dir();
 		$base_dir = $paths['dir'];
 		if ($base_dir === '') {
 			return false;
@@ -73,7 +73,7 @@ if (!function_exists('vms_private_files_ensure_dir')) {
 		if (!wp_mkdir_p($base_dir)) {
 			return false;
 		}
-		vms_private_files_write_hardening_files($base_dir);
+		bvmgr_private_files_write_hardening_files($base_dir);
 
 		$bucket = sanitize_key($bucket);
 		if ($bucket === '') {
@@ -84,16 +84,16 @@ if (!function_exists('vms_private_files_ensure_dir')) {
 		if (!wp_mkdir_p($bucket_dir)) {
 			return false;
 		}
-		vms_private_files_write_hardening_files($bucket_dir);
+		bvmgr_private_files_write_hardening_files($bucket_dir);
 
 		return true;
 	}
 }
 
-if (!function_exists('vms_private_files_bucket_dir')) {
-	function vms_private_files_bucket_dir(string $bucket): string
+if (!function_exists('bvmgr_private_files_bucket_dir')) {
+	function bvmgr_private_files_bucket_dir(string $bucket): string
 	{
-		$paths = vms_private_files_upload_dir();
+		$paths = bvmgr_private_files_upload_dir();
 		$base_dir = $paths['dir'];
 		$bucket = sanitize_key($bucket);
 		if ($base_dir === '' || $bucket === '') {
@@ -104,8 +104,8 @@ if (!function_exists('vms_private_files_bucket_dir')) {
 	}
 }
 
-if (!function_exists('vms_private_files_validate_storage_key')) {
-	function vms_private_files_validate_storage_key(string $storage_key): string
+if (!function_exists('bvmgr_private_files_validate_storage_key')) {
+	function bvmgr_private_files_validate_storage_key(string $storage_key): string
 	{
 		$storage_key = trim(str_replace('\\', '/', $storage_key));
 		if ($storage_key === '' || strpos($storage_key, "\0") !== false) {
@@ -138,8 +138,8 @@ if (!function_exists('vms_private_files_validate_storage_key')) {
 	}
 }
 
-if (!function_exists('vms_private_files_generate_storage_key')) {
-	function vms_private_files_generate_storage_key(string $bucket, string $extension = ''): string
+if (!function_exists('bvmgr_private_files_generate_storage_key')) {
+	function bvmgr_private_files_generate_storage_key(string $bucket, string $extension = ''): string
 	{
 		$bucket = sanitize_key($bucket);
 		if ($bucket === '') {
@@ -156,15 +156,15 @@ if (!function_exists('vms_private_files_generate_storage_key')) {
 	}
 }
 
-if (!function_exists('vms_private_files_absolute_path')) {
-	function vms_private_files_absolute_path(string $storage_key): string
+if (!function_exists('bvmgr_private_files_absolute_path')) {
+	function bvmgr_private_files_absolute_path(string $storage_key): string
 	{
-		$storage_key = vms_private_files_validate_storage_key($storage_key);
+		$storage_key = bvmgr_private_files_validate_storage_key($storage_key);
 		if ($storage_key === '') {
 			return '';
 		}
 
-		$paths = vms_private_files_upload_dir();
+		$paths = bvmgr_private_files_upload_dir();
 		$base_dir = $paths['dir'];
 		if ($base_dir === '') {
 			return '';
@@ -174,15 +174,15 @@ if (!function_exists('vms_private_files_absolute_path')) {
 	}
 }
 
-if (!function_exists('vms_private_files_path_is_safe')) {
-	function vms_private_files_path_is_safe(string $path): bool
+if (!function_exists('bvmgr_private_files_path_is_safe')) {
+	function bvmgr_private_files_path_is_safe(string $path): bool
 	{
 		$path = trim($path);
 		if ($path === '') {
 			return false;
 		}
 
-		$paths = vms_private_files_upload_dir();
+		$paths = bvmgr_private_files_upload_dir();
 		$base_dir = $paths['dir'];
 		if ($base_dir === '') {
 			return false;
@@ -204,12 +204,12 @@ if (!function_exists('vms_private_files_path_is_safe')) {
 	}
 }
 
-if (!function_exists('vms_private_files_normalize_allowed_mimes')) {
+if (!function_exists('bvmgr_private_files_normalize_allowed_mimes')) {
 	/**
 	 * @param array<string,mixed> $allowed_mimes
 	 * @return array<string,string|array<int,string>>
 	 */
-	function vms_private_files_normalize_allowed_mimes(array $allowed_mimes): array
+	function bvmgr_private_files_normalize_allowed_mimes(array $allowed_mimes): array
 	{
 		$normalized = array();
 
@@ -255,15 +255,15 @@ if (!function_exists('vms_private_files_normalize_allowed_mimes')) {
 	}
 }
 
-if (!function_exists('vms_private_files_filter_upload_dir')) {
+if (!function_exists('bvmgr_private_files_filter_upload_dir')) {
 	/**
 	 * @param array<string,mixed> $uploads
 	 * @return array<string,mixed>
 	 */
-	function vms_private_files_filter_upload_dir(array $uploads): array
+	function bvmgr_private_files_filter_upload_dir(array $uploads): array
 	{
-		$context = isset($GLOBALS['vms_private_files_upload_dir_context']) && is_array($GLOBALS['vms_private_files_upload_dir_context'])
-			? $GLOBALS['vms_private_files_upload_dir_context']
+		$context = isset($GLOBALS['bvmgr_private_files_upload_dir_context']) && is_array($GLOBALS['bvmgr_private_files_upload_dir_context'])
+			? $GLOBALS['bvmgr_private_files_upload_dir_context']
 			: array();
 		$path = isset($context['path']) ? trim((string) $context['path']) : '';
 		if ($path === '') {
@@ -281,37 +281,37 @@ if (!function_exists('vms_private_files_filter_upload_dir')) {
 	}
 }
 
-if (!function_exists('vms_private_files_with_scoped_upload_dir')) {
+if (!function_exists('bvmgr_private_files_with_scoped_upload_dir')) {
 	/**
 	 * @param array<string,mixed> $context
 	 * @return mixed
 	 */
-	function vms_private_files_with_scoped_upload_dir(array $context, callable $callback)
+	function bvmgr_private_files_with_scoped_upload_dir(array $context, callable $callback)
 	{
-		$GLOBALS['vms_private_files_upload_dir_context'] = $context;
-		add_filter('upload_dir', 'vms_private_files_filter_upload_dir');
+		$GLOBALS['bvmgr_private_files_upload_dir_context'] = $context;
+		add_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir');
 
 		try {
 			return $callback();
 		} finally {
-			remove_filter('upload_dir', 'vms_private_files_filter_upload_dir');
-			unset($GLOBALS['vms_private_files_upload_dir_context']);
+			remove_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir');
+			unset($GLOBALS['bvmgr_private_files_upload_dir_context']);
 		}
 	}
 }
 
-if (!function_exists('vms_private_files_install_schema')) {
-	function vms_private_files_install_schema(): void
+if (!function_exists('bvmgr_private_files_install_schema')) {
+	function bvmgr_private_files_install_schema(): void
 	{
-		$installed = (string) get_option(VMS_PRIVATE_FILES_SCHEMA_OPTION, '');
-		if ($installed === VMS_PRIVATE_FILES_SCHEMA_VERSION) {
-			vms_private_files_ensure_dir();
+		$installed = (string) get_option(BVMGR_PRIVATE_FILES_SCHEMA_OPTION, '');
+		if ($installed === BVMGR_PRIVATE_FILES_SCHEMA_VERSION) {
+			bvmgr_private_files_ensure_dir();
 			return;
 		}
 
 		global $wpdb;
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$table = vms_private_files_table();
+		$table = bvmgr_private_files_table();
 		$charset = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE {$table} (
@@ -331,39 +331,39 @@ if (!function_exists('vms_private_files_install_schema')) {
 		) {$charset};";
 
 		dbDelta($sql);
-		vms_private_files_ensure_dir();
-		update_option(VMS_PRIVATE_FILES_SCHEMA_OPTION, VMS_PRIVATE_FILES_SCHEMA_VERSION, false);
+		bvmgr_private_files_ensure_dir();
+		update_option(BVMGR_PRIVATE_FILES_SCHEMA_OPTION, BVMGR_PRIVATE_FILES_SCHEMA_VERSION, false);
 	}
 }
-add_action('init', 'vms_private_files_install_schema', 34);
+add_action('init', 'bvmgr_private_files_install_schema', 34);
 
-if (!function_exists('vms_private_file_get')) {
+if (!function_exists('bvmgr_private_file_get')) {
 	/**
 	 * @return array<string,mixed>|null
 	 */
-	function vms_private_file_get(int $file_id): ?array
+	function bvmgr_private_file_get(int $file_id): ?array
 	{
 		if ($file_id <= 0) {
 			return null;
 		}
 
 		global $wpdb;
-		$table = vms_private_files_table();
+		$table = bvmgr_private_files_table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Authorization-sensitive private-file reads must observe the current plugin-owned index row; stale cached metadata could expose a deleted or reassigned file.
 		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $file_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
 
-if (!function_exists('vms_private_file_path')) {
-	function vms_private_file_path(string $stored_filename): string
+if (!function_exists('bvmgr_private_file_path')) {
+	function bvmgr_private_file_path(string $stored_filename): string
 	{
-		return vms_private_files_absolute_path($stored_filename);
+		return bvmgr_private_files_absolute_path($stored_filename);
 	}
 }
 
-if (!function_exists('vms_private_files_safe_download_name')) {
-	function vms_private_files_safe_download_name(string $filename, string $fallback_base = 'download'): string
+if (!function_exists('bvmgr_private_files_safe_download_name')) {
+	function bvmgr_private_files_safe_download_name(string $filename, string $fallback_base = 'download'): string
 	{
 		$filename = sanitize_file_name($filename);
 		if ($filename !== '') {
@@ -375,11 +375,11 @@ if (!function_exists('vms_private_files_safe_download_name')) {
 	}
 }
 
-if (!function_exists('vms_private_files_stream_path')) {
-	function vms_private_files_stream_path(string $path, string $filename, string $mime): void
+if (!function_exists('bvmgr_private_files_stream_path')) {
+	function bvmgr_private_files_stream_path(string $path, string $filename, string $mime): void
 	{
 		$path = trim($path);
-		$filename = vms_private_files_safe_download_name($filename);
+		$filename = bvmgr_private_files_safe_download_name($filename);
 		$mime = trim($mime);
 		if ($mime === '') {
 			$mime = 'application/octet-stream';
@@ -405,11 +405,11 @@ if (!function_exists('vms_private_files_stream_path')) {
 	}
 }
 
-if (!function_exists('vms_private_files_attachment_payload')) {
+if (!function_exists('bvmgr_private_files_attachment_payload')) {
 	/**
 	 * @return array<string,string>|WP_Error
 	 */
-	function vms_private_files_attachment_payload(int $attachment_id)
+	function bvmgr_private_files_attachment_payload(int $attachment_id)
 	{
 		$attachment_id = absint($attachment_id);
 		if ($attachment_id <= 0) {
@@ -439,29 +439,29 @@ if (!function_exists('vms_private_files_attachment_payload')) {
 		return array(
 			'path' => $path,
 			'mime' => $mime,
-			'filename' => vms_private_files_safe_download_name($filename !== '' ? $filename : basename($path)),
+			'filename' => bvmgr_private_files_safe_download_name($filename !== '' ? $filename : basename($path)),
 		);
 	}
 }
 
-if (!function_exists('vms_private_files_register_path')) {
+if (!function_exists('bvmgr_private_files_register_path')) {
 	/**
 	 * @param array<string,mixed> $args
 	 * @return int|WP_Error
 	 */
-	function vms_private_files_register_path(string $storage_key, string $path, string $original_filename, string $mime, array $args = array())
+	function bvmgr_private_files_register_path(string $storage_key, string $path, string $original_filename, string $mime, array $args = array())
 	{
-		$storage_key = vms_private_files_validate_storage_key($storage_key);
+		$storage_key = bvmgr_private_files_validate_storage_key($storage_key);
 		$path = trim($path);
 		$mime = sanitize_text_field($mime);
 		if ($storage_key === '' || $path === '' || $mime === '') {
 			return new WP_Error('private_upload_register_failed', __('Could not register the uploaded file.', 'backstage-venue-manager'));
 		}
-		if (!file_exists($path) || !is_file($path) || !is_readable($path) || !vms_private_files_path_is_safe($path)) {
+		if (!file_exists($path) || !is_file($path) || !is_readable($path) || !bvmgr_private_files_path_is_safe($path)) {
 			return new WP_Error('private_upload_register_failed', __('Could not register the uploaded file.', 'backstage-venue-manager'));
 		}
 
-		$expected_path = vms_private_files_absolute_path($storage_key);
+		$expected_path = bvmgr_private_files_absolute_path($storage_key);
 		$real_path = realpath($path);
 		$real_expected = $expected_path !== '' ? realpath($expected_path) : false;
 		if ($expected_path === '' || $real_path === false || $real_expected === false || wp_normalize_path($real_path) !== wp_normalize_path($real_expected)) {
@@ -472,12 +472,12 @@ if (!function_exists('vms_private_files_register_path')) {
 		$hash = hash_file('sha256', $path);
 
 		global $wpdb;
-		$table = vms_private_files_table();
+		$table = bvmgr_private_files_table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Private-file registration persists one validated metadata row in the plugin-owned index through wpdb::insert(); no core API owns this repository.
 		$inserted = $wpdb->insert(
 			$table,
 			array(
-				'original_filename' => vms_private_files_safe_download_name($original_filename !== '' ? $original_filename : basename($storage_key)),
+				'original_filename' => bvmgr_private_files_safe_download_name($original_filename !== '' ? $original_filename : basename($storage_key)),
 				'stored_filename' => $storage_key,
 				'mime_type' => $mime,
 				'file_size' => $actual_size,
@@ -497,31 +497,31 @@ if (!function_exists('vms_private_files_register_path')) {
 	}
 }
 
-if (!function_exists('vms_private_files_store_validated_upload')) {
+if (!function_exists('bvmgr_private_files_store_validated_upload')) {
 	/**
 	 * @param array<string,mixed> $validated_upload
 	 * @param array<string,mixed> $args
 	 * @return int|WP_Error
 	 */
-	function vms_private_files_store_validated_upload(array $validated_upload, array $args = array())
+	function bvmgr_private_files_store_validated_upload(array $validated_upload, array $args = array())
 	{
 		$bucket = isset($args['bucket']) ? sanitize_key((string) $args['bucket']) : 'general';
 		if ($bucket === '') {
 			$bucket = 'general';
 		}
 		$allowed_mimes = isset($args['allowed_mimes']) && is_array($args['allowed_mimes'])
-			? vms_private_files_normalize_allowed_mimes($args['allowed_mimes'])
+			? bvmgr_private_files_normalize_allowed_mimes($args['allowed_mimes'])
 			: array();
 		if (empty($allowed_mimes)) {
 			return new WP_Error('private_storage_invalid', __('Could not prepare private file storage.', 'backstage-venue-manager'));
 		}
-		if (!vms_private_files_ensure_dir($bucket)) {
+		if (!bvmgr_private_files_ensure_dir($bucket)) {
 			return new WP_Error('private_dir_unavailable', __('Could not create the private upload directory.', 'backstage-venue-manager'));
 		}
 
 		$extension = isset($validated_upload['ext']) ? sanitize_key((string) $validated_upload['ext']) : '';
-		$storage_key = vms_private_files_generate_storage_key($bucket, $extension);
-		$destination = vms_private_files_absolute_path($storage_key);
+		$storage_key = bvmgr_private_files_generate_storage_key($bucket, $extension);
+		$destination = bvmgr_private_files_absolute_path($storage_key);
 		if ($destination === '') {
 			return new WP_Error('private_storage_invalid', __('Could not prepare private file storage.', 'backstage-venue-manager'));
 		}
@@ -530,7 +530,7 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 		if (!is_dir($destination_dir) && !wp_mkdir_p($destination_dir)) {
 			return new WP_Error('private_storage_invalid', __('Could not prepare private file storage.', 'backstage-venue-manager'));
 		}
-		vms_private_files_write_hardening_files($destination_dir);
+		bvmgr_private_files_write_hardening_files($destination_dir);
 
 		$tmp_name = isset($validated_upload['tmp_name']) ? trim((string) $validated_upload['tmp_name']) : '';
 		if ($tmp_name === '') {
@@ -557,7 +557,7 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 			'size' => max(0, (int) ($validated_upload['size'] ?? ($validated_upload['reported_size'] ?? 0))),
 		);
 		$destination_basename = basename($destination);
-		$handled = vms_private_files_with_scoped_upload_dir(
+		$handled = bvmgr_private_files_with_scoped_upload_dir(
 			array(
 				'path' => $destination_dir,
 			),
@@ -591,7 +591,7 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 				$handled_file !== ''
 				&& file_exists($handled_file)
 				&& is_file($handled_file)
-				&& vms_private_files_path_is_safe($handled_file)
+				&& bvmgr_private_files_path_is_safe($handled_file)
 			) {
 					wp_delete_file($handled_file);
 				}
@@ -605,7 +605,7 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 			$mime = 'application/octet-stream';
 		}
 
-		$registered = vms_private_files_register_path(
+		$registered = bvmgr_private_files_register_path(
 			$storage_key,
 			$destination,
 			isset($validated_upload['sanitized_name']) ? (string) $validated_upload['sanitized_name'] : 'upload',
@@ -621,26 +621,26 @@ if (!function_exists('vms_private_files_store_validated_upload')) {
 	}
 }
 
-if (!function_exists('vms_private_files_delete')) {
-	function vms_private_files_delete(int $file_id): bool
+if (!function_exists('bvmgr_private_files_delete')) {
+	function bvmgr_private_files_delete(int $file_id): bool
 	{
 		$file_id = absint($file_id);
 		if ($file_id <= 0) {
 			return false;
 		}
 
-		$row = vms_private_file_get($file_id);
+		$row = bvmgr_private_file_get($file_id);
 		if (!is_array($row)) {
 			return false;
 		}
 
-		$path = vms_private_file_path((string) ($row['stored_filename'] ?? ''));
-		if ($path !== '' && vms_private_files_path_is_safe($path) && file_exists($path) && is_file($path)) {
+		$path = bvmgr_private_file_path((string) ($row['stored_filename'] ?? ''));
+		if ($path !== '' && bvmgr_private_files_path_is_safe($path) && file_exists($path) && is_file($path)) {
 				wp_delete_file($path);
 			}
 
 		global $wpdb;
-		$table = vms_private_files_table();
+		$table = bvmgr_private_files_table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Private-file deletion removes the current plugin-owned index row immediately after bounded local-file cleanup; no core deletion or cache API owns this repository.
 		$deleted = $wpdb->delete($table, array('id' => $file_id), array('%d'));
 
@@ -648,11 +648,11 @@ if (!function_exists('vms_private_files_delete')) {
 	}
 }
 
-if (!function_exists('vms_private_w9_storage_kind_meta_key')) {
-	function vms_private_w9_storage_kind_meta_key(): string
+if (!function_exists('bvmgr_private_w9_storage_kind_meta_key')) {
+	function bvmgr_private_w9_storage_kind_meta_key(): string
 	{
-		if (function_exists('vms_meta_key')) {
-			$mapped = (string) vms_meta_key('vendor', 'w9_upload_storage_kind');
+		if (function_exists('bvmgr_meta_key')) {
+			$mapped = (string) bvmgr_meta_key('vendor', 'w9_upload_storage_kind');
 			if ($mapped !== '') {
 				return $mapped;
 			}
@@ -662,8 +662,8 @@ if (!function_exists('vms_private_w9_storage_kind_meta_key')) {
 	}
 }
 
-if (!function_exists('vms_private_w9_allowed_mimes')) {
-	function vms_private_w9_allowed_mimes(): array
+if (!function_exists('bvmgr_private_w9_allowed_mimes')) {
+	function bvmgr_private_w9_allowed_mimes(): array
 	{
 		return array(
 			'pdf' => 'application/pdf',
@@ -675,8 +675,8 @@ if (!function_exists('vms_private_w9_allowed_mimes')) {
 	}
 }
 
-if (!function_exists('vms_private_w9_max_bytes')) {
-	function vms_private_w9_max_bytes(): int
+if (!function_exists('bvmgr_private_w9_max_bytes')) {
+	function bvmgr_private_w9_max_bytes(): int
 	{
 		$configured = 10 * 1024 * 1024;
 		$wp_limit = (int) wp_max_upload_size();
@@ -688,8 +688,8 @@ if (!function_exists('vms_private_w9_max_bytes')) {
 	}
 }
 
-if (!function_exists('vms_private_w9_download_url')) {
-	function vms_private_w9_download_url(int $post_id): string
+if (!function_exists('bvmgr_private_w9_download_url')) {
+	function bvmgr_private_w9_download_url(int $post_id): string
 	{
 		$post_id = absint($post_id);
 		return wp_nonce_url(
@@ -700,28 +700,28 @@ if (!function_exists('vms_private_w9_download_url')) {
 				),
 				admin_url('admin-post.php')
 			),
-			'vms_private_w9_download_' . $post_id
+			'bvmgr_private_w9_download_' . $post_id
 		);
 	}
 }
 
-if (!function_exists('vms_private_w9_store_upload')) {
+if (!function_exists('bvmgr_private_w9_store_upload')) {
 	/**
 	 * @return int|WP_Error
 	 */
-	function vms_private_w9_store_upload(int $post_id, array $files)
+	function bvmgr_private_w9_store_upload(int $post_id, array $files)
 	{
 		$post_id = absint($post_id);
-		$upload = vms_upload_read_file($files, 'vms_w9_upload');
+		$upload = bvmgr_upload_read_file($files, 'vms_w9_upload');
 		if (is_wp_error($upload)) {
 			return $upload;
 		}
 
-		$validated = vms_validate_uploaded_file(
+		$validated = bvmgr_validate_uploaded_file(
 			$upload,
 			array(
-				'allowed_mimes' => vms_private_w9_allowed_mimes(),
-				'max_bytes' => vms_private_w9_max_bytes(),
+				'allowed_mimes' => bvmgr_private_w9_allowed_mimes(),
+				'max_bytes' => bvmgr_private_w9_max_bytes(),
 				'type_message' => __('Upload must be a PDF or image (JPG/PNG/WEBP).', 'backstage-venue-manager'),
 				'empty_message' => __('The uploaded W-9 file is empty.', 'backstage-venue-manager'),
 				'too_large_message' => __('The uploaded W-9 file is too large.', 'backstage-venue-manager'),
@@ -737,10 +737,10 @@ if (!function_exists('vms_private_w9_store_upload')) {
 			$post_type = 'record';
 		}
 
-		return vms_private_files_store_validated_upload(
+		return bvmgr_private_files_store_validated_upload(
 			$validated,
 			array(
-				'allowed_mimes' => vms_private_w9_allowed_mimes(),
+				'allowed_mimes' => bvmgr_private_w9_allowed_mimes(),
 				'bucket' => 'tax-docs',
 				'related_post_type' => sanitize_key($post_type),
 				'related_post_id' => $post_id,
@@ -749,18 +749,18 @@ if (!function_exists('vms_private_w9_store_upload')) {
 	}
 }
 
-if (!function_exists('vms_private_w9_file_payload')) {
+if (!function_exists('bvmgr_private_w9_file_payload')) {
 	/**
 	 * @return array<string,string|int>|WP_Error
 	 */
-	function vms_private_w9_file_payload(int $post_id)
+	function bvmgr_private_w9_file_payload(int $post_id)
 	{
 		$post_id = absint($post_id);
 		if ($post_id <= 0) {
 			return new WP_Error('w9_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		$upload_key = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'w9_upload_id') : '_vms_w9_upload_id';
+		$upload_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'w9_upload_id') : '_vms_w9_upload_id';
 		if ($upload_key === '') {
 			$upload_key = '_vms_w9_upload_id';
 		}
@@ -770,15 +770,15 @@ if (!function_exists('vms_private_w9_file_payload')) {
 			return new WP_Error('w9_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		$storage_kind = sanitize_key((string) get_post_meta($post_id, vms_private_w9_storage_kind_meta_key(), true));
+		$storage_kind = sanitize_key((string) get_post_meta($post_id, bvmgr_private_w9_storage_kind_meta_key(), true));
 		if ($storage_kind === 'private_file') {
-			$row = vms_private_file_get($file_id);
+			$row = bvmgr_private_file_get($file_id);
 			if (!is_array($row)) {
 				return new WP_Error('w9_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 			}
 
-			$path = vms_private_file_path((string) ($row['stored_filename'] ?? ''));
-			if ($path === '' || !vms_private_files_path_is_safe($path)) {
+			$path = bvmgr_private_file_path((string) ($row['stored_filename'] ?? ''));
+			if ($path === '' || !bvmgr_private_files_path_is_safe($path)) {
 				return new WP_Error('w9_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 			}
 
@@ -791,7 +791,7 @@ if (!function_exists('vms_private_w9_file_payload')) {
 			);
 		}
 
-		$attachment = vms_private_files_attachment_payload($file_id);
+		$attachment = bvmgr_private_files_attachment_payload($file_id);
 		if (is_wp_error($attachment)) {
 			return $attachment;
 		}
@@ -802,10 +802,10 @@ if (!function_exists('vms_private_w9_file_payload')) {
 	}
 }
 
-if (!function_exists('vms_private_w9_file_label')) {
-	function vms_private_w9_file_label(int $post_id): string
+if (!function_exists('bvmgr_private_w9_file_label')) {
+	function bvmgr_private_w9_file_label(int $post_id): string
 	{
-		$payload = vms_private_w9_file_payload($post_id);
+		$payload = bvmgr_private_w9_file_payload($post_id);
 		if (is_wp_error($payload)) {
 			return '';
 		}
@@ -814,8 +814,8 @@ if (!function_exists('vms_private_w9_file_label')) {
 	}
 }
 
-if (!function_exists('vms_private_w9_user_can_download')) {
-	function vms_private_w9_user_can_download(int $post_id): bool
+if (!function_exists('bvmgr_private_w9_user_can_download')) {
+	function bvmgr_private_w9_user_can_download(int $post_id): bool
 	{
 		$post_id = absint($post_id);
 		if ($post_id <= 0) {
@@ -832,11 +832,11 @@ if (!function_exists('vms_private_w9_user_can_download')) {
 		$user_id = get_current_user_id();
 		$post_type = get_post_type($post_id);
 		if ($post_type === 'vms_vendor') {
-			if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $post_id)) {
+			if (function_exists('bvmgr_user_can_access_vendor') && bvmgr_user_can_access_vendor($user_id, $post_id)) {
 				return true;
 			}
-			if (function_exists('vms_get_active_vendor_ids_for_user')) {
-				$vendor_ids = array_map('absint', (array) vms_get_active_vendor_ids_for_user($user_id));
+			if (function_exists('bvmgr_get_active_vendor_ids_for_user')) {
+				$vendor_ids = array_map('absint', (array) bvmgr_get_active_vendor_ids_for_user($user_id));
 				return in_array($post_id, $vendor_ids, true);
 			}
 		}
@@ -849,41 +849,41 @@ if (!function_exists('vms_private_w9_user_can_download')) {
 	}
 }
 
-if (!function_exists('vms_private_w9_download_handler')) {
-	function vms_private_w9_download_handler(): void
+if (!function_exists('bvmgr_private_w9_download_handler')) {
+	function bvmgr_private_w9_download_handler(): void
 	{
 		$post_id = isset($_GET['post_id']) && !is_array($_GET['post_id']) ? absint($_GET['post_id']) : 0;
 		if ($post_id <= 0) {
 			wp_die(esc_html__('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		check_admin_referer('vms_private_w9_download_' . $post_id);
-		if (!vms_private_w9_user_can_download($post_id)) {
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_private_w9_download_' . $post_id, '_wpnonce'), '_wpnonce');
+		if (!bvmgr_private_w9_user_can_download($post_id)) {
 			wp_die(esc_html__('You do not have permission to download this file.', 'backstage-venue-manager'));
 		}
 
-		$payload = vms_private_w9_file_payload($post_id);
+		$payload = bvmgr_private_w9_file_payload($post_id);
 		if (is_wp_error($payload)) {
 			wp_die(esc_html($payload->get_error_message()));
 		}
 
 		$mime = trim((string) ($payload['mime'] ?? ''));
-		$allowed_mimes = array_values(vms_private_w9_allowed_mimes());
+		$allowed_mimes = array_values(bvmgr_private_w9_allowed_mimes());
 		if (!in_array($mime, $allowed_mimes, true)) {
 			$mime = 'application/octet-stream';
 		}
 
-		vms_private_files_stream_path(
+		bvmgr_private_files_stream_path(
 			(string) ($payload['path'] ?? ''),
 			(string) ($payload['filename'] ?? 'w9-upload'),
 			$mime
 		);
 	}
 }
-add_action('admin_post_vms_private_w9_download', 'vms_private_w9_download_handler');
+add_action('admin_post_vms_private_w9_download', 'bvmgr_private_w9_download_handler');
 
-if (!function_exists('vms_private_staff_cert_allowed_mimes')) {
-	function vms_private_staff_cert_allowed_mimes(): array
+if (!function_exists('bvmgr_private_staff_cert_allowed_mimes')) {
+	function bvmgr_private_staff_cert_allowed_mimes(): array
 	{
 		return array(
 			'pdf' => 'application/pdf',
@@ -897,8 +897,8 @@ if (!function_exists('vms_private_staff_cert_allowed_mimes')) {
 	}
 }
 
-if (!function_exists('vms_private_staff_cert_max_bytes')) {
-	function vms_private_staff_cert_max_bytes(): int
+if (!function_exists('bvmgr_private_staff_cert_max_bytes')) {
+	function bvmgr_private_staff_cert_max_bytes(): int
 	{
 		$configured = 10 * 1024 * 1024;
 		$wp_limit = (int) wp_max_upload_size();
@@ -910,23 +910,23 @@ if (!function_exists('vms_private_staff_cert_max_bytes')) {
 	}
 }
 
-if (!function_exists('vms_private_staff_cert_store_upload')) {
+if (!function_exists('bvmgr_private_staff_cert_store_upload')) {
 	/**
 	 * @return int|WP_Error
 	 */
-	function vms_private_staff_cert_store_upload(int $staff_id, array $files)
+	function bvmgr_private_staff_cert_store_upload(int $staff_id, array $files)
 	{
 		$staff_id = absint($staff_id);
-		$upload = vms_upload_read_file($files, 'vms_staff_certification_file');
+		$upload = bvmgr_upload_read_file($files, 'vms_staff_certification_file');
 		if (is_wp_error($upload)) {
 			return $upload;
 		}
 
-		$validated = vms_validate_uploaded_file(
+		$validated = bvmgr_validate_uploaded_file(
 			$upload,
 			array(
-				'allowed_mimes' => vms_private_staff_cert_allowed_mimes(),
-				'max_bytes' => vms_private_staff_cert_max_bytes(),
+				'allowed_mimes' => bvmgr_private_staff_cert_allowed_mimes(),
+				'max_bytes' => bvmgr_private_staff_cert_max_bytes(),
 				'type_message' => __('Upload must be a PDF or image (JPG/PNG/WEBP/HEIC/HEIF).', 'backstage-venue-manager'),
 				'empty_message' => __('The uploaded certificate file is empty.', 'backstage-venue-manager'),
 				'too_large_message' => __('The uploaded certificate file is too large.', 'backstage-venue-manager'),
@@ -937,10 +937,10 @@ if (!function_exists('vms_private_staff_cert_store_upload')) {
 			return $validated;
 		}
 
-		return vms_private_files_store_validated_upload(
+		return bvmgr_private_files_store_validated_upload(
 			$validated,
 			array(
-				'allowed_mimes' => vms_private_staff_cert_allowed_mimes(),
+				'allowed_mimes' => bvmgr_private_staff_cert_allowed_mimes(),
 				'bucket' => 'staff-certifications',
 				'related_post_type' => 'vms_staff',
 				'related_post_id' => $staff_id,
@@ -949,8 +949,8 @@ if (!function_exists('vms_private_staff_cert_store_upload')) {
 	}
 }
 
-if (!function_exists('vms_private_staff_cert_download_url')) {
-	function vms_private_staff_cert_download_url(int $staff_id, string $qualification_id): string
+if (!function_exists('bvmgr_private_staff_cert_download_url')) {
+	function bvmgr_private_staff_cert_download_url(int $staff_id, string $qualification_id): string
 	{
 		$staff_id = absint($staff_id);
 		$qualification_id = sanitize_key($qualification_id);
@@ -963,13 +963,13 @@ if (!function_exists('vms_private_staff_cert_download_url')) {
 				),
 				admin_url('admin-post.php')
 			),
-			'vms_private_staff_cert_download_' . $staff_id . '_' . $qualification_id
+			'bvmgr_private_staff_cert_download_' . $staff_id . '_' . $qualification_id
 		);
 	}
 }
 
-if (!function_exists('vms_private_staff_cert_user_can_download')) {
-	function vms_private_staff_cert_user_can_download(int $staff_id): bool
+if (!function_exists('bvmgr_private_staff_cert_user_can_download')) {
+	function bvmgr_private_staff_cert_user_can_download(int $staff_id): bool
 	{
 		$staff_id = absint($staff_id);
 		if ($staff_id <= 0) {
@@ -987,12 +987,12 @@ if (!function_exists('vms_private_staff_cert_user_can_download')) {
 	}
 }
 
-if (!function_exists('vms_private_staff_cert_file_payload')) {
+if (!function_exists('bvmgr_private_staff_cert_file_payload')) {
 	/**
 	 * @param array<string,mixed> $row
 	 * @return array<string,string|int>|WP_Error
 	 */
-	function vms_private_staff_cert_file_payload(int $staff_id, array $row)
+	function bvmgr_private_staff_cert_file_payload(int $staff_id, array $row)
 	{
 		$staff_id = absint($staff_id);
 		if ($staff_id <= 0) {
@@ -1006,13 +1006,13 @@ if (!function_exists('vms_private_staff_cert_file_payload')) {
 
 		$storage_kind = isset($row['storage_kind']) ? sanitize_key((string) $row['storage_kind']) : '';
 		if ($storage_kind === 'private_file') {
-			$private_row = vms_private_file_get($file_id);
+			$private_row = bvmgr_private_file_get($file_id);
 			if (!is_array($private_row)) {
 				return new WP_Error('staff_cert_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 			}
 
-			$path = vms_private_file_path((string) ($private_row['stored_filename'] ?? ''));
-			if ($path === '' || !vms_private_files_path_is_safe($path)) {
+			$path = bvmgr_private_file_path((string) ($private_row['stored_filename'] ?? ''));
+			if ($path === '' || !bvmgr_private_files_path_is_safe($path)) {
 				return new WP_Error('staff_cert_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 			}
 
@@ -1025,7 +1025,7 @@ if (!function_exists('vms_private_staff_cert_file_payload')) {
 			);
 		}
 
-		$attachment = vms_private_files_attachment_payload($file_id);
+		$attachment = bvmgr_private_files_attachment_payload($file_id);
 		if (is_wp_error($attachment)) {
 			return $attachment;
 		}
@@ -1036,8 +1036,8 @@ if (!function_exists('vms_private_staff_cert_file_payload')) {
 	}
 }
 
-if (!function_exists('vms_private_staff_cert_download_handler')) {
-	function vms_private_staff_cert_download_handler(): void
+if (!function_exists('bvmgr_private_staff_cert_download_handler')) {
+	function bvmgr_private_staff_cert_download_handler(): void
 	{
 		$staff_id = isset($_GET['staff_id']) && !is_array($_GET['staff_id']) ? absint($_GET['staff_id']) : 0;
 		$qualification_id = isset($_GET['qualification_id']) && !is_array($_GET['qualification_id'])
@@ -1047,13 +1047,13 @@ if (!function_exists('vms_private_staff_cert_download_handler')) {
 			wp_die(esc_html__('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		check_admin_referer('vms_private_staff_cert_download_' . $staff_id . '_' . $qualification_id);
-		if (!vms_private_staff_cert_user_can_download($staff_id)) {
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_private_staff_cert_download_' . $staff_id . '_' . $qualification_id, '_wpnonce'), '_wpnonce');
+		if (!bvmgr_private_staff_cert_user_can_download($staff_id)) {
 			wp_die(esc_html__('You do not have permission to download this file.', 'backstage-venue-manager'));
 		}
 
-		$rows = function_exists('vms_staffing_get_staff_qualifications')
-			? (array) vms_staffing_get_staff_qualifications($staff_id)
+		$rows = function_exists('bvmgr_staffing_get_staff_qualifications')
+			? (array) bvmgr_staffing_get_staff_qualifications($staff_id)
 			: array();
 		$match = null;
 		foreach ($rows as $row) {
@@ -1070,22 +1070,22 @@ if (!function_exists('vms_private_staff_cert_download_handler')) {
 			wp_die(esc_html__('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		$payload = vms_private_staff_cert_file_payload($staff_id, $match);
+		$payload = bvmgr_private_staff_cert_file_payload($staff_id, $match);
 		if (is_wp_error($payload)) {
 			wp_die(esc_html($payload->get_error_message()));
 		}
 
 		$mime = trim((string) ($payload['mime'] ?? ''));
-		$allowed_mimes = array_values(vms_private_staff_cert_allowed_mimes());
+		$allowed_mimes = array_values(bvmgr_private_staff_cert_allowed_mimes());
 		if (!in_array($mime, $allowed_mimes, true)) {
 			$mime = 'application/octet-stream';
 		}
 
-		vms_private_files_stream_path(
+		bvmgr_private_files_stream_path(
 			(string) ($payload['path'] ?? ''),
 			(string) ($payload['filename'] ?? 'certificate-upload'),
 			$mime
 		);
 	}
 }
-add_action('admin_post_vms_private_staff_cert_download', 'vms_private_staff_cert_download_handler');
+add_action('admin_post_vms_private_staff_cert_download', 'bvmgr_private_staff_cert_download_handler');

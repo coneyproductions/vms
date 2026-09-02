@@ -232,13 +232,13 @@ function tribe_get_cost($eventId, bool $withCurrency = false): string
 	return (string) ($GLOBALS['vms_event_details_test_cost'] ?? '');
 }
 
-function vms_tec_is_cancelled_event(int $eventId): bool
+function bvmgr_tec_is_cancelled_event(int $eventId): bool
 {
 	unset($eventId);
 	return false;
 }
 
-function vms_event_details_context(int $eventId): array
+function bvmgr_event_details_context(int $eventId): array
 {
 	unset($eventId);
 	return (array) ($GLOBALS['vms_event_details_test_context'] ?? array());
@@ -248,17 +248,17 @@ $pluginRoot = dirname(__DIR__);
 $sourcePath = $pluginRoot . '/includes/public/event-details.php';
 $source = $readFile($sourcePath);
 
-$assert(strpos($source, "add_action('wp_head', 'vms_event_details_print_json_ld', 30);") !== false, 'Fallback JSON-LD should stay registered on wp_head at priority 30.');
-$assert(strpos($source, "add_filter('tribe_json_ld_event_object', 'vms_event_details_filter_tec_event_schema', 99, 3);") !== false, 'TEC Event schema filter registration should remain unchanged.');
-$assert(strpos($source, "add_filter('tribe_json_ld_markup', 'vms_event_details_filter_tec_json_ld_markup', 99);") !== false, 'TEC JSON-LD markup filter registration should remain unchanged.');
-$assert(strpos($source, '$schema = vms_event_details_schema($event_id);') !== false, 'Fallback emitter should continue to use vms_event_details_schema() as its producer.');
-$assert(strpos($source, '$json = vms_event_details_encode_fallback_json_ld($schema);') !== false, 'Fallback emitter should route output through the narrow fallback encoder.');
+$assert(strpos($source, "add_action('wp_head', 'bvmgr_event_details_print_json_ld', 30);") !== false, 'Fallback JSON-LD should stay registered on wp_head at priority 30.');
+$assert(strpos($source, "add_filter('tribe_json_ld_event_object', 'bvmgr_event_details_filter_tec_event_schema', 99, 3);") !== false, 'TEC Event schema filter registration should remain unchanged.');
+$assert(strpos($source, "add_filter('tribe_json_ld_markup', 'bvmgr_event_details_filter_tec_json_ld_markup', 99);") !== false, 'TEC JSON-LD markup filter registration should remain unchanged.');
+$assert(strpos($source, '$schema = bvmgr_event_details_schema($event_id);') !== false, 'Fallback emitter should continue to use bvmgr_event_details_schema() as its producer.');
+$assert(strpos($source, '$json = bvmgr_event_details_encode_fallback_json_ld($schema);') !== false, 'Fallback emitter should route output through the narrow fallback encoder.');
 $assert(strpos($source, 'JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE') !== false, 'Fallback encoder should use the explicit script-safe JSON flag set.');
 $assert(strpos($source, 'wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)') === false, 'Fallback emitter should no longer use the old unescaped-slash encoding flags.');
 $assert(strpos($source, '<script type="application/ld+json" class="vms-event-json-ld" data-vms-schema-mode="fallback">') !== false, 'Fallback emitter should preserve the exact fixed script attributes.');
 
-$chunkStart = strpos($source, 'function vms_event_details_encode_fallback_json_ld(array $schema): string');
-$chunkEnd = strpos($source, "if (!function_exists('vms_event_details_tec_schema_filters_available'))");
+$chunkStart = strpos($source, 'function bvmgr_event_details_encode_fallback_json_ld(array $schema): string');
+$chunkEnd = strpos($source, "if (!function_exists('bvmgr_event_details_tec_schema_filters_available'))");
 $assert($chunkStart !== false && $chunkEnd !== false && $chunkEnd > $chunkStart, 'Failed to isolate the fallback JSON-LD encoder/emitter source.');
 $fallbackChunk = substr($source, (int) $chunkStart, (int) $chunkEnd - (int) $chunkStart);
 foreach (array('wp_kses(', 'wp_kses_post(', 'allowed_html', 'esc_html($json)', 'esc_attr($json)') as $forbidden) {
@@ -271,7 +271,7 @@ try {
 	$wpHeadRegistrations = array_values(array_filter(
 		(array) ($GLOBALS['vms_event_details_test_actions']['wp_head'] ?? array()),
 		static function (array $registration): bool {
-			return $registration['callback'] === 'vms_event_details_print_json_ld';
+			return $registration['callback'] === 'bvmgr_event_details_print_json_ld';
 		}
 	));
 	$assertSame(1, count($wpHeadRegistrations), 'Fallback JSON-LD should register exactly one wp_head callback.');
@@ -280,7 +280,7 @@ try {
 	$tecEventRegistrations = array_values(array_filter(
 		(array) ($GLOBALS['vms_event_details_test_filters']['tribe_json_ld_event_object'] ?? array()),
 		static function (array $registration): bool {
-			return $registration['callback'] === 'vms_event_details_filter_tec_event_schema';
+			return $registration['callback'] === 'bvmgr_event_details_filter_tec_event_schema';
 		}
 	));
 	$assertSame(1, count($tecEventRegistrations), 'TEC Event schema callback registration should remain singular.');
@@ -290,7 +290,7 @@ try {
 	$tecMarkupRegistrations = array_values(array_filter(
 		(array) ($GLOBALS['vms_event_details_test_filters']['tribe_json_ld_markup'] ?? array()),
 		static function (array $registration): bool {
-			return $registration['callback'] === 'vms_event_details_filter_tec_json_ld_markup';
+			return $registration['callback'] === 'bvmgr_event_details_filter_tec_json_ld_markup';
 		}
 	));
 	$assertSame(1, count($tecMarkupRegistrations), 'TEC JSON-LD markup callback registration should remain singular.');
@@ -321,13 +321,13 @@ try {
 	$GLOBALS['vms_event_details_test_json_encode_calls'] = array();
 
 	ob_start();
-	vms_event_details_print_json_ld();
+	bvmgr_event_details_print_json_ld();
 	$defaultOutput = (string) ob_get_clean();
 	$assertSame('', $defaultOutput, 'Fallback JSON-LD should remain disabled by default when TEC JSON-LD filters are present.');
 	$assertSame(array(), $GLOBALS['vms_event_details_test_json_encode_calls'], 'Fallback JSON-LD should not encode anything when its default-print filter vetoes output.');
 
-	$GLOBALS['vms_event_details_test_apply_filters']['vms_event_details_print_json_ld'] = true;
-	$expectedSchema = vms_event_details_schema(123);
+$GLOBALS['vms_event_details_test_apply_filters']['vms_event_details_print_json_ld'] = true;
+	$expectedSchema = bvmgr_event_details_schema(123);
 	$assertSame(
 		array('@context', '@id', '@type', 'description', 'endDate', 'eventAttendanceMode', 'eventStatus', 'image', 'location', 'name', 'offers', 'organizer', 'performer', 'startDate', 'url'),
 		$sortedKeys($expectedSchema),
@@ -341,13 +341,13 @@ try {
 
 	$GLOBALS['vms_event_details_test_json_encode_calls'] = array();
 	ob_start();
-	vms_event_details_print_json_ld();
+	bvmgr_event_details_print_json_ld();
 	$output = (string) ob_get_clean();
 	$assert($output !== '', 'Fallback JSON-LD should emit output when explicitly enabled.');
 
 	$expectedFlags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE;
 	$assertSame(1, count($GLOBALS['vms_event_details_test_json_encode_calls']), 'Fallback JSON-LD should encode the schema exactly once.');
-	$assertSame($expectedSchema, $GLOBALS['vms_event_details_test_json_encode_calls'][0]['value'], 'Fallback JSON-LD should encode the schema produced by vms_event_details_schema().');
+	$assertSame($expectedSchema, $GLOBALS['vms_event_details_test_json_encode_calls'][0]['value'], 'Fallback JSON-LD should encode the schema produced by bvmgr_event_details_schema().');
 	$assertSame($expectedFlags, $GLOBALS['vms_event_details_test_json_encode_calls'][0]['flags'], 'Fallback JSON-LD should use the explicit script-safe JSON flag set.');
 
 	$expectedPrefix = "\n" . '<script type="application/ld+json" class="vms-event-json-ld" data-vms-schema-mode="fallback">';
@@ -422,7 +422,7 @@ try {
 	$GLOBALS['vms_event_details_test_context'] = array();
 	$GLOBALS['vms_event_details_test_json_encode_calls'] = array();
 	ob_start();
-	vms_event_details_print_json_ld();
+	bvmgr_event_details_print_json_ld();
 	$emptyOutput = (string) ob_get_clean();
 	$assertSame('', $emptyOutput, 'Empty fallback schema data should keep the no-output behavior.');
 	$assertSame(array(), $GLOBALS['vms_event_details_test_json_encode_calls'], 'Empty fallback schema data should not reach wp_json_encode().');

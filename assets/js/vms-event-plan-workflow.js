@@ -61,7 +61,7 @@
         return;
       }
 
-      ok = window.confirm('Run LIVE refunds now for this already-cancelled event? This does not save the Event Plan. VMS will attempt WooCommerce gateway refunds for remaining eligible ticket lines and queue anything unsafe for manual review.');
+      ok = window.confirm('Run LIVE refunds now for this already-cancelled event? This does not save the Event Plan. Backstage Venue Manager will attempt WooCommerce gateway refunds for remaining eligible ticket lines and queue anything unsafe for manual review.');
       if (!ok) {
         event.preventDefault();
         return;
@@ -116,7 +116,7 @@
 
       message = 'Are you sure you want to mark this event as Cancelled?';
       if (replacementDate !== '') {
-        message += ' VMS will also create a linked Draft Event Plan for ' + replacementDate + '.';
+        message += ' Backstage Venue Manager will also create a linked Draft Event Plan for ' + replacementDate + '.';
       }
       if (usesAutoRefund) {
         message += ' This will attempt LIVE payment refunds for matching ticket orders through WooCommerce. Mixed orders will refund only the cancelled event ticket lines when possible, and anything unsafe will be queued for manual review.';

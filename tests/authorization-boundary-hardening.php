@@ -27,14 +27,14 @@ final class WP_Post
 	public string $post_name = '';
 }
 
-if (!defined('VMS_VENDOR_APP_CPT')) {
-	define('VMS_VENDOR_APP_CPT', 'vms_vendor_app');
+if (!defined('BVMGR_VENDOR_APP_CPT')) {
+	define('BVMGR_VENDOR_APP_CPT', 'vms_vendor_app');
 }
-if (!defined('VMS_VENDOR_CPT')) {
-	define('VMS_VENDOR_CPT', 'vms_vendor');
+if (!defined('BVMGR_VENDOR_CPT')) {
+	define('BVMGR_VENDOR_CPT', 'vms_vendor');
 }
-if (!defined('VMS_VENUE_TEMPLATE_META_KEY')) {
-	define('VMS_VENUE_TEMPLATE_META_KEY', '_vms_is_template');
+if (!defined('BVMGR_VENUE_TEMPLATE_META_KEY')) {
+	define('BVMGR_VENUE_TEMPLATE_META_KEY', '_vms_is_template');
 }
 
 $GLOBALS['vms_test_posts'] = array();
@@ -136,7 +136,7 @@ function absint($value): int
 	return abs((int) $value);
 }
 
-function vms_request_read_scalar(array $source, string $key): string
+function bvmgr_request_read_scalar(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 		return '';
@@ -150,37 +150,37 @@ function vms_request_read_scalar(array $source, string $key): string
 	return trim((string) $value);
 }
 
-function vms_request_read_text_field(array $source, string $key): string
+function bvmgr_request_read_text_field(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_text_field($value);
 }
 
-function vms_request_read_textarea_field(array $source, string $key): string
+function bvmgr_request_read_textarea_field(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_textarea_field($value);
 }
 
-function vms_request_read_email(array $source, string $key): string
+function bvmgr_request_read_email(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_email($value);
 }
 
-function vms_request_read_key(array $source, string $key): string
+function bvmgr_request_read_key(array $source, string $key): string
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? '' : sanitize_key($value);
 }
 
-function vms_request_read_absint(array $source, string $key): int
+function bvmgr_request_read_absint(array $source, string $key): int
 {
-	$value = vms_request_read_scalar($source, $key);
+	$value = bvmgr_request_read_scalar($source, $key);
 	return $value === '' ? 0 : absint($value);
 }
 
-function vms_request_read_bool_flag(array $source, string $key): bool
+function bvmgr_request_read_bool_flag(array $source, string $key): bool
 {
 	if (!array_key_exists($key, $source)) {
 		return false;
@@ -239,11 +239,27 @@ function wp_verify_nonce(string $nonce, string $action): bool
 	return $nonce === vms_test_nonce($action);
 }
 
-function check_admin_referer(string $action): bool
+function bvmgr_nonce_action_for_value($nonce, string $action): string
+{
+	if (wp_verify_nonce($nonce, $action)) {
+		return $action;
+	}
+	$legacy = str_starts_with($action, 'bvmgr_') ? 'vms_' . substr($action, 6) : $action;
+	return $legacy !== $action && wp_verify_nonce($nonce, $legacy) ? $legacy : $action;
+}
+
+function bvmgr_nonce_action_for_request(string $action, $queryArg = false): string
+{
+	$key = is_string($queryArg) && $queryArg !== '' ? $queryArg : '_wpnonce';
+	$nonce = isset($_REQUEST[$key]) && !is_array($_REQUEST[$key]) ? sanitize_text_field((string) $_REQUEST[$key]) : '';
+	return bvmgr_nonce_action_for_value($nonce, $action);
+}
+
+function check_admin_referer(string $action, string $queryArg = '_wpnonce'): bool
 {
 	$nonce = '';
-	if (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce'])) {
-		$nonce = sanitize_text_field((string) $_REQUEST['_wpnonce']);
+	if (isset($_REQUEST[$queryArg]) && !is_array($_REQUEST[$queryArg])) {
+		$nonce = sanitize_text_field((string) $_REQUEST[$queryArg]);
 	}
 
 	if (!wp_verify_nonce($nonce, $action)) {
@@ -362,12 +378,12 @@ function add_post_meta(int $post_id, string $meta_key, $value, bool $unique = fa
 	$GLOBALS['vms_test_meta'][$post_id][$meta_key] = $existing;
 }
 
-function vms_vendor_app_cpt_slugs(): array
+function bvmgr_vendor_app_cpt_slugs(): array
 {
-	return array(VMS_VENDOR_APP_CPT, 'vms_vendor_application');
+	return array(BVMGR_VENDOR_APP_CPT, 'vms_vendor_application');
 }
 
-function vms_vendor_app_statuses(): array
+function bvmgr_vendor_app_statuses(): array
 {
 	return array(
 		'pending' => 'Pending',
@@ -377,39 +393,39 @@ function vms_vendor_app_statuses(): array
 	);
 }
 
-function vms_vendor_app_status_pill_class(string $status): string
+function bvmgr_vendor_app_status_pill_class(string $status): string
 {
 	return 'vms-pill-' . sanitize_key($status);
 }
 
-function vms_vendor_app_get_status(int $app_id): string
+function bvmgr_vendor_app_get_status(int $app_id): string
 {
 	$status = (string) get_post_meta($app_id, '_vms_app_status', true);
 	return $status !== '' ? $status : 'pending';
 }
 
-function vms_vendor_app_set_status(int $app_id, string $status): void
+function bvmgr_vendor_app_set_status(int $app_id, string $status): void
 {
 	update_post_meta($app_id, '_vms_app_status', sanitize_key($status));
 }
 
-function vms_vendor_app_default_response_message(int $app_id, string $status): string
+function bvmgr_vendor_app_default_response_message(int $app_id, string $status): string
 {
 	return 'Default response for ' . $status;
 }
 
-function vms_vendor_app_get_confirmation_state(int $app_id): string
+function bvmgr_vendor_app_get_confirmation_state(int $app_id): string
 {
 	$state = (string) get_post_meta($app_id, '_vms_app_confirmation_state', true);
 	return $state !== '' ? $state : 'confirmed';
 }
 
-function vms_vendor_app_confirmation_state_label(string $state): string
+function bvmgr_vendor_app_confirmation_state_label(string $state): string
 {
 	return ucfirst($state);
 }
 
-function vms_approvals_queue_record_transition(string $queue, int $object_id, string $from_status, string $to_status): void
+function bvmgr_approvals_queue_record_transition(string $queue, int $object_id, string $from_status, string $to_status): void
 {
 	$GLOBALS['vms_test_transition_log'][] = array(
 		'queue' => $queue,
@@ -419,12 +435,12 @@ function vms_approvals_queue_record_transition(string $queue, int $object_id, st
 	);
 }
 
-function vms_vendor_mark_profile_reviewed(int $vendor_id, int $user_id): void
+function bvmgr_vendor_mark_profile_reviewed(int $vendor_id, int $user_id): void
 {
 	update_post_meta($vendor_id, '_vms_test_reviewed_by', $user_id);
 }
 
-function vms_set_admin_notice(string $message, string $type = 'success'): void
+function bvmgr_set_admin_notice(string $message, string $type = 'success'): void
 {
 	$GLOBALS['vms_test_notices'][] = array('message' => $message, 'type' => $type);
 }
@@ -447,7 +463,7 @@ function wp_update_post(array $data): int
 	return $postId;
 }
 
-function vms_duplicate_venue_as_draft(int $template_id): int
+function bvmgr_duplicate_venue_as_draft(int $template_id): int
 {
 	$template = get_post($template_id);
 	if (!$template instanceof WP_Post) {
@@ -463,7 +479,7 @@ function vms_duplicate_venue_as_draft(int $template_id): int
 	return $newId;
 }
 
-function vms_meta_key(string $object, string $field): string
+function bvmgr_meta_key(string $object, string $field): string
 {
 	$map = array(
 		'event_plan' => array(
@@ -478,18 +494,18 @@ function vms_meta_key(string $object, string $field): string
 	return $map[$object][$field] ?? '';
 }
 
-function vms_event_plan_vendor_exists(int $vendor_id): bool
+function bvmgr_event_plan_vendor_exists(int $vendor_id): bool
 {
 	$post = get_post($vendor_id);
-	return $post instanceof WP_Post && $post->post_type === VMS_VENDOR_CPT && $post->post_status !== 'trash';
+	return $post instanceof WP_Post && $post->post_type === BVMGR_VENDOR_CPT && $post->post_status !== 'trash';
 }
 
-function vms_event_plan_flag_missing_vendor(int $post_id, int $vendor_id, string $title): void
+function bvmgr_event_plan_flag_missing_vendor(int $post_id, int $vendor_id, string $title): void
 {
 	update_post_meta($post_id, '_vms_integrity_issue', 'missing_vendor');
 }
 
-function vms_event_plan_perf_wp_update_post(array $data, string $context, int $post_id): void
+function bvmgr_event_plan_perf_wp_update_post(array $data, string $context, int $post_id): void
 {
 	wp_update_post(array(
 		'ID' => $post_id,
@@ -497,32 +513,32 @@ function vms_event_plan_perf_wp_update_post(array $data, string $context, int $p
 	));
 }
 
-function vms_add_admin_notice(string $message, string $type = 'success'): void
+function bvmgr_add_admin_notice(string $message, string $type = 'success'): void
 {
 	$GLOBALS['vms_test_notices'][] = array('message' => $message, 'type' => $type);
 }
 
-function vms_sd_require_engine(): void
+function bvmgr_sd_require_engine(): void
 {
 }
 
-function vms_sch_season_get_rules(int $venue_id): array
+function bvmgr_sch_season_get_rules(int $venue_id): array
 {
 	return array();
 }
 
-function vms_sch_season_save_rules(int $venue_id, array $rules): bool
+function bvmgr_sch_season_save_rules(int $venue_id, array $rules): bool
 {
 	$GLOBALS['vms_test_season_save_calls']++;
 	return true;
 }
 
-function vms_sd_base_url(string $page_slug, int $venue_id): string
+function bvmgr_sd_base_url(string $page_slug, int $venue_id): string
 {
 	return admin_url('admin.php?page=' . $page_slug . '&venue_id=' . $venue_id);
 }
 
-function vms_sd_redirect(string $url): void
+function bvmgr_sd_redirect(string $url): void
 {
 	wp_safe_redirect($url);
 }
@@ -688,18 +704,18 @@ $venueTemplatesPath = dirname(__DIR__) . '/includes/admin/venue-duplicate-templa
 $seasonDatesPath = dirname(__DIR__) . '/includes/admin/season-dates.php';
 $eventPlansPath = dirname(__DIR__) . '/includes/cpt/event-plans.php';
 
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_row_actions'));
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_metabox_actions'));
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_handle_edit_screen_decision'));
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_handle_approve'));
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_handle_reject'));
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_handle_repair_vendor'));
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_applications_handle_resync_vendor'));
-eval(vms_test_extract_named_function($helpersPath, 'vms_vendor_handle_mark_reviewed'));
-eval(vms_test_extract_named_function($venueTemplatesPath, 'vms_handle_create_venue_from_template'));
-eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_query_arg'));
-eval(vms_test_extract_named_function($seasonDatesPath, 'vms_sd_maybe_handle_post'));
-eval(vms_test_extract_named_function($eventPlansPath, 'vms_event_plan_current_get_request'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_applications_row_actions'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_applications_metabox_actions'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_applications_handle_edit_screen_decision'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_applications_handle_approve'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_applications_handle_reject'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_applications_handle_repair_vendor'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_applications_handle_resync_vendor'));
+eval(vms_test_extract_named_function($helpersPath, 'bvmgr_vendor_handle_mark_reviewed'));
+eval(vms_test_extract_named_function($venueTemplatesPath, 'bvmgr_handle_create_venue_from_template'));
+eval(vms_test_extract_named_function($seasonDatesPath, 'bvmgr_sd_query_arg'));
+eval(vms_test_extract_named_function($seasonDatesPath, 'bvmgr_sd_maybe_handle_post'));
+eval(vms_test_extract_named_function($eventPlansPath, 'bvmgr_event_plan_current_get_request'));
 $GLOBALS['vms_test_event_plan_admin_guard'] = eval(
 	'return ' . vms_test_extract_inline_closure($eventPlansPath, "add_action('admin_init', function () {") . ';'
 );
@@ -725,7 +741,7 @@ $expectRedirect = static function (callable $callback, string $expectedLocation)
 try {
 	vms_test_reset_runtime_state();
 
-	$appId = vms_test_register_post(VMS_VENDOR_APP_CPT, 'Vendor Application Fixture');
+	$appId = vms_test_register_post(BVMGR_VENDOR_APP_CPT, 'Vendor Application Fixture');
 	update_post_meta($appId, '_vms_app_status', 'pending');
 	update_post_meta($appId, '_vms_app_confirmation_state', 'confirmed');
 	update_post_meta($appId, '_vms_app_operator_internal_note', 'Baseline note');
@@ -740,55 +756,55 @@ try {
 	$assert(current_user_can('edit_posts') === true, 'Broad edit_posts capability should be available in the limited-user fixture.');
 	$assert(current_user_can('edit_post', $appId) === false, 'Limited-user fixture should not have edit_post on the target application.');
 
-	$rowActions = vms_vendor_applications_row_actions(array('edit' => 'Edit'), $vendorPost);
+	$rowActions = bvmgr_vendor_applications_row_actions(array('edit' => 'Edit'), $vendorPost);
 	$assert(!isset($rowActions['vms_review_response']), 'Row actions should hide review controls without object-level access.');
 
 	ob_start();
-	vms_vendor_applications_metabox_actions($vendorPost);
+	bvmgr_vendor_applications_metabox_actions($vendorPost);
 	$limitedMetabox = (string) ob_get_clean();
 	$assert(strpos($limitedMetabox, 'You do not have permission to update applications.') !== false, 'Metabox should render the permission warning when object-level access is missing.');
-	$assert(strpos($limitedMetabox, 'vms_vendor_app_decision_nonce') === false, 'Metabox should not render decision controls without object-level access.');
+	$assert(strpos($limitedMetabox, 'bvmgr_vendor_app_decision_nonce') === false, 'Metabox should not render decision controls without object-level access.');
 
 	$_POST = array(
 		'vms_vendor_app_admin_fields_present' => '1',
-		'vms_vendor_app_decision_nonce' => vms_test_nonce('vms_vendor_app_decision_' . $appId),
+		'bvmgr_vendor_app_decision_nonce' => vms_test_nonce('bvmgr_vendor_app_decision_' . $appId),
 		'vms_vendor_app_operator_internal_note' => 'Unauthorized change',
 		'vms_vendor_app_decision_message' => 'Unauthorized response',
 		'vms_vendor_app_decision' => 'holding',
 	);
-	vms_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
-	$assert(vms_vendor_app_get_status($appId) === 'pending', 'Edit-screen decision should not mutate status before object authorization passes.');
+	bvmgr_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
+	$assert(bvmgr_vendor_app_get_status($appId) === 'pending', 'Edit-screen decision should not mutate status before object authorization passes.');
 	$assert((string) get_post_meta($appId, '_vms_app_operator_internal_note', true) === 'Baseline note', 'Edit-screen decision should not update notes before object authorization passes.');
 
 	$_GET = array('app_id' => $appId);
 	$_REQUEST = $_GET;
 	$expectDie(static function () {
-		vms_vendor_applications_handle_approve();
+		bvmgr_vendor_applications_handle_approve();
 	}, 'Forbidden');
 	$expectDie(static function () {
-		vms_vendor_applications_handle_repair_vendor();
+		bvmgr_vendor_applications_handle_repair_vendor();
 	}, 'Forbidden');
 	$expectDie(static function () {
-		vms_vendor_applications_handle_resync_vendor();
+		bvmgr_vendor_applications_handle_resync_vendor();
 	}, 'Forbidden');
 
-	$vendorId = vms_test_register_post(VMS_VENDOR_CPT, 'Vendor Fixture');
+	$vendorId = vms_test_register_post(BVMGR_VENDOR_CPT, 'Vendor Fixture');
 	$_GET = array('vendor_id' => $vendorId);
 	$_REQUEST = $_GET;
 	$expectDie(static function () {
-		vms_vendor_handle_mark_reviewed();
+		bvmgr_vendor_handle_mark_reviewed();
 	}, 'Permission denied.');
 	$assert((string) get_post_meta($vendorId, '_vms_test_reviewed_by', true) === '', 'Mark reviewed should not mutate vendor review state before object authorization passes.');
 
 	$templateId = vms_test_register_post('vms_venue', 'Template Venue Fixture');
-	update_post_meta($templateId, VMS_VENUE_TEMPLATE_META_KEY, '1');
+	update_post_meta($templateId, BVMGR_VENUE_TEMPLATE_META_KEY, '1');
 	$_POST = array(
-		'vms_create_venue_from_template_nonce' => vms_test_nonce('vms_create_venue_from_template'),
+		'bvmgr_create_venue_from_template_nonce' => vms_test_nonce('bvmgr_create_venue_from_template'),
 		'vms_template_id' => $templateId,
 	);
 	$_REQUEST = $_POST;
 	$expectDie(static function () {
-		vms_handle_create_venue_from_template();
+		bvmgr_handle_create_venue_from_template();
 	}, 'Not allowed.');
 	$assert(count((array) $GLOBALS['vms_test_posts']) === 3, 'Create-from-template should not create a new venue when the user lacks edit_post on the template.');
 
@@ -798,31 +814,31 @@ try {
 	);
 	$GLOBALS['vms_test_current_user_id'] = 88;
 
-	$authorizedActions = vms_vendor_applications_row_actions(array('edit' => 'Edit'), $vendorPost);
+	$authorizedActions = bvmgr_vendor_applications_row_actions(array('edit' => 'Edit'), $vendorPost);
 	$assert(isset($authorizedActions['vms_review_response']), 'Row actions should show review controls for users with object-level access.');
 
 	ob_start();
-	vms_vendor_applications_metabox_actions($vendorPost);
+	bvmgr_vendor_applications_metabox_actions($vendorPost);
 	$authorizedMetabox = (string) ob_get_clean();
-	$assert(strpos($authorizedMetabox, 'vms_vendor_app_decision_nonce') !== false, 'Metabox should render the decision nonce for authorized users.');
+	$assert(strpos($authorizedMetabox, 'bvmgr_vendor_app_decision_nonce') !== false, 'Metabox should render the canonical decision nonce for authorized users.');
 	$assert(strpos($authorizedMetabox, 'Approve') !== false, 'Metabox should still render decision buttons for authorized users.');
 
 	$_POST = array(
 		'vms_vendor_app_admin_fields_present' => '1',
-		'vms_vendor_app_decision_nonce' => vms_test_nonce('vms_vendor_app_decision_' . $appId),
+		'bvmgr_vendor_app_decision_nonce' => vms_test_nonce('bvmgr_vendor_app_decision_' . $appId),
 		'vms_vendor_app_operator_internal_note' => 'Authorized note',
 		'vms_vendor_app_decision_message' => 'Hold this for later review.',
 		'vms_vendor_app_decision' => 'holding',
 	);
 	$GLOBALS['vms_test_transition_log'] = array();
-	vms_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
-	$assert(vms_vendor_app_get_status($appId) === 'holding', 'Edit-screen decision should update status for authorized users.');
+	bvmgr_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
+	$assert(bvmgr_vendor_app_get_status($appId) === 'holding', 'Edit-screen decision should update status for authorized users.');
 	$assert((string) get_post_meta($appId, '_vms_app_operator_internal_note', true) === 'Authorized note', 'Edit-screen decision should update the internal note for authorized users.');
 	$assert((string) get_post_meta($appId, '_vms_app_last_response_status', true) === 'holding', 'Edit-screen decision should preserve the stored response status on success.');
 	$assert((string) get_post_meta($appId, '_vms_app_last_response_message', true) === 'Hold this for later review.', 'Edit-screen decision should preserve the stored response message on success.');
 	$assert(count((array) $GLOBALS['vms_test_transition_log']) === 1, 'Edit-screen decision should still record review-queue transitions on success.');
 
-	vms_vendor_app_set_status($appId, 'pending');
+	bvmgr_vendor_app_set_status($appId, 'pending');
 	update_post_meta($appId, '_vms_app_operator_internal_note', 'Baseline note');
 	delete_post_meta($appId, '_vms_app_last_response_status');
 	delete_post_meta($appId, '_vms_app_last_response_message');
@@ -833,24 +849,24 @@ try {
 		'vms_vendor_app_decision_message' => 'Missing nonce',
 		'vms_vendor_app_decision' => 'holding',
 	);
-	vms_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
-	$assert(vms_vendor_app_get_status($appId) === 'pending', 'Missing nonce should block edit-screen status mutations.');
+	bvmgr_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
+	$assert(bvmgr_vendor_app_get_status($appId) === 'pending', 'Missing nonce should block edit-screen status mutations.');
 	$assert((string) get_post_meta($appId, '_vms_app_operator_internal_note', true) === 'Baseline note', 'Missing nonce should block edit-screen note updates.');
 
 	$_POST = array(
 		'vms_vendor_app_admin_fields_present' => '1',
-		'vms_vendor_app_decision_nonce' => 'expired',
+		'bvmgr_vendor_app_decision_nonce' => 'expired',
 		'vms_vendor_app_operator_internal_note' => 'Invalid nonce change',
 		'vms_vendor_app_decision_message' => 'Invalid nonce',
 		'vms_vendor_app_decision' => 'holding',
 	);
-	vms_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
-	$assert(vms_vendor_app_get_status($appId) === 'pending', 'Invalid nonce should block edit-screen status mutations.');
+	bvmgr_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
+	$assert(bvmgr_vendor_app_get_status($appId) === 'pending', 'Invalid nonce should block edit-screen status mutations.');
 	$assert((string) get_post_meta($appId, '_vms_app_operator_internal_note', true) === 'Baseline note', 'Invalid nonce should block edit-screen note updates.');
 
 	$_POST = array(
 		'vms_vendor_app_admin_fields_present' => '1',
-		'vms_vendor_app_decision_nonce' => array('expired'),
+		'bvmgr_vendor_app_decision_nonce' => array('expired'),
 		'vms_vendor_app_operator_internal_note' => 'Malformed nonce change',
 		'vms_vendor_app_decision_message' => 'Malformed nonce',
 		'vms_vendor_app_decision' => 'holding',
@@ -861,49 +877,49 @@ try {
 		return false;
 	});
 	try {
-		vms_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
+		bvmgr_vendor_applications_handle_edit_screen_decision($appId, $vendorPost, true);
 	} finally {
 		restore_error_handler();
 	}
 	$assert($warningRaised === false, 'Malformed nonce inputs should fail without warnings.');
-	$assert(vms_vendor_app_get_status($appId) === 'pending', 'Malformed nonce should block edit-screen status mutations.');
+	$assert(bvmgr_vendor_app_get_status($appId) === 'pending', 'Malformed nonce should block edit-screen status mutations.');
 	$assert((string) get_post_meta($appId, '_vms_app_operator_internal_note', true) === 'Baseline note', 'Malformed nonce should block edit-screen note updates.');
 
 	$_GET = array(
 		'app_id' => $appId,
-		'_wpnonce' => vms_test_nonce('vms_vendor_app_reject_' . $appId),
+		'_wpnonce' => vms_test_nonce('bvmgr_vendor_app_reject_' . $appId),
 	);
 	$_REQUEST = $_GET;
 	$GLOBALS['vms_test_transition_log'] = array();
 	$expectRedirect(static function () {
-		vms_vendor_applications_handle_reject();
-	}, admin_url('edit.php?post_type=' . VMS_VENDOR_APP_CPT));
-	$assert(vms_vendor_app_get_status($appId) === 'rejected', 'Reject admin-post should still update the application status for authorized users.');
+		bvmgr_vendor_applications_handle_reject();
+	}, admin_url('edit.php?post_type=' . BVMGR_VENDOR_APP_CPT));
+	$assert(bvmgr_vendor_app_get_status($appId) === 'rejected', 'Reject admin-post should still update the application status for authorized users.');
 	$assert(count((array) $GLOBALS['vms_test_transition_log']) === 1, 'Reject admin-post should still record the status transition.');
 
 	$_GET = array(
 		'vendor_id' => $vendorId,
-		'_wpnonce' => vms_test_nonce('vms_vendor_mark_reviewed_' . $vendorId),
+		'_wpnonce' => vms_test_nonce('bvmgr_vendor_mark_reviewed_' . $vendorId),
 	);
 	$_REQUEST = $_GET;
 	$expectRedirect(static function () {
-		vms_vendor_handle_mark_reviewed();
+		bvmgr_vendor_handle_mark_reviewed();
 	}, admin_url('post.php?post=' . $vendorId . '&action=edit'));
 	$assert((int) get_post_meta($vendorId, '_vms_test_reviewed_by', true) === 88, 'Mark reviewed should still stamp the acting user on success.');
 
 	$expectRedirect(static function () use ($templateId) {
 		$_POST = array(
-			'vms_create_venue_from_template_nonce' => vms_test_nonce('vms_create_venue_from_template'),
+			'bvmgr_create_venue_from_template_nonce' => vms_test_nonce('bvmgr_create_venue_from_template'),
 			'vms_template_id' => $templateId,
 		);
 		$_REQUEST = $_POST;
-		vms_handle_create_venue_from_template();
+		bvmgr_handle_create_venue_from_template();
 	}, admin_url('post.php?post=1003&action=edit'));
 	$newVenue = get_post(1003);
 	$assert($newVenue instanceof WP_Post, 'Create-from-template should still create a new venue for authorized users.');
 	$assert($newVenue->post_title === 'New Venue — Template Venue Fixture', 'Create-from-template should preserve the success title update.');
 	$assert($newVenue->post_name === sanitize_title('New Venue — Template Venue Fixture'), 'Create-from-template should preserve the generated slug update.');
-	$assert((string) get_post_meta(1003, VMS_VENUE_TEMPLATE_META_KEY, true) === '', 'Create-from-template should still clear the template marker on the new venue.');
+	$assert((string) get_post_meta(1003, BVMGR_VENUE_TEMPLATE_META_KEY, true) === '', 'Create-from-template should still clear the template marker on the new venue.');
 
 	vms_test_reset_runtime_state();
 	$eventPlanId = vms_test_register_post('vms_event_plan', 'Event Plan Fixture', 'publish');
@@ -938,12 +954,12 @@ try {
 	$_SERVER['REQUEST_METHOD'] = 'POST';
 	$_GET = array('page' => 'vms-season-dates');
 	$_POST = array(
-		'vms_season_dates_nonce' => vms_test_nonce('vms_season_dates_55'),
+		'bvmgr_season_dates_nonce' => vms_test_nonce('bvmgr_season_dates_55'),
 		'vms_action' => 'save_rules',
 		'venue_id' => 55,
 	);
 	$_REQUEST = array_merge($_GET, $_POST);
-	vms_sd_maybe_handle_post();
+	bvmgr_sd_maybe_handle_post();
 	$assert((int) $GLOBALS['vms_test_season_save_calls'] === 0, 'Season Dates POST handler should not reach mutation paths without the admin capability.');
 
 	fwrite(STDOUT, "Authorization boundary hardening OK.\n");

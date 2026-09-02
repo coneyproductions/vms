@@ -114,7 +114,7 @@ function get_the_title(int $post_id): string
 	return $GLOBALS['g13_tail_titles'][$post_id] ?? ('Post ' . $post_id);
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	$keys = array(
@@ -127,29 +127,29 @@ function vms_meta_key(string $scope, string $field): string
 	return $keys[$field] ?? ('_vms_' . $field);
 }
 
-function vms_event_plan_get_status(int $post_id, string $context): string
+function bvmgr_event_plan_get_status(int $post_id, string $context): string
 {
 	unset($context);
 	return $GLOBALS['g13_tail_statuses'][$post_id] ?? 'draft';
 }
 
-function vms_event_plan_should_include(int $post_id, string $context, array $flags): bool
+function bvmgr_event_plan_should_include(int $post_id, string $context, array $flags): bool
 {
 	unset($context, $flags);
 	return !in_array($post_id, $GLOBALS['g13_tail_excluded'], true);
 }
 
-function vms_sch_is_valid_ymd(string $ymd): bool
+function bvmgr_sch_is_valid_ymd(string $ymd): bool
 {
 	return preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd) === 1;
 }
 
-function vms_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_ymd): bool
+function bvmgr_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_ymd): bool
 {
 	return $ymd >= $start_ymd && $ymd <= $end_ymd;
 }
 
-function vms_get_timezone(): DateTimeZone
+function bvmgr_get_timezone(): DateTimeZone
 {
 	return new DateTimeZone('America/Chicago');
 }
@@ -159,33 +159,33 @@ function wp_reset_postdata(): void
 	$GLOBALS['g13_tail_reset_postdata']++;
 }
 
-function vms_rating_submitted_text_field(string $key): string
+function bvmgr_rating_submitted_text_field(string $key): string
 {
 	return (string) ($GLOBALS['g13_tail_rating_fields'][$key] ?? '');
 }
 
-function vms_rating_submitted_email(string $key): string
+function bvmgr_rating_submitted_email(string $key): string
 {
 	return sanitize_email($GLOBALS['g13_tail_rating_fields'][$key] ?? '');
 }
 
-function vms_rating_submitted_value(string $key): int
+function bvmgr_rating_submitted_value(string $key): int
 {
 	return (int) ($GLOBALS['g13_tail_rating_fields'][$key] ?? 0);
 }
 
-function vms_rating_submitted_comment(): string
+function bvmgr_rating_submitted_comment(): string
 {
 	return (string) ($GLOBALS['g13_tail_rating_fields']['vms_rating_comment'] ?? '');
 }
 
-function vms_get_event_plan_for_tec_event(int $event_id): int
+function bvmgr_get_event_plan_for_tec_event(int $event_id): int
 {
 	unset($event_id);
 	return (int) $GLOBALS['g13_tail_rating_plan_id'];
 }
 
-function vms_has_attended_event(int $event_id, string $email): bool
+function bvmgr_has_attended_event(int $event_id, string $email): bool
 {
 	unset($event_id, $email);
 	return (bool) $GLOBALS['g13_tail_attended'];
@@ -196,7 +196,7 @@ function wp_timezone(): DateTimeZone
 	return new DateTimeZone('America/Chicago');
 }
 
-function vms_approvals_queue_default_vendor_post_type(): string
+function bvmgr_approvals_queue_default_vendor_post_type(): string
 {
 	return (string) $GLOBALS['g13_tail_vendor_post_type'];
 }
@@ -207,7 +207,7 @@ function post_type_exists(string $post_type): bool
 	return (bool) $GLOBALS['g13_tail_post_type_exists'];
 }
 
-function vms_vendor_app_meta_key(string $field): string
+function bvmgr_vendor_app_meta_key(string $field): string
 {
 	return $field === 'confirmation_state' ? '_vms_app_confirmation_state' : '';
 }
@@ -289,37 +289,37 @@ function g13_tail_extract_assignment_call(string $source, string $marker): strin
 function g13_tail_restore_g17_logging(string $source): string
 {
 	$specs = array(
-		'vms_vendor_tax_profile_missing_items' => array(
+		'bvmgr_vendor_tax_profile_missing_items' => array(
 			'current_hash' => 'd455fc35e3361dcf4f94e7827800eb65d5ecf3fe580d30d5265d632981da659e',
 			'historical_hash' => 'c873dd6e83043bb7626c2916e450ce8bc3d4abebc37912d9c223081b4b30be6b',
 			'historical_base64' => 'ZnVuY3Rpb24gdm1zX3ZlbmRvcl90YXhfcHJvZmlsZV9taXNzaW5nX2l0ZW1zKGludCAkdmVuZG9yX2lkKTogYXJyYXkKewogICAgLy8gTk9URToKICAgIC8vIFRoaXMgZnVuY3Rpb24gaXMgdXNlZCBieSBhZG1pbi1vbmx5IHJlYWRpbmVzcyBjaGVja3MgKGV2ZW50IHBsYW4gZWRpdG9yKS4KICAgIC8vIEl0IE1VU1Qgc3RheSBhbGlnbmVkIHdpdGggdGhlIGFkbWluIHZlbmRvciBsaXN0IGNoZWNrcy4KCiAgICAkbWlzc2luZyA9IGFycmF5KCk7CiAgICAvLyBTdGFmZiBlbXBsb3llZTogdXNlIEVtcGxveWVlIFBhY2tldCByZXF1aXJlbWVudHMgKFctNCArIEktOSkuIENvbnRyYWN0b3JzIHVzZSBXLTkgdGF4IHByb2ZpbGUuCiAgICBpZiAoZ2V0X3Bvc3RfdHlwZSgkdmVuZG9yX2lkKSA9PT0gJ3Ztc19zdGFmZicpIHsKICAgICAgICAka193b3JrZXIgPSBmdW5jdGlvbl9leGlzdHMoJ3Ztc19tZXRhX2tleScpID8gKHN0cmluZykgdm1zX21ldGFfa2V5KCdzdGFmZicsICd3b3JrZXJfdHlwZScpIDogJ192bXNfc3RhZmZfd29ya2VyX3R5cGUnOwogICAgICAgIGlmICgka193b3JrZXIgPT09ICcnKSAka193b3JrZXIgPSAnX3Ztc19zdGFmZl93b3JrZXJfdHlwZSc7CiAgICAgICAgJHd0ID0gc2FuaXRpemVfa2V5KChzdHJpbmcpIGdldF9wb3N0X21ldGEoJHZlbmRvcl9pZCwgJGtfd29ya2VyLCB0cnVlKSk7CiAgICAgICAgaWYgKCR3dCA9PT0gJ2VtcGxveWVlJykgewogICAgICAgICAgICAkZW1wX21pc3NpbmcgPSBhcnJheSgpOwogICAgICAgICAgICAkdzQgPSAoaW50KSBnZXRfcG9zdF9tZXRhKCR2ZW5kb3JfaWQsICdfdm1zX2VtcGxveWVlX3c0X3JlY2VpdmVkJywgdHJ1ZSkgPyAxIDogMDsKICAgICAgICAgICAgJGk5ID0gKGludCkgZ2V0X3Bvc3RfbWV0YSgkdmVuZG9yX2lkLCAnX3Ztc19lbXBsb3llZV9pOV92ZXJpZmllZCcsIHRydWUpID8gMSA6IDA7CiAgICAgICAgICAgIGlmICghJHc0KSAkZW1wX21pc3NpbmdbXSA9IF9fKCdXLTQgcmVjZWl2ZWQnLCAnYmFja3N0YWdlLXZlbnVlLW1hbmFnZXInKTsKICAgICAgICAgICAgaWYgKCEkaTkpICRlbXBfbWlzc2luZ1tdID0gX18oJ0ktOSB2ZXJpZmllZCcsICdiYWNrc3RhZ2UtdmVudWUtbWFuYWdlcicpOwogICAgICAgICAgICByZXR1cm4gJGVtcF9taXNzaW5nOwogICAgICAgIH0KICAgIH0KCgogICAgLy8gTWV0YSBrZXlzIChjYW5vbmljYWwpCiAgICAka19kb25lICAgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICd0YXhfcHJvZmlsZV9jb21wbGV0ZWRfYXQnKTsKCiAgICAka19sZWdhbCAgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICdwYXllZV9sZWdhbF9uYW1lJyk7CiAgICAka19lbnRpdHkgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICdlbnRpdHlfdHlwZScpOwoKICAgICRrX2FkZHIxID0gdm1zX21ldGFfa2V5KCd2ZW5kb3InLCAnYWRkcjEnKTsKICAgICRrX2NpdHkgID0gdm1zX21ldGFfa2V5KCd2ZW5kb3InLCAnY2l0eScpOwogICAgJGtfc3RhdGUgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICdzdGF0ZScpOwogICAgJGtfemlwICAgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICd6aXAnKTsKCiAgICAka191cGxvYWQgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICd3OV91cGxvYWRfaWQnKTsKICAgICRrX3JlY3YgICA9IHZtc19tZXRhX2tleSgndmVuZG9yJywgJ3c5X3JlY2VpdmVkX2RhdGUnKTsKICAgICRrX2F0dGVzdCA9IHZtc19tZXRhX2tleSgndmVuZG9yJywgJ3c5X2F0dGVzdGVkX2F0Jyk7CiAgICAka19wcm92ICAgPSB2bXNfbWV0YV9rZXkoJ3ZlbmRvcicsICd3OV9wcm92aWRlcicpOwoKICAgIC8vIElmIGFuIGFkbWluIGV4cGxpY2l0bHkgbWFya2VkIHRoZSBwcm9maWxlIGNvbXBsZXRlLCB0cmVhdCBpdCBhcyBjb21wbGV0ZS4KICAgIC8vIFRoaXMgc3VwcG9ydHMgZW1haWwtYmFzZWQgVy05IHdvcmtmbG93cyB3aGVyZSB0aGUgc2lnbmVkIFctOSBpcyBub3QgdXBsb2FkZWQgaW50byBWTVMuCiAgICAkZG9uZV9hdCA9IChpbnQpIGdldF9wb3N0X21ldGEoJHZlbmRvcl9pZCwgKHN0cmluZykgJGtfZG9uZSwgdHJ1ZSk7CiAgICBpZiAoJGRvbmVfYXQgPiAwKSB7CiAgICAgICAgcmV0dXJuIGFycmF5KCk7CiAgICB9CgogICAgLy8gSGVscGVyOiBzYWZlIHNjYWxhciBtZXRhIHJlYWQKICAgICRtID0gZnVuY3Rpb24gKGludCAkaWQsIHN0cmluZyAka2V5KTogc3RyaW5nIHsKICAgICAgICAkdiA9IGdldF9wb3N0X21ldGEoJGlkLCAka2V5LCB0cnVlKTsKICAgICAgICBpZiAoaXNfYXJyYXkoJHYpIHx8IGlzX29iamVjdCgkdikpIHsKICAgICAgICAgICAgZXJyb3JfbG9nKCdbVk1TXSB0YXggbWlzc2luZ19pdGVtczogbm9uLXNjYWxhciBtZXRhIGZvciBrZXkgJyAuICRrZXkgLiAnIG9uIHBvc3RfaWQgJyAuICRpZCk7CiAgICAgICAgICAgIHJldHVybiAnJzsKICAgICAgICB9CiAgICAgICAgcmV0dXJuIHRyaW0oKHN0cmluZykgJHYpOwogICAgfTsKCiAgICAkbGVnYWwgID0gJG0oJHZlbmRvcl9pZCwgKHN0cmluZykgJGtfbGVnYWwpOwogICAgJGVudGl0eSA9ICRtKCR2ZW5kb3JfaWQsIChzdHJpbmcpICRrX2VudGl0eSk7CgogICAgJGFkZHIxID0gJG0oJHZlbmRvcl9pZCwgKHN0cmluZykgJGtfYWRkcjEpOwogICAgJGNpdHkgID0gJG0oJHZlbmRvcl9pZCwgKHN0cmluZykgJGtfY2l0eSk7CiAgICAkc3RhdGUgPSAkbSgkdmVuZG9yX2lkLCAoc3RyaW5nKSAka19zdGF0ZSk7CiAgICAkemlwICAgPSAkbSgkdmVuZG9yX2lkLCAoc3RyaW5nKSAka196aXApOwoKICAgIGlmICgkbGVnYWwgPT09ICcnKSAgJG1pc3NpbmdbXSA9ICdMZWdhbC9QYXllZSBOYW1lJzsKICAgIGlmICgkZW50aXR5ID09PSAnJykgJG1pc3NpbmdbXSA9ICdFbnRpdHkgVHlwZSc7CgogICAgaWYgKCRhZGRyMSA9PT0gJycpICRtaXNzaW5nW10gPSAnTWFpbGluZyBBZGRyZXNzIChsaW5lIDEpJzsKICAgIGlmICgkY2l0eSA9PT0gJycpICAkbWlzc2luZ1tdID0gJ01haWxpbmcgQWRkcmVzcyAoY2l0eSknOwogICAgaWYgKCRzdGF0ZSA9PT0gJycpICRtaXNzaW5nW10gPSAnTWFpbGluZyBBZGRyZXNzIChzdGF0ZSknOwogICAgaWYgKCR6aXAgPT09ICcnKSAgICRtaXNzaW5nW10gPSAnTWFpbGluZyBBZGRyZXNzIChaSVApJzsKCiAgICAvLyBXLTkgcmVxdWlyZW1lbnQgZGVwZW5kcyBvbiBwcm92aWRlciBtb2RlIChnbG9iYWwgc2V0dGluZykKICAgICRzZXR0aW5ncyA9IGdldF9vcHRpb24oJ3Ztc19zZXR0aW5ncycsIGFycmF5KCkpOwogICAgJHNldHRpbmdzID0gaXNfYXJyYXkoJHNldHRpbmdzKSA/ICRzZXR0aW5ncyA6IGFycmF5KCk7CgogICAgJHByb3ZpZGVyID0gaXNzZXQoJHNldHRpbmdzWyd0YXhfdzlfcHJvdmlkZXInXSkgPyAoc3RyaW5nKSAkc2V0dGluZ3NbJ3RheF93OV9wcm92aWRlciddIDogJyc7CiAgICBpZiAoIWluX2FycmF5KCRwcm92aWRlciwgYXJyYXkoJ3VwbG9hZCcsICdxdWlja2Jvb2tzX2VtYWlsJywgJ3RheDEwOTlfZW1haWwnKSwgdHJ1ZSkpIHsKICAgICAgICAkcHJvdmlkZXIgPSAndXBsb2FkJzsKICAgIH0KCiAgICAkdXBsb2FkX2lkID0gKGludCkgZ2V0X3Bvc3RfbWV0YSgkdmVuZG9yX2lkLCAoc3RyaW5nKSAka191cGxvYWQsIHRydWUpOwogICAgJHJlY3ZfZGF0ZSA9ICRtKCR2ZW5kb3JfaWQsIChzdHJpbmcpICRrX3JlY3YpOwogICAgJGF0dGVzdGVkX2F0ID0gKGludCkgZ2V0X3Bvc3RfbWV0YSgkdmVuZG9yX2lkLCAoc3RyaW5nKSAka19hdHRlc3QsIHRydWUpOwoKICAgICRwcm92aWRlcl9sYWJlbCA9ICdVcGxvYWQnOwogICAgaWYgKCRwcm92aWRlciA9PT0gJ3F1aWNrYm9va3NfZW1haWwnKSB7CiAgICAgICAgJHByb3ZpZGVyX2xhYmVsID0gJ1F1aWNrQm9va3MgT25saW5lJzsKICAgIH0gZWxzZWlmICgkcHJvdmlkZXIgPT09ICd0YXgxMDk5X2VtYWlsJykgewogICAgICAgICRwcm92aWRlcl9sYWJlbCA9ICdUYXgxMDk5JzsKICAgIH0KCiAgICBpZiAoJHByb3ZpZGVyID09PSAndXBsb2FkJykgewogICAgICAgIGlmICgkdXBsb2FkX2lkIDw9IDAgJiYgJHJlY3ZfZGF0ZSA9PT0gJycpIHsKICAgICAgICAgICAgJG1pc3NpbmdbXSA9ICdTaWduZWQgVy05IFVwbG9hZCAob3IgUmVjZWl2ZWQgRGF0ZSknOwogICAgICAgIH0KICAgIH0gZWxzZSB7CiAgICAgICAgLy8gT2ZmLXNpdGUgcHJvdmlkZXJzIHJlbWFpbiBpbmNvbXBsZXRlIHVudGlsIHRoZSB2ZW51ZSBjb25maXJtcyBjb21wbGV0aW9uLAogICAgICAgIC8vIHVubGVzcyBhIHJlYWwgcmVjZWl2ZWQtZGF0ZSBzeW5jIG9yIHVwbG9hZCBleGlzdHMuCiAgICAgICAgaWYgKCR1cGxvYWRfaWQgPD0gMCAmJiAkcmVjdl9kYXRlID09PSAnJykgewogICAgICAgICAgICBpZiAoJGF0dGVzdGVkX2F0ID4gMCkgewogICAgICAgICAgICAgICAgJG1pc3NpbmdbXSA9IHNwcmludGYoJyVzIGNvbXBsZXRpb24gcGVuZGluZyBhZG1pbiBjb25maXJtYXRpb24nLCAkcHJvdmlkZXJfbGFiZWwpOwogICAgICAgICAgICB9IGVsc2UgewogICAgICAgICAgICAgICAgJG1pc3NpbmdbXSA9IHNwcmludGYoJyVzIGNvbXBsZXRpb24gbm90IHlldCBjb25maXJtZWQgYnkgc3RhZmYnLCAkcHJvdmlkZXJfbGFiZWwpOwogICAgICAgICAgICB9CiAgICAgICAgfQogICAgfQoKICAgIHJldHVybiAkbWlzc2luZzsKfQ==',
 		),
-		'vms_approvals_queue_log' => array(
+		'bvmgr_approvals_queue_log' => array(
 			'current_hash' => '80589d0dff8a00739b08f9b38291b99e38779c9f8cb064003198ee70fcfc574f',
 			'historical_hash' => '1fd8ec0b4eeb5169bf4b8ad6ca61300a54c9349f6757e06172769cdc11a2b0c8',
 			'historical_base64' => 'ZnVuY3Rpb24gdm1zX2FwcHJvdmFsc19xdWV1ZV9sb2coc3RyaW5nICRtZXNzYWdlLCBhcnJheSAkY29udGV4dCA9IGFycmF5KCkpOiB2b2lkCgl7CgkJJGxpbmUgPSAnW1ZNUyBBcHByb3ZhbHNdICcgLiB0cmltKCRtZXNzYWdlKTsKCQlpZiAoIWVtcHR5KCRjb250ZXh0KSkgewoJCQkkanNvbiA9IHdwX2pzb25fZW5jb2RlKCRjb250ZXh0KTsKCQkJaWYgKGlzX3N0cmluZygkanNvbikgJiYgJGpzb24gIT09ICcnKSB7CgkJCQkkbGluZSAuPSAnICcgLiAkanNvbjsKCQkJfQoJCX0KCQllcnJvcl9sb2coJGxpbmUpOwoJfQ==',
 		),
-		'vms_approvals_queue_provider_url' => array(
+		'bvmgr_approvals_queue_provider_url' => array(
 			'current_hash' => '3a779cd11146c6a5b16a6ff61743b37fd3a35733c2ec886c3ed82b40714b4bd0',
 			'historical_hash' => 'b8b5d1537bc1a92f166b0656348ea17f93ad3d58c6dea0ffa471dcf4701e0e6f',
 			'historical_base64' => 'ZnVuY3Rpb24gdm1zX2FwcHJvdmFsc19xdWV1ZV9wcm92aWRlcl91cmwoYXJyYXkgJHByb3ZpZGVyKTogc3RyaW5nCgl7CgkJaWYgKCFlbXB0eSgkcHJvdmlkZXJbJ3NjcmVlbl91cmxfY2FsbGJhY2snXSkgJiYgaXNfY2FsbGFibGUoJHByb3ZpZGVyWydzY3JlZW5fdXJsX2NhbGxiYWNrJ10pKSB7CgkJCXRyeSB7CgkJCQkkcmVzb2x2ZWQgPSBjYWxsX3VzZXJfZnVuYygkcHJvdmlkZXJbJ3NjcmVlbl91cmxfY2FsbGJhY2snXSwgJHByb3ZpZGVyKTsKCQkJCWlmIChpc19zdHJpbmcoJHJlc29sdmVkKSAmJiAkcmVzb2x2ZWQgIT09ICcnKSB7CgkJCQkJcmV0dXJuIGVzY191cmxfcmF3KCRyZXNvbHZlZCk7CgkJCQl9CgkJCX0gY2F0Y2ggKFRocm93YWJsZSAkZSkgewoJCQkJdm1zX2FwcHJvdmFsc19xdWV1ZV9sb2coCgkJCQkJJ1Byb3ZpZGVyIHNjcmVlbiBVUkwgY2FsbGJhY2sgZmFpbGVkLicsCgkJCQkJYXJyYXkoCgkJCQkJCSdwcm92aWRlcicgPT4gKHN0cmluZykgKCRwcm92aWRlclsnaWQnXSA/PyAnJyksCgkJCQkJCSdlcnJvcicgPT4gJGUtPmdldE1lc3NhZ2UoKSwKCQkJCQkpCgkJCQkpOwoJCQl9CgkJfQoKCQlyZXR1cm4gZXNjX3VybF9yYXcoKHN0cmluZykgKCRwcm92aWRlclsnc2NyZWVuX3VybCddID8/ICcnKSk7Cgl9',
 		),
-		'vms_approvals_queue_provider_pending_count' => array(
+		'bvmgr_approvals_queue_provider_pending_count' => array(
 			'current_hash' => 'da3b49f31d390106f0c795cea43558f7a0641d858e99a92173a33c2a70722951',
 			'historical_hash' => 'd347ca70d424b1f59ec4f021e3807ca9aeb958b14b491cb0a0a30c9628291136',
 			'historical_base64' => 'ZnVuY3Rpb24gdm1zX2FwcHJvdmFsc19xdWV1ZV9wcm92aWRlcl9wZW5kaW5nX2NvdW50KGFycmF5ICRwcm92aWRlcik6IGludAoJewoJCSRjYWxsYmFjayA9ICRwcm92aWRlclsncGVuZGluZ19jb3VudF9jYWxsYmFjayddID8/IG51bGw7CgkJaWYgKCFpc19jYWxsYWJsZSgkY2FsbGJhY2spKSB7CgkJCXZtc19hcHByb3ZhbHNfcXVldWVfbG9nKAoJCQkJJ1Byb3ZpZGVyIG1pc3NpbmcgcGVuZGluZ19jb3VudF9jYWxsYmFjay4nLAoJCQkJYXJyYXkoJ3Byb3ZpZGVyJyA9PiAoc3RyaW5nKSAoJHByb3ZpZGVyWydpZCddID8/ICcnKSkKCQkJKTsKCQkJcmV0dXJuIDA7CgkJfQoKCQl0cnkgewoJCQkkdmFsdWUgPSBjYWxsX3VzZXJfZnVuYygkY2FsbGJhY2ssICRwcm92aWRlcik7CgkJCWlmIChpc193cF9lcnJvcigkdmFsdWUpKSB7CgkJCQl2bXNfYXBwcm92YWxzX3F1ZXVlX2xvZygKCQkJCQknUHJvdmlkZXIgY291bnQgY2FsbGJhY2sgcmV0dXJuZWQgV1BfRXJyb3IuJywKCQkJCQlhcnJheSgKCQkJCQkJJ3Byb3ZpZGVyJyA9PiAoc3RyaW5nKSAoJHByb3ZpZGVyWydpZCddID8/ICcnKSwKCQkJCQkJJ2Vycm9yJyA9PiAkdmFsdWUtPmdldF9lcnJvcl9tZXNzYWdlKCksCgkJCQkJKQoJCQkJKTsKCQkJCXZtc19hcHByb3ZhbHNfcXVldWVfYWRkX2FkbWluX25vdGljZSgKCQkJCQlfXygnQXBwcm92YWxzIGNvdW50IHJlZnJlc2ggZmFpbGVkIGZvciBvbmUgcXVldWUuIENoZWNrIGxvZ3MgZm9yIGRldGFpbHMuJywgJ2JhY2tzdGFnZS12ZW51ZS1tYW5hZ2VyJyksCgkJCQkJJ3dhcm5pbmcnCgkJCQkpOwoJCQkJcmV0dXJuIDA7CgkJCX0KCgkJCXJldHVybiBtYXgoMCwgYWJzaW50KCR2YWx1ZSkpOwoJCX0gY2F0Y2ggKFRocm93YWJsZSAkZSkgewoJCQl2bXNfYXBwcm92YWxzX3F1ZXVlX2xvZygKCQkJCSdQcm92aWRlciBjb3VudCBjYWxsYmFjayB0aHJldyBhbiBleGNlcHRpb24uJywKCQkJCWFycmF5KAoJCQkJCSdwcm92aWRlcicgPT4gKHN0cmluZykgKCRwcm92aWRlclsnaWQnXSA/PyAnJyksCgkJCQkJJ2Vycm9yJyA9PiAkZS0+Z2V0TWVzc2FnZSgpLAoJCQkJKQoJCQkpOwoJCQl2bXNfYXBwcm92YWxzX3F1ZXVlX2FkZF9hZG1pbl9ub3RpY2UoCgkJCQlfXygnQXBwcm92YWxzIGNvdW50IHJlZnJlc2ggZmFpbGVkIGZvciBvbmUgcXVldWUuIENoZWNrIGxvZ3MgZm9yIGRldGFpbHMuJywgJ2JhY2tzdGFnZS12ZW51ZS1tYW5hZ2VyJyksCgkJCQknd2FybmluZycKCQkJKTsKCQl9CgoJCXJldHVybiAwOwoJfQ==',
 		),
-		'vms_approvals_queue_provider_summary_items' => array(
+		'bvmgr_approvals_queue_provider_summary_items' => array(
 			'current_hash' => 'e562d8503b19a7ae78d21af6efd3090c797d13824e4459d23023a318e8fd9dd6',
 			'historical_hash' => '75abd2390464878ffa63b3cb49aa10bfc9bd6dc5005318718a4c1ede9a7f7047',
 			'historical_base64' => 'ZnVuY3Rpb24gdm1zX2FwcHJvdmFsc19xdWV1ZV9wcm92aWRlcl9zdW1tYXJ5X2l0ZW1zKGFycmF5ICRwcm92aWRlcik6IGFycmF5Cgl7CgkJJGNhbGxiYWNrID0gJHByb3ZpZGVyWydzdW1tYXJ5X2NhbGxiYWNrJ10gPz8gbnVsbDsKCQlpZiAoIWlzX2NhbGxhYmxlKCRjYWxsYmFjaykpIHsKCQkJcmV0dXJuIGFycmF5KCk7CgkJfQoKCQl0cnkgewoJCQkkdmFsdWUgPSBjYWxsX3VzZXJfZnVuYygkY2FsbGJhY2ssICRwcm92aWRlcik7CgkJCWlmICghaXNfYXJyYXkoJHZhbHVlKSkgewoJCQkJcmV0dXJuIGFycmF5KCk7CgkJCX0KCQkJJGl0ZW1zID0gYXJyYXkoKTsKCQkJZm9yZWFjaCAoJHZhbHVlIGFzICRyb3cpIHsKCQkJCWlmICghaXNfYXJyYXkoJHJvdykpIHsKCQkJCQljb250aW51ZTsKCQkJCX0KCQkJCSR0aXRsZSA9IHNhbml0aXplX3RleHRfZmllbGQoKHN0cmluZykgKCRyb3dbJ3RpdGxlJ10gPz8gJycpKTsKCQkJCWlmICgkdGl0bGUgPT09ICcnKSB7CgkJCQkJY29udGludWU7CgkJCQl9CgkJCQkkbWV0YSA9IHNhbml0aXplX3RleHRfZmllbGQoKHN0cmluZykgKCRyb3dbJ21ldGEnXSA/PyAnJykpOwoJCQkJJGl0ZW1zW10gPSBhcnJheSgKCQkJCQkndGl0bGUnID0+ICR0aXRsZSwKCQkJCQknbWV0YScgPT4gJG1ldGEsCgkJCQkpOwoJCQl9CgkJCXJldHVybiBhcnJheV9zbGljZSgkaXRlbXMsIDAsIDUpOwoJCX0gY2F0Y2ggKFRocm93YWJsZSAkZSkgewoJCQl2bXNfYXBwcm92YWxzX3F1ZXVlX2xvZygKCQkJCSdQcm92aWRlciBzdW1tYXJ5IGNhbGxiYWNrIHRocmV3IGFuIGV4Y2VwdGlvbi4nLAoJCQkJYXJyYXkoCgkJCQkJJ3Byb3ZpZGVyJyA9PiAoc3RyaW5nKSAoJHByb3ZpZGVyWydpZCddID8/ICcnKSwKCQkJCQknZXJyb3InID0+ICRlLT5nZXRNZXNzYWdlKCksCgkJCQkpCgkJCSk7CgkJCXJldHVybiBhcnJheSgpOwoJCX0KCX0=',
 		),
-		'vms_approvals_queue_collect_snapshot' => array(
+		'bvmgr_approvals_queue_collect_snapshot' => array(
 			'current_hash' => 'edfdb89f4ad37551bd02c5d5dbe03d1d30ed53956ef4e6329500e4a422434bf4',
 			'historical_hash' => 'd9619a0b3c8a5405ef1a2b5698ac6461c1f0d5610725ca150d704679002ded00',
 			'historical_base64' => 'ZnVuY3Rpb24gdm1zX2FwcHJvdmFsc19xdWV1ZV9jb2xsZWN0X3NuYXBzaG90KGJvb2wgJGNhcGFiaWxpdHlfYXdhcmUgPSB0cnVlKTogYXJyYXkKCXsKCQlzdGF0aWMgJGNhY2hlID0gYXJyYXkoKTsKCgkJJGNhY2hlX2tleSA9ICgkY2FwYWJpbGl0eV9hd2FyZSA/ICdjYXAnIDogJ2FsbCcpIC4gJzonIC4gKGludCkgZ2V0X2N1cnJlbnRfdXNlcl9pZCgpOwoJCWlmIChpc3NldCgkY2FjaGVbJGNhY2hlX2tleV0pKSB7CgkJCXJldHVybiAkY2FjaGVbJGNhY2hlX2tleV07CgkJfQoKCQkkc25hcHNob3QgPSBhcnJheSgKCQkJJ2dlbmVyYXRlZF9hdCcgPT4gKHN0cmluZykgY3VycmVudF90aW1lKCdteXNxbCcpLAoJCQkndG90YWxfcGVuZGluZycgPT4gMCwKCQkJJ3Byb3ZpZGVycycgPT4gYXJyYXkoKSwKCQkpOwoKCQlmb3JlYWNoICh2bXNfYXBwcm92YWxzX3F1ZXVlX2dldF9wcm92aWRlcnMoKSBhcyAkcHJvdmlkZXIpIHsKCQkJaWYgKCRjYXBhYmlsaXR5X2F3YXJlICYmICF2bXNfYXBwcm92YWxzX3F1ZXVlX3VzZXJfY2FuX3Byb3ZpZGVyKCRwcm92aWRlcikpIHsKCQkJCWNvbnRpbnVlOwoJCQl9CgoJCQkkcGVuZGluZ19jb3VudCA9IHZtc19hcHByb3ZhbHNfcXVldWVfcHJvdmlkZXJfcGVuZGluZ19jb3VudCgkcHJvdmlkZXIpOwoJCQkkc2NyZWVuX3VybCA9IHZtc19hcHByb3ZhbHNfcXVldWVfcHJvdmlkZXJfdXJsKCRwcm92aWRlcik7CgkJCWlmICgkc2NyZWVuX3VybCA9PT0gJycpIHsKCQkJCXZtc19hcHByb3ZhbHNfcXVldWVfbG9nKAoJCQkJCSdQcm92aWRlciBzY3JlZW4gVVJMIGlzIGVtcHR5LicsCgkJCQkJYXJyYXkoJ3Byb3ZpZGVyJyA9PiAoc3RyaW5nKSAoJHByb3ZpZGVyWydpZCddID8/ICcnKSkKCQkJCSk7CgkJCX0KCgkJCSRzdW1tYXJ5X2l0ZW1zID0gYXJyYXkoKTsKCQkJaWYgKCRwZW5kaW5nX2NvdW50ID4gMCkgewoJCQkJJHN1bW1hcnlfaXRlbXMgPSB2bXNfYXBwcm92YWxzX3F1ZXVlX3Byb3ZpZGVyX3N1bW1hcnlfaXRlbXMoJHByb3ZpZGVyKTsKCQkJfQoKCQkJJHJvdyA9IGFycmF5KAoJCQkJJ2lkJyA9PiAoc3RyaW5nKSAoJHByb3ZpZGVyWydpZCddID8/ICcnKSwKCQkJCSdsYWJlbCcgPT4gKHN0cmluZykgKCRwcm92aWRlclsnbGFiZWwnXSA/PyAnJyksCgkJCQknbWVudV9sYWJlbCcgPT4gKHN0cmluZykgKCRwcm92aWRlclsnbWVudV9sYWJlbCddID8/ICcnKSwKCQkJCSdzZWN0aW9uX2xhYmVsJyA9PiAoc3RyaW5nKSAoJHByb3ZpZGVyWydzZWN0aW9uX2xhYmVsJ10gPz8gJycpLAoJCQkJJ2Rlc2NyaXB0aW9uJyA9PiAoc3RyaW5nKSAoJHByb3ZpZGVyWydkZXNjcmlwdGlvbiddID8/ICcnKSwKCQkJCSdjYXBhYmlsaXR5JyA9PiAoc3RyaW5nKSAoJHByb3ZpZGVyWydjYXBhYmlsaXR5J10gPz8gJycpLAoJCQkJJ21lbnVfc2x1Z3MnID0+IChhcnJheSkgKCRwcm92aWRlclsnbWVudV9zbHVncyddID8/IGFycmF5KCkpLAoJCQkJJ3BlbmRpbmdfY291bnQnID0+IG1heCgwLCAkcGVuZGluZ19jb3VudCksCgkJCQknc2NyZWVuX3VybCcgPT4gJHNjcmVlbl91cmwsCgkJCQknc3VtbWFyeV9pdGVtcycgPT4gJHN1bW1hcnlfaXRlbXMsCgkJCSk7CgoJCQkkc25hcHNob3RbJ3Byb3ZpZGVycyddW10gPSAkcm93OwoJCQkkc25hcHNob3RbJ3RvdGFsX3BlbmRpbmcnXSArPSBtYXgoMCwgJHBlbmRpbmdfY291bnQpOwoJCX0KCgkJJGNhY2hlWyRjYWNoZV9rZXldID0gJHNuYXBzaG90OwoJCXJldHVybiAkc25hcHNob3Q7Cgl9',
 		),
-		'vms_approvals_queue_record_transition' => array(
+		'bvmgr_approvals_queue_record_transition' => array(
 			'current_hash' => '11f968b3c8ad22c645cd59cfaa60a71e4f9de4338d1b4361c8368e82e787e8ee',
 			'historical_hash' => '43c19e3c4c8d90cc36e9d7cc2c17fc03b167efd45b5809f77181ff5bd1ddb79d',
 			'historical_base64' => 'ZnVuY3Rpb24gdm1zX2FwcHJvdmFsc19xdWV1ZV9yZWNvcmRfdHJhbnNpdGlvbihzdHJpbmcgJHF1ZXVlX2lkLCBpbnQgJGl0ZW1faWQsIHN0cmluZyAkZnJvbV9zdGF0dXMsIHN0cmluZyAkdG9fc3RhdHVzLCBhcnJheSAkY29udGV4dCA9IGFycmF5KCkpOiB2b2lkCgl7CgkJJHF1ZXVlX2lkID0gc2FuaXRpemVfa2V5KCRxdWV1ZV9pZCk7CgkJJGl0ZW1faWQgPSBhYnNpbnQoJGl0ZW1faWQpOwoJCSRmcm9tX3N0YXR1cyA9IHNhbml0aXplX2tleSgkZnJvbV9zdGF0dXMpOwoJCSR0b19zdGF0dXMgPSBzYW5pdGl6ZV9rZXkoJHRvX3N0YXR1cyk7CgkJaWYgKCRxdWV1ZV9pZCA9PT0gJycgfHwgJGl0ZW1faWQgPD0gMCB8fCAkdG9fc3RhdHVzID09PSAnJykgewoJCQlyZXR1cm47CgkJfQoKCQkkZW50cnkgPSBhcnJheSgKCQkJJ3RzJyA9PiBjdXJyZW50X3RpbWUoJ215c3FsJyksCgkJCSdxdWV1ZV9pZCcgPT4gJHF1ZXVlX2lkLAoJCQknaXRlbV9pZCcgPT4gJGl0ZW1faWQsCgkJCSdmcm9tX3N0YXR1cycgPT4gJGZyb21fc3RhdHVzLAoJCQkndG9fc3RhdHVzJyA9PiAkdG9fc3RhdHVzLAoJCQknYWN0b3JfaWQnID0+IChpbnQpIGdldF9jdXJyZW50X3VzZXJfaWQoKSwKCQkJJ25vdGUnID0+IHNhbml0aXplX3RleHRfZmllbGQoKHN0cmluZykgKCRjb250ZXh0Wydub3RlJ10gPz8gJycpKSwKCQkpOwoKCQkkZXhpc3RpbmcgPSBnZXRfb3B0aW9uKHZtc19hcHByb3ZhbHNfcXVldWVfYXVkaXRfb3B0aW9uX2tleSgpLCBhcnJheSgpKTsKCQlpZiAoIWlzX2FycmF5KCRleGlzdGluZykpIHsKCQkJJGV4aXN0aW5nID0gYXJyYXkoKTsKCQl9CgkJJGV4aXN0aW5nW10gPSAkZW50cnk7CgkJJGV4aXN0aW5nID0gYXJyYXlfdmFsdWVzKGFycmF5X3NsaWNlKCRleGlzdGluZywgLTMwMCwgMzAwLCB0cnVlKSk7CgkJdXBkYXRlX29wdGlvbih2bXNfYXBwcm92YWxzX3F1ZXVlX2F1ZGl0X29wdGlvbl9rZXkoKSwgJGV4aXN0aW5nLCBmYWxzZSk7CgoJCXZtc19hcHByb3ZhbHNfcXVldWVfbG9nKAoJCQknU3RhdHVzIHRyYW5zaXRpb24gcmVjb3JkZWQuJywKCQkJYXJyYXkoCgkJCQkncXVldWVfaWQnID0+ICRxdWV1ZV9pZCwKCQkJCSdpdGVtX2lkJyA9PiAkaXRlbV9pZCwKCQkJCSdmcm9tX3N0YXR1cycgPT4gJGZyb21fc3RhdHVzLAoJCQkJJ3RvX3N0YXR1cycgPT4gJHRvX3N0YXR1cywKCQkJCSdhY3Rvcl9pZCcgPT4gKGludCkgZ2V0X2N1cnJlbnRfdXNlcl9pZCgpLAoJCQkpCgkJKTsKCX0=',
@@ -327,18 +327,18 @@ function g13_tail_restore_g17_logging(string $source): string
 	);
 	$selected = array();
 	if (strpos($source, "'tax_profile_meta_shape_invalid'") !== false) {
-		$selected[] = 'vms_vendor_tax_profile_missing_items';
+		$selected[] = 'bvmgr_vendor_tax_profile_missing_items';
 	}
 	if (strpos($source, "'approvals_provider_pending_callback_failed'") !== false) {
 		$selected = array_merge(
 			$selected,
 			array(
-				'vms_approvals_queue_log',
-				'vms_approvals_queue_provider_url',
-				'vms_approvals_queue_provider_pending_count',
-				'vms_approvals_queue_provider_summary_items',
-				'vms_approvals_queue_collect_snapshot',
-				'vms_approvals_queue_record_transition',
+				'bvmgr_approvals_queue_log',
+				'bvmgr_approvals_queue_provider_url',
+				'bvmgr_approvals_queue_provider_pending_count',
+				'bvmgr_approvals_queue_provider_summary_items',
+				'bvmgr_approvals_queue_collect_snapshot',
+				'bvmgr_approvals_queue_record_transition',
 			)
 		);
 		$source = str_replace("\t * @param mixed               \$error\n", '', $source, $doc_count);
@@ -460,10 +460,10 @@ foreach (array_diff($relative_files, array('includes/schedule/schedule.php')) as
 }
 
 $owned_function_map = array(
-	'includes/cpt/ratings.php' => array('vms_get_band_rating_summary', 'vms_handle_rating_submission'),
-	'includes/helpers.php' => array('vms_resolve_event_plan_for_tec_event', 'vms_get_ticket_product_ids_for_event', 'vms_get_event_titles_by_date', 'vms_get_comp_packages_for_venue'),
-	'includes/schedule/schedule.php' => array('vms_sch_get_plans_by_date', 'vms_sch_get_plans_by_date_all'),
-	'includes/admin/approvals-review-queue.php' => array('vms_approvals_queue_vendor_summary'),
+	'includes/cpt/ratings.php' => array('bvmgr_get_band_rating_summary', 'bvmgr_handle_rating_submission'),
+	'includes/helpers.php' => array('bvmgr_resolve_event_plan_for_tec_event', 'bvmgr_get_ticket_product_ids_for_event', 'bvmgr_get_event_titles_by_date', 'bvmgr_get_comp_packages_for_venue'),
+	'includes/schedule/schedule.php' => array('bvmgr_sch_get_plans_by_date', 'bvmgr_sch_get_plans_by_date_all'),
+	'includes/admin/approvals-review-queue.php' => array('bvmgr_approvals_queue_vendor_summary'),
 );
 $owned_chunks = array();
 foreach ($owned_function_map as $relative_file => $functions) {
@@ -547,10 +547,10 @@ foreach ($owned_function_map as $relative_file => $functions) {
 
 // Complete ratings aggregate semantics: invalid/empty inputs, filters, IDs, and aggregate results.
 g13_tail_reset();
-g13_tail_same(array('average' => null, 'count' => 0), vms_get_band_rating_summary(0), 'Invalid band summary result changed.');
+g13_tail_same(array('average' => null, 'count' => 0), bvmgr_get_band_rating_summary(0), 'Invalid band summary result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid band should not query ratings.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array());
-g13_tail_same(array('average' => null, 'count' => 0), vms_get_band_rating_summary(44), 'Empty rating summary result changed.');
+g13_tail_same(array('average' => null, 'count' => 0), bvmgr_get_band_rating_summary(44), 'Empty rating summary result changed.');
 $empty_rating_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $empty_rating_args['posts_per_page'], 'Rating aggregate must remain complete rather than count-capped.');
 g13_tail_same('ids', $empty_rating_args['fields'], 'Rating aggregate result shape changed.');
@@ -564,7 +564,7 @@ $GLOBALS['g13_tail_meta'] = array(
 	12 => array('_vms_rating_value' => 3),
 	13 => array('_vms_rating_value' => 0),
 );
-g13_tail_same(array('average' => 4.0, 'count' => 2), vms_get_band_rating_summary(44, false), 'Rating aggregate average/count changed.');
+g13_tail_same(array('average' => 4.0, 'count' => 2), bvmgr_get_band_rating_summary(44, false), 'Rating aggregate average/count changed.');
 $rating_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(array(array('key' => '_vms_band_id', 'value' => 44)), $rating_args['meta_query'], 'Unverified rating filter changed.');
 
@@ -578,7 +578,7 @@ $GLOBALS['g13_tail_rating_fields'] = array(
 	'vms_rating_comment' => 'Good show',
 );
 $GLOBALS['g13_tail_nonce_valid'] = false;
-$nonce_failure = vms_handle_rating_submission(700, 77);
+$nonce_failure = bvmgr_handle_rating_submission(700, 77);
 g13_tail_same(false, $nonce_failure['success'], 'Invalid rating nonce should still fail.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid rating nonce should not query duplicates.');
 
@@ -588,7 +588,7 @@ $GLOBALS['g13_tail_meta'] = array(
 	701 => array('_vms_band_vendor_id' => 77, '_vms_event_date' => '', '_vms_start_time' => ''),
 );
 $GLOBALS['g13_tail_get_posts_queue'] = array(array(901));
-$duplicate_failure = vms_handle_rating_submission(700, 77);
+$duplicate_failure = bvmgr_handle_rating_submission(700, 77);
 g13_tail_same(false, $duplicate_failure['success'], 'Existing duplicate rating should still fail.');
 g13_tail_contains('already submitted', $duplicate_failure['message'], 'Duplicate rating failure message changed.');
 $duplicate_args = $GLOBALS['g13_tail_get_posts_calls'][0];
@@ -616,16 +616,16 @@ $GLOBALS['g13_tail_meta'] = array(
 );
 $GLOBALS['g13_tail_get_posts_queue'] = array(array());
 $GLOBALS['g13_tail_attended'] = false;
-$no_duplicate = vms_handle_rating_submission(700, 77);
+$no_duplicate = bvmgr_handle_rating_submission(700, 77);
 g13_tail_same(false, $no_duplicate['success'], 'Empty duplicate result should continue to attendance validation.');
 g13_tail_contains("couldn't find a ticket", $no_duplicate['message'], 'Empty duplicate-result continuation changed.');
 
 // Linked Event Plan lifecycle resolution retains complete candidate enumeration and deterministic ranking.
 g13_tail_reset();
-g13_tail_same(0, vms_resolve_event_plan_for_tec_event(0), 'Invalid TEC resolver result changed.');
+g13_tail_same(0, bvmgr_resolve_event_plan_for_tec_event(0), 'Invalid TEC resolver result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid TEC ID should not query Event Plans.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array());
-g13_tail_same(0, vms_resolve_event_plan_for_tec_event(88), 'Empty TEC resolver result changed.');
+g13_tail_same(0, bvmgr_resolve_event_plan_for_tec_event(88), 'Empty TEC resolver result changed.');
 $resolver_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $resolver_args['posts_per_page'], 'TEC resolver must inspect all linked lifecycle candidates.');
 g13_tail_same('ids', $resolver_args['fields'], 'TEC resolver result shape changed.');
@@ -644,21 +644,21 @@ $GLOBALS['g13_tail_meta'] = array(
 	102 => array('_vms_ticketing_config_v2' => array()),
 	103 => array('_vms_ticketing_config_v2' => array('enabled' => true)),
 );
-g13_tail_same(102, vms_resolve_event_plan_for_tec_event(88), 'TEC resolver lifecycle ranking changed.');
+g13_tail_same(102, bvmgr_resolve_event_plan_for_tec_event(88), 'TEC resolver lifecycle ranking changed.');
 
 // Ticket-product lookup retains invalid/empty behavior, complete exact linkage, and integer results.
 g13_tail_reset();
-g13_tail_same(array(), vms_get_ticket_product_ids_for_event(0), 'Invalid ticket-event result changed.');
+g13_tail_same(array(), bvmgr_get_ticket_product_ids_for_event(0), 'Invalid ticket-event result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid ticket-event ID should not query products.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array('401', 402));
-g13_tail_same(array(401, 402), vms_get_ticket_product_ids_for_event(90), 'Ticket product ID normalization changed.');
+g13_tail_same(array(401, 402), bvmgr_get_ticket_product_ids_for_event(90), 'Ticket product ID normalization changed.');
 $ticket_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $ticket_args['posts_per_page'], 'Ticket lookup must return every linked product.');
 g13_tail_same(array('key' => '_tribe_wooticket_for_event', 'value' => 90), $ticket_args['meta_query'][0], 'Ticket product linkage filter changed.');
 
 // Legacy TEC title mapping executes WP_Query, preserves the whole dated-event scan, then filters in PHP.
 g13_tail_reset();
-g13_tail_same(array(), vms_get_event_titles_by_date(array()), 'Empty active-date title map changed.');
+g13_tail_same(array(), bvmgr_get_event_titles_by_date(array()), 'Empty active-date title map changed.');
 g13_tail_same(0, count(WP_Query::$calls), 'Empty active dates should not execute WP_Query.');
 WP_Query::$queue = array(array(501, 502, 503));
 $GLOBALS['g13_tail_meta'] = array(
@@ -667,7 +667,7 @@ $GLOBALS['g13_tail_meta'] = array(
 	503 => array('_EventStartDate' => 'This is not a date'),
 );
 $GLOBALS['g13_tail_titles'] = array(501 => 'Included Event', 502 => 'Outside Event');
-g13_tail_same(array('2026-09-10' => 'Included Event'), vms_get_event_titles_by_date(array(' 2026-09-10 ')), 'TEC title PHP date filtering changed.');
+g13_tail_same(array('2026-09-10' => 'Included Event'), bvmgr_get_event_titles_by_date(array(' 2026-09-10 ')), 'TEC title PHP date filtering changed.');
 $title_args = WP_Query::$calls[0];
 g13_tail_same(-1, $title_args['posts_per_page'], 'Legacy title helper must retain its whole dated-event scan.');
 g13_tail_same('ids', $title_args['fields'], 'Legacy title query result shape changed.');
@@ -678,18 +678,18 @@ g13_tail_same(1, $GLOBALS['g13_tail_reset_postdata'], 'Legacy title query should
 g13_tail_reset();
 $package = new WP_Post(601, 'vms_comp_package', 'publish');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array($package), array());
-g13_tail_same(array($package), vms_get_comp_packages_for_venue(12, true), 'Venue/global package results changed.');
+g13_tail_same(array($package), bvmgr_get_comp_packages_for_venue(12, true), 'Venue/global package results changed.');
 $package_global_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $package_global_args['posts_per_page'], 'Comp-package choices must remain complete.');
 g13_tail_same('OR', $package_global_args['meta_query']['relation'], 'Venue/global package relation changed.');
 g13_tail_same(array(12, 0), array_column(array_slice($package_global_args['meta_query'], 1, 2), 'value'), 'Venue/global package values changed.');
-g13_tail_same(array(), vms_get_comp_packages_for_venue(12, false), 'Empty venue-only package result changed.');
+g13_tail_same(array(), bvmgr_get_comp_packages_for_venue(12, false), 'Empty venue-only package result changed.');
 $package_venue_args = $GLOBALS['g13_tail_get_posts_calls'][1];
 g13_tail_same(array(array('key' => '_vms_venue_id', 'value' => 12, 'compare' => '=', 'type' => 'NUMERIC')), $package_venue_args['meta_query'], 'Venue-only package scope changed.');
 
 // Single-venue schedule query retains bounded primary args/results and the unbounded historical fallback with PHP revalidation.
 g13_tail_reset();
-g13_tail_same(array(), vms_sch_get_plans_by_date(0, '2026-09-01', '2026-09-30'), 'Invalid venue schedule result changed.');
+g13_tail_same(array(), bvmgr_sch_get_plans_by_date(0, '2026-09-01', '2026-09-30'), 'Invalid venue schedule result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Invalid venue should not query schedule plans.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array(701, 702, 703));
 $GLOBALS['g13_tail_meta'] = array(
@@ -704,7 +704,7 @@ $GLOBALS['g13_tail_posts'] = array(
 );
 $GLOBALS['g13_tail_statuses'] = array(701 => 'published', 702 => 'draft', 703 => 'published');
 $GLOBALS['g13_tail_excluded'] = array(703);
-$single_map = vms_sch_get_plans_by_date(12, '2026-09-01', '2026-09-30', false, array('context' => 'schedule_admin'));
+$single_map = bvmgr_sch_get_plans_by_date(12, '2026-09-01', '2026-09-30', false, array('context' => 'schedule_admin'));
 g13_tail_same(array(701), array_column($single_map['2026-09-05'], 'plan_id'), 'Single-venue schedule PHP filtering/result changed.');
 $single_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(-1, $single_args['posts_per_page'], 'Single-venue schedule completeness changed.');
@@ -722,7 +722,7 @@ $GLOBALS['g13_tail_posts'] = array(
 	705 => new WP_Post(705, 'vms_event_plan', 'publish'),
 );
 $GLOBALS['g13_tail_statuses'] = array(704 => 'published', 705 => 'published');
-$single_fallback_map = vms_sch_get_plans_by_date(12, '2026-09-01', '2026-09-30');
+$single_fallback_map = bvmgr_sch_get_plans_by_date(12, '2026-09-01', '2026-09-30');
 g13_tail_same(array(704), array_column($single_fallback_map['2026-09-08'], 'plan_id'), 'Single-venue fallback PHP window filtering changed.');
 g13_tail_same(2, count($GLOBALS['g13_tail_get_posts_calls']), 'Empty primary schedule query should invoke one fallback.');
 g13_tail_same(1, count($GLOBALS['g13_tail_get_posts_calls'][1]['meta_query']), 'Single-venue fallback must remove only the date constraint.');
@@ -731,13 +731,13 @@ g13_tail_same(-1, $GLOBALS['g13_tail_get_posts_calls'][1]['posts_per_page'], 'Si
 
 // Multi-venue schedule query retains finite venue/date primary bounds and the selected-venues historical fallback.
 g13_tail_reset();
-g13_tail_same(array(), vms_sch_get_plans_by_date_all(array(), '2026-09-01', '2026-09-30'), 'Empty multi-venue schedule result changed.');
+g13_tail_same(array(), bvmgr_sch_get_plans_by_date_all(array(), '2026-09-01', '2026-09-30'), 'Empty multi-venue schedule result changed.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Empty venue set should not query schedule plans.');
 $GLOBALS['g13_tail_get_posts_queue'] = array(array(711));
 $GLOBALS['g13_tail_meta'] = array(711 => array('_vms_event_date' => '2026-09-09', '_vms_venue_id' => 21));
 $GLOBALS['g13_tail_posts'] = array(711 => new WP_Post(711, 'vms_event_plan', 'publish'));
 $GLOBALS['g13_tail_statuses'] = array(711 => 'published');
-$all_map = vms_sch_get_plans_by_date_all(array(21, 22), '2026-09-01', '2026-09-30');
+$all_map = bvmgr_sch_get_plans_by_date_all(array(21, 22), '2026-09-01', '2026-09-30');
 g13_tail_same(array(array('plan_id' => 711, 'venue_id' => 21, 'plan_status' => 'published')), $all_map['2026-09-09'], 'Multi-venue schedule primary result changed.');
 $all_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same('IN', $all_args['meta_query'][0]['compare'], 'Multi-venue primary venue comparison changed.');
@@ -755,7 +755,7 @@ $GLOBALS['g13_tail_posts'] = array(
 	713 => new WP_Post(713, 'vms_event_plan', 'publish'),
 );
 $GLOBALS['g13_tail_statuses'] = array(712 => 'published', 713 => 'published');
-$all_fallback_map = vms_sch_get_plans_by_date_all(array(21, 22), '2026-09-01', '2026-09-30');
+$all_fallback_map = bvmgr_sch_get_plans_by_date_all(array(21, 22), '2026-09-01', '2026-09-30');
 g13_tail_same(array(712), array_column($all_fallback_map['2026-09-10'], 'plan_id'), 'Multi-venue fallback PHP window filtering changed.');
 g13_tail_same(2, count($GLOBALS['g13_tail_get_posts_calls']), 'Empty multi-venue primary query should invoke one fallback.');
 g13_tail_same(1, count($GLOBALS['g13_tail_get_posts_calls'][1]['meta_query']), 'Multi-venue fallback must remove only the date constraint.');
@@ -781,11 +781,11 @@ g13_tail_same(500, $GLOBALS['g13_tail_get_posts_calls'][1]['posts_per_page'], 'I
 // Approvals summary retains missing-post-type/empty branches, five-row cap, exact nested filters, and result mapping.
 g13_tail_reset();
 $GLOBALS['g13_tail_post_type_exists'] = false;
-g13_tail_same(array(), vms_approvals_queue_vendor_summary(), 'Missing vendor post type should return an empty summary.');
+g13_tail_same(array(), bvmgr_approvals_queue_vendor_summary(), 'Missing vendor post type should return an empty summary.');
 g13_tail_same(0, count($GLOBALS['g13_tail_get_posts_calls']), 'Missing vendor post type should not query applications.');
 $GLOBALS['g13_tail_post_type_exists'] = true;
 $GLOBALS['g13_tail_get_posts_queue'] = array(array(), array(new WP_Post(901, 'vms_vendor_application', 'pending', '2026-08-06 10:00:00'), (object) array('ID' => 902)));
-g13_tail_same(array(), vms_approvals_queue_vendor_summary(), 'Empty approvals query result changed.');
+g13_tail_same(array(), bvmgr_approvals_queue_vendor_summary(), 'Empty approvals query result changed.');
 $approval_args = $GLOBALS['g13_tail_get_posts_calls'][0];
 g13_tail_same(5, $approval_args['posts_per_page'], 'Approvals summary cap changed.');
 g13_tail_same('AND', $approval_args['meta_query']['relation'], 'Approvals outer relation changed.');
@@ -795,7 +795,7 @@ g13_tail_same('OR', $approval_args['meta_query'][1]['relation'], 'Approvals conf
 g13_tail_same(array('confirmed', null), array($approval_args['meta_query'][1][0]['value'], $approval_args['meta_query'][1][1]['value'] ?? null), 'Approvals confirmed-or-legacy values changed.');
 $GLOBALS['g13_tail_titles'][901] = '';
 $GLOBALS['g13_tail_meta'][901] = array('_vms_app_email' => 'APPLICANT@EXAMPLE.TEST');
-$approval_items = vms_approvals_queue_vendor_summary();
+$approval_items = bvmgr_approvals_queue_vendor_summary();
 g13_tail_same(array(array('title' => 'Application #901', 'meta' => 'applicant@example.test - 2026-08-06 10:00:00')), $approval_items, 'Approvals summary result mapping changed.');
 
 echo "G13 corrected tail repository SQL remediation checks passed.\n";

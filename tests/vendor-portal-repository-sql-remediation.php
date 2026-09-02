@@ -117,12 +117,12 @@ function __(string $text, string $domain = ''): string
 	return $text;
 }
 
-function vms_admission_table_entries(): string
+function bvmgr_admission_table_entries(): string
 {
 	return (string) $GLOBALS['portal_admissions_table'];
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	$keys = array(
@@ -140,22 +140,22 @@ function wp_reset_postdata(): void
 	$GLOBALS['portal_reset_postdata_calls']++;
 }
 
-function vms_vendor_portal_build_bonus_progress_card(int $plan_id, bool $history = false): array
+function bvmgr_vendor_portal_build_bonus_progress_card(int $plan_id, bool $history = false): array
 {
 	return $GLOBALS['portal_bonus_cards'][$plan_id . ':' . ($history ? '1' : '0')] ?? array();
 }
 
-function vms_vendor_portal_secondary_sales_visibility_enabled(): bool
+function bvmgr_vendor_portal_secondary_sales_visibility_enabled(): bool
 {
 	return true;
 }
 
-function vms_vendor_portal_build_secondary_sales_snapshot_card(int $plan_id): array
+function bvmgr_vendor_portal_build_secondary_sales_snapshot_card(int $plan_id): array
 {
 	return $GLOBALS['portal_secondary_cards'][$plan_id] ?? array();
 }
 
-function vms_event_plan_get_status(int $plan_id, string $context): string
+function bvmgr_event_plan_get_status(int $plan_id, string $context): string
 {
 	unset($context);
 	return $GLOBALS['portal_event_statuses'][$plan_id] ?? 'draft';
@@ -170,17 +170,17 @@ function get_post_meta(int $post_id, string $key, bool $single = false)
 	return $value;
 }
 
-function vms_format_local_ymd(string $date, string $format): string
+function bvmgr_format_local_ymd(string $date, string $format): string
 {
 	return $format . ':' . $date;
 }
 
-function vms_vendor_portal_get_progress_headcount_context(int $plan_id): array
+function bvmgr_vendor_portal_get_progress_headcount_context(int $plan_id): array
 {
 	return array('headcount' => $plan_id + 10);
 }
 
-function vms_vendor_portal_get_count_breakdown(int $plan_id, array $context = array()): array
+function bvmgr_vendor_portal_get_count_breakdown(int $plan_id, array $context = array()): array
 {
 	return array('plan_id' => $plan_id, 'headcount' => (int) ($context['headcount'] ?? 0));
 }
@@ -319,14 +319,14 @@ $live_source = (string) file_get_contents($live_path);
 portal_assert($source !== '' && $live_source !== '', 'Mirror and shadow-live portal sources should be readable.');
 
 $owned_functions = array(
-	'vms_vendor_portal_get_admissions_headcount',
-	'vms_vendor_portal_get_guest_admissions_count',
-	'vms_vendor_portal_get_bonus_progress_cards',
-	'vms_vendor_portal_get_recent_bonus_history_cards',
-	'vms_vendor_portal_get_secondary_sales_snapshot_cards',
-	'vms_vendor_portal_get_secondary_sales_history_cards',
-	'vms_vendor_portal_get_past_assigned_event_rows',
-	'vms_vendor_portal_get_next_headliner_booking',
+	'bvmgr_vendor_portal_get_admissions_headcount',
+	'bvmgr_vendor_portal_get_guest_admissions_count',
+	'bvmgr_vendor_portal_get_bonus_progress_cards',
+	'bvmgr_vendor_portal_get_recent_bonus_history_cards',
+	'bvmgr_vendor_portal_get_secondary_sales_snapshot_cards',
+	'bvmgr_vendor_portal_get_secondary_sales_history_cards',
+	'bvmgr_vendor_portal_get_past_assigned_event_rows',
+	'bvmgr_vendor_portal_get_next_headliner_booking',
 );
 $owned_source = '';
 foreach ($owned_functions as $function) {
@@ -374,13 +374,13 @@ foreach ($owned_functions as $function) {
 // Admissions aggregates retain prepared identifiers/values, fresh counts, and request-local table readiness.
 $wpdb = new VMS_Portal_WPDB_Spy();
 $GLOBALS['wpdb'] = $wpdb;
-portal_same(0, vms_vendor_portal_get_admissions_headcount(0), 'Invalid headcount IDs should fail closed.');
+portal_same(0, bvmgr_vendor_portal_get_admissions_headcount(0), 'Invalid headcount IDs should fail closed.');
 portal_same(array(), $wpdb->reads, 'Invalid headcount IDs should not query admissions.');
 $table = 'wp_vms_admission_entries_headcount';
 $GLOBALS['portal_admissions_table'] = $table;
 $wpdb->get_var_queue = array($table, 17, 19);
-portal_same(17, vms_vendor_portal_get_admissions_headcount(71), 'Headcount aggregate result changed.');
-portal_same(19, vms_vendor_portal_get_admissions_headcount(71), 'Headcount should reread current admission rows on repeat calls.');
+portal_same(17, bvmgr_vendor_portal_get_admissions_headcount(71), 'Headcount aggregate result changed.');
+portal_same(19, bvmgr_vendor_portal_get_admissions_headcount(71), 'Headcount should reread current admission rows on repeat calls.');
 portal_same(3, count($wpdb->reads), 'Headcount should cache only table readiness, not aggregate results.');
 portal_same(array($table), $wpdb->prepares[0]['args'], 'Headcount table probe should prepare its table pattern.');
 portal_same(array($table, 71), $wpdb->prepares[1]['args'], 'Headcount aggregate should prepare table and Event Plan ID.');
@@ -393,7 +393,7 @@ $wpdb = new VMS_Portal_WPDB_Spy();
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['portal_admissions_table'] = 'wp_vms_admission_entries_missing';
 $wpdb->get_var_queue = array(null);
-portal_same(0, vms_vendor_portal_get_admissions_headcount(72), 'A missing admissions table should preserve zero headcount.');
+portal_same(0, bvmgr_vendor_portal_get_admissions_headcount(72), 'A missing admissions table should preserve zero headcount.');
 portal_same(1, count($wpdb->reads), 'A missing admissions table should stop after the readiness probe.');
 
 $wpdb = new VMS_Portal_WPDB_Spy();
@@ -401,9 +401,9 @@ $GLOBALS['wpdb'] = $wpdb;
 $table = 'wp_vms_admission_entries_guest';
 $GLOBALS['portal_admissions_table'] = $table;
 $wpdb->get_var_queue = array($table, 8, 3);
-portal_same(8, vms_vendor_portal_get_guest_admissions_count(81), 'Guest-admission aggregate result changed.');
-portal_same(8, vms_vendor_portal_get_guest_admissions_count(81), 'Guest-admission result should retain its per-plan request cache.');
-portal_same(3, vms_vendor_portal_get_guest_admissions_count(82), 'A second plan should retain a fresh guest-admission aggregate.');
+portal_same(8, bvmgr_vendor_portal_get_guest_admissions_count(81), 'Guest-admission aggregate result changed.');
+portal_same(8, bvmgr_vendor_portal_get_guest_admissions_count(81), 'Guest-admission result should retain its per-plan request cache.');
+portal_same(3, bvmgr_vendor_portal_get_guest_admissions_count(82), 'A second plan should retain a fresh guest-admission aggregate.');
 portal_same(3, count($wpdb->reads), 'Guest counts should reuse table readiness and cache only matching plan results.');
 portal_same(array($table), $wpdb->prepares[0]['args'], 'Guest table probe should prepare its table pattern.');
 portal_same(array($table, 81), $wpdb->prepares[1]['args'], 'Guest aggregate should prepare table and first plan ID.');
@@ -431,12 +431,12 @@ $GLOBALS['portal_secondary_cards'] = array(
 );
 portal_same(
 	array(array('plan_id' => 101, 'mode' => 'progress'), array('plan_id' => 103, 'mode' => 'progress')),
-	vms_vendor_portal_get_bonus_progress_cards(42, 2),
+	bvmgr_vendor_portal_get_bonus_progress_cards(42, 2),
 	'Bonus-progress card filtering/result order changed.'
 );
-portal_same(array(array('plan_id' => 104, 'mode' => 'history')), vms_vendor_portal_get_recent_bonus_history_cards(42, 1), 'Bonus-history results changed.');
-portal_same(array(array('plan_id' => 105, 'mode' => 'secondary-progress')), vms_vendor_portal_get_secondary_sales_snapshot_cards(42, 1), 'Secondary snapshot results changed.');
-portal_same(array(array('plan_id' => 106, 'mode' => 'secondary-history')), vms_vendor_portal_get_secondary_sales_history_cards(42, 1), 'Secondary history results changed.');
+portal_same(array(array('plan_id' => 104, 'mode' => 'history')), bvmgr_vendor_portal_get_recent_bonus_history_cards(42, 1), 'Bonus-history results changed.');
+portal_same(array(array('plan_id' => 105, 'mode' => 'secondary-progress')), bvmgr_vendor_portal_get_secondary_sales_snapshot_cards(42, 1), 'Secondary snapshot results changed.');
+portal_same(array(array('plan_id' => 106, 'mode' => 'secondary-history')), bvmgr_vendor_portal_get_secondary_sales_history_cards(42, 1), 'Secondary history results changed.');
 
 $GLOBALS['portal_event_statuses'] = array(201 => 'published', 202 => 'draft', 203 => 'published');
 $GLOBALS['portal_meta'] = array(
@@ -454,7 +454,7 @@ $GLOBALS['portal_meta'] = array(
 	),
 );
 $GLOBALS['portal_titles'] = array(201 => 'Primary Show', 203 => 'Lineup Show');
-$past_rows = vms_vendor_portal_get_past_assigned_event_rows(42, 2);
+$past_rows = bvmgr_vendor_portal_get_past_assigned_event_rows(42, 2);
 portal_same(array(201, 203), array_column($past_rows, 'plan_id'), 'Past-event result filtering/order changed.');
 portal_same(array('primary', 'lineup'), array_column($past_rows, 'role_key'), 'Past-event vendor role resolution changed.');
 portal_same(array(211, 213), array_column($past_rows, 'attendance_count'), 'Past-event attendance result shape changed.');
@@ -507,7 +507,7 @@ $GLOBALS['portal_meta'][301] = array('_vms_event_date' => '2026-09-12', '_vms_te
 $GLOBALS['portal_posts'][401] = new WP_Post(401, 'publish');
 $GLOBALS['portal_titles'][301] = 'Plan Title';
 $GLOBALS['portal_titles'][401] = 'Public Event Title';
-$next = vms_vendor_portal_get_next_headliner_booking(42);
+$next = bvmgr_vendor_portal_get_next_headliner_booking(42);
 portal_same(
 	array(
 		'plan_id' => 301,

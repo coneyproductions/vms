@@ -1,12 +1,12 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_tasks_register_tours')) {
+if (!function_exists('bvmgr_tasks_register_tours')) {
 	/**
 	 * @param array<int,array<string,mixed>> $tours
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_tasks_register_tours(array $tours): array
+	function bvmgr_tasks_register_tours(array $tours): array
 	{
 		$tours[] = array(
 			'id' => 'vms_staff_tasks_overview',
@@ -99,4 +99,4 @@ if (!function_exists('vms_tasks_register_tours')) {
 		return $tours;
 	}
 }
-add_filter('vms_register_tours', 'vms_tasks_register_tours');
+add_filter('vms_register_tours', 'bvmgr_tasks_register_tours');

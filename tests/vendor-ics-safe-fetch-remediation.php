@@ -109,7 +109,7 @@ try {
 	require_once dirname(__DIR__) . '/includes/integrations/vendor-ics-sync.php';
 
 	vms_test_reset('http://127.0.0.1/private.ics');
-	$private_result = vms_vendor_ics_sync_now(17, array('2026-08-08'));
+	$private_result = bvmgr_vendor_ics_sync_now(17, array('2026-08-08'));
 	vms_test_assert_same(false, $private_result['ok'] ?? null, 'Unsafe ICS URLs must fail closed.');
 	vms_test_assert_same(
 		array('http://127.0.0.1/private.ics'),
@@ -121,7 +121,7 @@ try {
 	vms_test_reset('https://calendar.example.test/feed.ics');
 	$GLOBALS['vms_test_validated_url'] = 'https://calendar.example.test/feed.ics';
 	$GLOBALS['vms_test_remote_response'] = new WP_Error('Connection refused.');
-	$remote_error_result = vms_vendor_ics_sync_now(17, array('2026-08-08'));
+	$remote_error_result = bvmgr_vendor_ics_sync_now(17, array('2026-08-08'));
 	vms_test_assert_same(false, $remote_error_result['ok'] ?? null, 'Remote request failures must remain non-mutating failures.');
 	vms_test_assert_same('Connection refused.', $remote_error_result['error'] ?? null, 'Remote request error reporting changed unexpectedly.');
 	vms_test_assert_same(1, count($GLOBALS['vms_test_safe_get_calls']), 'A validated ICS URL should make one safe request.');
@@ -143,7 +143,7 @@ try {
 		'code' => 200,
 		'body' => str_repeat('A', (2 * MB_IN_BYTES) + 1),
 	);
-	$oversized_result = vms_vendor_ics_sync_now(17, array('2026-08-08'));
+	$oversized_result = bvmgr_vendor_ics_sync_now(17, array('2026-08-08'));
 	vms_test_assert_same(false, $oversized_result['ok'] ?? null, 'Oversized ICS responses must fail closed.');
 	vms_test_assert_true(
 		str_contains((string) ($oversized_result['error'] ?? ''), 'too large'),

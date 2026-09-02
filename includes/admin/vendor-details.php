@@ -20,15 +20,15 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_vendor_defaults',
         __('Pay Structure + Booking Defaults', 'backstage-venue-manager'),
-        'vms_render_vendor_defaults_metabox',
+        'bvmgr_render_vendor_defaults_metabox',
         'vms_vendor',
         'normal',
         'default'
     );
 });
 
-if (!function_exists('vms_vendor_defaults_admin_screen_is_target')) {
-    function vms_vendor_defaults_admin_screen_is_target($screen): bool
+if (!function_exists('bvmgr_vendor_defaults_admin_screen_is_target')) {
+    function bvmgr_vendor_defaults_admin_screen_is_target($screen): bool
     {
         if (!is_object($screen)) {
             return false;
@@ -42,29 +42,29 @@ if (!function_exists('vms_vendor_defaults_admin_screen_is_target')) {
     }
 }
 
-if (!function_exists('vms_vendor_defaults_admin_enqueue_assets')) {
-    function vms_vendor_defaults_admin_enqueue_assets(): void
+if (!function_exists('bvmgr_vendor_defaults_admin_enqueue_assets')) {
+    function bvmgr_vendor_defaults_admin_enqueue_assets(): void
     {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!vms_vendor_defaults_admin_screen_is_target($screen)) {
+        if (!bvmgr_vendor_defaults_admin_screen_is_target($screen)) {
             return;
         }
 
-        $version = function_exists('vms_asset_version')
-            ? vms_asset_version()
-            : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+        $version = function_exists('bvmgr_asset_version')
+            ? bvmgr_asset_version()
+            : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(
-            'vms-compensation-admin',
-            VMS_PLUGIN_URL . 'assets/js/vms-compensation-admin.js',
+            'bvmgr-compensation-admin',
+            BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js',
             array(),
             $version,
             true
         );
 
         wp_localize_script(
-            'vms-compensation-admin',
-            'vmsVendorDefaultsAdmin',
+            'bvmgr-compensation-admin',
+            'BVMGR_VENDOR_DEFAULTS_ADMIN',
             array(
                 'strings' => array(
                     'flatFeeOnly' => __('Flat Fee Only', 'backstage-venue-manager'),
@@ -118,7 +118,7 @@ if (!function_exists('vms_vendor_defaults_admin_enqueue_assets')) {
         );
     }
 }
-add_action('admin_enqueue_scripts', 'vms_vendor_defaults_admin_enqueue_assets', 50);
+add_action('admin_enqueue_scripts', 'bvmgr_vendor_defaults_admin_enqueue_assets', 50);
 
 /**
  * Save handler
@@ -131,22 +131,22 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_vendor_defaults_nonce']) && !is_array($_POST['vms_vendor_defaults_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_vendor_defaults_nonce']))
+    $nonce = (isset($_POST['bvmgr_vendor_defaults_nonce']) && !is_array($_POST['bvmgr_vendor_defaults_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_defaults_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_vendor_defaults')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_vendor_defaults'))) {
         return;
     }
  
     $get = function ($key) {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_save_vendor_defaults before reading compensation defaults.
-        return vms_request_read_text_field($_POST, (string) $key);
+        return bvmgr_request_read_text_field($_POST, (string) $key);
     };
     $vk = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 
@@ -496,14 +496,14 @@ add_action('save_post_vms_vendor', function ($post_id, $post) {
 /**
  * Render metabox
  */
-function vms_render_vendor_defaults_metabox($post)
+function bvmgr_render_vendor_defaults_metabox($post)
 {
-    wp_nonce_field('vms_save_vendor_defaults', 'vms_vendor_defaults_nonce');
+    wp_nonce_field('bvmgr_save_vendor_defaults', 'bvmgr_vendor_defaults_nonce');
     $vk = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 
@@ -604,9 +604,9 @@ function vms_render_vendor_defaults_metabox($post)
                             <option value="0"><?php esc_html_e('No template selected', 'backstage-venue-manager'); ?></option>
                             <?php foreach ($comp_packages as $pkg) :
                                 $pkg_id = (int) $pkg->ID;
-                                $pkg_terms = function_exists('vms_get_comp_package_terms') ? vms_get_comp_package_terms($pkg_id) : array();
-                                $pkg_commission_percent = function_exists('vms_normalize_agent_fee_percent') ? vms_normalize_agent_fee_percent(get_post_meta($pkg_id, '_vms_commission_percent', true)) : null;
-                                $pkg_commission_mode = function_exists('vms_normalize_agent_fee_mode') ? vms_normalize_agent_fee_mode(get_post_meta($pkg_id, '_vms_commission_mode', true)) : '';
+                                $pkg_terms = function_exists('bvmgr_get_comp_package_terms') ? bvmgr_get_comp_package_terms($pkg_id) : array();
+                                $pkg_commission_percent = function_exists('bvmgr_normalize_agent_fee_percent') ? bvmgr_normalize_agent_fee_percent(get_post_meta($pkg_id, '_vms_commission_percent', true)) : null;
+                                $pkg_commission_mode = function_exists('bvmgr_normalize_agent_fee_mode') ? bvmgr_normalize_agent_fee_mode(get_post_meta($pkg_id, '_vms_commission_mode', true)) : '';
                                 if ($pkg_commission_percent !== null && $pkg_commission_percent > 0) {
                                     $pkg_terms['commission_percent'] = $pkg_commission_percent;
                                     $pkg_terms['commission_mode'] = ($pkg_commission_mode !== '') ? $pkg_commission_mode : 'artist_fee';
@@ -631,7 +631,7 @@ function vms_render_vendor_defaults_metabox($post)
                     <div class="vms-field vms-field--full">
                         <label for="vms_create_comp_template_name"><?php esc_html_e('Create New Template from Current Defaults', 'backstage-venue-manager'); ?></label>
                         <input type="text" id="vms_create_comp_template_name" name="vms_create_comp_template_name" value="" placeholder="<?php echo esc_attr__('Example: Friday Bonus 150/200/250', 'backstage-venue-manager'); ?>">
-                        <div class="vms-help"><?php esc_html_e('Enter a name, click Update, and VMS will save the current Global Event Plan Defaults as a new editable template and select it for this vendor.', 'backstage-venue-manager'); ?></div>
+                        <div class="vms-help"><?php esc_html_e('Enter a name, click Update, and Backstage Venue Manager will save the current Global Event Plan Defaults as a new editable template and select it for this vendor.', 'backstage-venue-manager'); ?></div>
                     </div>
                 </div>
 

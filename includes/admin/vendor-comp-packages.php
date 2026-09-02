@@ -30,15 +30,15 @@ add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_comp_package_details',
         __('Comp Package Details', 'backstage-venue-manager'),
-        'vms_render_comp_package_meta_box',
+        'bvmgr_render_comp_package_meta_box',
         'vms_comp_package',
         'normal',
         'default'
     );
 });
 
-if (!function_exists('vms_comp_package_admin_screen_is_target')) {
-    function vms_comp_package_admin_screen_is_target($screen): bool
+if (!function_exists('bvmgr_comp_package_admin_screen_is_target')) {
+    function bvmgr_comp_package_admin_screen_is_target($screen): bool
     {
         if (!is_object($screen)) {
             return false;
@@ -52,29 +52,29 @@ if (!function_exists('vms_comp_package_admin_screen_is_target')) {
     }
 }
 
-if (!function_exists('vms_comp_package_admin_enqueue_assets')) {
-    function vms_comp_package_admin_enqueue_assets(): void
+if (!function_exists('bvmgr_comp_package_admin_enqueue_assets')) {
+    function bvmgr_comp_package_admin_enqueue_assets(): void
     {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!vms_comp_package_admin_screen_is_target($screen)) {
+        if (!bvmgr_comp_package_admin_screen_is_target($screen)) {
             return;
         }
 
-        $version = function_exists('vms_asset_version')
-            ? vms_asset_version()
-            : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+        $version = function_exists('bvmgr_asset_version')
+            ? bvmgr_asset_version()
+            : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(
-            'vms-compensation-admin',
-            VMS_PLUGIN_URL . 'assets/js/vms-compensation-admin.js',
+            'bvmgr-compensation-admin',
+            BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js',
             array(),
             $version,
             true
         );
 
         wp_localize_script(
-            'vms-compensation-admin',
-            'vmsCompPackageAdmin',
+            'bvmgr-compensation-admin',
+            'BVMGR_COMP_PACKAGE_ADMIN',
             array(
                 'labels' => array(
                     'basePay' => __('Base Pay', 'backstage-venue-manager'),
@@ -84,11 +84,11 @@ if (!function_exists('vms_comp_package_admin_enqueue_assets')) {
         );
     }
 }
-add_action('admin_enqueue_scripts', 'vms_comp_package_admin_enqueue_assets', 50);
+add_action('admin_enqueue_scripts', 'bvmgr_comp_package_admin_enqueue_assets', 50);
 
-function vms_render_comp_package_meta_box($post)
+function bvmgr_render_comp_package_meta_box($post)
 {
-    wp_nonce_field('vms_save_comp_package', 'vms_comp_package_nonce');
+    wp_nonce_field('bvmgr_save_comp_package', 'bvmgr_comp_package_nonce');
 
     // Venue scope
     $venue_id = (int) get_post_meta($post->ID, '_vms_venue_id', true);
@@ -136,8 +136,8 @@ function vms_render_comp_package_meta_box($post)
     ));
 
     $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.comp_package.editor.basics" data-vms-tour="comp-package.help-action">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-    if (function_exists('vms_render_help_button')) {
-        $tour_button = vms_render_help_button(array(
+    if (function_exists('bvmgr_render_help_button')) {
+        $tour_button = bvmgr_render_help_button(array(
             'tour_id' => 'vms.comp_package.editor.basics',
             'anchor' => 'comp-package.help-action',
             'label' => __('Start Guided Tour', 'backstage-venue-manager'),
@@ -351,10 +351,10 @@ function vms_render_comp_package_meta_box($post)
 
 add_action('save_post_vms_comp_package', function ($post_id, $post) {
 
-    $nonce = (isset($_POST['vms_comp_package_nonce']) && !is_array($_POST['vms_comp_package_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_comp_package_nonce']))
+    $nonce = (isset($_POST['bvmgr_comp_package_nonce']) && !is_array($_POST['bvmgr_comp_package_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_comp_package_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_comp_package')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_comp_package'))) {
         return;
     }
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
@@ -389,50 +389,50 @@ add_action('save_post_vms_comp_package', function ($post_id, $post) {
         return max($min, (int) floor((float) $value));
     };
 
-    $flat_fee = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_flat_fee'));
+    $flat_fee = $parse_nonnegative_float(bvmgr_request_read_scalar($_POST, 'vms_flat_fee'));
 
-    $split_basis = vms_request_read_key($_POST, 'vms_split_basis');
+    $split_basis = bvmgr_request_read_key($_POST, 'vms_split_basis');
     if ($split_basis === '') {
         $split_basis = 'gross';
     }
     if (!in_array($split_basis, array('gross', 'net'), true)) $split_basis = 'gross';
 
-    $split_pct_artist = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_split_percent_artist'));
+    $split_pct_artist = $parse_nonnegative_float(bvmgr_request_read_scalar($_POST, 'vms_split_percent_artist'));
     if ($split_pct_artist !== '' && $split_pct_artist > 100) {
         $split_pct_artist = 100.0;
     }
 
-    $commission_mode = vms_request_read_key($_POST, 'vms_commission_mode');
+    $commission_mode = bvmgr_request_read_key($_POST, 'vms_commission_mode');
     if ($commission_mode === '') {
         $commission_mode = 'none';
     }
     if (!in_array($commission_mode, array('none', 'add_on_top', 'deduct_from_artist'), true)) $commission_mode = 'none';
 
-    $commission_pct  = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_commission_percent'));
+    $commission_pct  = $parse_nonnegative_float(bvmgr_request_read_scalar($_POST, 'vms_commission_percent'));
     if ($commission_pct !== '' && $commission_pct > 100) {
         $commission_pct = 100.0;
     }
-    $commission_base = vms_request_read_key($_POST, 'vms_commission_base');
+    $commission_base = bvmgr_request_read_key($_POST, 'vms_commission_base');
     if ($commission_base === '') {
         $commission_base = 'flat_fee';
     }
     if (!in_array($commission_base, array('flat_fee', 'gross', 'net'), true)) $commission_base = 'flat_fee';
 
-    $min_guarantee = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_min_guarantee'));
-    $cap_amount    = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_cap_amount'));
+    $min_guarantee = $parse_nonnegative_float(bvmgr_request_read_scalar($_POST, 'vms_min_guarantee'));
+    $cap_amount    = $parse_nonnegative_float(bvmgr_request_read_scalar($_POST, 'vms_cap_amount'));
 
-    $attendance_bonus_mode = vms_request_read_key($_POST, 'vms_attendance_bonus_mode');
+    $attendance_bonus_mode = bvmgr_request_read_key($_POST, 'vms_attendance_bonus_mode');
     if (!in_array($attendance_bonus_mode, array('step', 'continuous'), true)) {
         $attendance_bonus_mode = '';
     }
 
-    $attendance_bonus_start_count = $parse_nonnegative_int(vms_request_read_scalar($_POST, 'vms_attendance_bonus_start_count'));
-    $attendance_bonus_step_size = $parse_nonnegative_int(vms_request_read_scalar($_POST, 'vms_attendance_bonus_step_size'), 1);
-    $attendance_bonus_step_bonus = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_attendance_bonus_step_bonus'));
-    $attendance_bonus_per_ticket_rate = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_attendance_bonus_per_ticket_rate'));
-    $attendance_bonus_max_bonus = $parse_nonnegative_float(vms_request_read_scalar($_POST, 'vms_attendance_bonus_max_bonus'));
+    $attendance_bonus_start_count = $parse_nonnegative_int(bvmgr_request_read_scalar($_POST, 'vms_attendance_bonus_start_count'));
+    $attendance_bonus_step_size = $parse_nonnegative_int(bvmgr_request_read_scalar($_POST, 'vms_attendance_bonus_step_size'), 1);
+    $attendance_bonus_step_bonus = $parse_nonnegative_float(bvmgr_request_read_scalar($_POST, 'vms_attendance_bonus_step_bonus'));
+    $attendance_bonus_per_ticket_rate = $parse_nonnegative_float(bvmgr_request_read_scalar($_POST, 'vms_attendance_bonus_per_ticket_rate'));
+    $attendance_bonus_max_bonus = $parse_nonnegative_float(bvmgr_request_read_scalar($_POST, 'vms_attendance_bonus_max_bonus'));
 
-    $notes = vms_request_read_textarea_field($_POST, 'vms_notes');
+    $notes = bvmgr_request_read_textarea_field($_POST, 'vms_notes');
 
     update_post_meta($post_id, '_vms_venue_id', $venue_id);
     update_post_meta($post_id, '_vms_comp_type', $type);

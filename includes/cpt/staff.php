@@ -77,8 +77,8 @@ add_action('admin_init', function () {
     update_option('vms_staff_roles_seeded', 1);
 });
 
-if (!function_exists('vms_staff_has_verified_editor_request')) {
-    function vms_staff_has_verified_editor_request(int $post_id): bool
+if (!function_exists('bvmgr_staff_has_verified_editor_request')) {
+    function bvmgr_staff_has_verified_editor_request(int $post_id): bool
     {
         $post_id = absint($post_id);
         if ($post_id <= 0) {
@@ -86,13 +86,13 @@ if (!function_exists('vms_staff_has_verified_editor_request')) {
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the core post nonce is required before verification on this save_post boundary.
-        $post_nonce = vms_request_read_text_field($_POST, '_wpnonce');
+        $post_nonce = bvmgr_request_read_text_field($_POST, '_wpnonce');
         if ($post_nonce !== '' && wp_verify_nonce($post_nonce, 'update-post_' . $post_id)) {
             return true;
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Inline and bulk edit saves use a separate core edit nonce.
-        $inline_nonce = vms_request_read_text_field($_POST, '_inline_edit');
+        $inline_nonce = bvmgr_request_read_text_field($_POST, '_inline_edit');
         if ($inline_nonce !== '' && (wp_verify_nonce($inline_nonce, 'inlineeditnonce') || wp_verify_nonce($inline_nonce, 'taxinlineeditnonce'))) {
             return true;
         }
@@ -101,8 +101,8 @@ if (!function_exists('vms_staff_has_verified_editor_request')) {
     }
 }
 
-if (!function_exists('vms_staff_submitted_tax_input')) {
-    function vms_staff_submitted_tax_input(): array
+if (!function_exists('bvmgr_staff_submitted_tax_input')) {
+    function bvmgr_staff_submitted_tax_input(): array
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Caller verifies the core editor nonce before this taxonomy read.
         if (!isset($_POST['tax_input']) || !is_array($_POST['tax_input'])) {
@@ -120,8 +120,8 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
     if (!taxonomy_exists('vms_staff_role')) return;
-    if (!vms_staff_has_verified_editor_request($post_id)) return;
-    $tax_input = vms_staff_submitted_tax_input();
+    if (!bvmgr_staff_has_verified_editor_request($post_id)) return;
+    $tax_input = bvmgr_staff_submitted_tax_input();
     if (!array_key_exists('vms_staff_role', $tax_input)) return;
 
     $raw_terms = $tax_input['vms_staff_role'] ?? array();
@@ -132,8 +132,8 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     wp_set_post_terms($post_id, $term_ids, 'vms_staff_role', false);
 }, 30, 3);
 
-if (!function_exists('vms_staff_cpt_admin_screen_is_target')) {
-    function vms_staff_cpt_admin_screen_is_target($screen): bool
+if (!function_exists('bvmgr_staff_cpt_admin_screen_is_target')) {
+    function bvmgr_staff_cpt_admin_screen_is_target($screen): bool
     {
         if (!is_object($screen)) {
             return false;
@@ -147,29 +147,29 @@ if (!function_exists('vms_staff_cpt_admin_screen_is_target')) {
     }
 }
 
-if (!function_exists('vms_staff_cpt_admin_enqueue_assets')) {
-    function vms_staff_cpt_admin_enqueue_assets(): void
+if (!function_exists('bvmgr_staff_cpt_admin_enqueue_assets')) {
+    function bvmgr_staff_cpt_admin_enqueue_assets(): void
     {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!vms_staff_cpt_admin_screen_is_target($screen)) {
+        if (!bvmgr_staff_cpt_admin_screen_is_target($screen)) {
             return;
         }
 
-        $version = function_exists('vms_asset_version')
-            ? vms_asset_version()
-            : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+        $version = function_exists('bvmgr_asset_version')
+            ? bvmgr_asset_version()
+            : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
         wp_enqueue_script(
-            'vms-staff-cpt-admin',
-            VMS_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js',
+            'bvmgr-staff-cpt-admin',
+            BVMGR_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js',
             array(),
             $version,
             true
         );
 
         wp_localize_script(
-            'vms-staff-cpt-admin',
-            'vmsStaffCptAdmin',
+            'bvmgr-staff-cpt-admin',
+            'BVMGR_STAFF_CPT_ADMIN',
             array(
                 'labels' => array(
                     'qualification' => __('Qualification', 'backstage-venue-manager'),
@@ -208,15 +208,15 @@ if (!function_exists('vms_staff_cpt_admin_enqueue_assets')) {
         );
     }
 }
-add_action('admin_enqueue_scripts', 'vms_staff_cpt_admin_enqueue_assets', 50);
+add_action('admin_enqueue_scripts', 'bvmgr_staff_cpt_admin_enqueue_assets', 50);
 
 add_action('add_meta_boxes_vms_staff', function (): void {
     add_meta_box(
         'vms-staff-qualifications',
         __('Qualifications / Licenses', 'backstage-venue-manager'),
         function (WP_Post $post): void {
-            $rows = function_exists('vms_staffing_get_staff_qualifications')
-                ? (array) vms_staffing_get_staff_qualifications((int) $post->ID)
+            $rows = function_exists('bvmgr_staffing_get_staff_qualifications')
+                ? (array) bvmgr_staffing_get_staff_qualifications((int) $post->ID)
                 : array();
             if (empty($rows)) {
                 $rows = array(array(
@@ -245,7 +245,7 @@ add_action('add_meta_boxes_vms_staff', function (): void {
                 'expired' => __('Expired', 'backstage-venue-manager'),
                 'inactive' => __('Inactive', 'backstage-venue-manager'),
             );
-            wp_nonce_field('vms_staff_qualifications_save', 'vms_staff_qualifications_nonce');
+            wp_nonce_field('bvmgr_staff_qualifications_save', 'bvmgr_staff_qualifications_nonce');
             $pending_review_count = 0;
             foreach ($rows as $pending_row) {
                 if (is_array($pending_row) && sanitize_key((string) ($pending_row['status'] ?? '')) === 'pending_verification') {
@@ -355,19 +355,19 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
-    $nonce = (isset($_POST['vms_staff_qualifications_nonce']) && !is_array($_POST['vms_staff_qualifications_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_qualifications_nonce']))
+    $nonce = (isset($_POST['bvmgr_staff_qualifications_nonce']) && !is_array($_POST['bvmgr_staff_qualifications_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_qualifications_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_qualifications_save')) return;
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_qualifications_save'))) return;
 
     $rows = array();
     if (isset($_POST['vms_staff_qualifications']) && is_array($_POST['vms_staff_qualifications'])) {
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured qualification rows are normalized element-by-element in the staffing save helpers.
         $rows = (array) wp_unslash($_POST['vms_staff_qualifications']);
     }
-    if (function_exists('vms_staffing_save_staff_qualifications_with_review')) {
-        vms_staffing_save_staff_qualifications_with_review($post_id, $rows, get_current_user_id());
-    } elseif (function_exists('vms_staffing_save_staff_qualifications')) {
-        vms_staffing_save_staff_qualifications($post_id, $rows);
+    if (function_exists('bvmgr_staffing_save_staff_qualifications_with_review')) {
+        bvmgr_staffing_save_staff_qualifications_with_review($post_id, $rows, get_current_user_id());
+    } elseif (function_exists('bvmgr_staffing_save_staff_qualifications')) {
+        bvmgr_staffing_save_staff_qualifications($post_id, $rows);
     }
 }, 40, 3);

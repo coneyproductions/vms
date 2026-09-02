@@ -226,7 +226,7 @@ function wp_validate_redirect(string $location, string $fallback = ''): string
 	return $location;
 }
 
-function vms_json_decode_associative(string $raw, int $depth = 8): array
+function bvmgr_json_decode_associative(string $raw, int $depth = 8): array
 {
 	$decoded = json_decode($raw, true, $depth);
 	return array(
@@ -236,7 +236,7 @@ function vms_json_decode_associative(string $raw, int $depth = 8): array
 	);
 }
 
-function vms_json_decoded_is_object(array $value, string $token = ''): bool
+function bvmgr_json_decoded_is_object(array $value, string $token = ''): bool
 {
 	return $token === '{';
 }
@@ -258,46 +258,46 @@ vms_test_assert($claimsAdminSource !== '', 'Claims admin source should be readab
 vms_test_assert($claimsCustomerSource !== '', 'Claims customer source should be readable.');
 vms_test_assert($frontBundleSource !== '', 'Ticketing front bundle source should be readable.');
 
-$updateGrantNoteBody = vms_test_extract_function($claimsAdminSource, 'vms_ticketing_claims_handle_update_grant_note');
-$setGrantStatusBody = vms_test_extract_function($claimsAdminSource, 'vms_ticketing_claims_handle_set_grant_status');
-$existingCountsHelperBody = vms_test_extract_function($claimsCustomerSource, 'vms_ticketing_claims_post_existing_counts');
+$updateGrantNoteBody = vms_test_extract_function($claimsAdminSource, 'bvmgr_ticketing_claims_handle_update_grant_note');
+$setGrantStatusBody = vms_test_extract_function($claimsAdminSource, 'bvmgr_ticketing_claims_handle_set_grant_status');
+$existingCountsHelperBody = vms_test_extract_function($claimsCustomerSource, 'bvmgr_ticketing_claims_post_existing_counts');
 
 vms_test_assert_code_order(
-	"\$grant_id = vms_ticketing_claims_post_absint('grant_id');",
+	"\$grant_id = bvmgr_ticketing_claims_post_absint('grant_id');",
 	"check_admin_referer('vms_ticketing_claims_update_grant_note_' . \$grant_id);",
 	$updateGrantNoteBody,
 	'Grant-note mutations should derive the dynamic nonce action from the sanitized grant ID before verifying the existing nonce.'
 );
 vms_test_assert_code_order(
 	"check_admin_referer('vms_ticketing_claims_update_grant_note_' . \$grant_id);",
-	"\$event_plan_id = vms_ticketing_claims_post_absint('event_plan_id');",
+	"\$event_plan_id = bvmgr_ticketing_claims_post_absint('event_plan_id');",
 	$updateGrantNoteBody,
 	'Grant-note mutations should read the event plan ID only after the existing nonce has been verified.'
 );
 vms_test_assert_code_order(
-	"\$grant_id = vms_ticketing_claims_post_absint('grant_id');",
+	"\$grant_id = bvmgr_ticketing_claims_post_absint('grant_id');",
 	"check_admin_referer('vms_ticketing_claims_set_grant_status_' . \$grant_id);",
 	$setGrantStatusBody,
 	'Grant-status mutations should derive the dynamic nonce action from the sanitized grant ID before verifying the existing nonce.'
 );
 vms_test_assert_code_order(
 	"check_admin_referer('vms_ticketing_claims_set_grant_status_' . \$grant_id);",
-	"\$event_plan_id = vms_ticketing_claims_post_absint('event_plan_id');",
+	"\$event_plan_id = bvmgr_ticketing_claims_post_absint('event_plan_id');",
 	$setGrantStatusBody,
 	'Grant-status mutations should read the event plan ID only after the existing nonce has been verified.'
 );
 vms_test_assert_contains(
-	"vms_ticketing_claims_post_local_redirect('_wp_http_referer')",
+	"bvmgr_ticketing_claims_post_local_redirect('_wp_http_referer')",
 	$claimsAdminSource,
 	'Claims admin redirects should consume the posted referer through the local redirect helper.'
 );
 vms_test_assert_contains(
-	"\$existing_counts = vms_ticketing_claims_post_existing_counts();",
+	"\$existing_counts = bvmgr_ticketing_claims_post_existing_counts();",
 	$claimsCustomerSource,
 	'Assignee validation should route existing_counts through the subsystem-local POST helper.'
 );
 vms_test_assert_contains(
-	'return vms_ticketing_claims_parse_existing_counts_payload($raw_existing_counts);',
+	'return bvmgr_ticketing_claims_parse_existing_counts_payload($raw_existing_counts);',
 	$existingCountsHelperBody,
 	'The existing_counts POST helper should keep the shared normalization logic.'
 );
@@ -313,16 +313,16 @@ vms_test_assert_contains(
 );
 
 $_POST = array('grant_id' => '42');
-vms_test_assert_same(42, vms_ticketing_claims_post_absint('grant_id'), 'Claims admin POST integers should preserve scalar grant IDs.');
+vms_test_assert_same(42, bvmgr_ticketing_claims_post_absint('grant_id'), 'Claims admin POST integers should preserve scalar grant IDs.');
 $_POST = array('grant_id' => array('42'));
-vms_test_assert_same(0, vms_ticketing_claims_post_absint('grant_id'), 'Claims admin POST integers should reject array-shaped grant IDs.');
+vms_test_assert_same(0, bvmgr_ticketing_claims_post_absint('grant_id'), 'Claims admin POST integers should reject array-shaped grant IDs.');
 
 $_POST = array('_wp_http_referer' => '/wp-admin/post.php?post=9&action=edit');
-vms_test_assert_same('/wp-admin/post.php?post=9&action=edit', vms_ticketing_claims_post_local_redirect('_wp_http_referer', '/fallback'), 'Claims admin referers should preserve safe local redirects.');
+vms_test_assert_same('/wp-admin/post.php?post=9&action=edit', bvmgr_ticketing_claims_post_local_redirect('_wp_http_referer', '/fallback'), 'Claims admin referers should preserve safe local redirects.');
 $_POST = array('_wp_http_referer' => array('/wp-admin/post.php?post=9&action=edit'));
-vms_test_assert_same('/fallback', vms_ticketing_claims_post_local_redirect('_wp_http_referer', '/fallback'), 'Claims admin referers should reject array-shaped values.');
+vms_test_assert_same('/fallback', bvmgr_ticketing_claims_post_local_redirect('_wp_http_referer', '/fallback'), 'Claims admin referers should reject array-shaped values.');
 $_POST = array('_wp_http_referer' => 'https://evil.example/phish');
-vms_test_assert_same('/fallback', vms_ticketing_claims_post_local_redirect('_wp_http_referer', '/fallback'), 'Claims admin referers should reject external redirects.');
+vms_test_assert_same('/fallback', bvmgr_ticketing_claims_post_local_redirect('_wp_http_referer', '/fallback'), 'Claims admin referers should reject external redirects.');
 
 $_POST = array(
 	'existing_counts' => array(
@@ -337,18 +337,18 @@ vms_test_assert_same(
 		'buyer@example.com' => 2,
 		'guest@example.com' => 3,
 	),
-	vms_ticketing_claims_post_existing_counts(),
+	bvmgr_ticketing_claims_post_existing_counts(),
 	'Claims customer existing_counts should accept only top-level arrays and normalize keyed nonnegative counts.'
 );
 
 $_POST = array(
 	'existing_counts' => '{"buyer@example.com":2}',
 );
-vms_test_assert_same(array(), vms_ticketing_claims_post_existing_counts(), 'Claims customer existing_counts should reject scalar JSON payloads at the POST boundary.');
+vms_test_assert_same(array(), bvmgr_ticketing_claims_post_existing_counts(), 'Claims customer existing_counts should reject scalar JSON payloads at the POST boundary.');
 
 vms_test_assert_same(
 	array('buyer@example.com' => 2),
-	vms_ticketing_claims_parse_existing_counts_payload('{"buyer@example.com":2}'),
+	bvmgr_ticketing_claims_parse_existing_counts_payload('{"buyer@example.com":2}'),
 	'The shared existing_counts parser should continue to support legacy JSON object payloads when called directly.'
 );
 

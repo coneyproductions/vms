@@ -409,24 +409,24 @@ function wp_timezone(): DateTimeZone
 	return new DateTimeZone('UTC');
 }
 
-function vms_meta_key(string $scope, string $key): string
+function bvmgr_meta_key(string $scope, string $key): string
 {
 	return $GLOBALS['vms_test_meta_keys'][$scope . ':' . $key] ?? '';
 }
 
 /** @return array<int,string> */
-function vms_tasks_admin_get_venues(): array
+function bvmgr_tasks_admin_get_venues(): array
 {
 	return $GLOBALS['vms_test_venues'];
 }
 
 /** @return array<string,mixed>|null */
-function vms_tasks_get_event_context(int $event_id): ?array
+function bvmgr_tasks_get_event_context(int $event_id): ?array
 {
 	return $GLOBALS['vms_test_event_contexts'][$event_id] ?? null;
 }
 
-function vms_event_plan_should_include(int $plan_id, string $context, array $args = array()): bool
+function bvmgr_event_plan_should_include(int $plan_id, string $context, array $args = array()): bool
 {
 	$GLOBALS['vms_test_event_plan_should_include_calls'][] = array(
 		'plan_id' => $plan_id,
@@ -437,12 +437,12 @@ function vms_event_plan_should_include(int $plan_id, string $context, array $arg
 	return $GLOBALS['vms_test_event_plan_should_include'][$plan_id] ?? true;
 }
 
-function vms_staffing_get_rollup(int $plan_id)
+function bvmgr_staffing_get_rollup(int $plan_id)
 {
 	return $GLOBALS['vms_test_rollups'][$plan_id] ?? null;
 }
 
-function vms_staffing_compute_rollup(int $plan_id): array
+function bvmgr_staffing_compute_rollup(int $plan_id): array
 {
 	$GLOBALS['vms_test_compute_rollup_calls'][] = $plan_id;
 	if (isset($GLOBALS['vms_test_rollup_recompute'][$plan_id])) {
@@ -453,7 +453,7 @@ function vms_staffing_compute_rollup(int $plan_id): array
 	return is_array($rollup) ? $rollup : array('ok' => false, 'error' => 'missing_rollup');
 }
 
-function vms_staffing_dashboard_readiness_label(string $status): string
+function bvmgr_staffing_dashboard_readiness_label(string $status): string
 {
 	return strtoupper($status);
 }
@@ -865,10 +865,10 @@ require_once $staff_user_link_path;
 require_once $vendor_staff_link_path;
 require_once $staff_vendor_link_path;
 
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_get_staff_user'));
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_build_dashboard_response'));
-eval(vms_test_extract_function($core_staffing_source, 'vms_staffing_collect_rebuild_plan_ids'));
-eval(vms_test_extract_function($admin_ui_source, 'vms_tasks_admin_get_event_options'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_get_staff_user'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_build_dashboard_response'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_collect_rebuild_plan_ids'));
+eval(vms_test_extract_function($admin_ui_source, 'bvmgr_tasks_admin_get_event_options'));
 
 $expected_t1_inventory = array(
 	'includes/modules/staff-tasks/store.php:221:WordPress.DB.DirectDatabaseQuery.DirectQuery',
@@ -1065,17 +1065,17 @@ try {
 		vms_test_collect_target_hashes(
 			$core_staffing_source,
 			array(
-				'vms_staffing_get_staff_user',
-				'vms_staffing_build_dashboard_response',
-				'vms_staffing_collect_rebuild_plan_ids',
+				'bvmgr_staffing_get_staff_user',
+				'bvmgr_staffing_build_dashboard_response',
+				'bvmgr_staffing_collect_rebuild_plan_ids',
 			)
 		),
 		vms_test_collect_target_hashes(
 			$live_core_staffing_source,
 			array(
-				'vms_staffing_get_staff_user',
-				'vms_staffing_build_dashboard_response',
-				'vms_staffing_collect_rebuild_plan_ids',
+				'bvmgr_staffing_get_staff_user',
+				'bvmgr_staffing_build_dashboard_response',
+				'bvmgr_staffing_collect_rebuild_plan_ids',
 			)
 		),
 		'Mirror/live core staffing T5 targets should remain byte-identical.'
@@ -1086,8 +1086,8 @@ try {
 	);
 
 	vms_test_assert_same(
-		vms_test_collect_target_hashes($admin_ui_source, array('vms_tasks_admin_get_event_options')),
-		vms_test_collect_target_hashes($live_admin_ui_source, array('vms_tasks_admin_get_event_options')),
+		vms_test_collect_target_hashes($admin_ui_source, array('bvmgr_tasks_admin_get_event_options')),
+		vms_test_collect_target_hashes($live_admin_ui_source, array('bvmgr_tasks_admin_get_event_options')),
 		'Mirror/live admin-ui T5 target should remain byte-identical.'
 	);
 	vms_test_assert_true(
@@ -1106,14 +1106,14 @@ try {
 		'Mirror/live vendor-staff link should retain authorized whole-file divergence while the T5 closure stays aligned.'
 	);
 
-	$list_link_source = vms_test_extract_function($staff_list_columns_source, 'vms_staff_admin_list_linked_user_id');
+	$list_link_source = vms_test_extract_function($staff_list_columns_source, 'bvmgr_staff_admin_list_linked_user_id');
 	$user_link_save_source = vms_test_extract_inline_closure($staff_user_link_source, "add_action('save_post_vms_staff', function (int \$post_id, WP_Post \$post, bool \$update): void {");
 	$staff_vendor_save_source = vms_test_extract_inline_closure($staff_vendor_link_source, "add_action('save_post_vms_staff', function (int \$post_id, WP_Post \$post, bool \$update): void {");
 	$vendor_staff_save_source = vms_test_extract_inline_closure($vendor_staff_link_source, $vendor_staff_marker);
-	$staff_user_source = vms_test_extract_function($core_staffing_source, 'vms_staffing_get_staff_user');
-	$dashboard_source = vms_test_extract_function($core_staffing_source, 'vms_staffing_build_dashboard_response');
-	$rebuild_source = vms_test_extract_function($core_staffing_source, 'vms_staffing_collect_rebuild_plan_ids');
-	$event_options_source = vms_test_extract_function($admin_ui_source, 'vms_tasks_admin_get_event_options');
+	$staff_user_source = vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_get_staff_user');
+	$dashboard_source = vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_build_dashboard_response');
+	$rebuild_source = vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_collect_rebuild_plan_ids');
+	$event_options_source = vms_test_extract_function($admin_ui_source, 'bvmgr_tasks_admin_get_event_options');
 
 	vms_test_assert_contains('SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1', $list_link_source, 'Linked-user admin fallback should read usermeta through prepared SQL.');
 	vms_test_assert_not_contains('get_users(array(', $list_link_source, 'Linked-user admin fallback should not reintroduce a get_users() meta query.');
@@ -1159,12 +1159,12 @@ try {
 
 	$wpdb = vms_test_reset_runtime();
 	$GLOBALS['vms_test_post_meta'][12]['_vms_linked_user_id'] = 44;
-	vms_test_assert_same(44, vms_staff_admin_list_linked_user_id(12), 'Linked-user admin helper should prefer the normalized cached forward pointer.');
+	vms_test_assert_same(44, bvmgr_staff_admin_list_linked_user_id(12), 'Linked-user admin helper should prefer the normalized cached forward pointer.');
 	vms_test_assert_same(array(), $wpdb->prepare_calls, 'Linked-user admin helper should not query usermeta when the cached forward pointer exists.');
 
 	$wpdb = vms_test_reset_runtime();
 	$wpdb->get_var_queue = array(71);
-	vms_test_assert_same(71, vms_staff_admin_list_linked_user_id(12), 'Linked-user admin helper should fall back to the prepared reverse usermeta pointer.');
+	vms_test_assert_same(71, bvmgr_staff_admin_list_linked_user_id(12), 'Linked-user admin helper should fall back to the prepared reverse usermeta pointer.');
 	vms_test_assert_same(array(), $GLOBALS['vms_test_get_users_calls'], 'Linked-user admin helper should not fall back to get_users() for reverse lookups.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1');
 	vms_test_assert_same(array('wp_usermeta', '_vms_staff_id', '12'), $prepare['args'], 'Linked-user admin helper should prepare the usermeta table, reverse-link meta key, and staff ID string.');
@@ -1250,14 +1250,14 @@ try {
 	$wpdb = vms_test_reset_runtime();
 	$GLOBALS['vms_test_post_meta'][44]['_vms_linked_user_id'] = 87;
 	$GLOBALS['vms_test_users'][87] = new WP_User(array('ID' => 87, 'display_name' => 'Cache User'));
-	$user = vms_staffing_get_staff_user(44);
+	$user = bvmgr_staffing_get_staff_user(44);
 	vms_test_assert_true($user instanceof WP_User && $user->ID === 87, 'Staffing user lookup should prefer the normalized cached forward pointer.');
 	vms_test_assert_same(array(), $wpdb->prepare_calls, 'Staffing user lookup should not query usermeta when the cached forward pointer exists.');
 
 	$wpdb = vms_test_reset_runtime();
 	$wpdb->get_var_queue = array(99);
 	$GLOBALS['vms_test_users'][99] = new WP_User(array('ID' => 99, 'display_name' => 'Fallback User'));
-	$user = vms_staffing_get_staff_user(44);
+	$user = bvmgr_staffing_get_staff_user(44);
 	vms_test_assert_true($user instanceof WP_User && $user->ID === 99, 'Staffing user lookup should fall back to the prepared reverse usermeta pointer.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1');
 	vms_test_assert_same(array('wp_usermeta', '_vms_staff_id', '44'), $prepare['args'], 'Staffing user lookup should prepare the usermeta table, reverse-link meta key, and staff ID string.');
@@ -1306,7 +1306,7 @@ try {
 	$GLOBALS['vms_test_posts'][7] = new WP_Post(array('ID' => 7, 'post_type' => 'vms_venue', 'post_title' => 'Main Hall'));
 	$GLOBALS['vms_test_posts'][201] = new WP_Post(array('ID' => 201, 'post_type' => 'vms_event_plan', 'post_title' => 'Alpha'));
 	$GLOBALS['vms_test_posts'][202] = new WP_Post(array('ID' => 202, 'post_type' => 'vms_event_plan', 'post_title' => 'Beta'));
-	$response = vms_staffing_build_dashboard_response(array('staffing_n' => 2, 'venue_id' => '7', 'include_drafts' => true));
+	$response = bvmgr_staffing_build_dashboard_response(array('staffing_n' => 2, 'venue_id' => '7', 'include_drafts' => true));
 	vms_test_assert_same(array(201, 202), array_column($response['items'], 'plan_id'), 'Dashboard response should keep prepared-query order, venue filtering, inclusion gates, and the item cap.');
 	vms_test_assert_same(array(201), $GLOBALS['vms_test_compute_rollup_calls'], 'Dashboard response should recompute only dirty rollups.');
 	vms_test_assert_same('READY', $response['items'][0]['readiness_label'], 'Dashboard response should format readiness labels through the shared helper.');
@@ -1319,7 +1319,7 @@ try {
 	$GLOBALS['vms_test_event_plan_should_include'][301] = true;
 	$GLOBALS['vms_test_event_plan_should_include'][302] = false;
 	$GLOBALS['vms_test_event_plan_should_include'][303] = true;
-	$plan_ids = vms_staffing_collect_rebuild_plan_ids(
+	$plan_ids = bvmgr_staffing_collect_rebuild_plan_ids(
 		array(
 			'start_date' => '2026-08-10',
 			'end_date' => '2026-08-31',
@@ -1343,7 +1343,7 @@ try {
 	$GLOBALS['vms_test_venues'] = array(7 => 'Main Hall');
 	$GLOBALS['vms_test_event_contexts'][601] = array('event_title' => 'Late Show', 'date_ymd' => '2026-08-10', 'venue_id' => 7);
 	$GLOBALS['vms_test_event_contexts'][603] = array('event_title' => 'Early Show', 'date_ymd' => '2026-08-08', 'venue_id' => 7);
-	$options = vms_tasks_admin_get_event_options();
+	$options = bvmgr_tasks_admin_get_event_options();
 	vms_test_assert_same(
 		array(
 			603 => 'Early Show - 2026-08-08 @ Main Hall',
@@ -1357,11 +1357,11 @@ try {
 	vms_test_assert_true(!isset($GLOBALS['vms_test_get_posts_calls'][0]['meta_key']), 'Admin event fallback should not order directly by meta_key.');
 	vms_test_assert_true(!isset($GLOBALS['vms_test_get_posts_calls'][0]['meta_query']), 'Admin event fallback should not include a meta_query clause.');
 
-	eval(vms_test_extract_function($generator_source, 'vms_tasks_collect_upcoming_event_ids'));
+	eval(vms_test_extract_function($generator_source, 'bvmgr_tasks_collect_upcoming_event_ids'));
 	$wpdb = vms_test_reset_runtime();
 	$wpdb->get_col_queue = array(array(81, '82', 82, 0));
 	$GLOBALS['vms_test_meta_keys']['event_plan:date'] = '_vms_event_date';
-	$ids = vms_tasks_collect_upcoming_event_ids(30);
+	$ids = bvmgr_tasks_collect_upcoming_event_ids(30);
 	vms_test_assert_same(array(81, 82), $ids, 'Generator horizon reads should dedupe prepared-query results and discard non-positive IDs.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT p.ID FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND pm.meta_key = %s AND pm.meta_value >= %s AND pm.meta_value <= %s ORDER BY pm.meta_value ASC, p.ID ASC');
 	$generator_today = wp_date('Y-m-d', time(), wp_timezone());

@@ -1,5 +1,5 @@
 (function () {
-  var config = window.vmsStatusNoticesAdmin || {};
+  var config = window.BVMGR_STATUS_NOTICES_ADMIN || {};
   var strings = config.strings || {};
 
   function t(key, fallback) {

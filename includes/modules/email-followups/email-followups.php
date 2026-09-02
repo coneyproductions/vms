@@ -1,11 +1,11 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (function_exists('vms_register_module')) {
-	vms_register_module(array(
+if (function_exists('bvmgr_register_module')) {
+	bvmgr_register_module(array(
 		'slug' => 'email_followups',
 		'name' => 'Email Follow-Ups',
-		'version' => defined('VMS_VERSION') ? (string) VMS_VERSION : '0.2.24.584',
+		'version' => defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '0.2.24.584',
 		'premium' => false,
 		'description' => 'Event-aware buyer reminders and follow-up email routines, designed to use MailPoet/WordPress delivery safely.',
 		'source' => 'core',
@@ -14,7 +14,7 @@ if (function_exists('vms_register_module')) {
 
 require_once __DIR__ . '/logs.php';
 
-if (function_exists('vms_is_public_frontend_request') && vms_is_public_frontend_request()) {
+if (function_exists('bvmgr_is_public_frontend_request') && bvmgr_is_public_frontend_request()) {
 	return;
 }
 

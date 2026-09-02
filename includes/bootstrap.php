@@ -47,25 +47,25 @@ require_once __DIR__ . '/support/load.php';
 
 // Legacy optional files that were previously loaded through includes/core/bootstrap.php.
 // Keep behavior here in the canonical bootstrap instead of loading a second core shim.
-$vms_optional_bootstrap_files = [
+$bvmgr_optional_bootstrap_files = [
 	__DIR__ . '/taxonomies/vendor-type.php',
 	__DIR__ . '/taxonomies/vendor-category.php',
 	__DIR__ . '/meta/event-plan.php',
 	__DIR__ . '/meta/vendor.php',
 ];
-foreach ($vms_optional_bootstrap_files as $vms_optional_bootstrap_file) {
-	if (is_string($vms_optional_bootstrap_file) && $vms_optional_bootstrap_file !== '' && file_exists($vms_optional_bootstrap_file)) {
-		require_once $vms_optional_bootstrap_file;
+foreach ($bvmgr_optional_bootstrap_files as $bvmgr_optional_bootstrap_file) {
+	if (is_string($bvmgr_optional_bootstrap_file) && $bvmgr_optional_bootstrap_file !== '' && file_exists($bvmgr_optional_bootstrap_file)) {
+		require_once $bvmgr_optional_bootstrap_file;
 	}
 }
-unset($vms_optional_bootstrap_file, $vms_optional_bootstrap_files);
+unset($bvmgr_optional_bootstrap_file, $bvmgr_optional_bootstrap_files);
 
 /**
  * Modules
  */
 require_once __DIR__ . '/modules/load.php';
-if (function_exists('vms_load_modules')) {
-	vms_load_modules();
+if (function_exists('bvmgr_load_modules')) {
+	bvmgr_load_modules();
 }
 
 do_action('vms_loaded');

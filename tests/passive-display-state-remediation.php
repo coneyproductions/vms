@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_VERSION', 'test-version');
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
 
 set_error_handler(static function (int $severity, string $message, string $file = '', int $line = 0): bool {
 	throw new RuntimeException($message . ' @ ' . $file . ':' . $line, $severity);
@@ -118,12 +118,12 @@ vms_test_assert($corePluginSource !== '', 'Core plugin source should be readable
 vms_test_assert($adminMenuSource !== '', 'Admin menu source should be readable.');
 
 vms_test_assert_contains(
-	'$page = vms_request_read_key($_GET, \'page\');',
+	'$page = bvmgr_request_read_key($_GET, \'page\');',
 	$helpersSource,
 	'Legacy helper-backed admin asset scope should continue to read page through the shared key helper.'
 );
 vms_test_assert_contains(
-	'$page = vms_request_read_key($_GET, \'page\');',
+	'$page = bvmgr_request_read_key($_GET, \'page\');',
 	$adminMenuSource,
 	'Missing-callback page rendering should read page through the shared key helper.'
 );
@@ -164,18 +164,18 @@ $GLOBALS['vms_test_enqueued_scripts'] = array();
 $_GET = array('page' => array('vms-dashboard'));
 $GLOBALS['vms_test_current_screen'] = (object) array('post_type' => 'vms_event_plan');
 $adminEnqueueAction();
-vms_test_assert(isset($GLOBALS['vms_test_enqueued_styles']['vms-admin']), 'CPT fallback should still enqueue VMS admin assets when page state is malformed.');
-vms_test_assert(isset($GLOBALS['vms_test_enqueued_scripts']['vms-number-input-guard']), 'CPT fallback should still enqueue the shared admin number-input guard.');
+vms_test_assert(isset($GLOBALS['vms_test_enqueued_styles']['bvmgr-admin']), 'CPT fallback should enqueue canonical admin assets when page state is malformed.');
+vms_test_assert(isset($GLOBALS['vms_test_enqueued_scripts']['bvmgr-number-input-guard']), 'CPT fallback should enqueue the canonical shared admin number-input guard.');
 
 ob_start();
 $_GET = array('page' => array('vms-broken-page'));
-vms_admin_menu_render_missing_callback_page();
+bvmgr_admin_menu_render_missing_callback_page();
 $missingCallbackHtml = (string) ob_get_clean();
 vms_test_assert(strpos($missingCallbackHtml, '<code>') === false, 'Missing-callback page rendering should reject array-shaped page values.');
 
 ob_start();
 $_GET = array('page' => 'vms-broken-page');
-vms_admin_menu_render_missing_callback_page();
+bvmgr_admin_menu_render_missing_callback_page();
 $missingCallbackHtml = (string) ob_get_clean();
 vms_test_assert(strpos($missingCallbackHtml, 'vms-broken-page') !== false, 'Missing-callback page rendering should preserve valid scalar page slugs.');
 

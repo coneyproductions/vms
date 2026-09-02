@@ -120,7 +120,7 @@ function sanitize_text_field($value): string
     return $filtered;
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
     if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
         return '';
@@ -160,7 +160,7 @@ function vms_test_public_calendar_capture_current_user_agent_from_globals(): arr
     );
 
     try {
-        $normalized = vms_public_calendar_get_request_user_agent();
+        $normalized = bvmgr_public_calendar_get_request_user_agent();
     } finally {
         restore_error_handler();
     }
@@ -188,7 +188,7 @@ function vms_test_public_calendar_expected_user_agent(bool $setHeader, $header):
         $_SERVER['HTTP_USER_AGENT'] = $header;
     }
 
-    $userAgent = vms_request_server_value('HTTP_USER_AGENT');
+    $userAgent = bvmgr_request_server_value('HTTP_USER_AGENT');
     if ($userAgent === '') {
         return '';
     }
@@ -231,15 +231,15 @@ function vms_test_public_calendar_resolve_current_view(
 
     $defaultView = $isLegacy
         ? 'month'
-        : vms_public_calendar_normalize_view((string) $settingsDefaultView);
+        : bvmgr_public_calendar_normalize_view((string) $settingsDefaultView);
 
     $view = trim((string) $shortcodeView) !== ''
-        ? vms_public_calendar_normalize_view((string) $shortcodeView)
+        ? bvmgr_public_calendar_normalize_view((string) $shortcodeView)
         : $defaultView;
 
-    $requestedView = vms_public_calendar_get_requested_view();
+    $requestedView = bvmgr_public_calendar_get_requested_view();
     if ($requestedView !== '') {
-        $view = vms_public_calendar_normalize_view($requestedView);
+        $view = bvmgr_public_calendar_normalize_view($requestedView);
     }
 
     $userAgentResult = vms_test_public_calendar_capture_current_user_agent_from_globals();
@@ -290,12 +290,12 @@ vms_test_public_calendar_assert($liveCalendarSource !== '', 'Live public calenda
 vms_test_public_calendar_assert($mirrorRuntimeGuardsSource !== '', 'Mirror runtime guards source should be readable.');
 vms_test_public_calendar_assert($liveRuntimeGuardsSource !== '', 'Live runtime guards source should be readable.');
 
-$mirrorUaHelper = vms_test_public_calendar_extract_named_function($mirrorCalendarPath, 'vms_public_calendar_get_request_user_agent');
-$liveUaHelper = vms_test_public_calendar_extract_named_function($liveCalendarPath, 'vms_public_calendar_get_request_user_agent');
-$mirrorRequestedViewHelper = vms_test_public_calendar_extract_named_function($mirrorCalendarPath, 'vms_public_calendar_get_requested_view');
-$liveRequestedViewHelper = vms_test_public_calendar_extract_named_function($liveCalendarPath, 'vms_public_calendar_get_requested_view');
-$mirrorNormalizeViewHelper = vms_test_public_calendar_extract_named_function($mirrorCalendarPath, 'vms_public_calendar_normalize_view');
-$liveNormalizeViewHelper = vms_test_public_calendar_extract_named_function($liveCalendarPath, 'vms_public_calendar_normalize_view');
+$mirrorUaHelper = vms_test_public_calendar_extract_named_function($mirrorCalendarPath, 'bvmgr_public_calendar_get_request_user_agent');
+$liveUaHelper = vms_test_public_calendar_extract_named_function($liveCalendarPath, 'bvmgr_public_calendar_get_request_user_agent');
+$mirrorRequestedViewHelper = vms_test_public_calendar_extract_named_function($mirrorCalendarPath, 'bvmgr_public_calendar_get_requested_view');
+$liveRequestedViewHelper = vms_test_public_calendar_extract_named_function($liveCalendarPath, 'bvmgr_public_calendar_get_requested_view');
+$mirrorNormalizeViewHelper = vms_test_public_calendar_extract_named_function($mirrorCalendarPath, 'bvmgr_public_calendar_normalize_view');
+$liveNormalizeViewHelper = vms_test_public_calendar_extract_named_function($liveCalendarPath, 'bvmgr_public_calendar_normalize_view');
 
 vms_test_public_calendar_assert($mirrorUaHelper === $liveUaHelper, 'Mirror/live public calendar UA helpers should stay aligned.');
 vms_test_public_calendar_assert($mirrorRequestedViewHelper === $liveRequestedViewHelper, 'Mirror/live requested-view helpers should stay aligned.');

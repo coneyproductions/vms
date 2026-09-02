@@ -2,9 +2,9 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__ . '/');
-define('VMS_VENDOR_APP_CPT', 'vms_vendor_app');
-define('VMS_VENDOR_APP_CPT_LEGACY', 'vms_vendor_application');
-define('VMS_VENDOR_CPT', 'vms_vendor');
+define('BVMGR_VENDOR_APP_CPT', 'vms_vendor_app');
+define('BVMGR_VENDOR_APP_CPT_LEGACY', 'vms_vendor_application');
+define('BVMGR_VENDOR_CPT', 'vms_vendor');
 
 final class WP_Error
 {
@@ -134,12 +134,12 @@ function add_option(string $key, $value, string $deprecated = '', $autoload = nu
 }
 
 /** @return string[] */
-function vms_vendor_app_cpt_slugs(): array
+function bvmgr_vendor_app_cpt_slugs(): array
 {
-	return array(VMS_VENDOR_APP_CPT, VMS_VENDOR_APP_CPT_LEGACY);
+	return array(BVMGR_VENDOR_APP_CPT, BVMGR_VENDOR_APP_CPT_LEGACY);
 }
 
-function vms_vendor_app_meta_key(string $field): string
+function bvmgr_vendor_app_meta_key(string $field): string
 {
 	unset($field);
 	return (string) $GLOBALS['g11_vendor_confirmation_key'];
@@ -158,13 +158,13 @@ function wp_date(string $format): string
 	return (string) $GLOBALS['g11_vendor_now'];
 }
 
-function vms_admin_guard_begin(string $name, array $args)
+function bvmgr_admin_guard_begin(string $name, array $args)
 {
 	$GLOBALS['g11_vendor_timeline'][] = array('kind' => 'guard_begin', 'name' => $name, 'args' => $args);
 	return $GLOBALS['g11_vendor_guard_result'];
 }
 
-function vms_admin_guard_finish(array $guard, array $stats): void
+function bvmgr_admin_guard_finish(array $guard, array $stats): void
 {
 	$GLOBALS['g11_vendor_timeline'][] = array('kind' => 'guard_finish', 'guard' => $guard, 'stats' => $stats);
 }
@@ -179,13 +179,13 @@ function get_post_type(int $post_id): string
 	return (string) ($GLOBALS['g11_vendor_post_types'][$post_id] ?? '');
 }
 
-function vms_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id): int
+function bvmgr_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id): int
 {
 	$GLOBALS['g11_vendor_timeline'][] = array('kind' => 'sync', 'app_id' => $app_id, 'vendor_id' => $vendor_id);
 	return (int) ($GLOBALS['g11_vendor_sync_results'][$app_id] ?? 0);
 }
 
-function vms_vendor_app_link_submitting_user_to_vendor(int $app_id, int $vendor_id, int $actor_user_id = 0)
+function bvmgr_vendor_app_link_submitting_user_to_vendor(int $app_id, int $vendor_id, int $actor_user_id = 0)
 {
 	$GLOBALS['g11_vendor_timeline'][] = array('kind' => 'link', 'app_id' => $app_id, 'vendor_id' => $vendor_id, 'actor_user_id' => $actor_user_id);
 	return $GLOBALS['g11_vendor_link_results'][$app_id] ?? 1;
@@ -297,7 +297,7 @@ function g11_vendor_strip_directives(string $source, array $directives): string
 
 function g11_vendor_restore_operational_call(string $source, string $event_code, string $historical): string
 {
-	$needle = "vms_record_operational_issue('" . $event_code . "'";
+	$needle = "bvmgr_record_operational_issue('" . $event_code . "'";
 	g11_vendor_same(1, substr_count($source, $needle), 'Known G16 call count changed: ' . $event_code);
 	$call = strpos($source, $needle);
 	$line_start = strrpos(substr($source, 0, (int) $call), "\n");
@@ -325,7 +325,7 @@ function g11_vendor_restore_g16_baseline(string $source): string
 		'vendor_app_vendor_type_unresolved' => "error_log('[VMS] vendor-applications: unknown vendor type slug \"' . \$slug . '\" on app_id ' . \$app_id . '; not assigning taxonomy term.');",
 		'vendor_app_vendor_type_assignment_failed' => "error_log('[VMS] vendor-applications: failed setting vms_vendor_type terms for vendor_id ' . \$vendor_id . ' (app_id ' . \$app_id . ')');",
 	);
-	if (strpos($source, "vms_record_operational_issue('vendor_apply_turnstile_payload_invalid'") !== false) {
+	if (strpos($source, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'") !== false) {
 		$historical['vendor_apply_turnstile_payload_invalid'] = "error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');";
 	}
 	foreach ($historical as $event_code => $statement) {
@@ -496,8 +496,8 @@ foreach ($invalid_directives as $invalid_directive) {
 }
 
 g11_vendor_same(0, substr_count($source, 'error_log('), 'All nine G16 operational logging rows must be migrated without suppression.');
-g11_vendor_same(9, substr_count($source, 'vms_record_operational_issue('), 'Mirror must contain the exact nine G16 operational calls.');
-g11_vendor_same(8, substr_count($shadow_source, 'vms_record_operational_issue('), 'Shadow must contain only the eight corresponding G16 operational calls.');
+g11_vendor_same(9, substr_count($source, 'bvmgr_record_operational_issue('), 'Mirror must contain the exact nine G16 operational calls.');
+g11_vendor_same(8, substr_count($shadow_source, 'bvmgr_record_operational_issue('), 'Shadow must contain only the eight corresponding G16 operational calls.');
 g11_vendor_contains('https://challenges.cloudflare.com/turnstile/v0/api.js', $source, 'Adjacent Turnstile offloaded-content finding must remain present.');
 g11_vendor_contains('echo $msg;', $source, 'Adjacent unescaped message output must remain present.');
 g11_vendor_contains('<?php echo $variant_map_json; ?>', $source, 'Adjacent unescaped JSON output must remain present.');
@@ -510,10 +510,10 @@ foreach (array(
 }
 
 $owned_functions = array(
-	'vms_vendor_app_count_pending',
-	'vms_vendor_app_count_by_review_filter',
-	'vms_vendor_applications_migrate_legacy_post_type_once',
-	'vms_vendor_app_backfill_vendor_sot_once',
+	'bvmgr_vendor_app_count_pending',
+	'bvmgr_vendor_app_count_by_review_filter',
+	'bvmgr_vendor_applications_migrate_legacy_post_type_once',
+	'bvmgr_vendor_app_backfill_vendor_sot_once',
 );
 foreach ($owned_functions as $owned_function) {
 	$mirror_function = g11_vendor_extract_function($source, $owned_function);
@@ -536,7 +536,7 @@ g11_vendor_not_contains('set_transient(', $owned_source, 'No persistent caching 
 g11_vendor_reset();
 $GLOBALS['g11_vendor_confirmation_key'] = '';
 WP_Query::$found_posts_queue = array(17);
-g11_vendor_same(17, vms_vendor_app_count_pending(), 'Pending count must return WP_Query found_posts.');
+g11_vendor_same(17, bvmgr_vendor_app_count_pending(), 'Pending count must return WP_Query found_posts.');
 $pending_meta_query = array(
 	'relation' => 'AND',
 	array(
@@ -568,7 +568,7 @@ g11_vendor_assert(!array_key_exists('no_found_rows', WP_Query::$calls[0]), 'Pend
 
 g11_vendor_reset();
 WP_Query::$found_posts_queue = array(0);
-g11_vendor_same(0, vms_vendor_app_count_pending(), 'Empty pending count must remain zero.');
+g11_vendor_same(0, bvmgr_vendor_app_count_pending(), 'Empty pending count must remain zero.');
 g11_vendor_same(1, count(WP_Query::$calls), 'Pending count must execute a fresh query on every invocation.');
 
 $confirmation_key = '_vms_custom_confirmation_state';
@@ -602,7 +602,7 @@ foreach ($review_cases as $filter => $case) {
 	g11_vendor_reset();
 	$GLOBALS['g11_vendor_confirmation_key'] = $confirmation_key;
 	WP_Query::$found_posts_queue = array($case['count']);
-	g11_vendor_same($case['count'], vms_vendor_app_count_by_review_filter($filter), 'Review-filter count result changed for ' . $filter . '.');
+	g11_vendor_same($case['count'], bvmgr_vendor_app_count_by_review_filter($filter), 'Review-filter count result changed for ' . $filter . '.');
 	g11_vendor_same(array(
 		'post_type' => array('vms_vendor_app', 'vms_vendor_application'),
 		'post_status' => array('publish', 'draft', 'pending', 'private'),
@@ -614,25 +614,25 @@ foreach ($review_cases as $filter => $case) {
 }
 
 g11_vendor_reset();
-g11_vendor_same(0, vms_vendor_app_count_by_review_filter('not-a-review-filter'), 'Invalid review filter must return zero.');
+g11_vendor_same(0, bvmgr_vendor_app_count_by_review_filter('not-a-review-filter'), 'Invalid review filter must return zero.');
 g11_vendor_same(array(), WP_Query::$calls, 'Invalid review filter must not execute a query.');
 
-$migration_source = g11_vendor_extract_function($source, 'vms_vendor_applications_migrate_legacy_post_type_once');
+$migration_source = g11_vendor_extract_function($source, 'bvmgr_vendor_applications_migrate_legacy_post_type_once');
 $invalid_migration_source = str_replace(
-	'function vms_vendor_applications_migrate_legacy_post_type_once(',
+	'function bvmgr_vendor_applications_migrate_legacy_post_type_once(',
 	'function g11_vendor_applications_migrate_invalid_once(',
 	$migration_source,
 	$rename_count
 );
 g11_vendor_same(1, $rename_count, 'Invalid migration test must rename the owned function once.');
 $invalid_migration_source = str_replace(
-	'$canonical = sanitize_key((string) VMS_VENDOR_APP_CPT);',
+	'$canonical = sanitize_key((string) BVMGR_VENDOR_APP_CPT);',
 	'$canonical = sanitize_key((string) $GLOBALS[\'g11_vendor_invalid_canonical\']);',
 	$invalid_migration_source,
 	$canonical_replacement_count
 );
 $invalid_migration_source = str_replace(
-	'$legacy = sanitize_key((string) VMS_VENDOR_APP_CPT_LEGACY);',
+	'$legacy = sanitize_key((string) BVMGR_VENDOR_APP_CPT_LEGACY);',
 	'$legacy = sanitize_key((string) $GLOBALS[\'g11_vendor_invalid_legacy\']);',
 	$invalid_migration_source,
 	$legacy_replacement_count
@@ -646,7 +646,7 @@ g11_vendor_reset();
 $wpdb = new G11_Vendor_WPDB_Spy();
 $GLOBALS['wpdb'] = $wpdb;
 $GLOBALS['g11_vendor_options'][$migration_marker] = '1';
-vms_vendor_applications_migrate_legacy_post_type_once();
+bvmgr_vendor_applications_migrate_legacy_post_type_once();
 g11_vendor_same(array(), $wpdb->prepares, 'Completed migration must not prepare SQL again.');
 g11_vendor_same(array(), $wpdb->queries, 'Completed migration must not execute SQL again.');
 g11_vendor_same(array(), $GLOBALS['g11_vendor_option_updates'], 'Completed migration must not rewrite its marker.');
@@ -667,7 +667,7 @@ foreach (array(4, false, 0) as $query_result) {
 	$wpdb = new G11_Vendor_WPDB_Spy();
 	$wpdb->query_queue = array($query_result);
 	$GLOBALS['wpdb'] = $wpdb;
-	vms_vendor_applications_migrate_legacy_post_type_once();
+	bvmgr_vendor_applications_migrate_legacy_post_type_once();
 	g11_vendor_same(1, count($wpdb->prepares), 'Migration must prepare exactly one statement.');
 	g11_vendor_same(
 		'UPDATE wp_posts SET post_type = %s WHERE post_type = %s',
@@ -718,13 +718,13 @@ $empty_stats = array(
 
 g11_vendor_reset();
 $GLOBALS['g11_vendor_options'][$backfill_marker] = array('already' => 'done');
-vms_vendor_app_backfill_vendor_sot_once();
+bvmgr_vendor_app_backfill_vendor_sot_once();
 g11_vendor_same(array(), $GLOBALS['g11_vendor_timeline'], 'Completed backfill must not acquire a guard or query again.');
 g11_vendor_same(array(), $GLOBALS['g11_vendor_get_posts_calls'], 'Completed backfill must not execute get_posts.');
 
 g11_vendor_reset();
 $GLOBALS['g11_vendor_guard_result'] = false;
-vms_vendor_app_backfill_vendor_sot_once();
+bvmgr_vendor_app_backfill_vendor_sot_once();
 g11_vendor_same(array('guard_begin'), array_column($GLOBALS['g11_vendor_timeline'], 'kind'), 'Rejected guard must stop the backfill immediately.');
 g11_vendor_same($expected_guard_args, $GLOBALS['g11_vendor_timeline'][0]['args'], 'Backfill guard args changed.');
 g11_vendor_same(array(), $GLOBALS['g11_vendor_get_posts_calls'], 'Rejected guard must prevent the exhaustive query.');
@@ -733,7 +733,7 @@ g11_vendor_same(array(), $GLOBALS['g11_vendor_added_options'], 'Rejected guard m
 foreach (array(array(), false) as $empty_result) {
 	g11_vendor_reset();
 	$GLOBALS['g11_vendor_get_posts_queue'] = array($empty_result);
-	vms_vendor_app_backfill_vendor_sot_once();
+	bvmgr_vendor_app_backfill_vendor_sot_once();
 	g11_vendor_same(array($expected_backfill_args), $GLOBALS['g11_vendor_get_posts_calls'], 'Empty/failure backfill query args changed.');
 	g11_vendor_same(
 		array($backfill_marker, $empty_stats, '', false),
@@ -755,7 +755,7 @@ $GLOBALS['g11_vendor_meta'] = array(
 $GLOBALS['g11_vendor_post_types'] = array(20 => 'vms_vendor', 22 => 'post', 23 => 'vms_vendor');
 $GLOBALS['g11_vendor_sync_results'] = array(10 => 2, 13 => 1);
 $GLOBALS['g11_vendor_link_results'] = array(10 => 1, 13 => new WP_Error());
-vms_vendor_app_backfill_vendor_sot_once();
+bvmgr_vendor_app_backfill_vendor_sot_once();
 $populated_stats = array(
 	'apps_scanned' => 4,
 	'vendors_synced' => 2,

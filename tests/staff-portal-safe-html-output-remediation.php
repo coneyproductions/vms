@@ -61,8 +61,8 @@ if (!function_exists('esc_html')) {
 	}
 }
 
-if (!function_exists('vms_portal_notice')) {
-	function vms_portal_notice(string $type, string $msg): string
+if (!function_exists('bvmgr_portal_notice')) {
+	function bvmgr_portal_notice(string $type, string $msg): string
 	{
 		$type = ($type === 'success' || $type === 'warning') ? $type : 'error';
 		return '<div class="vms-notice vms-notice-' . esc_attr($type) . '">' . esc_html($msg) . '</div>';
@@ -175,64 +175,64 @@ $expectedAllowedHtml = array(
 		'class' => true,
 	),
 );
-$assert(vms_staff_portal_safe_html_allowed_html() === $expectedAllowedHtml, 'Staff Portal safe-HTML allowlist should preserve the existing narrow element and attribute contract.');
+$assert(bvmgr_staff_portal_safe_html_allowed_html() === $expectedAllowedHtml, 'Staff Portal safe-HTML allowlist should preserve the existing narrow element and attribute contract.');
 
 $safeFragment = '<div class="vms-cal-pop" tabindex="0"><p class="vms-muted"><a class="vms-cal-pop-ticket" href="https://example.test/event" loading="lazy" rel="noopener" target="_blank">View</a><span class="vms-cal-vendor-icon" aria-hidden="true">T</span><img alt="Poster" class="poster" loading="lazy" src="https://example.test/poster.jpg"></p></div>';
-$assert(vms_staff_portal_safe_html($safeFragment) === $safeFragment, 'Allowed staff portal elements and attributes should survive unchanged.');
+$assert(bvmgr_staff_portal_safe_html($safeFragment) === $safeFragment, 'Allowed staff portal elements and attributes should survive unchanged.');
 
-$badge = vms_staff_portal_badge_html('complete');
+$badge = bvmgr_staff_portal_badge_html('complete');
 $assert($badge === '<span class="vms-badge vms-badge-ok">Complete</span>', 'Tax status badge markup should keep its class and label.');
-$assert(wp_kses(vms_staff_portal_safe_html($badge), vms_staff_portal_safe_html_allowed_html()) === $badge, 'Tax status badge should survive the explicit final-output contract.');
+$assert(wp_kses(bvmgr_staff_portal_safe_html($badge), bvmgr_staff_portal_safe_html_allowed_html()) === $badge, 'Tax status badge should survive the explicit final-output contract.');
 
-$certificationBadge = vms_staff_portal_certification_status_badge('pending_verification');
+$certificationBadge = bvmgr_staff_portal_certification_status_badge('pending_verification');
 $assert($certificationBadge === '<span class="vms-badge vms-badge-warn">Pending Verification</span>', 'Certification status badge should keep its warning class and fallback label.');
-$assert(wp_kses(vms_staff_portal_safe_html($certificationBadge), vms_staff_portal_safe_html_allowed_html()) === $certificationBadge, 'Certification status badge should survive the explicit final-output contract.');
+$assert(wp_kses(bvmgr_staff_portal_safe_html($certificationBadge), bvmgr_staff_portal_safe_html_allowed_html()) === $certificationBadge, 'Certification status badge should survive the explicit final-output contract.');
 
-$notice = vms_staff_portal_notice_html('warning', '<img src=x onerror=alert(1)>');
+$notice = bvmgr_staff_portal_notice_html('warning', '<img src=x onerror=alert(1)>');
 $assert($notice === '<div class="vms-notice vms-notice-warning">&lt;img src=x onerror=alert(1)&gt;</div>', 'Portal notices should keep escaped text inside the generated notice div.');
-$assert(wp_kses($notice, vms_staff_portal_safe_html_allowed_html()) === $notice, 'Portal notices should survive the explicit final-output contract.');
+$assert(wp_kses($notice, bvmgr_staff_portal_safe_html_allowed_html()) === $notice, 'Portal notices should survive the explicit final-output contract.');
 
 $assignmentFragment = '<div class="vms-av-event-title vms-av-event-title--staff vms-public-cal"><div class="vms-av-meta-line is-trigger vms-cal-entry" tabindex="0"><div class="vms-cal-entry-vendors"><a class="vms-cal-vendor-row vms-cal-entry-vendor is-primary" href="https://example.test/show"><span class="vms-cal-vendor-icon" aria-hidden="true">S</span><span class="vms-cal-vendor-name">Show</span></a></div><div class="vms-cal-pop"><div class="vms-cal-pop-body"><a class="vms-cal-pop-media" href="https://example.test/show"><img src="https://example.test/show.jpg" alt="" loading="lazy"></a><div class="vms-cal-pop-actions"><a class="vms-cal-pop-ticket" href="https://example.test/show">View Event Page</a></div></div></div></div><span class="vms-av-meta-more">+1 more</span></div>';
-$assert(vms_staff_portal_safe_html($assignmentFragment) === $assignmentFragment, 'Assignment calendar safe fragment should keep current div/a/img/span structure and attributes.');
+$assert(bvmgr_staff_portal_safe_html($assignmentFragment) === $assignmentFragment, 'Assignment calendar safe fragment should keep current div/a/img/span structure and attributes.');
 
 $unsafeFragment = '<div class="ok" onclick="evil()" onload="evil()" style="color:red" id="bad" data-x="1"><a class="link" href="javascript:alert(1)" style="color:red">Bad</a><img src="javascript:alert(1)" alt="x" onerror="evil()"><span class="x" aria-hidden="true" onclick="evil()">Icon</span><script>alert(1)</script><iframe src="x"></iframe><object data="x"></object><form><input></form></div>';
-$filtered = vms_staff_portal_safe_html($unsafeFragment);
+$filtered = bvmgr_staff_portal_safe_html($unsafeFragment);
 foreach (array('<script', '<iframe', '<object', '<form', '<input', 'onclick=', 'onload=', 'onerror=', 'style=', ' id=', 'data-x=', 'javascript:') as $forbidden) {
 	$assert(strpos($filtered, $forbidden) === false, 'Staff Portal safe-HTML contract should reject unsupported markup or attributes: ' . $forbidden);
 }
 $assert(strpos($filtered, '<div class="ok"><a class="link">Bad</a><img alt="x"><span class="x" aria-hidden="true">Icon</span>alert(1)</div>') !== false, 'Allowed tags should remain while unsafe attributes and protocols are stripped.');
 
-$malformedBadge = vms_staff_portal_certification_status_badge('active" onclick="evil');
+$malformedBadge = bvmgr_staff_portal_certification_status_badge('active" onclick="evil');
 $assert(strpos($malformedBadge, 'onclick=') === false && strpos($malformedBadge, '<script') === false, 'Malformed certification statuses should not break out of the generated badge fragment.');
 
-preg_match_all('~wp_kses\s*\(\s*vms_staff_portal_safe_html\s*\(~', $staffPortalSource, $wrappedSafeHtmlMatches);
+preg_match_all('~wp_kses\s*\(\s*bvmgr_staff_portal_safe_html\s*\(~', $staffPortalSource, $wrappedSafeHtmlMatches);
 $assert(count($wrappedSafeHtmlMatches[0]) === 5, 'Every Staff Portal safe-html final output sink should wrap the safe fragment with wp_kses().');
 
-preg_match_all('~echo\s+wp_kses\s*\(\s*vms_staff_portal_notice_html\s*\(~', $staffPortalSource, $wrappedNoticeMatches);
+preg_match_all('~echo\s+wp_kses\s*\(\s*bvmgr_staff_portal_notice_html\s*\(~', $staffPortalSource, $wrappedNoticeMatches);
 $assert(count($wrappedNoticeMatches[0]) === 17, 'Every Staff Portal notice final output sink should wrap the notice fragment with wp_kses().');
 
 foreach (array(
-	'echo vms_staff_portal_safe_html(',
-	'echo vms_staff_portal_notice_html(',
-	'esc_html(vms_staff_portal_safe_html(',
-	'esc_html(vms_staff_portal_notice_html(',
-	'esc_html(vms_staff_portal_badge_html(',
-	'esc_html(vms_staff_portal_certification_status_badge(',
+	'echo bvmgr_staff_portal_safe_html(',
+	'echo bvmgr_staff_portal_notice_html(',
+	'esc_html(bvmgr_staff_portal_safe_html(',
+	'esc_html(bvmgr_staff_portal_notice_html(',
+	'esc_html(bvmgr_staff_portal_badge_html(',
+	'esc_html(bvmgr_staff_portal_certification_status_badge(',
 ) as $forbiddenSource) {
 	$assert(strpos($staffPortalSource, $forbiddenSource) === false, 'Staff Portal source should not contain uncontracted or text-escaped safe fragment output: ' . $forbiddenSource);
 }
 
 $assert(strpos($staffPortalSource, 'wp_kses_post(') === false, 'Staff Portal safe-HTML output should not use wp_kses_post().');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $staffPortalSource), 'Staff Portal safe-HTML output should not use the broad post allowlist.');
-$assert(!preg_match('~wp_kses\s*\(\s*\$content_html\s*,\s*vms_staff_portal_safe_html_allowed_html\s*\(\s*\)\s*\)~', $staffPortalSource), 'Staff Portal shell content should not be passed through the fragment allowlist.');
-$assert(!preg_match('~wp_kses\s*\(\s*ob_get_clean\s*\(\s*\)\s*,\s*vms_staff_portal_safe_html_allowed_html\s*\(\s*\)\s*\)~', $staffPortalSource), 'Complete Staff Portal buffered output should not be passed through the fragment allowlist.');
+$assert(!preg_match('~wp_kses\s*\(\s*\$content_html\s*,\s*bvmgr_staff_portal_safe_html_allowed_html\s*\(\s*\)\s*\)~', $staffPortalSource), 'Staff Portal shell content should not be passed through the fragment allowlist.');
+$assert(!preg_match('~wp_kses\s*\(\s*ob_get_clean\s*\(\s*\)\s*,\s*bvmgr_staff_portal_safe_html_allowed_html\s*\(\s*\)\s*\)~', $staffPortalSource), 'Complete Staff Portal buffered output should not be passed through the fragment allowlist.');
 
 $sourceLines = preg_split('/\R/', $staffPortalSource);
 foreach ($sourceLines as $line) {
-	if (strpos($line, 'vms_staff_portal_safe_html_allowed_html()') === false || strpos($line, 'function vms_staff_portal_safe_html_allowed_html') !== false) {
+	if (strpos($line, 'bvmgr_staff_portal_safe_html_allowed_html()') === false || strpos($line, 'function bvmgr_staff_portal_safe_html_allowed_html') !== false) {
 		continue;
 	}
-	if (strpos($line, 'return wp_kses($html, vms_staff_portal_safe_html_allowed_html())') !== false) {
+	if (strpos($line, 'return wp_kses($html, bvmgr_staff_portal_safe_html_allowed_html())') !== false) {
 		continue;
 	}
 	$assert(

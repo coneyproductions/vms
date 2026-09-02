@@ -17,26 +17,26 @@ add_action('admin_menu', function () {
     'Due Dates',
     'manage_options',
     'vms-due-dates',
-    'vms_render_due_dates_admin_page'
+    'bvmgr_render_due_dates_admin_page'
   );
 }, 30);
 
 // ---------------------------
 // Admin-post handlers
 // ---------------------------
-add_action('admin_post_vms_due_add_payee', 'vms_due_admin_post_add_payee');
-add_action('admin_post_vms_due_edit_payee', 'vms_due_admin_post_edit_payee');
-add_action('admin_post_vms_due_archive_payee', 'vms_due_admin_post_archive_payee');
+add_action('admin_post_vms_due_add_payee', 'bvmgr_due_admin_post_add_payee');
+add_action('admin_post_vms_due_edit_payee', 'bvmgr_due_admin_post_edit_payee');
+add_action('admin_post_vms_due_archive_payee', 'bvmgr_due_admin_post_archive_payee');
 
-add_action('admin_post_vms_due_add_obligation', 'vms_due_admin_post_add_obligation');
-add_action('admin_post_vms_due_edit_obligation', 'vms_due_admin_post_edit_obligation');
-add_action('admin_post_vms_due_archive_obligation', 'vms_due_admin_post_archive_obligation');
-add_action('admin_post_vms_due_complete', 'vms_due_admin_post_complete');
-add_action('admin_post_vms_due_uncomplete', 'vms_due_admin_post_uncomplete');
+add_action('admin_post_vms_due_add_obligation', 'bvmgr_due_admin_post_add_obligation');
+add_action('admin_post_vms_due_edit_obligation', 'bvmgr_due_admin_post_edit_obligation');
+add_action('admin_post_vms_due_archive_obligation', 'bvmgr_due_admin_post_archive_obligation');
+add_action('admin_post_vms_due_complete', 'bvmgr_due_admin_post_complete');
+add_action('admin_post_vms_due_uncomplete', 'bvmgr_due_admin_post_uncomplete');
 
-add_action('admin_post_vms_due_seed_templates', 'vms_due_admin_post_seed_templates');
+add_action('admin_post_vms_due_seed_templates', 'bvmgr_due_admin_post_seed_templates');
 
-function vms_due_admin_redirect(string $msg = '', array $extra_query = [], string $fragment = ''): void {
+function bvmgr_due_admin_redirect(string $msg = '', array $extra_query = [], string $fragment = ''): void {
   $url = admin_url('admin.php?page=vms-due-dates');
   $query = [];
   if ($msg !== '') {
@@ -61,7 +61,7 @@ function vms_due_admin_redirect(string $msg = '', array $extra_query = [], strin
   exit;
 }
 
-function vms_due_parse_identifiers(string $raw): array {
+function bvmgr_due_parse_identifiers(string $raw): array {
   $raw = (string) $raw;
   $lines = preg_split('/\r\n|\r|\n/', $raw);
   $out = [];
@@ -92,7 +92,7 @@ function vms_due_parse_identifiers(string $raw): array {
   return $out;
 }
 
-function vms_due_identifiers_to_textarea(array $identifiers): string {
+function bvmgr_due_identifiers_to_textarea(array $identifiers): string {
   $lines = [];
   foreach ($identifiers as $row) {
     if (!is_array($row)) continue;
@@ -104,7 +104,7 @@ function vms_due_identifiers_to_textarea(array $identifiers): string {
   return implode("\n", $lines);
 }
 
-function vms_due_admin_collect_instance_filters(array $src): array {
+function bvmgr_due_admin_collect_instance_filters(array $src): array {
   $status = sanitize_key((string) ($src['due_status'] ?? 'open'));
   $cadence = sanitize_key((string) ($src['due_cadence'] ?? 'all'));
   $payee = sanitize_text_field((string) ($src['due_payee'] ?? 'all'));
@@ -135,7 +135,7 @@ function vms_due_admin_collect_instance_filters(array $src): array {
   ];
 }
 
-function vms_due_admin_instance_filter_query_args(array $filters): array {
+function bvmgr_due_admin_instance_filter_query_args(array $filters): array {
   $out = [];
   $status = sanitize_key((string) ($filters['status'] ?? 'open'));
   $cadence = sanitize_key((string) ($filters['cadence'] ?? 'all'));
@@ -158,7 +158,7 @@ function vms_due_admin_instance_filter_query_args(array $filters): array {
   return $out;
 }
 
-function vms_due_admin_render_instance_filter_hidden_inputs(array $filters): void {
+function bvmgr_due_admin_render_instance_filter_hidden_inputs(array $filters): void {
   $status = sanitize_key((string) ($filters['status'] ?? 'open'));
   $cadence = sanitize_key((string) ($filters['cadence'] ?? 'all'));
   $payee = sanitize_text_field((string) ($filters['payee'] ?? 'all'));
@@ -172,7 +172,7 @@ function vms_due_admin_render_instance_filter_hidden_inputs(array $filters): voi
   }
 }
 
-function vms_due_admin_query_arg(string $key): string {
+function bvmgr_due_admin_query_arg(string $key): string {
   // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- Read-only admin routing/message parameters only affect page state.
   if (!isset($_GET[$key])) {
     return '';
@@ -182,22 +182,22 @@ function vms_due_admin_query_arg(string $key): string {
   return (string) wp_unslash($_GET[$key]);
 }
 
-function vms_due_admin_post_add_payee(): void {
+function bvmgr_due_admin_post_add_payee(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_add_payee');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_add_payee', '_wpnonce'), '_wpnonce');
 
   $name = sanitize_text_field(wp_unslash((string) ($_POST['payee_name'] ?? '')));
   $account_number = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_number'] ?? '')));
   $account_id = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_id'] ?? '')));
   $notes = sanitize_textarea_field(wp_unslash((string) ($_POST['payee_notes'] ?? '')));
-  $identifiers = vms_due_parse_identifiers(sanitize_textarea_field(wp_unslash((string) ($_POST['payee_identifiers'] ?? ''))));
+  $identifiers = bvmgr_due_parse_identifiers(sanitize_textarea_field(wp_unslash((string) ($_POST['payee_identifiers'] ?? ''))));
 
   if ($name === '') {
-    vms_due_admin_redirect('payee_missing_name');
+    bvmgr_due_admin_redirect('payee_missing_name');
   }
 
-  $payees = vms_due_get_payees();
-  $id = vms_due_new_id('payee');
+  $payees = bvmgr_due_get_payees();
+  $id = bvmgr_due_new_id('payee');
 
   $payees[$id] = [
     'id' => $id,
@@ -209,32 +209,32 @@ function vms_due_admin_post_add_payee(): void {
     'is_active' => 1,
   ];
 
-  vms_due_save_payees($payees);
-  vms_due_admin_redirect('payee_added');
+  bvmgr_due_save_payees($payees);
+  bvmgr_due_admin_redirect('payee_added');
 }
 
-function vms_due_admin_post_edit_payee(): void {
+function bvmgr_due_admin_post_edit_payee(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_edit_payee');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_edit_payee', '_wpnonce'), '_wpnonce');
 
   $id = sanitize_key(wp_unslash((string) ($_POST['payee_id'] ?? '')));
   if ($id === '') {
-    vms_due_admin_redirect('payee_missing_id');
+    bvmgr_due_admin_redirect('payee_missing_id');
   }
 
   $name = sanitize_text_field(wp_unslash((string) ($_POST['payee_name'] ?? '')));
   $account_number = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_number'] ?? '')));
   $account_id = sanitize_text_field(wp_unslash((string) ($_POST['payee_account_id'] ?? '')));
   $notes = sanitize_textarea_field(wp_unslash((string) ($_POST['payee_notes'] ?? '')));
-  $identifiers = vms_due_parse_identifiers(sanitize_textarea_field(wp_unslash((string) ($_POST['payee_identifiers'] ?? ''))));
+  $identifiers = bvmgr_due_parse_identifiers(sanitize_textarea_field(wp_unslash((string) ($_POST['payee_identifiers'] ?? ''))));
 
   if ($name === '') {
-    vms_due_admin_redirect('payee_missing_name');
+    bvmgr_due_admin_redirect('payee_missing_name');
   }
 
-  $payees = vms_due_get_payees();
+  $payees = bvmgr_due_get_payees();
   if (empty($payees[$id]) || !is_array($payees[$id])) {
-    vms_due_admin_redirect('payee_not_found');
+    bvmgr_due_admin_redirect('payee_not_found');
   }
 
   $existing = $payees[$id];
@@ -248,27 +248,27 @@ function vms_due_admin_post_edit_payee(): void {
     'is_active' => isset($existing['is_active']) ? (int) $existing['is_active'] : 1,
   ];
 
-  vms_due_save_payees($payees);
-  vms_due_admin_redirect('payee_updated');
+  bvmgr_due_save_payees($payees);
+  bvmgr_due_admin_redirect('payee_updated');
 }
 
-function vms_due_admin_post_archive_payee(): void {
+function bvmgr_due_admin_post_archive_payee(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_archive_payee');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_archive_payee', '_wpnonce'), '_wpnonce');
 
   $id = sanitize_key((string) ($_GET['id'] ?? ''));
-  $payees = vms_due_get_payees();
+  $payees = bvmgr_due_get_payees();
   if (!empty($payees[$id]) && is_array($payees[$id])) {
     $payees[$id]['is_active'] = 0;
-    vms_due_save_payees($payees);
+    bvmgr_due_save_payees($payees);
   }
 
-  vms_due_admin_redirect('payee_archived');
+  bvmgr_due_admin_redirect('payee_archived');
 }
 
-function vms_due_admin_post_add_obligation(): void {
+function bvmgr_due_admin_post_add_obligation(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_add_obligation');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_add_obligation', '_wpnonce'), '_wpnonce');
 
   $title = sanitize_text_field(wp_unslash((string) ($_POST['ob_title'] ?? '')));
   $payee_id = sanitize_key(wp_unslash((string) ($_POST['ob_payee_id'] ?? '')));
@@ -290,7 +290,7 @@ function vms_due_admin_post_add_obligation(): void {
   $remind_days = max(0, min(365, $remind_days));
 
   if ($title === '') {
-    vms_due_admin_redirect('ob_missing_title');
+    bvmgr_due_admin_redirect('ob_missing_title');
   }
 
   // Normalize cadence
@@ -332,8 +332,8 @@ function vms_due_admin_post_add_obligation(): void {
     $end_date = '';
   }
 
-  $obs = vms_due_get_obligations();
-  $id = vms_due_new_id('ob');
+  $obs = bvmgr_due_get_obligations();
+  $id = bvmgr_due_new_id('ob');
 
   $row = [
     'id' => $id,
@@ -355,18 +355,18 @@ function vms_due_admin_post_add_obligation(): void {
   ];
 
   $obs[$id] = $row;
-  vms_due_save_obligations($obs);
+  bvmgr_due_save_obligations($obs);
 
-  vms_due_admin_redirect('ob_added');
+  bvmgr_due_admin_redirect('ob_added');
 }
 
-function vms_due_admin_post_edit_obligation(): void {
+function bvmgr_due_admin_post_edit_obligation(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_edit_obligation');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_edit_obligation', '_wpnonce'), '_wpnonce');
 
   $id = sanitize_key(wp_unslash((string) ($_POST['ob_id'] ?? '')));
   if ($id === '') {
-    vms_due_admin_redirect('ob_missing_id');
+    bvmgr_due_admin_redirect('ob_missing_id');
   }
 
   $title = sanitize_text_field(wp_unslash((string) ($_POST['ob_title'] ?? '')));
@@ -387,7 +387,7 @@ function vms_due_admin_post_edit_obligation(): void {
   $remind_days = max(0, min(365, $remind_days));
 
   if ($title === '') {
-    vms_due_admin_redirect('ob_missing_title');
+    bvmgr_due_admin_redirect('ob_missing_title');
   }
 
   // Normalize cadence
@@ -429,9 +429,9 @@ function vms_due_admin_post_edit_obligation(): void {
     $end_date = '';
   }
 
-  $obs = vms_due_get_obligations();
+  $obs = bvmgr_due_get_obligations();
   if (empty($obs[$id]) || !is_array($obs[$id])) {
-    vms_due_admin_redirect('ob_not_found');
+    bvmgr_due_admin_redirect('ob_not_found');
   }
 
   $existing = $obs[$id];
@@ -452,87 +452,87 @@ function vms_due_admin_post_edit_obligation(): void {
     'is_active' => isset($existing['is_active']) ? (int) $existing['is_active'] : 1,
   ];
 
-  vms_due_save_obligations($obs);
-  vms_due_admin_redirect('ob_updated');
+  bvmgr_due_save_obligations($obs);
+  bvmgr_due_admin_redirect('ob_updated');
 }
 
-function vms_due_admin_post_archive_obligation(): void {
+function bvmgr_due_admin_post_archive_obligation(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_archive_obligation');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_archive_obligation', '_wpnonce'), '_wpnonce');
 
   $id = sanitize_key((string) ($_GET['id'] ?? ''));
-  $obs = vms_due_get_obligations();
+  $obs = bvmgr_due_get_obligations();
   if (!empty($obs[$id]) && is_array($obs[$id])) {
     $obs[$id]['is_active'] = 0;
-    vms_due_save_obligations($obs);
+    bvmgr_due_save_obligations($obs);
   }
 
-  vms_due_admin_redirect('ob_archived');
+  bvmgr_due_admin_redirect('ob_archived');
 }
 
-function vms_due_admin_post_complete(): void {
+function bvmgr_due_admin_post_complete(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_complete');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_complete', '_wpnonce'), '_wpnonce');
 
   $oid = sanitize_key(wp_unslash((string) ($_POST['obligation_id'] ?? '')));
   $due = sanitize_text_field(wp_unslash((string) ($_POST['due_date'] ?? '')));
   $notes = sanitize_textarea_field(wp_unslash((string) ($_POST['notes'] ?? '')));
   $proof = esc_url_raw(wp_unslash((string) ($_POST['proof_url'] ?? '')));
 
-  $filters = vms_due_admin_collect_instance_filters((array) $_POST);
-  $query = vms_due_admin_instance_filter_query_args($filters);
+  $filters = bvmgr_due_admin_collect_instance_filters((array) $_POST);
+  $query = bvmgr_due_admin_instance_filter_query_args($filters);
 
-  if (!function_exists('vms_due_safe_complete')) {
-    vms_due_admin_redirect('due_complete_error_helper_missing', $query, 'vms-due-instances');
+  if (!function_exists('bvmgr_due_safe_complete')) {
+    bvmgr_due_admin_redirect('due_complete_error_helper_missing', $query, 'vms-due-instances');
   }
 
-  $result = (array) vms_due_safe_complete($oid, $due, $notes, $proof);
+  $result = (array) bvmgr_due_safe_complete($oid, $due, $notes, $proof);
   if (!empty($result['ok'])) {
     if (!empty($result['already'])) {
-      vms_due_admin_redirect('due_already_completed', $query, 'vms-due-instances');
+      bvmgr_due_admin_redirect('due_already_completed', $query, 'vms-due-instances');
     }
-    vms_due_admin_redirect('due_completed', $query, 'vms-due-instances');
+    bvmgr_due_admin_redirect('due_completed', $query, 'vms-due-instances');
   }
 
   $err = sanitize_key((string) ($result['error'] ?? 'unknown'));
-  vms_due_admin_redirect('due_complete_error_' . ($err !== '' ? $err : 'unknown'), $query, 'vms-due-instances');
+  bvmgr_due_admin_redirect('due_complete_error_' . ($err !== '' ? $err : 'unknown'), $query, 'vms-due-instances');
 }
 
-function vms_due_admin_post_uncomplete(): void {
+function bvmgr_due_admin_post_uncomplete(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_uncomplete');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_uncomplete', '_wpnonce'), '_wpnonce');
 
   $oid = sanitize_key(wp_unslash((string) ($_POST['obligation_id'] ?? '')));
   $due = sanitize_text_field(wp_unslash((string) ($_POST['due_date'] ?? '')));
   $notes = sanitize_textarea_field(wp_unslash((string) ($_POST['notes'] ?? '')));
   $proof = esc_url_raw(wp_unslash((string) ($_POST['proof_url'] ?? '')));
 
-  $filters = vms_due_admin_collect_instance_filters((array) $_POST);
-  $query = vms_due_admin_instance_filter_query_args($filters);
+  $filters = bvmgr_due_admin_collect_instance_filters((array) $_POST);
+  $query = bvmgr_due_admin_instance_filter_query_args($filters);
 
-  if (!function_exists('vms_due_safe_uncomplete')) {
-    vms_due_admin_redirect('due_reopen_error_helper_missing', $query, 'vms-due-instances');
+  if (!function_exists('bvmgr_due_safe_uncomplete')) {
+    bvmgr_due_admin_redirect('due_reopen_error_helper_missing', $query, 'vms-due-instances');
   }
 
-  $result = (array) vms_due_safe_uncomplete($oid, $due, $notes, $proof);
+  $result = (array) bvmgr_due_safe_uncomplete($oid, $due, $notes, $proof);
   if (!empty($result['ok'])) {
     if (!empty($result['already'])) {
-      vms_due_admin_redirect('due_already_open', $query, 'vms-due-instances');
+      bvmgr_due_admin_redirect('due_already_open', $query, 'vms-due-instances');
     }
-    vms_due_admin_redirect('due_reopened', $query, 'vms-due-instances');
+    bvmgr_due_admin_redirect('due_reopened', $query, 'vms-due-instances');
   }
 
   $err = sanitize_key((string) ($result['error'] ?? 'unknown'));
-  vms_due_admin_redirect('due_reopen_error_' . ($err !== '' ? $err : 'unknown'), $query, 'vms-due-instances');
+  bvmgr_due_admin_redirect('due_reopen_error_' . ($err !== '' ? $err : 'unknown'), $query, 'vms-due-instances');
 }
 
-function vms_due_admin_post_seed_templates(): void {
+function bvmgr_due_admin_post_seed_templates(): void {
   if (!current_user_can('manage_options')) wp_die('Forbidden');
-  check_admin_referer('vms_due_seed_templates');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_due_seed_templates', '_wpnonce'), '_wpnonce');
 
   // Seed a few safe, generic templates. Operator can edit later.
-  $payees = vms_due_get_payees();
-  $obs = vms_due_get_obligations();
+  $payees = bvmgr_due_get_payees();
+  $obs = bvmgr_due_get_obligations();
 
   $today_ymd = wp_date('Y-m-d', time(), wp_timezone());
 
@@ -545,7 +545,7 @@ function vms_due_admin_post_seed_templates(): void {
   }
 
   if ($seedPayeeId === '') {
-    $seedPayeeId = vms_due_new_id('payee');
+    $seedPayeeId = bvmgr_due_new_id('payee');
     $payees[$seedPayeeId] = [
       'id' => $seedPayeeId,
       'name' => 'IRS',
@@ -558,7 +558,7 @@ function vms_due_admin_post_seed_templates(): void {
   }
 
   // IRS Estimated Tax - Quarterly (month 1 of quarter) on day 15.
-  $id1 = vms_due_new_id('ob');
+  $id1 = bvmgr_due_new_id('ob');
   $obs[$id1] = [
     'id' => $id1,
     'title' => 'Estimated Tax Payment',
@@ -576,17 +576,17 @@ function vms_due_admin_post_seed_templates(): void {
     'is_active' => 1,
   ];
 
-  vms_due_save_payees($payees);
-  vms_due_save_obligations($obs);
+  bvmgr_due_save_payees($payees);
+  bvmgr_due_save_obligations($obs);
 
-  vms_due_admin_redirect('templates_seeded');
+  bvmgr_due_admin_redirect('templates_seeded');
 }
 
 // ---------------------------
 // Render
 // ---------------------------
-function vms_due_render_admin_notices(): void {
-  $msg = sanitize_key(vms_due_admin_query_arg('vms_due_msg'));
+function bvmgr_due_render_admin_notices(): void {
+  $msg = sanitize_key(bvmgr_due_admin_query_arg('vms_due_msg'));
   if ($msg === '') {
     return;
   }
@@ -597,35 +597,35 @@ function vms_due_render_admin_notices(): void {
   echo '</p></div>';
 }
 
-function vms_render_due_dates_admin_page(): void {
-  if (function_exists('vms_admin_ui_render_shell')) {
-    vms_admin_ui_render_shell(
+function bvmgr_render_due_dates_admin_page(): void {
+  if (function_exists('bvmgr_admin_ui_render_shell')) {
+    bvmgr_admin_ui_render_shell(
       array(
         'title' => __('Due Dates', 'backstage-venue-manager'),
-        'notices_callback' => 'vms_due_render_admin_notices',
+        'notices_callback' => 'bvmgr_due_render_admin_notices',
       ),
-      'vms_render_due_dates_admin_page_content'
+      'bvmgr_render_due_dates_admin_page_content'
     );
     return;
   }
 
   echo '<div class="wrap"><h1>Due Dates</h1>';
-  vms_render_due_dates_admin_page_content();
+  bvmgr_render_due_dates_admin_page_content();
   echo '</div>';
 }
 
-function vms_render_due_dates_admin_page_content(): void {
+function bvmgr_render_due_dates_admin_page_content(): void {
   if (!current_user_can('manage_options')) {
     wp_die('Forbidden');
   }
 
-  $payees = vms_due_get_payees();
-  $obs = vms_due_get_obligations();
-  $log = vms_due_get_log();
-  $log_idx = vms_due_log_index($log);
+  $payees = bvmgr_due_get_payees();
+  $obs = bvmgr_due_get_obligations();
+  $log = bvmgr_due_get_log();
+  $log_idx = bvmgr_due_log_index($log);
 
-  $edit_payee_id = sanitize_key(vms_due_admin_query_arg('edit_payee'));
-  $edit_ob_id = sanitize_key(vms_due_admin_query_arg('edit_ob'));
+  $edit_payee_id = sanitize_key(bvmgr_due_admin_query_arg('edit_payee'));
+  $edit_ob_id = sanitize_key(bvmgr_due_admin_query_arg('edit_ob'));
 
   // Build a simple map of payee names for display.
   $payeeNames = [];
@@ -635,7 +635,7 @@ function vms_render_due_dates_admin_page_content(): void {
   }
 
   // For "next due" display.
-  $dash_items = vms_due_build_dashboard_items(120);
+  $dash_items = bvmgr_due_build_dashboard_items(120);
   $nextByOb = [];
   foreach ($dash_items as $it) {
     if (!is_array($it)) continue;
@@ -647,13 +647,13 @@ function vms_render_due_dates_admin_page_content(): void {
     }
   }
 
-  $instance_filters = vms_due_admin_collect_instance_filters([
-    'due_status' => vms_due_admin_query_arg('due_status'),
-    'due_cadence' => vms_due_admin_query_arg('due_cadence'),
-    'due_payee' => vms_due_admin_query_arg('due_payee'),
-    'due_include_archived' => vms_due_admin_query_arg('due_include_archived'),
+  $instance_filters = bvmgr_due_admin_collect_instance_filters([
+    'due_status' => bvmgr_due_admin_query_arg('due_status'),
+    'due_cadence' => bvmgr_due_admin_query_arg('due_cadence'),
+    'due_payee' => bvmgr_due_admin_query_arg('due_payee'),
+    'due_include_archived' => bvmgr_due_admin_query_arg('due_include_archived'),
   ]);
-  $instance_resp = vms_due_build_obligations_list_response([
+  $instance_resp = bvmgr_due_build_obligations_list_response([
     'status' => $instance_filters['status'],
     'cadence' => $instance_filters['cadence'],
     'payee_id' => $instance_filters['payee'],
@@ -670,7 +670,7 @@ function vms_render_due_dates_admin_page_content(): void {
 
   // Seed templates
   echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-due-seed-form">';
-  wp_nonce_field('vms_due_seed_templates');
+  wp_nonce_field('bvmgr_due_seed_templates');
   echo '<input type="hidden" name="action" value="vms_due_seed_templates" />';
   echo '<button type="submit" class="button">Add sample templates</button>';
   echo '</form>';
@@ -687,14 +687,14 @@ function vms_render_due_dates_admin_page_content(): void {
     $cancel_url = admin_url('admin.php?page=vms-due-dates#vms-payee-' . rawurlencode($edit_payee_id));
     echo '<h3 id="vms-due-edit-payee">Edit Payee</h3>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-    wp_nonce_field('vms_due_edit_payee');
+    wp_nonce_field('bvmgr_due_edit_payee');
     echo '<input type="hidden" name="action" value="vms_due_edit_payee" />';
     echo '<input type="hidden" name="payee_id" value="' . esc_attr($edit_payee_id) . '" />';
     echo '<table class="form-table" role="presentation">';
     echo '<tr><th scope="row"><label for="payee_name">Name</label></th><td><input name="payee_name" id="payee_name" class="regular-text" required value="' . esc_attr((string) ($payeeEdit['name'] ?? '')) . '" /></td></tr>';
     echo '<tr><th scope="row"><label for="payee_account_number">Account Number</label></th><td><input name="payee_account_number" id="payee_account_number" class="regular-text" value="' . esc_attr((string) ($payeeEdit['account_number'] ?? '')) . '" /></td></tr>';
     echo '<tr><th scope="row"><label for="payee_account_id">Account ID</label></th><td><input name="payee_account_id" id="payee_account_id" class="regular-text" value="' . esc_attr((string) ($payeeEdit['account_id'] ?? '')) . '" /></td></tr>';
-    echo '<tr><th scope="row"><label for="payee_identifiers">Additional IDs</label></th><td><textarea name="payee_identifiers" id="payee_identifiers" class="large-text" rows="3" placeholder="e.g. Permit: ABC-999">' . esc_textarea(vms_due_identifiers_to_textarea((array) ($payeeEdit['identifiers'] ?? []))) . '</textarea></td></tr>';
+    echo '<tr><th scope="row"><label for="payee_identifiers">Additional IDs</label></th><td><textarea name="payee_identifiers" id="payee_identifiers" class="large-text" rows="3" placeholder="e.g. Permit: ABC-999">' . esc_textarea(bvmgr_due_identifiers_to_textarea((array) ($payeeEdit['identifiers'] ?? []))) . '</textarea></td></tr>';
     echo '<tr><th scope="row"><label for="payee_notes">Notes</label></th><td><textarea name="payee_notes" id="payee_notes" class="large-text" rows="2">' . esc_textarea((string) ($payeeEdit['notes'] ?? '')) . '</textarea></td></tr>';
     echo '</table>';
     echo '<p>';
@@ -705,7 +705,7 @@ function vms_render_due_dates_admin_page_content(): void {
   } else {
     echo '<h3>Add Payee</h3>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" >';
-    wp_nonce_field('vms_due_add_payee');
+    wp_nonce_field('bvmgr_due_add_payee');
     echo '<input type="hidden" name="action" value="vms_due_add_payee" />';
     echo '<table class="form-table" role="presentation">';
     echo '<tr><th scope="row"><label for="payee_name">Name</label></th><td><input name="payee_name" id="payee_name" class="regular-text" required /></td></tr>';
@@ -758,7 +758,7 @@ function vms_render_due_dates_admin_page_content(): void {
       echo '<a class="button button-small" href="' . esc_url($edit_url) . '">Edit</a> ';
 
       if ($active) {
-        $aurl = wp_nonce_url(admin_url('admin-post.php?action=vms_due_archive_payee&id=' . rawurlencode($pid)), 'vms_due_archive_payee');
+        $aurl = wp_nonce_url(admin_url('admin-post.php?action=vms_due_archive_payee&id=' . rawurlencode($pid)), 'bvmgr_due_archive_payee');
         echo '<a class="button button-small" href="' . esc_url($aurl) . '">Archive</a>';
       }
       echo '</div>';
@@ -796,7 +796,7 @@ function vms_render_due_dates_admin_page_content(): void {
 
     echo '<h3 id="vms-due-edit-obligation">Edit Obligation</h3>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-    wp_nonce_field('vms_due_edit_obligation');
+    wp_nonce_field('bvmgr_due_edit_obligation');
     echo '<input type="hidden" name="action" value="vms_due_edit_obligation" />';
     echo '<input type="hidden" name="ob_id" value="' . esc_attr($edit_ob_id) . '" />';
     echo '<table class="form-table" role="presentation">';
@@ -871,7 +871,7 @@ function vms_render_due_dates_admin_page_content(): void {
   } else {
     echo '<h3>Add Obligation</h3>';
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-    wp_nonce_field('vms_due_add_obligation');
+    wp_nonce_field('bvmgr_due_add_obligation');
     echo '<input type="hidden" name="action" value="vms_due_add_obligation" />';
     echo '<table class="form-table" role="presentation">';
     echo '<tr><th scope="row"><label for="ob_title">Title</label></th><td><input name="ob_title" id="ob_title" class="regular-text" required placeholder="e.g. Sales Tax Report" /></td></tr>';
@@ -995,7 +995,7 @@ function vms_render_due_dates_admin_page_content(): void {
       echo '<a class="button button-small" href="' . esc_url($edit_ob_url) . '">Edit</a> ';
 
       if ($active) {
-        $aurl = wp_nonce_url(admin_url('admin-post.php?action=vms_due_archive_obligation&id=' . rawurlencode($oid)), 'vms_due_archive_obligation');
+        $aurl = wp_nonce_url(admin_url('admin-post.php?action=vms_due_archive_obligation&id=' . rawurlencode($oid)), 'bvmgr_due_archive_obligation');
         echo '<a class="button button-small" href="' . esc_url($aurl) . '">Archive</a>';
       }
       echo '</div>';
@@ -1115,22 +1115,22 @@ function vms_render_due_dates_admin_page_content(): void {
       if ($oid !== '' && $due !== '') {
         if ($status === 'completed') {
           echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" onsubmit="return window.confirm(\'Reopen this due date? This writes an append-only uncomplete entry.\');">';
-          wp_nonce_field('vms_due_uncomplete');
+          wp_nonce_field('bvmgr_due_uncomplete');
           echo '<input type="hidden" name="action" value="vms_due_uncomplete" />';
           echo '<input type="hidden" name="obligation_id" value="' . esc_attr($oid) . '" />';
           echo '<input type="hidden" name="due_date" value="' . esc_attr($due) . '" />';
           echo '<input type="hidden" name="notes" value="Reopened from obligations list" />';
-          vms_due_admin_render_instance_filter_hidden_inputs($instance_filters);
+          bvmgr_due_admin_render_instance_filter_hidden_inputs($instance_filters);
           echo '<button type="submit" class="button button-small">Reopen</button>';
           echo '</form>';
         } else {
           echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" onsubmit="return window.confirm(\'Mark this due date as complete? This writes an append-only completion entry.\');">';
-          wp_nonce_field('vms_due_complete');
+          wp_nonce_field('bvmgr_due_complete');
           echo '<input type="hidden" name="action" value="vms_due_complete" />';
           echo '<input type="hidden" name="obligation_id" value="' . esc_attr($oid) . '" />';
           echo '<input type="hidden" name="due_date" value="' . esc_attr($due) . '" />';
           echo '<input type="hidden" name="notes" value="Completed from obligations list" />';
-          vms_due_admin_render_instance_filter_hidden_inputs($instance_filters);
+          bvmgr_due_admin_render_instance_filter_hidden_inputs($instance_filters);
           echo '<button type="submit" class="button button-small button-primary">Mark complete</button>';
           echo '</form>';
         }
@@ -1188,7 +1188,7 @@ function vms_render_due_dates_admin_page_content(): void {
       }
       if ($action === 'complete' && $oid !== '' && $due !== '' && $is_completed_now) {
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-due-seed-form" onsubmit="return window.confirm(\'Reopen this due date? This writes an append-only uncomplete entry.\');">';
-        wp_nonce_field('vms_due_uncomplete');
+        wp_nonce_field('bvmgr_due_uncomplete');
         echo '<input type="hidden" name="action" value="vms_due_uncomplete" />';
         echo '<input type="hidden" name="obligation_id" value="' . esc_attr($oid) . '" />';
         echo '<input type="hidden" name="due_date" value="' . esc_attr($due) . '" />';

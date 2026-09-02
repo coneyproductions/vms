@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours_Storage')) {
-	class VMS_Tours_Storage
+if (!class_exists('BVMGR_Tours_Storage')) {
+	class BVMGR_Tours_Storage
 	{
 		const USER_META_PREFS = 'vms_tours_prefs';
 		const USER_META_STATE = 'vms_tours_state';

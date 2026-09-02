@@ -24,27 +24,27 @@ $ticket_mode_label = isset($ticket_mode_label_map[$ticket_mode]) ? (string) $tic
 $linked_tec_status_label = $linked_tec_status !== '' ? ucfirst(str_replace('_', ' ', $linked_tec_status)) : __('Not linked', 'backstage-venue-manager');
 $load_url = isset($vms_ticketing_v2_load_url) ? (string) $vms_ticketing_v2_load_url : '';
 $summary_url = isset($vms_ticketing_v2_summary_url) ? (string) $vms_ticketing_v2_summary_url : '';
-$ticketing_sales_mode = function_exists('vms_event_plan_get_ticketing_sales_mode')
-    ? vms_event_plan_get_ticketing_sales_mode($plan_id)
+$bvmgr_ticketing_sales_mode = function_exists('bvmgr_event_plan_get_ticketing_sales_mode')
+    ? bvmgr_event_plan_get_ticketing_sales_mode($plan_id)
     : 'serenade_range';
-$is_external_ticketing = $ticketing_sales_mode === 'external';
-$external_ticket_url = function_exists('vms_event_plan_get_external_ticket_url')
-    ? vms_event_plan_get_external_ticket_url($plan_id)
+$bvmgr_is_external_ticketing = $bvmgr_ticketing_sales_mode === 'external';
+$bvmgr_external_ticket_url = function_exists('bvmgr_event_plan_get_external_ticket_url')
+    ? bvmgr_event_plan_get_external_ticket_url($plan_id)
     : (string) get_post_meta($plan_id, '_vms_external_ticket_url', true);
-$external_ticket_provider = function_exists('vms_event_plan_get_external_ticket_provider')
-    ? vms_event_plan_get_external_ticket_provider($plan_id, false)
+$bvmgr_external_ticket_provider = function_exists('bvmgr_event_plan_get_external_ticket_provider')
+    ? bvmgr_event_plan_get_external_ticket_provider($plan_id, false)
     : (string) get_post_meta($plan_id, '_vms_external_ticket_provider', true);
-$event_relationship = function_exists('vms_event_plan_get_relationship')
-    ? vms_event_plan_get_relationship($plan_id)
+$bvmgr_event_relationship = function_exists('bvmgr_event_plan_get_relationship')
+    ? bvmgr_event_plan_get_relationship($plan_id)
     : 'serenade_range_produced';
-$external_event_producer = function_exists('vms_event_plan_get_external_event_producer')
-    ? vms_event_plan_get_external_event_producer($plan_id)
+$bvmgr_external_event_producer = function_exists('bvmgr_event_plan_get_external_event_producer')
+    ? bvmgr_event_plan_get_external_event_producer($plan_id)
     : (string) get_post_meta($plan_id, '_vms_external_event_producer', true);
-$external_event_producer_website = function_exists('vms_event_plan_get_external_event_producer_website')
-    ? vms_event_plan_get_external_event_producer_website($plan_id)
+$bvmgr_external_event_producer_website = function_exists('bvmgr_event_plan_get_external_event_producer_website')
+    ? bvmgr_event_plan_get_external_event_producer_website($plan_id)
     : (string) get_post_meta($plan_id, '_vms_external_event_producer_website', true);
-$has_native_ticket_records = function_exists('vms_event_plan_has_native_ticket_records')
-    ? vms_event_plan_has_native_ticket_records($plan_id)
+$bvmgr_has_native_ticket_records = function_exists('bvmgr_event_plan_has_native_ticket_records')
+    ? bvmgr_event_plan_has_native_ticket_records($plan_id)
     : false;
 ?>
 <div class="vms-ticketing-destination" data-vms-ticketing-destination>
@@ -54,42 +54,42 @@ $has_native_ticket_records = function_exists('vms_event_plan_has_native_ticket_r
     <p class="vms-ticketing-destination__mode">
         <label for="vms-ticketing-sales-mode"><strong><?php esc_html_e('Sales destination', 'backstage-venue-manager'); ?></strong></label>
         <select name="vms_ticketing_sales_mode" id="vms-ticketing-sales-mode" data-vms-ticketing-sales-mode>
-            <option value="serenade_range" <?php selected($ticketing_sales_mode, 'serenade_range'); ?>><?php esc_html_e('Serenade Range Ticketing', 'backstage-venue-manager'); ?></option>
-            <option value="external" <?php selected($ticketing_sales_mode, 'external'); ?>><?php esc_html_e('External Ticketing', 'backstage-venue-manager'); ?></option>
+            <option value="serenade_range" <?php selected($bvmgr_ticketing_sales_mode, 'serenade_range'); ?>><?php esc_html_e('Serenade Range Ticketing', 'backstage-venue-manager'); ?></option>
+            <option value="external" <?php selected($bvmgr_ticketing_sales_mode, 'external'); ?>><?php esc_html_e('External Ticketing', 'backstage-venue-manager'); ?></option>
         </select>
     </p>
 
-    <div class="vms-ticketing-destination__external" data-vms-external-ticketing-fields <?php echo $is_external_ticketing ? '' : 'hidden'; ?>>
+    <div class="vms-ticketing-destination__external" data-vms-external-ticketing-fields <?php echo $bvmgr_is_external_ticketing ? '' : 'hidden'; ?>>
         <div class="vms-ticketing-destination__field">
             <label for="vms-external-ticket-url"><strong><?php esc_html_e('External ticket purchase URL', 'backstage-venue-manager'); ?></strong> <span aria-hidden="true">*</span></label>
-            <input type="url" class="widefat" id="vms-external-ticket-url" name="vms_external_ticket_url" value="<?php echo esc_attr($external_ticket_url); ?>" placeholder="https://tickets.example.com/event" inputmode="url" aria-describedby="vms-external-ticket-url-help">
+            <input type="url" class="widefat" id="vms-external-ticket-url" name="vms_external_ticket_url" value="<?php echo esc_attr($bvmgr_external_ticket_url); ?>" placeholder="https://tickets.example.com/event" inputmode="url" aria-describedby="vms-external-ticket-url-help">
             <p id="vms-external-ticket-url-help" class="description"><?php esc_html_e('Required before Ready or Publish. Only complete http:// or https:// purchase links are accepted.', 'backstage-venue-manager'); ?></p>
         </div>
 
         <div class="vms-ticketing-destination__field">
             <label for="vms-external-ticket-provider"><strong><?php esc_html_e('Ticket seller/provider', 'backstage-venue-manager'); ?></strong></label>
-            <input type="text" class="regular-text" id="vms-external-ticket-provider" name="vms_external_ticket_provider" value="<?php echo esc_attr($external_ticket_provider); ?>" placeholder="Eventbrite">
+            <input type="text" class="regular-text" id="vms-external-ticket-provider" name="vms_external_ticket_provider" value="<?php echo esc_attr($bvmgr_external_ticket_provider); ?>" placeholder="Eventbrite">
             <p class="description"><?php esc_html_e('Optional. If blank, public copy will say “external ticket provider.”', 'backstage-venue-manager'); ?></p>
         </div>
 
         <div class="vms-ticketing-destination__field">
             <label for="vms-event-relationship"><strong><?php esc_html_e('Event presentation', 'backstage-venue-manager'); ?></strong></label>
             <select name="vms_event_relationship" id="vms-event-relationship" data-vms-event-relationship>
-                <option value="serenade_range_produced" <?php selected($event_relationship, 'serenade_range_produced'); ?>><?php esc_html_e('Serenade Range-produced event', 'backstage-venue-manager'); ?></option>
-                <option value="hosted_third_party" <?php selected($event_relationship, 'hosted_third_party'); ?>><?php esc_html_e('Hosted at Serenade Range / third-party produced', 'backstage-venue-manager'); ?></option>
+                <option value="serenade_range_produced" <?php selected($bvmgr_event_relationship, 'serenade_range_produced'); ?>><?php esc_html_e('Serenade Range-produced event', 'backstage-venue-manager'); ?></option>
+                <option value="hosted_third_party" <?php selected($bvmgr_event_relationship, 'hosted_third_party'); ?>><?php esc_html_e('Hosted at Serenade Range / third-party produced', 'backstage-venue-manager'); ?></option>
             </select>
         </div>
 
-        <div data-vms-external-producer-fields <?php echo $event_relationship === 'hosted_third_party' ? '' : 'hidden'; ?>>
+        <div data-vms-external-producer-fields <?php echo $bvmgr_event_relationship === 'hosted_third_party' ? '' : 'hidden'; ?>>
             <div class="vms-ticketing-destination__field">
                 <label for="vms-external-event-producer"><strong><?php esc_html_e('Presenter/producer', 'backstage-venue-manager'); ?></strong></label>
-                <input type="text" class="regular-text" id="vms-external-event-producer" name="vms_external_event_producer" value="<?php echo esc_attr($external_event_producer); ?>" placeholder="ABC Promotions">
+                <input type="text" class="regular-text" id="vms-external-event-producer" name="vms_external_event_producer" value="<?php echo esc_attr($bvmgr_external_event_producer); ?>" placeholder="ABC Promotions">
                 <p class="description"><?php esc_html_e('Optional. Public pages will use “Presented by …” when supplied.', 'backstage-venue-manager'); ?></p>
             </div>
 
             <div class="vms-ticketing-destination__field">
                 <label for="vms-external-event-producer-website"><strong><?php esc_html_e('Presenter/producer website', 'backstage-venue-manager'); ?></strong></label>
-                <input type="url" class="regular-text" id="vms-external-event-producer-website" name="vms_external_event_producer_website" value="<?php echo esc_attr($external_event_producer_website); ?>" placeholder="https://presenter.example.com" inputmode="url" aria-describedby="vms-external-event-producer-website-help">
+                <input type="url" class="regular-text" id="vms-external-event-producer-website" name="vms_external_event_producer_website" value="<?php echo esc_attr($bvmgr_external_event_producer_website); ?>" placeholder="https://presenter.example.com" inputmode="url" aria-describedby="vms-external-event-producer-website-help">
                 <p id="vms-external-event-producer-website-help" class="description"><?php esc_html_e('Optional. Only complete http:// or https:// links are accepted; the presenter name will link to this site.', 'backstage-venue-manager'); ?></p>
             </div>
         </div>
@@ -98,7 +98,7 @@ $has_native_ticket_records = function_exists('vms_event_plan_has_native_ticket_r
             <p><?php esc_html_e('This event will stay on SerenadeRange.com, but ticket purchases will be completed on the external seller’s site.', 'backstage-venue-manager'); ?></p>
         </div>
 
-        <?php if ($has_native_ticket_records) : ?>
+        <?php if ($bvmgr_has_native_ticket_records) : ?>
             <div class="notice notice-warning inline vms-notice vms-notice--warning" data-vms-native-ticket-record-warning>
                 <p><strong><?php esc_html_e('Existing native ticket records are preserved.', 'backstage-venue-manager'); ?></strong> <?php esc_html_e('They will not be offered publicly or accept new purchases while External Ticketing is active. Switching back restores the normal native workflow; no products, inventory, or order history will be deleted.', 'backstage-venue-manager'); ?></p>
             </div>
@@ -107,13 +107,13 @@ $has_native_ticket_records = function_exists('vms_event_plan_has_native_ticket_r
 </div>
 <?php
 
-if ($is_external_ticketing) {
+if ($bvmgr_is_external_ticketing) {
     return;
 }
 
 if ($render_mode !== 'full') {
-    if (function_exists('vms_event_plan_perf_log')) {
-        vms_event_plan_perf_log('event_plan_ticketing_v2_lookup', $plan_id, array(
+    if (function_exists('bvmgr_event_plan_perf_log')) {
+        bvmgr_event_plan_perf_log('event_plan_ticketing_v2_lookup', $plan_id, array(
             'phase' => 'summary_only',
             'section' => 'ticketing_v2_lookup',
             'lazy_load' => 'request_reload',
@@ -121,7 +121,7 @@ if ($render_mode !== 'full') {
             'linked_tec_event_id' => $linked_tec_id,
             'ticket_mode' => $ticket_mode,
         ));
-        vms_event_plan_perf_log('event_plan_admin_boot_woo_lookup', $plan_id, array(
+        bvmgr_event_plan_perf_log('event_plan_admin_boot_woo_lookup', $plan_id, array(
             'phase' => 'deferred',
             'section' => 'ticketing_summary',
             'reason' => 'summary_only_initial_load',
@@ -160,24 +160,24 @@ if ($render_mode !== 'full') {
     return;
 }
 
-if (function_exists('vms_event_plan_perf_log')) {
-    vms_event_plan_perf_log('event_plan_section_lazy_load', $plan_id, array(
+if (function_exists('bvmgr_event_plan_perf_log')) {
+    bvmgr_event_plan_perf_log('event_plan_section_lazy_load', $plan_id, array(
         'phase' => 'run',
         'section' => 'ticketing_v2',
         'lazy_load' => 'request_reload',
     ));
 }
 
-$v2_lookup_trace = function_exists('vms_event_plan_perf_span_start')
-    ? vms_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', $plan_id, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
+$v2_lookup_trace = function_exists('bvmgr_event_plan_perf_span_start')
+    ? bvmgr_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', $plan_id, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
     : '';
-$can_phase_b = function_exists('vms_ticketing_b_is_event_tickets_woo_available')
-    ? vms_ticketing_b_is_event_tickets_woo_available()
+$can_phase_b = function_exists('bvmgr_ticketing_b_is_event_tickets_woo_available')
+    ? bvmgr_ticketing_b_is_event_tickets_woo_available()
     : false;
-$cfg_v2 = function_exists('vms_ticketing_v2_get_admin_config')
-    ? vms_ticketing_v2_get_admin_config($plan_id)
-    : (function_exists('vms_ticketing_v2_get_config') ? vms_ticketing_v2_get_config($plan_id) : array());
-$sync_v2 = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($plan_id) : array();
+$cfg_v2 = function_exists('bvmgr_ticketing_v2_get_admin_config')
+    ? bvmgr_ticketing_v2_get_admin_config($plan_id)
+    : (function_exists('bvmgr_ticketing_v2_get_config') ? bvmgr_ticketing_v2_get_config($plan_id) : array());
+$sync_v2 = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($plan_id) : array();
 $mode_v2 = is_array($cfg_v2) ? (string) ($cfg_v2['mode'] ?? 'read_only') : 'read_only';
 $sync_map_v2 = (is_array($sync_v2) && !empty($sync_v2['map']) && is_array($sync_v2['map'])) ? $sync_v2['map'] : array();
 $last_commit_ts = 0;
@@ -189,11 +189,11 @@ if (is_array($sync_v2) && !empty($sync_v2['last_commit']) && is_array($sync_v2['
         $last_commit_at = wp_date('Y-m-d H:i', $last_commit_ts, wp_timezone());
     }
 }
-$cfg_v2_exists = (function_exists('metadata_exists') && function_exists('vms_ticketing_v2_k'))
-    ? (metadata_exists('post', $plan_id, vms_ticketing_v2_k('config')) ? '1' : '0')
+$cfg_v2_exists = (function_exists('metadata_exists') && function_exists('bvmgr_ticketing_v2_k'))
+    ? (metadata_exists('post', $plan_id, bvmgr_ticketing_v2_k('config')) ? '1' : '0')
     : '0';
-$templates_v2 = function_exists('vms_ticketing_v2_templates_get_all') ? vms_ticketing_v2_templates_get_all() : array();
-$default_tpl_id = function_exists('vms_ticketing_v2_get_default_template_id') ? vms_ticketing_v2_get_default_template_id() : '';
+$templates_v2 = function_exists('bvmgr_ticketing_v2_templates_get_all') ? bvmgr_ticketing_v2_templates_get_all() : array();
+$default_tpl_id = function_exists('bvmgr_ticketing_v2_get_default_template_id') ? bvmgr_ticketing_v2_get_default_template_id() : '';
 $default_tpl_name = '';
 if ($default_tpl_id && !empty($templates_v2[$default_tpl_id]) && is_array($templates_v2[$default_tpl_id])) {
     $default_tpl_name = (string) (($templates_v2[$default_tpl_id]['name'] ?? '') ?: $default_tpl_id);
@@ -201,7 +201,7 @@ if ($default_tpl_id && !empty($templates_v2[$default_tpl_id]) && is_array($templ
 $settings = (array) get_option('vms_settings', array());
 $global_ticketing_default = !empty($settings['ticketing_enabled_default']);
 $ticketing_override = (string) get_post_meta($plan_id, '_vms_ticketing_enabled_override', true);
-$ticketing_effective = function_exists('vms_event_plan_is_ticketing_enabled') ? vms_event_plan_is_ticketing_enabled($plan_id) : $global_ticketing_default;
+$ticketing_effective = function_exists('bvmgr_event_plan_is_ticketing_enabled') ? bvmgr_event_plan_is_ticketing_enabled($plan_id) : $global_ticketing_default;
 $ticketing_global_label = $global_ticketing_default ? __('ON', 'backstage-venue-manager') : __('OFF', 'backstage-venue-manager');
 $ticket_ui_settings = (array) get_option('vms_settings', array());
 $ticket_ui_global_layout = isset($ticket_ui_settings['ticket_ui_layout']) ? sanitize_key((string) $ticket_ui_settings['ticket_ui_layout']) : 'classic';
@@ -247,13 +247,13 @@ $preview_disabled = (!$ticketing_effective || !$can_phase_b);
 $stats_computed_ts = (is_array($ticket_stats) && isset($ticket_stats['computed_at_gmt'])) ? absint($ticket_stats['computed_at_gmt']) : 0;
 $stats_stale_after_commit = ($last_commit_ts > 0 && $stats_computed_ts < $last_commit_ts);
 $recon_v2 = array();
-if ($linked_tec_id > 0 && $mode_v2 === 'vms_managed' && function_exists('vms_ticketing_v2_reconcile_event_plan_ticket_cache')) {
-    $recon_v2 = vms_ticketing_v2_reconcile_event_plan_ticket_cache($plan_id, $linked_tec_id, $sync_map_v2, false);
+if ($linked_tec_id > 0 && $mode_v2 === 'vms_managed' && function_exists('bvmgr_ticketing_v2_reconcile_event_plan_ticket_cache')) {
+    $recon_v2 = bvmgr_ticketing_v2_reconcile_event_plan_ticket_cache($plan_id, $linked_tec_id, $sync_map_v2, false);
 }
 $recon_v2_warnings = (is_array($recon_v2) && !empty($recon_v2['warnings']) && is_array($recon_v2['warnings'])) ? $recon_v2['warnings'] : array();
 $recon_v2_warnings = array_values(array_unique(array_filter(array_map('strval', $recon_v2_warnings))));
-if (function_exists('vms_event_plan_perf_span_finish')) {
-    vms_event_plan_perf_span_finish('event_plan_ticketing_v2_lookup', $plan_id, $v2_lookup_trace, array(
+if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+    bvmgr_event_plan_perf_span_finish('event_plan_ticketing_v2_lookup', $plan_id, $v2_lookup_trace, array(
         'section' => 'ticketing_v2_lookup',
         'linked_tec_event_id' => $linked_tec_id,
         'ticketing_mode' => sanitize_key($mode_v2),
@@ -265,17 +265,17 @@ $ticket_help_tickets_override = (string) get_post_meta($plan_id, '_vms_ticket_ui
 $ticket_help_addons_override = (string) get_post_meta($plan_id, '_vms_ticket_ui_help_addons_override', true);
 $ticket_addons_heading_override = trim(html_entity_decode((string) get_post_meta($plan_id, '_vms_ticket_ui_addons_heading_override', true), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 $ticket_addons_subtext_override = trim(html_entity_decode((string) get_post_meta($plan_id, '_vms_ticket_ui_addons_subtext_override', true), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-$ticket_addons_heading_placeholder = function_exists('vms_ticketing_ui_addons_section_heading')
-    ? (string) vms_ticketing_ui_addons_section_heading()
+$ticket_addons_heading_placeholder = function_exists('bvmgr_ticketing_ui_addons_section_heading')
+    ? (string) bvmgr_ticketing_ui_addons_section_heading()
     : __('Fire Pits & Tables', 'backstage-venue-manager');
-$ticket_addons_subtext_placeholder = function_exists('vms_ticketing_ui_addons_section_subtext')
-    ? (string) vms_ticketing_ui_addons_section_subtext()
+$ticket_addons_subtext_placeholder = function_exists('bvmgr_ticketing_ui_addons_section_subtext')
+    ? (string) bvmgr_ticketing_ui_addons_section_subtext()
     : __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager');
-$ticket_help_tickets_placeholder = function_exists('vms_ticketing_ui_help_global_text')
-    ? (string) vms_ticketing_ui_help_global_text('tickets')
+$ticket_help_tickets_placeholder = function_exists('bvmgr_ticketing_ui_help_global_text')
+    ? (string) bvmgr_ticketing_ui_help_global_text('tickets')
     : '';
-$ticket_help_addons_placeholder = function_exists('vms_ticketing_ui_help_global_text')
-    ? (string) vms_ticketing_ui_help_global_text('addons')
+$ticket_help_addons_placeholder = function_exists('bvmgr_ticketing_ui_help_global_text')
+    ? (string) bvmgr_ticketing_ui_help_global_text('addons')
     : '';
 $plan_image_id = function_exists('get_post_thumbnail_id') ? absint(get_post_thumbnail_id($plan_id)) : 0;
 $plan_image_url = ($plan_image_id > 0 && function_exists('wp_get_attachment_image_url'))
@@ -297,9 +297,9 @@ if (function_exists('wp_enqueue_media')) {
     <?php elseif (!$can_phase_b) : ?>
         <p class="description"><?php esc_html_e('Event Tickets (WooCommerce) is not available. Activate Event Tickets, Event Tickets Plus, and WooCommerce.', 'backstage-venue-manager'); ?></p>
     <?php elseif ($linked_tec_id <= 0) : ?>
-        <p class="description"><?php esc_html_e('No calendar event is linked yet. Click “Preview sync” and VMS will create and link the calendar event automatically, then show you exactly what tickets/products will be created on Commit.', 'backstage-venue-manager'); ?></p>
+        <p class="description"><?php esc_html_e('No calendar event is linked yet. Click “Preview sync” and Backstage Venue Manager will create and link the calendar event automatically, then show you exactly what tickets/products will be created on Commit.', 'backstage-venue-manager'); ?></p>
     <?php else : ?>
-        <p class="description"><?php esc_html_e('Configure GA attendance and entitlements here. Use Save → Preview → Commit. No tickets or products are deleted by VMS.', 'backstage-venue-manager'); ?></p>
+        <p class="description"><?php esc_html_e('Configure GA attendance and entitlements here. Use Save → Preview → Commit. No tickets or products are deleted by Backstage Venue Manager.', 'backstage-venue-manager'); ?></p>
     <?php endif; ?>
 
     <?php if (!empty($recon_v2_warnings)) : ?>
@@ -363,7 +363,7 @@ if (function_exists('wp_enqueue_media')) {
 
     <div class="vms-ticketing__box vms-ticketing__helpcopy-box">
         <h4 class="vms-ticketing__box-title"><?php esc_html_e('Public help copy overrides', 'backstage-venue-manager'); ?></h4>
-        <p class="description"><?php esc_html_e('Use these only when this event needs wording that differs from the global default. Leave blank to inherit the global help copy from VMS Settings.', 'backstage-venue-manager'); ?></p>
+        <p class="description"><?php esc_html_e('Use these only when this event needs wording that differs from the global default. Leave blank to inherit the global help copy from Backstage Venue Manager Settings.', 'backstage-venue-manager'); ?></p>
         <p class="description"><?php esc_html_e('These public UI/help text overrides save separately from ticket configuration.', 'backstage-venue-manager'); ?></p>
         <div class="vms-ticketing__help-label-grid">
             <p>

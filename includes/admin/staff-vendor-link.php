@@ -11,22 +11,22 @@ if (!defined('ABSPATH')) exit;
  * - Vendor post_meta: vms_meta_key('vendor','linked_staff_id') fallback '_vms_linked_staff_id'
  */
 
-if (!function_exists('vms_vendor_linked_staff_meta_key')) {
-    function vms_vendor_linked_staff_meta_key(): string
+if (!function_exists('bvmgr_vendor_linked_staff_meta_key')) {
+    function bvmgr_vendor_linked_staff_meta_key(): string
     {
-        if (function_exists('vms_meta_key')) {
-            $k = (string) vms_meta_key('vendor', 'linked_staff_id');
+        if (function_exists('bvmgr_meta_key')) {
+            $k = (string) bvmgr_meta_key('vendor', 'linked_staff_id');
             if ($k !== '') return $k;
         }
         return '_vms_linked_staff_id';
     }
 }
 
-if (!function_exists('vms_staff_linked_vendor_meta_key')) {
-    function vms_staff_linked_vendor_meta_key(): string
+if (!function_exists('bvmgr_staff_linked_vendor_meta_key')) {
+    function bvmgr_staff_linked_vendor_meta_key(): string
     {
-        if (function_exists('vms_meta_key')) {
-            $k = (string) vms_meta_key('staff', 'linked_vendor_id');
+        if (function_exists('bvmgr_meta_key')) {
+            $k = (string) bvmgr_meta_key('staff', 'linked_vendor_id');
             if ($k !== '') return $k;
         }
         return '_vms_linked_vendor_id';
@@ -37,21 +37,21 @@ add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_staff_vendor_link',
         __('Linked Vendor', 'backstage-venue-manager'),
-        'vms_staff_vendor_link_metabox_render',
+        'bvmgr_staff_vendor_link_metabox_render',
         'vms_staff',
         'side',
         'default'
     );
 });
 
-function vms_staff_vendor_link_metabox_render($post): void
+function bvmgr_staff_vendor_link_metabox_render($post): void
 {
     if (!($post instanceof WP_Post)) return;
 
     $staff_id = (int) $post->ID;
-    $current_vendor_id = (int) get_post_meta($staff_id, vms_staff_linked_vendor_meta_key(), true);
+    $current_vendor_id = (int) get_post_meta($staff_id, bvmgr_staff_linked_vendor_meta_key(), true);
 
-    wp_nonce_field('vms_staff_vendor_link_save', 'vms_staff_vendor_link_nonce');
+    wp_nonce_field('bvmgr_staff_vendor_link_save', 'bvmgr_staff_vendor_link_nonce');
 
     echo '<p class="description">' . esc_html__('Link this staff profile to a Vendor record when the same person is also a payee (contractor, performer, vendor account).', 'backstage-venue-manager') . '</p>';
 
@@ -98,16 +98,16 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $nonce = (isset($_POST['vms_staff_vendor_link_nonce']) && !is_array($_POST['vms_staff_vendor_link_nonce']))
-        ? sanitize_text_field(wp_unslash((string) $_POST['vms_staff_vendor_link_nonce']))
+    $nonce = (isset($_POST['bvmgr_staff_vendor_link_nonce']) && !is_array($_POST['bvmgr_staff_vendor_link_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_vendor_link_nonce']))
         : '';
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_staff_vendor_link_save')) {
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_vendor_link_save'))) {
         return;
     }
 
     $staff_id = (int) $post_id;
-    $k_staff_vendor = vms_staff_linked_vendor_meta_key();
-    $k_vendor_staff = vms_vendor_linked_staff_meta_key();
+    $k_staff_vendor = bvmgr_staff_linked_vendor_meta_key();
+    $k_vendor_staff = bvmgr_vendor_linked_staff_meta_key();
 
     $old_vendor_id = (int) get_post_meta($staff_id, $k_staff_vendor, true);
     $new_vendor_id = isset($_POST['vms_linked_vendor_id']) ? (int) $_POST['vms_linked_vendor_id'] : 0;

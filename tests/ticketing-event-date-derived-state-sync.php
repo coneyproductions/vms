@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
     require_once dirname(__DIR__) . '/vendor-management-system.php';
 }
 
@@ -29,9 +29,9 @@ $cleanup = static function () use (&$createdPosts): void {
 
 try {
     wp_set_current_user(1);
-    $assert(function_exists('vms_ticketing_v2_plan_calendar_alignment'), 'Calendar alignment guard is unavailable.');
-    $assert(function_exists('vms_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change'), 'Calendar-derived ticket sync is unavailable.');
-    $assert(function_exists('vms_ticketing_v2_has_purchasable_qualifying_native_ticket'), 'Native qualifying-ticket availability helper is unavailable.');
+    $assert(function_exists('bvmgr_ticketing_v2_plan_calendar_alignment'), 'Calendar alignment guard is unavailable.');
+    $assert(function_exists('bvmgr_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change'), 'Calendar-derived ticket sync is unavailable.');
+    $assert(function_exists('bvmgr_ticketing_v2_has_purchasable_qualifying_native_ticket'), 'Native qualifying-ticket availability helper is unavailable.');
     $assert(class_exists('WC_Product_Simple'), 'WooCommerce is unavailable.');
     $assert(class_exists('Tribe__Tickets__Tickets'), 'Event Tickets is unavailable.');
 
@@ -65,10 +65,10 @@ try {
     $assert(!is_wp_error($eventId) && (int) $eventId > 0, 'Could not create TEC fixture.');
     $eventId = $registerPost((int) $eventId);
 
-    update_post_meta($planId, '_vms_event_plan_status', 'published');
     update_post_meta($planId, '_vms_event_date', $oldDate);
     update_post_meta($planId, '_vms_start_time', '19:00');
     update_post_meta($planId, '_vms_end_time', '22:00');
+    update_post_meta($planId, '_vms_event_plan_status', 'published');
     update_post_meta($planId, '_vms_ticketing_enabled_override', 'on');
     update_post_meta($planId, '_vms_ticketing_sales_mode', 'serenade_range');
     update_post_meta($planId, '_vms_tec_event_id', $eventId);
@@ -146,8 +146,8 @@ try {
         );
     };
 
-    vms_ticketing_v2_set_config($planId, $configForEnd($oldEnd));
-    vms_ticketing_v2_set_sync($planId, array(
+    bvmgr_ticketing_v2_set_config($planId, $configForEnd($oldEnd));
+    bvmgr_ticketing_v2_set_sync($planId, array(
         'map' => array(
             'ga' => array('woo_product_id' => $ticketId),
             'tickets' => array(
@@ -155,7 +155,7 @@ try {
                     'woo_product_id' => $ticketId,
                     'ticket_key' => 'ga',
                     'counts_toward_unlock' => 1,
-                    'last_sync_hash' => vms_ticketing_v2_hash_ticket(vms_ticketing_v2_get_config($planId)['tickets'][0]),
+                    'last_sync_hash' => bvmgr_ticketing_v2_hash_ticket(bvmgr_ticketing_v2_get_config($planId)['tickets'][0]),
                 ),
             ),
             'entitlements' => array(
@@ -165,18 +165,24 @@ try {
         ),
     ));
 
-    $alignment = vms_ticketing_v2_plan_calendar_alignment($planId, $eventId);
+    $alignment = bvmgr_ticketing_v2_plan_calendar_alignment($planId, $eventId);
     $assert(!empty($alignment['aligned']), 'Initial Event Plan and TEC occurrence should align: ' . wp_json_encode($alignment));
-    $assert(vms_ticketing_v2_has_purchasable_qualifying_native_ticket($eventId, $planId), 'Future native GA should be purchasable and qualifying.');
-    $availableMarkup = vms_ticketing_v2_render_entitlements_block($eventId, $planId);
+    $assert(bvmgr_ticketing_v2_has_purchasable_qualifying_native_ticket($eventId, $planId), 'Future native GA should be purchasable and qualifying.');
+    $availableMarkup = bvmgr_ticketing_v2_render_entitlements_block($eventId, $planId);
     $assert(strpos($availableMarkup, 'Gated Table') !== false && strpos($availableMarkup, 'Ungated Pool') !== false, 'Available native GA should expose gated and ungated add-ons.');
 
     // Reproduce the defect: the plan/config move, while TEC and product windows remain old.
-    update_post_meta($planId, '_vms_event_date', $newDate);
-    vms_ticketing_v2_set_config($planId, $configForEnd($newEnd));
-    $mismatched = vms_ticketing_v2_plan_calendar_alignment($planId, $eventId);
+    if (function_exists('bvmgr_event_occurrence_authorized_write')) {
+        bvmgr_event_occurrence_authorized_write(static function () use ($planId, $newDate): void {
+            update_post_meta($planId, '_vms_event_date', $newDate);
+        });
+    } else {
+        update_post_meta($planId, '_vms_event_date', $newDate);
+    }
+    bvmgr_ticketing_v2_set_config($planId, $configForEnd($newEnd));
+    $mismatched = bvmgr_ticketing_v2_plan_calendar_alignment($planId, $eventId);
     $assert(!empty($mismatched['checkable']) && empty($mismatched['aligned']), 'Changed Event Plan should be detected as out of sync with TEC.');
-    $preview = vms_ticketing_v2_preview_sync($planId);
+    $preview = bvmgr_ticketing_v2_preview_sync($planId);
     $assert(!empty($preview['blocked']), 'Native ticket Preview must block while the calendar occurrence is stale.');
     delete_transient('vms_tix_v2_prev_' . sanitize_key((string) ($preview['preview_id'] ?? '')));
     $guardPreviewId = 'date_alignment_guard_' . wp_generate_password(8, false, false);
@@ -186,11 +192,11 @@ try {
         'user_id' => get_current_user_id(),
         'tec_event_id' => $eventId,
         'mode' => 'vms_managed',
-        'config_hash' => vms_ticketing_v2_hash_config_for_sync(vms_ticketing_v2_get_config($planId)),
+        'config_hash' => bvmgr_ticketing_v2_hash_config_for_sync(bvmgr_ticketing_v2_get_config($planId)),
         'actions' => array(),
         'blocked' => false,
     ), 5 * MINUTE_IN_SECONDS);
-    $guardCommit = vms_ticketing_v2_commit_sync($planId, $guardPreviewId, array('phase' => 'prepare'));
+    $guardCommit = bvmgr_ticketing_v2_commit_sync($planId, $guardPreviewId, array('phase' => 'prepare'));
     $assert(strpos((string) wp_json_encode($guardCommit), 'calendar_event_out_of_sync') !== false, 'Commit did not independently reject stale calendar data.');
     delete_transient('vms_tix_v2_prev_' . sanitize_key($guardPreviewId));
 
@@ -199,34 +205,59 @@ try {
     update_post_meta($eventId, '_EventStartDate', $newDate . ' 19:00:00');
     update_post_meta($eventId, '_EventEndDate', $newEnd);
     clean_post_cache($eventId);
+
+    $canonicalHookCalls = array();
+    $legacyHookCalls = 0;
+    $canonicalHook = static function (int $hookPlanId, int $hookEventId, array $result) use (&$canonicalHookCalls): void {
+        $canonicalHookCalls[] = array($hookPlanId, $hookEventId, $result);
+    };
+    $legacyHook = static function () use (&$legacyHookCalls): void {
+        $legacyHookCalls++;
+    };
+    add_action('bvmgr_ticketing_v2_calendar_sales_windows_synced', $canonicalHook, 10, 3);
+    add_action('vms_ticketing_v2_calendar_sales_windows_synced', $legacyHook, 10, 0);
+    try {
+        $calendarSyncOk = bvmgr_event_plan_sync_ticket_windows_after_calendar_change($planId, $eventId, true, false);
+    } finally {
+        remove_action('bvmgr_ticketing_v2_calendar_sales_windows_synced', $canonicalHook, 10);
+        remove_action('vms_ticketing_v2_calendar_sales_windows_synced', $legacyHook, 10);
+    }
     $assert(
-        vms_event_plan_sync_ticket_windows_after_calendar_change($planId, $eventId, true, false),
+        $calendarSyncOk,
         'Pre-closure calendar-derived ticket synchronization failed.'
     );
-    $alignedAfterPublish = vms_ticketing_v2_plan_calendar_alignment($planId, $eventId);
+    $assert(
+        count($canonicalHookCalls) === 1
+        && (int) $canonicalHookCalls[0][0] === $planId
+        && (int) $canonicalHookCalls[0][1] === $eventId
+        && !empty($canonicalHookCalls[0][2]['ok']),
+        'Canonical sales-window synchronization hook did not fire exactly once with the expected payload.'
+    );
+    $assert($legacyHookCalls === 0, 'Legacy sales-window synchronization hook fired unexpectedly.');
+    $alignedAfterPublish = bvmgr_ticketing_v2_plan_calendar_alignment($planId, $eventId);
     $assert(!empty($alignedAfterPublish['aligned']), 'Calendar occurrence did not align after Publish Now: ' . wp_json_encode($alignedAfterPublish));
     $assert((string) get_post_meta($ticketId, '_ticket_end_date', true) === $newEnd, 'Publish Now did not re-derive the mapped ticket sale end.');
-    $repair = vms_ticketing_v2_inspect_enabled_ticket_product($ticketId, vms_ticketing_v2_get_config($planId)['tickets'][0]);
+    $repair = bvmgr_ticketing_v2_inspect_enabled_ticket_product($ticketId, bvmgr_ticketing_v2_get_config($planId)['tickets'][0]);
     $assert(empty($repair['needs_sales_window_repair']), 'Synchronized ticket still reports sale-window drift.');
 
     // The same helper must not create a general past-event reopening path.
     update_post_meta($ticketId, '_ticket_end_date', $oldEnd);
-    $closedResult = vms_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change($planId, $eventId, true);
+    $closedResult = bvmgr_ticketing_v2_sync_mapped_ticket_sales_windows_for_calendar_change($planId, $eventId, true);
     $assert(!empty($closedResult['skipped']) && ($closedResult['reason'] ?? '') === 'completed_event_not_reopened', 'Completed occurrence was not protected from automatic reopening.');
     $assert((string) get_post_meta($ticketId, '_ticket_end_date', true) === $oldEnd, 'Completed occurrence unexpectedly rewrote its ticket sale end.');
-    $assert(vms_event_plan_sync_ticket_windows_after_calendar_change($planId, $eventId, true, true), 'Completed occurrence guard wrapper failed.');
+    $assert(bvmgr_event_plan_sync_ticket_windows_after_calendar_change($planId, $eventId, true, true), 'Completed occurrence guard wrapper failed.');
     $rescheduleGuard = get_post_meta($planId, '_vms_ticketing_reschedule_required_v1', true);
     $assert(is_array($rescheduleGuard) && absint($rescheduleGuard['tec_event_id'] ?? 0) === $eventId, 'Completed occurrence did not persist the explicit-reschedule guard.');
-    $completedPreview = vms_ticketing_v2_preview_sync($planId);
+    $completedPreview = bvmgr_ticketing_v2_preview_sync($planId);
     $assert(!empty($completedPreview['blocked']), 'Completed occurrence guard did not block a later native ticket Preview.');
     delete_transient('vms_tix_v2_prev_' . sanitize_key((string) ($completedPreview['preview_id'] ?? '')));
     delete_post_meta($planId, '_vms_ticketing_reschedule_required_v1');
 
     // Expired qualifying tickets suppress only GA-gated add-ons in native mode.
     update_post_meta($ticketId, '_ticket_end_date', wp_date('Y-m-d H:i:s', strtotime('-1 hour')));
-    vms_ticketing_v2_invalidate_calendar_ticket_caches($eventId, array($ticketId));
-    $assert(!vms_ticketing_v2_has_purchasable_qualifying_native_ticket($eventId, $planId), 'Expired GA was incorrectly treated as purchasable.');
-    $expiredMarkup = vms_ticketing_v2_render_entitlements_block($eventId, $planId);
+    bvmgr_ticketing_v2_invalidate_calendar_ticket_caches($eventId, array($ticketId));
+    $assert(!bvmgr_ticketing_v2_has_purchasable_qualifying_native_ticket($eventId, $planId), 'Expired GA was incorrectly treated as purchasable.');
+    $expiredMarkup = bvmgr_ticketing_v2_render_entitlements_block($eventId, $planId);
     $assert(strpos($expiredMarkup, 'Gated Table') === false, 'GA-gated add-on remained actionable without a purchasable qualifying ticket.');
     $assert(strpos($expiredMarkup, 'Ungated Pool') !== false, 'Ungated add-on disappeared with an unavailable qualifying ticket.');
 
@@ -234,7 +265,7 @@ try {
     // add-on purchasing behavior is invented.
     update_post_meta($planId, '_vms_ticketing_sales_mode', 'external');
     update_post_meta($planId, '_vms_external_ticket_url', 'https://tickets.example.test/date-sync');
-    $externalMarkup = vms_ticketing_v2_render_entitlements_block($eventId, $planId);
+    $externalMarkup = bvmgr_ticketing_v2_render_entitlements_block($eventId, $planId);
     $assert($externalMarkup === '', 'External mode native add-on suppression changed.');
 
     fwrite(STDOUT, "PASS: pre-closure occurrence changes synchronize TEC/ticket windows, stale commits block, completed events do not reopen, and gated add-ons follow native ticket availability.\n");

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const cfg = window.VMS_TOURS || {};
+  const cfg = window.BVMGR_TOURS || {};
 
   const runtimeDebounce = new Map();
   const runtimeDebounceSeconds = 60;
@@ -479,8 +479,8 @@
     }
   }
 
-  window.VMS_Tour = window.VMS_Tour || {};
-  window.VMS_Tour.start = runSharedTour;
+  window.BVMGR_TOUR = window.BVMGR_TOUR || {};
+  window.BVMGR_TOUR.start = runSharedTour;
 
   function startTour(tourId) {
     const tour = getTourById(tourId) || getContextTour();

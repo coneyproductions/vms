@@ -128,7 +128,7 @@ function vms_public_release_test_public_slug(): string
 
 function vms_public_release_test_public_basename(): string
 {
-	return vms_public_release_test_public_slug() . '/vendor-management-system.php';
+	return vms_public_release_test_public_slug() . '/backstage-venue-manager.php';
 }
 
 function vms_public_release_test_fixture(array $options = array()): string
@@ -146,7 +146,7 @@ function vms_public_release_test_fixture(array $options = array()): string
 	$releaseExcludeLines = array_values(array_map('strval', (array) ($options['release_exclude_lines'] ?? vms_public_release_test_default_release_excludes())));
 
 	$files = array(
-		'vendor-management-system.php' => <<<PHP
+		'backstage-venue-manager.php' => <<<PHP
 <?php
 /**
  * Plugin Name: VMS
@@ -169,8 +169,8 @@ PHP,
 <?php
 defined('ABSPATH') || exit;
 
-if (function_exists('vms_db_migrate_vendor_core_v1')) {
-	vms_db_migrate_vendor_core_v1();
+if (function_exists('bvmgr_db_migrate_vendor_core_v1')) {
+	bvmgr_db_migrate_vendor_core_v1();
 }
 PHP,
 		'includes/bootstrap.php' => "<?php\ndefined('ABSPATH') || exit;\nrequire_once __DIR__ . '/core/plugin.php';\n",
@@ -179,19 +179,19 @@ PHP,
 <?php
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_PLUGIN_SLUG')) {
-	define('VMS_PLUGIN_SLUG', '{$internalPluginSlug}');
+if (!defined('BVMGR_PLUGIN_SLUG')) {
+	define('BVMGR_PLUGIN_SLUG', '{$internalPluginSlug}');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', '{$constantsVersion}');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', '{$constantsVersion}');
 }
 PHP,
 		'includes/db/migrations.php' => <<<PHP
 <?php
 defined('ABSPATH') || exit;
 
-function vms_db_migrate_vendor_core_v1(): void
+function bvmgr_db_migrate_vendor_core_v1(): void
 {
 	if (function_exists('update_option')) {
 		update_option('vms_db_schema_version', 'vendor_core_v1');
@@ -373,7 +373,7 @@ function vms_public_release_test_fixture_package_entries(array $overrides = arra
 
 	$entries = array(
 		$publicSlug . '/' => '',
-		$publicSlug . '/vendor-management-system.php' => <<<PHP
+		$publicSlug . '/backstage-venue-manager.php' => <<<PHP
 <?php
 /**
  * Plugin Name: VMS
@@ -383,8 +383,8 @@ function vms_public_release_test_fixture_package_entries(array $overrides = arra
 PHP,
 		$publicSlug . '/includes/bootstrap.php' => "<?php\n",
 		$publicSlug . '/includes/core/plugin.php' => "<?php\n",
-		$publicSlug . '/includes/core/registry/constants.php' => "<?php\ndefine('VMS_PLUGIN_SLUG', '" . addslashes($internalPluginSlug) . "');\ndefine('VMS_VERSION', '{$constantsVersion}');\n",
-		$publicSlug . '/includes/db/migrations.php' => "<?php\nfunction vms_db_migrate_vendor_core_v1(): void {}\n",
+		$publicSlug . '/includes/core/registry/constants.php' => "<?php\ndefine('BVMGR_PLUGIN_SLUG', '" . addslashes($internalPluginSlug) . "');\ndefine('BVMGR_VERSION', '{$constantsVersion}');\n",
+		$publicSlug . '/includes/db/migrations.php' => "<?php\nfunction bvmgr_db_migrate_vendor_core_v1(): void {}\n",
 		$publicSlug . '/assets/js/app.js' => "console.log('ok');\n",
 		$publicSlug . '/uninstall.php' => "<?php\ndefined('WP_UNINSTALL_PLUGIN') || exit;\n",
 		$publicSlug . '/vms-build.txt' => $buildVersion . "\n",
@@ -606,7 +606,10 @@ $tests['agent instructions are excluded from staged and packaged public builds']
 			'force' => true,
 			'release_tests' => array(),
 		));
-		vms_public_release_test_assert(($report['status'] ?? '') === 'PASS', 'Expected valid public build with AGENTS exclusion to pass.');
+		vms_public_release_test_assert(
+			($report['status'] ?? '') === 'PASS',
+			'Expected valid public build with AGENTS exclusion to pass: ' . json_encode(array_values(array_filter((array) ($report['checks'] ?? array()), static fn(array $check): bool => ($check['status'] ?? '') === 'FAIL')))
+		);
 		vms_public_release_test_assert(!empty($report['artifact']['created']), 'Expected AGENTS exclusion build to create a ZIP.');
 
 		$zipEntries = vms_public_release_test_read_zip_entries((string) $report['artifact']['zip_path']);
@@ -811,7 +814,7 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		);
 		vms_public_release_test_assert(
 			($report['metadata']['version'] ?? '') === '1.2.0',
-			'Expected the current repository VMS_VERSION to resolve to 1.2.0.'
+			'Expected the current repository BVMGR_VERSION to resolve to 1.2.0.'
 		);
 		vms_public_release_test_assert(
 			($report['metadata']['build_version'] ?? '') === '1.2.0',
@@ -832,7 +835,15 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		$packagedFiles = array_values(array_filter($zipEntries, static function (string $entryName): bool {
 			return substr($entryName, -1) !== '/';
 		}));
-		vms_public_release_test_assert(count($packagedFiles) === 372, 'Expected the current repository public package to contain 372 files after excluding the dormant Safety prototype.');
+		vms_public_release_test_assert(count($packagedFiles) === 383, 'Expected the integrated repository public package boundary to contain the 375 B4 files plus exactly eight event-occurrence and communication runtime files.');
+		vms_public_release_test_assert(
+			in_array(vms_public_release_test_public_slug() . '/includes/core/event-communications.php', $packagedFiles, true),
+			'Expected the customer communication ledger runtime to be present in the public package.'
+		);
+		vms_public_release_test_assert(
+			in_array(vms_public_release_test_public_slug() . '/includes/admin/event-communications.php', $packagedFiles, true),
+			'Expected the customer communication workflow UI to be present in the public package.'
+		);
 
 		foreach ($zipEntries as $entryName) {
 			vms_public_release_test_assert(substr($entryName, -10) !== '/AGENTS.md', 'Expected AGENTS.md to stay out of the packaged public ZIP.');
@@ -841,21 +852,24 @@ $tests['repository public boundary packages the current 1.2.0 public release mar
 		}
 
 		$packagedHeader = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_basename());
+		$packagedLegacyBridge = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/vendor-management-system.php');
 		$packagedConstants = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/includes/core/registry/constants.php');
 		$packagedReadme = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/readme.txt');
 		$packagedBuild = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/vms-build.txt');
 
 		vms_public_release_test_assert(strpos($packagedHeader, 'Version: 1.2.0') !== false, 'Expected the packaged plugin header version to resolve to 1.2.0.');
+		vms_public_release_test_assert($packagedLegacyBridge !== '', 'Expected the headerless legacy filename bridge to remain in the public package.');
+		vms_public_release_test_assert(preg_match('/^\s*\*\s*Plugin Name:/m', $packagedLegacyBridge) !== 1, 'Expected the legacy filename bridge to avoid a duplicate plugin header.');
 		vms_public_release_test_assert(
-			strpos($packagedConstants, "define('VMS_VERSION', '1.2.0');") !== false,
-			'Expected the packaged VMS_VERSION constant to resolve to 1.2.0.'
+			strpos($packagedConstants, "define('BVMGR_VERSION', '1.2.0');") !== false,
+			'Expected the packaged BVMGR_VERSION constant to resolve to 1.2.0.'
 		);
 		vms_public_release_test_assert(strpos($packagedReadme, 'Stable tag: 1.2.0') !== false, 'Expected the packaged readme stable tag to resolve to 1.2.0.');
 		vms_public_release_test_assert(substr_count($packagedReadme, '= 1.2.0 =') >= 2, 'Expected the packaged readme to contain the 1.2.0 changelog and upgrade-notice sections.');
 		vms_public_release_test_assert(trim($packagedBuild) === '1.2.0', 'Expected the packaged build marker to resolve to 1.2.0.');
 
 		vms_public_release_test_assert(
-			$packagedHeader === (string) file_get_contents($pluginRoot . '/vendor-management-system.php'),
+			$packagedHeader === (string) file_get_contents($pluginRoot . '/backstage-venue-manager.php'),
 			'Expected the packaged plugin header file to match the mirror source.'
 		);
 		vms_public_release_test_assert(

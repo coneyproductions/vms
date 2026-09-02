@@ -8,12 +8,12 @@
  
 defined('ABSPATH') || exit;
  
-if (!defined('VMS_PLUGIN_SLUG')) {
-	define('VMS_PLUGIN_SLUG', 'vms');
+if (!defined('BVMGR_PLUGIN_SLUG')) {
+	define('BVMGR_PLUGIN_SLUG', 'vms');
 }
  
 // Plugin version (SemVer). Use this for WP asset cache-busting.
-if (!defined('VMS_VERSION')) {
+if (!defined('BVMGR_VERSION')) {
 		// v0.2.24.724: adds a Wallet Plus / TCPDF PDF-only mitigation that swaps header, hero, and reusable QR assets to local readable paths and prefers resized hero derivatives where available.
 		// v0.2.24.723: reduces Ticket Integrity full-scan memory pressure by compacting cron snapshots, avoiding duplicate in-memory result arrays, clearing sold-context caches between events, and skipping cleanly when memory headroom is too low.
 		// v0.2.24.722: adds an opt-in flat-file slow-request logger for scoped checkout, wallet/PDF, and async loopback diagnostics with threshold-only writes, redacted URLs, hashed IPs, and log rotation.
@@ -92,7 +92,7 @@ if (!defined('VMS_VERSION')) {
 	// v0.2.24.596: hardens the compact VMS admin menu so secondary pages are physically removed from the WordPress left rail instead of relying on VMS-screen-only CSS.
 	// v0.2.24.588: fixes Guided Tours shell callback visibility, wraps Data Tools in the VMS admin shell, forces VMS parent highlighting for VMS pages, and tightens top-nav dropdown widths.
 	// v0.2.24.587: catalogs legacy/direct admin pages in the registry and centralizes the compact left-rail section specs while keeping direct callbacks intact.
-	// v0.2.24.586: tightens admin menu registry pass so only durable section pages remain in the left rail while all module/add-on pages stay discoverable in All VMS Pages.
+	// v0.2.24.586: tightens admin menu registry pass so only durable section pages remain in the left rail while all module/add-on pages stay discoverable in All Backstage Venue Manager Pages.
 	// v0.2.24.585: adds first-pass admin menu registry, page directory, and add-on-safe discovery.
 	// v0.2.24.584: adds Square Sync Protection firewall for VMS/TEC ticket, admission, and event add-on Woo products while preserving Square-owned normal catalog items.
 	// v0.2.24.583: adds the first Email Follow-Ups foundation with MailPoet detection, event-aware previews, test sends, logging, and off-by-default scheduled sends.
@@ -105,42 +105,42 @@ if (!defined('VMS_VERSION')) {
 			// v0.2.24.737: adds Market Vendor target/needed-slots controls in the compact Additional Vendors UI and preserves ADD visibility metadata through secondary-vendor update paths.
 			// v0.2.24.736: keeps grouped Additional Vendors compatibility meta aligned on ordinary Event Plan saves so flat/id-index readers still see Food, Dessert, and Market assignments after unrelated module saves.
 			// v0.2.24.735: adds canonical multi-type secondary vendor assignments, grouped Additional Vendor Event Plan UI, type-specific calendar/ADD slot handling, Market Vendor support, and Music Vendor/Food Vendor wording updates.
-			define('VMS_VERSION', '1.2.0');
+			define('BVMGR_VERSION', '1.2.0');
 	// ^ bump in sync with plugin header + vms-build.txt
 	// Public 1.2.0 metadata maps to internal 0.2.24.748 repo state; last proven public artifact remains 0.2.24.747.
 	// IMPORTANT: keep in sync with plugin header Version.
 	// PATCH: premium modules now fail closed until they register with VMS core.
 }
  
-if (!function_exists('vms_asset_version')) {
-	function vms_asset_version(): string
+if (!function_exists('bvmgr_asset_version')) {
+	function bvmgr_asset_version(): string
 	{
-		return defined('VMS_VERSION') ? (string) VMS_VERSION : '';
+		return defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '';
 	}
 }
 
-if (!defined('VMS_TEXTDOMAIN')) { // USED IN statuses.php
-	define('VMS_TEXTDOMAIN', 'backstage-venue-manager');
+if (!defined('BVMGR_TEXTDOMAIN')) { // USED IN statuses.php
+	define('BVMGR_TEXTDOMAIN', 'backstage-venue-manager');
 }
 
-if (!defined('VMS_REST_NAMESPACE')) {
-	define('VMS_REST_NAMESPACE', 'vms/v1');
+if (!defined('BVMGR_REST_NAMESPACE')) {
+	define('BVMGR_REST_NAMESPACE', 'vms/v1');
 }
 
 /**
  * Post Types
  */
-if (!defined('VMS_CPT_EVENT_PLAN')) {
-	define('VMS_CPT_EVENT_PLAN', 'vms_event_plan');
+if (!defined('BVMGR_CPT_EVENT_PLAN')) {
+	define('BVMGR_CPT_EVENT_PLAN', 'vms_event_plan');
 }
-if (!defined('VMS_CPT_VENDOR')) {
-	define('VMS_CPT_VENDOR', 'vms_vendor');
+if (!defined('BVMGR_CPT_VENDOR')) {
+	define('BVMGR_CPT_VENDOR', 'vms_vendor');
 }
-if (!defined('VMS_VENDOR_PROFILE_BASE_SLUG')) {
-	define('VMS_VENDOR_PROFILE_BASE_SLUG', 'vendor');
+if (!defined('BVMGR_VENDOR_PROFILE_BASE_SLUG')) {
+	define('BVMGR_VENDOR_PROFILE_BASE_SLUG', 'vendor');
 }
-if (!defined('VMS_CPT_STAFF')) {
-	define('VMS_CPT_STAFF', 'vms_staff');
+if (!defined('BVMGR_CPT_STAFF')) {
+	define('BVMGR_CPT_STAFF', 'vms_staff');
 }
 
 /**
@@ -171,11 +171,11 @@ if (!defined('VMS_CPT_STAFF')) {
 
 
 // Schedule user context (per-user user_meta)
-if (!defined('VMS_SCH_CURRENT_VENUE_META_KEY')) {
-	define('VMS_SCH_CURRENT_VENUE_META_KEY', '_vms_current_venue_id');
+if (!defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')) {
+	define('BVMGR_SCH_CURRENT_VENUE_META_KEY', '_vms_current_venue_id');
 }
-if (!defined('VMS_SCH_CURRENT_SCOPE_META_KEY')) {
-	define('VMS_SCH_CURRENT_SCOPE_META_KEY', '_vms_schedule_scope');
+if (!defined('BVMGR_SCH_CURRENT_SCOPE_META_KEY')) {
+	define('BVMGR_SCH_CURRENT_SCOPE_META_KEY', '_vms_schedule_scope');
 }
 
 /**
@@ -194,14 +194,14 @@ if (!defined('VMS_SCH_CURRENT_SCOPE_META_KEY')) {
 // 	define('VMS_OPT_NOTIFICATION_DEFAULTS', 'vms_notification_defaults');
 // }
 
-if (!defined('VMS_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE')) {
-	define('VMS_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE', 'vms_vendor_onboarding_email_template');
+if (!defined('BVMGR_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE')) {
+	define('BVMGR_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE', 'vms_vendor_onboarding_email_template');
 }
-if (!defined('VMS_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION')) {
-	define('VMS_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION', 'vms_ticket_mutation_audit_db_schema_version');
+if (!defined('BVMGR_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION')) {
+	define('BVMGR_OPT_TICKET_MUTATION_AUDIT_DB_SCHEMA_VERSION', 'vms_ticket_mutation_audit_db_schema_version');
 }
-if (!defined('VMS_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION')) {
-	define('VMS_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION', 'vms_ticket_inventory_audit_db_schema_version');
+if (!defined('BVMGR_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION')) {
+	define('BVMGR_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION', 'vms_ticket_inventory_audit_db_schema_version');
 }
 
 //
@@ -212,55 +212,55 @@ if (!defined('VMS_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION')) {
 /**
  * Meta keys (underscore = internal/private)
  */
-if (!defined('VMS_META_EVENT_PLAN_VENUE_ID_LEGACY')) {
-	define('VMS_META_EVENT_PLAN_VENUE_ID_LEGACY', '_vms_event_plan_venue_id'); // deprecated; do not use
+if (!defined('BVMGR_META_EVENT_PLAN_VENUE_ID_LEGACY')) {
+	define('BVMGR_META_EVENT_PLAN_VENUE_ID_LEGACY', '_vms_event_plan_venue_id'); // deprecated; do not use
 }
-if (!defined('VMS_META_EVENT_PLAN_DATE')) {
-	define('VMS_META_EVENT_PLAN_DATE', '_vms_event_date'); // YYYY-mm-dd
+if (!defined('BVMGR_META_EVENT_PLAN_DATE')) {
+	define('BVMGR_META_EVENT_PLAN_DATE', '_vms_event_date'); // YYYY-mm-dd
 }
-if (!defined('VMS_META_EVENT_PLAN_VENUE_ID')) {
-	define('VMS_META_EVENT_PLAN_VENUE_ID', '_vms_venue_id');
+if (!defined('BVMGR_META_EVENT_PLAN_VENUE_ID')) {
+	define('BVMGR_META_EVENT_PLAN_VENUE_ID', '_vms_venue_id');
 }
-if (!defined('VMS_META_EVENT_PLAN_NOTES_INTERNAL')) {
-	define('VMS_META_EVENT_PLAN_NOTES_INTERNAL', '_vms_event_plan_notes_internal');
+if (!defined('BVMGR_META_EVENT_PLAN_NOTES_INTERNAL')) {
+	define('BVMGR_META_EVENT_PLAN_NOTES_INTERNAL', '_vms_event_plan_notes_internal');
 }
-if (!defined('VMS_META_EVENT_PLAN_NOTES_PUBLIC')) {
-	define('VMS_META_EVENT_PLAN_NOTES_PUBLIC', '_vms_event_plan_public_notes');
-}
-
-if (!defined('VMS_META_VENDOR_DISPLAY_NAME')) {
-	define('VMS_META_VENDOR_DISPLAY_NAME', '_vms_vendor_display_name');
-}
-if (!defined('VMS_META_VENDOR_CONTACT_NAME')) {
-	define('VMS_META_VENDOR_CONTACT_NAME', '_vms_vendor_contact_name');
-}
-if (!defined('VMS_META_VENDOR_EMAIL')) {
-	define('VMS_META_VENDOR_EMAIL', '_vms_vendor_email');
-}
-if (!defined('VMS_META_VENDOR_PHONE')) {
-	define('VMS_META_VENDOR_PHONE', '_vms_vendor_phone');
-}
-if (!defined('VMS_META_VENDOR_STATUS')) {
-	define('VMS_META_VENDOR_STATUS', '_vms_vendor_status');
-}
-if (!defined('VMS_META_VENDOR_AVAIL_DEFAULT')) {
-	define('VMS_META_VENDOR_AVAIL_DEFAULT', '_vms_vendor_availability_default');
+if (!defined('BVMGR_META_EVENT_PLAN_NOTES_PUBLIC')) {
+	define('BVMGR_META_EVENT_PLAN_NOTES_PUBLIC', '_vms_event_plan_public_notes');
 }
 
-if (!defined('VMS_META_PAY_AMOUNT')) {
-	define('VMS_META_PAY_AMOUNT', '_vms_pay_amount');
+if (!defined('BVMGR_META_VENDOR_DISPLAY_NAME')) {
+	define('BVMGR_META_VENDOR_DISPLAY_NAME', '_vms_vendor_display_name');
 }
-if (!defined('VMS_META_PAY_METHOD')) {
-	define('VMS_META_PAY_METHOD', '_vms_pay_method');
+if (!defined('BVMGR_META_VENDOR_CONTACT_NAME')) {
+	define('BVMGR_META_VENDOR_CONTACT_NAME', '_vms_vendor_contact_name');
 }
-if (!defined('VMS_META_PAY_STATUS')) {
-	define('VMS_META_PAY_STATUS', '_vms_pay_status');
+if (!defined('BVMGR_META_VENDOR_EMAIL')) {
+	define('BVMGR_META_VENDOR_EMAIL', '_vms_vendor_email');
 }
-if (!defined('VMS_META_PAY_DATE')) {
-	define('VMS_META_PAY_DATE', '_vms_pay_date');
+if (!defined('BVMGR_META_VENDOR_PHONE')) {
+	define('BVMGR_META_VENDOR_PHONE', '_vms_vendor_phone');
 }
-if (!defined('VMS_META_PAY_NOTES')) {
-	define('VMS_META_PAY_NOTES', '_vms_pay_notes');
+if (!defined('BVMGR_META_VENDOR_STATUS')) {
+	define('BVMGR_META_VENDOR_STATUS', '_vms_vendor_status');
+}
+if (!defined('BVMGR_META_VENDOR_AVAIL_DEFAULT')) {
+	define('BVMGR_META_VENDOR_AVAIL_DEFAULT', '_vms_vendor_availability_default');
+}
+
+if (!defined('BVMGR_META_PAY_AMOUNT')) {
+	define('BVMGR_META_PAY_AMOUNT', '_vms_pay_amount');
+}
+if (!defined('BVMGR_META_PAY_METHOD')) {
+	define('BVMGR_META_PAY_METHOD', '_vms_pay_method');
+}
+if (!defined('BVMGR_META_PAY_STATUS')) {
+	define('BVMGR_META_PAY_STATUS', '_vms_pay_status');
+}
+if (!defined('BVMGR_META_PAY_DATE')) {
+	define('BVMGR_META_PAY_DATE', '_vms_pay_date');
+}
+if (!defined('BVMGR_META_PAY_NOTES')) {
+	define('BVMGR_META_PAY_NOTES', '_vms_pay_notes');
 }
 
 
@@ -275,183 +275,183 @@ if (!defined('VMS_META_PAY_NOTES')) {
  * Authoritative mapping storage:
  * - DB table suffix: vms_vendor_user_links (full table name uses $wpdb->prefix)
  */
-if (!defined('VMS_USER_PRIMARY_VENDOR_META_KEY')) {
-	define('VMS_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id');
+if (!defined('BVMGR_USER_PRIMARY_VENDOR_META_KEY')) {
+	define('BVMGR_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id');
 }
-if (!defined('VMS_VENDOR_PRIMARY_USER_META_KEY')) {
-	define('VMS_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
+if (!defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY')) {
+	define('BVMGR_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
 }
-if (!defined('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX')) {
-	define('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX', 'vms_vendor_user_links');
+if (!defined('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX', 'vms_vendor_user_links');
 }
-if (!defined('VMS_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX')) {
-	define('VMS_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX', 'vms_vendor_app_confirm_tokens');
+if (!defined('BVMGR_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX', 'vms_vendor_app_confirm_tokens');
 }
 
 /**
  * Staffing tables (Phase A structured role scheduling)
  */
-if (!defined('VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX')) {
-	define('VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX', 'vms_staffing_templates');
+if (!defined('BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX')) {
+	define('BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX', 'vms_staffing_templates');
 }
-if (!defined('VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX')) {
-	define('VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX', 'vms_staffing_template_slots');
+if (!defined('BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX', 'vms_staffing_template_slots');
 }
-if (!defined('VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX')) {
-	define('VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX', 'vms_event_role_slots');
+if (!defined('BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX', 'vms_event_role_slots');
 }
-if (!defined('VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX')) {
-	define('VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX', 'vms_event_role_assignments');
+if (!defined('BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX', 'vms_event_role_assignments');
 }
-if (!defined('VMS_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX')) {
-	define('VMS_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX', 'vms_staffing_event_rollups');
+if (!defined('BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX', 'vms_staffing_event_rollups');
 }
-if (!defined('VMS_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX')) {
-	define('VMS_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX', 'vms_staffing_audit_log');
+if (!defined('BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX')) {
+	define('BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX', 'vms_staffing_audit_log');
 }
-if (!defined('VMS_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX')) {
-	define('VMS_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX', 'vms_ticket_mutation_audit');
+if (!defined('BVMGR_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX')) {
+	define('BVMGR_DB_TABLE_TICKET_MUTATION_AUDIT_SUFFIX', 'vms_ticket_mutation_audit');
 }
-if (!defined('VMS_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX')) {
-	define('VMS_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX', 'vms_ticket_inventory_audit');
+if (!defined('BVMGR_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX')) {
+	define('BVMGR_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX', 'vms_ticket_inventory_audit');
 }
 
 /**
  * Staff Tasks module (V1 foundation)
  */
-if (!defined('VMS_CAP_TASKS_MANAGE_TEMPLATES')) {
-	define('VMS_CAP_TASKS_MANAGE_TEMPLATES', 'vms_manage_task_templates');
+if (!defined('BVMGR_CAP_TASKS_MANAGE_TEMPLATES')) {
+	define('BVMGR_CAP_TASKS_MANAGE_TEMPLATES', 'vms_manage_task_templates');
 }
-if (!defined('VMS_CAP_TASKS_MANAGE_CHECKLISTS')) {
-	define('VMS_CAP_TASKS_MANAGE_CHECKLISTS', 'vms_manage_checklist_templates');
+if (!defined('BVMGR_CAP_TASKS_MANAGE_CHECKLISTS')) {
+	define('BVMGR_CAP_TASKS_MANAGE_CHECKLISTS', 'vms_manage_checklist_templates');
 }
-if (!defined('VMS_CAP_TASKS_MANAGE_ALL')) {
-	define('VMS_CAP_TASKS_MANAGE_ALL', 'vms_manage_tasks_all');
+if (!defined('BVMGR_CAP_TASKS_MANAGE_ALL')) {
+	define('BVMGR_CAP_TASKS_MANAGE_ALL', 'vms_manage_tasks_all');
 }
-if (!defined('VMS_CAP_TASKS_COMPLETE_SELF')) {
-	define('VMS_CAP_TASKS_COMPLETE_SELF', 'vms_complete_tasks_self');
+if (!defined('BVMGR_CAP_TASKS_COMPLETE_SELF')) {
+	define('BVMGR_CAP_TASKS_COMPLETE_SELF', 'vms_complete_tasks_self');
 }
-if (!defined('VMS_CAP_TASKS_VIEW_SELF')) {
-	define('VMS_CAP_TASKS_VIEW_SELF', 'vms_view_tasks_self');
+if (!defined('BVMGR_CAP_TASKS_VIEW_SELF')) {
+	define('BVMGR_CAP_TASKS_VIEW_SELF', 'vms_view_tasks_self');
 }
-if (!defined('VMS_DB_TABLE_TASK_TEMPLATES_SUFFIX')) {
-	define('VMS_DB_TABLE_TASK_TEMPLATES_SUFFIX', 'vms_task_templates');
+if (!defined('BVMGR_DB_TABLE_TASK_TEMPLATES_SUFFIX')) {
+	define('BVMGR_DB_TABLE_TASK_TEMPLATES_SUFFIX', 'vms_task_templates');
 }
-if (!defined('VMS_DB_TABLE_CHECKLIST_TEMPLATES_SUFFIX')) {
-	define('VMS_DB_TABLE_CHECKLIST_TEMPLATES_SUFFIX', 'vms_checklist_templates');
+if (!defined('BVMGR_DB_TABLE_CHECKLIST_TEMPLATES_SUFFIX')) {
+	define('BVMGR_DB_TABLE_CHECKLIST_TEMPLATES_SUFFIX', 'vms_checklist_templates');
 }
-if (!defined('VMS_DB_TABLE_CHECKLIST_ITEMS_SUFFIX')) {
-	define('VMS_DB_TABLE_CHECKLIST_ITEMS_SUFFIX', 'vms_checklist_items');
+if (!defined('BVMGR_DB_TABLE_CHECKLIST_ITEMS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_CHECKLIST_ITEMS_SUFFIX', 'vms_checklist_items');
 }
-if (!defined('VMS_DB_TABLE_TASK_INSTANCES_SUFFIX')) {
-	define('VMS_DB_TABLE_TASK_INSTANCES_SUFFIX', 'vms_task_instances');
+if (!defined('BVMGR_DB_TABLE_TASK_INSTANCES_SUFFIX')) {
+	define('BVMGR_DB_TABLE_TASK_INSTANCES_SUFFIX', 'vms_task_instances');
 }
-if (!defined('VMS_DB_TABLE_TASK_LOGS_SUFFIX')) {
-	define('VMS_DB_TABLE_TASK_LOGS_SUFFIX', 'vms_task_logs');
+if (!defined('BVMGR_DB_TABLE_TASK_LOGS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_TASK_LOGS_SUFFIX', 'vms_task_logs');
 }
-if (!defined('VMS_OPT_TASKS_DB_SCHEMA_VERSION')) {
-	define('VMS_OPT_TASKS_DB_SCHEMA_VERSION', 'vms_tasks_db_schema_version');
+if (!defined('BVMGR_OPT_TASKS_DB_SCHEMA_VERSION')) {
+	define('BVMGR_OPT_TASKS_DB_SCHEMA_VERSION', 'vms_tasks_db_schema_version');
 }
-if (!defined('VMS_OPT_TASKS_SETTINGS')) {
-	define('VMS_OPT_TASKS_SETTINGS', 'vms_tasks_settings_v1');
+if (!defined('BVMGR_OPT_TASKS_SETTINGS')) {
+	define('BVMGR_OPT_TASKS_SETTINGS', 'vms_tasks_settings_v1');
 }
-if (!defined('VMS_CRON_TASKS_NIGHTLY')) {
-	define('VMS_CRON_TASKS_NIGHTLY', 'vms_tasks_nightly_generator');
+if (!defined('BVMGR_CRON_TASKS_NIGHTLY')) {
+	define('BVMGR_CRON_TASKS_NIGHTLY', 'vms_tasks_nightly_generator');
 }
 
 /**
  * Continuity Binder option key (wp_options).
  */
-if (!defined('VMS_CONTINUITY_BINDER_OPTION')) {
-    define('VMS_CONTINUITY_BINDER_OPTION', 'vms_continuity_binder_v1');
+if (!defined('BVMGR_CONTINUITY_BINDER_OPTION')) {
+    define('BVMGR_CONTINUITY_BINDER_OPTION', 'vms_continuity_binder_v1');
 }
 
-if (!defined('VMS_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1')) {
-    define('VMS_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1', 'vms_rewrite_flushed_vendor_profiles_v1');
+if (!defined('BVMGR_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1')) {
+    define('BVMGR_OPT_REWRITE_FLUSH_VENDOR_PROFILES_V1', 'vms_rewrite_flushed_vendor_profiles_v1');
 }
 
 /**
  * Due Dates / Compliance Obligations (wp_options)
  */
-if (!defined('VMS_OPT_DUE_PAYEES')) {
-  define('VMS_OPT_DUE_PAYEES', 'vms_due_payees_v1');
+if (!defined('BVMGR_OPT_DUE_PAYEES')) {
+  define('BVMGR_OPT_DUE_PAYEES', 'vms_due_payees_v1');
 }
-if (!defined('VMS_OPT_DUE_OBLIGATIONS')) {
-  define('VMS_OPT_DUE_OBLIGATIONS', 'vms_due_obligations_v1');
+if (!defined('BVMGR_OPT_DUE_OBLIGATIONS')) {
+  define('BVMGR_OPT_DUE_OBLIGATIONS', 'vms_due_obligations_v1');
 }
-if (!defined('VMS_OPT_DUE_LOG')) {
-  define('VMS_OPT_DUE_LOG', 'vms_due_log_v1');
+if (!defined('BVMGR_OPT_DUE_LOG')) {
+  define('BVMGR_OPT_DUE_LOG', 'vms_due_log_v1');
 }
 
 /**
  * Ticketing templates (wp_options)
  */
-if (!defined('VMS_OPT_TICKETING_TEMPLATES_V1')) {
-  define('VMS_OPT_TICKETING_TEMPLATES_V1', 'vms_ticketing_templates_v1');
+if (!defined('BVMGR_OPT_TICKETING_TEMPLATES_V1')) {
+  define('BVMGR_OPT_TICKETING_TEMPLATES_V1', 'vms_ticketing_templates_v1');
 }
 
 /**
  * Ticketing default template (wp_options)
  */
-if (!defined('VMS_OPT_TICKETING_DEFAULT_TEMPLATE_V1')) {
-  define('VMS_OPT_TICKETING_DEFAULT_TEMPLATE_V1', 'vms_ticketing_default_template_v1');
+if (!defined('BVMGR_OPT_TICKETING_DEFAULT_TEMPLATE_V1')) {
+  define('BVMGR_OPT_TICKETING_DEFAULT_TEMPLATE_V1', 'vms_ticketing_default_template_v1');
 }
 
 /**
  * Social sharing module (Phase 0/1 foundation)
  */
-if (!defined('VMS_CAP_SOCIAL_MANAGE')) {
-	define('VMS_CAP_SOCIAL_MANAGE', 'vms_social_manage');
+if (!defined('BVMGR_CAP_SOCIAL_MANAGE')) {
+	define('BVMGR_CAP_SOCIAL_MANAGE', 'vms_social_manage');
 }
-if (!defined('VMS_OPT_SOCIAL_SETTINGS_V1')) {
-	define('VMS_OPT_SOCIAL_SETTINGS_V1', 'vms_social_settings_v1');
+if (!defined('BVMGR_OPT_SOCIAL_SETTINGS_V1')) {
+	define('BVMGR_OPT_SOCIAL_SETTINGS_V1', 'vms_social_settings_v1');
 }
-if (!defined('VMS_OPT_SOCIAL_DB_SCHEMA_VERSION')) {
-	define('VMS_OPT_SOCIAL_DB_SCHEMA_VERSION', 'vms_social_db_schema_version');
+if (!defined('BVMGR_OPT_SOCIAL_DB_SCHEMA_VERSION')) {
+	define('BVMGR_OPT_SOCIAL_DB_SCHEMA_VERSION', 'vms_social_db_schema_version');
 }
-if (!defined('VMS_SOCIAL_DB_SCHEMA_VERSION')) {
-	define('VMS_SOCIAL_DB_SCHEMA_VERSION', 'social_v1');
+if (!defined('BVMGR_SOCIAL_DB_SCHEMA_VERSION')) {
+	define('BVMGR_SOCIAL_DB_SCHEMA_VERSION', 'social_v1');
 }
-if (!defined('VMS_SOCIAL_CRON_HOOK')) {
-	define('VMS_SOCIAL_CRON_HOOK', 'vms_social_process_queue');
+if (!defined('BVMGR_SOCIAL_CRON_HOOK')) {
+	define('BVMGR_SOCIAL_CRON_HOOK', 'vms_social_process_queue');
 }
-if (!defined('VMS_SOCIAL_LOCK_TRANSIENT')) {
-	define('VMS_SOCIAL_LOCK_TRANSIENT', 'vms_social_runner_lock');
+if (!defined('BVMGR_SOCIAL_LOCK_TRANSIENT')) {
+	define('BVMGR_SOCIAL_LOCK_TRANSIENT', 'vms_social_runner_lock');
 }
-if (!defined('VMS_SOCIAL_MAX_ATTEMPTS_DEFAULT')) {
-	define('VMS_SOCIAL_MAX_ATTEMPTS_DEFAULT', 5);
+if (!defined('BVMGR_SOCIAL_MAX_ATTEMPTS_DEFAULT')) {
+	define('BVMGR_SOCIAL_MAX_ATTEMPTS_DEFAULT', 5);
 }
-if (!defined('VMS_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX')) {
-	define('VMS_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX', 'vms_social_accounts');
+if (!defined('BVMGR_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_SOCIAL_ACCOUNTS_SUFFIX', 'vms_social_accounts');
 }
-if (!defined('VMS_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX')) {
-	define('VMS_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX', 'vms_social_venue_map');
+if (!defined('BVMGR_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX')) {
+	define('BVMGR_DB_TABLE_SOCIAL_VENUE_MAP_SUFFIX', 'vms_social_venue_map');
 }
-if (!defined('VMS_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX')) {
-	define('VMS_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX', 'vms_social_templates');
+if (!defined('BVMGR_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX')) {
+	define('BVMGR_DB_TABLE_SOCIAL_TEMPLATES_SUFFIX', 'vms_social_templates');
 }
-if (!defined('VMS_DB_TABLE_SOCIAL_QUEUE_SUFFIX')) {
-	define('VMS_DB_TABLE_SOCIAL_QUEUE_SUFFIX', 'vms_social_queue');
+if (!defined('BVMGR_DB_TABLE_SOCIAL_QUEUE_SUFFIX')) {
+	define('BVMGR_DB_TABLE_SOCIAL_QUEUE_SUFFIX', 'vms_social_queue');
 }
-if (!defined('VMS_DB_TABLE_SOCIAL_AUDIT_SUFFIX')) {
-	define('VMS_DB_TABLE_SOCIAL_AUDIT_SUFFIX', 'vms_social_audit');
+if (!defined('BVMGR_DB_TABLE_SOCIAL_AUDIT_SUFFIX')) {
+	define('BVMGR_DB_TABLE_SOCIAL_AUDIT_SUFFIX', 'vms_social_audit');
 }
 
 /**
  * Ticketing claims + direct grants (Phase 1 foundation)
  */
-if (!defined('VMS_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION')) {
-	define('VMS_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION', 'vms_ticketing_claims_db_schema_version');
+if (!defined('BVMGR_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION')) {
+	define('BVMGR_OPT_TICKETING_CLAIMS_DB_SCHEMA_VERSION', 'vms_ticketing_claims_db_schema_version');
 }
-if (!defined('VMS_TICKETING_CLAIMS_DB_SCHEMA_VERSION')) {
-	define('VMS_TICKETING_CLAIMS_DB_SCHEMA_VERSION', 'ticketing_claims_v1');
+if (!defined('BVMGR_TICKETING_CLAIMS_DB_SCHEMA_VERSION')) {
+	define('BVMGR_TICKETING_CLAIMS_DB_SCHEMA_VERSION', 'ticketing_claims_v1');
 }
-if (!defined('VMS_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX')) {
-	define('VMS_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX', 'vms_ticketing_direct_grants');
+if (!defined('BVMGR_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_TICKETING_DIRECT_GRANTS_SUFFIX', 'vms_ticketing_direct_grants');
 }
-if (!defined('VMS_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX')) {
-	define('VMS_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX', 'vms_ticketing_claim_reservations');
+if (!defined('BVMGR_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX')) {
+	define('BVMGR_DB_TABLE_TICKETING_CLAIM_RESERVATIONS_SUFFIX', 'vms_ticketing_claim_reservations');
 }
-if (!defined('VMS_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX')) {
-	define('VMS_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX', 'vms_ticketing_claim_log');
+if (!defined('BVMGR_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX')) {
+	define('BVMGR_DB_TABLE_TICKETING_CLAIM_LOG_SUFFIX', 'vms_ticketing_claim_log');
 }

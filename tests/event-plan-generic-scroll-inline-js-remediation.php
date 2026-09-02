@@ -113,7 +113,7 @@ $findApplicationJsonScriptTags = static function (string $source, string $requir
 	$assert(strpos($shellAssetSource, 'maybeFocusEventPlanTicketingArea') === false, 'The shell asset should not absorb the ticketing-specific focus helper.');
 
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-shell'") !== false, 'Admin UI assets should enqueue the new Event Plan shell asset.');
-	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js'") !== false, 'Admin UI assets should point the shell handle to assets/js/vms-event-plan-shell.js.');
+	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js'") !== false, 'Admin UI assets should point the shell handle to assets/js/vms-event-plan-shell.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'The shell asset should stay scoped to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'The shell asset should stay scoped to Event Plan edit/new screens.');
 

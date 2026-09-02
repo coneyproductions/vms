@@ -4,8 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 $assert = static function (bool $condition, string $message): void {
@@ -40,10 +40,10 @@ $cleanup = static function () use (&$createdPosts, &$createdTerms, &$createdPlan
 	global $wpdb;
 
 	foreach (array_reverse($createdPlanIds) as $planId) {
-		$slotTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('event_slots') : '';
-		$assignmentTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('assignments') : '';
-		$rollupTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('rollups') : '';
-		$auditTable = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('audit') : '';
+		$slotTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('event_slots') : '';
+		$assignmentTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('assignments') : '';
+		$rollupTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('rollups') : '';
+		$auditTable = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('audit') : '';
 		$slotIds = array();
 		if ($slotTable !== '') {
 			$slotIds = $wpdb->get_col($wpdb->prepare("SELECT slot_id FROM {$slotTable} WHERE event_plan_id = %d", (int) $planId));
@@ -80,8 +80,8 @@ try {
 		}
 
 		$roleId = $registerTerm((int) $created['term_id']);
-		if (function_exists('vms_staffing_role_meta_save')) {
-			vms_staffing_role_meta_save($roleId, $meta);
+		if (function_exists('bvmgr_staffing_role_meta_save')) {
+			bvmgr_staffing_role_meta_save($roleId, $meta);
 		}
 
 		return $roleId;
@@ -101,8 +101,8 @@ try {
 		if (!empty($roleIds)) {
 			wp_set_post_terms($staffId, array_values(array_map('absint', $roleIds)), 'vms_staff_role', false);
 		}
-		if (function_exists('vms_staffing_save_staff_qualifications')) {
-			vms_staffing_save_staff_qualifications($staffId, $qualifications);
+		if (function_exists('bvmgr_staffing_save_staff_qualifications')) {
+			bvmgr_staffing_save_staff_qualifications($staffId, $qualifications);
 		}
 
 		return $staffId;
@@ -131,7 +131,7 @@ try {
 	};
 
 	$invokeStaffContext = static function (int $planId): array {
-		$reflection = new ReflectionClass('VMS_Admin_Event_Plans');
+		$reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
 		$admin = $reflection->newInstanceWithoutConstructor();
 		$method = $reflection->getMethod('get_event_plan_staff_render_context');
 		$method->setAccessible(true);
@@ -154,7 +154,7 @@ try {
 		);
 		$_POST = array_merge($defaults, $overrides);
 
-		$reflection = new ReflectionClass('VMS_Admin_Event_Plans');
+		$reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
 		$admin = $reflection->newInstanceWithoutConstructor();
 		$admin->save_event_plan_meta($planId, get_post($planId));
 		clean_post_cache($planId);
@@ -222,7 +222,7 @@ try {
 
 	$planId = $createPlan('QA Staffing Eligibility Harness ' . $suffix);
 
-	$seedResult = vms_staffing_save_event_roles_matrix(
+	$seedResult = bvmgr_staffing_save_event_roles_matrix(
 		$planId,
 		array(
 			$barRoleId => 1,
@@ -253,9 +253,9 @@ try {
 	);
 	$assert(!empty($seedResult['ok']), 'Failed to seed staffing slots for the eligibility harness.');
 
-	$barQualifiedStatus = vms_staffing_staff_candidate_status_for_role($barQualifiedId, $barRoleId);
-	$barExpiredStatus = vms_staffing_staff_candidate_status_for_role($barExpiredId, $barRoleId);
-	$cleanupStatus = vms_staffing_staff_candidate_status_for_role($cleanupOnlyId, $cleanupRoleId);
+	$barQualifiedStatus = bvmgr_staffing_staff_candidate_status_for_role($barQualifiedId, $barRoleId);
+	$barExpiredStatus = bvmgr_staffing_staff_candidate_status_for_role($barExpiredId, $barRoleId);
+	$cleanupStatus = bvmgr_staffing_staff_candidate_status_for_role($cleanupOnlyId, $cleanupRoleId);
 	$assert(!empty($barQualifiedStatus['eligible']), 'Qualified bar staff should be eligible for the bar role.');
 	$assert(empty($barExpiredStatus['eligible']) && !empty($barExpiredStatus['qualification_hard_blocked']), 'Expired bar staff should be ineligible because of the hard-block certification rule.');
 	$assert(!empty($cleanupStatus['eligible']) && empty($cleanupStatus['qualification_hard_blocked']), 'Soft-block cleanup qualification gaps should not remove cleanup candidates.');
@@ -303,7 +303,7 @@ try {
 		),
 	));
 
-	$assignedAfterSave = vms_staffing_get_event_assigned_staff_map($planId);
+	$assignedAfterSave = bvmgr_staffing_get_event_assigned_staff_map($planId);
 	$barAssignedAfterSave = isset($assignedAfterSave[$barRoleId]) && is_array($assignedAfterSave[$barRoleId]) ? array_values(array_map('absint', $assignedAfterSave[$barRoleId])) : array();
 	$assert(in_array($barExpiredId, $barAssignedAfterSave, true), 'Existing assigned but now-ineligible bar staff should remain assigned after save.');
 	$assert(!in_array($cleanupOnlyId, $barAssignedAfterSave, true), 'Newly posted ineligible bar staff should be blocked from assignment.');

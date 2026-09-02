@@ -68,7 +68,7 @@ function g16a_extract_guarded_function(string $source, string $name): string
 
 function g16a_operational_call(string $source, string $event_code): string
 {
-	$needle = "vms_record_operational_issue('" . $event_code . "'";
+	$needle = "bvmgr_record_operational_issue('" . $event_code . "'";
 	g16a_same(1, substr_count($source, $needle), 'Fixed event must occur exactly once: ' . $event_code);
 	$start = strpos($source, $needle);
 	$line_start = strrpos(substr($source, 0, (int) $start), "\n");
@@ -116,17 +116,17 @@ function g16a_restore_group_a_baseline(string $relative, string $source): string
 		),
 		'includes/core/goals-forecast.php' => array(
 			'goals_legacy_issue' => "error_log('[VMS Goals] ' . \$message);",
-			'goals_provider_hard_error_check_failed' => "vms_goals_log('Hard-error check failed (square): ' . \$e->getMessage());",
-			'goals_provider_call_failed' => "vms_goals_log('Provider call failed (square): ' . \$e->getMessage());",
-			'goals_actuals_refresh_failed' => "vms_goals_log('Actuals refresh failed for event ' . \$event_plan_id . ': ' . \$msg);",
-			'goals_progress_capped' => "vms_goals_log('Goal progress evaluation capped at ' . \$max_events . ' events for performance.');",
+			'goals_provider_hard_error_check_failed' => "bvmgr_goals_log('Hard-error check failed (square): ' . \$e->getMessage());",
+			'goals_provider_call_failed' => "bvmgr_goals_log('Provider call failed (square): ' . \$e->getMessage());",
+			'goals_actuals_refresh_failed' => "bvmgr_goals_log('Actuals refresh failed for event ' . \$event_plan_id . ': ' . \$msg);",
+			'goals_progress_capped' => "bvmgr_goals_log('Goal progress evaluation capped at ' . \$max_events . ' events for performance.');",
 		),
 	);
 	g16a_assert(isset($maps[$relative]), 'Unknown Group A projection target: ' . $relative);
 	$map = $maps[$relative];
 	if (
 		$relative === 'includes/vendor-applications.php'
-		&& strpos($source, "vms_record_operational_issue('vendor_apply_turnstile_payload_invalid'") !== false
+		&& strpos($source, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'") !== false
 	) {
 		$map['vendor_apply_turnstile_payload_invalid'] = "error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');";
 	}
@@ -236,21 +236,21 @@ g16a_same(1, $g16a_mutation_count, 'Owned Turnstile mutation anchor should occur
 g16a_assert(hash('sha256', $g16a_mutation) !== $g16a_expected_projection_hashes['mirror']['includes/vendor-applications.php'], 'Immutable full-file projection must reject an owned runtime mutation.');
 
 $g16a_exact_calls = array(
-	'vendor_app_vendor_create_failed' => "vms_record_operational_issue('vendor_app_vendor_create_failed', array( 'service' => 'wordpress', 'operation' => 'create_vendor', 'status' => 'failed', 'entity_type' => 'vendor_application', 'post_id' => \$app_id, ), \$vendor_id);",
-	'vendor_app_submitting_user_missing' => "vms_record_operational_issue('vendor_app_submitting_user_missing', array( 'service' => 'wordpress', 'operation' => 'link_submitting_user', 'status' => 'missing', 'entity_type' => 'user', 'entity_id' => \$user_id, 'vendor_id' => \$vendor_id, 'post_id' => \$app_id, ));",
-	'vendor_app_user_link_failed' => "vms_record_operational_issue('vendor_app_user_link_failed', array( 'service' => 'wordpress', 'operation' => 'link_submitting_user', 'status' => 'failed', 'entity_type' => 'user', 'entity_id' => \$user_id, 'vendor_id' => \$vendor_id, 'post_id' => \$app_id, ));",
-	'vendor_apply_turnstile_config_missing' => "vms_record_operational_issue('vendor_apply_turnstile_config_missing', array( 'service' => 'turnstile', 'provider' => 'cloudflare', 'operation' => 'siteverify', 'status' => 'blocked', 'reason' => 'missing_configuration', ));",
-	'vendor_apply_turnstile_request_failed' => "vms_record_operational_issue('vendor_apply_turnstile_request_failed', array( 'service' => 'turnstile', 'provider' => 'cloudflare', 'operation' => 'siteverify', 'status' => 'failed', 'reason' => 'transport_error', ), \$resp);",
-	'vendor_apply_turnstile_response_failed' => "vms_record_operational_issue('vendor_apply_turnstile_response_failed', array( 'service' => 'turnstile', 'provider' => 'cloudflare', 'operation' => 'siteverify', 'status' => 'failed', 'reason' => 'unusable_response', 'http_status' => \$code, ));",
-	'vendor_apply_turnstile_payload_invalid' => "vms_record_operational_issue('vendor_apply_turnstile_payload_invalid', array( 'service' => 'turnstile', 'provider' => 'cloudflare', 'operation' => 'decode_response', 'status' => 'failed', 'reason' => 'invalid_json', ));",
-	'vendor_app_vendor_type_unresolved' => "vms_record_operational_issue('vendor_app_vendor_type_unresolved', array( 'service' => 'wordpress', 'operation' => 'resolve_vendor_type', 'status' => 'skipped', 'reason' => 'term_unresolved', 'post_id' => \$app_id, ), \$slug);",
-	'vendor_app_vendor_type_assignment_failed' => "vms_record_operational_issue('vendor_app_vendor_type_assignment_failed', array( 'service' => 'wordpress', 'operation' => 'assign_vendor_type', 'status' => 'failed', 'vendor_id' => \$vendor_id, 'post_id' => \$app_id, ), \$set);",
-	'vendor_app_review_ready_mail_failed' => "vms_record_operational_issue('vendor_app_review_ready_mail_failed', array( 'service' => 'wp_mail', 'operation' => 'review_ready_notification', 'status' => 'failed', 'entity_type' => 'vendor_application', 'post_id' => \$app_id, ));",
-	'goals_legacy_issue' => "vms_record_operational_issue('goals_legacy_issue', array( 'service' => 'goals_forecast', 'operation' => 'legacy_log', 'status' => 'reported', ), \$message);",
-	'goals_provider_hard_error_check_failed' => "vms_record_operational_issue('goals_provider_hard_error_check_failed', array( 'service' => 'goals_forecast', 'provider' => 'square', 'operation' => 'hard_error_check', 'status' => 'failed', ), \$e);",
-	'goals_provider_call_failed' => "vms_record_operational_issue('goals_provider_call_failed', array( 'service' => 'goals_forecast', 'provider' => 'square', 'operation' => 'fetch_actuals', 'status' => 'failed', 'event_id' => \$event_plan_id, ), \$e);",
-	'goals_actuals_refresh_failed' => "vms_record_operational_issue('goals_actuals_refresh_failed', array( 'service' => 'goals_forecast', 'provider' => sanitize_key((string) (\$result['provider'] ?? 'none')), 'operation' => 'refresh_actuals', 'status' => 'failed', 'event_id' => \$event_plan_id, ), \$msg);",
-	'goals_progress_capped' => "vms_record_operational_issue('goals_progress_capped', array( 'service' => 'goals_forecast', 'operation' => 'compute_progress', 'status' => 'capped', 'count' => \$max_events, 'entity_type' => 'goal', 'entity_id' => absint(\$goal['id'] ?? 0), ));",
+	'vendor_app_vendor_create_failed' => "bvmgr_record_operational_issue('vendor_app_vendor_create_failed', array( 'service' => 'wordpress', 'operation' => 'create_vendor', 'status' => 'failed', 'entity_type' => 'vendor_application', 'post_id' => \$app_id, ), \$vendor_id);",
+	'vendor_app_submitting_user_missing' => "bvmgr_record_operational_issue('vendor_app_submitting_user_missing', array( 'service' => 'wordpress', 'operation' => 'link_submitting_user', 'status' => 'missing', 'entity_type' => 'user', 'entity_id' => \$user_id, 'vendor_id' => \$vendor_id, 'post_id' => \$app_id, ));",
+	'vendor_app_user_link_failed' => "bvmgr_record_operational_issue('vendor_app_user_link_failed', array( 'service' => 'wordpress', 'operation' => 'link_submitting_user', 'status' => 'failed', 'entity_type' => 'user', 'entity_id' => \$user_id, 'vendor_id' => \$vendor_id, 'post_id' => \$app_id, ));",
+	'vendor_apply_turnstile_config_missing' => "bvmgr_record_operational_issue('vendor_apply_turnstile_config_missing', array( 'service' => 'turnstile', 'provider' => 'cloudflare', 'operation' => 'siteverify', 'status' => 'blocked', 'reason' => 'missing_configuration', ));",
+	'vendor_apply_turnstile_request_failed' => "bvmgr_record_operational_issue('vendor_apply_turnstile_request_failed', array( 'service' => 'turnstile', 'provider' => 'cloudflare', 'operation' => 'siteverify', 'status' => 'failed', 'reason' => 'transport_error', ), \$resp);",
+	'vendor_apply_turnstile_response_failed' => "bvmgr_record_operational_issue('vendor_apply_turnstile_response_failed', array( 'service' => 'turnstile', 'provider' => 'cloudflare', 'operation' => 'siteverify', 'status' => 'failed', 'reason' => 'unusable_response', 'http_status' => \$code, ));",
+	'vendor_apply_turnstile_payload_invalid' => "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid', array( 'service' => 'turnstile', 'provider' => 'cloudflare', 'operation' => 'decode_response', 'status' => 'failed', 'reason' => 'invalid_json', ));",
+	'vendor_app_vendor_type_unresolved' => "bvmgr_record_operational_issue('vendor_app_vendor_type_unresolved', array( 'service' => 'wordpress', 'operation' => 'resolve_vendor_type', 'status' => 'skipped', 'reason' => 'term_unresolved', 'post_id' => \$app_id, ), \$slug);",
+	'vendor_app_vendor_type_assignment_failed' => "bvmgr_record_operational_issue('vendor_app_vendor_type_assignment_failed', array( 'service' => 'wordpress', 'operation' => 'assign_vendor_type', 'status' => 'failed', 'vendor_id' => \$vendor_id, 'post_id' => \$app_id, ), \$set);",
+	'vendor_app_review_ready_mail_failed' => "bvmgr_record_operational_issue('vendor_app_review_ready_mail_failed', array( 'service' => 'wp_mail', 'operation' => 'review_ready_notification', 'status' => 'failed', 'entity_type' => 'vendor_application', 'post_id' => \$app_id, ));",
+	'goals_legacy_issue' => "bvmgr_record_operational_issue('goals_legacy_issue', array( 'service' => 'goals_forecast', 'operation' => 'legacy_log', 'status' => 'reported', ), \$message);",
+	'goals_provider_hard_error_check_failed' => "bvmgr_record_operational_issue('goals_provider_hard_error_check_failed', array( 'service' => 'goals_forecast', 'provider' => 'square', 'operation' => 'hard_error_check', 'status' => 'failed', ), \$e);",
+	'goals_provider_call_failed' => "bvmgr_record_operational_issue('goals_provider_call_failed', array( 'service' => 'goals_forecast', 'provider' => 'square', 'operation' => 'fetch_actuals', 'status' => 'failed', 'event_id' => \$event_plan_id, ), \$e);",
+	'goals_actuals_refresh_failed' => "bvmgr_record_operational_issue('goals_actuals_refresh_failed', array( 'service' => 'goals_forecast', 'provider' => sanitize_key((string) (\$result['provider'] ?? 'none')), 'operation' => 'refresh_actuals', 'status' => 'failed', 'event_id' => \$event_plan_id, ), \$msg);",
+	'goals_progress_capped' => "bvmgr_record_operational_issue('goals_progress_capped', array( 'service' => 'goals_forecast', 'operation' => 'compute_progress', 'status' => 'capped', 'count' => \$max_events, 'entity_type' => 'goal', 'entity_id' => absint(\$goal['id'] ?? 0), ));",
 );
 $g16a_event_files = array(
 	'vendor_app_review_ready_mail_failed' => 'includes/core/vendor-application-confirmation.php',
@@ -268,21 +268,21 @@ foreach ($g16a_exact_calls as $event_code => $expected_call) {
 foreach (array('mirror', 'shadow') as $tree) {
 	g16a_same(0, preg_match_all('/(?<![A-Za-z0-9_])error_log\s*\(/', implode("\n", $g16a_sources[$tree])), $tree . ' Group A targets must contain zero direct error_log calls.');
 }
-g16a_same(9, substr_count($g16a_sources['mirror']['includes/vendor-applications.php'], 'vms_record_operational_issue('), 'Mirror vendor source must contain all nine Group A calls.');
-g16a_same(8, substr_count($g16a_sources['shadow']['includes/vendor-applications.php'], 'vms_record_operational_issue('), 'Shadow vendor source must contain only eight corresponding Group A calls.');
-g16a_same(1, substr_count($g16a_sources['mirror']['includes/core/vendor-application-confirmation.php'], "vms_record_operational_issue('vendor_app_review_ready_mail_failed'"), 'Mirror confirmation event count changed.');
-g16a_same(5, substr_count($g16a_sources['mirror']['includes/core/goals-forecast.php'], 'vms_record_operational_issue('), 'Mirror goals event count changed.');
+g16a_same(9, substr_count($g16a_sources['mirror']['includes/vendor-applications.php'], 'bvmgr_record_operational_issue('), 'Mirror vendor source must contain all nine Group A calls.');
+g16a_same(8, substr_count($g16a_sources['shadow']['includes/vendor-applications.php'], 'bvmgr_record_operational_issue('), 'Shadow vendor source must contain only eight corresponding Group A calls.');
+g16a_same(1, substr_count($g16a_sources['mirror']['includes/core/vendor-application-confirmation.php'], "bvmgr_record_operational_issue('vendor_app_review_ready_mail_failed'"), 'Mirror confirmation event count changed.');
+g16a_same(5, substr_count($g16a_sources['mirror']['includes/core/goals-forecast.php'], 'bvmgr_record_operational_issue('), 'Mirror goals event count changed.');
 
-foreach (array('vms_vendor_app_get_or_create_vendor', 'vms_vendor_app_link_submitting_user_to_vendor', 'vms_vendor_app_sync_vendor_from_application') as $function) {
+foreach (array('bvmgr_vendor_app_get_or_create_vendor', 'bvmgr_vendor_app_link_submitting_user_to_vendor', 'bvmgr_vendor_app_sync_vendor_from_application') as $function) {
 	g16a_same(g16a_extract_function($g16a_sources['mirror']['includes/vendor-applications.php'], $function), g16a_extract_function($g16a_sources['shadow']['includes/vendor-applications.php'], $function), 'Shared vendor boundary parity changed: ' . $function);
 }
-foreach (array('vms_vendor_app_send_review_ready_admin_notification', 'vms_vendor_app_maybe_notify_review_ready') as $function) {
+foreach (array('bvmgr_vendor_app_send_review_ready_admin_notification', 'bvmgr_vendor_app_maybe_notify_review_ready') as $function) {
 	g16a_same(g16a_extract_function($g16a_sources['mirror']['includes/core/vendor-application-confirmation.php'], $function), g16a_extract_function($g16a_sources['shadow']['includes/core/vendor-application-confirmation.php'], $function), 'Shared confirmation boundary parity changed: ' . $function);
 }
 g16a_same($g16a_sources['mirror']['includes/core/goals-forecast.php'], $g16a_sources['shadow']['includes/core/goals-forecast.php'], 'Goals runtime must retain full mirror/shadow parity.');
 
-$g16a_mirror_turnstile = g16a_extract_function($g16a_sources['mirror']['includes/vendor-applications.php'], 'vms_vendor_apply_verify_turnstile');
-$g16a_shadow_turnstile = g16a_extract_function($g16a_sources['shadow']['includes/vendor-applications.php'], 'vms_vendor_apply_verify_turnstile');
+$g16a_mirror_turnstile = g16a_extract_function($g16a_sources['mirror']['includes/vendor-applications.php'], 'bvmgr_vendor_apply_verify_turnstile');
+$g16a_shadow_turnstile = g16a_extract_function($g16a_sources['shadow']['includes/vendor-applications.php'], 'bvmgr_vendor_apply_verify_turnstile');
 foreach (array(
 	'vendor_apply_turnstile_config_missing',
 	'vendor_apply_turnstile_request_failed',
@@ -290,17 +290,17 @@ foreach (array(
 ) as $event_code) {
 	g16a_same(g16a_normalize(g16a_operational_call($g16a_mirror_turnstile, $event_code)), g16a_normalize(g16a_operational_call($g16a_shadow_turnstile, $event_code)), 'Corresponding Turnstile event must stay synchronized: ' . $event_code);
 }
-g16a_same(1, substr_count($g16a_mirror_turnstile, "vms_record_operational_issue('vendor_apply_turnstile_payload_invalid'"), 'Mirror must retain its structured invalid-JSON event.');
-g16a_same(0, substr_count($g16a_shadow_turnstile, "vms_record_operational_issue('vendor_apply_turnstile_payload_invalid'"), 'Shadow must not gain the mirror-only invalid-JSON event.');
-g16a_contains('vms_vendor_apply_turnstile_response_token()', $g16a_mirror_turnstile, 'Mirror must retain its normalized Turnstile token helper.');
-g16a_contains("vms_request_read_scalar(\$_POST, 'cf-turnstile-response')", $g16a_shadow_turnstile, 'Shadow must retain its established direct normalized token reader.');
-g16a_contains('vms_vendor_apply_parse_turnstile_siteverify_body($body)', $g16a_mirror_turnstile, 'Mirror must retain its structured JSON parser.');
+g16a_same(1, substr_count($g16a_mirror_turnstile, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'"), 'Mirror must retain its structured invalid-JSON event.');
+g16a_same(0, substr_count($g16a_shadow_turnstile, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'"), 'Shadow must not gain the mirror-only invalid-JSON event.');
+g16a_contains('bvmgr_vendor_apply_turnstile_response_token()', $g16a_mirror_turnstile, 'Mirror must retain its normalized Turnstile token helper.');
+g16a_contains("bvmgr_request_read_scalar(\$_POST, 'cf-turnstile-response')", $g16a_shadow_turnstile, 'Shadow must retain its established direct normalized token reader.');
+g16a_contains('bvmgr_vendor_apply_parse_turnstile_siteverify_body($body)', $g16a_mirror_turnstile, 'Mirror must retain its structured JSON parser.');
 g16a_contains('json_decode($body, true)', $g16a_shadow_turnstile, 'Shadow must retain its established JSON decoder branch.');
 g16a_assert($g16a_mirror_turnstile !== $g16a_shadow_turnstile, 'Intentional Turnstile mirror/shadow divergence must remain explicit.');
 
 defined('ABSPATH') || define('ABSPATH', '/srv/wordpress/');
-defined('VMS_PLUGIN_PATH') || define('VMS_PLUGIN_PATH', '/srv/wordpress/wp-content/plugins/vms/');
-defined('VMS_VENDOR_CPT') || define('VMS_VENDOR_CPT', 'vms_vendor');
+defined('BVMGR_PLUGIN_PATH') || define('BVMGR_PLUGIN_PATH', '/srv/wordpress/wp-content/plugins/vms/');
+defined('BVMGR_VENDOR_CPT') || define('BVMGR_VENDOR_CPT', 'vms_vendor');
 
 final class G16A_WP_Error
 {
@@ -338,11 +338,11 @@ function update_option(string $key, $value, bool $autoload = false): bool { unse
 function is_admin(): bool { return false; }
 function wp_doing_ajax(): bool { return false; }
 function wp_doing_cron(): bool { return false; }
-function vms_admin_guard_request_method(): string { return 'post'; }
-function vms_resource_fingerprint_current_admin_page(): string { return ''; }
-function vms_admin_guard_current_screen_id(): string { return ''; }
-function vms_request_current_uri(): string { return '/vendor/apply?token=token-sentinel'; }
-function vms_resource_fingerprint_store_entry(array $entry): void { $GLOBALS['g16a_entries'][] = $entry; }
+function bvmgr_admin_guard_request_method(): string { return 'post'; }
+function bvmgr_resource_fingerprint_current_admin_page(): string { return ''; }
+function bvmgr_admin_guard_current_screen_id(): string { return ''; }
+function bvmgr_request_current_uri(): string { return '/vendor/apply?token=token-sentinel'; }
+function bvmgr_resource_fingerprint_store_entry(array $entry): void { $GLOBALS['g16a_entries'][] = $entry; }
 
 function get_post(int $post_id): object { return (object) array('ID' => $post_id, 'post_type' => 'vms_vendor_application', 'post_title' => 'Safe Vendor'); }
 function get_post_type(int $post_id): string { return (string) ($GLOBALS['g16a_post_types'][$post_id] ?? ''); }
@@ -362,26 +362,26 @@ function wp_insert_post(array $args, bool $wp_error = false)
 	unset($args, $wp_error);
 	return $GLOBALS['g16a_insert_result'];
 }
-function vms_vendor_app_cpt_slugs(): array { return array('vms_vendor_application'); }
-function vms_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id): int { unset($app_id); return $vendor_id; }
-function vms_vendor_app_get_submitting_user_id(int $app_id): int { unset($app_id); return (int) $GLOBALS['g16a_user_id']; }
+function bvmgr_vendor_app_cpt_slugs(): array { return array('vms_vendor_application'); }
+function bvmgr_vendor_app_sync_vendor_from_application(int $app_id, int $vendor_id): int { unset($app_id); return $vendor_id; }
+function bvmgr_vendor_app_get_submitting_user_id(int $app_id): int { unset($app_id); return (int) $GLOBALS['g16a_user_id']; }
 function get_userdata(int $user_id) { unset($user_id); return $GLOBALS['g16a_user']; }
-function vms_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args, int $actor_user_id): bool
+function bvmgr_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args, int $actor_user_id): bool
 {
 	unset($vendor_id, $user_id, $args, $actor_user_id);
 	return (bool) $GLOBALS['g16a_link_result'];
 }
 
-function vms_vendor_apply_turnstile_site_key(): string { return (string) $GLOBALS['g16a_site_key']; }
-function vms_vendor_apply_turnstile_secret_key(): string { return (string) $GLOBALS['g16a_secret_key']; }
-function vms_vendor_apply_turnstile_response_token(): string { return (string) $GLOBALS['g16a_token']; }
-function vms_request_remote_addr(): string { return '203.0.113.77'; }
+function bvmgr_vendor_apply_turnstile_site_key(): string { return (string) $GLOBALS['g16a_site_key']; }
+function bvmgr_vendor_apply_turnstile_secret_key(): string { return (string) $GLOBALS['g16a_secret_key']; }
+function bvmgr_vendor_apply_turnstile_response_token(): string { return (string) $GLOBALS['g16a_token']; }
+function bvmgr_request_remote_addr(): string { return '203.0.113.77'; }
 function wp_remote_post(string $url, array $args) { $GLOBALS['g16a_remote_call'] = compact('url', 'args'); return $GLOBALS['g16a_remote_result']; }
 function wp_remote_retrieve_response_code($response): int { return (int) ($response['response']['code'] ?? 0); }
 function wp_remote_retrieve_body($response): string { return (string) ($response['body'] ?? ''); }
-function vms_vendor_apply_parse_turnstile_siteverify_body(string $body): array { unset($body); return $GLOBALS['g16a_parsed_body']; }
+function bvmgr_vendor_apply_parse_turnstile_siteverify_body(string $body): array { unset($body); return $GLOBALS['g16a_parsed_body']; }
 
-function vms_vendor_app_get_confirmation_email(int $app_id): string { unset($app_id); return 'submitter-sentinel@example.test'; }
+function bvmgr_vendor_app_get_confirmation_email(int $app_id): string { unset($app_id); return 'submitter-sentinel@example.test'; }
 function get_the_title(int $post_id): string { unset($post_id); return 'Safe Vendor'; }
 function apply_filters(string $hook, $value)
 {
@@ -390,29 +390,29 @@ function apply_filters(string $hook, $value)
 	}
 	return $value;
 }
-function vms_vendor_app_meta_key(string $suffix): string { return '_vms_app_' . $suffix; }
-function vms_vendor_app_vendor_type_label(string $type): string { return $type === '' ? 'Unknown' : $type; }
-function vms_vendor_app_confirmation_state_label(string $state): string { return $state; }
-function vms_vendor_app_get_confirmation_state(int $app_id): string { unset($app_id); return 'confirmed'; }
+function bvmgr_vendor_app_meta_key(string $suffix): string { return '_vms_app_' . $suffix; }
+function bvmgr_vendor_app_vendor_type_label(string $type): string { return $type === '' ? 'Unknown' : $type; }
+function bvmgr_vendor_app_confirmation_state_label(string $state): string { return $state; }
+function bvmgr_vendor_app_get_confirmation_state(int $app_id): string { unset($app_id); return 'confirmed'; }
 function admin_url(string $path = ''): string { return 'https://example.test/wp-admin/' . ltrim($path, '/'); }
 function wp_mail($to, string $subject, string $message): bool
 {
 	$GLOBALS['g16a_mail_calls'][] = compact('to', 'subject', 'message');
 	return (bool) $GLOBALS['g16a_mail_result'];
 }
-function vms_vendor_app_is_review_ready(int $app_id): bool { unset($app_id); return true; }
+function bvmgr_vendor_app_is_review_ready(int $app_id): bool { unset($app_id); return true; }
 function current_time(string $type): string { unset($type); return '2026-08-08 12:00:00'; }
 
 function vms_square_actuals_has_hard_errors(array $raw): bool { unset($raw); throw new RuntimeException($GLOBALS['g16a_exception_message'], 731); }
-function vms_pos_provider_detect(): array { return array('square' => array('slug' => 'square')); }
-function vms_goals_get_settings(): array { return array('enabled_actuals_providers' => array('square'), 'default_trailing_window_events' => 2); }
+function bvmgr_pos_provider_detect(): array { return array('square' => array('slug' => 'square')); }
+function bvmgr_goals_get_settings(): array { return array('enabled_actuals_providers' => array('square'), 'default_trailing_window_events' => 2); }
 function vms_square_get_event_actuals(int $event_plan_id, array $args): array { unset($event_plan_id, $args); throw new RuntimeException($GLOBALS['g16a_exception_message'], 732); }
-function vms_goals_normalize_provider_actuals(string $provider, array $raw): array { return array('ok' => true, 'provider' => $provider, 'raw' => $raw); }
-function vms_goals_get_event_ids_in_period(string $start, string $end, int $limit): array { unset($start, $end, $limit); return range(1001, 1026); }
+function bvmgr_goals_normalize_provider_actuals(string $provider, array $raw): array { return array('ok' => true, 'provider' => $provider, 'raw' => $raw); }
+function bvmgr_goals_get_event_ids_in_period(string $start, string $end, int $limit): array { unset($start, $end, $limit); return range(1001, 1026); }
 function wp_timezone(): DateTimeZone { return new DateTimeZone('UTC'); }
 function wp_date(string $format, $timestamp = null, $timezone = null): string { unset($format, $timestamp, $timezone); return '2026-08-08'; }
-function vms_goals_get_event_pnl(int $event_id, array $args): array { unset($event_id, $args); return array(); }
-function vms_goals_metric_value_from_pnl(string $metric, array $pnl): int { unset($metric, $pnl); return 0; }
+function bvmgr_goals_get_event_pnl(int $event_id, array $args): array { unset($event_id, $args); return array(); }
+function bvmgr_goals_metric_value_from_pnl(string $metric, array $pnl): int { unset($metric, $pnl); return 0; }
 
 function g16a_reset_runtime(): void
 {
@@ -456,32 +456,32 @@ function g16a_assert_entry_redacted(array $entry, string $message): void
 
 $g16a_runtime_source = g16a_read($g16a_root . '/includes/runtime-guards.php');
 foreach (array(
-	'vms_operational_issue_value_is_tainted',
-	'vms_operational_issue_request_path',
-	'vms_operational_issue_error_identity',
-	'vms_operational_issue_context',
-	'vms_record_operational_issue',
+	'bvmgr_operational_issue_value_is_tainted',
+	'bvmgr_operational_issue_request_path',
+	'bvmgr_operational_issue_error_identity',
+	'bvmgr_operational_issue_context',
+	'bvmgr_record_operational_issue',
 ) as $helper) {
 	eval(g16a_extract_guarded_function($g16a_runtime_source, $helper));
 }
 foreach (array(
-	array('includes/vendor-applications.php', 'vms_vendor_app_get_or_create_vendor'),
-	array('includes/vendor-applications.php', 'vms_vendor_app_link_submitting_user_to_vendor'),
-	array('includes/vendor-applications.php', 'vms_vendor_apply_verify_turnstile'),
-	array('includes/core/vendor-application-confirmation.php', 'vms_vendor_app_send_review_ready_admin_notification'),
-	array('includes/core/vendor-application-confirmation.php', 'vms_vendor_app_maybe_notify_review_ready'),
-	array('includes/core/goals-forecast.php', 'vms_goals_log'),
-	array('includes/core/goals-forecast.php', 'vms_goals_provider_has_hard_errors'),
-	array('includes/core/goals-forecast.php', 'vms_pos_get_event_actuals'),
-	array('includes/core/goals-forecast.php', 'vms_goals_refresh_event_actuals'),
-	array('includes/core/goals-forecast.php', 'vms_goals_compute_goal_progress'),
+	array('includes/vendor-applications.php', 'bvmgr_vendor_app_get_or_create_vendor'),
+	array('includes/vendor-applications.php', 'bvmgr_vendor_app_link_submitting_user_to_vendor'),
+	array('includes/vendor-applications.php', 'bvmgr_vendor_apply_verify_turnstile'),
+	array('includes/core/vendor-application-confirmation.php', 'bvmgr_vendor_app_send_review_ready_admin_notification'),
+	array('includes/core/vendor-application-confirmation.php', 'bvmgr_vendor_app_maybe_notify_review_ready'),
+	array('includes/core/goals-forecast.php', 'bvmgr_goals_log'),
+	array('includes/core/goals-forecast.php', 'bvmgr_goals_provider_has_hard_errors'),
+	array('includes/core/goals-forecast.php', 'bvmgr_pos_get_event_actuals'),
+	array('includes/core/goals-forecast.php', 'bvmgr_goals_refresh_event_actuals'),
+	array('includes/core/goals-forecast.php', 'bvmgr_goals_compute_goal_progress'),
 ) as $target) {
 	eval(g16a_extract_function($g16a_sources['mirror'][$target[0]], $target[1]));
 }
 
 g16a_reset_runtime();
 $g16a_probe_error = new WP_Error('transport_failure', $GLOBALS['g16a_exception_message']);
-g16a_assert(vms_record_operational_issue('vendor_apply_turnstile_request_failed', array(
+g16a_assert(bvmgr_record_operational_issue('vendor_apply_turnstile_request_failed', array(
 	'service' => 'turnstile',
 	'provider' => 'cloudflare',
 	'operation' => 'siteverify',
@@ -497,13 +497,13 @@ g16a_same('', $g16a_probe_entry['request_uri'], 'Operational issues must not sto
 g16a_same('transport_failure', $g16a_probe_issue['error']['error_code'] ?? '', 'Safe error code should remain available.');
 g16a_assert(preg_match('/^[a-f0-9]{24}$/', (string) ($g16a_probe_issue['error']['error_fingerprint'] ?? '')) === 1, 'Raw errors must persist only a deterministic 24-hex fingerprint.');
 $g16a_first_fingerprint = $g16a_probe_issue['error']['error_fingerprint'];
-vms_record_operational_issue('vendor_apply_turnstile_request_failed', array('service' => 'turnstile'), $g16a_probe_error);
+bvmgr_record_operational_issue('vendor_apply_turnstile_request_failed', array('service' => 'turnstile'), $g16a_probe_error);
 g16a_same($g16a_first_fingerprint, g16a_last_issue()['error']['error_fingerprint'] ?? '', 'Equivalent raw errors must have deterministic identities.');
 g16a_assert_entry_redacted($g16a_probe_entry, 'Direct sentinel probe');
 
 g16a_reset_runtime();
 $GLOBALS['g16a_insert_result'] = new WP_Error('vendor_create_failed', $GLOBALS['g16a_exception_message']);
-g16a_same(0, vms_vendor_app_get_or_create_vendor(41), 'Vendor creation failure must retain its zero result.');
+g16a_same(0, bvmgr_vendor_app_get_or_create_vendor(41), 'Vendor creation failure must retain its zero result.');
 $g16a_issue = g16a_last_issue();
 g16a_same('vendor_app_vendor_create_failed', $g16a_issue['event_code'], 'Vendor create failure event changed.');
 g16a_same(array('service' => 'wordpress', 'operation' => 'create_vendor', 'status' => 'failed', 'entity_type' => 'vendor_application', 'post_id' => 41), $g16a_issue['context'], 'Vendor create failure context changed.');
@@ -512,12 +512,12 @@ g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Vendor creation failure
 
 g16a_reset_runtime();
 $GLOBALS['g16a_insert_result'] = 0;
-g16a_same(0, vms_vendor_app_get_or_create_vendor(42), 'Non-WP_Error vendor creation failure must retain its zero result.');
+g16a_same(0, bvmgr_vendor_app_get_or_create_vendor(42), 'Non-WP_Error vendor creation failure must retain its zero result.');
 g16a_assert(!isset(g16a_last_issue()['error']), 'Non-error vendor create result should not invent an error identity.');
 
 g16a_reset_runtime();
 $GLOBALS['g16a_user'] = false;
-$g16a_missing_user = vms_vendor_app_link_submitting_user_to_vendor(51, 61, 7);
+$g16a_missing_user = bvmgr_vendor_app_link_submitting_user_to_vendor(51, 61, 7);
 g16a_assert($g16a_missing_user instanceof WP_Error, 'Missing submitting user must retain a caller-visible WP_Error.');
 g16a_same('vms_vendor_app_missing_user', $g16a_missing_user->get_error_code(), 'Missing-user public error code changed.');
 g16a_same('The submitting website account no longer exists.', $g16a_missing_user->get_error_message(), 'Missing-user public notice changed.');
@@ -525,30 +525,30 @@ g16a_same(array('service' => 'wordpress', 'operation' => 'link_submitting_user',
 
 g16a_reset_runtime();
 $GLOBALS['g16a_link_result'] = false;
-$g16a_failed_link = vms_vendor_app_link_submitting_user_to_vendor(52, 62, 8);
+$g16a_failed_link = bvmgr_vendor_app_link_submitting_user_to_vendor(52, 62, 8);
 g16a_assert($g16a_failed_link instanceof WP_Error, 'Failed user link must retain a caller-visible WP_Error.');
 g16a_same('vms_vendor_app_link_failed', $g16a_failed_link->get_error_code(), 'Failed-link public error code changed.');
 g16a_same('The website account link could not be saved.', $g16a_failed_link->get_error_message(), 'Failed-link public notice changed.');
 g16a_same('vendor_app_user_link_failed', g16a_last_issue()['event_code'], 'Failed-link event changed.');
 
 g16a_reset_runtime();
-g16a_same(true, vms_vendor_app_link_submitting_user_to_vendor(53, 63, 9), 'Successful user link must retain true.');
+g16a_same(true, bvmgr_vendor_app_link_submitting_user_to_vendor(53, 63, 9), 'Successful user link must retain true.');
 g16a_same(array(), $GLOBALS['g16a_entries'], 'Successful user link must not record a failure.');
 
 g16a_reset_runtime();
 $GLOBALS['g16a_site_key'] = '';
-g16a_same(false, vms_vendor_apply_verify_turnstile(), 'Missing Turnstile configuration must still fail closed.');
+g16a_same(false, bvmgr_vendor_apply_verify_turnstile(), 'Missing Turnstile configuration must still fail closed.');
 g16a_same('vendor_apply_turnstile_config_missing', g16a_last_issue()['event_code'], 'Turnstile configuration event changed.');
 g16a_same(array(), $GLOBALS['g16a_remote_call'], 'Missing Turnstile configuration must not call the provider.');
 
 g16a_reset_runtime();
 $GLOBALS['g16a_token'] = '';
-g16a_same(false, vms_vendor_apply_verify_turnstile(), 'Missing Turnstile token must still fail closed.');
+g16a_same(false, bvmgr_vendor_apply_verify_turnstile(), 'Missing Turnstile token must still fail closed.');
 g16a_same(array(), $GLOBALS['g16a_entries'], 'Missing Turnstile token must not create a new operational issue.');
 
 g16a_reset_runtime();
 $GLOBALS['g16a_remote_result'] = new WP_Error('transport_failure', $GLOBALS['g16a_exception_message']);
-g16a_same(false, vms_vendor_apply_verify_turnstile(), 'Turnstile transport failure must retain false.');
+g16a_same(false, bvmgr_vendor_apply_verify_turnstile(), 'Turnstile transport failure must retain false.');
 g16a_same('vendor_apply_turnstile_request_failed', g16a_last_issue()['event_code'], 'Turnstile transport event changed.');
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Turnstile transport failure');
 g16a_same('token-sentinel-raw', $GLOBALS['g16a_remote_call']['args']['body']['response'], 'Turnstile provider request token contract changed.');
@@ -556,7 +556,7 @@ g16a_same('203.0.113.77', $GLOBALS['g16a_remote_call']['args']['body']['remoteip
 
 g16a_reset_runtime();
 $GLOBALS['g16a_remote_result'] = array('response' => array('code' => 503), 'body' => $GLOBALS['g16a_exception_message']);
-g16a_same(false, vms_vendor_apply_verify_turnstile(), 'Unusable Turnstile response must retain false.');
+g16a_same(false, bvmgr_vendor_apply_verify_turnstile(), 'Unusable Turnstile response must retain false.');
 $g16a_issue = g16a_last_issue();
 g16a_same('vendor_apply_turnstile_response_failed', $g16a_issue['event_code'], 'Turnstile response event changed.');
 g16a_same(503, $g16a_issue['context']['http_status'] ?? 0, 'Turnstile response should retain only its numeric HTTP status.');
@@ -565,17 +565,17 @@ g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Turnstile unusable resp
 g16a_reset_runtime();
 $GLOBALS['g16a_remote_result'] = array('response' => array('code' => 200), 'body' => $GLOBALS['g16a_exception_message']);
 $GLOBALS['g16a_parsed_body'] = array();
-g16a_same(false, vms_vendor_apply_verify_turnstile(), 'Invalid Turnstile payload must retain false.');
+g16a_same(false, bvmgr_vendor_apply_verify_turnstile(), 'Invalid Turnstile payload must retain false.');
 g16a_same('vendor_apply_turnstile_payload_invalid', g16a_last_issue()['event_code'], 'Mirror invalid-payload event changed.');
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Turnstile invalid payload');
 
 g16a_reset_runtime();
-g16a_same(true, vms_vendor_apply_verify_turnstile(), 'Successful Turnstile verification must retain true.');
+g16a_same(true, bvmgr_vendor_apply_verify_turnstile(), 'Successful Turnstile verification must retain true.');
 g16a_same(array(), $GLOBALS['g16a_entries'], 'Successful Turnstile verification must not record a failure.');
 
 g16a_reset_runtime();
 $g16a_slug = 'slug-token-sentinel-/private/tmp/raw.php';
-vms_record_operational_issue('vendor_app_vendor_type_unresolved', array(
+bvmgr_record_operational_issue('vendor_app_vendor_type_unresolved', array(
 	'service' => 'wordpress',
 	'operation' => 'resolve_vendor_type',
 	'status' => 'skipped',
@@ -588,7 +588,7 @@ g16a_same('string', $g16a_issue['error']['error_class'] ?? '', 'Unresolved vendo
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Unresolved vendor type');
 
 g16a_reset_runtime();
-$g16a_assignment_recorded = vms_record_operational_issue('vendor_app_vendor_type_assignment_failed', array(
+$g16a_assignment_recorded = bvmgr_record_operational_issue('vendor_app_vendor_type_assignment_failed', array(
 	'service' => 'wordpress',
 	'operation' => 'assign_vendor_type',
 	'status' => 'failed',
@@ -602,7 +602,7 @@ if ($g16a_assignment_recorded) {
 
 g16a_reset_runtime();
 $GLOBALS['g16a_mail_result'] = false;
-g16a_same(false, vms_vendor_app_send_review_ready_admin_notification(91), 'Failed review-ready mail must retain false.');
+g16a_same(false, bvmgr_vendor_app_send_review_ready_admin_notification(91), 'Failed review-ready mail must retain false.');
 $g16a_issue = g16a_last_issue();
 g16a_same('vendor_app_review_ready_mail_failed', $g16a_issue['event_code'], 'Review-ready mail event changed.');
 g16a_same(array('service' => 'wp_mail', 'operation' => 'review_ready_notification', 'status' => 'failed', 'entity_type' => 'vendor_application', 'post_id' => 91), $g16a_issue['context'], 'Review-ready mail context changed.');
@@ -611,35 +611,35 @@ g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Review-ready mail failu
 
 g16a_reset_runtime();
 $GLOBALS['g16a_mail_result'] = false;
-g16a_same(false, vms_vendor_app_maybe_notify_review_ready(92), 'Failed review-ready retry must retain false.');
+g16a_same(false, bvmgr_vendor_app_maybe_notify_review_ready(92), 'Failed review-ready retry must retain false.');
 g16a_same(array(), $GLOBALS['g16a_meta_updates'], 'Failed review-ready retry must not write its notified marker.');
 
 g16a_reset_runtime();
 $GLOBALS['g16a_mail_result'] = true;
-g16a_same(true, vms_vendor_app_maybe_notify_review_ready(93), 'Successful review-ready mail must retain true.');
+g16a_same(true, bvmgr_vendor_app_maybe_notify_review_ready(93), 'Successful review-ready mail must retain true.');
 g16a_same('_vms_app_review_ready_notified_at', $GLOBALS['g16a_meta_updates'][0]['key'] ?? '', 'Successful review-ready mail must retain its marker key.');
 g16a_same('2026-08-08 12:00:00', $GLOBALS['g16a_meta_updates'][0]['value'] ?? '', 'Successful review-ready mail must retain its marker value.');
 g16a_same(array(), $GLOBALS['g16a_entries'], 'Successful review-ready mail must not record a failure.');
 
 g16a_reset_runtime();
 $GLOBALS['g16a_meta'][94]['_vms_app_review_ready_notified_at'] = 'already-sent';
-g16a_same(true, vms_vendor_app_maybe_notify_review_ready(94), 'Existing review-ready marker must retain true.');
+g16a_same(true, bvmgr_vendor_app_maybe_notify_review_ready(94), 'Existing review-ready marker must retain true.');
 g16a_same(array(), $GLOBALS['g16a_mail_calls'], 'Existing review-ready marker must prevent a retry.');
 
 g16a_reset_runtime();
-vms_goals_log($GLOBALS['g16a_exception_message']);
+bvmgr_goals_log($GLOBALS['g16a_exception_message']);
 g16a_same('goals_legacy_issue', g16a_last_issue()['event_code'], 'Goals compatibility shim event changed.');
 g16a_same(array('service' => 'goals_forecast', 'operation' => 'legacy_log', 'status' => 'reported'), g16a_last_issue()['context'], 'Goals compatibility shim context changed.');
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Goals compatibility shim');
 
 g16a_reset_runtime();
-g16a_same(false, vms_goals_provider_has_hard_errors('square', array(), array()), 'Caught hard-error check exception must retain the fallback result.');
+g16a_same(false, bvmgr_goals_provider_has_hard_errors('square', array(), array()), 'Caught hard-error check exception must retain the fallback result.');
 g16a_same('goals_provider_hard_error_check_failed', g16a_last_issue()['event_code'], 'Goals hard-error check event changed.');
 g16a_same(731, (int) (g16a_last_issue()['error']['error_code'] ?? 0), 'Goals hard-error exception code changed.');
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Goals hard-error check');
 
 g16a_reset_runtime();
-$g16a_provider_result = vms_pos_get_event_actuals(101, array('mode' => 'refresh'));
+$g16a_provider_result = bvmgr_pos_get_event_actuals(101, array('mode' => 'refresh'));
 g16a_same(false, $g16a_provider_result['ok'], 'Provider exception must retain its false result.');
 g16a_same('square', $g16a_provider_result['provider'], 'Provider exception must retain its provider result.');
 g16a_same('Square provider error: ' . $GLOBALS['g16a_exception_message'], $g16a_provider_result['errors'][0], 'Privileged caller-visible provider error must remain unchanged.');
@@ -647,17 +647,17 @@ g16a_same('goals_provider_call_failed', g16a_last_issue()['event_code'], 'Goals 
 g16a_assert_entry_redacted($GLOBALS['g16a_entries'][0], 'Goals provider call');
 
 g16a_reset_runtime();
-$g16a_refresh_result = vms_goals_refresh_event_actuals(102, array('mode' => 'refresh'));
+$g16a_refresh_result = bvmgr_goals_refresh_event_actuals(102, array('mode' => 'refresh'));
 g16a_same(false, $g16a_refresh_result['ok'], 'Failed actuals refresh must retain false.');
 g16a_same('Square provider error: ' . $GLOBALS['g16a_exception_message'], $g16a_refresh_result['message'], 'Privileged refresh result must retain its raw caller-visible message.');
 g16a_same(array('goals_provider_call_failed', 'goals_actuals_refresh_failed'), array_map(static fn(array $entry): string => (string) ($entry['flags']['operational_issue'][0]['event_code'] ?? ''), $GLOBALS['g16a_entries']), 'Failed refresh must retain exact producer ordering.');
 foreach ($GLOBALS['g16a_entries'] as $entry) {
 	g16a_assert_entry_redacted($entry, 'Goals actuals refresh');
 }
-g16a_same(array('ok' => false, 'message' => 'Invalid event plan id.'), vms_goals_refresh_event_actuals(0), 'Invalid refresh target result changed.');
+g16a_same(array('ok' => false, 'message' => 'Invalid event plan id.'), bvmgr_goals_refresh_event_actuals(0), 'Invalid refresh target result changed.');
 
 g16a_reset_runtime();
-$g16a_progress = vms_goals_compute_goal_progress(array(
+$g16a_progress = bvmgr_goals_compute_goal_progress(array(
 	'id' => 111,
 	'metric' => 'true_profit',
 	'target_cents' => 2500,

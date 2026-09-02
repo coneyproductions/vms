@@ -14,7 +14,7 @@ add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_venue_health_check',
         __('Venue Health Check', 'backstage-venue-manager'),
-        'vms_render_venue_health_check_box',
+        'bvmgr_render_venue_health_check_box',
         'vms_venue',
         'side',
         'high'
@@ -24,7 +24,7 @@ add_action('add_meta_boxes', function (): void {
 /**
  * @param WP_Post $post
  */
-function vms_render_venue_health_check_box($post): void {
+function bvmgr_render_venue_health_check_box($post): void {
 
     $post_id = isset($post->ID) ? (int) $post->ID : 0;
     if ($post_id <= 0) {
@@ -32,7 +32,7 @@ function vms_render_venue_health_check_box($post): void {
         return;
     }
 
-    $issues = vms_get_venue_health_check_issues($post_id);
+    $issues = bvmgr_get_venue_health_check_issues($post_id);
     $has_errors = !empty($issues['errors']);
     $has_warnings = !empty($issues['warnings']);
 
@@ -55,7 +55,7 @@ function vms_render_venue_health_check_box($post): void {
         echo '<div class="vms-healthcheck__heading">' . esc_html__('Must fix', 'backstage-venue-manager') . '</div>';
         echo '<ul class="vms-healthcheck__list">';
         foreach ($issues['errors'] as $row) {
-            echo '<li>' . wp_kses($row, vms_healthcheck_allowed_html()) . '</li>';
+            echo '<li>' . wp_kses($row, bvmgr_healthcheck_allowed_html()) . '</li>';
         }
         echo '</ul>';
         echo '</div>';
@@ -66,7 +66,7 @@ function vms_render_venue_health_check_box($post): void {
         echo '<div class="vms-healthcheck__heading">' . esc_html__('Recommended', 'backstage-venue-manager') . '</div>';
         echo '<ul class="vms-healthcheck__list">';
         foreach ($issues['warnings'] as $row) {
-            echo '<li>' . wp_kses($row, vms_healthcheck_allowed_html()) . '</li>';
+            echo '<li>' . wp_kses($row, bvmgr_healthcheck_allowed_html()) . '</li>';
         }
         echo '</ul>';
         echo '</div>';
@@ -77,7 +77,7 @@ function vms_render_venue_health_check_box($post): void {
         echo '<div class="vms-healthcheck__heading">' . esc_html__('Notes', 'backstage-venue-manager') . '</div>';
         echo '<ul class="vms-healthcheck__list">';
         foreach ($issues['notes'] as $row) {
-            echo '<li>' . wp_kses($row, vms_healthcheck_allowed_html()) . '</li>';
+            echo '<li>' . wp_kses($row, bvmgr_healthcheck_allowed_html()) . '</li>';
         }
         echo '</ul>';
         echo '</div>';
@@ -89,7 +89,7 @@ function vms_render_venue_health_check_box($post): void {
 /**
  * Minimal allowlist for health check list items.
  */
-function vms_healthcheck_allowed_html(): array {
+function bvmgr_healthcheck_allowed_html(): array {
     return array(
         'a' => array(
             'href'  => true,
@@ -107,7 +107,7 @@ function vms_healthcheck_allowed_html(): array {
  *
  * @return array{errors: string[], warnings: string[], notes: string[]}
  */
-function vms_get_venue_health_check_issues(int $venue_id): array {
+function bvmgr_get_venue_health_check_issues(int $venue_id): array {
 
     $out = array(
         'errors'   => array(),
@@ -117,7 +117,7 @@ function vms_get_venue_health_check_issues(int $venue_id): array {
 
     // Weekly open days
     $open_days_raw = get_post_meta($venue_id, '_vms_venue_open_days', true);
-    $open_days = vms_healthcheck_normalize_open_days($open_days_raw);
+    $open_days = bvmgr_healthcheck_normalize_open_days($open_days_raw);
 
     if (empty($open_days)) {
         $out['errors'][] = sprintf(
@@ -185,10 +185,10 @@ function vms_get_venue_health_check_issues(int $venue_id): array {
 /**
  * Normalize open days from legacy formats (array|numeric|string) to int array 0..6.
  */
-function vms_healthcheck_normalize_open_days($raw): array {
+function bvmgr_healthcheck_normalize_open_days($raw): array {
     // Prefer the canonical helper if available.
-    if (function_exists('vms_normalize_int_array')) {
-        $arr = vms_normalize_int_array($raw);
+    if (function_exists('bvmgr_normalize_int_array')) {
+        $arr = bvmgr_normalize_int_array($raw);
     } else {
         $arr = array();
         if (is_array($raw)) {

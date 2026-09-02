@@ -4,8 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/bootstrap-wordpress.php';
 vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 $assert = static function (bool $condition, string $message): void {
@@ -132,8 +132,8 @@ try {
 			'vms_secondary_vendors_module_detached' => '1',
 		), $overrides);
 
-		$reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-		/** @var VMS_Admin_Event_Plans $admin */
+		$reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+		/** @var BVMGR_Admin_Event_Plans $admin */
 		$admin = $reflection->newInstanceWithoutConstructor();
 		$admin->save_event_plan_meta($planId, get_post($planId));
 		clean_post_cache($planId);
@@ -165,8 +165,8 @@ try {
 	update_post_meta($planId, '_vms_venue_id', 0);
 	update_post_meta($planId, '_vms_band_vendor_id', $primaryVendorId);
 
-	$assignmentMetaKey = function_exists('vms_event_plan_secondary_vendor_assignment_meta_key')
-		? vms_event_plan_secondary_vendor_assignment_meta_key()
+	$assignmentMetaKey = function_exists('bvmgr_event_plan_secondary_vendor_assignment_meta_key')
+		? bvmgr_event_plan_secondary_vendor_assignment_meta_key()
 		: '_vms_secondary_vendor_assignments_v1';
 
 	delete_post_meta($planId, $assignmentMetaKey);
@@ -175,8 +175,8 @@ try {
 	delete_post_meta($planId, '_vms_secondary_vendor_id');
 	add_post_meta($planId, '_vms_secondary_vendor_id', $foodVendorA, false);
 
-	$legacyHydrated = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-		? vms_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
+	$legacyHydrated = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+		? bvmgr_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
 		: array();
 	$assert($normalizeAssignments($legacyHydrated) === array(
 		'food_truck' => array(
@@ -186,8 +186,8 @@ try {
 		),
 	), 'Legacy secondary vendor meta should hydrate into the canonical assignment map.');
 
-	$saveResult = function_exists('vms_event_plan_save_secondary_vendors_module')
-		? vms_event_plan_save_secondary_vendors_module($planId, array(
+	$saveResult = function_exists('bvmgr_event_plan_save_secondary_vendors_module')
+		? bvmgr_event_plan_save_secondary_vendors_module($planId, array(
 			'vms_secondary_vendor_assignments' => array(
 				array(
 					'type_slug' => 'food_truck',
@@ -243,10 +243,10 @@ try {
 	sort($indexSecondaryIds);
 	$assert($indexSecondaryIds === $expectedFlatIds, 'Repeated secondary vendor index rows should contain every assigned additional vendor.');
 
-	if (function_exists('vms_event_plan_import_update_secondary_meta')) {
-		vms_event_plan_import_update_secondary_meta($planId, 'food_truck', array($foodVendorB), $primaryVendorId);
-		$afterImportAssignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-			? vms_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
+	if (function_exists('bvmgr_event_plan_import_update_secondary_meta')) {
+		bvmgr_event_plan_import_update_secondary_meta($planId, 'food_truck', array($foodVendorB), $primaryVendorId);
+		$afterImportAssignments = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+			? bvmgr_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
 			: array();
 		$assert($normalizeAssignments($afterImportAssignments) === array(
 			'dessert_truck' => array(
@@ -275,13 +275,13 @@ try {
 	$afterBroadSave = $normalizeAssignments((array) get_post_meta($planId, $assignmentMetaKey, true));
 	$assert($afterBroadSave === $beforeBroadSave, 'Broad Event Plan saves must not wipe canonical secondary vendor assignments when the detached module is not posted.');
 
-	$setResult = function_exists('vms_event_plan_set_secondary_vendors')
-		? vms_event_plan_set_secondary_vendors($planId, 'food_truck', array($foodVendorA))
+	$setResult = function_exists('bvmgr_event_plan_set_secondary_vendors')
+		? bvmgr_event_plan_set_secondary_vendors($planId, 'food_truck', array($foodVendorA))
 		: new WP_Error('missing_helper', 'Secondary vendor set helper is unavailable.');
 	$assert(!is_wp_error($setResult), 'Setting one secondary vendor group should succeed.');
 
-	$afterSetAssignments = function_exists('vms_event_plan_get_secondary_vendor_assignments')
-		? vms_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
+	$afterSetAssignments = function_exists('bvmgr_event_plan_get_secondary_vendor_assignments')
+		? bvmgr_event_plan_get_secondary_vendor_assignments($planId, array('primary_vendor_id' => $primaryVendorId))
 		: array();
 	$assert($normalizeAssignments($afterSetAssignments) === $expectedAssignments, 'Saving Food Vendor should not wipe Dessert Vendor or Market Vendor groups.');
 
@@ -302,13 +302,13 @@ try {
 			'vendor_ids' => array($marketVendorC, $marketVendorD, $marketVendorE),
 		),
 	);
-	$writeCalendarAssignments = function_exists('vms_event_plan_write_secondary_vendor_assignments')
-		? vms_event_plan_write_secondary_vendor_assignments($planId, $calendarAssignments)
+	$writeCalendarAssignments = function_exists('bvmgr_event_plan_write_secondary_vendor_assignments')
+		? bvmgr_event_plan_write_secondary_vendor_assignments($planId, $calendarAssignments)
 		: new WP_Error('missing_helper', 'Secondary vendor write helper is unavailable.');
 	$assert(!is_wp_error($writeCalendarAssignments), 'Writing calendar secondary vendor assignments should succeed.');
 
-	$calendarGroups = function_exists('vms_calendar_prepare_vendor_groups')
-		? vms_calendar_prepare_vendor_groups($planId, 0, 'admin', 0)
+	$calendarGroups = function_exists('bvmgr_calendar_prepare_vendor_groups')
+		? bvmgr_calendar_prepare_vendor_groups($planId, 0, 'admin', 0)
 		: array();
 	$assert(isset($calendarGroups['food_truck'], $calendarGroups['dessert_truck'], $calendarGroups['market_vendor']), 'Calendar feed should build vendor groups for each additional vendor type.');
 	$assert((int) ($calendarGroups['food_truck']['filled_slots'] ?? -1) === 1, 'Food Vendor slot counts should only reflect Food Vendor assignments.');
@@ -321,26 +321,26 @@ try {
 	$assert((int) ($calendarGroups['market_vendor']['max_slots'] ?? -1) === 10, 'Market Vendor capacity should remain separate from standard vendor slots.');
 	$assert(!empty($calendarGroups['market_vendor']['has_open_slots']), 'Market Vendor groups should stay open while capacity remains.');
 
-	$dispatchContext = function_exists('vms_add_dispatch_get_event_plan_context')
-		? vms_add_dispatch_get_event_plan_context($planId)
+	$dispatchContext = function_exists('bvmgr_add_dispatch_get_event_plan_context')
+		? bvmgr_add_dispatch_get_event_plan_context($planId)
 		: null;
 	$assert(is_array($dispatchContext), 'ADD context should be available for Event Plans.');
 	$dispatchMissingTypes = array_values(array_unique(array_map('sanitize_key', (array) ($dispatchContext['missing_secondary_types'] ?? array()))));
 	sort($dispatchMissingTypes);
 	$assert($dispatchMissingTypes === array('dessert_truck'), 'ADD context should expose only secondary vendor types with open needed slots, not spare Market capacity without a target.');
 
-	$dessertInterest = function_exists('vms_add_dispatch_resolve_vendor_interest_target')
-		? vms_add_dispatch_resolve_vendor_interest_target((array) $dispatchContext, $dessertVendorB)
+	$dessertInterest = function_exists('bvmgr_add_dispatch_resolve_vendor_interest_target')
+		? bvmgr_add_dispatch_resolve_vendor_interest_target((array) $dispatchContext, $dessertVendorB)
 		: array('ok' => false);
 	$assert(!empty($dessertInterest['ok']) && (string) ($dessertInterest['vendor_type'] ?? '') === 'dessert_truck', 'ADD should allow Dessert Vendors to target the open Dessert Vendor slot.');
 
-	$foodInterest = function_exists('vms_add_dispatch_resolve_vendor_interest_target')
-		? vms_add_dispatch_resolve_vendor_interest_target((array) $dispatchContext, $foodVendorB)
+	$foodInterest = function_exists('bvmgr_add_dispatch_resolve_vendor_interest_target')
+		? bvmgr_add_dispatch_resolve_vendor_interest_target((array) $dispatchContext, $foodVendorB)
 		: array('ok' => true);
 	$assert(empty($foodInterest['ok']), 'ADD should not treat a filled Food Vendor slot as open just because another vendor type still has capacity.');
 
-	$assert(function_exists('vms_vendor_type_label') && vms_vendor_type_label('band') === 'Music Vendor', 'The band vendor type should display as Music Vendor.');
-	$assert(function_exists('vms_vendor_type_label') && vms_vendor_type_label('food_truck') === 'Food Vendor', 'The food_truck vendor type should display as Food Vendor.');
+	$assert(function_exists('bvmgr_vendor_type_label') && bvmgr_vendor_type_label('band') === 'Music Vendor', 'The band vendor type should display as Music Vendor.');
+	$assert(function_exists('bvmgr_vendor_type_label') && bvmgr_vendor_type_label('food_truck') === 'Food Vendor', 'The food_truck vendor type should display as Food Vendor.');
 
 	fwrite(STDOUT, "event plan secondary vendor assignments regression: PASS\n");
 } catch (Throwable $e) {

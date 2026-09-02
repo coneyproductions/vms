@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_notify_render_user_profile_fields')) {
-	function vms_notify_render_user_profile_fields(WP_User $user): void
+if (!function_exists('bvmgr_notify_render_user_profile_fields')) {
+	function bvmgr_notify_render_user_profile_fields(WP_User $user): void
 	{
 		if (!current_user_can('edit_user', $user->ID)) {
 			return;
@@ -20,7 +20,7 @@ if (!function_exists('vms_notify_render_user_profile_fields')) {
 		$sms_checked = !empty($sms_enabled);
 		$wa_checked = !empty($wa_enabled);
 
-		echo '<h2>' . esc_html__('VMS Notifications', 'backstage-venue-manager') . '</h2>';
+		echo '<h2>' . esc_html__('Backstage Venue Manager Notifications', 'backstage-venue-manager') . '</h2>';
 		echo '<table class="form-table" role="presentation">';
 		echo '<tr>';
 		echo '<th><label for="vms_locale_preference">' . esc_html__('Locale preference', 'backstage-venue-manager') . '</label></th>';
@@ -52,11 +52,11 @@ if (!function_exists('vms_notify_render_user_profile_fields')) {
 		echo '</table>';
 	}
 }
-add_action('show_user_profile', 'vms_notify_render_user_profile_fields');
-add_action('edit_user_profile', 'vms_notify_render_user_profile_fields');
+add_action('show_user_profile', 'bvmgr_notify_render_user_profile_fields');
+add_action('edit_user_profile', 'bvmgr_notify_render_user_profile_fields');
 
-if (!function_exists('vms_notify_save_user_profile_fields')) {
-	function vms_notify_save_user_profile_fields(int $user_id): void
+if (!function_exists('bvmgr_notify_save_user_profile_fields')) {
+	function bvmgr_notify_save_user_profile_fields(int $user_id): void
 	{
 		if (!current_user_can('edit_user', $user_id)) {
 			return;
@@ -64,22 +64,22 @@ if (!function_exists('vms_notify_save_user_profile_fields')) {
 
 		check_admin_referer('update-user_' . $user_id);
 
-		$locale = vms_request_read_text_field($_POST, 'vms_locale_preference');
+		$locale = bvmgr_request_read_text_field($_POST, 'vms_locale_preference');
 		if ($locale !== '' && !preg_match('/^[a-z]{2}_[A-Z]{2}$/', $locale)) {
 			$locale = '';
 		}
 
-		$phone = vms_request_read_text_field($_POST, 'vms_phone_e164');
+		$phone = bvmgr_request_read_text_field($_POST, 'vms_phone_e164');
 		if ($phone !== '' && !preg_match('/^\+[1-9][0-9]{7,14}$/', $phone)) {
 			$phone = '';
 		}
 
 		update_user_meta($user_id, 'vms_locale_preference', $locale);
-		update_user_meta($user_id, 'vms_notify_email_enabled', vms_request_read_bool_flag($_POST, 'vms_notify_email_enabled') ? '1' : '0');
-		update_user_meta($user_id, 'vms_notify_sms_enabled', vms_request_read_bool_flag($_POST, 'vms_notify_sms_enabled') ? '1' : '0');
-		update_user_meta($user_id, 'vms_notify_whatsapp_enabled', vms_request_read_bool_flag($_POST, 'vms_notify_whatsapp_enabled') ? '1' : '0');
+		update_user_meta($user_id, 'vms_notify_email_enabled', bvmgr_request_read_bool_flag($_POST, 'vms_notify_email_enabled') ? '1' : '0');
+		update_user_meta($user_id, 'vms_notify_sms_enabled', bvmgr_request_read_bool_flag($_POST, 'vms_notify_sms_enabled') ? '1' : '0');
+		update_user_meta($user_id, 'vms_notify_whatsapp_enabled', bvmgr_request_read_bool_flag($_POST, 'vms_notify_whatsapp_enabled') ? '1' : '0');
 		update_user_meta($user_id, 'vms_phone_e164', $phone);
 	}
 }
-add_action('personal_options_update', 'vms_notify_save_user_profile_fields');
-add_action('edit_user_profile_update', 'vms_notify_save_user_profile_fields');
+add_action('personal_options_update', 'bvmgr_notify_save_user_profile_fields');
+add_action('edit_user_profile_update', 'bvmgr_notify_save_user_profile_fields');

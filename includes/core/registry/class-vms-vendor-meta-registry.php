@@ -10,7 +10,7 @@ defined('ABSPATH') || exit;
  * - Never register meta keys for fields marked persist=false or sensitive=true.
  * - All meta registration must flow from the master schema to prevent drift.
  */
-final class VMS_Vendor_Meta_Registry {
+final class BVMGR_Vendor_Meta_Registry {
 
 	/**
 	 * Build the WordPress meta registration array for vendor meta keys.
@@ -19,13 +19,13 @@ final class VMS_Vendor_Meta_Registry {
 	 */
 	public static function get(): array {
 
-		if (!function_exists('vms_vendor_schema')) {
+		if (!function_exists('bvmgr_vendor_schema')) {
 			// Hard fail would be fine too, but returning an empty array avoids white screens
 			// if schema load order is temporarily wrong. Up to you.
 			return [];
 		}
 
-		$schema = vms_vendor_schema();
+		$schema = bvmgr_vendor_schema();
 		$meta   = [];
 
 		foreach ($schema as $field_key => $def) {

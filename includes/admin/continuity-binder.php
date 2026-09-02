@@ -1,33 +1,33 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_continuity_binder_enqueue_assets($hook) {
+function bvmgr_continuity_binder_enqueue_assets($hook) {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder admin routing only controls asset loading for the current page.
-    $page = vms_request_read_key($_GET, 'page');
+    $page = bvmgr_request_read_key($_GET, 'page');
     if ($page !== 'vms-continuity-binder') {
         return;
     }
 
     wp_enqueue_script(
-        'vms-continuity-binder',
+        'bvmgr-continuity-binder',
         plugins_url('../../assets/js/vms-continuity-binder.js', __FILE__),
         array(),
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''),
+        function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
         true
     );
 }
-add_action('admin_enqueue_scripts', 'vms_continuity_binder_enqueue_assets');
+add_action('admin_enqueue_scripts', 'bvmgr_continuity_binder_enqueue_assets');
 
-function vms_continuity_binder_option_key() {
-    if (defined('VMS_CONTINUITY_BINDER_OPTION')) {
-        return VMS_CONTINUITY_BINDER_OPTION;
+function bvmgr_continuity_binder_option_key() {
+    if (defined('BVMGR_CONTINUITY_BINDER_OPTION')) {
+        return BVMGR_CONTINUITY_BINDER_OPTION;
     }
 
     // Fallback only; the canonical key should live in constants.php.
     return 'vms_continuity_binder_v1';
 }
 
-function vms_continuity_binder_default_data() {
+function bvmgr_continuity_binder_default_data() {
     return array(
         'version'    => 1,
         'updated_at' => 0,
@@ -105,16 +105,16 @@ Annual / Seasonal:
     );
 }
 
-function vms_continuity_binder_get_data() {
-    $key  = vms_continuity_binder_option_key();
+function bvmgr_continuity_binder_get_data() {
+    $key  = bvmgr_continuity_binder_option_key();
     $data = get_option($key);
 
     if (!is_array($data) || empty($data['sections']) || !is_array($data['sections'])) {
-        return vms_continuity_binder_default_data();
+        return bvmgr_continuity_binder_default_data();
     }
 
     // Merge defaults to ensure new sections appear after updates.
-    $defaults = vms_continuity_binder_default_data();
+    $defaults = bvmgr_continuity_binder_default_data();
     $merged   = $defaults;
 
     $merged['version']    = isset($data['version']) ? (int) $data['version'] : $defaults['version'];
@@ -136,14 +136,14 @@ function vms_continuity_binder_get_data() {
     return $merged;
 }
 
-function vms_continuity_binder_render_text($text) {
+function bvmgr_continuity_binder_render_text($text) {
     $safe = esc_html((string) $text);
     $safe = wpautop($safe);
     $safe = make_clickable($safe);
     return $safe;
 }
 
-function vms_continuity_binder_anchor_id($section_id) {
+function bvmgr_continuity_binder_anchor_id($section_id) {
     $id = sanitize_key((string) $section_id);
     if ($id === '') {
         $id = 'section';
@@ -151,7 +151,7 @@ function vms_continuity_binder_anchor_id($section_id) {
     return 'vms-cb-section-' . $id;
 }
 
-function vms_continuity_binder_render_nav($sections, $base_url) {
+function bvmgr_continuity_binder_render_nav($sections, $base_url) {
     if (!is_array($sections) || empty($sections)) {
         return;
     }
@@ -161,7 +161,7 @@ function vms_continuity_binder_render_nav($sections, $base_url) {
     echo '<ul class="vms-cb-nav-list">';
 
     foreach ($sections as $section_id => $section) {
-        $anchor_id = vms_continuity_binder_anchor_id($section_id);
+        $anchor_id = bvmgr_continuity_binder_anchor_id($section_id);
         $label     = isset($section['title']) ? (string) $section['title'] : (string) $section_id;
         $href      = $base_url . '#' . $anchor_id;
 
@@ -174,40 +174,40 @@ function vms_continuity_binder_render_nav($sections, $base_url) {
     echo '</div>';
 }
 
-function vms_continuity_binder_render_updated_notice(): void {
+function bvmgr_continuity_binder_render_updated_notice(): void {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder notice state only affects admin feedback.
-    if (vms_request_read_scalar($_GET, 'updated') !== '1') {
+    if (bvmgr_request_read_scalar($_GET, 'updated') !== '1') {
         return;
     }
 
     echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Binder updated.', 'backstage-venue-manager') . '</p></div>';
 }
 
-function vms_render_continuity_binder_page() {
-    if (function_exists('vms_admin_ui_render_shell')) {
-        vms_admin_ui_render_shell(
+function bvmgr_render_continuity_binder_page() {
+    if (function_exists('bvmgr_admin_ui_render_shell')) {
+        bvmgr_admin_ui_render_shell(
             array(
                 'title' => __('Continuity Binder', 'backstage-venue-manager'),
-                'notices_callback' => 'vms_continuity_binder_render_updated_notice',
+                'notices_callback' => 'bvmgr_continuity_binder_render_updated_notice',
             ),
-            'vms_render_continuity_binder_page_content'
+            'bvmgr_render_continuity_binder_page_content'
         );
         return;
     }
 
     echo '<div class="wrap"><h1>' . esc_html__('Continuity Binder', 'backstage-venue-manager') . '</h1>';
-    vms_render_continuity_binder_page_content();
+    bvmgr_render_continuity_binder_page_content();
     echo '</div>';
 }
 
-function vms_render_continuity_binder_page_content() {
+function bvmgr_render_continuity_binder_page_content() {
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('You do not have permission to view this page.', 'backstage-venue-manager'));
     }
 
-    $data      = vms_continuity_binder_get_data();
+    $data      = bvmgr_continuity_binder_get_data();
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Continuity Binder mode switching only affects the current admin view.
-    $is_edit   = (vms_request_read_scalar($_GET, 'edit') === '1');
+    $is_edit   = (bvmgr_request_read_scalar($_GET, 'edit') === '1');
     $is_saved  = !empty($data['updated_at']);
     $page_slug = 'vms-continuity-binder';
 
@@ -224,11 +224,11 @@ function vms_render_continuity_binder_page_content() {
         echo '<a class="button" href="' . esc_url($base_url) . '">' . esc_html__('Back to View Mode', 'backstage-venue-manager') . '</a>';
         echo '</div>';
 
-        vms_continuity_binder_render_nav($data['sections'], $edit_url);
+        bvmgr_continuity_binder_render_nav($data['sections'], $edit_url);
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         echo '<input type="hidden" name="action" value="vms_save_continuity_binder" />';
-        wp_nonce_field('vms_save_continuity_binder', '_vms_cb_nonce');
+        wp_nonce_field('bvmgr_save_continuity_binder', '_bvmgr_cb_nonce');
 
         echo '<div class="vms-cb-form-actions">';
         echo get_submit_button(__('Save Binder', 'backstage-venue-manager'), 'primary', 'submit', false);
@@ -238,7 +238,7 @@ function vms_render_continuity_binder_page_content() {
             $title_name   = 'sections[' . $section_id . '][title]';
             $content_name = 'sections[' . $section_id . '][content]';
 
-            $anchor_id = vms_continuity_binder_anchor_id($section_id);
+            $anchor_id = bvmgr_continuity_binder_anchor_id($section_id);
 
             echo '<div class="postbox vms-cb-section" id="' . esc_attr($anchor_id) . '">';
             echo '<h2 class="hndle"><span>' . esc_html($section['title']) . '</span></h2>';
@@ -264,7 +264,7 @@ function vms_render_continuity_binder_page_content() {
     echo '<a class="button button-primary" href="' . esc_url($edit_url) . '">' . esc_html__('Edit Binder', 'backstage-venue-manager') . '</a>';
     echo '</div>';
 
-    vms_continuity_binder_render_nav($data['sections'], $base_url);
+    bvmgr_continuity_binder_render_nav($data['sections'], $base_url);
 
     if ($is_saved) {
         $updated_at = wp_date('Y-m-d H:i', (int) $data['updated_at'], wp_timezone());
@@ -278,23 +278,23 @@ function vms_render_continuity_binder_page_content() {
     }
 
     foreach ($data['sections'] as $section_id => $section) {
-        $anchor_id = vms_continuity_binder_anchor_id($section_id);
+        $anchor_id = bvmgr_continuity_binder_anchor_id($section_id);
 
         echo '<div class="postbox vms-cb-section" id="' . esc_attr($anchor_id) . '">';
         echo '<h2 class="hndle"><span>' . esc_html($section['title']) . '</span></h2>';
-        echo '<div class="inside vms-cb-section-content">' . vms_continuity_binder_render_text($section['content']) . '</div>';
+        echo '<div class="inside vms-cb-section-content">' . bvmgr_continuity_binder_render_text($section['content']) . '</div>';
         echo '</div>';
     }
 
     echo '</div>';
 }
 
-function vms_admin_post_save_continuity_binder() {
+function bvmgr_admin_post_save_continuity_binder() {
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('Unauthorized.', 'backstage-venue-manager'));
     }
 
-    if (!isset($_POST['_vms_cb_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_vms_cb_nonce'])), 'vms_save_continuity_binder')) {
+    if (!isset($_POST['_bvmgr_cb_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_bvmgr_cb_nonce'])), bvmgr_nonce_action_for_value(sanitize_text_field(wp_unslash($_POST['_bvmgr_cb_nonce'])), 'bvmgr_save_continuity_binder'))) {
         wp_die(esc_html__('Invalid nonce.', 'backstage-venue-manager'));
     }
 
@@ -303,7 +303,7 @@ function vms_admin_post_save_continuity_binder() {
         ? (array) wp_unslash($_POST['sections'])
         : array();
 
-    $defaults = vms_continuity_binder_default_data();
+    $defaults = bvmgr_continuity_binder_default_data();
     $sections = array();
 
     foreach ($defaults['sections'] as $section_id => $section_def) {
@@ -323,7 +323,7 @@ function vms_admin_post_save_continuity_binder() {
         'sections'   => $sections,
     );
 
-    update_option(vms_continuity_binder_option_key(), $data, false);
+    update_option(bvmgr_continuity_binder_option_key(), $data, false);
 
     $url = add_query_arg(
         array(

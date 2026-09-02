@@ -108,9 +108,9 @@ try {
 		'get_post_meta(',
 		'get_posts(',
 		'get_terms(',
-		'vms_staffing_staff_candidate_status_for_role(',
-		'vms_vendor_tax_profile_missing_items(',
-		'vms_get_tax_bypass_status(',
+		'bvmgr_staffing_staff_candidate_status_for_role(',
+		'bvmgr_vendor_tax_profile_missing_items(',
+		'bvmgr_get_tax_bypass_status(',
 		'get_the_title(',
 		'wp_kses_post(',
 		'wp_kses(',
@@ -202,7 +202,7 @@ try {
 
 	require_once $eventPlansPath;
 
-	$controller = new VMS_Admin_Event_Plans();
+	$controller = new BVMGR_Admin_Event_Plans();
 	$invokePrivate = static function (object $object, string $method, array $args = array()) {
 		$reflection = new ReflectionMethod($object, $method);
 		return $reflection->invokeArgs($object, $args);

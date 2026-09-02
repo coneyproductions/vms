@@ -3,25 +3,25 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-if (!function_exists('vms_vendor_command_center_page_slug')) {
-    function vms_vendor_command_center_page_slug(): string
+if (!function_exists('bvmgr_vendor_command_center_page_slug')) {
+    function bvmgr_vendor_command_center_page_slug(): string
     {
         return 'vms-vendor-command-center';
     }
 }
 
 
-if (!function_exists('vms_vendor_command_center_template_option_key')) {
-    function vms_vendor_command_center_template_option_key(): string
+if (!function_exists('bvmgr_vendor_command_center_template_option_key')) {
+    function bvmgr_vendor_command_center_template_option_key(): string
     {
-        return defined('VMS_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE')
-            ? (string) VMS_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE
+        return defined('BVMGR_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE')
+            ? (string) BVMGR_OPT_VENDOR_ONBOARDING_EMAIL_TEMPLATE
             : 'vms_vendor_onboarding_email_template';
     }
 }
 
-if (!function_exists('vms_vendor_command_center_decode_human_text')) {
-    function vms_vendor_command_center_decode_human_text(string $text): string
+if (!function_exists('bvmgr_vendor_command_center_decode_human_text')) {
+    function bvmgr_vendor_command_center_decode_human_text(string $text): string
     {
         $charset = (string) get_bloginfo('charset');
         if ($charset === '') {
@@ -32,26 +32,26 @@ if (!function_exists('vms_vendor_command_center_decode_human_text')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_vendor_title')) {
-    function vms_vendor_command_center_vendor_title(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_vendor_title')) {
+    function bvmgr_vendor_command_center_vendor_title(int $vendor_id): string
     {
         $title = get_post_field('post_title', $vendor_id, 'raw');
         if (!is_string($title)) {
             $title = '';
         }
 
-        $title = trim(vms_vendor_command_center_decode_human_text($title));
+        $title = trim(bvmgr_vendor_command_center_decode_human_text($title));
         if ($title !== '') {
             return $title;
         }
 
-        return trim(vms_vendor_command_center_decode_human_text((string) get_the_title($vendor_id)));
+        return trim(bvmgr_vendor_command_center_decode_human_text((string) get_the_title($vendor_id)));
     }
 }
 
 
-if (!function_exists('vms_vendor_command_center_builtin_template')) {
-    function vms_vendor_command_center_builtin_template(): array
+if (!function_exists('bvmgr_vendor_command_center_builtin_template')) {
+    function bvmgr_vendor_command_center_builtin_template(): array
     {
         return array(
             'subject' => __('Your {site_name} vendor portal setup for {vendor_name}', 'backstage-venue-manager'),
@@ -75,32 +75,32 @@ if (!function_exists('vms_vendor_command_center_builtin_template')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_template_default_scope')) {
-    function vms_vendor_command_center_template_default_scope(): string
+if (!function_exists('bvmgr_vendor_command_center_template_default_scope')) {
+    function bvmgr_vendor_command_center_template_default_scope(): string
     {
         return 'default';
     }
 }
 
-if (!function_exists('vms_vendor_command_center_type_scope_key')) {
-    function vms_vendor_command_center_type_scope_key(string $type_slug): string
+if (!function_exists('bvmgr_vendor_command_center_type_scope_key')) {
+    function bvmgr_vendor_command_center_type_scope_key(string $type_slug): string
     {
         $type_slug = sanitize_title($type_slug);
         if ($type_slug === '') {
-            return vms_vendor_command_center_template_default_scope();
+            return bvmgr_vendor_command_center_template_default_scope();
         }
 
         return 'type:' . $type_slug;
     }
 }
 
-if (!function_exists('vms_vendor_command_center_parse_template_scope')) {
-    function vms_vendor_command_center_parse_template_scope(string $scope): array
+if (!function_exists('bvmgr_vendor_command_center_parse_template_scope')) {
+    function bvmgr_vendor_command_center_parse_template_scope(string $scope): array
     {
         $scope = trim((string) $scope);
-        if ($scope === '' || $scope === vms_vendor_command_center_template_default_scope()) {
+        if ($scope === '' || $scope === bvmgr_vendor_command_center_template_default_scope()) {
             return array(
-                'scope' => vms_vendor_command_center_template_default_scope(),
+                'scope' => bvmgr_vendor_command_center_template_default_scope(),
                 'is_type' => false,
                 'type_slug' => '',
             );
@@ -110,7 +110,7 @@ if (!function_exists('vms_vendor_command_center_parse_template_scope')) {
             $type_slug = sanitize_title(substr($scope, 5));
             if ($type_slug !== '') {
                 return array(
-                    'scope' => vms_vendor_command_center_type_scope_key($type_slug),
+                    'scope' => bvmgr_vendor_command_center_type_scope_key($type_slug),
                     'is_type' => true,
                     'type_slug' => $type_slug,
                 );
@@ -118,15 +118,15 @@ if (!function_exists('vms_vendor_command_center_parse_template_scope')) {
         }
 
         return array(
-            'scope' => vms_vendor_command_center_template_default_scope(),
+            'scope' => bvmgr_vendor_command_center_template_default_scope(),
             'is_type' => false,
             'type_slug' => '',
         );
     }
 }
 
-if (!function_exists('vms_vendor_command_center_query_arg')) {
-    function vms_vendor_command_center_query_arg(string $key): string
+if (!function_exists('bvmgr_vendor_command_center_query_arg')) {
+    function bvmgr_vendor_command_center_query_arg(string $key): string
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Vendor Command Center filters and selection only change admin display state.
         if (!isset($_GET[$key])) {
@@ -138,15 +138,15 @@ if (!function_exists('vms_vendor_command_center_query_arg')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_normalize_template_entry')) {
-    function vms_vendor_command_center_normalize_template_entry($raw): ?array
+if (!function_exists('bvmgr_vendor_command_center_normalize_template_entry')) {
+    function bvmgr_vendor_command_center_normalize_template_entry($raw): ?array
     {
         if (!is_array($raw)) {
             return null;
         }
 
-        $subject = isset($raw['subject']) ? sanitize_text_field(vms_vendor_command_center_decode_human_text((string) $raw['subject'])) : '';
-        $body = isset($raw['body']) ? sanitize_textarea_field(vms_vendor_command_center_decode_human_text((string) $raw['body'])) : '';
+        $subject = isset($raw['subject']) ? sanitize_text_field(bvmgr_vendor_command_center_decode_human_text((string) $raw['subject'])) : '';
+        $body = isset($raw['body']) ? sanitize_textarea_field(bvmgr_vendor_command_center_decode_human_text((string) $raw['body'])) : '';
         if ($subject === '' || trim($body) === '') {
             return null;
         }
@@ -158,27 +158,27 @@ if (!function_exists('vms_vendor_command_center_normalize_template_entry')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_template_store_raw')) {
-    function vms_vendor_command_center_get_template_store_raw(): array
+if (!function_exists('bvmgr_vendor_command_center_get_template_store_raw')) {
+    function bvmgr_vendor_command_center_get_template_store_raw(): array
     {
-        $stored = get_option(vms_vendor_command_center_template_option_key(), array());
+        $stored = get_option(bvmgr_vendor_command_center_template_option_key(), array());
         $default_template = null;
         $by_type = array();
 
         if (is_array($stored) && (array_key_exists('default', $stored) || array_key_exists('by_type', $stored))) {
-            $default_template = vms_vendor_command_center_normalize_template_entry($stored['default'] ?? null);
+            $default_template = bvmgr_vendor_command_center_normalize_template_entry($stored['default'] ?? null);
             foreach ((array) ($stored['by_type'] ?? array()) as $type_slug => $entry) {
                 $type_slug = sanitize_title((string) $type_slug);
                 if ($type_slug === '') {
                     continue;
                 }
-                $normalized = vms_vendor_command_center_normalize_template_entry($entry);
+                $normalized = bvmgr_vendor_command_center_normalize_template_entry($entry);
                 if ($normalized !== null) {
                     $by_type[$type_slug] = $normalized;
                 }
             }
         } else {
-            $default_template = vms_vendor_command_center_normalize_template_entry($stored);
+            $default_template = bvmgr_vendor_command_center_normalize_template_entry($stored);
         }
 
         if (!empty($by_type)) {
@@ -192,11 +192,11 @@ if (!function_exists('vms_vendor_command_center_get_template_store_raw')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_persist_template_store')) {
-    function vms_vendor_command_center_persist_template_store(array $store): void
+if (!function_exists('bvmgr_vendor_command_center_persist_template_store')) {
+    function bvmgr_vendor_command_center_persist_template_store(array $store): void
     {
         $payload = array();
-        $default_template = vms_vendor_command_center_normalize_template_entry($store['default'] ?? null);
+        $default_template = bvmgr_vendor_command_center_normalize_template_entry($store['default'] ?? null);
         if ($default_template !== null) {
             $payload['default'] = $default_template;
         }
@@ -207,7 +207,7 @@ if (!function_exists('vms_vendor_command_center_persist_template_store')) {
             if ($type_slug === '') {
                 continue;
             }
-            $normalized = vms_vendor_command_center_normalize_template_entry($entry);
+            $normalized = bvmgr_vendor_command_center_normalize_template_entry($entry);
             if ($normalized !== null) {
                 $by_type_payload[$type_slug] = $normalized;
             }
@@ -219,20 +219,20 @@ if (!function_exists('vms_vendor_command_center_persist_template_store')) {
         }
 
         if (empty($payload)) {
-            delete_option(vms_vendor_command_center_template_option_key());
+            delete_option(bvmgr_vendor_command_center_template_option_key());
             return;
         }
 
-        update_option(vms_vendor_command_center_template_option_key(), $payload, false);
+        update_option(bvmgr_vendor_command_center_template_option_key(), $payload, false);
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_saved_template')) {
-    function vms_vendor_command_center_get_saved_template(string $scope = 'default'): array
+if (!function_exists('bvmgr_vendor_command_center_get_saved_template')) {
+    function bvmgr_vendor_command_center_get_saved_template(string $scope = 'default'): array
     {
-        $defaults = vms_vendor_command_center_builtin_template();
-        $store = vms_vendor_command_center_get_template_store_raw();
-        $scope_meta = vms_vendor_command_center_parse_template_scope($scope);
+        $defaults = bvmgr_vendor_command_center_builtin_template();
+        $store = bvmgr_vendor_command_center_get_template_store_raw();
+        $scope_meta = bvmgr_vendor_command_center_parse_template_scope($scope);
 
         if (!empty($scope_meta['is_type'])) {
             $type_slug = (string) ($scope_meta['type_slug'] ?? '');
@@ -249,11 +249,11 @@ if (!function_exists('vms_vendor_command_center_get_saved_template')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_has_custom_template')) {
-    function vms_vendor_command_center_has_custom_template(string $scope = 'default'): bool
+if (!function_exists('bvmgr_vendor_command_center_has_custom_template')) {
+    function bvmgr_vendor_command_center_has_custom_template(string $scope = 'default'): bool
     {
-        $store = vms_vendor_command_center_get_template_store_raw();
-        $scope_meta = vms_vendor_command_center_parse_template_scope($scope);
+        $store = bvmgr_vendor_command_center_get_template_store_raw();
+        $scope_meta = bvmgr_vendor_command_center_parse_template_scope($scope);
 
         if (!empty($scope_meta['is_type'])) {
             $type_slug = (string) ($scope_meta['type_slug'] ?? '');
@@ -264,8 +264,8 @@ if (!function_exists('vms_vendor_command_center_has_custom_template')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_type_terms')) {
-    function vms_vendor_command_center_type_terms(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_command_center_type_terms')) {
+    function bvmgr_vendor_command_center_type_terms(int $vendor_id): array
     {
         $terms = get_the_terms($vendor_id, 'vms_vendor_type');
         if (is_wp_error($terms) || empty($terms)) {
@@ -304,10 +304,10 @@ if (!function_exists('vms_vendor_command_center_type_terms')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_primary_type_label')) {
-    function vms_vendor_command_center_primary_type_label(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_primary_type_label')) {
+    function bvmgr_vendor_command_center_primary_type_label(int $vendor_id): string
     {
-        $terms = vms_vendor_command_center_type_terms($vendor_id);
+        $terms = bvmgr_vendor_command_center_type_terms($vendor_id);
         if (!empty($terms[0]['label'])) {
             return (string) $terms[0]['label'];
         }
@@ -316,15 +316,15 @@ if (!function_exists('vms_vendor_command_center_primary_type_label')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_vendor_contact_name')) {
-    function vms_vendor_command_center_get_vendor_contact_name(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_get_vendor_contact_name')) {
+    function bvmgr_vendor_command_center_get_vendor_contact_name(int $vendor_id): string
     {
-        $contact_name = trim(vms_vendor_command_center_decode_human_text((string) get_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('contact_name', '_vms_contact_name'), true)));
+        $contact_name = trim(bvmgr_vendor_command_center_decode_human_text((string) get_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('contact_name', '_vms_contact_name'), true)));
         if ($contact_name !== '') {
             return $contact_name;
         }
 
-        $vendor_name = vms_vendor_command_center_vendor_title($vendor_id);
+        $vendor_name = bvmgr_vendor_command_center_vendor_title($vendor_id);
         if ($vendor_name !== '') {
             return $vendor_name;
         }
@@ -333,27 +333,27 @@ if (!function_exists('vms_vendor_command_center_get_vendor_contact_name')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_template_tokens')) {
-    function vms_vendor_command_center_template_tokens(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_command_center_template_tokens')) {
+    function bvmgr_vendor_command_center_template_tokens(int $vendor_id): array
     {
         $site_name = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
         $contact_email = sanitize_email((string) get_option('admin_email', ''));
 
         return array(
-            '{vendor_name}' => vms_vendor_command_center_vendor_title($vendor_id),
-            '{contact_name}' => vms_vendor_command_center_decode_human_text(vms_vendor_command_center_get_vendor_contact_name($vendor_id)),
-            '{vendor_type}' => vms_vendor_command_center_decode_human_text(vms_vendor_command_center_primary_type_label($vendor_id)),
-            '{site_name}' => vms_vendor_command_center_decode_human_text($site_name),
+            '{vendor_name}' => bvmgr_vendor_command_center_vendor_title($vendor_id),
+            '{contact_name}' => bvmgr_vendor_command_center_decode_human_text(bvmgr_vendor_command_center_get_vendor_contact_name($vendor_id)),
+            '{vendor_type}' => bvmgr_vendor_command_center_decode_human_text(bvmgr_vendor_command_center_primary_type_label($vendor_id)),
+            '{site_name}' => bvmgr_vendor_command_center_decode_human_text($site_name),
             '{vendor_portal_url}' => home_url('/vendor-portal/'),
             '{website_login_url}' => home_url('/my-account/'),
             '{contact_email}' => $contact_email,
-            '{vendor_email}' => vms_vendor_command_center_get_vendor_email($vendor_id),
+            '{vendor_email}' => bvmgr_vendor_command_center_get_vendor_email($vendor_id),
         );
     }
 }
 
-if (!function_exists('vms_vendor_command_center_placeholder_help')) {
-    function vms_vendor_command_center_placeholder_help(): array
+if (!function_exists('bvmgr_vendor_command_center_placeholder_help')) {
+    function bvmgr_vendor_command_center_placeholder_help(): array
     {
         return array(
             '{contact_name}' => __('Primary contact name when available; otherwise the vendor name.', 'backstage-venue-manager'),
@@ -368,10 +368,10 @@ if (!function_exists('vms_vendor_command_center_placeholder_help')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_resolve_template_text')) {
-    function vms_vendor_command_center_resolve_template_text(string $template, int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_resolve_template_text')) {
+    function bvmgr_vendor_command_center_resolve_template_text(string $template, int $vendor_id): string
     {
-        $resolved = strtr($template, vms_vendor_command_center_template_tokens($vendor_id));
+        $resolved = strtr($template, bvmgr_vendor_command_center_template_tokens($vendor_id));
         $resolved = str_replace(array("
 ", "
 "), "
@@ -384,10 +384,10 @@ if (!function_exists('vms_vendor_command_center_resolve_template_text')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_prepare_plain_email_text')) {
-    function vms_vendor_command_center_prepare_plain_email_text(string $message): string
+if (!function_exists('bvmgr_vendor_command_center_prepare_plain_email_text')) {
+    function bvmgr_vendor_command_center_prepare_plain_email_text(string $message): string
     {
-        $message = vms_vendor_command_center_decode_human_text($message);
+        $message = bvmgr_vendor_command_center_decode_human_text($message);
         $message = str_replace(array("\r\n", "\r"), "\n", $message);
         $message = wp_strip_all_tags($message);
         $message = preg_replace("/\n{3,}/", "\n\n", $message);
@@ -396,18 +396,18 @@ if (!function_exists('vms_vendor_command_center_prepare_plain_email_text')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_active_template_scope_for_vendor')) {
-    function vms_vendor_command_center_active_template_scope_for_vendor(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_command_center_active_template_scope_for_vendor')) {
+    function bvmgr_vendor_command_center_active_template_scope_for_vendor(int $vendor_id): array
     {
-        $store = vms_vendor_command_center_get_template_store_raw();
-        foreach (vms_vendor_command_center_type_terms($vendor_id) as $term) {
+        $store = bvmgr_vendor_command_center_get_template_store_raw();
+        foreach (bvmgr_vendor_command_center_type_terms($vendor_id) as $term) {
             $type_slug = (string) ($term['slug'] ?? '');
             if ($type_slug === '' || empty($store['by_type'][$type_slug])) {
                 continue;
             }
 
             return array(
-                'scope' => vms_vendor_command_center_type_scope_key($type_slug),
+                'scope' => bvmgr_vendor_command_center_type_scope_key($type_slug),
                 /* translators: %s: vendor type label. */
                 'label' => sprintf(__('%s template', 'backstage-venue-manager'), (string) ($term['label'] ?? $type_slug)),
                 'type_slug' => $type_slug,
@@ -417,7 +417,7 @@ if (!function_exists('vms_vendor_command_center_active_template_scope_for_vendor
         }
 
         return array(
-            'scope' => vms_vendor_command_center_template_default_scope(),
+            'scope' => bvmgr_vendor_command_center_template_default_scope(),
             'label' => __('General default template', 'backstage-venue-manager'),
             'type_slug' => '',
             'type_label' => '',
@@ -426,16 +426,16 @@ if (!function_exists('vms_vendor_command_center_active_template_scope_for_vendor
     }
 }
 
-if (!function_exists('vms_vendor_command_center_active_template_note')) {
-    function vms_vendor_command_center_active_template_note(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_active_template_note')) {
+    function bvmgr_vendor_command_center_active_template_note(int $vendor_id): string
     {
-        $active = vms_vendor_command_center_active_template_scope_for_vendor($vendor_id);
+        $active = bvmgr_vendor_command_center_active_template_scope_for_vendor($vendor_id);
         if (!empty($active['is_type'])) {
             /* translators: %s: active vendor template label. */
             return sprintf(__('Using the saved %s for this vendor.', 'backstage-venue-manager'), (string) ($active['label'] ?? __('type template', 'backstage-venue-manager')));
         }
 
-        $type_label = vms_vendor_command_center_primary_type_label($vendor_id);
+        $type_label = bvmgr_vendor_command_center_primary_type_label($vendor_id);
         if ($type_label !== __('vendor', 'backstage-venue-manager')) {
             /* translators: %s: vendor type label. */
             return sprintf(__('Using the General default template. Save a %s template if you want this vendor type to use different wording.', 'backstage-venue-manager'), $type_label);
@@ -445,28 +445,28 @@ if (!function_exists('vms_vendor_command_center_active_template_note')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_resolved_template')) {
-    function vms_vendor_command_center_resolved_template(int $vendor_id, string $scope = ''): array
+if (!function_exists('bvmgr_vendor_command_center_resolved_template')) {
+    function bvmgr_vendor_command_center_resolved_template(int $vendor_id, string $scope = ''): array
     {
         if ($scope === '') {
-            $active = vms_vendor_command_center_active_template_scope_for_vendor($vendor_id);
-            $scope = (string) ($active['scope'] ?? vms_vendor_command_center_template_default_scope());
+            $active = bvmgr_vendor_command_center_active_template_scope_for_vendor($vendor_id);
+            $scope = (string) ($active['scope'] ?? bvmgr_vendor_command_center_template_default_scope());
         }
 
-        $template = vms_vendor_command_center_get_saved_template($scope);
+        $template = bvmgr_vendor_command_center_get_saved_template($scope);
 
         return array(
-            'subject' => vms_vendor_command_center_resolve_template_text((string) ($template['subject'] ?? ''), $vendor_id),
-            'body' => vms_vendor_command_center_resolve_template_text((string) ($template['body'] ?? ''), $vendor_id),
+            'subject' => bvmgr_vendor_command_center_resolve_template_text((string) ($template['subject'] ?? ''), $vendor_id),
+            'body' => bvmgr_vendor_command_center_resolve_template_text((string) ($template['body'] ?? ''), $vendor_id),
         );
     }
 }
 
-if (!function_exists('vms_vendor_command_center_vendor_meta_key')) {
-    function vms_vendor_command_center_vendor_meta_key(string $field, string $fallback): string
+if (!function_exists('bvmgr_vendor_command_center_vendor_meta_key')) {
+    function bvmgr_vendor_command_center_vendor_meta_key(string $field, string $fallback): string
     {
-        if (function_exists('vms_meta_key')) {
-            $mapped = (string) vms_meta_key('vendor', $field);
+        if (function_exists('bvmgr_meta_key')) {
+            $mapped = (string) bvmgr_meta_key('vendor', $field);
             if ($mapped !== '') {
                 return $mapped;
             }
@@ -475,13 +475,13 @@ if (!function_exists('vms_vendor_command_center_vendor_meta_key')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_vendor_email')) {
-    function vms_vendor_command_center_get_vendor_email(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_get_vendor_email')) {
+    function bvmgr_vendor_command_center_get_vendor_email(int $vendor_id): string
     {
         $keys = array(
-            vms_vendor_command_center_vendor_meta_key('primary_email', '_vms_vendor_primary_email'),
-            vms_vendor_command_center_vendor_meta_key('contact_email', '_vms_contact_email'),
-            vms_vendor_command_center_vendor_meta_key('email', '_vms_vendor_email'),
+            bvmgr_vendor_command_center_vendor_meta_key('primary_email', '_vms_vendor_primary_email'),
+            bvmgr_vendor_command_center_vendor_meta_key('contact_email', '_vms_contact_email'),
+            bvmgr_vendor_command_center_vendor_meta_key('email', '_vms_vendor_email'),
         );
 
         foreach ($keys as $key) {
@@ -495,13 +495,13 @@ if (!function_exists('vms_vendor_command_center_get_vendor_email')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_vendor_phone')) {
-    function vms_vendor_command_center_get_vendor_phone(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_get_vendor_phone')) {
+    function bvmgr_vendor_command_center_get_vendor_phone(int $vendor_id): string
     {
         $keys = array(
-            vms_vendor_command_center_vendor_meta_key('primary_phone', '_vms_vendor_primary_phone'),
-            vms_vendor_command_center_vendor_meta_key('contact_phone', '_vms_contact_phone'),
-            vms_vendor_command_center_vendor_meta_key('phone', '_vms_vendor_phone'),
+            bvmgr_vendor_command_center_vendor_meta_key('primary_phone', '_vms_vendor_primary_phone'),
+            bvmgr_vendor_command_center_vendor_meta_key('contact_phone', '_vms_contact_phone'),
+            bvmgr_vendor_command_center_vendor_meta_key('phone', '_vms_vendor_phone'),
         );
 
         foreach ($keys as $key) {
@@ -515,10 +515,10 @@ if (!function_exists('vms_vendor_command_center_get_vendor_phone')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_vendor_website')) {
-    function vms_vendor_command_center_get_vendor_website(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_get_vendor_website')) {
+    function bvmgr_vendor_command_center_get_vendor_website(int $vendor_id): string
     {
-        $website = trim((string) get_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('website', '_vms_vendor_website'), true));
+        $website = trim((string) get_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('website', '_vms_vendor_website'), true));
         if ($website === '') {
             return '';
         }
@@ -531,11 +531,11 @@ if (!function_exists('vms_vendor_command_center_get_vendor_website')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_linked_user_id')) {
-    function vms_vendor_command_center_get_linked_user_id(int $vendor_id): int
+if (!function_exists('bvmgr_vendor_command_center_get_linked_user_id')) {
+    function bvmgr_vendor_command_center_get_linked_user_id(int $vendor_id): int
     {
-        if (function_exists('vms_vendor_user_links_get_by_vendor')) {
-            $rows = (array) vms_vendor_user_links_get_by_vendor($vendor_id, false);
+        if (function_exists('bvmgr_vendor_user_links_get_by_vendor')) {
+            $rows = (array) bvmgr_vendor_user_links_get_by_vendor($vendor_id, false);
             foreach ($rows as $row) {
                 $user_id = isset($row['user_id']) ? (int) $row['user_id'] : 0;
                 if ($user_id > 0) {
@@ -544,14 +544,14 @@ if (!function_exists('vms_vendor_command_center_get_linked_user_id')) {
             }
         }
 
-        return (int) get_post_meta($vendor_id, (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
+        return (int) get_post_meta($vendor_id, (defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_candidate_user_id')) {
-    function vms_vendor_command_center_get_candidate_user_id(int $vendor_id, string $email = ''): int
+if (!function_exists('bvmgr_vendor_command_center_get_candidate_user_id')) {
+    function bvmgr_vendor_command_center_get_candidate_user_id(int $vendor_id, string $email = ''): int
     {
-        $email = $email !== '' ? sanitize_email($email) : vms_vendor_command_center_get_vendor_email($vendor_id);
+        $email = $email !== '' ? sanitize_email($email) : bvmgr_vendor_command_center_get_vendor_email($vendor_id);
         if ($email === '') {
             return 0;
         }
@@ -561,8 +561,8 @@ if (!function_exists('vms_vendor_command_center_get_candidate_user_id')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_application_snapshot')) {
-    function vms_vendor_command_center_get_application_snapshot(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_command_center_get_application_snapshot')) {
+    function bvmgr_vendor_command_center_get_application_snapshot(int $vendor_id): array
     {
         $app_id = (int) get_post_meta($vendor_id, '_vms_application_id', true);
         if ($app_id <= 0) {
@@ -584,8 +584,8 @@ if (!function_exists('vms_vendor_command_center_get_application_snapshot')) {
             );
         }
 
-        $status = function_exists('vms_vendor_app_get_status') ? (string) vms_vendor_app_get_status($app_id) : sanitize_key((string) get_post_meta($app_id, '_vms_app_status', true));
-        $labels = function_exists('vms_vendor_app_statuses') ? (array) vms_vendor_app_statuses() : array();
+        $status = function_exists('bvmgr_vendor_app_get_status') ? (string) bvmgr_vendor_app_get_status($app_id) : sanitize_key((string) get_post_meta($app_id, '_vms_app_status', true));
+        $labels = function_exists('bvmgr_vendor_app_statuses') ? (array) bvmgr_vendor_app_statuses() : array();
         $label = isset($labels[$status]) ? (string) $labels[$status] : ucfirst($status ?: 'linked');
 
         return array(
@@ -597,8 +597,8 @@ if (!function_exists('vms_vendor_command_center_get_application_snapshot')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_terms_days')) {
-    function vms_vendor_command_center_terms_days(): int
+if (!function_exists('bvmgr_vendor_command_center_terms_days')) {
+    function bvmgr_vendor_command_center_terms_days(): int
     {
         $days = (int) get_option('vms_dash_bills_terms_days', 0);
         if ($days < 0) {
@@ -611,8 +611,8 @@ if (!function_exists('vms_vendor_command_center_terms_days')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_extract_known_amount')) {
-    function vms_vendor_command_center_extract_known_amount(int $plan_id, string $event_date_ymd, int $venue_id): array
+if (!function_exists('bvmgr_vendor_command_center_extract_known_amount')) {
+    function bvmgr_vendor_command_center_extract_known_amount(int $plan_id, string $event_date_ymd, int $venue_id): array
     {
         $snapshot = get_post_meta($plan_id, '_vms_comp_snapshot', true);
         $structure = '';
@@ -633,8 +633,8 @@ if (!function_exists('vms_vendor_command_center_extract_known_amount')) {
         }
 
         if (($flat_fee === null || (float) $flat_fee <= 0) && in_array($structure, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true)) {
-            if (function_exists('vms_get_venue_default_comp_for_date') && $venue_id > 0 && $event_date_ymd !== '') {
-                $default = (array) vms_get_venue_default_comp_for_date($venue_id, $event_date_ymd);
+            if (function_exists('bvmgr_get_venue_default_comp_for_date') && $venue_id > 0 && $event_date_ymd !== '') {
+                $default = (array) bvmgr_get_venue_default_comp_for_date($venue_id, $event_date_ymd);
                 $def_structure = isset($default['structure']) ? sanitize_key((string) $default['structure']) : '';
                 $def_fee = isset($default['flat_fee_amount']) ? $default['flat_fee_amount'] : null;
                 if (in_array($def_structure, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true) && is_numeric($def_fee) && (float) $def_fee > 0) {
@@ -655,15 +655,15 @@ if (!function_exists('vms_vendor_command_center_extract_known_amount')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_get_supporting_payables')) {
-    function vms_vendor_command_center_get_supporting_payables(int $plan_id, string $event_date_ymd, int $venue_id): array
+if (!function_exists('bvmgr_vendor_command_center_get_supporting_payables')) {
+    function bvmgr_vendor_command_center_get_supporting_payables(int $plan_id, string $event_date_ymd, int $venue_id): array
     {
-        if (!function_exists('vms_get_event_plan_lineup_supporting_entries')) {
+        if (!function_exists('bvmgr_get_event_plan_lineup_supporting_entries')) {
             return array();
         }
 
         $rows = array();
-        foreach ((array) vms_get_event_plan_lineup_supporting_entries($plan_id, array(
+        foreach ((array) bvmgr_get_event_plan_lineup_supporting_entries($plan_id, array(
             'event_date' => $event_date_ymd,
             'venue_id' => $venue_id,
         )) as $entry) {
@@ -693,8 +693,8 @@ if (!function_exists('vms_vendor_command_center_get_supporting_payables')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
-    function vms_vendor_command_center_collect_plan_maps(): array
+if (!function_exists('bvmgr_vendor_command_center_collect_plan_maps')) {
+    function bvmgr_vendor_command_center_collect_plan_maps(): array
     {
         static $cache = null;
         if (is_array($cache)) {
@@ -707,10 +707,10 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
         $due_soon_ymd = $today->modify('+14 days')->format('Y-m-d');
         $window_start = $today->modify('-120 days')->format('Y-m-d');
         $window_end = $today->modify('+365 days')->format('Y-m-d');
-        $terms_days = vms_vendor_command_center_terms_days();
+        $terms_days = bvmgr_vendor_command_center_terms_days();
 
         $plan_ids = get_posts(array(
-            'post_type' => defined('VMS_CPT_EVENT_PLAN') ? VMS_CPT_EVENT_PLAN : 'vms_event_plan',
+            'post_type' => defined('BVMGR_CPT_EVENT_PLAN') ? BVMGR_CPT_EVENT_PLAN : 'vms_event_plan',
             'post_status' => array('publish', 'draft', 'private', 'pending'),
             'posts_per_page' => -1,
             'fields' => 'ids',
@@ -744,8 +744,8 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
                 continue;
             }
 
-            $status = function_exists('vms_event_plan_get_status')
-                ? sanitize_key((string) vms_event_plan_get_status($plan_id, 'dashboard_bills'))
+            $status = function_exists('bvmgr_event_plan_get_status')
+                ? sanitize_key((string) bvmgr_event_plan_get_status($plan_id, 'dashboard_bills'))
                 : sanitize_key((string) get_post_meta($plan_id, '_vms_event_plan_status', true));
             if ($status === 'canceled') {
                 $status = 'cancelled';
@@ -760,8 +760,8 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
                 $secondary_vendor_ids = array();
             }
             $secondary_vendor_ids = array_values(array_unique(array_filter(array_map('absint', $secondary_vendor_ids))));
-            $lineup_vendor_ids = function_exists('vms_get_event_plan_lineup_vendor_ids')
-                ? array_values(array_unique(array_filter(array_map('absint', (array) vms_get_event_plan_lineup_vendor_ids($plan_id, array(
+            $lineup_vendor_ids = function_exists('bvmgr_get_event_plan_lineup_vendor_ids')
+                ? array_values(array_unique(array_filter(array_map('absint', (array) bvmgr_get_event_plan_lineup_vendor_ids($plan_id, array(
                     'event_date' => $event_date,
                 ))))))
                 : array();
@@ -779,8 +779,8 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
                             'plan_id' => $plan_id,
                             'event_date' => $event_date,
                             'status' => $status,
-                            'label' => function_exists('vms_event_plan_status_label')
-                                ? (string) vms_event_plan_status_label($status)
+                            'label' => function_exists('bvmgr_event_plan_status_label')
+                                ? (string) bvmgr_event_plan_status_label($status)
                                 : ucwords(str_replace(array('_', '-'), ' ', $status)),
                             'edit_link' => get_edit_post_link($plan_id, ''),
                         );
@@ -792,8 +792,8 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
                 continue;
             }
 
-            $include_financial = function_exists('vms_event_plan_should_include')
-                ? (bool) vms_event_plan_should_include($plan_id, 'dashboard_bills', array(
+            $include_financial = function_exists('bvmgr_event_plan_should_include')
+                ? (bool) bvmgr_event_plan_should_include($plan_id, 'dashboard_bills', array(
                     'include_drafts' => false,
                     'include_cancelled' => false,
                 ))
@@ -804,14 +804,14 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
             }
 
             $venue_id = (int) get_post_meta($plan_id, '_vms_venue_id', true);
-            $primary_amount_info = vms_vendor_command_center_extract_known_amount($plan_id, $event_date, $venue_id);
+            $primary_amount_info = bvmgr_vendor_command_center_extract_known_amount($plan_id, $event_date, $venue_id);
             $payable_rows = array_merge(
                 array(array(
                     'vendor_id' => $primary_vendor_id,
                     'structure' => (string) ($primary_amount_info['structure'] ?? ''),
                     'known_amount' => $primary_amount_info['known_amount'] ?? null,
                 )),
-                function_exists('vms_vendor_command_center_get_supporting_payables') ? vms_vendor_command_center_get_supporting_payables($plan_id, $event_date, $venue_id) : array()
+                function_exists('bvmgr_vendor_command_center_get_supporting_payables') ? bvmgr_vendor_command_center_get_supporting_payables($plan_id, $event_date, $venue_id) : array()
             );
 
             $due_date = $event_date;
@@ -852,12 +852,12 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
                 }
 
                 $tax_missing = false;
-                if (function_exists('vms_is_vendor_tax_profile_complete')) {
-                    $tax_missing = !vms_is_vendor_tax_profile_complete($pay_vendor_id);
+                if (function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+                    $tax_missing = !bvmgr_is_vendor_tax_profile_complete($pay_vendor_id);
                 }
                 $tax_bypass_active = false;
-                if (function_exists('vms_get_tax_bypass_status')) {
-                    $bypass = (array) vms_get_tax_bypass_status($pay_vendor_id);
+                if (function_exists('bvmgr_get_tax_bypass_status')) {
+                    $bypass = (array) bvmgr_get_tax_bypass_status($pay_vendor_id);
                     $tax_bypass_active = !empty($bypass['is_active']);
                 }
                 if ($tax_missing && !$tax_bypass_active) {
@@ -891,8 +891,8 @@ if (!function_exists('vms_vendor_command_center_collect_plan_maps')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_pill')) {
-    function vms_vendor_command_center_pill(string $label, string $tone = 'neutral', string $title = ''): string
+if (!function_exists('bvmgr_vendor_command_center_pill')) {
+    function bvmgr_vendor_command_center_pill(string $label, string $tone = 'neutral', string $title = ''): string
     {
         $class = 'vms-status-pill vms-vcc-pill vms-vcc-pill--' . sanitize_html_class($tone);
         $title_attr = $title !== '' ? ' title="' . esc_attr($title) . '"' : '';
@@ -900,8 +900,8 @@ if (!function_exists('vms_vendor_command_center_pill')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_format_date')) {
-    function vms_vendor_command_center_format_date(string $ymd): string
+if (!function_exists('bvmgr_vendor_command_center_format_date')) {
+    function bvmgr_vendor_command_center_format_date(string $ymd): string
     {
         if ($ymd === '') {
             return '';
@@ -915,8 +915,8 @@ if (!function_exists('vms_vendor_command_center_format_date')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_format_datetime_from_timestamp')) {
-    function vms_vendor_command_center_format_datetime_from_timestamp(int $ts): string
+if (!function_exists('bvmgr_vendor_command_center_format_datetime_from_timestamp')) {
+    function bvmgr_vendor_command_center_format_datetime_from_timestamp(int $ts): string
     {
         if ($ts <= 0) {
             return '';
@@ -925,8 +925,8 @@ if (!function_exists('vms_vendor_command_center_format_datetime_from_timestamp')
     }
 }
 
-if (!function_exists('vms_vendor_command_center_phone_href')) {
-    function vms_vendor_command_center_phone_href(string $phone): string
+if (!function_exists('bvmgr_vendor_command_center_phone_href')) {
+    function bvmgr_vendor_command_center_phone_href(string $phone): string
     {
         $digits = preg_replace('/[^0-9+]/', '', trim($phone));
         if (!is_string($digits) || $digits === '') {
@@ -943,8 +943,8 @@ if (!function_exists('vms_vendor_command_center_phone_href')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_profile_link_snapshot')) {
-    function vms_vendor_command_center_profile_link_snapshot(int $linked_user_id, int $candidate_user_id): array
+if (!function_exists('bvmgr_vendor_command_center_profile_link_snapshot')) {
+    function bvmgr_vendor_command_center_profile_link_snapshot(int $linked_user_id, int $candidate_user_id): array
     {
         $status = 'no_link';
         $label = __('No profile link', 'backstage-venue-manager');
@@ -972,14 +972,14 @@ if (!function_exists('vms_vendor_command_center_profile_link_snapshot')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_onboarding_snapshot')) {
-    function vms_vendor_command_center_onboarding_snapshot(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_command_center_onboarding_snapshot')) {
+    function bvmgr_vendor_command_center_onboarding_snapshot(int $vendor_id): array
     {
-        $last_at = (int) get_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_last_contacted_at', '_vms_vendor_onboarding_last_contacted_at'), true);
-        $last_by = (int) get_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_last_contacted_by', '_vms_vendor_onboarding_last_contacted_by'), true);
-        $last_email = trim((string) get_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_last_contact_email', '_vms_vendor_onboarding_last_contact_email'), true));
-        $last_subject = trim((string) get_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_last_contact_subject', '_vms_vendor_onboarding_last_contact_subject'), true));
-        $contact_count = (int) get_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_contact_count', '_vms_vendor_onboarding_contact_count'), true);
+        $last_at = (int) get_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_last_contacted_at', '_vms_vendor_onboarding_last_contacted_at'), true);
+        $last_by = (int) get_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_last_contacted_by', '_vms_vendor_onboarding_last_contacted_by'), true);
+        $last_email = trim((string) get_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_last_contact_email', '_vms_vendor_onboarding_last_contact_email'), true));
+        $last_subject = trim((string) get_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_last_contact_subject', '_vms_vendor_onboarding_last_contact_subject'), true));
+        $contact_count = (int) get_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_contact_count', '_vms_vendor_onboarding_contact_count'), true);
 
         $status = 'needs_contact';
         $label = __('Needs contact', 'backstage-venue-manager');
@@ -1007,8 +1007,8 @@ if (!function_exists('vms_vendor_command_center_onboarding_snapshot')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
-    function vms_vendor_command_center_payables_snapshot(int $vendor_id, array $payables_map): array
+if (!function_exists('bvmgr_vendor_command_center_payables_snapshot')) {
+    function bvmgr_vendor_command_center_payables_snapshot(int $vendor_id, array $payables_map): array
     {
         $summary = isset($payables_map[$vendor_id]) && is_array($payables_map[$vendor_id]) ? $payables_map[$vendor_id] : array();
         $snapshot = array(
@@ -1051,7 +1051,7 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
             /* translators: %d: number of overdue payable items. */
             $snapshot['label'] = sprintf(_n('Overdue (%d)', 'Overdue (%d)', $count, 'backstage-venue-manager'), $count);
             $snapshot['tone'] = 'danger';
-            $snapshot['title'] = __('At least one Event Plan payable is past due and still open in VMS.', 'backstage-venue-manager');
+            $snapshot['title'] = __('At least one Event Plan payable is past due and still open in Backstage Venue Manager.', 'backstage-venue-manager');
             return $snapshot;
         }
 
@@ -1071,23 +1071,23 @@ if (!function_exists('vms_vendor_command_center_payables_snapshot')) {
             /* translators: %d: number of upcoming payable items. */
             $snapshot['label'] = sprintf(_n('Upcoming (%d)', 'Upcoming (%d)', $count, 'backstage-venue-manager'), $count);
             $snapshot['tone'] = 'info';
-            $snapshot['title'] = __('This vendor has upcoming Event Plan payable items with no current overdue balance in VMS.', 'backstage-venue-manager');
+            $snapshot['title'] = __('This vendor has upcoming Event Plan payable items with no current overdue balance in Backstage Venue Manager.', 'backstage-venue-manager');
             return $snapshot;
         }
 
         $snapshot['status'] = 'clear';
         $snapshot['label'] = __('No open items', 'backstage-venue-manager');
         $snapshot['tone'] = 'success';
-        $snapshot['title'] = __('Past Event Plan payables exist, but no current open items were found in the current VMS payables view.', 'backstage-venue-manager');
+        $snapshot['title'] = __('Past Event Plan payables exist, but no current open items were found in the current Backstage Venue Manager payables view.', 'backstage-venue-manager');
         return $snapshot;
     }
 }
 
-if (!function_exists('vms_vendor_command_center_type_labels')) {
-    function vms_vendor_command_center_type_labels(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_command_center_type_labels')) {
+    function bvmgr_vendor_command_center_type_labels(int $vendor_id): array
     {
         $labels = array();
-        foreach (vms_vendor_command_center_type_terms($vendor_id) as $term) {
+        foreach (bvmgr_vendor_command_center_type_terms($vendor_id) as $term) {
             if (!empty($term['label'])) {
                 $labels[] = (string) $term['label'];
             }
@@ -1096,15 +1096,15 @@ if (!function_exists('vms_vendor_command_center_type_labels')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_build_rows')) {
-    function vms_vendor_command_center_build_rows(): array
+if (!function_exists('bvmgr_vendor_command_center_build_rows')) {
+    function bvmgr_vendor_command_center_build_rows(): array
     {
-        $maps = vms_vendor_command_center_collect_plan_maps();
+        $maps = bvmgr_vendor_command_center_collect_plan_maps();
         $next_map = isset($maps['next_map']) && is_array($maps['next_map']) ? $maps['next_map'] : array();
         $payables_map = isset($maps['payables_map']) && is_array($maps['payables_map']) ? $maps['payables_map'] : array();
 
         $vendor_ids = get_posts(array(
-            'post_type' => defined('VMS_VENDOR_CPT') ? VMS_VENDOR_CPT : 'vms_vendor',
+            'post_type' => defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor',
             'post_status' => array('publish', 'draft', 'private', 'pending'),
             'posts_per_page' => -1,
             'fields' => 'ids',
@@ -1120,18 +1120,18 @@ if (!function_exists('vms_vendor_command_center_build_rows')) {
                 continue;
             }
 
-            $title = vms_vendor_command_center_vendor_title($vendor_id);
-            $email = vms_vendor_command_center_get_vendor_email($vendor_id);
-            $phone = vms_vendor_command_center_get_vendor_phone($vendor_id);
-            $website = vms_vendor_command_center_get_vendor_website($vendor_id);
-            $linked_user_id = vms_vendor_command_center_get_linked_user_id($vendor_id);
-            $candidate_user_id = vms_vendor_command_center_get_candidate_user_id($vendor_id, $email);
-            $application = vms_vendor_command_center_get_application_snapshot($vendor_id);
-            $profile_link = vms_vendor_command_center_profile_link_snapshot($linked_user_id, $candidate_user_id);
-            $onboarding = vms_vendor_command_center_onboarding_snapshot($vendor_id);
-            $payables = vms_vendor_command_center_payables_snapshot($vendor_id, $payables_map);
+            $title = bvmgr_vendor_command_center_vendor_title($vendor_id);
+            $email = bvmgr_vendor_command_center_get_vendor_email($vendor_id);
+            $phone = bvmgr_vendor_command_center_get_vendor_phone($vendor_id);
+            $website = bvmgr_vendor_command_center_get_vendor_website($vendor_id);
+            $linked_user_id = bvmgr_vendor_command_center_get_linked_user_id($vendor_id);
+            $candidate_user_id = bvmgr_vendor_command_center_get_candidate_user_id($vendor_id, $email);
+            $application = bvmgr_vendor_command_center_get_application_snapshot($vendor_id);
+            $profile_link = bvmgr_vendor_command_center_profile_link_snapshot($linked_user_id, $candidate_user_id);
+            $onboarding = bvmgr_vendor_command_center_onboarding_snapshot($vendor_id);
+            $payables = bvmgr_vendor_command_center_payables_snapshot($vendor_id, $payables_map);
             $next_item = isset($next_map[$vendor_id]) && is_array($next_map[$vendor_id]) ? $next_map[$vendor_id] : array();
-            $type_terms = vms_vendor_command_center_type_terms($vendor_id);
+            $type_terms = bvmgr_vendor_command_center_type_terms($vendor_id);
             $type_labels = array();
             $type_slugs = array();
             foreach ($type_terms as $type_term) {
@@ -1186,14 +1186,14 @@ if (!function_exists('vms_vendor_command_center_build_rows')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_filter_rows')) {
-    function vms_vendor_command_center_filter_rows(array $rows): array
+if (!function_exists('bvmgr_vendor_command_center_filter_rows')) {
+    function bvmgr_vendor_command_center_filter_rows(array $rows): array
     {
-        $search = sanitize_text_field(vms_vendor_command_center_query_arg('vms_vendor_q'));
-        $type_filter = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_type'));
-        $account_filter = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_account'));
-        $onboarding_filter = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_onboarding'));
-        $payables_filter = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_payables'));
+        $search = sanitize_text_field(bvmgr_vendor_command_center_query_arg('vms_vendor_q'));
+        $type_filter = sanitize_key(bvmgr_vendor_command_center_query_arg('vms_vendor_type'));
+        $account_filter = sanitize_key(bvmgr_vendor_command_center_query_arg('vms_vendor_account'));
+        $onboarding_filter = sanitize_key(bvmgr_vendor_command_center_query_arg('vms_vendor_onboarding'));
+        $payables_filter = sanitize_key(bvmgr_vendor_command_center_query_arg('vms_vendor_payables'));
 
         $filtered = array();
         foreach ($rows as $row) {
@@ -1243,8 +1243,8 @@ if (!function_exists('vms_vendor_command_center_filter_rows')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_all_type_options')) {
-    function vms_vendor_command_center_all_type_options(array $rows): array
+if (!function_exists('bvmgr_vendor_command_center_all_type_options')) {
+    function bvmgr_vendor_command_center_all_type_options(array $rows): array
     {
         $options = array();
         foreach ($rows as $row) {
@@ -1252,7 +1252,7 @@ if (!function_exists('vms_vendor_command_center_all_type_options')) {
             if ($vendor_id <= 0) {
                 continue;
             }
-            foreach (vms_vendor_command_center_type_terms($vendor_id) as $term) {
+            foreach (bvmgr_vendor_command_center_type_terms($vendor_id) as $term) {
                 $slug = (string) ($term['slug'] ?? '');
                 $label = (string) ($term['label'] ?? '');
                 if ($slug !== '' && $label !== '') {
@@ -1265,11 +1265,11 @@ if (!function_exists('vms_vendor_command_center_all_type_options')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_template_scope_options')) {
-    function vms_vendor_command_center_template_scope_options(array $type_options): array
+if (!function_exists('bvmgr_vendor_command_center_template_scope_options')) {
+    function bvmgr_vendor_command_center_template_scope_options(array $type_options): array
     {
         $options = array(
-            vms_vendor_command_center_template_default_scope() => __('General default', 'backstage-venue-manager'),
+            bvmgr_vendor_command_center_template_default_scope() => __('General default', 'backstage-venue-manager'),
         );
 
         foreach ($type_options as $slug => $label) {
@@ -1278,23 +1278,23 @@ if (!function_exists('vms_vendor_command_center_template_scope_options')) {
                 continue;
             }
             /* translators: %s: vendor type label. */
-            $options[vms_vendor_command_center_type_scope_key($slug)] = sprintf(__('%s template', 'backstage-venue-manager'), (string) $label);
+            $options[bvmgr_vendor_command_center_type_scope_key($slug)] = sprintf(__('%s template', 'backstage-venue-manager'), (string) $label);
         }
 
         return $options;
     }
 }
 
-if (!function_exists('vms_vendor_command_center_template_editor_payload')) {
-    function vms_vendor_command_center_template_editor_payload(array $type_options): array
+if (!function_exists('bvmgr_vendor_command_center_template_editor_payload')) {
+    function bvmgr_vendor_command_center_template_editor_payload(array $type_options): array
     {
-        $scope_options = vms_vendor_command_center_template_scope_options($type_options);
+        $scope_options = bvmgr_vendor_command_center_template_scope_options($type_options);
         $payload = array();
 
         foreach ($scope_options as $scope => $label) {
-            $scope_meta = vms_vendor_command_center_parse_template_scope((string) $scope);
-            $effective = vms_vendor_command_center_get_saved_template((string) $scope);
-            $has_custom = vms_vendor_command_center_has_custom_template((string) $scope);
+            $scope_meta = bvmgr_vendor_command_center_parse_template_scope((string) $scope);
+            $effective = bvmgr_vendor_command_center_get_saved_template((string) $scope);
+            $has_custom = bvmgr_vendor_command_center_has_custom_template((string) $scope);
             $description = __('All vendors use this copy unless their vendor type has its own saved template.', 'backstage-venue-manager');
             if (!empty($scope_meta['is_type'])) {
                 $type_slug = (string) ($scope_meta['type_slug'] ?? '');
@@ -1322,8 +1322,8 @@ if (!function_exists('vms_vendor_command_center_template_editor_payload')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_summary_counts')) {
-    function vms_vendor_command_center_summary_counts(array $rows): array
+if (!function_exists('bvmgr_vendor_command_center_summary_counts')) {
+    function bvmgr_vendor_command_center_summary_counts(array $rows): array
     {
         $counts = array(
             'total' => 0,
@@ -1371,28 +1371,28 @@ if (!function_exists('vms_vendor_command_center_summary_counts')) {
     }
 }
 
-if (!function_exists('vms_vendor_command_center_default_subject')) {
-    function vms_vendor_command_center_default_subject(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_default_subject')) {
+    function bvmgr_vendor_command_center_default_subject(int $vendor_id): string
     {
-        $resolved = vms_vendor_command_center_resolved_template($vendor_id);
+        $resolved = bvmgr_vendor_command_center_resolved_template($vendor_id);
         return trim((string) ($resolved['subject'] ?? ''));
     }
 }
 
-if (!function_exists('vms_vendor_command_center_default_body')) {
-    function vms_vendor_command_center_default_body(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_command_center_default_body')) {
+    function bvmgr_vendor_command_center_default_body(int $vendor_id): string
     {
-        $resolved = vms_vendor_command_center_resolved_template($vendor_id);
+        $resolved = bvmgr_vendor_command_center_resolved_template($vendor_id);
         return trim((string) ($resolved['body'] ?? ''));
     }
 }
 
-if (!function_exists('vms_render_vendor_command_center_page')) {
-    function vms_render_vendor_command_center_page(): void
+if (!function_exists('bvmgr_render_vendor_command_center_page')) {
+    function bvmgr_render_vendor_command_center_page(): void
     {
         $tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.vendor_command_center.basics" data-vms-tour="vendor-command.help-action">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-        if (function_exists('vms_render_help_button')) {
-            $tour_button = vms_render_help_button(array(
+        if (function_exists('bvmgr_render_help_button')) {
+            $tour_button = bvmgr_render_help_button(array(
                 'tour_id' => 'vms.vendor_command_center.basics',
                 'anchor' => 'vendor-command.help-action',
                 'label' => __('Start Guided Tour', 'backstage-venue-manager'),
@@ -1402,8 +1402,8 @@ if (!function_exists('vms_render_vendor_command_center_page')) {
 
         $actions_html = '<div class="vms-vcc-header-actions">' . $tour_button . '</div>';
 
-        if (function_exists('vms_admin_ui_render_shell')) {
-            vms_admin_ui_render_shell(
+        if (function_exists('bvmgr_admin_ui_render_shell')) {
+            bvmgr_admin_ui_render_shell(
                 array(
                     'title' => __('Vendor Command Center', 'backstage-venue-manager'),
                     'subtitle' => __('One vendor-focused table for website accounts, profile links, onboarding outreach, next dates, and payable health.', 'backstage-venue-manager'),
@@ -1411,43 +1411,43 @@ if (!function_exists('vms_render_vendor_command_center_page')) {
                     'content_class' => 'vms-vcc-content',
                     'actions_html' => $actions_html,
                 ),
-                'vms_render_vendor_command_center_page_content'
+                'bvmgr_render_vendor_command_center_page_content'
             );
             return;
         }
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__('Vendor Command Center', 'backstage-venue-manager') . '</h1>';
-        vms_render_vendor_command_center_page_content();
+        bvmgr_render_vendor_command_center_page_content();
         echo '</div>';
     }
 }
 
-if (!function_exists('vms_render_vendor_command_center_page_content')) {
-    function vms_render_vendor_command_center_page_content(): void
+if (!function_exists('bvmgr_render_vendor_command_center_page_content')) {
+    function bvmgr_render_vendor_command_center_page_content(): void
     {
-        $all_rows = vms_vendor_command_center_build_rows();
-        $rows = vms_vendor_command_center_filter_rows($all_rows);
-        $summary = vms_vendor_command_center_summary_counts($all_rows);
-        $type_options = vms_vendor_command_center_all_type_options($all_rows);
+        $all_rows = bvmgr_vendor_command_center_build_rows();
+        $rows = bvmgr_vendor_command_center_filter_rows($all_rows);
+        $summary = bvmgr_vendor_command_center_summary_counts($all_rows);
+        $type_options = bvmgr_vendor_command_center_all_type_options($all_rows);
 
-        $selected_vendor_id = absint(vms_vendor_command_center_query_arg('vendor_id'));
+        $selected_vendor_id = absint(bvmgr_vendor_command_center_query_arg('vendor_id'));
         if ($selected_vendor_id <= 0 && !empty($rows)) {
             $selected_vendor_id = (int) ($rows[0]['vendor_id'] ?? 0);
         }
 
-        $selected_vendor_email = $selected_vendor_id > 0 ? vms_vendor_command_center_get_vendor_email($selected_vendor_id) : '';
-        $selected_subject = $selected_vendor_id > 0 ? vms_vendor_command_center_default_subject($selected_vendor_id) : '';
-        $selected_body = $selected_vendor_id > 0 ? vms_vendor_command_center_default_body($selected_vendor_id) : '';
-        $selected_template_note = $selected_vendor_id > 0 ? vms_vendor_command_center_active_template_note($selected_vendor_id) : __('Using the General default template for this vendor.', 'backstage-venue-manager');
-        $template_scope_options = vms_vendor_command_center_template_scope_options($type_options);
-        $template_editor_payload = vms_vendor_command_center_template_editor_payload($type_options);
-        $selected_template_scope = sanitize_text_field(vms_vendor_command_center_query_arg('template_scope'));
+        $selected_vendor_email = $selected_vendor_id > 0 ? bvmgr_vendor_command_center_get_vendor_email($selected_vendor_id) : '';
+        $selected_subject = $selected_vendor_id > 0 ? bvmgr_vendor_command_center_default_subject($selected_vendor_id) : '';
+        $selected_body = $selected_vendor_id > 0 ? bvmgr_vendor_command_center_default_body($selected_vendor_id) : '';
+        $selected_template_note = $selected_vendor_id > 0 ? bvmgr_vendor_command_center_active_template_note($selected_vendor_id) : __('Using the General default template for this vendor.', 'backstage-venue-manager');
+        $template_scope_options = bvmgr_vendor_command_center_template_scope_options($type_options);
+        $template_editor_payload = bvmgr_vendor_command_center_template_editor_payload($type_options);
+        $selected_template_scope = sanitize_text_field(bvmgr_vendor_command_center_query_arg('template_scope'));
         if ($selected_template_scope === '') {
-            $selected_template_scope = vms_vendor_command_center_template_default_scope();
+            $selected_template_scope = bvmgr_vendor_command_center_template_default_scope();
         }
         if (!isset($template_scope_options[$selected_template_scope])) {
-            $selected_template_scope = vms_vendor_command_center_template_default_scope();
+            $selected_template_scope = bvmgr_vendor_command_center_template_default_scope();
         }
 
         $vendor_form_map = array();
@@ -1458,9 +1458,9 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
             }
             $vendor_form_map[(string) $vendor_id] = array(
                 'to' => (string) ($row['email'] ?? ''),
-                'subject' => vms_vendor_command_center_default_subject($vendor_id),
-                'message' => vms_vendor_command_center_default_body($vendor_id),
-                'template_note' => vms_vendor_command_center_active_template_note($vendor_id),
+                'subject' => bvmgr_vendor_command_center_default_subject($vendor_id),
+                'message' => bvmgr_vendor_command_center_default_body($vendor_id),
+                'template_note' => bvmgr_vendor_command_center_active_template_note($vendor_id),
             );
         }
 
@@ -1485,7 +1485,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         }
         echo '</div>';
 
-        $placeholder_help = vms_vendor_command_center_placeholder_help();
+        $placeholder_help = bvmgr_vendor_command_center_placeholder_help();
 
         echo '<details class="vms-vcc-compose vms-vcc-panel" data-vms-tour="vendor-command.compose" data-vms-persist-key="vcc-compose" open>';
         echo '<summary class="vms-vcc-panel__summary">';
@@ -1500,7 +1500,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         echo '<script type="application/json" id="vms-vcc-vendor-map">' . wp_json_encode($vendor_form_map) . '</script>';
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-compose__form">';
-        wp_nonce_field('vms_vendor_command_center_send_onboarding', 'vms_vendor_command_center_nonce');
+        wp_nonce_field('bvmgr_vendor_command_center_send_onboarding', 'bvmgr_vendor_command_center_nonce');
         echo '<input type="hidden" name="action" value="vms_vendor_command_center_send_onboarding">';
 
         echo '<div class="vms-vcc-compose__grid">';
@@ -1557,7 +1557,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         echo '<div class="vms-vcc-panel__body">';
         echo '<script type="application/json" id="vms-vcc-template-map">' . wp_json_encode($template_editor_payload) . '</script>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-compose__form">';
-        wp_nonce_field('vms_vendor_command_center_save_template', 'vms_vendor_command_center_template_nonce');
+        wp_nonce_field('bvmgr_vendor_command_center_save_template', 'bvmgr_vendor_command_center_template_nonce');
         echo '<input type="hidden" name="action" value="vms_vendor_command_center_save_template">';
         echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $selected_vendor_id) . '">';
 
@@ -1597,23 +1597,23 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         echo '</div>';
         echo '</details>';
 
-        if (function_exists('vms_vendor_booking_onboarding_render_settings_panel')) {
-            vms_vendor_booking_onboarding_render_settings_panel();
+        if (function_exists('bvmgr_vendor_booking_onboarding_render_settings_panel')) {
+            bvmgr_vendor_booking_onboarding_render_settings_panel();
         }
 
         echo '<form method="get" class="vms-vcc-filters" data-vms-tour="vendor-command.filters">';
-        echo '<input type="hidden" name="page" value="' . esc_attr(vms_vendor_command_center_page_slug()) . '">';
-        echo '<input type="search" name="vms_vendor_q" value="' . esc_attr(sanitize_text_field(vms_vendor_command_center_query_arg('vms_vendor_q'))) . '" placeholder="' . esc_attr__('Search vendor, email, phone, or type', 'backstage-venue-manager') . '">';
+        echo '<input type="hidden" name="page" value="' . esc_attr(bvmgr_vendor_command_center_page_slug()) . '">';
+        echo '<input type="search" name="vms_vendor_q" value="' . esc_attr(sanitize_text_field(bvmgr_vendor_command_center_query_arg('vms_vendor_q'))) . '" placeholder="' . esc_attr__('Search vendor, email, phone, or type', 'backstage-venue-manager') . '">';
 
         echo '<select name="vms_vendor_type">';
         echo '<option value="">' . esc_html__('All types', 'backstage-venue-manager') . '</option>';
-        $current_type = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_type'));
+        $current_type = sanitize_key(bvmgr_vendor_command_center_query_arg('vms_vendor_type'));
         foreach ($type_options as $slug => $label) {
             echo '<option value="' . esc_attr($slug) . '"' . selected($current_type, $slug, false) . '>' . esc_html($label) . '</option>';
         }
         echo '</select>';
 
-        $current_account = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_account'));
+        $current_account = sanitize_key(bvmgr_vendor_command_center_query_arg('vms_vendor_account'));
         echo '<select name="vms_vendor_account">';
         echo '<option value="">' . esc_html__('All account states', 'backstage-venue-manager') . '</option>';
         echo '<option value="linked"' . selected($current_account, 'linked', false) . '>' . esc_html__('Linked account', 'backstage-venue-manager') . '</option>';
@@ -1621,14 +1621,14 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         echo '<option value="no_account"' . selected($current_account, 'no_account', false) . '>' . esc_html__('No account', 'backstage-venue-manager') . '</option>';
         echo '</select>';
 
-        $current_onboarding = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_onboarding'));
+        $current_onboarding = sanitize_key(bvmgr_vendor_command_center_query_arg('vms_vendor_onboarding'));
         echo '<select name="vms_vendor_onboarding">';
         echo '<option value="">' . esc_html__('All onboarding states', 'backstage-venue-manager') . '</option>';
         echo '<option value="contacted"' . selected($current_onboarding, 'contacted', false) . '>' . esc_html__('Contacted', 'backstage-venue-manager') . '</option>';
         echo '<option value="needs_contact"' . selected($current_onboarding, 'needs_contact', false) . '>' . esc_html__('Needs contact', 'backstage-venue-manager') . '</option>';
         echo '</select>';
 
-        $current_payables = sanitize_key(vms_vendor_command_center_query_arg('vms_vendor_payables'));
+        $current_payables = sanitize_key(bvmgr_vendor_command_center_query_arg('vms_vendor_payables'));
         echo '<select name="vms_vendor_payables">';
         echo '<option value="">' . esc_html__('All payables states', 'backstage-venue-manager') . '</option>';
         foreach (array(
@@ -1645,7 +1645,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
         echo '</select>';
 
         submit_button(__('Filter', 'backstage-venue-manager'), '', '', false);
-        echo ' <a class="button" href="' . esc_url(admin_url('admin.php?page=' . vms_vendor_command_center_page_slug())) . '">' . esc_html__('Reset', 'backstage-venue-manager') . '</a>';
+        echo ' <a class="button" href="' . esc_url(admin_url('admin.php?page=' . bvmgr_vendor_command_center_page_slug())) . '">' . esc_html__('Reset', 'backstage-venue-manager') . '</a>';
         echo '</form>';
 
         echo '<div class="vms-vcc-table-wrap" data-vms-tour="vendor-command.table">';
@@ -1679,8 +1679,8 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                 $onboarding = (array) ($row['onboarding'] ?? array());
                 $next_item = (array) ($row['next_item'] ?? array());
                 $payables = (array) ($row['payables'] ?? array());
-                $booking_status = (!empty($next_item['plan_id']) && function_exists('vms_vendor_booking_onboarding_get_vendor_plan_status'))
-                    ? (array) vms_vendor_booking_onboarding_get_vendor_plan_status((int) $next_item['plan_id'], $vendor_id)
+                $booking_status = (!empty($next_item['plan_id']) && function_exists('bvmgr_vendor_booking_onboarding_get_vendor_plan_status'))
+                    ? (array) bvmgr_vendor_booking_onboarding_get_vendor_plan_status((int) $next_item['plan_id'], $vendor_id)
                     : array();
 
                 echo '<tr>';
@@ -1697,7 +1697,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                     echo '<div><a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a></div>';
                 }
                 if ($phone !== '') {
-                    $tel = vms_vendor_command_center_phone_href($phone);
+                    $tel = bvmgr_vendor_command_center_phone_href($phone);
                     echo '<div>';
                     if ($tel !== '') {
                         echo '<a href="' . esc_attr($tel) . '">' . esc_html($phone) . '</a>';
@@ -1715,15 +1715,15 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                 echo '<td>';
                 if (!empty($row['types'])) {
                     foreach ((array) $row['types'] as $type_label) {
-                        echo wp_kses_post(vms_vendor_command_center_pill((string) $type_label, 'neutral')) . ' ';
+                        echo wp_kses_post(bvmgr_vendor_command_center_pill((string) $type_label, 'neutral')) . ' ';
                     }
                 } else {
-                    echo wp_kses_post(vms_vendor_command_center_pill(__('Uncategorized', 'backstage-venue-manager'), 'neutral'));
+                    echo wp_kses_post(bvmgr_vendor_command_center_pill(__('Uncategorized', 'backstage-venue-manager'), 'neutral'));
                 }
                 echo '</td>';
 
                 echo '<td>';
-                echo wp_kses_post(vms_vendor_command_center_pill((string) ($row['account_label'] ?? __('No account', 'backstage-venue-manager')), (string) ($row['account_tone'] ?? 'neutral'), (string) ($row['account_title'] ?? '')));
+                echo wp_kses_post(bvmgr_vendor_command_center_pill((string) ($row['account_label'] ?? __('No account', 'backstage-venue-manager')), (string) ($row['account_tone'] ?? 'neutral'), (string) ($row['account_title'] ?? '')));
                 if ($linked_user_id > 0) {
                     $user = get_user_by('id', $linked_user_id);
                     $user_link = get_edit_user_link($linked_user_id);
@@ -1745,7 +1745,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                 echo '</td>';
 
                 echo '<td>';
-                echo wp_kses_post(vms_vendor_command_center_pill((string) ($profile_link['label'] ?? __('No profile link', 'backstage-venue-manager')), (string) ($profile_link['tone'] ?? 'neutral'), (string) ($profile_link['title'] ?? '')));
+                echo wp_kses_post(bvmgr_vendor_command_center_pill((string) ($profile_link['label'] ?? __('No profile link', 'backstage-venue-manager')), (string) ($profile_link['tone'] ?? 'neutral'), (string) ($profile_link['title'] ?? '')));
                 echo '</td>';
 
                 echo '<td>';
@@ -1758,24 +1758,24 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                 } elseif ($app_status === 'rejected') {
                     $app_tone = 'danger';
                 }
-                echo wp_kses_post(vms_vendor_command_center_pill((string) ($application['label'] ?? __('No application', 'backstage-venue-manager')), $app_tone));
+                echo wp_kses_post(bvmgr_vendor_command_center_pill((string) ($application['label'] ?? __('No application', 'backstage-venue-manager')), $app_tone));
                 if (!empty($application['edit_link'])) {
                     echo '<div class="vms-vcc-subline"><a href="' . esc_url((string) $application['edit_link']) . '">' . esc_html__('Open application', 'backstage-venue-manager') . '</a></div>';
                 }
                 echo '</td>';
 
                 echo '<td>';
-                echo wp_kses_post(vms_vendor_command_center_pill((string) ($onboarding['label'] ?? __('Needs contact', 'backstage-venue-manager')), (string) ($onboarding['tone'] ?? 'neutral'), (string) ($onboarding['title'] ?? '')));
+                echo wp_kses_post(bvmgr_vendor_command_center_pill((string) ($onboarding['label'] ?? __('Needs contact', 'backstage-venue-manager')), (string) ($onboarding['tone'] ?? 'neutral'), (string) ($onboarding['title'] ?? '')));
                 if (!empty($onboarding['last_contacted_at'])) {
                     /* translators: %s: formatted onboarding email sent date and time. */
-                    echo '<div class="vms-vcc-subline">' . esc_html(sprintf(__('Last sent %s', 'backstage-venue-manager'), vms_vendor_command_center_format_datetime_from_timestamp((int) $onboarding['last_contacted_at']))) . '</div>';
+                    echo '<div class="vms-vcc-subline">' . esc_html(sprintf(__('Last sent %s', 'backstage-venue-manager'), bvmgr_vendor_command_center_format_datetime_from_timestamp((int) $onboarding['last_contacted_at']))) . '</div>';
                 }
                 echo '</td>';
 
                 echo '<td>';
                 if (!empty($next_item['event_date'])) {
                     $next_date = (string) $next_item['event_date'];
-                    $next_label = vms_vendor_command_center_format_date($next_date);
+                    $next_label = bvmgr_vendor_command_center_format_date($next_date);
                     if (!empty($next_item['edit_link'])) {
                         echo '<a href="' . esc_url((string) $next_item['edit_link']) . '"><strong>' . esc_html($next_label) . '</strong></a>';
                     } else {
@@ -1786,18 +1786,18 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                         echo '<div class="vms-vcc-subline">' . esc_html((string) $booking_status['role_label']) . '</div>';
                     }
                     if (!empty($booking_status['video_required'])) {
-                        echo '<div class="vms-vcc-subline">' . wp_kses_post(vms_vendor_command_center_pill((string) ($booking_status['video_label'] ?? __('Video needed', 'backstage-venue-manager')), (string) ($booking_status['video_tone'] ?? 'warning'))) . '</div>';
+                        echo '<div class="vms-vcc-subline">' . wp_kses_post(bvmgr_vendor_command_center_pill((string) ($booking_status['video_label'] ?? __('Video needed', 'backstage-venue-manager')), (string) ($booking_status['video_tone'] ?? 'warning'))) . '</div>';
                     }
                 } else {
-                    echo wp_kses_post(vms_vendor_command_center_pill(__('No future date', 'backstage-venue-manager'), 'neutral'));
+                    echo wp_kses_post(bvmgr_vendor_command_center_pill(__('No future date', 'backstage-venue-manager'), 'neutral'));
                 }
                 echo '</td>';
 
                 echo '<td>';
-                echo wp_kses_post(vms_vendor_command_center_pill((string) ($payables['label'] ?? __('No bill data', 'backstage-venue-manager')), (string) ($payables['tone'] ?? 'neutral'), (string) ($payables['title'] ?? '')));
+                echo wp_kses_post(bvmgr_vendor_command_center_pill((string) ($payables['label'] ?? __('No bill data', 'backstage-venue-manager')), (string) ($payables['tone'] ?? 'neutral'), (string) ($payables['title'] ?? '')));
                 if (!empty($payables['next_due_date'])) {
                     /* translators: %s: formatted next payable due date. */
-                    echo '<div class="vms-vcc-subline">' . esc_html(sprintf(__('Next due %s', 'backstage-venue-manager'), vms_vendor_command_center_format_date((string) $payables['next_due_date']))) . '</div>';
+                    echo '<div class="vms-vcc-subline">' . esc_html(sprintf(__('Next due %s', 'backstage-venue-manager'), bvmgr_vendor_command_center_format_date((string) $payables['next_due_date']))) . '</div>';
                 }
                 echo '</td>';
 
@@ -1805,11 +1805,11 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                 if ($edit_link !== '') {
                     echo '<a class="button button-small vms-vcc-action-link vms-vcc-action-link--edit" href="' . esc_url($edit_link) . '">' . esc_html__('Edit vendor', 'backstage-venue-manager') . '</a> ';
                 }
-                echo '<a class="button button-small vms-vcc-action-link vms-vcc-action-link--contact" href="' . esc_url(add_query_arg(array('page' => vms_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php'))) . '#vms-vcc-body">' . esc_html__('Contact', 'backstage-venue-manager') . '</a> ';
+                echo '<a class="button button-small vms-vcc-action-link vms-vcc-action-link--contact" href="' . esc_url(add_query_arg(array('page' => bvmgr_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php'))) . '#vms-vcc-body">' . esc_html__('Contact', 'backstage-venue-manager') . '</a> ';
 
-                if (!empty($next_item['plan_id']) && function_exists('vms_vendor_booking_onboarding_send_booked_email')) {
+                if (!empty($next_item['plan_id']) && function_exists('bvmgr_vendor_booking_onboarding_send_booked_email')) {
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-inline-form">';
-                    wp_nonce_field('vms_vendor_booking_onboarding_resend_' . (int) $next_item['plan_id'] . '_' . $vendor_id);
+                    wp_nonce_field('bvmgr_vendor_booking_onboarding_resend_' . (int) $next_item['plan_id'] . '_' . $vendor_id);
                     echo '<input type="hidden" name="action" value="vms_vendor_booking_onboarding_resend">';
                     echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) ((int) $next_item['plan_id'])) . '">';
                     echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
@@ -1817,10 +1817,10 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
                     echo '</form>';
                 }
 
-                if (!empty($booking_status['video_required']) && !empty($next_item['plan_id']) && function_exists('vms_vendor_booking_onboarding_set_video_waiver') && ((string) ($booking_status['video_status'] ?? '') !== 'uploaded' || !empty($booking_status['video_waived']))) {
+                if (!empty($booking_status['video_required']) && !empty($next_item['plan_id']) && function_exists('bvmgr_vendor_booking_onboarding_set_video_waiver') && ((string) ($booking_status['video_status'] ?? '') !== 'uploaded' || !empty($booking_status['video_waived']))) {
                     $waive_now = empty($booking_status['video_waived']);
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-inline-form">';
-                    wp_nonce_field('vms_vendor_booking_onboarding_toggle_waiver_' . (int) $next_item['plan_id'] . '_' . $vendor_id);
+                    wp_nonce_field('bvmgr_vendor_booking_onboarding_toggle_waiver_' . (int) $next_item['plan_id'] . '_' . $vendor_id);
                     echo '<input type="hidden" name="action" value="vms_vendor_booking_onboarding_toggle_waiver">';
                     echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) ((int) $next_item['plan_id'])) . '">';
                     echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
@@ -1831,7 +1831,7 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
 
                 if ($candidate_user_id > 0 && $linked_user_id <= 0) {
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-inline-form">';
-                    wp_nonce_field('vms_vendor_command_center_link_matching_user_' . $vendor_id, 'vms_vendor_command_center_link_nonce');
+                    wp_nonce_field('bvmgr_vendor_command_center_link_matching_user_' . $vendor_id, 'bvmgr_vendor_command_center_link_nonce');
                     echo '<input type="hidden" name="action" value="vms_vendor_command_center_link_matching_user">';
                     echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
                     submit_button(__('Link account', 'backstage-venue-manager'), 'secondary small vms-vcc-action-link vms-vcc-action-link--link', 'submit', false);
@@ -1849,30 +1849,30 @@ if (!function_exists('vms_render_vendor_command_center_page_content')) {
 }
 
 
-add_action('admin_post_vms_vendor_command_center_save_template', 'vms_vendor_command_center_handle_save_template');
-if (!function_exists('vms_vendor_command_center_handle_save_template')) {
-    function vms_vendor_command_center_handle_save_template(): void
+add_action('admin_post_vms_vendor_command_center_save_template', 'bvmgr_vendor_command_center_handle_save_template');
+if (!function_exists('bvmgr_vendor_command_center_handle_save_template')) {
+    function bvmgr_vendor_command_center_handle_save_template(): void
     {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
         }
 
-        check_admin_referer('vms_vendor_command_center_save_template', 'vms_vendor_command_center_template_nonce');
+        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_command_center_save_template', 'bvmgr_vendor_command_center_template_nonce'), 'bvmgr_vendor_command_center_template_nonce');
 
         $vendor_id = absint(wp_unslash((string) ($_POST['vendor_id'] ?? 0)));
-        $template_scope = isset($_POST['template_scope']) ? sanitize_text_field((string) wp_unslash($_POST['template_scope'])) : vms_vendor_command_center_template_default_scope();
-        $scope_meta = vms_vendor_command_center_parse_template_scope($template_scope);
-        $template_scope = (string) ($scope_meta['scope'] ?? vms_vendor_command_center_template_default_scope());
+        $template_scope = isset($_POST['template_scope']) ? sanitize_text_field((string) wp_unslash($_POST['template_scope'])) : bvmgr_vendor_command_center_template_default_scope();
+        $scope_meta = bvmgr_vendor_command_center_parse_template_scope($template_scope);
+        $template_scope = (string) ($scope_meta['scope'] ?? bvmgr_vendor_command_center_template_default_scope());
 
         $redirect_args = array(
-            'page' => vms_vendor_command_center_page_slug(),
+            'page' => bvmgr_vendor_command_center_page_slug(),
             'template_scope' => $template_scope,
         );
         if ($vendor_id > 0) {
             $redirect_args['vendor_id'] = $vendor_id;
         }
 
-        $store = vms_vendor_command_center_get_template_store_raw();
+        $store = bvmgr_vendor_command_center_get_template_store_raw();
 
         if (!empty($_POST['vms_reset_template'])) {
             if (!empty($scope_meta['is_type'])) {
@@ -1880,15 +1880,15 @@ if (!function_exists('vms_vendor_command_center_handle_save_template')) {
                 if ($type_slug !== '') {
                     unset($store['by_type'][$type_slug]);
                 }
-                vms_vendor_command_center_persist_template_store($store);
-                if (function_exists('vms_add_admin_notice')) {
-                    vms_add_admin_notice(__('Selected vendor-type template reset. Matching vendors will now fall back to the General default.', 'backstage-venue-manager'), 'success');
+                bvmgr_vendor_command_center_persist_template_store($store);
+                if (function_exists('bvmgr_add_admin_notice')) {
+                    bvmgr_add_admin_notice(__('Selected vendor-type template reset. Matching vendors will now fall back to the General default.', 'backstage-venue-manager'), 'success');
                 }
             } else {
                 unset($store['default']);
-                vms_vendor_command_center_persist_template_store($store);
-                if (function_exists('vms_add_admin_notice')) {
-                    vms_add_admin_notice(__('General default onboarding template reset to the built-in default.', 'backstage-venue-manager'), 'success');
+                bvmgr_vendor_command_center_persist_template_store($store);
+                if (function_exists('bvmgr_add_admin_notice')) {
+                    bvmgr_add_admin_notice(__('General default onboarding template reset to the built-in default.', 'backstage-venue-manager'), 'success');
                 }
             }
             wp_safe_redirect(add_query_arg($redirect_args, admin_url('admin.php')));
@@ -1899,8 +1899,8 @@ if (!function_exists('vms_vendor_command_center_handle_save_template')) {
         $body = isset($_POST['template_body']) ? sanitize_textarea_field((string) wp_unslash($_POST['template_body'])) : '';
 
         if ($subject === '' || trim($body) === '') {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Saved template subject and message are both required.', 'backstage-venue-manager'), 'error');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Saved template subject and message are both required.', 'backstage-venue-manager'), 'error');
             }
             wp_safe_redirect(add_query_arg($redirect_args, admin_url('admin.php')));
             exit;
@@ -1916,15 +1916,15 @@ if (!function_exists('vms_vendor_command_center_handle_save_template')) {
             if ($type_slug !== '') {
                 $store['by_type'][$type_slug] = $entry;
             }
-            vms_vendor_command_center_persist_template_store($store);
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Saved vendor-type onboarding template updated.', 'backstage-venue-manager'), 'success');
+            bvmgr_vendor_command_center_persist_template_store($store);
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Saved vendor-type onboarding template updated.', 'backstage-venue-manager'), 'success');
             }
         } else {
             $store['default'] = $entry;
-            vms_vendor_command_center_persist_template_store($store);
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('General default onboarding template updated. Future single-vendor emails will use it unless a vendor type has its own template.', 'backstage-venue-manager'), 'success');
+            bvmgr_vendor_command_center_persist_template_store($store);
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('General default onboarding template updated. Future single-vendor emails will use it unless a vendor type has its own template.', 'backstage-venue-manager'), 'success');
             }
         }
 
@@ -1933,48 +1933,48 @@ if (!function_exists('vms_vendor_command_center_handle_save_template')) {
     }
 }
 
-add_action('admin_post_vms_vendor_command_center_send_onboarding', 'vms_vendor_command_center_handle_send_onboarding');
-if (!function_exists('vms_vendor_command_center_handle_send_onboarding')) {
-    function vms_vendor_command_center_handle_send_onboarding(): void
+add_action('admin_post_vms_vendor_command_center_send_onboarding', 'bvmgr_vendor_command_center_handle_send_onboarding');
+if (!function_exists('bvmgr_vendor_command_center_handle_send_onboarding')) {
+    function bvmgr_vendor_command_center_handle_send_onboarding(): void
     {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
         }
 
-        check_admin_referer('vms_vendor_command_center_send_onboarding', 'vms_vendor_command_center_nonce');
+        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_command_center_send_onboarding', 'bvmgr_vendor_command_center_nonce'), 'bvmgr_vendor_command_center_nonce');
 
-	        $vendor_id = vms_request_read_absint($_POST, 'vendor_id');
-	        $to_email = vms_request_read_email($_POST, 'to_email');
-	        $subject = sanitize_text_field(vms_vendor_command_center_decode_human_text(vms_request_read_scalar($_POST, 'subject')));
-	        $message = sanitize_textarea_field(vms_vendor_command_center_decode_human_text(vms_request_read_scalar($_POST, 'message')));
-	        $message_text = vms_vendor_command_center_prepare_plain_email_text($message);
+	        $vendor_id = bvmgr_request_read_absint($_POST, 'vendor_id');
+	        $to_email = bvmgr_request_read_email($_POST, 'to_email');
+	        $subject = sanitize_text_field(bvmgr_vendor_command_center_decode_human_text(bvmgr_request_read_scalar($_POST, 'subject')));
+	        $message = sanitize_textarea_field(bvmgr_vendor_command_center_decode_human_text(bvmgr_request_read_scalar($_POST, 'message')));
+	        $message_text = bvmgr_vendor_command_center_prepare_plain_email_text($message);
 
-        if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('VMS_VENDOR_CPT') ? VMS_VENDOR_CPT : 'vms_vendor')) {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Select a valid vendor before sending onboarding email.', 'backstage-venue-manager'), 'error');
+        if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor')) {
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Select a valid vendor before sending onboarding email.', 'backstage-venue-manager'), 'error');
             }
-            wp_safe_redirect(admin_url('admin.php?page=' . vms_vendor_command_center_page_slug()));
+            wp_safe_redirect(admin_url('admin.php?page=' . bvmgr_vendor_command_center_page_slug()));
             exit;
         }
 
         if (!is_email($to_email)) {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('A valid recipient email is required.', 'backstage-venue-manager'), 'error');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('A valid recipient email is required.', 'backstage-venue-manager'), 'error');
             }
-            wp_safe_redirect(add_query_arg(array('page' => vms_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => bvmgr_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php')));
             exit;
         }
 
         if ($subject === '' || $message_text === '') {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Subject and message are both required.', 'backstage-venue-manager'), 'error');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Subject and message are both required.', 'backstage-venue-manager'), 'error');
             }
-            wp_safe_redirect(add_query_arg(array('page' => vms_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => bvmgr_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php')));
             exit;
         }
 
-        $result = function_exists('vms_notify_provider_core_email_send')
-            ? (array) vms_notify_provider_core_email_send(array(
+        $result = function_exists('bvmgr_notify_provider_core_email_send')
+            ? (array) bvmgr_notify_provider_core_email_send(array(
                 'to' => $to_email,
                 'subject' => $subject,
                 'body_text' => $message_text,
@@ -1983,8 +1983,8 @@ if (!function_exists('vms_vendor_command_center_handle_send_onboarding')) {
 
         $sent = !empty($result['success']);
         if (!$sent) {
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vendor_command_center',
                     'event_key' => 'vendor_onboarding_manual',
                     'recipient_user_id' => 0,
@@ -1998,24 +1998,24 @@ if (!function_exists('vms_vendor_command_center_handle_send_onboarding')) {
                     'error_message' => isset($result['error_message']) ? (string) $result['error_message'] : __('wp_mail reported failure.', 'backstage-venue-manager'),
                 ));
             }
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Email could not be sent. Please confirm the recipient address and your WordPress mail setup.', 'backstage-venue-manager'), 'error');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Email could not be sent. Please confirm the recipient address and your WordPress mail setup.', 'backstage-venue-manager'), 'error');
             }
-            wp_safe_redirect(add_query_arg(array('page' => vms_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php')));
+            wp_safe_redirect(add_query_arg(array('page' => bvmgr_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php')));
             exit;
         }
 
         $ts = (int) current_time('timestamp');
-        update_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_last_contacted_at', '_vms_vendor_onboarding_last_contacted_at'), $ts);
-        update_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_last_contacted_by', '_vms_vendor_onboarding_last_contacted_by'), (int) get_current_user_id());
-        update_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_last_contact_email', '_vms_vendor_onboarding_last_contact_email'), $to_email);
-        update_post_meta($vendor_id, vms_vendor_command_center_vendor_meta_key('onboarding_last_contact_subject', '_vms_vendor_onboarding_last_contact_subject'), $subject);
-        $count_key = vms_vendor_command_center_vendor_meta_key('onboarding_contact_count', '_vms_vendor_onboarding_contact_count');
+        update_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_last_contacted_at', '_vms_vendor_onboarding_last_contacted_at'), $ts);
+        update_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_last_contacted_by', '_vms_vendor_onboarding_last_contacted_by'), (int) get_current_user_id());
+        update_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_last_contact_email', '_vms_vendor_onboarding_last_contact_email'), $to_email);
+        update_post_meta($vendor_id, bvmgr_vendor_command_center_vendor_meta_key('onboarding_last_contact_subject', '_vms_vendor_onboarding_last_contact_subject'), $subject);
+        $count_key = bvmgr_vendor_command_center_vendor_meta_key('onboarding_contact_count', '_vms_vendor_onboarding_contact_count');
         $count = (int) get_post_meta($vendor_id, $count_key, true);
         update_post_meta($vendor_id, $count_key, max(0, $count) + 1);
 
-        if (function_exists('vms_notify_insert_log')) {
-            vms_notify_insert_log(array(
+        if (function_exists('bvmgr_notify_insert_log')) {
+            bvmgr_notify_insert_log(array(
                 'source' => 'vendor_command_center',
                 'event_key' => 'vendor_onboarding_manual',
                 'recipient_user_id' => 0,
@@ -2033,90 +2033,90 @@ if (!function_exists('vms_vendor_command_center_handle_send_onboarding')) {
             ));
         }
 
-        if (function_exists('vms_add_admin_notice')) {
-            vms_add_admin_notice(__('Onboarding email sent and logged on the vendor record.', 'backstage-venue-manager'), 'success');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice(__('Onboarding email sent and logged on the vendor record.', 'backstage-venue-manager'), 'success');
         }
 
-        wp_safe_redirect(add_query_arg(array('page' => vms_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php')));
+        wp_safe_redirect(add_query_arg(array('page' => bvmgr_vendor_command_center_page_slug(), 'vendor_id' => $vendor_id), admin_url('admin.php')));
         exit;
     }
 }
 
-add_action('admin_post_vms_vendor_command_center_link_matching_user', 'vms_vendor_command_center_handle_link_matching_user');
-if (!function_exists('vms_vendor_command_center_handle_link_matching_user')) {
-    function vms_vendor_command_center_handle_link_matching_user(): void
+add_action('admin_post_vms_vendor_command_center_link_matching_user', 'bvmgr_vendor_command_center_handle_link_matching_user');
+if (!function_exists('bvmgr_vendor_command_center_handle_link_matching_user')) {
+    function bvmgr_vendor_command_center_handle_link_matching_user(): void
     {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have permission to perform this action.', 'backstage-venue-manager'));
         }
 
         $vendor_id = absint(wp_unslash((string) ($_POST['vendor_id'] ?? 0)));
-        check_admin_referer('vms_vendor_command_center_link_matching_user_' . $vendor_id, 'vms_vendor_command_center_link_nonce');
+        check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_command_center_link_matching_user_' . $vendor_id, 'bvmgr_vendor_command_center_link_nonce'), 'bvmgr_vendor_command_center_link_nonce');
 
-        if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('VMS_VENDOR_CPT') ? VMS_VENDOR_CPT : 'vms_vendor')) {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('Vendor account linking failed because the vendor record could not be found.', 'backstage-venue-manager'), 'error');
+        if ($vendor_id <= 0 || get_post_type($vendor_id) !== (defined('BVMGR_VENDOR_CPT') ? BVMGR_VENDOR_CPT : 'vms_vendor')) {
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('Vendor account linking failed because the vendor record could not be found.', 'backstage-venue-manager'), 'error');
             }
-            wp_safe_redirect(admin_url('admin.php?page=' . vms_vendor_command_center_page_slug()));
+            wp_safe_redirect(admin_url('admin.php?page=' . bvmgr_vendor_command_center_page_slug()));
             exit;
         }
 
-        $linked_user_id = vms_vendor_command_center_get_linked_user_id($vendor_id);
+        $linked_user_id = bvmgr_vendor_command_center_get_linked_user_id($vendor_id);
         if ($linked_user_id > 0) {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('This vendor is already linked to a website account.', 'backstage-venue-manager'), 'warning');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('This vendor is already linked to a website account.', 'backstage-venue-manager'), 'warning');
             }
-            wp_safe_redirect(admin_url('admin.php?page=' . vms_vendor_command_center_page_slug()));
+            wp_safe_redirect(admin_url('admin.php?page=' . bvmgr_vendor_command_center_page_slug()));
             exit;
         }
 
-        $user_id = vms_vendor_command_center_get_candidate_user_id($vendor_id);
+        $user_id = bvmgr_vendor_command_center_get_candidate_user_id($vendor_id);
         if ($user_id <= 0) {
-            if (function_exists('vms_add_admin_notice')) {
-                vms_add_admin_notice(__('No matching website account was found for this vendor email.', 'backstage-venue-manager'), 'error');
+            if (function_exists('bvmgr_add_admin_notice')) {
+                bvmgr_add_admin_notice(__('No matching website account was found for this vendor email.', 'backstage-venue-manager'), 'error');
             }
-            wp_safe_redirect(admin_url('admin.php?page=' . vms_vendor_command_center_page_slug()));
+            wp_safe_redirect(admin_url('admin.php?page=' . bvmgr_vendor_command_center_page_slug()));
             exit;
         }
 
         $ok = false;
-        if (function_exists('vms_vendor_user_link_upsert')) {
-            $ok = (bool) vms_vendor_user_link_upsert($vendor_id, $user_id, array(
+        if (function_exists('bvmgr_vendor_user_link_upsert')) {
+            $ok = (bool) bvmgr_vendor_user_link_upsert($vendor_id, $user_id, array(
                 'role' => 'primary_contact',
                 'status' => 'active',
                 'set_primary_for_user' => true,
                 'source' => 'vendor_command_center',
             ), (int) get_current_user_id());
         } else {
-            update_post_meta($vendor_id, (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), $user_id);
-            update_user_meta($user_id, (defined('VMS_USER_PRIMARY_VENDOR_META_KEY') ? VMS_USER_PRIMARY_VENDOR_META_KEY : '_vms_vendor_id'), $vendor_id);
+            update_post_meta($vendor_id, (defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), $user_id);
+            update_user_meta($user_id, (defined('BVMGR_USER_PRIMARY_VENDOR_META_KEY') ? BVMGR_USER_PRIMARY_VENDOR_META_KEY : '_vms_vendor_id'), $vendor_id);
             $ok = true;
         }
 
-        if (function_exists('vms_add_admin_notice')) {
+        if (function_exists('bvmgr_add_admin_notice')) {
             if ($ok) {
-                vms_add_admin_notice(__('Matching website account linked to vendor profile.', 'backstage-venue-manager'), 'success');
+                bvmgr_add_admin_notice(__('Matching website account linked to vendor profile.', 'backstage-venue-manager'), 'success');
             } else {
-                vms_add_admin_notice(__('Vendor account link could not be saved.', 'backstage-venue-manager'), 'error');
+                bvmgr_add_admin_notice(__('Vendor account link could not be saved.', 'backstage-venue-manager'), 'error');
             }
         }
 
-        wp_safe_redirect(admin_url('admin.php?page=' . vms_vendor_command_center_page_slug()));
+        wp_safe_redirect(admin_url('admin.php?page=' . bvmgr_vendor_command_center_page_slug()));
         exit;
     }
 }
 
-if (!function_exists('vms_vendor_command_center_register_tours')) {
+if (!function_exists('bvmgr_vendor_command_center_register_tours')) {
     /**
      * @param array<int,array<string,mixed>> $tours
      * @return array<int,array<string,mixed>>
      */
-    function vms_vendor_command_center_register_tours(array $tours): array
+    function bvmgr_vendor_command_center_register_tours(array $tours): array
     {
         $tours[] = array(
             'id' => 'vms.vendor_command_center.basics',
             'title' => __('Vendor Command Center', 'backstage-venue-manager'),
-            'screen' => 'admin:' . vms_vendor_command_center_page_slug(),
+            'screen' => 'admin:' . bvmgr_vendor_command_center_page_slug(),
             'version' => '1.0.0',
             'level' => 'beginner',
             'description' => __('Review vendor account setup, onboarding outreach, and payable health from one table.', 'backstage-venue-manager'),
@@ -2183,4 +2183,4 @@ if (!function_exists('vms_vendor_command_center_register_tours')) {
         return $tours;
     }
 }
-add_filter('vms_tours_register', 'vms_vendor_command_center_register_tours');
+add_filter('vms_tours_register', 'bvmgr_vendor_command_center_register_tours');

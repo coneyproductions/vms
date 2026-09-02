@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) exit;
  * plus dropdown filters.
  */
 
-function vms_vendor_list_columns_query_arg(string $key): string
+function bvmgr_vendor_list_columns_query_arg(string $key): string
 {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only vendor admin filter state only changes list display.
     if (!isset($_GET[$key])) {
@@ -18,7 +18,7 @@ function vms_vendor_list_columns_query_arg(string $key): string
     return (string) wp_unslash($_GET[$key]);
 }
 
-function vms_vendor_list_columns_pill_allowed_html(): array
+function bvmgr_vendor_list_columns_pill_allowed_html(): array
 {
     return array(
         'span' => array(
@@ -66,7 +66,7 @@ add_action('manage_vms_vendor_posts_custom_column', function ($column, $post_id)
         $status = (string) get_post_meta($post_id, '_vms_w9_status', true);
         if (!$status) $status = 'not_requested';
 
-        echo wp_kses(vms_render_w9_pill($status), vms_vendor_list_columns_pill_allowed_html());
+        echo wp_kses(bvmgr_render_w9_pill($status), bvmgr_vendor_list_columns_pill_allowed_html());
         return;
     }
 
@@ -74,7 +74,7 @@ add_action('manage_vms_vendor_posts_custom_column', function ($column, $post_id)
         $req = (string) get_post_meta($post_id, '_vms_requires_1099', true);
         if (!$req) $req = 'unknown';
 
-        echo wp_kses(vms_render_1099_pill($req), vms_vendor_list_columns_pill_allowed_html());
+        echo wp_kses(bvmgr_render_1099_pill($req), bvmgr_vendor_list_columns_pill_allowed_html());
         return;
     }
 }, 10, 2);
@@ -141,21 +141,21 @@ add_filter('manage_vms_vendor_posts_columns', function ($cols) {
 add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
     if ($col !== 'vms_tax_status') return;
 
-    if (!function_exists('vms_vendor_tax_profile_is_complete')) {
+    if (!function_exists('bvmgr_vendor_tax_profile_is_complete')) {
         echo '—';
         return;
     }
 
-    $complete = vms_vendor_tax_profile_is_complete((int)$post_id);
+    $complete = bvmgr_vendor_tax_profile_is_complete((int)$post_id);
 
     if ($complete) {
         $markup = '<span class="vms-vendor-tax-pill vms-vendor-tax-pill-complete">✅ ' .
             esc_html__('Complete', 'backstage-venue-manager') .
         '</span>';
-        echo wp_kses($markup, vms_vendor_list_columns_pill_allowed_html());
+        echo wp_kses($markup, bvmgr_vendor_list_columns_pill_allowed_html());
     } else {
-        $missing = function_exists('vms_vendor_tax_profile_missing_items')
-            ? vms_vendor_tax_profile_missing_items((int)$post_id)
+        $missing = function_exists('bvmgr_vendor_tax_profile_missing_items')
+            ? bvmgr_vendor_tax_profile_missing_items((int)$post_id)
             : [];
 
         $title = !empty($missing)
@@ -165,7 +165,7 @@ add_action('manage_vms_vendor_posts_custom_column', function ($col, $post_id) {
         $markup = '<span title="' . $title . '" class="vms-vendor-tax-pill vms-vendor-tax-pill-incomplete">⚠️ ' .
             esc_html__('Incomplete', 'backstage-venue-manager') .
         '</span>';
-        echo wp_kses($markup, vms_vendor_list_columns_pill_allowed_html());
+        echo wp_kses($markup, bvmgr_vendor_list_columns_pill_allowed_html());
     }
 }, 20, 2);
 
@@ -181,8 +181,8 @@ add_action('restrict_manage_posts', function () {
     global $typenow;
     if ($typenow !== 'vms_vendor') return;
 
-    $w9 = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_w9_status'));
-    $r1099 = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_requires_1099'));
+    $w9 = sanitize_text_field(bvmgr_vendor_list_columns_query_arg('vms_w9_status'));
+    $r1099 = sanitize_text_field(bvmgr_vendor_list_columns_query_arg('vms_requires_1099'));
 
     $w9_opts = [
         ''              => __('All W-9 statuses', 'backstage-venue-manager'),
@@ -229,7 +229,7 @@ add_action('pre_get_posts', function ($query) {
 
     $meta_query = (array) $query->get('meta_query');
 
-    $w9 = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_w9_status'));
+    $w9 = sanitize_text_field(bvmgr_vendor_list_columns_query_arg('vms_w9_status'));
     if ($w9 !== '') {
         $meta_query[] = [
             'key'     => '_vms_w9_status',
@@ -238,7 +238,7 @@ add_action('pre_get_posts', function ($query) {
         ];
     }
 
-    $r = sanitize_text_field(vms_vendor_list_columns_query_arg('vms_requires_1099'));
+    $r = sanitize_text_field(bvmgr_vendor_list_columns_query_arg('vms_requires_1099'));
     if ($r !== '') {
         $meta_query[] = [
             'key'     => '_vms_requires_1099',
@@ -255,7 +255,7 @@ add_action('pre_get_posts', function ($query) {
 /** -----------------------------
  * Little “pill” UI helpers
  * ----------------------------- */
-function vms_render_w9_pill(string $status): string
+function bvmgr_render_w9_pill(string $status): string
 {
     $map = [
         'not_requested' => ['Not Requested', 'vms-vendor-mini-pill-not-requested'],
@@ -273,7 +273,7 @@ function vms_render_w9_pill(string $status): string
     );
 }
 
-function vms_render_1099_pill(string $req): string
+function bvmgr_render_1099_pill(string $req): string
 {
     $map = [
         'unknown' => ['Unknown', 'vms-vendor-mini-pill-default'],

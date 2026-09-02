@@ -68,7 +68,7 @@ try {
 	$assert(strpos($shellAssetSource, 'maybeFocusEventPlanTicketingArea') === false, 'Shell asset should not absorb the ticketing-specific focus helper.');
 	$assert(strpos($ticketingAssetSource, 'function maybeFocusEventPlanTicketingArea()') !== false, 'admin-ticketing.js should retain the ticketing-specific focus helper.');
 	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-shell'") !== false, 'Admin UI assets should retain the existing Event Plan shell handle.');
-	$assert(strpos($adminUiAssetsSource, "VMS_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js'") !== false, 'Admin UI assets should still point the shell handle at assets/js/vms-event-plan-shell.js.');
+	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js'") !== false, 'Admin UI assets should still point the shell handle at assets/js/vms-event-plan-shell.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Shell asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Shell asset should remain restricted to Event Plan edit/new screens.');
 	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitStaff = initStaff;') === false, 'Staff controller ownership should move out of Event Plan PHP in this slice.');

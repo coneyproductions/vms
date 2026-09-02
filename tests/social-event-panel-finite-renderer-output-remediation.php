@@ -5,12 +5,12 @@ if (!defined('ABSPATH')) {
 	define('ABSPATH', dirname(__DIR__) . '/');
 }
 
-if (!defined('VMS_PLUGIN_URL')) {
-	define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+if (!defined('BVMGR_PLUGIN_URL')) {
+	define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', 'test-version');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', 'test-version');
 }
 
 if (!class_exists('WP_Post')) {
@@ -113,16 +113,16 @@ $GLOBALS['vms_test_forbidden_runtime_reads'] = array(
 	'get_post_type' => 0,
 	'get_user_option' => 0,
 	'current_user_can' => 0,
-	'vms_social_current_user_can_manage' => 0,
-	'vms_social_event_plan_context' => 0,
-	'vms_social_event_meta_enabled_platforms' => 0,
-	'vms_social_event_meta_template_overrides' => 0,
-	'vms_social_queue_latest_for_event' => 0,
-	'vms_social_templates_all' => 0,
-	'vms_social_template_default_for_platform' => 0,
-	'vms_social_template_for_platform' => 0,
-	'vms_social_render_template_payload' => 0,
-	'vms_social_get_settings' => 0,
+	'bvmgr_social_current_user_can_manage' => 0,
+	'bvmgr_social_event_plan_context' => 0,
+	'bvmgr_social_event_meta_enabled_platforms' => 0,
+	'bvmgr_social_event_meta_template_overrides' => 0,
+	'bvmgr_social_queue_latest_for_event' => 0,
+	'bvmgr_social_templates_all' => 0,
+	'bvmgr_social_template_default_for_platform' => 0,
+	'bvmgr_social_template_for_platform' => 0,
+	'bvmgr_social_render_template_payload' => 0,
+	'bvmgr_social_get_settings' => 0,
 	'wp_nonce_field' => 0,
 	'wp_create_nonce' => 0,
 	'admin_url' => 0,
@@ -355,66 +355,66 @@ if (!function_exists('get_current_screen')) {
 	}
 }
 
-if (!function_exists('vms_social_current_user_can_manage')) {
-	function vms_social_current_user_can_manage(): bool
+if (!function_exists('bvmgr_social_current_user_can_manage')) {
+	function bvmgr_social_current_user_can_manage(): bool
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_current_user_can_manage']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_current_user_can_manage']++;
 		return (bool) $GLOBALS['vms_test_social_manage'];
 	}
 }
 
-if (!function_exists('vms_social_event_plan_context')) {
-	function vms_social_event_plan_context(int $event_plan_id): array
+if (!function_exists('bvmgr_social_event_plan_context')) {
+	function bvmgr_social_event_plan_context(int $event_plan_id): array
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_event_plan_context']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_event_plan_context']++;
 		return (array) ($GLOBALS['vms_test_social_contexts'][$event_plan_id] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_event_meta_enabled_platforms')) {
-	function vms_social_event_meta_enabled_platforms(int $event_plan_id): array
+if (!function_exists('bvmgr_social_event_meta_enabled_platforms')) {
+	function bvmgr_social_event_meta_enabled_platforms(int $event_plan_id): array
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_event_meta_enabled_platforms']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_event_meta_enabled_platforms']++;
 		return (array) ($GLOBALS['vms_test_social_enabled'][$event_plan_id] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_event_meta_template_overrides')) {
-	function vms_social_event_meta_template_overrides(int $event_plan_id): array
+if (!function_exists('bvmgr_social_event_meta_template_overrides')) {
+	function bvmgr_social_event_meta_template_overrides(int $event_plan_id): array
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_event_meta_template_overrides']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_event_meta_template_overrides']++;
 		return (array) ($GLOBALS['vms_test_social_template_overrides'][$event_plan_id] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_queue_latest_for_event')) {
-	function vms_social_queue_latest_for_event(int $event_plan_id): array
+if (!function_exists('bvmgr_social_queue_latest_for_event')) {
+	function bvmgr_social_queue_latest_for_event(int $event_plan_id): array
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_queue_latest_for_event']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_queue_latest_for_event']++;
 		return (array) ($GLOBALS['vms_test_social_queue_latest'][$event_plan_id] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_templates_all')) {
-	function vms_social_templates_all(string $platform): array
+if (!function_exists('bvmgr_social_templates_all')) {
+	function bvmgr_social_templates_all(string $platform): array
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_templates_all']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_templates_all']++;
 		return (array) ($GLOBALS['vms_test_social_templates'][$platform] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_template_default_for_platform')) {
-	function vms_social_template_default_for_platform(string $platform): array
+if (!function_exists('bvmgr_social_template_default_for_platform')) {
+	function bvmgr_social_template_default_for_platform(string $platform): array
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_template_default_for_platform']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_template_default_for_platform']++;
 		return (array) ($GLOBALS['vms_test_social_default_templates'][$platform] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_template_for_platform')) {
-	function vms_social_template_for_platform(string $platform, int $template_id): array
+if (!function_exists('bvmgr_social_template_for_platform')) {
+	function bvmgr_social_template_for_platform(string $platform, int $template_id): array
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_template_for_platform']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_template_for_platform']++;
 		foreach ((array) ($GLOBALS['vms_test_social_templates'][$platform] ?? array()) as $template) {
 			if ((int) ($template['id'] ?? 0) === $template_id) {
 				return (array) $template;
@@ -424,25 +424,25 @@ if (!function_exists('vms_social_template_for_platform')) {
 	}
 }
 
-if (!function_exists('vms_social_render_template_payload')) {
-	function vms_social_render_template_payload(string $platform, string $body, array $context, bool $utm_enabled): array
+if (!function_exists('bvmgr_social_render_template_payload')) {
+	function bvmgr_social_render_template_payload(string $platform, string $body, array $context, bool $utm_enabled): array
 	{
 		unset($body, $context, $utm_enabled);
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_render_template_payload']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_render_template_payload']++;
 		return (array) ($GLOBALS['vms_test_social_rendered_payloads'][$platform] ?? array());
 	}
 }
 
-if (!function_exists('vms_social_get_settings')) {
-	function vms_social_get_settings(): array
+if (!function_exists('bvmgr_social_get_settings')) {
+	function bvmgr_social_get_settings(): array
 	{
-		$GLOBALS['vms_test_forbidden_runtime_reads']['vms_social_get_settings']++;
+		$GLOBALS['vms_test_forbidden_runtime_reads']['bvmgr_social_get_settings']++;
 		return (array) $GLOBALS['vms_test_social_settings'];
 	}
 }
 
-if (!function_exists('vms_social_trim_preview')) {
-	function vms_social_trim_preview(string $text, int $width = 180): string
+if (!function_exists('bvmgr_social_trim_preview')) {
+	function bvmgr_social_trim_preview(string $text, int $width = 180): string
 	{
 		unset($width);
 		return $text;
@@ -583,84 +583,84 @@ try {
 
 	require_once $eventPanelPath;
 
-	$assert(function_exists('vms_social_build_event_panel_view'), 'Main context builder should exist.');
-	$assert(function_exists('vms_social_render_event_panel_html'), 'Main finite renderer should exist.');
-	$assert(function_exists('vms_social_build_event_panel_footer_forms_view'), 'Footer context builder should exist.');
-	$assert(function_exists('vms_social_render_event_panel_footer_forms_markup'), 'Footer finite renderer should exist.');
+	$assert(function_exists('bvmgr_social_build_event_panel_view'), 'Main context builder should exist.');
+	$assert(function_exists('bvmgr_social_render_event_panel_html'), 'Main finite renderer should exist.');
+	$assert(function_exists('bvmgr_social_build_event_panel_footer_forms_view'), 'Footer context builder should exist.');
+	$assert(function_exists('bvmgr_social_render_event_panel_footer_forms_markup'), 'Footer finite renderer should exist.');
 
 	foreach (array(
-		'function vms_social_event_panel_markup(int $event_plan_id): array',
-		'function vms_social_event_panel_footer_forms_html(int $event_plan_id, int $queue_id = 0): string',
-		'function vms_social_event_panel_register_footer_forms(int $event_plan_id, int $queue_id = 0): void',
-		'function vms_social_event_panel_render_footer_forms(): void',
-		'function vms_social_render_event_panel(WP_Post $post): void',
-		'function vms_social_ajax_load_event_panel(): void',
-		'function vms_social_event_panel_form_id(int $event_plan_id, string $kind): string',
-		'function vms_social_build_event_panel_view(int $event_plan_id): array',
-		'function vms_social_render_event_panel_html(array $view): string',
-		'function vms_social_build_event_panel_footer_forms_view(int $event_plan_id, int $queue_id = 0): array',
-		'function vms_social_render_event_panel_footer_forms_markup(array $view): string',
+		'function bvmgr_social_event_panel_markup(int $event_plan_id): array',
+		'function bvmgr_social_event_panel_footer_forms_html(int $event_plan_id, int $queue_id = 0): string',
+		'function bvmgr_social_event_panel_register_footer_forms(int $event_plan_id, int $queue_id = 0): void',
+		'function bvmgr_social_event_panel_render_footer_forms(): void',
+		'function bvmgr_social_render_event_panel(WP_Post $post): void',
+		'function bvmgr_social_ajax_load_event_panel(): void',
+		'function bvmgr_social_event_panel_form_id(int $event_plan_id, string $kind): string',
+		'function bvmgr_social_build_event_panel_view(int $event_plan_id): array',
+		'function bvmgr_social_render_event_panel_html(array $view): string',
+		'function bvmgr_social_build_event_panel_footer_forms_view(int $event_plan_id, int $queue_id = 0): array',
+		'function bvmgr_social_render_event_panel_footer_forms_markup(array $view): string',
 	) as $requiredSignature) {
 		$assert(strpos($eventPanelSource, $requiredSignature) !== false, 'Expected source signature marker: ' . $requiredSignature);
 	}
 
 	$markupSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_event_panel_markup(int $event_plan_id): array',
-		"if (!function_exists('vms_social_add_event_panel'))",
-		'vms_social_event_panel_markup()'
+		'function bvmgr_social_event_panel_markup(int $event_plan_id): array',
+		"if (!function_exists('bvmgr_social_add_event_panel'))",
+		'bvmgr_social_event_panel_markup()'
 	);
 	$footerHtmlSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_event_panel_footer_forms_html(int $event_plan_id, int $queue_id = 0): string',
-		"if (!function_exists('vms_social_event_panel_render_footer_forms'))",
-		'vms_social_event_panel_footer_forms_html()'
+		'function bvmgr_social_event_panel_footer_forms_html(int $event_plan_id, int $queue_id = 0): string',
+		"if (!function_exists('bvmgr_social_event_panel_render_footer_forms'))",
+		'bvmgr_social_event_panel_footer_forms_html()'
 	);
 	$renderSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_render_event_panel(WP_Post $post): void',
-		"if (!function_exists('vms_social_ajax_load_event_panel'))",
-		'vms_social_render_event_panel()'
+		'function bvmgr_social_render_event_panel(WP_Post $post): void',
+		"if (!function_exists('bvmgr_social_ajax_load_event_panel'))",
+		'bvmgr_social_render_event_panel()'
 	);
 	$ajaxSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_ajax_load_event_panel(): void',
-		"if (!function_exists('vms_social_save_event_panel'))",
-		'vms_social_ajax_load_event_panel()'
+		'function bvmgr_social_ajax_load_event_panel(): void',
+		"if (!function_exists('bvmgr_social_save_event_panel'))",
+		'bvmgr_social_ajax_load_event_panel()'
 	);
 	$builderSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_build_event_panel_view(int $event_plan_id): array',
-		"if (!function_exists('vms_social_normalize_event_panel_platform_render_view'))",
-		'vms_social_build_event_panel_view()'
+		'function bvmgr_social_build_event_panel_view(int $event_plan_id): array',
+		"if (!function_exists('bvmgr_social_normalize_event_panel_platform_render_view'))",
+		'bvmgr_social_build_event_panel_view()'
 	);
 	$rendererSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_render_event_panel_html(array $view): string',
-		"if (!function_exists('vms_social_build_event_panel_footer_forms_view'))",
-		'vms_social_render_event_panel_html()'
+		'function bvmgr_social_render_event_panel_html(array $view): string',
+		"if (!function_exists('bvmgr_social_build_event_panel_footer_forms_view'))",
+		'bvmgr_social_render_event_panel_html()'
 	);
 	$footerBuilderSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_build_event_panel_footer_forms_view(int $event_plan_id, int $queue_id = 0): array',
-		"if (!function_exists('vms_social_render_event_panel_footer_forms_markup'))",
-		'vms_social_build_event_panel_footer_forms_view()'
+		'function bvmgr_social_build_event_panel_footer_forms_view(int $event_plan_id, int $queue_id = 0): array',
+		"if (!function_exists('bvmgr_social_render_event_panel_footer_forms_markup'))",
+		'bvmgr_social_build_event_panel_footer_forms_view()'
 	);
 	$footerRendererSource = $extractSource(
 		$eventPanelSource,
-		'function vms_social_render_event_panel_footer_forms_markup(array $view): string',
-		"if (!function_exists('vms_social_event_panel_register_footer_forms'))",
-		'vms_social_render_event_panel_footer_forms_markup()'
+		'function bvmgr_social_render_event_panel_footer_forms_markup(array $view): string',
+		"if (!function_exists('bvmgr_social_event_panel_register_footer_forms'))",
+		'bvmgr_social_render_event_panel_footer_forms_markup()'
 	);
 
-	$assert(strpos($markupSource, 'vms_social_build_event_panel_view(') !== false, 'Public main producer should delegate to the main context builder.');
-	$assert(strpos($markupSource, 'vms_social_render_event_panel_html($view)') !== false, 'Public main producer should delegate to the main finite renderer.');
-	$assert(strpos($footerHtmlSource, 'vms_social_build_event_panel_footer_forms_view(') !== false, 'Public footer producer should delegate to the footer context builder.');
-	$assert(strpos($footerHtmlSource, 'vms_social_render_event_panel_footer_forms_markup($view)') !== false, 'Public footer producer should delegate to the footer finite renderer.');
-	$assert(strpos($renderSource, 'vms_social_event_panel_markup($event_plan_id)') !== false, 'Synchronous render should still call the public main producer.');
-	$assert(strpos($renderSource, 'vms_social_event_panel_register_footer_forms($event_plan_id, (int) ($payload[\'queue_id\'] ?? 0));') !== false, 'Synchronous render should still use the footer registry with the public payload.');
-	$assert(strpos($ajaxSource, 'vms_social_event_panel_markup($event_plan_id)') !== false, 'AJAX render should still call the public main producer.');
-	$assert(strpos($ajaxSource, '\'footer_forms_html\' => vms_social_event_panel_footer_forms_html($event_plan_id, (int) ($payload[\'queue_id\'] ?? 0)),') !== false, 'AJAX render should still call the public footer producer.');
+	$assert(strpos($markupSource, 'bvmgr_social_build_event_panel_view(') !== false, 'Public main producer should delegate to the main context builder.');
+	$assert(strpos($markupSource, 'bvmgr_social_render_event_panel_html($view)') !== false, 'Public main producer should delegate to the main finite renderer.');
+	$assert(strpos($footerHtmlSource, 'bvmgr_social_build_event_panel_footer_forms_view(') !== false, 'Public footer producer should delegate to the footer context builder.');
+	$assert(strpos($footerHtmlSource, 'bvmgr_social_render_event_panel_footer_forms_markup($view)') !== false, 'Public footer producer should delegate to the footer finite renderer.');
+	$assert(strpos($renderSource, 'bvmgr_social_event_panel_markup($event_plan_id)') !== false, 'Synchronous render should still call the public main producer.');
+	$assert(strpos($renderSource, 'bvmgr_social_event_panel_register_footer_forms($event_plan_id, (int) ($payload[\'queue_id\'] ?? 0));') !== false, 'Synchronous render should still use the footer registry with the public payload.');
+	$assert(strpos($ajaxSource, 'bvmgr_social_event_panel_markup($event_plan_id)') !== false, 'AJAX render should still call the public main producer.');
+	$assert(strpos($ajaxSource, '\'footer_forms_html\' => bvmgr_social_event_panel_footer_forms_html($event_plan_id, (int) ($payload[\'queue_id\'] ?? 0)),') !== false, 'AJAX render should still call the public footer producer.');
 	$assert(strpos($ajaxSource, "wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);") !== false, 'AJAX invalid-plan failure should remain unchanged.');
 	$assert(strpos($ajaxSource, "wp_send_json_error(array('message' => 'Not allowed.'), 403);") !== false, 'AJAX capability failure should remain unchanged.');
 	$assert(strpos($ajaxSource, "check_ajax_referer('vms_social_load_event_panel', 'nonce');") !== false, 'AJAX nonce check should remain unchanged.');
@@ -670,16 +670,16 @@ try {
 		'get_post_type(',
 		'current_user_can(',
 		'get_user_option(',
-		'vms_social_event_plan_context(',
-		'vms_social_event_meta_enabled_platforms(',
-		'vms_social_event_meta_template_overrides(',
-		'vms_social_queue_latest_for_event(',
-		'vms_social_templates_all(',
-		'vms_social_template_default_for_platform(',
-		'vms_social_template_for_platform(',
-		'vms_social_render_template_payload(',
-		'vms_social_get_settings(',
-		'vms_social_event_share_url(',
+		'bvmgr_social_event_plan_context(',
+		'bvmgr_social_event_meta_enabled_platforms(',
+		'bvmgr_social_event_meta_template_overrides(',
+		'bvmgr_social_queue_latest_for_event(',
+		'bvmgr_social_templates_all(',
+		'bvmgr_social_template_default_for_platform(',
+		'bvmgr_social_template_for_platform(',
+		'bvmgr_social_render_template_payload(',
+		'bvmgr_social_get_settings(',
+		'bvmgr_social_event_share_url(',
 		'wp_nonce_field(',
 		'wp_create_nonce(',
 		'admin_url(',
@@ -695,13 +695,13 @@ try {
 	}
 
 	foreach (array(
-		'vms_social_event_plan_context(',
-		'vms_social_event_meta_enabled_platforms(',
-		'vms_social_event_meta_template_overrides(',
+		'bvmgr_social_event_plan_context(',
+		'bvmgr_social_event_meta_enabled_platforms(',
+		'bvmgr_social_event_meta_template_overrides(',
 		'get_post_meta(',
-		'vms_social_queue_latest_for_event(',
-		'vms_social_get_settings(',
-		'vms_social_build_event_panel_nonce_view(',
+		'bvmgr_social_queue_latest_for_event(',
+		'bvmgr_social_get_settings(',
+		'bvmgr_social_build_event_panel_nonce_view(',
 	) as $requiredBuilderMarker) {
 		$assert(strpos($builderSource, $requiredBuilderMarker) !== false, 'Main builder should keep the expected external-read marker: ' . $requiredBuilderMarker);
 	}
@@ -712,7 +712,7 @@ try {
 	$assert(strpos($socialAdminAssetSource, 'shell.innerHTML = String(payload.data.html);') !== false, 'JS source should remain unchanged for shell.innerHTML insertion.');
 	$assert(strpos($socialAdminAssetSource, 'wrapper.innerHTML = String(html);') !== false, 'JS source should remain unchanged for detached footer parsing.');
 
-	$queuedView = vms_social_build_event_panel_view(42);
+	$queuedView = bvmgr_social_build_event_panel_view(42);
 	$assert(array_keys($queuedView) === array(
 		'event_plan_id',
 		'nonce_value',
@@ -744,7 +744,7 @@ try {
 	$assert((string) $queuedView['nonce_value'] === 'nonce:vms_social_event_panel_save', 'Main context builder should preserve the current panel nonce contract.');
 	$assert((string) $queuedView['referer_value'] === '/wp-admin/post.php?post=42&action=edit', 'Main context builder should preserve the current referer contract.');
 
-	$queuedFooterView = vms_social_build_event_panel_footer_forms_view(42, 314);
+	$queuedFooterView = bvmgr_social_build_event_panel_footer_forms_view(42, 314);
 	$assert(array_keys($queuedFooterView) === array(
 		'event_plan_id',
 		'queue_id',
@@ -759,24 +759,24 @@ try {
 	$assert((string) $queuedFooterView['action_url'] === 'https://example.test/wp-admin/admin-post.php', 'Footer context builder should preserve the admin-post URL contract.');
 
 	$resetForbiddenCounters();
-	$queuedDirectHtml = vms_social_render_event_panel_html($queuedView);
+	$queuedDirectHtml = bvmgr_social_render_event_panel_html($queuedView);
 	$assertNoForbiddenRuntimeCalls('Main renderer direct execution');
 	$resetForbiddenCounters();
-	$queuedDirectFooterHtml = vms_social_render_event_panel_footer_forms_markup($queuedFooterView);
+	$queuedDirectFooterHtml = bvmgr_social_render_event_panel_footer_forms_markup($queuedFooterView);
 	$assertNoForbiddenRuntimeCalls('Footer renderer direct execution');
 
-	$publicQueuedPayload = vms_social_event_panel_markup(42);
+	$publicQueuedPayload = bvmgr_social_event_panel_markup(42);
 	$assert((string) $publicQueuedPayload['html'] === $queuedDirectHtml, 'Public main producer should return the exact finite renderer output.');
 	$assert((int) $publicQueuedPayload['queue_id'] === 314, 'Public main producer should preserve the queue_id contract.');
-	$assert(vms_social_event_panel_footer_forms_html(42, 314) === $queuedDirectFooterHtml, 'Public footer producer should return the exact finite renderer output.');
+	$assert(bvmgr_social_event_panel_footer_forms_html(42, 314) === $queuedDirectFooterHtml, 'Public footer producer should return the exact finite renderer output.');
 
 	$GLOBALS['vms_test_user_options'] = array();
-	$GLOBALS['vms_social_event_panel_footer_forms'] = array();
+	$GLOBALS['bvmgr_social_event_panel_footer_forms'] = array();
 	ob_start();
-	vms_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
+	bvmgr_social_render_event_panel(new WP_Post(42, 'vms_event_plan'));
 	$openPanelHtml = (string) ob_get_clean();
 	$assert($openPanelHtml === (string) $publicQueuedPayload['html'], 'Synchronous open-panel rendering should still echo the public main producer output.');
-	$assert(isset($GLOBALS['vms_social_event_panel_footer_forms'][42]), 'Synchronous open-panel rendering should still populate the footer registry.');
+	$assert(isset($GLOBALS['bvmgr_social_event_panel_footer_forms'][42]), 'Synchronous open-panel rendering should still populate the footer registry.');
 
 	list($queuedDoc, $queuedXPath, $queuedRoot) = $parseFragment($queuedDirectHtml, 'queued main renderer');
 	unset($queuedDoc);
@@ -861,7 +861,7 @@ try {
 		'queue_retry_form_id' => 'vms-social-queue-retry-form-42',
 	);
 	$resetForbiddenCounters();
-	$defaultNoQueueHtml = vms_social_render_event_panel_html($defaultNoQueueView);
+	$defaultNoQueueHtml = bvmgr_social_render_event_panel_html($defaultNoQueueView);
 	$assertNoForbiddenRuntimeCalls('Main renderer default/no-queue execution');
 	list($defaultDoc, $defaultXPath, $defaultRoot) = $parseFragment($defaultNoQueueHtml, 'default no-queue renderer');
 	unset($defaultDoc);
@@ -936,7 +936,7 @@ try {
 		'queue_retry_form_id' => 'retry" onfocus="alert(9)',
 	);
 	$resetForbiddenCounters();
-	$hostileMainHtml = vms_social_render_event_panel_html($hostileView);
+	$hostileMainHtml = bvmgr_social_render_event_panel_html($hostileView);
 	$assertNoForbiddenRuntimeCalls('Main renderer hostile execution');
 	list($hostileDoc, $hostileXPath, $hostileRoot) = $parseFragment($hostileMainHtml, 'hostile main renderer');
 	unset($hostileDoc, $hostileRoot);
@@ -946,8 +946,8 @@ try {
 	$assert($hostileXPath->query('//*[@id="vms-root"]//@href[starts-with(translate(., "JAVASCRIPT", "javascript"), "javascript:")]')->length === 0, 'Hostile main view should not emit unsafe href URLs.');
 	$assert($hostileXPath->query('//*[@id="vms-root"]//@onload | //*[@id="vms-root"]//@onclick | //*[@id="vms-root"]//@onfocus | //*[@id="vms-root"]//@onmouseover')->length === 0, 'Hostile main view should not introduce event-handler attributes.');
 
-	$queuedFooterHtmlNoQueue = vms_social_render_event_panel_footer_forms_markup(vms_social_build_event_panel_footer_forms_view(42, 0));
-	$assert($queuedFooterHtmlNoQueue === vms_social_event_panel_footer_forms_html(42, 0), 'Public footer producer should preserve the one-form state.');
+	$queuedFooterHtmlNoQueue = bvmgr_social_render_event_panel_footer_forms_markup(bvmgr_social_build_event_panel_footer_forms_view(42, 0));
+	$assert($queuedFooterHtmlNoQueue === bvmgr_social_event_panel_footer_forms_html(42, 0), 'Public footer producer should preserve the one-form state.');
 	list($footerNoQueueDoc, $footerNoQueueXPath, $footerNoQueueRoot) = $parseFragment($queuedFooterHtmlNoQueue, 'footer no-queue renderer');
 	unset($footerNoQueueDoc);
 	$footerNoQueueChildren = $getDirectChildElements($footerNoQueueRoot);
@@ -988,22 +988,22 @@ try {
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 	), 'Queue detached form should preserve the exact hidden-field contract.');
 	$assert($getHiddenInputMap($footerQueuedChildren[1]) === array(
-		array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_cancel'),
-		array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_cancel'),
+	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_cancel'),
+	array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_cancel'),
 		array('name' => 'queue_id', 'type' => 'hidden', 'value' => '314'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 		array('name' => 'tab', 'type' => 'hidden', 'value' => 'queue'),
 	), 'Cancel detached form should preserve the exact hidden-field contract.');
 	$assert($getHiddenInputMap($footerQueuedChildren[2]) === array(
-		array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_retry'),
-		array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_retry'),
+	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_retry'),
+	array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_retry'),
 		array('name' => 'queue_id', 'type' => 'hidden', 'value' => '314'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 		array('name' => 'tab', 'type' => 'hidden', 'value' => 'queue'),
 	), 'Retry detached form should preserve the exact hidden-field contract.');
 
 	$resetForbiddenCounters();
-	$hostileFooterHtml = vms_social_render_event_panel_footer_forms_markup(array(
+	$hostileFooterHtml = bvmgr_social_render_event_panel_footer_forms_markup(array(
 		'event_plan_id' => 42,
 		'queue_id' => 7,
 		'action_url' => 'javascript:alert(1)',

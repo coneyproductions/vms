@@ -112,10 +112,10 @@ foreach (
     vms_test_admin_selector_redirect_assert_not_contains('$_SERVER', $source, $label . ' should not retain direct $_SERVER reads.');
 }
 
-$mirrorDashboardSelector = vms_test_admin_selector_redirect_extract_named_function($mirrorHelpersPath, 'vms_dash_render_venue_selector');
-$liveDashboardSelector = vms_test_admin_selector_redirect_extract_named_function($liveHelpersPath, 'vms_dash_render_venue_selector');
-$mirrorScheduleSelector = vms_test_admin_selector_redirect_extract_named_function($mirrorVenueContextPath, 'vms_render_current_venue_selector');
-$liveScheduleSelector = vms_test_admin_selector_redirect_extract_named_function($liveVenueContextPath, 'vms_render_current_venue_selector');
+$mirrorDashboardSelector = vms_test_admin_selector_redirect_extract_named_function($mirrorHelpersPath, 'bvmgr_dash_render_venue_selector');
+$liveDashboardSelector = vms_test_admin_selector_redirect_extract_named_function($liveHelpersPath, 'bvmgr_dash_render_venue_selector');
+$mirrorScheduleSelector = vms_test_admin_selector_redirect_extract_named_function($mirrorVenueContextPath, 'bvmgr_render_current_venue_selector');
+$liveScheduleSelector = vms_test_admin_selector_redirect_extract_named_function($liveVenueContextPath, 'bvmgr_render_current_venue_selector');
 $mirrorScheduleConsumer = vms_test_admin_selector_redirect_extract_closure($mirrorVenueContextPath, "add_action('admin_post_vms_set_current_venue', function () {");
 $liveScheduleConsumer = vms_test_admin_selector_redirect_extract_closure($liveVenueContextPath, "add_action('admin_post_vms_set_current_venue', function () {");
 $mirrorDashboardConsumer = vms_test_admin_selector_redirect_extract_closure($mirrorVenueContextPath, "add_action('admin_post_vms_set_dashboard_venue', function () {");

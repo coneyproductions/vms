@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_VENUE_TEMPLATE_META_KEY', '_vms_is_venue_template');
+define('BVMGR_VENUE_TEMPLATE_META_KEY', '_vms_is_venue_template');
 
 final class G13_WPDB_Spy
 {
@@ -107,55 +107,55 @@ function wc_get_product(int $product_id)
 	return null;
 }
 
-function vms_ticketing_v2_calc_sold_qty_for_entitlement_scope(int $plan_id, string $entitlement_id, string $sku, int $product_id): array
+function bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope(int $plan_id, string $entitlement_id, string $sku, int $product_id): array
 {
 	unset($plan_id, $entitlement_id, $sku, $product_id);
 	return array('ok' => true, 'sold_qty' => 0);
 }
 
-function vms_ticketing_v2_product_meta_key(string $field): string
+function bvmgr_ticketing_v2_product_meta_key(string $field): string
 {
 	return '_vms_' . $field;
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	return $field === 'date' ? '_vms_event_date' : '_vms_' . $field;
 }
 
-function vms_budget_calculator_event_plan_date_key(): string
+function bvmgr_budget_calculator_event_plan_date_key(): string
 {
 	return '_vms_event_date';
 }
 
-function vms_budget_calculator_event_plan_status_key(): string
+function bvmgr_budget_calculator_event_plan_status_key(): string
 {
 	return '_vms_event_plan_status';
 }
 
-function vms_budget_calculator_ensure_inclusion_helpers(): void
+function bvmgr_budget_calculator_ensure_inclusion_helpers(): void
 {
 }
 
-function vms_budget_calculator_is_valid_ymd(string $value): bool
+function bvmgr_budget_calculator_is_valid_ymd(string $value): bool
 {
 	return preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1;
 }
 
-function vms_event_plan_should_include(int $plan_id, string $context, array $args): bool
+function bvmgr_event_plan_should_include(int $plan_id, string $context, array $args): bool
 {
 	unset($context, $args);
 	return !in_array($plan_id, $GLOBALS['g13_excluded'], true);
 }
 
-function vms_event_plan_get_status(int $plan_id, string $context): string
+function bvmgr_event_plan_get_status(int $plan_id, string $context): string
 {
 	unset($context);
 	return $GLOBALS['g13_statuses'][$plan_id] ?? 'draft';
 }
 
-function vms_event_plan_status_label(string $status): string
+function bvmgr_event_plan_status_label(string $status): string
 {
 	return strtoupper($status);
 }
@@ -182,7 +182,7 @@ function wp_timezone(): DateTimeZone
 	return new DateTimeZone('America/Chicago');
 }
 
-function vms_vendor_command_center_terms_days(): int
+function bvmgr_vendor_command_center_terms_days(): int
 {
 	return 30;
 }
@@ -393,13 +393,13 @@ foreach (array_diff($relative_files, array('includes/admin/budget-calculator.php
 
 $owned_chunks = array();
 $owned_function_map = array(
-	'includes/admin/budget-calculator.php' => array('vms_budget_calculator_collect_event_plans_for_year'),
-	'includes/admin/event-command-center.php' => array('vms_event_command_center_get_plan_ids'),
-	'includes/admin/event-feedback.php' => array('vms_feedback_recent_event_plans'),
-	'includes/admin/settings-page.php' => array('vms_handle_sync_entitlement_images', 'vms_ticketing_stock_reconcile_scan'),
+	'includes/admin/budget-calculator.php' => array('bvmgr_budget_calculator_collect_event_plans_for_year'),
+	'includes/admin/event-command-center.php' => array('bvmgr_event_command_center_get_plan_ids'),
+	'includes/admin/event-feedback.php' => array('bvmgr_feedback_recent_event_plans'),
+	'includes/admin/settings-page.php' => array('bvmgr_handle_sync_entitlement_images', 'bvmgr_ticketing_stock_reconcile_scan'),
 	'includes/admin/settings/class-vms-settings-tours.php' => array('handle_reset_current_user'),
-	'includes/admin/vendor-command-center.php' => array('vms_vendor_command_center_collect_plan_maps'),
-	'includes/admin/venue-duplicate-templates.php' => array('vms_render_create_from_template_panel'),
+	'includes/admin/vendor-command-center.php' => array('bvmgr_vendor_command_center_collect_plan_maps'),
+	'includes/admin/venue-duplicate-templates.php' => array('bvmgr_render_create_from_template_panel'),
 );
 foreach ($owned_function_map as $relative_file => $functions) {
 	foreach ($functions as $function) {
@@ -462,22 +462,22 @@ foreach (array(
 
 $all_runtime_source = implode("\n", $mirror_sources);
 g13_same(0, substr_count($mirror_sources['includes/admin/settings-page.php'], 'error_log('), 'G16 settings must contain no direct logging fallback.');
-g13_contains("vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must prefer the PhaseB adapter.');
-g13_contains("vms_record_operational_issue('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must retain the foundation fallback.');
+g13_contains("bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must prefer the PhaseB adapter.');
+g13_contains("bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed'", $mirror_sources['includes/admin/settings-page.php'], 'G16 settings must retain the foundation fallback.');
 g13_contains('implode(\'\', $website_rows)', $mirror_sources['includes/admin/event-feedback.php'], 'The neighboring feedback output finding should remain present.');
-g13_contains('echo vms_express_bar_action_form(', $mirror_sources['includes/admin/express-bar.php'], 'The neighboring Express Bar output findings should remain present.');
+g13_contains('echo bvmgr_express_bar_action_form(', $mirror_sources['includes/admin/express-bar.php'], 'The neighboring Express Bar output findings should remain present.');
 g13_contains('echo $content_html;', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings content output finding should remain present.');
-g13_contains('echo vms_settings_page_ticketing_stock_notice_placeholder();', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings placeholder output finding should remain present.');
+g13_contains('echo bvmgr_settings_page_ticketing_stock_notice_placeholder();', $mirror_sources['includes/admin/settings-page.php'], 'The neighboring settings placeholder output finding should remain present.');
 g13_same(0, substr_count($all_runtime_source, 'WordPress.PHP.DevelopmentFunctions.error_log_error_log'), 'The G16 settings remediation must not add a logging suppression.');
 g13_same(0, substr_count($all_runtime_source, 'WordPress.Security.EscapeOutput.OutputNotEscaped'), 'The neighboring output findings must remain unsuppressed.');
 
 foreach (array(
-	'vms_budget_calculator_collect_event_plans_for_year',
-	'vms_event_command_center_get_plan_ids',
-	'vms_feedback_recent_event_plans',
-	'vms_ticketing_stock_reconcile_scan',
-	'vms_vendor_command_center_collect_plan_maps',
-	'vms_render_create_from_template_panel',
+	'bvmgr_budget_calculator_collect_event_plans_for_year',
+	'bvmgr_event_command_center_get_plan_ids',
+	'bvmgr_feedback_recent_event_plans',
+	'bvmgr_ticketing_stock_reconcile_scan',
+	'bvmgr_vendor_command_center_collect_plan_maps',
+	'bvmgr_render_create_from_template_panel',
 ) as $function) {
 	$function_file = '';
 	foreach ($owned_function_map as $relative_file => $functions) {
@@ -497,7 +497,7 @@ $GLOBALS['g13_meta'] = array(
 	41 => array('_vms_event_date' => '2026-01-12', '_vms_venue_id' => 9),
 	42 => array('_vms_event_date' => '2026-09-08', '_vms_venue_id' => 10),
 );
-$budget_rows = vms_budget_calculator_collect_event_plans_for_year(2026, true);
+$budget_rows = bvmgr_budget_calculator_collect_event_plans_for_year(2026, true);
 g13_same(array(41, 42), array_column($budget_rows, 'plan_id'), 'Budget report result ordering changed.');
 g13_same(1, count($GLOBALS['g13_get_posts_calls']), 'A nonempty bounded budget lookup should not invoke fallback.');
 $budget_args = $GLOBALS['g13_get_posts_calls'][0];
@@ -513,7 +513,7 @@ $GLOBALS['g13_meta'] = array(
 	52 => array('_vms_event_date' => '2025-12-31', '_vms_venue_id' => 12),
 	53 => array('_vms_event_date' => 'legacy-date', '_vms_venue_id' => 13),
 );
-$fallback_rows = vms_budget_calculator_collect_event_plans_for_year(2026, false);
+$fallback_rows = bvmgr_budget_calculator_collect_event_plans_for_year(2026, false);
 g13_same(array(51), array_column($fallback_rows, 'plan_id'), 'Budget fallback PHP year/date filtering changed.');
 g13_same(2, count($GLOBALS['g13_get_posts_calls']), 'Empty bounded lookup should invoke exactly one legacy fallback.');
 g13_same(array(), $GLOBALS['g13_get_posts_calls'][1]['meta_query'], 'Budget fallback must still remove the meta join.');
@@ -522,7 +522,7 @@ g13_same(-1, $GLOBALS['g13_get_posts_calls'][1]['posts_per_page'], 'Budget fallb
 // Finite get_posts selectors retain exact limits, ordering, and returned values.
 g13_reset_query_spies();
 $GLOBALS['g13_get_posts_queue'] = array(array(0, '61', 62));
-g13_same(array(61, 62), vms_event_command_center_get_plan_ids(), 'Command Center ID normalization changed.');
+g13_same(array(61, 62), bvmgr_event_command_center_get_plan_ids(), 'Command Center ID normalization changed.');
 $command_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(200, $command_args['posts_per_page'], 'Command Center finite limit changed.');
 g13_same('_vms_event_date', $command_args['meta_key'], 'Command Center date ordering key changed.');
@@ -532,7 +532,7 @@ g13_same(true, $command_args['no_found_rows'], 'Command Center count-query behav
 g13_reset_query_spies();
 $feedback_post = new WP_Post(71);
 $GLOBALS['g13_get_posts_queue'] = array(array($feedback_post));
-g13_same(array($feedback_post), vms_feedback_recent_event_plans(), 'Feedback selector returned objects changed.');
+g13_same(array($feedback_post), bvmgr_feedback_recent_event_plans(), 'Feedback selector returned objects changed.');
 $feedback_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(75, $feedback_args['posts_per_page'], 'Feedback selector default limit changed.');
 g13_same('_vms_event_date', $feedback_args['meta_key'], 'Feedback selector date key changed.');
@@ -541,7 +541,7 @@ g13_same('DESC', $feedback_args['order'], 'Feedback selector order changed.');
 // Settings candidate scans retain complete enumeration and exact plugin-owned marker relations.
 g13_reset_query_spies();
 $GLOBALS['g13_get_posts_queue'] = array(array());
-$stock_summary = vms_ticketing_stock_reconcile_scan(false);
+$stock_summary = bvmgr_ticketing_stock_reconcile_scan(false);
 g13_same('preview', $stock_summary['mode'], 'Stock preview mode changed.');
 g13_same(0, $stock_summary['checked'], 'Empty stock preview result changed.');
 $stock_args = $GLOBALS['g13_get_posts_calls'][0];
@@ -599,7 +599,7 @@ g13_same(array('wc-processing', 'wc-completed'), $express_args['status'], 'Expre
 // The vendor map remains a finite temporal enumeration even though it intentionally has no count cap.
 g13_reset_query_spies();
 $GLOBALS['g13_get_posts_queue'] = array(array());
-g13_same(array('next_map' => array(), 'payables_map' => array()), vms_vendor_command_center_collect_plan_maps(), 'Empty vendor map result shape changed.');
+g13_same(array('next_map' => array(), 'payables_map' => array()), bvmgr_vendor_command_center_collect_plan_maps(), 'Empty vendor map result shape changed.');
 $vendor_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(-1, $vendor_args['posts_per_page'], 'Vendor map completeness changed.');
 g13_same('_vms_event_date', $vendor_args['meta_key'], 'Vendor map ordering key changed.');
@@ -611,10 +611,10 @@ g13_same(485, (int) $vendor_start->diff($vendor_end)->days, 'Vendor map finite 4
 // Venue templates remain a complete plugin-marker selector on the authorized Add Venue screen.
 g13_reset_query_spies();
 $GLOBALS['g13_get_posts_queue'] = array(array());
-vms_render_create_from_template_panel(new WP_Post(0, 'auto-draft'));
+bvmgr_render_create_from_template_panel(new WP_Post(0, 'auto-draft'));
 $venue_args = $GLOBALS['g13_get_posts_calls'][0];
 g13_same(-1, $venue_args['posts_per_page'], 'Venue template enumeration changed.');
-g13_same(VMS_VENUE_TEMPLATE_META_KEY, $venue_args['meta_key'], 'Venue template marker key changed.');
+g13_same(BVMGR_VENUE_TEMPLATE_META_KEY, $venue_args['meta_key'], 'Venue template marker key changed.');
 g13_same('1', $venue_args['meta_value'], 'Venue template marker value changed.');
 
 // The actual settings-tour operation is an immediate prepared DELETE, not a table probe.

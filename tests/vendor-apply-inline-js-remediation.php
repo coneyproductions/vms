@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_options'] = array(
 	'vms_turnstile_site_key' => 'site-key',
@@ -43,11 +43,11 @@ function wp_json_encode($value): string { return json_encode($value, JSON_UNESCA
 function is_user_logged_in(): bool { return false; }
 function current_user_can(string $capability): bool { unset($capability); return false; }
 function wp_get_current_user(): WP_User { return new WP_User(); }
-function vms_request_method(): string { return 'get'; }
-function vms_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
-function vms_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
-function vms_asset_url(string $asset_rel): string { return VMS_PLUGIN_URL . ltrim($asset_rel, '/'); }
-function vms_asset_version_for(string $asset_rel): string { unset($asset_rel); return 'test-version'; }
+function bvmgr_request_method(): string { return 'get'; }
+function bvmgr_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
+function bvmgr_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
+function bvmgr_asset_url(string $asset_rel): string { return BVMGR_PLUGIN_URL . ltrim($asset_rel, '/'); }
+function bvmgr_asset_version_for(string $asset_rel): string { unset($asset_rel); return 'test-version'; }
 function wp_enqueue_script(string $handle, string $src = '', array $deps = array(), $ver = false, bool $in_footer = false): void { $GLOBALS['vms_test_scripts'][$handle] = compact('src', 'deps', 'ver', 'in_footer'); }
 function wp_nonce_field(string $action, string $name): void { echo '<input type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr($action) . '" />'; }
 function add_query_arg(array $args, string $url): string { return $url . '?' . http_build_query($args); }
@@ -88,11 +88,11 @@ foreach ($scriptMatches as $scriptMatch) {
 $_GET = array();
 $_POST = array();
 $resetScripts();
-$html = vms_vendor_apply_shortcode();
+$html = bvmgr_vendor_apply_shortcode();
 
-$assert(function_exists('vms_vendor_apply_turnstile_is_configured') && vms_vendor_apply_turnstile_is_configured(), 'Vendor Applications form should treat Turnstile as configured only when both keys exist.');
-$assert(isset($GLOBALS['vms_test_scripts']['vms-vendor-apply']), 'Vendor Applications form should enqueue the migrated vms-vendor-apply asset.');
-$assert(($GLOBALS['vms_test_scripts']['vms-vendor-apply']['src'] ?? '') === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/js/vms-vendor-apply.js', 'Vendor Applications asset should use the expected asset URL helper output.');
+$assert(function_exists('bvmgr_vendor_apply_turnstile_is_configured') && bvmgr_vendor_apply_turnstile_is_configured(), 'Vendor Applications form should treat Turnstile as configured only when both keys exist.');
+$assert(isset($GLOBALS['vms_test_scripts']['bvmgr-vendor-apply']), 'Vendor Applications form should enqueue the canonical bvmgr-vendor-apply asset.');
+$assert(($GLOBALS['vms_test_scripts']['bvmgr-vendor-apply']['src'] ?? '') === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/js/vms-vendor-apply.js', 'Vendor Applications asset should use the expected asset URL helper output.');
 $assert(isset($GLOBALS['vms_test_scripts']['cf-turnstile']), 'Vendor Applications form should keep the existing Turnstile asset enqueued when both keys are configured.');
 $assert(strpos($html, 'id="vms-vendor-apply-variant-map"') !== false, 'Vendor Applications form should render the JSON configuration payload.');
 $assert(stripos($html, 'onchange=') === false && stripos($html, 'onclick=') === false && stripos($html, 'onsubmit=') === false, 'Vendor Applications form should not emit inline event-handler attributes.');
@@ -114,8 +114,8 @@ $assert(is_array($variantMap) && isset($variantMap['default'], $variantMap['band
 $_GET = array('vms_app' => 'success');
 $_POST = array();
 $resetScripts();
-$successHtml = vms_vendor_apply_shortcode();
-$assert(!isset($GLOBALS['vms_test_scripts']['vms-vendor-apply']), 'Vendor Applications asset should not be enqueued when the shortcode returns the confirmation screen instead of the form.');
+$successHtml = bvmgr_vendor_apply_shortcode();
+$assert(!isset($GLOBALS['vms_test_scripts']['bvmgr-vendor-apply']), 'Vendor Applications asset should not be enqueued when the shortcode returns the confirmation screen instead of the form.');
 $assert(strpos($successHtml, 'vms-vendor-apply-confirmation') !== false, 'Vendor Applications success path should still return the confirmation screen.');
 $assert(strpos($successHtml, 'id="vms-vendor-apply-variant-map"') === false, 'Vendor Applications success path should not render form-only JSON configuration.');
 

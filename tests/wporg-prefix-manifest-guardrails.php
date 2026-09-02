@@ -1,0 +1,510 @@
+<?php
+declare(strict_types=1);
+
+require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-inventory.php';
+require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-migration-state.php';
+require_once dirname(__DIR__) . '/scripts/lib/public-release.php';
+
+$failures = array();
+$assert = static function (bool $condition, string $message) use (&$failures): void {
+	if (!$condition) {
+		$failures[] = $message;
+	}
+};
+
+$root = dirname(__DIR__);
+$manifestPath = $root . '/docs/wporg-prefix-migration-manifest.json';
+$releaseExcludes = array_values(array_filter(array_map('trim', file($root . '/release-public-excludes.txt') ?: array()), static function (string $line): bool {
+	return $line !== '' && !str_starts_with($line, '#');
+}));
+$assert(in_array('docs/', $releaseExcludes, true), 'B1 manifest and documentation must remain outside the public package.');
+$assert(in_array('scripts/', $releaseExcludes, true), 'B1 migration infrastructure must remain outside the public package.');
+$assert(in_array('tests/', $releaseExcludes, true), 'B1 test infrastructure must remain outside the public package.');
+$releaseTestIds = array_column(VMS_Public_Release_Tooling::defaultReleaseTests(), 'id');
+$assert(in_array('wporg-prefix-b4-addon-compatibility', $releaseTestIds, true), 'B4 disposable add-on compatibility must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b4-query-rewrite-cli', $releaseTestIds, true), 'B4 query, rewrite, and WP-CLI transition tests must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b4-nonces', $releaseTestIds, true), 'B4 nonce transition tests must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b4-browser-assets', $releaseTestIds, true), 'B4 browser-global and asset-handle transition tests must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b4-guardrails', $releaseTestIds, true), 'B4 exact identifier-map and compatibility guardrails must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b3-guardrails', $releaseTestIds, true), 'B3 frozen-map and exact-resolution guardrails must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-scanner-inventory', $releaseTestIds, true), 'Prefix scanner inventory and migration-aware gate coverage must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b2-5-runtime', $releaseTestIds, true), 'B2.5 runtime correction coverage must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-manifest-guardrails', $releaseTestIds, true), 'Prefix guardrails must remain a required default release precondition.');
+$assert(in_array('wporg-prefix-b2-foundation', $releaseTestIds, true), 'B2 foundation coverage must remain a required default release precondition.');
+$manifest = json_decode((string) file_get_contents($manifestPath), true);
+$assert(is_array($manifest), 'Machine-readable prefix manifest must decode.');
+if (!is_array($manifest)) {
+	fwrite(STDERR, "Prefix manifest guardrail failures:\n- Manifest did not decode.\n");
+	exit(1);
+}
+$assert(($manifest['schema_version'] ?? null) === 5, 'B4 exact-identifier manifest schema must be version 5.');
+
+$expectedB4Summary = array(
+	'browser_globals' => 29,
+	'asset_handles' => 64,
+	'asset_registration_call_sites' => 99,
+	'asset_resolved_source_sites' => 105,
+	'asset_dependency_sites' => 34,
+	'asset_consumer_sites' => 19,
+	'nonce_static_actions' => 154,
+	'nonce_dynamic_action_families' => 64,
+	'nonce_fields' => 73,
+	'query_vars' => 14,
+	'rewrite_tags' => 4,
+	'rewrite_rules' => 7,
+	'cli_paths' => 3,
+);
+$b4Inventory = (array) ($manifest['b4_identifier_inventory'] ?? array());
+$b4MapPath = $root . '/' . (string) ($b4Inventory['artifact'] ?? '');
+$assert(($b4Inventory['summary'] ?? null) === $expectedB4Summary, 'B4 manifest summary must retain the exact frozen identifier inventory.');
+$assert(($b4Inventory['frozen_from_head'] ?? null) === 'bdd84df7bcbfcec65ee57fedf561bf4e167761f6', 'B4 identifier inventory must remain tied to the authorized starting HEAD.');
+$assert(in_array(($b4Inventory['implementation_state'] ?? null), array('not_started', 'browser_assets_complete', 'nonce_complete', 'complete'), true), 'B4 implementation state must use one reviewed checkpoint value.');
+$assert(is_file($b4MapPath), 'B4 frozen identifier map must exist at its manifest path.');
+$assert(is_file($b4MapPath) && hash_file('sha256', $b4MapPath) === ($b4Inventory['sha256'] ?? null), 'B4 frozen identifier map hash must match the controlling manifest.');
+$b4Map = is_file($b4MapPath) ? json_decode((string) file_get_contents($b4MapPath), true) : null;
+$assert(is_array($b4Map) && ($b4Map['summary'] ?? null) === $expectedB4Summary, 'B4 frozen identifier map must decode with the exact reviewed summary.');
+$assert(($manifest['b4_addon_compatibility']['sha256'] ?? null) === hash_file('sha256', $root . '/docs/wporg-prefix-b4-addon-compatibility.json'), 'Manifest must bind the exact B4 add-on compatibility evidence hash.');
+$assert(($manifest['b4_addon_compatibility']['summary'] ?? null) === array('addons' => 5, 'b4_semantic_consumers' => 0, 'patches_required' => 0, 'installed_trees_modified' => 0), 'Manifest must retain the exact five-add-on zero-impact B4 result.');
+$corrections = array_column((array) ($manifest['b4_evidence_corrections'] ?? array()), null, 'id');
+$assert(array_keys($corrections) === array(
+	'complete-browser-global-inventory',
+	'semantic-asset-handle-inventory',
+	'refer-a-friend-admin-slug-not-handle',
+	'exact-nonce-action-inventory',
+), 'B4 evidence corrections must retain the exact reviewed order and membership.');
+
+$completedB3 = (array) ($manifest['completed_batches']['B3'] ?? array());
+$b3Counts = (array) ($completedB3['counts'] ?? array());
+$b3SymbolMap = (array) ($completedB3['symbol_map'] ?? array());
+$currentB3Names = array();
+foreach ($b3SymbolMap as $entry) {
+	$currentB3Names[(string) ($entry['legacy_identifier'] ?? '')] = (string) ($entry['canonical_identifier'] ?? '');
+}
+$b3Name = static fn(string $legacy): string => $currentB3Names[$legacy] ?? $legacy;
+
+$requiredCategories = array(
+	'php_functions',
+	'classes_interfaces',
+	'constants',
+	'globals',
+	'hooks',
+	'options',
+	'post_meta',
+	'user_meta',
+	'transients',
+	'tables',
+	'cron',
+	'action_scheduler',
+	'rest',
+	'ajax',
+	'shortcodes',
+	'handles',
+	'cpt_taxonomy',
+	'capabilities_roles',
+	'nonces',
+	'query_rewrite',
+	'cli',
+	'protocol_headers',
+	'public_extension_apis',
+);
+$categoryFields = array(
+	'current_identifier',
+	'canonical_target',
+	'b0_strategy',
+	'compatibility_classification',
+	'persistence_external_contract_status',
+	'planned_implementation_batch',
+	'do_not_rename_current',
+);
+$categoriesById = array();
+foreach ((array) ($manifest['categories'] ?? array()) as $category) {
+	$id = (string) ($category['id'] ?? '');
+	$categoriesById[$id] = $category;
+	foreach ($categoryFields as $field) {
+		$assert(array_key_exists($field, $category), "Category {$id} must provide {$field}.");
+	}
+}
+foreach ($requiredCategories as $requiredCategory) {
+	$assert(isset($categoriesById[$requiredCategory]), "Manifest must include category {$requiredCategory}.");
+}
+$assert(count($categoriesById) === 25, 'Manifest must retain all 25 B0 categories A-Y.');
+$assert(isset($categoriesById['namespaces'], $categoriesById['tests_tooling_assets']), 'Manifest must retain the namespace and tests/tooling categories.');
+
+$expectedCounts = array(
+	'public_php_files' => 278,
+	'functions' => array('unique' => 4702, 'occurrences' => 4722),
+	'classes' => array('unique' => 27, 'occurrences' => 27),
+	'interfaces' => array('unique' => 1, 'occurrences' => 1),
+	'constants' => array('unique' => 107, 'occurrences' => 116),
+	'namespaces' => array('unique' => 0, 'occurrences' => 0),
+	'global_slots' => array('unique' => 90, 'occurrences' => 445),
+);
+foreach ($expectedCounts as $key => $expected) {
+	$assert(($manifest['php_inventory_counts'][$key] ?? null) === $expected, "Semantic count {$key} must match the B1 baseline.");
+}
+
+$dynamicExpected = array(
+	'exact_function_literals_unique' => 3645,
+	'exact_function_literals_occurrences' => 7363,
+	'function_exists_unique' => 3485,
+	'function_exists_occurrences' => 6560,
+	'direct_literal_callbacks_unique' => 727,
+	'direct_literal_callbacks_occurrences' => 783,
+	'exact_type_literals_unique' => 20,
+	'exact_type_literals_occurrences' => 45,
+	'duplicate_function_families' => 20,
+	'duplicate_constant_families' => 9,
+);
+foreach ($dynamicExpected as $key => $expected) {
+	$assert(($manifest['php_inventory_counts']['dynamic_symbols'][$key] ?? null) === $expected, "Dynamic-symbol count {$key} must match the B2 intermediate state.");
+}
+$assert(
+	array_keys((array) ($manifest['dynamic_symbols']['reflection_references'] ?? array())) === array($b3Name('bvmgr_get_active_season_dates')),
+	'Reflection baseline must retain the exact current get_active_season_dates function reference.'
+);
+
+$requiredEntryFields = array(
+	'current_identifier',
+	'canonical_target',
+	'b0_strategy',
+	'compatibility_classification',
+	'persistence_external_contract_status',
+	'planned_implementation_batch',
+	'do_not_rename',
+	'declaration_sites',
+);
+$currentProhibited = array();
+$declaredByKind = array();
+foreach ((array) ($manifest['symbols'] ?? array()) as $kind => $entries) {
+	$targets = array();
+	$declaredByKind[$kind] = array_fill_keys(array_column((array) $entries, 'current_identifier'), true);
+	foreach ((array) $entries as $entry) {
+		foreach ($requiredEntryFields as $field) {
+			$assert(array_key_exists($field, $entry), "Symbol {$kind} entry must provide {$field}.");
+		}
+		$current = (string) ($entry['current_identifier'] ?? '');
+		$target = $entry['canonical_target'] ?? null;
+		if (is_string($target) && $target !== '') {
+			$assert(!isset($targets[$target]), "Canonical target {$target} must be unique within {$kind}.");
+			$targets[$target] = true;
+		}
+		$plain = (string) preg_replace('/^(?:GLOBALS:|global:|loader:|template:)/', '', $current);
+		if (preg_match('/^[A-Za-z][A-Za-z0-9]{1,2}_/', $plain) === 1) {
+			$currentProhibited[] = $kind . ':' . $current;
+		}
+	}
+}
+sort($currentProhibited, SORT_STRING);
+$assert(
+	$currentProhibited === ($manifest['current_prohibited_globals'] ?? null),
+	'Current prohibited-global inventory must exactly equal current semantic declarations.'
+);
+$prohibitedBaseline = (array) ($manifest['prohibited_global_baseline'] ?? array());
+$assert(count($prohibitedBaseline) === 4696, 'Immutable B1 prohibited-global allowance set must contain exactly 4,696 declarations/slots.');
+$assert(count($currentProhibited) === (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1), 'Current prohibited globals must equal the exact remaining B3 function ratchet.');
+$assert(array_diff($currentProhibited, $prohibitedBaseline) === array(), 'No new prohibited global declaration may appear outside the immutable B1 allowance set.');
+$committedBaseline = json_decode((string) file_get_contents($root . '/docs/wporg-prefix-prohibited-global-baseline.json'), true);
+$assert($prohibitedBaseline === $committedBaseline, 'Manifest ratchet allowance set must equal the separate immutable B1 baseline file.');
+
+$completedB2 = (array) ($manifest['completed_batches']['B2'] ?? array());
+$assert(($completedB2['status'] ?? null) === 'complete', 'Manifest must mark B2 complete.');
+$assert(($completedB2['unique_symbols'] ?? null) === array('classes' => 23, 'interfaces' => 1, 'constants' => 107, 'global_slots' => 44), 'B2 unique-symbol map must remain exactly 23/1/107/44.');
+$assert(($completedB2['declaration_sites'] ?? null) === array('classes' => 23, 'interfaces' => 1, 'constants' => 116, 'global_slots' => 232), 'B2 declaration-site map must remain exactly 23/1/116/232.');
+$assert(($completedB2['forbidden_global_ratchet'] ?? null) === array('before' => 4696, 'after' => 4521, 'reduction' => 175), 'B2 ratchet must record the exact 4,696 to 4,521 reduction.');
+$b2SymbolMap = (array) ($completedB2['symbol_map'] ?? array());
+$assert(count($b2SymbolMap) === 175, 'B2 completed symbol map must contain exactly 175 unique legacy-to-canonical mappings.');
+$expectedRemoved = array();
+foreach ($b2SymbolMap as $entry) {
+	$kind = (string) ($entry['kind'] ?? '');
+	$legacy = (string) ($entry['legacy_identifier'] ?? '');
+	$canonical = (string) ($entry['canonical_identifier'] ?? '');
+	$expectedRemoved[] = $kind . ':' . $legacy;
+	$assert($legacy !== '' && $canonical !== '' && $legacy !== $canonical, "B2 map entry {$kind} must provide distinct legacy and canonical identifiers.");
+	$assert(isset($declaredByKind[$kind][$canonical]), "B2 canonical declaration must exist: {$kind}:{$canonical}.");
+	$assert(!isset($declaredByKind[$kind][$legacy]), "B2 legacy declaration must be absent: {$kind}:{$legacy}.");
+}
+sort($expectedRemoved, SORT_STRING);
+$actualRemoved = array_values(array_diff($prohibitedBaseline, $currentProhibited));
+sort($actualRemoved, SORT_STRING);
+$expectedAllRemoved = $expectedRemoved;
+foreach ($b3SymbolMap as $entry) {
+	$expectedAllRemoved[] = 'functions:' . (string) ($entry['legacy_identifier'] ?? '');
+}
+sort($expectedAllRemoved, SORT_STRING);
+$assert($actualRemoved === $expectedAllRemoved, 'Exact ratchet removals must equal the completed B2 map plus only completed B3 functions.');
+$assert(($completedB3['status'] ?? '') === ((int) ($b3Counts['remaining_legacy_unique_functions'] ?? 0) === 0 ? 'complete' : 'in_progress'), 'B3 manifest status must follow its exact remaining count.');
+$assert((int) ($b3Counts['migrated_unique_functions'] ?? -1) + (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1) === 4521, 'B3 unique-function progress must reconcile to 4,521.');
+$assert((int) ($b3Counts['migrated_declaration_sites'] ?? -1) + (int) ($b3Counts['remaining_legacy_declaration_sites'] ?? -1) === 4541, 'B3 declaration-site progress must reconcile to 4,541.');
+$assert(count($b3SymbolMap) === (int) ($b3Counts['migrated_unique_functions'] ?? -1), 'B3 completed symbol map must match the migrated unique count.');
+$assert(($completedB3['legacy_wrappers'] ?? null) === 0, 'B3 must never record a public legacy wrapper.');
+
+$completeLedger = (array) ($manifest['complete_semantic_ledger'] ?? array());
+$assert(($completeLedger['historical_original_ratchet'] ?? null) === array(
+	'pre_B2' => 4696,
+	'post_B2' => 4521,
+	'reduction' => 175,
+	'immutable' => true,
+), 'Complete semantic ledger must preserve the immutable original B1/B2 ratchet.');
+$assert(($completeLedger['corrected_complete_counts'] ?? null) === array(
+	'pre_B2' => 4737,
+	'post_B2' => 4562,
+	'post_B2_5' => 4521,
+), 'Complete semantic ledger must record the exact 4,737 to 4,562 to 4,521 counts.');
+$assert(($completeLedger['originally_omitted'] ?? null) === array(
+	'global_slots' => 41,
+	'token_sites' => 194,
+	'plugin_check_rows' => 57,
+), 'Complete semantic ledger must distinguish 41 slots, 194 token sites, and 57 scanner rows.');
+
+$completedB2_5 = (array) ($manifest['completed_batches']['B2_5'] ?? array());
+$assert(($completedB2_5['status'] ?? null) === 'complete', 'Manifest must mark the B2.5 corrective batch complete.');
+$assert(($completedB2_5['unique_symbols'] ?? null) === array('global_slots' => 41), 'B2.5 must contain exactly 41 corrected global slots.');
+$assert(($completedB2_5['declaration_sites'] ?? null) === array('global_slots' => 194), 'B2.5 must contain exactly 194 corrected global token sites.');
+$assert(($completedB2_5['scanner_rows_eliminated'] ?? null) === 57, 'B2.5 must eliminate exactly 57 Plugin Check rows.');
+$assert(($completedB2_5['scanner_missed_semantic_slots'] ?? null) === 1, 'B2.5 must preserve the scanner-missed $tag correction as semantic evidence.');
+$b2_5SymbolMap = (array) ($completedB2_5['symbol_map'] ?? array());
+$assert(count($b2_5SymbolMap) === 41, 'B2.5 completed symbol map must contain exactly 41 explicit mappings.');
+$b2_5Sites = 0;
+$b2_5Legacy = array();
+$b2_5Canonical = array();
+foreach ($b2_5SymbolMap as $entry) {
+	$legacy = (string) ($entry['legacy_identifier'] ?? '');
+	$canonical = (string) ($entry['canonical_identifier'] ?? '');
+	$b2_5Legacy[] = $legacy;
+	$b2_5Canonical[] = $canonical;
+	$b2_5Sites += count((array) ($entry['declaration_sites'] ?? array()));
+	$assert(str_starts_with((string) preg_replace('/^(?:loader:|template:)/', '', $canonical), 'bvmgr_'), "B2.5 canonical slot must use bvmgr_: {$canonical}.");
+	$assert(!isset($declaredByKind['global_slots'][$legacy]), "B2.5 legacy slot must be absent: {$legacy}.");
+	$assert(isset($declaredByKind['global_slots'][$canonical]), "B2.5 canonical slot must exist: {$canonical}.");
+}
+$assert($b2_5Sites === 194, 'B2.5 symbol-map sites must sum to exactly 194.');
+$assert(count(array_unique($b2_5Legacy)) === 41 && count(array_unique($b2_5Canonical)) === 41, 'B2.5 old and new slot identifiers must each be unique.');
+$assert(in_array('template:tag', $b2_5Legacy, true), 'B2.5 map must include the scanner-missed template:tag slot.');
+
+// Independent semantic audit: assigned/bound variables at PHP file scope must
+// be modeled, proven method-local through the include boundary, or carry one
+// exact reason-coded unreachable exclusion. This does not consume Plugin Check.
+$methodScopePartials = array(
+	'includes/cpt/event-plans/partials/advanced-controls.php',
+	'includes/cpt/event-plans/partials/comp-ack.php',
+	'includes/cpt/event-plans/partials/compensation.php',
+	'includes/cpt/event-plans/partials/legacy-imported-ticketing-integration.php',
+	'includes/cpt/event-plans/partials/readiness-details.php',
+	'includes/cpt/event-plans/partials/secondary-vendors.php',
+	'includes/cpt/event-plans/partials/staff.php',
+	'includes/cpt/event-plans/partials/ticketing-v2.php',
+	'includes/cpt/event-plans/partials/time-lineup.php',
+	'includes/cpt/event-plans/partials/workflow-status.php',
+);
+$semanticGlobalAssignmentSites = array();
+foreach ((array) ($manifest['symbols']['global_slots'] ?? array()) as $entry) {
+	$plain = (string) preg_replace('/^(?:GLOBALS:|global:|loader:|template:)/', '', (string) ($entry['current_identifier'] ?? ''));
+	foreach ((array) ($entry['declaration_sites'] ?? array()) as $site) {
+		$semanticGlobalAssignmentSites[(string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0) . '|' . $plain] = true;
+	}
+}
+$topLevelAssignments = BVMGR_WPORG_Prefix_Inventory::topLevelVariableAssignments($root);
+$templateAssignmentNames = array();
+$partialFilesSeen = array();
+$unmodeledAssignments = array();
+$deadCodeAssignments = array();
+foreach ($topLevelAssignments as $row) {
+	$file = (string) $row['file'];
+	$line = (int) $row['line'];
+	$variable = (string) $row['variable'];
+	if (in_array($file, $methodScopePartials, true)) {
+		$partialFilesSeen[$file] = true;
+		continue;
+	}
+	if ($file === 'includes/rest-dashboard.php' && $line === 11 && $variable === 'path') {
+		$deadCodeAssignments[] = $row;
+		continue;
+	}
+	if ($file === 'includes/public/templates/vendor-profile.php') {
+		$templateAssignmentNames[$variable] = true;
+	}
+	$key = $file . '|' . $line . '|' . $variable;
+	if (!isset($semanticGlobalAssignmentSites[$key])) {
+		$unmodeledAssignments[] = $row;
+	}
+}
+ksort($partialFilesSeen, SORT_STRING);
+$expectedPartialFiles = array_fill_keys($methodScopePartials, true);
+ksort($expectedPartialFiles, SORT_STRING);
+$assert($partialFilesSeen === $expectedPartialFiles, 'Top-level semantic audit must recognize exactly the ten Event Plan partial families as method-included scope.');
+$assert($unmodeledAssignments === array(), 'Every live top-level assignment must map to the semantic global inventory.');
+$assert($deadCodeAssignments === array(array('file' => 'includes/rest-dashboard.php', 'line' => 11, 'variable' => 'path')), 'Only the exact unreachable rest-dashboard $path assignment may be reason-coded out.');
+$restDashboard = (string) file_get_contents($root . '/includes/rest-dashboard.php');
+$scheduleHelpers = (string) file_get_contents($root . '/includes/schedule/helpers.php');
+$assert(
+	str_contains($restDashboard, "require_once __DIR__ . '/schedule/helpers.php';")
+	&& str_contains($restDashboard, "if (!function_exists('" . $b3Name('bvmgr_sch_get_all_venue_ids') . "'))")
+	&& str_contains($scheduleHelpers, "function " . $b3Name('bvmgr_sch_get_all_venue_ids') . "(): array"),
+	'Unreachable rest-dashboard $path exclusion must retain its require-before-guard proof.'
+);
+$assert(count($templateAssignmentNames) === 38, 'Vendor-profile template must expose exactly 38 assigned/bound semantic slots.');
+$assert(isset($templateAssignmentNames['bvmgr_vendor_profile_social_icon_tag']), 'Semantic audit must detect the formerly scanner-missed $tag binder under its canonical name.');
+foreach (array_keys($templateAssignmentNames) as $templateAssignmentName) {
+	$assert(str_starts_with($templateAssignmentName, 'bvmgr_'), "Vendor-profile global must use bvmgr_: {$templateAssignmentName}.");
+}
+
+foreach ((array) ($manifest['symbols'] ?? array()) as $kind => $entries) {
+	foreach ((array) $entries as $entry) {
+		$target = $entry['canonical_target'] ?? null;
+		$current = (string) ($entry['current_identifier'] ?? '');
+		if (is_string($target) && $target !== '' && $target !== $current) {
+			$assert(!isset($declaredByKind[$kind][$target]), "Canonical target {$target} must not collide with an existing core declaration.");
+		}
+	}
+}
+
+$functionDeclarations = $declaredByKind['functions'] ?? array();
+$externalDynamicContracts = array();
+foreach ((array) ($manifest['dynamic_symbols']['function_resolution_requirements'] ?? array()) as $name => $requirements) {
+	$requirement = $requirements[0] ?? array();
+	if (($requirement['resolution_policy'] ?? '') !== 'core-current-or-canonical-must-resolve') {
+		$externalDynamicContracts[] = $name;
+		continue;
+	}
+	$canonical = $requirement['canonical_target'] ?? null;
+	$assert(
+		isset($functionDeclarations[$name]) || (is_string($canonical) && isset($functionDeclarations[$canonical])),
+		"Dynamic function contract {$name} must resolve through its current or canonical declaration."
+	);
+}
+$assert($externalDynamicContracts === array(
+	'vms_dt_render_tools_home',
+	'vms_dt_reporting_build_event_model',
+	'vms_dt_reporting_build_square_line_evidence',
+	'vms_dt_reporting_build_ticket_source_rollup',
+	'vms_dt_reporting_build_website_detail_rows',
+	'vms_format_currency',
+	'vms_get_all_venue_ids',
+	'vms_get_event_plan_id_by_date',
+	'vms_ops_admin_render_presets_page',
+	'vms_ops_admin_render_settings_page',
+	'vms_ops_admin_render_teams_page',
+	'vms_ops_default_settings',
+	'vms_ops_ticket_apply_post_show_buffer',
+	'vms_ops_ticket_get_event_attendees',
+	'vms_ops_ticket_post_show_scan_buffer_hours',
+	'vms_render_docs_admin_page',
+	'vms_sch_season_is_blackout_date',
+	'vms_season_passes_count_successful_checkins_for_passholder_event',
+	'vms_season_passes_get_passholder_usage_summary',
+	'vms_season_passes_is_event_eligible_for_type',
+	'vms_season_passes_normalize_pass_type_row',
+	'vms_season_passes_table_pass_types',
+	'vms_season_passes_table_passholders',
+	'vms_square_actuals_has_hard_errors',
+	'vms_square_get_event_actuals',
+	'vms_sync_tec_status_from_plan',
+	'vms_vendor_flag_updated',
+), 'External or dynamic function contracts must remain the exact reviewed 27-entry integrated baseline.');
+
+$fixture = <<<'PHP'
+<?php
+function abc_new_global() {}
+function bvmgr_allowed_global() {}
+$retained = 'vms_physical_table_name';
+add_action('vms_legacy_hook', 'bvmgr_allowed_global');
+PHP;
+$fixtureDeclarations = BVMGR_WPORG_Prefix_Inventory::scanSource($fixture);
+$fixtureProhibited = BVMGR_WPORG_Prefix_Inventory::prohibitedDeclarations($fixtureDeclarations);
+$assert($fixtureProhibited === array('functions:abc_new_global'), 'Semantic ratchet must reject a new short-prefix declaration only.');
+
+$legacyFixture = <<<'PHP'
+<?php
+function vms_new_unmanifested_global() {}
+PHP;
+$legacyProhibited = BVMGR_WPORG_Prefix_Inventory::prohibitedDeclarations(
+	BVMGR_WPORG_Prefix_Inventory::scanSource($legacyFixture)
+);
+$assert($legacyProhibited === array('functions:vms_new_unmanifested_global'), 'New vms_* declarations must be detectable outside the baseline.');
+
+$publicApis = (array) ($manifest['public_extension_apis'] ?? array());
+$assert(count($publicApis) === 13, 'Public extension API map must contain exactly 13 entries/types.');
+$publicApiNames = array_column($publicApis, 'current_identifier');
+$assert(count(array_unique($publicApiNames)) === 13, 'Public extension API identifiers must be unique.');
+foreach ($publicApis as $api) {
+	$assert(!empty($api['requires_coordinated_cutover']), 'Each public extension API must declare coordinated cutover.');
+	$assert(($api['compatibility_classification'] ?? '') === 'coordinated-cutover-no-public-package-legacy-wrapper', 'Public API policy must forbid public-package legacy wrappers.');
+}
+$providerApi = array_values(array_filter($publicApis, static fn(array $api): bool => ($api['type'] ?? '') === 'interface'));
+$assert(count($providerApi) === 1 && ($providerApi[0]['legacy_identifier'] ?? null) === 'VMS_Social_Provider_Interface' && ($providerApi[0]['current_identifier'] ?? null) === 'BVMGR_Social_Provider_Interface', 'Public provider interface must record its completed B2 cutover exactly.');
+
+$addons = (array) ($manifest['known_addons'] ?? array());
+$assert(array_column($addons, 'slug') === array('vms-events-slider', 'vms-fill-dates', 'vms-data-tools', 'vms-express-bar', 'vms-refer-a-friend'), 'Known add-on list and order must remain authoritative.');
+$assert(array_column($addons, 'remaining_batch_dependencies') === array(
+	array('B2', 'B3', 'B7'),
+	array('B3', 'B7'),
+	array('B2', 'B3', 'B7'),
+	array('B2', 'B3', 'B7'),
+	array('B3', 'B7'),
+), 'Known add-on later-batch dependencies must match their exact consumed contract classes.');
+$referAFriend = $addons[4] ?? array();
+$assert(($referAFriend['consumed_contracts']['asset_handles'] ?? null) === array(), 'Refer a Friend must not misclassify its retained vms-admin parent slug as a B4 asset-handle dependency.');
+$b2AddonMap = array();
+foreach ($addons as $addon) {
+	$assert(($addon['external_tree_modified'] ?? null) === false, 'B1 must not claim external add-on edits.');
+	$assert(!empty($addon['consumed_contracts']), 'Each add-on must freeze consumed contracts.');
+	foreach ((array) ($addon['consumed_contracts']['b2_php_symbols'] ?? array()) as $dependency) {
+		$key = implode(':', array($addon['slug'], $dependency['kind'], $dependency['current_identifier']));
+		$b2AddonMap[$key] = array(
+			'canonical_target' => $dependency['canonical_target'],
+			'evidence_files' => $dependency['evidence_files'],
+		);
+	}
+}
+ksort($b2AddonMap, SORT_STRING);
+$assert($b2AddonMap === array(
+	'vms-data-tools:classes:VMS_Vendor_Schema_Registry' => array(
+		'canonical_target' => 'BVMGR_Vendor_Schema_Registry',
+		'evidence_files' => array('includes/admin/page-vendor-import.php', 'includes/services/vendor-import/vendor-import-engine.php'),
+	),
+	'vms-data-tools:constants:VMS_USER_PRIMARY_VENDOR_META_KEY' => array(
+		'canonical_target' => 'BVMGR_USER_PRIMARY_VENDOR_META_KEY',
+		'evidence_files' => array('includes/vendor-invites/orchestrator.php'),
+	),
+	'vms-data-tools:constants:VMS_VENDOR_PRIMARY_USER_META_KEY' => array(
+		'canonical_target' => 'BVMGR_VENDOR_PRIMARY_USER_META_KEY',
+		'evidence_files' => array('includes/vendor-invites/helpers.php', 'includes/vendor-invites/orchestrator.php'),
+	),
+	'vms-data-tools:constants:VMS_VENUE_CPT' => array(
+		'canonical_target' => 'BVMGR_VENUE_CPT',
+		'evidence_files' => array('includes/admin/page-payables-export.php', 'includes/admin/page-revenue-intelligence.php'),
+	),
+	'vms-events-slider:constants:VMS_CALENDAR_FEED_CACHE_BUST_OPTION' => array(
+		'canonical_target' => 'BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION',
+		'evidence_files' => array('vms-events-slider.php'),
+	),
+	'vms-express-bar:constants:VMS_PLUGIN_FILE' => array(
+		'canonical_target' => 'BVMGR_PLUGIN_FILE',
+		'evidence_files' => array('includes/helpers.php'),
+	),
+	'vms-express-bar:constants:VMS_VERSION' => array(
+		'canonical_target' => 'BVMGR_VERSION',
+		'evidence_files' => array('includes/helpers.php'),
+	),
+), 'B1 must freeze the exact complete seven-entry semantic B2 add-on dependency map.');
+
+$map = BVMGR_Prefix_Compatibility_Map::fromFile($manifestPath);
+$assert($map->canonicalFor('vms_register_admin_page') === 'bvmgr_register_admin_page', 'Compatibility map must resolve the known public Admin Page API.');
+$assert($map->canonicalFor('VMS_Social_Provider_Interface') === 'BVMGR_Social_Provider_Interface', 'Compatibility map must resolve the public provider interface.');
+$assert(BVMGR_Prefix_Compatibility_Map::readOrder('bvmgr_key', 'vms_key') === array('bvmgr_key', 'vms_key'), 'Dual-read order must be canonical first.');
+$assert(BVMGR_Prefix_Compatibility_Map::writeTargets('bvmgr_key', 'vms_key', false) === array('bvmgr_key'), 'Canonical-write policy must not mirror by default.');
+$assert(BVMGR_Prefix_Compatibility_Map::writeTargets('bvmgr_key', 'vms_key', true) === array('bvmgr_key', 'vms_key'), 'Rollback-safe policy may explicitly mirror.');
+$assert(BVMGR_Prefix_Compatibility_Map::fireOrder('bvmgr_hook', 'vms_hook') === array('bvmgr_hook', 'vms_hook'), 'Dual-fire order must be canonical first.');
+
+$command = escapeshellarg(PHP_BINARY) . ' -d memory_limit=1G ' . escapeshellarg($root . '/scripts/generate-wporg-prefix-manifest.php') . ' --check 2>&1';
+$output = array();
+$status = 0;
+exec($command, $output, $status);
+$assert($status === 0, 'Committed manifest must match a fresh semantic generation: ' . implode(' ', $output));
+
+if ($failures !== array()) {
+	fwrite(STDERR, "Prefix manifest guardrail failures:\n- " . implode("\n- ", $failures) . "\n");
+	exit(1);
+}
+
+echo "Prefix manifest and semantic guardrail tests passed.\n";

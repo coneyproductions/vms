@@ -9,8 +9,8 @@ defined('ABSPATH') || exit;
  * - Operators still need to identify which event a product belongs to
  */
 
-add_filter('manage_edit-product_columns', 'vms_ticketing_v2_add_product_event_columns', 20, 1);
-function vms_ticketing_v2_add_product_event_columns(array $cols): array
+add_filter('manage_edit-product_columns', 'bvmgr_ticketing_v2_add_product_event_columns', 20, 1);
+function bvmgr_ticketing_v2_add_product_event_columns(array $cols): array
 {
     $out = array();
     $inserted = false;
@@ -34,8 +34,8 @@ function vms_ticketing_v2_add_product_event_columns(array $cols): array
     return $out;
 }
 
-add_action('manage_product_posts_custom_column', 'vms_ticketing_v2_render_product_event_columns', 20, 2);
-function vms_ticketing_v2_render_product_event_columns(string $column, int $post_id): void
+add_action('manage_product_posts_custom_column', 'bvmgr_ticketing_v2_render_product_event_columns', 20, 2);
+function bvmgr_ticketing_v2_render_product_event_columns(string $column, int $post_id): void
 {
     if (!in_array($column, array('vms_event', 'vms_event_date', 'vms_square_mirror'), true)) {
         return;
@@ -48,19 +48,19 @@ function vms_ticketing_v2_render_product_event_columns(string $column, int $post
     }
 
     if ($column === 'vms_square_mirror') {
-        $is_relevant = vms_square_ticket_mirror_has_mirror_meta($product_id)
-            || vms_square_ticket_mirror_product_role($product_id) === 'ga_ticket'
-            || (function_exists('vms_square_firewall_is_protected_product') && vms_square_firewall_is_protected_product($product_id));
+        $is_relevant = bvmgr_square_ticket_mirror_has_mirror_meta($product_id)
+            || bvmgr_square_ticket_mirror_product_role($product_id) === 'ga_ticket'
+            || (function_exists('bvmgr_square_firewall_is_protected_product') && bvmgr_square_firewall_is_protected_product($product_id));
 
         if (!$is_relevant) {
             echo '—';
             return;
         }
 
-        $state = vms_square_ticket_mirror_status_context($product_id);
-        if (function_exists('vms_square_ticket_mirror_admin_status_badge')) {
+        $state = bvmgr_square_ticket_mirror_status_context($product_id);
+        if (function_exists('bvmgr_square_ticket_mirror_admin_status_badge')) {
             echo wp_kses(
-                vms_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')),
+                bvmgr_square_ticket_mirror_admin_status_badge((string) ($state['status'] ?? 'not_mirrored')),
                 array(
                     'span' => array(
                         'style' => true,
@@ -68,15 +68,15 @@ function vms_ticketing_v2_render_product_event_columns(string $column, int $post
                 )
             );
         } else {
-            echo esc_html(vms_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored')));
+            echo esc_html(bvmgr_square_ticket_mirror_label_for_status((string) ($state['status'] ?? 'not_mirrored')));
         }
         return;
     }
 
     // Resolve TEC event ID for this product.
     $tec_event_id = 0;
-    if (function_exists('vms_ticketing_v2_resolve_event_id_for_product')) {
-        $tec_event_id = absint(vms_ticketing_v2_resolve_event_id_for_product($product_id));
+    if (function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')) {
+        $tec_event_id = absint(bvmgr_ticketing_v2_resolve_event_id_for_product($product_id));
     }
     if ($tec_event_id <= 0) {
         $tec_event_id = absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true));
@@ -104,8 +104,8 @@ function vms_ticketing_v2_render_product_event_columns(string $column, int $post
 
     // Event date
     $date = '';
-    if (function_exists('vms_ticketing_v2_format_event_date_for_product_title')) {
-        $date = (string) vms_ticketing_v2_format_event_date_for_product_title($tec_event_id);
+    if (function_exists('bvmgr_ticketing_v2_format_event_date_for_product_title')) {
+        $date = (string) bvmgr_ticketing_v2_format_event_date_for_product_title($tec_event_id);
     }
     $date = trim($date);
 

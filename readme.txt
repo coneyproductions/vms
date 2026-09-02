@@ -2,7 +2,7 @@
 Contributors: coneyproductions
 Tags: event management, venue management, vendor management, ticketing, woocommerce
 Requires at least: 6.8
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.3
 Stable tag: 1.2.0
 License: GPLv2 or later
@@ -22,7 +22,7 @@ Backstage Venue Manager 1.2.0 was runtime-tested on WordPress 6.8 and 7.0. Packa
 
 1. Upload the plugin folder or ZIP to your WordPress site.
 2. Activate `Backstage Venue Manager`.
-3. Open the `VMS` admin menu and review the available modules for your site.
+3. Open the `Backstage Venue Manager` admin menu and review the available modules for your site.
 4. Install WooCommerce only if you need commerce, admissions, or ticketing-related workflows that depend on it.
 5. Install The Events Calendar and Event Tickets only if you need event-linked ticketing workflows that depend on them.
 6. Configure Cloudflare Turnstile only if you plan to use the vendor application form with Turnstile protection enabled.

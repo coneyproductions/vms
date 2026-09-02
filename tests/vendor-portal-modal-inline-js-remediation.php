@@ -11,7 +11,7 @@ $assert = static function (bool $condition, string $message): void {
 	}
 };
 $collectRuntimePhpFiles = static function (string $pluginRoot): array {
-	$files = array($pluginRoot . '/vendor-management-system.php', $pluginRoot . '/vms.php');
+	$files = array($pluginRoot . '/backstage-venue-manager.php', $pluginRoot . '/vms.php');
 	$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($pluginRoot . '/includes', FilesystemIterator::SKIP_DOTS));
 	foreach ($iterator as $fileInfo) {
 		if ($fileInfo instanceof SplFileInfo && $fileInfo->isFile() && strtolower($fileInfo->getExtension()) === 'php') {

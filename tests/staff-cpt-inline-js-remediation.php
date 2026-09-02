@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_current_screen'] = null;
 $GLOBALS['vms_test_actions'] = array();
@@ -57,7 +57,7 @@ function wp_localize_script(string $handle, string $name, array $data): bool
     return true;
 }
 
-function vms_asset_version(): string
+function bvmgr_asset_version(): string
 {
     return 'test-asset-version';
 }
@@ -122,45 +122,45 @@ try {
     $assert(isset($GLOBALS['vms_test_actions']['save_post_vms_staff'][30]) && count($GLOBALS['vms_test_actions']['save_post_vms_staff'][30]) === 1, 'Staff CPT taxonomy save hook should remain registered at priority 30.');
     $assert(isset($GLOBALS['vms_test_actions']['save_post_vms_staff'][40]) && count($GLOBALS['vms_test_actions']['save_post_vms_staff'][40]) === 1, 'Staff qualifications save hook should remain registered at priority 40.');
 
-    $assert(function_exists('vms_staff_cpt_admin_screen_is_target'), 'Staff CPT should declare a dedicated screen-gate helper.');
-    $assert(vms_staff_cpt_admin_screen_is_target((object) array('base' => 'post', 'post_type' => 'vms_staff')) === true, 'Staff CPT screen gate should allow the Staff post edit screen.');
-    $assert(vms_staff_cpt_admin_screen_is_target((object) array('base' => 'post-new', 'post_type' => 'vms_staff')) === true, 'Staff CPT screen gate should allow the Staff post-new screen.');
-    $assert(vms_staff_cpt_admin_screen_is_target((object) array('base' => 'edit', 'post_type' => 'vms_staff')) === false, 'Staff CPT screen gate should reject non-post/non-post-new screens.');
-    $assert(vms_staff_cpt_admin_screen_is_target((object) array('base' => 'post', 'post_type' => 'vms_vendor')) === false, 'Staff CPT screen gate should reject non-Staff post types.');
-    $assert(vms_staff_cpt_admin_screen_is_target(null) === false, 'Staff CPT screen gate should safely reject a missing screen object.');
+    $assert(function_exists('bvmgr_staff_cpt_admin_screen_is_target'), 'Staff CPT should declare a dedicated screen-gate helper.');
+    $assert(bvmgr_staff_cpt_admin_screen_is_target((object) array('base' => 'post', 'post_type' => 'vms_staff')) === true, 'Staff CPT screen gate should allow the Staff post edit screen.');
+    $assert(bvmgr_staff_cpt_admin_screen_is_target((object) array('base' => 'post-new', 'post_type' => 'vms_staff')) === true, 'Staff CPT screen gate should allow the Staff post-new screen.');
+    $assert(bvmgr_staff_cpt_admin_screen_is_target((object) array('base' => 'edit', 'post_type' => 'vms_staff')) === false, 'Staff CPT screen gate should reject non-post/non-post-new screens.');
+    $assert(bvmgr_staff_cpt_admin_screen_is_target((object) array('base' => 'post', 'post_type' => 'vms_vendor')) === false, 'Staff CPT screen gate should reject non-Staff post types.');
+    $assert(bvmgr_staff_cpt_admin_screen_is_target(null) === false, 'Staff CPT screen gate should safely reject a missing screen object.');
 
     $resetRuntime();
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'post', 'post_type' => 'vms_staff');
-    vms_staff_cpt_admin_enqueue_assets();
-    $assert(isset($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']), 'Staff CPT should enqueue the dedicated asset on the Staff post edit screen.');
-    $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['src'] === VMS_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js', 'Staff CPT should enqueue the dedicated asset from assets/js/vms-staff-cpt-admin.js.');
-    $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['deps'] === array(), 'Staff CPT should not add unnecessary JavaScript dependencies.');
-    $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['ver'] === 'test-asset-version', 'Staff CPT should use vms_asset_version() for the asset version when available.');
-    $assert($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']['in_footer'] === true, 'Staff CPT should load the dedicated asset in the footer.');
-    $assert(isset($GLOBALS['vms_test_localized_scripts']['vms-staff-cpt-admin']), 'Staff CPT should localize only the inert labels needed by the asset.');
-    $assert($GLOBALS['vms_test_localized_scripts']['vms-staff-cpt-admin']['name'] === 'vmsStaffCptAdmin', 'Staff CPT should use the dedicated inert config object name.');
-    $localizedData = $GLOBALS['vms_test_localized_scripts']['vms-staff-cpt-admin']['data'];
+    bvmgr_staff_cpt_admin_enqueue_assets();
+    $assert(isset($GLOBALS['vms_test_scripts']['bvmgr-staff-cpt-admin']), 'Staff CPT should enqueue the canonical dedicated asset on the Staff post edit screen.');
+    $assert($GLOBALS['vms_test_scripts']['bvmgr-staff-cpt-admin']['src'] === BVMGR_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js', 'Staff CPT should enqueue the dedicated asset from assets/js/vms-staff-cpt-admin.js.');
+    $assert($GLOBALS['vms_test_scripts']['bvmgr-staff-cpt-admin']['deps'] === array(), 'Staff CPT should not add unnecessary JavaScript dependencies.');
+    $assert($GLOBALS['vms_test_scripts']['bvmgr-staff-cpt-admin']['ver'] === 'test-asset-version', 'Staff CPT should use bvmgr_asset_version() for the asset version when available.');
+    $assert($GLOBALS['vms_test_scripts']['bvmgr-staff-cpt-admin']['in_footer'] === true, 'Staff CPT should load the dedicated asset in the footer.');
+    $assert(isset($GLOBALS['vms_test_localized_scripts']['bvmgr-staff-cpt-admin']), 'Staff CPT should localize only the inert labels needed by the asset.');
+    $assert($GLOBALS['vms_test_localized_scripts']['bvmgr-staff-cpt-admin']['name'] === 'BVMGR_STAFF_CPT_ADMIN', 'Staff CPT should use the canonical inert config object name.');
+    $localizedData = $GLOBALS['vms_test_localized_scripts']['bvmgr-staff-cpt-admin']['data'];
     $assert(array_keys($localizedData) === array('labels', 'statusOptions'), 'Staff CPT should localize only labels and statusOptions.');
     $assert(array_keys($localizedData['labels']) === array('qualification', 'authority', 'credentialNumber', 'issueDate', 'expiration', 'status', 'proofUrl', 'reviewNote', 'remove'), 'Staff CPT should pass only the translated field labels through localized config.');
     $assert(array_column($localizedData['statusOptions'], 'value') === array('active', 'pending_verification', 'rejected', 'expired', 'inactive'), 'Staff CPT should preserve the existing status values and order in the inert config.');
 
     $resetRuntime();
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'post-new', 'post_type' => 'vms_staff');
-    vms_staff_cpt_admin_enqueue_assets();
-    $assert(isset($GLOBALS['vms_test_scripts']['vms-staff-cpt-admin']), 'Staff CPT should enqueue the dedicated asset on the Staff post-new screen.');
+    bvmgr_staff_cpt_admin_enqueue_assets();
+    $assert(isset($GLOBALS['vms_test_scripts']['bvmgr-staff-cpt-admin']), 'Staff CPT should enqueue the canonical dedicated asset on the Staff post-new screen.');
 
     $resetRuntime();
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'post', 'post_type' => 'vms_vendor');
-    vms_staff_cpt_admin_enqueue_assets();
+    bvmgr_staff_cpt_admin_enqueue_assets();
     $assert($GLOBALS['vms_test_scripts'] === array(), 'Staff CPT should not enqueue the asset on non-Staff edit screens.');
 
     $resetRuntime();
     $GLOBALS['vms_test_current_screen'] = (object) array('base' => 'edit', 'post_type' => 'vms_staff');
-    vms_staff_cpt_admin_enqueue_assets();
+    bvmgr_staff_cpt_admin_enqueue_assets();
     $assert($GLOBALS['vms_test_scripts'] === array(), 'Staff CPT should not enqueue the asset on non-post/non-post-new Staff screens.');
 
-    $assert(strpos($corePluginSource, 'vms-staff-cpt-admin') === false, 'Staff CPT asset should not be registered through the global core admin asset loader.');
-    $assert(strpos($adminUiAssetsSource, 'vms-staff-cpt-admin') === false, 'Staff CPT asset should not be registered through the shared admin UI asset loader.');
+    $assert(strpos($corePluginSource, 'bvmgr-staff-cpt-admin') === false, 'Staff CPT asset should not be registered through the global core admin asset loader.');
+    $assert(strpos($adminUiAssetsSource, 'bvmgr-staff-cpt-admin') === false, 'Staff CPT asset should not be registered through the shared admin UI asset loader.');
 
     $assert(strpos($staffSource, "register_post_type('vms_staff'") !== false, 'Staff CPT post-type registration should remain unchanged.');
     $assert(strpos($staffSource, "'vms-staff-qualifications'") !== false, 'Staff qualifications metabox registration should remain unchanged.');
@@ -193,7 +193,7 @@ try {
     $assert(strpos($assetSource, "createInputLabel(idx, 'notes', '', 'text', 'regular-text')") !== false, 'Staff CPT asset should preserve the notes field name for new rows.');
     $assert(strpos($assetSource, "document.addEventListener('DOMContentLoaded', init, { once: true });") !== false, 'Staff CPT asset should preserve safe initial-load behavior when the document is still loading.');
 
-    $assert(strpos($staffingSource, "VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should preserve its separate external asset boundary.');
+    $assert(strpos($staffingSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should preserve its separate external asset boundary.');
     $assert(strpos($staffingSource, '<script') === false, 'Staffing admin source should remain free of inline executable <script> blocks.');
     $assert(strpos($staffPortalSource, 'data-vms-staff-availability="1"') !== false, 'Staff Portal source should preserve the inert availability form marker.');
     $assert(strpos($staffPortalSource, 'assets/js/vms-staff-portal.js') !== false, 'Staff Portal source should preserve its separate external availability asset boundary.');

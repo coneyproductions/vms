@@ -107,22 +107,22 @@ require dirname(__DIR__) . '/includes/runtime-guards.php';
 $source = (string) file_get_contents(dirname(__DIR__) . '/includes/runtime-guards.php');
 vms_test_assert($source !== '', 'Runtime guards source should be readable.');
 vms_test_assert_contains(
-	'$page = vms_request_read_key($_GET, \'page\');',
+	'$page = bvmgr_request_read_key($_GET, \'page\');',
 	$source,
 	'Runtime guards should read passive admin page state through the shared key helper.'
 );
 vms_test_assert_contains(
-	'$post_type = vms_request_read_key($_GET, \'post_type\');',
+	'$post_type = bvmgr_request_read_key($_GET, \'post_type\');',
 	$source,
 	'Runtime guards should read passive admin post_type state through the shared key helper.'
 );
 vms_test_assert_contains(
-	'$post_id = vms_request_read_absint($_GET, \'post\');',
+	'$post_id = bvmgr_request_read_absint($_GET, \'post\');',
 	$source,
 	'Runtime guards should read passive admin post IDs through the shared integer helper.'
 );
 vms_test_assert_contains(
-	'return vms_request_read_scalar($_REQUEST, $key);',
+	'return bvmgr_request_read_scalar($_REQUEST, $key);',
 	$source,
 	'Runtime guards should route allowlisted dynamic request keys through the shared scalar helper.'
 );
@@ -146,20 +146,20 @@ $GLOBALS['vms_test_post_types'] = array(
 );
 
 $_GET = array('page' => 'VMS-Dashboard');
-vms_test_assert_same('vms-dashboard', vms_resource_fingerprint_current_admin_page(), 'Passive admin page state should preserve valid scalar page slugs.');
+vms_test_assert_same('vms-dashboard', bvmgr_resource_fingerprint_current_admin_page(), 'Passive admin page state should preserve valid scalar page slugs.');
 
 $_GET = array(
 	'page' => array('bad'),
 	'post_type' => 'VMS_Event_Plan',
 );
-vms_test_assert_same('vms_event_plan', vms_resource_fingerprint_current_admin_page(), 'Passive admin page fingerprinting should reject array-shaped page values and fall back to post_type.');
+vms_test_assert_same('vms_event_plan', bvmgr_resource_fingerprint_current_admin_page(), 'Passive admin page fingerprinting should reject array-shaped page values and fall back to post_type.');
 
 $_GET = array(
 	'page' => array('bad'),
 	'post_type' => array('bad'),
 	'post' => '77',
 );
-vms_test_assert_same('vms_event_plan', vms_resource_fingerprint_current_admin_page(), 'Passive admin page fingerprinting should reject malformed post_type and derive post scope from a valid scalar post ID.');
+vms_test_assert_same('vms_event_plan', bvmgr_resource_fingerprint_current_admin_page(), 'Passive admin page fingerprinting should reject malformed post_type and derive post scope from a valid scalar post ID.');
 
 $_GET = array(
 	'page' => array('bad'),
@@ -167,48 +167,48 @@ $_GET = array(
 	'post' => array('77'),
 );
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => 'Edit-VMS_Venue');
-vms_test_assert_same('edit-vms_venue', vms_resource_fingerprint_current_admin_page(), 'Passive admin page fingerprinting should reject malformed post IDs and fall back to the current screen ID.');
+vms_test_assert_same('edit-vms_venue', bvmgr_resource_fingerprint_current_admin_page(), 'Passive admin page fingerprinting should reject malformed post IDs and fall back to the current screen ID.');
 
 $GLOBALS['vms_test_current_screen'] = (object) array('id' => 'edit-vms_event_plan');
 $_GET = array();
-vms_test_assert_same('edit-vms_event_plan', vms_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve an explicit current screen ID.');
+vms_test_assert_same('edit-vms_event_plan', bvmgr_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve an explicit current screen ID.');
 
 $GLOBALS['vms_test_current_screen'] = null;
 $GLOBALS['pagenow'] = 'edit.php';
 $_GET = array('post_type' => 'VMS_Event_Plan');
-vms_test_assert_same('', vms_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve the existing no-screen-id fallback behavior when only pagenow-based edit context is available.');
+vms_test_assert_same('', bvmgr_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve the existing no-screen-id fallback behavior when only pagenow-based edit context is available.');
 
 $_GET = array(
 	'post_type' => array('bad'),
 	'post' => '77',
 );
-vms_test_assert_same('', vms_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve the existing no-screen-id fallback behavior when malformed post_type input leaves only the derived post ID path.');
+vms_test_assert_same('', bvmgr_admin_guard_current_screen_id(), 'Passive admin screen detection should preserve the existing no-screen-id fallback behavior when malformed post_type input leaves only the derived post ID path.');
 
 $_REQUEST = array('action' => "  slashed\\-action  ");
-vms_test_assert_same('slashed-action', vms_admin_guard_request_value('action'), 'Allowlisted dynamic request keys should unslash and trim scalar input.');
+vms_test_assert_same('slashed-action', bvmgr_admin_guard_request_value('action'), 'Allowlisted dynamic request keys should unslash and trim scalar input.');
 
 $_REQUEST = array('action' => array('bad'));
-vms_test_assert_same('', vms_admin_guard_request_value('action'), 'Allowlisted dynamic request keys should reject array-shaped input.');
+vms_test_assert_same('', bvmgr_admin_guard_request_value('action'), 'Allowlisted dynamic request keys should reject array-shaped input.');
 
 $_REQUEST = array('unexpected' => 'value');
-vms_test_assert_same('', vms_admin_guard_request_value('unexpected'), 'Dynamic request reads should reject keys outside the finite allowlist.');
+vms_test_assert_same('', bvmgr_admin_guard_request_value('unexpected'), 'Dynamic request reads should reject keys outside the finite allowlist.');
 
 $_REQUEST = array('_wpnonce' => '  nonce-value  ');
-vms_test_assert_same('nonce-value', vms_admin_guard_request_value('_wpnonce'), 'Dynamic request reads should preserve the existing nonce fallback keys.');
+vms_test_assert_same('nonce-value', bvmgr_admin_guard_request_value('_wpnonce'), 'Dynamic request reads should preserve the existing nonce fallback keys.');
 
 $_GET = array(
 	'post_type' => array('bad'),
 	'post' => '41',
 );
 $GLOBALS['vms_test_current_screen'] = null;
-vms_test_assert_same(true, vms_admin_guard_is_tec_admin_request(), 'Passive TEC admin detection should reject malformed post_type values and preserve the post-ID fallback.');
+vms_test_assert_same(true, bvmgr_admin_guard_is_tec_admin_request(), 'Passive TEC admin detection should reject malformed post_type values and preserve the post-ID fallback.');
 
 $_GET = array(
 	'page' => array('bad'),
 	'post' => '88',
 );
 $GLOBALS['vms_test_current_screen'] = null;
-$scope = vms_resource_fingerprint_sensitive_admin_scope();
+$scope = bvmgr_resource_fingerprint_sensitive_admin_scope();
 vms_test_assert_same('event_plan_editor', $scope['scope_reason'] ?? '', 'Sensitive admin scope should preserve the event-plan editor classification derived from a valid scalar post ID.');
 vms_test_assert_same('vms_event_plan', $scope['page'] ?? '', 'Sensitive admin scope should preserve the derived event-plan page slug.');
 vms_test_assert_same(0, $scope['post_id'] ?? 0, 'Sensitive admin scope should preserve the existing derived-page contract without introducing a new post_id field in this branch.');
@@ -217,6 +217,6 @@ $_GET = array(
 	'page' => array('bad'),
 	'post' => array('88'),
 );
-vms_test_assert_same(array(), vms_resource_fingerprint_sensitive_admin_scope(), 'Sensitive admin scope should reject malformed array-shaped post IDs.');
+vms_test_assert_same(array(), bvmgr_resource_fingerprint_sensitive_admin_scope(), 'Sensitive admin scope should reject malformed array-shaped post IDs.');
 
 fwrite(STDOUT, "runtime guard request state remediation: PASS\n");

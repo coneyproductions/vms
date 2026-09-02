@@ -10,16 +10,16 @@ if (!defined('ABSPATH')) exit;
  *   without silently auto-publishing anything.
  */
 
-add_action('admin_post_vms_integrity_venue_links_action', 'vms_handle_integrity_venue_links_action');
-function vms_handle_integrity_venue_links_action(): void
+add_action('admin_post_vms_integrity_venue_links_action', 'bvmgr_handle_integrity_venue_links_action');
+function bvmgr_handle_integrity_venue_links_action(): void
 {
   if (!current_user_can('manage_options')) {
     wp_die('Insufficient permissions.');
   }
 
-  check_admin_referer('vms_integrity_venue_links_action');
+  check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_integrity_venue_links_action', '_wpnonce'), '_wpnonce');
 
-  $action = vms_request_read_key($_POST, 'vms_action');
+  $action = bvmgr_request_read_key($_POST, 'vms_action');
   $plan_ids = (isset($_POST['plan_ids']) && is_array($_POST['plan_ids']))
     ? array_values(array_filter(array_map('absint', (array) wp_unslash($_POST['plan_ids']))))
     : array();
@@ -37,7 +37,7 @@ function vms_handle_integrity_venue_links_action(): void
   }
 
   // Step gate: require explicit confirm checkbox for any writes.
-  $confirmed = vms_request_read_bool_flag($_POST, 'vms_confirm');
+  $confirmed = bvmgr_request_read_bool_flag($_POST, 'vms_confirm');
   if (!$confirmed) {
     wp_safe_redirect(add_query_arg(array('vms_msg' => 'confirm_required'), $redirect_base));
     exit;
@@ -97,12 +97,12 @@ function vms_handle_integrity_venue_links_action(): void
 }
 
 
-function vms_render_integrity_venue_reconcile_notice(): void
+function bvmgr_render_integrity_venue_reconcile_notice(): void
 {
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity notice state only affects admin messaging.
-  $msg = vms_request_read_key($_GET, 'vms_msg');
+  $msg = bvmgr_request_read_key($_GET, 'vms_msg');
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity notice state only affects admin messaging.
-  $changed = vms_request_read_absint($_GET, 'vms_changed');
+  $changed = bvmgr_request_read_absint($_GET, 'vms_changed');
 
   if ($msg === 'confirm_required') {
     echo '<div class="notice notice-warning"><p><strong>Confirmation required.</strong> Check the confirmation box before running an action.</p></div>';
@@ -113,61 +113,61 @@ function vms_render_integrity_venue_reconcile_notice(): void
   }
 }
 
-function vms_render_integrity_venue_reconcile_page_intro(): void
+function bvmgr_render_integrity_venue_reconcile_page_intro(): void
 {
   echo '<p class="description">Review Event Plans that reference Venues in the Trash, missing Venues, or Venues that are not published. This is intentionally review-first and does not auto-publish restored Venues.</p>';
 }
 
-function vms_render_integrity_venue_reconcile_page(): void
+function bvmgr_render_integrity_venue_reconcile_page(): void
 {
   if (!current_user_can('manage_options')) {
     wp_die('Insufficient permissions.');
   }
 
-  $event_plans_url = function_exists('vms_admin_ui_post_type_url')
-    ? vms_admin_ui_post_type_url('vms_event_plan')
+  $event_plans_url = function_exists('bvmgr_admin_ui_post_type_url')
+    ? bvmgr_admin_ui_post_type_url('vms_event_plan')
     : admin_url('edit.php?post_type=vms_event_plan');
-  $settings_url = function_exists('vms_admin_ui_page_url')
-    ? vms_admin_ui_page_url('vms-settings')
+  $settings_url = function_exists('bvmgr_admin_ui_page_url')
+    ? bvmgr_admin_ui_page_url('vms-settings')
     : admin_url('admin.php?page=vms-settings');
   $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
   $actions_html .= '<a class="button button-primary" href="' . esc_url($settings_url) . '">' . esc_html__('Settings & Scan', 'backstage-venue-manager') . '</a>';
 
-  if (function_exists('vms_admin_ui_render_shell')) {
-    vms_admin_ui_render_shell(
+  if (function_exists('bvmgr_admin_ui_render_shell')) {
+    bvmgr_admin_ui_render_shell(
       array(
         'title' => __('Integrity: Venue Links', 'backstage-venue-manager'),
         'actions_html' => $actions_html,
         'content_class' => 'vms-admin-shell__content--integrity',
-        'rich_notices_callback' => 'vms_render_integrity_venue_reconcile_notice',
+        'rich_notices_callback' => 'bvmgr_render_integrity_venue_reconcile_notice',
       ),
-      'vms_render_integrity_venue_reconcile_page_content'
+      'bvmgr_render_integrity_venue_reconcile_page_content'
     );
     return;
   }
 
   echo '<div class="wrap"><h1>' . esc_html__('Integrity: Venue Links', 'backstage-venue-manager') . '</h1>';
-  vms_render_integrity_venue_reconcile_page_intro();
-  vms_render_integrity_venue_reconcile_notice();
-  vms_render_integrity_venue_reconcile_page_sections();
+  bvmgr_render_integrity_venue_reconcile_page_intro();
+  bvmgr_render_integrity_venue_reconcile_notice();
+  bvmgr_render_integrity_venue_reconcile_page_sections();
   echo '</div>';
 }
 
-function vms_render_integrity_venue_reconcile_page_content(): void
+function bvmgr_render_integrity_venue_reconcile_page_content(): void
 {
-  vms_render_integrity_venue_reconcile_page_intro();
-  vms_render_integrity_venue_reconcile_page_sections();
+  bvmgr_render_integrity_venue_reconcile_page_intro();
+  bvmgr_render_integrity_venue_reconcile_page_sections();
 }
 
-function vms_render_integrity_venue_reconcile_page_sections(): void
+function bvmgr_render_integrity_venue_reconcile_page_sections(): void
 {
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity filters only bound the diagnostic result size.
-  $limit = vms_request_read_absint($_GET, 'limit');
+  $limit = bvmgr_request_read_absint($_GET, 'limit');
   if ($limit < 1) $limit = 500;
   if ($limit > 5000) $limit = 5000;
 
-  $issues = function_exists('vms_integrity_list_event_plans_with_venue_issues')
-    ? (array) vms_integrity_list_event_plans_with_venue_issues($limit)
+  $issues = function_exists('bvmgr_integrity_list_event_plans_with_venue_issues')
+    ? (array) bvmgr_integrity_list_event_plans_with_venue_issues($limit)
     : array();
 
   $trashed = isset($issues['trashed']) ? (array) $issues['trashed'] : array();
@@ -189,7 +189,7 @@ function vms_render_integrity_venue_reconcile_page_sections(): void
   $action_url = admin_url('admin-post.php');
 
   echo '<form method="post" action="' . esc_url($action_url) . '">';
-  wp_nonce_field('vms_integrity_venue_links_action');
+  wp_nonce_field('bvmgr_integrity_venue_links_action');
   echo '<input type="hidden" name="action" value="vms_integrity_venue_links_action" />';
 
   echo '<div class="vms-card-wide">';
@@ -257,5 +257,5 @@ function vms_render_integrity_venue_reconcile_page_sections(): void
 
   echo '</form>';
 
-  echo '<p class="description">Tip: run the Integrity Scan (VMS → Settings) first to force any impacted Event Plans back to Draft, then reconcile links here.</p>';
+  echo '<p class="description">Tip: run the Integrity Scan (Backstage Venue Manager → Settings) first to force any impacted Event Plans back to Draft, then reconcile links here.</p>';
 }

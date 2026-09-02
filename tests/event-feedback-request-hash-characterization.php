@@ -79,7 +79,7 @@ function wp_unslash($value)
     return $value;
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
     if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
         return '';
@@ -130,7 +130,7 @@ function vms_test_event_feedback_capture_request_hash(array $server): array
     );
 
     try {
-        $hash = vms_feedback_request_hash();
+        $hash = bvmgr_feedback_request_hash();
     } finally {
         restore_error_handler();
     }
@@ -343,8 +343,8 @@ vms_test_event_feedback_assert($liveCoreSource !== '', 'Live core Event Feedback
 vms_test_event_feedback_assert($mirrorPublicSource !== '', 'Mirror public Event Feedback source should be readable.');
 vms_test_event_feedback_assert($livePublicSource !== '', 'Live public Event Feedback source should be readable.');
 
-$mirrorRequestHashSource = vms_test_event_feedback_extract_named_function($mirrorCorePath, 'vms_feedback_request_hash');
-$liveRequestHashSource = vms_test_event_feedback_extract_named_function($liveCorePath, 'vms_feedback_request_hash');
+$mirrorRequestHashSource = vms_test_event_feedback_extract_named_function($mirrorCorePath, 'bvmgr_feedback_request_hash');
+$liveRequestHashSource = vms_test_event_feedback_extract_named_function($liveCorePath, 'bvmgr_feedback_request_hash');
 
 vms_test_event_feedback_assert(
     $mirrorRequestHashSource === $liveRequestHashSource,

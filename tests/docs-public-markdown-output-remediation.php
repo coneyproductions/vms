@@ -94,14 +94,14 @@ $assert = static function (bool $condition, string $message): void {
 $assert(is_string($docsPublicSource) && $docsPublicSource !== '', 'Public docs source should be readable.');
 $assert(is_string($docsRenderSource) && $docsRenderSource !== '', 'Docs renderer source should be readable.');
 
-$assert(!preg_match('~echo\s+vms_docs_render_markdown\s*\(~', $docsPublicSource), 'Public docs should not directly echo an uncontracted Markdown renderer result.');
-$assert(preg_match('~\$rendered_markdown\s*=\s*vms_docs_render_markdown\s*\(\s*\$md\s*\)\s*;~', $docsPublicSource) === 1, 'Public docs should retain a separate rendered Markdown value before the final sink.');
-$assert(preg_match('~echo\s+wp_kses\s*\(\s*\$rendered_markdown\s*,\s*vms_docs_rendered_allowed_html\s*\(\s*\)\s*\)\s*;~s', $docsPublicSource) === 1, 'Public docs should apply the dedicated rendered Markdown allowlist at the output boundary.');
-$assert(strpos($docsPublicSource, 'esc_html(vms_docs_render_markdown(') === false, 'Public docs should not text-escape the finished rendered document.');
+$assert(!preg_match('~echo\s+bvmgr_docs_render_markdown\s*\(~', $docsPublicSource), 'Public docs should not directly echo an uncontracted Markdown renderer result.');
+$assert(preg_match('~\$rendered_markdown\s*=\s*bvmgr_docs_render_markdown\s*\(\s*\$md\s*\)\s*;~', $docsPublicSource) === 1, 'Public docs should retain a separate rendered Markdown value before the final sink.');
+$assert(preg_match('~echo\s+wp_kses\s*\(\s*\$rendered_markdown\s*,\s*bvmgr_docs_rendered_allowed_html\s*\(\s*\)\s*\)\s*;~s', $docsPublicSource) === 1, 'Public docs should apply the dedicated rendered Markdown allowlist at the output boundary.');
+$assert(strpos($docsPublicSource, 'esc_html(bvmgr_docs_render_markdown(') === false, 'Public docs should not text-escape the finished rendered document.');
 $assert(strpos($docsPublicSource, 'esc_html($rendered_markdown') === false, 'Public docs should not text-escape the finished rendered document value.');
 $assert(strpos($docsPublicSource . $docsRenderSource, 'wp_kses_post(') === false, 'Docs Markdown output should not use the broad post-content allowlist helper.');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $docsPublicSource . $docsRenderSource), 'Docs Markdown output should not use the broad post allowlist.');
-$assert(strpos($docsRenderSource, 'wp_kses($text, vms_docs_inline_allowed_html())') !== false, 'Inline Markdown parsing should keep the narrow inline allowlist.');
+$assert(strpos($docsRenderSource, 'wp_kses($text, bvmgr_docs_inline_allowed_html())') !== false, 'Inline Markdown parsing should keep the narrow inline allowlist.');
 
 $normalizeAllowedHtml = static function (array $allowed_html): array {
 	ksort($allowed_html);
@@ -134,8 +134,8 @@ $expectedRenderedAllowed = $expectedInlineAllowed + array(
 	'pre' => array(),
 );
 
-$assert($normalizeAllowedHtml(vms_docs_inline_allowed_html()) === $normalizeAllowedHtml($expectedInlineAllowed), 'Inline Markdown allowlist should contain only the renderer-created inline tags and attributes.');
-$assert($normalizeAllowedHtml(vms_docs_rendered_allowed_html()) === $normalizeAllowedHtml($expectedRenderedAllowed), 'Rendered Markdown allowlist should contain only the renderer-created document tags and attributes.');
+$assert($normalizeAllowedHtml(bvmgr_docs_inline_allowed_html()) === $normalizeAllowedHtml($expectedInlineAllowed), 'Inline Markdown allowlist should contain only the renderer-created inline tags and attributes.');
+$assert($normalizeAllowedHtml(bvmgr_docs_rendered_allowed_html()) === $normalizeAllowedHtml($expectedRenderedAllowed), 'Rendered Markdown allowlist should contain only the renderer-created document tags and attributes.');
 
 $markdown = <<<'MARKDOWN'
 # Heading
@@ -153,8 +153,8 @@ Paragraph with **bold**, *italic*, `inline <b>x</b>`, and [safe link](https://ex
 <a href="javascript:alert(1)" onclick="alert(1)">raw bad link</a>
 MARKDOWN;
 
-$rendered = vms_docs_render_markdown($markdown);
-$safe = wp_kses($rendered, vms_docs_rendered_allowed_html());
+$rendered = bvmgr_docs_render_markdown($markdown);
+$safe = wp_kses($rendered, bvmgr_docs_rendered_allowed_html());
 
 $assert(strpos($safe, '<h1>Heading</h1>') !== false, 'Rendered Markdown should preserve headings.');
 $assert(strpos($safe, '<p>Paragraph with <strong>bold</strong>, <em>italic</em>, <code>inline &lt;b&gt;x&lt;/b&gt;</code>, and <a href="https://example.com/docs" target="_blank" rel="noopener noreferrer">safe link</a>.</p>') !== false, 'Rendered Markdown should preserve paragraphs, emphasis, inline code, and safe link attributes.');

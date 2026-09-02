@@ -2,12 +2,12 @@
 
 defined('ABSPATH') || exit;
 
-if (!defined('VMS_TOURS_VERSION')) {
-	define('VMS_TOURS_VERSION', '1.0.0');
+if (!defined('BVMGR_TOURS_VERSION')) {
+	define('BVMGR_TOURS_VERSION', '1.0.0');
 }
 
-if (!defined('VMS_TOURS_DEBUG')) {
-	define('VMS_TOURS_DEBUG', false);
+if (!defined('BVMGR_TOURS_DEBUG')) {
+	define('BVMGR_TOURS_DEBUG', false);
 }
 
 require_once __DIR__ . '/class-vms-tours-screen.php';
@@ -17,25 +17,25 @@ require_once __DIR__ . '/class-vms-tours-compat.php';
 require_once __DIR__ . '/class-vms-tours-admin.php';
 require_once __DIR__ . '/class-vms-tours-service.php';
 
-if (!function_exists('vms_tours_register')) {
+if (!function_exists('bvmgr_tours_register')) {
 	/**
 	 * @param array<string,mixed> $tour_def
 	 */
-	function vms_tours_register(array $tour_def): void
+	function bvmgr_tours_register(array $tour_def): void
 	{
-		VMS_Tours_Service::instance()->register_tour($tour_def);
+		BVMGR_Tours_Service::instance()->register_tour($tour_def);
 	}
 }
 
-if (!function_exists('vms_enqueue_tour_assets')) {
-	function vms_enqueue_tour_assets(): void
+if (!function_exists('bvmgr_enqueue_tour_assets')) {
+	function bvmgr_enqueue_tour_assets(): void
 	{
-		VMS_Tours_Service::instance()->enqueue_admin_assets();
+		BVMGR_Tours_Service::instance()->enqueue_admin_assets();
 	}
 }
 
-if (!function_exists('vms_tours_sanitize_anchor_token')) {
-	function vms_tours_sanitize_anchor_token(string $anchor): string
+if (!function_exists('bvmgr_tours_sanitize_anchor_token')) {
+	function bvmgr_tours_sanitize_anchor_token(string $anchor): string
 	{
 		$anchor = strtolower(trim($anchor));
 		if ($anchor === '') {
@@ -47,11 +47,11 @@ if (!function_exists('vms_tours_sanitize_anchor_token')) {
 	}
 }
 
-if (!function_exists('vms_render_help_button')) {
+if (!function_exists('bvmgr_render_help_button')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_render_help_button(array $args = array()): string
+	function bvmgr_render_help_button(array $args = array()): string
 	{
 		$tour_id = isset($args['tour_id']) ? (string) $args['tour_id'] : '';
 		$tour_id = strtolower(trim($tour_id));
@@ -60,7 +60,7 @@ if (!function_exists('vms_render_help_button')) {
 			$tour_id = '';
 		}
 
-		$anchor = isset($args['anchor']) ? vms_tours_sanitize_anchor_token((string) $args['anchor']) : '';
+		$anchor = isset($args['anchor']) ? bvmgr_tours_sanitize_anchor_token((string) $args['anchor']) : '';
 		$label = isset($args['label']) ? sanitize_text_field((string) $args['label']) : __('Help', 'backstage-venue-manager');
 		$class = isset($args['class']) ? sanitize_html_class((string) $args['class']) : '';
 
@@ -80,5 +80,5 @@ if (!function_exists('vms_render_help_button')) {
 }
 
 add_action('plugins_loaded', static function (): void {
-	VMS_Tours_Service::instance();
+	BVMGR_Tours_Service::instance();
 }, 20);

@@ -1,5 +1,5 @@
 (function () {
-  var payload = window.vmsStatusNoticesData || null;
+  var payload = window.BVMGR_STATUS_NOTICES_DATA || null;
   if (!payload || !Array.isArray(payload.notices) || payload.notices.length === 0) {
     return;
   }

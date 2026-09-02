@@ -187,7 +187,7 @@ function vms_test_native_strip_tags_noise(string $value): string
 function vms_test_run_attach_noise(string $noise, bool $owns_buffer, bool $is_admin): array
 {
 	$GLOBALS['vms_test_manage_options'] = $is_admin;
-	$GLOBALS['vms_ajax_ob_started'] = $owns_buffer;
+	$GLOBALS['bvmgr_ajax_ob_started'] = $owns_buffer;
 
 	$start_level = ob_get_level();
 	if ($owns_buffer) {
@@ -196,7 +196,7 @@ function vms_test_run_attach_noise(string $noise, bool $owns_buffer, bool $is_ad
 	}
 
 	try {
-		$data = vms_ticketing_ajax_attach_noise(array('ok' => true));
+		$data = bvmgr_ticketing_ajax_attach_noise(array('ok' => true));
 		$end_level = ob_get_level();
 	} finally {
 		while (ob_get_level() > $start_level) {
@@ -206,7 +206,7 @@ function vms_test_run_attach_noise(string $noise, bool $owns_buffer, bool $is_ad
 
 	return array(
 		'data' => $data,
-		'flag' => $GLOBALS['vms_ajax_ob_started'] ?? null,
+		'flag' => $GLOBALS['bvmgr_ajax_ob_started'] ?? null,
 		'ob_level_before' => $start_level,
 		'ob_level_after' => $end_level,
 	);
@@ -216,7 +216,7 @@ try {
 	$plugin_root = dirname(__DIR__);
 	$source_path = $plugin_root . '/includes/integrations/ticketing.php';
 	$source = vms_test_read_file($source_path);
-	$function_body = vms_test_extract_function($source, 'vms_ticketing_ajax_attach_noise');
+	$function_body = vms_test_extract_function($source, 'bvmgr_ticketing_ajax_attach_noise');
 
 	vms_test_assert_true(
 		strpos($function_body, "wp_strip_all_tags((string) \$noise, false)") !== false,

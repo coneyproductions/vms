@@ -193,7 +193,7 @@ function wp_date(string $format, ?int $timestamp = null, ?DateTimeZone $timezone
 	return (new DateTimeImmutable('@' . $timestamp))->setTimezone($timezone)->format($format);
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	if ($scope === 'event_plan' && $field === 'import_key') {
 		return '_vms_import_event_key';
@@ -202,7 +202,7 @@ function vms_meta_key(string $scope, string $field): string
 	return '_vms_' . $scope . '_' . $field;
 }
 
-function vms_email_followups_settings(): array
+function bvmgr_email_followups_settings(): array
 {
 	return array(
 		'enabled' => true,
@@ -212,7 +212,7 @@ function vms_email_followups_settings(): array
 	);
 }
 
-function vms_email_followups_template_definitions(): array
+function bvmgr_email_followups_template_definitions(): array
 {
 	return array(
 		'scheduled_notice' => array(
@@ -223,7 +223,7 @@ function vms_email_followups_template_definitions(): array
 	);
 }
 
-function vms_email_followups_event_context(int $event_plan_id): array
+function bvmgr_email_followups_event_context(int $event_plan_id): array
 {
 	return array(
 		'valid' => $event_plan_id > 0,
@@ -233,7 +233,7 @@ function vms_email_followups_event_context(int $event_plan_id): array
 	);
 }
 
-function vms_email_followups_was_sent(int $event_plan_id, string $email_key): bool
+function bvmgr_email_followups_was_sent(int $event_plan_id, string $email_key): bool
 {
 	unset($event_plan_id, $email_key);
 	return false;
@@ -309,8 +309,8 @@ g12_same($mirror_sources['scheduler'], $shadow_sources['scheduler'], 'Email Foll
 g12_assert($mirror_sources['import'] !== $shadow_sources['import'], 'The Event Plan import engine should retain its intentional whole-file divergence.');
 
 $import_target_functions = array(
-	'vms_event_plan_import_find_existing_plan_lookup',
-	'vms_event_plan_import_find_plan_id_by_key',
+	'bvmgr_event_plan_import_find_existing_plan_lookup',
+	'bvmgr_event_plan_import_find_plan_id_by_key',
 );
 foreach ($import_target_functions as $function_name) {
 	g12_same(
@@ -449,10 +449,10 @@ g12_assert(
 	'Immutable projection hash must detect a non-annotation runtime mutation.'
 );
 
-$preview_source = g12_extract_function($mirror_sources['import'], 'vms_event_plan_import_build_preview_from_csv');
-$commit_source = g12_extract_function($mirror_sources['import'], 'vms_event_plan_import_run_commit');
-g12_same(1, substr_count($preview_source, 'vms_event_plan_import_find_existing_plan_lookup()'), 'Preview should build the complete import-key map exactly once.');
-g12_same(1, substr_count($commit_source, 'vms_event_plan_import_find_existing_plan_lookup()'), 'Commit should build the complete import-key map exactly once.');
+$preview_source = g12_extract_function($mirror_sources['import'], 'bvmgr_event_plan_import_build_preview_from_csv');
+$commit_source = g12_extract_function($mirror_sources['import'], 'bvmgr_event_plan_import_run_commit');
+g12_same(1, substr_count($preview_source, 'bvmgr_event_plan_import_find_existing_plan_lookup()'), 'Preview should build the complete import-key map exactly once.');
+g12_same(1, substr_count($commit_source, 'bvmgr_event_plan_import_find_existing_plan_lookup()'), 'Commit should build the complete import-key map exactly once.');
 
 $GLOBALS['g12_posts_by_id'] = array(
 	201 => new WP_Post(201),
@@ -474,7 +474,7 @@ require $plugin_root . '/' . $relative_paths['scheduler'];
 require $plugin_root . '/' . $relative_paths['import'];
 
 $choice_started = time();
-$choices = vms_email_followups_event_choices(2);
+$choices = bvmgr_email_followups_event_choices(2);
 $choice_finished = time();
 g12_same(array(202, 201), g12_post_ids($choices), 'Recipient choices should preserve nearest-date ordering and the requested result limit.');
 g12_same('recipient_choices', $GLOBALS['g12_get_posts_calls'][0]['label'] ?? null, 'First captured query should be the recipient-choice query.');
@@ -500,7 +500,7 @@ g12_same(
 g12_same(array(201, 202, 203), g12_post_ids($GLOBALS['g12_get_posts_calls'][0]['result']), 'Captured recipient get_posts() result should pass through unchanged before local ordering.');
 
 $scheduler_started = time();
-$due_items = vms_email_followups_due_items();
+$due_items = bvmgr_email_followups_due_items();
 $scheduler_finished = time();
 g12_same(array(301, 302), array_column($due_items, 'event_plan_id'), 'Scheduler should preserve every due plan returned by its bounded query.');
 g12_same('scheduler_due_items', $GLOBALS['g12_get_posts_calls'][1]['label'] ?? null, 'Second captured query should be the scheduler query.');
@@ -526,7 +526,7 @@ g12_same(
 );
 g12_same(array(301, 302), $GLOBALS['g12_get_posts_calls'][1]['result'], 'Captured scheduler get_posts() result should pass through unchanged.');
 
-$plan_lookup = vms_event_plan_import_find_existing_plan_lookup();
+$plan_lookup = bvmgr_event_plan_import_find_existing_plan_lookup();
 g12_same(array('alpha' => 401, 'beta' => 402), $plan_lookup, 'Complete import lookup should preserve first-ID wins and skip invalid or duplicate keys.');
 g12_same('import_complete_map', $GLOBALS['g12_get_posts_calls'][2]['label'] ?? null, 'Third captured query should build the complete import-key map.');
 g12_same(
@@ -544,12 +544,12 @@ g12_same(
 g12_same(array(401, 402, 403, 0), $GLOBALS['g12_get_posts_calls'][2]['result'], 'Captured complete import-map result should pass through unchanged.');
 
 $call_count = count($GLOBALS['g12_get_posts_calls']);
-g12_same(401, vms_event_plan_import_find_plan_id_by_key('alpha', $plan_lookup), 'Prebuilt import-map hits should return without a fallback query.');
+g12_same(401, bvmgr_event_plan_import_find_plan_id_by_key('alpha', $plan_lookup), 'Prebuilt import-map hits should return without a fallback query.');
 g12_same($call_count, count($GLOBALS['g12_get_posts_calls']), 'Prebuilt import-map hits must not issue another get_posts() query.');
-g12_same(0, vms_event_plan_import_find_plan_id_by_key('  ', $plan_lookup), 'Blank import keys should fail closed without a fallback query.');
+g12_same(0, bvmgr_event_plan_import_find_plan_id_by_key('  ', $plan_lookup), 'Blank import keys should fail closed without a fallback query.');
 g12_same($call_count, count($GLOBALS['g12_get_posts_calls']), 'Blank import keys must not issue another get_posts() query.');
 
-g12_same(499, vms_event_plan_import_find_plan_id_by_key('late-key', $plan_lookup), 'Absent import keys should preserve the exact one-row fallback result.');
+g12_same(499, bvmgr_event_plan_import_find_plan_id_by_key('late-key', $plan_lookup), 'Absent import keys should preserve the exact one-row fallback result.');
 g12_same(499, $plan_lookup['late-key'] ?? 0, 'Exact fallback matches should be retained in the request-local lookup map.');
 g12_same('import_exact_fallback', $GLOBALS['g12_get_posts_calls'][3]['label'] ?? null, 'Fourth captured query should be the exact one-row import fallback.');
 g12_same(

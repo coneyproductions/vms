@@ -3,29 +3,29 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-if (!function_exists('vms_ticket_revenue_money_to_cents')) {
-    function vms_ticket_revenue_money_to_cents($amount): int
+if (!function_exists('bvmgr_ticket_revenue_money_to_cents')) {
+    function bvmgr_ticket_revenue_money_to_cents($amount): int
     {
         return (int) round(((float) $amount) * 100);
     }
 }
 
-if (!function_exists('vms_ticket_revenue_cents_to_decimal')) {
-    function vms_ticket_revenue_cents_to_decimal(int $cents): string
+if (!function_exists('bvmgr_ticket_revenue_cents_to_decimal')) {
+    function bvmgr_ticket_revenue_cents_to_decimal(int $cents): string
     {
         return number_format($cents / 100, 2, '.', '');
     }
 }
 
-if (!function_exists('vms_ticket_revenue_default_statuses')) {
-    function vms_ticket_revenue_default_statuses(): array
+if (!function_exists('bvmgr_ticket_revenue_default_statuses')) {
+    function bvmgr_ticket_revenue_default_statuses(): array
     {
         return array('processing', 'completed', 'refunded');
     }
 }
 
-if (!function_exists('vms_ticket_revenue_available_statuses')) {
-    function vms_ticket_revenue_available_statuses(): array
+if (!function_exists('bvmgr_ticket_revenue_available_statuses')) {
+    function bvmgr_ticket_revenue_available_statuses(): array
     {
         $statuses = function_exists('wc_get_order_statuses') ? (array) wc_get_order_statuses() : array();
         $out = array();
@@ -55,22 +55,29 @@ if (!function_exists('vms_ticket_revenue_available_statuses')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_is_valid_ymd')) {
-    function vms_ticket_revenue_is_valid_ymd(string $value): bool
+if (!function_exists('bvmgr_ticket_revenue_is_valid_ymd')) {
+    function bvmgr_ticket_revenue_is_valid_ymd(string $value): bool
     {
         return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', trim($value));
     }
 }
 
-if (!function_exists('vms_ticket_revenue_normalize_ymd')) {
-    function vms_ticket_revenue_normalize_ymd($value): string
+if (!function_exists('bvmgr_ticket_revenue_normalize_ymd')) {
+    function bvmgr_ticket_revenue_normalize_ymd($value): string
     {
         $value = trim((string) $value);
         if ($value === '') {
             return '';
         }
 
-        if (vms_ticket_revenue_is_valid_ymd($value)) {
+        if (function_exists('bvmgr_event_occurrence_normalize_snapshot_date')) {
+            $calendar_date = bvmgr_event_occurrence_normalize_snapshot_date($value);
+            if ($calendar_date !== '') {
+                return $calendar_date;
+            }
+        }
+
+        if (bvmgr_ticket_revenue_is_valid_ymd($value)) {
             return $value;
         }
 
@@ -87,47 +94,47 @@ if (!function_exists('vms_ticket_revenue_normalize_ymd')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_wp_now_ymd')) {
-    function vms_ticket_revenue_wp_now_ymd(): string
+if (!function_exists('bvmgr_ticket_revenue_wp_now_ymd')) {
+    function bvmgr_ticket_revenue_wp_now_ymd(): string
     {
         return wp_date('Y-m-d', time(), wp_timezone());
     }
 }
 
-if (!function_exists('vms_ticket_revenue_plan_tec_meta_key')) {
-    function vms_ticket_revenue_plan_tec_meta_key(): string
+if (!function_exists('bvmgr_ticket_revenue_plan_tec_meta_key')) {
+    function bvmgr_ticket_revenue_plan_tec_meta_key(): string
     {
-        if (function_exists('vms_ticketing_b_meta_key')) {
-            return (string) vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
+        if (function_exists('bvmgr_ticketing_b_meta_key')) {
+            return (string) bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id');
         }
         return '_vms_tec_event_id';
     }
 }
 
-if (!function_exists('vms_ticket_revenue_product_event_plan_meta_key')) {
-    function vms_ticket_revenue_product_event_plan_meta_key(): string
+if (!function_exists('bvmgr_ticket_revenue_product_event_plan_meta_key')) {
+    function bvmgr_ticket_revenue_product_event_plan_meta_key(): string
     {
-        if (function_exists('vms_ticketing_v2_product_meta_key')) {
-            return (string) vms_ticketing_v2_product_meta_key('event_plan_id');
+        if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+            return (string) bvmgr_ticketing_v2_product_meta_key('event_plan_id');
         }
         return '_vms_event_plan_id';
     }
 }
 
-if (!function_exists('vms_ticket_revenue_product_tec_meta_key')) {
-    function vms_ticket_revenue_product_tec_meta_key(): string
+if (!function_exists('bvmgr_ticket_revenue_product_tec_meta_key')) {
+    function bvmgr_ticket_revenue_product_tec_meta_key(): string
     {
-        if (function_exists('vms_ticketing_v2_product_meta_key')) {
-            return (string) vms_ticketing_v2_product_meta_key('tec_event_id');
+        if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+            return (string) bvmgr_ticketing_v2_product_meta_key('tec_event_id');
         }
         return '_vms_tec_event_id';
     }
 }
 
-if (!function_exists('vms_ticket_revenue_normalize_statuses')) {
-    function vms_ticket_revenue_normalize_statuses(array $statuses): array
+if (!function_exists('bvmgr_ticket_revenue_normalize_statuses')) {
+    function bvmgr_ticket_revenue_normalize_statuses(array $statuses): array
     {
-        $available = vms_ticket_revenue_available_statuses();
+        $available = bvmgr_ticket_revenue_available_statuses();
         $out = array();
         foreach ($statuses as $status) {
             $status = sanitize_key((string) $status);
@@ -138,19 +145,19 @@ if (!function_exists('vms_ticket_revenue_normalize_statuses')) {
         }
         $out = array_values(array_unique($out));
         if (empty($out)) {
-            $out = vms_ticket_revenue_default_statuses();
+            $out = bvmgr_ticket_revenue_default_statuses();
         }
         return $out;
     }
 }
 
-if (!function_exists('vms_ticket_revenue_normalize_args')) {
-    function vms_ticket_revenue_normalize_args(array $args = array()): array
+if (!function_exists('bvmgr_ticket_revenue_normalize_args')) {
+    function bvmgr_ticket_revenue_normalize_args(array $args = array()): array
     {
-        $as_of_date = isset($args['as_of_date']) ? sanitize_text_field((string) $args['as_of_date']) : vms_ticket_revenue_wp_now_ymd();
-        $as_of_date = vms_ticket_revenue_normalize_ymd($as_of_date);
-        if (!vms_ticket_revenue_is_valid_ymd($as_of_date)) {
-            $as_of_date = vms_ticket_revenue_wp_now_ymd();
+        $as_of_date = isset($args['as_of_date']) ? sanitize_text_field((string) $args['as_of_date']) : bvmgr_ticket_revenue_wp_now_ymd();
+        $as_of_date = bvmgr_ticket_revenue_normalize_ymd($as_of_date);
+        if (!bvmgr_ticket_revenue_is_valid_ymd($as_of_date)) {
+            $as_of_date = bvmgr_ticket_revenue_wp_now_ymd();
         }
 
         $recognition = isset($args['recognition_status']) ? sanitize_key((string) $args['recognition_status']) : 'all';
@@ -159,8 +166,8 @@ if (!function_exists('vms_ticket_revenue_normalize_args')) {
         }
 
         $order_statuses = isset($args['order_statuses']) && is_array($args['order_statuses'])
-            ? vms_ticket_revenue_normalize_statuses((array) $args['order_statuses'])
-            : vms_ticket_revenue_default_statuses();
+            ? bvmgr_ticket_revenue_normalize_statuses((array) $args['order_statuses'])
+            : bvmgr_ticket_revenue_default_statuses();
 
         $preview_limit = isset($args['preview_limit']) ? max(1, (int) $args['preview_limit']) : 200;
         $unresolved_limit = isset($args['unresolved_limit']) ? max(1, (int) $args['unresolved_limit']) : 150;
@@ -181,8 +188,8 @@ if (!function_exists('vms_ticket_revenue_normalize_args')) {
 
         foreach (array('sold_from', 'sold_to', 'event_from', 'event_to') as $key) {
             $value = isset($args[$key]) ? sanitize_text_field((string) $args[$key]) : '';
-            $out[$key] = vms_ticket_revenue_normalize_ymd($value);
-            if (!vms_ticket_revenue_is_valid_ymd($out[$key])) {
+            $out[$key] = bvmgr_ticket_revenue_normalize_ymd($value);
+            if (!bvmgr_ticket_revenue_is_valid_ymd($out[$key])) {
                 $out[$key] = '';
             }
         }
@@ -191,8 +198,8 @@ if (!function_exists('vms_ticket_revenue_normalize_args')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_build_order_query')) {
-    function vms_ticket_revenue_build_order_query(array $args): array
+if (!function_exists('bvmgr_ticket_revenue_build_order_query')) {
+    function bvmgr_ticket_revenue_build_order_query(array $args): array
     {
         $query = array(
             'type' => 'shop_order',
@@ -218,8 +225,8 @@ if (!function_exists('vms_ticket_revenue_build_order_query')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_order_refund_map')) {
-    function vms_ticket_revenue_order_refund_map($order): array
+if (!function_exists('bvmgr_ticket_revenue_order_refund_map')) {
+    function bvmgr_ticket_revenue_order_refund_map($order): array
     {
         $map = array();
         if (!$order || !method_exists($order, 'get_refunds')) {
@@ -249,8 +256,8 @@ if (!function_exists('vms_ticket_revenue_order_refund_map')) {
                 }
 
                 $map[$refunded_item_id]['qty'] += abs((int) $refund_item->get_quantity());
-                $map[$refunded_item_id]['line_subtotal_cents'] += abs(vms_ticket_revenue_money_to_cents($refund_item->get_total()));
-                $map[$refunded_item_id]['line_tax_cents'] += abs(vms_ticket_revenue_money_to_cents($refund_item->get_total_tax()));
+                $map[$refunded_item_id]['line_subtotal_cents'] += abs(bvmgr_ticket_revenue_money_to_cents($refund_item->get_total()));
+                $map[$refunded_item_id]['line_tax_cents'] += abs(bvmgr_ticket_revenue_money_to_cents($refund_item->get_total_tax()));
             }
         }
 
@@ -258,8 +265,8 @@ if (!function_exists('vms_ticket_revenue_order_refund_map')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_utc_timezone')) {
-    function vms_ticket_sales_resolver_utc_timezone(): DateTimeZone
+if (!function_exists('bvmgr_ticket_sales_resolver_utc_timezone')) {
+    function bvmgr_ticket_sales_resolver_utc_timezone(): DateTimeZone
     {
         static $timezone = null;
 
@@ -271,8 +278,8 @@ if (!function_exists('vms_ticket_sales_resolver_utc_timezone')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_normalize_int_list')) {
-    function vms_ticket_sales_resolver_normalize_int_list($value): array
+if (!function_exists('bvmgr_ticket_sales_resolver_normalize_int_list')) {
+    function bvmgr_ticket_sales_resolver_normalize_int_list($value): array
     {
         $raw = array();
 
@@ -298,8 +305,8 @@ if (!function_exists('vms_ticket_sales_resolver_normalize_int_list')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_normalize_bool')) {
-    function vms_ticket_sales_resolver_normalize_bool($value, bool $default): bool
+if (!function_exists('bvmgr_ticket_sales_resolver_normalize_bool')) {
+    function bvmgr_ticket_sales_resolver_normalize_bool($value, bool $default): bool
     {
         if ($value === null || $value === '') {
             return $default;
@@ -325,8 +332,8 @@ if (!function_exists('vms_ticket_sales_resolver_normalize_bool')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_normalize_args')) {
-    function vms_ticket_sales_resolver_normalize_args(array $args = array()): array
+if (!function_exists('bvmgr_ticket_sales_resolver_normalize_args')) {
+    function bvmgr_ticket_sales_resolver_normalize_args(array $args = array()): array
     {
         $order_statuses_raw = $args['order_statuses'] ?? array();
         if (!is_array($order_statuses_raw)) {
@@ -336,37 +343,37 @@ if (!function_exists('vms_ticket_sales_resolver_normalize_args')) {
         $date_from = isset($args['date_from']) ? (string) $args['date_from'] : (string) ($args['sold_from'] ?? '');
         $date_to = isset($args['date_to']) ? (string) $args['date_to'] : (string) ($args['sold_to'] ?? '');
 
-        $event_ids = vms_ticket_sales_resolver_normalize_int_list($args['event_ids'] ?? array());
+        $event_ids = bvmgr_ticket_sales_resolver_normalize_int_list($args['event_ids'] ?? array());
         $legacy_event_id = absint($args['tec_event_id'] ?? 0);
         if ($legacy_event_id > 0 && empty($event_ids)) {
             $event_ids[] = $legacy_event_id;
         }
 
-        $event_plan_ids = vms_ticket_sales_resolver_normalize_int_list($args['event_plan_ids'] ?? array());
+        $event_plan_ids = bvmgr_ticket_sales_resolver_normalize_int_list($args['event_plan_ids'] ?? array());
         $legacy_event_plan_id = absint($args['event_plan_id'] ?? 0);
         if ($legacy_event_plan_id > 0 && empty($event_plan_ids)) {
             $event_plan_ids[] = $legacy_event_plan_id;
         }
 
         return array(
-            'date_from' => vms_ticket_revenue_normalize_ymd($date_from),
-            'date_to' => vms_ticket_revenue_normalize_ymd($date_to),
-            'order_statuses' => vms_ticket_revenue_normalize_statuses((array) $order_statuses_raw),
-            'order_ids' => vms_ticket_sales_resolver_normalize_int_list($args['order_ids'] ?? array()),
+            'date_from' => bvmgr_ticket_revenue_normalize_ymd($date_from),
+            'date_to' => bvmgr_ticket_revenue_normalize_ymd($date_to),
+            'order_statuses' => bvmgr_ticket_revenue_normalize_statuses((array) $order_statuses_raw),
+            'order_ids' => bvmgr_ticket_sales_resolver_normalize_int_list($args['order_ids'] ?? array()),
             'event_ids' => array_values(array_unique(array_filter(array_map('absint', $event_ids)))),
             'event_plan_ids' => array_values(array_unique(array_filter(array_map('absint', $event_plan_ids)))),
-            'product_ids' => vms_ticket_sales_resolver_normalize_int_list($args['product_ids'] ?? array()),
+            'product_ids' => bvmgr_ticket_sales_resolver_normalize_int_list($args['product_ids'] ?? array()),
             'customer_email' => sanitize_email((string) ($args['customer_email'] ?? '')),
-            'include_unresolved' => vms_ticket_sales_resolver_normalize_bool($args['include_unresolved'] ?? null, true),
-            'include_refunded_lines' => vms_ticket_sales_resolver_normalize_bool($args['include_refunded_lines'] ?? null, true),
+            'include_unresolved' => bvmgr_ticket_sales_resolver_normalize_bool($args['include_unresolved'] ?? null, true),
+            'include_refunded_lines' => bvmgr_ticket_sales_resolver_normalize_bool($args['include_refunded_lines'] ?? null, true),
             'limit' => max(0, (int) ($args['limit'] ?? 0)),
             'offset' => max(0, (int) ($args['offset'] ?? 0)),
         );
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_collect_order_ids')) {
-    function vms_ticket_sales_resolver_collect_order_ids(array $args): array
+if (!function_exists('bvmgr_ticket_sales_resolver_collect_order_ids')) {
+    function bvmgr_ticket_sales_resolver_collect_order_ids(array $args): array
     {
         if (!empty($args['order_ids'])) {
             return array_values(array_unique(array_filter(array_map('absint', (array) $args['order_ids']))));
@@ -421,8 +428,8 @@ if (!function_exists('vms_ticket_sales_resolver_collect_order_ids')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_line_kind_for_product')) {
-    function vms_ticket_sales_resolver_line_kind_for_product(int $product_id): string
+if (!function_exists('bvmgr_ticket_sales_resolver_line_kind_for_product')) {
+    function bvmgr_ticket_sales_resolver_line_kind_for_product(int $product_id): string
     {
         $product_id = absint($product_id);
         if ($product_id <= 0) {
@@ -430,10 +437,10 @@ if (!function_exists('vms_ticket_sales_resolver_line_kind_for_product')) {
         }
 
         $role = '';
-        if (function_exists('vms_ticketing_v2_product_role_for_naming')) {
-            $role = sanitize_key((string) vms_ticketing_v2_product_role_for_naming($product_id));
-        } elseif (function_exists('vms_ticketing_v2_product_meta_key')) {
-            $role = sanitize_key((string) get_post_meta($product_id, vms_ticketing_v2_product_meta_key('product_role'), true));
+        if (function_exists('bvmgr_ticketing_v2_product_role_for_naming')) {
+            $role = sanitize_key((string) bvmgr_ticketing_v2_product_role_for_naming($product_id));
+        } elseif (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+            $role = sanitize_key((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('product_role'), true));
         } else {
             $role = sanitize_key((string) get_post_meta($product_id, '_vms_product_role', true));
         }
@@ -445,7 +452,7 @@ if (!function_exists('vms_ticket_sales_resolver_line_kind_for_product')) {
             return 'ticket';
         }
 
-        if (function_exists('vms_ticketing_v2_product_is_entitlement') && vms_ticketing_v2_product_is_entitlement($product_id)) {
+        if (function_exists('bvmgr_ticketing_v2_product_is_entitlement') && bvmgr_ticketing_v2_product_is_entitlement($product_id)) {
             return 'addon';
         }
 
@@ -457,20 +464,20 @@ if (!function_exists('vms_ticket_sales_resolver_line_kind_for_product')) {
         }
 
         $tec_event_id = 0;
-        if (function_exists('vms_ticketing_v2_resolve_event_id_for_product')) {
-            $tec_event_id = absint(vms_ticketing_v2_resolve_event_id_for_product($product_id));
+        if (function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')) {
+            $tec_event_id = absint(bvmgr_ticketing_v2_resolve_event_id_for_product($product_id));
         }
         if ($tec_event_id > 0) {
             return 'ticket';
         }
 
-        $event_plan_id = absint(get_post_meta($product_id, vms_ticket_revenue_product_event_plan_meta_key(), true));
-        $stored_tec_event_id = absint(get_post_meta($product_id, vms_ticket_revenue_product_tec_meta_key(), true));
-        $marker_version_key = function_exists('vms_ticketing_v2_product_meta_key')
-            ? vms_ticketing_v2_product_meta_key('ticketing_marker_version')
+        $event_plan_id = absint(get_post_meta($product_id, bvmgr_ticket_revenue_product_event_plan_meta_key(), true));
+        $stored_tec_event_id = absint(get_post_meta($product_id, bvmgr_ticket_revenue_product_tec_meta_key(), true));
+        $marker_version_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+            ? bvmgr_ticketing_v2_product_meta_key('ticketing_marker_version')
             : '_vms_ticketing_marker_version';
-        $source_provider_key = function_exists('vms_ticketing_v2_product_meta_key')
-            ? vms_ticketing_v2_product_meta_key('ticketing_source_provider')
+        $source_provider_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+            ? bvmgr_ticketing_v2_product_meta_key('ticketing_source_provider')
             : '_vms_ticketing_source_provider';
         $has_ticketing_marker = absint(get_post_meta($product_id, $marker_version_key, true)) > 0
             || trim((string) get_post_meta($product_id, $source_provider_key, true)) !== '';
@@ -482,8 +489,8 @@ if (!function_exists('vms_ticket_sales_resolver_line_kind_for_product')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_event_payload_for_tec_event')) {
-    function vms_ticket_revenue_event_payload_for_tec_event(int $tec_event_id, array &$event_cache): array
+if (!function_exists('bvmgr_ticket_revenue_event_payload_for_tec_event')) {
+    function bvmgr_ticket_revenue_event_payload_for_tec_event(int $tec_event_id, array &$event_cache): array
     {
         $tec_event_id = absint($tec_event_id);
         if ($tec_event_id <= 0) {
@@ -501,20 +508,20 @@ if (!function_exists('vms_ticket_revenue_event_payload_for_tec_event')) {
         if ($event_start_gmt === '' && $event_start_local !== '') {
             $event_start_gmt = (string) get_gmt_from_date($event_start_local, 'Y-m-d H:i:s');
         }
-        $event_date = vms_ticket_revenue_normalize_ymd($event_start_local);
+        $event_date = bvmgr_ticket_revenue_normalize_ymd($event_start_local);
         $event_permalink = (string) get_permalink($tec_event_id);
 
         $plan_id = 0;
-        if (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-            $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
-        } elseif (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event')) {
-            $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event($tec_event_id));
+        if (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+            $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+        } elseif (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event')) {
+            $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event($tec_event_id));
         }
 
         $plan_title = '';
         if ($plan_id > 0) {
             $plan_title = (string) get_the_title($plan_id);
-            $plan_date = vms_ticket_revenue_normalize_ymd((string) get_post_meta($plan_id, '_vms_event_date', true));
+            $plan_date = bvmgr_ticket_revenue_normalize_ymd((string) get_post_meta($plan_id, '_vms_event_date', true));
             if ($plan_date !== '') {
                 $event_date = $plan_date;
             }
@@ -544,8 +551,8 @@ if (!function_exists('vms_ticket_revenue_event_payload_for_tec_event')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_product_context')) {
-    function vms_ticket_revenue_product_context(int $product_id, array &$product_cache, array &$event_cache): array
+if (!function_exists('bvmgr_ticket_revenue_product_context')) {
+    function bvmgr_ticket_revenue_product_context(int $product_id, array &$product_cache, array &$event_cache): array
     {
         $product_id = absint($product_id);
         if ($product_id <= 0) {
@@ -564,23 +571,23 @@ if (!function_exists('vms_ticket_revenue_product_context')) {
             }
         }
 
-        $line_kind = vms_ticket_sales_resolver_line_kind_for_product($product_id);
+        $line_kind = bvmgr_ticket_sales_resolver_line_kind_for_product($product_id);
         $item_kind = ($line_kind === 'addon') ? 'addon' : (($line_kind !== '') ? $line_kind : 'ticket');
 
-        $event_plan_id = absint(get_post_meta($product_id, vms_ticket_revenue_product_event_plan_meta_key(), true));
-        $marker_version_key = function_exists('vms_ticketing_v2_product_meta_key')
-            ? vms_ticketing_v2_product_meta_key('ticketing_marker_version')
+        $event_plan_id = absint(get_post_meta($product_id, bvmgr_ticket_revenue_product_event_plan_meta_key(), true));
+        $marker_version_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+            ? bvmgr_ticketing_v2_product_meta_key('ticketing_marker_version')
             : '_vms_ticketing_marker_version';
-        $source_provider_key = function_exists('vms_ticketing_v2_product_meta_key')
-            ? vms_ticketing_v2_product_meta_key('ticketing_source_provider')
+        $source_provider_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+            ? bvmgr_ticketing_v2_product_meta_key('ticketing_source_provider')
             : '_vms_ticketing_source_provider';
         $has_ticketing_marker = absint(get_post_meta($product_id, $marker_version_key, true)) > 0
             || trim((string) get_post_meta($product_id, $source_provider_key, true)) !== '';
         $tec_event_id = 0;
         $resolution_source = '';
         $resolution_confidence = '';
-        if (function_exists('vms_ticketing_v2_resolve_event_id_for_product')) {
-            $tec_event_id = absint(vms_ticketing_v2_resolve_event_id_for_product($product_id));
+        if (function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')) {
+            $tec_event_id = absint(bvmgr_ticketing_v2_resolve_event_id_for_product($product_id));
         }
         if ($tec_event_id > 0) {
             $resolution_source = 'ticket_post_event_link';
@@ -601,14 +608,14 @@ if (!function_exists('vms_ticket_revenue_product_context')) {
             }
         }
         if ($tec_event_id <= 0) {
-            $tec_event_id = absint(get_post_meta($product_id, vms_ticket_revenue_product_tec_meta_key(), true));
+            $tec_event_id = absint(get_post_meta($product_id, bvmgr_ticket_revenue_product_tec_meta_key(), true));
             if ($tec_event_id > 0) {
                 $resolution_source = 'ticket_post_event_link';
                 $resolution_confidence = 'exact';
             }
         }
         if ($tec_event_id <= 0 && $event_plan_id > 0) {
-            $tec_event_id = absint(get_post_meta($event_plan_id, vms_ticket_revenue_plan_tec_meta_key(), true));
+            $tec_event_id = absint(get_post_meta($event_plan_id, bvmgr_ticket_revenue_plan_tec_meta_key(), true));
             if ($tec_event_id > 0) {
                 $resolution_source = 'event_plan_link';
                 $resolution_confidence = 'derived';
@@ -636,14 +643,14 @@ if (!function_exists('vms_ticket_revenue_product_context')) {
         );
 
         if ($tec_event_id > 0) {
-            $resolved = array_merge($resolved, vms_ticket_revenue_event_payload_for_tec_event($tec_event_id, $event_cache));
+            $resolved = array_merge($resolved, bvmgr_ticket_revenue_event_payload_for_tec_event($tec_event_id, $event_cache));
         }
 
         if ($resolved['event_plan_id'] > 0 && $resolved['event_plan_title'] === '') {
             $resolved['event_plan_title'] = (string) get_the_title((int) $resolved['event_plan_id']);
         }
         if ($resolved['event_date'] === '' && $resolved['event_plan_id'] > 0) {
-            $resolved['event_date'] = vms_ticket_revenue_normalize_ymd((string) get_post_meta((int) $resolved['event_plan_id'], '_vms_event_date', true));
+            $resolved['event_date'] = bvmgr_ticket_revenue_normalize_ymd((string) get_post_meta((int) $resolved['event_plan_id'], '_vms_event_date', true));
         }
         if ($resolved['event_start_local'] === '' && $resolved['event_plan_id'] > 0) {
             $resolved['event_start_local'] = trim((string) get_post_meta((int) $resolved['event_plan_id'], '_vms_event_plan_start_datetime', true));
@@ -661,8 +668,8 @@ if (!function_exists('vms_ticket_revenue_product_context')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_order_item_candidate_product_ids')) {
-    function vms_ticket_revenue_order_item_candidate_product_ids($item): array
+if (!function_exists('bvmgr_ticket_revenue_order_item_candidate_product_ids')) {
+    function bvmgr_ticket_revenue_order_item_candidate_product_ids($item): array
     {
         $ids = array();
         if (!$item || !is_object($item)) {
@@ -689,8 +696,8 @@ if (!function_exists('vms_ticket_revenue_order_item_candidate_product_ids')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_get_item_meta_first')) {
-    function vms_ticket_revenue_get_item_meta_first($item, array $keys): string
+if (!function_exists('bvmgr_ticket_revenue_get_item_meta_first')) {
+    function bvmgr_ticket_revenue_get_item_meta_first($item, array $keys): string
     {
         if (!$item || !is_object($item) || !method_exists($item, 'get_meta')) {
             return '';
@@ -707,10 +714,10 @@ if (!function_exists('vms_ticket_revenue_get_item_meta_first')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_resolve_event_for_order_item')) {
-    function vms_ticket_revenue_resolve_event_for_order_item($item, array &$product_cache, array &$event_cache): array
+if (!function_exists('bvmgr_ticket_revenue_resolve_event_for_order_item')) {
+    function bvmgr_ticket_revenue_resolve_event_for_order_item($item, array &$product_cache, array &$event_cache): array
     {
-        $candidate_product_ids = vms_ticket_revenue_order_item_candidate_product_ids($item);
+        $candidate_product_ids = bvmgr_ticket_revenue_order_item_candidate_product_ids($item);
         $primary_product_id = !empty($candidate_product_ids) ? (int) $candidate_product_ids[0] : 0;
 
         $resolved = array(
@@ -727,7 +734,7 @@ if (!function_exists('vms_ticket_revenue_resolve_event_for_order_item')) {
         );
 
         foreach ($candidate_product_ids as $candidate_id) {
-            $ctx = vms_ticket_revenue_product_context($candidate_id, $product_cache, $event_cache);
+            $ctx = bvmgr_ticket_revenue_product_context($candidate_id, $product_cache, $event_cache);
             if ($resolved['product_id'] <= 0 && !empty($ctx['product_id'])) {
                 $resolved['product_id'] = (int) $ctx['product_id'];
             }
@@ -746,26 +753,26 @@ if (!function_exists('vms_ticket_revenue_resolve_event_for_order_item')) {
             }
         }
 
-        $item_tec_event_id = absint(vms_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id')));
+        $item_tec_event_id = absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id')));
         if ($item_tec_event_id > 0) {
-            $resolved = array_merge($resolved, vms_ticket_revenue_event_payload_for_tec_event($item_tec_event_id, $event_cache));
+            $resolved = array_merge($resolved, bvmgr_ticket_revenue_event_payload_for_tec_event($item_tec_event_id, $event_cache));
             $resolved['resolution_source'] = 'order_item_meta';
         }
 
-        $item_plan_id = absint(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id')));
+        $item_plan_id = absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id')));
         if ($item_plan_id > 0) {
             $resolved['event_plan_id'] = $item_plan_id;
             if ($resolved['event_plan_title'] === '') {
                 $resolved['event_plan_title'] = (string) get_the_title($item_plan_id);
             }
-            $plan_date = vms_ticket_revenue_normalize_ymd((string) get_post_meta($item_plan_id, '_vms_event_date', true));
+            $plan_date = bvmgr_ticket_revenue_normalize_ymd((string) get_post_meta($item_plan_id, '_vms_event_date', true));
             if ($resolved['event_date'] === '' && $plan_date !== '') {
                 $resolved['event_date'] = $plan_date;
             }
             if ($resolved['tec_event_id'] <= 0) {
-                $plan_event_id = absint(get_post_meta($item_plan_id, vms_ticket_revenue_plan_tec_meta_key(), true));
+                $plan_event_id = absint(get_post_meta($item_plan_id, bvmgr_ticket_revenue_plan_tec_meta_key(), true));
                 if ($plan_event_id > 0) {
-                    $resolved = array_merge($resolved, vms_ticket_revenue_event_payload_for_tec_event($plan_event_id, $event_cache));
+                    $resolved = array_merge($resolved, bvmgr_ticket_revenue_event_payload_for_tec_event($plan_event_id, $event_cache));
                 }
             }
             if ($resolved['resolution_source'] === '') {
@@ -773,8 +780,10 @@ if (!function_exists('vms_ticket_revenue_resolve_event_for_order_item')) {
             }
         }
 
-        $snapshot_title = vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event'));
-        $snapshot_date = vms_ticket_revenue_normalize_ymd(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date')));
+        $snapshot_title = bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event'));
+        $snapshot_date = bvmgr_event_occurrence_normalize_snapshot_date(
+            bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date'))
+        );
         if ($snapshot_title !== '') {
             $resolved['event_title'] = $snapshot_title;
             if ($resolved['resolution_source'] === '') {
@@ -792,7 +801,7 @@ if (!function_exists('vms_ticket_revenue_resolve_event_for_order_item')) {
             $resolved['event_plan_title'] = (string) get_the_title((int) $resolved['event_plan_id']);
         }
         if ($resolved['product_id'] > 0 && $resolved['product_sku'] === '') {
-            $ctx = vms_ticket_revenue_product_context((int) $resolved['product_id'], $product_cache, $event_cache);
+            $ctx = bvmgr_ticket_revenue_product_context((int) $resolved['product_id'], $product_cache, $event_cache);
             if (!empty($ctx['product_sku'])) {
                 $resolved['product_sku'] = (string) $ctx['product_sku'];
             }
@@ -805,10 +814,10 @@ if (!function_exists('vms_ticket_revenue_resolve_event_for_order_item')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_recognition_for_date')) {
-    function vms_ticket_revenue_recognition_for_date(string $event_date, string $as_of_date): string
+if (!function_exists('bvmgr_ticket_revenue_recognition_for_date')) {
+    function bvmgr_ticket_revenue_recognition_for_date(string $event_date, string $as_of_date): string
     {
-        if (!vms_ticket_revenue_is_valid_ymd($event_date) || !vms_ticket_revenue_is_valid_ymd($as_of_date)) {
+        if (!bvmgr_ticket_revenue_is_valid_ymd($event_date) || !bvmgr_ticket_revenue_is_valid_ymd($as_of_date)) {
             return 'unknown';
         }
 
@@ -816,8 +825,8 @@ if (!function_exists('vms_ticket_revenue_recognition_for_date')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_filter_match')) {
-    function vms_ticket_revenue_filter_match(array $row, array $args): bool
+if (!function_exists('bvmgr_ticket_revenue_filter_match')) {
+    function bvmgr_ticket_revenue_filter_match(array $row, array $args): bool
     {
         $event_date = (string) ($row['event_date'] ?? '');
         $plan_id = (int) ($row['event_plan_id'] ?? 0);
@@ -830,10 +839,10 @@ if (!function_exists('vms_ticket_revenue_filter_match')) {
         if (!empty($args['tec_event_id']) && (int) $args['tec_event_id'] !== $tec_event_id) {
             return false;
         }
-        if (!empty($args['event_from']) && (!vms_ticket_revenue_is_valid_ymd($event_date) || $event_date < $args['event_from'])) {
+        if (!empty($args['event_from']) && (!bvmgr_ticket_revenue_is_valid_ymd($event_date) || $event_date < $args['event_from'])) {
             return false;
         }
-        if (!empty($args['event_to']) && (!vms_ticket_revenue_is_valid_ymd($event_date) || $event_date > $args['event_to'])) {
+        if (!empty($args['event_to']) && (!bvmgr_ticket_revenue_is_valid_ymd($event_date) || $event_date > $args['event_to'])) {
             return false;
         }
         if (($args['recognition_status'] ?? 'all') !== 'all' && $recognition !== (string) $args['recognition_status']) {
@@ -844,8 +853,8 @@ if (!function_exists('vms_ticket_revenue_filter_match')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_event_key')) {
-    function vms_ticket_revenue_event_key(array $row): string
+if (!function_exists('bvmgr_ticket_revenue_event_key')) {
+    function bvmgr_ticket_revenue_event_key(array $row): string
     {
         $plan_id = (int) ($row['event_plan_id'] ?? 0);
         $tec_event_id = (int) ($row['tec_event_id'] ?? 0);
@@ -859,8 +868,8 @@ if (!function_exists('vms_ticket_revenue_event_key')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_is_resolved_event_link')) {
-    function vms_ticket_revenue_is_resolved_event_link(array $event): bool
+if (!function_exists('bvmgr_ticket_revenue_is_resolved_event_link')) {
+    function bvmgr_ticket_revenue_is_resolved_event_link(array $event): bool
     {
         return !empty($event['tec_event_id'])
             || !empty($event['event_plan_id'])
@@ -869,8 +878,8 @@ if (!function_exists('vms_ticket_revenue_is_resolved_event_link')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_unresolved_reason')) {
-    function vms_ticket_revenue_unresolved_reason(array $event, array $candidate_product_ids): string
+if (!function_exists('bvmgr_ticket_revenue_unresolved_reason')) {
+    function bvmgr_ticket_revenue_unresolved_reason(array $event, array $candidate_product_ids): string
     {
         if (empty($candidate_product_ids)) {
             return 'No Woo product/variation ID on order line.';
@@ -882,8 +891,8 @@ if (!function_exists('vms_ticket_revenue_unresolved_reason')) {
     }
 }
 
-if (!function_exists('vms_ticket_revenue_build_unresolved_row')) {
-    function vms_ticket_revenue_build_unresolved_row($order, $item, array $event, array $candidate_product_ids, string $sold_date, string $sold_datetime): array
+if (!function_exists('bvmgr_ticket_revenue_build_unresolved_row')) {
+    function bvmgr_ticket_revenue_build_unresolved_row($order, $item, array $event, array $candidate_product_ids, string $sold_date, string $sold_datetime): array
     {
         $customer_name = is_object($order) && method_exists($order, 'get_formatted_billing_full_name')
             ? trim((string) $order->get_formatted_billing_full_name())
@@ -906,20 +915,22 @@ if (!function_exists('vms_ticket_revenue_build_unresolved_row')) {
             'candidate_product_ids' => implode(', ', $candidate_product_ids),
             'product_id' => (int) ($event['product_id'] ?? 0),
             'product_sku' => (string) ($event['product_sku'] ?? ''),
-            'event_title_snapshot' => vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event')),
-            'event_date_snapshot' => vms_ticket_revenue_normalize_ymd(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date'))),
-            'item_tec_event_id' => absint(vms_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id'))),
-            'item_event_plan_id' => absint(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id'))),
+            'event_title_snapshot' => bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event')),
+            'event_date_snapshot' => bvmgr_event_occurrence_normalize_snapshot_date(
+                bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date'))
+            ),
+            'item_tec_event_id' => absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id'))),
+            'item_event_plan_id' => absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id'))),
             'resolution_source' => (string) ($event['resolution_source'] ?? ''),
-            'reason' => vms_ticket_revenue_unresolved_reason($event, $candidate_product_ids),
+            'reason' => bvmgr_ticket_revenue_unresolved_reason($event, $candidate_product_ids),
         );
     }
 }
 
-if (!function_exists('vms_ticket_revenue_build_report')) {
-    function vms_ticket_revenue_build_report(array $args = array()): array
+if (!function_exists('bvmgr_ticket_revenue_build_report')) {
+    function bvmgr_ticket_revenue_build_report(array $args = array()): array
     {
-        $args = vms_ticket_revenue_normalize_args($args);
+        $args = bvmgr_ticket_revenue_normalize_args($args);
 
         $resolver_args = array(
             'date_from' => (string) ($args['sold_from'] ?? ''),
@@ -930,8 +941,8 @@ if (!function_exists('vms_ticket_revenue_build_report')) {
             'include_unresolved' => true,
         );
 
-        $resolver_result = class_exists('VMS_Ticket_Revenue_Service')
-            ? VMS_Ticket_Revenue_Service::get_sales_result($resolver_args)
+        $resolver_result = class_exists('BVMGR_Ticket_Revenue_Service')
+            ? BVMGR_Ticket_Revenue_Service::get_sales_result($resolver_args)
             : array(
                 'rows' => array(),
                 'warnings' => array(__('Ticket sales resolver is unavailable.', 'backstage-venue-manager')),
@@ -971,7 +982,7 @@ if (!function_exists('vms_ticket_revenue_build_report')) {
             ),
         );
 
-        if (!class_exists('VMS_Ticket_Revenue_Service')) {
+        if (!class_exists('BVMGR_Ticket_Revenue_Service')) {
             return $result;
         }
 
@@ -1005,7 +1016,7 @@ if (!function_exists('vms_ticket_revenue_build_report')) {
                 (int) ($sales_row['line_tax_total_cents'] ?? 0) - (int) ($sales_row['line_refunded_tax_total_cents'] ?? 0)
             );
             $cash_total_cents = $net_after_refund_subtotal_cents + $net_after_refund_tax_cents;
-            $recognition_status = vms_ticket_revenue_recognition_for_date((string) ($sales_row['event_date'] ?? ''), (string) $args['as_of_date']);
+            $recognition_status = bvmgr_ticket_revenue_recognition_for_date((string) ($sales_row['event_date'] ?? ''), (string) $args['as_of_date']);
 
             $row = array(
                 'order_id' => (int) ($sales_row['order_id'] ?? 0),
@@ -1043,7 +1054,7 @@ if (!function_exists('vms_ticket_revenue_build_report')) {
                 'resolution_source' => (string) ($sales_row['resolution_source'] ?? ''),
             );
 
-            if (!vms_ticket_revenue_filter_match($row, $args)) {
+            if (!bvmgr_ticket_revenue_filter_match($row, $args)) {
                 $result['counts']['line_items_skipped_filtered']++;
                 continue;
             }
@@ -1067,7 +1078,7 @@ if (!function_exists('vms_ticket_revenue_build_report')) {
             $result['summary'][$bucket_key] += (int) $row['cash_total_cents'];
             $result['rows'][] = $row;
 
-            $event_key = vms_ticket_revenue_event_key($row);
+            $event_key = bvmgr_ticket_revenue_event_key($row);
             if (!isset($result['event_summary'][$event_key])) {
                 $result['event_summary'][$event_key] = array(
                     'event_plan_id' => (int) $row['event_plan_id'],

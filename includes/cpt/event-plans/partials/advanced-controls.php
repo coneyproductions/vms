@@ -1,7 +1,7 @@
     <?php
         defined('ABSPATH') || exit;
-        $lookup_trace = function_exists('vms_event_plan_perf_span_start')
-            ? vms_event_plan_perf_span_start('event_plan_advanced_controls_lookup', (int) $post->ID, array('section' => 'advanced_controls_lookup'))
+        $lookup_trace = function_exists('bvmgr_event_plan_perf_span_start')
+            ? bvmgr_event_plan_perf_span_start('event_plan_advanced_controls_lookup', (int) $post->ID, array('section' => 'advanced_controls_lookup'))
             : '';
         $vms_ticketing_v2_render_mode = isset($vms_ticketing_v2_render_mode) ? sanitize_key((string) $vms_ticketing_v2_render_mode) : 'full';
         $meta_bundle = method_exists($this, 'get_event_plan_meta_bundle')
@@ -15,7 +15,7 @@
         $linked_tec_url = (string) ($linked_tec_summary['linked_tec_url'] ?? ($meta_bundle['linked_tec_url'] ?? ''));
         $linked_tec_title = (string) ($linked_tec_summary['linked_tec_title'] ?? '');
 
-        $k_ticket_pids = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'ticket_product_ids') ?: '_vms_ticket_product_ids_v1') : '_vms_ticket_product_ids_v1';
+        $k_ticket_pids = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'ticket_product_ids') ?: '_vms_ticket_product_ids_v1') : '_vms_ticket_product_ids_v1';
         $ticket_pids = isset($meta_bundle['ticket_product_ids']) && is_array($meta_bundle['ticket_product_ids']) ? $meta_bundle['ticket_product_ids'] : array();
         $ticket_stats = isset($ticket_stats) && is_array($ticket_stats)
             ? $ticket_stats
@@ -29,8 +29,8 @@
 
         // Optional: show legacy/import IDs (if present) to avoid confusing operators.
         $linked_tec_legacy = array();
-        if ($linked_tec_id > 0 && function_exists('vms_ticketing_get_tec_legacy_identifiers')) {
-            $linked_tec_legacy = vms_ticketing_get_tec_legacy_identifiers($linked_tec_id);
+        if ($linked_tec_id > 0 && function_exists('bvmgr_ticketing_get_tec_legacy_identifiers')) {
+            $linked_tec_legacy = bvmgr_ticketing_get_tec_legacy_identifiers($linked_tec_id);
         }
         $linked_tec_legacy_str = '';
         if (!empty($linked_tec_legacy)) {
@@ -55,8 +55,8 @@
         $has_stable_draft = !$is_autodraft;
         $resync_form_id = 'vms-event-plan-calendar-resync-' . (int) $post->ID;
         $resync_redirect_to = admin_url('post.php?post=' . (int) $post->ID . '&action=edit');
-        if ($has_stable_draft && function_exists('vms_event_plan_editor_register_detached_form')) {
-            vms_event_plan_editor_register_detached_form(
+        if ($has_stable_draft && function_exists('bvmgr_event_plan_editor_register_detached_form')) {
+            bvmgr_event_plan_editor_register_detached_form(
                 $resync_form_id,
                 'post',
                 admin_url('admin-post.php'),
@@ -65,12 +65,12 @@
                     'post_id' => (int) $post->ID,
                     'redirect_to' => $resync_redirect_to,
                     'source' => 'advanced_controls',
-                    '_vms_resync_calendar_nonce' => wp_create_nonce('vms_resync_calendar'),
+                    '_bvmgr_resync_calendar_nonce' => wp_create_nonce('bvmgr_resync_calendar'),
                 )
             );
         }
-        if (function_exists('vms_event_plan_perf_span_finish')) {
-            vms_event_plan_perf_span_finish('event_plan_advanced_controls_lookup', (int) $post->ID, $lookup_trace, array(
+        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+            bvmgr_event_plan_perf_span_finish('event_plan_advanced_controls_lookup', (int) $post->ID, $lookup_trace, array(
                 'section' => 'advanced_controls_lookup',
                 'linked_tec_event_id' => $linked_tec_id,
                 'ticket_product_count' => is_array($ticket_pids) ? count($ticket_pids) : 0,
@@ -151,16 +151,16 @@
 							<h5><?php esc_html_e('GA attendance + entitlements', 'backstage-venue-manager'); ?></h5>
 
 							<?php
-								$v2_lookup_trace = function_exists('vms_event_plan_perf_span_start')
-									? vms_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', (int) $post->ID, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
+								$v2_lookup_trace = function_exists('bvmgr_event_plan_perf_span_start')
+									? bvmgr_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', (int) $post->ID, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
 									: '';
-								$can_phase_b = function_exists('vms_ticketing_b_is_event_tickets_woo_available')
-									? vms_ticketing_b_is_event_tickets_woo_available()
+								$can_phase_b = function_exists('bvmgr_ticketing_b_is_event_tickets_woo_available')
+									? bvmgr_ticketing_b_is_event_tickets_woo_available()
 									: false;
-								$cfg_v2 = function_exists('vms_ticketing_v2_get_admin_config')
-									? vms_ticketing_v2_get_admin_config($post->ID)
-									: (function_exists('vms_ticketing_v2_get_config') ? vms_ticketing_v2_get_config($post->ID) : array());
-								$sync_v2 = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($post->ID) : array();
+								$cfg_v2 = function_exists('bvmgr_ticketing_v2_get_admin_config')
+									? bvmgr_ticketing_v2_get_admin_config($post->ID)
+									: (function_exists('bvmgr_ticketing_v2_get_config') ? bvmgr_ticketing_v2_get_config($post->ID) : array());
+								$sync_v2 = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($post->ID) : array();
 								$mode_v2 = is_array($cfg_v2) ? (string) ($cfg_v2['mode'] ?? 'read_only') : 'read_only';
 								$sync_map_v2 = (is_array($sync_v2) && !empty($sync_v2['map']) && is_array($sync_v2['map'])) ? $sync_v2['map'] : array();
 								$last_commit_ts = 0;
@@ -172,11 +172,11 @@
 										$last_commit_at = wp_date('Y-m-d H:i', $last_commit_ts, wp_timezone());
 									}
 								}
-								$cfg_v2_exists = (function_exists('metadata_exists') && function_exists('vms_ticketing_v2_k'))
-									? (metadata_exists('post', $post->ID, vms_ticketing_v2_k('config')) ? '1' : '0')
+								$cfg_v2_exists = (function_exists('metadata_exists') && function_exists('bvmgr_ticketing_v2_k'))
+									? (metadata_exists('post', $post->ID, bvmgr_ticketing_v2_k('config')) ? '1' : '0')
 									: '0';
-								$templates_v2 = function_exists('vms_ticketing_v2_templates_get_all') ? vms_ticketing_v2_templates_get_all() : array();
-								$default_tpl_id = function_exists('vms_ticketing_v2_get_default_template_id') ? vms_ticketing_v2_get_default_template_id() : '';
+								$templates_v2 = function_exists('bvmgr_ticketing_v2_templates_get_all') ? bvmgr_ticketing_v2_templates_get_all() : array();
+								$default_tpl_id = function_exists('bvmgr_ticketing_v2_get_default_template_id') ? bvmgr_ticketing_v2_get_default_template_id() : '';
 								$default_tpl_name = '';
 								if ($default_tpl_id && !empty($templates_v2[$default_tpl_id]) && is_array($templates_v2[$default_tpl_id])) {
 									$default_tpl_name = (string) (($templates_v2[$default_tpl_id]['name'] ?? '') ?: $default_tpl_id);
@@ -184,7 +184,7 @@
 								$settings = (array) get_option('vms_settings', array());
 								$global_ticketing_default = !empty($settings['ticketing_enabled_default']);
 								$ticketing_override = (string) get_post_meta($post->ID, '_vms_ticketing_enabled_override', true);
-								$ticketing_effective = function_exists('vms_event_plan_is_ticketing_enabled') ? vms_event_plan_is_ticketing_enabled((int) $post->ID) : $global_ticketing_default;
+								$ticketing_effective = function_exists('bvmgr_event_plan_is_ticketing_enabled') ? bvmgr_event_plan_is_ticketing_enabled((int) $post->ID) : $global_ticketing_default;
 								$ticketing_global_label = $global_ticketing_default ? __('ON', 'backstage-venue-manager') : __('OFF', 'backstage-venue-manager');
 								$ticket_ui_settings = (array) get_option('vms_settings', array());
 								$ticket_ui_global_layout = isset($ticket_ui_settings['ticket_ui_layout']) ? sanitize_key((string) $ticket_ui_settings['ticket_ui_layout']) : 'classic';
@@ -204,13 +204,13 @@
 								$stats_computed_ts = (is_array($ticket_stats) && isset($ticket_stats['computed_at_gmt'])) ? absint($ticket_stats['computed_at_gmt']) : 0;
 								$stats_stale_after_commit = ($last_commit_ts > 0 && $stats_computed_ts < $last_commit_ts);
 								$recon_v2 = array();
-								if ($linked_tec_id > 0 && $mode_v2 === 'vms_managed' && function_exists('vms_ticketing_v2_reconcile_event_plan_ticket_cache')) {
-									$recon_v2 = vms_ticketing_v2_reconcile_event_plan_ticket_cache((int) $post->ID, (int) $linked_tec_id, $sync_map_v2, false);
+								if ($linked_tec_id > 0 && $mode_v2 === 'vms_managed' && function_exists('bvmgr_ticketing_v2_reconcile_event_plan_ticket_cache')) {
+									$recon_v2 = bvmgr_ticketing_v2_reconcile_event_plan_ticket_cache((int) $post->ID, (int) $linked_tec_id, $sync_map_v2, false);
 								}
 								$recon_v2_warnings = (is_array($recon_v2) && !empty($recon_v2['warnings']) && is_array($recon_v2['warnings'])) ? $recon_v2['warnings'] : array();
 								$recon_v2_warnings = array_values(array_unique(array_filter(array_map('strval', $recon_v2_warnings))));
-								if (function_exists('vms_event_plan_perf_span_finish')) {
-									vms_event_plan_perf_span_finish('event_plan_ticketing_v2_lookup', (int) $post->ID, $v2_lookup_trace, array(
+								if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+									bvmgr_event_plan_perf_span_finish('event_plan_ticketing_v2_lookup', (int) $post->ID, $v2_lookup_trace, array(
 										'section' => 'ticketing_v2_lookup',
 										'linked_tec_event_id' => $linked_tec_id,
 										'ticketing_mode' => sanitize_key($mode_v2),
@@ -224,9 +224,9 @@
 						<?php elseif (!$can_phase_b) : ?>
 							<p class="description"><?php esc_html_e('Event Tickets (WooCommerce) is not available. Activate Event Tickets, Event Tickets Plus, and WooCommerce.', 'backstage-venue-manager'); ?></p>
 						<?php elseif ($linked_tec_id <= 0) : ?>
-							<p class="description"><?php esc_html_e('No calendar event is linked yet. Click “Preview sync” and VMS will create and link the calendar event automatically, then show you exactly what tickets/products will be created on Commit.', 'backstage-venue-manager'); ?></p>
+							<p class="description"><?php esc_html_e('No calendar event is linked yet. Click “Preview sync” and Backstage Venue Manager will create and link the calendar event automatically, then show you exactly what tickets/products will be created on Commit.', 'backstage-venue-manager'); ?></p>
 						<?php else : ?>
-							<p class="description"><?php esc_html_e('Configure GA attendance and entitlements here. Use Save → Preview → Commit. No tickets or products are deleted by VMS.', 'backstage-venue-manager'); ?></p>
+							<p class="description"><?php esc_html_e('Configure GA attendance and entitlements here. Use Save → Preview → Commit. No tickets or products are deleted by Backstage Venue Manager.', 'backstage-venue-manager'); ?></p>
 						<?php endif; ?>
 
 						<?php if (!empty($recon_v2_warnings)) : ?>
@@ -249,17 +249,17 @@
 							$ticket_help_addons_override = (string) get_post_meta($post->ID, '_vms_ticket_ui_help_addons_override', true);
 							$ticket_addons_heading_override = trim(html_entity_decode((string) get_post_meta($post->ID, '_vms_ticket_ui_addons_heading_override', true), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 							$ticket_addons_subtext_override = trim(html_entity_decode((string) get_post_meta($post->ID, '_vms_ticket_ui_addons_subtext_override', true), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-							$ticket_addons_heading_placeholder = function_exists('vms_ticketing_ui_addons_section_heading')
-								? (string) vms_ticketing_ui_addons_section_heading()
+							$ticket_addons_heading_placeholder = function_exists('bvmgr_ticketing_ui_addons_section_heading')
+								? (string) bvmgr_ticketing_ui_addons_section_heading()
 								: __('Fire Pits & Tables', 'backstage-venue-manager');
-							$ticket_addons_subtext_placeholder = function_exists('vms_ticketing_ui_addons_section_subtext')
-								? (string) vms_ticketing_ui_addons_section_subtext()
+							$ticket_addons_subtext_placeholder = function_exists('bvmgr_ticketing_ui_addons_section_subtext')
+								? (string) bvmgr_ticketing_ui_addons_section_subtext()
 								: __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager');
-							$ticket_help_tickets_placeholder = function_exists('vms_ticketing_ui_help_global_text')
-								? (string) vms_ticketing_ui_help_global_text('tickets')
+							$ticket_help_tickets_placeholder = function_exists('bvmgr_ticketing_ui_help_global_text')
+								? (string) bvmgr_ticketing_ui_help_global_text('tickets')
 								: '';
-							$ticket_help_addons_placeholder = function_exists('vms_ticketing_ui_help_global_text')
-								? (string) vms_ticketing_ui_help_global_text('addons')
+							$ticket_help_addons_placeholder = function_exists('bvmgr_ticketing_ui_help_global_text')
+								? (string) bvmgr_ticketing_ui_help_global_text('addons')
 								: '';
 						?>
 						<div class="vms-ticketing__togglebar">
@@ -289,7 +289,7 @@
 
 						<div class="vms-ticketing__box vms-ticketing__helpcopy-box">
 							<h4 class="vms-ticketing__box-title"><?php esc_html_e('Public help copy overrides', 'backstage-venue-manager'); ?></h4>
-							<p class="description"><?php esc_html_e('Use these only when this event needs wording that differs from the global default. Leave blank to inherit the global help copy from VMS Settings.', 'backstage-venue-manager'); ?></p>
+							<p class="description"><?php esc_html_e('Use these only when this event needs wording that differs from the global default. Leave blank to inherit the global help copy from Backstage Venue Manager Settings.', 'backstage-venue-manager'); ?></p>
 							<div class="vms-ticketing__help-label-grid">
 								<p>
 									<label for="vms_ticket_ui_addons_heading_override"><strong><?php esc_html_e('Add-on section heading override', 'backstage-venue-manager'); ?></strong></label><br />
@@ -418,16 +418,16 @@
 						</div>
 							<?php endif; ?>
 
-						<p class="description"><?php esc_html_e('Linking does not modify the calendar event. Use “Re-sync to Calendar” if you want VMS to update it.', 'backstage-venue-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Linking does not modify the calendar event. Use “Re-sync to Calendar” if you want Backstage Venue Manager to update it.', 'backstage-venue-manager'); ?></p>
             </div>
 
             <?php
-                $k_sup = function_exists('vms_meta_key')
-                    ? (vms_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
+                $k_sup = function_exists('bvmgr_meta_key')
+                    ? (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
                     : '_vms_calendar_unpublished_suppress';
                 $sup_val = (string) get_post_meta($post->ID, $k_sup, true);
                 $sup_checked = in_array($sup_val, array('1', 'yes', 'true'), true);
-                $sup_nonce = wp_create_nonce('vms_event_plan_calendar_unpublished_suppress_save');
+                $sup_nonce = wp_create_nonce('bvmgr_event_plan_calendar_unpublished_suppress_save');
             ?>
 
             <div
@@ -441,8 +441,8 @@
                     <input type="checkbox" id="vms-calendar-unpublished-suppress" value="1" <?php checked($sup_checked); ?> />
                     <strong><?php esc_html_e('Allow linked calendar event to remain unpublished', 'backstage-venue-manager'); ?></strong>
                     <?php
-                        if (function_exists('vms_help_icon')) {
-                            vms_help_icon(__('When enabled, this Event Plan will not show “calendar event is not published” as Needs attention. Missing or trashed calendar links are still flagged.', 'backstage-venue-manager'));
+                        if (function_exists('bvmgr_help_icon')) {
+                            bvmgr_help_icon(__('When enabled, this Event Plan will not show “calendar event is not published” as Needs attention. Missing or trashed calendar links are still flagged.', 'backstage-venue-manager'));
                         }
                     ?>
                 </label>

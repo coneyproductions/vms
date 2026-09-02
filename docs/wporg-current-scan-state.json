@@ -1,23 +1,27 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-08-08T21:10:04Z",
-  "source_commit": "a14b4a67a2f8273bb45b8b4569b6282efb6d5743",
+  "generated_at_utc": "2026-08-26T00:24:45Z",
+  "source_commit": "3c783f8474d471970e90211024858cb22767596e",
   "artifact": {
-    "path": "/tmp/wporg-final-g17.BmolWv/build/backstage-venue-manager-1.2.0-public-release.zip",
-    "sha256": "27d2fdd8b7d7bf3020807eb5ccb3b5654d733fd0a0eb4150d4e388a307c82d82",
-    "build_finished_at_utc": "2026-08-08T21:00:43+00:00",
-    "packaged_files": 372,
-    "packaged_php_files_linted": 269,
+    "path": "/private/tmp/bvm-wporg-identity-phase-a/artifacts/backstage-venue-manager-1.2.0-public-release.zip",
+    "sha256": "e2b7546b7dde917208db7cf12a6100feaaa8ac1d3b965daca83b7d552e70cf81",
+    "build_finished_at_utc": "2026-08-25T22:18:39+00:00",
+    "packaged_files": 374,
+    "packaged_php_files_linted": 271,
     "packaged_javascript_files_syntax_checked": 55,
-    "strict_json_path": "/tmp/wporg-final-g17.BmolWv/plugin-check.strict.json",
-    "strict_json_sha256": "3c23ee9d81d601c73a73cae5e82a2917e023273eb1ca500314fd8af33b707a73",
+    "strict_json_path": "/private/tmp/bvm-wporg-identity-phase-a/plugin-check.strict.json",
+    "strict_json_sha256": "c806d7f150d988a5db8057a01ce86d5baf035628f73b67df2211dd8418553604",
     "plugin_check_stderr_bytes": 0,
     "activation_state_unchanged": null,
     "activation_snapshot_sha256": null,
-    "activation_state_note": "Not measured for this checkpoint; canonical Plugin Check used --skip-plugins and no activation-state mutation command.",
+    "activation_state_note": "Canonical Plugin Check used --skip-plugins and did not mutate the primary site. Activation, deactivation, reactivation, legacy-basename upgrade, migration-interruption, admin/public bootstrap, and uninstall preservation were exercised separately on disposable sites against this exact artifact hash.",
+    "compatibility_report_path": "/private/tmp/bvm-wporg-identity-phase-a/compatibility-final/backstage-venue-manager-1.2.0-release-compatibility.report.json",
+    "compatibility_report_sha256": "ca39bf5b64dcaaea0f8c08331c3c16421b4ec7af99be6b399368aad2ad279012",
+    "compatibility_status": "WARN",
+    "compatibility_note": "No fatal occurred and all required boots and fixture-preservation checks passed. WARN reflects dependency-stack PHP 8.5 deprecations plus one non-fatal migration-interruption warning.",
     "manual_review_notes": [
       "No version-matched BUILD-NOTES file was found for plugin version 1.2.0.",
-      "The activation-hook smoke was intentionally skipped because it would mutate a WordPress site."
+      "The builder's activation hook smoke stayed skipped; the repository compatibility harness completed the mutable lifecycle checks on disposable WordPress sites."
     ]
   },
   "scan": {

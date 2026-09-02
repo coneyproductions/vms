@@ -17,12 +17,12 @@ defined('ABSPATH') || exit;
 // 	}
 // }, 999);
 
-if (!function_exists('vms_core')) {
-	function vms_core(): array
+if (!function_exists('bvmgr_core')) {
+	function bvmgr_core(): array
 	{
 		return [
 			'slug'    => 'vms',
-			'version' => defined('VMS_VERSION') ? VMS_VERSION : '0.2.24.456',
+			'version' => defined('BVMGR_VERSION') ? BVMGR_VERSION : '0.2.24.456',
 		];
 	}
 }
@@ -31,7 +31,7 @@ add_filter('admin_body_class', function (string $classes): string {
 	// Ensure VMS admin styling applies on:
 	// - VMS admin pages (page=vms, page=vms-*)
 	// - VMS CPT edit screens (Event Plans, Vendors, Venues)
-	$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin-body page state only scopes read-only styling and remains nonce-free.
+	$page = bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin-body page state only scopes read-only styling and remains nonce-free.
 
 	$is_vms_page = false;
 	if ($page === 'vms') {
@@ -78,7 +78,7 @@ add_filter('admin_body_class', function (string $classes): string {
  */
 add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 
-	$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin asset page state only scopes read-only styling and remains nonce-free.
+	$page = bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive admin asset page state only scopes read-only styling and remains nonce-free.
 
 	// Only load assets on VMS admin pages.
 	$is_vms_page = false;
@@ -109,35 +109,35 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 		return;
 	}
 
-	$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+	$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
  
 	// Shared foundation
 	wp_enqueue_style(
-		'vms-shared',
-		VMS_PLUGIN_URL . 'assets/css/vms-shared.css',
+		'bvmgr-shared',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-shared.css',
 		[],
 		$ver
 	);
 
 	wp_enqueue_style(
-		'vms-ui',
-		VMS_PLUGIN_URL . 'assets/css/vms-ui.css',
-		['vms-shared'],
+		'bvmgr-ui',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-ui.css',
+		['bvmgr-shared'],
 		$ver
 	);
 
 	// Admin-specific
 	wp_enqueue_style(
-		'vms-admin',
-		VMS_PLUGIN_URL . 'assets/css/vms-admin.css',
-		['vms-ui'],
+		'bvmgr-admin',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-admin.css',
+		['bvmgr-ui'],
 		$ver
 	);
 
 	// Prevent accidental mouse-wheel changes on number fields across VMS screens.
 	wp_enqueue_script(
-		'vms-number-input-guard',
-		VMS_PLUGIN_URL . 'assets/vms-number-input-guard.js',
+		'bvmgr-number-input-guard',
+		BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js',
 		[],
 		$ver,
 		true
@@ -151,8 +151,8 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
 	}
 	if ($help_mode !== 'off') {
 		wp_enqueue_script(
-			'vms-help-tooltips',
-			VMS_PLUGIN_URL . 'assets/admin-help-tooltips.js',
+			'bvmgr-help-tooltips',
+			BVMGR_PLUGIN_URL . 'assets/admin-help-tooltips.js',
 			[],
 			$ver,
 			true
@@ -169,27 +169,27 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
  */
 add_action('wp_enqueue_scripts', function (): void {
 
-	$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+	$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 
 	// Shared foundation
 	wp_enqueue_style(
-		'vms-shared',
-		VMS_PLUGIN_URL . 'assets/css/vms-shared.css',
+		'bvmgr-shared',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-shared.css',
 		[],
 		$ver
 	);
 
 	wp_enqueue_style(
-		'vms-ui',
-		VMS_PLUGIN_URL . 'assets/css/vms-ui.css',
-		['vms-shared'],
+		'bvmgr-ui',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-ui.css',
+		['bvmgr-shared'],
 		$ver
 	);
 
 	// Prevent accidental mouse-wheel changes on number fields across VMS public forms.
 	wp_enqueue_script(
-		'vms-number-input-guard',
-		VMS_PLUGIN_URL . 'assets/vms-number-input-guard.js',
+		'bvmgr-number-input-guard',
+		BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js',
 		[],
 		$ver,
 		true
@@ -198,17 +198,17 @@ add_action('wp_enqueue_scripts', function (): void {
 	// Register portal stylesheet so the shortcode can enqueue it even when the page builder
 	// does not store the shortcode in post_content (the has_shortcode() guard would miss).
 	$portal_ver = $ver;
-	if (defined('VMS_PLUGIN_PATH')) {
-		$portal_file = VMS_PLUGIN_PATH . 'assets/css/vms-portal.css';
+	if (defined('BVMGR_PLUGIN_PATH')) {
+		$portal_file = BVMGR_PLUGIN_PATH . 'assets/css/vms-portal.css';
 		if (file_exists($portal_file)) {
 			$portal_ver = (string) @filemtime($portal_file);
 		}
 	}
 
 	wp_register_style(
-		'vms-portal',
-		VMS_PLUGIN_URL . 'assets/css/vms-portal.css',
-		['vms-ui'],
+		'bvmgr-portal',
+		BVMGR_PLUGIN_URL . 'assets/css/vms-portal.css',
+		['bvmgr-ui'],
 		$portal_ver
 	);
 	// Portal stylesheet
@@ -219,7 +219,7 @@ add_action('wp_enqueue_scripts', function (): void {
 	// will not affect other public pages.
 	$should = apply_filters('vms_should_enqueue_portal_assets', true);
 	if ($should !== false) {
-		wp_enqueue_style('vms-portal');
+		wp_enqueue_style('bvmgr-portal');
 	}
 }, 20);
 
@@ -232,44 +232,44 @@ add_action('wp_enqueue_scripts', function (): void {
  */
 add_action('plugins_loaded', function (): void {
 	if (defined('WP_INSTALLING') && WP_INSTALLING) return;
-	if (!defined('VMS_PLUGIN_PATH')) return;
-	if (function_exists('vms_should_run_runtime_maintenance') && !vms_should_run_runtime_maintenance()) return;
+	if (!defined('BVMGR_PLUGIN_PATH')) return;
+	if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) return;
 
-	if (function_exists('vms_require_internal_file') && !vms_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_runtime', 'Database migration checks')) {
+	if (function_exists('bvmgr_require_internal_file') && !bvmgr_require_internal_file('includes/db/migrations.php', 'missing_db_migrations_runtime', 'Database migration checks')) {
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v7')) {
-		vms_db_migrate_vendor_core_v7();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v7')) {
+		bvmgr_db_migrate_vendor_core_v7();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v6')) {
-		vms_db_migrate_vendor_core_v6();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v6')) {
+		bvmgr_db_migrate_vendor_core_v6();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v5')) {
-		vms_db_migrate_vendor_core_v5();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v5')) {
+		bvmgr_db_migrate_vendor_core_v5();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v4')) {
-		vms_db_migrate_vendor_core_v4();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v4')) {
+		bvmgr_db_migrate_vendor_core_v4();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v3')) {
-		vms_db_migrate_vendor_core_v3();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v3')) {
+		bvmgr_db_migrate_vendor_core_v3();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v2')) {
-		vms_db_migrate_vendor_core_v2();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v2')) {
+		bvmgr_db_migrate_vendor_core_v2();
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v1')) {
-		vms_db_migrate_vendor_core_v1();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v1')) {
+		bvmgr_db_migrate_vendor_core_v1();
 	}
 }, 5);

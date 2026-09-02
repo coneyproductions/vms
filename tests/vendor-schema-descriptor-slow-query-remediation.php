@@ -54,7 +54,7 @@ function absint($value): int
 	return abs((int) $value);
 }
 
-function vms_meta_key(string $scope, string $name): string
+function bvmgr_meta_key(string $scope, string $name): string
 {
 	$GLOBALS['vms_schema_meta_key_calls'][] = array($scope, $name);
 	if ($scope === 'event_plan' && $name === 'checkin_close_at') {
@@ -166,7 +166,7 @@ require $schema_path;
 require $meta_registry_path;
 require $checkin_path;
 
-$schema = vms_vendor_schema();
+$schema = bvmgr_vendor_schema();
 vms_schema_same(31, count($schema), 'Vendor schema should retain all 31 canonical field descriptors.');
 vms_schema_same(
 	array('display_name', 'primary_email', 'primary_phone', 'email', 'phone', 'website', 'vendor_type'),
@@ -193,7 +193,7 @@ vms_schema_same(true, $schema['tax_tin']['sensitive'] ?? null, 'tax_tin should r
 vms_schema_same(true, $schema['tax_tin']['importable'] ?? null, 'tax_tin should remain ingestable.');
 vms_schema_assert(!array_key_exists('meta_key', $schema['tax_tin']), 'tax_tin must not acquire a persistence meta key.');
 
-$registry = VMS_Vendor_Meta_Registry::get();
+$registry = BVMGR_Vendor_Meta_Registry::get();
 vms_schema_same(28, count($registry), 'Derived vendor meta registry should retain exactly 28 registrations.');
 vms_schema_same(
 	array_values(array_column($meta_fields, 'meta_key')),
@@ -203,7 +203,7 @@ vms_schema_same(
 vms_schema_assert(!isset($registry['_vms_vendor_tax_tin']), 'Derived registry must never register sensitive tax_tin.');
 vms_schema_same(array('vms_vendor_meta_registry'), $GLOBALS['vms_schema_filter_calls'], 'Derived registry should retain its extension filter.');
 
-$stored = vms_event_plan_store_checkin_close_meta(701);
+$stored = bvmgr_event_plan_store_checkin_close_meta(701);
 vms_schema_assert(($stored['datetime'] ?? null) instanceof DateTimeImmutable, 'Stored check-in result should retain its DateTimeImmutable contract.');
 vms_schema_same('2026-08-09 01:00:00', $stored['datetime']->format('Y-m-d H:i:s'), 'Check-in close should retain the four-hour post-show buffer.');
 vms_schema_same('stored', $stored['reason'] ?? null, 'Stored check-in result should retain its reason.');
@@ -212,7 +212,7 @@ vms_schema_same('2026-08-09 01:00:00', $stored['checkin_close_at'] ?? null, 'Sto
 vms_schema_same('_checkin_close_at', $stored['meta_key'] ?? null, 'Stored check-in result should expose its metadata descriptor.');
 vms_schema_same('2026-08-09 01:00:00', $GLOBALS['vms_schema_post_meta'][701]['_checkin_close_at'] ?? null, 'Stored check-in value should reach the WordPress metadata API.');
 
-$missing = vms_event_plan_store_checkin_close_meta(702);
+$missing = bvmgr_event_plan_store_checkin_close_meta(702);
 vms_schema_same('missing_schedule', $missing['reason'] ?? null, 'Missing schedule should retain its failure reason.');
 vms_schema_same(false, $missing['stored'] ?? null, 'Missing schedule should report no stored value.');
 vms_schema_same('', $missing['checkin_close_at'] ?? null, 'Missing schedule should return an empty serialized value.');

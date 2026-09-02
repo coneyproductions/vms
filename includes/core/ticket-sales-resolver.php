@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_ticket_sales_resolver_context_score')) {
-    function vms_ticket_sales_resolver_context_score(array $context): int
+if (!function_exists('bvmgr_ticket_sales_resolver_context_score')) {
+    function bvmgr_ticket_sales_resolver_context_score(array $context): int
     {
         $confidence = (string) ($context['resolution_confidence'] ?? '');
 
@@ -12,7 +12,7 @@ if (!function_exists('vms_ticket_sales_resolver_context_score')) {
         if ($confidence === 'derived') {
             return 20;
         }
-        if (vms_ticket_revenue_is_resolved_event_link($context)) {
+        if (bvmgr_ticket_revenue_is_resolved_event_link($context)) {
             return 10;
         }
         if (!empty($context['is_ticket_related'])) {
@@ -23,8 +23,8 @@ if (!function_exists('vms_ticket_sales_resolver_context_score')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_attendee_ids_for_order_item')) {
-    function vms_ticket_sales_resolver_attendee_ids_for_order_item(int $order_id, int $order_item_id, array &$cache): array
+if (!function_exists('bvmgr_ticket_sales_resolver_attendee_ids_for_order_item')) {
+    function bvmgr_ticket_sales_resolver_attendee_ids_for_order_item(int $order_id, int $order_item_id, array &$cache): array
     {
         $cache_key = $order_id . ':' . $order_item_id;
         if (isset($cache[$cache_key])) {
@@ -62,8 +62,8 @@ if (!function_exists('vms_ticket_sales_resolver_attendee_ids_for_order_item')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_attendee_context')) {
-    function vms_ticket_sales_resolver_attendee_context(int $order_id, $item, array &$product_cache, array &$event_cache, array &$attendee_cache): array
+if (!function_exists('bvmgr_ticket_sales_resolver_attendee_context')) {
+    function bvmgr_ticket_sales_resolver_attendee_context(int $order_id, $item, array &$product_cache, array &$event_cache, array &$attendee_cache): array
     {
         $context = array(
             'attendee_ids' => array(),
@@ -92,7 +92,7 @@ if (!function_exists('vms_ticket_sales_resolver_attendee_context')) {
             return $context;
         }
 
-        $attendee_ids = vms_ticket_sales_resolver_attendee_ids_for_order_item($order_id, $order_item_id, $attendee_cache);
+        $attendee_ids = bvmgr_ticket_sales_resolver_attendee_ids_for_order_item($order_id, $order_item_id, $attendee_cache);
         if (empty($attendee_ids)) {
             return $context;
         }
@@ -125,13 +125,13 @@ if (!function_exists('vms_ticket_sales_resolver_attendee_context')) {
         }
 
         if (!empty($ticket_post_ids)) {
-            $ticket_context = vms_ticket_revenue_product_context((int) $ticket_post_ids[0], $product_cache, $event_cache);
+            $ticket_context = bvmgr_ticket_revenue_product_context((int) $ticket_post_ids[0], $product_cache, $event_cache);
             $context = array_merge($context, $ticket_context);
             $context['ticket_post_id'] = (int) ($ticket_context['ticket_post_id'] ?? $ticket_post_ids[0]);
         }
 
         if (!empty($event_ids)) {
-            $context = array_merge($context, vms_ticket_revenue_event_payload_for_tec_event((int) $event_ids[0], $event_cache));
+            $context = array_merge($context, bvmgr_ticket_revenue_event_payload_for_tec_event((int) $event_ids[0], $event_cache));
             $context['tec_event_id'] = (int) $event_ids[0];
         }
 
@@ -139,8 +139,8 @@ if (!function_exists('vms_ticket_sales_resolver_attendee_context')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_confidence_for_source')) {
-    function vms_ticket_sales_resolver_confidence_for_source(string $source): string
+if (!function_exists('bvmgr_ticket_sales_resolver_confidence_for_source')) {
+    function bvmgr_ticket_sales_resolver_confidence_for_source(string $source): string
     {
         switch (sanitize_key($source)) {
             case 'attendee_meta':
@@ -161,8 +161,8 @@ if (!function_exists('vms_ticket_sales_resolver_confidence_for_source')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_diagnostic_message')) {
-    function vms_ticket_sales_resolver_diagnostic_message(array $resolved): string
+if (!function_exists('bvmgr_ticket_sales_resolver_diagnostic_message')) {
+    function bvmgr_ticket_sales_resolver_diagnostic_message(array $resolved): string
     {
         $flags = array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($resolved['diagnostic_flags'] ?? array())))));
         $source = sanitize_key((string) ($resolved['resolution_source'] ?? ''));
@@ -170,7 +170,7 @@ if (!function_exists('vms_ticket_sales_resolver_diagnostic_message')) {
 
         if ($confidence === 'unresolved') {
             $snapshot = is_array($resolved['raw_linkage_snapshot'] ?? null) ? $resolved['raw_linkage_snapshot'] : array();
-            return vms_ticket_revenue_unresolved_reason($resolved, (array) ($snapshot['candidate_product_ids'] ?? array()));
+            return bvmgr_ticket_revenue_unresolved_reason($resolved, (array) ($snapshot['candidate_product_ids'] ?? array()));
         }
 
         if (in_array('attendee_event_mismatch', $flags, true)) {
@@ -190,8 +190,8 @@ if (!function_exists('vms_ticket_sales_resolver_diagnostic_message')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_order_dates')) {
-    function vms_ticket_sales_resolver_order_dates($order): array
+if (!function_exists('bvmgr_ticket_sales_resolver_order_dates')) {
+    function bvmgr_ticket_sales_resolver_order_dates($order): array
     {
         $created = is_object($order) && method_exists($order, 'get_date_created')
             ? $order->get_date_created()
@@ -199,20 +199,22 @@ if (!function_exists('vms_ticket_sales_resolver_order_dates')) {
         $timestamp = $created ? (int) $created->getTimestamp() : 0;
 
         return array(
-            'order_date_gmt' => $timestamp > 0 ? wp_date('Y-m-d H:i:s', $timestamp, vms_ticket_sales_resolver_utc_timezone()) : '',
+            'order_date_gmt' => $timestamp > 0 ? wp_date('Y-m-d H:i:s', $timestamp, bvmgr_ticket_sales_resolver_utc_timezone()) : '',
             'order_date_local' => $timestamp > 0 ? wp_date('Y-m-d H:i:s', $timestamp, wp_timezone()) : '',
         );
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
-    function vms_ticket_sales_resolver_resolve_line_context($order, $item, array &$product_cache, array &$event_cache, array &$attendee_cache): array
+if (!function_exists('bvmgr_ticket_sales_resolver_resolve_line_context')) {
+    function bvmgr_ticket_sales_resolver_resolve_line_context($order, $item, array &$product_cache, array &$event_cache, array &$attendee_cache): array
     {
-        $candidate_product_ids = vms_ticket_revenue_order_item_candidate_product_ids($item);
-        $item_tec_event_id = absint(vms_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id')));
-        $item_plan_id = absint(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id')));
-        $snapshot_title = vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event'));
-        $snapshot_date = vms_ticket_revenue_normalize_ymd(vms_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date')));
+        $candidate_product_ids = bvmgr_ticket_revenue_order_item_candidate_product_ids($item);
+        $item_tec_event_id = absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_tec_event_post_id')));
+        $item_plan_id = absint(bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_plan_id')));
+        $snapshot_title = bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_title_snapshot', 'Event'));
+        $snapshot_date = bvmgr_event_occurrence_normalize_snapshot_date(
+            bvmgr_ticket_revenue_get_item_meta_first($item, array('_vms_event_date_snapshot', 'Event Date'))
+        );
 
         $resolved = array(
             'product_id' => !empty($candidate_product_ids) ? (int) $candidate_product_ids[0] : 0,
@@ -247,7 +249,7 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
         $best_product_context = array();
         $best_product_score = 0;
         foreach ($candidate_product_ids as $candidate_product_id) {
-            $candidate_context = vms_ticket_revenue_product_context($candidate_product_id, $product_cache, $event_cache);
+            $candidate_context = bvmgr_ticket_revenue_product_context($candidate_product_id, $product_cache, $event_cache);
             if ($resolved['product_id'] <= 0 && !empty($candidate_context['product_id'])) {
                 $resolved['product_id'] = (int) $candidate_context['product_id'];
             }
@@ -267,7 +269,7 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
                 $resolved['is_ticket_related'] = true;
             }
 
-            $score = vms_ticket_sales_resolver_context_score($candidate_context);
+            $score = bvmgr_ticket_sales_resolver_context_score($candidate_context);
             if ($score > $best_product_score) {
                 $best_product_context = $candidate_context;
                 $best_product_score = $score;
@@ -275,7 +277,7 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
         }
 
         $order_id = is_object($order) && method_exists($order, 'get_id') ? absint($order->get_id()) : 0;
-        $attendee_context = vms_ticket_sales_resolver_attendee_context($order_id, $item, $product_cache, $event_cache, $attendee_cache);
+        $attendee_context = bvmgr_ticket_sales_resolver_attendee_context($order_id, $item, $product_cache, $event_cache, $attendee_cache);
         if (!empty($attendee_context['attendee_ids'])) {
             $resolved['attendee_ids'] = array_values(array_unique(array_filter(array_map('absint', (array) $attendee_context['attendee_ids']))));
             $resolved['raw_linkage_snapshot']['attendee_ids'] = $resolved['attendee_ids'];
@@ -302,14 +304,14 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
                 $resolved = array_merge($resolved, $attendee_context);
                 $resolved['resolution_source'] = 'attendee_meta';
                 $resolved['resolution_confidence'] = 'exact';
-            } elseif ($best_product_score === 0 && vms_ticket_revenue_is_resolved_event_link($attendee_context)) {
+            } elseif ($best_product_score === 0 && bvmgr_ticket_revenue_is_resolved_event_link($attendee_context)) {
                 $best_product_context = $attendee_context;
-                $best_product_score = vms_ticket_sales_resolver_context_score($attendee_context);
+                $best_product_score = bvmgr_ticket_sales_resolver_context_score($attendee_context);
             }
         }
 
         if ($item_tec_event_id > 0 && $resolved['resolution_confidence'] !== 'exact') {
-            $resolved = array_merge($resolved, vms_ticket_revenue_event_payload_for_tec_event($item_tec_event_id, $event_cache));
+            $resolved = array_merge($resolved, bvmgr_ticket_revenue_event_payload_for_tec_event($item_tec_event_id, $event_cache));
             $resolved['resolution_source'] = 'order_item_meta';
             $resolved['resolution_confidence'] = 'exact';
             $resolved['is_ticket_related'] = true;
@@ -321,7 +323,7 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
                 $resolved['event_plan_title'] = (string) get_the_title($item_plan_id);
             }
 
-            $plan_date = vms_ticket_revenue_normalize_ymd((string) get_post_meta($item_plan_id, '_vms_event_date', true));
+            $plan_date = bvmgr_ticket_revenue_normalize_ymd((string) get_post_meta($item_plan_id, '_vms_event_date', true));
             if ($resolved['event_date'] === '' && $plan_date !== '') {
                 $resolved['event_date'] = $plan_date;
             }
@@ -333,9 +335,9 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
             }
 
             if ($resolved['tec_event_id'] <= 0 && $resolved['resolution_confidence'] !== 'exact') {
-                $plan_event_id = absint(get_post_meta($item_plan_id, vms_ticket_revenue_plan_tec_meta_key(), true));
+                $plan_event_id = absint(get_post_meta($item_plan_id, bvmgr_ticket_revenue_plan_tec_meta_key(), true));
                 if ($plan_event_id > 0) {
-                    $resolved = array_merge($resolved, vms_ticket_revenue_event_payload_for_tec_event($plan_event_id, $event_cache));
+                    $resolved = array_merge($resolved, bvmgr_ticket_revenue_event_payload_for_tec_event($plan_event_id, $event_cache));
                 }
             }
 
@@ -371,7 +373,7 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
         }
 
         if ($resolved['product_id'] > 0 && ($resolved['product_sku'] === '' || $resolved['line_kind'] === '' || $resolved['ticket_post_id'] <= 0)) {
-            $product_context = vms_ticket_revenue_product_context((int) $resolved['product_id'], $product_cache, $event_cache);
+            $product_context = bvmgr_ticket_revenue_product_context((int) $resolved['product_id'], $product_cache, $event_cache);
             if ($resolved['product_sku'] === '' && !empty($product_context['product_sku'])) {
                 $resolved['product_sku'] = (string) $product_context['product_sku'];
             }
@@ -394,16 +396,16 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
         }
 
         if ($resolved['resolution_confidence'] === '') {
-            $resolved['resolution_confidence'] = vms_ticket_sales_resolver_confidence_for_source((string) $resolved['resolution_source']);
+            $resolved['resolution_confidence'] = bvmgr_ticket_sales_resolver_confidence_for_source((string) $resolved['resolution_source']);
         }
-        if ($resolved['resolution_confidence'] === '' && vms_ticket_revenue_is_resolved_event_link($resolved)) {
+        if ($resolved['resolution_confidence'] === '' && bvmgr_ticket_revenue_is_resolved_event_link($resolved)) {
             $resolved['resolution_confidence'] = 'derived';
         }
 
         if (
             !$resolved['is_ticket_related']
             && (
-                vms_ticket_revenue_is_resolved_event_link($resolved)
+                bvmgr_ticket_revenue_is_resolved_event_link($resolved)
                 || !empty($resolved['attendee_ids'])
                 || $item_tec_event_id > 0
                 || $item_plan_id > 0
@@ -414,7 +416,7 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
             $resolved['is_ticket_related'] = true;
         }
 
-        if (!vms_ticket_revenue_is_resolved_event_link($resolved)) {
+        if (!bvmgr_ticket_revenue_is_resolved_event_link($resolved)) {
             $resolved['resolution_source'] = 'unresolved';
             $resolved['resolution_confidence'] = 'unresolved';
 
@@ -439,25 +441,25 @@ if (!function_exists('vms_ticket_sales_resolver_resolve_line_context')) {
         }
 
         $resolved['diagnostic_flags'] = array_values(array_unique(array_filter(array_map('sanitize_key', (array) $resolved['diagnostic_flags']))));
-        $resolved['diagnostic_message'] = vms_ticket_sales_resolver_diagnostic_message($resolved);
+        $resolved['diagnostic_message'] = bvmgr_ticket_sales_resolver_diagnostic_message($resolved);
 
         return $resolved;
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_build_row')) {
-    function vms_ticket_sales_resolver_build_row($order, $item, array $resolved, array $refund_map): array
+if (!function_exists('bvmgr_ticket_sales_resolver_build_row')) {
+    function bvmgr_ticket_sales_resolver_build_row($order, $item, array $resolved, array $refund_map): array
     {
-        $order_dates = vms_ticket_sales_resolver_order_dates($order);
+        $order_dates = bvmgr_ticket_sales_resolver_order_dates($order);
         $status_slug = is_object($order) && method_exists($order, 'get_status')
             ? sanitize_key((string) $order->get_status())
             : '';
         $status_key = $status_slug !== '' ? 'wc-' . $status_slug : '';
 
-        $gross_subtotal_cents = vms_ticket_revenue_money_to_cents($item->get_subtotal());
-        $gross_tax_cents = vms_ticket_revenue_money_to_cents($item->get_subtotal_tax());
-        $net_subtotal_cents = vms_ticket_revenue_money_to_cents($item->get_total());
-        $line_tax_cents = vms_ticket_revenue_money_to_cents($item->get_total_tax());
+        $gross_subtotal_cents = bvmgr_ticket_revenue_money_to_cents($item->get_subtotal());
+        $gross_tax_cents = bvmgr_ticket_revenue_money_to_cents($item->get_subtotal_tax());
+        $net_subtotal_cents = bvmgr_ticket_revenue_money_to_cents($item->get_total());
+        $line_tax_cents = bvmgr_ticket_revenue_money_to_cents($item->get_total_tax());
         $discount_cents = max(0, $gross_subtotal_cents - $net_subtotal_cents);
         $discount_tax_cents = max(0, $gross_tax_cents - $line_tax_cents);
         $line_total_cents = $net_subtotal_cents + $line_tax_cents;
@@ -477,7 +479,7 @@ if (!function_exists('vms_ticket_sales_resolver_build_row')) {
 
         $diagnostic_message = trim((string) ($resolved['diagnostic_message'] ?? ''));
         if ($diagnostic_message === '') {
-            $diagnostic_message = vms_ticket_sales_resolver_diagnostic_message($resolved);
+            $diagnostic_message = bvmgr_ticket_sales_resolver_diagnostic_message($resolved);
         }
 
         return array(
@@ -516,20 +518,20 @@ if (!function_exists('vms_ticket_sales_resolver_build_row')) {
             'currency' => is_object($order) && method_exists($order, 'get_currency')
                 ? (string) $order->get_currency()
                 : '',
-            'line_subtotal' => vms_ticket_revenue_cents_to_decimal($gross_subtotal_cents),
+            'line_subtotal' => bvmgr_ticket_revenue_cents_to_decimal($gross_subtotal_cents),
             'line_subtotal_cents' => $gross_subtotal_cents,
-            'line_net_subtotal' => vms_ticket_revenue_cents_to_decimal($net_subtotal_cents),
+            'line_net_subtotal' => bvmgr_ticket_revenue_cents_to_decimal($net_subtotal_cents),
             'line_net_subtotal_cents' => $net_subtotal_cents,
-            'line_discount_total' => vms_ticket_revenue_cents_to_decimal($discount_cents),
+            'line_discount_total' => bvmgr_ticket_revenue_cents_to_decimal($discount_cents),
             'line_discount_total_cents' => $discount_cents,
             'line_discount_tax_total_cents' => $discount_tax_cents,
-            'line_tax_total' => vms_ticket_revenue_cents_to_decimal($line_tax_cents),
+            'line_tax_total' => bvmgr_ticket_revenue_cents_to_decimal($line_tax_cents),
             'line_tax_total_cents' => $line_tax_cents,
-            'line_total' => vms_ticket_revenue_cents_to_decimal($line_total_cents),
+            'line_total' => bvmgr_ticket_revenue_cents_to_decimal($line_total_cents),
             'line_total_cents' => $line_total_cents,
-            'line_refunded_total' => vms_ticket_revenue_cents_to_decimal($refunded_subtotal_cents),
+            'line_refunded_total' => bvmgr_ticket_revenue_cents_to_decimal($refunded_subtotal_cents),
             'line_refunded_total_cents' => $refunded_subtotal_cents,
-            'line_refunded_tax_total' => vms_ticket_revenue_cents_to_decimal($refunded_tax_cents),
+            'line_refunded_tax_total' => bvmgr_ticket_revenue_cents_to_decimal($refunded_tax_cents),
             'line_refunded_tax_total_cents' => $refunded_tax_cents,
             'is_refunded' => $is_refunded,
             'payment_method' => is_object($order) && method_exists($order, 'get_payment_method')
@@ -549,8 +551,8 @@ if (!function_exists('vms_ticket_sales_resolver_build_row')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_row_matches')) {
-    function vms_ticket_sales_resolver_row_matches(array $row, array $args): bool
+if (!function_exists('bvmgr_ticket_sales_resolver_row_matches')) {
+    function bvmgr_ticket_sales_resolver_row_matches(array $row, array $args): bool
     {
         if (!empty($args['order_ids']) && !in_array((int) ($row['order_id'] ?? 0), (array) $args['order_ids'], true)) {
             return false;
@@ -590,8 +592,8 @@ if (!function_exists('vms_ticket_sales_resolver_row_matches')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_sort_rows')) {
-    function vms_ticket_sales_resolver_sort_rows(array &$rows): void
+if (!function_exists('bvmgr_ticket_sales_resolver_sort_rows')) {
+    function bvmgr_ticket_sales_resolver_sort_rows(array &$rows): void
     {
         usort($rows, static function (array $a, array $b): int {
             $cmp = strcmp((string) ($a['order_date_local'] ?? ''), (string) ($b['order_date_local'] ?? ''));
@@ -614,10 +616,10 @@ if (!function_exists('vms_ticket_sales_resolver_sort_rows')) {
     }
 }
 
-if (!function_exists('vms_ticket_sales_resolver_get_result')) {
-    function vms_ticket_sales_resolver_get_result(array $args = array()): array
+if (!function_exists('bvmgr_ticket_sales_resolver_get_result')) {
+    function bvmgr_ticket_sales_resolver_get_result(array $args = array()): array
     {
-        $args = vms_ticket_sales_resolver_normalize_args($args);
+        $args = bvmgr_ticket_sales_resolver_normalize_args($args);
 
         $result = array(
             'args' => $args,
@@ -640,7 +642,7 @@ if (!function_exists('vms_ticket_sales_resolver_get_result')) {
             return $result;
         }
 
-        $order_ids = vms_ticket_sales_resolver_collect_order_ids($args);
+        $order_ids = bvmgr_ticket_sales_resolver_collect_order_ids($args);
         $result['counts']['orders_scanned'] = count($order_ids);
         if (empty($order_ids)) {
             return $result;
@@ -657,7 +659,7 @@ if (!function_exists('vms_ticket_sales_resolver_get_result')) {
                 continue;
             }
 
-            $refund_map = vms_ticket_revenue_order_refund_map($order);
+            $refund_map = bvmgr_ticket_revenue_order_refund_map($order);
             foreach ((array) $order->get_items('line_item') as $item) {
                 if (!$item) {
                     continue;
@@ -665,15 +667,15 @@ if (!function_exists('vms_ticket_sales_resolver_get_result')) {
 
                 $result['counts']['line_items_scanned']++;
 
-                $resolved = vms_ticket_sales_resolver_resolve_line_context($order, $item, $product_cache, $event_cache, $attendee_cache);
+                $resolved = bvmgr_ticket_sales_resolver_resolve_line_context($order, $item, $product_cache, $event_cache, $attendee_cache);
                 if (empty($resolved['is_ticket_related'])) {
                     $result['counts']['line_items_skipped_non_ticket']++;
                     continue;
                 }
 
                 $result['counts']['ticket_related_lines']++;
-                $row = vms_ticket_sales_resolver_build_row($order, $item, $resolved, $refund_map);
-                if (!vms_ticket_sales_resolver_row_matches($row, $args)) {
+                $row = bvmgr_ticket_sales_resolver_build_row($order, $item, $resolved, $refund_map);
+                if (!bvmgr_ticket_sales_resolver_row_matches($row, $args)) {
                     $result['counts']['line_items_skipped_filtered']++;
                     continue;
                 }
@@ -686,7 +688,7 @@ if (!function_exists('vms_ticket_sales_resolver_get_result')) {
             }
         }
 
-        vms_ticket_sales_resolver_sort_rows($rows);
+        bvmgr_ticket_sales_resolver_sort_rows($rows);
 
         $result['counts']['rows_matched'] = count($rows);
         $offset = max(0, (int) ($args['offset'] ?? 0));
@@ -710,12 +712,28 @@ if (!function_exists('vms_ticket_sales_resolver_get_result')) {
     }
 }
 
-if (!class_exists('VMS_Ticket_Revenue_Service')) {
-    final class VMS_Ticket_Revenue_Service
+if (!function_exists('bvmgr_ticket_sales_resolver_active_attendee_post_statuses')) {
+    /**
+     * Return the attendee post statuses that represent active admission records.
+     *
+     * @return string[]
+     */
+    function bvmgr_ticket_sales_resolver_active_attendee_post_statuses(): array
+    {
+        $statuses = array('publish', 'private');
+        $statuses = (array) apply_filters('bvmgr_ticket_sales_resolver_active_attendee_post_statuses', $statuses);
+        $statuses = array_values(array_unique(array_filter(array_map('sanitize_key', $statuses))));
+
+        return !empty($statuses) ? $statuses : array('publish');
+    }
+}
+
+if (!class_exists('BVMGR_Ticket_Revenue_Service')) {
+    final class BVMGR_Ticket_Revenue_Service
     {
         public static function get_sales_result(array $args = array()): array
         {
-            return vms_ticket_sales_resolver_get_result($args);
+            return bvmgr_ticket_sales_resolver_get_result($args);
         }
 
         public static function get_sales_rows(array $args = array()): array
@@ -726,13 +744,13 @@ if (!class_exists('VMS_Ticket_Revenue_Service')) {
     }
 }
 
-if (!function_exists('vms_get_ticket_sales_rows')) {
+if (!function_exists('bvmgr_get_ticket_sales_rows')) {
     /**
      * Developer example:
      * $rows = vms_get_ticket_sales_rows(array('date_from' => '2026-03-01', 'date_to' => '2026-03-31'));
      */
-    function vms_get_ticket_sales_rows(array $args = array()): array
+    function bvmgr_get_ticket_sales_rows(array $args = array()): array
     {
-        return VMS_Ticket_Revenue_Service::get_sales_rows($args);
+        return BVMGR_Ticket_Revenue_Service::get_sales_rows($args);
     }
 }

@@ -12,23 +12,23 @@ if (!defined('ABSPATH')) exit;
 require_once __DIR__ . '/../../core/registry/meta-keys.php';
 require_once __DIR__ . '/../../core/registry/constants.php';
 
-function vms_vendor_register_tax_bulk_actions($bulk_actions)
+function bvmgr_vendor_register_tax_bulk_actions($bulk_actions)
 {
 	$bulk_actions['vms_tax_mark_complete']   = 'Mark Tax Profile Complete';
 	$bulk_actions['vms_tax_mark_incomplete'] = 'Mark Tax Profile Incomplete';
 	return $bulk_actions;
 }
-add_filter('bulk_actions-edit-' . VMS_CPT_VENDOR, 'vms_vendor_register_tax_bulk_actions');
+add_filter('bulk_actions-edit-' . BVMGR_CPT_VENDOR, 'bvmgr_vendor_register_tax_bulk_actions');
 
-function vms_vendor_handle_tax_bulk_actions($redirect_url, $action, $post_ids)
+function bvmgr_vendor_handle_tax_bulk_actions($redirect_url, $action, $post_ids)
 {
 	if (!in_array($action, array('vms_tax_mark_complete', 'vms_tax_mark_incomplete'), true)) {
 		return $redirect_url;
 	}
 
-	$k_done    = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_attest  = vms_meta_key('vendor', 'w9_attested_at');
-	$k_prov    = vms_meta_key('vendor', 'w9_provider');
+	$k_done    = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_attest  = bvmgr_meta_key('vendor', 'w9_attested_at');
+	$k_prov    = bvmgr_meta_key('vendor', 'w9_provider');
 
 	$now = time();
 	$changed = 0;
@@ -55,9 +55,9 @@ function vms_vendor_handle_tax_bulk_actions($redirect_url, $action, $post_ids)
 		'vms_tax_bulk_action' => $action,
 	), $redirect_url);
 }
-add_filter('handle_bulk_actions-edit-' . VMS_CPT_VENDOR, 'vms_vendor_handle_tax_bulk_actions', 10, 3);
+add_filter('handle_bulk_actions-edit-' . BVMGR_CPT_VENDOR, 'bvmgr_vendor_handle_tax_bulk_actions', 10, 3);
 
-function vms_vendor_tax_bulk_admin_notice()
+function bvmgr_vendor_tax_bulk_admin_notice()
 {
 	if (empty($_REQUEST['vms_tax_bulk_done'])) return;
 
@@ -76,4 +76,4 @@ function vms_vendor_tax_bulk_admin_notice()
 
 	echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($msg) . '</p></div>';
 }
-add_action('admin_notices', 'vms_vendor_tax_bulk_admin_notice');
+add_action('admin_notices', 'bvmgr_vendor_tax_bulk_admin_notice');

@@ -196,7 +196,7 @@ if (!class_exists('WP_REST_Request')) {
 				return true;
 			}
 
-			$decoded = vms_json_decode_associative($this->body, 32);
+			$decoded = bvmgr_json_decode_associative($this->body, 32);
 			if (empty($decoded['ok'])) {
 				return new WP_Error(
 					'rest_invalid_json',
@@ -234,8 +234,8 @@ function get_option(string $key, $default = false)
 	return array_key_exists($key, $GLOBALS['vms_test_options']) ? $GLOBALS['vms_test_options'][$key] : $default;
 }
 
-if (!class_exists('VMS_Tours')) {
-	class VMS_Tours
+if (!class_exists('BVMGR_Tours')) {
+	class BVMGR_Tours
 	{
 		public const OPT_ENABLED = 'vms_tours_enabled';
 
@@ -333,24 +333,24 @@ require dirname(__DIR__) . '/includes/integrations/ticketing-claims-customer.php
 require dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php';
 require dirname(__DIR__) . '/includes/rest/class-vms-rest-tours.php';
 
-$decodedObject = vms_json_decode_associative('{"ok":true}', 8);
+$decodedObject = bvmgr_json_decode_associative('{"ok":true}', 8);
 $assert(!empty($decodedObject['ok']), 'Expected object JSON to decode successfully.');
-$assert(vms_json_decoded_is_object((array) $decodedObject['value'], (string) ($decodedObject['top_level_token'] ?? '')), 'Expected top-level object detection to succeed.');
+$assert(bvmgr_json_decoded_is_object((array) $decodedObject['value'], (string) ($decodedObject['top_level_token'] ?? '')), 'Expected top-level object detection to succeed.');
 
-$decodedList = vms_json_decode_associative('[1,2,3]', 8);
+$decodedList = bvmgr_json_decode_associative('[1,2,3]', 8);
 $assert(!empty($decodedList['ok']), 'Expected list JSON to decode successfully.');
-$assert(vms_json_decoded_is_list((array) $decodedList['value'], (string) ($decodedList['top_level_token'] ?? '')), 'Expected top-level list detection to succeed.');
+$assert(bvmgr_json_decoded_is_list((array) $decodedList['value'], (string) ($decodedList['top_level_token'] ?? '')), 'Expected top-level list detection to succeed.');
 
 $assert(
-	vms_pass_claims_decode_venue_ids_json('[4,"2",4,0]') === array(2, 4),
+	bvmgr_pass_claims_decode_venue_ids_json('[4,"2",4,0]') === array(2, 4),
 	'Venue ID JSON should normalize a JSON list of venue IDs.'
 );
 $assert(
-	vms_pass_claims_decode_venue_ids_json('{"venue_id":4}') === array(),
+	bvmgr_pass_claims_decode_venue_ids_json('{"venue_id":4}') === array(),
 	'Venue ID JSON should reject object-shaped payloads.'
 );
 
-$existingCounts = vms_ticketing_claims_parse_existing_counts_payload('{"buyer@example.com":2,"Guest@example.com":"3","bad":[] }');
+$existingCounts = bvmgr_ticketing_claims_parse_existing_counts_payload('{"buyer@example.com":2,"Guest@example.com":"3","bad":[] }');
 $assert(
 	$existingCounts === array(
 		'buyer@example.com' => 2,
@@ -360,7 +360,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_b_validate_tier_rows_payload(array(
+	bvmgr_ticketing_b_validate_tier_rows_payload(array(
 		array(
 			'tier_key' => 'ga',
 			'name' => 'General Admission',
@@ -370,7 +370,7 @@ $assert(
 	'Phase B tier payload validator should accept a well-formed tier list.'
 );
 $assert(
-	!vms_ticketing_b_validate_tier_rows_payload(array(
+	!bvmgr_ticketing_b_validate_tier_rows_payload(array(
 		array(
 			'name' => array('bad'),
 		),
@@ -379,7 +379,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_b_validate_commit_items_payload(array(
+	bvmgr_ticketing_b_validate_commit_items_payload(array(
 		array(
 			'tier_key' => 'ga',
 			'action' => 'create',
@@ -389,7 +389,7 @@ $assert(
 	'Phase B commit payload validator should accept a well-formed commit item list.'
 );
 $assert(
-	!vms_ticketing_b_validate_commit_items_payload(array(
+	!bvmgr_ticketing_b_validate_commit_items_payload(array(
 		array(
 			'tier_key' => 'ga',
 			'action' => 'explode',
@@ -399,7 +399,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_v2_validate_config_payload(array(
+	bvmgr_ticketing_v2_validate_config_payload(array(
 		'mode' => 'vms_managed',
 		'tickets' => array(
 			array(
@@ -416,7 +416,7 @@ $assert(
 	'Ticketing v2 config validator should accept object payloads with list-based tickets and entitlements.'
 );
 $assert(
-	!vms_ticketing_v2_validate_config_payload(array(
+	!bvmgr_ticketing_v2_validate_config_payload(array(
 		'tickets' => array(
 			'not_a_list' => array('ticket_key' => 'ga'),
 		),
@@ -425,7 +425,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_v2_validate_atomic_add_payload(array(
+	bvmgr_ticketing_v2_validate_atomic_add_payload(array(
 		'nonce' => 'abc123',
 		'ticket_lines' => array(
 			array(
@@ -452,7 +452,7 @@ $assert(
 	'Atomic add payload validator should accept well-formed ticket and add-on lines.'
 );
 $assert(
-	!vms_ticketing_v2_validate_atomic_add_payload(array(
+	!bvmgr_ticketing_v2_validate_atomic_add_payload(array(
 		'ticket_lines' => array(
 			array(
 				'product_id' => 55,
@@ -467,7 +467,7 @@ $assert(
 );
 
 $assert(
-	vms_ticketing_v2_validate_silent_add_payload(array(
+	bvmgr_ticketing_v2_validate_silent_add_payload(array(
 		'items' => array(
 			array(
 				'productId' => 77,
@@ -478,7 +478,7 @@ $assert(
 	'Silent-add payload validator should accept a list of simple add-on rows.'
 );
 $assert(
-	!vms_ticketing_v2_validate_silent_add_payload(array(
+	!bvmgr_ticketing_v2_validate_silent_add_payload(array(
 		'items' => array(
 			'broken' => array(
 				'productId' => 77,
@@ -490,7 +490,7 @@ $assert(
 );
 
 $assert(
-	vms_event_plan_import_validate_rows_payload(
+	bvmgr_event_plan_import_validate_rows_payload(
 		array(
 			'columns' => array(
 				'has_agenda_text' => true,
@@ -512,7 +512,7 @@ $assert(
 	'Importer preview payload validator should accept the expected object-with-rows shape.'
 );
 $assert(
-	!vms_event_plan_import_validate_rows_payload(
+	!bvmgr_event_plan_import_validate_rows_payload(
 		array(
 			'columns' => array('has_agenda_text' => true),
 			'rows' => array(
@@ -525,7 +525,7 @@ $assert(
 );
 
 $assert(
-	vms_event_plan_import_validate_snapshot_payload(
+	bvmgr_event_plan_import_validate_snapshot_payload(
 		array(
 			'created_at' => time(),
 			'entries' => array(
@@ -540,7 +540,7 @@ $assert(
 	'Importer snapshot validator should accept the expected object-with-entries shape.'
 );
 $assert(
-	!vms_event_plan_import_validate_snapshot_payload(
+	!bvmgr_event_plan_import_validate_snapshot_payload(
 		array(
 			'entries' => array(
 				'bad' => array('plan_id' => 99),
@@ -735,10 +735,10 @@ $liveTicketingRulesSource = file_get_contents($liveTicketingRulesPath);
 $assert(is_string($mirrorTicketingRulesSource) && $mirrorTicketingRulesSource !== '', 'Expected to load the mirror Ticketing Rules V2 runtime source.');
 $assert(is_string($liveTicketingRulesSource) && $liveTicketingRulesSource !== '', 'Expected to load the live Ticketing Rules V2 runtime source.');
 
-$mirrorDecodeHelperSource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'vms_ticketing_v2_decode_stored_claim_assignment_rows');
-$liveDecodeHelperSource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'vms_ticketing_v2_decode_stored_claim_assignment_rows');
-$mirrorConsumedQtySource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'vms_ticketing_v2_assignee_consumed_qty_for_event');
-$liveConsumedQtySource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'vms_ticketing_v2_assignee_consumed_qty_for_event');
+$mirrorDecodeHelperSource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows');
+$liveDecodeHelperSource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows');
+$mirrorConsumedQtySource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'bvmgr_ticketing_v2_assignee_consumed_qty_for_event');
+$liveConsumedQtySource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'bvmgr_ticketing_v2_assignee_consumed_qty_for_event');
 $normalizeSource = static function (string $source): string {
 	$normalized = preg_replace('/\s+/', ' ', trim($source));
 	return is_string($normalized) ? $normalized : trim($source);
@@ -784,7 +784,7 @@ $withoutWarnings = static function (callable $callback) {
 
 $decodeRowsWithoutWarnings = static function ($raw) use ($withoutWarnings): array {
 	$decoded = $withoutWarnings(static function () use ($raw): array {
-		return vms_ticketing_v2_decode_stored_claim_assignment_rows($raw);
+		return bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($raw);
 	});
 
 	return is_array($decoded) ? $decoded : array();
@@ -1048,9 +1048,9 @@ $assert(
 
 $GLOBALS['vms_test_current_user_caps'] = array('manage_options' => true);
 $GLOBALS['vms_test_options'] = array(
-	VMS_Tours::OPT_ENABLED => 1,
+	BVMGR_Tours::OPT_ENABLED => 1,
 );
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 
 $assertToursError = static function ($result, string $expectedCode, int $expectedStatus, string $message) use ($assert): void {
 	$assert(is_wp_error($result), $message . ' Expected a WP_Error response.');
@@ -1108,46 +1108,46 @@ $invalidToursBodies = array(
 );
 
 foreach ($invalidToursBodies as $case) {
-	VMS_Tours::reset();
-	$runtimeResult = VMS_REST_Tours::post_runtime_drift(new WP_REST_Request($case['body']));
+	BVMGR_Tours::reset();
+	$runtimeResult = BVMGR_REST_Tours::post_runtime_drift(new WP_REST_Request($case['body']));
 	$assertToursError($runtimeResult, $case['code'], 400, $case['label'] . ' Runtime drift.');
-	$assert(VMS_Tours::$merge_calls === 0, $case['label'] . ' Runtime drift must not run merge work.');
-	$assert(VMS_Tours::$replace_calls === 0, $case['label'] . ' Runtime drift must not replace scan reports.');
+	$assert(BVMGR_Tours::$merge_calls === 0, $case['label'] . ' Runtime drift must not run merge work.');
+	$assert(BVMGR_Tours::$replace_calls === 0, $case['label'] . ' Runtime drift must not replace scan reports.');
 
-	VMS_Tours::reset();
-	$scanResult = VMS_REST_Tours::post_drift_scan(new WP_REST_Request($case['body']));
+	BVMGR_Tours::reset();
+	$scanResult = BVMGR_REST_Tours::post_drift_scan(new WP_REST_Request($case['body']));
 	$assertToursError($scanResult, $case['code'], 400, $case['label'] . ' Drift scan.');
-	$assert(VMS_Tours::$merge_calls === 0, $case['label'] . ' Drift scan must not run merge work.');
-	$assert(VMS_Tours::$replace_calls === 0, $case['label'] . ' Drift scan must not replace scan reports.');
+	$assert(BVMGR_Tours::$merge_calls === 0, $case['label'] . ' Drift scan must not run merge work.');
+	$assert(BVMGR_Tours::$replace_calls === 0, $case['label'] . ' Drift scan must not replace scan reports.');
 }
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $runtimeEmptyObject = $assertToursResponse(
-	VMS_REST_Tours::post_runtime_drift(new WP_REST_Request('{}')),
+	BVMGR_REST_Tours::post_runtime_drift(new WP_REST_Request('{}')),
 	200,
 	'Empty object runtime-drift payload should remain accepted.'
 );
-$assert(VMS_Tours::$merge_calls === 1, 'Empty object runtime-drift payload should still reach the runtime handler.');
+$assert(BVMGR_Tours::$merge_calls === 1, 'Empty object runtime-drift payload should still reach the runtime handler.');
 $assert(($runtimeEmptyObject['report']['source'] ?? '') === 'runtime', 'Empty object runtime-drift payload should preserve the existing report contract.');
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $scanEmptyObject = $assertToursResponse(
-	VMS_REST_Tours::post_drift_scan(new WP_REST_Request('{}')),
+	BVMGR_REST_Tours::post_drift_scan(new WP_REST_Request('{}')),
 	200,
 	'Empty object drift-scan payload should remain accepted.'
 );
-$assert(VMS_Tours::$replace_calls === 1, 'Empty object drift-scan payload should still reach the scan replacement handler.');
+$assert(BVMGR_Tours::$replace_calls === 1, 'Empty object drift-scan payload should still reach the scan replacement handler.');
 $assert(($scanEmptyObject['report']['source'] ?? '') === 'scan', 'Empty object drift-scan payload should preserve the default scan source.');
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $validRuntimePayload = $assertToursResponse(
-	VMS_REST_Tours::post_runtime_drift(new WP_REST_Request('{"context_key":"dashboard","anchor":"tour-anchor","tour_id":"intro","severity":"optional"}')),
+	BVMGR_REST_Tours::post_runtime_drift(new WP_REST_Request('{"context_key":"dashboard","anchor":"tour-anchor","tour_id":"intro","severity":"optional"}')),
 	200,
 	'Valid runtime-drift object payload should remain accepted.'
 );
-$assert(VMS_Tours::$merge_calls === 1, 'Valid runtime-drift payload should invoke runtime merge work once.');
+$assert(BVMGR_Tours::$merge_calls === 1, 'Valid runtime-drift payload should invoke runtime merge work once.');
 $assert(
-	VMS_Tours::$last_merge_payload === array(
+	BVMGR_Tours::$last_merge_payload === array(
 		'context_key' => 'dashboard',
 		'anchor' => 'tour-anchor',
 		'tour_id' => 'intro',
@@ -1157,36 +1157,36 @@ $assert(
 );
 $assert(($validRuntimePayload['report']['source'] ?? '') === 'runtime', 'Valid runtime-drift payload should return a runtime report.');
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $validScanPayload = $assertToursResponse(
-	VMS_REST_Tours::post_drift_scan(new WP_REST_Request('{"source":"auto-update","contexts":{"dashboard":{"scan_error":"","missing_anchors":{}}}}')),
+	BVMGR_REST_Tours::post_drift_scan(new WP_REST_Request('{"source":"auto-update","contexts":{"dashboard":{"scan_error":"","missing_anchors":{}}}}')),
 	200,
 	'Valid drift-scan object payload should remain accepted.'
 );
-$assert(VMS_Tours::$replace_calls === 1, 'Valid drift-scan payload should invoke scan replacement once.');
-$assert(VMS_Tours::$last_replace_source === 'auto-update', 'Valid drift-scan payload should preserve the auto-update source contract.');
+$assert(BVMGR_Tours::$replace_calls === 1, 'Valid drift-scan payload should invoke scan replacement once.');
+$assert(BVMGR_Tours::$last_replace_source === 'auto-update', 'Valid drift-scan payload should preserve the auto-update source contract.');
 $assert(isset($validScanPayload['report']['contexts']['dashboard']), 'Valid drift-scan payload should preserve object-shaped contexts.');
 
-VMS_Tours::reset();
+BVMGR_Tours::reset();
 $GLOBALS['vms_test_current_user_caps'] = array();
-$capabilityFailure = VMS_REST_Tours::can_manage_tours(new WP_REST_Request('{}'));
+$capabilityFailure = BVMGR_REST_Tours::can_manage_tours(new WP_REST_Request('{}'));
 $assertToursError($capabilityFailure, 'forbidden', 403, 'Tours management capability protection should remain intact.');
 
 $GLOBALS['vms_test_current_user_caps'] = array('manage_options' => true);
-VMS_Tours::reset();
-VMS_Tours::$nonce_valid = false;
-$nonceFailure = VMS_REST_Tours::can_manage_tours(new WP_REST_Request('{}'));
+BVMGR_Tours::reset();
+BVMGR_Tours::$nonce_valid = false;
+$nonceFailure = BVMGR_REST_Tours::can_manage_tours(new WP_REST_Request('{}'));
 $assertToursError($nonceFailure, 'forbidden', 403, 'Tours management nonce protection should remain intact.');
 
-VMS_Tours::reset();
-VMS_Tours::$nonce_valid = true;
-VMS_Tours::$can_run = false;
-$runtimeCapabilityFailure = VMS_REST_Tours::can_post_runtime_drift(new WP_REST_Request('{}'));
+BVMGR_Tours::reset();
+BVMGR_Tours::$nonce_valid = true;
+BVMGR_Tours::$can_run = false;
+$runtimeCapabilityFailure = BVMGR_REST_Tours::can_post_runtime_drift(new WP_REST_Request('{}'));
 $assertToursError($runtimeCapabilityFailure, 'forbidden', 403, 'Runtime-drift capability protection should remain intact.');
 
-VMS_Tours::reset();
-VMS_Tours::$nonce_valid = false;
-$runtimeNonceFailure = VMS_REST_Tours::can_post_runtime_drift(new WP_REST_Request('{}'));
+BVMGR_Tours::reset();
+BVMGR_Tours::$nonce_valid = false;
+$runtimeNonceFailure = BVMGR_REST_Tours::can_post_runtime_drift(new WP_REST_Request('{}'));
 $assertToursError($runtimeNonceFailure, 'forbidden', 403, 'Runtime-drift nonce protection should remain intact.');
 
 fwrite(STDOUT, "decoded JSON validation helpers OK.\n");

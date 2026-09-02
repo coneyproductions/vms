@@ -26,7 +26,7 @@ add_action('admin_menu', function () {
 		__('Staffing Templates', 'backstage-venue-manager'),
 		$capability,
 		'vms-staffing-templates',
-		'vms_staffing_admin_render_templates_page'
+		'bvmgr_staffing_admin_render_templates_page'
 	);
 
 	add_submenu_page(
@@ -35,23 +35,23 @@ add_action('admin_menu', function () {
 		__('Staffing Rollups', 'backstage-venue-manager'),
 		$capability,
 		'vms-staffing-rollups',
-		'vms_staffing_admin_render_rollups_page'
+		'bvmgr_staffing_admin_render_rollups_page'
 	);
 }, 35);
 
-if (!function_exists('vms_staffing_role_meta_field_value')) {
-	function vms_staffing_role_meta_field_value(array $meta, string $key, $default = '')
+if (!function_exists('bvmgr_staffing_role_meta_field_value')) {
+	function bvmgr_staffing_role_meta_field_value(array $meta, string $key, $default = '')
 	{
 		return array_key_exists($key, $meta) ? $meta[$key] : $default;
 	}
 }
 
 
-if (!function_exists('vms_staffing_admin_qualification_mode_label')) {
-	function vms_staffing_admin_qualification_mode_label(string $mode): string
+if (!function_exists('bvmgr_staffing_admin_qualification_mode_label')) {
+	function bvmgr_staffing_admin_qualification_mode_label(string $mode): string
 	{
-		$mode = function_exists('vms_staffing_normalize_qualification_mode')
-			? vms_staffing_normalize_qualification_mode($mode, 'warn')
+		$mode = function_exists('bvmgr_staffing_normalize_qualification_mode')
+			? bvmgr_staffing_normalize_qualification_mode($mode, 'warn')
 			: 'warn';
 		$labels = array(
 			'warn' => __('Warn only', 'backstage-venue-manager'),
@@ -62,8 +62,8 @@ if (!function_exists('vms_staffing_admin_qualification_mode_label')) {
 	}
 }
 
-if (!function_exists('vms_staffing_admin_render_required_qualification_rows')) {
-	function vms_staffing_admin_render_required_qualification_rows(array $rows, string $field_base): void
+if (!function_exists('bvmgr_staffing_admin_render_required_qualification_rows')) {
+	function bvmgr_staffing_admin_render_required_qualification_rows(array $rows, string $field_base): void
 	{
 		if (empty($rows)) {
 			$rows = array(array('name' => '', 'mode' => 'warn'));
@@ -74,8 +74,8 @@ if (!function_exists('vms_staffing_admin_render_required_qualification_rows')) {
 				<?php foreach ($rows as $idx => $row) : ?>
 					<?php
 						$name = isset($row['name']) ? sanitize_text_field((string) $row['name']) : '';
-						$mode = function_exists('vms_staffing_normalize_qualification_mode')
-							? vms_staffing_normalize_qualification_mode((string) ($row['mode'] ?? 'warn'), 'warn')
+						$mode = function_exists('bvmgr_staffing_normalize_qualification_mode')
+							? bvmgr_staffing_normalize_qualification_mode((string) ($row['mode'] ?? 'warn'), 'warn')
 							: 'warn';
 					?>
 					<div class="vms-qualification-rule-row" data-vms-qualification-row="1">
@@ -128,7 +128,7 @@ if (!function_exists('vms_staffing_admin_render_required_qualification_rows')) {
 }
 
 add_action('vms_staff_role_add_form_fields', function () {
-	$defaults = function_exists('vms_staffing_role_meta_defaults') ? vms_staffing_role_meta_defaults() : array();
+	$defaults = function_exists('bvmgr_staffing_role_meta_defaults') ? bvmgr_staffing_role_meta_defaults() : array();
 	$is_critical = !empty($defaults['is_critical']);
 	$is_active = !empty($defaults['is_active']);
 	$default_headcount = isset($defaults['default_headcount']) ? (int) $defaults['default_headcount'] : 1;
@@ -174,7 +174,7 @@ add_action('vms_staff_role_add_form_fields', function () {
 		<label><?php esc_html_e('Required qualifications', 'backstage-venue-manager'); ?></label>
 		<?php
 			$required_qualification_rules = isset($defaults['required_qualification_rules']) && is_array($defaults['required_qualification_rules']) ? $defaults['required_qualification_rules'] : array();
-			vms_staffing_admin_render_required_qualification_rows($required_qualification_rules, 'vms_staffing_role_meta[required_qualifications]');
+			bvmgr_staffing_admin_render_required_qualification_rows($required_qualification_rules, 'vms_staffing_role_meta[required_qualifications]');
 		?>
 	</div>
 	<?php
@@ -182,13 +182,13 @@ add_action('vms_staff_role_add_form_fields', function () {
 
 add_action('vms_staff_role_edit_form_fields', function ($term) {
 	$role_id = isset($term->term_id) ? absint($term->term_id) : 0;
-	$meta = function_exists('vms_staffing_role_meta_get') ? vms_staffing_role_meta_get($role_id) : array();
-	$is_critical = !empty(vms_staffing_role_meta_field_value($meta, 'is_critical', 0));
-	$is_active = !empty(vms_staffing_role_meta_field_value($meta, 'is_active', 1));
-	$default_headcount = (int) vms_staffing_role_meta_field_value($meta, 'default_headcount', 1);
-	$default_pay_type = (string) vms_staffing_role_meta_field_value($meta, 'default_pay_type', 'none');
-	$default_rate = (string) vms_staffing_role_meta_field_value($meta, 'default_rate', '');
-	$default_notes = (string) vms_staffing_role_meta_field_value($meta, 'default_notes', '');
+	$meta = function_exists('bvmgr_staffing_role_meta_get') ? bvmgr_staffing_role_meta_get($role_id) : array();
+	$is_critical = !empty(bvmgr_staffing_role_meta_field_value($meta, 'is_critical', 0));
+	$is_active = !empty(bvmgr_staffing_role_meta_field_value($meta, 'is_active', 1));
+	$default_headcount = (int) bvmgr_staffing_role_meta_field_value($meta, 'default_headcount', 1);
+	$default_pay_type = (string) bvmgr_staffing_role_meta_field_value($meta, 'default_pay_type', 'none');
+	$default_rate = (string) bvmgr_staffing_role_meta_field_value($meta, 'default_rate', '');
+	$default_notes = (string) bvmgr_staffing_role_meta_field_value($meta, 'default_notes', '');
 	?>
 	<tr class="form-field">
 		<th scope="row"><?php esc_html_e('Critical role', 'backstage-venue-manager'); ?></th>
@@ -234,22 +234,22 @@ add_action('vms_staff_role_edit_form_fields', function ($term) {
 		<th scope="row"><?php esc_html_e('Required qualifications', 'backstage-venue-manager'); ?></th>
 		<td>
 			<?php
-				$required_qualification_rules = vms_staffing_role_meta_field_value($meta, 'required_qualification_rules', array());
+				$required_qualification_rules = bvmgr_staffing_role_meta_field_value($meta, 'required_qualification_rules', array());
 				if (!is_array($required_qualification_rules)) {
 					$required_qualification_rules = array();
 				}
-				vms_staffing_admin_render_required_qualification_rows($required_qualification_rules, 'vms_staffing_role_meta[required_qualifications]');
+				bvmgr_staffing_admin_render_required_qualification_rows($required_qualification_rules, 'vms_staffing_role_meta[required_qualifications]');
 			?>
 		</td>
 	</tr>
 	<?php
 });
 
-add_action('created_vms_staff_role', 'vms_staffing_admin_save_role_term_meta');
-add_action('edited_vms_staff_role', 'vms_staffing_admin_save_role_term_meta');
+add_action('created_vms_staff_role', 'bvmgr_staffing_admin_save_role_term_meta');
+add_action('edited_vms_staff_role', 'bvmgr_staffing_admin_save_role_term_meta');
 
-if (!function_exists('vms_staffing_admin_save_role_term_meta')) {
-	function vms_staffing_admin_save_role_term_meta($term_id): void
+if (!function_exists('bvmgr_staffing_admin_save_role_term_meta')) {
+	function bvmgr_staffing_admin_save_role_term_meta($term_id): void
 	{
 		$term_id = absint($term_id);
 		if ($term_id <= 0) return;
@@ -270,15 +270,15 @@ if (!function_exists('vms_staffing_admin_save_role_term_meta')) {
 			: null;
 		if (!is_array($raw)) return;
 
-		if (!function_exists('vms_staffing_role_meta_save')) return;
-		vms_staffing_role_meta_save($term_id, $raw);
+		if (!function_exists('bvmgr_staffing_role_meta_save')) return;
+		bvmgr_staffing_role_meta_save($term_id, $raw);
 	}
 }
 
-if (!function_exists('vms_staffing_admin_role_options_html')) {
-	function vms_staffing_admin_role_options_html(int $selected = 0): string
+if (!function_exists('bvmgr_staffing_admin_role_options_html')) {
+	function bvmgr_staffing_admin_role_options_html(int $selected = 0): string
 	{
-		$roles = function_exists('vms_staffing_get_role_catalog') ? vms_staffing_get_role_catalog(true) : array();
+		$roles = function_exists('bvmgr_staffing_get_role_catalog') ? bvmgr_staffing_get_role_catalog(true) : array();
 		$html = '';
 		foreach ($roles as $r) {
 			$rid = isset($r['role_id']) ? absint($r['role_id']) : 0;
@@ -297,8 +297,8 @@ if (!function_exists('vms_staffing_admin_role_options_html')) {
 	}
 }
 
-if (!function_exists('vms_staffing_admin_get_venues')) {
-	function vms_staffing_admin_get_venues(): array
+if (!function_exists('bvmgr_staffing_admin_get_venues')) {
+	function bvmgr_staffing_admin_get_venues(): array
 	{
 		$venues = get_posts(array(
 			'post_type'      => 'vms_venue',
@@ -311,10 +311,10 @@ if (!function_exists('vms_staffing_admin_get_venues')) {
 	}
 }
 
-if (!function_exists('vms_staffing_admin_request_method')) {
-	function vms_staffing_admin_request_method(): string
+if (!function_exists('bvmgr_staffing_admin_request_method')) {
+	function bvmgr_staffing_admin_request_method(): string
 	{
-		$method = vms_request_server_value('REQUEST_METHOD');
+		$method = bvmgr_request_server_value('REQUEST_METHOD');
 		if ($method === '') {
 			return '';
 		}
@@ -323,8 +323,8 @@ if (!function_exists('vms_staffing_admin_request_method')) {
 	}
 }
 
-if (!function_exists('vms_staffing_admin_screen_is_role_target')) {
-	function vms_staffing_admin_screen_is_role_target($screen): bool
+if (!function_exists('bvmgr_staffing_admin_screen_is_role_target')) {
+	function bvmgr_staffing_admin_screen_is_role_target($screen): bool
 	{
 		if (!is_object($screen)) {
 			return false;
@@ -342,57 +342,57 @@ if (!function_exists('vms_staffing_admin_screen_is_role_target')) {
 	}
 }
 
-if (!function_exists('vms_staffing_admin_is_templates_page')) {
-	function vms_staffing_admin_is_templates_page(): bool
+if (!function_exists('bvmgr_staffing_admin_is_templates_page')) {
+	function bvmgr_staffing_admin_is_templates_page(): bool
 	{
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Staffing templates routing only controls whether admin assets load.
-			$page = vms_request_read_key($_GET, 'page');
+			$page = bvmgr_request_read_key($_GET, 'page');
 
 		return $page === 'vms-staffing-templates';
 	}
 }
 
-if (!function_exists('vms_staffing_admin_enqueue_assets')) {
-	function vms_staffing_admin_enqueue_assets(): void
+if (!function_exists('bvmgr_staffing_admin_enqueue_assets')) {
+	function bvmgr_staffing_admin_enqueue_assets(): void
 	{
 		if (!current_user_can('manage_options')) {
 			return;
 		}
 
 		$screen = function_exists('get_current_screen') ? get_current_screen() : null;
-		$is_role_screen = vms_staffing_admin_screen_is_role_target($screen);
-		$is_templates_page = vms_staffing_admin_is_templates_page();
+		$is_role_screen = bvmgr_staffing_admin_screen_is_role_target($screen);
+		$is_templates_page = bvmgr_staffing_admin_is_templates_page();
 
 		if (!$is_role_screen && !$is_templates_page) {
 			return;
 		}
 
-		$version = function_exists('vms_asset_version')
-			? vms_asset_version()
-			: (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+		$version = function_exists('bvmgr_asset_version')
+			? bvmgr_asset_version()
+			: (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 		if ($is_templates_page) {
 			wp_enqueue_style(
-				'vms-staffing-admin',
-				VMS_PLUGIN_URL . 'assets/css/vms-staffing-admin.css',
+				'bvmgr-staffing-admin',
+				BVMGR_PLUGIN_URL . 'assets/css/vms-staffing-admin.css',
 				array(),
 				$version
 			);
 		}
 
 		wp_enqueue_script(
-			'vms-staffing-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js',
+			'bvmgr-staffing-admin',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js',
 			array(),
 			$version,
 			true
 		);
 	}
 }
-add_action('admin_enqueue_scripts', 'vms_staffing_admin_enqueue_assets', 50);
+add_action('admin_enqueue_scripts', 'bvmgr_staffing_admin_enqueue_assets', 50);
 
-if (!function_exists('vms_staffing_admin_build_template_payload_from_post')) {
-	function vms_staffing_admin_build_template_payload_from_post(array $post_data): array
+if (!function_exists('bvmgr_staffing_admin_build_template_payload_from_post')) {
+	function bvmgr_staffing_admin_build_template_payload_from_post(array $post_data): array
 	{
 		$payload = array(
 			'template_id'                 => isset($post_data['vms_tpl_template_id']) ? absint($post_data['vms_tpl_template_id']) : 0,
@@ -413,8 +413,8 @@ if (!function_exists('vms_staffing_admin_build_template_payload_from_post')) {
 			: array();
 		foreach ($slot_rows as $row) {
 			if (!is_array($row)) continue;
-			if (function_exists('vms_staffing_template_normalize_slot_row')) {
-				$normalized_row = vms_staffing_template_normalize_slot_row($row);
+			if (function_exists('bvmgr_staffing_template_normalize_slot_row')) {
+				$normalized_row = bvmgr_staffing_template_normalize_slot_row($row);
 				if (is_array($normalized_row)) {
 					$payload['slots'][] = $normalized_row;
 				}
@@ -427,8 +427,8 @@ if (!function_exists('vms_staffing_admin_build_template_payload_from_post')) {
 	}
 }
 
-if (!function_exists('vms_staffing_admin_template_row_markup')) {
-	function vms_staffing_admin_template_row_markup($idx, array $slot = array()): string
+if (!function_exists('bvmgr_staffing_admin_template_row_markup')) {
+	function bvmgr_staffing_admin_template_row_markup($idx, array $slot = array()): string
 	{
 		$role_id = isset($slot['role_id']) ? absint($slot['role_id']) : 0;
 		$base_headcount = isset($slot['base_headcount']) ? absint($slot['base_headcount']) : 1;
@@ -490,7 +490,7 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 							<option value="0"><?php esc_html_e('Select role', 'backstage-venue-manager'); ?></option>
 							<?php
 							echo wp_kses(
-								vms_staffing_admin_role_options_html($role_id),
+								bvmgr_staffing_admin_role_options_html($role_id),
 								array(
 									'option' => array(
 										'value'    => true,
@@ -595,11 +595,11 @@ if (!function_exists('vms_staffing_admin_template_row_markup')) {
 	}
 }
 
-if (!function_exists('vms_staffing_admin_render_template_row')) {
-	function vms_staffing_admin_render_template_row(int $idx, array $slot = array()): void
+if (!function_exists('bvmgr_staffing_admin_render_template_row')) {
+	function bvmgr_staffing_admin_render_template_row(int $idx, array $slot = array()): void
 	{
 		echo wp_kses(
-			vms_staffing_admin_template_row_markup($idx, $slot),
+			bvmgr_staffing_admin_template_row_markup($idx, $slot),
 			array(
 				'div'    => array(
 					'class'                         => true,
@@ -650,21 +650,21 @@ if (!function_exists('vms_staffing_admin_render_template_row')) {
 	}
 }
 
-if (!function_exists('vms_staffing_admin_render_templates_page')) {
-	function vms_staffing_admin_render_templates_page(): void
+if (!function_exists('bvmgr_staffing_admin_render_templates_page')) {
+	function bvmgr_staffing_admin_render_templates_page(): void
 	{
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
 		}
 
-		$request_method = vms_staffing_admin_request_method();
+		$request_method = bvmgr_staffing_admin_request_method();
 		$post_data = 'POST' === $request_method ? wp_unslash($_POST) : array();
 		$post_action = isset($post_data['vms_tpl_action']) ? sanitize_key((string) $post_data['vms_tpl_action']) : '';
 
 		if ('POST' === $request_method && 'save' === $post_action) {
-			check_admin_referer('vms_staffing_template_save');
-			$payload = vms_staffing_admin_build_template_payload_from_post($post_data);
-			$res = function_exists('vms_staffing_save_template') ? vms_staffing_save_template($payload, get_current_user_id()) : array('ok' => false, 'error' => 'core_missing');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_staffing_template_save', '_wpnonce'), '_wpnonce');
+			$payload = bvmgr_staffing_admin_build_template_payload_from_post($post_data);
+			$res = function_exists('bvmgr_staffing_save_template') ? bvmgr_staffing_save_template($payload, get_current_user_id()) : array('ok' => false, 'error' => 'core_missing');
 			$next = admin_url('admin.php?page=vms-staffing-templates');
 			if (!empty($res['ok'])) {
 				$next = add_query_arg(array(
@@ -681,23 +681,23 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 		}
 
 		if ('POST' === $request_method && 'delete' === $post_action) {
-			check_admin_referer('vms_staffing_template_delete');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_staffing_template_delete', '_wpnonce'), '_wpnonce');
 			$template_id = isset($post_data['vms_tpl_template_id']) ? absint($post_data['vms_tpl_template_id']) : 0;
-			$ok = $template_id > 0 && function_exists('vms_staffing_delete_template') ? vms_staffing_delete_template($template_id, get_current_user_id()) : false;
+			$ok = $template_id > 0 && function_exists('bvmgr_staffing_delete_template') ? bvmgr_staffing_delete_template($template_id, get_current_user_id()) : false;
 			$next = admin_url('admin.php?page=vms-staffing-templates');
 			$next = add_query_arg(array('deleted' => $ok ? 1 : 0), $next);
 			wp_safe_redirect($next);
 			exit;
 		}
 
-		$templates = function_exists('vms_staffing_get_templates') ? vms_staffing_get_templates() : array();
+		$templates = function_exists('bvmgr_staffing_get_templates') ? bvmgr_staffing_get_templates() : array();
 		$template_id = isset($_GET['template_id']) ? absint($_GET['template_id']) : 0;
-		$current = $template_id > 0 && function_exists('vms_staffing_get_template') ? vms_staffing_get_template($template_id) : null;
+		$current = $template_id > 0 && function_exists('bvmgr_staffing_get_template') ? bvmgr_staffing_get_template($template_id) : null;
 		$current_slots = is_array($current) && isset($current['slots']) && is_array($current['slots']) ? $current['slots'] : array();
 		if (empty($current_slots)) {
 			$current_slots = array(array());
 		}
-		$venues = vms_staffing_admin_get_venues();
+		$venues = bvmgr_staffing_admin_get_venues();
 
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__('Staffing Templates', 'backstage-venue-manager') . '</h1>';
@@ -772,7 +772,7 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 		echo '<hr>';
 		echo '<h2>' . esc_html($title) . '</h2>';
 		echo '<form method="post">';
-		wp_nonce_field('vms_staffing_template_save');
+		wp_nonce_field('bvmgr_staffing_template_save');
 		echo '<input type="hidden" name="vms_tpl_action" value="save">';
 		echo '<input type="hidden" name="vms_tpl_template_id" value="' . esc_attr((string) (is_array($current) ? absint($current['template_id']) : 0)) . '">';
 		echo '<table class="form-table" role="presentation">';
@@ -803,7 +803,7 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 		echo '<div id="vms-tpl-slots">';
 		$idx = 0;
 		foreach ($current_slots as $slot) {
-			vms_staffing_admin_render_template_row($idx, is_array($slot) ? $slot : array());
+			bvmgr_staffing_admin_render_template_row($idx, is_array($slot) ? $slot : array());
 			$idx++;
 		}
 		echo '</div>';
@@ -813,22 +813,22 @@ if (!function_exists('vms_staffing_admin_render_templates_page')) {
 
 		if (is_array($current) && !empty($current['template_id'])) {
 			echo '<form method="post" onsubmit="return confirm(\'' . esc_js(__('Delete this template?', 'backstage-venue-manager')) . '\');">';
-			wp_nonce_field('vms_staffing_template_delete');
+			wp_nonce_field('bvmgr_staffing_template_delete');
 			echo '<input type="hidden" name="vms_tpl_action" value="delete">';
 			echo '<input type="hidden" name="vms_tpl_template_id" value="' . esc_attr((string) absint($current['template_id'])) . '">';
 			echo '<p><button type="submit" class="button button-secondary">' . esc_html__('Delete Template', 'backstage-venue-manager') . '</button></p>';
 			echo '</form>';
 		}
 
-		$template_row_template = vms_staffing_admin_template_row_markup('__INDEX__', array());
+		$template_row_template = bvmgr_staffing_admin_template_row_markup('__INDEX__', array());
 		echo '<template id="vms-tpl-slot-row-template">' . $template_row_template . '</template>';
 
 		echo '</div>';
 	}
 }
 
-if (!function_exists('vms_staffing_admin_render_rollups_page')) {
-	function vms_staffing_admin_render_rollups_page(): void
+if (!function_exists('bvmgr_staffing_admin_render_rollups_page')) {
+	function bvmgr_staffing_admin_render_rollups_page(): void
 	{
 		if (!current_user_can('manage_options')) {
 			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
@@ -844,9 +844,9 @@ if (!function_exists('vms_staffing_admin_render_rollups_page')) {
 			'include_cancelled' => 0,
 		);
 
-		$request_method = vms_staffing_admin_request_method();
+		$request_method = bvmgr_staffing_admin_request_method();
 		if ('POST' === $request_method) {
-			check_admin_referer('vms_staffing_rollups_run');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_staffing_rollups_run', '_wpnonce'), '_wpnonce');
 			$post_data = wp_unslash($_POST);
 			$filters = array(
 				'start_date'        => isset($post_data['vms_staffing_start_date']) ? sanitize_text_field((string) $post_data['vms_staffing_start_date']) : '',
@@ -857,13 +857,13 @@ if (!function_exists('vms_staffing_admin_render_rollups_page')) {
 			);
 			$action = isset($post_data['vms_staffing_rollup_action']) ? sanitize_key((string) $post_data['vms_staffing_rollup_action']) : 'preview';
 			$preview = ($action !== 'run');
-			$result = function_exists('vms_staffing_rebuild_rollups')
-				? vms_staffing_rebuild_rollups($filters, $preview)
+			$result = function_exists('bvmgr_staffing_rebuild_rollups')
+				? bvmgr_staffing_rebuild_rollups($filters, $preview)
 				: array('preview' => 1, 'matched_count' => 0, 'error_count' => 1, 'errors' => array(array('error' => 'core_missing')));
 		}
 
 		global $wpdb;
-		$t_roll = function_exists('vms_staffing_table_name') ? vms_staffing_table_name('rollups') : '';
+		$t_roll = function_exists('bvmgr_staffing_table_name') ? bvmgr_staffing_table_name('rollups') : '';
 		$dirty_count = 0;
 		if ($t_roll !== '') {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup dirty-count reads the plugin-owned rollups repository with a %i/%d-prepared identifier and filter, and the admin page must show request-fresh state after rebuild and dirty-flag mutations.
@@ -872,14 +872,14 @@ if (!function_exists('vms_staffing_admin_render_rollups_page')) {
 			);
 		}
 
-		$venues = vms_staffing_admin_get_venues();
+		$venues = bvmgr_staffing_admin_get_venues();
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__('Staffing Rollups', 'backstage-venue-manager') . '</h1>';
 		echo '<p class="description">' . esc_html__('Rebuild staffing readiness cache by date/venue/status using Preview → Run.', 'backstage-venue-manager') . '</p>';
 		echo '<p><strong>' . esc_html__('Dirty rollups:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $dirty_count) . '</p>';
 
 		echo '<form method="post">';
-		wp_nonce_field('vms_staffing_rollups_run');
+		wp_nonce_field('bvmgr_staffing_rollups_run');
 		echo '<table class="form-table" role="presentation">';
 		echo '<tr><th><label for="vms_staffing_start_date">' . esc_html__('Start date', 'backstage-venue-manager') . '</label></th><td><input type="date" id="vms_staffing_start_date" name="vms_staffing_start_date" value="' . esc_attr((string) $filters['start_date']) . '"></td></tr>';
 		echo '<tr><th><label for="vms_staffing_end_date">' . esc_html__('End date', 'backstage-venue-manager') . '</label></th><td><input type="date" id="vms_staffing_end_date" name="vms_staffing_end_date" value="' . esc_attr((string) $filters['end_date']) . '"></td></tr>';

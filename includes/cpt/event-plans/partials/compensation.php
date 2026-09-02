@@ -288,8 +288,8 @@
                         </p>
                     </div>
                     <?php
-                    $vms_deposit_summary = function_exists('vms_comp_deposit_summary_part')
-                        ? (string) vms_comp_deposit_summary_part(array(
+                    $vms_deposit_summary = function_exists('bvmgr_comp_deposit_summary_part')
+                        ? (string) bvmgr_comp_deposit_summary_part(array(
                             'deposit_amount' => $deposit_amount,
                             'deposit_status' => $deposit_status,
                             'deposit_treatment' => $deposit_treatment,
@@ -347,8 +347,8 @@
                         </p>
                     </div>
                     <?php
-                    $vms_final_payment_summary = function_exists('vms_comp_final_payment_summary_part')
-                        ? (string) vms_comp_final_payment_summary_part(array(
+                    $vms_final_payment_summary = function_exists('bvmgr_comp_final_payment_summary_part')
+                        ? (string) bvmgr_comp_final_payment_summary_part(array(
                             'final_payment_timing' => $final_payment_timing,
                             'final_payment_days_after' => $final_payment_days_after,
                             'final_payment_date' => $final_payment_date,
@@ -406,7 +406,7 @@
             <strong><?php esc_html_e('Locked Pay Snapshot (Current payout source)', 'backstage-venue-manager'); ?></strong><br>
             <div class="vms-mt-6">
                 <?php
-                $summary = function_exists('vms_snapshot_summary_line') ? (string) vms_snapshot_summary_line($snapshot) : '';
+                $summary = function_exists('bvmgr_snapshot_summary_line') ? (string) bvmgr_snapshot_summary_line($snapshot) : '';
                 echo esc_html($summary !== '' ? $summary : __('Pay structure locked, but no values recorded.', 'backstage-venue-manager'));
                 ?>
             </div>

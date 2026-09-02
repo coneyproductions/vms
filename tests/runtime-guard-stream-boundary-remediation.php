@@ -243,7 +243,7 @@ try {
 		throw new RuntimeException('Could not extract function body for ' . $functionName . '().');
 	};
 
-	$readLimitedStream = $extractFunction($runtimeSource, 'vms_read_limited_stream');
+	$readLimitedStream = $extractFunction($runtimeSource, 'bvmgr_read_limited_stream');
 
 	vms_test_runtime_guard_assert_same(
 		1,
@@ -292,13 +292,13 @@ try {
 		'The bounded stream helper should retain its 8 KB capped chunk reads.'
 	);
 	vms_test_runtime_guard_assert(
-		strpos($ticketingSource, "function vms_ticketing_v2_read_json_request_payload(int \$max_bytes): array") !== false
-			&& strpos($ticketingSource, "vms_read_limited_stream('php://input', \$max_bytes)") !== false,
+		strpos($ticketingSource, "function bvmgr_ticketing_v2_read_json_request_payload(int \$max_bytes): array") !== false
+			&& strpos($ticketingSource, "bvmgr_read_limited_stream('php://input', \$max_bytes)") !== false,
 		'The JSON request reader should keep the hardcoded php://input caller.'
 	);
 	vms_test_runtime_guard_assert_same(
 		2,
-		substr_count($ticketingSource, 'vms_ticketing_v2_read_json_request_payload(65536)'),
+		substr_count($ticketingSource, 'bvmgr_ticketing_v2_read_json_request_payload(65536)'),
 		'The ticketing AJAX handlers should keep the 65,536-byte request-body cap.'
 	);
 
@@ -311,7 +311,7 @@ try {
 	$successCapture = vms_test_runtime_guard_capture(
 		static function (): array {
 			$uri = VMS_Test_Runtime_Guard_Stream_Wrapper::setScenario('success', 'hello world');
-			return vms_read_limited_stream($uri, 20);
+			return bvmgr_read_limited_stream($uri, 20);
 		}
 	);
 	vms_test_runtime_guard_assert_no_warnings($successCapture['warnings'], 'Successful bounded stream read');
@@ -334,7 +334,7 @@ try {
 	$oversizedCapture = vms_test_runtime_guard_capture(
 		static function (): array {
 			$uri = VMS_Test_Runtime_Guard_Stream_Wrapper::setScenario('oversized', 'abcdefgh');
-			return vms_read_limited_stream($uri, 5);
+			return bvmgr_read_limited_stream($uri, 5);
 		}
 	);
 	vms_test_runtime_guard_assert_no_warnings($oversizedCapture['warnings'], 'Oversized bounded stream read');
@@ -351,7 +351,7 @@ try {
 	$readFailCapture = vms_test_runtime_guard_capture(
 		static function (): array {
 			$uri = VMS_Test_Runtime_Guard_Stream_Wrapper::setScenario('read-fail', 'abcdef', false, true);
-			return vms_read_limited_stream($uri, 5);
+			return bvmgr_read_limited_stream($uri, 5);
 		}
 	);
 	vms_test_runtime_guard_assert_no_warnings($readFailCapture['warnings'], 'Read-failure bounded stream read');
@@ -374,7 +374,7 @@ try {
 	$openFailCapture = vms_test_runtime_guard_capture(
 		static function (): array {
 			$uri = VMS_Test_Runtime_Guard_Stream_Wrapper::setScenario('open-fail', '', true);
-			return vms_read_limited_stream($uri, 5);
+			return bvmgr_read_limited_stream($uri, 5);
 		}
 	);
 	vms_test_runtime_guard_assert_no_warnings($openFailCapture['warnings'], 'Open-failure bounded stream read');

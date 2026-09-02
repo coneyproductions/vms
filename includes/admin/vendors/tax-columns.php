@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
 require_once __DIR__ . '/../../core/registry/meta-keys.php';
 require_once __DIR__ . '/../../core/registry/constants.php';
 
-function vms_admin_vendor_tax_columns_add($cols)
+function bvmgr_admin_vendor_tax_columns_add($cols)
 {
 	$new = array();
 
@@ -36,15 +36,15 @@ function vms_admin_vendor_tax_columns_add($cols)
 
 	return $new;
 }
-add_filter('manage_edit-' . VMS_CPT_VENDOR . '_columns', 'vms_admin_vendor_tax_columns_add', 20);
+add_filter('manage_edit-' . BVMGR_CPT_VENDOR . '_columns', 'bvmgr_admin_vendor_tax_columns_add', 20);
 
-function vms_admin_vendor_tax_columns_render($col, $post_id)
+function bvmgr_admin_vendor_tax_columns_render($col, $post_id)
 {
-	if (get_post_type($post_id) !== VMS_CPT_VENDOR) return;
+	if (get_post_type($post_id) !== BVMGR_CPT_VENDOR) return;
 
-	$k_done     = vms_meta_key('vendor', 'tax_profile_completed_at');
-	$k_provider = vms_meta_key('vendor', 'w9_provider');
-	$k_upload   = vms_meta_key('vendor', 'w9_upload_id');
+	$k_done     = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+	$k_provider = bvmgr_meta_key('vendor', 'w9_provider');
+	$k_upload   = bvmgr_meta_key('vendor', 'w9_upload_id');
 
 	if ($col === 'vms_tax_provider') {
 		$provider = (string) get_post_meta($post_id, $k_provider, true);
@@ -83,4 +83,4 @@ function vms_admin_vendor_tax_columns_render($col, $post_id)
 		return;
 	}
 }
-add_action('manage_' . VMS_CPT_VENDOR . '_posts_custom_column', 'vms_admin_vendor_tax_columns_render', 10, 2);
+add_action('manage_' . BVMGR_CPT_VENDOR . '_posts_custom_column', 'bvmgr_admin_vendor_tax_columns_render', 10, 2);

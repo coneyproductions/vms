@@ -179,17 +179,17 @@ function get_post_type($post = null): string
 	return (string) ($GLOBALS['vms_test_context']['post_types'][$postId] ?? '');
 }
 
-function vms_tec_is_cancelled_event(int $eventId): bool
+function bvmgr_tec_is_cancelled_event(int $eventId): bool
 {
 	return in_array($eventId, (array) ($GLOBALS['vms_test_context']['cancelled_event_ids'] ?? array()), true);
 }
 
-function vms_ticketing_v2_find_plan_id_by_tec_event_id(int $eventId): int
+function bvmgr_ticketing_v2_find_plan_id_by_tec_event_id(int $eventId): int
 {
 	return (int) ($GLOBALS['vms_test_context']['plan_ids'][$eventId] ?? 0);
 }
 
-function vms_ticketing_v2_disabled_ticket_products_for_plan(int $planId): array
+function bvmgr_ticketing_v2_disabled_ticket_products_for_plan(int $planId): array
 {
 	$GLOBALS['vms_test_context']['disabled_helper_calls'][] = $planId;
 	return (array) ($GLOBALS['vms_test_context']['disabled_by_plan'][$planId] ?? array());
@@ -205,7 +205,7 @@ try {
 	$cancelledRegistration = vms_test_find_filter_registration(
 		$ticketingRulesSource,
 		'tribe_tickets_get_tickets_query_args',
-		'vms_tec_suppress_tickets_for_cancelled_events'
+		'bvmgr_tec_suppress_tickets_for_cancelled_events'
 	);
 	vms_test_assert_true(is_array($cancelledRegistration), 'Cancelled-event suppression should remain registered on the native ticket query filter.');
 	vms_test_assert_same(20, $cancelledRegistration['priority'], 'Cancelled-event suppression should remain at priority 20.');
@@ -214,7 +214,7 @@ try {
 	$disabledRegistration = vms_test_find_filter_registration(
 		$ticketingRulesSource,
 		'tribe_tickets_get_tickets_query_args',
-		'vms_ticketing_v2_filter_disabled_ticket_query_args'
+		'bvmgr_ticketing_v2_filter_disabled_ticket_query_args'
 	);
 	vms_test_assert_true(is_array($disabledRegistration), 'Disabled-ticket suppression should be registered on the native ticket query filter.');
 	vms_test_assert_same(30, $disabledRegistration['priority'], 'Disabled-ticket suppression should run after cancelled-event suppression.');
@@ -224,18 +224,18 @@ try {
 	vms_test_assert_not_contains('function vms_ticketing_v2_strip_disabled_ticket_rows_from_html(', $ticketingRulesSource, 'Disabled rows should no longer be removed through server-mount HTML stripping.');
 	vms_test_assert_contains("'disabledTicketProductIds' => array_values(array_unique(array_filter(array_map('absint', \$disabled_ticket_product_ids))))", $ticketingRulesSource, 'Frontend disabled-ticket ID localization should remain present.');
 	vms_test_assert_contains("'disabledTicketMap' => \$disabled_ticket_map", $ticketingRulesSource, 'Frontend disabled-ticket map localization should remain present.');
-	vms_test_assert_contains('function vms_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array', $ticketingRulesSource, 'The existing disabled-ticket helper should remain present.');
+	vms_test_assert_contains('function bvmgr_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array', $ticketingRulesSource, 'The existing disabled-ticket helper should remain present.');
 	vms_test_assert_contains('phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in', $ticketingRulesSource, 'Disabled-ticket suppression should keep any bounded post__not_in exception limited to the single packaged Plugin Check rule.');
 	vms_test_assert_contains('hideDisabledTicketRows(state)', $frontBundleSource, 'Frontend disabled-row hiding should remain available as a fail-closed backup.');
 	vms_test_assert_contains('disabledTicketMap', $frontBundleSource, 'Frontend disabled-ticket mapping should remain available as a fail-closed backup.');
 
-	eval(vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_ticket_query_event_meta_keys'));
-	eval(vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_event_id_from_ticket_query_args'));
-	eval(vms_test_extract_function($ticketingRulesSource, 'vms_ticketing_v2_filter_disabled_ticket_query_args'));
+	eval(vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_ticket_query_event_meta_keys'));
+	eval(vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_event_id_from_ticket_query_args'));
+	eval(vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_filter_disabled_ticket_query_args'));
 
 	vms_test_assert_same(
 		array('_tribe_rsvp_for_event', '_tribe_tpp_for_event', '_tec_tickets_commerce_event'),
-		vms_ticketing_v2_ticket_query_event_meta_keys(),
+		bvmgr_ticketing_v2_ticket_query_event_meta_keys(),
 		'Ticket-query event meta-key resolution should retain the installed Event Tickets relation keys.'
 	);
 
@@ -243,7 +243,7 @@ try {
 	$args = array('provider' => 'all', 'posts_per_page' => 25);
 	[$result, $output, $beforeLevel, $afterLevel] = vms_test_call_with_capture(
 		static function () use ($args): array {
-			return vms_ticketing_v2_filter_disabled_ticket_query_args($args);
+			return bvmgr_ticketing_v2_filter_disabled_ticket_query_args($args);
 		}
 	);
 	vms_test_assert_same($args, $result, 'Invalid ticket-query event resolution should leave args unchanged.');
@@ -256,7 +256,7 @@ try {
 	$args = array('event' => 201, 'provider' => 'all');
 	[$result] = vms_test_call_with_capture(
 		static function () use ($args): array {
-			return vms_ticketing_v2_filter_disabled_ticket_query_args($args);
+			return bvmgr_ticketing_v2_filter_disabled_ticket_query_args($args);
 		}
 	);
 	vms_test_assert_same($args, $result, 'Non-event targets should leave ticket query args unchanged.');
@@ -267,7 +267,7 @@ try {
 	$args = array('event' => 202, 'provider' => 'all');
 	[$result] = vms_test_call_with_capture(
 		static function () use ($args): array {
-			return vms_ticketing_v2_filter_disabled_ticket_query_args($args);
+			return bvmgr_ticketing_v2_filter_disabled_ticket_query_args($args);
 		}
 	);
 	vms_test_assert_same($args, $result, 'Cancelled events should leave disabled-ticket suppression to the existing cancellation filter.');
@@ -278,7 +278,7 @@ try {
 	$args = array('event' => 203, 'provider' => 'all');
 	[$result] = vms_test_call_with_capture(
 		static function () use ($args): array {
-			return vms_ticketing_v2_filter_disabled_ticket_query_args($args);
+			return bvmgr_ticketing_v2_filter_disabled_ticket_query_args($args);
 		}
 	);
 	vms_test_assert_same($args, $result, 'Events without a VMS plan should leave ticket query args unchanged.');
@@ -291,7 +291,7 @@ try {
 	$args = array('event' => 204, 'provider' => 'all', 'posts_per_page' => 10);
 	[$result] = vms_test_call_with_capture(
 		static function () use ($args): array {
-			return vms_ticketing_v2_filter_disabled_ticket_query_args($args);
+			return bvmgr_ticketing_v2_filter_disabled_ticket_query_args($args);
 		}
 	);
 	vms_test_assert_same($args, $result, 'Events with no disabled ticket IDs should leave query args unchanged.');
@@ -309,7 +309,7 @@ try {
 	);
 	[$result] = vms_test_call_with_capture(
 		static function () use ($args): array {
-			return vms_ticketing_v2_filter_disabled_ticket_query_args($args);
+			return bvmgr_ticketing_v2_filter_disabled_ticket_query_args($args);
 		}
 	);
 	vms_test_assert_same(array(3, 9, 10, 11), $result['post__not_in'], 'Disabled-ticket suppression should merge, normalize, and deduplicate native exclusion IDs.');
@@ -333,7 +333,7 @@ try {
 	);
 	[$result] = vms_test_call_with_capture(
 		static function () use ($args): array {
-			return vms_ticketing_v2_filter_disabled_ticket_query_args($args);
+			return bvmgr_ticketing_v2_filter_disabled_ticket_query_args($args);
 		}
 	);
 	vms_test_assert_same(array(21, 22), $result['post__not_in'], 'Disabled-ticket suppression should resolve the authoritative event ID from the native query meta contract.');
@@ -349,7 +349,7 @@ try {
 	$args = array('provider' => 'all');
 	[$result] = vms_test_call_with_capture(
 		static function () use ($args): array {
-			return vms_ticketing_v2_filter_disabled_ticket_query_args($args);
+			return bvmgr_ticketing_v2_filter_disabled_ticket_query_args($args);
 		}
 	);
 	vms_test_assert_same(array(31), $result['post__not_in'], 'Disabled-ticket suppression should fall back to the queried event on singular event requests when native args omit the event ID.');

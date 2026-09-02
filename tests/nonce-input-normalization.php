@@ -102,24 +102,24 @@ function current_user_can(string $capability): bool
 	return !empty($GLOBALS['vms_test_caps'][$capability]);
 }
 
-function vms_admission_manage_capability(): string
+function bvmgr_admission_manage_capability(): string
 {
 	return 'vms_admission_manage';
 }
 
-function vms_admission_door_capability(): string
+function bvmgr_admission_door_capability(): string
 {
 	return 'vms_door_checkin';
 }
 
-function vms_admission_current_user_can_manage(): bool
+function bvmgr_admission_current_user_can_manage(): bool
 {
-	return current_user_can(vms_admission_manage_capability());
+	return current_user_can(bvmgr_admission_manage_capability());
 }
 
-function vms_admission_current_user_can_checkin(): bool
+function bvmgr_admission_current_user_can_checkin(): bool
 {
-	return current_user_can(vms_admission_door_capability()) || vms_admission_current_user_can_manage();
+	return current_user_can(bvmgr_admission_door_capability()) || bvmgr_admission_current_user_can_manage();
 }
 
 $assert = static function (bool $condition, string $message): void {
@@ -133,46 +133,46 @@ $assert = static function (bool $condition, string $message): void {
 require dirname(__DIR__) . '/includes/modules/admissions/rest.php';
 require dirname(__DIR__) . '/includes/core/tours/class-vms-tours.php';
 
-$GLOBALS['vms_test_caps'] = array(vms_admission_door_capability() => true);
+$GLOBALS['vms_test_caps'] = array(bvmgr_admission_door_capability() => true);
 
 $goodHeaderRequest = new WP_REST_Request(array('X-WP-Nonce' => ' good nonce '));
-$assert(vms_admission_rest_can_checkin_request($goodHeaderRequest) === true, 'Admissions REST should accept sanitized valid header nonces.');
+$assert(bvmgr_admission_rest_can_checkin_request($goodHeaderRequest) === true, 'Admissions REST should accept sanitized valid header nonces.');
 
 $missingNonceRequest = new WP_REST_Request();
-$assert(vms_admission_rest_can_checkin_request($missingNonceRequest) === true, 'Admissions REST should preserve missing-nonce behavior when the caller has capability.');
+$assert(bvmgr_admission_rest_can_checkin_request($missingNonceRequest) === true, 'Admissions REST should preserve missing-nonce behavior when the caller has capability.');
 
 $invalidHeaderRequest = new WP_REST_Request(array('X-WP-Nonce' => 'expired'));
-$invalidHeaderResult = vms_admission_rest_can_checkin_request($invalidHeaderRequest);
+$invalidHeaderResult = bvmgr_admission_rest_can_checkin_request($invalidHeaderRequest);
 $assert($invalidHeaderResult instanceof WP_Error, 'Admissions REST should reject invalid header nonces.');
 $assert($invalidHeaderResult->get_error_code() === 'vms_admission_bad_nonce', 'Admissions REST invalid nonce code should remain stable.');
 $assert($invalidHeaderResult->get_error_message() === 'Your Admissions session expired. Refresh the page and try again.', 'Admissions REST invalid nonce message should remain stable.');
 
 $arrayParamRequest = new WP_REST_Request(array(), array('_wpnonce' => array('expired')));
-$assert(vms_admission_rest_request_nonce($arrayParamRequest) === '', 'Admissions REST should drop array-shaped _wpnonce params.');
-$assert(vms_admission_rest_can_checkin_request($arrayParamRequest) === true, 'Admissions REST should treat array-shaped _wpnonce params like missing nonces, preserving existing flow.');
+$assert(bvmgr_admission_rest_request_nonce($arrayParamRequest) === '', 'Admissions REST should drop array-shaped _wpnonce params.');
+$assert(bvmgr_admission_rest_can_checkin_request($arrayParamRequest) === true, 'Admissions REST should treat array-shaped _wpnonce params like missing nonces, preserving existing flow.');
 
 $objectParamRequest = new WP_REST_Request(array(), array('_wpnonce' => (object) array('bad' => 'nonce')));
-$assert(vms_admission_rest_request_nonce($objectParamRequest) === '', 'Admissions REST should drop non-scalar _wpnonce params.');
+$assert(bvmgr_admission_rest_request_nonce($objectParamRequest) === '', 'Admissions REST should drop non-scalar _wpnonce params.');
 
 $GLOBALS['vms_test_caps'] = array();
-$forbiddenResult = vms_admission_rest_can_checkin_request($goodHeaderRequest);
+$forbiddenResult = bvmgr_admission_rest_can_checkin_request($goodHeaderRequest);
 $assert($forbiddenResult instanceof WP_Error, 'Admissions REST should preserve capability gating.');
 $assert($forbiddenResult->get_error_code() === 'vms_admission_forbidden', 'Admissions REST forbidden code should remain stable.');
 
 $tourHeaderRequest = new WP_REST_Request(array('X-WP-Nonce' => ' good nonce '));
-$assert(VMS_Tours::verify_rest_nonce($tourHeaderRequest) === true, 'Tours REST verification should accept sanitized header nonces.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourHeaderRequest) === true, 'Tours REST verification should accept sanitized header nonces.');
 
 $tourParamRequest = new WP_REST_Request(array(), array('_wpnonce' => 'good nonce'));
-$assert(VMS_Tours::verify_rest_nonce($tourParamRequest) === true, 'Tours REST verification should accept valid _wpnonce params.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourParamRequest) === true, 'Tours REST verification should accept valid _wpnonce params.');
 
 $tourMissingRequest = new WP_REST_Request();
-$assert(VMS_Tours::verify_rest_nonce($tourMissingRequest) === false, 'Tours REST verification should continue failing closed for missing nonces.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourMissingRequest) === false, 'Tours REST verification should continue failing closed for missing nonces.');
 
 $tourArrayRequest = new WP_REST_Request(array(), array('_wpnonce' => array('bad')));
-$assert(VMS_Tours::verify_rest_nonce($tourArrayRequest) === false, 'Tours REST verification should reject array-shaped _wpnonce params.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourArrayRequest) === false, 'Tours REST verification should reject array-shaped _wpnonce params.');
 
 $tourObjectRequest = new WP_REST_Request(array(), array('_wpnonce' => (object) array('bad' => 'nonce')));
-$assert(VMS_Tours::verify_rest_nonce($tourObjectRequest) === false, 'Tours REST verification should reject non-scalar _wpnonce params.');
+$assert(BVMGR_Tours::verify_rest_nonce($tourObjectRequest) === false, 'Tours REST verification should reject non-scalar _wpnonce params.');
 
 $extract_request_nonce = static function (array $request, string $key): string {
 	return (isset($request[$key]) && !is_array($request[$key]))

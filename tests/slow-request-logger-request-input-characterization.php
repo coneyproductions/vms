@@ -116,7 +116,7 @@ function wp_unslash($value)
 	return $value;
 }
 
-function vms_request_read_scalar(array $source, string $key): string
+function bvmgr_request_read_scalar(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 		return '';
@@ -228,7 +228,7 @@ function vms_test_slow_logger_reset_runtime(): void
 {
 	$_SERVER = array();
 	$_REQUEST = array();
-	unset($GLOBALS['vms_slow_request_logger']);
+	unset($GLOBALS['bvmgr_slow_request_logger']);
 	if (file_exists(VMS_SLOW_REQUEST_LOGGER_PATH)) {
 		unlink(VMS_SLOW_REQUEST_LOGGER_PATH);
 	}
@@ -244,12 +244,12 @@ function vms_test_slow_logger_bootstrap_state(array $match): array
 	return array(
 		'matched' => true,
 		'started_at' => isset($_SERVER['REQUEST_TIME_FLOAT']) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true),
-		'method' => strtoupper(vms_request_method()),
+		'method' => strtoupper(bvmgr_request_method()),
 		'normalized_uri' => (string) ($match['normalized_uri'] ?? '/'),
 		'scope' => (string) ($match['scope'] ?? ''),
 		'reason' => (string) ($match['reason'] ?? ''),
-		'user_agent_class' => vms_slow_request_logger_user_agent_class(),
-		'ip_hash' => vms_slow_request_logger_source_ip_hash(),
+		'user_agent_class' => bvmgr_slow_request_logger_user_agent_class(),
+		'ip_hash' => bvmgr_slow_request_logger_source_ip_hash(),
 		'response_status' => 0,
 	);
 }
@@ -262,7 +262,7 @@ function vms_test_slow_logger_match(array $server, array $request = array()): ar
 
 	return vms_test_slow_logger_capture(
 		static function (): array {
-			return vms_slow_request_logger_match_request();
+			return bvmgr_slow_request_logger_match_request();
 		}
 	);
 }
@@ -275,7 +275,7 @@ function vms_test_slow_logger_parse(array $server, array $request = array()): ar
 
 	return vms_test_slow_logger_capture(
 		static function (): array {
-			return vms_slow_request_logger_parse_request_uri();
+			return bvmgr_slow_request_logger_parse_request_uri();
 		}
 	);
 }
@@ -288,19 +288,19 @@ function vms_test_slow_logger_write_payload(array $server, array $request = arra
 
 	$matchResult = vms_test_slow_logger_capture(
 		static function (): array {
-			return vms_slow_request_logger_match_request();
+			return bvmgr_slow_request_logger_match_request();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($matchResult['warnings'], 'Match request');
 	$match = $matchResult['value'];
 	vms_test_slow_logger_assert(!empty($match['matched']), 'Payload exercise should match the logger scope.');
 
-	$GLOBALS['vms_slow_request_logger'] = vms_test_slow_logger_bootstrap_state($match);
-	$GLOBALS['vms_slow_request_logger']['response_status'] = $responseStatus;
+	$GLOBALS['bvmgr_slow_request_logger'] = vms_test_slow_logger_bootstrap_state($match);
+	$GLOBALS['bvmgr_slow_request_logger']['response_status'] = $responseStatus;
 
 	$shutdownResult = vms_test_slow_logger_capture(
 		static function (): void {
-			vms_slow_request_logger_shutdown();
+			bvmgr_slow_request_logger_shutdown();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($shutdownResult['warnings'], 'Shutdown payload write');
@@ -323,21 +323,21 @@ $loggerPath = $pluginRoot . '/includes/core/slow-request-logger.php';
 $runtimeGuardsPath = $pluginRoot . '/includes/runtime-guards.php';
 $loggerSource = (string) file_get_contents($loggerPath);
 
-foreach (array('vms_request_server_value', 'vms_request_method', 'vms_request_current_uri', 'vms_request_user_agent') as $helperName) {
+foreach (array('bvmgr_request_server_value', 'bvmgr_request_method', 'bvmgr_request_current_uri', 'bvmgr_request_user_agent') as $helperName) {
 	eval(vms_test_slow_logger_extract_guarded_function($runtimeGuardsPath, $helperName));
 }
 
 require $loggerPath;
 
 try {
-	vms_test_slow_logger_assert_contains("vms_request_server_value('REQUEST_URI')", $loggerSource, 'Logger should source REQUEST_URI through the shared server-value helper.');
-	vms_test_slow_logger_assert_contains('vms_request_server_value($key)', $loggerSource, 'Logger should source proxy headers through the shared server-value helper.');
-	vms_test_slow_logger_assert_contains("substr(vms_request_server_value('HTTP_USER_AGENT'), 0, 255)", $loggerSource, 'Logger should source the user agent through the shared server-value helper plus its local cap.');
-	vms_test_slow_logger_assert_contains('strtoupper(vms_request_method())', $loggerSource, 'Logger should source the request method through the shared method helper.');
+	vms_test_slow_logger_assert_contains("bvmgr_request_server_value('REQUEST_URI')", $loggerSource, 'Logger should source REQUEST_URI through the shared server-value helper.');
+	vms_test_slow_logger_assert_contains('bvmgr_request_server_value($key)', $loggerSource, 'Logger should source proxy headers through the shared server-value helper.');
+	vms_test_slow_logger_assert_contains("substr(bvmgr_request_server_value('HTTP_USER_AGENT'), 0, 255)", $loggerSource, 'Logger should source the user agent through the shared server-value helper plus its local cap.');
+	vms_test_slow_logger_assert_contains('strtoupper(bvmgr_request_method())', $loggerSource, 'Logger should source the request method through the shared method helper.');
 	vms_test_slow_logger_assert_contains("isset(\$_SERVER['REQUEST_TIME_FLOAT']) ? (float) \$_SERVER['REQUEST_TIME_FLOAT'] : microtime(true)", $loggerSource, 'Logger should preserve the direct REQUEST_TIME_FLOAT timing read.');
-	vms_test_slow_logger_assert_not_contains('vms_request_current_uri(', $loggerSource, 'Logger should not adopt vms_request_current_uri().');
-	vms_test_slow_logger_assert_not_contains('vms_request_remote_addr(', $loggerSource, 'Logger should not adopt vms_request_remote_addr().');
-	vms_test_slow_logger_assert_not_contains('vms_request_user_agent(', $loggerSource, 'Logger should not adopt vms_request_user_agent().');
+	vms_test_slow_logger_assert_not_contains('bvmgr_request_current_uri(', $loggerSource, 'Logger should not adopt bvmgr_request_current_uri().');
+	vms_test_slow_logger_assert_not_contains('bvmgr_request_remote_addr(', $loggerSource, 'Logger should not adopt bvmgr_request_remote_addr().');
+	vms_test_slow_logger_assert_not_contains('bvmgr_request_user_agent(', $loggerSource, 'Logger should not adopt bvmgr_request_user_agent().');
 
 	preg_match_all('/\$_SERVER\[[^\]]+\]/', $loggerSource, $serverMatches);
 	$uniqueServerMatches = array_values(array_unique($serverMatches[0]));
@@ -364,10 +364,10 @@ try {
 
 	vms_test_slow_logger_reset_runtime();
 	$_SERVER['REQUEST_URI'] = 'wp-admin/admin-post.php?action=Foo_Bar';
-	$missingSlashHelper = vms_request_current_uri('/');
+	$missingSlashHelper = bvmgr_request_current_uri('/');
 	$missingSlashMatch = vms_test_slow_logger_capture(
 		static function (): array {
-			return vms_slow_request_logger_match_request();
+			return bvmgr_slow_request_logger_match_request();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($missingSlashMatch['warnings'], 'Missing-leading-slash match');
@@ -377,10 +377,10 @@ try {
 	vms_test_slow_logger_reset_runtime();
 	$_SERVER['REQUEST_URI'] = "/wp-admin/admin-post.php?action=Foo\x00_Bar";
 	$_REQUEST['action'] = "Foo\x00_Bar";
-	$controlByteHelper = vms_request_current_uri('/');
+	$controlByteHelper = bvmgr_request_current_uri('/');
 	$controlByteMatch = vms_test_slow_logger_capture(
 		static function (): array {
-			return vms_slow_request_logger_match_request();
+			return bvmgr_slow_request_logger_match_request();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($controlByteMatch['warnings'], 'Control-byte match');
@@ -391,10 +391,10 @@ try {
 	$_SERVER['REQUEST_URI'] = '/' . str_repeat('a', 2055) . '?key=secret';
 	$longParse = vms_test_slow_logger_capture(
 		static function (): array {
-			return vms_slow_request_logger_parse_request_uri();
+			return bvmgr_slow_request_logger_parse_request_uri();
 		}
 	);
-	$longHelper = vms_request_current_uri('/');
+	$longHelper = bvmgr_request_current_uri('/');
 	vms_test_slow_logger_assert_no_warnings($longParse['warnings'], 'Long URI parse');
 	vms_test_slow_logger_assert_same(2056, strlen((string) $longParse['value']['path']), 'Logger should preserve over-2048 request paths for its local parser.');
 	vms_test_slow_logger_assert_same(2048, strlen($longHelper), 'The shared current-URI helper would cap the URI at 2048 characters.');
@@ -435,7 +435,7 @@ try {
 	$remoteOnlyIp = vms_test_slow_logger_capture(
 		static function (): string {
 			$_SERVER = array('REMOTE_ADDR' => '203.0.113.7');
-			return vms_slow_request_logger_source_ip_hash();
+			return bvmgr_slow_request_logger_source_ip_hash();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($remoteOnlyIp['warnings'], 'Remote-only IP hash');
@@ -447,7 +447,7 @@ try {
 				'HTTP_X_FORWARDED_FOR' => ' 2001:DB8::A , 203.0.113.7',
 				'REMOTE_ADDR' => '203.0.113.7',
 			);
-			return vms_slow_request_logger_source_ip_hash();
+			return bvmgr_slow_request_logger_source_ip_hash();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($xffIp['warnings'], 'XFF IP hash');
@@ -460,7 +460,7 @@ try {
 				'HTTP_X_FORWARDED_FOR' => '198.51.100.3, 203.0.113.7',
 				'REMOTE_ADDR' => '203.0.113.7',
 			);
-			return vms_slow_request_logger_source_ip_hash();
+			return bvmgr_slow_request_logger_source_ip_hash();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($cfIp['warnings'], 'CF-precedence IP hash');
@@ -472,7 +472,7 @@ try {
 				'HTTP_CF_CONNECTING_IP' => array('198.51.100.10'),
 				'REMOTE_ADDR' => '203.0.113.7',
 			);
-			return vms_slow_request_logger_source_ip_hash();
+			return bvmgr_slow_request_logger_source_ip_hash();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($malformedCfIp['warnings'], 'Malformed CF IP hash');
@@ -481,7 +481,7 @@ try {
 	$missingIp = vms_test_slow_logger_capture(
 		static function (): string {
 			$_SERVER = array();
-			return vms_slow_request_logger_source_ip_hash();
+			return bvmgr_slow_request_logger_source_ip_hash();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($missingIp['warnings'], 'Missing IP hash');
@@ -490,7 +490,7 @@ try {
 	$ordinaryUa = vms_test_slow_logger_capture(
 		static function (): string {
 			$_SERVER = array('HTTP_USER_AGENT' => 'Googlebot/2.1');
-			return vms_slow_request_logger_user_agent_class();
+			return bvmgr_slow_request_logger_user_agent_class();
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($ordinaryUa['warnings'], 'Ordinary UA classification');
@@ -499,7 +499,7 @@ try {
 	$longUa = vms_test_slow_logger_capture(
 		static function (): int {
 			$_SERVER = array('HTTP_USER_AGENT' => str_repeat('A', 300));
-			return strlen(vms_slow_request_logger_user_agent());
+			return strlen(bvmgr_slow_request_logger_user_agent());
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($longUa['warnings'], 'Long UA cap');
@@ -509,8 +509,8 @@ try {
 		static function (): array {
 			$_SERVER = array('HTTP_USER_AGENT' => array('Bot/1.0'));
 			return array(
-				'raw' => vms_slow_request_logger_user_agent(),
-				'class' => vms_slow_request_logger_user_agent_class(),
+				'raw' => bvmgr_slow_request_logger_user_agent(),
+				'class' => bvmgr_slow_request_logger_user_agent_class(),
 			);
 		}
 	);
@@ -523,19 +523,19 @@ try {
 	$whitespaceUa = vms_test_slow_logger_capture(
 		static function (): array {
 			return array(
-				'logger' => vms_slow_request_logger_user_agent(),
-				'helper_server' => vms_request_server_value('HTTP_USER_AGENT'),
-				'helper_user_agent' => vms_request_user_agent(),
+				'logger' => bvmgr_slow_request_logger_user_agent(),
+				'helper_server' => bvmgr_request_server_value('HTTP_USER_AGENT'),
+				'helper_user_agent' => bvmgr_request_user_agent(),
 			);
 		}
 	);
 	vms_test_slow_logger_assert_no_warnings($whitespaceUa['warnings'], 'Whitespace UA handling');
 	vms_test_slow_logger_assert_same("Tablet\tBrowser/1.0", $whitespaceUa['value']['logger'], 'Logger UA capture should preserve helper-backed trimming without sanitize_text_field normalization.');
-	vms_test_slow_logger_assert_same($whitespaceUa['value']['helper_server'], $whitespaceUa['value']['logger'], 'Logger UA capture should align with vms_request_server_value().');
+	vms_test_slow_logger_assert_same($whitespaceUa['value']['helper_server'], $whitespaceUa['value']['logger'], 'Logger UA capture should align with bvmgr_request_server_value().');
 	vms_test_slow_logger_assert_same('Tablet Browser/1.0', $whitespaceUa['value']['helper_user_agent'], 'The shared user-agent helper would additionally sanitize control whitespace.');
 	vms_test_slow_logger_assert(
 		$whitespaceUa['value']['logger'] !== $whitespaceUa['value']['helper_user_agent'],
-		'Logger UA capture should remain distinct from vms_request_user_agent() semantics.'
+		'Logger UA capture should remain distinct from bvmgr_request_user_agent() semantics.'
 	);
 
 	$missingMethod = vms_test_slow_logger_capture(

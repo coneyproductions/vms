@@ -7,21 +7,21 @@ if (!defined('ABSPATH')) exit;
  * - Flags affected Event Plans as "Needs attention"
  * - Forces Published/Ready Event Plans back to Draft for safety
  */
-add_action('admin_post_vms_integrity_scan', 'vms_handle_integrity_scan');
+add_action('admin_post_vms_integrity_scan', 'bvmgr_handle_integrity_scan');
 
-add_action('admin_post_vms_set_default_venue', 'vms_handle_set_default_venue');
-add_action('admin_post_vms_sync_entitlement_images', 'vms_handle_sync_entitlement_images');
+add_action('admin_post_vms_set_default_venue', 'bvmgr_handle_set_default_venue');
+add_action('admin_post_vms_sync_entitlement_images', 'bvmgr_handle_sync_entitlement_images');
 // Ticketing inventory tools (Preview → Commit)
-add_action('admin_post_vms_ticketing_stock_preview', 'vms_handle_ticketing_stock_preview');
-add_action('admin_post_vms_ticketing_stock_commit', 'vms_handle_ticketing_stock_commit');
-add_action('admin_post_vms_ticketing_stock_csv', 'vms_handle_ticketing_stock_csv');
-add_action('admin_post_vms_ticketing_stock_clear_preview', 'vms_handle_ticketing_stock_clear_preview');
+add_action('admin_post_vms_ticketing_stock_preview', 'bvmgr_handle_ticketing_stock_preview');
+add_action('admin_post_vms_ticketing_stock_commit', 'bvmgr_handle_ticketing_stock_commit');
+add_action('admin_post_vms_ticketing_stock_csv', 'bvmgr_handle_ticketing_stock_csv');
+add_action('admin_post_vms_ticketing_stock_clear_preview', 'bvmgr_handle_ticketing_stock_clear_preview');
 
 // Back-compat: older Settings button action
-add_action('admin_post_vms_reconcile_ticketing_stock', 'vms_handle_reconcile_ticketing_stock');
+add_action('admin_post_vms_reconcile_ticketing_stock', 'bvmgr_handle_reconcile_ticketing_stock');
 
-if (!function_exists('vms_settings_page_help_button_allowed_html')) {
-	function vms_settings_page_help_button_allowed_html(): array
+if (!function_exists('bvmgr_settings_page_help_button_allowed_html')) {
+	function bvmgr_settings_page_help_button_allowed_html(): array
 	{
 		return array(
 			'button' => array(
@@ -35,8 +35,8 @@ if (!function_exists('vms_settings_page_help_button_allowed_html')) {
 	}
 }
 
-if (!function_exists('vms_settings_page_dropdown_allowed_html')) {
-	function vms_settings_page_dropdown_allowed_html(): array
+if (!function_exists('bvmgr_settings_page_dropdown_allowed_html')) {
+	function bvmgr_settings_page_dropdown_allowed_html(): array
 	{
 		return array(
 			'select' => array(
@@ -52,7 +52,7 @@ if (!function_exists('vms_settings_page_dropdown_allowed_html')) {
 	}
 }
 
-function vms_handle_set_default_venue(): void
+function bvmgr_handle_set_default_venue(): void
 {
   if (!current_user_can('manage_options')) {
     wp_die('Insufficient permissions.');
@@ -64,7 +64,7 @@ function vms_handle_set_default_venue(): void
   }
 
   $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-  if (!wp_verify_nonce($nonce, 'vms_set_default_venue_' . $venue_id)) {
+  if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_set_default_venue_' . $venue_id))) {
     wp_die('Invalid nonce.');
   }
 
@@ -87,13 +87,13 @@ function vms_handle_set_default_venue(): void
   wp_safe_redirect($redirect);
   exit;
 }
-function vms_handle_integrity_scan(): void
+function bvmgr_handle_integrity_scan(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Insufficient permissions.');
 	}
 
-	check_admin_referer('vms_integrity_scan');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_integrity_scan', '_wpnonce'), '_wpnonce');
 
 	$mode  = isset($_POST['mode']) ? sanitize_key((string) $_POST['mode']) : 'all';
 	$limit = isset($_POST['limit']) ? (int) $_POST['limit'] : 500;
@@ -104,13 +104,13 @@ function vms_handle_integrity_scan(): void
 
 	$results = array();
 	if ($mode === 'vendors') {
-		$results = vms_integrity_scan_event_plans_for_missing_vendors($limit);
+		$results = bvmgr_integrity_scan_event_plans_for_missing_vendors($limit);
 	} elseif ($mode === 'venues') {
-		$results = vms_integrity_scan_event_plans_for_orphaned_venues($limit);
+		$results = bvmgr_integrity_scan_event_plans_for_orphaned_venues($limit);
 	} elseif ($mode === 'events') {
-		$results = vms_integrity_scan_event_plans_for_orphaned_calendar_events($limit);
+		$results = bvmgr_integrity_scan_event_plans_for_orphaned_calendar_events($limit);
 	} else {
-		$results = vms_integrity_scan_event_plans_all($limit);
+		$results = bvmgr_integrity_scan_event_plans_all($limit);
 		$mode = 'all';
 	}
 
@@ -128,22 +128,22 @@ function vms_handle_integrity_scan(): void
 	exit;
 }
 
-function vms_handle_sync_entitlement_images(): void
+function bvmgr_handle_sync_entitlement_images(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Insufficient permissions.');
 	}
 
-	check_admin_referer('vms_sync_entitlement_images');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_sync_entitlement_images', '_wpnonce'), '_wpnonce');
 
-	$ent_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('ticketing_entitlement_id')
+	$ent_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id')
 		: '_vms_ticketing_entitlement_id';
-	$role_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('product_role')
+	$role_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('product_role')
 		: '_vms_product_role';
-	$plan_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('event_plan_id')
+	$plan_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('event_plan_id')
 		: '_vms_event_plan_id';
 
 	$product_ids = get_posts(array(
@@ -202,8 +202,8 @@ function vms_handle_sync_entitlement_images(): void
 		}
 
 		if ($role === 'ga_ticket') {
-			if ($plan_id > 0 && function_exists('vms_ticketing_v2_sync_ticket_product_image_with_result')) {
-				$res = vms_ticketing_v2_sync_ticket_product_image_with_result($pid, $plan_id);
+			if ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_sync_ticket_product_image_with_result')) {
+				$res = bvmgr_ticketing_v2_sync_ticket_product_image_with_result($pid, $plan_id);
 			} else {
 				$res = array(
 					'status' => $plan_id > 0 ? 'error_missing_sync_function' : 'error_missing_plan',
@@ -215,8 +215,8 @@ function vms_handle_sync_entitlement_images(): void
 			}
 		} else {
 			$entitlement_id = '';
-			if (function_exists('vms_entitlements_get_product_entitlement_id')) {
-				$entitlement_id = vms_entitlements_get_product_entitlement_id($pid);
+			if (function_exists('bvmgr_entitlements_get_product_entitlement_id')) {
+				$entitlement_id = bvmgr_entitlements_get_product_entitlement_id($pid);
 			}
 			if ($entitlement_id === '') {
 				$entitlement_id = sanitize_key((string) get_post_meta($pid, $ent_meta_key, true));
@@ -231,8 +231,8 @@ function vms_handle_sync_entitlement_images(): void
 					'image_id' => 0,
 					'message' => ($role === 'entitlement') ? 'missing_entitlement_marker' : 'not_a_vms_ticket_or_entitlement_image_product',
 				);
-			} elseif (function_exists('vms_entitlements_sync_product_image_with_result')) {
-				$res = vms_entitlements_sync_product_image_with_result($pid, $entitlement_id);
+			} elseif (function_exists('bvmgr_entitlements_sync_product_image_with_result')) {
+				$res = bvmgr_entitlements_sync_product_image_with_result($pid, $entitlement_id);
 			} else {
 				$res = array(
 					'status' => 'error_missing_sync_function',
@@ -266,10 +266,10 @@ function vms_handle_sync_entitlement_images(): void
 		'status' => ((int) $summary['errors'] > 0) ? 'completed_with_errors' : 'completed',
 		'count' => (int) $summary['errors'],
 	);
-	if (function_exists('vms_entitlements_sync_image_log')) {
-		vms_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
-	} elseif (function_exists('vms_record_operational_issue')) {
-		vms_record_operational_issue('entitlement_image_sync_backfill_completed', $operational_context);
+	if (function_exists('bvmgr_entitlements_sync_image_log')) {
+		bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
+	} elseif (function_exists('bvmgr_record_operational_issue')) {
+		bvmgr_record_operational_issue('entitlement_image_sync_backfill_completed', $operational_context);
 	}
 
 	wp_safe_redirect(add_query_arg(array(
@@ -279,7 +279,7 @@ function vms_handle_sync_entitlement_images(): void
 	exit;
 }
 
-function vms_ticketing_stock_preview_transient_key(int $user_id): string
+function bvmgr_ticketing_stock_preview_transient_key(int $user_id): string
 {
 	return 'vms_ticketing_stock_preview_' . max(1, $user_id);
 }
@@ -289,7 +289,7 @@ function vms_ticketing_stock_preview_transient_key(int $user_id): string
  *
  * @return array{ts:int,mode:string,checked:int,updated:int,skipped:int,errors:int,message:string,results:array<int,array<string,mixed>>}
  */
-function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
+function bvmgr_ticketing_stock_reconcile_scan(bool $apply_changes): array
 {
 	$summary = array(
 		'ts' => time(),
@@ -302,20 +302,20 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 		'results' => array(),
 	);
 
-	if (!function_exists('wc_get_product') || !function_exists('vms_ticketing_v2_calc_sold_qty_for_entitlement_scope')) {
+	if (!function_exists('wc_get_product') || !function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope')) {
 		$summary['errors'] = 1;
 		$summary['message'] = 'woocommerce_or_ticketing_helpers_unavailable';
 		return $summary;
 	}
 
-	$k_ent = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('ticketing_entitlement_id')
+	$k_ent = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id')
 		: '_vms_ticketing_entitlement_id';
-	$k_role = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('product_role')
+	$k_role = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('product_role')
 		: '_vms_product_role';
-	$k_plan = function_exists('vms_ticketing_v2_product_meta_key')
-		? vms_ticketing_v2_product_meta_key('event_plan_id')
+	$k_plan = function_exists('bvmgr_ticketing_v2_product_meta_key')
+		? bvmgr_ticketing_v2_product_meta_key('event_plan_id')
 		: '_vms_event_plan_id';
 
 	$product_ids = get_posts(array(
@@ -353,9 +353,9 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 		$name = get_the_title($pid);
 
 		$capacity = absint(get_post_meta($pid, '_vms_ticketing_entitlement_capacity_v2', true));
-		if ($capacity <= 0 && $plan_id > 0 && function_exists('vms_ticketing_v2_get_config') && function_exists('vms_ticketing_v2_find_entitlement_cfg')) {
-			$cfg = vms_ticketing_v2_get_config($plan_id);
-			$ent_cfg = ($ent_id !== '') ? vms_ticketing_v2_find_entitlement_cfg((array) $cfg, $ent_id) : null;
+		if ($capacity <= 0 && $plan_id > 0 && function_exists('bvmgr_ticketing_v2_get_config') && function_exists('bvmgr_ticketing_v2_find_entitlement_cfg')) {
+			$cfg = bvmgr_ticketing_v2_get_config($plan_id);
+			$ent_cfg = ($ent_id !== '') ? bvmgr_ticketing_v2_find_entitlement_cfg((array) $cfg, $ent_id) : null;
 			if (is_array($ent_cfg)) {
 				$capacity = max(0, (int) ($ent_cfg['capacity'] ?? 0));
 			}
@@ -378,7 +378,7 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 			continue;
 		}
 
-		$sold_res = vms_ticketing_v2_calc_sold_qty_for_entitlement_scope($plan_id, $ent_id, $sku, $pid);
+		$sold_res = bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope($plan_id, $ent_id, $sku, $pid);
 		if (empty($sold_res['ok'])) {
 			$summary['errors']++;
 			$summary['results'][] = array(
@@ -437,8 +437,8 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 				);
 			}
 
-			if (function_exists('vms_ticketing_v2_push_inventory_write_context')) {
-				vms_ticketing_v2_push_inventory_write_context(array(
+			if (function_exists('bvmgr_ticketing_v2_push_inventory_write_context')) {
+				bvmgr_ticketing_v2_push_inventory_write_context(array(
 					'trigger_source' => 'manual_action',
 					'source_function' => 'vms_ticketing_stock_reconcile_scan',
 					'derivation_source' => 'manual_entitlement_stock_reconciliation',
@@ -448,8 +448,8 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 					'writer_branch' => 'manual_entitlement_stock_reconciliation',
 					'result_health' => ($remaining > 0) ? 'expected_sellable_state' : 'expected_closed_state',
 				));
-			} elseif (function_exists('vms_ticket_mutation_audit_push_context')) {
-				vms_ticket_mutation_audit_push_context(array(
+			} elseif (function_exists('bvmgr_ticket_mutation_audit_push_context')) {
+				bvmgr_ticket_mutation_audit_push_context(array(
 					'trigger_source' => 'manual_action',
 					'source_function' => 'vms_ticketing_stock_reconcile_scan',
 					'derivation_source' => 'manual_entitlement_stock_reconciliation',
@@ -473,10 +473,10 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 				update_post_meta($pid, '_vms_ticketing_entitlement_remaining_v2', $remaining);
 				update_post_meta($pid, '_vms_ticketing_entitlement_stock_reconciled_at_gmt', time());
 			} finally {
-				if (function_exists('vms_ticketing_v2_pop_inventory_write_context')) {
-					vms_ticketing_v2_pop_inventory_write_context();
-				} elseif (function_exists('vms_ticket_mutation_audit_pop_context')) {
-					vms_ticket_mutation_audit_pop_context();
+				if (function_exists('bvmgr_ticketing_v2_pop_inventory_write_context')) {
+					bvmgr_ticketing_v2_pop_inventory_write_context();
+				} elseif (function_exists('bvmgr_ticket_mutation_audit_pop_context')) {
+					bvmgr_ticket_mutation_audit_pop_context();
 				}
 			}
 		}
@@ -504,14 +504,14 @@ function vms_ticketing_stock_reconcile_scan(bool $apply_changes): array
 	return $summary;
 }
 
-function vms_handle_ticketing_stock_preview(): void
+function bvmgr_handle_ticketing_stock_preview(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_preview')) wp_die('Invalid nonce.');
+	if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_stock_preview'))) wp_die('Invalid nonce.');
 
-	$rep = vms_ticketing_stock_reconcile_scan(false);
-	set_transient(vms_ticketing_stock_preview_transient_key(get_current_user_id()), $rep, 30 * MINUTE_IN_SECONDS);
+	$rep = bvmgr_ticketing_stock_reconcile_scan(false);
+	set_transient(bvmgr_ticketing_stock_preview_transient_key(get_current_user_id()), $rep, 30 * MINUTE_IN_SECONDS);
 
 	wp_safe_redirect(add_query_arg(array(
 		'page' => 'vms-settings',
@@ -520,16 +520,16 @@ function vms_handle_ticketing_stock_preview(): void
 	exit;
 }
 
-function vms_handle_ticketing_stock_commit(): void
+function bvmgr_handle_ticketing_stock_commit(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_commit')) wp_die('Invalid nonce.');
+	if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_stock_commit'))) wp_die('Invalid nonce.');
 
 	// Always re-scan right before applying (orders may have changed since preview).
-	$rep = vms_ticketing_stock_reconcile_scan(true);
+	$rep = bvmgr_ticketing_stock_reconcile_scan(true);
 	set_transient('vms_ticketing_stock_reconcile_last', $rep, 30 * MINUTE_IN_SECONDS);
-	delete_transient(vms_ticketing_stock_preview_transient_key(get_current_user_id()));
+	delete_transient(bvmgr_ticketing_stock_preview_transient_key(get_current_user_id()));
 
 	wp_safe_redirect(add_query_arg(array(
 		'page' => 'vms-settings',
@@ -538,21 +538,21 @@ function vms_handle_ticketing_stock_commit(): void
 	exit;
 }
 
-function vms_handle_ticketing_stock_clear_preview(): void
+function bvmgr_handle_ticketing_stock_clear_preview(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_clear_preview')) wp_die('Invalid nonce.');
-	delete_transient(vms_ticketing_stock_preview_transient_key(get_current_user_id()));
+	if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_stock_clear_preview'))) wp_die('Invalid nonce.');
+	delete_transient(bvmgr_ticketing_stock_preview_transient_key(get_current_user_id()));
 	wp_safe_redirect(add_query_arg(array('page' => 'vms-settings'), admin_url('admin.php')));
 	exit;
 }
 
-function vms_handle_ticketing_stock_csv(): void
+function bvmgr_handle_ticketing_stock_csv(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_ticketing_stock_csv')) wp_die('Invalid nonce.');
+	if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_stock_csv'))) wp_die('Invalid nonce.');
 
 	$mode = isset($_GET['mode']) ? sanitize_key(wp_unslash($_GET['mode'])) : 'preview';
 	$rep = null;
@@ -560,7 +560,7 @@ function vms_handle_ticketing_stock_csv(): void
 		$rep = get_transient('vms_ticketing_stock_reconcile_last');
 	}
 	if (!is_array($rep)) {
-		$rep = get_transient(vms_ticketing_stock_preview_transient_key(get_current_user_id()));
+		$rep = get_transient(bvmgr_ticketing_stock_preview_transient_key(get_current_user_id()));
 	}
 	if (!is_array($rep)) {
 		wp_die('No report available. Run Preview first.');
@@ -599,13 +599,13 @@ function vms_handle_ticketing_stock_csv(): void
 }
 
 // Back-compat: treat as Commit
-function vms_handle_reconcile_ticketing_stock(): void
+function bvmgr_handle_reconcile_ticketing_stock(): void
 {
 	if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if (!$nonce || !wp_verify_nonce($nonce, 'vms_reconcile_ticketing_stock')) wp_die('Invalid nonce.');
+	if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_reconcile_ticketing_stock'))) wp_die('Invalid nonce.');
 
-	$rep = vms_ticketing_stock_reconcile_scan(true);
+	$rep = bvmgr_ticketing_stock_reconcile_scan(true);
 	set_transient('vms_ticketing_stock_reconcile_last', $rep, 30 * MINUTE_IN_SECONDS);
 
 	wp_safe_redirect(add_query_arg(array(
@@ -618,7 +618,7 @@ function vms_handle_reconcile_ticketing_stock(): void
 
 
 
-function vms_sanitize_settings($input)
+function bvmgr_sanitize_settings($input)
 {
   $out = array();
   $input = (array) $input;
@@ -724,15 +724,15 @@ function vms_sanitize_settings($input)
 
   // Calendar (Core)
   $parse_map = function ($raw): array {
-	    if (function_exists('vms_calendar_parse_assoc_map')) {
-	      return (array) vms_calendar_parse_assoc_map($raw);
+	    if (function_exists('bvmgr_calendar_parse_assoc_map')) {
+	      return (array) bvmgr_calendar_parse_assoc_map($raw);
 	    }
 	    if (is_array($raw)) return $raw;
 	    if (!is_string($raw)) return array();
 	    $raw = trim($raw);
 	    if ($raw === '') return array();
-	    $decoded = vms_json_decode_associative($raw, 16);
-	    if (!empty($decoded['ok']) && is_array($decoded['value']) && vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))) {
+	    $decoded = bvmgr_json_decode_associative($raw, 16);
+	    if (!empty($decoded['ok']) && is_array($decoded['value']) && bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))) {
 	      return $decoded['value'];
 	    }
 	    $out = array();
@@ -774,8 +774,8 @@ function vms_sanitize_settings($input)
     return $out_map;
   };
 
-  if (function_exists('vms_calendar_sanitize_icon_map')) {
-    $out['calendar_vendor_type_icons'] = (array) vms_calendar_sanitize_icon_map($input['calendar_vendor_type_icons'] ?? array());
+  if (function_exists('bvmgr_calendar_sanitize_icon_map')) {
+    $out['calendar_vendor_type_icons'] = (array) bvmgr_calendar_sanitize_icon_map($input['calendar_vendor_type_icons'] ?? array());
   } else {
     $icon_map = array();
     foreach ($parse_map($input['calendar_vendor_type_icons'] ?? array()) as $slug => $icon) {
@@ -869,7 +869,7 @@ function vms_sanitize_settings($input)
 }
 
 
-function vms_field_timezone()
+function bvmgr_field_timezone()
 {
   $opts  = (array) get_option('vms_settings', array());
   $saved = isset($opts['timezone']) ? (string) $opts['timezone'] : '';
@@ -899,7 +899,7 @@ function vms_field_timezone()
   }
 }
 
-function vms_field_enable_woo()
+function bvmgr_field_enable_woo()
 {
   $opts = (array) get_option('vms_settings', array());
   $val  = !empty($opts['enable_woo']) ? 1 : 0;
@@ -910,15 +910,15 @@ function vms_field_enable_woo()
   echo '</label>';
 }
 
-function vms_dashboard_settings_defaults()
+function bvmgr_dashboard_settings_defaults()
 {
   add_option('vms_dash_week_mode', 'calendar');   // calendar | lookahead
   add_option('vms_dash_week_start', 1);          // 0=Sun,1=Mon…6=Sat
   add_option('vms_dash_week_span', 1);           // 1 or 2
 }
-add_action('admin_init', 'vms_dashboard_settings_defaults');
+add_action('admin_init', 'bvmgr_dashboard_settings_defaults');
 
-function vms_field_enable_tec_publish()
+function bvmgr_field_enable_tec_publish()
 {
   $opts = (array) get_option('vms_settings', array());
   $val  = array_key_exists('enable_tec_publish', $opts) ? (int) $opts['enable_tec_publish'] : 1;
@@ -929,7 +929,7 @@ function vms_field_enable_tec_publish()
   echo '</label>';
 }
 
-function vms_field_default_venue()
+function bvmgr_field_default_venue()
 {
   $opts  = (array) get_option('vms_settings', array());
   $saved = isset($opts['default_venue_id']) ? (int) $opts['default_venue_id'] : 0;
@@ -968,15 +968,15 @@ function vms_field_default_venue()
   ));
   $published = array_values(array_unique(array_map('intval', (array) $published)));
 
-  vms_render_settings_default_venue_alert(
-    vms_build_settings_default_venue_alert_context($saved, $venues, $published, $saved_is_valid)
+  bvmgr_render_settings_default_venue_alert(
+    bvmgr_build_settings_default_venue_alert_context($saved, $venues, $published, $saved_is_valid)
   );
 }
 
 /**
  * @return array{visible:bool,class:string,label:string,href:string,target:string,rel:string}
  */
-function vms_settings_default_venue_alert_default_action_context(): array
+function bvmgr_settings_default_venue_alert_default_action_context(): array
 {
   return array(
     'visible' => false,
@@ -993,15 +993,15 @@ function vms_settings_default_venue_alert_default_action_context(): array
  * @param array<int,mixed> $published
  * @return array<string,mixed>
  */
-function vms_build_settings_default_venue_alert_context(int $saved, array $venues, array $published, bool $saved_is_valid): array
+function bvmgr_build_settings_default_venue_alert_context(int $saved, array $venues, array $published, bool $saved_is_valid): array
 {
   $context = array(
     'show' => false,
     'state' => 'hidden',
     'notice_class' => '',
     'status' => '',
-    'primary_action' => vms_settings_default_venue_alert_default_action_context(),
-    'secondary_action' => vms_settings_default_venue_alert_default_action_context(),
+    'primary_action' => bvmgr_settings_default_venue_alert_default_action_context(),
+    'secondary_action' => bvmgr_settings_default_venue_alert_default_action_context(),
   );
 
   $all = array_values(array_unique(array_map('intval', $venues)));
@@ -1069,7 +1069,7 @@ function vms_build_settings_default_venue_alert_context(int $saved, array $venue
       'label' => 'Fix now: set Default Venue to “' . get_the_title($vid) . '”',
       'href' => wp_nonce_url(
         admin_url('admin-post.php?action=vms_set_default_venue&venue_id=' . $vid),
-        'vms_set_default_venue_' . $vid
+        'bvmgr_set_default_venue_' . $vid
       ),
       'target' => '',
       'rel' => '',
@@ -1082,7 +1082,7 @@ function vms_build_settings_default_venue_alert_context(int $saved, array $venue
 /**
  * @param array<string,mixed> $context
  */
-function vms_render_settings_default_venue_alert(array $context): void
+function bvmgr_render_settings_default_venue_alert(array $context): void
 {
   if (empty($context['show'])) {
     return;
@@ -1095,7 +1095,7 @@ function vms_render_settings_default_venue_alert(array $context): void
   } elseif (($context['state'] ?? 'hidden') === 'selected_unpublished') {
     echo '<p><strong>Default Venue needs attention:</strong> The selected venue is not published (status: <strong>' . esc_html((string) ($context['status'] ?? '')) . '</strong>). Publish it or choose a published venue.</p>';
   } else {
-    echo '<p><strong>Default Venue is not set.</strong> This can cause parts of VMS to load with no venue context (especially in single-venue installs).</p>';
+    echo '<p><strong>Default Venue is not set.</strong> This can cause parts of Backstage Venue Manager to load with no venue context (especially in single-venue installs).</p>';
   }
 
   $primary_action = is_array($context['primary_action'] ?? null) ? $context['primary_action'] : array();
@@ -1129,7 +1129,7 @@ function vms_render_settings_default_venue_alert(array $context): void
   echo '</div>';
 }
 
-function vms_field_admission_max_party_size()
+function bvmgr_field_admission_max_party_size()
 {
   $opts = (array) get_option('vms_settings', array());
   $val = isset($opts['vms_admission_max_party_size']) ? absint($opts['vms_admission_max_party_size']) : 6;
@@ -1140,7 +1140,7 @@ function vms_field_admission_max_party_size()
   echo '<p class="description">' . esc_html__('Maximum number of people allowed in a single guest list entry.', 'backstage-venue-manager') . '</p>';
 }
 
-function vms_field_admission_allow_uncheckin()
+function bvmgr_field_admission_allow_uncheckin()
 {
   $opts = (array) get_option('vms_settings', array());
   $val = !empty($opts['vms_admission_allow_uncheckin']) ? 1 : 0;
@@ -1151,7 +1151,7 @@ function vms_field_admission_allow_uncheckin()
   echo '</label>';
 }
 
-function vms_field_admission_allow_uncheckin_for_door()
+function bvmgr_field_admission_allow_uncheckin_for_door()
 {
   $opts = (array) get_option('vms_settings', array());
   $val = !empty($opts['vms_admission_allow_uncheckin_for_door']) ? 1 : 0;
@@ -1162,7 +1162,7 @@ function vms_field_admission_allow_uncheckin_for_door()
   echo '</label>';
 }
 
-function vms_field_admission_door_show_phone()
+function bvmgr_field_admission_door_show_phone()
 {
   $opts = (array) get_option('vms_settings', array());
   $val = !empty($opts['vms_admission_door_show_phone']) ? 1 : 0;
@@ -1173,7 +1173,7 @@ function vms_field_admission_door_show_phone()
   echo '</label>';
 }
 
-function vms_field_vendor_portal_show_secondary_ticket_sales()
+function bvmgr_field_vendor_portal_show_secondary_ticket_sales()
 {
   $opts = (array) get_option('vms_settings', array());
   $val = !empty($opts['vendor_portal_show_secondary_ticket_sales']) ? 1 : 0;
@@ -1185,7 +1185,7 @@ function vms_field_vendor_portal_show_secondary_ticket_sales()
   echo '<p class="description">' . esc_html__('Useful for food vendors and other secondary vendors who need expected crowd size. Compensation and bonus details remain hidden.', 'backstage-venue-manager') . '</p>';
 }
 
-function vms_field_availability_date_dispatch_enabled()
+function bvmgr_field_availability_date_dispatch_enabled()
 {
   $opts = (array) get_option('vms_settings', array());
   $val = array_key_exists('availability_date_dispatch_enabled', $opts) ? (!empty($opts['availability_date_dispatch_enabled']) ? 1 : 0) : 1;
@@ -1197,10 +1197,10 @@ function vms_field_availability_date_dispatch_enabled()
   echo '<p class="description">' . esc_html__('When enabled, operators can send secure availability requests from Event Plans and record ADD responses back into canonical vendor availability. Disable this checkbox to turn off the module without deleting its stored request history.', 'backstage-venue-manager') . '</p>';
 }
 
-function vms_field_vendor_doc_submission_notifications()
+function bvmgr_field_vendor_doc_submission_notifications()
 {
-  $settings = function_exists('vms_vendor_submission_alert_settings')
-    ? vms_vendor_submission_alert_settings()
+  $settings = function_exists('bvmgr_vendor_submission_alert_settings')
+    ? bvmgr_vendor_submission_alert_settings()
     : array(
         'vendor_doc_submission_notify_enabled' => 1,
         'vendor_doc_submission_notify_target' => 'site_admin',
@@ -1215,8 +1215,8 @@ function vms_field_vendor_doc_submission_notifications()
   $role = isset($settings['vendor_doc_submission_notify_role']) ? sanitize_key((string) $settings['vendor_doc_submission_notify_role']) : '';
   $capability = isset($settings['vendor_doc_submission_notify_capability']) ? sanitize_key((string) $settings['vendor_doc_submission_notify_capability']) : '';
 
-  $target_options = function_exists('vms_vendor_submission_recipient_mode_options')
-    ? vms_vendor_submission_recipient_mode_options()
+  $target_options = function_exists('bvmgr_vendor_submission_recipient_mode_options')
+    ? bvmgr_vendor_submission_recipient_mode_options()
     : array(
         'site_admin' => __('Site admin email', 'backstage-venue-manager'),
         'user' => __('Specific WordPress user', 'backstage-venue-manager'),
@@ -1230,7 +1230,7 @@ function vms_field_vendor_doc_submission_notifications()
   echo esc_html__('Send an email alert when a vendor submits tech docs, a W-9/tax step, or a promo video', 'backstage-venue-manager');
   echo '</label>';
 
-  echo '<p class="description">' . esc_html__('These submissions still flag the vendor as Needs review in VMS even if email alerts are turned off.', 'backstage-venue-manager') . '</p>';
+  echo '<p class="description">' . esc_html__('These submissions still flag the vendor as Needs review in Backstage Venue Manager even if email alerts are turned off.', 'backstage-venue-manager') . '</p>';
 
   echo '<p><label for="vms_vendor_doc_submission_notify_target"><strong>' . esc_html__('Send alerts to', 'backstage-venue-manager') . '</strong></label><br>';
   echo '<select id="vms_vendor_doc_submission_notify_target" name="vms_settings[vendor_doc_submission_notify_target]" class="vms-minw-320">';
@@ -1273,14 +1273,14 @@ function vms_field_vendor_doc_submission_notifications()
 }
 
 
-function vms_field_staff_portal_doc_visibility_roles()
+function bvmgr_field_staff_portal_doc_visibility_roles()
 {
   $opts = (array) get_option('vms_settings', array());
   $selected = isset($opts['staff_portal_doc_visibility_role_ids']) && is_array($opts['staff_portal_doc_visibility_role_ids'])
     ? array_values(array_unique(array_filter(array_map('absint', (array) $opts['staff_portal_doc_visibility_role_ids']))))
     : array();
 
-  $role_map = function_exists('vms_staffing_role_map_by_id') ? (array) vms_staffing_role_map_by_id(false) : array();
+  $role_map = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(false) : array();
 
   if (empty($role_map)) {
     echo '<p class="description">' . esc_html__('No staffing roles are available yet. Create staffing roles first, then come back here to limit who sees event docs in the Staff Portal.', 'backstage-venue-manager') . '</p>';
@@ -1305,7 +1305,7 @@ function vms_field_staff_portal_doc_visibility_roles()
   echo '</fieldset>';
 }
 
-function vms_field_season_dates_link()
+function bvmgr_field_season_dates_link()
 
 {
   $url = admin_url('admin.php?page=vms-season-dates');
@@ -1330,7 +1330,7 @@ add_action('admin_init', function () {
   // IMPORTANT: group name must match settings_fields() below.
 register_setting('vms_settings_group', 'vms_settings', array(
   'type' => 'array',
-  'sanitize_callback' => 'vms_sanitize_settings',
+  'sanitize_callback' => 'bvmgr_sanitize_settings',
   'default' => array(),
 ));
 
@@ -1346,7 +1346,7 @@ register_setting('vms_settings_group', 'vms_settings', array(
   add_settings_field(
     'vms_default_venue_id',
     __('Default Venue', 'backstage-venue-manager'),
-    'vms_field_default_venue',
+    'bvmgr_field_default_venue',
     'vms-settings',
     'vms_settings_venues'
   );
@@ -1366,7 +1366,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_admission_max_party_size',
     __('Max party size', 'backstage-venue-manager'),
-    'vms_field_admission_max_party_size',
+    'bvmgr_field_admission_max_party_size',
     'vms-settings',
     'vms_settings_admissions'
   );
@@ -1374,7 +1374,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_admission_allow_uncheckin',
     __('Allow undo check-in', 'backstage-venue-manager'),
-    'vms_field_admission_allow_uncheckin',
+    'bvmgr_field_admission_allow_uncheckin',
     'vms-settings',
     'vms_settings_admissions'
   );
@@ -1382,7 +1382,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_admission_allow_uncheckin_for_door',
     __('Allow undo check-in for door staff', 'backstage-venue-manager'),
-    'vms_field_admission_allow_uncheckin_for_door',
+    'bvmgr_field_admission_allow_uncheckin_for_door',
     'vms-settings',
     'vms_settings_admissions'
   );
@@ -1390,7 +1390,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_admission_door_show_phone',
     __('Show phone numbers at door', 'backstage-venue-manager'),
-    'vms_field_admission_door_show_phone',
+    'bvmgr_field_admission_door_show_phone',
     'vms-settings',
     'vms_settings_admissions'
   );
@@ -1410,7 +1410,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_vendor_portal_show_secondary_ticket_sales',
     __('Secondary vendor crowd visibility', 'backstage-venue-manager'),
-    'vms_field_vendor_portal_show_secondary_ticket_sales',
+    'bvmgr_field_vendor_portal_show_secondary_ticket_sales',
     'vms-settings',
     'vms_settings_vendor_portal'
   );
@@ -1418,7 +1418,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_availability_date_dispatch_enabled',
     __('Availability & Date Dispatch', 'backstage-venue-manager'),
-    'vms_field_availability_date_dispatch_enabled',
+    'bvmgr_field_availability_date_dispatch_enabled',
     'vms-settings',
     'vms_settings_vendor_portal'
   );
@@ -1426,7 +1426,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_vendor_doc_submission_notifications',
     __('Vendor document submission alerts', 'backstage-venue-manager'),
-    'vms_field_vendor_doc_submission_notifications',
+    'bvmgr_field_vendor_doc_submission_notifications',
     'vms-settings',
     'vms_settings_vendor_portal'
   );
@@ -1446,7 +1446,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_staff_portal_doc_visibility_roles',
     __('Tech doc visibility by staffing role', 'backstage-venue-manager'),
-    'vms_field_staff_portal_doc_visibility_roles',
+    'bvmgr_field_staff_portal_doc_visibility_roles',
     'vms-settings',
     'vms_settings_staff_portal'
   );
@@ -1517,7 +1517,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_dash_week_mode',
     __('Week view mode', 'backstage-venue-manager'),
-    'vms_dash_field_week_mode',
+    'bvmgr_dash_field_week_mode',
     'vms-settings',
     'vms_dash_section'
   );
@@ -1525,7 +1525,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_dash_week_start',
     __('Week starts on', 'backstage-venue-manager'),
-    'vms_dash_field_week_start',
+    'bvmgr_dash_field_week_start',
     'vms-settings',
     'vms_dash_section'
   );
@@ -1533,7 +1533,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_dash_week_span',
     __('Week preview length', 'backstage-venue-manager'),
-    'vms_dash_field_week_span',
+    'bvmgr_dash_field_week_span',
     'vms-settings',
     'vms_dash_section'
   );
@@ -1542,7 +1542,7 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_dash_bills_span',
     __('Upcoming Bills window (days)', 'backstage-venue-manager'),
-    'vms_dash_field_bills_span',
+    'bvmgr_dash_field_bills_span',
     'vms-settings',
     'vms_dash_section'
   );
@@ -1550,13 +1550,13 @@ add_action('admin_init', function () {
   add_settings_field(
     'vms_dash_bills_terms_days',
     __('Upcoming Bills terms offset (days)', 'backstage-venue-manager'),
-    'vms_dash_field_bills_terms_days',
+    'bvmgr_dash_field_bills_terms_days',
     'vms-settings',
     'vms_dash_section'
   );
 });
 
-function vms_dash_field_week_mode()
+function bvmgr_dash_field_week_mode()
 {
   $val = get_option('vms_dash_week_mode', 'calendar');
   echo '<select name="vms_dash_week_mode">';
@@ -1565,7 +1565,7 @@ function vms_dash_field_week_mode()
   echo '</select>';
 }
 
-function vms_dash_field_week_start()
+function bvmgr_dash_field_week_start()
 {
   $val = (int) get_option('vms_dash_week_start', 1);
   $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -1577,7 +1577,7 @@ function vms_dash_field_week_start()
   echo '<p class="description">Used only for “Calendar week” mode.</p>';
 }
 
-function vms_dash_field_week_span()
+function bvmgr_dash_field_week_span()
 {
   $val = (int) get_option('vms_dash_week_span', 1);
   echo '<select name="vms_dash_week_span">';
@@ -1587,30 +1587,30 @@ function vms_dash_field_week_span()
 }
 
 
-function vms_dash_field_bills_span()
+function bvmgr_dash_field_bills_span()
 {
   $val = (int) get_option('vms_dash_bills_span', 30);
   echo '<input type="number" min="1" max="365" step="1" name="vms_dash_bills_span" value="' . esc_attr($val) . '" class="vms-input-narrow" /> ';
   echo '<span class="description">Days ahead to include in Upcoming Bills.</span>';
 }
 
-function vms_dash_field_bills_terms_days()
+function bvmgr_dash_field_bills_terms_days()
 {
   $val = (int) get_option('vms_dash_bills_terms_days', 0);
   echo '<input type="number" min="0" max="365" step="1" name="vms_dash_bills_terms_days" value="' . esc_attr($val) . '" class="vms-input-narrow" /> ';
   echo '<span class="description">Adds days to the event date to estimate a due date.</span>';
 }
 
-if (!function_exists('vms_settings_assoc_map_to_lines')) {
+if (!function_exists('bvmgr_settings_assoc_map_to_lines')) {
   /**
    * Render map values as newline key:value rows for textarea editing.
    *
    * @param mixed $raw
    */
-  function vms_settings_assoc_map_to_lines($raw): string
+  function bvmgr_settings_assoc_map_to_lines($raw): string
   {
-    $map = function_exists('vms_calendar_parse_assoc_map')
-      ? (array) vms_calendar_parse_assoc_map($raw)
+    $map = function_exists('bvmgr_calendar_parse_assoc_map')
+      ? (array) bvmgr_calendar_parse_assoc_map($raw)
       : (is_array($raw) ? $raw : array());
 
     if (empty($map)) return '';
@@ -1625,13 +1625,13 @@ if (!function_exists('vms_settings_assoc_map_to_lines')) {
   }
 }
 
-if (!function_exists('vms_settings_calendar_icon_choices')) {
+if (!function_exists('bvmgr_settings_calendar_icon_choices')) {
   /**
    * Curated icon choices for non-technical admin selection.
    *
    * @return array<string,string> icon => label
    */
-  function vms_settings_calendar_icon_choices(): array
+  function bvmgr_settings_calendar_icon_choices(): array
   {
     return array(
       '🎵' => __('Music', 'backstage-venue-manager'),
@@ -1660,11 +1660,11 @@ if (!function_exists('vms_settings_calendar_icon_choices')) {
   }
 }
 
-if (!function_exists('vms_settings_calendar_vendor_type_label')) {
+if (!function_exists('bvmgr_settings_calendar_vendor_type_label')) {
   /**
    * Neutral Schedule settings labels without changing stored vendor-type slugs.
    */
-  function vms_settings_calendar_vendor_type_label(string $slug, string $label): string
+  function bvmgr_settings_calendar_vendor_type_label(string $slug, string $label): string
   {
     $slug = sanitize_key($slug);
     $label = trim($label);
@@ -1699,14 +1699,14 @@ if (!function_exists('vms_settings_calendar_vendor_type_label')) {
   }
 }
 
-if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
+if (!function_exists('bvmgr_settings_calendar_vendor_type_rows')) {
   /**
    * Rows for Vendor Type icon selectors.
    *
    * @param array<string,mixed> $seed_map
    * @return array<int,array{slug:string,label:string}>
    */
-  function vms_settings_calendar_vendor_type_rows(array $seed_map): array
+  function bvmgr_settings_calendar_vendor_type_rows(array $seed_map): array
   {
     $rows = array();
     $seen = array();
@@ -1730,7 +1730,7 @@ if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
         $seen[$slug] = true;
         $rows[] = array(
           'slug' => $slug,
-          'label' => vms_settings_calendar_vendor_type_label($slug, (string) $term->name),
+          'label' => bvmgr_settings_calendar_vendor_type_label($slug, (string) $term->name),
         );
       }
     }
@@ -1744,7 +1744,7 @@ if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
       $rows[] = array(
         'slug' => $k,
         /* translators: %s: saved vendor type key */
-        'label' => vms_settings_calendar_vendor_type_label($k, sprintf(__('Archived type (%s)', 'backstage-venue-manager'), $k)),
+        'label' => bvmgr_settings_calendar_vendor_type_label($k, sprintf(__('Archived type (%s)', 'backstage-venue-manager'), $k)),
       );
     }
 
@@ -1752,47 +1752,47 @@ if (!function_exists('vms_settings_calendar_vendor_type_rows')) {
   }
 }
 
-function vms_render_settings_page_notices(): void
+function bvmgr_render_settings_page_notices(): void
 {
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only settings notice state only affects admin feedback.
-  if (vms_request_read_key($_GET, 'vms_notice') === 'default_venue_set') {
+  if (bvmgr_request_read_key($_GET, 'vms_notice') === 'default_venue_set') {
     echo '<div class="notice notice-success"><p>' . esc_html__('Default venue updated.', 'backstage-venue-manager') . '</p></div>';
   }
 }
 
-function vms_render_settings_page()
+function bvmgr_render_settings_page()
 {
-  vms_get_settings_page_ticketing_stock_notice_state(true);
+  bvmgr_get_settings_page_ticketing_stock_notice_state(true);
 
-  if (function_exists('vms_admin_ui_render_shell')) {
-    vms_admin_ui_render_shell(
+  if (function_exists('bvmgr_admin_ui_render_shell')) {
+    bvmgr_admin_ui_render_shell(
       array(
-        'title' => __('VMS Settings', 'backstage-venue-manager'),
-        'notices_callback' => 'vms_render_settings_page_notice_bar',
+        'title' => __('Backstage Venue Manager Settings', 'backstage-venue-manager'),
+        'notices_callback' => 'bvmgr_render_settings_page_notice_bar',
       ),
-      'vms_render_settings_page_content'
+      'bvmgr_render_settings_page_content'
     );
     return;
   }
 
-  echo '<div class="wrap"><h1>' . esc_html__('VMS Settings', 'backstage-venue-manager') . '</h1>';
-  vms_render_settings_page_notices();
+  echo '<div class="wrap"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';
+  bvmgr_render_settings_page_notices();
   ob_start();
-  vms_render_settings_page_content(true);
+  bvmgr_render_settings_page_content(true);
   $content_html = (string) ob_get_clean();
   $content_html = str_replace(
-    vms_settings_page_ticketing_stock_notice_placeholder(),
-    vms_get_settings_page_ticketing_stock_notice_markup(),
+    bvmgr_settings_page_ticketing_stock_notice_placeholder(),
+    bvmgr_get_settings_page_ticketing_stock_notice_markup(),
     $content_html
   );
   echo $content_html;
   echo '</div>';
 }
 
-function vms_render_settings_page_content(bool $include_ticketing_stock_notice_placeholder = false)
+function bvmgr_render_settings_page_content(bool $include_ticketing_stock_notice_placeholder = false)
 {
-  if (defined('VMS_VERSION')) {
-    echo '<p class="description">' . esc_html__('Plugin version:', 'backstage-venue-manager') . ' ' . esc_html((string) VMS_VERSION) . '</p>';
+  if (defined('BVMGR_VERSION')) {
+    echo '<p class="description">' . esc_html__('Plugin version:', 'backstage-venue-manager') . ' ' . esc_html((string) BVMGR_VERSION) . '</p>';
   }
   echo '<form method="post" action="options.php">';
   settings_fields('vms_settings_group');
@@ -1833,20 +1833,20 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
     ? (!empty($settings['ticket_ui_help_addons_enabled']) ? 1 : 0)
     : 1;
   $ticket_help_tickets_default = isset($settings['ticket_ui_help_tickets_default']) ? trim((string) $settings['ticket_ui_help_tickets_default']) : '';
-  if ($ticket_help_tickets_default === '' && function_exists('vms_ticketing_ui_help_default_text')) {
-    $ticket_help_tickets_default = wpautop(esc_html((string) vms_ticketing_ui_help_default_text('tickets')));
+  if ($ticket_help_tickets_default === '' && function_exists('bvmgr_ticketing_ui_help_default_text')) {
+    $ticket_help_tickets_default = wpautop(esc_html((string) bvmgr_ticketing_ui_help_default_text('tickets')));
   }
   $ticket_help_addons_default = isset($settings['ticket_ui_help_addons_default']) ? trim((string) $settings['ticket_ui_help_addons_default']) : '';
-  if ($ticket_help_addons_default === '' && function_exists('vms_ticketing_ui_help_default_text')) {
-    $ticket_help_addons_default = wpautop(esc_html((string) vms_ticketing_ui_help_default_text('addons')));
+  if ($ticket_help_addons_default === '' && function_exists('bvmgr_ticketing_ui_help_default_text')) {
+    $ticket_help_addons_default = wpautop(esc_html((string) bvmgr_ticketing_ui_help_default_text('addons')));
   }
   $ticket_ui_addons_heading = isset($settings['ticket_ui_addons_heading']) ? trim(html_entity_decode((string) $settings['ticket_ui_addons_heading'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
   if ($ticket_ui_addons_heading === '') {
-    $ticket_ui_addons_heading = function_exists('vms_ticketing_ui_addons_section_heading_default') ? vms_ticketing_ui_addons_section_heading_default() : 'Fire Pits & Tables';
+    $ticket_ui_addons_heading = function_exists('bvmgr_ticketing_ui_addons_section_heading_default') ? bvmgr_ticketing_ui_addons_section_heading_default() : 'Fire Pits & Tables';
   }
   $ticket_ui_addons_subtext = isset($settings['ticket_ui_addons_subtext']) ? trim(html_entity_decode((string) $settings['ticket_ui_addons_subtext'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
   if ($ticket_ui_addons_subtext === '') {
-    $ticket_ui_addons_subtext = function_exists('vms_ticketing_ui_addons_section_subtext_default') ? vms_ticketing_ui_addons_section_subtext_default() : 'Click here to add a fire pit or table to your order.';
+    $ticket_ui_addons_subtext = function_exists('bvmgr_ticketing_ui_addons_section_subtext_default') ? bvmgr_ticketing_ui_addons_section_subtext_default() : 'Click here to add a fire pit or table to your order.';
   }
 
   echo '<h2 class="vms-mt-24">' . esc_html__('Ticketing', 'backstage-venue-manager') . '</h2>';
@@ -1865,14 +1865,14 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   echo '<th scope="row"><label for="vms_ticket_ui_layout">' . esc_html__('Ticket UI', 'backstage-venue-manager') . '</label></th>';
   echo '<td data-vms-tour="ticketing-ui.settings-root">';
   $ticketing_ui_tour_button = '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.settings.ticketing_ui" data-vms-tour="ticketing-ui.start-tour">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
-  if (function_exists('vms_render_help_button')) {
-    $ticketing_ui_tour_button = vms_render_help_button(array(
+  if (function_exists('bvmgr_render_help_button')) {
+    $ticketing_ui_tour_button = bvmgr_render_help_button(array(
       'tour_id' => 'vms.settings.ticketing_ui',
       'anchor' => 'ticketing-ui.start-tour',
       'label' => __('Start Guided Tour', 'backstage-venue-manager'),
     ));
   }
-  echo '<p>' . wp_kses($ticketing_ui_tour_button, vms_settings_page_help_button_allowed_html()) . '</p>';
+  echo '<p>' . wp_kses($ticketing_ui_tour_button, bvmgr_settings_page_help_button_allowed_html()) . '</p>';
   echo '<p class="description">' . esc_html__('Ticket UI can run in Safe Mode, the older unified V2 layout, or the new progressive flow that keeps all admission choices together while tucking optional add-ons below.', 'backstage-venue-manager') . '</p>';
   echo '<p data-vms-tour="ticketing-ui.public-enable">';
   echo '<label for="vms_ticket_ui_layout"><strong>' . esc_html__('Ticket UI Layout', 'backstage-venue-manager') . '</strong></label><br />';
@@ -1975,11 +1975,11 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
 
 
   // Ticketing inventory tools (Preview → Commit)
-  $ticketing_stock_notice_state = vms_get_settings_page_ticketing_stock_notice_state();
+  $ticketing_stock_notice_state = bvmgr_get_settings_page_ticketing_stock_notice_state();
   $preview_rep = $ticketing_stock_notice_state['preview_report'] ?? false;
 
   if ($include_ticketing_stock_notice_placeholder) {
-    echo vms_settings_page_ticketing_stock_notice_placeholder();
+    echo bvmgr_settings_page_ticketing_stock_notice_placeholder();
   }
 
   echo '<h3 class="vms-mt-16">' . esc_html__('Ticketing inventory tools', 'backstage-venue-manager') . '</h3>';
@@ -1988,14 +1988,14 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   $preview_url = add_query_arg(
     array(
       'action' => 'vms_ticketing_stock_preview',
-      '_wpnonce' => wp_create_nonce('vms_ticketing_stock_preview'),
+      '_wpnonce' => wp_create_nonce('bvmgr_ticketing_stock_preview'),
     ),
     admin_url('admin-post.php')
   );
   $commit_url = add_query_arg(
     array(
       'action' => 'vms_ticketing_stock_commit',
-      '_wpnonce' => wp_create_nonce('vms_ticketing_stock_commit'),
+      '_wpnonce' => wp_create_nonce('bvmgr_ticketing_stock_commit'),
     ),
     admin_url('admin-post.php')
   );
@@ -2003,14 +2003,14 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
     array(
       'action' => 'vms_ticketing_stock_csv',
       'mode' => 'preview',
-      '_wpnonce' => wp_create_nonce('vms_ticketing_stock_csv'),
+      '_wpnonce' => wp_create_nonce('bvmgr_ticketing_stock_csv'),
     ),
     admin_url('admin-post.php')
   );
   $clear_preview_url = add_query_arg(
     array(
       'action' => 'vms_ticketing_stock_clear_preview',
-      '_wpnonce' => wp_create_nonce('vms_ticketing_stock_clear_preview'),
+      '_wpnonce' => wp_create_nonce('bvmgr_ticketing_stock_clear_preview'),
     ),
     admin_url('admin-post.php')
   );
@@ -2094,15 +2094,15 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   }
   $public_calendar_page_id = isset($settings['public_calendar_page_id']) ? absint($settings['public_calendar_page_id']) : 0;
   $public_calendar_custom_url = isset($settings['public_calendar_custom_url']) ? trim((string) $settings['public_calendar_custom_url']) : '';
-  $public_calendar_resolved_url = function_exists('vms_get_public_event_calendar_url') ? (string) vms_get_public_event_calendar_url() : '';
+  $public_calendar_resolved_url = function_exists('bvmgr_get_public_event_calendar_url') ? (string) bvmgr_get_public_event_calendar_url() : '';
   $calendar_open_slot_target = isset($settings['calendar_open_slot_link_target']) ? sanitize_key((string) $settings['calendar_open_slot_link_target']) : 'vendor_dashboard';
   if (!in_array($calendar_open_slot_target, array('vendor_dashboard', 'vendor_registration', 'custom'), true)) {
     $calendar_open_slot_target = 'vendor_dashboard';
   }
   $calendar_open_slot_custom = isset($settings['calendar_open_slot_link_custom_url']) ? esc_url((string) $settings['calendar_open_slot_link_custom_url']) : '';
   $parse_assoc_map = static function ($raw): array {
-    if (function_exists('vms_calendar_parse_assoc_map')) {
-      return (array) vms_calendar_parse_assoc_map($raw);
+    if (function_exists('bvmgr_calendar_parse_assoc_map')) {
+      return (array) bvmgr_calendar_parse_assoc_map($raw);
     }
     return is_array($raw) ? $raw : array();
   };
@@ -2113,7 +2113,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   $saved_target_by_type_map = $parse_assoc_map($settings['calendar_open_slot_link_target_by_type'] ?? array());
   $saved_custom_url_by_type_map = $parse_assoc_map($settings['calendar_open_slot_link_custom_url_by_type'] ?? array());
   $saved_public_visibility_map = $parse_assoc_map($settings['calendar_public_show_vendors_by_type'] ?? array());
-  $vendor_type_rows = vms_settings_calendar_vendor_type_rows(array_merge(
+  $vendor_type_rows = bvmgr_settings_calendar_vendor_type_rows(array_merge(
     (array) $saved_icon_map,
     (array) $saved_slot_limit_map,
     (array) $saved_vendor_visibility_map,
@@ -2137,7 +2137,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   echo '<table class="form-table" role="presentation">';
 
   echo '<tr><th scope="row">' . esc_html__('Vendor Type Icons', 'backstage-venue-manager') . '</th><td>';
-  $icon_choices = vms_settings_calendar_icon_choices();
+  $icon_choices = bvmgr_settings_calendar_icon_choices();
 
   if (empty($vendor_type_rows)) {
     echo '<p class="description">' . esc_html__('Create Vendor Types first. Then you can pick icons from a list here.', 'backstage-venue-manager') . '</p>';
@@ -2334,10 +2334,10 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
     'echo'              => 0,
   ));
   if (is_string($public_calendar_page_dropdown) && $public_calendar_page_dropdown !== '') {
-    echo wp_kses($public_calendar_page_dropdown, vms_settings_page_dropdown_allowed_html());
+    echo wp_kses($public_calendar_page_dropdown, bvmgr_settings_page_dropdown_allowed_html());
   }
   echo '</p>';
-  echo '<p class="description">' . esc_html__('Choose the public page customers should use to browse events. Auto-detect first looks for the VMS public calendar page, then falls back to the TEC events archive.', 'backstage-venue-manager') . '</p>';
+  echo '<p class="description">' . esc_html__('Choose the public page customers should use to browse events. Auto-detect first looks for the Backstage Venue Manager public calendar page, then falls back to the TEC events archive.', 'backstage-venue-manager') . '</p>';
   echo '<p>';
   echo '<label for="vms_public_calendar_custom_url"><strong>' . esc_html__('Advanced custom URL override', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<input id="vms_public_calendar_custom_url" type="text" class="regular-text" name="vms_settings[public_calendar_custom_url]" value="' . esc_attr($public_calendar_custom_url) . '" placeholder="/events-calendar" />';
@@ -2432,9 +2432,9 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
 
   echo '<hr class="vms-hr-spaced">';
   echo '<h2>Public Pages</h2>';
-  echo '<p class="description">VMS uses these pages for vendors and staff. If any are missing, you can repair them here.</p>';
+  echo '<p class="description">Backstage Venue Manager uses these pages for vendors and staff. If any are missing, you can repair them here.</p>';
 
-  $pages = vms_required_public_pages();
+  $pages = bvmgr_required_public_pages();
 
   echo '<div class="vms-card-wide">';
   echo '<table class="widefat striped vms-mt-10">';
@@ -2480,7 +2480,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
 
   $repair_url = wp_nonce_url(
     admin_url('admin-post.php?action=vms_repair_pages'),
-    'vms_repair_pages'
+    'bvmgr_repair_pages'
   );
 
   echo '<p class="vms-mt-14">';
@@ -2489,7 +2489,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
   echo '</p>';
 
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only settings notice state only affects admin feedback.
-			if (vms_request_read_scalar($_GET, 'vms_entitlement_image_sync_done') === '1') {
+			if (bvmgr_request_read_scalar($_GET, 'vms_entitlement_image_sync_done') === '1') {
 			$img_sync = get_transient('vms_entitlement_image_sync_last');
 			if (is_array($img_sync)) {
 				$ts_readable = wp_date('Y-m-d H:i', (int) ($img_sync['ts'] ?? 0), wp_timezone());
@@ -2539,7 +2539,7 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
 		echo '<h2>Ticketing Image Tools</h2>';
 		echo '<p>Sync GA ticket and entitlement/add-on images from Ticketing v2 config to WooCommerce product featured images so cart, checkout, and order thumbnails stay aligned.</p>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_sync_entitlement_images');
+		wp_nonce_field('bvmgr_sync_entitlement_images');
 		echo '<input type="hidden" name="action" value="vms_sync_entitlement_images" />';
 		submit_button('Sync Ticket Images to Woo Products', 'secondary', 'submit', false);
 		echo '</form>';
@@ -2550,14 +2550,14 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
 			// =========================================================
 			// Data Integrity Tools (On-demand Scan)
 			// =========================================================
-		vms_render_settings_page_integrity_scan_result(vms_get_settings_page_integrity_scan_result_context());
+		bvmgr_render_settings_page_integrity_scan_result(bvmgr_get_settings_page_integrity_scan_result_context());
 
 		echo '<div class="vms-card">';
 		echo '<h2>Data Integrity</h2>';
 		echo '<p>Scan Event Plans for broken links: missing or trashed Vendors, orphaned Venues, and missing or trashed calendar events. Published Event Plans with a linked calendar event that is not published (and not scheduled) are flagged as <strong>Needs attention</strong> unless suppressed per plan. Event Plans are forced back to Draft only for broken links (missing, trashed, or invalid references).</p>';
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-		wp_nonce_field('vms_integrity_scan');
+		wp_nonce_field('bvmgr_integrity_scan');
 		echo '<input type="hidden" name="action" value="vms_integrity_scan" />';
 
 		echo '<p><label for="vms_integrity_mode"><strong>Mode</strong></label><br />';
@@ -2579,12 +2579,12 @@ function vms_render_settings_page_content(bool $include_ticketing_stock_notice_p
 echo '</div>';
 }
 
-function vms_settings_page_ticketing_stock_notice_placeholder(): string
+function bvmgr_settings_page_ticketing_stock_notice_placeholder(): string
 {
   return '<!-- vms-settings-ticketing-stock-notice -->';
 }
 
-function vms_get_settings_page_ticketing_stock_notice_state(bool $refresh = false): array
+function bvmgr_get_settings_page_ticketing_stock_notice_state(bool $refresh = false): array
 {
   static $state = null;
 
@@ -2596,14 +2596,14 @@ function vms_get_settings_page_ticketing_stock_notice_state(bool $refresh = fals
     return $state;
   }
 
-  $preview_key = function_exists('vms_ticketing_stock_preview_transient_key')
-    ? vms_ticketing_stock_preview_transient_key(get_current_user_id())
+  $preview_key = function_exists('bvmgr_ticketing_stock_preview_transient_key')
+    ? bvmgr_ticketing_stock_preview_transient_key(get_current_user_id())
     : 'vms_ticketing_stock_preview_' . max(1, get_current_user_id());
 
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only ticketing-stock notice state only affects admin messaging.
-  $preview_done = (vms_request_read_scalar($_GET, 'vms_ticketing_stock_preview_done') === '1');
+  $preview_done = (bvmgr_request_read_scalar($_GET, 'vms_ticketing_stock_preview_done') === '1');
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only ticketing-stock notice state only affects admin messaging.
-  $commit_done = (vms_request_read_scalar($_GET, 'vms_ticketing_stock_commit_done') === '1');
+  $commit_done = (bvmgr_request_read_scalar($_GET, 'vms_ticketing_stock_commit_done') === '1');
 
   $state = array(
     'preview_done' => $preview_done,
@@ -2619,20 +2619,20 @@ function vms_get_settings_page_ticketing_stock_notice_state(bool $refresh = fals
   return $state;
 }
 
-function vms_render_settings_page_notice_bar(): void
+function bvmgr_render_settings_page_notice_bar(): void
 {
-  vms_render_settings_page_notices();
-  vms_render_settings_page_ticketing_stock_notices(vms_get_settings_page_ticketing_stock_notice_state());
+  bvmgr_render_settings_page_notices();
+  bvmgr_render_settings_page_ticketing_stock_notices(bvmgr_get_settings_page_ticketing_stock_notice_state());
 }
 
-function vms_get_settings_page_ticketing_stock_notice_markup(): string
+function bvmgr_get_settings_page_ticketing_stock_notice_markup(): string
 {
   ob_start();
-  vms_render_settings_page_ticketing_stock_notices(vms_get_settings_page_ticketing_stock_notice_state());
+  bvmgr_render_settings_page_ticketing_stock_notices(bvmgr_get_settings_page_ticketing_stock_notice_state());
   return (string) ob_get_clean();
 }
 
-function vms_render_settings_page_ticketing_stock_notices(array $ticketing_stock_notice_state): void
+function bvmgr_render_settings_page_ticketing_stock_notices(array $ticketing_stock_notice_state): void
 {
   $preview_rep = $ticketing_stock_notice_state['preview_report'] ?? false;
 
@@ -2655,13 +2655,13 @@ function vms_render_settings_page_ticketing_stock_notices(array $ticketing_stock
   }
 }
 
-function vms_settings_page_integrity_scan_normalize_count($value): int
+function bvmgr_settings_page_integrity_scan_normalize_count($value): int
 {
   $count = (int) $value;
   return $count < 0 ? 0 : $count;
 }
 
-function vms_settings_page_integrity_scan_normalize_limit($value): int
+function bvmgr_settings_page_integrity_scan_normalize_limit($value): int
 {
   $limit = (int) $value;
   if ($limit < 1) {
@@ -2674,7 +2674,7 @@ function vms_settings_page_integrity_scan_normalize_limit($value): int
   return $limit;
 }
 
-function vms_settings_page_integrity_scan_normalize_mode($value): string
+function bvmgr_settings_page_integrity_scan_normalize_mode($value): string
 {
   $mode = sanitize_key((string) $value);
   if (!in_array($mode, array('all', 'vendors', 'venues', 'events'), true)) {
@@ -2687,7 +2687,7 @@ function vms_settings_page_integrity_scan_normalize_mode($value): string
 /**
  * @return array{visible:bool,label:string,href:string,class:string,target:string,rel:string}
  */
-function vms_settings_page_integrity_scan_default_action_context(): array
+function bvmgr_settings_page_integrity_scan_default_action_context(): array
 {
   return array(
     'visible' => false,
@@ -2703,7 +2703,7 @@ function vms_settings_page_integrity_scan_default_action_context(): array
  * @param mixed $results
  * @return array{section:string,label:string,checked:int,missing:int,trashed:int,secondary_missing:int,secondary_trashed:int,unpublished:int,unlinked:int,cleared_refs:int,forced_draft:int,action:array{visible:bool,label:string,href:string,class:string,target:string,rel:string}}
  */
-function vms_settings_page_integrity_scan_normalize_section_context(string $section, $results): array
+function bvmgr_settings_page_integrity_scan_normalize_section_context(string $section, $results): array
 {
   $results = is_array($results) ? $results : array();
   $context = array(
@@ -2718,28 +2718,28 @@ function vms_settings_page_integrity_scan_normalize_section_context(string $sect
     'unlinked' => 0,
     'cleared_refs' => 0,
     'forced_draft' => 0,
-    'action' => vms_settings_page_integrity_scan_default_action_context(),
+    'action' => bvmgr_settings_page_integrity_scan_default_action_context(),
   );
 
   if ($section === 'vendors') {
     $context['label'] = 'Event Plans (Vendor links):';
-    $context['checked'] = vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
-    $context['missing'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_vendor'] ?? 0);
-    $context['trashed'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_vendor'] ?? 0);
-    $context['secondary_missing'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_secondary_vendor'] ?? 0);
-    $context['secondary_trashed'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_secondary_vendor'] ?? 0);
-    $context['forced_draft'] = vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
+    $context['checked'] = bvmgr_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
+    $context['missing'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_missing_vendor'] ?? 0);
+    $context['trashed'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_trashed_vendor'] ?? 0);
+    $context['secondary_missing'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_missing_secondary_vendor'] ?? 0);
+    $context['secondary_trashed'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_trashed_secondary_vendor'] ?? 0);
+    $context['forced_draft'] = bvmgr_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
     return $context;
   }
 
   if ($section === 'venues') {
     $context['label'] = 'Event Plans (Venue links):';
-    $context['checked'] = vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
-    $context['missing'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_venue'] ?? 0);
-    $context['trashed'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_venue'] ?? 0);
-    $context['unpublished'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_venue_unpublished'] ?? 0);
-    $context['cleared_refs'] = vms_settings_page_integrity_scan_normalize_count($results['cleared_venue_refs'] ?? 0);
-    $context['forced_draft'] = vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
+    $context['checked'] = bvmgr_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
+    $context['missing'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_missing_venue'] ?? 0);
+    $context['trashed'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_trashed_venue'] ?? 0);
+    $context['unpublished'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_venue_unpublished'] ?? 0);
+    $context['cleared_refs'] = bvmgr_settings_page_integrity_scan_normalize_count($results['cleared_venue_refs'] ?? 0);
+    $context['forced_draft'] = bvmgr_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
     if ($context['trashed'] > 0) {
       $context['action'] = array(
         'visible' => true,
@@ -2754,13 +2754,13 @@ function vms_settings_page_integrity_scan_normalize_section_context(string $sect
   }
 
   $context['label'] = 'Event Plans (Calendar):';
-  $context['checked'] = vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
-  $context['unlinked'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unlinked'] ?? 0);
-  $context['missing'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_calendar_event'] ?? 0);
-  $context['trashed'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_calendar_event'] ?? 0);
-  $context['unpublished'] = vms_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unpublished'] ?? 0);
-  $context['cleared_refs'] = vms_settings_page_integrity_scan_normalize_count($results['cleared_calendar_event_refs'] ?? 0);
-  $context['forced_draft'] = vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
+  $context['checked'] = bvmgr_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0);
+  $context['unlinked'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unlinked'] ?? 0);
+  $context['missing'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_missing_calendar_event'] ?? 0);
+  $context['trashed'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_trashed_calendar_event'] ?? 0);
+  $context['unpublished'] = bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unpublished'] ?? 0);
+  $context['cleared_refs'] = bvmgr_settings_page_integrity_scan_normalize_count($results['cleared_calendar_event_refs'] ?? 0);
+  $context['forced_draft'] = bvmgr_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0);
   if (
     $context['unlinked'] > 0 ||
     $context['missing'] > 0 ||
@@ -2783,40 +2783,40 @@ function vms_settings_page_integrity_scan_normalize_section_context(string $sect
 /**
  * @return array<string,int>
  */
-function vms_settings_page_integrity_scan_normalize_single_mode_results(string $mode, array $results): array
+function bvmgr_settings_page_integrity_scan_normalize_single_mode_results(string $mode, array $results): array
 {
   if ($mode === 'vendors') {
     return array(
-      'checked' => vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
-      'flagged_missing_vendor' => vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_vendor'] ?? 0),
-      'flagged_trashed_vendor' => vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_vendor'] ?? 0),
-      'flagged_missing_secondary_vendor' => vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_secondary_vendor'] ?? 0),
-      'flagged_trashed_secondary_vendor' => vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_secondary_vendor'] ?? 0),
-      'removed_missing_secondary_vendor_ids' => vms_settings_page_integrity_scan_normalize_count($results['removed_missing_secondary_vendor_ids'] ?? 0),
-      'forced_draft' => vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
+      'checked' => bvmgr_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
+      'flagged_missing_vendor' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_missing_vendor'] ?? 0),
+      'flagged_trashed_vendor' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_trashed_vendor'] ?? 0),
+      'flagged_missing_secondary_vendor' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_missing_secondary_vendor'] ?? 0),
+      'flagged_trashed_secondary_vendor' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_trashed_secondary_vendor'] ?? 0),
+      'removed_missing_secondary_vendor_ids' => bvmgr_settings_page_integrity_scan_normalize_count($results['removed_missing_secondary_vendor_ids'] ?? 0),
+      'forced_draft' => bvmgr_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
     );
   }
 
   if ($mode === 'venues') {
     return array(
-      'checked' => vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
-      'flagged_missing_venue' => vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_venue'] ?? 0),
-      'flagged_trashed_venue' => vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_venue'] ?? 0),
-      'flagged_venue_unpublished' => vms_settings_page_integrity_scan_normalize_count($results['flagged_venue_unpublished'] ?? 0),
-      'cleared_venue_refs' => vms_settings_page_integrity_scan_normalize_count($results['cleared_venue_refs'] ?? 0),
-      'forced_draft' => vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
+      'checked' => bvmgr_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
+      'flagged_missing_venue' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_missing_venue'] ?? 0),
+      'flagged_trashed_venue' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_trashed_venue'] ?? 0),
+      'flagged_venue_unpublished' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_venue_unpublished'] ?? 0),
+      'cleared_venue_refs' => bvmgr_settings_page_integrity_scan_normalize_count($results['cleared_venue_refs'] ?? 0),
+      'forced_draft' => bvmgr_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
     );
   }
 
   if ($mode === 'events') {
     return array(
-      'checked' => vms_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
-      'flagged_calendar_event_unlinked' => vms_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unlinked'] ?? 0),
-      'flagged_missing_calendar_event' => vms_settings_page_integrity_scan_normalize_count($results['flagged_missing_calendar_event'] ?? 0),
-      'flagged_trashed_calendar_event' => vms_settings_page_integrity_scan_normalize_count($results['flagged_trashed_calendar_event'] ?? 0),
-      'flagged_calendar_event_unpublished' => vms_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unpublished'] ?? 0),
-      'cleared_calendar_event_refs' => vms_settings_page_integrity_scan_normalize_count($results['cleared_calendar_event_refs'] ?? 0),
-      'forced_draft' => vms_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
+      'checked' => bvmgr_settings_page_integrity_scan_normalize_count($results['checked'] ?? 0),
+      'flagged_calendar_event_unlinked' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unlinked'] ?? 0),
+      'flagged_missing_calendar_event' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_missing_calendar_event'] ?? 0),
+      'flagged_trashed_calendar_event' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_trashed_calendar_event'] ?? 0),
+      'flagged_calendar_event_unpublished' => bvmgr_settings_page_integrity_scan_normalize_count($results['flagged_calendar_event_unpublished'] ?? 0),
+      'cleared_calendar_event_refs' => bvmgr_settings_page_integrity_scan_normalize_count($results['cleared_calendar_event_refs'] ?? 0),
+      'forced_draft' => bvmgr_settings_page_integrity_scan_normalize_count($results['forced_draft'] ?? 0),
     );
   }
 
@@ -2827,7 +2827,7 @@ function vms_settings_page_integrity_scan_normalize_single_mode_results(string $
  * @param mixed $stored_result
  * @return array<string,mixed>
  */
-function vms_build_settings_page_integrity_scan_result_context($stored_result, bool $scan_done_requested): array
+function bvmgr_build_settings_page_integrity_scan_result_context($stored_result, bool $scan_done_requested): array
 {
   $context = array(
     'requested' => $scan_done_requested,
@@ -2853,10 +2853,10 @@ function vms_build_settings_page_integrity_scan_result_context($stored_result, b
     return $context;
   }
 
-  $mode = vms_settings_page_integrity_scan_normalize_mode($stored_result['mode'] ?? 'all');
+  $mode = bvmgr_settings_page_integrity_scan_normalize_mode($stored_result['mode'] ?? 'all');
   $context['mode'] = $mode;
   $context['mode_label'] = $mode;
-  $context['limit'] = vms_settings_page_integrity_scan_normalize_limit($stored_result['limit'] ?? 500);
+  $context['limit'] = bvmgr_settings_page_integrity_scan_normalize_limit($stored_result['limit'] ?? 500);
   $context['timestamp'] = wp_date('Y-m-d H:i', (int) ($stored_result['ts'] ?? 0), wp_timezone());
 
   if (isset($results['vendors']) || isset($results['venues']) || isset($results['events'])) {
@@ -2864,9 +2864,9 @@ function vms_build_settings_page_integrity_scan_result_context($stored_result, b
     $context['status'] = 'composite';
     $context['layout'] = 'composite';
     $context['sections'] = array(
-      vms_settings_page_integrity_scan_normalize_section_context('vendors', $results['vendors'] ?? array()),
-      vms_settings_page_integrity_scan_normalize_section_context('venues', $results['venues'] ?? array()),
-      vms_settings_page_integrity_scan_normalize_section_context('events', $results['events'] ?? array()),
+      bvmgr_settings_page_integrity_scan_normalize_section_context('vendors', $results['vendors'] ?? array()),
+      bvmgr_settings_page_integrity_scan_normalize_section_context('venues', $results['venues'] ?? array()),
+      bvmgr_settings_page_integrity_scan_normalize_section_context('events', $results['events'] ?? array()),
     );
     return $context;
   }
@@ -2876,7 +2876,7 @@ function vms_build_settings_page_integrity_scan_result_context($stored_result, b
     return $context;
   }
 
-  $single_results = vms_settings_page_integrity_scan_normalize_single_mode_results($mode, $results);
+  $single_results = bvmgr_settings_page_integrity_scan_normalize_single_mode_results($mode, $results);
   if ($single_results === array()) {
     $context['status'] = 'invalid';
     return $context;
@@ -2892,7 +2892,7 @@ function vms_build_settings_page_integrity_scan_result_context($stored_result, b
 /**
  * @return array<string,mixed>
  */
-function vms_get_settings_page_integrity_scan_result_context(bool $refresh = false): array
+function bvmgr_get_settings_page_integrity_scan_result_context(bool $refresh = false): array
 {
   static $context = null;
 
@@ -2905,9 +2905,9 @@ function vms_get_settings_page_integrity_scan_result_context(bool $refresh = fal
   }
 
   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only integrity-scan notice state only affects admin messaging.
-  $scan_done_requested = (vms_request_read_scalar($_GET, 'vms_scan_done') === '1');
+  $scan_done_requested = (bvmgr_request_read_scalar($_GET, 'vms_scan_done') === '1');
   $stored_result = $scan_done_requested ? get_transient('vms_integrity_scan_last') : false;
-  $context = vms_build_settings_page_integrity_scan_result_context($stored_result, $scan_done_requested);
+  $context = bvmgr_build_settings_page_integrity_scan_result_context($stored_result, $scan_done_requested);
 
   return $context;
 }
@@ -2915,7 +2915,7 @@ function vms_get_settings_page_integrity_scan_result_context(bool $refresh = fal
 /**
  * @param array<string,mixed> $context
  */
-function vms_render_settings_page_integrity_scan_result(array $context): void
+function bvmgr_render_settings_page_integrity_scan_result(array $context): void
 {
   if (empty($context['show'])) {
     return;
@@ -2985,7 +2985,7 @@ function vms_render_settings_page_integrity_scan_result(array $context): void
   echo '</div>';
 }
 
-function vms_field_sch_hide_past_default()
+function bvmgr_field_sch_hide_past_default()
 {
   $opts = (array) get_option('vms_settings', array());
   $val  = array_key_exists('sch_hide_past_default', $opts) ? (int) $opts['sch_hide_past_default'] : 1; // default ON

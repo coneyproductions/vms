@@ -14,9 +14,9 @@ $GLOBALS['vms_test_runtime_calls'] = array(
     'remove_query_arg' => 0,
     'get_post_type' => 0,
     'get_post_status' => 0,
-    'vms_sch_get_schedule_venue_candidates' => 0,
-    'vms_sch_pick_single_venue_candidate' => 0,
-    'vms_sch_get_all_venue_ids' => 0,
+    'bvmgr_sch_get_schedule_venue_candidates' => 0,
+    'bvmgr_sch_pick_single_venue_candidate' => 0,
+    'bvmgr_sch_get_all_venue_ids' => 0,
 );
 $GLOBALS['vms_test_mutation_calls'] = array(
     'update_user_meta' => 0,
@@ -143,8 +143,8 @@ if (!function_exists('sanitize_email')) {
     }
 }
 
-if (!function_exists('vms_request_read_scalar')) {
-    function vms_request_read_scalar(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_scalar')) {
+    function bvmgr_request_read_scalar(array $source, string $key): string
     {
         if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
             return '';
@@ -155,26 +155,26 @@ if (!function_exists('vms_request_read_scalar')) {
     }
 }
 
-if (!function_exists('vms_request_read_text_field')) {
-    function vms_request_read_text_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_text_field')) {
+    function bvmgr_request_read_text_field(array $source, string $key): string
     {
-        $value = vms_request_read_scalar($source, $key);
+        $value = bvmgr_request_read_scalar($source, $key);
         return $value === '' ? '' : sanitize_text_field($value);
     }
 }
 
-if (!function_exists('vms_request_read_key')) {
-    function vms_request_read_key(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_key')) {
+    function bvmgr_request_read_key(array $source, string $key): string
     {
-        $value = vms_request_read_scalar($source, $key);
+        $value = bvmgr_request_read_scalar($source, $key);
         return $value === '' ? '' : sanitize_key($value);
     }
 }
 
-if (!function_exists('vms_request_read_absint')) {
-    function vms_request_read_absint(array $source, string $key): int
+if (!function_exists('bvmgr_request_read_absint')) {
+    function bvmgr_request_read_absint(array $source, string $key): int
     {
-        $value = vms_request_read_scalar($source, $key);
+        $value = bvmgr_request_read_scalar($source, $key);
         return $value === '' ? 0 : absint($value);
     }
 }
@@ -345,34 +345,34 @@ if (!function_exists('delete_post_meta')) {
     }
 }
 
-if (!function_exists('vms_sch_get_schedule_venue_candidates')) {
-    function vms_sch_get_schedule_venue_candidates(int $limit = -1): array
+if (!function_exists('bvmgr_sch_get_schedule_venue_candidates')) {
+    function bvmgr_sch_get_schedule_venue_candidates(int $limit = -1): array
     {
         unset($limit);
-        $GLOBALS['vms_test_runtime_calls']['vms_sch_get_schedule_venue_candidates']++;
+        $GLOBALS['vms_test_runtime_calls']['bvmgr_sch_get_schedule_venue_candidates']++;
         return array_values(array_map('intval', (array) $GLOBALS['vms_test_schedule_venue_candidates']));
     }
 }
 
-if (!function_exists('vms_sch_pick_single_venue_candidate')) {
-    function vms_sch_pick_single_venue_candidate(array $candidate_ids): int
+if (!function_exists('bvmgr_sch_pick_single_venue_candidate')) {
+    function bvmgr_sch_pick_single_venue_candidate(array $candidate_ids): int
     {
-        $GLOBALS['vms_test_runtime_calls']['vms_sch_pick_single_venue_candidate']++;
+        $GLOBALS['vms_test_runtime_calls']['bvmgr_sch_pick_single_venue_candidate']++;
         $ids = array_values(array_unique(array_filter(array_map('intval', $candidate_ids))));
         return count($ids) === 1 ? (int) $ids[0] : 0;
     }
 }
 
-if (!function_exists('vms_sch_get_all_venue_ids')) {
-    function vms_sch_get_all_venue_ids(): array
+if (!function_exists('bvmgr_sch_get_all_venue_ids')) {
+    function bvmgr_sch_get_all_venue_ids(): array
     {
-        $GLOBALS['vms_test_runtime_calls']['vms_sch_get_all_venue_ids']++;
+        $GLOBALS['vms_test_runtime_calls']['bvmgr_sch_get_all_venue_ids']++;
         return array_values(array_map('intval', (array) $GLOBALS['vms_test_all_venue_ids']));
     }
 }
 
-if (!function_exists('vms_render_current_venue_selector')) {
-    function vms_render_current_venue_selector(): void
+if (!function_exists('bvmgr_render_current_venue_selector')) {
+    function bvmgr_render_current_venue_selector(): void
     {
         echo '<div class="vms-test-current-venue-selector"></div>';
     }
@@ -422,9 +422,9 @@ $resetState = static function (): void {
         'remove_query_arg' => 0,
         'get_post_type' => 0,
         'get_post_status' => 0,
-        'vms_sch_get_schedule_venue_candidates' => 0,
-        'vms_sch_pick_single_venue_candidate' => 0,
-        'vms_sch_get_all_venue_ids' => 0,
+        'bvmgr_sch_get_schedule_venue_candidates' => 0,
+        'bvmgr_sch_pick_single_venue_candidate' => 0,
+        'bvmgr_sch_get_all_venue_ids' => 0,
     );
     $GLOBALS['vms_test_mutation_calls'] = array(
         'update_user_meta' => 0,
@@ -467,15 +467,15 @@ try {
     $expectedNoSelectionHtml = '<div class="notice notice-warning"><p>Select a venue to view its schedule.</p></div>';
     $expectedNoVenuesHtml = '<div class="notice notice-warning"><p>No venues found to display.</p></div>';
 
-    $assert(function_exists('vms_schedule_get_scope_warning_notice_context'), 'Schedule should define the scope warning notice context builder.');
-    $assert(function_exists('vms_schedule_render_scope_warning_notice'), 'Schedule should define the scope warning notice renderer.');
-    $assert(function_exists('vms_schedule_get_unpublished_venue_notice_context'), 'Schedule should define the unpublished-venue notice context builder.');
-    $assert(function_exists('vms_schedule_render_unpublished_venue_notice'), 'Schedule should define the unpublished-venue notice renderer.');
-    $assert(function_exists('vms_render_schedule_page_content'), 'Schedule should still define the page-content renderer.');
+    $assert(function_exists('bvmgr_schedule_get_scope_warning_notice_context'), 'Schedule should define the scope warning notice context builder.');
+    $assert(function_exists('bvmgr_schedule_render_scope_warning_notice'), 'Schedule should define the scope warning notice renderer.');
+    $assert(function_exists('bvmgr_schedule_get_unpublished_venue_notice_context'), 'Schedule should define the unpublished-venue notice context builder.');
+    $assert(function_exists('bvmgr_schedule_render_unpublished_venue_notice'), 'Schedule should define the unpublished-venue notice renderer.');
+    $assert(function_exists('bvmgr_render_schedule_page_content'), 'Schedule should still define the page-content renderer.');
 
-    $builderSource = $functionSource('vms_schedule_get_scope_warning_notice_context');
-    $rendererSource = $functionSource('vms_schedule_render_scope_warning_notice');
-    $pageContentSource = $functionSource('vms_render_schedule_page_content');
+    $builderSource = $functionSource('bvmgr_schedule_get_scope_warning_notice_context');
+    $rendererSource = $functionSource('bvmgr_schedule_render_scope_warning_notice');
+    $pageContentSource = $functionSource('bvmgr_render_schedule_page_content');
 
     $assert(strpos($builderSource, "'show' => \$show") !== false, 'Schedule scope warning builder should preserve the finite show flag.');
     $assert(strpos($builderSource, "'variant' => \$variant") !== false, 'Schedule scope warning builder should preserve the finite variant key.');
@@ -494,18 +494,18 @@ try {
 
     $assert(substr_count($scheduleSource, $expectedNoSelectionHtml) === 1, 'Schedule should keep only one direct no-selection warning fragment after normalization.');
     $assert(substr_count($scheduleSource, $expectedNoVenuesHtml) === 1, 'Schedule should keep only one direct no-venues warning fragment after normalization.');
-    $assert(substr_count($scheduleSource, 'vms_schedule_render_scope_warning_notice($scope_warning_notice_context);') === 2, 'Schedule should route both scope warning branches through the shared page-local renderer.');
-    $assert(substr_count($scheduleSource, 'vms_schedule_render_unpublished_venue_notice($unpublished_notice_context);') === 2, 'Schedule should keep routing both richer unpublished-venue branches through their separate shared renderer.');
-    $assert(strpos($pageContentSource, "vms_schedule_get_scope_warning_notice_context(\$scope === 'venue' && (int) \$venue_id <= 0, 'no_selection');") !== false, 'Schedule page content should preserve the exact no-selection condition.');
-    $assert(strpos($pageContentSource, "vms_schedule_get_scope_warning_notice_context(empty(\$venue_ids), 'no_venues');") !== false, 'Schedule page content should preserve the exact no-venues condition after the all-venue read.');
+    $assert(substr_count($scheduleSource, 'bvmgr_schedule_render_scope_warning_notice($scope_warning_notice_context);') === 2, 'Schedule should route both scope warning branches through the shared page-local renderer.');
+    $assert(substr_count($scheduleSource, 'bvmgr_schedule_render_unpublished_venue_notice($unpublished_notice_context);') === 2, 'Schedule should keep routing both richer unpublished-venue branches through their separate shared renderer.');
+    $assert(strpos($pageContentSource, "bvmgr_schedule_get_scope_warning_notice_context(\$scope === 'venue' && (int) \$venue_id <= 0, 'no_selection');") !== false, 'Schedule page content should preserve the exact no-selection condition.');
+    $assert(strpos($pageContentSource, "bvmgr_schedule_get_scope_warning_notice_context(empty(\$venue_ids), 'no_venues');") !== false, 'Schedule page content should preserve the exact no-venues condition after the all-venue read.');
     $assert(strpos($scheduleSource, "echo '<div class=\"notice notice-error\"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';") !== false, 'Schedule should preserve the richer unpublished-venue notice family outside the scope warning renderer.');
-    $assert(strpos($scheduleSource, 'vms_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);') !== false, 'Schedule should preserve the separate invalid-bounds renderer family.');
+    $assert(strpos($scheduleSource, 'bvmgr_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);') !== false, 'Schedule should preserve the separate invalid-bounds renderer family.');
     $assert(strpos($scheduleSource, "'notices_callback' =>") === false, 'Schedule scope warnings should remain content-local and outside the Administrator shell.');
 
-    $visibleNoSelectionContext = vms_schedule_get_scope_warning_notice_context(true, 'no_selection');
-    $hiddenNoSelectionContext = vms_schedule_get_scope_warning_notice_context(false, 'no_selection');
-    $visibleNoVenuesContext = vms_schedule_get_scope_warning_notice_context(true, 'no_venues');
-    $invalidVariantContext = vms_schedule_get_scope_warning_notice_context(true, '<script>alert(1)</script>');
+    $visibleNoSelectionContext = bvmgr_schedule_get_scope_warning_notice_context(true, 'no_selection');
+    $hiddenNoSelectionContext = bvmgr_schedule_get_scope_warning_notice_context(false, 'no_selection');
+    $visibleNoVenuesContext = bvmgr_schedule_get_scope_warning_notice_context(true, 'no_venues');
+    $invalidVariantContext = bvmgr_schedule_get_scope_warning_notice_context(true, '<script>alert(1)</script>');
 
     $assertSame(array('show', 'variant'), array_keys($visibleNoSelectionContext), 'Schedule scope warning builder should return only the finite show and variant keys.');
     $assertSame(array('show' => true, 'variant' => 'no_selection'), $visibleNoSelectionContext, 'Schedule scope warning builder should preserve the visible no-selection context exactly.');
@@ -515,7 +515,7 @@ try {
 
     $beforeHiddenRenderer = $snapshotCounters();
     $hiddenHtml = $captureOutput(static function (): void {
-        vms_schedule_render_scope_warning_notice(array('show' => false, 'variant' => 'no_selection'));
+        bvmgr_schedule_render_scope_warning_notice(array('show' => false, 'variant' => 'no_selection'));
     });
     $afterHiddenRenderer = $snapshotCounters();
     $assertSame('', $hiddenHtml, 'Schedule scope warning renderer should emit nothing for hidden context.');
@@ -527,7 +527,7 @@ try {
     ) as $variant => $expectedHtml) {
         $beforeVisibleRenderer = $snapshotCounters();
         $visibleHtml = $captureOutput(static function () use ($variant): void {
-            vms_schedule_render_scope_warning_notice(array(
+            bvmgr_schedule_render_scope_warning_notice(array(
                 'show' => true,
                 'variant' => $variant,
                 'message' => '</p><script>alert(1)</script><p>',
@@ -560,7 +560,7 @@ try {
 
     $beforeInvalidVariantRenderer = $snapshotCounters();
     $invalidVariantHtml = $captureOutput(static function (): void {
-        vms_schedule_render_scope_warning_notice(array('show' => true, 'variant' => 'bad_variant'));
+        bvmgr_schedule_render_scope_warning_notice(array('show' => true, 'variant' => 'bad_variant'));
     });
     $afterInvalidVariantRenderer = $snapshotCounters();
     $assertSame('', $invalidVariantHtml, 'Schedule scope warning renderer should emit nothing for an invalid visible variant.');
@@ -570,7 +570,7 @@ try {
     $GLOBALS['vms_test_user_meta'][77]['_vms_schedule_scope'] = 'venue';
     $noSelectionBefore = $snapshotCounters();
     $noSelectionPageHtml = $captureOutput(static function (): void {
-        vms_render_schedule_page_content();
+        bvmgr_render_schedule_page_content();
     });
     $noSelectionAfter = $snapshotCounters();
     $assert(strpos($noSelectionPageHtml, '<div class="vms-admin-schedule-content">') !== false, 'Schedule no-selection branch should remain nested inside the schedule content wrapper.');
@@ -579,8 +579,8 @@ try {
     $assert(strpos($noSelectionPageHtml, $expectedNoVenuesHtml) === false, 'Schedule no-selection branch should not emit the no-venues fragment.');
     $assert(strpos($noSelectionPageHtml, 'vms-sch-scope-venue') === false && strpos($noSelectionPageHtml, 'vms-sch-list') === false && strpos($noSelectionPageHtml, 'vms-panel-month') === false, 'Schedule no-selection branch should return before any venue-scope body markup appears.');
     $assertSame($noSelectionBefore['mutation_calls'], $noSelectionAfter['mutation_calls'], 'Schedule no-selection branch should not perform mutations when no incoming state changes are requested.');
-    $assertSame(0, $noSelectionAfter['runtime_calls']['vms_sch_get_all_venue_ids'], 'Schedule no-selection branch should return before reading all-venue IDs.');
-    $assertSame(2, $noSelectionAfter['runtime_calls']['vms_sch_get_schedule_venue_candidates'], 'Schedule no-selection branch should preserve the unpublished-guard candidate probe plus the single-candidate fallback probe before the warning.');
+    $assertSame(0, $noSelectionAfter['runtime_calls']['bvmgr_sch_get_all_venue_ids'], 'Schedule no-selection branch should return before reading all-venue IDs.');
+    $assertSame(2, $noSelectionAfter['runtime_calls']['bvmgr_sch_get_schedule_venue_candidates'], 'Schedule no-selection branch should preserve the unpublished-guard candidate probe plus the single-candidate fallback probe before the warning.');
     $assertSame(0, $noSelectionAfter['runtime_calls']['get_post_status'], 'Schedule no-selection branch should not enter the unpublished-venue guards.');
 
     $resetState();
@@ -588,7 +588,7 @@ try {
     $GLOBALS['vms_test_all_venue_ids'] = array();
     $noVenuesBefore = $snapshotCounters();
     $noVenuesPageHtml = $captureOutput(static function (): void {
-        vms_render_schedule_page_content();
+        bvmgr_render_schedule_page_content();
     });
     $noVenuesAfter = $snapshotCounters();
     $assert(strpos($noVenuesPageHtml, '<div class="vms-admin-schedule-content">') !== false, 'Schedule no-venues branch should remain nested inside the schedule content wrapper.');
@@ -596,8 +596,8 @@ try {
     $assert(strpos($noVenuesPageHtml, $expectedNoVenuesHtml) !== false, 'Schedule no-venues branch should emit the shared no-venues warning fragment.');
     $assert(strpos($noVenuesPageHtml, 'vms-sch-scope-all') === false && strpos($noVenuesPageHtml, 'vms-sch-list-all') === false && strpos($noVenuesPageHtml, 'vms-panel-month') === false, 'Schedule no-venues branch should return before any all-venues body markup appears.');
     $assertSame($noVenuesBefore['mutation_calls'], $noVenuesAfter['mutation_calls'], 'Schedule no-venues branch should not perform mutations when no incoming state changes are requested.');
-    $assertSame(1, $noVenuesAfter['runtime_calls']['vms_sch_get_all_venue_ids'], 'Schedule no-venues branch should preserve the single all-venue read before the warning.');
-    $assertSame(2, $noVenuesAfter['runtime_calls']['vms_sch_get_schedule_venue_candidates'], 'Schedule no-venues branch should preserve the unpublished-guard candidate probe plus the single-candidate fallback probe before the all-venues warning.');
+    $assertSame(1, $noVenuesAfter['runtime_calls']['bvmgr_sch_get_all_venue_ids'], 'Schedule no-venues branch should preserve the single all-venue read before the warning.');
+    $assertSame(2, $noVenuesAfter['runtime_calls']['bvmgr_sch_get_schedule_venue_candidates'], 'Schedule no-venues branch should preserve the unpublished-guard candidate probe plus the single-candidate fallback probe before the all-venues warning.');
     $assertSame(0, $noVenuesAfter['runtime_calls']['get_post_status'], 'Schedule no-venues branch should not enter the unpublished-venue guards.');
 
     fwrite(STDOUT, "schedule warning notice output remediation: PASS\n");

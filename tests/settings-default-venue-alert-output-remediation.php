@@ -5,8 +5,8 @@ if (!defined('ABSPATH')) {
 	define('ABSPATH', dirname(__DIR__) . '/');
 }
 
-if (!defined('VMS_VERSION')) {
-	define('VMS_VERSION', 'test-version');
+if (!defined('BVMGR_VERSION')) {
+	define('BVMGR_VERSION', 'test-version');
 }
 
 $GLOBALS['vms_test_actions'] = array();
@@ -182,8 +182,8 @@ if (!function_exists('sanitize_email')) {
 	}
 }
 
-if (!function_exists('vms_request_read_scalar')) {
-	function vms_request_read_scalar(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_scalar')) {
+	function bvmgr_request_read_scalar(array $source, string $key): string
 	{
 		if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
 			return '';
@@ -194,48 +194,48 @@ if (!function_exists('vms_request_read_scalar')) {
 	}
 }
 
-if (!function_exists('vms_request_read_text_field')) {
-	function vms_request_read_text_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_text_field')) {
+	function bvmgr_request_read_text_field(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_text_field($value);
 	}
 }
 
-if (!function_exists('vms_request_read_textarea_field')) {
-	function vms_request_read_textarea_field(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_textarea_field')) {
+	function bvmgr_request_read_textarea_field(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_textarea_field($value);
 	}
 }
 
-if (!function_exists('vms_request_read_email')) {
-	function vms_request_read_email(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_email')) {
+	function bvmgr_request_read_email(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_email($value);
 	}
 }
 
-if (!function_exists('vms_request_read_key')) {
-	function vms_request_read_key(array $source, string $key): string
+if (!function_exists('bvmgr_request_read_key')) {
+	function bvmgr_request_read_key(array $source, string $key): string
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? '' : sanitize_key($value);
 	}
 }
 
-if (!function_exists('vms_request_read_absint')) {
-	function vms_request_read_absint(array $source, string $key): int
+if (!function_exists('bvmgr_request_read_absint')) {
+	function bvmgr_request_read_absint(array $source, string $key): int
 	{
-		$value = vms_request_read_scalar($source, $key);
+		$value = bvmgr_request_read_scalar($source, $key);
 		return $value === '' ? 0 : absint($value);
 	}
 }
 
-if (!function_exists('vms_request_read_bool_flag')) {
-	function vms_request_read_bool_flag(array $source, string $key): bool
+if (!function_exists('bvmgr_request_read_bool_flag')) {
+	function bvmgr_request_read_bool_flag(array $source, string $key): bool
 	{
 		if (!array_key_exists($key, $source)) {
 			return false;
@@ -445,28 +445,28 @@ $run_admin_init_hooks = static function (): void {
 
 $assert(is_string($settingsSource) && $settingsSource !== '', 'Settings source should be readable.');
 $assert(is_string($shellSource) && $shellSource !== '', 'Shell source should be readable.');
-$assert(strpos($settingsSource, "add_action('admin_post_vms_set_default_venue', 'vms_handle_set_default_venue');") !== false, 'Default-venue admin-post registration should remain unchanged.');
+$assert(strpos($settingsSource, "add_action('admin_post_vms_set_default_venue', 'bvmgr_handle_set_default_venue');") !== false, 'Default-venue admin-post registration should remain unchanged.');
 $assert(strpos($settingsSource, "register_setting('vms_settings_group', 'vms_settings', array(") !== false, 'Settings registration should preserve the vms_settings option registration.');
-$assert(strpos($settingsSource, "'sanitize_callback' => 'vms_sanitize_settings'") !== false, 'Settings registration should preserve the sanitize callback.');
+$assert(strpos($settingsSource, "'sanitize_callback' => 'bvmgr_sanitize_settings'") !== false, 'Settings registration should preserve the sanitize callback.');
 $assert(strpos($settingsSource, "'default' => array()") !== false, 'Settings registration should preserve the default array.');
 $assert(strpos($settingsSource, "'vms_default_venue_id'") !== false, 'The Default Venue field registration should remain present.');
-$assert(strpos($settingsSource, "'vms_field_default_venue'") !== false, 'The Default Venue field callback should remain unchanged.');
+$assert(strpos($settingsSource, "'bvmgr_field_default_venue'") !== false, 'The Default Venue field callback should remain unchanged.');
 $assert(strpos($settingsSource, "name=\"vms_settings[default_venue_id]\" class=\"vms-minw-320\"") !== false, 'The Default Venue select control should remain unchanged.');
 $assert(strpos($settingsSource, '$out[\'default_venue_id\'] = isset($input[\'default_venue_id\']) ? absint($input[\'default_venue_id\']) : 0;') !== false, 'Default Venue option sanitization should remain unchanged.');
 $assert(strpos($settingsSource, "isset(\$_GET['venue_id']) ? absint(wp_unslash(\$_GET['venue_id'])) : 0;") !== false, 'Default Venue action handler should preserve venue_id normalization.');
 $assert(strpos($settingsSource, "wp_verify_nonce(\$nonce, 'vms_set_default_venue_' . \$venue_id)") !== false, 'Default Venue action handler should preserve the nonce action.');
 $assert(strpos($settingsSource, "Venue must be published before it can be set as the Default Venue.") !== false, 'Default Venue action handler should preserve the published-venue guard.');
-$assert(strpos($settingsSource, "vms_render_settings_default_venue_alert(") !== false, 'Default Venue field should route through the dedicated alert renderer.');
-$assert(strpos($settingsSource, "vms_build_settings_default_venue_alert_context(") !== false, 'Default Venue field should route through the dedicated alert context builder.');
+$assert(strpos($settingsSource, "bvmgr_render_settings_default_venue_alert(") !== false, 'Default Venue field should route through the dedicated alert renderer.');
+$assert(strpos($settingsSource, "bvmgr_build_settings_default_venue_alert_context(") !== false, 'Default Venue field should route through the dedicated alert context builder.');
 $assert(strpos($settingsSource, 'function vms_render_settings_alert(') === false, 'No generic Settings alert renderer should be introduced.');
-$assert(strpos($settingsSource, 'vms_render_settings_page_integrity_scan_result(vms_get_settings_page_integrity_scan_result_context());') !== false, 'Settings integrity-scan output should remain unchanged.');
+$assert(strpos($settingsSource, 'bvmgr_render_settings_page_integrity_scan_result(bvmgr_get_settings_page_integrity_scan_result_context());') !== false, 'Settings integrity-scan output should remain unchanged.');
 $assert(strpos($settingsSource, '<strong>Entitlement image sync complete.</strong>') !== false, 'Entitlement image-sync output should remain unchanged.');
 $assertSame(
 	array(
 		'div' => array('class' => true),
 		'p' => array(),
 	),
-	vms_admin_ui_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_explicit_notice_allowed_html(),
 	'Administrator shell simple notice contract should remain unchanged.'
 );
 $assertSame(
@@ -475,7 +475,7 @@ $assertSame(
 		'p' => array(),
 		'strong' => array(),
 	),
-	vms_admin_ui_rich_explicit_notice_allowed_html(),
+	bvmgr_admin_ui_rich_explicit_notice_allowed_html(),
 	'Administrator shell rich notice contract should remain unchanged.'
 );
 
@@ -485,7 +485,7 @@ foreach ($GLOBALS['vms_test_registered_settings'] as $registration) {
 	if (($registration['option_group'] ?? '') === 'vms_settings_group' && ($registration['option_name'] ?? '') === 'vms_settings') {
 		$settingsRegistrationFound = true;
 		$assertSame('array', $registration['args']['type'] ?? '', 'Settings registration should preserve the array type.');
-		$assertSame('vms_sanitize_settings', $registration['args']['sanitize_callback'] ?? '', 'Settings registration should preserve the sanitize callback.');
+		$assertSame('bvmgr_sanitize_settings', $registration['args']['sanitize_callback'] ?? '', 'Settings registration should preserve the sanitize callback.');
 		$assertSame(array(), $registration['args']['default'] ?? null, 'Settings registration should preserve the default array.');
 	}
 }
@@ -496,7 +496,7 @@ foreach ($GLOBALS['vms_test_registered_fields'] as $field) {
 	if (($field['id'] ?? '') === 'vms_default_venue_id') {
 		$defaultVenueFieldFound = true;
 		$assertSame('Default Venue', $field['title'] ?? '', 'Default Venue field title should remain unchanged.');
-		$assertSame('vms_field_default_venue', $field['callback'] ?? '', 'Default Venue field callback should remain unchanged.');
+		$assertSame('bvmgr_field_default_venue', $field['callback'] ?? '', 'Default Venue field callback should remain unchanged.');
 		$assertSame('vms-settings', $field['page'] ?? '', 'Default Venue field page should remain unchanged.');
 		$assertSame('vms_settings_venues', $field['section'] ?? '', 'Default Venue field section should remain unchanged.');
 	}
@@ -522,7 +522,7 @@ $GLOBALS['vms_test_posts'] = array(
 	),
 );
 ob_start();
-vms_field_default_venue();
+bvmgr_field_default_venue();
 $valid_field_html = (string) ob_get_clean();
 $assertSame(
 	'<select name="vms_settings[default_venue_id]" class="vms-minw-320"><option value="0">— None —</option><option value="11" >Draft Venue</option><option value="22" selected="selected">Published Venue</option></select><p class="description">Used when no venue is selected in context.</p>',
@@ -559,7 +559,7 @@ $GLOBALS['vms_test_posts'] = array(
 		'edit_url' => '',
 	),
 );
-$single_unpublished_context = vms_build_settings_default_venue_alert_context(0, array(31), array(), false);
+$single_unpublished_context = bvmgr_build_settings_default_venue_alert_context(0, array(31), array(), false);
 $assertSame(true, $single_unpublished_context['show'], 'Single unpublished venue should produce an alert.');
 $assertSame('single_unpublished', $single_unpublished_context['state'], 'Single unpublished venue should use the dedicated finite state.');
 $assertSame('notice notice-error vms-settings-default-venue-alert', $single_unpublished_context['notice_class'], 'Single unpublished venue should preserve the error alert classes.');
@@ -585,7 +585,7 @@ $GLOBALS['vms_test_posts'] = array(
 		'edit_url' => 'https://example.test/wp-admin/post.php?post=42&action=edit',
 	),
 );
-$selected_unpublished_context = vms_build_settings_default_venue_alert_context(41, array(41, 42), array(42), false);
+$selected_unpublished_context = bvmgr_build_settings_default_venue_alert_context(41, array(41, 42), array(42), false);
 $assertSame(true, $selected_unpublished_context['show'], 'Selected unpublished venue should produce an alert.');
 $assertSame('selected_unpublished', $selected_unpublished_context['state'], 'Selected unpublished venue should use the dedicated finite state.');
 $assertSame('notice notice-warning vms-settings-default-venue-alert', $selected_unpublished_context['notice_class'], 'Selected unpublished venue should preserve the warning alert classes.');
@@ -607,21 +607,21 @@ $GLOBALS['vms_test_posts'] = array(
 		'edit_url' => 'https://example.test/wp-admin/post.php?post=52&action=edit',
 	),
 );
-$unset_fix_context = vms_build_settings_default_venue_alert_context(0, array(52), array(52), false);
+$unset_fix_context = bvmgr_build_settings_default_venue_alert_context(0, array(52), array(52), false);
 $assertSame(true, $unset_fix_context['show'], 'A missing default venue with one published candidate should produce an alert.');
 $assertSame('unset', $unset_fix_context['state'], 'A missing default venue should use the unset finite state.');
 $assertSame(false, $unset_fix_context['primary_action']['visible'], 'Unset default venue should not show the selected-venue action.');
 $assertSame(true, $unset_fix_context['secondary_action']['visible'], 'Unset default venue should show the fix-now action when exactly one published venue exists.');
 
 $reset_state();
-$missing_saved_context = vms_build_settings_default_venue_alert_context(99, array(), array(), false);
+$missing_saved_context = bvmgr_build_settings_default_venue_alert_context(99, array(), array(), false);
 $assertSame(true, $missing_saved_context['show'], 'A missing saved venue should still produce the not-set alert.');
 $assertSame('unset', $missing_saved_context['state'], 'A missing saved venue should normalize to the unset finite state.');
 $assertSame(false, $missing_saved_context['primary_action']['visible'], 'A missing saved venue should not show the selected-venue action.');
 $assertSame(false, $missing_saved_context['secondary_action']['visible'], 'A missing saved venue with no published choices should not show the fix-now action.');
 
 $reset_state();
-$hidden_context = vms_build_settings_default_venue_alert_context(22, array(11, 22), array(22), true);
+$hidden_context = bvmgr_build_settings_default_venue_alert_context(22, array(11, 22), array(22), true);
 $assertSame(false, $hidden_context['show'], 'A published saved venue should produce no alert.');
 $assertSame('hidden', $hidden_context['state'], 'A published saved venue should use the hidden finite state.');
 
@@ -638,11 +638,11 @@ $renderer_context = array(
 		'target' => '',
 		'rel' => '',
 	),
-	'secondary_action' => vms_settings_default_venue_alert_default_action_context(),
+	'secondary_action' => bvmgr_settings_default_venue_alert_default_action_context(),
 );
 $reset_state();
 ob_start();
-vms_render_settings_default_venue_alert($renderer_context);
+bvmgr_render_settings_default_venue_alert($renderer_context);
 $rendered_single_unpublished = (string) ob_get_clean();
 $assertSame(
 	'<div class="notice notice-error vms-settings-default-venue-alert"><p><strong>Action required:</strong> Your only venue is not published (status: <strong>draft</strong>). This will cause Schedule and Season Dates to appear empty.</p><p><a class="button button-primary" href="https://example.test/wp-admin/post.php?post=31&amp;action=edit">Open venue and publish</a></p></div>',
@@ -687,7 +687,7 @@ $renderer_context = array(
 	),
 );
 ob_start();
-vms_render_settings_default_venue_alert($renderer_context);
+bvmgr_render_settings_default_venue_alert($renderer_context);
 $rendered_selected_unpublished = (string) ob_get_clean();
 $assertSame(
 	'<div class="notice notice-warning vms-settings-default-venue-alert"><p><strong>Default Venue needs attention:</strong> The selected venue is not published (status: <strong>private</strong>). Publish it or choose a published venue.</p><p><a class="button button-secondary" href="https://example.test/wp-admin/post.php?post=41&amp;action=edit">Open selected venue</a></p><p><a class="button button-primary" href="https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&amp;venue_id=42&amp;_wpnonce=nonce%3Avms_set_default_venue_42">Fix now: set Default Venue to “Main &lt;Hall&gt;”</a></p></div>',
@@ -701,7 +701,7 @@ $renderer_context = array(
 	'state' => 'unset',
 	'notice_class' => 'notice notice-warning vms-settings-default-venue-alert',
 	'status' => '',
-	'primary_action' => vms_settings_default_venue_alert_default_action_context(),
+	'primary_action' => bvmgr_settings_default_venue_alert_default_action_context(),
 	'secondary_action' => array(
 		'visible' => true,
 		'class' => 'button button-primary',
@@ -712,7 +712,7 @@ $renderer_context = array(
 	),
 	);
 ob_start();
-vms_render_settings_default_venue_alert($renderer_context);
+bvmgr_render_settings_default_venue_alert($renderer_context);
 $rendered_unset = (string) ob_get_clean();
 $assertSame(
 	'<div class="notice notice-warning vms-settings-default-venue-alert"><p><strong>Default Venue is not set.</strong> This can cause parts of VMS to load with no venue context (especially in single-venue installs).</p><p><a class="button button-primary" href="https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&amp;venue_id=52&amp;_wpnonce=nonce%3Avms_set_default_venue_52">Fix now: set Default Venue to “Only &amp; Venue”</a></p></div>',
@@ -721,7 +721,7 @@ $assertSame(
 );
 
 ob_start();
-vms_render_settings_default_venue_alert($hidden_context);
+bvmgr_render_settings_default_venue_alert($hidden_context);
 $rendered_hidden = (string) ob_get_clean();
 $assertSame('', $rendered_hidden, 'The default-venue alert renderer should stay silent for no-alert states.');
 
@@ -744,7 +744,7 @@ $GLOBALS['vms_test_posts'] = array(
 	),
 );
 ob_start();
-vms_field_default_venue();
+bvmgr_field_default_venue();
 $field_with_alert = (string) ob_get_clean();
 $assert(strpos($field_with_alert, '<select name="vms_settings[default_venue_id]" class="vms-minw-320">') === 0, 'The Default Venue setting control should remain at the start of the field output.');
 $assert(strpos($field_with_alert, '<p class="description">Used when no venue is selected in context.</p>') !== false, 'The Default Venue description should remain present.');
@@ -753,7 +753,7 @@ $assert(strpos($field_with_alert, 'Fix now: set Default Venue to “Main &lt;Hal
 $assert(strpos($field_with_alert, '<script') === false && strpos($field_with_alert, '<style') === false && strpos($field_with_alert, 'onclick=') === false, 'The field output should not contain executable markup.');
 
 $captured_notices_html = '';
-$remaining_field_html = vms_admin_ui_extract_notice_markup('<table><tr><td>' . $field_with_alert . '</td></tr></table>', $captured_notices_html);
+$remaining_field_html = bvmgr_admin_ui_extract_notice_markup('<table><tr><td>' . $field_with_alert . '</td></tr></table>', $captured_notices_html);
 $assertSame('', $captured_notices_html, 'The Default Venue alert should remain page-local and should not be captured into the Administrator shell notice buffer.');
 $assert(strpos($remaining_field_html, 'vms-settings-default-venue-alert') !== false, 'The Default Venue alert should remain in page-local field content after shell notice extraction.');
 

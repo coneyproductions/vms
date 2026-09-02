@@ -125,13 +125,13 @@ function get_post_type($postId = null): string
 	return $post instanceof WP_Post ? (string) $post->post_type : '';
 }
 
-function vms_public_event_sidebar_is_rendering_target(int $eventId): bool
+function bvmgr_public_event_sidebar_is_rendering_target(int $eventId): bool
 {
 	unset($eventId);
 	return false;
 }
 
-function vms_event_details_render_card(int $eventId, bool $guardOnce = true, string $headingOverride = '', string $layout = 'inline'): string
+function bvmgr_event_details_render_card(int $eventId, bool $guardOnce = true, string $headingOverride = '', string $layout = 'inline'): string
 {
 	$GLOBALS['vms_test_render_calls'][] = array(
 		'event_id' => $eventId,
@@ -151,64 +151,64 @@ $resetContext = static function (string $singularPostType, int $queriedObjectId,
 	$GLOBALS['vms_test_render_calls'] = array();
 	$GLOBALS['post'] = $globalPost;
 	unset(
-		$GLOBALS['vms_event_details_sidebar_rendered'],
-		$GLOBALS['vms_event_details_sidebar_manual_rendered'],
-		$GLOBALS['vms_public_event_sidebar_active_indexes']
+		$GLOBALS['bvmgr_event_details_sidebar_rendered'],
+		$GLOBALS['bvmgr_event_details_sidebar_manual_rendered'],
+		$GLOBALS['bvmgr_public_event_sidebar_active_indexes']
 	);
 };
 
 try {
 	$resetContext('tribe_events', 101);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 	vms_plan_your_visit_sidebar_assert($output === 'rendered:101:sidebar', 'Published single Event request should render automatically.');
 	vms_plan_your_visit_sidebar_assert(count($GLOBALS['vms_test_render_calls']) === 1, 'Published single Event request should render exactly once.');
 
 	$resetContext('', 0, $GLOBALS['vms_test_posts'][101]);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Event archive context should not fall back to the incidental global event post.');
 
 	$resetContext('', 101, $GLOBALS['vms_test_posts'][101]);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Event taxonomy/category archive context should not auto-render an arbitrary event.');
 
 	$resetContext('', 777, $GLOBALS['vms_test_posts'][104]);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Venue archive or other non-single event context should not auto-render an arbitrary event.');
 
 	$resetContext('page', 103, $GLOBALS['vms_test_posts'][101]);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Unrelated singular pages should not auto-render Event sidebar output.');
 
 	$resetContext('tribe_events', 103);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Non-event queried objects should not auto-render.');
 
 	$resetContext('tribe_events', 102);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Unpublished events should not auto-render.');
 
 	$resetContext('', 0);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar', 'event_id' => '101'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar', 'event_id' => '101'));
 	vms_plan_your_visit_sidebar_assert($output === 'rendered:101:sidebar', 'Explicit event_id targeting should still render outside single-event context.');
 
 	$resetContext('', 0);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar', 'id' => '101'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar', 'id' => '101'));
 	vms_plan_your_visit_sidebar_assert($output === 'rendered:101:sidebar', 'Explicit id targeting should still render outside single-event context.');
 
 	$resetContext('', 0);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar', 'event' => '101'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar', 'event' => '101'));
 	vms_plan_your_visit_sidebar_assert($output === 'rendered:101:sidebar', 'Explicit event targeting should still render outside single-event context.');
 
 	$resetContext('tribe_events', 101);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar', 'event_id' => '999'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar', 'event_id' => '999'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Invalid explicit event IDs should be rejected without falling back to the queried event.');
 
 	$resetContext('tribe_events', 101);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar', 'event_id' => '102'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar', 'event_id' => '102'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Explicit unpublished events should be rejected.');
 
 	$resetContext('', 0);
-	$output = vms_event_details_shortcode(array('layout' => 'sidebar', 'id' => '103'));
+	$output = bvmgr_event_details_shortcode(array('layout' => 'sidebar', 'id' => '103'));
 	vms_plan_your_visit_sidebar_assert($output === '', 'Explicit non-event targets should be rejected.');
 
 	fwrite(STDOUT, "plan your visit sidebar context: PASS\n");

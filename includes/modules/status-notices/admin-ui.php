@@ -1,15 +1,15 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_status_notice_admin_page_url')) {
-	function vms_status_notice_admin_page_url(array $args = array()): string
+if (!function_exists('bvmgr_status_notice_admin_page_url')) {
+	function bvmgr_status_notice_admin_page_url(array $args = array()): string
 	{
 		return add_query_arg($args, admin_url('admin.php?page=vms-status-notices'));
 	}
 }
 
-if (!function_exists('vms_status_notice_admin_query_arg')) {
-	function vms_status_notice_admin_query_arg(string $key): string
+if (!function_exists('bvmgr_status_notice_admin_query_arg')) {
+	function bvmgr_status_notice_admin_query_arg(string $key): string
 	{
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Status Notices admin routing and filters only change admin display state.
 		if (!isset($_GET[$key])) {
@@ -21,8 +21,8 @@ if (!function_exists('vms_status_notice_admin_query_arg')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_admin_templates')) {
-	function vms_status_notice_admin_templates(): array
+if (!function_exists('bvmgr_status_notice_admin_templates')) {
+	function bvmgr_status_notice_admin_templates(): array
 	{
 		return array(
 			'maintenance_banner' => __('Maintenance (Banner)', 'backstage-venue-manager'),
@@ -34,42 +34,42 @@ if (!function_exists('vms_status_notice_admin_templates')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_admin_enqueue_assets')) {
-	function vms_status_notice_admin_enqueue_assets(): void
+if (!function_exists('bvmgr_status_notice_admin_enqueue_assets')) {
+	function bvmgr_status_notice_admin_enqueue_assets(): void
 	{
-		$page = sanitize_key(vms_status_notice_admin_query_arg('page'));
+		$page = sanitize_key(bvmgr_status_notice_admin_query_arg('page'));
 		if ($page !== 'vms-status-notices') {
 			return;
 		}
 
-		$ver = defined('VMS_VERSION') ? VMS_VERSION : null;
+		$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 		wp_enqueue_style(
-			'vms-notices-front',
-			VMS_PLUGIN_URL . 'assets/css/vms-notices-front.css',
-			array('vms-ui'),
+			'bvmgr-notices-front',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-notices-front.css',
+			array('bvmgr-ui'),
 			$ver
 		);
 		wp_enqueue_style(
-			'vms-status-notices-admin',
-			VMS_PLUGIN_URL . 'assets/css/vms-status-notices-admin.css',
-			array('vms-admin', 'vms-admin-ui', 'vms-notices-front'),
+			'bvmgr-status-notices-admin',
+			BVMGR_PLUGIN_URL . 'assets/css/vms-status-notices-admin.css',
+			array('bvmgr-admin', 'bvmgr-admin-ui', 'bvmgr-notices-front'),
 			$ver
 		);
 		wp_enqueue_script(
-			'vms-status-notices-admin',
-			VMS_PLUGIN_URL . 'assets/js/vms-status-notices-admin.js',
+			'bvmgr-status-notices-admin',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-status-notices-admin.js',
 			array(),
 			$ver,
 			true
 		);
 
-		wp_localize_script('vms-status-notices-admin', 'vmsStatusNoticesAdmin', array(
-			'pageTypeLabels' => vms_status_notice_page_type_labels(),
-			'deviceLabels' => vms_status_notice_device_labels(),
-			'browserLabels' => vms_status_notice_browser_labels(),
-			'osLabels' => vms_status_notice_os_labels(),
+		wp_localize_script('bvmgr-status-notices-admin', 'BVMGR_STATUS_NOTICES_ADMIN', array(
+			'pageTypeLabels' => bvmgr_status_notice_page_type_labels(),
+			'deviceLabels' => bvmgr_status_notice_device_labels(),
+			'browserLabels' => bvmgr_status_notice_browser_labels(),
+			'osLabels' => bvmgr_status_notice_os_labels(),
 			'ajaxUrl' => admin_url('admin-ajax.php'),
-			'searchNonce' => wp_create_nonce('vms_status_notice_object_search'),
+			'searchNonce' => wp_create_nonce('bvmgr_status_notice_object_search'),
 			'searchMinChars' => 2,
 			'strings' => array(
 				'pass' => __('PASS', 'backstage-venue-manager'),
@@ -90,10 +90,10 @@ if (!function_exists('vms_status_notice_admin_enqueue_assets')) {
 		));
 	}
 }
-add_action('admin_enqueue_scripts', 'vms_status_notice_admin_enqueue_assets', 45);
+add_action('admin_enqueue_scripts', 'bvmgr_status_notice_admin_enqueue_assets', 45);
 
-if (!function_exists('vms_status_notice_roles_catalog')) {
-	function vms_status_notice_roles_catalog(): array
+if (!function_exists('bvmgr_status_notice_roles_catalog')) {
+	function bvmgr_status_notice_roles_catalog(): array
 	{
 		$catalog = array();
 		if (!function_exists('wp_roles')) {
@@ -110,8 +110,8 @@ if (!function_exists('vms_status_notice_roles_catalog')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_render_checkbox_group')) {
-	function vms_status_notice_render_checkbox_group(string $name, array $options, array $selected, string $class = 'vms-status-grid-checks'): void
+if (!function_exists('bvmgr_status_notice_render_checkbox_group')) {
+	function bvmgr_status_notice_render_checkbox_group(string $name, array $options, array $selected, string $class = 'vms-status-grid-checks'): void
 	{
 		echo '<div class="' . esc_attr($class) . '">';
 		foreach ($options as $value => $label) {
@@ -123,30 +123,30 @@ if (!function_exists('vms_status_notice_render_checkbox_group')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_render_admin_page')) {
-	function vms_status_notice_render_admin_page(): void
+if (!function_exists('bvmgr_status_notice_render_admin_page')) {
+	function bvmgr_status_notice_render_admin_page(): void
 	{
-		if (!current_user_can(vms_status_notices_capability())) {
+		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('You do not have permission to manage Status Notices.', 'backstage-venue-manager'));
 		}
 
-		$view = sanitize_key(vms_status_notice_admin_query_arg('view'));
+		$view = sanitize_key(bvmgr_status_notice_admin_query_arg('view'));
 		if ($view === '') {
 			$view = 'list';
 		}
 		if ($view === 'edit') {
-			vms_status_notice_render_edit_screen();
+			bvmgr_status_notice_render_edit_screen();
 			return;
 		}
 
-		vms_status_notice_render_list_screen();
+		bvmgr_status_notice_render_list_screen();
 	}
 }
 
-if (!function_exists('vms_status_notice_notice_bar')) {
-	function vms_status_notice_notice_bar(): void
+if (!function_exists('bvmgr_status_notice_notice_bar')) {
+	function bvmgr_status_notice_notice_bar(): void
 	{
-		$status = sanitize_key(vms_status_notice_admin_query_arg('vms_status_notice_result'));
+		$status = sanitize_key(bvmgr_status_notice_admin_query_arg('vms_status_notice_result'));
 		if ($status === '') {
 			return;
 		}
@@ -166,7 +166,7 @@ if (!function_exists('vms_status_notice_notice_bar')) {
 				$message = __('Status Notice moved to trash.', 'backstage-venue-manager');
 				break;
 			case 'bulk_updated':
-				$bulk_count = absint(vms_status_notice_admin_query_arg('bulk_count'));
+				$bulk_count = absint(bvmgr_status_notice_admin_query_arg('bulk_count'));
 				if ($bulk_count > 0) {
 					/* translators: %d: number of updated notices */
 					$message = sprintf(_n('%d notice updated.', '%d notices updated.', $bulk_count, 'backstage-venue-manager'), $bulk_count);
@@ -182,14 +182,14 @@ if (!function_exists('vms_status_notice_notice_bar')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_render_list_screen')) {
-	function vms_status_notice_render_list_screen(): void
+if (!function_exists('bvmgr_status_notice_render_list_screen')) {
+	function bvmgr_status_notice_render_list_screen(): void
 	{
-		$items = vms_status_notice_query_all();
-		$scope_filter = sanitize_key(vms_status_notice_admin_query_arg('scope'));
-		$severity_filter = sanitize_key(vms_status_notice_admin_query_arg('severity'));
-		$enabled_filter = sanitize_key(vms_status_notice_admin_query_arg('enabled'));
-		$q = sanitize_text_field(vms_status_notice_admin_query_arg('q'));
+		$items = bvmgr_status_notice_query_all();
+		$scope_filter = sanitize_key(bvmgr_status_notice_admin_query_arg('scope'));
+		$severity_filter = sanitize_key(bvmgr_status_notice_admin_query_arg('severity'));
+		$enabled_filter = sanitize_key(bvmgr_status_notice_admin_query_arg('enabled'));
+		$q = sanitize_text_field(bvmgr_status_notice_admin_query_arg('q'));
 
 		$items = array_values(array_filter($items, static function (array $item) use ($scope_filter, $severity_filter, $enabled_filter, $q): bool {
 			if ($scope_filter !== '' && $scope_filter !== (string) ($item['scope'] ?? '')) {
@@ -216,17 +216,17 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 			return true;
 		}));
 
-		$scope_labels = vms_status_notice_scope_labels();
-		$severity_labels = vms_status_notice_severity_labels();
+		$scope_labels = bvmgr_status_notice_scope_labels();
+		$severity_labels = bvmgr_status_notice_severity_labels();
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => __('Status Notices', 'backstage-venue-manager'),
 					'subtitle' => __('Targeted website and admin notices with device/browser-aware delivery.', 'backstage-venue-manager'),
 					'shell_id' => 'vms-status-notices-wrap',
-					'actions_html' => '<a class="button button-primary" href="' . esc_url(vms_status_notice_admin_page_url(array('view' => 'edit'))) . '">' . esc_html__('Create Notice', 'backstage-venue-manager') . '</a>',
-					'notices_callback' => 'vms_status_notice_notice_bar',
+					'actions_html' => '<a class="button button-primary" href="' . esc_url(bvmgr_status_notice_admin_page_url(array('view' => 'edit'))) . '">' . esc_html__('Create Notice', 'backstage-venue-manager') . '</a>',
+					'notices_callback' => 'bvmgr_status_notice_notice_bar',
 				),
 				static function () use ($items, $scope_filter, $severity_filter, $enabled_filter, $q, $scope_labels, $severity_labels): void {
 					echo '<form class="vms-status-filters" method="get">';
@@ -253,15 +253,15 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 					echo '</form>';
 
 					echo '<p class="description vms-status-template-links">' . esc_html__('Quick templates:', 'backstage-venue-manager') . ' ';
-					foreach (vms_status_notice_admin_templates() as $template_key => $template_label) {
-						$url = vms_status_notice_admin_page_url(array('view' => 'edit', 'template' => $template_key));
+					foreach (bvmgr_status_notice_admin_templates() as $template_key => $template_label) {
+						$url = bvmgr_status_notice_admin_page_url(array('view' => 'edit', 'template' => $template_key));
 						echo '<a href="' . esc_url($url) . '">' . esc_html($template_label) . '</a> ';
 					}
 					echo '</p>';
 
 					echo '<form class="vms-status-bulk-actions" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
 					echo '<input type="hidden" name="action" value="vms_status_notice_bulk">';
-					wp_nonce_field('vms_status_notice_bulk');
+					wp_nonce_field('bvmgr_status_notice_bulk');
 					echo '<div class="vms-status-bulk-actions__row">';
 					echo '<label>' . esc_html__('Bulk Action', 'backstage-venue-manager') . ' ';
 					echo '<select name="bulk_action">';
@@ -293,10 +293,10 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 					} else {
 						foreach ($items as $item) {
 							$id = (int) ($item['id'] ?? 0);
-							$edit_url = vms_status_notice_admin_page_url(array('view' => 'edit', 'id' => $id));
-							$toggle_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_toggle&id=' . $id . '&enabled=' . (empty($item['enabled']) ? '1' : '0')), 'vms_status_notice_toggle_' . $id);
-							$duplicate_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_duplicate&id=' . $id), 'vms_status_notice_duplicate_' . $id);
-							$trash_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_trash&id=' . $id), 'vms_status_notice_trash_' . $id);
+							$edit_url = bvmgr_status_notice_admin_page_url(array('view' => 'edit', 'id' => $id));
+							$toggle_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_toggle&id=' . $id . '&enabled=' . (empty($item['enabled']) ? '1' : '0')), 'bvmgr_status_notice_toggle_' . $id);
+							$duplicate_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_duplicate&id=' . $id), 'bvmgr_status_notice_duplicate_' . $id);
+							$trash_url = wp_nonce_url(admin_url('admin-post.php?action=vms_status_notice_trash&id=' . $id), 'bvmgr_status_notice_trash_' . $id);
 
 							$window = __('Always', 'backstage-venue-manager');
 							if ((string) ($item['schedule_mode'] ?? 'always') === 'scheduled') {
@@ -336,22 +336,22 @@ if (!function_exists('vms_status_notice_render_list_screen')) {
 		}
 
 		echo '<div class="wrap"><h1>' . esc_html__('Status Notices', 'backstage-venue-manager') . '</h1>';
-		vms_status_notice_notice_bar();
+		bvmgr_status_notice_notice_bar();
 		echo '</div>';
 	}
 }
 
-if (!function_exists('vms_status_notice_render_edit_screen')) {
-	function vms_status_notice_render_edit_screen(): void
+if (!function_exists('bvmgr_status_notice_render_edit_screen')) {
+	function bvmgr_status_notice_render_edit_screen(): void
 	{
-		$notice_id = absint(vms_status_notice_admin_query_arg('id'));
-		$template = sanitize_key(vms_status_notice_admin_query_arg('template'));
+		$notice_id = absint(bvmgr_status_notice_admin_query_arg('id'));
+		$template = sanitize_key(bvmgr_status_notice_admin_query_arg('template'));
 
-		$notice = $notice_id > 0 ? vms_status_notice_get($notice_id) : null;
+		$notice = $notice_id > 0 ? bvmgr_status_notice_get($notice_id) : null;
 		if (!is_array($notice)) {
-			$notice = vms_status_notice_default_notice();
+			$notice = bvmgr_status_notice_default_notice();
 			if ($template !== '') {
-				$notice = vms_status_notice_template_defaults($template);
+				$notice = bvmgr_status_notice_template_defaults($template);
 			}
 		}
 
@@ -361,13 +361,13 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 		$notice['url_contains_raw'] = implode("\n", array_map('strval', (array) ($notice['url_contains'] ?? array())));
 		$notice['url_excludes_raw'] = implode("\n", array_map('strval', (array) ($notice['url_excludes'] ?? array())));
 
-		$scope_labels = vms_status_notice_scope_labels();
-		$severity_labels = vms_status_notice_severity_labels();
-		$page_type_labels = vms_status_notice_page_type_labels();
-		$device_labels = vms_status_notice_device_labels();
-		$browser_labels = vms_status_notice_browser_labels();
-		$os_labels = vms_status_notice_os_labels();
-		$role_labels = vms_status_notice_roles_catalog();
+		$scope_labels = bvmgr_status_notice_scope_labels();
+		$severity_labels = bvmgr_status_notice_severity_labels();
+		$page_type_labels = bvmgr_status_notice_page_type_labels();
+		$device_labels = bvmgr_status_notice_device_labels();
+		$browser_labels = bvmgr_status_notice_browser_labels();
+		$os_labels = bvmgr_status_notice_os_labels();
+		$role_labels = bvmgr_status_notice_roles_catalog();
 
 		$title = $notice_id > 0 ? __('Edit Status Notice', 'backstage-venue-manager') : __('Create Status Notice', 'backstage-venue-manager');
 		$subtitle = __('Use targeting rules to display browser/device-specific guidance without code changes.', 'backstage-venue-manager');
@@ -375,7 +375,7 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 		$content = static function () use ($notice, $notice_id, $scope_labels, $severity_labels, $page_type_labels, $device_labels, $browser_labels, $os_labels, $role_labels): void {
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-status-notice-form" id="vms-status-notice-form">';
 			echo '<input type="hidden" name="action" value="vms_status_notice_save">';
-			wp_nonce_field('vms_status_notice_save');
+			wp_nonce_field('bvmgr_status_notice_save');
 			echo '<input type="hidden" name="notice_id" value="' . esc_attr((string) $notice_id) . '">';
 
 			echo '<section class="vms-status-card">';
@@ -413,12 +413,12 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 			echo '<label>' . esc_html__('Placement', 'backstage-venue-manager') . '<select name="placement"><option value="top"' . selected((string) ($notice['placement'] ?? ''), 'top', false) . '>' . esc_html__('Top', 'backstage-venue-manager') . '</option><option value="bottom"' . selected((string) ($notice['placement'] ?? ''), 'bottom', false) . '>' . esc_html__('Bottom', 'backstage-venue-manager') . '</option></select></label>';
 			echo '<label><input type="checkbox" name="dismissible" value="1"' . checked(1, (int) ($notice['dismissible'] ?? 0), false) . '> ' . esc_html__('Dismissible', 'backstage-venue-manager') . '</label>';
 			echo '<label>' . esc_html__('Dismiss TTL', 'backstage-venue-manager') . '<select name="dismiss_ttl">';
-			foreach (vms_status_notice_allowed_dismiss_ttls() as $ttl) {
+			foreach (bvmgr_status_notice_allowed_dismiss_ttls() as $ttl) {
 				echo '<option value="' . esc_attr($ttl) . '"' . selected((string) ($notice['dismiss_ttl'] ?? ''), $ttl, false) . '>' . esc_html($ttl) . '</option>';
 			}
 			echo '</select></label>';
 			echo '<label>' . esc_html__('Trigger', 'backstage-venue-manager') . '<select name="trigger">';
-			foreach (vms_status_notice_allowed_triggers() as $trigger) {
+			foreach (bvmgr_status_notice_allowed_triggers() as $trigger) {
 				echo '<option value="' . esc_attr($trigger) . '"' . selected((string) ($notice['trigger'] ?? ''), $trigger, false) . '>' . esc_html($trigger) . '</option>';
 			}
 			echo '</select></label>';
@@ -432,7 +432,7 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 			echo '<div class="vms-status-grid">';
 			echo '<label>' . esc_html__('Pages Mode', 'backstage-venue-manager') . '<select name="pages_mode"><option value="all"' . selected((string) ($notice['pages_mode'] ?? ''), 'all', false) . '>' . esc_html__('All pages (with exclusions)', 'backstage-venue-manager') . '</option><option value="include"' . selected((string) ($notice['pages_mode'] ?? ''), 'include', false) . '>' . esc_html__('Include matching pages only', 'backstage-venue-manager') . '</option></select></label>';
 			echo '<div class="vms-status-span-2"><span class="vms-status-label">' . esc_html__('Include Page Types', 'backstage-venue-manager') . '</span>';
-			vms_status_notice_render_checkbox_group('include_page_types', $page_type_labels, (array) ($notice['include_page_types'] ?? array()));
+			bvmgr_status_notice_render_checkbox_group('include_page_types', $page_type_labels, (array) ($notice['include_page_types'] ?? array()));
 			echo '</div>';
 			echo '<label>' . esc_html__('Include Objects', 'backstage-venue-manager');
 			echo '<textarea class="vms-status-list-source" data-list-ui="object-picker" data-value-type="int" data-row-placeholder="123" name="include_object_ids_raw" rows="3" placeholder="123&#10;456">' . esc_textarea((string) ($notice['include_object_ids_raw'] ?? '')) . '</textarea>';
@@ -452,15 +452,15 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 			echo '</label>';
 
 			echo '<label>' . esc_html__('User Mode', 'backstage-venue-manager') . '<select name="user_mode">';
-			foreach (vms_status_notice_allowed_user_mode() as $mode) {
+			foreach (bvmgr_status_notice_allowed_user_mode() as $mode) {
 				echo '<option value="' . esc_attr($mode) . '"' . selected((string) ($notice['user_mode'] ?? ''), $mode, false) . '>' . esc_html($mode) . '</option>';
 			}
 			echo '</select></label>';
 			echo '<div><span class="vms-status-label">' . esc_html__('Roles Include', 'backstage-venue-manager') . '</span>';
-			vms_status_notice_render_checkbox_group('roles_include', $role_labels, (array) ($notice['roles_include'] ?? array()));
+			bvmgr_status_notice_render_checkbox_group('roles_include', $role_labels, (array) ($notice['roles_include'] ?? array()));
 			echo '</div>';
 			echo '<div><span class="vms-status-label">' . esc_html__('Roles Exclude', 'backstage-venue-manager') . '</span>';
-			vms_status_notice_render_checkbox_group('roles_exclude', $role_labels, (array) ($notice['roles_exclude'] ?? array()));
+			bvmgr_status_notice_render_checkbox_group('roles_exclude', $role_labels, (array) ($notice['roles_exclude'] ?? array()));
 			echo '</div>';
 			echo '<label>' . esc_html__('User IDs Include', 'backstage-venue-manager');
 			echo '<textarea class="vms-status-list-source" data-list-ui="rows" data-value-type="int" data-row-placeholder="12" name="user_ids_include_raw" rows="3" placeholder="12&#10;47">' . esc_textarea((string) ($notice['user_ids_include_raw'] ?? '')) . '</textarea>';
@@ -473,10 +473,10 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 			}
 			echo '</select></label>';
 			echo '<div><span class="vms-status-label">' . esc_html__('Browser Include', 'backstage-venue-manager') . '</span>';
-			vms_status_notice_render_checkbox_group('browser_include', $browser_labels, (array) ($notice['browser_include'] ?? array()));
+			bvmgr_status_notice_render_checkbox_group('browser_include', $browser_labels, (array) ($notice['browser_include'] ?? array()));
 			echo '</div>';
 			echo '<div><span class="vms-status-label">' . esc_html__('OS Include', 'backstage-venue-manager') . '</span>';
-			vms_status_notice_render_checkbox_group('os_include', $os_labels, (array) ($notice['os_include'] ?? array()));
+			bvmgr_status_notice_render_checkbox_group('os_include', $os_labels, (array) ($notice['os_include'] ?? array()));
 			echo '</div>';
 			echo '</div>';
 			echo '</section>';
@@ -488,7 +488,7 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 			echo '<label>' . esc_html__('Start At', 'backstage-venue-manager') . '<input type="datetime-local" name="start_at" value="' . esc_attr((string) ($notice['start_at'] ?? '')) . '"></label>';
 			echo '<label>' . esc_html__('End At', 'backstage-venue-manager') . '<input type="datetime-local" name="end_at" value="' . esc_attr((string) ($notice['end_at'] ?? '')) . '"></label>';
 			echo '<label>' . esc_html__('Frequency', 'backstage-venue-manager') . '<select name="frequency">';
-			foreach (vms_status_notice_allowed_frequency() as $frequency) {
+			foreach (bvmgr_status_notice_allowed_frequency() as $frequency) {
 				echo '<option value="' . esc_attr($frequency) . '"' . selected((string) ($notice['frequency'] ?? ''), $frequency, false) . '>' . esc_html($frequency) . '</option>';
 			}
 			echo '</select></label>';
@@ -528,18 +528,18 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 
 			echo '<p class="submit">';
 			echo '<button type="submit" class="button button-primary">' . esc_html__('Save Status Notice', 'backstage-venue-manager') . '</button> ';
-			echo '<a class="button" href="' . esc_url(vms_status_notice_admin_page_url()) . '">' . esc_html__('Back to Notices', 'backstage-venue-manager') . '</a>';
+			echo '<a class="button" href="' . esc_url(bvmgr_status_notice_admin_page_url()) . '">' . esc_html__('Back to Notices', 'backstage-venue-manager') . '</a>';
 			echo '</p>';
 			echo '</form>';
 		};
 
-		if (function_exists('vms_admin_ui_render_shell')) {
-			vms_admin_ui_render_shell(
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
 				array(
 					'title' => $title,
 					'subtitle' => $subtitle,
 					'shell_id' => 'vms-status-notice-edit-wrap',
-					'notices_callback' => 'vms_status_notice_notice_bar',
+					'notices_callback' => 'bvmgr_status_notice_notice_bar',
 				),
 				$content
 			);
@@ -547,52 +547,52 @@ if (!function_exists('vms_status_notice_render_edit_screen')) {
 		}
 
 		echo '<div class="wrap">';
-		vms_status_notice_notice_bar();
+		bvmgr_status_notice_notice_bar();
 		$content();
 		echo '</div>';
 	}
 }
 
-if (!function_exists('vms_status_notice_admin_redirect')) {
-	function vms_status_notice_admin_redirect(array $args = array()): void
+if (!function_exists('bvmgr_status_notice_admin_redirect')) {
+	function bvmgr_status_notice_admin_redirect(array $args = array()): void
 	{
-		wp_safe_redirect(vms_status_notice_admin_page_url($args));
+		wp_safe_redirect(bvmgr_status_notice_admin_page_url($args));
 		exit;
 	}
 }
 
-if (!function_exists('vms_status_notice_handle_save')) {
-	function vms_status_notice_handle_save(): void
+if (!function_exists('bvmgr_status_notice_handle_save')) {
+	function bvmgr_status_notice_handle_save(): void
 	{
-		if (!current_user_can(vms_status_notices_capability())) {
+		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_status_notice_save');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_save', '_wpnonce'), '_wpnonce');
 
 		$notice_id = isset($_POST['notice_id']) ? absint(wp_unslash((string) $_POST['notice_id'])) : 0;
 		$raw = isset($_POST) ? (array) wp_unslash($_POST) : array();
-		$saved_id = vms_status_notice_save($notice_id, $raw);
+		$saved_id = bvmgr_status_notice_save($notice_id, $raw);
 		if ($saved_id <= 0) {
-			vms_status_notice_admin_redirect(array('view' => 'edit', 'id' => $notice_id));
+			bvmgr_status_notice_admin_redirect(array('view' => 'edit', 'id' => $notice_id));
 		}
 
-		vms_status_notice_admin_redirect(array('view' => 'edit', 'id' => $saved_id, 'vms_status_notice_result' => 'saved'));
+		bvmgr_status_notice_admin_redirect(array('view' => 'edit', 'id' => $saved_id, 'vms_status_notice_result' => 'saved'));
 	}
 }
-add_action('admin_post_vms_status_notice_save', 'vms_status_notice_handle_save');
+add_action('admin_post_vms_status_notice_save', 'bvmgr_status_notice_handle_save');
 
-if (!function_exists('vms_status_notice_handle_duplicate')) {
-	function vms_status_notice_handle_duplicate(): void
+if (!function_exists('bvmgr_status_notice_handle_duplicate')) {
+	function bvmgr_status_notice_handle_duplicate(): void
 	{
-		if (!current_user_can(vms_status_notices_capability())) {
+		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		check_admin_referer('vms_status_notice_duplicate_' . $notice_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_duplicate_' . $notice_id, '_wpnonce'), '_wpnonce');
 
-		$notice = vms_status_notice_get($notice_id);
+		$notice = bvmgr_status_notice_get($notice_id);
 		if (!is_array($notice)) {
-			vms_status_notice_admin_redirect();
+			bvmgr_status_notice_admin_redirect();
 		}
 
 		$raw = $notice;
@@ -602,58 +602,58 @@ if (!function_exists('vms_status_notice_handle_duplicate')) {
 		$raw['user_ids_include_raw'] = implode("\n", array_map('intval', (array) ($notice['user_ids_include'] ?? array())));
 		$raw['url_contains_raw'] = implode("\n", array_map('strval', (array) ($notice['url_contains'] ?? array())));
 		$raw['url_excludes_raw'] = implode("\n", array_map('strval', (array) ($notice['url_excludes'] ?? array())));
-			$new_id = vms_status_notice_save(0, $raw);
+			$new_id = bvmgr_status_notice_save(0, $raw);
 
 			if ($new_id > 0) {
-				vms_status_notice_admin_redirect(array('view' => 'edit', 'id' => $new_id, 'vms_status_notice_result' => 'duplicated'));
+				bvmgr_status_notice_admin_redirect(array('view' => 'edit', 'id' => $new_id, 'vms_status_notice_result' => 'duplicated'));
 			}
 
-		vms_status_notice_admin_redirect();
+		bvmgr_status_notice_admin_redirect();
 	}
 }
-add_action('admin_post_vms_status_notice_duplicate', 'vms_status_notice_handle_duplicate');
+add_action('admin_post_vms_status_notice_duplicate', 'bvmgr_status_notice_handle_duplicate');
 
-if (!function_exists('vms_status_notice_handle_toggle')) {
-	function vms_status_notice_handle_toggle(): void
+if (!function_exists('bvmgr_status_notice_handle_toggle')) {
+	function bvmgr_status_notice_handle_toggle(): void
 	{
-		if (!current_user_can(vms_status_notices_capability())) {
+		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		check_admin_referer('vms_status_notice_toggle_' . $notice_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_toggle_' . $notice_id, '_wpnonce'), '_wpnonce');
 			if ($notice_id > 0) {
 				$enabled = isset($_GET['enabled']) ? absint(wp_unslash((string) $_GET['enabled'])) : 0;
 				update_post_meta($notice_id, '_vms_notice_enabled', $enabled ? 1 : 0);
 				update_post_meta($notice_id, '_vms_notice_updated_at', time());
 			}
-			vms_status_notice_admin_redirect(array('vms_status_notice_result' => 'toggled'));
+			bvmgr_status_notice_admin_redirect(array('vms_status_notice_result' => 'toggled'));
 		}
 }
-add_action('admin_post_vms_status_notice_toggle', 'vms_status_notice_handle_toggle');
+add_action('admin_post_vms_status_notice_toggle', 'bvmgr_status_notice_handle_toggle');
 
-if (!function_exists('vms_status_notice_handle_trash')) {
-	function vms_status_notice_handle_trash(): void
+if (!function_exists('bvmgr_status_notice_handle_trash')) {
+	function bvmgr_status_notice_handle_trash(): void
 	{
-		if (!current_user_can(vms_status_notices_capability())) {
+		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
 		$notice_id = isset($_GET['id']) ? absint(wp_unslash((string) $_GET['id'])) : 0;
-		check_admin_referer('vms_status_notice_trash_' . $notice_id);
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_trash_' . $notice_id, '_wpnonce'), '_wpnonce');
 			if ($notice_id > 0) {
 				wp_trash_post($notice_id);
 			}
-			vms_status_notice_admin_redirect(array('vms_status_notice_result' => 'trashed'));
+			bvmgr_status_notice_admin_redirect(array('vms_status_notice_result' => 'trashed'));
 		}
 }
-add_action('admin_post_vms_status_notice_trash', 'vms_status_notice_handle_trash');
+add_action('admin_post_vms_status_notice_trash', 'bvmgr_status_notice_handle_trash');
 
-if (!function_exists('vms_status_notice_handle_bulk')) {
-	function vms_status_notice_handle_bulk(): void
+if (!function_exists('bvmgr_status_notice_handle_bulk')) {
+	function bvmgr_status_notice_handle_bulk(): void
 	{
-		if (!current_user_can(vms_status_notices_capability())) {
+		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
 		}
-		check_admin_referer('vms_status_notice_bulk');
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_bulk', '_wpnonce'), '_wpnonce');
 
 		$bulk_action = isset($_POST['bulk_action']) ? sanitize_key((string) wp_unslash($_POST['bulk_action'])) : '';
 		$notice_ids = isset($_POST['notice_ids']) ? array_map('absint', (array) wp_unslash($_POST['notice_ids'])) : array();
@@ -662,7 +662,7 @@ if (!function_exists('vms_status_notice_handle_bulk')) {
 		})));
 
 		if (empty($notice_ids) || !in_array($bulk_action, array('enable', 'disable', 'trash'), true)) {
-			vms_status_notice_admin_redirect();
+			bvmgr_status_notice_admin_redirect();
 		}
 
 		$updated = 0;
@@ -684,16 +684,16 @@ if (!function_exists('vms_status_notice_handle_bulk')) {
 			$updated += 1;
 		}
 
-		vms_status_notice_admin_redirect(array(
+		bvmgr_status_notice_admin_redirect(array(
 			'vms_status_notice_result' => 'bulk_updated',
 			'bulk_count' => $updated,
 		));
 	}
 }
-add_action('admin_post_vms_status_notice_bulk', 'vms_status_notice_handle_bulk');
+add_action('admin_post_vms_status_notice_bulk', 'bvmgr_status_notice_handle_bulk');
 
-if (!function_exists('vms_status_notice_object_search_post_types')) {
-	function vms_status_notice_object_search_post_types(): array
+if (!function_exists('bvmgr_status_notice_object_search_post_types')) {
+	function bvmgr_status_notice_object_search_post_types(): array
 	{
 		$post_types = array();
 		foreach (array('page', 'post', 'product', 'tribe_events') as $candidate) {
@@ -719,13 +719,13 @@ if (!function_exists('vms_status_notice_object_search_post_types')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_handle_object_search')) {
-	function vms_status_notice_handle_object_search(): void
+if (!function_exists('bvmgr_status_notice_handle_object_search')) {
+	function bvmgr_status_notice_handle_object_search(): void
 	{
-		if (!current_user_can(vms_status_notices_capability())) {
+		if (!current_user_can(bvmgr_status_notices_capability())) {
 			wp_send_json_error(array('message' => __('Access denied.', 'backstage-venue-manager')), 403);
 		}
-		check_ajax_referer('vms_status_notice_object_search', 'nonce');
+		check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_status_notice_object_search', 'nonce'), 'nonce', true);
 
 		$query = isset($_GET['q']) ? sanitize_text_field((string) wp_unslash($_GET['q'])) : '';
 		$query_length = function_exists('mb_strlen') ? mb_strlen($query, 'UTF-8') : strlen($query);
@@ -733,7 +733,7 @@ if (!function_exists('vms_status_notice_handle_object_search')) {
 			wp_send_json_success(array('items' => array()));
 		}
 
-		$post_types = vms_status_notice_object_search_post_types();
+		$post_types = bvmgr_status_notice_object_search_post_types();
 		if (empty($post_types)) {
 			wp_send_json_success(array('items' => array()));
 		}
@@ -780,4 +780,4 @@ if (!function_exists('vms_status_notice_handle_object_search')) {
 		wp_send_json_success(array('items' => $items));
 	}
 }
-add_action('wp_ajax_vms_status_notice_search_objects', 'vms_status_notice_handle_object_search');
+add_action('wp_ajax_vms_status_notice_search_objects', 'bvmgr_status_notice_handle_object_search');

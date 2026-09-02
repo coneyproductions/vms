@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_db_migrate_vendor_core_v1(): void
+function bvmgr_db_migrate_vendor_core_v1(): void
 {
 	global $wpdb;
 
@@ -105,7 +105,7 @@ function vms_db_migrate_vendor_core_v1(): void
 	update_option('vms_db_schema_version', 'vendor_core_v1');
 }
 
-function vms_db_migrate_vendor_core_v2(): void
+function bvmgr_db_migrate_vendor_core_v2(): void
 {
 	global $wpdb;
 
@@ -113,14 +113,14 @@ function vms_db_migrate_vendor_core_v2(): void
 	if ($ver === 'vendor_core_v2' || $ver === 'vendor_core_v3' || $ver === 'vendor_core_v4' || $ver === 'vendor_core_v5' || $ver === 'vendor_core_v6' || $ver === 'vendor_core_v7') return;
 
 	// Ensure v1 tables exist first.
-	if (function_exists('vms_db_migrate_vendor_core_v1')) {
-		vms_db_migrate_vendor_core_v1();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v1')) {
+		bvmgr_db_migrate_vendor_core_v1();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 	$charset_collate = $wpdb->get_charset_collate();
-	$t_links = $wpdb->prefix . (defined('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX') ? VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX : 'vms_vendor_user_links');
+	$t_links = $wpdb->prefix . (defined('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX') ? BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX : 'vms_vendor_user_links');
 
 	$sql_links = "CREATE TABLE {$t_links} (
 		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -145,12 +145,12 @@ function vms_db_migrate_vendor_core_v2(): void
 	dbDelta($sql_links);
 
 	// Best-effort backfill from legacy pointers (idempotent).
-	vms_db_backfill_vendor_user_links_from_legacy($t_links);
+	bvmgr_db_backfill_vendor_user_links_from_legacy($t_links);
 
 	update_option('vms_db_schema_version', 'vendor_core_v2');
 }
 
-function vms_db_migrate_vendor_core_v3(): void
+function bvmgr_db_migrate_vendor_core_v3(): void
 {
 	global $wpdb;
 
@@ -158,20 +158,20 @@ function vms_db_migrate_vendor_core_v3(): void
 	if ($ver === 'vendor_core_v3' || $ver === 'vendor_core_v4' || $ver === 'vendor_core_v5' || $ver === 'vendor_core_v6' || $ver === 'vendor_core_v7') return;
 
 	// Ensure v2 tables exist first.
-	if (function_exists('vms_db_migrate_vendor_core_v2')) {
-		vms_db_migrate_vendor_core_v2();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v2')) {
+		bvmgr_db_migrate_vendor_core_v2();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 	$charset_collate = $wpdb->get_charset_collate();
 
-	$t_templates = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates');
-	$t_template_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots');
-	$t_event_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
-	$t_assignments = $wpdb->prefix . (defined('VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? VMS_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
-	$t_rollups = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX') ? VMS_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX : 'vms_staffing_event_rollups');
-	$t_audit = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX') ? VMS_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX : 'vms_staffing_audit_log');
+	$t_templates = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates');
+	$t_template_slots = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots');
+	$t_event_slots = $wpdb->prefix . (defined('BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
+	$t_assignments = $wpdb->prefix . (defined('BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
+	$t_rollups = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX : 'vms_staffing_event_rollups');
+	$t_audit = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX : 'vms_staffing_audit_log');
 
 	$sql_templates = "CREATE TABLE {$t_templates} (
 		template_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -331,7 +331,7 @@ function vms_db_migrate_vendor_core_v3(): void
 	update_option('vms_db_schema_version', 'vendor_core_v3');
 }
 
-function vms_db_migrate_vendor_core_v4(): void
+function bvmgr_db_migrate_vendor_core_v4(): void
 {
 	global $wpdb;
 
@@ -340,8 +340,8 @@ function vms_db_migrate_vendor_core_v4(): void
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v3')) {
-		vms_db_migrate_vendor_core_v3();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v3')) {
+		bvmgr_db_migrate_vendor_core_v3();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -374,7 +374,7 @@ function vms_db_migrate_vendor_core_v4(): void
 	update_option('vms_db_schema_version', 'vendor_core_v4');
 }
 
-function vms_db_migrate_vendor_core_v5(): void
+function bvmgr_db_migrate_vendor_core_v5(): void
 {
 	global $wpdb;
 
@@ -383,13 +383,13 @@ function vms_db_migrate_vendor_core_v5(): void
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v4')) {
-		vms_db_migrate_vendor_core_v4();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v4')) {
+		bvmgr_db_migrate_vendor_core_v4();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset_collate = $wpdb->get_charset_collate();
-	$t_templates = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates');
+	$t_templates = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATES_SUFFIX : 'vms_staffing_templates');
 
 	$sql_templates = "CREATE TABLE {$t_templates} (
 		template_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -421,7 +421,7 @@ function vms_db_migrate_vendor_core_v5(): void
 	update_option('vms_db_schema_version', 'vendor_core_v5');
 }
 
-function vms_db_migrate_vendor_core_v6(): void
+function bvmgr_db_migrate_vendor_core_v6(): void
 {
 	global $wpdb;
 
@@ -430,13 +430,13 @@ function vms_db_migrate_vendor_core_v6(): void
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v5')) {
-		vms_db_migrate_vendor_core_v5();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v5')) {
+		bvmgr_db_migrate_vendor_core_v5();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset_collate = $wpdb->get_charset_collate();
-	$t_template_slots = $wpdb->prefix . (defined('VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? VMS_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots');
+	$t_template_slots = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_TEMPLATE_SLOTS_SUFFIX : 'vms_staffing_template_slots');
 
 	$sql_template_slots = "CREATE TABLE {$t_template_slots} (
 		template_slot_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -472,7 +472,7 @@ function vms_db_migrate_vendor_core_v6(): void
 	update_option('vms_db_schema_version', 'vendor_core_v6');
 }
 
-function vms_db_migrate_vendor_core_v7(): void
+function bvmgr_db_migrate_vendor_core_v7(): void
 {
 	global $wpdb;
 
@@ -481,13 +481,13 @@ function vms_db_migrate_vendor_core_v7(): void
 		return;
 	}
 
-	if (function_exists('vms_db_migrate_vendor_core_v6')) {
-		vms_db_migrate_vendor_core_v6();
+	if (function_exists('bvmgr_db_migrate_vendor_core_v6')) {
+		bvmgr_db_migrate_vendor_core_v6();
 	}
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$charset_collate = $wpdb->get_charset_collate();
-	$t_confirm_tokens = $wpdb->prefix . (defined('VMS_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX') ? VMS_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX : 'vms_vendor_app_confirm_tokens');
+	$t_confirm_tokens = $wpdb->prefix . (defined('BVMGR_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX') ? BVMGR_DB_TABLE_VENDOR_APP_CONFIRM_TOKENS_SUFFIX : 'vms_vendor_app_confirm_tokens');
 
 	$sql_confirm_tokens = "CREATE TABLE {$t_confirm_tokens} (
 		id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -527,12 +527,12 @@ function vms_db_migrate_vendor_core_v7(): void
  *
  * This is safe to run multiple times.
  */
-function vms_db_backfill_vendor_user_links_from_legacy(string $t_links): void
+function bvmgr_db_backfill_vendor_user_links_from_legacy(string $t_links): void
 {
 	global $wpdb;
 
-	$vendor_user_meta_key = defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id';
-	$user_primary_vendor_meta_key = defined('VMS_USER_PRIMARY_VENDOR_META_KEY') ? VMS_USER_PRIMARY_VENDOR_META_KEY : '_vms_vendor_id';
+	$vendor_user_meta_key = defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id';
+	$user_primary_vendor_meta_key = defined('BVMGR_USER_PRIMARY_VENDOR_META_KEY') ? BVMGR_USER_PRIMARY_VENDOR_META_KEY : '_vms_vendor_id';
 
 	$now = current_time('mysql', true);
 

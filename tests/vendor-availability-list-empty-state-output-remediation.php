@@ -186,13 +186,13 @@ try {
     $source = file_get_contents($plugin_root . '/includes/admin/vendor-availability.php');
     $assert(is_string($source) && $source !== '', 'Vendor Availability source should be readable.');
 
-    $assert(function_exists('vms_vendor_availability_get_list_empty_state_notice_context'), 'Vendor Availability should define the empty-state notice context builder.');
-    $assert(function_exists('vms_vendor_availability_render_list_empty_state_notice'), 'Vendor Availability should define the empty-state notice renderer.');
-    $assert(function_exists('vms_render_vendor_availability_list_view'), 'Vendor Availability should still define the list-view renderer.');
+    $assert(function_exists('bvmgr_vendor_availability_get_list_empty_state_notice_context'), 'Vendor Availability should define the empty-state notice context builder.');
+    $assert(function_exists('bvmgr_vendor_availability_render_list_empty_state_notice'), 'Vendor Availability should define the empty-state notice renderer.');
+    $assert(function_exists('bvmgr_render_vendor_availability_list_view'), 'Vendor Availability should still define the list-view renderer.');
 
-    $builder_source = $functionSource('vms_vendor_availability_get_list_empty_state_notice_context');
-    $renderer_source = $functionSource('vms_vendor_availability_render_list_empty_state_notice');
-    $list_source = $functionSource('vms_render_vendor_availability_list_view');
+    $builder_source = $functionSource('bvmgr_vendor_availability_get_list_empty_state_notice_context');
+    $renderer_source = $functionSource('bvmgr_vendor_availability_render_list_empty_state_notice');
+    $list_source = $functionSource('bvmgr_render_vendor_availability_list_view');
 
     $assert(strpos($builder_source, "'show' => empty(\$rows)") !== false, 'Vendor Availability empty-state builder should preserve the exact empty($rows) condition.');
     $assert(strpos($builder_source, 'get_option(') === false && strpos($builder_source, 'get_post_meta(') === false && strpos($builder_source, 'get_posts(') === false && strpos($builder_source, 'current_user_can(') === false, 'Vendor Availability empty-state builder should not perform provider or capability reads.');
@@ -202,18 +202,18 @@ try {
     $assert(strpos($renderer_source, 'get_option(') === false && strpos($renderer_source, 'get_post_meta(') === false && strpos($renderer_source, 'get_posts(') === false && strpos($renderer_source, 'current_user_can(') === false, 'Vendor Availability empty-state renderer should not perform provider or capability reads.');
     $assert(strpos($renderer_source, 'update_option(') === false && strpos($renderer_source, 'update_post_meta(') === false && strpos($renderer_source, 'delete_post_meta(') === false, 'Vendor Availability empty-state renderer should not perform mutations.');
 
-    $assert(strpos($list_source, '$empty_state_notice_context = vms_vendor_availability_get_list_empty_state_notice_context($rows);') !== false, 'Vendor Availability list view should resolve the empty-state context from the existing rows input.');
-    $assert(strpos($list_source, 'vms_vendor_availability_render_list_empty_state_notice($empty_state_notice_context);') !== false, 'Vendor Availability list view should render the empty-state notice through the page-local renderer.');
+    $assert(strpos($list_source, '$empty_state_notice_context = bvmgr_vendor_availability_get_list_empty_state_notice_context($rows);') !== false, 'Vendor Availability list view should resolve the empty-state context from the existing rows input.');
+    $assert(strpos($list_source, 'bvmgr_vendor_availability_render_list_empty_state_notice($empty_state_notice_context);') !== false, 'Vendor Availability list view should render the empty-state notice through the page-local renderer.');
     $assert(strpos($list_source, "echo '<div class=\"vms-va-table-wrap\">';") !== false, 'Vendor Availability list view should still retain the non-empty table path.');
 
-    $visible_context = vms_vendor_availability_get_list_empty_state_notice_context(array());
-    $hidden_context = vms_vendor_availability_get_list_empty_state_notice_context(array(array('vendor_id' => 44)));
+    $visible_context = bvmgr_vendor_availability_get_list_empty_state_notice_context(array());
+    $hidden_context = bvmgr_vendor_availability_get_list_empty_state_notice_context(array(array('vendor_id' => 44)));
     $assertSame(array('show' => true), $visible_context, 'Vendor Availability empty-state builder should show only when rows are empty.');
     $assertSame(array('show' => false), $hidden_context, 'Vendor Availability empty-state builder should hide when rows are present.');
 
     $before_hidden_renderer = $snapshotCounters();
     $hidden_html = $captureOutput(static function (): void {
-        vms_vendor_availability_render_list_empty_state_notice(array('show' => false));
+        bvmgr_vendor_availability_render_list_empty_state_notice(array('show' => false));
     });
     $after_hidden_renderer = $snapshotCounters();
     $assertSame('', $hidden_html, 'Vendor Availability empty-state renderer should emit nothing for hidden context.');
@@ -221,7 +221,7 @@ try {
 
     $before_visible_renderer = $snapshotCounters();
     $visible_html = $captureOutput(static function (): void {
-        vms_vendor_availability_render_list_empty_state_notice(array(
+        bvmgr_vendor_availability_render_list_empty_state_notice(array(
             'show' => true,
             'message' => '</p><script>alert(1)</script><p>',
             'notice_class' => 'notice notice-danger inline',
@@ -252,7 +252,7 @@ try {
 
     $before_list_render = $snapshotCounters();
     $list_empty_html = $captureOutput(static function (): void {
-        vms_render_vendor_availability_list_view(array(), '2026-07-17', 'list', array());
+        bvmgr_render_vendor_availability_list_view(array(), '2026-07-17', 'list', array());
     });
     $after_list_render = $snapshotCounters();
     $assert($after_list_render['provider_reads']['get_option'] === $before_list_render['provider_reads']['get_option'] + 1, 'Vendor Availability list empty-state lifecycle should preserve the single date-format option read for the heading.');

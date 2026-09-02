@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) exit;
  * @param array $active_dates array of date strings (should match your availability keys)
  * @return array ['ok'=>bool, 'marked'=>int, 'error'=>string]
  */
-function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
+function bvmgr_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
 {
     $ics_url = (string) get_post_meta($vendor_id, '_vms_ics_url', true);
     $ics_url = trim($ics_url);
@@ -53,7 +53,7 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
         return array('ok' => false, 'error' => __('ICS feed returned empty content.', 'backstage-venue-manager'));
     }
 
-    $events = vms_vendor_ics_extract_events($raw, $active_dates);
+    $events = bvmgr_vendor_ics_extract_events($raw, $active_dates);
     if (!$events) {
         // Save an empty ICS layer (important so it can “clear” old unavailable marks)
         update_post_meta($vendor_id, '_vms_availability_ics', array());
@@ -62,7 +62,7 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
     }
 
     // Busy dates (YYYY-MM-DD) in venue timezone
-    $busy_dates = vms_vendor_ics_busy_dates($events); // returns ['YYYY-MM-DD' => true]
+    $busy_dates = bvmgr_vendor_ics_busy_dates($events); // returns ['YYYY-MM-DD' => true]
 
     // Only consider dates in active window
     $active_set = array_fill_keys($active_dates, true);
@@ -107,7 +107,7 @@ function vms_vendor_ics_sync_now(int $vendor_id, array $active_dates): array
  * IMPORTANT:
  * - We intentionally expand only within the active_dates range to keep it fast.
  */
-function vms_vendor_ics_extract_events(string $raw, array $active_dates = array()): array
+function bvmgr_vendor_ics_extract_events(string $raw, array $active_dates = array()): array
 {
     // Unfold lines (RFC5545): lines starting with space/tab continue previous line
     $raw = preg_replace("/\r\n[ \t]/", '', $raw);
@@ -115,13 +115,13 @@ function vms_vendor_ics_extract_events(string $raw, array $active_dates = array(
     preg_match_all('/BEGIN:VEVENT(.*?)END:VEVENT/s', $raw, $matches);
     if (empty($matches[1])) return array();
 
-    $fallback_tz = vms_get_timezone(); // your helpers.php
-    $window = vms_vendor_ics_build_window_from_active_dates($active_dates, $fallback_tz);
+    $fallback_tz = bvmgr_get_timezone(); // your helpers.php
+    $window = bvmgr_vendor_ics_build_window_from_active_dates($active_dates, $fallback_tz);
 
     // Parse blocks into structured VEVENT records
     $parsed = array();
     foreach ($matches[1] as $block) {
-        $ve = vms_vendor_ics_parse_vevent_block($block, $fallback_tz);
+        $ve = bvmgr_vendor_ics_parse_vevent_block($block, $fallback_tz);
         if (!$ve) continue;
         $parsed[] = $ve;
     }
@@ -164,7 +164,7 @@ function vms_vendor_ics_extract_events(string $raw, array $active_dates = array(
             $end_ts   = (int)$master['end_ts'];
 
             // Only include if within window (loosely)
-            if (!vms_vendor_ics_range_intersects_window($start_ts, $end_ts, $window)) {
+            if (!bvmgr_vendor_ics_range_intersects_window($start_ts, $end_ts, $window)) {
                 continue;
             }
 
@@ -183,7 +183,7 @@ function vms_vendor_ics_extract_events(string $raw, array $active_dates = array(
         }
 
         // RRULE expansion (weekly MVP)
-        $occurrences = vms_vendor_ics_expand_rrule_weekly($master, $window, $fallback_tz);
+        $occurrences = bvmgr_vendor_ics_expand_rrule_weekly($master, $window, $fallback_tz);
 
         // Apply EXDATE exclusions
         if (!empty($master['exdate_set'])) {
@@ -214,7 +214,7 @@ function vms_vendor_ics_extract_events(string $raw, array $active_dates = array(
             $ov_start = (int)$ov['start_ts'];
             $ov_end   = (int)$ov['end_ts'];
 
-            if (vms_vendor_ics_range_intersects_window($ov_start, $ov_end, $window)) {
+            if (bvmgr_vendor_ics_range_intersects_window($ov_start, $ov_end, $window)) {
                 $occurrences[] = array('start' => $ov_start, 'end' => $ov_end);
             }
         }
@@ -237,28 +237,28 @@ function vms_vendor_ics_extract_events(string $raw, array $active_dates = array(
 /**
  * Parse a VEVENT block into a structured array.
  */
-function vms_vendor_ics_parse_vevent_block(string $block, DateTimeZone $fallback_tz): ?array
+function bvmgr_vendor_ics_parse_vevent_block(string $block, DateTimeZone $fallback_tz): ?array
 {
-    $uid = vms_vendor_ics_find_prop_value($block, 'UID');
+    $uid = bvmgr_vendor_ics_find_prop_value($block, 'UID');
     if (!$uid) return null;
 
-    $dtstart = vms_vendor_ics_find_prop_with_params($block, 'DTSTART');
+    $dtstart = bvmgr_vendor_ics_find_prop_with_params($block, 'DTSTART');
     if (!$dtstart) return null;
 
-    $dtend   = vms_vendor_ics_find_prop_with_params($block, 'DTEND');
-    $rrule   = vms_vendor_ics_find_prop_value($block, 'RRULE');
-    $status  = vms_vendor_ics_find_prop_value($block, 'STATUS');
+    $dtend   = bvmgr_vendor_ics_find_prop_with_params($block, 'DTEND');
+    $rrule   = bvmgr_vendor_ics_find_prop_value($block, 'RRULE');
+    $status  = bvmgr_vendor_ics_find_prop_value($block, 'STATUS');
 
     // Recurrence override
-    $rec_id = vms_vendor_ics_find_prop_with_params($block, 'RECURRENCE-ID');
+    $rec_id = bvmgr_vendor_ics_find_prop_with_params($block, 'RECURRENCE-ID');
 
     // Parse DTSTART/DTEND with TZID awareness
-    $start_ts = vms_vendor_ics_parse_dt_with_params($dtstart['value'], $dtstart['params'], $fallback_tz);
+    $start_ts = bvmgr_vendor_ics_parse_dt_with_params($dtstart['value'], $dtstart['params'], $fallback_tz);
     if (!$start_ts) return null;
 
     $end_ts = null;
     if ($dtend) {
-        $end_ts = vms_vendor_ics_parse_dt_with_params($dtend['value'], $dtend['params'], $fallback_tz);
+        $end_ts = bvmgr_vendor_ics_parse_dt_with_params($dtend['value'], $dtend['params'], $fallback_tz);
     }
     if (!$end_ts) {
         // If no DTEND, assume 1 hour
@@ -266,11 +266,11 @@ function vms_vendor_ics_parse_vevent_block(string $block, DateTimeZone $fallback
     }
 
     // Parse EXDATE(s) (can be multiple lines AND comma-separated)
-    $exdate_set = vms_vendor_ics_parse_exdates($block, $fallback_tz);
+    $exdate_set = bvmgr_vendor_ics_parse_exdates($block, $fallback_tz);
 
     $recurrence_id_ts = null;
     if ($rec_id) {
-        $recurrence_id_ts = vms_vendor_ics_parse_dt_with_params($rec_id['value'], $rec_id['params'], $fallback_tz);
+        $recurrence_id_ts = bvmgr_vendor_ics_parse_dt_with_params($rec_id['value'], $rec_id['params'], $fallback_tz);
     }
 
     return array(
@@ -290,7 +290,7 @@ function vms_vendor_ics_parse_vevent_block(string $block, DateTimeZone $fallback
 /**
  * Find property VALUE only (no params).
  */
-function vms_vendor_ics_find_prop_value(string $block, string $prop): ?string
+function bvmgr_vendor_ics_find_prop_value(string $block, string $prop): ?string
 {
     if (preg_match('/^' . preg_quote($prop, '/') . '(?:;[^:]*)?:(.+)$/m', $block, $m)) {
         return trim((string)$m[1]);
@@ -299,7 +299,7 @@ function vms_vendor_ics_find_prop_value(string $block, string $prop): ?string
 }
 
 
-function vms_vendor_ics_find_prop_with_params(string $block, string $prop): ?array
+function bvmgr_vendor_ics_find_prop_with_params(string $block, string $prop): ?array
 {
     if (!preg_match('/^' . preg_quote($prop, '/') . '([^:]*)\:(.+)$/m', $block, $m)) {
         return null;
@@ -333,7 +333,7 @@ function vms_vendor_ics_find_prop_with_params(string $block, string $prop): ?arr
  *   EXDATE;TZID=America/Chicago:20260110T180000,20260117T180000
  * And can emit multiple EXDATE lines.
  */
-function vms_vendor_ics_parse_exdates(string $block, DateTimeZone $fallback_tz): array
+function bvmgr_vendor_ics_parse_exdates(string $block, DateTimeZone $fallback_tz): array
 {
     $set = array();
 
@@ -361,7 +361,7 @@ function vms_vendor_ics_parse_exdates(string $block, DateTimeZone $fallback_tz):
         $vals = array_map('trim', explode(',', $value_str));
         foreach ($vals as $v) {
             if ($v === '') continue;
-            $ts = vms_vendor_ics_parse_dt_with_params($v, $params, $fallback_tz);
+            $ts = bvmgr_vendor_ics_parse_dt_with_params($v, $params, $fallback_tz);
             if ($ts) $set[(int)$ts] = true;
         }
     }
@@ -372,7 +372,7 @@ function vms_vendor_ics_parse_exdates(string $block, DateTimeZone $fallback_tz):
 /**
  * Parse datetime respecting TZID when present, and Zulu when value ends with Z.
  */
-function vms_vendor_ics_parse_dt_with_params(string $value, array $params, DateTimeZone $fallback_tz): ?int
+function bvmgr_vendor_ics_parse_dt_with_params(string $value, array $params, DateTimeZone $fallback_tz): ?int
 {
     $value = trim($value);
 
@@ -441,7 +441,7 @@ function vms_vendor_ics_parse_dt_with_params(string $value, array $params, DateT
  * - end:   max(active_dates)+1 day at 00:00
  * Adds some padding so weekly rules don’t miss boundary cases.
  */
-function vms_vendor_ics_build_window_from_active_dates(array $active_dates, DateTimeZone $tz): array
+function bvmgr_vendor_ics_build_window_from_active_dates(array $active_dates, DateTimeZone $tz): array
 {
     // Default: today -> +12 months
     $now = new DateTime('now', $tz);
@@ -480,7 +480,7 @@ function vms_vendor_ics_build_window_from_active_dates(array $active_dates, Date
     );
 }
 
-function vms_vendor_ics_range_intersects_window(int $start_ts, int $end_ts, array $window): bool
+function bvmgr_vendor_ics_range_intersects_window(int $start_ts, int $end_ts, array $window): bool
 {
     $ws = (int)($window['start_ts'] ?? 0);
     $we = (int)($window['end_ts'] ?? 0);
@@ -494,7 +494,7 @@ function vms_vendor_ics_range_intersects_window(int $start_ts, int $end_ts, arra
  * Parse RRULE into key=>value pairs.
  * Example: FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,WE,FR;UNTIL=20261231T000000Z
  */
-function vms_vendor_ics_parse_rrule(string $rrule_raw): array
+function bvmgr_vendor_ics_parse_rrule(string $rrule_raw): array
 {
     $out = array();
     $rrule_raw = trim($rrule_raw);
@@ -518,9 +518,9 @@ function vms_vendor_ics_parse_rrule(string $rrule_raw): array
  * - Handles BYDAY, INTERVAL, UNTIL, COUNT.
  * - If BYDAY omitted, uses DTSTART weekday.
  */
-function vms_vendor_ics_expand_rrule_weekly(array $master, array $window, DateTimeZone $fallback_tz): array
+function bvmgr_vendor_ics_expand_rrule_weekly(array $master, array $window, DateTimeZone $fallback_tz): array
 {
-    $rr = vms_vendor_ics_parse_rrule((string)$master['rrule_raw']);
+    $rr = bvmgr_vendor_ics_parse_rrule((string)$master['rrule_raw']);
     $freq = strtoupper((string)($rr['FREQ'] ?? ''));
     if ($freq !== 'WEEKLY') {
         // MVP: only weekly right now. You can add DAILY/MONTHLY later.
@@ -533,7 +533,7 @@ function vms_vendor_ics_expand_rrule_weekly(array $master, array $window, DateTi
     // UNTIL may be Zulu or local; parse with DTSTART tz if possible
     $until_ts = 0;
     if (!empty($rr['UNTIL'])) {
-        $until_ts = (int)(vms_vendor_ics_parse_dt_with_params((string)$rr['UNTIL'], $master['dtstart_params'] ?? array(), $fallback_tz) ?? 0);
+        $until_ts = (int)(bvmgr_vendor_ics_parse_dt_with_params((string)$rr['UNTIL'], $master['dtstart_params'] ?? array(), $fallback_tz) ?? 0);
     }
 
     // Determine timezone used for DTSTART interpretation
@@ -674,7 +674,7 @@ function vms_vendor_ics_expand_rrule_weekly(array $master, array $window, DateTi
 
     return $out;
 }
-function vms_vendor_ics_find_prop(string $block, string $prop): ?string
+function bvmgr_vendor_ics_find_prop(string $block, string $prop): ?string
 {
     // Matches lines like: DTSTART:20260105T180000Z or DTSTART;TZID=America/Chicago:. . .
     if (preg_match('/^' . preg_quote($prop, '/') . '(?:;[^:]*)?:(.+)$/m', $block, $m)) {
@@ -686,7 +686,7 @@ function vms_vendor_ics_find_prop(string $block, string $prop): ?string
 /**
  * Parse common ICS datetime formats into timestamp using given timezone when needed.
  */
-function vms_vendor_ics_parse_dt(string $value, DateTimeZone $fallback_tz): ?int
+function bvmgr_vendor_ics_parse_dt(string $value, DateTimeZone $fallback_tz): ?int
 {
     $value = trim($value);
 
@@ -735,9 +735,9 @@ function vms_vendor_ics_parse_dt(string $value, DateTimeZone $fallback_tz): ?int
  * Convert events to a set of busy dates (YYYY-MM-DD) in VMS timezone.
  * If an event spans multiple days, all days are marked busy.
  */
-function vms_vendor_ics_busy_dates(array $events): array
+function bvmgr_vendor_ics_busy_dates(array $events): array
 {
-    $tz = vms_get_timezone();
+    $tz = bvmgr_get_timezone();
     $busy = array();
 
     // MVP show window (local time)

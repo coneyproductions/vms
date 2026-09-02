@@ -13,7 +13,7 @@ defined('ABSPATH') || exit;
  * - No "meta:_vms_*" targets
  * - No post/meta storage decisions (that comes from vms_vendor_schema())
  */
-final class VMS_Vendor_Schema_Registry
+final class BVMGR_Vendor_Schema_Registry
 {
 
 	/**

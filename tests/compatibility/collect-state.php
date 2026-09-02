@@ -71,8 +71,8 @@ $normalizeMetaValue = static function ($value) use (&$normalizeMetaValue) {
 };
 
 $vmsOwnedCronHook = static function (string $hook): bool {
-	if (function_exists('vms_is_owned_cron_hook')) {
-		return vms_is_owned_cron_hook($hook);
+	if (function_exists('bvmgr_is_owned_cron_hook')) {
+		return bvmgr_is_owned_cron_hook($hook);
 	}
 
 	return strpos($hook, 'vms_') === 0;
@@ -289,8 +289,8 @@ if (!empty($fixture)) {
 
 	$currentUserPrograms = array();
 	if ($userId > 0) {
-		if (function_exists('vms_ticketing_get_user_verified_programs')) {
-			$currentUserPrograms = array_values(array_map('sanitize_key', vms_ticketing_get_user_verified_programs($userId)));
+		if (function_exists('bvmgr_ticketing_get_user_verified_programs')) {
+			$currentUserPrograms = array_values(array_map('sanitize_key', bvmgr_ticketing_get_user_verified_programs($userId)));
 		} else {
 			$currentUserPrograms = array_values(array_map('sanitize_key', (array) get_user_meta($userId, 'vms_verified_programs', true)));
 		}
@@ -367,7 +367,7 @@ if (!empty($fixture)) {
 	$fixtureState['preserved'] = !in_array(false, array_values($fixturePreservationChecks), true);
 }
 
-$pluginVersion = defined('VMS_VERSION') ? (string) VMS_VERSION : '';
+$pluginVersion = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '';
 $buildVersion = '';
 $pluginBuildFile = VMS_Release_Compatibility_Tooling::buildVersionPathForPluginBasename(WP_PLUGIN_DIR, $vmsPluginBase);
 if ($pluginBuildFile !== '' && is_file($pluginBuildFile)) {

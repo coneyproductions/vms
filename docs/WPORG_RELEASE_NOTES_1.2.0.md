@@ -7,7 +7,7 @@ Date: 2026-07-25
 - Product line: `Backstage Venue Manager` public core
 - Public version: `1.2.0`
 - Public slug: `backstage-venue-manager`
-- Main plugin file: `vendor-management-system.php`
+- Canonical main plugin file: `backstage-venue-manager.php`
 - Source of truth: the repository mirror `packages/vms-github-reconcile`
 
 ## Public-Core Summary
@@ -16,6 +16,13 @@ Date: 2026-07-25
 - Carries forward the accepted WordPress.org remediation work for request boundaries, output handling, JSON handling, file-system and upload/download boundaries, executable admin assets, AJAX lifecycle behavior, packaging controls, and Turnstile disclosure alignment.
 - Preserves existing venue, vendor, Event Plan, admissions, and ticketing behavior within the public core package.
 - Leaves database schemas, migration routines, and internal compatibility basenames unchanged.
+
+## Main-Filename Compatibility
+
+- The public package exposes one WordPress plugin header at `backstage-venue-manager/backstage-venue-manager.php`.
+- `vendor-management-system.php` remains as a headerless same-directory bridge so an existing active basename can load the canonical bootstrap and migrate to `backstage-venue-manager.php` without creating a second Plugins-screen entry.
+- Both single-site `active_plugins` and multisite `active_sitewide_plugins` basename values are migrated, preserving the network activation timestamp.
+- A directory change from an existing `vms/` install to the public `backstage-venue-manager/` package remains a controlled replacement boundary; the in-package bridge cannot safely rewrite an old basename after an updater has removed the old directory.
 
 ## Package Exclusions
 

@@ -5,8 +5,8 @@ if (!defined('WP_CLI') || !WP_CLI) {
     return;
 }
 
-if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
-    class VMS_CLI_Square_Ticket_Mirror_Command
+if (!class_exists('BVMGR_CLI_Square_Ticket_Mirror_Command')) {
+    class BVMGR_CLI_Square_Ticket_Mirror_Command
     {
         /**
          * Show Square ticket mirror status and source model for one product.
@@ -21,8 +21,8 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
          *
          * ## EXAMPLES
          *
-         *     wp vms square-ticket-mirror status --product=123
-         *     wp vms square-ticket-mirror status --product=123 --format=json
+         *     wp bvmgr square-ticket-mirror status --product=123
+         *     wp bvmgr square-ticket-mirror status --product=123 --format=json
          *
          * @subcommand status
          * @when after_wp_load
@@ -38,7 +38,7 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
                 WP_CLI::error('A valid --product ID is required.');
             }
 
-            $state = vms_square_ticket_mirror_status_context($product_id);
+            $state = bvmgr_square_ticket_mirror_status_context($product_id);
             $payload = array(
                 'product_id' => $product_id,
                 'status' => (string) ($state['status'] ?? 'not_mirrored'),
@@ -102,8 +102,8 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
          *
          * ## EXAMPLES
          *
-         *     wp vms square-ticket-mirror stamp-test --product=123
-         *     wp vms square-ticket-mirror stamp-test --product=123 --variation-id=VARIATION_TEST_123 --format=json
+         *     wp bvmgr square-ticket-mirror stamp-test --product=123
+         *     wp bvmgr square-ticket-mirror stamp-test --product=123 --variation-id=VARIATION_TEST_123 --format=json
          *
          * @subcommand stamp-test
          * @when after_wp_load
@@ -137,7 +137,7 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
                 $item->set_product($product);
                 $item->set_quantity(1);
 
-                $result = vms_square_ticket_mirror_maybe_stamp_checkout_item($item, array(
+                $result = bvmgr_square_ticket_mirror_maybe_stamp_checkout_item($item, array(
                     'hook' => 'wp_cli_stamp_test',
                     'order_id' => 0,
                     'simulated_variation_id' => $simulated_variation_id,
@@ -152,7 +152,7 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
                         '_square_item_variation_id' => (string) $item->get_meta('_square_item_variation_id', true),
                         '_vms_square_mirror_stamped' => (string) $item->get_meta('_vms_square_mirror_stamped', true),
                     ),
-                    'status' => vms_square_ticket_mirror_status_context($product_id),
+                    'status' => bvmgr_square_ticket_mirror_status_context($product_id),
                 );
 
                 $format = sanitize_key((string) ($assoc_args['format'] ?? 'summary'));
@@ -181,7 +181,7 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
         {
             $backup = array();
             foreach ($this->mirror_meta_fields() as $field) {
-                $meta_key = vms_square_ticket_mirror_product_meta_key($field);
+                $meta_key = bvmgr_square_ticket_mirror_product_meta_key($field);
                 if ($meta_key === '') {
                     continue;
                 }
@@ -201,7 +201,7 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
         private function restore_mirror_meta(int $product_id, array $backup): void
         {
             foreach ($this->mirror_meta_fields() as $field) {
-                $meta_key = vms_square_ticket_mirror_product_meta_key($field);
+                $meta_key = bvmgr_square_ticket_mirror_product_meta_key($field);
                 if ($meta_key === '') {
                     continue;
                 }
@@ -217,21 +217,21 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
 
         private function apply_simulated_mirror_meta(int $product_id, string $variation_id): void
         {
-            $state = vms_square_ticket_mirror_status_context($product_id);
-            $source_model = is_array($state['source_model'] ?? null) ? (array) $state['source_model'] : vms_square_ticket_mirror_build_source_model($product_id);
-            $source_hash = vms_square_ticket_mirror_source_hash($source_model);
+            $state = bvmgr_square_ticket_mirror_status_context($product_id);
+            $source_model = is_array($state['source_model'] ?? null) ? (array) $state['source_model'] : bvmgr_square_ticket_mirror_build_source_model($product_id);
+            $source_hash = bvmgr_square_ticket_mirror_source_hash($source_model);
 
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_mode', vms_square_ticket_mirror_mode_value());
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirrored');
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_item_id', 'SIMULATED_ITEM_' . $product_id);
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_variation_id', $variation_id);
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_category_id', 'SIMULATED_CATEGORY');
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_location_id', 'SIMULATED_LOCATION');
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_catalog_version', '1');
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_source_hash', $source_hash);
-            vms_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_sync_gmt', vms_square_ticket_mirror_now_gmt());
-            vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
-            vms_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_mode', bvmgr_square_ticket_mirror_mode_value());
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_status', 'mirrored');
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_item_id', 'SIMULATED_ITEM_' . $product_id);
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_variation_id', $variation_id);
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_category_id', 'SIMULATED_CATEGORY');
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_location_id', 'SIMULATED_LOCATION');
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_catalog_version', '1');
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_source_hash', $source_hash);
+            bvmgr_square_ticket_mirror_update_meta($product_id, 'square_mirror_last_sync_gmt', bvmgr_square_ticket_mirror_now_gmt());
+            bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_code');
+            bvmgr_square_ticket_mirror_delete_meta($product_id, 'square_mirror_last_error_message');
         }
 
         /**
@@ -257,5 +257,7 @@ if (!class_exists('VMS_CLI_Square_Ticket_Mirror_Command')) {
         }
     }
 
-    WP_CLI::add_command('vms square-ticket-mirror', 'VMS_CLI_Square_Ticket_Mirror_Command');
+    WP_CLI::add_command('bvmgr square-ticket-mirror', 'BVMGR_CLI_Square_Ticket_Mirror_Command');
+    // Deprecated B4 compatibility alias; retain until the CLI retirement gate is met.
+    WP_CLI::add_command('vms square-ticket-mirror', 'BVMGR_CLI_Square_Ticket_Mirror_Command');
 }

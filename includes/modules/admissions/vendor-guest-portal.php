@@ -1,53 +1,53 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admission_vendor_guest_meta_key')) {
-	function vms_admission_vendor_guest_meta_key(): string
+if (!function_exists('bvmgr_admission_vendor_guest_meta_key')) {
+	function bvmgr_admission_vendor_guest_meta_key(): string
 	{
-		$key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'vendor_guest_rules') : '';
+		$key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'vendor_guest_rules') : '';
 		return $key !== '' ? $key : '_vms_vendor_guest_rules';
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_flash_key')) {
-	function vms_admission_vendor_guest_flash_key(int $user_id): string
+if (!function_exists('bvmgr_admission_vendor_guest_flash_key')) {
+	function bvmgr_admission_vendor_guest_flash_key(int $user_id): string
 	{
 		return 'vms_vendor_guest_flash_' . max(0, $user_id);
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_set_flash')) {
-	function vms_admission_vendor_guest_set_flash(int $user_id, array $payload): void
+if (!function_exists('bvmgr_admission_vendor_guest_set_flash')) {
+	function bvmgr_admission_vendor_guest_set_flash(int $user_id, array $payload): void
 	{
 		if ($user_id <= 0) {
 			return;
 		}
-		set_transient(vms_admission_vendor_guest_flash_key($user_id), $payload, 120);
+		set_transient(bvmgr_admission_vendor_guest_flash_key($user_id), $payload, 120);
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_pull_flash')) {
-	function vms_admission_vendor_guest_pull_flash(int $user_id): array
+if (!function_exists('bvmgr_admission_vendor_guest_pull_flash')) {
+	function bvmgr_admission_vendor_guest_pull_flash(int $user_id): array
 	{
 		if ($user_id <= 0) {
 			return array();
 		}
-		$key = vms_admission_vendor_guest_flash_key($user_id);
+		$key = bvmgr_admission_vendor_guest_flash_key($user_id);
 		$data = get_transient($key);
 		delete_transient($key);
 		return is_array($data) ? $data : array();
 	}
 }
 
-if (!function_exists('vms_admission_get_event_vendor_ids')) {
-	function vms_admission_get_event_vendor_ids(int $event_plan_id): array
+if (!function_exists('bvmgr_admission_get_event_vendor_ids')) {
+	function bvmgr_admission_get_event_vendor_ids(int $event_plan_id): array
 	{
 		$ids = array();
-		$band_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+		$band_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
 		$band_key = $band_key !== '' ? $band_key : '_vms_band_vendor_id';
-		$secondary_ids_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+		$secondary_ids_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
 		$secondary_ids_key = $secondary_ids_key !== '' ? $secondary_ids_key : '_vms_secondary_vendor_ids';
-		$secondary_idx_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+		$secondary_idx_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
 		$secondary_idx_key = $secondary_idx_key !== '' ? $secondary_idx_key : '_vms_secondary_vendor_id';
 
 		$band_id = (int) get_post_meta($event_plan_id, $band_key, true);
@@ -72,11 +72,11 @@ if (!function_exists('vms_admission_get_event_vendor_ids')) {
 	}
 }
 
-if (!function_exists('vms_admission_get_event_vendor_posts')) {
-	function vms_admission_get_event_vendor_posts(int $event_plan_id): array
+if (!function_exists('bvmgr_admission_get_event_vendor_posts')) {
+	function bvmgr_admission_get_event_vendor_posts(int $event_plan_id): array
 	{
 		$rows = array();
-		foreach (vms_admission_get_event_vendor_ids($event_plan_id) as $vendor_id) {
+		foreach (bvmgr_admission_get_event_vendor_ids($event_plan_id) as $vendor_id) {
 			$post = get_post($vendor_id);
 			if (!($post instanceof WP_Post) || $post->post_type !== 'vms_vendor') {
 				continue;
@@ -91,8 +91,8 @@ if (!function_exists('vms_admission_get_event_vendor_posts')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_default_rules')) {
-	function vms_admission_vendor_guest_default_rules(): array
+if (!function_exists('bvmgr_admission_vendor_guest_default_rules')) {
+	function bvmgr_admission_vendor_guest_default_rules(): array
 	{
 		return array(
 			'enabled' => 0,
@@ -102,11 +102,11 @@ if (!function_exists('vms_admission_vendor_guest_default_rules')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_get_rules')) {
-	function vms_admission_vendor_guest_get_rules(int $event_plan_id): array
+if (!function_exists('bvmgr_admission_vendor_guest_get_rules')) {
+	function bvmgr_admission_vendor_guest_get_rules(int $event_plan_id): array
 	{
-		$raw = get_post_meta($event_plan_id, vms_admission_vendor_guest_meta_key(), true);
-		$rules = vms_admission_vendor_guest_default_rules();
+		$raw = get_post_meta($event_plan_id, bvmgr_admission_vendor_guest_meta_key(), true);
+		$rules = bvmgr_admission_vendor_guest_default_rules();
 		if (!is_array($raw)) {
 			$raw = array();
 		}
@@ -130,10 +130,10 @@ if (!function_exists('vms_admission_vendor_guest_get_rules')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_get_vendor_rule')) {
-	function vms_admission_vendor_guest_get_vendor_rule(int $event_plan_id, int $vendor_id): array
+if (!function_exists('bvmgr_admission_vendor_guest_get_vendor_rule')) {
+	function bvmgr_admission_vendor_guest_get_vendor_rule(int $event_plan_id, int $vendor_id): array
 	{
-		$rules = vms_admission_vendor_guest_get_rules($event_plan_id);
+		$rules = bvmgr_admission_vendor_guest_get_rules($event_plan_id);
 		$vendor_rule = (array) ($rules['vendors'][$vendor_id] ?? array());
 		$legacy_first_time_only = !empty($rules['first_time_only']) ? 1 : 0;
 		return array(
@@ -146,38 +146,38 @@ if (!function_exists('vms_admission_vendor_guest_get_vendor_rule')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_is_enabled_for_vendor')) {
-	function vms_admission_vendor_guest_is_enabled_for_vendor(int $event_plan_id, int $vendor_id): bool
+if (!function_exists('bvmgr_admission_vendor_guest_is_enabled_for_vendor')) {
+	function bvmgr_admission_vendor_guest_is_enabled_for_vendor(int $event_plan_id, int $vendor_id): bool
 	{
-		$rule = vms_admission_vendor_guest_get_vendor_rule($event_plan_id, $vendor_id);
+		$rule = bvmgr_admission_vendor_guest_get_vendor_rule($event_plan_id, $vendor_id);
 		return !empty($rule['program_enabled']) && !empty($rule['enabled']) && (int) ($rule['allotment'] ?? 0) > 0;
 	}
 }
 
 
-if (!function_exists('vms_admission_vendor_guest_internal_comp_product_option_key')) {
-	function vms_admission_vendor_guest_internal_comp_product_option_key(): string
+if (!function_exists('bvmgr_admission_vendor_guest_internal_comp_product_option_key')) {
+	function bvmgr_admission_vendor_guest_internal_comp_product_option_key(): string
 	{
 		return 'vms_admission_internal_comp_product_id';
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_internal_comp_order_meta_key')) {
-	function vms_admission_vendor_guest_internal_comp_order_meta_key(): string
+if (!function_exists('bvmgr_admission_vendor_guest_internal_comp_order_meta_key')) {
+	function bvmgr_admission_vendor_guest_internal_comp_order_meta_key(): string
 	{
 		return '_vms_internal_comp_admission';
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_bridge_source_key')) {
-	function vms_admission_vendor_guest_bridge_source_key(): string
+if (!function_exists('bvmgr_admission_vendor_guest_bridge_source_key')) {
+	function bvmgr_admission_vendor_guest_bridge_source_key(): string
 	{
 		return 'tec_woo_attendee';
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_split_name')) {
-	function vms_admission_vendor_guest_split_name(string $full_name): array
+if (!function_exists('bvmgr_admission_vendor_guest_split_name')) {
+	function bvmgr_admission_vendor_guest_split_name(string $full_name): array
 	{
 		$full_name = trim(preg_replace('/\s+/', ' ', $full_name));
 		if ($full_name === '') {
@@ -190,8 +190,8 @@ if (!function_exists('vms_admission_vendor_guest_split_name')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_has_full_name')) {
-	function vms_admission_vendor_guest_has_full_name(string $full_name): bool
+if (!function_exists('bvmgr_admission_vendor_guest_has_full_name')) {
+	function bvmgr_admission_vendor_guest_has_full_name(string $full_name): bool
 	{
 		$full_name = trim(preg_replace('/\s+/', ' ', $full_name));
 		if ($full_name === '') {
@@ -205,8 +205,8 @@ if (!function_exists('vms_admission_vendor_guest_has_full_name')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_parse_party_guests')) {
-	function vms_admission_vendor_guest_parse_party_guests(array $post, int $party_size): array
+if (!function_exists('bvmgr_admission_vendor_guest_parse_party_guests')) {
+	function bvmgr_admission_vendor_guest_parse_party_guests(array $post, int $party_size): array
 	{
 		$party_size = max(1, $party_size);
 		$names = isset($post['guest_names']) && is_array($post['guest_names']) ? $post['guest_names'] : array();
@@ -230,8 +230,8 @@ if (!function_exists('vms_admission_vendor_guest_parse_party_guests')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_is_internal_comp_order')) {
-	function vms_admission_vendor_guest_is_internal_comp_order($order_ref): bool
+if (!function_exists('bvmgr_admission_vendor_guest_is_internal_comp_order')) {
+	function bvmgr_admission_vendor_guest_is_internal_comp_order($order_ref): bool
 	{
 		if (!function_exists('wc_get_order')) {
 			return false;
@@ -240,19 +240,19 @@ if (!function_exists('vms_admission_vendor_guest_is_internal_comp_order')) {
 		if (!is_object($order) || !method_exists($order, 'get_meta')) {
 			return false;
 		}
-		return (bool) $order->get_meta(vms_admission_vendor_guest_internal_comp_order_meta_key(), true);
+		return (bool) $order->get_meta(bvmgr_admission_vendor_guest_internal_comp_order_meta_key(), true);
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_bridge_context_from_claim_meta')) {
-	function vms_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta): array
+if (!function_exists('bvmgr_admission_vendor_guest_bridge_context_from_claim_meta')) {
+	function bvmgr_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta): array
 	{
 		if (is_string($claim_meta) && $claim_meta !== '') {
-			$decoded = vms_json_decode_associative($claim_meta, 16);
+			$decoded = bvmgr_json_decode_associative($claim_meta, 16);
 			if (
 				!empty($decoded['ok'])
 				&& is_array($decoded['value'])
-				&& vms_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+				&& bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
 			) {
 				$claim_meta = $decoded['value'];
 			}
@@ -271,13 +271,13 @@ if (!function_exists('vms_admission_vendor_guest_bridge_context_from_claim_meta'
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_internal_comp_product_id')) {
-	function vms_admission_vendor_guest_internal_comp_product_id(): int
+if (!function_exists('bvmgr_admission_vendor_guest_internal_comp_product_id')) {
+	function bvmgr_admission_vendor_guest_internal_comp_product_id(): int
 	{
 		if (!function_exists('wc_get_product') || !class_exists('WC_Product_Simple')) {
 			return 0;
 		}
-		$stored_id = absint(get_option(vms_admission_vendor_guest_internal_comp_product_option_key(), 0));
+		$stored_id = absint(get_option(bvmgr_admission_vendor_guest_internal_comp_product_option_key(), 0));
 		if ($stored_id > 0) {
 			$product = wc_get_product($stored_id);
 			if ($product) {
@@ -288,7 +288,7 @@ if (!function_exists('vms_admission_vendor_guest_internal_comp_product_id')) {
 			'post_type' => 'product',
 			'post_status' => 'private',
 			'post_title' => __('Complimentary Admission', 'backstage-venue-manager'),
-			'post_excerpt' => __('Internal scanner-native comp admission product used by VMS for non-public guest passes.', 'backstage-venue-manager'),
+			'post_excerpt' => __('Internal scanner-native comp admission product used by Backstage Venue Manager for non-public guest passes.', 'backstage-venue-manager'),
 			'post_content' => '',
 			'post_author' => get_current_user_id() ?: 1,
 		);
@@ -307,17 +307,17 @@ if (!function_exists('vms_admission_vendor_guest_internal_comp_product_id')) {
 		$product->set_sold_individually(false);
 		$product->set_reviews_allowed(false);
 		$product->save();
-		update_post_meta($product_id, vms_admission_vendor_guest_internal_comp_order_meta_key(), 1);
+		update_post_meta($product_id, bvmgr_admission_vendor_guest_internal_comp_order_meta_key(), 1);
 		update_post_meta($product_id, '_vms_internal_comp_product', 1);
-		update_option(vms_admission_vendor_guest_internal_comp_product_option_key(), $product_id, false);
+		update_option(bvmgr_admission_vendor_guest_internal_comp_product_option_key(), $product_id, false);
 		return (int) $product_id;
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_bridge_cancel')) {
-	function vms_admission_vendor_guest_bridge_cancel(array $bridge, string $reason = ''): void
+if (!function_exists('bvmgr_admission_vendor_guest_bridge_cancel')) {
+	function bvmgr_admission_vendor_guest_bridge_cancel(array $bridge, string $reason = ''): void
 	{
-		$bridge = vms_admission_vendor_guest_bridge_context_from_claim_meta(array('bridge' => $bridge));
+		$bridge = bvmgr_admission_vendor_guest_bridge_context_from_claim_meta(array('bridge' => $bridge));
 		foreach ((array) ($bridge['attendee_ids'] ?? array()) as $attendee_id) {
 			$attendee_id = absint($attendee_id);
 			if ($attendee_id > 0 && get_post($attendee_id)) {
@@ -338,8 +338,8 @@ if (!function_exists('vms_admission_vendor_guest_bridge_cancel')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
-	function vms_admission_vendor_guest_bridge_create(int $event_plan_id, int $vendor_id, string $guest_name, string $guest_email, string $phone, int $party_size, string $notes, int $user_id)
+if (!function_exists('bvmgr_admission_vendor_guest_bridge_create')) {
+	function bvmgr_admission_vendor_guest_bridge_create(int $event_plan_id, int $vendor_id, string $guest_name, string $guest_email, string $phone, int $party_size, string $notes, int $user_id)
 	{
 		if (!function_exists('wc_create_order') || !function_exists('wc_get_product')) {
 			return new WP_Error('vms_vendor_guest_bridge_wc_missing', __('WooCommerce is required to issue scanner-native complimentary admissions.', 'backstage-venue-manager'));
@@ -351,7 +351,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 		if ($tec_event_id <= 0) {
 			return new WP_Error('vms_vendor_guest_bridge_no_event', __('This event plan is not connected to a TEC event yet, so a scannable complimentary admission cannot be issued.', 'backstage-venue-manager'));
 		}
-		$product_id = vms_admission_vendor_guest_internal_comp_product_id();
+		$product_id = bvmgr_admission_vendor_guest_internal_comp_product_id();
 		if ($product_id <= 0) {
 			return new WP_Error('vms_vendor_guest_bridge_no_product', __('Could not prepare the internal complimentary admission product.', 'backstage-venue-manager'));
 		}
@@ -363,7 +363,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 		if (!is_object($provider)) {
 			return new WP_Error('vms_vendor_guest_bridge_no_provider', __('The WooCommerce ticket provider could not be loaded.', 'backstage-venue-manager'));
 		}
-		$name = vms_admission_vendor_guest_split_name($guest_name);
+		$name = bvmgr_admission_vendor_guest_split_name($guest_name);
 		$order = wc_create_order(array(
 			'created_via' => 'vms_vendor_guest',
 			'customer_id' => 0,
@@ -380,7 +380,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 			$order->set_billing_phone($phone);
 		}
 		$order->set_customer_note($notes);
-		$order->update_meta_data(vms_admission_vendor_guest_internal_comp_order_meta_key(), 1);
+		$order->update_meta_data(bvmgr_admission_vendor_guest_internal_comp_order_meta_key(), 1);
 		$order->update_meta_data('_vms_vendor_guest_source', 'vendor_portal');
 		$order->update_meta_data('_vms_vendor_id', $vendor_id);
 		$order->update_meta_data('_vms_event_plan_id', $event_plan_id);
@@ -396,7 +396,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 		$item->set_quantity(max(1, $party_size));
 		$item->set_subtotal(0);
 		$item->set_total(0);
-		$item->add_meta_data(vms_admission_vendor_guest_internal_comp_order_meta_key(), 1, true);
+		$item->add_meta_data(bvmgr_admission_vendor_guest_internal_comp_order_meta_key(), 1, true);
 		$item->add_meta_data('_vms_vendor_id', $vendor_id, true);
 		$item->add_meta_data('_vms_event_plan_id', $event_plan_id, true);
 		$item->add_meta_data('_vms_tec_event_id', $tec_event_id, true);
@@ -421,7 +421,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 			$attendee_post = apply_filters('wootickets_attendee_insert_args', $attendee_post, $order_id, $product_id, $tec_event_id);
 			$attendee_id = wp_insert_post($attendee_post, true);
 			if (is_wp_error($attendee_id) || $attendee_id <= 0) {
-				vms_admission_vendor_guest_bridge_cancel(array(
+				bvmgr_admission_vendor_guest_bridge_cancel(array(
 					'order_id' => $order_id,
 					'attendee_ids' => $attendee_ids,
 				), __('Bridge cleanup after attendee creation failure.', 'backstage-venue-manager'));
@@ -461,7 +461,7 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 			$email_dispatched = 1;
 		}
 		return array(
-			'source' => vms_admission_vendor_guest_bridge_source_key(),
+			'source' => bvmgr_admission_vendor_guest_bridge_source_key(),
 			'product_id' => $product_id,
 			'order_id' => $order_id,
 			'order_item_id' => $order_item_id,
@@ -472,11 +472,11 @@ if (!function_exists('vms_admission_vendor_guest_bridge_create')) {
 	}
 }
 
-if (!function_exists('vms_admission_find_duplicate_entry_count')) {
-	function vms_admission_find_duplicate_entry_count(int $event_plan_id, string $guest_name_norm, string $guest_email_norm = '', string $phone_norm = '', int $exclude_entry_id = 0): array
+if (!function_exists('bvmgr_admission_find_duplicate_entry_count')) {
+	function bvmgr_admission_find_duplicate_entry_count(int $event_plan_id, string $guest_name_norm, string $guest_email_norm = '', string $phone_norm = '', int $exclude_entry_id = 0): array
 	{
 		global $wpdb;
-		$table = vms_admission_table_entries();
+		$table = bvmgr_admission_table_entries();
 		$where = array('event_plan_id = %d', "status <> 'canceled'");
 		$params = array($event_plan_id);
 		if ($exclude_entry_id > 0) {
@@ -512,17 +512,17 @@ if (!function_exists('vms_admission_find_duplicate_entry_count')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_ticket_product_ids')) {
-	function vms_admission_vendor_guest_ticket_product_ids(int $event_plan_id): array
+if (!function_exists('bvmgr_admission_vendor_guest_ticket_product_ids')) {
+	function bvmgr_admission_vendor_guest_ticket_product_ids(int $event_plan_id): array
 	{
 		$tec_event_id = (int) get_post_meta($event_plan_id, '_vms_tec_event_id', true);
 		$product_ids = array();
-		if ($tec_event_id > 0 && function_exists('vms_ticketing_get_ticket_product_ids_for_tec_event')) {
-			$product_ids = (array) vms_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
-		} elseif ($tec_event_id > 0 && function_exists('vms_get_ticket_product_ids_for_event')) {
-			$product_ids = (array) vms_get_ticket_product_ids_for_event($tec_event_id);
-		} elseif (function_exists('vms_vendor_portal_get_ticket_product_ids')) {
-			$product_ids = (array) vms_vendor_portal_get_ticket_product_ids($event_plan_id);
+		if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_get_ticket_product_ids_for_tec_event')) {
+			$product_ids = (array) bvmgr_ticketing_get_ticket_product_ids_for_tec_event($tec_event_id);
+		} elseif ($tec_event_id > 0 && function_exists('bvmgr_get_ticket_product_ids_for_event')) {
+			$product_ids = (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id);
+		} elseif (function_exists('bvmgr_vendor_portal_get_ticket_product_ids')) {
+			$product_ids = (array) bvmgr_vendor_portal_get_ticket_product_ids($event_plan_id);
 		}
 		$product_ids = array_values(array_unique(array_filter(array_map('absint', $product_ids))));
 		sort($product_ids, SORT_NUMERIC);
@@ -530,8 +530,8 @@ if (!function_exists('vms_admission_vendor_guest_ticket_product_ids')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_product_event_id')) {
-	function vms_admission_vendor_guest_product_event_id(int $product_id): int
+if (!function_exists('bvmgr_admission_vendor_guest_product_event_id')) {
+	function bvmgr_admission_vendor_guest_product_event_id(int $product_id): int
 	{
 		$product_id = absint($product_id);
 		if ($product_id <= 0) {
@@ -545,8 +545,8 @@ if (!function_exists('vms_admission_vendor_guest_product_event_id')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_paid_history')) {
-	function vms_admission_vendor_guest_paid_history(string $guest_email_norm, string $phone_norm, int $target_event_plan_id = 0): array
+if (!function_exists('bvmgr_admission_vendor_guest_paid_history')) {
+	function bvmgr_admission_vendor_guest_paid_history(string $guest_email_norm, string $phone_norm, int $target_event_plan_id = 0): array
 	{
 		$result = array(
 			'same_event_paid' => 0,
@@ -578,7 +578,7 @@ if (!function_exists('vms_admission_vendor_guest_paid_history')) {
 			return $result;
 		}
 		$target_event_id = $target_event_plan_id > 0 ? (int) get_post_meta($target_event_plan_id, '_vms_tec_event_id', true) : 0;
-		$target_products = $target_event_plan_id > 0 ? vms_admission_vendor_guest_ticket_product_ids($target_event_plan_id) : array();
+		$target_products = $target_event_plan_id > 0 ? bvmgr_admission_vendor_guest_ticket_product_ids($target_event_plan_id) : array();
 		$target_product_lookup = array_fill_keys($target_products, true);
 		$seen_orders = array();
 		$seen_events = array();
@@ -592,7 +592,7 @@ if (!function_exists('vms_admission_vendor_guest_paid_history')) {
 				if ($order_id <= 0 || isset($seen_orders[$order_id])) {
 					continue;
 				}
-				if (vms_admission_vendor_guest_is_internal_comp_order($order)) {
+				if (bvmgr_admission_vendor_guest_is_internal_comp_order($order)) {
 					continue;
 				}
 				$seen_orders[$order_id] = true;
@@ -603,9 +603,9 @@ if (!function_exists('vms_admission_vendor_guest_paid_history')) {
 					}
 					$product_id = (int) $item->get_product_id();
 					$variation_id = method_exists($item, 'get_variation_id') ? (int) $item->get_variation_id() : 0;
-					$event_id = vms_admission_vendor_guest_product_event_id($variation_id);
+					$event_id = bvmgr_admission_vendor_guest_product_event_id($variation_id);
 					if ($event_id <= 0) {
-						$event_id = vms_admission_vendor_guest_product_event_id($product_id);
+						$event_id = bvmgr_admission_vendor_guest_product_event_id($product_id);
 					}
 					if ($event_id > 0) {
 						$matched_any = true;
@@ -629,11 +629,11 @@ if (!function_exists('vms_admission_vendor_guest_paid_history')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_comp_history')) {
-	function vms_admission_vendor_guest_comp_history(int $event_plan_id, string $guest_name_norm, string $guest_email_norm, string $phone_norm): array
+if (!function_exists('bvmgr_admission_vendor_guest_comp_history')) {
+	function bvmgr_admission_vendor_guest_comp_history(int $event_plan_id, string $guest_name_norm, string $guest_email_norm, string $phone_norm): array
 	{
 		global $wpdb;
-		$table = vms_admission_table_entries();
+		$table = bvmgr_admission_table_entries();
 		$where = array("status <> 'canceled'", 'event_plan_id <> %d');
 		$params = array($event_plan_id);
 		$identity = array();
@@ -665,8 +665,8 @@ if (!function_exists('vms_admission_vendor_guest_comp_history')) {
 		$event_ids = array_values(array_unique(array_filter(array_map(static function ($row): int {
 				return isset($row['event_plan_id']) ? (int) $row['event_plan_id'] : 0;
 			}, (array) $rows))));
-		if (($guest_email_norm !== '' || $phone_norm !== '') && function_exists('vms_admission_table_pass_claims')) {
-			$claims_table = vms_admission_table_pass_claims();
+		if (($guest_email_norm !== '' || $phone_norm !== '') && function_exists('bvmgr_admission_table_pass_claims')) {
+			$claims_table = bvmgr_admission_table_pass_claims();
 			$claim_where = array('event_plan_id <> %d');
 			$claim_params = array($event_plan_id);
 			$claim_identity = array();
@@ -702,15 +702,15 @@ if (!function_exists('vms_admission_vendor_guest_comp_history')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_validation_report')) {
-	function vms_admission_vendor_guest_validation_report(int $event_plan_id, string $guest_name, string $guest_email, string $phone): array
+if (!function_exists('bvmgr_admission_vendor_guest_validation_report')) {
+	function bvmgr_admission_vendor_guest_validation_report(int $event_plan_id, string $guest_name, string $guest_email, string $phone): array
 	{
-		$guest_name_norm = vms_admission_normalize_name($guest_name);
-		$guest_email_norm = vms_admission_normalize_email($guest_email);
-		$phone_norm = vms_admission_normalize_phone($phone);
-		$duplicate = vms_admission_find_duplicate_entry_count($event_plan_id, $guest_name_norm, $guest_email_norm, $phone_norm, 0);
-		$comp_history = vms_admission_vendor_guest_comp_history($event_plan_id, $guest_name_norm, $guest_email_norm, $phone_norm);
-		$paid_history = vms_admission_vendor_guest_paid_history($guest_email_norm, $phone_norm, $event_plan_id);
+		$guest_name_norm = bvmgr_admission_normalize_name($guest_name);
+		$guest_email_norm = bvmgr_admission_normalize_email($guest_email);
+		$phone_norm = bvmgr_admission_normalize_phone($phone);
+		$duplicate = bvmgr_admission_find_duplicate_entry_count($event_plan_id, $guest_name_norm, $guest_email_norm, $phone_norm, 0);
+		$comp_history = bvmgr_admission_vendor_guest_comp_history($event_plan_id, $guest_name_norm, $guest_email_norm, $phone_norm);
+		$paid_history = bvmgr_admission_vendor_guest_paid_history($guest_email_norm, $phone_norm, $event_plan_id);
 		return array(
 			'guest_name_norm' => $guest_name_norm,
 			'guest_email_norm' => $guest_email_norm,
@@ -726,11 +726,11 @@ if (!function_exists('vms_admission_vendor_guest_validation_report')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_entries_for_vendor')) {
-	function vms_admission_vendor_guest_entries_for_vendor(int $event_plan_id, int $vendor_id, bool $include_canceled = true): array
+if (!function_exists('bvmgr_admission_vendor_guest_entries_for_vendor')) {
+	function bvmgr_admission_vendor_guest_entries_for_vendor(int $event_plan_id, int $vendor_id, bool $include_canceled = true): array
 	{
 		global $wpdb;
-		$table = vms_admission_table_entries();
+		$table = bvmgr_admission_table_entries();
 		$where = 'event_plan_id = %d AND owner_vendor_id = %d AND source = %s';
 		$params = array($event_plan_id, $vendor_id, 'vendor_portal');
 		if (!$include_canceled) {
@@ -749,43 +749,43 @@ if (!function_exists('vms_admission_vendor_guest_entries_for_vendor')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_used_headcount')) {
-	function vms_admission_vendor_guest_used_headcount(int $event_plan_id, int $vendor_id): int
+if (!function_exists('bvmgr_admission_vendor_guest_used_headcount')) {
+	function bvmgr_admission_vendor_guest_used_headcount(int $event_plan_id, int $vendor_id): int
 	{
 		$total = 0;
-		foreach (vms_admission_vendor_guest_entries_for_vendor($event_plan_id, $vendor_id, false) as $row) {
+		foreach (bvmgr_admission_vendor_guest_entries_for_vendor($event_plan_id, $vendor_id, false) as $row) {
 			$total += max(1, (int) ($row['party_size'] ?? 1));
 		}
 		return max(0, $total);
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_event_plan_can_vendor_manage')) {
-	function vms_admission_vendor_guest_event_plan_can_vendor_manage(int $event_plan_id, int $vendor_id, int $user_id): bool
+if (!function_exists('bvmgr_admission_vendor_guest_event_plan_can_vendor_manage')) {
+	function bvmgr_admission_vendor_guest_event_plan_can_vendor_manage(int $event_plan_id, int $vendor_id, int $user_id): bool
 	{
 		if ($event_plan_id <= 0 || $vendor_id <= 0 || $user_id <= 0) {
 			return false;
 		}
-		if (function_exists('vms_user_can_access_vendor') && !vms_user_can_access_vendor($user_id, $vendor_id)) {
+		if (function_exists('bvmgr_user_can_access_vendor') && !bvmgr_user_can_access_vendor($user_id, $vendor_id)) {
 			return false;
 		}
-		if (!in_array($vendor_id, vms_admission_get_event_vendor_ids($event_plan_id), true)) {
+		if (!in_array($vendor_id, bvmgr_admission_get_event_vendor_ids($event_plan_id), true)) {
 			return false;
 		}
-		return vms_admission_vendor_guest_is_enabled_for_vendor($event_plan_id, $vendor_id);
+		return bvmgr_admission_vendor_guest_is_enabled_for_vendor($event_plan_id, $vendor_id);
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_portal_events')) {
-	function vms_admission_vendor_guest_portal_events(int $vendor_id): array
+if (!function_exists('bvmgr_admission_vendor_guest_portal_events')) {
+	function bvmgr_admission_vendor_guest_portal_events(int $vendor_id): array
 	{
 		if ($vendor_id <= 0) {
 			return array();
 		}
 		$today = wp_date('Y-m-d', time(), wp_timezone());
-		$band_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+		$band_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
 		$band_key = $band_key !== '' ? $band_key : '_vms_band_vendor_id';
-		$secondary_idx_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+		$secondary_idx_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
 		$secondary_idx_key = $secondary_idx_key !== '' ? $secondary_idx_key : '_vms_secondary_vendor_id';
 			$posts = get_posts(array(
 				'post_type' => 'vms_event_plan',
@@ -812,15 +812,15 @@ if (!function_exists('vms_admission_vendor_guest_portal_events')) {
 		$rows = array();
 		foreach ((array) $posts as $post) {
 			$post_id = (int) $post->ID;
-			if (!vms_admission_vendor_guest_is_enabled_for_vendor($post_id, $vendor_id)) {
+			if (!bvmgr_admission_vendor_guest_is_enabled_for_vendor($post_id, $vendor_id)) {
 				continue;
 			}
-			$plan = vms_admission_event_plan_context($post_id);
+			$plan = bvmgr_admission_event_plan_context($post_id);
 			if (!$plan) {
 				continue;
 			}
-			$rule = vms_admission_vendor_guest_get_vendor_rule($post_id, $vendor_id);
-			$used = vms_admission_vendor_guest_used_headcount($post_id, $vendor_id);
+			$rule = bvmgr_admission_vendor_guest_get_vendor_rule($post_id, $vendor_id);
+			$used = bvmgr_admission_vendor_guest_used_headcount($post_id, $vendor_id);
 			$allotment = (int) ($rule['allotment'] ?? 0);
 			$remaining = max(0, $allotment - $used);
 			$venue_name = (string) ($plan['venue_name'] ?? '');
@@ -833,19 +833,19 @@ if (!function_exists('vms_admission_vendor_guest_portal_events')) {
 				'used' => $used,
 				'remaining' => $remaining,
 				'first_time_only' => !empty($rule['first_time_only']) ? 1 : 0,
-				'entries' => vms_admission_vendor_guest_entries_for_vendor($post_id, $vendor_id, true),
+				'entries' => bvmgr_admission_vendor_guest_entries_for_vendor($post_id, $vendor_id, true),
 			);
 		}
 		return $rows;
 	}
 }
 
-if (!function_exists('vms_admission_render_vendor_guest_config')) {
-	function vms_admission_render_vendor_guest_config(WP_Post $post): void
+if (!function_exists('bvmgr_admission_render_vendor_guest_config')) {
+	function bvmgr_admission_render_vendor_guest_config(WP_Post $post): void
 	{
 		$event_plan_id = (int) $post->ID;
-		$rules = vms_admission_vendor_guest_get_rules($event_plan_id);
-		$vendors = vms_admission_get_event_vendor_posts($event_plan_id);
+		$rules = bvmgr_admission_vendor_guest_get_rules($event_plan_id);
+		$vendors = bvmgr_admission_get_event_vendor_posts($event_plan_id);
 		$fallback_tour = array(
 			'tourId' => 'vms.event_plan.vendor_guest.fallback',
 			'options' => array(
@@ -889,7 +889,7 @@ if (!function_exists('vms_admission_render_vendor_guest_config')) {
 		echo '<table class="vms-adm-vendor-guest-table" data-vms-tour="vendor-guest.table"><thead><tr><th>' . esc_html__('Vendor', 'backstage-venue-manager') . '</th><th>' . esc_html__('Allow Portal Entries', 'backstage-venue-manager') . '</th><th>' . esc_html__('Guest Headcount Cap', 'backstage-venue-manager') . '</th><th>' . esc_html__('First-Time Guests Only', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 		foreach ($vendors as $vendor) {
 			$vendor_id = (int) ($vendor['id'] ?? 0);
-			$vendor_rule = vms_admission_vendor_guest_get_vendor_rule($event_plan_id, $vendor_id);
+			$vendor_rule = bvmgr_admission_vendor_guest_get_vendor_rule($event_plan_id, $vendor_id);
 			$row_enabled = !empty($vendor_rule['enabled']);
 			$control_state = $row_enabled ? '' : ' disabled';
 			echo '<tr data-vms-vendor-guest-row>';
@@ -904,22 +904,22 @@ if (!function_exists('vms_admission_render_vendor_guest_config')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_rules_from_post')) {
-	function vms_admission_vendor_guest_rules_from_post(array $source): ?array
+if (!function_exists('bvmgr_admission_vendor_guest_rules_from_post')) {
+	function bvmgr_admission_vendor_guest_rules_from_post(array $source): ?array
 	{
-		return vms_request_read_array($source, 'vms_vendor_guest_rules');
+		return bvmgr_request_read_array($source, 'vms_vendor_guest_rules');
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_flag_value')) {
-	function vms_admission_vendor_guest_flag_value($value): int
+if (!function_exists('bvmgr_admission_vendor_guest_flag_value')) {
+	function bvmgr_admission_vendor_guest_flag_value($value): int
 	{
 		return (is_array($value) || is_object($value) || empty($value)) ? 0 : 1;
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_absint_value')) {
-	function vms_admission_vendor_guest_absint_value($value): int
+if (!function_exists('bvmgr_admission_vendor_guest_absint_value')) {
+	function bvmgr_admission_vendor_guest_absint_value($value): int
 	{
 		if (!is_scalar($value)) {
 			return 0;
@@ -934,8 +934,8 @@ if (!function_exists('vms_admission_vendor_guest_absint_value')) {
 	}
 }
 
-if (!function_exists('vms_admission_save_vendor_guest_config')) {
-	function vms_admission_save_vendor_guest_config(int $post_id, WP_Post $post): void
+if (!function_exists('bvmgr_admission_save_vendor_guest_config')) {
+	function bvmgr_admission_save_vendor_guest_config(int $post_id, WP_Post $post): void
 	{
 		if ($post->post_type !== 'vms_event_plan') {
 			return;
@@ -946,24 +946,24 @@ if (!function_exists('vms_admission_save_vendor_guest_config')) {
 		if (wp_is_post_revision($post_id)) {
 			return;
 		}
-		$nonce = (isset($_POST['vms_event_plan_details_nonce']) && !is_array($_POST['vms_event_plan_details_nonce']))
-			? sanitize_text_field(wp_unslash((string) $_POST['vms_event_plan_details_nonce']))
+		$nonce = (isset($_POST['bvmgr_event_plan_details_nonce']) && !is_array($_POST['bvmgr_event_plan_details_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_event_plan_details_nonce']))
 			: '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_save_event_plan_details')) {
+		if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_event_plan_details'))) {
 			return;
 		}
 		if (!current_user_can('edit_post', $post_id)) {
 			return;
 		}
-		$raw = vms_admission_vendor_guest_rules_from_post($_POST);
+		$raw = bvmgr_admission_vendor_guest_rules_from_post($_POST);
 		if ($raw === null) {
 			return;
 		}
-		$allowed_vendor_ids = vms_admission_get_event_vendor_ids($post_id);
+		$allowed_vendor_ids = bvmgr_admission_get_event_vendor_ids($post_id);
 		$allowed_lookup = array_fill_keys($allowed_vendor_ids, true);
-		$existing_rules = vms_admission_vendor_guest_get_rules($post_id);
+		$existing_rules = bvmgr_admission_vendor_guest_get_rules($post_id);
 		$normalized = array(
-			'enabled' => vms_admission_vendor_guest_flag_value($raw['enabled'] ?? 0),
+			'enabled' => bvmgr_admission_vendor_guest_flag_value($raw['enabled'] ?? 0),
 			'first_time_only' => !empty($existing_rules['first_time_only']) ? 1 : 0,
 			'vendors' => array(),
 		);
@@ -977,18 +977,18 @@ if (!function_exists('vms_admission_save_vendor_guest_config')) {
 				continue;
 			}
 			$normalized['vendors'][$vendor_id] = array(
-				'enabled' => vms_admission_vendor_guest_flag_value($rule['enabled'] ?? 0),
-				'allotment' => vms_admission_vendor_guest_absint_value($rule['allotment'] ?? 0),
-				'first_time_only' => vms_admission_vendor_guest_flag_value($rule['first_time_only'] ?? 0),
+				'enabled' => bvmgr_admission_vendor_guest_flag_value($rule['enabled'] ?? 0),
+				'allotment' => bvmgr_admission_vendor_guest_absint_value($rule['allotment'] ?? 0),
+				'first_time_only' => bvmgr_admission_vendor_guest_flag_value($rule['first_time_only'] ?? 0),
 			);
 		}
-		update_post_meta($post_id, vms_admission_vendor_guest_meta_key(), $normalized);
+		update_post_meta($post_id, bvmgr_admission_vendor_guest_meta_key(), $normalized);
 	}
 }
-add_action('save_post_vms_event_plan', 'vms_admission_save_vendor_guest_config', 30, 2);
+add_action('save_post_vms_event_plan', 'bvmgr_admission_save_vendor_guest_config', 30, 2);
 
-if (!function_exists('vms_admission_vendor_guest_register_portal_tab')) {
-	function vms_admission_vendor_guest_register_portal_tab($tabs)
+if (!function_exists('bvmgr_admission_vendor_guest_register_portal_tab')) {
+	function bvmgr_admission_vendor_guest_register_portal_tab($tabs)
 	{
 		if (!is_array($tabs)) {
 			return $tabs;
@@ -998,10 +998,10 @@ if (!function_exists('vms_admission_vendor_guest_register_portal_tab')) {
 		return array_values(array_unique(array_filter(array_map('sanitize_key', $tabs))));
 	}
 }
-add_filter('vms_vendor_portal_allowed_tabs', 'vms_admission_vendor_guest_register_portal_tab', 20);
+add_filter('vms_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);
 
-if (!function_exists('vms_admission_vendor_guest_portal_url')) {
-	function vms_admission_vendor_guest_portal_url(array $portal_context, int $event_plan_id = 0): string
+if (!function_exists('bvmgr_admission_vendor_guest_portal_url')) {
+	function bvmgr_admission_vendor_guest_portal_url(array $portal_context, int $event_plan_id = 0): string
 	{
 		$base_url = (string) ($portal_context['base_url'] ?? get_permalink());
 		$args = array('tab' => 'guest-list');
@@ -1009,8 +1009,8 @@ if (!function_exists('vms_admission_vendor_guest_portal_url')) {
 		if ($vendor_id > 0) {
 			$args['vendor_id'] = $vendor_id;
 		}
-		if (!empty($portal_context['is_preview']) && function_exists('vms_vendor_portal_get_preview_query_args')) {
-			$args = array_merge((array) vms_vendor_portal_get_preview_query_args($vendor_id), $args);
+		if (!empty($portal_context['is_preview']) && function_exists('bvmgr_vendor_portal_get_preview_query_args')) {
+			$args = array_merge((array) bvmgr_vendor_portal_get_preview_query_args($vendor_id), $args);
 		}
 		if ($event_plan_id > 0) {
 			$args['guest_event'] = $event_plan_id;
@@ -1019,22 +1019,22 @@ if (!function_exists('vms_admission_vendor_guest_portal_url')) {
 	}
 }
 
-if (!function_exists('vms_admission_vendor_guest_add_nav_link')) {
-	function vms_admission_vendor_guest_add_nav_link(string $tab, array $portal_context): void
+if (!function_exists('bvmgr_admission_vendor_guest_add_nav_link')) {
+	function bvmgr_admission_vendor_guest_add_nav_link(string $tab, array $portal_context): void
 	{
-		$url = vms_admission_vendor_guest_portal_url($portal_context);
+		$url = bvmgr_admission_vendor_guest_portal_url($portal_context);
 		echo '<a class="' . ($tab === 'guest-list' ? 'is-active' : '') . '" href="' . esc_url($url) . '">' . esc_html__('Guest List', 'backstage-venue-manager') . '</a>';
 	}
 }
-add_action('vms_vendor_portal_nav_links', 'vms_admission_vendor_guest_add_nav_link', 20, 2);
+add_action('vms_vendor_portal_nav_links', 'bvmgr_admission_vendor_guest_add_nav_link', 20, 2);
 
-if (!function_exists('vms_admission_vendor_guest_portal_screen_key')) {
-	function vms_admission_vendor_guest_portal_screen_key(string $screen_key): string
+if (!function_exists('bvmgr_admission_vendor_guest_portal_screen_key')) {
+	function bvmgr_admission_vendor_guest_portal_screen_key(string $screen_key): string
 	{
 		if (!is_user_logged_in() || !is_page('vendor-portal')) {
 			return $screen_key;
 		}
-		$tab = vms_request_read_key($_GET, 'tab'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive vendor-portal tab navigation remains nonce-free while rejecting malformed tab values.
+		$tab = bvmgr_request_read_key($_GET, 'tab'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive vendor-portal tab navigation remains nonce-free while rejecting malformed tab values.
 		if ($tab === '') {
 			$tab = 'dashboard';
 		}
@@ -1044,10 +1044,10 @@ if (!function_exists('vms_admission_vendor_guest_portal_screen_key')) {
 		return $screen_key;
 	}
 }
-add_filter('vms_tours_frontend_screen_key', 'vms_admission_vendor_guest_portal_screen_key', 60);
+add_filter('vms_tours_frontend_screen_key', 'bvmgr_admission_vendor_guest_portal_screen_key', 60);
 
-if (!function_exists('vms_admission_vendor_guest_register_tours')) {
-	function vms_admission_vendor_guest_register_tours(array $tours): array
+if (!function_exists('bvmgr_admission_vendor_guest_register_tours')) {
+	function bvmgr_admission_vendor_guest_register_tours(array $tours): array
 	{
 		$tours[] = array(
 			'id' => 'vms.event_plan.vendor_guest',
@@ -1119,10 +1119,10 @@ if (!function_exists('vms_admission_vendor_guest_register_tours')) {
 		return $tours;
 	}
 }
-add_filter('vms_tours_register', 'vms_admission_vendor_guest_register_tours', 45);
+add_filter('vms_tours_register', 'bvmgr_admission_vendor_guest_register_tours', 45);
 
-if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
-	function vms_admission_vendor_guest_render_custom_tab(bool $rendered, string $tab, array $portal_context): bool
+if (!function_exists('bvmgr_admission_vendor_guest_render_custom_tab')) {
+	function bvmgr_admission_vendor_guest_render_custom_tab(bool $rendered, string $tab, array $portal_context): bool
 	{
 		if ($tab !== 'guest-list') {
 			return $rendered;
@@ -1130,28 +1130,28 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 		$vendor_id = isset($portal_context['vendor_id']) ? absint($portal_context['vendor_id']) : 0;
 		$user_id = get_current_user_id();
 		$is_preview = !empty($portal_context['is_preview']);
-		$flash = vms_admission_vendor_guest_pull_flash($user_id);
-		$events = vms_admission_vendor_guest_portal_events($vendor_id);
+		$flash = bvmgr_admission_vendor_guest_pull_flash($user_id);
+		$events = bvmgr_admission_vendor_guest_portal_events($vendor_id);
 		echo '<div class="vms-vendor-guest-root">';
 		echo '<div class="vms-vendor-guest-tour" data-vms-tour="vendor-portal-guest.help"><button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.vendor.portal.guest_list">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button></div>';
 		echo '<p class="vms-vendor-guest-help">' . esc_html__('Use this page to add the complimentary guests the venue has allowed for your upcoming events. Every entry is checked against the current door list and paid customer history before it is accepted.', 'backstage-venue-manager') . '</p>';
-		if (!empty($flash['message']) && function_exists('vms_portal_notice')) {
-			echo wp_kses_post(vms_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
+		if (!empty($flash['message']) && function_exists('bvmgr_portal_notice')) {
+			echo wp_kses_post(bvmgr_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
 		}
-		if ($is_preview && function_exists('vms_portal_notice')) {
-			echo wp_kses_post(vms_portal_notice('warning', __('Admin preview is read-only here so you can inspect the workflow without changing the vendor’s guest list.', 'backstage-venue-manager')));
+		if ($is_preview && function_exists('bvmgr_portal_notice')) {
+			echo wp_kses_post(bvmgr_portal_notice('warning', __('Admin preview is read-only here so you can inspect the workflow without changing the vendor’s guest list.', 'backstage-venue-manager')));
 		}
 		if (empty($events)) {
-			if (function_exists('vms_portal_notice')) {
-				echo wp_kses_post(vms_portal_notice('warning', __('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager')));
+			if (function_exists('bvmgr_portal_notice')) {
+				echo wp_kses_post(bvmgr_portal_notice('warning', __('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager')));
 			} else {
 				echo '<p>' . esc_html__('No upcoming events currently allow this vendor account to add complimentary guests.', 'backstage-venue-manager') . '</p>';
 			}
 			echo '</div>';
 			return true;
 		}
-		$max_party = max(1, (int) (vms_admission_settings()['max_party_size'] ?? 6));
-		$selected_event = vms_request_read_absint($_GET, 'guest_event'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive guest-event selection remains nonce-free while rejecting malformed identifier values.
+		$max_party = max(1, (int) (bvmgr_admission_settings()['max_party_size'] ?? 6));
+		$selected_event = bvmgr_request_read_absint($_GET, 'guest_event'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive guest-event selection remains nonce-free while rejecting malformed identifier values.
 		$event_index = 0;
 		foreach ($events as $event) {
 			$event_plan_id = (int) ($event['event_plan_id'] ?? 0);
@@ -1174,7 +1174,7 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 			echo '<div class="vms-vendor-guest-meta"><span>' . implode('</span><span>', $meta) . '</span></div>';
 			if (!$is_preview) {
 				if (function_exists('wp_enqueue_script')) {
-					wp_enqueue_script('vms-vendor-guest-portal', VMS_PLUGIN_URL . 'assets/js/vms-vendor-guest-portal.js', array(), defined('VMS_VERSION') ? VMS_VERSION : false, true);
+					wp_enqueue_script('bvmgr-vendor-guest-portal', BVMGR_PLUGIN_URL . 'assets/js/vms-vendor-guest-portal.js', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : false, true);
 				}
 				$form_anchor = ($selected_event === $event_plan_id || $event_index === 0) ? ' data-vms-tour="vendor-portal-guest.form"' : '';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vendor-guest-form" data-vms-vendor-guest-form data-max-party="' . esc_attr((string) $max_party) . '"' . $form_anchor . '>';
@@ -1182,8 +1182,8 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 				echo '<input type="hidden" name="mode" value="add">';
 				echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '">';
 				echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
-				echo '<input type="hidden" name="return_url" value="' . esc_attr(vms_admission_vendor_guest_portal_url($portal_context, $event_plan_id)) . '">';
-				wp_nonce_field('vms_vendor_guest_portal_submit', '_vms_vendor_guest_nonce');
+				echo '<input type="hidden" name="return_url" value="' . esc_attr(bvmgr_admission_vendor_guest_portal_url($portal_context, $event_plan_id)) . '">';
+				wp_nonce_field('bvmgr_vendor_guest_portal_submit', '_bvmgr_vendor_guest_nonce');
 				echo '<div class="vms-vendor-guest-party-list">';
 				echo '<fieldset class="vms-vendor-guest-person is-primary" data-vms-guest-slot="1">';
 				echo '<legend data-vms-guest-legend>' . esc_html__('Guest Pass', 'backstage-venue-manager') . '</legend>';
@@ -1245,8 +1245,8 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 						echo '<input type="hidden" name="entry_id" value="' . esc_attr((string) $entry_id) . '">';
 						echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '">';
 						echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
-						echo '<input type="hidden" name="return_url" value="' . esc_attr(vms_admission_vendor_guest_portal_url($portal_context, $event_plan_id)) . '">';
-						wp_nonce_field('vms_vendor_guest_portal_submit', '_vms_vendor_guest_nonce');
+						echo '<input type="hidden" name="return_url" value="' . esc_attr(bvmgr_admission_vendor_guest_portal_url($portal_context, $event_plan_id)) . '">';
+						wp_nonce_field('bvmgr_vendor_guest_portal_submit', '_bvmgr_vendor_guest_nonce');
 						echo '<button type="submit" class="button">' . esc_html__('Remove Guest', 'backstage-venue-manager') . '</button>';
 						echo '</form></div>';
 					}
@@ -1261,18 +1261,18 @@ if (!function_exists('vms_admission_vendor_guest_render_custom_tab')) {
 		return true;
 	}
 }
-add_filter('vms_vendor_portal_render_custom_tab', 'vms_admission_vendor_guest_render_custom_tab', 20, 3);
+add_filter('vms_vendor_portal_render_custom_tab', 'bvmgr_admission_vendor_guest_render_custom_tab', 20, 3);
 
-if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
-	function vms_admission_vendor_guest_handle_submit(): void
+if (!function_exists('bvmgr_admission_vendor_guest_handle_submit')) {
+	function bvmgr_admission_vendor_guest_handle_submit(): void
 	{
 		if (!is_user_logged_in()) {
 			wp_die(esc_html__('Please log in to manage guest entries.', 'backstage-venue-manager'));
 		}
-		$nonce = (isset($_POST['_vms_vendor_guest_nonce']) && !is_array($_POST['_vms_vendor_guest_nonce']))
-			? sanitize_text_field(wp_unslash((string) $_POST['_vms_vendor_guest_nonce']))
+		$nonce = (isset($_POST['_bvmgr_vendor_guest_nonce']) && !is_array($_POST['_bvmgr_vendor_guest_nonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['_bvmgr_vendor_guest_nonce']))
 			: '';
-		if (!wp_verify_nonce($nonce, 'vms_vendor_guest_portal_submit')) {
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_vendor_guest_portal_submit'))) {
 			wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'));
 		}
 		$user_id = get_current_user_id();
@@ -1288,7 +1288,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 			if ($mode === 'cancel') {
 				$entry_id = isset($_POST['entry_id']) ? absint((string) wp_unslash($_POST['entry_id'])) : 0;
 				global $wpdb;
-				$table = vms_admission_table_entries();
+				$table = bvmgr_admission_table_entries();
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest cancellations read one admissions row from the plugin-owned table with a %i/%d-prepared identifier and ID before ownership checks.
 				$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $entry_id), ARRAY_A);
 			if (!is_array($row)) {
@@ -1297,20 +1297,20 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 			} elseif ((int) ($row['owner_vendor_id'] ?? 0) !== $vendor_id || (int) ($row['event_plan_id'] ?? 0) !== $event_plan_id || (string) ($row['source'] ?? '') !== 'vendor_portal') {
 				$flash_type = 'error';
 				$flash_message = __('You cannot remove that guest entry.', 'backstage-venue-manager');
-			} elseif (!vms_admission_vendor_guest_event_plan_can_vendor_manage($event_plan_id, $vendor_id, $user_id)) {
+			} elseif (!bvmgr_admission_vendor_guest_event_plan_can_vendor_manage($event_plan_id, $vendor_id, $user_id)) {
 				$flash_type = 'error';
 				$flash_message = __('This event is not currently open for vendor-managed guest entries.', 'backstage-venue-manager');
 			} else {
 					$claim_meta = $row['claim_meta'] ?? '';
-					$bridge = vms_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta);
-					vms_admission_vendor_guest_bridge_cancel($bridge, __('Vendor guest entry removed before check-in.', 'backstage-venue-manager'));
+					$bridge = bvmgr_admission_vendor_guest_bridge_context_from_claim_meta($claim_meta);
+					bvmgr_admission_vendor_guest_bridge_cancel($bridge, __('Vendor guest entry removed before check-in.', 'backstage-venue-manager'));
 					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest cancellations write directly to the plugin-owned admissions table so the portal and door list immediately reflect the canceled state.
 					$updated = $wpdb->update(
 						$table,
 						array(
 						'status' => 'canceled',
 						'updated_by' => $user_id,
-						'updated_at' => vms_admission_now_mysql(),
+						'updated_at' => bvmgr_admission_now_mysql(),
 					),
 					array('id' => $entry_id),
 					array('%s', '%d', '%s'),
@@ -1320,7 +1320,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 					$flash_type = 'error';
 					$flash_message = __('Could not remove that guest entry.', 'backstage-venue-manager');
 				} else {
-					vms_admission_audit_log($event_plan_id, $entry_id, 'vendor_portal_cancel', $user_id, 'vendor_portal', array(
+					bvmgr_admission_audit_log($event_plan_id, $entry_id, 'vendor_portal_cancel', $user_id, 'vendor_portal', array(
 						'vendor_id' => $vendor_id,
 						'bridge' => $bridge,
 					));
@@ -1328,20 +1328,20 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 				}
 			}
 		} else {
-			if (!vms_admission_vendor_guest_event_plan_can_vendor_manage($event_plan_id, $vendor_id, $user_id)) {
+			if (!bvmgr_admission_vendor_guest_event_plan_can_vendor_manage($event_plan_id, $vendor_id, $user_id)) {
 				$flash_type = 'error';
 				$flash_message = __('This event is not currently open for vendor-managed guest entries.', 'backstage-venue-manager');
 			} else {
 				$notes = sanitize_textarea_field((string) wp_unslash($_POST['notes'] ?? ''));
 				$party_size = max(1, absint((string) wp_unslash($_POST['party_size'] ?? '1')));
-				$settings = vms_admission_settings();
+				$settings = bvmgr_admission_settings();
 				$max_party = max(1, (int) ($settings['max_party_size'] ?? 6));
 				if ($party_size > $max_party) {
 					$party_size = $max_party;
 				}
-				$submitted_guests = vms_admission_vendor_guest_parse_party_guests($_POST, $party_size);
-				$rule = vms_admission_vendor_guest_get_vendor_rule($event_plan_id, $vendor_id);
-				$used = vms_admission_vendor_guest_used_headcount($event_plan_id, $vendor_id);
+				$submitted_guests = bvmgr_admission_vendor_guest_parse_party_guests($_POST, $party_size);
+				$rule = bvmgr_admission_vendor_guest_get_vendor_rule($event_plan_id, $vendor_id);
+				$used = bvmgr_admission_vendor_guest_used_headcount($event_plan_id, $vendor_id);
 				$allotment = (int) ($rule['allotment'] ?? 0);
 				if (($used + $party_size) > $allotment) {
 					$flash_type = 'error';
@@ -1360,7 +1360,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						$phone = (string) ($guest_row['phone'] ?? '');
 						/* translators: %d: number used in this message. */
 						$guest_label = $slot === 1 ? __('the primary guest', 'backstage-venue-manager') : sprintf(__('guest %d', 'backstage-venue-manager'), $slot);
-						if (!vms_admission_vendor_guest_has_full_name($guest_name)) {
+						if (!bvmgr_admission_vendor_guest_has_full_name($guest_name)) {
 							$flash_type = 'error';
 							/* translators: %s: human-readable value used in this message. */
 							$flash_message = sprintf(__('Please enter a real first and last name for %s.', 'backstage-venue-manager'), $guest_label);
@@ -1378,9 +1378,9 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 							$flash_message = sprintf(__('Please add an email or phone number for %s.', 'backstage-venue-manager'), $guest_label);
 							break;
 						}
-						$name_norm = vms_admission_normalize_name($guest_name);
-						$email_norm = vms_admission_normalize_email($guest_email);
-						$phone_norm = vms_admission_normalize_phone($phone);
+						$name_norm = bvmgr_admission_normalize_name($guest_name);
+						$email_norm = bvmgr_admission_normalize_email($guest_email);
+						$phone_norm = bvmgr_admission_normalize_phone($phone);
 						if ($name_norm !== '' && isset($seen_names[$name_norm])) {
 							$flash_type = 'error';
 							/* translators: %1$s: human-readable value used in this message. */
@@ -1399,7 +1399,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 							$flash_message = sprintf(__('Each guest needs their own contact info. The phone number for %s is already being used in this guest group.', 'backstage-venue-manager'), $guest_name);
 							break;
 						}
-						$report = vms_admission_vendor_guest_validation_report($event_plan_id, $guest_name, $guest_email, $phone);
+						$report = bvmgr_admission_vendor_guest_validation_report($event_plan_id, $guest_name, $guest_email, $phone);
 						if (!empty($report['duplicate_count'])) {
 							$flash_type = 'error';
 							/* translators: %s: human-readable value used in this message. */
@@ -1433,7 +1433,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 					}
 					if ($flash_type !== 'error') {
 						global $wpdb;
-						$table = vms_admission_table_entries();
+						$table = bvmgr_admission_table_entries();
 						$group_key = 'vendor-guest-' . wp_generate_uuid4();
 						$created_rows = array();
 						$created_bridges = array();
@@ -1445,7 +1445,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 							$guest_email = (string) $guest_payload['email'];
 							$phone = (string) $guest_payload['phone'];
 							$report = (array) $guest_payload['report'];
-							$bridge = vms_admission_vendor_guest_bridge_create($event_plan_id, $vendor_id, $guest_name, $guest_email, $phone, 1, $notes, $user_id);
+							$bridge = bvmgr_admission_vendor_guest_bridge_create($event_plan_id, $vendor_id, $guest_name, $guest_email, $phone, 1, $notes, $user_id);
 							if (is_wp_error($bridge)) {
 								$flash_type = 'error';
 								$flash_message = $bridge->get_error_message();
@@ -1481,27 +1481,27 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 									'claim_reference' => $group_key,
 									'claim_meta' => wp_json_encode($claim_meta),
 									'created_by' => $user_id,
-									'created_at' => vms_admission_now_mysql(),
+									'created_at' => bvmgr_admission_now_mysql(),
 								),
 								array('%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s')
 							);
 							if ($insert === false) {
-								vms_admission_vendor_guest_bridge_cancel($bridge, __('Bridge cleanup after admission row insert failure.', 'backstage-venue-manager'));
+								bvmgr_admission_vendor_guest_bridge_cancel($bridge, __('Bridge cleanup after admission row insert failure.', 'backstage-venue-manager'));
 								$flash_type = 'error';
 								$flash_message = __('Could not add that guest right now.', 'backstage-venue-manager');
 								$insert_failed = true;
 								break;
 							}
 							$entry_id = (int) $wpdb->insert_id;
-							if (function_exists('vms_admission_ensure_entry_token')) {
-								vms_admission_ensure_entry_token($entry_id);
+							if (function_exists('bvmgr_admission_ensure_entry_token')) {
+								bvmgr_admission_ensure_entry_token($entry_id);
 							}
 							$created_rows[] = $entry_id;
 							$created_bridges[] = $bridge;
 							if (!empty($bridge['email_dispatched'])) {
 								$email_count++;
 							}
-							vms_admission_audit_log($event_plan_id, $entry_id, 'vendor_portal_create', $user_id, 'vendor_portal', array(
+							bvmgr_admission_audit_log($event_plan_id, $entry_id, 'vendor_portal_create', $user_id, 'vendor_portal', array(
 								'vendor_id' => $vendor_id,
 								'validation' => $report,
 								'bridge' => $bridge,
@@ -1511,7 +1511,7 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 						}
 							if ($insert_failed) {
 								foreach ($created_bridges as $bridge) {
-									vms_admission_vendor_guest_bridge_cancel($bridge, __('Bridge rollback after partial vendor guest failure.', 'backstage-venue-manager'));
+									bvmgr_admission_vendor_guest_bridge_cancel($bridge, __('Bridge rollback after partial vendor guest failure.', 'backstage-venue-manager'));
 								}
 								foreach ($created_rows as $entry_id) {
 									// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor guest rollback deletes directly from the plugin-owned admissions table so partial portal writes are fully reverted in-request.
@@ -1534,9 +1534,9 @@ if (!function_exists('vms_admission_vendor_guest_handle_submit')) {
 				}
 			}
 		}
-		vms_admission_vendor_guest_set_flash($user_id, array('type' => $flash_type, 'message' => $flash_message));
+		bvmgr_admission_vendor_guest_set_flash($user_id, array('type' => $flash_type, 'message' => $flash_message));
 		wp_safe_redirect($return_url);
 		exit;
 	}
 }
-add_action('admin_post_vms_vendor_guest_portal_submit', 'vms_admission_vendor_guest_handle_submit');
+add_action('admin_post_vms_vendor_guest_portal_submit', 'bvmgr_admission_vendor_guest_handle_submit');

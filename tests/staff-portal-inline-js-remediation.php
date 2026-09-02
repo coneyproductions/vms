@@ -29,7 +29,7 @@ try {
 	$assert(strpos($staffPortalSource, "action: 'vms_staff_save_manual_availability_day'") === false, 'Staff Portal source should no longer emit the inline autosave controller.');
 	$assert(strpos($staffPortalSource, 'wp_add_inline_script(') === false, 'Staff Portal source should not replace the controller with wp_add_inline_script().');
 	$assert(strpos($staffPortalSource, 'wp_localize_script(') === false, 'Staff Portal source should not replace the controller with wp_localize_script().');
-	$assert(strpos($staffPortalSource, 'vms_staff_save_manual_availability_day_ajax') !== false, 'Staff Portal AJAX save handler should remain present.');
+	$assert(strpos($staffPortalSource, 'bvmgr_staff_save_manual_availability_day_ajax') !== false, 'Staff Portal AJAX save handler should remain present.');
 	$assert(strpos($staffPortalSource, "check_ajax_referer('vms_staff_avail_ajax', 'nonce');") !== false, 'Staff Portal AJAX nonce verification boundary should remain unchanged.');
 
 	preg_match_all('~<script\b([^>]*)>(.*?)</script>~is', $staffPortalSource, $scriptMatches, PREG_SET_ORDER);
@@ -60,9 +60,9 @@ try {
 	$assert(strpos($staffPortalAsset, 'if (!form || root.dataset.staffAvailabilityBound === \'1\') return;') !== false, 'Staff Portal asset should no-op safely when the availability form is absent and prevent duplicate initialization.');
 	$assert(strpos($staffPortalAsset, 'if (!root) return;') !== false, 'Staff Portal asset should no-op safely when the portal root is absent.');
 
-	$assert(strpos($staffingAdminSource, "VMS_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should remain unchanged by the Staff Portal slice.');
+	$assert(strpos($staffingAdminSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should remain unchanged by the Staff Portal slice.');
 	$assert(strpos($staffingAdminSource, 'data-vms-qualification-builder="1"') !== false, 'Staffing admin qualification-builder markup should remain unchanged by the Staff Portal slice.');
-	$assert(strpos($staffCptSource, "VMS_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js'") !== false, 'Staff CPT source should remain unchanged by the Staff Portal slice.');
+	$assert(strpos($staffCptSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staff-cpt-admin.js'") !== false, 'Staff CPT source should remain unchanged by the Staff Portal slice.');
 
 	fwrite(STDOUT, "Staff Portal inline JS remediation OK.\n");
 } catch (Throwable $e) {

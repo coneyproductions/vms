@@ -287,7 +287,7 @@ $runtime_files = array(
             ),
         ),
         'snippets'  => array(
-            "echoesc_html(sprintf(__('Configured limit: %1\$s. Effective limit on this server: %2\$s.','backstage-venue-manager'),vms_ticketing_verification_format_bytes(\$configured_upload_bytes),vms_ticketing_verification_format_bytes(\$effective_upload_bytes)));" => 1,
+            "echoesc_html(sprintf(__('Configured limit: %1\$s. Effective limit on this server: %2\$s.','backstage-venue-manager'),bvmgr_ticketing_verification_format_bytes(\$configured_upload_bytes),bvmgr_ticketing_verification_format_bytes(\$effective_upload_bytes)));" => 1,
         ),
     ),
     'includes/portal/vendor-portal.php' => array(
@@ -301,7 +301,7 @@ $runtime_files = array(
             ),
         ),
         'snippets'  => array(
-            "'too_large_message'=>sprintf(__('That file is too large. Please keep it under %s.','backstage-venue-manager'),function_exists('size_format')?size_format(vms_vendor_portal_headliner_promo_video_max_bytes(),0):(string)vms_vendor_portal_headliner_promo_video_max_bytes())," => 1,
+            "'too_large_message'=>sprintf(__('That file is too large. Please keep it under %s.','backstage-venue-manager'),function_exists('size_format')?size_format(bvmgr_vendor_portal_headliner_promo_video_max_bytes(),0):(string)bvmgr_vendor_portal_headliner_promo_video_max_bytes())," => 1,
         ),
     ),
 );

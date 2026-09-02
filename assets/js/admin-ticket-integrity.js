@@ -42,7 +42,7 @@
 			return;
 		}
 
-		var config = window.vmsTicketIntegrityAdmin || {};
+		var config = window.BVMGR_TICKET_INTEGRITY_ADMIN || {};
 		var message = 'Continue?';
 
 		if (form.matches('[data-vms-ticket-integrity-confirm="rebuild"]')) {

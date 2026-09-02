@@ -53,7 +53,7 @@ function g17b_extract_adapter_call(string $source, string $event_code): string
 {
 	$event_at = strpos($source, "'" . $event_code . "'");
 	g17b_assert($event_at !== false, 'Missing operational event ' . $event_code);
-	$start = strrpos(substr($source, 0, (int) $event_at), 'vms_record_operational_issue(');
+	$start = strrpos(substr($source, 0, (int) $event_at), 'bvmgr_record_operational_issue(');
 	g17b_assert($start !== false, 'Missing adapter call for ' . $event_code);
 	$open = strpos($source, '(', (int) $start);
 	$depth = 0;
@@ -126,22 +126,22 @@ CURRENT,
 	}
 
 	if ($relative === 'includes/admin/menu.php') {
-		$current = g17b_extract_function($source, 'vms_admin_render_season_dates_page');
+		$current = g17b_extract_function($source, 'bvmgr_admin_render_season_dates_page');
 		$historical = <<<'HISTORICAL'
 function vms_admin_render_season_dates_page(): void
   {
-    if (function_exists('vms_render_season_dates_page')) {
-      vms_render_season_dates_page();
+    if (function_exists('bvmgr_render_season_dates_page')) {
+      bvmgr_render_season_dates_page();
       return;
     }
 
     echo '<div class="wrap">';
     echo '<h1>Season Dates</h1>';
-    echo '<p>Season Dates page renderer is missing. Expected function <code>vms_render_season_dates_page()</code>.</p>';
+    echo '<p>Season Dates page renderer is missing. Expected function <code>bvmgr_render_season_dates_page()</code>.</p>';
     echo '</div>';
 
     if (defined('WP_DEBUG') && WP_DEBUG) {
-      error_log('VMS: Season Dates renderer missing. Expected vms_render_season_dates_page().');
+      error_log('VMS: Season Dates renderer missing. Expected bvmgr_render_season_dates_page().');
     }
   }
 HISTORICAL;
@@ -185,7 +185,7 @@ HISTORICAL;
 
 		private function debug(string $message): void
 		{
-			if (defined('VMS_TOURS_DEBUG') && VMS_TOURS_DEBUG) {
+			if (defined('BVMGR_TOURS_DEBUG') && BVMGR_TOURS_DEBUG) {
 				error_log('[VMS Tours] ' . $message);
 			}
 		}
@@ -207,9 +207,9 @@ HISTORICAL,
 		'',
 		'Approvals historical logger doc reconstruction failed'
 	);
-	$current_logger = g17b_extract_function($source, 'vms_approvals_queue_log');
+	$current_logger = g17b_extract_function($source, 'bvmgr_approvals_queue_log');
 	$historical_logger = <<<'HISTORICAL'
-function vms_approvals_queue_log(string $message, array $context = array()): void
+function bvmgr_approvals_queue_log(string $message, array $context = array()): void
 	{
 		$line = '[VMS Approvals] ' . trim($message);
 		if (!empty($context)) {
@@ -226,7 +226,7 @@ HISTORICAL;
 	$call_replacements = array(
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'approvals_provider_url_callback_failed',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -237,7 +237,7 @@ vms_approvals_queue_log(
 				);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'Provider screen URL callback failed.',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -248,7 +248,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'approvals_provider_pending_callback_missing',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -258,7 +258,7 @@ vms_approvals_queue_log(
 			);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'Provider missing pending_count_callback.',
 				array('provider' => (string) ($provider['id'] ?? ''))
 			);
@@ -266,7 +266,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'approvals_provider_pending_callback_failed',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -277,7 +277,7 @@ vms_approvals_queue_log(
 				);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'Provider count callback returned WP_Error.',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -288,7 +288,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'approvals_provider_pending_callback_threw',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -299,7 +299,7 @@ vms_approvals_queue_log(
 			);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'Provider count callback threw an exception.',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -310,7 +310,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'approvals_provider_summary_callback_threw',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -321,7 +321,7 @@ vms_approvals_queue_log(
 			);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 				'Provider summary callback threw an exception.',
 				array(
 					'provider' => (string) ($provider['id'] ?? ''),
@@ -332,7 +332,7 @@ HISTORICAL,
 		),
 		array(
 			<<<'CURRENT'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'approvals_provider_url_missing',
 					array(
 						'provider' => (string) ($provider['id'] ?? ''),
@@ -342,7 +342,7 @@ vms_approvals_queue_log(
 				);
 CURRENT,
 			<<<'HISTORICAL'
-vms_approvals_queue_log(
+bvmgr_approvals_queue_log(
 					'Provider screen URL is empty.',
 					array('provider' => (string) ($provider['id'] ?? ''))
 				);
@@ -356,13 +356,13 @@ HISTORICAL,
 	return g17b_replace_once(
 		$source,
 		<<<'CURRENT'
-		update_option(vms_approvals_queue_audit_option_key(), $existing, false);
+		update_option(bvmgr_approvals_queue_audit_option_key(), $existing, false);
 	}
 CURRENT,
 		<<<'HISTORICAL'
-		update_option(vms_approvals_queue_audit_option_key(), $existing, false);
+		update_option(bvmgr_approvals_queue_audit_option_key(), $existing, false);
 
-		vms_approvals_queue_log(
+		bvmgr_approvals_queue_log(
 			'Status transition recorded.',
 			array(
 				'queue_id' => $queue_id,
@@ -450,13 +450,13 @@ foreach (array('mirror', 'shadow') as $tree) {
 
 	$helper_call = g17b_extract_adapter_call($g17b_sources[$tree]['helpers'], 'tax_profile_meta_shape_invalid');
 	g17b_same(
-		g17b_compact("vms_record_operational_issue('tax_profile_meta_shape_invalid',array('entity_id'=>\$id,'entity_type'=>'vendor','operation'=>'read_meta','status'=>'invalid',));"),
+		g17b_compact("bvmgr_record_operational_issue('tax_profile_meta_shape_invalid',array('entity_id'=>\$id,'entity_type'=>'vendor','operation'=>'read_meta','status'=>'invalid',));"),
 		g17b_compact($helper_call),
 		$tree . ' tax-profile adapter contract changed'
 	);
 	$vendor_call = g17b_extract_adapter_call($g17b_sources[$tree]['vendor_list'], 'vendor_list_meta_shape_invalid');
 	g17b_same(
-		g17b_compact("vms_record_operational_issue('vendor_list_meta_shape_invalid',array('vendor_id'=>\$post_id,'operation'=>'read_meta','status'=>'invalid',));"),
+		g17b_compact("bvmgr_record_operational_issue('vendor_list_meta_shape_invalid',array('vendor_id'=>\$post_id,'operation'=>'read_meta','status'=>'invalid',));"),
 		g17b_compact($vendor_call),
 		$tree . ' vendor-list adapter contract changed'
 	);
@@ -467,8 +467,8 @@ foreach (array('mirror', 'shadow') as $tree) {
 	}
 
 	$approvals = $g17b_sources[$tree]['approvals'];
-	$logger = g17b_extract_function($approvals, 'vms_approvals_queue_log');
-	g17b_same(1, substr_count($logger, 'vms_record_operational_issue('), $tree . ' approvals wrapper must invoke the adapter once');
+	$logger = g17b_extract_function($approvals, 'bvmgr_approvals_queue_log');
+	g17b_same(1, substr_count($logger, 'bvmgr_record_operational_issue('), $tree . ' approvals wrapper must invoke the adapter once');
 	g17b_same(1, substr_count($logger, "array('provider', 'operation', 'status')"), $tree . ' approvals wrapper allowlist changed');
 	foreach (array('message', 'queue_id', 'item_id', 'actor_id', 'from_status', 'to_status', 'wp_json_encode') as $forbidden) {
 		g17b_same(0, substr_count($logger, $forbidden), $tree . ' approvals wrapper retained unsafe field ' . $forbidden);
@@ -485,7 +485,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 	}
 	g17b_same(0, substr_count($approvals, '->getMessage()'), $tree . ' approvals must not serialize Throwable messages');
 	g17b_same(0, substr_count($approvals, '->get_error_message()'), $tree . ' approvals must not serialize WP_Error messages');
-	g17b_same(0, substr_count(g17b_extract_function($approvals, 'vms_approvals_queue_record_transition'), 'vms_approvals_queue_log('), $tree . ' successful transitions must not duplicate the durable audit');
+	g17b_same(0, substr_count(g17b_extract_function($approvals, 'bvmgr_approvals_queue_record_transition'), 'bvmgr_approvals_queue_log('), $tree . ' successful transitions must not duplicate the durable audit');
 
 	$tours = $g17b_sources[$tree]['tours'];
 	g17b_same(0, substr_count($tours, '$this->debug('), $tree . ' Tours debug calls remain');
@@ -493,7 +493,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 	g17b_same(5, substr_count(g17b_extract_function($tours, 'normalize_tour'), 'return array();'), $tree . ' Tours rejection return inventory changed');
 	g17b_same(1, substr_count(g17b_extract_function($tours, 'sanitize_placement'), "return 'auto';"), $tree . ' Tours invalid-placement normalization changed');
 
-	$menu = g17b_extract_function($g17b_sources[$tree]['menu'], 'vms_admin_render_season_dates_page');
+	$menu = g17b_extract_function($g17b_sources[$tree]['menu'], 'bvmgr_admin_render_season_dates_page');
 	g17b_same(1, substr_count($menu, "echo '<div class=\"wrap\">';"), $tree . ' Season Dates fallback wrapper changed');
 	g17b_same(1, substr_count($menu, 'Season Dates page renderer is missing.'), $tree . ' Season Dates fallback copy changed');
 }
@@ -501,16 +501,16 @@ foreach (array('mirror', 'shadow') as $tree) {
 g17b_same($g17b_sources['mirror']['tours'], $g17b_sources['shadow']['tours'], 'Tours full-file mirror/shadow parity changed');
 g17b_same($g17b_sources['mirror']['vendor_list'], $g17b_sources['shadow']['vendor_list'], 'Vendor-list full-file mirror/shadow parity changed');
 foreach (array(
-	'helpers' => array('vms_vendor_tax_profile_missing_items'),
+	'helpers' => array('bvmgr_vendor_tax_profile_missing_items'),
 	'approvals' => array(
-		'vms_approvals_queue_log',
-		'vms_approvals_queue_provider_url',
-		'vms_approvals_queue_provider_pending_count',
-		'vms_approvals_queue_provider_summary_items',
-		'vms_approvals_queue_collect_snapshot',
-		'vms_approvals_queue_record_transition',
+		'bvmgr_approvals_queue_log',
+		'bvmgr_approvals_queue_provider_url',
+		'bvmgr_approvals_queue_provider_pending_count',
+		'bvmgr_approvals_queue_provider_summary_items',
+		'bvmgr_approvals_queue_collect_snapshot',
+		'bvmgr_approvals_queue_record_transition',
 	),
-	'menu' => array('vms_admin_render_season_dates_page'),
+	'menu' => array('bvmgr_admin_render_season_dates_page'),
 ) as $key => $functions) {
 	g17b_assert($g17b_sources['mirror'][$key] !== $g17b_sources['shadow'][$key], 'Established whole-file divergence disappeared: ' . $key);
 	foreach ($functions as $function) {
@@ -641,7 +641,7 @@ function get_post_type(int $post_id): string
 	return 'vms_vendor';
 }
 
-function vms_meta_key(string $scope, string $field): string
+function bvmgr_meta_key(string $scope, string $field): string
 {
 	unset($scope);
 	return '_vms_' . $field;
@@ -691,7 +691,7 @@ function is_wp_error($value): bool
 	return $value instanceof WP_Error;
 }
 
-function vms_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
+function bvmgr_record_operational_issue(string $event_code, array $context = array(), $error = null): bool
 {
 	$GLOBALS['g17b_events'][] = array(
 		'event_code' => $event_code,
@@ -701,12 +701,12 @@ function vms_record_operational_issue(string $event_code, array $context = array
 	return false;
 }
 
-function vms_approvals_queue_get_providers(): array
+function bvmgr_approvals_queue_get_providers(): array
 {
 	return $GLOBALS['g17b_provider_rows'];
 }
 
-function vms_approvals_queue_user_can_provider(array $provider): bool
+function bvmgr_approvals_queue_user_can_provider(array $provider): bool
 {
 	unset($provider);
 	return true;
@@ -718,22 +718,22 @@ function user_can(WP_User $user, string $capability): bool
 	return true;
 }
 
-eval(g17b_extract_function($g17b_sources['mirror']['helpers'], 'vms_vendor_tax_profile_missing_items'));
-eval(g17b_extract_function($g17b_sources['mirror']['vendor_list'], 'vms_admin_vendor_list_get_meta_scalar'));
+eval(g17b_extract_function($g17b_sources['mirror']['helpers'], 'bvmgr_vendor_tax_profile_missing_items'));
+eval(g17b_extract_function($g17b_sources['mirror']['vendor_list'], 'bvmgr_admin_vendor_list_get_meta_scalar'));
 foreach (array(
-	'vms_approvals_queue_notice_transient_key',
-	'vms_approvals_queue_log',
-	'vms_approvals_queue_add_admin_notice',
-	'vms_approvals_queue_provider_url',
-	'vms_approvals_queue_provider_pending_count',
-	'vms_approvals_queue_provider_summary_items',
-	'vms_approvals_queue_collect_snapshot',
-	'vms_approvals_queue_audit_option_key',
-	'vms_approvals_queue_record_transition',
+	'bvmgr_approvals_queue_notice_transient_key',
+	'bvmgr_approvals_queue_log',
+	'bvmgr_approvals_queue_add_admin_notice',
+	'bvmgr_approvals_queue_provider_url',
+	'bvmgr_approvals_queue_provider_pending_count',
+	'bvmgr_approvals_queue_provider_summary_items',
+	'bvmgr_approvals_queue_collect_snapshot',
+	'bvmgr_approvals_queue_audit_option_key',
+	'bvmgr_approvals_queue_record_transition',
 ) as $function) {
 	eval(g17b_extract_function($g17b_sources['mirror']['approvals'], $function));
 }
-eval(g17b_extract_function($g17b_sources['mirror']['menu'], 'vms_admin_render_season_dates_page'));
+eval(g17b_extract_function($g17b_sources['mirror']['menu'], 'bvmgr_admin_render_season_dates_page'));
 require $g17b_root . '/includes/tours/class-vms-tours-registry.php';
 
 $GLOBALS['g17b_meta'][77] = array(
@@ -749,7 +749,7 @@ $GLOBALS['g17b_meta'][77] = array(
 	'_vms_w9_attested_at' => 0,
 );
 $GLOBALS['g17b_events'] = array();
-$g17b_missing = vms_vendor_tax_profile_missing_items(77);
+$g17b_missing = bvmgr_vendor_tax_profile_missing_items(77);
 g17b_same(array('Legal/Payee Name'), $g17b_missing, 'Tax-profile invalid meta must retain blank-value fallback');
 g17b_same(
 	array(
@@ -769,7 +769,7 @@ g17b_assert(strpos(serialize($GLOBALS['g17b_events']), 'secret-meta') === false,
 
 $GLOBALS['g17b_meta'][88]['secret-vendor-meta-key'] = (object) array('secret-vendor-meta-value' => true);
 $GLOBALS['g17b_events'] = array();
-g17b_same('', vms_admin_vendor_list_get_meta_scalar(88, 'secret-vendor-meta-key'), 'Vendor-list invalid meta must retain blank-value fallback');
+g17b_same('', bvmgr_admin_vendor_list_get_meta_scalar(88, 'secret-vendor-meta-key'), 'Vendor-list invalid meta must retain blank-value fallback');
 g17b_same(
 	array(
 		'event_code' => 'vendor_list_meta_shape_invalid',
@@ -786,7 +786,7 @@ g17b_same(
 g17b_assert(strpos(serialize($GLOBALS['g17b_events']), 'secret-vendor-meta') === false, 'Vendor-list runtime event leaked a meta key/value sentinel');
 
 $GLOBALS['g17b_events'] = array();
-g17b_same(0, vms_approvals_queue_provider_pending_count(array('id' => 'Provider Unsafe!', 'pending_count_callback' => null)), 'Missing approvals callback result changed');
+g17b_same(0, bvmgr_approvals_queue_provider_pending_count(array('id' => 'Provider Unsafe!', 'pending_count_callback' => null)), 'Missing approvals callback result changed');
 g17b_same(
 	array(
 		'event_code' => 'approvals_provider_pending_callback_missing',
@@ -801,7 +801,7 @@ $g17b_wp_error = new WP_Error('provider_failed', 'secret WP_Error message');
 $GLOBALS['g17b_events'] = array();
 g17b_same(
 	0,
-	vms_approvals_queue_provider_pending_count(
+	bvmgr_approvals_queue_provider_pending_count(
 		array(
 			'id' => 'provider_one',
 			'pending_count_callback' => static fn() => $g17b_wp_error,
@@ -816,7 +816,7 @@ g17b_same('warning', $GLOBALS['g17b_transients']['vms_approvals_notice_42'][0]['
 $GLOBALS['g17b_events'] = array();
 g17b_same(
 	0,
-	vms_approvals_queue_provider_pending_count(
+	bvmgr_approvals_queue_provider_pending_count(
 		array(
 			'id' => 'provider_two',
 			'pending_count_callback' => static function (): int {
@@ -833,7 +833,7 @@ g17b_same(2, count($GLOBALS['g17b_transients']['vms_approvals_notice_42'] ?? arr
 $GLOBALS['g17b_events'] = array();
 g17b_same(
 	'https://example.test/fallback',
-	vms_approvals_queue_provider_url(
+	bvmgr_approvals_queue_provider_url(
 		array(
 			'id' => 'provider_three',
 			'screen_url' => 'https://example.test/fallback',
@@ -850,7 +850,7 @@ g17b_assert(($GLOBALS['g17b_events'][0]['error'] ?? null) instanceof RuntimeExce
 $GLOBALS['g17b_events'] = array();
 g17b_same(
 	array(),
-	vms_approvals_queue_provider_summary_items(
+	bvmgr_approvals_queue_provider_summary_items(
 		array(
 			'id' => 'provider_four',
 			'summary_callback' => static function (): array {
@@ -872,14 +872,14 @@ $GLOBALS['g17b_provider_rows'] = array(
 	),
 );
 $GLOBALS['g17b_events'] = array();
-$g17b_snapshot = vms_approvals_queue_collect_snapshot(false);
+$g17b_snapshot = bvmgr_approvals_queue_collect_snapshot(false);
 g17b_same('', $g17b_snapshot['providers'][0]['screen_url'] ?? null, 'Empty approvals URL result changed');
 g17b_same('approvals_provider_url_missing', $GLOBALS['g17b_events'][0]['event_code'] ?? '', 'Empty approvals URL event changed');
 g17b_same(array('provider' => 'provider_empty_url', 'operation' => 'resolve_url', 'status' => 'missing'), $GLOBALS['g17b_events'][0]['context'] ?? null, 'Empty approvals URL context changed');
 
 $GLOBALS['g17b_options']['vms_approvals_audit_log'] = array();
 $GLOBALS['g17b_events'] = array();
-vms_approvals_queue_record_transition('Vendor Queue!', 901, 'pending', 'approved', array('note' => 'Approved safely'));
+bvmgr_approvals_queue_record_transition('Vendor Queue!', 901, 'pending', 'approved', array('note' => 'Approved safely'));
 g17b_same(0, count($GLOBALS['g17b_events']), 'Successful transition must not emit a duplicate operational event');
 g17b_same(
 	array(
@@ -896,10 +896,10 @@ g17b_same(
 );
 
 ob_start();
-vms_admin_render_season_dates_page();
+bvmgr_admin_render_season_dates_page();
 $g17b_menu_html = (string) ob_get_clean();
 g17b_same(
-	'<div class="wrap"><h1>Season Dates</h1><p>Season Dates page renderer is missing. Expected function <code>vms_render_season_dates_page()</code>.</p></div>',
+	'<div class="wrap"><h1>Season Dates</h1><p>Season Dates page renderer is missing. Expected function <code>bvmgr_render_season_dates_page()</code>.</p></div>',
 	$g17b_menu_html,
 	'Season Dates fallback HTML changed'
 );
@@ -921,7 +921,7 @@ $g17b_valid_tour = array(
 		),
 	),
 );
-$g17b_registry = new VMS_Tours_Registry();
+$g17b_registry = new BVMGR_Tours_Registry();
 g17b_assert($g17b_registry->register($g17b_valid_tour), 'Valid Tours registration changed');
 $g17b_tour = $g17b_registry->get('tourone');
 g17b_same('auto', $g17b_tour['steps'][0]['placement'] ?? null, 'Invalid Tours placement must still normalize to auto');
@@ -932,7 +932,7 @@ foreach (array(
 	'empty_version' => array_replace($g17b_valid_tour, array('version' => ' ')),
 	'no_valid_steps' => array_replace($g17b_valid_tour, array('steps' => array(array()))),
 ) as $case => $tour_definition) {
-	$registry = new VMS_Tours_Registry();
+	$registry = new BVMGR_Tours_Registry();
 	g17b_assert(!$registry->register($tour_definition), 'Tours rejection decision changed: ' . $case);
 }
 

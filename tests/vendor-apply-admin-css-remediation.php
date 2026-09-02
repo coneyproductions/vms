@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_options'] = array();
 $GLOBALS['vms_test_screen'] = (object) array('post_type' => '');
@@ -44,7 +44,7 @@ function wp_enqueue_script(string $handle, string $src = '', array $deps = array
 	$GLOBALS['vms_test_scripts'][$handle] = compact('src', 'deps', 'ver', 'in_footer');
 }
 
-function vms_request_read_key(array $source, string $key): string
+function bvmgr_request_read_key(array $source, string $key): string
 {
 	if (!array_key_exists($key, $source) || is_array($source[$key])) {
 		return '';
@@ -143,13 +143,13 @@ $assert(strpos($vendorApplicationsSource, "admin_head-edit.php") === false, 'Ven
 $assert(strpos($vendorApplicationsSource, '<style') === false, 'Vendor Applications should not print inline style tags.');
 $assert(strpos($vendorApplicationsSource, '<span class="vms-status-pill ') !== false, 'Vendor Applications should keep the status-pill markup.');
 
-eval(vms_test_extract_named_function($vendorApplicationsPath, 'vms_vendor_app_status_pill_class'));
+eval(vms_test_extract_named_function($vendorApplicationsPath, 'bvmgr_vendor_app_status_pill_class'));
 
-$assert(vms_vendor_app_status_pill_class('pending') === 'vms-pill-yellow', 'Pending applications should keep the yellow pill class.');
-$assert(vms_vendor_app_status_pill_class('holding') === 'vms-pill-blue', 'Holding applications should keep the blue pill class.');
-$assert(vms_vendor_app_status_pill_class('approved') === 'vms-pill-green', 'Approved applications should keep the green pill class.');
-$assert(vms_vendor_app_status_pill_class('rejected') === 'vms-pill-red', 'Rejected applications should keep the red pill class.');
-$assert(vms_vendor_app_status_pill_class('unknown') === 'vms-pill-grey', 'Fallback applications should keep the grey pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('pending') === 'vms-pill-yellow', 'Pending applications should keep the yellow pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('holding') === 'vms-pill-blue', 'Holding applications should keep the blue pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('approved') === 'vms-pill-green', 'Approved applications should keep the green pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('rejected') === 'vms-pill-red', 'Rejected applications should keep the red pill class.');
+$assert(bvmgr_vendor_app_status_pill_class('unknown') === 'vms-pill-grey', 'Fallback applications should keep the grey pill class.');
 
 $requiredCssSnippets = array(
 	'body.post-type-vms_vendor_app .vms-status-pill',
@@ -193,15 +193,15 @@ $_GET = array();
 $GLOBALS['vms_test_screen'] = (object) array('post_type' => 'vms_vendor_app');
 $resetAssets();
 $adminEnqueue('edit.php');
-$assert(isset($GLOBALS['vms_test_styles']['vms-shared']), 'Vendor Applications admin screens should enqueue vms-shared.');
-$assert(isset($GLOBALS['vms_test_styles']['vms-ui']), 'Vendor Applications admin screens should enqueue vms-ui.');
-$assert(isset($GLOBALS['vms_test_styles']['vms-admin']), 'Vendor Applications admin screens should enqueue vms-admin.');
-$assert(($GLOBALS['vms_test_styles']['vms-admin']['src'] ?? '') === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/css/vms-admin.css', 'Vendor Applications admin screens should use the external admin stylesheet asset.');
+$assert(isset($GLOBALS['vms_test_styles']['bvmgr-shared']), 'Vendor Applications admin screens should enqueue bvmgr-shared.');
+$assert(isset($GLOBALS['vms_test_styles']['bvmgr-ui']), 'Vendor Applications admin screens should enqueue bvmgr-ui.');
+$assert(isset($GLOBALS['vms_test_styles']['bvmgr-admin']), 'Vendor Applications admin screens should enqueue bvmgr-admin.');
+$assert(($GLOBALS['vms_test_styles']['bvmgr-admin']['src'] ?? '') === 'https://example.test/wp-content/plugins/backstage-venue-manager/assets/css/vms-admin.css', 'Vendor Applications admin screens should use the external admin stylesheet asset.');
 
 $_GET = array();
 $GLOBALS['vms_test_screen'] = (object) array('post_type' => 'vms_vendor_application');
 $resetAssets();
 $adminEnqueue('edit.php');
-$assert(isset($GLOBALS['vms_test_styles']['vms-admin']), 'Legacy Vendor Applications admin screens should still enqueue vms-admin.');
+$assert(isset($GLOBALS['vms_test_styles']['bvmgr-admin']), 'Legacy Vendor Applications admin screens should still enqueue the canonical bvmgr-admin handle.');
 
 fwrite(STDOUT, "Vendor Applications admin CSS remediation OK.\n");

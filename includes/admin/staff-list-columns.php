@@ -15,8 +15,8 @@ if (!defined('ABSPATH')) exit;
  *    vms_vendor_tax_profile_missing_items() / vms_vendor_tax_profile_is_complete()
  */
 
-if (!function_exists('vms_staff_admin_list_role_names')) {
-    function vms_staff_admin_list_role_names(int $post_id): array
+if (!function_exists('bvmgr_staff_admin_list_role_names')) {
+    function bvmgr_staff_admin_list_role_names(int $post_id): array
     {
         $role_names = array();
 
@@ -47,8 +47,8 @@ if (!function_exists('vms_staff_admin_list_role_names')) {
     }
 }
 
-if (!function_exists('vms_staff_admin_list_linked_user_id')) {
-    function vms_staff_admin_list_linked_user_id(int $post_id): int
+if (!function_exists('bvmgr_staff_admin_list_linked_user_id')) {
+    function bvmgr_staff_admin_list_linked_user_id(int $post_id): int
     {
         $user_id = (int) get_post_meta($post_id, '_vms_linked_user_id', true);
         if ($user_id <= 0) {
@@ -96,18 +96,18 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
     switch ($col) {
 
         case 'vms_staff_role': {
-            $role_names = vms_staff_admin_list_role_names((int) $post_id);
+            $role_names = bvmgr_staff_admin_list_role_names((int) $post_id);
             echo !empty($role_names) ? esc_html(implode(', ', $role_names)) : '—';
             break;
         }
 
         case 'vms_dualhat': {
-            if (!function_exists('vms_staff_linked_vendor_meta_key')) {
+            if (!function_exists('bvmgr_staff_linked_vendor_meta_key')) {
                 echo '—';
                 break;
             }
 
-            $vendor_id = (int) get_post_meta((int) $post_id, vms_staff_linked_vendor_meta_key(), true);
+            $vendor_id = (int) get_post_meta((int) $post_id, bvmgr_staff_linked_vendor_meta_key(), true);
             if ($vendor_id <= 0) {
                 echo '—';
                 break;
@@ -137,8 +137,8 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
 
         case 'vms_tax': {
             // Reuse the vendor tax validation helpers (you said staff should follow same requirements).
-            if (function_exists('vms_vendor_tax_profile_missing_items')) {
-                $missing = vms_vendor_tax_profile_missing_items((int)$post_id);
+            if (function_exists('bvmgr_vendor_tax_profile_missing_items')) {
+                $missing = bvmgr_vendor_tax_profile_missing_items((int)$post_id);
 
                 if (empty($missing)) {
                     echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>';
@@ -155,12 +155,12 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
         }
 
         case 'vms_certifications': {
-            if (!function_exists('vms_staffing_staff_qualification_status_counts')) {
+            if (!function_exists('bvmgr_staffing_staff_qualification_status_counts')) {
                 echo '—';
                 break;
             }
 
-            $counts = vms_staffing_staff_qualification_status_counts((int) $post_id);
+            $counts = bvmgr_staffing_staff_qualification_status_counts((int) $post_id);
             $pending = (int) ($counts['pending_verification'] ?? 0);
             $approved = (int) ($counts['active'] ?? 0);
             $expired = (int) ($counts['expired'] ?? 0);
@@ -168,7 +168,7 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
 
             if ($pending > 0) {
                 /* translators: %d: number of staff certifications pending verification. */
-                echo '<a class="vms-badge vms-badge-warn" href="' . esc_url(vms_staffing_staff_qualification_review_url((int) $post_id)) . '">' . esc_html(sprintf(_n('%d Pending', '%d Pending', $pending, 'backstage-venue-manager'), $pending)) . '</a>';
+                echo '<a class="vms-badge vms-badge-warn" href="' . esc_url(bvmgr_staffing_staff_qualification_review_url((int) $post_id)) . '">' . esc_html(sprintf(_n('%d Pending', '%d Pending', $pending, 'backstage-venue-manager'), $pending)) . '</a>';
             } elseif ($approved > 0) {
                 /* translators: %d: number of approved staff certifications. */
                 echo '<span class="vms-badge vms-badge-ok">' . esc_html(sprintf(_n('%d Approved', '%d Approved', $approved, 'backstage-venue-manager'), $approved)) . '</span>';
@@ -225,7 +225,7 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
         }
 
         case 'vms_linked_user': {
-            $user_id = vms_staff_admin_list_linked_user_id((int) $post_id);
+            $user_id = bvmgr_staff_admin_list_linked_user_id((int) $post_id);
 
             if ($user_id <= 0) {
                 echo '—';

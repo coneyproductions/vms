@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) exit;
  * - Array of day => list of event cards
  */
 
-function vms_parse_month_ym(string $ym): array
+function bvmgr_parse_month_ym(string $ym): array
 {
     // Accept "YYYY-MM" only. Fall back to current month.
     if (!preg_match('/^\d{4}-\d{2}$/', $ym)) {
@@ -46,16 +46,16 @@ function vms_parse_month_ym(string $ym): array
     ];
 }
 
-function vms_get_event_plans_for_venue_month(int $venue_id, string $ym): array
+function bvmgr_get_event_plans_for_venue_month(int $venue_id, string $ym): array
 {
     if ($venue_id <= 0) return [];
 
-    $m = vms_parse_month_ym($ym);
+    $m = bvmgr_parse_month_ym($ym);
 
     // Convert exclusive end to inclusive end for the canonical feed.
     $month_end_inclusive = gmdate('Y-m-d', strtotime('-1 day', strtotime($m['end'])));
-    $events = function_exists('vms_get_calendar_events')
-        ? (array) vms_get_calendar_events([
+    $events = function_exists('bvmgr_get_calendar_events')
+        ? (array) bvmgr_get_calendar_events([
             'start_date' => $m['start'],
             'end_date' => $month_end_inclusive,
             'venue_ids' => [$venue_id],
@@ -148,9 +148,9 @@ function vms_get_event_plans_for_venue_month(int $venue_id, string $ym): array
     ];
 }
 
-function vms_calendar_prev_next(string $ym): array
+function bvmgr_calendar_prev_next(string $ym): array
 {
-    $m = vms_parse_month_ym($ym);
+    $m = bvmgr_parse_month_ym($ym);
     $prev = gmdate('Y-m', strtotime('-1 month', $m['start_ts']));
     $next = gmdate('Y-m', strtotime('+1 month', $m['start_ts']));
     return ['prev' => $prev, 'next' => $next];

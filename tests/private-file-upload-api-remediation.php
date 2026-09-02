@@ -78,9 +78,9 @@ $runCommand = static function (string $command) use ($repoRoot): string {
 	return is_string($output) ? trim($output) : '';
 };
 
-$brokerFunction = $extractFunction($privateFilesSource, 'vms_private_files_store_validated_upload');
-$staffCertFunction = $extractFunction($staffPortalSource, 'vms_staff_portal_handle_certification_submission');
-$verificationStoreFunction = $extractFunction($ticketingSource, 'vms_ticketing_verification_store_proof_file');
+$brokerFunction = $extractFunction($privateFilesSource, 'bvmgr_private_files_store_validated_upload');
+$staffCertFunction = $extractFunction($staffPortalSource, 'bvmgr_staff_portal_handle_certification_submission');
+$verificationStoreFunction = $extractFunction($ticketingSource, 'bvmgr_ticketing_verification_store_proof_file');
 
 $assert(strpos($brokerFunction, 'move_uploaded_file(') === false, 'The shared private-file broker should no longer call move_uploaded_file() directly.');
 $assert(strpos($brokerFunction, 'copy(') === false, 'The shared private-file broker should not introduce copy().');
@@ -93,34 +93,34 @@ $assert(strpos($privateFilesSource, "require_once ABSPATH . 'wp-admin/includes/f
 $assert(substr_count($brokerFunction, "'test_form' => false") === 1, 'The broker should pass test_form => false exactly once.');
 $assert(strpos($brokerFunction, "'mimes' => \$allowed_mimes") !== false, 'The broker should pass the caller MIME map to wp_handle_upload().');
 $assert(strpos($brokerFunction, "'unique_filename_callback' => static function") !== false, 'The broker should preserve the generated basename through unique_filename_callback.');
-$assert(strpos($privateFilesSource, "add_filter('upload_dir', 'vms_private_files_filter_upload_dir');") !== false, 'The broker should scope upload_dir through a dedicated filter.');
-$assert(strpos($privateFilesSource, "remove_filter('upload_dir', 'vms_private_files_filter_upload_dir');") !== false, 'The broker should remove the upload_dir filter after each upload call.');
-$assert(strpos($privateFilesSource, "unset(\$GLOBALS['vms_private_files_upload_dir_context']);") !== false, 'The broker should clear the upload_dir context after each upload call.');
+$assert(strpos($privateFilesSource, "add_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir');") !== false, 'The broker should scope upload_dir through a dedicated filter.');
+$assert(strpos($privateFilesSource, "remove_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir');") !== false, 'The broker should remove the upload_dir filter after each upload call.');
+$assert(strpos($privateFilesSource, "unset(\$GLOBALS['bvmgr_private_files_upload_dir_context']);") !== false, 'The broker should clear the upload_dir context after each upload call.');
 $assert(strpos($brokerFunction, 'wp_normalize_path($handled_real) === wp_normalize_path($destination_real)') !== false, 'The broker should verify the handled path exactly matches the intended destination.');
-$assert(strpos($brokerFunction, 'vms_private_files_path_is_safe($handled_file)') !== false, 'The broker should only unlink unexpected handled files when safe.');
+$assert(strpos($brokerFunction, 'bvmgr_private_files_path_is_safe($handled_file)') !== false, 'The broker should only unlink unexpected handled files when safe.');
 $assert(strpos($brokerFunction, "\$handled['url']") === false && strpos($brokerFunction, '$handled["url"]') === false, 'The broker should not use the returned public URL.');
 $assert(strpos($brokerFunction, 'wp_insert_attachment(') === false, 'The broker should not create attachments.');
 $assert(strpos($brokerFunction, '@chmod($destination, 0640);') !== false, 'The broker should preserve the existing 0640 permission behavior.');
-$assert(strpos($privateFilesSource, "'allowed_mimes' => vms_private_w9_allowed_mimes()") !== false, 'The W-9 wrapper should pass its exact MIME map into the broker.');
-$assert(strpos($privateFilesSource, "'allowed_mimes' => vms_private_staff_cert_allowed_mimes()") !== false, 'The staff-cert wrapper should pass its exact MIME map into the broker.');
-$assert(strpos($vendorPortalSource, '$allowed_mimes = vms_vendor_portal_tech_doc_allowed_mimes();') !== false, 'Vendor tech docs should reuse the same MIME map for validation and storage.');
+$assert(strpos($privateFilesSource, "'allowed_mimes' => bvmgr_private_w9_allowed_mimes()") !== false, 'The W-9 wrapper should pass its exact MIME map into the broker.');
+$assert(strpos($privateFilesSource, "'allowed_mimes' => bvmgr_private_staff_cert_allowed_mimes()") !== false, 'The staff-cert wrapper should pass its exact MIME map into the broker.');
+$assert(strpos($vendorPortalSource, '$allowed_mimes = bvmgr_vendor_portal_tech_doc_allowed_mimes();') !== false, 'Vendor tech docs should reuse the same MIME map for validation and storage.');
 $assert(substr_count($vendorPortalSource, "'allowed_mimes' => \$allowed_mimes") >= 2, 'Vendor tech docs should pass the exact same MIME map to validation and storage.');
-$assert(strpos($ticketingSource, '$allowed_mimes = vms_ticketing_verification_allowed_mimes();') !== false, 'Ticket verification proofs should reuse the same MIME map for storage.');
+$assert(strpos($ticketingSource, '$allowed_mimes = bvmgr_ticketing_verification_allowed_mimes();') !== false, 'Ticket verification proofs should reuse the same MIME map for storage.');
 $assert(strpos($verificationStoreFunction, "'allowed_mimes' => \$allowed_mimes") !== false, 'The non-image verification proof branch should pass the exact validation MIME map into the broker.');
 $assert(strpos($privateFilesSource, 'get_allowed_mime_types(') === false, 'The broker should not fall back to the global WordPress MIME allowlist.');
 $assert(strpos($privateFilesSource, 'wp_get_mime_types(') === false, 'The broker should not widen the MIME boundary through a global MIME helper.');
 $assert(strpos($privateFilesSource, "explode('|', (string) \$extensions)") !== false, 'The MIME normalizer should preserve grouped extension keys.');
 
-$assert(strpos($adminW9Source, 'vms_private_files_delete($previous_upload_id);') !== false, 'The admin W-9 replacement cleanup should remain unchanged.');
-$assert(strpos($vendorTaxSource, 'vms_private_files_delete($previous_upload_id);') !== false, 'The vendor tax-profile W-9 replacement cleanup should remain unchanged.');
-$assert(strpos($staffPortalSource, 'vms_private_files_delete($previous_upload_id);') !== false, 'The staff W-9 replacement cleanup should remain unchanged.');
-$assert(strpos($staffCertFunction, 'vms_private_files_delete(') === false, 'The staff certification submission flow should preserve its existing downstream no-rollback behavior.');
-$assert(strpos($vendorPortalSource, 'vms_private_files_delete($previous_id);') !== false, 'Vendor tech-document replacement cleanup should remain unchanged.');
-$assert(strpos($ticketingSource, 'vms_private_files_delete((int) $stored[\'file_id\']);') !== false, 'Ticket verification request-creation rollback should remain unchanged.');
-$assert(strpos($verificationStoreFunction, 'vms_ticketing_verification_optimize_image_upload(') !== false, 'The verification image branch should remain intact.');
-$assert(strpos($verificationStoreFunction, 'vms_private_files_register_path(') !== false, 'The verification image branch should still register files directly.');
-$assert(strpos($verificationStoreFunction, 'vms_private_files_store_validated_upload(') !== false, 'The verification non-image branch should still use the shared broker.');
-$assert(strpos($eventPlanSource, 'vms_event_plan_import_with_scoped_upload_dir(') !== false, 'The Event Plan upload API implementation should remain unchanged.');
+$assert(strpos($adminW9Source, 'bvmgr_private_files_delete($previous_upload_id);') !== false, 'The admin W-9 replacement cleanup should remain unchanged.');
+$assert(strpos($vendorTaxSource, 'bvmgr_private_files_delete($previous_upload_id);') !== false, 'The vendor tax-profile W-9 replacement cleanup should remain unchanged.');
+$assert(strpos($staffPortalSource, 'bvmgr_private_files_delete($previous_upload_id);') !== false, 'The staff W-9 replacement cleanup should remain unchanged.');
+$assert(strpos($staffCertFunction, 'bvmgr_private_files_delete(') === false, 'The staff certification submission flow should preserve its existing downstream no-rollback behavior.');
+$assert(strpos($vendorPortalSource, 'bvmgr_private_files_delete($previous_id);') !== false, 'Vendor tech-document replacement cleanup should remain unchanged.');
+$assert(strpos($ticketingSource, 'bvmgr_private_files_delete((int) $stored[\'file_id\']);') !== false, 'Ticket verification request-creation rollback should remain unchanged.');
+$assert(strpos($verificationStoreFunction, 'bvmgr_ticketing_verification_optimize_image_upload(') !== false, 'The verification image branch should remain intact.');
+$assert(strpos($verificationStoreFunction, 'bvmgr_private_files_register_path(') !== false, 'The verification image branch should still register files directly.');
+$assert(strpos($verificationStoreFunction, 'bvmgr_private_files_store_validated_upload(') !== false, 'The verification non-image branch should still use the shared broker.');
+$assert(strpos($eventPlanSource, 'bvmgr_event_plan_import_with_scoped_upload_dir(') !== false, 'The Event Plan upload API implementation should remain unchanged.');
 $assert(strpos($eventPlanSource, 'wp_handle_upload(') !== false, 'The Event Plan upload API implementation should remain present.');
 
 define('ABSPATH', __DIR__ . '/');
@@ -496,7 +496,7 @@ $GLOBALS['vms_test_assert'] = $assert;
 vms_test_reset_case('success');
 $validated = vms_test_validated_upload();
 $allowedMimes = vms_test_allowed_mimes();
-$result = vms_private_files_store_validated_upload(
+$result = bvmgr_private_files_store_validated_upload(
 	$validated,
 	array(
 		'allowed_mimes' => $allowedMimes,
@@ -533,7 +533,7 @@ vms_test_assert_filter_cycle('Successful uploads');
 vms_test_recursive_delete((string) $GLOBALS['vms_test_case']['temp_root']);
 
 vms_test_reset_case('error');
-$errorResult = vms_private_files_store_validated_upload(
+$errorResult = bvmgr_private_files_store_validated_upload(
 	vms_test_validated_upload(),
 	array(
 		'allowed_mimes' => vms_test_allowed_mimes(),
@@ -548,7 +548,7 @@ vms_test_recursive_delete((string) $GLOBALS['vms_test_case']['temp_root']);
 
 vms_test_reset_case('unexpected_inside');
 $insideMismatchPath = (string) $GLOBALS['vms_test_case']['unexpected_path'];
-$insideResult = vms_private_files_store_validated_upload(
+$insideResult = bvmgr_private_files_store_validated_upload(
 	vms_test_validated_upload(),
 	array(
 		'allowed_mimes' => vms_test_allowed_mimes(),
@@ -562,7 +562,7 @@ vms_test_recursive_delete((string) $GLOBALS['vms_test_case']['temp_root']);
 
 vms_test_reset_case('unexpected_outside');
 $outsideMismatchPath = (string) $GLOBALS['vms_test_case']['unexpected_path'];
-$outsideResult = vms_private_files_store_validated_upload(
+$outsideResult = bvmgr_private_files_store_validated_upload(
 	vms_test_validated_upload(),
 	array(
 		'allowed_mimes' => vms_test_allowed_mimes(),
@@ -577,7 +577,7 @@ vms_test_recursive_delete((string) $GLOBALS['vms_test_case']['temp_root']);
 vms_test_reset_case('throw');
 $thrown = false;
 try {
-	vms_private_files_store_validated_upload(
+	bvmgr_private_files_store_validated_upload(
 		vms_test_validated_upload(),
 		array(
 			'allowed_mimes' => vms_test_allowed_mimes(),
@@ -594,7 +594,7 @@ vms_test_recursive_delete((string) $GLOBALS['vms_test_case']['temp_root']);
 vms_test_reset_case('success');
 $GLOBALS['vms_test_case']['wpdb_insert_fail'] = true;
 $registerFailureDestination = (string) $GLOBALS['vms_test_case']['expected_destination'];
-$registerFailure = vms_private_files_store_validated_upload(
+$registerFailure = bvmgr_private_files_store_validated_upload(
 	vms_test_validated_upload(),
 	array(
 		'allowed_mimes' => vms_test_allowed_mimes(),
@@ -608,7 +608,7 @@ vms_test_assert_filter_cycle('Registration failures');
 vms_test_recursive_delete((string) $GLOBALS['vms_test_case']['temp_root']);
 
 vms_test_reset_case('success');
-$missingAllowed = vms_private_files_store_validated_upload(
+$missingAllowed = bvmgr_private_files_store_validated_upload(
 	vms_test_validated_upload(),
 	array(
 		'bucket' => 'verifications',

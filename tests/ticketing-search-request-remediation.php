@@ -75,16 +75,16 @@ $ticketingFile = dirname(__DIR__) . '/includes/integrations/ticketing.php';
 $source = (string) file_get_contents($ticketingFile);
 vms_test_assert($source !== '', 'Ticketing integration source should be readable.');
 
-$tecSearchBody = vms_test_extract_function($source, 'vms_ticketing_ajax_search_tec_events');
-$productSearchBody = vms_test_extract_function($source, 'vms_ticketing_ajax_search_products');
+$tecSearchBody = vms_test_extract_function($source, 'bvmgr_ticketing_ajax_search_tec_events');
+$productSearchBody = vms_test_extract_function($source, 'bvmgr_ticketing_ajax_search_products');
 
 vms_test_assert_contains(
-	"\$q = vms_request_read_text_field(\$_POST, 'q');",
+	"\$q = bvmgr_request_read_text_field(\$_POST, 'q');",
 	$tecSearchBody,
 	'TEC event search should read q through the shared scalar request helper.'
 );
 vms_test_assert_contains(
-	"\$q = vms_request_read_text_field(\$_POST, 'q');",
+	"\$q = bvmgr_request_read_text_field(\$_POST, 'q');",
 	$productSearchBody,
 	'Product search should read q through the shared scalar request helper.'
 );
@@ -99,14 +99,14 @@ vms_test_assert_not_contains(
 	'Product search should no longer cast raw POST q values directly to strings.'
 );
 vms_test_assert_code_order(
-	'if (!vms_ticketing_is_tec_active()) {',
-	"\$q = vms_request_read_text_field(\$_POST, 'q');",
+	'if (!bvmgr_ticketing_is_tec_active()) {',
+	"\$q = bvmgr_request_read_text_field(\$_POST, 'q');",
 	$tecSearchBody,
 	'TEC event search should continue to read q only after the nonce, capability, and integration gates pass.'
 );
 vms_test_assert_code_order(
-	'if (!vms_ticketing_is_woo_active()) {',
-	"\$q = vms_request_read_text_field(\$_POST, 'q');",
+	'if (!bvmgr_ticketing_is_woo_active()) {',
+	"\$q = bvmgr_request_read_text_field(\$_POST, 'q');",
 	$productSearchBody,
 	'Product search should continue to read q only after the nonce, capability, and integration gates pass.'
 );

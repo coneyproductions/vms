@@ -116,7 +116,7 @@ try {
 	$assert(strpos($staffAssetPagesSource, "'vms-task-templates'") === false, 'Staff Tasks asset page list should stay limited to the two targeted pages.');
 	$assert(strpos($staffEnqueueSource, "!in_array(\$page, vms_tasks_admin_page_asset_pages(), true)") !== false, 'Staff Tasks enqueue should bail unless the current page matches the exact targeted page list.');
 	$assert(strpos($staffEnqueueSource, 'vms_tasks_current_user_can_manage_all()') !== false, 'Staff Tasks enqueue should preserve the manage-all capability boundary.');
-	$assert(strpos($staffEnqueueSource, "VMS_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js'") !== false, 'Staff Tasks enqueue should point to the external admin-pages asset.');
+	$assert(strpos($staffEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js'") !== false, 'Staff Tasks enqueue should point to the external admin-pages asset.');
 	$assert(strpos($staffSource, "add_action('admin_enqueue_scripts', 'vms_tasks_admin_enqueue_page_assets', 60);") !== false, 'Staff Tasks should register the page-scoped enqueue callback.');
 
 	$assert(
@@ -196,9 +196,9 @@ try {
 	$assert(strpos($addSource, 'wp_add_inline_script') === false, 'ADD admin UI should not reintroduce the request-builder helper through wp_add_inline_script().');
 
 	$assert(strpos($addEnqueueSource, "\$page !== vms_add_dispatch_page_slug() && !\$is_event_plan") !== false, 'ADD admin enqueue should preserve the existing page-or-Event-Plan style gate.');
-	$assert(strpos($addEnqueueSource, "VMS_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css'") !== false, 'ADD admin enqueue should preserve the existing stylesheet ownership.');
+	$assert(strpos($addEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css'") !== false, 'ADD admin enqueue should preserve the existing stylesheet ownership.');
 	$assert(strpos($addEnqueueSource, "\$page === vms_add_dispatch_page_slug() && current_user_can('manage_options')") !== false, 'ADD request-builder asset should load only on the exact ADD page under the existing capability boundary.');
-	$assert(strpos($addEnqueueSource, "VMS_PLUGIN_URL . 'assets/js/vms-add-dispatch-admin.js'") !== false, 'ADD admin enqueue should point to the external request-builder asset.');
+	$assert(strpos($addEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-add-dispatch-admin.js'") !== false, 'ADD admin enqueue should point to the external request-builder asset.');
 	$assert(
 		preg_match(
 			'~add_submenu_page\(\s*\'vms-dashboard\',\s*__\(\'ADD — Availability & Date Dispatch\', \'backstage-venue-manager\'\),\s*__\(\'ADD Dispatch\', \'backstage-venue-manager\'\),\s*\'manage_options\',\s*vms_add_dispatch_page_slug\(\),\s*\'vms_add_dispatch_render_admin_page\'\s*\);~s',
@@ -270,7 +270,7 @@ try {
 	$assert(strpos($menuBadgeCssSource, "wp_enqueue_style('vms-admin-menu');") !== false, 'ADD menu-badge CSS gate should enqueue the shared admin-menu stylesheet.');
 	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_css', 21, 0);") !== false, 'ADD menu-badge CSS should remain owned by its admin_enqueue_scripts gate.');
 	$assert(strpos($menuBadgeJsSource, '<script>') === false, 'ADD menu-badge JS gate should no longer print an inline script block.');
-	$assert(strpos($menuBadgeJsSource, "VMS_PLUGIN_URL . 'assets/js/vms-admin-menu.js'") !== false, 'ADD menu-badge JS gate should preserve the external admin-menu asset boundary.');
+	$assert(strpos($menuBadgeJsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-admin-menu.js'") !== false, 'ADD menu-badge JS gate should preserve the external admin-menu asset boundary.');
 	$assert(strpos($menuBadgeJsSource, "wp_localize_script(\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\r\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\n            'vms-admin-menu'") !== false, 'ADD menu-badge JS gate should hand off inert localized config through vmsAdminMenu.');
 	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_js', 50, 0);") !== false, 'ADD menu-badge JS should remain owned by its admin_enqueue_scripts gate.');
 

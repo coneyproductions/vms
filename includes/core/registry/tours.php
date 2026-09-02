@@ -2,50 +2,50 @@
 
 defined('ABSPATH') || exit;
  
-if (!function_exists('vms_register_tour')) {
+if (!function_exists('bvmgr_register_tour')) {
 	/**
 	 * Runtime registry API for modules/add-ons.
 	 *
 	 * @param string $tour_id
 	 * @param array<string,mixed> $args
 	 */
-	function vms_register_tour(string $tour_id, array $args): void
+	function bvmgr_register_tour(string $tour_id, array $args): void
 	{
 		$tour_id = sanitize_key($tour_id);
 		if ($tour_id === '') {
 			return;
 		}
-		if (!isset($GLOBALS['vms_registered_tours']) || !is_array($GLOBALS['vms_registered_tours'])) {
-			$GLOBALS['vms_registered_tours'] = array();
+		if (!isset($GLOBALS['bvmgr_registered_tours']) || !is_array($GLOBALS['bvmgr_registered_tours'])) {
+			$GLOBALS['bvmgr_registered_tours'] = array();
 		}
 		$args['id'] = $tour_id;
-		$GLOBALS['vms_registered_tours'][$tour_id] = $args;
+		$GLOBALS['bvmgr_registered_tours'][$tour_id] = $args;
 	}
 }
 
-if (!function_exists('vms_get_registered_tours')) {
+if (!function_exists('bvmgr_get_registered_tours')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_get_registered_tours(): array
+	function bvmgr_get_registered_tours(): array
 	{
-		$rows = isset($GLOBALS['vms_registered_tours']) && is_array($GLOBALS['vms_registered_tours'])
-			? $GLOBALS['vms_registered_tours']
+		$rows = isset($GLOBALS['bvmgr_registered_tours']) && is_array($GLOBALS['bvmgr_registered_tours'])
+			? $GLOBALS['bvmgr_registered_tours']
 			: array();
 		return array_values($rows);
 	}
 }
 
-if (!function_exists('vms_get_tour_registry')) {
+if (!function_exists('bvmgr_get_tour_registry')) {
 	/**
 	 * Returns canonical tour registry.
 	 */
-	function vms_get_tour_registry(): array
+	function bvmgr_get_tour_registry(): array
 	{
 		$tours = array(
 			array(
 				'id'       => 'vms_welcome',
-				'title'    => 'VMS Guided Tour',
+				'title'    => 'Backstage Venue Manager Guided Tour',
 				'version'  => 1,
 				'contexts' => array(
 					array(
@@ -59,7 +59,7 @@ if (!function_exists('vms_get_tour_registry')) {
 					array(
 						'anchor'    => 'dashboard_welcome',
 						'title'     => 'Welcome',
-						'content'   => '<p>Welcome to the VMS dashboard; pick your venue and scope filters before anything else.</p>',
+						'content'   => '<p>Welcome to the Backstage Venue Manager dashboard; pick your venue and scope filters before anything else.</p>',
 						'placement' => 'bottom',
 					),
 					array(
@@ -84,7 +84,7 @@ if (!function_exists('vms_get_tour_registry')) {
 			),
 		);
 
-		$dynamic = vms_get_registered_tours();
+		$dynamic = bvmgr_get_registered_tours();
 		if (!empty($dynamic)) {
 			$tours = array_merge($tours, $dynamic);
 		}

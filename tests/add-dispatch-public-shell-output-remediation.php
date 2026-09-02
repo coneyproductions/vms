@@ -121,28 +121,28 @@ $assert = static function (bool $condition, string $message): void {
 };
 
 $assert(is_string($publicSource) && $publicSource !== '', 'ADD public shell source should be readable.');
-$assert(strpos($publicSource, 'function vms_add_dispatch_render_public_shell(string $headline, string $content_html): void') !== false, 'ADD public shell renderer should remain the isolated browser output owner.');
+$assert(strpos($publicSource, 'function bvmgr_add_dispatch_render_public_shell(string $headline, string $content_html): void') !== false, 'ADD public shell renderer should remain the isolated browser output owner.');
 $assert(strpos($publicSource, "echo '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">';") !== false, 'ADD public shell should continue to emit the standalone document wrapper directly.');
 $assert(strpos($publicSource, "echo '</div></div></body></html>';") !== false, 'ADD public shell should continue to close the standalone document wrapper directly.');
 $assert(strpos($publicSource, 'echo $content_html;') === false, 'ADD public shell should not echo the response fragment raw.');
 $assert(
-	preg_match('~echo\s+wp_kses\s*\(\s*\$content_html\s*,\s*vms_add_dispatch_public_response_allowed_html\s*\(\s*\)\s*\)\s*;~', $publicSource) === 1,
+	preg_match('~echo\s+wp_kses\s*\(\s*\$content_html\s*,\s*bvmgr_add_dispatch_public_response_allowed_html\s*\(\s*\)\s*\)\s*;~', $publicSource) === 1,
 	'ADD public shell should apply the dedicated allowlist at the final response-fragment sink.'
 );
 $assert(strpos($publicSource, 'esc_html($content_html') === false, 'Completed ADD public response HTML should not be text-escaped.');
 $assert(strpos($publicSource, 'wp_kses_post(') === false, 'ADD public shell output should not use wp_kses_post().');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $publicSource), 'ADD public shell output should not use the broad post allowlist.');
-$assert(strpos($publicSource, 'wp_kses($html, vms_add_dispatch_public_response_allowed_html())') === false, 'ADD response assembly should not sanitize the complete fragment before the isolated final sink.');
-$assert(strpos($publicSource, 'wp_kses(ob_get_clean(), vms_add_dispatch_public_response_allowed_html())') === false, 'ADD public shell contract should not be applied to buffered page output.');
+$assert(strpos($publicSource, 'wp_kses($html, bvmgr_add_dispatch_public_response_allowed_html())') === false, 'ADD response assembly should not sanitize the complete fragment before the isolated final sink.');
+$assert(strpos($publicSource, 'wp_kses(ob_get_clean(), bvmgr_add_dispatch_public_response_allowed_html())') === false, 'ADD public shell contract should not be applied to buffered page output.');
 
 foreach (array(
 	"echo '<title>' . esc_html(\$headline) . '</title>';",
 	"esc_html((string) (\$context['event_title'] ?? ''))",
-	"esc_html(vms_add_dispatch_format_date((string) (\$context['event_date'] ?? '')))",
+	"esc_html(bvmgr_add_dispatch_format_date((string) (\$context['event_date'] ?? '')))",
 	"esc_html((string) \$context['venue_name'])",
 	"nl2br(esc_html((string) \$request['message']))",
-	"esc_url(vms_add_dispatch_build_response_url(\$response, 'available'))",
-	"esc_url(vms_add_dispatch_build_response_url(\$response, 'unavailable'))",
+	"esc_url(bvmgr_add_dispatch_build_response_url(\$response, 'available'))",
+	"esc_url(bvmgr_add_dispatch_build_response_url(\$response, 'unavailable'))",
 ) as $requiredEscaping) {
 	$assert(strpos($publicSource, $requiredEscaping) !== false, 'ADD public shell should retain contextual escaping marker: ' . $requiredEscaping);
 }
@@ -162,7 +162,7 @@ $expectedAllowedHtml = array(
 	),
 	'strong' => array(),
 );
-$assert(vms_add_dispatch_public_response_allowed_html() === $expectedAllowedHtml, 'ADD public shell allowlist should contain only the response fragment tags and attributes.');
+$assert(bvmgr_add_dispatch_public_response_allowed_html() === $expectedAllowedHtml, 'ADD public shell allowlist should contain only the response fragment tags and attributes.');
 
 $unsafeHtml = '<h1>Availability Request</h1>'
 	. '<div class="vms-add-meta" style="color:red" aria-label="bad"><strong>Event:</strong> Summer Kickoff</div>'
@@ -171,7 +171,7 @@ $unsafeHtml = '<h1>Availability Request</h1>'
 	. '<a class="vms-add-btn" href="javascript:alert(1)" data-action="no">No</a>'
 	. '<iframe src="https://example.test/embed"></iframe><object data="https://example.test/object"></object><embed src="https://example.test/embed"></embed>'
 	. '<img src="https://example.test/image.png" alt="x">';
-$filtered = wp_kses($unsafeHtml, vms_add_dispatch_public_response_allowed_html());
+$filtered = wp_kses($unsafeHtml, bvmgr_add_dispatch_public_response_allowed_html());
 
 $assert(strpos($filtered, '<h1>Availability Request</h1>') !== false, 'ADD public shell contract should preserve the heading fragment.');
 $assert(strpos($filtered, '<div class="vms-add-meta"><strong>Event:</strong> Summer Kickoff</div>') !== false, 'ADD public shell contract should preserve the event summary fragment.');
@@ -183,7 +183,7 @@ foreach (array('<script', '<span', '<img', '<iframe', '<object', '<embed', 'oncl
 }
 
 $documentEscapeAttempt = '<html lang="en"><body><p class="vms-add-note">Still here</p><script>alert(1)</script><iframe src="https://example.test/embed"></iframe></body></html>';
-$documentFiltered = wp_kses($documentEscapeAttempt, vms_add_dispatch_public_response_allowed_html());
+$documentFiltered = wp_kses($documentEscapeAttempt, bvmgr_add_dispatch_public_response_allowed_html());
 $assert(strpos($documentFiltered, '<p class="vms-add-note">Still here</p>') !== false, 'The ADD public shell contract should keep only the intended inner fragment when a standalone document wrapper is attempted.');
 foreach (array('<html', '<body', '<script', '<iframe') as $forbidden) {
 	$assert(strpos($documentFiltered, $forbidden) === false, 'The ADD public shell contract should not permit standalone document-shell markup: ' . $forbidden);
@@ -197,12 +197,12 @@ $assert(strpos($dynamicMessage, '<script') === false, 'Dynamic request text shou
 $sourceLines = preg_split('/\R/', $publicSource);
 $allowlistUseLines = array();
 foreach ($sourceLines as $line) {
-	if (strpos($line, 'vms_add_dispatch_public_response_allowed_html()') === false || strpos($line, 'function vms_add_dispatch_public_response_allowed_html') !== false) {
+	if (strpos($line, 'bvmgr_add_dispatch_public_response_allowed_html()') === false || strpos($line, 'function bvmgr_add_dispatch_public_response_allowed_html') !== false) {
 		continue;
 	}
 	$allowlistUseLines[] = $line;
 	$assert(
-		preg_match('~wp_kses\s*\(\s*\$content_html\s*,\s*vms_add_dispatch_public_response_allowed_html\s*\(\s*\)\s*\)~', $line) === 1,
+		preg_match('~wp_kses\s*\(\s*\$content_html\s*,\s*bvmgr_add_dispatch_public_response_allowed_html\s*\(\s*\)\s*\)~', $line) === 1,
 		'The ADD public response allowlist should only be applied directly to the final response fragment sink.'
 	);
 }

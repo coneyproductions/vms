@@ -128,8 +128,8 @@ if (!function_exists('wp_unslash')) {
 	}
 }
 
-if (!function_exists('vms_request_server_value')) {
-	function vms_request_server_value(string $key): string
+if (!function_exists('bvmgr_request_server_value')) {
+	function bvmgr_request_server_value(string $key): string
 	{
 		if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
 			return '';
@@ -139,10 +139,10 @@ if (!function_exists('vms_request_server_value')) {
 	}
 }
 
-if (!function_exists('vms_request_method')) {
-	function vms_request_method(string $fallback = 'get'): string
+if (!function_exists('bvmgr_request_method')) {
+	function bvmgr_request_method(string $fallback = 'get'): string
 	{
-		$method = sanitize_key(vms_request_server_value('REQUEST_METHOD'));
+		$method = sanitize_key(bvmgr_request_server_value('REQUEST_METHOD'));
 		if ($method !== '') {
 			return $method;
 		}
@@ -152,10 +152,10 @@ if (!function_exists('vms_request_method')) {
 	}
 }
 
-if (!function_exists('vms_request_current_uri')) {
-	function vms_request_current_uri(string $fallback = ''): string
+if (!function_exists('bvmgr_request_current_uri')) {
+	function bvmgr_request_current_uri(string $fallback = ''): string
 	{
-		$uri = vms_request_server_value('REQUEST_URI');
+		$uri = bvmgr_request_server_value('REQUEST_URI');
 		if ($uri === '') {
 			return $fallback;
 		}
@@ -173,10 +173,10 @@ if (!function_exists('vms_request_current_uri')) {
 	}
 }
 
-if (!function_exists('vms_request_remote_addr')) {
-	function vms_request_remote_addr(): string
+if (!function_exists('bvmgr_request_remote_addr')) {
+	function bvmgr_request_remote_addr(): string
 	{
-		$ip = vms_request_server_value('REMOTE_ADDR');
+		$ip = bvmgr_request_server_value('REMOTE_ADDR');
 		if ($ip === '') {
 			return '';
 		}
@@ -185,10 +185,10 @@ if (!function_exists('vms_request_remote_addr')) {
 	}
 }
 
-if (!function_exists('vms_request_user_agent')) {
-	function vms_request_user_agent(): string
+if (!function_exists('bvmgr_request_user_agent')) {
+	function bvmgr_request_user_agent(): string
 	{
-		$user_agent = vms_request_server_value('HTTP_USER_AGENT');
+		$user_agent = bvmgr_request_server_value('HTTP_USER_AGENT');
 		if ($user_agent === '') {
 			return '';
 		}
@@ -387,8 +387,8 @@ if (!function_exists('wp_kses')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_render_public_shell')) {
-	function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void
+if (!function_exists('bvmgr_pass_claims_render_public_shell')) {
+	function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void
 	{
 		ob_start();
 		$render_content();
@@ -401,8 +401,8 @@ if (!function_exists('vms_pass_claims_render_public_shell')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_find_token_by_raw')) {
-	function vms_pass_claims_find_token_by_raw(string $raw_token): ?array
+if (!function_exists('bvmgr_pass_claims_find_token_by_raw')) {
+	function bvmgr_pass_claims_find_token_by_raw(string $raw_token): ?array
 	{
 		$GLOBALS['vms_test_find_token_calls']++;
 		$GLOBALS['vms_test_find_token_tokens'][] = $raw_token;
@@ -411,8 +411,8 @@ if (!function_exists('vms_pass_claims_find_token_by_raw')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_get_batch_by_id')) {
-	function vms_pass_claims_get_batch_by_id(int $batch_id): ?array
+if (!function_exists('bvmgr_pass_claims_get_batch_by_id')) {
+	function bvmgr_pass_claims_get_batch_by_id(int $batch_id): ?array
 	{
 		$GLOBALS['vms_test_get_batch_calls']++;
 		$GLOBALS['vms_test_get_batch_ids'][] = $batch_id;
@@ -421,8 +421,8 @@ if (!function_exists('vms_pass_claims_get_batch_by_id')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_rate_limit_hit')) {
-	function vms_pass_claims_rate_limit_hit(string $ip, string $token_public_key): bool
+if (!function_exists('bvmgr_pass_claims_rate_limit_hit')) {
+	function bvmgr_pass_claims_rate_limit_hit(string $ip, string $token_public_key): bool
 	{
 		$GLOBALS['vms_test_rate_limit_calls']++;
 		$GLOBALS['vms_test_rate_limit_args'][] = array($ip, $token_public_key);
@@ -430,8 +430,8 @@ if (!function_exists('vms_pass_claims_rate_limit_hit')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
-	function vms_pass_claims_eligible_events_for_batch(array $batch): array
+if (!function_exists('bvmgr_pass_claims_eligible_events_for_batch')) {
+	function bvmgr_pass_claims_eligible_events_for_batch(array $batch): array
 	{
 		$GLOBALS['vms_test_eligible_calls']++;
 		$GLOBALS['vms_test_eligible_batches'][] = $batch;
@@ -439,8 +439,8 @@ if (!function_exists('vms_pass_claims_eligible_events_for_batch')) {
 	}
 }
 
-if (!function_exists('vms_pass_claims_empty_events_notice')) {
-	function vms_pass_claims_empty_events_notice(array $batch): array
+if (!function_exists('bvmgr_pass_claims_empty_events_notice')) {
+	function bvmgr_pass_claims_empty_events_notice(array $batch): array
 	{
 		$GLOBALS['vms_test_empty_notice_calls']++;
 		$GLOBALS['vms_test_empty_notice_batches'][] = $batch;
@@ -448,6 +448,7 @@ if (!function_exists('vms_pass_claims_empty_events_notice')) {
 	}
 }
 
+require_once dirname(__DIR__) . '/includes/core/prefix-b4-compat.php';
 require_once dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php';
 
 $pluginRoot = dirname(__DIR__);
@@ -521,38 +522,38 @@ $captureShellRender = static function (callable $callback) use ($assert): array 
 $assert(is_string($passClaimsSource) && $passClaimsSource !== '', 'Pass Claims source should be readable.');
 $assert(is_string($adminShellSource) && $adminShellSource !== '', 'Administrator shell source should be readable.');
 
-$assert(isset($GLOBALS['vms_test_actions']['init'][30]) && in_array('vms_pass_claims_register_rewrite', $GLOBALS['vms_test_actions']['init'][30], true), 'Pass Claims should register its public rewrite callback on init at priority 30.');
-$assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array('vms_pass_claims_template_router', $GLOBALS['vms_test_actions']['template_redirect'][0], true), 'Pass Claims should register its public template router on template_redirect at priority 0.');
+$assert(isset($GLOBALS['vms_test_actions']['init'][30]) && in_array('bvmgr_pass_claims_register_rewrite', $GLOBALS['vms_test_actions']['init'][30], true), 'Pass Claims should register its public rewrite callback on init at priority 30.');
+$assert(isset($GLOBALS['vms_test_actions']['template_redirect'][0]) && in_array('bvmgr_pass_claims_template_router', $GLOBALS['vms_test_actions']['template_redirect'][0], true), 'Pass Claims should register its public template router on template_redirect at priority 0.');
 
 $GLOBALS['vms_test_rewrite_tags'] = array();
 $GLOBALS['vms_test_rewrite_rules'] = array();
-vms_pass_claims_register_rewrite();
-$assert($GLOBALS['vms_test_rewrite_tags'] === array(array('%vms_pass_claim_token%', '([^&]+)')), 'Pass Claims rewrite registration should preserve the claim-token tag.');
-$assert($GLOBALS['vms_test_rewrite_rules'] === array(array('^pass/claim/([^/]+)/?$', 'index.php?vms_pass_claim_token=$matches[1]', 'top')), 'Pass Claims rewrite registration should preserve the public claim route.');
+bvmgr_pass_claims_register_rewrite();
+$assert($GLOBALS['vms_test_rewrite_tags'] === array(array('%bvmgr_pass_claim_token%', '([^&]+)'), array('%vms_pass_claim_token%', '([^&]+)')), 'Pass Claims rewrite registration should expose the canonical tag and retain the legacy inbound tag.');
+$assert($GLOBALS['vms_test_rewrite_rules'] === array(array('^pass/claim/([^/]+)/?$', 'index.php?bvmgr_pass_claim_token=$matches[1]', 'top')), 'Pass Claims rewrite registration should route the unchanged public path to the canonical query var.');
 
 $resetRuntime();
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'query-token';
-$assert(vms_pass_claims_get_request_token() === 'query-token', 'Pass Claims request token helper should prefer the registered query var.');
+$assert(bvmgr_pass_claims_get_request_token() === 'query-token', 'Pass Claims request token helper should prefer the registered query var.');
 
 $resetRuntime();
 $_GET['vms_pass_claim_token'] = 'get%20token';
-$assert(vms_pass_claims_get_request_token() === 'get token', 'Pass Claims request token helper should fall back to the query-string token.');
+$assert(bvmgr_pass_claims_get_request_token() === 'get token', 'Pass Claims request token helper should fall back to the query-string token.');
 
 $resetRuntime();
 $_SERVER['REQUEST_URI'] = '/pass/claim/uri%20token?ref=1';
-$assert(vms_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
+$assert(bvmgr_pass_claims_get_request_token() === 'uri token', 'Pass Claims request token helper should fall back to the routed request URI token.');
 
 $resetRuntime();
 $GLOBALS['vms_test_is_admin'] = true;
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'ignored';
-vms_pass_claims_template_router();
+bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay inactive in wp-admin contexts.');
 
 $resetRuntime();
-vms_pass_claims_template_router();
+bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay silent when no claim token is present.');
 
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
 $assert(strpos($passClaimsSource, "echo '<main id=\"primary\" class=\"site-main vms-pass-public-page\" role=\"main\">';") !== false, 'Pass Claims public shell should preserve the outer main wrapper.');
 $assert(strpos($passClaimsSource, "echo '<div class=\"vms-pass-wrap\"><div class=\"vms-pass-card\">';") !== false, 'Pass Claims public shell should preserve the nested pass wrappers.');
 $assert(strpos($passClaimsSource, '$render_content();') !== false, 'Pass Claims public shell should invoke the renderer callback at the content insertion point.');
@@ -560,13 +561,13 @@ $assert(strpos($passClaimsSource, 'echo $content_html;') === false, 'Pass Claims
 $assert(strpos($passClaimsSource, "echo '</div></div>';") !== false && strpos($passClaimsSource, "echo '</main>';") !== false, 'Pass Claims public shell should preserve the closing wrappers.');
 $assert(strpos($adminShellSource, 'echo $captured_notices_html;') !== false && strpos($adminShellSource, 'echo $content_html;') !== false, 'Administrator shell raw captured and content sinks should remain unchanged.');
 
-$claimedHelperStart = strpos($passClaimsSource, 'function vms_pass_claims_public_claimed_card_html(int $entry_id): string');
-$claimedHelperEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_render_public_shell'))");
+$claimedHelperStart = strpos($passClaimsSource, 'function bvmgr_pass_claims_public_claimed_card_html(int $entry_id): string');
+$claimedHelperEnd = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_render_public_shell'))");
 $assert($claimedHelperStart !== false && $claimedHelperEnd !== false && $claimedHelperEnd > $claimedHelperStart, 'Pass Claims claimed-card helper block should be locatable.');
 $claimedHelperSource = substr($passClaimsSource, (int) $claimedHelperStart, (int) $claimedHelperEnd - (int) $claimedHelperStart);
 
-$assert(strpos($claimedHelperSource, 'function vms_pass_claims_public_claimed_card_html(int $entry_id): string') !== false, 'Pass Claims should define a dedicated already-claimed card HTML helper.');
-$assert(strpos($claimedHelperSource, 'function vms_pass_claims_render_public_claimed_card(int $entry_id): void') !== false, 'Pass Claims should define a dedicated already-claimed card renderer.');
+$assert(strpos($claimedHelperSource, 'function bvmgr_pass_claims_public_claimed_card_html(int $entry_id): string') !== false, 'Pass Claims should define a dedicated already-claimed card HTML helper.');
+$assert(strpos($claimedHelperSource, 'function bvmgr_pass_claims_render_public_claimed_card(int $entry_id): void') !== false, 'Pass Claims should define a dedicated already-claimed card renderer.');
 $assert(strpos($claimedHelperSource, 'wp_kses(') === false, 'Pass Claims already-claimed card should rely on direct escaping rather than a local KSES contract.');
 $assert(strpos($claimedHelperSource, 'wp_kses_post(') === false, 'Pass Claims already-claimed card should not use wp_kses_post().');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $claimedHelperSource), 'Pass Claims already-claimed card should not use the broad post allowlist.');
@@ -574,21 +575,21 @@ $assert(strpos($claimedHelperSource, '$wpdb') === false && strpos($claimedHelper
 
 $expectedClaimedNoReference = '<h1>Already Claimed</h1><p class="vms-pass-note">This pass has already been claimed.</p>';
 $expectedClaimedWithReference = $expectedClaimedNoReference . '<p class="vms-pass-meta"><strong>Reference:</strong> GL-17</p>';
-$assert(vms_pass_claims_public_claimed_card_html(0) === $expectedClaimedNoReference, 'Pass Claims already-claimed card should preserve the base heading and note when no admission reference exists.');
-$assert(vms_pass_claims_public_claimed_card_html(17) === $expectedClaimedWithReference, 'Pass Claims already-claimed card should preserve the optional reference paragraph exactly.');
-$assert(vms_pass_claims_public_claimed_card_html(-5) === $expectedClaimedNoReference, 'Pass Claims already-claimed card should only expose a reference paragraph for positive admission IDs.');
+$assert(bvmgr_pass_claims_public_claimed_card_html(0) === $expectedClaimedNoReference, 'Pass Claims already-claimed card should preserve the base heading and note when no admission reference exists.');
+$assert(bvmgr_pass_claims_public_claimed_card_html(17) === $expectedClaimedWithReference, 'Pass Claims already-claimed card should preserve the optional reference paragraph exactly.');
+$assert(bvmgr_pass_claims_public_claimed_card_html(-5) === $expectedClaimedNoReference, 'Pass Claims already-claimed card should only expose a reference paragraph for positive admission IDs.');
 
 foreach (array('<a', '<button', '<form', '<input', '<img', '<ul', '<ol', '<table', 'data-', 'aria-', ' id=', ' style=') as $forbidden) {
 	$assert(strpos($expectedClaimedWithReference, $forbidden) === false, 'Pass Claims already-claimed card should not introduce unsupported markup or attributes: ' . $forbidden);
 }
 
-$assert(strpos($passClaimsSource, 'vms_pass_claims_render_public_claimed_card((int) ($token_row[\'reservation_entry_id\'] ?? 0));') !== false, 'Pass Claims should route the claimed-token branch through the dedicated already-claimed renderer.');
+$assert(strpos($passClaimsSource, 'bvmgr_pass_claims_render_public_claimed_card((int) ($token_row[\'reservation_entry_id\'] ?? 0));') !== false, 'Pass Claims should route the claimed-token branch through the dedicated already-claimed renderer.');
 $assert(strpos($passClaimsSource, '$claimed_html') === false, 'Pass Claims should remove the old claimed_html handoff variable from the public claimed branch.');
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_public_status_allowed_html(): array') !== false, 'The accepted Pass Claims public status family should remain defined.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_public_status_allowed_html(): array') !== false, 'The accepted Pass Claims public status family should remain defined.');
 
 $resetRuntime();
 $directClaimedCard = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claimed_card(17);
+	bvmgr_pass_claims_render_public_claimed_card(17);
 });
 $assert($directClaimedCard['headline'] === 'Already Claimed', 'Pass Claims already-claimed renderer should preserve the public shell headline.');
 $assert($directClaimedCard['content_html'] === $expectedClaimedWithReference, 'Pass Claims already-claimed renderer should preserve the full claimed-card markup.');
@@ -604,7 +605,7 @@ $GLOBALS['vms_test_get_batch_return'] = $baseBatch(array(
 ));
 $routeClaimed = $captureShellRender(static function (): void {
 	$GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = 'claimed-route-token';
-	vms_pass_claims_template_router();
+	bvmgr_pass_claims_template_router();
 });
 $assert($routeClaimed['headline'] === 'Already Claimed', 'Pass Claims template router should preserve the already-claimed card headline.');
 $assert($routeClaimed['content_html'] === $expectedClaimedWithReference, 'Pass Claims template router should route claimed tokens to the preserved already-claimed card markup.');
@@ -621,7 +622,7 @@ $GLOBALS['vms_test_get_batch_return'] = $baseBatch(array(
 	'expires_at' => gmdate('Y-m-d H:i:s', time() + 3600),
 ));
 $claimedWithoutReference = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('claimed-no-reference');
+	bvmgr_pass_claims_render_public_claim('claimed-no-reference');
 });
 $assert($claimedWithoutReference['content_html'] === $expectedClaimedNoReference, 'Pass Claims already-claimed rendering should omit the reference paragraph when no admission ID is linked.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_eligible_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0, 'Pass Claims already-claimed rendering without a reference should still stop before rate limiting and event eligibility.');
@@ -635,7 +636,7 @@ $GLOBALS['vms_test_get_batch_return'] = $baseBatch(array(
 	'expires_at' => gmdate('Y-m-d H:i:s', time() + 3600),
 ));
 $claimedEscapedReference = $captureShellRender(static function (): void {
-	vms_pass_claims_render_public_claim('claimed-escaped-reference');
+	bvmgr_pass_claims_render_public_claim('claimed-escaped-reference');
 });
 $assert($claimedEscapedReference['content_html'] === $expectedClaimedNoReference, 'Pass Claims already-claimed rendering should keep HTML-like stored reservation IDs inert by casting them away from markup.');
 foreach (array('<script', 'alert(1)', 'GL-') as $forbidden) {

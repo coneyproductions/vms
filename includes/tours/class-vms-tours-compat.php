@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours_Compat')) {
-	class VMS_Tours_Compat
+if (!class_exists('BVMGR_Tours_Compat')) {
+	class BVMGR_Tours_Compat
 	{
 		const ALLOWED_SCRIPT_HANDLES = array(
 			'vms-driverjs',
@@ -31,11 +31,11 @@ if (!class_exists('VMS_Tours_Compat')) {
 		private $detected_legacy_handles = array();
 
 		/**
-		 * @var VMS_Tours_Screen
+		 * @var BVMGR_Tours_Screen
 		 */
 		private $screen;
 
-		public function __construct(VMS_Tours_Screen $screen)
+		public function __construct(BVMGR_Tours_Screen $screen)
 		{
 			$this->screen = $screen;
 		}
@@ -106,7 +106,7 @@ if (!class_exists('VMS_Tours_Compat')) {
 			}
 
 			echo '<div class="notice notice-warning is-dismissible">';
-			echo '<p><strong>' . esc_html__('VMS Guided Tours compatibility notice:', 'backstage-venue-manager') . '</strong> ' . esc_html__('legacy tour script handles were detected and deregistered on this VMS screen.', 'backstage-venue-manager') . '</p>';
+			echo '<p><strong>' . esc_html__('Backstage Venue Manager Guided Tours compatibility notice:', 'backstage-venue-manager') . '</strong> ' . esc_html__('legacy tour script handles were detected and deregistered on this Backstage Venue Manager screen.', 'backstage-venue-manager') . '</p>';
 			echo '<p><code>' . esc_html(implode(', ', $this->detected_legacy_handles)) . '</code></p>';
 			echo '</div>';
 		}
@@ -121,8 +121,8 @@ if (!class_exists('VMS_Tours_Compat')) {
 				$legacy = array();
 			}
 
-			if (function_exists('vms_get_registered_tours')) {
-				$dynamic = vms_get_registered_tours();
+			if (function_exists('bvmgr_get_registered_tours')) {
+				$dynamic = bvmgr_get_registered_tours();
 				if (is_array($dynamic) && !empty($dynamic)) {
 					$legacy = array_merge($legacy, $dynamic);
 				}

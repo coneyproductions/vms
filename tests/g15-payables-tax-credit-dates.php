@@ -139,7 +139,7 @@ foreach ($artifact_rows as $row_id => $row) {
 	foreach (array('mirror', 'shadow') as $tree) {
 		$source = $sources[$tree][$row['file']];
 		if ($row['occurrence'] === 'payables_add') {
-			$function = g15_extract_function($source, 'vms_payables_add_days');
+			$function = g15_extract_function($source, 'bvmgr_payables_add_days');
 			g15_same(1, substr_count($function, "new DateTimeImmutable(\$ymd . ' 00:00:00', \$utc)"), 'Add-days must construct one immutable date with the explicit UTC object: ' . $tree);
 			g15_same(1, substr_count($function, '$date = $date->setTimezone($utc);'), 'Add-days must normalize embedded timezone tokens back to UTC: ' . $tree);
 			g15_same(1, substr_count($function, "return \$date->format('Y-m-d');"), 'Add-days must format the UTC immutable date once: ' . $tree);
@@ -191,7 +191,7 @@ $historical = array(
 	'credit_today' => "\t\t\t\$today = function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d');",
 );
 $historical_add_days = <<<'PHP'
-function vms_payables_add_days(string $ymd, int $days): string
+function bvmgr_payables_add_days(string $ymd, int $days): string
 {
     $ymd  = trim((string) $ymd);
     $days = (int) $days;
@@ -229,7 +229,7 @@ $project_historical = static function (string $source, string $file, string $tre
 	global $current, $historical, $historical_add_days;
 	if ($file === 'includes/core/payables.php') {
 		$source = g15_replace_once($source, $current['payables_bill'], $historical['payables_bill'], 'Payables bill projection changed.');
-		return g15_replace_once($source, g15_extract_function($source, 'vms_payables_add_days'), $historical_add_days, 'Payables add-days projection changed.');
+		return g15_replace_once($source, g15_extract_function($source, 'bvmgr_payables_add_days'), $historical_add_days, 'Payables add-days projection changed.');
 	}
 	if ($file === 'includes/portal/vendor-tax-profile.php') {
 		$key = $tree === 'shadow' ? 'tax_received_shadow' : 'tax_received';
@@ -295,10 +295,10 @@ function sanitize_title($value): string
 	return strtolower(trim((string) preg_replace('/[^a-z0-9]+/i', '-', (string) $value), '-'));
 }
 
-$bill_function = g15_extract_function($sources['mirror']['includes/core/payables.php'], 'vms_payables_build_bill_no');
+$bill_function = g15_extract_function($sources['mirror']['includes/core/payables.php'], 'bvmgr_payables_build_bill_no');
 $bill_function = g15_replace_once(
 	$bill_function,
-	'function vms_payables_build_bill_no(string $event_date, int $venue_id, int $vendor_id): string',
+	'function bvmgr_payables_build_bill_no(string $event_date, int $venue_id, int $vendor_id): string',
 	'function g15_payables_build_bill_no(string $event_date, int $venue_id, int $vendor_id, int $timestamp): string',
 	'Bill test-function rename changed.'
 );
@@ -314,24 +314,24 @@ g15_same('VMS-main-hall-20260308-44', g15_payables_build_bill_no('bad', 9, 44, $
 date_default_timezone_set('Asia/Tokyo');
 g15_same('VMS-venue-20260308-0', g15_payables_build_bill_no('2026-03-08T12:34', 0, 0, $midnight_boundary), 'Bill fallback changed under a second non-UTC runtime.');
 
-$add_function = g15_extract_function($sources['mirror']['includes/core/payables.php'], 'vms_payables_add_days');
+$add_function = g15_extract_function($sources['mirror']['includes/core/payables.php'], 'bvmgr_payables_add_days');
 eval($add_function);
 
-g15_same('', vms_payables_add_days('', 1), 'Empty payables date must fail closed.');
-g15_same('', vms_payables_add_days('   ', -1), 'Trim-empty payables date must fail closed.');
-g15_same('', vms_payables_add_days('not-a-date', 1), 'Malformed payables date must fail closed.');
-g15_same('', vms_payables_add_days('@0', 1), 'Epoch timestamp syntax must fail before adding.');
-g15_same('', vms_payables_add_days('1970-01-01', 1), 'Epoch-zero calendar date must fail before adding.');
-g15_same('1969-12-31', vms_payables_add_days('1969-12-31', 0), 'Pre-epoch zero offset changed.');
-g15_same('1969-12-30', vms_payables_add_days('1969-12-31', -1), 'Pre-epoch negative offset changed.');
-g15_same('1970-01-01', vms_payables_add_days('1969-12-31', 1), 'Pre-epoch positive offset changed.');
-g15_same('2024-03-01', vms_payables_add_days('2024-02-30', 0), 'Lenient normalization changed.');
-g15_same('2026-03-08', vms_payables_add_days('2026-03-08', 0), 'Zero offset changed.');
-g15_same('2026-03-09', vms_payables_add_days('2026-03-08', 1), 'Positive offset changed at nominal DST start.');
-g15_same('2026-10-31', vms_payables_add_days('2026-11-01', -1), 'Negative offset changed at nominal DST end.');
-g15_same('2026-03-07', vms_payables_add_days('2026-03-08 +14:00', 0), 'Embedded positive offset must re-normalize to the UTC instant before formatting.');
-g15_same('2026-03-08', vms_payables_add_days('2026-03-08 +14:00', 1), 'Embedded positive offset must re-normalize to UTC before adding.');
-g15_same('2026-03-08', vms_payables_add_days('2026-03-08 America/Chicago', 0), 'Embedded timezone name must re-normalize to UTC before formatting.');
+g15_same('', bvmgr_payables_add_days('', 1), 'Empty payables date must fail closed.');
+g15_same('', bvmgr_payables_add_days('   ', -1), 'Trim-empty payables date must fail closed.');
+g15_same('', bvmgr_payables_add_days('not-a-date', 1), 'Malformed payables date must fail closed.');
+g15_same('', bvmgr_payables_add_days('@0', 1), 'Epoch timestamp syntax must fail before adding.');
+g15_same('', bvmgr_payables_add_days('1970-01-01', 1), 'Epoch-zero calendar date must fail before adding.');
+g15_same('1969-12-31', bvmgr_payables_add_days('1969-12-31', 0), 'Pre-epoch zero offset changed.');
+g15_same('1969-12-30', bvmgr_payables_add_days('1969-12-31', -1), 'Pre-epoch negative offset changed.');
+g15_same('1970-01-01', bvmgr_payables_add_days('1969-12-31', 1), 'Pre-epoch positive offset changed.');
+g15_same('2024-03-01', bvmgr_payables_add_days('2024-02-30', 0), 'Lenient normalization changed.');
+g15_same('2026-03-08', bvmgr_payables_add_days('2026-03-08', 0), 'Zero offset changed.');
+g15_same('2026-03-09', bvmgr_payables_add_days('2026-03-08', 1), 'Positive offset changed at nominal DST start.');
+g15_same('2026-10-31', bvmgr_payables_add_days('2026-11-01', -1), 'Negative offset changed at nominal DST end.');
+g15_same('2026-03-07', bvmgr_payables_add_days('2026-03-08 +14:00', 0), 'Embedded positive offset must re-normalize to the UTC instant before formatting.');
+g15_same('2026-03-08', bvmgr_payables_add_days('2026-03-08 +14:00', 1), 'Embedded positive offset must re-normalize to UTC before adding.');
+g15_same('2026-03-08', bvmgr_payables_add_days('2026-03-08 America/Chicago', 0), 'Embedded timezone name must re-normalize to UTC before formatting.');
 
 $timezone_cases = array(
 	array('2026-03-08', 1, '2026-03-09'),
@@ -344,11 +344,11 @@ $timezone_cases = array(
 foreach (array('UTC', 'America/Chicago', 'Asia/Tokyo') as $runtime_timezone) {
 	date_default_timezone_set($runtime_timezone);
 	foreach ($timezone_cases as $case) {
-		g15_same($case[2], vms_payables_add_days($case[0], $case[1]), 'Add-days changed with PHP default timezone: ' . $runtime_timezone);
+		g15_same($case[2], bvmgr_payables_add_days($case[0], $case[1]), 'Add-days changed with PHP default timezone: ' . $runtime_timezone);
 	}
 }
 
-$historical_add = g15_replace_once($historical_add_days, 'function vms_payables_add_days(', 'function g15_historical_payables_add_days(', 'Historical add-days rename changed.');
+$historical_add = g15_replace_once($historical_add_days, 'function bvmgr_payables_add_days(', 'function g15_historical_payables_add_days(', 'Historical add-days rename changed.');
 eval($historical_add);
 date_default_timezone_set('UTC');
 foreach (array(
@@ -356,7 +356,7 @@ foreach (array(
 	array('2024-02-30', 2), array('1969-12-31', -1), array('1970-01-01', 1),
 	array('2026-03-08 +14:00', 0), array('2026-03-08 +14:00', 1),
 ) as $case) {
-	g15_same(g15_historical_payables_add_days($case[0], $case[1]), vms_payables_add_days($case[0], $case[1]), 'WordPress-UTC legacy add-days behavior changed.');
+	g15_same(g15_historical_payables_add_days($case[0], $case[1]), bvmgr_payables_add_days($case[0], $case[1]), 'WordPress-UTC legacy add-days behavior changed.');
 }
 
 function update_post_meta(int $post_id, string $key, $value): bool
@@ -365,7 +365,7 @@ function update_post_meta(int $post_id, string $key, $value): bool
 	return true;
 }
 
-$tax_function = g15_extract_function($sources['mirror']['includes/portal/vendor-tax-profile.php'], 'vms_vendor_portal_render_tax_profile');
+$tax_function = g15_extract_function($sources['mirror']['includes/portal/vendor-tax-profile.php'], 'bvmgr_vendor_portal_render_tax_profile');
 $tax_error_start = strpos($tax_function, 'if (is_wp_error($file_id))');
 $tax_success_start = $tax_error_start === false ? false : strpos($tax_function, '} else {', $tax_error_start);
 $tax_stamp_position = strpos($tax_function, trim($current['tax_received']));
@@ -411,25 +411,25 @@ function apply_filters(string $hook, $value, ...$args)
 	return $GLOBALS['g15_filter_value'];
 }
 
-function vms_event_credit_meta_keys(): array
+function bvmgr_event_credit_meta_keys(): array
 {
 	return array('original_event_plan_id' => '_credit_original_plan');
 }
 
-function vms_meta_key(string $object, string $field): string
+function bvmgr_meta_key(string $object, string $field): string
 {
 	unset($object, $field);
 	return '_event_status';
 }
 
-function vms_cancellation_refund_product_role(int $product_id): string
+function bvmgr_cancellation_refund_product_role(int $product_id): string
 {
 	unset($product_id);
 	return '';
 }
 
-$credit_function = g15_extract_function($sources['mirror']['includes/core/event-credits.php'], 'vms_event_credit_product_is_eligible');
-$credit_function = g15_replace_once($credit_function, 'function vms_event_credit_product_is_eligible(', 'function g15_event_credit_product_is_eligible(', 'Event Credit test-function rename changed.');
+$credit_function = g15_extract_function($sources['mirror']['includes/core/event-credits.php'], 'bvmgr_event_credit_product_is_eligible');
+$credit_function = g15_replace_once($credit_function, 'function bvmgr_event_credit_product_is_eligible(', 'function g15_event_credit_product_is_eligible(', 'Event Credit test-function rename changed.');
 $credit_function = g15_replace_once($credit_function, 'time()', '$GLOBALS[\'g15_now\']', 'Event Credit clock injection changed.');
 eval($credit_function);
 

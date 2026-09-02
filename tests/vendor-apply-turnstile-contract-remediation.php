@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 
 $GLOBALS['vms_test_options'] = array();
 $GLOBALS['vms_test_scripts'] = array();
@@ -79,13 +79,13 @@ function wp_get_current_user(): WP_User
 	$user->user_email = (string) $GLOBALS['vms_test_user_email'];
 	return $user;
 }
-function vms_request_method(): string { return 'get'; }
-function vms_request_read_scalar(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? trim((string) $source[$key]) : ''; }
-function vms_request_read_text_field(array $source, string $key): string { return sanitize_text_field(vms_request_read_scalar($source, $key)); }
-function vms_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
-function vms_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
-function vms_asset_url(string $asset_rel): string { return VMS_PLUGIN_URL . ltrim($asset_rel, '/'); }
-function vms_asset_version_for(string $asset_rel): string { unset($asset_rel); return VMS_VERSION; }
+function bvmgr_request_method(): string { return 'get'; }
+function bvmgr_request_read_scalar(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? trim((string) $source[$key]) : ''; }
+function bvmgr_request_read_text_field(array $source, string $key): string { return sanitize_text_field(bvmgr_request_read_scalar($source, $key)); }
+function bvmgr_request_read_key(array $source, string $key): string { return isset($source[$key]) && !is_array($source[$key]) ? (string) $source[$key] : ''; }
+function bvmgr_request_read_bool_flag(array $source, string $key): bool { return !empty($source[$key]); }
+function bvmgr_asset_url(string $asset_rel): string { return BVMGR_PLUGIN_URL . ltrim($asset_rel, '/'); }
+function bvmgr_asset_version_for(string $asset_rel): string { unset($asset_rel); return BVMGR_VERSION; }
 function wp_enqueue_script(string $handle, string $src = '', array $deps = array(), $ver = false, bool $in_footer = false): void
 {
 	$record = compact('handle', 'src', 'deps', 'ver', 'in_footer');
@@ -97,20 +97,20 @@ function add_query_arg(array $args, string $url): string { return $url . '?' . h
 function home_url(string $path = '/'): string { return 'https://example.test' . $path; }
 function get_page_by_path(string $path) { unset($path); return null; }
 function get_permalink($post): string { unset($post); return 'https://example.test/permalink/'; }
-function vms_vendor_apply_render_success_screen(bool $is_logged_in_submitter, bool $is_portal_add_flow): string
+function bvmgr_vendor_apply_render_success_screen(bool $is_logged_in_submitter, bool $is_portal_add_flow): string
 {
 	unset($is_logged_in_submitter, $is_portal_add_flow);
 	return 'SCREEN_SUCCESS';
 }
-function vms_vendor_apply_render_confirmation_pending_screen(int $app_id, array $args = array()): string
+function bvmgr_vendor_apply_render_confirmation_pending_screen(int $app_id, array $args = array()): string
 {
 	return 'SCREEN_PENDING:' . $app_id . ':' . (string) ($args['notice'] ?? '');
 }
-function vms_vendor_apply_render_existing_status_screen(int $app_id, string $kind): string
+function bvmgr_vendor_apply_render_existing_status_screen(int $app_id, string $kind): string
 {
 	return 'SCREEN_EXISTING:' . $app_id . ':' . $kind;
 }
-function vms_vendor_app_find_application_by_public_lookup_key(string $ref): int
+function bvmgr_vendor_app_find_application_by_public_lookup_key(string $ref): int
 {
 	return $ref !== '' ? 321 : 0;
 }
@@ -217,7 +217,7 @@ $restoreTurnstileLoggingBaseline = static function (string $source) use ($assert
 		'vendor_apply_turnstile_payload_invalid' => "error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');",
 	);
 	foreach ($historical as $eventCode => $statement) {
-		$needle = "vms_record_operational_issue('" . $eventCode . "'";
+		$needle = "bvmgr_record_operational_issue('" . $eventCode . "'";
 		$assert(substr_count($source, $needle) === 1, 'Known G16 Turnstile call count changed: ' . $eventCode);
 		$call = strpos($source, $needle);
 		$lineStart = strrpos(substr($source, 0, (int) $call), "\n");
@@ -263,7 +263,7 @@ $renderShortcode = static function (array $options, bool $manageOptions = false,
 		}
 	}
 
-	$html = vms_vendor_apply_shortcode();
+	$html = bvmgr_vendor_apply_shortcode();
 
 	return array(
 		'html' => $html,
@@ -279,28 +279,28 @@ $vendorApplicationsSource = $readFile($vendorApplicationsPath);
 $readmeSource = $readFile($readmePath);
 $assetSource = $readFile($assetPath);
 
-$assert(function_exists('vms_vendor_apply_turnstile_is_configured'), 'Expected Turnstile complete-configuration helper to exist.');
+$assert(function_exists('bvmgr_vendor_apply_turnstile_is_configured'), 'Expected Turnstile complete-configuration helper to exist.');
 
-$helperSource = $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_turnstile_is_configured');
-$assert(strpos($helperSource, 'vms_vendor_apply_turnstile_site_key()') !== false, 'Complete-configuration helper should derive the site key through the existing helper.');
-$assert(strpos($helperSource, 'vms_vendor_apply_turnstile_secret_key()') !== false, 'Complete-configuration helper should derive the secret key through the existing helper.');
+$helperSource = $extractFunctionSource($vendorApplicationsPath, 'bvmgr_vendor_apply_turnstile_is_configured');
+$assert(strpos($helperSource, 'bvmgr_vendor_apply_turnstile_site_key()') !== false, 'Complete-configuration helper should derive the site key through the existing helper.');
+$assert(strpos($helperSource, 'bvmgr_vendor_apply_turnstile_secret_key()') !== false, 'Complete-configuration helper should derive the secret key through the existing helper.');
 $assert(strpos($helperSource, 'get_option(') === false, 'Complete-configuration helper should not duplicate raw option reads.');
 
-$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_is_rate_limited')) === '082c25ed3a27c59ae785ccafd9e57b2a1b40a760fa6ee76aa5ed2131fca982c1', 'Rate limiting function should remain unchanged.');
-$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_parse_turnstile_siteverify_body')) === 'b16d36431e7d78f48cd52a69548498425a4671e5c54eb6ec1b97586855b42c7d', 'Turnstile siteverify parser should remain unchanged.');
-$turnstileVerifySource = $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_verify_turnstile');
+$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'bvmgr_vendor_apply_is_rate_limited')) === '082c25ed3a27c59ae785ccafd9e57b2a1b40a760fa6ee76aa5ed2131fca982c1', 'Rate limiting function should remain unchanged.');
+$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'bvmgr_vendor_apply_parse_turnstile_siteverify_body')) === 'b16d36431e7d78f48cd52a69548498425a4671e5c54eb6ec1b97586855b42c7d', 'Turnstile siteverify parser should remain unchanged.');
+$turnstileVerifySource = $extractFunctionSource($vendorApplicationsPath, 'bvmgr_vendor_apply_verify_turnstile');
 $turnstileHistoricalProjection = $restoreTurnstileLoggingBaseline($turnstileVerifySource);
 $assert(hash('sha256', $turnstileHistoricalProjection) === '5802d9b120a3434857a72ce4160b54aefc46ea31e1e816b7d292c05d3e57b8af', 'Turnstile verification should differ from its immutable baseline only by the known G16 logging migration.');
 $turnstileMutation = str_replace("'timeout' => 8", "'timeout' => 9", $turnstileHistoricalProjection, $turnstileMutationCount);
 $assert($turnstileMutationCount === 1 && hash('sha256', $turnstileMutation) !== '5802d9b120a3434857a72ce4160b54aefc46ea31e1e816b7d292c05d3e57b8af', 'Turnstile immutable projection must reject a non-logging runtime mutation.');
-$assert(substr_count($turnstileVerifySource, 'vms_record_operational_issue(') === 4, 'Mirror Turnstile verification should contain exactly four structured operational branches.');
-$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_request_fingerprint')) === 'e6700ad7ba8ff855318160c10640fb4443f1f832384276cd5b49cbc160d06827', 'Request fingerprinting should remain unchanged.');
-$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_handle_frontend_post')) === '375e812b9016e3200c4e2dc8c14f69a8ae6f8f7b72f068949d2e5508543530d4', 'Frontend POST handler should remain unchanged.');
+$assert(substr_count($turnstileVerifySource, 'bvmgr_record_operational_issue(') === 4, 'Mirror Turnstile verification should contain exactly four structured operational branches.');
+$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'bvmgr_vendor_apply_request_fingerprint')) === 'e6700ad7ba8ff855318160c10640fb4443f1f832384276cd5b49cbc160d06827', 'Request fingerprinting should remain unchanged.');
+$assert(hash('sha256', $extractFunctionSource($vendorApplicationsPath, 'bvmgr_vendor_apply_handle_frontend_post')) === '375e812b9016e3200c4e2dc8c14f69a8ae6f8f7b72f068949d2e5508543530d4', 'Frontend POST handler should remain unchanged.');
 $assert(hash('sha256', $assetSource) === '1856166b2a3785803148bc9019867e7b9e387e6b953f2099959ebb2af99e685c', 'Unrelated Vendor Application asset should remain unchanged.');
 
-$shortcodeSource = $extractFunctionSource($vendorApplicationsPath, 'vms_vendor_apply_shortcode');
+$shortcodeSource = $extractFunctionSource($vendorApplicationsPath, 'bvmgr_vendor_apply_shortcode');
 $assert(strpos($shortcodeSource, "'https://challenges.cloudflare.com/turnstile/v0/api.js'") !== false, 'Shortcode should keep the explicit Cloudflare Turnstile client URL.');
-$assert(strpos($shortcodeSource, 'VMS_VERSION') !== false, 'Shortcode should enqueue Turnstile with VMS_VERSION.');
+$assert(strpos($shortcodeSource, 'BVMGR_VERSION') !== false, 'Shortcode should enqueue Turnstile with BVMGR_VERSION.');
 $assert(strpos($shortcodeSource, __('Vendor applications are temporarily unavailable.', 'backstage-venue-manager')) !== false, 'Shortcode should contain the public unavailable notice.');
 $assert(strpos($shortcodeSource, 'Turnstile requires both a site key and a secret key before the Vendor Application form can be used.') !== false, 'Shortcode should contain the bounded administrator diagnostic.');
 
@@ -309,7 +309,7 @@ $assert(strpos($vendorApplicationsSource, "'timeout' => 8") !== false, 'Verifica
 $assert(strpos($vendorApplicationsSource, "'secret'   => \$secret") !== false, 'Verification source should retain the secret field.');
 $assert(strpos($vendorApplicationsSource, "'response' => \$token") !== false, 'Verification source should retain the response field.');
 $assert(strpos($vendorApplicationsSource, "'remoteip' => \$ip") !== false, 'Verification source should retain the remoteip field.');
-$assert(strpos($vendorApplicationsSource, "if (!vms_vendor_apply_verify_turnstile()) {") !== false, 'Frontend POST path should retain the fail-closed Turnstile gate.');
+$assert(strpos($vendorApplicationsSource, "if (!bvmgr_vendor_apply_verify_turnstile()) {") !== false, 'Frontend POST path should retain the fail-closed Turnstile gate.');
 
 $assert(strpos($readmeSource, 'optional protection for the public Vendor Application form against automated abuse') !== false, 'Readme should describe Cloudflare Turnstile as an optional external service.');
 $assert(strpos($readmeSource, 'both a site key and a secret key') !== false, 'Readme should document the two-key enablement requirement.');
@@ -324,7 +324,7 @@ $assert(strpos($readmeSource, 'https://www.cloudflare.com/turnstile-privacy-poli
 
 $assert(hash('sha256', $assetSource) === '1856166b2a3785803148bc9019867e7b9e387e6b953f2099959ebb2af99e685c', 'Unrelated Vendor Application assets should remain unchanged.');
 
-$assert(!vms_vendor_apply_turnstile_is_configured(), 'Turnstile should be incomplete with no configured keys.');
+$assert(!bvmgr_vendor_apply_turnstile_is_configured(), 'Turnstile should be incomplete with no configured keys.');
 
 $incompleteCases = array(
 	'none' => array(),
@@ -334,9 +334,9 @@ $incompleteCases = array(
 
 foreach ($incompleteCases as $label => $options) {
 	$public = $renderShortcode($options);
-	$assert(!vms_vendor_apply_turnstile_is_configured(), $label . ' should not count as a complete Turnstile configuration.');
+	$assert(!bvmgr_vendor_apply_turnstile_is_configured(), $label . ' should not count as a complete Turnstile configuration.');
 	$assert(!isset($public['scripts']['cf-turnstile']), $label . ' should not enqueue the Cloudflare Turnstile client.');
-	$assert(!isset($public['scripts']['vms-vendor-apply']), $label . ' should not enqueue the active form asset when the form is unavailable.');
+	$assert(!isset($public['scripts']['bvmgr-vendor-apply']), $label . ' should not enqueue the active form asset when the form is unavailable.');
 	$assert(strpos($public['html'], 'https://challenges.cloudflare.com/turnstile/v0/api.js') === false, $label . ' should not expose the Cloudflare client URL in rendered output.');
 	$assert(strpos($public['html'], 'class="cf-turnstile"') === false, $label . ' should not render the Turnstile widget markup.');
 	$assert(strpos($public['html'], 'class="vms-vendor-apply-form"') === false, $label . ' should not render the active Vendor Application form.');
@@ -349,7 +349,7 @@ foreach ($incompleteCases as $label => $options) {
 
 	$admin = $renderShortcode($options, true);
 	$assert(!isset($admin['scripts']['cf-turnstile']), $label . ' admin view should not enqueue the Cloudflare Turnstile client.');
-	$assert(!isset($admin['scripts']['vms-vendor-apply']), $label . ' admin view should not enqueue the active form asset when the form is unavailable.');
+	$assert(!isset($admin['scripts']['bvmgr-vendor-apply']), $label . ' admin view should not enqueue the active form asset when the form is unavailable.');
 	$assert(strpos($admin['html'], 'Vendor applications are temporarily unavailable.') !== false, $label . ' admin view should still render the public unavailable notice.');
 	$assert(strpos($admin['html'], 'Turnstile requires both a site key and a secret key before the Vendor Application form can be used.') !== false, $label . ' admin view should render the bounded administrator diagnostic.');
 	foreach ($options as $value) {
@@ -366,13 +366,13 @@ $configured = $renderShortcode(
 	)
 );
 
-$assert(vms_vendor_apply_turnstile_is_configured(), 'Both keys should count as a complete Turnstile configuration.');
-$assert(isset($configured['scripts']['vms-vendor-apply']), 'Configured form should enqueue the Vendor Applications asset.');
+$assert(bvmgr_vendor_apply_turnstile_is_configured(), 'Both keys should count as a complete Turnstile configuration.');
+$assert(isset($configured['scripts']['bvmgr-vendor-apply']), 'Configured form should enqueue the canonical Vendor Applications asset.');
 $assert(isset($configured['scripts']['cf-turnstile']), 'Configured form should enqueue the Cloudflare Turnstile client.');
 $assert(count($scriptCallsForHandle('cf-turnstile')) === 1, 'Configured form should enqueue the Cloudflare Turnstile client exactly once.');
 $assert(($configured['scripts']['cf-turnstile']['src'] ?? '') === 'https://challenges.cloudflare.com/turnstile/v0/api.js', 'Configured form should keep the explicit Cloudflare Turnstile client URL.');
 $assert(($configured['scripts']['cf-turnstile']['deps'] ?? null) === array(), 'Configured form should keep an empty dependency list for the Cloudflare Turnstile client.');
-$assert(($configured['scripts']['cf-turnstile']['ver'] ?? null) === VMS_VERSION, 'Configured form should use VMS_VERSION for the Cloudflare Turnstile client.');
+$assert(($configured['scripts']['cf-turnstile']['ver'] ?? null) === BVMGR_VERSION, 'Configured form should use BVMGR_VERSION for the Cloudflare Turnstile client.');
 $assert(($configured['scripts']['cf-turnstile']['in_footer'] ?? null) === true, 'Configured form should keep the Cloudflare Turnstile client in the footer.');
 $assert(strpos($configured['html'], 'class="vms-vendor-apply-form"') !== false, 'Configured form should render the active Vendor Application form.');
 $assert(strpos($configured['html'], 'name="vms_vendor_apply_nonce"') !== false, 'Configured form should preserve the form nonce field.');
@@ -386,13 +386,13 @@ $filterConfigured = $renderShortcode(
 	false,
 	array(),
 	array(
-		'vms_vendor_apply_turnstile_site_key' => array(
+		'bvmgr_vendor_apply_turnstile_site_key' => array(
 			static function (string $value): string {
 				unset($value);
 				return 'filtered-site-key';
 			},
 		),
-		'vms_vendor_apply_turnstile_secret_key' => array(
+		'bvmgr_vendor_apply_turnstile_secret_key' => array(
 			static function (string $value): string {
 				unset($value);
 				return 'filtered-secret-key';
@@ -401,7 +401,7 @@ $filterConfigured = $renderShortcode(
 	)
 );
 
-$assert(vms_vendor_apply_turnstile_is_configured(), 'Supported filters should be able to provide a complete Turnstile configuration.');
+$assert(bvmgr_vendor_apply_turnstile_is_configured(), 'Supported filters should be able to provide a complete Turnstile configuration.');
 $assert(isset($filterConfigured['scripts']['cf-turnstile']), 'Filter-provided keys should still enqueue the Cloudflare Turnstile client.');
 $assert(strpos($filterConfigured['html'], 'data-sitekey="filtered-site-key"') !== false, 'Filter-provided public site key should render in the widget markup.');
 $assert(strpos($filterConfigured['html'], 'filtered-secret-key') === false, 'Filter-provided secret key should never render.');

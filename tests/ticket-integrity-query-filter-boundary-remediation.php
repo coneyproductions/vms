@@ -86,15 +86,15 @@ function vms_test_extract_function(string $source, string $name): string
 
 function vms_test_project_g16_monitor_logging(string $source): string
 {
-	$start = strpos($source, 'function vms_ticket_integrity_fatal_operation(');
-	$last = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_operational_context');
+	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
+	$last = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
 	$last_start = strpos($source, $last, (int) $start);
 	vms_test_assert_true($start !== false && $last_start !== false, 'G16 monitor helper bounds changed.');
 	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
 	vms_test_assert_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), 'G16 monitor helper block changed.');
 	$source = str_replace($block . "\n\n", '', $source, $count);
 	vms_test_assert_same(1, $count, 'G16 monitor helper removal changed.');
-	$current = vms_test_extract_function($source, 'vms_ticket_integrity_fatal_guard_shutdown');
+	$current = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown');
 	vms_test_assert_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), 'G16 monitor shutdown changed.');
 	$fixture = vms_test_read_file(__DIR__ . '/g16-operational-logging-group-c.php');
 	vms_test_assert_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), 'G16 historical shutdown fixture changed.');
@@ -362,46 +362,46 @@ if (!function_exists('wp_date')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_b_meta_key')) {
-	function vms_ticketing_b_meta_key(string $field, string $fallback): string
+if (!function_exists('bvmgr_ticketing_b_meta_key')) {
+	function bvmgr_ticketing_b_meta_key(string $field, string $fallback): string
 	{
 		unset($field);
 		return $fallback;
 	}
 }
 
-if (!function_exists('vms_ticketing_b_get_linked_tec_event_id')) {
-	function vms_ticketing_b_get_linked_tec_event_id(int $plan_id): int
+if (!function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')) {
+	function bvmgr_ticketing_b_get_linked_tec_event_id(int $plan_id): int
 	{
 		return (int) ($GLOBALS['vms_test_linked_tec_events'][$plan_id] ?? 0);
 	}
 }
 
-if (!function_exists('vms_ticket_integrity_parse_wp_datetime')) {
-	function vms_ticket_integrity_parse_wp_datetime(string $value): int
+if (!function_exists('bvmgr_ticket_integrity_parse_wp_datetime')) {
+	function bvmgr_ticket_integrity_parse_wp_datetime(string $value): int
 	{
 		$timestamp = strtotime($value . ' UTC');
 		return $timestamp === false ? 0 : $timestamp;
 	}
 }
 
-if (!function_exists('vms_ticketing_b_get_mode')) {
-	function vms_ticketing_b_get_mode(int $plan_id): string
+if (!function_exists('bvmgr_ticketing_b_get_mode')) {
+	function bvmgr_ticketing_b_get_mode(int $plan_id): string
 	{
 		unset($plan_id);
 		return 'read_only';
 	}
 }
 
-if (!function_exists('vms_ticketing_b_get_event_ticket_products')) {
-	function vms_ticketing_b_get_event_ticket_products(int $tec_event_id): array
+if (!function_exists('bvmgr_ticketing_b_get_event_ticket_products')) {
+	function bvmgr_ticketing_b_get_event_ticket_products(int $tec_event_id): array
 	{
 		return $GLOBALS['vms_test_event_ticket_products'][$tec_event_id] ?? array();
 	}
 }
 
-if (!function_exists('vms_tec_is_cancelled_event')) {
-	function vms_tec_is_cancelled_event(int $tec_event_id): bool
+if (!function_exists('bvmgr_tec_is_cancelled_event')) {
+	function bvmgr_tec_is_cancelled_event(int $tec_event_id): bool
 	{
 		return !empty($GLOBALS['vms_test_cancelled_events'][$tec_event_id]);
 	}
@@ -451,9 +451,9 @@ $admin_page_source = vms_test_read_file($admin_page_path);
 $cron_source = vms_test_read_file($cron_path);
 $daily_report_source = vms_test_read_file($daily_report_path);
 $live_monitor_source = vms_test_read_file($live_monitor_path);
-$build_targets_source = vms_test_extract_function($monitor_source, 'vms_ticket_integrity_build_targets');
-$scan_all_source = vms_test_extract_function($monitor_source, 'vms_ticket_integrity_scan_all');
-$vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'vms_vendor_type_maybe_canonicalize_terms');
+$build_targets_source = vms_test_extract_function($monitor_source, 'bvmgr_ticket_integrity_build_targets');
+$scan_all_source = vms_test_extract_function($monitor_source, 'bvmgr_ticket_integrity_scan_all');
+$vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'bvmgr_vendor_type_maybe_canonicalize_terms');
 
 $live_monitor_projection = vms_test_project_g16_monitor_logging($live_monitor_source);
 $live_monitor_projection_removals = 0;
@@ -535,13 +535,13 @@ vms_test_assert_contains(
 	'Vendor-type canonicalization should remain scoped to the registered vendor-type taxonomy.'
 );
 vms_test_assert_contains(
-	"add_action('init', 'vms_vendor_type_maybe_canonicalize_terms', 22);",
+	"add_action('init', 'bvmgr_vendor_type_maybe_canonicalize_terms', 22);",
 	$vendor_type_source,
 	'Vendor-type canonicalization should remain registered on init at priority 22 with the default accepted-argument count.'
 );
 vms_test_assert_same(
 	1,
-	vms_test_count_pattern("/add_action\(\s*'init'\s*,\s*'vms_vendor_type_maybe_canonicalize_terms'\s*,\s*22\s*\);/", $vendor_type_source),
+	vms_test_count_pattern("/add_action\(\s*'init'\s*,\s*'bvmgr_vendor_type_maybe_canonicalize_terms'\s*,\s*22\s*\);/", $vendor_type_source),
 	'Vendor-type canonicalization should have exactly one init hook registration.'
 );
 vms_test_assert_not_contains(
@@ -555,14 +555,14 @@ vms_test_assert_same(
 	'Exactly two suppress_filters=true occurrences should remain across includes/: Ticket Integrity and vendor-type.'
 );
 vms_test_assert_contains(
-	"function vms_ticket_integrity_build_targets(array \$args = array()): array",
+	"function bvmgr_ticket_integrity_build_targets(array \$args = array()): array",
 	$monitor_source,
 	'Ticket Integrity monitor should still expose the target-builder helper.'
 );
 vms_test_assert_contains(
-	'vms_ticket_integrity_build_targets($args);',
+	'bvmgr_ticket_integrity_build_targets($args);',
 	$scan_all_source,
-	'Full scans should still build targets through vms_ticket_integrity_build_targets().'
+	'Full scans should still build targets through bvmgr_ticket_integrity_build_targets().'
 );
 vms_test_assert_contains(
 	"current_user_can('manage_options')",
@@ -575,12 +575,12 @@ vms_test_assert_contains(
 	'Manual Ticket Integrity scans should remain nonce-protected.'
 );
 vms_test_assert_contains(
-	"add_action('vms_ticket_integrity_daily_scan', 'vms_ticket_integrity_run_daily_scan');",
+	"add_action('vms_ticket_integrity_daily_scan', 'bvmgr_ticket_integrity_run_daily_scan');",
 	$cron_source,
 	'Full Ticket Integrity scans should remain schedulable through the daily cron hook.'
 );
 vms_test_assert_contains(
-	"vms_ticket_integrity_scan_all(array('trigger' => sanitize_key(\$trigger)))",
+	"bvmgr_ticket_integrity_scan_all(array('trigger' => sanitize_key(\$trigger)))",
 	$daily_report_source,
 	'Daily report refresh should continue to reuse the full Ticket Integrity scan path.'
 );
@@ -614,7 +614,7 @@ $GLOBALS['vms_test_query_filter_callback'] = static function (array $posts, arra
 	}));
 };
 
-$targets = vms_ticket_integrity_build_targets(
+$targets = bvmgr_ticket_integrity_build_targets(
 	array(
 		'days_ahead' => 7,
 	)
@@ -658,8 +658,8 @@ vms_test_assert_same(
 
 vms_test_reset_runtime_state();
 vms_test_seed_query_dataset(true);
-$include_inactive_false = vms_ticket_integrity_build_targets(array('days_ahead' => 7, 'include_inactive' => false));
-$include_inactive_true = vms_ticket_integrity_build_targets(array('days_ahead' => 7, 'include_inactive' => true));
+$include_inactive_false = bvmgr_ticket_integrity_build_targets(array('days_ahead' => 7, 'include_inactive' => false));
+$include_inactive_true = bvmgr_ticket_integrity_build_targets(array('days_ahead' => 7, 'include_inactive' => true));
 vms_test_assert_same(
 	array(101),
 	vms_test_target_plan_ids($include_inactive_false),
@@ -674,7 +674,7 @@ vms_test_assert_same(
 vms_test_reset_runtime_state();
 vms_test_seed_query_dataset(false);
 $GLOBALS['vms_test_apply_filters']['vms_ticket_integrity_target_query_batch_size'] = 999;
-vms_ticket_integrity_build_targets(array('days_ahead' => 7));
+bvmgr_ticket_integrity_build_targets(array('days_ahead' => 7));
 $bounded_query = $GLOBALS['vms_test_query_calls'][0] ?? array();
 vms_test_assert_same(500, $bounded_query['posts_per_page'] ?? null, 'Ticket Integrity target query should cap batch size at 500 when a filter requests an unsafe larger value.');
 

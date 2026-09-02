@@ -1,8 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-if (!function_exists('vms_staff_certifications_admin_badge_markup')) {
-    function vms_staff_certifications_admin_badge_markup(int $count): string
+if (!function_exists('bvmgr_staff_certifications_admin_badge_markup')) {
+    function bvmgr_staff_certifications_admin_badge_markup(int $count): string
     {
         $count = max(0, $count);
         if ($count <= 0) {
@@ -12,40 +12,40 @@ if (!function_exists('vms_staff_certifications_admin_badge_markup')) {
     }
 }
 
-if (!function_exists('vms_staff_certifications_pending_count')) {
-    function vms_staff_certifications_pending_count(): int
+if (!function_exists('bvmgr_staff_certifications_pending_count')) {
+    function bvmgr_staff_certifications_pending_count(): int
     {
-        return function_exists('vms_staffing_get_pending_staff_qualification_count')
-            ? (int) vms_staffing_get_pending_staff_qualification_count()
+        return function_exists('bvmgr_staffing_get_pending_staff_qualification_count')
+            ? (int) bvmgr_staffing_get_pending_staff_qualification_count()
             : 0;
     }
 }
 
-if (!function_exists('vms_staff_certifications_get_pending_review_items')) {
+if (!function_exists('bvmgr_staff_certifications_get_pending_review_items')) {
     /**
      * @return array<int|string,mixed>
      */
-    function vms_staff_certifications_get_pending_review_items(): array
+    function bvmgr_staff_certifications_get_pending_review_items(): array
     {
-        return function_exists('vms_staffing_get_staff_qualification_review_items')
-            ? (array) vms_staffing_get_staff_qualification_review_items('pending_verification')
+        return function_exists('bvmgr_staffing_get_staff_qualification_review_items')
+            ? (array) bvmgr_staffing_get_staff_qualification_review_items('pending_verification')
             : array();
     }
 }
 
-if (!function_exists('vms_staff_certifications_admin_menu_label')) {
-    function vms_staff_certifications_admin_menu_label(string $label = ''): string
+if (!function_exists('bvmgr_staff_certifications_admin_menu_label')) {
+    function bvmgr_staff_certifications_admin_menu_label(string $label = ''): string
     {
         $label = $label !== '' ? $label : __('Staff Certifications', 'backstage-venue-manager');
-        return esc_html($label) . vms_staff_certifications_admin_badge_markup(vms_staff_certifications_pending_count());
+        return esc_html($label) . bvmgr_staff_certifications_admin_badge_markup(bvmgr_staff_certifications_pending_count());
     }
 }
 
-if (!function_exists('vms_staff_certifications_render_empty_state_notice')) {
+if (!function_exists('bvmgr_staff_certifications_render_empty_state_notice')) {
     /**
      * @param array<int|string,mixed> $pending
      */
-    function vms_staff_certifications_render_empty_state_notice(array $pending): void
+    function bvmgr_staff_certifications_render_empty_state_notice(array $pending): void
     {
         if (!empty($pending)) {
             return;
@@ -55,23 +55,23 @@ if (!function_exists('vms_staff_certifications_render_empty_state_notice')) {
     }
 }
 
-if (!function_exists('vms_render_staff_certifications_admin_page')) {
-    function vms_render_staff_certifications_admin_page(): void
+if (!function_exists('bvmgr_render_staff_certifications_admin_page')) {
+    function bvmgr_render_staff_certifications_admin_page(): void
     {
-        $pending = vms_staff_certifications_get_pending_review_items();
+        $pending = bvmgr_staff_certifications_get_pending_review_items();
 
-        if (function_exists('vms_admin_ui_render_shell')) {
-            vms_admin_ui_render_shell(
+        if (function_exists('bvmgr_admin_ui_render_shell')) {
+            bvmgr_admin_ui_render_shell(
                 array(
                     'title' => __('Staff Certifications', 'backstage-venue-manager'),
                     'subtitle' => __('Review staff-uploaded certificates, licenses, and permits that are waiting on admin approval.', 'backstage-venue-manager'),
                     'shell_id' => 'vms-staff-certifications-admin',
                     'notices_callback' => function () use ($pending): void {
-                        vms_staff_certifications_render_empty_state_notice($pending);
+                        bvmgr_staff_certifications_render_empty_state_notice($pending);
                     },
                 ),
                 function () use ($pending): void {
-                    vms_render_staff_certifications_admin_page_content($pending);
+                    bvmgr_render_staff_certifications_admin_page_content($pending);
                 }
             );
             return;
@@ -79,20 +79,20 @@ if (!function_exists('vms_render_staff_certifications_admin_page')) {
 
         echo '<div class="wrap" id="vms-staff-certifications-admin">';
         echo '<h1>' . esc_html__('Staff Certifications', 'backstage-venue-manager') . '</h1>';
-        vms_render_staff_certifications_admin_page_content($pending);
-        vms_staff_certifications_render_empty_state_notice($pending);
+        bvmgr_render_staff_certifications_admin_page_content($pending);
+        bvmgr_staff_certifications_render_empty_state_notice($pending);
         echo '</div>';
     }
 }
 
-if (!function_exists('vms_render_staff_certifications_admin_page_content')) {
+if (!function_exists('bvmgr_render_staff_certifications_admin_page_content')) {
     /**
      * @param array<int|string,mixed>|null $pending
      */
-    function vms_render_staff_certifications_admin_page_content(?array $pending = null): void
+    function bvmgr_render_staff_certifications_admin_page_content(?array $pending = null): void
     {
         if ($pending === null) {
-            $pending = vms_staff_certifications_get_pending_review_items();
+            $pending = bvmgr_staff_certifications_get_pending_review_items();
         }
 
         echo '<div class="vms-admin-card vms-staff-certifications-summary">';
@@ -126,7 +126,7 @@ if (!function_exists('vms_render_staff_certifications_admin_page_content')) {
             $submitted_at = !empty($row['submitted_at']) ? wp_date('M j, Y g:ia', absint($row['submitted_at']), wp_timezone()) : '—';
             $expiration = !empty($row['expiration_date']) ? (string) $row['expiration_date'] : '—';
             $proof_url = !empty($row['proof_download_url']) ? (string) $row['proof_download_url'] : (!empty($row['proof_url']) ? (string) $row['proof_url'] : '');
-            $edit_url = $staff_id > 0 ? vms_staffing_staff_qualification_review_url($staff_id) : admin_url('edit.php?post_type=vms_staff');
+            $edit_url = $staff_id > 0 ? bvmgr_staffing_staff_qualification_review_url($staff_id) : admin_url('edit.php?post_type=vms_staff');
 
             echo '<tr>';
             echo '<td><strong>' . esc_html($staff_name) . '</strong></td>';
@@ -142,11 +142,11 @@ if (!function_exists('vms_render_staff_certifications_admin_page_content')) {
     }
 }
 
-if (!function_exists('vms_staff_certifications_get_pending_review_warning_context')) {
+if (!function_exists('bvmgr_staff_certifications_get_pending_review_warning_context')) {
     /**
      * @return array{show:bool,pending_count:int,review_url:string}
      */
-    function vms_staff_certifications_get_pending_review_warning_context(): array
+    function bvmgr_staff_certifications_get_pending_review_warning_context(): array
     {
         if (!current_user_can('manage_options')) {
             return array(
@@ -165,7 +165,7 @@ if (!function_exists('vms_staff_certifications_get_pending_review_warning_contex
             );
         }
 
-        $pending_count = max(0, (int) vms_staff_certifications_pending_count());
+        $pending_count = max(0, (int) bvmgr_staff_certifications_pending_count());
         if ($pending_count <= 0) {
             return array(
                 'show' => false,
@@ -182,11 +182,11 @@ if (!function_exists('vms_staff_certifications_get_pending_review_warning_contex
     }
 }
 
-if (!function_exists('vms_staff_certifications_render_pending_review_warning')) {
+if (!function_exists('bvmgr_staff_certifications_render_pending_review_warning')) {
     /**
      * @param array{show:bool,pending_count:int,review_url:string} $context
      */
-    function vms_staff_certifications_render_pending_review_warning(array $context): void
+    function bvmgr_staff_certifications_render_pending_review_warning(array $context): void
     {
         if (empty($context['show'])) {
             return;
@@ -207,11 +207,11 @@ if (!function_exists('vms_staff_certifications_render_pending_review_warning')) 
     }
 }
 
-if (!function_exists('vms_staff_certifications_render_pending_review_admin_notice')) {
-    function vms_staff_certifications_render_pending_review_admin_notice(): void
+if (!function_exists('bvmgr_staff_certifications_render_pending_review_admin_notice')) {
+    function bvmgr_staff_certifications_render_pending_review_admin_notice(): void
     {
-        vms_staff_certifications_render_pending_review_warning(vms_staff_certifications_get_pending_review_warning_context());
+        bvmgr_staff_certifications_render_pending_review_warning(bvmgr_staff_certifications_get_pending_review_warning_context());
     }
 }
 
-add_action('admin_notices', 'vms_staff_certifications_render_pending_review_admin_notice');
+add_action('admin_notices', 'bvmgr_staff_certifications_render_pending_review_admin_notice');

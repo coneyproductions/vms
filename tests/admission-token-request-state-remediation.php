@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
-define('VMS_VERSION', 'test-version');
+define('BVMGR_PLUGIN_URL', 'https://example.test/wp-content/plugins/backstage-venue-manager/');
+define('BVMGR_VERSION', 'test-version');
 define('ARRAY_A', 'ARRAY_A');
 
 function vms_test_assert(bool $condition, string $message): void
@@ -191,32 +191,32 @@ function get_post_meta(int $post_id, string $key, bool $single = true)
 	return '';
 }
 
-function vms_meta_key(string $group, string $key): string
+function bvmgr_meta_key(string $group, string $key): string
 {
 	return '_vms_event_plan_status';
 }
 
-function vms_admission_table_entries(): string
+function bvmgr_admission_table_entries(): string
 {
 	return 'wp_vms_admission_entries';
 }
 
-function vms_admission_scan_url(string $token): string
+function bvmgr_admission_scan_url(string $token): string
 {
 	return 'https://example.test/admission/scan/' . rawurlencode($token);
 }
 
-function vms_admission_qr_image_url(string $payload): string
+function bvmgr_admission_qr_image_url(string $payload): string
 {
 	return 'https://example.test/qr/' . rawurlencode($payload);
 }
 
-function vms_admission_group_entries(array $row): array
+function bvmgr_admission_group_entries(array $row): array
 {
 	return array($row);
 }
 
-function vms_admission_ensure_entry_token(int $entry_id): string
+function bvmgr_admission_ensure_entry_token(int $entry_id): string
 {
 	return 'group-' . $entry_id;
 }
@@ -236,6 +236,7 @@ class vms_test_wpdb
 }
 
 require_once dirname(__DIR__) . '/includes/runtime-guards.php';
+require_once dirname(__DIR__) . '/includes/core/prefix-b4-compat.php';
 
 $pluginRoot = dirname(__DIR__);
 $admissionTokensPath = $pluginRoot . '/includes/modules/admissions/admission-tokens.php';
@@ -247,33 +248,23 @@ $passClaimsSource = (string) file_get_contents($passClaimsPath);
 vms_test_assert($admissionTokensSource !== '', 'Admission Tokens source should be readable.');
 vms_test_assert($passClaimsSource !== '', 'Pass Claims source should be readable.');
 
-eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_get_request_token'));
-$scanRouterSource = vms_test_extract_function($admissionTokensSource, 'vms_admission_scan_template_router');
+eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_get_request_token'));
+$scanRouterSource = vms_test_extract_function($admissionTokensSource, 'bvmgr_admission_scan_template_router');
 $scanRouterSource = str_replace("exit;", 'return;', $scanRouterSource);
 eval($scanRouterSource);
 
 vms_test_assert_contains(
-	"array_key_exists('vms_pass_claim_token', \$_GET) && is_scalar(\$_GET['vms_pass_claim_token'])",
+	"bvmgr_get_query_var_compat('bvmgr_pass_claim_token')",
 	$passClaimsSource,
-	'Pass Claims token fallback should reject array/object query-string tokens before unslashing.'
+	'Pass Claims token lookup should use the canonical-first B4 query compatibility helper.'
 );
 vms_test_assert_contains(
-	"\$raw_token = wp_unslash(\$_GET['vms_pass_claim_token']);",
-	$passClaimsSource,
-	'Pass Claims token fallback should unslash the query-string token before raw decoding.'
-);
-vms_test_assert_contains(
-	"array_key_exists('vms_admission_scan_token', \$_GET) && is_scalar(\$_GET['vms_admission_scan_token'])",
+	"bvmgr_get_query_var_compat('bvmgr_admission_scan_token')",
 	$admissionTokensSource,
-	'Admission scan routing should reject array/object query-string tokens before unslashing.'
+	'Admission scan routing should use the canonical-first B4 query compatibility helper.'
 );
 vms_test_assert_contains(
-	"\$raw_token = wp_unslash(\$_GET['vms_admission_scan_token']);",
-	$admissionTokensSource,
-	'Admission scan routing should unslash the query-string token before raw decoding.'
-);
-vms_test_assert_contains(
-	"vms_request_read_bool_flag(\$_GET, 'vms_print_pass')",
+	"bvmgr_request_read_bool_flag(\$_GET, 'vms_print_pass')",
 	$admissionTokensSource,
 	'Admission scan routing should use the shared boolean helper for print-mode state.'
 );
@@ -286,20 +277,20 @@ vms_test_assert_not_contains(
 $GLOBALS['vms_test_query_vars'] = array('vms_pass_claim_token' => 'query-token');
 $_GET = array();
 $_SERVER['REQUEST_URI'] = '';
-vms_test_assert_same('query-token', vms_pass_claims_get_request_token(), 'Pass Claims request-token helper should still prefer the rewrite query var.');
+vms_test_assert_same('query-token', bvmgr_pass_claims_get_request_token(), 'Pass Claims request-token helper should still prefer the rewrite query var.');
 
 $GLOBALS['vms_test_query_vars']['vms_pass_claim_token'] = '';
 $_GET = array('vms_pass_claim_token' => 'get%20token');
 $_SERVER['REQUEST_URI'] = '';
-vms_test_assert_same('get token', vms_pass_claims_get_request_token(), 'Pass Claims request-token helper should still accept a normal scalar query-string token.');
+vms_test_assert_same('get token', bvmgr_pass_claims_get_request_token(), 'Pass Claims request-token helper should still accept a normal scalar query-string token.');
 
 $_GET = array('vms_pass_claim_token' => array('bad-token'));
 $_SERVER['REQUEST_URI'] = '/pass/claim/uri%20token';
-vms_test_assert_same('uri token', vms_pass_claims_get_request_token(), 'Pass Claims request-token helper should reject array-shaped query-string tokens and fall back to the routed URI token.');
+vms_test_assert_same('uri token', bvmgr_pass_claims_get_request_token(), 'Pass Claims request-token helper should reject array-shaped query-string tokens and fall back to the routed URI token.');
 
 $_GET = array('vms_pass_claim_token' => array('bad-token'));
 $_SERVER['REQUEST_URI'] = '';
-vms_test_assert_same('', vms_pass_claims_get_request_token(), 'Pass Claims request-token helper should return an empty string when every token source is malformed or missing.');
+vms_test_assert_same('', bvmgr_pass_claims_get_request_token(), 'Pass Claims request-token helper should return an empty string when every token source is malformed or missing.');
 
 global $wpdb;
 $wpdb = new vms_test_wpdb();
@@ -309,7 +300,7 @@ $GLOBALS['vms_test_status_headers'] = array();
 $GLOBALS['vms_test_nocache_calls'] = 0;
 $_GET = array('vms_admission_scan_token' => array('bad-token'));
 ob_start();
-vms_admission_scan_template_router();
+bvmgr_admission_scan_template_router();
 $routerOutput = (string) ob_get_clean();
 vms_test_assert_same(array(), $GLOBALS['vms_test_status_headers'], 'Admission scan routing should return early when the query-string token is array-shaped.');
 vms_test_assert_same('', $routerOutput, 'Admission scan routing should emit no output when the query-string token is malformed.');
@@ -322,7 +313,7 @@ $_GET = array(
 	'vms_print_pass' => array('1'),
 );
 ob_start();
-vms_admission_scan_template_router();
+bvmgr_admission_scan_template_router();
 $routerOutput = (string) ob_get_clean();
 vms_test_assert_same(array(404), $GLOBALS['vms_test_status_headers'], 'Admission scan routing should still reach the 404 public renderer for a scalar token with no matching record.');
 vms_test_assert_contains('class="site-main vms-pass-public-page"', $routerOutput, 'Admission scan routing should still render the public pass shell for scalar tokens.');
@@ -336,7 +327,7 @@ $_GET = array(
 	'vms_print_pass' => '1',
 );
 ob_start();
-vms_admission_scan_template_router();
+bvmgr_admission_scan_template_router();
 $routerOutput = (string) ob_get_clean();
 vms_test_assert_contains('vms-pass-public-page--print', $routerOutput, 'Admission scan routing should preserve scalar print-mode state.');
 

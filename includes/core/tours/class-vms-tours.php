@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours')) {
-	class VMS_Tours
+if (!class_exists('BVMGR_Tours')) {
+	class BVMGR_Tours
 	{
 		const OPT_ENABLED                = 'vms_tours_enabled';
 		const OPT_AUTOSTART              = 'vms_tours_autostart';
@@ -61,7 +61,7 @@ if (!class_exists('VMS_Tours')) {
 
 		public static function maybe_mark_pending_scan_on_version_change(): void
 		{
-			$current = defined('VMS_VERSION') ? (string) VMS_VERSION : '';
+			$current = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '';
 			if ($current === '') {
 				return;
 			}
@@ -103,7 +103,7 @@ if (!class_exists('VMS_Tours')) {
 			if (!is_admin()) {
 				return false;
 			}
-			$page = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours page routing only selects read-only admin context and remains nonce-free.
+			$page = bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours page routing only selects read-only admin context and remains nonce-free.
 			if ($page === 'vms' || strpos($page, 'vms-') === 0) {
 				return true;
 			}
@@ -119,10 +119,10 @@ if (!class_exists('VMS_Tours')) {
 
 		public static function get_registry(): array
 		{
-			if (!function_exists('vms_get_tour_registry')) {
+			if (!function_exists('bvmgr_get_tour_registry')) {
 				return array();
 			}
-			$raw = (array) vms_get_tour_registry();
+			$raw = (array) bvmgr_get_tour_registry();
 			$out = array();
 			foreach ($raw as $tour) {
 				$normalized = self::normalize_tour($tour);
@@ -402,7 +402,7 @@ if (!class_exists('VMS_Tours')) {
 			}
 
 			$current_context = self::get_current_context_key();
-			$page            = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours asset scope only selects read-only admin context and remains nonce-free.
+			$page            = bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours asset scope only selects read-only admin context and remains nonce-free.
 			$needs_assets    = ($current_context !== '' || $page === 'vms-tour-maintenance' || $page === 'vms' || $page === 'vms-dashboard');
 			if (!$needs_assets) {
 				return;
@@ -411,7 +411,7 @@ if (!class_exists('VMS_Tours')) {
 			self::enqueue_shared_assets();
 
 			$nonce = wp_create_nonce('wp_rest');
-			wp_localize_script('vms-tours', 'VMS_TOURS', array(
+			wp_localize_script('bvmgr-tours', 'BVMGR_TOURS', array(
 				'enabled'         => self::get_bool_option(self::OPT_ENABLED, true),
 				'autostart'       => self::get_bool_option(self::OPT_AUTOSTART, true),
 				'library'         => (string) get_option(self::OPT_LIBRARY, 'driverjs'),
@@ -429,7 +429,7 @@ if (!class_exists('VMS_Tours')) {
 				),
 				'ajax'            => array(
 					'url'   => esc_url_raw(admin_url('admin-ajax.php')),
-					'nonce' => wp_create_nonce('vms_tours_state'),
+					'nonce' => wp_create_nonce('bvmgr_tours_state'),
 				),
 				'userState'       => self::get_current_user_state(),
 				'canManage'       => current_user_can('manage_options'),
@@ -449,27 +449,27 @@ if (!class_exists('VMS_Tours')) {
 
 		public static function enqueue_shared_assets(): void
 		{
-			$version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+			$version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
 			$driver_js_rel  = 'assets/vendor/driverjs/driver.min.js';
 			$driver_css_rel = 'assets/vendor/driverjs/driver.min.css';
-			$driver_js_abs  = defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . $driver_js_rel : '';
-			$driver_css_abs = defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . $driver_css_rel : '';
+			$driver_js_abs  = defined('BVMGR_PLUGIN_PATH') ? BVMGR_PLUGIN_PATH . $driver_js_rel : '';
+			$driver_css_abs = defined('BVMGR_PLUGIN_PATH') ? BVMGR_PLUGIN_PATH . $driver_css_rel : '';
 
 			if ($driver_js_abs !== '' && file_exists($driver_js_abs)) {
-				wp_enqueue_script('vms-driverjs', VMS_PLUGIN_URL . $driver_js_rel, array(), $version, true);
+				wp_enqueue_script('bvmgr-driverjs', BVMGR_PLUGIN_URL . $driver_js_rel, array(), $version, true);
 			}
 			if ($driver_css_abs !== '' && file_exists($driver_css_abs)) {
-				wp_enqueue_style('vms-driverjs', VMS_PLUGIN_URL . $driver_css_rel, array(), $version);
+				wp_enqueue_style('bvmgr-driverjs', BVMGR_PLUGIN_URL . $driver_css_rel, array(), $version);
 			}
 
-			wp_enqueue_style('vms-tours', VMS_PLUGIN_URL . 'assets/css/vms-tours.css', array('vms-admin'), $version);
-			wp_enqueue_script('vms-tours', VMS_PLUGIN_URL . 'assets/js/vms-tours.js', array(), $version, true);
+			wp_enqueue_style('bvmgr-tours', BVMGR_PLUGIN_URL . 'assets/css/vms-tours.css', array('bvmgr-admin'), $version);
+			wp_enqueue_script('bvmgr-tours', BVMGR_PLUGIN_URL . 'assets/js/vms-tours.js', array(), $version, true);
 		}
 
 		public static function get_current_context_key(): string
 		{
-			$page   = vms_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours context lookup only selects read-only admin context and remains nonce-free.
+			$page   = bvmgr_request_read_key($_GET, 'page'); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive tours context lookup only selects read-only admin context and remains nonce-free.
 			$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 			$sid    = ($screen && isset($screen->id)) ? (string) $screen->id : '';
 			$url    = self::get_current_admin_relative_url();
@@ -525,11 +525,11 @@ if (!class_exists('VMS_Tours')) {
 
 			$dismiss_url = wp_nonce_url(
 				admin_url('admin-post.php?action=vms_tours_dismiss_notice&hash=' . rawurlencode($hash)),
-				'vms_tours_dismiss_notice'
+				'bvmgr_tours_dismiss_notice'
 			);
 
 			echo '<div class="notice notice-warning is-dismissible vms-tours-notice">';
-			echo '<p><strong>VMS Tour Drift:</strong> ' . esc_html((string) $count) . ' anchor(s) are missing. Run a scan and copy the report for Codex.</p>';
+			echo '<p><strong>Backstage Venue Manager Tour Drift:</strong> ' . esc_html((string) $count) . ' anchor(s) are missing. Run a scan and copy the report for Codex.</p>';
 			echo '<p><a class="button button-secondary" href="' . esc_url(admin_url('admin.php?page=vms-tour-maintenance')) . '">View Tour Maintenance</a> ';
 			echo '<a class="button" href="' . esc_url($dismiss_url) . '">Dismiss until new drift/scan</a></p>';
 			echo '</div>';
@@ -562,12 +562,12 @@ if (!class_exists('VMS_Tours')) {
 					}
 				}
 			}
-			if (!function_exists('vms_render_help_button')) {
+			if (!function_exists('bvmgr_render_help_button')) {
 				return;
 			}
 
 			echo '<div class="vms-global-help-float" style="position:fixed;top:42px;right:16px;z-index:100000;">';
-			echo vms_render_help_button(array(
+			echo bvmgr_render_help_button(array(
 				'tour_id' => $tour_id,
 				'anchor' => '',
 				'class' => 'vms-global-help-menu',
@@ -580,8 +580,8 @@ if (!class_exists('VMS_Tours')) {
 			if (!current_user_can('manage_options')) {
 				wp_die('Insufficient permissions.');
 			}
-			check_admin_referer('vms_tours_dismiss_notice');
-			$hash = vms_request_read_text_field($_GET, 'hash');
+			check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tours_dismiss_notice', '_wpnonce'), '_wpnonce');
+			$hash = bvmgr_request_read_text_field($_GET, 'hash');
 			if ($hash !== '') {
 				update_user_meta(get_current_user_id(), self::USER_META_NOTICE_DISMISSED, $hash);
 			}
@@ -612,7 +612,7 @@ if (!class_exists('VMS_Tours')) {
 				if ($slug !== 'vms-dashboard') {
 					continue;
 				}
-				$title = isset($item[0]) ? (string) $item[0] : 'VMS';
+				$title = isset($item[0]) ? (string) $item[0] : 'Backstage Venue Manager';
 				if (strpos($title, 'plugin-count') !== false) {
 					return;
 				}
@@ -627,18 +627,18 @@ if (!class_exists('VMS_Tours')) {
 			if (!is_user_logged_in() || !self::can_run_tours()) {
 				wp_send_json_error(array('message' => 'Forbidden'), 403);
 			}
-			check_ajax_referer('vms_tours_state', 'nonce');
+			check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_tours_state', 'nonce'), 'nonce', true);
 
-			$tour_id = vms_request_read_key($_POST, 'tour_id');
-			$status  = vms_request_read_key($_POST, 'status');
+			$tour_id = bvmgr_request_read_key($_POST, 'tour_id');
+			$status  = bvmgr_request_read_key($_POST, 'status');
 			if ($status === '') {
 				$status = 'in_progress';
 			}
-			$version = vms_request_read_absint($_POST, 'version');
+			$version = bvmgr_request_read_absint($_POST, 'version');
 			if ($version <= 0) {
 				$version = 1;
 			}
-			$step = vms_request_read_absint($_POST, 'step_index');
+			$step = bvmgr_request_read_absint($_POST, 'step_index');
 			if ($tour_id === '') {
 				wp_send_json_error(array('message' => 'Missing tour_id'), 400);
 			}
@@ -948,7 +948,7 @@ if (!class_exists('VMS_Tours')) {
 
 		private static function get_current_admin_relative_url(): string
 		{
-			$request_uri = vms_request_current_uri('');
+			$request_uri = bvmgr_request_current_uri('');
 			if ($request_uri === '') {
 				return '';
 			}
@@ -980,21 +980,21 @@ if (!class_exists('VMS_Tours')) {
 	}
 }
 
-VMS_Tours::init();
+BVMGR_Tours::init();
 
-if (!function_exists('vms_enqueue_tour_assets')) {
-	function vms_enqueue_tour_assets(): void
+if (!function_exists('bvmgr_enqueue_tour_assets')) {
+	function bvmgr_enqueue_tour_assets(): void
 	{
-		if (!class_exists('VMS_Tours') || !method_exists('VMS_Tours', 'enqueue_shared_assets')) {
+		if (!class_exists('BVMGR_Tours') || !method_exists('BVMGR_Tours', 'enqueue_shared_assets')) {
 			return;
 		}
-		VMS_Tours::enqueue_shared_assets();
+		BVMGR_Tours::enqueue_shared_assets();
 	}
 }
 
-if (!function_exists('vms_render_help_button')) {
-	if (!function_exists('vms_tours_sanitize_anchor_token')) {
-		function vms_tours_sanitize_anchor_token(string $anchor): string
+if (!function_exists('bvmgr_render_help_button')) {
+	if (!function_exists('bvmgr_tours_sanitize_anchor_token')) {
+		function bvmgr_tours_sanitize_anchor_token(string $anchor): string
 		{
 			$anchor = strtolower(trim($anchor));
 			if ($anchor === '') {
@@ -1008,10 +1008,10 @@ if (!function_exists('vms_render_help_button')) {
 	/**
 	 * @param array<string,mixed> $args
 	 */
-	function vms_render_help_button(array $args = array()): string
+	function bvmgr_render_help_button(array $args = array()): string
 	{
 		$tour_id = sanitize_key((string) ($args['tour_id'] ?? ''));
-		$anchor = vms_tours_sanitize_anchor_token((string) ($args['anchor'] ?? ''));
+		$anchor = bvmgr_tours_sanitize_anchor_token((string) ($args['anchor'] ?? ''));
 		$label = sanitize_text_field((string) ($args['label'] ?? __('Help', 'backstage-venue-manager')));
 		$class = sanitize_html_class((string) ($args['class'] ?? ''));
 
