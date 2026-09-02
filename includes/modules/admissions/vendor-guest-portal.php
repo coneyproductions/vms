@@ -987,6 +987,19 @@ if (!function_exists('vms_admission_save_vendor_guest_config')) {
 }
 add_action('save_post_vms_event_plan', 'vms_admission_save_vendor_guest_config', 30, 2);
 
+if (!function_exists('vms_admission_vendor_guest_register_portal_tab')) {
+	function vms_admission_vendor_guest_register_portal_tab($tabs)
+	{
+		if (!is_array($tabs)) {
+			return $tabs;
+		}
+
+		$tabs[] = 'guest-list';
+		return array_values(array_unique(array_filter(array_map('sanitize_key', $tabs))));
+	}
+}
+add_filter('vms_vendor_portal_allowed_tabs', 'vms_admission_vendor_guest_register_portal_tab', 20);
+
 if (!function_exists('vms_admission_vendor_guest_portal_url')) {
 	function vms_admission_vendor_guest_portal_url(array $portal_context, int $event_plan_id = 0): string
 	{

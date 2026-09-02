@@ -151,13 +151,33 @@ function add_action(string $hook, $callback, int $priority = 10, int $accepted_a
 
 function add_filter(string $hook, $callback, int $priority = 10, int $accepted_args = 1): void
 {
-	unset($hook, $callback, $priority, $accepted_args);
+	$GLOBALS['vms_test_filters'][$hook][$priority][] = array(
+		'callback' => $callback,
+		'accepted_args' => $accepted_args,
+	);
+	ksort($GLOBALS['vms_test_filters'][$hook]);
 }
 
-function apply_filters(string $hook, $value)
+function apply_filters(string $hook, $value, ...$args)
 {
-	unset($hook);
+	foreach ((array) ($GLOBALS['vms_test_filters'][$hook] ?? array()) as $callbacks) {
+		foreach ((array) $callbacks as $entry) {
+			$accepted_args = max(1, (int) ($entry['accepted_args'] ?? 1));
+			$callback_args = array_slice(array_merge(array($value), $args), 0, $accepted_args);
+			$value = call_user_func_array($entry['callback'], $callback_args);
+		}
+	}
 	return $value;
+}
+
+function get_permalink(): string
+{
+	return 'https://example.test/vendor-portal/';
+}
+
+function add_query_arg(array $args, string $url): string
+{
+	return rtrim($url, '?') . '?' . http_build_query($args);
 }
 
 function admin_url(string $path = ''): string
@@ -304,22 +324,42 @@ $pluginRoot = dirname(__DIR__);
 $adminUiPath = $pluginRoot . '/includes/modules/admissions/admin-ui.php';
 $passClaimsPath = $pluginRoot . '/includes/modules/admissions/pass-claims.php';
 $vendorGuestPath = $pluginRoot . '/includes/modules/admissions/vendor-guest-portal.php';
+$vendorPortalPath = $pluginRoot . '/includes/portal/vendor-portal.php';
 
 $adminUiSource = (string) file_get_contents($adminUiPath);
 $passClaimsSource = (string) file_get_contents($passClaimsPath);
 $vendorGuestSource = (string) file_get_contents($vendorGuestPath);
+$vendorPortalSource = (string) file_get_contents($vendorPortalPath);
 
 vms_test_assert($adminUiSource !== '', 'Admissions admin UI source should be readable.');
 vms_test_assert($passClaimsSource !== '', 'Pass Claims source should be readable.');
 vms_test_assert($vendorGuestSource !== '', 'Vendor Guest Portal source should be readable.');
+vms_test_assert($vendorPortalSource !== '', 'Vendor Portal source should be readable.');
 
 eval(vms_test_extract_function($adminUiSource, 'vms_admission_admin_enqueue_assets'));
 eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_is_admin_page'));
 eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_render_admin_notices'));
 eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_render_passes_tab'));
 eval(vms_test_extract_function($passClaimsSource, 'vms_pass_claims_render_admin_page'));
+eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_query_key'));
+eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_query_absint'));
+eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_allowed_tabs'));
+eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_get_requested_tab'));
+eval(vms_test_extract_function($vendorPortalSource, 'vms_vendor_portal_get_requested_vendor_id'));
+eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_register_portal_tab'));
+eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_portal_url'));
+eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_add_nav_link'));
 eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_portal_screen_key'));
 eval(vms_test_extract_function($vendorGuestSource, 'vms_admission_vendor_guest_render_custom_tab'));
+
+add_filter('vms_vendor_portal_allowed_tabs', 'vms_admission_vendor_guest_register_portal_tab', 20);
+add_filter('vms_vendor_portal_allowed_tabs', static function ($tabs) {
+	if (!is_array($tabs)) {
+		return $tabs;
+	}
+	$tabs[] = 'agreements';
+	return array_values(array_unique(array_filter(array_map('sanitize_key', $tabs))));
+}, 20);
 
 vms_test_assert_contains(
 	"\$post_id = vms_request_read_absint(\$_GET, 'post');",
@@ -356,6 +396,54 @@ vms_test_assert_not_contains(
 	$vendorGuestSource,
 	'Vendor Guest Portal should no longer broad-cast guest_event through a string coercion path.'
 );
+vms_test_assert_contains(
+	"add_filter('vms_vendor_portal_allowed_tabs', 'vms_admission_vendor_guest_register_portal_tab', 20);",
+	$vendorGuestSource,
+	'Vendor Guest Portal should register its canonical slug with the portal allowlist.'
+);
+
+$requiredPortalTabs = array('dashboard', 'profile', 'tax-profile', 'history', 'availability', 'opportunities', 'all-vendors', 'tech', 'guest-list', 'agreements');
+$allowedPortalTabs = vms_vendor_portal_allowed_tabs();
+vms_test_assert_same(array(), array_values(array_diff($requiredPortalTabs, $allowedPortalTabs)), 'Guest List and Agreements should preserve the complete Vendor Portal routing matrix.');
+
+foreach ($requiredPortalTabs as $requiredPortalTab) {
+	$_GET = array('tab' => $requiredPortalTab);
+	vms_test_assert_same($requiredPortalTab, vms_vendor_portal_get_requested_tab('dashboard'), 'Vendor Portal direct routing should preserve the allowed tab: ' . $requiredPortalTab);
+}
+
+$_GET = array('tab' => 'guest_list');
+vms_test_assert_same('dashboard', vms_vendor_portal_get_requested_tab('dashboard'), 'The noncanonical guest_list alias should continue to fail closed to Dashboard.');
+
+$_GET = array('tab' => 'guest-list', 'vendor_id' => '5505');
+vms_test_assert_same('guest-list', vms_vendor_portal_get_requested_tab('dashboard'), 'Direct tab=guest-list should survive Vendor Portal validation.');
+vms_test_assert_same(5505, vms_vendor_portal_get_requested_vendor_id(), 'Direct Guest List routing should preserve vendor_id=5505.');
+
+$routingPortalContext = array(
+	'base_url' => 'https://example.test/vendor-portal/',
+	'vendor_id' => 5505,
+	'is_preview' => false,
+);
+ob_start();
+vms_admission_vendor_guest_add_nav_link('guest-list', $routingPortalContext);
+$guestListNavHtml = (string) ob_get_clean();
+vms_test_assert_contains('class="is-active"', $guestListNavHtml, 'Guest List should receive active navigation styling.');
+vms_test_assert_contains('tab=guest-list', $guestListNavHtml, 'Guest List navigation should use the canonical route slug.');
+vms_test_assert_contains('vendor_id=5505', $guestListNavHtml, 'Guest List navigation should retain the authorized vendor context.');
+
+preg_match('/href="([^"]+)"/', $guestListNavHtml, $guestListNavMatch);
+$clickedGuestListUrl = html_entity_decode((string) ($guestListNavMatch[1] ?? ''), ENT_QUOTES);
+parse_str((string) parse_url($clickedGuestListUrl, PHP_URL_QUERY), $clickedGuestListQuery);
+$_GET = $clickedGuestListQuery;
+vms_test_assert_same('guest-list', vms_vendor_portal_get_requested_tab('dashboard'), 'Clicking the normal Guest List link should route to Guest List.');
+vms_test_assert_same(5505, vms_vendor_portal_get_requested_vendor_id(), 'Clicked Guest List navigation should preserve vendor_id=5505.');
+vms_test_assert(vms_vendor_portal_get_requested_tab('dashboard') !== 'dashboard', 'Dashboard should not remain selected for Guest List requests.');
+
+$_GET = array('tab' => 'agreements', 'vendor_id' => '5505');
+vms_test_assert_same('agreements', vms_vendor_portal_get_requested_tab('dashboard'), 'Direct tab=agreements should continue to survive Vendor Portal validation.');
+vms_test_assert_same(5505, vms_vendor_portal_get_requested_vendor_id(), 'Direct Agreements routing should preserve vendor_id=5505.');
+
+$_GET = array('tab' => 'not-a-real-section');
+vms_test_assert_same('dashboard', vms_vendor_portal_get_requested_tab('dashboard'), 'Unknown portal tabs should continue to fail closed to Dashboard.');
 
 $GLOBALS['vms_test_is_admin'] = true;
 $GLOBALS['vms_test_admission_admin_should_load'] = true;
@@ -422,12 +510,15 @@ $GLOBALS['vms_test_guest_events'] = array(
 	array('event_plan_id' => 41, 'title' => 'Event One', 'remaining' => 3, 'allotment' => 5, 'used' => 2, 'event_date' => '2026-08-01', 'venue_name' => 'Room One'),
 	array('event_plan_id' => 73, 'title' => 'Event Two', 'remaining' => 1, 'allotment' => 4, 'used' => 3, 'event_date' => '2026-08-02', 'venue_name' => 'Room Two'),
 );
-$portalContext = array('vendor_id' => 11, 'is_preview' => true);
+$portalContext = array('vendor_id' => 5505, 'is_preview' => true);
 
 ob_start();
-$_GET = array('guest_event' => '73');
-vms_admission_vendor_guest_render_custom_tab(false, 'guest-list', $portalContext);
+$_GET = array('tab' => 'guest-list', 'vendor_id' => '5505', 'guest_event' => '73');
+$resolvedGuestListTab = vms_vendor_portal_get_requested_tab('dashboard');
+$guestListRendered = vms_admission_vendor_guest_render_custom_tab(false, $resolvedGuestListTab, $portalContext);
 $guestHtml = (string) ob_get_clean();
+vms_test_assert_same(true, $guestListRendered, 'The Guest List content provider should claim the validated Guest List route.');
+vms_test_assert_contains('class="vms-vendor-guest-root"', $guestHtml, 'The existing Guest List UI should render for a validated direct route.');
 vms_test_assert_same(2, substr_count($guestHtml, 'data-vms-tour="vendor-portal-guest.card"'), 'Vendor Guest Portal should preserve scalar guest_event selection for the matching event card.');
 
 ob_start();

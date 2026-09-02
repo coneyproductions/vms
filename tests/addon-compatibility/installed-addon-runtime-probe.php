@@ -108,15 +108,37 @@ $check('investor-registry', isset($registry['vms-investor-portal']), array('regi
 $check('ops-version-and-resolution', defined('VMS_OPS_CONSOLE_VERSION') && (string) VMS_OPS_CONSOLE_VERSION === $expectedOpsVersion && vms_ops_core_function('vms_get_event_plan_for_tec_event') === 'bvmgr_get_event_plan_for_tec_event');
 $check('ops-runtime', $routeCount('/vms-ops/v1') > 0 && in_array('vms-ops-console-members', $allMenuSlugs, true), array('route_count' => $routeCount('/vms-ops/v1')));
 
-$agreementTabs = function_exists('bvmgr_vendor_portal_allowed_tabs') ? bvmgr_vendor_portal_allowed_tabs() : array();
+$portalAllowedTabsFunction = function_exists('bvmgr_vendor_portal_allowed_tabs') ? 'bvmgr_vendor_portal_allowed_tabs' : 'vms_vendor_portal_allowed_tabs';
+$portalRequestedTabFunction = function_exists('bvmgr_vendor_portal_get_requested_tab') ? 'bvmgr_vendor_portal_get_requested_tab' : 'vms_vendor_portal_get_requested_tab';
+$portalRequestedVendorFunction = function_exists('bvmgr_vendor_portal_get_requested_vendor_id') ? 'bvmgr_vendor_portal_get_requested_vendor_id' : 'vms_vendor_portal_get_requested_vendor_id';
+$guestListAllowedTabCallback = function_exists('bvmgr_admission_vendor_guest_register_portal_tab') ? 'bvmgr_admission_vendor_guest_register_portal_tab' : 'vms_admission_vendor_guest_register_portal_tab';
+$portalTabs = function_exists($portalAllowedTabsFunction) ? $portalAllowedTabsFunction() : array();
+$previousGet = $_GET;
+$_GET = array('tab' => 'agreements', 'vendor_id' => '5505');
+$agreementsRequestedTab = function_exists($portalRequestedTabFunction) ? $portalRequestedTabFunction('dashboard') : '';
+$agreementsRequestedVendor = function_exists($portalRequestedVendorFunction) ? $portalRequestedVendorFunction() : 0;
+$_GET = array('tab' => 'guest-list', 'vendor_id' => '5505');
+$guestListRequestedTab = function_exists($portalRequestedTabFunction) ? $portalRequestedTabFunction('dashboard') : '';
+$guestListRequestedVendor = function_exists($portalRequestedVendorFunction) ? $portalRequestedVendorFunction() : 0;
+$_GET = $previousGet;
 $check(
 	'agreements-regression',
 	defined('VMSA_VERSION')
 		&& (string) VMSA_VERSION === $expectedAgreementsVersion
 		&& in_array('vms-agreements', $allMenuSlugs, true)
 		&& has_filter('vms_vendor_portal_allowed_tabs', 'vmsa_register_vendor_portal_tab') !== false
-		&& in_array('agreements', $agreementTabs, true),
-	array('allowed_tabs' => $agreementTabs)
+		&& in_array('agreements', $portalTabs, true)
+		&& $agreementsRequestedTab === 'agreements'
+		&& $agreementsRequestedVendor === 5505,
+	array('allowed_tabs' => $portalTabs, 'requested_tab' => $agreementsRequestedTab, 'requested_vendor' => $agreementsRequestedVendor)
+);
+$check(
+	'guest-list-routing-regression',
+	has_filter('vms_vendor_portal_allowed_tabs', $guestListAllowedTabCallback) !== false
+		&& in_array('guest-list', $portalTabs, true)
+		&& $guestListRequestedTab === 'guest-list'
+		&& $guestListRequestedVendor === 5505,
+	array('allowed_tabs' => $portalTabs, 'requested_tab' => $guestListRequestedTab, 'requested_vendor' => $guestListRequestedVendor)
 );
 $check('express-bar-regression', defined('VMSEB_VERSION') && (string) VMSEB_VERSION === '0.6.24' && in_array('vms-express-bar', $allMenuSlugs, true) && in_array('vms-bar-menu', $allMenuSlugs, true));
 $check('sponsorships-standalone-regression', defined('VMS_SPONSORSHIPS_VERSION') && (string) VMS_SPONSORSHIPS_VERSION === '0.1.7.1' && in_array('vms-sponsorships', $allMenuSlugs, true) && shortcode_exists('vms_sponsor_inquiry'));

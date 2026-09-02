@@ -1071,10 +1071,10 @@ includes/modules/admissions/vendor-guest-portal.php:741:WordPress.DB.PreparedSQL
 includes/modules/admissions/vendor-guest-portal.php:743:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
 [includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_handle_submit]
-includes/modules/admissions/vendor-guest-portal.php:1279:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/vendor-guest-portal.php:1294:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/vendor-guest-portal.php:1449:WordPress.DB.DirectDatabaseQuery.DirectQuery
-includes/modules/admissions/vendor-guest-portal.php:1504:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/vendor-guest-portal.php:1292:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/vendor-guest-portal.php:1307:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/vendor-guest-portal.php:1462:WordPress.DB.DirectDatabaseQuery.DirectQuery
+includes/modules/admissions/vendor-guest-portal.php:1517:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
 [includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_portal_events]
 includes/modules/admissions/vendor-guest-portal.php:795:WordPress.DB.SlowDBQuery.slow_db_query_meta_key
