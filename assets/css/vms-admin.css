@@ -7411,15 +7411,3 @@ body.post-type-vms_vendor .vms-vendor-dow-venue .vms-vendor-defaults-table-wrap 
 .vms-staff-qualification-review-notice {
     margin: 12px 0;
 }
-
-/* Keep the communications ledger inside the Event Plan column on narrow screens. */
-body.post-type-vms_event_plan #bvmgr-event-communications {
-	min-width: 0;
-	max-width: 100%;
-}
-
-body.post-type-vms_event_plan .bvmgr-event-communications__body {
-	min-width: 0;
-	max-width: 100%;
-	overflow-x: auto;
-}

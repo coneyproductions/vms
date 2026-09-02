@@ -422,9 +422,9 @@ if (!function_exists('bvmgr_event_communication_render_admin_section')) {
 				$requires_attention = true;
 			}
 		}
-		echo '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12"' . ($requires_attention ? ' open' : '') . '>';
+		echo '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="min-width:0;max-width:100%;"' . ($requires_attention ? ' open' : '') . '>';
 		echo '<summary><strong>' . esc_html__('Customer communications', 'backstage-venue-manager') . '</strong> — ' . esc_html($panel_summary) . '</summary>';
-		echo '<div class="vms-mt-12 bvmgr-event-communications__body">';
+		echo '<div class="vms-mt-12 bvmgr-event-communications__body" style="min-width:0;max-width:100%;overflow-x:auto;">';
 		if (is_array($notice)) {
 			echo '<div class="notice ' . esc_attr(!empty($notice['ok']) ? 'notice-success' : 'notice-error') . ' inline"><p>' . esc_html((string) ($notice['message'] ?? '')) . '</p></div>';
 		}
