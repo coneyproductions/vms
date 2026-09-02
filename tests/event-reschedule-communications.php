@@ -226,7 +226,7 @@ try {
 	ob_start();
 	do_action('admin_footer-post.php');
 	$pending_footer_markup = (string) ob_get_clean();
-	$assert(strpos($pending_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="min-width:0;max-width:100%;" open>') !== false && strpos($pending_panel_markup, '4 recipients need review') !== false, 'A newly actionable pending communication operation did not default expanded with an attention summary.');
+	$assert(strpos($pending_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="contain:inline-size;min-width:0;max-width:100%;width:100%;box-sizing:border-box;" open>') !== false && strpos($pending_panel_markup, '4 recipients need review') !== false, 'A newly actionable pending communication operation did not default expanded with an attention summary.');
 	$assert(strpos($pending_panel_markup, '<form') === false && strpos($pending_panel_markup, '</form>') === false, 'Customer communications still emitted a form inside the WordPress Event Plan post form.');
 	$required_controls = array();
 	preg_match_all('/<(?:input|textarea)\b[^>]*\brequired\b[^>]*>/i', $pending_panel_markup, $required_controls);
@@ -392,7 +392,7 @@ try {
 	ob_start();
 	bvmgr_event_communication_render_admin_section($plan_id, $failed_history_before_panel, $operation_id);
 	$failed_panel_markup = (string) ob_get_clean();
-	$assert(strpos($failed_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="min-width:0;max-width:100%;" open>') !== false && strpos($failed_panel_markup, '1 failed') !== false, 'A failed communication state did not default expanded with a failed summary.');
+	$assert(strpos($failed_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="contain:inline-size;min-width:0;max-width:100%;width:100%;box-sizing:border-box;" open>') !== false && strpos($failed_panel_markup, '1 failed') !== false, 'A failed communication state did not default expanded with a failed summary.');
 	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $failed_ledger_before_panel && bvmgr_event_occurrence_history($plan_id) === $failed_history_before_panel, 'Rendering the failed communication panel mutated ledger/history/audit state.');
 
 	$messages_before_unconfirmed_retry = count($sent_messages);
@@ -454,7 +454,7 @@ try {
 	ob_start();
 	bvmgr_event_communication_render_admin_section($plan_id, bvmgr_event_occurrence_history($plan_id), $operation_id);
 	$unfinished_panel_markup = (string) ob_get_clean();
-	$assert(strpos($unfinished_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="min-width:0;max-width:100%;" open>') !== false && strpos($unfinished_panel_markup, '1 send attempt needs review') !== false, 'An unfinished communication attempt did not default expanded for explicit administrator review.');
+	$assert(strpos($unfinished_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="contain:inline-size;min-width:0;max-width:100%;width:100%;box-sizing:border-box;" open>') !== false && strpos($unfinished_panel_markup, '1 send attempt needs review') !== false, 'An unfinished communication attempt did not default expanded for explicit administrator review.');
 	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $unfinished_before_panel, 'Rendering an unfinished-attempt attention state mutated communication state.');
 	$assert(bvmgr_event_communication_save_mutation($plan_id, $operation_id, $unfinished_before_panel, $resolved_without_unfinished_attempt), 'Could not restore the fully resolved communication fixture after unfinished-attempt coverage.');
 	$resolved_ledger_before_panel = bvmgr_event_communication_get_ledger($plan_id, $operation_id);
@@ -466,7 +466,7 @@ try {
 	$markup = (string) ob_get_clean();
 	$_GET = $saved_get;
 	$assert(strpos($markup, 'Review &amp; Send Notification') !== false && strpos($markup, 'Every affected recipient has a resolved written-notice state') !== false && strpos($markup, 'Written notice remains unresolved') === false, 'Resolved recipient ledger UI or reminder state changed.');
-	$assert(strpos($markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="min-width:0;max-width:100%;">') !== false && strpos($markup, 'Customer communications</strong> — 4 of 4 complete') !== false, 'A fully resolved communication ledger did not default collapsed with a completed summary.');
+	$assert(strpos($markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="contain:inline-size;min-width:0;max-width:100%;width:100%;box-sizing:border-box;">') !== false && strpos($markup, 'Customer communications</strong> — 4 of 4 complete') !== false, 'A fully resolved communication ledger did not default collapsed with a completed summary.');
 	$assert(strpos($markup, 'bvmgr-event-communications__body') !== false && strpos($markup, 'overflow-x:auto') !== false, 'The communication ledger lost its narrow-screen overflow boundary.');
 	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $resolved_ledger_before_panel && bvmgr_event_occurrence_history($plan_id) === $resolved_history_before_panel, 'Rendering the collapsed resolved panel mutated recipients, sent states, attempts, audit data, or history.');
 	ob_start();
@@ -522,7 +522,7 @@ try {
 	ob_start();
 	bvmgr_event_communication_render_admin_section($bootstrap_plan_id, $bootstrap_history_before_panel, $bootstrap_operation_id);
 	$missing_ledger_panel_markup = (string) ob_get_clean();
-	$assert(strpos($missing_ledger_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="min-width:0;max-width:100%;" open>') !== false && strpos($missing_ledger_panel_markup, 'ledger review required') !== false, 'An affected historical operation with a missing communication ledger did not default expanded for administrator attention.');
+	$assert(strpos($missing_ledger_panel_markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12" style="contain:inline-size;min-width:0;max-width:100%;width:100%;box-sizing:border-box;" open>') !== false && strpos($missing_ledger_panel_markup, 'ledger review required') !== false, 'An affected historical operation with a missing communication ledger did not default expanded for administrator attention.');
 	$assert(bvmgr_event_occurrence_history($bootstrap_plan_id) === $bootstrap_history_before_panel && bvmgr_event_communication_get_ledger($bootstrap_plan_id, $bootstrap_operation_id) === array(), 'Rendering a missing-ledger attention state mutated operation history or created communication state.');
 	$bootstrap_preview = bvmgr_event_communication_bootstrap_preview($bootstrap_plan_id, $bootstrap_operation_id);
 	$assert(!empty($bootstrap_preview['allowed']) && (int) $bootstrap_preview['counts']['customers'] === 2 && (int) $bootstrap_preview['counts']['orders'] === 3 && (int) $bootstrap_preview['counts']['line_items'] === 3, 'Retroactive preview did not reconstruct the exact operation audience.');
