@@ -467,6 +467,7 @@ try {
 	$_GET = $saved_get;
 	$assert(strpos($markup, 'Review &amp; Send Notification') !== false && strpos($markup, 'Every affected recipient has a resolved written-notice state') !== false && strpos($markup, 'Written notice remains unresolved') === false, 'Resolved recipient ledger UI or reminder state changed.');
 	$assert(strpos($markup, '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12">') !== false && strpos($markup, 'Customer communications</strong> — 4 of 4 complete') !== false, 'A fully resolved communication ledger did not default collapsed with a completed summary.');
+	$assert(strpos($markup, 'bvmgr-event-communications__body') !== false, 'The communication ledger lost its narrow-screen overflow boundary.');
 	$assert(bvmgr_event_communication_get_ledger($plan_id, $operation_id) === $resolved_ledger_before_panel && bvmgr_event_occurrence_history($plan_id) === $resolved_history_before_panel, 'Rendering the collapsed resolved panel mutated recipients, sent states, attempts, audit data, or history.');
 	ob_start();
 	bvmgr_event_occurrence_render_admin_panel($plan_id);

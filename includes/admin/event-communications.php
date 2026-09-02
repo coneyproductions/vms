@@ -424,7 +424,7 @@ if (!function_exists('bvmgr_event_communication_render_admin_section')) {
 		}
 		echo '<details id="bvmgr-event-communications" class="vms-ep-card vms-mt-12"' . ($requires_attention ? ' open' : '') . '>';
 		echo '<summary><strong>' . esc_html__('Customer communications', 'backstage-venue-manager') . '</strong> — ' . esc_html($panel_summary) . '</summary>';
-		echo '<div class="vms-mt-12">';
+		echo '<div class="vms-mt-12 bvmgr-event-communications__body">';
 		if (is_array($notice)) {
 			echo '<div class="notice ' . esc_attr(!empty($notice['ok']) ? 'notice-success' : 'notice-error') . ' inline"><p>' . esc_html((string) ($notice['message'] ?? '')) . '</p></div>';
 		}
