@@ -39,7 +39,7 @@ if (!function_exists('bvmgr_admin_ui_extract_notice_markup')) {
 		$prev_use_errors = libxml_use_internal_errors(true);
 		$doc = new DOMDocument('1.0', 'UTF-8');
 		$loaded = $doc->loadHTML(
-			'<!doctype html><html><body><div id="vms-shell-fragment">' . $markup . '</div></body></html>',
+			'<?xml encoding="UTF-8" ?><!doctype html><html><body><div id="vms-shell-fragment">' . $markup . '</div></body></html>',
 			defined('LIBXML_HTML_NOIMPLIED') ? LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD : 0
 		);
 		libxml_clear_errors();

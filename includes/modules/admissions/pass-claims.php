@@ -1,6 +1,16 @@
 <?php
 defined('ABSPATH') || exit;
 
+if (!function_exists('bvmgr_pass_claims_apply_filters')) {
+	function bvmgr_pass_claims_apply_filters(string $hook_name, $value, ...$args)
+	{
+		if (!function_exists('apply_filters')) {
+			return $value;
+		}
+		return call_user_func_array('apply_filters', array_merge(array($hook_name, $value), $args));
+	}
+}
+
 if (!function_exists('bvmgr_pass_claims_capability')) {
 	function bvmgr_pass_claims_capability(): string
 	{
@@ -1755,9 +1765,18 @@ if (!function_exists('bvmgr_pass_claims_render_tab_nav')) {
 			'passes' => __('Guest Passes', 'backstage-venue-manager'),
 			'reports' => __('Reports', 'backstage-venue-manager'),
 		);
+		$tabs = bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_admin_tabs', $tabs);
+		$tabs = is_array($tabs) ? $tabs : array();
 		echo '<nav class="vms-pass-tabs" aria-label="Guest Passes sections">';
 		foreach ($tabs as $key => $label) {
+			$key = sanitize_key((string) $key);
+			if ($key === '' || !is_scalar($label)) {
+				continue;
+			}
+			$label = sanitize_text_field((string) $label);
 			$url = bvmgr_pass_claims_admin_page_url(array('tab' => $key));
+			$filtered_url = bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_admin_tab_url', $url, $key);
+			$url = is_scalar($filtered_url) ? (string) $filtered_url : $url;
 			$class = 'vms-pass-tab';
 			if ($tab === $key) {
 				$class .= ' is-current';
@@ -2637,7 +2656,7 @@ if (!function_exists('bvmgr_pass_claims_reset_token_unclaimed')) {
 }
 
 if (!function_exists('bvmgr_pass_claims_create_claim')) {
-	function bvmgr_pass_claims_create_claim(array $token_row, array $batch, array $event_plan, array $input)
+	function bvmgr_pass_claims_create_claim(array $token_row, array $batch, array $event_plan, array $input, array $context = array())
 	{
 		global $wpdb;
 		$tokens_table = bvmgr_admission_table_pass_tokens();
@@ -2664,6 +2683,7 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 		$global_max_party_size = max(1, (int) ($settings['max_party_size'] ?? 6));
 		$batch_max_party_size = max(1, (int) ($batch['admissions_per_link'] ?? 1));
 		$max_party_size = max(1, min($global_max_party_size, $batch_max_party_size));
+		$max_party_size = min($max_party_size, max(1, (int) bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_max_party_size', $max_party_size, $batch, $context)));
 		$party_size = max(1, min($max_party_size, absint((string) ($input['party_size'] ?? '1'))));
 		$event_plan_id = (int) ($event_plan['id'] ?? 0);
 		$venue_id = (int) ($event_plan['venue_id'] ?? 0);
@@ -2720,28 +2740,51 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 				}
 			}
 
+			$claim_validation_error = bvmgr_pass_claims_apply_filters(
+				'bvmgr_pass_claims_claim_validation_error',
+				null,
+				$token_row,
+				$batch,
+				$event_plan,
+				array_merge($input, array('party_size' => $party_size)),
+				$context
+			);
+			if (is_wp_error($claim_validation_error)) {
+				bvmgr_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+				return $claim_validation_error;
+			}
+
 			$ip = bvmgr_request_remote_addr();
 			$user_agent = bvmgr_request_user_agent();
+			$claim_insert_payload = array(
+				'data' => array(
+					'token_id' => $token_id,
+					'batch_id' => $batch_id,
+					'source_id' => $source_id,
+					'event_plan_id' => $event_plan_id,
+					'first_name' => $first_name,
+					'last_name' => $last_name,
+					'phone' => $phone,
+					'phone_norm' => $phone_norm,
+					'email' => $email,
+					'opt_in' => $opt_in,
+					'ip' => $ip,
+					'user_agent' => $user_agent,
+					'created_at' => $now,
+				),
+				'formats' => array('%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s'),
+			);
+			$claim_insert_payload = bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_claim_insert_payload', $claim_insert_payload, $context, $token_row, $batch, $event_plan);
+			if (!is_array($claim_insert_payload) || !is_array($claim_insert_payload['data'] ?? null) || !is_array($claim_insert_payload['formats'] ?? null)) {
+				bvmgr_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+				return new WP_Error('invalid_claim_insert_payload', __('Could not create claim.', 'backstage-venue-manager'));
+			}
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Public claim creation writes directly to the plugin-owned claims table because no core API exposes this repository.
 			$insert_claim = $wpdb->insert(
 				$claims_table,
-			array(
-				'token_id' => $token_id,
-				'batch_id' => $batch_id,
-				'source_id' => $source_id,
-				'event_plan_id' => $event_plan_id,
-				'first_name' => $first_name,
-				'last_name' => $last_name,
-				'phone' => $phone,
-				'phone_norm' => $phone_norm,
-				'email' => $email,
-				'opt_in' => $opt_in,
-				'ip' => $ip,
-				'user_agent' => $user_agent,
-				'created_at' => $now,
-			),
-			array('%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s')
+				$claim_insert_payload['data'],
+				$claim_insert_payload['formats']
 			);
 			if ($insert_claim === false) {
 				bvmgr_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
@@ -2754,6 +2797,20 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 		$value_amount = (float) ($batch['value_amount'] ?? 0);
 		$claim_reference = 'pc:' . $token_id;
 		$notes = sprintf('Pass claim from batch #%d. Party size: %d.', $batch_id, $party_size);
+		$claim_meta = bvmgr_pass_claims_apply_filters(
+			'bvmgr_pass_claims_claim_meta',
+			array(
+				'first_name' => $first_name,
+				'last_name' => $last_name,
+				'email' => $email,
+				'group_size' => $party_size,
+			),
+			$context,
+			$token_row,
+			$batch,
+			$event_plan
+		);
+		$claim_meta = is_array($claim_meta) ? $claim_meta : array();
 
 		$entry_ids = array();
 		$admission_tokens = array();
@@ -2788,13 +2845,9 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 					'discount_type' => $value_type,
 					'discount_value' => $value_amount,
 					'claim_reference' => $slot_reference,
-					'claim_meta' => wp_json_encode(array(
-						'first_name' => $first_name,
-						'last_name' => $last_name,
-						'email' => $email,
-						'group_size' => $party_size,
+					'claim_meta' => wp_json_encode(array_merge($claim_meta, array(
 						'group_slot' => $slot,
-					)),
+					))),
 					'created_by' => 0,
 					'created_at' => $now,
 				),
@@ -2883,7 +2936,7 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 			$email_sent = !empty($email_result['sent']);
 		}
 
-		return array(
+		$result = array(
 			'claim_id' => $claim_id,
 			'entry_id' => $entry_id,
 			'event_plan_id' => $event_plan_id,
@@ -2898,6 +2951,10 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 			'email_sent' => $email_sent,
 			'email_result' => $email_result,
 		);
+		if (function_exists('do_action')) {
+			do_action('bvmgr_pass_claims_claim_created', $result, $token_row, $context);
+		}
+		return $result;
 	}
 }
 
@@ -3143,6 +3200,8 @@ if (!function_exists('bvmgr_pass_claims_render_public_claim')) {
 				__('This pass batch is no longer available.', 'backstage-venue-manager')
 			);
 		}
+		$claim_context = bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_claim_context', array(), $token_row, $batch);
+		$claim_context = is_array($claim_context) ? $claim_context : array();
 
 		$batch_status = sanitize_key((string) ($batch['status'] ?? ''));
 		$token_status = sanitize_key((string) ($token_row['status'] ?? ''));
@@ -3184,7 +3243,18 @@ if (!function_exists('bvmgr_pass_claims_render_public_claim')) {
 			);
 		}
 
+		$claim_preflight_error = bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_claim_preflight_error', null, $token_row, $batch, $claim_context);
+		if ($claim_preflight_error instanceof WP_Error) {
+			bvmgr_pass_claims_render_public_status_screen(
+				__('Claim Pass', 'backstage-venue-manager'),
+				__('Claim Unavailable', 'backstage-venue-manager'),
+				$claim_preflight_error->get_error_message()
+			);
+		}
+
 		$eligible_events = bvmgr_pass_claims_eligible_events_for_batch($batch);
+		$eligible_events = bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_eligible_events', $eligible_events, $batch, $token_row, $claim_context);
+		$eligible_events = is_array($eligible_events) ? $eligible_events : array();
 		if (empty($eligible_events)) {
 			$empty_notice = bvmgr_pass_claims_empty_events_notice($batch);
 			bvmgr_pass_claims_render_public_status_screen(
@@ -3205,6 +3275,8 @@ if (!function_exists('bvmgr_pass_claims_render_public_claim')) {
 			'party_size' => 1,
 			'opt_in' => 0,
 		);
+		$posted = bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_default_posted', $posted, $claim_context, $token_row, $batch);
+		$posted = is_array($posted) ? $posted : array();
 
 		if (bvmgr_request_method() === 'post' && isset($_POST['vms_pass_claim_submit'])) {
 			$nonce = (isset($_POST['_bvmgr_pass_claim_nonce']) && !is_array($_POST['_bvmgr_pass_claim_nonce']))
@@ -3221,6 +3293,7 @@ if (!function_exists('bvmgr_pass_claims_render_public_claim')) {
 				$global_max_party_size = function_exists('bvmgr_admission_settings') ? max(1, (int) (bvmgr_admission_settings()['max_party_size'] ?? 6)) : 6;
 				$batch_max_party_size = max(1, (int) ($batch['admissions_per_link'] ?? 1));
 				$max_party_size = max(1, min($global_max_party_size, $batch_max_party_size));
+				$max_party_size = min($max_party_size, max(1, (int) bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_max_party_size', $max_party_size, $batch, $claim_context)));
 				$requested_party_size = absint((string) wp_unslash($_POST['party_size'] ?? '1'));
 				$posted['party_size'] = max(1, $requested_party_size);
 				if ($requested_party_size < 1 || $requested_party_size > $max_party_size) {
@@ -3242,9 +3315,9 @@ if (!function_exists('bvmgr_pass_claims_render_public_claim')) {
 				} elseif (!$selected_event) {
 					$error = __('Please choose a valid event.', 'backstage-venue-manager');
 				} else {
-					$result = bvmgr_pass_claims_create_claim($token_row, $batch, $selected_event, $posted);
+					$result = bvmgr_pass_claims_create_claim($token_row, $batch, $selected_event, $posted, $claim_context);
 					if (is_wp_error($result)) {
-						$error = $result->get_error_message();
+						$error = (string) bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_public_claim_error', $result->get_error_message(), $result, $claim_context);
 					} else {
 						$success = is_array($result) ? $result : array();
 					}
@@ -3260,6 +3333,7 @@ if (!function_exists('bvmgr_pass_claims_render_public_claim')) {
 		$global_max_party_size = function_exists('bvmgr_admission_settings') ? max(1, (int) (bvmgr_admission_settings()['max_party_size'] ?? 6)) : 6;
 		$batch_max_party_size = max(1, (int) ($batch['admissions_per_link'] ?? 1));
 		$max_party_size = max(1, min($global_max_party_size, $batch_max_party_size));
+		$max_party_size = min($max_party_size, max(1, (int) bvmgr_pass_claims_apply_filters('bvmgr_pass_claims_max_party_size', $max_party_size, $batch, $claim_context)));
 
 		bvmgr_pass_claims_render_public_form($batch, $eligible_events, $posted, $error, $max_party_size);
 	}
