@@ -1252,6 +1252,11 @@ if (!function_exists('bvmgr_vendor_portal_build_bonus_progress_card')) {
         $source_label = isset($headcount_context['label']) ? (string) ($headcount_context['label']) : __('Ticket sales', 'backstage-venue-manager');
 
         if ($structure === 'attendance_bonus') {
+            $count_breakdown = bvmgr_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
+            $attendance_count = max(
+                0,
+                (int) ($count_breakdown['presales'] ?? 0) + (int) ($count_breakdown['door_sales'] ?? 0)
+            );
             $snapshot = function_exists('bvmgr_get_attendance_bonus_progress_snapshot')
                 ? (array) bvmgr_get_attendance_bonus_progress_snapshot($terms, $attendance_count)
                 : array();
@@ -1263,6 +1268,7 @@ if (!function_exists('bvmgr_vendor_portal_build_bonus_progress_card')) {
                 return array();
             }
 
+            $count_breakdown = bvmgr_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
             $base_pay = 0.0;
             if (function_exists('bvmgr_normalize_comp_nonnegative_float')) {
                 $normalized_base_pay = bvmgr_normalize_comp_nonnegative_float($terms['flat_fee_amount'] ?? null);
@@ -1312,8 +1318,6 @@ if (!function_exists('bvmgr_vendor_portal_build_bonus_progress_card')) {
         $updated_label = isset($headcount_context['updated_label'])
             ? trim((string) ($headcount_context['updated_label'] ?? ''))
             : bvmgr_vendor_portal_format_stats_updated_label($stats_payload);
-
-        $count_breakdown = bvmgr_vendor_portal_get_count_breakdown($plan_id, $headcount_context);
 
         return array(
             'plan_id' => $plan_id,
@@ -1739,7 +1743,7 @@ if (!function_exists('bvmgr_vendor_portal_render_bonus_progress_section')) {
             return;
         }
 
-        bvmgr_vendor_portal_render_progress_cards_section($cards, __('Bonus Progress', 'backstage-venue-manager'), false);
+        bvmgr_vendor_portal_render_progress_cards_section($cards, __('Vendor Bonus Progress', 'backstage-venue-manager'), false);
     }
 }
 
