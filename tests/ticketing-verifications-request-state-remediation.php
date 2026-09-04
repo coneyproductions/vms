@@ -188,9 +188,9 @@ require_once $verificationFile;
 
 $source = (string) file_get_contents($verificationFile);
 vms_test_assert($source !== '', 'Ticketing verifications source should be readable.');
-vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, 'vms_submit_verification_request')") !== false, 'Verification submit nonce action should remain unchanged.');
-vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, 'vms_verification_decision_' . \$request_id)") !== false, 'Verification decision nonce action should remain unchanged.');
-vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, 'vms_verification_proof_' . \$request_id)") !== false, 'Verification proof nonce action should remain unchanged.');
+vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_submit_verification_request'))") !== false, 'Verification submit nonce compatibility action should remain unchanged.');
+vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_verification_decision_' . \$request_id))") !== false, 'Verification decision nonce compatibility action should remain unchanged.');
+vms_test_assert(strpos($source, "wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_verification_proof_' . \$request_id))") !== false, 'Verification proof nonce compatibility action should remain unchanged.');
 vms_test_assert(strpos($source, 'bvmgr_ticketing_verification_proof_payload($request_id)') !== false, 'Verification proof payload authorization flow should remain unchanged.');
 vms_test_assert(strpos($source, "'vms_verification_program_allowances'") !== false, 'Verification program allowances request key should remain unchanged.');
 vms_test_assert(strpos($source, "'vms_verification_upload_settings'") !== false, 'Verification upload settings request key should remain unchanged.');

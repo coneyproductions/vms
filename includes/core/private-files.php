@@ -376,11 +376,12 @@ if (!function_exists('bvmgr_private_files_safe_download_name')) {
 }
 
 if (!function_exists('bvmgr_private_files_stream_path')) {
-	function bvmgr_private_files_stream_path(string $path, string $filename, string $mime): void
+	function bvmgr_private_files_stream_path(string $path, string $filename, string $mime, string $disposition = 'attachment'): void
 	{
 		$path = trim($path);
 		$filename = bvmgr_private_files_safe_download_name($filename);
 		$mime = trim($mime);
+		$disposition = strtolower(trim($disposition)) === 'inline' ? 'inline' : 'attachment';
 		if ($mime === '') {
 			$mime = 'application/octet-stream';
 		}
@@ -390,7 +391,7 @@ if (!function_exists('bvmgr_private_files_stream_path')) {
 
 		nocache_headers();
 		header('Content-Type: ' . $mime);
-		header('Content-Disposition: attachment; filename="' . $filename . '"');
+		header('Content-Disposition: ' . $disposition . '; filename="' . $filename . '"');
 		header('X-Content-Type-Options: nosniff');
 		header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
 		header('Pragma: no-cache');

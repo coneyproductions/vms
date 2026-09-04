@@ -1043,6 +1043,66 @@ if (!function_exists('bvmgr_ticketing_verification_proof_payload')) {
     }
 }
 
+if (!function_exists('bvmgr_ticketing_verification_proof_response_args')) {
+    /**
+     * @param array<string,mixed> $payload
+     * @return array{path:string,filename:string,mime:string,disposition:string}|WP_Error
+     */
+    function bvmgr_ticketing_verification_proof_response_args(array $payload)
+    {
+        $path = trim((string) ($payload['path'] ?? ''));
+        if (
+            $path === ''
+            || !file_exists($path)
+            || !is_file($path)
+            || !is_readable($path)
+            || !bvmgr_ticketing_verification_path_within_root($path)
+        ) {
+            return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
+        }
+
+        $filename = bvmgr_private_files_safe_download_name((string) ($payload['filename'] ?? 'verification-proof'), 'verification-proof');
+        $stored_mime = strtolower(trim(sanitize_text_field((string) ($payload['mime'] ?? ''))));
+        $allowed_mimes = bvmgr_ticketing_verification_allowed_mimes();
+        $allowed_values = array();
+        foreach ($allowed_mimes as $raw_mimes) {
+            foreach ((array) $raw_mimes as $raw_mime) {
+                $allowed_mime = strtolower(trim(sanitize_text_field((string) $raw_mime)));
+                if ($allowed_mime !== '') {
+                    $allowed_values[] = $allowed_mime;
+                }
+            }
+        }
+        $allowed_values = array_values(array_unique($allowed_values));
+
+        $checked = wp_check_filetype_and_ext($path, $filename, $allowed_mimes);
+        $checked_mime = is_array($checked) && isset($checked['type'])
+            ? strtolower(trim(sanitize_text_field((string) $checked['type'])))
+            : '';
+        $mime = (
+            $checked_mime !== ''
+            && $checked_mime === $stored_mime
+            && in_array($checked_mime, $allowed_values, true)
+        ) ? $checked_mime : 'application/octet-stream';
+
+        $inline_mimes = array(
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'image/gif',
+            'image/avif',
+        );
+
+        return array(
+            'path' => $path,
+            'filename' => $filename,
+            'mime' => $mime,
+            'disposition' => in_array($mime, $inline_mimes, true) ? 'inline' : 'attachment',
+        );
+    }
+}
+
 if (!function_exists('bvmgr_ticketing_verification_delete_proof_asset_for_request')) {
     function bvmgr_ticketing_verification_delete_proof_asset_for_request(int $request_id): void
     {
@@ -3462,10 +3522,16 @@ if (!function_exists('bvmgr_ticketing_verification_stream_proof')) {
             wp_die(esc_html($payload->get_error_message()));
         }
 
+        $response = bvmgr_ticketing_verification_proof_response_args($payload);
+        if (is_wp_error($response)) {
+            wp_die(esc_html($response->get_error_message()));
+        }
+
         bvmgr_private_files_stream_path(
-            (string) ($payload['path'] ?? ''),
-            (string) ($payload['filename'] ?? 'verification-proof'),
-            (string) ($payload['mime'] ?? 'application/octet-stream')
+            (string) ($response['path'] ?? ''),
+            (string) ($response['filename'] ?? 'verification-proof'),
+            (string) ($response['mime'] ?? 'application/octet-stream'),
+            (string) ($response['disposition'] ?? 'attachment')
         );
     }
 }

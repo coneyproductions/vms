@@ -205,12 +205,12 @@ $submitBody = vms_test_extract_function($source, 'bvmgr_ticketing_verification_h
 
 vms_test_assert_code_order(
 	"\$request_id = bvmgr_ticketing_verification_post_absint('request_id');",
-	"wp_verify_nonce(\$nonce, 'vms_verification_decision_' . \$request_id)",
+	"wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_verification_decision_' . \$request_id))",
 	$decisionBody,
 	'Verification decisions should derive the dynamic nonce action from the sanitized request ID before verifying the existing nonce.'
 );
 vms_test_assert_code_order(
-	"wp_verify_nonce(\$nonce, 'vms_verification_decision_' . \$request_id)",
+	"wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_verification_decision_' . \$request_id))",
 	"\$decision = bvmgr_ticketing_verification_post_key('decision');",
 	$decisionBody,
 	'Verification decisions should not read the decision value until after the existing nonce passes.'

@@ -99,7 +99,9 @@ $assert($readPatternCount('/(?<!wp_)is_writable\(/', $allSource) === 0, 'F3 shou
 
 $assert(strpos($streamFunction, 'nocache_headers();') !== false, 'The shared stream helper should preserve nocache_headers().');
 $assert(strpos($streamFunction, "header('Content-Type: ' . \$mime);") !== false, 'The shared stream helper should set Content-Type.');
-$assert(strpos($streamFunction, "header('Content-Disposition: attachment; filename=\"' . \$filename . '\"');") !== false, 'The shared stream helper should set Content-Disposition.');
+$assert(strpos($streamFunction, "string \$disposition = 'attachment'") !== false, 'The shared stream helper should default to attachment disposition.');
+$assert(strpos($streamFunction, "\$disposition = strtolower(trim(\$disposition)) === 'inline' ? 'inline' : 'attachment';") !== false, 'The shared stream helper should allow only explicit inline disposition.');
+$assert(strpos($streamFunction, "header('Content-Disposition: ' . \$disposition . '; filename=\"' . \$filename . '\"');") !== false, 'The shared stream helper should set Content-Disposition.');
 $assert(strpos($streamFunction, "header('X-Content-Type-Options: nosniff');") !== false, 'The shared stream helper should set nosniff.');
 $assert(strpos($streamFunction, "header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');") !== false, 'The shared stream helper should preserve private cache-control.');
 $assert(strpos($streamFunction, "readfile(\$path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile") !== false, 'The shared stream helper should retain a line-specific readfile suppression.');
@@ -119,12 +121,12 @@ $assert(strpos($storeFunction, 'wp_delete_file($destination);') !== false, 'The 
 $assert(strpos($deleteFunction, 'bvmgr_private_files_path_is_safe($path)') !== false, 'The shared private-file delete path should preserve its safe-path guard.');
 $assert(strpos($deleteFunction, 'wp_delete_file($path);') !== false, 'The shared private-file delete path should use wp_delete_file().');
 
-$assert(strpos($w9DownloadFunction, "check_admin_referer('vms_private_w9_download_' . \$post_id);") !== false, 'The W-9 download handler should retain nonce verification.');
+$assert(strpos($w9DownloadFunction, "check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_private_w9_download_' . \$post_id, '_wpnonce'), '_wpnonce');") !== false, 'The W-9 download handler should retain nonce verification.');
 $assert(strpos($w9DownloadFunction, '!bvmgr_private_w9_user_can_download($post_id)') !== false, 'The W-9 download handler should retain authorization.');
 $assert(strpos($w9DownloadFunction, 'bvmgr_private_w9_file_payload($post_id)') !== false, 'The W-9 download handler should still resolve through the payload helper.');
 $assert(strpos($w9DownloadFunction, 'bvmgr_private_files_stream_path(') !== false, 'The W-9 download handler should still use the shared stream helper.');
 
-$assert(strpos($staffDownloadFunction, "check_admin_referer('vms_private_staff_cert_download_' . \$staff_id . '_' . \$qualification_id);") !== false, 'The staff certification download handler should retain nonce verification.');
+$assert(strpos($staffDownloadFunction, "check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_private_staff_cert_download_' . \$staff_id . '_' . \$qualification_id, '_wpnonce'), '_wpnonce');") !== false, 'The staff certification download handler should retain nonce verification.');
 $assert(strpos($staffDownloadFunction, '!bvmgr_private_staff_cert_user_can_download($staff_id)') !== false, 'The staff certification download handler should retain authorization.');
 $assert(strpos($staffDownloadFunction, 'bvmgr_private_staff_cert_file_payload($staff_id, $match)') !== false, 'The staff certification download handler should still resolve through the payload helper.');
 $assert(strpos($staffDownloadFunction, 'bvmgr_private_files_stream_path(') !== false, 'The staff certification download handler should still use the shared stream helper.');
@@ -150,8 +152,9 @@ $assert(strpos($ticketingStoreFunction, 'bvmgr_private_files_register_path(') !=
 $assert(strpos($ticketingStoreFunction, 'wp_delete_file($stored_path);') !== false, 'Verification proof storage should use wp_delete_file() for failed registration cleanup.');
 
 $assert(strpos($ticketingStreamFunction, '!bvmgr_ticketing_verification_current_user_can_manage()') !== false, 'Verification proof streaming should retain its capability gate.');
-$assert(strpos($ticketingStreamFunction, "!wp_verify_nonce(\$nonce, 'vms_verification_proof_' . \$request_id)") !== false, 'Verification proof streaming should retain nonce verification.');
+$assert(strpos($ticketingStreamFunction, "!wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_verification_proof_' . \$request_id))") !== false, 'Verification proof streaming should retain request-bound nonce verification.');
 $assert(strpos($ticketingStreamFunction, 'bvmgr_ticketing_verification_proof_payload($request_id)') !== false, 'Verification proof streaming should still resolve through the payload helper.');
+$assert(strpos($ticketingStreamFunction, 'bvmgr_ticketing_verification_proof_response_args($payload)') !== false, 'Verification proof streaming should validate response MIME and disposition.');
 $assert(strpos($ticketingStreamFunction, 'bvmgr_private_files_stream_path(') !== false, 'Verification proof streaming should still use the shared stream helper.');
 
 $assert(strpos($imageNormalizeFunction, '!wp_is_writable($target_dir)') !== false, 'Image normalization should use wp_is_writable() for the target directory.');
