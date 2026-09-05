@@ -1,12 +1,12 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-add_action('init', 'vms_register_vendor_cpt');
+add_action('init', 'bvmgr_register_vendor_cpt');
 
 // Integrity guard: if a vendor is deleted, any published/ready Event Plans pointing at that vendor
 // are reverted to Draft and flagged for review.
-add_action('before_delete_post', 'vms_vendor_delete_revert_event_plans', 10, 2);
-function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): void
+add_action('before_delete_post', 'bvmgr_vendor_delete_revert_event_plans', 10, 2);
+function bvmgr_vendor_delete_revert_event_plans(int $vendor_id, $post = null): void
 {
     if ($vendor_id <= 0) return;
 
@@ -16,10 +16,10 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
     $vendor_title = (string) get_post_field('post_title', $vendor_id, 'raw');
     $vendor_title = $vendor_title ? wp_strip_all_tags($vendor_title) : '';
 
-    $band_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
-    $status_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
-    $secondary_ids_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
-    $secondary_idx_key = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
+    $band_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+    $status_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+    $secondary_ids_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_ids') : '_vms_secondary_vendor_ids';
+    $secondary_idx_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'secondary_vendor_id') : '_vms_secondary_vendor_id';
 
     $plan_ids = get_posts(array(
         'post_type'              => 'vms_event_plan',
@@ -29,7 +29,7 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
         'no_found_rows'          => true,
         'update_post_term_cache' => false,
         'update_post_meta_cache' => false,
-        'meta_query'             => array(
+        'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor deletion must enumerate the complete all-status Event Plan set with this exact primary-vendor link so every broken reference is cleared and flagged.
             array(
                 'key'     => $band_key,
                 'value'   => $vendor_id,
@@ -47,7 +47,7 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
         'no_found_rows'          => true,
         'update_post_term_cache' => false,
         'update_post_meta_cache' => false,
-        'meta_query'             => array(
+        'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor deletion must enumerate the complete all-status Event Plan set with this exact indexed secondary-vendor link so every broken reference is removed and flagged.
             array(
                 'key'     => $secondary_idx_key,
                 'value'   => $vendor_id,
@@ -85,11 +85,11 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
             }
 
             // Flag (don’t overwrite a more severe missing headliner flag)
-            $k_issue = function_exists('vms_meta_key') ? vms_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
+            $k_issue = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
             $issue_now = (string) get_post_meta($plan_id, $k_issue, true);
             if ($issue_now !== 'missing_vendor') {
-                if (function_exists('vms_event_plan_flag_missing_secondary_vendor')) {
-                    vms_event_plan_flag_missing_secondary_vendor($plan_id, $vendor_id, $vendor_title);
+                if (function_exists('bvmgr_event_plan_flag_missing_secondary_vendor')) {
+                    bvmgr_event_plan_flag_missing_secondary_vendor($plan_id, $vendor_id, $vendor_title);
                 } else {
                     update_post_meta($plan_id, '_vms_integrity_issue', 'missing_secondary_vendor');
                     update_post_meta($plan_id, '_vms_integrity_vendor_id', $vendor_id);
@@ -110,8 +110,8 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
         }
 
         // Flag and clear broken pointer (non-destructive; does not touch TEC events automatically).
-        if (function_exists('vms_event_plan_flag_missing_vendor')) {
-            vms_event_plan_flag_missing_vendor($plan_id, $vendor_id, $vendor_title);
+        if (function_exists('bvmgr_event_plan_flag_missing_vendor')) {
+            bvmgr_event_plan_flag_missing_vendor($plan_id, $vendor_id, $vendor_title);
         } else {
             // Fallback: set minimal meta flags if helpers are unavailable.
             update_post_meta($plan_id, '_vms_integrity_issue', 'missing_vendor');
@@ -131,28 +131,29 @@ function vms_vendor_delete_revert_event_plans(int $vendor_id, $post = null): voi
         $count++;
     }
 
-    if ($count > 0 && function_exists('vms_add_admin_notice')) {
-        vms_add_admin_notice(sprintf(__('🚩 Vendor deleted. %d event plan(s) were reverted to Draft and flagged for review.', 'vms'), $count), 'warning');
+    if ($count > 0 && function_exists('bvmgr_add_admin_notice')) {
+        /* translators: %d: number used in this message. */
+        bvmgr_add_admin_notice(sprintf(__('🚩 Vendor deleted. %d event plan(s) were reverted to Draft and flagged for review.', 'backstage-venue-manager'), $count), 'warning');
     }
 }
 
 
 
 
-function vms_register_vendor_cpt()
+function bvmgr_register_vendor_cpt()
 {
     $labels = array(
-        'name'               => __('Vendors', 'vms'),
-        'singular_name'      => __('Vendor', 'vms'),
-        'add_new'            => __('Add New Vendor', 'vms'),
-        'add_new_item'       => __('Add New Vendor', 'vms'),
-        'edit_item'          => __('Edit Vendor', 'vms'),
-        'new_item'           => __('New Vendor', 'vms'),
-        'view_item'          => __('View Vendor', 'vms'),
-        'search_items'       => __('Search Vendors', 'vms'),
-        'not_found'          => __('No vendors found', 'vms'),
-        'not_found_in_trash' => __('No vendors found in Trash', 'vms'),
-        'menu_name'          => __('Vendors', 'vms'),
+        'name'               => __('Vendors', 'backstage-venue-manager'),
+        'singular_name'      => __('Vendor', 'backstage-venue-manager'),
+        'add_new'            => __('Add New Vendor', 'backstage-venue-manager'),
+        'add_new_item'       => __('Add New Vendor', 'backstage-venue-manager'),
+        'edit_item'          => __('Edit Vendor', 'backstage-venue-manager'),
+        'new_item'           => __('New Vendor', 'backstage-venue-manager'),
+        'view_item'          => __('View Vendor', 'backstage-venue-manager'),
+        'search_items'       => __('Search Vendors', 'backstage-venue-manager'),
+        'not_found'          => __('No vendors found', 'backstage-venue-manager'),
+        'not_found_in_trash' => __('No vendors found in Trash', 'backstage-venue-manager'),
+        'menu_name'          => __('Vendors', 'backstage-venue-manager'),
     );
 
     $args = array(
@@ -171,12 +172,37 @@ function vms_register_vendor_cpt()
     register_post_type('vms_vendor', $args);
 }
 
+if (!function_exists('bvmgr_vendor_has_public_profile_type')) {
+    function bvmgr_vendor_has_public_profile_type(int $vendor_id): bool
+    {
+        $vendor_id = absint($vendor_id);
+        if ($vendor_id <= 0) {
+            return false;
+        }
+
+        if (function_exists('bvmgr_vendor_primary_type_slug')) {
+            return trim((string) bvmgr_vendor_primary_type_slug($vendor_id)) !== '';
+        }
+
+        $terms = get_the_terms($vendor_id, 'vms_vendor_type');
+        return is_array($terms) && !is_wp_error($terms) && !empty($terms);
+    }
+}
+
+if (!function_exists('bvmgr_vendor_availability_snapshot_month')) {
+    function bvmgr_vendor_availability_snapshot_month(): string
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only availability snapshot month only changes which calendar view is displayed.
+        return bvmgr_request_read_text_field($_GET, 'vms_vendor_month');
+    }
+}
+
 /**
  * Admin functionality for VMS Vendors.
  */
 
 
-class VMS_Admin_Vendors
+class BVMGR_Admin_Vendors
 {
 
     public function __construct()
@@ -192,7 +218,7 @@ class VMS_Admin_Vendors
     {
         add_meta_box(
             'vms_vendor_details',
-            __('Vendor Details', 'vms'),
+            __('Vendor Details', 'backstage-venue-manager'),
             array($this, 'render_vendor_details_meta_box'),
             'vms_vendor',
             'normal',
@@ -201,7 +227,7 @@ class VMS_Admin_Vendors
 
         add_meta_box(
             'vms_vendor_public_profile',
-            __('Public Profile', 'vms'),
+            __('Public Profile', 'backstage-venue-manager'),
             array($this, 'render_vendor_public_profile_meta_box'),
             'vms_vendor',
             'side',
@@ -210,7 +236,7 @@ class VMS_Admin_Vendors
 
         add_meta_box(
             'vms_vendor_availability_snapshot',
-            __('Availability Snapshot', 'vms'),
+            __('Availability Snapshot', 'backstage-venue-manager'),
             array($this, 'render_vendor_availability_snapshot_meta_box'),
             'vms_vendor',
             'normal',
@@ -225,12 +251,12 @@ class VMS_Admin_Vendors
     public function render_vendor_details_meta_box($post)
     {
         // Security nonce.
-        wp_nonce_field('vms_save_vendor_details', 'vms_vendor_details_nonce');
+        wp_nonce_field('bvmgr_save_vendor_details', 'bvmgr_vendor_details_nonce');
 
-        $k_contact_name  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_name') : '_vms_contact_name';
-        $k_primary_email = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
-        $k_primary_phone = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
-        $k_website       = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'website') : '_vms_vendor_website';
+        $k_contact_name  = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_name') : '_vms_contact_name';
+        $k_primary_email = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+        $k_primary_phone = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
+        $k_website       = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'website') : '_vms_vendor_website';
 
         $contact_name    = get_post_meta($post->ID, $k_contact_name, true);
         $primary_email   = get_post_meta($post->ID, $k_primary_email, true);
@@ -255,37 +281,37 @@ class VMS_Admin_Vendors
 ?>
 
         <p class="description">
-            <?php esc_html_e('Contact and website fields live here. Mailing city/state now live in the "Tax Profile (Admin)" box so there is only one source of truth for shared tax/profile location fields. Pay structure and Event Plan defaults are managed in the "Pay Structure + Event Plan Defaults" box.', 'vms'); ?>
+            <?php esc_html_e('Contact and website fields live here. Mailing city/state now live in the "Tax Profile (Admin)" box so there is only one source of truth for shared tax/profile location fields. Pay structure and Event Plan defaults are managed in the "Pay Structure + Event Plan Defaults" box.', 'backstage-venue-manager'); ?>
         </p>
 
         <p class="description">
-            <?php esc_html_e('Social links, featured video, and gallery photos are managed in the "Public Profile" box.', 'vms'); ?>
+            <?php esc_html_e('Social links, featured video, and gallery photos are managed in the "Public Profile" box.', 'backstage-venue-manager'); ?>
         </p>
 
         <p class="description">
-            <?php esc_html_e("Use the Vendor Categories box to store this vendor's categories, such as Genre or Cuisine. Those categories can sync to Event Plans and TEC event categories.", 'vms'); ?>
+            <?php esc_html_e("Use the Vendor Categories box to store this vendor's categories, such as Genre or Cuisine. Those categories can sync to Event Plans and TEC event categories.", 'backstage-venue-manager'); ?>
         </p>
 
         <p>
-            <label for="vms_contact_name"><strong><?php esc_html_e('Primary Contact Name (optional)', 'vms'); ?></strong></label><br />
+            <label for="vms_contact_name"><strong><?php esc_html_e('Primary Contact Name (optional)', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="text" id="vms_contact_name" name="vms_contact_name" class="regular-text"
                 value="<?php echo esc_attr($contact_name); ?>" />
         </p>
 
         <p>
-            <label for="vms_primary_email"><strong><?php esc_html_e('Primary Contact Email', 'vms'); ?></strong></label><br />
+            <label for="vms_primary_email"><strong><?php esc_html_e('Primary Contact Email', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="email" id="vms_primary_email" name="vms_primary_email" class="regular-text"
                 value="<?php echo esc_attr($primary_email); ?>" />
         </p>
 
         <p>
-            <label for="vms_primary_phone"><strong><?php esc_html_e('Primary Contact Phone', 'vms'); ?></strong></label><br />
+            <label for="vms_primary_phone"><strong><?php esc_html_e('Primary Contact Phone', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="text" id="vms_primary_phone" name="vms_primary_phone" class="regular-text"
                 value="<?php echo esc_attr($primary_phone); ?>" />
         </p>
 
         <p>
-            <label for="vms_website_url"><strong><?php esc_html_e('Website URL', 'vms'); ?></strong></label><br />
+            <label for="vms_website_url"><strong><?php esc_html_e('Website URL', 'backstage-venue-manager'); ?></strong></label><br />
             <input type="url" id="vms_website_url" name="vms_website_url" class="regular-text"
                 value="<?php echo esc_attr($website_url); ?>" />
         </p>
@@ -300,15 +326,15 @@ class VMS_Admin_Vendors
     public function render_vendor_public_profile_meta_box($post)
     {
         // Security nonce for this meta box.
-        wp_nonce_field('vms_save_vendor_public_profile', 'vms_vendor_public_profile_nonce');
+        wp_nonce_field('bvmgr_save_vendor_public_profile', 'bvmgr_vendor_public_profile_nonce');
 
         $post_id = (int) $post->ID;
 
-        $k_enabled  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
-        $k_show_e   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
-        $k_show_p   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
-        $k_show_w   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
-        $k_show_loc = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
+        $k_enabled  = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
+        $k_show_e   = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
+        $k_show_p   = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
+        $k_show_w   = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
+        $k_show_loc = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
 
         $enabled  = get_post_meta($post_id, $k_enabled, true);
         $show_e   = get_post_meta($post_id, $k_show_e, true);
@@ -317,32 +343,40 @@ class VMS_Admin_Vendors
         $show_loc = get_post_meta($post_id, $k_show_loc, true);
 
         $enabled_bool = ($enabled === '1' || $enabled === 1 || $enabled === true || $enabled === 'yes' || $enabled === 'on');
+        $has_vendor_type = bvmgr_vendor_has_public_profile_type($post_id);
 
-        $profile_url = function_exists('vms_vendor_profile_url') ? vms_vendor_profile_url($post_id) : '';
+        $profile_url = function_exists('bvmgr_vendor_profile_url') ? bvmgr_vendor_profile_url($post_id) : '';
 
-        echo '<p><label><input type="checkbox" name="vms_public_profile_enabled" value="1" ' . checked($enabled_bool, true, false) . ' /> ' . esc_html__('Enable public profile', 'vms') . '</label></p>';
-        echo '<p class="description">' . esc_html__('When disabled, the public profile returns a 404.', 'vms') . '</p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_enabled" value="1" ' . checked($enabled_bool, true, false) . ' /> ' . esc_html__('Enable public profile', 'backstage-venue-manager') . '</label></p>';
+        echo '<p class="description">' . esc_html__('When disabled, the public profile returns a 404.', 'backstage-venue-manager') . '</p>';
+        echo '<p class="description">' . esc_html__('Public profiles require at least one Vendor Type.', 'backstage-venue-manager') . '</p>';
+        if (!$has_vendor_type) {
+            echo '<p class="description"><strong>' . esc_html__('Assign a Vendor Type before enabling this public profile.', 'backstage-venue-manager') . '</strong></p>';
+            if ($enabled_bool) {
+                echo '<p class="description">' . esc_html__('This profile is still blocked on the public site until a Vendor Type is assigned.', 'backstage-venue-manager') . '</p>';
+            }
+        }
 
         echo '<hr />';
 
         $social_fields = array(
-            'facebook'  => array('label' => __('Facebook URL', 'vms'),  'key' => '_vms_vendor_social_facebook'),
-            'instagram' => array('label' => __('Instagram URL', 'vms'), 'key' => '_vms_vendor_social_instagram'),
-            'x'         => array('label' => __('X / Twitter URL', 'vms'),'key' => '_vms_vendor_social_x'),
-            'tiktok'    => array('label' => __('TikTok URL', 'vms'),    'key' => '_vms_vendor_social_tiktok'),
-            'youtube'   => array('label' => __('YouTube URL', 'vms'),   'key' => '_vms_vendor_social_youtube'),
-            'spotify'   => array('label' => __('Spotify URL', 'vms'),   'key' => '_vms_vendor_social_spotify'),
+            'facebook'  => array('label' => __('Facebook URL', 'backstage-venue-manager'),  'key' => '_vms_vendor_social_facebook'),
+            'instagram' => array('label' => __('Instagram URL', 'backstage-venue-manager'), 'key' => '_vms_vendor_social_instagram'),
+            'x'         => array('label' => __('X / Twitter URL', 'backstage-venue-manager'),'key' => '_vms_vendor_social_x'),
+            'tiktok'    => array('label' => __('TikTok URL', 'backstage-venue-manager'),    'key' => '_vms_vendor_social_tiktok'),
+            'youtube'   => array('label' => __('YouTube URL', 'backstage-venue-manager'),   'key' => '_vms_vendor_social_youtube'),
+            'spotify'   => array('label' => __('Spotify URL', 'backstage-venue-manager'),   'key' => '_vms_vendor_social_spotify'),
         );
         $featured_video_url = (string) get_post_meta($post_id, '_vms_vendor_featured_video_url', true);
 
-        echo '<p><strong>' . esc_html__('Visible fields', 'vms') . '</strong></p>';
-        echo '<p><label><input type="checkbox" name="vms_public_profile_show_location" value="1" ' . checked(($show_loc === '' || $show_loc === '1'), true, false) . ' /> ' . esc_html__('Location (City/State)', 'vms') . '</label></p>';
-        echo '<p><label><input type="checkbox" name="vms_public_profile_show_phone" value="1" ' . checked(($show_p === '' || $show_p === '1'), true, false) . ' /> ' . esc_html__('Phone', 'vms') . '</label></p>';
-        echo '<p><label><input type="checkbox" name="vms_public_profile_show_email" value="1" ' . checked(($show_e === '' || $show_e === '1'), true, false) . ' /> ' . esc_html__('Email', 'vms') . '</label></p>';
-        echo '<p><label><input type="checkbox" name="vms_public_profile_show_website" value="1" ' . checked(($show_w === '' || $show_w === '1'), true, false) . ' /> ' . esc_html__('Website button', 'vms') . '</label></p>';
+        echo '<p><strong>' . esc_html__('Visible fields', 'backstage-venue-manager') . '</strong></p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_show_location" value="1" ' . checked(($show_loc === '' || $show_loc === '1'), true, false) . ' /> ' . esc_html__('Location (City/State)', 'backstage-venue-manager') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_show_phone" value="1" ' . checked(($show_p === '' || $show_p === '1'), true, false) . ' /> ' . esc_html__('Phone', 'backstage-venue-manager') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_show_email" value="1" ' . checked(($show_e === '' || $show_e === '1'), true, false) . ' /> ' . esc_html__('Email', 'backstage-venue-manager') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="vms_public_profile_show_website" value="1" ' . checked(($show_w === '' || $show_w === '1'), true, false) . ' /> ' . esc_html__('Website button', 'backstage-venue-manager') . '</label></p>';
 
         echo '<hr />';
-        echo '<p><strong>' . esc_html__('Social links (icon-only on public profile)', 'vms') . '</strong></p>';
+        echo '<p><strong>' . esc_html__('Social links (icon-only on public profile)', 'backstage-venue-manager') . '</strong></p>';
         foreach ($social_fields as $field) {
             $value = (string) get_post_meta($post_id, $field['key'], true);
             echo '<p><label><strong>' . esc_html($field['label']) . '</strong></label><br />';
@@ -350,25 +384,26 @@ class VMS_Admin_Vendors
         }
 
         echo '<hr />';
-        echo '<p><strong>' . esc_html__('Featured media', 'vms') . '</strong></p>';
-        echo '<p><label><strong>' . esc_html__('Featured video URL', 'vms') . '</strong></label><br />';
+        echo '<p><strong>' . esc_html__('Featured media', 'backstage-venue-manager') . '</strong></p>';
+        echo '<p><label><strong>' . esc_html__('Featured video URL', 'backstage-venue-manager') . '</strong></label><br />';
         echo '<input type="url" class="widefat" name="vms_vendor_featured_video_url" value="' . esc_attr($featured_video_url) . '" placeholder="https://www.youtube.com/watch?v=..." />';
-        echo '<span class="description" style="display:block;margin-top:4px;">' . esc_html__('YouTube works best. Facebook video links may work when oEmbed is available in your setup.', 'vms') . '</span></p>';
+        echo '<span class="description" style="display:block;margin-top:4px;">' . esc_html__('YouTube works best. Facebook video links may work when oEmbed is available in your setup.', 'backstage-venue-manager') . '</span></p>';
 
-        echo '<p><strong>' . esc_html__('Gallery photos (up to 5)', 'vms') . '</strong></p>';
+        echo '<p><strong>' . esc_html__('Gallery photos (up to 5)', 'backstage-venue-manager') . '</strong></p>';
         for ($i = 1; $i <= 5; $i++) {
             $gallery_value = (string) get_post_meta($post_id, '_vms_vendor_gallery_image_' . $i, true);
-            echo '<p><label><strong>' . sprintf(esc_html__('Photo %d URL', 'vms'), $i) . '</strong></label><br />';
+            /* translators: %d: gallery photo number. */
+            echo '<p><label><strong>' . sprintf(esc_html__('Photo %d URL', 'backstage-venue-manager'), $i) . '</strong></label><br />';
             echo '<input type="url" class="widefat" name="vms_vendor_gallery_image_' . esc_attr((string) $i) . '" value="' . esc_attr($gallery_value) . '" placeholder="https://" /></p>';
         }
 
-        echo '<p class="description">' . esc_html__('For now these are curated/admin-managed fields, which keeps the public profile moderated. Vendors do not edit these public profile media/social fields from their portal yet.', 'vms') . '</p>';
+        echo '<p class="description">' . esc_html__('For now these are curated/admin-managed fields, which keeps the public profile moderated. Vendors do not edit these public profile media/social fields from their portal yet.', 'backstage-venue-manager') . '</p>';
 
         if ($profile_url) {
-            if ($enabled_bool) {
-                echo '<p><a class="button button-secondary" href="' . esc_url($profile_url) . '" target="_blank" rel="noopener">' . esc_html__('Open profile', 'vms') . '</a></p>';
+            if ($enabled_bool && $has_vendor_type) {
+                echo '<p><a class="button button-secondary" href="' . esc_url($profile_url) . '" target="_blank" rel="noopener">' . esc_html__('Open profile', 'backstage-venue-manager') . '</a></p>';
             } else {
-                echo '<p class="description">' . esc_html__('Enable the profile to activate the public URL.', 'vms') . '</p>';
+                echo '<p class="description">' . esc_html__('Enable the profile to activate the public URL.', 'backstage-venue-manager') . '</p>';
             }
         }
     }
@@ -380,17 +415,14 @@ class VMS_Admin_Vendors
     public function render_vendor_availability_snapshot_meta_box($post)
     {
         $post_id = (int) $post->ID;
-        $month = '';
-        if (isset($_GET['vms_vendor_month'])) {
-            $month = sanitize_text_field((string) wp_unslash($_GET['vms_vendor_month']));
-        }
+        $month = bvmgr_vendor_availability_snapshot_month();
 
-        if (function_exists('vms_render_vendor_availability_vendor_profile_calendar')) {
-            vms_render_vendor_availability_vendor_profile_calendar($post_id, $month);
+        if (function_exists('bvmgr_render_vendor_availability_vendor_profile_calendar')) {
+            bvmgr_render_vendor_availability_vendor_profile_calendar($post_id, $month);
             return;
         }
 
-        echo '<p>' . esc_html__('Availability snapshot is unavailable right now.', 'vms') . '</p>';
+        echo '<p>' . esc_html__('Availability snapshot is unavailable right now.', 'backstage-venue-manager') . '</p>';
     }
 
     /**
@@ -399,8 +431,10 @@ class VMS_Admin_Vendors
     public function save_vendor_meta($post_id, $post)
     {
         // Check nonce(s). Either meta box nonce should allow saving its own fields.
-        $details_ok = (isset($_POST['vms_vendor_details_nonce']) && wp_verify_nonce($_POST['vms_vendor_details_nonce'], 'vms_save_vendor_details'));
-        $profile_ok = (isset($_POST['vms_vendor_public_profile_nonce']) && wp_verify_nonce($_POST['vms_vendor_public_profile_nonce'], 'vms_save_vendor_public_profile'));
+        $details_nonce = bvmgr_request_read_text_field($_POST, 'bvmgr_vendor_details_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Details nonce is required before local verification.
+        $profile_nonce = bvmgr_request_read_text_field($_POST, 'bvmgr_vendor_public_profile_nonce'); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reading the submitted Vendor Public Profile nonce is required before local verification.
+        $details_ok = ($details_nonce !== '' && wp_verify_nonce($details_nonce, bvmgr_nonce_action_for_value($details_nonce, 'bvmgr_save_vendor_details')));
+        $profile_ok = ($profile_nonce !== '' && wp_verify_nonce($profile_nonce, bvmgr_nonce_action_for_value($profile_nonce, 'bvmgr_save_vendor_public_profile')));
 
         if (!$details_ok && !$profile_ok) {
             return;
@@ -418,18 +452,18 @@ class VMS_Admin_Vendors
 
         if ($details_ok) {
 
-            $k_contact_name  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_name') : '_vms_contact_name';
-            $k_primary_email = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
-            $k_primary_phone = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
-            $k_website       = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'website') : '_vms_vendor_website';
+            $k_contact_name  = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_name') : '_vms_contact_name';
+            $k_primary_email = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+            $k_primary_phone = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
+            $k_website       = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'website') : '_vms_vendor_website';
 
             // Sanitize and save Vendor Details-only fields.
             // City/State intentionally live only in Tax Profile (Admin) to avoid duplicate shared inputs.
             $fields = array(
-                $k_contact_name  => isset($_POST['vms_contact_name']) ? sanitize_text_field($_POST['vms_contact_name']) : '',
-                $k_primary_email => isset($_POST['vms_primary_email']) ? sanitize_email($_POST['vms_primary_email']) : '',
-                $k_primary_phone => isset($_POST['vms_primary_phone']) ? sanitize_text_field($_POST['vms_primary_phone']) : '',
-                $k_website       => isset($_POST['vms_website_url']) ? esc_url_raw($_POST['vms_website_url']) : '',
+                $k_contact_name  => bvmgr_request_read_text_field($_POST, 'vms_contact_name'),
+                $k_primary_email => bvmgr_request_read_email($_POST, 'vms_primary_email'),
+                $k_primary_phone => bvmgr_request_read_text_field($_POST, 'vms_primary_phone'),
+                $k_website       => esc_url_raw(bvmgr_request_read_scalar($_POST, 'vms_website_url')),
             );
 
             foreach ($fields as $meta_key => $value) {
@@ -443,13 +477,19 @@ class VMS_Admin_Vendors
 
         // Save Public Profile fields (if its nonce was present/valid).
         if ($profile_ok) {
-            $k_enabled  = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
-            $k_show_e   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
-            $k_show_p   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
-            $k_show_w   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
-            $k_show_loc = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
+            $k_enabled  = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_enabled') : '_vms_vendor_public_profile_enabled';
+            $k_show_e   = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
+            $k_show_p   = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
+            $k_show_w   = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
+            $k_show_loc = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
 
             $enabled  = isset($_POST['vms_public_profile_enabled']) ? '1' : '0';
+            if ($enabled === '1' && !bvmgr_vendor_has_public_profile_type($post_id)) {
+                $enabled = '0';
+                if (function_exists('bvmgr_add_admin_notice')) {
+                    bvmgr_add_admin_notice(__('Public profiles require a Vendor Type. Assign a Vendor Type before enabling this public profile.', 'backstage-venue-manager'), 'error');
+                }
+            }
             $show_e   = isset($_POST['vms_public_profile_show_email']) ? '1' : '0';
             $show_p   = isset($_POST['vms_public_profile_show_phone']) ? '1' : '0';
             $show_w   = isset($_POST['vms_public_profile_show_website']) ? '1' : '0';
@@ -469,9 +509,12 @@ class VMS_Admin_Vendors
                 '_vms_vendor_social_youtube',
                 '_vms_vendor_social_spotify',
             );
-            $social_raw = isset($_POST['vms_vendor_social']) && is_array($_POST['vms_vendor_social']) ? (array) $_POST['vms_vendor_social'] : array();
+            $social_raw = (isset($_POST['vms_vendor_social']) && is_array($_POST['vms_vendor_social']))
+                ? (array) wp_unslash($_POST['vms_vendor_social']) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Vendor social URLs are unslashed here and sanitized element-by-element below.
+                : array();
             foreach ($social_keys as $social_key) {
-                $value = isset($social_raw[$social_key]) ? esc_url_raw((string) wp_unslash($social_raw[$social_key])) : '';
+                $raw_value = $social_raw[$social_key] ?? '';
+                $value = is_scalar($raw_value) ? esc_url_raw((string) $raw_value) : '';
                 if ($value === '') {
                     delete_post_meta($post_id, $social_key);
                 } else {
@@ -503,8 +546,8 @@ class VMS_Admin_Vendors
 
 if (is_admin()) {
     add_action('init', function () {
-        if (class_exists('VMS_Admin_Vendors')) {
-            new VMS_Admin_Vendors();
+        if (class_exists('BVMGR_Admin_Vendors')) {
+            new BVMGR_Admin_Vendors();
         }
     }, 20);
 }

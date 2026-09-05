@@ -4,20 +4,20 @@ defined('ABSPATH') || exit;
 add_action('init', function (): void {
 
 	$labels = [
-		'name'                       => __('Vendor Categories', 'vms'),
-		'singular_name'              => __('Vendor Category', 'vms'),
-		'search_items'               => __('Search Vendor Categories', 'vms'),
-		'popular_items'              => __('Popular Vendor Categories', 'vms'),
-		'all_items'                  => __('All Vendor Categories', 'vms'),
-		'edit_item'                  => __('Edit Vendor Category', 'vms'),
-		'update_item'                => __('Update Vendor Category', 'vms'),
-		'add_new_item'               => __('Add New Vendor Category', 'vms'),
-		'new_item_name'              => __('New Vendor Category Name', 'vms'),
-		'separate_items_with_commas' => __('Separate vendor categories with commas', 'vms'),
-		'add_or_remove_items'        => __('Add or remove vendor categories', 'vms'),
-		'choose_from_most_used'      => __('Choose from the most used vendor categories', 'vms'),
-		'not_found'                  => __('No vendor categories found.', 'vms'),
-		'menu_name'                  => __('Vendor Categories', 'vms'),
+		'name'                       => __('Vendor Categories', 'backstage-venue-manager'),
+		'singular_name'              => __('Vendor Category', 'backstage-venue-manager'),
+		'search_items'               => __('Search Vendor Categories', 'backstage-venue-manager'),
+		'popular_items'              => __('Popular Vendor Categories', 'backstage-venue-manager'),
+		'all_items'                  => __('All Vendor Categories', 'backstage-venue-manager'),
+		'edit_item'                  => __('Edit Vendor Category', 'backstage-venue-manager'),
+		'update_item'                => __('Update Vendor Category', 'backstage-venue-manager'),
+		'add_new_item'               => __('Add New Vendor Category', 'backstage-venue-manager'),
+		'new_item_name'              => __('New Vendor Category Name', 'backstage-venue-manager'),
+		'separate_items_with_commas' => __('Separate vendor categories with commas', 'backstage-venue-manager'),
+		'add_or_remove_items'        => __('Add or remove vendor categories', 'backstage-venue-manager'),
+		'choose_from_most_used'      => __('Choose from the most used vendor categories', 'backstage-venue-manager'),
+		'not_found'                  => __('No vendor categories found.', 'backstage-venue-manager'),
+		'menu_name'                  => __('Vendor Categories', 'backstage-venue-manager'),
 	];
 
 	$args = [
@@ -36,37 +36,37 @@ add_action('init', function (): void {
 
 }, 12);
 
-if (!function_exists('vms_vendor_category_default_label_map')) {
-	function vms_vendor_category_default_label_map(): array
+if (!function_exists('bvmgr_vendor_category_default_label_map')) {
+	function bvmgr_vendor_category_default_label_map(): array
 	{
 		return [
-			'band'              => __('Genre', 'vms'),
-			'bands'             => __('Genre', 'vms'),
-			'artist'            => __('Genre', 'vms'),
-			'performer'         => __('Genre', 'vms'),
-			'solo-musician'     => __('Genre', 'vms'),
-			'solo_musician'     => __('Genre', 'vms'),
-			'musician'          => __('Genre', 'vms'),
-			'dj'                => __('Genre', 'vms'),
-			'food-truck'        => __('Cuisine', 'vms'),
-			'food_truck'        => __('Cuisine', 'vms'),
-			'foodtruck'         => __('Cuisine', 'vms'),
-			'caterer'           => __('Cuisine', 'vms'),
-			'bar'               => __('Style', 'vms'),
-			'bartender'         => __('Service', 'vms'),
-			'photographer'      => __('Style', 'vms'),
-			'videographer'      => __('Style', 'vms'),
-			'florist'           => __('Style', 'vms'),
-			'contractor'        => __('Service', 'vms'),
-			'security'          => __('Service', 'vms'),
-			'sound'             => __('Service', 'vms'),
-			'lighting'          => __('Service', 'vms'),
+			'band'              => __('Genre', 'backstage-venue-manager'),
+			'bands'             => __('Genre', 'backstage-venue-manager'),
+			'artist'            => __('Genre', 'backstage-venue-manager'),
+			'performer'         => __('Genre', 'backstage-venue-manager'),
+			'solo-musician'     => __('Genre', 'backstage-venue-manager'),
+			'solo_musician'     => __('Genre', 'backstage-venue-manager'),
+			'musician'          => __('Genre', 'backstage-venue-manager'),
+			'dj'                => __('Genre', 'backstage-venue-manager'),
+			'food-truck'        => __('Cuisine', 'backstage-venue-manager'),
+			'food_truck'        => __('Cuisine', 'backstage-venue-manager'),
+			'foodtruck'         => __('Cuisine', 'backstage-venue-manager'),
+			'caterer'           => __('Cuisine', 'backstage-venue-manager'),
+			'bar'               => __('Style', 'backstage-venue-manager'),
+			'bartender'         => __('Service', 'backstage-venue-manager'),
+			'photographer'      => __('Style', 'backstage-venue-manager'),
+			'videographer'      => __('Style', 'backstage-venue-manager'),
+			'florist'           => __('Style', 'backstage-venue-manager'),
+			'contractor'        => __('Service', 'backstage-venue-manager'),
+			'security'          => __('Service', 'backstage-venue-manager'),
+			'sound'             => __('Service', 'backstage-venue-manager'),
+			'lighting'          => __('Service', 'backstage-venue-manager'),
 		];
 	}
 }
 
-if (!function_exists('vms_vendor_category_label_for_type')) {
-	function vms_vendor_category_label_for_type($type): string
+if (!function_exists('bvmgr_vendor_category_label_for_type')) {
+	function bvmgr_vendor_category_label_for_type($type): string
 	{
 		$term = null;
 		$slug = '';
@@ -101,17 +101,17 @@ if (!function_exists('vms_vendor_category_label_for_type')) {
 			}
 		}
 
-		$defaults = vms_vendor_category_default_label_map();
+		$defaults = bvmgr_vendor_category_default_label_map();
 		if ($slug !== '' && isset($defaults[$slug]) && is_string($defaults[$slug]) && $defaults[$slug] !== '') {
 			return $defaults[$slug];
 		}
 
-		return __('Category', 'vms');
+		return __('Category', 'backstage-venue-manager');
 	}
 }
 
-if (!function_exists('vms_vendor_primary_type_slug')) {
-	function vms_vendor_primary_type_slug(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_primary_type_slug')) {
+	function bvmgr_vendor_primary_type_slug(int $vendor_id): string
 	{
 		$vendor_id = absint($vendor_id);
 		if ($vendor_id <= 0) {
@@ -128,15 +128,15 @@ if (!function_exists('vms_vendor_primary_type_slug')) {
 	}
 }
 
-if (!function_exists('vms_vendor_category_label_for_vendor')) {
-	function vms_vendor_category_label_for_vendor(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_category_label_for_vendor')) {
+	function bvmgr_vendor_category_label_for_vendor(int $vendor_id): string
 	{
-		return vms_vendor_category_label_for_type(vms_vendor_primary_type_slug($vendor_id));
+		return bvmgr_vendor_category_label_for_type(bvmgr_vendor_primary_type_slug($vendor_id));
 	}
 }
 
-if (!function_exists('vms_vendor_get_category_terms')) {
-	function vms_vendor_get_category_terms(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_get_category_terms')) {
+	function bvmgr_vendor_get_category_terms(int $vendor_id): array
 	{
 		$vendor_id = absint($vendor_id);
 		if ($vendor_id <= 0) {
@@ -158,8 +158,8 @@ if (!function_exists('vms_vendor_get_category_terms')) {
 	}
 }
 
-if (!function_exists('vms_vendor_categories_parse_legacy_list')) {
-	function vms_vendor_categories_parse_legacy_list(string $raw): array
+if (!function_exists('bvmgr_vendor_categories_parse_legacy_list')) {
+	function bvmgr_vendor_categories_parse_legacy_list(string $raw): array
 	{
 		$raw = trim($raw);
 		if ($raw === '') {
@@ -185,15 +185,15 @@ if (!function_exists('vms_vendor_categories_parse_legacy_list')) {
 	}
 }
 
-if (!function_exists('vms_vendor_categories_seed_from_legacy_meta')) {
-	function vms_vendor_categories_seed_from_legacy_meta(int $vendor_id): void
+if (!function_exists('bvmgr_vendor_categories_seed_from_legacy_meta')) {
+	function bvmgr_vendor_categories_seed_from_legacy_meta(int $vendor_id): void
 	{
 		$vendor_id = absint($vendor_id);
 		if ($vendor_id <= 0 || !taxonomy_exists('vms_vendor_category')) {
 			return;
 		}
 
-		$existing = vms_vendor_get_category_terms($vendor_id);
+		$existing = bvmgr_vendor_get_category_terms($vendor_id);
 		if (!empty($existing)) {
 			return;
 		}
@@ -203,7 +203,7 @@ if (!function_exists('vms_vendor_categories_seed_from_legacy_meta')) {
 			return;
 		}
 
-		$names = vms_vendor_categories_parse_legacy_list($raw);
+		$names = bvmgr_vendor_categories_parse_legacy_list($raw);
 		if (empty($names)) {
 			return;
 		}
@@ -238,9 +238,9 @@ if (!function_exists('vms_vendor_categories_seed_from_legacy_meta')) {
 add_action('vms_vendor_type_add_form_fields', function () {
 	?>
 	<div class="form-field">
-		<label for="vms_vendor_type_category_label"><?php esc_html_e('Vendor Category Label', 'vms'); ?></label>
+		<label for="vms_vendor_type_category_label"><?php esc_html_e('Vendor Category Label', 'backstage-venue-manager'); ?></label>
 		<input type="text" id="vms_vendor_type_category_label" name="vms_vendor_type_category_label" value="">
-		<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service. Leave blank to use the default Category label.', 'vms'); ?></p>
+		<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service. Leave blank to use the default Category label.', 'backstage-venue-manager'); ?></p>
 	</div>
 	<?php
 });
@@ -248,30 +248,34 @@ add_action('vms_vendor_type_add_form_fields', function () {
 add_action('vms_vendor_type_edit_form_fields', function ($term) {
 	$term_id = isset($term->term_id) ? absint($term->term_id) : 0;
 	$value = $term_id > 0 ? trim((string) get_term_meta($term_id, '_vms_vendor_type_category_label', true)) : '';
-	$resolved = vms_vendor_category_label_for_type($term);
+	$resolved = bvmgr_vendor_category_label_for_type($term);
 	?>
 	<tr class="form-field">
-		<th scope="row"><label for="vms_vendor_type_category_label"><?php esc_html_e('Vendor Category Label', 'vms'); ?></label></th>
+		<th scope="row"><label for="vms_vendor_type_category_label"><?php esc_html_e('Vendor Category Label', 'backstage-venue-manager'); ?></label></th>
 		<td>
 			<input type="text" id="vms_vendor_type_category_label" name="vms_vendor_type_category_label" value="<?php echo esc_attr($value); ?>">
-			<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service.', 'vms'); ?></p>
-			<p class="description"><?php printf(esc_html__('Current resolved label: %s', 'vms'), esc_html($resolved)); ?></p>
+			<p class="description"><?php esc_html_e('Optional. Example: Genre, Cuisine, Style, Service.', 'backstage-venue-manager'); ?></p>
+			<?php /* translators: %s: resolved vendor category label. */ ?>
+			<p class="description"><?php printf(esc_html__('Current resolved label: %s', 'backstage-venue-manager'), esc_html($resolved)); ?></p>
 		</td>
 	</tr>
 	<?php
 });
 
-if (!function_exists('vms_vendor_type_save_category_label_meta')) {
-	function vms_vendor_type_save_category_label_meta($term_id): void
+if (!function_exists('bvmgr_vendor_type_save_category_label_meta')) {
+	function bvmgr_vendor_type_category_label_from_post(array $source): string
+	{
+		return bvmgr_request_read_text_field($source, 'vms_vendor_type_category_label');
+	}
+
+	function bvmgr_vendor_type_save_category_label_meta($term_id): void
 	{
 		$term_id = absint($term_id);
 		if ($term_id <= 0 || !current_user_can('manage_categories')) {
 			return;
 		}
 
-		$value = isset($_POST['vms_vendor_type_category_label'])
-			? sanitize_text_field((string) wp_unslash($_POST['vms_vendor_type_category_label']))
-			: '';
+		$value = bvmgr_vendor_type_category_label_from_post($_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Vendor Type term create/edit hooks run under WordPress taxonomy admin nonce handling; this helper only normalizes the bounded optional label meta field.
 
 		if ($value === '') {
 			delete_term_meta($term_id, '_vms_vendor_type_category_label');
@@ -281,19 +285,19 @@ if (!function_exists('vms_vendor_type_save_category_label_meta')) {
 		update_term_meta($term_id, '_vms_vendor_type_category_label', $value);
 	}
 }
-add_action('created_vms_vendor_type', 'vms_vendor_type_save_category_label_meta');
-add_action('edited_vms_vendor_type', 'vms_vendor_type_save_category_label_meta');
+add_action('created_vms_vendor_type', 'bvmgr_vendor_type_save_category_label_meta');
+add_action('edited_vms_vendor_type', 'bvmgr_vendor_type_save_category_label_meta');
 
-if (!function_exists('vms_vendor_categories_get_related_event_plan_ids')) {
-	function vms_vendor_categories_get_related_event_plan_ids(int $vendor_id): array
+if (!function_exists('bvmgr_vendor_categories_get_related_event_plan_ids')) {
+	function bvmgr_vendor_categories_get_related_event_plan_ids(int $vendor_id): array
 	{
 		$vendor_id = absint($vendor_id);
 		if ($vendor_id <= 0) {
 			return [];
 		}
 
-		$band_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
-		$secondary_idx_key = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'secondary_vendor_id') ?: '_vms_secondary_vendor_id') : '_vms_secondary_vendor_id';
+		$band_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'band_vendor_id') ?: '_vms_band_vendor_id') : '_vms_band_vendor_id';
+		$secondary_idx_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'secondary_vendor_id') ?: '_vms_secondary_vendor_id') : '_vms_secondary_vendor_id';
 
 		$primary_ids = get_posts([
 			'post_type'              => 'vms_event_plan',
@@ -303,7 +307,7 @@ if (!function_exists('vms_vendor_categories_get_related_event_plan_ids')) {
 			'no_found_rows'          => true,
 			'update_post_term_cache' => false,
 			'update_post_meta_cache' => false,
-			'meta_query'             => [[
+			'meta_query'             => [[ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor save propagation must enumerate the complete all-status Event Plan set with this exact primary-vendor link so every category snapshot stays current.
 				'key'     => $band_key,
 				'value'   => $vendor_id,
 				'compare' => '=',
@@ -319,7 +323,7 @@ if (!function_exists('vms_vendor_categories_get_related_event_plan_ids')) {
 			'no_found_rows'          => true,
 			'update_post_term_cache' => false,
 			'update_post_meta_cache' => false,
-			'meta_query'             => [[
+			'meta_query'             => [[ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Vendor save propagation must enumerate the complete all-status Event Plan set with this exact indexed secondary-vendor link so every category snapshot stays current.
 				'key'     => $secondary_idx_key,
 				'value'   => $vendor_id,
 				'compare' => '=',
@@ -333,8 +337,8 @@ if (!function_exists('vms_vendor_categories_get_related_event_plan_ids')) {
 	}
 }
 
-if (!function_exists('vms_vendor_categories_touch_related_event_plans')) {
-	function vms_vendor_categories_touch_related_event_plans(int $vendor_id, WP_Post $post): void
+if (!function_exists('bvmgr_vendor_categories_touch_related_event_plans')) {
+	function bvmgr_vendor_categories_touch_related_event_plans(int $vendor_id, WP_Post $post): void
 	{
 		if ($post->post_type !== 'vms_vendor') {
 			return;
@@ -346,27 +350,27 @@ if (!function_exists('vms_vendor_categories_touch_related_event_plans')) {
 			return;
 		}
 
-		vms_vendor_categories_seed_from_legacy_meta($vendor_id);
+		bvmgr_vendor_categories_seed_from_legacy_meta($vendor_id);
 
-		if (!function_exists('vms_event_plan_update_vendor_category_snapshot')) {
+		if (!function_exists('bvmgr_event_plan_update_vendor_category_snapshot')) {
 			return;
 		}
 
-		$plan_ids = vms_vendor_categories_get_related_event_plan_ids($vendor_id);
+		$plan_ids = bvmgr_vendor_categories_get_related_event_plan_ids($vendor_id);
 		if (empty($plan_ids)) {
 			return;
 		}
 
-		$k_tec = function_exists('vms_meta_key') ? (vms_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
+		$k_tec = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
 		foreach ($plan_ids as $plan_id) {
-			vms_event_plan_update_vendor_category_snapshot((int) $plan_id);
-			if (function_exists('vms_tec_sync_vendor_categories_from_plan')) {
+			bvmgr_event_plan_update_vendor_category_snapshot((int) $plan_id);
+			if (function_exists('bvmgr_tec_sync_vendor_categories_from_plan')) {
 				$tec_event_id = (int) get_post_meta((int) $plan_id, $k_tec, true);
 				if ($tec_event_id > 0) {
-					vms_tec_sync_vendor_categories_from_plan((int) $plan_id, $tec_event_id);
+					bvmgr_tec_sync_vendor_categories_from_plan((int) $plan_id, $tec_event_id);
 				}
 			}
 		}
 	}
 }
-add_action('save_post_vms_vendor', 'vms_vendor_categories_touch_related_event_plans', 40, 2);
+add_action('save_post_vms_vendor', 'bvmgr_vendor_categories_touch_related_event_plans', 40, 2);

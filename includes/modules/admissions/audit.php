@@ -1,15 +1,15 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admission_now_mysql')) {
-	function vms_admission_now_mysql(): string
+if (!function_exists('bvmgr_admission_now_mysql')) {
+	function bvmgr_admission_now_mysql(): string
 	{
 		return (string) wp_date('Y-m-d H:i:s', time(), wp_timezone());
 	}
 }
 
-if (!function_exists('vms_admission_settings')) {
-	function vms_admission_settings(): array
+if (!function_exists('bvmgr_admission_settings')) {
+	function bvmgr_admission_settings(): array
 	{
 		$opts = (array) get_option('vms_settings', array());
 		$settings = array(
@@ -30,12 +30,13 @@ if (!function_exists('vms_admission_settings')) {
 	}
 }
 
-if (!function_exists('vms_admission_audit_log')) {
-	function vms_admission_audit_log(int $event_plan_id, ?int $entry_id, string $action, int $actor_user_id, string $actor_context, array $details = array()): bool
+if (!function_exists('bvmgr_admission_audit_log')) {
+	function bvmgr_admission_audit_log(int $event_plan_id, ?int $entry_id, string $action, int $actor_user_id, string $actor_context, array $details = array()): bool
 	{
 		global $wpdb;
 
-		$table = vms_admission_table_audit();
+		$table = bvmgr_admission_table_audit();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admissions audit logging writes directly to the plugin-owned audit table because no core API exposes this repository.
 		$result = $wpdb->insert(
 			$table,
 			array(
@@ -44,7 +45,7 @@ if (!function_exists('vms_admission_audit_log')) {
 				'action' => sanitize_key($action),
 				'actor_user_id' => $actor_user_id,
 				'actor_context' => sanitize_key($actor_context),
-				'created_at' => vms_admission_now_mysql(),
+				'created_at' => bvmgr_admission_now_mysql(),
 				'details' => !empty($details) ? wp_json_encode($details) : null,
 			),
 			array('%d', '%d', '%s', '%d', '%s', '%s', '%s')

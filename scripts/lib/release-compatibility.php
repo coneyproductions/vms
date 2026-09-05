@@ -115,7 +115,115 @@ final class VMS_Release_Compatibility_Tooling
 		'optional-removed' => 'scenario-g-optional-removed',
 	);
 
+	private const PUBLIC_PLUGIN_SLUG = 'backstage-venue-manager';
+
+	private const INTERNAL_PLUGIN_SLUG = 'vms';
+
+	private const MAIN_PLUGIN_FILE = 'backstage-venue-manager.php';
+
+	private const LEGACY_MAIN_PLUGIN_FILE = 'vendor-management-system.php';
+
 	public const FIXTURE_OPTION = 'vms_compat_upgrade_fixture_manifest';
+
+	public static function publicPluginSlug(): string
+	{
+		return self::PUBLIC_PLUGIN_SLUG;
+	}
+
+	public static function internalPluginSlug(): string
+	{
+		return self::INTERNAL_PLUGIN_SLUG;
+	}
+
+	public static function mainPluginFile(): string
+	{
+		return self::MAIN_PLUGIN_FILE;
+	}
+
+	public static function legacyMainPluginFile(): string
+	{
+		return self::LEGACY_MAIN_PLUGIN_FILE;
+	}
+
+	public static function publicPluginBasename(): string
+	{
+		return self::PUBLIC_PLUGIN_SLUG . '/' . self::MAIN_PLUGIN_FILE;
+	}
+
+	public static function internalPluginBasename(): string
+	{
+		return self::INTERNAL_PLUGIN_SLUG . '/' . self::MAIN_PLUGIN_FILE;
+	}
+
+	public static function legacyPublicPluginBasename(): string
+	{
+		return self::PUBLIC_PLUGIN_SLUG . '/' . self::LEGACY_MAIN_PLUGIN_FILE;
+	}
+
+	public static function legacyInternalPluginBasename(): string
+	{
+		return self::INTERNAL_PLUGIN_SLUG . '/' . self::LEGACY_MAIN_PLUGIN_FILE;
+	}
+
+	public static function recognizedPluginBasenames(): array
+	{
+		return array(
+			self::publicPluginBasename(),
+			self::internalPluginBasename(),
+			self::legacyPublicPluginBasename(),
+			self::legacyInternalPluginBasename(),
+		);
+	}
+
+	public static function isRecognizedPluginBasename(string $pluginBasename): bool
+	{
+		$pluginBasename = trim(str_replace('\\', '/', $pluginBasename));
+		return in_array($pluginBasename, self::recognizedPluginBasenames(), true);
+	}
+
+	public static function resolveInstalledPluginBasename(array $activePlugins, string $pluginsDir = ''): string
+	{
+		$recognizedActive = array();
+		foreach ($activePlugins as $pluginBasename) {
+			$pluginBasename = trim(str_replace('\\', '/', (string) $pluginBasename));
+			if (self::isRecognizedPluginBasename($pluginBasename)) {
+				$recognizedActive[$pluginBasename] = true;
+			}
+		}
+		if ($recognizedActive !== array()) {
+			$resolved = array_keys($recognizedActive);
+			sort($resolved, SORT_STRING);
+			return (string) $resolved[0];
+		}
+
+		$pluginsDir = rtrim($pluginsDir, DIRECTORY_SEPARATOR);
+		if ($pluginsDir !== '') {
+			foreach (self::recognizedPluginBasenames() as $pluginBasename) {
+				$pluginPath = $pluginsDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $pluginBasename);
+				if (is_file($pluginPath)) {
+					return $pluginBasename;
+				}
+			}
+		}
+
+		return '';
+	}
+
+	public static function buildVersionPathForPluginBasename(string $pluginsDir, string $pluginBasename): string
+	{
+		$pluginsDir = rtrim($pluginsDir, DIRECTORY_SEPARATOR);
+		$pluginBasename = trim(str_replace('\\', '/', $pluginBasename));
+		if ($pluginsDir === '' || !self::isRecognizedPluginBasename($pluginBasename)) {
+			return '';
+		}
+
+		$pluginDirectory = dirname($pluginBasename);
+		if ($pluginDirectory === '' || $pluginDirectory === '.') {
+			return '';
+		}
+
+		return $pluginsDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $pluginDirectory) . DIRECTORY_SEPARATOR . 'vms-build.txt';
+	}
 
 	public static function run(array $config): array
 	{
@@ -226,11 +334,22 @@ final class VMS_Release_Compatibility_Tooling
 			'checksum_matches_expected' => $checksumMatches,
 			'size_bytes' => filesize($artifactPath) ?: 0,
 			'root_directory' => $zipRoot['root_directory'],
+			'plugin_basename' => $zipRoot['plugin_basename'],
 			'version' => self::extractArtifactVersion($artifactPath),
 		);
 	}
 
 	public static function inspectZipRoot(string $artifactPath): array
+	{
+		return self::inspectArtifactRoot($artifactPath, true);
+	}
+
+	public static function inspectCompatibleZipRoot(string $artifactPath): array
+	{
+		return self::inspectArtifactRoot($artifactPath, false);
+	}
+
+	private static function inspectArtifactRoot(string $artifactPath, bool $requirePublicRoot): array
 	{
 		$zip = new ZipArchive();
 		$opened = $zip->open($artifactPath);
@@ -239,12 +358,14 @@ final class VMS_Release_Compatibility_Tooling
 		}
 
 		$roots = array();
+		$entries = array();
 		for ($index = 0; $index < $zip->numFiles; $index++) {
 			$entryName = (string) $zip->getNameIndex($index);
 			if ($entryName === '') {
 				continue;
 			}
 			$entryName = ltrim($entryName, '/');
+			$entries[$entryName] = true;
 			$parts = explode('/', $entryName);
 			$root = $parts[0] ?? '';
 			if ($root !== '') {
@@ -255,12 +376,39 @@ final class VMS_Release_Compatibility_Tooling
 
 		$rootNames = array_values(array_keys($roots));
 		sort($rootNames, SORT_STRING);
-		if (count($rootNames) !== 1 || $rootNames[0] !== 'vms') {
-			throw new RuntimeException('Artifact ZIP must contain exactly one top-level vms/ root directory.');
+		if (count($rootNames) !== 1) {
+			if ($requirePublicRoot) {
+				throw new RuntimeException('Artifact ZIP must contain exactly one top-level backstage-venue-manager/ root directory.');
+			}
+
+			throw new RuntimeException('Artifact ZIP must contain exactly one recognized top-level backstage-venue-manager/ or vms/ root directory.');
+		}
+
+		$rootDirectory = (string) $rootNames[0];
+		if ($requirePublicRoot && $rootDirectory !== self::publicPluginSlug()) {
+			throw new RuntimeException('Artifact ZIP must contain exactly one top-level backstage-venue-manager/ root directory.');
+		}
+		if (!$requirePublicRoot && !in_array($rootDirectory, array(self::publicPluginSlug(), self::internalPluginSlug()), true)) {
+			throw new RuntimeException('Artifact ZIP must contain exactly one recognized top-level backstage-venue-manager/ or vms/ root directory.');
+		}
+
+		$mainPluginFile = '';
+		foreach (array(self::mainPluginFile(), self::legacyMainPluginFile()) as $candidateMainPluginFile) {
+			if (isset($entries[$rootDirectory . '/' . $candidateMainPluginFile])) {
+				$mainPluginFile = $candidateMainPluginFile;
+				break;
+			}
+		}
+		if ($mainPluginFile === '') {
+			throw new RuntimeException('Artifact ZIP does not contain a recognized Backstage Venue Manager main plugin file.');
+		}
+		if ($requirePublicRoot && $mainPluginFile !== self::mainPluginFile()) {
+			throw new RuntimeException('Public artifact must use backstage-venue-manager/backstage-venue-manager.php as its canonical plugin basename.');
 		}
 
 		return array(
-			'root_directory' => 'vms',
+			'root_directory' => $rootDirectory,
+			'plugin_basename' => $rootDirectory . '/' . $mainPluginFile,
 		);
 	}
 
@@ -366,6 +514,69 @@ final class VMS_Release_Compatibility_Tooling
 		return implode("\n", $lines) . "\n";
 	}
 
+	public static function discoverPluginsWorkspaceRoot(string $pluginRoot, string $wordpressSourceRoot = ''): string
+	{
+		$pluginRoot = rtrim($pluginRoot, DIRECTORY_SEPARATOR);
+		$candidates = array(
+			dirname($pluginRoot),
+			dirname(dirname($pluginRoot)),
+		);
+
+		$wordpressSourceRoot = rtrim(trim($wordpressSourceRoot), DIRECTORY_SEPARATOR);
+		if ($wordpressSourceRoot !== '') {
+			$candidates[] = $wordpressSourceRoot . DIRECTORY_SEPARATOR . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins';
+		}
+
+		$rankedCandidates = array();
+		$seen = array();
+		foreach ($candidates as $index => $candidate) {
+			$resolved = realpath($candidate);
+			$candidate = is_string($resolved) && $resolved !== '' ? $resolved : $candidate;
+			if (isset($seen[$candidate])) {
+				continue;
+			}
+			$seen[$candidate] = true;
+
+			$dependencyCount = 0;
+			foreach (self::DEPENDENCIES as $definition) {
+				$mainFile = $candidate
+					. DIRECTORY_SEPARATOR . (string) $definition['directory']
+					. DIRECTORY_SEPARATOR . (string) $definition['main_file'];
+				if (is_file($mainFile)) {
+					$dependencyCount++;
+				}
+			}
+
+			$rankedCandidates[] = array(
+				'path' => $candidate,
+				'dependency_count' => $dependencyCount,
+				'order' => $index,
+			);
+		}
+
+		usort($rankedCandidates, static function (array $left, array $right): int {
+			$countComparison = $right['dependency_count'] <=> $left['dependency_count'];
+			return $countComparison !== 0 ? $countComparison : ($left['order'] <=> $right['order']);
+		});
+
+		return (string) ($rankedCandidates[0]['path'] ?? dirname($pluginRoot));
+	}
+
+	public static function isConfirmedAdminSession(
+		array $followUp,
+		bool $hasAdminMarker,
+		bool $looksLikeLoginForm,
+		bool $originMismatchDetected
+	): bool {
+		$statusCode = (int) ($followUp['status_code'] ?? 0);
+		return !empty($followUp['ok'])
+			&& $statusCode >= 200
+			&& $statusCode < 400
+			&& $hasAdminMarker
+			&& !$looksLikeLoginForm
+			&& !$originMismatchDetected;
+	}
+
 	private static function normalizeConfig(array $config): array
 	{
 		$pluginRoot = isset($config['plugin_root']) ? (string) $config['plugin_root'] : dirname(__DIR__, 2);
@@ -397,7 +608,7 @@ final class VMS_Release_Compatibility_Tooling
 
 		return array(
 			'plugin_root' => $pluginRoot,
-			'plugins_workspace_root' => dirname($pluginRoot),
+			'plugins_workspace_root' => self::discoverPluginsWorkspaceRoot($pluginRoot, $wordpressSourceRoot),
 			'working_dir' => $workingDir,
 			'output_dir' => $outputDir,
 			'artifact_path' => $artifactPath,
@@ -463,11 +674,15 @@ final class VMS_Release_Compatibility_Tooling
 				);
 			}
 
+			$identity = self::inspectArtifactRoot($requestedPath, false);
 			return array(
 				'path' => $requestedPath,
 				'filename' => basename($requestedPath),
 				'available' => true,
 				'status' => 'PASS',
+				'root_directory' => $identity['root_directory'],
+				'plugin_basename' => $identity['plugin_basename'],
+				'version' => self::extractArtifactVersion($requestedPath),
 			);
 		}
 
@@ -487,11 +702,15 @@ final class VMS_Release_Compatibility_Tooling
 				return filemtime($right) <=> filemtime($left);
 			});
 			$resolved = (string) $candidates[0];
+			$identity = self::inspectArtifactRoot($resolved, false);
 			return array(
 				'path' => $resolved,
 				'filename' => basename($resolved),
 				'available' => true,
 				'status' => 'PASS',
+				'root_directory' => $identity['root_directory'],
+				'plugin_basename' => $identity['plugin_basename'],
+				'version' => self::extractArtifactVersion($resolved),
 			);
 		}
 
@@ -500,6 +719,9 @@ final class VMS_Release_Compatibility_Tooling
 			'filename' => '',
 			'available' => false,
 			'status' => 'BLOCKED',
+			'root_directory' => '',
+			'plugin_basename' => '',
+			'version' => '',
 		);
 	}
 
@@ -743,10 +965,10 @@ final class VMS_Release_Compatibility_Tooling
 	private static function reviewRuntimeChanges(string $pluginRoot, string $baselineArtifactPath): array
 	{
 		$baselineUninstall = $baselineArtifactPath !== '' && is_file($baselineArtifactPath)
-			? self::readZipEntry($baselineArtifactPath, 'vms/uninstall.php')
+			? self::readArtifactRelativeEntry($baselineArtifactPath, 'uninstall.php')
 			: '';
 		$baselineVendorTech = $baselineArtifactPath !== '' && is_file($baselineArtifactPath)
-			? self::readZipEntry($baselineArtifactPath, 'vms/includes/portal/vendor-tech-profile.php')
+			? self::readArtifactRelativeEntry($baselineArtifactPath, 'includes/portal/vendor-tech-profile.php')
 			: '';
 
 		return array(
@@ -774,6 +996,7 @@ final class VMS_Release_Compatibility_Tooling
 	private static function runMatrixScenario(array $scenario, array $config, array $artifact, array $environment): array
 	{
 		$site = self::createSiteHarness($scenario['id'], $config, $environment);
+		$artifactPlugin = self::artifactPluginBasename($artifact);
 		$keepWorkspace = false;
 		try {
 			$missingDependencies = array();
@@ -792,17 +1015,17 @@ final class VMS_Release_Compatibility_Tooling
 				);
 			}
 
-			$site->provision();
-			$site->copyDependencies((array) $scenario['present_dependencies'], (array) $environment['dependencies']);
-			$site->installArtifact($artifact['path']);
-			if (!empty($scenario['activate_before_vms'])) {
-				$site->activatePlugins((array) $scenario['activate_before_vms']);
-			}
-			$beforeState = $site->collectState(self::FIXTURE_OPTION);
-			$site->activatePlugins(array('vms'));
-			if (!empty($scenario['activate_after_vms'])) {
-				$site->activatePlugins((array) $scenario['activate_after_vms']);
-			}
+				$site->provision();
+				$site->copyDependencies((array) $scenario['present_dependencies'], (array) $environment['dependencies']);
+				$site->installArtifact($artifact['path']);
+				if (!empty($scenario['activate_before_vms'])) {
+					$site->activatePlugins((array) $scenario['activate_before_vms']);
+				}
+				$beforeState = $site->collectState(self::FIXTURE_OPTION);
+				$site->activatePlugins(array($artifactPlugin));
+				if (!empty($scenario['activate_after_vms'])) {
+					$site->activatePlugins((array) $scenario['activate_after_vms']);
+				}
 			if (!empty($scenario['deactivate_after_vms'])) {
 				$site->deactivatePlugins((array) $scenario['deactivate_after_vms']);
 			}
@@ -854,10 +1077,11 @@ final class VMS_Release_Compatibility_Tooling
 					'workspace_retained' => $status === 'FAIL' && !empty($config['keep_failed_workspaces']),
 					'workspace_path' => $status === 'FAIL' && !empty($config['keep_failed_workspaces']) ? $site->getWorkspaceRoot() : '',
 				),
-				'dependencies_present' => (array) $scenario['present_dependencies'],
-				'activate_before_vms' => (array) $scenario['activate_before_vms'],
-				'activate_after_vms' => (array) $scenario['activate_after_vms'],
-				'deactivate_after_vms' => (array) $scenario['deactivate_after_vms'],
+					'dependencies_present' => (array) $scenario['present_dependencies'],
+					'plugin_basename' => $artifactPlugin,
+					'activate_before_vms' => (array) $scenario['activate_before_vms'],
+					'activate_after_vms' => (array) $scenario['activate_after_vms'],
+					'deactivate_after_vms' => (array) $scenario['deactivate_after_vms'],
 				'login' => $login,
 				'admin_request' => $adminRequest,
 				'public_request' => $publicRequest,
@@ -893,22 +1117,23 @@ final class VMS_Release_Compatibility_Tooling
 			'activate_before_vms' => array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus'),
 		);
 		$site = self::createSiteHarness($scenario['id'], $config, $environment);
+		$artifactPlugin = self::artifactPluginBasename($artifact);
 		$keepWorkspace = false;
 		try {
 			$site->provision();
-			$site->copyDependencies((array) $scenario['present_dependencies'], (array) $environment['dependencies']);
-			$site->installArtifact($artifact['path']);
-			$site->activatePlugins((array) $scenario['activate_before_vms']);
-			$beforeActivation = $site->collectState(self::FIXTURE_OPTION);
-			$site->activatePlugins(array('vms'));
-			$seeded = $site->seedUpgradeFixtures(self::FIXTURE_OPTION);
-			$afterActivation = $site->collectState(self::FIXTURE_OPTION);
-			$site->deactivatePlugins(array('vms'));
-			$afterDeactivation = $site->collectState(self::FIXTURE_OPTION);
-			$site->activatePlugins(array('vms'));
-			$afterReactivation = $site->collectState(self::FIXTURE_OPTION);
-			$secondActivation = $site->activatePlugins(array('vms'));
-			$afterSecondActivation = $site->collectState(self::FIXTURE_OPTION);
+				$site->copyDependencies((array) $scenario['present_dependencies'], (array) $environment['dependencies']);
+				$site->installArtifact($artifact['path']);
+				$site->activatePlugins((array) $scenario['activate_before_vms']);
+				$beforeActivation = $site->collectState(self::FIXTURE_OPTION);
+				$site->activatePlugins(array($artifactPlugin));
+				$seeded = $site->seedUpgradeFixtures(self::FIXTURE_OPTION);
+				$afterActivation = $site->collectState(self::FIXTURE_OPTION);
+				$site->deactivatePlugins(array($artifactPlugin));
+				$afterDeactivation = $site->collectState(self::FIXTURE_OPTION);
+				$site->activatePlugins(array($artifactPlugin));
+				$afterReactivation = $site->collectState(self::FIXTURE_OPTION);
+				$secondActivation = $site->activatePlugins(array($artifactPlugin));
+				$afterSecondActivation = $site->collectState(self::FIXTURE_OPTION);
 			$site->startServer();
 			$login = $site->loginAdmin();
 			$adminRequest = $site->requestAdminEventPlanList();
@@ -947,10 +1172,11 @@ final class VMS_Release_Compatibility_Tooling
 			$keepWorkspace = $status === 'FAIL' && !empty($config['keep_failed_workspaces']);
 
 			return array(
-				'status' => $status,
-				'summary' => implode(' ', $summaryParts),
-				'fixture_seed' => $seeded,
-				'before_activation' => $beforeActivation,
+					'status' => $status,
+					'summary' => implode(' ', $summaryParts),
+					'plugin_basename' => $artifactPlugin,
+					'fixture_seed' => $seeded,
+					'before_activation' => $beforeActivation,
 				'after_activation' => $afterActivation,
 				'after_deactivation' => $afterDeactivation,
 				'after_reactivation' => $afterReactivation,
@@ -992,22 +1218,28 @@ final class VMS_Release_Compatibility_Tooling
 		}
 
 		$site = self::createSiteHarness('upgrade-from-0.2.24.725', $config, $environment);
+		$baselinePlugin = self::artifactPluginBasename($baselineArtifact, self::internalPluginBasename());
+		$artifactPlugin = self::artifactPluginBasename($artifact);
+		$basenameTransition = $baselinePlugin !== $artifactPlugin;
 		$keepWorkspace = false;
 		try {
 			$site->provision();
 			$site->copyDependencies(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus'), (array) $environment['dependencies']);
 			$site->installArtifact($baselineArtifact['path']);
-			$site->activatePlugins(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus', 'vms'));
+			$site->activatePlugins(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus', $baselinePlugin));
 			$seeded = $site->seedUpgradeFixtures(self::FIXTURE_OPTION);
 			$beforeUpgrade = $site->collectState(self::FIXTURE_OPTION);
 			$site->installArtifact($artifact['path']);
-			$site->activatePlugins(array('vms'));
+			if ($basenameTransition) {
+				$site->deactivatePlugins(array($baselinePlugin));
+			}
+			$site->activatePlugins(array($artifactPlugin));
 			$afterUpgrade = $site->collectState(self::FIXTURE_OPTION);
 			$site->installArtifact($artifact['path']);
-			$site->activatePlugins(array('vms'));
+			$site->activatePlugins(array($artifactPlugin));
 			$afterSecondUpgrade = $site->collectState(self::FIXTURE_OPTION);
-			$site->deactivatePlugins(array('vms'));
-			$site->activatePlugins(array('vms'));
+			$site->deactivatePlugins(array($artifactPlugin));
+			$site->activatePlugins(array($artifactPlugin));
 			$afterReactivation = $site->collectState(self::FIXTURE_OPTION);
 			$site->startServer();
 			$login = $site->loginAdmin();
@@ -1027,10 +1259,13 @@ final class VMS_Release_Compatibility_Tooling
 			$publicSmokeFailed = empty($publicPage['ok']);
 			$eventSmokeFailed = empty($eventRequest['ok']);
 
-			$status = 'PASS';
-			$summaryParts = array('Baseline 0.2.24.725 upgraded to the public release ZIP on a disposable site.');
-			if (!$upgradePreservation['preserved'] || !$secondUpgradePreservation['preserved'] || !$reactivationPreservation['preserved']) {
-				$status = 'FAIL';
+				$status = 'PASS';
+				$summaryParts = array('Baseline 0.2.24.725 upgraded to the public release ZIP on a disposable site.');
+				if ($basenameTransition) {
+					$summaryParts[] = 'The upgrade path deactivated the historical internal basename before activating the public package basename.';
+				}
+				if (!$upgradePreservation['preserved'] || !$secondUpgradePreservation['preserved'] || !$reactivationPreservation['preserved']) {
+					$status = 'FAIL';
 				$summaryParts[] = 'One or more representative fixture checks regressed across update or reactivation.';
 			}
 			if (!empty($logSummary['fatal_count']) || $adminSmokeFailed || $publicSmokeFailed || $eventSmokeFailed) {
@@ -1051,10 +1286,13 @@ final class VMS_Release_Compatibility_Tooling
 			$keepWorkspace = $status === 'FAIL' && !empty($config['keep_failed_workspaces']);
 
 			return array(
-				'status' => $status,
-				'summary' => implode(' ', $summaryParts),
-				'fixture_seed' => $seeded,
-				'before_upgrade' => $beforeUpgrade,
+					'status' => $status,
+					'summary' => implode(' ', $summaryParts),
+					'baseline_plugin_basename' => $baselinePlugin,
+					'artifact_plugin_basename' => $artifactPlugin,
+					'basename_transition' => $basenameTransition,
+					'fixture_seed' => $seeded,
+					'before_upgrade' => $beforeUpgrade,
 				'after_upgrade' => $afterUpgrade,
 				'after_second_upgrade' => $afterSecondUpgrade,
 				'after_reactivation' => $afterReactivation,
@@ -1089,12 +1327,13 @@ final class VMS_Release_Compatibility_Tooling
 	private static function runMigrationInterruptionScenario(array $config, array $artifact, array $environment): array
 	{
 		$site = self::createSiteHarness('migration-interruption', $config, $environment);
+		$artifactPlugin = self::artifactPluginBasename($artifact);
 		$keepWorkspace = false;
 		try {
 			$site->provision();
 			$site->copyDependencies(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus'), (array) $environment['dependencies']);
 			$site->installArtifact($artifact['path']);
-			$site->activatePlugins(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus', 'vms'));
+			$site->activatePlugins(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus', $artifactPlugin));
 			$site->seedUpgradeFixtures(self::FIXTURE_OPTION);
 			$beforeRollback = $site->collectState(self::FIXTURE_OPTION);
 			$site->evalPhp(
@@ -1103,8 +1342,8 @@ final class VMS_Release_Compatibility_Tooling
 				'update_option("vms_ticketing_claims_db_schema_version", "", false);' .
 				'echo "ok\n";'
 			);
-			$site->deactivatePlugins(array('vms'));
-			$site->activatePlugins(array('vms'));
+			$site->deactivatePlugins(array($artifactPlugin));
+			$site->activatePlugins(array($artifactPlugin));
 			$afterResume = $site->collectState(self::FIXTURE_OPTION);
 			$site->startServer();
 			$login = $site->loginAdmin();
@@ -1139,10 +1378,11 @@ final class VMS_Release_Compatibility_Tooling
 			$keepWorkspace = $status === 'FAIL' && !empty($config['keep_failed_workspaces']);
 
 			return array(
-				'status' => $status,
-				'summary' => implode(' ', $summaryParts),
-				'before_resume' => $beforeRollback,
-				'after_resume' => $afterResume,
+					'status' => $status,
+					'summary' => implode(' ', $summaryParts),
+					'plugin_basename' => $artifactPlugin,
+					'before_resume' => $beforeRollback,
+					'after_resume' => $afterResume,
 				'fixture_preservation' => $fixturePreservation,
 				'scheduled_work_comparison' => $scheduledWork,
 				'login' => $login,
@@ -1169,17 +1409,18 @@ final class VMS_Release_Compatibility_Tooling
 	private static function runUninstallScenario(array $config, array $artifact, array $environment): array
 	{
 		$site = self::createSiteHarness('uninstall', $config, $environment);
+		$artifactPlugin = self::artifactPluginBasename($artifact);
 		$keepWorkspace = false;
 		try {
 			$site->provision();
 			$site->copyDependencies(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus'), (array) $environment['dependencies']);
 			$site->installArtifact($artifact['path']);
-			$site->activatePlugins(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus', 'vms'));
+			$site->activatePlugins(array('woocommerce', 'the-events-calendar', 'event-tickets', 'event-tickets-plus', $artifactPlugin));
 			$site->seedUpgradeFixtures(self::FIXTURE_OPTION);
 			$beforeDeactivate = $site->collectState(self::FIXTURE_OPTION);
-			$site->deactivatePlugins(array('vms'));
+			$site->deactivatePlugins(array($artifactPlugin));
 			$afterDeactivate = $site->collectState(self::FIXTURE_OPTION);
-			$site->deletePlugins(array('vms'));
+			$site->deletePlugins(array($artifactPlugin));
 			$afterDelete = $site->collectState(self::FIXTURE_OPTION);
 
 			$deactivatePreservation = self::compareFixturePreservation((array) ($beforeDeactivate['fixture'] ?? array()), (array) ($afterDeactivate['fixture'] ?? array()));
@@ -1194,10 +1435,11 @@ final class VMS_Release_Compatibility_Tooling
 			$keepWorkspace = $status === 'FAIL' && !empty($config['keep_failed_workspaces']);
 
 			return array(
-				'status' => $status,
-				'summary' => implode(' ', $summaryParts),
-				'before_deactivate' => $beforeDeactivate,
-				'after_deactivate' => $afterDeactivate,
+					'status' => $status,
+					'summary' => implode(' ', $summaryParts),
+					'plugin_basename' => $artifactPlugin,
+					'before_deactivate' => $beforeDeactivate,
+					'after_deactivate' => $afterDeactivate,
 				'after_delete' => $afterDelete,
 				'fixture_preservation_after_deactivate' => $deactivatePreservation,
 				'fixture_preservation_after_delete' => $deletePreservation,
@@ -1331,9 +1573,33 @@ final class VMS_Release_Compatibility_Tooling
 		return is_string($contents) ? $contents : '';
 	}
 
+	private static function readArtifactRelativeEntry(string $zipPath, string $relativePath): string
+	{
+		$identity = self::inspectArtifactRoot($zipPath, false);
+		return self::readZipEntry(
+			$zipPath,
+			$identity['root_directory'] . '/' . ltrim(str_replace('\\', '/', $relativePath), '/')
+		);
+	}
+
+	private static function artifactPluginBasename(array $artifact, string $fallback = ''): string
+	{
+		$pluginBasename = trim(str_replace('\\', '/', (string) ($artifact['plugin_basename'] ?? '')));
+		if (self::isRecognizedPluginBasename($pluginBasename)) {
+			return $pluginBasename;
+		}
+
+		$fallback = trim(str_replace('\\', '/', $fallback));
+		if (self::isRecognizedPluginBasename($fallback)) {
+			return $fallback;
+		}
+
+		return self::publicPluginBasename();
+	}
+
 	private static function extractArtifactVersion(string $artifactPath): string
 	{
-		if (!preg_match('/vms-([0-9.]+(?:\.[0-9]+)*)/i', basename($artifactPath), $matches)) {
+		if (!preg_match('/(?:backstage-venue-manager|vms)-([0-9.]+(?:\.[0-9]+)*)/i', basename($artifactPath), $matches)) {
 			return '';
 		}
 		return (string) ($matches[1] ?? '');
@@ -1347,7 +1613,8 @@ final class VMS_Release_Compatibility_Tooling
 		}
 
 		$version = (string) ($report['artifact']['version'] ?? 'unknown');
-		$prefix = 'vms-' . $version . '-release-compatibility';
+		$artifactRoot = (string) ($report['artifact']['root_directory'] ?? self::publicPluginSlug());
+		$prefix = $artifactRoot . '-' . $version . '-release-compatibility';
 		$jsonPath = $outputDir . DIRECTORY_SEPARATOR . $prefix . '.report.json';
 		$textPath = $outputDir . DIRECTORY_SEPARATOR . $prefix . '.report.txt';
 
@@ -1732,10 +1999,17 @@ final class VMS_Release_Compatibility_Site
 			|| strpos($body, 'adminmenuwrap') !== false
 			|| strpos($body, 'wpbody-content') !== false;
 		$looksLikeLoginForm = strpos($body, 'id="loginform"') !== false || strpos($body, 'name="log"') !== false;
-		$ok = !empty($response['ok']) && !empty($followUp['ok']) && $hasAdminMarker && !$looksLikeLoginForm && !$originMismatchDetected;
+		$ok = VMS_Release_Compatibility_Tooling::isConfirmedAdminSession(
+			$followUp,
+			$hasAdminMarker,
+			$looksLikeLoginForm,
+			$originMismatchDetected
+		);
 
 		return array(
 			'ok' => $ok,
+			'post_request_ok' => !empty($response['ok']),
+			'post_status_code' => (int) ($response['status_code'] ?? 0),
 			'status_code' => (int) ($followUp['status_code'] ?? 0),
 			'final_url' => (string) ($followUp['final_url'] ?? ''),
 			'origin_mismatch_detected' => $originMismatchDetected,

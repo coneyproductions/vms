@@ -19,29 +19,29 @@ if (!function_exists('vms_safety_register_cpts')) {
 
 		register_post_type('vms_incident', array_merge($common, array(
 			'labels' => array(
-				'name' => __('Incident Reports', 'vms'),
-				'singular_name' => __('Incident Report', 'vms'),
+				'name' => __('Incident Reports', 'backstage-venue-manager'),
+				'singular_name' => __('Incident Report', 'backstage-venue-manager'),
 			),
 		)));
 
 		register_post_type('vms_doc', array_merge($common, array(
 			'labels' => array(
-				'name' => __('Safety Documents', 'vms'),
-				'singular_name' => __('Safety Document', 'vms'),
+				'name' => __('Safety Documents', 'backstage-venue-manager'),
+				'singular_name' => __('Safety Document', 'backstage-venue-manager'),
 			),
 		)));
 
 		register_post_type('vms_checklist_tpl', array_merge($common, array(
 			'labels' => array(
-				'name' => __('Safety Checklist Templates', 'vms'),
-				'singular_name' => __('Safety Checklist Template', 'vms'),
+				'name' => __('Safety Checklist Templates', 'backstage-venue-manager'),
+				'singular_name' => __('Safety Checklist Template', 'backstage-venue-manager'),
 			),
 		)));
 
 		register_post_type('vms_checklist', array_merge($common, array(
 			'labels' => array(
-				'name' => __('Safety Checklists', 'vms'),
-				'singular_name' => __('Safety Checklist', 'vms'),
+				'name' => __('Safety Checklists', 'backstage-venue-manager'),
+				'singular_name' => __('Safety Checklist', 'backstage-venue-manager'),
 			),
 		)));
 	}

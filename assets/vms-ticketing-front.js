@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var cfg = window.vmsTicketingFront || {};
+  var cfg = window.BVMGR_TICKETING_FRONT || {};
 
   function isDiagFlagEnabled() {
     var raw = '';
@@ -92,7 +92,7 @@
   }
 
   function collectDiagSnapshot() {
-    var bundle = window.__vmsTicketingFrontBundle || {};
+    var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
     var state = bundle.state || null;
     var source = document.querySelector('#vms-reserved-addons.vms-entitlements-block');
     var form = document.querySelector('#tribe-tickets__tickets-form') || document.querySelector('#tribe-tickets form, .tribe-tickets__tickets form, .tribe-tickets__tickets-form, form.tribe-tickets__tickets-form');
@@ -1058,7 +1058,7 @@
   startDiagPanel();
   diagLog('bundle-start', { build: incomingBuildStamp || String(cfg.buildStamp || '') });
 
-  var existingBundle = window.__vmsTicketingFrontBundle || {};
+  var existingBundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
   if (existingBundle.loaded
       && (!incomingBuildStamp || String(existingBundle.buildStamp || '') === incomingBuildStamp)
       && stateBelongsToCurrentDocument(existingBundle.state)) {
@@ -1071,7 +1071,7 @@
       // ignore
     }
   }
-  window.__vmsTicketingFrontBundle = {
+  window.BVMGR_TICKETING_FRONT_BUNDLE = {
     loaded: true,
     buildStamp: incomingBuildStamp,
     previousBuildStamp: String(existingBundle.buildStamp || ''),
@@ -2650,19 +2650,19 @@
     [75, 250, 750, 1500, 3000].forEach(function (delay) {
       window.setTimeout(update, delay);
     });
-    if (!window.__vmsMyTicketsNoticeObserver && typeof MutationObserver !== 'undefined' && document.body) {
-      window.__vmsMyTicketsNoticeObserver = new MutationObserver(function () {
+    if (!window.BVMGR_MY_TICKETS_NOTICE_OBSERVER && typeof MutationObserver !== 'undefined' && document.body) {
+      window.BVMGR_MY_TICKETS_NOTICE_OBSERVER = new MutationObserver(function () {
         update();
       });
-      window.__vmsMyTicketsNoticeObserver.observe(document.body, { childList: true, subtree: true });
+      window.BVMGR_MY_TICKETS_NOTICE_OBSERVER.observe(document.body, { childList: true, subtree: true });
       window.setTimeout(function () {
-        if (window.__vmsMyTicketsNoticeObserver) {
+        if (window.BVMGR_MY_TICKETS_NOTICE_OBSERVER) {
           try {
-            window.__vmsMyTicketsNoticeObserver.disconnect();
+            window.BVMGR_MY_TICKETS_NOTICE_OBSERVER.disconnect();
           } catch (err) {
             // ignore observer cleanup errors
           }
-          window.__vmsMyTicketsNoticeObserver = null;
+          window.BVMGR_MY_TICKETS_NOTICE_OBSERVER = null;
         }
       }, 10000);
     }
@@ -4150,7 +4150,10 @@
     payload.set('event_id', String(state.tecEventId || cfg.tecEventId || 0));
     payload.set('ticket_key', String(access.ticket_key || ''));
     payload.set('assignee_email', local.email);
-    payload.set('existing_counts', JSON.stringify(collectTicketClaimVerifiedCounts(ticketModel, rowState.seat)));
+    var existingCounts = collectTicketClaimVerifiedCounts(ticketModel, rowState.seat);
+    Object.keys(existingCounts).forEach(function (emailKey) {
+      payload.set('existing_counts[' + emailKey + ']', String(existingCounts[emailKey]));
+    });
 
     fetch(normalizeUrl(cfg.claimsValidateUrl), {
       method: 'POST',
@@ -5628,7 +5631,7 @@
   }
 
   function init() {
-    var bundle = window.__vmsTicketingFrontBundle || {};
+    var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
     if (repairMountedState(bundle.state)) {
       return true;
     }
@@ -5654,7 +5657,7 @@
         DIAG.flags.initSuccess = true;
         diagLog('init-ticket-only-success', { ticketAccessCount: Object.keys(ticketOnlyState.ticketAccessMap || {}).length });
         renderDiagPanel();
-        window.__vmsTicketingFrontBundle.state = ticketOnlyState;
+        window.BVMGR_TICKETING_FRONT_BUNDLE.state = ticketOnlyState;
         return true;
       }
       return initTicketOnlyBridge(form);
@@ -5665,7 +5668,7 @@
         DIAG.flags.initSuccess = true;
         diagLog('init-server-controls-success', { addons: serverState.addons.length });
         renderDiagPanel();
-        window.__vmsTicketingFrontBundle.state = serverState;
+        window.BVMGR_TICKETING_FRONT_BUNDLE.state = serverState;
         return true;
       }
       return false;
@@ -5751,7 +5754,7 @@
 
   function boot() {
     syncMyTicketsNotice();
-    var bundle = window.__vmsTicketingFrontBundle || {};
+    var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
     DIAG.flags.bootCalls += 1;
     diagLog('boot-attempt', { attempt: DIAG.flags.bootCalls });
     renderDiagPanel();
@@ -5767,7 +5770,7 @@
   }
 
   function installDomObserver() {
-    var bundle = window.__vmsTicketingFrontBundle || {};
+    var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
     if (bundle.observer || !document.body || typeof MutationObserver === 'undefined') {
       return;
     }

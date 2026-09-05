@@ -10,15 +10,15 @@ defined('ABSPATH') || exit;
  *
  * @return array<string,string> key => human label
  */
-function vms_event_plan_statuses(): array {
+function bvmgr_event_plan_statuses(): array {
 	$statuses = [
-		'draft'     => vms_i18n_runtime('Draft', VMS_TEXTDOMAIN),
-		'ready'     => vms_i18n_runtime('Ready', VMS_TEXTDOMAIN),
-		'published' => vms_i18n_runtime('Published', VMS_TEXTDOMAIN),
-		'tentative' => vms_i18n_runtime('Tentative', VMS_TEXTDOMAIN),
-		'confirmed' => vms_i18n_runtime('Confirmed', VMS_TEXTDOMAIN),
-		'cancelled' => vms_i18n_runtime('Cancelled', VMS_TEXTDOMAIN),
-		'archived'  => vms_i18n_runtime('Archived', VMS_TEXTDOMAIN),
+		'draft'     => __('Draft', 'backstage-venue-manager'),
+		'ready'     => __('Ready', 'backstage-venue-manager'),
+		'published' => __('Published', 'backstage-venue-manager'),
+		'tentative' => __('Tentative', 'backstage-venue-manager'),
+		'confirmed' => __('Confirmed', 'backstage-venue-manager'),
+		'cancelled' => __('Cancelled', 'backstage-venue-manager'),
+		'archived'  => __('Archived', 'backstage-venue-manager'),
 	];
 
 	return apply_filters('vms_event_plan_statuses', $statuses);
@@ -29,12 +29,12 @@ function vms_event_plan_statuses(): array {
  *
  * @return array<string,string>
  */
-function vms_vendor_availability_statuses(): array {
+function bvmgr_vendor_availability_statuses(): array {
 	$statuses = [
-		'available'   => vms_i18n_runtime('Available', VMS_TEXTDOMAIN),
-		'unavailable' => vms_i18n_runtime('Unavailable', VMS_TEXTDOMAIN),
-		'tentative'   => vms_i18n_runtime('Tentative', VMS_TEXTDOMAIN),
-		'unknown'     => vms_i18n_runtime('Unknown', VMS_TEXTDOMAIN),
+		'available'   => __('Available', 'backstage-venue-manager'),
+		'unavailable' => __('Unavailable', 'backstage-venue-manager'),
+		'tentative'   => __('Tentative', 'backstage-venue-manager'),
+		'unknown'     => __('Unknown', 'backstage-venue-manager'),
 	];
 
 	return apply_filters('vms_vendor_availability_statuses', $statuses);
@@ -45,12 +45,12 @@ function vms_vendor_availability_statuses(): array {
  *
  * @return array<string,string>
  */
-function vms_payment_statuses(): array {
+function bvmgr_payment_statuses(): array {
 	$statuses = [
-		'unpaid'   => vms_i18n_runtime('Unpaid', VMS_TEXTDOMAIN),
-		'partial'  => vms_i18n_runtime('Partial', VMS_TEXTDOMAIN),
-		'paid'     => vms_i18n_runtime('Paid', VMS_TEXTDOMAIN),
-		'void'     => vms_i18n_runtime('Void', VMS_TEXTDOMAIN),
+		'unpaid'   => __('Unpaid', 'backstage-venue-manager'),
+		'partial'  => __('Partial', 'backstage-venue-manager'),
+		'paid'     => __('Paid', 'backstage-venue-manager'),
+		'void'     => __('Void', 'backstage-venue-manager'),
 	];
 
 	return apply_filters('vms_payment_statuses', $statuses);
@@ -61,13 +61,13 @@ function vms_payment_statuses(): array {
  *
  * @return array<string,string>
  */
-function vms_cancellation_reasons(): array {
+function bvmgr_cancellation_reasons(): array {
 	$reasons = [
-		'weather'         => vms_i18n_runtime('Weather', VMS_TEXTDOMAIN),
-		'low_sales'       => vms_i18n_runtime('Low sales', VMS_TEXTDOMAIN),
-		'artist_cancelled'=> vms_i18n_runtime('Artist cancelled', VMS_TEXTDOMAIN),
-		'venue_issue'     => vms_i18n_runtime('Venue issue', VMS_TEXTDOMAIN),
-		'other'           => vms_i18n_runtime('Other', VMS_TEXTDOMAIN),
+		'weather'         => __('Weather', 'backstage-venue-manager'),
+		'low_sales'       => __('Low sales', 'backstage-venue-manager'),
+		'artist_cancelled'=> __('Artist cancelled', 'backstage-venue-manager'),
+		'venue_issue'     => __('Venue issue', 'backstage-venue-manager'),
+		'other'           => __('Other', 'backstage-venue-manager'),
 	];
 
 	return apply_filters('vms_cancellation_reasons', $reasons);

@@ -14,18 +14,18 @@ defined('ABSPATH') || exit;
  * - Conservative defaults (no rules => closed)
  */
 
-if (!defined('VMS_SEASON_RULES_OPT_V1')) {
-    define('VMS_SEASON_RULES_OPT_V1', 'vms_season_rules_v1');
+if (!defined('BVMGR_SEASON_RULES_OPT_V1')) {
+    define('BVMGR_SEASON_RULES_OPT_V1', 'vms_season_rules_v1');
 }
-if (!defined('VMS_SEASON_ACTIVE_OPT_V1')) {
-    define('VMS_SEASON_ACTIVE_OPT_V1', 'vms_season_active_dates_v1');
+if (!defined('BVMGR_SEASON_ACTIVE_OPT_V1')) {
+    define('BVMGR_SEASON_ACTIVE_OPT_V1', 'vms_season_active_dates_v1');
 }
 
 /** -------------------------
  *  Sanitizers / validators
  *  ------------------------- */
 
-function vms_sch_season_is_valid_mmdd(string $mmdd): bool
+function bvmgr_sch_season_is_valid_mmdd(string $mmdd): bool
 {
     if (!preg_match('/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', $mmdd)) {
         return false;
@@ -33,7 +33,7 @@ function vms_sch_season_is_valid_mmdd(string $mmdd): bool
     [$m, $d] = array_map('intval', explode('-', $mmdd));
     return checkdate($m, $d, 2000); // 2000 is leap year, so 02-29 is allowed
 }
-function vms_sch_season_is_valid_ymd(string $ymd): bool
+function bvmgr_sch_season_is_valid_ymd(string $ymd): bool
 {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd)) {
         return false;
@@ -42,13 +42,13 @@ function vms_sch_season_is_valid_ymd(string $ymd): bool
     return checkdate($m, $d, $y);
 }
 
-function vms_sch_season_sanitize_note($note): string
+function bvmgr_sch_season_sanitize_note($note): string
 {
     $note = is_string($note) ? $note : '';
     $note = wp_strip_all_tags($note);
     return trim($note);
 }
-function vms_sch_season_sanitize_days_w($raw): ?int
+function bvmgr_sch_season_sanitize_days_w($raw): ?int
 {
     if ($raw === null || $raw === '') {
         return null;
@@ -61,7 +61,7 @@ function vms_sch_season_sanitize_days_w($raw): ?int
     return ($mask > 0) ? $mask : null;
 }
 
-function vms_sch_season_sanitize_rule(array $rule): ?array
+function bvmgr_sch_season_sanitize_rule(array $rule): ?array
 {
     $type = isset($rule['type']) ? sanitize_key((string) $rule['type']) : '';
     $enabled = !empty($rule['enabled']);
@@ -71,13 +71,13 @@ function vms_sch_season_sanitize_rule(array $rule): ?array
         $id = 'r_' . substr(wp_generate_uuid4(), 0, 8);
     }
 
-    $note = vms_sch_season_sanitize_note($rule['note'] ?? '');
+    $note = bvmgr_sch_season_sanitize_note($rule['note'] ?? '');
 
     if ($type === 'open_window') {
         $start = isset($rule['start_mmdd']) ? trim((string) $rule['start_mmdd']) : '';
         $end   = isset($rule['end_mmdd']) ? trim((string) $rule['end_mmdd']) : '';
 
-        if (!vms_sch_season_is_valid_mmdd($start) || !vms_sch_season_is_valid_mmdd($end)) {
+        if (!bvmgr_sch_season_is_valid_mmdd($start) || !bvmgr_sch_season_is_valid_mmdd($end)) {
             return null;
         }
 
@@ -105,7 +105,7 @@ function vms_sch_season_sanitize_rule(array $rule): ?array
                 }
                 $mask = ($tmp > 0 && $tmp <= 127) ? $tmp : null;
             } else {
-                $mask = vms_sch_season_sanitize_days_w($rule['days_w']);
+                $mask = bvmgr_sch_season_sanitize_days_w($rule['days_w']);
             }
         }
 
@@ -130,7 +130,7 @@ function vms_sch_season_sanitize_rule(array $rule): ?array
 
     if ($type === 'blackout_date') {
         $date = isset($rule['date_ymd']) ? trim((string) $rule['date_ymd']) : '';
-        if (!vms_sch_season_is_valid_ymd($date)) {
+        if (!bvmgr_sch_season_is_valid_ymd($date)) {
             return null;
         }
 
@@ -147,7 +147,7 @@ function vms_sch_season_sanitize_rule(array $rule): ?array
         $start = isset($rule['start_ymd']) ? trim((string) $rule['start_ymd']) : '';
         $end   = isset($rule['end_ymd']) ? trim((string) $rule['end_ymd']) : '';
 
-        if (!vms_sch_season_is_valid_ymd($start) || !vms_sch_season_is_valid_ymd($end)) {
+        if (!bvmgr_sch_season_is_valid_ymd($start) || !bvmgr_sch_season_is_valid_ymd($end)) {
             return null;
         }
 
@@ -182,7 +182,7 @@ function vms_sch_season_sanitize_rule(array $rule): ?array
     return null;
 }
 
-function vms_sch_season_rules_hash(array $rules): string
+function bvmgr_sch_season_rules_hash(array $rules): string
 {
     // Deterministic hash of sanitized rules (order-independent by id sort).
     $sorted = $rules;
@@ -192,7 +192,7 @@ function vms_sch_season_rules_hash(array $rules): string
     return hash('sha256', wp_json_encode($sorted));
 }
 
-function vms_sch_season_dow_w(string $ymd): int
+function bvmgr_sch_season_dow_w(string $ymd): int
 {
     // Day-of-week for a date-only value should not be timezone-sensitive.
     // Use UTC explicitly to avoid server tz surprises.
@@ -210,25 +210,25 @@ function vms_sch_season_dow_w(string $ymd): int
  *  Option access helpers
  *  ------------------------- */
 
-function vms_sch_season_get_rules_all(): array
+function bvmgr_sch_season_get_rules_all(): array
 {
-    $all = get_option(VMS_SEASON_RULES_OPT_V1, []);
+    $all = get_option(BVMGR_SEASON_RULES_OPT_V1, []);
     return is_array($all) ? $all : [];
 }
 
-function vms_sch_season_get_rules(int $venue_id): array
+function bvmgr_sch_season_get_rules(int $venue_id): array
 {
     $venue_id = absint($venue_id);
     if ($venue_id <= 0) {
         return [];
     }
 
-    $all = vms_sch_season_get_rules_all();
+    $all = bvmgr_sch_season_get_rules_all();
     $rules = $all[$venue_id] ?? [];
     return is_array($rules) ? array_values($rules) : [];
 }
 
-function vms_sch_season_save_rules(int $venue_id, array $rules): array
+function bvmgr_sch_season_save_rules(int $venue_id, array $rules): array
 {
     $venue_id = absint($venue_id);
     if ($venue_id <= 0) {
@@ -240,27 +240,27 @@ function vms_sch_season_save_rules(int $venue_id, array $rules): array
         if (!is_array($rule)) {
             continue;
         }
-        $clean = vms_sch_season_sanitize_rule($rule);
+        $clean = bvmgr_sch_season_sanitize_rule($rule);
         if ($clean) {
             $sanitized[] = $clean;
         }
     }
 
-    $all = vms_sch_season_get_rules_all();
+    $all = bvmgr_sch_season_get_rules_all();
     $all[$venue_id] = array_values($sanitized);
 
-    update_option(VMS_SEASON_RULES_OPT_V1, $all, false);
+    update_option(BVMGR_SEASON_RULES_OPT_V1, $all, false);
 
     return $all[$venue_id];
 }
 
-function vms_sch_season_get_active_all(): array
+function bvmgr_sch_season_get_active_all(): array
 {
-    $all = get_option(VMS_SEASON_ACTIVE_OPT_V1, []);
+    $all = get_option(BVMGR_SEASON_ACTIVE_OPT_V1, []);
     return is_array($all) ? $all : [];
 }
 
-function vms_sch_season_get_active_payload(int $venue_id): array
+function bvmgr_sch_season_get_active_payload(int $venue_id): array
 {
     static $cache = [];
 
@@ -273,7 +273,7 @@ function vms_sch_season_get_active_payload(int $venue_id): array
         return $cache[$venue_id];
     }
 
-    $all = vms_sch_season_get_active_all();
+    $all = bvmgr_sch_season_get_active_all();
 
     $payload = [];
     if (isset($all[$venue_id]) && is_array($all[$venue_id])) {
@@ -286,33 +286,33 @@ function vms_sch_season_get_active_payload(int $venue_id): array
     return $payload;
 }
 
-function vms_sch_season_set_active_payload(int $venue_id, array $payload): void
+function bvmgr_sch_season_set_active_payload(int $venue_id, array $payload): void
 {
     $venue_id = absint($venue_id);
     if ($venue_id <= 0) {
         return;
     }
-    $all = vms_sch_season_get_active_all();
+    $all = bvmgr_sch_season_get_active_all();
     $all[$venue_id] = $payload;
-    update_option(VMS_SEASON_ACTIVE_OPT_V1, $all, false);
+    update_option(BVMGR_SEASON_ACTIVE_OPT_V1, $all, false);
 }
 
-function vms_sch_season_clear_active_dates(int $venue_id): void
+function bvmgr_sch_season_clear_active_dates(int $venue_id): void
 {
     $venue_id = absint($venue_id);
     if ($venue_id <= 0) {
         return;
     }
-    $all = vms_sch_season_get_active_all();
+    $all = bvmgr_sch_season_get_active_all();
     unset($all[$venue_id]);
-    update_option(VMS_SEASON_ACTIVE_OPT_V1, $all, false);
+    update_option(BVMGR_SEASON_ACTIVE_OPT_V1, $all, false);
 }
 
 
 // Canonical: return a fast lookup map of blackout dates for a venue.
 // Uses stored payload when available; otherwise falls back to scanning rules in one place only.
-if (!function_exists('vms_sch_season_get_blackout_map')) {
-    function vms_sch_season_get_blackout_map(int $venue_id): array
+if (!function_exists('bvmgr_sch_season_get_blackout_map')) {
+    function bvmgr_sch_season_get_blackout_map(int $venue_id): array
     {
         static $cache = [];
 
@@ -323,7 +323,7 @@ if (!function_exists('vms_sch_season_get_blackout_map')) {
         $map = [];
 
         // 1) Prefer stored generated payload (single source of truth when present).
-        $payload = function_exists('vms_sch_season_get_active_payload') ? vms_sch_season_get_active_payload($venue_id) : [];
+        $payload = function_exists('bvmgr_sch_season_get_active_payload') ? bvmgr_sch_season_get_active_payload($venue_id) : [];
         $list = [];
 
         if (is_array($payload)) {
@@ -357,8 +357,8 @@ if (!function_exists('vms_sch_season_get_blackout_map')) {
                 $d = (string) $d;
 
                 $valid = true;
-                if (function_exists('vms_sch_season_is_valid_ymd')) {
-                    $valid = vms_sch_season_is_valid_ymd($d);
+                if (function_exists('bvmgr_sch_season_is_valid_ymd')) {
+                    $valid = bvmgr_sch_season_is_valid_ymd($d);
                 } else {
                     $valid = (bool) preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $d);
                 }
@@ -407,14 +407,14 @@ if (!function_exists('vms_sch_season_get_blackout_map')) {
 }
 
 // Canonical: answer “is this date a blackout?” without duplicating logic in callers.
-if (!function_exists('vms_sch_season_is_blackout')) {
-    function vms_sch_season_is_blackout(int $venue_id, string $ymd): bool
+if (!function_exists('bvmgr_sch_season_is_blackout')) {
+    function bvmgr_sch_season_is_blackout(int $venue_id, string $ymd): bool
     {
         $ymd = (string) $ymd;
 
         $valid = true;
-        if (function_exists('vms_sch_season_is_valid_ymd')) {
-            $valid = vms_sch_season_is_valid_ymd($ymd);
+        if (function_exists('bvmgr_sch_season_is_valid_ymd')) {
+            $valid = bvmgr_sch_season_is_valid_ymd($ymd);
         } else {
             $valid = (bool) preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $ymd);
         }
@@ -423,7 +423,7 @@ if (!function_exists('vms_sch_season_is_blackout')) {
             return false;
         }
 
-        $map = function_exists('vms_sch_season_get_blackout_map') ? vms_sch_season_get_blackout_map($venue_id) : [];
+        $map = function_exists('bvmgr_sch_season_get_blackout_map') ? bvmgr_sch_season_get_blackout_map($venue_id) : [];
         return isset($map[$ymd]);
     }
 }
@@ -433,14 +433,14 @@ if (!function_exists('vms_sch_season_is_blackout')) {
  *  Core logic
  *  ------------------------- */
 
-function vms_sch_season_is_open_by_rules(array $rules, string $ymd): bool
+function bvmgr_sch_season_is_open_by_rules(array $rules, string $ymd): bool
 {
-    if (!vms_sch_season_is_valid_ymd($ymd)) {
+    if (!bvmgr_sch_season_is_valid_ymd($ymd)) {
         return false;
     }
 
     $mmdd  = substr($ymd, 5, 5);
-    $dow_w = vms_sch_season_dow_w($ymd); // 0..6 (Sun..Sat)
+    $dow_w = bvmgr_sch_season_dow_w($ymd); // 0..6 (Sun..Sat)
 
     $has_open_rule = false;
     $is_open = false;
@@ -456,7 +456,7 @@ function vms_sch_season_is_open_by_rules(array $rules, string $ymd): bool
             $start = (string) ($r['start_mmdd'] ?? '');
             $end   = (string) ($r['end_mmdd'] ?? '');
 
-            if (!vms_sch_season_is_valid_mmdd($start) || !vms_sch_season_is_valid_mmdd($end)) {
+            if (!bvmgr_sch_season_is_valid_mmdd($start) || !bvmgr_sch_season_is_valid_mmdd($end)) {
                 continue;
             }
 
@@ -535,9 +535,9 @@ function vms_sch_season_is_open_by_rules(array $rules, string $ymd): bool
     return $is_open;
 }
 
-function vms_sch_season_is_blackout_by_rules(array $rules, string $ymd): bool
+function bvmgr_sch_season_is_blackout_by_rules(array $rules, string $ymd): bool
 {
-    if (!vms_sch_season_is_valid_ymd($ymd)) {
+    if (!bvmgr_sch_season_is_valid_ymd($ymd)) {
         return false;
     }
 
@@ -573,11 +573,11 @@ function vms_sch_season_is_blackout_by_rules(array $rules, string $ymd): bool
  *
  * Includes venue rules and global rules (venue_id=0).
  */
-if (!function_exists('vms_sch_season_get_blackout_notes_map')) {
-    function vms_sch_season_get_blackout_notes_map(int $venue_id, string $from_ymd, string $to_ymd): array
+if (!function_exists('bvmgr_sch_season_get_blackout_notes_map')) {
+    function bvmgr_sch_season_get_blackout_notes_map(int $venue_id, string $from_ymd, string $to_ymd): array
     {
         if ($venue_id <= 0) return array();
-        if (!vms_sch_season_is_valid_ymd($from_ymd) || !vms_sch_season_is_valid_ymd($to_ymd)) {
+        if (!bvmgr_sch_season_is_valid_ymd($from_ymd) || !bvmgr_sch_season_is_valid_ymd($to_ymd)) {
             return array();
         }
         if ($from_ymd > $to_ymd) {
@@ -590,17 +590,17 @@ if (!function_exists('vms_sch_season_get_blackout_notes_map')) {
 
         $buckets = array((int) $venue_id, 0);
         foreach ($buckets as $bid) {
-            $rules = vms_sch_season_get_rules((int) $bid);
+            $rules = bvmgr_sch_season_get_rules((int) $bid);
             if (!is_array($rules)) continue;
 
             foreach ($rules as $r) {
                 if (!is_array($r) || empty($r['enabled'])) continue;
                 $t = (string) ($r['type'] ?? '');
-                $note = vms_sch_season_sanitize_note($r['note'] ?? '');
+                $note = bvmgr_sch_season_sanitize_note($r['note'] ?? '');
 
                 if ($t === 'blackout_date') {
                     $d = (string) ($r['date_ymd'] ?? '');
-                    if (!$d || !vms_sch_season_is_valid_ymd($d)) continue;
+                    if (!$d || !bvmgr_sch_season_is_valid_ymd($d)) continue;
                     if ($d < $from_ymd || $d > $to_ymd) continue;
                     if (!isset($out[$d])) $out[$d] = array();
                     if ($note !== '' && !in_array($note, $out[$d], true)) {
@@ -612,7 +612,7 @@ if (!function_exists('vms_sch_season_get_blackout_notes_map')) {
                 } elseif ($t === 'blackout_range') {
                     $s = (string) ($r['start_ymd'] ?? '');
                     $e = (string) ($r['end_ymd'] ?? '');
-                    if (!$s || !$e || !vms_sch_season_is_valid_ymd($s) || !vms_sch_season_is_valid_ymd($e)) continue;
+                    if (!$s || !$e || !bvmgr_sch_season_is_valid_ymd($s) || !bvmgr_sch_season_is_valid_ymd($e)) continue;
                     if ($s > $e) { $tmp = $s; $s = $e; $e = $tmp; }
 
                     // Clip to window
@@ -625,7 +625,7 @@ if (!function_exists('vms_sch_season_get_blackout_notes_map')) {
                     if (!$ts_from || !$ts_to) continue;
 
                     for ($ts = $ts_from; $ts <= $ts_to; $ts = strtotime('+1 day', $ts)) {
-                        $d = date('Y-m-d', $ts);
+                        $d = gmdate('Y-m-d', $ts);
                         if (!isset($out[$d])) $out[$d] = array();
                         if ($note !== '' && !in_array($note, $out[$d], true)) {
                             $out[$d][] = $note;
@@ -646,41 +646,41 @@ if (!function_exists('vms_sch_season_get_blackout_notes_map')) {
  * Returns true if venue is open on date, using generated dates when available for that range,
  * otherwise computing from rules.
  */
-function vms_sch_is_venue_open_on_date(int $venue_id, string $ymd): bool
+function bvmgr_sch_is_venue_open_on_date(int $venue_id, string $ymd): bool
 {
     $venue_id = absint($venue_id);
     if ($venue_id <= 0) {
         return false;
     }
-    if (!vms_sch_season_is_valid_ymd($ymd)) {
+    if (!bvmgr_sch_season_is_valid_ymd($ymd)) {
         return false;
     }
 
-    $payload = vms_sch_season_get_active_payload($venue_id);
+    $payload = bvmgr_sch_season_get_active_payload($venue_id);
 
     $from = isset($payload['from_ymd']) ? (string) $payload['from_ymd'] : '';
     $to   = isset($payload['to_ymd']) ? (string) $payload['to_ymd'] : '';
 
-    if ($from && $to && vms_sch_season_is_valid_ymd($from) && vms_sch_season_is_valid_ymd($to)) {
+    if ($from && $to && bvmgr_sch_season_is_valid_ymd($from) && bvmgr_sch_season_is_valid_ymd($to)) {
         if ($ymd >= $from && $ymd <= $to) {
             $map = $payload['dates_map'] ?? [];
             return is_array($map) && isset($map[$ymd]);
         }
     }
 
-    $rules = vms_sch_season_get_rules($venue_id);
-    return vms_sch_season_is_open_by_rules($rules, $ymd);
+    $rules = bvmgr_sch_season_get_rules($venue_id);
+    return bvmgr_sch_season_is_open_by_rules($rules, $ymd);
 }
 
 /**
  * Generate and return (but do not automatically save) the active dates payload for a venue.
  * The UI layer should call vms_sch_season_set_active_payload() only after explicit confirmation.
  */
-function vms_sch_season_generate_active_dates(int $venue_id, string $from_ymd, string $to_ymd): array
+function bvmgr_sch_season_generate_active_dates(int $venue_id, string $from_ymd, string $to_ymd): array
 {
     $venue_id = absint($venue_id);
 
-    if ($venue_id <= 0 || !vms_sch_season_is_valid_ymd($from_ymd) || !vms_sch_season_is_valid_ymd($to_ymd)) {
+    if ($venue_id <= 0 || !bvmgr_sch_season_is_valid_ymd($from_ymd) || !bvmgr_sch_season_is_valid_ymd($to_ymd)) {
         return [
             'error' => 'invalid_input',
             'message' => 'Invalid venue or date range.',
@@ -706,7 +706,7 @@ function vms_sch_season_generate_active_dates(int $venue_id, string $from_ymd, s
         ];
     }
 
-    $rules = vms_sch_season_get_rules($venue_id);
+    $rules = bvmgr_sch_season_get_rules($venue_id);
     $dates_map = [];
     $blackout_map = [];
 
@@ -715,13 +715,13 @@ function vms_sch_season_generate_active_dates(int $venue_id, string $from_ymd, s
         $ymd = gmdate('Y-m-d', $ts);
 
         // Record blackouts explicitly.
-        if (vms_sch_season_is_blackout_by_rules($rules, $ymd)) {
+        if (bvmgr_sch_season_is_blackout_by_rules($rules, $ymd)) {
             $blackout_map[$ymd] = 1;
             continue;
         }
 
         // Record open dates.
-        if (vms_sch_season_is_open_by_rules($rules, $ymd)) {
+        if (bvmgr_sch_season_is_open_by_rules($rules, $ymd)) {
             $dates_map[$ymd] = 1;
         }
     }
@@ -730,7 +730,7 @@ function vms_sch_season_generate_active_dates(int $venue_id, string $from_ymd, s
         'from_ymd'     => $from_ymd,
         'to_ymd'       => $to_ymd,
         'generated_at' => current_time('mysql'),
-        'rules_hash'   => vms_sch_season_rules_hash($rules),
+        'rules_hash'   => bvmgr_sch_season_rules_hash($rules),
         'dates_map'    => $dates_map,
 
         // New: explicit blackout storage (canonical).

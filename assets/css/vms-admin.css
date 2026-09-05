@@ -3019,6 +3019,49 @@ body[class*="vms_page_vms-"] table.vms-sch-grid thead {
   background: var(--vms-notice-warning-bg);
 }
 
+.vms-ticketing-destination {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid #c3c4c7;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.vms-ticketing-destination > h4 {
+  margin: 0 0 6px;
+}
+
+.vms-ticketing-destination__mode {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.vms-ticketing-destination__external {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #dcdcde;
+}
+
+.vms-ticketing-destination__external[hidden],
+.vms-ticketing-destination__field[hidden] {
+  display: none !important;
+}
+
+.vms-ticketing-destination__field {
+  display: grid;
+  gap: 5px;
+  max-width: 720px;
+}
+
+.vms-ticketing-destination__field .description {
+  margin: 0;
+}
+
 
 /* Ticketing: draw attention to required Mode selection when a commit is possible but blocked by mode */
 .vms-field-attn {
@@ -5761,6 +5804,60 @@ body.post-type-vms_rating .vms-rating-select-wide {
   background: #f6f7f7;
   color: #475467;
   border-color: #d0d5dd;
+}
+
+/* Vendor Applications list screen preserves its historical status-pill palette. */
+body.post-type-vms_vendor_app .vms-status-pill,
+body.post-type-vms_vendor_application .vms-status-pill,
+body.vms-cpt-vms_vendor_app .vms-status-pill,
+body.vms-cpt-vms_vendor_application .vms-status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+body.post-type-vms_vendor_app .vms-pill-blue,
+body.post-type-vms_vendor_application .vms-pill-blue,
+body.vms-cpt-vms_vendor_app .vms-pill-blue,
+body.vms-cpt-vms_vendor_application .vms-pill-blue {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+body.post-type-vms_vendor_app .vms-pill-yellow,
+body.post-type-vms_vendor_application .vms-pill-yellow,
+body.vms-cpt-vms_vendor_app .vms-pill-yellow,
+body.vms-cpt-vms_vendor_application .vms-pill-yellow {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+body.post-type-vms_vendor_app .vms-pill-green,
+body.post-type-vms_vendor_application .vms-pill-green,
+body.vms-cpt-vms_vendor_app .vms-pill-green,
+body.vms-cpt-vms_vendor_application .vms-pill-green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+body.post-type-vms_vendor_app .vms-pill-red,
+body.post-type-vms_vendor_application .vms-pill-red,
+body.vms-cpt-vms_vendor_app .vms-pill-red,
+body.vms-cpt-vms_vendor_application .vms-pill-red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+body.post-type-vms_vendor_app .vms-pill-grey,
+body.post-type-vms_vendor_application .vms-pill-grey,
+body.vms-cpt-vms_vendor_app .vms-pill-grey,
+body.vms-cpt-vms_vendor_application .vms-pill-grey {
+  background: #f3f4f6;
+  color: #374151;
 }
 
 /* Vendor Command Center */

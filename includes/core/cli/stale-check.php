@@ -5,15 +5,15 @@ if (!defined('WP_CLI') || !WP_CLI) {
 	return;
 }
 
-if (!class_exists('VMS_CLI_Stale_Check_Command')) {
+if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 	/**
 	 * Built-in stale-check helper for historical bug + cancellation-health probes.
 	 * 
 	 * Usage:
-	 *   wp vms stale-check
-	 *   wp vms stale-check --bugs=BUG-01,BUG-03
+	 *   wp bvmgr stale-check
+	 *   wp bvmgr stale-check --bugs=BUG-01,BUG-03
 	 */
-		class VMS_CLI_Stale_Check_Command
+		class BVMGR_CLI_Stale_Check_Command
 		{
 			/** @var array<int,string> */
 			private $supported = array('BUG-01', 'BUG-02', 'BUG-03', 'BUG-05', 'BUG-06', 'BUG-07', 'BUG-08', 'BUG-09', 'BUG-10', 'BUG-11', 'CAN-01', 'TICK-01');
@@ -33,9 +33,9 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms stale-check
-		 *     wp vms stale_check
-		 *     wp vms stale-check --bugs=BUG-01,BUG-03,CAN-01
+		 *     wp bvmgr stale-check
+		 *     wp bvmgr stale_check
+		 *     wp bvmgr stale-check --bugs=BUG-01,BUG-03,CAN-01
 		 *
 		 * @subcommand stale-check
 		 * @when after_wp_load
@@ -110,8 +110,8 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms stale_check
-		 *     wp vms stale_check --bugs=BUG-01,BUG-03
+		 *     wp bvmgr stale_check
+		 *     wp bvmgr stale_check --bugs=BUG-01,BUG-03
 		 *
 		 * @subcommand stale_check
 		 * @when after_wp_load
@@ -160,16 +160,16 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 		 */
 		private function check_bug_01(): array
 		{
-			$k_status = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+			$k_status = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 			if ($k_status === '') {
 				$k_status = '_vms_event_plan_status';
 			}
-			$k_tec = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
+			$k_tec = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'tec_event_id') : '_vms_tec_event_id';
 			if ($k_tec === '') {
 				$k_tec = '_vms_tec_event_id';
 			}
 
-			$k_issue = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
+			$k_issue = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'integrity_issue') : '_vms_integrity_issue';
 			if ($k_issue === '') {
 				$k_issue = '_vms_integrity_issue';
 			}
@@ -179,7 +179,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				'post_status' => array('publish', 'draft', 'private', 'pending', 'future'),
 				'posts_per_page' => 300,
 				'fields' => 'ids',
-				'meta_query' => array(
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- BUG-01 stale-check intentionally samples at most 300 Event Plan IDs with draft workflow status and linked TEC metadata for diagnosis.
 					'relation' => 'AND',
 					array('key' => $k_status, 'value' => 'draft', 'compare' => '='),
 					array('key' => $k_tec, 'compare' => 'EXISTS'),
@@ -334,7 +334,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				'post_status' => array('publish', 'draft', 'private', 'pending', 'future'),
 				'posts_per_page' => 150,
 				'fields' => 'ids',
-				'meta_query' => array(
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- BUG-03 stale-check intentionally samples at most 150 Event Plan IDs missing either start- or end-time metadata for diagnosis.
 					'relation' => 'OR',
 					array('key' => '_vms_start_time', 'compare' => 'NOT EXISTS'),
 					array('key' => '_vms_end_time', 'compare' => 'NOT EXISTS'),
@@ -363,9 +363,9 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				$file = WP_CONTENT_DIR . '/plugins/vms/includes/cpt/event-plans.php';
 				$code = is_readable($file) ? (string) file_get_contents($file) : '';
 
-				$has_effective_helper = function_exists('vms_get_event_plan_effective_comp_default');
-				$has_resolver = function_exists('vms_resolve_event_plan_comp_default');
-				$has_ajax_effective_call = (strpos($code, "vms_get_event_plan_effective_comp_default") !== false);
+				$has_effective_helper = function_exists('bvmgr_get_event_plan_effective_comp_default');
+				$has_resolver = function_exists('bvmgr_resolve_event_plan_comp_default');
+				$has_ajax_effective_call = (strpos($code, "bvmgr_get_event_plan_effective_comp_default") !== false);
 				$has_event_date_payload = (strpos($code, "form.append('event_date', dateInp.value || '');") !== false);
 				$has_legacy_date_payload = (strpos($code, "form.append('date', dateInp.value || '');") !== false);
 
@@ -389,7 +389,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				$fixture_ok = false;
 				$fixture_notes = '';
 				if ($has_resolver) {
-					$fixture = (array) vms_resolve_event_plan_comp_default(
+					$fixture = (array) bvmgr_resolve_event_plan_comp_default(
 						array(
 							'structure' => 'flat_fee',
 							'flat_fee_amount' => 777.0,
@@ -402,7 +402,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 						),
 						'Fixture Holiday'
 					);
-					$fallback = (array) vms_resolve_event_plan_comp_default(
+					$fallback = (array) bvmgr_resolve_event_plan_comp_default(
 						array(),
 						array(
 							'structure' => 'door_split',
@@ -457,13 +457,13 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 			 */
 			private function check_bug_06(): array
 		{
-			$has_validate_fn = function_exists('vms_validate_event_plan');
-			$has_venue_guard = function_exists('vms_event_plan_is_venue_closed_for_event_date');
-			$has_rule_eval = function_exists('vms_sch_season_is_open_by_rules');
+			$has_validate_fn = function_exists('bvmgr_validate_event_plan');
+			$has_venue_guard = function_exists('bvmgr_event_plan_is_venue_closed_for_event_date');
+			$has_rule_eval = function_exists('bvmgr_sch_season_is_open_by_rules');
 
 			$issues = array();
 			if (!$has_validate_fn) {
-				$issues[] = 'vms_validate_event_plan missing';
+				$issues[] = 'bvmgr_validate_event_plan missing';
 			}
 			if (!$has_venue_guard) {
 				$issues[] = 'season-aware venue close guard missing';
@@ -500,10 +500,10 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 					),
 				);
 
-				$mask_sat_open = (bool) vms_sch_season_is_open_by_rules($rules_mask, $sat);
-				$mask_fri_closed = !((bool) vms_sch_season_is_open_by_rules($rules_mask, $fri));
-				$array_sat_open = (bool) vms_sch_season_is_open_by_rules($rules_array, $sat);
-				$array_fri_closed = !((bool) vms_sch_season_is_open_by_rules($rules_array, $fri));
+				$mask_sat_open = (bool) bvmgr_sch_season_is_open_by_rules($rules_mask, $sat);
+				$mask_fri_closed = !((bool) bvmgr_sch_season_is_open_by_rules($rules_mask, $fri));
+				$array_sat_open = (bool) bvmgr_sch_season_is_open_by_rules($rules_array, $sat);
+				$array_fri_closed = !((bool) bvmgr_sch_season_is_open_by_rules($rules_array, $fri));
 
 				$fixture_ok = ($mask_sat_open && $mask_fri_closed && $array_sat_open && $array_fri_closed);
 				if (!$fixture_ok) {
@@ -542,14 +542,14 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 			$schedule_file = WP_CONTENT_DIR . '/plugins/vms/includes/admin/schedule.php';
 			$schedule_code = is_readable($schedule_file) ? (string) file_get_contents($schedule_file) : '';
 			$has_schedule_wiring = (
-				strpos($schedule_code, 'vms_sch_get_schedule_venue_candidates') !== false
-				&& strpos($schedule_code, 'vms_sch_pick_single_venue_candidate') !== false
+				strpos($schedule_code, 'bvmgr_sch_get_schedule_venue_candidates') !== false
+				&& strpos($schedule_code, 'bvmgr_sch_pick_single_venue_candidate') !== false
 			);
 			if (!$has_schedule_wiring) {
 				$issues[] = 'schedule venue bootstrap missing helper wiring for single-venue fallback';
 			}
 
-			if (!function_exists('vms_sch_pick_single_venue_candidate')) {
+			if (!function_exists('bvmgr_sch_pick_single_venue_candidate')) {
 				$schedule_helpers_file = WP_CONTENT_DIR . '/plugins/vms/includes/schedule/helpers.php';
 				if (is_readable($schedule_helpers_file)) {
 					require_once $schedule_helpers_file;
@@ -558,13 +558,13 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 
 			$fixture_ok = false;
 			$fixture_notes = '';
-			if (!function_exists('vms_sch_pick_single_venue_candidate')) {
+			if (!function_exists('bvmgr_sch_pick_single_venue_candidate')) {
 				$issues[] = 'single-venue helper function unavailable';
 			} else {
-				$case_single = (int) vms_sch_pick_single_venue_candidate(array(17));
-				$case_single_dupe = (int) vms_sch_pick_single_venue_candidate(array(17, 17));
-				$case_none = (int) vms_sch_pick_single_venue_candidate(array());
-				$case_many = (int) vms_sch_pick_single_venue_candidate(array(17, 18));
+				$case_single = (int) bvmgr_sch_pick_single_venue_candidate(array(17));
+				$case_single_dupe = (int) bvmgr_sch_pick_single_venue_candidate(array(17, 17));
+				$case_none = (int) bvmgr_sch_pick_single_venue_candidate(array());
+				$case_many = (int) bvmgr_sch_pick_single_venue_candidate(array(17, 18));
 
 				$fixture_ok = (
 					$case_single === 17
@@ -750,14 +750,14 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				$issues[] = 'vms-ticketing-front.js missing or unreadable';
 			}
 
-			$has_success_clear_helper = (strpos($rules_code, 'function vms_ticketing_v2_clear_success_notices(): void') !== false);
-			$has_request_guard_helper = (strpos($rules_code, 'function vms_ticketing_v2_request_is_add_to_cart(): bool') !== false);
-			$has_cart_empty_helper = (strpos($rules_code, 'function vms_ticketing_v2_session_cart_is_empty(): bool') !== false);
-			$has_prune_helper = (strpos($rules_code, 'function vms_ticketing_v2_prune_stale_success_notices(): void') !== false);
-			$has_template_redirect_hook = (strpos($rules_code, "add_action('template_redirect', 'vms_ticketing_v2_prune_stale_success_notices', 5);") !== false);
-			$has_request_guard_use = (strpos($rules_code, 'if (vms_ticketing_v2_request_is_add_to_cart()) {') !== false);
-			$has_cart_empty_use = (strpos($rules_code, 'if (!vms_ticketing_v2_session_cart_is_empty()) {') !== false);
-			$has_success_clear_uses = (substr_count($rules_code, 'vms_ticketing_v2_clear_success_notices();') >= 3);
+			$has_success_clear_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_clear_success_notices(): void') !== false);
+			$has_request_guard_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_request_is_add_to_cart(): bool') !== false);
+			$has_cart_empty_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_session_cart_is_empty(): bool') !== false);
+			$has_prune_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_prune_stale_success_notices(): void') !== false);
+			$has_template_redirect_hook = (strpos($rules_code, "add_action('template_redirect', 'bvmgr_ticketing_v2_prune_stale_success_notices', 5);") !== false);
+			$has_request_guard_use = (strpos($rules_code, 'if (bvmgr_ticketing_v2_request_is_add_to_cart()) {') !== false);
+			$has_cart_empty_use = (strpos($rules_code, 'if (!bvmgr_ticketing_v2_session_cart_is_empty()) {') !== false);
+			$has_success_clear_uses = (substr_count($rules_code, 'bvmgr_ticketing_v2_clear_success_notices();') >= 3);
 			$has_legacy_clear = (strpos($rules_code, 'wc_clear_notices()') !== false);
 			$has_js_clean_helper = (strpos($js_code, 'function cleanWooParamsInAddressBar()') !== false);
 			$has_js_clean_call = (strpos($js_code, 'cleanWooParamsInAddressBar();') !== false);
@@ -784,7 +784,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 			$fixture_ok = false;
 			$fixture_notes = '';
 			$runtime_available = (
-				function_exists('vms_ticketing_v2_clear_success_notices')
+				function_exists('bvmgr_ticketing_v2_clear_success_notices')
 				&& function_exists('wc_get_notices')
 				&& function_exists('wc_set_notices')
 				&& function_exists('WC')
@@ -805,7 +805,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				);
 
 				wc_set_notices($fixture);
-				vms_ticketing_v2_clear_success_notices();
+				bvmgr_ticketing_v2_clear_success_notices();
 				$after = wc_get_notices();
 
 				$success_cleared = empty($after['success']);
@@ -859,13 +859,13 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				$issues[] = 'vms-ticketing-front.js missing or unreadable';
 			}
 
-			$has_hint_key_helper = (strpos($rules_code, 'function vms_ticketing_v2_session_ga_hint_key(): string') !== false);
-			$has_hint_seed_helper = (strpos($rules_code, 'function vms_ticketing_v2_session_seed_ga_hint(int $plan_id, int $ga_qty, string $source = \'\'): void') !== false);
-			$has_hint_clear_helper = (strpos($rules_code, 'function vms_ticketing_v2_session_clear_ga_hint(int $plan_id = 0): void') !== false);
-			$has_effective_ga_helper = (strpos($rules_code, 'function vms_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_qty): int') !== false);
-			$has_effective_ga_use = (substr_count($rules_code, '$ga_qty = vms_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);') >= 2);
-			$has_hint_seed_use = (strpos($rules_code, 'vms_ticketing_v2_session_seed_ga_hint($hint_plan_id, $ga_qty_hint, \'silent_add_payload\');') !== false);
-			$has_hint_clear_use = (substr_count($rules_code, 'vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);') >= 2);
+			$has_hint_key_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_session_ga_hint_key(): string') !== false);
+			$has_hint_seed_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_session_seed_ga_hint(int $plan_id, int $ga_qty, string $source = \'\'): void') !== false);
+			$has_hint_clear_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_session_clear_ga_hint(int $plan_id = 0): void') !== false);
+			$has_effective_ga_helper = (strpos($rules_code, 'function bvmgr_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_qty): int') !== false);
+			$has_effective_ga_use = (substr_count($rules_code, '$ga_qty = bvmgr_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);') >= 2);
+			$has_hint_seed_use = (strpos($rules_code, 'bvmgr_ticketing_v2_session_seed_ga_hint($hint_plan_id, $ga_qty_hint, \'silent_add_payload\');') !== false);
+			$has_hint_clear_use = (substr_count($rules_code, 'bvmgr_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);') >= 2);
 
 			$has_ticket_qty_helper = (strpos($js_code, 'function detectSelectedTicketsQty(addonsWrap) {') !== false);
 			$has_pending_plan_capture = (strpos($js_code, 'eventPlanId: eventPlanId,') !== false);
@@ -896,11 +896,11 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 			$fixture_ok = false;
 			$fixture_notes = '';
 			$runtime_available = (
-				function_exists('vms_ticketing_v2_session_get_ga_hints')
-				&& function_exists('vms_ticketing_v2_session_set_ga_hints')
-				&& function_exists('vms_ticketing_v2_session_seed_ga_hint')
-				&& function_exists('vms_ticketing_v2_session_clear_ga_hint')
-				&& function_exists('vms_ticketing_v2_effective_ga_qty_for_plan')
+				function_exists('bvmgr_ticketing_v2_session_get_ga_hints')
+				&& function_exists('bvmgr_ticketing_v2_session_set_ga_hints')
+				&& function_exists('bvmgr_ticketing_v2_session_seed_ga_hint')
+				&& function_exists('bvmgr_ticketing_v2_session_clear_ga_hint')
+				&& function_exists('bvmgr_ticketing_v2_effective_ga_qty_for_plan')
 				&& function_exists('WC')
 				&& WC()
 				&& isset(WC()->session)
@@ -912,17 +912,17 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				$fixture_notes = 'Runtime fixture skipped (Woo session unavailable in this CLI context); static guard markers evaluated.';
 			} else {
 				$fixture_plan_id = 999991;
-				$before_hints = (array) vms_ticketing_v2_session_get_ga_hints();
+				$before_hints = (array) bvmgr_ticketing_v2_session_get_ga_hints();
 
-					vms_ticketing_v2_session_clear_ga_hint($fixture_plan_id);
-					vms_ticketing_v2_session_seed_ga_hint($fixture_plan_id, 4, 'stale_check_tick01');
+					bvmgr_ticketing_v2_session_clear_ga_hint($fixture_plan_id);
+					bvmgr_ticketing_v2_session_seed_ga_hint($fixture_plan_id, 4, 'stale_check_tick01');
 
-					$hint_only_qty = (int) vms_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 0);
-					$cart_partial_qty = (int) vms_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 2);
-					$mid_hints = (array) vms_ticketing_v2_session_get_ga_hints();
+					$hint_only_qty = (int) bvmgr_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 0);
+					$cart_partial_qty = (int) bvmgr_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 2);
+					$mid_hints = (array) bvmgr_ticketing_v2_session_get_ga_hints();
 					$hint_retained = !empty($mid_hints[$fixture_plan_id]);
-					$cart_caught_up_qty = (int) vms_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 4);
-					$after_hints = (array) vms_ticketing_v2_session_get_ga_hints();
+					$cart_caught_up_qty = (int) bvmgr_ticketing_v2_effective_ga_qty_for_plan($fixture_plan_id, 4);
+					$after_hints = (array) bvmgr_ticketing_v2_session_get_ga_hints();
 					$hint_cleared = empty($after_hints[$fixture_plan_id]);
 
 					$fixture_ok = (
@@ -945,7 +945,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 						$fixture_notes = 'Runtime fixture passed: hinted GA total is used while cart quantity catches up and is cleared once cart quantity reaches the hinted total.';
 					}
 
-				vms_ticketing_v2_session_set_ga_hints(is_array($before_hints) ? $before_hints : array());
+				bvmgr_ticketing_v2_session_set_ga_hints(is_array($before_hints) ? $before_hints : array());
 			}
 
 			$signal = (empty($issues) && $fixture_ok) ? 'pass' : 'warn';
@@ -974,15 +974,15 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 					$issues[] = 'event-plans.php missing or unreadable';
 				}
 
-				$has_helper = (strpos($event_plan_code, 'function vms_tec_resolve_featured_image_arg(') !== false);
-				$has_helper_call = (strpos($event_plan_code, 'vms_tec_resolve_featured_image_arg($plan_thumb_id, $existing_tec_thumb_id, $vendor_thumb_id)') !== false);
+				$has_helper = (strpos($event_plan_code, 'function bvmgr_tec_resolve_featured_image_arg(') !== false);
+				$has_helper_call = (strpos($event_plan_code, 'bvmgr_tec_resolve_featured_image_arg($plan_thumb_id, $existing_tec_thumb_id, $vendor_thumb_id)') !== false);
 				$has_helper_plan_branch = (strpos($event_plan_code, 'if ($plan_thumb_id > 0) {') !== false);
 				$has_helper_existing_branch = (strpos($event_plan_code, 'if ($existing_tec_thumb_id > 0) {') !== false);
 				$has_helper_vendor_branch = (strpos($event_plan_code, 'if ($vendor_thumb_id > 0) {') !== false);
-				$post_existing_count = substr_count($event_plan_code, '$args = vms_build_tec_event_args($post_id, $existing_tec_id);');
+				$post_existing_count = substr_count($event_plan_code, '$args = bvmgr_build_tec_event_args($post_id, $existing_tec_id);');
 				$has_publish_builder = ($post_existing_count >= 1);
 				$has_resync_builder = ($post_existing_count >= 2);
-				$has_extras_builder = (strpos($event_plan_code, '$args = vms_build_tec_event_args($plan_id, $tec_event_id);') !== false);
+				$has_extras_builder = (strpos($event_plan_code, '$args = bvmgr_build_tec_event_args($plan_id, $tec_event_id);') !== false);
 
 				if (!$has_helper) {
 					$issues[] = 'featured-image resolver helper missing';
@@ -997,9 +997,9 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				$fixture_ok = false;
 				$fixture_notes = '';
 				$resolver = null;
-				if (function_exists('vms_tec_resolve_featured_image_arg')) {
+				if (function_exists('bvmgr_tec_resolve_featured_image_arg')) {
 					$resolver = function (int $plan, int $existing, int $vendor): int {
-						return (int) vms_tec_resolve_featured_image_arg($plan, $existing, $vendor);
+						return (int) bvmgr_tec_resolve_featured_image_arg($plan, $existing, $vendor);
 					};
 				} elseif ($has_helper && $has_helper_plan_branch && $has_helper_existing_branch && $has_helper_vendor_branch) {
 					// Fallback for static probes where Event Plan functions are not loaded in runtime.
@@ -1045,7 +1045,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 					if (!$fixture_ok) {
 						$issues[] = 'resolver fixture failed: ' . implode(', ', $fixture_failures);
 					} else {
-						$fixture_notes = function_exists('vms_tec_resolve_featured_image_arg')
+						$fixture_notes = function_exists('bvmgr_tec_resolve_featured_image_arg')
 							? 'Resolver fixture passed: plan image wins, linked TEC image is preserved, vendor image is fallback-only when both plan+TEC images are missing.'
 							: 'Static resolver fixture passed from source markers: plan image wins, linked TEC image is preserved, vendor image remains fallback-only.';
 					}
@@ -1069,23 +1069,23 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 			 */
 		private function check_can_01(): array
 		{
-			$k_status = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+			$k_status = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 			if ($k_status === '') {
 				$k_status = '_vms_event_plan_status';
 			}
-			$k_job_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'cancel_job_id') : '_vms_cancel_job_id';
+			$k_job_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'cancel_job_id') : '_vms_cancel_job_id';
 			if ($k_job_id === '') {
 				$k_job_id = '_vms_cancel_job_id';
 			}
-			$k_job_state = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'cancel_job_state') : '_vms_cancel_job_state';
+			$k_job_state = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'cancel_job_state') : '_vms_cancel_job_state';
 			if ($k_job_state === '') {
 				$k_job_state = '_vms_cancel_job_state';
 			}
-			$k_job_summary = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'cancel_job_summary') : '_vms_cancel_job_summary';
+			$k_job_summary = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'cancel_job_summary') : '_vms_cancel_job_summary';
 			if ($k_job_summary === '') {
 				$k_job_summary = '_vms_cancel_job_summary';
 			}
-			$k_review = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'cancel_requires_operator_review') : '_vms_cancel_requires_operator_review';
+			$k_review = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'cancel_requires_operator_review') : '_vms_cancel_requires_operator_review';
 			if ($k_review === '') {
 				$k_review = '_vms_cancel_requires_operator_review';
 			}
@@ -1095,7 +1095,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				'post_status' => array('publish', 'draft', 'private', 'pending', 'future'),
 				'posts_per_page' => 300,
 				'fields' => 'ids',
-				'meta_query' => array(
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- CAN-01 stale-check intentionally samples at most 300 cancelled Event Plan IDs to audit their cancellation-job state.
 					array('key' => $k_status, 'value' => 'cancelled', 'compare' => '='),
 				),
 			));
@@ -1141,8 +1141,8 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				$review_flag = ((string) get_post_meta($plan_id, $k_review, true) === '1');
 
 				if ($job_id === '' || !is_array($summary) || empty($summary['steps']) || !is_array($summary['steps'])) {
-					if ($this->repair_mode && function_exists('vms_cancellation_backfill_legacy_job')) {
-						$repair = (array) vms_cancellation_backfill_legacy_job($plan_id, array(
+					if ($this->repair_mode && function_exists('bvmgr_cancellation_backfill_legacy_job')) {
+						$repair = (array) bvmgr_cancellation_backfill_legacy_job($plan_id, array(
 							'source' => 'stale_check_can01',
 							'backfill_by_user_id' => get_current_user_id(),
 						));
@@ -1438,7 +1438,7 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 				'manual' => 'MANUAL',
 			);
 
-			WP_CLI::log('VMS stale-check report');
+			WP_CLI::log('Backstage Venue Manager stale-check report');
 			WP_CLI::log(str_repeat('-', 72));
 
 			$counts = array('pass' => 0, 'warn' => 0, 'manual' => 0);
@@ -1461,4 +1461,6 @@ if (!class_exists('VMS_CLI_Stale_Check_Command')) {
 	}
 }
 
-WP_CLI::add_command('vms', 'VMS_CLI_Stale_Check_Command');
+WP_CLI::add_command('bvmgr', 'BVMGR_CLI_Stale_Check_Command');
+// Deprecated B4 compatibility alias; retain until the CLI retirement gate is met.
+WP_CLI::add_command('vms', 'BVMGR_CLI_Stale_Check_Command');

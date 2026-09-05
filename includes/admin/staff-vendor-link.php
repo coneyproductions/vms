@@ -11,22 +11,22 @@ if (!defined('ABSPATH')) exit;
  * - Vendor post_meta: vms_meta_key('vendor','linked_staff_id') fallback '_vms_linked_staff_id'
  */
 
-if (!function_exists('vms_vendor_linked_staff_meta_key')) {
-    function vms_vendor_linked_staff_meta_key(): string
+if (!function_exists('bvmgr_vendor_linked_staff_meta_key')) {
+    function bvmgr_vendor_linked_staff_meta_key(): string
     {
-        if (function_exists('vms_meta_key')) {
-            $k = (string) vms_meta_key('vendor', 'linked_staff_id');
+        if (function_exists('bvmgr_meta_key')) {
+            $k = (string) bvmgr_meta_key('vendor', 'linked_staff_id');
             if ($k !== '') return $k;
         }
         return '_vms_linked_staff_id';
     }
 }
 
-if (!function_exists('vms_staff_linked_vendor_meta_key')) {
-    function vms_staff_linked_vendor_meta_key(): string
+if (!function_exists('bvmgr_staff_linked_vendor_meta_key')) {
+    function bvmgr_staff_linked_vendor_meta_key(): string
     {
-        if (function_exists('vms_meta_key')) {
-            $k = (string) vms_meta_key('staff', 'linked_vendor_id');
+        if (function_exists('bvmgr_meta_key')) {
+            $k = (string) bvmgr_meta_key('staff', 'linked_vendor_id');
             if ($k !== '') return $k;
         }
         return '_vms_linked_vendor_id';
@@ -36,24 +36,24 @@ if (!function_exists('vms_staff_linked_vendor_meta_key')) {
 add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_staff_vendor_link',
-        __('Linked Vendor', 'vms'),
-        'vms_staff_vendor_link_metabox_render',
+        __('Linked Vendor', 'backstage-venue-manager'),
+        'bvmgr_staff_vendor_link_metabox_render',
         'vms_staff',
         'side',
         'default'
     );
 });
 
-function vms_staff_vendor_link_metabox_render($post): void
+function bvmgr_staff_vendor_link_metabox_render($post): void
 {
     if (!($post instanceof WP_Post)) return;
 
     $staff_id = (int) $post->ID;
-    $current_vendor_id = (int) get_post_meta($staff_id, vms_staff_linked_vendor_meta_key(), true);
+    $current_vendor_id = (int) get_post_meta($staff_id, bvmgr_staff_linked_vendor_meta_key(), true);
 
-    wp_nonce_field('vms_staff_vendor_link_save', 'vms_staff_vendor_link_nonce');
+    wp_nonce_field('bvmgr_staff_vendor_link_save', 'bvmgr_staff_vendor_link_nonce');
 
-    echo '<p class="description">' . esc_html__('Link this staff profile to a Vendor record when the same person is also a payee (contractor, performer, vendor account).', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Link this staff profile to a Vendor record when the same person is also a payee (contractor, performer, vendor account).', 'backstage-venue-manager') . '</p>';
 
     $vendor_posts = get_posts(array(
         'post_type'      => 'vms_vendor',
@@ -66,7 +66,7 @@ function vms_staff_vendor_link_metabox_render($post): void
     ));
 
     echo '<select name="vms_linked_vendor_id" style="width:100%;">';
-    echo '<option value="0">— ' . esc_html__('Not linked', 'vms') . ' —</option>';
+    echo '<option value="0">— ' . esc_html__('Not linked', 'backstage-venue-manager') . ' —</option>';
 
     foreach ($vendor_posts as $vid) {
         $vid = (int) $vid;
@@ -87,7 +87,7 @@ function vms_staff_vendor_link_metabox_render($post): void
         $edit_vendor = get_edit_post_link($current_vendor_id, '');
         if ($edit_vendor) {
             echo '<p style="margin-top:10px;">';
-            echo '<a class="button button-secondary" href="' . esc_url($edit_vendor) . '">' . esc_html__('Edit linked vendor', 'vms') . '</a>';
+            echo '<a class="button button-secondary" href="' . esc_url($edit_vendor) . '">' . esc_html__('Edit linked vendor', 'backstage-venue-manager') . '</a>';
             echo '</p>';
         }
     }
@@ -98,13 +98,16 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (!isset($_POST['vms_staff_vendor_link_nonce']) || !wp_verify_nonce((string) $_POST['vms_staff_vendor_link_nonce'], 'vms_staff_vendor_link_save')) {
+    $nonce = (isset($_POST['bvmgr_staff_vendor_link_nonce']) && !is_array($_POST['bvmgr_staff_vendor_link_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_vendor_link_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_vendor_link_save'))) {
         return;
     }
 
     $staff_id = (int) $post_id;
-    $k_staff_vendor = vms_staff_linked_vendor_meta_key();
-    $k_vendor_staff = vms_vendor_linked_staff_meta_key();
+    $k_staff_vendor = bvmgr_staff_linked_vendor_meta_key();
+    $k_vendor_staff = bvmgr_vendor_linked_staff_meta_key();
 
     $old_vendor_id = (int) get_post_meta($staff_id, $k_staff_vendor, true);
     $new_vendor_id = isset($_POST['vms_linked_vendor_id']) ? (int) $_POST['vms_linked_vendor_id'] : 0;
@@ -134,21 +137,19 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     }
 
     // Enforce uniqueness: if another staff already links to this vendor, unlink it.
-    $other_staff_ids = get_posts(array(
-        'post_type'      => 'vms_staff',
-        'post_status'    => 'any',
-        'numberposts'    => -1,
-        'fields'         => 'ids',
-        'no_found_rows'  => true,
-        'meta_query'     => array(
-            array(
-                'key'     => $k_staff_vendor,
-                'value'   => $new_vendor_id,
-                'compare' => '=',
-                'type'    => 'NUMERIC',
-            )
-        ),
-    ));
+    global $wpdb;
+    $other_staff_ids = array();
+    if (is_object($wpdb) && method_exists($wpdb, 'get_col') && method_exists($wpdb, 'prepare')) {
+        $t_posts = (isset($wpdb->posts) && is_string($wpdb->posts) && $wpdb->posts !== '') ? $wpdb->posts : '';
+        $t_postmeta = (isset($wpdb->postmeta) && is_string($wpdb->postmeta) && $wpdb->postmeta !== '') ? $wpdb->postmeta : '';
+        if ($t_posts !== '' && $t_postmeta !== '') {
+            /* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff/vendor reverse-link cleanup reads request-fresh postmeta pointers with prepared identifiers and filters so dual-hat links stay one-to-one after admin edits. */
+            $other_staff_ids = $wpdb->get_col($wpdb->prepare('SELECT pm.post_id FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE pm.meta_key = %s AND pm.meta_value = %s AND p.post_type = %s ORDER BY pm.meta_id ASC', $t_postmeta, $t_posts, $k_staff_vendor, (string) $new_vendor_id, 'vms_staff'));
+        }
+    }
+    if (!is_array($other_staff_ids)) {
+        $other_staff_ids = array();
+    }
 
     foreach ($other_staff_ids as $osid) {
         $osid = (int) $osid;

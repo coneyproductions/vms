@@ -8,17 +8,11 @@ if (!defined('WP_ADMIN')) {
     define('WP_ADMIN', true);
 }
 
-$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-if (!defined('ABSPATH')) {
-    if (!file_exists($wpLoad)) {
-        fwrite(STDERR, "Could not locate wp-load.php.\n");
-        exit(1);
-    }
-    require_once $wpLoad;
-}
+require_once __DIR__ . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
-    require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
+    require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 final class VMS_Ticket_UI_Overrides_Ajax_Exit extends RuntimeException
@@ -88,13 +82,29 @@ try {
     add_filter('wp_die_ajax_handler', $dieHandlerFilter);
 
     $ensureVendorType = static function (string $slug, string $name) use ($registerTerm): string {
+        if (!taxonomy_exists('vms_vendor_type')) {
+            do_action('init');
+        }
+
+        $termExists = term_exists($slug, 'vms_vendor_type');
+        if ((is_array($termExists) && !empty($termExists['term_id'])) || is_numeric($termExists)) {
+            return $slug;
+        }
+
         $existing = get_term_by('slug', $slug, 'vms_vendor_type');
         if ($existing instanceof WP_Term) {
             return (string) $existing->slug;
         }
 
         $created = wp_insert_term($name, 'vms_vendor_type', array('slug' => $slug));
-        if (is_wp_error($created) || empty($created['term_id'])) {
+        if (is_wp_error($created)) {
+            if ($created->get_error_code() === 'term_exists') {
+                return $slug;
+            }
+
+            throw new RuntimeException('Failed to create test vendor type term: ' . $slug . ' (' . $created->get_error_message() . ')');
+        }
+        if (empty($created['term_id'])) {
             throw new RuntimeException('Failed to create test vendor type term: ' . $slug);
         }
 
@@ -205,9 +215,13 @@ try {
         $_POST = array_merge($defaults, $overrides);
         $_GET = array();
         $_REQUEST = $_POST;
+        $GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
+        if (function_exists('bvmgr_prefix_b4_normalize_nonce_fields')) {
+            bvmgr_prefix_b4_normalize_nonce_fields();
+        }
 
-        $reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-        /** @var VMS_Admin_Event_Plans $admin */
+        $reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+        /** @var BVMGR_Admin_Event_Plans $admin */
         $admin = $reflection->newInstanceWithoutConstructor();
         $admin->save_event_plan_meta($planId, get_post($planId));
         clean_post_cache($planId);
@@ -217,17 +231,17 @@ try {
     $primaryVendorId = $createVendor('Ticket UI Primary Vendor');
     $secondaryVendorId = $createVendor('Ticket UI Secondary Vendor', $secondaryTypeSlug);
 
-    $ticketConfigKey = function_exists('vms_ticketing_v2_k')
-        ? (string) vms_ticketing_v2_k('config')
+    $ticketConfigKey = function_exists('bvmgr_ticketing_v2_k')
+        ? (string) bvmgr_ticketing_v2_k('config')
         : '_vms_ticketing_config_v2';
-    $tecMetaKey = function_exists('vms_ticketing_meta_key')
-        ? (string) vms_ticketing_meta_key('tec_event_id', '_vms_tec_event_id')
+    $tecMetaKey = function_exists('bvmgr_ticketing_meta_key')
+        ? (string) bvmgr_ticketing_meta_key('tec_event_id', '_vms_tec_event_id')
         : '_vms_tec_event_id';
-    $suppressMetaKey = function_exists('vms_meta_key')
-        ? (string) (vms_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
+    $suppressMetaKey = function_exists('bvmgr_meta_key')
+        ? (string) (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
         : '_vms_calendar_unpublished_suppress';
-    $legacyTicketKeys = function_exists('vms_event_plan_legacy_ticket_meta_keys')
-        ? (array) vms_event_plan_legacy_ticket_meta_keys()
+    $legacyTicketKeys = function_exists('bvmgr_event_plan_legacy_ticket_meta_keys')
+        ? (array) bvmgr_event_plan_legacy_ticket_meta_keys()
         : array('_vms_price_ga', '_vms_enable_tables');
 
     $captureState = static function (int $planId) use ($ticketConfigKey, $tecMetaKey, $suppressMetaKey, $legacyTicketKeys, $normalizeValue): array {
@@ -419,8 +433,8 @@ try {
     $assert(wp_json_encode($beforeBroadIntentState['unpublished_suppressor']) === wp_json_encode($afterBroadIntentState['unpublished_suppressor']), 'The compatibility fallback should still leave the unpublished-calendar suppressor unchanged.');
     $assert(wp_json_encode($beforeBroadIntentState['legacy_import_ticketing']) === wp_json_encode($afterBroadIntentState['legacy_import_ticketing']), 'The compatibility fallback should still leave legacy/import ticketing meta unchanged.');
 
-    $reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-    /** @var VMS_Admin_Event_Plans $admin */
+    $reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+    /** @var BVMGR_Admin_Event_Plans $admin */
     $admin = $reflection->newInstanceWithoutConstructor();
     $prevGet = $_GET ?? array();
     $_GET['vms_ep_load_section'] = 'ticketing_v2';
@@ -444,7 +458,7 @@ try {
 
     $ticketingBootstrapPhp = (string) file_get_contents(dirname(__DIR__) . '/includes/integrations/ticketing.php');
     $assert(strpos($ticketingBootstrapPhp, "ticketUiOverridesNonce") !== false, 'Ticketing bootstrap should localize the dedicated Ticket UI override nonce.');
-    $assert(strpos($ticketingBootstrapPhp, "vms_event_plan_ticket_ui_overrides_save") !== false, 'Ticketing bootstrap should use the dedicated Ticket UI override nonce action.');
+    $assert(strpos($ticketingBootstrapPhp, "bvmgr_event_plan_ticket_ui_overrides_save") !== false, 'Ticketing bootstrap should use the canonical dedicated Ticket UI override nonce action.');
 
     fwrite(STDOUT, "Ticket UI override isolation test passed.\n");
 } catch (Throwable $e) {

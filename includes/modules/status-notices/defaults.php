@@ -1,15 +1,15 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_status_notices_capability')) {
-	function vms_status_notices_capability(): string
+if (!function_exists('bvmgr_status_notices_capability')) {
+	function bvmgr_status_notices_capability(): string
 	{
 		return 'manage_options';
 	}
 }
 
-if (!function_exists('vms_status_notice_default_notice')) {
-	function vms_status_notice_default_notice(): array
+if (!function_exists('bvmgr_status_notice_default_notice')) {
+	function bvmgr_status_notice_default_notice(): array
 	{
 		return array(
 			'id' => 0,
@@ -61,110 +61,110 @@ if (!function_exists('vms_status_notice_default_notice')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_scopes')) {
-	function vms_status_notice_allowed_scopes(): array
+if (!function_exists('bvmgr_status_notice_allowed_scopes')) {
+	function bvmgr_status_notice_allowed_scopes(): array
 	{
 		return array('front', 'admin', 'both');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_severities')) {
-	function vms_status_notice_allowed_severities(): array
+if (!function_exists('bvmgr_status_notice_allowed_severities')) {
+	function bvmgr_status_notice_allowed_severities(): array
 	{
 		return array('info', 'warning', 'critical');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_placements')) {
-	function vms_status_notice_allowed_placements(): array
+if (!function_exists('bvmgr_status_notice_allowed_placements')) {
+	function bvmgr_status_notice_allowed_placements(): array
 	{
 		return array('top', 'bottom');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_dismiss_ttls')) {
-	function vms_status_notice_allowed_dismiss_ttls(): array
+if (!function_exists('bvmgr_status_notice_allowed_dismiss_ttls')) {
+	function bvmgr_status_notice_allowed_dismiss_ttls(): array
 	{
 		return array('1h', '1d', '7d', 'forever');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_triggers')) {
-	function vms_status_notice_allowed_triggers(): array
+if (!function_exists('bvmgr_status_notice_allowed_triggers')) {
+	function bvmgr_status_notice_allowed_triggers(): array
 	{
 		return array('on_load', 'after_delay', 'on_element_visible', 'when_element_exists');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_pages_mode')) {
-	function vms_status_notice_allowed_pages_mode(): array
+if (!function_exists('bvmgr_status_notice_allowed_pages_mode')) {
+	function bvmgr_status_notice_allowed_pages_mode(): array
 	{
 		return array('all', 'include');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_page_types')) {
-	function vms_status_notice_allowed_page_types(): array
+if (!function_exists('bvmgr_status_notice_allowed_page_types')) {
+	function bvmgr_status_notice_allowed_page_types(): array
 	{
 		return array('event', 'product', 'cart', 'checkout', 'account', 'ticketing', 'generic');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_user_mode')) {
-	function vms_status_notice_allowed_user_mode(): array
+if (!function_exists('bvmgr_status_notice_allowed_user_mode')) {
+	function bvmgr_status_notice_allowed_user_mode(): array
 	{
 		return array('everyone', 'logged_in', 'logged_out', 'roles_include', 'roles_exclude');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_device_mode')) {
-	function vms_status_notice_allowed_device_mode(): array
+if (!function_exists('bvmgr_status_notice_allowed_device_mode')) {
+	function bvmgr_status_notice_allowed_device_mode(): array
 	{
 		return array('any', 'mobile', 'tablet', 'desktop');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_browsers')) {
-	function vms_status_notice_allowed_browsers(): array
+if (!function_exists('bvmgr_status_notice_allowed_browsers')) {
+	function bvmgr_status_notice_allowed_browsers(): array
 	{
 		return array('safari_ios', 'safari_mac', 'chrome', 'firefox', 'edge', 'other');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_os')) {
-	function vms_status_notice_allowed_os(): array
+if (!function_exists('bvmgr_status_notice_allowed_os')) {
+	function bvmgr_status_notice_allowed_os(): array
 	{
 		return array('ios', 'android', 'windows', 'macos', 'linux', 'other');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_schedule_mode')) {
-	function vms_status_notice_allowed_schedule_mode(): array
+if (!function_exists('bvmgr_status_notice_allowed_schedule_mode')) {
+	function bvmgr_status_notice_allowed_schedule_mode(): array
 	{
 		return array('always', 'scheduled');
 	}
 }
 
-if (!function_exists('vms_status_notice_allowed_frequency')) {
-	function vms_status_notice_allowed_frequency(): array
+if (!function_exists('bvmgr_status_notice_allowed_frequency')) {
+	function bvmgr_status_notice_allowed_frequency(): array
 	{
 		return array('every_load', 'once_session', 'once_per_ttl', 'until_dismissed');
 	}
 }
 
-if (!function_exists('vms_status_notice_template_keys')) {
-	function vms_status_notice_template_keys(): array
+if (!function_exists('bvmgr_status_notice_template_keys')) {
+	function bvmgr_status_notice_template_keys(): array
 	{
 		return array('maintenance_banner', 'major_outage', 'browser_warning', 'admin_alert', 'ios_safari_ticketing_warning');
 	}
 }
 
-if (!function_exists('vms_status_notice_template_defaults')) {
-	function vms_status_notice_template_defaults(string $template): array
+if (!function_exists('bvmgr_status_notice_template_defaults')) {
+	function bvmgr_status_notice_template_defaults(string $template): array
 	{
-		$base = vms_status_notice_default_notice();
+		$base = bvmgr_status_notice_default_notice();
 		$template = sanitize_key($template);
-		if (!in_array($template, vms_status_notice_template_keys(), true)) {
+		if (!in_array($template, bvmgr_status_notice_template_keys(), true)) {
 			return $base;
 		}
 
@@ -247,79 +247,79 @@ if (!function_exists('vms_status_notice_template_defaults')) {
 	}
 }
 
-if (!function_exists('vms_status_notice_scope_labels')) {
-	function vms_status_notice_scope_labels(): array
+if (!function_exists('bvmgr_status_notice_scope_labels')) {
+	function bvmgr_status_notice_scope_labels(): array
 	{
 		return array(
-			'front' => __('Front-end', 'vms'),
-			'admin' => __('WP Admin', 'vms'),
-			'both' => __('Front + Admin', 'vms'),
+			'front' => __('Front-end', 'backstage-venue-manager'),
+			'admin' => __('WP Admin', 'backstage-venue-manager'),
+			'both' => __('Front + Admin', 'backstage-venue-manager'),
 		);
 	}
 }
 
-if (!function_exists('vms_status_notice_severity_labels')) {
-	function vms_status_notice_severity_labels(): array
+if (!function_exists('bvmgr_status_notice_severity_labels')) {
+	function bvmgr_status_notice_severity_labels(): array
 	{
 		return array(
-			'info' => __('Info', 'vms'),
-			'warning' => __('Warning', 'vms'),
-			'critical' => __('Critical', 'vms'),
+			'info' => __('Info', 'backstage-venue-manager'),
+			'warning' => __('Warning', 'backstage-venue-manager'),
+			'critical' => __('Critical', 'backstage-venue-manager'),
 		);
 	}
 }
 
-if (!function_exists('vms_status_notice_page_type_labels')) {
-	function vms_status_notice_page_type_labels(): array
+if (!function_exists('bvmgr_status_notice_page_type_labels')) {
+	function bvmgr_status_notice_page_type_labels(): array
 	{
 		return array(
-			'event' => __('Event pages', 'vms'),
-			'product' => __('Product pages', 'vms'),
-			'cart' => __('Cart page', 'vms'),
-			'checkout' => __('Checkout page', 'vms'),
-			'account' => __('Account page', 'vms'),
-			'ticketing' => __('Ticketing surfaces', 'vms'),
-			'generic' => __('Generic pages', 'vms'),
+			'event' => __('Event pages', 'backstage-venue-manager'),
+			'product' => __('Product pages', 'backstage-venue-manager'),
+			'cart' => __('Cart page', 'backstage-venue-manager'),
+			'checkout' => __('Checkout page', 'backstage-venue-manager'),
+			'account' => __('Account page', 'backstage-venue-manager'),
+			'ticketing' => __('Ticketing surfaces', 'backstage-venue-manager'),
+			'generic' => __('Generic pages', 'backstage-venue-manager'),
 		);
 	}
 }
 
-if (!function_exists('vms_status_notice_device_labels')) {
-	function vms_status_notice_device_labels(): array
+if (!function_exists('bvmgr_status_notice_device_labels')) {
+	function bvmgr_status_notice_device_labels(): array
 	{
 		return array(
-			'any' => __('Any device', 'vms'),
-			'mobile' => __('Mobile', 'vms'),
-			'tablet' => __('Tablet', 'vms'),
-			'desktop' => __('Desktop', 'vms'),
+			'any' => __('Any device', 'backstage-venue-manager'),
+			'mobile' => __('Mobile', 'backstage-venue-manager'),
+			'tablet' => __('Tablet', 'backstage-venue-manager'),
+			'desktop' => __('Desktop', 'backstage-venue-manager'),
 		);
 	}
 }
 
-if (!function_exists('vms_status_notice_browser_labels')) {
-	function vms_status_notice_browser_labels(): array
+if (!function_exists('bvmgr_status_notice_browser_labels')) {
+	function bvmgr_status_notice_browser_labels(): array
 	{
 		return array(
-			'safari_ios' => __('Safari (iOS)', 'vms'),
-			'safari_mac' => __('Safari (macOS)', 'vms'),
-			'chrome' => __('Chrome', 'vms'),
-			'firefox' => __('Firefox', 'vms'),
-			'edge' => __('Edge', 'vms'),
-			'other' => __('Other', 'vms'),
+			'safari_ios' => __('Safari (iOS)', 'backstage-venue-manager'),
+			'safari_mac' => __('Safari (macOS)', 'backstage-venue-manager'),
+			'chrome' => __('Chrome', 'backstage-venue-manager'),
+			'firefox' => __('Firefox', 'backstage-venue-manager'),
+			'edge' => __('Edge', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }
 
-if (!function_exists('vms_status_notice_os_labels')) {
-	function vms_status_notice_os_labels(): array
+if (!function_exists('bvmgr_status_notice_os_labels')) {
+	function bvmgr_status_notice_os_labels(): array
 	{
 		return array(
-			'ios' => __('iOS', 'vms'),
-			'android' => __('Android', 'vms'),
-			'windows' => __('Windows', 'vms'),
-			'macos' => __('macOS', 'vms'),
-			'linux' => __('Linux', 'vms'),
-			'other' => __('Other', 'vms'),
+			'ios' => __('iOS', 'backstage-venue-manager'),
+			'android' => __('Android', 'backstage-venue-manager'),
+			'windows' => __('Windows', 'backstage-venue-manager'),
+			'macos' => __('macOS', 'backstage-venue-manager'),
+			'linux' => __('Linux', 'backstage-venue-manager'),
+			'other' => __('Other', 'backstage-venue-manager'),
 		);
 	}
 }

@@ -1,73 +1,73 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admission_db_option_key')) {
-	function vms_admission_db_option_key(): string
+if (!function_exists('bvmgr_admission_db_option_key')) {
+	function bvmgr_admission_db_option_key(): string
 	{
 		return 'vms_admission_db_version';
 	}
 }
 
-if (!function_exists('vms_admission_db_version_target')) {
-	function vms_admission_db_version_target(): string
+if (!function_exists('bvmgr_admission_db_version_target')) {
+	function bvmgr_admission_db_version_target(): string
 	{
 		return '1.4.0';
 	}
 }
 
-if (!function_exists('vms_admission_table_entries')) {
-	function vms_admission_table_entries(): string
+if (!function_exists('bvmgr_admission_table_entries')) {
+	function bvmgr_admission_table_entries(): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'vms_admission_entries';
 	}
 }
 
-if (!function_exists('vms_admission_table_audit')) {
-	function vms_admission_table_audit(): string
+if (!function_exists('bvmgr_admission_table_audit')) {
+	function bvmgr_admission_table_audit(): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'vms_admission_audit';
 	}
 }
 
-if (!function_exists('vms_admission_table_pass_sources')) {
-	function vms_admission_table_pass_sources(): string
+if (!function_exists('bvmgr_admission_table_pass_sources')) {
+	function bvmgr_admission_table_pass_sources(): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'vms_pass_sources';
 	}
 }
 
-if (!function_exists('vms_admission_table_pass_batches')) {
-	function vms_admission_table_pass_batches(): string
+if (!function_exists('bvmgr_admission_table_pass_batches')) {
+	function bvmgr_admission_table_pass_batches(): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'vms_pass_batches';
 	}
 }
 
-if (!function_exists('vms_admission_table_pass_tokens')) {
-	function vms_admission_table_pass_tokens(): string
+if (!function_exists('bvmgr_admission_table_pass_tokens')) {
+	function bvmgr_admission_table_pass_tokens(): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'vms_pass_tokens';
 	}
 }
 
-if (!function_exists('vms_admission_table_pass_claims')) {
-	function vms_admission_table_pass_claims(): string
+if (!function_exists('bvmgr_admission_table_pass_claims')) {
+	function bvmgr_admission_table_pass_claims(): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'vms_pass_claims';
 	}
 }
 
-if (!function_exists('vms_admission_maybe_upgrade_schema')) {
-	function vms_admission_maybe_upgrade_schema(): void
+if (!function_exists('bvmgr_admission_maybe_upgrade_schema')) {
+	function bvmgr_admission_maybe_upgrade_schema(): void
 	{
-		$current = (string) get_option(vms_admission_db_option_key(), '');
-		$target = vms_admission_db_version_target();
+		$current = (string) get_option(bvmgr_admission_db_option_key(), '');
+		$target = bvmgr_admission_db_version_target();
 		if ($current === $target) {
 			return;
 		}
@@ -76,12 +76,12 @@ if (!function_exists('vms_admission_maybe_upgrade_schema')) {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 
-		$entries = vms_admission_table_entries();
-		$audit = vms_admission_table_audit();
-		$sources = vms_admission_table_pass_sources();
-		$batches = vms_admission_table_pass_batches();
-		$tokens = vms_admission_table_pass_tokens();
-		$claims = vms_admission_table_pass_claims();
+		$entries = bvmgr_admission_table_entries();
+		$audit = bvmgr_admission_table_audit();
+		$sources = bvmgr_admission_table_pass_sources();
+		$batches = bvmgr_admission_table_pass_batches();
+		$tokens = bvmgr_admission_table_pass_tokens();
+		$claims = bvmgr_admission_table_pass_claims();
 
 		$sql_entries = "CREATE TABLE {$entries} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -241,16 +241,19 @@ if (!function_exists('vms_admission_maybe_upgrade_schema')) {
 		dbDelta($sql_claims);
 
 		// Backfill: checked-in rows from older schema should count as fully checked in.
-		$wpdb->query("UPDATE {$entries} SET checked_in_qty = party_size WHERE status = 'checked_in' AND (checked_in_qty IS NULL OR checked_in_qty = 0)");
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills write the plugin-owned admissions table directly because no core API exposes these custom rows during upgrades.
+		$wpdb->query($wpdb->prepare("UPDATE %i SET checked_in_qty = party_size WHERE status = 'checked_in' AND (checked_in_qty IS NULL OR checked_in_qty = 0)", $entries));
 
-		$rows = $wpdb->get_results("SELECT id, guest_email, phone FROM {$entries} WHERE (guest_email IS NOT NULL AND guest_email <> '' AND (guest_email_norm IS NULL OR guest_email_norm = '')) OR (phone IS NOT NULL AND phone <> '' AND (phone_norm IS NULL OR phone_norm = ''))", ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills read request-fresh admissions rows with missing normalized identity fields from the plugin-owned table before repair writes.
+		$rows = $wpdb->get_results($wpdb->prepare("SELECT id, guest_email, phone FROM %i WHERE (guest_email IS NOT NULL AND guest_email <> '' AND (guest_email_norm IS NULL OR guest_email_norm = '')) OR (phone IS NOT NULL AND phone <> '' AND (phone_norm IS NULL OR phone_norm = ''))", $entries), ARRAY_A);
 		foreach ((array) $rows as $row) {
 			$entry_id = isset($row['id']) ? (int) $row['id'] : 0;
 			if ($entry_id <= 0) {
 				continue;
 			}
-			$email_norm = vms_admission_normalize_email((string) ($row['guest_email'] ?? ''));
-			$phone_norm = vms_admission_normalize_phone((string) ($row['phone'] ?? ''));
+			$email_norm = bvmgr_admission_normalize_email((string) ($row['guest_email'] ?? ''));
+			$phone_norm = bvmgr_admission_normalize_phone((string) ($row['phone'] ?? ''));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills write normalized identity fields directly to the plugin-owned admissions table during upgrades.
 			$wpdb->update(
 				$entries,
 				array(
@@ -264,14 +267,15 @@ if (!function_exists('vms_admission_maybe_upgrade_schema')) {
 		}
 
 		// Backfill native admission scan tokens for existing VMS admissions.
-		$token_rows = $wpdb->get_results("SELECT id FROM {$entries} WHERE admission_token = '' OR admission_token IS NULL LIMIT 5000", ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills read a bounded set of admissions rows that still need scan tokens from the plugin-owned table before calling the token repair helper.
+		$token_rows = $wpdb->get_results($wpdb->prepare("SELECT id FROM %i WHERE admission_token = '' OR admission_token IS NULL LIMIT 5000", $entries), ARRAY_A);
 		foreach ((array) $token_rows as $token_row) {
 			$entry_id = isset($token_row['id']) ? (int) $token_row['id'] : 0;
-			if ($entry_id > 0 && function_exists('vms_admission_ensure_entry_token')) {
-				vms_admission_ensure_entry_token($entry_id);
+			if ($entry_id > 0 && function_exists('bvmgr_admission_ensure_entry_token')) {
+				bvmgr_admission_ensure_entry_token($entry_id);
 			}
 		}
 
-		update_option(vms_admission_db_option_key(), $target);
+		update_option(bvmgr_admission_db_option_key(), $target);
 	}
 }

@@ -1,18 +1,13 @@
 <?php
 declare(strict_types=1);
 
-$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-if (!defined('ABSPATH')) {
-	if (!file_exists($wpLoad)) {
-		fwrite(STDERR, "Could not locate wp-load.php.\n");
-		exit(1);
-	}
-	require_once $wpLoad;
-}
+require_once __DIR__ . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
-	require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
+	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
+require_once dirname(__DIR__) . '/includes/core/event-reschedule.php';
 
 $assert = static function (bool $condition, string $message): void {
 	if ($condition) {
@@ -98,8 +93,8 @@ try {
 	};
 
 	$getPrimaryLineupEntry = static function (int $planId): array {
-		$entries = function_exists('vms_get_event_plan_lineup_entries')
-			? (array) vms_get_event_plan_lineup_entries($planId)
+		$entries = function_exists('bvmgr_get_event_plan_lineup_entries')
+			? (array) bvmgr_get_event_plan_lineup_entries($planId)
 			: (array) get_post_meta($planId, '_vms_lineup_entries_v1', true);
 		foreach ($entries as $entry) {
 			if (!is_array($entry)) {
@@ -113,10 +108,12 @@ try {
 	};
 
 	$seedPlanState = static function (int $planId, int $primaryVendorId, string $secondaryType, array $secondaryVendorIds) use ($getPrimaryLineupEntry): void {
+		bvmgr_event_occurrence_authorized_write(static function () use ($planId): void {
+			update_post_meta($planId, '_vms_event_date', '2026-06-12');
+			update_post_meta($planId, '_vms_start_time', '19:00');
+			update_post_meta($planId, '_vms_end_time', '21:00');
+		});
 		update_post_meta($planId, '_vms_event_plan_status', 'published');
-		update_post_meta($planId, '_vms_event_date', '2026-06-12');
-		update_post_meta($planId, '_vms_start_time', '19:00');
-		update_post_meta($planId, '_vms_end_time', '21:00');
 		update_post_meta($planId, '_vms_venue_id', 0);
 		update_post_meta($planId, '_vms_band_vendor_id', $primaryVendorId);
 		update_post_meta($planId, '_vms_secondary_vendor_type', $secondaryType);
@@ -132,8 +129,8 @@ try {
 		update_post_meta($planId, '_vms_ticketing_enabled_override', 'on');
 		update_post_meta($planId, '_vms_ticket_ui_layout_override', 'progressive');
 		update_post_meta($planId, '_vms_ticket_ui_addons_heading_override', 'Fire Pits & Tables');
-		if (function_exists('vms_save_event_plan_lineup_entries')) {
-			vms_save_event_plan_lineup_entries(
+		if (function_exists('bvmgr_save_event_plan_lineup_entries')) {
+			bvmgr_save_event_plan_lineup_entries(
 				$planId,
 				array(
 					'primary' => array(
@@ -164,8 +161,9 @@ try {
 	};
 
 	$runSave = static function (int $planId, array $overrides = array()): void {
+		$GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
 		$defaults = array(
-			'vms_event_plan_details_nonce' => wp_create_nonce('vms_save_event_plan_details'),
+			'bvmgr_event_plan_details_nonce' => wp_create_nonce('bvmgr_save_event_plan_details'),
 			'post_ID' => $planId,
 			'original_post_status' => 'publish',
 			'vms_event_plan_action' => 'save_draft',
@@ -174,16 +172,16 @@ try {
 		);
 		$_POST = array_merge($defaults, $overrides);
 
-		$reflection = new ReflectionClass('VMS_Admin_Event_Plans');
-		/** @var VMS_Admin_Event_Plans $admin */
+		$reflection = new ReflectionClass('BVMGR_Admin_Event_Plans');
+		/** @var BVMGR_Admin_Event_Plans $admin */
 		$admin = $reflection->newInstanceWithoutConstructor();
 		$admin->save_event_plan_meta($planId, get_post($planId));
 		clean_post_cache($planId);
 	};
 
 	$runSecondaryVendorModuleSave = static function (int $planId, array $request = array()) use ($assert): array {
-		$assert(function_exists('vms_event_plan_save_secondary_vendors_module'), 'Expected isolated Secondary Vendors module save helper to exist.');
-		$result = vms_event_plan_save_secondary_vendors_module($planId, $request);
+		$assert(function_exists('bvmgr_event_plan_save_secondary_vendors_module'), 'Expected isolated Secondary Vendors module save helper to exist.');
+		$result = bvmgr_event_plan_save_secondary_vendors_module($planId, $request);
 		if ($result instanceof WP_Error) {
 			throw new RuntimeException('Secondary Vendors module save failed: ' . $result->get_error_message());
 		}
@@ -425,11 +423,11 @@ try {
 	$coreSaveAfter = $getRelevantState($planId);
 	$coreSaveDiff = $diffState($coreSaveBefore, $coreSaveAfter);
 	$printDiff('Core save with detached Secondary Vendors', $coreSaveDiff);
-	$assert(($coreSaveAfter['core_details']['event_date'] ?? '') === '2026-06-19', 'Core details save did not persist the updated event date.');
+	$assert(($coreSaveAfter['core_details']['event_date'] ?? '') === '2026-06-12', 'Ordinary save changed the protected published event date.');
 	$assert(($coreSaveAfter['secondary_vendors'] ?? array()) === ($coreSaveBefore['secondary_vendors'] ?? array()), 'Core details save altered Secondary Vendors while the detached module was loaded.');
 	$assert(($coreSaveAfter['staffing'] ?? array()) === ($coreSaveBefore['staffing'] ?? array()), 'Core details save altered staffing while the detached Secondary Vendors module was loaded.');
 	$assert(($coreSaveAfter['ticketing'] ?? array()) === ($coreSaveBefore['ticketing'] ?? array()), 'Core details save altered ticketing overrides while the detached Secondary Vendors module was loaded.');
-	$assert(isset($coreSaveDiff['core_details']) && count($coreSaveDiff) === 1, 'Core details save should only change the core module diff.');
+	$assert(empty($coreSaveDiff), 'Protected published occurrence save should be a no-op across detached modules.');
 
 	$seedPlanState($planId, $primaryVendorId, $foodTruckSlug, array($foodTruckVendorId));
 	$moduleSaveBefore = $getRelevantState($planId);

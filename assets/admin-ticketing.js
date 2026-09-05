@@ -1,11 +1,11 @@
-/* global ajaxurl, VMS_TICKETING */
+/* global ajaxurl, BVMGR_TICKETING */
 (function () {
-  if (typeof window === 'undefined' || !window.VMS_TICKETING) return;
+  if (typeof window === 'undefined' || !window.BVMGR_TICKETING) return;
 
-  let planId = parseInt(window.VMS_TICKETING.planId || 0, 10);
-  const nonce = String(window.VMS_TICKETING.nonce || '');
-  const ticketUiOverridesNonce = String(window.VMS_TICKETING.ticketUiOverridesNonce || '');
-  const editUrlBase = String(window.VMS_TICKETING.editUrlBase || '');
+  let planId = parseInt(window.BVMGR_TICKETING.planId || 0, 10);
+  const nonce = String(window.BVMGR_TICKETING.nonce || '');
+  const ticketUiOverridesNonce = String(window.BVMGR_TICKETING.ticketUiOverridesNonce || '');
+  const editUrlBase = String(window.BVMGR_TICKETING.editUrlBase || '');
   const postForm = document.getElementById('post');
   let lastPostFormSubmitter = null;
 
@@ -153,8 +153,8 @@
     const normalized = String(sectionKey || '').trim();
     if (!normalized) return window.location.href;
 
-    if (typeof window.vmsEventPlanPersistRequestedSection === 'function') {
-      return window.vmsEventPlanPersistRequestedSection(normalized);
+    if (typeof window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION === 'function') {
+      return window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION(normalized);
     }
 
     try {
@@ -171,6 +171,31 @@
     } catch (e) {
       return window.location.href;
     }
+  }
+
+  function maybeFocusEventPlanTicketingArea() {
+    let requestedSection = '';
+    try {
+      requestedSection = String(new URL(window.location.href).searchParams.get('vms_ep_load_section') || '').trim();
+    } catch (e) {}
+    if (requestedSection !== 'ticketing_v2') return;
+
+    const ticketingBox = document.getElementById('vms_event_plan_ticketing_v2');
+    if (!ticketingBox || ticketingBox.dataset.vmsTicketingFocusHandled === '1') return;
+    ticketingBox.dataset.vmsTicketingFocusHandled = '1';
+
+    window.setTimeout(() => {
+      try { ticketingBox.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { try { ticketingBox.scrollIntoView(); } catch (err) {} }
+      const focusTarget = ticketingBox.querySelector('#vms-ticketing-v2-source .button, #vms-ticketing-v2-source select, #vms-ticketing-v2-source input, #vms-ticketing-v2-source textarea, #vms-ticketing-v2-source a');
+      if (!focusTarget || typeof focusTarget.focus !== 'function') return;
+      try { focusTarget.focus({ preventScroll: true }); } catch (e) { try { focusTarget.focus(); } catch (err) {} }
+    }, 150);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeFocusEventPlanTicketingArea, { once: true });
+  } else {
+    maybeFocusEventPlanTicketingArea();
   }
 
   function waitMs(ms) {
@@ -2463,7 +2488,7 @@
       case 'bad_response':
         return 'Unexpected server response (bad_response). Open the details panel below for the raw response, then send that to Cadence if it repeats.';
       case 'timeout':
-        return 'The request timed out before the server finished responding. Open the details panel below to see what VMS knows so far.';
+        return 'The request timed out before the server finished responding. Open the details panel below to see what Backstage Venue Manager knows so far.';
       case 'network_error':
         return 'The browser could not complete the request. Open the details panel below to see the raw error.';
       case 'missing_tec_link':
@@ -2492,9 +2517,9 @@
       case 'invalid_product_for_disable':
         return 'The mapped Woo product could not be found or was no longer valid for disabling.';
       case 'retire_safety_check_failed':
-        return 'VMS refused to retire the old ticket product because it no longer proved that it was safe.';
+        return 'Backstage Venue Manager refused to retire the old ticket product because it no longer proved that it was safe.';
       case 'retire_failed':
-        return 'VMS could not retire the stale ticket product.';
+        return 'Backstage Venue Manager could not retire the stale ticket product.';
       case 'ticket_disabled_pending_sync':
         return 'This ticket was disabled in config before Commit finished syncing the public products.';
       default:
@@ -3283,8 +3308,8 @@
     program.className = 'vms-ticketing-v2-ticket-program';
     const programOptions = [{ value: '', label: 'Select group' }];
     try {
-      const map = window.VMS_TICKETING && window.VMS_TICKETING.verificationPrograms
-        ? window.VMS_TICKETING.verificationPrograms
+      const map = window.BVMGR_TICKETING && window.BVMGR_TICKETING.verificationPrograms
+        ? window.BVMGR_TICKETING.verificationPrograms
         : null;
 
       if (map && typeof map === 'object') {

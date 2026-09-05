@@ -1,31 +1,31 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_ticket_inventory_forensics_schema_option_key(): string
+function bvmgr_ticket_inventory_forensics_schema_option_key(): string
 {
-	return defined('VMS_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION')
-		? (string) VMS_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION
+	return defined('BVMGR_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION')
+		? (string) BVMGR_OPT_TICKET_INVENTORY_AUDIT_DB_SCHEMA_VERSION
 		: 'vms_ticket_inventory_audit_db_schema_version';
 }
 
-function vms_ticket_inventory_forensics_schema_target(): string
+function bvmgr_ticket_inventory_forensics_schema_target(): string
 {
 	return 'ticket_inventory_audit_v2';
 }
 
-function vms_ticket_inventory_forensics_table_name(): string
+function bvmgr_ticket_inventory_forensics_table_name(): string
 {
 	global $wpdb;
-	$suffix = defined('VMS_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX')
-		? (string) VMS_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX
+	$suffix = defined('BVMGR_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX')
+		? (string) BVMGR_DB_TABLE_TICKET_INVENTORY_AUDIT_SUFFIX
 		: 'vms_ticket_inventory_audit';
 	return $wpdb->prefix . $suffix;
 }
 
-function vms_ticket_inventory_forensics_maybe_upgrade_schema(): void
+function bvmgr_ticket_inventory_forensics_maybe_upgrade_schema(): void
 {
-	$current = (string) get_option(vms_ticket_inventory_forensics_schema_option_key(), '');
-	$target = vms_ticket_inventory_forensics_schema_target();
+	$current = (string) get_option(bvmgr_ticket_inventory_forensics_schema_option_key(), '');
+	$target = bvmgr_ticket_inventory_forensics_schema_target();
 	if ($current === $target) {
 		return;
 	}
@@ -33,7 +33,7 @@ function vms_ticket_inventory_forensics_maybe_upgrade_schema(): void
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 	global $wpdb;
-	$table = vms_ticket_inventory_forensics_table_name();
+	$table = bvmgr_ticket_inventory_forensics_table_name();
 	$charset_collate = $wpdb->get_charset_collate();
 
 	$sql = "CREATE TABLE {$table} (
@@ -71,11 +71,11 @@ function vms_ticket_inventory_forensics_maybe_upgrade_schema(): void
 	) {$charset_collate};";
 
 	dbDelta($sql);
-	update_option(vms_ticket_inventory_forensics_schema_option_key(), $target, false);
+	update_option(bvmgr_ticket_inventory_forensics_schema_option_key(), $target, false);
 }
-add_action('plugins_loaded', 'vms_ticket_inventory_forensics_maybe_upgrade_schema', 11);
+add_action('plugins_loaded', 'bvmgr_ticket_inventory_forensics_maybe_upgrade_schema', 11);
 
-function vms_ticket_inventory_forensics_product_meta_keys(): array
+function bvmgr_ticket_inventory_forensics_product_meta_keys(): array
 {
 	return array(
 		'_stock',
@@ -101,7 +101,7 @@ function vms_ticket_inventory_forensics_product_meta_keys(): array
 	);
 }
 
-function vms_ticket_inventory_forensics_event_meta_keys(): array
+function bvmgr_ticket_inventory_forensics_event_meta_keys(): array
 {
 	return array(
 		'_tribe_ticket_use_global_stock',
@@ -109,7 +109,7 @@ function vms_ticket_inventory_forensics_event_meta_keys(): array
 	);
 }
 
-function vms_ticket_inventory_forensics_is_relevant_meta_write(int $object_id, string $meta_key): bool
+function bvmgr_ticket_inventory_forensics_is_relevant_meta_write(int $object_id, string $meta_key): bool
 {
 	$object_id = absint($object_id);
 	$meta_key = (string) $meta_key;
@@ -119,30 +119,30 @@ function vms_ticket_inventory_forensics_is_relevant_meta_write(int $object_id, s
 
 	$post_type = (string) get_post_type($object_id);
 	if ($post_type === 'product') {
-		return in_array($meta_key, vms_ticket_inventory_forensics_product_meta_keys(), true);
+		return in_array($meta_key, bvmgr_ticket_inventory_forensics_product_meta_keys(), true);
 	}
 
 	if ($post_type === 'tribe_events') {
-		return in_array($meta_key, vms_ticket_inventory_forensics_event_meta_keys(), true);
+		return in_array($meta_key, bvmgr_ticket_inventory_forensics_event_meta_keys(), true);
 	}
 
 	return false;
 }
 
-function vms_ticket_inventory_forensics_current_context(): array
+function bvmgr_ticket_inventory_forensics_current_context(): array
 {
-	if (function_exists('vms_ticket_mutation_audit_current_context')) {
-		$context = vms_ticket_mutation_audit_current_context();
+	if (function_exists('bvmgr_ticket_mutation_audit_current_context')) {
+		$context = bvmgr_ticket_mutation_audit_current_context();
 		return is_array($context) ? $context : array();
 	}
 
 	return array();
 }
 
-function vms_ticket_inventory_forensics_detect_source(): array
+function bvmgr_ticket_inventory_forensics_detect_source(): array
 {
-	if (function_exists('vms_ticket_mutation_audit_detect_source')) {
-		$source = vms_ticket_mutation_audit_detect_source();
+	if (function_exists('bvmgr_ticket_mutation_audit_detect_source')) {
+		$source = bvmgr_ticket_mutation_audit_detect_source();
 		return is_array($source) ? $source : array();
 	}
 
@@ -152,7 +152,7 @@ function vms_ticket_inventory_forensics_detect_source(): array
 	);
 }
 
-function vms_ticket_inventory_forensics_is_explicit_source_hook(string $source_hook): bool
+function bvmgr_ticket_inventory_forensics_is_explicit_source_hook(string $source_hook): bool
 {
 	$source_hook = sanitize_key($source_hook);
 	if ($source_hook === '') {
@@ -178,7 +178,7 @@ function vms_ticket_inventory_forensics_is_explicit_source_hook(string $source_h
 	return false;
 }
 
-function vms_ticket_inventory_forensics_guard_decision(
+function bvmgr_ticket_inventory_forensics_guard_decision(
 	string $hook_name,
 	int $object_id = 0,
 	string $meta_key = '',
@@ -192,12 +192,12 @@ function vms_ticket_inventory_forensics_guard_decision(
 	}
 
 	if (empty($context)) {
-		$context = vms_ticket_inventory_forensics_current_context();
+		$context = bvmgr_ticket_inventory_forensics_current_context();
 	}
 
 	$source_hook = sanitize_key($source_hook !== '' ? $source_hook : (string) ($context['source_hook'] ?? ''));
-	if ($source_hook === '' && function_exists('vms_ticket_mutation_audit_current_hook')) {
-		$source_hook = vms_ticket_mutation_audit_current_hook();
+	if ($source_hook === '' && function_exists('bvmgr_ticket_mutation_audit_current_hook')) {
+		$source_hook = bvmgr_ticket_mutation_audit_current_hook();
 	}
 
 	$source_function = sanitize_text_field($source_function !== '' ? $source_function : (string) ($context['source_function'] ?? ''));
@@ -206,12 +206,12 @@ function vms_ticket_inventory_forensics_guard_decision(
 		'reason' => 'unknown',
 		'hook_name' => $hook_name,
 		'object_id' => absint($object_id),
-		'meta_key' => (string) $meta_key,
+		'meta_key' => (string) $meta_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This guard descriptor records the mutation metadata key; it does not configure a database query.
 		'source_hook' => $source_hook,
 		'source_function' => $source_function,
 	);
 
-	if (function_exists('vms_admin_guard_heavy_hooks_disabled') && vms_admin_guard_heavy_hooks_disabled()) {
+	if (function_exists('bvmgr_admin_guard_heavy_hooks_disabled') && bvmgr_admin_guard_heavy_hooks_disabled()) {
 		$result['reason'] = 'constant_disabled';
 		return $result;
 	}
@@ -228,14 +228,14 @@ function vms_ticket_inventory_forensics_guard_decision(
 		return $result;
 	}
 
-	if (vms_ticket_inventory_forensics_is_explicit_source_hook($source_hook)) {
+	if (bvmgr_ticket_inventory_forensics_is_explicit_source_hook($source_hook)) {
 		$result['allowed'] = true;
 		$result['reason'] = 'inferred_mutation_source';
 		return $result;
 	}
 
-	if (function_exists('vms_admin_guard_should_allow_heavy_block')) {
-		$guard = (array) vms_admin_guard_should_allow_heavy_block(
+	if (function_exists('bvmgr_admin_guard_should_allow_heavy_block')) {
+		$guard = (array) bvmgr_admin_guard_should_allow_heavy_block(
 			$hook_name,
 			array(
 				'task' => 'ticket_inventory_forensics',
@@ -251,20 +251,20 @@ function vms_ticket_inventory_forensics_guard_decision(
 	return $result;
 }
 
-function vms_ticket_inventory_forensics_trace(string $decision, array $context = array(), float $started_at = 0.0): void
+function bvmgr_ticket_inventory_forensics_trace(string $decision, array $context = array(), float $started_at = 0.0): void
 {
 	$payload = array(
 		'task' => 'ticket_inventory_forensics',
 		'reason' => sanitize_key((string) ($context['reason'] ?? '')),
 		'object_id' => absint($context['object_id'] ?? 0),
-		'meta_key' => (string) ($context['meta_key'] ?? ''),
+		'meta_key' => (string) ($context['meta_key'] ?? ''), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This trace payload records the mutation metadata key; it does not configure a database query.
 		'operation' => sanitize_key((string) ($context['operation'] ?? '')),
 		'source_hook' => sanitize_key((string) ($context['source_hook'] ?? '')),
 		'source_function' => sanitize_text_field((string) ($context['source_function'] ?? '')),
 	);
 
-	if (function_exists('vms_admin_guard_trace')) {
-		vms_admin_guard_trace(
+	if (function_exists('bvmgr_admin_guard_trace')) {
+		bvmgr_admin_guard_trace(
 			sanitize_key((string) ($context['hook_name'] ?? 'ticket_inventory_forensics')),
 			$decision,
 			$payload,
@@ -273,10 +273,10 @@ function vms_ticket_inventory_forensics_trace(string $decision, array $context =
 	}
 }
 
-function vms_ticket_inventory_forensics_trigger_source(array $context, string $source_hook, string $source_function): string
+function bvmgr_ticket_inventory_forensics_trigger_source(array $context, string $source_hook, string $source_function): string
 {
-	if (function_exists('vms_ticket_mutation_audit_trigger_source')) {
-		return (string) vms_ticket_mutation_audit_trigger_source($context, $source_hook, $source_function);
+	if (function_exists('bvmgr_ticket_mutation_audit_trigger_source')) {
+		return (string) bvmgr_ticket_mutation_audit_trigger_source($context, $source_hook, $source_function);
 	}
 
 	$trigger = sanitize_key((string) ($context['trigger_source'] ?? ''));
@@ -299,183 +299,183 @@ function vms_ticket_inventory_forensics_trigger_source(array $context, string $s
 	return 'unknown_internal';
 }
 
-function vms_ticket_inventory_forensics_result_label(string $result_status): string
+function bvmgr_ticket_inventory_forensics_result_label(string $result_status): string
 {
-	if (function_exists('vms_ticket_mutation_audit_result_label')) {
+	if (function_exists('bvmgr_ticket_mutation_audit_result_label')) {
 		$normalized = sanitize_key($result_status);
 		if (in_array($normalized, array('success', 'no_op', 'partial', 'failed'), true)) {
-			return (string) vms_ticket_mutation_audit_result_label($normalized);
+			return (string) bvmgr_ticket_mutation_audit_result_label($normalized);
 		}
 	}
 
 	switch (sanitize_key($result_status)) {
 		case 'success':
-			return __('Success', 'vms');
+			return __('Success', 'backstage-venue-manager');
 		case 'no_op':
-			return __('No changes', 'vms');
+			return __('No changes', 'backstage-venue-manager');
 		case 'partial':
-			return __('Partial', 'vms');
+			return __('Partial', 'backstage-venue-manager');
 		case 'skipped':
-			return __('Skipped', 'vms');
+			return __('Skipped', 'backstage-venue-manager');
 		case 'failed':
-			return __('Failed', 'vms');
+			return __('Failed', 'backstage-venue-manager');
 		default:
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_change_type_label(string $change_type): string
+function bvmgr_ticket_inventory_forensics_change_type_label(string $change_type): string
 {
 	switch (sanitize_key($change_type)) {
 		case 'stock_zeroed':
-			return __('Stock zeroed', 'vms');
+			return __('Stock zeroed', 'backstage-venue-manager');
 		case 'stock_restored':
-			return __('Stock restored', 'vms');
+			return __('Stock restored', 'backstage-venue-manager');
 		case 'stock_quantity_changed':
-			return __('Stock quantity changed', 'vms');
+			return __('Stock quantity changed', 'backstage-venue-manager');
 		case 'manage_stock_enabled':
-			return __('Manage stock enabled', 'vms');
+			return __('Manage stock enabled', 'backstage-venue-manager');
 		case 'manage_stock_disabled':
-			return __('Manage stock disabled', 'vms');
+			return __('Manage stock disabled', 'backstage-venue-manager');
 		case 'stock_status_changed':
-			return __('Stock status changed', 'vms');
+			return __('Stock status changed', 'backstage-venue-manager');
 		case 'capacity_relinked':
-			return __('Capacity / stock pool changed', 'vms');
+			return __('Capacity / stock pool changed', 'backstage-venue-manager');
 		case 'sale_window_changed':
-			return __('Sale window changed', 'vms');
+			return __('Sale window changed', 'backstage-venue-manager');
 		case 'availability_meta_normalized':
-			return __('Availability meta normalized', 'vms');
+			return __('Availability meta normalized', 'backstage-venue-manager');
 		case 'inventory_write_no_effect':
-			return __('Inventory write had no effect', 'vms');
+			return __('Inventory write had no effect', 'backstage-venue-manager');
 		case 'repair_no_effect':
-			return __('Repair had no effect', 'vms');
+			return __('Repair had no effect', 'backstage-venue-manager');
 		case 'repair_partial':
-			return __('Repair changed some roles only', 'vms');
+			return __('Repair changed some roles only', 'backstage-venue-manager');
 		case 'repair_skipped_role':
-			return __('Repair skipped a role', 'vms');
+			return __('Repair skipped a role', 'backstage-venue-manager');
 		default:
-			return __('Inventory mutation', 'vms');
+			return __('Inventory mutation', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_normalize_confidence(string $confidence): string
+function bvmgr_ticket_inventory_forensics_normalize_confidence(string $confidence): string
 {
 	$confidence = sanitize_key($confidence);
 	return in_array($confidence, array('authoritative', 'inferred', 'fallback', 'unknown'), true) ? $confidence : 'unknown';
 }
 
-function vms_ticket_inventory_forensics_normalize_expected_effect(string $effect): string
+function bvmgr_ticket_inventory_forensics_normalize_expected_effect(string $effect): string
 {
 	$effect = sanitize_key($effect);
 	return in_array($effect, array('reopen', 'close', 'preserve', 'unknown'), true) ? $effect : 'unknown';
 }
 
-function vms_ticket_inventory_forensics_confidence_label(string $confidence): string
+function bvmgr_ticket_inventory_forensics_confidence_label(string $confidence): string
 {
-	switch (vms_ticket_inventory_forensics_normalize_confidence($confidence)) {
+	switch (bvmgr_ticket_inventory_forensics_normalize_confidence($confidence)) {
 		case 'authoritative':
-			return __('Authoritative', 'vms');
+			return __('Authoritative', 'backstage-venue-manager');
 		case 'inferred':
-			return __('Inferred', 'vms');
+			return __('Inferred', 'backstage-venue-manager');
 		case 'fallback':
-			return __('Fallback', 'vms');
+			return __('Fallback', 'backstage-venue-manager');
 		default:
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_expected_effect_label(string $effect): string
+function bvmgr_ticket_inventory_forensics_expected_effect_label(string $effect): string
 {
-	switch (vms_ticket_inventory_forensics_normalize_expected_effect($effect)) {
+	switch (bvmgr_ticket_inventory_forensics_normalize_expected_effect($effect)) {
 		case 'reopen':
-			return __('Reopen availability', 'vms');
+			return __('Reopen availability', 'backstage-venue-manager');
 		case 'close':
-			return __('Close availability', 'vms');
+			return __('Close availability', 'backstage-venue-manager');
 		case 'preserve':
-			return __('Preserve availability', 'vms');
+			return __('Preserve availability', 'backstage-venue-manager');
 		default:
-			return __('Unknown effect', 'vms');
+			return __('Unknown effect', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_cause_label(string $cause): string
+function bvmgr_ticket_inventory_forensics_cause_label(string $cause): string
 {
 	switch (sanitize_key($cause)) {
 		case 'per_ticket_stock_corruption':
-			return __('Per-ticket stock corruption', 'vms');
+			return __('Per-ticket stock corruption', 'backstage-venue-manager');
 		case 'shared_capacity_linkage_corruption':
-			return __('Shared/event capacity linkage corruption', 'vms');
+			return __('Shared/event capacity linkage corruption', 'backstage-venue-manager');
 		case 'sale_window_false_closure':
-			return __('Sale-window false closure', 'vms');
+			return __('Sale-window false closure', 'backstage-venue-manager');
 		case 'mixed_mode_corruption':
-			return __('Mixed-mode corruption', 'vms');
+			return __('Mixed-mode corruption', 'backstage-venue-manager');
 		case 'unknown_inventory_drift':
-			return __('Unknown inventory drift', 'vms');
+			return __('Unknown inventory drift', 'backstage-venue-manager');
 		default:
-			return __('Healthy / not flagged', 'vms');
+			return __('Healthy / not flagged', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_role_label(string $role): string
+function bvmgr_ticket_inventory_forensics_role_label(string $role): string
 {
 	switch (sanitize_key($role)) {
 		case 'standard_ticket':
-			return __('Standard/public ticket', 'vms');
+			return __('Standard/public ticket', 'backstage-venue-manager');
 		case 'qualified_ticket':
-			return __('Verified/qualified ticket', 'vms');
+			return __('Verified/qualified ticket', 'backstage-venue-manager');
 		case 'add_on':
 		case 'entitlement':
 		case 'addon':
-			return __('Add-on', 'vms');
+			return __('Add-on', 'backstage-venue-manager');
 		case 'ga_ticket':
 		case 'ticket':
-			return __('Ticket', 'vms');
+			return __('Ticket', 'backstage-venue-manager');
 		case 'legacy_ticket':
-			return __('Legacy ticket', 'vms');
+			return __('Legacy ticket', 'backstage-venue-manager');
 		default:
-			return __('Ticket', 'vms');
+			return __('Ticket', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_mapping_label(string $mapping_state): string
+function bvmgr_ticket_inventory_forensics_mapping_label(string $mapping_state): string
 {
 	switch (sanitize_key($mapping_state)) {
 		case 'ok':
-			return __('Mapped', 'vms');
+			return __('Mapped', 'backstage-venue-manager');
 		case 'unmapped':
-			return __('Unmapped', 'vms');
+			return __('Unmapped', 'backstage-venue-manager');
 		case 'missing':
-			return __('Missing product', 'vms');
+			return __('Missing product', 'backstage-venue-manager');
 		case 'trash':
-			return __('Trashed product', 'vms');
+			return __('Trashed product', 'backstage-venue-manager');
 		case 'not_product':
-			return __('Wrong post type', 'vms');
+			return __('Wrong post type', 'backstage-venue-manager');
 		case 'event_mismatch':
-			return __('Wrong event link', 'vms');
+			return __('Wrong event link', 'backstage-venue-manager');
 		case 'legacy_attached':
-			return __('Legacy attached', 'vms');
+			return __('Legacy attached', 'backstage-venue-manager');
 		case 'attached_untracked':
-			return __('Attached / untracked', 'vms');
+			return __('Attached / untracked', 'backstage-venue-manager');
 		case 'mapped_only':
-			return __('Mapped only', 'vms');
+			return __('Mapped only', 'backstage-venue-manager');
 		default:
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_bool_label(bool $value): string
+function bvmgr_ticket_inventory_forensics_bool_label(bool $value): string
 {
-	return $value ? __('On', 'vms') : __('Off', 'vms');
+	return $value ? __('On', 'backstage-venue-manager') : __('Off', 'backstage-venue-manager');
 }
 
-function vms_ticket_inventory_forensics_display_quantity($value, string $empty = '—'): string
+function bvmgr_ticket_inventory_forensics_display_quantity($value, string $empty = '—'): string
 {
 	if ($value === '' || $value === null) {
 		return $empty;
 	}
 
 	if (is_numeric($value) && (int) $value === -1) {
-		return __('Unlimited', 'vms');
+		return __('Unlimited', 'backstage-venue-manager');
 	}
 
 	if (is_numeric($value)) {
@@ -485,15 +485,15 @@ function vms_ticket_inventory_forensics_display_quantity($value, string $empty =
 	return trim((string) $value) !== '' ? (string) $value : $empty;
 }
 
-function vms_ticket_inventory_forensics_post_type(int $object_id): string
+function bvmgr_ticket_inventory_forensics_post_type(int $object_id): string
 {
 	return $object_id > 0 ? (string) get_post_type($object_id) : '';
 }
 
-function vms_ticket_inventory_forensics_product_meta_key(string $which, string $fallback): string
+function bvmgr_ticket_inventory_forensics_product_meta_key(string $which, string $fallback): string
 {
-	if (function_exists('vms_ticketing_v2_product_meta_key')) {
-		$key = (string) vms_ticketing_v2_product_meta_key($which);
+	if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+		$key = (string) bvmgr_ticketing_v2_product_meta_key($which);
 		if ($key !== '') {
 			return $key;
 		}
@@ -502,49 +502,49 @@ function vms_ticket_inventory_forensics_product_meta_key(string $which, string $
 	return $fallback;
 }
 
-function vms_ticket_inventory_forensics_find_plan_id_by_event(int $tec_event_id): int
+function bvmgr_ticket_inventory_forensics_find_plan_id_by_event(int $tec_event_id): int
 {
 	$tec_event_id = absint($tec_event_id);
 	if ($tec_event_id <= 0) {
 		return 0;
 	}
 
-	if (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-		return absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+	if (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+		return absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
 	}
 
-	if (function_exists('vms_get_event_plan_for_tec_event')) {
-		return absint(vms_get_event_plan_for_tec_event($tec_event_id));
+	if (function_exists('bvmgr_get_event_plan_for_tec_event')) {
+		return absint(bvmgr_get_event_plan_for_tec_event($tec_event_id));
 	}
 
 	return 0;
 }
 
-function vms_ticket_inventory_forensics_resolve_scope(int $object_id): array
+function bvmgr_ticket_inventory_forensics_resolve_scope(int $object_id): array
 {
 	$object_id = absint($object_id);
 	if ($object_id <= 0) {
 		return array();
 	}
 
-	$post_type = vms_ticket_inventory_forensics_post_type($object_id);
+	$post_type = bvmgr_ticket_inventory_forensics_post_type($object_id);
 	$plan_id = 0;
 	$tec_event_id = 0;
 	$product_id = 0;
 
 	if ($post_type === 'product') {
 		$product_id = $object_id;
-		$plan_id = absint(get_post_meta($product_id, vms_ticket_inventory_forensics_product_meta_key('event_plan_id', '_vms_event_plan_id'), true));
+		$plan_id = absint(get_post_meta($product_id, bvmgr_ticket_inventory_forensics_product_meta_key('event_plan_id', '_vms_event_plan_id'), true));
 		$tec_event_id = absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true));
 		if ($tec_event_id <= 0) {
-			$tec_event_id = absint(get_post_meta($product_id, vms_ticket_inventory_forensics_product_meta_key('tec_event_id', '_vms_tec_event_id'), true));
+			$tec_event_id = absint(get_post_meta($product_id, bvmgr_ticket_inventory_forensics_product_meta_key('tec_event_id', '_vms_tec_event_id'), true));
 		}
 		if ($plan_id <= 0 && $tec_event_id > 0) {
-			$plan_id = vms_ticket_inventory_forensics_find_plan_id_by_event($tec_event_id);
+			$plan_id = bvmgr_ticket_inventory_forensics_find_plan_id_by_event($tec_event_id);
 		}
 	} elseif ($post_type === 'tribe_events') {
 		$tec_event_id = $object_id;
-		$plan_id = vms_ticket_inventory_forensics_find_plan_id_by_event($tec_event_id);
+		$plan_id = bvmgr_ticket_inventory_forensics_find_plan_id_by_event($tec_event_id);
 	}
 
 	$event_title = $tec_event_id > 0 ? (string) get_the_title($tec_event_id) : (string) get_the_title($object_id);
@@ -558,21 +558,21 @@ function vms_ticket_inventory_forensics_resolve_scope(int $object_id): array
 	);
 }
 
-function vms_ticket_inventory_forensics_meta_flag($value): bool
+function bvmgr_ticket_inventory_forensics_meta_flag($value): bool
 {
 	$value = strtolower(trim((string) $value));
 	return in_array($value, array('1', 'yes', 'true', 'on'), true);
 }
 
-function vms_ticket_inventory_forensics_parse_datetime(string $raw): int
+function bvmgr_ticket_inventory_forensics_parse_datetime(string $raw): int
 {
 	$raw = trim($raw);
 	if ($raw === '') {
 		return 0;
 	}
 
-	if (function_exists('vms_ticket_integrity_parse_wp_datetime')) {
-		return absint(vms_ticket_integrity_parse_wp_datetime($raw));
+	if (function_exists('bvmgr_ticket_integrity_parse_wp_datetime')) {
+		return absint(bvmgr_ticket_integrity_parse_wp_datetime($raw));
 	}
 
 	$timezone = function_exists('wp_timezone') ? wp_timezone() : null;
@@ -589,11 +589,11 @@ function vms_ticket_inventory_forensics_parse_datetime(string $raw): int
 	return $fallback ? (int) $fallback : 0;
 }
 
-function vms_ticket_inventory_forensics_build_window_state(string $start_raw, string $end_raw): array
+function bvmgr_ticket_inventory_forensics_build_window_state(string $start_raw, string $end_raw): array
 {
 	$now = time();
-	$start_ts = vms_ticket_inventory_forensics_parse_datetime($start_raw);
-	$end_ts = vms_ticket_inventory_forensics_parse_datetime($end_raw);
+	$start_ts = bvmgr_ticket_inventory_forensics_parse_datetime($start_raw);
+	$end_ts = bvmgr_ticket_inventory_forensics_parse_datetime($end_raw);
 	$start_valid = ($start_raw === '' || $start_ts > 0);
 	$end_valid = ($end_raw === '' || $end_ts > 0);
 	$is_open = true;
@@ -617,7 +617,7 @@ function vms_ticket_inventory_forensics_build_window_state(string $start_raw, st
 	);
 }
 
-function vms_ticket_inventory_forensics_load_ticket_object(int $product_id)
+function bvmgr_ticket_inventory_forensics_load_ticket_object(int $product_id)
 {
 	$product_id = absint($product_id);
 	if ($product_id <= 0 || !class_exists('Tribe__Tickets__Tickets') || !method_exists('Tribe__Tickets__Tickets', 'load_ticket_object')) {
@@ -633,7 +633,7 @@ function vms_ticket_inventory_forensics_load_ticket_object(int $product_id)
 	return null;
 }
 
-function vms_ticket_inventory_forensics_snapshot_event(int $tec_event_id): array
+function bvmgr_ticket_inventory_forensics_snapshot_event(int $tec_event_id): array
 {
 	$tec_event_id = absint($tec_event_id);
 	$event_capacity = null;
@@ -662,7 +662,7 @@ function vms_ticket_inventory_forensics_snapshot_event(int $tec_event_id): array
 	return array(
 		'tec_event_id' => $tec_event_id,
 		'global_stock_enabled_raw' => $tec_event_id > 0 ? (string) get_post_meta($tec_event_id, '_tribe_ticket_use_global_stock', true) : '',
-		'global_stock_enabled' => $tec_event_id > 0 ? vms_ticket_inventory_forensics_meta_flag(get_post_meta($tec_event_id, '_tribe_ticket_use_global_stock', true)) : false,
+		'global_stock_enabled' => $tec_event_id > 0 ? bvmgr_ticket_inventory_forensics_meta_flag(get_post_meta($tec_event_id, '_tribe_ticket_use_global_stock', true)) : false,
 		'global_stock_level_raw' => $tec_event_id > 0 ? get_post_meta($tec_event_id, '_tribe_ticket_global_stock_level', true) : '',
 		'event_capacity' => $event_capacity,
 		'event_available' => $event_available,
@@ -670,20 +670,20 @@ function vms_ticket_inventory_forensics_snapshot_event(int $tec_event_id): array
 	);
 }
 
-function vms_ticket_inventory_forensics_snapshot_product(int $product_id): array
+function bvmgr_ticket_inventory_forensics_snapshot_product(int $product_id): array
 {
-	$scope = vms_ticket_inventory_forensics_resolve_scope($product_id);
+	$scope = bvmgr_ticket_inventory_forensics_resolve_scope($product_id);
 	$wc_product = function_exists('wc_get_product') ? wc_get_product($product_id) : null;
-	$ticket = vms_ticket_inventory_forensics_load_ticket_object($product_id);
+	$ticket = bvmgr_ticket_inventory_forensics_load_ticket_object($product_id);
 	$post = $product_id > 0 ? get_post($product_id) : null;
 	$post_status = $post instanceof WP_Post ? (string) $post->post_status : '';
-	$product_role = sanitize_key((string) get_post_meta($product_id, vms_ticket_inventory_forensics_product_meta_key('product_role', '_vms_product_role'), true));
+	$product_role = sanitize_key((string) get_post_meta($product_id, bvmgr_ticket_inventory_forensics_product_meta_key('product_role', '_vms_product_role'), true));
 	$is_entitlement = ($product_role === 'entitlement' || $product_role === 'addon');
-	$sale_state = vms_ticket_inventory_forensics_build_window_state(
+	$sale_state = bvmgr_ticket_inventory_forensics_build_window_state(
 		trim((string) get_post_meta($product_id, '_ticket_start_date', true)),
 		trim((string) get_post_meta($product_id, '_ticket_end_date', true))
 	);
-	$event_snapshot = vms_ticket_inventory_forensics_snapshot_event(absint($scope['tec_event_id'] ?? 0));
+	$event_snapshot = bvmgr_ticket_inventory_forensics_snapshot_event(absint($scope['tec_event_id'] ?? 0));
 
 	$stock_quantity = $wc_product && method_exists($wc_product, 'get_stock_quantity')
 		? $wc_product->get_stock_quantity()
@@ -693,7 +693,7 @@ function vms_ticket_inventory_forensics_snapshot_product(int $product_id): array
 		: (string) get_post_meta($product_id, '_stock_status', true);
 	$managing_stock = $wc_product && method_exists($wc_product, 'managing_stock')
 		? (bool) $wc_product->managing_stock()
-		: vms_ticket_inventory_forensics_meta_flag(get_post_meta($product_id, '_manage_stock', true));
+		: bvmgr_ticket_inventory_forensics_meta_flag(get_post_meta($product_id, '_manage_stock', true));
 	$is_in_stock = $wc_product && method_exists($wc_product, 'is_in_stock')
 		? (bool) $wc_product->is_in_stock()
 		: null;
@@ -733,9 +733,9 @@ function vms_ticket_inventory_forensics_snapshot_product(int $product_id): array
 		'sku' => $product_id > 0 ? trim((string) get_post_meta($product_id, '_sku', true)) : '',
 		'post_status' => $post_status,
 		'role' => $product_role,
-		'visibility_mode' => sanitize_key((string) get_post_meta($product_id, vms_ticket_inventory_forensics_product_meta_key('ticketing_visibility_mode', '_vms_ticketing_visibility_mode'), true)),
-		'ticket_key' => sanitize_key((string) get_post_meta($product_id, vms_ticket_inventory_forensics_product_meta_key('ticketing_ticket_key', '_vms_ticketing_ticket_key'), true)),
-		'entitlement_id' => sanitize_key((string) get_post_meta($product_id, vms_ticket_inventory_forensics_product_meta_key('ticketing_entitlement_id', '_vms_ticketing_entitlement_id'), true)),
+		'visibility_mode' => sanitize_key((string) get_post_meta($product_id, bvmgr_ticket_inventory_forensics_product_meta_key('ticketing_visibility_mode', '_vms_ticketing_visibility_mode'), true)),
+		'ticket_key' => sanitize_key((string) get_post_meta($product_id, bvmgr_ticket_inventory_forensics_product_meta_key('ticketing_ticket_key', '_vms_ticketing_ticket_key'), true)),
+		'entitlement_id' => sanitize_key((string) get_post_meta($product_id, bvmgr_ticket_inventory_forensics_product_meta_key('ticketing_entitlement_id', '_vms_ticketing_entitlement_id'), true)),
 		'linked_event_id' => absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true)),
 		'stock_quantity' => is_numeric($stock_quantity) ? (int) $stock_quantity : $stock_quantity,
 		'manage_stock_raw' => (string) get_post_meta($product_id, '_manage_stock', true),
@@ -771,18 +771,18 @@ function vms_ticket_inventory_forensics_snapshot_product(int $product_id): array
 	);
 }
 
-function vms_ticket_inventory_forensics_snapshot_object(int $object_id): array
+function bvmgr_ticket_inventory_forensics_snapshot_object(int $object_id): array
 {
 	$object_id = absint($object_id);
-	$scope = vms_ticket_inventory_forensics_resolve_scope($object_id);
+	$scope = bvmgr_ticket_inventory_forensics_resolve_scope($object_id);
 	$post_type = (string) ($scope['post_type'] ?? '');
 
 	if ($post_type === 'product') {
-		return vms_ticket_inventory_forensics_snapshot_product($object_id);
+		return bvmgr_ticket_inventory_forensics_snapshot_product($object_id);
 	}
 
 	if ($post_type === 'tribe_events') {
-		$event_snapshot = vms_ticket_inventory_forensics_snapshot_event($object_id);
+		$event_snapshot = bvmgr_ticket_inventory_forensics_snapshot_event($object_id);
 		return array_merge(
 			array(
 				'post_type' => 'tribe_events',
@@ -798,7 +798,7 @@ function vms_ticket_inventory_forensics_snapshot_object(int $object_id): array
 	return array();
 }
 
-function vms_ticket_inventory_forensics_snapshot_signature(array $snapshot): array
+function bvmgr_ticket_inventory_forensics_snapshot_signature(array $snapshot): array
 {
 	return array(
 		'post_type' => (string) ($snapshot['post_type'] ?? ''),
@@ -829,13 +829,13 @@ function vms_ticket_inventory_forensics_snapshot_signature(array $snapshot): arr
 	);
 }
 
-function vms_ticket_inventory_forensics_snapshot_hash(array $snapshot): string
+function bvmgr_ticket_inventory_forensics_snapshot_hash(array $snapshot): string
 {
-	$json = wp_json_encode(vms_ticket_inventory_forensics_snapshot_signature($snapshot));
+	$json = wp_json_encode(bvmgr_ticket_inventory_forensics_snapshot_signature($snapshot));
 	return sha1(is_string($json) ? $json : '');
 }
 
-function vms_ticket_inventory_forensics_snapshot_role_key(array $snapshot): string
+function bvmgr_ticket_inventory_forensics_snapshot_role_key(array $snapshot): string
 {
 	$role = sanitize_key((string) ($snapshot['role'] ?? ''));
 	$visibility_mode = sanitize_key((string) ($snapshot['visibility_mode'] ?? ''));
@@ -853,58 +853,58 @@ function vms_ticket_inventory_forensics_snapshot_role_key(array $snapshot): stri
 	return 'unknown';
 }
 
-function vms_ticket_inventory_forensics_snapshot_role_label(string $role_key): string
+function bvmgr_ticket_inventory_forensics_snapshot_role_label(string $role_key): string
 {
 	switch (sanitize_key($role_key)) {
 		case 'standard_ticket':
-			return __('Standard/public ticket', 'vms');
+			return __('Standard/public ticket', 'backstage-venue-manager');
 		case 'qualified_ticket':
-			return __('Verified/qualified ticket', 'vms');
+			return __('Verified/qualified ticket', 'backstage-venue-manager');
 		case 'add_on':
-			return __('Add-on', 'vms');
+			return __('Add-on', 'backstage-venue-manager');
 		default:
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_source_label(string $source): string
+function bvmgr_ticket_inventory_forensics_source_label(string $source): string
 {
 	$source = sanitize_key($source);
 	switch ($source) {
 		case 'authoritative_config':
-			return __('Authoritative config', 'vms');
+			return __('Authoritative config', 'backstage-venue-manager');
 		case 'authoritative_zero_capacity':
-			return __('Authoritative zero-capacity branch', 'vms');
+			return __('Authoritative zero-capacity branch', 'backstage-venue-manager');
 		case 'sold_count_reconciliation':
-			return __('Sold-count reconciliation', 'vms');
+			return __('Sold-count reconciliation', 'backstage-venue-manager');
 		case 'ticket_sold_count_reconciliation':
-			return __('Ticket sold-count reconciliation', 'vms');
+			return __('Ticket sold-count reconciliation', 'backstage-venue-manager');
 		case 'entitlement_scope_sold_count_reconciliation':
-			return __('Add-on sold-count reconciliation', 'vms');
+			return __('Add-on sold-count reconciliation', 'backstage-venue-manager');
 		case 'legacy_plan_product_sold_count_reconciliation':
-			return __('Legacy plan-product sold-count reconciliation', 'vms');
+			return __('Legacy plan-product sold-count reconciliation', 'backstage-venue-manager');
 		case 'manual_entitlement_stock_reconciliation':
-			return __('Manual add-on stock reconciliation', 'vms');
+			return __('Manual add-on stock reconciliation', 'backstage-venue-manager');
 		case 'entitlement_capacity_seed':
-			return __('Add-on capacity seed', 'vms');
+			return __('Add-on capacity seed', 'backstage-venue-manager');
 		case 'fallback_existing_state':
-			return __('Fallback existing state', 'vms');
+			return __('Fallback existing state', 'backstage-venue-manager');
 		case 'ticket_existing_state_fallback':
-			return __('Ticket existing-state fallback', 'vms');
+			return __('Ticket existing-state fallback', 'backstage-venue-manager');
 		case 'entitlement_existing_state_fallback':
-			return __('Add-on existing-state fallback', 'vms');
+			return __('Add-on existing-state fallback', 'backstage-venue-manager');
 		case 'repair_branch_guardrail':
-			return __('Repair branch guardrail', 'vms');
+			return __('Repair branch guardrail', 'backstage-venue-manager');
 		case 'legacy_normalization':
-			return __('Legacy normalization', 'vms');
+			return __('Legacy normalization', 'backstage-venue-manager');
 		case 'repair_audit':
-			return __('Repair audit', 'vms');
+			return __('Repair audit', 'backstage-venue-manager');
 		default:
-			return __('Unknown', 'vms');
+			return __('Unknown', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_build_detail_payload(
+function bvmgr_ticket_inventory_forensics_build_detail_payload(
 	string $meta_key,
 	array $before_snapshot,
 	array $after_snapshot,
@@ -913,7 +913,7 @@ function vms_ticket_inventory_forensics_build_detail_payload(
 	string $source_function,
 	string $trigger_source
 ): array {
-	$role_key = vms_ticket_inventory_forensics_snapshot_role_key(!empty($after_snapshot) ? $after_snapshot : $before_snapshot);
+	$role_key = bvmgr_ticket_inventory_forensics_snapshot_role_key(!empty($after_snapshot) ? $after_snapshot : $before_snapshot);
 	$after_error = trim((string) ($after_snapshot['vms_reconcile_error'] ?? ''));
 	$before_stock = is_numeric($before_snapshot['stock_quantity'] ?? null) ? (int) $before_snapshot['stock_quantity'] : null;
 	$after_stock = is_numeric($after_snapshot['stock_quantity'] ?? null) ? (int) $after_snapshot['stock_quantity'] : null;
@@ -935,7 +935,7 @@ function vms_ticket_inventory_forensics_build_detail_payload(
 	} elseif ($derivation_source === '' && $after_error !== '') {
 		$derivation_source = 'fallback_existing_state';
 		$confidence = 'fallback';
-		$reason = __('Sold quantity could not be derived cleanly, so the routine fell back to preserving or constraining the existing inventory state.', 'vms');
+		$reason = __('Sold quantity could not be derived cleanly, so the routine fell back to preserving or constraining the existing inventory state.', 'backstage-venue-manager');
 	} elseif (
 		$derivation_source === ''
 		&&
@@ -949,7 +949,7 @@ function vms_ticket_inventory_forensics_build_detail_payload(
 	) {
 		$derivation_source = 'sold_count_reconciliation';
 		$confidence = 'authoritative';
-		$reason = __('The write was derived from current ticket configuration plus reconciled sold counts.', 'vms');
+		$reason = __('The write was derived from current ticket configuration plus reconciled sold counts.', 'backstage-venue-manager');
 	} elseif (
 		$derivation_source === ''
 		&&
@@ -958,11 +958,11 @@ function vms_ticket_inventory_forensics_build_detail_payload(
 	) {
 		$derivation_source = 'authoritative_config';
 		$confidence = 'authoritative';
-		$reason = __('The write came directly from the authoritative VMS ticket configuration.', 'vms');
+		$reason = __('The write came directly from the authoritative VMS ticket configuration.', 'backstage-venue-manager');
 	} elseif ($derivation_source === '' && (strpos($source_function, 'repair') !== false || strpos($source_function, 'legacy') !== false)) {
 		$derivation_source = 'legacy_normalization';
 		$confidence = 'inferred';
-		$reason = __('The write was made while normalizing legacy or drifted ticket state during repair.', 'vms');
+		$reason = __('The write was made while normalizing legacy or drifted ticket state during repair.', 'backstage-venue-manager');
 	}
 
 	if ($derivation_source === '') {
@@ -972,7 +972,7 @@ function vms_ticket_inventory_forensics_build_detail_payload(
 		$confidence = 'unknown';
 	}
 	if ($reason === '') {
-		$reason = __('The write changed a live inventory-related field, but the exact derivation path still needs manual review.', 'vms');
+		$reason = __('The write changed a live inventory-related field, but the exact derivation path still needs manual review.', 'backstage-venue-manager');
 	}
 
 	$expected_effect = sanitize_key((string) ($context['expected_effect'] ?? ''));
@@ -986,28 +986,28 @@ function vms_ticket_inventory_forensics_build_detail_payload(
 
 	return array(
 		'product_role' => $role_key,
-		'product_role_label' => vms_ticket_inventory_forensics_snapshot_role_label($role_key),
+		'product_role_label' => bvmgr_ticket_inventory_forensics_snapshot_role_label($role_key),
 		'derivation_source' => $derivation_source,
-		'derivation_source_label' => vms_ticket_inventory_forensics_source_label($derivation_source),
-		'confidence_level' => vms_ticket_inventory_forensics_normalize_confidence($confidence),
-		'confidence_label' => vms_ticket_inventory_forensics_confidence_label($confidence),
-		'expected_effect' => vms_ticket_inventory_forensics_normalize_expected_effect($expected_effect),
-		'expected_effect_label' => vms_ticket_inventory_forensics_expected_effect_label($expected_effect),
+		'derivation_source_label' => bvmgr_ticket_inventory_forensics_source_label($derivation_source),
+		'confidence_level' => bvmgr_ticket_inventory_forensics_normalize_confidence($confidence),
+		'confidence_label' => bvmgr_ticket_inventory_forensics_confidence_label($confidence),
+		'expected_effect' => bvmgr_ticket_inventory_forensics_normalize_expected_effect($expected_effect),
+		'expected_effect_label' => bvmgr_ticket_inventory_forensics_expected_effect_label($expected_effect),
 		'writer_branch' => $writer_branch,
 		'result_health' => $result_health,
 		'reason_text' => $reason,
-		'old_value' => vms_ticket_inventory_forensics_display_quantity($before_snapshot['stock_quantity'] ?? $before_snapshot['ticket_capacity_raw'] ?? ''),
-		'new_value' => vms_ticket_inventory_forensics_display_quantity($after_snapshot['stock_quantity'] ?? $after_snapshot['ticket_capacity_raw'] ?? ''),
-		'old_stock_qty' => vms_ticket_inventory_forensics_display_quantity($before_stock),
-		'new_stock_qty' => vms_ticket_inventory_forensics_display_quantity($after_stock),
-		'old_stock_status' => $before_status !== '' ? $before_status : __('(empty)', 'vms'),
-		'new_stock_status' => $after_status !== '' ? $after_status : __('(empty)', 'vms'),
-		'old_manage_stock' => vms_ticket_inventory_forensics_bool_label($before_manage_stock),
-		'new_manage_stock' => vms_ticket_inventory_forensics_bool_label($after_manage_stock),
+		'old_value' => bvmgr_ticket_inventory_forensics_display_quantity($before_snapshot['stock_quantity'] ?? $before_snapshot['ticket_capacity_raw'] ?? ''),
+		'new_value' => bvmgr_ticket_inventory_forensics_display_quantity($after_snapshot['stock_quantity'] ?? $after_snapshot['ticket_capacity_raw'] ?? ''),
+		'old_stock_qty' => bvmgr_ticket_inventory_forensics_display_quantity($before_stock),
+		'new_stock_qty' => bvmgr_ticket_inventory_forensics_display_quantity($after_stock),
+		'old_stock_status' => $before_status !== '' ? $before_status : __('(empty)', 'backstage-venue-manager'),
+		'new_stock_status' => $after_status !== '' ? $after_status : __('(empty)', 'backstage-venue-manager'),
+		'old_manage_stock' => bvmgr_ticket_inventory_forensics_bool_label($before_manage_stock),
+		'new_manage_stock' => bvmgr_ticket_inventory_forensics_bool_label($after_manage_stock),
 	);
 }
 
-function vms_ticket_inventory_forensics_decode_json_field($value): array
+function bvmgr_ticket_inventory_forensics_decode_json_field($value): array
 {
 	if (is_array($value)) {
 		return $value;
@@ -1020,27 +1020,27 @@ function vms_ticket_inventory_forensics_decode_json_field($value): array
 	return is_array($decoded) ? $decoded : array();
 }
 
-function vms_ticket_inventory_forensics_pending_store(): array
+function bvmgr_ticket_inventory_forensics_pending_store(): array
 {
-	$store = $GLOBALS['vms_ticket_inventory_forensics_pending_meta'] ?? array();
+	$store = $GLOBALS['bvmgr_ticket_inventory_forensics_pending_meta'] ?? array();
 	return is_array($store) ? $store : array();
 }
 
-function vms_ticket_inventory_forensics_enqueue_pending(string $operation, int $object_id, string $meta_key, array $row): void
+function bvmgr_ticket_inventory_forensics_enqueue_pending(string $operation, int $object_id, string $meta_key, array $row): void
 {
-	$store = vms_ticket_inventory_forensics_pending_store();
+	$store = bvmgr_ticket_inventory_forensics_pending_store();
 	$key = $operation . ':' . $object_id . ':' . $meta_key;
 	if (!isset($store[$key]) || !is_array($store[$key])) {
 		$store[$key] = array();
 	}
 
 	$store[$key][] = $row;
-	$GLOBALS['vms_ticket_inventory_forensics_pending_meta'] = $store;
+	$GLOBALS['bvmgr_ticket_inventory_forensics_pending_meta'] = $store;
 }
 
-function vms_ticket_inventory_forensics_dequeue_pending(string $operation, int $object_id, string $meta_key): array
+function bvmgr_ticket_inventory_forensics_dequeue_pending(string $operation, int $object_id, string $meta_key): array
 {
-	$store = vms_ticket_inventory_forensics_pending_store();
+	$store = bvmgr_ticket_inventory_forensics_pending_store();
 	$key = $operation . ':' . $object_id . ':' . $meta_key;
 	$row = array();
 
@@ -1051,27 +1051,27 @@ function vms_ticket_inventory_forensics_dequeue_pending(string $operation, int $
 		}
 	}
 
-	$GLOBALS['vms_ticket_inventory_forensics_pending_meta'] = $store;
+	$GLOBALS['bvmgr_ticket_inventory_forensics_pending_meta'] = $store;
 	return is_array($row) ? $row : array();
 }
 
-function vms_ticket_inventory_forensics_capture_pre_meta_write($check, $object_id, $meta_key, $meta_value, $prev_value)
+function bvmgr_ticket_inventory_forensics_capture_pre_meta_write($check, $object_id, $meta_key, $meta_value, $prev_value)
 {
 	unset($meta_value, $prev_value);
 
 	$object_id = absint($object_id);
 	$meta_key = (string) $meta_key;
-	if (!vms_ticket_inventory_forensics_is_relevant_meta_write($object_id, $meta_key)) {
+	if (!bvmgr_ticket_inventory_forensics_is_relevant_meta_write($object_id, $meta_key)) {
 		return $check;
 	}
 
 	$started_at = microtime(true);
 	$operation = current_filter() === 'add_post_metadata' ? 'add' : 'update';
-	$context = vms_ticket_inventory_forensics_current_context();
-	$source = vms_ticket_inventory_forensics_detect_source();
+	$context = bvmgr_ticket_inventory_forensics_current_context();
+	$source = bvmgr_ticket_inventory_forensics_detect_source();
 	$source_hook = (string) ($context['source_hook'] ?? $source['source_hook'] ?? '');
 	$source_function = (string) ($context['source_function'] ?? $source['source_function'] ?? '');
-	$guard = vms_ticket_inventory_forensics_guard_decision(current_filter(), $object_id, $meta_key, $context, $source_hook, $source_function);
+	$guard = bvmgr_ticket_inventory_forensics_guard_decision(current_filter(), $object_id, $meta_key, $context, $source_hook, $source_function);
 	$trace_context = array_merge(
 		$guard,
 		array(
@@ -1080,47 +1080,47 @@ function vms_ticket_inventory_forensics_capture_pre_meta_write($check, $object_i
 	);
 	if (empty($guard['allowed'])) {
 		if (is_admin()) {
-			vms_ticket_inventory_forensics_trace('skipped', $trace_context, $started_at);
+			bvmgr_ticket_inventory_forensics_trace('skipped', $trace_context, $started_at);
 		}
 		return $check;
 	}
 
-	vms_ticket_inventory_forensics_enqueue_pending(
+	bvmgr_ticket_inventory_forensics_enqueue_pending(
 		$operation,
 		$object_id,
 		$meta_key,
 		array(
-			'before_snapshot' => vms_ticket_inventory_forensics_snapshot_object($object_id),
+			'before_snapshot' => bvmgr_ticket_inventory_forensics_snapshot_object($object_id),
 			'context' => $context,
 			'source_hook' => $source_hook,
 			'source_function' => $source_function,
 		)
 	);
 	if (is_admin()) {
-		vms_ticket_inventory_forensics_trace('allowed', $trace_context, $started_at);
+		bvmgr_ticket_inventory_forensics_trace('allowed', $trace_context, $started_at);
 	}
 
 	return $check;
 }
-add_filter('add_post_metadata', 'vms_ticket_inventory_forensics_capture_pre_meta_write', 10, 5);
-add_filter('update_post_metadata', 'vms_ticket_inventory_forensics_capture_pre_meta_write', 10, 5);
+add_filter('add_post_metadata', 'bvmgr_ticket_inventory_forensics_capture_pre_meta_write', 10, 5);
+add_filter('update_post_metadata', 'bvmgr_ticket_inventory_forensics_capture_pre_meta_write', 10, 5);
 
-function vms_ticket_inventory_forensics_capture_pre_meta_delete($check, $object_id, $meta_key, $meta_value, $delete_all)
+function bvmgr_ticket_inventory_forensics_capture_pre_meta_delete($check, $object_id, $meta_key, $meta_value, $delete_all)
 {
 	unset($meta_value, $delete_all);
 
 	$object_id = absint($object_id);
 	$meta_key = (string) $meta_key;
-	if (!vms_ticket_inventory_forensics_is_relevant_meta_write($object_id, $meta_key)) {
+	if (!bvmgr_ticket_inventory_forensics_is_relevant_meta_write($object_id, $meta_key)) {
 		return $check;
 	}
 
 	$started_at = microtime(true);
-	$context = vms_ticket_inventory_forensics_current_context();
-	$source = vms_ticket_inventory_forensics_detect_source();
+	$context = bvmgr_ticket_inventory_forensics_current_context();
+	$source = bvmgr_ticket_inventory_forensics_detect_source();
 	$source_hook = (string) ($context['source_hook'] ?? $source['source_hook'] ?? '');
 	$source_function = (string) ($context['source_function'] ?? $source['source_function'] ?? '');
-	$guard = vms_ticket_inventory_forensics_guard_decision(current_filter(), $object_id, $meta_key, $context, $source_hook, $source_function);
+	$guard = bvmgr_ticket_inventory_forensics_guard_decision(current_filter(), $object_id, $meta_key, $context, $source_hook, $source_function);
 	$trace_context = array_merge(
 		$guard,
 		array(
@@ -1129,37 +1129,37 @@ function vms_ticket_inventory_forensics_capture_pre_meta_delete($check, $object_
 	);
 	if (empty($guard['allowed'])) {
 		if (is_admin()) {
-			vms_ticket_inventory_forensics_trace('skipped', $trace_context, $started_at);
+			bvmgr_ticket_inventory_forensics_trace('skipped', $trace_context, $started_at);
 		}
 		return $check;
 	}
 
-	vms_ticket_inventory_forensics_enqueue_pending(
+	bvmgr_ticket_inventory_forensics_enqueue_pending(
 		'delete',
 		$object_id,
 		$meta_key,
 		array(
-			'before_snapshot' => vms_ticket_inventory_forensics_snapshot_object($object_id),
+			'before_snapshot' => bvmgr_ticket_inventory_forensics_snapshot_object($object_id),
 			'context' => $context,
 			'source_hook' => $source_hook,
 			'source_function' => $source_function,
 		)
 	);
 	if (is_admin()) {
-		vms_ticket_inventory_forensics_trace('allowed', $trace_context, $started_at);
+		bvmgr_ticket_inventory_forensics_trace('allowed', $trace_context, $started_at);
 	}
 
 	return $check;
 }
-add_filter('delete_post_metadata', 'vms_ticket_inventory_forensics_capture_pre_meta_delete', 10, 5);
+add_filter('delete_post_metadata', 'bvmgr_ticket_inventory_forensics_capture_pre_meta_delete', 10, 5);
 
-function vms_ticket_inventory_forensics_normalize_result_status(string $result_status): string
+function bvmgr_ticket_inventory_forensics_normalize_result_status(string $result_status): string
 {
 	$result_status = sanitize_key($result_status);
 	return in_array($result_status, array('success', 'no_op', 'partial', 'skipped', 'failed'), true) ? $result_status : 'success';
 }
 
-function vms_ticket_inventory_forensics_change_type_for_meta(string $meta_key, array $before_snapshot, array $after_snapshot, string $result_status): string
+function bvmgr_ticket_inventory_forensics_change_type_for_meta(string $meta_key, array $before_snapshot, array $after_snapshot, string $result_status): string
 {
 	if ($result_status === 'no_op') {
 		return 'inventory_write_no_effect';
@@ -1188,12 +1188,13 @@ function vms_ticket_inventory_forensics_change_type_for_meta(string $meta_key, a
 	}
 }
 
-function vms_ticket_inventory_forensics_subject_label(array $scope, array $after_snapshot): string
+function bvmgr_ticket_inventory_forensics_subject_label(array $scope, array $after_snapshot): string
 {
 	$product_id = absint($scope['product_id'] ?? 0);
 	if ($product_id > 0) {
 		$title = trim((string) ($after_snapshot['title'] ?? get_the_title($product_id)));
-		return $title !== '' ? $title : sprintf(__('Product #%d', 'vms'), $product_id);
+		/* translators: %d: product ID. */
+		return $title !== '' ? $title : sprintf(__('Product #%d', 'backstage-venue-manager'), $product_id);
 	}
 
 	$event_id = absint($scope['tec_event_id'] ?? 0);
@@ -1202,80 +1203,91 @@ function vms_ticket_inventory_forensics_subject_label(array $scope, array $after
 		return $title;
 	}
 
-	return $event_id > 0 ? sprintf(__('Event #%d', 'vms'), $event_id) : __('Inventory object', 'vms');
+	/* translators: %d: event ID. */
+	return $event_id > 0 ? sprintf(__('Event #%d', 'backstage-venue-manager'), $event_id) : __('Inventory object', 'backstage-venue-manager');
 }
 
-function vms_ticket_inventory_forensics_build_summary(string $change_type, string $meta_key, array $scope, array $before_snapshot, array $after_snapshot, string $result_status): string
+function bvmgr_ticket_inventory_forensics_build_summary(string $change_type, string $meta_key, array $scope, array $before_snapshot, array $after_snapshot, string $result_status): string
 {
-	$subject = vms_ticket_inventory_forensics_subject_label($scope, $after_snapshot);
+	$subject = bvmgr_ticket_inventory_forensics_subject_label($scope, $after_snapshot);
 	if ($result_status === 'no_op') {
-		return sprintf(__('Inventory write had no effect for %s.', 'vms'), $subject);
+		/* translators: %s: human-readable value used in this message. */
+		return sprintf(__('Inventory write had no effect for %s.', 'backstage-venue-manager'), $subject);
 	}
 
 	switch ($change_type) {
 		case 'stock_zeroed':
 			return sprintf(
-				__('Stock changed %1$s -> %2$s for %3$s.', 'vms'),
-				vms_ticket_inventory_forensics_display_quantity($before_snapshot['stock_quantity'] ?? null),
-				vms_ticket_inventory_forensics_display_quantity($after_snapshot['stock_quantity'] ?? null),
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
+				__('Stock changed %1$s -> %2$s for %3$s.', 'backstage-venue-manager'),
+				bvmgr_ticket_inventory_forensics_display_quantity($before_snapshot['stock_quantity'] ?? null),
+				bvmgr_ticket_inventory_forensics_display_quantity($after_snapshot['stock_quantity'] ?? null),
 				$subject
 			);
 		case 'stock_quantity_changed':
 			return sprintf(
-				__('Stock quantity changed %1$s -> %2$s for %3$s.', 'vms'),
-				vms_ticket_inventory_forensics_display_quantity($before_snapshot['stock_quantity'] ?? null),
-				vms_ticket_inventory_forensics_display_quantity($after_snapshot['stock_quantity'] ?? null),
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
+				__('Stock quantity changed %1$s -> %2$s for %3$s.', 'backstage-venue-manager'),
+				bvmgr_ticket_inventory_forensics_display_quantity($before_snapshot['stock_quantity'] ?? null),
+				bvmgr_ticket_inventory_forensics_display_quantity($after_snapshot['stock_quantity'] ?? null),
 				$subject
 			);
 		case 'manage_stock_enabled':
 		case 'manage_stock_disabled':
 			return sprintf(
-				__('Manage stock changed %1$s -> %2$s for %3$s.', 'vms'),
-				vms_ticket_inventory_forensics_bool_label(!empty($before_snapshot['managing_stock'])),
-				vms_ticket_inventory_forensics_bool_label(!empty($after_snapshot['managing_stock'])),
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
+				__('Manage stock changed %1$s -> %2$s for %3$s.', 'backstage-venue-manager'),
+				bvmgr_ticket_inventory_forensics_bool_label(!empty($before_snapshot['managing_stock'])),
+				bvmgr_ticket_inventory_forensics_bool_label(!empty($after_snapshot['managing_stock'])),
 				$subject
 			);
 		case 'stock_status_changed':
 			return sprintf(
-				__('Stock status changed %1$s -> %2$s for %3$s.', 'vms'),
-				trim((string) ($before_snapshot['stock_status'] ?? '')) !== '' ? (string) ($before_snapshot['stock_status'] ?? '') : __('(empty)', 'vms'),
-				trim((string) ($after_snapshot['stock_status'] ?? '')) !== '' ? (string) ($after_snapshot['stock_status'] ?? '') : __('(empty)', 'vms'),
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
+				__('Stock status changed %1$s -> %2$s for %3$s.', 'backstage-venue-manager'),
+				trim((string) ($before_snapshot['stock_status'] ?? '')) !== '' ? (string) ($before_snapshot['stock_status'] ?? '') : __('(empty)', 'backstage-venue-manager'),
+				trim((string) ($after_snapshot['stock_status'] ?? '')) !== '' ? (string) ($after_snapshot['stock_status'] ?? '') : __('(empty)', 'backstage-venue-manager'),
 				$subject
 			);
 		case 'capacity_relinked':
 			$before_value = $before_snapshot['ticket_capacity_raw'] ?? $before_snapshot['event_global_stock_level_raw'] ?? '';
 			$after_value = $after_snapshot['ticket_capacity_raw'] ?? $after_snapshot['event_global_stock_level_raw'] ?? '';
 			return sprintf(
-				__('Capacity-related field %1$s changed %2$s -> %3$s for %4$s.', 'vms'),
+				/* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message, 4: value 4 used in this message. */
+				__('Capacity-related field %1$s changed %2$s -> %3$s for %4$s.', 'backstage-venue-manager'),
 				$meta_key,
-				vms_ticket_inventory_forensics_display_quantity($before_value),
-				vms_ticket_inventory_forensics_display_quantity($after_value),
+				bvmgr_ticket_inventory_forensics_display_quantity($before_value),
+				bvmgr_ticket_inventory_forensics_display_quantity($after_value),
 				$subject
 			);
 		case 'sale_window_changed':
-			return sprintf(__('Sale window changed for %s.', 'vms'), $subject);
+			/* translators: %s: human-readable value used in this message. */
+			return sprintf(__('Sale window changed for %s.', 'backstage-venue-manager'), $subject);
 		default:
-			return sprintf(__('Availability-related field %1$s changed for %2$s.', 'vms'), $meta_key, $subject);
+			/* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+			return sprintf(__('Availability-related field %1$s changed for %2$s.', 'backstage-venue-manager'), $meta_key, $subject);
 	}
 }
 
-function vms_ticket_inventory_forensics_prune_logs(): void
+function bvmgr_ticket_inventory_forensics_prune_logs(): void
 {
 	global $wpdb;
-	$table = vms_ticket_inventory_forensics_table_name();
+	$table = bvmgr_ticket_inventory_forensics_table_name();
 	$cutoff = gmdate('Y-m-d H:i:s', time() - (90 * DAY_IN_SECONDS));
-	$wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE created_at_gmt < %s", $cutoff));
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ninety-day retention pruning deletes expired rows from the plugin-owned forensics table; no core API owns this repository.
+	$wpdb->query($wpdb->prepare('DELETE FROM %i WHERE created_at_gmt < %s', $table, $cutoff));
 }
 
-function vms_ticket_inventory_forensics_insert(array $row): int
+function bvmgr_ticket_inventory_forensics_insert(array $row): int
 {
 	global $wpdb;
 
-	if ((string) get_option(vms_ticket_inventory_forensics_schema_option_key(), '') !== vms_ticket_inventory_forensics_schema_target()) {
+	if ((string) get_option(bvmgr_ticket_inventory_forensics_schema_option_key(), '') !== bvmgr_ticket_inventory_forensics_schema_target()) {
 		return 0;
 	}
 
-	$table = vms_ticket_inventory_forensics_table_name();
+	$table = bvmgr_ticket_inventory_forensics_table_name();
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Forensics recording persists one normalized row in the plugin-owned audit table through wpdb::insert(); no core API owns this repository.
 	$ok = $wpdb->insert(
 		$table,
 		array(
@@ -1291,10 +1303,10 @@ function vms_ticket_inventory_forensics_insert(array $row): int
 			'mutation_key' => sanitize_key((string) ($row['mutation_key'] ?? '')),
 			'product_role' => sanitize_key((string) ($row['product_role'] ?? '')),
 			'change_type' => sanitize_key((string) ($row['change_type'] ?? '')),
-			'result_status' => vms_ticket_inventory_forensics_normalize_result_status((string) ($row['result_status'] ?? 'success')),
+			'result_status' => bvmgr_ticket_inventory_forensics_normalize_result_status((string) ($row['result_status'] ?? 'success')),
 			'derivation_source' => sanitize_key((string) ($row['derivation_source'] ?? '')),
-			'confidence_level' => vms_ticket_inventory_forensics_normalize_confidence((string) ($row['confidence_level'] ?? 'unknown')),
-			'expected_effect' => vms_ticket_inventory_forensics_normalize_expected_effect((string) ($row['expected_effect'] ?? 'unknown')),
+			'confidence_level' => bvmgr_ticket_inventory_forensics_normalize_confidence((string) ($row['confidence_level'] ?? 'unknown')),
+			'expected_effect' => bvmgr_ticket_inventory_forensics_normalize_expected_effect((string) ($row['expected_effect'] ?? 'unknown')),
 			'reason_text' => sanitize_text_field((string) ($row['reason_text'] ?? '')),
 			'summary_text' => sanitize_text_field((string) ($row['summary_text'] ?? '')),
 			'before_json' => is_string($row['before_json'] ?? null) ? $row['before_json'] : wp_json_encode($row['before_json'] ?? array()),
@@ -1308,26 +1320,26 @@ function vms_ticket_inventory_forensics_insert(array $row): int
 		return 0;
 	}
 
-	vms_ticket_inventory_forensics_prune_logs();
+	bvmgr_ticket_inventory_forensics_prune_logs();
 	return (int) $wpdb->insert_id;
 }
 
-function vms_ticket_inventory_forensics_record_post_meta_write(string $operation, int $object_id, string $meta_key): void
+function bvmgr_ticket_inventory_forensics_record_post_meta_write(string $operation, int $object_id, string $meta_key): void
 {
 	$object_id = absint($object_id);
 	$meta_key = (string) $meta_key;
-	if (!vms_ticket_inventory_forensics_is_relevant_meta_write($object_id, $meta_key)) {
+	if (!bvmgr_ticket_inventory_forensics_is_relevant_meta_write($object_id, $meta_key)) {
 		return;
 	}
 
 	$started_at = microtime(true);
-	$pending = vms_ticket_inventory_forensics_dequeue_pending($operation, $object_id, $meta_key);
-	$context = is_array($pending['context'] ?? null) ? $pending['context'] : vms_ticket_inventory_forensics_current_context();
+	$pending = bvmgr_ticket_inventory_forensics_dequeue_pending($operation, $object_id, $meta_key);
+	$context = is_array($pending['context'] ?? null) ? $pending['context'] : bvmgr_ticket_inventory_forensics_current_context();
 	$source_hook = sanitize_key((string) ($pending['source_hook'] ?? ''));
 	$source_function = sanitize_text_field((string) ($pending['source_function'] ?? ''));
 
 	if ($source_hook === '' || $source_function === '') {
-		$source = vms_ticket_inventory_forensics_detect_source();
+		$source = bvmgr_ticket_inventory_forensics_detect_source();
 		if ($source_hook === '') {
 			$source_hook = sanitize_key((string) ($source['source_hook'] ?? ''));
 		}
@@ -1335,7 +1347,7 @@ function vms_ticket_inventory_forensics_record_post_meta_write(string $operation
 			$source_function = sanitize_text_field((string) ($source['source_function'] ?? ''));
 		}
 	}
-	$guard = vms_ticket_inventory_forensics_guard_decision(current_filter(), $object_id, $meta_key, $context, $source_hook, $source_function);
+	$guard = bvmgr_ticket_inventory_forensics_guard_decision(current_filter(), $object_id, $meta_key, $context, $source_hook, $source_function);
 	$trace_context = array_merge(
 		$guard,
 		array(
@@ -1344,22 +1356,22 @@ function vms_ticket_inventory_forensics_record_post_meta_write(string $operation
 	);
 	if (empty($guard['allowed'])) {
 		if (is_admin()) {
-			vms_ticket_inventory_forensics_trace('skipped', $trace_context, $started_at);
+			bvmgr_ticket_inventory_forensics_trace('skipped', $trace_context, $started_at);
 		}
 		return;
 	}
 
-	$before_snapshot = is_array($pending['before_snapshot'] ?? null) ? $pending['before_snapshot'] : vms_ticket_inventory_forensics_snapshot_object($object_id);
-	$after_snapshot = vms_ticket_inventory_forensics_snapshot_object($object_id);
-	$scope = vms_ticket_inventory_forensics_resolve_scope($object_id);
+	$before_snapshot = is_array($pending['before_snapshot'] ?? null) ? $pending['before_snapshot'] : bvmgr_ticket_inventory_forensics_snapshot_object($object_id);
+	$after_snapshot = bvmgr_ticket_inventory_forensics_snapshot_object($object_id);
+	$scope = bvmgr_ticket_inventory_forensics_resolve_scope($object_id);
 
-	$result_status = vms_ticket_inventory_forensics_snapshot_hash($before_snapshot) === vms_ticket_inventory_forensics_snapshot_hash($after_snapshot)
+	$result_status = bvmgr_ticket_inventory_forensics_snapshot_hash($before_snapshot) === bvmgr_ticket_inventory_forensics_snapshot_hash($after_snapshot)
 		? 'no_op'
-		: vms_ticket_inventory_forensics_normalize_result_status((string) ($context['requested_result_status'] ?? 'success'));
-	$change_type = vms_ticket_inventory_forensics_change_type_for_meta($meta_key, $before_snapshot, $after_snapshot, $result_status);
-	$summary_text = vms_ticket_inventory_forensics_build_summary($change_type, $meta_key, $scope, $before_snapshot, $after_snapshot, $result_status);
-	$trigger_source = vms_ticket_inventory_forensics_trigger_source($context, $source_hook, $source_function);
-	$detail_payload = vms_ticket_inventory_forensics_build_detail_payload(
+		: bvmgr_ticket_inventory_forensics_normalize_result_status((string) ($context['requested_result_status'] ?? 'success'));
+	$change_type = bvmgr_ticket_inventory_forensics_change_type_for_meta($meta_key, $before_snapshot, $after_snapshot, $result_status);
+	$summary_text = bvmgr_ticket_inventory_forensics_build_summary($change_type, $meta_key, $scope, $before_snapshot, $after_snapshot, $result_status);
+	$trigger_source = bvmgr_ticket_inventory_forensics_trigger_source($context, $source_hook, $source_function);
+	$detail_payload = bvmgr_ticket_inventory_forensics_build_detail_payload(
 		$meta_key,
 		$before_snapshot,
 		$after_snapshot,
@@ -1369,7 +1381,7 @@ function vms_ticket_inventory_forensics_record_post_meta_write(string $operation
 		$trigger_source
 	);
 
-	vms_ticket_inventory_forensics_insert(
+	bvmgr_ticket_inventory_forensics_insert(
 		array(
 			'plan_id' => absint($scope['plan_id'] ?? 0),
 			'tec_event_id' => absint($scope['tec_event_id'] ?? 0),
@@ -1394,11 +1406,11 @@ function vms_ticket_inventory_forensics_record_post_meta_write(string $operation
 		)
 	);
 	if (is_admin()) {
-		vms_ticket_inventory_forensics_trace('finished', $trace_context, $started_at);
+		bvmgr_ticket_inventory_forensics_trace('finished', $trace_context, $started_at);
 	}
 }
 
-function vms_ticket_inventory_forensics_log_direct_change(int $plan_id, array $args = array()): int
+function bvmgr_ticket_inventory_forensics_log_direct_change(int $plan_id, array $args = array()): int
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
@@ -1409,16 +1421,16 @@ function vms_ticket_inventory_forensics_log_direct_change(int $plan_id, array $a
 	$product_id = absint($args['product_id'] ?? 0);
 	$before_snapshot = is_array($args['before_snapshot'] ?? null)
 		? $args['before_snapshot']
-		: ($product_id > 0 ? vms_ticket_inventory_forensics_snapshot_product($product_id) : array());
+		: ($product_id > 0 ? bvmgr_ticket_inventory_forensics_snapshot_product($product_id) : array());
 	$after_snapshot = is_array($args['after_snapshot'] ?? null)
 		? $args['after_snapshot']
-		: ($product_id > 0 ? vms_ticket_inventory_forensics_snapshot_product($product_id) : $before_snapshot);
-	$context = vms_ticket_inventory_forensics_current_context();
-	$source = vms_ticket_inventory_forensics_detect_source();
+		: ($product_id > 0 ? bvmgr_ticket_inventory_forensics_snapshot_product($product_id) : $before_snapshot);
+	$context = bvmgr_ticket_inventory_forensics_current_context();
+	$source = bvmgr_ticket_inventory_forensics_detect_source();
 	$source_hook = sanitize_key((string) ($args['source_hook'] ?? $context['source_hook'] ?? $source['source_hook'] ?? ''));
 	$source_function = sanitize_text_field((string) ($args['source_function'] ?? $context['source_function'] ?? $source['source_function'] ?? ''));
 	$mutation_key = sanitize_key((string) ($args['mutation_key'] ?? 'repair_state'));
-	$guard = vms_ticket_inventory_forensics_guard_decision('ticket_inventory_forensics_direct_change', $product_id, $mutation_key, $context, $source_hook, $source_function);
+	$guard = bvmgr_ticket_inventory_forensics_guard_decision('ticket_inventory_forensics_direct_change', $product_id, $mutation_key, $context, $source_hook, $source_function);
 	$trace_context = array_merge(
 		$guard,
 		array(
@@ -1428,19 +1440,19 @@ function vms_ticket_inventory_forensics_log_direct_change(int $plan_id, array $a
 	);
 	if (empty($guard['allowed'])) {
 		if (is_admin()) {
-			vms_ticket_inventory_forensics_trace('skipped', $trace_context, $started_at);
+			bvmgr_ticket_inventory_forensics_trace('skipped', $trace_context, $started_at);
 		}
 		return 0;
 	}
 
-	$trigger_source = vms_ticket_inventory_forensics_trigger_source($context, $source_hook, $source_function);
-	$result_status = vms_ticket_inventory_forensics_normalize_result_status((string) ($args['result_status'] ?? 'success'));
+	$trigger_source = bvmgr_ticket_inventory_forensics_trigger_source($context, $source_hook, $source_function);
+	$result_status = bvmgr_ticket_inventory_forensics_normalize_result_status((string) ($args['result_status'] ?? 'success'));
 	$change_type = sanitize_key((string) ($args['change_type'] ?? 'repair_no_effect'));
-	$scope = vms_ticket_inventory_forensics_resolve_scope($product_id);
+	$scope = bvmgr_ticket_inventory_forensics_resolve_scope($product_id);
 	$tec_event_id = absint($args['tec_event_id'] ?? $scope['tec_event_id'] ?? 0);
 	$event_title = (string) ($args['event_title'] ?? $scope['event_title'] ?? get_the_title($tec_event_id ?: $plan_id));
 	$detail_payload = array_merge(
-		vms_ticket_inventory_forensics_build_detail_payload(
+		bvmgr_ticket_inventory_forensics_build_detail_payload(
 			$mutation_key,
 			$before_snapshot,
 			$after_snapshot,
@@ -1450,7 +1462,7 @@ function vms_ticket_inventory_forensics_log_direct_change(int $plan_id, array $a
 			$trigger_source
 		),
 		array(
-			'product_role' => sanitize_key((string) ($args['product_role'] ?? '')) !== '' ? sanitize_key((string) ($args['product_role'] ?? '')) : vms_ticket_inventory_forensics_snapshot_role_key(!empty($after_snapshot) ? $after_snapshot : $before_snapshot),
+			'product_role' => sanitize_key((string) ($args['product_role'] ?? '')) !== '' ? sanitize_key((string) ($args['product_role'] ?? '')) : bvmgr_ticket_inventory_forensics_snapshot_role_key(!empty($after_snapshot) ? $after_snapshot : $before_snapshot),
 			'derivation_source' => sanitize_key((string) ($args['derivation_source'] ?? '')) !== '' ? sanitize_key((string) ($args['derivation_source'] ?? '')) : sanitize_key((string) ($context['derivation_source'] ?? '')),
 			'confidence_level' => sanitize_key((string) ($args['confidence_level'] ?? '')) !== '' ? sanitize_key((string) ($args['confidence_level'] ?? '')) : sanitize_key((string) ($context['confidence_level'] ?? '')),
 			'expected_effect' => sanitize_key((string) ($args['expected_effect'] ?? '')) !== '' ? sanitize_key((string) ($args['expected_effect'] ?? '')) : sanitize_key((string) ($context['expected_effect'] ?? '')),
@@ -1466,22 +1478,22 @@ function vms_ticket_inventory_forensics_log_direct_change(int $plan_id, array $a
 	if (empty($detail_payload['derivation_source'])) {
 		$detail_payload['derivation_source'] = 'repair_audit';
 	}
-	$detail_payload['confidence_level'] = vms_ticket_inventory_forensics_normalize_confidence((string) ($detail_payload['confidence_level'] ?? 'unknown'));
-	$detail_payload['expected_effect'] = vms_ticket_inventory_forensics_normalize_expected_effect((string) ($detail_payload['expected_effect'] ?? 'unknown'));
-	$detail_payload['product_role_label'] = vms_ticket_inventory_forensics_snapshot_role_label((string) ($detail_payload['product_role'] ?? 'unknown'));
-	$detail_payload['derivation_source_label'] = vms_ticket_inventory_forensics_source_label((string) ($detail_payload['derivation_source'] ?? 'unknown'));
-	$detail_payload['confidence_label'] = vms_ticket_inventory_forensics_confidence_label((string) ($detail_payload['confidence_level'] ?? 'unknown'));
-	$detail_payload['expected_effect_label'] = vms_ticket_inventory_forensics_expected_effect_label((string) ($detail_payload['expected_effect'] ?? 'unknown'));
+	$detail_payload['confidence_level'] = bvmgr_ticket_inventory_forensics_normalize_confidence((string) ($detail_payload['confidence_level'] ?? 'unknown'));
+	$detail_payload['expected_effect'] = bvmgr_ticket_inventory_forensics_normalize_expected_effect((string) ($detail_payload['expected_effect'] ?? 'unknown'));
+	$detail_payload['product_role_label'] = bvmgr_ticket_inventory_forensics_snapshot_role_label((string) ($detail_payload['product_role'] ?? 'unknown'));
+	$detail_payload['derivation_source_label'] = bvmgr_ticket_inventory_forensics_source_label((string) ($detail_payload['derivation_source'] ?? 'unknown'));
+	$detail_payload['confidence_label'] = bvmgr_ticket_inventory_forensics_confidence_label((string) ($detail_payload['confidence_level'] ?? 'unknown'));
+	$detail_payload['expected_effect_label'] = bvmgr_ticket_inventory_forensics_expected_effect_label((string) ($detail_payload['expected_effect'] ?? 'unknown'));
 
 	$summary_text = trim((string) ($args['summary_text'] ?? ''));
 	if ($summary_text === '') {
 		$summary_text = trim((string) ($detail_payload['reason_text'] ?? ''));
 		if ($summary_text === '') {
-			$summary_text = vms_ticket_inventory_forensics_change_type_label($change_type);
+			$summary_text = bvmgr_ticket_inventory_forensics_change_type_label($change_type);
 		}
 	}
 
-	$insert_id = vms_ticket_inventory_forensics_insert(
+	$insert_id = bvmgr_ticket_inventory_forensics_insert(
 		array(
 			'plan_id' => $plan_id,
 			'tec_event_id' => $tec_event_id,
@@ -1506,34 +1518,34 @@ function vms_ticket_inventory_forensics_log_direct_change(int $plan_id, array $a
 		)
 	);
 	if (is_admin()) {
-		vms_ticket_inventory_forensics_trace('finished', $trace_context, $started_at);
+		bvmgr_ticket_inventory_forensics_trace('finished', $trace_context, $started_at);
 	}
 
 	return $insert_id;
 }
 
-function vms_ticket_inventory_forensics_after_add_post_meta($meta_id, $object_id, $meta_key, $meta_value): void
+function bvmgr_ticket_inventory_forensics_after_add_post_meta($meta_id, $object_id, $meta_key, $meta_value): void
 {
 	unset($meta_id, $meta_value);
-	vms_ticket_inventory_forensics_record_post_meta_write('add', absint($object_id), (string) $meta_key);
+	bvmgr_ticket_inventory_forensics_record_post_meta_write('add', absint($object_id), (string) $meta_key);
 }
-add_action('added_post_meta', 'vms_ticket_inventory_forensics_after_add_post_meta', 10, 4);
+add_action('added_post_meta', 'bvmgr_ticket_inventory_forensics_after_add_post_meta', 10, 4);
 
-function vms_ticket_inventory_forensics_after_update_post_meta($meta_id, $object_id, $meta_key, $meta_value): void
+function bvmgr_ticket_inventory_forensics_after_update_post_meta($meta_id, $object_id, $meta_key, $meta_value): void
 {
 	unset($meta_id, $meta_value);
-	vms_ticket_inventory_forensics_record_post_meta_write('update', absint($object_id), (string) $meta_key);
+	bvmgr_ticket_inventory_forensics_record_post_meta_write('update', absint($object_id), (string) $meta_key);
 }
-add_action('updated_post_meta', 'vms_ticket_inventory_forensics_after_update_post_meta', 10, 4);
+add_action('updated_post_meta', 'bvmgr_ticket_inventory_forensics_after_update_post_meta', 10, 4);
 
-function vms_ticket_inventory_forensics_after_delete_post_meta($meta_ids, $object_id, $meta_key, $meta_value): void
+function bvmgr_ticket_inventory_forensics_after_delete_post_meta($meta_ids, $object_id, $meta_key, $meta_value): void
 {
 	unset($meta_ids, $meta_value);
-	vms_ticket_inventory_forensics_record_post_meta_write('delete', absint($object_id), (string) $meta_key);
+	bvmgr_ticket_inventory_forensics_record_post_meta_write('delete', absint($object_id), (string) $meta_key);
 }
-add_action('deleted_post_meta', 'vms_ticket_inventory_forensics_after_delete_post_meta', 10, 4);
+add_action('deleted_post_meta', 'bvmgr_ticket_inventory_forensics_after_delete_post_meta', 10, 4);
 
-function vms_ticket_inventory_forensics_normalize_log_row($row): array
+function bvmgr_ticket_inventory_forensics_normalize_log_row($row): array
 {
 	if (!is_array($row)) {
 		return array();
@@ -1541,9 +1553,9 @@ function vms_ticket_inventory_forensics_normalize_log_row($row): array
 
 	$created = trim((string) ($row['created_at_gmt'] ?? ''));
 	$timestamp = $created !== '' ? strtotime($created . ' UTC') : 0;
-	$before_snapshot = vms_ticket_inventory_forensics_decode_json_field($row['before_json'] ?? '');
-	$after_snapshot = vms_ticket_inventory_forensics_decode_json_field($row['after_json'] ?? '');
-	$details = vms_ticket_inventory_forensics_decode_json_field($row['details_json'] ?? '');
+	$before_snapshot = bvmgr_ticket_inventory_forensics_decode_json_field($row['before_json'] ?? '');
+	$after_snapshot = bvmgr_ticket_inventory_forensics_decode_json_field($row['after_json'] ?? '');
+	$details = bvmgr_ticket_inventory_forensics_decode_json_field($row['details_json'] ?? '');
 	$product_role = sanitize_key((string) ($row['product_role'] ?? $details['product_role'] ?? ''));
 	$derivation_source = sanitize_key((string) ($row['derivation_source'] ?? $details['derivation_source'] ?? ''));
 	$confidence_level = sanitize_key((string) ($row['confidence_level'] ?? $details['confidence_level'] ?? 'unknown'));
@@ -1566,17 +1578,17 @@ function vms_ticket_inventory_forensics_normalize_log_row($row): array
 		'source_function' => sanitize_text_field((string) ($row['source_function'] ?? '')),
 		'mutation_key' => sanitize_key((string) ($row['mutation_key'] ?? '')),
 		'product_role' => $product_role,
-		'product_role_label' => vms_ticket_inventory_forensics_snapshot_role_label($product_role),
+		'product_role_label' => bvmgr_ticket_inventory_forensics_snapshot_role_label($product_role),
 		'change_type' => sanitize_key((string) ($row['change_type'] ?? '')),
-		'change_type_label' => vms_ticket_inventory_forensics_change_type_label((string) ($row['change_type'] ?? '')),
-		'result_status' => vms_ticket_inventory_forensics_normalize_result_status((string) ($row['result_status'] ?? '')),
-		'result_label' => vms_ticket_inventory_forensics_result_label((string) ($row['result_status'] ?? '')),
+		'change_type_label' => bvmgr_ticket_inventory_forensics_change_type_label((string) ($row['change_type'] ?? '')),
+		'result_status' => bvmgr_ticket_inventory_forensics_normalize_result_status((string) ($row['result_status'] ?? '')),
+		'result_label' => bvmgr_ticket_inventory_forensics_result_label((string) ($row['result_status'] ?? '')),
 		'derivation_source' => $derivation_source,
-		'derivation_source_label' => vms_ticket_inventory_forensics_source_label($derivation_source),
-		'confidence_level' => vms_ticket_inventory_forensics_normalize_confidence($confidence_level),
-		'confidence_label' => vms_ticket_inventory_forensics_confidence_label($confidence_level),
-		'expected_effect' => vms_ticket_inventory_forensics_normalize_expected_effect($expected_effect),
-		'expected_effect_label' => vms_ticket_inventory_forensics_expected_effect_label($expected_effect),
+		'derivation_source_label' => bvmgr_ticket_inventory_forensics_source_label($derivation_source),
+		'confidence_level' => bvmgr_ticket_inventory_forensics_normalize_confidence($confidence_level),
+		'confidence_label' => bvmgr_ticket_inventory_forensics_confidence_label($confidence_level),
+		'expected_effect' => bvmgr_ticket_inventory_forensics_normalize_expected_effect($expected_effect),
+		'expected_effect_label' => bvmgr_ticket_inventory_forensics_expected_effect_label($expected_effect),
 		'writer_branch' => $writer_branch,
 		'result_health' => $result_health,
 		'reason_text' => $reason_text,
@@ -1587,26 +1599,28 @@ function vms_ticket_inventory_forensics_normalize_log_row($row): array
 	);
 }
 
-function vms_ticket_inventory_forensics_recent_logs(int $plan_id, int $limit = 8, int $product_id = 0): array
+function bvmgr_ticket_inventory_forensics_recent_logs(int $plan_id, int $limit = 8, int $product_id = 0): array
 {
 	$plan_id = absint($plan_id);
 	$product_id = absint($product_id);
 	$limit = max(1, min(100, absint($limit)));
 
-	if ($plan_id <= 0 || (string) get_option(vms_ticket_inventory_forensics_schema_option_key(), '') !== vms_ticket_inventory_forensics_schema_target()) {
+	if ($plan_id <= 0 || (string) get_option(bvmgr_ticket_inventory_forensics_schema_option_key(), '') !== bvmgr_ticket_inventory_forensics_schema_target()) {
 		return array();
 	}
 
 	global $wpdb;
-	$table = vms_ticket_inventory_forensics_table_name();
+	$table = bvmgr_ticket_inventory_forensics_table_name();
 	if ($product_id > 0) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Product-filtered forensics history must read request-fresh plugin-owned audit rows after mutations.
 		$rows = $wpdb->get_results(
-			$wpdb->prepare("SELECT * FROM {$table} WHERE plan_id = %d AND product_id = %d ORDER BY id DESC LIMIT %d", $plan_id, $product_id, $limit),
+			$wpdb->prepare('SELECT * FROM %i WHERE plan_id = %d AND product_id = %d ORDER BY id DESC LIMIT %d', $table, $plan_id, $product_id, $limit),
 			ARRAY_A
 		);
 	} else {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Plan-wide forensics history must read request-fresh plugin-owned audit rows after mutations.
 		$rows = $wpdb->get_results(
-			$wpdb->prepare("SELECT * FROM {$table} WHERE plan_id = %d ORDER BY id DESC LIMIT %d", $plan_id, $limit),
+			$wpdb->prepare('SELECT * FROM %i WHERE plan_id = %d ORDER BY id DESC LIMIT %d', $table, $plan_id, $limit),
 			ARRAY_A
 		);
 	}
@@ -1615,16 +1629,16 @@ function vms_ticket_inventory_forensics_recent_logs(int $plan_id, int $limit = 8
 		return array();
 	}
 
-	return array_values(array_filter(array_map('vms_ticket_inventory_forensics_normalize_log_row', $rows)));
+	return array_values(array_filter(array_map('bvmgr_ticket_inventory_forensics_normalize_log_row', $rows)));
 }
 
-function vms_ticket_inventory_forensics_latest_log(int $plan_id, int $product_id = 0): array
+function bvmgr_ticket_inventory_forensics_latest_log(int $plan_id, int $product_id = 0): array
 {
-	$logs = vms_ticket_inventory_forensics_recent_logs($plan_id, 1, $product_id);
+	$logs = bvmgr_ticket_inventory_forensics_recent_logs($plan_id, 1, $product_id);
 	return !empty($logs[0]) && is_array($logs[0]) ? $logs[0] : array();
 }
 
-function vms_ticket_inventory_forensics_normalize_match_key(array $row): string
+function bvmgr_ticket_inventory_forensics_normalize_match_key(array $row): string
 {
 	$ticket_key = sanitize_key((string) ($row['ticket_key'] ?? ''));
 	if ($ticket_key !== '') {
@@ -1646,12 +1660,12 @@ function vms_ticket_inventory_forensics_normalize_match_key(array $row): string
 	return sanitize_key((string) ($row['role'] ?? 'ticket')) . ':' . sanitize_key($title);
 }
 
-function vms_ticket_inventory_forensics_numeric_value($value)
+function bvmgr_ticket_inventory_forensics_numeric_value($value)
 {
 	return is_numeric($value) ? (int) $value : null;
 }
 
-function vms_ticket_inventory_forensics_row_role_key(array $ticket_snapshot, array $entitlement_snapshot, array $product_snapshot): string
+function bvmgr_ticket_inventory_forensics_row_role_key(array $ticket_snapshot, array $entitlement_snapshot, array $product_snapshot): string
 {
 	if (!empty($entitlement_snapshot)) {
 		return 'add_on';
@@ -1673,77 +1687,77 @@ function vms_ticket_inventory_forensics_row_role_key(array $ticket_snapshot, arr
 	return 'unknown';
 }
 
-function vms_ticket_inventory_forensics_sold_source_label(string $source): string
+function bvmgr_ticket_inventory_forensics_sold_source_label(string $source): string
 {
 	switch (sanitize_key($source)) {
 		case 'vms_reconciled_meta':
-			return __('VMS reconciled sold meta', 'vms');
+			return __('VMS reconciled sold meta', 'backstage-venue-manager');
 		case 'paid_order_scan':
-			return __('Paid-order scan', 'vms');
+			return __('Paid-order scan', 'backstage-venue-manager');
 		case 'woo_total_sales_meta':
-			return __('Woo total_sales meta only', 'vms');
+			return __('Woo total_sales meta only', 'backstage-venue-manager');
 		default:
-			return __('Not resolved', 'vms');
+			return __('Not resolved', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_sellability_label(string $state): string
+function bvmgr_ticket_inventory_forensics_sellability_label(string $state): string
 {
 	switch (sanitize_key($state)) {
 		case 'open':
-			return __('Open in VMS config', 'vms');
+			return __('Open in Backstage Venue Manager config', 'backstage-venue-manager');
 		case 'gated_open':
-			return __('Qualified / gated open', 'vms');
+			return __('Qualified / gated open', 'backstage-venue-manager');
 		case 'hidden_open':
-			return __('Hidden add-on should remain available', 'vms');
+			return __('Hidden add-on should remain available', 'backstage-venue-manager');
 		case 'sold_out':
-			return __('Correctly closed because sold out', 'vms');
+			return __('Correctly closed because sold out', 'backstage-venue-manager');
 		case 'closed':
-			return __('Closed by current intent', 'vms');
+			return __('Closed by current intent', 'backstage-venue-manager');
 		case 'missing':
-			return __('Missing product state', 'vms');
+			return __('Missing product state', 'backstage-venue-manager');
 		default:
-			return __('Needs review', 'vms');
+			return __('Needs review', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_agreement_label(string $status): string
+function bvmgr_ticket_inventory_forensics_agreement_label(string $status): string
 {
 	switch (sanitize_key($status)) {
 		case 'correct_match':
-			return __('Woo and TEC agree correctly', 'vms');
+			return __('Woo and TEC agree correctly', 'backstage-venue-manager');
 		case 'sold_out_match':
-			return __('Sold-out state is consistent', 'vms');
+			return __('Sold-out state is consistent', 'backstage-venue-manager');
 		case 'match_but_wrong':
-			return __('Woo and TEC agree, but both disagree with VMS intent', 'vms');
+			return __('Woo and TEC agree, but both disagree with VMS intent', 'backstage-venue-manager');
 		case 'diverged':
-			return __('Woo and TEC disagree', 'vms');
+			return __('Woo and TEC disagree', 'backstage-venue-manager');
 		default:
-			return __('Needs review', 'vms');
+			return __('Needs review', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_verification_label(string $result): string
+function bvmgr_ticket_inventory_forensics_verification_label(string $result): string
 {
 	switch (sanitize_key($result)) {
 		case 'verified':
-			return __('Woo and TEC both match VMS intent', 'vms');
+			return __('Woo and TEC both match VMS intent', 'backstage-venue-manager');
 		case 'woo_verified':
-			return __('Woo matches VMS intent', 'vms');
+			return __('Woo matches VMS intent', 'backstage-venue-manager');
 		case 'sold_out_healthy':
-			return __('Woo matches sold-aware VMS intent', 'vms');
+			return __('Woo matches sold-aware VMS intent', 'backstage-venue-manager');
 		case 'woo_mismatch':
-			return __('Woo mismatch requires repair', 'vms');
+			return __('Woo mismatch requires repair', 'backstage-venue-manager');
 		case 'tec_followup':
-			return __('Woo matches VMS intent, but TEC still disagrees', 'vms');
+			return __('Woo matches VMS intent, but TEC still disagrees', 'backstage-venue-manager');
 		case 'woo_recorruption':
-			return __('Woo re-corruption detected', 'vms');
+			return __('Woo re-corruption detected', 'backstage-venue-manager');
 		default:
-			return __('Manual review required', 'vms');
+			return __('Manual review required', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_inventory_forensics_sellability_is_open(string $state)
+function bvmgr_ticket_inventory_forensics_sellability_is_open(string $state)
 {
 	switch (sanitize_key($state)) {
 		case 'open':
@@ -1759,14 +1773,14 @@ function vms_ticket_inventory_forensics_sellability_is_open(string $state)
 	}
 }
 
-function vms_ticket_inventory_forensics_reset_runtime_caches(): void
+function bvmgr_ticket_inventory_forensics_reset_runtime_caches(): void
 {
-	$GLOBALS['vms_ticket_inventory_forensics_sold_context_cache'] = array();
+	$GLOBALS['bvmgr_ticket_inventory_forensics_sold_context_cache'] = array();
 }
 
-function vms_ticket_inventory_forensics_resolve_sold_context(int $plan_id, array $product_snapshot, array $ticket_snapshot, array $entitlement_snapshot, string $role): array
+function bvmgr_ticket_inventory_forensics_resolve_sold_context(int $plan_id, array $product_snapshot, array $ticket_snapshot, array $entitlement_snapshot, string $role): array
 {
-	$cache = $GLOBALS['vms_ticket_inventory_forensics_sold_context_cache'] ?? array();
+	$cache = $GLOBALS['bvmgr_ticket_inventory_forensics_sold_context_cache'] ?? array();
 	if (!is_array($cache)) {
 		$cache = array();
 	}
@@ -1779,7 +1793,7 @@ function vms_ticket_inventory_forensics_resolve_sold_context(int $plan_id, array
 		return $cache[$cache_key];
 	}
 
-	$vms_sold_qty = vms_ticket_inventory_forensics_numeric_value($product_snapshot['vms_sold_qty'] ?? null);
+	$vms_sold_qty = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['vms_sold_qty'] ?? null);
 	$meta_total_sales = max(0, (int) ($product_snapshot['total_sales'] ?? 0));
 	$order_scan_sold_qty = null;
 	$helper_ok = false;
@@ -1788,10 +1802,10 @@ function vms_ticket_inventory_forensics_resolve_sold_context(int $plan_id, array
 
 	if ($product_id > 0) {
 		$scan_result = array('ok' => false, 'message' => 'sold_qty_helper_unavailable');
-		if ($role === 'add_on' && $plan_id > 0 && $entitlement_id !== '' && function_exists('vms_ticketing_v2_calc_sold_qty_for_entitlement_scope')) {
-			$scan_result = vms_ticketing_v2_calc_sold_qty_for_entitlement_scope($plan_id, $entitlement_id, $sku, $product_id);
-		} elseif (function_exists('vms_ticketing_v2_calc_sold_qty_for_product')) {
-			$scan_result = vms_ticketing_v2_calc_sold_qty_for_product($product_id);
+		if ($role === 'add_on' && $plan_id > 0 && $entitlement_id !== '' && function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope')) {
+			$scan_result = bvmgr_ticketing_v2_calc_sold_qty_for_entitlement_scope($plan_id, $entitlement_id, $sku, $product_id);
+		} elseif (function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_product')) {
+			$scan_result = bvmgr_ticketing_v2_calc_sold_qty_for_product($product_id);
 		}
 
 		if (!empty($scan_result['ok'])) {
@@ -1820,86 +1834,86 @@ function vms_ticket_inventory_forensics_resolve_sold_context(int $plan_id, array
 		'order_scan_sold_qty' => $order_scan_sold_qty,
 		'woo_total_sales' => $meta_total_sales,
 		'sold_source' => $sold_source,
-		'sold_source_label' => vms_ticket_inventory_forensics_sold_source_label($sold_source),
+		'sold_source_label' => bvmgr_ticket_inventory_forensics_sold_source_label($sold_source),
 		'helper_ok' => $helper_ok ? 1 : 0,
 		'helper_message' => $helper_message,
 		'ignored_total_sales' => $ignored_total_sales ? 1 : 0,
 	);
-	$GLOBALS['vms_ticket_inventory_forensics_sold_context_cache'] = $cache;
+	$GLOBALS['bvmgr_ticket_inventory_forensics_sold_context_cache'] = $cache;
 
 	return $cache[$cache_key];
 }
 
-function vms_ticket_inventory_forensics_build_intended_state(array $ticket_snapshot, array $entitlement_snapshot, array $product_snapshot, array $sold_context, string $role): array
+function bvmgr_ticket_inventory_forensics_build_intended_state(array $ticket_snapshot, array $entitlement_snapshot, array $product_snapshot, array $sold_context, string $role): array
 {
 	$remaining_hint = null;
 	$capacity_hint = null;
 	$state = 'unknown';
-	$reason = __('The current VMS intent could not be derived cleanly for this row.', 'vms');
+	$reason = __('The current VMS intent could not be derived cleanly for this row.', 'backstage-venue-manager');
 
 	if ($role === 'add_on') {
-		$capacity_hint = vms_ticket_inventory_forensics_numeric_value($entitlement_snapshot['capacity'] ?? null);
+		$capacity_hint = bvmgr_ticket_inventory_forensics_numeric_value($entitlement_snapshot['capacity'] ?? null);
 		if ($capacity_hint === null) {
-			$capacity_hint = vms_ticket_inventory_forensics_numeric_value($product_snapshot['vms_capacity'] ?? null);
+			$capacity_hint = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['vms_capacity'] ?? null);
 		}
 
-		$remaining_hint = vms_ticket_inventory_forensics_numeric_value($product_snapshot['vms_remaining'] ?? null);
+		$remaining_hint = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['vms_remaining'] ?? null);
 		if ($remaining_hint === null && $capacity_hint !== null && is_numeric($sold_context['resolved_sold_qty'] ?? null)) {
 			$remaining_hint = max(0, $capacity_hint - max(0, (int) $sold_context['resolved_sold_qty']));
 		}
 
 		if ($capacity_hint !== null && $capacity_hint <= 0) {
 			$state = 'closed';
-			$reason = __('The authoritative add-on capacity is 0, so VMS intends this add-on to remain closed.', 'vms');
+			$reason = __('The authoritative add-on capacity is 0, so VMS intends this add-on to remain closed.', 'backstage-venue-manager');
 		} elseif ($remaining_hint !== null && $remaining_hint <= 0) {
 			$state = 'closed';
-			$reason = __('The add-on has no remaining entitlement inventory after sold-count reconciliation.', 'vms');
+			$reason = __('The add-on has no remaining entitlement inventory after sold-count reconciliation.', 'backstage-venue-manager');
 		} elseif ($capacity_hint !== null || $remaining_hint !== null) {
 			$state = 'hidden_open';
-			$reason = __('The authoritative entitlement config still expects this add-on to remain sellable.', 'vms');
+			$reason = __('The authoritative entitlement config still expects this add-on to remain sellable.', 'backstage-venue-manager');
 		}
 	} elseif (!empty($ticket_snapshot)) {
 		$visibility_mode = sanitize_key((string) ($ticket_snapshot['visibility_mode'] ?? 'public'));
 		$config_is_open = !empty($ticket_snapshot['sales_state']['config_is_open']);
-		$capacity_hint = vms_ticket_inventory_forensics_numeric_value($ticket_snapshot['inventory_total'] ?? null);
+		$capacity_hint = bvmgr_ticket_inventory_forensics_numeric_value($ticket_snapshot['inventory_total'] ?? null);
 		if ($capacity_hint === null) {
-			$capacity_hint = vms_ticket_inventory_forensics_numeric_value($product_snapshot['vms_capacity'] ?? null);
+			$capacity_hint = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['vms_capacity'] ?? null);
 		}
 		if ($capacity_hint === null) {
-			$capacity_hint = vms_ticket_inventory_forensics_numeric_value($product_snapshot['ticket_capacity_raw'] ?? null);
+			$capacity_hint = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['ticket_capacity_raw'] ?? null);
 		}
 
-		$remaining_hint = vms_ticket_inventory_forensics_numeric_value($product_snapshot['vms_remaining'] ?? null);
+		$remaining_hint = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['vms_remaining'] ?? null);
 		if ($remaining_hint === null && $capacity_hint !== null && is_numeric($sold_context['resolved_sold_qty'] ?? null)) {
 			$remaining_hint = max(0, $capacity_hint - max(0, (int) $sold_context['resolved_sold_qty']));
 		}
 
 		if (!$config_is_open) {
 			$state = 'closed';
-			$reason = __('The current VMS sale-window rules intentionally close this ticket.', 'vms');
+			$reason = __('The current VMS sale-window rules intentionally close this ticket.', 'backstage-venue-manager');
 		} elseif ($remaining_hint !== null && $remaining_hint <= 0) {
 			$state = 'closed';
-			$reason = __('The current VMS capacity-minus-sold calculation leaves no remaining ticket inventory.', 'vms');
+			$reason = __('The current VMS capacity-minus-sold calculation leaves no remaining ticket inventory.', 'backstage-venue-manager');
 		} elseif ($visibility_mode === 'verified') {
 			$state = 'gated_open';
-			$reason = __('VMS intends this verified ticket to remain available for eligible buyers.', 'vms');
+			$reason = __('VMS intends this verified ticket to remain available for eligible buyers.', 'backstage-venue-manager');
 		} else {
 			$state = 'open';
-			$reason = __('VMS intends this ticket to remain sellable on the public/live path.', 'vms');
+			$reason = __('VMS intends this ticket to remain sellable on the public/live path.', 'backstage-venue-manager');
 		}
 	}
 
 	return array(
 		'state' => $state,
-		'label' => vms_ticket_inventory_forensics_sellability_label($state),
-		'is_open' => vms_ticket_inventory_forensics_sellability_is_open($state),
+		'label' => bvmgr_ticket_inventory_forensics_sellability_label($state),
+		'is_open' => bvmgr_ticket_inventory_forensics_sellability_is_open($state),
 		'reason' => $reason,
 		'capacity_hint' => $capacity_hint,
 		'remaining_hint' => $remaining_hint,
 	);
 }
 
-function vms_ticket_inventory_forensics_normalize_add_on_sold_out_state(
+function bvmgr_ticket_inventory_forensics_normalize_add_on_sold_out_state(
 	array $intended_state,
 	array $sold_context,
 	array $woo_state,
@@ -1910,13 +1924,13 @@ function vms_ticket_inventory_forensics_normalize_add_on_sold_out_state(
 		return $intended_state;
 	}
 
-	$capacity_hint = vms_ticket_inventory_forensics_numeric_value($intended_state['capacity_hint'] ?? null);
+	$capacity_hint = bvmgr_ticket_inventory_forensics_numeric_value($intended_state['capacity_hint'] ?? null);
 	if ($capacity_hint === null || $capacity_hint <= 0) {
 		return $intended_state;
 	}
 
-	$remaining_hint = vms_ticket_inventory_forensics_numeric_value($intended_state['remaining_hint'] ?? null);
-	$resolved_sold_qty = vms_ticket_inventory_forensics_numeric_value($sold_context['resolved_sold_qty'] ?? null);
+	$remaining_hint = bvmgr_ticket_inventory_forensics_numeric_value($intended_state['remaining_hint'] ?? null);
+	$resolved_sold_qty = bvmgr_ticket_inventory_forensics_numeric_value($sold_context['resolved_sold_qty'] ?? null);
 	$woo_total_sales = max(0, absint($sold_context['woo_total_sales'] ?? 0));
 	$woo_is_open = $woo_state['is_open'] ?? null;
 	$tec_is_open = $tec_state['is_open'] ?? null;
@@ -1930,19 +1944,19 @@ function vms_ticket_inventory_forensics_normalize_add_on_sold_out_state(
 		return $intended_state;
 	}
 
-	$reason = __('This add-on is correctly closed because sold-out evidence matches the current Woo/TEC state.', 'vms');
+	$reason = __('This add-on is correctly closed because sold-out evidence matches the current Woo/TEC state.', 'backstage-venue-manager');
 	if ($sold_out_by_remaining) {
-		$reason = __('This add-on has no remaining capacity after sold-count reconciliation, so the closed sellability state is healthy.', 'vms');
+		$reason = __('This add-on has no remaining capacity after sold-count reconciliation, so the closed sellability state is healthy.', 'backstage-venue-manager');
 	} elseif ($sold_out_by_reconciled_qty) {
 		/* translators: 1: sold quantity, 2: capacity */
-		$reason = sprintf(__('This add-on sold %1$d of %2$d capacity, so the closed sellability state is healthy.', 'vms'), $resolved_sold_qty, $capacity_hint);
+		$reason = sprintf(__('This add-on sold %1$d of %2$d capacity, so the closed sellability state is healthy.', 'backstage-venue-manager'), $resolved_sold_qty, $capacity_hint);
 	} elseif ($sold_out_by_total_sales_fallback) {
 		/* translators: 1: total sales count, 2: capacity */
-		$reason = sprintf(__('Woo total_sales reports %1$d sale(s) against %2$d capacity, and Woo/TEC both resolve the add-on as closed, so this sold-out state is treated as healthy.', 'vms'), $woo_total_sales, $capacity_hint);
+		$reason = sprintf(__('Woo total_sales reports %1$d sale(s) against %2$d capacity, and Woo/TEC both resolve the add-on as closed, so this sold-out state is treated as healthy.', 'backstage-venue-manager'), $woo_total_sales, $capacity_hint);
 	}
 
 	$intended_state['state'] = 'sold_out';
-	$intended_state['label'] = vms_ticket_inventory_forensics_sellability_label('sold_out');
+	$intended_state['label'] = bvmgr_ticket_inventory_forensics_sellability_label('sold_out');
 	$intended_state['is_open'] = false;
 	$intended_state['reason'] = $reason;
 	$intended_state['sold_out_evidence'] = $sold_out_by_remaining
@@ -1952,11 +1966,11 @@ function vms_ticket_inventory_forensics_normalize_add_on_sold_out_state(
 	return $intended_state;
 }
 
-function vms_ticket_inventory_forensics_build_woo_state(array $product_snapshot): array
+function bvmgr_ticket_inventory_forensics_build_woo_state(array $product_snapshot): array
 {
 	$post_type = (string) ($product_snapshot['post_type'] ?? '');
 	$post_status = (string) ($product_snapshot['post_status'] ?? '');
-	$stock_qty = vms_ticket_inventory_forensics_numeric_value($product_snapshot['stock_quantity'] ?? null);
+	$stock_qty = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['stock_quantity'] ?? null);
 	$stock_status = sanitize_key((string) ($product_snapshot['stock_status'] ?? ''));
 	$managing_stock = !empty($product_snapshot['managing_stock']);
 	$is_in_stock = array_key_exists('is_in_stock', $product_snapshot) ? $product_snapshot['is_in_stock'] : null;
@@ -1964,9 +1978,9 @@ function vms_ticket_inventory_forensics_build_woo_state(array $product_snapshot)
 	if ($post_type !== 'product' || $post_status === 'trash') {
 		return array(
 			'state' => 'missing',
-			'label' => vms_ticket_inventory_forensics_sellability_label('missing'),
+			'label' => bvmgr_ticket_inventory_forensics_sellability_label('missing'),
 			'is_open' => false,
-			'reason' => __('Woo does not currently expose a live product object for this row.', 'vms'),
+			'reason' => __('Woo does not currently expose a live product object for this row.', 'backstage-venue-manager'),
 		);
 	}
 
@@ -1981,24 +1995,24 @@ function vms_ticket_inventory_forensics_build_woo_state(array $product_snapshot)
 
 	return array(
 		'state' => $closed ? 'closed' : 'open',
-		'label' => $closed ? __('Woo currently closes sellability', 'vms') : __('Woo currently shows sellable inventory', 'vms'),
+		'label' => $closed ? __('Woo currently closes sellability', 'backstage-venue-manager') : __('Woo currently shows sellable inventory', 'backstage-venue-manager'),
 		'is_open' => !$closed,
 		'reason' => $closed
-			? __('Woo stock / stock-status fields currently close this product.', 'vms')
-			: __('Woo stock / stock-status fields currently keep this product sellable.', 'vms'),
+			? __('Woo stock / stock-status fields currently close this product.', 'backstage-venue-manager')
+			: __('Woo stock / stock-status fields currently keep this product sellable.', 'backstage-venue-manager'),
 	);
 }
 
-function vms_ticket_inventory_forensics_build_tec_state(array $product_snapshot): array
+function bvmgr_ticket_inventory_forensics_build_tec_state(array $product_snapshot): array
 {
-	$available_qty = vms_ticket_inventory_forensics_numeric_value($product_snapshot['tec_available'] ?? null);
-	$inventory_qty = vms_ticket_inventory_forensics_numeric_value($product_snapshot['tec_inventory'] ?? null);
-	$stock_qty = vms_ticket_inventory_forensics_numeric_value($product_snapshot['tec_stock'] ?? null);
+	$available_qty = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['tec_available'] ?? null);
+	$inventory_qty = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['tec_inventory'] ?? null);
+	$stock_qty = bvmgr_ticket_inventory_forensics_numeric_value($product_snapshot['tec_stock'] ?? null);
 
 	if ($available_qty !== null) {
 		return array(
 			'state' => ($available_qty > 0) ? 'open' : 'closed',
-			'label' => ($available_qty > 0) ? __('TEC currently shows available inventory', 'vms') : __('TEC currently resolves unavailable inventory', 'vms'),
+			'label' => ($available_qty > 0) ? __('TEC currently shows available inventory', 'backstage-venue-manager') : __('TEC currently resolves unavailable inventory', 'backstage-venue-manager'),
 			'is_open' => ($available_qty > 0),
 		);
 	}
@@ -2006,7 +2020,7 @@ function vms_ticket_inventory_forensics_build_tec_state(array $product_snapshot)
 	if ($inventory_qty !== null) {
 		return array(
 			'state' => ($inventory_qty > 0) ? 'open' : 'closed',
-			'label' => ($inventory_qty > 0) ? __('TEC inventory remains open', 'vms') : __('TEC inventory resolves closed', 'vms'),
+			'label' => ($inventory_qty > 0) ? __('TEC inventory remains open', 'backstage-venue-manager') : __('TEC inventory resolves closed', 'backstage-venue-manager'),
 			'is_open' => ($inventory_qty > 0),
 		);
 	}
@@ -2014,19 +2028,19 @@ function vms_ticket_inventory_forensics_build_tec_state(array $product_snapshot)
 	if ($stock_qty !== null) {
 		return array(
 			'state' => ($stock_qty > 0) ? 'open' : 'closed',
-			'label' => ($stock_qty > 0) ? __('TEC stock remains open', 'vms') : __('TEC stock resolves closed', 'vms'),
+			'label' => ($stock_qty > 0) ? __('TEC stock remains open', 'backstage-venue-manager') : __('TEC stock resolves closed', 'backstage-venue-manager'),
 			'is_open' => ($stock_qty > 0),
 		);
 	}
 
 	return array(
 		'state' => 'unknown',
-		'label' => __('TEC did not expose a separate availability value', 'vms'),
+		'label' => __('TEC did not expose a separate availability value', 'backstage-venue-manager'),
 		'is_open' => null,
 	);
 }
 
-function vms_ticket_inventory_forensics_build_verification(array $intended_state, array $woo_state, array $tec_state): array
+function bvmgr_ticket_inventory_forensics_build_verification(array $intended_state, array $woo_state, array $tec_state): array
 {
 	$intended_open = $intended_state['is_open'] ?? null;
 	$woo_open = $woo_state['is_open'] ?? null;
@@ -2045,7 +2059,7 @@ function vms_ticket_inventory_forensics_build_verification(array $intended_state
 	}
 
 	$result = 'manual_review';
-	$reason = __('The current Woo / TEC state still needs manual review.', 'vms');
+	$reason = __('The current Woo / TEC state still needs manual review.', 'backstage-venue-manager');
 	if (
 		$intended_state_key === 'sold_out'
 		&& $woo_open === false
@@ -2054,32 +2068,32 @@ function vms_ticket_inventory_forensics_build_verification(array $intended_state
 		$agreement_status = 'sold_out_match';
 		$result = 'sold_out_healthy';
 		$reason = ($tec_open === false)
-			? __('This add-on is correctly closed because sold out, and both Woo and TEC reflect that sold-aware state.', 'vms')
-			: __('This add-on is correctly closed because sold out, and Woo reflects that sold-aware state.', 'vms');
+			? __('This add-on is correctly closed because sold out, and both Woo and TEC reflect that sold-aware state.', 'backstage-venue-manager')
+			: __('This add-on is correctly closed because sold out, and Woo reflects that sold-aware state.', 'backstage-venue-manager');
 	} elseif ($intended_open !== null && $woo_open !== null && $woo_open !== $intended_open) {
 		$result = 'woo_mismatch';
-		$reason = __('VMS intent and Woo inventory disagree. Repair should target Woo first.', 'vms');
+		$reason = __('VMS intent and Woo inventory disagree. Repair should target Woo first.', 'backstage-venue-manager');
 	} elseif ($intended_open !== null && $woo_open === $intended_open && $tec_open !== null && $tec_open !== $intended_open) {
 		$result = 'tec_followup';
-		$reason = __('Woo now matches VMS intent, but TEC availability still disagrees.', 'vms');
+		$reason = __('Woo now matches VMS intent, but TEC availability still disagrees.', 'backstage-venue-manager');
 	} elseif ($intended_open !== null && $woo_open === $intended_open && $tec_open === $intended_open) {
 		$result = 'verified';
-		$reason = __('Woo and TEC both match the current VMS intent for this row.', 'vms');
+		$reason = __('Woo and TEC both match the current VMS intent for this row.', 'backstage-venue-manager');
 	} elseif ($intended_open !== null && $woo_open === $intended_open && $tec_open === null) {
 		$result = 'woo_verified';
-		$reason = __('Woo matches VMS intent. TEC did not expose a separate availability signal for this row.', 'vms');
+		$reason = __('Woo matches VMS intent. TEC did not expose a separate availability signal for this row.', 'backstage-venue-manager');
 	}
 
 	return array(
 		'agreement_status' => $agreement_status,
-		'agreement_label' => vms_ticket_inventory_forensics_agreement_label($agreement_status),
+		'agreement_label' => bvmgr_ticket_inventory_forensics_agreement_label($agreement_status),
 		'verification_result' => $result,
-		'verification_result_label' => vms_ticket_inventory_forensics_verification_label($result),
+		'verification_result_label' => bvmgr_ticket_inventory_forensics_verification_label($result),
 		'verification_reason' => $reason,
 	);
 }
 
-function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $args = array()): array
+function bvmgr_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $args = array()): array
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
@@ -2091,7 +2105,7 @@ function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $a
 	$entitlement_snapshots = array_values(array_filter((array) ($args['entitlement_snapshots'] ?? array()), 'is_array'));
 	$recent_logs = array_values(array_filter((array) ($args['recent_logs'] ?? array()), 'is_array'));
 	if (empty($recent_logs)) {
-		$recent_logs = vms_ticket_inventory_forensics_recent_logs($plan_id, 24);
+		$recent_logs = bvmgr_ticket_inventory_forensics_recent_logs($plan_id, 24);
 	}
 
 	$latest_by_product = array();
@@ -2134,7 +2148,7 @@ function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $a
 	foreach ($product_ids as $product_id) {
 		$ticket_snapshot = is_array($ticket_by_product[$product_id] ?? null) ? $ticket_by_product[$product_id] : array();
 		$entitlement_snapshot = is_array($entitlement_by_product[$product_id] ?? null) ? $entitlement_by_product[$product_id] : array();
-		$product_snapshot = vms_ticket_inventory_forensics_snapshot_product($product_id);
+		$product_snapshot = bvmgr_ticket_inventory_forensics_snapshot_product($product_id);
 		$latest_log = is_array($latest_by_product[$product_id] ?? null) ? $latest_by_product[$product_id] : array();
 
 		$mapping_state = 'attached_untracked';
@@ -2146,26 +2160,26 @@ function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $a
 			$mapping_state = 'legacy_attached';
 		}
 
-		$role = vms_ticket_inventory_forensics_row_role_key($ticket_snapshot, $entitlement_snapshot, $product_snapshot);
+		$role = bvmgr_ticket_inventory_forensics_row_role_key($ticket_snapshot, $entitlement_snapshot, $product_snapshot);
 		$ticket_label = trim((string) ($ticket_snapshot['title'] ?? $entitlement_snapshot['label'] ?? $product_snapshot['title'] ?? ''));
 		$stock_qty = $product_snapshot['stock_quantity'] ?? null;
 		$available_qty = $product_snapshot['tec_available'] ?? null;
-		$sold_context = vms_ticket_inventory_forensics_resolve_sold_context($plan_id, $product_snapshot, $ticket_snapshot, $entitlement_snapshot, $role);
-		$intended_state = vms_ticket_inventory_forensics_build_intended_state($ticket_snapshot, $entitlement_snapshot, $product_snapshot, $sold_context, $role);
-		$woo_state = vms_ticket_inventory_forensics_build_woo_state($product_snapshot);
-		$tec_state = vms_ticket_inventory_forensics_build_tec_state($product_snapshot);
-		$intended_state = vms_ticket_inventory_forensics_normalize_add_on_sold_out_state(
+		$sold_context = bvmgr_ticket_inventory_forensics_resolve_sold_context($plan_id, $product_snapshot, $ticket_snapshot, $entitlement_snapshot, $role);
+		$intended_state = bvmgr_ticket_inventory_forensics_build_intended_state($ticket_snapshot, $entitlement_snapshot, $product_snapshot, $sold_context, $role);
+		$woo_state = bvmgr_ticket_inventory_forensics_build_woo_state($product_snapshot);
+		$tec_state = bvmgr_ticket_inventory_forensics_build_tec_state($product_snapshot);
+		$intended_state = bvmgr_ticket_inventory_forensics_normalize_add_on_sold_out_state(
 			$intended_state,
 			$sold_context,
 			$woo_state,
 			$tec_state,
 			$role
 		);
-		$verification = vms_ticket_inventory_forensics_build_verification($intended_state, $woo_state, $tec_state);
+		$verification = bvmgr_ticket_inventory_forensics_build_verification($intended_state, $woo_state, $tec_state);
 		$customer_facing = !empty($ticket_snapshot['customer_facing']);
 		$intended_is_open = $intended_state['is_open'] ?? null;
 		$expected_open = !empty($intended_is_open);
-		$expected_remaining_hint = vms_ticket_inventory_forensics_numeric_value($intended_state['remaining_hint'] ?? null);
+		$expected_remaining_hint = bvmgr_ticket_inventory_forensics_numeric_value($intended_state['remaining_hint'] ?? null);
 		$event_capacity = $product_snapshot['event_capacity'] ?? null;
 		$event_sold = $product_snapshot['event_sold'] ?? null;
 		$event_remaining = (is_numeric($event_capacity) && is_numeric($event_sold) && (int) $event_capacity >= 0)
@@ -2182,19 +2196,20 @@ function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $a
 
 		$rows[] = array(
 			'product_id' => $product_id,
-			'ticket_label' => $ticket_label !== '' ? $ticket_label : sprintf(__('Product #%d', 'vms'), $product_id),
+			/* translators: %d: product ID. */
+			'ticket_label' => $ticket_label !== '' ? $ticket_label : sprintf(__('Product #%d', 'backstage-venue-manager'), $product_id),
 			'title' => (string) ($product_snapshot['title'] ?? ''),
 			'sku' => (string) ($product_snapshot['sku'] ?? ''),
 			'role' => $role,
-			'role_label' => vms_ticket_inventory_forensics_role_label($role),
+			'role_label' => bvmgr_ticket_inventory_forensics_role_label($role),
 			'ticket_key' => sanitize_key((string) ($ticket_snapshot['ticket_key'] ?? $product_snapshot['ticket_key'] ?? '')),
 			'entitlement_id' => sanitize_key((string) ($entitlement_snapshot['entitlement_id'] ?? $product_snapshot['entitlement_id'] ?? '')),
 			'mapping_state' => $mapping_state,
-			'mapping_label' => vms_ticket_inventory_forensics_mapping_label($mapping_state),
+			'mapping_label' => bvmgr_ticket_inventory_forensics_mapping_label($mapping_state),
 			'status' => (string) ($product_snapshot['post_status'] ?? ''),
 			'stock_qty' => $stock_qty,
 			'manage_stock' => !empty($product_snapshot['managing_stock']),
-			'manage_stock_label' => vms_ticket_inventory_forensics_bool_label(!empty($product_snapshot['managing_stock'])),
+			'manage_stock_label' => bvmgr_ticket_inventory_forensics_bool_label(!empty($product_snapshot['managing_stock'])),
 			'stock_status' => (string) ($product_snapshot['stock_status'] ?? ''),
 			'ticket_capacity' => $product_snapshot['ticket_capacity_raw'] ?? '',
 			'ticket_capacity_resolved' => $product_snapshot['tec_capacity'] ?? null,
@@ -2202,7 +2217,7 @@ function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $a
 			'order_scan_sold_qty' => $sold_context['order_scan_sold_qty'] ?? null,
 			'woo_total_sales' => $sold_context['woo_total_sales'] ?? 0,
 			'sold_source' => (string) ($sold_context['sold_source'] ?? 'unresolved'),
-			'sold_source_label' => (string) ($sold_context['sold_source_label'] ?? __('Not resolved', 'vms')),
+			'sold_source_label' => (string) ($sold_context['sold_source_label'] ?? __('Not resolved', 'backstage-venue-manager')),
 			'ignored_total_sales' => !empty($sold_context['ignored_total_sales']) ? 1 : 0,
 			'available_qty' => $available_qty,
 			'inventory_qty' => $product_snapshot['tec_inventory'] ?? null,
@@ -2214,17 +2229,17 @@ function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $a
 			'qualified_ticket' => ($role === 'qualified_ticket') ? 1 : 0,
 			'expected_remaining_hint' => $expected_remaining_hint,
 			'vms_intended_sellability' => (string) ($intended_state['state'] ?? 'unknown'),
-			'vms_intended_label' => (string) ($intended_state['label'] ?? __('Needs review', 'vms')),
+			'vms_intended_label' => (string) ($intended_state['label'] ?? __('Needs review', 'backstage-venue-manager')),
 			'vms_intended_reason' => (string) ($intended_state['reason'] ?? ''),
 			'woo_sellability' => (string) ($woo_state['state'] ?? 'unknown'),
-			'woo_sellability_label' => (string) ($woo_state['label'] ?? __('Needs review', 'vms')),
+			'woo_sellability_label' => (string) ($woo_state['label'] ?? __('Needs review', 'backstage-venue-manager')),
 			'woo_sellability_reason' => (string) ($woo_state['reason'] ?? ''),
 			'tec_sellability' => (string) ($tec_state['state'] ?? 'unknown'),
-			'tec_sellability_label' => (string) ($tec_state['label'] ?? __('Needs review', 'vms')),
+			'tec_sellability_label' => (string) ($tec_state['label'] ?? __('Needs review', 'backstage-venue-manager')),
 			'agreement_status' => (string) ($verification['agreement_status'] ?? 'needs_review'),
-			'agreement_label' => (string) ($verification['agreement_label'] ?? __('Needs review', 'vms')),
+			'agreement_label' => (string) ($verification['agreement_label'] ?? __('Needs review', 'backstage-venue-manager')),
 			'verification_result' => (string) ($verification['verification_result'] ?? 'manual_review'),
-			'verification_result_label' => (string) ($verification['verification_result_label'] ?? __('Manual review required', 'vms')),
+			'verification_result_label' => (string) ($verification['verification_result_label'] ?? __('Manual review required', 'backstage-venue-manager')),
 			'verification_reason' => (string) ($verification['verification_reason'] ?? ''),
 			'global_stock_mode' => (string) ($product_snapshot['global_stock_mode'] ?? ''),
 			'global_stock_cap' => $product_snapshot['global_stock_cap_raw'] ?? '',
@@ -2273,25 +2288,25 @@ function vms_ticket_inventory_forensics_build_ticket_rows(int $plan_id, array $a
 	return $rows;
 }
 
-function vms_ticket_inventory_forensics_build_diff_fields(array $broken_row, array $healthy_row): array
+function bvmgr_ticket_inventory_forensics_build_diff_fields(array $broken_row, array $healthy_row): array
 {
 	$fields = array(
-		'vms_intended_label' => __('VMS Intended Sellability', 'vms'),
-		'woo_sellability_label' => __('Woo Sellability', 'vms'),
-		'tec_sellability_label' => __('TEC Sellability', 'vms'),
-		'stock_qty' => __('Stock Qty', 'vms'),
-		'manage_stock_label' => __('Manage Stock', 'vms'),
-		'stock_status' => __('Stock Status', 'vms'),
-		'ticket_capacity' => __('Ticket Capacity', 'vms'),
-		'sold_qty' => __('Sold', 'vms'),
-		'available_qty' => __('Available (TEC)', 'vms'),
-		'global_stock_mode' => __('Stock Mode', 'vms'),
-		'event_global_stock_level' => __('Event Shared Stock', 'vms'),
-		'sale_start_raw' => __('Sale Start', 'vms'),
-		'sale_end_raw' => __('Sale End', 'vms'),
-		'vms_remaining' => __('VMS Remaining', 'vms'),
-		'mapping_label' => __('Mapping Status', 'vms'),
-		'last_change_source' => __('Last Change Source', 'vms'),
+		'vms_intended_label' => __('VMS Intended Sellability', 'backstage-venue-manager'),
+		'woo_sellability_label' => __('Woo Sellability', 'backstage-venue-manager'),
+		'tec_sellability_label' => __('TEC Sellability', 'backstage-venue-manager'),
+		'stock_qty' => __('Stock Qty', 'backstage-venue-manager'),
+		'manage_stock_label' => __('Manage Stock', 'backstage-venue-manager'),
+		'stock_status' => __('Stock Status', 'backstage-venue-manager'),
+		'ticket_capacity' => __('Ticket Capacity', 'backstage-venue-manager'),
+		'sold_qty' => __('Sold', 'backstage-venue-manager'),
+		'available_qty' => __('Available (TEC)', 'backstage-venue-manager'),
+		'global_stock_mode' => __('Stock Mode', 'backstage-venue-manager'),
+		'event_global_stock_level' => __('Event Shared Stock', 'backstage-venue-manager'),
+		'sale_start_raw' => __('Sale Start', 'backstage-venue-manager'),
+		'sale_end_raw' => __('Sale End', 'backstage-venue-manager'),
+		'vms_remaining' => __('VMS Remaining', 'backstage-venue-manager'),
+		'mapping_label' => __('Mapping Status', 'backstage-venue-manager'),
+		'last_change_source' => __('Last Change Source', 'backstage-venue-manager'),
 	);
 
 	$diffs = array();
@@ -2299,11 +2314,11 @@ function vms_ticket_inventory_forensics_build_diff_fields(array $broken_row, arr
 		$broken_value = $broken_row[$field] ?? null;
 		$healthy_value = $healthy_row[$field] ?? null;
 		$broken_display = is_bool($broken_value)
-			? vms_ticket_inventory_forensics_bool_label($broken_value)
-			: vms_ticket_inventory_forensics_display_quantity($broken_value);
+			? bvmgr_ticket_inventory_forensics_bool_label($broken_value)
+			: bvmgr_ticket_inventory_forensics_display_quantity($broken_value);
 		$healthy_display = is_bool($healthy_value)
-			? vms_ticket_inventory_forensics_bool_label($healthy_value)
-			: vms_ticket_inventory_forensics_display_quantity($healthy_value);
+			? bvmgr_ticket_inventory_forensics_bool_label($healthy_value)
+			: bvmgr_ticket_inventory_forensics_display_quantity($healthy_value);
 
 		if ($broken_display === $healthy_display) {
 			continue;
@@ -2319,14 +2334,14 @@ function vms_ticket_inventory_forensics_build_diff_fields(array $broken_row, arr
 	return $diffs;
 }
 
-function vms_ticket_inventory_forensics_find_healthy_baseline(int $plan_id): array
+function bvmgr_ticket_inventory_forensics_find_healthy_baseline(int $plan_id): array
 {
 	$plan_id = absint($plan_id);
-	if ($plan_id <= 0 || !function_exists('vms_ticket_integrity_get_sorted_events')) {
+	if ($plan_id <= 0 || !function_exists('bvmgr_ticket_integrity_get_sorted_events')) {
 		return array();
 	}
 
-	foreach ((array) vms_ticket_integrity_get_sorted_events() as $event) {
+	foreach ((array) bvmgr_ticket_integrity_get_sorted_events() as $event) {
 		if (!is_array($event)) {
 			continue;
 		}
@@ -2348,7 +2363,7 @@ function vms_ticket_inventory_forensics_find_healthy_baseline(int $plan_id): arr
 	return array();
 }
 
-function vms_ticket_inventory_forensics_build_comparison(int $plan_id, array $args = array()): array
+function bvmgr_ticket_inventory_forensics_build_comparison(int $plan_id, array $args = array()): array
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
@@ -2362,27 +2377,27 @@ function vms_ticket_inventory_forensics_build_comparison(int $plan_id, array $ar
 		return array();
 	}
 
-	$healthy_event = is_array($args['healthy_event'] ?? null) ? $args['healthy_event'] : vms_ticket_inventory_forensics_find_healthy_baseline($plan_id);
+	$healthy_event = is_array($args['healthy_event'] ?? null) ? $args['healthy_event'] : bvmgr_ticket_inventory_forensics_find_healthy_baseline($plan_id);
 	$healthy_plan_id = absint($healthy_event['plan_id'] ?? 0);
 	if ($healthy_plan_id <= 0) {
 		return array();
 	}
 
-	$healthy_context = function_exists('vms_ticket_integrity_build_context') ? vms_ticket_integrity_build_context($healthy_plan_id) : array();
+	$healthy_context = function_exists('bvmgr_ticket_integrity_build_context') ? bvmgr_ticket_integrity_build_context($healthy_plan_id) : array();
 	$product_cache = array();
-	$healthy_ticket_snapshots = function_exists('vms_ticket_integrity_build_ticket_snapshots')
-		? vms_ticket_integrity_build_ticket_snapshots($healthy_context, $product_cache)
+	$healthy_ticket_snapshots = function_exists('bvmgr_ticket_integrity_build_ticket_snapshots')
+		? bvmgr_ticket_integrity_build_ticket_snapshots($healthy_context, $product_cache)
 		: array();
-	$healthy_entitlement_snapshots = function_exists('vms_ticket_integrity_build_entitlement_snapshots')
-		? vms_ticket_integrity_build_entitlement_snapshots($healthy_context, $product_cache)
+	$healthy_entitlement_snapshots = function_exists('bvmgr_ticket_integrity_build_entitlement_snapshots')
+		? bvmgr_ticket_integrity_build_entitlement_snapshots($healthy_context, $product_cache)
 		: array();
-	$healthy_rows = vms_ticket_inventory_forensics_build_ticket_rows(
+	$healthy_rows = bvmgr_ticket_inventory_forensics_build_ticket_rows(
 		$healthy_plan_id,
 		array(
 			'context' => $healthy_context,
 			'ticket_snapshots' => $healthy_ticket_snapshots,
 			'entitlement_snapshots' => $healthy_entitlement_snapshots,
-			'recent_logs' => vms_ticket_inventory_forensics_recent_logs($healthy_plan_id, 12),
+			'recent_logs' => bvmgr_ticket_inventory_forensics_recent_logs($healthy_plan_id, 12),
 		)
 	);
 
@@ -2392,7 +2407,7 @@ function vms_ticket_inventory_forensics_build_comparison(int $plan_id, array $ar
 			continue;
 		}
 
-		$key = vms_ticket_inventory_forensics_normalize_match_key($row);
+		$key = bvmgr_ticket_inventory_forensics_normalize_match_key($row);
 		if ($key !== '' && !isset($healthy_by_key[$key])) {
 			$healthy_by_key[$key] = $row;
 		}
@@ -2400,19 +2415,19 @@ function vms_ticket_inventory_forensics_build_comparison(int $plan_id, array $ar
 
 	$comparison_rows = array();
 	foreach ($broken_rows as $row) {
-		$key = vms_ticket_inventory_forensics_normalize_match_key($row);
+		$key = bvmgr_ticket_inventory_forensics_normalize_match_key($row);
 		if ($key === '' || empty($healthy_by_key[$key])) {
 			continue;
 		}
 
 		$healthy_row = $healthy_by_key[$key];
-		$differences = vms_ticket_inventory_forensics_build_diff_fields($row, $healthy_row);
+		$differences = bvmgr_ticket_inventory_forensics_build_diff_fields($row, $healthy_row);
 		if (empty($differences)) {
 			continue;
 		}
 
 		$comparison_rows[] = array(
-			'label' => (string) ($row['ticket_label'] ?? __('Ticket', 'vms')),
+			'label' => (string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager')),
 			'differences' => $differences,
 		);
 	}
@@ -2420,16 +2435,16 @@ function vms_ticket_inventory_forensics_build_comparison(int $plan_id, array $ar
 	return array(
 		'healthy_plan_id' => $healthy_plan_id,
 		'healthy_event_title' => (string) ($healthy_event['event_title'] ?? get_the_title($healthy_plan_id)),
-		'healthy_origin_label' => function_exists('vms_ticket_mutation_audit_origin_label')
-			? vms_ticket_mutation_audit_origin_label((string) ($healthy_event['origin_classification'] ?? 'vms_native'))
-			: __('VMS-native', 'vms'),
+		'healthy_origin_label' => function_exists('bvmgr_ticket_mutation_audit_origin_label')
+			? bvmgr_ticket_mutation_audit_origin_label((string) ($healthy_event['origin_classification'] ?? 'vms_native'))
+			: __('VMS-native', 'backstage-venue-manager'),
 		'rows' => $comparison_rows,
 	);
 }
 
-function vms_ticket_inventory_forensics_build_cluster_note(bool $zero_available_mismatch): array
+function bvmgr_ticket_inventory_forensics_build_cluster_note(bool $zero_available_mismatch): array
 {
-	if (!$zero_available_mismatch || !function_exists('vms_ticket_integrity_get_sorted_events')) {
+	if (!$zero_available_mismatch || !function_exists('bvmgr_ticket_integrity_get_sorted_events')) {
 		return array('message' => '');
 	}
 
@@ -2437,7 +2452,7 @@ function vms_ticket_inventory_forensics_build_cluster_note(bool $zero_available_
 	$native = 0;
 	$mixed = 0;
 
-	foreach ((array) vms_ticket_integrity_get_sorted_events() as $event) {
+	foreach ((array) bvmgr_ticket_integrity_get_sorted_events() as $event) {
 		if (!is_array($event)) {
 			continue;
 		}
@@ -2459,13 +2474,13 @@ function vms_ticket_inventory_forensics_build_cluster_note(bool $zero_available_
 
 	$message = '';
 	if ($imported > 0 && $native === 0 && $mixed === 0) {
-		$message = __('All currently flagged zero-availability events are imported legacy.', 'vms');
+		$message = __('All currently flagged zero-availability events are imported legacy.', 'backstage-venue-manager');
 	} elseif ($imported > 0 && $native === 0) {
-		$message = __('Current zero-availability drift is clustering on imported legacy / mixed-history events.', 'vms');
+		$message = __('Current zero-availability drift is clustering on imported legacy / mixed-history events.', 'backstage-venue-manager');
 	} elseif ($native > 0 && $imported === 0) {
-		$message = __('Current zero-availability drift is not limited to imported legacy events.', 'vms');
+		$message = __('Current zero-availability drift is not limited to imported legacy events.', 'backstage-venue-manager');
 	} elseif ($imported > 0 && $native > 0) {
-		$message = __('Zero-availability drift is currently affecting both imported legacy and VMS-native events.', 'vms');
+		$message = __('Zero-availability drift is currently affecting both imported legacy and VMS-native events.', 'backstage-venue-manager');
 	}
 
 	return array(
@@ -2476,14 +2491,14 @@ function vms_ticket_inventory_forensics_build_cluster_note(bool $zero_available_
 	);
 }
 
-function vms_ticket_inventory_forensics_detect_repeated_drift(int $plan_id, array $recent_logs, bool $zero_available_mismatch): array
+function bvmgr_ticket_inventory_forensics_detect_repeated_drift(int $plan_id, array $recent_logs, bool $zero_available_mismatch): array
 {
 	$plan_id = absint($plan_id);
-	if ($plan_id <= 0 || !$zero_available_mismatch || !function_exists('vms_ticket_integrity_get_repair_report')) {
+	if ($plan_id <= 0 || !$zero_available_mismatch || !function_exists('bvmgr_ticket_integrity_get_repair_report')) {
 		return array('flagged' => false);
 	}
 
-	$last_repair = vms_ticket_integrity_get_repair_report($plan_id);
+	$last_repair = bvmgr_ticket_integrity_get_repair_report($plan_id);
 	if (empty($last_repair) || empty($last_repair['saved_at_gmt'])) {
 		return array('flagged' => false);
 	}
@@ -2503,12 +2518,12 @@ function vms_ticket_inventory_forensics_detect_repeated_drift(int $plan_id, arra
 
 	return array(
 		'flagged' => true,
-		'message' => __('This event still shows zero-availability drift after a prior rebuild, and later inventory writes were recorded afterward.', 'vms'),
+		'message' => __('This event still shows zero-availability drift after a prior rebuild, and later inventory writes were recorded afterward.', 'backstage-venue-manager'),
 		'latest_log' => $post_repair_logs[0],
 	);
 }
 
-function vms_ticket_inventory_forensics_classify_cause(array $ticket_rows, array $event_snapshot, array $issues): array
+function bvmgr_ticket_inventory_forensics_classify_cause(array $ticket_rows, array $event_snapshot, array $issues): array
 {
 	$public_rows = array_values(array_filter($ticket_rows, static function ($row): bool {
 		return is_array($row) && !empty($row['standard_public']) && !empty($row['expected_open']);
@@ -2533,7 +2548,8 @@ function vms_ticket_inventory_forensics_classify_cause(array $ticket_rows, array
 		$flags = is_array($row['mismatch_flags'] ?? null) ? $row['mismatch_flags'] : array();
 		if (!empty($flags['unexpected_zero_stock']) || !empty($flags['unexpected_outofstock']) || !empty($flags['zero_available_conflict'])) {
 			$per_ticket = true;
-			$reasons[] = sprintf(__('Ticket "%s" is reporting sold-out stock even though remaining capacity still exists.', 'vms'), (string) ($row['ticket_label'] ?? __('Ticket', 'vms')));
+			/* translators: %s: human-readable value used in this message. */
+			$reasons[] = sprintf(__('Ticket "%s" is reporting sold-out stock even though remaining capacity still exists.', 'backstage-venue-manager'), (string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager')));
 		}
 
 		if (
@@ -2546,12 +2562,13 @@ function vms_ticket_inventory_forensics_classify_cause(array $ticket_rows, array
 			)
 		) {
 			$shared = true;
-			$reasons[] = __('Shared/event capacity fields look out of sync with the remaining event capacity.', 'vms');
+			$reasons[] = __('Shared/event capacity fields look out of sync with the remaining event capacity.', 'backstage-venue-manager');
 		}
 
 		if (!empty($flags['sale_window_conflict'])) {
 			$sale_window = true;
-			$reasons[] = sprintf(__('Ticket "%s" looks open in config but closed by live sale dates.', 'vms'), (string) ($row['ticket_label'] ?? __('Ticket', 'vms')));
+			/* translators: %s: ticket label that appears open in config but closed by live sale dates. */
+			$reasons[] = sprintf(__('Ticket "%s" looks open in config but closed by live sale dates.', 'backstage-venue-manager'), (string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager')));
 		}
 	}
 
@@ -2564,7 +2581,7 @@ function vms_ticket_inventory_forensics_classify_cause(array $ticket_rows, array
 	}));
 	if (!empty($public_zero_rows) && !empty($addon_positive_rows)) {
 		$role_divergence = true;
-		$reasons[] = __('Admission tickets are resolving to zero while one or more add-ons still look available.', 'vms');
+		$reasons[] = __('Admission tickets are resolving to zero while one or more add-ons still look available.', 'backstage-venue-manager');
 	}
 
 	$mapping_issue_present = false;
@@ -2596,41 +2613,41 @@ function vms_ticket_inventory_forensics_classify_cause(array $ticket_rows, array
 
 	return array(
 		'cause' => $cause,
-		'label' => vms_ticket_inventory_forensics_cause_label($cause),
+		'label' => bvmgr_ticket_inventory_forensics_cause_label($cause),
 		'role_divergence' => $role_divergence ? 1 : 0,
 		'reasons' => array_values(array_unique(array_filter(array_map('strval', $reasons)))),
 	);
 }
 
-function vms_ticket_inventory_forensics_recommended_action(string $cause, bool $zero_available_mismatch, string $origin_classification): string
+function bvmgr_ticket_inventory_forensics_recommended_action(string $cause, bool $zero_available_mismatch, string $origin_classification): string
 {
 	switch (sanitize_key($cause)) {
 		case 'per_ticket_stock_corruption':
-			return __('Review the most recent stock and stock-status writes for the affected tickets before running another rebuild.', 'vms');
+			return __('Review the most recent stock and stock-status writes for the affected tickets before running another rebuild.', 'backstage-venue-manager');
 		case 'shared_capacity_linkage_corruption':
-			return __('Compare the event shared-capacity fields and ticket stock modes with a healthy event; the capacity pool looks disconnected.', 'vms');
+			return __('Compare the event shared-capacity fields and ticket stock modes with a healthy event; the capacity pool looks disconnected.', 'backstage-venue-manager');
 		case 'sale_window_false_closure':
-			return __('Review the live sale-start and sale-end fields. Operator config reads open, but product dates are closing availability.', 'vms');
+			return __('Review the live sale-start and sale-end fields. Operator config reads open, but product dates are closing availability.', 'backstage-venue-manager');
 		case 'mixed_mode_corruption':
-			return __('Inspect both the mutation diagnostics and the inventory logs together. This event shows more than one drift pattern at the same time.', 'vms');
+			return __('Inspect both the mutation diagnostics and the inventory logs together. This event shows more than one drift pattern at the same time.', 'backstage-venue-manager');
 	}
 
 	if ($zero_available_mismatch && $origin_classification === 'imported_legacy') {
-		return __('Compare this imported legacy event against a healthy VMS-native event before changing live inventory values.', 'vms');
+		return __('Compare this imported legacy event against a healthy VMS-native event before changing live inventory values.', 'backstage-venue-manager');
 	}
 
 	if ($zero_available_mismatch) {
-		return __('Compare the broken ticket rows against the healthy baseline to see which stock or capacity fields differ.', 'vms');
+		return __('Compare the broken ticket rows against the healthy baseline to see which stock or capacity fields differ.', 'backstage-venue-manager');
 	}
 
-	return __('No immediate inventory repair signal is obvious. Keep this event under watch and review the latest inventory mutation if the state changes again.', 'vms');
+	return __('No immediate inventory repair signal is obvious. Keep this event under watch and review the latest inventory mutation if the state changes again.', 'backstage-venue-manager');
 }
 
-function vms_ticket_inventory_forensics_snapshot_is_open(array $snapshot): bool
+function bvmgr_ticket_inventory_forensics_snapshot_is_open(array $snapshot): bool
 {
 	$stock_status = sanitize_key((string) ($snapshot['stock_status'] ?? ''));
-	$stock_qty = vms_ticket_inventory_forensics_numeric_value($snapshot['stock_quantity'] ?? null);
-	$manage_stock = !empty($snapshot['managing_stock']) || vms_ticket_inventory_forensics_meta_flag($snapshot['manage_stock_raw'] ?? '');
+	$stock_qty = bvmgr_ticket_inventory_forensics_numeric_value($snapshot['stock_quantity'] ?? null);
+	$manage_stock = !empty($snapshot['managing_stock']) || bvmgr_ticket_inventory_forensics_meta_flag($snapshot['manage_stock_raw'] ?? '');
 	$is_in_stock = array_key_exists('is_in_stock', $snapshot) ? $snapshot['is_in_stock'] : null;
 
 	if ($stock_status === 'outofstock') {
@@ -2646,10 +2663,10 @@ function vms_ticket_inventory_forensics_snapshot_is_open(array $snapshot): bool
 	return true;
 }
 
-function vms_ticket_inventory_forensics_repair_entry_is_open(array $entry): bool
+function bvmgr_ticket_inventory_forensics_repair_entry_is_open(array $entry): bool
 {
 	$stock_status = sanitize_key((string) ($entry['final_stock_status'] ?? ''));
-	$stock_qty = vms_ticket_inventory_forensics_numeric_value($entry['final_stock_qty'] ?? null);
+	$stock_qty = bvmgr_ticket_inventory_forensics_numeric_value($entry['final_stock_qty'] ?? null);
 	$manage_stock = !empty($entry['final_manage_stock']);
 
 	if ($stock_status === 'outofstock') {
@@ -2662,7 +2679,7 @@ function vms_ticket_inventory_forensics_repair_entry_is_open(array $entry): bool
 	return true;
 }
 
-function vms_ticket_inventory_forensics_detect_woo_recorruption(array $ticket_rows, array $recent_logs, array $repair_report): array
+function bvmgr_ticket_inventory_forensics_detect_woo_recorruption(array $ticket_rows, array $recent_logs, array $repair_report): array
 {
 	$repair_ts = absint($repair_report['saved_at_gmt'] ?? 0);
 	if ($repair_ts <= 0 || empty($ticket_rows) || empty($recent_logs)) {
@@ -2712,22 +2729,23 @@ function vms_ticket_inventory_forensics_detect_woo_recorruption(array $ticket_ro
 		}
 
 		$repair_entry = $repair_entries_by_product[$product_id];
-		if (!vms_ticket_inventory_forensics_repair_entry_is_open($repair_entry)) {
+		if (!bvmgr_ticket_inventory_forensics_repair_entry_is_open($repair_entry)) {
 			continue;
 		}
 
 		$bad_log = $post_repair_log_by_product[$product_id];
 		$after_snapshot = is_array($bad_log['after_snapshot'] ?? null) ? $bad_log['after_snapshot'] : array();
-		if (!empty($after_snapshot) && vms_ticket_inventory_forensics_snapshot_is_open($after_snapshot)) {
+		if (!empty($after_snapshot) && bvmgr_ticket_inventory_forensics_snapshot_is_open($after_snapshot)) {
 			continue;
 		}
 
 		$source_text = trim((string) ($bad_log['source_function'] ?? $bad_log['source_hook'] ?? ''));
 		$ticket_rows[$index]['verification_result'] = 'woo_recorruption';
-		$ticket_rows[$index]['verification_result_label'] = vms_ticket_inventory_forensics_verification_label('woo_recorruption');
+		$ticket_rows[$index]['verification_result_label'] = bvmgr_ticket_inventory_forensics_verification_label('woo_recorruption');
 		$ticket_rows[$index]['verification_reason'] = $source_text !== ''
-			? sprintf(__('Repair previously left Woo sellable, but a later write from %s closed it again.', 'vms'), $source_text)
-			: __('Repair previously left Woo sellable, but a later inventory write closed it again.', 'vms');
+			/* translators: %s: human-readable value used in this message. */
+			? sprintf(__('Repair previously left Woo sellable, but a later write from %s closed it again.', 'backstage-venue-manager'), $source_text)
+			: __('Repair previously left Woo sellable, but a later inventory write closed it again.', 'backstage-venue-manager');
 		$ticket_rows[$index]['woo_recorruption'] = 1;
 		$ticket_rows[$index]['last_good_woo_state'] = array(
 			'stock_qty' => $repair_entry['final_stock_qty'] ?? null,
@@ -2739,7 +2757,7 @@ function vms_ticket_inventory_forensics_detect_woo_recorruption(array $ticket_ro
 		$flagged_rows[] = $ticket_rows[$index];
 		if (empty($latest_bad_write) || absint($bad_log['timestamp_gmt'] ?? 0) > absint($latest_bad_write['timestamp_gmt'] ?? 0)) {
 			$latest_bad_write = array_merge($bad_log, array(
-				'ticket_label' => (string) ($row['ticket_label'] ?? __('Ticket', 'vms')),
+				'ticket_label' => (string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager')),
 				'product_id' => $product_id,
 			));
 		}
@@ -2754,8 +2772,9 @@ function vms_ticket_inventory_forensics_detect_woo_recorruption(array $ticket_ro
 
 	$source_text = trim((string) ($latest_bad_write['source_function'] ?? $latest_bad_write['source_hook'] ?? ''));
 	$message = $source_text !== ''
-		? sprintf(__('Woo was repaired into a sellable state, but a later write from %s closed it again.', 'vms'), $source_text)
-		: __('Woo was repaired into a sellable state, but a later inventory write closed it again.', 'vms');
+		/* translators: %s: human-readable value used in this message. */
+		? sprintf(__('Woo was repaired into a sellable state, but a later write from %s closed it again.', 'backstage-venue-manager'), $source_text)
+		: __('Woo was repaired into a sellable state, but a later inventory write closed it again.', 'backstage-venue-manager');
 
 	return array(
 		'flagged' => true,
@@ -2768,7 +2787,7 @@ function vms_ticket_inventory_forensics_detect_woo_recorruption(array $ticket_ro
 	);
 }
 
-function vms_ticket_inventory_forensics_build_event_diagnostics(int $plan_id, array $args = array()): array
+function bvmgr_ticket_inventory_forensics_build_event_diagnostics(int $plan_id, array $args = array()): array
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
@@ -2780,11 +2799,11 @@ function vms_ticket_inventory_forensics_build_event_diagnostics(int $plan_id, ar
 	$repair_report = is_array($args['repair_report'] ?? null) ? $args['repair_report'] : array();
 	$recent_logs = array_values(array_filter((array) ($args['recent_logs'] ?? array()), 'is_array'));
 	if (empty($recent_logs)) {
-		$recent_logs = vms_ticket_inventory_forensics_recent_logs($plan_id, 24);
+		$recent_logs = bvmgr_ticket_inventory_forensics_recent_logs($plan_id, 24);
 	}
 
-	$event_snapshot = vms_ticket_inventory_forensics_snapshot_event(absint($context['tec_event_id'] ?? 0));
-	$ticket_rows = vms_ticket_inventory_forensics_build_ticket_rows(
+	$event_snapshot = bvmgr_ticket_inventory_forensics_snapshot_event(absint($context['tec_event_id'] ?? 0));
+	$ticket_rows = bvmgr_ticket_inventory_forensics_build_ticket_rows(
 		$plan_id,
 		array(
 			'context' => $context,
@@ -2793,7 +2812,7 @@ function vms_ticket_inventory_forensics_build_event_diagnostics(int $plan_id, ar
 			'recent_logs' => $recent_logs,
 		)
 	);
-	$recorruption = vms_ticket_inventory_forensics_detect_woo_recorruption($ticket_rows, $recent_logs, $repair_report);
+	$recorruption = bvmgr_ticket_inventory_forensics_detect_woo_recorruption($ticket_rows, $recent_logs, $repair_report);
 	$ticket_rows = array_values(array_filter((array) ($recorruption['rows'] ?? $ticket_rows), 'is_array'));
 
 	$public_rows = array_values(array_filter($ticket_rows, static function ($row): bool {
@@ -2895,25 +2914,25 @@ function vms_ticket_inventory_forensics_build_event_diagnostics(int $plan_id, ar
 					'source_function' => (string) ($row['last_change_source'] ?? ''),
 					'source_hook' => (string) ($row['last_change_trigger'] ?? ''),
 					'reason_text' => (string) ($row['last_write_reason'] ?? ''),
-					'ticket_label' => (string) ($row['ticket_label'] ?? __('Ticket', 'vms')),
+					'ticket_label' => (string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager')),
 					'product_id' => absint($row['product_id'] ?? 0),
 				);
 			}
 		}
 	}
 
-	$cause = vms_ticket_inventory_forensics_classify_cause($ticket_rows, $event_snapshot, $issues);
+	$cause = bvmgr_ticket_inventory_forensics_classify_cause($ticket_rows, $event_snapshot, $issues);
 	$origin_classification = sanitize_key((string) ($args['origin_classification'] ?? ''));
-	$comparison = vms_ticket_inventory_forensics_build_comparison(
+	$comparison = bvmgr_ticket_inventory_forensics_build_comparison(
 		$plan_id,
 		array(
 			'ticket_rows' => $ticket_rows,
 			'healthy_event' => is_array($args['healthy_event'] ?? null) ? $args['healthy_event'] : array(),
 		)
 	);
-	$cluster = vms_ticket_inventory_forensics_build_cluster_note($zero_available_mismatch);
+	$cluster = bvmgr_ticket_inventory_forensics_build_cluster_note($zero_available_mismatch);
 	$latest_log = !empty($recent_logs[0]) && is_array($recent_logs[0]) ? $recent_logs[0] : array();
-	$repeated_drift = vms_ticket_inventory_forensics_detect_repeated_drift($plan_id, $recent_logs, $zero_available_mismatch);
+	$repeated_drift = bvmgr_ticket_inventory_forensics_detect_repeated_drift($plan_id, $recent_logs, $zero_available_mismatch);
 	$addon_rows = array_values(array_filter($ticket_rows, static function ($row): bool {
 		return is_array($row) && sanitize_key((string) ($row['role'] ?? '')) === 'add_on';
 	}));
@@ -2921,13 +2940,13 @@ function vms_ticket_inventory_forensics_build_event_diagnostics(int $plan_id, ar
 		return (is_numeric($row['available_qty'] ?? null) && (int) $row['available_qty'] > 0)
 			|| (is_numeric($row['stock_qty'] ?? null) && (int) $row['stock_qty'] > 0);
 	})));
-	$recommended_action = vms_ticket_inventory_forensics_recommended_action((string) ($cause['cause'] ?? ''), $zero_available_mismatch, $origin_classification);
+	$recommended_action = bvmgr_ticket_inventory_forensics_recommended_action((string) ($cause['cause'] ?? ''), $zero_available_mismatch, $origin_classification);
 	if (!empty($recorruption['flagged'])) {
-		$recommended_action = __('Repair Woo only after you block the later writer that is re-closing inventory. Review the latest conflicting Woo write first.', 'vms');
+		$recommended_action = __('Repair Woo only after you block the later writer that is re-closing inventory. Review the latest conflicting Woo write first.', 'backstage-venue-manager');
 	} elseif (!empty($tec_followup_rows)) {
-		$recommended_action = __('Woo already matches VMS intent on at least one row. Investigate TEC-side availability on those rows before rewriting Woo again.', 'vms');
+		$recommended_action = __('Woo already matches VMS intent on at least one row. Investigate TEC-side availability on those rows before rewriting Woo again.', 'backstage-venue-manager');
 	} elseif (!empty($upstream_writer_suspect['source_function']) || !empty($upstream_writer_suspect['source_hook'])) {
-		$recommended_action = __('Review the latest conflicting Woo writer and its derivation reason before running another repair. The bad data source now looks attributable.', 'vms');
+		$recommended_action = __('Review the latest conflicting Woo writer and its derivation reason before running another repair. The bad data source now looks attributable.', 'backstage-venue-manager');
 	}
 
 	return array(
@@ -2946,7 +2965,7 @@ function vms_ticket_inventory_forensics_build_event_diagnostics(int $plan_id, ar
 		'tec_followup_count' => count($tec_followup_rows),
 		'woo_recorruption_detected' => !empty($recorruption['flagged']) ? 1 : 0,
 		'suspected_cause' => (string) ($cause['cause'] ?? 'healthy'),
-		'suspected_cause_label' => (string) ($cause['label'] ?? vms_ticket_inventory_forensics_cause_label('healthy')),
+		'suspected_cause_label' => (string) ($cause['label'] ?? bvmgr_ticket_inventory_forensics_cause_label('healthy')),
 		'cause_reasons' => array_values((array) ($cause['reasons'] ?? array())),
 		'verification_summary' => $verification_summary,
 		'upstream_writer_suspect' => $upstream_writer_suspect,

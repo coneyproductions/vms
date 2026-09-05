@@ -8,17 +8,11 @@ if (!defined('WP_ADMIN')) {
     define('WP_ADMIN', true);
 }
 
-$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-if (!defined('ABSPATH')) {
-    if (!file_exists($wpLoad)) {
-        fwrite(STDERR, "Could not locate wp-load.php.\n");
-        exit(1);
-    }
-    require_once $wpLoad;
-}
+require_once __DIR__ . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
-    require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
+    require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 final class VMS_Calendar_Suppress_Ajax_Exit extends RuntimeException
@@ -126,25 +120,25 @@ try {
         return $decoded;
     };
 
-    $kSuppress = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
+    $kSuppress = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'calendar_unpublished_suppress') ?: '_vms_calendar_unpublished_suppress')
         : '_vms_calendar_unpublished_suppress';
-    $kSecondaryIds = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids')
+    $kSecondaryIds = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'secondary_vendor_ids') ?: '_vms_secondary_vendor_ids')
         : '_vms_secondary_vendor_ids';
-    $kSecondaryType = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'secondary_vendor_type') ?: '_vms_secondary_vendor_type')
+    $kSecondaryType = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'secondary_vendor_type') ?: '_vms_secondary_vendor_type')
         : '_vms_secondary_vendor_type';
-    $kTicketOverride = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'ticketing_enabled_override') ?: '_vms_ticketing_enabled_override')
+    $kTicketOverride = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'ticketing_enabled_override') ?: '_vms_ticketing_enabled_override')
         : '_vms_ticketing_enabled_override';
     $kTicketLayoutOverride = '_vms_ticket_ui_layout_override';
     $kTicketHeadingOverride = '_vms_ticket_ui_addons_heading_override';
-    $kIntegrityIssue = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'integrity_issue') ?: '_vms_integrity_issue')
+    $kIntegrityIssue = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'integrity_issue') ?: '_vms_integrity_issue')
         : '_vms_integrity_issue';
-    $kIntegrityTs = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'integrity_ts') ?: '_vms_integrity_ts')
+    $kIntegrityTs = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'integrity_ts') ?: '_vms_integrity_ts')
         : '_vms_integrity_ts';
 
     $captureState = static function (int $planId) use ($kSuppress, $kSecondaryIds, $kSecondaryType, $kTicketOverride, $kTicketLayoutOverride, $kTicketHeadingOverride, $kIntegrityIssue, $kIntegrityTs): array {
@@ -227,12 +221,12 @@ try {
     $assert(wp_json_encode($before['ticketing']) === wp_json_encode($afterDisable['ticketing']), 'Clearing the suppressor should not alter ticketing overrides.');
     $assert(wp_json_encode($before['integrity']) === wp_json_encode($afterDisable['integrity']), 'Clearing the suppressor should not alter integrity flags or timestamps.');
 
-    $admin = (new ReflectionClass('VMS_Admin_Event_Plans'))->newInstanceWithoutConstructor();
+    $admin = (new ReflectionClass('BVMGR_Admin_Event_Plans'))->newInstanceWithoutConstructor();
     ob_start();
     $admin->render_event_plan_advanced_controls_host_meta_box(get_post($planId));
     $advancedHtml = (string) ob_get_clean();
     ob_start();
-    vms_event_plan_editor_render_detached_forms();
+    bvmgr_event_plan_editor_render_detached_forms();
     $detachedFormsHtml = (string) ob_get_clean();
 
     $assert(strpos($advancedHtml, 'name="vms_event_plan_action" value="resync_to_calendar"') === false, 'Re-sync to Calendar should no longer submit through the broad Event Plan save path.');
@@ -245,7 +239,7 @@ try {
     $assert(strpos($advancedHtml, '<form') === false, 'Advanced Controls should not introduce a nested form.');
     $assert(strpos($detachedFormsHtml, 'id="vms-event-plan-calendar-resync-' . $planId . '"') !== false, 'Detached Re-sync form should render in the admin footer output.');
     $assert(strpos($detachedFormsHtml, 'name="action" value="vms_resync_event_to_calendar"') !== false, 'Detached Re-sync form should target the isolated admin-post action.');
-    $assert(strpos($detachedFormsHtml, 'name="_vms_resync_calendar_nonce"') !== false, 'Detached Re-sync form should include the dedicated resync nonce field.');
+    $assert(strpos($detachedFormsHtml, 'name="_bvmgr_resync_calendar_nonce"') !== false, 'Detached Re-sync form should include the canonical dedicated resync nonce field.');
     $assert(strpos($detachedFormsHtml, 'name="post_id" value="' . $planId . '"') !== false, 'Detached Re-sync form should include the Event Plan ID only once as payload state.');
     $assert(strpos($detachedFormsHtml, 'name="source" value="advanced_controls"') !== false, 'Detached Re-sync form should mark the Advanced Controls source.');
     $assert(strpos($detachedFormsHtml, 'name="redirect_to"') !== false, 'Detached Re-sync form should include a redirect target back to the Event Plan editor.');

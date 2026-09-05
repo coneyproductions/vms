@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
  * Single source of truth for all meta keys used by VMS.
  */
 
-function vms_meta_keys(): array
+function bvmgr_meta_keys(): array
 {
 	return [
 		'vendor' => [
@@ -101,8 +101,9 @@ function vms_meta_keys(): array
 			'zip'   => '_vms_zip',
 
 			// W-9 workflow (upload mode)
-			'w9_upload_id'     => '_vms_w9_upload_id',
-			'w9_received_date' => '_vms_w9_received_date',
+			'w9_upload_id'           => '_vms_w9_upload_id',
+			'w9_upload_storage_kind' => '_vms_w9_upload_storage_kind',
+			'w9_received_date'       => '_vms_w9_received_date',
 
 			// W-9 workflow (off-site email modes: QuickBooks/Tax1099)
 			'w9_attested_at' => '_vms_w9_external_vendor_attested_at',
@@ -285,6 +286,14 @@ function vms_meta_keys(): array
 'ticketing_config_v2' => '_vms_ticketing_config_v2',
 'ticketing_sync_v2'   => '_vms_ticketing_sync_v2',
 'ticketing_stats_v2'  => '_vms_ticketing_stats_v2',
+			// Public sales destination: serenade_range | external (missing = serenade_range)
+			'ticketing_sales_mode' => '_vms_ticketing_sales_mode',
+			'external_ticket_url' => '_vms_external_ticket_url',
+			'external_ticket_provider' => '_vms_external_ticket_provider',
+			// Public presentation: serenade_range_produced | hosted_third_party
+			'event_relationship' => '_vms_event_relationship',
+			'external_event_producer' => '_vms_external_event_producer',
+			'external_event_producer_website' => '_vms_external_event_producer_website',
 			// Ticketing enabled override: on | off | inherit (missing)
 			'ticketing_enabled_override' => '_vms_ticketing_enabled_override',
 // One-time snapshot used only when migrating legacy tier-based payloads to v2
@@ -426,16 +435,16 @@ function vms_meta_keys(): array
 /**
  * Convenience getter: vms_meta_key('vendor', 'email')
  */
-function vms_meta_key(string $entity, string $field): string
+function bvmgr_meta_key(string $entity, string $field): string
 {
-	$map = vms_meta_keys();
+	$map = bvmgr_meta_keys();
 	return $map[$entity][$field] ?? '';
 }
 
 /**
  * Export helper for Truth Report (stable shape; no duplication elsewhere).
  */
-function vms_meta_keys_export(): array
+function bvmgr_meta_keys_export(): array
 {
-	return vms_meta_keys();
+	return bvmgr_meta_keys();
 }

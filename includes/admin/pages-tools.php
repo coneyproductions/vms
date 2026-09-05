@@ -11,12 +11,12 @@ add_action('admin_post_vms_repair_pages', function () {
     }
 
     // Nonce check first (before doing anything)
-    check_admin_referer('vms_repair_pages');
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_repair_pages', '_wpnonce'), '_wpnonce');
 
     // IMPORTANT: do not output anything in this handler.
     // No echo/print/var_dump, no stray whitespace outside <?php tags.
 
-    $pages = function_exists('vms_required_public_pages') ? vms_required_public_pages() : [];
+    $pages = function_exists('bvmgr_required_public_pages') ? bvmgr_required_public_pages() : [];
     $created = 0;
     $restored = 0;
     $ok = 0;
@@ -30,12 +30,14 @@ add_action('admin_post_vms_repair_pages', function () {
         $existing = get_page_by_path($spec['slug'], OBJECT, 'page');
         $was_trashed = ($existing && $existing->post_status === 'trash');
 
-        if (!function_exists('vms_ensure_page_exists')) {
+        if (!function_exists('bvmgr_ensure_page_exists')) {
             // Bail gracefully: can't ensure without helper
             break;
         }
 
-        $page_id = (int) vms_ensure_page_exists($spec);
+        $spec['managed_key'] = sanitize_key((string) $key);
+        $spec['repair_existing'] = true;
+        $page_id = (int) bvmgr_ensure_page_exists($spec);
 
         if ($page_id > 0) {
             update_option('vms_page_' . sanitize_key($key), $page_id);
@@ -59,7 +61,7 @@ add_action('admin_post_vms_repair_pages', function () {
         $notices[] = [
             'type' => 'success',
             'msg'  => sprintf(
-                'VMS Pages repaired. OK: %d. Created: %d. Restored: %d.',
+                'Backstage Venue Manager pages repaired. OK: %d. Created: %d. Restored: %d.',
                 (int) $ok,
                 (int) $created,
                 (int) $restored

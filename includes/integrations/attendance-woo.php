@@ -1,8 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-add_filter('vms_has_attended_event', 'vms_check_woo_tickets_for_attendance', 10, 3);
-function vms_check_woo_tickets_for_attendance($has_attended, $event_id, $email)
+add_filter('vms_has_attended_event', 'bvmgr_check_woo_tickets_for_attendance', 10, 3);
+function bvmgr_check_woo_tickets_for_attendance($has_attended, $event_id, $email)
 {
 
     if ($has_attended) {
@@ -18,7 +18,7 @@ function vms_check_woo_tickets_for_attendance($has_attended, $event_id, $email)
     }
 
     // 1. Find all ticket products tied to this TEC event
-    $ticket_product_ids = vms_get_ticket_product_ids_for_event($event_id);
+    $ticket_product_ids = bvmgr_get_ticket_product_ids_for_event($event_id);
     if (empty($ticket_product_ids)) {
         return false;
     }

@@ -35,13 +35,17 @@ final class Vms_Test_Json_Response extends RuntimeException
 	public bool $success;
 	public array $data;
 	public int $status;
+	public int $flags;
+	public int $numArgs;
 
-	public function __construct(bool $success, array $data, int $status)
+	public function __construct(bool $success, array $data, int $status, int $flags = 0, int $numArgs = 2)
 	{
 		parent::__construct('JSON response captured.');
 		$this->success = $success;
 		$this->data = $data;
 		$this->status = $status;
+		$this->flags = $flags;
+		$this->numArgs = $numArgs;
 	}
 }
 
@@ -63,6 +67,11 @@ function add_filter(string $hook, $callback, int $priority = 10, int $acceptedAr
 function check_ajax_referer(string $action, $queryArg = false, bool $stop = true): bool
 {
 	return true;
+}
+
+function bvmgr_nonce_action_for_request(string $action, $queryArg = false): string
+{
+	return $action;
 }
 
 function is_user_logged_in(): bool
@@ -95,6 +104,20 @@ function sanitize_email(string $value): string
 	return strtolower(trim($value));
 }
 
+function bvmgr_request_read_absint(array $source, string $key): int
+{
+	if (!array_key_exists($key, $source) || !is_scalar($source[$key])) {
+		return 0;
+	}
+
+	$value = wp_unslash($source[$key]);
+	if (!is_scalar($value)) {
+		return 0;
+	}
+
+	return absint($value);
+}
+
 function get_user_by(string $field, string $value)
 {
 	if ($field !== 'email') {
@@ -111,17 +134,47 @@ function wc_get_product(int $productId)
 	return new Vms_Test_Product('Qualified Guest Ticket');
 }
 
-function wp_send_json_error(array $data, int $statusCode = 200): void
+function wp_send_json_error(array $data, int $statusCode = 200, int $flags = 0): void
 {
-	throw new Vms_Test_Json_Response(false, $data, $statusCode);
+	throw new Vms_Test_Json_Response(false, $data, $statusCode, $flags, func_num_args());
 }
 
-function wp_send_json_success(array $data, int $statusCode = 200): void
+function wp_send_json_success(array $data, int $statusCode = 200, int $flags = 0): void
 {
-	throw new Vms_Test_Json_Response(true, $data, $statusCode);
+	throw new Vms_Test_Json_Response(true, $data, $statusCode, $flags, func_num_args());
 }
 
-function vms_ticketing_v2_resolve_verified_ticket_context(int $productId): array
+function bvmgr_ticketing_v2_ajax_send_error(array $data, ?int $httpStatus = null, int $flags = 0): void
+{
+	if (func_num_args() >= 3) {
+		wp_send_json_error($data, $httpStatus ?? 200, $flags);
+		return;
+	}
+
+	if (func_num_args() === 2) {
+		wp_send_json_error($data, $httpStatus ?? 200);
+		return;
+	}
+
+	wp_send_json_error($data);
+}
+
+function bvmgr_ticketing_v2_ajax_send_success(array $data, ?int $httpStatus = null, int $flags = 0): void
+{
+	if (func_num_args() >= 3) {
+		wp_send_json_success($data, $httpStatus ?? 200, $flags);
+		return;
+	}
+
+	if (func_num_args() === 2) {
+		wp_send_json_success($data, $httpStatus ?? 200);
+		return;
+	}
+
+	wp_send_json_success($data);
+}
+
+function bvmgr_ticketing_v2_resolve_verified_ticket_context(int $productId): array
 {
 	return array(
 		'visibility_mode' => 'verified',
@@ -135,22 +188,22 @@ function vms_ticketing_v2_resolve_verified_ticket_context(int $productId): array
 	);
 }
 
-function vms_ticketing_claims_normalize_allowed_programs(array $allowedPrograms, string $legacyProgram): array
+function bvmgr_ticketing_claims_normalize_allowed_programs(array $allowedPrograms, string $legacyProgram): array
 {
 	return $allowedPrograms;
 }
 
-function vms_ticketing_claims_truthy($value, bool $default = false): bool
+function bvmgr_ticketing_claims_truthy($value, bool $default = false): bool
 {
 	return (bool) $value;
 }
 
-function vms_ticketing_v2_ticket_group_product_ids_from_context(array $context, int $productId): array
+function bvmgr_ticketing_v2_ticket_group_product_ids_from_context(array $context, int $productId): array
 {
 	return array($productId);
 }
 
-function vms_ticketing_claims_resolve_eligibility(array $args): array
+function bvmgr_ticketing_claims_resolve_eligibility(array $args): array
 {
 	return array(
 		'eligible' => true,
@@ -161,17 +214,17 @@ function vms_ticketing_claims_resolve_eligibility(array $args): array
 	);
 }
 
-function vms_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_User $user, array $resolved): int
+function bvmgr_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_User $user, array $resolved): int
 {
 	return 2;
 }
 
-function vms_ticketing_v2_assignee_consumed_qty_for_event(int $eventId, string $assigneeEmail, array $groupProductIds): int
+function bvmgr_ticketing_v2_assignee_consumed_qty_for_event(int $eventId, string $assigneeEmail, array $groupProductIds): int
 {
 	return 0;
 }
 
-function vms_ticketing_v2_cart_assignee_usage_for_event(int $eventId, string $ticketKey): array
+function bvmgr_ticketing_v2_cart_assignee_usage_for_event(int $eventId, string $ticketKey): array
 {
 	return array();
 }
@@ -186,12 +239,21 @@ $assert = static function (bool $condition, string $message): void {
 
 require dirname(__DIR__) . '/includes/integrations/ticketing-claims-customer.php';
 
+$_GET = array();
+$assert(bvmgr_ticketing_claims_account_should_expand() === false, 'Benefits panel should stay collapsed when the flag is missing.');
+
+$_GET['vms_benefits'] = '1';
+$assert(bvmgr_ticketing_claims_account_should_expand() === true, 'Benefits panel should expand when the scalar benefits flag is 1.');
+
+$_GET['vms_benefits'] = array('1');
+$assert(bvmgr_ticketing_claims_account_should_expand() === false, 'Benefits panel should reject array-shaped benefits flags.');
+
 $runHandler = static function (array $post, bool $loggedIn): Vms_Test_Json_Response {
 	$_POST = $post;
 	$GLOBALS['vms_test_logged_in'] = $loggedIn;
 
 	try {
-		vms_ticketing_claims_handle_validate_assignee();
+		bvmgr_ticketing_claims_handle_validate_assignee();
 	} catch (Vms_Test_Json_Response $response) {
 		return $response;
 	}

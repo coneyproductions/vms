@@ -15,15 +15,15 @@ if (!defined('ABSPATH')) exit;
 add_action('add_meta_boxes', function (): void {
     add_meta_box(
         'vms_staff_user_link',
-        __('Portal User', 'vms'),
-        'vms_staff_user_link_metabox_render',
+        __('Portal User', 'backstage-venue-manager'),
+        'bvmgr_staff_user_link_metabox_render',
         'vms_staff',
         'side',
         'default'
     );
 });
 
-function vms_staff_user_link_metabox_render($post): void
+function bvmgr_staff_user_link_metabox_render($post): void
 {
     if (!($post instanceof WP_Post)) return;
 
@@ -42,9 +42,9 @@ function vms_staff_user_link_metabox_render($post): void
         }
     }
 
-    wp_nonce_field('vms_staff_user_link_save', 'vms_staff_user_link_nonce');
+    wp_nonce_field('bvmgr_staff_user_link_save', 'bvmgr_staff_user_link_nonce');
 
-    echo '<p class="description">' . esc_html__('Pick the WordPress user account that logs in as this staff member (Ops Console, Staff Portal, alerts).', 'vms') . '</p>';
+    echo '<p class="description">' . esc_html__('Pick the WordPress user account that logs in as this staff member (Ops Console, Staff Portal, alerts).', 'backstage-venue-manager') . '</p>';
 
     $users = get_users(array(
         'orderby' => 'display_name',
@@ -53,7 +53,7 @@ function vms_staff_user_link_metabox_render($post): void
     ));
 
     echo '<select name="vms_linked_user_id" style="width:100%;">';
-    echo '<option value="0">— ' . esc_html__('Not linked', 'vms') . ' —</option>';
+    echo '<option value="0">— ' . esc_html__('Not linked', 'backstage-venue-manager') . ' —</option>';
     foreach ($users as $u) {
         $label = (string) $u->display_name;
         if (!empty($u->user_email)) {
@@ -72,7 +72,7 @@ function vms_staff_user_link_metabox_render($post): void
         $user = get_user_by('id', $linked_user_id);
         if ($user) {
             echo '<p style="margin-top:10px;" class="description">' .
-                esc_html__('Currently linked:', 'vms') . ' <strong>' . esc_html($user->display_name) . '</strong>' .
+                esc_html__('Currently linked:', 'backstage-venue-manager') . ' <strong>' . esc_html($user->display_name) . '</strong>' .
                 '</p>';
         }
     }
@@ -83,7 +83,10 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (!isset($_POST['vms_staff_user_link_nonce']) || !wp_verify_nonce((string) $_POST['vms_staff_user_link_nonce'], 'vms_staff_user_link_save')) {
+    $nonce = (isset($_POST['bvmgr_staff_user_link_nonce']) && !is_array($_POST['bvmgr_staff_user_link_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_staff_user_link_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_staff_user_link_save'))) {
         return;
     }
 
@@ -119,21 +122,19 @@ add_action('save_post_vms_staff', function (int $post_id, WP_Post $post, bool $u
     }
 
     // Enforce uniqueness: if another staff post already points at this user, clear it.
-    $other_staff_ids = get_posts(array(
-        'post_type'      => 'vms_staff',
-        'post_status'    => 'any',
-        'numberposts'    => -1,
-        'fields'         => 'ids',
-        'no_found_rows'  => true,
-        'meta_query'     => array(
-            array(
-                'key'     => '_vms_linked_user_id',
-                'value'   => $new_user_id,
-                'compare' => '=',
-                'type'    => 'NUMERIC',
-            )
-        ),
-    ));
+    global $wpdb;
+    $other_staff_ids = array();
+    if (is_object($wpdb) && method_exists($wpdb, 'get_col') && method_exists($wpdb, 'prepare')) {
+        $t_posts = (isset($wpdb->posts) && is_string($wpdb->posts) && $wpdb->posts !== '') ? $wpdb->posts : '';
+        $t_postmeta = (isset($wpdb->postmeta) && is_string($wpdb->postmeta) && $wpdb->postmeta !== '') ? $wpdb->postmeta : '';
+        if ($t_posts !== '' && $t_postmeta !== '') {
+            /* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff/user link cleanup reads request-fresh reverse postmeta pointers with prepared identifiers and filters so duplicate links clear immediately after admin edits. */
+            $other_staff_ids = $wpdb->get_col($wpdb->prepare('SELECT pm.post_id FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE pm.meta_key = %s AND pm.meta_value = %s AND p.post_type = %s ORDER BY pm.meta_id ASC', $t_postmeta, $t_posts, '_vms_linked_user_id', (string) $new_user_id, 'vms_staff'));
+        }
+    }
+    if (!is_array($other_staff_ids)) {
+        $other_staff_ids = array();
+    }
 
     foreach ($other_staff_ids as $osid) {
         $osid = (int) $osid;

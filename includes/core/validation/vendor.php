@@ -5,8 +5,8 @@ defined('ABSPATH') || exit;
  * Validate and sanitize vendor input.
  * Returns: ['ok' => bool, 'data' => array, 'errors' => array]
  */
-function vms_validate_vendor_input(array $input): array {
-	$schema = vms_vendor_schema();
+function bvmgr_validate_vendor_input(array $input): array {
+	$schema = bvmgr_vendor_schema();
 
 	$out = [];
 	$errors = [];

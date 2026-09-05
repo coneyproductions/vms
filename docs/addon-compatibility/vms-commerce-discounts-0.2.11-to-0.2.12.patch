@@ -1,0 +1,141 @@
+diff --git a/vms-commerce-discounts/includes/class-vms-discounts-loader.php b/vms-commerce-discounts/includes/class-vms-discounts-loader.php
+index a5cc12d..c048c7a 100644
+--- a/vms-commerce-discounts/includes/class-vms-discounts-loader.php
++++ b/vms-commerce-discounts/includes/class-vms-discounts-loader.php
+@@ -30 +30 @@ class VMS_Discounts_Loader
+-    /** @var VMS_Discounts_Square_Bridge */
++    /** @var VMS_Discounts_Square_Bridge|null */
+@@ -71 +71,7 @@ class VMS_Discounts_Loader
+-            $this->square_bridge = new VMS_Discounts_Square_Bridge($this->order);
++            if ($this->square_bridge_parent_available() && class_exists('VMS_Discounts_Square_Bridge', false)) {
++                $this->square_bridge = new VMS_Discounts_Square_Bridge($this->order);
++            } else {
++                $this->square_bridge = null;
++                add_action('admin_notices', [$this, 'render_square_bridge_unavailable_notice']);
++                $this->maybe_log_square_bridge_unavailable();
++            }
+@@ -107 +113,33 @@ class VMS_Discounts_Loader
+-        require_once VMS_DISCOUNTS_PATH . 'includes/class-vms-discounts-square-bridge.php';
++        if ($this->square_bridge_parent_available()) {
++            require_once VMS_DISCOUNTS_PATH . 'includes/class-vms-discounts-square-bridge.php';
++        }
++    }
++
++    protected function square_bridge_parent_available(): bool
++    {
++        return class_exists('\\WooCommerce\\Square\\Gateway\\API\\Requests\\Orders');
++    }
++
++    public function render_square_bridge_unavailable_notice(): void
++    {
++        if (!current_user_can('manage_options')) {
++            return;
++        }
++
++        echo '<div class="notice notice-warning"><p>'
++            . esc_html__('WooCommerce Square integration is unavailable. Commerce Discounts will continue without Square-specific discount synchronization.', 'vms-commerce-discounts')
++            . '</p></div>';
++    }
++
++    protected function maybe_log_square_bridge_unavailable(): void
++    {
++        if (!function_exists('vms_discounts_debug_log')) {
++            return;
++        }
++
++        vms_discounts_debug_log(
++            'Square bridge integration unavailable because WooCommerce Square request classes are not loaded. Continuing without native Square discount synchronization.',
++            [
++                'parent_class' => 'WooCommerce\\Square\\Gateway\\API\\Requests\\Orders',
++            ]
++        );
+diff --git a/vms-commerce-discounts/readme.txt b/vms-commerce-discounts/readme.txt
+index b22b3bd..0952b30 100644
+--- a/vms-commerce-discounts/readme.txt
++++ b/vms-commerce-discounts/readme.txt
+@@ -6 +6 @@ Requires PHP: 7.4
+-Stable tag: 0.2.11
++Stable tag: 0.2.12
+@@ -31,0 +32,5 @@ Key features:
++= 0.2.12 =
++* Prevents activation fatals when WooCommerce Square is unavailable by loading the Square bridge only after its request parent class exists.
++* Keeps non-Square discount features available and shows administrators that Square-specific discount synchronization is unavailable.
++* Preserves the existing Square bridge classes and callback registrations when WooCommerce Square is available.
++
+diff --git a/vms-commerce-discounts/vms-build.txt b/vms-commerce-discounts/vms-build.txt
+index e82431d..aa734e7 100644
+--- a/vms-commerce-discounts/vms-build.txt
++++ b/vms-commerce-discounts/vms-build.txt
+@@ -2,2 +2,2 @@ VMS Commerce Discounts
+-Version: 0.2.11
+-Build date: 2026-05-13
++Version: 0.2.12
++Build date: 2026-08-30
+@@ -6,4 +6,3 @@ Purpose
+-- Roll back the Woo Cart/Checkout Block display-filter experiment from 0.2.9/0.2.10 because block carts escape/position price-format filters differently than classic Woo templates.
+-- Preserve the 0.2.8 calculation fix for paid ticket lines whose recorded cart subtotal is temporarily zero before Woo finishes calculating totals.
+-- Keep the classic cart/checkout display concise: original price struck through, discounted price next to it, no "was/saved/group discount" story text.
+-- Move the VMS item-price adjustment earlier in Woo's totals pass so cart/block totals are less likely to read the undiscounted price before VMS adjusts it.
++- Prevent activation fatals when WooCommerce Square is unavailable.
++- Keep the non-Square Commerce Discounts runtime available while omitting Square-only classes and callbacks.
++- Preserve the existing Square bridge behavior when WooCommerce Square is available.
+@@ -13,3 +12 @@ Files changed
+-- includes/class-vms-discounts-cart.php
+-- assets/frontend/discounts-display.css
+-- assets/frontend/discounts-display.js
++- includes/class-vms-discounts-loader.php
+@@ -18 +15 @@ Files changed
+-- vms-commerce-discounts-test-plan-0.2.11.md
++- vms-commerce-discounts-test-plan-0.2.12.md
+@@ -21,2 +18,2 @@ Notes
+-- This build intentionally does not force a rich line-through display inside Woo Cart Blocks. Classic Woo templates still get the compact strike-through display.
+-- If the block cart still shows original totals while checkout is correct, avoid cart-page express payment buttons for discounted ticket orders until a deeper Store API totals pass is built/tested.
++- Discount calculations, order handling, stored identifiers, and Square request behavior are unchanged.
++- WooCommerce remains required for the plugin runtime; WooCommerce Square is required only for the Square-specific bridge.
+diff --git a/vms-commerce-discounts/vms-commerce-discounts-test-plan-0.2.12.md b/vms-commerce-discounts/vms-commerce-discounts-test-plan-0.2.12.md
+new file mode 100644
+index 0000000..43ddddb
+--- /dev/null
++++ b/vms-commerce-discounts/vms-commerce-discounts-test-plan-0.2.12.md
+@@ -0,0 +1,31 @@
++# VMS Commerce Discounts 0.2.12 Test Plan
++
++## Goal
++
++Confirm Commerce Discounts activates without WooCommerce Square while preserving the existing Square bridge when WooCommerce Square is available.
++
++## Missing-Square activation
++
++1. In an isolated WordPress environment, activate WooCommerce and Backstage Venue Manager.
++2. Leave WooCommerce Square unavailable.
++3. Activate VMS Commerce Discounts.
++4. Confirm activation completes without a PHP fatal.
++5. Confirm the Commerce settings page and non-Square callbacks remain registered.
++6. Confirm the Square bridge classes and Square gateway filters are not registered.
++7. Confirm administrators see that WooCommerce Square integration is unavailable while other Commerce Discounts features continue.
++
++## Square-present preservation
++
++1. Activate WooCommerce Square before Commerce Discounts.
++2. Confirm both Commerce Square bridge classes load.
++3. Confirm the credit-card and Cash App `get_order` filters each retain one Commerce callback.
++4. Confirm no missing-Square notice appears.
++
++## Dependency preservation
++
++1. With WooCommerce unavailable, confirm the existing WooCommerce dependency notice still appears without a fatal.
++2. With Backstage Venue Manager unavailable, confirm Commerce continues to follow its existing WooCommerce-only dependency contract.
++
++## Safety boundary
++
++Do not dispatch a payment, Square API request, order mutation, email, webhook, or production synchronization during this compatibility test.
+diff --git a/vms-commerce-discounts/vms-commerce-discounts.php b/vms-commerce-discounts/vms-commerce-discounts.php
+index 3a463be..ee6873b 100644
+--- a/vms-commerce-discounts/vms-commerce-discounts.php
++++ b/vms-commerce-discounts/vms-commerce-discounts.php
+@@ -5 +5 @@ Description: Rule-based WooCommerce discounts for regular products, TEC/Event Ti
+-Version: 0.2.11
++Version: 0.2.12
+@@ -15 +15 @@ if (!defined('VMS_DISCOUNTS_VERSION')) {
+-    define('VMS_DISCOUNTS_VERSION', '0.2.11');
++    define('VMS_DISCOUNTS_VERSION', '0.2.12');

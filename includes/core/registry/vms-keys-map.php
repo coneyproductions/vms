@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-function vms_keys_map_registry()
+function bvmgr_keys_map_registry()
 {
   return array(
 
@@ -24,11 +24,11 @@ function vms_keys_map_registry()
 
         '',
         'CPTs (authoritative constants / registration functions):',
-        '  Vendor CPT constant: VMS_VENDOR_CPT = vms_vendor',
-        '  Venue CPT registration function: vms_register_venue_cpt()',
-        '  Venue CPT constant: VMS_VENUE_CPT (vms_venue)',
-        '  Event Plan CPT constant: VMS_CPT_EVENT_PLAN = vms_event_plan',
-        '  Continuity Binder option key constant: VMS_CONTINUITY_BINDER_OPTION = vms_continuity_binder_v1',
+        '  Vendor CPT constant: BVMGR_VENDOR_CPT = vms_vendor',
+        '  Venue CPT registration function: bvmgr_register_venue_cpt()',
+        '  Venue CPT constant: BVMGR_VENUE_CPT (vms_venue)',
+        '  Event Plan CPT constant: BVMGR_CPT_EVENT_PLAN = vms_event_plan',
+        '  Continuity Binder option key constant: BVMGR_CONTINUITY_BINDER_OPTION = vms_continuity_binder_v1',
 
         '',
         'Entity: Venue',
@@ -50,7 +50,7 @@ function vms_keys_map_registry()
         'Entity: Vendor',
         '  Canonical variable: $vendor_id',
         '  Canonical ID type: int (WordPress post ID)',
-        '  CPT: VMS_VENDOR_CPT (vms_vendor)',
+        '  CPT: BVMGR_VENDOR_CPT (vms_vendor)',
         '  Common representations:',
         '    - $vendor_id (PHP variable)',
         '    - vendor_id (request arg name when applicable)',
@@ -93,16 +93,16 @@ function vms_keys_map_registry()
     'vendor_schema' => array(
       'title' => 'A) Vendor schema',
       'lines' => array(
-        'Storage: WordPress CPT vms_vendor (display_name stored in post_title; other fields stored in post_meta per vms_vendor_schema()).',
+        'Storage: WordPress CPT vms_vendor (display_name stored in post_title; other fields stored in post_meta per bvmgr_vendor_schema()).',
         'Authoritative registry file: vms/includes/core/registry/meta-keys.php',
         'Storage mapping source: vms/includes/core/registry/vendor-schema.php',
         'Critical keys (only):',
         '_vms_vendor_primary_email = “Primary Contact Email” (schema field: primary_email)',
         '_vms_vendor_primary_phone = “Primary Phone” (schema field: primary_phone)',
-        '_vms_vendor_email = “Vendor Email” (schema field uses vms_meta_key(\'vendor\',\'email\'))',
-        '_vms_vendor_phone = “Vendor Phone” (schema field uses vms_meta_key(\'vendor\',\'phone\'))',
-        '_vms_vendor_default_comp_by_venue = “Vendor Event Plan default overrides keyed by venue_id” (schema key: vms_meta_key(\'vendor\',\'default_comp_by_venue\'))',
-        '_vms_vendor_default_comp_by_venue_dow = “Vendor Event Plan default overrides keyed by venue_id + day-of-week (0..6)” (schema key: vms_meta_key(\'vendor\',\'default_comp_by_venue_dow\'))',
+        '_vms_vendor_email = “Vendor Email” (schema field uses bvmgr_meta_key(\'vendor\',\'email\'))',
+        '_vms_vendor_phone = “Vendor Phone” (schema field uses bvmgr_meta_key(\'vendor\',\'phone\'))',
+        '_vms_vendor_default_comp_by_venue = “Vendor Event Plan default overrides keyed by venue_id” (schema key: bvmgr_meta_key(\'vendor\',\'default_comp_by_venue\'))',
+        '_vms_vendor_default_comp_by_venue_dow = “Vendor Event Plan default overrides keyed by venue_id + day-of-week (0..6)” (schema key: bvmgr_meta_key(\'vendor\',\'default_comp_by_venue_dow\'))',
         '_vms_default_attendance_bonus_mode = “Vendor default attendance-bonus mode (step|continuous)” (post_meta on vms_vendor)',
         '_vms_default_attendance_bonus_start_count = “Vendor default attendance-bonus starting count” (post_meta on vms_vendor)',
         '_vms_default_attendance_bonus_step_size = “Vendor default attendance-bonus step size” (post_meta on vms_vendor)',
@@ -110,7 +110,7 @@ function vms_keys_map_registry()
         '_vms_default_attendance_bonus_per_ticket_rate = “Vendor default attendance-bonus rate per ticket” (post_meta on vms_vendor)',
         '_vms_default_attendance_bonus_max_bonus = “Vendor default attendance-bonus max bonus cap” (post_meta on vms_vendor)',
         '_vms_default_comp_package_id = “Vendor default Comp Package template ID used as a reusable booking baseline” (post_meta on vms_vendor)',
-        '_vms_vendor_user_id = “Linked WP user ID for portal access” (vendor post_meta; VMS_VENDOR_USER_META_KEY)',
+        '_vms_vendor_user_id = “Linked WP user ID for portal access” (vendor post_meta; BVMGR_VENDOR_USER_META_KEY)',
         '_vms_vendor_id = “Linked vendor post ID on WP user record” (user_meta; one-to-one link)',
       ),
     ),
@@ -120,7 +120,7 @@ function vms_keys_map_registry()
       'lines' => array(
         'Storage: WordPress CPT vms_vendor_app (status stored in _vms_app_status post_meta).',
         'Critical keys (only):',
-        '_vms_app_submitted_user_id = “Logged-in WP user who submitted this vendor application” (post_meta on vms_vendor_app; registry key: vms_meta_key(\'vendor_application\',\'submitted_user_id\'))',
+        '_vms_app_submitted_user_id = “Logged-in WP user who submitted this vendor application” (post_meta on vms_vendor_app; registry key: bvmgr_meta_key(\'vendor_application\',\'submitted_user_id\'))',
         '_vms_vendor_id = “Approved vendor post created or linked from this application” (post_meta on vms_vendor_app)',
       ),
     ),
@@ -255,10 +255,10 @@ function vms_keys_map_registry()
 	        'vms_admission_allow_uncheckin_for_door = “Allow door-staff undo check-in” (key inside vms_settings)',
 	        'vms_admission_door_show_phone = “Door UI may show unmasked phone” (key inside vms_settings)',
 	        'vms_pass_claim_token = “Front-end pass claim route query var (rewrite tag)”',
-			'vms_ticketing_templates_v1 = “Ticketing v2 templates library” (constant: VMS_OPT_TICKETING_TEMPLATES_V1)',
-			'vms_ticketing_default_template_v1 = “Ticketing v2 default template id” (constant: VMS_OPT_TICKETING_DEFAULT_TEMPLATE_V1)',
-	        'vms_social_settings_v1 = “Social sharing global settings (enabled/kill_switch/utm/retry)” (constant: VMS_OPT_SOCIAL_SETTINGS_V1)',
-	        'vms_social_db_schema_version = “Social module table schema marker” (constant: VMS_OPT_SOCIAL_DB_SCHEMA_VERSION)',
+			'vms_ticketing_templates_v1 = “Ticketing v2 templates library” (constant: BVMGR_OPT_TICKETING_TEMPLATES_V1)',
+			'vms_ticketing_default_template_v1 = “Ticketing v2 default template id” (constant: BVMGR_OPT_TICKETING_DEFAULT_TEMPLATE_V1)',
+	        'vms_social_settings_v1 = “Social sharing global settings (enabled/kill_switch/utm/retry)” (constant: BVMGR_OPT_SOCIAL_SETTINGS_V1)',
+	        'vms_social_db_schema_version = “Social module table schema marker” (constant: BVMGR_OPT_SOCIAL_DB_SCHEMA_VERSION)',
 	      ),
 	    ),
 
@@ -276,7 +276,7 @@ function vms_keys_map_registry()
       'lines' => array(
         'Storage: wp_options',
         'Option key:',
-        'vms_continuity_binder_v1 = “Continuity Binder content storage” (constant: VMS_CONTINUITY_BINDER_OPTION)',
+        'vms_continuity_binder_v1 = “Continuity Binder content storage” (constant: BVMGR_CONTINUITY_BINDER_OPTION)',
       ),
     ),
 
@@ -354,16 +354,16 @@ function vms_keys_map_registry()
 	        '{$wpdb->prefix}vms_task_instances = “Event task instances with live status, due, assignment, and supersede linkage”',
 	        '{$wpdb->prefix}vms_task_logs = “Immutable task action audit log”',
 	        'Option keys:',
-	        'vms_tasks_db_schema_version = “Staff Tasks DB schema version marker” (constant: VMS_OPT_TASKS_DB_SCHEMA_VERSION)',
-	        'vms_tasks_settings_v1 = “Staff Tasks settings payload (horizon/regeneration/dashboard toggles)” (constant: VMS_OPT_TASKS_SETTINGS)',
+	        'vms_tasks_db_schema_version = “Staff Tasks DB schema version marker” (constant: BVMGR_OPT_TASKS_DB_SCHEMA_VERSION)',
+	        'vms_tasks_settings_v1 = “Staff Tasks settings payload (horizon/regeneration/dashboard toggles)” (constant: BVMGR_OPT_TASKS_SETTINGS)',
 	        'Cron hook:',
-	        'vms_tasks_nightly_generator = “Nightly Staff Tasks generation hook name” (constant: VMS_CRON_TASKS_NIGHTLY)',
+	        'vms_tasks_nightly_generator = “Nightly Staff Tasks generation hook name” (constant: BVMGR_CRON_TASKS_NIGHTLY)',
 	        'Capabilities:',
-	        'vms_manage_task_templates = “Manage task template definitions” (constant: VMS_CAP_TASKS_MANAGE_TEMPLATES)',
-	        'vms_manage_checklist_templates = “Manage checklist template definitions” (constant: VMS_CAP_TASKS_MANAGE_CHECKLISTS)',
-	        'vms_manage_tasks_all = “View and update all tasks across events” (constant: VMS_CAP_TASKS_MANAGE_ALL)',
-	        'vms_complete_tasks_self = “Complete tasks assigned to the current user” (constant: VMS_CAP_TASKS_COMPLETE_SELF)',
-	        'vms_view_tasks_self = “View only tasks assigned to the current user” (constant: VMS_CAP_TASKS_VIEW_SELF)',
+	        'vms_manage_task_templates = “Manage task template definitions” (constant: BVMGR_CAP_TASKS_MANAGE_TEMPLATES)',
+	        'vms_manage_checklist_templates = “Manage checklist template definitions” (constant: BVMGR_CAP_TASKS_MANAGE_CHECKLISTS)',
+	        'vms_manage_tasks_all = “View and update all tasks across events” (constant: BVMGR_CAP_TASKS_MANAGE_ALL)',
+	        'vms_complete_tasks_self = “Complete tasks assigned to the current user” (constant: BVMGR_CAP_TASKS_COMPLETE_SELF)',
+	        'vms_view_tasks_self = “View only tasks assigned to the current user” (constant: BVMGR_CAP_TASKS_VIEW_SELF)',
 	      ),
 	    ),
 

@@ -16,7 +16,7 @@ defined('ABSPATH') || exit;
 /**
  * Normalize status to canonical keys.
  */
-function vms_event_plan_status_normalize(string $status): string
+function bvmgr_event_plan_status_normalize(string $status): string
 {
 	$status = sanitize_key((string) $status);
 
@@ -36,7 +36,7 @@ function vms_event_plan_status_normalize(string $status): string
  * - Non-financial contexts may infer Published for legacy plans where meta is missing
  *   but WP post_status is publish (to avoid silently hiding older records).
  */
-function vms_event_plan_get_status(int $plan_id, string $context = 'generic'): string
+function bvmgr_event_plan_get_status(int $plan_id, string $context = 'generic'): string
 {
 	$plan_id = absint($plan_id);
 	$context = sanitize_key((string) $context);
@@ -45,12 +45,12 @@ function vms_event_plan_get_status(int $plan_id, string $context = 'generic'): s
 		return 'draft';
 	}
 
-	$k_status = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+	$k_status = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 	$status_raw = (string) get_post_meta($plan_id, $k_status, true);
-	$status = vms_event_plan_status_normalize($status_raw);
+	$status = bvmgr_event_plan_status_normalize($status_raw);
 
-	$allowed = function_exists('vms_event_plan_statuses')
-		? array_keys((array) vms_event_plan_statuses())
+	$allowed = function_exists('bvmgr_event_plan_statuses')
+		? array_keys((array) bvmgr_event_plan_statuses())
 		: array('draft', 'ready', 'published', 'tentative', 'confirmed', 'cancelled', 'archived');
 
 	if ($status === '' || !in_array($status, $allowed, true)) {
@@ -74,9 +74,9 @@ function vms_event_plan_get_status(int $plan_id, string $context = 'generic'): s
 /**
  * True if status is cancelled.
  */
-function vms_event_plan_is_cancelled(string $status): bool
+function bvmgr_event_plan_is_cancelled(string $status): bool
 {
-	$status = vms_event_plan_status_normalize($status);
+	$status = bvmgr_event_plan_status_normalize($status);
 	return ($status === 'cancelled');
 }
 
@@ -95,12 +95,12 @@ function vms_event_plan_is_cancelled(string $status): bool
  * - include_cancelled: include Cancelled plans (default varies by context)
  * - include_archived: include Archived plans (default false)
  */
-function vms_event_plan_allowed_statuses(string $context, array $flags = array()): array
+function bvmgr_event_plan_allowed_statuses(string $context, array $flags = array()): array
 {
 	$context = sanitize_key((string) $context);
 
-	$all = function_exists('vms_event_plan_statuses')
-		? array_keys((array) vms_event_plan_statuses())
+	$all = function_exists('bvmgr_event_plan_statuses')
+		? array_keys((array) bvmgr_event_plan_statuses())
 		: array('draft', 'ready', 'published', 'tentative', 'confirmed', 'cancelled', 'archived');
 
 	// Published-only everywhere by default.
@@ -167,24 +167,24 @@ function vms_event_plan_allowed_statuses(string $context, array $flags = array()
 /**
  * Should the plan appear in a given context?
  */
-function vms_event_plan_should_include(int $plan_id, string $context = 'generic', array $flags = array()): bool
+function bvmgr_event_plan_should_include(int $plan_id, string $context = 'generic', array $flags = array()): bool
 {
 	$context = sanitize_key((string) $context);
-	$status = vms_event_plan_get_status($plan_id, $context);
+	$status = bvmgr_event_plan_get_status($plan_id, $context);
 
-	$allowed = vms_event_plan_allowed_statuses($context, $flags);
+	$allowed = bvmgr_event_plan_allowed_statuses($context, $flags);
 	return in_array($status, $allowed, true);
 }
 
 /**
  * Human label for a status (uses registry when available).
  */
-function vms_event_plan_status_label(string $status): string
+function bvmgr_event_plan_status_label(string $status): string
 {
-	$status = vms_event_plan_status_normalize($status);
+	$status = bvmgr_event_plan_status_normalize($status);
 
-	if (function_exists('vms_event_plan_statuses')) {
-		$map = (array) vms_event_plan_statuses();
+	if (function_exists('bvmgr_event_plan_statuses')) {
+		$map = (array) bvmgr_event_plan_statuses();
 		if (isset($map[$status])) {
 			return (string) $map[$status];
 		}
@@ -197,9 +197,9 @@ function vms_event_plan_status_label(string $status): string
  * Status pill CSS class for admin list tables.
  * (Matches existing vms-admin.css classes.)
  */
-function vms_event_plan_status_pill_class(string $status): string
+function bvmgr_event_plan_status_pill_class(string $status): string
 {
-	$status = vms_event_plan_status_normalize($status);
+	$status = bvmgr_event_plan_status_normalize($status);
 
 	// vms-admin.css currently defines: .vms-pill-ready, .vms-pill-draft, .vms-pill-cancelled
 	if ($status === 'cancelled') {

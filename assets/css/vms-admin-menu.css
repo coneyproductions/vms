@@ -32,3 +32,31 @@
   padding-left: 24px !important;
   font-size: 12px;
 }
+
+/* ADD Dispatch admin-menu badge.
+ *
+ * The badge logic is injected conditionally from the ADD module, but the rules
+ * stay in the shared admin-menu stylesheet because the rendered badge lives in
+ * the global left admin rail.
+ */
+#adminmenu .vms-add-dispatch-alert-badge {
+  margin-left: 6px;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 999px;
+  background: #d63638;
+  box-shadow: none;
+}
+
+#adminmenu .vms-add-dispatch-alert-badge .pending-count {
+  display: block;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 4px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}

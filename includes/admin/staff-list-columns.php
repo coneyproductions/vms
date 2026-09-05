@@ -15,8 +15,8 @@ if (!defined('ABSPATH')) exit;
  *    vms_vendor_tax_profile_missing_items() / vms_vendor_tax_profile_is_complete()
  */
 
-if (!function_exists('vms_staff_admin_list_role_names')) {
-    function vms_staff_admin_list_role_names(int $post_id): array
+if (!function_exists('bvmgr_staff_admin_list_role_names')) {
+    function bvmgr_staff_admin_list_role_names(int $post_id): array
     {
         $role_names = array();
 
@@ -47,8 +47,8 @@ if (!function_exists('vms_staff_admin_list_role_names')) {
     }
 }
 
-if (!function_exists('vms_staff_admin_list_linked_user_id')) {
-    function vms_staff_admin_list_linked_user_id(int $post_id): int
+if (!function_exists('bvmgr_staff_admin_list_linked_user_id')) {
+    function bvmgr_staff_admin_list_linked_user_id(int $post_id): int
     {
         $user_id = (int) get_post_meta($post_id, '_vms_linked_user_id', true);
         if ($user_id <= 0) {
@@ -58,20 +58,17 @@ if (!function_exists('vms_staff_admin_list_linked_user_id')) {
             return $user_id;
         }
 
-        $linked_users = get_users(array(
-            'fields' => array('ID'),
-            'number' => 1,
-            'meta_key' => '_vms_staff_id',
-            'meta_value' => $post_id,
-            'orderby' => 'ID',
-            'order' => 'ASC',
-        ));
-
-        if (is_array($linked_users) && !empty($linked_users)) {
-            return (int) ($linked_users[0]->ID ?? 0);
+        global $wpdb;
+        if (!is_object($wpdb) || !method_exists($wpdb, 'get_var') || !method_exists($wpdb, 'prepare')) {
+            return 0;
         }
-
-        return 0;
+        $t_usermeta = (isset($wpdb->usermeta) && is_string($wpdb->usermeta) && $wpdb->usermeta !== '') ? $wpdb->usermeta : ((isset($wpdb->prefix) && is_string($wpdb->prefix)) ? $wpdb->prefix . 'usermeta' : '');
+        if ($t_usermeta === '') {
+            return 0;
+        }
+        /* phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin linked-user fallback reads one normalized reverse usermeta pointer with prepared identifier/filter values, and staff-link edits must remain request-fresh. */
+        $user_id = (int) $wpdb->get_var($wpdb->prepare('SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1', $t_usermeta, '_vms_staff_id', (string) $post_id));
+        return $user_id > 0 ? $user_id : 0;
     }
 }
 
@@ -81,15 +78,15 @@ add_filter('manage_edit-vms_staff_columns', function ($cols) {
     $new = [];
 
     if (isset($cols['cb'])) $new['cb'] = $cols['cb'];
-    $new['title'] = __('Staff', 'vms');
+    $new['title'] = __('Staff', 'backstage-venue-manager');
 
-    $new['vms_staff_role']   = __('Role', 'vms');
-    $new['vms_dualhat']      = __('Dual-Hat', 'vms');
-    $new['vms_tax']          = __('Tax Profile', 'vms');
-    $new['vms_certifications'] = __('Certifications', 'vms');
-    $new['vms_contact']      = __('Contact', 'vms');
-    $new['vms_linked_user']  = __('Portal User', 'vms');
-    $new['date']             = __('Date', 'vms');
+    $new['vms_staff_role']   = __('Role', 'backstage-venue-manager');
+    $new['vms_dualhat']      = __('Dual-Hat', 'backstage-venue-manager');
+    $new['vms_tax']          = __('Tax Profile', 'backstage-venue-manager');
+    $new['vms_certifications'] = __('Certifications', 'backstage-venue-manager');
+    $new['vms_contact']      = __('Contact', 'backstage-venue-manager');
+    $new['vms_linked_user']  = __('Portal User', 'backstage-venue-manager');
+    $new['date']             = __('Date', 'backstage-venue-manager');
 
     return $new;
 }, 20);
@@ -99,18 +96,18 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
     switch ($col) {
 
         case 'vms_staff_role': {
-            $role_names = vms_staff_admin_list_role_names((int) $post_id);
+            $role_names = bvmgr_staff_admin_list_role_names((int) $post_id);
             echo !empty($role_names) ? esc_html(implode(', ', $role_names)) : '—';
             break;
         }
 
         case 'vms_dualhat': {
-            if (!function_exists('vms_staff_linked_vendor_meta_key')) {
+            if (!function_exists('bvmgr_staff_linked_vendor_meta_key')) {
                 echo '—';
                 break;
             }
 
-            $vendor_id = (int) get_post_meta((int) $post_id, vms_staff_linked_vendor_meta_key(), true);
+            $vendor_id = (int) get_post_meta((int) $post_id, bvmgr_staff_linked_vendor_meta_key(), true);
             if ($vendor_id <= 0) {
                 echo '—';
                 break;
@@ -128,7 +125,7 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
             }
 
             $edit_url = get_edit_post_link($vendor_id, '');
-            echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'vms') . '</span>';
+            echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'backstage-venue-manager') . '</span>';
             if (is_string($edit_url) && $edit_url !== '') {
                 echo ' <a href="' . esc_url($edit_url) . '">' . esc_html($label) . '</a>';
             } else {
@@ -140,13 +137,13 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
 
         case 'vms_tax': {
             // Reuse the vendor tax validation helpers (you said staff should follow same requirements).
-            if (function_exists('vms_vendor_tax_profile_missing_items')) {
-                $missing = vms_vendor_tax_profile_missing_items((int)$post_id);
+            if (function_exists('bvmgr_vendor_tax_profile_missing_items')) {
+                $missing = bvmgr_vendor_tax_profile_missing_items((int)$post_id);
 
                 if (empty($missing)) {
-                    echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>';
+                    echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>';
                 } else {
-                    echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>';
+                    echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'backstage-venue-manager') . '</span>';
                     echo '<div class="description vms-staff-tax-missing">' .
                         esc_html(implode(', ', $missing)) .
                         '</div>';
@@ -158,31 +155,35 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
         }
 
         case 'vms_certifications': {
-            if (!function_exists('vms_staffing_staff_qualification_status_counts')) {
+            if (!function_exists('bvmgr_staffing_staff_qualification_status_counts')) {
                 echo '—';
                 break;
             }
 
-            $counts = vms_staffing_staff_qualification_status_counts((int) $post_id);
+            $counts = bvmgr_staffing_staff_qualification_status_counts((int) $post_id);
             $pending = (int) ($counts['pending_verification'] ?? 0);
             $approved = (int) ($counts['active'] ?? 0);
             $expired = (int) ($counts['expired'] ?? 0);
             $rejected = (int) ($counts['rejected'] ?? 0);
 
             if ($pending > 0) {
-                echo '<a class="vms-badge vms-badge-warn" href="' . esc_url(vms_staffing_staff_qualification_review_url((int) $post_id)) . '">' . esc_html(sprintf(_n('%d Pending', '%d Pending', $pending, 'vms'), $pending)) . '</a>';
+                /* translators: %d: number of staff certifications pending verification. */
+                echo '<a class="vms-badge vms-badge-warn" href="' . esc_url(bvmgr_staffing_staff_qualification_review_url((int) $post_id)) . '">' . esc_html(sprintf(_n('%d Pending', '%d Pending', $pending, 'backstage-venue-manager'), $pending)) . '</a>';
             } elseif ($approved > 0) {
-                echo '<span class="vms-badge vms-badge-ok">' . esc_html(sprintf(_n('%d Approved', '%d Approved', $approved, 'vms'), $approved)) . '</span>';
+                /* translators: %d: number of approved staff certifications. */
+                echo '<span class="vms-badge vms-badge-ok">' . esc_html(sprintf(_n('%d Approved', '%d Approved', $approved, 'backstage-venue-manager'), $approved)) . '</span>';
             } else {
                 echo '—';
             }
 
             $meta_bits = array();
             if ($expired > 0) {
-                $meta_bits[] = sprintf(_n('%d expired', '%d expired', $expired, 'vms'), $expired);
+                /* translators: %d: number of expired staff certifications. */
+                $meta_bits[] = sprintf(_n('%d expired', '%d expired', $expired, 'backstage-venue-manager'), $expired);
             }
             if ($rejected > 0) {
-                $meta_bits[] = sprintf(_n('%d rejected', '%d rejected', $rejected, 'vms'), $rejected);
+                /* translators: %d: number of rejected staff certifications. */
+                $meta_bits[] = sprintf(_n('%d rejected', '%d rejected', $rejected, 'backstage-venue-manager'), $rejected);
             }
             if (!empty($meta_bits)) {
                 echo '<div class="description">' . esc_html(implode(' · ', $meta_bits)) . '</div>';
@@ -209,12 +210,22 @@ add_action('manage_vms_staff_posts_custom_column', function ($col, $post_id) {
                 $lines[] = '<a href="tel:' . esc_attr($phone) . '">' . esc_html($phone) . '</a>';
             }
 
-            echo !empty($lines) ? implode('<br>', $lines) : '—';
+            if (!empty($lines)) {
+                echo wp_kses(implode('<br>', $lines), array(
+                    'a' => array(
+                        'href' => true,
+                    ),
+                    'br' => array(),
+                    'strong' => array(),
+                ));
+            } else {
+                echo '—';
+            }
             break;
         }
 
         case 'vms_linked_user': {
-            $user_id = vms_staff_admin_list_linked_user_id((int) $post_id);
+            $user_id = bvmgr_staff_admin_list_linked_user_id((int) $post_id);
 
             if ($user_id <= 0) {
                 echo '—';

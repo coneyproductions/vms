@@ -7,7 +7,31 @@ if (!defined('ABSPATH')) { exit; }
  * Note: This is not a full Markdown implementation. It’s designed for stable docs output.
  */
 
-function vms_docs_render_markdown($md) {
+function bvmgr_docs_inline_allowed_html() {
+    return [
+        'a' => ['href' => true, 'target' => true, 'rel' => true],
+        'strong' => [],
+        'em' => [],
+        'code' => [],
+    ];
+}
+
+function bvmgr_docs_rendered_allowed_html() {
+    return bvmgr_docs_inline_allowed_html() + [
+        'h1' => [],
+        'h2' => [],
+        'h3' => [],
+        'h4' => [],
+        'h5' => [],
+        'h6' => [],
+        'p' => [],
+        'ul' => [],
+        'li' => [],
+        'pre' => [],
+    ];
+}
+
+function bvmgr_docs_render_markdown($md) {
     $md = str_replace("\r\n", "\n", (string)$md);
 
     $lines = explode("\n", $md);
@@ -55,7 +79,7 @@ function vms_docs_render_markdown($md) {
         if (preg_match('/^(#{1,6})\s+(.*)$/', $trim, $m)) {
             $flush_ul();
             $level = strlen($m[1]);
-            $text = vms_docs_render_inlines($m[2]);
+            $text = bvmgr_docs_render_inlines($m[2]);
             $html .= "<h{$level}>{$text}</h{$level}>\n";
             continue;
         }
@@ -66,13 +90,13 @@ function vms_docs_render_markdown($md) {
                 $html .= "<ul>\n";
                 $in_ul = true;
             }
-            $html .= "<li>" . vms_docs_render_inlines($m[1]) . "</li>\n";
+            $html .= "<li>" . bvmgr_docs_render_inlines($m[1]) . "</li>\n";
             continue;
         }
 
         // Paragraph.
         $flush_ul();
-        $html .= "<p>" . vms_docs_render_inlines($trim) . "</p>\n";
+        $html .= "<p>" . bvmgr_docs_render_inlines($trim) . "</p>\n";
     }
 
     // Close anything left open.
@@ -86,7 +110,7 @@ function vms_docs_render_markdown($md) {
     return $html;
 }
 
-function vms_docs_render_inlines($text) {
+function bvmgr_docs_render_inlines($text) {
     $text = (string)$text;
 
     // Inline code `code`
@@ -110,12 +134,7 @@ function vms_docs_render_inlines($text) {
     // Escape any remaining raw HTML brackets (basic safety).
     // We do this last to preserve the tags we intentionally added above.
     // This is a compromise renderer; we can harden further later.
-    $text = wp_kses($text, [
-        'a' => ['href' => true, 'target' => true, 'rel' => true],
-        'strong' => [],
-        'em' => [],
-        'code' => [],
-    ]);
+    $text = wp_kses($text, bvmgr_docs_inline_allowed_html());
 
     return $text;
 }

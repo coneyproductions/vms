@@ -1,4 +1,5 @@
 <?php
+defined('ABSPATH') || exit;
 /**
  * VMS Schedule Helpers
  */
@@ -11,7 +12,7 @@
  *  - " - Jan 17, 2026"
  *  - " (01/17/2026)"
  */
-function vms_trim_title_date_suffix($title) {
+function bvmgr_trim_title_date_suffix($title) {
     $title = trim((string) $title);
 
     $patterns = array(
@@ -35,7 +36,7 @@ function vms_trim_title_date_suffix($title) {
  * - If VMS vendor name is blank but TEC title exists, show "TEC: {title}".
  * - If both are blank, show "TBD - draft" (or "TBD ({Status})" if not Draft).
  */
-function vms_event_plan_compact_label($plan_id): string {
+function bvmgr_event_plan_compact_label($plan_id): string {
     $plan_id = (int) $plan_id;
     if ($plan_id <= 0) {
         return 'TBD - draft';
@@ -43,11 +44,11 @@ function vms_event_plan_compact_label($plan_id): string {
 
     // Resolve plan status (meta-driven; stable for Schedule labeling).
     $status = '';
-    if (function_exists('vms_event_plan_get_status')) {
-        $status = (string) vms_event_plan_get_status($plan_id, 'schedule_admin');
+    if (function_exists('bvmgr_event_plan_get_status')) {
+        $status = (string) bvmgr_event_plan_get_status($plan_id, 'schedule_admin');
     }
     if ($status === '') {
-        $status = sanitize_key((string) get_post_meta($plan_id, vms_meta_key('event_plan', 'status'), true));
+        $status = sanitize_key((string) get_post_meta($plan_id, bvmgr_meta_key('event_plan', 'status'), true));
     }
     $status = sanitize_key((string) $status);
     if ($status === 'canceled') {
@@ -72,8 +73,8 @@ function vms_event_plan_compact_label($plan_id): string {
         } elseif ($status === 'confirmed') {
             $label = 'Confirmed';
         } else {
-            $label = function_exists('vms_event_plan_status_label')
-                ? (string) vms_event_plan_status_label($status)
+            $label = function_exists('bvmgr_event_plan_status_label')
+                ? (string) bvmgr_event_plan_status_label($status)
                 : ucwords(str_replace(array('_', '-'), ' ', $status));
         }
         $suffix = ' (' . $label . ')';
@@ -103,7 +104,7 @@ function vms_event_plan_compact_label($plan_id): string {
 /**
  * Get a plan's associated TEC event ID.
  */
-function vms_get_plan_tec_event_id($plan_id) {
+function bvmgr_get_plan_tec_event_id($plan_id) {
     $plan_id = (int) $plan_id;
     if ($plan_id <= 0) return 0;
 
@@ -116,15 +117,15 @@ function vms_get_plan_tec_event_id($plan_id) {
  * Uses the shared schedule label and links to the Event Plan edit screen.
  * This keeps Schedule list + calendar consistent and avoids TEC title ambiguity.
  */
-function vms_get_plan_headliner_link_html($plan_id, $css_class = 'vms-event-headliner-link') {
+function bvmgr_get_plan_headliner_link_html($plan_id, $css_class = 'vms-event-headliner-link') {
     $plan_id = (int) $plan_id;
     if ($plan_id <= 0) return '';
 
     // Admin Schedule should always be deterministic and consistent with Calendar view.
     // Always link to the plan edit screen and use the shared schedule label.
-    $label = function_exists('vms_event_plan_compact_label')
-        ? vms_event_plan_compact_label($plan_id)
-        : vms_sch_plan_label($plan_id);
+    $label = function_exists('bvmgr_event_plan_compact_label')
+        ? bvmgr_event_plan_compact_label($plan_id)
+        : bvmgr_sch_plan_label($plan_id);
 
     $edit_url = get_edit_post_link($plan_id, 'raw');
     if (empty($edit_url)) {
@@ -143,7 +144,7 @@ function vms_get_plan_headliner_link_html($plan_id, $css_class = 'vms-event-head
  *  - int plan id
  *  - array with ['plan_id' => 123]
  */
-function vms_get_plan_id_from_row($row) {
+function bvmgr_get_plan_id_from_row($row) {
     if (is_array($row) && isset($row['plan_id']) && is_numeric($row['plan_id'])) {
         return (int) $row['plan_id'];
     }

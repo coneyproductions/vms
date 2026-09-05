@@ -26,38 +26,38 @@ if (!defined('ABSPATH')) exit;
  * - Uses nonces + capability checks.
  */
 
-define('VMS_VENUE_TEMPLATE_META_KEY', '_vms_is_template');
+define('BVMGR_VENUE_TEMPLATE_META_KEY', '_vms_is_template');
 
 /**
  * Boot hooks
  */
-add_action('init', 'vms_admin_venue_templates_boot');
-function vms_admin_venue_templates_boot(): void
+add_action('init', 'bvmgr_admin_venue_templates_boot');
+function bvmgr_admin_venue_templates_boot(): void
 {
     if (!is_admin()) return;
 
     // Row action "Duplicate" in Venues list
-    add_filter('post_row_actions', 'vms_add_duplicate_row_action', 10, 2);
+    add_filter('post_row_actions', 'bvmgr_add_duplicate_row_action', 10, 2);
 
     // Button in Publish box on venue edit screen
-    add_action('post_submitbox_misc_actions', 'vms_add_duplicate_submitbox_button');
+    add_action('post_submitbox_misc_actions', 'bvmgr_add_duplicate_submitbox_button');
 
     // Template checkbox meta box
-    add_action('add_meta_boxes', 'vms_add_template_metabox');
-    add_action('save_post_vms_venue', 'vms_save_template_metabox', 10, 2);
+    add_action('add_meta_boxes', 'bvmgr_add_template_metabox');
+    add_action('save_post_vms_venue', 'bvmgr_save_template_metabox', 10, 2);
 
     // "Create from Template" panel on Add New Venue screen
-    add_action('edit_form_top', 'vms_render_create_from_template_panel');
+    add_action('edit_form_top', 'bvmgr_render_create_from_template_panel');
 
     // Exclude templates from normal venue queries (except venue admin screens)
-    add_action('pre_get_posts', 'vms_exclude_templates_from_venue_queries');
+    add_action('pre_get_posts', 'bvmgr_exclude_templates_from_venue_queries');
 
     // Handlers (admin-post)
-    add_action('admin_post_vms_duplicate_venue', 'vms_handle_duplicate_venue');
-    add_action('admin_post_vms_create_venue_from_template', 'vms_handle_create_venue_from_template');
+    add_action('admin_post_vms_duplicate_venue', 'bvmgr_handle_duplicate_venue');
+    add_action('admin_post_vms_create_venue_from_template', 'bvmgr_handle_create_venue_from_template');
 
     // Admin notices (transient-based)
-    add_action('admin_notices', 'vms_render_admin_notices');
+    add_action('admin_notices', 'bvmgr_render_admin_notices');
 }
 
 /**
@@ -65,7 +65,7 @@ function vms_admin_venue_templates_boot(): void
  * Admin notices (persist across redirect)
  * ----------------------------------------------------------
  */
-function vms_set_admin_notice(string $message, string $type = 'success'): void
+function bvmgr_set_admin_notice(string $message, string $type = 'success'): void
 {
     $user_id = get_current_user_id();
     if (!$user_id) return;
@@ -82,7 +82,7 @@ function vms_set_admin_notice(string $message, string $type = 'success'): void
     set_transient($key, $notices, 60);
 }
 
-function vms_render_admin_notices(): void
+function bvmgr_render_admin_notices(): void
 {
     $user_id = get_current_user_id();
     if (!$user_id) return;
@@ -111,7 +111,7 @@ function vms_render_admin_notices(): void
  * 1) Duplicate Venue — Row Action (Venues list)
  * ----------------------------------------------------------
  */
-function vms_add_duplicate_row_action(array $actions, $post): array
+function bvmgr_add_duplicate_row_action(array $actions, $post): array
 {
     if (!($post instanceof WP_Post)) return $actions;
     if ($post->post_type !== 'vms_venue') return $actions;
@@ -119,7 +119,7 @@ function vms_add_duplicate_row_action(array $actions, $post): array
 
     $url = wp_nonce_url(
         admin_url('admin-post.php?action=vms_duplicate_venue&post=' . (int)$post->ID),
-        'vms_duplicate_venue_' . (int)$post->ID
+        'bvmgr_duplicate_venue_' . (int)$post->ID
     );
 
     $new = [];
@@ -133,7 +133,7 @@ function vms_add_duplicate_row_action(array $actions, $post): array
  * 2) Duplicate Venue — Button on edit screen submitbox
  * ----------------------------------------------------------
  */
-function vms_add_duplicate_submitbox_button(): void
+function bvmgr_add_duplicate_submitbox_button(): void
 {
     global $post;
     if (!($post instanceof WP_Post)) return;
@@ -142,7 +142,7 @@ function vms_add_duplicate_submitbox_button(): void
 
     $url = wp_nonce_url(
         admin_url('admin-post.php?action=vms_duplicate_venue&post=' . (int)$post->ID),
-        'vms_duplicate_venue_' . (int)$post->ID
+        'bvmgr_duplicate_venue_' . (int)$post->ID
     );
 
     echo '<div class="misc-pub-section vms-venue-dup-submit-section">';
@@ -156,27 +156,27 @@ function vms_add_duplicate_submitbox_button(): void
  * 3) Duplicate Venue — Handler (admin-post)
  * ----------------------------------------------------------
  */
-function vms_handle_duplicate_venue(): void
+function bvmgr_handle_duplicate_venue(): void
 {
     if (!current_user_can('edit_posts')) wp_die('Not allowed.');
 
     $source_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
     if ($source_id <= 0) wp_die('Missing venue ID.');
 
-    check_admin_referer('vms_duplicate_venue_' . $source_id);
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_duplicate_venue_' . $source_id, '_wpnonce'), '_wpnonce');
 
     $source = get_post($source_id);
     if (!$source || $source->post_type !== 'vms_venue') wp_die('Invalid venue.');
     if (!current_user_can('edit_post', $source_id)) wp_die('Not allowed.');
 
-    $new_id = vms_duplicate_venue_as_draft($source_id);
+    $new_id = bvmgr_duplicate_venue_as_draft($source_id);
     if (!$new_id) {
-        vms_set_admin_notice('Failed to duplicate venue.', 'error');
+        bvmgr_set_admin_notice('Failed to duplicate venue.', 'error');
         wp_safe_redirect(admin_url('edit.php?post_type=vms_venue'));
         exit;
     }
 
-    vms_set_admin_notice('Venue duplicated. Update details and publish when ready.', 'success');
+    bvmgr_set_admin_notice('Venue duplicated. Update details and publish when ready.', 'success');
     wp_safe_redirect(get_edit_post_link($new_id, ''));
     exit;
 }
@@ -184,7 +184,7 @@ function vms_handle_duplicate_venue(): void
 /**
  * Core duplication routine.
  */
-function vms_duplicate_venue_as_draft(int $source_id): int
+function bvmgr_duplicate_venue_as_draft(int $source_id): int
 {
     $source = get_post($source_id);
     if (!$source) return 0;
@@ -192,7 +192,7 @@ function vms_duplicate_venue_as_draft(int $source_id): int
     $new_post = [
         'post_type'    => $source->post_type,
         'post_status'  => 'draft',
-        'post_title'   => vms_build_copy_title((string)$source->post_title),
+        'post_title'   => bvmgr_build_copy_title((string)$source->post_title),
         'post_content' => $source->post_content,
         'post_excerpt' => $source->post_excerpt,
         'post_author'  => get_current_user_id(),
@@ -236,7 +236,7 @@ function vms_duplicate_venue_as_draft(int $source_id): int
     return (int)$new_id;
 }
 
-function vms_build_copy_title(string $title): string
+function bvmgr_build_copy_title(string $title): string
 {
     $title = trim($title);
     if ($title === '') $title = 'Venue';
@@ -248,23 +248,23 @@ function vms_build_copy_title(string $title): string
  * 4) Templates — Metabox (checkbox)
  * ----------------------------------------------------------
  */
-function vms_add_template_metabox(): void
+function bvmgr_add_template_metabox(): void
 {
     add_meta_box(
         'vms_venue_template_box',
-        __('Venue Template', 'vms'),
-        'vms_render_template_metabox',
+        __('Venue Template', 'backstage-venue-manager'),
+        'bvmgr_render_template_metabox',
         'vms_venue',
         'side',
         'high'
     );
 }
 
-function vms_render_template_metabox(WP_Post $post): void
+function bvmgr_render_template_metabox(WP_Post $post): void
 {
-    wp_nonce_field('vms_save_venue_template', 'vms_venue_template_nonce');
+    wp_nonce_field('bvmgr_save_venue_template', 'bvmgr_venue_template_nonce');
 
-    $is_template = get_post_meta($post->ID, VMS_VENUE_TEMPLATE_META_KEY, true) === '1';
+    $is_template = get_post_meta($post->ID, BVMGR_VENUE_TEMPLATE_META_KEY, true) === '1';
 
     echo '<p class="description vms-venue-template-help">';
     echo 'Templates are used as starting points when creating new venues.';
@@ -276,25 +276,25 @@ function vms_render_template_metabox(WP_Post $post): void
     echo '</label>';
 }
 
-function vms_save_template_metabox(int $post_id, WP_Post $post): void
+function bvmgr_save_template_metabox(int $post_id, WP_Post $post): void
 {
     if ($post->post_type !== 'vms_venue') return;
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (
-        !isset($_POST['vms_venue_template_nonce']) ||
-        !wp_verify_nonce($_POST['vms_venue_template_nonce'], 'vms_save_venue_template')
-    ) {
+    $nonce = (isset($_POST['bvmgr_venue_template_nonce']) && !is_array($_POST['bvmgr_venue_template_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_template_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_venue_template'))) {
         return;
     }
 
     $is_template = isset($_POST['vms_is_template']) ? '1' : '0';
 
     if ($is_template === '1') {
-        update_post_meta($post_id, VMS_VENUE_TEMPLATE_META_KEY, '1');
+        update_post_meta($post_id, BVMGR_VENUE_TEMPLATE_META_KEY, '1');
     } else {
-        delete_post_meta($post_id, VMS_VENUE_TEMPLATE_META_KEY);
+        delete_post_meta($post_id, BVMGR_VENUE_TEMPLATE_META_KEY);
     }
 }
 
@@ -303,7 +303,7 @@ function vms_save_template_metabox(int $post_id, WP_Post $post): void
  * 5) Templates — Create from Template panel (Add New Venue)
  * ----------------------------------------------------------
  */
-function vms_render_create_from_template_panel(WP_Post $post): void
+function bvmgr_render_create_from_template_panel(WP_Post $post): void
 {
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     if (!$screen) return;
@@ -321,7 +321,9 @@ function vms_render_create_from_template_panel(WP_Post $post): void
         'posts_per_page' => -1,
         'orderby'        => 'title',
         'order'          => 'ASC',
-        'meta_key'       => VMS_VENUE_TEMPLATE_META_KEY,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- The add-venue admin selector intentionally enumerates all venues carrying the plugin-owned template marker.
+        'meta_key'       => BVMGR_VENUE_TEMPLATE_META_KEY,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- The exact marker value limits the selector to venue templates.
         'meta_value'     => '1',
     ]);
 
@@ -338,7 +340,7 @@ function vms_render_create_from_template_panel(WP_Post $post): void
 
     echo '<form method="post" action="' . esc_url($action_url) . '">';
     echo '<input type="hidden" name="action" value="vms_create_venue_from_template" />';
-    wp_nonce_field('vms_create_venue_from_template', 'vms_create_venue_from_template_nonce');
+    wp_nonce_field('bvmgr_create_venue_from_template', 'bvmgr_create_venue_from_template_nonce');
 
     echo '<label><strong>Template:</strong> ';
     echo '<select name="vms_template_id" class="vms-venue-template-select">';
@@ -356,35 +358,36 @@ function vms_render_create_from_template_panel(WP_Post $post): void
 /**
  * Handler (admin-post) — Create a new venue from a template
  */
-function vms_handle_create_venue_from_template(): void
+function bvmgr_handle_create_venue_from_template(): void
 {
     if (!current_user_can('edit_posts')) wp_die('Not allowed.');
 
-    if (
-        !isset($_POST['vms_create_venue_from_template_nonce']) ||
-        !wp_verify_nonce($_POST['vms_create_venue_from_template_nonce'], 'vms_create_venue_from_template')
-    ) {
+    $nonce = (isset($_POST['bvmgr_create_venue_from_template_nonce']) && !is_array($_POST['bvmgr_create_venue_from_template_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_create_venue_from_template_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_create_venue_from_template'))) {
         wp_die('Invalid nonce.');
     }
 
     $template_id = isset($_POST['vms_template_id']) ? absint($_POST['vms_template_id']) : 0;
     if ($template_id <= 0) wp_die('Missing template.');
+    if (!current_user_can('edit_post', $template_id)) wp_die('Not allowed.');
 
     $template = get_post($template_id);
     if (!$template || $template->post_type !== 'vms_venue') wp_die('Invalid template.');
 
-    $is_template = get_post_meta($template_id, VMS_VENUE_TEMPLATE_META_KEY, true) === '1';
+    $is_template = get_post_meta($template_id, BVMGR_VENUE_TEMPLATE_META_KEY, true) === '1';
     if (!$is_template) wp_die('Selected venue is not marked as a template.');
 
-    $new_id = vms_duplicate_venue_as_draft($template_id);
+    $new_id = bvmgr_duplicate_venue_as_draft($template_id);
     if (!$new_id) {
-        vms_set_admin_notice('Failed to create venue from template.', 'error');
+        bvmgr_set_admin_notice('Failed to create venue from template.', 'error');
         wp_safe_redirect(admin_url('post-new.php?post_type=vms_venue'));
         exit;
     }
 
     // IMPORTANT: venues created FROM templates should NOT themselves be templates
-    delete_post_meta($new_id, VMS_VENUE_TEMPLATE_META_KEY);
+    delete_post_meta($new_id, BVMGR_VENUE_TEMPLATE_META_KEY);
 
     // Nicer default title
     wp_update_post([
@@ -393,7 +396,7 @@ function vms_handle_create_venue_from_template(): void
         'post_name'  => sanitize_title('New Venue — ' . $template->post_title),
     ]);
 
-    vms_set_admin_notice('Venue created from template. Update details and publish when ready.', 'success');
+    bvmgr_set_admin_notice('Venue created from template. Update details and publish when ready.', 'success');
     wp_safe_redirect(get_edit_post_link($new_id, ''));
     exit;
 }
@@ -403,7 +406,7 @@ function vms_handle_create_venue_from_template(): void
  * 6) Exclude templates from venue queries (safe + targeted)
  * ----------------------------------------------------------
  */
-function vms_exclude_templates_from_venue_queries(WP_Query $query): void
+function bvmgr_exclude_templates_from_venue_queries(WP_Query $query): void
 {
     if (!$query->is_main_query()) return;
 
@@ -428,11 +431,11 @@ function vms_exclude_templates_from_venue_queries(WP_Query $query): void
     $meta_query[] = [
         'relation' => 'OR',
         [
-            'key'     => VMS_VENUE_TEMPLATE_META_KEY,
+            'key'     => BVMGR_VENUE_TEMPLATE_META_KEY,
             'compare' => 'NOT EXISTS',
         ],
         [
-            'key'     => VMS_VENUE_TEMPLATE_META_KEY,
+            'key'     => BVMGR_VENUE_TEMPLATE_META_KEY,
             'value'   => '1',
             'compare' => '!=',
         ],

@@ -19,18 +19,18 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-add_filter('manage_edit-vms_vendor_columns', 'vms_admin_vendor_columns_refined', 50);
-add_action('manage_vms_vendor_posts_custom_column', 'vms_admin_vendor_column_render_refined', 50, 2);
+add_filter('manage_edit-vms_vendor_columns', 'bvmgr_admin_vendor_columns_refined', 50);
+add_action('manage_vms_vendor_posts_custom_column', 'bvmgr_admin_vendor_column_render_refined', 50, 2);
 
 // Admin list filters (read-only)
-add_action('restrict_manage_posts', 'vms_admin_vendor_list_filters_render', 50);
-add_action('pre_get_posts', 'vms_admin_vendor_list_filters_apply', 50);
+add_action('restrict_manage_posts', 'bvmgr_admin_vendor_list_filters_render', 50);
+add_action('pre_get_posts', 'bvmgr_admin_vendor_list_filters_apply', 50);
 
 /**
  * Convert meta values to a display-safe scalar.
- * - If we cannot derive a scalar, return '' and log (no silent failures).
+ * - If we cannot derive a scalar, return '' and record a bounded operational issue.
  */
-function vms_admin_vendor_list_get_meta_scalar(int $post_id, string $meta_key): string
+function bvmgr_admin_vendor_list_get_meta_scalar(int $post_id, string $meta_key): string
 {
     if ($meta_key === '') {
         return '';
@@ -48,7 +48,16 @@ function vms_admin_vendor_list_get_meta_scalar(int $post_id, string $meta_key): 
 
     // If a plugin/theme accidentally stored an array/object, do NOT render garbage.
     if (is_array($v) || is_object($v)) {
-        error_log('[VMS] vendor-list-ui: non-scalar meta for key ' . $meta_key . ' on post_id ' . $post_id);
+        if (function_exists('bvmgr_record_operational_issue')) {
+            bvmgr_record_operational_issue(
+                'vendor_list_meta_shape_invalid',
+                array(
+                    'vendor_id' => $post_id,
+                    'operation' => 'read_meta',
+                    'status' => 'invalid',
+                )
+            );
+        }
         return '';
     }
 
@@ -58,7 +67,7 @@ function vms_admin_vendor_list_get_meta_scalar(int $post_id, string $meta_key): 
 /**
  * Read provider mode from vms_settings (mirrors vendor-tax-profile.php behavior).
  */
-function vms_admin_tax_settings_get_provider(): string
+function bvmgr_admin_tax_settings_get_provider(): string
 {
     $settings = get_option('vms_settings', array());
     $settings = is_array($settings) ? $settings : array();
@@ -70,21 +79,49 @@ function vms_admin_tax_settings_get_provider(): string
     return $provider;
 }
 
+function bvmgr_admin_vendor_list_pill_allowed_html(): array
+{
+    return array(
+        'span' => array(
+            'class' => true,
+            'title' => true,
+            'aria-hidden' => true,
+        ),
+    );
+}
+
+function bvmgr_admin_vendor_list_query_arg(string $key): string
+{
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only vendor list filters only affect admin list display state.
+    if (!isset($_GET[$key])) {
+        return '';
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only vendor list filters are unslashed here and allowlisted by the caller.
+    return (string) wp_unslash($_GET[$key]);
+}
+
+function bvmgr_admin_vendor_list_allowed_filter(string $key, array $allowed): string
+{
+    $value = sanitize_key(bvmgr_admin_vendor_list_query_arg($key));
+    return in_array($value, $allowed, true) ? $value : '';
+}
+
 /**
  * Returns true if W-9 requirement is satisfied for the configured provider mode.
  * This does not imply the full tax profile is complete.
  */
-function vms_admin_vendor_w9_is_satisfied(int $vendor_id): bool
+function bvmgr_admin_vendor_w9_is_satisfied(int $vendor_id): bool
 {
-    $provider = vms_admin_tax_settings_get_provider();
+    $provider = bvmgr_admin_tax_settings_get_provider();
 
-    $k_upload = vms_meta_key('vendor', 'w9_upload_id');
-    $k_recv   = vms_meta_key('vendor', 'w9_received_date');
-    $k_attest = vms_meta_key('vendor', 'w9_attested_at');
+    $k_upload = bvmgr_meta_key('vendor', 'w9_upload_id');
+    $k_recv   = bvmgr_meta_key('vendor', 'w9_received_date');
+    $k_attest = bvmgr_meta_key('vendor', 'w9_attested_at');
 
-    $upload_id = (int) vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_upload);
-    $recv_date = vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_recv);
-    $attest_at = (int) vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_attest);
+    $upload_id = (int) bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_upload);
+    $recv_date = bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_recv);
+    $attest_at = (int) bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_attest);
 
     if ($provider === 'upload') {
         return ($upload_id > 0) || ($recv_date !== '');
@@ -97,25 +134,25 @@ function vms_admin_vendor_w9_is_satisfied(int $vendor_id): bool
  * Returns a list of missing tax-profile fields for tooltip display.
  * Note: VMS intentionally does not store SSN/EIN.
  */
-function vms_admin_vendor_tax_missing_fields(int $vendor_id): array
+function bvmgr_admin_vendor_tax_missing_fields(int $vendor_id): array
 {
     $missing = array();
 
-    $k_legal  = vms_meta_key('vendor', 'payee_legal_name');
-    $k_entity = vms_meta_key('vendor', 'entity_type');
+    $k_legal  = bvmgr_meta_key('vendor', 'payee_legal_name');
+    $k_entity = bvmgr_meta_key('vendor', 'entity_type');
 
-    $k_addr1 = vms_meta_key('vendor', 'addr1');
-    $k_city  = vms_meta_key('vendor', 'city');
-    $k_state = vms_meta_key('vendor', 'state');
-    $k_zip   = vms_meta_key('vendor', 'zip');
+    $k_addr1 = bvmgr_meta_key('vendor', 'addr1');
+    $k_city  = bvmgr_meta_key('vendor', 'city');
+    $k_state = bvmgr_meta_key('vendor', 'state');
+    $k_zip   = bvmgr_meta_key('vendor', 'zip');
 
-    $legal  = vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_legal);
-    $entity = vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_entity);
+    $legal  = bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_legal);
+    $entity = bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_entity);
 
-    $addr1 = vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_addr1);
-    $city  = vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_city);
-    $state = vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_state);
-    $zip   = vms_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_zip);
+    $addr1 = bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_addr1);
+    $city  = bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_city);
+    $state = bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_state);
+    $zip   = bvmgr_admin_vendor_list_get_meta_scalar($vendor_id, (string) $k_zip);
 
     if ($legal === '')  $missing[] = 'legal name';
     if ($entity === '') $missing[] = 'entity type';
@@ -125,7 +162,7 @@ function vms_admin_vendor_tax_missing_fields(int $vendor_id): array
     if ($state === '') $missing[] = 'state';
     if ($zip === '')   $missing[] = 'zip';
 
-    if (!vms_admin_vendor_w9_is_satisfied($vendor_id)) {
+    if (!bvmgr_admin_vendor_w9_is_satisfied($vendor_id)) {
         $missing[] = 'W-9';
     }
 
@@ -135,7 +172,7 @@ function vms_admin_vendor_tax_missing_fields(int $vendor_id): array
 /**
  * Column layout: keep it tight.
  */
-function vms_admin_vendor_columns_refined($columns)
+function bvmgr_admin_vendor_columns_refined($columns)
 {
     $new = [];
 
@@ -158,7 +195,7 @@ function vms_admin_vendor_columns_refined($columns)
     return $new;
 }
 
-function vms_phone_to_tel_href(string $phone): string
+function bvmgr_phone_to_tel_href(string $phone): string
 {
     $phone = trim($phone);
     if ($phone === '') return '';
@@ -179,25 +216,25 @@ function vms_phone_to_tel_href(string $phone): string
     return 'tel:' . $digits;
 }
 
-function vms_admin_vendor_column_render_refined($column, $post_id)
+function bvmgr_admin_vendor_column_render_refined($column, $post_id)
 {
     switch ($column) {
 
         case 'vms_vendor_contact': {
-                $k_email = vms_meta_key('vendor', 'primary_email');
-                $k_phone = vms_meta_key('vendor', 'primary_phone');
+                $k_email = bvmgr_meta_key('vendor', 'primary_email');
+                $k_phone = bvmgr_meta_key('vendor', 'primary_phone');
 
-                $email = vms_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_email);
-                $phone = vms_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_phone);
+                $email = bvmgr_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_email);
+                $phone = bvmgr_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_phone);
 
                 // Fallback for legacy data if a vendor hasn't been resaved yet.
                 if ($email === '') {
-                    $k_email_legacy = vms_meta_key('vendor', 'contact_email');
-                    $email = vms_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_email_legacy);
+                    $k_email_legacy = bvmgr_meta_key('vendor', 'contact_email');
+                    $email = bvmgr_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_email_legacy);
                 }
                 if ($phone === '') {
-                    $k_phone_legacy = vms_meta_key('vendor', 'contact_phone');
-                    $phone = vms_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_phone_legacy);
+                    $k_phone_legacy = bvmgr_meta_key('vendor', 'contact_phone');
+                    $phone = bvmgr_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_phone_legacy);
                 }
 
 
@@ -209,7 +246,7 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
                 }
 
                 if ($phone !== '') {
-                    $tel = vms_phone_to_tel_href($phone);
+                    $tel = bvmgr_phone_to_tel_href($phone);
 
                     echo '<div><span class="dashicons dashicons-phone"></span> ';
 
@@ -288,12 +325,12 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
             }
 
         case 'vms_vendor_dualhat': {
-                if (!function_exists('vms_vendor_linked_staff_meta_key')) {
+                if (!function_exists('bvmgr_vendor_linked_staff_meta_key')) {
                     echo '&nbsp;';
                     break;
                 }
 
-                $staff_id = (int) get_post_meta((int) $post_id, vms_vendor_linked_staff_meta_key(), true);
+                $staff_id = (int) get_post_meta((int) $post_id, bvmgr_vendor_linked_staff_meta_key(), true);
                 if ($staff_id <= 0) {
                     echo '&nbsp;';
                     break;
@@ -311,7 +348,7 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
                 }
 
                 $edit_url = get_edit_post_link($staff_id, '');
-                echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'vms') . '</span>';
+                echo '<span class="vms-badge vms-badge-dualhat">' . esc_html__('Dual-Hat', 'backstage-venue-manager') . '</span>';
                 if (is_string($edit_url) && $edit_url !== '') {
                     echo ' <a href="' . esc_url($edit_url) . '">' . esc_html($label) . '</a>';
                 } else {
@@ -324,8 +361,8 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
         case 'vms_vendor_portal': {
                 $linked_user_id = 0;
 
-                if (function_exists('vms_vendor_user_links_get_by_vendor')) {
-                    $rows = (array) vms_vendor_user_links_get_by_vendor((int) $post_id, false);
+                if (function_exists('bvmgr_vendor_user_links_get_by_vendor')) {
+                    $rows = (array) bvmgr_vendor_user_links_get_by_vendor((int) $post_id, false);
                     foreach ($rows as $row) {
                         $candidate_user_id = isset($row['user_id']) ? (int) $row['user_id'] : 0;
                         $link_status = isset($row['link_status']) ? (string) $row['link_status'] : '';
@@ -337,7 +374,7 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
                 }
 
                 if ($linked_user_id <= 0) {
-                    $link_key = defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id';
+                    $link_key = defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id';
                     $linked_user_id = (int) get_post_meta($post_id, $link_key, true);
                 }
 
@@ -350,17 +387,17 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
             }
 
         case 'vms_vendor_tax': {
-                $k_done   = vms_meta_key('vendor', 'tax_profile_completed_at');
-                $done_at  = (int) vms_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_done);
+                $k_done   = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
+                $done_at  = (int) bvmgr_admin_vendor_list_get_meta_scalar((int) $post_id, (string) $k_done);
 
-                $provider = vms_admin_tax_settings_get_provider();
+                $provider = bvmgr_admin_tax_settings_get_provider();
                 $provider_label = ($provider === 'quickbooks_email')
                     ? 'QuickBooks'
                     : (($provider === 'tax1099_email') ? 'Tax1099' : 'Upload');
 
-                $w9_ok = vms_admin_vendor_w9_is_satisfied((int) $post_id);
+                $w9_ok = bvmgr_admin_vendor_w9_is_satisfied((int) $post_id);
 
-                $missing = vms_admin_vendor_tax_missing_fields((int) $post_id);
+                $missing = bvmgr_admin_vendor_tax_missing_fields((int) $post_id);
                 $missing_title = '';
                 if (!empty($missing)) {
                     $missing_title = 'Missing: ' . implode(', ', $missing);
@@ -376,9 +413,15 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
                     ? '<span class="vms-pill vms-pill-ok" title="Tax profile marked complete"><span class="dashicons dashicons-yes"></span> Complete</span>'
                     : '<span class="vms-pill vms-pill-warn" title="Tax profile incomplete"><span class="dashicons dashicons-clock"></span> Incomplete</span>';
 
-                $wrap_title = $missing_title !== '' ? ' title="' . esc_attr($missing_title) . '"' : '';
-
-                echo '<div class="vms-vcol-wrap"' . $wrap_title . '>' . $w9_pill . $mode_pill . $status_pill . '</div>';
+                echo '<div class="vms-vcol-wrap"';
+                if ($missing_title !== '') {
+                    echo ' title="' . esc_attr($missing_title) . '"';
+                }
+                echo '>';
+                echo wp_kses($w9_pill, bvmgr_admin_vendor_list_pill_allowed_html());
+                echo wp_kses($mode_pill, bvmgr_admin_vendor_list_pill_allowed_html());
+                echo wp_kses($status_pill, bvmgr_admin_vendor_list_pill_allowed_html());
+                echo '</div>';
                 break;
             }
     }
@@ -387,7 +430,7 @@ function vms_admin_vendor_column_render_refined($column, $post_id)
 /**
  * Render dropdown filters above vendor list.
  */
-function vms_admin_vendor_list_filters_render()
+function bvmgr_admin_vendor_list_filters_render()
 {
     if (!is_admin()) return;
 
@@ -396,8 +439,8 @@ function vms_admin_vendor_list_filters_render()
         return;
     }
 
-    $tax = isset($_GET['vms_tax']) ? (string) $_GET['vms_tax'] : '';
-    $w9  = isset($_GET['vms_w9']) ? (string) $_GET['vms_w9'] : '';
+    $tax = bvmgr_admin_vendor_list_allowed_filter('vms_tax', array('complete', 'incomplete'));
+    $w9  = bvmgr_admin_vendor_list_allowed_filter('vms_w9', array('ok', 'missing'));
 
     echo '<label class="screen-reader-text" for="vms_tax">Tax Profile</label>';
     echo '<select name="vms_tax" id="vms_tax" class="vms-vendor-filter-tax">';
@@ -417,7 +460,7 @@ function vms_admin_vendor_list_filters_render()
 /**
  * Apply dropdown filters to the vendor list query (read-only).
  */
-function vms_admin_vendor_list_filters_apply($query)
+function bvmgr_admin_vendor_list_filters_apply($query)
 {
     if (!is_admin()) return;
     if (!$query instanceof WP_Query) return;
@@ -426,15 +469,15 @@ function vms_admin_vendor_list_filters_apply($query)
     $post_type = $query->get('post_type');
     if ($post_type !== 'vms_vendor') return;
 
-    $tax = isset($_GET['vms_tax']) ? (string) $_GET['vms_tax'] : '';
-    $w9  = isset($_GET['vms_w9']) ? (string) $_GET['vms_w9'] : '';
+    $tax = bvmgr_admin_vendor_list_allowed_filter('vms_tax', array('complete', 'incomplete'));
+    $w9  = bvmgr_admin_vendor_list_allowed_filter('vms_w9', array('ok', 'missing'));
 
     $meta_query = (array) $query->get('meta_query');
     if (!is_array($meta_query)) $meta_query = array();
 
     // Tax Profile filter uses completion stamp
     if ($tax === 'complete' || $tax === 'incomplete') {
-        $k_done = vms_meta_key('vendor', 'tax_profile_completed_at');
+        $k_done = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 
         if ($tax === 'complete') {
             $meta_query[] = array(
@@ -453,11 +496,11 @@ function vms_admin_vendor_list_filters_apply($query)
     // W-9 filter depends on provider mode
     if ($w9 === 'ok' || $w9 === 'missing') {
 
-        $provider = vms_admin_tax_settings_get_provider();
+        $provider = bvmgr_admin_tax_settings_get_provider();
 
         if ($provider === 'upload') {
-            $k_upload = vms_meta_key('vendor', 'w9_upload_id');
-            $k_recv   = vms_meta_key('vendor', 'w9_received_date');
+            $k_upload = bvmgr_meta_key('vendor', 'w9_upload_id');
+            $k_recv   = bvmgr_meta_key('vendor', 'w9_received_date');
 
             if ($w9 === 'ok') {
                 $meta_query[] = array(
@@ -490,7 +533,7 @@ function vms_admin_vendor_list_filters_apply($query)
             }
 
         } else {
-            $k_attest = vms_meta_key('vendor', 'w9_attested_at');
+            $k_attest = bvmgr_meta_key('vendor', 'w9_attested_at');
 
             if ($w9 === 'ok') {
                 $meta_query[] = array(

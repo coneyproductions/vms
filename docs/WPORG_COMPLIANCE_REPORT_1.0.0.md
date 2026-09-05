@@ -1,0 +1,410 @@
+# WordPress.org Compliance Report 1.0.0
+
+Date: 2026-06-22
+
+## Source State
+
+- Branch: `work/unreleased-2026-06-18`
+- HEAD at start of `WPORG-12D`: `ab2bcffe333ffeae3409cf086ccc9547174d76f9` (`ab2bcff`)
+- Remote: `origin https://github.com/coneyproductions/vms.git`
+- `WPORG-12C` checkpoint state at the start of this task: committed and pushed
+- Unrelated modified file left untouched: `docs/VMS ... Market Readiness Checklist (CANONICAL).txt`
+
+## Tested Environment
+
+- Local WordPress root: `.../Local Sites/serenade-range-local-test-site/app/public`
+- WordPress runtime evidence:
+  - `6.8` disposable lifecycle matrix from `WPORG-02`
+  - `7.0` disposable lifecycle matrix from `WPORG-02`
+  - current local site boot smoke during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, `WPORG-04Y`, `WPORG-05A`, `WPORG-05B`, `WPORG-05C`, `WPORG-05D`, `WPORG-05E`, `WPORG-06A`, and `WPORG-06B`
+- PHP runtime evidence:
+  - `8.5.3` from `WPORG-02`
+  - `8.3.30` from Local binary during `WPORG-03`, `WPORG-04A`, `WPORG-04B`, `WPORG-04D`, `WPORG-04E`, `WPORG-04G`, `WPORG-04H`, `WPORG-04I`, `WPORG-04J`, `WPORG-04K`, `WPORG-04L`, `WPORG-04M`, `WPORG-04N`, `WPORG-04O`, `WPORG-04P`, `WPORG-04Q`, `WPORG-04R`, `WPORG-04S`, `WPORG-04T`, `WPORG-04U`, `WPORG-04V`, `WPORG-04W`, `WPORG-04X`, `WPORG-04Y`, `WPORG-05A`, `WPORG-05B`, `WPORG-05C`, `WPORG-05D`, `WPORG-05E`, `WPORG-06A`, and `WPORG-06B`
+- MySQL: `8.0.35`
+- WP-CLI: `2.12.0`
+- Dependency versions used in lifecycle and smoke work:
+  - WooCommerce `10.5.3`
+  - The Events Calendar `6.15.17.1`
+  - Event Tickets `5.27.4.1`
+  - Event Tickets Plus `6.9.1`
+
+## Final Metadata Decision
+
+- Applied in `vendor-management-system.php` and `readme.txt`:
+  - `Requires at least: 6.8`
+  - `Requires PHP: 8.3`
+  - `Tested up to: 7.0`
+- Evidence for `Requires at least: 6.8`
+  - WordPress `6.8` completed the disposable lifecycle and compatibility matrix in `WPORG-02` without VMS fatals.
+- Evidence for `Requires PHP: 8.3`
+  - Local PHP `8.3.30` binary was available.
+  - `php -l` passed for `vendor-management-system.php` and `includes/core/registry/constants.php` under PHP `8.3`.
+  - Direct WordPress boot smoke under PHP `8.3` loaded `vendor-management-system.php` successfully.
+  - Repo-root public-release builder passed under PHP `8.3`, including the bundled release regression scripts.
+
+## Version And Packaging Validation
+
+- PASS: plugin header `Version`, `VMS_VERSION`, `vms-build.txt`, and `readme.txt` stable tag all resolve to `1.0.0`.
+- PASS: header license, `readme.txt` license, and root `LICENSE.txt` are aligned on `GPLv2 or later`.
+- PASS: requested WordPress.org slug/text-domain metadata now use `backstage-venue-manager`, while internal `vms` identifiers remain unchanged.
+- PASS: root `readme.txt` and root `LICENSE.txt` remain packaged.
+
+Current rebuilt RC:
+
+- Artifact: `dist/wporg-12d/vms-1.0.0-public-release.zip`
+- SHA-256: `be5008b2dd6afd04d2c1c06eedbe60f931b3e1d25c8acff0801159792abf0384`
+- Package integrity: PASS
+- `WPORG-12D` rebuilt and reran the packaged RC after the bounded ticket-integrity nonce/input mutation-flow hardening batch in `includes/admin/ticket-integrity-page.php`
+
+## Builder Status
+
+The repo-root builder path issue remains fixed in this task, and the remaining packaged-validation regressions that still hardcoded `wp-load.php` were aligned to the shared bootstrap.
+
+- Root cause:
+  - bundled release regression scripts assumed `dirname(__DIR__, 4) . '/wp-load.php'`
+- Fix applied:
+  - added a shared test bootstrap resolver that accepts explicit `VMS_TEST_WP_LOAD` / `VMS_TEST_WORDPRESS_ROOT` inputs and otherwise searches upward safely
+  - updated the release runner to pass the detected WordPress root into regression scripts
+  - updated the non-destructive build-pipeline test harness
+  - updated the remaining isolated Event Plans regressions that still hardcoded `dirname(__DIR__, 4) . '/wp-load.php'` to use `tests/bootstrap-wordpress.php`
+  - updated `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` to use the same resolver
+- Result:
+  - repo-root build now passes without `--skip-release-tests`
+  - builder no longer depends on the repo living directly at `wp-content/plugins/vms`
+  - the seven remaining nested-repo-sensitive Event Plans tests still pass from this workspace
+  - `vendor-availability-ux` now passes from this workspace
+  - `add-dispatch-open-vendor-needs` still fails on a pre-existing missing-primary-vendor visibility assertion outside the selected `WPORG-04G` render-only batch
+
+## PHP 8.3 Proof
+
+Commands executed with the Local PHP `8.3.30` binary:
+
+- `php -l vendor-management-system.php`
+  - PASS
+- `php -l includes/core/registry/constants.php`
+  - PASS
+- `php -l includes/social-share/template-engine.php`
+  - PASS
+- `php -l includes/social-share/audit.php`
+  - PASS
+- `php -l includes/core/lineup-schedule.php`
+  - PASS
+- `php -l includes/core/vendor-user-links.php`
+  - PASS
+- `php -l includes/core/event-plan-review.php`
+  - PASS
+- direct WordPress boot smoke requiring `vendor-management-system.php`
+  - PASS (`VMS_BOOT_OK`)
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-03-php83-proof --force`
+  - PASS
+  - proof artifact SHA-256: `e9a01197068239213309082bc37cea2b1667a40c505ed067c7b8f21033bbcae8`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04a --force`
+  - PASS
+  - current artifact SHA-256: `fd97b45b61f9a1131d12b954080228cb0a441df172d04516597e513e0ba44a67`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04b --force`
+  - PASS
+  - current artifact SHA-256: `f04938e13855920759e68307946dcf73de31e4b411245392675522373baee5ef`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04d --force`
+  - PASS
+  - artifact SHA-256: `7987b619acec510e397677074eba3f0442a8511b2a5492112583fc5f7ea9e6f3`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04e --force`
+  - PASS
+  - current artifact SHA-256: `ca120b97c574ccdd72bb124defc8e712ed7291f4f9730d334423b6b1176d34be`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04g --force`
+  - PASS
+  - current artifact SHA-256: `e2f4f6a45593b26c319dea37b4179f174e54558aa25acdc0a1131f6cbe553f6d`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04h --force`
+  - PASS
+  - current artifact SHA-256: `b66aded43d758b2d8bc5de66b57f8ceb8e69927d89eb91c6dadf1a26ed9a734c`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04i --force`
+  - PASS
+  - current artifact SHA-256: `aceda39376ec454c49106a1a41ec88a96ec5ff49acfb97ae730308c93120aaa8`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04j --force`
+  - PASS
+  - current artifact SHA-256: `06905c9a2c62788056adf9d99857dce37df82e4f7f87a6e7fbb57df5c0d498c5`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04k --force`
+  - PASS
+  - current artifact SHA-256: `894cf8280489f4d52561be45e88b4ee317693ad2b61cc400c45ad41b4dceb209`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04l --force`
+  - PASS
+  - current artifact SHA-256: `2814fe4b4867cfb67a03cef47c135dacf785963e0e46cf47af5282a40c80d03b`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04m --force`
+  - PASS
+  - current artifact SHA-256: `08bbe1f22254facca50dfabb096ed06b45b06126efe1111d872ac5c3202ca1e3`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04n --force`
+  - PASS
+  - current artifact SHA-256: `51c6d2c127845440ffce9eee2c07428ce67b5c8dc90a1b3208c6a0601680b8a9`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04o --force`
+  - PASS
+  - current artifact SHA-256: `b5ff1494aa35b48e3d108f51d8efc584bacde4fbeceb433acca60ebdac06b690`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04p --force`
+  - PASS
+  - current artifact SHA-256: `720dc9a32f3609ebb54ef77227b0cf85123776554f7b62c347e8a77077fcf152`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04q --force`
+  - PASS
+  - current artifact SHA-256: `bdb050f722c55de68a34c1690a7f8143f024801e638a7f00f1a14975c96d3671`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04r --force`
+  - PASS
+  - current artifact SHA-256: `4f336a3eb71714ac703633ca0b8f7222ed371881372416779b9159ca9203dd5d`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04s --force`
+  - PASS
+  - current artifact SHA-256: `efd8df8bbbd0c823fcbc4aa5dfc999e7166d25c89ee163aaa59779198603886b`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04t --force`
+  - PASS
+  - current artifact SHA-256: `3943d3219317a3099c29d4d9678ae266c93aa762fa21b8852efc5f258fadb4ac`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04u --force`
+  - PASS
+  - current artifact SHA-256: `1da175f784580f21806ae4dc2aa2c214f94d83d032e8b04bd8c3666467399f4c`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04v --force`
+  - PASS
+  - current artifact SHA-256: `1a4df7d0d1cf157c02241fcac4db65fd229b9a395c5158a0d328e6dea78483c7`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04w --force`
+  - PASS
+  - current artifact SHA-256: `e77856b986a347babea86fb1b4c381e2714d6d31674d2eb72c1193016d324902`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04x --force`
+  - PASS
+  - current artifact SHA-256: `b3eaf4abe3129cc1bf9f8185d3db27d545b7afea06d3248236d100d116fbf004`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-04y --force`
+  - PASS
+  - current artifact SHA-256: `25fb74d421406702ac95fa7238573a4ff08b9f64b380840bb3c8f3e02cfae7b9`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-05a --force`
+  - PASS
+  - current artifact SHA-256: `701b77068cfb5c80f7142bcee707554a381f72919e5d000e1e1330820a92876a`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-05b --force`
+  - PASS
+  - current artifact SHA-256: `ccbb20fe811dd86e0f92c88c0ed6acf8ded6730b33e09e05074f19c29ddf2e0d`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-05c --force`
+  - PASS
+  - current artifact SHA-256: `e2b6279b72adf456d5a15c5ed4f6d8dac4051380a09df027d483b7c1f7164c62`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-05d --force`
+  - PASS
+  - current artifact SHA-256: `ab7f747f6fd70853ae556d00b4cbb2961af1c31ba2bd530e70e7c4ab49a02e9c`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-05e --force`
+  - PASS
+  - current artifact SHA-256: `66d1fdd1cfcb6e5fb3af92f66a9b329a57c96fb28078b1a57bb47b4237ddad55`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-06a --force`
+  - PASS
+  - current artifact SHA-256: `15ebdc2c93fc257d53f1da473e0734853f66b0aa2305539fc9e50465bb3293e2`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-06b --force`
+  - PASS
+  - current artifact SHA-256: `8ea9fd47c875f2beac29011c811eda79112d02b03525e79bf60eda720aed6359`
+- `php scripts/build-public-release.php --allow-dirty --output-dir dist/wporg-06c --force`
+  - PASS
+  - current artifact SHA-256: `f8bf7787e7abe21a2834cd2ecaaab2c90ea9c39e7579c8ee2ad9e7e6a3938df2`
+
+## Readme Validator
+
+- Reran the official validator after applying the proven minimums.
+- Result:
+  - No minimum-field warnings remain.
+  - Notes only:
+    - tag `vendor management` is not widely used
+    - no donate link was found
+
+## Plugin Check
+
+Raw output:
+
+- `docs/plugin-check-1.0.0-raw.txt`
+
+Current packaged-plugin result:
+
+- `2985` total findings
+- `865` errors
+- `2120` warnings
+
+Comparison:
+
+- `WPORG-02` source-tree baseline: `4567` total / `1646` errors / `2921` warnings
+- `WPORG-03` packaged-plugin run before direct-access guard fixes: `3900` total / `1342` errors / `2558` warnings
+- `WPORG-03` packaged-plugin final: `3888` total / `1330` errors / `2558` warnings
+- `WPORG-04A` packaged-plugin final: `3808` total / `1329` errors / `2479` warnings
+- `WPORG-04B` packaged-plugin final: `3695` total / `1317` errors / `2378` warnings
+- `WPORG-04D` packaged-plugin final: `3692` total / `1316` errors / `2376` warnings
+- `WPORG-04E` packaged-plugin final: `3605` total / `1316` errors / `2289` warnings
+- `WPORG-04G` packaged-plugin final: `3554` total / `1266` errors / `2288` warnings
+- `WPORG-04H` packaged-plugin final: `3491` total / `1203` errors / `2288` warnings
+- `WPORG-04I` packaged-plugin final: `3435` total / `1179` errors / `2256` warnings
+- `WPORG-04J` packaged-plugin final: `3408` total / `1158` errors / `2250` warnings
+- `WPORG-04K` packaged-plugin final: `3319` total / `1078` errors / `2241` warnings
+- `WPORG-04L` packaged-plugin final: `3290` total / `1061` errors / `2229` warnings
+- `WPORG-04M` packaged-plugin final: `3278` total / `1049` errors / `2229` warnings
+- `WPORG-04N` packaged-plugin final: `3274` total / `1045` errors / `2229` warnings
+- `WPORG-04O` packaged-plugin final: `3270` total / `1045` errors / `2225` warnings
+- `WPORG-04P` packaged-plugin final: `3268` total / `1043` errors / `2225` warnings
+- `WPORG-04Q` packaged-plugin final: `3255` total / `1031` errors / `2224` warnings
+- `WPORG-04R` packaged-plugin final: `3224` total / `999` errors / `2225` warnings
+- `WPORG-04S` packaged-plugin final: `3205` total / `980` errors / `2225` warnings
+- `WPORG-04T` packaged-plugin final: `3175` total / `950` errors / `2225` warnings
+- `WPORG-04U` packaged-plugin final: `3170` total / `945` errors / `2225` warnings
+- `WPORG-04V` packaged-plugin final: `3163` total / `938` errors / `2225` warnings
+- `WPORG-04W` packaged-plugin final: `3158` total / `933` errors / `2225` warnings
+- `WPORG-04X` packaged-plugin final: `3150` total / `925` errors / `2225` warnings
+- `WPORG-04Y` packaged-plugin final: `3147` total / `922` errors / `2225` warnings
+- `WPORG-05A` packaged-plugin final: `3124` total / `922` errors / `2202` warnings
+- `WPORG-05B` packaged-plugin final: `3108` total / `922` errors / `2186` warnings
+- `WPORG-05C` packaged-plugin final: `3103` total / `922` errors / `2181` warnings
+- `WPORG-05D` packaged-plugin final: `3098` total / `922` errors / `2176` warnings
+- `WPORG-05E` packaged-plugin final: `3092` total / `922` errors / `2170` warnings
+- `WPORG-06A` packaged-plugin final: `3082` total / `913` errors / `2169` warnings
+- `WPORG-06B` packaged-plugin final: `3079` total / `909` errors / `2170` warnings
+- `WPORG-06C` packaged-plugin final: `3076` total / `906` errors / `2170` warnings
+- `WPORG-07A` packaged-plugin final: `3069` total / `906` errors / `2163` warnings
+- `WPORG-07B` packaged-plugin final: `3061` total / `898` errors / `2163` warnings
+- `WPORG-08A` packaged-plugin final: `3041` total / `877` errors / `2164` warnings
+- `WPORG-08B` packaged-plugin final: `3033` total / `869` errors / `2164` warnings
+- `WPORG-09A` packaged-plugin final: `3030` total / `867` errors / `2163` warnings
+- `WPORG-10A` packaged-plugin final: `3029` total / `867` errors / `2162` warnings
+- `WPORG-11A` packaged-plugin final: `3019` total / `865` errors / `2154` warnings
+- `WPORG-12B` packaged-plugin final: `3001` total / `865` errors / `2136` warnings
+- `WPORG-12C` packaged-plugin final: `2997` total / `865` errors / `2132` warnings
+- `WPORG-12D` packaged-plugin final: `2985` total / `865` errors / `2120` warnings
+
+Dominant remaining codes:
+
+- `WordPress.WP.I18n.MissingTranslatorsComment`: `523`
+- `WordPress.Security.NonceVerification.Recommended`: `543`
+- `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized`: `240`
+- `WordPress.Security.ValidatedSanitizedInput.MissingUnslash`: `214`
+- `WordPress.Security.EscapeOutput.OutputNotEscaped`: `145`
+- `WordPress.DB.DirectDatabaseQuery.DirectQuery`: `296`
+- `WordPress.DB.DirectDatabaseQuery.NoCaching`: `258`
+- `PluginCheck.Security.DirectDB.UnescapedDBParameter`: `142`
+- `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`: `136`
+- `WordPress.DB.PreparedSQL.NotPrepared`: `67`
+
+High-level category counts:
+
+- nonce and input handling: `1110`
+- database and SQL safety: `1076`
+- i18n placeholder comments / ordering: `539`
+- escaping and output safety: `145`
+- date/time API usage: `25`
+- development logging: `41`
+
+Packaged rerun note:
+
+- No previously unseen Plugin Check code categories appeared in `WPORG-12D`.
+- `WPORG-12A` recorded the mutation-flow roadmap only; `WPORG-12B`, `WPORG-12C`, and `WPORG-12D` are the packaged reruns completed after that planning pass.
+- The selected `includes/admin/ticket-integrity-page.php` batch reduced the file from `27` findings (`7` errors / `20` warnings) to `14` (`7` errors / `7` warnings) while reducing its nonce/input subset from `20` to `7`.
+- The removed ticket-integrity nonce/input findings were `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized x3`, `WordPress.Security.ValidatedSanitizedInput.MissingUnslash x6`, and `WordPress.Security.NonceVerification.Recommended x4`, all cleared through request normalization around the existing guarded handlers and the same-page admin notice/filter query round-trips.
+- The remaining `7` nonce/input findings in that file are read-only `WordPress.Security.NonceVerification.Recommended` warnings on admin query reads with no matching nonce flow in the current UI; the longstanding date/output errors in that file were intentionally left out of this batch.
+- The normalized extracted-package rerun again did not emit the oscillating `plugin_header_nonexistent_domain_path` warning, left the standing `load_plugin_textdomain()` warning associated with `vendor-management-system.php`, and introduced no unrelated count changes outside the selected file scope.
+- `WPORG-12D` recommends continuing with `includes/admin/vendor-command-center.php`, then `includes/modules/staff-tasks/admin-ui.php`, before widening into ticketing, portal/public, upload, admissions-claim, or Event Plans/runtime flows.
+
+Fixed across this release-prep sequence:
+
+- `missing_direct_file_access_protection`: `12` -> `0`
+- `includes/admin/goals-forecast.php`: `66` -> `0`
+- `includes/social-share/event-plan-panel.php`: `18` -> `4`
+- `includes/admin/budget-calculator.php`: `111` -> `2`
+- `includes/cpt/event-plans.php`: `244` -> `241` in this protected audit slice; `248` -> `241` across `WPORG-04B` plus `WPORG-04D`
+- `includes/admin/due-dates.php`: `46` -> `0`
+- `includes/admin/holidays.php`: `41` -> `0`
+- `includes/admin/vendor-command-center.php`: `51` -> `29`, with `22` -> `0` errors
+- `includes/admin/vendor-availability.php`: `50` -> `0`, with `28` -> `0` errors
+- `includes/admin/event-command-center.php`: `79` -> `15`, with `63` -> `0` errors
+- `includes/admin/staffing.php`: `59` -> `3`, with `24` -> `0` errors
+- `includes/portal/staff-portal.php`: `86` -> `59`, with `46` -> `25` errors
+- `includes/portal/vendor-portal.php`: `152` -> `63`, with `80` -> `0` errors
+- `includes/public/venue-calendar-shortcode.php`: `29` -> `0`, with `17` -> `0` errors
+- `includes/public/vendor-profiles.php`: `14` -> `2`, with `12` -> `0` errors
+- `includes/public/templates/vendor-profile.php`: `4` -> `0`, with `4` -> `0` errors
+- `includes/social-share/template-engine.php`: `8` -> `4`, with `0` -> `0` errors
+- `includes/social-share/audit.php`: `7` -> `5`, with `2` -> `0` errors
+- `includes/core/lineup-schedule.php`: `12` -> `0`, with `12` -> `0` errors
+- `includes/core/vendor-user-links.php`: `68` -> `36`, with `39` -> `7` errors
+- `includes/core/event-plan-review.php`: `21` -> `2`, with `19` -> `0` errors
+- `includes/admin/schedule.php`: `52` -> `22`, with `30` -> `0` errors
+- `includes/admin/staff-list-columns.php`: `7` -> `2`, with `5` -> `0` errors
+- `includes/admin/approvals-review-queue.php`: `11` -> `4`, with `7` -> `0` errors
+- `includes/admin/menu.php`: `8` -> `3`, with `5` -> `0` errors
+- `includes/core/vendor-document-alerts.php`: `8` -> `0`, with `8` -> `0` errors
+- `includes/admin/cancelled-event-cost-review.php`: `3` -> `0`, with `3` -> `0` errors
+- `includes/admin/vendor-list-ui.php`: `21` -> `1`, with `17` -> `1` warnings and `4` -> `0` errors
+- `includes/admin/event-profitability-report.php`: `7` -> `1`, with `6` -> `0` warnings and `1` -> `1` errors
+- `includes/admin/docs-page.php`: `6` -> `1`, with `5` -> `0` warnings and `1` -> `1` errors
+- `includes/admin-ui/context.php`: `6` -> `0`, with `6` -> `0` warnings and `0` -> `0` errors
+- `includes/admin/settings-page.php`: `48` -> `39`, with `20` -> `11` errors and `9` `OutputNotEscaped` findings -> `0`
+- `includes/admin/settings-page.php`: `39` -> `31`, with `8` `MissingTranslatorsComment` findings -> `0`
+- `includes/admin/settings-page.php`: `31` -> `29`, with `2` remaining `date()` findings -> `0`
+- `includes/admin/settings-page.php`: `29` -> `11`, with nonce/input findings `24` -> `6` through handler-only request normalization around existing `manage_options` and `wp_verify_nonce()` checks
+- `includes/admin/ticket-integrity-page.php`: `27` -> `14`, with nonce/input findings `20` -> `7` through handler-only settings/test-email normalization plus same-page admin notice/filter query normalization around the existing `manage_options` and `check_admin_referer()` checks
+- `includes/core/plugin.php`: `10` -> `8`, with `2` remaining gated admin asset debug traces -> `0`
+- `includes/modules/admissions/pass-claims.php`: `165` -> `155`, with DB/SQL findings `125` -> `115`
+- `includes/admin/vendor-list-columns.php`: `11` -> `8`, with `3` -> `0` errors and `3` `OutputNotEscaped` findings -> `0`
+- `includes/core/goals-forecast.php`: `38` -> `32`, with DB/SQL findings `37` -> `31`
+- `includes/modules/admissions/pass-claims.php`: `173` -> `165`, with DB/SQL findings `133` -> `125`
+- `includes/admin/ticket-integrity-page.php`: `48` -> `27`, with `21` `MissingTranslatorsComment` findings -> `0`
+- normalized extracted-package state outside selected file scope in `WPORG-10A`: `plugin_header_nonexistent_domain_path`: `0` -> `1`, `includes/helpers/checkin-close.php`: `1` -> `1`, `PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound`: `1` -> `1`
+- remaining isolated Event Plans regressions now use the shared bootstrap and pass from the nested repo workspace
+- `tests/vendor-availability-ux.php` and `tests/add-dispatch-open-vendor-needs.php` now use the shared bootstrap resolver
+- packaged nonce/input blocker surface: `1517` -> `1110`
+- packaged i18n placeholder/comment surface: `792` -> `539`
+- packaged SQL safety surface: `1101` -> `1076`
+- packaged output-escaping surface: `317` -> `145`
+- packaged date/time surface: `86` -> `25`
+
+Detailed grouping and recommendations:
+
+- `docs/WPORG_PLUGIN_CHECK_TRIAGE_1.0.0.md`
+
+## Add-on And External-Service Audit
+
+The `WPORG-02` audit conclusions still hold.
+
+- Add-on installer/updater recommendation remains `A`
+  - retain manual operator-initiated ZIP handling for `1.0.0`
+- Freemius, Turnstile, QRServer/goQR, ICS fetches, and operator-configured webhooks remain disclosed and feature-triggered rather than passive telemetry paths
+- No new WordPress.org blocker was found in the add-on / remote-service policy review during this pass
+
+## Blockers
+
+| Check | Finding | Classification | Recommended action | Safe fix applied |
+| --- | --- | --- | --- | --- |
+| Plugin Check: nonce/input | `1110` remaining findings in mutating admin, portal, and admissions flows | BLOCKER | `WPORG-12B` closed the first bounded admin-only mutation slice in `includes/admin/settings-page.php`, `WPORG-12C` reduced the status-notices admin surface, and `WPORG-12D` reduced `includes/admin/ticket-integrity-page.php` to seven read-only `Recommended` warnings plus deferred non-nonce errors. Continue the same guarded normalization pattern in `includes/admin/vendor-command-center.php`, then `includes/modules/staff-tasks/admin-ui.php`, before widening into ticketing, portal/public, upload, admissions-claim, or Event Plans/runtime flows. | Partially |
+| Plugin Check: escaping | `145` remaining `OutputNotEscaped` findings | BLOCKER | Pause the escape-only phase after `WPORG-06C`; the remaining candidates are shared allowed-HTML boundaries, public/portal surfaces, metabox/save flows, vendor-assignment dashboards, or excluded Event Plans slices rather than isolated admin-only display targets. | Partially |
+| Plugin Check: SQL safety | `1076` remaining DB/SQL findings, including `142` unescaped DB-parameter reports, `136` interpolated SQL reports, and `67` `PreparedSQL.NotPrepared` reports | BLOCKER | Keep DB/SQL paused while the bounded admin-only nonce/input sequence continues; only resume isolated read-only SQL work if a materially safer candidate appears than the next mutation batch. | Partially |
+
+## Should Fix Before Submission
+
+| Check | Finding | Classification | Recommended action | Safe fix applied |
+| --- | --- | --- | --- | --- |
+| Plugin Check: i18n | `539` placeholder-comment and ordering findings remain | SHOULD FIX BEFORE SUBMISSION | Pause targeted i18n after `WPORG-08B` unless another isolated admin-only translator-comment or placeholder-ordering slice appears; otherwise switch back to blocker coverage. | Partially |
+| Plugin Check: date/time APIs | `25` `date()` findings remain | SHOULD FIX BEFORE SUBMISSION | Pause the date/time phase after `WPORG-09A` unless another admin-only display-only slice appears; the remaining higher-density candidates are scheduling, sales-window, notification, save-flow, portal-stamping, payables, Event Plans, or mixed/runtime helpers. | Partially |
+| Plugin Check: development logging | `41` logging findings remain (`40` `error_log()` + `1` `debug_backtrace()`) | SHOULD FIX BEFORE SUBMISSION | Pause the logging phase after `WPORG-10A` unless another isolated admin-only dev-trace slice appears; the remaining files are operationally meaningful or runtime-sensitive. | Partially |
+
+## Accept / Document
+
+| Check | Finding | Classification | Recommended action | Safe fix applied |
+| --- | --- | --- | --- | --- |
+| Minimum metadata | `Requires at least: 6.8` and `Requires PHP: 8.3` are now proven and applied | ACCEPT / DOCUMENT | Keep future metadata changes tied to real runtime evidence | Yes |
+| Repo-root builder and isolated regressions | Nested-path release builder now passes without `--skip-release-tests`, and the remaining Event Plans isolated regressions now reuse the shared bootstrap resolver | ACCEPT / DOCUMENT | Keep the shared WordPress bootstrap resolver and reusable test fixtures in place | Yes |
+| Packaged metadata files | Root `readme.txt` and root `LICENSE.txt` remain present in the final ZIP | ACCEPT / DOCUMENT | Keep verifying this in release engineering | No |
+| Dependency-absence loading | Builder and prior lifecycle evidence still support fail-closed optional dependency behavior | ACCEPT / DOCUMENT | Keep readme disclosure aligned with runtime behavior | No |
+| Add-ons and external services | `WPORG-02` recommendation `A` remains valid | ACCEPT / DOCUMENT | Retain current disclosures unless those code paths change | No |
+
+## Deferred / Not Run
+
+| Check | Finding | Classification | Recommended action | Safe fix applied |
+| --- | --- | --- | --- | --- |
+| PHPCS / WPCS | Still not run locally | DEFER | Add a project-local PHPCS/WPCS toolchain in a separate task if coding-standard proof is needed | No |
+| PHP 8.2 or lower runtime proof | PHP `8.2` binary exists locally, but this task only proved `8.3` and did not lower the declared minimum further | DEFER | Only lower the minimum after equivalent build and boot evidence exists | No |
+| Browser QA | No manual browser/admin walkthrough was run in this pass | DEFER | Use `WPORG-04I` or final clean-site QA after the remaining blocker-reduction pass | No |
+
+## Checks Not Run Or Limited
+
+- PHPCS / WPCS
+  - still not run because `phpcs`, `composer`, and repo config were absent
+- activation-hook execution
+  - the builder intentionally warns instead of mutating a WordPress site during activation-hook checks
+
+## Recommended Next Task
+
+- Post-`WPORG-12D` phased follow-up
+- Scope:
+  - start the next bounded admin-only nonce/input normalization batch in `includes/admin/vendor-command-center.php`
+  - keep the follow-up limited to request normalization around the existing capability and nonce scaffolding for onboarding email and template-save actions, with manual admin QA as the release gate
+  - queue `includes/modules/staff-tasks/admin-ui.php` after that as the next bounded admin mutation candidate
+  - keep DB/SQL, logging, date/time, targeted i18n, and escape-only follow-up paused unless a materially safer isolated slice appears than the next admin-only mutation batch
+  - postpone ticketing, portal/public submission, upload/import, admissions-claim, and Event Plans/runtime nonce/input widening until focused automated coverage or stronger manual QA plans exist for those flows

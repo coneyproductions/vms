@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 require_once __DIR__ . '/../schedule/helpers.php';
 require_once __DIR__ . '/../schedule/schedule.php';
 
-add_action('admin_post_vms_create_event_plan', 'vms_handle_create_event_plan');
+add_action('admin_post_vms_create_event_plan', 'bvmgr_handle_create_event_plan');
 
 /**
  * Normalize the schedule window bounds.
@@ -27,13 +27,13 @@ add_action('admin_post_vms_create_event_plan', 'vms_handle_create_event_plan');
  * - [0 => 'YYYY-mm-dd', 1 => 'YYYY-mm-dd']
  * - Same keys but values may be DateTimeInterface objects
  */
-function vms_sch_get_window_bounds(int $venue_id): array
+function bvmgr_sch_get_window_bounds(int $venue_id): array
 {
     $start = '';
     $end   = '';
 
-    if (function_exists('vms_get_schedule_window_bounds')) {
-        $raw = vms_get_schedule_window_bounds($venue_id);
+    if (function_exists('bvmgr_get_schedule_window_bounds')) {
+        $raw = bvmgr_get_schedule_window_bounds($venue_id);
         if (is_array($raw)) {
             $start = $raw['start_ymd'] ?? $raw['start'] ?? $raw['start_date'] ?? ($raw[0] ?? '');
             $end   = $raw['end_ymd']   ?? $raw['end']   ?? $raw['end_date']   ?? ($raw[1] ?? '');
@@ -50,7 +50,8 @@ function vms_sch_get_window_bounds(int $venue_id): array
     // Fallback window: first day of current month through end of month +24 months.
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $start) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $end)) {
         $start = current_time('Y-m-01');
-        $end   = date('Y-m-t', strtotime('+24 months', strtotime($start)));
+        $start_dt = bvmgr_sch_parse_ymd($start);
+        $end = $start_dt ? $start_dt->modify('+24 months')->format('Y-m-t') : $start;
     }
 
     // Safety: ensure start <= end
@@ -66,35 +67,60 @@ function vms_sch_get_window_bounds(int $venue_id): array
     );
 }
 
+function bvmgr_sch_parse_ymd(string $ymd): ?DateTimeImmutable
+{
+    $dt = DateTimeImmutable::createFromFormat('!Y-m-d', $ymd, wp_timezone());
+    if (!$dt instanceof DateTimeImmutable || $dt->format('Y-m-d') !== $ymd) {
+        return null;
+    }
+
+    return $dt;
+}
+
+function bvmgr_sch_allowed_html(): array
+{
+    return array(
+        'a' => array(
+            'class' => true,
+            'href'  => true,
+        ),
+        'br' => array(),
+        'div' => array(
+            'class' => true,
+        ),
+        'span' => array(
+            'class' => true,
+        ),
+    );
+}
+
 /**
  * View window for schedule rendering (separate from creation window).
  *
  * Default: 12 months back and 12 months forward from the current month,
  * expanded to always include the configured creation window.
  */
-function vms_sch_get_view_window_bounds(string $create_start_ymd, string $create_end_ymd, int $months_back = 12, int $months_ahead = 12): array
+function bvmgr_sch_get_view_window_bounds(string $create_start_ymd, string $create_end_ymd, int $months_back = 12, int $months_ahead = 12): array
 {
     $base_start = current_time('Y-m-01');
-    $base_ts    = strtotime($base_start);
+    $base_dt    = bvmgr_sch_parse_ymd($base_start);
 
     // Clamp to sane bounds (avoid accidental huge renders)
     $months_back  = max(0, min(24, (int) $months_back));
     $months_ahead = max(1, min(24, (int) $months_ahead));
 
-    $view_start = $base_ts ? date('Y-m-01', strtotime('-' . $months_back . ' months', $base_ts)) : $base_start;
-    $view_end   = $base_ts ? date('Y-m-t',  strtotime('+' . $months_ahead . ' months', $base_ts)) : $base_start;
+    $view_start = $base_dt ? $base_dt->modify('-' . $months_back . ' months')->format('Y-m-01') : $base_start;
+    $view_end   = $base_dt ? $base_dt->modify('+' . $months_ahead . ' months')->format('Y-m-t') : $base_start;
 
     // Ensure the view always includes the configured creation window.
-    $vs = strtotime($view_start);
-    $ve = strtotime($view_end);
-    $cs = strtotime($create_start_ymd);
-    $ce = strtotime($create_end_ymd);
+    $create_start_dt = bvmgr_sch_parse_ymd($create_start_ymd);
+    $create_end_dt   = bvmgr_sch_parse_ymd($create_end_ymd);
 
-    if ($cs && $vs && $cs < $vs) {
-        $view_start = date('Y-m-01', $cs);
+    if ($create_start_dt && $create_start_ymd < $view_start) {
+        $view_start = $create_start_dt->format('Y-m-01');
     }
-    if ($ce && $ve && $ce > $ve) {
-        $view_end = date('Y-m-t', $ce);
+    if ($create_end_dt && $create_end_ymd > $view_end) {
+        $view_end = $create_end_dt->format('Y-m-t');
     }
 
     return array(
@@ -103,7 +129,7 @@ function vms_sch_get_view_window_bounds(string $create_start_ymd, string $create
     );
 }
 
-function vms_sch_format_time_ampm(string $hhmm): string
+function bvmgr_sch_format_time_ampm(string $hhmm): string
 {
     $hhmm = trim($hhmm);
     if ($hhmm === '') return '';
@@ -115,7 +141,7 @@ function vms_sch_format_time_ampm(string $hhmm): string
     return strtolower($dt->format('g:ia'));
 }
 
-function vms_sch_plan_label($plan_id)
+function bvmgr_sch_plan_label($plan_id)
 {
     $plan_id = (int) $plan_id;
     if ($plan_id <= 0) {
@@ -123,8 +149,8 @@ function vms_sch_plan_label($plan_id)
     }
 
     // Single source of truth for Schedule labeling (list + calendar).
-    if (function_exists('vms_event_plan_compact_label')) {
-        return (string) vms_event_plan_compact_label($plan_id);
+    if (function_exists('bvmgr_event_plan_compact_label')) {
+        return (string) bvmgr_event_plan_compact_label($plan_id);
     }
 
     return 'Event Plan';
@@ -138,7 +164,7 @@ function vms_sch_plan_label($plan_id)
  * - Must be a vms_venue post.
  * - Must not be missing, trashed, or auto-draft.
  */
-function vms_sch_is_valid_venue_post_id(int $venue_id): bool
+function bvmgr_sch_is_valid_venue_post_id(int $venue_id): bool
 {
     if ($venue_id <= 0) {
         return false;
@@ -157,29 +183,32 @@ function vms_sch_is_valid_venue_post_id(int $venue_id): bool
 }
 
 
-function vms_handle_create_event_plan(): void
+function bvmgr_handle_create_event_plan(): void
 {
     if (!current_user_can('manage_options')) {
         wp_die('Insufficient permissions.');
     }
 
-    $ymd = isset($_GET['date']) ? sanitize_text_field((string) $_GET['date']) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The create-event-plan link verifies an action-specific nonce before any mutation occurs.
+    $ymd = bvmgr_request_read_text_field($_GET, 'date');
     if (!$ymd) {
         wp_die('Missing date.');
     }
-    if (!function_exists('vms_sch_is_valid_ymd') || !vms_sch_is_valid_ymd($ymd)) {
+    if (!function_exists('bvmgr_sch_is_valid_ymd') || !bvmgr_sch_is_valid_ymd($ymd)) {
         wp_die('Invalid date.');
     }
 
-    $nonce = isset($_GET['_wpnonce']) ? (string) $_GET['_wpnonce'] : '';
-    if (!wp_verify_nonce($nonce, 'vms_create_event_plan_' . $ymd)) {
+    $nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
+        ? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
+        : '';
+    if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_create_event_plan_' . $ymd))) {
         wp_die('Invalid nonce.');
     }
 
     // Prefer explicit venue_id from the calendar link; fallback to current selected venue.
-    $venue_id = isset($_GET['venue_id']) ? absint($_GET['venue_id']) : 0;
-    if ($venue_id <= 0 && function_exists('vms_get_current_venue_id')) {
-        $venue_id = (int) vms_get_current_venue_id();
+    $venue_id = bvmgr_request_read_absint($_GET, 'venue_id');
+    if ($venue_id <= 0 && function_exists('bvmgr_get_current_venue_id')) {
+        $venue_id = (int) bvmgr_get_current_venue_id();
     }
     if ($venue_id <= 0) {
         wp_die('Select a venue first.');
@@ -195,8 +224,8 @@ function vms_handle_create_event_plan(): void
     $is_blackout = false;
     if (function_exists('vms_sch_season_is_blackout_date')) {
         $is_blackout = (bool) vms_sch_season_is_blackout_date((int) $venue_id, (string) $ymd);
-    } elseif (function_exists('vms_sch_season_get_rules')) {
-        $rules = vms_sch_season_get_rules((int) $venue_id);
+    } elseif (function_exists('bvmgr_sch_season_get_rules')) {
+        $rules = bvmgr_sch_season_get_rules((int) $venue_id);
         if (is_array($rules)) {
             foreach ($rules as $r) {
                 if (!is_array($r)) {
@@ -235,11 +264,11 @@ function vms_handle_create_event_plan(): void
         exit;
     }
 
-    $bounds = vms_sch_get_window_bounds((int) $venue_id);
+    $bounds = bvmgr_sch_get_window_bounds((int) $venue_id);
     $start_ymd = (string) ($bounds['start_ymd'] ?? '');
     $end_ymd   = (string) ($bounds['end_ymd'] ?? '');
 
-    if (!vms_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) {
+    if (!bvmgr_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) {
         wp_die('That date is outside the configured schedule window.');
     }
 
@@ -250,6 +279,7 @@ function vms_handle_create_event_plan(): void
         'post_status'    => array('publish', 'draft', 'pending', 'future', 'private'),
         'posts_per_page' => -1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Duplicate prevention must inspect every plan matching this exact validated date-and-venue pair.
         'meta_query'     => array(
             'relation' => 'AND',
             array(
@@ -300,8 +330,8 @@ function vms_handle_create_event_plan(): void
     update_post_meta((int) $plan_id, '_vms_venue_id', (int) $venue_id);
 
     // STAFF-01: seed structured staffing slots from the best matching template.
-    if (function_exists('vms_staffing_seed_event_slots_from_template')) {
-        vms_staffing_seed_event_slots_from_template((int) $plan_id, false, (int) get_current_user_id());
+    if (function_exists('bvmgr_staffing_seed_event_slots_from_template')) {
+        bvmgr_staffing_seed_event_slots_from_template((int) $plan_id, false, (int) get_current_user_id());
     }
 
     $edit_link = get_edit_post_link((int) $plan_id, '');
@@ -312,34 +342,34 @@ function vms_handle_create_event_plan(): void
 /**
  * Render: Schedule page
  */
-function vms_render_schedule_page(): void
+function bvmgr_render_schedule_page(): void
 {
-    $event_plans_url = function_exists('vms_admin_ui_post_type_url')
-        ? vms_admin_ui_post_type_url('vms_event_plan')
+    $event_plans_url = function_exists('bvmgr_admin_ui_post_type_url')
+        ? bvmgr_admin_ui_post_type_url('vms_event_plan')
         : admin_url('edit.php?post_type=vms_event_plan');
     $new_event_plan_url = admin_url('post-new.php?post_type=vms_event_plan');
-    $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'vms') . '</a>';
-    $actions_html .= '<a class="button button-primary" href="' . esc_url($new_event_plan_url) . '">' . esc_html__('New Event Plan', 'vms') . '</a>';
+    $actions_html = '<a class="button" href="' . esc_url($event_plans_url) . '">' . esc_html__('Event Plans', 'backstage-venue-manager') . '</a>';
+    $actions_html .= '<a class="button button-primary" href="' . esc_url($new_event_plan_url) . '">' . esc_html__('New Event Plan', 'backstage-venue-manager') . '</a>';
 
-    if (function_exists('vms_admin_ui_render_shell')) {
-        vms_admin_ui_render_shell(
+    if (function_exists('bvmgr_admin_ui_render_shell')) {
+        bvmgr_admin_ui_render_shell(
             array(
-                'title' => __('Schedule', 'vms'),
-                'subtitle' => __('Plan dates, venues, and event readiness from a single calendar command center.', 'vms'),
+                'title' => __('Schedule', 'backstage-venue-manager'),
+                'subtitle' => __('Plan dates, venues, and event readiness from a single calendar command center.', 'backstage-venue-manager'),
                 'actions_html' => $actions_html,
                 'content_class' => 'vms-admin-shell__content--schedule',
             ),
-            'vms_render_schedule_page_content'
+            'bvmgr_render_schedule_page_content'
         );
         return;
     }
 
     echo '<div class="wrap"><h1>Schedule</h1>';
-    vms_render_schedule_page_content();
+    bvmgr_render_schedule_page_content();
     echo '</div>';
 }
 
-function vms_render_schedule_page_content(): void
+function bvmgr_render_schedule_page_content(): void
 {
     if (!current_user_can('manage_options')) {
         wp_die('Insufficient permissions.');
@@ -348,21 +378,26 @@ function vms_render_schedule_page_content(): void
     $user_id = (int) get_current_user_id();
 
     // Canonical schedule "current venue" key (helpers.php defines this constant).
-    $sch_venue_meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $sch_venue_meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     // View + scope come from URL (view mode only; do NOT store as current venue).
-    $view = isset($_GET['view']) ? sanitize_text_field((string) $_GET['view']) : 'calendar';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule view selection only changes the current admin display mode.
+    $view = bvmgr_request_read_text_field($_GET, 'view');
+    if ($view === '') {
+        $view = 'calendar';
+    }
     if ($view !== 'list' && $view !== 'calendar') {
         $view = 'calendar';
     }
 
-    $scope_meta_key = defined('VMS_SCH_CURRENT_SCOPE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_SCOPE_META_KEY
+    $scope_meta_key = defined('BVMGR_SCH_CURRENT_SCOPE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_SCOPE_META_KEY
         : '_vms_schedule_scope';
 
-    $incoming_scope = isset($_GET['scope']) ? sanitize_key((string) $_GET['scope']) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule scope selection only affects this admin view and stored user preference state.
+    $incoming_scope = bvmgr_request_read_key($_GET, 'scope');
     if ($incoming_scope !== 'venue' && $incoming_scope !== 'all') {
         $incoming_scope = '';
     }
@@ -382,10 +417,11 @@ function vms_render_schedule_page_content(): void
 
     // If URL explicitly specifies a venue_id, save it as the new numeric "current venue".
     // IMPORTANT: This never saves 'all'. All-venues is controlled by $scope only.
-    if (isset($_GET['venue_id'])) {
-        $venue_int = absint($_GET['venue_id']);
-        if (vms_sch_is_valid_venue_post_id((int) $venue_int)) {
-            update_user_meta($user_id, $sch_venue_meta_key, (string) $venue_int);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule venue selection only updates the viewer's own admin preference state.
+    $requested_venue_id = bvmgr_request_read_absint($_GET, 'venue_id');
+    if ($requested_venue_id > 0) {
+        if (bvmgr_sch_is_valid_venue_post_id($requested_venue_id)) {
+            update_user_meta($user_id, $sch_venue_meta_key, (string) $requested_venue_id);
         }
     }
 
@@ -393,14 +429,14 @@ function vms_render_schedule_page_content(): void
     $venue_id = absint(get_user_meta($user_id, $sch_venue_meta_key, true));
 
     // If a saved venue is no longer valid (missing/trashed), treat it as unset for this view.
-    if ($venue_id > 0 && !vms_sch_is_valid_venue_post_id((int) $venue_id)) {
+    if ($venue_id > 0 && !bvmgr_sch_is_valid_venue_post_id((int) $venue_id)) {
         $venue_id = 0;
     }
 
     // Fallback to Default Venue if none selected yet.
-    if ($venue_id <= 0 && function_exists('vms_get_default_venue_id')) {
-        $fallback_default = (int) vms_get_default_venue_id();
-        if (vms_sch_is_valid_venue_post_id((int) $fallback_default)) {
+    if ($venue_id <= 0 && function_exists('bvmgr_get_default_venue_id')) {
+        $fallback_default = (int) bvmgr_get_default_venue_id();
+        if (bvmgr_sch_is_valid_venue_post_id((int) $fallback_default)) {
             $venue_id = $fallback_default;
         }
     }
@@ -408,9 +444,9 @@ function vms_render_schedule_page_content(): void
     // Multi-venue installs: if no current venue has ever been selected and no default venue exists,
     // fall back deterministically to the first available venue (by title), matching the dropdown selector.
     // This prevents a confusing blank schedule where the selector shows a venue but the page still thinks none is selected.
-    if ($venue_id <= 0 && function_exists('vms_get_current_venue_id')) {
-        $fallback_first = (int) vms_get_current_venue_id();
-        if (vms_sch_is_valid_venue_post_id((int) $fallback_first)) {
+    if ($venue_id <= 0 && function_exists('bvmgr_get_current_venue_id')) {
+        $fallback_first = (int) bvmgr_get_current_venue_id();
+        if (bvmgr_sch_is_valid_venue_post_id((int) $fallback_first)) {
             $venue_id = $fallback_first;
             update_user_meta($user_id, $sch_venue_meta_key, (string) $venue_id);
         }
@@ -421,14 +457,14 @@ function vms_render_schedule_page_content(): void
     // IMPORTANT: Do NOT auto-pick an arbitrary venue when multiple venues exist.
     if (
         $venue_id <= 0
-        && function_exists('vms_sch_get_schedule_venue_candidates')
-        && function_exists('vms_sch_pick_single_venue_candidate')
+        && function_exists('bvmgr_sch_get_schedule_venue_candidates')
+        && function_exists('bvmgr_sch_pick_single_venue_candidate')
     ) {
-        $single_candidate = (int) vms_sch_pick_single_venue_candidate(
-            (array) vms_sch_get_schedule_venue_candidates()
+        $single_candidate = (int) bvmgr_sch_pick_single_venue_candidate(
+            (array) bvmgr_sch_get_schedule_venue_candidates()
         );
 
-        if ($single_candidate > 0 && vms_sch_is_valid_venue_post_id($single_candidate)) {
+        if ($single_candidate > 0 && bvmgr_sch_is_valid_venue_post_id($single_candidate)) {
             $venue_id = $single_candidate;
             update_user_meta($user_id, $sch_venue_meta_key, (string) $venue_id);
         }
@@ -442,8 +478,10 @@ function vms_render_schedule_page_content(): void
         $months_back = 12;
     }
 
-    if (isset($_GET['lb'])) {
-        $requested_lb = absint($_GET['lb']);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule lookback selection only updates the viewer's own admin preference state.
+    $requested_lb_raw = bvmgr_request_read_scalar($_GET, 'lb');
+    if ($requested_lb_raw !== '') {
+        $requested_lb = absint($requested_lb_raw);
         if (in_array($requested_lb, array(0, 1, 12), true)) {
             $months_back = (int) $requested_lb;
             update_user_meta($user_id, $lb_key, (string) $months_back);
@@ -452,18 +490,20 @@ function vms_render_schedule_page_content(): void
 
     // Schedule visibility toggle: include Draft/Ready in Schedule views (persist per-user).
     // Default: ON (Draft/Ready should appear in Schedule as Draft/Ready).
-    $has_inc = function_exists('vms_user_pref_has_include_drafts')
-        ? (bool) vms_user_pref_has_include_drafts($user_id)
+    $has_inc = function_exists('bvmgr_user_pref_has_include_drafts')
+        ? (bool) bvmgr_user_pref_has_include_drafts($user_id)
         : (bool) metadata_exists('user', $user_id, '_vms_include_drafts');
 
     $include_drafts = $has_inc
-        ? ((function_exists('vms_user_pref_get_include_drafts')) ? (bool) vms_user_pref_get_include_drafts((int) $user_id) : false)
+        ? ((function_exists('bvmgr_user_pref_get_include_drafts')) ? (bool) bvmgr_user_pref_get_include_drafts((int) $user_id) : false)
         : true;
 
-    if (isset($_GET['include_drafts'])) {
-        $include_drafts = (absint($_GET['include_drafts']) === 1);
-        if (function_exists('vms_user_pref_set_include_drafts')) {
-            vms_user_pref_set_include_drafts((bool) $include_drafts, (int) $user_id);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Current-user Schedule visibility selection only updates the viewer's own admin preference state.
+    $include_drafts_raw = bvmgr_request_read_scalar($_GET, 'include_drafts');
+    if ($include_drafts_raw !== '') {
+        $include_drafts = (absint($include_drafts_raw) === 1);
+        if (function_exists('bvmgr_user_pref_set_include_drafts')) {
+            bvmgr_user_pref_set_include_drafts((bool) $include_drafts, (int) $user_id);
         } else {
             update_user_meta((int) $user_id, '_vms_include_drafts', $include_drafts ? '1' : '0');
         }
@@ -471,8 +511,8 @@ function vms_render_schedule_page_content(): void
 
     echo '<div class="vms-admin-schedule-content">';
 
-    if (function_exists('vms_render_current_venue_selector')) {
-        vms_render_current_venue_selector();
+    if (function_exists('bvmgr_render_current_venue_selector')) {
+        bvmgr_render_current_venue_selector();
     }
 
     $base_url = remove_query_arg(array('view', 'scope'));
@@ -487,7 +527,11 @@ function vms_render_schedule_page_content(): void
     echo '<p>High-level view of dates, booked vendors, and event plan status.</p>';
 
     // Lookback control (mirrors vendor portal lookback selector)
-    $page_slug = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : 'vms-schedule';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule form routing only preserves the current admin page slug.
+    $page_slug = bvmgr_request_read_key($_GET, 'page');
+    if ($page_slug === '') {
+        $page_slug = 'vms-schedule';
+    }
     echo '<form method="get" class="vms-sch-lookback vms-js-auto-submit-form">';
     echo '<input type="hidden" name="page" value="' . esc_attr($page_slug) . '">';
     echo '<input type="hidden" name="scope" value="' . esc_attr($scope) . '">';
@@ -497,23 +541,22 @@ function vms_render_schedule_page_content(): void
     }
     // Persisted what-if default (unchecked=0).
     echo '<input type="hidden" name="include_drafts" value="0">';
-    echo '<label for="vms-sch-lb">' . esc_html__('Show past:', 'vms') . '</label>';
+    echo '<label for="vms-sch-lb">' . esc_html__('Show past:', 'backstage-venue-manager') . '</label>';
     echo '<select id="vms-sch-lb" name="lb" class="vms-js-auto-submit-field">';
-    echo '<option value="0"' . selected(0, $months_back, false) . '>' . esc_html__('None', 'vms') . '</option>';
-    echo '<option value="1"' . selected(1, $months_back, false) . '>' . esc_html__('1 month', 'vms') . '</option>';
-    echo '<option value="12"' . selected(12, $months_back, false) . '>' . esc_html__('12 months', 'vms') . '</option>';
+    echo '<option value="0"' . selected(0, $months_back, false) . '>' . esc_html__('None', 'backstage-venue-manager') . '</option>';
+    echo '<option value="1"' . selected(1, $months_back, false) . '>' . esc_html__('1 month', 'backstage-venue-manager') . '</option>';
+    echo '<option value="12"' . selected(12, $months_back, false) . '>' . esc_html__('12 months', 'backstage-venue-manager') . '</option>';
     echo '</select>';
-    echo '<span class="vms-sch-muted">' . esc_html__('Past months are view-only.', 'vms') . '</span>';
-    $chk = $include_drafts ? ' checked' : '';
-    echo '<label class="vms-sch-whatif"><input type="checkbox" name="include_drafts" value="1" class="vms-js-auto-submit-field"' . $chk . '> ' . esc_html__('Include Draft/Ready', 'vms') . '</label>';
+    echo '<span class="vms-sch-muted">' . esc_html__('Past months are view-only.', 'backstage-venue-manager') . '</span>';
+    echo '<label class="vms-sch-whatif"><input type="checkbox" name="include_drafts" value="1" class="vms-js-auto-submit-field"' . checked($include_drafts, true, false) . '> ' . esc_html__('Include Draft/Ready', 'backstage-venue-manager') . '</label>';
     echo '</form>';
 
     // Single-venue guardrail: if the only venue exists but is not published, call it out loudly.
     $only_unpublished_id = 0;
     $only_unpublished_status = '';
 
-    $venue_candidates = function_exists('vms_sch_get_schedule_venue_candidates')
-        ? (array) vms_sch_get_schedule_venue_candidates(2)
+    $venue_candidates = function_exists('bvmgr_sch_get_schedule_venue_candidates')
+        ? (array) bvmgr_sch_get_schedule_venue_candidates(2)
         : array();
     $venue_candidates = array_values(array_unique(array_filter(array_map('intval', (array) $venue_candidates))));
 
@@ -533,13 +576,8 @@ function vms_render_schedule_page_content(): void
             $edit = admin_url('post.php?post=' . (int) $only_unpublished_id . '&action=edit');
         }
 
-        echo '<div class="notice notice-error"><p><strong>' . esc_html__('Action required:', 'vms') . '</strong> ';
-        echo esc_html__('Your only venue is not published, so Schedule cannot load availability.', 'vms') . ' ';
-        if ($title !== '') {
-            echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
-        }
-        echo '<span class="vms-muted">(' . esc_html($only_unpublished_status) . ')</span>';
-        echo '</p><p><a class="button button-primary" href="' . esc_url($edit) . '">' . esc_html__('Open venue to publish', 'vms') . '</a></p></div>';
+        $unpublished_notice_context = bvmgr_schedule_get_unpublished_venue_notice_context(true, 'single_unpublished', $title, $only_unpublished_status, $edit);
+        bvmgr_schedule_render_unpublished_venue_notice($unpublished_notice_context);
 
         // Stop here to avoid a confusing blank calendar when the only venue is unpublished.
         echo '</div>';
@@ -556,14 +594,8 @@ function vms_render_schedule_page_content(): void
                 $edit = admin_url('post.php?post=' . (int) $venue_id . '&action=edit');
             }
 
-            echo '<div class="notice notice-error"><p><strong>' . esc_html__('Venue is not published:', 'vms') . '</strong> ';
-            if ($title !== '') {
-                echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
-            }
-            echo '<span class="vms-muted">(' . esc_html($selected_status) . ')</span> ';
-            echo esc_html__('Publish this venue to enable schedule availability.', 'vms') . '</p><p>';
-            echo '<a class="button button-primary" href="' . esc_url($edit) . '">' . esc_html__('Open venue to publish', 'vms') . '</a>';
-            echo '</p></div>';
+            $unpublished_notice_context = bvmgr_schedule_get_unpublished_venue_notice_context(true, 'selected_unpublished', $title, $selected_status, $edit);
+            bvmgr_schedule_render_unpublished_venue_notice($unpublished_notice_context);
 
             echo '</div>';
             return;
@@ -571,17 +603,18 @@ function vms_render_schedule_page_content(): void
     }
 
 
-    if ($scope === 'venue' && (int) $venue_id <= 0) {
-        echo '<div class="notice notice-warning"><p>Select a venue to view its schedule.</p></div>';
+    $scope_warning_notice_context = bvmgr_schedule_get_scope_warning_notice_context($scope === 'venue' && (int) $venue_id <= 0, 'no_selection');
+    if (!empty($scope_warning_notice_context['show'])) {
+        bvmgr_schedule_render_scope_warning_notice($scope_warning_notice_context);
         echo '</div>';
         return;
     }
 
     if ($scope === 'all') {
-
-        $venue_ids = vms_sch_get_all_venue_ids();
-        if (empty($venue_ids)) {
-            echo '<div class="notice notice-warning"><p>No venues found to display.</p></div>';
+        $venue_ids = bvmgr_sch_get_all_venue_ids();
+        $scope_warning_notice_context = bvmgr_schedule_get_scope_warning_notice_context(empty($venue_ids), 'no_venues');
+        if (!empty($scope_warning_notice_context['show'])) {
+            bvmgr_schedule_render_scope_warning_notice($scope_warning_notice_context);
             echo '</div>';
             return;
         }
@@ -589,20 +622,20 @@ function vms_render_schedule_page_content(): void
 
         $bounds_venue_id = (int) $venue_ids[0];
 
-        $bounds = vms_sch_get_window_bounds($bounds_venue_id);
+        $bounds = bvmgr_sch_get_window_bounds($bounds_venue_id);
         $create_start_ymd = (string) $bounds['start_ymd'];
         $create_end_ymd   = (string) $bounds['end_ymd'];
 
-        $view_bounds = vms_sch_get_view_window_bounds($create_start_ymd, $create_end_ymd, $months_back, 12);
+        $view_bounds = bvmgr_sch_get_view_window_bounds($create_start_ymd, $create_end_ymd, $months_back, 12);
         $start_ymd = (string) $view_bounds['start_ymd'];
         $end_ymd   = (string) $view_bounds['end_ymd'];
 
-        $venue_name_map = vms_sch_get_venue_name_map($venue_ids);
+        $venue_name_map = bvmgr_sch_get_venue_name_map($venue_ids);
 
         // Open/closed state is venue-specific — skip it in All Venues
         $open_map = array();
 
-        $plans_by_date = vms_sch_get_plans_by_date_all(
+        $plans_by_date = bvmgr_sch_get_plans_by_date_all(
             $venue_ids,
             $start_ymd,
             $end_ymd,
@@ -611,16 +644,16 @@ function vms_render_schedule_page_content(): void
         );
     } else {
 
-        $bounds = vms_sch_get_window_bounds($venue_id);
+        $bounds = bvmgr_sch_get_window_bounds($venue_id);
         $create_start_ymd = (string) $bounds['start_ymd'];
         $create_end_ymd   = (string) $bounds['end_ymd'];
 
-        $view_bounds = vms_sch_get_view_window_bounds($create_start_ymd, $create_end_ymd, $months_back, 12);
+        $view_bounds = bvmgr_sch_get_view_window_bounds($create_start_ymd, $create_end_ymd, $months_back, 12);
         $start_ymd = (string) $view_bounds['start_ymd'];
         $end_ymd   = (string) $view_bounds['end_ymd'];
 
-        $open_map  = vms_sch_get_open_map($venue_id, $start_ymd, $end_ymd);
-        $plans_by_date = vms_sch_get_plans_by_date(
+        $open_map  = bvmgr_sch_get_open_map($venue_id, $start_ymd, $end_ymd);
+        $plans_by_date = bvmgr_sch_get_plans_by_date(
             $venue_id,
             $start_ymd,
             $end_ymd,
@@ -644,32 +677,128 @@ function vms_render_schedule_page_content(): void
 
     if ($view === 'list') {
         if ($scope === 'all') {
-            vms_render_schedule_list_view_all($start_ymd, $end_ymd, $plans_by_date, $venue_name_map);
+            bvmgr_render_schedule_list_view_all($start_ymd, $end_ymd, $plans_by_date, $venue_name_map);
         } else {
-            vms_render_schedule_list_view($venue_id, $start_ymd, $end_ymd, $open_map, $plans_by_date, $create_start_ymd, $create_end_ymd);
+            bvmgr_render_schedule_list_view($venue_id, $start_ymd, $end_ymd, $open_map, $plans_by_date, $create_start_ymd, $create_end_ymd);
         }
     } else {
         if ($scope === 'all') {
-            vms_render_schedule_calendar_view_all($start_ymd, $end_ymd, $plans_by_date, $venue_name_map);
+            bvmgr_render_schedule_calendar_view_all($start_ymd, $end_ymd, $plans_by_date, $venue_name_map);
         } else {
-            vms_render_schedule_calendar_view($venue_id, $start_ymd, $end_ymd, $open_map, $plans_by_date, $create_start_ymd, $create_end_ymd);
+            bvmgr_render_schedule_calendar_view($venue_id, $start_ymd, $end_ymd, $open_map, $plans_by_date, $create_start_ymd, $create_end_ymd);
         }
     }
 
     echo '</div>';
 }
 
+function bvmgr_schedule_get_invalid_bounds_notice_context(bool $show): array
+{
+    return array(
+        'show' => $show,
+    );
+}
 
-function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string $end_ymd, array $open_map, array $plans_by_date, string $create_start_ymd, string $create_end_ymd): void
+function bvmgr_schedule_get_scope_warning_notice_context(bool $show, string $variant): array
+{
+    $variant = in_array($variant, array('no_selection', 'no_venues'), true) ? $variant : '';
+
+    return array(
+        'show' => $show,
+        'variant' => $variant,
+    );
+}
+
+function bvmgr_schedule_get_unpublished_venue_notice_context(bool $show, string $variant, string $title, string $status, string $edit_url): array
+{
+    $variant = in_array($variant, array('single_unpublished', 'selected_unpublished'), true) ? $variant : '';
+    $show = $show && $variant !== '';
+
+    return array(
+        'show' => $show,
+        'variant' => $variant,
+        'show_title' => $show && $title !== '',
+        'title' => $show ? $title : '',
+        'status' => $show ? $status : '',
+        'edit_url' => $show ? $edit_url : '',
+    );
+}
+
+function bvmgr_schedule_render_invalid_bounds_notice(array $context): void
+{
+    if (empty($context['show'])) {
+        return;
+    }
+
+    echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+}
+
+function bvmgr_schedule_render_scope_warning_notice(array $context): void
+{
+    if (empty($context['show'])) {
+        return;
+    }
+
+    $variant = isset($context['variant']) ? (string) $context['variant'] : '';
+    if ($variant === 'no_selection') {
+        echo '<div class="notice notice-warning"><p>Select a venue to view its schedule.</p></div>';
+        return;
+    }
+
+    if ($variant === 'no_venues') {
+        echo '<div class="notice notice-warning"><p>No venues found to display.</p></div>';
+    }
+}
+
+function bvmgr_schedule_render_unpublished_venue_notice(array $context): void
+{
+    if (empty($context['show'])) {
+        return;
+    }
+
+    $variant = isset($context['variant']) ? (string) $context['variant'] : '';
+    if (!in_array($variant, array('single_unpublished', 'selected_unpublished'), true)) {
+        return;
+    }
+
+    $show_title = !empty($context['show_title']);
+    $title = isset($context['title']) ? (string) $context['title'] : '';
+    $status = isset($context['status']) ? (string) $context['status'] : '';
+    $edit_url = isset($context['edit_url']) ? (string) $context['edit_url'] : '';
+
+    if ($variant === 'single_unpublished') {
+        echo '<div class="notice notice-error"><p><strong>' . esc_html__('Action required:', 'backstage-venue-manager') . '</strong> ';
+        echo esc_html__('Your only venue is not published, so Schedule cannot load availability.', 'backstage-venue-manager') . ' ';
+        if ($show_title) {
+            echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
+        }
+        echo '<span class="vms-muted">(' . esc_html($status) . ')</span>';
+        echo '</p><p><a class="button button-primary" href="' . esc_url($edit_url) . '">' . esc_html__('Open venue to publish', 'backstage-venue-manager') . '</a></p></div>';
+        return;
+    }
+
+    echo '<div class="notice notice-error"><p><strong>' . esc_html__('Venue is not published:', 'backstage-venue-manager') . '</strong> ';
+    if ($show_title) {
+        echo '<span class="vms-muted">' . esc_html($title) . '</span> ';
+    }
+    echo '<span class="vms-muted">(' . esc_html($status) . ')</span> ';
+    echo esc_html__('Publish this venue to enable schedule availability.', 'backstage-venue-manager') . '</p><p>';
+    echo '<a class="button button-primary" href="' . esc_url($edit_url) . '">' . esc_html__('Open venue to publish', 'backstage-venue-manager') . '</a>';
+    echo '</p></div>';
+}
+
+
+function bvmgr_render_schedule_list_view(int $venue_id, string $start_ymd, string $end_ymd, array $open_map, array $plans_by_date, string $create_start_ymd, string $create_end_ymd): void
 {
 
     $venue_id_param = (int) $venue_id;
 
-    $start_ts = strtotime($start_ymd);
-    $end_ts   = strtotime($end_ymd);
+    $start_dt = bvmgr_sch_parse_ymd($start_ymd);
+    $end_dt   = bvmgr_sch_parse_ymd($end_ymd);
+    $invalid_bounds_notice_context = bvmgr_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);
 
-    if (!$start_ts || !$end_ts) {
-        echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+    if (!empty($invalid_bounds_notice_context['show'])) {
+        bvmgr_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);
         return;
     }
 
@@ -679,8 +808,10 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
     $opts = (array) get_option('vms_settings', array());
     $hide_past_default = array_key_exists('sch_hide_past_default', $opts) ? (int) $opts['sch_hide_past_default'] : 1;
 
-    $show_past = isset($_GET['show_past']) ? (int) $_GET['show_past'] : 0;
-    $force_hide_past = isset($_GET['hide_past']) ? (int) $_GET['hide_past'] : 0;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule filters only affect which dates are shown in the current admin view.
+    $show_past = bvmgr_request_read_absint($_GET, 'show_past');
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Schedule filters only affect which dates are shown in the current admin view.
+    $force_hide_past = bvmgr_request_read_absint($_GET, 'hide_past');
 
     // show_past wins if both are present
     if ($show_past === 1) {
@@ -725,14 +856,14 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
     echo '</tr></thead><tbody>';
 
     // Blackout notes map (range-capable) for this window.
-    $blackout_notes_map = function_exists('vms_sch_season_get_blackout_notes_map')
-        ? vms_sch_season_get_blackout_notes_map((int) $venue_id, $start_ymd, $end_ymd)
+    $blackout_notes_map = function_exists('bvmgr_sch_season_get_blackout_notes_map')
+        ? bvmgr_sch_season_get_blackout_notes_map((int) $venue_id, $start_ymd, $end_ymd)
         : array();
 
     $today_ymd = function_exists('current_time') ? (string) current_time('Y-m-d') : (string) gmdate('Y-m-d');
 
-    for ($ts = $start_ts; $ts <= $end_ts; $ts = strtotime('+1 day', $ts)) {
-        $ymd = date('Y-m-d', $ts);
+    for ($cursor = $start_dt; $cursor <= $end_dt; $cursor = $cursor->modify('+1 day')) {
+        $ymd = $cursor->format('Y-m-d');
         $blackout_notes = isset($blackout_notes_map[$ymd]) && is_array($blackout_notes_map[$ymd]) ? $blackout_notes_map[$ymd] : array();
         $has_blackout = !empty($blackout_notes);
         $event_status = '';
@@ -746,13 +877,13 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
         }
 
         // Creation window is separate from the view window (we can still *view* past/future months).
-        $in_create_window = vms_sch_is_date_in_window($ymd, $create_start_ymd, $create_end_ymd);
+        $in_create_window = bvmgr_sch_is_date_in_window($ymd, $create_start_ymd, $create_end_ymd);
 
         // Holidays (single venue): show only the holiday name(s) in a dedicated column.
         $holiday_html = '';
-        $holiday_forces_open = function_exists('vms_sch_holiday_forces_open') ? vms_sch_holiday_forces_open($venue_id_param, $ymd) : false;
-        if (function_exists('vms_sch_get_holidays_for_date')) {
-            $holidays = vms_sch_get_holidays_for_date($venue_id_param, $ymd);
+        $holiday_forces_open = function_exists('bvmgr_sch_holiday_forces_open') ? bvmgr_sch_holiday_forces_open($venue_id_param, $ymd) : false;
+        if (function_exists('bvmgr_sch_get_holidays_for_date')) {
+            $holidays = bvmgr_sch_get_holidays_for_date($venue_id_param, $ymd);
             if (!empty($holidays)) {
                 $parts = array();
                 foreach ($holidays as $h) {
@@ -812,7 +943,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
             foreach ($plans_by_date[$ymd] as $row) {
 
-                $plan_id = vms_get_plan_id_from_row($row);
+                $plan_id = bvmgr_get_plan_id_from_row($row);
                 if ($plan_id <= 0) continue;
 
                 $status = '';
@@ -825,7 +956,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
                 // Fallback for legacy rows that do not carry canonical plan_status.
                 if ($status === '') {
-                    $status = sanitize_key((string) vms_map_plan_status($plan_id));
+                    $status = sanitize_key((string) bvmgr_map_plan_status($plan_id));
                     if ($status === 'canceled') {
                         $status = 'cancelled';
                     }
@@ -843,7 +974,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
                 $venue_id = (int) ($row['venue_id'] ?? 0);
                 $venue_name = ($venue_id > 0 && isset($venue_name_map[$venue_id])) ? (string) $venue_name_map[$venue_id] : '';
 
-                $html = vms_get_plan_headliner_link_html($plan_id);
+                $html = bvmgr_get_plan_headliner_link_html($plan_id);
                 if ($html !== '') {
                     if ($venue_name !== '') {
                         $html = '<span class="vms-muted">' . esc_html($venue_name) . ':</span> ' . $html;
@@ -877,7 +1008,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
                 'action'    => 'vms_create_event_plan',
                 'date'      => (string) $ymd,
                 'venue_id'  => (int) $venue_id_param,
-                '_wpnonce'  => wp_create_nonce('vms_create_event_plan_' . $ymd),
+                '_wpnonce'  => wp_create_nonce('bvmgr_create_event_plan_' . $ymd),
             );
 
             if ($has_plans) {
@@ -904,7 +1035,7 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
 
         echo '<tr class="' . esc_attr($row_state_class . $past_class . ' ' . $status_class) . '">';
 
-        echo '<td>' . esc_html(date_i18n('D, M j, Y', $ts));
+        echo '<td>' . esc_html(wp_date('D, M j, Y', $cursor->getTimestamp(), $cursor->getTimezone()));
 
         // $badge is clunky! Needs it's own row on desktop or hidden on mobile.
         // if ($badge !== '') {
@@ -912,28 +1043,29 @@ function vms_render_schedule_list_view(int $venue_id, string $start_ymd, string 
         // }
         echo '</td>';
 
-        echo '<td>' . $holiday_html . $blackout_html . '</td>';
-        echo '<td>' . $plans_html . '</td>';
-        echo '<td>' . $create_html . '</td>';
+        echo '<td>' . wp_kses($holiday_html . $blackout_html, bvmgr_sch_allowed_html()) . '</td>';
+        echo '<td>' . wp_kses($plans_html, bvmgr_sch_allowed_html()) . '</td>';
+        echo '<td>' . wp_kses($create_html, bvmgr_sch_allowed_html()) . '</td>';
         echo '</tr>';
     }
 
     echo '</tbody></table>';
 }
 
-function vms_render_schedule_calendar_view(int $venue_id, string $start_ymd, string $end_ymd, array $open_map, array $plans_by_date, string $create_start_ymd, string $create_end_ymd): void
+function bvmgr_render_schedule_calendar_view(int $venue_id, string $start_ymd, string $end_ymd, array $open_map, array $plans_by_date, string $create_start_ymd, string $create_end_ymd): void
 {
     $start_ts = strtotime($start_ymd);
     $end_ts   = strtotime($end_ymd);
+    $invalid_bounds_notice_context = bvmgr_schedule_get_invalid_bounds_notice_context(!$start_ts || !$end_ts);
 
-    if (!$start_ts || !$end_ts) {
-        echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+    if (!empty($invalid_bounds_notice_context['show'])) {
+        bvmgr_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);
         return;
     }
 
     // Blackout notes map (range-capable) for this window.
-    $blackout_notes_map = function_exists('vms_sch_season_get_blackout_notes_map')
-        ? vms_sch_season_get_blackout_notes_map((int) $venue_id, $start_ymd, $end_ymd)
+    $blackout_notes_map = function_exists('bvmgr_sch_season_get_blackout_notes_map')
+        ? bvmgr_sch_season_get_blackout_notes_map((int) $venue_id, $start_ymd, $end_ymd)
         : array();
 
     $tz = wp_timezone();
@@ -985,7 +1117,7 @@ $scope_key = 'single';
         for ($day = 1; $day <= $days_in_month; $day++) {
             $ymd = $month_start->format('Y-m-') . str_pad((string) $day, 2, '0', STR_PAD_LEFT);
             $in_window = true; // this month/day is inside the view range by construction
-            $in_create_window = vms_sch_is_date_in_window($ymd, $create_start_ymd, $create_end_ymd);
+            $in_create_window = bvmgr_sch_is_date_in_window($ymd, $create_start_ymd, $create_end_ymd);
 
             $classes = array('vms-sch-cell');
             if (!$in_window) {
@@ -996,7 +1128,7 @@ $scope_key = 'single';
 
             $blackout_notes = ($in_window && isset($blackout_notes_map[$ymd]) && is_array($blackout_notes_map[$ymd])) ? $blackout_notes_map[$ymd] : array();
             $has_blackout = !empty($blackout_notes);
-            $holiday_forces_open = function_exists('vms_sch_holiday_forces_open') ? vms_sch_holiday_forces_open((int) $venue_id, $ymd) : false;
+            $holiday_forces_open = function_exists('bvmgr_sch_holiday_forces_open') ? bvmgr_sch_holiday_forces_open((int) $venue_id, $ymd) : false;
 
             // Open status must reflect Season Dates (not "has plan"), plus Holiday override.
             $is_open = ($in_window && (isset($open_map[$ymd]) || $holiday_forces_open));
@@ -1037,8 +1169,8 @@ $scope_key = 'single';
 
             // Holidays: show only the holiday name(s) next to the day number.
             $holiday_html = '';
-            if (function_exists('vms_sch_get_holidays_for_date')) {
-                $holidays = vms_sch_get_holidays_for_date((int) $venue_id, $ymd);
+            if (function_exists('bvmgr_sch_get_holidays_for_date')) {
+                $holidays = bvmgr_sch_get_holidays_for_date((int) $venue_id, $ymd);
                 if (!empty($holidays)) {
                     $parts = array();
                     foreach ($holidays as $h) {
@@ -1078,7 +1210,7 @@ $scope_key = 'single';
 
                 foreach ($plans_by_date[$ymd] as $row) {
 
-                    $pid = vms_get_plan_id_from_row($row);
+                    $pid = bvmgr_get_plan_id_from_row($row);
                     if ($pid <= 0) {
                         continue;
                     }
@@ -1089,7 +1221,7 @@ $scope_key = 'single';
                         $url = admin_url('post.php?post=' . (int) $pid . '&action=edit');
                     }
 
-                    $items[] = '<div class="vms-sch-plan"><a href="' . esc_url($url) . '">' . esc_html(vms_sch_plan_label((int) $pid)) . '</a></div>';
+                    $items[] = '<div class="vms-sch-plan"><a href="' . esc_url($url) . '">' . esc_html(bvmgr_sch_plan_label((int) $pid)) . '</a></div>';
                 }
 
                 $plans_html = '<div class="vms-sch-plans">' . implode('', $items) . '</div>';
@@ -1111,7 +1243,7 @@ $scope_key = 'single';
                     'action'    => 'vms_create_event_plan',
                     'date'      => (string) $ymd,
                     'venue_id'  => (int) $venue_id,
-                    '_wpnonce'  => wp_create_nonce('vms_create_event_plan_' . $ymd),
+                    '_wpnonce'  => wp_create_nonce('bvmgr_create_event_plan_' . $ymd),
                 );
 
                 if ($has_plans) {
@@ -1126,10 +1258,10 @@ $scope_key = 'single';
 
             echo '<td>';
             echo '<div class="' . esc_attr(implode(' ', $classes)) . '">';
-            echo '<div class="vms-sch-top"><div class="vms-sch-daynum">' . esc_html((string) $day) . '</div>' . $holiday_html . $blackout_html . '</div>';
-            echo $badge;
-            echo $plans_html;
-            echo $create_html;
+            echo '<div class="vms-sch-top"><div class="vms-sch-daynum">' . esc_html((string) $day) . '</div>' . wp_kses($holiday_html . $blackout_html, bvmgr_sch_allowed_html()) . '</div>';
+            echo wp_kses($badge, bvmgr_sch_allowed_html());
+            echo wp_kses($plans_html, bvmgr_sch_allowed_html());
+            echo wp_kses($create_html, bvmgr_sch_allowed_html());
             echo '</div>';
             echo '</td>';
 
@@ -1152,34 +1284,35 @@ $scope_key = 'single';
         echo '</div>';      // closes .vms-panel-body
         echo '</details>';
 
-        $cursor = new DateTime(date('Y-m-01', strtotime('+1 month', $cursor->getTimestamp())), $tz);
+        $cursor = $cursor->modify('first day of next month');
     }
 
     // Month accordion behavior is handled centrally in vms-admin-ui.js.
 }
 
-function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, array $plans_by_date, array $venue_name_map): void
+function bvmgr_render_schedule_list_view_all(string $start_ymd, string $end_ymd, array $plans_by_date, array $venue_name_map): void
 {
-    $start_ts = strtotime($start_ymd);
-    $end_ts   = strtotime($end_ymd);
+    $start_dt = bvmgr_sch_parse_ymd($start_ymd);
+    $end_dt   = bvmgr_sch_parse_ymd($end_ymd);
+    $invalid_bounds_notice_context = bvmgr_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);
 
-    if (!$start_ts || !$end_ts) {
-        echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+    if (!empty($invalid_bounds_notice_context['show'])) {
+        bvmgr_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);
         return;
     }
 
-    $venue_ids = function_exists('vms_sch_get_all_venue_ids') ? vms_sch_get_all_venue_ids() : array_keys($venue_name_map);
+    $venue_ids = function_exists('bvmgr_sch_get_all_venue_ids') ? bvmgr_sch_get_all_venue_ids() : array_keys($venue_name_map);
     $venue_ids = array_values(array_filter(array_map('intval', (array) $venue_ids)));
 
     // Precompute blackout notes for this list window (range-capable).
     $blackout_notes_by_venue = array();
-    if (function_exists('vms_sch_season_get_blackout_notes_map') && !empty($venue_ids)) {
+    if (function_exists('bvmgr_sch_season_get_blackout_notes_map') && !empty($venue_ids)) {
         foreach ($venue_ids as $vid) {
             $vid = (int) $vid;
             if ($vid <= 0) {
                 continue;
             }
-            $blackout_notes_by_venue[$vid] = vms_sch_season_get_blackout_notes_map($vid, $start_ymd, $end_ymd);
+            $blackout_notes_by_venue[$vid] = bvmgr_sch_season_get_blackout_notes_map($vid, $start_ymd, $end_ymd);
         }
     }
 
@@ -1191,8 +1324,8 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
     echo '<th>Event Plans</th>';
     echo '</tr></thead><tbody>';
 
-    for ($ts = $start_ts; $ts <= $end_ts; $ts = strtotime('+1 day', $ts)) {
-        $ymd = date('Y-m-d', $ts);
+    for ($cursor = $start_dt; $cursor <= $end_dt; $cursor = $cursor->modify('+1 day')) {
+        $ymd = $cursor->format('Y-m-d');
 
         $venues_html = '<span class="vms-muted">—</span>';
         $holidays_html = '<span class="vms-muted">—</span>';
@@ -1213,8 +1346,8 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
                 $venue_label = ($vid > 0 && isset($venue_name_map[$vid])) ? (string) $venue_name_map[$vid] : ('Venue #' . $vid);
 
                 // Holidays
-                if (function_exists('vms_sch_get_holidays_for_date')) {
-                    $entries = vms_sch_get_holidays_for_date($vid, $ymd);
+                if (function_exists('bvmgr_sch_get_holidays_for_date')) {
+                    $entries = bvmgr_sch_get_holidays_for_date($vid, $ymd);
                     if (!empty($entries)) {
                         foreach ($entries as $h) {
                             if (!is_array($h)) {
@@ -1250,7 +1383,7 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
             $plan_lines  = array();
 
             foreach ($plans_by_date[$ymd] as $row) {
-                $plan_id = vms_get_plan_id_from_row($row);
+                $plan_id = bvmgr_get_plan_id_from_row($row);
                 if ($plan_id <= 0) {
                     continue;
                 }
@@ -1259,7 +1392,7 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
                 $venue_name = ($venue_id > 0 && isset($venue_name_map[$venue_id])) ? (string) $venue_name_map[$venue_id] : '';
                 $venue_lines[] = ($venue_name !== '') ? esc_html($venue_name) : '<span class="vms-muted">(unknown)</span>';
 
-                $html = vms_get_plan_headliner_link_html($plan_id);
+                $html = bvmgr_get_plan_headliner_link_html($plan_id);
                 $plan_lines[] = ($html !== '') ? $html : '<span class="vms-muted">(untitled)</span>';
             }
 
@@ -1272,10 +1405,10 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
         }
 
         echo '<tr>';
-        echo '<td>' . esc_html(date_i18n('D, M j, Y', $ts)) . '</td>';
-        echo '<td>' . $venues_html . '</td>';
-        echo '<td>' . $holidays_html . '</td>';
-        echo '<td>' . $plans_html . '</td>';
+        echo '<td>' . esc_html(wp_date('D, M j, Y', $cursor->getTimestamp(), $cursor->getTimezone())) . '</td>';
+        echo '<td>' . wp_kses($venues_html, bvmgr_sch_allowed_html()) . '</td>';
+        echo '<td>' . wp_kses($holidays_html, bvmgr_sch_allowed_html()) . '</td>';
+        echo '<td>' . wp_kses($plans_html, bvmgr_sch_allowed_html()) . '</td>';
         echo '</tr>';
     }
 
@@ -1283,42 +1416,44 @@ function vms_render_schedule_list_view_all(string $start_ymd, string $end_ymd, a
 }
 
 
-function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ymd, array $plans_by_date, array $venue_name_map): void
+function bvmgr_render_schedule_calendar_view_all(string $start_ymd, string $end_ymd, array $plans_by_date, array $venue_name_map): void
 {
-    $start_ts  = strtotime($start_ymd);
-    $end_ts    = strtotime($end_ymd);
     $today_ymd = wp_date('Y-m-d'); // uses WP timezone settings
 
-    if (!$start_ts || !$end_ts) {
-        echo '<div class="notice notice-error"><p>Schedule window bounds were invalid.</p></div>';
+    $start_dt = bvmgr_sch_parse_ymd($start_ymd);
+    $end_dt   = bvmgr_sch_parse_ymd($end_ymd);
+    $invalid_bounds_notice_context = bvmgr_schedule_get_invalid_bounds_notice_context(!$start_dt || !$end_dt);
+
+    if (!empty($invalid_bounds_notice_context['show'])) {
+        bvmgr_schedule_render_invalid_bounds_notice($invalid_bounds_notice_context);
         return;
     }
 
-    $venue_ids = function_exists('vms_sch_get_all_venue_ids') ? vms_sch_get_all_venue_ids() : array_keys($venue_name_map);
+    $venue_ids = function_exists('bvmgr_sch_get_all_venue_ids') ? bvmgr_sch_get_all_venue_ids() : array_keys($venue_name_map);
     $venue_ids = array_values(array_filter(array_map('intval', (array) $venue_ids)));
 
     // Normalize to first day of start month
-    $cursor    = strtotime(date('Y-m-01', $start_ts));
-    $end_month = strtotime(date('Y-m-01', $end_ts));
+    $cursor    = $start_dt->modify('first day of this month');
+    $end_month = $end_dt->modify('first day of this month');
 
     while ($cursor <= $end_month) {
-        $month_label = date_i18n('F Y', $cursor);
-        $month_start = strtotime(date('Y-m-01', $cursor));
-        $month_end   = strtotime(date('Y-m-t', $cursor));
+        $month_label = wp_date('F Y', $cursor->getTimestamp(), $cursor->getTimezone());
+        $month_start = $cursor;
+        $month_end   = $cursor->modify('last day of this month');
 
         // Precompute blackout notes for this month slice (range-capable).
-        $month_from_ymd = date('Y-m-d', max($month_start, $start_ts));
-        $month_to_ymd   = date('Y-m-d', min($month_end, $end_ts));
+        $month_from_ymd = ($month_start < $start_dt ? $start_dt : $month_start)->format('Y-m-d');
+        $month_to_ymd   = ($month_end > $end_dt ? $end_dt : $month_end)->format('Y-m-d');
         $blackout_notes_by_venue = array();
-        if (function_exists('vms_sch_season_get_blackout_notes_map') && !empty($venue_ids)) {
+        if (function_exists('bvmgr_sch_season_get_blackout_notes_map') && !empty($venue_ids)) {
             foreach ($venue_ids as $vid) {
                 $vid = (int) $vid;
                 if ($vid <= 0) continue;
-                $blackout_notes_by_venue[$vid] = vms_sch_season_get_blackout_notes_map($vid, $month_from_ymd, $month_to_ymd);
+                $blackout_notes_by_venue[$vid] = bvmgr_sch_season_get_blackout_notes_map($vid, $month_from_ymd, $month_to_ymd);
             }
         }
 
-        $month_key = date('Y-m', $cursor); // YYYY-MM
+        $month_key = $cursor->format('Y-m'); // YYYY-MM
 
         echo '<details class="vms-av-method vms-sch-month" data-vms-month="' . esc_attr($month_key) . '" data-vms-scope="all">';
         echo '<summary><span>' . esc_html($month_label) . '</span></summary>';
@@ -1331,8 +1466,8 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
         }
         echo '</tr></thead><tbody>';
 
-        $first_dow = (int) date('w', $month_start); // 0=Sun
-        $day_ts    = $month_start;
+        $first_dow = (int) $month_start->format('w'); // 0=Sun
+        $day_dt    = $month_start;
 
         $cell = 0;
         echo '<tr>';
@@ -1343,10 +1478,10 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
             $cell++;
         }
 
-        while ($day_ts <= $month_end) {
-            $ymd = date('Y-m-d', $day_ts);
+        while ($day_dt <= $month_end) {
+            $ymd = $day_dt->format('Y-m-d');
 
-            $in_window = ($day_ts >= $start_ts && $day_ts <= $end_ts);
+            $in_window = ($ymd >= $start_ymd && $ymd <= $end_ymd);
 
             $cell_classes = 'vms-sch-cell';
             if (!$in_window) {
@@ -1361,7 +1496,7 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
 
             echo '<td class="vms-valign-top">';
             echo '<div class="' . esc_attr($cell_classes) . '">';
-            echo '<div class="vms-sch-daynum">' . esc_html((string) ((int) substr($ymd, 8, 2))) . '</div>';
+            echo '<div class="vms-sch-daynum">' . esc_html($day_dt->format('j')) . '</div>';
 
             // Collect plans by venue
             $by_venue = array();
@@ -1381,13 +1516,13 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
 
             // Collect holidays by venue (all venues calendar)
             $holidays_by_venue = array();
-            if ($in_window && function_exists('vms_sch_get_holidays_for_date') && !empty($venue_ids)) {
+            if ($in_window && function_exists('bvmgr_sch_get_holidays_for_date') && !empty($venue_ids)) {
                 foreach ($venue_ids as $vid) {
                     $vid = (int) $vid;
                     if ($vid <= 0) {
                         continue;
                     }
-                    $entries = vms_sch_get_holidays_for_date($vid, $ymd);
+                    $entries = bvmgr_sch_get_holidays_for_date($vid, $ymd);
                     if (empty($entries)) {
                         continue;
                     }
@@ -1439,7 +1574,7 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
                         foreach ($by_venue[$vid] as $pid) {
                             echo '<div class="vms-sch-planitem">';
                             echo '<a class="vms-sch-planlink" href="' . esc_url(get_edit_post_link($pid, '')) . '">' 
-                                . esc_html(vms_sch_plan_label($pid))
+                                . esc_html(bvmgr_sch_plan_label($pid))
                                 . '</a>';
                             echo '</div>';
                         }
@@ -1455,11 +1590,11 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
             echo '</td>';
 
             $cell++;
-            if ($cell % 7 === 0 && $day_ts !== $month_end) {
+            if ($cell % 7 === 0 && $day_dt < $month_end) {
                 echo '</tr><tr>';
             }
 
-            $day_ts = strtotime('+1 day', $day_ts);
+            $day_dt = $day_dt->modify('+1 day');
         }
 
         // Trailing blanks
@@ -1472,7 +1607,7 @@ function vms_render_schedule_calendar_view_all(string $start_ymd, string $end_ym
         echo '</tbody></table>';
         echo '</div></details>';
 
-        $cursor = strtotime('+1 month', $cursor);
+        $cursor = $cursor->modify('first day of next month');
     }
 
     // Month accordion behavior is handled centrally in vms-admin-ui.js.

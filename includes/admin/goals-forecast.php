@@ -1,51 +1,103 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_goals_fmt_money')) {
-	function vms_goals_fmt_money(int $cents): string
+if (!function_exists('bvmgr_goals_fmt_money')) {
+	function bvmgr_goals_fmt_money(int $cents): string
 	{
 		$amount = $cents / 100;
 		return '$' . number_format_i18n($amount, 2);
 	}
 }
 
-if (!function_exists('vms_goals_admin_url')) {
-	function vms_goals_admin_url(array $args = array()): string
+if (!function_exists('bvmgr_goals_admin_url')) {
+	function bvmgr_goals_admin_url(array $args = array()): string
 	{
 		return add_query_arg($args, admin_url('admin.php?page=vms-goals-forecast'));
 	}
 }
 
-if (!function_exists('vms_goals_admin_redirect_with_notice')) {
-	function vms_goals_admin_redirect_with_notice(string $status, string $message, array $extra = array()): void
+if (!function_exists('bvmgr_goals_post_value')) {
+	function bvmgr_goals_post_value(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST values are sanitized or validated at the call site.
+		if (!isset($_POST[$key]) || is_array($_POST[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST values are sanitized or validated at the call site.
+		return (string) wp_unslash($_POST[$key]);
+	}
+}
+
+if (!function_exists('bvmgr_goals_post_array')) {
+	function bvmgr_goals_post_array(string $key): array
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST arrays are sanitized element-by-element at the call site.
+		if (!isset($_POST[$key]) || !is_array($_POST[$key])) {
+			return array();
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw unslashed POST arrays are sanitized element-by-element at the call site.
+		return wp_unslash($_POST[$key]);
+	}
+}
+
+if (!function_exists('bvmgr_goals_query_value')) {
+	function bvmgr_goals_query_value(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin query values are sanitized by the caller.
+		if (!isset($_GET[$key]) || is_array($_GET[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only admin query values are sanitized by the caller.
+		return (string) wp_unslash($_GET[$key]);
+	}
+}
+
+if (!function_exists('bvmgr_goals_request_value')) {
+	function bvmgr_goals_request_value(string $key): string
+	{
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Caller performs capability and nonce validation for this request.
+		if (!isset($_REQUEST[$key]) || is_array($_REQUEST[$key])) {
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Caller performs capability and nonce validation for this request.
+		return (string) wp_unslash($_REQUEST[$key]);
+	}
+}
+
+if (!function_exists('bvmgr_goals_admin_redirect_with_notice')) {
+	function bvmgr_goals_admin_redirect_with_notice(string $status, string $message, array $extra = array()): void
 	{
 		$args = array_merge($extra, array(
 			'vms_goals_status' => sanitize_key($status),
 			'vms_goals_message' => sanitize_text_field($message),
 		));
-		wp_safe_redirect(vms_goals_admin_url($args));
+		wp_safe_redirect(bvmgr_goals_admin_url($args));
 		exit;
 	}
 }
 
-add_action('admin_menu', 'vms_goals_admin_menu', 45);
-function vms_goals_admin_menu(): void
+add_action('admin_menu', 'bvmgr_goals_admin_menu', 45);
+function bvmgr_goals_admin_menu(): void
 {
 	add_submenu_page(
 		'vms-dashboard',
-		__('Goals & Forecasting', 'vms'),
-		__('Goals & Forecasting', 'vms'),
+		__('Goals & Forecasting', 'backstage-venue-manager'),
+		__('Goals & Forecasting', 'backstage-venue-manager'),
 		'manage_options',
 		'vms-goals-forecast',
-		'vms_goals_render_admin_page'
+		'bvmgr_goals_render_admin_page'
 	);
 }
 
-add_action('admin_enqueue_scripts', 'vms_goals_admin_enqueue_assets');
-function vms_goals_admin_enqueue_assets(string $hook): void
+add_action('admin_enqueue_scripts', 'bvmgr_goals_admin_enqueue_assets');
+function bvmgr_goals_admin_enqueue_assets(string $hook): void
 {
 	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
-	$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+	$page = sanitize_key(bvmgr_goals_query_value('page'));
 
 	$load = ($page === 'vms-goals-forecast');
 	if ($screen && isset($screen->post_type) && $screen->post_type === 'vms_event_plan') {
@@ -56,12 +108,12 @@ function vms_goals_admin_enqueue_assets(string $hook): void
 		return;
 	}
 
-	$css = VMS_PLUGIN_URL . 'assets/css/vms-goals-forecast-admin.css';
+	$css = BVMGR_PLUGIN_URL . 'assets/css/vms-goals-forecast-admin.css';
 	wp_enqueue_style(
-		'vms-goals-forecast-admin',
+		'bvmgr-goals-forecast-admin',
 		$css,
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 	);
 
 	$js = <<<'JS'
@@ -93,27 +145,33 @@ JS;
 	wp_add_inline_script('jquery-core', $js);
 }
 
-add_action('admin_post_vms_goals_save_settings', 'vms_goals_admin_post_save_settings');
-function vms_goals_admin_post_save_settings(): void
+add_action('admin_post_vms_goals_save_settings', 'bvmgr_goals_admin_post_save_settings');
+function bvmgr_goals_admin_post_save_settings(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
-	check_admin_referer('vms_goals_save_settings');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_goals_save_settings', '_wpnonce'), '_wpnonce');
 
-	$tab = isset($_POST['tab']) ? sanitize_key((string) $_POST['tab']) : 'forecast-defaults';
+	$tab = sanitize_key(bvmgr_goals_post_value('tab'));
+	if ($tab === '') {
+		$tab = 'forecast-defaults';
+	}
 	$update = array();
 
 	if ($tab === 'overhead-rules') {
 		$update['overhead_rules'] = array(
-			'mode' => isset($_POST['overhead_mode']) ? sanitize_key((string) $_POST['overhead_mode']) : 'flat_per_event',
-			'flat_per_event_cents' => vms_goals_parse_money_to_cents($_POST['overhead_flat_per_event'] ?? 0),
-			'per_attendee_cents' => vms_goals_parse_money_to_cents($_POST['overhead_per_attendee'] ?? 0),
-			'percent_of_gross_bps' => max(0, min(10000, (int) ($_POST['overhead_percent_bps'] ?? 0))),
+			'mode' => sanitize_key(bvmgr_goals_post_value('overhead_mode')),
+			'flat_per_event_cents' => bvmgr_goals_parse_money_to_cents(bvmgr_goals_post_value('overhead_flat_per_event')),
+			'per_attendee_cents' => bvmgr_goals_parse_money_to_cents(bvmgr_goals_post_value('overhead_per_attendee')),
+			'percent_of_gross_bps' => max(0, min(10000, (int) bvmgr_goals_post_value('overhead_percent_bps'))),
 		);
+		if ($update['overhead_rules']['mode'] === '') {
+			$update['overhead_rules']['mode'] = 'flat_per_event';
+		}
 	} else {
-		$map_keys = isset($_POST['bucket_map_key']) && is_array($_POST['bucket_map_key']) ? $_POST['bucket_map_key'] : array();
-		$map_components = isset($_POST['bucket_map_component']) && is_array($_POST['bucket_map_component']) ? $_POST['bucket_map_component'] : array();
+		$map_keys = bvmgr_goals_post_array('bucket_map_key');
+		$map_components = bvmgr_goals_post_array('bucket_map_component');
 		$bucket_map = array();
 		foreach ($map_keys as $i => $bucket_key) {
 			$key = sanitize_key((string) $bucket_key);
@@ -127,98 +185,137 @@ function vms_goals_admin_post_save_settings(): void
 			$bucket_map[$key] = $component;
 		}
 
+		$default_metric = sanitize_key(bvmgr_goals_post_value('default_metric'));
+		if ($default_metric === '') {
+			$default_metric = 'true_profit';
+		}
+
+		$default_allocation_mode = sanitize_key(bvmgr_goals_post_value('default_allocation_mode'));
+		if ($default_allocation_mode === '') {
+			$default_allocation_mode = 'even';
+		}
+
+		$default_trailing_window_events_raw = bvmgr_goals_post_value('default_trailing_window_events');
+		$default_trailing_window_events = ($default_trailing_window_events_raw !== '') ? max(1, (int) $default_trailing_window_events_raw) : 6;
+
+		$headcount_default_door_mode = sanitize_key(bvmgr_goals_post_value('headcount_default_door_mode'));
+		if ($headcount_default_door_mode === '') {
+			$headcount_default_door_mode = 'percent';
+		}
+
+		$headcount_default_door_percent_raw = bvmgr_goals_post_value('headcount_default_door_percent');
+		$headcount_default_door_percent = ($headcount_default_door_percent_raw !== '') ? max(0, min(95, (int) $headcount_default_door_percent_raw)) : 15;
+
+		$headcount_default_door_count_raw = bvmgr_goals_post_value('headcount_default_door_count');
+		$headcount_default_door_count = ($headcount_default_door_count_raw !== '') ? max(0, (int) $headcount_default_door_count_raw) : 0;
+
+		$concessions_buyer_rate_pct_raw = bvmgr_goals_post_value('concessions_buyer_rate_pct');
+		$concessions_buyer_rate_pct = ($concessions_buyer_rate_pct_raw !== '') ? max(0, min(100, (int) $concessions_buyer_rate_pct_raw)) : 35;
+
 		$update = array(
-			'default_metric' => isset($_POST['default_metric']) ? sanitize_key((string) $_POST['default_metric']) : 'true_profit',
-			'default_overhead_mode' => !empty($_POST['include_overhead_by_default']) ? 'include_overhead' : 'exclude_overhead',
-			'default_allocation_mode' => isset($_POST['default_allocation_mode']) ? sanitize_key((string) $_POST['default_allocation_mode']) : 'even',
-			'default_trailing_window_events' => max(1, (int) ($_POST['default_trailing_window_events'] ?? 6)),
-			'headcount_default_door_mode' => isset($_POST['headcount_default_door_mode']) ? sanitize_key((string) $_POST['headcount_default_door_mode']) : 'percent',
-			'headcount_default_door_percent' => max(0, min(95, (int) ($_POST['headcount_default_door_percent'] ?? 15))),
-			'headcount_default_door_count' => max(0, (int) ($_POST['headcount_default_door_count'] ?? 0)),
-			'default_avg_ticket_price_cents' => vms_goals_parse_money_to_cents($_POST['default_avg_ticket_price'] ?? 0),
+			'default_metric' => $default_metric,
+			'default_overhead_mode' => (bvmgr_goals_post_value('include_overhead_by_default') !== '') ? 'include_overhead' : 'exclude_overhead',
+			'default_allocation_mode' => $default_allocation_mode,
+			'default_trailing_window_events' => $default_trailing_window_events,
+			'headcount_default_door_mode' => $headcount_default_door_mode,
+			'headcount_default_door_percent' => $headcount_default_door_percent,
+			'headcount_default_door_count' => $headcount_default_door_count,
+			'default_avg_ticket_price_cents' => bvmgr_goals_parse_money_to_cents(bvmgr_goals_post_value('default_avg_ticket_price')),
 			'provider_bucket_component_map' => $bucket_map,
 			'concessions_model_defaults' => array(
-				'buyer_rate_pct' => max(0, min(100, (int) ($_POST['concessions_buyer_rate_pct'] ?? 35))),
-				'avg_spend_cents' => vms_goals_parse_money_to_cents($_POST['concessions_avg_spend'] ?? 0),
+				'buyer_rate_pct' => $concessions_buyer_rate_pct,
+				'avg_spend_cents' => bvmgr_goals_parse_money_to_cents(bvmgr_goals_post_value('concessions_avg_spend')),
 				'mode' => 'simple',
-				'use_bucket_keys' => array_values(array_filter(array_map('sanitize_key', isset($_POST['concessions_use_bucket_keys']) && is_array($_POST['concessions_use_bucket_keys']) ? $_POST['concessions_use_bucket_keys'] : array()))),
+				'use_bucket_keys' => array_values(array_filter(array_map('sanitize_key', bvmgr_goals_post_array('concessions_use_bucket_keys')))),
 			),
 		);
 	}
 
-	vms_goals_update_settings($update);
-	vms_goals_admin_redirect_with_notice('success', 'Settings saved.', array('tab' => $tab));
+	bvmgr_goals_update_settings($update);
+	bvmgr_goals_admin_redirect_with_notice('success', 'Settings saved.', array('tab' => $tab));
 }
 
-add_action('admin_post_vms_goals_save_goal', 'vms_goals_admin_post_save_goal');
-function vms_goals_admin_post_save_goal(): void
+add_action('admin_post_vms_goals_save_goal', 'bvmgr_goals_admin_post_save_goal');
+function bvmgr_goals_admin_post_save_goal(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
-	check_admin_referer('vms_goals_save_goal');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_goals_save_goal', '_wpnonce'), '_wpnonce');
 
-	$goal_id = isset($_POST['goal_id']) ? absint($_POST['goal_id']) : 0;
+	$goal_id = absint(bvmgr_goals_post_value('goal_id'));
 	$payload = array(
-		'name' => sanitize_text_field((string) ($_POST['name'] ?? '')),
-		'metric' => sanitize_key((string) ($_POST['metric'] ?? 'true_profit')),
-		'period_type' => sanitize_key((string) ($_POST['period_type'] ?? 'month')),
-		'period_start_local' => sanitize_text_field((string) ($_POST['period_start_local'] ?? '')),
-		'period_end_local' => sanitize_text_field((string) ($_POST['period_end_local'] ?? '')),
-		'target_cents' => $_POST['target_amount'] ?? 0,
-		'allocation_mode' => sanitize_key((string) ($_POST['allocation_mode'] ?? 'even')),
-		'weight_mode' => sanitize_key((string) ($_POST['weight_mode'] ?? 'none')),
-		'venue_id' => absint($_POST['venue_id'] ?? 0),
-		'is_active' => !empty($_POST['is_active']) ? 1 : 0,
+		'name' => sanitize_text_field(bvmgr_goals_post_value('name')),
+		'metric' => sanitize_key(bvmgr_goals_post_value('metric')),
+		'period_type' => sanitize_key(bvmgr_goals_post_value('period_type')),
+		'period_start_local' => sanitize_text_field(bvmgr_goals_post_value('period_start_local')),
+		'period_end_local' => sanitize_text_field(bvmgr_goals_post_value('period_end_local')),
+		'target_cents' => bvmgr_goals_post_value('target_amount'),
+		'allocation_mode' => sanitize_key(bvmgr_goals_post_value('allocation_mode')),
+		'weight_mode' => sanitize_key(bvmgr_goals_post_value('weight_mode')),
+		'venue_id' => absint(bvmgr_goals_post_value('venue_id')),
+		'is_active' => (bvmgr_goals_post_value('is_active') !== '') ? 1 : 0,
 	);
+	if ($payload['metric'] === '') {
+		$payload['metric'] = 'true_profit';
+	}
+	if ($payload['period_type'] === '') {
+		$payload['period_type'] = 'month';
+	}
+	if ($payload['allocation_mode'] === '') {
+		$payload['allocation_mode'] = 'even';
+	}
+	if ($payload['weight_mode'] === '') {
+		$payload['weight_mode'] = 'none';
+	}
 
-	$result = vms_goals_save_goal($payload, $goal_id);
+	$result = bvmgr_goals_save_goal($payload, $goal_id);
 	if (empty($result['ok'])) {
-		vms_goals_admin_redirect_with_notice('error', (string) ($result['message'] ?? 'Unable to save goal.'), array('tab' => 'goals'));
+		bvmgr_goals_admin_redirect_with_notice('error', (string) ($result['message'] ?? 'Unable to save goal.'), array('tab' => 'goals'));
 	}
-	vms_goals_admin_redirect_with_notice('success', (string) ($result['message'] ?? 'Goal saved.'), array('tab' => 'goals'));
+	bvmgr_goals_admin_redirect_with_notice('success', (string) ($result['message'] ?? 'Goal saved.'), array('tab' => 'goals'));
 }
 
-add_action('admin_post_vms_goals_delete_goal', 'vms_goals_admin_post_delete_goal');
-function vms_goals_admin_post_delete_goal(): void
+add_action('admin_post_vms_goals_delete_goal', 'bvmgr_goals_admin_post_delete_goal');
+function bvmgr_goals_admin_post_delete_goal(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
-	$goal_id = isset($_GET['goal_id']) ? absint($_GET['goal_id']) : 0;
-	$nonce = isset($_GET['_wpnonce']) ? (string) wp_unslash($_GET['_wpnonce']) : '';
-	if ($goal_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_delete_goal_' . $goal_id)) {
-		vms_goals_admin_redirect_with_notice('error', 'Delete request failed security checks.', array('tab' => 'goals'));
+	$goal_id = absint(bvmgr_goals_query_value('goal_id'));
+	$nonce = sanitize_text_field(bvmgr_goals_query_value('_wpnonce'));
+	if ($goal_id <= 0 || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_goals_delete_goal_' . $goal_id))) {
+		bvmgr_goals_admin_redirect_with_notice('error', 'Delete request failed security checks.', array('tab' => 'goals'));
 	}
 
-	$ok = vms_goals_delete_goal($goal_id);
-	vms_goals_admin_redirect_with_notice($ok ? 'success' : 'error', $ok ? 'Goal deleted.' : 'Unable to delete goal.', array('tab' => 'goals'));
+	$ok = bvmgr_goals_delete_goal($goal_id);
+	bvmgr_goals_admin_redirect_with_notice($ok ? 'success' : 'error', $ok ? 'Goal deleted.' : 'Unable to delete goal.', array('tab' => 'goals'));
 }
 
-add_action('admin_post_vms_goals_activate_goal', 'vms_goals_admin_post_activate_goal');
-function vms_goals_admin_post_activate_goal(): void
+add_action('admin_post_vms_goals_activate_goal', 'bvmgr_goals_admin_post_activate_goal');
+function bvmgr_goals_admin_post_activate_goal(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
-	$goal_id = isset($_GET['goal_id']) ? absint($_GET['goal_id']) : 0;
-	$nonce = isset($_GET['_wpnonce']) ? (string) wp_unslash($_GET['_wpnonce']) : '';
-	if ($goal_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_activate_goal_' . $goal_id)) {
-		vms_goals_admin_redirect_with_notice('error', 'Activate request failed security checks.', array('tab' => 'goals'));
+	$goal_id = absint(bvmgr_goals_query_value('goal_id'));
+	$nonce = sanitize_text_field(bvmgr_goals_query_value('_wpnonce'));
+	if ($goal_id <= 0 || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_goals_activate_goal_' . $goal_id))) {
+		bvmgr_goals_admin_redirect_with_notice('error', 'Activate request failed security checks.', array('tab' => 'goals'));
 	}
 
-	if (function_exists('vms_goals_set_active_goal') && vms_goals_set_active_goal($goal_id)) {
-		vms_goals_admin_redirect_with_notice('success', 'Goal activated.', array('tab' => 'goals'));
+	if (function_exists('bvmgr_goals_set_active_goal') && bvmgr_goals_set_active_goal($goal_id)) {
+		bvmgr_goals_admin_redirect_with_notice('success', 'Goal activated.', array('tab' => 'goals'));
 	}
 
-	vms_goals_admin_redirect_with_notice('error', 'Unable to activate goal.', array('tab' => 'goals'));
+	bvmgr_goals_admin_redirect_with_notice('error', 'Unable to activate goal.', array('tab' => 'goals'));
 }
 
-if (!function_exists('vms_goals_render_admin_notice')) {
-	function vms_goals_render_admin_notice(): void
+if (!function_exists('bvmgr_goals_render_admin_notice')) {
+	function bvmgr_goals_render_admin_notice(): void
 	{
-		$status = isset($_GET['vms_goals_status']) ? sanitize_key((string) $_GET['vms_goals_status']) : '';
-		$message = isset($_GET['vms_goals_message']) ? sanitize_text_field((string) wp_unslash($_GET['vms_goals_message'])) : '';
+		$status = sanitize_key(bvmgr_goals_query_value('vms_goals_status'));
+		$message = sanitize_text_field(bvmgr_goals_query_value('vms_goals_message'));
 		if ($status === '' || $message === '') {
 			return;
 		}
@@ -227,78 +324,81 @@ if (!function_exists('vms_goals_render_admin_notice')) {
 	}
 }
 
-if (!function_exists('vms_goals_render_admin_page')) {
-	function vms_goals_render_admin_page(): void
+if (!function_exists('bvmgr_goals_render_admin_page')) {
+	function bvmgr_goals_render_admin_page(): void
 	{
 		if (!current_user_can('manage_options')) {
 			return;
 		}
 
-		$tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : 'goals';
+		$tab = sanitize_key(bvmgr_goals_query_value('tab'));
+		if ($tab === '') {
+			$tab = 'goals';
+		}
 		if (!in_array($tab, array('goals', 'overhead-rules', 'forecast-defaults'), true)) {
 			$tab = 'goals';
 		}
 
-		$settings = vms_goals_get_settings();
-		$goals = vms_goals_list();
-		$edit_goal_id = isset($_GET['edit_goal_id']) ? absint($_GET['edit_goal_id']) : 0;
-		$edit_goal = ($edit_goal_id > 0) ? vms_goals_get_goal($edit_goal_id) : array();
+		$settings = bvmgr_goals_get_settings();
+		$goals = bvmgr_goals_list();
+		$edit_goal_id = absint(bvmgr_goals_query_value('edit_goal_id'));
+		$edit_goal = ($edit_goal_id > 0) ? bvmgr_goals_get_goal($edit_goal_id) : array();
 
 		echo '<div class="wrap vms-goals-admin">';
-		echo '<h1>' . esc_html__('Goals & Forecasting', 'vms') . '</h1>';
-		vms_goals_render_admin_notice();
+		echo '<h1>' . esc_html__('Goals & Forecasting', 'backstage-venue-manager') . '</h1>';
+		bvmgr_goals_render_admin_notice();
 
 		echo '<h2 class="nav-tab-wrapper">';
-		echo '<a class="nav-tab ' . ($tab === 'goals' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'goals'))) . '">' . esc_html__('Goals', 'vms') . '</a>';
-		echo '<a class="nav-tab ' . ($tab === 'overhead-rules' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'overhead-rules'))) . '">' . esc_html__('Overhead Rules', 'vms') . '</a>';
-		echo '<a class="nav-tab ' . ($tab === 'forecast-defaults' ? 'nav-tab-active' : '') . '" href="' . esc_url(vms_goals_admin_url(array('tab' => 'forecast-defaults'))) . '">' . esc_html__('Forecast Defaults', 'vms') . '</a>';
+		echo '<a class="nav-tab ' . ($tab === 'goals' ? 'nav-tab-active' : '') . '" href="' . esc_url(bvmgr_goals_admin_url(array('tab' => 'goals'))) . '">' . esc_html__('Goals', 'backstage-venue-manager') . '</a>';
+		echo '<a class="nav-tab ' . ($tab === 'overhead-rules' ? 'nav-tab-active' : '') . '" href="' . esc_url(bvmgr_goals_admin_url(array('tab' => 'overhead-rules'))) . '">' . esc_html__('Overhead Rules', 'backstage-venue-manager') . '</a>';
+		echo '<a class="nav-tab ' . ($tab === 'forecast-defaults' ? 'nav-tab-active' : '') . '" href="' . esc_url(bvmgr_goals_admin_url(array('tab' => 'forecast-defaults'))) . '">' . esc_html__('Forecast Defaults', 'backstage-venue-manager') . '</a>';
 		echo '</h2>';
 
 		if ($tab === 'goals') {
-			vms_goals_render_goals_tab($goals, $edit_goal);
+			bvmgr_goals_render_goals_tab($goals, $edit_goal);
 		} elseif ($tab === 'overhead-rules') {
-			vms_goals_render_overhead_tab($settings);
+			bvmgr_goals_render_overhead_tab($settings);
 		} else {
-			vms_goals_render_forecast_defaults_tab($settings);
+			bvmgr_goals_render_forecast_defaults_tab($settings);
 		}
 
 		echo '</div>';
 	}
 }
 
-if (!function_exists('vms_goals_render_goals_tab')) {
-	function vms_goals_render_goals_tab(array $goals, array $edit_goal): void
+if (!function_exists('bvmgr_goals_render_goals_tab')) {
+	function bvmgr_goals_render_goals_tab(array $goals, array $edit_goal): void
 	{
 		echo '<div class="vms-goals-grid">';
 		echo '<section class="vms-goals-card">';
-		echo '<h2>' . esc_html__('Goals', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Goals', 'backstage-venue-manager') . '</h2>';
 		if (empty($goals)) {
-			echo '<p>' . esc_html__('No goals created yet.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('No goals created yet.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<table class="widefat striped"><thead><tr>';
-			echo '<th>' . esc_html__('Name', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Metric', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Period', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Target', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Active', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Actions', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Name', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Metric', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Period', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Target', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Active', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
 			echo '</tr></thead><tbody>';
 			foreach ($goals as $goal) {
 				$goal_id = (int) ($goal['id'] ?? 0);
 				$name = (string) ($goal['name'] ?? '');
 				$metric = (string) ($goal['metric'] ?? '');
 				$period = (string) ($goal['period_type'] ?? '') . ': ' . (string) ($goal['period_start_local'] ?? '') . ' → ' . (string) ($goal['period_end_local'] ?? '');
-				$target = vms_goals_fmt_money((int) ($goal['target_cents'] ?? 0));
+				$target = bvmgr_goals_fmt_money((int) ($goal['target_cents'] ?? 0));
 				$is_active = !empty($goal['is_active']);
 
-				$edit_url = vms_goals_admin_url(array('tab' => 'goals', 'edit_goal_id' => $goal_id));
+				$edit_url = bvmgr_goals_admin_url(array('tab' => 'goals', 'edit_goal_id' => $goal_id));
 				$delete_url = wp_nonce_url(
 					admin_url('admin-post.php?action=vms_goals_delete_goal&goal_id=' . $goal_id),
-					'vms_goals_delete_goal_' . $goal_id
+					'bvmgr_goals_delete_goal_' . $goal_id
 				);
 				$activate_url = wp_nonce_url(
 					admin_url('admin-post.php?action=vms_goals_activate_goal&goal_id=' . $goal_id),
-					'vms_goals_activate_goal_' . $goal_id
+					'bvmgr_goals_activate_goal_' . $goal_id
 				);
 
 				echo '<tr>';
@@ -306,13 +406,13 @@ if (!function_exists('vms_goals_render_goals_tab')) {
 				echo '<td><code>' . esc_html($metric) . '</code></td>';
 				echo '<td>' . esc_html($period) . '</td>';
 				echo '<td>' . esc_html($target) . '</td>';
-				echo '<td>' . ($is_active ? esc_html__('Yes', 'vms') : esc_html__('No', 'vms')) . '</td>';
+				echo '<td>' . ($is_active ? esc_html__('Yes', 'backstage-venue-manager') : esc_html__('No', 'backstage-venue-manager')) . '</td>';
 				echo '<td>';
-				echo '<a class="button button-small" href="' . esc_url($edit_url) . '">' . esc_html__('Edit', 'vms') . '</a> ';
+				echo '<a class="button button-small" href="' . esc_url($edit_url) . '">' . esc_html__('Edit', 'backstage-venue-manager') . '</a> ';
 				if (!$is_active) {
-					echo '<a class="button button-small" href="' . esc_url($activate_url) . '">' . esc_html__('Set Active', 'vms') . '</a> ';
+					echo '<a class="button button-small" href="' . esc_url($activate_url) . '">' . esc_html__('Set Active', 'backstage-venue-manager') . '</a> ';
 				}
-				echo '<a class="button button-small" href="' . esc_url($delete_url) . '" onclick="return confirm(\'Delete this goal?\');">' . esc_html__('Delete', 'vms') . '</a>';
+				echo '<a class="button button-small" href="' . esc_url($delete_url) . '" onclick="return confirm(\'Delete this goal?\');">' . esc_html__('Delete', 'backstage-venue-manager') . '</a>';
 				echo '</td>';
 				echo '</tr>';
 			}
@@ -334,56 +434,56 @@ if (!function_exists('vms_goals_render_goals_tab')) {
 		$is_active = !empty($goal['is_active']);
 
 		echo '<section class="vms-goals-card">';
-		echo '<h2>' . esc_html($goal_id > 0 ? __('Edit Goal', 'vms') : __('Add Goal', 'vms')) . '</h2>';
+		echo '<h2>' . esc_html($goal_id > 0 ? __('Edit Goal', 'backstage-venue-manager') : __('Add Goal', 'backstage-venue-manager')) . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
-		wp_nonce_field('vms_goals_save_goal');
+		wp_nonce_field('bvmgr_goals_save_goal');
 		echo '<input type="hidden" name="action" value="vms_goals_save_goal" />';
 		echo '<input type="hidden" name="goal_id" value="' . (int) $goal_id . '" />';
 
-		echo '<label><strong>' . esc_html__('Name', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Name', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="name" value="' . esc_attr($name) . '" required />';
 
-		echo '<label><strong>' . esc_html__('Metric', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Metric', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="metric">';
-		echo '<option value="true_profit" ' . selected($metric, 'true_profit', false) . '>' . esc_html__('True Profit', 'vms') . '</option>';
-		echo '<option value="event_profit" ' . selected($metric, 'event_profit', false) . '>' . esc_html__('Event Profit', 'vms') . '</option>';
-		echo '<option value="gross_revenue" ' . selected($metric, 'gross_revenue', false) . '>' . esc_html__('Gross Revenue', 'vms') . '</option>';
+		echo '<option value="true_profit" ' . selected($metric, 'true_profit', false) . '>' . esc_html__('True Profit', 'backstage-venue-manager') . '</option>';
+		echo '<option value="event_profit" ' . selected($metric, 'event_profit', false) . '>' . esc_html__('Event Profit', 'backstage-venue-manager') . '</option>';
+		echo '<option value="gross_revenue" ' . selected($metric, 'gross_revenue', false) . '>' . esc_html__('Gross Revenue', 'backstage-venue-manager') . '</option>';
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Period Type', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Period Type', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="period_type">';
 		foreach (array('year', 'quarter', 'month', 'week', 'custom') as $type) {
 			echo '<option value="' . esc_attr($type) . '" ' . selected($period_type, $type, false) . '>' . esc_html(ucfirst($type)) . '</option>';
 		}
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Custom Start (used only for custom)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Custom Start (used only for custom)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="period_start_local" value="' . esc_attr($period_start) . '" placeholder="YYYY-MM-DD HH:MM:SS" />';
-		echo '<label><strong>' . esc_html__('Custom End (used only for custom)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Custom End (used only for custom)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="period_end_local" value="' . esc_attr($period_end) . '" placeholder="YYYY-MM-DD HH:MM:SS" />';
 
-		echo '<label><strong>' . esc_html__('Target Amount', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Target Amount', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="target_amount" value="' . esc_attr(number_format($target_cents / 100, 2, '.', '')) . '" placeholder="50000.00" />';
 
-		echo '<label><strong>' . esc_html__('Allocation Mode', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Allocation Mode', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="allocation_mode">';
-		echo '<option value="even" ' . selected($allocation_mode, 'even', false) . '>' . esc_html__('Even', 'vms') . '</option>';
-		echo '<option value="weighted" ' . selected($allocation_mode, 'weighted', false) . '>' . esc_html__('Weighted', 'vms') . '</option>';
+		echo '<option value="even" ' . selected($allocation_mode, 'even', false) . '>' . esc_html__('Even', 'backstage-venue-manager') . '</option>';
+		echo '<option value="weighted" ' . selected($allocation_mode, 'weighted', false) . '>' . esc_html__('Weighted', 'backstage-venue-manager') . '</option>';
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Weight Mode', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Weight Mode', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="weight_mode">';
 		echo '<option value="none" ' . selected($weight_mode, 'none', false) . '>None</option>';
 		echo '<option value="forecast_headcount" ' . selected($weight_mode, 'forecast_headcount', false) . '>Forecast Headcount</option>';
 		echo '<option value="forecast_revenue" ' . selected($weight_mode, 'forecast_revenue', false) . '>Forecast Revenue</option>';
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Venue ID (optional)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Venue ID (optional)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="number" min="0" step="1" name="venue_id" value="' . (int) $venue_id . '" />';
 
-		echo '<label><input type="checkbox" name="is_active" value="1" ' . checked($is_active, true, false) . ' /> ' . esc_html__('Set as active goal', 'vms') . '</label>';
+		echo '<label><input type="checkbox" name="is_active" value="1" ' . checked($is_active, true, false) . ' /> ' . esc_html__('Set as active goal', 'backstage-venue-manager') . '</label>';
 
-		echo '<p><button class="button button-primary">' . esc_html__('Save Goal', 'vms') . '</button></p>';
+		echo '<p><button class="button button-primary">' . esc_html__('Save Goal', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 		echo '</section>';
 
@@ -391,40 +491,40 @@ if (!function_exists('vms_goals_render_goals_tab')) {
 	}
 }
 
-if (!function_exists('vms_goals_render_overhead_tab')) {
-	function vms_goals_render_overhead_tab(array $settings): void
+if (!function_exists('bvmgr_goals_render_overhead_tab')) {
+	function bvmgr_goals_render_overhead_tab(array $settings): void
 	{
 		$overhead = isset($settings['overhead_rules']) && is_array($settings['overhead_rules']) ? $settings['overhead_rules'] : array();
 		echo '<section class="vms-goals-card">';
-		echo '<h2>' . esc_html__('Overhead Rules', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Overhead Rules', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
-		wp_nonce_field('vms_goals_save_settings');
+		wp_nonce_field('bvmgr_goals_save_settings');
 		echo '<input type="hidden" name="action" value="vms_goals_save_settings" />';
 		echo '<input type="hidden" name="tab" value="overhead-rules" />';
 
-		echo '<label><strong>' . esc_html__('Mode', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Mode', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="overhead_mode">';
 		foreach (array('flat_per_event', 'per_attendee', 'percent_of_gross', 'hybrid') as $mode) {
 			echo '<option value="' . esc_attr($mode) . '" ' . selected((string) ($overhead['mode'] ?? ''), $mode, false) . '>' . esc_html($mode) . '</option>';
 		}
 		echo '</select>';
 
-		echo '<label><strong>' . esc_html__('Flat per event ($)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Flat per event ($)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="overhead_flat_per_event" value="' . esc_attr(number_format(((int) ($overhead['flat_per_event_cents'] ?? 0)) / 100, 2, '.', '')) . '" />';
-		echo '<label><strong>' . esc_html__('Per attendee ($)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Per attendee ($)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="text" name="overhead_per_attendee" value="' . esc_attr(number_format(((int) ($overhead['per_attendee_cents'] ?? 0)) / 100, 2, '.', '')) . '" />';
-		echo '<label><strong>' . esc_html__('Percent of gross (basis points)', 'vms') . '</strong></label>';
+		echo '<label><strong>' . esc_html__('Percent of gross (basis points)', 'backstage-venue-manager') . '</strong></label>';
 		echo '<input type="number" min="0" max="10000" step="1" name="overhead_percent_bps" value="' . (int) ($overhead['percent_of_gross_bps'] ?? 0) . '" />';
 		echo '<p class="description">250 bps = 2.50%</p>';
 
-		echo '<p><button class="button button-primary">' . esc_html__('Save Overhead Rules', 'vms') . '</button></p>';
+		echo '<p><button class="button button-primary">' . esc_html__('Save Overhead Rules', 'backstage-venue-manager') . '</button></p>';
 		echo '</form>';
 		echo '</section>';
 	}
 }
 
-if (!function_exists('vms_goals_render_forecast_defaults_tab')) {
-	function vms_goals_render_forecast_defaults_tab(array $settings): void
+if (!function_exists('bvmgr_goals_render_forecast_defaults_tab')) {
+	function bvmgr_goals_render_forecast_defaults_tab(array $settings): void
 	{
 		$concessions = isset($settings['concessions_model_defaults']) && is_array($settings['concessions_model_defaults'])
 			? $settings['concessions_model_defaults']
@@ -438,9 +538,9 @@ if (!function_exists('vms_goals_render_forecast_defaults_tab')) {
 		}
 
 		echo '<section class="vms-goals-card">';
-		echo '<h2>' . esc_html__('Forecast Defaults', 'vms') . '</h2>';
+		echo '<h2>' . esc_html__('Forecast Defaults', 'backstage-venue-manager') . '</h2>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-goals-form">';
-		wp_nonce_field('vms_goals_save_settings');
+		wp_nonce_field('bvmgr_goals_save_settings');
 		echo '<input type="hidden" name="action" value="vms_goals_save_settings" />';
 		echo '<input type="hidden" name="tab" value="forecast-defaults" />';
 
@@ -516,21 +616,21 @@ if (!function_exists('vms_goals_render_forecast_defaults_tab')) {
 	}
 }
 
-add_action('add_meta_boxes', 'vms_goals_event_plan_add_metabox', 25);
-function vms_goals_event_plan_add_metabox(): void
+add_action('add_meta_boxes', 'bvmgr_goals_event_plan_add_metabox', 25);
+function bvmgr_goals_event_plan_add_metabox(): void
 {
 	add_meta_box(
 		'vms_event_plan_goals_finance',
-		__('Finance: Goal Impact + Profitability', 'vms'),
-		'vms_goals_event_plan_metabox_html',
+		__('Finance: Goal Impact + Profitability', 'backstage-venue-manager'),
+		'bvmgr_goals_event_plan_metabox_html',
 		'vms_event_plan',
 		'normal',
 		'default'
 	);
 }
 
-if (!function_exists('vms_goals_event_plan_refresh_url')) {
-	function vms_goals_event_plan_refresh_url(int $event_plan_id): string
+if (!function_exists('bvmgr_goals_event_plan_refresh_url')) {
+	function bvmgr_goals_event_plan_refresh_url(int $event_plan_id): string
 	{
 		$redirect = get_edit_post_link($event_plan_id, 'raw');
 		if (!is_string($redirect) || $redirect === '') {
@@ -544,12 +644,12 @@ if (!function_exists('vms_goals_event_plan_refresh_url')) {
 			),
 			admin_url('admin-post.php')
 		);
-		return wp_nonce_url($url, 'vms_goals_refresh_event_actuals_' . $event_plan_id);
+		return wp_nonce_url($url, 'bvmgr_goals_refresh_event_actuals_' . $event_plan_id);
 	}
 }
 
-if (!function_exists('vms_goals_event_plan_metabox_html')) {
-	function vms_goals_event_plan_metabox_html(WP_Post $post): void
+if (!function_exists('bvmgr_goals_event_plan_metabox_html')) {
+	function bvmgr_goals_event_plan_metabox_html(WP_Post $post): void
 	{
 		$forecast = max(0, (int) get_post_meta($post->ID, '_vms_forecast_headcount', true));
 		$door_mode = (string) get_post_meta($post->ID, '_vms_door_sales_mode', true);
@@ -565,17 +665,17 @@ if (!function_exists('vms_goals_event_plan_metabox_html')) {
 		$direct_costs_cents = max(0, (int) get_post_meta($post->ID, '_vms_event_direct_costs_cents', true));
 		$processing_fees_cents = max(0, (int) get_post_meta($post->ID, '_vms_event_processing_fees_cents', true));
 
-		$provider_detected = vms_pos_provider_detect();
+		$provider_detected = bvmgr_pos_provider_detect();
 		$provider_names = array_keys($provider_detected);
 		$provider_status = empty($provider_names) ? 'No provider detected' : ('Detected: ' . implode(', ', $provider_names));
 
 		$snapshot_provider = (string) get_post_meta($post->ID, '_vms_event_actuals_provider', true);
 		$snapshot_pulled = (string) get_post_meta($post->ID, '_vms_event_actuals_pulled_at_utc', true);
-		$snapshot_totals = vms_goals_get_manual_event_actual_totals($post->ID);
-		$refresh_url = vms_goals_event_plan_refresh_url((int) $post->ID);
+		$snapshot_totals = bvmgr_goals_get_manual_event_actual_totals($post->ID);
+		$refresh_url = bvmgr_goals_event_plan_refresh_url((int) $post->ID);
 
-		$active_goal = vms_goals_get_active_goal();
-		$goal_progress = !empty($active_goal) ? vms_goals_compute_goal_progress($active_goal) : array();
+		$active_goal = bvmgr_goals_get_active_goal();
+		$goal_progress = !empty($active_goal) ? bvmgr_goals_compute_goal_progress($active_goal) : array();
 		$required_for_this_event = 0;
 		if (!empty($goal_progress['allocations']) && is_array($goal_progress['allocations'])) {
 			foreach ($goal_progress['allocations'] as $allocation) {
@@ -586,16 +686,16 @@ if (!function_exists('vms_goals_event_plan_metabox_html')) {
 			}
 		}
 
-		$pnl_forecast = vms_goals_get_event_pnl($post->ID, array('headcount_mode' => 'forecast', 'include_overhead' => true));
-		$pnl_ticketed = vms_goals_get_event_pnl($post->ID, array('headcount_mode' => 'ticketed', 'include_overhead' => true));
-		$pnl_true = vms_goals_get_event_pnl($post->ID, array('headcount_mode' => 'true', 'include_overhead' => true));
-		$break_even = vms_goals_break_even_headcount($post->ID, array('include_overhead' => true));
+		$pnl_forecast = bvmgr_goals_get_event_pnl($post->ID, array('headcount_mode' => 'forecast', 'include_overhead' => true));
+		$pnl_ticketed = bvmgr_goals_get_event_pnl($post->ID, array('headcount_mode' => 'ticketed', 'include_overhead' => true));
+		$pnl_true = bvmgr_goals_get_event_pnl($post->ID, array('headcount_mode' => 'true', 'include_overhead' => true));
+		$break_even = bvmgr_goals_break_even_headcount($post->ID, array('include_overhead' => true));
 
-		$notice_status = isset($_GET['vms_goals_actuals_status']) ? sanitize_key((string) $_GET['vms_goals_actuals_status']) : '';
-		$notice_event = isset($_GET['vms_goals_actuals_event']) ? absint($_GET['vms_goals_actuals_event']) : 0;
-		$notice_msg = isset($_GET['vms_goals_actuals_message']) ? sanitize_text_field((string) wp_unslash($_GET['vms_goals_actuals_message'])) : '';
+		$notice_status = sanitize_key(bvmgr_goals_query_value('vms_goals_actuals_status'));
+		$notice_event = absint(bvmgr_goals_query_value('vms_goals_actuals_event'));
+		$notice_msg = sanitize_text_field(bvmgr_goals_query_value('vms_goals_actuals_message'));
 
-		wp_nonce_field('vms_goals_event_finance_save', 'vms_goals_event_finance_nonce');
+		wp_nonce_field('bvmgr_goals_event_finance_save', 'bvmgr_goals_event_finance_nonce');
 
 		echo '<div class="vms-goals-finance">';
 		if ($notice_event === (int) $post->ID && $notice_msg !== '' && in_array($notice_status, array('success', 'error'), true)) {
@@ -610,19 +710,19 @@ if (!function_exists('vms_goals_event_plan_metabox_html')) {
 
 		echo '<div class="vms-goals-panel" data-vms-goals-panel="goal-impact">';
 		if (empty($active_goal)) {
-			echo '<p>No active goal selected. Configure one in <a href="' . esc_url(vms_goals_admin_url(array('tab' => 'goals'))) . '">Goals &amp; Forecasting</a>.</p>';
+			echo '<p>No active goal selected. Configure one in <a href="' . esc_url(bvmgr_goals_admin_url(array('tab' => 'goals'))) . '">Goals &amp; Forecasting</a>.</p>';
 		} else {
 			if (!empty($goal_progress['is_truncated'])) {
-				echo '<div class="notice notice-warning inline"><p>' . esc_html__('Goal calculations are performance-capped for this period. Narrow date range for full precision.', 'vms') . '</p></div>';
+				echo '<div class="notice notice-warning inline"><p>' . esc_html__('Goal calculations are performance-capped for this period. Narrow date range for full precision.', 'backstage-venue-manager') . '</p></div>';
 			}
 			echo '<p><strong>Active Goal:</strong> ' . esc_html((string) ($active_goal['name'] ?? '')) . '</p>';
-			echo '<p><strong>Required contribution for this event:</strong> ' . esc_html(vms_goals_fmt_money($required_for_this_event)) . '</p>';
-			echo '<p><strong>Projected true profit (forecast mode):</strong> ' . esc_html(vms_goals_fmt_money((int) ($pnl_forecast['true_profit_cents'] ?? 0))) . '</p>';
+			echo '<p><strong>Required contribution for this event:</strong> ' . esc_html(bvmgr_goals_fmt_money($required_for_this_event)) . '</p>';
+			echo '<p><strong>Projected true profit (forecast mode):</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_forecast['true_profit_cents'] ?? 0))) . '</p>';
 			$delta = (int) ($pnl_forecast['true_profit_cents'] ?? 0) - $required_for_this_event;
-			echo '<p><strong>Delta vs required:</strong> ' . esc_html(vms_goals_fmt_money($delta)) . '</p>';
+			echo '<p><strong>Delta vs required:</strong> ' . esc_html(bvmgr_goals_fmt_money($delta)) . '</p>';
 			if (!empty($goal_progress)) {
-				echo '<p><strong>Remaining required across goal:</strong> ' . esc_html(vms_goals_fmt_money((int) ($goal_progress['remaining_required_cents'] ?? 0))) . '</p>';
-				echo '<p><strong>Required avg per remaining event:</strong> ' . esc_html(vms_goals_fmt_money((int) ($goal_progress['required_avg_per_remaining_event_cents'] ?? 0))) . '</p>';
+				echo '<p><strong>Remaining required across goal:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($goal_progress['remaining_required_cents'] ?? 0))) . '</p>';
+				echo '<p><strong>Required avg per remaining event:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($goal_progress['required_avg_per_remaining_event_cents'] ?? 0))) . '</p>';
 			}
 		}
 		echo '</div>';
@@ -638,9 +738,9 @@ if (!function_exists('vms_goals_event_plan_metabox_html')) {
 		}
 
 		echo '<div class="vms-goals-kpis">';
-		echo '<div><strong>Forecast Profit</strong><br />' . esc_html(vms_goals_fmt_money((int) ($pnl_forecast['true_profit_cents'] ?? 0))) . '</div>';
-		echo '<div><strong>Ticketed Profit</strong><br />' . esc_html(vms_goals_fmt_money((int) ($pnl_ticketed['true_profit_cents'] ?? 0))) . '</div>';
-		echo '<div><strong>True Profit</strong><br />' . esc_html(vms_goals_fmt_money((int) ($pnl_true['true_profit_cents'] ?? 0))) . '</div>';
+		echo '<div><strong>Forecast Profit</strong><br />' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_forecast['true_profit_cents'] ?? 0))) . '</div>';
+		echo '<div><strong>Ticketed Profit</strong><br />' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_ticketed['true_profit_cents'] ?? 0))) . '</div>';
+		echo '<div><strong>True Profit</strong><br />' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_true['true_profit_cents'] ?? 0))) . '</div>';
 		echo '<div><strong>Break-even HC</strong><br />' . esc_html((string) ((int) ($break_even['break_even_headcount'] ?? 0))) . '</div>';
 		echo '</div>';
 
@@ -658,7 +758,7 @@ if (!function_exists('vms_goals_event_plan_metabox_html')) {
 			for ($i = 0; $i < 3; $i++) {
 				$val = (int) $vals[$i];
 				if (!empty($vals[3])) {
-					echo '<td>' . esc_html(vms_goals_fmt_money($val)) . '</td>';
+					echo '<td>' . esc_html(bvmgr_goals_fmt_money($val)) . '</td>';
 				} else {
 					echo '<td>' . esc_html((string) $val) . '</td>';
 				}
@@ -691,8 +791,8 @@ if (!function_exists('vms_goals_event_plan_metabox_html')) {
 	}
 }
 
-add_action('save_post_vms_event_plan', 'vms_goals_event_plan_save_meta', 35, 2);
-function vms_goals_event_plan_save_meta(int $post_id, WP_Post $post): void
+add_action('save_post_vms_event_plan', 'bvmgr_goals_event_plan_save_meta', 35, 2);
+function bvmgr_goals_event_plan_save_meta(int $post_id, WP_Post $post): void
 {
 	if ($post->post_type !== 'vms_event_plan') {
 		return;
@@ -703,23 +803,27 @@ function vms_goals_event_plan_save_meta(int $post_id, WP_Post $post): void
 	if (!current_user_can('edit_post', $post_id)) {
 		return;
 	}
-	if (!isset($_POST['vms_goals_event_finance_nonce']) || !wp_verify_nonce((string) $_POST['vms_goals_event_finance_nonce'], 'vms_goals_event_finance_save')) {
+	$nonce = sanitize_text_field(bvmgr_goals_post_value('bvmgr_goals_event_finance_nonce'));
+	if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_goals_event_finance_save'))) {
 		return;
 	}
 
-	$forecast = max(0, (int) ($_POST['vms_forecast_headcount'] ?? 0));
-	$door_mode = isset($_POST['vms_door_sales_mode']) ? sanitize_key((string) $_POST['vms_door_sales_mode']) : 'percent';
+	$forecast = max(0, (int) bvmgr_goals_post_value('vms_forecast_headcount'));
+	$door_mode = sanitize_key(bvmgr_goals_post_value('vms_door_sales_mode'));
+	if ($door_mode === '') {
+		$door_mode = 'percent';
+	}
 	if (!in_array($door_mode, array('percent', 'count'), true)) {
 		$door_mode = 'percent';
 	}
-	$door_percent = max(0, min(95, (int) ($_POST['vms_door_sales_percent'] ?? 0)));
-	$door_count = max(0, (int) ($_POST['vms_door_sales_count'] ?? 0));
-	$comp_forecast = max(0, (int) ($_POST['vms_comp_headcount_forecast'] ?? 0));
-	$true_hc = max(0, (int) ($_POST['vms_true_headcount'] ?? 0));
-	$comp_true = max(0, (int) ($_POST['vms_comp_headcount_true'] ?? 0));
-	$concessions_cents = vms_goals_parse_money_to_cents($_POST['vms_concessions_actual'] ?? 0);
-	$direct_costs_cents = vms_goals_parse_money_to_cents($_POST['vms_event_direct_costs_actual'] ?? 0);
-	$processing_cents = vms_goals_parse_money_to_cents($_POST['vms_event_processing_fees_actual'] ?? 0);
+	$door_percent = max(0, min(95, (int) bvmgr_goals_post_value('vms_door_sales_percent')));
+	$door_count = max(0, (int) bvmgr_goals_post_value('vms_door_sales_count'));
+	$comp_forecast = max(0, (int) bvmgr_goals_post_value('vms_comp_headcount_forecast'));
+	$true_hc = max(0, (int) bvmgr_goals_post_value('vms_true_headcount'));
+	$comp_true = max(0, (int) bvmgr_goals_post_value('vms_comp_headcount_true'));
+	$concessions_cents = bvmgr_goals_parse_money_to_cents(bvmgr_goals_post_value('vms_concessions_actual'));
+	$direct_costs_cents = bvmgr_goals_parse_money_to_cents(bvmgr_goals_post_value('vms_event_direct_costs_actual'));
+	$processing_cents = bvmgr_goals_parse_money_to_cents(bvmgr_goals_post_value('vms_event_processing_fees_actual'));
 
 	update_post_meta($post_id, '_vms_forecast_headcount', $forecast);
 	update_post_meta($post_id, '_vms_door_sales_mode', $door_mode);
@@ -733,7 +837,7 @@ function vms_goals_event_plan_save_meta(int $post_id, WP_Post $post): void
 	update_post_meta($post_id, '_vms_event_direct_costs_cents', $direct_costs_cents);
 	update_post_meta($post_id, '_vms_event_processing_fees_cents', $processing_cents);
 
-	$existing = vms_goals_get_manual_event_actual_totals($post_id);
+	$existing = bvmgr_goals_get_manual_event_actual_totals($post_id);
 	$existing['concessions_revenue_cents'] = $concessions_cents;
 	$existing['direct_costs_cents'] = $direct_costs_cents;
 	$existing['processing_fees_cents'] = $processing_cents;
@@ -744,22 +848,22 @@ function vms_goals_event_plan_save_meta(int $post_id, WP_Post $post): void
 	update_post_meta($post_id, '_vms_event_actuals_totals', $existing);
 }
 
-add_action('admin_post_vms_goals_refresh_event_actuals', 'vms_goals_admin_post_refresh_event_actuals');
-function vms_goals_admin_post_refresh_event_actuals(): void
+add_action('admin_post_vms_goals_refresh_event_actuals', 'bvmgr_goals_admin_post_refresh_event_actuals');
+function bvmgr_goals_admin_post_refresh_event_actuals(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	$event_plan_id = isset($_REQUEST['event_plan_id']) ? absint($_REQUEST['event_plan_id']) : 0;
-	$redirect = isset($_REQUEST['redirect']) ? esc_url_raw((string) wp_unslash($_REQUEST['redirect'])) : '';
+	$event_plan_id = absint(bvmgr_goals_request_value('event_plan_id'));
+	$redirect = esc_url_raw(bvmgr_goals_request_value('redirect'));
 	if ($redirect === '') {
 		$redirect = admin_url('post.php?post=' . $event_plan_id . '&action=edit');
 	}
 	$redirect = wp_validate_redirect($redirect, admin_url('edit.php?post_type=vms_event_plan'));
-	$nonce = isset($_REQUEST['_wpnonce']) ? (string) wp_unslash($_REQUEST['_wpnonce']) : '';
+	$nonce = sanitize_text_field(bvmgr_goals_request_value('_wpnonce'));
 
-	if ($event_plan_id <= 0 || !wp_verify_nonce($nonce, 'vms_goals_refresh_event_actuals_' . $event_plan_id)) {
+	if ($event_plan_id <= 0 || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_goals_refresh_event_actuals_' . $event_plan_id))) {
 		$redirect = add_query_arg(array(
 			'vms_goals_actuals_status' => 'error',
 			'vms_goals_actuals_event' => $event_plan_id,
@@ -769,7 +873,7 @@ function vms_goals_admin_post_refresh_event_actuals(): void
 		exit;
 	}
 
-	$result = vms_goals_refresh_event_actuals($event_plan_id);
+	$result = bvmgr_goals_refresh_event_actuals($event_plan_id);
 	$status = !empty($result['ok']) ? 'success' : 'error';
 	$message = sanitize_text_field((string) ($result['message'] ?? 'Refresh complete.'));
 	$redirect = add_query_arg(array(
@@ -781,15 +885,15 @@ function vms_goals_admin_post_refresh_event_actuals(): void
 	exit;
 }
 
-if (!function_exists('vms_goals_render_dashboard_panel')) {
-	function vms_goals_render_dashboard_panel(): void
+if (!function_exists('bvmgr_goals_render_dashboard_panel')) {
+	function bvmgr_goals_render_dashboard_panel(): void
 	{
-		$active_goal = vms_goals_get_active_goal();
+		$active_goal = bvmgr_goals_get_active_goal();
 		echo '<section id="vms-dashboard-goals">';
 		echo '<h2>Goal Tracker</h2>';
 		if (empty($active_goal)) {
 			echo '<div class="vms-panel-body"><p>No active goal configured.</p>';
-			echo '<p><a class="button button-secondary" href="' . esc_url(vms_goals_admin_url(array('tab' => 'goals'))) . '">Configure Goals</a></p></div>';
+			echo '<p><a class="button button-secondary" href="' . esc_url(bvmgr_goals_admin_url(array('tab' => 'goals'))) . '">Configure Goals</a></p></div>';
 			echo '</section>';
 			return;
 		}
@@ -798,22 +902,22 @@ if (!function_exists('vms_goals_render_dashboard_panel')) {
 		$cache_key = 'vms_goals_progress_' . $goal_id;
 		$progress = get_transient($cache_key);
 		if (!is_array($progress)) {
-			$progress = vms_goals_compute_goal_progress($active_goal);
+			$progress = bvmgr_goals_compute_goal_progress($active_goal);
 			set_transient($cache_key, $progress, 2 * MINUTE_IN_SECONDS);
 		}
 		echo '<div class="vms-panel-body vms-goals-dashboard-body">';
 		if (!empty($progress['is_truncated'])) {
-			echo '<div class="notice notice-warning inline"><p>' . esc_html__('Goal metrics are performance-capped; narrow the goal period for full precision.', 'vms') . '</p></div>';
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__('Goal metrics are performance-capped; narrow the goal period for full precision.', 'backstage-venue-manager') . '</p></div>';
 		}
 		echo '<p><strong>Goal:</strong> ' . esc_html((string) ($active_goal['name'] ?? '')) . '</p>';
-		echo '<p><strong>Target:</strong> ' . esc_html(vms_goals_fmt_money((int) ($progress['target_cents'] ?? 0))) . '</p>';
-		echo '<p><strong>Actual to date:</strong> ' . esc_html(vms_goals_fmt_money((int) ($progress['actual_to_date_cents'] ?? 0))) . '</p>';
-		echo '<p><strong>Remaining required:</strong> ' . esc_html(vms_goals_fmt_money((int) ($progress['remaining_required_cents'] ?? 0))) . '</p>';
+		echo '<p><strong>Target:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['target_cents'] ?? 0))) . '</p>';
+		echo '<p><strong>Actual to date:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['actual_to_date_cents'] ?? 0))) . '</p>';
+		echo '<p><strong>Remaining required:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['remaining_required_cents'] ?? 0))) . '</p>';
 		echo '<p><strong>Remaining events:</strong> ' . esc_html((string) ((int) ($progress['remaining_events_count'] ?? 0))) . '</p>';
-		echo '<p><strong>Required avg / event:</strong> ' . esc_html(vms_goals_fmt_money((int) ($progress['required_avg_per_remaining_event_cents'] ?? 0))) . '</p>';
-		echo '<p><strong>Projected end:</strong> ' . esc_html(vms_goals_fmt_money((int) ($progress['projected_end_cents'] ?? 0))) . '</p>';
-		echo '<p><strong>Projection gap:</strong> ' . esc_html(vms_goals_fmt_money((int) ($progress['projection_gap_cents'] ?? 0))) . '</p>';
-		echo '<p><a class="button button-secondary" href="' . esc_url(vms_goals_admin_url(array('tab' => 'goals'))) . '">Manage Goals</a></p>';
+		echo '<p><strong>Required avg / event:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['required_avg_per_remaining_event_cents'] ?? 0))) . '</p>';
+		echo '<p><strong>Projected end:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['projected_end_cents'] ?? 0))) . '</p>';
+		echo '<p><strong>Projection gap:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['projection_gap_cents'] ?? 0))) . '</p>';
+		echo '<p><a class="button button-secondary" href="' . esc_url(bvmgr_goals_admin_url(array('tab' => 'goals'))) . '">Manage Goals</a></p>';
 		echo '</div>';
 		echo '</section>';
 	}

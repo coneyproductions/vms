@@ -2,7 +2,7 @@
   // Deprecated shim. The canonical bundle is /assets/vms-ticketing-front.js.
   // This file exists only for backward compatibility with older cached enqueues.
   try {
-    if (window.__vmsTicketingFrontBundle && window.__vmsTicketingFrontBundle.loaded) return;
+    if (window.BVMGR_TICKETING_FRONT_BUNDLE && window.BVMGR_TICKETING_FRONT_BUNDLE.loaded) return;
 
     var cur = (document.currentScript && document.currentScript.src) ? String(document.currentScript.src) : '';
     if (!cur) return;

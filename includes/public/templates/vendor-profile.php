@@ -3,97 +3,159 @@ defined('ABSPATH') || exit;
 
 get_header();
 
-$vendor = isset($GLOBALS['vms_vendor_profile_post']) ? $GLOBALS['vms_vendor_profile_post'] : null;
-if (!($vendor instanceof WP_Post)) {
-    echo '<main class="vms-vendor-profile"><div class="vms-vp-card"><p>' . esc_html__('Vendor not found.', 'vms') . '</p></div></main>';
+$bvmgr_vendor_profile_post = isset($GLOBALS['bvmgr_vendor_profile_post']) ? $GLOBALS['bvmgr_vendor_profile_post'] : null;
+if (!($bvmgr_vendor_profile_post instanceof WP_Post)) {
+    echo '<main class="vms-vendor-profile"><div class="vms-vp-card"><p>' . esc_html__('Vendor not found.', 'backstage-venue-manager') . '</p></div></main>';
     wp_reset_postdata();
     get_footer();
     return;
 }
 
-$vendor_id = (int) $vendor->ID;
+$bvmgr_vendor_profile_post_id = (int) $bvmgr_vendor_profile_post->ID;
 
-$k_show_e   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
-$k_show_p   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
-$k_show_w   = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
-$k_show_loc = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
+$bvmgr_vendor_profile_show_email_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_email') : '_vms_vendor_public_profile_show_email';
+$bvmgr_vendor_profile_show_phone_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_phone') : '_vms_vendor_public_profile_show_phone';
+$bvmgr_vendor_profile_show_website_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_website') : '_vms_vendor_public_profile_show_website';
+$bvmgr_vendor_profile_show_location_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'public_profile_show_location') : '_vms_vendor_public_profile_show_location';
 
-$raw_show_e   = (string) get_post_meta($vendor_id, $k_show_e, true);
-$raw_show_p   = (string) get_post_meta($vendor_id, $k_show_p, true);
-$raw_show_w   = (string) get_post_meta($vendor_id, $k_show_w, true);
-$raw_show_loc = (string) get_post_meta($vendor_id, $k_show_loc, true);
+$bvmgr_vendor_profile_raw_show_email = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_show_email_meta_key, true);
+$bvmgr_vendor_profile_raw_show_phone = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_show_phone_meta_key, true);
+$bvmgr_vendor_profile_raw_show_website = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_show_website_meta_key, true);
+$bvmgr_vendor_profile_raw_show_location = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_show_location_meta_key, true);
 
-$show_email   = ($raw_show_e === '') ? true : ($raw_show_e === '1');
-$show_phone   = ($raw_show_p === '') ? true : ($raw_show_p === '1');
-$show_website = ($raw_show_w === '') ? true : ($raw_show_w === '1');
-$show_loc     = ($raw_show_loc === '') ? true : ($raw_show_loc === '1');
+$bvmgr_vendor_profile_show_email = ($bvmgr_vendor_profile_raw_show_email === '') ? true : ($bvmgr_vendor_profile_raw_show_email === '1');
+$bvmgr_vendor_profile_show_phone = ($bvmgr_vendor_profile_raw_show_phone === '') ? true : ($bvmgr_vendor_profile_raw_show_phone === '1');
+$bvmgr_vendor_profile_show_website = ($bvmgr_vendor_profile_raw_show_website === '') ? true : ($bvmgr_vendor_profile_raw_show_website === '1');
+$bvmgr_vendor_profile_show_location = ($bvmgr_vendor_profile_raw_show_location === '') ? true : ($bvmgr_vendor_profile_raw_show_location === '1');
 
-$k_primary_email = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
-$k_primary_phone = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
-$k_vendor_web    = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'website') : '_vms_vendor_website';
+$bvmgr_vendor_profile_primary_email_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email';
+$bvmgr_vendor_profile_primary_phone_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'primary_phone') : '_vms_vendor_primary_phone';
+$bvmgr_vendor_profile_website_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'website') : '_vms_vendor_website';
 
-$email   = (string) get_post_meta($vendor_id, $k_primary_email, true);
-$phone   = (string) get_post_meta($vendor_id, $k_primary_phone, true);
-$website = (string) get_post_meta($vendor_id, $k_vendor_web, true);
+$bvmgr_vendor_profile_email = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_primary_email_meta_key, true);
+$bvmgr_vendor_profile_phone = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_primary_phone_meta_key, true);
+$bvmgr_vendor_profile_website = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_website_meta_key, true);
 
-if ($email === '') {
-    $legacy_email_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_email') : '_vms_contact_email';
-    $email = (string) get_post_meta($vendor_id, $legacy_email_key, true);
+if ($bvmgr_vendor_profile_email === '') {
+    $bvmgr_vendor_profile_legacy_email_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_email') : '_vms_contact_email';
+    $bvmgr_vendor_profile_email = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_legacy_email_meta_key, true);
 }
-if ($phone === '') {
-    $legacy_phone_key = function_exists('vms_meta_key') ? vms_meta_key('vendor', 'contact_phone') : '_vms_contact_phone';
-    $phone = (string) get_post_meta($vendor_id, $legacy_phone_key, true);
+if ($bvmgr_vendor_profile_phone === '') {
+    $bvmgr_vendor_profile_legacy_phone_meta_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'contact_phone') : '_vms_contact_phone';
+    $bvmgr_vendor_profile_phone = (string) get_post_meta($bvmgr_vendor_profile_post_id, $bvmgr_vendor_profile_legacy_phone_meta_key, true);
 }
-if ($website === '') {
-    $website = (string) get_post_meta($vendor_id, '_vms_website_url', true);
+if ($bvmgr_vendor_profile_website === '') {
+    $bvmgr_vendor_profile_website = (string) get_post_meta($bvmgr_vendor_profile_post_id, '_vms_website_url', true);
 }
 
-$city  = (string) get_post_meta($vendor_id, function_exists('vms_meta_key') ? vms_meta_key('vendor', 'city') : '_vms_city', true);
-$state = (string) get_post_meta($vendor_id, function_exists('vms_meta_key') ? vms_meta_key('vendor', 'state') : '_vms_state', true);
-if (($city === '' || $state === '')) {
-    $legacy_loc = (string) get_post_meta($vendor_id, '_vms_vendor_location', true);
-    if ($legacy_loc !== '') {
-        $parts = array_map('trim', explode(',', $legacy_loc, 2));
-        if ($city === '' && isset($parts[0]) && $parts[0] !== '') {
-            $city = $parts[0];
+$bvmgr_vendor_profile_city  = (string) get_post_meta($bvmgr_vendor_profile_post_id, function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'city') : '_vms_city', true);
+$bvmgr_vendor_profile_state = (string) get_post_meta($bvmgr_vendor_profile_post_id, function_exists('bvmgr_meta_key') ? bvmgr_meta_key('vendor', 'state') : '_vms_state', true);
+if (($bvmgr_vendor_profile_city === '' || $bvmgr_vendor_profile_state === '')) {
+    $bvmgr_vendor_profile_legacy_location = (string) get_post_meta($bvmgr_vendor_profile_post_id, '_vms_vendor_location', true);
+    if ($bvmgr_vendor_profile_legacy_location !== '') {
+        $bvmgr_vendor_profile_legacy_location_parts = array_map('trim', explode(',', $bvmgr_vendor_profile_legacy_location, 2));
+        if ($bvmgr_vendor_profile_city === '' && isset($bvmgr_vendor_profile_legacy_location_parts[0]) && $bvmgr_vendor_profile_legacy_location_parts[0] !== '') {
+            $bvmgr_vendor_profile_city = $bvmgr_vendor_profile_legacy_location_parts[0];
         }
-        if ($state === '' && isset($parts[1]) && $parts[1] !== '') {
-            $state = $parts[1];
+        if ($bvmgr_vendor_profile_state === '' && isset($bvmgr_vendor_profile_legacy_location_parts[1]) && $bvmgr_vendor_profile_legacy_location_parts[1] !== '') {
+            $bvmgr_vendor_profile_state = $bvmgr_vendor_profile_legacy_location_parts[1];
         }
     }
 }
 
-$next_show_markup = function_exists('vms_vendor_profiles_render_next_show_card')
-    ? (string) vms_vendor_profiles_render_next_show_card($vendor_id)
+$bvmgr_vendor_profile_next_show_markup = function_exists('bvmgr_vendor_profiles_render_next_show_card')
+    ? (string) bvmgr_vendor_profiles_render_next_show_card($bvmgr_vendor_profile_post_id)
     : '';
 
-$social_markup = function_exists('vms_vendor_profiles_render_social_links')
-    ? (string) vms_vendor_profiles_render_social_links($vendor_id)
+$bvmgr_vendor_profile_social_markup = function_exists('bvmgr_vendor_profiles_render_social_links')
+    ? (string) bvmgr_vendor_profiles_render_social_links($bvmgr_vendor_profile_post_id)
     : '';
 
-$video_url = trim((string) get_post_meta($vendor_id, '_vms_vendor_featured_video_url', true));
-$video_embed = '';
-if ($video_url !== '') {
-    $video_embed = wp_oembed_get($video_url, array('width' => 960));
-    if ($video_embed === false || $video_embed === '') {
-        $video_embed = '<p><a href="' . esc_url($video_url) . '" target="_blank" rel="noopener">' . esc_html__('Watch featured video', 'vms') . '</a></p>';
+$bvmgr_vendor_profile_video_url = trim((string) get_post_meta($bvmgr_vendor_profile_post_id, '_vms_vendor_featured_video_url', true));
+$bvmgr_vendor_profile_video_embed = '';
+if ($bvmgr_vendor_profile_video_url !== '') {
+    $bvmgr_vendor_profile_video_embed = wp_oembed_get($bvmgr_vendor_profile_video_url, array('width' => 960));
+    if ($bvmgr_vendor_profile_video_embed === false || $bvmgr_vendor_profile_video_embed === '') {
+        $bvmgr_vendor_profile_video_embed = '<p><a href="' . esc_url($bvmgr_vendor_profile_video_url) . '" target="_blank" rel="noopener">' . esc_html__('Watch featured video', 'backstage-venue-manager') . '</a></p>';
     }
 }
 
-$gallery_images = array();
-for ($i = 1; $i <= 5; $i++) {
-    $url = trim((string) get_post_meta($vendor_id, '_vms_vendor_gallery_image_' . $i, true));
-    if ($url !== '') {
-        $gallery_images[] = esc_url($url);
+$bvmgr_vendor_profile_gallery_images = array();
+for ($bvmgr_vendor_profile_gallery_image_index = 1; $bvmgr_vendor_profile_gallery_image_index <= 5; $bvmgr_vendor_profile_gallery_image_index++) {
+    $bvmgr_vendor_profile_gallery_image_candidate_url = trim((string) get_post_meta($bvmgr_vendor_profile_post_id, '_vms_vendor_gallery_image_' . $bvmgr_vendor_profile_gallery_image_index, true));
+    if ($bvmgr_vendor_profile_gallery_image_candidate_url !== '') {
+        $bvmgr_vendor_profile_gallery_images[] = esc_url($bvmgr_vendor_profile_gallery_image_candidate_url);
     }
+}
+
+$bvmgr_vendor_profile_allowed_html = function_exists('bvmgr_vendor_profiles_promo_allowed_html')
+    ? bvmgr_vendor_profiles_promo_allowed_html()
+    : wp_kses_allowed_html('post');
+$bvmgr_vendor_profile_allowed_html['section'] = array(
+    'aria-label' => true,
+    'class' => true,
+);
+$bvmgr_vendor_profile_allowed_html['div'] = array(
+    'aria-label' => true,
+    'class' => true,
+);
+$bvmgr_vendor_profile_allowed_html['p'] = array(
+    'class' => true,
+);
+$bvmgr_vendor_profile_allowed_html['h2'] = array(
+    'class' => true,
+);
+$bvmgr_vendor_profile_allowed_html['a'] = array_merge(
+    isset($bvmgr_vendor_profile_allowed_html['a']) && is_array($bvmgr_vendor_profile_allowed_html['a'])
+        ? $bvmgr_vendor_profile_allowed_html['a']
+        : array(),
+    array(
+        'aria-label' => true,
+        'class' => true,
+        'href' => true,
+        'rel' => true,
+        'target' => true,
+    )
+);
+$bvmgr_vendor_profile_allowed_html['span'] = array_merge(
+    isset($bvmgr_vendor_profile_allowed_html['span']) && is_array($bvmgr_vendor_profile_allowed_html['span'])
+        ? $bvmgr_vendor_profile_allowed_html['span']
+        : array(),
+    array(
+        'aria-hidden' => true,
+        'class' => true,
+    )
+);
+
+$bvmgr_vendor_profile_social_icon_allowed_html = function_exists('bvmgr_vendor_profiles_social_icon_allowed_html')
+    ? bvmgr_vendor_profiles_social_icon_allowed_html()
+    : array(
+        'svg' => array(
+            'aria-hidden' => true,
+            'focusable' => true,
+            'viewbox' => true,
+        ),
+        'path' => array(
+            'd' => true,
+            'fill' => true,
+        ),
+    );
+
+foreach ($bvmgr_vendor_profile_social_icon_allowed_html as $bvmgr_vendor_profile_social_icon_tag => $bvmgr_vendor_profile_social_icon_attributes) {
+    $bvmgr_vendor_profile_allowed_html[$bvmgr_vendor_profile_social_icon_tag] = array_merge(
+        isset($bvmgr_vendor_profile_allowed_html[$bvmgr_vendor_profile_social_icon_tag]) && is_array($bvmgr_vendor_profile_allowed_html[$bvmgr_vendor_profile_social_icon_tag])
+            ? $bvmgr_vendor_profile_allowed_html[$bvmgr_vendor_profile_social_icon_tag]
+            : array(),
+        $bvmgr_vendor_profile_social_icon_attributes
+    );
 }
 ?>
 <main class="vms-vendor-profile" role="main">
     <section class="vms-vp-hero">
         <div class="vms-vp-hero-media">
-            <?php if (has_post_thumbnail($vendor_id)) : ?>
+            <?php if (has_post_thumbnail($bvmgr_vendor_profile_post_id)) : ?>
                 <div class="vms-vp-avatar">
-                    <?php echo get_the_post_thumbnail($vendor_id, 'large'); ?>
+                    <?php echo get_the_post_thumbnail($bvmgr_vendor_profile_post_id, 'large'); ?>
                 </div>
             <?php else : ?>
                 <div class="vms-vp-avatar vms-vp-avatar--placeholder" aria-hidden="true"></div>
@@ -101,87 +163,87 @@ for ($i = 1; $i <= 5; $i++) {
         </div>
 
         <div class="vms-vp-hero-body">
-            <h1 class="vms-vp-title"><?php echo esc_html(get_the_title($vendor_id)); ?></h1>
+            <h1 class="vms-vp-title"><?php echo esc_html(get_the_title($bvmgr_vendor_profile_post_id)); ?></h1>
 
-            <?php if ($show_loc && ($city !== '' || $state !== '')) : ?>
-                <p class="vms-vp-location"><?php echo esc_html(trim($city . ($city !== '' && $state !== '' ? ', ' : '') . $state)); ?></p>
+            <?php if ($bvmgr_vendor_profile_show_location && ($bvmgr_vendor_profile_city !== '' || $bvmgr_vendor_profile_state !== '')) : ?>
+                <p class="vms-vp-location"><?php echo esc_html(trim($bvmgr_vendor_profile_city . ($bvmgr_vendor_profile_city !== '' && $bvmgr_vendor_profile_state !== '' ? ', ' : '') . $bvmgr_vendor_profile_state)); ?></p>
             <?php endif; ?>
 
-            <?php if ($social_markup !== '') : ?>
-                <?php echo $social_markup; ?>
+            <?php if ($bvmgr_vendor_profile_social_markup !== '') : ?>
+                <?php echo wp_kses($bvmgr_vendor_profile_social_markup, $bvmgr_vendor_profile_allowed_html); ?>
             <?php endif; ?>
 
             <div class="vms-vp-actions">
-                <?php if ($show_phone && $phone !== '') : ?>
-                    <a class="vms-vp-btn" href="<?php echo esc_url('tel:' . preg_replace('/[^0-9\+]/', '', $phone)); ?>"><?php echo esc_html__('Call', 'vms'); ?></a>
+                <?php if ($bvmgr_vendor_profile_show_phone && $bvmgr_vendor_profile_phone !== '') : ?>
+                    <a class="vms-vp-btn" href="<?php echo esc_url('tel:' . preg_replace('/[^0-9\+]/', '', $bvmgr_vendor_profile_phone)); ?>"><?php echo esc_html__('Call', 'backstage-venue-manager'); ?></a>
                 <?php endif; ?>
 
-                <?php if ($show_email && $email !== '') : ?>
-                    <a class="vms-vp-btn" href="<?php echo esc_url('mailto:' . sanitize_email($email)); ?>"><?php echo esc_html__('Email', 'vms'); ?></a>
+                <?php if ($bvmgr_vendor_profile_show_email && $bvmgr_vendor_profile_email !== '') : ?>
+                    <a class="vms-vp-btn" href="<?php echo esc_url('mailto:' . sanitize_email($bvmgr_vendor_profile_email)); ?>"><?php echo esc_html__('Email', 'backstage-venue-manager'); ?></a>
                 <?php endif; ?>
 
-                <?php if ($show_website && $website !== '') : ?>
-                    <a class="vms-vp-btn" href="<?php echo esc_url($website); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Website', 'vms'); ?></a>
+                <?php if ($bvmgr_vendor_profile_show_website && $bvmgr_vendor_profile_website !== '') : ?>
+                    <a class="vms-vp-btn" href="<?php echo esc_url($bvmgr_vendor_profile_website); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Website', 'backstage-venue-manager'); ?></a>
                 <?php endif; ?>
             </div>
         </div>
     </section>
 
-    <?php if ($next_show_markup !== '') : ?>
-        <?php echo $next_show_markup; ?>
+    <?php if ($bvmgr_vendor_profile_next_show_markup !== '') : ?>
+        <?php echo wp_kses($bvmgr_vendor_profile_next_show_markup, $bvmgr_vendor_profile_allowed_html); ?>
     <?php endif; ?>
 
-    <?php if (trim((string) $vendor->post_content) !== '') : ?>
+    <?php if (trim((string) $bvmgr_vendor_profile_post->post_content) !== '') : ?>
         <section class="vms-vp-card">
-            <h2 class="vms-vp-h2"><?php echo esc_html__('About', 'vms'); ?></h2>
+            <h2 class="vms-vp-h2"><?php echo esc_html__('About', 'backstage-venue-manager'); ?></h2>
             <div class="vms-vp-content">
-                <?php echo apply_filters('the_content', $vendor->post_content); ?>
+                <?php echo wp_kses(apply_filters('the_content', $bvmgr_vendor_profile_post->post_content), $bvmgr_vendor_profile_allowed_html); ?>
             </div>
         </section>
     <?php endif; ?>
 
-    <?php if ($video_embed !== '') : ?>
+    <?php if ($bvmgr_vendor_profile_video_embed !== '') : ?>
         <section class="vms-vp-card">
-            <h2 class="vms-vp-h2"><?php echo esc_html__('Featured video', 'vms'); ?></h2>
-            <div class="vms-vp-video"><?php echo $video_embed; ?></div>
+            <h2 class="vms-vp-h2"><?php echo esc_html__('Featured video', 'backstage-venue-manager'); ?></h2>
+            <div class="vms-vp-video"><?php echo wp_kses($bvmgr_vendor_profile_video_embed, $bvmgr_vendor_profile_allowed_html); ?></div>
         </section>
     <?php endif; ?>
 
-    <?php if (!empty($gallery_images)) : ?>
+    <?php if (!empty($bvmgr_vendor_profile_gallery_images)) : ?>
         <section class="vms-vp-card">
-            <h2 class="vms-vp-h2"><?php echo esc_html__('Photos', 'vms'); ?></h2>
+            <h2 class="vms-vp-h2"><?php echo esc_html__('Photos', 'backstage-venue-manager'); ?></h2>
             <div class="vms-vp-gallery">
-                <?php foreach ($gallery_images as $image_url) : ?>
-                    <a class="vms-vp-gallery__item" href="<?php echo esc_url($image_url); ?>" target="_blank" rel="noopener">
-                        <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($vendor_id)); ?>">
+                <?php foreach ($bvmgr_vendor_profile_gallery_images as $bvmgr_vendor_profile_gallery_image_url) : ?>
+                    <a class="vms-vp-gallery__item" href="<?php echo esc_url($bvmgr_vendor_profile_gallery_image_url); ?>" target="_blank" rel="noopener">
+                        <img src="<?php echo esc_url($bvmgr_vendor_profile_gallery_image_url); ?>" alt="<?php echo esc_attr(get_the_title($bvmgr_vendor_profile_post_id)); ?>">
                     </a>
                 <?php endforeach; ?>
             </div>
         </section>
     <?php endif; ?>
 
-    <?php if (($show_email && $email !== '') || ($show_phone && $phone !== '') || ($show_website && $website !== '')) : ?>
+    <?php if (($bvmgr_vendor_profile_show_email && $bvmgr_vendor_profile_email !== '') || ($bvmgr_vendor_profile_show_phone && $bvmgr_vendor_profile_phone !== '') || ($bvmgr_vendor_profile_show_website && $bvmgr_vendor_profile_website !== '')) : ?>
         <section class="vms-vp-card">
-            <h2 class="vms-vp-h2"><?php echo esc_html__('Contact', 'vms'); ?></h2>
+            <h2 class="vms-vp-h2"><?php echo esc_html__('Contact', 'backstage-venue-manager'); ?></h2>
             <div class="vms-vp-contact">
-                <?php if ($show_phone && $phone !== '') : ?>
+                <?php if ($bvmgr_vendor_profile_show_phone && $bvmgr_vendor_profile_phone !== '') : ?>
                     <div class="vms-vp-contact-row">
-                        <span class="vms-vp-contact-label"><?php echo esc_html__('Phone', 'vms'); ?></span>
-                        <a class="vms-vp-contact-value" href="<?php echo esc_url('tel:' . preg_replace('/[^0-9\+]/', '', $phone)); ?>"><?php echo esc_html($phone); ?></a>
+                        <span class="vms-vp-contact-label"><?php echo esc_html__('Phone', 'backstage-venue-manager'); ?></span>
+                        <a class="vms-vp-contact-value" href="<?php echo esc_url('tel:' . preg_replace('/[^0-9\+]/', '', $bvmgr_vendor_profile_phone)); ?>"><?php echo esc_html($bvmgr_vendor_profile_phone); ?></a>
                     </div>
                 <?php endif; ?>
 
-                <?php if ($show_email && $email !== '') : ?>
+                <?php if ($bvmgr_vendor_profile_show_email && $bvmgr_vendor_profile_email !== '') : ?>
                     <div class="vms-vp-contact-row">
-                        <span class="vms-vp-contact-label"><?php echo esc_html__('Email', 'vms'); ?></span>
-                        <a class="vms-vp-contact-value" href="<?php echo esc_url('mailto:' . sanitize_email($email)); ?>"><?php echo esc_html($email); ?></a>
+                        <span class="vms-vp-contact-label"><?php echo esc_html__('Email', 'backstage-venue-manager'); ?></span>
+                        <a class="vms-vp-contact-value" href="<?php echo esc_url('mailto:' . sanitize_email($bvmgr_vendor_profile_email)); ?>"><?php echo esc_html($bvmgr_vendor_profile_email); ?></a>
                     </div>
                 <?php endif; ?>
 
-                <?php if ($show_website && $website !== '') : ?>
+                <?php if ($bvmgr_vendor_profile_show_website && $bvmgr_vendor_profile_website !== '') : ?>
                     <div class="vms-vp-contact-row">
-                        <span class="vms-vp-contact-label"><?php echo esc_html__('Website', 'vms'); ?></span>
-                        <a class="vms-vp-contact-value" href="<?php echo esc_url($website); ?>" target="_blank" rel="noopener"><?php echo esc_html($website); ?></a>
+                        <span class="vms-vp-contact-label"><?php echo esc_html__('Website', 'backstage-venue-manager'); ?></span>
+                        <a class="vms-vp-contact-value" href="<?php echo esc_url($bvmgr_vendor_profile_website); ?>" target="_blank" rel="noopener"><?php echo esc_html($bvmgr_vendor_profile_website); ?></a>
                     </div>
                 <?php endif; ?>
             </div>

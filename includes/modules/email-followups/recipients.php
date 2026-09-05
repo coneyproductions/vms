@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_email_followups_time_label')) {
-	function vms_email_followups_time_label(string $hhmm): string
+if (!function_exists('bvmgr_email_followups_time_label')) {
+	function bvmgr_email_followups_time_label(string $hhmm): string
 	{
 		$hhmm = trim($hhmm);
 		if ($hhmm === '') {
@@ -13,14 +13,14 @@ if (!function_exists('vms_email_followups_time_label')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_plan_tec_event_id')) {
-	function vms_email_followups_plan_tec_event_id(int $event_plan_id): int
+if (!function_exists('bvmgr_email_followups_plan_tec_event_id')) {
+	function bvmgr_email_followups_plan_tec_event_id(int $event_plan_id): int
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return 0;
 		}
-		$key = function_exists('vms_ticket_revenue_plan_tec_meta_key') ? vms_ticket_revenue_plan_tec_meta_key() : '_vms_tec_event_id';
+		$key = function_exists('bvmgr_ticket_revenue_plan_tec_meta_key') ? bvmgr_ticket_revenue_plan_tec_meta_key() : '_vms_tec_event_id';
 		$tec_event_id = absint(get_post_meta($event_plan_id, $key, true));
 		if ($tec_event_id <= 0) {
 			$tec_event_id = absint(get_post_meta($event_plan_id, '_vms_calendar_event_id', true));
@@ -29,16 +29,16 @@ if (!function_exists('vms_email_followups_plan_tec_event_id')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_context')) {
-	function vms_email_followups_event_context(int $event_plan_id): array
+if (!function_exists('bvmgr_email_followups_event_context')) {
+	function bvmgr_email_followups_event_context(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$post = $event_plan_id > 0 ? get_post($event_plan_id) : null;
 		if (!$post || $post->post_type !== 'vms_event_plan') {
-			return array('valid' => false, 'message' => __('Event Plan not found.', 'vms'));
+			return array('valid' => false, 'message' => __('Event Plan not found.', 'backstage-venue-manager'));
 		}
 
-		$status_key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+		$status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 		if ($status_key === '') {
 			$status_key = '_vms_event_plan_status';
 		}
@@ -69,7 +69,7 @@ if (!function_exists('vms_email_followups_event_context')) {
 			$venue_name = sanitize_text_field((string) get_bloginfo('name'));
 		}
 
-		$tec_event_id = vms_email_followups_plan_tec_event_id($event_plan_id);
+		$tec_event_id = bvmgr_email_followups_plan_tec_event_id($event_plan_id);
 		$event_url = $tec_event_id > 0 ? get_permalink($tec_event_id) : '';
 		if (!$event_url && $event_plan_id > 0) {
 			$event_url = home_url('/');
@@ -85,9 +85,9 @@ if (!function_exists('vms_email_followups_event_context')) {
 			'event_date' => $date,
 			'event_date_label' => $start_ts > 0 ? wp_date('l, F j, Y', $start_ts, wp_timezone()) : $date,
 			'start_time' => $start_time,
-			'start_time_label' => vms_email_followups_time_label($start_time),
+			'start_time_label' => bvmgr_email_followups_time_label($start_time),
 			'end_time' => $end_time,
-			'end_time_label' => vms_email_followups_time_label($end_time),
+			'end_time_label' => bvmgr_email_followups_time_label($end_time),
 			'gates_time_label' => $gates_ts > 0 ? wp_date('g:ia', $gates_ts, wp_timezone()) : '',
 			'start_ts' => $start_ts,
 			'venue_id' => $venue_id,
@@ -99,8 +99,8 @@ if (!function_exists('vms_email_followups_event_context')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_context_allows_send')) {
-	function vms_email_followups_context_allows_send(array $context): array
+if (!function_exists('bvmgr_email_followups_context_allows_send')) {
+	function bvmgr_email_followups_context_allows_send(array $context): array
 	{
 		if (empty($context['valid'])) {
 			return array(false, (string) ($context['message'] ?? 'invalid_event'));
@@ -118,8 +118,8 @@ if (!function_exists('vms_email_followups_context_allows_send')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_recipients')) {
-	function vms_email_followups_event_recipients(int $event_plan_id): array
+if (!function_exists('bvmgr_email_followups_event_recipients')) {
+	function bvmgr_email_followups_event_recipients(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$result = array(
@@ -134,12 +134,12 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 			'warnings' => array(),
 		);
 
-		if (!function_exists('vms_get_ticket_sales_rows')) {
-			$result['warnings'][] = __('Ticket sales resolver is unavailable.', 'vms');
+		if (!function_exists('bvmgr_get_ticket_sales_rows')) {
+			$result['warnings'][] = __('Ticket sales resolver is unavailable.', 'backstage-venue-manager');
 			return $result;
 		}
 
-		$context = vms_email_followups_event_context($event_plan_id);
+		$context = bvmgr_email_followups_event_context($event_plan_id);
 		$args = array(
 			'event_plan_id' => $event_plan_id,
 			'order_statuses' => array('processing', 'completed', 'on-hold'),
@@ -151,7 +151,7 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 			$args['tec_event_id'] = absint($context['tec_event_id']);
 		}
 
-		$rows = vms_get_ticket_sales_rows($args);
+		$rows = bvmgr_get_ticket_sales_rows($args);
 		if (!is_array($rows)) {
 			$rows = array();
 		}
@@ -205,8 +205,8 @@ if (!function_exists('vms_email_followups_event_recipients')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_event_choices')) {
-	function vms_email_followups_event_choices(int $limit = 80, int $selected_event_plan_id = 0): array
+if (!function_exists('bvmgr_email_followups_event_choices')) {
+	function bvmgr_email_followups_event_choices(int $limit = 80, int $selected_event_plan_id = 0): array
 	{
 		$limit = max(1, min(200, $limit));
 		$now = time();
@@ -221,8 +221,8 @@ if (!function_exists('vms_email_followups_event_choices')) {
 			'posts_per_page' => 200,
 			'orderby' => 'meta_value',
 			'order' => 'DESC',
-			'meta_key' => '_vms_event_date',
-			'meta_query' => array(
+			'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Event choices intentionally order the bounded two-year Event Plan window by canonical event-date metadata.
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Event choices intentionally filter the bounded two-year Event Plan window by canonical event-date metadata; no indexed domain date field exists.
 				array(
 					'key' => '_vms_event_date',
 					'value' => array($from, $to),
@@ -267,24 +267,24 @@ if (!function_exists('vms_email_followups_event_choices')) {
 	}
 }
 
-if (!function_exists('vms_email_followups_upcoming_event_choices')) {
-	function vms_email_followups_upcoming_event_choices(int $limit = 50): array
+if (!function_exists('bvmgr_email_followups_upcoming_event_choices')) {
+	function bvmgr_email_followups_upcoming_event_choices(int $limit = 50): array
 	{
-		return vms_email_followups_event_choices($limit);
+		return bvmgr_email_followups_event_choices($limit);
 	}
 }
 
-if (!function_exists('vms_email_followups_event_choice_label')) {
-	function vms_email_followups_event_choice_label(WP_Post $plan): string
+if (!function_exists('bvmgr_email_followups_event_choice_label')) {
+	function bvmgr_email_followups_event_choice_label(WP_Post $plan): string
 	{
 		$date = (string) get_post_meta($plan->ID, '_vms_event_date', true);
 		$today = wp_date('Y-m-d', time(), wp_timezone());
 		$status = '';
 		if ($date !== '') {
 			if ($date < $today) {
-				$status = ' — ' . __('past event', 'vms');
+				$status = ' — ' . __('past event', 'backstage-venue-manager');
 			} elseif ($date === $today) {
-				$status = ' — ' . __('today', 'vms');
+				$status = ' — ' . __('today', 'backstage-venue-manager');
 			}
 		}
 

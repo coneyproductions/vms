@@ -4,7 +4,7 @@ declare(strict_types=1);
 final class VMS_Public_Release_Tooling
 {
 	private const REQUIRED_RUNTIME_FILES = array(
-		'vendor-management-system.php',
+		'backstage-venue-manager.php',
 		'includes/bootstrap.php',
 		'includes/core/plugin.php',
 		'includes/db/migrations.php',
@@ -44,6 +44,15 @@ final class VMS_Public_Release_Tooling
 		'zip',
 	);
 
+	private const PROHIBITED_INTERNAL_INSTRUCTION_FILES = array(
+		'AGENTS.md',
+	);
+
+	private const PUBLIC_PLUGIN_SLUG = 'backstage-venue-manager';
+	private const ZIP_TIMESTAMP_POLICY = 'source-date-epoch-or-git-commit-v1';
+	private const ZIP_MIN_TIMESTAMP = 315532800;
+	private const ZIP_MAX_TIMESTAMP = 4354819198;
+
 	private const OPTIONAL_LOAD_SMOKE_SCENARIOS = array(
 		array(
 			'id' => 'wp-load-smoke-baseline',
@@ -81,6 +90,8 @@ final class VMS_Public_Release_Tooling
 			self::assertWritableOutputTargets($config, $reportSeed);
 
 			$report['git'] = self::detectGitState($config['plugin_root']);
+			$archiveTimestamp = self::resolveArchiveTimestamp($report['git']);
+			$report['artifact']['timestamp_policy'] = $archiveTimestamp;
 			if ($config['provenance_manifest_path'] !== '') {
 				$provenanceManifest = self::loadProvenanceManifest($config['provenance_manifest_path']);
 				$report['metadata']['provenance_manifest_path'] = (string) ($provenanceManifest['path'] ?? '');
@@ -109,7 +120,7 @@ final class VMS_Public_Release_Tooling
 			if (!self::hasRequiredFailures($report['checks'])) {
 				$tempBuildDir = self::createTemporaryDirectory('vms-public-release-');
 				$temporaryPaths[] = $tempBuildDir;
-				$stagedRoot = $tempBuildDir . DIRECTORY_SEPARATOR . $metadata['slug'];
+				$stagedRoot = $tempBuildDir . DIRECTORY_SEPARATOR . $metadata['public_plugin_slug'];
 				$manifestPatterns = self::loadExcludeManifest($metadata['exclude_manifest']);
 
 				$stageResult = self::stagePluginTree(
@@ -145,7 +156,7 @@ final class VMS_Public_Release_Tooling
 				$directoryValidation = self::validateTarget(
 					$stagedRoot,
 					array(
-						'plugin_slug' => $metadata['slug'],
+						'plugin_slug' => $metadata['public_plugin_slug'],
 						'manifest_path' => $metadata['exclude_manifest'],
 					)
 				);
@@ -162,7 +173,7 @@ final class VMS_Public_Release_Tooling
 					self::runOptionalWpLoadSmokes(
 						$config['plugin_root'],
 						$stagedRoot,
-						$metadata['slug']
+						$metadata['public_plugin_slug']
 					)
 				);
 
@@ -178,7 +189,7 @@ final class VMS_Public_Release_Tooling
 					self::buildZipArtifact(
 						$stagedRoot,
 						$report['artifact']['zip_path'],
-						isset($provenanceManifest['artifact']['root_mtime_unix']) ? (int) $provenanceManifest['artifact']['root_mtime_unix'] : null
+						(int) $archiveTimestamp['effective_timestamp_unix']
 					);
 					$report['artifact']['created'] = true;
 					$report['artifact']['size_bytes'] = filesize($report['artifact']['zip_path']) ?: 0;
@@ -187,7 +198,7 @@ final class VMS_Public_Release_Tooling
 					$zipValidation = self::validateTarget(
 						$report['artifact']['zip_path'],
 						array(
-							'plugin_slug' => $metadata['slug'],
+							'plugin_slug' => $metadata['public_plugin_slug'],
 							'manifest_path' => $metadata['exclude_manifest'],
 						)
 					);
@@ -238,7 +249,7 @@ final class VMS_Public_Release_Tooling
 
 	public static function validateTarget(string $target, array $options = array()): array
 	{
-		$pluginSlug = self::normalizeSlug((string) ($options['plugin_slug'] ?? 'vms'));
+		$pluginSlug = self::normalizeSlug((string) ($options['plugin_slug'] ?? self::publicPluginSlug()));
 		$manifestPath = isset($options['manifest_path']) && is_string($options['manifest_path']) && $options['manifest_path'] !== ''
 			? $options['manifest_path']
 			: dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'release-public-excludes.txt';
@@ -292,7 +303,7 @@ final class VMS_Public_Release_Tooling
 	public static function verifyProvenanceTarget(string $target, string $manifestPath): array
 	{
 		$manifest = self::loadProvenanceManifest($manifestPath);
-		$slug = (string) ($manifest['slug'] ?? 'vms');
+		$slug = (string) ($manifest['slug'] ?? self::publicPluginSlug());
 		$checks = array();
 		$temporaryPaths = array();
 
@@ -402,6 +413,9 @@ final class VMS_Public_Release_Tooling
 		$lines[] = 'Artifact Size: ' . self::formatSize((int) ($report['artifact']['size_bytes'] ?? 0));
 		$lines[] = 'SHA-256: ' . (string) (($report['artifact']['sha256'] ?? '') !== '' ? $report['artifact']['sha256'] : 'n/a');
 		$lines[] = 'Build Timestamp (UTC): ' . (string) ($report['finished_at_utc'] ?? ($report['started_at_utc'] ?? 'n/a'));
+		$lines[] = 'ZIP Timestamp Policy: ' . (string) (($report['artifact']['timestamp_policy']['policy'] ?? '') ?: 'n/a');
+		$lines[] = 'ZIP Timestamp Source: ' . (string) (($report['artifact']['timestamp_policy']['source'] ?? '') ?: 'n/a');
+		$lines[] = 'ZIP Timestamp (UTC): ' . (string) (($report['artifact']['timestamp_policy']['effective_timestamp_utc'] ?? '') ?: 'n/a');
 		$lines[] = 'Plugin Version: ' . (string) (($report['metadata']['version'] ?? '') !== '' ? $report['metadata']['version'] : 'unknown');
 		$lines[] = 'Plugin Slug: ' . (string) (($report['metadata']['slug'] ?? '') !== '' ? $report['metadata']['slug'] : 'unknown');
 		$lines[] = 'Git Commit: ' . (string) (($report['git']['commit'] ?? '') !== '' ? $report['git']['commit'] : 'n/a');
@@ -455,6 +469,84 @@ final class VMS_Public_Release_Tooling
 	public static function defaultReleaseTests(): array
 	{
 		return array(
+			array(
+				'id' => 'g14-g15-provenance-v2',
+				'label' => 'G14/G15 reproducible historical provenance migration',
+				'path' => 'tests/g14-g15-provenance-v2.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'public-release-reproducibility',
+				'label' => 'Byte-reproducible public-release ZIP metadata',
+				'path' => 'tests/public-release-reproducibility.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b4-addon-compatibility',
+				'label' => 'WordPress.org B4 disposable add-on compatibility and provenance',
+				'path' => 'tests/wporg-prefix-b4-addon-compatibility.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b4-query-rewrite-cli',
+				'label' => 'WordPress.org B4 query, rewrite, and WP-CLI compatibility',
+				'path' => 'tests/wporg-prefix-b4-query-rewrite-cli.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b4-nonces',
+				'label' => 'WordPress.org B4 nonce action and field compatibility',
+				'path' => 'tests/wporg-prefix-b4-nonces.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b4-browser-assets',
+				'label' => 'WordPress.org B4 browser-global and asset-handle cutover',
+				'path' => 'tests/wporg-prefix-b4-browser-assets.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b4-guardrails',
+				'label' => 'WordPress.org B4 exact identifier map and compatibility guardrails',
+				'path' => 'tests/wporg-prefix-b4-guardrails.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b3-guardrails',
+				'label' => 'WordPress.org B3 frozen function map, dependency waves, and exact resolution gate',
+				'path' => 'tests/wporg-prefix-b3-guardrails.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-scanner-inventory',
+				'label' => 'WordPress.org prefix scanner inventory and migration-aware gate',
+				'path' => 'tests/wporg-prefix-scanner-inventory.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b2-5-runtime',
+				'label' => 'WordPress.org B2.5 global-scope correction behavior',
+				'path' => 'tests/wporg-prefix-b2-5-runtime.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-manifest-guardrails',
+				'label' => 'WordPress.org prefix manifest and migration guardrails',
+				'path' => 'tests/wporg-prefix-manifest-guardrails.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'wporg-prefix-b2-foundation',
+				'label' => 'WordPress.org B2 global-symbol and bootstrap foundation',
+				'path' => 'tests/wporg-prefix-b2-foundation.php',
+				'required' => true,
+			),
+			array(
+				'id' => 'plugin-identity-alignment',
+				'label' => 'Canonical plugin identity and basename migration regression',
+				'path' => 'tests/plugin-identity-alignment.php',
+				'required' => true,
+			),
 			array(
 				'id' => 'admissions-rest-permissions',
 				'label' => 'Admissions REST permission regression',
@@ -515,16 +607,22 @@ final class VMS_Public_Release_Tooling
 		);
 	}
 
+	private static function publicPluginSlug(): string
+	{
+		return self::normalizeSlug(self::PUBLIC_PLUGIN_SLUG);
+	}
+
 	private static function collectSourceMetadata(string $pluginRoot): array
 	{
-		$entryFile = $pluginRoot . DIRECTORY_SEPARATOR . 'vendor-management-system.php';
+		$entryFile = $pluginRoot . DIRECTORY_SEPARATOR . 'backstage-venue-manager.php';
 		$constantsFile = $pluginRoot . DIRECTORY_SEPARATOR . 'includes/core/registry/constants.php';
 		$buildFile = $pluginRoot . DIRECTORY_SEPARATOR . 'vms-build.txt';
 		$migrationsFile = $pluginRoot . DIRECTORY_SEPARATOR . 'includes/db/migrations.php';
 		$excludeManifest = $pluginRoot . DIRECTORY_SEPARATOR . 'release-public-excludes.txt';
 		$header = self::readPluginHeader($entryFile);
-		$slug = self::extractDefineValue($constantsFile, 'VMS_PLUGIN_SLUG') ?? basename($pluginRoot);
-		$version = self::extractDefineValue($constantsFile, 'VMS_VERSION') ?? '';
+		$internalSlug = self::extractDefineValue($constantsFile, 'BVMGR_PLUGIN_SLUG') ?? basename($pluginRoot);
+		$publicSlug = self::publicPluginSlug();
+		$version = self::extractDefineValue($constantsFile, 'BVMGR_VERSION') ?? '';
 		$buildVersion = is_readable($buildFile) ? trim((string) file_get_contents($buildFile)) : '';
 		$migrationInfo = self::inspectVendorCoreMigrations($migrationsFile);
 		$buildNotesFile = $pluginRoot . DIRECTORY_SEPARATOR . 'BUILD-NOTES-' . $version . '.md';
@@ -536,7 +634,10 @@ final class VMS_Public_Release_Tooling
 			'build_file' => $buildFile,
 			'migrations_file' => $migrationsFile,
 			'exclude_manifest' => $excludeManifest,
-			'slug' => self::normalizeSlug($slug),
+			'slug' => $publicSlug,
+			'internal_plugin_slug' => self::normalizeSlug($internalSlug),
+			'public_plugin_slug' => $publicSlug,
+			'public_plugin_basename' => $publicSlug . '/backstage-venue-manager.php',
 			'header_version' => (string) ($header['Version'] ?? ''),
 			'header_text_domain' => (string) ($header['Text Domain'] ?? ''),
 			'header_requires_php' => (string) ($header['Requires PHP'] ?? ''),
@@ -553,7 +654,7 @@ final class VMS_Public_Release_Tooling
 
 	private static function buildInitialReport(array $config, array $metadata): array
 	{
-		$baseName = $metadata['slug'] . '-' . (($metadata['version'] !== '') ? $metadata['version'] : 'unknown-version') . '-public-release';
+		$baseName = $metadata['public_plugin_slug'] . '-' . (($metadata['version'] !== '') ? $metadata['version'] : 'unknown-version') . '-public-release';
 		if (!empty($config['dev_build'])) {
 			$baseName .= '-dev';
 		}
@@ -577,6 +678,7 @@ final class VMS_Public_Release_Tooling
 				'report_text_path' => $config['output_dir'] . DIRECTORY_SEPARATOR . $baseName . '.report.txt',
 				'size_bytes' => 0,
 				'sha256' => '',
+				'timestamp_policy' => array(),
 			),
 			'checks' => array(),
 			'warnings' => array(),
@@ -641,6 +743,7 @@ final class VMS_Public_Release_Tooling
 		}
 
 		$commit = trim(self::runCommand(array('git', '-C', $pluginRoot, 'rev-parse', 'HEAD'))['stdout']);
+		$commitTimestamp = trim(self::runCommand(array('git', '-C', $pluginRoot, 'show', '-s', '--format=%ct', 'HEAD'))['stdout']);
 		$statusOutput = self::runCommand(array('git', '-C', $pluginRoot, 'status', '--short', '--untracked-files=all'));
 		$dirty = trim($statusOutput['stdout']) !== '';
 
@@ -648,10 +751,48 @@ final class VMS_Public_Release_Tooling
 			'available' => true,
 			'state' => $dirty ? 'dirty' : 'clean',
 			'commit' => $commit,
+			'commit_timestamp_unix' => ctype_digit($commitTimestamp) ? (int) $commitTimestamp : 0,
 			'repo_root' => $repoRoot,
 			'message' => $dirty
 				? 'Git worktree contains uncommitted or untracked changes.'
 				: 'Git worktree is clean.',
+		);
+	}
+
+	private static function resolveArchiveTimestamp(array $git): array
+	{
+		$sourceDateEpoch = getenv('SOURCE_DATE_EPOCH');
+		if ($sourceDateEpoch !== false) {
+			if ($sourceDateEpoch === '' || preg_match('/^[0-9]+$/', $sourceDateEpoch) !== 1) {
+				throw new RuntimeException('SOURCE_DATE_EPOCH must be an unsigned integer Unix timestamp.');
+			}
+			$rawTimestamp = (int) $sourceDateEpoch;
+			if ((string) $rawTimestamp !== ltrim($sourceDateEpoch, '0') && !preg_match('/^0+$/', $sourceDateEpoch)) {
+				throw new RuntimeException('SOURCE_DATE_EPOCH is outside the supported integer range.');
+			}
+			$source = 'SOURCE_DATE_EPOCH';
+		} elseif ((int) ($git['commit_timestamp_unix'] ?? 0) > 0) {
+			$rawTimestamp = (int) $git['commit_timestamp_unix'];
+			$source = 'git-commit-timestamp';
+		} else {
+			$rawTimestamp = self::ZIP_MIN_TIMESTAMP;
+			$source = 'non-git-deterministic-fallback';
+		}
+
+		if ($rawTimestamp < self::ZIP_MIN_TIMESTAMP || $rawTimestamp > self::ZIP_MAX_TIMESTAMP) {
+			throw new RuntimeException('Canonical ZIP timestamp must be within the DOS-safe 1980-01-01 through 2107-12-31 range.');
+		}
+
+		$effectiveTimestamp = $rawTimestamp - ($rawTimestamp % 2);
+
+		return array(
+			'policy' => self::ZIP_TIMESTAMP_POLICY,
+			'source' => $source,
+			'input_timestamp_unix' => $rawTimestamp,
+			'effective_timestamp_unix' => $effectiveTimestamp,
+			'effective_timestamp_utc' => gmdate('Y-m-d\TH:i:s\Z', $effectiveTimestamp),
+			'timezone' => 'UTC',
+			'dos_even_second' => true,
 		);
 	}
 
@@ -664,9 +805,11 @@ final class VMS_Public_Release_Tooling
 	): array
 	{
 		$checks = array();
+		$publicPluginSlug = (string) ($metadata['public_plugin_slug'] ?? '');
+		$internalPluginSlug = (string) ($metadata['internal_plugin_slug'] ?? '');
 		$versions = array_filter(array(
 			'plugin header' => $metadata['header_version'],
-			'VMS_VERSION' => $metadata['version'],
+			'BVMGR_VERSION' => $metadata['version'],
 			'vms-build.txt' => $metadata['build_version'],
 		), static function ($value): bool {
 			return trim((string) $value) !== '';
@@ -677,7 +820,7 @@ final class VMS_Public_Release_Tooling
 			(count($versions) === 3 && count($uniqueVersions) === 1) ? 'PASS' : 'FAIL',
 			'Version marker consistency',
 			(count($versions) === 3 && count($uniqueVersions) === 1)
-				? 'Plugin header version, VMS_VERSION, and vms-build.txt are synchronized.'
+				? 'Plugin header version, BVMGR_VERSION, and vms-build.txt are synchronized.'
 				: 'Version markers are missing or inconsistent.',
 			array(
 				'required' => true,
@@ -687,17 +830,19 @@ final class VMS_Public_Release_Tooling
 
 		$checks[] = self::check(
 			'slug-and-text-domain',
-			($metadata['slug'] !== '' && $metadata['header_text_domain'] === $metadata['slug']) ? 'PASS' : 'FAIL',
+			($publicPluginSlug !== '' && $metadata['header_text_domain'] === $publicPluginSlug) ? 'PASS' : 'FAIL',
 			'Plugin slug and text domain assumptions',
-			($metadata['slug'] !== '' && $metadata['header_text_domain'] === $metadata['slug'])
-				? 'Plugin slug and text domain both resolve to `' . $metadata['slug'] . '`.'
+			($publicPluginSlug !== '' && $metadata['header_text_domain'] === $publicPluginSlug)
+				? 'Public package slug and text domain both resolve to `' . $publicPluginSlug . '`.'
 				: 'Plugin slug/text domain assumptions do not line up with the package root.',
 			array(
 				'required' => true,
 				'details' => array(
-					'slug' => $metadata['slug'],
+					'public_plugin_slug' => $publicPluginSlug,
+					'internal_plugin_slug' => $internalPluginSlug,
 					'text_domain' => $metadata['header_text_domain'],
-					'package_root' => basename($pluginRoot),
+					'public_package_root' => $publicPluginSlug,
+					'source_checkout_root' => basename($pluginRoot),
 				),
 			)
 		);
@@ -811,6 +956,13 @@ final class VMS_Public_Release_Tooling
 	private static function runReleaseRegressionChecks(string $pluginRoot, array $tests): array
 	{
 		$checks = array();
+		$extraEnv = array();
+		$wpRoot = self::detectWordPressRoot($pluginRoot);
+		if ($wpRoot !== null) {
+			$extraEnv['VMS_TEST_WORDPRESS_ROOT'] = $wpRoot;
+			$extraEnv['VMS_TEST_WP_LOAD'] = $wpRoot . DIRECTORY_SEPARATOR . 'wp-load.php';
+		}
+
 		foreach ($tests as $test) {
 			$relativePath = (string) ($test['path'] ?? '');
 			$label = (string) ($test['label'] ?? $relativePath);
@@ -833,7 +985,7 @@ final class VMS_Public_Release_Tooling
 				continue;
 			}
 
-			$result = self::runCommand(array(self::phpBinary(), $scriptPath), $pluginRoot);
+			$result = self::runCommand(array(self::phpBinary(), $scriptPath), $pluginRoot, $extraEnv);
 			$checks[] = self::check(
 				'test-' . (string) ($test['id'] ?? md5($relativePath)),
 				$result['exit_code'] === 0 ? 'PASS' : 'FAIL',
@@ -959,7 +1111,7 @@ final class VMS_Public_Release_Tooling
 		}
 
 		try {
-			$pluginEntryFile = $stagedRoot . DIRECTORY_SEPARATOR . 'vendor-management-system.php';
+			$pluginEntryFile = $stagedRoot . DIRECTORY_SEPARATOR . 'backstage-venue-manager.php';
 			$scriptContents = <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -1026,7 +1178,7 @@ PHP;
 		$expectedSlug = (string) ($manifest['slug'] ?? '');
 		$actualVersion = (string) ($metadata['version'] ?? '');
 		$actualHeaderVersion = (string) ($metadata['header_version'] ?? '');
-		$actualSlug = (string) ($metadata['slug'] ?? '');
+		$actualSlug = (string) ($metadata['public_plugin_slug'] ?? '');
 
 		$checks[] = self::check(
 			'provenance-manifest-metadata',
@@ -1198,42 +1350,52 @@ PHP;
 		);
 	}
 
-	private static function buildZipArtifact(string $stagedRoot, string $zipPath, ?int $rootMtimeUnix = null): void
+	private static function buildZipArtifact(string $stagedRoot, string $zipPath, int $canonicalMtimeUnix): void
 	{
 		if (!class_exists('ZipArchive')) {
 			throw new RuntimeException('ZipArchive is required to create public-release artifacts.');
 		}
+		if (!method_exists('ZipArchive', 'setMtimeName')) {
+			throw new RuntimeException('ZipArchive::setMtimeName() is required for reproducible public-release artifacts.');
+		}
 
 		$zip = new ZipArchive();
-		$result = $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-		if ($result !== true) {
-			throw new RuntimeException('Could not open zip artifact for writing.');
-		}
-
-		$slug = basename($stagedRoot);
-		$zip->addEmptyDir($slug);
-		if (method_exists($zip, 'setMtimeName') && is_int($rootMtimeUnix) && $rootMtimeUnix > 0) {
-			$zip->setMtimeName($slug . '/', $rootMtimeUnix);
-		}
-
-		$files = self::listAllFiles($stagedRoot);
-		sort($files, SORT_STRING);
-		foreach ($files as $absolutePath) {
-			$relativePath = self::pathRelativeToOrBasename($absolutePath, $stagedRoot);
-			$zipPathName = $slug . '/' . $relativePath;
-			if (!$zip->addFile($absolutePath, $zipPathName)) {
-				$zip->close();
-				throw new RuntimeException('Could not add staged file to zip: ' . $relativePath);
+		$zipOpen = false;
+		$previousTimezone = date_default_timezone_get();
+		date_default_timezone_set('UTC');
+		try {
+			$result = $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+			if ($result !== true) {
+				throw new RuntimeException('Could not open zip artifact for writing.');
 			}
-			if (method_exists($zip, 'setMtimeName')) {
-				$mtime = @filemtime($absolutePath);
-				if (is_int($mtime) && $mtime > 0) {
-					$zip->setMtimeName($zipPathName, $mtime);
+			$zipOpen = true;
+
+			$slug = basename($stagedRoot);
+			if (!$zip->addEmptyDir($slug)) {
+				throw new RuntimeException('Could not add the package root directory to the ZIP artifact.');
+			}
+			if (!$zip->setMtimeName($slug . '/', $canonicalMtimeUnix)) {
+				throw new RuntimeException('Could not normalize the package root ZIP timestamp.');
+			}
+
+			$files = self::listAllFiles($stagedRoot);
+			sort($files, SORT_STRING);
+			foreach ($files as $absolutePath) {
+				$relativePath = self::pathRelativeToOrBasename($absolutePath, $stagedRoot);
+				$zipPathName = $slug . '/' . $relativePath;
+				if (!$zip->addFile($absolutePath, $zipPathName)) {
+					throw new RuntimeException('Could not add staged file to zip: ' . $relativePath);
+				}
+				if (!$zip->setMtimeName($zipPathName, $canonicalMtimeUnix)) {
+					throw new RuntimeException('Could not normalize the ZIP timestamp for: ' . $relativePath);
 				}
 			}
+		} finally {
+			if ($zipOpen) {
+				$zip->close();
+			}
+			date_default_timezone_set($previousTimezone);
 		}
-
-		$zip->close();
 	}
 
 	private static function validateDirectoryPackageRoot(string $packageRoot, string $pluginSlug, array $manifestPatterns): array
@@ -1347,6 +1509,7 @@ PHP;
 		$missingFiles = array();
 		$missingDirs = array();
 		$manifestViolations = array();
+		$internalInstructionViolations = array();
 		$pathTraversalViolations = array();
 		$localPathViolations = array();
 		$localUrlViolations = array();
@@ -1395,6 +1558,14 @@ PHP;
 
 			$presentFiles[$relativePath] = true;
 			self::registerAncestorDirectories($presentDirs, $relativePath);
+
+			$internalInstructionFile = self::matchProhibitedInternalInstructionFile($relativePath);
+			if ($internalInstructionFile !== null) {
+				$internalInstructionViolations[] = array(
+					'path' => $relativePath,
+					'file' => $internalInstructionFile,
+				);
+			}
 
 			if ((int) ($entry['size'] ?? 0) === 0 && preg_match('/\.(php|js)$/i', $relativePath)) {
 				$zeroByteRuntimeCode[] = $relativePath;
@@ -1490,6 +1661,26 @@ PHP;
 			array(
 				'required' => true,
 				'details' => empty($manifestViolations) ? array() : array('paths' => array_values(array_unique($manifestViolations))),
+			)
+		);
+
+		$checks[] = self::check(
+			'internal-instruction-files-excluded',
+			empty($internalInstructionViolations) ? 'PASS' : 'FAIL',
+			'Internal development instruction files are excluded from the public package',
+			empty($internalInstructionViolations)
+				? 'No internal development instruction files were found in the package.'
+				: 'Internal development instruction file must not be included in the public package: ' . (string) ($internalInstructionViolations[0]['file'] ?? ''),
+			array(
+				'required' => true,
+				'details' => empty($internalInstructionViolations) ? array() : array(
+					'paths' => array_values(array_unique(array_map(
+						static function (array $violation): string {
+							return (string) ($violation['path'] ?? '');
+						},
+						$internalInstructionViolations
+					))),
+				),
 			)
 		);
 
@@ -1825,6 +2016,21 @@ PHP;
 		return null;
 	}
 
+	private static function matchProhibitedInternalInstructionFile(string $path): ?string
+	{
+		$normalizedPath = ltrim(str_replace('\\', '/', $path), '/');
+		$normalizedPath = strtolower($normalizedPath);
+
+		foreach (self::PROHIBITED_INTERNAL_INSTRUCTION_FILES as $candidate) {
+			$normalizedCandidate = strtolower(ltrim(str_replace('\\', '/', $candidate), '/'));
+			if ($normalizedPath === $normalizedCandidate) {
+				return $candidate;
+			}
+		}
+
+		return null;
+	}
+
 	private static function globPatternToRegex(string $pattern): string
 	{
 		$isDirectoryPattern = substr($pattern, -1) === '/';
@@ -1884,7 +2090,7 @@ PHP;
 		}
 
 		$contents = (string) file_get_contents($migrationsFile);
-		if (preg_match_all('/function\s+(vms_db_migrate_vendor_core_v(\d+))\s*\(/', $contents, $functionMatches, PREG_SET_ORDER) > 0) {
+		if (preg_match_all('/function\s+((?:vms|bvmgr)_db_migrate_vendor_core_v(\d+))\s*\(/', $contents, $functionMatches, PREG_SET_ORDER) > 0) {
 			$latestVersion = -1;
 			$latestFunction = '';
 			foreach ($functionMatches as $functionMatch) {

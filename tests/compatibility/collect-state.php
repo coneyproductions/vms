@@ -1,14 +1,9 @@
 <?php
 declare(strict_types=1);
 
-if (!defined('ABSPATH')) {
-	$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-	if (!file_exists($wpLoad)) {
-		fwrite(STDERR, "Could not locate wp-load.php.\n");
-		exit(1);
-	}
-	require_once $wpLoad;
-}
+require_once dirname(__DIR__) . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
+require_once dirname(__DIR__, 2) . '/scripts/lib/release-compatibility.php';
 
 if (!function_exists('is_plugin_active')) {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -76,8 +71,8 @@ $normalizeMetaValue = static function ($value) use (&$normalizeMetaValue) {
 };
 
 $vmsOwnedCronHook = static function (string $hook): bool {
-	if (function_exists('vms_is_owned_cron_hook')) {
-		return vms_is_owned_cron_hook($hook);
+	if (function_exists('bvmgr_is_owned_cron_hook')) {
+		return bvmgr_is_owned_cron_hook($hook);
 	}
 
 	return strpos($hook, 'vms_') === 0;
@@ -98,11 +93,10 @@ $tableRowCount = static function (string $tableName) use ($tableExists, $wpdb): 
 	return is_numeric($count) ? (int) $count : 0;
 };
 
-$vmsPluginBase = 'vms/vendor-management-system.php';
-$vmsActive = is_plugin_active($vmsPluginBase);
-
 $activePlugins = array_values(array_map('strval', (array) get_option('active_plugins', array())));
 sort($activePlugins, SORT_STRING);
+$vmsPluginBase = VMS_Release_Compatibility_Tooling::resolveInstalledPluginBasename($activePlugins, WP_PLUGIN_DIR);
+$vmsActive = $vmsPluginBase !== '' ? is_plugin_active($vmsPluginBase) : false;
 
 $vmsOptionRows = $wpdb->get_results(
 	$wpdb->prepare(
@@ -295,8 +289,8 @@ if (!empty($fixture)) {
 
 	$currentUserPrograms = array();
 	if ($userId > 0) {
-		if (function_exists('vms_ticketing_get_user_verified_programs')) {
-			$currentUserPrograms = array_values(array_map('sanitize_key', vms_ticketing_get_user_verified_programs($userId)));
+		if (function_exists('bvmgr_ticketing_get_user_verified_programs')) {
+			$currentUserPrograms = array_values(array_map('sanitize_key', bvmgr_ticketing_get_user_verified_programs($userId)));
 		} else {
 			$currentUserPrograms = array_values(array_map('sanitize_key', (array) get_user_meta($userId, 'vms_verified_programs', true)));
 		}
@@ -373,11 +367,11 @@ if (!empty($fixture)) {
 	$fixtureState['preserved'] = !in_array(false, array_values($fixturePreservationChecks), true);
 }
 
-$pluginVersion = defined('VMS_VERSION') ? (string) VMS_VERSION : '';
+$pluginVersion = defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '';
 $buildVersion = '';
-$pluginFile = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'vms' . DIRECTORY_SEPARATOR . 'vms-build.txt';
-if (is_file($pluginFile)) {
-	$buildVersion = trim((string) file_get_contents($pluginFile));
+$pluginBuildFile = VMS_Release_Compatibility_Tooling::buildVersionPathForPluginBasename(WP_PLUGIN_DIR, $vmsPluginBase);
+if ($pluginBuildFile !== '' && is_file($pluginBuildFile)) {
+	$buildVersion = trim((string) file_get_contents($pluginBuildFile));
 }
 
 $report = array(
@@ -393,6 +387,8 @@ $report = array(
 	'plugin' => array(
 		'active' => $vmsActive,
 		'active_plugins' => $activePlugins,
+		'basename' => $vmsPluginBase,
+		'recognized_basenames' => VMS_Release_Compatibility_Tooling::recognizedPluginBasenames(),
 		'version' => $pluginVersion,
 		'build_version' => $buildVersion,
 		'vms_loaded' => did_action('vms_loaded') > 0,

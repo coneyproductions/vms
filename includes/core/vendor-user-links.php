@@ -19,49 +19,49 @@ defined('ABSPATH') || exit;
  * - DB table: {$wpdb->prefix}vms_vendor_user_links
  */
 
-if (!defined('VMS_USER_PRIMARY_VENDOR_META_KEY')) {
-    define('VMS_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id');
+if (!defined('BVMGR_USER_PRIMARY_VENDOR_META_KEY')) {
+    define('BVMGR_USER_PRIMARY_VENDOR_META_KEY', '_vms_vendor_id');
 }
 
-if (!defined('VMS_VENDOR_PRIMARY_USER_META_KEY')) {
-    define('VMS_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
+if (!defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY')) {
+    define('BVMGR_VENDOR_PRIMARY_USER_META_KEY', '_vms_vendor_user_id');
 }
 
 /**
  * Legacy alias kept for existing code references.
  * This refers to the vendor post_meta key that stores the vendor's PRIMARY contact user ID.
  */
-if (!defined('VMS_VENDOR_USER_META_KEY')) {
-    define('VMS_VENDOR_USER_META_KEY', VMS_VENDOR_PRIMARY_USER_META_KEY);
+if (!defined('BVMGR_VENDOR_USER_META_KEY')) {
+    define('BVMGR_VENDOR_USER_META_KEY', BVMGR_VENDOR_PRIMARY_USER_META_KEY);
 }
 
-if (!defined('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX')) {
-    define('VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX', 'vms_vendor_user_links');
+if (!defined('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX')) {
+    define('BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX', 'vms_vendor_user_links');
 }
 
 /**
  * Table name (with WP prefix).
  */
-function vms_vendor_user_links_table(): string
+function bvmgr_vendor_user_links_table(): string
 {
     global $wpdb;
-    return $wpdb->prefix . VMS_DB_TABLE_VENDOR_USER_LINKS_SUFFIX;
+    return $wpdb->prefix . BVMGR_DB_TABLE_VENDOR_USER_LINKS_SUFFIX;
 }
 
-function vms_vendor_user_links_table_exists(): bool
+function bvmgr_vendor_user_links_table_exists(): bool
 {
     global $wpdb;
-    $t = vms_vendor_user_links_table();
+    $t = bvmgr_vendor_user_links_table();
     $like = $wpdb->esc_like($t);
-    $sql = $wpdb->prepare("SHOW TABLES LIKE %s", $like);
-    $found = $wpdb->get_var($sql);
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- This request-local schema probe gates the authoritative link repository; stale cached absence would incorrectly force legacy authorization fallbacks after migrations.
+    $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $like));
     return is_string($found) && $found === $t;
 }
 
 /**
  * Normalize/validate link role.
  */
-function vms_vendor_user_link_normalize_role(string $role): string
+function bvmgr_vendor_user_link_normalize_role(string $role): string
 {
     $role = sanitize_key($role);
     if ($role === '') $role = 'manager';
@@ -84,7 +84,7 @@ function vms_vendor_user_link_normalize_role(string $role): string
 /**
  * Normalize/validate link status.
  */
-function vms_vendor_user_link_normalize_status(string $status): string
+function bvmgr_vendor_user_link_normalize_status(string $status): string
 {
     $status = sanitize_key($status);
     if ($status === '') $status = 'active';
@@ -110,32 +110,41 @@ function vms_vendor_user_link_normalize_status(string $status): string
  * - link_status (string)
  * - is_primary (int 0/1)
  */
-function vms_vendor_user_links_get_by_user(int $user_id, bool $include_inactive = false): array
+function bvmgr_vendor_user_links_get_by_user(int $user_id, bool $include_inactive = false): array
 {
     $user_id = (int) $user_id;
     if ($user_id <= 0) return array();
 
-    if (!vms_vendor_user_links_table_exists()) {
-        return vms_vendor_user_links_get_by_user_legacy($user_id);
+    if (!bvmgr_vendor_user_links_table_exists()) {
+        return bvmgr_vendor_user_links_get_by_user_legacy($user_id);
     }
 
     global $wpdb;
-    $t = vms_vendor_user_links_table();
+    $t = bvmgr_vendor_user_links_table();
 
-    $where = "user_id = %d";
-    if (!$include_inactive) {
-        $where .= " AND link_status = 'active'";
+    if ($include_inactive) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor/user authorization reads target the plugin-owned link repository with prepared identifier/value placeholders and must observe request-fresh link mutations.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT vendor_id, user_role, link_status, is_primary FROM %i WHERE user_id = %d ORDER BY is_primary DESC, vendor_id ASC',
+                $t,
+                $user_id
+            ),
+            ARRAY_A
+        );
+    } else {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active vendor/user authorization reads target the plugin-owned link repository with prepared identifier/value placeholders and must observe request-fresh link mutations.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT vendor_id, user_role, link_status, is_primary FROM %i WHERE user_id = %d AND link_status = %s ORDER BY is_primary DESC, vendor_id ASC',
+                $t,
+                $user_id,
+                'active'
+            ),
+            ARRAY_A
+        );
     }
 
-    $sql = $wpdb->prepare(
-        "SELECT vendor_id, user_role, link_status, is_primary
-         FROM {$t}
-         WHERE {$where}
-         ORDER BY is_primary DESC, vendor_id ASC",
-        $user_id
-    );
-
-    $rows = $wpdb->get_results($sql, ARRAY_A);
     if (!is_array($rows)) return array();
 
     $out = array();
@@ -156,7 +165,7 @@ function vms_vendor_user_links_get_by_user(int $user_id, bool $include_inactive 
  * - User meta _vms_vendor_id
  * - Vendor meta _vms_vendor_user_id (reverse lookup)
  */
-function vms_vendor_user_links_get_by_user_legacy(int $user_id): array
+function bvmgr_vendor_user_links_get_by_user_legacy(int $user_id): array
 {
     $user_id = (int) $user_id;
     if ($user_id <= 0) return array();
@@ -164,7 +173,7 @@ function vms_vendor_user_links_get_by_user_legacy(int $user_id): array
     $rows = array();
 
     // 1) User meta pointer (primary vendor)
-    $primary_vendor = (int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true);
+    $primary_vendor = (int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true);
     if ($primary_vendor > 0) {
         $rows[] = array(
             'vendor_id'   => $primary_vendor,
@@ -180,9 +189,9 @@ function vms_vendor_user_links_get_by_user_legacy(int $user_id): array
         'post_status'    => array('publish', 'draft', 'private'),
         'fields'         => 'ids',
         'posts_per_page' => -1,
-        'meta_query'     => array(
+        'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Compatibility fallback runs only when the authoritative link table is unavailable and must honor the legacy vendor-primary-user pointer.
             array(
-                'key'   => VMS_VENDOR_PRIMARY_USER_META_KEY,
+                'key'   => BVMGR_VENDOR_PRIMARY_USER_META_KEY,
                 'value' => (string) $user_id,
             ),
         ),
@@ -215,9 +224,9 @@ function vms_vendor_user_links_get_by_user_legacy(int $user_id): array
 /**
  * Active vendor IDs for a user (convenience).
  */
-function vms_get_active_vendor_ids_for_user(int $user_id): array
+function bvmgr_get_active_vendor_ids_for_user(int $user_id): array
 {
-    $rows = vms_vendor_user_links_get_by_user($user_id, false);
+    $rows = bvmgr_vendor_user_links_get_by_user($user_id, false);
     $ids = array();
     foreach ($rows as $r) {
         $vid = isset($r['vendor_id']) ? (int) $r['vendor_id'] : 0;
@@ -240,13 +249,13 @@ function vms_get_active_vendor_ids_for_user(int $user_id): array
 /**
  * Can user access/manage this vendor (active link required).
  */
-function vms_user_can_access_vendor(int $user_id, int $vendor_id): bool
+function bvmgr_user_can_access_vendor(int $user_id, int $vendor_id): bool
 {
     $user_id = (int) $user_id;
     $vendor_id = (int) $vendor_id;
     if ($user_id <= 0 || $vendor_id <= 0) return false;
 
-    $rows = vms_vendor_user_links_get_by_user($user_id, false);
+    $rows = bvmgr_vendor_user_links_get_by_user($user_id, false);
     foreach ($rows as $r) {
         if ((int) $r['vendor_id'] === $vendor_id) {
             return true;
@@ -263,28 +272,28 @@ function vms_user_can_access_vendor(int $user_id, int $vendor_id): bool
  * 2) Else if table has an is_primary row (active), use it and sync user meta.
  * 3) Else use first active vendor and sync user meta + mark is_primary when possible.
  */
-function vms_get_primary_vendor_id_for_user(int $user_id): int
+function bvmgr_get_primary_vendor_id_for_user(int $user_id): int
 {
     $user_id = (int) $user_id;
     if ($user_id <= 0) return 0;
 
-    $vendor_ids = vms_get_active_vendor_ids_for_user($user_id);
+    $vendor_ids = bvmgr_get_active_vendor_ids_for_user($user_id);
     if (!$vendor_ids) return 0;
 
-    $meta_vid = (int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true);
+    $meta_vid = (int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true);
     if ($meta_vid > 0 && in_array($meta_vid, $vendor_ids, true)) {
         return (int) $meta_vid;
     }
 
     // Try is_primary from table
-    if (vms_vendor_user_links_table_exists()) {
-        $rows = vms_vendor_user_links_get_by_user($user_id, false);
+    if (bvmgr_vendor_user_links_table_exists()) {
+        $rows = bvmgr_vendor_user_links_get_by_user($user_id, false);
         foreach ($rows as $r) {
             if (!empty($r['is_primary']) && (int) $r['vendor_id'] > 0) {
                 $vid = (int) $r['vendor_id'];
                 if (in_array($vid, $vendor_ids, true)) {
                     // Sync legacy pointer
-                    update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vid);
+                    update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vid);
                     return $vid;
                 }
             }
@@ -294,9 +303,9 @@ function vms_get_primary_vendor_id_for_user(int $user_id): int
     // Fall back to first
     $vid = (int) $vendor_ids[0];
     if ($vid > 0) {
-        update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vid);
-        if (vms_vendor_user_links_table_exists()) {
-            vms_vendor_user_links_set_primary_for_user($user_id, $vid, 0);
+        update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vid);
+        if (bvmgr_vendor_user_links_table_exists()) {
+            bvmgr_vendor_user_links_set_primary_for_user($user_id, $vid, 0);
         }
     }
     return $vid;
@@ -305,39 +314,47 @@ function vms_get_primary_vendor_id_for_user(int $user_id): int
 /**
  * Set user's primary vendor (updates both user_meta pointer + table is_primary flag).
  */
-function vms_vendor_user_links_set_primary_for_user(int $user_id, int $vendor_id, int $actor_user_id = 0): bool
+function bvmgr_vendor_user_links_set_primary_for_user(int $user_id, int $vendor_id, int $actor_user_id = 0): bool
 {
     $user_id = (int) $user_id;
     $vendor_id = (int) $vendor_id;
 
     if ($user_id <= 0 || $vendor_id <= 0) return false;
-    if (!vms_user_can_access_vendor($user_id, $vendor_id)) return false;
+    if (!bvmgr_user_can_access_vendor($user_id, $vendor_id)) return false;
 
     // Always sync legacy pointer
-    update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
+    update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
 
-    if (!vms_vendor_user_links_table_exists()) return true;
+    if (!bvmgr_vendor_user_links_table_exists()) return true;
 
     global $wpdb;
-    $t = vms_vendor_user_links_table();
+    $t = bvmgr_vendor_user_links_table();
     $now = current_time('mysql', true);
 
     // Clear existing primaries for this user
-    $wpdb->query($wpdb->prepare(
-        "UPDATE {$t} SET is_primary = 0, updated_at = %s, updated_by = %d WHERE user_id = %d",
-        $now,
-        (int) $actor_user_id,
-        $user_id
-    ));
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Primary reassignment writes the plugin-owned link repository directly so the following set operation observes the cleared state in the same request.
+    $wpdb->query(
+        $wpdb->prepare(
+            'UPDATE %i SET is_primary = 0, updated_at = %s, updated_by = %d WHERE user_id = %d',
+            $t,
+            $now,
+            (int) $actor_user_id,
+            $user_id
+        )
+    );
 
     // Set for the requested vendor
-    $updated = $wpdb->query($wpdb->prepare(
-        "UPDATE {$t} SET is_primary = 1, updated_at = %s, updated_by = %d WHERE user_id = %d AND vendor_id = %d",
-        $now,
-        (int) $actor_user_id,
-        $user_id,
-        $vendor_id
-    ));
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Primary reassignment immediately writes the selected plugin-owned link row after clearing prior primaries; no persistent cache spans this ordered mutation pair.
+    $updated = $wpdb->query(
+        $wpdb->prepare(
+            'UPDATE %i SET is_primary = 1, updated_at = %s, updated_by = %d WHERE user_id = %d AND vendor_id = %d',
+            $t,
+            $now,
+            (int) $actor_user_id,
+            $user_id,
+            $vendor_id
+        )
+    );
 
     return ($updated !== false);
 }
@@ -345,13 +362,13 @@ function vms_vendor_user_links_set_primary_for_user(int $user_id, int $vendor_id
 /**
  * Get link rows for a vendor (admin UI support).
  */
-function vms_vendor_user_links_get_by_vendor(int $vendor_id, bool $include_inactive = true): array
+function bvmgr_vendor_user_links_get_by_vendor(int $vendor_id, bool $include_inactive = true): array
 {
     $vendor_id = (int) $vendor_id;
     if ($vendor_id <= 0) return array();
 
-    if (!vms_vendor_user_links_table_exists()) {
-        $uid = (int) get_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, true);
+    if (!bvmgr_vendor_user_links_table_exists()) {
+        $uid = (int) get_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, true);
         if ($uid > 0) {
             return array(
                 array(
@@ -365,22 +382,31 @@ function vms_vendor_user_links_get_by_vendor(int $vendor_id, bool $include_inact
     }
 
     global $wpdb;
-    $t = vms_vendor_user_links_table();
+    $t = bvmgr_vendor_user_links_table();
 
-    $where = "vendor_id = %d";
-    if (!$include_inactive) {
-        $where .= " AND link_status = 'active'";
+    if ($include_inactive) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor link administration reads the plugin-owned repository with prepared identifier/value placeholders and must reflect request-fresh link changes.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT user_id, user_role, link_status FROM %i WHERE vendor_id = %d ORDER BY link_status ASC, user_role ASC, user_id ASC',
+                $t,
+                $vendor_id
+            ),
+            ARRAY_A
+        );
+    } else {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active vendor link administration reads the plugin-owned repository with prepared identifier/value placeholders and must reflect request-fresh link changes.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT user_id, user_role, link_status FROM %i WHERE vendor_id = %d AND link_status = %s ORDER BY link_status ASC, user_role ASC, user_id ASC',
+                $t,
+                $vendor_id,
+                'active'
+            ),
+            ARRAY_A
+        );
     }
 
-    $sql = $wpdb->prepare(
-        "SELECT user_id, user_role, link_status
-         FROM {$t}
-         WHERE {$where}
-         ORDER BY link_status ASC, user_role ASC, user_id ASC",
-        $vendor_id
-    );
-
-    $rows = $wpdb->get_results($sql, ARRAY_A);
     if (!is_array($rows)) return array();
 
     $out = array();
@@ -396,8 +422,8 @@ function vms_vendor_user_links_get_by_vendor(int $vendor_id, bool $include_inact
 }
 
 
-if (!function_exists('vms_vendor_user_link_exists')) {
-    function vms_vendor_user_link_exists(int $vendor_id, int $user_id): bool
+if (!function_exists('bvmgr_vendor_user_link_exists')) {
+    function bvmgr_vendor_user_link_exists(int $vendor_id, int $user_id): bool
     {
         $vendor_id = (int) $vendor_id;
         $user_id = (int) $user_id;
@@ -405,44 +431,44 @@ if (!function_exists('vms_vendor_user_link_exists')) {
             return false;
         }
 
-        foreach ((array) vms_vendor_user_links_get_by_vendor($vendor_id, true) as $row) {
+        foreach ((array) bvmgr_vendor_user_links_get_by_vendor($vendor_id, true) as $row) {
             if ((int) ($row['user_id'] ?? 0) === $user_id) {
                 return true;
             }
         }
 
-        return ((int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true) === $vendor_id);
+        return ((int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true) === $vendor_id);
     }
 }
 
-if (!function_exists('vms_vendor_user_link_notification_enabled')) {
-    function vms_vendor_user_link_notification_enabled(array $context = array()): bool
+if (!function_exists('bvmgr_vendor_user_link_notification_enabled')) {
+    function bvmgr_vendor_user_link_notification_enabled(array $context = array()): bool
     {
         return (bool) apply_filters('vms_vendor_user_link_notification_enabled', false, $context);
     }
 }
 
-if (!function_exists('vms_vendor_user_link_request_meta_key')) {
-    function vms_vendor_user_link_request_meta_key(): string
+if (!function_exists('bvmgr_vendor_user_link_request_meta_key')) {
+    function bvmgr_vendor_user_link_request_meta_key(): string
     {
         return '_vms_vendor_link_requests';
     }
 }
 
-if (!function_exists('vms_vendor_user_link_request_notification_enabled')) {
-    function vms_vendor_user_link_request_notification_enabled(array $context = array()): bool
+if (!function_exists('bvmgr_vendor_user_link_request_notification_enabled')) {
+    function bvmgr_vendor_user_link_request_notification_enabled(array $context = array()): bool
     {
         return (bool) apply_filters('vms_vendor_user_link_request_notification_enabled', true, $context);
     }
 }
 
-if (!function_exists('vms_vendor_user_link_vendor_email_meta_keys')) {
-    function vms_vendor_user_link_vendor_email_meta_keys(): array
+if (!function_exists('bvmgr_vendor_user_link_vendor_email_meta_keys')) {
+    function bvmgr_vendor_user_link_vendor_email_meta_keys(): array
     {
         $keys = array(
-            function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email',
-            function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'contact_email') : '_vms_contact_email',
-            function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'email') : '_vms_vendor_email',
+            function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'primary_email') : '_vms_vendor_primary_email',
+            function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'contact_email') : '_vms_contact_email',
+            function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'email') : '_vms_vendor_email',
         );
 
         $out = array();
@@ -457,8 +483,8 @@ if (!function_exists('vms_vendor_user_link_vendor_email_meta_keys')) {
     }
 }
 
-if (!function_exists('vms_vendor_user_link_find_vendor_matches_for_email')) {
-    function vms_vendor_user_link_find_vendor_matches_for_email(string $email): array
+if (!function_exists('bvmgr_vendor_user_link_find_vendor_matches_for_email')) {
+    function bvmgr_vendor_user_link_find_vendor_matches_for_email(string $email): array
     {
         $email = sanitize_email($email);
         if (!is_email($email)) {
@@ -466,7 +492,7 @@ if (!function_exists('vms_vendor_user_link_find_vendor_matches_for_email')) {
         }
 
         $meta_query = array('relation' => 'OR');
-        foreach (vms_vendor_user_link_vendor_email_meta_keys() as $meta_key) {
+        foreach (bvmgr_vendor_user_link_vendor_email_meta_keys() as $meta_key) {
             $meta_query[] = array(
                 'key' => $meta_key,
                 'value' => $email,
@@ -486,7 +512,7 @@ if (!function_exists('vms_vendor_user_link_find_vendor_matches_for_email')) {
             'orderby' => 'title',
             'order' => 'ASC',
             'no_found_rows' => true,
-            'meta_query' => $meta_query,
+            'meta_query' => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Self-service matching must compare the normalized email against the finite legacy/current vendor-email key set and return request-fresh candidates.
         ));
 
         if (empty($query->posts)) {
@@ -497,15 +523,15 @@ if (!function_exists('vms_vendor_user_link_find_vendor_matches_for_email')) {
     }
 }
 
-if (!function_exists('vms_vendor_user_link_get_requests_for_user')) {
-    function vms_vendor_user_link_get_requests_for_user(int $user_id): array
+if (!function_exists('bvmgr_vendor_user_link_get_requests_for_user')) {
+    function bvmgr_vendor_user_link_get_requests_for_user(int $user_id): array
     {
         $user_id = (int) $user_id;
         if ($user_id <= 0) {
             return array();
         }
 
-        $raw = get_user_meta($user_id, vms_vendor_user_link_request_meta_key(), true);
+        $raw = get_user_meta($user_id, bvmgr_vendor_user_link_request_meta_key(), true);
         if (!is_array($raw)) {
             return array();
         }
@@ -544,16 +570,16 @@ if (!function_exists('vms_vendor_user_link_get_requests_for_user')) {
     }
 }
 
-if (!function_exists('vms_vendor_user_link_request_is_pending')) {
-    function vms_vendor_user_link_request_is_pending(int $user_id, int $vendor_id): bool
+if (!function_exists('bvmgr_vendor_user_link_request_is_pending')) {
+    function bvmgr_vendor_user_link_request_is_pending(int $user_id, int $vendor_id): bool
     {
-        $requests = vms_vendor_user_link_get_requests_for_user($user_id);
+        $requests = bvmgr_vendor_user_link_get_requests_for_user($user_id);
         return !empty($requests[$vendor_id]) && sanitize_key((string) ($requests[$vendor_id]['status'] ?? 'pending')) === 'pending';
     }
 }
 
-if (!function_exists('vms_vendor_user_link_store_request')) {
-    function vms_vendor_user_link_store_request(int $user_id, int $vendor_id, array $args = array()): bool
+if (!function_exists('bvmgr_vendor_user_link_store_request')) {
+    function bvmgr_vendor_user_link_store_request(int $user_id, int $vendor_id, array $args = array()): bool
     {
         $user_id = (int) $user_id;
         $vendor_id = (int) $vendor_id;
@@ -561,7 +587,7 @@ if (!function_exists('vms_vendor_user_link_store_request')) {
             return false;
         }
 
-        $requests = vms_vendor_user_link_get_requests_for_user($user_id);
+        $requests = bvmgr_vendor_user_link_get_requests_for_user($user_id);
         $existing = isset($requests[$vendor_id]) && is_array($requests[$vendor_id]) ? $requests[$vendor_id] : array();
         $already_pending = !empty($existing) && sanitize_key((string) ($existing['status'] ?? 'pending')) === 'pending';
         if ($already_pending) {
@@ -577,13 +603,13 @@ if (!function_exists('vms_vendor_user_link_store_request')) {
             'source' => sanitize_key((string) ($args['source'] ?? 'vendor_portal')),
         );
 
-        update_user_meta($user_id, vms_vendor_user_link_request_meta_key(), $requests);
+        update_user_meta($user_id, bvmgr_vendor_user_link_request_meta_key(), $requests);
         return true;
     }
 }
 
-if (!function_exists('vms_vendor_user_link_clear_request')) {
-    function vms_vendor_user_link_clear_request(int $user_id, int $vendor_id): void
+if (!function_exists('bvmgr_vendor_user_link_clear_request')) {
+    function bvmgr_vendor_user_link_clear_request(int $user_id, int $vendor_id): void
     {
         $user_id = (int) $user_id;
         $vendor_id = (int) $vendor_id;
@@ -591,23 +617,23 @@ if (!function_exists('vms_vendor_user_link_clear_request')) {
             return;
         }
 
-        $requests = vms_vendor_user_link_get_requests_for_user($user_id);
+        $requests = bvmgr_vendor_user_link_get_requests_for_user($user_id);
         if (!isset($requests[$vendor_id])) {
             return;
         }
 
         unset($requests[$vendor_id]);
         if (empty($requests)) {
-            delete_user_meta($user_id, vms_vendor_user_link_request_meta_key());
+            delete_user_meta($user_id, bvmgr_vendor_user_link_request_meta_key());
             return;
         }
 
-        update_user_meta($user_id, vms_vendor_user_link_request_meta_key(), $requests);
+        update_user_meta($user_id, bvmgr_vendor_user_link_request_meta_key(), $requests);
     }
 }
 
-if (!function_exists('vms_vendor_user_link_notification_recipients')) {
-    function vms_vendor_user_link_notification_recipients(array $context = array()): array
+if (!function_exists('bvmgr_vendor_user_link_notification_recipients')) {
+    function bvmgr_vendor_user_link_notification_recipients(array $context = array()): array
     {
         $emails = array();
         $admin_email = sanitize_email((string) get_option('admin_email', ''));
@@ -621,8 +647,8 @@ if (!function_exists('vms_vendor_user_link_notification_recipients')) {
     }
 }
 
-if (!function_exists('vms_vendor_user_link_vendor_type_label')) {
-    function vms_vendor_user_link_vendor_type_label(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_user_link_vendor_type_label')) {
+    function bvmgr_vendor_user_link_vendor_type_label(int $vendor_id): string
     {
         $vendor_id = (int) $vendor_id;
         if ($vendor_id <= 0) {
@@ -639,23 +665,23 @@ if (!function_exists('vms_vendor_user_link_vendor_type_label')) {
     }
 }
 
-if (!function_exists('vms_vendor_user_link_source_label')) {
-    function vms_vendor_user_link_source_label(array $context): string
+if (!function_exists('bvmgr_vendor_user_link_source_label')) {
+    function bvmgr_vendor_user_link_source_label(array $context): string
     {
         $source = sanitize_key((string) ($context['source'] ?? 'vendor_user_link_upsert'));
         $labels = array(
-            'vendor_user_link_upsert' => __('Vendor/User link save', 'vms'),
-            'vendor_user_metabox' => __('Vendor edit screen', 'vms'),
-            'vendor_command_center' => __('Vendor Command Center', 'vms'),
-            'vendor_application' => __('Vendor application approval', 'vms'),
+            'vendor_user_link_upsert' => __('Vendor/User link save', 'backstage-venue-manager'),
+            'vendor_user_metabox' => __('Vendor edit screen', 'backstage-venue-manager'),
+            'vendor_command_center' => __('Vendor Command Center', 'backstage-venue-manager'),
+            'vendor_application' => __('Vendor application approval', 'backstage-venue-manager'),
         );
 
         return $labels[$source] ?? ucwords(str_replace('_', ' ', $source));
     }
 }
 
-if (!function_exists('vms_vendor_user_link_actor_label')) {
-    function vms_vendor_user_link_actor_label(array $context): string
+if (!function_exists('bvmgr_vendor_user_link_actor_label')) {
+    function bvmgr_vendor_user_link_actor_label(array $context): string
     {
         $actor_user_id = (int) ($context['actor_user_id'] ?? 0);
         $linked_user_id = (int) ($context['user_id'] ?? 0);
@@ -667,12 +693,14 @@ if (!function_exists('vms_vendor_user_link_actor_label')) {
 
             if ($actor_user_id === $linked_user_id) {
                 if ($actor_name !== '' && $actor_email !== '') {
-                    return sprintf(__('Self-service (%1$s <%2$s>)', 'vms'), $actor_name, $actor_email);
+                    /* translators: 1: Actor display name, 2: Actor email address. */
+                    return sprintf(__('Self-service (%1$s <%2$s>)', 'backstage-venue-manager'), $actor_name, $actor_email);
                 }
                 if ($actor_email !== '') {
-                    return sprintf(__('Self-service (%s)', 'vms'), $actor_email);
+                    /* translators: %s: Actor email address. */
+                    return sprintf(__('Self-service (%s)', 'backstage-venue-manager'), $actor_email);
                 }
-                return __('Self-service', 'vms');
+                return __('Self-service', 'backstage-venue-manager');
             }
 
             if ($actor_name !== '' && $actor_email !== '') {
@@ -684,17 +712,18 @@ if (!function_exists('vms_vendor_user_link_actor_label')) {
             if ($actor_email !== '') {
                 return $actor_email;
             }
-            return sprintf(__('User #%d', 'vms'), $actor_user_id);
+            /* translators: %d: WordPress user ID. */
+            return sprintf(__('User #%d', 'backstage-venue-manager'), $actor_user_id);
         }
 
-        return __('System / automatic', 'vms');
+        return __('System / automatic', 'backstage-venue-manager');
     }
 }
 
-if (!function_exists('vms_vendor_user_link_notify_admin')) {
-    function vms_vendor_user_link_notify_admin(array $context): void
+if (!function_exists('bvmgr_vendor_user_link_notify_admin')) {
+    function bvmgr_vendor_user_link_notify_admin(array $context): void
     {
-        if (!vms_vendor_user_link_notification_enabled($context)) {
+        if (!bvmgr_vendor_user_link_notification_enabled($context)) {
             return;
         }
 
@@ -704,58 +733,79 @@ if (!function_exists('vms_vendor_user_link_notify_admin')) {
             return;
         }
 
-        $recipients = vms_vendor_user_link_notification_recipients($context);
+        $recipients = bvmgr_vendor_user_link_notification_recipients($context);
         if (empty($recipients)) {
             return;
         }
 
         $vendor_title = get_the_title($vendor_id);
         if (!is_string($vendor_title) || $vendor_title === '') {
-            $vendor_title = sprintf(__('Vendor #%d', 'vms'), $vendor_id);
+            /* translators: %d: Vendor post ID. */
+            $vendor_title = sprintf(__('Vendor #%d', 'backstage-venue-manager'), $vendor_id);
         }
 
-        $vendor_type = vms_vendor_user_link_vendor_type_label($vendor_id);
+        $vendor_type = bvmgr_vendor_user_link_vendor_type_label($vendor_id);
         $linked_user = get_userdata($user_id);
         $user_name = $linked_user instanceof WP_User ? trim((string) $linked_user->display_name) : '';
         $user_email = ($linked_user instanceof WP_User) ? sanitize_email((string) $linked_user->user_email) : '';
         $role = sanitize_key((string) ($context['role'] ?? ''));
         $status = sanitize_key((string) ($context['status'] ?? ''));
-        $source_label = vms_vendor_user_link_source_label($context);
-        $actor_label = vms_vendor_user_link_actor_label($context);
-        $primary_label = !empty($context['set_primary_for_user']) ? __('Yes', 'vms') : __('No', 'vms');
+        $source_label = bvmgr_vendor_user_link_source_label($context);
+        $actor_label = bvmgr_vendor_user_link_actor_label($context);
+        $primary_label = !empty($context['set_primary_for_user']) ? __('Yes', 'backstage-venue-manager') : __('No', 'backstage-venue-manager');
         $vendor_link = current_user_can('edit_post', $vendor_id) ? get_edit_post_link($vendor_id, '') : admin_url('post.php?post=' . $vendor_id . '&action=edit');
         $user_link = current_user_can('list_users') ? admin_url('user-edit.php?user_id=' . $user_id) : '';
+        if ($user_name !== '') {
+            $linked_user_label = wp_specialchars_decode($user_name, ENT_QUOTES);
+        } else {
+            /* translators: %d: WordPress user ID. */
+            $linked_user_label = sprintf(__('User #%d', 'backstage-venue-manager'), $user_id);
+        }
 
-        $subject = sprintf(__('[VMS] Vendor account linked: %s', 'vms'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
+        /* translators: %s: Vendor title. */
+        $subject = sprintf(__('[Backstage Venue Manager] Vendor account linked: %s', 'backstage-venue-manager'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
 
         $lines = array(
-            __('A vendor profile was linked to a website account.', 'vms'),
+            __('A vendor profile was linked to a website account.', 'backstage-venue-manager'),
             '',
-            sprintf(__('Vendor: %s', 'vms'), wp_specialchars_decode($vendor_title, ENT_QUOTES)),
-            sprintf(__('Vendor ID: %d', 'vms'), $vendor_id),
+            /* translators: %s: Vendor title. */
+            sprintf(__('Vendor: %s', 'backstage-venue-manager'), wp_specialchars_decode($vendor_title, ENT_QUOTES)),
+            /* translators: %d: Vendor post ID. */
+            sprintf(__('Vendor ID: %d', 'backstage-venue-manager'), $vendor_id),
         );
         if ($vendor_type !== '') {
-            $lines[] = sprintf(__('Vendor Type: %s', 'vms'), $vendor_type);
+            /* translators: %s: Vendor type label. */
+            $lines[] = sprintf(__('Vendor Type: %s', 'backstage-venue-manager'), $vendor_type);
         }
-        $lines[] = sprintf(__('Website User: %s', 'vms'), $user_name !== '' ? wp_specialchars_decode($user_name, ENT_QUOTES) : sprintf(__('User #%d', 'vms'), $user_id));
-        $lines[] = sprintf(__('User ID: %d', 'vms'), $user_id);
+        /* translators: %s: Website user display label. */
+        $lines[] = sprintf(__('Website User: %s', 'backstage-venue-manager'), $linked_user_label);
+        /* translators: %d: WordPress user ID. */
+        $lines[] = sprintf(__('User ID: %d', 'backstage-venue-manager'), $user_id);
         if ($user_email !== '') {
-            $lines[] = sprintf(__('User Email: %s', 'vms'), $user_email);
+            /* translators: %s: Website user email address. */
+            $lines[] = sprintf(__('User Email: %s', 'backstage-venue-manager'), $user_email);
         }
         if ($role !== '') {
-            $lines[] = sprintf(__('Role: %s', 'vms'), $role);
+            /* translators: %s: Vendor/user link role key. */
+            $lines[] = sprintf(__('Role: %s', 'backstage-venue-manager'), $role);
         }
         if ($status !== '') {
-            $lines[] = sprintf(__('Status: %s', 'vms'), $status);
+            /* translators: %s: Vendor/user link status key. */
+            $lines[] = sprintf(__('Status: %s', 'backstage-venue-manager'), $status);
         }
-        $lines[] = sprintf(__('Primary portal vendor for this user: %s', 'vms'), $primary_label);
-        $lines[] = sprintf(__('Source: %s', 'vms'), $source_label);
-        $lines[] = sprintf(__('Linked by: %s', 'vms'), $actor_label);
+        /* translators: %s: Yes/No label for whether the vendor is primary for the user. */
+        $lines[] = sprintf(__('Primary portal vendor for this user: %s', 'backstage-venue-manager'), $primary_label);
+        /* translators: %s: Source label describing where the link originated. */
+        $lines[] = sprintf(__('Source: %s', 'backstage-venue-manager'), $source_label);
+        /* translators: %s: Actor label describing who created the link. */
+        $lines[] = sprintf(__('Linked by: %s', 'backstage-venue-manager'), $actor_label);
         if (is_string($vendor_link) && $vendor_link !== '') {
-            $lines[] = sprintf(__('Vendor Profile: %s', 'vms'), $vendor_link);
+            /* translators: %s: Admin URL for the vendor profile. */
+            $lines[] = sprintf(__('Vendor Profile: %s', 'backstage-venue-manager'), $vendor_link);
         }
         if ($user_link !== '') {
-            $lines[] = sprintf(__('User Account: %s', 'vms'), $user_link);
+            /* translators: %s: Admin URL for the linked user account. */
+            $lines[] = sprintf(__('User Account: %s', 'backstage-venue-manager'), $user_link);
         }
 
         $body_text = implode("
@@ -763,8 +813,8 @@ if (!function_exists('vms_vendor_user_link_notify_admin')) {
         $body_html = nl2br(esc_html($body_text));
 
         foreach ($recipients as $email) {
-            $result = function_exists('vms_notify_provider_core_email_send')
-                ? (array) vms_notify_provider_core_email_send(array(
+            $result = function_exists('bvmgr_notify_provider_core_email_send')
+                ? (array) bvmgr_notify_provider_core_email_send(array(
                     'to' => $email,
                     'subject' => $subject,
                     'body_text' => $body_text,
@@ -776,8 +826,8 @@ if (!function_exists('vms_vendor_user_link_notify_admin')) {
                     'error_message' => '',
                 );
 
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vms_vendor_user_links',
                     'event_key' => 'vendor_user_link_created',
                     'recipient_address' => $email,
@@ -800,10 +850,10 @@ if (!function_exists('vms_vendor_user_link_notify_admin')) {
 
 }
 
-if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
-    function vms_vendor_user_link_request_notify_admin(array $context): void
+if (!function_exists('bvmgr_vendor_user_link_request_notify_admin')) {
+    function bvmgr_vendor_user_link_request_notify_admin(array $context): void
     {
-        if (!vms_vendor_user_link_request_notification_enabled($context)) {
+        if (!bvmgr_vendor_user_link_request_notification_enabled($context)) {
             return;
         }
 
@@ -813,17 +863,18 @@ if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
             return;
         }
 
-        $recipients = vms_vendor_user_link_notification_recipients($context);
+        $recipients = bvmgr_vendor_user_link_notification_recipients($context);
         if (empty($recipients)) {
             return;
         }
 
         $vendor_title = get_the_title($vendor_id);
         if (!is_string($vendor_title) || $vendor_title === '') {
-            $vendor_title = sprintf(__('Vendor #%d', 'vms'), $vendor_id);
+            /* translators: %d: Vendor post ID. */
+            $vendor_title = sprintf(__('Vendor #%d', 'backstage-venue-manager'), $vendor_id);
         }
 
-        $vendor_type = vms_vendor_user_link_vendor_type_label($vendor_id);
+        $vendor_type = bvmgr_vendor_user_link_vendor_type_label($vendor_id);
         $request_user = get_userdata($user_id);
         $user_name = $request_user instanceof WP_User ? trim((string) $request_user->display_name) : '';
         $user_email = ($request_user instanceof WP_User) ? sanitize_email((string) $request_user->user_email) : '';
@@ -831,35 +882,52 @@ if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
         $requested_ts = $requested_at_gmt !== '' ? strtotime($requested_at_gmt . ' GMT') : false;
         $requested_label = $requested_ts ? wp_date(get_option('date_format', 'F j, Y') . ' ' . get_option('time_format', 'g:i a'), (int) $requested_ts) : '';
         $source = sanitize_key((string) ($context['source'] ?? 'vendor_portal'));
-        $source_label = ($source === 'vendor_portal') ? __('Vendor portal access request', 'vms') : ucwords(str_replace('_', ' ', $source));
+        $source_label = ($source === 'vendor_portal') ? __('Vendor portal access request', 'backstage-venue-manager') : ucwords(str_replace('_', ' ', $source));
         $vendor_link = current_user_can('edit_post', $vendor_id) ? get_edit_post_link($vendor_id, '') : admin_url('post.php?post=' . $vendor_id . '&action=edit');
         $user_link = current_user_can('list_users') ? admin_url('user-edit.php?user_id=' . $user_id) : '';
+        if ($user_name !== '') {
+            $request_user_label = wp_specialchars_decode($user_name, ENT_QUOTES);
+        } else {
+            /* translators: %d: WordPress user ID. */
+            $request_user_label = sprintf(__('User #%d', 'backstage-venue-manager'), $user_id);
+        }
 
-        $subject = sprintf(__('[VMS] Vendor portal link requested: %s', 'vms'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
+        /* translators: %s: Vendor title. */
+        $subject = sprintf(__('[Backstage Venue Manager] Vendor portal link requested: %s', 'backstage-venue-manager'), wp_specialchars_decode($vendor_title, ENT_QUOTES));
 
         $lines = array(
-            __('A website user requested to be linked to a vendor profile.', 'vms'),
+            __('A website user requested to be linked to a vendor profile.', 'backstage-venue-manager'),
             '',
-            sprintf(__('Vendor: %s', 'vms'), wp_specialchars_decode($vendor_title, ENT_QUOTES)),
-            sprintf(__('Vendor ID: %d', 'vms'), $vendor_id),
+            /* translators: %s: Vendor title. */
+            sprintf(__('Vendor: %s', 'backstage-venue-manager'), wp_specialchars_decode($vendor_title, ENT_QUOTES)),
+            /* translators: %d: Vendor post ID. */
+            sprintf(__('Vendor ID: %d', 'backstage-venue-manager'), $vendor_id),
         );
         if ($vendor_type !== '') {
-            $lines[] = sprintf(__('Vendor Type: %s', 'vms'), $vendor_type);
+            /* translators: %s: Vendor type label. */
+            $lines[] = sprintf(__('Vendor Type: %s', 'backstage-venue-manager'), $vendor_type);
         }
-        $lines[] = sprintf(__('Website User: %s', 'vms'), $user_name !== '' ? wp_specialchars_decode($user_name, ENT_QUOTES) : sprintf(__('User #%d', 'vms'), $user_id));
-        $lines[] = sprintf(__('User ID: %d', 'vms'), $user_id);
+        /* translators: %s: Website user display label. */
+        $lines[] = sprintf(__('Website User: %s', 'backstage-venue-manager'), $request_user_label);
+        /* translators: %d: WordPress user ID. */
+        $lines[] = sprintf(__('User ID: %d', 'backstage-venue-manager'), $user_id);
         if ($user_email !== '') {
-            $lines[] = sprintf(__('User Email: %s', 'vms'), $user_email);
+            /* translators: %s: Website user email address. */
+            $lines[] = sprintf(__('User Email: %s', 'backstage-venue-manager'), $user_email);
         }
         if ($requested_label !== '') {
-            $lines[] = sprintf(__('Requested At: %s', 'vms'), $requested_label);
+            /* translators: %s: Localized request timestamp. */
+            $lines[] = sprintf(__('Requested At: %s', 'backstage-venue-manager'), $requested_label);
         }
-        $lines[] = sprintf(__('Source: %s', 'vms'), $source_label);
+        /* translators: %s: Source label describing where the request originated. */
+        $lines[] = sprintf(__('Source: %s', 'backstage-venue-manager'), $source_label);
         if (is_string($vendor_link) && $vendor_link !== '') {
-            $lines[] = sprintf(__('Vendor Profile: %s', 'vms'), $vendor_link);
+            /* translators: %s: Admin URL for the vendor profile. */
+            $lines[] = sprintf(__('Vendor Profile: %s', 'backstage-venue-manager'), $vendor_link);
         }
         if ($user_link !== '') {
-            $lines[] = sprintf(__('User Account: %s', 'vms'), $user_link);
+            /* translators: %s: Admin URL for the requesting user account. */
+            $lines[] = sprintf(__('User Account: %s', 'backstage-venue-manager'), $user_link);
         }
 
         $body_text = implode("
@@ -867,8 +935,8 @@ if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
         $body_html = nl2br(esc_html($body_text));
 
         foreach ($recipients as $email) {
-            $result = function_exists('vms_notify_provider_core_email_send')
-                ? (array) vms_notify_provider_core_email_send(array(
+            $result = function_exists('bvmgr_notify_provider_core_email_send')
+                ? (array) bvmgr_notify_provider_core_email_send(array(
                     'to' => $email,
                     'subject' => $subject,
                     'body_text' => $body_text,
@@ -880,8 +948,8 @@ if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
                     'error_message' => '',
                 );
 
-            if (function_exists('vms_notify_insert_log')) {
-                vms_notify_insert_log(array(
+            if (function_exists('bvmgr_notify_insert_log')) {
+                bvmgr_notify_insert_log(array(
                     'source' => 'vms_vendor_user_link_requests',
                     'event_key' => 'vendor_user_link_requested',
                     'recipient_address' => $email,
@@ -902,11 +970,11 @@ if (!function_exists('vms_vendor_user_link_request_notify_admin')) {
     }
 }
 
-add_action('vms_vendor_user_link_requested', 'vms_vendor_user_link_request_notify_admin', 10, 1);
-add_action('vms_vendor_user_link_created', 'vms_vendor_user_link_clear_pending_request_on_create', 20, 1);
+add_action('vms_vendor_user_link_requested', 'bvmgr_vendor_user_link_request_notify_admin', 10, 1);
+add_action('vms_vendor_user_link_created', 'bvmgr_vendor_user_link_clear_pending_request_on_create', 20, 1);
 
-if (!function_exists('vms_vendor_user_link_clear_pending_request_on_create')) {
-    function vms_vendor_user_link_clear_pending_request_on_create(array $context): void
+if (!function_exists('bvmgr_vendor_user_link_clear_pending_request_on_create')) {
+    function bvmgr_vendor_user_link_clear_pending_request_on_create(array $context): void
     {
         $vendor_id = (int) ($context['vendor_id'] ?? 0);
         $user_id = (int) ($context['user_id'] ?? 0);
@@ -914,41 +982,41 @@ if (!function_exists('vms_vendor_user_link_clear_pending_request_on_create')) {
             return;
         }
 
-        vms_vendor_user_link_clear_request($user_id, $vendor_id);
+        bvmgr_vendor_user_link_clear_request($user_id, $vendor_id);
     }
 }
 
 /**
  * Upsert a vendor↔user link row.
  */
-function vms_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args = array(), int $actor_user_id = 0): bool
+function bvmgr_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args = array(), int $actor_user_id = 0): bool
 {
     $vendor_id = (int) $vendor_id;
     $user_id = (int) $user_id;
     if ($vendor_id <= 0 || $user_id <= 0) return false;
 
-    $role   = vms_vendor_user_link_normalize_role(isset($args['role']) ? (string) $args['role'] : 'manager');
-    $status = vms_vendor_user_link_normalize_status(isset($args['status']) ? (string) $args['status'] : 'active');
+    $role   = bvmgr_vendor_user_link_normalize_role(isset($args['role']) ? (string) $args['role'] : 'manager');
+    $status = bvmgr_vendor_user_link_normalize_status(isset($args['status']) ? (string) $args['status'] : 'active');
     $set_primary_for_user = !empty($args['set_primary_for_user']);
     $source = sanitize_key((string) ($args['source'] ?? 'vendor_user_link_upsert'));
-    $link_existed_before = vms_vendor_user_link_exists($vendor_id, $user_id);
+    $link_existed_before = bvmgr_vendor_user_link_exists($vendor_id, $user_id);
 
     // Back-compat: ensure user meta has a primary vendor if none exists.
-    $existing_primary = (int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true);
+    $existing_primary = (int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true);
     if ($existing_primary <= 0) {
-        update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
+        update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
         $set_primary_for_user = true;
     }
 
-    if (!vms_vendor_user_links_table_exists()) {
+    if (!bvmgr_vendor_user_links_table_exists()) {
         // Fall back to the legacy convenience pointers without clobbering an
         // existing primary vendor selection unless this call explicitly asked for it.
-        $vendor_primary_user = (int) get_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, true);
+        $vendor_primary_user = (int) get_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, true);
         if ($vendor_primary_user <= 0 || $set_primary_for_user) {
-            update_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, $user_id);
+            update_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, $user_id);
         }
         if ($set_primary_for_user || $existing_primary <= 0) {
-            update_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
+            update_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, $vendor_id);
         }
 
         if (!$link_existed_before) {
@@ -967,46 +1035,48 @@ function vms_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args =
     }
 
     global $wpdb;
-    $t = vms_vendor_user_links_table();
+    $t = bvmgr_vendor_user_links_table();
     $now = current_time('mysql', true);
 
     $is_primary = $set_primary_for_user ? 1 : 0;
 
     // Insert or update in a single statement.
-    $sql = $wpdb->prepare(
-        "INSERT INTO {$t}
-            (vendor_id, user_id, user_role, link_status, is_primary, created_at, created_by, updated_at, updated_by)
-         VALUES
-            (%d, %d, %s, %s, %d, %s, %d, %s, %d)
-         ON DUPLICATE KEY UPDATE
-            user_role   = VALUES(user_role),
-            link_status = VALUES(link_status),
-            is_primary  = IF(VALUES(is_primary)=1, 1, is_primary),
-            updated_at  = VALUES(updated_at),
-            updated_by  = VALUES(updated_by)",
-        $vendor_id,
-        $user_id,
-        $role,
-        $status,
-        $is_primary,
-        $now,
-        (int) $actor_user_id,
-        $now,
-        (int) $actor_user_id
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor/user upserts persist authoritative plugin-owned link state with a prepared identifier and values; authorization and portal reads must observe the mutation immediately.
+    $ok = $wpdb->query(
+        $wpdb->prepare(
+            'INSERT INTO %i
+                (vendor_id, user_id, user_role, link_status, is_primary, created_at, created_by, updated_at, updated_by)
+             VALUES
+                (%d, %d, %s, %s, %d, %s, %d, %s, %d)
+             ON DUPLICATE KEY UPDATE
+                user_role   = VALUES(user_role),
+                link_status = VALUES(link_status),
+                is_primary  = IF(VALUES(is_primary)=1, 1, is_primary),
+                updated_at  = VALUES(updated_at),
+                updated_by  = VALUES(updated_by)',
+            $t,
+            $vendor_id,
+            $user_id,
+            $role,
+            $status,
+            $is_primary,
+            $now,
+            (int) $actor_user_id,
+            $now,
+            (int) $actor_user_id
+        )
     );
-
-    $ok = $wpdb->query($sql);
     if ($ok === false) return false;
 
     // If requested, enforce unique primary for this user.
     if ($set_primary_for_user) {
-        vms_vendor_user_links_set_primary_for_user($user_id, $vendor_id, $actor_user_id);
+        bvmgr_vendor_user_links_set_primary_for_user($user_id, $vendor_id, $actor_user_id);
     }
 
     // Back-compat: if vendor has no primary contact user, set it.
-    $vendor_primary_user = (int) get_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, true);
+    $vendor_primary_user = (int) get_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, true);
     if ($vendor_primary_user <= 0 && $status === 'active') {
-        update_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, $user_id);
+        update_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, $user_id);
     }
 
     if (!$link_existed_before) {
@@ -1027,13 +1097,13 @@ function vms_vendor_user_link_upsert(int $vendor_id, int $user_id, array $args =
 /**
  * Update role/status for an existing link.
  */
-function vms_vendor_user_link_update(int $vendor_id, int $user_id, array $fields = array(), int $actor_user_id = 0): bool
+function bvmgr_vendor_user_link_update(int $vendor_id, int $user_id, array $fields = array(), int $actor_user_id = 0): bool
 {
     $vendor_id = (int) $vendor_id;
     $user_id = (int) $user_id;
     if ($vendor_id <= 0 || $user_id <= 0) return false;
 
-    if (!vms_vendor_user_links_table_exists()) {
+    if (!bvmgr_vendor_user_links_table_exists()) {
         return true;
     }
 
@@ -1041,10 +1111,10 @@ function vms_vendor_user_link_update(int $vendor_id, int $user_id, array $fields
     $status = null;
 
     if (isset($fields['role'])) {
-        $role = vms_vendor_user_link_normalize_role((string) $fields['role']);
+        $role = bvmgr_vendor_user_link_normalize_role((string) $fields['role']);
     }
     if (isset($fields['status'])) {
-        $status = vms_vendor_user_link_normalize_status((string) $fields['status']);
+        $status = bvmgr_vendor_user_link_normalize_status((string) $fields['status']);
     }
 
     $data = array();
@@ -1065,7 +1135,7 @@ function vms_vendor_user_link_update(int $vendor_id, int $user_id, array $fields
     $fmt[] = '%d';
 
     global $wpdb;
-    $t = vms_vendor_user_links_table();
+    $t = bvmgr_vendor_user_links_table();
 
     $where = array(
         'vendor_id' => $vendor_id,
@@ -1073,6 +1143,7 @@ function vms_vendor_user_link_update(int $vendor_id, int $user_id, array $fields
     );
     $where_fmt = array('%d', '%d');
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor/user role and status changes write the authoritative plugin-owned link row directly and must be visible to authorization checks in the same request.
     $res = $wpdb->update($t, $data, $where, $fmt, $where_fmt);
     return ($res !== false);
 }
@@ -1080,30 +1151,31 @@ function vms_vendor_user_link_update(int $vendor_id, int $user_id, array $fields
 /**
  * Delete a vendor↔user link.
  */
-function vms_vendor_user_link_delete(int $vendor_id, int $user_id, int $actor_user_id = 0): bool
+function bvmgr_vendor_user_link_delete(int $vendor_id, int $user_id, int $actor_user_id = 0): bool
 {
     $vendor_id = (int) $vendor_id;
     $user_id = (int) $user_id;
     if ($vendor_id <= 0 || $user_id <= 0) return false;
 
     // Legacy cleanup
-    $vendor_primary_user = (int) get_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY, true);
+    $vendor_primary_user = (int) get_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY, true);
     if ($vendor_primary_user === $user_id) {
-        delete_post_meta($vendor_id, VMS_VENDOR_PRIMARY_USER_META_KEY);
+        delete_post_meta($vendor_id, BVMGR_VENDOR_PRIMARY_USER_META_KEY);
     }
 
-    $user_primary_vendor = (int) get_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY, true);
+    $user_primary_vendor = (int) get_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY, true);
     if ($user_primary_vendor === $vendor_id) {
-        delete_user_meta($user_id, VMS_USER_PRIMARY_VENDOR_META_KEY);
+        delete_user_meta($user_id, BVMGR_USER_PRIMARY_VENDOR_META_KEY);
     }
 
-    if (!vms_vendor_user_links_table_exists()) {
+    if (!bvmgr_vendor_user_links_table_exists()) {
         return true;
     }
 
     global $wpdb;
-    $t = vms_vendor_user_links_table();
+    $t = bvmgr_vendor_user_links_table();
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Vendor/user unlinking removes the authoritative plugin-owned link row directly before selecting any replacement primary in the same request.
     $res = $wpdb->delete($t, array(
         'vendor_id' => $vendor_id,
         'user_id'   => $user_id,
@@ -1112,9 +1184,9 @@ function vms_vendor_user_link_delete(int $vendor_id, int $user_id, int $actor_us
     if ($res === false) return false;
 
     // If we deleted the primary vendor for the user, select another active vendor and set it.
-    $still = vms_get_active_vendor_ids_for_user($user_id);
+    $still = bvmgr_get_active_vendor_ids_for_user($user_id);
     if ($still) {
-        vms_vendor_user_links_set_primary_for_user($user_id, (int)$still[0], $actor_user_id);
+        bvmgr_vendor_user_links_set_primary_for_user($user_id, (int)$still[0], $actor_user_id);
     }
 
     return true;
@@ -1124,16 +1196,16 @@ function vms_vendor_user_link_delete(int $vendor_id, int $user_id, int $actor_us
  * Convenience: vendor ID for a specific user (primary/default).
  * Kept for backwards compatibility with older helper names.
  */
-function vms_get_vendor_id_for_user(int $user_id): int
+function bvmgr_get_vendor_id_for_user(int $user_id): int
 {
-    return vms_get_primary_vendor_id_for_user($user_id);
+    return bvmgr_get_primary_vendor_id_for_user($user_id);
 }
 
 /**
  * Convenience: current user's vendor ID (primary/default).
  */
-function vms_get_vendor_id_for_current_user(): int
+function bvmgr_get_vendor_id_for_current_user(): int
 {
     $user_id = get_current_user_id();
-    return $user_id ? vms_get_primary_vendor_id_for_user((int)$user_id) : 0;
+    return $user_id ? bvmgr_get_primary_vendor_id_for_user((int)$user_id) : 0;
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/scripts/lib/public-release.php';
 
 if ($argc < 2) {
-	fwrite(STDERR, "Usage: php tests/check-package-integrity.php <path-to-vms-zip-or-staged-plugin-dir>\n");
+	fwrite(STDERR, "Usage: php tests/check-package-integrity.php <path-to-backstage-venue-manager-zip-or-staged-plugin-dir>\n");
 	exit(2);
 }
 
@@ -12,7 +12,7 @@ $target = (string) $argv[1];
 $result = VMS_Public_Release_Tooling::validateTarget(
 	$target,
 	array(
-		'plugin_slug' => 'vms',
+		'plugin_slug' => 'backstage-venue-manager',
 		'manifest_path' => dirname(__DIR__) . '/release-public-excludes.txt',
 	)
 );

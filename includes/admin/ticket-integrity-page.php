@@ -1,33 +1,45 @@
 <?php
 defined('ABSPATH') || exit;
 
-function vms_ticket_integrity_register_admin_page(): void
+function bvmgr_ticket_integrity_register_admin_page(): void
 {
 	add_submenu_page(
 		'vms-dashboard',
-		__('Ticket Integrity', 'vms'),
-		__('Ticket Integrity', 'vms'),
+		__('Ticket Integrity', 'backstage-venue-manager'),
+		__('Ticket Integrity', 'backstage-venue-manager'),
 		'manage_options',
 		'vms-ticket-integrity',
-		'vms_ticket_integrity_render_admin_page'
+		'bvmgr_ticket_integrity_render_admin_page'
 	);
 }
-add_action('admin_menu', 'vms_ticket_integrity_register_admin_page', 45);
+add_action('admin_menu', 'bvmgr_ticket_integrity_register_admin_page', 45);
 
-function vms_ticket_integrity_admin_enqueue_assets(string $hook): void
+function bvmgr_ticket_integrity_query_arg(string $key): string
+{
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Ticket Integrity admin routing and notices only change admin display state.
+	if (!isset($_GET[$key])) {
+		return '';
+	}
+
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only Ticket Integrity admin routing and notices are unslashed here and sanitized or cast by the caller.
+	return (string) wp_unslash($_GET[$key]);
+}
+
+function bvmgr_ticket_integrity_admin_enqueue_assets(string $hook): void
 {
 	unset($hook);
 
-	$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
-	if (!in_array($page, array('vms-ticket-integrity', 'vms-dashboard'), true)) {
+	$page = sanitize_key(bvmgr_ticket_integrity_query_arg('page'));
+	$needs_menu_badge_style = current_user_can('manage_options') && bvmgr_ticket_integrity_menu_alert_needed();
+	if (!$needs_menu_badge_style && !in_array($page, array('vms-ticket-integrity', 'vms-dashboard'), true)) {
 		return;
 	}
 
 	wp_enqueue_style(
-		'vms-admin-ticket-integrity',
-		VMS_PLUGIN_URL . 'assets/css/admin-ticket-integrity.css',
+		'bvmgr-admin-ticket-integrity',
+		BVMGR_PLUGIN_URL . 'assets/css/admin-ticket-integrity.css',
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 	);
 
 	if ($page !== 'vms-ticket-integrity') {
@@ -35,27 +47,27 @@ function vms_ticket_integrity_admin_enqueue_assets(string $hook): void
 	}
 
 	wp_enqueue_script(
-		'vms-admin-ticket-integrity',
-		VMS_PLUGIN_URL . 'assets/js/admin-ticket-integrity.js',
+		'bvmgr-admin-ticket-integrity',
+		BVMGR_PLUGIN_URL . 'assets/js/admin-ticket-integrity.js',
 		array(),
-		function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : ''),
+		function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
 		true
 	);
 
 	wp_add_inline_script(
-		'vms-admin-ticket-integrity',
-		'window.vmsTicketIntegrityAdmin = ' . wp_json_encode(
+		'bvmgr-admin-ticket-integrity',
+		'window.BVMGR_TICKET_INTEGRITY_ADMIN = ' . wp_json_encode(
 			array(
-				'confirmRebuild' => __('Rebuild Ticket Config will attempt a real ticket repair for this Event Plan, may update live ticket mappings, and will log what changed. Continue?', 'vms'),
-				'confirmCleanupDuplicates' => __('Resolve Duplicate Legacy Tickets will not delete sold tickets. It will retire unsold duplicate products and, when safer, promote the sold legacy product back into the active map while retiring the newer unsold duplicate. Continue?', 'vms'),
+				'confirmRebuild' => __('Rebuild Ticket Config will attempt a real ticket repair for this Event Plan, may update live ticket mappings, and will log what changed. Continue?', 'backstage-venue-manager'),
+				'confirmCleanupDuplicates' => __('Resolve Duplicate Legacy Tickets will not delete sold tickets. It will retire unsold duplicate products and, when safer, promote the sold legacy product back into the active map while retiring the newer unsold duplicate. Continue?', 'backstage-venue-manager'),
 			)
 		) . ';',
 		'before'
 	);
 }
-add_action('admin_enqueue_scripts', 'vms_ticket_integrity_admin_enqueue_assets', 45);
+add_action('admin_enqueue_scripts', 'bvmgr_ticket_integrity_admin_enqueue_assets', 45);
 
-function vms_ticket_integrity_admin_redirect(string $notice, array $extra = array()): void
+function bvmgr_ticket_integrity_admin_redirect(string $notice, array $extra = array()): void
 {
 	$args = array_merge(
 		$extra,
@@ -64,20 +76,20 @@ function vms_ticket_integrity_admin_redirect(string $notice, array $extra = arra
 		)
 	);
 
-	wp_safe_redirect(vms_ticket_integrity_admin_url($args));
+	wp_safe_redirect(bvmgr_ticket_integrity_admin_url($args));
 	exit;
 }
 
-function vms_ticket_integrity_handle_manual_scan(): void
+function bvmgr_ticket_integrity_handle_manual_scan(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_run_scan');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_run_scan', '_wpnonce'), '_wpnonce');
 	$include_inactive = !empty($_POST['include_inactive']);
-	$result = function_exists('vms_ticket_integrity_scan_all')
-		? vms_ticket_integrity_scan_all(
+	$result = function_exists('bvmgr_ticket_integrity_scan_all')
+		? bvmgr_ticket_integrity_scan_all(
 			array(
 				'trigger' => 'manual_admin',
 				'include_inactive' => $include_inactive,
@@ -86,7 +98,7 @@ function vms_ticket_integrity_handle_manual_scan(): void
 		: array('ok' => false, 'message' => 'scan_helper_missing');
 
 	if (empty($result['ok'])) {
-		vms_ticket_integrity_admin_redirect(
+		bvmgr_ticket_integrity_admin_redirect(
 			'scan_failed',
 			array(
 				'detail' => sanitize_text_field((string) ($result['message'] ?? 'scan_failed')),
@@ -95,7 +107,7 @@ function vms_ticket_integrity_handle_manual_scan(): void
 	}
 
 	$summary = is_array($result['store']['summary'] ?? null) ? $result['store']['summary'] : array();
-	vms_ticket_integrity_admin_redirect(
+	bvmgr_ticket_integrity_admin_redirect(
 		'scan_complete',
 		array(
 			'red' => absint($summary['red'] ?? 0),
@@ -104,22 +116,22 @@ function vms_ticket_integrity_handle_manual_scan(): void
 		)
 	);
 }
-add_action('admin_post_vms_ticket_integrity_run_scan', 'vms_ticket_integrity_handle_manual_scan');
+add_action('admin_post_vms_ticket_integrity_run_scan', 'bvmgr_ticket_integrity_handle_manual_scan');
 
-function vms_ticket_integrity_handle_event_scan(): void
+function bvmgr_ticket_integrity_handle_event_scan(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_run_event_scan');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_run_event_scan', '_wpnonce'), '_wpnonce');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
-	$result = function_exists('vms_ticket_integrity_scan_event_now')
-		? vms_ticket_integrity_scan_event_now($plan_id, array('trigger' => 'manual_event_admin'))
+	$result = function_exists('bvmgr_ticket_integrity_scan_event_now')
+		? bvmgr_ticket_integrity_scan_event_now($plan_id, array('trigger' => 'manual_event_admin'))
 		: array('ok' => false, 'message' => 'scan_helper_missing');
 
 	if (empty($result['ok'])) {
-		vms_ticket_integrity_admin_redirect(
+		bvmgr_ticket_integrity_admin_redirect(
 			'event_scan_failed',
 			array(
 				'event' => $plan_id,
@@ -128,53 +140,53 @@ function vms_ticket_integrity_handle_event_scan(): void
 		);
 	}
 
-	vms_ticket_integrity_admin_redirect(
+	bvmgr_ticket_integrity_admin_redirect(
 		'event_scan_complete',
 		array(
 			'event' => $plan_id,
 		)
 	);
 }
-add_action('admin_post_vms_ticket_integrity_run_event_scan', 'vms_ticket_integrity_handle_event_scan');
+add_action('admin_post_vms_ticket_integrity_run_event_scan', 'bvmgr_ticket_integrity_handle_event_scan');
 
-function vms_ticket_integrity_handle_save_settings(): void
+function bvmgr_ticket_integrity_handle_save_settings(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_save_settings');
-	$settings = function_exists('vms_ticket_integrity_update_settings')
-		? vms_ticket_integrity_update_settings(
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_save_settings', '_wpnonce'), '_wpnonce');
+	$settings = function_exists('bvmgr_ticket_integrity_update_settings')
+		? bvmgr_ticket_integrity_update_settings(
 			array(
 				'nightly_enabled' => !empty($_POST['nightly_enabled']) ? 1 : 0,
 				'days_ahead' => absint($_POST['days_ahead'] ?? 120),
 				'email_alerts_enabled' => !empty($_POST['email_alerts_enabled']) ? 1 : 0,
-				'alert_recipient' => (string) ($_POST['alert_recipient'] ?? ''),
+				'alert_recipient' => sanitize_email(wp_unslash((string) ($_POST['alert_recipient'] ?? ''))),
 				'send_resolved_notifications' => !empty($_POST['send_resolved_notifications']) ? 1 : 0,
 				'reminder_interval_hours' => absint($_POST['reminder_interval_hours'] ?? 24),
 				'include_yellow_in_email_alerts' => !empty($_POST['include_yellow_in_email_alerts']) ? 1 : 0,
 				'daily_report_enabled' => !empty($_POST['daily_report_enabled']) ? 1 : 0,
-				'daily_report_recipient' => (string) ($_POST['daily_report_recipient'] ?? ''),
+				'daily_report_recipient' => sanitize_email(wp_unslash((string) ($_POST['daily_report_recipient'] ?? ''))),
 				'low_inventory_email_alerts_enabled' => !empty($_POST['low_inventory_email_alerts_enabled']) ? 1 : 0,
 				'low_inventory_threshold' => absint($_POST['low_inventory_threshold'] ?? 25),
 				'low_inventory_percent_threshold' => absint($_POST['low_inventory_percent_threshold'] ?? 10),
 				'critical_inventory_threshold' => absint($_POST['critical_inventory_threshold'] ?? 5),
 				'critical_inventory_percent_threshold' => absint($_POST['critical_inventory_percent_threshold'] ?? 3),
 				'payment_gateway_health_enabled' => !empty($_POST['payment_gateway_health_enabled']) ? 1 : 0,
-				'payment_gateway_health_interval' => (string) ($_POST['payment_gateway_health_interval'] ?? 'vms_ticket_integrity_fifteen_minutes'),
+				'payment_gateway_health_interval' => sanitize_key(wp_unslash((string) ($_POST['payment_gateway_health_interval'] ?? 'vms_ticket_integrity_fifteen_minutes'))),
 			)
 		)
 		: array();
 
-	if (function_exists('vms_ticket_integrity_maybe_schedule_cron')) {
-		vms_ticket_integrity_maybe_schedule_cron();
+	if (function_exists('bvmgr_ticket_integrity_maybe_schedule_cron')) {
+		bvmgr_ticket_integrity_maybe_schedule_cron();
 	}
 
-	if (function_exists('vms_ticket_integrity_log_event')) {
-		vms_ticket_integrity_log_event(
+	if (function_exists('bvmgr_ticket_integrity_log_event')) {
+		bvmgr_ticket_integrity_log_event(
 			'settings_saved',
-			__('Ticket integrity settings saved.', 'vms'),
+			__('Ticket integrity settings saved.', 'backstage-venue-manager'),
 			array(
 				'nightly_enabled' => !empty($settings['nightly_enabled']) ? '1' : '0',
 				'days_ahead' => absint($settings['days_ahead'] ?? 0),
@@ -182,41 +194,41 @@ function vms_ticket_integrity_handle_save_settings(): void
 		);
 	}
 
-	vms_ticket_integrity_admin_redirect('settings_saved');
+	bvmgr_ticket_integrity_admin_redirect('settings_saved');
 }
-add_action('admin_post_vms_ticket_integrity_save_settings', 'vms_ticket_integrity_handle_save_settings');
+add_action('admin_post_vms_ticket_integrity_save_settings', 'bvmgr_ticket_integrity_handle_save_settings');
 
-function vms_ticket_integrity_handle_send_daily_report(): void
+function bvmgr_ticket_integrity_handle_send_daily_report(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_send_daily_report');
-	if (!function_exists('vms_ticket_integrity_send_state_of_range_report')) {
-		vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'vms')));
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_send_daily_report', '_wpnonce'), '_wpnonce');
+	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
+		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
 
-	$result = vms_ticket_integrity_send_state_of_range_report('manual');
+	$result = bvmgr_ticket_integrity_send_state_of_range_report('manual');
 	if (!empty($result['ok'])) {
-		vms_ticket_integrity_admin_redirect('daily_report_sent');
+		bvmgr_ticket_integrity_admin_redirect('daily_report_sent');
 	}
 
-	$detail = sanitize_text_field((string) ($result['message'] ?? __('The daily report could not be sent.', 'vms')));
-	vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => $detail));
+	$detail = sanitize_text_field((string) ($result['message'] ?? __('The daily report could not be sent.', 'backstage-venue-manager')));
+	bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => $detail));
 }
-add_action('admin_post_vms_ticket_integrity_send_daily_report', 'vms_ticket_integrity_handle_send_daily_report');
+add_action('admin_post_vms_ticket_integrity_send_daily_report', 'bvmgr_ticket_integrity_handle_send_daily_report');
 
-function vms_ticket_integrity_daily_report_preview_transient_key(int $user_id = 0): string
+function bvmgr_ticket_integrity_daily_report_preview_transient_key(int $user_id = 0): string
 {
 	$user_id = $user_id > 0 ? $user_id : get_current_user_id();
 	return 'vms_ticket_integrity_daily_report_preview_' . absint($user_id);
 }
 
-function vms_ticket_integrity_store_daily_report_preview(array $preview): void
+function bvmgr_ticket_integrity_store_daily_report_preview(array $preview): void
 {
 	set_transient(
-		vms_ticket_integrity_daily_report_preview_transient_key(),
+		bvmgr_ticket_integrity_daily_report_preview_transient_key(),
 		array(
 			'subject' => sanitize_text_field((string) ($preview['subject'] ?? '')),
 			'body' => (string) ($preview['body'] ?? ''),
@@ -228,24 +240,24 @@ function vms_ticket_integrity_store_daily_report_preview(array $preview): void
 	);
 }
 
-function vms_ticket_integrity_get_daily_report_preview(): array
+function bvmgr_ticket_integrity_get_daily_report_preview(): array
 {
-	$preview = get_transient(vms_ticket_integrity_daily_report_preview_transient_key());
+	$preview = get_transient(bvmgr_ticket_integrity_daily_report_preview_transient_key());
 	return is_array($preview) ? $preview : array();
 }
 
-function vms_ticket_integrity_handle_daily_report_preview(): void
+function bvmgr_ticket_integrity_handle_daily_report_preview(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_preview_daily_report');
-	if (!function_exists('vms_ticket_integrity_send_state_of_range_report')) {
-		vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'vms')));
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_preview_daily_report', '_wpnonce'), '_wpnonce');
+	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
+		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
 
-	$result = vms_ticket_integrity_send_state_of_range_report(
+	$result = bvmgr_ticket_integrity_send_state_of_range_report(
 		'manual',
 		array(
 			'dry_run' => true,
@@ -253,37 +265,37 @@ function vms_ticket_integrity_handle_daily_report_preview(): void
 		)
 	);
 	if (empty($result['ok'])) {
-		$detail = sanitize_text_field((string) ($result['message'] ?? __('The daily report preview could not be rendered.', 'vms')));
-		vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => $detail));
+		$detail = sanitize_text_field((string) ($result['message'] ?? __('The daily report preview could not be rendered.', 'backstage-venue-manager')));
+		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => $detail));
 	}
 
 	$email = is_array($result['email'] ?? null) ? $result['email'] : array();
-	vms_ticket_integrity_store_daily_report_preview(
+	bvmgr_ticket_integrity_store_daily_report_preview(
 		array(
 			'subject' => (string) ($email['subject'] ?? ''),
 			'body' => (string) ($email['body'] ?? ''),
-			'recipient' => function_exists('vms_ticket_integrity_daily_report_recipient') ? vms_ticket_integrity_daily_report_recipient() : '',
+			'recipient' => function_exists('bvmgr_ticket_integrity_daily_report_recipient') ? bvmgr_ticket_integrity_daily_report_recipient() : '',
 			'mode' => 'preview',
 			'generated_at_gmt' => time(),
 		)
 	);
 
-	vms_ticket_integrity_admin_redirect('daily_report_preview_ready');
+	bvmgr_ticket_integrity_admin_redirect('daily_report_preview_ready');
 }
-add_action('admin_post_vms_ticket_integrity_preview_daily_report', 'vms_ticket_integrity_handle_daily_report_preview');
+add_action('admin_post_vms_ticket_integrity_preview_daily_report', 'bvmgr_ticket_integrity_handle_daily_report_preview');
 
-function vms_ticket_integrity_handle_daily_report_dry_run(): void
+function bvmgr_ticket_integrity_handle_daily_report_dry_run(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_dry_run_daily_report');
-	if (!function_exists('vms_ticket_integrity_send_state_of_range_report')) {
-		vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'vms')));
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_dry_run_daily_report', '_wpnonce'), '_wpnonce');
+	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
+		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
 
-	$result = vms_ticket_integrity_send_state_of_range_report(
+	$result = bvmgr_ticket_integrity_send_state_of_range_report(
 		'manual',
 		array(
 			'dry_run' => true,
@@ -291,34 +303,34 @@ function vms_ticket_integrity_handle_daily_report_dry_run(): void
 		)
 	);
 	if (!empty($result['ok'])) {
-		vms_ticket_integrity_admin_redirect('daily_report_dry_run_ready');
+		bvmgr_ticket_integrity_admin_redirect('daily_report_dry_run_ready');
 	}
 
-	$detail = sanitize_text_field((string) ($result['message'] ?? __('The daily report dry run failed.', 'vms')));
-	vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => $detail));
+	$detail = sanitize_text_field((string) ($result['message'] ?? __('The daily report dry run failed.', 'backstage-venue-manager')));
+	bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => $detail));
 }
-add_action('admin_post_vms_ticket_integrity_dry_run_daily_report', 'vms_ticket_integrity_handle_daily_report_dry_run');
+add_action('admin_post_vms_ticket_integrity_dry_run_daily_report', 'bvmgr_ticket_integrity_handle_daily_report_dry_run');
 
-function vms_ticket_integrity_handle_send_daily_report_test(): void
+function bvmgr_ticket_integrity_handle_send_daily_report_test(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_send_daily_report_test');
-	if (!function_exists('vms_ticket_integrity_send_state_of_range_report')) {
-		vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'vms')));
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_send_daily_report_test', '_wpnonce'), '_wpnonce');
+	if (!function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
+		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('Daily report helper is unavailable.', 'backstage-venue-manager')));
 	}
 
-	$recipient = sanitize_email((string) ($_POST['test_recipient'] ?? ''));
+	$recipient = sanitize_email(wp_unslash((string) ($_POST['test_recipient'] ?? '')));
 	if ($recipient === '') {
 		$recipient = sanitize_email((string) get_option('admin_email', ''));
 	}
 	if ($recipient === '') {
-		vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('No admin test recipient is configured.', 'vms')));
+		bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => __('No admin test recipient is configured.', 'backstage-venue-manager')));
 	}
 
-	$result = vms_ticket_integrity_send_state_of_range_report(
+	$result = bvmgr_ticket_integrity_send_state_of_range_report(
 		'manual',
 		array(
 			'mode' => 'admin_test',
@@ -326,51 +338,51 @@ function vms_ticket_integrity_handle_send_daily_report_test(): void
 		)
 	);
 	if (!empty($result['ok'])) {
-		vms_ticket_integrity_admin_redirect('daily_report_test_sent', array('recipient' => $recipient));
+		bvmgr_ticket_integrity_admin_redirect('daily_report_test_sent', array('recipient' => $recipient));
 	}
 
-	$detail = sanitize_text_field((string) ($result['message'] ?? __('The admin test email could not be sent.', 'vms')));
-	vms_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => $detail));
+	$detail = sanitize_text_field((string) ($result['message'] ?? __('The admin test email could not be sent.', 'backstage-venue-manager')));
+	bvmgr_ticket_integrity_admin_redirect('daily_report_failed', array('detail' => $detail));
 }
-add_action('admin_post_vms_ticket_integrity_send_daily_report_test', 'vms_ticket_integrity_handle_send_daily_report_test');
+add_action('admin_post_vms_ticket_integrity_send_daily_report_test', 'bvmgr_ticket_integrity_handle_send_daily_report_test');
 
-function vms_ticket_integrity_run_rebuild(int $plan_id): array
+function bvmgr_ticket_integrity_run_rebuild(int $plan_id): array
 {
 	$plan_id = absint($plan_id);
 	if ($plan_id <= 0) {
 		return array('ok' => false, 'message' => 'invalid_plan');
 	}
 
-	if (function_exists('vms_ticket_integrity_repair_event')) {
-		return vms_ticket_integrity_repair_event($plan_id);
+	if (function_exists('bvmgr_ticket_integrity_repair_event')) {
+		return bvmgr_ticket_integrity_repair_event($plan_id);
 	}
 
 	return array('ok' => false, 'message' => 'repair_helper_missing');
 }
 
-function vms_ticket_integrity_handle_rebuild(): void
+function bvmgr_ticket_integrity_handle_rebuild(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_rebuild');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_rebuild', '_wpnonce'), '_wpnonce');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 
-	if (function_exists('vms_ticket_integrity_log_event')) {
-		vms_ticket_integrity_log_event(
+	if (function_exists('bvmgr_ticket_integrity_log_event')) {
+		bvmgr_ticket_integrity_log_event(
 			'repair_started',
-			__('Ticket integrity rebuild started.', 'vms'),
+			__('Ticket integrity rebuild started.', 'backstage-venue-manager'),
 			array('plan_id' => $plan_id)
 		);
 	}
 
-	$result = vms_ticket_integrity_run_rebuild($plan_id);
+	$result = bvmgr_ticket_integrity_run_rebuild($plan_id);
 	if (empty($result['ok'])) {
-		if (function_exists('vms_ticket_integrity_log_event')) {
-			vms_ticket_integrity_log_event(
+		if (function_exists('bvmgr_ticket_integrity_log_event')) {
+			bvmgr_ticket_integrity_log_event(
 				'repair_failed',
-				__('Ticket integrity rebuild failed.', 'vms'),
+				__('Ticket integrity rebuild failed.', 'backstage-venue-manager'),
 				array(
 					'plan_id' => $plan_id,
 					'message' => (string) ($result['message'] ?? 'repair_failed'),
@@ -378,7 +390,7 @@ function vms_ticket_integrity_handle_rebuild(): void
 			);
 		}
 
-		vms_ticket_integrity_admin_redirect(
+		bvmgr_ticket_integrity_admin_redirect(
 			'rebuild_failed',
 			array(
 				'event' => $plan_id,
@@ -387,41 +399,41 @@ function vms_ticket_integrity_handle_rebuild(): void
 		);
 	}
 
-	if (function_exists('vms_ticket_integrity_scan_event_now')) {
-		vms_ticket_integrity_scan_event_now($plan_id, array('trigger' => 'rebuild_followup'));
+	if (function_exists('bvmgr_ticket_integrity_scan_event_now')) {
+		bvmgr_ticket_integrity_scan_event_now($plan_id, array('trigger' => 'rebuild_followup'));
 	}
 
 	$repair_status = sanitize_key((string) ($result['repair_status'] ?? 'repaired'));
 	$summary_text = sanitize_text_field((string) ($result['summary_text'] ?? ''));
 	$notice = 'rebuild_complete';
 	$log_type = 'repair_completed';
-	$log_message = __('Ticket integrity rebuild completed.', 'vms');
+	$log_message = __('Ticket integrity rebuild completed.', 'backstage-venue-manager');
 
 	switch ($repair_status) {
 		case 'no_changes':
 			$notice = 'rebuild_no_change';
 			$log_type = 'repair_no_changes';
-			$log_message = __('Ticket integrity rebuild made no mapping changes.', 'vms');
+			$log_message = __('Ticket integrity rebuild made no mapping changes.', 'backstage-venue-manager');
 			break;
 		case 'partial_changes':
 			$notice = 'rebuild_partial';
 			$log_type = 'repair_partial_changes';
-			$log_message = __('Ticket integrity rebuild made partial changes.', 'vms');
+			$log_message = __('Ticket integrity rebuild made partial changes.', 'backstage-venue-manager');
 			break;
 		case 'partial':
 			$notice = 'rebuild_partial';
 			$log_type = 'repair_partial';
-			$log_message = __('Ticket integrity rebuild made changes, but unresolved conflicts remain.', 'vms');
+			$log_message = __('Ticket integrity rebuild made changes, but unresolved conflicts remain.', 'backstage-venue-manager');
 			break;
 		case 'blocked':
 			$notice = 'rebuild_blocked';
 			$log_type = 'repair_blocked';
-			$log_message = __('Ticket integrity rebuild could not proceed safely.', 'vms');
+			$log_message = __('Ticket integrity rebuild could not proceed safely.', 'backstage-venue-manager');
 			break;
 	}
 
-	if (function_exists('vms_ticket_integrity_log_event')) {
-		vms_ticket_integrity_log_event(
+	if (function_exists('bvmgr_ticket_integrity_log_event')) {
+		bvmgr_ticket_integrity_log_event(
 			$log_type,
 			$log_message,
 			array(
@@ -432,7 +444,7 @@ function vms_ticket_integrity_handle_rebuild(): void
 		);
 	}
 
-	vms_ticket_integrity_admin_redirect(
+	bvmgr_ticket_integrity_admin_redirect(
 		$notice,
 		array(
 			'event' => $plan_id,
@@ -440,13 +452,13 @@ function vms_ticket_integrity_handle_rebuild(): void
 		)
 	);
 }
-add_action('admin_post_vms_ticket_integrity_rebuild', 'vms_ticket_integrity_handle_rebuild');
+add_action('admin_post_vms_ticket_integrity_rebuild', 'bvmgr_ticket_integrity_handle_rebuild');
 
 
-function vms_ticket_integrity_find_ticket_config_row(array $context, string $ticket_key, string $title_token = ''): array
+function bvmgr_ticket_integrity_find_ticket_config_row(array $context, string $ticket_key, string $title_token = ''): array
 {
 	$tickets = is_array($context['cfg']['tickets'] ?? null) ? array_values((array) $context['cfg']['tickets']) : array();
-	$title_token = $title_token !== '' ? $title_token : vms_ticket_integrity_normalize_title_token((string) ($ticket_key ?: ''));
+	$title_token = $title_token !== '' ? $title_token : bvmgr_ticket_integrity_normalize_title_token((string) ($ticket_key ?: ''));
 	foreach ($tickets as $index => $ticket_row) {
 		if (!is_array($ticket_row)) {
 			continue;
@@ -466,7 +478,7 @@ function vms_ticket_integrity_find_ticket_config_row(array $context, string $tic
 			return $ticket_row;
 		}
 
-		$row_title_token = vms_ticket_integrity_normalize_title_token((string) ($ticket_row['title'] ?? $row_ticket_key));
+		$row_title_token = bvmgr_ticket_integrity_normalize_title_token((string) ($ticket_row['title'] ?? $row_ticket_key));
 		if ($title_token !== '' && $row_title_token === $title_token) {
 			return $ticket_row;
 		}
@@ -475,47 +487,47 @@ function vms_ticket_integrity_find_ticket_config_row(array $context, string $tic
 	return array();
 }
 
-function vms_ticket_integrity_build_duplicate_cleanup_plan(int $plan_id): array
+function bvmgr_ticket_integrity_build_duplicate_cleanup_plan(int $plan_id): array
 {
-	if (function_exists('vms_ticket_integrity_duplicate_cleanup_build_plan')) {
-		return vms_ticket_integrity_duplicate_cleanup_build_plan($plan_id);
+	if (function_exists('bvmgr_ticket_integrity_duplicate_cleanup_build_plan')) {
+		return bvmgr_ticket_integrity_duplicate_cleanup_build_plan($plan_id);
 	}
 
 	return array('ok' => false, 'message' => 'duplicate_cleanup_helper_missing');
 }
 
-function vms_ticket_integrity_resolve_duplicate_legacy_products(int $plan_id): array
+function bvmgr_ticket_integrity_resolve_duplicate_legacy_products(int $plan_id): array
 {
-	if (function_exists('vms_ticket_integrity_duplicate_cleanup_run')) {
-		return vms_ticket_integrity_duplicate_cleanup_run($plan_id, array('source_function' => 'vms_ticket_integrity_handle_duplicate_cleanup'));
+	if (function_exists('bvmgr_ticket_integrity_duplicate_cleanup_run')) {
+		return bvmgr_ticket_integrity_duplicate_cleanup_run($plan_id, array('source_function' => 'vms_ticket_integrity_handle_duplicate_cleanup'));
 	}
 
 	return array('ok' => false, 'message' => 'duplicate_cleanup_helper_missing');
 }
 
-function vms_ticket_integrity_handle_duplicate_cleanup(): void
+function bvmgr_ticket_integrity_handle_duplicate_cleanup(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_cleanup_duplicates');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_cleanup_duplicates', '_wpnonce'), '_wpnonce');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
 
-	if (function_exists('vms_ticket_integrity_log_event')) {
-		vms_ticket_integrity_log_event(
+	if (function_exists('bvmgr_ticket_integrity_log_event')) {
+		bvmgr_ticket_integrity_log_event(
 			'duplicate_cleanup_started',
-			__('Duplicate legacy ticket cleanup started.', 'vms'),
+			__('Duplicate legacy ticket cleanup started.', 'backstage-venue-manager'),
 			array('plan_id' => $plan_id)
 		);
 	}
 
-	$result = vms_ticket_integrity_resolve_duplicate_legacy_products($plan_id);
+	$result = bvmgr_ticket_integrity_resolve_duplicate_legacy_products($plan_id);
 	if (empty($result['ok']) && ($result['status'] ?? '') !== 'blocked') {
-		if (function_exists('vms_ticket_integrity_log_event')) {
-			vms_ticket_integrity_log_event(
+		if (function_exists('bvmgr_ticket_integrity_log_event')) {
+			bvmgr_ticket_integrity_log_event(
 				'duplicate_cleanup_failed',
-				__('Duplicate legacy ticket cleanup failed.', 'vms'),
+				__('Duplicate legacy ticket cleanup failed.', 'backstage-venue-manager'),
 				array(
 					'plan_id' => $plan_id,
 					'message' => (string) ($result['message'] ?? 'duplicate_cleanup_failed'),
@@ -523,7 +535,7 @@ function vms_ticket_integrity_handle_duplicate_cleanup(): void
 			);
 		}
 
-		vms_ticket_integrity_admin_redirect(
+		bvmgr_ticket_integrity_admin_redirect(
 			'duplicate_cleanup_failed',
 			array(
 				'event' => $plan_id,
@@ -532,27 +544,27 @@ function vms_ticket_integrity_handle_duplicate_cleanup(): void
 		);
 	}
 
-	if (function_exists('vms_ticket_integrity_scan_event_now')) {
-		vms_ticket_integrity_scan_event_now($plan_id, array('trigger' => 'duplicate_cleanup_followup'));
+	if (function_exists('bvmgr_ticket_integrity_scan_event_now')) {
+		bvmgr_ticket_integrity_scan_event_now($plan_id, array('trigger' => 'duplicate_cleanup_followup'));
 	}
 
 	$status = sanitize_key((string) ($result['status'] ?? 'complete'));
 	$summary_text = sanitize_text_field((string) ($result['summary_text'] ?? ''));
 	$notice = 'duplicate_cleanup_complete';
 	$log_type = 'duplicate_cleanup_completed';
-	$log_message = __('Duplicate legacy ticket cleanup completed.', 'vms');
+	$log_message = __('Duplicate legacy ticket cleanup completed.', 'backstage-venue-manager');
 	if ($status === 'partial') {
 		$notice = 'duplicate_cleanup_partial';
 		$log_type = 'duplicate_cleanup_partial';
-		$log_message = __('Duplicate legacy ticket cleanup completed with warnings.', 'vms');
+		$log_message = __('Duplicate legacy ticket cleanup completed with warnings.', 'backstage-venue-manager');
 	} elseif ($status === 'blocked') {
 		$notice = 'duplicate_cleanup_blocked';
 		$log_type = 'duplicate_cleanup_blocked';
-		$log_message = __('Duplicate legacy ticket cleanup was blocked for one or more sold paths.', 'vms');
+		$log_message = __('Duplicate legacy ticket cleanup was blocked for one or more sold paths.', 'backstage-venue-manager');
 	}
 
-	if (function_exists('vms_ticket_integrity_log_event')) {
-		vms_ticket_integrity_log_event(
+	if (function_exists('bvmgr_ticket_integrity_log_event')) {
+		bvmgr_ticket_integrity_log_event(
 			$log_type,
 			$log_message,
 			array(
@@ -564,7 +576,7 @@ function vms_ticket_integrity_handle_duplicate_cleanup(): void
 		);
 	}
 
-	vms_ticket_integrity_admin_redirect(
+	bvmgr_ticket_integrity_admin_redirect(
 		$notice,
 		array(
 			'event' => $plan_id,
@@ -572,39 +584,37 @@ function vms_ticket_integrity_handle_duplicate_cleanup(): void
 		)
 	);
 }
-add_action('admin_post_vms_ticket_integrity_cleanup_duplicates', 'vms_ticket_integrity_handle_duplicate_cleanup');
+add_action('admin_post_vms_ticket_integrity_cleanup_duplicates', 'bvmgr_ticket_integrity_handle_duplicate_cleanup');
 
-function vms_ticket_integrity_report_text_value($value): string
+function bvmgr_ticket_integrity_report_text_value($value): string
 {
 	if ($value === '' || $value === null) {
 		return '—';
 	}
 
-	if (function_exists('vms_ticket_inventory_forensics_display_quantity')) {
-		return (string) vms_ticket_inventory_forensics_display_quantity($value);
+	if (function_exists('bvmgr_ticket_inventory_forensics_display_quantity')) {
+		return (string) bvmgr_ticket_inventory_forensics_display_quantity($value);
 	}
 
 	return is_scalar($value) ? (string) $value : '—';
 }
 
-function vms_ticket_integrity_build_event_report_markdown(array $event): string
+function bvmgr_ticket_integrity_build_event_report_markdown(array $event): string
 {
 	$lines = array();
-	$generated_at = function_exists('wp_date')
-		? wp_date('Y-m-d H:i:s T', time(), wp_timezone())
-		: date('Y-m-d H:i:s');
-	$lines[] = '# ' . trim((string) ($event['event_title'] ?? __('Ticket Integrity Report', 'vms')));
+	$generated_at = wp_date('Y-m-d H:i:s T', time(), wp_timezone());
+	$lines[] = '# ' . trim((string) ($event['event_title'] ?? __('Ticket Integrity Report', 'backstage-venue-manager')));
 	$lines[] = '';
 	$lines[] = '- Generated: ' . $generated_at;
 	$lines[] = '- Plan ID: ' . absint($event['plan_id'] ?? 0);
 	$lines[] = '- TEC Event ID: ' . absint($event['tec_event_id'] ?? 0);
-	$lines[] = '- Status: ' . vms_ticket_integrity_status_label((string) ($event['status'] ?? 'unknown'));
-	$lines[] = '- Origin: ' . (function_exists('vms_ticket_mutation_audit_origin_label') ? vms_ticket_mutation_audit_origin_label((string) ($event['origin_classification'] ?? '')) : (string) ($event['origin_classification'] ?? 'unknown'));
-	$lines[] = '- Summary: ' . trim((string) ($event['issue_summary'] ?? __('No issues detected.', 'vms')));
+	$lines[] = '- Status: ' . bvmgr_ticket_integrity_status_label((string) ($event['status'] ?? 'unknown'));
+	$lines[] = '- Origin: ' . (function_exists('bvmgr_ticket_mutation_audit_origin_label') ? bvmgr_ticket_mutation_audit_origin_label((string) ($event['origin_classification'] ?? '')) : (string) ($event['origin_classification'] ?? 'unknown'));
+	$lines[] = '- Summary: ' . trim((string) ($event['issue_summary'] ?? __('No issues detected.', 'backstage-venue-manager')));
 	$lines[] = '';
 
 	$issues = array_values((array) ($event['issues'] ?? array()));
-	$open_issues = function_exists('vms_ticket_integrity_open_issues') ? vms_ticket_integrity_open_issues($issues) : $issues;
+	$open_issues = function_exists('bvmgr_ticket_integrity_open_issues') ? bvmgr_ticket_integrity_open_issues($issues) : $issues;
 	$lines[] = '## Open Issues';
 	if (empty($open_issues)) {
 		$lines[] = '- None';
@@ -615,8 +625,8 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 			}
 			$headline = sprintf(
 				'%s: %s',
-				vms_ticket_integrity_status_label((string) ($issue['severity'] ?? 'unknown')),
-				(string) ($issue['title'] ?? __('Issue', 'vms'))
+				bvmgr_ticket_integrity_status_label((string) ($issue['severity'] ?? 'unknown')),
+				(string) ($issue['title'] ?? __('Issue', 'backstage-venue-manager'))
 			);
 			$lines[] = '- ' . $headline;
 			$details = trim((string) ($issue['details'] ?? ''));
@@ -631,16 +641,16 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 	$inventory = is_array($event['inventory_diagnostics'] ?? null) ? $event['inventory_diagnostics'] : array();
 	$repair = is_array($event['repair_diagnostics'] ?? null) ? $event['repair_diagnostics'] : array();
 	$lines[] = '## Diagnostics';
-	$lines[] = '- Public Ticket Path: ' . (!empty($mutation['public_path_healthy']) ? __('Healthy', 'vms') : __('Needs review', 'vms'));
-	$lines[] = '- Last Mapping Change: ' . (!empty($mutation['latest_mutation']) ? vms_ticket_integrity_format_datetime(absint($mutation['latest_mutation']['timestamp_gmt'] ?? 0)) : 'No change log yet');
-	$lines[] = '- Last Inventory Change: ' . (!empty($inventory['latest_inventory_mutation']) ? vms_ticket_integrity_format_datetime(absint($inventory['latest_inventory_mutation']['timestamp_gmt'] ?? 0)) : 'No change log yet');
-	$lines[] = '- Last Rebuild: ' . trim((string) ($repair['repair_status_label'] ?? __('No rebuild attempt logged yet', 'vms')));
-	$lines[] = '- Repeated Drift: ' . (!empty($mutation['repeated_drift']['flagged']) || !empty($inventory['repeated_inventory_drift']['flagged']) ? __('Detected', 'vms') : __('Not detected', 'vms'));
-	$lines[] = '- Zero-Available Mismatch: ' . (!empty($inventory['zero_available_mismatch']) ? __('Detected', 'vms') : __('Not detected', 'vms'));
-	$lines[] = '- Woo Primary Mismatch: ' . (!empty($inventory['woo_primary_mismatch']) ? __('Detected', 'vms') : __('Not detected', 'vms'));
-	$lines[] = '- TEC Follow-up Required: ' . (!empty($inventory['tec_followup_required']) ? __('Detected', 'vms') : __('Not detected', 'vms'));
-	$lines[] = '- Woo Re-Corruption: ' . (!empty($inventory['woo_recorruption_detected']) ? __('Detected', 'vms') : __('Not detected', 'vms'));
-	$lines[] = '- Likely Pattern: ' . trim((string) ($inventory['suspected_cause_label'] ?? __('Healthy / not flagged', 'vms')));
+	$lines[] = '- Public Ticket Path: ' . (!empty($mutation['public_path_healthy']) ? __('Healthy', 'backstage-venue-manager') : __('Needs review', 'backstage-venue-manager'));
+	$lines[] = '- Last Mapping Change: ' . (!empty($mutation['latest_mutation']) ? bvmgr_ticket_integrity_format_datetime(absint($mutation['latest_mutation']['timestamp_gmt'] ?? 0)) : 'No change log yet');
+	$lines[] = '- Last Inventory Change: ' . (!empty($inventory['latest_inventory_mutation']) ? bvmgr_ticket_integrity_format_datetime(absint($inventory['latest_inventory_mutation']['timestamp_gmt'] ?? 0)) : 'No change log yet');
+	$lines[] = '- Last Rebuild: ' . trim((string) ($repair['repair_status_label'] ?? __('No rebuild attempt logged yet', 'backstage-venue-manager')));
+	$lines[] = '- Repeated Drift: ' . (!empty($mutation['repeated_drift']['flagged']) || !empty($inventory['repeated_inventory_drift']['flagged']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager'));
+	$lines[] = '- Zero-Available Mismatch: ' . (!empty($inventory['zero_available_mismatch']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager'));
+	$lines[] = '- Woo Primary Mismatch: ' . (!empty($inventory['woo_primary_mismatch']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager'));
+	$lines[] = '- TEC Follow-up Required: ' . (!empty($inventory['tec_followup_required']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager'));
+	$lines[] = '- Woo Re-Corruption: ' . (!empty($inventory['woo_recorruption_detected']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager'));
+	$lines[] = '- Likely Pattern: ' . trim((string) ($inventory['suspected_cause_label'] ?? __('Healthy / not flagged', 'backstage-venue-manager')));
 	$writer_suspect = is_array($inventory['upstream_writer_suspect'] ?? null) ? $inventory['upstream_writer_suspect'] : array();
 	if (!empty($writer_suspect)) {
 		$source_text = trim((string) ($writer_suspect['source_function'] ?? $writer_suspect['source_hook'] ?? ''));
@@ -662,14 +672,14 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 	if (empty($repair)) {
 		$lines[] = '- No saved rebuild diagnostics yet.';
 	} else {
-		$lines[] = '- Result: ' . trim((string) ($repair['repair_status_label'] ?? __('Unknown', 'vms')));
+		$lines[] = '- Result: ' . trim((string) ($repair['repair_status_label'] ?? __('Unknown', 'backstage-venue-manager')));
 		$lines[] = '- Summary: ' . trim((string) ($repair['summary_text'] ?? ''));
 		$lines[] = '- Preview Change Count: ' . absint($repair['preview_change_count'] ?? 0);
-		$lines[] = '- Remaining Issue Summary: ' . trim((string) ($repair['remaining_issue_summary'] ?? __('No summary stored', 'vms')));
-		$lines[] = '- Woo Verification: ' . trim((string) ($repair['woo_verification_label'] ?? __('Not stored', 'vms')));
-		$lines[] = '- TEC Verification: ' . trim((string) ($repair['tec_verification_label'] ?? __('Not stored', 'vms')));
+		$lines[] = '- Remaining Issue Summary: ' . trim((string) ($repair['remaining_issue_summary'] ?? __('No summary stored', 'backstage-venue-manager')));
+		$lines[] = '- Woo Verification: ' . trim((string) ($repair['woo_verification_label'] ?? __('Not stored', 'backstage-venue-manager')));
+		$lines[] = '- TEC Verification: ' . trim((string) ($repair['tec_verification_label'] ?? __('Not stored', 'backstage-venue-manager')));
 		if (!empty($repair['woo_recorruption_detected'])) {
-			$lines[] = '- Woo Re-Corruption: ' . __('Detected after repair', 'vms');
+			$lines[] = '- Woo Re-Corruption: ' . __('Detected after repair', 'backstage-venue-manager');
 		}
 		$repair_writer = is_array($repair['upstream_writer_suspect'] ?? null) ? $repair['upstream_writer_suspect'] : array();
 		$repair_source = trim((string) ($repair_writer['source_function'] ?? $repair_writer['source_hook'] ?? ''));
@@ -691,17 +701,17 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 					continue;
 				}
 
-				$lines[] = '  - ' . trim((string) ($entry['label'] ?? __('Role entry', 'vms'))) . ': action ' . trim((string) ($entry['preview_action'] ?? 'noop')) . ', branch ' . trim((string) ($entry['branch_status_label'] ?? __('Branch not entered', 'vms'))) . ', result ' . trim((string) ($entry['result_label'] ?? __('Unknown', 'vms'))) . ', product #' . absint($entry['product_id'] ?? 0);
+				$lines[] = '  - ' . trim((string) ($entry['label'] ?? __('Role entry', 'backstage-venue-manager'))) . ': action ' . trim((string) ($entry['preview_action'] ?? 'noop')) . ', branch ' . trim((string) ($entry['branch_status_label'] ?? __('Branch not entered', 'backstage-venue-manager'))) . ', result ' . trim((string) ($entry['result_label'] ?? __('Unknown', 'backstage-venue-manager'))) . ', product #' . absint($entry['product_id'] ?? 0);
 				if (!empty($entry['skip_reason_label'])) {
 					$lines[] = '    - Skip reason: ' . trim((string) $entry['skip_reason_label']);
 				}
-				$lines[] = '    - Derivation: ' . trim((string) ($entry['derivation_source_label'] ?? $entry['derivation_source'] ?? __('Unknown', 'vms'))) . ' / Confidence: ' . trim((string) ($entry['confidence_label'] ?? $entry['confidence_level'] ?? __('Unknown', 'vms'))) . ' / Writer branch: ' . trim((string) ($entry['writer_branch_label'] ?? __('Not recorded', 'vms'))) . ' / Result health: ' . trim((string) ($entry['result_health_label'] ?? __('Not recorded', 'vms')));
+				$lines[] = '    - Derivation: ' . trim((string) ($entry['derivation_source_label'] ?? $entry['derivation_source'] ?? __('Unknown', 'backstage-venue-manager'))) . ' / Confidence: ' . trim((string) ($entry['confidence_label'] ?? $entry['confidence_level'] ?? __('Unknown', 'backstage-venue-manager'))) . ' / Writer branch: ' . trim((string) ($entry['writer_branch_label'] ?? __('Not recorded', 'backstage-venue-manager'))) . ' / Result health: ' . trim((string) ($entry['result_health_label'] ?? __('Not recorded', 'backstage-venue-manager')));
 				if (
 					array_key_exists('final_stock_qty', $entry)
 					|| trim((string) ($entry['final_stock_status'] ?? '')) !== ''
 					|| array_key_exists('final_manage_stock', $entry)
 				) {
-					$lines[] = '    - Final inventory: stock ' . vms_ticket_integrity_report_text_value($entry['final_stock_qty'] ?? null) . ' / status ' . trim((string) ($entry['final_stock_status'] ?? '—')) . ' / manage stock ' . trim((string) ($entry['final_manage_stock_label'] ?? '—'));
+					$lines[] = '    - Final inventory: stock ' . bvmgr_ticket_integrity_report_text_value($entry['final_stock_qty'] ?? null) . ' / status ' . trim((string) ($entry['final_stock_status'] ?? '—')) . ' / manage stock ' . trim((string) ($entry['final_manage_stock_label'] ?? '—'));
 				}
 				$reason_text = trim((string) ($entry['reason_text'] ?? ''));
 				if ($reason_text !== '') {
@@ -726,7 +736,7 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 		if (!is_array($row)) {
 			continue;
 		}
-		$lines[] = '| ' . str_replace('|', '/', (string) ($row['ticket_label'] ?? __('Ticket', 'vms')))
+		$lines[] = '| ' . str_replace('|', '/', (string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager')))
 			. ' | ' . str_replace('|', '/', (string) ($row['role_label'] ?? ''))
 			. ' | ' . absint($row['product_id'] ?? 0)
 			. ' | ' . str_replace('|', '/', (string) ($row['vms_intended_label'] ?? ''))
@@ -734,11 +744,11 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 			. ' | ' . str_replace('|', '/', (string) ($row['tec_sellability_label'] ?? ''))
 			. ' | ' . str_replace('|', '/', (string) ($row['agreement_label'] ?? ''))
 			. ' | ' . str_replace('|', '/', (string) ($row['verification_result_label'] ?? ''))
-			. ' | ' . vms_ticket_integrity_report_text_value($row['stock_qty'] ?? null)
+			. ' | ' . bvmgr_ticket_integrity_report_text_value($row['stock_qty'] ?? null)
 			. ' | ' . str_replace('|', '/', (string) ($row['stock_status'] ?? ''))
 			. ' | ' . str_replace('|', '/', (string) ($row['manage_stock_label'] ?? ''))
 			. ' | ' . str_replace('|', '/', (string) ($row['sold_source_label'] ?? ''))
-			. ' | ' . vms_ticket_integrity_report_text_value($row['woo_total_sales'] ?? null)
+			. ' | ' . bvmgr_ticket_integrity_report_text_value($row['woo_total_sales'] ?? null)
 			. ' | ' . str_replace('|', '/', (string) ($row['last_change_source'] ?? ''))
 			. ' | ' . str_replace('|', '/', (string) ($row['last_write_reason'] ?? ''))
 			. ' |';
@@ -754,12 +764,12 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 			if (!is_array($comparison_row)) {
 				continue;
 			}
-			$lines[] = '- ' . (string) ($comparison_row['label'] ?? __('Ticket', 'vms'));
+			$lines[] = '- ' . (string) ($comparison_row['label'] ?? __('Ticket', 'backstage-venue-manager'));
 			foreach ((array) ($comparison_row['differences'] ?? array()) as $difference) {
 				if (!is_array($difference)) {
 					continue;
 				}
-				$lines[] = '  - ' . (string) ($difference['label'] ?? __('Field', 'vms')) . ': broken ' . (string) ($difference['broken'] ?? '—') . ' / healthy ' . (string) ($difference['healthy'] ?? '—');
+				$lines[] = '  - ' . (string) ($difference['label'] ?? __('Field', 'backstage-venue-manager')) . ': broken ' . (string) ($difference['broken'] ?? '—') . ' / healthy ' . (string) ($difference['healthy'] ?? '—');
 			}
 		}
 	}
@@ -776,16 +786,16 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 			}
 			$details = is_array($mutation_row['details'] ?? null) ? $mutation_row['details'] : array();
 			$result_health = sanitize_key((string) ($mutation_row['result_health'] ?? ''));
-			$result_health_label = $result_health !== '' && function_exists('vms_ticketing_v2_inventory_result_health_label')
-				? (string) vms_ticketing_v2_inventory_result_health_label($result_health)
+			$result_health_label = $result_health !== '' && function_exists('bvmgr_ticketing_v2_inventory_result_health_label')
+				? (string) bvmgr_ticketing_v2_inventory_result_health_label($result_health)
 				: trim((string) ($details['result_health'] ?? ''));
-			$lines[] = '- ' . trim((string) ($mutation_row['change_type_label'] ?? __('Inventory mutation', 'vms'))) . ' / ' . vms_ticket_integrity_format_datetime(absint($mutation_row['timestamp_gmt'] ?? 0));
+			$lines[] = '- ' . trim((string) ($mutation_row['change_type_label'] ?? __('Inventory mutation', 'backstage-venue-manager'))) . ' / ' . bvmgr_ticket_integrity_format_datetime(absint($mutation_row['timestamp_gmt'] ?? 0));
 			$lines[] = '  - Source: ' . trim((string) ($mutation_row['source_function'] ?? $mutation_row['source_hook'] ?? ''));
-			$lines[] = '  - Derivation: ' . trim((string) ($mutation_row['derivation_source_label'] ?? $mutation_row['derivation_source'] ?? __('Unknown', 'vms'))) . ' / Writer branch: ' . trim((string) ($details['writer_branch'] ?? $mutation_row['writer_branch'] ?? __('Not recorded', 'vms')));
+			$lines[] = '  - Derivation: ' . trim((string) ($mutation_row['derivation_source_label'] ?? $mutation_row['derivation_source'] ?? __('Unknown', 'backstage-venue-manager'))) . ' / Writer branch: ' . trim((string) ($details['writer_branch'] ?? $mutation_row['writer_branch'] ?? __('Not recorded', 'backstage-venue-manager')));
 			if ($result_health_label !== '') {
 				$lines[] = '  - Result health: ' . $result_health_label;
 			}
-			$lines[] = '  - Stock qty: ' . vms_ticket_integrity_report_text_value($details['old_stock_qty'] ?? null) . ' -> ' . vms_ticket_integrity_report_text_value($details['new_stock_qty'] ?? null);
+			$lines[] = '  - Stock qty: ' . bvmgr_ticket_integrity_report_text_value($details['old_stock_qty'] ?? null) . ' -> ' . bvmgr_ticket_integrity_report_text_value($details['new_stock_qty'] ?? null);
 			$lines[] = '  - Stock status: ' . trim((string) ($details['old_stock_status'] ?? '—')) . ' -> ' . trim((string) ($details['new_stock_status'] ?? '—'));
 			$lines[] = '  - Manage stock: ' . trim((string) ($details['old_manage_stock'] ?? '—')) . ' -> ' . trim((string) ($details['new_manage_stock'] ?? '—'));
 			$lines[] = '  - Reason: ' . trim((string) ($mutation_row['reason_text'] ?? $mutation_row['summary_text'] ?? ''));
@@ -795,41 +805,42 @@ function vms_ticket_integrity_build_event_report_markdown(array $event): string
 	return implode("\n", $lines) . "\n";
 }
 
-function vms_ticket_integrity_handle_export_report(): void
+function bvmgr_ticket_integrity_handle_export_report(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die('Forbidden', 403);
 	}
 
-	check_admin_referer('vms_ticket_integrity_export_report');
+	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_export_report', '_wpnonce'), '_wpnonce');
 	$plan_id = absint($_POST['plan_id'] ?? 0);
-	$event = function_exists('vms_ticket_integrity_scan_event_record')
-		? vms_ticket_integrity_scan_event_record($plan_id, array('trigger' => 'manual_export'))
+	$event = function_exists('bvmgr_ticket_integrity_scan_event_record')
+		? bvmgr_ticket_integrity_scan_event_record($plan_id, array('trigger' => 'manual_export'))
 		: array();
 
 	if ($plan_id <= 0 || empty($event)) {
-		vms_ticket_integrity_admin_redirect(
+		bvmgr_ticket_integrity_admin_redirect(
 			'event_scan_failed',
 			array(
 				'event' => $plan_id,
-				'detail' => sanitize_text_field(__('Could not build diagnostics export for this event.', 'vms')),
+				'detail' => sanitize_text_field(__('Could not build diagnostics export for this event.', 'backstage-venue-manager')),
 			)
 		);
 	}
 
-	$filename = 'ticket-integrity-report-plan-' . $plan_id . '-' . (function_exists('wp_date') ? wp_date('Ymd-His', time(), wp_timezone()) : date('Ymd-His')) . '.md';
+	$filename = 'ticket-integrity-report-plan-' . $plan_id . '-' . wp_date('Ymd-His', time(), wp_timezone()) . '.md';
 	nocache_headers();
 	header('Content-Type: text/markdown; charset=' . get_option('blog_charset'));
 	header('Content-Disposition: attachment; filename="' . $filename . '"');
-	echo vms_ticket_integrity_build_event_report_markdown($event);
+	echo bvmgr_ticket_integrity_build_event_report_markdown($event);
 	exit;
 }
-add_action('admin_post_vms_ticket_integrity_export_report', 'vms_ticket_integrity_handle_export_report');
+add_action('admin_post_vms_ticket_integrity_export_report', 'bvmgr_ticket_integrity_handle_export_report');
 
-function vms_ticket_integrity_render_notice_from_query(): void
+function bvmgr_ticket_integrity_render_notice_from_query(): void
 {
-	$notice = isset($_GET['tim_notice']) ? sanitize_key((string) $_GET['tim_notice']) : '';
-	$detail = isset($_GET['detail']) ? sanitize_text_field((string) $_GET['detail']) : '';
+	$notice = sanitize_key(bvmgr_ticket_integrity_query_arg('tim_notice'));
+	$detail = sanitize_text_field(bvmgr_ticket_integrity_query_arg('detail'));
+	$notice_recipient = sanitize_email(bvmgr_ticket_integrity_query_arg('recipient'));
 
 	if ($notice === '') {
 		return;
@@ -842,90 +853,90 @@ function vms_ticket_integrity_render_notice_from_query(): void
 			$class = 'notice-success';
 			$message = sprintf(
 				/* translators: 1: red count, 2: yellow count */
-				__('Ticket integrity scan completed. Red: %1$d. Yellow: %2$d.', 'vms'),
-				absint($_GET['red'] ?? 0),
-				absint($_GET['yellow'] ?? 0)
+				__('Ticket integrity scan completed. Red: %1$d. Yellow: %2$d.', 'backstage-venue-manager'),
+				absint(bvmgr_ticket_integrity_query_arg('red')),
+				absint(bvmgr_ticket_integrity_query_arg('yellow'))
 			);
 			break;
 		case 'event_scan_complete':
 			$class = 'notice-success';
-			$message = __('Event integrity scan completed.', 'vms');
+			$message = __('Event integrity scan completed.', 'backstage-venue-manager');
 			break;
 		case 'settings_saved':
 			$class = 'notice-success';
-			$message = __('Ticket Integrity settings saved.', 'vms');
+			$message = __('Ticket Integrity settings saved.', 'backstage-venue-manager');
 			break;
 		case 'daily_report_sent':
 			$class = 'notice-success';
-			$message = __('State of the Range email sent.', 'vms');
+			$message = __('State of the Range email sent.', 'backstage-venue-manager');
 			break;
 		case 'daily_report_preview_ready':
 			$class = 'notice-success';
-			$message = __('State of the Range preview rendered successfully.', 'vms');
+			$message = __('State of the Range preview rendered successfully.', 'backstage-venue-manager');
 			break;
 		case 'daily_report_dry_run_ready':
 			$class = 'notice-success';
-			$message = __('State of the Range dry-run diagnostic completed without sending email.', 'vms');
+			$message = __('State of the Range dry-run diagnostic completed without sending email.', 'backstage-venue-manager');
 			break;
 		case 'daily_report_test_sent':
 			$class = 'notice-success';
-			$message = __('State of the Range admin test email sent.', 'vms');
-			if (!empty($_GET['recipient'])) {
-				$message .= ' ' . sanitize_email((string) $_GET['recipient']);
+			$message = __('State of the Range admin test email sent.', 'backstage-venue-manager');
+			if ($notice_recipient !== '') {
+				$message .= ' ' . $notice_recipient;
 			}
 			break;
 		case 'daily_report_failed':
 			$class = 'notice-error';
-			$message = __('State of the Range email failed to send.', 'vms');
+			$message = __('State of the Range email failed to send.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
 			break;
 		case 'rebuild_complete':
 			$class = 'notice-success';
-			$message = __('Repair completed and the event was re-scanned.', 'vms');
+			$message = __('Repair completed and the event was re-scanned.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
 			break;
 		case 'rebuild_no_change':
 			$class = 'notice-info';
-			$message = __('No mapping changes were needed and the event was re-scanned.', 'vms');
+			$message = __('No mapping changes were needed and the event was re-scanned.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
 			break;
 		case 'rebuild_partial':
 			$class = 'notice-warning';
-			$message = __('Repair made changes, but unresolved conflicts still remain.', 'vms');
+			$message = __('Repair made changes, but unresolved conflicts still remain.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
 			break;
 		case 'rebuild_blocked':
 			$class = 'notice-warning';
-			$message = __('Repair could not proceed safely.', 'vms');
+			$message = __('Repair could not proceed safely.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
 			break;
 		case 'duplicate_cleanup_complete':
 			$class = 'notice-success';
-			$message = __('Duplicate legacy ticket cleanup completed and the event was re-scanned.', 'vms');
+			$message = __('Duplicate legacy ticket cleanup completed and the event was re-scanned.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
 			break;
 		case 'duplicate_cleanup_partial':
 			$class = 'notice-warning';
-			$message = __('Duplicate legacy ticket cleanup made progress, but warnings remain.', 'vms');
+			$message = __('Duplicate legacy ticket cleanup made progress, but warnings remain.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
 			break;
 		case 'duplicate_cleanup_blocked':
 			$class = 'notice-warning';
-			$message = __('Duplicate legacy ticket cleanup was blocked for one or more sold paths.', 'vms');
+			$message = __('Duplicate legacy ticket cleanup was blocked for one or more sold paths.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
@@ -935,7 +946,7 @@ function vms_ticket_integrity_render_notice_from_query(): void
 		case 'rebuild_failed':
 		case 'duplicate_cleanup_failed':
 			$class = 'notice-error';
-			$message = __('Ticket Integrity action failed.', 'vms');
+			$message = __('Ticket Integrity action failed.', 'backstage-venue-manager');
 			if ($detail !== '') {
 				$message .= ' ' . $detail;
 			}
@@ -949,15 +960,15 @@ function vms_ticket_integrity_render_notice_from_query(): void
 	echo '<div class="notice ' . esc_attr($class) . '"><p>' . esc_html($message) . '</p></div>';
 }
 
-function vms_ticket_integrity_render_summary_cards(array $summary, array $last_scan): void
+function bvmgr_ticket_integrity_render_summary_cards(array $summary, array $last_scan): void
 {
 	$cards = array(
-		array('label' => __('Events Scanned', 'vms'), 'value' => absint($summary['events_scanned'] ?? 0), 'status' => 'neutral'),
-		array('label' => __('Green', 'vms'), 'value' => absint($summary['green'] ?? 0), 'status' => 'green'),
-		array('label' => __('Yellow', 'vms'), 'value' => absint($summary['yellow'] ?? 0), 'status' => 'yellow'),
-		array('label' => __('Red', 'vms'), 'value' => absint($summary['red'] ?? 0), 'status' => 'red'),
-		array('label' => __('Informational', 'vms'), 'value' => absint($summary['informational'] ?? 0), 'status' => 'informational'),
-		array('label' => __('Last Scan', 'vms'), 'value' => vms_ticket_integrity_format_datetime(absint($last_scan['completed_at_gmt'] ?? 0)), 'status' => 'neutral'),
+		array('label' => __('Events Scanned', 'backstage-venue-manager'), 'value' => absint($summary['events_scanned'] ?? 0), 'status' => 'neutral'),
+		array('label' => __('Green', 'backstage-venue-manager'), 'value' => absint($summary['green'] ?? 0), 'status' => 'green'),
+		array('label' => __('Yellow', 'backstage-venue-manager'), 'value' => absint($summary['yellow'] ?? 0), 'status' => 'yellow'),
+		array('label' => __('Red', 'backstage-venue-manager'), 'value' => absint($summary['red'] ?? 0), 'status' => 'red'),
+		array('label' => __('Informational', 'backstage-venue-manager'), 'value' => absint($summary['informational'] ?? 0), 'status' => 'informational'),
+		array('label' => __('Last Scan', 'backstage-venue-manager'), 'value' => bvmgr_ticket_integrity_format_datetime(absint($last_scan['completed_at_gmt'] ?? 0)), 'status' => 'neutral'),
 	);
 
 	echo '<div class="vms-ticket-integrity__cards" data-vms-tour="ticket-integrity.summary">';
@@ -970,14 +981,14 @@ function vms_ticket_integrity_render_summary_cards(array $summary, array $last_s
 	echo '</div>';
 }
 
-function vms_ticket_integrity_render_payment_gateway_health_panel(array $health): void
+function bvmgr_ticket_integrity_render_payment_gateway_health_panel(array $health): void
 {
 	$status = sanitize_key((string) ($health['status'] ?? 'unknown'));
-	$status_label = function_exists('vms_ticket_integrity_payment_gateway_status_label')
-		? vms_ticket_integrity_payment_gateway_status_label($status)
+	$status_label = function_exists('bvmgr_ticket_integrity_payment_gateway_status_label')
+		? bvmgr_ticket_integrity_payment_gateway_status_label($status)
 		: strtoupper($status);
-	$status_css = function_exists('vms_ticket_integrity_payment_gateway_status_css')
-		? vms_ticket_integrity_payment_gateway_status_css($status)
+	$status_css = function_exists('bvmgr_ticket_integrity_payment_gateway_status_css')
+		? bvmgr_ticket_integrity_payment_gateway_status_css($status)
 		: 'neutral';
 	$checkout = is_array($health['checkout'] ?? null) ? $health['checkout'] : array();
 	$square = is_array($health['square'] ?? null) ? $health['square'] : array();
@@ -989,12 +1000,13 @@ function vms_ticket_integrity_render_payment_gateway_health_panel(array $health)
 	echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.payment-gateway-health">';
 	echo '<div class="vms-ticket-integrity__payment-health-header">';
 	echo '<div>';
-	echo '<h2>' . esc_html__('Payment Gateway Health', 'vms') . '</h2>';
-	echo '<p class="description">' . esc_html__('Detect whether customers can currently pay at checkout and keep the most recent payment incident visible after recovery.', 'vms') . '</p>';
+	echo '<h2>' . esc_html__('Payment Gateway Health', 'backstage-venue-manager') . '</h2>';
+	echo '<p class="description">' . esc_html__('Detect whether customers can currently pay at checkout and keep the most recent payment incident visible after recovery.', 'backstage-venue-manager') . '</p>';
 	echo '</div>';
 	echo '<div class="vms-ticket-integrity__payment-health-status">';
-	echo '<span class="' . esc_attr(vms_ticket_integrity_status_css_class($status_css)) . '">' . esc_html($status_label) . '</span>';
-	echo '<div class="vms-ticket-integrity__payment-health-meta">' . esc_html(sprintf(__('Last checked: %s', 'vms'), (string) ($health['last_checked_local'] ?? __('Never', 'vms')))) . '</div>';
+	echo '<span class="' . esc_attr(bvmgr_ticket_integrity_status_css_class($status_css)) . '">' . esc_html($status_label) . '</span>';
+		/* translators: %s: last payment gateway health check timestamp in the site timezone. */
+		echo '<div class="vms-ticket-integrity__payment-health-meta">' . esc_html(sprintf(__('Last checked: %s', 'backstage-venue-manager'), (string) ($health['last_checked_local'] ?? __('Never', 'backstage-venue-manager')))) . '</div>';
 	echo '</div>';
 	echo '</div>';
 
@@ -1004,34 +1016,34 @@ function vms_ticket_integrity_render_payment_gateway_health_panel(array $health)
 
 	echo '<div class="vms-ticket-integrity__cards vms-ticket-integrity__payment-health-cards">';
 	echo '<div class="vms-ticket-integrity__card vms-ticket-integrity__card--' . esc_attr($status_css) . '">';
-	echo '<div class="vms-ticket-integrity__card-label">' . esc_html__('Checkout Methods', 'vms') . '</div>';
+	echo '<div class="vms-ticket-integrity__card-label">' . esc_html__('Checkout Methods', 'backstage-venue-manager') . '</div>';
 	echo '<div class="vms-ticket-integrity__card-value">' . esc_html((string) absint($checkout['available_count'] ?? 0)) . '</div>';
-	echo '<div class="vms-ticket-integrity__payment-card-meta">' . esc_html(!empty($checkout['available_gateway_titles']) ? implode(', ', (array) $checkout['available_gateway_titles']) : __('None available', 'vms')) . '</div>';
+	echo '<div class="vms-ticket-integrity__payment-card-meta">' . esc_html(!empty($checkout['available_gateway_titles']) ? implode(', ', (array) $checkout['available_gateway_titles']) : __('None available', 'backstage-venue-manager')) . '</div>';
 	echo '</div>';
 
 	echo '<div class="vms-ticket-integrity__card vms-ticket-integrity__card--' . esc_attr(!empty($square['connection_present']) ? 'green' : 'red') . '">';
-	echo '<div class="vms-ticket-integrity__card-label">' . esc_html__('Square Connection', 'vms') . '</div>';
-	echo '<div class="vms-ticket-integrity__card-value">' . esc_html(!empty($square['connection_present']) ? __('Connected', 'vms') : __('Disconnected', 'vms')) . '</div>';
-	echo '<div class="vms-ticket-integrity__payment-card-meta">' . esc_html(!empty($square['has_location_id']) ? __('Location present', 'vms') : __('Location missing', 'vms')) . '</div>';
+	echo '<div class="vms-ticket-integrity__card-label">' . esc_html__('Square Connection', 'backstage-venue-manager') . '</div>';
+	echo '<div class="vms-ticket-integrity__card-value">' . esc_html(!empty($square['connection_present']) ? __('Connected', 'backstage-venue-manager') : __('Disconnected', 'backstage-venue-manager')) . '</div>';
+	echo '<div class="vms-ticket-integrity__payment-card-meta">' . esc_html(!empty($square['has_location_id']) ? __('Location present', 'backstage-venue-manager') : __('Location missing', 'backstage-venue-manager')) . '</div>';
 	echo '</div>';
 
 	echo '<div class="vms-ticket-integrity__card vms-ticket-integrity__card--' . esc_attr(!empty($square['gateway_enabled']) ? 'green' : 'yellow') . '">';
-	echo '<div class="vms-ticket-integrity__card-label">' . esc_html__('Square Gateway', 'vms') . '</div>';
-	echo '<div class="vms-ticket-integrity__card-value">' . esc_html(!empty($square['gateway_enabled']) ? __('Enabled', 'vms') : __('Disabled', 'vms')) . '</div>';
-	echo '<div class="vms-ticket-integrity__payment-card-meta">' . esc_html((string) ($square['environment_label'] ?? __('Unknown', 'vms'))) . '</div>';
+	echo '<div class="vms-ticket-integrity__card-label">' . esc_html__('Square Gateway', 'backstage-venue-manager') . '</div>';
+	echo '<div class="vms-ticket-integrity__card-value">' . esc_html(!empty($square['gateway_enabled']) ? __('Enabled', 'backstage-venue-manager') : __('Disabled', 'backstage-venue-manager')) . '</div>';
+	echo '<div class="vms-ticket-integrity__payment-card-meta">' . esc_html((string) ($square['environment_label'] ?? __('Unknown', 'backstage-venue-manager'))) . '</div>';
 	echo '</div>';
 
 	$apple_pay_card_status = !empty($apple_pay['failed']) ? 'yellow' : (!empty($apple_pay['enabled']) ? 'green' : 'neutral');
 	echo '<div class="vms-ticket-integrity__card vms-ticket-integrity__card--' . esc_attr($apple_pay_card_status) . '">';
-	echo '<div class="vms-ticket-integrity__card-label">' . esc_html__('Apple Pay', 'vms') . '</div>';
-	echo '<div class="vms-ticket-integrity__card-value">' . esc_html(!empty($apple_pay['failed']) ? __('Warning', 'vms') : (!empty($apple_pay['enabled']) ? __('Ready', 'vms') : __('Off', 'vms'))) . '</div>';
-	echo '<div class="vms-ticket-integrity__payment-card-meta">' . esc_html(!empty($apple_pay['failed']) ? __('Domain registration failed', 'vms') : (!empty($apple_pay['enabled']) ? __('Domain registered or pending', 'vms') : __('Digital wallets not enabled', 'vms'))) . '</div>';
+	echo '<div class="vms-ticket-integrity__card-label">' . esc_html__('Apple Pay', 'backstage-venue-manager') . '</div>';
+	echo '<div class="vms-ticket-integrity__card-value">' . esc_html(!empty($apple_pay['failed']) ? __('Warning', 'backstage-venue-manager') : (!empty($apple_pay['enabled']) ? __('Ready', 'backstage-venue-manager') : __('Off', 'backstage-venue-manager'))) . '</div>';
+	echo '<div class="vms-ticket-integrity__payment-card-meta">' . esc_html(!empty($apple_pay['failed']) ? __('Domain registration failed', 'backstage-venue-manager') : (!empty($apple_pay['enabled']) ? __('Domain registered or pending', 'backstage-venue-manager') : __('Digital wallets not enabled', 'backstage-venue-manager'))) . '</div>';
 	echo '</div>';
 	echo '</div>';
 
 	echo '<div class="vms-ticket-integrity__payment-health-columns">';
 	echo '<div class="vms-ticket-integrity__payment-health-column">';
-	echo '<h3>' . esc_html__('Checks', 'vms') . '</h3>';
+	echo '<h3>' . esc_html__('Checks', 'backstage-venue-manager') . '</h3>';
 	echo '<ul class="vms-ticket-integrity__audit-list">';
 	foreach ((array) ($health['checks'] ?? array()) as $check) {
 		if (!is_array($check)) {
@@ -1039,8 +1051,8 @@ function vms_ticket_integrity_render_payment_gateway_health_panel(array $health)
 		}
 		$check_css = sanitize_key((string) ($check['status_css'] ?? 'neutral'));
 		echo '<li>';
-		echo '<span class="' . esc_attr(vms_ticket_integrity_status_css_class($check_css)) . '">' . esc_html((string) ($check['status_label'] ?? __('Unknown', 'vms'))) . '</span> ';
-		echo '<strong>' . esc_html((string) ($check['label'] ?? __('Check', 'vms'))) . '</strong>';
+		echo '<span class="' . esc_attr(bvmgr_ticket_integrity_status_css_class($check_css)) . '">' . esc_html((string) ($check['status_label'] ?? __('Unknown', 'backstage-venue-manager'))) . '</span> ';
+		echo '<strong>' . esc_html((string) ($check['label'] ?? __('Check', 'backstage-venue-manager'))) . '</strong>';
 		echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html((string) ($check['message'] ?? '')) . '</div>';
 		echo '</li>';
 	}
@@ -1048,229 +1060,231 @@ function vms_ticket_integrity_render_payment_gateway_health_panel(array $health)
 	echo '</div>';
 
 	echo '<div class="vms-ticket-integrity__payment-health-column">';
-	echo '<h3>' . esc_html__('Diagnostics', 'vms') . '</h3>';
+	echo '<h3>' . esc_html__('Diagnostics', 'backstage-venue-manager') . '</h3>';
 	echo '<ul class="vms-ticket-integrity__audit-list">';
-	echo '<li><strong>' . esc_html__('Site environment', 'vms') . ':</strong> ' . esc_html((string) ($site_environment['label'] ?? __('Unknown', 'vms'))) . '</li>';
-	echo '<li><strong>' . esc_html__('Gateway source', 'vms') . ':</strong> ' . esc_html((string) ($checkout['source'] ?? __('Unknown', 'vms'))) . '</li>';
-	echo '<li><strong>' . esc_html__('Square auth', 'vms') . ':</strong> ' . esc_html(!empty($square['authenticated']) ? __('Present', 'vms') : __('Missing', 'vms')) . '</li>';
-	echo '<li><strong>' . esc_html__('Square location', 'vms') . ':</strong> ' . esc_html(!empty($square['has_location_id']) ? __('Present', 'vms') : __('Missing', 'vms')) . '</li>';
+	echo '<li><strong>' . esc_html__('Site environment', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) ($site_environment['label'] ?? __('Unknown', 'backstage-venue-manager'))) . '</li>';
+	echo '<li><strong>' . esc_html__('Gateway source', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) ($checkout['source'] ?? __('Unknown', 'backstage-venue-manager'))) . '</li>';
+	echo '<li><strong>' . esc_html__('Square auth', 'backstage-venue-manager') . ':</strong> ' . esc_html(!empty($square['authenticated']) ? __('Present', 'backstage-venue-manager') : __('Missing', 'backstage-venue-manager')) . '</li>';
+	echo '<li><strong>' . esc_html__('Square location', 'backstage-venue-manager') . ':</strong> ' . esc_html(!empty($square['has_location_id']) ? __('Present', 'backstage-venue-manager') : __('Missing', 'backstage-venue-manager')) . '</li>';
 	if (!empty($health['diagnostic_message'])) {
-		echo '<li><strong>' . esc_html__('Diagnostic note', 'vms') . ':</strong> ' . esc_html((string) $health['diagnostic_message']) . '</li>';
+		echo '<li><strong>' . esc_html__('Diagnostic note', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) $health['diagnostic_message']) . '</li>';
 	}
 	echo '</ul>';
 	echo '</div>';
 	echo '</div>';
 
 	echo '<div class="vms-ticket-integrity__payment-health-memory">';
-	echo '<h3>' . esc_html__('Incident Memory', 'vms') . '</h3>';
+	echo '<h3>' . esc_html__('Incident Memory', 'backstage-venue-manager') . '</h3>';
 	if (!empty($incident['active'])) {
-		echo '<p><strong>' . esc_html__('Current incident', 'vms') . ':</strong> ' . esc_html(sprintf(__('first detected %s', 'vms'), vms_ticket_integrity_format_datetime(absint($incident['first_detected_failure_gmt'] ?? 0)))) . '</p>';
+			/* translators: %s: timestamp when the current payment incident was first detected. */
+			echo '<p><strong>' . esc_html__('Current incident', 'backstage-venue-manager') . ':</strong> ' . esc_html(sprintf(__('first detected %s', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime(absint($incident['first_detected_failure_gmt'] ?? 0)))) . '</p>';
 		if (!empty($incident['diagnostic_message'])) {
 			echo '<p class="vms-ticket-integrity__issue-detail">' . esc_html((string) $incident['diagnostic_message']) . '</p>';
 		}
 	} elseif (!empty($last_incident['resolved_at_gmt'])) {
-		echo '<p><strong>' . esc_html__('Most recent incident', 'vms') . ':</strong> ' . esc_html(sprintf(__('resolved %s', 'vms'), vms_ticket_integrity_format_datetime(absint($last_incident['resolved_at_gmt'] ?? 0)))) . '</p>';
+			/* translators: %s: timestamp when the most recent payment incident was resolved. */
+			echo '<p><strong>' . esc_html__('Most recent incident', 'backstage-venue-manager') . ':</strong> ' . esc_html(sprintf(__('resolved %s', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime(absint($last_incident['resolved_at_gmt'] ?? 0)))) . '</p>';
 		if (!empty($last_incident['summary'])) {
 			echo '<p class="vms-ticket-integrity__issue-detail">' . esc_html((string) $last_incident['summary']) . '</p>';
 		}
 	} else {
-		echo '<p>' . esc_html__('No payment gateway incidents have been recorded yet.', 'vms') . '</p>';
+		echo '<p>' . esc_html__('No payment gateway incidents have been recorded yet.', 'backstage-venue-manager') . '</p>';
 	}
 	echo '</div>';
 	echo '</section>';
 }
 
-function vms_ticket_integrity_daily_report_result_label(string $result): string
+function bvmgr_ticket_integrity_daily_report_result_label(string $result): string
 {
 	$result = sanitize_key($result);
 	switch ($result) {
 		case 'render_started':
-			return __('Render started', 'vms');
+			return __('Render started', 'backstage-venue-manager');
 		case 'rendered':
-			return __('Rendered', 'vms');
+			return __('Rendered', 'backstage-venue-manager');
 		case 'dry_run_rendered':
-			return __('Dry run rendered', 'vms');
+			return __('Dry run rendered', 'backstage-venue-manager');
 		case 'send_attempted':
-			return __('Send attempted', 'vms');
+			return __('Send attempted', 'backstage-venue-manager');
 		case 'send_success':
 		case 'sent':
-			return __('Send success', 'vms');
+			return __('Send success', 'backstage-venue-manager');
 		case 'skipped_no_snapshot':
-			return __('Skipped: no usable snapshot', 'vms');
+			return __('Skipped: no usable snapshot', 'backstage-venue-manager');
 		case 'skipped_scan_failed':
-			return __('Skipped: refresh scan failed', 'vms');
+			return __('Skipped: refresh scan failed', 'backstage-venue-manager');
 		case 'send_failed':
-			return __('Send failed', 'vms');
+			return __('Send failed', 'backstage-venue-manager');
 		case 'scan_refresh_failed':
-			return __('Refresh scan failed', 'vms');
+			return __('Refresh scan failed', 'backstage-venue-manager');
 		case 'disabled':
-			return __('Disabled', 'vms');
+			return __('Disabled', 'backstage-venue-manager');
 		case 'no_recipient':
-			return __('No recipient configured', 'vms');
+			return __('No recipient configured', 'backstage-venue-manager');
 		case 'empty_body':
-			return __('Rendered empty body', 'vms');
+			return __('Rendered empty body', 'backstage-venue-manager');
 		default:
-			return $result !== '' ? ucwords(str_replace('_', ' ', $result)) : __('Never run', 'vms');
+			return $result !== '' ? ucwords(str_replace('_', ' ', $result)) : __('Never run', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_integrity_render_daily_report_status_panel(array $settings): void
+function bvmgr_ticket_integrity_render_daily_report_status_panel(array $settings): void
 {
-	if (!function_exists('vms_ticket_integrity_daily_report_status_snapshot')) {
+	if (!function_exists('bvmgr_ticket_integrity_daily_report_status_snapshot')) {
 		return;
 	}
 
-	$status = vms_ticket_integrity_daily_report_status_snapshot();
+	$status = bvmgr_ticket_integrity_daily_report_status_snapshot();
 	$state = is_array($status['state'] ?? null) ? $status['state'] : array();
-	$configured_recipient = function_exists('vms_ticket_integrity_daily_report_recipient')
-		? vms_ticket_integrity_daily_report_recipient($settings)
+	$configured_recipient = function_exists('bvmgr_ticket_integrity_daily_report_recipient')
+		? bvmgr_ticket_integrity_daily_report_recipient($settings)
 		: sanitize_email((string) get_option('admin_email', ''));
 	$scheduled_timestamps = array_map('absint', (array) ($status['scheduled_timestamps'] ?? array()));
 
 	echo '<section class="vms-ticket-integrity__panel">';
-	echo '<h2>' . esc_html__('State of the Range Status', 'vms') . '</h2>';
-	echo '<p class="description">' . esc_html__('Track whether the daily report was scheduled, rendered, and handed off to the site mailer separately.', 'vms') . '</p>';
+	echo '<h2>' . esc_html__('State of the Range Status', 'backstage-venue-manager') . '</h2>';
+	echo '<p class="description">' . esc_html__('Track whether the daily report was scheduled, rendered, and handed off to the site mailer separately.', 'backstage-venue-manager') . '</p>';
 	echo '<div class="vms-ticket-integrity__diagnostic-grid">';
-	vms_ticket_integrity_render_diagnostic_meta(__('Hook', 'vms'), (string) ($status['hook'] ?? 'vms_ticket_integrity_daily_report'));
-	vms_ticket_integrity_render_diagnostic_meta(__('Expected Local Time', 'vms'), (string) ($status['expected_local_time'] ?? '06:05'));
-	vms_ticket_integrity_render_diagnostic_meta(__('Next Scheduled Run', 'vms'), (string) ($status['next_scheduled_run_local'] ?? __('Never', 'vms')), !empty($status['next_scheduled_run_at']) ? 'good' : 'warning');
-	vms_ticket_integrity_render_diagnostic_meta(__('Scheduled Hook Count', 'vms'), (string) absint($status['scheduled_hook_count'] ?? 0), absint($status['scheduled_hook_count'] ?? 0) === 1 ? 'good' : 'warning');
-	vms_ticket_integrity_render_diagnostic_meta(__('Last Scheduled Run', 'vms'), vms_ticket_integrity_format_datetime(absint($state['last_scheduled_run_at'] ?? 0)));
-	vms_ticket_integrity_render_diagnostic_meta(__('Last Successful Render', 'vms'), vms_ticket_integrity_format_datetime(absint($state['last_render_finished_at'] ?? 0)));
-	vms_ticket_integrity_render_diagnostic_meta(__('Last Send Attempt', 'vms'), vms_ticket_integrity_format_datetime(absint($state['last_send_attempt_at'] ?? 0)));
-	vms_ticket_integrity_render_diagnostic_meta(__('Last Successful Send', 'vms'), vms_ticket_integrity_format_datetime(absint($state['last_successful_send_at'] ?? 0)));
-	vms_ticket_integrity_render_diagnostic_meta(__('Last Result', 'vms'), vms_ticket_integrity_daily_report_result_label((string) ($state['last_result'] ?? '')), ($state['last_status'] ?? '') === 'sent' ? 'good' : (($state['last_error'] ?? '') !== '' ? 'warning' : ''));
-	vms_ticket_integrity_render_diagnostic_meta(__('Configured Recipient', 'vms'), $configured_recipient !== '' ? $configured_recipient : __('None configured', 'vms'), $configured_recipient !== '' ? 'good' : 'warning');
-	vms_ticket_integrity_render_diagnostic_meta(__('Last Mailer', 'vms'), (string) ($state['last_mailer'] ?? '') !== '' ? (string) $state['last_mailer'] : __('Unknown', 'vms'));
-	vms_ticket_integrity_render_diagnostic_meta(__('Last Trigger / Mode', 'vms'), trim(implode(' / ', array_filter(array((string) ($state['last_trigger'] ?? ''), (string) ($state['last_mode'] ?? ''))))));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Hook', 'backstage-venue-manager'), (string) ($status['hook'] ?? 'vms_ticket_integrity_daily_report'));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Expected Local Time', 'backstage-venue-manager'), (string) ($status['expected_local_time'] ?? '06:05'));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Next Scheduled Run', 'backstage-venue-manager'), (string) ($status['next_scheduled_run_local'] ?? __('Never', 'backstage-venue-manager')), !empty($status['next_scheduled_run_at']) ? 'good' : 'warning');
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Scheduled Hook Count', 'backstage-venue-manager'), (string) absint($status['scheduled_hook_count'] ?? 0), absint($status['scheduled_hook_count'] ?? 0) === 1 ? 'good' : 'warning');
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Last Scheduled Run', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime(absint($state['last_scheduled_run_at'] ?? 0)));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Last Successful Render', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime(absint($state['last_render_finished_at'] ?? 0)));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Last Send Attempt', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime(absint($state['last_send_attempt_at'] ?? 0)));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Last Successful Send', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime(absint($state['last_successful_send_at'] ?? 0)));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Last Result', 'backstage-venue-manager'), bvmgr_ticket_integrity_daily_report_result_label((string) ($state['last_result'] ?? '')), ($state['last_status'] ?? '') === 'sent' ? 'good' : (($state['last_error'] ?? '') !== '' ? 'warning' : ''));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Configured Recipient', 'backstage-venue-manager'), $configured_recipient !== '' ? $configured_recipient : __('None configured', 'backstage-venue-manager'), $configured_recipient !== '' ? 'good' : 'warning');
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Last Mailer', 'backstage-venue-manager'), (string) ($state['last_mailer'] ?? '') !== '' ? (string) $state['last_mailer'] : __('Unknown', 'backstage-venue-manager'));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Last Trigger / Mode', 'backstage-venue-manager'), trim(implode(' / ', array_filter(array((string) ($state['last_trigger'] ?? ''), (string) ($state['last_mode'] ?? ''))))));
 	echo '</div>';
 
 	echo '<div class="vms-ticket-integrity__diagnostic-columns">';
 	echo '<div class="vms-ticket-integrity__diagnostic-section">';
-	echo '<h5>' . esc_html__('Schedule Details', 'vms') . '</h5>';
+	echo '<h5>' . esc_html__('Schedule Details', 'backstage-venue-manager') . '</h5>';
 	echo '<ul class="vms-ticket-integrity__audit-list">';
-	echo '<li><strong>' . esc_html__('Scheduled timestamps', 'vms') . ':</strong> ';
+	echo '<li><strong>' . esc_html__('Scheduled timestamps', 'backstage-venue-manager') . ':</strong> ';
 	if (empty($scheduled_timestamps)) {
-		echo esc_html__('None', 'vms');
+		echo esc_html__('None', 'backstage-venue-manager');
 	} else {
-		echo esc_html(implode(', ', array_map('vms_ticket_integrity_format_datetime', $scheduled_timestamps)));
+		echo esc_html(implode(', ', array_map('bvmgr_ticket_integrity_format_datetime', $scheduled_timestamps)));
 	}
 	echo '</li>';
-	echo '<li><strong>' . esc_html__('Site timezone', 'vms') . ':</strong> ' . esc_html(wp_timezone_string() !== '' ? wp_timezone_string() : 'UTC') . '</li>';
+	echo '<li><strong>' . esc_html__('Site timezone', 'backstage-venue-manager') . ':</strong> ' . esc_html(wp_timezone_string() !== '' ? wp_timezone_string() : 'UTC') . '</li>';
 	echo '</ul>';
 	echo '</div>';
 
 	echo '<div class="vms-ticket-integrity__diagnostic-section">';
-	echo '<h5>' . esc_html__('Last Delivery Attempt', 'vms') . '</h5>';
+	echo '<h5>' . esc_html__('Last Delivery Attempt', 'backstage-venue-manager') . '</h5>';
 	echo '<ul class="vms-ticket-integrity__audit-list">';
-	echo '<li><strong>' . esc_html__('Recipient used', 'vms') . ':</strong> ' . esc_html((string) ($state['last_recipient'] ?? '') !== '' ? (string) $state['last_recipient'] : __('None', 'vms')) . '</li>';
-	echo '<li><strong>' . esc_html__('Subject', 'vms') . ':</strong> ' . esc_html((string) ($state['last_subject'] ?? '') !== '' ? (string) $state['last_subject'] : __('Unknown', 'vms')) . '</li>';
-	echo '<li><strong>' . esc_html__('Used stale snapshot', 'vms') . ':</strong> ' . esc_html(!empty($state['used_stale_snapshot']) ? __('Yes', 'vms') : __('No', 'vms')) . '</li>';
-	echo '<li><strong>' . esc_html__('Last error', 'vms') . ':</strong> ' . esc_html((string) ($state['last_error'] ?? '') !== '' ? (string) $state['last_error'] : __('None', 'vms')) . '</li>';
+	echo '<li><strong>' . esc_html__('Recipient used', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) ($state['last_recipient'] ?? '') !== '' ? (string) $state['last_recipient'] : __('None', 'backstage-venue-manager')) . '</li>';
+	echo '<li><strong>' . esc_html__('Subject', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) ($state['last_subject'] ?? '') !== '' ? (string) $state['last_subject'] : __('Unknown', 'backstage-venue-manager')) . '</li>';
+	echo '<li><strong>' . esc_html__('Used stale snapshot', 'backstage-venue-manager') . ':</strong> ' . esc_html(!empty($state['used_stale_snapshot']) ? __('Yes', 'backstage-venue-manager') : __('No', 'backstage-venue-manager')) . '</li>';
+	echo '<li><strong>' . esc_html__('Last error', 'backstage-venue-manager') . ':</strong> ' . esc_html((string) ($state['last_error'] ?? '') !== '' ? (string) $state['last_error'] : __('None', 'backstage-venue-manager')) . '</li>';
 	echo '</ul>';
 	echo '</div>';
 	echo '</div>';
 
 	if (absint($status['scheduled_hook_count'] ?? 0) !== 1) {
-		echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html__('The report hook count is not exactly one. VMS will repair duplicates or missing hooks on the next runtime-maintenance pass.', 'vms') . '</p>';
+		echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html__('The report hook count is not exactly one. Backstage Venue Manager will repair duplicates or missing hooks on the next runtime-maintenance pass.', 'backstage-venue-manager') . '</p>';
 	}
 	if ((string) ($state['last_error'] ?? '') !== '') {
-		echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html__('The last run recorded a delivery or render error. Use Preview or Dry-Run Diagnostic below before sending a live test email.', 'vms') . '</p>';
+		echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html__('The last run recorded a delivery or render error. Use Preview or Dry-Run Diagnostic below before sending a live test email.', 'backstage-venue-manager') . '</p>';
 	}
 	echo '</section>';
 }
 
-function vms_ticket_integrity_render_daily_report_preview_panel(): void
+function bvmgr_ticket_integrity_render_daily_report_preview_panel(): void
 {
-	$preview = vms_ticket_integrity_get_daily_report_preview();
+	$preview = bvmgr_ticket_integrity_get_daily_report_preview();
 	if (empty($preview)) {
 		return;
 	}
 
 	echo '<section class="vms-ticket-integrity__panel">';
-	echo '<h2>' . esc_html__('State of the Range Preview', 'vms') . '</h2>';
+	echo '<h2>' . esc_html__('State of the Range Preview', 'backstage-venue-manager') . '</h2>';
 	echo '<div class="vms-ticket-integrity__diagnostic-grid">';
-	vms_ticket_integrity_render_diagnostic_meta(__('Mode', 'vms'), vms_ticket_integrity_daily_report_result_label((string) ($preview['mode'] ?? 'preview')));
-	vms_ticket_integrity_render_diagnostic_meta(__('Generated', 'vms'), vms_ticket_integrity_format_datetime(absint($preview['generated_at_gmt'] ?? 0)));
-	vms_ticket_integrity_render_diagnostic_meta(__('Recipient', 'vms'), (string) ($preview['recipient'] ?? '') !== '' ? (string) $preview['recipient'] : __('Not used for preview', 'vms'));
-	vms_ticket_integrity_render_diagnostic_meta(__('Subject', 'vms'), (string) ($preview['subject'] ?? ''));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Mode', 'backstage-venue-manager'), bvmgr_ticket_integrity_daily_report_result_label((string) ($preview['mode'] ?? 'preview')));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Generated', 'backstage-venue-manager'), bvmgr_ticket_integrity_format_datetime(absint($preview['generated_at_gmt'] ?? 0)));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Recipient', 'backstage-venue-manager'), (string) ($preview['recipient'] ?? '') !== '' ? (string) $preview['recipient'] : __('Not used for preview', 'backstage-venue-manager'));
+	bvmgr_ticket_integrity_render_diagnostic_meta(__('Subject', 'backstage-venue-manager'), (string) ($preview['subject'] ?? ''));
 	echo '</div>';
 	echo '<pre style="margin-top:14px;white-space:pre-wrap;word-break:break-word;max-height:420px;overflow:auto;">' . esc_html((string) ($preview['body'] ?? '')) . '</pre>';
 	echo '</section>';
 }
 
-function vms_ticket_integrity_render_settings_form(array $settings): void
+function bvmgr_ticket_integrity_render_settings_form(array $settings): void
 {
 	$recipient_placeholder = sanitize_email((string) get_option('admin_email', ''));
 	$test_recipient = sanitize_email((string) get_option('admin_email', ''));
 
 	echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.settings">';
-	echo '<h2>' . esc_html__('Monitor Settings', 'vms') . '</h2>';
+	echo '<h2>' . esc_html__('Monitor Settings', 'backstage-venue-manager') . '</h2>';
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form">';
-	wp_nonce_field('vms_ticket_integrity_save_settings');
+	wp_nonce_field('bvmgr_ticket_integrity_save_settings');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_save_settings" />';
 
-	echo '<label><input type="checkbox" name="nightly_enabled" value="1"' . checked(!empty($settings['nightly_enabled']), true, false) . ' /> ' . esc_html__('Enable nightly integrity scan', 'vms') . '</label>';
-	echo '<label>' . esc_html__('Days ahead to scan', 'vms') . '<input type="number" min="1" max="365" name="days_ahead" value="' . esc_attr((string) absint($settings['days_ahead'] ?? 120)) . '" /></label>';
-	echo '<label><input type="checkbox" name="email_alerts_enabled" value="1"' . checked(!empty($settings['email_alerts_enabled']), true, false) . ' /> ' . esc_html__('Enable integrity exception emails', 'vms') . '</label>';
-	echo '<label>' . esc_html__('Alert recipient email', 'vms') . '<input type="email" name="alert_recipient" value="' . esc_attr((string) ($settings['alert_recipient'] ?? '')) . '" placeholder="' . esc_attr($recipient_placeholder) . '" /></label>';
-	echo '<label><input type="checkbox" name="send_resolved_notifications" value="1"' . checked(!empty($settings['send_resolved_notifications']), true, false) . ' /> ' . esc_html__('Send resolved notifications', 'vms') . '</label>';
-	echo '<label>' . esc_html__('Reminder interval (hours)', 'vms') . '<input type="number" min="1" max="168" name="reminder_interval_hours" value="' . esc_attr((string) absint($settings['reminder_interval_hours'] ?? 24)) . '" /></label>';
-	echo '<label><input type="checkbox" name="include_yellow_in_email_alerts" value="1"' . checked(!empty($settings['include_yellow_in_email_alerts']), true, false) . ' /> ' . esc_html__('Include Yellow issues in integrity exception emails', 'vms') . '</label>';
-	echo '<label><input type="checkbox" name="daily_report_enabled" value="1"' . checked(!empty($settings['daily_report_enabled']), true, false) . ' /> ' . esc_html__('Enable daily “State of the Range” email', 'vms') . '</label>';
-	echo '<label>' . esc_html__('Daily report recipient email', 'vms') . '<input type="email" name="daily_report_recipient" value="' . esc_attr((string) ($settings['daily_report_recipient'] ?? '')) . '" placeholder="' . esc_attr($recipient_placeholder) . '" /></label>';
-	echo '<label><input type="checkbox" name="payment_gateway_health_enabled" value="1"' . checked(!empty($settings['payment_gateway_health_enabled']), true, false) . ' /> ' . esc_html__('Enable scheduled payment gateway health checks', 'vms') . '</label>';
-	echo '<label>' . esc_html__('Payment gateway health interval', 'vms');
+	echo '<label><input type="checkbox" name="nightly_enabled" value="1"' . checked(!empty($settings['nightly_enabled']), true, false) . ' /> ' . esc_html__('Enable nightly integrity scan', 'backstage-venue-manager') . '</label>';
+	echo '<label>' . esc_html__('Days ahead to scan', 'backstage-venue-manager') . '<input type="number" min="1" max="365" name="days_ahead" value="' . esc_attr((string) absint($settings['days_ahead'] ?? 120)) . '" /></label>';
+	echo '<label><input type="checkbox" name="email_alerts_enabled" value="1"' . checked(!empty($settings['email_alerts_enabled']), true, false) . ' /> ' . esc_html__('Enable integrity exception emails', 'backstage-venue-manager') . '</label>';
+	echo '<label>' . esc_html__('Alert recipient email', 'backstage-venue-manager') . '<input type="email" name="alert_recipient" value="' . esc_attr((string) ($settings['alert_recipient'] ?? '')) . '" placeholder="' . esc_attr($recipient_placeholder) . '" /></label>';
+	echo '<label><input type="checkbox" name="send_resolved_notifications" value="1"' . checked(!empty($settings['send_resolved_notifications']), true, false) . ' /> ' . esc_html__('Send resolved notifications', 'backstage-venue-manager') . '</label>';
+	echo '<label>' . esc_html__('Reminder interval (hours)', 'backstage-venue-manager') . '<input type="number" min="1" max="168" name="reminder_interval_hours" value="' . esc_attr((string) absint($settings['reminder_interval_hours'] ?? 24)) . '" /></label>';
+	echo '<label><input type="checkbox" name="include_yellow_in_email_alerts" value="1"' . checked(!empty($settings['include_yellow_in_email_alerts']), true, false) . ' /> ' . esc_html__('Include Yellow issues in integrity exception emails', 'backstage-venue-manager') . '</label>';
+	echo '<label><input type="checkbox" name="daily_report_enabled" value="1"' . checked(!empty($settings['daily_report_enabled']), true, false) . ' /> ' . esc_html__('Enable daily “State of the Range” email', 'backstage-venue-manager') . '</label>';
+	echo '<label>' . esc_html__('Daily report recipient email', 'backstage-venue-manager') . '<input type="email" name="daily_report_recipient" value="' . esc_attr((string) ($settings['daily_report_recipient'] ?? '')) . '" placeholder="' . esc_attr($recipient_placeholder) . '" /></label>';
+	echo '<label><input type="checkbox" name="payment_gateway_health_enabled" value="1"' . checked(!empty($settings['payment_gateway_health_enabled']), true, false) . ' /> ' . esc_html__('Enable scheduled payment gateway health checks', 'backstage-venue-manager') . '</label>';
+	echo '<label>' . esc_html__('Payment gateway health interval', 'backstage-venue-manager');
 	echo '<select name="payment_gateway_health_interval">';
-	echo '<option value="vms_ticket_integrity_fifteen_minutes"' . selected((string) ($settings['payment_gateway_health_interval'] ?? 'vms_ticket_integrity_fifteen_minutes'), 'vms_ticket_integrity_fifteen_minutes', false) . '>' . esc_html__('Every 15 minutes', 'vms') . '</option>';
-	echo '<option value="hourly"' . selected((string) ($settings['payment_gateway_health_interval'] ?? 'vms_ticket_integrity_fifteen_minutes'), 'hourly', false) . '>' . esc_html__('Hourly', 'vms') . '</option>';
+	echo '<option value="vms_ticket_integrity_fifteen_minutes"' . selected((string) ($settings['payment_gateway_health_interval'] ?? 'vms_ticket_integrity_fifteen_minutes'), 'vms_ticket_integrity_fifteen_minutes', false) . '>' . esc_html__('Every 15 minutes', 'backstage-venue-manager') . '</option>';
+	echo '<option value="hourly"' . selected((string) ($settings['payment_gateway_health_interval'] ?? 'vms_ticket_integrity_fifteen_minutes'), 'hourly', false) . '>' . esc_html__('Hourly', 'backstage-venue-manager') . '</option>';
 	echo '</select></label>';
-	echo '<label><input type="checkbox" name="low_inventory_email_alerts_enabled" value="1"' . checked(!empty($settings['low_inventory_email_alerts_enabled']), true, false) . ' /> ' . esc_html__('Send low-inventory alert emails', 'vms') . '</label>';
-	echo '<label>' . esc_html__('Low inventory threshold (tickets)', 'vms') . '<input type="number" min="1" max="10000" name="low_inventory_threshold" value="' . esc_attr((string) absint($settings['low_inventory_threshold'] ?? 25)) . '" /></label>';
-	echo '<label>' . esc_html__('Low inventory threshold (%)', 'vms') . '<input type="number" min="1" max="100" name="low_inventory_percent_threshold" value="' . esc_attr((string) absint($settings['low_inventory_percent_threshold'] ?? 10)) . '" /></label>';
-	echo '<label>' . esc_html__('Critical inventory threshold (tickets)', 'vms') . '<input type="number" min="1" max="10000" name="critical_inventory_threshold" value="' . esc_attr((string) absint($settings['critical_inventory_threshold'] ?? 5)) . '" /></label>';
-	echo '<label>' . esc_html__('Critical inventory threshold (%)', 'vms') . '<input type="number" min="1" max="100" name="critical_inventory_percent_threshold" value="' . esc_attr((string) absint($settings['critical_inventory_percent_threshold'] ?? 3)) . '" /></label>';
-	echo '<p class="description">' . esc_html__('Nightly scans still drive the underlying integrity checks. The daily State of the Range email is scheduled separately for the morning and will refresh the scan first if the stored data is stale.', 'vms') . '</p>';
+	echo '<label><input type="checkbox" name="low_inventory_email_alerts_enabled" value="1"' . checked(!empty($settings['low_inventory_email_alerts_enabled']), true, false) . ' /> ' . esc_html__('Send low-inventory alert emails', 'backstage-venue-manager') . '</label>';
+	echo '<label>' . esc_html__('Low inventory threshold (tickets)', 'backstage-venue-manager') . '<input type="number" min="1" max="10000" name="low_inventory_threshold" value="' . esc_attr((string) absint($settings['low_inventory_threshold'] ?? 25)) . '" /></label>';
+	echo '<label>' . esc_html__('Low inventory threshold (%)', 'backstage-venue-manager') . '<input type="number" min="1" max="100" name="low_inventory_percent_threshold" value="' . esc_attr((string) absint($settings['low_inventory_percent_threshold'] ?? 10)) . '" /></label>';
+	echo '<label>' . esc_html__('Critical inventory threshold (tickets)', 'backstage-venue-manager') . '<input type="number" min="1" max="10000" name="critical_inventory_threshold" value="' . esc_attr((string) absint($settings['critical_inventory_threshold'] ?? 5)) . '" /></label>';
+	echo '<label>' . esc_html__('Critical inventory threshold (%)', 'backstage-venue-manager') . '<input type="number" min="1" max="100" name="critical_inventory_percent_threshold" value="' . esc_attr((string) absint($settings['critical_inventory_percent_threshold'] ?? 3)) . '" /></label>';
+	echo '<p class="description">' . esc_html__('Nightly scans still drive the underlying integrity checks. The daily State of the Range email is scheduled separately for the morning and will refresh the scan first if the stored data is stale.', 'backstage-venue-manager') . '</p>';
 
-	submit_button(__('Save Ticket Integrity Settings', 'vms'), 'secondary', 'submit', false);
+	submit_button(__('Save Ticket Integrity Settings', 'backstage-venue-manager'), 'secondary', 'submit', false);
 	echo '</form>';
 
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form" style="margin-top:12px;">';
-	wp_nonce_field('vms_ticket_integrity_send_daily_report');
+	wp_nonce_field('bvmgr_ticket_integrity_send_daily_report');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_send_daily_report" />';
-	submit_button(__('Send State of the Range Now', 'vms'), 'secondary', 'submit', false);
+	submit_button(__('Send State of the Range Now', 'backstage-venue-manager'), 'secondary', 'submit', false);
 	echo '</form>';
 
 	echo '<div class="vms-ticket-integrity__diagnostic-columns">';
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form">';
-	wp_nonce_field('vms_ticket_integrity_preview_daily_report');
+	wp_nonce_field('bvmgr_ticket_integrity_preview_daily_report');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_preview_daily_report" />';
-	submit_button(__('Preview Today’s Report', 'vms'), 'secondary', 'submit', false);
+	submit_button(__('Preview Today’s Report', 'backstage-venue-manager'), 'secondary', 'submit', false);
 	echo '</form>';
 
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form">';
-	wp_nonce_field('vms_ticket_integrity_dry_run_daily_report');
+	wp_nonce_field('bvmgr_ticket_integrity_dry_run_daily_report');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_dry_run_daily_report" />';
-	submit_button(__('Dry-Run Diagnostic', 'vms'), 'secondary', 'submit', false);
+	submit_button(__('Dry-Run Diagnostic', 'backstage-venue-manager'), 'secondary', 'submit', false);
 	echo '</form>';
 
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__settings-form">';
-	wp_nonce_field('vms_ticket_integrity_send_daily_report_test');
+	wp_nonce_field('bvmgr_ticket_integrity_send_daily_report_test');
 	echo '<input type="hidden" name="action" value="vms_ticket_integrity_send_daily_report_test" />';
-	echo '<label>' . esc_html__('Admin test recipient', 'vms') . '<input type="email" name="test_recipient" value="' . esc_attr($test_recipient) . '" placeholder="' . esc_attr($test_recipient) . '" /></label>';
-	submit_button(__('Send Test to Admin', 'vms'), 'secondary', 'submit', false);
+	echo '<label>' . esc_html__('Admin test recipient', 'backstage-venue-manager') . '<input type="email" name="test_recipient" value="' . esc_attr($test_recipient) . '" placeholder="' . esc_attr($test_recipient) . '" /></label>';
+	submit_button(__('Send Test to Admin', 'backstage-venue-manager'), 'secondary', 'submit', false);
 	echo '</form>';
 	echo '</div>';
 	echo '</section>';
 }
 
-function vms_ticket_integrity_format_audit_source(array $entry): string
+function bvmgr_ticket_integrity_format_audit_source(array $entry): string
 {
 	$parts = array();
 	$trigger = sanitize_key((string) ($entry['trigger_source'] ?? ''));
 	if ($trigger !== '') {
-		$parts[] = function_exists('vms_ticket_mutation_audit_trigger_label')
-			? vms_ticket_mutation_audit_trigger_label($trigger)
+		$parts[] = function_exists('bvmgr_ticket_mutation_audit_trigger_label')
+			? bvmgr_ticket_mutation_audit_trigger_label($trigger)
 			: ucwords(str_replace('_', ' ', $trigger));
 	}
 
@@ -1287,26 +1301,26 @@ function vms_ticket_integrity_format_audit_source(array $entry): string
 	return implode(' / ', array_filter($parts));
 }
 
-function vms_ticket_integrity_format_repair_result(array $entry): string
+function bvmgr_ticket_integrity_format_repair_result(array $entry): string
 {
 	$result = sanitize_key((string) ($entry['result_status'] ?? ''));
 	switch ($result) {
 		case 'success':
-			return __('Repair completed', 'vms');
+			return __('Repair completed', 'backstage-venue-manager');
 		case 'no_op':
-			return __('No changes were needed', 'vms');
+			return __('No changes were needed', 'backstage-venue-manager');
 		case 'partial_changes':
-			return __('Repair made partial changes', 'vms');
+			return __('Repair made partial changes', 'backstage-venue-manager');
 		case 'partial':
-			return __('Repair attempted but unresolved conflicts remain', 'vms');
+			return __('Repair attempted but unresolved conflicts remain', 'backstage-venue-manager');
 		case 'failed':
-			return __('Repair could not proceed safely', 'vms');
+			return __('Repair could not proceed safely', 'backstage-venue-manager');
 		default:
-			return __('No rebuild attempt logged yet', 'vms');
+			return __('No rebuild attempt logged yet', 'backstage-venue-manager');
 	}
 }
 
-function vms_ticket_integrity_render_diagnostic_meta(string $label, string $value, string $modifier = ''): void
+function bvmgr_ticket_integrity_render_diagnostic_meta(string $label, string $value, string $modifier = ''): void
 {
 	$class = 'vms-ticket-integrity__diagnostic-meta';
 	if ($modifier !== '') {
@@ -1319,7 +1333,7 @@ function vms_ticket_integrity_render_diagnostic_meta(string $label, string $valu
 	echo '</div>';
 }
 
-function vms_ticket_integrity_render_subdetails(string $title, callable $callback, array $args = array()): void
+function bvmgr_ticket_integrity_render_subdetails(string $title, callable $callback, array $args = array()): void
 {
 	$classes = array('vms-ticket-integrity__subdetails');
 	if (!empty($args['class'])) {
@@ -1345,10 +1359,10 @@ function vms_ticket_integrity_render_subdetails(string $title, callable $callbac
 	echo '</details>';
 }
 
-function vms_ticket_integrity_render_ticket_mapping_list(array $tickets): void
+function bvmgr_ticket_integrity_render_ticket_mapping_list(array $tickets): void
 {
 	if (empty($tickets)) {
-		echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No active mapped tickets are stored in the current config snapshot.', 'vms') . '</p>';
+		echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No active mapped tickets are stored in the current config snapshot.', 'backstage-venue-manager') . '</p>';
 		return;
 	}
 
@@ -1358,18 +1372,20 @@ function vms_ticket_integrity_render_ticket_mapping_list(array $tickets): void
 			continue;
 		}
 
-		$title = trim((string) ($ticket['title'] ?? $ticket['ticket_key'] ?? __('Ticket', 'vms')));
+		$title = trim((string) ($ticket['title'] ?? $ticket['ticket_key'] ?? __('Ticket', 'backstage-venue-manager')));
 		$product_id = absint($ticket['mapped_product_id'] ?? 0);
 		$visibility_mode = sanitize_key((string) ($ticket['visibility_mode'] ?? 'public'));
 		$enabled = !array_key_exists('enabled', $ticket) || !empty($ticket['enabled']);
-		$detail = $product_id > 0
-			? sprintf(__('Product #%d', 'vms'), $product_id)
-			: __('Not currently mapped to a product', 'vms');
-		if ($visibility_mode !== '') {
-			$detail .= ' / ' . sprintf(__('Visibility: %s', 'vms'), str_replace('_', ' ', $visibility_mode));
-		}
+			$detail = $product_id > 0
+				/* translators: %d: mapped WooCommerce product ID. */
+				? sprintf(__('Product #%d', 'backstage-venue-manager'), $product_id)
+				: __('Not currently mapped to a product', 'backstage-venue-manager');
+			if ($visibility_mode !== '') {
+				/* translators: %s: ticket visibility mode label. */
+				$detail .= ' / ' . sprintf(__('Visibility: %s', 'backstage-venue-manager'), str_replace('_', ' ', $visibility_mode));
+			}
 		if (!$enabled) {
-			$detail .= ' / ' . __('Disabled in config', 'vms');
+			$detail .= ' / ' . __('Disabled in config', 'backstage-venue-manager');
 		}
 
 		echo '<li><strong>' . esc_html($title) . '</strong><div class="vms-ticket-integrity__issue-detail">' . esc_html($detail) . '</div></li>';
@@ -1377,7 +1393,7 @@ function vms_ticket_integrity_render_ticket_mapping_list(array $tickets): void
 	echo '</ul>';
 }
 
-function vms_ticket_integrity_render_product_diagnostic_list(array $products, string $empty_message): void
+function bvmgr_ticket_integrity_render_product_diagnostic_list(array $products, string $empty_message): void
 {
 	if (empty($products)) {
 		echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html($empty_message) . '</p>';
@@ -1391,18 +1407,21 @@ function vms_ticket_integrity_render_product_diagnostic_list(array $products, st
 		}
 
 		$product_id = absint($product['product_id'] ?? 0);
-		$title = trim((string) ($product['title'] ?? __('Untitled product', 'vms')));
+		$title = trim((string) ($product['title'] ?? __('Untitled product', 'backstage-venue-manager')));
 		$status = trim((string) ($product['post_status'] ?? ''));
 		$sku = trim((string) ($product['sku'] ?? ''));
-		$parts = array(sprintf(__('Product #%d', 'vms'), $product_id));
-		if ($status !== '') {
-			$parts[] = sprintf(__('Status: %s', 'vms'), $status);
-		}
-		if ($sku !== '') {
-			$parts[] = sprintf(__('SKU: %s', 'vms'), $sku);
-		}
+			/* translators: %d: WooCommerce product ID. */
+			$parts = array(sprintf(__('Product #%d', 'backstage-venue-manager'), $product_id));
+			if ($status !== '') {
+				/* translators: %s: WordPress post status for the product. */
+				$parts[] = sprintf(__('Status: %s', 'backstage-venue-manager'), $status);
+			}
+			if ($sku !== '') {
+				/* translators: %s: WooCommerce product SKU. */
+				$parts[] = sprintf(__('SKU: %s', 'backstage-venue-manager'), $sku);
+			}
 		if (!empty($product['is_mapped'])) {
-			$parts[] = __('Currently mapped', 'vms');
+			$parts[] = __('Currently mapped', 'backstage-venue-manager');
 		}
 
 		echo '<li><strong>' . esc_html($title) . '</strong><div class="vms-ticket-integrity__issue-detail">' . esc_html(implode(' / ', $parts)) . '</div></li>';
@@ -1410,7 +1429,7 @@ function vms_ticket_integrity_render_product_diagnostic_list(array $products, st
 	echo '</ul>';
 }
 
-function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
+function bvmgr_ticket_integrity_render_mutation_diagnostics(array $event): void
 {
 	$diagnostics = is_array($event['mutation_diagnostics'] ?? null) ? $event['mutation_diagnostics'] : array();
 	$origin = is_array($diagnostics['origin'] ?? null) ? $diagnostics['origin'] : array();
@@ -1418,8 +1437,8 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 		$classification = sanitize_key((string) ($event['origin_classification'] ?? ''));
 		$origin = array(
 			'classification' => $classification,
-			'label' => function_exists('vms_ticket_mutation_audit_origin_label')
-				? vms_ticket_mutation_audit_origin_label($classification)
+			'label' => function_exists('bvmgr_ticket_mutation_audit_origin_label')
+				? bvmgr_ticket_mutation_audit_origin_label($classification)
 				: ucwords(str_replace('_', ' ', $classification)),
 			'reasons' => array_values(array_filter(array_map('strval', (array) ($event['origin_reasons'] ?? array())))),
 		);
@@ -1435,51 +1454,51 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 	$recommended_action = trim((string) ($diagnostics['recommended_action'] ?? ''));
 	$public_path_healthy = !empty($diagnostics['public_path_healthy']);
 	$latest_result = trim((string) ($latest_mutation['result_label'] ?? ''));
-	$latest_source = vms_ticket_integrity_format_audit_source($latest_mutation);
+	$latest_source = bvmgr_ticket_integrity_format_audit_source($latest_mutation);
 	$last_repair_label = !empty($last_repair)
-		? vms_ticket_integrity_format_repair_result($last_repair)
-		: __('No rebuild attempt logged yet', 'vms');
-	$drift_value = !empty($repeated_drift['flagged']) ? __('Detected', 'vms') : __('Not detected', 'vms');
+		? bvmgr_ticket_integrity_format_repair_result($last_repair)
+		: __('No rebuild attempt logged yet', 'backstage-venue-manager');
+	$drift_value = !empty($repeated_drift['flagged']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager');
 	$origin_reasons = array_values(array_filter(array_map('strval', (array) ($origin['reasons'] ?? array()))));
 
 	echo '<section class="vms-ticket-integrity__diagnostics" data-vms-tour="ticket-integrity.diagnostics">';
-	echo '<h4>' . esc_html__('Mutation Diagnostics', 'vms') . '</h4>';
+	echo '<h4>' . esc_html__('Mutation Diagnostics', 'backstage-venue-manager') . '</h4>';
 	echo '<div class="vms-ticket-integrity__diagnostic-grid">';
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Event origin', 'vms'),
-		trim((string) ($origin['label'] ?? __('Unknown', 'vms')))
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Event origin', 'backstage-venue-manager'),
+		trim((string) ($origin['label'] ?? __('Unknown', 'backstage-venue-manager')))
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Last mapping change', 'vms'),
-		!empty($latest_mutation) ? vms_ticket_integrity_format_datetime(absint($latest_mutation['timestamp_gmt'] ?? 0)) : __('No change log yet', 'vms')
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Last mapping change', 'backstage-venue-manager'),
+		!empty($latest_mutation) ? bvmgr_ticket_integrity_format_datetime(absint($latest_mutation['timestamp_gmt'] ?? 0)) : __('No change log yet', 'backstage-venue-manager')
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Last change source', 'vms'),
-		$latest_source !== '' ? $latest_source : __('No source logged yet', 'vms')
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Last change source', 'backstage-venue-manager'),
+		$latest_source !== '' ? $latest_source : __('No source logged yet', 'backstage-venue-manager')
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Last change result', 'vms'),
-		$latest_result !== '' ? $latest_result : __('No result logged yet', 'vms')
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Last change result', 'backstage-venue-manager'),
+		$latest_result !== '' ? $latest_result : __('No result logged yet', 'backstage-venue-manager')
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Last rebuild', 'vms'),
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Last rebuild', 'backstage-venue-manager'),
 		$last_repair_label
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Repeated drift', 'vms'),
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Repeated drift', 'backstage-venue-manager'),
 		$drift_value,
 		!empty($repeated_drift['flagged']) ? 'warning' : 'good'
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Public ticket path', 'vms'),
-		$public_path_healthy ? __('Healthy', 'vms') : __('Needs review', 'vms'),
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Public ticket path', 'backstage-venue-manager'),
+		$public_path_healthy ? __('Healthy', 'backstage-venue-manager') : __('Needs review', 'backstage-venue-manager'),
 		$public_path_healthy ? 'good' : 'warning'
 	);
 	echo '</div>';
 
 	if (!empty($origin_reasons)) {
-		vms_ticket_integrity_render_subdetails(
-			__('Why this origin was chosen', 'vms'),
+		bvmgr_ticket_integrity_render_subdetails(
+			__('Why this origin was chosen', 'backstage-venue-manager'),
 			static function () use ($origin_reasons): void {
 				echo '<ul class="vms-ticket-integrity__mutation-list">';
 				foreach ($origin_reasons as $reason) {
@@ -1487,40 +1506,41 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 				}
 				echo '</ul>';
 			},
-			array(
-				'summary_meta' => sprintf(_n('%d reason', '%d reasons', count($origin_reasons), 'vms'), count($origin_reasons)),
-			)
-		);
+				array(
+					/* translators: %d: number of reasons explaining the selected ticket origin. */
+					'summary_meta' => sprintf(_n('%d reason', '%d reasons', count($origin_reasons), 'backstage-venue-manager'), count($origin_reasons)),
+				)
+			);
 	}
 
 	if (!empty($repeated_drift['flagged']) && !empty($repeated_drift['message'])) {
 		echo '<p class="vms-ticket-integrity__diagnostic-note vms-ticket-integrity__diagnostic-note--warning">' . esc_html((string) ($repeated_drift['message'])) . '</p>';
 	}
 
-	vms_ticket_integrity_render_subdetails(
-		__('Mapping snapshot', 'vms'),
+	bvmgr_ticket_integrity_render_subdetails(
+		__('Mapping snapshot', 'backstage-venue-manager'),
 		static function () use ($active_mapped_tickets, $legacy_leftovers, $untracked_products): void {
 			echo '<div class="vms-ticket-integrity__diagnostic-columns">';
 			echo '<div class="vms-ticket-integrity__diagnostic-section">';
-			echo '<h5>' . esc_html__('Current mapped tickets', 'vms') . '</h5>';
-			vms_ticket_integrity_render_ticket_mapping_list($active_mapped_tickets);
+			echo '<h5>' . esc_html__('Current mapped tickets', 'backstage-venue-manager') . '</h5>';
+			bvmgr_ticket_integrity_render_ticket_mapping_list($active_mapped_tickets);
 			echo '</div>';
 
 			echo '<div class="vms-ticket-integrity__diagnostic-section">';
-			echo '<h5>' . esc_html__('Legacy leftovers', 'vms') . '</h5>';
-			vms_ticket_integrity_render_product_diagnostic_list($legacy_leftovers, __('No legacy leftovers are currently attached.', 'vms'));
+			echo '<h5>' . esc_html__('Legacy leftovers', 'backstage-venue-manager') . '</h5>';
+			bvmgr_ticket_integrity_render_product_diagnostic_list($legacy_leftovers, __('No legacy leftovers are currently attached.', 'backstage-venue-manager'));
 			echo '</div>';
 
 			echo '<div class="vms-ticket-integrity__diagnostic-section">';
-			echo '<h5>' . esc_html__('Untracked attached products', 'vms') . '</h5>';
-			vms_ticket_integrity_render_product_diagnostic_list($untracked_products, __('No extra attached products are currently outside the active map.', 'vms'));
+			echo '<h5>' . esc_html__('Untracked attached products', 'backstage-venue-manager') . '</h5>';
+			bvmgr_ticket_integrity_render_product_diagnostic_list($untracked_products, __('No extra attached products are currently outside the active map.', 'backstage-venue-manager'));
 			echo '</div>';
 			echo '</div>';
 		},
 		array(
 			'summary_meta' => sprintf(
 				/* translators: 1: mapped tickets, 2: legacy leftovers, 3: untracked products */
-				__('Mapped %1$d / Legacy %2$d / Extra %3$d', 'vms'),
+				__('Mapped %1$d / Legacy %2$d / Extra %3$d', 'backstage-venue-manager'),
 				count($active_mapped_tickets),
 				count($legacy_leftovers),
 				count($untracked_products)
@@ -1532,11 +1552,11 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 		echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html($recommended_action) . '</p>';
 	}
 
-	vms_ticket_integrity_render_subdetails(
-		__('Recent mutation history', 'vms'),
+	bvmgr_ticket_integrity_render_subdetails(
+		__('Recent mutation history', 'backstage-venue-manager'),
 		static function () use ($recent_mutations): void {
 			if (empty($recent_mutations)) {
-				echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No mutation history has been recorded for this event yet.', 'vms') . '</p>';
+				echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No mutation history has been recorded for this event yet.', 'backstage-venue-manager') . '</p>';
 				return;
 			}
 
@@ -1546,22 +1566,22 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 					continue;
 				}
 
-				$headline = trim((string) ($mutation['change_type_label'] ?? __('Ticket mutation', 'vms')));
+				$headline = trim((string) ($mutation['change_type_label'] ?? __('Ticket mutation', 'backstage-venue-manager')));
 				$result_label = trim((string) ($mutation['result_label'] ?? ''));
 				if ($result_label !== '') {
 					$headline .= ' / ' . $result_label;
 				}
-				$time_text = vms_ticket_integrity_format_datetime(absint($mutation['timestamp_gmt'] ?? 0));
-				$source_text = vms_ticket_integrity_format_audit_source($mutation);
+				$time_text = bvmgr_ticket_integrity_format_datetime(absint($mutation['timestamp_gmt'] ?? 0));
+				$source_text = bvmgr_ticket_integrity_format_audit_source($mutation);
 				$summary_text = trim((string) ($mutation['summary_text'] ?? ''));
 				$details = is_array($mutation['details'] ?? null) ? $mutation['details'] : array();
 				$derivation_text = trim((string) ($mutation['derivation_source_label'] ?? $mutation['derivation_source'] ?? ''));
 				$writer_branch_text = trim((string) ($details['writer_branch'] ?? $mutation['writer_branch'] ?? ''));
 				$result_health = sanitize_key((string) ($mutation['result_health'] ?? ''));
-				$result_health_text = $result_health !== '' && function_exists('vms_ticketing_v2_inventory_result_health_label')
-					? (string) vms_ticketing_v2_inventory_result_health_label($result_health)
+				$result_health_text = $result_health !== '' && function_exists('bvmgr_ticketing_v2_inventory_result_health_label')
+					? (string) bvmgr_ticketing_v2_inventory_result_health_label($result_health)
 					: '';
-				$stock_transition = vms_ticket_integrity_report_text_value($details['old_stock_qty'] ?? null) . ' -> ' . vms_ticket_integrity_report_text_value($details['new_stock_qty'] ?? null);
+				$stock_transition = bvmgr_ticket_integrity_report_text_value($details['old_stock_qty'] ?? null) . ' -> ' . bvmgr_ticket_integrity_report_text_value($details['new_stock_qty'] ?? null);
 				$status_transition = trim((string) ($details['old_stock_status'] ?? '—')) . ' -> ' . trim((string) ($details['new_stock_status'] ?? '—'));
 				$manage_transition = trim((string) ($details['old_manage_stock'] ?? '—')) . ' -> ' . trim((string) ($details['new_manage_stock'] ?? '—'));
 
@@ -1575,17 +1595,17 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 					echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html(
 						sprintf(
 							/* translators: 1: derivation text, 2: writer branch, 3: result health */
-							__('Derivation: %1$s / Writer branch: %2$s / Result health: %3$s', 'vms'),
-							$derivation_text !== '' ? $derivation_text : __('Unknown', 'vms'),
-							$writer_branch_text !== '' ? $writer_branch_text : __('Not recorded', 'vms'),
-							$result_health_text !== '' ? $result_health_text : __('Not recorded', 'vms')
+							__('Derivation: %1$s / Writer branch: %2$s / Result health: %3$s', 'backstage-venue-manager'),
+							$derivation_text !== '' ? $derivation_text : __('Unknown', 'backstage-venue-manager'),
+							$writer_branch_text !== '' ? $writer_branch_text : __('Not recorded', 'backstage-venue-manager'),
+							$result_health_text !== '' ? $result_health_text : __('Not recorded', 'backstage-venue-manager')
 						)
 					) . '</div>';
 				}
 				echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html(
 					sprintf(
 						/* translators: 1: stock qty transition, 2: stock status transition, 3: manage stock transition */
-						__('Stock qty: %1$s / Stock status: %2$s / Manage stock: %3$s', 'vms'),
+						__('Stock qty: %1$s / Stock status: %2$s / Manage stock: %3$s', 'backstage-venue-manager'),
 						$stock_transition,
 						$status_transition,
 						$manage_transition
@@ -1598,14 +1618,15 @@ function vms_ticket_integrity_render_mutation_diagnostics(array $event): void
 			}
 			echo '</ul>';
 		},
-		array(
-			'summary_meta' => sprintf(_n('%d entry', '%d entries', count($recent_mutations), 'vms'), count($recent_mutations))
-		)
-	);
+			array(
+				/* translators: %d: number of recent mutation log entries. */
+				'summary_meta' => sprintf(_n('%d entry', '%d entries', count($recent_mutations), 'backstage-venue-manager'), count($recent_mutations))
+			)
+		);
 	echo '</section>';
 }
 
-function vms_ticket_integrity_render_compact_table_facts(array $facts): string
+function bvmgr_ticket_integrity_render_compact_table_facts(array $facts): string
 {
 	$lines = array();
 	foreach ($facts as $label => $value) {
@@ -1631,10 +1652,10 @@ function vms_ticket_integrity_render_compact_table_facts(array $facts): string
 	return '<div class="vms-ticket-integrity__stacked-cell">' . implode('', $lines) . '</div>';
 }
 
-function vms_ticket_integrity_render_inventory_value($value): string
+function bvmgr_ticket_integrity_render_inventory_value($value): string
 {
-	if (function_exists('vms_ticket_inventory_forensics_display_quantity')) {
-		return (string) vms_ticket_inventory_forensics_display_quantity($value);
+	if (function_exists('bvmgr_ticket_inventory_forensics_display_quantity')) {
+		return (string) bvmgr_ticket_inventory_forensics_display_quantity($value);
 	}
 
 	if ($value === '' || $value === null) {
@@ -1644,7 +1665,7 @@ function vms_ticket_integrity_render_inventory_value($value): string
 	return is_scalar($value) ? (string) $value : '—';
 }
 
-function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
+function bvmgr_ticket_integrity_render_inventory_diagnostics(array $event): void
 {
 	$diagnostics = is_array($event['inventory_diagnostics'] ?? null) ? $event['inventory_diagnostics'] : array();
 	if (empty($diagnostics)) {
@@ -1660,54 +1681,54 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 	$repeated_drift = is_array($diagnostics['repeated_inventory_drift'] ?? null) ? $diagnostics['repeated_inventory_drift'] : array();
 	$recorruption = is_array($diagnostics['woo_recorruption'] ?? null) ? $diagnostics['woo_recorruption'] : array();
 	$writer_suspect = is_array($diagnostics['upstream_writer_suspect'] ?? null) ? $diagnostics['upstream_writer_suspect'] : array();
-	$latest_source = vms_ticket_integrity_format_audit_source($latest_mutation);
+	$latest_source = bvmgr_ticket_integrity_format_audit_source($latest_mutation);
 
 	echo '<section class="vms-ticket-integrity__diagnostics vms-ticket-integrity__diagnostics--inventory" data-vms-tour="ticket-integrity.inventory">';
-	echo '<h4>' . esc_html__('Inventory Forensics', 'vms') . '</h4>';
+	echo '<h4>' . esc_html__('Inventory Forensics', 'backstage-venue-manager') . '</h4>';
 	echo '<div class="vms-ticket-integrity__diagnostic-grid">';
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Event Capacity', 'vms'),
-		vms_ticket_integrity_render_inventory_value($diagnostics['event_capacity'] ?? null)
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Event Capacity', 'backstage-venue-manager'),
+		bvmgr_ticket_integrity_render_inventory_value($diagnostics['event_capacity'] ?? null)
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Sold Count', 'vms'),
-		vms_ticket_integrity_render_inventory_value($diagnostics['event_sold'] ?? null)
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Sold Count', 'backstage-venue-manager'),
+		bvmgr_ticket_integrity_render_inventory_value($diagnostics['event_sold'] ?? null)
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Available (TEC)', 'vms'),
-		vms_ticket_integrity_render_inventory_value($diagnostics['event_available'] ?? null)
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Available (TEC)', 'backstage-venue-manager'),
+		bvmgr_ticket_integrity_render_inventory_value($diagnostics['event_available'] ?? null)
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Zero-Available Mismatch', 'vms'),
-		!empty($diagnostics['zero_available_mismatch']) ? __('Detected', 'vms') : __('Not detected', 'vms'),
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Zero-Available Mismatch', 'backstage-venue-manager'),
+		!empty($diagnostics['zero_available_mismatch']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager'),
 		!empty($diagnostics['zero_available_mismatch']) ? 'warning' : 'good'
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Likely Pattern', 'vms'),
-		trim((string) ($diagnostics['suspected_cause_label'] ?? __('Healthy / not flagged', 'vms')))
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Likely Pattern', 'backstage-venue-manager'),
+		trim((string) ($diagnostics['suspected_cause_label'] ?? __('Healthy / not flagged', 'backstage-venue-manager')))
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Woo Primary Mismatch', 'vms'),
-		!empty($diagnostics['woo_primary_mismatch']) ? __('Detected', 'vms') : __('Not detected', 'vms'),
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Woo Primary Mismatch', 'backstage-venue-manager'),
+		!empty($diagnostics['woo_primary_mismatch']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager'),
 		!empty($diagnostics['woo_primary_mismatch']) ? 'warning' : 'good'
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('TEC Follow-up', 'vms'),
-		!empty($diagnostics['tec_followup_required']) ? __('Required', 'vms') : __('Not required', 'vms'),
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('TEC Follow-up', 'backstage-venue-manager'),
+		!empty($diagnostics['tec_followup_required']) ? __('Required', 'backstage-venue-manager') : __('Not required', 'backstage-venue-manager'),
 		!empty($diagnostics['tec_followup_required']) ? 'warning' : 'good'
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Woo Re-Corruption', 'vms'),
-		!empty($diagnostics['woo_recorruption_detected']) ? __('Detected', 'vms') : __('Not detected', 'vms'),
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Woo Re-Corruption', 'backstage-venue-manager'),
+		!empty($diagnostics['woo_recorruption_detected']) ? __('Detected', 'backstage-venue-manager') : __('Not detected', 'backstage-venue-manager'),
 		!empty($diagnostics['woo_recorruption_detected']) ? 'warning' : 'good'
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Last Inventory Change', 'vms'),
-		!empty($latest_mutation) ? vms_ticket_integrity_format_datetime(absint($latest_mutation['timestamp_gmt'] ?? 0)) : __('No change log yet', 'vms')
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Last Inventory Change', 'backstage-venue-manager'),
+		!empty($latest_mutation) ? bvmgr_ticket_integrity_format_datetime(absint($latest_mutation['timestamp_gmt'] ?? 0)) : __('No change log yet', 'backstage-venue-manager')
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Last Change Source', 'vms'),
-		$latest_source !== '' ? $latest_source : __('No source logged yet', 'vms')
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Last Change Source', 'backstage-venue-manager'),
+		$latest_source !== '' ? $latest_source : __('No source logged yet', 'backstage-venue-manager')
 	);
 	echo '</div>';
 
@@ -1727,20 +1748,22 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 		$source_text = trim((string) ($writer_suspect['source_function'] ?? $writer_suspect['source_hook'] ?? ''));
 		$reason_text = trim((string) ($writer_suspect['reason_text'] ?? ''));
 		$parts = array();
-		if ($source_text !== '') {
-			$parts[] = sprintf(__('Likely upstream writer: %s', 'vms'), $source_text);
-		}
-		if ($reason_text !== '') {
-			$parts[] = sprintf(__('Last conflicting reason: %s', 'vms'), $reason_text);
-		}
+			if ($source_text !== '') {
+				/* translators: %s: function or hook name suspected of rewriting ticket inventory. */
+				$parts[] = sprintf(__('Likely upstream writer: %s', 'backstage-venue-manager'), $source_text);
+			}
+			if ($reason_text !== '') {
+				/* translators: %s: most recent reason recorded for the conflicting ticket inventory write. */
+				$parts[] = sprintf(__('Last conflicting reason: %s', 'backstage-venue-manager'), $reason_text);
+			}
 		if (!empty($parts)) {
 			echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html(implode(' / ', $parts)) . '</p>';
 		}
 	}
 
 	if (!empty($cause_reasons)) {
-		vms_ticket_integrity_render_subdetails(
-			__('Why This Was Flagged', 'vms'),
+		bvmgr_ticket_integrity_render_subdetails(
+			__('Why This Was Flagged', 'backstage-venue-manager'),
 			static function () use ($cause_reasons): void {
 				echo '<ul class="vms-ticket-integrity__mutation-list">';
 				foreach ($cause_reasons as $reason) {
@@ -1748,10 +1771,11 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 				}
 				echo '</ul>';
 			},
-			array(
-				'summary_meta' => sprintf(_n('%d reason', '%d reasons', count($cause_reasons), 'vms'), count($cause_reasons)),
-			)
-		);
+				array(
+					/* translators: %d: number of reasons why the ticket integrity issue was flagged. */
+					'summary_meta' => sprintf(_n('%d reason', '%d reasons', count($cause_reasons), 'backstage-venue-manager'), count($cause_reasons)),
+				)
+			);
 	}
 
 	$recommended_action = trim((string) ($diagnostics['recommended_action'] ?? ''));
@@ -1759,28 +1783,28 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 		echo '<p class="vms-ticket-integrity__diagnostic-note vms-ticket-integrity__diagnostic-note--warning">' . esc_html($recommended_action) . '</p>';
 	}
 
-	vms_ticket_integrity_render_subdetails(
-		__('Per-Ticket Snapshot', 'vms'),
+	bvmgr_ticket_integrity_render_subdetails(
+		__('Per-Ticket Snapshot', 'backstage-venue-manager'),
 		static function () use ($ticket_rows): void {
 			if (empty($ticket_rows)) {
-				echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No inventory-tracked ticket rows were found for this event.', 'vms') . '</p>';
+				echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No inventory-tracked ticket rows were found for this event.', 'backstage-venue-manager') . '</p>';
 				return;
 			}
 
 			echo '<div class="vms-ticket-integrity__inventory-table-wrap">';
 			echo '<table class="widefat striped vms-ticket-integrity__inventory-table">';
 			echo '<thead><tr>';
-			echo '<th>' . esc_html__('Ticket', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Role/Type', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Product ID', 'vms') . '</th>';
-			echo '<th>' . esc_html__('VMS Intended', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Woo State', 'vms') . '</th>';
-			echo '<th>' . esc_html__('TEC State', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Agreement', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Verification', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Woo Inventory', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Sales', 'vms') . '</th>';
-			echo '<th>' . esc_html__('Last Write', 'vms') . '</th>';
+			echo '<th>' . esc_html__('Ticket', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Role/Type', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Product ID', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('VMS Intended', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Woo State', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('TEC State', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Agreement', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Verification', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Woo Inventory', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Sales', 'backstage-venue-manager') . '</th>';
+			echo '<th>' . esc_html__('Last Write', 'backstage-venue-manager') . '</th>';
 			echo '</tr></thead><tbody>';
 			foreach ($ticket_rows as $row) {
 				if (!is_array($row)) {
@@ -1789,66 +1813,67 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 
 				$last_changed = absint($row['last_changed_gmt'] ?? 0);
 				echo '<tr>';
-				echo '<td><strong>' . esc_html((string) ($row['ticket_label'] ?? __('Ticket', 'vms'))) . '</strong></td>';
-				echo '<td>' . esc_html((string) ($row['role_label'] ?? __('Ticket', 'vms'))) . '</td>';
+				echo '<td><strong>' . esc_html((string) ($row['ticket_label'] ?? __('Ticket', 'backstage-venue-manager'))) . '</strong></td>';
+				echo '<td>' . esc_html((string) ($row['role_label'] ?? __('Ticket', 'backstage-venue-manager'))) . '</td>';
 				echo '<td><code>#' . esc_html((string) absint($row['product_id'] ?? 0)) . '</code></td>';
 				echo '<td>' . esc_html((string) ($row['vms_intended_label'] ?? '—')) . '</td>';
 				echo '<td>' . esc_html((string) ($row['woo_sellability_label'] ?? '—')) . '</td>';
 				echo '<td>' . esc_html((string) ($row['tec_sellability_label'] ?? '—')) . '</td>';
 				echo '<td>' . esc_html((string) ($row['agreement_label'] ?? '—')) . '</td>';
 				echo '<td>' . esc_html((string) ($row['verification_result_label'] ?? '—')) . '</td>';
-				$woo_inventory_html = vms_ticket_integrity_render_compact_table_facts(
+				$woo_inventory_html = bvmgr_ticket_integrity_render_compact_table_facts(
 					array(
-						__('Stock Qty', 'vms')      => vms_ticket_integrity_render_inventory_value($row['stock_qty'] ?? null),
-						__('Manage Stock', 'vms')   => (string) ($row['manage_stock_label'] ?? '—'),
-						__('Stock Status', 'vms')   => (string) ($row['stock_status'] ?? '—'),
+						__('Stock Qty', 'backstage-venue-manager')      => bvmgr_ticket_integrity_render_inventory_value($row['stock_qty'] ?? null),
+						__('Manage Stock', 'backstage-venue-manager')   => (string) ($row['manage_stock_label'] ?? '—'),
+						__('Stock Status', 'backstage-venue-manager')   => (string) ($row['stock_status'] ?? '—'),
 					)
 				);
-				$sales_html = vms_ticket_integrity_render_compact_table_facts(
+				$sales_html = bvmgr_ticket_integrity_render_compact_table_facts(
 					array(
-						__('Sold', 'vms')            => vms_ticket_integrity_render_inventory_value($row['sold_qty'] ?? null),
-						__('Sold Source', 'vms')     => (string) ($row['sold_source_label'] ?? '—'),
-						__('Woo total_sales', 'vms') => vms_ticket_integrity_render_inventory_value($row['woo_total_sales'] ?? null),
+						__('Sold', 'backstage-venue-manager')            => bvmgr_ticket_integrity_render_inventory_value($row['sold_qty'] ?? null),
+						__('Sold Source', 'backstage-venue-manager')     => (string) ($row['sold_source_label'] ?? '—'),
+						__('Woo total_sales', 'backstage-venue-manager') => bvmgr_ticket_integrity_render_inventory_value($row['woo_total_sales'] ?? null),
 					)
 				);
-				$last_write_html = vms_ticket_integrity_render_compact_table_facts(
+				$last_write_html = bvmgr_ticket_integrity_render_compact_table_facts(
 					array(
-						__('Last Changed', 'vms')          => $last_changed > 0 ? vms_ticket_integrity_format_datetime($last_changed) : __('No log yet', 'vms'),
-						__('Last Woo Write Source', 'vms') => (string) ($row['last_change_source'] ?? '—'),
-						__('Last Write Reason', 'vms')     => (string) ($row['last_write_reason'] ?? '—'),
+						__('Last Changed', 'backstage-venue-manager')          => $last_changed > 0 ? bvmgr_ticket_integrity_format_datetime($last_changed) : __('No log yet', 'backstage-venue-manager'),
+						__('Last Woo Write Source', 'backstage-venue-manager') => (string) ($row['last_change_source'] ?? '—'),
+						__('Last Write Reason', 'backstage-venue-manager')     => (string) ($row['last_write_reason'] ?? '—'),
 					)
 				);
-				echo '<td>' . $woo_inventory_html . '</td>';
-				echo '<td>' . $sales_html . '</td>';
-				echo '<td>' . $last_write_html . '</td>';
+				echo '<td>' . wp_kses_post($woo_inventory_html) . '</td>';
+				echo '<td>' . wp_kses_post($sales_html) . '</td>';
+				echo '<td>' . wp_kses_post($last_write_html) . '</td>';
 				echo '</tr>';
 			}
 			echo '</tbody></table>';
 			echo '</div>';
 		},
-		array(
-			'summary_meta' => sprintf(_n('%d row', '%d rows', count($ticket_rows), 'vms'), count($ticket_rows))
-		)
-	);
+			array(
+				/* translators: %d: number of ticket inventory rows in the per-ticket snapshot. */
+				'summary_meta' => sprintf(_n('%d row', '%d rows', count($ticket_rows), 'backstage-venue-manager'), count($ticket_rows))
+			)
+		);
 
 	if (!empty($comparison)) {
 		$comparison_rows = array_values((array) ($comparison['rows'] ?? array()));
-		vms_ticket_integrity_render_subdetails(
-			__('Healthy vs Broken Comparison', 'vms'),
+		bvmgr_ticket_integrity_render_subdetails(
+			__('Healthy vs Broken Comparison', 'backstage-venue-manager'),
 			static function () use ($comparison, $comparison_rows): void {
 				if (!empty($comparison['healthy_plan_id'])) {
 					$comparison_note = sprintf(
 						/* translators: 1: event title, 2: plan id, 3: origin label */
-						__('Healthy baseline: %1$s (Plan #%2$d, %3$s).', 'vms'),
-						(string) ($comparison['healthy_event_title'] ?? __('Healthy event', 'vms')),
+						__('Healthy baseline: %1$s (Plan #%2$d, %3$s).', 'backstage-venue-manager'),
+						(string) ($comparison['healthy_event_title'] ?? __('Healthy event', 'backstage-venue-manager')),
 						absint($comparison['healthy_plan_id'] ?? 0),
-						(string) ($comparison['healthy_origin_label'] ?? __('VMS-native', 'vms'))
+						(string) ($comparison['healthy_origin_label'] ?? __('VMS-native', 'backstage-venue-manager'))
 					);
 					echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html($comparison_note) . '</p>';
 				}
 
 				if (empty($comparison_rows)) {
-					echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No matched ticket rows produced a field-level difference against the healthy baseline yet.', 'vms') . '</p>';
+					echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No matched ticket rows produced a field-level difference against the healthy baseline yet.', 'backstage-venue-manager') . '</p>';
 					return;
 				}
 
@@ -1859,7 +1884,7 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 					}
 
 					echo '<li>';
-					echo '<strong>' . esc_html((string) ($comparison_row['label'] ?? __('Ticket', 'vms'))) . '</strong>';
+					echo '<strong>' . esc_html((string) ($comparison_row['label'] ?? __('Ticket', 'backstage-venue-manager'))) . '</strong>';
 					foreach ((array) ($comparison_row['differences'] ?? array()) as $difference) {
 						if (!is_array($difference)) {
 							continue;
@@ -1867,8 +1892,8 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 
 						$line = sprintf(
 							/* translators: 1: field label, 2: broken value, 3: healthy value */
-							__('%1$s: broken %2$s / healthy %3$s', 'vms'),
-							(string) ($difference['label'] ?? __('Field', 'vms')),
+							__('%1$s: broken %2$s / healthy %3$s', 'backstage-venue-manager'),
+							(string) ($difference['label'] ?? __('Field', 'backstage-venue-manager')),
 							(string) ($difference['broken'] ?? '—'),
 							(string) ($difference['healthy'] ?? '—')
 						);
@@ -1879,16 +1904,17 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 				echo '</ul>';
 			},
 			array(
-				'summary_meta' => sprintf(_n('%d row', '%d rows', count($comparison_rows), 'vms'), count($comparison_rows))
+				/* translators: %d: number of comparison rows against the healthy ticket baseline. */
+				'summary_meta' => sprintf(_n('%d row', '%d rows', count($comparison_rows), 'backstage-venue-manager'), count($comparison_rows))
 			)
 		);
 	}
 
-	vms_ticket_integrity_render_subdetails(
-		__('Recent Inventory Mutations', 'vms'),
+	bvmgr_ticket_integrity_render_subdetails(
+		__('Recent Inventory Mutations', 'backstage-venue-manager'),
 		static function () use ($recent_mutations): void {
 			if (empty($recent_mutations)) {
-				echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No inventory mutation history has been recorded for this event yet.', 'vms') . '</p>';
+				echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No inventory mutation history has been recorded for this event yet.', 'backstage-venue-manager') . '</p>';
 				return;
 			}
 
@@ -1898,14 +1924,15 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 					continue;
 				}
 
-				$headline = trim((string) ($mutation['change_type_label'] ?? __('Inventory mutation', 'vms')));
+				$headline = trim((string) ($mutation['change_type_label'] ?? __('Inventory mutation', 'backstage-venue-manager')));
 				$product_id = absint($mutation['product_id'] ?? 0);
-				if ($product_id > 0) {
-					$headline .= ' / ' . sprintf(__('Product #%d', 'vms'), $product_id);
-				}
+					if ($product_id > 0) {
+						/* translators: %d: WooCommerce product ID tied to the inventory mutation. */
+						$headline .= ' / ' . sprintf(__('Product #%d', 'backstage-venue-manager'), $product_id);
+					}
 
-				$time_text = vms_ticket_integrity_format_datetime(absint($mutation['timestamp_gmt'] ?? 0));
-				$source_text = vms_ticket_integrity_format_audit_source($mutation);
+				$time_text = bvmgr_ticket_integrity_format_datetime(absint($mutation['timestamp_gmt'] ?? 0));
+				$source_text = bvmgr_ticket_integrity_format_audit_source($mutation);
 				$summary_text = trim((string) ($mutation['summary_text'] ?? ''));
 
 				echo '<li>';
@@ -1921,14 +1948,15 @@ function vms_ticket_integrity_render_inventory_diagnostics(array $event): void
 			}
 			echo '</ul>';
 		},
-		array(
-			'summary_meta' => sprintf(_n('%d entry', '%d entries', count($recent_mutations), 'vms'), count($recent_mutations))
-		)
-	);
+			array(
+				/* translators: %d: number of recent inventory mutation log entries. */
+				'summary_meta' => sprintf(_n('%d entry', '%d entries', count($recent_mutations), 'backstage-venue-manager'), count($recent_mutations))
+			)
+		);
 	echo '</section>';
 }
 
-function vms_ticket_integrity_render_repair_diagnostics(array $event): void
+function bvmgr_ticket_integrity_render_repair_diagnostics(array $event): void
 {
 	$report = is_array($event['repair_diagnostics'] ?? null) ? $event['repair_diagnostics'] : array();
 	if (empty($report)) {
@@ -1939,31 +1967,31 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 	$detail_state = trim((string) ($report['detail_state_label'] ?? ''));
 
 	echo '<section class="vms-ticket-integrity__diagnostics" data-vms-tour="ticket-integrity.repair-diagnostics">';
-	echo '<h4>' . esc_html__('Repair Diagnostics', 'vms') . '</h4>';
+	echo '<h4>' . esc_html__('Repair Diagnostics', 'backstage-venue-manager') . '</h4>';
 	echo '<div class="vms-ticket-integrity__diagnostic-grid">';
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Last Rebuild Result', 'vms'),
-		trim((string) ($report['repair_status_label'] ?? __('Unknown', 'vms')))
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Last Rebuild Result', 'backstage-venue-manager'),
+		trim((string) ($report['repair_status_label'] ?? __('Unknown', 'backstage-venue-manager')))
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Saved', 'vms'),
-		!empty($report['saved_at_gmt']) ? vms_ticket_integrity_format_datetime(absint($report['saved_at_gmt'])) : __('No timestamp', 'vms')
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Saved', 'backstage-venue-manager'),
+		!empty($report['saved_at_gmt']) ? bvmgr_ticket_integrity_format_datetime(absint($report['saved_at_gmt'])) : __('No timestamp', 'backstage-venue-manager')
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Preview Change Count', 'vms'),
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Preview Change Count', 'backstage-venue-manager'),
 		(string) absint($report['preview_change_count'] ?? 0)
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Remaining Issue Summary', 'vms'),
-		trim((string) ($report['remaining_issue_summary'] ?? __('No summary stored', 'vms')))
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Remaining Issue Summary', 'backstage-venue-manager'),
+		trim((string) ($report['remaining_issue_summary'] ?? __('No summary stored', 'backstage-venue-manager')))
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('Woo Verification', 'vms'),
-		trim((string) ($report['woo_verification_label'] ?? __('Not stored', 'vms')))
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('Woo Verification', 'backstage-venue-manager'),
+		trim((string) ($report['woo_verification_label'] ?? __('Not stored', 'backstage-venue-manager')))
 	);
-	vms_ticket_integrity_render_diagnostic_meta(
-		__('TEC Verification', 'vms'),
-		trim((string) ($report['tec_verification_label'] ?? __('Not stored', 'vms')))
+	bvmgr_ticket_integrity_render_diagnostic_meta(
+		__('TEC Verification', 'backstage-venue-manager'),
+		trim((string) ($report['tec_verification_label'] ?? __('Not stored', 'backstage-venue-manager')))
 	);
 	echo '</div>';
 
@@ -1977,7 +2005,7 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 	}
 
 	if (!empty($report['woo_recorruption_detected'])) {
-		echo '<p class="vms-ticket-integrity__diagnostic-note vms-ticket-integrity__diagnostic-note--warning">' . esc_html__('Woo was repaired successfully at rebuild time, but a later write has since re-closed inventory.', 'vms') . '</p>';
+		echo '<p class="vms-ticket-integrity__diagnostic-note vms-ticket-integrity__diagnostic-note--warning">' . esc_html__('Woo was repaired successfully at rebuild time, but a later write has since re-closed inventory.', 'backstage-venue-manager') . '</p>';
 	}
 
 	$repair_writer = is_array($report['upstream_writer_suspect'] ?? null) ? $report['upstream_writer_suspect'] : array();
@@ -1985,12 +2013,14 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 		$source_text = trim((string) ($repair_writer['source_function'] ?? $repair_writer['source_hook'] ?? ''));
 		$reason_text = trim((string) ($repair_writer['reason_text'] ?? ''));
 		$parts = array();
-		if ($source_text !== '') {
-			$parts[] = sprintf(__('Likely upstream writer: %s', 'vms'), $source_text);
-		}
-		if ($reason_text !== '') {
-			$parts[] = sprintf(__('Last conflicting reason: %s', 'vms'), $reason_text);
-		}
+			if ($source_text !== '') {
+				/* translators: %s: function or hook name suspected of re-closing repaired inventory. */
+				$parts[] = sprintf(__('Likely upstream writer: %s', 'backstage-venue-manager'), $source_text);
+			}
+			if ($reason_text !== '') {
+				/* translators: %s: most recent reason recorded for the conflicting post-repair write. */
+				$parts[] = sprintf(__('Last conflicting reason: %s', 'backstage-venue-manager'), $reason_text);
+			}
 		if (!empty($parts)) {
 			echo '<p class="vms-ticket-integrity__diagnostic-note">' . esc_html(implode(' / ', $parts)) . '</p>';
 		}
@@ -2003,13 +2033,13 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 		}
 
 		$entries = array_values((array) ($role_group['entries'] ?? array()));
-		vms_ticket_integrity_render_subdetails(
+		bvmgr_ticket_integrity_render_subdetails(
 			(string) ($role_group['label'] ?? $role_key),
 			static function () use ($role_group, $entries): void {
 				echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html(
 					sprintf(
 						/* translators: 1: attempted, 2: succeeded, 3: skipped, 4: no effect, 5: partial, 6: failed */
-						__('Attempted %1$d / Succeeded %2$d / Skipped %3$d / No effect %4$d / Partial %5$d / Failed %6$d', 'vms'),
+						__('Attempted %1$d / Succeeded %2$d / Skipped %3$d / No effect %4$d / Partial %5$d / Failed %6$d', 'backstage-venue-manager'),
 						absint($role_group['attempted'] ?? 0),
 						absint($role_group['succeeded'] ?? 0),
 						absint($role_group['skipped'] ?? 0),
@@ -2021,7 +2051,7 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 				echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html(
 					sprintf(
 						/* translators: 1: entered count, 2: not entered count, 3: blocked count */
-						__('Branch entered %1$d / Branch not entered %2$d / Branch blocked %3$d', 'vms'),
+						__('Branch entered %1$d / Branch not entered %2$d / Branch blocked %3$d', 'backstage-venue-manager'),
 						absint($role_group['branch_entered'] ?? 0),
 						absint($role_group['branch_not_entered'] ?? 0),
 						absint($role_group['branch_blocked'] ?? 0)
@@ -2029,7 +2059,7 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 				) . '</div>';
 
 				if (empty($entries)) {
-					echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No entries recorded for this role in the last rebuild.', 'vms') . '</p>';
+					echo '<p class="vms-ticket-integrity__diagnostic-empty">' . esc_html__('No entries recorded for this role in the last rebuild.', 'backstage-venue-manager') . '</p>';
 					return;
 				}
 
@@ -2040,14 +2070,14 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 					}
 
 					echo '<li>';
-					echo '<strong>' . esc_html((string) ($entry['label'] ?? __('Role entry', 'vms'))) . '</strong>';
+					echo '<strong>' . esc_html((string) ($entry['label'] ?? __('Role entry', 'backstage-venue-manager'))) . '</strong>';
 					echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html(
 						sprintf(
 							/* translators: 1: action, 2: branch label, 3: result label, 4: product id */
-							__('Action: %1$s / Branch: %2$s / Result: %3$s / Product #%4$d', 'vms'),
+							__('Action: %1$s / Branch: %2$s / Result: %3$s / Product #%4$d', 'backstage-venue-manager'),
 							(string) ($entry['preview_action'] ?? 'noop'),
-							(string) ($entry['branch_status_label'] ?? __('Branch not entered', 'vms')),
-							(string) ($entry['result_label'] ?? __('Unknown', 'vms')),
+							(string) ($entry['branch_status_label'] ?? __('Branch not entered', 'backstage-venue-manager')),
+							(string) ($entry['result_label'] ?? __('Unknown', 'backstage-venue-manager')),
 							absint($entry['product_id'] ?? 0)
 						)
 					) . '</div>';
@@ -2056,22 +2086,22 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 						echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html(
 							sprintf(
 								/* translators: 1: skip reason, 2: expected flag, 3: safety flag */
-								__('Skip reason: %1$s / Expected skip: %2$s / Safety-driven: %3$s', 'vms'),
+								__('Skip reason: %1$s / Expected skip: %2$s / Safety-driven: %3$s', 'backstage-venue-manager'),
 								$skip_reason,
-								!empty($entry['skip_expected']) ? __('Yes', 'vms') : __('No', 'vms'),
-								!empty($entry['skip_safety_driven']) ? __('Yes', 'vms') : __('No', 'vms')
+								!empty($entry['skip_expected']) ? __('Yes', 'backstage-venue-manager') : __('No', 'backstage-venue-manager'),
+								!empty($entry['skip_safety_driven']) ? __('Yes', 'backstage-venue-manager') : __('No', 'backstage-venue-manager')
 							)
 						) . '</div>';
 					}
 					echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html(
 						sprintf(
 							/* translators: 1: source value, 2: derivation source, 3: confidence, 4: writer branch, 5: result health */
-							__('Source value: %1$s / Derivation: %2$s / Confidence: %3$s / Writer branch: %4$s / Result health: %5$s', 'vms'),
+							__('Source value: %1$s / Derivation: %2$s / Confidence: %3$s / Writer branch: %4$s / Result health: %5$s', 'backstage-venue-manager'),
 							(string) ($entry['source_value'] ?? '—'),
 							(string) ($entry['derivation_source_label'] ?? $entry['derivation_source'] ?? 'unknown'),
 							(string) ($entry['confidence_label'] ?? $entry['confidence_level'] ?? 'unknown'),
-							(string) ($entry['writer_branch_label'] ?? __('Not recorded', 'vms')),
-							(string) ($entry['result_health_label'] ?? __('Not recorded', 'vms'))
+							(string) ($entry['writer_branch_label'] ?? __('Not recorded', 'backstage-venue-manager')),
+							(string) ($entry['result_health_label'] ?? __('Not recorded', 'backstage-venue-manager'))
 						)
 					) . '</div>';
 					if (
@@ -2082,8 +2112,8 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 						echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html(
 							sprintf(
 								/* translators: 1: stock qty, 2: stock status, 3: manage stock label */
-								__('Final inventory: stock %1$s / status %2$s / manage stock %3$s', 'vms'),
-								vms_ticket_integrity_render_inventory_value($entry['final_stock_qty'] ?? null),
+								__('Final inventory: stock %1$s / status %2$s / manage stock %3$s', 'backstage-venue-manager'),
+								bvmgr_ticket_integrity_render_inventory_value($entry['final_stock_qty'] ?? null),
 								(string) ($entry['final_stock_status'] ?? '—'),
 								(string) ($entry['final_manage_stock_label'] ?? '—')
 							)
@@ -2097,17 +2127,18 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 				}
 				echo '</ul>';
 			},
-			array(
-				'summary_meta' => sprintf(_n('%d entry', '%d entries', count($entries), 'vms'), count($entries)),
-				'class' => 'vms-ticket-integrity__subdetails--role'
-			)
-		);
+				array(
+					/* translators: %d: number of repair log entries recorded for the current ticket role. */
+					'summary_meta' => sprintf(_n('%d entry', '%d entries', count($entries), 'backstage-venue-manager'), count($entries)),
+					'class' => 'vms-ticket-integrity__subdetails--role'
+				)
+			);
 	}
 	echo '</div>';
 
 	if (!empty($warnings)) {
-		vms_ticket_integrity_render_subdetails(
-			__('Repair Warnings', 'vms'),
+		bvmgr_ticket_integrity_render_subdetails(
+			__('Repair Warnings', 'backstage-venue-manager'),
 			static function () use ($warnings): void {
 				echo '<ul class="vms-ticket-integrity__mutation-list">';
 				foreach ($warnings as $warning) {
@@ -2115,33 +2146,34 @@ function vms_ticket_integrity_render_repair_diagnostics(array $event): void
 				}
 				echo '</ul>';
 			},
-			array(
-				'summary_meta' => sprintf(_n('%d warning', '%d warnings', count($warnings), 'vms'), count($warnings)),
-			)
-		);
+				array(
+					/* translators: %d: number of repair warnings shown for the current event. */
+					'summary_meta' => sprintf(_n('%d warning', '%d warnings', count($warnings), 'backstage-venue-manager'), count($warnings)),
+				)
+			);
 	}
 
 	echo '</section>';
 }
 
-function vms_ticket_integrity_render_results_table(array $events, int $focused_plan_id = 0): void
+function bvmgr_ticket_integrity_render_results_table(array $events, int $focused_plan_id = 0): void
 {
 	echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.table">';
-	echo '<h2>' . esc_html__('Results', 'vms') . '</h2>';
+	echo '<h2>' . esc_html__('Results', 'backstage-venue-manager') . '</h2>';
 	echo '<div class="vms-ticket-integrity__results-table-wrap">';
 	echo '<table class="widefat striped vms-ticket-integrity__results-table">';
 	echo '<thead><tr>';
-	echo '<th>' . esc_html__('Status', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Event', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Event Date', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Issue Summary', 'vms') . '</th>';
-	echo '<th>' . esc_html__('First Detected', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Last Detected', 'vms') . '</th>';
-	echo '<th>' . esc_html__('Actions', 'vms') . '</th>';
+	echo '<th>' . esc_html__('Status', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Event', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Event Date', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Issue Summary', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('First Detected', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Last Detected', 'backstage-venue-manager') . '</th>';
+	echo '<th>' . esc_html__('Actions', 'backstage-venue-manager') . '</th>';
 	echo '</tr></thead><tbody>';
 
 	if (empty($events)) {
-		echo '<tr><td colspan="7">' . esc_html__('No scan results are stored yet. Run the monitor to populate this table.', 'vms') . '</td></tr>';
+		echo '<tr><td colspan="7">' . esc_html__('No scan results are stored yet. Run the monitor to populate this table.', 'backstage-venue-manager') . '</td></tr>';
 		echo '</tbody></table>';
 		echo '</div>';
 		echo '</section>';
@@ -2152,45 +2184,45 @@ function vms_ticket_integrity_render_results_table(array $events, int $focused_p
 		$plan_id = absint($event['plan_id'] ?? 0);
 		$status = (string) ($event['status'] ?? 'green');
 		$issues = is_array($event['issues'] ?? null) ? $event['issues'] : array();
-		$open_issues = vms_ticket_integrity_open_issues($issues);
-		$first_detected = absint($event['first_detected_gmt'] ?? vms_ticket_integrity_issue_first_detected($issues));
-		$last_detected = absint($event['last_detected_gmt'] ?? vms_ticket_integrity_issue_last_detected($issues));
+		$open_issues = bvmgr_ticket_integrity_open_issues($issues);
+		$first_detected = absint($event['first_detected_gmt'] ?? bvmgr_ticket_integrity_issue_first_detected($issues));
+		$last_detected = absint($event['last_detected_gmt'] ?? bvmgr_ticket_integrity_issue_last_detected($issues));
 		$event_row_id = 'vms-ticket-integrity-event-' . $plan_id;
 		$event_url = (string) ($event['event_url'] ?? '');
 		$edit_plan_url = (string) ($event['edit_plan_url'] ?? '');
 		$mode = sanitize_key((string) ($event['mode'] ?? ''));
-		$row_class = ($focused_plan_id > 0 && $focused_plan_id === $plan_id) ? ' class="vms-ticket-integrity__focused-row"' : '';
+		$row_class = ($focused_plan_id > 0 && $focused_plan_id === $plan_id) ? 'vms-ticket-integrity__focused-row' : '';
 
-		echo '<tr id="' . esc_attr($event_row_id) . '"' . $row_class . '>';
-		echo '<td><span class="' . esc_attr(vms_ticket_integrity_status_css_class($status)) . '">' . esc_html(vms_ticket_integrity_status_label($status)) . '</span></td>';
+		echo '<tr id="' . esc_attr($event_row_id) . '"' . ($row_class !== '' ? ' class="' . esc_attr($row_class) . '"' : '') . '>';
+		echo '<td><span class="' . esc_attr(bvmgr_ticket_integrity_status_css_class($status)) . '">' . esc_html(bvmgr_ticket_integrity_status_label($status)) . '</span></td>';
 		echo '<td>';
-		echo '<strong>' . esc_html((string) ($event['event_title'] ?? __('Untitled event', 'vms'))) . '</strong>';
+		echo '<strong>' . esc_html((string) ($event['event_title'] ?? __('Untitled event', 'backstage-venue-manager'))) . '</strong>';
 		if ($event_url !== '') {
-			echo '<div><a href="' . esc_url($event_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('View Event', 'vms') . '</a></div>';
+			echo '<div><a href="' . esc_url($event_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('View Event', 'backstage-venue-manager') . '</a></div>';
 		}
 		echo '</td>';
 		echo '<td>' . esc_html((string) ($event['event_date_local'] ?? '')) . '</td>';
-		echo '<td>' . esc_html((string) ($event['issue_summary'] ?? __('No issues detected.', 'vms'))) . '</td>';
-		echo '<td>' . esc_html(vms_ticket_integrity_format_datetime($first_detected)) . '</td>';
-		echo '<td>' . esc_html(vms_ticket_integrity_format_datetime($last_detected)) . '</td>';
+		echo '<td>' . esc_html((string) ($event['issue_summary'] ?? __('No issues detected.', 'backstage-venue-manager'))) . '</td>';
+		echo '<td>' . esc_html(bvmgr_ticket_integrity_format_datetime($first_detected)) . '</td>';
+		echo '<td>' . esc_html(bvmgr_ticket_integrity_format_datetime($last_detected)) . '</td>';
 		echo '<td>';
 		echo '<div class="vms-ticket-integrity__actions">';
 		if ($edit_plan_url !== '') {
-			echo '<a class="button button-small" href="' . esc_url($edit_plan_url) . '">' . esc_html__('Edit Tickets', 'vms') . '</a>';
+			echo '<a class="button button-small" href="' . esc_url($edit_plan_url) . '">' . esc_html__('Edit Tickets', 'backstage-venue-manager') . '</a>';
 		}
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__inline-form">';
-		wp_nonce_field('vms_ticket_integrity_run_event_scan');
+		wp_nonce_field('bvmgr_ticket_integrity_run_event_scan');
 		echo '<input type="hidden" name="action" value="vms_ticket_integrity_run_event_scan" />';
 		echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '" />';
-		echo '<button type="submit" class="button button-small">' . esc_html__('Re-run Scan', 'vms') . '</button>';
+		echo '<button type="submit" class="button button-small">' . esc_html__('Re-run Scan', 'backstage-venue-manager') . '</button>';
 		echo '</form>';
 
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__inline-form">';
-		wp_nonce_field('vms_ticket_integrity_export_report');
+		wp_nonce_field('bvmgr_ticket_integrity_export_report');
 		echo '<input type="hidden" name="action" value="vms_ticket_integrity_export_report" />';
 		echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '" />';
-		echo '<button type="submit" class="button button-small">' . esc_html__('Download Report', 'vms') . '</button>';
+		echo '<button type="submit" class="button button-small">' . esc_html__('Download Report', 'backstage-venue-manager') . '</button>';
 		echo '</form>';
 
 		$has_duplicate_cleanup_issue = false;
@@ -2204,22 +2236,22 @@ function vms_ticket_integrity_render_results_table(array $events, int $focused_p
 
 		if ($mode === 'vms_managed') {
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__inline-form" data-vms-ticket-integrity-confirm="rebuild">';
-			wp_nonce_field('vms_ticket_integrity_rebuild');
+			wp_nonce_field('bvmgr_ticket_integrity_rebuild');
 			echo '<input type="hidden" name="action" value="vms_ticket_integrity_rebuild" />';
 			echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '" />';
-			echo '<button type="submit" class="button button-small button-secondary" data-vms-tour="ticket-integrity.rebuild">' . esc_html__('Rebuild Ticket Config', 'vms') . '</button>';
+			echo '<button type="submit" class="button button-small button-secondary" data-vms-tour="ticket-integrity.rebuild">' . esc_html__('Rebuild Ticket Config', 'backstage-venue-manager') . '</button>';
 			echo '</form>';
 
 			if ($has_duplicate_cleanup_issue) {
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__inline-form" data-vms-ticket-integrity-confirm="cleanup-duplicates">';
-				wp_nonce_field('vms_ticket_integrity_cleanup_duplicates');
+				wp_nonce_field('bvmgr_ticket_integrity_cleanup_duplicates');
 				echo '<input type="hidden" name="action" value="vms_ticket_integrity_cleanup_duplicates" />';
 				echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '" />';
-				echo '<button type="submit" class="button button-small button-link-delete">' . esc_html__('Resolve Duplicate Legacy Tickets', 'vms') . '</button>';
+				echo '<button type="submit" class="button button-small button-link-delete">' . esc_html__('Resolve Duplicate Legacy Tickets', 'backstage-venue-manager') . '</button>';
 				echo '</form>';
 			}
 		} else {
-			echo '<span class="vms-ticket-integrity__action-note">' . esc_html__('Rebuild available in VMS-managed mode only.', 'vms') . '</span>';
+			echo '<span class="vms-ticket-integrity__action-note">' . esc_html__('Rebuild available in VMS-managed mode only.', 'backstage-venue-manager') . '</span>';
 		}
 		echo '</div>';
 		echo '</td>';
@@ -2228,14 +2260,14 @@ function vms_ticket_integrity_render_results_table(array $events, int $focused_p
 		echo '<tr class="vms-ticket-integrity__details-row">';
 		echo '<td colspan="7">';
 		echo '<details class="vms-ticket-integrity__details" data-vms-tour="ticket-integrity.details">';
-		echo '<summary>' . esc_html__('View Details', 'vms') . '</summary>';
+		echo '<summary>' . esc_html__('View Details', 'backstage-venue-manager') . '</summary>';
 
 		if (!empty($open_issues)) {
 			echo '<ul class="vms-ticket-integrity__issue-list">';
 			foreach ($open_issues as $issue) {
 				echo '<li>';
-				echo '<span class="' . esc_attr(vms_ticket_integrity_status_css_class((string) ($issue['severity'] ?? ''))) . '">' . esc_html(vms_ticket_integrity_status_label((string) ($issue['severity'] ?? ''))) . '</span> ';
-				echo '<strong>' . esc_html((string) ($issue['title'] ?? __('Issue', 'vms'))) . '</strong>';
+				echo '<span class="' . esc_attr(bvmgr_ticket_integrity_status_css_class((string) ($issue['severity'] ?? ''))) . '">' . esc_html(bvmgr_ticket_integrity_status_label((string) ($issue['severity'] ?? ''))) . '</span> ';
+				echo '<strong>' . esc_html((string) ($issue['title'] ?? __('Issue', 'backstage-venue-manager'))) . '</strong>';
 				$details = trim((string) ($issue['details'] ?? ''));
 				if ($details !== '') {
 					echo '<div class="vms-ticket-integrity__issue-detail">' . esc_html($details) . '</div>';
@@ -2244,17 +2276,17 @@ function vms_ticket_integrity_render_results_table(array $events, int $focused_p
 			}
 			echo '</ul>';
 		} else {
-			echo '<p>' . esc_html__('No open issues are currently stored for this event.', 'vms') . '</p>';
+			echo '<p>' . esc_html__('No open issues are currently stored for this event.', 'backstage-venue-manager') . '</p>';
 		}
 
 		$product_provenance = is_array($event['product_provenance'] ?? null) ? $event['product_provenance'] : array();
 		if (!empty($product_provenance)) {
-			echo '<h4>' . esc_html__('Linked Product Provenance', 'vms') . '</h4>';
+			echo '<h4>' . esc_html__('Linked Product Provenance', 'backstage-venue-manager') . '</h4>';
 			echo '<ul class="vms-ticket-integrity__product-list">';
 			foreach ($product_provenance as $product) {
 				$product_id = absint($product['product_id'] ?? 0);
 				echo '<li>';
-				echo '<strong>' . esc_html((string) ($product['title'] ?? __('Untitled product', 'vms'))) . '</strong> ';
+				echo '<strong>' . esc_html((string) ($product['title'] ?? __('Untitled product', 'backstage-venue-manager'))) . '</strong> ';
 				echo '<code>#' . esc_html((string) $product_id) . '</code>';
 				if (!empty($product['labels']) && is_array($product['labels'])) {
 					echo '<span class="vms-ticket-integrity__labels">';
@@ -2268,9 +2300,9 @@ function vms_ticket_integrity_render_results_table(array $events, int $focused_p
 			echo '</ul>';
 		}
 
-		vms_ticket_integrity_render_mutation_diagnostics($event);
-		vms_ticket_integrity_render_repair_diagnostics($event);
-		vms_ticket_integrity_render_inventory_diagnostics($event);
+		bvmgr_ticket_integrity_render_mutation_diagnostics($event);
+		bvmgr_ticket_integrity_render_repair_diagnostics($event);
+		bvmgr_ticket_integrity_render_inventory_diagnostics($event);
 
 		echo '</details>';
 		echo '</td>';
@@ -2282,13 +2314,13 @@ function vms_ticket_integrity_render_results_table(array $events, int $focused_p
 	echo '</section>';
 }
 
-function vms_ticket_integrity_render_audit_log(array $logs): void
+function bvmgr_ticket_integrity_render_audit_log(array $logs): void
 {
 	echo '<section class="vms-ticket-integrity__panel">';
-	echo '<h2>' . esc_html__('Recent Audit Log', 'vms') . '</h2>';
+	echo '<h2>' . esc_html__('Recent Audit Log', 'backstage-venue-manager') . '</h2>';
 
 	if (empty($logs)) {
-		echo '<p>' . esc_html__('No audit entries are recorded yet.', 'vms') . '</p>';
+		echo '<p>' . esc_html__('No audit entries are recorded yet.', 'backstage-venue-manager') . '</p>';
 		echo '</section>';
 		return;
 	}
@@ -2300,7 +2332,7 @@ function vms_ticket_integrity_render_audit_log(array $logs): void
 		}
 
 		echo '<li>';
-		echo '<strong>' . esc_html(vms_ticket_integrity_format_datetime(absint($entry['timestamp_gmt'] ?? 0))) . '</strong> ';
+		echo '<strong>' . esc_html(bvmgr_ticket_integrity_format_datetime(absint($entry['timestamp_gmt'] ?? 0))) . '</strong> ';
 		echo '<code>' . esc_html((string) ($entry['type'] ?? 'event')) . '</code> ';
 		echo esc_html((string) ($entry['message'] ?? ''));
 		echo '</li>';
@@ -2310,37 +2342,37 @@ function vms_ticket_integrity_render_audit_log(array $logs): void
 }
 
 
-function vms_ticket_integrity_menu_alert_needed(): bool
+function bvmgr_ticket_integrity_menu_alert_needed(): bool
 {
-	if (function_exists('vms_ticket_integrity_payment_gateway_menu_alert_needed') && vms_ticket_integrity_payment_gateway_menu_alert_needed()) {
+	if (function_exists('bvmgr_ticket_integrity_payment_gateway_menu_alert_needed') && bvmgr_ticket_integrity_payment_gateway_menu_alert_needed()) {
 		return true;
 	}
 
-	$settings = function_exists('vms_ticket_integrity_get_settings') ? vms_ticket_integrity_get_settings() : array();
+	$settings = function_exists('bvmgr_ticket_integrity_get_settings') ? bvmgr_ticket_integrity_get_settings() : array();
 	if (!empty($settings['email_alerts_enabled'])) {
 		return false;
 	}
 
-	$store = function_exists('vms_ticket_integrity_get_results_store') ? vms_ticket_integrity_get_results_store() : array();
+	$store = function_exists('bvmgr_ticket_integrity_get_results_store') ? bvmgr_ticket_integrity_get_results_store() : array();
 	$summary = is_array($store['summary'] ?? null) ? $store['summary'] : array();
 	$problem_events = absint($summary['red'] ?? 0) + absint($summary['yellow'] ?? 0);
 	return $problem_events > 0;
 }
 
-function vms_ticket_integrity_menu_alert_markup(): string
+function bvmgr_ticket_integrity_menu_alert_markup(): string
 {
 	$inner = '<span class="plugin-count">!</span>';
-	return ' <span class="update-plugins count-1 vms-ticket-integrity-alert-badge"><span class="update-count">' . $inner . '</span></span><span class="screen-reader-text">' . esc_html__('Ticket Integrity has critical payment gateway health or open monitor issues.', 'vms') . '</span>';
+	return ' <span class="update-plugins count-1 vms-ticket-integrity-alert-badge"><span class="update-count">' . $inner . '</span></span><span class="screen-reader-text">' . esc_html__('Ticket Integrity has critical payment gateway health or open monitor issues.', 'backstage-venue-manager') . '</span>';
 }
 
-function vms_ticket_integrity_add_menu_alert_badge(): void
+function bvmgr_ticket_integrity_add_menu_alert_badge(): void
 {
-	if (!current_user_can('manage_options') || !vms_ticket_integrity_menu_alert_needed()) {
+	if (!current_user_can('manage_options') || !bvmgr_ticket_integrity_menu_alert_needed()) {
 		return;
 	}
 
 	global $submenu, $menu;
-	$markup = vms_ticket_integrity_menu_alert_markup();
+	$markup = bvmgr_ticket_integrity_menu_alert_markup();
 
 	if (isset($submenu['vms-dashboard']) && is_array($submenu['vms-dashboard'])) {
 		foreach ($submenu['vms-dashboard'] as $index => $item) {
@@ -2350,7 +2382,7 @@ function vms_ticket_integrity_add_menu_alert_badge(): void
 			if (strpos((string) ($item[0] ?? ''), 'vms-ticket-integrity-alert-badge') !== false) {
 				break;
 			}
-			$submenu['vms-dashboard'][$index][0] = (string) ($item[0] ?? __('Ticket Integrity', 'vms')) . $markup;
+			$submenu['vms-dashboard'][$index][0] = (string) ($item[0] ?? __('Ticket Integrity', 'backstage-venue-manager')) . $markup;
 			break;
 		}
 	}
@@ -2363,97 +2395,83 @@ function vms_ticket_integrity_add_menu_alert_badge(): void
 			if (strpos((string) ($item[0] ?? ''), 'vms-ticket-integrity-alert-badge') !== false) {
 				break;
 			}
-			$menu[$index][0] = (string) ($item[0] ?? 'VMS') . $markup;
+			$menu[$index][0] = (string) ($item[0] ?? 'Backstage Venue Manager') . $markup;
 			break;
 		}
 	}
 }
-add_action('admin_menu', 'vms_ticket_integrity_add_menu_alert_badge', 1001);
+add_action('admin_menu', 'bvmgr_ticket_integrity_add_menu_alert_badge', 1001);
 
-function vms_ticket_integrity_render_menu_alert_badge_css(): void
+function bvmgr_ticket_integrity_render_admin_page(): void
 {
-	if (!current_user_can('manage_options') || !vms_ticket_integrity_menu_alert_needed()) {
-		return;
-	}
-
-	echo '<style id="vms-ticket-integrity-alert-dot-css">';
-	echo '#adminmenu .vms-ticket-integrity-alert-badge{margin-left:6px;min-width:18px;height:18px;line-height:18px;border-radius:999px;background:#d63638;box-shadow:none;}';
-	echo '#adminmenu .vms-ticket-integrity-alert-badge .update-count,#adminmenu .vms-ticket-integrity-alert-badge .plugin-count{display:block;min-width:18px;height:18px;line-height:18px;padding:0 4px;color:#fff;font-size:11px;font-weight:700;text-align:center;}';
-	echo '</style>';
-}
-add_action('admin_head', 'vms_ticket_integrity_render_menu_alert_badge_css', 20);
-
-function vms_ticket_integrity_render_admin_page(): void
-{
-	$settings = function_exists('vms_ticket_integrity_get_settings') ? vms_ticket_integrity_get_settings() : array();
-	$store = function_exists('vms_ticket_integrity_get_results_store') ? vms_ticket_integrity_get_results_store() : array('events' => array(), 'summary' => array(), 'last_scan' => array());
-	if (function_exists('vms_ticket_integrity_prepare_payment_gateway_health')) {
-		$store['payment_gateway_health'] = vms_ticket_integrity_prepare_payment_gateway_health('admin_page', 20 * MINUTE_IN_SECONDS);
+	$settings = function_exists('bvmgr_ticket_integrity_get_settings') ? bvmgr_ticket_integrity_get_settings() : array();
+	$store = function_exists('bvmgr_ticket_integrity_get_results_store') ? bvmgr_ticket_integrity_get_results_store() : array('events' => array(), 'summary' => array(), 'last_scan' => array());
+	if (function_exists('bvmgr_ticket_integrity_prepare_payment_gateway_health')) {
+		$store['payment_gateway_health'] = bvmgr_ticket_integrity_prepare_payment_gateway_health('admin_page', 20 * MINUTE_IN_SECONDS);
 	}
 	$summary = is_array($store['summary'] ?? null) ? $store['summary'] : array();
 	$last_scan = is_array($store['last_scan'] ?? null) ? $store['last_scan'] : array();
 	$payment_gateway_health = is_array($store['payment_gateway_health'] ?? null) ? $store['payment_gateway_health'] : array();
-	$events = function_exists('vms_ticket_integrity_get_sorted_events') ? vms_ticket_integrity_get_sorted_events() : array();
-	$logs = function_exists('vms_ticket_integrity_get_logs') ? vms_ticket_integrity_get_logs() : array();
+	$events = function_exists('bvmgr_ticket_integrity_get_sorted_events') ? bvmgr_ticket_integrity_get_sorted_events() : array();
+	$logs = function_exists('bvmgr_ticket_integrity_get_logs') ? bvmgr_ticket_integrity_get_logs() : array();
 
-	$filter_plan_id = absint($_GET['event'] ?? 0);
+	$filter_plan_id = absint(bvmgr_ticket_integrity_query_arg('event'));
 	if ($filter_plan_id > 0) {
 		$events = array_values(array_filter($events, static function (array $event) use ($filter_plan_id): bool {
 			return absint($event['plan_id'] ?? 0) === $filter_plan_id;
 		}));
 	}
 
-	$tour_button = function_exists('vms_render_help_button')
-		? vms_render_help_button(
+	$tour_button = function_exists('bvmgr_render_help_button')
+		? bvmgr_render_help_button(
 			array(
 				'tour_id' => 'vms.ticket_integrity.monitor',
 				'anchor' => 'ticket-integrity.help',
-				'label' => __('Start Guided Tour', 'vms'),
+				'label' => __('Start Guided Tour', 'backstage-venue-manager'),
 				'class' => 'button-secondary',
 			)
 		)
-		: '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">' . esc_html__('Start Guided Tour', 'vms') . '</button>';
+		: '<button type="button" class="button button-secondary vms-tour-help-trigger" data-vms-tour-start="vms.ticket_integrity.monitor" data-vms-tour="ticket-integrity.help">' . esc_html__('Start Guided Tour', 'backstage-venue-manager') . '</button>';
 
 	$actions_html = '<div class="vms-ticket-integrity__header-actions" data-vms-tour="ticket-integrity.help">' . $tour_button . '</div>';
 
-	if (function_exists('vms_admin_ui_render_shell')) {
-		vms_admin_ui_render_shell(
-			array(
-				'title' => __('Ticket Integrity', 'vms'),
-				'subtitle' => __('Proactively scan published upcoming events for customer-facing ticketing failures before sales are lost.', 'vms'),
-				'shell_id' => 'vms-ticket-integrity',
-				'content_class' => 'vms-ticket-integrity-page',
-				'actions_html' => $actions_html,
-			),
-			static function () use ($settings, $summary, $last_scan, $payment_gateway_health, $events, $logs, $filter_plan_id): void {
-				vms_ticket_integrity_render_notice_from_query();
-
-				echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.run">';
-				echo '<h2>' . esc_html__('Run Ticket Integrity Check Now', 'vms') . '</h2>';
+		if (function_exists('bvmgr_admin_ui_render_shell')) {
+			bvmgr_admin_ui_render_shell(
+				array(
+					'title' => __('Ticket Integrity', 'backstage-venue-manager'),
+					'subtitle' => __('Proactively scan published upcoming events for customer-facing ticketing failures before sales are lost.', 'backstage-venue-manager'),
+					'shell_id' => 'vms-ticket-integrity',
+					'content_class' => 'vms-ticket-integrity-page',
+					'actions_html' => $actions_html,
+					'notices_callback' => 'bvmgr_ticket_integrity_render_notice_from_query',
+				),
+				static function () use ($settings, $summary, $last_scan, $payment_gateway_health, $events, $logs, $filter_plan_id): void {
+					echo '<section class="vms-ticket-integrity__panel" data-vms-tour="ticket-integrity.run">';
+				echo '<h2>' . esc_html__('Run Ticket Integrity Check Now', 'backstage-venue-manager') . '</h2>';
 				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-ticket-integrity__run-form">';
-				wp_nonce_field('vms_ticket_integrity_run_scan');
+				wp_nonce_field('bvmgr_ticket_integrity_run_scan');
 				echo '<input type="hidden" name="action" value="vms_ticket_integrity_run_scan" />';
-				echo '<label><input type="checkbox" name="include_inactive" value="1" /> ' . esc_html__('Include cancelled / inactive events on this manual run', 'vms') . '</label>';
-				echo '<button type="submit" class="button button-primary">' . esc_html__('Run Check Now', 'vms') . '</button>';
+				echo '<label><input type="checkbox" name="include_inactive" value="1" /> ' . esc_html__('Include cancelled / inactive events on this manual run', 'backstage-venue-manager') . '</label>';
+				echo '<button type="submit" class="button button-primary">' . esc_html__('Run Check Now', 'backstage-venue-manager') . '</button>';
 				echo '</form>';
 				echo '</section>';
 
-				vms_ticket_integrity_render_summary_cards($summary, $last_scan);
-				vms_ticket_integrity_render_payment_gateway_health_panel($payment_gateway_health);
-				vms_ticket_integrity_render_daily_report_status_panel($settings);
-				vms_ticket_integrity_render_daily_report_preview_panel();
+				bvmgr_ticket_integrity_render_summary_cards($summary, $last_scan);
+				bvmgr_ticket_integrity_render_payment_gateway_health_panel($payment_gateway_health);
+				bvmgr_ticket_integrity_render_daily_report_status_panel($settings);
+				bvmgr_ticket_integrity_render_daily_report_preview_panel();
 
 				if ($filter_plan_id > 0) {
-					echo '<p class="vms-ticket-integrity__filter-note">' . esc_html__('Showing a single event from the dashboard/problem list.', 'vms') . ' <a href="' . esc_url(vms_ticket_integrity_admin_url()) . '">' . esc_html__('Clear filter', 'vms') . '</a></p>';
+					echo '<p class="vms-ticket-integrity__filter-note">' . esc_html__('Showing a single event from the dashboard/problem list.', 'backstage-venue-manager') . ' <a href="' . esc_url(bvmgr_ticket_integrity_admin_url()) . '">' . esc_html__('Clear filter', 'backstage-venue-manager') . '</a></p>';
 				}
 
-				vms_ticket_integrity_render_settings_form($settings);
-				vms_ticket_integrity_render_results_table($events, $filter_plan_id);
-				vms_ticket_integrity_render_audit_log($logs);
+				bvmgr_ticket_integrity_render_settings_form($settings);
+				bvmgr_ticket_integrity_render_results_table($events, $filter_plan_id);
+				bvmgr_ticket_integrity_render_audit_log($logs);
 			}
 		);
 		return;
 	}
 
-	echo '<div class="wrap"><h1>' . esc_html__('Ticket Integrity', 'vms') . '</h1></div>';
+	echo '<div class="wrap"><h1>' . esc_html__('Ticket Integrity', 'backstage-venue-manager') . '</h1></div>';
 }

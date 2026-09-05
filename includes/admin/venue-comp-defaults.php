@@ -30,8 +30,8 @@ if (!defined('ABSPATH')) exit;
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'vms_venue_comp_defaults',
-        __('Default Pay (By Day)', 'vms'),
-        'vms_render_venue_comp_defaults_metabox',
+        __('Default Pay (By Day)', 'backstage-venue-manager'),
+        'bvmgr_render_venue_comp_defaults_metabox',
         'vms_venue',
         'normal',
         'default'
@@ -50,10 +50,10 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
 
     // Nonce
-    if (
-        empty($_POST['vms_venue_comp_defaults_nonce']) ||
-        !wp_verify_nonce($_POST['vms_venue_comp_defaults_nonce'], 'vms_save_venue_comp_defaults')
-    ) {
+    $nonce = (isset($_POST['bvmgr_venue_comp_defaults_nonce']) && !is_array($_POST['bvmgr_venue_comp_defaults_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_comp_defaults_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_venue_comp_defaults'))) {
         return;
     }
 
@@ -61,7 +61,8 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     if (!current_user_can('edit_post', $post_id)) return;
 
     $incoming = isset($_POST['vms_venue_comp_by_dow']) && is_array($_POST['vms_venue_comp_by_dow'])
-        ? (array) $_POST['vms_venue_comp_by_dow']
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured venue compensation defaults are unslashed here and normalized field-by-field below.
+        ? (array) wp_unslash($_POST['vms_venue_comp_by_dow'])
         : array();
 
     $out = array();
@@ -70,22 +71,22 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
     for ($dow = 0; $dow <= 6; $dow++) {
         $row = isset($incoming[$dow]) && is_array($incoming[$dow]) ? $incoming[$dow] : array();
 
-        $structure = isset($row['structure']) ? sanitize_text_field(wp_unslash($row['structure'])) : '';
+        $structure = isset($row['structure']) ? sanitize_key((string) $row['structure']) : '';
         if (!in_array($structure, array('flat_fee', 'flat_fee_door_split', 'door_split'), true)) {
             $structure = 'flat_fee';
         }
 
         // Numbers: allow blank -> '' (meaning “no default provided”)
-        $flat  = isset($row['flat_fee_amount']) ? trim((string) wp_unslash($row['flat_fee_amount'])) : '';
-        $split = isset($row['door_split_percent']) ? trim((string) wp_unslash($row['door_split_percent'])) : '';
-        $comm  = isset($row['commission_percent']) ? trim((string) wp_unslash($row['commission_percent'])) : '';
+        $flat  = isset($row['flat_fee_amount']) ? trim((string) $row['flat_fee_amount']) : '';
+        $split = isset($row['door_split_percent']) ? trim((string) $row['door_split_percent']) : '';
+        $comm  = isset($row['commission_percent']) ? trim((string) $row['commission_percent']) : '';
 
         $flat_val  = ($flat === '') ? '' : (float) $flat;
         $split_val = ($split === '') ? '' : (float) $split;
         $comm_val  = ($comm === '') ? '' : (float) $comm;
 
         // Commission mode
-        $comm_mode = isset($row['commission_mode']) ? sanitize_text_field(wp_unslash($row['commission_mode'])) : 'artist_fee';
+        $comm_mode = isset($row['commission_mode']) ? sanitize_key((string) $row['commission_mode']) : 'artist_fee';
         if (!in_array($comm_mode, array('artist_fee', 'gross'), true)) {
             $comm_mode = 'artist_fee';
         }
@@ -111,9 +112,9 @@ add_action('save_post_vms_venue', function ($post_id, $post) {
 /**
  * Render metabox UI.
  */
-function vms_render_venue_comp_defaults_metabox($post) {
+function bvmgr_render_venue_comp_defaults_metabox($post) {
 
-    wp_nonce_field('vms_save_venue_comp_defaults', 'vms_venue_comp_defaults_nonce');
+    wp_nonce_field('bvmgr_save_venue_comp_defaults', 'bvmgr_venue_comp_defaults_nonce');
 
     $saved = get_post_meta($post->ID, '_vms_default_comp_by_dow', true);
     if (!is_array($saved)) $saved = array();
@@ -129,29 +130,29 @@ function vms_render_venue_comp_defaults_metabox($post) {
 
     // Days in UI order (Mon..Sun is easier for humans)
     $days = array(
-        1 => __('Mon', 'vms'),
-        2 => __('Tue', 'vms'),
-        3 => __('Wed', 'vms'),
-        4 => __('Thu', 'vms'),
-        5 => __('Fri', 'vms'),
-        6 => __('Sat', 'vms'),
-        0 => __('Sun', 'vms'),
+        1 => __('Mon', 'backstage-venue-manager'),
+        2 => __('Tue', 'backstage-venue-manager'),
+        3 => __('Wed', 'backstage-venue-manager'),
+        4 => __('Thu', 'backstage-venue-manager'),
+        5 => __('Fri', 'backstage-venue-manager'),
+        6 => __('Sat', 'backstage-venue-manager'),
+        0 => __('Sun', 'backstage-venue-manager'),
     );
 
     echo '<div class="vms-note">';
-    echo '<strong>' . esc_html__('How this works:', 'vms') . '</strong> ';
-    echo esc_html__('When you create/edit an Event Plan, we can auto-fill compensation based on Venue + Event Date. Event Plan values remain the final override.', 'vms');
-    echo '<div class="vms-help">' . esc_html__('Holidays/closed days will be layered on top in the next step.', 'vms') . '</div>';
+    echo '<strong>' . esc_html__('How this works:', 'backstage-venue-manager') . '</strong> ';
+    echo esc_html__('When you create/edit an Event Plan, we can auto-fill compensation based on Venue + Event Date. Event Plan values remain the final override.', 'backstage-venue-manager');
+    echo '<div class="vms-help">' . esc_html__('Holidays/closed days will be layered on top in the next step.', 'backstage-venue-manager') . '</div>';
     echo '</div>';
 
     echo '<table class="vms-comp-table widefat striped">';
     echo '<thead><tr>';
-    echo '<th>' . esc_html__('Day', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Structure', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Flat Fee', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Door Split %', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Commission %', 'vms') . '</th>';
-    echo '<th>' . esc_html__('Commission Mode', 'vms') . '</th>';
+    echo '<th>' . esc_html__('Day', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Structure', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Flat Fee', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Door Split %', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Commission %', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Commission Mode', 'backstage-venue-manager') . '</th>';
     echo '</tr></thead><tbody>';
 
     foreach ($days as $dow => $label) {
@@ -167,9 +168,9 @@ function vms_render_venue_comp_defaults_metabox($post) {
         // Structure
         echo '<td>';
         echo '<select name="' . esc_attr($name . '[structure]') . '">';
-        echo '<option value="flat_fee" ' . selected($row['structure'], 'flat_fee', false) . '>' . esc_html__('Flat Fee Only', 'vms') . '</option>';
-        echo '<option value="flat_fee_door_split" ' . selected($row['structure'], 'flat_fee_door_split', false) . '>' . esc_html__('Flat Fee + Door Split', 'vms') . '</option>';
-        echo '<option value="door_split" ' . selected($row['structure'], 'door_split', false) . '>' . esc_html__('Door Split Only', 'vms') . '</option>';
+        echo '<option value="flat_fee" ' . selected($row['structure'], 'flat_fee', false) . '>' . esc_html__('Flat Fee Only', 'backstage-venue-manager') . '</option>';
+        echo '<option value="flat_fee_door_split" ' . selected($row['structure'], 'flat_fee_door_split', false) . '>' . esc_html__('Flat Fee + Door Split', 'backstage-venue-manager') . '</option>';
+        echo '<option value="door_split" ' . selected($row['structure'], 'door_split', false) . '>' . esc_html__('Door Split Only', 'backstage-venue-manager') . '</option>';
         echo '</select>';
         echo '</td>';
 
@@ -186,14 +187,14 @@ function vms_render_venue_comp_defaults_metabox($post) {
         // Commission %
         echo '<td>';
         echo '<input type="number" step="0.01" min="0" max="100" name="' . esc_attr($name . '[commission_percent]') . '" value="' . esc_attr($row['commission_percent']) . '" placeholder="">';
-        echo '<div class="vms-help">' . esc_html__('Optional. Leave blank for no default agent fee.', 'vms') . '</div>';
+        echo '<div class="vms-help">' . esc_html__('Optional. Leave blank for no default agent fee.', 'backstage-venue-manager') . '</div>';
         echo '</td>';
 
         // Commission mode
         echo '<td>';
         echo '<select name="' . esc_attr($name . '[commission_mode]') . '">';
-        echo '<option value="artist_fee" ' . selected($row['commission_mode'], 'artist_fee', false) . '>' . esc_html__('Added to artist fee', 'vms') . '</option>';
-        echo '<option value="gross" ' . selected($row['commission_mode'], 'gross', false) . '>' . esc_html__('Taken from gross', 'vms') . '</option>';
+        echo '<option value="artist_fee" ' . selected($row['commission_mode'], 'artist_fee', false) . '>' . esc_html__('Added to artist fee', 'backstage-venue-manager') . '</option>';
+        echo '<option value="gross" ' . selected($row['commission_mode'], 'gross', false) . '>' . esc_html__('Taken from gross', 'backstage-venue-manager') . '</option>';
         echo '</select>';
         echo '</td>';
 
@@ -203,7 +204,7 @@ function vms_render_venue_comp_defaults_metabox($post) {
     echo '</tbody></table>';
 
     echo '<p class="vms-help vms-venue-comp-help-bottom">' .
-        esc_html__('Tip: Leaving a value blank means “no default” for that day; the Event Plan can still be set manually.', 'vms') .
+        esc_html__('Tip: Leaving a value blank means “no default” for that day; the Event Plan can still be set manually.', 'backstage-venue-manager') .
         '</p>';
 }
 
@@ -211,8 +212,8 @@ function vms_render_venue_comp_defaults_metabox($post) {
  * Helper: get all per-day defaults for a venue.
  */
 
-if (!function_exists('vms_get_venue_default_comp_by_dow')) {
-function vms_get_venue_default_comp_by_dow(int $venue_id): array {
+if (!function_exists('bvmgr_get_venue_default_comp_by_dow')) {
+function bvmgr_get_venue_default_comp_by_dow(int $venue_id): array {
     $saved = get_post_meta($venue_id, '_vms_default_comp_by_dow', true);
     return is_array($saved) ? $saved : array();
 }
@@ -221,15 +222,15 @@ function vms_get_venue_default_comp_by_dow(int $venue_id): array {
 
 
 
-if (!function_exists('vms_get_venue_default_comp_for_date')) {
-function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
+if (!function_exists('bvmgr_get_venue_default_comp_for_date')) {
+function bvmgr_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
     $event_date = trim($event_date);
     if ($venue_id <= 0 || $event_date === '') return array();
 
     // Use VMS timezone helper if you have it; fallback to WP timezone.
     $tz = null;
-    if (function_exists('vms_get_timezone')) {
-        $tz = vms_get_timezone(); // expected DateTimeZone
+    if (function_exists('bvmgr_get_timezone')) {
+        $tz = bvmgr_get_timezone(); // expected DateTimeZone
     }
     if (!$tz instanceof DateTimeZone) {
         $tz = wp_timezone();
@@ -244,13 +245,13 @@ function vms_get_venue_default_comp_for_date(int $venue_id, string $event_date):
 
     $dow = (int) $dt->format('w'); // 0..6 (Sun..Sat)
 
-    $all = vms_get_venue_default_comp_by_dow($venue_id);
+    $all = bvmgr_get_venue_default_comp_by_dow($venue_id);
     if (!isset($all[$dow]) || !is_array($all[$dow])) return array();
 
     // Normalize output keys
     $row = $all[$dow];
 
-    $normalized_terms = function_exists('vms_normalize_comp_terms') ? vms_normalize_comp_terms($row) : array();
+    $normalized_terms = function_exists('bvmgr_normalize_comp_terms') ? bvmgr_normalize_comp_terms($row) : array();
     $out = array(
         'structure'          => isset($normalized_terms['structure']) ? (string) $normalized_terms['structure'] : (isset($row['structure']) ? (string) $row['structure'] : 'flat_fee'),
         'flat_fee_amount'    => $normalized_terms['flat_fee_amount'] ?? ($row['flat_fee_amount'] ?? ''),

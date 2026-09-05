@@ -4,7 +4,7 @@
 Reduce ambiguity about where new work belongs so future passes do not reintroduce loader drift.
 
 ## Canonical live entry path
-1. `vendor-management-system.php`
+1. `backstage-venue-manager.php`
 2. `includes/bootstrap.php`
 3. area loaders under `includes/*/load.php`
 4. support loader under `includes/support/load.php`

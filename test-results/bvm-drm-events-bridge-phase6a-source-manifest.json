@@ -1,0 +1,285 @@
+{
+    "wordpress_version": "7.1",
+    "plugins": {
+        "backstage-venue-manager": {
+            "entry": "backstage-venue-manager/vendor-management-system.php",
+            "entry_sha256": "a6bf5ef7aad60c26a6e5f969fa9dc2e2e710782995a65fcb97824e9ead8f88ee",
+            "name": "Backstage Venue Manager",
+            "version": "1.2.0",
+            "requires_wordpress": "6.8",
+            "requires_php": "8.3",
+            "requires_plugins": "",
+            "file_count": 372,
+            "sha256": "93980139f5a4db7fe6646c93f87405dd4622e3befda50fa4ec336f4d0468ad66"
+        },
+        "woocommerce": {
+            "entry": "woocommerce/woocommerce.php",
+            "entry_sha256": "11b1edac22d43e34309a4dbb57e9ef684951d005daf948542e07c51a8840c52c",
+            "name": "WooCommerce",
+            "version": "11.0.1",
+            "requires_wordpress": "6.9",
+            "requires_php": "7.4",
+            "requires_plugins": "",
+            "file_count": 5872,
+            "sha256": "1fc4862b314506a2aa04942e8fbdd81654ee73f4dc039e02292b28fe32fbe41d"
+        },
+        "woocommerce-square": {
+            "entry": "woocommerce-square/woocommerce-square.php",
+            "entry_sha256": "e27282bfe44a0f53880b95c6d405e3792974b61dd9b28a52e5a9bcd5061ced3c",
+            "name": "WooCommerce Square",
+            "version": "5.2.0",
+            "requires_wordpress": "6.7",
+            "requires_php": "7.4",
+            "requires_plugins": "woocommerce",
+            "file_count": 2553,
+            "sha256": "5a1a78ed247c291fef98f0a0530dc834ac2a8dc1d2ed9ca1d8d6fb73f3e2a299"
+        },
+        "the-events-calendar": {
+            "entry": "the-events-calendar/the-events-calendar.php",
+            "entry_sha256": "b2d81e0f21e8706c56f6036ae92386d371b083d10d3948e6a5c1e1e107e8d5d8",
+            "name": "The Events Calendar",
+            "version": "6.17.3",
+            "requires_wordpress": "6.7",
+            "requires_php": "7.4",
+            "requires_plugins": "",
+            "file_count": 3810,
+            "sha256": "c111dca4d860b67c3c5275aba599dfd5f28c7ea0b86fc656224934828073793f"
+        },
+        "event-tickets": {
+            "entry": "event-tickets/event-tickets.php",
+            "entry_sha256": "1454982eafe96ebe91dc3cbc9c82d5d5ce5527380b180d2e5b924607224bb76d",
+            "name": "Event Tickets",
+            "version": "5.29.2.1",
+            "requires_wordpress": "6.8",
+            "requires_php": "7.4",
+            "requires_plugins": "",
+            "file_count": 4252,
+            "sha256": "bd0dca61fb44e9524de36e25191f8f9764794e86272557e1f5e2907e4b1b374d"
+        },
+        "event-tickets-plus": {
+            "entry": "event-tickets-plus/event-tickets-plus.php",
+            "entry_sha256": "1c7524efcb484030ef3b7f5aba65209636b03b03fc1585afe8e631ba02ba16a4",
+            "name": "Event Tickets Plus",
+            "version": "6.9.3",
+            "requires_wordpress": "6.7",
+            "requires_php": "7.4",
+            "requires_plugins": "event-tickets",
+            "file_count": 1068,
+            "sha256": "3c43a5c94778d6e7cefcd48574c040d826927909516c917a107a5fafbf715b40"
+        },
+        "vms-events-slider": {
+            "entry": "vms-events-slider/vms-events-slider.php",
+            "entry_sha256": "9e9530600ecc2b8a20bed4dc389909c6c333fcd71bf592e7df6d9d401ea577cd",
+            "name": "VMS Events Slider",
+            "version": "1.0.9",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "",
+            "file_count": 3,
+            "sha256": "bb9e805aa9f2bb38b229779d24947bffc13811a28ed925926dcbbfe572bfa590"
+        },
+        "vms-fill-dates": {
+            "entry": "vms-fill-dates/vms-fill-dates.php",
+            "entry_sha256": "7a27366896f17f8ed759ad1c595afa16c6d64b658f0b9a339ed42bad7f700108",
+            "name": "VMS Fill Dates",
+            "version": "0.1.7",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "",
+            "file_count": 9,
+            "sha256": "5abccf40f0edbf190c7fe6859bd2a87974af06b1e2afadad801e2182a1e53d9c"
+        },
+        "vms-data-tools": {
+            "entry": "vms-data-tools/vms-data-tools.php",
+            "entry_sha256": "63a79406b0e5dd835f7493b2edf770278010114abda8a1cbb27b8042ded71b22",
+            "name": "VMS Data Tools",
+            "version": "0.5.53",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "",
+            "file_count": 76,
+            "sha256": "984f87642eb8a4c1d839a6d477dcf2f2914243212ae0c99475fedfb6af79053c"
+        },
+        "vms-express-bar": {
+            "entry": "vms-express-bar/vms-express-bar.php",
+            "entry_sha256": "84262db3c2e883671d1388a118d894847dbc1fa0b1d6da79020350dcc979e1db",
+            "name": "VMS Express Bar",
+            "version": "0.6.22",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "",
+            "file_count": 43,
+            "sha256": "d0688ff405957f085be1fcedd2e905028782da3185e339be621d143779594197"
+        },
+        "vms-refer-a-friend": {
+            "entry": "vms-refer-a-friend/vms-refer-a-friend.php",
+            "entry_sha256": "f356e2e3cf5187724da38f462580185afc612c3fd2179f667e6268d42c657559",
+            "name": "VMS Refer-a-Friend",
+            "version": "0.2.5",
+            "requires_wordpress": "6.4",
+            "requires_php": "7.4",
+            "requires_plugins": "",
+            "file_count": 15,
+            "sha256": "756be28a8b8bf01f13aca6e128eafc77ef32ee5b3ddf0d6b01249159ee7bd1d9"
+        },
+        "drm-calendar-intake": {
+            "entry": "drm-calendar-intake/drm-calendar-intake.php",
+            "entry_sha256": "8b1fe742b80ff1358c65ae591e7a2bf97270b4ded1a9381ad80bb22056f50661",
+            "name": "DRM Calendar Intake",
+            "version": "0.2.4",
+            "requires_wordpress": "6.4",
+            "requires_php": "7.4",
+            "requires_plugins": "",
+            "file_count": 20,
+            "sha256": "b5852613236cdc5118433fd021a72de30722cbcbc675bc02a1d5929942ecd55b"
+        },
+        "vms-commerce-discounts": {
+            "entry": "vms-commerce-discounts/vms-commerce-discounts.php",
+            "entry_sha256": "b2f8e43c542af7ae30b3c29ef71896555eeb635e3d94023bea4fac31785dfb18",
+            "name": "VMS Commerce Discounts",
+            "version": "0.2.12",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "",
+            "file_count": 26,
+            "sha256": "3a3528dfa1ed5d76608f27504ffed4990d1c2c320f1897d4c0cb49200531a060"
+        },
+        "vms-investor-portal": {
+            "entry": "vms-investor-portal/vms-investor-portal.php",
+            "entry_sha256": "2699c3119376d419b79d45f8368e5e9efd05c8d9926f38a750dbff16c4c447eb",
+            "name": "VMS Investor Portal",
+            "version": "0.2.2",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "",
+            "file_count": 5,
+            "sha256": "df18839a08bb1da4dec29dd28305f3926bd9a9c844e952eaacda6143e436210e"
+        },
+        "vms-meta-ads": {
+            "entry": "vms-meta-ads/vms-meta-ads.php",
+            "entry_sha256": "8a123c15bf5afd02c4f4282b7b5562f93996043a86a44499fa2b82a00570a486",
+            "name": "VMS Meta Ads Builder",
+            "version": "0.1.106",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "",
+            "file_count": 142,
+            "sha256": "e737bb56595e90e59a131912f75fea69eadff7252db97464f697922a0a59955b"
+        },
+        "vms-ops-console-premium": {
+            "entry": "vms-ops-console-premium/vms-ops-console-premium.php",
+            "entry_sha256": "d251363318bb4c1f13031aa8b794f6438668deb5d3d572262bfa73b03ebd7fd6",
+            "name": "VMS Ops Console Premium",
+            "version": "0.1.66",
+            "requires_wordpress": "6.0",
+            "requires_php": "7.4",
+            "requires_plugins": "",
+            "file_count": 47,
+            "sha256": "53cd65f1a23f106a25e652c2ef2d79f4057aef7ec1905376de8f5efde1434588"
+        },
+        "vms-season-passes": {
+            "entry": "vms-season-passes/vms-season-passes.php",
+            "entry_sha256": "903812427581bb4734ad93368221cc2d1d81d1b3e3c52cccacfde861d7e6a1f2",
+            "name": "VMS Season Passes",
+            "version": "0.1.0",
+            "requires_wordpress": "6.8",
+            "requires_php": "8.3",
+            "requires_plugins": "",
+            "file_count": 15,
+            "sha256": "97c6993ab6f9f44b879fb4a105e1704233082eb05a324cf47ff05096f02068fe"
+        },
+        "vms-sponsorships": {
+            "entry": "vms-sponsorships/vms-sponsorships.php",
+            "entry_sha256": "7a606b193b918ef18c772244259eba6ec2c91449ff4e86e39d5e980566334a87",
+            "name": "VMS Sponsorships",
+            "version": "0.1.27",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "",
+            "file_count": 16,
+            "sha256": "7b38c9a53642cd4aa3dad29a94872bb4168880b36132b7fe9b9c404b510d7ea4"
+        },
+        "vmsx-checkout-policies": {
+            "entry": "vmsx-checkout-policies/vmsx-checkout-policies.php",
+            "entry_sha256": "11be4593060b5d452936357bc9ee975e067b2498544f502a299421ceac1f179e",
+            "name": "VMS Checkout Policies",
+            "version": "0.1.8",
+            "requires_wordpress": "",
+            "requires_php": "",
+            "requires_plugins": "woocommerce",
+            "file_count": 14,
+            "sha256": "2153b875a9815fbb38e64999da02feb3189f89f6c31d19cc9ff6b2a966ac45fa"
+        },
+        "vmsx-weather-risk": {
+            "entry": "vmsx-weather-risk/vmsx-weather-risk.php",
+            "entry_sha256": "ed72a5d73b0f6c33b676c7c66687892e0632f455889fa1786d10d619b6abe7f7",
+            "name": "VMSX Weather Risk",
+            "version": "0.1.12",
+            "requires_wordpress": "6.0",
+            "requires_php": "7.4",
+            "requires_plugins": "",
+            "file_count": 35,
+            "sha256": "131d3bace99b7860b1e1585c99b967604a00e0f0a13b6f71576d748c455111af"
+        },
+        "drm-events-bridge": {
+            "entry": "drm-events-bridge/drm-events-bridge.php",
+            "entry_sha256": "90ded5e059fe0974d465ae9627f8b12d36154b2b83a384b85238d6767028efed",
+            "name": "DRM Events Bridge",
+            "version": "0.2.2",
+            "requires_wordpress": "6.8",
+            "requires_php": "8.3",
+            "requires_plugins": "",
+            "file_count": 9,
+            "sha256": "075878dc3628d5f6f26ce96e51ea328c0ce040ddf2b7036e3c18136029d979b3"
+        },
+        "drm-event-router": {
+            "entry": "drm-event-router/drm-event-router.php",
+            "entry_sha256": "e5cb839c969756fafc04f1ec6e8ec1e1b658ef3f08b6fc7e3ea7ed90480d8372",
+            "name": "DRM Event Router",
+            "version": "0.1.4",
+            "requires_wordpress": "6.4",
+            "requires_php": "7.4",
+            "requires_plugins": "",
+            "file_count": 13,
+            "sha256": "647ea4f23faaef737809f5cd83a0852f63cb4263dd26579a98cdb99cb4260888"
+        }
+    },
+    "source_selection": {
+        "vms-commerce-discounts": "Phase 5A corrected archive 0.2.12 reconstructed from authoritative 0.2.11; installed 0.2.4 and temporary 0.2.9 copies excluded as stale",
+        "vmsx-weather-risk": "latest versioned installable archive 0.1.12; installed active 0.1.3 copy excluded as stale",
+        "drm-events-bridge": "immutable git archive of deployed release commit b1efcc974233a3b43c2a9efa30533c6688f87320; dirty worktree excluded",
+        "drm-event-router": "immutable git archive of production-matched commit 7a4232ee327e2b5385e257cd7d20bf48e19d67fd"
+    },
+    "blocked": [],
+    "retired": {
+        "vms-safety-pro": {
+            "name": "VMS Safety Toolkit Pro",
+            "version": "0.1.0",
+            "status": "RETIRED — excluded from Phase 6A runtime and coexistence scenarios"
+        }
+    },
+    "indirect": {
+        "drm-event-router": {
+            "reason": "Produces the vms_projection payload but neither detects nor calls BVM runtime."
+        },
+        "backstage-calendar-feeds": {
+            "reason": "Consumes DRM Calendar Intake provider contracts; no direct BVM runtime contract was found."
+        },
+        "event-venue-map-modal": {
+            "reason": "Integrates with The Events Calendar presentation only; no direct BVM runtime contract was found."
+        }
+    },
+    "git_provenance": {
+        "drm-events-bridge": {
+            "commit": "b1efcc974233a3b43c2a9efa30533c6688f87320",
+            "git_tree": "3e2c1e49411c6811065f7f8eacca8fdaf736ed60",
+            "bootstrap_sha256": "90ded5e059fe0974d465ae9627f8b12d36154b2b83a384b85238d6767028efed",
+            "dirty_source_status_before_sha256": "6cdc2a1cde71acbab832a682aa0fb3d6f784d6c51fdacec93d2cab55396126c6"
+        },
+        "drm-event-router": {
+            "commit": "7a4232ee327e2b5385e257cd7d20bf48e19d67fd",
+            "git_tree": "a9c3fb75bb59b6b24426ea3a93a3b581c21aebba",
+            "bootstrap_sha256": "e5cb839c969756fafc04f1ec6e8ec1e1b658ef3f08b6fc7e3ea7ed90480d8372"
+        }
+    }
+}

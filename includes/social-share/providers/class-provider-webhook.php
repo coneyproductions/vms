@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
+class BVMGR_Social_Provider_Webhook implements BVMGR_Social_Provider_Interface
 {
 	public function get_platform_key(): string
 	{
@@ -43,7 +43,7 @@ class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
 
 	public function validate_connection(int $account_id): array
 	{
-		$cfg = function_exists('vms_social_account_token_json') ? vms_social_account_token_json($account_id) : array();
+		$cfg = function_exists('bvmgr_social_account_token_json') ? bvmgr_social_account_token_json($account_id) : array();
 		$url = esc_url_raw((string) ($cfg['webhook_url'] ?? ''));
 		$ok = $url !== '';
 		return array(
@@ -82,7 +82,7 @@ class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
 
 	public function publish(int $account_id, string $destination_id, array $rendered_payload): array
 	{
-		$cfg = function_exists('vms_social_account_token_json') ? vms_social_account_token_json($account_id) : array();
+		$cfg = function_exists('bvmgr_social_account_token_json') ? bvmgr_social_account_token_json($account_id) : array();
 		$url = esc_url_raw((string) ($cfg['webhook_url'] ?? ''));
 		if ($url === '') {
 			throw new RuntimeException('Webhook URL is missing.');
@@ -111,12 +111,12 @@ class VMS_Social_Provider_Webhook implements VMS_Social_Provider_Interface
 		);
 
 		if (is_wp_error($response)) {
-			throw new RuntimeException((string) $response->get_error_message());
+			throw new RuntimeException((string) $response->get_error_message()); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook transport diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.
 		}
 
 		$code = (int) wp_remote_retrieve_response_code($response);
 		if ($code < 200 || $code >= 300) {
-			throw new RuntimeException('Webhook returned HTTP ' . $code);
+			throw new RuntimeException('Webhook returned HTTP ' . $code); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook status diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.
 		}
 
 		return array(

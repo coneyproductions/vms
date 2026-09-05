@@ -13,7 +13,7 @@ defined('ABSPATH') || exit;
  * Convert a money-ish string into a float.
  * Accepts: "125", "125.00", "$1,250.50", " 1 250.50 "
  */
-function vms_payables_sanitize_amount($raw): float
+function bvmgr_payables_sanitize_amount($raw): float
 {
     $raw = is_scalar($raw) ? (string) $raw : '';
     $raw = trim($raw);
@@ -38,15 +38,15 @@ function vms_payables_sanitize_amount($raw): float
  * 2) Vendor legal name (_vms_payee_legal_name)
  * 3) Vendor post_title
  */
-function vms_payables_resolve_vendor_payee_name(int $vendor_id): string
+function bvmgr_payables_resolve_vendor_payee_name(int $vendor_id): string
 {
     $vendor_id = (int) $vendor_id;
     if ($vendor_id <= 0) {
         return '';
     }
 
-    $k_dba   = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'payee_dba') : '_vms_payee_dba';
-    $k_legal = function_exists('vms_meta_key') ? (string) vms_meta_key('vendor', 'payee_legal_name') : '_vms_payee_legal_name';
+    $k_dba   = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'payee_dba') : '_vms_payee_dba';
+    $k_legal = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('vendor', 'payee_legal_name') : '_vms_payee_legal_name';
 
     $dba = (string) get_post_meta($vendor_id, $k_dba, true);
     $dba = trim($dba);
@@ -71,7 +71,7 @@ function vms_payables_resolve_vendor_payee_name(int $vendor_id): string
  * Format (v1):
  *   VMS-{venue_slug}-{YYYYMMDD}-{vendor_id}
  */
-function vms_payables_build_bill_no(string $event_date, int $venue_id, int $vendor_id): string
+function bvmgr_payables_build_bill_no(string $event_date, int $venue_id, int $vendor_id): string
 {
     $venue_id  = (int) $venue_id;
     $vendor_id = (int) $vendor_id;
@@ -85,7 +85,7 @@ function vms_payables_build_bill_no(string $event_date, int $venue_id, int $vend
     $ymd = preg_replace('/[^0-9]/', '', (string) $event_date); // supports YYYY-MM-DD → YYYYMMDD
     if (strlen($ymd) !== 8) {
         // fallback: today
-        $ymd = date('Ymd');
+        $ymd = gmdate('Ymd');
     }
 
     if ($venue_slug === '') {
@@ -98,7 +98,7 @@ function vms_payables_build_bill_no(string $event_date, int $venue_id, int $vend
 /**
  * Add days to a YYYY-MM-DD date. Returns YYYY-MM-DD or '' on failure.
  */
-function vms_payables_add_days(string $ymd, int $days): string
+function bvmgr_payables_add_days(string $ymd, int $days): string
 {
     $ymd  = trim((string) $ymd);
     $days = (int) $days;
@@ -107,16 +107,26 @@ function vms_payables_add_days(string $ymd, int $days): string
         return '';
     }
 
-    $ts = strtotime($ymd . ' 00:00:00');
-    if (!$ts) {
+    $utc = new DateTimeZone('UTC');
+    try {
+        $date = new DateTimeImmutable($ymd . ' 00:00:00', $utc);
+    } catch (Exception $exception) {
+        return '';
+    }
+    $date = $date->setTimezone($utc);
+
+    if ($date->getTimestamp() === 0) {
         return '';
     }
 
     if ($days !== 0) {
-        $ts = strtotime(($days >= 0 ? '+' : '') . $days . ' days', $ts);
+        $date = $date->modify(($days >= 0 ? '+' : '') . $days . ' days');
+        if (!$date instanceof DateTimeImmutable) {
+            return '';
+        }
     }
 
-    return date('Y-m-d', $ts);
+    return $date->format('Y-m-d');
 }
 
 /**
@@ -146,7 +156,7 @@ function vms_payables_add_days(string $ymd, int $days): string
  *    ],
  *  ]
  */
-function vms_payables_build_bills_for_export(string $event_date, array $venue_ids, array $args = []): array
+function bvmgr_payables_build_bills_for_export(string $event_date, array $venue_ids, array $args = []): array
 {
     $event_date = trim((string) $event_date);
 
@@ -158,8 +168,8 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
     $include_zero = !empty($args['include_zero']);
     $include_tax_incomplete = !empty($args['include_tax_incomplete']);
 
-    if (function_exists('vms_event_plan_allowed_statuses')) {
-        $all = vms_event_plan_allowed_statuses('payables_export', array(
+    if (function_exists('bvmgr_event_plan_allowed_statuses')) {
+        $all = bvmgr_event_plan_allowed_statuses('payables_export', array(
             'include_drafts' => true,
             'include_cancelled' => false,
             'include_archived' => false,
@@ -179,25 +189,25 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
         ];
     }
 
-    if (!defined('VMS_CPT_EVENT_PLAN')) {
-        define('VMS_CPT_EVENT_PLAN', 'vms_event_plan');
+    if (!defined('BVMGR_CPT_EVENT_PLAN')) {
+        define('BVMGR_CPT_EVENT_PLAN', 'vms_event_plan');
     }
 
-    $k_date   = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
-    $k_venue  = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
-    $k_status = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'status') : '_vms_event_plan_status';
-    $k_vendor = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
-    $k_struct = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'comp_structure') : '_vms_comp_structure';
-    $k_flat   = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'flat_fee_amount') : '_vms_flat_fee_amount';
+    $k_date   = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
+    $k_venue  = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
+    $k_status = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+    $k_vendor = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '_vms_band_vendor_id';
+    $k_struct = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'comp_structure') : '_vms_comp_structure';
+    $k_flat   = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'flat_fee_amount') : '_vms_flat_fee_amount';
 
     $q = [
-        'post_type'      => VMS_CPT_EVENT_PLAN,
+        'post_type'      => BVMGR_CPT_EVENT_PLAN,
         'post_status'    => ['publish', 'draft', 'pending', 'private'],
         'posts_per_page' => -1,
         'fields'         => 'ids',
         'orderby'        => 'ID',
         'order'          => 'ASC',
-        'meta_query'     => [
+        'meta_query'     => [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- A payables export must include the complete Event Plan set for one requested date, finite venue list, and allowlisted workflow statuses so no payable line is omitted.
             'relation' => 'AND',
             [
                 'key'     => $k_date,
@@ -229,14 +239,14 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
     $bills = [];
 
     $append_line = static function (array &$bills, int $plan_id, int $venue_id, string $event_date, int $vendor_id, float $amount, string $structure, string $description, bool $payment_blocked, bool $tax_missing, bool $bypass_active, string $bypass_until, int $terms_days) {
-        $supplier = vms_payables_resolve_vendor_payee_name($vendor_id);
+        $supplier = bvmgr_payables_resolve_vendor_payee_name($vendor_id);
         if ($supplier === '') {
             return false;
         }
 
-        $bill_no   = vms_payables_build_bill_no($event_date, $venue_id, $vendor_id);
+        $bill_no   = bvmgr_payables_build_bill_no($event_date, $venue_id, $vendor_id);
         $bill_date = $event_date;
-        $due_date  = ($terms_days !== 0) ? vms_payables_add_days($event_date, $terms_days) : $event_date;
+        $due_date  = ($terms_days !== 0) ? bvmgr_payables_add_days($event_date, $terms_days) : $event_date;
         $key = $vendor_id . '|' . $venue_id . '|' . $event_date;
 
         if (!isset($bills[$key])) {
@@ -289,14 +299,14 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
 
         if ($vendor_id > 0) {
             $tax_missing = false;
-            if (function_exists('vms_is_vendor_tax_profile_complete')) {
-                $tax_missing = !vms_is_vendor_tax_profile_complete((int) $vendor_id);
+            if (function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+                $tax_missing = !bvmgr_is_vendor_tax_profile_complete((int) $vendor_id);
             }
 
             $bypass_active = false;
             $bypass_until = '';
-            if (function_exists('vms_get_tax_bypass_status')) {
-                $st = (array) vms_get_tax_bypass_status((int) $vendor_id);
+            if (function_exists('bvmgr_get_tax_bypass_status')) {
+                $st = (array) bvmgr_get_tax_bypass_status((int) $vendor_id);
                 $bypass_active = !empty($st['is_active']);
                 $bypass_until = isset($st['until']) ? (string) $st['until'] : '';
             }
@@ -304,11 +314,11 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
             $payment_blocked = ($tax_missing && !$bypass_active);
 
             if ($payment_blocked && empty($include_tax_incomplete)) {
-                $vendor_label = vms_payables_resolve_vendor_payee_name($vendor_id);
+                $vendor_label = bvmgr_payables_resolve_vendor_payee_name($vendor_id);
                 $warnings[] = "Excluded bill for '" . $vendor_label . "' (tax profile incomplete). Payments/exports are blocked until resolved or bypass set.";
             } else {
                 $structure = trim((string) get_post_meta($plan_id, $k_struct, true));
-                $amount = vms_payables_sanitize_amount(get_post_meta($plan_id, $k_flat, true));
+                $amount = bvmgr_payables_sanitize_amount(get_post_meta($plan_id, $k_flat, true));
 
                 if ($amount <= 0.0 && !$include_zero) {
                     $guaranteed_structures = array('flat_fee', 'flat_fee_door_split', 'attendance_bonus');
@@ -321,7 +331,7 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
                     }
                 } else {
                     $primary_desc = $base_desc;
-                    if (!empty(function_exists('vms_get_event_plan_lineup_primary_entry') ? vms_get_event_plan_lineup_primary_entry($plan_id) : array())) {
+                    if (!empty(function_exists('bvmgr_get_event_plan_lineup_primary_entry') ? bvmgr_get_event_plan_lineup_primary_entry($plan_id) : array())) {
                         $primary_desc .= ' — Primary lineup entry';
                     }
                     if (!$append_line($bills, $plan_id, $venue_id, $event_date, $vendor_id, $amount, $structure, $primary_desc, $payment_blocked, $tax_missing, $bypass_active, $bypass_until, $terms_days)) {
@@ -333,11 +343,11 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
             $warnings[] = 'Plan #' . $plan_id . ' has no primary vendor linked; primary payable skipped.';
         }
 
-        if (!function_exists('vms_get_event_plan_lineup_supporting_entries')) {
+        if (!function_exists('bvmgr_get_event_plan_lineup_supporting_entries')) {
             continue;
         }
 
-        $supporting_entries = (array) vms_get_event_plan_lineup_supporting_entries($plan_id, array(
+        $supporting_entries = (array) bvmgr_get_event_plan_lineup_supporting_entries($plan_id, array(
             'event_date' => $event_date,
             'venue_id' => $venue_id,
         ));
@@ -351,26 +361,26 @@ function vms_payables_build_bills_for_export(string $event_date, array $venue_id
                 continue;
             }
 
-            $support_amount = vms_payables_sanitize_amount($entry['guaranteed_fee'] ?? '');
+            $support_amount = bvmgr_payables_sanitize_amount($entry['guaranteed_fee'] ?? '');
             if ($support_amount <= 0.0 && !$include_zero) {
                 $warnings[] = 'Plan #' . $plan_id . ' supporting lineup entry #' . ($entry_index + 1) . ' has $0 guaranteed fee; skipped.';
                 continue;
             }
 
             $support_tax_missing = false;
-            if (function_exists('vms_is_vendor_tax_profile_complete')) {
-                $support_tax_missing = !vms_is_vendor_tax_profile_complete((int) $support_vendor_id);
+            if (function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+                $support_tax_missing = !bvmgr_is_vendor_tax_profile_complete((int) $support_vendor_id);
             }
             $support_bypass_active = false;
             $support_bypass_until = '';
-            if (function_exists('vms_get_tax_bypass_status')) {
-                $support_st = (array) vms_get_tax_bypass_status((int) $support_vendor_id);
+            if (function_exists('bvmgr_get_tax_bypass_status')) {
+                $support_st = (array) bvmgr_get_tax_bypass_status((int) $support_vendor_id);
                 $support_bypass_active = !empty($support_st['is_active']);
                 $support_bypass_until = isset($support_st['until']) ? (string) $support_st['until'] : '';
             }
             $support_payment_blocked = ($support_tax_missing && !$support_bypass_active);
             if ($support_payment_blocked && empty($include_tax_incomplete)) {
-                $vendor_label = vms_payables_resolve_vendor_payee_name($support_vendor_id);
+                $vendor_label = bvmgr_payables_resolve_vendor_payee_name($support_vendor_id);
                 $warnings[] = "Excluded bill for '" . $vendor_label . "' (tax profile incomplete). Payments/exports are blocked until resolved or bypass set.";
                 continue;
             }

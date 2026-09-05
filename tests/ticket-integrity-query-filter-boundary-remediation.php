@@ -1,0 +1,681 @@
+<?php
+declare(strict_types=1);
+
+function vms_test_fail(string $message): void
+{
+	throw new RuntimeException($message);
+}
+
+function vms_test_assert_true(bool $condition, string $message): void
+{
+	if ($condition) {
+		return;
+	}
+
+	vms_test_fail($message);
+}
+
+/**
+ * @param mixed $expected
+ * @param mixed $actual
+ */
+function vms_test_assert_same($expected, $actual, string $message): void
+{
+	if ($expected === $actual) {
+		return;
+	}
+
+	vms_test_fail(
+		$message
+		. "\nExpected: " . var_export($expected, true)
+		. "\nActual: " . var_export($actual, true)
+	);
+}
+
+function vms_test_assert_contains(string $needle, string $haystack, string $message): void
+{
+	vms_test_assert_true(strpos($haystack, $needle) !== false, $message . "\nMissing: " . $needle);
+}
+
+function vms_test_assert_not_contains(string $needle, string $haystack, string $message): void
+{
+	vms_test_assert_true(strpos($haystack, $needle) === false, $message . "\nUnexpected: " . $needle);
+}
+
+function vms_test_read_file(string $path): string
+{
+	$contents = file_get_contents($path);
+	if (!is_string($contents) || $contents === '') {
+		vms_test_fail('Failed to read source file: ' . $path);
+	}
+
+	return $contents;
+}
+
+function vms_test_extract_function(string $source, string $name): string
+{
+	$pattern = '~function\s+' . preg_quote($name, '~') . '\s*\(~';
+	if (!preg_match($pattern, $source, $matches, PREG_OFFSET_CAPTURE)) {
+		vms_test_fail('Unable to locate function ' . $name . '.');
+	}
+	$start = (int) $matches[0][1];
+
+	$brace = strpos($source, '{', $start);
+	if ($brace === false) {
+		vms_test_fail('Unable to locate opening brace for ' . $name . '.');
+	}
+
+	$depth = 1;
+	$length = strlen($source);
+	for ($i = $brace + 1; $i < $length; $i++) {
+		$char = $source[$i];
+		if ($char === '{') {
+			$depth++;
+			continue;
+		}
+		if ($char === '}') {
+			$depth--;
+			if ($depth === 0) {
+				return substr($source, $start, ($i - $start) + 1);
+			}
+		}
+	}
+
+	vms_test_fail('Unable to locate closing brace for ' . $name . '.');
+}
+
+function vms_test_project_g16_monitor_logging(string $source): string
+{
+	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
+	$last = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
+	$last_start = strpos($source, $last, (int) $start);
+	vms_test_assert_true($start !== false && $last_start !== false, 'G16 monitor helper bounds changed.');
+	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
+	vms_test_assert_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), 'G16 monitor helper block changed.');
+	$source = str_replace($block . "\n\n", '', $source, $count);
+	vms_test_assert_same(1, $count, 'G16 monitor helper removal changed.');
+	$current = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown');
+	vms_test_assert_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), 'G16 monitor shutdown changed.');
+	$fixture = vms_test_read_file(__DIR__ . '/g16-operational-logging-group-c.php');
+	vms_test_assert_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), 'G16 historical shutdown fixture changed.');
+	$historical = base64_decode($match[1], true);
+	vms_test_assert_true(is_string($historical) && $historical !== '', 'G16 historical shutdown decode failed.');
+	$source = str_replace($current, $historical, $source, $count);
+	vms_test_assert_same(1, $count, 'G16 shutdown reverse count changed.');
+	return $source;
+}
+
+function vms_test_count_pattern(string $pattern, string $contents): int
+{
+	$count = preg_match_all($pattern, $contents);
+	if ($count === false) {
+		vms_test_fail('Failed counting pattern: ' . $pattern);
+	}
+
+	return $count;
+}
+
+function vms_test_project_g16_vendor_logging(string $source): string
+{
+	$specs = array(
+		array(
+			'current' => "\t\t\t\tvms_record_operational_issue(\n"
+				. "\t\t\t\t\t'vendor_type_default_term_ensure_failed',\n"
+				. "\t\t\t\t\tarray(\n"
+				. "\t\t\t\t\t\t'service' => 'vendor_taxonomy',\n"
+				. "\t\t\t\t\t\t'entity_type' => 'vendor_type',\n"
+				. "\t\t\t\t\t\t'operation' => 'ensure_default',\n"
+				. "\t\t\t\t\t\t'stage' => 'term_insert',\n"
+				. "\t\t\t\t\t\t'status' => 'failed',\n"
+				. "\t\t\t\t\t),\n"
+				. "\t\t\t\t\t\$created\n"
+				. "\t\t\t\t);",
+			'historical' => " \t\t\t\terror_log('[VMS] vendor-type: failed to ensure default term ' . \$slug . ' (' . \$created->get_error_message() . ')');",
+		),
+		array(
+			'current' => "\t\t\t\t\tvms_record_operational_issue(\n"
+				. "\t\t\t\t\t\t'vendor_type_duplicate_term_delete_failed',\n"
+				. "\t\t\t\t\t\tarray(\n"
+				. "\t\t\t\t\t\t\t'service' => 'vendor_taxonomy',\n"
+				. "\t\t\t\t\t\t\t'entity_type' => 'vendor_type',\n"
+				. "\t\t\t\t\t\t\t'operation' => 'delete_duplicate',\n"
+				. "\t\t\t\t\t\t\t'stage' => 'canonicalization',\n"
+				. "\t\t\t\t\t\t\t'status' => 'failed',\n"
+				. "\t\t\t\t\t\t\t'entity_id' => (int) \$term->term_id,\n"
+				. "\t\t\t\t\t\t),\n"
+				. "\t\t\t\t\t\t\$deleted\n"
+				. "\t\t\t\t\t);",
+			'historical' => " \t\t\t\t\terror_log('[VMS] vendor-type: failed deleting duplicate term #' . (int) \$term->term_id . ' (' . \$deleted->get_error_message() . ')');",
+		),
+	);
+	foreach ($specs as $index => $spec) {
+		vms_test_assert_same(1, substr_count($source, $spec['current']), 'G16 vendor projection fragment changed at index ' . $index . '.');
+		$count = 0;
+		$source = str_replace($spec['current'], $spec['historical'], $source, $count);
+		vms_test_assert_same(1, $count, 'G16 vendor projection must restore each historical statement once.');
+	}
+	return $source;
+}
+
+function vms_test_collect_suppress_filters_true_occurrences(string $directory): array
+{
+	$matches = array();
+	$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
+	foreach ($iterator as $item) {
+		if (!$item->isFile() || strtolower($item->getExtension()) !== 'php') {
+			continue;
+		}
+
+		$contents = file_get_contents($item->getPathname());
+		if (!is_string($contents)) {
+			vms_test_fail('Failed to read PHP file while scanning suppress_filters: ' . $item->getPathname());
+		}
+
+		if (preg_match("/'suppress_filters'\\s*=>\\s*true/", $contents)) {
+			$matches[] = $item->getPathname();
+		}
+	}
+
+	sort($matches);
+	return $matches;
+}
+
+/**
+ * @param array<int,array<string,mixed>> $targets
+ * @return array<int,int>
+ */
+function vms_test_target_plan_ids(array $targets): array
+{
+	$ids = array();
+	foreach ($targets as $target) {
+		$ids[] = (int) ($target['plan_id'] ?? 0);
+	}
+
+	return $ids;
+}
+
+function vms_test_seed_query_dataset(bool $include_cancelled_target = false): void
+{
+	$now = time();
+	$tomorrow = date('Y-m-d', $now + DAY_IN_SECONDS);
+	$day_after = date('Y-m-d', $now + (2 * DAY_IN_SECONDS));
+	$future = date('Y-m-d', $now + (3 * DAY_IN_SECONDS));
+	$past = date('Y-m-d', $now - DAY_IN_SECONDS);
+
+	$GLOBALS['vms_test_query_pages'] = array(
+		1 => array(101, 202),
+		2 => array(303, 404),
+	);
+	$GLOBALS['vms_test_titles'] = array(
+		1101 => 'Alpha Event',
+		1202 => 'Bravo Event',
+		1303 => 'Cancelled Event',
+		1404 => 'Past Event',
+	);
+	$GLOBALS['vms_test_linked_tec_events'] = array(
+		101 => 1101,
+		202 => 1202,
+		303 => 1303,
+		404 => 1404,
+	);
+	$GLOBALS['vms_test_cancelled_events'] = array(
+		1101 => false,
+		1202 => $include_cancelled_target,
+		1303 => true,
+		1404 => false,
+	);
+	$GLOBALS['vms_test_event_ticket_products'] = array(
+		1101 => array(9101),
+		1202 => array(9202),
+		1303 => array(9303),
+		1404 => array(9404),
+	);
+	$GLOBALS['vms_test_meta'] = array(
+		101 => array(
+			'_vms_tec_event_id' => 1101,
+			'_vms_event_date' => $tomorrow,
+			'_vms_start_time' => '19:00',
+		),
+		202 => array(
+			'_vms_tec_event_id' => 1202,
+			'_vms_event_date' => $day_after,
+			'_vms_start_time' => '20:00',
+		),
+		303 => array(
+			'_vms_tec_event_id' => 1303,
+			'_vms_event_date' => $future,
+			'_vms_start_time' => '18:30',
+		),
+		404 => array(
+			'_vms_tec_event_id' => 1404,
+			'_vms_event_date' => $past,
+			'_vms_start_time' => '17:00',
+		),
+	);
+}
+
+function vms_test_reset_runtime_state(): void
+{
+	$GLOBALS['vms_test_query_calls'] = array();
+	$GLOBALS['vms_test_query_filter_callback'] = null;
+	$GLOBALS['vms_test_apply_filters'] = array(
+		'vms_ticket_integrity_target_query_batch_size' => 100,
+	);
+}
+
+if (!defined('ABSPATH')) {
+	define('ABSPATH', dirname(__DIR__) . '/');
+}
+
+if (!defined('DAY_IN_SECONDS')) {
+	define('DAY_IN_SECONDS', 86400);
+}
+
+if (!function_exists('absint')) {
+	function absint($value): int
+	{
+		return abs((int) $value);
+	}
+}
+
+if (!function_exists('__')) {
+	function __(string $text, string $domain = ''): string
+	{
+		unset($domain);
+		return $text;
+	}
+}
+
+if (!function_exists('apply_filters')) {
+	function apply_filters(string $tag, $value)
+	{
+		return $GLOBALS['vms_test_apply_filters'][$tag] ?? $value;
+	}
+}
+
+if (!function_exists('sanitize_key')) {
+	function sanitize_key($key): string
+	{
+		$key = strtolower((string) $key);
+		$key = preg_replace('/[^a-z0-9_\-]/', '', $key);
+		return is_string($key) ? $key : '';
+	}
+}
+
+if (!function_exists('sanitize_email')) {
+	function sanitize_email($email): string
+	{
+		$email = trim((string) $email);
+		return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
+	}
+}
+
+if (!function_exists('get_option')) {
+	function get_option(string $option, $default = false)
+	{
+		return $GLOBALS['vms_test_options'][$option] ?? $default;
+	}
+}
+
+if (!function_exists('get_post_meta')) {
+	function get_post_meta(int $post_id, string $key, bool $single = true)
+	{
+		unset($single);
+		return $GLOBALS['vms_test_meta'][$post_id][$key] ?? '';
+	}
+}
+
+if (!function_exists('metadata_exists')) {
+	function metadata_exists(string $meta_type, int $object_id, string $meta_key): bool
+	{
+		unset($meta_type);
+		return array_key_exists($meta_key, $GLOBALS['vms_test_meta'][$object_id] ?? array());
+	}
+}
+
+if (!function_exists('get_the_title')) {
+	function get_the_title(int $post_id): string
+	{
+		return (string) ($GLOBALS['vms_test_titles'][$post_id] ?? '');
+	}
+}
+
+if (!function_exists('wp_reset_postdata')) {
+	function wp_reset_postdata(): void
+	{
+	}
+}
+
+if (!function_exists('wp_timezone')) {
+	function wp_timezone(): DateTimeZone
+	{
+		return new DateTimeZone('UTC');
+	}
+}
+
+if (!function_exists('wp_date')) {
+	function wp_date(string $format, int $timestamp, ?DateTimeZone $timezone = null): string
+	{
+		$timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone('UTC');
+		$date = new DateTimeImmutable('@' . $timestamp);
+		return $date->setTimezone($timezone)->format($format);
+	}
+}
+
+if (!function_exists('bvmgr_ticketing_b_meta_key')) {
+	function bvmgr_ticketing_b_meta_key(string $field, string $fallback): string
+	{
+		unset($field);
+		return $fallback;
+	}
+}
+
+if (!function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')) {
+	function bvmgr_ticketing_b_get_linked_tec_event_id(int $plan_id): int
+	{
+		return (int) ($GLOBALS['vms_test_linked_tec_events'][$plan_id] ?? 0);
+	}
+}
+
+if (!function_exists('bvmgr_ticket_integrity_parse_wp_datetime')) {
+	function bvmgr_ticket_integrity_parse_wp_datetime(string $value): int
+	{
+		$timestamp = strtotime($value . ' UTC');
+		return $timestamp === false ? 0 : $timestamp;
+	}
+}
+
+if (!function_exists('bvmgr_ticketing_b_get_mode')) {
+	function bvmgr_ticketing_b_get_mode(int $plan_id): string
+	{
+		unset($plan_id);
+		return 'read_only';
+	}
+}
+
+if (!function_exists('bvmgr_ticketing_b_get_event_ticket_products')) {
+	function bvmgr_ticketing_b_get_event_ticket_products(int $tec_event_id): array
+	{
+		return $GLOBALS['vms_test_event_ticket_products'][$tec_event_id] ?? array();
+	}
+}
+
+if (!function_exists('bvmgr_tec_is_cancelled_event')) {
+	function bvmgr_tec_is_cancelled_event(int $tec_event_id): bool
+	{
+		return !empty($GLOBALS['vms_test_cancelled_events'][$tec_event_id]);
+	}
+}
+
+if (!class_exists('WP_Query')) {
+	final class WP_Query
+	{
+		/** @var array<int,int> */
+		public array $posts = array();
+
+		public int $max_num_pages = 0;
+
+		/**
+		 * @param array<string,mixed> $args
+		 */
+		public function __construct(array $args = array())
+		{
+			$GLOBALS['vms_test_query_calls'][] = $args;
+			$page = abs((int) ($args['paged'] ?? 1));
+			$pages = $GLOBALS['vms_test_query_pages'] ?? array();
+			$posts = $pages[$page] ?? array();
+			if (!empty($GLOBALS['vms_test_query_filter_callback']) && empty($args['suppress_filters'])) {
+				$callback = $GLOBALS['vms_test_query_filter_callback'];
+				$posts = $callback($posts, $args);
+			}
+
+			$this->posts = array_values(array_map('intval', $posts));
+			$this->max_num_pages = count($pages);
+		}
+	}
+}
+
+require_once dirname(__DIR__) . '/includes/ticketing/ticket-integrity-monitor.php';
+
+$monitor_path = dirname(__DIR__) . '/includes/ticketing/ticket-integrity-monitor.php';
+$vendor_type_path = dirname(__DIR__) . '/includes/taxonomies/vendor-type.php';
+$admin_page_path = dirname(__DIR__) . '/includes/admin/ticket-integrity-page.php';
+$cron_path = dirname(__DIR__) . '/includes/ticketing/ticket-integrity-cron.php';
+$daily_report_path = dirname(__DIR__) . '/includes/ticketing/ticket-integrity-daily-report.php';
+$live_monitor_path = dirname(__DIR__, 3) . '/vms/includes/ticketing/ticket-integrity-monitor.php';
+$includes_dir = dirname(__DIR__) . '/includes';
+
+$monitor_source = vms_test_read_file($monitor_path);
+$vendor_type_source = vms_test_read_file($vendor_type_path);
+$admin_page_source = vms_test_read_file($admin_page_path);
+$cron_source = vms_test_read_file($cron_path);
+$daily_report_source = vms_test_read_file($daily_report_path);
+$live_monitor_source = vms_test_read_file($live_monitor_path);
+$build_targets_source = vms_test_extract_function($monitor_source, 'bvmgr_ticket_integrity_build_targets');
+$scan_all_source = vms_test_extract_function($monitor_source, 'bvmgr_ticket_integrity_scan_all');
+$vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'bvmgr_vendor_type_maybe_canonicalize_terms');
+
+$live_monitor_projection = vms_test_project_g16_monitor_logging($live_monitor_source);
+$live_monitor_projection_removals = 0;
+$live_monitor_annotations = array(
+	' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.',
+	' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket Integrity intentionally paginates the complete published, linked Event Plan set inside the configured date window before applying ticketing and activity checks.',
+);
+foreach ($live_monitor_annotations as $annotation) {
+	vms_test_assert_same(
+		1,
+		substr_count($live_monitor_projection, $annotation),
+		'Live Ticket Integrity monitor should contain each exact G10 query annotation once.'
+	);
+	$live_monitor_projection = str_replace($annotation, '', $live_monitor_projection, $removals);
+	$live_monitor_projection_removals += $removals;
+}
+vms_test_assert_same(
+	2,
+	$live_monitor_projection_removals,
+	'Live Ticket Integrity monitor projection should strip exactly the two authorized G10 query annotations.'
+);
+$live_monitor_g15_projection_rows = 0;
+$live_monitor_g15_fragments = array(
+	array(
+		'current' => "\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());",
+		'historical' => "\tif (function_exists('wp_date')) {\n\t\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());\n\t}\n\n\treturn date('Y-m-d g:i a', \$timestamp);",
+		'rows' => 1,
+	),
+	array(
+		'current' => "\t\$tz = wp_timezone();\n\t\$start_date = wp_date('Y-m-d', \$now, \$tz);\n\t\$end_date = wp_date('Y-m-d', \$cutoff, \$tz);",
+		'historical' => "\t\$tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');\n\t\$start_date = function_exists('wp_date') ? wp_date('Y-m-d', \$now, \$tz) : date('Y-m-d', \$now);\n\t\$end_date = function_exists('wp_date') ? wp_date('Y-m-d', \$cutoff, \$tz) : date('Y-m-d', \$cutoff);",
+		'rows' => 2,
+	),
+);
+foreach ($live_monitor_g15_fragments as $fragment) {
+	vms_test_assert_same(1, substr_count($live_monitor_projection, $fragment['current']), 'Live monitor should contain each exact G15 date replacement once.');
+	$live_monitor_projection = str_replace($fragment['current'], $fragment['historical'], $live_monitor_projection, $removals);
+	vms_test_assert_same(1, $removals, 'Live monitor projection should reverse each exact G15 date replacement once.');
+	$live_monitor_g15_projection_rows += $fragment['rows'];
+}
+vms_test_assert_same(3, $live_monitor_g15_projection_rows, 'Live monitor projection must reverse exactly three G15 date rows.');
+
+vms_test_assert_same(
+	1,
+	vms_test_count_pattern('/WordPressVIPMinimum\.Performance\.WPQueryParams\.SuppressFilters_suppress_filters/', $monitor_source),
+	'Ticket Integrity monitor should contain exactly one line-specific SuppressFilters suppression.'
+);
+vms_test_assert_contains(
+	"Ticket Integrity scans require the canonical unfiltered event-plan dataset",
+	$monitor_source,
+	'Ticket Integrity suppression should explain the bounded canonical-query requirement.'
+);
+$vendor_type_suppression = "// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- get_posts() already defaults suppress_filters to true; keep the explicit value to document this one-time canonical vendor-type migration across all event plans when normalizing legacy secondary vendor type meta.";
+vms_test_assert_same(
+	1,
+	substr_count($vendor_type_source, 'WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters'),
+	'Vendor-type canonicalization should contain exactly one verified E2 SuppressFilters suppression.'
+);
+vms_test_assert_contains(
+	$vendor_type_suppression,
+	$vendor_type_canonicalize_source,
+	'Vendor-type canonicalization should preserve the exact E2 suppression rationale.'
+);
+vms_test_assert_same(
+	1,
+	vms_test_count_pattern("/'suppress_filters'\s*=>\s*true/", $vendor_type_canonicalize_source),
+	'Vendor-type canonicalization should contain exactly one explicit suppress_filters=true query argument.'
+);
+vms_test_assert_true(
+	(bool) preg_match(
+		"/get_posts\(\[\s*'post_type'\s*=>\s*'vms_event_plan',\s*'post_status'\s*=>\s*'any',\s*'numberposts'\s*=>\s*-1,\s*'fields'\s*=>\s*'ids',\s*'no_found_rows'\s*=>\s*true,\s*\/\/ phpcs:ignore WordPressVIPMinimum\.Performance\.WPQueryParams\.SuppressFilters_suppress_filters -- get_posts\(\) already defaults suppress_filters to true; keep the explicit value to document this one-time canonical vendor-type migration across all event plans when normalizing legacy secondary vendor type meta\.\s*'suppress_filters'\s*=>\s*true,\s*\]\);/",
+		$vendor_type_canonicalize_source
+	),
+	'Vendor-type canonicalization should preserve the exact bounded event-plan get_posts() query.'
+);
+vms_test_assert_contains(
+	"if (!taxonomy_exists('vms_vendor_type')) {",
+	$vendor_type_canonicalize_source,
+	'Vendor-type canonicalization should remain scoped to the registered vendor-type taxonomy.'
+);
+vms_test_assert_contains(
+	"add_action('init', 'bvmgr_vendor_type_maybe_canonicalize_terms', 22);",
+	$vendor_type_source,
+	'Vendor-type canonicalization should remain registered on init at priority 22 with the default accepted-argument count.'
+);
+vms_test_assert_same(
+	1,
+	vms_test_count_pattern("/add_action\(\s*'init'\s*,\s*'bvmgr_vendor_type_maybe_canonicalize_terms'\s*,\s*22\s*\);/", $vendor_type_source),
+	'Vendor-type canonicalization should have exactly one init hook registration.'
+);
+vms_test_assert_not_contains(
+	'add_filter(',
+	$vendor_type_canonicalize_source,
+	'Vendor-type canonicalization should not add broad global query filters.'
+);
+vms_test_assert_same(
+	2,
+	count(vms_test_collect_suppress_filters_true_occurrences($includes_dir)),
+	'Exactly two suppress_filters=true occurrences should remain across includes/: Ticket Integrity and vendor-type.'
+);
+vms_test_assert_contains(
+	"function bvmgr_ticket_integrity_build_targets(array \$args = array()): array",
+	$monitor_source,
+	'Ticket Integrity monitor should still expose the target-builder helper.'
+);
+vms_test_assert_contains(
+	'bvmgr_ticket_integrity_build_targets($args);',
+	$scan_all_source,
+	'Full scans should still build targets through bvmgr_ticket_integrity_build_targets().'
+);
+vms_test_assert_contains(
+	"current_user_can('manage_options')",
+	$admin_page_source,
+	'Manual Ticket Integrity scans should remain manage_options-gated.'
+);
+vms_test_assert_contains(
+	"check_admin_referer('vms_ticket_integrity_run_scan')",
+	$admin_page_source,
+	'Manual Ticket Integrity scans should remain nonce-protected.'
+);
+vms_test_assert_contains(
+	"add_action('vms_ticket_integrity_daily_scan', 'bvmgr_ticket_integrity_run_daily_scan');",
+	$cron_source,
+	'Full Ticket Integrity scans should remain schedulable through the daily cron hook.'
+);
+vms_test_assert_contains(
+	"bvmgr_ticket_integrity_scan_all(array('trigger' => sanitize_key(\$trigger)))",
+	$daily_report_source,
+	'Daily report refresh should continue to reuse the full Ticket Integrity scan path.'
+);
+$vendor_type_projection = vms_test_project_g16_vendor_logging($vendor_type_source);
+vms_test_assert_same(
+	'ac036bef295173d9d26b7165871a09797de2a61add12247ee985a547f3f74b4e',
+	hash('sha256', $vendor_type_projection),
+	'Vendor-type semantic baseline should remain unchanged outside G16 group B.'
+);
+$mutated_vendor_type = str_replace("'stage' => 'canonicalization'", "'stage' => 'unexpected_stage'", $vendor_type_source, $vendor_mutation_count);
+vms_test_assert_same(1, $vendor_mutation_count, 'Vendor projection mutation control must alter one owned stage.');
+$vendor_mutation_rejected = false;
+try {
+	vms_test_project_g16_vendor_logging($mutated_vendor_type);
+} catch (RuntimeException $exception) {
+	$vendor_mutation_rejected = true;
+}
+vms_test_assert_true($vendor_mutation_rejected, 'Vendor projection must reject a mutated owned logging context.');
+vms_test_assert_same(
+	'066eeaf16b910c930d4ad23eeca2b48669dbc889713d62dafcc80a7c58848122',
+	hash('sha256', $live_monitor_projection),
+	'Live Ticket Integrity monitor must retain its semantic baseline after projecting G10 annotations and G15 date calls.'
+);
+
+vms_test_reset_runtime_state();
+vms_test_seed_query_dataset(false);
+$GLOBALS['vms_test_query_filter_callback'] = static function (array $posts, array $args): array {
+	unset($args);
+	return array_values(array_filter($posts, static function (int $plan_id): bool {
+		return $plan_id !== 202;
+	}));
+};
+
+$targets = bvmgr_ticket_integrity_build_targets(
+	array(
+		'days_ahead' => 7,
+	)
+);
+
+$query_calls = $GLOBALS['vms_test_query_calls'];
+vms_test_assert_same(2, count($query_calls), 'Target builder should paginate through both query pages.');
+
+$first_query = $query_calls[0];
+vms_test_assert_same('vms_event_plan', $first_query['post_type'] ?? null, 'Ticket Integrity target query should stay scoped to Event Plans.');
+vms_test_assert_same('publish', $first_query['post_status'] ?? null, 'Ticket Integrity target query should remain publish-only at the WP post_status layer.');
+vms_test_assert_same(100, $first_query['posts_per_page'] ?? null, 'Ticket Integrity target query should preserve the default batch size of 100.');
+vms_test_assert_same('ids', $first_query['fields'] ?? null, 'Ticket Integrity target query should continue returning IDs only.');
+vms_test_assert_same(false, $first_query['no_found_rows'] ?? null, 'Ticket Integrity target query should preserve pagination counts.');
+vms_test_assert_same('_vms_event_date', $first_query['meta_key'] ?? null, 'Ticket Integrity target query should continue ordering by _vms_event_date.');
+vms_test_assert_same('meta_value', $first_query['orderby'] ?? null, 'Ticket Integrity target query should continue ordering by event-date meta_value.');
+vms_test_assert_same('DATE', $first_query['meta_type'] ?? null, 'Ticket Integrity target query should preserve DATE meta typing.');
+vms_test_assert_same('ASC', $first_query['order'] ?? null, 'Ticket Integrity target query should preserve ascending event order.');
+vms_test_assert_same(false, $first_query['update_post_meta_cache'] ?? null, 'Ticket Integrity target query should keep post-meta cache priming disabled.');
+vms_test_assert_same(false, $first_query['update_post_term_cache'] ?? null, 'Ticket Integrity target query should keep term-cache priming disabled.');
+vms_test_assert_same(false, $first_query['cache_results'] ?? null, 'Ticket Integrity target query should keep result caching disabled.');
+vms_test_assert_same(false, $first_query['lazy_load_term_meta'] ?? null, 'Ticket Integrity target query should keep lazy term-meta loading disabled.');
+vms_test_assert_same(true, $first_query['suppress_filters'] ?? null, 'Ticket Integrity target query must explicitly request the canonical unfiltered dataset.');
+vms_test_assert_same(1, $first_query['paged'] ?? null, 'Ticket Integrity target query should start at page 1.');
+
+$first_meta_query = $first_query['meta_query'] ?? array();
+vms_test_assert_true(is_array($first_meta_query) && count($first_meta_query) === 2, 'Ticket Integrity target query should keep the two explicit meta constraints.');
+vms_test_assert_same('_vms_event_date', $first_meta_query[0]['key'] ?? null, 'Target query should constrain the event-date meta key.');
+vms_test_assert_same('BETWEEN', $first_meta_query[0]['compare'] ?? null, 'Target query should bound the date window with BETWEEN.');
+vms_test_assert_same('DATE', $first_meta_query[0]['type'] ?? null, 'Target query should compare event dates as DATE values.');
+vms_test_assert_same(array(wp_date('Y-m-d', time(), wp_timezone()), wp_date('Y-m-d', time() + (7 * DAY_IN_SECONDS), wp_timezone())), $first_meta_query[0]['value'] ?? null, 'Target query should derive the inclusive date window from today through the requested days_ahead horizon.');
+vms_test_assert_same('_vms_tec_event_id', $first_meta_query[1]['key'] ?? null, 'Target query should require a linked TEC event meta value.');
+vms_test_assert_same('>', $first_meta_query[1]['compare'] ?? null, 'Target query should require TEC event IDs greater than zero.');
+vms_test_assert_same('NUMERIC', $first_meta_query[1]['type'] ?? null, 'Target query should compare linked TEC IDs numerically.');
+
+vms_test_assert_same(
+	array(101, 202),
+	vms_test_target_plan_ids($targets),
+	'Ticket Integrity target enumeration should retain canonical plans even when an external visibility filter would otherwise hide one.'
+);
+
+vms_test_reset_runtime_state();
+vms_test_seed_query_dataset(true);
+$include_inactive_false = bvmgr_ticket_integrity_build_targets(array('days_ahead' => 7, 'include_inactive' => false));
+$include_inactive_true = bvmgr_ticket_integrity_build_targets(array('days_ahead' => 7, 'include_inactive' => true));
+vms_test_assert_same(
+	array(101),
+	vms_test_target_plan_ids($include_inactive_false),
+	'Default Ticket Integrity scans should exclude cancelled events after building the canonical dataset.'
+);
+vms_test_assert_same(
+	array(101, 202, 303),
+	vms_test_target_plan_ids($include_inactive_true),
+	'Explicit include_inactive scans should retain cancelled canonical targets inside the bounded date window.'
+);
+
+vms_test_reset_runtime_state();
+vms_test_seed_query_dataset(false);
+$GLOBALS['vms_test_apply_filters']['vms_ticket_integrity_target_query_batch_size'] = 999;
+bvmgr_ticket_integrity_build_targets(array('days_ahead' => 7));
+$bounded_query = $GLOBALS['vms_test_query_calls'][0] ?? array();
+vms_test_assert_same(500, $bounded_query['posts_per_page'] ?? null, 'Ticket Integrity target query should cap batch size at 500 when a filter requests an unsafe larger value.');
+
+fwrite(STDOUT, "Ticket Integrity query filter boundary remediation test passed.\n");

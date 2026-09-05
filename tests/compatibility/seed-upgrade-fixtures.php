@@ -1,14 +1,8 @@
 <?php
 declare(strict_types=1);
 
-if (!defined('ABSPATH')) {
-	$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-	if (!file_exists($wpLoad)) {
-		fwrite(STDERR, "Could not locate wp-load.php.\n");
-		exit(1);
-	}
-	require_once $wpLoad;
-}
+require_once dirname(__DIR__) . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
 
 if (!function_exists('is_plugin_active')) {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -30,8 +24,8 @@ $labelBase = strtoupper($fixturePrefix) . '-' . $suffix;
 wp_set_current_user(1);
 
 $eventPlanMetaKey = static function (string $field, string $fallback): string {
-	if (function_exists('vms_meta_key')) {
-		$key = (string) vms_meta_key('event_plan', $field);
+	if (function_exists('bvmgr_meta_key')) {
+		$key = (string) bvmgr_meta_key('event_plan', $field);
 		if ($key !== '') {
 			return $key;
 		}
@@ -41,14 +35,14 @@ $eventPlanMetaKey = static function (string $field, string $fallback): string {
 };
 
 $productMetaKey = static function (string $field, string $fallback): string {
-	if (function_exists('vms_ticketing_v2_product_meta_key')) {
-		$key = (string) vms_ticketing_v2_product_meta_key($field);
+	if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+		$key = (string) bvmgr_ticketing_v2_product_meta_key($field);
 		if ($key !== '') {
 			return $key;
 		}
 	}
-	if (function_exists('vms_meta_key')) {
-		$key = (string) vms_meta_key('product', $field);
+	if (function_exists('bvmgr_meta_key')) {
+		$key = (string) bvmgr_meta_key('product', $field);
 		if ($key !== '') {
 			return $key;
 		}
@@ -67,7 +61,7 @@ $createPost = static function (array $postarr, string $label): int {
 };
 
 $ensureAdmissionRow = static function (int $eventPlanId, int $venueId, int $actorUserId, string $guestName, string $guestEmail) use ($wpdb): int {
-	$table = function_exists('vms_admission_table_entries') ? vms_admission_table_entries() : ($wpdb->prefix . 'vms_admission_entries');
+	$table = function_exists('bvmgr_admission_table_entries') ? bvmgr_admission_table_entries() : ($wpdb->prefix . 'vms_admission_entries');
 	$createdAt = current_time('mysql', true);
 	$guestNameNorm = sanitize_title($guestName);
 	$guestEmailNorm = sanitize_email($guestEmail);
@@ -113,8 +107,8 @@ $ensureAdmissionRow = static function (int $eventPlanId, int $venueId, int $acto
 	}
 
 	$entryId = (int) $wpdb->insert_id;
-	if ($entryId > 0 && function_exists('vms_admission_ensure_entry_token')) {
-		vms_admission_ensure_entry_token($entryId);
+	if ($entryId > 0 && function_exists('bvmgr_admission_ensure_entry_token')) {
+		bvmgr_admission_ensure_entry_token($entryId);
 	}
 
 	return $entryId;
@@ -287,8 +281,12 @@ update_post_meta($qualifiedProductId, $verifiedProgramMetaKey, 'veteran');
 update_post_meta($qualifiedProductId, $allowedProgramsMetaKey, array('veteran'));
 update_post_meta($qualifiedProductId, $claimTypeMetaKey, 'event_ticket_eligibility');
 
-if (function_exists('vms_vendor_user_link_upsert')) {
-	vms_vendor_user_link_upsert(
+$vendorUserLinkUpsert = function_exists('bvmgr_vendor_user_link_upsert')
+	? 'bvmgr_vendor_user_link_upsert'
+	: (function_exists('vms_vendor_user_link_upsert') ? 'vms_vendor_user_link_upsert' : '');
+if ($vendorUserLinkUpsert !== '') {
+	call_user_func(
+		$vendorUserLinkUpsert,
 		$vendorId,
 		$userId,
 		array(
@@ -304,8 +302,8 @@ if (function_exists('vms_vendor_user_link_upsert')) {
 	update_post_meta($vendorId, '_vms_vendor_user_id', $userId);
 }
 
-if (function_exists('vms_ticketing_verification_assign_program')) {
-	vms_ticketing_verification_assign_program($userId, 'veteran', 'Compatibility fixture', 1);
+if (function_exists('bvmgr_ticketing_verification_assign_program')) {
+	bvmgr_ticketing_verification_assign_program($userId, 'veteran', 'Compatibility fixture', 1);
 } else {
 	update_user_meta($userId, 'vms_verified_programs', array('veteran'));
 	$user = get_user_by('id', $userId);
@@ -323,8 +321,8 @@ $admissionEntryId = $ensureAdmissionRow(
 );
 
 $scheduledHooks = array();
-$spotHook = function_exists('vms_ticket_integrity_spot_hook')
-	? (string) vms_ticket_integrity_spot_hook()
+$spotHook = function_exists('bvmgr_ticket_integrity_spot_hook')
+	? (string) bvmgr_ticket_integrity_spot_hook()
 	: 'vms_ticket_integrity_spot_scan';
 if ($spotHook !== '') {
 	wp_schedule_single_event(time() + 600, $spotHook, array($eventPlanId));

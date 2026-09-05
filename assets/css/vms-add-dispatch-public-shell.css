@@ -1,0 +1,14 @@
+body{margin:0;background:#eef2f6;color:#12253d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+.vms-add-public{max-width:760px;margin:28px auto;padding:0 14px;}
+.vms-add-card{background:#fff;border:1px solid #d6e0eb;border-radius:16px;box-shadow:0 16px 40px rgba(18,37,61,.08);padding:20px;}
+h1{margin:0 0 10px;font-size:30px;line-height:1.15;}
+.vms-add-meta{background:#f6f9fc;border:1px solid #dce6f1;border-radius:12px;padding:14px 16px;margin:0 0 14px;}
+.vms-add-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px;}
+.vms-add-btn{display:block;text-align:center;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:700;}
+.vms-add-btn--yes{background:#1f7a4c;color:#fff;}
+.vms-add-btn--no{background:#8b2d2d;color:#fff;}
+.vms-add-note,.vms-add-error,.vms-add-success{border-radius:12px;padding:12px 14px;margin:14px 0;}
+.vms-add-note{background:#f6f9fc;border:1px solid #dce6f1;color:#334b63;}
+.vms-add-error{background:#fff0f0;border:1px solid #e7b0b0;color:#7a1d1d;}
+.vms-add-success{background:#ecfbf2;border:1px solid #abd5b7;color:#13472b;}
+@media (max-width:760px){.vms-add-actions{grid-template-columns:1fr;}}

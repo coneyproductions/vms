@@ -1,11 +1,11 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_ticketing_claims_account_dashboard_url')) {
-	function vms_ticketing_claims_account_dashboard_url(): string
+if (!function_exists('bvmgr_ticketing_claims_account_dashboard_url')) {
+	function bvmgr_ticketing_claims_account_dashboard_url(): string
 	{
-		if (function_exists('vms_ticketing_verification_account_dashboard_url')) {
-			return (string) vms_ticketing_verification_account_dashboard_url();
+		if (function_exists('bvmgr_ticketing_verification_account_dashboard_url')) {
+			return (string) bvmgr_ticketing_verification_account_dashboard_url();
 		}
 		if (function_exists('wc_get_account_endpoint_url')) {
 			return (string) wc_get_account_endpoint_url('dashboard');
@@ -20,14 +20,14 @@ if (!function_exists('vms_ticketing_claims_account_dashboard_url')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_account_benefits_url')) {
-	function vms_ticketing_claims_account_benefits_url(): string
+if (!function_exists('bvmgr_ticketing_claims_account_benefits_url')) {
+	function bvmgr_ticketing_claims_account_benefits_url(): string
 	{
 		if (!is_user_logged_in()) {
 			return '';
 		}
 
-		$dashboard_url = trim(vms_ticketing_claims_account_dashboard_url());
+		$dashboard_url = trim(bvmgr_ticketing_claims_account_dashboard_url());
 		if ($dashboard_url === '') {
 			return '';
 		}
@@ -43,15 +43,80 @@ if (!function_exists('vms_ticketing_claims_account_benefits_url')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_account_should_expand')) {
-	function vms_ticketing_claims_account_should_expand(): bool
+if (!function_exists('bvmgr_ticketing_claims_account_query_absint')) {
+	function bvmgr_ticketing_claims_account_query_absint(string $key): int
 	{
-		return isset($_GET['vms_benefits']) && absint(wp_unslash($_GET['vms_benefits'])) === 1;
+		return bvmgr_request_read_absint($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Customer benefits query state only controls read-only account panel expansion.
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_account_event_date_text')) {
-	function vms_ticketing_claims_account_event_date_text(int $event_id): string
+if (!function_exists('bvmgr_ticketing_claims_account_should_expand')) {
+	function bvmgr_ticketing_claims_account_should_expand(): bool
+	{
+		return bvmgr_ticketing_claims_account_query_absint('vms_benefits') === 1;
+	}
+}
+
+if (!function_exists('bvmgr_ticketing_claims_parse_existing_counts_payload')) {
+	function bvmgr_ticketing_claims_parse_existing_counts_payload($raw): array
+	{
+		if (is_array($raw)) {
+			$decoded = $raw;
+		} elseif (is_string($raw)) {
+			$raw = trim($raw);
+			if ($raw === '' || strlen($raw) > 16384) {
+				return array();
+			}
+
+			$json = bvmgr_json_decode_associative($raw, 8);
+			if (
+				empty($json['ok'])
+				|| !is_array($json['value'])
+				|| !bvmgr_json_decoded_is_object($json['value'], (string) ($json['top_level_token'] ?? ''))
+			) {
+				return array();
+			}
+
+			$decoded = $json['value'];
+		} else {
+			return array();
+		}
+
+		$existing_counts = array();
+		foreach ($decoded as $email_key => $count) {
+			$email_key = strtolower(trim(sanitize_email((string) $email_key)));
+			if ($email_key === '') {
+				continue;
+			}
+			if (is_array($count) || is_object($count)) {
+				continue;
+			}
+
+			$existing_counts[$email_key] = max(0, min(1000, absint($count)));
+		}
+
+		return $existing_counts;
+	}
+}
+
+if (!function_exists('bvmgr_ticketing_claims_post_existing_counts')) {
+	function bvmgr_ticketing_claims_post_existing_counts(): array
+	{
+		if (!isset($_POST['existing_counts']) || !is_array($_POST['existing_counts'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- existing_counts is consumed only after the assignee-validation AJAX nonce and logged-in gates pass.
+			return array();
+		}
+
+		$raw_existing_counts = wp_unslash($_POST['existing_counts']); // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- existing_counts accepts only a nonce-gated assignee=>count map and is normalized by the existing helper below.
+		if (!is_array($raw_existing_counts)) {
+			return array();
+		}
+
+		return bvmgr_ticketing_claims_parse_existing_counts_payload($raw_existing_counts);
+	}
+}
+
+if (!function_exists('bvmgr_ticketing_claims_account_event_date_text')) {
+	function bvmgr_ticketing_claims_account_event_date_text(int $event_id): string
 	{
 		$event_id = absint($event_id);
 		if ($event_id <= 0) {
@@ -81,18 +146,18 @@ if (!function_exists('vms_ticketing_claims_account_event_date_text')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_account_user_grants')) {
+if (!function_exists('bvmgr_ticketing_claims_account_user_grants')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_ticketing_claims_account_user_grants(int $user_id, int $limit = 40): array
+	function bvmgr_ticketing_claims_account_user_grants(int $user_id, int $limit = 40): array
 	{
 		$user_id = absint($user_id);
-		if ($user_id <= 0 || !function_exists('vms_ticketing_claims_get_direct_grants')) {
+		if ($user_id <= 0 || !function_exists('bvmgr_ticketing_claims_get_direct_grants')) {
 			return array();
 		}
 
-		$rows = vms_ticketing_claims_get_direct_grants(array(
+		$rows = bvmgr_ticketing_claims_get_direct_grants(array(
 			'user_id' => $user_id,
 			'status' => 'any',
 			'limit' => max(1, min(120, absint($limit))),
@@ -106,30 +171,30 @@ if (!function_exists('vms_ticketing_claims_account_user_grants')) {
 
 			$event_id = absint($row['event_id'] ?? 0);
 			$type_key = sanitize_key((string) ($row['grant_type'] ?? ''));
-			$type_label = function_exists('vms_ticketing_claims_grant_type_label')
-				? vms_ticketing_claims_grant_type_label($type_key)
+			$type_label = function_exists('bvmgr_ticketing_claims_grant_type_label')
+				? bvmgr_ticketing_claims_grant_type_label($type_key)
 				: ucwords(str_replace('_', ' ', $type_key));
 
-			$res_counts = function_exists('vms_ticketing_claims_grant_reservation_counts')
-				? vms_ticketing_claims_grant_reservation_counts(absint($row['id'] ?? 0))
+			$res_counts = function_exists('bvmgr_ticketing_claims_grant_reservation_counts')
+				? bvmgr_ticketing_claims_grant_reservation_counts(absint($row['id'] ?? 0))
 				: null;
-			$status_key = function_exists('vms_ticketing_claims_resolve_grant_status')
-				? vms_ticketing_claims_resolve_grant_status($row, is_array($res_counts) ? $res_counts : null)
+			$status_key = function_exists('bvmgr_ticketing_claims_resolve_grant_status')
+				? bvmgr_ticketing_claims_resolve_grant_status($row, is_array($res_counts) ? $res_counts : null)
 				: sanitize_key((string) ($row['status'] ?? 'active'));
-			$status_label = function_exists('vms_ticketing_claims_grant_status_label')
-				? vms_ticketing_claims_grant_status_label($status_key)
+			$status_label = function_exists('bvmgr_ticketing_claims_grant_status_label')
+				? bvmgr_ticketing_claims_grant_status_label($status_key)
 				: ucwords(str_replace('_', ' ', $status_key));
-			$status_help = function_exists('vms_ticketing_claims_grant_status_explanation')
-				? vms_ticketing_claims_grant_status_explanation($status_key)
+			$status_help = function_exists('bvmgr_ticketing_claims_grant_status_explanation')
+				? bvmgr_ticketing_claims_grant_status_explanation($status_key)
 				: '';
 
 			$event_title = $event_id > 0 ? (string) get_the_title($event_id) : '';
-			$event_date = vms_ticketing_claims_account_event_date_text($event_id);
+			$event_date = bvmgr_ticketing_claims_account_event_date_text($event_id);
 			$qty_limit = max(0, absint($row['qty_limit'] ?? 0));
 			$qty_used = max(0, absint($row['qty_used'] ?? 0));
 
 			$out[] = array(
-				'event_title' => $event_title !== '' ? $event_title : __('Event benefit', 'vms'),
+				'event_title' => $event_title !== '' ? $event_title : __('Event benefit', 'backstage-venue-manager'),
 				'event_date' => $event_date,
 				'type_label' => $type_label,
 				'status_key' => $status_key,
@@ -147,47 +212,47 @@ if (!function_exists('vms_ticketing_claims_account_user_grants')) {
 	}
 }
 
-if (!function_exists('vms_ticketing_claims_render_account_benefits_entry')) {
-	function vms_ticketing_claims_render_account_benefits_entry(): void
+if (!function_exists('bvmgr_ticketing_claims_render_account_benefits_entry')) {
+	function bvmgr_ticketing_claims_render_account_benefits_entry(): void
 	{
 		if (!is_user_logged_in()) {
 			return;
 		}
 
 		$user_id = (int) get_current_user_id();
-		$expanded = vms_ticketing_claims_account_should_expand();
-		$panel_url = vms_ticketing_claims_account_benefits_url();
+		$expanded = bvmgr_ticketing_claims_account_should_expand();
+		$panel_url = bvmgr_ticketing_claims_account_benefits_url();
 
-		$verified_programs = function_exists('vms_ticketing_get_user_verified_programs')
-			? (array) vms_ticketing_get_user_verified_programs($user_id)
+		$verified_programs = function_exists('bvmgr_ticketing_get_user_verified_programs')
+			? (array) bvmgr_ticketing_get_user_verified_programs($user_id)
 			: array();
-		$grants = vms_ticketing_claims_account_user_grants($user_id, 50);
-		$recent_claim_emails = function_exists('vms_ticketing_claims_recent_assignee_emails_for_buyer')
-			? (array) vms_ticketing_claims_recent_assignee_emails_for_buyer($user_id, 8)
+		$grants = bvmgr_ticketing_claims_account_user_grants($user_id, 50);
+		$recent_claim_emails = function_exists('bvmgr_ticketing_claims_recent_assignee_emails_for_buyer')
+			? (array) bvmgr_ticketing_claims_recent_assignee_emails_for_buyer($user_id, 8)
 			: array();
 
 		echo '<section id="vms-benefits-panel" class="vms-benefits-account-entry" data-vms-tour="claims.account.help">';
-		echo '<h3 data-vms-tour="claims.account.summary">' . esc_html__('My Eligibility & Benefits', 'vms') . '</h3>';
-		echo '<p class="vms-verify-copy">' . esc_html__('See which eligibility types are approved on your account and which event benefits are currently available, reserved, used, expired, or revoked.', 'vms') . '</p>';
+		echo '<h3 data-vms-tour="claims.account.summary">' . esc_html__('My Eligibility & Benefits', 'backstage-venue-manager') . '</h3>';
+		echo '<p class="vms-verify-copy">' . esc_html__('See which eligibility types are approved on your account and which event benefits are currently available, reserved, used, expired, or revoked.', 'backstage-venue-manager') . '</p>';
 
 		if (!$expanded) {
 			if ($panel_url !== '') {
-				echo '<p><a class="button" href="' . esc_url($panel_url) . '">' . esc_html__('Open My Benefits', 'vms') . '</a></p>';
+				echo '<p><a class="button" href="' . esc_url($panel_url) . '">' . esc_html__('Open My Benefits', 'backstage-venue-manager') . '</a></p>';
 			} else {
-				echo '<p class="vms-verify-copy">' . esc_html__('Benefits are shown here once the My Account dashboard page is available.', 'vms') . '</p>';
+				echo '<p class="vms-verify-copy">' . esc_html__('Benefits are shown here once the My Account dashboard page is available.', 'backstage-venue-manager') . '</p>';
 			}
 			echo '</section>';
 			return;
 		}
 
 		echo '<div class="vms-benefits-how" data-vms-tour="claims.account.how">';
-		echo '<p class="vms-verify-copy"><strong>' . esc_html__('How this works', 'vms') . ':</strong> ' . esc_html__('Credential eligibility is approval tied to your account. Event benefits are additional rights that can be assigned for a specific event. Reserved means a temporary hold during checkout.', 'vms') . '</p>';
+		echo '<p class="vms-verify-copy"><strong>' . esc_html__('How this works', 'backstage-venue-manager') . ':</strong> ' . esc_html__('Credential eligibility is approval tied to your account. Event benefits are additional rights that can be assigned for a specific event. Reserved means a temporary hold during checkout.', 'backstage-venue-manager') . '</p>';
 		echo '</div>';
 
 		echo '<div class="vms-benefits-block" data-vms-tour="claims.account.verified">';
-		echo '<h4>' . esc_html__('Approved Eligibility', 'vms') . '</h4>';
+		echo '<h4>' . esc_html__('Approved Eligibility', 'backstage-venue-manager') . '</h4>';
 		if (empty($verified_programs)) {
-			echo '<p class="vms-verify-copy">' . esc_html__('No approved credential eligibility is attached to this account yet.', 'vms') . '</p>';
+			echo '<p class="vms-verify-copy">' . esc_html__('No approved credential eligibility is attached to this account yet.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<ul class="vms-benefits-list">';
 			foreach ($verified_programs as $program_key) {
@@ -195,19 +260,20 @@ if (!function_exists('vms_ticketing_claims_render_account_benefits_entry')) {
 				if ($program_key === '') {
 					continue;
 				}
-				$program_label = function_exists('vms_ticketing_verification_program_label')
-					? vms_ticketing_verification_program_label($program_key)
+				$program_label = function_exists('bvmgr_ticketing_verification_program_label')
+					? bvmgr_ticketing_verification_program_label($program_key)
 					: ucwords(str_replace('_', ' ', $program_key));
-				echo '<li>' . esc_html(sprintf(__('Verified for %s eligibility', 'vms'), $program_label)) . '</li>';
+				/* translators: %s: human-readable value used in this message. */
+				echo '<li>' . esc_html(sprintf(__('Verified for %s eligibility', 'backstage-venue-manager'), $program_label)) . '</li>';
 			}
 			echo '</ul>';
 		}
 		echo '</div>';
 
 		echo '<div class="vms-benefits-block" data-vms-tour="claims.account.grants">';
-		echo '<h4>' . esc_html__('Event Benefits', 'vms') . '</h4>';
+		echo '<h4>' . esc_html__('Event Benefits', 'backstage-venue-manager') . '</h4>';
 		if (empty($grants)) {
-			echo '<p class="vms-verify-copy">' . esc_html__('No event-specific benefits are currently attached to this account.', 'vms') . '</p>';
+			echo '<p class="vms-verify-copy">' . esc_html__('No event-specific benefits are currently attached to this account.', 'backstage-venue-manager') . '</p>';
 		} else {
 			echo '<div class="vms-benefits-cards">';
 			foreach ($grants as $grant) {
@@ -233,7 +299,8 @@ if (!function_exists('vms_ticketing_claims_render_account_benefits_entry')) {
 					echo '<p class="vms-benefits-card-help">' . esc_html($status_help) . '</p>';
 				}
 				if ($qty_limit > 0) {
-					echo '<p class="vms-benefits-card-help">' . esc_html(sprintf(__('Used %1$d of %2$d units', 'vms'), $qty_used, $qty_limit)) . '</p>';
+					/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+					echo '<p class="vms-benefits-card-help">' . esc_html(sprintf(__('Used %1$d of %2$d units', 'backstage-venue-manager'), $qty_used, $qty_limit)) . '</p>';
 				}
 				if ($note !== '') {
 					echo '<p class="vms-benefits-card-note">' . esc_html($note) . '</p>';
@@ -246,8 +313,8 @@ if (!function_exists('vms_ticketing_claims_render_account_benefits_entry')) {
 
 		if (!empty($recent_claim_emails)) {
 			echo '<div class="vms-benefits-block" data-vms-tour="claims.account.recent">';
-			echo '<h4>' . esc_html__('Recently Claimed For', 'vms') . '</h4>';
-			echo '<p class="vms-verify-copy">' . esc_html__('Quick helper for repeat group purchases. These addresses are only shown to you.', 'vms') . '</p>';
+			echo '<h4>' . esc_html__('Recently Claimed For', 'backstage-venue-manager') . '</h4>';
+			echo '<p class="vms-verify-copy">' . esc_html__('Quick helper for repeat group purchases. These addresses are only shown to you.', 'backstage-venue-manager') . '</p>';
 			echo '<div class="vms-benefits-recent-list">';
 			foreach ($recent_claim_emails as $email) {
 				$email = sanitize_email((string) $email);
@@ -263,10 +330,10 @@ if (!function_exists('vms_ticketing_claims_render_account_benefits_entry')) {
 		echo '</section>';
 	}
 }
-add_action('woocommerce_account_dashboard', 'vms_ticketing_claims_render_account_benefits_entry', 27);
+add_action('woocommerce_account_dashboard', 'bvmgr_ticketing_claims_render_account_benefits_entry', 27);
 
-if (!function_exists('vms_ticketing_claims_enqueue_account_styles')) {
-	function vms_ticketing_claims_enqueue_account_styles(): void
+if (!function_exists('bvmgr_ticketing_claims_enqueue_account_styles')) {
+	function bvmgr_ticketing_claims_enqueue_account_styles(): void
 	{
 		if (is_admin() || !is_user_logged_in()) {
 			return;
@@ -285,41 +352,41 @@ if (!function_exists('vms_ticketing_claims_enqueue_account_styles')) {
 		}
 
 		wp_enqueue_style(
-			'vms-ticketing-front',
-			plugins_url('assets/css/vms-ticketing-front.css', VMS_PLUGIN_FILE),
+			'bvmgr-ticketing-front',
+			plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
 			$deps,
-			function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+			function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
 		);
 	}
 }
-add_action('wp_enqueue_scripts', 'vms_ticketing_claims_enqueue_account_styles', 1002);
+add_action('wp_enqueue_scripts', 'bvmgr_ticketing_claims_enqueue_account_styles', 1002);
 
-if (!function_exists('vms_ticketing_claims_handle_client_log_action')) {
-	function vms_ticketing_claims_handle_client_log_action(): void
+if (!function_exists('bvmgr_ticketing_claims_handle_client_log_action')) {
+	function bvmgr_ticketing_claims_handle_client_log_action(): void
 	{
 		if (!is_user_logged_in()) {
-			wp_send_json_error(array('message' => 'login_required'), 401);
+			bvmgr_ticketing_v2_ajax_send_error(array('message' => 'login_required'), 401);
 		}
 
-		if (!check_ajax_referer('vms_ticketing_claims_log_client_action', 'nonce', false)) {
-			wp_send_json_error(array('message' => 'bad_nonce'), 403);
+		if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_log_client_action', 'nonce'), 'nonce', false)) {
+			bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
 		}
 
 		$reason_code = isset($_POST['reason_code']) ? sanitize_key((string) wp_unslash($_POST['reason_code'])) : '';
 		$allowed = array('self_apply_attempt', 'recent_claim_helper_used');
 		if (!in_array($reason_code, $allowed, true)) {
-			wp_send_json_error(array('message' => 'invalid_reason'), 400);
+			bvmgr_ticketing_v2_ajax_send_error(array('message' => 'invalid_reason'), 400);
 		}
 
 		$buyer_user_id = (int) get_current_user_id();
 		$event_id = isset($_POST['event_id']) ? absint($_POST['event_id']) : 0;
 		$assignee_email = isset($_POST['assignee_email']) ? sanitize_email((string) wp_unslash($_POST['assignee_email'])) : '';
 		$message = ($reason_code === 'self_apply_attempt')
-			? __('Customer used "Use my benefit" helper on event page.', 'vms')
-			: __('Customer reused a recent claimant email helper.', 'vms');
+			? __('Customer used "Use my benefit" helper on event page.', 'backstage-venue-manager')
+			: __('Customer reused a recent claimant email helper.', 'backstage-venue-manager');
 
-		if (function_exists('vms_ticketing_claims_log_result')) {
-			vms_ticketing_claims_log_result(array(
+		if (function_exists('bvmgr_ticketing_claims_log_result')) {
+			bvmgr_ticketing_claims_log_result(array(
 				'event_id' => $event_id,
 				'buyer_user_id' => $buyer_user_id,
 				'assignee_user_id' => $buyer_user_id,
@@ -337,26 +404,26 @@ if (!function_exists('vms_ticketing_claims_handle_client_log_action')) {
 			));
 		}
 
-		wp_send_json_success(array('ok' => true));
+		bvmgr_ticketing_v2_ajax_send_success(array('ok' => true));
 	}
 }
-add_action('wp_ajax_vms_ticketing_claims_log_client_action', 'vms_ticketing_claims_handle_client_log_action');
+add_action('wp_ajax_vms_ticketing_claims_log_client_action', 'bvmgr_ticketing_claims_handle_client_log_action');
 
-if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
-	function vms_ticketing_claims_handle_validate_assignee(): void
+if (!function_exists('bvmgr_ticketing_claims_handle_validate_assignee')) {
+	function bvmgr_ticketing_claims_handle_validate_assignee(): void
 	{
-		if (!check_ajax_referer('vms_ticketing_claims_validate_assignee', 'nonce', false)) {
-			wp_send_json_error(array(
+		if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_validate_assignee', 'nonce'), 'nonce', false)) {
+			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
-				'message' => __('Session expired. Please refresh and try again.', 'vms'),
+				'message' => __('Session expired. Please refresh and try again.', 'backstage-venue-manager'),
 				'reason_code' => 'bad_nonce',
 			), 403);
 		}
 
 		if (!is_user_logged_in()) {
-			wp_send_json_error(array(
+			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
-				'message' => __('Log in before checking approved guest emails for this ticket.', 'vms'),
+				'message' => __('Log in before checking approved guest emails for this ticket.', 'backstage-venue-manager'),
 				'reason_code' => 'login_required',
 			), 401);
 		}
@@ -365,55 +432,40 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		$event_id = isset($_POST['event_id']) ? absint(wp_unslash($_POST['event_id'])) : 0;
 		$ticket_key = isset($_POST['ticket_key']) ? sanitize_key((string) wp_unslash($_POST['ticket_key'])) : '';
 		$assignee_email = isset($_POST['assignee_email']) ? sanitize_email((string) wp_unslash($_POST['assignee_email'])) : '';
-		$existing_counts = array();
-		if (isset($_POST['existing_counts'])) {
-			$raw_existing_counts = wp_unslash($_POST['existing_counts']);
-			$decoded_existing_counts = is_string($raw_existing_counts)
-				? json_decode((string) $raw_existing_counts, true)
-				: (is_array($raw_existing_counts) ? $raw_existing_counts : array());
-			if (is_array($decoded_existing_counts)) {
-				foreach ($decoded_existing_counts as $email_key => $count) {
-					$email_key = strtolower(trim(sanitize_email((string) $email_key)));
-					if ($email_key === '') {
-						continue;
-					}
-					$existing_counts[$email_key] = max(0, absint($count));
-				}
-			}
-		}
+			$existing_counts = bvmgr_ticketing_claims_post_existing_counts();
 
 		if ($product_id <= 0 || $assignee_email === '') {
-			wp_send_json_error(array(
+			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
-				'message' => __('Enter a valid registered email address first.', 'vms'),
+				'message' => __('Enter a valid registered email address first.', 'backstage-venue-manager'),
 				'reason_code' => 'invalid_request',
 			), 400);
 		}
 
-		if (!function_exists('vms_ticketing_v2_resolve_verified_ticket_context')) {
-			wp_send_json_error(array(
+		if (!function_exists('bvmgr_ticketing_v2_resolve_verified_ticket_context')) {
+			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
-				'message' => __('Ticket validation is temporarily unavailable.', 'vms'),
+				'message' => __('Ticket validation is temporarily unavailable.', 'backstage-venue-manager'),
 				'reason_code' => 'context_unavailable',
 			), 400);
 		}
 
-		$ctx = (array) vms_ticketing_v2_resolve_verified_ticket_context($product_id);
+		$ctx = (array) bvmgr_ticketing_v2_resolve_verified_ticket_context($product_id);
 		$visibility_mode = sanitize_key((string) ($ctx['visibility_mode'] ?? 'public'));
 		if ($visibility_mode !== 'verified') {
-			wp_send_json_error(array(
+			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
-				'message' => __('This ticket does not support claim-ticket assignment.', 'vms'),
+				'message' => __('This ticket does not support claim-ticket assignment.', 'backstage-venue-manager'),
 				'reason_code' => 'ticket_not_verified',
 			), 400);
 		}
 
 		$legacy_program = sanitize_key((string) ($ctx['program'] ?? ''));
-		$allowed_programs = function_exists('vms_ticketing_claims_normalize_allowed_programs')
-			? vms_ticketing_claims_normalize_allowed_programs($ctx['allowed_programs'] ?? array(), $legacy_program)
+		$allowed_programs = function_exists('bvmgr_ticketing_claims_normalize_allowed_programs')
+			? bvmgr_ticketing_claims_normalize_allowed_programs($ctx['allowed_programs'] ?? array(), $legacy_program)
 			: ($legacy_program !== '' ? array($legacy_program) : array());
-		$allow_direct_grants = function_exists('vms_ticketing_claims_truthy')
-			? vms_ticketing_claims_truthy($ctx['allow_direct_grants'] ?? false, false)
+		$allow_direct_grants = function_exists('bvmgr_ticketing_claims_truthy')
+			? bvmgr_ticketing_claims_truthy($ctx['allow_direct_grants'] ?? false, false)
 			: !empty($ctx['allow_direct_grants']);
 		$grant_type = sanitize_key((string) ($ctx['claim_grant_type'] ?? 'event_ticket_eligibility'));
 		if ($grant_type === '') {
@@ -425,9 +477,9 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 			$event_id = $ctx_event_id;
 		}
 		if ($event_id <= 0) {
-			wp_send_json_error(array(
+			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
-				'message' => __('Could not determine the event for this ticket.', 'vms'),
+				'message' => __('Could not determine the event for this ticket.', 'backstage-venue-manager'),
 				'reason_code' => 'event_missing',
 			), 400);
 		}
@@ -437,8 +489,8 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 			$ticket_key = $ctx_ticket_key;
 		}
 		$claims_per_assignee = max(1, absint($ctx['claims_per_assignee'] ?? 1));
-		$group_product_ids = function_exists('vms_ticketing_v2_ticket_group_product_ids_from_context')
-			? vms_ticketing_v2_ticket_group_product_ids_from_context($ctx, $product_id)
+		$group_product_ids = function_exists('bvmgr_ticketing_v2_ticket_group_product_ids_from_context')
+			? bvmgr_ticketing_v2_ticket_group_product_ids_from_context($ctx, $product_id)
 			: array($product_id);
 		if (empty($group_product_ids)) {
 			$group_product_ids = array($product_id);
@@ -453,11 +505,11 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 
 		$user = get_user_by('email', $assignee_email);
 		if (!($user instanceof WP_User)) {
-			wp_send_json_error(array(
+			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
-				'message' => function_exists('vms_ticketing_v2_claim_assignment_unknown_guest_message')
-					? vms_ticketing_v2_claim_assignment_unknown_guest_message()
-					: __("We couldn't find an approved qualified guest account for this email. The guest needs to register and be approved before this ticket can be claimed.", 'vms'),
+				'message' => function_exists('bvmgr_ticketing_v2_claim_assignment_unknown_guest_message')
+					? bvmgr_ticketing_v2_claim_assignment_unknown_guest_message()
+					: __("We couldn't find an approved qualified guest account for this email. The guest needs to register and be approved before this ticket can be claimed.", 'backstage-venue-manager'),
 				'reason_code' => 'account_not_found',
 				'ticket_label' => $ticket_label,
 			), 200);
@@ -470,8 +522,8 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 			'matched_rule_path' => '',
 			'matched_grant_id' => 0,
 		);
-		if (function_exists('vms_ticketing_claims_resolve_eligibility')) {
-			$resolved = (array) vms_ticketing_claims_resolve_eligibility(array(
+		if (function_exists('bvmgr_ticketing_claims_resolve_eligibility')) {
+			$resolved = (array) bvmgr_ticketing_claims_resolve_eligibility(array(
 				'user_id' => (int) $user->ID,
 				'event_id' => (int) $event_id,
 				'ticket_product_id' => (int) $product_id,
@@ -487,23 +539,23 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		$reason_code = sanitize_key((string) ($resolved['reason_code'] ?? ($eligible ? 'ok' : 'not_eligible')));
 		$message = sanitize_text_field((string) ($resolved['message'] ?? ''));
 		if ($message === '' && !$eligible) {
-			$message = function_exists('vms_ticketing_v2_claim_assignment_unapproved_guest_message')
-				? vms_ticketing_v2_claim_assignment_unapproved_guest_message()
-				: __('This email is not approved for this ticket yet. The guest needs to register and be approved before this ticket can be claimed.', 'vms');
+			$message = function_exists('bvmgr_ticketing_v2_claim_assignment_unapproved_guest_message')
+				? bvmgr_ticketing_v2_claim_assignment_unapproved_guest_message()
+				: __('This email is not approved for this ticket yet. The guest needs to register and be approved before this ticket can be claimed.', 'backstage-venue-manager');
 		}
 		if ($message === '' && $eligible) {
-			$message = __('Eligible account confirmed for this ticket.', 'vms');
+			$message = __('Eligible account confirmed for this ticket.', 'backstage-venue-manager');
 		}
 
-		$claims_per_assignee = function_exists('vms_ticketing_v2_assignee_claims_per_event_limit')
-			? max(1, absint(vms_ticketing_v2_assignee_claims_per_event_limit($ctx, $user, $resolved)))
+		$claims_per_assignee = function_exists('bvmgr_ticketing_v2_assignee_claims_per_event_limit')
+			? max(1, absint(bvmgr_ticketing_v2_assignee_claims_per_event_limit($ctx, $user, $resolved)))
 			: max(1, absint($claims_per_assignee));
 
-		$consumed_qty = function_exists('vms_ticketing_v2_assignee_consumed_qty_for_event')
-			? absint(vms_ticketing_v2_assignee_consumed_qty_for_event($event_id, $assignee_email, $group_product_ids))
+		$consumed_qty = function_exists('bvmgr_ticketing_v2_assignee_consumed_qty_for_event')
+			? absint(bvmgr_ticketing_v2_assignee_consumed_qty_for_event($event_id, $assignee_email, $group_product_ids))
 			: 0;
-		$cart_counts = function_exists('vms_ticketing_v2_cart_assignee_usage_for_event')
-			? (array) vms_ticketing_v2_cart_assignee_usage_for_event($event_id, $ticket_key)
+		$cart_counts = function_exists('bvmgr_ticketing_v2_cart_assignee_usage_for_event')
+			? (array) bvmgr_ticketing_v2_cart_assignee_usage_for_event($event_id, $ticket_key)
 			: array();
 		if (!empty($existing_counts)) {
 			foreach ($existing_counts as $existing_email_key => $existing_count) {
@@ -522,20 +574,22 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		if ($eligible && $remaining_before_assignment <= 0) {
 			$eligible = false;
 			$reason_code = 'assignee_limit_reached';
-			$message = sprintf(__('This guest has already used the %d-ticket limit for this event.', 'vms'), $claims_per_assignee);
+			/* translators: %d: number used in this message. */
+			$message = sprintf(__('This guest has already used the %d-ticket limit for this event.', 'backstage-venue-manager'), $claims_per_assignee);
 		}
 
 		$remaining_after_assignment = max(0, $remaining_before_assignment - 1);
 		if ($eligible) {
 			$message = sprintf(
-				__('Eligible account confirmed. This account is eligible for %1$d ticket(s) for this event (%2$d remaining after this ticket).', 'vms'),
+				/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+				__('Eligible account confirmed. This account is eligible for %1$d ticket(s) for this event (%2$d remaining after this ticket).', 'backstage-venue-manager'),
 				$claims_per_assignee,
 				$remaining_after_assignment
 			);
 		}
 
 		if (!$eligible) {
-			wp_send_json_error(array(
+			bvmgr_ticketing_v2_ajax_send_error(array(
 				'ok' => false,
 				'message' => $message,
 				'reason_code' => $reason_code,
@@ -544,7 +598,7 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 			), 200);
 		}
 
-		wp_send_json_success(array(
+		bvmgr_ticketing_v2_ajax_send_success(array(
 			'ok' => true,
 			'message' => $message,
 			'reason_code' => $reason_code,
@@ -553,11 +607,11 @@ if (!function_exists('vms_ticketing_claims_handle_validate_assignee')) {
 		));
 	}
 }
-add_action('wp_ajax_vms_ticketing_claims_validate_assignee', 'vms_ticketing_claims_handle_validate_assignee');
-add_action('wp_ajax_nopriv_vms_ticketing_claims_validate_assignee', 'vms_ticketing_claims_handle_validate_assignee');
+add_action('wp_ajax_vms_ticketing_claims_validate_assignee', 'bvmgr_ticketing_claims_handle_validate_assignee');
+add_action('wp_ajax_nopriv_vms_ticketing_claims_validate_assignee', 'bvmgr_ticketing_claims_handle_validate_assignee');
 
-if (!function_exists('vms_ticketing_claims_frontend_tour_screen_key')) {
-	function vms_ticketing_claims_frontend_tour_screen_key(string $screen_key): string
+if (!function_exists('bvmgr_ticketing_claims_frontend_tour_screen_key')) {
+	function bvmgr_ticketing_claims_frontend_tour_screen_key(string $screen_key): string
 	{
 		if (is_admin()) {
 			return $screen_key;
@@ -569,7 +623,7 @@ if (!function_exists('vms_ticketing_claims_frontend_tour_screen_key')) {
 
 		if (is_singular('tribe_events') && is_user_logged_in()) {
 			$event_id = (int) get_queried_object_id();
-			if ($event_id > 0 && function_exists('vms_ticketing_verification_event_has_verified_tickets') && vms_ticketing_verification_event_has_verified_tickets($event_id)) {
+			if ($event_id > 0 && function_exists('bvmgr_ticketing_verification_event_has_verified_tickets') && bvmgr_ticketing_verification_event_has_verified_tickets($event_id)) {
 				return 'frontend:vms-event-benefits';
 			}
 		}
@@ -577,22 +631,22 @@ if (!function_exists('vms_ticketing_claims_frontend_tour_screen_key')) {
 		return $screen_key;
 	}
 }
-add_filter('vms_tours_frontend_screen_key', 'vms_ticketing_claims_frontend_tour_screen_key', 40);
+add_filter('vms_tours_frontend_screen_key', 'bvmgr_ticketing_claims_frontend_tour_screen_key', 40);
 
-if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
+if (!function_exists('bvmgr_ticketing_claims_register_phase3_tours')) {
 	/**
 	 * @param array<int,array<string,mixed>> $tours
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_ticketing_claims_register_phase3_tours(array $tours): array
+	function bvmgr_ticketing_claims_register_phase3_tours(array $tours): array
 	{
 		$tours[] = array(
 			'id' => 'vms.claims.operator.grants',
-			'title' => __('Event Benefit Grant Management', 'vms'),
+			'title' => __('Event Benefit Grant Management', 'backstage-venue-manager'),
 			'screen' => 'admin:vms_event_plan',
 			'version' => '3.0.0',
 			'level' => 'beginner',
-			'description' => __('Assign and manage event-specific benefits for individual accounts.', 'vms'),
+			'description' => __('Assign and manage event-specific benefits for individual accounts.', 'backstage-venue-manager'),
 			'audience' => array(
 				'capabilities_any' => array('manage_options', 'edit_posts'),
 				'capabilities_all' => array(),
@@ -606,29 +660,29 @@ if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
 				array(
 					'id' => 'claims_grants_help',
 					'selector' => '[data-vms-tour="claims.grants.help"]',
-					'title' => __('What A Benefit Grant Is', 'vms'),
-					'body' => wp_kses_post(__('Use this area to assign event-specific admission rights directly to an account. This exists so support teams can safely handle make-good, promo, and manual exception scenarios without editing raw data.', 'vms')),
+					'title' => __('What A Benefit Grant Is', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Use this area to assign event-specific admission rights directly to an account. This exists so support teams can safely handle make-good, promo, and manual exception scenarios without editing raw data.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'claims_grants_lookup',
 					'selector' => '[data-vms-tour="claims.grants.lookup"]',
-					'title' => __('Find The Correct Account', 'vms'),
-					'body' => wp_kses_post(__('Search by email, login, or name first so the benefit is tied to the right user. Incorrect account targeting can block legitimate purchasers later.', 'vms')),
+					'title' => __('Find The Correct Account', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Search by email, login, or name first so the benefit is tied to the right user. Incorrect account targeting can block legitimate purchasers later.', 'backstage-venue-manager')),
 					'placement' => 'bottom',
 				),
 				array(
 					'id' => 'claims_grants_form',
 					'selector' => '[data-vms-tour="claims.grants.form"]',
-					'title' => __('Create A Benefit Safely', 'vms'),
-					'body' => wp_kses_post(__('Choose benefit source, quantity, status, and reason. Status exists to control availability without deleting history, which protects support and audit workflows.', 'vms')),
+					'title' => __('Create A Benefit Safely', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Choose benefit source, quantity, status, and reason. Status exists to control availability without deleting history, which protects support and audit workflows.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'claims_grants_browser',
 					'selector' => '[data-vms-tour="claims.grants.browser"]',
-					'title' => __('Monitor Existing Grants', 'vms'),
-					'body' => wp_kses_post(__('Review active, reserved, used, expired, and revoked grants here. Reserved means checkout is in progress; repair tools can release stuck reservations when needed.', 'vms')),
+					'title' => __('Monitor Existing Grants', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Review active, reserved, used, expired, and revoked grants here. Reserved means checkout is in progress; repair tools can release stuck reservations when needed.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 			),
@@ -636,11 +690,11 @@ if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
 
 		$tours[] = array(
 			'id' => 'vms.claims.operator.browser',
-			'title' => __('Benefit Browser & Repair Tools', 'vms'),
+			'title' => __('Benefit Browser & Repair Tools', 'backstage-venue-manager'),
 			'screen' => 'admin:vms-credential-claims',
 			'version' => '3.0.0',
 			'level' => 'beginner',
-			'description' => __('Inspect benefit state, claim history, and safe repair actions.', 'vms'),
+			'description' => __('Inspect benefit state, claim history, and safe repair actions.', 'backstage-venue-manager'),
 			'audience' => array(
 				'capabilities_any' => array('manage_options'),
 				'capabilities_all' => array(),
@@ -654,36 +708,36 @@ if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
 				array(
 					'id' => 'claims_browser_help',
 					'selector' => '[data-vms-tour="claims.browser.help"]',
-					'title' => __('Purpose Of This Screen', 'vms'),
-					'body' => wp_kses_post(__('This screen shows how eligibility decisions were made and where each benefit came from, so operators can explain outcomes clearly and avoid guessing.', 'vms')),
+					'title' => __('Purpose Of This Screen', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('This screen shows how eligibility decisions were made and where each benefit came from, so operators can explain outcomes clearly and avoid guessing.', 'backstage-venue-manager')),
 					'placement' => 'bottom',
 				),
 				array(
 					'id' => 'claims_browser_filters',
 					'selector' => '[data-vms-tour="claims.browser.filters"]',
-					'title' => __('Filter Before Acting', 'vms'),
-					'body' => wp_kses_post(__('Filter by account, event, source, status, and dates to isolate the exact case. Precise filtering reduces accidental edits on the wrong record.', 'vms')),
+					'title' => __('Filter Before Acting', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Filter by account, event, source, status, and dates to isolate the exact case. Precise filtering reduces accidental edits on the wrong record.', 'backstage-venue-manager')),
 					'placement' => 'bottom',
 				),
 				array(
 					'id' => 'claims_browser_table',
 					'selector' => '[data-vms-tour="claims.browser.table"]',
-					'title' => __('Read Benefit Status Correctly', 'vms'),
-					'body' => wp_kses_post(__('Status cards explain availability, reserved holds, and used history. Use revoke for forward-looking blocks; use repair/release when correcting stuck state.', 'vms')),
+					'title' => __('Read Benefit Status Correctly', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Status cards explain availability, reserved holds, and used history. Use revoke for forward-looking blocks; use repair/release when correcting stuck state.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'claims_log',
 					'selector' => '[data-vms-tour="claims.log"]',
-					'title' => __('Audit History', 'vms'),
-					'body' => wp_kses_post(__('Audit logs protect operators by recording who acted, what changed, and why. This exists so support actions remain traceable during escalations.', 'vms')),
+					'title' => __('Audit History', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Audit logs protect operators by recording who acted, what changed, and why. This exists so support actions remain traceable during escalations.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'claims_repair',
 					'selector' => '[data-vms-tour="claims.repair"]',
-					'title' => __('When To Repair Vs Revoke', 'vms'),
-					'body' => wp_kses_post(__('Revoke removes future availability. Repair is for correcting bad reservation state so legitimate benefits become usable again without deleting history.', 'vms')),
+					'title' => __('When To Repair Vs Revoke', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Revoke removes future availability. Repair is for correcting bad reservation state so legitimate benefits become usable again without deleting history.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 			),
@@ -691,11 +745,11 @@ if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
 
 		$tours[] = array(
 			'id' => 'vms.claims.customer.account',
-			'title' => __('My Eligibility & Benefits', 'vms'),
+			'title' => __('My Eligibility & Benefits', 'backstage-venue-manager'),
 			'screen' => 'frontend:vms-account-benefits',
 			'version' => '3.0.0',
 			'level' => 'beginner',
-			'description' => __('Understand credential eligibility and event-specific account benefits.', 'vms'),
+			'description' => __('Understand credential eligibility and event-specific account benefits.', 'backstage-venue-manager'),
 			'audience' => array(
 				'capabilities_any' => array('read'),
 				'capabilities_all' => array(),
@@ -709,22 +763,22 @@ if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
 				array(
 					'id' => 'claims_account_help',
 					'selector' => '[data-vms-tour="claims.account.help"]',
-					'title' => __('What You See Here', 'vms'),
-					'body' => wp_kses_post(__('This page shows benefits attached to your account. Some come from approved credentials, and others may be assigned for specific events.', 'vms')),
+					'title' => __('What You See Here', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('This page shows benefits attached to your account. Some come from approved credentials, and others may be assigned for specific events.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'claims_account_how',
 					'selector' => '[data-vms-tour="claims.account.how"]',
-					'title' => __('Why Status Matters', 'vms'),
-					'body' => wp_kses_post(__('Reserved means a temporary checkout hold. Used means already consumed. Revoked or expired means the benefit is no longer available.', 'vms')),
+					'title' => __('Why Status Matters', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Reserved means a temporary checkout hold. Used means already consumed. Revoked or expired means the benefit is no longer available.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'claims_account_grants',
 					'selector' => '[data-vms-tour="claims.account.grants"]',
-					'title' => __('Event Benefits', 'vms'),
-					'body' => wp_kses_post(__('Use this list to confirm what is available before purchasing. If something looks wrong, support can review audit history instead of asking you to retry blindly.', 'vms')),
+					'title' => __('Event Benefits', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Use this list to confirm what is available before purchasing. If something looks wrong, support can review audit history instead of asking you to retry blindly.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 			),
@@ -732,11 +786,11 @@ if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
 
 		$tours[] = array(
 			'id' => 'vms.claims.customer.event',
-			'title' => __('Special-Access Ticket Assignment', 'vms'),
+			'title' => __('Special-Access Ticket Assignment', 'backstage-venue-manager'),
 			'screen' => 'frontend:vms-event-benefits',
 			'version' => '4.0.0',
 			'level' => 'beginner',
-			'description' => __('Assign one eligible registered account per special-access ticket before adding tickets to your cart.', 'vms'),
+			'description' => __('Assign one eligible registered account per special-access ticket before adding tickets to your cart.', 'backstage-venue-manager'),
 				'audience' => array(
 					'capabilities_any' => array('read'),
 					'capabilities_all' => array(),
@@ -750,22 +804,22 @@ if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
 				array(
 					'id' => 'claims_event_panel',
 					'selector' => '[data-vms-tour="claims.seats.panel"]',
-					'title' => __('Assign One Email Per Ticket', 'vms'),
-					'body' => wp_kses_post(__('Each special-access ticket needs a registered eligible account email. This protects fairness, prevents duplicate claims, and keeps support decisions clear later.', 'vms')),
+					'title' => __('Assign One Email Per Ticket', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Each special-access ticket needs a registered eligible account email. This protects fairness, prevents duplicate claims, and keeps support decisions clear later.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'claims_event_rows',
 					'selector' => '[data-vms-tour="claims.seats.rows"]',
-					'title' => __('Registered Accounts Matter', 'vms'),
-					'body' => wp_kses_post(__('If someone has not registered yet, have them create an account first so their ticket can be validated and assigned correctly.', 'vms')),
+					'title' => __('Registered Accounts Matter', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('If someone has not registered yet, have them create an account first so their ticket can be validated and assigned correctly.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 				array(
 					'id' => 'claims_event_actions',
 					'selector' => '[data-vms-tour="claims.seats.actions"]',
-					'title' => __('Use My Benefit And Recent Emails', 'vms'),
-					'body' => wp_kses_post(__('Quick actions reduce typing, but every ticket still re-validates before tickets are added to your cart. Duplicates are blocked so each ticket maps to the right eligible account.', 'vms')),
+					'title' => __('Use My Benefit And Recent Emails', 'backstage-venue-manager'),
+					'body' => wp_kses_post(__('Quick actions reduce typing, but every ticket still re-validates before tickets are added to your cart. Duplicates are blocked so each ticket maps to the right eligible account.', 'backstage-venue-manager')),
 					'placement' => 'top',
 				),
 			),
@@ -774,4 +828,4 @@ if (!function_exists('vms_ticketing_claims_register_phase3_tours')) {
 		return $tours;
 	}
 }
-add_filter('vms_tours_register', 'vms_ticketing_claims_register_phase3_tours', 35);
+add_filter('vms_tours_register', 'bvmgr_ticketing_claims_register_phase3_tours', 35);

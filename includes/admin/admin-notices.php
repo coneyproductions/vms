@@ -20,6 +20,10 @@ add_action('admin_notices', function () {
         return;
     }
 
+    if (!function_exists('bvmgr_admin_ui_is_admin_notice_screen') || !bvmgr_admin_ui_is_admin_notice_screen()) {
+        return;
+    }
+
     // Only show if flagged by activation.
     if (get_option('vms_show_first_run_notice') !== '1') {
         return;   
@@ -27,7 +31,7 @@ add_action('admin_notices', function () {
 
     $dismiss_url = wp_nonce_url(
         add_query_arg(array('vms_dismiss_first_run_notice' => '1')),
-        'vms_dismiss_first_run_notice'
+        'bvmgr_dismiss_first_run_notice'
     );
 
     echo '<div class="notice notice-success vms-first-run-notice" style="padding:14px 16px;">';
@@ -36,15 +40,15 @@ add_action('admin_notices', function () {
     echo '<div style="font-size:24px;line-height:1;">🎉</div>';
     echo '<div style="flex:1;">';
 
-    echo '<p style="margin:0 0 6px;"><strong>Vendor Management System is activated.</strong></p>';
+    echo '<p style="margin:0 0 6px;"><strong>Backstage Venue Manager is activated.</strong></p>';
     echo '<p style="margin:0 0 10px;" class="description">';
     echo 'Here’s the recommended first-time setup checklist to get you running smoothly.';
     echo '</p>';
 
     echo '<ol style="margin:0 0 10px 18px;">';
-    echo '<li><strong>Create a Venue</strong> (VMS → Venues)</li>';
+    echo '<li><strong>Create a Venue</strong> (Backstage Venue Manager → Venues)</li>';
     echo '<li><strong>Set Venue Defaults</strong> (hours, comp-by-day, holiday rules if using)</li>';
-    echo '<li><strong>Create Vendors</strong> and fill out Tax Profile basics (VMS → Vendors)</li>';
+    echo '<li><strong>Create Vendors</strong> and fill out Tax Profile basics (Backstage Venue Manager → Vendors)</li>';
     echo '<li><strong>Create Comp Packages</strong> (optional, but recommended)</li>';
     echo '<li><strong>Create your first Event Plan</strong> and try: Venue Defaults → Review → Lock Draft Pay</li>';
     echo '</ol>';
@@ -54,7 +58,7 @@ add_action('admin_notices', function () {
     echo '</p>';
 
     echo '<p style="margin:0;">';
-    echo '<a href="' . esc_url(admin_url('admin.php?page=vms-season-board')) . '" class="button button-primary">Open VMS</a> ';
+    echo '<a href="' . esc_url(admin_url('admin.php?page=vms-season-board')) . '" class="button button-primary">Open Backstage Venue Manager</a> ';
     echo '<a href="' . esc_url($dismiss_url) . '" class="button">Dismiss</a>';
     echo '</p>';
 
@@ -76,7 +80,7 @@ add_action('admin_init', function () {
         return;
     }
 
-    check_admin_referer('vms_dismiss_first_run_notice');
+    check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_dismiss_first_run_notice', '_wpnonce'), '_wpnonce');
 
     delete_option('vms_show_first_run_notice');
 

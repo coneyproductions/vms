@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_express_bar_get_event_meta')) {
-    function vms_express_bar_get_event_meta(int $event_plan_id): array
+if (!function_exists('bvmgr_express_bar_get_event_meta')) {
+    function bvmgr_express_bar_get_event_meta(int $event_plan_id): array
     {
         $enabled = (string) get_post_meta($event_plan_id, '_vms_express_bar_enabled', true) === '1';
         $product_ids_raw = (string) get_post_meta($event_plan_id, '_vms_express_bar_product_ids', true);
@@ -21,11 +21,11 @@ if (!function_exists('vms_express_bar_get_event_meta')) {
     }
 }
 
-if (!function_exists('vms_express_bar_shortcode')) {
-    function vms_express_bar_shortcode(array $atts = array()): string
+if (!function_exists('bvmgr_express_bar_shortcode')) {
+    function bvmgr_express_bar_shortcode(array $atts = array()): string
     {
         if (!class_exists('WooCommerce')) {
-            return '<div class="vms-express-bar"><p>' . esc_html__('Express Bar requires WooCommerce.', 'vms') . '</p></div>';
+            return '<div class="vms-express-bar"><p>' . esc_html__('Express Bar requires WooCommerce.', 'backstage-venue-manager') . '</p></div>';
         }
 
         $atts = shortcode_atts(array(
@@ -41,17 +41,17 @@ if (!function_exists('vms_express_bar_shortcode')) {
         }
 
         if ($event_plan_id <= 0 || get_post_type($event_plan_id) !== 'vms_event_plan') {
-            return '<div class="vms-express-bar"><p>' . esc_html__('Invalid Event Plan.', 'vms') . '</p></div>';
+            return '<div class="vms-express-bar"><p>' . esc_html__('Invalid Event Plan.', 'backstage-venue-manager') . '</p></div>';
         }
 
-        $cfg = vms_express_bar_get_event_meta($event_plan_id);
+        $cfg = bvmgr_express_bar_get_event_meta($event_plan_id);
         if (empty($cfg['enabled'])) {
             return '';
         }
 
         $product_ids = (array) ($cfg['product_ids'] ?? array());
         if (empty($product_ids)) {
-            return '<div class="vms-express-bar"><p>' . esc_html__('Express Bar is enabled, but no products have been selected yet.', 'vms') . '</p></div>';
+            return '<div class="vms-express-bar"><p>' . esc_html__('Express Bar is enabled, but no products have been selected yet.', 'backstage-venue-manager') . '</p></div>';
         }
 
         $event_title = get_the_title($event_plan_id);
@@ -91,19 +91,19 @@ if (!function_exists('vms_express_bar_shortcode')) {
                             <input type="hidden" name="vms_express_bar" value="1" />
                             <input type="hidden" name="vms_express_bar_event_plan_id" value="<?php echo (int) $event_plan_id; ?>" />
                             <input type="hidden" name="vms_express_bar_redirect" value="<?php echo esc_url($permalink ?: ''); ?>" />
-                            <?php wp_nonce_field('vms_express_bar_add_' . $product_id, 'vms_express_bar_nonce'); ?>
+                            <?php wp_nonce_field('bvmgr_express_bar_add_' . $product_id, 'bvmgr_express_bar_nonce'); ?>
                             <label>
-                                <span><?php echo esc_html__('Quantity', 'vms'); ?></span><br />
+                                <span><?php echo esc_html__('Quantity', 'backstage-venue-manager'); ?></span><br />
                                 <input type="number" name="vms_express_bar_quantity" min="1" max="20" step="1" value="1" inputmode="numeric" />
                             </label>
                             <p>
                                 <label>
-                                    <span><?php echo esc_html__('Pickup name (optional)', 'vms'); ?></span><br />
+                                    <span><?php echo esc_html__('Pickup name (optional)', 'backstage-venue-manager'); ?></span><br />
                                     <input type="text" name="vms_express_bar_pickup_name" value="" maxlength="120" />
                                 </label>
                             </p>
                             <p>
-                                <button type="submit" class="button alt"><?php echo esc_html__('Add to cart', 'vms'); ?></button>
+                                <button type="submit" class="button alt"><?php echo esc_html__('Add to cart', 'backstage-venue-manager'); ?></button>
                             </p>
                         </form>
                     </div>
@@ -114,10 +114,10 @@ if (!function_exists('vms_express_bar_shortcode')) {
         return (string) ob_get_clean();
     }
 }
-add_shortcode('vms_express_bar_menu', 'vms_express_bar_shortcode');
+add_shortcode('vms_express_bar_menu', 'bvmgr_express_bar_shortcode');
 
-if (!function_exists('vms_express_bar_capture_cart_item_data')) {
-    function vms_express_bar_capture_cart_item_data(array $cart_item_data, int $product_id, int $variation_id): array
+if (!function_exists('bvmgr_express_bar_capture_cart_item_data')) {
+    function bvmgr_express_bar_capture_cart_item_data(array $cart_item_data, int $product_id, int $variation_id): array
     {
         unset($variation_id);
 
@@ -125,8 +125,8 @@ if (!function_exists('vms_express_bar_capture_cart_item_data')) {
             return $cart_item_data;
         }
 
-        $nonce = isset($_POST['vms_express_bar_nonce']) ? sanitize_text_field(wp_unslash($_POST['vms_express_bar_nonce'])) : '';
-        if (!wp_verify_nonce($nonce, 'vms_express_bar_add_' . $product_id)) {
+        $nonce = isset($_POST['bvmgr_express_bar_nonce']) ? sanitize_text_field(wp_unslash($_POST['bvmgr_express_bar_nonce'])) : '';
+        if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_add_' . $product_id))) {
             return $cart_item_data;
         }
 
@@ -135,7 +135,7 @@ if (!function_exists('vms_express_bar_capture_cart_item_data')) {
             return $cart_item_data;
         }
 
-        $cfg = vms_express_bar_get_event_meta($event_plan_id);
+        $cfg = bvmgr_express_bar_get_event_meta($event_plan_id);
         if (empty($cfg['enabled']) || !in_array($product_id, (array) $cfg['product_ids'], true)) {
             return $cart_item_data;
         }
@@ -159,62 +159,78 @@ if (!function_exists('vms_express_bar_capture_cart_item_data')) {
         return $cart_item_data;
     }
 }
-add_filter('woocommerce_add_cart_item_data', 'vms_express_bar_capture_cart_item_data', 10, 3);
+add_filter('woocommerce_add_cart_item_data', 'bvmgr_express_bar_capture_cart_item_data', 10, 3);
 
-if (!function_exists('vms_express_bar_validate_add_to_cart')) {
-    function vms_express_bar_validate_add_to_cart(bool $passed, int $product_id, int $quantity): bool
+if (!function_exists('bvmgr_express_bar_validate_add_to_cart')) {
+    function bvmgr_express_bar_validate_add_to_cart(bool $passed, int $product_id, int $quantity): bool
     {
         unset($quantity);
         if (empty($_POST['vms_express_bar']) || empty($_POST['vms_express_bar_event_plan_id'])) {
             return $passed;
         }
 
-        $event_plan_id = absint($_POST['vms_express_bar_event_plan_id']);
-        $cfg = vms_express_bar_get_event_meta($event_plan_id);
+        $nonce = (isset($_POST['bvmgr_express_bar_nonce']) && !is_array($_POST['bvmgr_express_bar_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_express_bar_nonce']))
+            : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_add_' . $product_id))) {
+            wc_add_notice(__('That Express Bar request could not be verified. Please try again.', 'backstage-venue-manager'), 'error');
+            return false;
+        }
+
+        $event_plan_id = bvmgr_request_read_absint($_POST, 'vms_express_bar_event_plan_id');
+        $cfg = bvmgr_express_bar_get_event_meta($event_plan_id);
         if (empty($cfg['enabled']) || !in_array($product_id, (array) $cfg['product_ids'], true)) {
-            wc_add_notice(__('That product is not enabled for this event’s Express Bar menu.', 'vms'), 'error');
+            wc_add_notice(__('That product is not enabled for this event’s Express Bar menu.', 'backstage-venue-manager'), 'error');
             return false;
         }
 
         return $passed;
     }
 }
-add_filter('woocommerce_add_to_cart_validation', 'vms_express_bar_validate_add_to_cart', 10, 3);
+add_filter('woocommerce_add_to_cart_validation', 'bvmgr_express_bar_validate_add_to_cart', 10, 3);
 
-if (!function_exists('vms_express_bar_maybe_redirect_after_add')) {
-    function vms_express_bar_maybe_redirect_after_add(string $url): string
+if (!function_exists('bvmgr_express_bar_maybe_redirect_after_add')) {
+    function bvmgr_express_bar_maybe_redirect_after_add(string $url): string
     {
-        if (empty($_REQUEST['vms_express_bar_redirect'])) {
+        if (empty($_POST['vms_express_bar']) || empty($_POST['vms_express_bar_redirect'])) {
             return $url;
         }
-        $redirect = esc_url_raw(wp_unslash($_REQUEST['vms_express_bar_redirect']));
-        return $redirect !== '' ? $redirect : $url;
+
+        $product_id = isset($_POST['add-to-cart']) ? absint($_POST['add-to-cart']) : 0;
+        $nonce = (isset($_POST['bvmgr_express_bar_nonce']) && !is_array($_POST['bvmgr_express_bar_nonce']))
+            ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_express_bar_nonce']))
+            : '';
+        if ($product_id <= 0 || $nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_express_bar_add_' . $product_id))) {
+            return $url;
+        }
+
+        return bvmgr_request_local_redirect($url, bvmgr_request_read_scalar($_POST, 'vms_express_bar_redirect'));
     }
 }
-add_filter('woocommerce_add_to_cart_redirect', 'vms_express_bar_maybe_redirect_after_add');
+add_filter('woocommerce_add_to_cart_redirect', 'bvmgr_express_bar_maybe_redirect_after_add');
 
-if (!function_exists('vms_express_bar_cart_item_data')) {
-    function vms_express_bar_cart_item_data(array $item_data, array $cart_item): array
+if (!function_exists('bvmgr_express_bar_cart_item_data')) {
+    function bvmgr_express_bar_cart_item_data(array $item_data, array $cart_item): array
     {
         if (!empty($cart_item['_vms_express_bar_event_plan_title'])) {
             $item_data[] = array(
-                'name' => __('Express Bar Event', 'vms'),
+                'name' => __('Express Bar Event', 'backstage-venue-manager'),
                 'value' => wc_clean((string) $cart_item['_vms_express_bar_event_plan_title']),
             );
         }
         if (!empty($cart_item['_vms_express_bar_pickup_name'])) {
             $item_data[] = array(
-                'name' => __('Pickup Name', 'vms'),
+                'name' => __('Pickup Name', 'backstage-venue-manager'),
                 'value' => wc_clean((string) $cart_item['_vms_express_bar_pickup_name']),
             );
         }
         return $item_data;
     }
 }
-add_filter('woocommerce_get_item_data', 'vms_express_bar_cart_item_data', 10, 2);
+add_filter('woocommerce_get_item_data', 'bvmgr_express_bar_cart_item_data', 10, 2);
 
-if (!function_exists('vms_express_bar_add_order_meta')) {
-    function vms_express_bar_add_order_meta(WC_Order $order, array $data): void
+if (!function_exists('bvmgr_express_bar_add_order_meta')) {
+    function bvmgr_express_bar_add_order_meta(WC_Order $order, array $data): void
     {
         unset($data);
         $event_ids = array();
@@ -233,10 +249,10 @@ if (!function_exists('vms_express_bar_add_order_meta')) {
         }
     }
 }
-add_action('woocommerce_checkout_create_order', 'vms_express_bar_add_order_meta', 10, 2);
+add_action('woocommerce_checkout_create_order', 'bvmgr_express_bar_add_order_meta', 10, 2);
 
-if (!function_exists('vms_express_bar_add_order_line_item_meta')) {
-    function vms_express_bar_add_order_line_item_meta(WC_Order_Item_Product $item, string $cart_item_key, array $values, WC_Order $order): void
+if (!function_exists('bvmgr_express_bar_add_order_line_item_meta')) {
+    function bvmgr_express_bar_add_order_line_item_meta(WC_Order_Item_Product $item, string $cart_item_key, array $values, WC_Order $order): void
     {
         unset($cart_item_key, $order);
         if (empty($values['_vms_express_bar'])) {
@@ -254,4 +270,4 @@ if (!function_exists('vms_express_bar_add_order_line_item_meta')) {
         }
     }
 }
-add_action('woocommerce_checkout_create_order_line_item', 'vms_express_bar_add_order_line_item_meta', 10, 4);
+add_action('woocommerce_checkout_create_order_line_item', 'bvmgr_express_bar_add_order_line_item_meta', 10, 4);

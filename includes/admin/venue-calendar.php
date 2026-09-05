@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) exit;
 // 	);
 // }
 
-function vms_render_admin_venue_calendar_page(): void
+function bvmgr_render_admin_venue_calendar_page(): void
 {
     if (!current_user_can('manage_options')) return;
 
@@ -31,16 +31,21 @@ function vms_render_admin_venue_calendar_page(): void
         'order'          => 'ASC',
     ]);
 
-    $venue_id = isset($_GET['venue_id']) ? absint($_GET['venue_id']) : 0;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue-calendar filters only change which venue is displayed.
+    $venue_id = bvmgr_request_read_absint($_GET, 'venue_id');
     if ($venue_id <= 0 && !empty($venues)) $venue_id = (int) $venues[0]->ID;
 
-    $ym = isset($_GET['ym']) ? sanitize_text_field(wp_unslash($_GET['ym'])) : gmdate('Y-m');
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue-calendar filters only change which month is displayed.
+    $ym = bvmgr_request_read_text_field($_GET, 'ym');
+    if ($ym === '') {
+        $ym = gmdate('Y-m');
+    }
 
-    $data = vms_get_event_plans_for_venue_month($venue_id, $ym);
+    $data = bvmgr_get_event_plans_for_venue_month($venue_id, $ym);
     $month = $data['month'];
     $days  = $data['days'];
 
-    $nav = vms_calendar_prev_next($ym);
+    $nav = bvmgr_calendar_prev_next($ym);
 
     echo '<div class="wrap vms-venue-calendar">';
     echo '<h1>Venue Calendar</h1>';
@@ -76,7 +81,7 @@ function vms_render_admin_venue_calendar_page(): void
     echo '</div>';
 
     // Calendar grid
-    echo vms_render_month_grid($month, $days, true);
+    echo bvmgr_render_month_grid($month, $days, true);
 
     echo '</div>';
 }
@@ -85,7 +90,7 @@ function vms_render_admin_venue_calendar_page(): void
  * Render the month grid.
  * $admin_mode: if true, cards link to edit screen.
  */
-function vms_render_month_grid(array $month, array $days, bool $admin_mode = false): string
+function bvmgr_render_month_grid(array $month, array $days, bool $admin_mode = false): string
 {
     $start_ts = $month['start_ts'];
     $days_in_month = $month['days_in_month'];
@@ -112,7 +117,7 @@ function vms_render_month_grid(array $month, array $days, bool $admin_mode = fal
                 $name = esc_html($ev['band_name']);
                 $time = $ev['start_time'] ? esc_html($ev['start_time']) : '';
 
-                $badge = vms_cal_status_badge((string)$ev['status']);
+                $badge = bvmgr_cal_status_badge((string)$ev['status']);
 
                 $inner = $img . '<div class="vms-cal-card-text"><div class="vms-cal-name">' . $name . '</div><div class="vms-cal-meta">' . $time . ' ' . $badge . '</div></div>';
                 $view_url = isset($ev['view_url']) ? esc_url((string) $ev['view_url']) : '';
@@ -134,7 +139,7 @@ function vms_render_month_grid(array $month, array $days, bool $admin_mode = fal
     return $out;
 }
 
-function vms_cal_status_badge(string $status): string
+function bvmgr_cal_status_badge(string $status): string
 {
     $status = $status ?: 'draft';
     $label = strtoupper($status);

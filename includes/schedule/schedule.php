@@ -10,24 +10,24 @@ require_once __DIR__ . '/season-dates.php';
  * Returns a map of open dates for the venue in the window.
  * open_map['YYYY-mm-dd'] = true
  */
-function vms_sch_get_open_map(int $venue_id, string $start_ymd, string $end_ymd): array
+function bvmgr_sch_get_open_map(int $venue_id, string $start_ymd, string $end_ymd): array
 {
     $open = array();
 
     if ($venue_id <= 0) return $open;
 
-    if (function_exists('vms_get_active_dates_for_venue')) {
+    if (function_exists('bvmgr_get_active_dates_for_venue')) {
         // Some implementations accept a range; others ignore it.
         try {
-            $dates = vms_get_active_dates_for_venue($venue_id, $start_ymd, $end_ymd);
+            $dates = bvmgr_get_active_dates_for_venue($venue_id, $start_ymd, $end_ymd);
         } catch (Throwable $e) {
-            $dates = vms_get_active_dates_for_venue($venue_id);
+            $dates = bvmgr_get_active_dates_for_venue($venue_id);
         }
 
         if (is_array($dates)) {
             foreach ($dates as $d) {
                 $d = (string) $d;
-                if (vms_sch_is_valid_ymd($d)) {
+                if (bvmgr_sch_is_valid_ymd($d)) {
                     $open[$d] = true;
                 }
             }
@@ -41,7 +41,7 @@ function vms_sch_get_open_map(int $venue_id, string $start_ymd, string $end_ymd)
  * Returns a map of plans by date.
  * plans_by_date['YYYY-mm-dd'] = [plan_id, plan_id, …]
  */
-function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end_ymd, bool $include_drafts = false, array $opts = array())
+function bvmgr_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end_ymd, bool $include_drafts = false, array $opts = array())
 {
     $map = array();
 
@@ -64,16 +64,17 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
         'post_status'    => array('publish', 'draft', 'pending', 'future', 'private'),
         'posts_per_page' => -1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The complete schedule lookup is bounded by one venue and the caller's explicit date window.
         'meta_query'     => array(
             'relation' => 'AND',
             array(
-                'key'     => vms_meta_key('event_plan', 'venue_id'),
+                'key'     => bvmgr_meta_key('event_plan', 'venue_id'),
                 'value'   => (int) $venue_id,
                 'compare' => '=',
                 'type'    => 'NUMERIC',
             ),
             array(
-                'key'     => vms_meta_key('event_plan', 'date'),
+                'key'     => bvmgr_meta_key('event_plan', 'date'),
                 'value'   => array($start_ymd, $end_ymd),
                 'compare' => 'BETWEEN',
                 'type'    => 'DATE',
@@ -85,9 +86,10 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
 
     // Safety net: if BETWEEN yields nothing, widen then filter manually.
     if (empty($plan_ids)) {
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The legacy fallback removes the date bound, scans all plans for this venue, and reapplies the caller's window in PHP below.
         $args['meta_query'] = array(
             array(
-                'key'     => vms_meta_key('event_plan', 'venue_id'),
+                'key'     => bvmgr_meta_key('event_plan', 'venue_id'),
                 'value'   => (int) $venue_id,
                 'compare' => '=',
                 'type'    => 'NUMERIC',
@@ -103,19 +105,19 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
         }
 
         // Canonical inclusion (status meta, context-aware).
-        if (function_exists('vms_event_plan_should_include')) {
-            if (!vms_event_plan_should_include($pid, $context, $flags)) {
+        if (function_exists('bvmgr_event_plan_should_include')) {
+            if (!bvmgr_event_plan_should_include($pid, $context, $flags)) {
                 continue;
             }
         }
 
-        $ymd = (string) get_post_meta($pid, vms_meta_key('event_plan', 'date'), true);
-        if (!vms_sch_is_valid_ymd($ymd)) continue;
-        if (!vms_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
+        $ymd = (string) get_post_meta($pid, bvmgr_meta_key('event_plan', 'date'), true);
+        if (!bvmgr_sch_is_valid_ymd($ymd)) continue;
+        if (!bvmgr_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
 
         if (!isset($map[$ymd])) $map[$ymd] = array();
 
-        $plan_status = function_exists('vms_event_plan_get_status') ? (string) vms_event_plan_get_status($pid, $context) : '';
+        $plan_status = function_exists('bvmgr_event_plan_get_status') ? (string) bvmgr_event_plan_get_status($pid, $context) : '';
 
         $map[$ymd][] = array(
             'plan_id'     => (int) $pid,
@@ -135,7 +137,7 @@ function vms_sch_get_plans_by_date(int $venue_id, string $start_ymd, string $end
  *   ['plan_id' => 124, 'venue_id' => 56],
  * ]
  */
-function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, string $end_ymd, bool $include_drafts = false, array $opts = array())
+function bvmgr_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, string $end_ymd, bool $include_drafts = false, array $opts = array())
 {
     $map = array();
     $venue_ids = array_values(array_filter(array_map('intval', $venue_ids)));
@@ -155,16 +157,17 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
         'post_status'    => array('publish', 'draft', 'pending', 'future', 'private'),
         'posts_per_page' => -1,
         'fields'         => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The complete schedule lookup is bounded by the caller's finite venue set and explicit date window.
         'meta_query'     => array(
             'relation' => 'AND',
             array(
-                'key'     => vms_meta_key('event_plan', 'venue_id'),
+                'key'     => bvmgr_meta_key('event_plan', 'venue_id'),
                 'value'   => $venue_ids,
                 'compare' => 'IN',
                 'type'    => 'NUMERIC',
             ),
             array(
-                'key'     => vms_meta_key('event_plan', 'date'),
+                'key'     => bvmgr_meta_key('event_plan', 'date'),
                 'value'   => array($start_ymd, $end_ymd),
                 'compare' => 'BETWEEN',
                 'type'    => 'DATE',
@@ -176,9 +179,10 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
 
     // Safety net: if BETWEEN yields nothing, widen then filter manually.
     if (empty($plan_ids)) {
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The legacy fallback removes the date bound, scans all plans for the selected venues, and reapplies the caller's window in PHP below.
         $args['meta_query'] = array(
             array(
-                'key'     => vms_meta_key('event_plan', 'venue_id'),
+                'key'     => bvmgr_meta_key('event_plan', 'venue_id'),
                 'value'   => $venue_ids,
                 'compare' => 'IN',
                 'type'    => 'NUMERIC',
@@ -191,21 +195,21 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
         $pid = (int) $pid;
         if ($pid <= 0) continue;
 
-        if (function_exists('vms_event_plan_should_include')) {
-            if (!vms_event_plan_should_include($pid, $context, $flags)) {
+        if (function_exists('bvmgr_event_plan_should_include')) {
+            if (!bvmgr_event_plan_should_include($pid, $context, $flags)) {
                 continue;
             }
         }
 
-        $ymd = (string) get_post_meta($pid, vms_meta_key('event_plan', 'date'), true);
-        if (!vms_sch_is_valid_ymd($ymd)) continue;
-        if (!vms_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
+        $ymd = (string) get_post_meta($pid, bvmgr_meta_key('event_plan', 'date'), true);
+        if (!bvmgr_sch_is_valid_ymd($ymd)) continue;
+        if (!bvmgr_sch_is_date_in_window($ymd, $start_ymd, $end_ymd)) continue;
 
-        $vid = (int) get_post_meta($pid, vms_meta_key('event_plan', 'venue_id'), true);
+        $vid = (int) get_post_meta($pid, bvmgr_meta_key('event_plan', 'venue_id'), true);
 
         if (!isset($map[$ymd])) $map[$ymd] = array();
 
-        $plan_status = function_exists('vms_event_plan_get_status') ? (string) vms_event_plan_get_status($pid, $context) : '';
+        $plan_status = function_exists('bvmgr_event_plan_get_status') ? (string) bvmgr_event_plan_get_status($pid, $context) : '';
 
         $map[$ymd][] = array(
             'plan_id'     => $pid,
@@ -220,7 +224,7 @@ function vms_sch_get_plans_by_date_all(array $venue_ids, string $start_ymd, stri
 /**
  * Build a lookup map: venue_id => venue_name
  */
-function vms_sch_get_venue_name_map(array $venue_ids): array
+function bvmgr_sch_get_venue_name_map(array $venue_ids): array
 {
     $map = array();
     foreach ($venue_ids as $vid) {
@@ -231,14 +235,14 @@ function vms_sch_get_venue_name_map(array $venue_ids): array
     return $map;
 }
 
-function vms_sch_is_valid_ymd(string $ymd): bool
+function bvmgr_sch_is_valid_ymd(string $ymd): bool
 {
     return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd);
 }
 
-function vms_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_ymd): bool
+function bvmgr_sch_is_date_in_window(string $ymd, string $start_ymd, string $end_ymd): bool
 {
-    if (!vms_sch_is_valid_ymd($ymd) || !vms_sch_is_valid_ymd($start_ymd) || !vms_sch_is_valid_ymd($end_ymd)) {
+    if (!bvmgr_sch_is_valid_ymd($ymd) || !bvmgr_sch_is_valid_ymd($start_ymd) || !bvmgr_sch_is_valid_ymd($end_ymd)) {
         return false;
     }
     $t = strtotime($ymd);

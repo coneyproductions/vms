@@ -2,21 +2,29 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admin_ui_get_page_slug')) {
-	function vms_admin_ui_get_page_slug(): string
+if (!function_exists('bvmgr_admin_ui_query_arg')) {
+	function bvmgr_admin_ui_query_arg(string $key): string
 	{
-		$page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only admin shell routing helper.
+		return bvmgr_request_read_scalar($_GET, $key);
+	}
+}
+
+if (!function_exists('bvmgr_admin_ui_get_page_slug')) {
+	function bvmgr_admin_ui_get_page_slug(): string
+	{
+		$page = sanitize_key(bvmgr_admin_ui_query_arg('page'));
 		return (string) $page;
 	}
 }
 
-if (!function_exists('vms_admin_ui_get_post_type')) {
+if (!function_exists('bvmgr_admin_ui_get_post_type')) {
 	/**
 	 * @param WP_Screen|null $screen
 	 */
-	function vms_admin_ui_get_post_type($screen = null): string
+	function bvmgr_admin_ui_get_post_type($screen = null): string
 	{
-		$post_type = isset($_GET['post_type']) ? sanitize_key((string) $_GET['post_type']) : '';
+		$post_type = sanitize_key(bvmgr_admin_ui_query_arg('post_type'));
 		if ($post_type !== '') {
 			return $post_type;
 		}
@@ -32,7 +40,7 @@ if (!function_exists('vms_admin_ui_get_post_type')) {
 			return $post_type;
 		}
 
-		$post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+		$post_id = absint(bvmgr_admin_ui_query_arg('post'));
 		if ($post_id > 0) {
 			$post_type = get_post_type($post_id);
 			if (is_string($post_type)) {
@@ -44,18 +52,18 @@ if (!function_exists('vms_admin_ui_get_post_type')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_is_vms_screen')) {
+if (!function_exists('bvmgr_admin_ui_is_vms_screen')) {
 	/**
 	 * @param WP_Screen|null $screen
 	 */
-	function vms_admin_ui_is_vms_screen($screen = null): bool
+	function bvmgr_admin_ui_is_vms_screen($screen = null): bool
 	{
-		$page = vms_admin_ui_get_page_slug();
+		$page = bvmgr_admin_ui_get_page_slug();
 		if ($page === 'vms' || strpos($page, 'vms-') === 0) {
 			return true;
 		}
 
-		$post_type = vms_admin_ui_get_post_type($screen);
+		$post_type = bvmgr_admin_ui_get_post_type($screen);
 		if ($post_type !== '' && strpos($post_type, 'vms_') === 0) {
 			return true;
 		}
@@ -74,10 +82,44 @@ if (!function_exists('vms_admin_ui_is_vms_screen')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_is_shell_page')) {
-	function vms_admin_ui_is_shell_page(): bool
+if (!function_exists('bvmgr_admin_ui_is_admin_notice_screen')) {
+	/**
+	 * @param WP_Screen|null $screen
+	 */
+	function bvmgr_admin_ui_is_admin_notice_screen($screen = null): bool
 	{
-		$page = vms_admin_ui_get_page_slug();
+		if (!is_admin()) {
+			return false;
+		}
+
+		if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (function_exists('wp_doing_cron') && wp_doing_cron())) {
+			return false;
+		}
+
+		if ((defined('REST_REQUEST') && REST_REQUEST) || (defined('DOING_CRON') && DOING_CRON)) {
+			return false;
+		}
+
+		if (!is_object($screen)) {
+			if (!function_exists('get_current_screen')) {
+				return false;
+			}
+
+			$screen = get_current_screen();
+		}
+
+		if (!is_object($screen)) {
+			return false;
+		}
+
+		return bvmgr_admin_ui_is_vms_screen($screen);
+	}
+}
+
+if (!function_exists('bvmgr_admin_ui_is_shell_page')) {
+	function bvmgr_admin_ui_is_shell_page(): bool
+	{
+		$page = bvmgr_admin_ui_get_page_slug();
 
 		// Premium Ops pages render their own wrappers; treat them as non-shell so
 		// the global VMS top nav can render consistently.
@@ -132,8 +174,8 @@ if (!function_exists('vms_admin_ui_is_shell_page')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_get_planning_memory')) {
-	function vms_admin_ui_get_planning_memory(int $user_id = 0): string
+if (!function_exists('bvmgr_admin_ui_get_planning_memory')) {
+	function bvmgr_admin_ui_get_planning_memory(int $user_id = 0): string
 	{
 		$user_id = $user_id > 0 ? $user_id : get_current_user_id();
 		if ($user_id <= 0) {
@@ -149,23 +191,23 @@ if (!function_exists('vms_admin_ui_get_planning_memory')) {
 	}
 }
 
-if (!function_exists('vms_admin_ui_get_planning_landing_url')) {
-	function vms_admin_ui_get_planning_landing_url(int $user_id = 0): string
+if (!function_exists('bvmgr_admin_ui_get_planning_landing_url')) {
+	function bvmgr_admin_ui_get_planning_landing_url(int $user_id = 0): string
 	{
-		$value = vms_admin_ui_get_planning_memory($user_id);
+		$value = bvmgr_admin_ui_get_planning_memory($user_id);
 		if ($value === 'event_plans') {
-			return vms_admin_ui_post_type_url('vms_event_plan');
+			return bvmgr_admin_ui_post_type_url('vms_event_plan');
 		}
 
-		return vms_admin_ui_page_url('vms-schedule');
+		return bvmgr_admin_ui_page_url('vms-schedule');
 	}
 }
 
-if (!function_exists('vms_admin_ui_track_planning_context')) {
+if (!function_exists('bvmgr_admin_ui_track_planning_context')) {
 	/**
 	 * @param WP_Screen $screen
 	 */
-	function vms_admin_ui_track_planning_context($screen): void
+	function bvmgr_admin_ui_track_planning_context($screen): void
 	{
 		if (!is_admin() || !is_user_logged_in()) {
 			return;
@@ -176,25 +218,25 @@ if (!function_exists('vms_admin_ui_track_planning_context')) {
 			return;
 		}
 
-		$page = vms_admin_ui_get_page_slug();
+		$page = bvmgr_admin_ui_get_page_slug();
 		if ($page === 'vms-schedule') {
 			update_user_meta($user_id, 'vms_last_planning_view', 'schedule');
 			return;
 		}
 
-		$post_type = vms_admin_ui_get_post_type($screen);
+		$post_type = bvmgr_admin_ui_get_post_type($screen);
 		if ($post_type === 'vms_event_plan') {
 			update_user_meta($user_id, 'vms_last_planning_view', 'event_plans');
 		}
 	}
 }
-add_action('current_screen', 'vms_admin_ui_track_planning_context', 20);
+add_action('current_screen', 'bvmgr_admin_ui_track_planning_context', 20);
 
-if (!function_exists('vms_admin_ui_active_cluster')) {
-	function vms_admin_ui_active_cluster(): string
+if (!function_exists('bvmgr_admin_ui_active_cluster')) {
+	function bvmgr_admin_ui_active_cluster(): string
 	{
-		$page = vms_admin_ui_get_page_slug();
-		$post_type = vms_admin_ui_get_post_type();
+		$page = bvmgr_admin_ui_get_page_slug();
+		$post_type = bvmgr_admin_ui_get_post_type();
 
 		if ($post_type === 'vms_event_plan') {
 			return 'planning';
@@ -232,7 +274,7 @@ if (!function_exists('vms_admin_ui_active_cluster')) {
 			return 'venues';
 		}
 
-		if (in_array($page, array('vms-settings', 'vms-guided-tours', 'vms-status-notices', 'vms-reference-keys-map', 'vms-continuity-binder', 'vms-addons', 'vms-docs', 'vms-import-event-plans'), true)) {
+		if (in_array($page, array('vms-settings', 'vms-guided-tours', 'vms-status-notices', 'vms-reference-keys-map', 'vms-continuity-binder', 'vms-docs', 'vms-import-event-plans'), true)) {
 			return 'settings';
 		}
 

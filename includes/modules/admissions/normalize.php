@@ -1,8 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_admission_normalize_name')) {
-	function vms_admission_normalize_name(string $name): string
+if (!function_exists('bvmgr_admission_normalize_name')) {
+	function bvmgr_admission_normalize_name(string $name): string
 	{
 		$name = trim($name);
 		if ($name === '') {
@@ -24,8 +24,8 @@ if (!function_exists('vms_admission_normalize_name')) {
 	}
 }
 
-if (!function_exists('vms_admission_mask_phone')) {
-	function vms_admission_mask_phone(string $phone): string
+if (!function_exists('bvmgr_admission_mask_phone')) {
+	function bvmgr_admission_mask_phone(string $phone): string
 	{
 		$digits = preg_replace('/\D+/', '', $phone);
 		if (!is_string($digits) || $digits === '') {
@@ -37,8 +37,8 @@ if (!function_exists('vms_admission_mask_phone')) {
 }
 
 
-if (!function_exists('vms_admission_normalize_phone')) {
-	function vms_admission_normalize_phone(string $phone): string
+if (!function_exists('bvmgr_admission_normalize_phone')) {
+	function bvmgr_admission_normalize_phone(string $phone): string
 	{
 		$digits = preg_replace('/\D+/', '', $phone);
 		if (!is_string($digits)) {
@@ -58,8 +58,8 @@ if (!function_exists('vms_admission_normalize_phone')) {
 	}
 }
 
-if (!function_exists('vms_admission_normalize_email')) {
-	function vms_admission_normalize_email(string $email): string
+if (!function_exists('bvmgr_admission_normalize_email')) {
+	function bvmgr_admission_normalize_email(string $email): string
 	{
 		$email = sanitize_email($email);
 		if ($email === '') {

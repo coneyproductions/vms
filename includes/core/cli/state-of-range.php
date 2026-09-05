@@ -5,8 +5,8 @@ if (!defined('WP_CLI') || !WP_CLI) {
 	return;
 }
 
-if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
-	class VMS_CLI_State_Of_Range_Command
+if (!class_exists('BVMGR_CLI_State_Of_Range_Command')) {
+	class BVMGR_CLI_State_Of_Range_Command
 	{
 		/**
 		 * Show State of the Range scheduling and delivery status.
@@ -18,8 +18,8 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms state-of-range status
-		 *     wp vms state-of-range status --format=json
+		 *     wp bvmgr state-of-range status
+		 *     wp bvmgr state-of-range status --format=json
 		 *
 		 * @subcommand status
 		 * @when after_wp_load
@@ -65,8 +65,8 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms state-of-range render --dry-run
-		 *     wp vms state-of-range render --date=2026-06-02 --print-body
+		 *     wp bvmgr state-of-range render --dry-run
+		 *     wp bvmgr state-of-range render --date=2026-06-02 --print-body
 		 *
 		 * @subcommand render
 		 * @when after_wp_load
@@ -81,7 +81,7 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 
 			$generated_at = $this->resolve_generated_at($assoc_args);
 			$recipient = sanitize_email((string) ($assoc_args['to'] ?? ''));
-			$result = vms_ticket_integrity_send_state_of_range_report(
+			$result = bvmgr_ticket_integrity_send_state_of_range_report(
 				'cli',
 				array(
 					'dry_run' => true,
@@ -117,7 +117,7 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms state-of-range send-test --to=admin@example.com
+		 *     wp bvmgr state-of-range send-test --to=admin@example.com
 		 *
 		 * @subcommand send-test
 		 * @when after_wp_load
@@ -136,7 +136,7 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 			}
 
 			$generated_at = $this->resolve_generated_at($assoc_args);
-			$result = vms_ticket_integrity_send_state_of_range_report(
+			$result = bvmgr_ticket_integrity_send_state_of_range_report(
 				'cli',
 				array(
 					'mode' => 'cli_test',
@@ -156,7 +156,7 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp vms state-of-range reschedule
+		 *     wp bvmgr state-of-range reschedule
 		 *
 		 * @subcommand reschedule
 		 * @when after_wp_load
@@ -167,11 +167,11 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 		public function reschedule(array $args, array $assoc_args): void
 		{
 			unset($args, $assoc_args);
-			if (!function_exists('vms_ticket_integrity_maybe_schedule_cron')) {
+			if (!function_exists('bvmgr_ticket_integrity_maybe_schedule_cron')) {
 				WP_CLI::error('Cron scheduling helper is unavailable.');
 			}
 
-			vms_ticket_integrity_maybe_schedule_cron();
+			bvmgr_ticket_integrity_maybe_schedule_cron();
 			$status = $this->collect_status();
 			WP_CLI::success('State of the Range schedules refreshed.');
 			WP_CLI::log('Next scheduled run: ' . (string) ($status['next_scheduled_run'] ?? 'Never'));
@@ -185,7 +185,7 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 		{
 			$this->assert_helpers_available();
 
-			$snapshot = vms_ticket_integrity_daily_report_status_snapshot();
+			$snapshot = bvmgr_ticket_integrity_daily_report_status_snapshot();
 			$state = is_array($snapshot['state'] ?? null) ? $snapshot['state'] : array();
 
 			return array(
@@ -230,15 +230,15 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 
 		private function format_timestamp(int $timestamp): string
 		{
-			if (function_exists('vms_ticket_integrity_format_datetime')) {
-				return vms_ticket_integrity_format_datetime($timestamp);
+			if (function_exists('bvmgr_ticket_integrity_format_datetime')) {
+				return bvmgr_ticket_integrity_format_datetime($timestamp);
 			}
 
 			if ($timestamp <= 0) {
 				return 'Never';
 			}
 
-			return date('Y-m-d H:i:s', $timestamp);
+			return wp_date('Y-m-d H:i:s', $timestamp, wp_timezone());
 		}
 
 		/**
@@ -251,11 +251,13 @@ if (!class_exists('VMS_CLI_State_Of_Range_Command')) {
 
 		private function assert_helpers_available(): void
 		{
-			if (!function_exists('vms_ticket_integrity_daily_report_status_snapshot') || !function_exists('vms_ticket_integrity_send_state_of_range_report')) {
+			if (!function_exists('bvmgr_ticket_integrity_daily_report_status_snapshot') || !function_exists('bvmgr_ticket_integrity_send_state_of_range_report')) {
 				WP_CLI::error('State of the Range helpers are unavailable.');
 			}
 		}
 	}
 
-	WP_CLI::add_command('vms state-of-range', 'VMS_CLI_State_Of_Range_Command');
+	WP_CLI::add_command('bvmgr state-of-range', 'BVMGR_CLI_State_Of_Range_Command');
+	// Deprecated B4 compatibility alias; retain until the CLI retirement gate is met.
+	WP_CLI::add_command('vms state-of-range', 'BVMGR_CLI_State_Of_Range_Command');
 }

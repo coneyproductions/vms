@@ -3,29 +3,22 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-if (!function_exists('vms_calendar_ics_query_value')) {
-	function vms_calendar_ics_query_value(string $key, string $default = ''): string
+if (!function_exists('bvmgr_calendar_ics_query_value')) {
+	function bvmgr_calendar_ics_query_value(string $key, string $default = ''): string
 	{
-		$val = get_query_var($key, null);
-		if (is_string($val) && $val !== '') {
-			return $val;
-		}
-		if (isset($_GET[$key])) {
-			return (string) wp_unslash($_GET[$key]);
-		}
-		return $default;
+		return bvmgr_get_query_var_compat($key, $default);
 	}
 }
 
-if (!function_exists('vms_calendar_ics_valid_ymd')) {
-	function vms_calendar_ics_valid_ymd(string $ymd): bool
+if (!function_exists('bvmgr_calendar_ics_valid_ymd')) {
+	function bvmgr_calendar_ics_valid_ymd(string $ymd): bool
 	{
 		return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd);
 	}
 }
 
-if (!function_exists('vms_calendar_ics_escape_text')) {
-	function vms_calendar_ics_escape_text(string $value): string
+if (!function_exists('bvmgr_calendar_ics_escape_text')) {
+	function bvmgr_calendar_ics_escape_text(string $value): string
 	{
 		$value = str_replace('\\', '\\\\', $value);
 		$value = str_replace(';', '\;', $value);
@@ -35,8 +28,8 @@ if (!function_exists('vms_calendar_ics_escape_text')) {
 	}
 }
 
-if (!function_exists('vms_calendar_ics_fold_line')) {
-	function vms_calendar_ics_fold_line(string $line): string
+if (!function_exists('bvmgr_calendar_ics_fold_line')) {
+	function bvmgr_calendar_ics_fold_line(string $line): string
 	{
 		$max = 73;
 		if (strlen($line) <= $max) {
@@ -59,15 +52,15 @@ if (!function_exists('vms_calendar_ics_fold_line')) {
 	}
 }
 
-if (!function_exists('vms_calendar_ics_line')) {
-	function vms_calendar_ics_line(string $name, string $value): string
+if (!function_exists('bvmgr_calendar_ics_line')) {
+	function bvmgr_calendar_ics_line(string $name, string $value): string
 	{
-		return vms_calendar_ics_fold_line($name . ':' . vms_calendar_ics_escape_text($value)) . "\r\n";
+		return bvmgr_calendar_ics_fold_line($name . ':' . bvmgr_calendar_ics_escape_text($value)) . "\r\n";
 	}
 }
 
-if (!function_exists('vms_calendar_ics_dt_utc')) {
-	function vms_calendar_ics_dt_utc(string $raw): string
+if (!function_exists('bvmgr_calendar_ics_dt_utc')) {
+	function bvmgr_calendar_ics_dt_utc(string $raw): string
 	{
 		$raw = trim($raw);
 		if ($raw === '') {
@@ -82,13 +75,13 @@ if (!function_exists('vms_calendar_ics_dt_utc')) {
 	}
 }
 
-if (!function_exists('vms_calendar_ics_dt_from_ymd_utc')) {
-	function vms_calendar_ics_dt_from_ymd_utc(string $ymd): string
+if (!function_exists('bvmgr_calendar_ics_dt_from_ymd_utc')) {
+	function bvmgr_calendar_ics_dt_from_ymd_utc(string $ymd): string
 	{
-		if (!vms_calendar_ics_valid_ymd($ymd)) {
+		if (!bvmgr_calendar_ics_valid_ymd($ymd)) {
 			return '';
 		}
-		$tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+		$tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		try {
 			$dt = new DateTimeImmutable($ymd . ' 00:00:00', $tz);
 		} catch (Exception $e) {
@@ -98,64 +91,64 @@ if (!function_exists('vms_calendar_ics_dt_from_ymd_utc')) {
 	}
 }
 
-if (!function_exists('vms_calendar_ics_vendor_id_for_request')) {
-	function vms_calendar_ics_vendor_id_for_request(int $user_id): int
+if (!function_exists('bvmgr_calendar_ics_vendor_id_for_request')) {
+	function bvmgr_calendar_ics_vendor_id_for_request(int $user_id): int
 	{
 		$user_id = absint($user_id);
 		if ($user_id <= 0) {
 			return 0;
 		}
 
-		$requested_raw = vms_calendar_ics_query_value('vms_calendar_vendor_id', '');
+		$requested_raw = bvmgr_calendar_ics_query_value('bvmgr_calendar_vendor_id', '');
 		if ($requested_raw === '') {
-			$requested_raw = vms_calendar_ics_query_value('vendor_id', '0');
+			$requested_raw = bvmgr_calendar_ics_query_value('vendor_id', '0');
 		}
 		$requested = absint($requested_raw);
 		if ($requested > 0) {
-			if (function_exists('vms_user_can_access_vendor') && vms_user_can_access_vendor($user_id, $requested)) {
+			if (function_exists('bvmgr_user_can_access_vendor') && bvmgr_user_can_access_vendor($user_id, $requested)) {
 				return $requested;
 			}
-			if (function_exists('vms_get_active_vendor_ids_for_user')) {
-				$active = array_values(array_unique(array_map('absint', (array) vms_get_active_vendor_ids_for_user($user_id))));
+			if (function_exists('bvmgr_get_active_vendor_ids_for_user')) {
+				$active = array_values(array_unique(array_map('absint', (array) bvmgr_get_active_vendor_ids_for_user($user_id))));
 				if (in_array($requested, $active, true)) {
 					return $requested;
 				}
 			}
 		}
 
-		if (function_exists('vms_get_primary_vendor_id_for_user')) {
-			return absint(vms_get_primary_vendor_id_for_user($user_id));
+		if (function_exists('bvmgr_get_primary_vendor_id_for_user')) {
+			return absint(bvmgr_get_primary_vendor_id_for_user($user_id));
 		}
-		if (function_exists('vms_get_vendor_id_for_current_user')) {
-			return absint(vms_get_vendor_id_for_current_user());
+		if (function_exists('bvmgr_get_vendor_id_for_current_user')) {
+			return absint(bvmgr_get_vendor_id_for_current_user());
 		}
 		return 0;
 	}
 }
 
-if (!function_exists('vms_calendar_ics_normalize_range')) {
+if (!function_exists('bvmgr_calendar_ics_normalize_range')) {
 	/**
 	 * @return array{start:string,end:string}
 	 */
-	function vms_calendar_ics_normalize_range(): array
+	function bvmgr_calendar_ics_normalize_range(): array
 	{
-		$today = wp_date('Y-m-d', time(), function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone());
+		$today = wp_date('Y-m-d', time(), function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone());
 		$default_start = $today;
 		$default_end = gmdate('Y-m-d', strtotime('+365 days', strtotime($default_start)));
 
-		$start = sanitize_text_field(vms_calendar_ics_query_value('vms_calendar_start', ''));
+		$start = sanitize_text_field(bvmgr_calendar_ics_query_value('bvmgr_calendar_start', ''));
 		if ($start === '') {
-			$start = sanitize_text_field(vms_calendar_ics_query_value('start', $default_start));
+			$start = sanitize_text_field(bvmgr_calendar_ics_query_value('start', $default_start));
 		}
-		$end = sanitize_text_field(vms_calendar_ics_query_value('vms_calendar_end', ''));
+		$end = sanitize_text_field(bvmgr_calendar_ics_query_value('bvmgr_calendar_end', ''));
 		if ($end === '') {
-			$end = sanitize_text_field(vms_calendar_ics_query_value('end', $default_end));
+			$end = sanitize_text_field(bvmgr_calendar_ics_query_value('end', $default_end));
 		}
 
-		if (!vms_calendar_ics_valid_ymd($start)) {
+		if (!bvmgr_calendar_ics_valid_ymd($start)) {
 			$start = $default_start;
 		}
-		if (!vms_calendar_ics_valid_ymd($end)) {
+		if (!bvmgr_calendar_ics_valid_ymd($end)) {
 			$end = $default_end;
 		}
 		if ($end < $start) {
@@ -176,20 +169,20 @@ if (!function_exists('vms_calendar_ics_normalize_range')) {
 	}
 }
 
-if (!function_exists('vms_calendar_ics_collect_events')) {
+if (!function_exists('bvmgr_calendar_ics_collect_events')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_calendar_ics_collect_events(string $mode, int $viewer_vendor_id): array
+	function bvmgr_calendar_ics_collect_events(string $mode, int $viewer_vendor_id): array
 	{
-		$range = vms_calendar_ics_normalize_range();
+		$range = bvmgr_calendar_ics_normalize_range();
 
-		$venue_raw = sanitize_text_field(vms_calendar_ics_query_value('vms_calendar_venue', ''));
+		$venue_raw = sanitize_text_field(bvmgr_calendar_ics_query_value('bvmgr_calendar_venue', ''));
 		if ($venue_raw === '') {
-			$venue_raw = sanitize_text_field(vms_calendar_ics_query_value('venue', ''));
+			$venue_raw = sanitize_text_field(bvmgr_calendar_ics_query_value('venue', ''));
 		}
 		if ($venue_raw === '') {
-			$venue_raw = sanitize_text_field(vms_calendar_ics_query_value('venue_id', ''));
+			$venue_raw = sanitize_text_field(bvmgr_calendar_ics_query_value('venue_id', ''));
 		}
 		$venue_ids = 'all';
 		if ($venue_raw !== '' && strtolower($venue_raw) !== 'all') {
@@ -210,15 +203,15 @@ if (!function_exists('vms_calendar_ics_collect_events')) {
 			$args['viewer_vendor_id'] = $viewer_vendor_id;
 		}
 
-		if (!function_exists('vms_get_calendar_events')) {
+		if (!function_exists('bvmgr_get_calendar_events')) {
 			return array();
 		}
-		return (array) vms_get_calendar_events($args);
+		return (array) bvmgr_get_calendar_events($args);
 	}
 }
 
-if (!function_exists('vms_calendar_ics_event_uid')) {
-	function vms_calendar_ics_event_uid(int $event_plan_id, string $date_key, string $site_host): string
+if (!function_exists('bvmgr_calendar_ics_event_uid')) {
+	function bvmgr_calendar_ics_event_uid(int $event_plan_id, string $date_key, string $site_host): string
 	{
 		$event_plan_id = absint($event_plan_id);
 		$date_key = sanitize_text_field($date_key);
@@ -230,8 +223,8 @@ if (!function_exists('vms_calendar_ics_event_uid')) {
 	}
 }
 
-if (!function_exists('vms_calendar_ics_status_label')) {
-	function vms_calendar_ics_status_label(array $event): string
+if (!function_exists('bvmgr_calendar_ics_status_label')) {
+	function bvmgr_calendar_ics_status_label(array $event): string
 	{
 		$viewer = isset($event['viewer_status']) && is_array($event['viewer_status']) ? $event['viewer_status'] : array();
 		$assigned = !empty($viewer['assigned']);
@@ -246,53 +239,55 @@ if (!function_exists('vms_calendar_ics_status_label')) {
 	}
 }
 
-if (!function_exists('vms_calendar_ics_build')) {
+if (!function_exists('bvmgr_calendar_ics_build')) {
 	/**
 	 * @param array<int,array<string,mixed>> $events
 	 */
-	function vms_calendar_ics_build(array $events, string $mode): string
+	function bvmgr_calendar_ics_build(array $events, string $mode): string
 	{
 		$mode = sanitize_key($mode);
 		$site_name = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
-		$tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+		$tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
 		$tz_name = ($tz instanceof DateTimeZone) ? (string) $tz->getName() : 'UTC';
 		$site_host = (string) wp_parse_url(home_url('/'), PHP_URL_HOST);
 		$cal_name = ($mode === 'vendor')
-			? sprintf(__('%s Vendor Calendar', 'vms'), $site_name)
-			: sprintf(__('%s Public Calendar', 'vms'), $site_name);
+			/* translators: %s: human-readable value used in this message. */
+			? sprintf(__('%s Vendor Calendar', 'backstage-venue-manager'), $site_name)
+			/* translators: %s: human-readable value used in this message. */
+			: sprintf(__('%s Public Calendar', 'backstage-venue-manager'), $site_name);
 
 		$out = "BEGIN:VCALENDAR\r\n";
 		$out .= "VERSION:2.0\r\n";
 		$out .= "PRODID:-//VMS//Calendar Feed//EN\r\n";
 		$out .= "CALSCALE:GREGORIAN\r\n";
 		$out .= "METHOD:PUBLISH\r\n";
-		$out .= vms_calendar_ics_line('X-WR-CALNAME', $cal_name);
-		$out .= vms_calendar_ics_line('X-WR-TIMEZONE', $tz_name);
+		$out .= bvmgr_calendar_ics_line('X-WR-CALNAME', $cal_name);
+		$out .= bvmgr_calendar_ics_line('X-WR-TIMEZONE', $tz_name);
 
 		$now_utc = gmdate('Ymd\THis\Z');
 		foreach ($events as $event) {
 			$event_plan_id = absint($event['event_plan_id'] ?? 0);
 			$date_key = (string) ($event['date_key'] ?? '');
-			if ($event_plan_id <= 0 || !vms_calendar_ics_valid_ymd($date_key)) {
+			if ($event_plan_id <= 0 || !bvmgr_calendar_ics_valid_ymd($date_key)) {
 				continue;
 			}
 
 			$title = trim((string) ($event['title'] ?? ''));
 			if ($title === '') {
-				$title = __('Event', 'vms');
+				$title = __('Event', 'backstage-venue-manager');
 			}
 
-			$status_label = ($mode === 'vendor') ? vms_calendar_ics_status_label($event) : '';
+			$status_label = ($mode === 'vendor') ? bvmgr_calendar_ics_status_label($event) : '';
 			$summary = ($status_label !== '') ? ($title . ' (' . $status_label . ')') : $title;
 
-			$dtstart = vms_calendar_ics_dt_utc((string) ($event['start_local'] ?? ''));
+			$dtstart = bvmgr_calendar_ics_dt_utc((string) ($event['start_local'] ?? ''));
 			if ($dtstart === '') {
-				$dtstart = vms_calendar_ics_dt_from_ymd_utc($date_key);
+				$dtstart = bvmgr_calendar_ics_dt_from_ymd_utc($date_key);
 			}
 			if ($dtstart === '') {
 				continue;
 			}
-			$dtend = vms_calendar_ics_dt_utc((string) ($event['end_local'] ?? ''));
+			$dtend = bvmgr_calendar_ics_dt_utc((string) ($event['end_local'] ?? ''));
 
 			$venue_name = trim((string) ($event['venue_name'] ?? ''));
 			$public_url = trim((string) ($event['public_url'] ?? ''));
@@ -300,10 +295,12 @@ if (!function_exists('vms_calendar_ics_build')) {
 
 			$description_parts = array();
 			if ($venue_name !== '') {
-				$description_parts[] = sprintf(__('Venue: %s', 'vms'), $venue_name);
+				/* translators: %s: venue. */
+				$description_parts[] = sprintf(__('Venue: %s', 'backstage-venue-manager'), $venue_name);
 			}
 			if ($status_label !== '') {
-				$description_parts[] = sprintf(__('Your status: %s', 'vms'), $status_label);
+				/* translators: %s: your status. */
+				$description_parts[] = sprintf(__('Your status: %s', 'backstage-venue-manager'), $status_label);
 			}
 			if ($excerpt !== '') {
 				$description_parts[] = $excerpt;
@@ -320,21 +317,21 @@ if (!function_exists('vms_calendar_ics_build')) {
 			}
 
 			$out .= "BEGIN:VEVENT\r\n";
-			$out .= vms_calendar_ics_line('UID', vms_calendar_ics_event_uid($event_plan_id, $date_key, $site_host));
+			$out .= bvmgr_calendar_ics_line('UID', bvmgr_calendar_ics_event_uid($event_plan_id, $date_key, $site_host));
 			$out .= "DTSTAMP:" . $now_utc . "\r\n";
 			$out .= "DTSTART:" . $dtstart . "\r\n";
 			if ($dtend !== '') {
 				$out .= "DTEND:" . $dtend . "\r\n";
 			}
-			$out .= vms_calendar_ics_line('SUMMARY', $summary);
+			$out .= bvmgr_calendar_ics_line('SUMMARY', $summary);
 			if ($description !== '') {
-				$out .= vms_calendar_ics_line('DESCRIPTION', $description);
+				$out .= bvmgr_calendar_ics_line('DESCRIPTION', $description);
 			}
 			if ($venue_name !== '') {
-				$out .= vms_calendar_ics_line('LOCATION', $venue_name);
+				$out .= bvmgr_calendar_ics_line('LOCATION', $venue_name);
 			}
 			if ($public_url !== '') {
-				$out .= vms_calendar_ics_line('URL', $public_url);
+				$out .= bvmgr_calendar_ics_line('URL', $public_url);
 			}
 			$out .= "STATUS:" . $ical_status . "\r\n";
 			$out .= "END:VEVENT\r\n";
@@ -345,9 +342,14 @@ if (!function_exists('vms_calendar_ics_build')) {
 	}
 }
 
-if (!function_exists('vms_calendar_ics_add_query_vars')) {
-	function vms_calendar_ics_add_query_vars(array $vars): array
+if (!function_exists('bvmgr_calendar_ics_add_query_vars')) {
+	function bvmgr_calendar_ics_add_query_vars(array $vars): array
 	{
+		$vars[] = 'bvmgr_calendar_ics';
+		$vars[] = 'bvmgr_calendar_start';
+		$vars[] = 'bvmgr_calendar_end';
+		$vars[] = 'bvmgr_calendar_venue';
+		$vars[] = 'bvmgr_calendar_vendor_id';
 		$vars[] = 'vms_calendar_ics';
 		$vars[] = 'vms_calendar_start';
 		$vars[] = 'vms_calendar_end';
@@ -356,12 +358,12 @@ if (!function_exists('vms_calendar_ics_add_query_vars')) {
 		return $vars;
 	}
 }
-add_filter('query_vars', 'vms_calendar_ics_add_query_vars', 12);
+add_filter('query_vars', 'bvmgr_calendar_ics_add_query_vars', 12);
 
-if (!function_exists('vms_calendar_ics_render')) {
-	function vms_calendar_ics_render(): void
+if (!function_exists('bvmgr_calendar_ics_render')) {
+	function bvmgr_calendar_ics_render(): void
 	{
-		$mode = sanitize_key(vms_calendar_ics_query_value('vms_calendar_ics', ''));
+		$mode = sanitize_key(bvmgr_calendar_ics_query_value('bvmgr_calendar_ics', ''));
 		if ($mode === '') {
 			return;
 		}
@@ -383,7 +385,7 @@ if (!function_exists('vms_calendar_ics_render')) {
 				exit;
 			}
 
-			$viewer_vendor_id = vms_calendar_ics_vendor_id_for_request(get_current_user_id());
+			$viewer_vendor_id = bvmgr_calendar_ics_vendor_id_for_request(get_current_user_id());
 			if ($viewer_vendor_id <= 0) {
 				status_header(403);
 				nocache_headers();
@@ -393,8 +395,8 @@ if (!function_exists('vms_calendar_ics_render')) {
 			}
 		}
 
-		$events = vms_calendar_ics_collect_events($mode, $viewer_vendor_id);
-		$ics = vms_calendar_ics_build($events, $mode);
+		$events = bvmgr_calendar_ics_collect_events($mode, $viewer_vendor_id);
+		$ics = bvmgr_calendar_ics_build($events, $mode);
 
 		status_header(200);
 		nocache_headers();
@@ -404,4 +406,4 @@ if (!function_exists('vms_calendar_ics_render')) {
 		exit;
 	}
 }
-add_action('template_redirect', 'vms_calendar_ics_render', 3);
+add_action('template_redirect', 'bvmgr_calendar_ics_render', 3);

@@ -2,16 +2,16 @@
 
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_event_plan_checkin_close_meta_key')) {
-    function vms_event_plan_checkin_close_meta_key(): string
+if (!function_exists('bvmgr_event_plan_checkin_close_meta_key')) {
+    function bvmgr_event_plan_checkin_close_meta_key(): string
     {
-        $key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'checkin_close_at') : '';
+        $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'checkin_close_at') : '';
         return $key !== '' ? $key : '_checkin_close_at';
     }
 }
 
-if (!function_exists('vms_event_plan_parse_local_datetime')) {
-    function vms_event_plan_parse_local_datetime(string $value): ?DateTimeImmutable
+if (!function_exists('bvmgr_event_plan_parse_local_datetime')) {
+    function bvmgr_event_plan_parse_local_datetime(string $value): ?DateTimeImmutable
     {
         $value = trim($value);
         if ($value === '') {
@@ -27,10 +27,10 @@ if (!function_exists('vms_event_plan_parse_local_datetime')) {
     }
 }
 
-if (!function_exists('vms_event_plan_start_datetime')) {
-    function vms_event_plan_start_datetime(int $post_id): ?DateTimeImmutable
+if (!function_exists('bvmgr_event_plan_start_datetime')) {
+    function bvmgr_event_plan_start_datetime(int $post_id): ?DateTimeImmutable
     {
-        $stored = vms_event_plan_parse_local_datetime((string) get_post_meta($post_id, '_vms_event_plan_start_datetime', true));
+        $stored = bvmgr_event_plan_parse_local_datetime((string) get_post_meta($post_id, '_vms_event_plan_start_datetime', true));
         if ($stored instanceof DateTimeImmutable) {
             return $stored;
         }
@@ -45,15 +45,15 @@ if (!function_exists('vms_event_plan_start_datetime')) {
             $start_time .= ':00';
         }
 
-        return vms_event_plan_parse_local_datetime($event_date . ' ' . $start_time);
+        return bvmgr_event_plan_parse_local_datetime($event_date . ' ' . $start_time);
     }
 }
 
-if (!function_exists('vms_event_plan_end_datetime')) {
-    function vms_event_plan_end_datetime(int $post_id): ?DateTimeImmutable
+if (!function_exists('bvmgr_event_plan_end_datetime')) {
+    function bvmgr_event_plan_end_datetime(int $post_id): ?DateTimeImmutable
     {
-        $start = vms_event_plan_start_datetime($post_id);
-        $stored = vms_event_plan_parse_local_datetime((string) get_post_meta($post_id, '_vms_event_plan_end_datetime', true));
+        $start = bvmgr_event_plan_start_datetime($post_id);
+        $stored = bvmgr_event_plan_parse_local_datetime((string) get_post_meta($post_id, '_vms_event_plan_end_datetime', true));
         if ($stored instanceof DateTimeImmutable) {
             if ($start instanceof DateTimeImmutable && $stored <= $start) {
                 return null;
@@ -72,7 +72,7 @@ if (!function_exists('vms_event_plan_end_datetime')) {
             $end_time .= ':00';
         }
 
-        $end = vms_event_plan_parse_local_datetime($event_date . ' ' . $end_time);
+        $end = bvmgr_event_plan_parse_local_datetime($event_date . ' ' . $end_time);
         if (!($end instanceof DateTimeImmutable)) {
             return null;
         }
@@ -85,8 +85,8 @@ if (!function_exists('vms_event_plan_end_datetime')) {
     }
 }
 
-if (!function_exists('vms_event_plan_checkin_close_buffer_hours')) {
-    function vms_event_plan_checkin_close_buffer_hours(): int
+if (!function_exists('bvmgr_event_plan_checkin_close_buffer_hours')) {
+    function bvmgr_event_plan_checkin_close_buffer_hours(): int
     {
         if (function_exists('vms_ops_ticket_post_show_scan_buffer_hours')) {
             return max(0, min(12, (int) vms_ops_ticket_post_show_scan_buffer_hours()));
@@ -109,14 +109,14 @@ if (!function_exists('vms_event_plan_checkin_close_buffer_hours')) {
     }
 }
 
-if (!function_exists('vms_event_plan_apply_checkin_close_buffer')) {
-    function vms_event_plan_apply_checkin_close_buffer(DateTimeImmutable $event_end): DateTimeImmutable
+if (!function_exists('bvmgr_event_plan_apply_checkin_close_buffer')) {
+    function bvmgr_event_plan_apply_checkin_close_buffer(DateTimeImmutable $event_end): DateTimeImmutable
     {
         if (function_exists('vms_ops_ticket_apply_post_show_buffer')) {
             return vms_ops_ticket_apply_post_show_buffer($event_end);
         }
 
-        $buffer_hours = vms_event_plan_checkin_close_buffer_hours();
+        $buffer_hours = bvmgr_event_plan_checkin_close_buffer_hours();
         if ($buffer_hours <= 0) {
             return $event_end;
         }
@@ -125,11 +125,11 @@ if (!function_exists('vms_event_plan_apply_checkin_close_buffer')) {
     }
 }
 
-if (!function_exists('vms_event_plan_resolve_checkin_close_meta')) {
-    function vms_event_plan_resolve_checkin_close_meta(int $post_id): array
+if (!function_exists('bvmgr_event_plan_resolve_checkin_close_meta')) {
+    function bvmgr_event_plan_resolve_checkin_close_meta(int $post_id): array
     {
-        $start = vms_event_plan_start_datetime($post_id);
-        $end = vms_event_plan_end_datetime($post_id);
+        $start = bvmgr_event_plan_start_datetime($post_id);
+        $end = bvmgr_event_plan_end_datetime($post_id);
 
         if (!($start instanceof DateTimeImmutable) || !($end instanceof DateTimeImmutable)) {
             return array(
@@ -150,7 +150,7 @@ if (!function_exists('vms_event_plan_resolve_checkin_close_meta')) {
         }
 
         return array(
-            'datetime' => vms_event_plan_apply_checkin_close_buffer($end),
+            'datetime' => bvmgr_event_plan_apply_checkin_close_buffer($end),
             'reason' => 'stored',
             'start_at' => $start,
             'end_at' => $end,
@@ -158,12 +158,12 @@ if (!function_exists('vms_event_plan_resolve_checkin_close_meta')) {
     }
 }
 
-if (!function_exists('vms_event_plan_store_checkin_close_meta')) {
-    function vms_event_plan_store_checkin_close_meta(int $post_id): array
+if (!function_exists('bvmgr_event_plan_store_checkin_close_meta')) {
+    function bvmgr_event_plan_store_checkin_close_meta(int $post_id): array
     {
         $post_id = absint($post_id);
-        $meta_key = vms_event_plan_checkin_close_meta_key();
-        $resolved = vms_event_plan_resolve_checkin_close_meta($post_id);
+        $meta_key = bvmgr_event_plan_checkin_close_meta_key();
+        $resolved = bvmgr_event_plan_resolve_checkin_close_meta($post_id);
         $datetime = $resolved['datetime'] ?? null;
         $value = $datetime instanceof DateTimeImmutable ? $datetime->format('Y-m-d H:i:s') : '';
 
@@ -175,16 +175,16 @@ if (!function_exists('vms_event_plan_store_checkin_close_meta')) {
 
         $resolved['stored'] = $value !== '';
         $resolved['checkin_close_at'] = $value;
-        $resolved['meta_key'] = $meta_key;
+        $resolved['meta_key'] = $meta_key; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Check-in result descriptor only; no query is executed here.
 
         return $resolved;
     }
 }
 
-if (!function_exists('vms_event_plan_sync_checkin_close_meta_to_tec')) {
-    function vms_event_plan_sync_checkin_close_meta_to_tec(int $post_id, int $tec_event_id): array
+if (!function_exists('bvmgr_event_plan_sync_checkin_close_meta_to_tec')) {
+    function bvmgr_event_plan_sync_checkin_close_meta_to_tec(int $post_id, int $tec_event_id): array
     {
-        $resolved = vms_event_plan_store_checkin_close_meta($post_id);
+        $resolved = bvmgr_event_plan_store_checkin_close_meta($post_id);
         $tec_event_id = absint($tec_event_id);
 
         if ($tec_event_id > 0) {

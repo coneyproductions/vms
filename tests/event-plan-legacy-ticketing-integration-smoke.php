@@ -8,17 +8,11 @@ if (!defined('WP_ADMIN')) {
     define('WP_ADMIN', true);
 }
 
-$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-if (!defined('ABSPATH')) {
-    if (!file_exists($wpLoad)) {
-        fwrite(STDERR, "Could not locate wp-load.php.\n");
-        exit(1);
-    }
-    require_once $wpLoad;
-}
+require_once __DIR__ . '/bootstrap-wordpress.php';
+vms_tests_require_wordpress(__DIR__);
 
-if (!class_exists('VMS_Admin_Event_Plans')) {
-    require_once dirname(__DIR__) . '/vendor-management-system.php';
+if (!class_exists('BVMGR_Admin_Event_Plans')) {
+    require_once dirname(__DIR__) . '/backstage-venue-manager.php';
 }
 
 final class VMS_Legacy_Ticketing_Ajax_Exit extends RuntimeException
@@ -72,13 +66,13 @@ try {
     $assert(current_user_can('edit_posts'), 'Expected test user to be able to edit posts.');
 
     $ajaxMap = array(
-        'vms_ticketing_search_tec_events' => 'vms_ticketing_ajax_search_tec_events',
-        'vms_ticketing_link_tec_event' => 'vms_ticketing_ajax_link_tec_event',
-        'vms_ticketing_unlink_tec_event' => 'vms_ticketing_ajax_unlink_tec_event',
-        'vms_ticketing_refresh_stats' => 'vms_ticketing_ajax_refresh_stats',
-        'vms_ticketing_search_products' => 'vms_ticketing_ajax_search_products',
-        'vms_ticketing_attach_product' => 'vms_ticketing_ajax_attach_product',
-        'vms_ticketing_detach_product' => 'vms_ticketing_ajax_detach_product',
+        'vms_ticketing_search_tec_events' => 'bvmgr_ticketing_ajax_search_tec_events',
+        'vms_ticketing_link_tec_event' => 'bvmgr_ticketing_ajax_link_tec_event',
+        'vms_ticketing_unlink_tec_event' => 'bvmgr_ticketing_ajax_unlink_tec_event',
+        'vms_ticketing_refresh_stats' => 'bvmgr_ticketing_ajax_refresh_stats',
+        'vms_ticketing_search_products' => 'bvmgr_ticketing_ajax_search_products',
+        'vms_ticketing_attach_product' => 'bvmgr_ticketing_ajax_attach_product',
+        'vms_ticketing_detach_product' => 'bvmgr_ticketing_ajax_detach_product',
     );
     foreach ($ajaxMap as $action => $callback) {
         $assert(false !== has_action('wp_ajax_' . $action, $callback), 'Expected AJAX action hook to remain registered: ' . $action);
@@ -141,10 +135,12 @@ try {
         return $productId;
     };
 
-    $dispatchAjax = static function (string $action, array $payload = array()) use ($assert): array {
+    $dispatchAjaxResponse = static function (string $action, array $payload = array(), ?callable $dispatcher = null) use ($assert): array {
         $prevPost = $_POST ?? array();
         $prevGet = $_GET ?? array();
         $prevRequest = $_REQUEST ?? array();
+        $hadAjaxCaptureState = array_key_exists('vms_ajax_ob_started', $GLOBALS);
+        $prevAjaxCaptureState = $hadAjaxCaptureState ? $GLOBALS['bvmgr_ajax_ob_started'] : null;
         $payload['action'] = $action;
         $payload['nonce'] = wp_create_nonce('vms_ticketing_nonce');
         $_POST = $payload;
@@ -152,39 +148,137 @@ try {
         $_REQUEST = $payload;
 
         $bufferLevel = ob_get_level();
-        $json = '';
+        $collectorLevel = 0;
+        $rawOutput = '';
+        if ($dispatcher === null) {
+            $dispatcher = static function (string $hook): void {
+                do_action($hook);
+            };
+        }
 
         try {
+            ob_start(static function (string $chunk) use (&$rawOutput): string {
+                $rawOutput .= $chunk;
+                return '';
+            });
+            $collectorLevel = ob_get_level();
+
+            // Keep one throwaway buffer above the collector so stale runtime flags
+            // can close it without discarding the actual dispatch output.
             ob_start();
             try {
-                do_action('wp_ajax_' . $action);
+                $dispatcher('wp_ajax_' . $action);
             } catch (VMS_Legacy_Ticketing_Ajax_Exit $e) {
                 unset($e);
             }
-            $json = (string) ob_get_clean();
+
+            while (ob_get_level() > $collectorLevel) {
+                ob_end_flush();
+            }
+            if (ob_get_level() === $collectorLevel) {
+                ob_end_flush();
+            }
         } finally {
             while (ob_get_level() > $bufferLevel) {
                 ob_end_clean();
             }
 
+            if ($hadAjaxCaptureState) {
+                $GLOBALS['bvmgr_ajax_ob_started'] = $prevAjaxCaptureState;
+            } else {
+                unset($GLOBALS['bvmgr_ajax_ob_started']);
+            }
             $_POST = $prevPost;
             $_GET = $prevGet;
             $_REQUEST = $prevRequest;
         }
 
-        $decoded = json_decode(trim($json), true);
-        $assert(is_array($decoded), 'Failed to decode AJAX JSON for ' . $action . '. Raw output: ' . substr(trim($json), 0, 200));
+        $trimmedOutput = trim($rawOutput);
+        $decoded = json_decode($trimmedOutput, true);
+        $assert(is_array($decoded), 'Failed to decode AJAX JSON for ' . $action . '. Raw output: ' . substr($trimmedOutput, 0, 200));
 
-        return $decoded;
+        return array(
+            'decoded' => $decoded,
+            'raw' => $rawOutput,
+            'raw_trimmed' => $trimmedOutput,
+            'buffer_level_before' => $bufferLevel,
+            'buffer_level_after' => ob_get_level(),
+        );
     };
 
+    $dispatchAjax = static function (string $action, array $payload = array(), ?callable $dispatcher = null) use ($dispatchAjaxResponse): array {
+        return $dispatchAjaxResponse($action, $payload, $dispatcher)['decoded'];
+    };
+
+    $assertAjaxDecodeFailure = static function (string $label, callable $callback) use ($assert): void {
+        try {
+            $callback();
+        } catch (RuntimeException $e) {
+            $assert(strpos($e->getMessage(), 'Failed to decode AJAX JSON') !== false, 'Expected a JSON decode failure for ' . $label . '.');
+            return;
+        }
+
+        throw new RuntimeException('Expected ' . $label . ' to fail JSON decoding.');
+    };
+
+    $probeStdout = '';
+    ob_start();
+    try {
+        $probeResponse = $dispatchAjaxResponse('vms_ticketing_capture_probe_valid', array(), static function (): void {
+            echo '{"success":true,"data":{"probe":"alpha"}}';
+            throw new VMS_Legacy_Ticketing_Ajax_Exit('');
+        });
+    } finally {
+        $probeStdout = (string) ob_get_clean();
+    }
+    $assert($probeStdout === '', 'dispatchAjax should not leak captured JSON to stdout.');
+    $assert(($probeResponse['decoded']['data']['probe'] ?? '') === 'alpha', 'dispatchAjax should return the decoded JSON payload.');
+    $assert($probeResponse['buffer_level_before'] === $probeResponse['buffer_level_after'], 'dispatchAjax should restore the starting output-buffer level.');
+
+    $firstProbeResponse = $dispatchAjaxResponse('vms_ticketing_capture_probe_first', array(), static function (): void {
+        echo '{"success":true,"data":{"probe":"first"}}';
+        throw new VMS_Legacy_Ticketing_Ajax_Exit('');
+    });
+    $secondProbeResponse = $dispatchAjaxResponse('vms_ticketing_capture_probe_second', array(), static function (): void {
+        echo '{"success":true,"data":{"probe":"second"}}';
+        throw new VMS_Legacy_Ticketing_Ajax_Exit('');
+    });
+    $assert(($firstProbeResponse['decoded']['data']['probe'] ?? '') === 'first', 'The first sequential dispatch should capture its own JSON response.');
+    $assert(($secondProbeResponse['decoded']['data']['probe'] ?? '') === 'second', 'The second sequential dispatch should capture its own JSON response.');
+    $assert($firstProbeResponse['raw_trimmed'] !== $secondProbeResponse['raw_trimmed'], 'Sequential dispatches should capture distinct response bodies.');
+
+    $assertAjaxDecodeFailure('empty AJAX response', static function () use ($dispatchAjaxResponse): void {
+        $dispatchAjaxResponse('vms_ticketing_capture_probe_empty', array(), static function (): void {
+            throw new VMS_Legacy_Ticketing_Ajax_Exit('');
+        });
+    });
+    $assertAjaxDecodeFailure('malformed AJAX response', static function () use ($dispatchAjaxResponse): void {
+        $dispatchAjaxResponse('vms_ticketing_capture_probe_malformed', array(), static function (): void {
+            echo '{bad json';
+            throw new VMS_Legacy_Ticketing_Ajax_Exit('');
+        });
+    });
+
+    $staleCaptureStdout = '';
+    ob_start();
+    try {
+        $staleCaptureResponse = $dispatchAjaxResponse('vms_ticketing_capture_probe_stale', array(), static function (): void {
+            bvmgr_ticketing_ajax_send_success(array('probe' => 'stale'));
+        });
+    } finally {
+        $staleCaptureStdout = (string) ob_get_clean();
+    }
+    $assert($staleCaptureStdout === '', 'Stale AJAX capture state should not leak JSON to stdout.');
+    $assert(($staleCaptureResponse['decoded']['data']['probe'] ?? '') === 'stale', 'Stale AJAX capture state should still return decoded JSON.');
+    $assert($staleCaptureResponse['raw_trimmed'] !== '', 'Stale AJAX capture state should not produce empty decode input.');
+
     $buildLegacyIdentifierString = static function (int $tecId): string {
-        if ($tecId <= 0 || !function_exists('vms_ticketing_get_tec_legacy_identifiers')) {
+        if ($tecId <= 0 || !function_exists('bvmgr_ticketing_get_tec_legacy_identifiers')) {
             return '';
         }
 
         $parts = array();
-        foreach ((array) vms_ticketing_get_tec_legacy_identifiers($tecId) as $row) {
+        foreach ((array) bvmgr_ticketing_get_tec_legacy_identifiers($tecId) as $row) {
             if (!is_array($row)) {
                 continue;
             }
@@ -218,7 +312,7 @@ try {
         'tec_event_id' => $tecId,
     ));
     $assert(!empty($linkResponse['success']), 'TEC link should succeed.');
-    $tecMetaKey = function_exists('vms_ticketing_meta_key') ? vms_ticketing_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id';
+    $tecMetaKey = function_exists('bvmgr_ticketing_meta_key') ? bvmgr_ticketing_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id';
     $assert((int) get_post_meta($planId, $tecMetaKey, true) === $tecId, 'Linked TEC event meta should be stored on the Event Plan.');
 
     $searchProductResponse = $dispatchAjax('vms_ticketing_search_products', array(
@@ -252,7 +346,7 @@ try {
     $refreshStats = isset($refreshResponse['data']['stats']) && is_array($refreshResponse['data']['stats']) ? $refreshResponse['data']['stats'] : array();
     $assert(isset($refreshStats['provider']) && $refreshStats['provider'] !== '', 'Refresh stats response should include a provider.');
 
-    $admin = (new ReflectionClass('VMS_Admin_Event_Plans'))->newInstanceWithoutConstructor();
+    $admin = (new ReflectionClass('BVMGR_Admin_Event_Plans'))->newInstanceWithoutConstructor();
     ob_start();
     $admin->render_event_plan_advanced_controls_host_meta_box(get_post($planId));
     $advancedHtml = (string) ob_get_clean();
@@ -269,11 +363,11 @@ try {
             return $this->capture_event_plan_partial($partial, $vars);
         },
         $admin,
-        'VMS_Admin_Event_Plans'
+        'BVMGR_Admin_Event_Plans'
     );
 
-    $ticketMetaKey = function_exists('vms_ticketing_meta_key') ? vms_ticketing_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1') : '_vms_ticket_product_ids_v1';
-    $ticketStatsKey = function_exists('vms_ticketing_meta_key') ? vms_ticketing_meta_key('ticket_stats', '_vms_ticket_stats_v1') : '_vms_ticket_stats_v1';
+    $ticketMetaKey = function_exists('bvmgr_ticketing_meta_key') ? bvmgr_ticketing_meta_key('ticket_product_ids', '_vms_ticket_product_ids_v1') : '_vms_ticket_product_ids_v1';
+    $ticketStatsKey = function_exists('bvmgr_ticketing_meta_key') ? bvmgr_ticketing_meta_key('ticket_stats', '_vms_ticket_stats_v1') : '_vms_ticket_stats_v1';
     $legacyHtml = (string) $capturePartial('legacy-imported-ticketing-integration', array(
         'post' => get_post($planId),
         'linked_tec_id' => $tecId,
@@ -282,7 +376,7 @@ try {
         'ticket_stats' => (array) get_post_meta($planId, $ticketStatsKey, true),
         'ticket_pids' => (array) get_post_meta($planId, $ticketMetaKey, true),
         'ticket_pids_meta_exists' => metadata_exists('post', $planId, $ticketMetaKey),
-        'manual_ticket_pids' => function_exists('vms_ticketing_get_manual_product_ids') ? vms_ticketing_get_manual_product_ids($planId) : array(),
+        'manual_ticket_pids' => function_exists('bvmgr_ticketing_get_manual_product_ids') ? bvmgr_ticketing_get_manual_product_ids($planId) : array(),
     ));
 
     $assert($legacyHtml !== '', 'Legacy/imported ticketing partial should render.');

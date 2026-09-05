@@ -59,10 +59,10 @@ foreach (array_slice($argv, 1) as $argument) {
 	}
 }
 
-if (empty($options['artifact_path'])) {
-	fwrite(STDERR, "Usage: php scripts/test-release-compatibility.php --artifact=/path/to/vms-public-release.zip [--expected-sha256=...] [--baseline-artifact=...] [--wordpress-source=...] [--output-dir=...] [--scenarios=a,b,c] [--matrix-only] [--php-memory-limit=512M] [--wp-cli-timeout=180] [--force] [--keep-failed-workspaces]\n");
-	exit(2);
-}
+	if (empty($options['artifact_path'])) {
+		fwrite(STDERR, "Usage: php scripts/test-release-compatibility.php --artifact=/path/to/backstage-venue-manager-public-release.zip [--expected-sha256=...] [--baseline-artifact=...] [--wordpress-source=...] [--output-dir=...] [--scenarios=a,b,c] [--matrix-only] [--php-memory-limit=512M] [--wp-cli-timeout=180] [--force] [--keep-failed-workspaces]\n");
+		exit(2);
+	}
 
 try {
 	$report = VMS_Release_Compatibility_Tooling::run($options);

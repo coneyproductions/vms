@@ -1,0 +1,478 @@
+diff -ruN --exclude=error_log a/vms-investor-portal/TEST-PLAN-0.2.3.md b/vms-investor-portal/TEST-PLAN-0.2.3.md
+--- a/vms-investor-portal/TEST-PLAN-0.2.3.md	1969-12-31 18:00:00
++++ b/vms-investor-portal/TEST-PLAN-0.2.3.md	2026-09-01 08:54:52
+@@ -0,0 +1,6 @@
++# VMS Investor Portal 0.2.3 Test Plan
++
++- Load with public Backstage Venue Manager 1.2.0 and no active historical VMS plugin.
++- Confirm the Investor Portal page registers in the public BVM admin registry.
++- Confirm event-plan, ticketing, staffing, goals, admissions, and reporting providers resolve through public APIs.
++- Confirm existing stored financials and calculated metrics render without changing stored data or permissions.
+diff -ruN --exclude=error_log a/vms-investor-portal/includes/class-vms-investor-metrics-provider.php b/vms-investor-portal/includes/class-vms-investor-metrics-provider.php
+--- a/vms-investor-portal/includes/class-vms-investor-metrics-provider.php	2026-06-15 12:39:41
++++ b/vms-investor-portal/includes/class-vms-investor-metrics-provider.php	2026-09-01 08:48:27
+@@ -317,11 +317,11 @@
+             $overhead_available = true;
+             $overhead_source_key = 'vms_goals_get_overhead_allocated_cents()';
+             $overhead_source_label = __('VMS Goals overhead rules', 'vms-investor-portal');
+-        } elseif ($event_plan_id > 0 && $this->load_vms_goals_support() && function_exists('vms_goals_get_settings')) {
+-            $settings = (array) vms_goals_get_settings();
++        } elseif ($event_plan_id > 0 && $this->load_vms_goals_support() && vms_investor_has_core_function('vms_goals_get_settings')) {
++            $settings = (array) vms_investor_call_core_function('vms_goals_get_settings');
+             $overhead_rules = isset($settings['overhead_rules']) && is_array($settings['overhead_rules']) ? $settings['overhead_rules'] : array();
+-            if (function_exists('vms_goals_get_overhead_allocated_cents')) {
+-                $overhead_auto_cents = max(0, (int) vms_goals_get_overhead_allocated_cents($gross_for_overhead_cents, $headcount_for_overhead, $overhead_rules));
++            if (vms_investor_has_core_function('vms_goals_get_overhead_allocated_cents')) {
++                $overhead_auto_cents = max(0, (int) vms_investor_call_core_function('vms_goals_get_overhead_allocated_cents', $gross_for_overhead_cents, $headcount_for_overhead, $overhead_rules));
+                 $overhead_available = true;
+                 $overhead_source_key = 'vms_goals_get_overhead_allocated_cents()';
+                 $overhead_source_label = __('VMS Goals overhead rules', 'vms-investor-portal');
+@@ -627,16 +627,16 @@
+         }
+ 
+         if ($event_plan_id > 0 && $this->load_vms_goals_support()) {
+-            if (function_exists('vms_goals_get_default_direct_costs_cents')) {
+-                $sources['goals_default_direct_costs_cents'] = max(0, (int) vms_goals_get_default_direct_costs_cents($event_plan_id));
++            if (vms_investor_has_core_function('vms_goals_get_default_direct_costs_cents')) {
++                $sources['goals_default_direct_costs_cents'] = max(0, (int) vms_investor_call_core_function('vms_goals_get_default_direct_costs_cents', $event_plan_id));
+                 $sources['goals_direct_costs_available'] = $sources['goals_default_direct_costs_cents'] > 0;
+             }
+         }
+ 
+         if ($event_plan_id > 0 && $this->load_vms_event_command_center_support()) {
+-            if (function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
++            if (vms_investor_has_core_function('vms_event_command_center_get_ticket_reporting_truth')) {
+                 try {
+-                    $sources['ticket_truth'] = (array) vms_event_command_center_get_ticket_reporting_truth($event_plan_id);
++                    $sources['ticket_truth'] = (array) vms_investor_call_core_function('vms_event_command_center_get_ticket_reporting_truth', $event_plan_id);
+                 } catch (Throwable $exception) {
+                     $sources['warnings'][] = sprintf(
+                         __('Ticket reporting truth could not be loaded: %s', 'vms-investor-portal'),
+@@ -650,9 +650,9 @@
+             $sources['ticket_snapshot'] = $this->build_ticket_snapshot_summary($event_plan_id, (array) ($sources['ticket_truth'] ?? array()));
+         }
+ 
+-        if ($event_plan_id > 0 && $this->load_vms_staffing_support() && function_exists('vms_staffing_get_event_plan_headcount_context')) {
++        if ($event_plan_id > 0 && $this->load_vms_staffing_support() && vms_investor_has_core_function('vms_staffing_get_event_plan_headcount_context')) {
+             try {
+-                $sources['headcount_context'] = (array) vms_staffing_get_event_plan_headcount_context($event_plan_id);
++                $sources['headcount_context'] = (array) vms_investor_call_core_function('vms_staffing_get_event_plan_headcount_context', $event_plan_id);
+             } catch (Throwable $exception) {
+                 $sources['warnings'][] = sprintf(
+                     __('Headcount context could not be loaded: %s', 'vms-investor-portal'),
+@@ -668,16 +668,16 @@
+             $attendance_seed = max(0, (int) ($sources['ticket_truth']['total_qty'] ?? 0));
+         }
+ 
+-        if ($event_plan_id > 0 && $this->load_vms_goals_support() && function_exists('vms_goals_get_settings') && function_exists('vms_goals_get_overhead_allocated_cents')) {
++        if ($event_plan_id > 0 && $this->load_vms_goals_support() && vms_investor_has_core_function('vms_goals_get_settings') && vms_investor_has_core_function('vms_goals_get_overhead_allocated_cents')) {
+             try {
+-                $settings = (array) vms_goals_get_settings();
++                $settings = (array) vms_investor_call_core_function('vms_goals_get_settings');
+                 $overhead_rules = isset($settings['overhead_rules']) && is_array($settings['overhead_rules']) ? (array) $settings['overhead_rules'] : array();
+                 $gross_cents = max(0, (int) (
+                     ($sources['dt_costs']['ticket_sales_total_cents'] ?? 0)
+                     + ($sources['dt_summary']['website_addons_net_cents'] ?? ($sources['dt_row']['website_addon_net_cents'] ?? 0))
+                     + ($sources['dt_summary']['onsite_non_ticket_cents'] ?? 0)
+                 ));
+-                $sources['goals_overhead_cents'] = max(0, (int) vms_goals_get_overhead_allocated_cents($gross_cents, $attendance_seed, $overhead_rules));
++                $sources['goals_overhead_cents'] = max(0, (int) vms_investor_call_core_function('vms_goals_get_overhead_allocated_cents', $gross_cents, $attendance_seed, $overhead_rules));
+                 $sources['goals_overhead_available'] = $sources['goals_overhead_cents'] > 0 || !empty($overhead_rules);
+             } catch (Throwable $exception) {
+                 $sources['warnings'][] = sprintf(
+@@ -806,9 +806,9 @@
+             return $result;
+         }
+ 
+-        if (function_exists('vms_ticket_revenue_build_report')) {
++        if (vms_investor_has_core_function('vms_ticket_revenue_build_report')) {
+             try {
+-                $report = (array) vms_ticket_revenue_build_report(array(
++                $report = (array) vms_investor_call_core_function('vms_ticket_revenue_build_report', array(
+                     'event_plan_id' => (int) ($context['event_plan_id'] ?? 0),
+                     'tec_event_id' => (int) ($context['tec_event_id'] ?? 0),
+                     'recognition_status' => 'all',
+@@ -1024,12 +1024,12 @@
+     private function get_admissions_headcount(int $event_plan_id): int
+     {
+         $event_plan_id = absint($event_plan_id);
+-        if ($event_plan_id <= 0 || !$this->load_vms_admissions_support() || !function_exists('vms_admission_table_entries')) {
++        if ($event_plan_id <= 0 || !$this->load_vms_admissions_support() || !vms_investor_has_core_function('vms_admission_table_entries')) {
+             return 0;
+         }
+ 
+         global $wpdb;
+-        $table = vms_admission_table_entries();
++        $table = vms_investor_call_core_function('vms_admission_table_entries');
+         if (!$wpdb || !is_string($table) || $table === '') {
+             return 0;
+         }
+@@ -1074,16 +1074,17 @@
+ 
+     private function load_vms_goals_support(): bool
+     {
+-        if (function_exists('vms_goals_get_event_pnl')) {
++        if (vms_investor_has_core_function('vms_goals_get_event_pnl')) {
+             return true;
+         }
+ 
++        $core_path = (string) vms_investor_core_constant('VMS_PLUGIN_PATH', '');
+         foreach ($this->candidate_files(array(
+-            defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . 'includes/core/goals-forecast.php' : '',
++            $core_path !== '' ? $core_path . 'includes/core/goals-forecast.php' : '',
+             defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR . '/vms/includes/core/goals-forecast.php' : '',
+         )) as $candidate) {
+             require_once $candidate;
+-            if (function_exists('vms_goals_get_event_pnl')) {
++            if (vms_investor_has_core_function('vms_goals_get_event_pnl')) {
+                 return true;
+             }
+         }
+@@ -1093,16 +1094,17 @@
+ 
+     private function load_vms_event_command_center_support(): bool
+     {
+-        if (function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
++        if (vms_investor_has_core_function('vms_event_command_center_get_ticket_reporting_truth')) {
+             return true;
+         }
+ 
++        $core_path = (string) vms_investor_core_constant('VMS_PLUGIN_PATH', '');
+         foreach ($this->candidate_files(array(
+-            defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . 'includes/admin/event-command-center.php' : '',
++            $core_path !== '' ? $core_path . 'includes/admin/event-command-center.php' : '',
+             defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR . '/vms/includes/admin/event-command-center.php' : '',
+         )) as $candidate) {
+             require_once $candidate;
+-            if (function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
++            if (vms_investor_has_core_function('vms_event_command_center_get_ticket_reporting_truth')) {
+                 return true;
+             }
+         }
+@@ -1112,16 +1114,17 @@
+ 
+     private function load_vms_staffing_support(): bool
+     {
+-        if (function_exists('vms_staffing_get_event_plan_headcount_context')) {
++        if (vms_investor_has_core_function('vms_staffing_get_event_plan_headcount_context')) {
+             return true;
+         }
+ 
++        $core_path = (string) vms_investor_core_constant('VMS_PLUGIN_PATH', '');
+         foreach ($this->candidate_files(array(
+-            defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . 'includes/core/staffing.php' : '',
++            $core_path !== '' ? $core_path . 'includes/core/staffing.php' : '',
+             defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR . '/vms/includes/core/staffing.php' : '',
+         )) as $candidate) {
+             require_once $candidate;
+-            if (function_exists('vms_staffing_get_event_plan_headcount_context')) {
++            if (vms_investor_has_core_function('vms_staffing_get_event_plan_headcount_context')) {
+                 return true;
+             }
+         }
+@@ -1131,16 +1134,17 @@
+ 
+     private function load_vms_admissions_support(): bool
+     {
+-        if (function_exists('vms_admission_table_entries')) {
++        if (vms_investor_has_core_function('vms_admission_table_entries')) {
+             return true;
+         }
+ 
++        $core_path = (string) vms_investor_core_constant('VMS_PLUGIN_PATH', '');
+         foreach ($this->candidate_files(array(
+-            defined('VMS_PLUGIN_PATH') ? VMS_PLUGIN_PATH . 'includes/modules/admissions/db.php' : '',
++            $core_path !== '' ? $core_path . 'includes/modules/admissions/db.php' : '',
+             defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR . '/vms/includes/modules/admissions/db.php' : '',
+         )) as $candidate) {
+             require_once $candidate;
+-            if (function_exists('vms_admission_table_entries')) {
++            if (vms_investor_has_core_function('vms_admission_table_entries')) {
+                 return true;
+             }
+         }
+@@ -1194,9 +1198,9 @@
+             );
+         }
+ 
+-        if (function_exists('vms_event_command_center_get_ticket_snapshot_light')) {
++        if (vms_investor_has_core_function('vms_event_command_center_get_ticket_snapshot_light')) {
+             try {
+-                $snapshot = (array) vms_event_command_center_get_ticket_snapshot_light($event_plan_id);
++                $snapshot = (array) vms_investor_call_core_function('vms_event_command_center_get_ticket_snapshot_light', $event_plan_id);
+                 return array(
+                     'total_ticket_count' => max(0, (int) ($snapshot['total_ticket_count'] ?? 0)),
+                     'ticket_source_label' => trim((string) ($snapshot['ticket_source_label'] ?? __('Ticket reporting', 'vms-investor-portal'))),
+@@ -1264,7 +1268,7 @@
+         }
+ 
+         $event_plan_id = (int) vms_ops_ticket_resolve_event_plan_id_for_guest_list($event_id, $event_source);
+-        if ($event_plan_id <= 0 || !$this->load_vms_admissions_support() || !function_exists('vms_admission_table_entries')) {
++        if ($event_plan_id <= 0 || !$this->load_vms_admissions_support() || !vms_investor_has_core_function('vms_admission_table_entries')) {
+             return 0;
+         }
+ 
+@@ -1273,7 +1277,7 @@
+             return 0;
+         }
+ 
+-        $table = vms_admission_table_entries();
++        $table = vms_investor_call_core_function('vms_admission_table_entries');
+         if (!is_string($table) || $table === '') {
+             return 0;
+         }
+diff -ruN --exclude=error_log a/vms-investor-portal/includes/class-vms-investor-portal.php b/vms-investor-portal/includes/class-vms-investor-portal.php
+--- a/vms-investor-portal/includes/class-vms-investor-portal.php	2026-06-15 12:34:35
++++ b/vms-investor-portal/includes/class-vms-investor-portal.php	2026-09-01 08:47:54
+@@ -150,11 +150,11 @@
+ 
+     public function register_vms_admin_page(): void
+     {
+-        if (!function_exists('vms_register_admin_page')) {
++        if (!vms_investor_has_core_function('vms_register_admin_page')) {
+             return;
+         }
+ 
+-        vms_register_admin_page(array(
++        vms_investor_call_core_function('vms_register_admin_page', array(
+             'id' => self::MENU_SLUG,
+             'slug' => self::MENU_SLUG,
+             'page_title' => __('Investor Financials', 'vms-investor-portal'),
+@@ -172,7 +172,7 @@
+     public function register_admin_menu_fallback(): void
+     {
+         if ($this->has_vms_parent_menu()) {
+-            if (function_exists('vms_register_admin_page')) {
++            if (vms_investor_has_core_function('vms_register_admin_page')) {
+                 return;
+             }
+ 
+@@ -2162,8 +2162,8 @@
+ 
+         if ($post->post_type === 'vms_event_plan') {
+             $candidates[] = absint(get_post_meta($post_id, $this->plan_tec_meta_key(), true));
+-            if (function_exists('vms_meta_key')) {
+-                $meta_key = (string) vms_meta_key('event_plan', 'tec_event_id');
++            if (vms_investor_has_core_function('vms_meta_key')) {
++                $meta_key = (string) vms_investor_call_core_function('vms_meta_key', 'event_plan', 'tec_event_id');
+                 if ($meta_key !== '') {
+                     $candidates[] = absint(get_post_meta($post_id, $meta_key, true));
+                 }
+@@ -2195,13 +2195,13 @@
+         $candidates[] = absint(get_post_meta($post_id, '_vms_event_plan_id', true));
+ 
+         if ($tec_event_id > 0) {
+-            if (function_exists('vms_get_event_plan_for_tec_event')) {
+-                $candidates[] = absint(vms_get_event_plan_for_tec_event($tec_event_id));
++            if (vms_investor_has_core_function('vms_get_event_plan_for_tec_event')) {
++                $candidates[] = absint(vms_investor_call_core_function('vms_get_event_plan_for_tec_event', $tec_event_id));
+             }
+-            if (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
+-                $candidates[] = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+-            } elseif (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event')) {
+-                $candidates[] = absint(vms_ticketing_v2_find_plan_id_by_tec_event($tec_event_id));
++            if (vms_investor_has_core_function('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
++                $candidates[] = absint(vms_investor_call_core_function('vms_ticketing_v2_find_plan_id_by_tec_event_id', $tec_event_id));
++            } elseif (vms_investor_has_core_function('vms_ticketing_v2_find_plan_id_by_tec_event')) {
++                $candidates[] = absint(vms_investor_call_core_function('vms_ticketing_v2_find_plan_id_by_tec_event', $tec_event_id));
+             }
+         }
+ 
+@@ -2232,15 +2232,15 @@
+         $post_status = sanitize_key((string) $post->post_status);
+         $status_candidates = array();
+ 
+-        if (!empty($context['event_plan_id']) && function_exists('vms_event_plan_get_status')) {
+-            $status_candidates[] = (string) vms_event_plan_get_status((int) $context['event_plan_id'], 'dashboard');
+-            $status_candidates[] = (string) vms_event_plan_get_status((int) $context['event_plan_id'], 'raw');
++        if (!empty($context['event_plan_id']) && vms_investor_has_core_function('vms_event_plan_get_status')) {
++            $status_candidates[] = (string) vms_investor_call_core_function('vms_event_plan_get_status', (int) $context['event_plan_id'], 'dashboard');
++            $status_candidates[] = (string) vms_investor_call_core_function('vms_event_plan_get_status', (int) $context['event_plan_id'], 'raw');
+         }
+ 
+         if (!empty($context['event_plan_id'])) {
+             $status_candidates[] = (string) get_post_meta((int) $context['event_plan_id'], '_vms_event_plan_status', true);
+-            if (function_exists('vms_meta_key')) {
+-                $meta_key = (string) vms_meta_key('event_plan', 'status');
++            if (vms_investor_has_core_function('vms_meta_key')) {
++                $meta_key = (string) vms_investor_call_core_function('vms_meta_key', 'event_plan', 'status');
+                 if ($meta_key !== '') {
+                     $status_candidates[] = (string) get_post_meta((int) $context['event_plan_id'], $meta_key, true);
+                 }
+@@ -2255,8 +2255,8 @@
+             if ($candidate === '') {
+                 continue;
+             }
+-            if (function_exists('vms_event_plan_status_normalize')) {
+-                $candidate = (string) vms_event_plan_status_normalize($candidate);
++            if (vms_investor_has_core_function('vms_event_plan_status_normalize')) {
++                $candidate = (string) vms_investor_call_core_function('vms_event_plan_status_normalize', $candidate);
+             }
+             $normalized = sanitize_key(strtolower($candidate));
+             if ($normalized === 'canceled') {
+@@ -2866,9 +2866,9 @@
+             }
+         }
+ 
+-        if ($event_plan_id > 0 && function_exists('vms_event_command_center_get_ticket_reporting_truth')) {
++        if ($event_plan_id > 0 && vms_investor_has_core_function('vms_event_command_center_get_ticket_reporting_truth')) {
+             try {
+-                $truth = (array) vms_event_command_center_get_ticket_reporting_truth($event_plan_id);
++                $truth = (array) vms_investor_call_core_function('vms_event_command_center_get_ticket_reporting_truth', $event_plan_id);
+                 if (!empty($truth['available'])) {
+                     $source_label = trim((string) ($truth['source_label'] ?? ''));
+                     if ($source_label === '') {
+@@ -2889,9 +2889,9 @@
+             }
+         }
+ 
+-        if (function_exists('vms_ticket_revenue_build_report')) {
++        if (vms_investor_has_core_function('vms_ticket_revenue_build_report')) {
+             try {
+-                $report = (array) vms_ticket_revenue_build_report(array(
++                $report = (array) vms_investor_call_core_function('vms_ticket_revenue_build_report', array(
+                     'event_plan_id' => $event_plan_id,
+                     'tec_event_id' => $tec_event_id,
+                     'recognition_status' => 'all',
+@@ -3011,9 +3011,9 @@
+ 
+             $ticketed_total = 0;
+             $ticket_source_label = '';
+-            if (function_exists('vms_event_command_center_get_ticket_snapshot')) {
++            if (vms_investor_has_core_function('vms_event_command_center_get_ticket_snapshot')) {
+                 try {
+-                    $snapshot = (array) vms_event_command_center_get_ticket_snapshot($event_plan_id);
++                    $snapshot = (array) vms_investor_call_core_function('vms_event_command_center_get_ticket_snapshot', $event_plan_id);
+                     $ticketed_total = max(0, (int) ($snapshot['total_ticket_count'] ?? 0));
+                     $ticket_source_label = trim((string) ($snapshot['ticket_source_label'] ?? ''));
+                 } catch (Throwable $exception) {
+@@ -3049,9 +3049,9 @@
+             }
+         }
+ 
+-        if (function_exists('vms_staffing_get_event_plan_headcount_context') && $event_plan_id > 0) {
++        if (vms_investor_has_core_function('vms_staffing_get_event_plan_headcount_context') && $event_plan_id > 0) {
+             try {
+-                $headcount_context = (array) vms_staffing_get_event_plan_headcount_context($event_plan_id);
++                $headcount_context = (array) vms_investor_call_core_function('vms_staffing_get_event_plan_headcount_context', $event_plan_id);
+                 $headcount = max(0, (int) ($headcount_context['headcount'] ?? 0));
+                 if (!empty($headcount_context['wired']) && $headcount > 0) {
+                     $result['available'] = true;
+@@ -3163,12 +3163,12 @@
+     private function get_admissions_headcount(int $event_plan_id): int
+     {
+         $event_plan_id = absint($event_plan_id);
+-        if ($event_plan_id <= 0 || !function_exists('vms_admission_table_entries')) {
++        if ($event_plan_id <= 0 || !vms_investor_has_core_function('vms_admission_table_entries')) {
+             return 0;
+         }
+ 
+         global $wpdb;
+-        $table = vms_admission_table_entries();
++        $table = vms_investor_call_core_function('vms_admission_table_entries');
+         if (!$wpdb || !is_string($table) || $table === '') {
+             return 0;
+         }
+@@ -3375,8 +3375,8 @@
+ 
+     private function plan_tec_meta_key(): string
+     {
+-        if (function_exists('vms_ticket_revenue_plan_tec_meta_key')) {
+-            return (string) vms_ticket_revenue_plan_tec_meta_key();
++        if (vms_investor_has_core_function('vms_ticket_revenue_plan_tec_meta_key')) {
++            return (string) vms_investor_call_core_function('vms_ticket_revenue_plan_tec_meta_key');
+         }
+ 
+         return '_vms_tec_event_id';
+@@ -3629,8 +3629,8 @@
+ 
+     private function get_vms_parent_slug(): string
+     {
+-        if (function_exists('vms_admin_menu_parent_slug')) {
+-            return (string) vms_admin_menu_parent_slug();
++        if (vms_investor_has_core_function('vms_admin_menu_parent_slug')) {
++            return (string) vms_investor_call_core_function('vms_admin_menu_parent_slug');
+         }
+ 
+         return 'vms-dashboard';
+diff -ruN --exclude=error_log a/vms-investor-portal/includes/core-compat.php b/vms-investor-portal/includes/core-compat.php
+--- a/vms-investor-portal/includes/core-compat.php	1969-12-31 18:00:00
++++ b/vms-investor-portal/includes/core-compat.php	2026-09-01 08:47:40
+@@ -0,0 +1,42 @@
++<?php
++defined('ABSPATH') || exit;
++
++function vms_investor_core_function(string $legacy_name): string
++{
++    $public_name = strpos($legacy_name, 'vms_') === 0
++        ? 'bvmgr_' . substr($legacy_name, 4)
++        : $legacy_name;
++
++    if (function_exists($public_name)) {
++        return $public_name;
++    }
++
++    return function_exists($legacy_name) ? $legacy_name : '';
++}
++
++function vms_investor_has_core_function(string $legacy_name): bool
++{
++    return vms_investor_core_function($legacy_name) !== '';
++}
++
++function vms_investor_call_core_function(string $legacy_name, ...$args)
++{
++    $function = vms_investor_core_function($legacy_name);
++    return $function !== '' ? $function(...$args) : null;
++}
++
++function vms_investor_core_constant(string $legacy_name, $default = null)
++{
++    $public_name = strpos($legacy_name, 'VMS_') === 0
++        ? 'BVMGR_' . substr($legacy_name, 4)
++        : $legacy_name;
++
++    if (defined($public_name)) {
++        return constant($public_name);
++    }
++    if (defined($legacy_name)) {
++        return constant($legacy_name);
++    }
++
++    return $default;
++}
+diff -ruN --exclude=error_log a/vms-investor-portal/vms-build.txt b/vms-investor-portal/vms-build.txt
+--- a/vms-investor-portal/vms-build.txt	1969-12-31 18:00:00
++++ b/vms-investor-portal/vms-build.txt	2026-09-01 08:47:40
+@@ -0,0 +1,6 @@
++VMS Investor Portal
++Build: 0.2.3
++Date: 2026-09-01
++Summary:
++- Resolves public Backstage Venue Manager reporting, event, staffing, admissions, ticketing, and admin-registry APIs first.
++- Retains legacy VMS runtime fallback and leaves investor calculations, stored financials, and permissions unchanged.
+diff -ruN --exclude=error_log a/vms-investor-portal/vms-investor-portal.php b/vms-investor-portal/vms-investor-portal.php
+--- a/vms-investor-portal/vms-investor-portal.php	2026-06-15 06:45:13
++++ b/vms-investor-portal/vms-investor-portal.php	2026-09-01 08:47:40
+@@ -2,18 +2,19 @@
+ /**
+  * Plugin Name: VMS Investor Portal
+  * Description: Private investor-facing dashboard for event performance reporting.
+- * Version: 0.2.2
++ * Version: 0.2.3
+  * Author: Coney Productions
+  * Text Domain: vms-investor-portal
+  */
+ 
+ defined('ABSPATH') || exit;
+ 
+-define('VMS_INVESTOR_PORTAL_VERSION', '0.2.2');
++define('VMS_INVESTOR_PORTAL_VERSION', '0.2.3');
+ define('VMS_INVESTOR_PORTAL_FILE', __FILE__);
+ define('VMS_INVESTOR_PORTAL_PATH', plugin_dir_path(__FILE__));
+ define('VMS_INVESTOR_PORTAL_URL', plugin_dir_url(__FILE__));
+ 
++require_once VMS_INVESTOR_PORTAL_PATH . 'includes/core-compat.php';
+ require_once VMS_INVESTOR_PORTAL_PATH . 'includes/class-vms-investor-metrics-provider.php';
+ require_once VMS_INVESTOR_PORTAL_PATH . 'includes/class-vms-investor-portal.php';
+ 

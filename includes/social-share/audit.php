@@ -1,12 +1,12 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_social_sanitize_details')) {
+if (!function_exists('bvmgr_social_sanitize_details')) {
 	/**
 	 * @param mixed $value
 	 * @return mixed
 	 */
-	function vms_social_sanitize_details($value)
+	function bvmgr_social_sanitize_details($value)
 	{
 		$secret_markers = array('token', 'secret', 'password', 'authorization', 'cookie', 'client_secret');
 
@@ -21,13 +21,13 @@ if (!function_exists('vms_social_sanitize_details')) {
 						break;
 					}
 				}
-				$out[$k] = $is_secret ? '[redacted]' : vms_social_sanitize_details($v);
+				$out[$k] = $is_secret ? '[redacted]' : bvmgr_social_sanitize_details($v);
 			}
 			return $out;
 		}
 
 		if (is_object($value)) {
-			return vms_social_sanitize_details((array) $value);
+			return bvmgr_social_sanitize_details((array) $value);
 		}
 
 		if (is_string($value)) {
@@ -46,14 +46,14 @@ if (!function_exists('vms_social_sanitize_details')) {
 	}
 }
 
-if (!function_exists('vms_social_audit_log')) {
+if (!function_exists('bvmgr_social_audit_log')) {
 	/**
 	 * @param array<string,mixed> $details
 	 */
-	function vms_social_audit_log(string $action, array $details = array(), int $queue_id = 0, string $platform = '', ?int $actor_user_id = null): void
+	function bvmgr_social_audit_log(string $action, array $details = array(), int $queue_id = 0, string $platform = '', ?int $actor_user_id = null): void
 	{
 		global $wpdb;
-		$table = vms_social_table_audit();
+		$table = bvmgr_social_table_audit();
 
 		$action = sanitize_key($action);
 		if ($action === '') {
@@ -66,12 +66,13 @@ if (!function_exists('vms_social_audit_log')) {
 		}
 		$actor = max(0, (int) $actor);
 
-		$sanitized_details = vms_social_sanitize_details($details);
+		$sanitized_details = bvmgr_social_sanitize_details($details);
 		$details_json = wp_json_encode($sanitized_details);
 		if (!is_string($details_json)) {
 			$details_json = '{}';
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Social audit writes append an authoritative row to the plugin-owned audit table; no core persistence API owns this repository.
 		$wpdb->insert(
 			$table,
 			array(
@@ -80,38 +81,46 @@ if (!function_exists('vms_social_audit_log')) {
 				'queue_id' => $queue_id > 0 ? $queue_id : null,
 				'platform' => $platform !== '' ? sanitize_key($platform) : null,
 				'details_json' => $details_json,
-				'created_at' => vms_social_now_mysql_utc(),
+				'created_at' => bvmgr_social_now_mysql_utc(),
 			),
 			array('%d', '%s', '%d', '%s', '%s', '%s')
 		);
 	}
 }
 
-if (!function_exists('vms_social_audit_recent')) {
+if (!function_exists('bvmgr_social_audit_recent')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_social_audit_recent(int $limit = 100, string $search = ''): array
+	function bvmgr_social_audit_recent(int $limit = 100, string $search = ''): array
 	{
 		global $wpdb;
-		$table = vms_social_table_audit();
+		$table = bvmgr_social_table_audit();
 		$limit = max(1, min(500, $limit));
 		$search = trim($search);
 
 		if ($search === '') {
-			$sql = $wpdb->prepare("SELECT * FROM {$table} ORDER BY id DESC LIMIT %d", $limit);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Recent audit history must read request-fresh plugin-owned rows after queue and provider mutations.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare('SELECT * FROM %i ORDER BY id DESC LIMIT %d', $table, $limit),
+				ARRAY_A
+			);
 		} else {
 			$like = '%' . $wpdb->esc_like($search) . '%';
-			$sql = $wpdb->prepare(
-				"SELECT * FROM {$table} WHERE action LIKE %s OR platform LIKE %s OR details_json LIKE %s ORDER BY id DESC LIMIT %d",
-				$like,
-				$like,
-				$like,
-				$limit
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Filtered audit history must read request-fresh plugin-owned rows while preserving the existing three-field search.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE action LIKE %s OR platform LIKE %s OR details_json LIKE %s ORDER BY id DESC LIMIT %d',
+					$table,
+					$like,
+					$like,
+					$like,
+					$limit
+				),
+				ARRAY_A
 			);
 		}
 
-		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }

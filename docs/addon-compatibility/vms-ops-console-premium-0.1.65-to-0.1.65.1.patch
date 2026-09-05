@@ -1,0 +1,244 @@
+diff -ruN --exclude=error_log a/vms-ops-console-premium/admin/presets.php b/vms-ops-console-premium/admin/presets.php
+--- a/vms-ops-console-premium/admin/presets.php	2026-03-03 06:41:53
++++ b/vms-ops-console-premium/admin/presets.php	2026-09-01 08:49:47
+@@ -7,13 +7,13 @@
+     {
+         $cap = 'manage_options';
+ 
+-        if (function_exists('vms_admin_ui_ops_capability')) {
+-            $candidate = sanitize_text_field((string) vms_admin_ui_ops_capability());
++        if (vms_ops_has_core_function('vms_admin_ui_ops_capability')) {
++            $candidate = sanitize_text_field((string) vms_ops_call_core_function('vms_admin_ui_ops_capability'));
+             if ($candidate !== '') {
+                 $cap = $candidate;
+             }
+-        } elseif (function_exists('vms_admin_ui_data_tools_capability')) {
+-            $candidate = sanitize_text_field((string) vms_admin_ui_data_tools_capability());
++        } elseif (vms_ops_has_core_function('vms_admin_ui_data_tools_capability')) {
++            $candidate = sanitize_text_field((string) vms_ops_call_core_function('vms_admin_ui_data_tools_capability'));
+             if ($candidate !== '') {
+                 $cap = $candidate;
+             }
+diff -ruN --exclude=error_log a/vms-ops-console-premium/admin/teams.php b/vms-ops-console-premium/admin/teams.php
+--- a/vms-ops-console-premium/admin/teams.php	2026-03-20 21:45:11
++++ b/vms-ops-console-premium/admin/teams.php	2026-09-01 08:49:47
+@@ -7,13 +7,13 @@
+     {
+         $cap = 'manage_options';
+ 
+-        if (function_exists('vms_admin_ui_ops_capability')) {
+-            $candidate = sanitize_text_field((string) vms_admin_ui_ops_capability());
++        if (vms_ops_has_core_function('vms_admin_ui_ops_capability')) {
++            $candidate = sanitize_text_field((string) vms_ops_call_core_function('vms_admin_ui_ops_capability'));
+             if ($candidate !== '') {
+                 $cap = $candidate;
+             }
+-        } elseif (function_exists('vms_admin_ui_data_tools_capability')) {
+-            $candidate = sanitize_text_field((string) vms_admin_ui_data_tools_capability());
++        } elseif (vms_ops_has_core_function('vms_admin_ui_data_tools_capability')) {
++            $candidate = sanitize_text_field((string) vms_ops_call_core_function('vms_admin_ui_data_tools_capability'));
+             if ($candidate !== '') {
+                 $cap = $candidate;
+             }
+@@ -977,14 +977,14 @@
+ if (!function_exists('vms_ops_admin_teams_page_slug')) {
+     function vms_ops_admin_teams_page_slug(): string
+     {
+-        if (function_exists('vms_admin_ui_registered_page_url')) {
+-            $legacy = vms_admin_ui_registered_page_url('vms-ops-console-teams');
++        if (vms_ops_has_core_function('vms_admin_ui_registered_page_url')) {
++            $legacy = vms_ops_call_core_function('vms_admin_ui_registered_page_url', 'vms-ops-console-teams');
+             if (is_string($legacy) && $legacy !== '') {
+                 return 'vms-ops-console-teams';
+             }
+         }
+ 
+-        if (function_exists('vms_admin_ui_page_url')) {
++        if (vms_ops_has_core_function('vms_admin_ui_page_url')) {
+             return 'vms-teams';
+         }
+ 
+diff -ruN --exclude=error_log a/vms-ops-console-premium/docs/test-plan-0.1.65.1-public-bvm-runtime.md b/vms-ops-console-premium/docs/test-plan-0.1.65.1-public-bvm-runtime.md
+--- a/vms-ops-console-premium/docs/test-plan-0.1.65.1-public-bvm-runtime.md	1969-12-31 18:00:00
++++ b/vms-ops-console-premium/docs/test-plan-0.1.65.1-public-bvm-runtime.md	2026-09-01 08:54:52
+@@ -0,0 +1,6 @@
++# VMS Ops Console Premium 0.1.65.1 Test Plan
++
++- Load with public Backstage Venue Manager 1.2.0 and no active historical VMS plugin.
++- Confirm Ops menus/PWA and REST routes register.
++- Confirm venue, event-plan, check-in-close, admissions, pass, and BVM admin helpers resolve through public APIs.
++- Confirm existing Ops options/tables and PWA business behavior remain unchanged.
+diff -ruN --exclude=error_log a/vms-ops-console-premium/includes/core-compat.php b/vms-ops-console-premium/includes/core-compat.php
+--- a/vms-ops-console-premium/includes/core-compat.php	1969-12-31 18:00:00
++++ b/vms-ops-console-premium/includes/core-compat.php	2026-09-01 08:49:39
+@@ -0,0 +1,42 @@
++<?php
++defined('ABSPATH') || exit;
++
++function vms_ops_core_function(string $legacy_name): string
++{
++    $public_name = strpos($legacy_name, 'vms_') === 0
++        ? 'bvmgr_' . substr($legacy_name, 4)
++        : $legacy_name;
++
++    if (function_exists($public_name)) {
++        return $public_name;
++    }
++
++    return function_exists($legacy_name) ? $legacy_name : '';
++}
++
++function vms_ops_has_core_function(string $legacy_name): bool
++{
++    return vms_ops_core_function($legacy_name) !== '';
++}
++
++function vms_ops_call_core_function(string $legacy_name, ...$args)
++{
++    $function = vms_ops_core_function($legacy_name);
++    return $function !== '' ? $function(...$args) : null;
++}
++
++function vms_ops_core_constant(string $legacy_name, $default = null)
++{
++    $public_name = strpos($legacy_name, 'VMS_') === 0
++        ? 'BVMGR_' . substr($legacy_name, 4)
++        : $legacy_name;
++
++    if (defined($public_name)) {
++        return constant($public_name);
++    }
++    if (defined($legacy_name)) {
++        return constant($legacy_name);
++    }
++
++    return $default;
++}
+diff -ruN --exclude=error_log a/vms-ops-console-premium/includes/ticket-console/checkin.php b/vms-ops-console-premium/includes/ticket-console/checkin.php
+--- a/vms-ops-console-premium/includes/ticket-console/checkin.php	2026-05-31 01:10:43
++++ b/vms-ops-console-premium/includes/ticket-console/checkin.php	2026-09-01 08:49:47
+@@ -608,8 +608,8 @@
+         }
+ 
+         $batch = null;
+-        if (function_exists('vms_pass_claims_get_batch_by_id')) {
+-            $row = vms_pass_claims_get_batch_by_id($batch_id);
++        if (vms_ops_has_core_function('vms_pass_claims_get_batch_by_id')) {
++            $row = vms_ops_call_core_function('vms_pass_claims_get_batch_by_id', $batch_id);
+             if (is_array($row)) {
+                 $batch = $row;
+             }
+@@ -964,8 +964,8 @@
+             return new WP_Error('guest_list_conflict', __('Could not check in Guest List entry (please retry).', 'vms-ops-console-premium'), array('status' => 409));
+         }
+ 
+-        if (function_exists('vms_admission_audit_log')) {
+-            vms_admission_audit_log($event_plan_id, $entry_id, 'checkin', $user_id, 'ops', array('qty' => $qty));
++        if (vms_ops_has_core_function('vms_admission_audit_log')) {
++            vms_ops_call_core_function('vms_admission_audit_log', $event_plan_id, $entry_id, 'checkin', $user_id, 'ops', array('qty' => $qty));
+         }
+ 
+         $attendee = array(
+diff -ruN --exclude=error_log a/vms-ops-console-premium/includes/ticket-console/events.php b/vms-ops-console-premium/includes/ticket-console/events.php
+--- a/vms-ops-console-premium/includes/ticket-console/events.php	2026-05-31 11:41:25
++++ b/vms-ops-console-premium/includes/ticket-console/events.php	2026-09-01 08:49:47
+@@ -225,8 +225,8 @@
+             return (int) $post->ID;
+         }
+ 
+-        if ($post->post_type === 'tribe_events' && function_exists('vms_get_event_plan_for_tec_event')) {
+-            return (int) vms_get_event_plan_for_tec_event((int) $post->ID);
++        if ($post->post_type === 'tribe_events' && vms_ops_has_core_function('vms_get_event_plan_for_tec_event')) {
++            return (int) vms_ops_call_core_function('vms_get_event_plan_for_tec_event', (int) $post->ID);
+         }
+ 
+         return 0;
+@@ -237,7 +237,7 @@
+     function vms_ops_ticket_explicit_checkin_close_for_post(WP_Post $post, int $linked_plan_id = 0): ?DateTimeImmutable
+     {
+         $linked_plan_id = $linked_plan_id > 0 ? $linked_plan_id : vms_ops_ticket_linked_event_plan_id_for_post($post);
+-        $plan_meta_key = function_exists('vms_meta_key') ? ((string) vms_meta_key('event_plan', 'checkin_close_at')) : '';
++        $plan_meta_key = vms_ops_has_core_function('vms_meta_key') ? ((string) vms_ops_call_core_function('vms_meta_key', 'event_plan', 'checkin_close_at')) : '';
+         if ($plan_meta_key === '') {
+             $plan_meta_key = '_checkin_close_at';
+         }
+@@ -548,11 +548,11 @@
+             return in_array($event_id, $valid_ids, true) ? $event_id : 0;
+         }
+ 
+-        if (!function_exists('vms_get_event_plan_for_tec_event')) {
++        if (!vms_ops_has_core_function('vms_get_event_plan_for_tec_event')) {
+             return 0;
+         }
+ 
+-        $event_plan_id = (int) vms_get_event_plan_for_tec_event($event_id);
++        $event_plan_id = (int) vms_ops_call_core_function('vms_get_event_plan_for_tec_event', $event_id);
+         if ($event_plan_id <= 0) {
+             return 0;
+         }
+diff -ruN --exclude=error_log a/vms-ops-console-premium/includes/venues.php b/vms-ops-console-premium/includes/venues.php
+--- a/vms-ops-console-premium/includes/venues.php	2026-03-13 09:17:38
++++ b/vms-ops-console-premium/includes/venues.php	2026-09-01 08:49:47
+@@ -39,8 +39,9 @@
+ if (!function_exists('vms_ops_venue_template_meta_key')) {
+     function vms_ops_venue_template_meta_key(): string
+     {
+-        if (defined('VMS_VENUE_TEMPLATE_META_KEY')) {
+-            $key = (string) VMS_VENUE_TEMPLATE_META_KEY;
++        $core_template_key = vms_ops_core_constant('VMS_VENUE_TEMPLATE_META_KEY', '');
++        if (is_string($core_template_key) && $core_template_key !== '') {
++            $key = $core_template_key;
+             if ($key !== '') {
+                 return $key;
+             }
+@@ -156,8 +157,8 @@
+             return $single_published;
+         }
+ 
+-        if (function_exists('vms_get_current_venue_id')) {
+-            $current_venue_id = (int) vms_get_current_venue_id();
++        if (vms_ops_has_core_function('vms_get_current_venue_id')) {
++            $current_venue_id = (int) vms_ops_call_core_function('vms_get_current_venue_id');
+             $current_candidates = vms_ops_venues_from_ids(array($current_venue_id), $active_statuses);
+             if (!empty($current_candidates)) {
+                 return $current_candidates[0];
+diff -ruN --exclude=error_log a/vms-ops-console-premium/vms-build.txt b/vms-ops-console-premium/vms-build.txt
+--- a/vms-ops-console-premium/vms-build.txt	2026-06-11 22:36:00
++++ b/vms-ops-console-premium/vms-build.txt	2026-09-01 08:49:39
+@@ -1,4 +1,4 @@
+ VMS Build
+-Version: 0.1.65
+-Date (UTC): 2026-06-12
+-Notes: Add a minimal legacy `/vms-console/` readiness redirect to the canonical `/vms-ops/` shell while preserving query strings and leaving the existing PWA manifest/service-worker scope unchanged.
++Version: 0.1.65.1
++Date (UTC): 2026-09-01
++Notes: Resolve public Backstage Venue Manager admin, venue, event-plan, admission, and pass APIs first while retaining legacy VMS fallback. Ops/PWA business behavior is unchanged.
+diff -ruN --exclude=error_log a/vms-ops-console-premium/vms-ops-console-premium.php b/vms-ops-console-premium/vms-ops-console-premium.php
+--- a/vms-ops-console-premium/vms-ops-console-premium.php	2026-06-11 22:35:51
++++ b/vms-ops-console-premium/vms-ops-console-premium.php	2026-09-01 08:49:39
+@@ -2,7 +2,7 @@
+ /**
+  * Plugin Name: VMS Ops Console Premium
+  * Description: Installable PWA ops console and Texas Private Club membership toolkit for VMS operators.
+- * Version: 0.1.65
++ * Version: 0.1.65.1
+  * Author: VMS
+  * Requires at least: 6.0
+  * Requires PHP: 7.4
+@@ -12,7 +12,7 @@
+ defined('ABSPATH') || exit;
+ 
+ if (!defined('VMS_OPS_CONSOLE_VERSION')) {
+-    define('VMS_OPS_CONSOLE_VERSION', '0.1.65');
++    define('VMS_OPS_CONSOLE_VERSION', '0.1.65.1');
+ }
+ if (!defined('VMS_OPS_CONSOLE_FILE')) {
+     define('VMS_OPS_CONSOLE_FILE', __FILE__);
+@@ -24,6 +24,7 @@
+     define('VMS_OPS_CONSOLE_URL', plugin_dir_url(__FILE__));
+ }
+ 
++require_once VMS_OPS_CONSOLE_PATH . 'includes/core-compat.php';
+ require_once VMS_OPS_CONSOLE_PATH . 'includes/db-schema.php';
+ require_once VMS_OPS_CONSOLE_PATH . 'includes/capabilities.php';
+ require_once VMS_OPS_CONSOLE_PATH . 'includes/encryption.php';

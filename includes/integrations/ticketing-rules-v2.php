@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) { exit; }
  * Read product meta with a safe fallback to the parent product when the cart line is a variation.
  * This prevents variation lines from bypassing eligibility/pool rules when meta is stored on the parent.
  */
-function vms_ticketing_v2_meta_get(int $product_id, string $meta_key) {
+function bvmgr_ticketing_v2_meta_get(int $product_id, string $meta_key) {
     $product_id = absint($product_id);
     if ($product_id <= 0 || $meta_key === '') {
         return '';
@@ -38,7 +38,7 @@ function vms_ticketing_v2_meta_get(int $product_id, string $meta_key) {
     return $val;
 }
 
-function vms_ticketing_v2_meta_truthy($value, bool $default = true): bool
+function bvmgr_ticketing_v2_meta_truthy($value, bool $default = true): bool
 {
     $raw = strtolower(trim((string) $value));
     if ($raw === '') {
@@ -50,10 +50,10 @@ function vms_ticketing_v2_meta_truthy($value, bool $default = true): bool
     return true;
 }
 
-function vms_ticketing_v2_claim_grant_type_values(): array
+function bvmgr_ticketing_v2_claim_grant_type_values(): array
 {
-    if (function_exists('vms_ticketing_claims_allowed_grant_types')) {
-        return (array) vms_ticketing_claims_allowed_grant_types();
+    if (function_exists('bvmgr_ticketing_claims_allowed_grant_types')) {
+        return (array) bvmgr_ticketing_claims_allowed_grant_types();
     }
     return array('event_ticket_eligibility', 'event_free_admit', 'credential_benefit_override', 'event_grant');
 }
@@ -64,7 +64,7 @@ function vms_ticketing_v2_claim_grant_type_values(): array
  * Note: tickets are commonly variable products. Woo cart lines may reference
  * the variation ID, while VMS mapping typically stores the parent product ID.
  */
-function vms_ticketing_v2_pid_matches_mapped(int $pid, int $mapped_pid): bool
+function bvmgr_ticketing_v2_pid_matches_mapped(int $pid, int $mapped_pid): bool
 {
     $pid = absint($pid);
     $mapped_pid = absint($mapped_pid);
@@ -82,7 +82,7 @@ function vms_ticketing_v2_pid_matches_mapped(int $pid, int $mapped_pid): bool
  * Session key used to carry short-lived GA qualification hints between
  * ticket add and reserved add-on validation.
  */
-function vms_ticketing_v2_session_ga_hint_key(): string
+function bvmgr_ticketing_v2_session_ga_hint_key(): string
 {
     return 'vms_ticketing_v2_ga_hint_by_plan_v1';
 }
@@ -90,7 +90,7 @@ function vms_ticketing_v2_session_ga_hint_key(): string
 /**
  * @return array<int,array<string,mixed>>
  */
-function vms_ticketing_v2_session_get_ga_hints(): array
+function bvmgr_ticketing_v2_session_get_ga_hints(): array
 {
     if (!function_exists('WC')) {
         return array();
@@ -101,7 +101,7 @@ function vms_ticketing_v2_session_get_ga_hints(): array
         return array();
     }
 
-    $raw = $wc->session->get(vms_ticketing_v2_session_ga_hint_key(), array());
+    $raw = $wc->session->get(bvmgr_ticketing_v2_session_ga_hint_key(), array());
     if (!is_array($raw) || empty($raw)) {
         return array();
     }
@@ -138,7 +138,7 @@ function vms_ticketing_v2_session_get_ga_hints(): array
     }
 
     if ($changed) {
-        $wc->session->set(vms_ticketing_v2_session_ga_hint_key(), $out);
+        $wc->session->set(bvmgr_ticketing_v2_session_ga_hint_key(), $out);
     }
 
     return $out;
@@ -147,7 +147,7 @@ function vms_ticketing_v2_session_get_ga_hints(): array
 /**
  * @param array<int,array<string,mixed>> $hints
  */
-function vms_ticketing_v2_session_set_ga_hints(array $hints): void
+function bvmgr_ticketing_v2_session_set_ga_hints(array $hints): void
 {
     if (!function_exists('WC')) {
         return;
@@ -178,10 +178,10 @@ function vms_ticketing_v2_session_set_ga_hints(array $hints): void
         );
     }
 
-    $wc->session->set(vms_ticketing_v2_session_ga_hint_key(), $clean);
+    $wc->session->set(bvmgr_ticketing_v2_session_ga_hint_key(), $clean);
 }
 
-function vms_ticketing_v2_session_seed_ga_hint(int $plan_id, int $ga_qty, string $source = ''): void
+function bvmgr_ticketing_v2_session_seed_ga_hint(int $plan_id, int $ga_qty, string $source = ''): void
 {
     $plan_id = absint($plan_id);
     $ga_qty = absint($ga_qty);
@@ -194,7 +194,7 @@ function vms_ticketing_v2_session_seed_ga_hint(int $plan_id, int $ga_qty, string
         $ttl = 30;
     }
 
-    $hints = vms_ticketing_v2_session_get_ga_hints();
+    $hints = bvmgr_ticketing_v2_session_get_ga_hints();
     $existing_qty = absint($hints[$plan_id]['qty'] ?? 0);
     $now = time();
 
@@ -205,25 +205,25 @@ function vms_ticketing_v2_session_seed_ga_hint(int $plan_id, int $ga_qty, string
         'source' => sanitize_key($source),
     );
 
-    vms_ticketing_v2_session_set_ga_hints($hints);
+    bvmgr_ticketing_v2_session_set_ga_hints($hints);
 }
 
-function vms_ticketing_v2_session_clear_ga_hint(int $plan_id = 0): void
+function bvmgr_ticketing_v2_session_clear_ga_hint(int $plan_id = 0): void
 {
     $plan_id = absint($plan_id);
     if ($plan_id <= 0) {
-        vms_ticketing_v2_session_set_ga_hints(array());
+        bvmgr_ticketing_v2_session_set_ga_hints(array());
         return;
     }
 
-    $hints = vms_ticketing_v2_session_get_ga_hints();
+    $hints = bvmgr_ticketing_v2_session_get_ga_hints();
     if (isset($hints[$plan_id])) {
         unset($hints[$plan_id]);
-        vms_ticketing_v2_session_set_ga_hints($hints);
+        bvmgr_ticketing_v2_session_set_ga_hints($hints);
     }
 }
 
-function vms_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_qty): int
+function bvmgr_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_qty): int
 {
     $plan_id = absint($plan_id);
     $cart_ga_qty = max(0, absint($cart_ga_qty));
@@ -231,7 +231,7 @@ function vms_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_q
         return $cart_ga_qty;
     }
 
-    $hints = vms_ticketing_v2_session_get_ga_hints();
+    $hints = bvmgr_ticketing_v2_session_get_ga_hints();
     $hint_qty = 0;
     if (!empty($hints[$plan_id]) && is_array($hints[$plan_id])) {
         $hint_qty = max(0, absint($hints[$plan_id]['qty'] ?? 0));
@@ -241,7 +241,7 @@ function vms_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_q
         // Cart state is authoritative once it catches up to the hinted total.
         // Until then, keep the higher hinted total so add-ons can qualify in mixed flows.
         if ($hint_qty > 0 && $cart_ga_qty >= $hint_qty) {
-            vms_ticketing_v2_session_clear_ga_hint($plan_id);
+            bvmgr_ticketing_v2_session_clear_ga_hint($plan_id);
             return $cart_ga_qty;
         }
         return max($cart_ga_qty, $hint_qty);
@@ -250,7 +250,7 @@ function vms_ticketing_v2_effective_ga_qty_for_plan(int $plan_id, int $cart_ga_q
     return max($cart_ga_qty, $hint_qty);
 }
 
-function vms_ticketing_v2_request_cart_cache_key(): string
+function bvmgr_ticketing_v2_request_cart_cache_key(): string
 {
     if (!function_exists('WC')) {
         return 'no_wc';
@@ -278,7 +278,7 @@ function vms_ticketing_v2_request_cart_cache_key(): string
     return md5(implode('|', $rows));
 }
 
-function vms_ticketing_v2_request_purchase_cache_scope(array $customer_ctx): string
+function bvmgr_ticketing_v2_request_purchase_cache_scope(array $customer_ctx): string
 {
     $user_id = absint($customer_ctx['user_id'] ?? 0);
     $email = strtolower(sanitize_email((string) ($customer_ctx['email'] ?? '')));
@@ -291,13 +291,13 @@ function vms_ticketing_v2_request_purchase_cache_scope(array $customer_ctx): str
         }
     }
 
-    return md5($user_id . '|' . $email . '|' . $session_customer_id . '|' . vms_ticketing_v2_request_cart_cache_key());
+    return md5($user_id . '|' . $email . '|' . $session_customer_id . '|' . bvmgr_ticketing_v2_request_cart_cache_key());
 }
 
 
-function vms_ticketing_v2_cart_scan(): array {
+function bvmgr_ticketing_v2_cart_scan(): array {
     static $cache = array();
-    $cache_key = vms_ticketing_v2_request_cart_cache_key();
+    $cache_key = bvmgr_ticketing_v2_request_cart_cache_key();
     if (isset($cache[$cache_key]) && is_array($cache[$cache_key])) {
         return $cache[$cache_key];
     }
@@ -338,15 +338,15 @@ function vms_ticketing_v2_cart_scan(): array {
         }
 
         // Primary: v2 markers (also present on legacy v1 products via _vms_event_plan_id).
-        $plan_id = absint(vms_ticketing_v2_meta_get($pid, vms_ticketing_v2_product_meta_key('event_plan_id')));
-        $role = (string) vms_ticketing_v2_meta_get($pid, vms_ticketing_v2_product_meta_key('product_role'));
+        $plan_id = absint(bvmgr_ticketing_v2_meta_get($pid, bvmgr_ticketing_v2_product_meta_key('event_plan_id')));
+        $role = (string) bvmgr_ticketing_v2_meta_get($pid, bvmgr_ticketing_v2_product_meta_key('product_role'));
 
         // Fallback: infer role from legacy meta.
         if ($role === '') {
-            $sr_qual = (string) vms_ticketing_v2_meta_get($pid, '_sr_addon_qualifier');
-            $sr_type = (string) vms_ticketing_v2_meta_get($pid, '_sr_addon_type');
-            $sr_req  = (string) vms_ticketing_v2_meta_get($pid, '_sr_required_qualifiers_per_unit');
-            $sr_unit = (string) vms_ticketing_v2_meta_get($pid, '_sr_addon_unit_label');
+            $sr_qual = (string) bvmgr_ticketing_v2_meta_get($pid, '_sr_addon_qualifier');
+            $sr_type = (string) bvmgr_ticketing_v2_meta_get($pid, '_sr_addon_type');
+            $sr_req  = (string) bvmgr_ticketing_v2_meta_get($pid, '_sr_required_qualifiers_per_unit');
+            $sr_unit = (string) bvmgr_ticketing_v2_meta_get($pid, '_sr_addon_unit_label');
 
             if ($sr_qual === 'yes') {
                 $role = 'ga_ticket';
@@ -357,9 +357,9 @@ function vms_ticketing_v2_cart_scan(): array {
 
         // Fallback: Event Tickets products can be mapped to a plan via TEC event ID.
         if ($plan_id <= 0) {
-            $tec_event_id = absint(vms_ticketing_v2_meta_get($pid, '_tribe_wooticket_for_event'));
-            if ($tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-                $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
+            $tec_event_id = absint(bvmgr_ticketing_v2_meta_get($pid, '_tribe_wooticket_for_event'));
+            if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+                $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
                 if ($role === '') {
                     $role = 'ga_ticket';
                 }
@@ -367,9 +367,9 @@ function vms_ticketing_v2_cart_scan(): array {
         }
 
         // If product markers are missing (common on legacy/adopted products), derive role from the plan sync map.
-        if ($plan_id > 0 && $role === '' && function_exists('vms_ticketing_v2_get_sync')) {
+        if ($plan_id > 0 && $role === '' && function_exists('bvmgr_ticketing_v2_get_sync')) {
             if (!isset($sync_cache[$plan_id])) {
-                $sync = vms_ticketing_v2_get_sync((int) $plan_id);
+                $sync = bvmgr_ticketing_v2_get_sync((int) $plan_id);
                 $sync_cache[$plan_id] = is_array($sync) ? $sync : array();
             }
 
@@ -382,7 +382,7 @@ function vms_ticketing_v2_cart_scan(): array {
                     continue;
                 }
                 $mapped_ticket_pid = absint($ticket_row['woo_product_id'] ?? 0);
-                if ($mapped_ticket_pid > 0 && vms_ticketing_v2_pid_matches_mapped($pid, $mapped_ticket_pid)) {
+                if ($mapped_ticket_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($pid, $mapped_ticket_pid)) {
                     $role = 'ga_ticket';
                     break;
                 }
@@ -390,14 +390,14 @@ function vms_ticketing_v2_cart_scan(): array {
 
             if ($role === '') {
                 $mapped_ga_pid = absint($map['ga']['woo_product_id'] ?? 0);
-                if ($mapped_ga_pid > 0 && vms_ticketing_v2_pid_matches_mapped($pid, $mapped_ga_pid)) {
+                if ($mapped_ga_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($pid, $mapped_ga_pid)) {
                     $role = 'ga_ticket';
                 } else {
                     $emap = (isset($map['entitlements']) && is_array($map['entitlements'])) ? $map['entitlements'] : array();
                     foreach ($emap as $ent_row) {
                         if (!is_array($ent_row)) continue;
                         $mapped_ent_pid = absint($ent_row['woo_product_id'] ?? 0);
-                        if ($mapped_ent_pid > 0 && vms_ticketing_v2_pid_matches_mapped($pid, $mapped_ent_pid)) {
+                        if ($mapped_ent_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($pid, $mapped_ent_pid)) {
                             $role = 'entitlement';
                             break;
                         }
@@ -415,98 +415,98 @@ function vms_ticketing_v2_cart_scan(): array {
         }
 
         if ($role === 'ga_ticket') {
-            $counts_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_counts_toward_unlock')
+            $counts_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_counts_toward_unlock')
                 : '_vms_ticketing_counts_toward_unlock';
-            $counts_meta = vms_ticketing_v2_meta_get($pid, $counts_key);
-            $counts_toward_unlock = vms_ticketing_v2_meta_truthy($counts_meta, true);
+            $counts_meta = bvmgr_ticketing_v2_meta_get($pid, $counts_key);
+            $counts_toward_unlock = bvmgr_ticketing_v2_meta_truthy($counts_meta, true);
 
-            $ratio_enabled_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_ratio_rule_enabled')
+            $ratio_enabled_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_ratio_rule_enabled')
                 : '_vms_ticketing_ratio_rule_enabled';
-            $ratio_max_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_ratio_rule_max_per_qualifying')
+            $ratio_max_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_ratio_rule_max_per_qualifying')
                 : '_vms_ticketing_ratio_rule_max_per_qualifying';
-            $ratio_mode_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_ratio_rule_qualifier_mode')
+            $ratio_mode_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_ratio_rule_qualifier_mode')
                 : '_vms_ticketing_ratio_rule_qualifier_mode';
-            $ratio_group_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_ratio_rule_group')
+            $ratio_group_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_ratio_rule_group')
                 : '_vms_ticketing_ratio_rule_group';
-            $ratio_rule_enabled = vms_ticketing_v2_meta_truthy(vms_ticketing_v2_meta_get($pid, $ratio_enabled_key), false);
-            $ratio_rule_max_per_qualifying = max(0, absint(vms_ticketing_v2_meta_get($pid, $ratio_max_key)));
+            $ratio_rule_enabled = bvmgr_ticketing_v2_meta_truthy(bvmgr_ticketing_v2_meta_get($pid, $ratio_enabled_key), false);
+            $ratio_rule_max_per_qualifying = max(0, absint(bvmgr_ticketing_v2_meta_get($pid, $ratio_max_key)));
             if (!$ratio_rule_enabled || $ratio_rule_max_per_qualifying <= 0) {
                 $ratio_rule_enabled = false;
                 $ratio_rule_max_per_qualifying = 0;
             }
-            $ratio_rule_qualifier_mode = sanitize_key((string) vms_ticketing_v2_meta_get($pid, $ratio_mode_key));
+            $ratio_rule_qualifier_mode = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, $ratio_mode_key));
             if (!in_array($ratio_rule_qualifier_mode, array('counts_toward_unlock'), true)) {
                 $ratio_rule_qualifier_mode = 'counts_toward_unlock';
             }
-            $ratio_rule_group = sanitize_title((string) vms_ticketing_v2_meta_get($pid, $ratio_group_key));
+            $ratio_rule_group = sanitize_title((string) bvmgr_ticketing_v2_meta_get($pid, $ratio_group_key));
             if (!$ratio_rule_enabled) {
                 $ratio_rule_group = '';
             }
 
-            $visibility_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_visibility_mode')
+            $visibility_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_visibility_mode')
                 : '_vms_ticketing_visibility_mode';
-            $program_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_verified_program')
+            $program_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_verified_program')
                 : '_vms_ticketing_verified_program';
-            $allowed_programs_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_allowed_programs')
+            $allowed_programs_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_allowed_programs')
                 : '_vms_ticketing_allowed_programs';
-            $allow_direct_grants_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_allow_direct_grants')
+            $allow_direct_grants_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_allow_direct_grants')
                 : '_vms_ticketing_allow_direct_grants';
-            $claim_grant_type_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_claim_grant_type')
+            $claim_grant_type_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_claim_grant_type')
                 : '_vms_ticketing_claim_grant_type';
-            $claims_per_assignee_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_claims_per_assignee')
+            $claims_per_assignee_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_claims_per_assignee')
                 : '_vms_ticketing_claims_per_assignee';
-            $require_assignee_email_key = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_require_assignee_email')
+            $require_assignee_email_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_require_assignee_email')
                 : '_vms_ticketing_require_assignee_email';
-            $ticket_key_meta = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_ticket_key')
+            $ticket_key_meta = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key')
                 : '_vms_ticketing_ticket_key';
-            $visibility_mode = sanitize_key((string) vms_ticketing_v2_meta_get($pid, $visibility_key));
+            $visibility_mode = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, $visibility_key));
             if (!in_array($visibility_mode, array('public', 'login', 'verified'), true)) {
                 $visibility_mode = 'public';
             }
-            $verified_program = sanitize_key((string) vms_ticketing_v2_meta_get($pid, $program_key));
-            $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-                ? vms_ticketing_v2_normalize_allowed_programs(vms_ticketing_v2_meta_get($pid, $allowed_programs_key), $verified_program)
+            $verified_program = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, $program_key));
+            $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+                ? bvmgr_ticketing_v2_normalize_allowed_programs(bvmgr_ticketing_v2_meta_get($pid, $allowed_programs_key), $verified_program)
                 : ($verified_program !== '' ? array($verified_program) : array());
-            $allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-                ? vms_ticketing_v2_truthy(vms_ticketing_v2_meta_get($pid, $allow_direct_grants_key), false)
-                : vms_ticketing_v2_meta_truthy(vms_ticketing_v2_meta_get($pid, $allow_direct_grants_key), false);
-            $claim_grant_type = sanitize_key((string) vms_ticketing_v2_meta_get($pid, $claim_grant_type_key));
-            if (!in_array($claim_grant_type, vms_ticketing_v2_claim_grant_type_values(), true)) {
+            $allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+                ? bvmgr_ticketing_v2_truthy(bvmgr_ticketing_v2_meta_get($pid, $allow_direct_grants_key), false)
+                : bvmgr_ticketing_v2_meta_truthy(bvmgr_ticketing_v2_meta_get($pid, $allow_direct_grants_key), false);
+            $claim_grant_type = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, $claim_grant_type_key));
+            if (!in_array($claim_grant_type, bvmgr_ticketing_v2_claim_grant_type_values(), true)) {
                 $claim_grant_type = 'event_ticket_eligibility';
             }
-            $claims_per_assignee = max(0, absint(vms_ticketing_v2_meta_get($pid, $claims_per_assignee_key)));
+            $claims_per_assignee = max(0, absint(bvmgr_ticketing_v2_meta_get($pid, $claims_per_assignee_key)));
             if ($claims_per_assignee <= 0) {
                 $claims_per_assignee = 1;
             }
-            $require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-                ? vms_ticketing_v2_truthy(vms_ticketing_v2_meta_get($pid, $require_assignee_email_key), true)
-                : vms_ticketing_v2_meta_truthy(vms_ticketing_v2_meta_get($pid, $require_assignee_email_key), true);
-            $event_id = absint(vms_ticketing_v2_meta_get($pid, '_vms_ticket_event_id'));
+            $require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+                ? bvmgr_ticketing_v2_truthy(bvmgr_ticketing_v2_meta_get($pid, $require_assignee_email_key), true)
+                : bvmgr_ticketing_v2_meta_truthy(bvmgr_ticketing_v2_meta_get($pid, $require_assignee_email_key), true);
+            $event_id = absint(bvmgr_ticketing_v2_meta_get($pid, '_vms_ticket_event_id'));
             if ($event_id <= 0) {
-                $event_id = absint(vms_ticketing_v2_meta_get($pid, '_tribe_wooticket_for_event'));
+                $event_id = absint(bvmgr_ticketing_v2_meta_get($pid, '_tribe_wooticket_for_event'));
             }
             if ($event_id <= 0) {
-                $tec_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-                    ? vms_ticketing_v2_product_meta_key('tec_event_id')
+                $tec_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                    ? bvmgr_ticketing_v2_product_meta_key('tec_event_id')
                     : '_vms_tec_event_id';
-                $event_id = absint(vms_ticketing_v2_meta_get($pid, $tec_meta_key));
+                $event_id = absint(bvmgr_ticketing_v2_meta_get($pid, $tec_meta_key));
             }
-            $ticket_key = sanitize_key((string) vms_ticketing_v2_meta_get($pid, '_vms_ticket_key'));
+            $ticket_key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, '_vms_ticket_key'));
             if ($ticket_key === '') {
-                $ticket_key = sanitize_key((string) vms_ticketing_v2_meta_get($pid, $ticket_key_meta));
+                $ticket_key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, $ticket_key_meta));
             }
             if ($visibility_mode !== 'verified') {
                 $verified_program = '';
@@ -547,7 +547,7 @@ function vms_ticketing_v2_cart_scan(): array {
         }
 
         if ($role === 'entitlement') {
-            $ent_id = sanitize_key((string) vms_ticketing_v2_meta_get($pid, vms_ticketing_v2_product_meta_key('ticketing_entitlement_id')));
+            $ent_id = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id')));
             // Legacy entitlements may not have a v2 entitlement_id; keep empty and enforce via product meta.
             $out['ent_lines'][] = array(
                 'plan_id' => $plan_id,
@@ -563,7 +563,7 @@ function vms_ticketing_v2_cart_scan(): array {
     return $cache[$cache_key];
 }
 
-function vms_ticketing_v2_find_entitlement_cfg(array $cfg, string $entitlement_id): ?array {
+function bvmgr_ticketing_v2_find_entitlement_cfg(array $cfg, string $entitlement_id): ?array {
     $entitlement_id = sanitize_key($entitlement_id);
     if ($entitlement_id === '') {
         return null;
@@ -582,7 +582,7 @@ function vms_ticketing_v2_find_entitlement_cfg(array $cfg, string $entitlement_i
     return null;
 }
 
-function vms_ticketing_v2_resolve_eligibility_for_product(int $product_id, int $plan_id, ?array $ent_cfg = null): array
+function bvmgr_ticketing_v2_resolve_eligibility_for_product(int $product_id, int $plan_id, ?array $ent_cfg = null): array
 {
     $out = array(
         'pool_key' => '',
@@ -619,11 +619,11 @@ function vms_ticketing_v2_resolve_eligibility_for_product(int $product_id, int $
     // Legacy fallback meta (pre-v2 import/blueprint flow).
     // NOTE: legacy sites sometimes store these keys on the parent product (variations) and/or use slightly different
     // type values (e.g., table_01, tables). We normalize into a stable bucket.
-    $sr_type_raw  = (string) vms_ticketing_v2_meta_get($product_id, '_sr_addon_type');
+    $sr_type_raw  = (string) bvmgr_ticketing_v2_meta_get($product_id, '_sr_addon_type');
     $sr_type      = sanitize_key($sr_type_raw);
-    $sr_req       = absint(vms_ticketing_v2_meta_get($product_id, '_sr_required_qualifiers_per_unit'));
-    $sr_qual      = (string) vms_ticketing_v2_meta_get($product_id, '_sr_addon_qualifier');
-    $sr_unit_label = (string) vms_ticketing_v2_meta_get($product_id, '_sr_addon_unit_label');
+    $sr_req       = absint(bvmgr_ticketing_v2_meta_get($product_id, '_sr_required_qualifiers_per_unit'));
+    $sr_qual      = (string) bvmgr_ticketing_v2_meta_get($product_id, '_sr_addon_qualifier');
+    $sr_unit_label = (string) bvmgr_ticketing_v2_meta_get($product_id, '_sr_addon_unit_label');
 
     // Normalize legacy type to a stable bucket so pool rules don’t silently fail.
     $sr_bucket = '';
@@ -702,14 +702,14 @@ function vms_ticketing_v2_resolve_eligibility_for_product(int $product_id, int $
  * Current cart quantity by entitlement eligibility pool for a single event plan.
  * Mirrors server-side validation semantics used during add-to-cart/checkout.
  */
-function vms_ticketing_v2_cart_pool_qty_by_key_for_plan(int $plan_id, array $cfg = array()): array
+function bvmgr_ticketing_v2_cart_pool_qty_by_key_for_plan(int $plan_id, array $cfg = array()): array
 {
     $plan_id = absint($plan_id);
     if ($plan_id <= 0) {
         return array();
     }
 
-    $scan = vms_ticketing_v2_cart_scan();
+    $scan = bvmgr_ticketing_v2_cart_scan();
     $ent_lines = (isset($scan['ent_lines']) && is_array($scan['ent_lines'])) ? $scan['ent_lines'] : array();
     if (empty($ent_lines)) {
         return array();
@@ -734,13 +734,13 @@ function vms_ticketing_v2_cart_pool_qty_by_key_for_plan(int $plan_id, array $cfg
         $ent_id = sanitize_key((string) ($line['entitlement_id'] ?? ''));
         $ent_cfg = null;
         if ($ent_id !== '' && is_array($cfg) && !empty($cfg)) {
-            $ent_cfg = vms_ticketing_v2_find_entitlement_cfg($cfg, $ent_id);
+            $ent_cfg = bvmgr_ticketing_v2_find_entitlement_cfg($cfg, $ent_id);
             if (is_array($ent_cfg) && empty($ent_cfg['enabled'])) {
                 continue;
             }
         }
 
-        $elig = vms_ticketing_v2_resolve_eligibility_for_product(
+        $elig = bvmgr_ticketing_v2_resolve_eligibility_for_product(
             $product_id,
             $plan_id,
             is_array($ent_cfg) ? $ent_cfg : null
@@ -761,14 +761,14 @@ function vms_ticketing_v2_cart_pool_qty_by_key_for_plan(int $plan_id, array $cfg
     return $out;
 }
 
-function vms_ticketing_v2_qualifying_ticket_product_ids_for_plan(int $plan_id): array
+function bvmgr_ticketing_v2_qualifying_ticket_product_ids_for_plan(int $plan_id): array
 {
     $plan_id = absint($plan_id);
-    if ($plan_id <= 0 || !function_exists('vms_ticketing_v2_get_sync')) {
+    if ($plan_id <= 0 || !function_exists('bvmgr_ticketing_v2_get_sync')) {
         return array();
     }
 
-    $sync = vms_ticketing_v2_get_sync($plan_id);
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
     $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
     if (empty($map)) {
         return array();
@@ -804,18 +804,111 @@ function vms_ticketing_v2_qualifying_ticket_product_ids_for_plan(int $plan_id): 
     return $out;
 }
 
-function vms_ticketing_v2_entitlement_product_ids_by_pool_for_plan(int $plan_id, array $cfg = array()): array
+/**
+ * Whether the active native TEC flow exposes a purchasable qualifying ticket.
+ */
+function bvmgr_ticketing_v2_has_purchasable_qualifying_native_ticket(int $tec_event_id, int $plan_id): bool
+{
+    $tec_event_id = absint($tec_event_id);
+    $plan_id = absint($plan_id);
+    if (
+        $tec_event_id <= 0
+        || $plan_id <= 0
+        || !class_exists('Tribe__Tickets__Tickets')
+        || !method_exists('Tribe__Tickets__Tickets', 'get_event_tickets')
+        || !function_exists('wc_get_product')
+    ) {
+        return false;
+    }
+
+    $qualifying_ids = bvmgr_ticketing_v2_qualifying_ticket_product_ids_for_plan($plan_id);
+    if (empty($qualifying_ids)) {
+        return false;
+    }
+
+    // The sync map can retain disabled rows for safe product retirement. Limit the
+    // public availability check to currently enabled ticket definitions.
+    $cfg = bvmgr_ticketing_v2_get_config($plan_id);
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
+    $ticket_map = (isset($sync['map']['tickets']) && is_array($sync['map']['tickets'])) ? $sync['map']['tickets'] : array();
+    $enabled_ids = array();
+    $tickets = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
+    foreach ($tickets as $ticket) {
+        if (!is_array($ticket) || (array_key_exists('enabled', $ticket) && empty($ticket['enabled']))) {
+            continue;
+        }
+        $counts_toward_unlock = array_key_exists('counts_toward_unlock', $ticket)
+            ? !empty($ticket['counts_toward_unlock'])
+            : true;
+        if (!$counts_toward_unlock) {
+            continue;
+        }
+        $ticket_key = sanitize_key((string) ($ticket['ticket_key'] ?? $ticket['key'] ?? ''));
+        $product_id = ($ticket_key !== '' && isset($ticket_map[$ticket_key]) && is_array($ticket_map[$ticket_key]))
+            ? absint($ticket_map[$ticket_key]['woo_product_id'] ?? 0)
+            : 0;
+        if ($product_id <= 0 && $ticket_key === 'ga') {
+            $product_id = absint($sync['map']['ga']['woo_product_id'] ?? 0);
+        }
+        if ($product_id > 0) {
+            $enabled_ids[] = $product_id;
+        }
+    }
+    $qualifying_ids = array_values(array_intersect($qualifying_ids, array_values(array_unique($enabled_ids))));
+    if (empty($qualifying_ids)) {
+        return false;
+    }
+
+    try {
+        $tickets_for_event = (array) Tribe__Tickets__Tickets::get_event_tickets($tec_event_id);
+    } catch (Throwable $e) {
+        return false;
+    }
+
+    foreach ($tickets_for_event as $ticket) {
+        if (!is_object($ticket)) {
+            continue;
+        }
+        $product_id = isset($ticket->ID) ? absint($ticket->ID) : 0;
+        if ($product_id <= 0 || !in_array($product_id, $qualifying_ids, true)) {
+            continue;
+        }
+        if (method_exists($ticket, 'date_in_range')) {
+            try {
+                if (!$ticket->date_in_range()) {
+                    continue;
+                }
+            } catch (Throwable $e) {
+                continue;
+            }
+        }
+        if ((string) get_post_status($product_id) !== 'publish') {
+            continue;
+        }
+
+        $product = wc_get_product($product_id);
+        if (!$product || !$product->is_purchasable() || !$product->is_in_stock()) {
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+function bvmgr_ticketing_v2_entitlement_product_ids_by_pool_for_plan(int $plan_id, array $cfg = array()): array
 {
     $plan_id = absint($plan_id);
-    if ($plan_id <= 0 || !function_exists('vms_ticketing_v2_get_sync')) {
+    if ($plan_id <= 0 || !function_exists('bvmgr_ticketing_v2_get_sync')) {
         return array();
     }
 
-    if (empty($cfg) && function_exists('vms_ticketing_v2_get_config')) {
-        $cfg = vms_ticketing_v2_get_config($plan_id);
+    if (empty($cfg) && function_exists('bvmgr_ticketing_v2_get_config')) {
+        $cfg = bvmgr_ticketing_v2_get_config($plan_id);
     }
 
-    $sync = vms_ticketing_v2_get_sync($plan_id);
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
     $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
     $emap = (isset($map['entitlements']) && is_array($map['entitlements'])) ? $map['entitlements'] : array();
     if (empty($emap)) {
@@ -849,7 +942,7 @@ function vms_ticketing_v2_entitlement_product_ids_by_pool_for_plan(int $plan_id,
         }
 
         $ent_cfg = (isset($ent_cfg_by_id[$ent_id]) && is_array($ent_cfg_by_id[$ent_id])) ? $ent_cfg_by_id[$ent_id] : null;
-        $elig = vms_ticketing_v2_resolve_eligibility_for_product($pid, $plan_id, is_array($ent_cfg) ? $ent_cfg : null);
+        $elig = bvmgr_ticketing_v2_resolve_eligibility_for_product($pid, $plan_id, is_array($ent_cfg) ? $ent_cfg : null);
         $pool_key = sanitize_key((string) ($elig['pool_key'] ?? ''));
         if ($pool_key === '' || !empty($elig['allow_without_ga'])) {
             continue;
@@ -871,7 +964,7 @@ function vms_ticketing_v2_entitlement_product_ids_by_pool_for_plan(int $plan_id,
     return $out;
 }
 
-function vms_ticketing_v2_current_customer_purchase_context(): array
+function bvmgr_ticketing_v2_current_customer_purchase_context(): array
 {
     $user_id = is_user_logged_in() ? absint(get_current_user_id()) : 0;
     $email = '';
@@ -901,7 +994,7 @@ function vms_ticketing_v2_current_customer_purchase_context(): array
     );
 }
 
-function vms_ticketing_v2_customer_order_ids_for_purchase_context(array $customer_ctx): array
+function bvmgr_ticketing_v2_customer_order_ids_for_purchase_context(array $customer_ctx): array
 {
     $user_id = absint($customer_ctx['user_id'] ?? 0);
     $email = strtolower(sanitize_email((string) ($customer_ctx['email'] ?? '')));
@@ -910,7 +1003,7 @@ function vms_ticketing_v2_customer_order_ids_for_purchase_context(array $custome
     }
 
     static $cache = array();
-    $scope_key = vms_ticketing_v2_request_purchase_cache_scope($customer_ctx);
+    $scope_key = bvmgr_ticketing_v2_request_purchase_cache_scope($customer_ctx);
     $cache_key = $user_id . '|' . $email . '|' . $scope_key;
     if (isset($cache[$cache_key]) && is_array($cache[$cache_key])) {
         return $cache[$cache_key];
@@ -942,21 +1035,21 @@ function vms_ticketing_v2_customer_order_ids_for_purchase_context(array $custome
     return $order_ids;
 }
 
-function vms_ticketing_v2_purchased_product_qty_for_customer(array $customer_ctx, array $product_ids): int
+function bvmgr_ticketing_v2_purchased_product_qty_for_customer(array $customer_ctx, array $product_ids): int
 {
     $product_ids = array_values(array_unique(array_filter(array_map('absint', $product_ids))));
     if (empty($product_ids)) {
         return 0;
     }
 
-    $order_ids = vms_ticketing_v2_customer_order_ids_for_purchase_context($customer_ctx);
+    $order_ids = bvmgr_ticketing_v2_customer_order_ids_for_purchase_context($customer_ctx);
     if (empty($order_ids)) {
         return 0;
     }
 
     $user_id = absint($customer_ctx['user_id'] ?? 0);
     $email = strtolower(sanitize_email((string) ($customer_ctx['email'] ?? '')));
-    $scope_key = vms_ticketing_v2_request_purchase_cache_scope($customer_ctx);
+    $scope_key = bvmgr_ticketing_v2_request_purchase_cache_scope($customer_ctx);
     static $cache = array();
     $cache_key = $user_id . '|' . $email . '|' . $scope_key . '|' . implode(',', $product_ids);
     if (isset($cache[$cache_key])) {
@@ -1004,7 +1097,7 @@ function vms_ticketing_v2_purchased_product_qty_for_customer(array $customer_ctx
     return $cache[$cache_key];
 }
 
-function vms_ticketing_v2_prior_addon_history_for_plan(int $plan_id, array $cfg = array()): array
+function bvmgr_ticketing_v2_prior_addon_history_for_plan(int $plan_id, array $cfg = array()): array
 {
     $plan_id = absint($plan_id);
     $empty = array(
@@ -1015,7 +1108,7 @@ function vms_ticketing_v2_prior_addon_history_for_plan(int $plan_id, array $cfg 
         return $empty;
     }
 
-    $customer_ctx = vms_ticketing_v2_current_customer_purchase_context();
+    $customer_ctx = bvmgr_ticketing_v2_current_customer_purchase_context();
     $user_id = absint($customer_ctx['user_id'] ?? 0);
     $email = strtolower(sanitize_email((string) ($customer_ctx['email'] ?? '')));
     if ($user_id <= 0 && $email === '') {
@@ -1023,18 +1116,18 @@ function vms_ticketing_v2_prior_addon_history_for_plan(int $plan_id, array $cfg 
     }
 
     static $cache = array();
-    $scope_key = vms_ticketing_v2_request_purchase_cache_scope($customer_ctx);
+    $scope_key = bvmgr_ticketing_v2_request_purchase_cache_scope($customer_ctx);
     $cache_key = $plan_id . '|' . $user_id . '|' . $email . '|' . $scope_key;
     if (isset($cache[$cache_key]) && is_array($cache[$cache_key])) {
         return $cache[$cache_key];
     }
 
-    $qualifying_product_ids = vms_ticketing_v2_qualifying_ticket_product_ids_for_plan($plan_id);
-    $pool_product_ids_by_key = vms_ticketing_v2_entitlement_product_ids_by_pool_for_plan($plan_id, $cfg);
+    $qualifying_product_ids = bvmgr_ticketing_v2_qualifying_ticket_product_ids_for_plan($plan_id);
+    $pool_product_ids_by_key = bvmgr_ticketing_v2_entitlement_product_ids_by_pool_for_plan($plan_id, $cfg);
 
     $result = $empty;
     if (!empty($qualifying_product_ids)) {
-        $result['qualifying_qty'] = vms_ticketing_v2_purchased_product_qty_for_customer($customer_ctx, $qualifying_product_ids);
+        $result['qualifying_qty'] = bvmgr_ticketing_v2_purchased_product_qty_for_customer($customer_ctx, $qualifying_product_ids);
     }
 
     foreach ($pool_product_ids_by_key as $pool_key => $product_ids) {
@@ -1042,7 +1135,7 @@ function vms_ticketing_v2_prior_addon_history_for_plan(int $plan_id, array $cfg 
         if ($pool_key === '') {
             continue;
         }
-        $result['pool_qty_by_key'][$pool_key] = vms_ticketing_v2_purchased_product_qty_for_customer($customer_ctx, (array) $product_ids);
+        $result['pool_qty_by_key'][$pool_key] = bvmgr_ticketing_v2_purchased_product_qty_for_customer($customer_ctx, (array) $product_ids);
     }
 
     ksort($result['pool_qty_by_key'], SORT_STRING);
@@ -1050,17 +1143,17 @@ function vms_ticketing_v2_prior_addon_history_for_plan(int $plan_id, array $cfg 
     return $result;
 }
 
-function vms_ticketing_v2_resolve_qualifying_ticket_label(int $plan_id): string
+function bvmgr_ticketing_v2_resolve_qualifying_ticket_label(int $plan_id): string
 {
     $plan_id = absint($plan_id);
-    if ($plan_id <= 0 || !function_exists('vms_ticketing_v2_get_sync')) {
-        return __('qualifying tickets', 'vms');
+    if ($plan_id <= 0 || !function_exists('bvmgr_ticketing_v2_get_sync')) {
+        return __('qualifying tickets', 'backstage-venue-manager');
     }
 
-    $sync = vms_ticketing_v2_get_sync($plan_id);
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
     $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
     if (empty($map)) {
-        return __('qualifying tickets', 'vms');
+        return __('qualifying tickets', 'backstage-venue-manager');
     }
 
     $labels = array();
@@ -1108,20 +1201,20 @@ function vms_ticketing_v2_resolve_qualifying_ticket_label(int $plan_id): string
         return (string) $label_list[0];
     }
 
-    return __('qualifying tickets', 'vms');
+    return __('qualifying tickets', 'backstage-venue-manager');
 }
 
-function vms_ticketing_v2_qualifying_ticket_phrase(string $ticket_label, int $count = 2): string
+function bvmgr_ticketing_v2_qualifying_ticket_phrase(string $ticket_label, int $count = 2): string
 {
     $count = max(1, absint($count));
     $label = trim($ticket_label);
     if ($label === '') {
-        return ($count === 1) ? __('qualifying ticket', 'vms') : __('qualifying tickets', 'vms');
+        return ($count === 1) ? __('qualifying ticket', 'backstage-venue-manager') : __('qualifying tickets', 'backstage-venue-manager');
     }
 
     $normalized = function_exists('mb_strtolower') ? mb_strtolower($label) : strtolower($label);
     if ($normalized === 'qualifying ticket' || $normalized === 'qualifying tickets') {
-        return ($count === 1) ? __('qualifying ticket', 'vms') : __('qualifying tickets', 'vms');
+        return ($count === 1) ? __('qualifying ticket', 'backstage-venue-manager') : __('qualifying tickets', 'backstage-venue-manager');
     }
 
     if (stripos($label, 'ticket') !== false) {
@@ -1129,13 +1222,15 @@ function vms_ticketing_v2_qualifying_ticket_phrase(string $ticket_label, int $co
     }
 
     if ($count === 1) {
-        return sprintf(__('%s ticket', 'vms'), $label);
+        /* translators: %s: human-readable value used in this message. */
+        return sprintf(__('%s ticket', 'backstage-venue-manager'), $label);
     }
 
-    return sprintf(__('%s tickets', 'vms'), $label);
+    /* translators: %s: human-readable value used in this message. */
+    return sprintf(__('%s tickets', 'backstage-venue-manager'), $label);
 }
 
-function vms_ticketing_v2_enforce_cart_rules(): void {
+function bvmgr_ticketing_v2_enforce_cart_rules(): void {
     if (is_admin() && !wp_doing_ajax()) {
         return;
     }
@@ -1143,7 +1238,7 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
         return;
     }
 
-    $scan = vms_ticketing_v2_cart_scan();
+    $scan = bvmgr_ticketing_v2_cart_scan();
     $ent_lines = $scan['ent_lines'] ?? array();
     if (empty($ent_lines)) {
         return;
@@ -1153,37 +1248,37 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
     $plan_ids = array_values(array_unique(array_map('absint', (array) $plan_ids)));
 
     if (count($plan_ids) > 1) {
-        wc_add_notice(__('You cannot purchase reserved items for multiple events in a single order. Please check out separately for each event.', 'vms'), 'error');
+        wc_add_notice(__('You cannot purchase reserved items for multiple events in a single order. Please check out separately for each event.', 'backstage-venue-manager'), 'error');
         return;
     }
 
     $plan_id = (int) ($plan_ids[0] ?? 0);
     if ($plan_id <= 0) {
-        wc_add_notice(__('Reserved items in your cart could not be validated. Please remove them and try again.', 'vms'), 'error');
+        wc_add_notice(__('Reserved items in your cart could not be validated. Please remove them and try again.', 'backstage-venue-manager'), 'error');
         return;
     }
 
     $cfg = array();
-    if (function_exists('vms_ticketing_v2_get_config')) {
-        $cfg = vms_ticketing_v2_get_config($plan_id);
+    if (function_exists('bvmgr_ticketing_v2_get_config')) {
+        $cfg = bvmgr_ticketing_v2_get_config($plan_id);
     }
 
     // Align sale window: reserved add-ons should not be purchasable when GA tickets are not on sale.
     $is_admin_user = function_exists('current_user_can') ? current_user_can('manage_options') : false;
-    if (!vms_ticketing_v2_ga_is_on_sale_now($cfg) && !$is_admin_user) {
-        wc_add_notice(__('Reserved add-ons are not available until tickets go on sale.', 'vms'), 'error');
+    if (!bvmgr_ticketing_v2_ga_is_on_sale_now($cfg) && !$is_admin_user) {
+        wc_add_notice(__('Reserved add-ons are not available until tickets go on sale.', 'backstage-venue-manager'), 'error');
         return;
     }
     $ga_qty_raw = (int) (($scan['ga_qty_by_plan'][$plan_id] ?? 0));
-    $ga_qty = vms_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);
-    $prior_history = function_exists('vms_ticketing_v2_prior_addon_history_for_plan')
-        ? vms_ticketing_v2_prior_addon_history_for_plan($plan_id, is_array($cfg) ? $cfg : array())
+    $ga_qty = bvmgr_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);
+    $prior_history = function_exists('bvmgr_ticketing_v2_prior_addon_history_for_plan')
+        ? bvmgr_ticketing_v2_prior_addon_history_for_plan($plan_id, is_array($cfg) ? $cfg : array())
         : array('qualifying_qty' => 0, 'pool_qty_by_key' => array());
     $ga_qty += max(0, absint($prior_history['qualifying_qty'] ?? 0));
     $prior_pool_qty_by_key = (isset($prior_history['pool_qty_by_key']) && is_array($prior_history['pool_qty_by_key']))
         ? $prior_history['pool_qty_by_key']
         : array();
-    $qualifying_ticket_label = vms_ticketing_v2_resolve_qualifying_ticket_label($plan_id);
+    $qualifying_ticket_label = bvmgr_ticketing_v2_resolve_qualifying_ticket_label($plan_id);
 
     // Shared pool enforcement: limits combined quantities across multiple entitlements when they share the same eligibility pool_key.
     $pool = array();
@@ -1203,17 +1298,18 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
 
         $ent_cfg = null;
         if (is_array($cfg) && !empty($cfg) && $ent_id !== '') {
-            $ent_cfg = vms_ticketing_v2_find_entitlement_cfg($cfg, $ent_id);
+            $ent_cfg = bvmgr_ticketing_v2_find_entitlement_cfg($cfg, $ent_id);
         }
 
         // If config is present and this entitlement is explicitly disabled, block.
         if (is_array($ent_cfg) && empty($ent_cfg['enabled'])) {
             $label = (string) ($ent_cfg['label'] ?? (string) get_the_title($product_id));
-            wc_add_notice(sprintf(__('A reserved item in your cart is not available for this event: “%s”. Please remove it and try again.', 'vms'), $label), 'error');
+            /* translators: %s: human-readable value used in this message. */
+            wc_add_notice(sprintf(__('A reserved item in your cart is not available for this event: “%s”. Please remove it and try again.', 'backstage-venue-manager'), $label), 'error');
             continue;
         }
 
-        $elig = vms_ticketing_v2_resolve_eligibility_for_product($product_id, $plan_id, is_array($ent_cfg) ? $ent_cfg : null);
+        $elig = bvmgr_ticketing_v2_resolve_eligibility_for_product($product_id, $plan_id, is_array($ent_cfg) ? $ent_cfg : null);
         $label = (string) ($elig['label'] ?? '');
         if ($label === '') {
             $label = (string) get_the_title($product_id);
@@ -1247,28 +1343,32 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
         }
 
         if ($max_per_order > 0 && $qty > $max_per_order) {
-            wc_add_notice(sprintf(__('You can only purchase up to %d of “%s” per order.', 'vms'), $max_per_order, $label), 'error');
+            /* translators: 1: maximum allowed quantity, 2: ticket label. */
+            wc_add_notice(sprintf(__('You can only purchase up to %1$d of “%2$s” per order.', 'backstage-venue-manager'), $max_per_order, $label), 'error');
         }
 
         if (!$allow_without_ga && $min_per > 0) {
             $required = $min_per * $qty;
             if ($ga_qty < $required) {
-                $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $required);
-                wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'vms'), $label, $required, $ticket_phrase), 'error');
+                $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $required);
+                /* translators: 1: value 1 used in this message, 2: number 2 used in this message, 3: value 3 used in this message, 4: value 4 used in this message. */
+                wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'backstage-venue-manager'), $label, $required, $ticket_phrase), 'error');
             }
         }
 
         if ($max_per_ga > 0 && $ga_qty > 0) {
             $allowed = $max_per_ga * $ga_qty;
             if ($qty > $allowed) {
-                $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, max(1, $ga_qty));
-                wc_add_notice(sprintf(__('“%1$s” exceeds what your current %2$s can support. Add more %2$s or remove this reservation.', 'vms'), $label, $ticket_phrase), 'error');
+                $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, max(1, $ga_qty));
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
+                wc_add_notice(sprintf(__('“%1$s” exceeds what your current %2$s can support. Add more %2$s or remove this reservation.', 'backstage-venue-manager'), $label, $ticket_phrase), 'error');
             }
         }
 
         if (!$allow_without_ga && $ga_qty <= 0 && $min_per <= 0) {
-            $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
-            wc_add_notice(sprintf(__('Add the required %2$s to reserve “%1$s”, or remove this reservation.', 'vms'), $label, $ticket_phrase), 'error');
+            $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
+            /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+            wc_add_notice(sprintf(__('Add the required %2$s to reserve “%1$s”, or remove this reservation.', 'backstage-venue-manager'), $label, $ticket_phrase), 'error');
         }
     }
 
@@ -1294,21 +1394,24 @@ function vms_ticketing_v2_enforce_cart_rules(): void {
                     $required_total = max(0, $pool_qty * $pool_min);
                     $missing = max(0, $required_total - $ga_qty);
                     if ($missing > 0) {
-                        $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $missing);
-                        wc_add_notice(sprintf(__('Your reserved spots require %1$d more %2$s. Add more %2$s or remove one or more reserved spots.', 'vms'), $missing, $ticket_phrase), 'error');
+                        $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $missing);
+                        /* translators: 1: number 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
+                        wc_add_notice(sprintf(__('Your reserved spots require %1$d more %2$s. Add more %2$s or remove one or more reserved spots.', 'backstage-venue-manager'), $missing, $ticket_phrase), 'error');
                     } else {
-                        $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
-                        wc_add_notice(sprintf(__('Your reserved spots currently require more %1$s. Add more %1$s or remove one or more reserved spots.', 'vms'), $ticket_phrase), 'error');
+                        $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
+                        /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+                        wc_add_notice(sprintf(__('Your reserved spots currently require more %1$s. Add more %1$s or remove one or more reserved spots.', 'backstage-venue-manager'), $ticket_phrase), 'error');
                     }
                 } else {
-                    wc_add_notice(sprintf(__('Your selected add-ons in “%s” exceed the pool limit. Please reduce to %d.', 'vms'), $label, $allowed), 'error');
+                    /* translators: 1: add-on pool label, 2: maximum allowed quantity. */
+                    wc_add_notice(sprintf(__('Your selected add-ons in “%1$s” exceed the pool limit. Please reduce to %2$d.', 'backstage-venue-manager'), $label, $allowed), 'error');
                 }
             }
         }
     }
 }
 
-function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
+function bvmgr_ticketing_v2_enforce_ticket_visibility_rules(): void
 {
     if (is_admin() && !wp_doing_ajax()) {
         return;
@@ -1317,7 +1420,7 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
         return;
     }
 
-    $scan = vms_ticketing_v2_cart_scan();
+    $scan = bvmgr_ticketing_v2_cart_scan();
     $ticket_lines = (isset($scan['ticket_lines']) && is_array($scan['ticket_lines'])) ? $scan['ticket_lines'] : array();
     if (empty($ticket_lines)) {
         return;
@@ -1328,18 +1431,18 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
         'verified_guest' => false,
         'verified_member' => false,
     );
-    $qualification_removed = vms_ticketing_v2_public_ticket_qualification_removed();
+    $qualification_removed = bvmgr_ticketing_v2_public_ticket_qualification_removed();
 
     foreach ($ticket_lines as $line) {
         if (!is_array($line)) {
             continue;
         }
 
-        $disabled_ticket_state = function_exists('vms_ticketing_v2_disabled_ticket_config_for_product')
-            ? vms_ticketing_v2_disabled_ticket_config_for_product(absint($line['product_id'] ?? 0), absint($line['plan_id'] ?? 0))
+        $disabled_ticket_state = function_exists('bvmgr_ticketing_v2_disabled_ticket_config_for_product')
+            ? bvmgr_ticketing_v2_disabled_ticket_config_for_product(absint($line['product_id'] ?? 0), absint($line['plan_id'] ?? 0))
             : array('disabled' => false);
         if (!empty($disabled_ticket_state['disabled'])) {
-            wc_add_notice(vms_ticketing_v2_disabled_ticket_notice_text($disabled_ticket_state), 'error');
+            wc_add_notice(bvmgr_ticketing_v2_disabled_ticket_notice_text($disabled_ticket_state), 'error');
             continue;
         }
 
@@ -1356,45 +1459,46 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
 
         if ($mode === 'login') {
             if (!is_user_logged_in() && !$already_notified['login']) {
-                wc_add_notice(__('Your cart includes tickets that require login. Please log in to continue.', 'vms'), 'error');
+                wc_add_notice(__('Your cart includes tickets that require login. Please log in to continue.', 'backstage-venue-manager'), 'error');
                 $already_notified['login'] = true;
             }
             continue;
         }
 
         $program = sanitize_key((string) ($line['verified_program'] ?? ''));
-        $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-            ? vms_ticketing_v2_normalize_allowed_programs($line['allowed_programs'] ?? array(), $program)
+        $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+            ? bvmgr_ticketing_v2_normalize_allowed_programs($line['allowed_programs'] ?? array(), $program)
             : ($program !== '' ? array($program) : array());
-        $allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-            ? vms_ticketing_v2_truthy($line['allow_direct_grants'] ?? false, false)
-            : vms_ticketing_v2_meta_truthy($line['allow_direct_grants'] ?? false, false);
+        $allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+            ? bvmgr_ticketing_v2_truthy($line['allow_direct_grants'] ?? false, false)
+            : bvmgr_ticketing_v2_meta_truthy($line['allow_direct_grants'] ?? false, false);
         $grant_type = sanitize_key((string) ($line['claim_grant_type'] ?? 'event_ticket_eligibility'));
-        if (!in_array($grant_type, vms_ticketing_v2_claim_grant_type_values(), true)) {
+        if (!in_array($grant_type, bvmgr_ticketing_v2_claim_grant_type_values(), true)) {
             $grant_type = 'event_ticket_eligibility';
         }
-        $require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-            ? vms_ticketing_v2_truthy($line['require_assignee_email'] ?? true, true)
-            : vms_ticketing_v2_meta_truthy($line['require_assignee_email'] ?? true, true);
+        $require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+            ? bvmgr_ticketing_v2_truthy($line['require_assignee_email'] ?? true, true)
+            : bvmgr_ticketing_v2_meta_truthy($line['require_assignee_email'] ?? true, true);
         $event_id = absint($line['event_id'] ?? 0);
         $ticket_key = sanitize_key((string) ($line['ticket_key'] ?? ''));
         if ($program === '' && !empty($allowed_programs)) {
             $program = (string) $allowed_programs[0];
         }
 
-        $program_label_text = vms_ticketing_v2_claim_program_label_text($allowed_programs, $program);
+        $program_label_text = bvmgr_ticketing_v2_claim_program_label_text($allowed_programs, $program);
 
         if (!is_user_logged_in()) {
             if (!$already_notified['verified_guest']) {
                 if (!empty($allowed_programs) && !$allow_direct_grants) {
                     $guest_message = sprintf(
-                        __('Your cart includes tickets that require %s verification. Please log in and submit verification to continue.', 'vms'),
+                        /* translators: %s: human-readable value used in this message. */
+                        __('Your cart includes tickets that require %s verification. Please log in and submit verification to continue.', 'backstage-venue-manager'),
                         $program_label_text
                     );
                 } elseif (empty($allowed_programs) && $allow_direct_grants) {
-                    $guest_message = __('Your cart includes tickets that require event-specific account approval. Please log in to continue.', 'vms');
+                    $guest_message = __('Your cart includes tickets that require event-specific account approval. Please log in to continue.', 'backstage-venue-manager');
                 } else {
-                    $guest_message = __('Your cart includes restricted tickets. Please log in and verify your account to continue.', 'vms');
+                    $guest_message = __('Your cart includes restricted tickets. Please log in and verify your account to continue.', 'backstage-venue-manager');
                 }
                 wc_add_notice(
                     $guest_message,
@@ -1405,7 +1509,7 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
             continue;
         }
 
-        $eligibility = vms_ticketing_v2_resolve_claim_eligibility_for_user(
+        $eligibility = bvmgr_ticketing_v2_resolve_claim_eligibility_for_user(
             (int) get_current_user_id(),
             $event_id,
             absint($line['product_id'] ?? 0),
@@ -1420,7 +1524,8 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
             $member_message = sanitize_text_field((string) ($eligibility['message'] ?? ''));
             if ($member_message === '') {
                 $member_message = sprintf(
-                    __('Your cart includes tickets that require %s verification. Submit your verification to continue.', 'vms'),
+                    /* translators: %s: human-readable value used in this message. */
+                    __('Your cart includes tickets that require %s verification. Submit your verification to continue.', 'backstage-venue-manager'),
                     $program_label_text
                 );
             }
@@ -1433,19 +1538,19 @@ function vms_ticketing_v2_enforce_ticket_visibility_rules(): void
     }
 }
 
-function vms_ticketing_v2_verified_ticket_program_label(string $program): string
+function bvmgr_ticketing_v2_verified_ticket_program_label(string $program): string
 {
     $program = sanitize_key($program);
     if ($program === '') {
-        return __('Verified', 'vms');
+        return __('Verified', 'backstage-venue-manager');
     }
-    if (function_exists('vms_ticketing_verification_program_label')) {
-        return vms_ticketing_verification_program_label($program);
+    if (function_exists('bvmgr_ticketing_verification_program_label')) {
+        return bvmgr_ticketing_verification_program_label($program);
     }
     return ucwords(str_replace('_', ' ', $program));
 }
 
-function vms_ticketing_v2_add_limit_notice_once(string $message): void
+function bvmgr_ticketing_v2_add_limit_notice_once(string $message): void
 {
     if ($message === '' || !function_exists('wc_add_notice')) {
         return;
@@ -1456,7 +1561,7 @@ function vms_ticketing_v2_add_limit_notice_once(string $message): void
     wc_add_notice($message, 'error');
 }
 
-function vms_ticketing_v2_normalize_ticket_ratio_rule(array $ticket_row): array
+function bvmgr_ticketing_v2_normalize_ticket_ratio_rule(array $ticket_row): array
 {
     $enabled = !empty($ticket_row['ratio_rule_enabled']);
     $max_per = max(0, absint($ticket_row['ratio_rule_max_per_qualifying'] ?? 0));
@@ -1483,7 +1588,7 @@ function vms_ticketing_v2_normalize_ticket_ratio_rule(array $ticket_row): array
     );
 }
 
-function vms_ticketing_v2_config_ticket_rows_by_key(array $cfg): array
+function bvmgr_ticketing_v2_config_ticket_rows_by_key(array $cfg): array
 {
     $out = array();
     $tickets = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
@@ -1503,7 +1608,7 @@ function vms_ticketing_v2_config_ticket_rows_by_key(array $cfg): array
     return $out;
 }
 
-function vms_ticketing_v2_ticket_key_for_product(int $product_id, int $plan_id = 0): string
+function bvmgr_ticketing_v2_ticket_key_for_product(int $product_id, int $plan_id = 0): string
 {
     $product_id = absint($product_id);
     $plan_id = absint($plan_id);
@@ -1511,20 +1616,20 @@ function vms_ticketing_v2_ticket_key_for_product(int $product_id, int $plan_id =
         return '';
     }
 
-    $key = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, '_vms_ticket_key'));
+    $key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, '_vms_ticket_key'));
     if ($key !== '') {
         return $key;
     }
 
-    if (function_exists('vms_ticketing_v2_product_meta_key')) {
-        $key = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, vms_ticketing_v2_product_meta_key('ticketing_ticket_key')));
+    if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+        $key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key')));
         if ($key !== '') {
             return $key;
         }
     }
 
-    if ($plan_id > 0 && function_exists('vms_ticketing_v2_get_sync')) {
-        $sync = vms_ticketing_v2_get_sync($plan_id);
+    if ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_get_sync')) {
+        $sync = bvmgr_ticketing_v2_get_sync($plan_id);
         $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
         $ticket_map = (isset($map['tickets']) && is_array($map['tickets'])) ? $map['tickets'] : array();
         foreach ($ticket_map as $row) {
@@ -1532,7 +1637,7 @@ function vms_ticketing_v2_ticket_key_for_product(int $product_id, int $plan_id =
                 continue;
             }
             $mapped_pid = absint($row['woo_product_id'] ?? 0);
-            if ($mapped_pid > 0 && vms_ticketing_v2_pid_matches_mapped($product_id, $mapped_pid)) {
+            if ($mapped_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($product_id, $mapped_pid)) {
                 return sanitize_key((string) ($row['key'] ?? ($row['ticket_key'] ?? '')));
             }
         }
@@ -1541,38 +1646,38 @@ function vms_ticketing_v2_ticket_key_for_product(int $product_id, int $plan_id =
     return '';
 }
 
-function vms_ticketing_v2_ratio_group_display_label(string $group): string
+function bvmgr_ticketing_v2_ratio_group_display_label(string $group): string
 {
     $group = trim($group);
     if ($group === '') {
-        return __('This ticket group', 'vms');
+        return __('This ticket group', 'backstage-venue-manager');
     }
     $label = trim(preg_replace('/[-_]+/', ' ', $group));
     if ($label === '') {
-        return __('This ticket group', 'vms');
+        return __('This ticket group', 'backstage-venue-manager');
     }
     return ucwords($label);
 }
 
-function vms_ticketing_v2_collect_ticket_ratio_violations(int $plan_id, array $cfg = array(), ?array $scan = null, array $request_adjustments = array()): array
+function bvmgr_ticketing_v2_collect_ticket_ratio_violations(int $plan_id, array $cfg = array(), ?array $scan = null, array $request_adjustments = array()): array
 {
     $plan_id = absint($plan_id);
     if ($plan_id <= 0) {
         return array();
     }
-    if (empty($cfg) && function_exists('vms_ticketing_v2_get_config')) {
-        $cfg = vms_ticketing_v2_get_config($plan_id);
+    if (empty($cfg) && function_exists('bvmgr_ticketing_v2_get_config')) {
+        $cfg = bvmgr_ticketing_v2_get_config($plan_id);
     }
     if (empty($cfg) || !is_array($cfg)) {
         return array();
     }
 
-    $rows_by_key = vms_ticketing_v2_config_ticket_rows_by_key($cfg);
+    $rows_by_key = bvmgr_ticketing_v2_config_ticket_rows_by_key($cfg);
     if (empty($rows_by_key)) {
         return array();
     }
     if ($scan === null) {
-        $scan = vms_ticketing_v2_cart_scan();
+        $scan = bvmgr_ticketing_v2_cart_scan();
     }
 
     $qty_by_key = array();
@@ -1585,7 +1690,7 @@ function vms_ticketing_v2_collect_ticket_ratio_violations(int $plan_id, array $c
         $product_id = absint($line['product_id'] ?? 0);
         $key = sanitize_key((string) ($line['ticket_key'] ?? ''));
         if ($key === '' && $product_id > 0) {
-            $key = vms_ticketing_v2_ticket_key_for_product($product_id, $plan_id);
+            $key = bvmgr_ticketing_v2_ticket_key_for_product($product_id, $plan_id);
         }
         if ($key === '') {
             continue;
@@ -1610,7 +1715,7 @@ function vms_ticketing_v2_collect_ticket_ratio_violations(int $plan_id, array $c
 
     $limited_groups = array();
     foreach ($rows_by_key as $limited_key => $row) {
-        $rule = vms_ticketing_v2_normalize_ticket_ratio_rule($row);
+        $rule = bvmgr_ticketing_v2_normalize_ticket_ratio_rule($row);
         if (empty($rule['enabled']) || absint($rule['max_per_qualifying'] ?? 0) <= 0) {
             continue;
         }
@@ -1685,24 +1790,26 @@ function vms_ticketing_v2_collect_ticket_ratio_violations(int $plan_id, array $c
 
         $shared_group = sanitize_title((string) ($group['shared_group'] ?? ''));
         if ($shared_group !== '') {
-            $ticket_label = vms_ticketing_v2_ratio_group_display_label($shared_group);
+            $ticket_label = bvmgr_ticketing_v2_ratio_group_display_label($shared_group);
         } else {
             $labels = array_values(array_unique(array_filter(array_map('strval', (array) ($group['labels'] ?? array())))));
-            $ticket_label = !empty($labels) ? (string) $labels[0] : __('This ticket', 'vms');
+            $ticket_label = !empty($labels) ? (string) $labels[0] : __('This ticket', 'backstage-venue-manager');
         }
 
-        $qualifying_label = vms_ticketing_v2_resolve_qualifying_ticket_label($plan_id);
-        $qualifying_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_label, max(1, $qualifying_qty));
+        $qualifying_label = bvmgr_ticketing_v2_resolve_qualifying_ticket_label($plan_id);
+        $qualifying_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_label, max(1, $qualifying_qty));
 
         if ($qualifying_qty <= 0) {
             $message = sprintf(
-                __('%1$s requires at least one qualifying ticket in the cart. Add a %2$s or reduce the %1$s quantity.', 'vms'),
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
+                __('%1$s requires at least one qualifying ticket in the cart. Add a %2$s or reduce the %1$s quantity.', 'backstage-venue-manager'),
                 $ticket_label,
                 $qualifying_phrase
             );
         } else {
             $message = sprintf(
-                __('%1$s is limited to %2$d total per %3$s. You selected %4$d; your current cart allows %5$d.', 'vms'),
+                /* translators: 1: value 1 used in this message, 2: number 2 used in this message, 3: value 3 used in this message, 4: number 4 used in this message, 5: number 5 used in this message. */
+                __('%1$s is limited to %2$d total per %3$s. You selected %4$d; your current cart allows %5$d.', 'backstage-venue-manager'),
                 $ticket_label,
                 $max_per,
                 $qualifying_phrase,
@@ -1727,25 +1834,25 @@ function vms_ticketing_v2_collect_ticket_ratio_violations(int $plan_id, array $c
     return $violations;
 }
 
-function vms_ticketing_v2_enforce_ticket_ratio_rules_in_cart(): void
+function bvmgr_ticketing_v2_enforce_ticket_ratio_rules_in_cart(): void
 {
     if (!function_exists('wc_add_notice') || !function_exists('WC') || !WC() || !isset(WC()->cart) || !WC()->cart) {
         return;
     }
 
-    $scan = vms_ticketing_v2_cart_scan();
+    $scan = bvmgr_ticketing_v2_cart_scan();
     $plan_ids = (isset($scan['plan_ids']) && is_array($scan['plan_ids'])) ? $scan['plan_ids'] : array();
     foreach ($plan_ids as $plan_id) {
-        $violations = vms_ticketing_v2_collect_ticket_ratio_violations(absint($plan_id), array(), $scan);
+        $violations = bvmgr_ticketing_v2_collect_ticket_ratio_violations(absint($plan_id), array(), $scan);
         foreach ($violations as $violation) {
-            vms_ticketing_v2_add_limit_notice_once((string) ($violation['message'] ?? ''));
+            bvmgr_ticketing_v2_add_limit_notice_once((string) ($violation['message'] ?? ''));
         }
     }
 }
 
-function vms_ticketing_v2_validate_ticket_ratio_for_add(int $product_id, int $plan_id, int $request_qty): bool
+function bvmgr_ticketing_v2_validate_ticket_ratio_for_add(int $product_id, int $plan_id, int $request_qty): bool
 {
-    if (!empty($GLOBALS['vms_ticketing_v2_atomic_add_in_progress'])) {
+    if (!empty($GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'])) {
         return true;
     }
     if (!function_exists('wc_add_notice')) {
@@ -1758,12 +1865,12 @@ function vms_ticketing_v2_validate_ticket_ratio_for_add(int $product_id, int $pl
         return true;
     }
 
-    $ticket_key = vms_ticketing_v2_ticket_key_for_product($product_id, $plan_id);
+    $ticket_key = bvmgr_ticketing_v2_ticket_key_for_product($product_id, $plan_id);
     if ($ticket_key === '') {
         return true;
     }
 
-    $violations = vms_ticketing_v2_collect_ticket_ratio_violations(
+    $violations = bvmgr_ticketing_v2_collect_ticket_ratio_violations(
         $plan_id,
         array(),
         null,
@@ -1774,12 +1881,12 @@ function vms_ticketing_v2_validate_ticket_ratio_for_add(int $product_id, int $pl
     }
 
     foreach ($violations as $violation) {
-        vms_ticketing_v2_add_limit_notice_once((string) ($violation['message'] ?? ''));
+        bvmgr_ticketing_v2_add_limit_notice_once((string) ($violation['message'] ?? ''));
     }
     return false;
 }
 
-function vms_ticketing_v2_public_ticket_qualification_removed(): bool
+function bvmgr_ticketing_v2_public_ticket_qualification_removed(): bool
 {
     return false;
 }
@@ -1790,7 +1897,7 @@ function vms_ticketing_v2_public_ticket_qualification_removed(): bool
  * Public ticket products may be legacy/adopted TEC products where VMS markers were
  * incomplete, so this helper mirrors the cart/add-to-cart fallbacks in one place.
  */
-function vms_ticketing_v2_resolve_plan_id_for_ticket_product(int $product_id): int
+function bvmgr_ticketing_v2_resolve_plan_id_for_ticket_product(int $product_id): int
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
@@ -1798,17 +1905,17 @@ function vms_ticketing_v2_resolve_plan_id_for_ticket_product(int $product_id): i
     }
 
     $plan_id = 0;
-    if (function_exists('vms_ticketing_v2_product_meta_key')) {
-        $plan_id = absint(vms_ticketing_v2_meta_get($product_id, vms_ticketing_v2_product_meta_key('event_plan_id')));
+    if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+        $plan_id = absint(bvmgr_ticketing_v2_meta_get($product_id, bvmgr_ticketing_v2_product_meta_key('event_plan_id')));
     }
 
     if ($plan_id <= 0) {
-        $tec_event_id = absint(vms_ticketing_v2_meta_get($product_id, '_tribe_wooticket_for_event'));
-        if ($tec_event_id <= 0 && function_exists('vms_ticketing_v2_product_meta_key')) {
-            $tec_event_id = absint(vms_ticketing_v2_meta_get($product_id, vms_ticketing_v2_product_meta_key('tec_event_id')));
+        $tec_event_id = absint(bvmgr_ticketing_v2_meta_get($product_id, '_tribe_wooticket_for_event'));
+        if ($tec_event_id <= 0 && function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+            $tec_event_id = absint(bvmgr_ticketing_v2_meta_get($product_id, bvmgr_ticketing_v2_product_meta_key('tec_event_id')));
         }
-        if ($tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-            $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+        if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+            $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
         }
     }
 
@@ -1823,22 +1930,22 @@ function vms_ticketing_v2_resolve_plan_id_for_ticket_product(int $product_id): i
  * Woo/TEC products, so it is the safest public runtime source while unsynced
  * config edits are pending.
  */
-function vms_ticketing_v2_sync_ticket_row_for_product(int $product_id, int $plan_id = 0): array
+function bvmgr_ticketing_v2_sync_ticket_row_for_product(int $product_id, int $plan_id = 0): array
 {
     $product_id = absint($product_id);
     $plan_id = absint($plan_id);
-    if ($product_id <= 0 || !function_exists('vms_ticketing_v2_get_sync')) {
+    if ($product_id <= 0 || !function_exists('bvmgr_ticketing_v2_get_sync')) {
         return array();
     }
 
     if ($plan_id <= 0) {
-        $plan_id = vms_ticketing_v2_resolve_plan_id_for_ticket_product($product_id);
+        $plan_id = bvmgr_ticketing_v2_resolve_plan_id_for_ticket_product($product_id);
     }
     if ($plan_id <= 0) {
         return array();
     }
 
-    $sync = vms_ticketing_v2_get_sync($plan_id);
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
     $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
 
     $ticket_rows = (isset($map['tickets']) && is_array($map['tickets'])) ? $map['tickets'] : array();
@@ -1847,7 +1954,7 @@ function vms_ticketing_v2_sync_ticket_row_for_product(int $product_id, int $plan
             continue;
         }
         $mapped_pid = absint($row['woo_product_id'] ?? 0);
-        if ($mapped_pid > 0 && vms_ticketing_v2_pid_matches_mapped($product_id, $mapped_pid)) {
+        if ($mapped_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($product_id, $mapped_pid)) {
             $row['ticket_key'] = sanitize_key((string) ($row['ticket_key'] ?? $ticket_key));
             $row['plan_id'] = $plan_id;
             return $row;
@@ -1856,7 +1963,7 @@ function vms_ticketing_v2_sync_ticket_row_for_product(int $product_id, int $plan
 
     $ga_row = (isset($map['ga']) && is_array($map['ga'])) ? $map['ga'] : array();
     $mapped_ga_pid = absint($ga_row['woo_product_id'] ?? 0);
-    if ($mapped_ga_pid > 0 && vms_ticketing_v2_pid_matches_mapped($product_id, $mapped_ga_pid)) {
+    if ($mapped_ga_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($product_id, $mapped_ga_pid)) {
         $ga_row['ticket_key'] = sanitize_key((string) ($ga_row['ticket_key'] ?? 'ga'));
         $ga_row['plan_id'] = $plan_id;
         return $ga_row;
@@ -1874,37 +1981,37 @@ function vms_ticketing_v2_sync_ticket_row_for_product(int $product_id, int $plan
  * In that pending window, the safest behavior is to block purchase server-side
  * instead of treating the product as ordinary/free public admission.
  */
-function vms_ticketing_v2_disabled_ticket_config_for_product(int $product_id, int $plan_id = 0): array
+function bvmgr_ticketing_v2_disabled_ticket_config_for_product(int $product_id, int $plan_id = 0): array
 {
     $product_id = absint($product_id);
     $plan_id = absint($plan_id);
-    if ($product_id <= 0 || !function_exists('vms_ticketing_v2_get_config')) {
+    if ($product_id <= 0 || !function_exists('bvmgr_ticketing_v2_get_config')) {
         return array('disabled' => false);
     }
 
     if ($plan_id <= 0) {
-        $plan_id = vms_ticketing_v2_resolve_plan_id_for_ticket_product($product_id);
+        $plan_id = bvmgr_ticketing_v2_resolve_plan_id_for_ticket_product($product_id);
     }
     if ($plan_id <= 0) {
         return array('disabled' => false);
     }
 
-    $sync_row = vms_ticketing_v2_sync_ticket_row_for_product($product_id, $plan_id);
+    $sync_row = bvmgr_ticketing_v2_sync_ticket_row_for_product($product_id, $plan_id);
     $ticket_key = sanitize_key((string) ($sync_row['ticket_key'] ?? ''));
     if ($ticket_key === '') {
-        $ticket_key_meta = function_exists('vms_ticketing_v2_product_meta_key')
-            ? vms_ticketing_v2_product_meta_key('ticketing_ticket_key')
+        $ticket_key_meta = function_exists('bvmgr_ticketing_v2_product_meta_key')
+            ? bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key')
             : '_vms_ticketing_ticket_key';
-        $ticket_key = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, $ticket_key_meta));
+        $ticket_key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, $ticket_key_meta));
     }
     if ($ticket_key === '') {
-        $ticket_key = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, '_vms_ticket_key'));
+        $ticket_key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, '_vms_ticket_key'));
     }
     if ($ticket_key === '') {
         return array('disabled' => false);
     }
 
-    $cfg = vms_ticketing_v2_get_config($plan_id);
+    $cfg = bvmgr_ticketing_v2_get_config($plan_id);
     $tickets = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
     foreach ($tickets as $row) {
         if (!is_array($row)) {
@@ -1922,7 +2029,7 @@ function vms_ticketing_v2_disabled_ticket_config_for_product(int $product_id, in
             'disabled' => true,
             'plan_id' => $plan_id,
             'ticket_key' => $ticket_key,
-            'label' => vms_ticketing_v2_sanitize_plain_text_label((string) ($row['title'] ?? get_the_title($product_id))),
+            'label' => bvmgr_ticketing_v2_sanitize_plain_text_label((string) ($row['title'] ?? get_the_title($product_id))),
             'product_id' => $product_id,
         );
     }
@@ -1940,7 +2047,7 @@ function vms_ticketing_v2_disabled_ticket_config_for_product(int $product_id, in
  *
  * @return array{product_ids:array<int,int>,map:array<string,array<string,mixed>>}
  */
-function vms_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array
+function bvmgr_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array
 {
     $plan_id = absint($plan_id);
     $out = array(
@@ -1948,17 +2055,17 @@ function vms_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array
         'map' => array(),
     );
 
-    if ($plan_id <= 0 || !function_exists('vms_ticketing_v2_get_config') || !function_exists('vms_ticketing_v2_get_sync')) {
+    if ($plan_id <= 0 || !function_exists('bvmgr_ticketing_v2_get_config') || !function_exists('bvmgr_ticketing_v2_get_sync')) {
         return $out;
     }
 
-    $cfg = vms_ticketing_v2_get_config($plan_id);
+    $cfg = bvmgr_ticketing_v2_get_config($plan_id);
     $tickets = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
     if (empty($tickets)) {
         return $out;
     }
 
-    $sync = vms_ticketing_v2_get_sync($plan_id);
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
     $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
     $ticket_map = (isset($map['tickets']) && is_array($map['tickets'])) ? $map['tickets'] : array();
     $legacy_ga_row = (isset($map['ga']) && is_array($map['ga'])) ? $map['ga'] : array();
@@ -1988,11 +2095,11 @@ function vms_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array
         }
 
         $sync_row = (isset($ticket_map[$ticket_key]) && is_array($ticket_map[$ticket_key])) ? $ticket_map[$ticket_key] : array();
-        $label_for_legacy_match = vms_ticketing_v2_sanitize_plain_text_label((string) ($row['title'] ?? ($sync_row['title'] ?? $ticket_key)));
+        $label_for_legacy_match = bvmgr_ticketing_v2_sanitize_plain_text_label((string) ($row['title'] ?? ($sync_row['title'] ?? $ticket_key)));
         $can_claim_legacy_ga = false;
         if (!empty($legacy_ga_row)) {
-            if (function_exists('vms_ticketing_v2_should_apply_legacy_ga_map_to_ticket')) {
-                $can_claim_legacy_ga = vms_ticketing_v2_should_apply_legacy_ga_map_to_ticket($ticket_key, $label_for_legacy_match);
+            if (function_exists('bvmgr_ticketing_v2_should_apply_legacy_ga_map_to_ticket')) {
+                $can_claim_legacy_ga = bvmgr_ticketing_v2_should_apply_legacy_ga_map_to_ticket($ticket_key, $label_for_legacy_match);
             } else {
                 $legacy_match_label = strtolower(trim((string) preg_replace('/\s+/u', ' ', $label_for_legacy_match)));
                 $has_specialized_label = ($legacy_match_label !== '' && preg_match('/\b(early|advance|pre[-\s]?sale|presale|vip|child|children|kid|kids|veteran|police|fire|emt|nurse|teacher|school)\b/u', $legacy_match_label));
@@ -2013,9 +2120,9 @@ function vms_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array
             continue;
         }
 
-        $label = vms_ticketing_v2_sanitize_plain_text_label((string) ($row['title'] ?? ($sync_row['title'] ?? __('this ticket', 'vms'))));
+        $label = bvmgr_ticketing_v2_sanitize_plain_text_label((string) ($row['title'] ?? ($sync_row['title'] ?? __('this ticket', 'backstage-venue-manager'))));
         if ($label === '') {
-            $label = __('this ticket', 'vms');
+            $label = __('this ticket', 'backstage-venue-manager');
         }
 
         $ids = array(
@@ -2056,20 +2163,21 @@ function vms_ticketing_v2_disabled_ticket_products_for_plan(int $plan_id): array
     return $out;
 }
 
-function vms_ticketing_v2_disabled_ticket_notice_text(array $state): string
+function bvmgr_ticketing_v2_disabled_ticket_notice_text(array $state): string
 {
     $label = trim((string) ($state['label'] ?? ''));
     if ($label === '') {
-        $label = __('this ticket', 'vms');
+        $label = __('this ticket', 'backstage-venue-manager');
     }
 
     return sprintf(
-        __('"%s" is no longer available for this event. Please remove it from your cart or refresh the event page.', 'vms'),
+        /* translators: %s: human-readable value used in this message. */
+        __('"%s" is no longer available for this event. Please remove it from your cart or refresh the event page.', 'backstage-venue-manager'),
         $label
     );
 }
 
-function vms_ticketing_v2_resolve_verified_ticket_context(int $product_id): array
+function bvmgr_ticketing_v2_resolve_verified_ticket_context(int $product_id): array
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
@@ -2087,57 +2195,57 @@ function vms_ticketing_v2_resolve_verified_ticket_context(int $product_id): arra
         );
     }
 
-    $visibility_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_visibility_mode')
+    $visibility_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_visibility_mode')
         : '_vms_ticketing_visibility_mode';
-    $program_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_verified_program')
+    $program_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_verified_program')
         : '_vms_ticketing_verified_program';
-    $allowed_programs_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_allowed_programs')
+    $allowed_programs_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_allowed_programs')
         : '_vms_ticketing_allowed_programs';
-    $allow_direct_grants_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_allow_direct_grants')
+    $allow_direct_grants_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_allow_direct_grants')
         : '_vms_ticketing_allow_direct_grants';
-    $claim_grant_type_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_claim_grant_type')
+    $claim_grant_type_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_claim_grant_type')
         : '_vms_ticketing_claim_grant_type';
-    $claims_per_assignee_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_claims_per_assignee')
+    $claims_per_assignee_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_claims_per_assignee')
         : '_vms_ticketing_claims_per_assignee';
-    $require_assignee_email_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_require_assignee_email')
+    $require_assignee_email_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_require_assignee_email')
         : '_vms_ticketing_require_assignee_email';
-    $ticket_key_meta = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_ticket_key')
+    $ticket_key_meta = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key')
         : '_vms_ticketing_ticket_key';
-    $max_qty_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('ticketing_max_qty_per_order')
+    $max_qty_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('ticketing_max_qty_per_order')
         : '_vms_ticketing_max_qty_per_order';
 
-    $visibility_mode = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, $visibility_key));
+    $visibility_mode = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, $visibility_key));
     if (!in_array($visibility_mode, array('public', 'login', 'verified'), true)) {
         $visibility_mode = 'public';
     }
 
-    $program = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, $program_key));
-    $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-        ? vms_ticketing_v2_normalize_allowed_programs(vms_ticketing_v2_meta_get($product_id, $allowed_programs_key), $program)
+    $program = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, $program_key));
+    $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+        ? bvmgr_ticketing_v2_normalize_allowed_programs(bvmgr_ticketing_v2_meta_get($product_id, $allowed_programs_key), $program)
         : ($program !== '' ? array($program) : array());
-    $allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-        ? vms_ticketing_v2_truthy(vms_ticketing_v2_meta_get($product_id, $allow_direct_grants_key), false)
-        : vms_ticketing_v2_meta_truthy(vms_ticketing_v2_meta_get($product_id, $allow_direct_grants_key), false);
-    $claim_grant_type = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, $claim_grant_type_key));
-    if (!in_array($claim_grant_type, vms_ticketing_v2_claim_grant_type_values(), true)) {
+    $allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+        ? bvmgr_ticketing_v2_truthy(bvmgr_ticketing_v2_meta_get($product_id, $allow_direct_grants_key), false)
+        : bvmgr_ticketing_v2_meta_truthy(bvmgr_ticketing_v2_meta_get($product_id, $allow_direct_grants_key), false);
+    $claim_grant_type = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, $claim_grant_type_key));
+    if (!in_array($claim_grant_type, bvmgr_ticketing_v2_claim_grant_type_values(), true)) {
         $claim_grant_type = 'event_ticket_eligibility';
     }
-    $claims_per_assignee = max(0, absint(vms_ticketing_v2_meta_get($product_id, $claims_per_assignee_key)));
+    $claims_per_assignee = max(0, absint(bvmgr_ticketing_v2_meta_get($product_id, $claims_per_assignee_key)));
     if ($claims_per_assignee <= 0) {
         $claims_per_assignee = 1;
     }
-    $require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-        ? vms_ticketing_v2_truthy(vms_ticketing_v2_meta_get($product_id, $require_assignee_email_key), true)
-        : vms_ticketing_v2_meta_truthy(vms_ticketing_v2_meta_get($product_id, $require_assignee_email_key), true);
+    $require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+        ? bvmgr_ticketing_v2_truthy(bvmgr_ticketing_v2_meta_get($product_id, $require_assignee_email_key), true)
+        : bvmgr_ticketing_v2_meta_truthy(bvmgr_ticketing_v2_meta_get($product_id, $require_assignee_email_key), true);
     if ($visibility_mode !== 'verified') {
         $program = '';
         $allowed_programs = array();
@@ -2149,29 +2257,29 @@ function vms_ticketing_v2_resolve_verified_ticket_context(int $product_id): arra
         $program = (string) $allowed_programs[0];
     }
 
-    $event_id = absint(vms_ticketing_v2_meta_get($product_id, '_vms_ticket_event_id'));
+    $event_id = absint(bvmgr_ticketing_v2_meta_get($product_id, '_vms_ticket_event_id'));
     if ($event_id <= 0) {
-        $event_id = absint(vms_ticketing_v2_meta_get($product_id, '_tribe_wooticket_for_event'));
+        $event_id = absint(bvmgr_ticketing_v2_meta_get($product_id, '_tribe_wooticket_for_event'));
     }
     if ($event_id <= 0) {
-        $tec_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-            ? vms_ticketing_v2_product_meta_key('tec_event_id')
+        $tec_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+            ? bvmgr_ticketing_v2_product_meta_key('tec_event_id')
             : '_vms_tec_event_id';
-        $event_id = absint(vms_ticketing_v2_meta_get($product_id, $tec_meta_key));
+        $event_id = absint(bvmgr_ticketing_v2_meta_get($product_id, $tec_meta_key));
     }
-    $ticket_key = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, '_vms_ticket_key'));
+    $ticket_key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, '_vms_ticket_key'));
     if ($ticket_key === '') {
-        $ticket_key = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, $ticket_key_meta));
+        $ticket_key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, $ticket_key_meta));
     }
 
-    $ticket_max_qty = max(0, absint(vms_ticketing_v2_meta_get($product_id, $max_qty_key)));
+    $ticket_max_qty = max(0, absint(bvmgr_ticketing_v2_meta_get($product_id, $max_qty_key)));
 
     // Safety fallback for legacy/adopted products whose runtime product meta may be
     // incomplete. The sync map reflects the last pushed public ticket state, while
     // saved config may already contain unpushed draft edits. Never let missing
     // product meta silently downgrade a last-pushed verified/login ticket to public.
-    $sync_ticket_row = function_exists('vms_ticketing_v2_sync_ticket_row_for_product')
-        ? vms_ticketing_v2_sync_ticket_row_for_product($product_id, 0)
+    $sync_ticket_row = function_exists('bvmgr_ticketing_v2_sync_ticket_row_for_product')
+        ? bvmgr_ticketing_v2_sync_ticket_row_for_product($product_id, 0)
         : array();
     if (is_array($sync_ticket_row) && !empty($sync_ticket_row)) {
         if ($ticket_key === '') {
@@ -2193,23 +2301,23 @@ function vms_ticketing_v2_resolve_verified_ticket_context(int $product_id): arra
         if ($meta_looks_unprotected && in_array($sync_visibility_mode, array('login', 'verified'), true)) {
             $visibility_mode = $sync_visibility_mode;
             $program = sanitize_key((string) ($sync_ticket_row['verified_program'] ?? ''));
-            $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-                ? vms_ticketing_v2_normalize_allowed_programs($sync_ticket_row['allowed_programs'] ?? array(), $program)
+            $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+                ? bvmgr_ticketing_v2_normalize_allowed_programs($sync_ticket_row['allowed_programs'] ?? array(), $program)
                 : ($program !== '' ? array($program) : array());
-            $allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-                ? vms_ticketing_v2_truthy($sync_ticket_row['allow_direct_grants'] ?? false, false)
-                : vms_ticketing_v2_meta_truthy($sync_ticket_row['allow_direct_grants'] ?? false, false);
+            $allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+                ? bvmgr_ticketing_v2_truthy($sync_ticket_row['allow_direct_grants'] ?? false, false)
+                : bvmgr_ticketing_v2_meta_truthy($sync_ticket_row['allow_direct_grants'] ?? false, false);
             $claim_grant_type = sanitize_key((string) ($sync_ticket_row['claim_grant_type'] ?? 'event_ticket_eligibility'));
-            if (!in_array($claim_grant_type, vms_ticketing_v2_claim_grant_type_values(), true)) {
+            if (!in_array($claim_grant_type, bvmgr_ticketing_v2_claim_grant_type_values(), true)) {
                 $claim_grant_type = 'event_ticket_eligibility';
             }
             $claims_per_assignee = max(0, absint($sync_ticket_row['claims_per_assignee'] ?? 1));
             if ($claims_per_assignee <= 0) {
                 $claims_per_assignee = 1;
             }
-            $require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-                ? vms_ticketing_v2_truthy($sync_ticket_row['require_assignee_email'] ?? true, true)
-                : vms_ticketing_v2_meta_truthy($sync_ticket_row['require_assignee_email'] ?? true, true);
+            $require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+                ? bvmgr_ticketing_v2_truthy($sync_ticket_row['require_assignee_email'] ?? true, true)
+                : bvmgr_ticketing_v2_meta_truthy($sync_ticket_row['require_assignee_email'] ?? true, true);
             if ($program === '' && !empty($allowed_programs)) {
                 $program = (string) $allowed_programs[0];
             }
@@ -2234,7 +2342,7 @@ function vms_ticketing_v2_resolve_verified_ticket_context(int $product_id): arra
     );
 }
 
-function vms_ticketing_v2_cart_verified_qty_for_event_program(int $event_id, string $program): int
+function bvmgr_ticketing_v2_cart_verified_qty_for_event_program(int $event_id, string $program): int
 {
     $event_id = absint($event_id);
     $program = sanitize_key($program);
@@ -2255,7 +2363,7 @@ function vms_ticketing_v2_cart_verified_qty_for_event_program(int $event_id, str
             continue;
         }
 
-        $ctx = vms_ticketing_v2_resolve_verified_ticket_context($item_pid);
+        $ctx = bvmgr_ticketing_v2_resolve_verified_ticket_context($item_pid);
         if (($ctx['visibility_mode'] ?? '') !== 'verified') {
             continue;
         }
@@ -2272,14 +2380,14 @@ function vms_ticketing_v2_cart_verified_qty_for_event_program(int $event_id, str
     return max(0, $qty);
 }
 
-function vms_ticketing_v2_resolve_verified_ticket_limit(int $user_id, string $program, int $ticket_max_qty): int
+function bvmgr_ticketing_v2_resolve_verified_ticket_limit(int $user_id, string $program, int $ticket_max_qty): int
 {
     $ticket_max_qty = max(0, absint($ticket_max_qty));
-    if (function_exists('vms_ticketing_verification_resolve_ticket_limit')) {
-        return max(0, absint(vms_ticketing_verification_resolve_ticket_limit($user_id, $program, $ticket_max_qty)));
+    if (function_exists('bvmgr_ticketing_verification_resolve_ticket_limit')) {
+        return max(0, absint(bvmgr_ticketing_verification_resolve_ticket_limit($user_id, $program, $ticket_max_qty)));
     }
-    if (function_exists('vms_ticketing_verification_get_program_default_allowance')) {
-        $allowance = max(0, absint(vms_ticketing_verification_get_program_default_allowance($program)));
+    if (function_exists('bvmgr_ticketing_verification_get_program_default_allowance')) {
+        $allowance = max(0, absint(bvmgr_ticketing_verification_get_program_default_allowance($program)));
         if ($ticket_max_qty <= 0) {
             return $allowance;
         }
@@ -2292,7 +2400,7 @@ function vms_ticketing_v2_resolve_verified_ticket_limit(int $user_id, string $pr
 }
 
 
-function vms_ticketing_v2_should_enforce_ticket_max_qty(array $ctx): bool
+function bvmgr_ticketing_v2_should_enforce_ticket_max_qty(array $ctx): bool
 {
     $limit = max(0, absint($ctx['limit'] ?? ($ctx['ticket_max_qty'] ?? 0)));
     if ($limit <= 0) {
@@ -2321,17 +2429,17 @@ function vms_ticketing_v2_should_enforce_ticket_max_qty(array $ctx): bool
     return (bool) apply_filters('vms_ticketing_v2_should_enforce_ticket_max_qty', $should_enforce, $ctx);
 }
 
-function vms_ticketing_v2_enforce_verified_ticket_limit_for_add(int $product_id, int $request_qty): bool
+function bvmgr_ticketing_v2_enforce_verified_ticket_limit_for_add(int $product_id, int $request_qty): bool
 {
-    return vms_ticketing_v2_enforce_ticket_max_qty_for_add($product_id, $request_qty);
+    return bvmgr_ticketing_v2_enforce_ticket_max_qty_for_add($product_id, $request_qty);
 }
 
-function vms_ticketing_v2_enforce_verified_ticket_limits_in_cart(): void
+function bvmgr_ticketing_v2_enforce_verified_ticket_limits_in_cart(): void
 {
     // Enforced by vms_ticketing_v2_enforce_ticket_max_qtys_in_cart().
 }
 
-function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
+function bvmgr_ticketing_v2_resolve_ticket_max_context(int $product_id): array
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
@@ -2352,13 +2460,13 @@ function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
         );
     }
 
-    $ctx = vms_ticketing_v2_resolve_verified_ticket_context($product_id);
-    $ticket_key = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, '_vms_ticket_key'));
+    $ctx = bvmgr_ticketing_v2_resolve_verified_ticket_context($product_id);
+    $ticket_key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, '_vms_ticket_key'));
     if ($ticket_key === '') {
-        $ticket_key_meta = function_exists('vms_ticketing_v2_product_meta_key')
-            ? vms_ticketing_v2_product_meta_key('ticketing_ticket_key')
+        $ticket_key_meta = function_exists('bvmgr_ticketing_v2_product_meta_key')
+            ? bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key')
             : '_vms_ticketing_ticket_key';
-        $ticket_key = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, $ticket_key_meta));
+        $ticket_key = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, $ticket_key_meta));
     }
     if ($ticket_key === '') {
         $canonical_pid = absint(wp_get_post_parent_id($product_id));
@@ -2368,15 +2476,15 @@ function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
         $ticket_key = 'pid_' . $canonical_pid;
     }
 
-    $event_id = absint(vms_ticketing_v2_meta_get($product_id, '_vms_ticket_event_id'));
+    $event_id = absint(bvmgr_ticketing_v2_meta_get($product_id, '_vms_ticket_event_id'));
     if ($event_id <= 0) {
         $event_id = absint($ctx['event_id'] ?? 0);
     }
     if ($event_id <= 0) {
-        $tec_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-            ? vms_ticketing_v2_product_meta_key('tec_event_id')
+        $tec_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+            ? bvmgr_ticketing_v2_product_meta_key('tec_event_id')
             : '_vms_tec_event_id';
-        $event_id = absint(vms_ticketing_v2_meta_get($product_id, $tec_meta_key));
+        $event_id = absint(bvmgr_ticketing_v2_meta_get($product_id, $tec_meta_key));
     }
 
     $visibility_mode = sanitize_key((string) ($ctx['visibility_mode'] ?? 'public'));
@@ -2385,23 +2493,23 @@ function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
     }
 
     $program = sanitize_key((string) ($ctx['program'] ?? ''));
-    $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-        ? vms_ticketing_v2_normalize_allowed_programs($ctx['allowed_programs'] ?? array(), $program)
+    $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+        ? bvmgr_ticketing_v2_normalize_allowed_programs($ctx['allowed_programs'] ?? array(), $program)
         : ($program !== '' ? array($program) : array());
-    $allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-        ? vms_ticketing_v2_truthy($ctx['allow_direct_grants'] ?? false, false)
-        : vms_ticketing_v2_meta_truthy($ctx['allow_direct_grants'] ?? false, false);
+    $allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+        ? bvmgr_ticketing_v2_truthy($ctx['allow_direct_grants'] ?? false, false)
+        : bvmgr_ticketing_v2_meta_truthy($ctx['allow_direct_grants'] ?? false, false);
     $claim_grant_type = sanitize_key((string) ($ctx['claim_grant_type'] ?? 'event_ticket_eligibility'));
-    if (!in_array($claim_grant_type, vms_ticketing_v2_claim_grant_type_values(), true)) {
+    if (!in_array($claim_grant_type, bvmgr_ticketing_v2_claim_grant_type_values(), true)) {
         $claim_grant_type = 'event_ticket_eligibility';
     }
     $claims_per_assignee = max(0, absint($ctx['claims_per_assignee'] ?? 1));
     if ($claims_per_assignee <= 0) {
         $claims_per_assignee = 1;
     }
-    $require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-        ? vms_ticketing_v2_truthy($ctx['require_assignee_email'] ?? true, true)
-        : vms_ticketing_v2_meta_truthy($ctx['require_assignee_email'] ?? true, true);
+    $require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+        ? bvmgr_ticketing_v2_truthy($ctx['require_assignee_email'] ?? true, true)
+        : bvmgr_ticketing_v2_meta_truthy($ctx['require_assignee_email'] ?? true, true);
     if ($visibility_mode !== 'verified') {
         $program = '';
         $allowed_programs = array();
@@ -2414,13 +2522,13 @@ function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
     }
 
     $ticket_max_qty = max(0, absint($ctx['ticket_max_qty'] ?? 0));
-    $qualification_removed = vms_ticketing_v2_public_ticket_qualification_removed();
+    $qualification_removed = bvmgr_ticketing_v2_public_ticket_qualification_removed();
     $use_buyer_allowance_limit = (!$qualification_removed && $visibility_mode === 'verified' && !$require_assignee_email);
     $verified_allowance = 0;
     if ($use_buyer_allowance_limit && $program !== '' && is_user_logged_in()) {
         $user_id = absint(get_current_user_id());
         if ($user_id > 0) {
-            $verified_allowance = max(0, absint(vms_ticketing_v2_resolve_verified_ticket_limit($user_id, $program, 0)));
+            $verified_allowance = max(0, absint(bvmgr_ticketing_v2_resolve_verified_ticket_limit($user_id, $program, 0)));
         }
     }
 
@@ -2449,8 +2557,8 @@ function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
                 $seed_ids[] = $parent_id;
             }
 
-            $ticket_key_meta = function_exists('vms_ticketing_v2_product_meta_key')
-                ? vms_ticketing_v2_product_meta_key('ticketing_ticket_key')
+            $ticket_key_meta = function_exists('bvmgr_ticketing_v2_product_meta_key')
+                ? bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key')
                 : '_vms_ticketing_ticket_key';
             $query_sets = array(
                 array(
@@ -2469,6 +2577,7 @@ function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
                     'post_status' => array('publish', 'private', 'draft', 'pending'),
                     'fields' => 'ids',
                     'posts_per_page' => -1,
+                    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket-limit grouping must collect all current and legacy product variants for one event/ticket key; the complete ID set is retained in a request-local cache.
                     'meta_query' => array(
                         array(
                             'key' => $qset['event_meta'],
@@ -2520,14 +2629,14 @@ function vms_ticketing_v2_resolve_ticket_max_context(int $product_id): array
         'related_product_ids' => $group_ids,
     );
 
-    if (!vms_ticketing_v2_should_enforce_ticket_max_qty($context)) {
+    if (!bvmgr_ticketing_v2_should_enforce_ticket_max_qty($context)) {
         $context['limit'] = 0;
     }
 
     return $context;
 }
 
-function vms_ticketing_v2_cart_qty_for_event_ticket(int $event_id, string $ticket_key): int
+function bvmgr_ticketing_v2_cart_qty_for_event_ticket(int $event_id, string $ticket_key): int
 {
     $event_id = absint($event_id);
     $ticket_key = sanitize_key($ticket_key);
@@ -2550,7 +2659,7 @@ function vms_ticketing_v2_cart_qty_for_event_ticket(int $event_id, string $ticke
             continue;
         }
 
-        $ctx = vms_ticketing_v2_resolve_ticket_max_context($item_pid);
+        $ctx = bvmgr_ticketing_v2_resolve_ticket_max_context($item_pid);
         if (absint($ctx['event_id'] ?? 0) !== $event_id) {
             continue;
         }
@@ -2604,7 +2713,7 @@ function vms_ticketing_v2_cart_qty_for_event_ticket(int $event_id, string $ticke
     return max(0, absint($qty));
 }
 
-function vms_ticketing_v2_ticket_group_product_ids_from_context(array $ctx, int $fallback_product_id = 0): array
+function bvmgr_ticketing_v2_ticket_group_product_ids_from_context(array $ctx, int $fallback_product_id = 0): array
 {
     $ids = array_map('absint', (array) ($ctx['related_product_ids'] ?? array()));
     $fallback_product_id = absint($fallback_product_id);
@@ -2619,7 +2728,7 @@ function vms_ticketing_v2_ticket_group_product_ids_from_context(array $ctx, int 
     return $ids;
 }
 
-function vms_ticketing_v2_event_ticket_product_ids_for_event(int $event_id): array
+function bvmgr_ticketing_v2_event_ticket_product_ids_for_event(int $event_id): array
 {
     $event_id = absint($event_id);
     if ($event_id <= 0) {
@@ -2633,11 +2742,11 @@ function vms_ticketing_v2_event_ticket_product_ids_for_event(int $event_id): arr
 
     $product_ids = array();
 
-    if (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') && function_exists('vms_ticketing_v2_get_config')) {
-        $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($event_id));
+    if (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') && function_exists('bvmgr_ticketing_v2_get_config')) {
+        $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($event_id));
         if ($plan_id > 0) {
-            $cfg = vms_ticketing_v2_get_config($plan_id);
-            $sync = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($plan_id) : array();
+            $cfg = bvmgr_ticketing_v2_get_config($plan_id);
+            $sync = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($plan_id) : array();
             $sync_map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
             $ticket_cfg_rows = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
             $ticket_sync_rows = (isset($sync_map['tickets']) && is_array($sync_map['tickets'])) ? $sync_map['tickets'] : array();
@@ -2662,11 +2771,11 @@ function vms_ticketing_v2_event_ticket_product_ids_for_event(int $event_id): arr
                 }
 
                 if ($ticket_pid <= 0 && $legacy_ga_pid > 0) {
-                    $ticket_label = function_exists('vms_ticketing_v2_sanitize_plain_text_label')
-                        ? vms_ticketing_v2_sanitize_plain_text_label((string) ($ticket_cfg_row['title'] ?? $ticket_key))
+                    $ticket_label = function_exists('bvmgr_ticketing_v2_sanitize_plain_text_label')
+                        ? bvmgr_ticketing_v2_sanitize_plain_text_label((string) ($ticket_cfg_row['title'] ?? $ticket_key))
                         : sanitize_text_field((string) ($ticket_cfg_row['title'] ?? $ticket_key));
-                    if (function_exists('vms_ticketing_v2_should_apply_legacy_ga_map_to_ticket')) {
-                        if (vms_ticketing_v2_should_apply_legacy_ga_map_to_ticket($ticket_key, $ticket_label)) {
+                    if (function_exists('bvmgr_ticketing_v2_should_apply_legacy_ga_map_to_ticket')) {
+                        if (bvmgr_ticketing_v2_should_apply_legacy_ga_map_to_ticket($ticket_key, $ticket_label)) {
                             $ticket_pid = $legacy_ga_pid;
                         }
                     } else {
@@ -2750,7 +2859,7 @@ function vms_ticketing_v2_event_ticket_product_ids_for_event(int $event_id): arr
     return $cache[$event_id];
 }
 
-function vms_ticketing_v2_active_ticket_count_for_event_user(int $event_id, int $user_id): int
+function bvmgr_ticketing_v2_active_ticket_count_for_event_user(int $event_id, int $user_id): int
 {
     $event_id = absint($event_id);
     $user_id = absint($user_id);
@@ -2758,15 +2867,15 @@ function vms_ticketing_v2_active_ticket_count_for_event_user(int $event_id, int 
         return -1;
     }
 
-    $product_ids = vms_ticketing_v2_event_ticket_product_ids_for_event($event_id);
-    if (empty($product_ids) || !function_exists('vms_ticketing_v2_purchased_ticket_qty_for_user')) {
+    $product_ids = bvmgr_ticketing_v2_event_ticket_product_ids_for_event($event_id);
+    if (empty($product_ids) || !function_exists('bvmgr_ticketing_v2_purchased_ticket_qty_for_user')) {
         return -1;
     }
 
-    return max(0, absint(vms_ticketing_v2_purchased_ticket_qty_for_user($user_id, $product_ids)));
+    return max(0, absint(bvmgr_ticketing_v2_purchased_ticket_qty_for_user($user_id, $product_ids)));
 }
 
-function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $product_ids): int
+function bvmgr_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $product_ids): int
 {
     $user_id = absint($user_id);
     $product_ids = array_values(array_unique(array_filter(array_map('absint', $product_ids))));
@@ -2788,20 +2897,26 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
         $oi = $wpdb->prefix . 'woocommerce_order_items';
         $oim = $wpdb->prefix . 'woocommerce_order_itemmeta';
         $stats_table = $wpdb->prefix . 'wc_order_stats';
-        $has_order_items = function_exists('vms_ticketing_v2_table_exists')
-            ? (vms_ticketing_v2_table_exists($oi) && vms_ticketing_v2_table_exists($oim))
-            : (($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $oi)) === $oi) && ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $oim)) === $oim));
-        $has_stats = function_exists('vms_ticketing_v2_table_exists')
-            ? vms_ticketing_v2_table_exists($stats_table)
-            : ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $stats_table)) === $stats_table);
+        if (function_exists('bvmgr_ticketing_v2_table_exists')) {
+            $has_order_items = bvmgr_ticketing_v2_table_exists($oi) && bvmgr_ticketing_v2_table_exists($oim);
+            $has_stats = bvmgr_ticketing_v2_table_exists($stats_table);
+        } else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The load-order fallback performs prepared WooCommerce capability probes before the request-cached purchased-quantity read; no core API exposes table availability.
+            $has_order_items = (($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $oi)) === $oi) && ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $oim)) === $oim));
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The load-order fallback performs a prepared WooCommerce stats-table capability probe before the request-cached purchased-quantity read.
+            $has_stats = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $stats_table)) === $stats_table);
+        }
 
         if ($has_order_items && $has_stats) {
             $pid_placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
             $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
             $orders_table = $wpdb->prefix . 'wc_orders';
-            $has_wc_orders = function_exists('vms_ticketing_v2_table_exists')
-                ? vms_ticketing_v2_table_exists($orders_table)
-                : ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $orders_table)) === $orders_table);
+            if (function_exists('bvmgr_ticketing_v2_table_exists')) {
+                $has_wc_orders = bvmgr_ticketing_v2_table_exists($orders_table);
+            } else {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The load-order fallback performs a prepared HPOS-orders capability probe so refund-type detection can select the correct storage branch.
+                $has_wc_orders = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $orders_table)) === $orders_table);
+            }
 
             // HPOS stores the canonical refund type in wp_wc_orders.type. On those sites,
             // wp_posts may contain only a shop_order_placehold row for the refund ID.
@@ -2810,10 +2925,10 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
             $refund_order_join_sql = '';
             $refund_type_conditions = array("refund_posts.post_type = 'shop_order_refund'");
             if ($has_wc_orders) {
-                $refund_order_join_sql = "
-                    LEFT JOIN {$orders_table} refund_orders
+                $refund_order_join_sql = $wpdb->prepare("
+                    LEFT JOIN %i refund_orders
                         ON refund_orders.id = refund_items.order_id
-                ";
+                ", $orders_table);
                 $refund_type_conditions[] = "refund_orders.type = 'shop_order_refund'";
             }
             $refund_type_where_sql = 'AND (' . implode(' OR ', $refund_type_conditions) . ')';
@@ -2827,29 +2942,29 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
                         MAX(CASE WHEN oim.meta_key = '_product_id' THEN CAST(oim.meta_value AS UNSIGNED) ELSE 0 END) AS product_id,
                         MAX(CASE WHEN oim.meta_key = '_variation_id' THEN CAST(oim.meta_value AS UNSIGNED) ELSE 0 END) AS variation_id,
                         MAX(CASE WHEN oim.meta_key = '_qty' THEN CAST(oim.meta_value AS SIGNED) ELSE 0 END) AS qty
-                    FROM {$oi} oi
-                    INNER JOIN {$oim} oim
+                    FROM %i oi
+                    INNER JOIN %i oim
                         ON oim.order_item_id = oi.order_item_id
                     WHERE oi.order_item_type = 'line_item'
                       AND oim.meta_key IN ('_product_id', '_variation_id', '_qty')
                     GROUP BY oi.order_item_id, oi.order_id
                     HAVING product_id IN ({$pid_placeholders}) OR variation_id IN ({$pid_placeholders})
                 ) line_items
-                INNER JOIN {$stats_table} stats
+                INNER JOIN %i stats
                     ON stats.order_id = line_items.order_id
                    AND stats.customer_id = %d
                 LEFT JOIN (
                     SELECT
                         CAST(refunded_item.meta_value AS UNSIGNED) AS refunded_item_id,
                         SUM(ABS(CAST(refund_qty.meta_value AS SIGNED))) AS refunded_qty
-                    FROM {$oi} refund_items
-                    INNER JOIN {$oim} refunded_item
+                    FROM %i refund_items
+                    INNER JOIN %i refunded_item
                         ON refunded_item.order_item_id = refund_items.order_item_id
                        AND refunded_item.meta_key = '_refunded_item_id'
-                    INNER JOIN {$oim} refund_qty
+                    INNER JOIN %i refund_qty
                         ON refund_qty.order_item_id = refund_items.order_item_id
                        AND refund_qty.meta_key = '_qty'
-                    LEFT JOIN {$wpdb->posts} refund_posts
+                    LEFT JOIN %i refund_posts
                         ON refund_posts.ID = refund_items.order_id
                     {$refund_order_join_sql}
                     WHERE refund_items.order_item_type = 'line_item'
@@ -2859,9 +2974,11 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
                     ON refunds.refunded_item_id = line_items.order_item_id
                 WHERE line_items.qty > 0
                   AND stats.status IN ({$status_placeholders})
-            ";
-            $params = array_merge($product_ids, $product_ids, array($user_id), $statuses);
+            "; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic fragments are bounded product/status placeholder lists plus one pre-prepared HPOS refund join and fixed refund-type conditions; identifiers and values remain wpdb-prepared.
+            $params = array_merge(array($oi, $oim), $product_ids, $product_ids, array($stats_table, $user_id, $oi, $oim, $oim, $wpdb->posts), $statuses);
+            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The purchased-quantity aggregate contains only prepared identifiers/values and bounded placeholder/storage fragments.
             $prepared = $wpdb->prepare($sql, $params);
+            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Ticket-limit enforcement requires a fresh WooCommerce order/refund aggregate on the first request-local cache lookup; no WooCommerce API preserves the grouped product/variation semantics.
             $cache[$cache_key] = max(0, absint($wpdb->get_var($prepared)));
             return max(0, absint($cache[$cache_key]));
         }
@@ -2911,7 +3028,38 @@ function vms_ticketing_v2_purchased_ticket_qty_for_user(int $user_id, array $pro
     return max(0, absint($cache[$cache_key]));
 }
 
-function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string $assignee_email, array $product_ids): int
+if (!function_exists('bvmgr_ticketing_v2_decode_stored_claim_assignment_rows')) {
+    /**
+     * Decode plugin-stored claim-assignment rows.
+     *
+     * @param mixed $raw
+     * @return array<int, array<string, mixed>>
+     */
+    function bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($raw): array
+    {
+        if (!is_string($raw)) {
+            return array();
+        }
+
+        $trimmed = trim($raw);
+        if ($trimmed === '' || substr($trimmed, 0, 1) !== '[') {
+            return array();
+        }
+
+        $decoded = json_decode($trimmed, true, 32);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            return array();
+        }
+
+        if (function_exists('array_is_list')) {
+            return array_is_list($decoded) ? $decoded : array();
+        }
+
+        return array_values($decoded) === $decoded ? $decoded : array();
+    }
+}
+
+function bvmgr_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string $assignee_email, array $product_ids): int
 {
     $event_id = absint($event_id);
     $assignee_email = sanitize_email($assignee_email);
@@ -2928,8 +3076,11 @@ function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string 
     static $lookup_supported = null;
 
     if ($lookup_supported === null) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Assignee lookup capability is probed once per request with a prepared WooCommerce lookup-table name.
         $has_lookup = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $lookup_table)) === $lookup_table);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Assignee lookup capability is probed once per request with a prepared WooCommerce stats-table name.
         $has_stats = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $stats_table)) === $stats_table);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Assignee lookup capability is probed once per request with a prepared WooCommerce itemmeta-table name.
         $has_itemmeta = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $itemmeta_table)) === $itemmeta_table);
         $lookup_supported = ($has_lookup && $has_stats && $has_itemmeta);
     }
@@ -2942,30 +3093,30 @@ function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string 
 
         $sql = "
             SELECT lookup.order_item_id, claim_meta.meta_value AS assignments_json
-            FROM {$lookup_table} lookup
-            INNER JOIN {$stats_table} stats ON stats.order_id = lookup.order_id
-            INNER JOIN {$itemmeta_table} event_meta
+            FROM %i lookup
+            INNER JOIN %i stats ON stats.order_id = lookup.order_id
+            INNER JOIN %i event_meta
                 ON event_meta.order_item_id = lookup.order_item_id
                AND event_meta.meta_key = '_vms_tec_event_post_id'
-            LEFT JOIN {$itemmeta_table} claim_meta
+            LEFT JOIN %i claim_meta
                 ON claim_meta.order_item_id = lookup.order_item_id
                AND claim_meta.meta_key = '_vms_claim_assignments'
             WHERE stats.status IN ({$status_placeholders})
               AND (lookup.product_id IN ({$pid_placeholders}) OR lookup.variation_id IN ({$pid_placeholders}))
               AND CAST(event_meta.meta_value AS UNSIGNED) = %d
-        ";
-        $params = array_merge($statuses, $product_ids, $product_ids, array($event_id));
-        $rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
+        "; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic fragments are bounded status/product placeholder lists; all WooCommerce identifiers and filter values remain wpdb-prepared.
+        $params = array_merge(array($lookup_table, $stats_table, $itemmeta_table, $itemmeta_table), $statuses, $product_ids, $product_ids, array($event_id));
+        // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- The assignee lookup contains only prepared identifiers/values and bounded placeholder lists.
+        $prepared = $wpdb->prepare($sql, $params);
+        // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-limit enforcement requires request-fresh assignment rows, and no WooCommerce API can join the event and plugin claim metadata with product/variation lookup rows.
+        $rows = $wpdb->get_results($prepared, ARRAY_A);
 
         foreach ((array) $rows as $row) {
             $assignments_json = (string) ($row['assignments_json'] ?? '');
             if ($assignments_json === '') {
                 continue;
             }
-            $decoded = json_decode($assignments_json, true);
-            if (!is_array($decoded)) {
-                continue;
-            }
+            $decoded = bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json);
             foreach ($decoded as $assignment_row) {
                 if (!is_array($assignment_row)) {
                     continue;
@@ -3017,13 +3168,10 @@ function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string 
 
             $assignment_rows = array();
             $assignment_json = $order_item->get_meta('_vms_claim_assignments', true);
-            if (is_string($assignment_json) && $assignment_json !== '') {
-                $decoded = json_decode($assignment_json, true);
-                if (is_array($decoded)) {
-                    $assignment_rows = $decoded;
-                }
-            } elseif (is_array($assignment_json)) {
+            if (is_array($assignment_json)) {
                 $assignment_rows = $assignment_json;
+            } elseif (is_string($assignment_json) && $assignment_json !== '') {
+                $assignment_rows = bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json);
             }
 
             if (empty($assignment_rows) && method_exists($order_item, 'get_meta_data')) {
@@ -3064,7 +3212,7 @@ function vms_ticketing_v2_assignee_consumed_qty_for_event(int $event_id, string 
  * @param mixed $raw
  * @return array<int,array{seat:int,assignee_email:string}>
  */
-function vms_ticketing_v2_claim_assignments_normalize($raw): array
+function bvmgr_ticketing_v2_claim_assignments_normalize($raw): array
 {
     if (!is_array($raw)) {
         return array();
@@ -3097,16 +3245,256 @@ function vms_ticketing_v2_claim_assignments_normalize($raw): array
     return $out;
 }
 
+function bvmgr_ticketing_v2_payload_is_object_like_array(array $value): bool
+{
+    return empty($value) || !bvmgr_array_is_list_compat($value);
+}
+
+function bvmgr_ticketing_v2_payload_has_scalar_value($value, int $max_length = 512): bool
+{
+    if ($value === null) {
+        return true;
+    }
+    if (is_array($value) || is_object($value)) {
+        return false;
+    }
+
+    return strlen((string) $value) <= $max_length;
+}
+
+function bvmgr_ticketing_v2_validate_claim_assignment_payload($rows): bool
+{
+    if (!is_array($rows) || (!empty($rows) && !bvmgr_array_is_list_compat($rows)) || count($rows) > 100) {
+        return false;
+    }
+
+    foreach ($rows as $row) {
+        if (!is_array($row) || !bvmgr_ticketing_v2_payload_is_object_like_array($row)) {
+            return false;
+        }
+        if (isset($row['seat']) && !bvmgr_ticketing_v2_payload_has_scalar_value($row['seat'], 16)) {
+            return false;
+        }
+        if (isset($row['seat_index']) && !bvmgr_ticketing_v2_payload_has_scalar_value($row['seat_index'], 16)) {
+            return false;
+        }
+        if (isset($row['assignee_email']) && !bvmgr_ticketing_v2_payload_has_scalar_value($row['assignee_email'], 254)) {
+            return false;
+        }
+        if (isset($row['email']) && !bvmgr_ticketing_v2_payload_has_scalar_value($row['email'], 254)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function bvmgr_ticketing_v2_validate_atomic_ticket_line_payload($line): bool
+{
+    if (!is_array($line) || !bvmgr_ticketing_v2_payload_is_object_like_array($line)) {
+        return false;
+    }
+
+    foreach (array('product_id', 'productId', 'ticket_id', 'ticketId', 'qty', 'quantity', 'variation_id', 'variationId') as $scalar_key) {
+        if (isset($line[$scalar_key]) && !bvmgr_ticketing_v2_payload_has_scalar_value($line[$scalar_key], 32)) {
+            return false;
+        }
+    }
+
+    if (isset($line['variation'])) {
+        if (!is_array($line['variation']) || !bvmgr_ticketing_v2_payload_is_object_like_array($line['variation']) || count($line['variation']) > 20) {
+            return false;
+        }
+        foreach ($line['variation'] as $variation_key => $variation_value) {
+            if (!bvmgr_ticketing_v2_payload_has_scalar_value($variation_key, 64) || !bvmgr_ticketing_v2_payload_has_scalar_value($variation_value, 200)) {
+                return false;
+            }
+        }
+    }
+
+    if (isset($line['attributes'])) {
+        if (!is_array($line['attributes']) || !bvmgr_ticketing_v2_payload_is_object_like_array($line['attributes']) || count($line['attributes']) > 20) {
+            return false;
+        }
+        foreach ($line['attributes'] as $attribute_key => $attribute_value) {
+            if (!bvmgr_ticketing_v2_payload_has_scalar_value($attribute_key, 64) || !bvmgr_ticketing_v2_payload_has_scalar_value($attribute_value, 200)) {
+                return false;
+            }
+        }
+    }
+
+    foreach (array('claim_assignments', 'claimAssignments') as $assignment_key) {
+        if (isset($line[$assignment_key]) && !bvmgr_ticketing_v2_validate_claim_assignment_payload($line[$assignment_key])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function bvmgr_ticketing_v2_validate_atomic_addon_line_payload($line): bool
+{
+    if (!is_array($line) || !bvmgr_ticketing_v2_payload_is_object_like_array($line)) {
+        return false;
+    }
+
+    foreach (array('product_id', 'productId', 'product', 'qty', 'quantity') as $scalar_key) {
+        if (isset($line[$scalar_key]) && !bvmgr_ticketing_v2_payload_has_scalar_value($line[$scalar_key], 32)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function bvmgr_ticketing_v2_validate_atomic_add_payload(array $data): bool
+{
+    if (!bvmgr_ticketing_v2_payload_is_object_like_array($data)) {
+        return false;
+    }
+
+    foreach (array('nonce', 'tec_event_id', 'tecEventId', 'event_plan_id', 'eventPlanId') as $scalar_key) {
+        if (isset($data[$scalar_key]) && !bvmgr_ticketing_v2_payload_has_scalar_value($data[$scalar_key], 200)) {
+            return false;
+        }
+    }
+
+    $ticket_lines = $data['ticket_lines'] ?? ($data['tickets'] ?? array());
+    if (!is_array($ticket_lines) || (!empty($ticket_lines) && !bvmgr_array_is_list_compat($ticket_lines)) || count($ticket_lines) > 50) {
+        return false;
+    }
+    foreach ($ticket_lines as $line) {
+        if (!bvmgr_ticketing_v2_validate_atomic_ticket_line_payload($line)) {
+            return false;
+        }
+    }
+
+    $addon_lines = $data['addon_lines'] ?? ($data['addons'] ?? array());
+    if (!is_array($addon_lines) || (!empty($addon_lines) && !bvmgr_array_is_list_compat($addon_lines)) || count($addon_lines) > 50) {
+        return false;
+    }
+    foreach ($addon_lines as $line) {
+        if (!bvmgr_ticketing_v2_validate_atomic_addon_line_payload($line)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function bvmgr_ticketing_v2_validate_silent_add_payload(array $data): bool
+{
+    if (!bvmgr_ticketing_v2_payload_is_object_like_array($data)) {
+        return false;
+    }
+
+    foreach (array('nonce', 'tec_event_id', 'event_plan_id', 'ga_qty_hint') as $scalar_key) {
+        if (isset($data[$scalar_key]) && !bvmgr_ticketing_v2_payload_has_scalar_value($data[$scalar_key], 200)) {
+            return false;
+        }
+    }
+
+    $items = $data['items'] ?? array();
+    if (!is_array($items) || (!empty($items) && !bvmgr_array_is_list_compat($items)) || count($items) > 50) {
+        return false;
+    }
+    foreach ($items as $item) {
+        if (!bvmgr_ticketing_v2_validate_atomic_addon_line_payload($item)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function bvmgr_ticketing_v2_read_form_request_payload(array $source): array
+{
+    if (empty($source)) {
+        return array();
+    }
+
+    $payload = wp_unslash($source);
+    return is_array($payload) ? $payload : array();
+}
+
+/**
+ * @return array{ok:bool,present:bool,payload:array<string,mixed>,error:string}
+ */
+function bvmgr_ticketing_v2_read_json_request_payload(int $max_bytes): array
+{
+    $body = bvmgr_read_limited_stream('php://input', $max_bytes);
+    if (empty($body['ok'])) {
+        return array(
+            'ok' => false,
+            'present' => false,
+            'payload' => array(),
+            'error' => 'body_read_failed',
+        );
+    }
+
+    $raw = trim((string) ($body['data'] ?? ''));
+    if ($raw === '') {
+        return array(
+            'ok' => true,
+            'present' => false,
+            'payload' => array(),
+            'error' => '',
+        );
+    }
+
+    $content_type = strtolower(bvmgr_request_server_value('CONTENT_TYPE'));
+    $top_level_token = bvmgr_json_top_level_token($raw);
+    $expects_json = (strpos($content_type, 'application/json') !== false || $top_level_token === '{' || $top_level_token === '[');
+    if (!$expects_json) {
+        return array(
+            'ok' => true,
+            'present' => false,
+            'payload' => array(),
+            'error' => '',
+        );
+    }
+
+    if (!empty($body['too_large'])) {
+        return array(
+            'ok' => false,
+            'present' => true,
+            'payload' => array(),
+            'error' => 'body_too_large',
+        );
+    }
+
+    $decoded = bvmgr_json_decode_associative($raw, 32);
+    if (
+        empty($decoded['ok'])
+        || !is_array($decoded['value'])
+        || !bvmgr_json_decoded_is_object($decoded['value'], (string) ($decoded['top_level_token'] ?? ''))
+    ) {
+        return array(
+            'ok' => false,
+            'present' => true,
+            'payload' => array(),
+            'error' => 'body_invalid_json',
+        );
+    }
+
+    return array(
+        'ok' => true,
+        'present' => true,
+        'payload' => $decoded['value'],
+        'error' => '',
+    );
+}
+
 /**
  * @return array<int,array{seat:int,assignee_email:string}>
  */
-function vms_ticketing_v2_cart_item_claim_assignments(array $cart_item): array
+function bvmgr_ticketing_v2_cart_item_claim_assignments(array $cart_item): array
 {
     $raw = $cart_item['vms_claim_assignments'] ?? array();
     if (!is_array($raw) && isset($cart_item['_vms_claim_assignments']) && is_array($cart_item['_vms_claim_assignments'])) {
         $raw = $cart_item['_vms_claim_assignments'];
     }
-    return vms_ticketing_v2_claim_assignments_normalize($raw);
+    return bvmgr_ticketing_v2_claim_assignments_normalize($raw);
 }
 
 /**
@@ -3123,9 +3511,9 @@ function vms_ticketing_v2_cart_item_claim_assignments(array $cart_item): array
  *   require_assignee_email:bool
  * }
  */
-function vms_ticketing_v2_claim_context_for_product(int $product_id): array
+function bvmgr_ticketing_v2_claim_context_for_product(int $product_id): array
 {
-    $ctx = vms_ticketing_v2_resolve_verified_ticket_context($product_id);
+    $ctx = bvmgr_ticketing_v2_resolve_verified_ticket_context($product_id);
 
     $visibility_mode = sanitize_key((string) ($ctx['visibility_mode'] ?? 'public'));
     if (!in_array($visibility_mode, array('public', 'login', 'verified'), true)) {
@@ -3133,19 +3521,19 @@ function vms_ticketing_v2_claim_context_for_product(int $product_id): array
     }
 
     $legacy_program = sanitize_key((string) ($ctx['program'] ?? ''));
-    $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-        ? vms_ticketing_v2_normalize_allowed_programs($ctx['allowed_programs'] ?? array(), $legacy_program)
+    $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+        ? bvmgr_ticketing_v2_normalize_allowed_programs($ctx['allowed_programs'] ?? array(), $legacy_program)
         : ($legacy_program !== '' ? array($legacy_program) : array());
     if ($legacy_program === '' && !empty($allowed_programs)) {
         $legacy_program = (string) $allowed_programs[0];
     }
 
-    $allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-        ? vms_ticketing_v2_truthy($ctx['allow_direct_grants'] ?? false, false)
-        : vms_ticketing_v2_meta_truthy($ctx['allow_direct_grants'] ?? false, false);
+    $allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+        ? bvmgr_ticketing_v2_truthy($ctx['allow_direct_grants'] ?? false, false)
+        : bvmgr_ticketing_v2_meta_truthy($ctx['allow_direct_grants'] ?? false, false);
 
     $claim_grant_type = sanitize_key((string) ($ctx['claim_grant_type'] ?? 'event_ticket_eligibility'));
-    if (!in_array($claim_grant_type, vms_ticketing_v2_claim_grant_type_values(), true)) {
+    if (!in_array($claim_grant_type, bvmgr_ticketing_v2_claim_grant_type_values(), true)) {
         $claim_grant_type = 'event_ticket_eligibility';
     }
 
@@ -3154,9 +3542,9 @@ function vms_ticketing_v2_claim_context_for_product(int $product_id): array
         $claims_per_assignee = 1;
     }
 
-    $require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-        ? vms_ticketing_v2_truthy($ctx['require_assignee_email'] ?? true, true)
-        : vms_ticketing_v2_meta_truthy($ctx['require_assignee_email'] ?? true, true);
+    $require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+        ? bvmgr_ticketing_v2_truthy($ctx['require_assignee_email'] ?? true, true)
+        : bvmgr_ticketing_v2_meta_truthy($ctx['require_assignee_email'] ?? true, true);
 
     return array(
         'visibility_mode' => $visibility_mode,
@@ -3173,44 +3561,44 @@ function vms_ticketing_v2_claim_context_for_product(int $product_id): array
     );
 }
 
-function vms_ticketing_v2_claim_program_label_text(array $allowed_programs, string $legacy_program = ''): string
+function bvmgr_ticketing_v2_claim_program_label_text(array $allowed_programs, string $legacy_program = ''): string
 {
-    $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-        ? vms_ticketing_v2_normalize_allowed_programs($allowed_programs, $legacy_program)
+    $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+        ? bvmgr_ticketing_v2_normalize_allowed_programs($allowed_programs, $legacy_program)
         : array_values(array_unique(array_filter(array_map('sanitize_key', $allowed_programs))));
     $legacy_program = sanitize_key($legacy_program);
 
     $labels = array();
-    if (function_exists('vms_ticketing_claims_program_labels')) {
-        $labels = (array) vms_ticketing_claims_program_labels($allowed_programs);
+    if (function_exists('bvmgr_ticketing_claims_program_labels')) {
+        $labels = (array) bvmgr_ticketing_claims_program_labels($allowed_programs);
     } else {
         foreach ($allowed_programs as $program) {
-            $labels[] = vms_ticketing_v2_verified_ticket_program_label((string) $program);
+            $labels[] = bvmgr_ticketing_v2_verified_ticket_program_label((string) $program);
         }
     }
     $labels = array_values(array_filter(array_unique(array_map('trim', $labels))));
     if (!empty($labels)) {
         return implode(', ', $labels);
     }
-    return vms_ticketing_v2_verified_ticket_program_label($legacy_program);
+    return bvmgr_ticketing_v2_verified_ticket_program_label($legacy_program);
 }
 
-function vms_ticketing_v2_claim_assignment_unknown_guest_message(): string
+function bvmgr_ticketing_v2_claim_assignment_unknown_guest_message(): string
 {
-    return __("We couldn't find an approved qualified guest account for this email. The guest needs to register and be approved before this ticket can be claimed.", 'vms');
+    return __("We couldn't find an approved qualified guest account for this email. The guest needs to register and be approved before this ticket can be claimed.", 'backstage-venue-manager');
 }
 
-function vms_ticketing_v2_claim_assignment_unapproved_guest_message(): string
+function bvmgr_ticketing_v2_claim_assignment_unapproved_guest_message(): string
 {
-    return __('This email is not approved for this ticket yet. The guest needs to register and be approved before this ticket can be claimed.', 'vms');
+    return __('This email is not approved for this ticket yet. The guest needs to register and be approved before this ticket can be claimed.', 'backstage-venue-manager');
 }
 
-function vms_ticketing_v2_claim_assignment_duplicate_guest_message(): string
+function bvmgr_ticketing_v2_claim_assignment_duplicate_guest_message(): string
 {
-    return __('This guest email has already been added.', 'vms');
+    return __('This guest email has already been added.', 'backstage-venue-manager');
 }
 
-function vms_ticketing_v2_resolve_claim_eligibility_for_user(
+function bvmgr_ticketing_v2_resolve_claim_eligibility_for_user(
     int $user_id,
     int $event_id,
     int $ticket_product_id,
@@ -3221,12 +3609,12 @@ function vms_ticketing_v2_resolve_claim_eligibility_for_user(
     string $grant_type
 ): array {
     $legacy_program = sanitize_key($legacy_program);
-    $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-        ? vms_ticketing_v2_normalize_allowed_programs($allowed_programs, $legacy_program)
+    $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+        ? bvmgr_ticketing_v2_normalize_allowed_programs($allowed_programs, $legacy_program)
         : array_values(array_unique(array_filter(array_map('sanitize_key', $allowed_programs))));
 
     $grant_type = sanitize_key($grant_type);
-    if (!in_array($grant_type, vms_ticketing_v2_claim_grant_type_values(), true)) {
+    if (!in_array($grant_type, bvmgr_ticketing_v2_claim_grant_type_values(), true)) {
         $grant_type = 'event_ticket_eligibility';
     }
 
@@ -3242,8 +3630,8 @@ function vms_ticketing_v2_resolve_claim_eligibility_for_user(
         return $eligibility;
     }
 
-    if (function_exists('vms_ticketing_claims_resolve_eligibility')) {
-        $resolved = (array) vms_ticketing_claims_resolve_eligibility(array(
+    if (function_exists('bvmgr_ticketing_claims_resolve_eligibility')) {
+        $resolved = (array) bvmgr_ticketing_claims_resolve_eligibility(array(
             'user_id' => $user_id,
             'event_id' => $event_id,
             'ticket_product_id' => $ticket_product_id,
@@ -3263,8 +3651,8 @@ function vms_ticketing_v2_resolve_claim_eligibility_for_user(
         return $eligibility;
     }
 
-    if ($legacy_program !== '' && function_exists('vms_ticketing_user_is_verified_for_program')) {
-        $eligible = vms_ticketing_user_is_verified_for_program($user_id, $legacy_program);
+    if ($legacy_program !== '' && function_exists('bvmgr_ticketing_user_is_verified_for_program')) {
+        $eligible = bvmgr_ticketing_user_is_verified_for_program($user_id, $legacy_program);
         $eligibility['eligible'] = $eligible;
         $eligibility['reason_code'] = $eligible ? 'ok' : 'credential_not_approved';
         return $eligibility;
@@ -3278,7 +3666,7 @@ function vms_ticketing_v2_resolve_claim_eligibility_for_user(
  * Resolve per-assignee event usage limit for claim assignment validation.
  * Falls back to ticket claim settings and raises cap for matched credential/direct-grant rules.
  */
-function vms_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_User $assignee_user, array $resolved = array()): int
+function bvmgr_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_User $assignee_user, array $resolved = array()): int
 {
     $base_limit = max(1, absint($context['claims_per_assignee'] ?? 1));
     $matched_rule_path = sanitize_key((string) ($resolved['matched_rule_path'] ?? ''));
@@ -3294,23 +3682,23 @@ function vms_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_Use
         }
     }
 
-    if ($matched_program !== '' && function_exists('vms_ticketing_v2_resolve_verified_ticket_limit')) {
+    if ($matched_program !== '' && function_exists('bvmgr_ticketing_v2_resolve_verified_ticket_limit')) {
         // Use the credential/profile allowance as the per-person claim cap.
         // Do not cap this value by the ticket's public "max qty per order" field:
         // that product/order control is separate from a verified account's
         // effective eligible-pass allowance, and capping here made per-user
         // overrides like 4 behave as though they were still limited to the
         // ticket/card setting.
-        $program_limit = max(0, absint(vms_ticketing_v2_resolve_verified_ticket_limit((int) $assignee_user->ID, $matched_program, 0)));
+        $program_limit = max(0, absint(bvmgr_ticketing_v2_resolve_verified_ticket_limit((int) $assignee_user->ID, $matched_program, 0)));
         if ($program_limit > 0) {
             $base_limit = max($base_limit, $program_limit);
         }
     }
 
-    if ($matched_rule_path === 'event_direct_grant' && function_exists('vms_ticketing_claims_get_direct_grant')) {
+    if ($matched_rule_path === 'event_direct_grant' && function_exists('bvmgr_ticketing_claims_get_direct_grant')) {
         $grant_id = absint($resolved['matched_grant_id'] ?? 0);
         if ($grant_id > 0) {
-            $grant_row = vms_ticketing_claims_get_direct_grant($grant_id);
+            $grant_row = bvmgr_ticketing_claims_get_direct_grant($grant_id);
             if (is_array($grant_row)) {
                 $grant_qty_limit = max(0, absint($grant_row['qty_limit'] ?? 0));
                 if ($grant_qty_limit > 0) {
@@ -3320,8 +3708,8 @@ function vms_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_Use
         }
     }
 
-    if (!empty($context['allow_direct_grants']) && function_exists('vms_ticketing_claims_find_active_direct_grant')) {
-        $grant_row = vms_ticketing_claims_find_active_direct_grant(array(
+    if (!empty($context['allow_direct_grants']) && function_exists('bvmgr_ticketing_claims_find_active_direct_grant')) {
+        $grant_row = bvmgr_ticketing_claims_find_active_direct_grant(array(
             'user_id' => (int) $assignee_user->ID,
             'event_id' => absint($context['event_id'] ?? 0),
             'ticket_product_id' => absint($context['ticket_product_id'] ?? 0),
@@ -3343,7 +3731,7 @@ function vms_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_Use
 /**
  * @return array<string,int>
  */
-function vms_ticketing_v2_cart_assignee_usage_for_event(int $event_id, string $ticket_key = '', string $exclude_cart_item_key = ''): array
+function bvmgr_ticketing_v2_cart_assignee_usage_for_event(int $event_id, string $ticket_key = '', string $exclude_cart_item_key = ''): array
 {
     $event_id = absint($event_id);
     $ticket_key = sanitize_key($ticket_key);
@@ -3367,7 +3755,7 @@ function vms_ticketing_v2_cart_assignee_usage_for_event(int $event_id, string $t
             continue;
         }
 
-        $ctx = vms_ticketing_v2_claim_context_for_product($item_product_id);
+        $ctx = bvmgr_ticketing_v2_claim_context_for_product($item_product_id);
         if (sanitize_key((string) ($ctx['visibility_mode'] ?? '')) !== 'verified') {
             continue;
         }
@@ -3378,7 +3766,7 @@ function vms_ticketing_v2_cart_assignee_usage_for_event(int $event_id, string $t
             continue;
         }
 
-        $rows = vms_ticketing_v2_cart_item_claim_assignments($cart_item);
+        $rows = bvmgr_ticketing_v2_cart_item_claim_assignments($cart_item);
         foreach ($rows as $row) {
             $email_key = strtolower(trim((string) ($row['assignee_email'] ?? '')));
             if ($email_key === '') {
@@ -3391,7 +3779,7 @@ function vms_ticketing_v2_cart_assignee_usage_for_event(int $event_id, string $t
     return $counts;
 }
 
-function vms_ticketing_v2_cart_line_has_claim_assignments(array $line): bool
+function bvmgr_ticketing_v2_cart_line_has_claim_assignments(array $line): bool
 {
     if (!function_exists('WC') || !WC() || !isset(WC()->cart) || !WC()->cart) {
         return false;
@@ -3416,7 +3804,7 @@ function vms_ticketing_v2_cart_line_has_claim_assignments(array $line): bool
             continue;
         }
 
-        $ctx = vms_ticketing_v2_claim_context_for_product($item_product_id);
+        $ctx = bvmgr_ticketing_v2_claim_context_for_product($item_product_id);
         if (sanitize_key((string) ($ctx['visibility_mode'] ?? '')) !== 'verified') {
             continue;
         }
@@ -3436,7 +3824,7 @@ function vms_ticketing_v2_cart_line_has_claim_assignments(array $line): bool
         }
         $matched_qty += $qty;
 
-        $rows = vms_ticketing_v2_cart_item_claim_assignments($cart_item);
+        $rows = bvmgr_ticketing_v2_cart_item_claim_assignments($cart_item);
         $assigned_qty += count($rows);
     }
 
@@ -3458,7 +3846,7 @@ function vms_ticketing_v2_cart_line_has_claim_assignments(array $line): bool
  *   context:array<string,mixed>
  * }
  */
-function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, array $assignments, int $buyer_user_id = 0, array $options = array()): array
+function bvmgr_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, array $assignments, int $buyer_user_id = 0, array $options = array()): array
 {
     $product_id = absint($product_id);
     $qty = max(0, absint($qty));
@@ -3466,7 +3854,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
     $source = sanitize_key((string) ($options['source'] ?? 'seat_assignment'));
     $log_results = !isset($options['log_results']) || !empty($options['log_results']);
 
-    $context = vms_ticketing_v2_claim_context_for_product($product_id);
+    $context = bvmgr_ticketing_v2_claim_context_for_product($product_id);
     $visibility_mode = sanitize_key((string) ($context['visibility_mode'] ?? 'public'));
     $require_assignee_email = !empty($context['require_assignee_email']);
     $event_id = absint($context['event_id'] ?? 0);
@@ -3476,13 +3864,13 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
     $allow_direct_grants = !empty($context['allow_direct_grants']);
     $claim_grant_type = sanitize_key((string) ($context['claim_grant_type'] ?? 'event_ticket_eligibility'));
     $claims_per_assignee = max(1, absint($context['claims_per_assignee'] ?? 1));
-    $program_label_text = vms_ticketing_v2_claim_program_label_text($allowed_programs, $legacy_program);
-    $group_product_ids = vms_ticketing_v2_ticket_group_product_ids_from_context($context, $product_id);
+    $program_label_text = bvmgr_ticketing_v2_claim_program_label_text($allowed_programs, $legacy_program);
+    $group_product_ids = bvmgr_ticketing_v2_ticket_group_product_ids_from_context($context, $product_id);
     if (empty($group_product_ids)) {
         $group_product_ids = array($product_id);
     }
 
-    $normalized = vms_ticketing_v2_claim_assignments_normalize($assignments);
+    $normalized = bvmgr_ticketing_v2_claim_assignments_normalize($assignments);
 
     if ($visibility_mode !== 'verified' || !$require_assignee_email || $qty <= 0) {
         return array(
@@ -3501,7 +3889,8 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if ($seat > $qty) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Ticket assignment %d is out of range for this selection.', 'vms'), $seat),
+                /* translators: %d: number used in this message. */
+                'message' => sprintf(__('Ticket assignment %d is out of range for this selection.', 'backstage-venue-manager'), $seat),
                 'reason_code' => 'assignment_seat_invalid',
                 'assignments' => array(),
                 'context' => $context,
@@ -3510,7 +3899,8 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if (isset($seat_lookup[$seat])) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Ticket %d has multiple email assignments. Keep only one email per ticket.', 'vms'), $seat),
+                /* translators: %d: ticket number. */
+                'message' => sprintf(__('Ticket %d has multiple email assignments. Keep only one email per ticket.', 'backstage-venue-manager'), $seat),
                 'reason_code' => 'assignment_seat_duplicate',
                 'assignments' => array(),
                 'context' => $context,
@@ -3521,7 +3911,8 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if ($email === '' || !is_email($email)) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Please enter a valid email for Ticket %d.', 'vms'), $seat),
+                /* translators: %d: ticket number. */
+                'message' => sprintf(__('Please enter a valid email for Ticket %d.', 'backstage-venue-manager'), $seat),
                 'reason_code' => 'invalid_email',
                 'assignments' => array(),
                 'context' => $context,
@@ -3539,7 +3930,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
     if (count($normalized) > $qty) {
         return array(
             'ok' => false,
-            'message' => __('Too many email assignments were provided for the selected ticket quantity.', 'vms'),
+            'message' => __('Too many email assignments were provided for the selected ticket quantity.', 'backstage-venue-manager'),
             'reason_code' => 'assignment_count_excess',
             'assignments' => array(),
             'context' => $context,
@@ -3549,7 +3940,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
     if ($event_id <= 0 || $ticket_key === '') {
         return array(
             'ok' => false,
-            'message' => __('Could not validate ticket assignments for this ticket right now. Please refresh and try again.', 'vms'),
+            'message' => __('Could not validate ticket assignments for this ticket right now. Please refresh and try again.', 'backstage-venue-manager'),
             'reason_code' => 'context_missing',
             'assignments' => array(),
             'context' => $context,
@@ -3573,8 +3964,8 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if ($buyer_user instanceof WP_User) {
             $buyer_email = sanitize_email((string) $buyer_user->user_email);
             if ($buyer_email !== '' && is_email($buyer_email)) {
-                $buyer_resolved = function_exists('vms_ticketing_claims_resolve_eligibility')
-                    ? (array) vms_ticketing_claims_resolve_eligibility(array(
+                $buyer_resolved = function_exists('bvmgr_ticketing_claims_resolve_eligibility')
+                    ? (array) bvmgr_ticketing_claims_resolve_eligibility(array(
                         'user_id' => (int) $buyer_user->ID,
                         'event_id' => $event_id,
                         'ticket_product_id' => $product_id,
@@ -3587,19 +3978,19 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
                     : array(
                         'eligible' => false,
                         'reason_code' => 'resolver_unavailable',
-                        'message' => __('Eligibility resolver is unavailable.', 'vms'),
+                        'message' => __('Eligibility resolver is unavailable.', 'backstage-venue-manager'),
                         'matched_rule_path' => '',
                         'matched_grant_id' => 0,
                     );
 
                 if (!empty($buyer_resolved['eligible'])) {
-                    $buyer_limit = function_exists('vms_ticketing_v2_assignee_claims_per_event_limit')
-                        ? vms_ticketing_v2_assignee_claims_per_event_limit($context, $buyer_user, $buyer_resolved)
+                    $buyer_limit = function_exists('bvmgr_ticketing_v2_assignee_claims_per_event_limit')
+                        ? bvmgr_ticketing_v2_assignee_claims_per_event_limit($context, $buyer_user, $buyer_resolved)
                         : max(1, $claims_per_assignee);
                     $buyer_limit = max(1, absint($buyer_limit));
                     $buyer_email_key = strtolower($buyer_email);
-                    $buyer_consumed_qty = function_exists('vms_ticketing_v2_assignee_consumed_qty_for_event')
-                        ? absint(vms_ticketing_v2_assignee_consumed_qty_for_event($event_id, $buyer_email, $group_product_ids))
+                    $buyer_consumed_qty = function_exists('bvmgr_ticketing_v2_assignee_consumed_qty_for_event')
+                        ? absint(bvmgr_ticketing_v2_assignee_consumed_qty_for_event($event_id, $buyer_email, $group_product_ids))
                         : 0;
                     $buyer_existing_qty = absint($existing_counts[$buyer_email_key] ?? 0);
                     $buyer_assigned_qty = 0;
@@ -3641,10 +4032,11 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
 
     if (count($normalized) !== $qty) {
         $missing_qty = max(0, $qty - count($normalized));
-        $message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'vms');
+        $message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'backstage-venue-manager');
         if ($buyer_auto_fill_count > 0 && $missing_qty > 0) {
             $message = sprintf(
-                __('Your account automatically applied to %1$d ticket(s). Please enter %2$d additional approved guest email(s) to continue.', 'vms'),
+                /* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
+                __('Your account automatically applied to %1$d ticket(s). Please enter %2$d additional approved guest email(s) to continue.', 'backstage-venue-manager'),
                 $buyer_auto_fill_count,
                 $missing_qty
             );
@@ -3672,7 +4064,8 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if ($email === '' || !is_email($email)) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Please enter a valid email for Ticket %d.', 'vms'), $seat),
+                /* translators: %d: ticket number. */
+                'message' => sprintf(__('Please enter a valid email for Ticket %d.', 'backstage-venue-manager'), $seat),
                 'reason_code' => 'invalid_email',
                 'assignments' => array(),
                 'context' => $context,
@@ -3682,8 +4075,8 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         $email_key = strtolower($email);
         $user = get_user_by('email', $email);
         if (!($user instanceof WP_User)) {
-            if ($log_results && function_exists('vms_ticketing_claims_log_result')) {
-                vms_ticketing_claims_log_result(array(
+            if ($log_results && function_exists('bvmgr_ticketing_claims_log_result')) {
+                bvmgr_ticketing_claims_log_result(array(
                     'event_id' => $event_id,
                     'ticket_product_id' => $product_id,
                     'ticket_key' => $ticket_key,
@@ -3694,7 +4087,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
                     'direct_grant_id' => 0,
                     'result' => 'failure',
                     'reason_code' => 'account_not_found',
-                    'message' => vms_ticketing_v2_claim_assignment_unknown_guest_message(),
+                    'message' => bvmgr_ticketing_v2_claim_assignment_unknown_guest_message(),
                     'context' => array(
                         'source' => $source,
                         'seat' => $seat,
@@ -3703,15 +4096,16 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
             }
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Ticket %1$d: %2$s', 'vms'), $seat, vms_ticketing_v2_claim_assignment_unknown_guest_message()),
+                /* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
+                'message' => sprintf(__('Ticket %1$d: %2$s', 'backstage-venue-manager'), $seat, bvmgr_ticketing_v2_claim_assignment_unknown_guest_message()),
                 'reason_code' => 'account_not_found',
                 'assignments' => array(),
                 'context' => $context,
             );
         }
 
-        $resolved = function_exists('vms_ticketing_claims_resolve_eligibility')
-            ? (array) vms_ticketing_claims_resolve_eligibility(array(
+        $resolved = function_exists('bvmgr_ticketing_claims_resolve_eligibility')
+            ? (array) bvmgr_ticketing_claims_resolve_eligibility(array(
                 'user_id' => (int) $user->ID,
                 'event_id' => $event_id,
                 'ticket_product_id' => $product_id,
@@ -3724,7 +4118,7 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
             : array(
                 'eligible' => false,
                 'reason_code' => 'resolver_unavailable',
-                'message' => __('Eligibility resolver is unavailable.', 'vms'),
+                'message' => __('Eligibility resolver is unavailable.', 'backstage-venue-manager'),
                 'matched_rule_path' => '',
                 'matched_grant_id' => 0,
             );
@@ -3734,19 +4128,19 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         $message = sanitize_text_field((string) ($resolved['message'] ?? ''));
 
         if (!$eligible && $message === '') {
-            $message = vms_ticketing_v2_claim_assignment_unapproved_guest_message();
+            $message = bvmgr_ticketing_v2_claim_assignment_unapproved_guest_message();
         }
 
         $assignee_claims_per_assignee = max(1, $claims_per_assignee);
         $consumed_qty = 0;
         $current_count = 0;
         if ($eligible) {
-            $assignee_claims_per_assignee = function_exists('vms_ticketing_v2_assignee_claims_per_event_limit')
-                ? vms_ticketing_v2_assignee_claims_per_event_limit($context, $user, $resolved)
+            $assignee_claims_per_assignee = function_exists('bvmgr_ticketing_v2_assignee_claims_per_event_limit')
+                ? bvmgr_ticketing_v2_assignee_claims_per_event_limit($context, $user, $resolved)
                 : max(1, $claims_per_assignee);
             if (!isset($assignee_consumed_cache[$email_key])) {
-                $assignee_consumed_cache[$email_key] = function_exists('vms_ticketing_v2_assignee_consumed_qty_for_event')
-                    ? absint(vms_ticketing_v2_assignee_consumed_qty_for_event($event_id, $email, $group_product_ids))
+                $assignee_consumed_cache[$email_key] = function_exists('bvmgr_ticketing_v2_assignee_consumed_qty_for_event')
+                    ? absint(bvmgr_ticketing_v2_assignee_consumed_qty_for_event($event_id, $email, $group_product_ids))
                     : 0;
             }
             $consumed_qty = absint($assignee_consumed_cache[$email_key] ?? 0);
@@ -3760,12 +4154,13 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
             if (($current_count + 1) > $allowed_for_new_assignments) {
                 $eligible = false;
                 $reason_code = 'assignee_limit_reached';
-                $message = sprintf(__('This guest has already used the %d-ticket limit for this event.', 'vms'), $assignee_claims_per_assignee);
+                /* translators: %d: number used in this message. */
+                $message = sprintf(__('This guest has already used the %d-ticket limit for this event.', 'backstage-venue-manager'), $assignee_claims_per_assignee);
             }
         }
 
-        if ($log_results && function_exists('vms_ticketing_claims_log_result')) {
-            vms_ticketing_claims_log_result(array(
+        if ($log_results && function_exists('bvmgr_ticketing_claims_log_result')) {
+            bvmgr_ticketing_claims_log_result(array(
                 'event_id' => $event_id,
                 'ticket_product_id' => $product_id,
                 'ticket_key' => $ticket_key,
@@ -3787,7 +4182,8 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
         if (!$eligible) {
             return array(
                 'ok' => false,
-                'message' => sprintf(__('Ticket %1$d: %2$s', 'vms'), $seat, $message),
+                /* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
+                'message' => sprintf(__('Ticket %1$d: %2$s', 'backstage-venue-manager'), $seat, $message),
                 'reason_code' => $reason_code,
                 'assignments' => array(),
                 'context' => $context,
@@ -3817,9 +4213,9 @@ function vms_ticketing_v2_validate_claim_assignments(int $product_id, int $qty, 
     );
 }
 
-function vms_ticketing_v2_enforce_ticket_max_qty_for_add(int $product_id, int $request_qty): bool
+function bvmgr_ticketing_v2_enforce_ticket_max_qty_for_add(int $product_id, int $request_qty): bool
 {
-    $ctx = vms_ticketing_v2_resolve_ticket_max_context($product_id);
+    $ctx = bvmgr_ticketing_v2_resolve_ticket_max_context($product_id);
     $event_id = absint($ctx['event_id'] ?? 0);
     $ticket_key = sanitize_key((string) ($ctx['ticket_key'] ?? ''));
     $limit = max(0, absint($ctx['limit'] ?? 0));
@@ -3828,38 +4224,40 @@ function vms_ticketing_v2_enforce_ticket_max_qty_for_add(int $product_id, int $r
     }
 
     $request_qty = max(1, absint($request_qty));
-    $cart_qty = vms_ticketing_v2_cart_qty_for_event_ticket($event_id, $ticket_key);
+    $cart_qty = bvmgr_ticketing_v2_cart_qty_for_event_ticket($event_id, $ticket_key);
 
     $purchased_qty = 0;
     $user_id = is_user_logged_in() ? absint(get_current_user_id()) : 0;
     if ($user_id > 0) {
-        $group_ids = vms_ticketing_v2_ticket_group_product_ids_from_context($ctx, $product_id);
-        $purchased_qty = vms_ticketing_v2_purchased_ticket_qty_for_user($user_id, $group_ids);
+        $group_ids = bvmgr_ticketing_v2_ticket_group_product_ids_from_context($ctx, $product_id);
+        $purchased_qty = bvmgr_ticketing_v2_purchased_ticket_qty_for_user($user_id, $group_ids);
     }
 
     $remaining = max(0, $limit - $purchased_qty - $cart_qty);
     if ($request_qty > $remaining) {
-        $label = __('this ticket', 'vms');
-        if (!vms_ticketing_v2_public_ticket_qualification_removed() && sanitize_key((string) ($ctx['visibility_mode'] ?? '')) === 'verified') {
+        $label = __('this ticket', 'backstage-venue-manager');
+        if (!bvmgr_ticketing_v2_public_ticket_qualification_removed() && sanitize_key((string) ($ctx['visibility_mode'] ?? '')) === 'verified') {
             $program = sanitize_key((string) ($ctx['program'] ?? ''));
             if ($program !== '') {
-                $label = sprintf(__('%s ticket', 'vms'), vms_ticketing_v2_verified_ticket_program_label($program));
+                /* translators: %s: human-readable value used in this message. */
+                $label = sprintf(__('%s ticket', 'backstage-venue-manager'), bvmgr_ticketing_v2_verified_ticket_program_label($program));
             }
         }
         $message = sprintf(
-            __('Limit reached for this event: up to %1$d %2$s per customer (%3$d remaining).', 'vms'),
+            /* translators: 1: number 1 used in this message, 2: value 2 used in this message, 3: number 3 used in this message. */
+            __('Limit reached for this event: up to %1$d %2$s per customer (%3$d remaining).', 'backstage-venue-manager'),
             $limit,
             $label,
             $remaining
         );
-        vms_ticketing_v2_add_limit_notice_once($message);
+        bvmgr_ticketing_v2_add_limit_notice_once($message);
         return false;
     }
 
     return true;
 }
 
-function vms_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
+function bvmgr_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
 {
     if (!function_exists('WC') || !WC() || !isset(WC()->cart) || !WC()->cart) {
         return;
@@ -3878,7 +4276,7 @@ function vms_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
             continue;
         }
 
-        $ctx = vms_ticketing_v2_resolve_ticket_max_context($item_pid);
+        $ctx = bvmgr_ticketing_v2_resolve_ticket_max_context($item_pid);
         $event_id = absint($ctx['event_id'] ?? 0);
         $ticket_key = sanitize_key((string) ($ctx['ticket_key'] ?? ''));
         $limit = max(0, absint($ctx['limit'] ?? 0));
@@ -3911,7 +4309,7 @@ function vms_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
             continue;
         }
 
-        $cart_qty = vms_ticketing_v2_cart_qty_for_event_ticket($event_id, $ticket_key);
+        $cart_qty = bvmgr_ticketing_v2_cart_qty_for_event_ticket($event_id, $ticket_key);
         if ($cart_qty <= 0) {
             continue;
         }
@@ -3920,27 +4318,29 @@ function vms_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
         $purchased_qty = 0;
         $user_id = is_user_logged_in() ? absint(get_current_user_id()) : 0;
         if ($user_id > 0) {
-            $group_ids = vms_ticketing_v2_ticket_group_product_ids_from_context($ctx, $sample_product_id);
-            $purchased_qty = vms_ticketing_v2_purchased_ticket_qty_for_user($user_id, $group_ids);
+            $group_ids = bvmgr_ticketing_v2_ticket_group_product_ids_from_context($ctx, $sample_product_id);
+            $purchased_qty = bvmgr_ticketing_v2_purchased_ticket_qty_for_user($user_id, $group_ids);
         }
 
         $allowed_in_cart = max(0, $limit - $purchased_qty);
         if ($cart_qty > $allowed_in_cart) {
             $remaining = 0;
-            $label = __('this ticket', 'vms');
-            if (!vms_ticketing_v2_public_ticket_qualification_removed() && sanitize_key((string) ($ctx['visibility_mode'] ?? '')) === 'verified') {
+            $label = __('this ticket', 'backstage-venue-manager');
+            if (!bvmgr_ticketing_v2_public_ticket_qualification_removed() && sanitize_key((string) ($ctx['visibility_mode'] ?? '')) === 'verified') {
                 $program = sanitize_key((string) ($ctx['program'] ?? ''));
                 if ($program !== '') {
-                    $label = sprintf(__('%s ticket', 'vms'), vms_ticketing_v2_verified_ticket_program_label($program));
+                    /* translators: %s: human-readable value used in this message. */
+                    $label = sprintf(__('%s ticket', 'backstage-venue-manager'), bvmgr_ticketing_v2_verified_ticket_program_label($program));
                 }
             }
             $message = sprintf(
-                __('Limit reached for this event: up to %1$d %2$s per customer (%3$d remaining).', 'vms'),
+                /* translators: 1: number 1 used in this message, 2: value 2 used in this message, 3: number 3 used in this message. */
+                __('Limit reached for this event: up to %1$d %2$s per customer (%3$d remaining).', 'backstage-venue-manager'),
                 $limit,
                 $label,
                 $remaining
             );
-            vms_ticketing_v2_add_limit_notice_once($message);
+            bvmgr_ticketing_v2_add_limit_notice_once($message);
         }
     }
 }
@@ -3948,48 +4348,49 @@ function vms_ticketing_v2_enforce_ticket_max_qtys_in_cart(): void
 
 
 
-function vms_ticketing_v2_product_cancelled_event_id(int $product_id): int
+function bvmgr_ticketing_v2_product_cancelled_event_id(int $product_id): int
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
         return 0;
     }
 
-    $event_id = function_exists('vms_ticketing_v2_resolve_event_id_for_product')
-        ? absint(vms_ticketing_v2_resolve_event_id_for_product($product_id))
+    $event_id = function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')
+        ? absint(bvmgr_ticketing_v2_resolve_event_id_for_product($product_id))
         : 0;
-    if ($event_id > 0 && vms_tec_is_cancelled_event($event_id)) {
+    if ($event_id > 0 && bvmgr_tec_is_cancelled_event($event_id)) {
         return $event_id;
     }
 
     return 0;
 }
 
-function vms_ticketing_v2_cancelled_event_sales_notice(int $event_id = 0): string
+function bvmgr_ticketing_v2_cancelled_event_sales_notice(int $event_id = 0): string
 {
     $title = $event_id > 0 ? trim((string) get_the_title($event_id)) : '';
     if ($title !== '') {
-        return sprintf(__('Ticket sales are closed because “%s” has been cancelled.', 'vms'), $title);
+        /* translators: %s: human-readable value used in this message. */
+        return sprintf(__('Ticket sales are closed because “%s” has been cancelled.', 'backstage-venue-manager'), $title);
     }
-    return __('Ticket sales are closed because this event has been cancelled.', 'vms');
+    return __('Ticket sales are closed because this event has been cancelled.', 'backstage-venue-manager');
 }
 
-function vms_ticketing_v2_linked_tec_event_id_for_plan(int $plan_id): int
+function bvmgr_ticketing_v2_linked_tec_event_id_for_plan(int $plan_id): int
 {
     $plan_id = absint($plan_id);
     if ($plan_id <= 0) {
         return 0;
     }
 
-    if (function_exists('vms_ticketing_b_get_linked_tec_event_id')) {
-        $linked = absint(vms_ticketing_b_get_linked_tec_event_id($plan_id));
+    if (function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')) {
+        $linked = absint(bvmgr_ticketing_b_get_linked_tec_event_id($plan_id));
         if ($linked > 0) {
             return $linked;
         }
     }
 
-    $tec_key = function_exists('vms_ticketing_b_meta_key')
-        ? (string) vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
+    $tec_key = function_exists('bvmgr_ticketing_b_meta_key')
+        ? (string) bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id')
         : '_vms_tec_event_id';
     if ($tec_key === '') {
         $tec_key = '_vms_tec_event_id';
@@ -3998,7 +4399,7 @@ function vms_ticketing_v2_linked_tec_event_id_for_plan(int $plan_id): int
     return absint(get_post_meta($plan_id, $tec_key, true));
 }
 
-function vms_ticketing_v2_cart_item_context_snapshot(array $cart_item): array
+function bvmgr_ticketing_v2_cart_item_context_snapshot(array $cart_item): array
 {
     $snapshot = isset($cart_item['_vms_ticketing_context']) && is_array($cart_item['_vms_ticketing_context'])
         ? $cart_item['_vms_ticketing_context']
@@ -4029,44 +4430,44 @@ function vms_ticketing_v2_cart_item_context_snapshot(array $cart_item): array
     return is_array($snapshot) ? $snapshot : array();
 }
 
-function vms_ticketing_v2_capture_cart_item_context(array $cart_item_data, int $product_id, int $variation_id): array
+function bvmgr_ticketing_v2_capture_cart_item_context(array $cart_item_data, int $product_id, int $variation_id): array
 {
     $pid = absint($variation_id > 0 ? $variation_id : $product_id);
     if ($pid <= 0) {
         return $cart_item_data;
     }
 
-    $plan_id = function_exists('vms_ticketing_v2_resolve_plan_id_for_ticket_product')
-        ? absint(vms_ticketing_v2_resolve_plan_id_for_ticket_product($pid))
+    $plan_id = function_exists('bvmgr_ticketing_v2_resolve_plan_id_for_ticket_product')
+        ? absint(bvmgr_ticketing_v2_resolve_plan_id_for_ticket_product($pid))
         : 0;
-    $event_id = function_exists('vms_ticketing_v2_resolve_event_id_for_product')
-        ? absint(vms_ticketing_v2_resolve_event_id_for_product($pid))
+    $event_id = function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')
+        ? absint(bvmgr_ticketing_v2_resolve_event_id_for_product($pid))
         : 0;
-    $role = sanitize_key((string) vms_ticketing_v2_meta_get($pid, vms_ticketing_v2_product_meta_key('product_role')));
-    if ($role === '' && function_exists('vms_ticketing_v2_product_is_entitlement') && vms_ticketing_v2_product_is_entitlement($pid)) {
+    $role = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, bvmgr_ticketing_v2_product_meta_key('product_role')));
+    if ($role === '' && function_exists('bvmgr_ticketing_v2_product_is_entitlement') && bvmgr_ticketing_v2_product_is_entitlement($pid)) {
         $role = 'entitlement';
     }
     if ($role === '' && ($plan_id > 0 || $event_id > 0)) {
         $role = 'ga_ticket';
     }
-    if (!vms_ticketing_v2_role_supports_event_name_suffix($role)) {
+    if (!bvmgr_ticketing_v2_role_supports_event_name_suffix($role)) {
         return $cart_item_data;
     }
 
     if ($event_id <= 0 && $plan_id > 0) {
-        $event_id = vms_ticketing_v2_linked_tec_event_id_for_plan($plan_id);
+        $event_id = bvmgr_ticketing_v2_linked_tec_event_id_for_plan($plan_id);
     }
 
-    $event_snapshot = function_exists('vms_ticketing_v2_resolve_event_snapshot_for_product')
-        ? vms_ticketing_v2_resolve_event_snapshot_for_product($pid)
+    $event_snapshot = function_exists('bvmgr_ticketing_v2_resolve_event_snapshot_for_product')
+        ? bvmgr_ticketing_v2_resolve_event_snapshot_for_product($pid)
         : array();
-    $event_when = $event_id > 0 ? vms_ticketing_v2_format_event_when($event_id) : '';
+    $event_when = $event_id > 0 ? bvmgr_ticketing_v2_format_event_when($event_id) : '';
 
     $context = array(
         'event_plan_id' => $plan_id,
         'tec_event_id' => $event_id,
         'product_role' => $role,
-        'ticket_key' => sanitize_key((string) vms_ticketing_v2_meta_get($pid, '_vms_ticket_key')),
+        'ticket_key' => sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, '_vms_ticket_key')),
         'event_title_snapshot' => trim((string) ($event_snapshot['title'] ?? '')),
         'event_date_snapshot' => trim((string) ($event_snapshot['date'] ?? '')),
         'event_when_snapshot' => trim((string) $event_when),
@@ -4092,20 +4493,20 @@ function vms_ticketing_v2_capture_cart_item_context(array $cart_item_data, int $
     return $cart_item_data;
 }
 
-function vms_ticketing_v2_sale_context_status_label(string $status): string
+function bvmgr_ticketing_v2_sale_context_status_label(string $status): string
 {
     $status = sanitize_key($status);
     if ($status === '') {
-        return __('unavailable', 'vms');
+        return __('unavailable', 'backstage-venue-manager');
     }
-    if (function_exists('vms_event_plan_status_label')) {
-        return (string) vms_event_plan_status_label($status);
+    if (function_exists('bvmgr_event_plan_status_label')) {
+        return (string) bvmgr_event_plan_status_label($status);
     }
 
     return ucwords(str_replace('_', ' ', $status));
 }
 
-function vms_ticketing_v2_sale_context_title(int $plan_id = 0, int $event_id = 0): string
+function bvmgr_ticketing_v2_sale_context_title(int $plan_id = 0, int $event_id = 0): string
 {
     $title = $event_id > 0 ? trim((string) get_the_title($event_id)) : '';
     if ($title === '' && $plan_id > 0) {
@@ -4114,53 +4515,73 @@ function vms_ticketing_v2_sale_context_title(int $plan_id = 0, int $event_id = 0
     return $title;
 }
 
-function vms_ticketing_v2_sale_context_message(string $code, int $plan_id = 0, int $event_id = 0, array $context = array()): string
+function bvmgr_ticketing_v2_sale_context_message(string $code, int $plan_id = 0, int $event_id = 0, array $context = array()): string
 {
     $code = sanitize_key($code);
     $plan_id = absint($plan_id);
     $event_id = absint($event_id);
-    $title = vms_ticketing_v2_sale_context_title($plan_id, $event_id);
+    $title = bvmgr_ticketing_v2_sale_context_title($plan_id, $event_id);
     $status = sanitize_key((string) ($context['plan_status'] ?? ''));
     $product_label = trim((string) ($context['product_label'] ?? ''));
 
     switch ($code) {
+		case 'external_ticketing':
+			$external_url = trim((string) ($context['external_url'] ?? ''));
+			if ($external_url === '' && $plan_id > 0 && function_exists('bvmgr_event_plan_get_external_ticket_url')) {
+				$external_url = bvmgr_event_plan_get_external_ticket_url($plan_id);
+			}
+			if ($title !== '' && $external_url !== '') {
+				/* translators: 1: event title, 2: external ticket purchase URL. */
+				return sprintf(__('Tickets for “%1$s” are sold by an external ticket provider. Native checkout is unavailable; buy tickets at %2$s', 'backstage-venue-manager'), $title, $external_url);
+			}
+			if ($external_url !== '') {
+				/* translators: %s: external ticket purchase URL. */
+				return sprintf(__('Tickets for this event are sold by an external ticket provider. Native checkout is unavailable; buy tickets at %s', 'backstage-venue-manager'), $external_url);
+			}
+			return __('Tickets for this event are handled by an external ticket provider. Native checkout is unavailable; return to the event page for the current purchase link.', 'backstage-venue-manager');
         case 'event_cancelled':
-            return vms_ticketing_v2_cancelled_event_sales_notice($event_id);
+            return bvmgr_ticketing_v2_cancelled_event_sales_notice($event_id);
         case 'event_past':
             if ($title !== '') {
-                return sprintf(__('Ticket sales are closed because “%s” has already ended.', 'vms'), $title);
+                /* translators: %s: human-readable value used in this message. */
+                return sprintf(__('Ticket sales are closed because “%s” has already ended.', 'backstage-venue-manager'), $title);
             }
-            return __('Ticket sales are closed because this event has already ended.', 'vms');
+            return __('Ticket sales are closed because this event has already ended.', 'backstage-venue-manager');
         case 'product_detached':
             if ($product_label !== '') {
-                return sprintf(__('“%s” is no longer available for this event. Please remove it from your cart and refresh the event page.', 'vms'), $product_label);
+                /* translators: %s: human-readable value used in this message. */
+                return sprintf(__('“%s” is no longer available for this event. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager'), $product_label);
             }
-            return __('This ticket is no longer available for this event. Please remove it from your cart and refresh the event page.', 'vms');
+            return __('This ticket is no longer available for this event. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager');
         case 'ticketing_disabled':
             if ($title !== '') {
-                return sprintf(__('Ticket sales are currently unavailable for “%s”. Please remove it from your cart and refresh the event page.', 'vms'), $title);
+                /* translators: %s: human-readable value used in this message. */
+                return sprintf(__('Ticket sales are currently unavailable for “%s”. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager'), $title);
             }
-            return __('Ticket sales are currently unavailable for this event. Please remove it from your cart and refresh the event page.', 'vms');
+            return __('Ticket sales are currently unavailable for this event. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager');
         case 'event_plan_unpublished':
         case 'event_unpublished':
         case 'event_missing':
         case 'invalid_event_plan':
             if ($title !== '') {
-                return sprintf(__('Ticket sales are not live for “%s”. Please remove it from your cart and refresh the event page.', 'vms'), $title);
+                /* translators: %s: human-readable value used in this message. */
+                return sprintf(__('Ticket sales are not live for “%s”. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager'), $title);
             }
-            return __('Ticket sales are not live for this event. Please remove it from your cart and refresh the event page.', 'vms');
+            return __('Ticket sales are not live for this event. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager');
         case 'event_plan_not_live':
-            $status_label = vms_ticketing_v2_sale_context_status_label($status);
+            $status_label = bvmgr_ticketing_v2_sale_context_status_label($status);
             if ($title !== '') {
-                return sprintf(__('Ticket sales are closed because “%1$s” is currently %2$s.', 'vms'), $title, $status_label);
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+                return sprintf(__('Ticket sales are closed because “%1$s” is currently %2$s.', 'backstage-venue-manager'), $title, $status_label);
             }
-            return sprintf(__('Ticket sales are closed because this event is currently %s.', 'vms'), $status_label);
+            /* translators: %s: human-readable value used in this message. */
+            return sprintf(__('Ticket sales are closed because this event is currently %s.', 'backstage-venue-manager'), $status_label);
     }
 
-    return __('This event can no longer be purchased. Please remove it from your cart and refresh the event page.', 'vms');
+    return __('This event can no longer be purchased. Please remove it from your cart and refresh the event page.', 'backstage-venue-manager');
 }
 
-function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $plan_id = 0, int $tec_event_id = 0, string $role = ''): array
+function bvmgr_ticketing_v2_validate_product_sale_context(int $product_id, int $plan_id = 0, int $tec_event_id = 0, string $role = ''): array
 {
     $product_id = absint($product_id);
     $plan_id = absint($plan_id);
@@ -4169,16 +4590,16 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
     $product_label = $product_id > 0 ? trim((string) get_the_title($product_id)) : '';
 
     if ($product_id > 0) {
-        if ($plan_id <= 0 && function_exists('vms_ticketing_v2_resolve_plan_id_for_ticket_product')) {
-            $plan_id = absint(vms_ticketing_v2_resolve_plan_id_for_ticket_product($product_id));
+        if ($plan_id <= 0 && function_exists('bvmgr_ticketing_v2_resolve_plan_id_for_ticket_product')) {
+            $plan_id = absint(bvmgr_ticketing_v2_resolve_plan_id_for_ticket_product($product_id));
         }
-        if ($tec_event_id <= 0 && function_exists('vms_ticketing_v2_resolve_event_id_for_product')) {
-            $tec_event_id = absint(vms_ticketing_v2_resolve_event_id_for_product($product_id));
+        if ($tec_event_id <= 0 && function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')) {
+            $tec_event_id = absint(bvmgr_ticketing_v2_resolve_event_id_for_product($product_id));
         }
     }
 
     if ($plan_id > 0 && $tec_event_id <= 0) {
-        $tec_event_id = vms_ticketing_v2_linked_tec_event_id_for_plan($plan_id);
+        $tec_event_id = bvmgr_ticketing_v2_linked_tec_event_id_for_plan($plan_id);
     }
 
     if ($plan_id <= 0 || get_post_type($plan_id) !== 'vms_event_plan') {
@@ -4189,9 +4610,25 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 409,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
         );
     }
+
+	if (function_exists('bvmgr_event_plan_is_externally_ticketed') && bvmgr_event_plan_is_externally_ticketed($plan_id)) {
+		$code = 'external_ticketing';
+		$external_url = function_exists('bvmgr_event_plan_get_external_ticket_url')
+			? bvmgr_event_plan_get_external_ticket_url($plan_id)
+			: '';
+		return array(
+			'ok' => false,
+			'code' => $code,
+			'http' => 409,
+			'plan_id' => $plan_id,
+			'event_id' => $tec_event_id,
+			'external_url' => $external_url,
+			'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('external_url' => $external_url)),
+		);
+	}
 
     if ((string) get_post_status($plan_id) !== 'publish') {
         $code = 'event_plan_unpublished';
@@ -4201,12 +4638,12 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 403,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
         );
     }
 
-    $plan_status = function_exists('vms_event_plan_current_internal_status')
-        ? sanitize_key((string) vms_event_plan_current_internal_status($plan_id, 'generic'))
+    $plan_status = function_exists('bvmgr_event_plan_current_internal_status')
+        ? sanitize_key((string) bvmgr_event_plan_current_internal_status($plan_id, 'generic'))
         : 'draft';
     if ($plan_status === 'cancelled') {
         $code = 'event_cancelled';
@@ -4216,7 +4653,7 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 410,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('plan_status' => $plan_status)),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('plan_status' => $plan_status)),
         );
     }
     if ($plan_status !== 'published') {
@@ -4227,11 +4664,11 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 403,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('plan_status' => $plan_status)),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('plan_status' => $plan_status)),
         );
     }
 
-    if (function_exists('vms_event_plan_is_ticketing_enabled') && !vms_event_plan_is_ticketing_enabled($plan_id)) {
+    if (function_exists('bvmgr_event_plan_is_ticketing_enabled') && !bvmgr_event_plan_is_ticketing_enabled($plan_id)) {
         $code = 'ticketing_disabled';
         return array(
             'ok' => false,
@@ -4239,11 +4676,11 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 403,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
         );
     }
 
-    if ($product_id > 0 && !vms_ticketing_v2_product_matches_current_plan_runtime($product_id, $plan_id, $role)) {
+    if ($product_id > 0 && !bvmgr_ticketing_v2_product_matches_current_plan_runtime($product_id, $plan_id, $role)) {
         $code = 'product_detached';
         return array(
             'ok' => false,
@@ -4251,7 +4688,7 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 409,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('product_label' => $product_label)),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('product_label' => $product_label)),
         );
     }
 
@@ -4263,7 +4700,7 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 409,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
         );
     }
 
@@ -4275,12 +4712,12 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 403,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
         );
     }
 
-    if ($product_id > 0 && !vms_ticketing_v2_atomic_product_matches_event($product_id, $tec_event_id)) {
-        $plan_event_id = vms_ticketing_v2_linked_tec_event_id_for_plan($plan_id);
+    if ($product_id > 0 && !bvmgr_ticketing_v2_atomic_product_matches_event($product_id, $tec_event_id)) {
+        $plan_event_id = bvmgr_ticketing_v2_linked_tec_event_id_for_plan($plan_id);
         if ($plan_event_id !== $tec_event_id) {
             $code = 'product_detached';
             return array(
@@ -4289,12 +4726,12 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
                 'http' => 409,
                 'plan_id' => $plan_id,
                 'event_id' => $tec_event_id,
-                'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('product_label' => $product_label)),
+                'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id, array('product_label' => $product_label)),
             );
         }
     }
 
-    if (vms_tec_is_cancelled_event($tec_event_id)) {
+    if (bvmgr_tec_is_cancelled_event($tec_event_id)) {
         $code = 'event_cancelled';
         return array(
             'ok' => false,
@@ -4302,11 +4739,11 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 410,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
         );
     }
 
-    if (function_exists('vms_ticketing_v2_event_is_past') && vms_ticketing_v2_event_is_past($tec_event_id, $plan_id)) {
+    if (function_exists('bvmgr_ticketing_v2_event_is_past') && bvmgr_ticketing_v2_event_is_past($tec_event_id, $plan_id)) {
         $code = 'event_past';
         return array(
             'ok' => false,
@@ -4314,7 +4751,7 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
             'http' => 410,
             'plan_id' => $plan_id,
             'event_id' => $tec_event_id,
-            'message' => vms_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
+            'message' => bvmgr_ticketing_v2_sale_context_message($code, $plan_id, $tec_event_id),
         );
     }
 
@@ -4328,7 +4765,7 @@ function vms_ticketing_v2_validate_product_sale_context(int $product_id, int $pl
     );
 }
 
-function vms_ticketing_v2_product_matches_current_plan_runtime(int $product_id, int $plan_id, string $role = ''): bool
+function bvmgr_ticketing_v2_product_matches_current_plan_runtime(int $product_id, int $plan_id, string $role = ''): bool
 {
     $product_id = absint($product_id);
     $plan_id = absint($plan_id);
@@ -4337,7 +4774,7 @@ function vms_ticketing_v2_product_matches_current_plan_runtime(int $product_id, 
         return false;
     }
 
-    $sync = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($plan_id) : array();
+    $sync = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($plan_id) : array();
     $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
     $has_runtime_map = false;
 
@@ -4346,11 +4783,11 @@ function vms_ticketing_v2_product_matches_current_plan_runtime(int $product_id, 
         $ga_row = (isset($map['ga']) && is_array($map['ga'])) ? $map['ga'] : array();
         $has_runtime_map = !empty($ticket_rows) || !empty($ga_row);
 
-        if (function_exists('vms_ticketing_v2_sync_ticket_row_for_product') && !empty(vms_ticketing_v2_sync_ticket_row_for_product($product_id, $plan_id))) {
+        if (function_exists('bvmgr_ticketing_v2_sync_ticket_row_for_product') && !empty(bvmgr_ticketing_v2_sync_ticket_row_for_product($product_id, $plan_id))) {
             return true;
         }
-        if (function_exists('vms_ticketing_v2_disabled_ticket_config_for_product')) {
-            $disabled_state = vms_ticketing_v2_disabled_ticket_config_for_product($product_id, $plan_id);
+        if (function_exists('bvmgr_ticketing_v2_disabled_ticket_config_for_product')) {
+            $disabled_state = bvmgr_ticketing_v2_disabled_ticket_config_for_product($product_id, $plan_id);
             if (!empty($disabled_state['disabled'])) {
                 return true;
             }
@@ -4363,7 +4800,7 @@ function vms_ticketing_v2_product_matches_current_plan_runtime(int $product_id, 
                 continue;
             }
             $mapped_pid = absint($ent_row['woo_product_id'] ?? 0);
-            if ($mapped_pid > 0 && vms_ticketing_v2_pid_matches_mapped($product_id, $mapped_pid)) {
+            if ($mapped_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($product_id, $mapped_pid)) {
                 return true;
             }
         }
@@ -4373,10 +4810,10 @@ function vms_ticketing_v2_product_matches_current_plan_runtime(int $product_id, 
         return false;
     }
 
-    return vms_ticketing_v2_atomic_product_matches_plan($product_id, $plan_id);
+    return bvmgr_ticketing_v2_atomic_product_matches_plan($product_id, $plan_id);
 }
 
-function vms_ticketing_v2_enforce_live_event_items_in_cart(): void
+function bvmgr_ticketing_v2_enforce_live_event_items_in_cart(): void
 {
     if (is_admin() && !wp_doing_ajax()) {
         return;
@@ -4397,22 +4834,22 @@ function vms_ticketing_v2_enforce_live_event_items_in_cart(): void
             continue;
         }
 
-        $snapshot = vms_ticketing_v2_cart_item_context_snapshot($cart_item);
+        $snapshot = bvmgr_ticketing_v2_cart_item_context_snapshot($cart_item);
         $role = sanitize_key((string) ($snapshot['product_role'] ?? ''));
         if ($role === '') {
-            $role = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, vms_ticketing_v2_product_meta_key('product_role')));
+            $role = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, bvmgr_ticketing_v2_product_meta_key('product_role')));
         }
-        if ($role === '' && function_exists('vms_ticketing_v2_product_is_entitlement') && vms_ticketing_v2_product_is_entitlement($product_id)) {
+        if ($role === '' && function_exists('bvmgr_ticketing_v2_product_is_entitlement') && bvmgr_ticketing_v2_product_is_entitlement($product_id)) {
             $role = 'entitlement';
         }
-        if ($role === '' && (!empty($snapshot['event_plan_id']) || !empty($snapshot['tec_event_id']) || vms_ticketing_v2_product_cancelled_event_id($product_id) > 0)) {
+        if ($role === '' && (!empty($snapshot['event_plan_id']) || !empty($snapshot['tec_event_id']) || bvmgr_ticketing_v2_product_cancelled_event_id($product_id) > 0)) {
             $role = 'ga_ticket';
         }
-        if (!vms_ticketing_v2_role_supports_event_name_suffix($role)) {
+        if (!bvmgr_ticketing_v2_role_supports_event_name_suffix($role)) {
             continue;
         }
 
-        $validation = vms_ticketing_v2_validate_product_sale_context(
+        $validation = bvmgr_ticketing_v2_validate_product_sale_context(
             $product_id,
             absint($snapshot['event_plan_id'] ?? 0),
             absint($snapshot['tec_event_id'] ?? 0),
@@ -4428,53 +4865,55 @@ function vms_ticketing_v2_enforce_live_event_items_in_cart(): void
         }
 
         $seen_messages[$message] = true;
-        vms_ticketing_v2_add_limit_notice_once($message);
+        bvmgr_ticketing_v2_add_limit_notice_once($message);
     }
 }
 
-function vms_ticketing_v2_enforce_no_cancelled_event_items_in_cart(): void
+function bvmgr_ticketing_v2_enforce_no_cancelled_event_items_in_cart(): void
 {
-    vms_ticketing_v2_enforce_live_event_items_in_cart();
+    bvmgr_ticketing_v2_enforce_live_event_items_in_cart();
 }
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_enforce_no_cancelled_event_items_in_cart', 4);
-add_action('woocommerce_checkout_process', 'vms_ticketing_v2_enforce_no_cancelled_event_items_in_cart', 4);
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_enforce_no_cancelled_event_items_in_cart', 4);
+add_action('woocommerce_checkout_process', 'bvmgr_ticketing_v2_enforce_no_cancelled_event_items_in_cart', 4);
 
-function vms_ticketing_v2_early_price_cap_notice(array $ctx, int $requested_qty = 0): string
+function bvmgr_ticketing_v2_early_price_cap_notice(array $ctx, int $requested_qty = 0): string
 {
     $ticket = (isset($ctx['ticket']) && is_array($ctx['ticket'])) ? $ctx['ticket'] : array();
     $state = (isset($ctx['state']) && is_array($ctx['state'])) ? $ctx['state'] : array();
-    $label = trim(vms_ticketing_v2_plain_display_text($ticket['title'] ?? ($ticket['label'] ?? __('ticket', 'vms'))));
+    $label = trim(bvmgr_ticketing_v2_plain_display_text($ticket['title'] ?? ($ticket['label'] ?? __('ticket', 'backstage-venue-manager'))));
     if ($label === '') {
-        $label = __('ticket', 'vms');
+        $label = __('ticket', 'backstage-venue-manager');
     }
     $remaining = (int) ($state['remaining_qty'] ?? 0);
 
     if ($remaining <= 0) {
-        return sprintf(__('Early Bird pricing for “%s” is sold out. Please refresh the event page to continue at the regular price.', 'vms'), $label);
+        /* translators: %s: formatted price. */
+        return sprintf(__('Early Bird pricing for “%s” is sold out. Please refresh the event page to continue at the regular price.', 'backstage-venue-manager'), $label);
     }
 
     return sprintf(
-        _n('Only %1$d Early Bird ticket remains for “%2$s”. Please reduce that ticket quantity or refresh the event page.', 'Only %1$d Early Bird tickets remain for “%2$s”. Please reduce that ticket quantity or refresh the event page.', $remaining, 'vms'),
+        /* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
+        _n('Only %1$d Early Bird ticket remains for “%2$s”. Please reduce that ticket quantity or refresh the event page.', 'Only %1$d Early Bird tickets remain for “%2$s”. Please reduce that ticket quantity or refresh the event page.', $remaining, 'backstage-venue-manager'),
         $remaining,
         $label
     );
 }
 
-function vms_ticketing_v2_early_price_cap_context_for_product(int $product_id): array
+function bvmgr_ticketing_v2_early_price_cap_context_for_product(int $product_id): array
 {
     $product_id = absint($product_id);
-    if ($product_id <= 0 || !function_exists('vms_ticketing_v2_get_ticket_config_for_product_price') || !function_exists('vms_ticketing_v2_get_ticket_early_price_state')) {
+    if ($product_id <= 0 || !function_exists('bvmgr_ticketing_v2_get_ticket_config_for_product_price') || !function_exists('bvmgr_ticketing_v2_get_ticket_early_price_state')) {
         return array();
     }
 
-    $ticket = vms_ticketing_v2_get_ticket_config_for_product_price($product_id);
+    $ticket = bvmgr_ticketing_v2_get_ticket_config_for_product_price($product_id);
     if (empty($ticket) || !is_array($ticket)) {
         return array();
     }
     $ticket['_vms_runtime_product_id'] = $product_id;
     $ticket['woo_product_id'] = $product_id;
 
-    $state = vms_ticketing_v2_get_ticket_early_price_state($ticket);
+    $state = bvmgr_ticketing_v2_get_ticket_early_price_state($ticket);
     $cap = max(0, absint($state['early_price_cap'] ?? 0));
     if ($cap <= 0 || empty($state['valid']) || empty($state['active_by_date'])) {
         return array();
@@ -4487,7 +4926,7 @@ function vms_ticketing_v2_early_price_cap_context_for_product(int $product_id): 
     );
 }
 
-function vms_ticketing_v2_cart_qty_for_product_id(int $product_id, string $exclude_cart_item_key = ''): int
+function bvmgr_ticketing_v2_cart_qty_for_product_id(int $product_id, string $exclude_cart_item_key = ''): int
 {
     $product_id = absint($product_id);
     if ($product_id <= 0 || !function_exists('WC') || !WC() || !isset(WC()->cart) || !WC()->cart) {
@@ -4512,13 +4951,13 @@ function vms_ticketing_v2_cart_qty_for_product_id(int $product_id, string $exclu
     return max(0, absint($qty));
 }
 
-function vms_ticketing_v2_validate_early_price_cap_for_add(int $product_id, int $quantity): bool
+function bvmgr_ticketing_v2_validate_early_price_cap_for_add(int $product_id, int $quantity): bool
 {
     if (!function_exists('wc_add_notice')) {
         return true;
     }
 
-    $ctx = vms_ticketing_v2_early_price_cap_context_for_product($product_id);
+    $ctx = bvmgr_ticketing_v2_early_price_cap_context_for_product($product_id);
     if (empty($ctx)) {
         return true;
     }
@@ -4530,17 +4969,17 @@ function vms_ticketing_v2_validate_early_price_cap_for_add(int $product_id, int 
         return true;
     }
 
-    $cart_qty = vms_ticketing_v2_cart_qty_for_product_id($product_id);
+    $cart_qty = bvmgr_ticketing_v2_cart_qty_for_product_id($product_id);
     $available_to_add = max(0, $remaining - $cart_qty);
     if ($quantity <= $available_to_add) {
         return true;
     }
 
-    wc_add_notice(vms_ticketing_v2_early_price_cap_notice($ctx, $quantity), 'error');
+    wc_add_notice(bvmgr_ticketing_v2_early_price_cap_notice($ctx, $quantity), 'error');
     return false;
 }
 
-function vms_ticketing_v2_enforce_early_price_caps_in_cart(): void
+function bvmgr_ticketing_v2_enforce_early_price_caps_in_cart(): void
 {
     if (!function_exists('wc_add_notice') || !function_exists('WC') || !WC() || !isset(WC()->cart) || !WC()->cart) {
         return;
@@ -4562,7 +5001,7 @@ function vms_ticketing_v2_enforce_early_price_caps_in_cart(): void
 
     $seen = array();
     foreach ($qty_by_product as $product_id => $cart_qty) {
-        $ctx = vms_ticketing_v2_early_price_cap_context_for_product((int) $product_id);
+        $ctx = bvmgr_ticketing_v2_early_price_cap_context_for_product((int) $product_id);
         if (empty($ctx)) {
             continue;
         }
@@ -4571,7 +5010,7 @@ function vms_ticketing_v2_enforce_early_price_caps_in_cart(): void
         if ($remaining <= 0 || $cart_qty <= $remaining) {
             continue;
         }
-        $message = vms_ticketing_v2_early_price_cap_notice($ctx, (int) $cart_qty);
+        $message = bvmgr_ticketing_v2_early_price_cap_notice($ctx, (int) $cart_qty);
         if (isset($seen[$message])) {
             continue;
         }
@@ -4580,7 +5019,7 @@ function vms_ticketing_v2_enforce_early_price_caps_in_cart(): void
     }
 }
 
-function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, $variation_id = 0, $variations = array(), $cart_item_data = array()) {
+function bvmgr_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, $variation_id = 0, $variations = array(), $cart_item_data = array()) {
     if (!$passed) {
         return $passed;
     }
@@ -4593,15 +5032,15 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
         return $passed;
     }
 
-    $plan_id = absint(vms_ticketing_v2_meta_get($pid, vms_ticketing_v2_product_meta_key('event_plan_id')));
-    $role = (string) vms_ticketing_v2_meta_get($pid, vms_ticketing_v2_product_meta_key('product_role'));
+    $plan_id = absint(bvmgr_ticketing_v2_meta_get($pid, bvmgr_ticketing_v2_product_meta_key('event_plan_id')));
+    $role = (string) bvmgr_ticketing_v2_meta_get($pid, bvmgr_ticketing_v2_product_meta_key('product_role'));
 
     // Legacy fallback: infer role for older add-on products.
     if ($role === '') {
-        $sr_qual = (string) vms_ticketing_v2_meta_get($pid, '_sr_addon_qualifier');
-        $sr_type = (string) vms_ticketing_v2_meta_get($pid, '_sr_addon_type');
-        $sr_req  = (string) vms_ticketing_v2_meta_get($pid, '_sr_required_qualifiers_per_unit');
-        $sr_unit = (string) vms_ticketing_v2_meta_get($pid, '_sr_addon_unit_label');
+        $sr_qual = (string) bvmgr_ticketing_v2_meta_get($pid, '_sr_addon_qualifier');
+        $sr_type = (string) bvmgr_ticketing_v2_meta_get($pid, '_sr_addon_type');
+        $sr_req  = (string) bvmgr_ticketing_v2_meta_get($pid, '_sr_required_qualifiers_per_unit');
+        $sr_unit = (string) bvmgr_ticketing_v2_meta_get($pid, '_sr_addon_unit_label');
         if ($sr_qual === 'yes') {
             $role = 'ga_ticket';
         } elseif ($sr_type !== '' || $sr_req !== '' || $sr_unit !== '') {
@@ -4611,15 +5050,15 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
 
     // Fallback for Event Tickets products: map tec_event_id to a plan when plan marker is missing.
     if ($plan_id <= 0) {
-        $tec_event_id = absint(vms_ticketing_v2_meta_get($pid, '_tribe_wooticket_for_event'));
-        if ($tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-            $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
+        $tec_event_id = absint(bvmgr_ticketing_v2_meta_get($pid, '_tribe_wooticket_for_event'));
+        if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+            $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
         }
     }
 
     // If product markers are missing (common on legacy/adopted products), derive role from the plan sync map.
-    if ($plan_id > 0 && $role === '' && function_exists('vms_ticketing_v2_get_sync')) {
-        $sync = vms_ticketing_v2_get_sync((int) $plan_id);
+    if ($plan_id > 0 && $role === '' && function_exists('bvmgr_ticketing_v2_get_sync')) {
+        $sync = bvmgr_ticketing_v2_get_sync((int) $plan_id);
         $map  = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
 
         $ticket_map = (isset($map['tickets']) && is_array($map['tickets'])) ? $map['tickets'] : array();
@@ -4628,7 +5067,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
                 continue;
             }
             $mapped_ticket_pid = absint($ticket_row['woo_product_id'] ?? 0);
-            if ($mapped_ticket_pid > 0 && vms_ticketing_v2_pid_matches_mapped($pid, $mapped_ticket_pid)) {
+            if ($mapped_ticket_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($pid, $mapped_ticket_pid)) {
                 $role = 'ga_ticket';
                 break;
             }
@@ -4636,14 +5075,14 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
 
         if ($role === '') {
             $mapped_ga_pid = absint($map['ga']['woo_product_id'] ?? 0);
-            if ($mapped_ga_pid > 0 && vms_ticketing_v2_pid_matches_mapped($pid, $mapped_ga_pid)) {
+            if ($mapped_ga_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($pid, $mapped_ga_pid)) {
                 $role = 'ga_ticket';
             } else {
                 $emap = (isset($map['entitlements']) && is_array($map['entitlements'])) ? $map['entitlements'] : array();
                 foreach ($emap as $ent_row) {
                     if (!is_array($ent_row)) continue;
                     $mapped_ent_pid = absint($ent_row['woo_product_id'] ?? 0);
-                    if ($mapped_ent_pid > 0 && vms_ticketing_v2_pid_matches_mapped($pid, $mapped_ent_pid)) {
+                    if ($mapped_ent_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($pid, $mapped_ent_pid)) {
                         $role = 'entitlement';
                         break;
                     }
@@ -4652,47 +5091,47 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
         }
     }
 
-    if (vms_ticketing_v2_role_supports_event_name_suffix($role)) {
-        $sale_context = vms_ticketing_v2_validate_product_sale_context($pid, $plan_id, 0, $role);
+    if (bvmgr_ticketing_v2_role_supports_event_name_suffix($role)) {
+        $sale_context = bvmgr_ticketing_v2_validate_product_sale_context($pid, $plan_id, 0, $role);
         if (empty($sale_context['ok'])) {
-            wc_add_notice((string) ($sale_context['message'] ?? __('This event can no longer be purchased. Please refresh the event page and try again.', 'vms')), 'error');
+            wc_add_notice((string) ($sale_context['message'] ?? __('This event can no longer be purchased. Please refresh the event page and try again.', 'backstage-venue-manager')), 'error');
             return false;
         }
         $plan_id = absint($sale_context['plan_id'] ?? $plan_id);
     }
 
     if ($plan_id > 0 && $role === 'ga_ticket') {
-        $disabled_ticket_state = function_exists('vms_ticketing_v2_disabled_ticket_config_for_product')
-            ? vms_ticketing_v2_disabled_ticket_config_for_product($pid, $plan_id)
+        $disabled_ticket_state = function_exists('bvmgr_ticketing_v2_disabled_ticket_config_for_product')
+            ? bvmgr_ticketing_v2_disabled_ticket_config_for_product($pid, $plan_id)
             : array('disabled' => false);
         if (!empty($disabled_ticket_state['disabled'])) {
-            wc_add_notice(vms_ticketing_v2_disabled_ticket_notice_text($disabled_ticket_state), 'error');
+            wc_add_notice(bvmgr_ticketing_v2_disabled_ticket_notice_text($disabled_ticket_state), 'error');
             return false;
         }
 
-        $verified_ctx = vms_ticketing_v2_resolve_verified_ticket_context($pid);
+        $verified_ctx = bvmgr_ticketing_v2_resolve_verified_ticket_context($pid);
             $visibility_mode = sanitize_key((string) ($verified_ctx['visibility_mode'] ?? 'public'));
             if (!in_array($visibility_mode, array('public', 'login', 'verified'), true)) {
                 $visibility_mode = 'public';
             }
             $verified_program = sanitize_key((string) ($verified_ctx['program'] ?? ''));
-            $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-                ? vms_ticketing_v2_normalize_allowed_programs($verified_ctx['allowed_programs'] ?? array(), $verified_program)
+            $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+                ? bvmgr_ticketing_v2_normalize_allowed_programs($verified_ctx['allowed_programs'] ?? array(), $verified_program)
                 : ($verified_program !== '' ? array($verified_program) : array());
-            $allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-                ? vms_ticketing_v2_truthy($verified_ctx['allow_direct_grants'] ?? false, false)
-                : vms_ticketing_v2_meta_truthy($verified_ctx['allow_direct_grants'] ?? false, false);
+            $allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+                ? bvmgr_ticketing_v2_truthy($verified_ctx['allow_direct_grants'] ?? false, false)
+                : bvmgr_ticketing_v2_meta_truthy($verified_ctx['allow_direct_grants'] ?? false, false);
             $claim_grant_type = sanitize_key((string) ($verified_ctx['claim_grant_type'] ?? 'event_ticket_eligibility'));
-            if (!in_array($claim_grant_type, vms_ticketing_v2_claim_grant_type_values(), true)) {
+            if (!in_array($claim_grant_type, bvmgr_ticketing_v2_claim_grant_type_values(), true)) {
                 $claim_grant_type = 'event_ticket_eligibility';
             }
             $claims_per_assignee = max(0, absint($verified_ctx['claims_per_assignee'] ?? 1));
             if ($claims_per_assignee <= 0) {
                 $claims_per_assignee = 1;
             }
-            $require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-                ? vms_ticketing_v2_truthy($verified_ctx['require_assignee_email'] ?? true, true)
-                : vms_ticketing_v2_meta_truthy($verified_ctx['require_assignee_email'] ?? true, true);
+            $require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+                ? bvmgr_ticketing_v2_truthy($verified_ctx['require_assignee_email'] ?? true, true)
+                : bvmgr_ticketing_v2_meta_truthy($verified_ctx['require_assignee_email'] ?? true, true);
             $event_id = absint($verified_ctx['event_id'] ?? 0);
             $ticket_key = sanitize_key((string) ($verified_ctx['ticket_key'] ?? ''));
             if ($verified_program === '' && !empty($allowed_programs)) {
@@ -4700,20 +5139,21 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
             }
 
             if ($visibility_mode === 'login' && !is_user_logged_in()) {
-                wc_add_notice(__('Please log in to purchase this ticket.', 'vms'), 'error');
+                wc_add_notice(__('Please log in to purchase this ticket.', 'backstage-venue-manager'), 'error');
                 return false;
             }
 
             if ($visibility_mode === 'verified') {
-                $incoming_claim_assignments = vms_ticketing_v2_claim_assignments_normalize($cart_item_data['vms_claim_assignments'] ?? array());
-                $program_label = vms_ticketing_v2_claim_program_label_text($allowed_programs, $verified_program);
+                $incoming_claim_assignments = bvmgr_ticketing_v2_claim_assignments_normalize($cart_item_data['vms_claim_assignments'] ?? array());
+                $program_label = bvmgr_ticketing_v2_claim_program_label_text($allowed_programs, $verified_program);
 
                 if (!is_user_logged_in()) {
                     $guest_message = $program_label !== ''
-                        ? sprintf(__('This ticket requires %s verification. Log in and submit verification first.', 'vms'), $program_label)
-                        : __('This ticket requires account verification. Log in and submit verification first.', 'vms');
+                        /* translators: %s: human-readable value used in this message. */
+                        ? sprintf(__('This ticket requires %s verification. Log in and submit verification first.', 'backstage-venue-manager'), $program_label)
+                        : __('This ticket requires account verification. Log in and submit verification first.', 'backstage-venue-manager');
                     if (empty($allowed_programs) && $allow_direct_grants) {
-                        $guest_message = __('This ticket requires event-specific account approval. Log in to continue.', 'vms');
+                        $guest_message = __('This ticket requires event-specific account approval. Log in to continue.', 'backstage-venue-manager');
                     }
                     wc_add_notice(
                         $guest_message,
@@ -4722,7 +5162,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
                     return false;
                 }
 
-                $eligibility = vms_ticketing_v2_resolve_claim_eligibility_for_user(
+                $eligibility = bvmgr_ticketing_v2_resolve_claim_eligibility_for_user(
                     (int) get_current_user_id(),
                     $event_id,
                     $pid,
@@ -4733,8 +5173,8 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
                     $claim_grant_type
                 );
 
-                if (function_exists('vms_ticketing_claims_log_result')) {
-                    vms_ticketing_claims_log_result(array(
+                if (function_exists('bvmgr_ticketing_claims_log_result')) {
+                    bvmgr_ticketing_claims_log_result(array(
                         'event_id' => $event_id,
                         'ticket_product_id' => $pid,
                         'ticket_key' => $ticket_key,
@@ -4763,7 +5203,8 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
                     $message = sanitize_text_field((string) ($eligibility['message'] ?? ''));
                     if ($message === '') {
                         $message = sprintf(
-                            __('Verification required for this ticket (%s). Submit your ID once for automatic recognition.', 'vms'),
+                            /* translators: %s: human-readable value used in this message. */
+                            __('Verification required for this ticket (%s). Submit your ID once for automatic recognition.', 'backstage-venue-manager'),
                             $program_label
                         );
                     }
@@ -4775,8 +5216,8 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
                 }
 
                 if ($require_assignee_email) {
-                    $existing_counts = vms_ticketing_v2_cart_assignee_usage_for_event($event_id, $ticket_key);
-                    $assignment_result = vms_ticketing_v2_validate_claim_assignments(
+                    $existing_counts = bvmgr_ticketing_v2_cart_assignee_usage_for_event($event_id, $ticket_key);
+                    $assignment_result = bvmgr_ticketing_v2_validate_claim_assignments(
                         $pid,
                         absint($quantity),
                         $incoming_claim_assignments,
@@ -4790,7 +5231,7 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
                     if (empty($assignment_result['ok'])) {
                         $assignment_message = sanitize_text_field((string) ($assignment_result['message'] ?? ''));
                         if ($assignment_message === '') {
-                            $assignment_message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'vms');
+                            $assignment_message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'backstage-venue-manager');
                         }
                         wc_add_notice($assignment_message, 'error');
                         return false;
@@ -4799,15 +5240,15 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
 
             }
 
-        if (!vms_ticketing_v2_validate_early_price_cap_for_add($pid, absint($quantity))) {
+        if (!bvmgr_ticketing_v2_validate_early_price_cap_for_add($pid, absint($quantity))) {
             return false;
         }
 
-        if (!vms_ticketing_v2_enforce_ticket_max_qty_for_add($pid, absint($quantity))) {
+        if (!bvmgr_ticketing_v2_enforce_ticket_max_qty_for_add($pid, absint($quantity))) {
             return false;
         }
 
-        if (!vms_ticketing_v2_validate_ticket_ratio_for_add($pid, $plan_id, absint($quantity))) {
+        if (!bvmgr_ticketing_v2_validate_ticket_ratio_for_add($pid, $plan_id, absint($quantity))) {
             return false;
         }
 
@@ -4819,27 +5260,27 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
     }
 
     $cfg = array();
-    if (function_exists('vms_ticketing_v2_get_config')) {
-        $cfg = vms_ticketing_v2_get_config($plan_id);
+    if (function_exists('bvmgr_ticketing_v2_get_config')) {
+        $cfg = bvmgr_ticketing_v2_get_config($plan_id);
     }
 
     $is_admin_user = function_exists('current_user_can') ? current_user_can('manage_options') : false;
-    if (!vms_ticketing_v2_ga_is_on_sale_now($cfg) && !$is_admin_user) {
-        wc_add_notice(__('Reserved add-ons are not available until tickets go on sale.', 'vms'), 'error');
+    if (!bvmgr_ticketing_v2_ga_is_on_sale_now($cfg) && !$is_admin_user) {
+        wc_add_notice(__('Reserved add-ons are not available until tickets go on sale.', 'backstage-venue-manager'), 'error');
         return;
     }
 
-    $ent_id = sanitize_key((string) vms_ticketing_v2_meta_get($pid, vms_ticketing_v2_product_meta_key('ticketing_entitlement_id')));
+    $ent_id = sanitize_key((string) bvmgr_ticketing_v2_meta_get($pid, bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id')));
     $ent_cfg = null;
     if ($ent_id !== '' && is_array($cfg) && !empty($cfg)) {
-        $ent_cfg = vms_ticketing_v2_find_entitlement_cfg($cfg, $ent_id);
+        $ent_cfg = bvmgr_ticketing_v2_find_entitlement_cfg($cfg, $ent_id);
         if (is_array($ent_cfg) && empty($ent_cfg['enabled'])) {
-            wc_add_notice(__('That reserved add-on is not available for this event.', 'vms'), 'error');
+            wc_add_notice(__('That reserved add-on is not available for this event.', 'backstage-venue-manager'), 'error');
             return false;
         }
     }
 
-    $elig = vms_ticketing_v2_resolve_eligibility_for_product($pid, $plan_id, is_array($ent_cfg) ? $ent_cfg : null);
+    $elig = bvmgr_ticketing_v2_resolve_eligibility_for_product($pid, $plan_id, is_array($ent_cfg) ? $ent_cfg : null);
     $pool_key = sanitize_key((string) ($elig['pool_key'] ?? ''));
     $pool_min = absint($elig['min_ga_per_unit'] ?? 0);
     $allow_without_ga = !empty($elig['allow_without_ga']);
@@ -4874,22 +5315,23 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
         }
     }
 
-    $scan = vms_ticketing_v2_cart_scan();
+    $scan = bvmgr_ticketing_v2_cart_scan();
     $ga_qty_raw = (int) (($scan['ga_qty_by_plan'][$plan_id] ?? 0));
-    $ga_qty = vms_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);
-    $prior_history = function_exists('vms_ticketing_v2_prior_addon_history_for_plan')
-        ? vms_ticketing_v2_prior_addon_history_for_plan($plan_id, is_array($cfg) ? $cfg : array())
+    $ga_qty = bvmgr_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);
+    $prior_history = function_exists('bvmgr_ticketing_v2_prior_addon_history_for_plan')
+        ? bvmgr_ticketing_v2_prior_addon_history_for_plan($plan_id, is_array($cfg) ? $cfg : array())
         : array('qualifying_qty' => 0, 'pool_qty_by_key' => array());
     $ga_qty += max(0, absint($prior_history['qualifying_qty'] ?? 0));
     $prior_pool_qty_by_key = (isset($prior_history['pool_qty_by_key']) && is_array($prior_history['pool_qty_by_key']))
         ? $prior_history['pool_qty_by_key']
         : array();
-    $qualifying_ticket_label = vms_ticketing_v2_resolve_qualifying_ticket_label($plan_id);
+    $qualifying_ticket_label = bvmgr_ticketing_v2_resolve_qualifying_ticket_label($plan_id);
 
     if (!$allow_without_ga && $pool_min > 0 && $ga_qty < $pool_min) {
         $label = ucwords(str_replace('_', ' ', (string) $pool_key));
-        $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $pool_min);
-        wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'vms'), $label, $pool_min, $ticket_phrase), 'error');
+        $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $pool_min);
+        /* translators: 1: value 1 used in this message, 2: number 2 used in this message, 3: value 3 used in this message, 4: value 4 used in this message. */
+        wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'backstage-venue-manager'), $label, $pool_min, $ticket_phrase), 'error');
         return false;
     }
 
@@ -4909,13 +5351,13 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
         $cart_ent_id = sanitize_key((string) ($line['entitlement_id'] ?? ''));
         $cart_ent_cfg = null;
         if ($cart_ent_id !== '' && is_array($cfg) && !empty($cfg)) {
-            $cart_ent_cfg = vms_ticketing_v2_find_entitlement_cfg($cfg, $cart_ent_id);
+            $cart_ent_cfg = bvmgr_ticketing_v2_find_entitlement_cfg($cfg, $cart_ent_id);
             if (is_array($cart_ent_cfg) && empty($cart_ent_cfg['enabled'])) {
                 continue;
             }
         }
 
-        $cart_elig = vms_ticketing_v2_resolve_eligibility_for_product($cart_pid, $plan_id, is_array($cart_ent_cfg) ? $cart_ent_cfg : null);
+        $cart_elig = bvmgr_ticketing_v2_resolve_eligibility_for_product($cart_pid, $plan_id, is_array($cart_ent_cfg) ? $cart_ent_cfg : null);
         if (sanitize_key((string) ($cart_elig['pool_key'] ?? '')) !== $pool_key) {
             continue;
         }
@@ -4948,14 +5390,17 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
             $required_total = max(0, ($pool_qty + $req_qty) * $pool_min);
             $missing = max(0, $required_total - $ga_qty);
             if ($missing > 0) {
-                $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $missing);
-                wc_add_notice(sprintf(__('Your reserved spots require %1$d more %2$s. Add more %2$s or remove one or more reserved spots.', 'vms'), $missing, $ticket_phrase), 'error');
+                $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, $missing);
+                /* translators: 1: number 1 used in this message, 2: value 2 used in this message, 3: value 3 used in this message. */
+                wc_add_notice(sprintf(__('Your reserved spots require %1$d more %2$s. Add more %2$s or remove one or more reserved spots.', 'backstage-venue-manager'), $missing, $ticket_phrase), 'error');
             } else {
-                $ticket_phrase = vms_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
-                wc_add_notice(sprintf(__('Your reserved spots currently require more %1$s. Add more %1$s or remove one or more reserved spots.', 'vms'), $ticket_phrase), 'error');
+                $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase($qualifying_ticket_label, 2);
+                /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+                wc_add_notice(sprintf(__('Your reserved spots currently require more %1$s. Add more %1$s or remove one or more reserved spots.', 'backstage-venue-manager'), $ticket_phrase), 'error');
             }
         } else {
-            wc_add_notice(sprintf(__('You can only select up to %d total add-ons in “%s”. Please choose fewer.', 'vms'), $allowed, $label), 'error');
+            /* translators: 1: maximum allowed quantity, 2: add-on pool label. */
+            wc_add_notice(sprintf(__('You can only select up to %1$d total add-ons in “%2$s”. Please choose fewer.', 'backstage-venue-manager'), $allowed, $label), 'error');
         }
         return false;
     }
@@ -4963,12 +5408,12 @@ function vms_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity, 
     return $passed;
 }
 
-function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
+function bvmgr_ticketing_v2_enforce_claim_assignments_in_cart(): void
 {
     if (!function_exists('wc_add_notice') || !function_exists('WC') || !WC() || !isset(WC()->cart) || !WC()->cart) {
         return;
     }
-    if (vms_ticketing_v2_public_ticket_qualification_removed()) {
+    if (bvmgr_ticketing_v2_public_ticket_qualification_removed()) {
         return;
     }
 
@@ -4987,7 +5432,7 @@ function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
             continue;
         }
 
-        $ctx = vms_ticketing_v2_claim_context_for_product($item_product_id);
+        $ctx = bvmgr_ticketing_v2_claim_context_for_product($item_product_id);
         if (sanitize_key((string) ($ctx['visibility_mode'] ?? '')) !== 'verified' || empty($ctx['require_assignee_email'])) {
             continue;
         }
@@ -5003,7 +5448,7 @@ function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
             continue;
         }
 
-        $buyer_eligibility = vms_ticketing_v2_resolve_claim_eligibility_for_user(
+        $buyer_eligibility = bvmgr_ticketing_v2_resolve_claim_eligibility_for_user(
             $buyer_user_id,
             $event_id,
             $item_product_id,
@@ -5017,10 +5462,10 @@ function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
             continue;
         }
 
-        $assignments = vms_ticketing_v2_cart_item_claim_assignments($cart_item);
-        $existing_counts = vms_ticketing_v2_cart_assignee_usage_for_event($event_id, $ticket_key, (string) $cart_item_key);
+        $assignments = bvmgr_ticketing_v2_cart_item_claim_assignments($cart_item);
+        $existing_counts = bvmgr_ticketing_v2_cart_assignee_usage_for_event($event_id, $ticket_key, (string) $cart_item_key);
 
-        $assignment_result = vms_ticketing_v2_validate_claim_assignments(
+        $assignment_result = bvmgr_ticketing_v2_validate_claim_assignments(
             $item_product_id,
             $qty,
             $assignments,
@@ -5033,8 +5478,8 @@ function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
         );
 
         if (!empty($assignment_result['ok'])) {
-            $validated_assignments = vms_ticketing_v2_claim_assignments_normalize($assignment_result['assignments'] ?? array());
-            $existing_snapshot = vms_ticketing_v2_claim_assignments_normalize($assignments);
+            $validated_assignments = bvmgr_ticketing_v2_claim_assignments_normalize($assignment_result['assignments'] ?? array());
+            $existing_snapshot = bvmgr_ticketing_v2_claim_assignments_normalize($assignments);
             if (!empty($validated_assignments)) {
                 $existing_json = wp_json_encode($existing_snapshot);
                 $validated_json = wp_json_encode($validated_assignments);
@@ -5051,13 +5496,14 @@ function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
 
         $message = sanitize_text_field((string) ($assignment_result['message'] ?? ''));
         if ($message === '') {
-            $message = __('Please add one approved guest email per special-access ticket in your cart.', 'vms');
+            $message = __('Please add one approved guest email per special-access ticket in your cart.', 'backstage-venue-manager');
         }
 
         $product = function_exists('wc_get_product') ? wc_get_product($item_product_id) : null;
         $product_name = $product ? sanitize_text_field((string) $product->get_name()) : '';
         if ($product_name !== '') {
-            $message = sprintf(__('Ticket "%1$s": %2$s', 'vms'), $product_name, $message);
+            /* translators: 1: value 1 used in this message, 2: value 2 used in this message. */
+            $message = sprintf(__('Ticket "%1$s": %2$s', 'backstage-venue-manager'), $product_name, $message);
         }
 
         if (isset($notices_seen[$message])) {
@@ -5072,35 +5518,35 @@ function vms_ticketing_v2_enforce_claim_assignments_in_cart(): void
     }
 }
 
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_enforce_early_price_caps_in_cart', 16);
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_enforce_ticket_max_qtys_in_cart', 17);
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_enforce_verified_ticket_limits_in_cart', 18);
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_enforce_ticket_ratio_rules_in_cart', 18);
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_enforce_claim_assignments_in_cart', 19);
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_enforce_ticket_visibility_rules', 19);
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_enforce_cart_rules');
-add_action('woocommerce_check_cart_items', 'vms_ticketing_v2_maybe_gate_cart_checkout_button', 25);
-add_action('woocommerce_checkout_process', 'vms_ticketing_v2_enforce_early_price_caps_in_cart', 16);
-add_action('woocommerce_checkout_process', 'vms_ticketing_v2_enforce_ticket_max_qtys_in_cart', 17);
-add_action('woocommerce_checkout_process', 'vms_ticketing_v2_enforce_verified_ticket_limits_in_cart', 18);
-add_action('woocommerce_checkout_process', 'vms_ticketing_v2_enforce_ticket_ratio_rules_in_cart', 18);
-add_action('woocommerce_checkout_process', 'vms_ticketing_v2_enforce_claim_assignments_in_cart', 19);
-add_action('woocommerce_checkout_process', 'vms_ticketing_v2_enforce_ticket_visibility_rules', 19);
-add_action('woocommerce_checkout_process', 'vms_ticketing_v2_enforce_cart_rules', 20);
-add_action('woocommerce_store_api_cart_errors', 'vms_ticketing_v2_store_api_add_checkout_blocker_errors', 20, 2);
-add_action('woocommerce_store_api_checkout_update_order_meta', 'vms_ticketing_v2_store_api_checkout_update_order_meta', 20, 1);
-add_action('woocommerce_store_api_validate_add_to_cart', 'vms_ticketing_v2_store_api_validate_add_to_cart', 20, 2);
-add_filter('woocommerce_available_payment_gateways', 'vms_ticketing_v2_filter_available_payment_gateways', 20);
-add_filter('woocommerce_order_button_html', 'vms_ticketing_v2_filter_checkout_order_button_html', 20);
-add_filter('woocommerce_add_to_cart_validation', 'vms_ticketing_v2_validate_add_to_cart', 20, 6);
-add_filter('woocommerce_add_cart_item_data', 'vms_ticketing_v2_capture_cart_item_context', 20, 3);
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_enforce_early_price_caps_in_cart', 16);
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_enforce_ticket_max_qtys_in_cart', 17);
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_enforce_verified_ticket_limits_in_cart', 18);
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_enforce_ticket_ratio_rules_in_cart', 18);
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_enforce_claim_assignments_in_cart', 19);
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_enforce_ticket_visibility_rules', 19);
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_enforce_cart_rules');
+add_action('woocommerce_check_cart_items', 'bvmgr_ticketing_v2_maybe_gate_cart_checkout_button', 25);
+add_action('woocommerce_checkout_process', 'bvmgr_ticketing_v2_enforce_early_price_caps_in_cart', 16);
+add_action('woocommerce_checkout_process', 'bvmgr_ticketing_v2_enforce_ticket_max_qtys_in_cart', 17);
+add_action('woocommerce_checkout_process', 'bvmgr_ticketing_v2_enforce_verified_ticket_limits_in_cart', 18);
+add_action('woocommerce_checkout_process', 'bvmgr_ticketing_v2_enforce_ticket_ratio_rules_in_cart', 18);
+add_action('woocommerce_checkout_process', 'bvmgr_ticketing_v2_enforce_claim_assignments_in_cart', 19);
+add_action('woocommerce_checkout_process', 'bvmgr_ticketing_v2_enforce_ticket_visibility_rules', 19);
+add_action('woocommerce_checkout_process', 'bvmgr_ticketing_v2_enforce_cart_rules', 20);
+add_action('woocommerce_store_api_cart_errors', 'bvmgr_ticketing_v2_store_api_add_checkout_blocker_errors', 20, 2);
+add_action('woocommerce_store_api_checkout_update_order_meta', 'bvmgr_ticketing_v2_store_api_checkout_update_order_meta', 20, 1);
+add_action('woocommerce_store_api_validate_add_to_cart', 'bvmgr_ticketing_v2_store_api_validate_add_to_cart', 20, 2);
+add_filter('woocommerce_available_payment_gateways', 'bvmgr_ticketing_v2_filter_available_payment_gateways', 20);
+add_filter('woocommerce_order_button_html', 'bvmgr_ticketing_v2_filter_checkout_order_button_html', 20);
+add_filter('woocommerce_add_to_cart_validation', 'bvmgr_ticketing_v2_validate_add_to_cart', 20, 6);
+add_filter('woocommerce_add_cart_item_data', 'bvmgr_ticketing_v2_capture_cart_item_context', 20, 3);
 
-add_filter('woocommerce_get_item_data', 'vms_ticketing_v2_add_event_meta_to_cart_item', 20, 2);
-add_action('woocommerce_checkout_create_order_line_item', 'vms_ticketing_v2_add_event_meta_to_order_item', 20, 4);
-add_filter('woocommerce_cart_item_name', 'vms_ticketing_v2_filter_cart_item_name', 20, 3);
-add_filter('woocommerce_order_item_name', 'vms_ticketing_v2_filter_order_item_name', 20, 3);
+add_filter('woocommerce_get_item_data', 'bvmgr_ticketing_v2_add_event_meta_to_cart_item', 20, 2);
+add_action('woocommerce_checkout_create_order_line_item', 'bvmgr_ticketing_v2_add_event_meta_to_order_item', 20, 4);
+add_filter('woocommerce_cart_item_name', 'bvmgr_ticketing_v2_filter_cart_item_name', 20, 3);
+add_filter('woocommerce_order_item_name', 'bvmgr_ticketing_v2_filter_order_item_name', 20, 3);
 
-function vms_ticketing_v2_wallet_pdf_local_asset_paths_enabled(array $template_vars = array()): bool
+function bvmgr_ticketing_v2_wallet_pdf_local_asset_paths_enabled(array $template_vars = array()): bool
 {
     $enabled = true;
 
@@ -5111,7 +5557,7 @@ function vms_ticketing_v2_wallet_pdf_local_asset_paths_enabled(array $template_v
     return (bool) apply_filters('vms_ticketing_v2_wallet_pdf_local_asset_paths_enabled', $enabled, $template_vars);
 }
 
-function vms_ticketing_v2_wallet_pdf_local_attachment_path(int $attachment_id, array $preferred_sizes = array()): string
+function bvmgr_ticketing_v2_wallet_pdf_local_attachment_path(int $attachment_id, array $preferred_sizes = array()): string
 {
     $attachment_id = absint($attachment_id);
     if ($attachment_id <= 0) {
@@ -5155,7 +5601,7 @@ function vms_ticketing_v2_wallet_pdf_local_attachment_path(int $attachment_id, a
     return $original;
 }
 
-function vms_ticketing_v2_wallet_pdf_header_image_path(): string
+function bvmgr_ticketing_v2_wallet_pdf_header_image_path(): string
 {
     if (!class_exists(\TEC\Tickets_Wallet_Plus\Passes\Pdf\Settings\Header_Image_Setting::class) || !function_exists('tribe')) {
         return '';
@@ -5166,10 +5612,10 @@ function vms_ticketing_v2_wallet_pdf_header_image_path(): string
         return '';
     }
 
-    return vms_ticketing_v2_wallet_pdf_local_attachment_path((int) $setting->get_value());
+    return bvmgr_ticketing_v2_wallet_pdf_local_attachment_path((int) $setting->get_value());
 }
 
-function vms_ticketing_v2_wallet_pdf_post_image_path(int $event_id): string
+function bvmgr_ticketing_v2_wallet_pdf_post_image_path(int $event_id): string
 {
     $event_id = absint($event_id);
     if ($event_id <= 0) {
@@ -5181,10 +5627,10 @@ function vms_ticketing_v2_wallet_pdf_post_image_path(int $event_id): string
         return '';
     }
 
-    return vms_ticketing_v2_wallet_pdf_local_attachment_path((int) $thumbnail_id, array('medium_large', 'large'));
+    return bvmgr_ticketing_v2_wallet_pdf_local_attachment_path((int) $thumbnail_id, array('medium_large', 'large'));
 }
 
-function vms_ticketing_v2_wallet_pdf_qr_link(array $attendee): string
+function bvmgr_ticketing_v2_wallet_pdf_qr_link(array $attendee): string
 {
     if (
         !class_exists(\TEC\Tickets\QR\Connector::class)
@@ -5208,7 +5654,7 @@ function vms_ticketing_v2_wallet_pdf_qr_link(array $attendee): string
     );
 }
 
-function vms_ticketing_v2_wallet_pdf_existing_qr_path(string $link): string
+function bvmgr_ticketing_v2_wallet_pdf_existing_qr_path(string $link): string
 {
     $link = trim($link);
     if ($link === '') {
@@ -5245,14 +5691,14 @@ function vms_ticketing_v2_wallet_pdf_existing_qr_path(string $link): string
     return $match_realpath !== false ? $match_realpath : $match;
 }
 
-function vms_ticketing_v2_wallet_pdf_qr_image_path(array $attendee): string
+function bvmgr_ticketing_v2_wallet_pdf_qr_image_path(array $attendee): string
 {
-    $link = vms_ticketing_v2_wallet_pdf_qr_link($attendee);
+    $link = bvmgr_ticketing_v2_wallet_pdf_qr_link($attendee);
     if ($link === '') {
         return '';
     }
 
-    $existing = vms_ticketing_v2_wallet_pdf_existing_qr_path($link);
+    $existing = bvmgr_ticketing_v2_wallet_pdf_existing_qr_path($link);
     if ($existing !== '') {
         return $existing;
     }
@@ -5260,13 +5706,13 @@ function vms_ticketing_v2_wallet_pdf_qr_image_path(array $attendee): string
     return '';
 }
 
-function vms_ticketing_v2_filter_wallet_pdf_template_vars(array $template_vars): array
+function bvmgr_ticketing_v2_filter_wallet_pdf_template_vars(array $template_vars): array
 {
-    if (!vms_ticketing_v2_wallet_pdf_local_asset_paths_enabled($template_vars)) {
+    if (!bvmgr_ticketing_v2_wallet_pdf_local_asset_paths_enabled($template_vars)) {
         return $template_vars;
     }
 
-    $header_image_path = vms_ticketing_v2_wallet_pdf_header_image_path();
+    $header_image_path = bvmgr_ticketing_v2_wallet_pdf_header_image_path();
     if ($header_image_path !== '') {
         $template_vars['header_image_url'] = $header_image_path;
     }
@@ -5279,13 +5725,13 @@ function vms_ticketing_v2_filter_wallet_pdf_template_vars(array $template_vars):
         $event_id = absint($template_vars['post']->ID);
     }
 
-    $post_image_path = vms_ticketing_v2_wallet_pdf_post_image_path($event_id);
+    $post_image_path = bvmgr_ticketing_v2_wallet_pdf_post_image_path($event_id);
     if ($post_image_path !== '') {
         $template_vars['post_image_url'] = $post_image_path;
     }
 
     if (!empty($template_vars['qr_enabled']) && !empty($template_vars['attendee']) && is_array($template_vars['attendee'])) {
-        $qr_image_path = vms_ticketing_v2_wallet_pdf_qr_image_path($template_vars['attendee']);
+        $qr_image_path = bvmgr_ticketing_v2_wallet_pdf_qr_image_path($template_vars['attendee']);
         if ($qr_image_path !== '') {
             $template_vars['qr_image_url'] = $qr_image_path;
         }
@@ -5293,19 +5739,19 @@ function vms_ticketing_v2_filter_wallet_pdf_template_vars(array $template_vars):
 
     return $template_vars;
 }
-add_filter('tec_tickets_wallet_plus_pdf_pass_template_vars', 'vms_ticketing_v2_filter_wallet_pdf_template_vars', 20);
+add_filter('tec_tickets_wallet_plus_pdf_pass_template_vars', 'bvmgr_ticketing_v2_filter_wallet_pdf_template_vars', 20);
 
-function vms_ticketing_v2_async_woo_ticket_email_hook(): string
+function bvmgr_ticketing_v2_async_woo_ticket_email_hook(): string
 {
     return 'vms_ticketing_v2_async_send_woo_ticket_emails';
 }
 
-function vms_ticketing_v2_async_woo_ticket_email_group(): string
+function bvmgr_ticketing_v2_async_woo_ticket_email_group(): string
 {
     return 'vms-ticketing';
 }
 
-function vms_ticketing_v2_async_woo_ticket_email_dispatch_active(?bool $set = null): bool
+function bvmgr_ticketing_v2_async_woo_ticket_email_dispatch_active(?bool $set = null): bool
 {
     static $active = false;
 
@@ -5316,26 +5762,41 @@ function vms_ticketing_v2_async_woo_ticket_email_dispatch_active(?bool $set = nu
     return $active;
 }
 
-function vms_ticketing_v2_is_wc_ajax_checkout_request(): bool
+function bvmgr_ticketing_v2_request_key(string $key): string
+{
+    return bvmgr_request_read_key($_REQUEST, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Woo request routing state only selects cart and checkout behavior.
+}
+
+function bvmgr_ticketing_v2_request_has_key(string $key): bool
+{
+    return isset($_REQUEST[$key]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Presence-only probe for read-only Woo request routing state.
+}
+
+function bvmgr_ticketing_v2_query_text(string $key): string
+{
+    return bvmgr_request_read_text_field($_GET, $key); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Store API route state only selects request routing behavior.
+}
+
+function bvmgr_ticketing_v2_is_wc_ajax_checkout_request(): bool
 {
     if (!function_exists('wp_doing_ajax') || !wp_doing_ajax()) {
         return false;
     }
 
-    $ajax_action = isset($_REQUEST['wc-ajax']) ? sanitize_key((string) wp_unslash($_REQUEST['wc-ajax'])) : '';
+    $ajax_action = bvmgr_ticketing_v2_request_key('wc-ajax');
     return $ajax_action === 'checkout';
 }
 
-function vms_ticketing_v2_queue_async_woo_ticket_email(int $order_id): bool
+function bvmgr_ticketing_v2_queue_async_woo_ticket_email(int $order_id): bool
 {
     $order_id = absint($order_id);
     if ($order_id <= 0) {
         return false;
     }
 
-    $hook = vms_ticketing_v2_async_woo_ticket_email_hook();
+    $hook = bvmgr_ticketing_v2_async_woo_ticket_email_hook();
     $args = array($order_id);
-    $group = vms_ticketing_v2_async_woo_ticket_email_group();
+    $group = bvmgr_ticketing_v2_async_woo_ticket_email_group();
 
     if (function_exists('as_has_scheduled_action') && function_exists('as_enqueue_async_action')) {
         if (as_has_scheduled_action($hook, $args, $group)) {
@@ -5352,14 +5813,14 @@ function vms_ticketing_v2_queue_async_woo_ticket_email(int $order_id): bool
     return (bool) wp_schedule_single_event(time() + 5, $hook, $args);
 }
 
-function vms_ticketing_v2_run_async_woo_ticket_email(int $order_id): void
+function bvmgr_ticketing_v2_run_async_woo_ticket_email(int $order_id): void
 {
     $order_id = absint($order_id);
     if ($order_id <= 0 || !class_exists('Tribe__Tickets_Plus__Commerce__WooCommerce__Main')) {
         return;
     }
 
-    vms_ticketing_v2_async_woo_ticket_email_dispatch_active(true);
+    bvmgr_ticketing_v2_async_woo_ticket_email_dispatch_active(true);
 
     try {
         $provider = Tribe__Tickets_Plus__Commerce__WooCommerce__Main::get_instance();
@@ -5367,18 +5828,18 @@ function vms_ticketing_v2_run_async_woo_ticket_email(int $order_id): void
             $provider->send_tickets_email($order_id);
         }
     } finally {
-        vms_ticketing_v2_async_woo_ticket_email_dispatch_active(false);
+        bvmgr_ticketing_v2_async_woo_ticket_email_dispatch_active(false);
     }
 }
-add_action('vms_ticketing_v2_async_send_woo_ticket_emails', 'vms_ticketing_v2_run_async_woo_ticket_email', 10, 1);
+add_action('vms_ticketing_v2_async_send_woo_ticket_emails', 'bvmgr_ticketing_v2_run_async_woo_ticket_email', 10, 1);
 
-function vms_ticketing_v2_maybe_defer_woo_ticket_email($pre, $to, $tickets, $args, $module)
+function bvmgr_ticketing_v2_maybe_defer_woo_ticket_email($pre, $to, $tickets, $args, $module)
 {
-    if ($pre !== null || vms_ticketing_v2_async_woo_ticket_email_dispatch_active()) {
+    if ($pre !== null || bvmgr_ticketing_v2_async_woo_ticket_email_dispatch_active()) {
         return $pre;
     }
 
-    if (!vms_ticketing_v2_is_wc_ajax_checkout_request()) {
+    if (!bvmgr_ticketing_v2_is_wc_ajax_checkout_request()) {
         return $pre;
     }
 
@@ -5393,7 +5854,7 @@ function vms_ticketing_v2_maybe_defer_woo_ticket_email($pre, $to, $tickets, $arg
         return true;
     }
 
-    $queued = vms_ticketing_v2_queue_async_woo_ticket_email($order_id);
+    $queued = bvmgr_ticketing_v2_queue_async_woo_ticket_email($order_id);
     if (!$queued) {
         return $pre;
     }
@@ -5401,28 +5862,28 @@ function vms_ticketing_v2_maybe_defer_woo_ticket_email($pre, $to, $tickets, $arg
     $queued_orders[$order_id] = true;
     return true;
 }
-add_filter('tec_tickets_send_tickets_email_for_attendee_pre', 'vms_ticketing_v2_maybe_defer_woo_ticket_email', 20, 5);
+add_filter('tec_tickets_send_tickets_email_for_attendee_pre', 'bvmgr_ticketing_v2_maybe_defer_woo_ticket_email', 20, 5);
 
-function vms_ticketing_v2_product_role_for_naming(int $product_id): string
+function bvmgr_ticketing_v2_product_role_for_naming(int $product_id): string
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
         return '';
     }
 
-    $meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('product_role')
+    $meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('product_role')
         : '_vms_product_role';
 
-    $role = sanitize_key((string) vms_ticketing_v2_meta_get($product_id, $meta_key));
+    $role = sanitize_key((string) bvmgr_ticketing_v2_meta_get($product_id, $meta_key));
     if ($role !== '') {
         return $role;
     }
 
     // Legacy/self-healing fallback: some older TEC ticket products may have the
     // VMS plan + TEC ticket link but lack the newer explicit product_role marker.
-    $plan_meta_key = function_exists('vms_ticketing_v2_product_meta_key')
-        ? vms_ticketing_v2_product_meta_key('event_plan_id')
+    $plan_meta_key = function_exists('bvmgr_ticketing_v2_product_meta_key')
+        ? bvmgr_ticketing_v2_product_meta_key('event_plan_id')
         : '_vms_event_plan_id';
     $plan_id = absint(get_post_meta($product_id, $plan_meta_key, true));
     $tec_event_id = absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true));
@@ -5433,12 +5894,12 @@ function vms_ticketing_v2_product_role_for_naming(int $product_id): string
     return '';
 }
 
-function vms_ticketing_v2_role_supports_event_name_suffix(string $role): bool
+function bvmgr_ticketing_v2_role_supports_event_name_suffix(string $role): bool
 {
     return in_array(sanitize_key($role), array('ga_ticket', 'entitlement'), true);
 }
 
-function vms_ticketing_v2_resolve_event_id_for_product(int $product_id): int
+function bvmgr_ticketing_v2_resolve_event_id_for_product(int $product_id): int
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) return 0;
@@ -5450,18 +5911,18 @@ function vms_ticketing_v2_resolve_event_id_for_product(int $product_id): int
     }
 
     // Secondary: if our stored tec_event_id happens to be the WP post ID.
-    if (function_exists('vms_ticketing_v2_product_meta_key')) {
-        $maybe = absint(get_post_meta($product_id, vms_ticketing_v2_product_meta_key('tec_event_id'), true));
+    if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+        $maybe = absint(get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('tec_event_id'), true));
         if ($maybe > 0 && get_post_type($maybe) === 'tribe_events') {
             return $maybe;
         }
     }
 
     // Fallback: derive from the linked Event Plan (if present).
-    if (function_exists('vms_ticketing_v2_product_meta_key')) {
-        $plan_id = absint(get_post_meta($product_id, vms_ticketing_v2_product_meta_key('event_plan_id'), true));
+    if (function_exists('bvmgr_ticketing_v2_product_meta_key')) {
+        $plan_id = absint(get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('event_plan_id'), true));
         if ($plan_id > 0) {
-            $tec_key = (function_exists('vms_ticketing_b_meta_key') ? vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id');
+            $tec_key = (function_exists('bvmgr_ticketing_b_meta_key') ? bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id');
             $maybe = absint(get_post_meta($plan_id, $tec_key, true));
             if ($maybe > 0 && get_post_type($maybe) === 'tribe_events') {
                 return $maybe;
@@ -5472,7 +5933,7 @@ function vms_ticketing_v2_resolve_event_id_for_product(int $product_id): int
     return 0;
 }
 
-function vms_ticketing_v2_format_event_suffix_date(int $tec_event_id): string
+function bvmgr_ticketing_v2_format_event_suffix_date(int $tec_event_id): string
 {
     $tec_event_id = absint($tec_event_id);
     if ($tec_event_id <= 0) {
@@ -5500,7 +5961,7 @@ function vms_ticketing_v2_format_event_suffix_date(int $tec_event_id): string
     return (string) wp_date('M j, Y', $ts, wp_timezone());
 }
 
-function vms_ticketing_v2_resolve_event_snapshot_for_product(int $product_id): array
+function bvmgr_ticketing_v2_resolve_event_snapshot_for_product(int $product_id): array
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
@@ -5512,10 +5973,10 @@ function vms_ticketing_v2_resolve_event_snapshot_for_product(int $product_id): a
         );
     }
 
-    $plan_id = absint(vms_ticketing_v2_meta_get($product_id, vms_ticketing_v2_product_meta_key('event_plan_id')));
-    $tec_event_id = vms_ticketing_v2_resolve_event_id_for_product($product_id);
+    $plan_id = absint(bvmgr_ticketing_v2_meta_get($product_id, bvmgr_ticketing_v2_product_meta_key('event_plan_id')));
+    $tec_event_id = bvmgr_ticketing_v2_resolve_event_id_for_product($product_id);
     $title = $tec_event_id > 0 ? (string) get_the_title($tec_event_id) : '';
-    $date = vms_ticketing_v2_format_event_suffix_date($tec_event_id);
+    $date = bvmgr_ticketing_v2_format_event_suffix_date($tec_event_id);
 
     return array(
         'title' => trim($title),
@@ -5525,7 +5986,7 @@ function vms_ticketing_v2_resolve_event_snapshot_for_product(int $product_id): a
     );
 }
 
-function vms_ticketing_v2_build_event_name_suffix(string $event_title, string $event_date): string
+function bvmgr_ticketing_v2_build_event_name_suffix(string $event_title, string $event_date): string
 {
     $event_title = trim($event_title);
     $event_date = trim($event_date);
@@ -5536,7 +5997,7 @@ function vms_ticketing_v2_build_event_name_suffix(string $event_title, string $e
     return ' — ' . $event_title . ' (' . $event_date . ')';
 }
 
-function vms_ticketing_v2_append_event_to_item_name($name, $product_id, $order_item = null): string
+function bvmgr_ticketing_v2_append_event_to_item_name($name, $product_id, $order_item = null): string
 {
     $base_name = (string) $name;
     $product_id = absint($product_id);
@@ -5544,8 +6005,8 @@ function vms_ticketing_v2_append_event_to_item_name($name, $product_id, $order_i
         return $base_name;
     }
 
-    $role = vms_ticketing_v2_product_role_for_naming($product_id);
-    if (!vms_ticketing_v2_role_supports_event_name_suffix($role)) {
+    $role = bvmgr_ticketing_v2_product_role_for_naming($product_id);
+    if (!bvmgr_ticketing_v2_role_supports_event_name_suffix($role)) {
         return $base_name;
     }
 
@@ -5557,12 +6018,12 @@ function vms_ticketing_v2_append_event_to_item_name($name, $product_id, $order_i
     }
 
     if ($event_title === '' || $event_date === '') {
-        $snapshot = vms_ticketing_v2_resolve_event_snapshot_for_product($product_id);
+        $snapshot = bvmgr_ticketing_v2_resolve_event_snapshot_for_product($product_id);
         $event_title = $event_title !== '' ? $event_title : (string) ($snapshot['title'] ?? '');
         $event_date = $event_date !== '' ? $event_date : (string) ($snapshot['date'] ?? '');
     }
 
-    $suffix = vms_ticketing_v2_build_event_name_suffix($event_title, $event_date);
+    $suffix = bvmgr_ticketing_v2_build_event_name_suffix($event_title, $event_date);
     if ($suffix === '') {
         return $base_name;
     }
@@ -5575,19 +6036,19 @@ function vms_ticketing_v2_append_event_to_item_name($name, $product_id, $order_i
     return $base_name . esc_html($suffix);
 }
 
-function vms_ticketing_v2_filter_cart_item_name($name, $cart_item, $cart_item_key): string
+function bvmgr_ticketing_v2_filter_cart_item_name($name, $cart_item, $cart_item_key): string
 {
     // Titles are kept clean (no appended event/date) and the event context is displayed via item meta.
     return (string) $name;
 }
 
-function vms_ticketing_v2_filter_order_item_name($name, $item, $is_visible): string
+function bvmgr_ticketing_v2_filter_order_item_name($name, $item, $is_visible): string
 {
     // Titles are kept clean (no appended event/date). Order/item context is shown via line-item meta.
     return (string) $name;
 }
 
-function vms_ticketing_v2_format_event_when(int $tec_event_id): string
+function bvmgr_ticketing_v2_format_event_when(int $tec_event_id): string
 {
     $tec_event_id = absint($tec_event_id);
     if ($tec_event_id <= 0) return '';
@@ -5608,10 +6069,10 @@ function vms_ticketing_v2_format_event_when(int $tec_event_id): string
     return (string) wp_date('D, M j, Y g:ia', $ts, wp_timezone());
 }
 
-function vms_ticketing_v2_add_event_meta_to_cart_item(array $item_data, array $cart_item): array
+function bvmgr_ticketing_v2_add_event_meta_to_cart_item(array $item_data, array $cart_item): array
 {
     $product_id = absint($cart_item['product_id'] ?? 0);
-    $snapshot = vms_ticketing_v2_cart_item_context_snapshot($cart_item);
+    $snapshot = bvmgr_ticketing_v2_cart_item_context_snapshot($cart_item);
     $variation_id = absint($cart_item['variation_id'] ?? 0);
     if ($variation_id > 0) {
         $product_id = $variation_id;
@@ -5620,7 +6081,7 @@ function vms_ticketing_v2_add_event_meta_to_cart_item(array $item_data, array $c
         return $item_data;
     }
 
-    $tec_event_id = vms_ticketing_v2_resolve_event_id_for_product($product_id);
+    $tec_event_id = bvmgr_ticketing_v2_resolve_event_id_for_product($product_id);
     if ($tec_event_id <= 0) {
         $tec_event_id = absint($snapshot['tec_event_id'] ?? 0);
     }
@@ -5630,26 +6091,26 @@ function vms_ticketing_v2_add_event_meta_to_cart_item(array $item_data, array $c
         $title = trim((string) ($snapshot['event_title_snapshot'] ?? ''));
     }
 
-    $when = $tec_event_id > 0 ? vms_ticketing_v2_format_event_when($tec_event_id) : '';
+    $when = $tec_event_id > 0 ? bvmgr_ticketing_v2_format_event_when($tec_event_id) : '';
     if ($when === '') {
         $when = trim((string) ($snapshot['event_when_snapshot'] ?? ($snapshot['event_date_snapshot'] ?? '')));
     }
 
     if ($title !== '') {
         $item_data[] = array(
-            'key'   => __('Event', 'vms'),
+            'key'   => __('Event', 'backstage-venue-manager'),
             'value' => esc_html($title),
         );
     }
 
     if ($when !== '') {
         $item_data[] = array(
-            'key'   => __('When', 'vms'),
+            'key'   => __('When', 'backstage-venue-manager'),
             'value' => esc_html($when),
         );
     }
 
-    $assignments = vms_ticketing_v2_cart_item_claim_assignments($cart_item);
+    $assignments = bvmgr_ticketing_v2_cart_item_claim_assignments($cart_item);
     if (!empty($assignments)) {
         foreach ($assignments as $assignment) {
             $seat = max(1, absint($assignment['seat'] ?? 0));
@@ -5658,7 +6119,8 @@ function vms_ticketing_v2_add_event_meta_to_cart_item(array $item_data, array $c
                 continue;
             }
             $item_data[] = array(
-                'key' => sprintf(__('Ticket %d Assignee', 'vms'), $seat),
+                /* translators: %d: number used in this message. */
+                'key' => sprintf(__('Ticket %d Assignee', 'backstage-venue-manager'), $seat),
                 'value' => esc_html($email),
             );
         }
@@ -5667,7 +6129,7 @@ function vms_ticketing_v2_add_event_meta_to_cart_item(array $item_data, array $c
     return $item_data;
 }
 
-function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_key, array $values, $order): void
+function bvmgr_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_key, array $values, $order): void
 {
     if (!is_object($item) || !method_exists($item, 'add_meta_data')) return;
 
@@ -5675,17 +6137,17 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
     $product_id = $variation_id > 0 ? $variation_id : absint($values['product_id'] ?? 0);
     if ($product_id <= 0) return;
 
-    $role = vms_ticketing_v2_product_role_for_naming($product_id);
-    if (!vms_ticketing_v2_role_supports_event_name_suffix($role)) {
+    $role = bvmgr_ticketing_v2_product_role_for_naming($product_id);
+    if (!bvmgr_ticketing_v2_role_supports_event_name_suffix($role)) {
         return;
     }
 
-    $event_snapshot = vms_ticketing_v2_resolve_event_snapshot_for_product($product_id);
+    $event_snapshot = bvmgr_ticketing_v2_resolve_event_snapshot_for_product($product_id);
     $title = (string) ($event_snapshot['title'] ?? '');
     $event_date = (string) ($event_snapshot['date'] ?? '');
     $tec_event_id = absint($event_snapshot['tec_event_id'] ?? 0);
     $event_plan_id = absint($event_snapshot['event_plan_id'] ?? 0);
-    $snapshot = vms_ticketing_v2_cart_item_context_snapshot($values);
+    $snapshot = bvmgr_ticketing_v2_cart_item_context_snapshot($values);
     if ($title === '') {
         $title = trim((string) ($snapshot['event_title_snapshot'] ?? ''));
     }
@@ -5698,7 +6160,7 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
     if ($event_plan_id <= 0) {
         $event_plan_id = absint($snapshot['event_plan_id'] ?? 0);
     }
-    $event_when = $tec_event_id > 0 ? vms_ticketing_v2_format_event_when($tec_event_id) : '';
+    $event_when = $tec_event_id > 0 ? bvmgr_ticketing_v2_format_event_when($tec_event_id) : '';
     if ($event_when === '') {
         $event_when = trim((string) ($snapshot['event_when_snapshot'] ?? $event_date));
     }
@@ -5706,16 +6168,16 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
     // Make GA ticket order/email thumbnails self-healing at checkout time. Entitlement
     // add-ons already have their own image sync path; GA tickets need the ticket row
     // policy applied against the current Event Plan / linked TEC event image.
-    if ($role === 'ga_ticket' && $event_plan_id > 0 && function_exists('vms_ticketing_v2_sync_ticket_product_image_with_result')) {
-        vms_ticketing_v2_sync_ticket_product_image_with_result($product_id, $event_plan_id);
+    if ($role === 'ga_ticket' && $event_plan_id > 0 && function_exists('bvmgr_ticketing_v2_sync_ticket_product_image_with_result')) {
+        bvmgr_ticketing_v2_sync_ticket_product_image_with_result($product_id, $event_plan_id);
     }
 
     // Optional human-facing meta.
     if ($title !== '') {
-        $item->add_meta_data(__('Event', 'vms'), $title, true);
+        $item->add_meta_data(__('Event', 'backstage-venue-manager'), $title, true);
     }
     if ($event_when !== '') {
-        $item->add_meta_data(__('When', 'vms'), $event_when, true);
+        $item->add_meta_data(__('When', 'backstage-venue-manager'), $event_when, true);
     }
 
     // Snapshot meta for stable cart/order/email line-item naming.
@@ -5736,15 +6198,15 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
     if ($tec_event_id > 0) {
         $item->add_meta_data('_vms_tec_event_post_id', (string) $tec_event_id, true);
     }
-    $claim_context = function_exists('vms_ticketing_v2_claim_context_for_product')
-        ? vms_ticketing_v2_claim_context_for_product($product_id)
+    $claim_context = function_exists('bvmgr_ticketing_v2_claim_context_for_product')
+        ? bvmgr_ticketing_v2_claim_context_for_product($product_id)
         : array();
     $claim_ticket_key = sanitize_key((string) ($claim_context['ticket_key'] ?? ''));
     if ($claim_ticket_key !== '') {
         $item->add_meta_data('_vms_claim_ticket_key', $claim_ticket_key, true);
     }
 
-    $assignments = vms_ticketing_v2_cart_item_claim_assignments($values);
+    $assignments = bvmgr_ticketing_v2_cart_item_claim_assignments($values);
     if (!empty($assignments)) {
         $assignment_snapshot = array();
         foreach ($assignments as $assignment) {
@@ -5753,7 +6215,8 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
             if ($email === '') {
                 continue;
             }
-            $item->add_meta_data(sprintf(__('Ticket %d Assignee', 'vms'), $seat), $email, true);
+            /* translators: %d: number used in this message. */
+            $item->add_meta_data(sprintf(__('Ticket %d Assignee', 'backstage-venue-manager'), $seat), $email, true);
             $assignment_snapshot[] = array(
                 'seat' => $seat,
                 'assignee_email' => $email,
@@ -5770,49 +6233,52 @@ function vms_ticketing_v2_add_event_meta_to_order_item($item, string $cart_item_
 
 
 /**
- * Front-end helper: show VMS entitlement add-ons on TEC single event pages.
+ * Front-end helper: show Backstage Venue Manager entitlement add-ons on TEC single event pages.
  * Note: Entitlements are Woo products (not Event Tickets ticket types), so they will not appear in the native TEC Tickets block.
  * This file also ships a front-end UX helper that makes add-ons feel like a single submission with the GA ticket form.
  */
-add_action('wp_enqueue_scripts', 'vms_ticketing_v2_enqueue_front_bundle', 999);
-add_action('template_redirect', 'vms_ticketing_v2_start_my_tickets_notice_buffer', 1);
+add_action('wp_enqueue_scripts', 'bvmgr_ticketing_v2_enqueue_front_bundle', 999);
+add_filter('tec_tickets_my_tickets_link_ticket_count_by_type', 'bvmgr_ticketing_v2_filter_my_tickets_link_ticket_count_by_type', 99, 3);
 
-add_action('wp_ajax_vms_ticketing_v2_silent_add', 'vms_ticketing_v2_ajax_silent_add');
-add_action('wp_ajax_nopriv_vms_ticketing_v2_silent_add', 'vms_ticketing_v2_ajax_silent_add');
-add_action('wp_ajax_vms_ticketing_v2_atomic_add_to_cart', 'vms_ticketing_v2_ajax_atomic_add_to_cart');
-add_action('wp_ajax_nopriv_vms_ticketing_v2_atomic_add_to_cart', 'vms_ticketing_v2_ajax_atomic_add_to_cart');
-add_action('wp_ajax_vms_ticketing_v2_cart_context', 'vms_ticketing_v2_ajax_cart_context');
-add_action('wp_ajax_nopriv_vms_ticketing_v2_cart_context', 'vms_ticketing_v2_ajax_cart_context');
-add_filter('wc_add_to_cart_message_html', 'vms_ticketing_v2_suppress_entitlement_added_notice', 10, 3);
-add_action('template_redirect', 'vms_ticketing_v2_prune_stale_success_notices', 5);
+add_action('wp_ajax_vms_ticketing_v2_silent_add', 'bvmgr_ticketing_v2_ajax_silent_add');
+add_action('wp_ajax_nopriv_vms_ticketing_v2_silent_add', 'bvmgr_ticketing_v2_ajax_silent_add');
+add_action('wp_ajax_vms_ticketing_v2_atomic_add_to_cart', 'bvmgr_ticketing_v2_ajax_atomic_add_to_cart');
+add_action('wp_ajax_nopriv_vms_ticketing_v2_atomic_add_to_cart', 'bvmgr_ticketing_v2_ajax_atomic_add_to_cart');
+add_action('wp_ajax_vms_ticketing_v2_cart_context', 'bvmgr_ticketing_v2_ajax_cart_context');
+add_action('wp_ajax_nopriv_vms_ticketing_v2_cart_context', 'bvmgr_ticketing_v2_ajax_cart_context');
+add_filter('wc_add_to_cart_message_html', 'bvmgr_ticketing_v2_suppress_entitlement_added_notice', 10, 3);
+add_action('template_redirect', 'bvmgr_ticketing_v2_prune_stale_success_notices', 5);
 
 
 // Public cancellation UX for TEC single-event pages:
 // - Prepend a clear cancellation notice.
 // - Add a “Cancelled” overlay on the featured image when possible.
 // - Suppress RSVP/ticket forms for cancelled events (public users).
-add_filter('the_content', 'vms_tec_prepend_cancelled_notice', 8);
-add_filter('post_thumbnail_html', 'vms_tec_cancelled_thumbnail_overlay', 20, 5);
-add_filter('tribe_tickets_get_tickets_query_args', 'vms_tec_suppress_tickets_for_cancelled_events', 20);
-add_filter('tribe_tickets_rsvp_tickets_form_hook', 'vms_tec_suppress_ticket_forms_for_cancelled_event', 20, 2);
-add_filter('tribe_tickets_commerce_tickets_form_hook', 'vms_tec_suppress_ticket_forms_for_cancelled_event', 20, 2);
-add_filter('body_class', 'vms_tec_cancelled_event_body_class', 20);
+add_filter('the_content', 'bvmgr_tec_prepend_cancelled_notice', 8);
+add_filter('post_thumbnail_html', 'bvmgr_tec_cancelled_thumbnail_overlay', 20, 5);
+add_filter('tribe_tickets_get_tickets_query_args', 'bvmgr_tec_suppress_tickets_for_cancelled_events', 20);
+add_filter('tribe_tickets_rsvp_tickets_form_hook', 'bvmgr_tec_suppress_ticket_forms_for_cancelled_event', 20, 2);
+add_filter('tribe_tickets_commerce_tickets_form_hook', 'bvmgr_tec_suppress_ticket_forms_for_cancelled_event', 20, 2);
+add_filter('tribe_events_event_costs', 'bvmgr_tec_suppress_event_costs_for_external_event', 999, 2);
+add_filter('tribe_get_cost', 'bvmgr_tec_suppress_public_cost_for_external_event', 999, 3);
+add_filter('body_class', 'bvmgr_tec_cancelled_event_body_class', 20);
 
-add_filter('the_content', 'vms_ticketing_v2_append_entitlements_to_tec_event', 25);
-add_action('template_redirect', 'vms_ticketing_v2_server_mount_boot', 5);
-add_shortcode('vms_reserved_add_ons', 'vms_ticketing_v2_shortcode_reserved_add_ons');
+add_filter('tribe_template_before_include_html:tickets/v2/tickets/footer', 'bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount', 20, 4);
+add_filter('tribe_tickets_get_tickets_query_args', 'bvmgr_ticketing_v2_filter_disabled_ticket_query_args', 30, 1);
+add_filter('the_content', 'bvmgr_ticketing_v2_append_entitlements_to_tec_event', 25);
+add_shortcode('vms_reserved_add_ons', 'bvmgr_ticketing_v2_shortcode_reserved_add_ons');
 
 /**
  * Ticket UI mode settings for front-end rendering.
  *
  * @return array{layout:string,layout_override:string,admin_preview:bool,is_admin_user:bool,effective_v2:bool,is_progressive:bool,show_availability:bool,availability_display:string,availability_low_threshold:int,sale_availability_display:string,sale_availability_low_threshold:int,show_safe_mode_notice:bool}
  */
-function vms_ticketing_v2_plain_display_text($value): string
+function bvmgr_ticketing_v2_plain_display_text($value): string
 {
     return html_entity_decode(sanitize_text_field((string) $value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 }
 
-function vms_ticketing_v2_is_legacy_verified_ticket_copy($value): bool
+function bvmgr_ticketing_v2_is_legacy_verified_ticket_copy($value): bool
 {
     $text = trim((string) preg_replace('/\s+/', ' ', html_entity_decode(wp_strip_all_tags((string) $value), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
     if ($text === '') {
@@ -5827,205 +6293,78 @@ function vms_ticketing_v2_is_legacy_verified_ticket_copy($value): bool
     );
 }
 
-function vms_ticketing_v2_start_my_tickets_notice_buffer(): void
+function bvmgr_ticketing_v2_filter_my_tickets_link_ticket_count_by_type(array $count_by_type, int $event_id, int $user_id): array
 {
     if (is_admin() || !is_user_logged_in()) {
-        return;
+        return $count_by_type;
     }
     if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (function_exists('wp_is_json_request') && wp_is_json_request()) || is_feed()) {
-        return;
+        return $count_by_type;
+    }
+    if (!function_exists('is_singular') || !is_singular('tribe_events')) {
+        return $count_by_type;
     }
 
-    $event_id = 0;
-    if (function_exists('is_singular') && is_singular('tribe_events')) {
-        $event_id = absint(get_queried_object_id());
-    }
-    if ($event_id <= 0) {
-        return;
+    $event_id = absint($event_id);
+    if ($event_id <= 0 || get_post_type($event_id) !== 'tribe_events') {
+        return $count_by_type;
     }
 
-    $count = function_exists('vms_ticketing_v2_active_ticket_count_for_event_user')
-        ? vms_ticketing_v2_active_ticket_count_for_event_user($event_id, (int) get_current_user_id())
+    $current_user_id = (int) get_current_user_id();
+    $user_id = absint($user_id);
+    if ($current_user_id <= 0 || $user_id <= 0 || $current_user_id !== $user_id) {
+        return $count_by_type;
+    }
+
+    $active_count = function_exists('bvmgr_ticketing_v2_active_ticket_count_for_event_user')
+        ? bvmgr_ticketing_v2_active_ticket_count_for_event_user($event_id, $user_id)
         : -1;
-    if ($count < 0) {
-        return;
+    if ($active_count < 0) {
+        return $count_by_type;
     }
 
-    $GLOBALS['vms_ticketing_v2_my_tickets_notice_count'] = max(0, absint($count));
-    if (!empty($GLOBALS['vms_ticketing_v2_my_tickets_notice_buffer_started'])) {
-        return;
-    }
-
-    $GLOBALS['vms_ticketing_v2_my_tickets_notice_buffer_started'] = true;
-    ob_start('vms_ticketing_v2_filter_my_tickets_notice_html');
-}
-
-function vms_ticketing_v2_filter_my_tickets_notice_html(string $html, int $phase = 0): string
-{
-    if ($html === '' || stripos($html, 'Tickets for this Event') === false && stripos($html, 'Ticket for this Event') === false) {
-        return $html;
-    }
-
-    $count = isset($GLOBALS['vms_ticketing_v2_my_tickets_notice_count'])
-        ? max(0, absint($GLOBALS['vms_ticketing_v2_my_tickets_notice_count']))
-        : -1;
-    if ($count < 0) {
-        return $html;
-    }
-
-    return vms_ticketing_v2_rewrite_my_tickets_notice_html($html, $count);
-}
-
-function vms_ticketing_v2_rewrite_my_tickets_notice_html(string $html, int $count): string
-{
-    $notice_pattern = 'You\s+have\s+\d+\s+Tickets?\s+for\s+this\s+Event';
-
-    if ($count <= 0) {
-        if (!(bool) preg_match('#' . $notice_pattern . '#iu', $html)) {
-            return $html;
-        }
-
-        if (vms_ticketing_v2_is_exact_my_tickets_notice_fragment($html)) {
-            return '';
-        }
-
-        return vms_ticketing_v2_remove_exact_my_tickets_notice_nodes($html);
-    }
-
-    $replacement = 'You have ' . $count . ' ' . ($count === 1 ? 'Ticket' : 'Tickets') . ' for this Event';
-    $updated = preg_replace('#' . $notice_pattern . '#iu', esc_html($replacement), $html);
-    return is_string($updated) ? $updated : $html;
-}
-
-function vms_ticketing_v2_is_exact_my_tickets_notice_fragment(string $html): bool
-{
-    $normalized = vms_ticketing_v2_normalize_my_tickets_notice_text($html);
-    if ($normalized === '') {
-        return false;
-    }
-
-    return (bool) preg_match(
-        '#^You\s+have\s+\d+\s+Tickets?\s+for\s+this\s+Event\.?\s*View\s*Tickets?$#iu',
-        $normalized
-    );
-}
-
-function vms_ticketing_v2_remove_exact_my_tickets_notice_nodes(string $html): string
-{
-    if ($html === '') {
-        return $html;
-    }
-
-    $ranges = array();
-    if (!preg_match_all('#</?(p|div|span|section)\b[^>]*>#iu', $html, $matches, PREG_OFFSET_CAPTURE)) {
-        return $html;
-    }
-
-    $stack = array();
-    foreach ($matches[0] as $index => $token_match) {
-        $token = (string) $token_match[0];
-        $offset = (int) $token_match[1];
-        $tag = strtolower((string) $matches[1][$index][0]);
-        $is_closing = isset($token[1]) && $token[1] === '/';
-
-        if (!$is_closing) {
-            $stack[] = array(
-                'tag' => $tag,
-                'offset' => $offset,
-            );
+    $filtered_counts = $count_by_type;
+    foreach ($filtered_counts as $ticket_type => $ticket_data) {
+        if (!is_array($ticket_data)) {
             continue;
         }
 
-        for ($stack_index = count($stack) - 1; $stack_index >= 0; $stack_index--) {
-            if ($stack[$stack_index]['tag'] !== $tag) {
-                continue;
-            }
-
-            $open = $stack[$stack_index];
-            $stack = array_slice($stack, 0, $stack_index);
-
-            $length = ($offset + strlen($token)) - (int) $open['offset'];
-            if ($length > 0 && $length <= 2000) {
-                $ranges[] = array((int) $open['offset'], $length);
-            }
-            break;
-        }
+        $filtered_counts[$ticket_type]['count'] = 0;
     }
 
-    if (empty($ranges)) {
-        return $html;
+    $ticket_entry = (isset($filtered_counts['ticket']) && is_array($filtered_counts['ticket']))
+        ? $filtered_counts['ticket']
+        : array();
+
+    $ticket_singular = (isset($ticket_entry['singular']) && is_string($ticket_entry['singular']) && $ticket_entry['singular'] !== '')
+        ? $ticket_entry['singular']
+        : '';
+    if ($ticket_singular === '' && function_exists('tribe_get_ticket_label_singular')) {
+        $ticket_singular = (string) tribe_get_ticket_label_singular('my-tickets-view-link');
+    }
+    if ($ticket_singular === '') {
+        $ticket_singular = 'Ticket';
     }
 
-    usort($ranges, static function (array $left, array $right): int {
-        if ($left[1] === $right[1]) {
-            return $left[0] <=> $right[0];
-        }
-        return $left[1] <=> $right[1];
-    });
-
-    $selected = array();
-    foreach ($ranges as $range) {
-        $start = (int) $range[0];
-        $length = (int) $range[1];
-        $fragment = substr($html, $start, $length);
-        if (!is_string($fragment) || !vms_ticketing_v2_is_safe_my_tickets_notice_node_fragment($fragment)) {
-            continue;
-        }
-
-        $overlaps_existing = false;
-        foreach ($selected as $selected_range) {
-            $selected_start = (int) $selected_range[0];
-            $selected_end = $selected_start + (int) $selected_range[1];
-            $end = $start + $length;
-            if ($start < $selected_end && $selected_start < $end) {
-                $overlaps_existing = true;
-                break;
-            }
-        }
-
-        if (!$overlaps_existing) {
-            $selected[] = array($start, $length);
-        }
+    $ticket_plural = (isset($ticket_entry['plural']) && is_string($ticket_entry['plural']) && $ticket_entry['plural'] !== '')
+        ? $ticket_entry['plural']
+        : '';
+    if ($ticket_plural === '' && function_exists('tribe_get_ticket_label_plural')) {
+        $ticket_plural = (string) tribe_get_ticket_label_plural('my-tickets-view-link');
+    }
+    if ($ticket_plural === '') {
+        $ticket_plural = 'Tickets';
     }
 
-    if (empty($selected)) {
-        return $html;
-    }
+    $ticket_entry['count'] = max(0, absint($active_count));
+    $ticket_entry['singular'] = $ticket_singular;
+    $ticket_entry['plural'] = $ticket_plural;
+    $filtered_counts['ticket'] = $ticket_entry;
 
-    usort($selected, static function (array $left, array $right): int {
-        return $right[0] <=> $left[0];
-    });
-
-    foreach ($selected as $range) {
-        $start = (int) $range[0];
-        $length = (int) $range[1];
-        $html = substr($html, 0, $start) . substr($html, $start + $length);
-    }
-
-    return $html;
+    return $filtered_counts;
 }
 
-function vms_ticketing_v2_is_safe_my_tickets_notice_node_fragment(string $html): bool
-{
-    if ($html === '' || strlen($html) > 2000) {
-        return false;
-    }
-
-    if (!(bool) preg_match('#<a\b[^>]*>\s*View\s*Tickets?\s*</a>#iu', $html)) {
-        return false;
-    }
-
-    return vms_ticketing_v2_is_exact_my_tickets_notice_fragment($html);
-}
-
-function vms_ticketing_v2_normalize_my_tickets_notice_text(string $html): string
-{
-    $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    $text = preg_replace('/\s+/u', ' ', $text);
-    return trim((string) $text);
-}
-
-function vms_ticketing_v2_front_ui_settings(int $plan_id = 0): array
+function bvmgr_ticketing_v2_front_ui_settings(int $plan_id = 0): array
 {
     static $cache = array();
 
@@ -6111,7 +6450,7 @@ function vms_ticketing_v2_front_ui_settings(int $plan_id = 0): array
     return $cache[$cache_key];
 }
 
-function vms_ticketing_v2_sale_quantity_text(array $sale_state, array $ticket_ui = array()): string
+function bvmgr_ticketing_v2_sale_quantity_text(array $sale_state, array $ticket_ui = array()): string
 {
     $cap = max(0, absint($sale_state['early_price_cap'] ?? 0));
     $remaining = (int) ($sale_state['remaining_qty'] ?? -1);
@@ -6134,7 +6473,8 @@ function vms_ticketing_v2_sale_quantity_text(array $sale_state, array $ticket_ui
 
     if ($remaining <= $low_threshold) {
         return sprintf(
-            _n('Only %d Early Bird ticket left', 'Only %d Early Bird tickets left', $remaining, 'vms'),
+            /* translators: %d: number used in this message. */
+            _n('Only %d Early Bird ticket left', 'Only %d Early Bird tickets left', $remaining, 'backstage-venue-manager'),
             $remaining
         );
     }
@@ -6149,12 +6489,14 @@ function vms_ticketing_v2_sale_quantity_text(array $sale_state, array $ticket_ui
     }
 
     if ($price_text !== '') {
-        return sprintf(__('Early Bird: %1$d available at %2$s', 'vms'), $remaining, $price_text);
+        /* translators: 1: number 1 used in this message, 2: value 2 used in this message. */
+        return sprintf(__('Early Bird: %1$d available at %2$s', 'backstage-venue-manager'), $remaining, $price_text);
     }
-    return sprintf(_n('Early Bird: %d available', 'Early Bird: %d available', $remaining, 'vms'), $remaining);
+    /* translators: %d: early bird. */
+    return sprintf(_n('Early Bird: %d available', 'Early Bird: %d available', $remaining, 'backstage-venue-manager'), $remaining);
 }
 
-function vms_ticketing_v2_enqueue_front_bundle(): void
+function bvmgr_ticketing_v2_enqueue_front_bundle(): void
 {
     if (is_admin()) return;
 
@@ -6164,38 +6506,32 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
     if (!$is_event && !$is_cart && !$is_checkout) return;
 
-    $front_script_path = trailingslashit(VMS_PLUGIN_PATH) . 'assets/vms-ticketing-front.js';
-    $front_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+    $front_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-front.js';
+    $front_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     if (is_readable($front_script_path)) {
         $front_script_version = (string) filemtime($front_script_path);
     }
 
-    $fallback_script_path = trailingslashit(VMS_PLUGIN_PATH) . 'assets/vms-ticketing-front-fallback.js';
-    $fallback_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+    $fallback_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-front-fallback.js';
+    $fallback_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     if (is_readable($fallback_script_path)) {
         $fallback_script_version = (string) filemtime($fallback_script_path);
-    }
-
-    $server_controls_script_path = trailingslashit(VMS_PLUGIN_PATH) . 'assets/vms-ticketing-front-server-controls.js';
-    $server_controls_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
-    if (is_readable($server_controls_script_path)) {
-        $server_controls_script_version = (string) filemtime($server_controls_script_path);
     }
 
     $build_stamp = $front_script_version !== '' ? $front_script_version : gmdate('YmdHis');
 
     // Bundle loads on event/cart/checkout pages for ticketing UI state + cart consistency guards.
     wp_enqueue_script(
-        'vms-ticketing-front',
-        plugins_url('assets/vms-ticketing-front.js', VMS_PLUGIN_FILE),
+        'bvmgr-ticketing-front',
+        plugins_url('assets/vms-ticketing-front.js', BVMGR_PLUGIN_FILE),
         array(),
         $front_script_version,
         true
     );
 
     wp_enqueue_script(
-        'vms-ticketing-front-fallback',
-        plugins_url('assets/vms-ticketing-front-fallback.js', VMS_PLUGIN_FILE),
+        'bvmgr-ticketing-front-fallback',
+        plugins_url('assets/vms-ticketing-front-fallback.js', BVMGR_PLUGIN_FILE),
         array(),
         $fallback_script_version,
         true
@@ -6212,10 +6548,10 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     }
 
     wp_enqueue_style(
-        'vms-ticketing-front',
-        plugins_url('assets/css/vms-ticketing-front.css', VMS_PLUGIN_FILE),
+        'bvmgr-ticketing-front',
+        plugins_url('assets/css/vms-ticketing-front.css', BVMGR_PLUGIN_FILE),
         $front_style_deps,
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+        function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
     );
 
     $tec_event_id = 0;
@@ -6238,8 +6574,8 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     $verified_programs = array();
     $verification_program_labels = array();
     $verification_allowance_defaults = array();
-    $allowed_claim_grant_types = function_exists('vms_ticketing_claims_allowed_grant_types')
-        ? (array) vms_ticketing_claims_allowed_grant_types()
+    $allowed_claim_grant_types = function_exists('bvmgr_ticketing_claims_allowed_grant_types')
+        ? (array) bvmgr_ticketing_claims_allowed_grant_types()
         : array('event_ticket_eligibility', 'event_free_admit', 'credential_benefit_override', 'event_grant');
     $current_user_id = get_current_user_id();
     $current_user = ($current_user_id > 0) ? wp_get_current_user() : null;
@@ -6252,21 +6588,21 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     }
     $event_is_rsvp = false;
 
-    if ($is_event && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') && function_exists('vms_ticketing_v2_get_config')) {
-        $plan_id_for_event = vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
+    if ($is_event && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') && function_exists('bvmgr_ticketing_v2_get_config')) {
+        $plan_id_for_event = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
         if ($plan_id_for_event > 0) {
-            $cfg_for_event = vms_ticketing_v2_get_config($plan_id_for_event);
-            $sync_for_event = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($plan_id_for_event) : array();
+            $cfg_for_event = bvmgr_ticketing_v2_get_config($plan_id_for_event);
+            $sync_for_event = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($plan_id_for_event) : array();
             $sync_map_for_event = (is_array($sync_for_event) && isset($sync_for_event['map']) && is_array($sync_for_event['map'])) ? $sync_for_event['map'] : array();
 
             $ticket_cfg_rows = (isset($cfg_for_event['tickets']) && is_array($cfg_for_event['tickets'])) ? $cfg_for_event['tickets'] : array();
             $ticket_sync_rows = (isset($sync_map_for_event['tickets']) && is_array($sync_map_for_event['tickets'])) ? $sync_map_for_event['tickets'] : array();
-            $ticket_ui_for_event = vms_ticketing_v2_front_ui_settings((int) $plan_id_for_event);
+            $ticket_ui_for_event = bvmgr_ticketing_v2_front_ui_settings((int) $plan_id_for_event);
             $legacy_ga_pid = absint($sync_map_for_event['ga']['woo_product_id'] ?? 0);
             $legacy_ga_ticket_id = absint($sync_map_for_event['ga']['tec_ticket_id'] ?? 0);
 
-            $disabled_ticket_runtime = function_exists('vms_ticketing_v2_disabled_ticket_products_for_plan')
-                ? vms_ticketing_v2_disabled_ticket_products_for_plan((int) $plan_id_for_event)
+            $disabled_ticket_runtime = function_exists('bvmgr_ticketing_v2_disabled_ticket_products_for_plan')
+                ? bvmgr_ticketing_v2_disabled_ticket_products_for_plan((int) $plan_id_for_event)
                 : array();
             $disabled_ticket_product_ids = (isset($disabled_ticket_runtime['product_ids']) && is_array($disabled_ticket_runtime['product_ids']))
                 ? array_values(array_unique(array_filter(array_map('absint', $disabled_ticket_runtime['product_ids']))))
@@ -6304,12 +6640,12 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                 }
 
                 $verified_program = sanitize_key((string) ($ticket_cfg_row['verified_program'] ?? ''));
-                $allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-                    ? vms_ticketing_v2_normalize_allowed_programs($ticket_cfg_row['allowed_programs'] ?? array(), $verified_program)
+                $allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+                    ? bvmgr_ticketing_v2_normalize_allowed_programs($ticket_cfg_row['allowed_programs'] ?? array(), $verified_program)
                     : ($verified_program !== '' ? array($verified_program) : array());
-                $allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-                    ? vms_ticketing_v2_truthy($ticket_cfg_row['allow_direct_grants'] ?? false, false)
-                    : vms_ticketing_v2_meta_truthy($ticket_cfg_row['allow_direct_grants'] ?? false, false);
+                $allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+                    ? bvmgr_ticketing_v2_truthy($ticket_cfg_row['allow_direct_grants'] ?? false, false)
+                    : bvmgr_ticketing_v2_meta_truthy($ticket_cfg_row['allow_direct_grants'] ?? false, false);
                 $claim_grant_type = sanitize_key((string) ($ticket_cfg_row['claim_grant_type'] ?? 'event_ticket_eligibility'));
                 if (!in_array($claim_grant_type, $allowed_claim_grant_types, true)) {
                     $claim_grant_type = 'event_ticket_eligibility';
@@ -6318,9 +6654,9 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                 if ($claims_per_assignee <= 0) {
                     $claims_per_assignee = 1;
                 }
-                $require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-                    ? vms_ticketing_v2_truthy($ticket_cfg_row['require_assignee_email'] ?? true, true)
-                    : vms_ticketing_v2_meta_truthy($ticket_cfg_row['require_assignee_email'] ?? true, true);
+                $require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+                    ? bvmgr_ticketing_v2_truthy($ticket_cfg_row['require_assignee_email'] ?? true, true)
+                    : bvmgr_ticketing_v2_meta_truthy($ticket_cfg_row['require_assignee_email'] ?? true, true);
                 if ($visibility_mode !== 'verified') {
                     $verified_program = '';
                     $allowed_programs = array();
@@ -6345,10 +6681,10 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                     $ticket_pid = absint($ticket_sync_rows[$ticket_key]['woo_product_id'] ?? 0);
                 }
                 if ($ticket_pid <= 0 && $legacy_ga_pid > 0) {
-                    $ticket_label_for_legacy_match = vms_ticketing_v2_sanitize_plain_text_label((string) ($ticket_cfg_row['title'] ?? $ticket_key));
+                    $ticket_label_for_legacy_match = bvmgr_ticketing_v2_sanitize_plain_text_label((string) ($ticket_cfg_row['title'] ?? $ticket_key));
                     $can_claim_legacy_ga = false;
-                    if (function_exists('vms_ticketing_v2_should_apply_legacy_ga_map_to_ticket')) {
-                        $can_claim_legacy_ga = vms_ticketing_v2_should_apply_legacy_ga_map_to_ticket($ticket_key, $ticket_label_for_legacy_match);
+                    if (function_exists('bvmgr_ticketing_v2_should_apply_legacy_ga_map_to_ticket')) {
+                        $can_claim_legacy_ga = bvmgr_ticketing_v2_should_apply_legacy_ga_map_to_ticket($ticket_key, $ticket_label_for_legacy_match);
                     } else {
                         $legacy_match_label = strtolower(trim((string) preg_replace('/\s+/u', ' ', $ticket_label_for_legacy_match)));
                         $has_specialized_label = ($legacy_match_label !== '' && preg_match('/\b(early|advance|pre[-\s]?sale|presale|vip|child|children|kid|kids|veteran|police|fire|emt|nurse|teacher|school)\b/u', $legacy_match_label));
@@ -6378,7 +6714,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                     $tec_ticket_id = $ticket_pid;
                 }
 
-                $ticket_context = vms_ticketing_v2_resolve_ticket_max_context($ticket_pid);
+                $ticket_context = bvmgr_ticketing_v2_resolve_ticket_max_context($ticket_pid);
                 $context_ticket_key = sanitize_key((string) ($ticket_context['ticket_key'] ?? ''));
                 if ($context_ticket_key === '') {
                     $context_ticket_key = $ticket_key;
@@ -6388,12 +6724,12 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                     $context_visibility_mode = $visibility_mode;
                 }
                 $context_program = sanitize_key((string) ($ticket_context['program'] ?? $verified_program));
-                $context_allowed_programs = function_exists('vms_ticketing_v2_normalize_allowed_programs')
-                    ? vms_ticketing_v2_normalize_allowed_programs($ticket_context['allowed_programs'] ?? $allowed_programs, $context_program)
+                $context_allowed_programs = function_exists('bvmgr_ticketing_v2_normalize_allowed_programs')
+                    ? bvmgr_ticketing_v2_normalize_allowed_programs($ticket_context['allowed_programs'] ?? $allowed_programs, $context_program)
                     : ($context_program !== '' ? array($context_program) : array());
-                $context_allow_direct_grants = function_exists('vms_ticketing_v2_truthy')
-                    ? vms_ticketing_v2_truthy($ticket_context['allow_direct_grants'] ?? $allow_direct_grants, false)
-                    : vms_ticketing_v2_meta_truthy($ticket_context['allow_direct_grants'] ?? $allow_direct_grants, false);
+                $context_allow_direct_grants = function_exists('bvmgr_ticketing_v2_truthy')
+                    ? bvmgr_ticketing_v2_truthy($ticket_context['allow_direct_grants'] ?? $allow_direct_grants, false)
+                    : bvmgr_ticketing_v2_meta_truthy($ticket_context['allow_direct_grants'] ?? $allow_direct_grants, false);
                 $context_claim_grant_type = sanitize_key((string) ($ticket_context['claim_grant_type'] ?? $claim_grant_type));
                 if (!in_array($context_claim_grant_type, $allowed_claim_grant_types, true)) {
                     $context_claim_grant_type = 'event_ticket_eligibility';
@@ -6402,9 +6738,9 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                 if ($context_claims_per_assignee <= 0) {
                     $context_claims_per_assignee = 1;
                 }
-                $context_require_assignee_email = function_exists('vms_ticketing_v2_truthy')
-                    ? vms_ticketing_v2_truthy($ticket_context['require_assignee_email'] ?? $require_assignee_email, true)
-                    : vms_ticketing_v2_meta_truthy($ticket_context['require_assignee_email'] ?? $require_assignee_email, true);
+                $context_require_assignee_email = function_exists('bvmgr_ticketing_v2_truthy')
+                    ? bvmgr_ticketing_v2_truthy($ticket_context['require_assignee_email'] ?? $require_assignee_email, true)
+                    : bvmgr_ticketing_v2_meta_truthy($ticket_context['require_assignee_email'] ?? $require_assignee_email, true);
                 if ($context_visibility_mode !== 'verified') {
                     $context_program = '';
                     $context_allowed_programs = array();
@@ -6416,7 +6752,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                     $context_program = (string) $context_allowed_programs[0];
                 }
                 $context_limit = max(0, absint($ticket_context['limit'] ?? 0));
-                $group_ids = vms_ticketing_v2_ticket_group_product_ids_from_context($ticket_context, $ticket_pid);
+                $group_ids = bvmgr_ticketing_v2_ticket_group_product_ids_from_context($ticket_context, $ticket_pid);
 
                 $current_user_eligibility = array(
                     'eligible' => 0,
@@ -6431,8 +6767,8 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                 $current_user_assigned_cart_qty = 0;
                 $current_user_claim_remaining_qty = -1;
                 if ($current_user_id > 0 && $context_visibility_mode === 'verified') {
-                    if (function_exists('vms_ticketing_claims_resolve_eligibility')) {
-                        $resolved = vms_ticketing_claims_resolve_eligibility(array(
+                    if (function_exists('bvmgr_ticketing_claims_resolve_eligibility')) {
+                        $resolved = bvmgr_ticketing_claims_resolve_eligibility(array(
                             'user_id' => (int) $current_user_id,
                             'event_id' => (int) $tec_event_id,
                             'ticket_product_id' => $ticket_pid,
@@ -6450,22 +6786,22 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                             $current_user_eligibility['matched_rule_path'] = sanitize_key((string) ($resolved['matched_rule_path'] ?? ''));
                             $current_user_eligibility['matched_grant_id'] = absint($resolved['matched_grant_id'] ?? 0);
                         }
-                    } elseif ($context_program !== '' && function_exists('vms_ticketing_user_is_verified_for_program')) {
-                        $fallback_eligible = vms_ticketing_user_is_verified_for_program((int) $current_user_id, $context_program);
+                    } elseif ($context_program !== '' && function_exists('bvmgr_ticketing_user_is_verified_for_program')) {
+                        $fallback_eligible = bvmgr_ticketing_user_is_verified_for_program((int) $current_user_id, $context_program);
                         $current_user_eligibility['eligible'] = $fallback_eligible ? 1 : 0;
                         $current_user_eligibility['reason_code'] = $fallback_eligible ? 'ok' : 'credential_not_approved';
                     }
                 }
 
                 if ($current_user instanceof WP_User && $current_user_email_key !== '' && !empty($current_user_eligibility['eligible'])) {
-                    $current_user_claims_per_assignee = function_exists('vms_ticketing_v2_assignee_claims_per_event_limit')
-                        ? max(1, absint(vms_ticketing_v2_assignee_claims_per_event_limit($ticket_context, $current_user, $current_user_resolved)))
+                    $current_user_claims_per_assignee = function_exists('bvmgr_ticketing_v2_assignee_claims_per_event_limit')
+                        ? max(1, absint(bvmgr_ticketing_v2_assignee_claims_per_event_limit($ticket_context, $current_user, $current_user_resolved)))
                         : max(1, absint($context_claims_per_assignee));
-                    $current_user_consumed_qty = function_exists('vms_ticketing_v2_assignee_consumed_qty_for_event')
-                        ? absint(vms_ticketing_v2_assignee_consumed_qty_for_event((int) $tec_event_id, $current_user_email, $group_ids))
+                    $current_user_consumed_qty = function_exists('bvmgr_ticketing_v2_assignee_consumed_qty_for_event')
+                        ? absint(bvmgr_ticketing_v2_assignee_consumed_qty_for_event((int) $tec_event_id, $current_user_email, $group_ids))
                         : 0;
-                    $current_user_cart_counts = function_exists('vms_ticketing_v2_cart_assignee_usage_for_event')
-                        ? (array) vms_ticketing_v2_cart_assignee_usage_for_event((int) $tec_event_id, $context_ticket_key)
+                    $current_user_cart_counts = function_exists('bvmgr_ticketing_v2_cart_assignee_usage_for_event')
+                        ? (array) bvmgr_ticketing_v2_cart_assignee_usage_for_event((int) $tec_event_id, $context_ticket_key)
                         : array();
                     $current_user_assigned_cart_qty = max(0, absint($current_user_cart_counts[$current_user_email_key] ?? 0));
                     $current_user_claim_remaining_qty = max(
@@ -6480,9 +6816,9 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                 $used_cart_qty = 0;
                 $remaining_qty = -1;
                 if ($context_limit > 0) {
-                    $used_cart_qty = absint(vms_ticketing_v2_cart_qty_for_event_ticket((int) $tec_event_id, $context_ticket_key));
+                    $used_cart_qty = absint(bvmgr_ticketing_v2_cart_qty_for_event_ticket((int) $tec_event_id, $context_ticket_key));
                     if ($current_user_id > 0) {
-                        $used_prior_qty = absint(vms_ticketing_v2_purchased_ticket_qty_for_user((int) $current_user_id, $group_ids));
+                        $used_prior_qty = absint(bvmgr_ticketing_v2_purchased_ticket_qty_for_user((int) $current_user_id, $group_ids));
                     }
                     $remaining_qty = max(0, $context_limit - $used_prior_qty - $used_cart_qty);
                 }
@@ -6500,7 +6836,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                 $front_current_user_consumed_qty = $current_user_consumed_qty;
                 $front_current_user_assigned_cart_qty = $current_user_assigned_cart_qty;
                 $front_current_user_claim_remaining_qty = $current_user_claim_remaining_qty;
-                if (vms_ticketing_v2_public_ticket_qualification_removed() && $front_visibility_mode === 'verified') {
+                if (bvmgr_ticketing_v2_public_ticket_qualification_removed() && $front_visibility_mode === 'verified') {
                     $front_visibility_mode = 'public';
                     $front_program = '';
                     $front_allowed_programs = array();
@@ -6523,11 +6859,11 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                 }
 
                 $is_rsvp_ticket = false;
-                $display_label = vms_ticketing_v2_plain_display_text($ticket_cfg_row['title'] ?? '');
+                $display_label = bvmgr_ticketing_v2_plain_display_text($ticket_cfg_row['title'] ?? '');
 
                 $verified_helper_copy = '';
                 if ($visibility_mode === 'verified') {
-                    $verified_helper_copy = __('Requires registration', 'vms');
+                    $verified_helper_copy = __('Requires registration', 'backstage-venue-manager');
                 }
 
                 $meta_flag = sanitize_key((string) get_post_meta($ticket_pid, '_vms_is_rsvp', true));
@@ -6546,19 +6882,19 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                     $display_label = 'RSVP';
                 }
 
-                $ratio_rule = function_exists('vms_ticketing_v2_normalize_ticket_ratio_rule')
-                    ? vms_ticketing_v2_normalize_ticket_ratio_rule(is_array($ticket_cfg_row) ? $ticket_cfg_row : array())
+                $ratio_rule = function_exists('bvmgr_ticketing_v2_normalize_ticket_ratio_rule')
+                    ? bvmgr_ticketing_v2_normalize_ticket_ratio_rule(is_array($ticket_cfg_row) ? $ticket_cfg_row : array())
                     : array('enabled' => false, 'max_per_qualifying' => 0, 'qualifier_mode' => 'counts_toward_unlock', 'group' => '');
                 $ticket_runtime_cfg = is_array($ticket_cfg_row) ? $ticket_cfg_row : array();
                 $ticket_runtime_cfg['_vms_runtime_product_id'] = $ticket_pid;
                 $ticket_runtime_cfg['woo_product_id'] = $ticket_pid;
                 $ticket_regular_price = max(0.0, (float) ($ticket_runtime_cfg['price'] ?? 0));
                 $ticket_early_price = max(0.0, (float) ($ticket_runtime_cfg['early_price'] ?? 0));
-                $ticket_sale_state = function_exists('vms_ticketing_v2_get_ticket_early_price_state')
-                    ? vms_ticketing_v2_get_ticket_early_price_state($ticket_runtime_cfg)
+                $ticket_sale_state = function_exists('bvmgr_ticketing_v2_get_ticket_early_price_state')
+                    ? bvmgr_ticketing_v2_get_ticket_early_price_state($ticket_runtime_cfg)
                     : array('active' => false, 'early_price_cap' => 0, 'sold_qty' => -1, 'remaining_qty' => -1);
-                $ticket_effective_price_for_sale = function_exists('vms_ticketing_v2_get_ticket_effective_price')
-                    ? (float) vms_ticketing_v2_get_ticket_effective_price($ticket_runtime_cfg)
+                $ticket_effective_price_for_sale = function_exists('bvmgr_ticketing_v2_get_ticket_effective_price')
+                    ? (float) bvmgr_ticketing_v2_get_ticket_effective_price($ticket_runtime_cfg)
                     : $ticket_regular_price;
                 $ticket_sale_active = !empty($ticket_sale_state['active']) && (
                     $ticket_regular_price > 0
@@ -6566,13 +6902,13 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
                     && $ticket_early_price < $ticket_regular_price
                     && abs($ticket_effective_price_for_sale - $ticket_early_price) < 0.00001
                 );
-                $ticket_sale_quantity_text = function_exists('vms_ticketing_v2_sale_quantity_text')
-                    ? vms_ticketing_v2_sale_quantity_text($ticket_sale_state, is_array($ticket_ui_for_event ?? null) ? $ticket_ui_for_event : array())
+                $ticket_sale_quantity_text = function_exists('bvmgr_ticketing_v2_sale_quantity_text')
+                    ? bvmgr_ticketing_v2_sale_quantity_text($ticket_sale_state, is_array($ticket_ui_for_event ?? null) ? $ticket_ui_for_event : array())
                     : '';
 
-                $ticket_description = vms_ticketing_v2_plain_display_text($ticket_cfg_row['description'] ?? '');
+                $ticket_description = bvmgr_ticketing_v2_plain_display_text($ticket_cfg_row['description'] ?? '');
                 if ($verified_helper_copy !== '') {
-                    if ($ticket_description === '' || vms_ticketing_v2_is_legacy_verified_ticket_copy($ticket_description)) {
+                    if ($ticket_description === '' || bvmgr_ticketing_v2_is_legacy_verified_ticket_copy($ticket_description)) {
                         $ticket_description = $verified_helper_copy;
                     } elseif (stripos($ticket_description, $verified_helper_copy) === false) {
                         $ticket_description = trim($ticket_description . ' ' . $verified_helper_copy);
@@ -6581,8 +6917,8 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
                 $access_row = array(
                     'ticket_key' => $context_ticket_key,
-                    'label' => vms_ticketing_v2_plain_display_text($ticket_cfg_row['title'] ?? ''),
-                    'display_label' => $display_label !== '' ? $display_label : vms_ticketing_v2_plain_display_text($ticket_cfg_row['title'] ?? ''),
+                    'label' => bvmgr_ticketing_v2_plain_display_text($ticket_cfg_row['title'] ?? ''),
+                    'display_label' => $display_label !== '' ? $display_label : bvmgr_ticketing_v2_plain_display_text($ticket_cfg_row['title'] ?? ''),
                     'description' => $ticket_description,
                     'sort_order' => (int) ($ticket_cfg_row['sort_order'] ?? 0),
                     'is_primary' => $is_primary_ticket ? 1 : 0,
@@ -6644,8 +6980,8 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
                 $ticket_price = 0.0;
                 if (is_array($ticket_runtime_cfg) && isset($ticket_runtime_cfg['price']) && is_numeric($ticket_runtime_cfg['price'])) {
-                    $ticket_price = function_exists('vms_ticketing_v2_get_ticket_effective_price')
-                        ? vms_ticketing_v2_get_ticket_effective_price($ticket_runtime_cfg)
+                    $ticket_price = function_exists('bvmgr_ticketing_v2_get_ticket_effective_price')
+                        ? bvmgr_ticketing_v2_get_ticket_effective_price($ticket_runtime_cfg)
                         : (float) $ticket_runtime_cfg['price'];
                 } else {
                     $ticket_product = function_exists('wc_get_product') ? wc_get_product($ticket_pid) : null;
@@ -6666,47 +7002,47 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         }
     }
 
-    if (function_exists('vms_ticketing_verification_form_url')) {
-        $verification_url = vms_ticketing_verification_form_url((int) $tec_event_id);
+    if (function_exists('bvmgr_ticketing_verification_form_url')) {
+        $verification_url = bvmgr_ticketing_verification_form_url((int) $tec_event_id);
     }
-    if (function_exists('vms_ticketing_get_current_user_verified_programs')) {
-        $verified_programs = vms_ticketing_get_current_user_verified_programs();
+    if (function_exists('bvmgr_ticketing_get_current_user_verified_programs')) {
+        $verified_programs = bvmgr_ticketing_get_current_user_verified_programs();
     }
-    if (function_exists('vms_ticketing_verification_programs')) {
-        $verification_program_labels = vms_ticketing_verification_programs();
+    if (function_exists('bvmgr_ticketing_verification_programs')) {
+        $verification_program_labels = bvmgr_ticketing_verification_programs();
     }
-    if (function_exists('vms_ticketing_verification_get_program_allowances')) {
-        $verification_allowance_defaults = vms_ticketing_verification_get_program_allowances();
+    if (function_exists('bvmgr_ticketing_verification_get_program_allowances')) {
+        $verification_allowance_defaults = bvmgr_ticketing_verification_get_program_allowances();
     }
-    if (function_exists('vms_ticketing_claims_account_benefits_url')) {
-        $my_benefits_url = (string) vms_ticketing_claims_account_benefits_url();
-    } elseif (function_exists('vms_ticketing_verification_account_dashboard_url')) {
-        $my_benefits_url = (string) add_query_arg('vms_benefits', '1', vms_ticketing_verification_account_dashboard_url()) . '#vms-benefits-panel';
+    if (function_exists('bvmgr_ticketing_claims_account_benefits_url')) {
+        $my_benefits_url = (string) bvmgr_ticketing_claims_account_benefits_url();
+    } elseif (function_exists('bvmgr_ticketing_verification_account_dashboard_url')) {
+        $my_benefits_url = (string) add_query_arg('vms_benefits', '1', bvmgr_ticketing_verification_account_dashboard_url()) . '#vms-benefits-panel';
     }
-    if ($current_user_id > 0 && function_exists('vms_ticketing_claims_recent_assignee_emails_for_buyer')) {
-        $recent_claim_emails = (array) vms_ticketing_claims_recent_assignee_emails_for_buyer($current_user_id, 8);
+    if ($current_user_id > 0 && function_exists('bvmgr_ticketing_claims_recent_assignee_emails_for_buyer')) {
+        $recent_claim_emails = (array) bvmgr_ticketing_claims_recent_assignee_emails_for_buyer($current_user_id, 8);
     }
     $redirect_after_login = ($tec_event_id > 0) ? get_permalink($tec_event_id) : home_url('/');
 
     $event_ticket_product_ids = array_values(array_unique(array_filter(array_map('absint', $event_ticket_product_ids))));
-    if ($is_event && $tec_event_id > 0 && function_exists('vms_ticketing_v2_event_ticket_product_ids_for_event')) {
+    if ($is_event && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_event_ticket_product_ids_for_event')) {
         $event_ticket_product_ids = array_values(array_unique(array_filter(array_merge(
             $event_ticket_product_ids,
-            vms_ticketing_v2_event_ticket_product_ids_for_event((int) $tec_event_id)
+            bvmgr_ticketing_v2_event_ticket_product_ids_for_event((int) $tec_event_id)
         ))));
     }
 
     $my_active_ticket_count = -1;
-    if ($is_event && $tec_event_id > 0 && $current_user_id > 0 && function_exists('vms_ticketing_v2_active_ticket_count_for_event_user')) {
-        $my_active_ticket_count = vms_ticketing_v2_active_ticket_count_for_event_user((int) $tec_event_id, (int) $current_user_id);
+    if ($is_event && $tec_event_id > 0 && $current_user_id > 0 && function_exists('bvmgr_ticketing_v2_active_ticket_count_for_event_user')) {
+        $my_active_ticket_count = bvmgr_ticketing_v2_active_ticket_count_for_event_user((int) $tec_event_id, (int) $current_user_id);
     }
 
-    $ticket_ui = vms_ticketing_v2_front_ui_settings((int) $plan_id_for_event);
-    $ticket_ratio_qualifying_label = ($plan_id_for_event > 0 && function_exists('vms_ticketing_v2_resolve_qualifying_ticket_label'))
-        ? (string) vms_ticketing_v2_resolve_qualifying_ticket_label((int) $plan_id_for_event)
-        : __('qualifying tickets', 'vms');
+    $ticket_ui = bvmgr_ticketing_v2_front_ui_settings((int) $plan_id_for_event);
+    $ticket_ratio_qualifying_label = ($plan_id_for_event > 0 && function_exists('bvmgr_ticketing_v2_resolve_qualifying_ticket_label'))
+        ? (string) bvmgr_ticketing_v2_resolve_qualifying_ticket_label((int) $plan_id_for_event)
+        : __('qualifying tickets', 'backstage-venue-manager');
 
-    wp_localize_script('vms-ticketing-front', 'vmsTicketingFront', array(
+    wp_localize_script('bvmgr-ticketing-front', 'BVMGR_TICKETING_FRONT', array(
         'tecEventId' => (int) $tec_event_id,
         'eventPlanId' => (int) $plan_id_for_event,
         'isCart'     => $is_cart ? 1 : 0,
@@ -6718,20 +7054,20 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         'uiV2AdminPreview' => !empty($ticket_ui['admin_preview']) ? '1' : '0',
         'isAdminUser' => !empty($ticket_ui['is_admin_user']) ? '1' : '0',
         'uiSafeModeNotice' => !empty($ticket_ui['show_safe_mode_notice']) ? '1' : '0',
-        'uiSafeModeNoticeText' => __('Ticket UI Safe Mode is active on this site. You are viewing the TEC fallback layout, not the unified V2 purchase UI.', 'vms'),
-        'uiSafeModeServerControlsNoticeText' => __('Ticket UI Safe Mode is active on this site. This event is using the server-controls safety layout instead of the full unified V2 ticket UI.', 'vms'),
+        'uiSafeModeNoticeText' => __('Ticket UI Safe Mode is active on this site. You are viewing the TEC fallback layout, not the unified V2 purchase UI.', 'backstage-venue-manager'),
+        'uiSafeModeServerControlsNoticeText' => __('Ticket UI Safe Mode is active on this site. This event is using the server-controls safety layout instead of the full unified V2 ticket UI.', 'backstage-venue-manager'),
         'showTicketAvailability' => !empty($ticket_ui['show_availability']) ? 1 : 0,
         'ticketAvailabilityDisplay' => sanitize_key((string) ($ticket_ui['availability_display'] ?? 'low')),
         'ticketAvailabilityLowThreshold' => max(1, absint($ticket_ui['availability_low_threshold'] ?? 25)),
         'saleAvailabilityDisplay' => sanitize_key((string) ($ticket_ui['sale_availability_display'] ?? 'when_capped')),
         'saleAvailabilityLowThreshold' => max(1, absint($ticket_ui['sale_availability_low_threshold'] ?? 10)),
         'myActiveTicketCount' => (int) $my_active_ticket_count,
-        'ticketHelpText' => (function_exists('vms_ticketing_ui_help_should_render') && !vms_ticketing_ui_help_should_render((int) $plan_id_for_event, 'tickets')) ? '' : (function_exists('vms_ticketing_ui_help_effective_text') ? (string) vms_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'tickets') : ''),
-        'ticketHelpStyle' => function_exists('vms_ticketing_ui_help_global_style') ? (array) vms_ticketing_ui_help_global_style('tickets') : array(),
-        'addonHelpText' => (function_exists('vms_ticketing_ui_help_should_render') && !vms_ticketing_ui_help_should_render((int) $plan_id_for_event, 'addons')) ? '' : (function_exists('vms_ticketing_ui_help_effective_text') ? (string) vms_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'addons') : ''),
-        'addonHelpStyle' => function_exists('vms_ticketing_ui_help_global_style') ? (array) vms_ticketing_ui_help_global_style('addons') : array(),
-        'addonSectionHeading' => function_exists('vms_ticketing_ui_addons_section_heading_effective') ? (string) vms_ticketing_ui_addons_section_heading_effective((int) $plan_id_for_event) : (function_exists('vms_ticketing_ui_addons_section_heading') ? (string) vms_ticketing_ui_addons_section_heading() : __('Fire Pits & Tables', 'vms')),
-        'addonSectionSubtext' => function_exists('vms_ticketing_ui_addons_section_subtext_effective') ? (string) vms_ticketing_ui_addons_section_subtext_effective((int) $plan_id_for_event) : (function_exists('vms_ticketing_ui_addons_section_subtext') ? (string) vms_ticketing_ui_addons_section_subtext() : __('Click here to add a fire pit or table to your order.', 'vms')),
+        'ticketHelpText' => (function_exists('bvmgr_ticketing_ui_help_should_render') && !bvmgr_ticketing_ui_help_should_render((int) $plan_id_for_event, 'tickets')) ? '' : (function_exists('bvmgr_ticketing_ui_help_effective_text') ? (string) bvmgr_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'tickets') : ''),
+        'ticketHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('tickets') : array(),
+        'addonHelpText' => (function_exists('bvmgr_ticketing_ui_help_should_render') && !bvmgr_ticketing_ui_help_should_render((int) $plan_id_for_event, 'addons')) ? '' : (function_exists('bvmgr_ticketing_ui_help_effective_text') ? (string) bvmgr_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'addons') : ''),
+        'addonHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('addons') : array(),
+        'addonSectionHeading' => function_exists('bvmgr_ticketing_ui_addons_section_heading_effective') ? (string) bvmgr_ticketing_ui_addons_section_heading_effective((int) $plan_id_for_event) : (function_exists('bvmgr_ticketing_ui_addons_section_heading') ? (string) bvmgr_ticketing_ui_addons_section_heading() : __('Fire Pits & Tables', 'backstage-venue-manager')),
+        'addonSectionSubtext' => function_exists('bvmgr_ticketing_ui_addons_section_subtext_effective') ? (string) bvmgr_ticketing_ui_addons_section_subtext_effective((int) $plan_id_for_event) : (function_exists('bvmgr_ticketing_ui_addons_section_subtext') ? (string) bvmgr_ticketing_ui_addons_section_subtext() : __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager')),
         'ticketRatioQualifyingLabel' => $ticket_ratio_qualifying_label,
         'loginUrl'   => wp_login_url($redirect_after_login),
         'registerUrl' => function_exists('wp_registration_url') ? wp_registration_url() : wp_login_url($redirect_after_login),
@@ -6744,8 +7080,8 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         'recentClaimEmails' => array_values(array_unique(array_filter(array_map('sanitize_email', (array) $recent_claim_emails)))),
         'currentUserEmail' => $current_user_email,
         'buildStamp' => (string) $build_stamp,
-        'hasCheckoutBlockers' => (($is_cart || $is_checkout) && !empty(vms_ticketing_v2_capture_checkout_blocker_error_messages())) ? 1 : 0,
-        'checkoutBlockerMessages' => (($is_cart || $is_checkout) ? vms_ticketing_v2_capture_checkout_blocker_error_messages() : array()),
+        'hasCheckoutBlockers' => (($is_cart || $is_checkout) && !empty(bvmgr_ticketing_v2_capture_checkout_blocker_error_messages())) ? 1 : 0,
+        'checkoutBlockerMessages' => (($is_cart || $is_checkout) ? bvmgr_ticketing_v2_capture_checkout_blocker_error_messages() : array()),
         'eventIsRsvp' => !empty($event_is_rsvp) ? 1 : 0,
         'ticketAccessMap' => $ticket_access_map,
         'ticketRemainingMap' => $ticket_remaining_map,
@@ -6755,27 +7091,27 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
         'cartUrl' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
         'wcAjaxAddToCartUrl' => (class_exists('WC_AJAX') ? WC_AJAX::get_endpoint('add_to_cart') : home_url('/?wc-ajax=add_to_cart')),
         'cartContextUrl' => admin_url('admin-ajax.php?action=vms_ticketing_v2_cart_context'),
-        'cartContextNonce' => wp_create_nonce('vms_ticketing_v2_cart_context'),
+        'cartContextNonce' => wp_create_nonce('bvmgr_ticketing_v2_cart_context'),
         'silentAddUrl' => admin_url('admin-ajax.php?action=vms_ticketing_v2_silent_add'),
-        'silentAddNonce' => wp_create_nonce('vms_ticketing_v2_silent_add'),
+        'silentAddNonce' => wp_create_nonce('bvmgr_ticketing_v2_silent_add'),
         'atomicAddUrl' => admin_url('admin-ajax.php?action=vms_ticketing_v2_atomic_add_to_cart'),
-        'atomicAddNonce' => wp_create_nonce('vms_ticketing_v2_atomic_add_to_cart'),
+        'atomicAddNonce' => wp_create_nonce('bvmgr_ticketing_v2_atomic_add_to_cart'),
         'claimsClientLogUrl' => admin_url('admin-ajax.php?action=vms_ticketing_claims_log_client_action'),
-        'claimsClientLogNonce' => wp_create_nonce('vms_ticketing_claims_log_client_action'),
+        'claimsClientLogNonce' => wp_create_nonce('bvmgr_ticketing_claims_log_client_action'),
         'claimsValidateUrl' => admin_url('admin-ajax.php?action=vms_ticketing_claims_validate_assignee'),
-        'claimsValidateNonce' => wp_create_nonce('vms_ticketing_claims_validate_assignee'),
+        'claimsValidateNonce' => wp_create_nonce('bvmgr_ticketing_claims_validate_assignee'),
         'legacyReplayEnabled' => apply_filters('vms_ticketing_v2_legacy_replay_enabled', false) ? 1 : 0,
     ));
 
     if ($is_event && !empty($ticket_ui['is_progressive'])) {
-        $progressive_script_path = trailingslashit(VMS_PLUGIN_PATH) . 'assets/vms-ticketing-progressive-ui.js';
-        $progressive_script_version = function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '');
+        $progressive_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-progressive-ui.js';
+        $progressive_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
         if (is_readable($progressive_script_path)) {
             $progressive_script_version = (string) filemtime($progressive_script_path);
             wp_enqueue_script(
-                'vms-ticketing-progressive-ui',
-                plugins_url('assets/vms-ticketing-progressive-ui.js', VMS_PLUGIN_FILE),
-                array('vms-ticketing-front'),
+                'bvmgr-ticketing-progressive-ui',
+                plugins_url('assets/vms-ticketing-progressive-ui.js', BVMGR_PLUGIN_FILE),
+                array('bvmgr-ticketing-front'),
                 $progressive_script_version,
                 true
             );
@@ -6785,7 +7121,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
     // Entitlements CSS only matters on event pages.
     if (!$is_event) return;
 
-    if (!function_exists('vms_ticketing_v2_get_config') || !function_exists('vms_ticketing_v2_get_sync')) return;
+    if (!function_exists('bvmgr_ticketing_v2_get_config') || !function_exists('bvmgr_ticketing_v2_get_sync')) return;
     if (!function_exists('WC') || !function_exists('wc_get_product')) return;
 
     $tec_event_id = get_queried_object_id();
@@ -6793,11 +7129,11 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
     $plan_id = $plan_id_for_event;
     if ($plan_id <= 0) {
-        $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
+        $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
     }
     if ($plan_id <= 0) return;
 
-    $cfg = (!empty($cfg_for_event) && $plan_id === $plan_id_for_event) ? $cfg_for_event : vms_ticketing_v2_get_config($plan_id);
+    $cfg = (!empty($cfg_for_event) && $plan_id === $plan_id_for_event) ? $cfg_for_event : bvmgr_ticketing_v2_get_config($plan_id);
     $ents = (isset($cfg['entitlements']) && is_array($cfg['entitlements'])) ? $cfg['entitlements'] : array();
 
     $has_enabled = false;
@@ -6808,12 +7144,12 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 
     if (!$has_enabled) return;
 
-    $entitlements_style_deps = array_values(array_unique(array_merge(array('vms-ticketing-front'), $front_style_deps)));
+    $entitlements_style_deps = array_values(array_unique(array_merge(array('bvmgr-ticketing-front'), $front_style_deps)));
     wp_enqueue_style(
-        'vms-ticketing-entitlements',
-        plugins_url('assets/css/vms-entitlements-public.css', VMS_PLUGIN_FILE),
+        'bvmgr-ticketing-entitlements',
+        plugins_url('assets/css/vms-entitlements-public.css', BVMGR_PLUGIN_FILE),
         $entitlements_style_deps,
-        function_exists('vms_asset_version') ? vms_asset_version() : (defined('VMS_VERSION') ? (string) VMS_VERSION : '')
+        function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '')
     );
 }
 
@@ -6821,7 +7157,7 @@ function vms_ticketing_v2_enqueue_front_bundle(): void
 /**
  * True if the linked VMS Event Plan for a TEC event is cancelled.
  */
-function vms_tec_is_cancelled_event(int $tec_event_id): bool
+function bvmgr_tec_is_cancelled_event(int $tec_event_id): bool
 {
     $tec_event_id = absint($tec_event_id);
     if ($tec_event_id <= 0) {
@@ -6829,18 +7165,18 @@ function vms_tec_is_cancelled_event(int $tec_event_id): bool
     }
 
     $plan_id = 0;
-    if (function_exists('vms_get_event_plan_for_tec_event')) {
-        $plan_id = (int) vms_get_event_plan_for_tec_event($tec_event_id);
-    } elseif (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $plan_id = (int) vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
+    if (function_exists('bvmgr_get_event_plan_for_tec_event')) {
+        $plan_id = (int) bvmgr_get_event_plan_for_tec_event($tec_event_id);
+    } elseif (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $plan_id = (int) bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id);
     }
 
     if ($plan_id <= 0) {
         return false;
     }
 
-    $k_status = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
+    $k_status = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
         : '_vms_event_plan_status';
 
     $status = sanitize_key((string) get_post_meta($plan_id, $k_status, true));
@@ -6854,19 +7190,19 @@ function vms_tec_is_cancelled_event(int $tec_event_id): bool
 /**
  * Add a public body class when the current TEC event is linked to a cancelled VMS plan.
  */
-function vms_tec_cancelled_event_body_class(array $classes): array
+function bvmgr_tec_cancelled_event_body_class(array $classes): array
 {
     if (is_admin() || !is_singular('tribe_events')) {
         return $classes;
     }
     $event_id = (int) get_queried_object_id();
-    if ($event_id > 0 && vms_tec_is_cancelled_event($event_id)) {
+    if ($event_id > 0 && bvmgr_tec_is_cancelled_event($event_id)) {
         $classes[] = 'vms-event-is-cancelled';
     }
     return array_values(array_unique(array_filter(array_map('sanitize_html_class', $classes))));
 }
 
-function vms_tec_prepend_cancelled_notice(string $content): string
+function bvmgr_tec_prepend_cancelled_notice(string $content): string
 {
     if (is_admin()) {
         return $content;
@@ -6886,48 +7222,48 @@ function vms_tec_prepend_cancelled_notice(string $content): string
         return $content;
     }
 
-    if (!vms_tec_is_cancelled_event($tec_event_id)) {
+    if (!bvmgr_tec_is_cancelled_event($tec_event_id)) {
         return $content;
     }
 
     // Pull cancellation reason from the linked plan (if present).
-    $plan_id = function_exists('vms_get_event_plan_for_tec_event')
-        ? (int) vms_get_event_plan_for_tec_event($tec_event_id)
-        : (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') ? (int) vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id) : 0);
+    $plan_id = function_exists('bvmgr_get_event_plan_for_tec_event')
+        ? (int) bvmgr_get_event_plan_for_tec_event($tec_event_id)
+        : (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') ? (int) bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id) : 0);
 
-    $k_reason_code = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code')
+    $k_reason_code = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code')
         : '_vms_cancel_reason_code';
-    $k_reason_note = function_exists('vms_meta_key')
-        ? (vms_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note')
+    $k_reason_note = function_exists('bvmgr_meta_key')
+        ? (bvmgr_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note')
         : '_vms_cancel_reason_note';
 
     $reason_code = $plan_id > 0 ? sanitize_key((string) get_post_meta($plan_id, $k_reason_code, true)) : '';
     $reason_note = $plan_id > 0 ? trim((string) get_post_meta($plan_id, $k_reason_note, true)) : '';
 
     $reason_label = '';
-    if ($reason_code !== '' && function_exists('vms_cancellation_reason_options')) {
-        $opts = (array) vms_cancellation_reason_options();
+    if ($reason_code !== '' && function_exists('bvmgr_cancellation_reason_options')) {
+        $opts = (array) bvmgr_cancellation_reason_options();
         if (isset($opts[$reason_code])) {
             $reason_label = (string) $opts[$reason_code];
         }
     }
 
-    $rescheduled = ($plan_id > 0 && function_exists('vms_event_plan_get_public_reschedule_destination'))
-        ? (array) vms_event_plan_get_public_reschedule_destination($plan_id)
+    $rescheduled = ($plan_id > 0 && function_exists('bvmgr_event_plan_get_public_reschedule_destination'))
+        ? (array) bvmgr_event_plan_get_public_reschedule_destination($plan_id)
         : array();
     $has_replacement_url = !empty($rescheduled['url']);
     $replacement_title = trim((string) ($rescheduled['title'] ?? ''));
     $replacement_date = trim((string) ($rescheduled['date_label'] ?? $rescheduled['date_raw'] ?? ''));
 
-    $events_url = function_exists('vms_get_public_event_calendar_url')
-        ? (string) vms_get_public_event_calendar_url()
+    $events_url = function_exists('bvmgr_get_public_event_calendar_url')
+        ? (string) bvmgr_get_public_event_calendar_url()
         : (function_exists('tribe_get_events_link') ? (string) tribe_get_events_link() : home_url('/events/'));
 
     $html  = "\n" . '<div class="vms-event-status-banner vms-event-status-banner--cancelled' . ($has_replacement_url ? ' vms-event-status-banner--rescheduled' : '') . '" role="status" aria-live="polite">';
     if ($has_replacement_url) {
-        $html .= '<div class="vms-event-status-banner__title">' . esc_html__('Event Rescheduled', 'vms') . '</div>';
-        $html .= '<div class="vms-event-status-banner__body">' . esc_html__('This event has been rescheduled. Please see updated details below.', 'vms') . '</div>';
+        $html .= '<div class="vms-event-status-banner__title">' . esc_html__('Event Rescheduled', 'backstage-venue-manager') . '</div>';
+        $html .= '<div class="vms-event-status-banner__body">' . esc_html__('This event has been rescheduled. Please see updated details below.', 'backstage-venue-manager') . '</div>';
         if ($replacement_title !== '' || $replacement_date !== '') {
             $replacement_meta = $replacement_title;
             if ($replacement_title !== '' && $replacement_date !== '') {
@@ -6936,12 +7272,12 @@ function vms_tec_prepend_cancelled_notice(string $content): string
                 $replacement_meta = $replacement_date;
             }
             if ($replacement_meta !== '') {
-                $html .= '<div class="vms-event-status-banner__meta"><strong>' . esc_html__('New date:', 'vms') . '</strong> ' . esc_html($replacement_meta) . '</div>';
+                $html .= '<div class="vms-event-status-banner__meta"><strong>' . esc_html__('New date:', 'backstage-venue-manager') . '</strong> ' . esc_html($replacement_meta) . '</div>';
             }
         }
     } else {
-        $html .= '<div class="vms-event-status-banner__title">' . esc_html__('Event Cancelled', 'vms') . '</div>';
-        $html .= '<div class="vms-event-status-banner__body">' . esc_html__('This event has been cancelled. Ticket sales and RSVPs are closed.', 'vms') . '</div>';
+        $html .= '<div class="vms-event-status-banner__title">' . esc_html__('Event Cancelled', 'backstage-venue-manager') . '</div>';
+        $html .= '<div class="vms-event-status-banner__body">' . esc_html__('This event has been cancelled. Ticket sales and RSVPs are closed.', 'backstage-venue-manager') . '</div>';
     }
 
     // Keep internal cancellation reason/notes private. Public pages should show only
@@ -6950,9 +7286,9 @@ function vms_tec_prepend_cancelled_notice(string $content): string
 
     $html .= '<div class="vms-event-status-banner__actions">';
     if ($has_replacement_url) {
-        $html .= '<a class="vms-event-status-banner__link vms-event-status-banner__link--primary" href="' . esc_url((string) $rescheduled['url']) . '">' . esc_html__('View New Date', 'vms') . '</a> ';
+        $html .= '<a class="vms-event-status-banner__link vms-event-status-banner__link--primary" href="' . esc_url((string) $rescheduled['url']) . '">' . esc_html__('View New Date', 'backstage-venue-manager') . '</a> ';
     }
-    $html .= '<a class="vms-event-status-banner__link" href="' . esc_url($events_url) . '">' . esc_html__('Browse upcoming events', 'vms') . '</a>';
+    $html .= '<a class="vms-event-status-banner__link" href="' . esc_url($events_url) . '">' . esc_html__('Browse upcoming events', 'backstage-venue-manager') . '</a>';
     $html .= '</div>';
     $html .= '</div>' . "\n";
 
@@ -6967,7 +7303,7 @@ function vms_tec_prepend_cancelled_notice(string $content): string
 /**
  * Wrap the featured image with a “Cancelled” overlay on TEC single events when applicable.
  */
-function vms_tec_cancelled_thumbnail_overlay(string $html, int $post_id, int $post_thumbnail_id, $size, $attr): string
+function bvmgr_tec_cancelled_thumbnail_overlay(string $html, int $post_id, int $post_thumbnail_id, $size, $attr): string
 {
     if ($html === '') {
         return $html;
@@ -6980,15 +7316,15 @@ function vms_tec_cancelled_thumbnail_overlay(string $html, int $post_id, int $po
     if ($post_id <= 0 || get_post_type($post_id) !== 'tribe_events') {
         return $html;
     }
-    if (!vms_tec_is_cancelled_event($post_id)) {
+    if (!bvmgr_tec_is_cancelled_event($post_id)) {
         return $html;
     }
 
-    $plan_id = function_exists('vms_get_event_plan_for_tec_event')
-        ? (int) vms_get_event_plan_for_tec_event($post_id)
-        : (function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id') ? (int) vms_ticketing_v2_find_plan_id_by_tec_event_id($post_id) : 0);
-    $rescheduled = ($plan_id > 0 && function_exists('vms_event_plan_get_public_reschedule_destination'))
-        ? (array) vms_event_plan_get_public_reschedule_destination($plan_id)
+    $plan_id = function_exists('bvmgr_get_event_plan_for_tec_event')
+        ? (int) bvmgr_get_event_plan_for_tec_event($post_id)
+        : (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') ? (int) bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($post_id) : 0);
+    $rescheduled = ($plan_id > 0 && function_exists('bvmgr_event_plan_get_public_reschedule_destination'))
+        ? (array) bvmgr_event_plan_get_public_reschedule_destination($plan_id)
         : array();
     $is_rescheduled = !empty($rescheduled['url']);
 
@@ -6997,7 +7333,7 @@ function vms_tec_cancelled_thumbnail_overlay(string $html, int $post_id, int $po
         return $html;
     }
 
-    $label = $is_rescheduled ? __('Rescheduled', 'vms') : __('Cancelled', 'vms');
+    $label = $is_rescheduled ? __('Rescheduled', 'backstage-venue-manager') : __('Cancelled', 'backstage-venue-manager');
     $state_class = $is_rescheduled ? ' vms-cancelled-thumb--rescheduled' : ' vms-cancelled-thumb--cancelled';
     $label_class = $is_rescheduled ? ' vms-cancelled-thumb__label--rescheduled' : '';
 
@@ -7006,10 +7342,64 @@ function vms_tec_cancelled_thumbnail_overlay(string $html, int $post_id, int $po
 
 
 /**
- * Suppress the printing of TEC ticket/RSVP forms on cancelled events.
+ * Determine whether a TEC event is linked to an externally ticketed Event Plan.
+ */
+function bvmgr_tec_event_is_externally_ticketed(int $event_id): bool
+{
+	$event_id = absint($event_id);
+	if ($event_id <= 0) {
+		return false;
+	}
+
+	$plan_id = function_exists('bvmgr_get_event_plan_for_tec_event')
+		? absint(bvmgr_get_event_plan_for_tec_event($event_id))
+		: (function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') ? absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($event_id)) : 0);
+
+	return $plan_id > 0
+		&& function_exists('bvmgr_event_plan_is_externally_ticketed')
+		&& bvmgr_event_plan_is_externally_ticketed($plan_id);
+}
+
+/**
+ * Prevent Event Tickets from rebuilding TEC cost metadata from preserved native products.
+ *
+ * @param mixed $costs
+ * @return mixed
+ */
+function bvmgr_tec_suppress_event_costs_for_external_event($costs, int $event_id)
+{
+	return bvmgr_tec_event_is_externally_ticketed($event_id) ? array() : $costs;
+}
+
+/**
+ * Suppress any stale cost that predates the latest TEC resync.
+ */
+function bvmgr_tec_suppress_public_cost_for_external_event(string $cost, int $event_id, bool $with_currency_symbol): string
+{
+	return bvmgr_tec_event_is_externally_ticketed($event_id) ? '' : $cost;
+}
+
+/**
+ * Determine whether a public TEC event must suppress native ticket purchasing.
+ */
+function bvmgr_tec_event_suppresses_native_ticketing(int $event_id): bool
+{
+	$event_id = absint($event_id);
+	if ($event_id <= 0) {
+		return false;
+	}
+	if (bvmgr_tec_is_cancelled_event($event_id)) {
+		return true;
+	}
+
+	return bvmgr_tec_event_is_externally_ticketed($event_id);
+}
+
+/**
+ * Suppress the printing of TEC ticket/RSVP forms on cancelled or external events.
  * Returning an empty hook prevents the form from rendering at all.
  */
-function vms_tec_suppress_ticket_forms_for_cancelled_event(string $hook, $provider): string
+function bvmgr_tec_suppress_ticket_forms_for_cancelled_event(string $hook, $provider): string
 {
     if (is_admin()) {
         return $hook;
@@ -7021,26 +7411,25 @@ function vms_tec_suppress_ticket_forms_for_cancelled_event(string $hook, $provid
     if ($event_id <= 0) {
         return $hook;
     }
-    if (!vms_tec_is_cancelled_event($event_id)) {
+    if (!bvmgr_tec_event_suppresses_native_ticketing($event_id)) {
         return $hook;
     }
     return '';
 }
 
 /**
- * Suppress ticket/RSVP queries for cancelled events for public users.
- * This helps ensure TEC RSVP blocks are not available after cancellation.
+ * Suppress ticket/RSVP queries for cancelled or externally ticketed events.
  */
-function vms_tec_suppress_tickets_for_cancelled_events(array $args): array
+function bvmgr_tec_suppress_tickets_for_cancelled_events(array $args): array
 {
     if (is_admin()) {
         return $args;
     }
 
-    // If we're on a cancelled TEC single-event page, suppress any ticket query regardless of provider/query-shape.
+    // On a suppressed TEC single-event page, block any ticket query regardless of provider/query shape.
     if (is_singular('tribe_events')) {
         $current_event_id = (int) get_queried_object_id();
-        if ($current_event_id > 0 && vms_tec_is_cancelled_event($current_event_id)) {
+        if ($current_event_id > 0 && bvmgr_tec_event_suppresses_native_ticketing($current_event_id)) {
             $args['post__in'] = array(0);
             return $args;
         }
@@ -7074,7 +7463,7 @@ function vms_tec_suppress_tickets_for_cancelled_events(array $args): array
             }
 
             $candidate = absint($val);
-            if ($candidate > 0 && vms_tec_is_cancelled_event($candidate)) {
+            if ($candidate > 0 && bvmgr_tec_event_suppresses_native_ticketing($candidate)) {
                 $event_id = $candidate;
                 break;
             }
@@ -7085,7 +7474,7 @@ function vms_tec_suppress_tickets_for_cancelled_events(array $args): array
         return $args;
     }
 
-    if (!vms_tec_is_cancelled_event($event_id)) {
+    if (!bvmgr_tec_event_suppresses_native_ticketing($event_id)) {
         return $args;
     }
 
@@ -7095,347 +7484,220 @@ function vms_tec_suppress_tickets_for_cancelled_events(array $args): array
     return $args;
 }
 
-function vms_ticketing_v2_server_mount_boot(): void
+function bvmgr_ticketing_v2_native_footer_mount_placed(int $tec_event_id, bool $mark_placed = false): bool
+{
+    static $placed_event_ids = array();
+
+    $tec_event_id = absint($tec_event_id);
+    if ($tec_event_id <= 0) {
+        return false;
+    }
+
+    if ($mark_placed) {
+        $placed_event_ids[$tec_event_id] = true;
+    }
+
+    return !empty($placed_event_ids[$tec_event_id]);
+}
+
+/**
+ * @return array<int,string>
+ */
+function bvmgr_ticketing_v2_ticket_query_event_meta_keys(): array
+{
+    $keys = array(
+        '_tribe_rsvp_for_event',
+        '_tribe_tpp_for_event',
+        '_tec_tickets_commerce_event',
+    );
+
+    if (class_exists('\TEC\Tickets\Commerce\Ticket') && isset(\TEC\Tickets\Commerce\Ticket::$event_relation_meta_key)) {
+        $keys[] = (string) \TEC\Tickets\Commerce\Ticket::$event_relation_meta_key;
+    }
+
+    return array_values(array_unique(array_filter(array_map('strval', $keys))));
+}
+
+function bvmgr_ticketing_v2_event_id_from_ticket_query_args(array $args): int
+{
+    foreach (array('event', 'event_id', 'post_parent') as $key) {
+        if (isset($args[$key]) && is_numeric($args[$key])) {
+            $event_id = absint($args[$key]);
+            if ($event_id > 0) {
+                return $event_id;
+            }
+        }
+    }
+
+    if (!empty($args['meta_query']) && is_array($args['meta_query'])) {
+        $meta_keys = bvmgr_ticketing_v2_ticket_query_event_meta_keys();
+        $queue = array($args['meta_query']);
+
+        while (!empty($queue)) {
+            $current = array_pop($queue);
+            if (!is_array($current)) {
+                continue;
+            }
+
+            foreach ($current as $candidate) {
+                if (!is_array($candidate)) {
+                    continue;
+                }
+
+                if (isset($candidate['key']) && in_array((string) $candidate['key'], $meta_keys, true)) {
+                    $value = $candidate['value'] ?? null;
+                    if (is_array($value)) {
+                        if (count($value) !== 1) {
+                            continue;
+                        }
+
+                        $value = reset($value);
+                    }
+
+                    if (!is_numeric($value)) {
+                        continue;
+                    }
+
+                    $event_id = absint($value);
+                    if ($event_id > 0) {
+                        return $event_id;
+                    }
+                }
+
+                $queue[] = $candidate;
+            }
+        }
+    }
+
+    if (is_singular('tribe_events')) {
+        return (int) get_queried_object_id();
+    }
+
+    return 0;
+}
+
+function bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount(string $html, string $file, array $name, $template): string
+{
+    if ($html === '' || is_admin()) {
+        return $html;
+    }
+
+    if (function_exists('wp_doing_ajax') && wp_doing_ajax()) {
+        return $html;
+    }
+
+    $is_rest_request = (defined('REST_REQUEST') && REST_REQUEST);
+    $is_json_request = function_exists('wp_is_json_request') && wp_is_json_request();
+    $is_feed_request = function_exists('is_feed') && is_feed();
+    $is_trackback_request = function_exists('is_trackback') && is_trackback();
+    $is_robots_request = function_exists('is_robots') && is_robots();
+    if ($is_rest_request || $is_json_request || $is_feed_request || $is_trackback_request || $is_robots_request) {
+        return $html;
+    }
+
+    $normalized_file = str_replace('\\', '/', $file);
+    if ($normalized_file === '' || strpos($normalized_file, '/v2/tickets/footer.php') === false) {
+        return $html;
+    }
+
+    $tec_event_id = 0;
+    if (is_object($template) && method_exists($template, 'get')) {
+        $tec_event_id = absint($template->get('post_id', 0));
+    }
+    if ($tec_event_id <= 0 && is_object($template) && method_exists($template, 'get_values')) {
+        $template_values = (array) $template->get_values();
+        $tec_event_id = absint($template_values['post_id'] ?? 0);
+    }
+    if ($tec_event_id <= 0 && is_singular('tribe_events')) {
+        $tec_event_id = (int) get_queried_object_id();
+    }
+    if ($tec_event_id <= 0 || get_post_type($tec_event_id) !== 'tribe_events') {
+        return $html;
+    }
+
+    if (bvmgr_tec_is_cancelled_event($tec_event_id)) {
+        return $html;
+    }
+
+    if (bvmgr_ticketing_v2_native_footer_mount_placed($tec_event_id)) {
+        return $html;
+    }
+
+    $plan_id = function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')
+        ? absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id))
+        : 0;
+    if ($plan_id <= 0) {
+        return $html;
+    }
+
+    if (function_exists('get_post_field') && function_exists('has_shortcode')) {
+        $event_content = (string) get_post_field('post_content', $tec_event_id);
+        if ($event_content !== '' && has_shortcode($event_content, 'vms_reserved_add_ons')) {
+            return $html;
+        }
+    }
+
+    $mount_body = bvmgr_ticketing_v2_render_entitlements_block($tec_event_id, $plan_id);
+    if ($mount_body === '') {
+        return $html;
+    }
+
+    $mount_html = "<div\n"
+        . "    id=\"vms-addon-mount\"\n"
+        . "    class=\"vms-addon-mount vms-addon-mount--server\"\n"
+        . ">\n"
+        . $mount_body
+        . "\n</div>\n";
+
+    bvmgr_ticketing_v2_native_footer_mount_placed($tec_event_id, true);
+
+    return $mount_html . $html;
+}
+
+function bvmgr_ticketing_v2_filter_disabled_ticket_query_args(array $args): array
 {
     if (is_admin()) {
-        return;
-    }
-    if (!is_singular('tribe_events')) {
-        return;
-    }
-    if (function_exists('wp_doing_ajax') && wp_doing_ajax()) {
-        return;
-    }
-    if ((defined('REST_REQUEST') && REST_REQUEST) || is_feed() || is_trackback() || is_robots()) {
-        return;
+        return $args;
     }
 
-    ob_start('vms_ticketing_v2_server_mount_callback');
-}
-
-
-function vms_ticketing_v2_extract_div_block_at(string $html, int $start): array
-{
-    $start = absint($start);
-    if ($start <= 0 && strpos($html, '<div') !== 0) {
-        return array();
+    $tec_event_id = bvmgr_ticketing_v2_event_id_from_ticket_query_args($args);
+    if ($tec_event_id <= 0 || get_post_type($tec_event_id) !== 'tribe_events') {
+        return $args;
     }
 
-    if (!preg_match('~<div\b|</div>~i', $html, $first_match, PREG_OFFSET_CAPTURE, $start)) {
-        return array();
-    }
-    if ((int) $first_match[0][1] !== (int) $start) {
-        return array();
+    if (bvmgr_tec_is_cancelled_event($tec_event_id)) {
+        return $args;
     }
 
-    $depth = 0;
-    $cursor = $start;
-    $end = false;
-    while (preg_match('~<div\b|</div>~i', $html, $match, PREG_OFFSET_CAPTURE, $cursor)) {
-        $token = strtolower((string) $match[0][0]);
-        $token_pos = (int) $match[0][1];
-        if ($token === '<div') {
-            $depth++;
-            $cursor = $token_pos + 4;
-            continue;
-        }
-
-        $depth--;
-        $cursor = $token_pos + 6;
-        if ($depth <= 0) {
-            $end = $cursor;
-            break;
-        }
+    if (!function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id') || !function_exists('bvmgr_ticketing_v2_disabled_ticket_products_for_plan')) {
+        return $args;
     }
 
-    if ($end === false || $end <= $start) {
-        return array();
+    $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+    if ($plan_id <= 0) {
+        return $args;
     }
 
-    return array(
-        'start' => $start,
-        'end'   => $end,
-        'html'  => substr($html, $start, $end - $start),
-    );
-}
-
-function vms_ticketing_v2_opening_div_has_class(string $opening_tag, string $class_name): bool
-{
-    if ($class_name === '' || !preg_match('/\sclass=("|\')(.*?)\1/is', $opening_tag, $m)) {
-        return false;
+    $disabled_runtime = bvmgr_ticketing_v2_disabled_ticket_products_for_plan($plan_id);
+    $disabled_ids = array();
+    if (isset($disabled_runtime['product_ids']) && is_array($disabled_runtime['product_ids'])) {
+        $disabled_ids = array_map('intval', $disabled_runtime['product_ids']);
+        $disabled_ids = array_values(array_unique(array_filter($disabled_ids, static function ($product_id) {
+            return $product_id > 0;
+        })));
     }
-    $classes = preg_split('/\s+/', trim((string) ($m[2] ?? '')));
-    return in_array($class_name, array_map('trim', (array) $classes), true);
-}
-
-function vms_ticketing_v2_strip_disabled_ticket_rows_from_html(string $html): string
-{
-    if ($html === '' || is_admin() || !is_singular('tribe_events')) {
-        return $html;
-    }
-
-    $tec_event_id = (int) get_queried_object_id();
-    if ($tec_event_id <= 0 || !function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        return $html;
-    }
-
-    $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
-    if ($plan_id <= 0 || !function_exists('vms_ticketing_v2_disabled_ticket_products_for_plan')) {
-        return $html;
-    }
-
-    $disabled_runtime = vms_ticketing_v2_disabled_ticket_products_for_plan($plan_id);
-    $disabled_ids = (isset($disabled_runtime['product_ids']) && is_array($disabled_runtime['product_ids']))
-        ? array_values(array_unique(array_filter(array_map('absint', $disabled_runtime['product_ids']))))
-        : array();
     if (empty($disabled_ids)) {
-        return $html;
+        return $args;
     }
 
-    $id_pattern = implode('|', array_map(static function ($id): string {
-        return preg_quote((string) absint($id), '~');
-    }, $disabled_ids));
-    if ($id_pattern === '') {
-        return $html;
-    }
+    $existing_exclusions = isset($args['post__not_in']) ? (array) $args['post__not_in'] : array();
+    // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in -- Disabled IDs are plan-scoped pending-sync ticket products for the resolved event, bounded by the saved plan config, and query-level exclusion preserves TEC ticket counts and pagination without broadening unrelated queries.
+    $args['post__not_in'] = array_values(array_unique(array_filter(array_map('absint', array_merge($existing_exclusions, $disabled_ids)))));
 
-    $row_classes = array('tribe-tickets__tickets-item', 'tribe-tickets__item');
-    $ranges = array();
-    if (preg_match_all('~<div\b[^>]*class=("|\')[^"\']+\1[^>]*>~is', $html, $matches, PREG_OFFSET_CAPTURE)) {
-        foreach ((array) ($matches[0] ?? array()) as $match) {
-            $opening = (string) ($match[0] ?? '');
-            $start = (int) ($match[1] ?? -1);
-            if ($start < 0) {
-                continue;
-            }
-
-            $is_ticket_row = false;
-            foreach ($row_classes as $row_class) {
-                if (vms_ticketing_v2_opening_div_has_class($opening, $row_class)) {
-                    $is_ticket_row = true;
-                    break;
-                }
-            }
-            if (!$is_ticket_row) {
-                continue;
-            }
-
-            $block = vms_ticketing_v2_extract_div_block_at($html, $start);
-            if (empty($block['html'])) {
-                continue;
-            }
-
-            $block_html = (string) $block['html'];
-            $has_disabled_id = (bool) preg_match('~(?:data-(?:ticket|product)(?:-id)?|name|id|for|value)=("|\')[^"\']*(?:' . $id_pattern . ')[^"\']*\1~i', $block_html);
-            if (!$has_disabled_id) {
-                continue;
-            }
-
-            $ranges[] = array('start' => (int) $block['start'], 'end' => (int) $block['end']);
-        }
-    }
-
-    if (empty($ranges)) {
-        return $html;
-    }
-
-    usort($ranges, static function (array $a, array $b): int {
-        return (int) ($b['start'] ?? 0) <=> (int) ($a['start'] ?? 0);
-    });
-
-    foreach ($ranges as $range) {
-        $start = (int) ($range['start'] ?? 0);
-        $end = (int) ($range['end'] ?? 0);
-        if ($start < 0 || $end <= $start || $end > strlen($html)) {
-            continue;
-        }
-        $html = substr($html, 0, $start) . substr($html, $end);
-    }
-
-    return $html;
+    return $args;
 }
 
-
-/**
- * Remove an element with a known ID from rendered TEC event HTML.
- * This is intentionally small and conservative: it handles form/div/section wrappers
- * commonly used by Event Tickets and VMS' mounted ticket UI.
- */
-function vms_ticketing_v2_remove_element_with_id(string $html, string $id): string
-{
-    $id = trim($id);
-    if ($html === '' || $id === '') {
-        return $html;
-    }
-
-    $pattern_id = preg_quote($id, '~');
-    foreach (array('form', 'section', 'div') as $tag) {
-        $pattern = '~<' . $tag . '\b(?=[^>]*\bid=("|\')' . $pattern_id . '\1)[^>]*>.*?</' . $tag . '>~is';
-        $html = (string) preg_replace($pattern, '', $html);
-    }
-
-    return $html;
-}
-
-/**
- * Fail closed on cancelled event pages: remove ticket purchase blocks from the
- * final HTML even if a TEC provider or custom UI path bypasses the normal hooks.
- */
-function vms_ticketing_v2_strip_cancelled_event_purchase_blocks(string $html): string
-{
-    if ($html === '' || is_admin() || !is_singular('tribe_events')) {
-        return $html;
-    }
-
-    $event_id = (int) get_queried_object_id();
-    if ($event_id <= 0 || !vms_tec_is_cancelled_event($event_id)) {
-        return $html;
-    }
-
-    foreach (array(
-        'tribe-tickets__tickets-form',
-        'tribe-tickets__tickets-wrapper',
-        'tribe-tickets__modal-form',
-        'vms-reserved-addons',
-        'vms-addon-mount',
-    ) as $id) {
-        $html = vms_ticketing_v2_remove_element_with_id($html, $id);
-    }
-
-    // Last-resort cleanup for ticket UI containers that may not carry stable IDs.
-    $html = (string) preg_replace('~<div\b(?=[^>]*class=("|\')[^"\']*(?:tribe-tickets|vms-ticketing|vms-addon-mount)[^"\']*\1)[^>]*>.*?</div>~is', '', $html);
-
-    return $html;
-}
-
-function vms_ticketing_v2_server_mount_callback(string $html): string
-{
-    if (is_singular('tribe_events')) {
-        $event_id = (int) get_queried_object_id();
-        if ($event_id > 0 && vms_tec_is_cancelled_event($event_id)) {
-            return vms_ticketing_v2_strip_cancelled_event_purchase_blocks($html);
-        }
-    }
-
-    $html = vms_ticketing_v2_strip_disabled_ticket_rows_from_html($html);
-
-    if ($html === '' || strpos($html, 'id="vms-reserved-addons"') === false || strpos($html, 'id="tribe-tickets__tickets-form"') === false) {
-        return $html;
-    }
-
-    $block = vms_ticketing_v2_extract_named_div_block($html, 'vms-reserved-addons');
-    if (!is_array($block) || empty($block['html'])) {
-        return $html;
-    }
-
-    $block_html = (string) ($block['html'] ?? '');
-    $html_without_block = substr($html, 0, (int) $block['start']) . substr($html, (int) $block['end']);
-    $form_pos = strpos($html_without_block, 'id="tribe-tickets__tickets-form"');
-    if ($form_pos === false) {
-        return $html;
-    }
-
-    $footer_marker_pos = strpos($html_without_block, 'tribe-tickets__tickets-footer', $form_pos);
-    if ($footer_marker_pos === false) {
-        return $html;
-    }
-
-    $footer_div_pos = vms_ticketing_v2_find_tag_open_before($html_without_block, 'div', $footer_marker_pos);
-    if ($footer_div_pos === false) {
-        return $html;
-    }
-
-    $mount_html = '
-<div id="vms-addon-mount" class="vms-addon-mount vms-addon-mount--server">
-'
-        . $block_html
-        . '
-</div>
-';
-
-    $mounted_html = substr($html_without_block, 0, $footer_div_pos) . $mount_html . substr($html_without_block, $footer_div_pos);
-    $mounted_html = preg_replace_callback('/<button\b[^>]*id="tribe-tickets__tickets-submit"[^>]*>.*?<\/button>/is', static function ($matches) {
-        $button_html = (string) ($matches[0] ?? '');
-        if ($button_html === '') {
-            return $button_html;
-        }
-
-        $button_html = preg_replace('/\sdata-content="[^"]*"/i', '', $button_html);
-        $button_html = preg_replace('/\sdata-js="[^"]*"/i', '', $button_html);
-        $button_html = preg_replace('/\saria-haspopup="[^"]*"/i', '', $button_html);
-        if (stripos($button_html, 'data-vms-cart-first=') === false) {
-            $button_html = preg_replace('/<button\b/i', '<button data-vms-cart-first="1"', $button_html, 1);
-        }
-        $button_html = preg_replace('/>.*?<\/button>/is', '>Add items to cart</button>', $button_html, 1);
-        return $button_html;
-    }, $mounted_html, 1);
-
-    return $mounted_html;
-}
-
-function vms_ticketing_v2_extract_named_div_block(string $html, string $id): array
-{
-    $needle = 'id="' . $id . '"';
-    $id_pos = strpos($html, $needle);
-    if ($id_pos === false) {
-        return array();
-    }
-
-    $start = vms_ticketing_v2_find_tag_open_before($html, 'div', $id_pos);
-    if ($start === false) {
-        return array();
-    }
-
-    if (!preg_match('~<div\b|</div>~i', $html, $first_match, PREG_OFFSET_CAPTURE, $start)) {
-        return array();
-    }
-    if ((int) $first_match[0][1] !== (int) $start) {
-        return array();
-    }
-
-    $depth = 0;
-    $cursor = $start;
-    $end = false;
-    while (preg_match('~<div\b|</div>~i', $html, $match, PREG_OFFSET_CAPTURE, $cursor)) {
-        $token = strtolower((string) $match[0][0]);
-        $token_pos = (int) $match[0][1];
-        if ($token === '<div') {
-            $depth++;
-            $cursor = $token_pos + 4;
-            continue;
-        }
-
-        $depth--;
-        $cursor = $token_pos + 6;
-        if ($depth <= 0) {
-            $end = $cursor;
-            break;
-        }
-    }
-
-    if ($end === false || $end <= $start) {
-        return array();
-    }
-
-    return array(
-        'start' => $start,
-        'end'   => $end,
-        'html'  => substr($html, $start, $end - $start),
-    );
-}
-
-function vms_ticketing_v2_find_tag_open_before(string $html, string $tag, int $pos)
-{
-    $needle = '<' . strtolower($tag);
-    $window = substr($html, 0, $pos + 1);
-    $found = strripos($window, $needle);
-    if ($found === false) {
-        return false;
-    }
-    return (int) $found;
-}
-
-function vms_ticketing_v2_append_entitlements_to_tec_event(string $content): string
+function bvmgr_ticketing_v2_append_entitlements_to_tec_event(string $content): string
 {
     if (is_admin()) return $content;
     if (!is_singular('tribe_events')) return $content;
@@ -7453,22 +7715,23 @@ function vms_ticketing_v2_append_entitlements_to_tec_event(string $content): str
     if ($tec_event_id !== (int) get_queried_object_id()) return $content;
     if ($tec_event_id <= 0) return $content;
 
+    if (bvmgr_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)) return $content;
 
     // Cancelled events should not show reserved add-ons.
-    if (vms_tec_is_cancelled_event((int) $tec_event_id)) return $content;
-    $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
+    if (bvmgr_tec_is_cancelled_event((int) $tec_event_id)) return $content;
+    $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
     if ($plan_id <= 0) return $content;
 
-    $html = vms_ticketing_v2_render_entitlements_block((int) $tec_event_id, (int) $plan_id);
+    $html = bvmgr_ticketing_v2_render_entitlements_block((int) $tec_event_id, (int) $plan_id);
     if ($html === '') return $content;
 
     return $content . $html;
 }
 
-function vms_ticketing_v2_shortcode_reserved_add_ons($atts = array()): string
+function bvmgr_ticketing_v2_shortcode_reserved_add_ons($atts = array()): string
 {
     if (is_admin()) return '';
-    if (!function_exists('vms_ticketing_v2_get_config') || !function_exists('vms_ticketing_v2_get_sync')) return '';
+    if (!function_exists('bvmgr_ticketing_v2_get_config') || !function_exists('bvmgr_ticketing_v2_get_sync')) return '';
 
     $a = shortcode_atts(array(
         'tec_event_id' => '0',
@@ -7480,33 +7743,34 @@ function vms_ticketing_v2_shortcode_reserved_add_ons($atts = array()): string
     }
     if ($tec_event_id <= 0) return '';
 
-    if (vms_tec_is_cancelled_event((int) $tec_event_id)) return '';
+    if (bvmgr_tec_is_cancelled_event((int) $tec_event_id)) return '';
 
-    $plan_id = vms_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
+    $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
     if ($plan_id <= 0) return '';
 
-    return vms_ticketing_v2_render_entitlements_block((int) $tec_event_id, (int) $plan_id);
+    return bvmgr_ticketing_v2_render_entitlements_block((int) $tec_event_id, (int) $plan_id);
 }
 
-function vms_ticketing_v2_find_plan_id_by_tec_event_id(int $tec_event_id): int
+function bvmgr_ticketing_v2_find_plan_id_by_tec_event_id(int $tec_event_id): int
 {
     $tec_event_id = absint($tec_event_id);
     if ($tec_event_id <= 0) return 0;
 
-    if (function_exists('vms_resolve_event_plan_for_tec_event')) {
-        return (int) vms_resolve_event_plan_for_tec_event($tec_event_id);
+    if (function_exists('bvmgr_resolve_event_plan_for_tec_event')) {
+        return (int) bvmgr_resolve_event_plan_for_tec_event($tec_event_id);
     }
 
     // Fallback for unusual load-order situations. Keep deterministic ordering even
     // when the shared resolver has not loaded yet.
     if (!class_exists('WP_Query')) return 0;
 
-    $tec_key = (function_exists('vms_ticketing_b_meta_key') ? vms_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id');
+    $tec_key = (function_exists('bvmgr_ticketing_b_meta_key') ? bvmgr_ticketing_b_meta_key('tec_event_id', '_vms_tec_event_id') : '_vms_tec_event_id');
 
     $q = new WP_Query(array(
         'post_type'      => 'vms_event_plan',
         'posts_per_page' => 1,
         'post_status'    => array('publish','draft','pending','private'),
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The unusual-load-order fallback performs one exact, single-result TEC-event marker lookup with deterministic modified ordering.
         'meta_query'     => array(
             array(
                 'key'     => $tec_key,
@@ -7527,13 +7791,13 @@ function vms_ticketing_v2_find_plan_id_by_tec_event_id(int $tec_event_id): int
     return $plan_id;
 }
 
-function vms_ticketing_v2_event_is_past(int $tec_event_id, int $plan_id): bool
+function bvmgr_ticketing_v2_event_is_past(int $tec_event_id, int $plan_id): bool
 {
-    $tz = function_exists('vms_get_timezone') ? vms_get_timezone() : wp_timezone();
+    $tz = function_exists('bvmgr_get_timezone') ? bvmgr_get_timezone() : wp_timezone();
     $now = time();
 
     if ($plan_id > 0) {
-        $k_date = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'date') : '_vms_event_date';
+        $k_date = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
         if ($k_date === '') {
             $k_date = '_vms_event_date';
         }
@@ -7570,33 +7834,34 @@ function vms_ticketing_v2_event_is_past(int $tec_event_id, int $plan_id): bool
     return false;
 }
 
-function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan_id): string
+function bvmgr_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan_id): string
 {
-    if (!function_exists('vms_ticketing_v2_get_config') || !function_exists('vms_ticketing_v2_get_sync')) return '';
+    if (!function_exists('bvmgr_ticketing_v2_get_config') || !function_exists('bvmgr_ticketing_v2_get_sync')) return '';
     if (!function_exists('WC') || !function_exists('wc_get_product')) return '';
 
 
     // Cancelled events must not display add-ons or allow purchase flows.
-    if ($tec_event_id > 0 && vms_tec_is_cancelled_event($tec_event_id)) return '';
+    if ($tec_event_id > 0 && bvmgr_tec_is_cancelled_event($tec_event_id)) return '';
 
     // Respect per-event ticketing override (cancellations set this to off).
-    if (function_exists('vms_event_plan_is_ticketing_enabled') && $plan_id > 0 && !vms_event_plan_is_ticketing_enabled($plan_id)) return '';
-    $cfg  = vms_ticketing_v2_get_config($plan_id);
-    $sync = vms_ticketing_v2_get_sync($plan_id);
+    if (function_exists('bvmgr_event_plan_is_ticketing_enabled') && $plan_id > 0 && !bvmgr_event_plan_is_ticketing_enabled($plan_id)) return '';
+    $cfg  = bvmgr_ticketing_v2_get_config($plan_id);
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
 
     $ents = (isset($cfg['entitlements']) && is_array($cfg['entitlements'])) ? $cfg['entitlements'] : array();
     if (!$ents) return '';
 
     // Past events should render as archive pages, not active sales pages.
-    if (vms_ticketing_v2_event_is_past($tec_event_id, $plan_id)) {
+    if (bvmgr_ticketing_v2_event_is_past($tec_event_id, $plan_id)) {
         return '';
     }
 
-    // v0.2.24.645: Do not hide mapped add-ons just because the GA sale-window helper
-    // returns false. Some live events can still have valid ticket/add-on UI while that
-    // helper is out of sync with TEC/Woo timing. Visibility should be driven by active
-    // event status plus mapped entitlement products; qualification and stock validation
-    // still happen below and at add-to-cart/checkout.
+    $uses_external_ticketing = function_exists('bvmgr_event_plan_is_externally_ticketed')
+        && bvmgr_event_plan_is_externally_ticketed($plan_id);
+    $native_qualifying_ticket_available = true;
+    if (!$uses_external_ticketing) {
+        $native_qualifying_ticket_available = bvmgr_ticketing_v2_has_purchasable_qualifying_native_ticket($tec_event_id, $plan_id);
+    }
 
     $map  = (isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
     $emap = (isset($map['entitlements']) && is_array($map['entitlements'])) ? $map['entitlements'] : array();
@@ -7674,9 +7939,17 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
             $selector_mode = 'stepper';
         }
 
-        $resolved_elig = vms_ticketing_v2_resolve_eligibility_for_product($pid, $plan_id, $ent);
+        $resolved_elig = bvmgr_ticketing_v2_resolve_eligibility_for_product($pid, $plan_id, $ent);
         $pool_key = sanitize_key((string) ($resolved_elig['pool_key'] ?? ''));
         $min_per = absint($resolved_elig['min_ga_per_unit'] ?? 0);
+        if (
+            !$uses_external_ticketing
+            && $min_per > 0
+            && empty($resolved_elig['allow_without_ga'])
+            && !$native_qualifying_ticket_available
+        ) {
+            continue;
+        }
         $pool_max_total = absint($resolved_elig['pool_max_total'] ?? 0);
         $image_id = absint($ent['image_id'] ?? 0);
         $image_url = '';
@@ -7769,29 +8042,29 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
     ?>
 
     <?php
-        $sync = function_exists('vms_ticketing_v2_get_sync') ? vms_ticketing_v2_get_sync($plan_id) : array();
+        $sync = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($plan_id) : array();
         $sync_map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
-        $qualifying_ticket_pids = function_exists('vms_ticketing_v2_qualifying_ticket_product_ids_for_plan')
-            ? vms_ticketing_v2_qualifying_ticket_product_ids_for_plan((int) $plan_id)
+        $qualifying_ticket_pids = function_exists('bvmgr_ticketing_v2_qualifying_ticket_product_ids_for_plan')
+            ? bvmgr_ticketing_v2_qualifying_ticket_product_ids_for_plan((int) $plan_id)
             : array();
         $ga_pid = absint($sync_map['ga']['woo_product_id'] ?? 0);
 
         $cart_ga_qty = 0;
-        if (function_exists('vms_ticketing_v2_cart_scan')) {
-            $cart_scan = vms_ticketing_v2_cart_scan();
+        if (function_exists('bvmgr_ticketing_v2_cart_scan')) {
+            $cart_scan = bvmgr_ticketing_v2_cart_scan();
             if (isset($cart_scan['ga_qty_by_plan']) && is_array($cart_scan['ga_qty_by_plan'])) {
                 $cart_ga_qty = absint($cart_scan['ga_qty_by_plan'][$plan_id] ?? 0);
             }
         }
-        $prior_history = function_exists('vms_ticketing_v2_prior_addon_history_for_plan')
-            ? vms_ticketing_v2_prior_addon_history_for_plan((int) $plan_id, is_array($cfg) ? $cfg : array())
+        $prior_history = function_exists('bvmgr_ticketing_v2_prior_addon_history_for_plan')
+            ? bvmgr_ticketing_v2_prior_addon_history_for_plan((int) $plan_id, is_array($cfg) ? $cfg : array())
             : array('qualifying_qty' => 0, 'pool_qty_by_key' => array());
         $prior_qualifying_qty = max(0, absint($prior_history['qualifying_qty'] ?? 0));
         $prior_pool_qty_by_key = (isset($prior_history['pool_qty_by_key']) && is_array($prior_history['pool_qty_by_key']))
             ? $prior_history['pool_qty_by_key']
             : array();
-        $cart_pool_qty_by_key = function_exists('vms_ticketing_v2_cart_pool_qty_by_key_for_plan')
-            ? vms_ticketing_v2_cart_pool_qty_by_key_for_plan((int) $plan_id, is_array($cfg) ? $cfg : array())
+        $cart_pool_qty_by_key = function_exists('bvmgr_ticketing_v2_cart_pool_qty_by_key_for_plan')
+            ? bvmgr_ticketing_v2_cart_pool_qty_by_key_for_plan((int) $plan_id, is_array($cfg) ? $cfg : array())
             : array();
         $prior_pool_qty_json = wp_json_encode($prior_pool_qty_by_key);
         if (!is_string($prior_pool_qty_json) || $prior_pool_qty_json === '') {
@@ -7802,11 +8075,11 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
             $cart_pool_qty_json = '{}';
         }
     ?>
-    <?php $ticket_ui = function_exists('vms_ticketing_v2_front_ui_settings') ? vms_ticketing_v2_front_ui_settings((int) $plan_id) : array('effective_v2' => false); ?>
+    <?php $ticket_ui = function_exists('bvmgr_ticketing_v2_front_ui_settings') ? bvmgr_ticketing_v2_front_ui_settings((int) $plan_id) : array('effective_v2' => false); ?>
     <?php $addons_wrap_classes = array('vms-entitlements-block'); ?>
     <?php if (!empty($ticket_ui['effective_v2'])) { $addons_wrap_classes[] = 'vms-entitlements--compact'; } ?>
-    <div id="vms-reserved-addons" class="<?php echo esc_attr(implode(' ', $addons_wrap_classes)); ?>" data-vms-tec-event-id="<?php echo esc_attr((string) $tec_event_id); ?>" data-vms-event-plan-id="<?php echo esc_attr((string) $plan_id); ?>" data-vms-ga-product-id="<?php echo esc_attr((string) $ga_pid); ?>" data-vms-qualifying-ticket-product-ids="<?php echo esc_attr(implode(',', $qualifying_ticket_pids)); ?>" data-vms-prior-qualifying-qty="<?php echo esc_attr((string) $prior_qualifying_qty); ?>" data-vms-prior-pool-qty="<?php echo esc_attr($prior_pool_qty_json); ?>" data-vms-cart-ga-qty="<?php echo esc_attr((string) $cart_ga_qty); ?>" data-vms-cart-pool-qty="<?php echo esc_attr($cart_pool_qty_json); ?>" data-vms-ui-layout="<?php echo esc_attr(!empty($ticket_ui['effective_v2']) ? 'v2' : 'classic'); ?>" data-vms-render-mode="server_controls" data-vms-inline-controller-owner="1">
-        <h3><?php echo esc_html__('Reserve Your Spot (Optional)', 'vms'); ?></h3>
+    <div id="vms-reserved-addons" class="<?php echo esc_attr(implode(' ', $addons_wrap_classes)); ?>" data-vms-tec-event-id="<?php echo esc_attr((string) $tec_event_id); ?>" data-vms-event-plan-id="<?php echo esc_attr((string) $plan_id); ?>" data-vms-ga-product-id="<?php echo esc_attr((string) $ga_pid); ?>" data-vms-qualifying-ticket-product-ids="<?php echo esc_attr(implode(',', $qualifying_ticket_pids)); ?>" data-vms-prior-qualifying-qty="<?php echo esc_attr((string) $prior_qualifying_qty); ?>" data-vms-prior-pool-qty="<?php echo esc_attr($prior_pool_qty_json); ?>" data-vms-cart-ga-qty="<?php echo esc_attr((string) $cart_ga_qty); ?>" data-vms-cart-pool-qty="<?php echo esc_attr($cart_pool_qty_json); ?>" data-vms-ui-layout="<?php echo esc_attr(!empty($ticket_ui['effective_v2']) ? 'v2' : 'classic'); ?>" data-vms-render-mode="server_controls">
+        <h3><?php echo esc_html__('Reserve Your Spot (Optional)', 'backstage-venue-manager'); ?></h3>
 
         <?php if ($items): ?>
             <ul class="vms-entitlements-list">
@@ -7838,7 +8111,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                                     <?php endif; ?>
                                     <?php if (!empty($it['more_info'])): ?>
                                         <details class="vms-entitlements-more vms-ent-more">
-                                            <summary><?php echo esc_html__('More info', 'vms'); ?></summary>
+                                            <summary><?php echo esc_html__('More info', 'backstage-venue-manager'); ?></summary>
                                             <div class="vms-entitlements-more-body vms-ent-more-body"><?php echo wp_kses_post((string) $it['more_info']); ?></div>
                                         </details>
                                     <?php endif; ?>
@@ -7849,7 +8122,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                             <div class="vms-entitlements-price vms-ent-price"><?php echo wp_kses_post((string) $it['price']); ?></div>
                             <div class="vms-entitlements-qty vms-ent-qty">
                                 <?php if (!$it['in_stock']): ?>
-                                    <em class="vms-entitlements-soldout"><?php echo esc_html__('Sold out', 'vms'); ?></em>
+                                    <em class="vms-entitlements-soldout"><?php echo esc_html__('Sold out', 'backstage-venue-manager'); ?></em>
                                 <?php else: ?>
                                     <?php
                                     $server_max_qty = 0;
@@ -7858,7 +8131,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                                     } elseif (!empty($it['pool_max_total'])) {
                                         $server_max_qty = (int) $it['pool_max_total'];
                                     }
-                                    $server_initial_note = empty($it['can_add']) ? __('Already in cart. Cart will be rechecked at add time.', 'vms') : '';
+                                    $server_initial_note = empty($it['can_add']) ? __('Already in cart. Cart will be rechecked at add time.', 'backstage-venue-manager') : '';
                                     ?>
                                     <?php $selector_mode = (string) ($it['selector_mode'] ?? 'stepper'); ?>
                                     <div class="vms-rw-stepper vms-addon-controls <?php echo ($selector_mode === 'checkbox') ? 'vms-addon-controls--checkbox' : 'vms-addon-controls--stepper'; ?>"
@@ -7881,14 +8154,16 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                                                     value="1"
                                                     name="vms_addon_qty[<?php echo esc_attr((string) absint($it['pid'] ?? 0)); ?>]"
                                                     data-vms-product-id="<?php echo esc_attr((string) absint($it['pid'] ?? 0)); ?>"
-                                                    aria-label="<?php echo esc_attr(sprintf(__('Reserve %s', 'vms'), (string) $it['label'])); ?>"
+                                                    <?php /* translators: %s: add-on ticket label. */ ?>
+                                                    aria-label="<?php echo esc_attr(sprintf(__('Reserve %s', 'backstage-venue-manager'), (string) $it['label'])); ?>"
                                                 />
-                                                <span class="vms-addon-checkbox-label"><?php echo esc_html__('Reserve', 'vms'); ?></span>
+                                                <span class="vms-addon-checkbox-label"><?php echo esc_html__('Reserve', 'backstage-venue-manager'); ?></span>
                                             </label>
                                             <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--minus vms-addon-minus vms-hidden" tabindex="-1" aria-hidden="true">−</button>
                                             <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--plus vms-addon-plus vms-hidden" tabindex="-1" aria-hidden="true">+</button>
                                         <?php else : ?>
-                                            <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--minus vms-addon-minus" aria-label="<?php echo esc_attr(sprintf(__('Decrease %s quantity', 'vms'), (string) $it['label'])); ?>">−</button>
+                                            <?php /* translators: %s: add-on ticket label. */ ?>
+                                            <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--minus vms-addon-minus" aria-label="<?php echo esc_attr(sprintf(__('Decrease %s quantity', 'backstage-venue-manager'), (string) $it['label'])); ?>">−</button>
                                             <input
                                                 type="number"
                                                 class="vms-rw-stepper__input vms-addon-input"
@@ -7899,9 +8174,11 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                                                 value="0"
                                                 name="vms_addon_qty[<?php echo esc_attr((string) absint($it['pid'] ?? 0)); ?>]"
                                                 data-vms-product-id="<?php echo esc_attr((string) absint($it['pid'] ?? 0)); ?>"
-                                                aria-label="<?php echo esc_attr(sprintf(__('%s quantity', 'vms'), (string) $it['label'])); ?>"
+                                                <?php /* translators: %s: add-on ticket label. */ ?>
+                                                aria-label="<?php echo esc_attr(sprintf(__('%s quantity', 'backstage-venue-manager'), (string) $it['label'])); ?>"
                                             />
-                                            <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--plus vms-addon-plus" aria-label="<?php echo esc_attr(sprintf(__('Increase %s quantity', 'vms'), (string) $it['label'])); ?>">+</button>
+                                            <?php /* translators: %s: add-on ticket label. */ ?>
+                                            <button type="button" class="vms-rw-stepper__btn vms-rw-stepper__btn--plus vms-addon-plus" aria-label="<?php echo esc_attr(sprintf(__('Increase %s quantity', 'backstage-venue-manager'), (string) $it['label'])); ?>">+</button>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
@@ -7914,427 +8191,9 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
             </ul>
         <?php endif; ?>
 
-        <script>
-        (function(){
-            var cfg = <?php echo wp_json_encode(array(
-                'atomicAddUrl' => admin_url('admin-ajax.php?action=vms_ticketing_v2_atomic_add_to_cart'),
-                'atomicAddNonce' => wp_create_nonce('vms_ticketing_v2_atomic_add_to_cart'),
-                'cartUrl' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
-                'tecEventId' => (int) $tec_event_id,
-                'eventPlanId' => (int) $plan_id,
-            )); ?> || {};
-            var selectors = {
-                form: '#tribe-tickets__tickets-form, #tribe-tickets form, .tribe-tickets__tickets form, .tribe-tickets__tickets-form, form.tribe-tickets__tickets-form',
-                submit: '#tribe-tickets__tickets-submit, .tribe-tickets__tickets-buy, button[type="submit"], input[type="submit"]',
-                nativeQty: 'input.tribe-tickets-quantity, input.tribe-tickets__tickets-item-quantity, input.tribe-tickets__tickets-item-quantity-number-input, .tribe-tickets__item__quantity input[type="number"], .tribe-tickets__tickets-item-quantity input[type="number"]',
-                nativeQtyButtons: '.tribe-tickets__item__quantity__add, .tribe-tickets__item__quantity__remove, .tribe-tickets__tickets-item-quantity-add, .tribe-tickets__tickets-item-quantity-remove'
-            };
-            function toInt(value, fallback) {
-                var parsed = parseInt(String(value == null ? '' : value), 10);
-                return isNaN(parsed) ? (fallback || 0) : parsed;
-            }
-            function safeParseJson(value, fallback) {
-                try { return JSON.parse(String(value || '')); } catch (e) { return fallback; }
-            }
-            function query(sel, root) { return (root || document).querySelector(sel); }
-            function queryAll(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
-            function inferProductId(input) {
-                var row = input ? input.closest('[data-ticket-id], [data-product-id], .tribe-tickets__item, .tribe-tickets__tickets-item') : null;
-                var candidates = [];
-                if (row) {
-                    if (row.dataset) {
-                        candidates.push(row.dataset.productId, row.dataset.ticketId, row.dataset.product, row.dataset.ticket);
-                    }
-                }
-                if (input) {
-                    if (input.id) {
-                        var idMatch = String(input.id).match(/(\d+)(?!.*\d)/);
-                        if (idMatch) { candidates.push(idMatch[1]); }
-                    }
-                }
-                if (input) {
-                    if (input.name) {
-                        var nameMatch = String(input.name).match(/(\d+)(?!.*\d)/);
-                        if (nameMatch) { candidates.push(nameMatch[1]); }
-                    }
-                }
-                for (var i = 0; i < candidates.length; i += 1) {
-                    var value = toInt(candidates[i], 0);
-                    if (value > 0) { return value; }
-                }
-                return 0;
-            }
-            function setDisabled(el, disabled) {
-                if (!el) { return; }
-                el.disabled = !!disabled;
-                if (disabled) { el.setAttribute('disabled', 'disabled'); } else { el.removeAttribute('disabled'); }
-                el.setAttribute('aria-disabled', disabled ? 'true' : 'false');
-            }
-            function setText(el, text) {
-                if (el) { el.textContent = text || ''; }
-            }
-            function readTicketQtyByProduct(form) {
-                var out = {};
-                queryAll(selectors.nativeQty, form).forEach(function(input){
-                    var productId = inferProductId(input);
-                    if (productId <= 0) { return; }
-                    out[productId] = Math.max(0, toInt(input.value, 0));
-                });
-                return out;
-            }
-            function readTicketLines(form) {
-                var lines = [];
-                queryAll(selectors.nativeQty, form).forEach(function(input){
-                    var productId = inferProductId(input);
-                    var qty = Math.max(0, toInt(input.value, 0));
-                    if (productId > 0) {
-                        if (qty > 0) {
-                            lines.push({ product_id: productId, qty: qty });
-                        }
-                    }
-                });
-                return lines;
-            }
-            function collectAddonLines(state) {
-                return state.addons.filter(function(addon){ return Math.max(0, addon.qty || 0) > 0; }).map(function(addon){ return { product_id: addon.productId, qty: addon.qty }; });
-            }
-            function selectedOtherPoolQty(state, poolKey, excludingProductId) {
-                return state.addons.reduce(function(sum, addon){
-                    if (!addon.poolKey || addon.poolKey !== poolKey || addon.productId === excludingProductId) { return sum; }
-                    return sum + Math.max(0, addon.qty || 0);
-                }, 0);
-            }
-            function currentQualifyingQty(state) {
-                var qtyByProduct = readTicketQtyByProduct(state.form);
-                var ids = state.qualifyingTicketIds || [];
-                var selected = 0;
-                if (ids.length) {
-                    ids.forEach(function(id){ selected += Math.max(0, toInt(qtyByProduct[id], 0)); });
-                } else {
-                    Object.keys(qtyByProduct).forEach(function(id){ selected += Math.max(0, toInt(qtyByProduct[id], 0)); });
-                }
-                return Math.max(0, state.priorQualifyingQty + state.cartGaQty + selected);
-            }
-            function addonLimit(state, addon) {
-                if (!addon.canAdd) { return 0; }
-                var qualifyingQty = currentQualifyingQty(state);
-                var existingPoolQty = addon.poolKey
-                    ? Math.max(0, toInt(state.priorPoolQtyByKey[addon.poolKey], 0) + toInt(state.cartPoolQtyByKey[addon.poolKey], 0))
-                    : 0;
-                var selectedPoolQty = addon.poolKey ? selectedOtherPoolQty(state, addon.poolKey, addon.productId) : 0;
-                var maxByTicket = 999;
-                if (addon.minGa > 0) {
-                    maxByTicket = Math.max(0, Math.floor(qualifyingQty / addon.minGa) - existingPoolQty - selectedPoolQty);
-                }
-                var maxByPool = 999;
-                if (addon.poolKey) {
-                    if (addon.poolMax > 0) {
-                        maxByPool = Math.max(0, addon.poolMax - existingPoolQty - selectedPoolQty);
-                    }
-                }
-                var maxByItem = addon.maxQty > 0 ? addon.maxQty : 999;
-                return Math.max(0, Math.min(maxByTicket, maxByPool, maxByItem));
-            }
-            function refresh(state) {
-                var qualifyingQty = currentQualifyingQty(state);
-                state.addons.forEach(function(addon){
-                    var limit = addonLimit(state, addon);
-                    var isCheckbox = !!addon.isCheckbox;
-                    if (isCheckbox) {
-                        limit = Math.min(Math.max(0, limit), 1);
-                    }
-                    addon.qty = Math.max(0, Math.min(limit, toInt(addon.qty, 0)));
-                    if (isCheckbox) {
-                        addon.input.checked = addon.qty > 0;
-                        addon.input.value = addon.qty > 0 ? '1' : '0';
-                    } else {
-                        addon.input.value = String(addon.qty);
-                    }
-                    if (limit > 0) { addon.input.setAttribute('max', String(limit)); }
-                    setDisabled(addon.minus, isCheckbox || addon.qty <= 0 || state.isSubmitting);
-                    setDisabled(addon.plus, isCheckbox || addon.qty >= limit || !addon.canAdd || state.isSubmitting);
-                    var inputDisabled = state.isSubmitting ? true : false;
-                    if (!inputDisabled && !addon.canAdd) {
-                        inputDisabled = addon.qty <= 0 ? true : false;
-                    }
-                    if (isCheckbox && !inputDisabled) {
-                        inputDisabled = limit <= 0 && addon.qty <= 0;
-                    }
-                    setDisabled(addon.input, inputDisabled);
-                    var note = '';
-                    var noteClass = '';
-                    if (!addon.canAdd) {
-                        note = addon.initialNote || 'Unavailable';
-                        noteClass = 'vms-ent-note--rule';
-                    } else if (addon.qty > 0 && isCheckbox) {
-                        note = 'Selected. Uncheck to remove.';
-                        noteClass = 'vms-ent-note--selected';
-                    } else if (addon.minGa > 0) {
-                        if (limit <= 0) {
-                            note = 'Requires ' + String(addon.minGa) + ' qualifying tickets • You have ' + String(qualifyingQty) + '.';
-                            noteClass = 'vms-ent-note--rule';
-                        } else {
-                            note = 'Up to ' + String(limit) + ' allowed with your current tickets.';
-                            noteClass = 'vms-ent-note--rule';
-                        }
-                    } else if (addon.poolKey && addon.poolMax > 0 && limit <= 0) {
-                        note = 'Pool limit reached.';
-                        noteClass = 'vms-ent-note--rule';
-                    }
-                    setText(addon.note, note);
-                    if (addon.note && addon.note.classList) {
-                        addon.note.classList.remove('vms-ent-note--rule', 'vms-ent-note--selected');
-                        if (noteClass) { addon.note.classList.add(noteClass); }
-                    }
-                    if (addon.checkboxWrap && addon.checkboxWrap.classList) {
-                        addon.checkboxWrap.classList.toggle('is-selected', addon.qty > 0);
-                    }
-                    setText(addon.status, (!isCheckbox && addon.qty > 0) ? String(addon.qty) + ' selected' : '');
-                    addon.row.classList.toggle('is-selected', addon.qty > 0);
-                    addon.row.classList.toggle('is-locked', limit <= 0 && addon.qty <= 0);
-                });
-                var hasSelection = readTicketLines(state.form).length > 0 || collectAddonLines(state).length > 0;
-                if (state.cta) {
-                    state.cta.textContent = state.isSubmitting ? 'Adding…' : (hasSelection ? 'Add items to cart' : 'Add items to cart');
-                    setDisabled(state.cta, state.isSubmitting || !hasSelection);
-                }
-                state.source.setAttribute('data-vms-inline-controller-active', '1');
-                state.source.setAttribute('data-vms-inline-current-qualifying', String(qualifyingQty));
-            }
-            function atomicSubmit(state) {
-                if (state.isSubmitting) { return; }
-                var ticketLines = readTicketLines(state.form);
-                var addonLines = collectAddonLines(state);
-                if (!ticketLines.length) {
-                    if (!addonLines.length) {
-                        refresh(state);
-                        return;
-                    }
-                }
-                state.isSubmitting = true;
-                refresh(state);
-                fetch(String(cfg.atomicAddUrl || ''), {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nonce: String(cfg.atomicAddNonce || ''),
-                        tecEventId: toInt(cfg.tecEventId, 0),
-                        eventPlanId: toInt(cfg.eventPlanId, 0),
-                        ticket_lines: ticketLines,
-                        addon_lines: addonLines
-                    })
-                }).then(function(res){
-                    return res.json().catch(function(){ return { success:false, data:{ message:'Could not add items to cart.' } }; });
-                }).then(function(payload){
-                    if (!payload || !payload.success || !payload.data || !payload.data.ok) {
-                        var message = 'Could not add items to cart.';
-                        if (payload) {
-                            if (payload.data) {
-                                if (payload.data.message) {
-                                    message = String(payload.data.message);
-                                }
-                            }
-                        }
-                        throw new Error(message);
-                    }
-                    window.location.href = payload.data.cart_url || cfg.cartUrl || '/cart/';
-                }).catch(function(err){
-                    state.isSubmitting = false;
-                    refresh(state);
-                    var errorMessage = 'Could not add items to cart.';
-                    if (err) {
-                        if (err.message) {
-                            errorMessage = String(err.message);
-                        }
-                    }
-                    window.alert(errorMessage);
-                });
-            }
-            function bindSubmitButton(button, state) {
-                if (!button || !state) { return; }
-                var ignoreClickUntil = 0;
-                function invoke(ev) {
-                    if (ev) {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        if (ev.stopImmediatePropagation) { ev.stopImmediatePropagation(); }
-                    }
-                    atomicSubmit(state);
-                }
-                button.addEventListener('pointerup', function(ev){
-                    ignoreClickUntil = Date.now() + 500;
-                    invoke(ev);
-                }, true);
-                button.addEventListener('touchend', function(ev){
-                    ignoreClickUntil = Date.now() + 500;
-                    invoke(ev);
-                }, true);
-                button.addEventListener('click', function(ev){
-                    if (ignoreClickUntil && Date.now() < ignoreClickUntil) {
-                        if (ev) {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                            if (ev.stopImmediatePropagation) { ev.stopImmediatePropagation(); }
-                        }
-                        return;
-                    }
-                    invoke(ev);
-                }, true);
-            }
-            function bindCheckboxToggle(addon, state) {
-                if (!addon || !addon.isCheckbox || !addon.input || !state) { return; }
-                var wrap = addon.checkboxWrap || addon.input;
-                var ignoreClickUntil = 0;
-                var lastTouchHandleAt = 0;
-                function suppress(ev) {
-                    if (!ev) { return; }
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    if (ev.stopImmediatePropagation) { ev.stopImmediatePropagation(); }
-                }
-                function applyTouchToggle(ev) {
-                    if (!addon.input || addon.input.disabled) { return; }
-                    ignoreClickUntil = Date.now() + 500;
-                    suppress(ev);
-                    addon.qty = addon.qty > 0 ? 0 : 1;
-                    addon.input.checked = addon.qty > 0;
-                    addon.input.value = addon.qty > 0 ? '1' : '0';
-                    refresh(state);
-                }
-                wrap.addEventListener('pointerup', function(ev){
-                    var pointerType = ev && ev.pointerType ? String(ev.pointerType).toLowerCase() : '';
-                    if (pointerType !== 'touch') { return; }
-                    if (Date.now() - lastTouchHandleAt < 80) { return; }
-                    lastTouchHandleAt = Date.now();
-                    applyTouchToggle(ev);
-                }, true);
-                wrap.addEventListener('touchend', function(ev){
-                    if (Date.now() - lastTouchHandleAt < 80) { return; }
-                    lastTouchHandleAt = Date.now();
-                    applyTouchToggle(ev);
-                }, true);
-                wrap.addEventListener('click', function(ev){
-                    if (!(ignoreClickUntil && Date.now() < ignoreClickUntil)) { return; }
-                    suppress(ev);
-                }, true);
-            }
-            function boot() {
-                var source = document.getElementById('vms-reserved-addons');
-                if (!source || String(source.getAttribute('data-vms-render-mode') || '') !== 'server_controls') { return; }
-                if (source.getAttribute('data-vms-inline-controller-active') === '1') { return; }
-                var form = source.closest('form') || query(selectors.form);
-                if (!form) { return; }
-                var cta = query(selectors.submit, form);
-                var state = {
-                    source: source,
-                    form: form,
-                    cta: cta,
-                    tecEventId: toInt(source.getAttribute('data-vms-tec-event-id'), 0),
-                    eventPlanId: toInt(source.getAttribute('data-vms-event-plan-id'), 0),
-                    priorQualifyingQty: toInt(source.getAttribute('data-vms-prior-qualifying-qty'), 0),
-                    priorPoolQtyByKey: safeParseJson(source.getAttribute('data-vms-prior-pool-qty'), {}),
-                    cartGaQty: toInt(source.getAttribute('data-vms-cart-ga-qty'), 0),
-                    cartPoolQtyByKey: safeParseJson(source.getAttribute('data-vms-cart-pool-qty'), {}),
-                    qualifyingTicketIds: String(source.getAttribute('data-vms-qualifying-ticket-product-ids') || '').split(',').map(function(v){ return toInt(v,0); }).filter(function(v){ return v > 0; }),
-                    addons: [],
-                    isSubmitting: false
-                };
-                queryAll('[data-vms-server-stepper="1"]', source).forEach(function(stepper){
-                    var row = stepper.closest('.vms-ent-row, .vms-entitlements-item') || stepper.parentNode;
-                    var input = query('.vms-addon-input', stepper) || query('.vms-addon-input', row);
-                    var minus = query('.vms-addon-minus', stepper) || query('.vms-addon-minus', row);
-                    var plus = query('.vms-addon-plus', stepper) || query('.vms-addon-plus', row);
-                    if (!row || !input) { return; }
-                    if (!minus) {
-                        minus = document.createElement('button');
-                        minus.type = 'button';
-                        minus.className = 'vms-rw-stepper__btn vms-rw-stepper__btn--minus vms-addon-minus';
-                        minus.setAttribute('aria-label', 'Decrease add-on quantity');
-                        minus.textContent = '−';
-                        stepper.insertBefore(minus, stepper.firstChild || input);
-                    }
-                    if (!plus) {
-                        plus = document.createElement('button');
-                        plus.type = 'button';
-                        plus.className = 'vms-rw-stepper__btn vms-rw-stepper__btn--plus vms-addon-plus';
-                        plus.setAttribute('aria-label', 'Increase add-on quantity');
-                        plus.textContent = '+';
-                        stepper.appendChild(plus);
-                    }
-                    var selectorMode = String(stepper.getAttribute('data-vms-selector-mode') || 'stepper') === 'checkbox' ? 'checkbox' : 'stepper';
-                    var addon = {
-                        row: row,
-                        input: input,
-                        minus: minus,
-                        plus: plus,
-                        note: query('.vms-ent-note', row),
-                        status: query('.vms-rw-addon__status', row),
-                        checkboxWrap: query('.vms-addon-checkbox-wrap', row),
-                        productId: toInt(stepper.getAttribute('data-vms-product-id') || input.getAttribute('data-vms-product-id'), 0),
-                        poolKey: String(stepper.getAttribute('data-vms-pool-key') || row.getAttribute('data-vms-pool-key') || ''),
-                        poolMax: toInt(stepper.getAttribute('data-vms-pool-max') || row.getAttribute('data-vms-pool-max'), 0),
-                        minGa: toInt(stepper.getAttribute('data-vms-pool-min-ga') || 0, 0),
-                        maxQty: toInt(stepper.getAttribute('data-vms-max-qty') || 0, 0),
-                        canAdd: String(stepper.getAttribute('data-vms-can-add') || '1') !== '0',
-                        initialNote: String(stepper.getAttribute('data-vms-initial-note') || ''),
-                        isCheckbox: selectorMode === 'checkbox',
-                        qty: selectorMode === 'checkbox' ? (input.checked ? 1 : 0) : Math.max(0, toInt(input.value, 0))
-                    };
-                    bindCheckboxToggle(addon, state);
-                    minus.addEventListener('click', function(ev){ ev.preventDefault(); addon.qty = Math.max(0, addon.qty - 1); refresh(state); });
-                    plus.addEventListener('click', function(ev){ ev.preventDefault(); addon.qty = addon.qty + 1; refresh(state); });
-                    input.addEventListener('input', function(){ addon.qty = addon.isCheckbox ? (input.checked ? 1 : 0) : Math.max(0, toInt(input.value, 0)); refresh(state); });
-                    input.addEventListener('change', function(){ addon.qty = addon.isCheckbox ? (input.checked ? 1 : 0) : Math.max(0, toInt(input.value, 0)); refresh(state); });
-                    state.addons.push(addon);
-                });
-                if (cta) {
-                    cta.removeAttribute('data-js');
-                    cta.removeAttribute('data-content');
-                    cta.removeAttribute('aria-haspopup');
-                    cta.setAttribute('data-vms-cart-first', '1');
-                    bindSubmitButton(cta, state);
-                }
-                form.addEventListener('submit', function(ev){ ev.preventDefault(); ev.stopPropagation(); if (ev.stopImmediatePropagation) { ev.stopImmediatePropagation(); } atomicSubmit(state); }, true);
-                form.addEventListener('click', function(ev){
-                    var btn = null;
-                    if (ev.target) {
-                        if (ev.target.closest) {
-                            btn = ev.target.closest(selectors.nativeQtyButtons);
-                        }
-                    }
-                    if (!btn) { return; }
-                    window.setTimeout(function(){ refresh(state); }, 0);
-                    window.setTimeout(function(){ refresh(state); }, 120);
-                    window.setTimeout(function(){ refresh(state); }, 280);
-                }, true);
-                form.addEventListener('input', function(ev){
-                    if (!ev.target) { return; }
-                    if (!ev.target.matches) { return; }
-                    if (!ev.target.matches(selectors.nativeQty)) { return; }
-                    window.setTimeout(function(){ refresh(state); }, 0);
-                }, true);
-                form.addEventListener('change', function(ev){
-                    if (!ev.target) { return; }
-                    if (!ev.target.matches) { return; }
-                    if (!ev.target.matches(selectors.nativeQty)) { return; }
-                    window.setTimeout(function(){ refresh(state); }, 0);
-                }, true);
-                refresh(state);
-                window.__vmsInlineTicketingController = { active: true, build: <?php echo wp_json_encode((string) (defined('VMS_VERSION') ? VMS_VERSION : '')); ?>, state: state };
-            }
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function(){ window.setTimeout(boot, 0); });
-            } else {
-                window.setTimeout(boot, 0);
-            }
-        })();
-        </script>
-
-
         <?php if ($is_admin_user && $debug): ?>
             <details class="vms-entitlements-debug">
-                <summary><?php echo esc_html__('Admin diagnostics', 'vms'); ?></summary>
+                <summary><?php echo esc_html__('Admin diagnostics', 'backstage-venue-manager'); ?></summary>
                 <ul class="vms-entitlements-debug-list">
                     <?php foreach ($debug as $d): ?>
                         <li>
@@ -8347,7 +8206,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
                     <?php endforeach; ?>
                 </ul>
                 <p class="description">
-                    <?php echo esc_html__('If these should be purchasable, run Ticketing Preview then Commit from the linked Event Plan to create/adopt products and store the map.', 'vms'); ?>
+                    <?php echo esc_html__('If these should be purchasable, run Ticketing Preview then Commit from the linked Event Plan to create/adopt products and store the map.', 'backstage-venue-manager'); ?>
                 </p>
             </details>
         <?php endif; ?>
@@ -8361,7 +8220,7 @@ function vms_ticketing_v2_render_entitlements_block(int $tec_event_id, int $plan
 /**
  * Clear WooCommerce success notices only (preserve validation/error notices).
  */
-function vms_ticketing_v2_clear_success_notices(): void
+function bvmgr_ticketing_v2_clear_success_notices(): void
 {
     if (!function_exists('wc_get_notices') || !function_exists('wc_set_notices')) {
         return;
@@ -8379,16 +8238,13 @@ function vms_ticketing_v2_clear_success_notices(): void
 /**
  * Returns true when the current request is actively adding products to cart.
  */
-function vms_ticketing_v2_request_is_add_to_cart(): bool
+function bvmgr_ticketing_v2_request_is_add_to_cart(): bool
 {
-    if (isset($_REQUEST['add-to-cart']) || isset($_REQUEST['added-to-cart'])) {
+    if (bvmgr_ticketing_v2_request_has_key('add-to-cart') || bvmgr_ticketing_v2_request_has_key('added-to-cart')) {
         return true;
     }
 
-    $wc_ajax = '';
-    if (isset($_REQUEST['wc-ajax'])) {
-        $wc_ajax = sanitize_key(wp_unslash((string) $_REQUEST['wc-ajax']));
-    }
+    $wc_ajax = bvmgr_ticketing_v2_request_key('wc-ajax');
 
     return ($wc_ajax === 'add_to_cart');
 }
@@ -8397,7 +8253,7 @@ function vms_ticketing_v2_request_is_add_to_cart(): bool
  * Lightweight cart-empty probe from Woo session so we can prune stale success notices
  * before they leak onto unrelated pages.
  */
-function vms_ticketing_v2_session_cart_is_empty(): bool
+function bvmgr_ticketing_v2_session_cart_is_empty(): bool
 {
     if (!function_exists('WC')) {
         return true;
@@ -8430,7 +8286,7 @@ function vms_ticketing_v2_session_cart_is_empty(): bool
  * Guard against stale Woo "added to cart" success notices surfacing on unrelated pages
  * after the cart has already been emptied.
  */
-function vms_ticketing_v2_prune_stale_success_notices(): void
+function bvmgr_ticketing_v2_prune_stale_success_notices(): void
 {
     if (is_admin() || wp_doing_ajax()) {
         return;
@@ -8446,37 +8302,37 @@ function vms_ticketing_v2_prune_stale_success_notices(): void
         return;
     }
 
-    if (vms_ticketing_v2_request_is_add_to_cart()) {
+    if (bvmgr_ticketing_v2_request_is_add_to_cart()) {
         return;
     }
 
-    if (!vms_ticketing_v2_session_cart_is_empty()) {
+    if (!bvmgr_ticketing_v2_session_cart_is_empty()) {
         return;
     }
 
-    vms_ticketing_v2_clear_success_notices();
+    bvmgr_ticketing_v2_clear_success_notices();
 }
 
 /**
  * Determine whether a product should be treated as a v2 entitlement.
  * This is used for notice suppression and silent add validation.
  */
-function vms_ticketing_v2_product_is_entitlement(int $product_id): bool
+function bvmgr_ticketing_v2_product_is_entitlement(int $product_id): bool
 {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
         return false;
     }
 
-    $role = (string) vms_ticketing_v2_meta_get($product_id, vms_ticketing_v2_product_meta_key('product_role'));
+    $role = (string) bvmgr_ticketing_v2_meta_get($product_id, bvmgr_ticketing_v2_product_meta_key('product_role'));
     if ($role === 'entitlement') {
         return true;
     }
 
     // Legacy fallback.
-    $sr_type = (string) vms_ticketing_v2_meta_get($product_id, '_sr_addon_type');
-    $sr_req  = (string) vms_ticketing_v2_meta_get($product_id, '_sr_required_qualifiers_per_unit');
-    $sr_unit = (string) vms_ticketing_v2_meta_get($product_id, '_sr_addon_unit_label');
+    $sr_type = (string) bvmgr_ticketing_v2_meta_get($product_id, '_sr_addon_type');
+    $sr_req  = (string) bvmgr_ticketing_v2_meta_get($product_id, '_sr_required_qualifiers_per_unit');
+    $sr_unit = (string) bvmgr_ticketing_v2_meta_get($product_id, '_sr_addon_unit_label');
     return ($sr_type !== '' || $sr_req !== '' || $sr_unit !== '');
 }
 
@@ -8485,7 +8341,7 @@ function vms_ticketing_v2_product_is_entitlement(int $product_id): bool
  * Suppress WooCommerce “added to cart” notices for entitlement products.
  * This prevents delayed notices from appearing after cart empty or navigation.
  */
-function vms_ticketing_v2_suppress_entitlement_added_notice($message, $products, $show_qty)
+function bvmgr_ticketing_v2_suppress_entitlement_added_notice($message, $products, $show_qty)
 {
     if (empty($products) || !is_array($products)) {
         return $message;
@@ -8493,7 +8349,7 @@ function vms_ticketing_v2_suppress_entitlement_added_notice($message, $products,
 
     foreach ($products as $pid => $qty) {
         $pid = absint($pid);
-        if ($pid > 0 && vms_ticketing_v2_product_is_entitlement($pid)) {
+        if ($pid > 0 && bvmgr_ticketing_v2_product_is_entitlement($pid)) {
             return '';
         }
     }
@@ -8506,7 +8362,7 @@ function vms_ticketing_v2_suppress_entitlement_added_notice($message, $products,
  * Parse a site-timezone datetime string and return a Unix timestamp.
  * Expected format is the VMS canonical YYYY-MM-DD HH:MM:SS, but a few common variants are accepted.
  */
-function vms_ticketing_v2_parse_wp_datetime_to_ts(string $dt): int
+function bvmgr_ticketing_v2_parse_wp_datetime_to_ts(string $dt): int
 {
     $dt = trim($dt);
     if ($dt === '') {
@@ -8542,7 +8398,7 @@ function vms_ticketing_v2_parse_wp_datetime_to_ts(string $dt): int
  * Returns true when GA is currently within its sales window.
  * If no window is set, GA is considered on-sale.
  */
-function vms_ticketing_v2_ga_is_on_sale_now(array $cfg): bool
+function bvmgr_ticketing_v2_ga_is_on_sale_now(array $cfg): bool
 {
     $ga = (isset($cfg['ga']) && is_array($cfg['ga'])) ? $cfg['ga'] : array();
 
@@ -8552,14 +8408,14 @@ function vms_ticketing_v2_ga_is_on_sale_now(array $cfg): bool
     $now = time();
 
     if ($start !== '') {
-        $ts = vms_ticketing_v2_parse_wp_datetime_to_ts($start);
+        $ts = bvmgr_ticketing_v2_parse_wp_datetime_to_ts($start);
         if ($ts > 0 && $now < $ts) {
             return false;
         }
     }
 
     if ($end !== '') {
-        $ts = vms_ticketing_v2_parse_wp_datetime_to_ts($end);
+        $ts = bvmgr_ticketing_v2_parse_wp_datetime_to_ts($end);
         if ($ts > 0 && $now > $ts) {
             return false;
         }
@@ -8573,7 +8429,7 @@ function vms_ticketing_v2_ga_is_on_sale_now(array $cfg): bool
  *
  * @return string[]
  */
-function vms_ticketing_v2_atomic_error_notices(): array
+function bvmgr_ticketing_v2_atomic_error_notices(): array
 {
     if (!function_exists('wc_get_notices')) {
         return array();
@@ -8608,7 +8464,7 @@ function vms_ticketing_v2_atomic_error_notices(): array
  *
  * @return string[]
  */
-function vms_ticketing_v2_capture_cart_rule_error_messages(): array
+function bvmgr_ticketing_v2_capture_cart_rule_error_messages(): array
 {
     static $cache = null;
     if (is_array($cache)) {
@@ -8626,14 +8482,14 @@ function vms_ticketing_v2_capture_cart_rule_error_messages(): array
 
     $before = wc_get_notices();
     wc_clear_notices();
-    vms_ticketing_v2_enforce_cart_rules();
-    $cache = vms_ticketing_v2_atomic_error_notices();
+    bvmgr_ticketing_v2_enforce_cart_rules();
+    $cache = bvmgr_ticketing_v2_atomic_error_notices();
     wc_set_notices(is_array($before) ? $before : array());
 
     return $cache;
 }
 
-function vms_ticketing_v2_capture_checkout_blocker_error_messages(): array
+function bvmgr_ticketing_v2_capture_checkout_blocker_error_messages(): array
 {
     static $cache = null;
     if (is_array($cache)) {
@@ -8652,16 +8508,16 @@ function vms_ticketing_v2_capture_checkout_blocker_error_messages(): array
     $before = wc_get_notices();
     wc_clear_notices();
 
-    vms_ticketing_v2_enforce_live_event_items_in_cart();
-    vms_ticketing_v2_enforce_early_price_caps_in_cart();
-    vms_ticketing_v2_enforce_ticket_max_qtys_in_cart();
-    vms_ticketing_v2_enforce_verified_ticket_limits_in_cart();
-    vms_ticketing_v2_enforce_ticket_ratio_rules_in_cart();
-    vms_ticketing_v2_enforce_claim_assignments_in_cart();
-    vms_ticketing_v2_enforce_ticket_visibility_rules();
-    vms_ticketing_v2_enforce_cart_rules();
+    bvmgr_ticketing_v2_enforce_live_event_items_in_cart();
+    bvmgr_ticketing_v2_enforce_early_price_caps_in_cart();
+    bvmgr_ticketing_v2_enforce_ticket_max_qtys_in_cart();
+    bvmgr_ticketing_v2_enforce_verified_ticket_limits_in_cart();
+    bvmgr_ticketing_v2_enforce_ticket_ratio_rules_in_cart();
+    bvmgr_ticketing_v2_enforce_claim_assignments_in_cart();
+    bvmgr_ticketing_v2_enforce_ticket_visibility_rules();
+    bvmgr_ticketing_v2_enforce_cart_rules();
 
-    $messages = vms_ticketing_v2_atomic_error_notices();
+    $messages = bvmgr_ticketing_v2_atomic_error_notices();
     $messages = array_values(array_unique(array_filter(array_map(static function ($message) {
         return sanitize_text_field((string) $message);
     }, (array) $messages))));
@@ -8672,7 +8528,7 @@ function vms_ticketing_v2_capture_checkout_blocker_error_messages(): array
     return $cache;
 }
 
-function vms_ticketing_v2_cart_has_checkout_blockers(): bool
+function bvmgr_ticketing_v2_cart_has_checkout_blockers(): bool
 {
     if (!function_exists('WC') || !WC() || !isset(WC()->cart) || !WC()->cart) {
         return false;
@@ -8682,26 +8538,26 @@ function vms_ticketing_v2_cart_has_checkout_blockers(): bool
         return true;
     }
 
-    return !empty(vms_ticketing_v2_capture_checkout_blocker_error_messages());
+    return !empty(bvmgr_ticketing_v2_capture_checkout_blocker_error_messages());
 }
 
-function vms_ticketing_v2_store_api_request_path(): string
+function bvmgr_ticketing_v2_store_api_request_path(): string
 {
-    $route = '';
-    if (isset($_GET['rest_route'])) {
-        $route = sanitize_text_field(wp_unslash((string) $_GET['rest_route']));
-    }
+    $route = bvmgr_ticketing_v2_query_text('rest_route');
 
-    if ($route === '' && isset($_SERVER['REQUEST_URI'])) {
-        $route = (string) wp_parse_url(wp_unslash((string) $_SERVER['REQUEST_URI']), PHP_URL_PATH);
+    if ($route === '') {
+        $request_path = wp_parse_url(bvmgr_request_current_uri(), PHP_URL_PATH);
+        if (is_string($request_path)) {
+            $route = $request_path;
+        }
     }
 
     return strtolower(trim((string) $route));
 }
 
-function vms_ticketing_v2_store_api_request_is_checkout(): bool
+function bvmgr_ticketing_v2_store_api_request_is_checkout(): bool
 {
-    $route = vms_ticketing_v2_store_api_request_path();
+    $route = bvmgr_ticketing_v2_store_api_request_path();
     if ($route === '') {
         return false;
     }
@@ -8713,16 +8569,16 @@ function vms_ticketing_v2_store_api_request_is_checkout(): bool
     return strpos($route, '/checkout') !== false;
 }
 
-function vms_ticketing_v2_store_api_add_checkout_blocker_errors($errors, $cart = null): void
+function bvmgr_ticketing_v2_store_api_add_checkout_blocker_errors($errors, $cart = null): void
 {
     if (!($errors instanceof WP_Error)) {
         return;
     }
-    if (!vms_ticketing_v2_store_api_request_is_checkout()) {
+    if (!bvmgr_ticketing_v2_store_api_request_is_checkout()) {
         return;
     }
 
-    foreach (vms_ticketing_v2_capture_checkout_blocker_error_messages() as $message) {
+    foreach (bvmgr_ticketing_v2_capture_checkout_blocker_error_messages() as $message) {
         $message = sanitize_text_field((string) $message);
         if ($message === '') {
             continue;
@@ -8731,18 +8587,17 @@ function vms_ticketing_v2_store_api_add_checkout_blocker_errors($errors, $cart =
     }
 }
 
-function vms_ticketing_v2_store_api_checkout_update_order_meta($order): void
+function bvmgr_ticketing_v2_store_api_checkout_update_order_meta($order): void
 {
-    $messages = vms_ticketing_v2_capture_checkout_blocker_error_messages();
+    $messages = bvmgr_ticketing_v2_capture_checkout_blocker_error_messages();
     if (empty($messages)) {
         return;
     }
 
-    throw new Exception(implode("
-", $messages));
+    throw new Exception(implode("\n", $messages)); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Store API converts this plain-text validation summary into a JSON/REST error payload; escaping at construction would corrupt the consumer contract.
 }
 
-function vms_ticketing_v2_store_api_validate_add_to_cart($product, $request = array()): void
+function bvmgr_ticketing_v2_store_api_validate_add_to_cart($product, $request = array()): void
 {
     if (!function_exists('wc_get_notices') || !function_exists('wc_set_notices') || !function_exists('wc_clear_notices')) {
         return;
@@ -8775,8 +8630,8 @@ function vms_ticketing_v2_store_api_validate_add_to_cart($product, $request = ar
         }
     }
 
-    $passed = vms_ticketing_v2_validate_add_to_cart(true, $product_id, $quantity, $variation_id, $variation, $cart_item_data);
-    $messages = vms_ticketing_v2_atomic_error_notices();
+    $passed = bvmgr_ticketing_v2_validate_add_to_cart(true, $product_id, $quantity, $variation_id, $variation, $cart_item_data);
+    $messages = bvmgr_ticketing_v2_atomic_error_notices();
     wc_set_notices(is_array($before) ? $before : array());
 
     if ($passed && empty($messages)) {
@@ -8792,48 +8647,48 @@ function vms_ticketing_v2_store_api_validate_add_to_cart($product, $request = ar
         }
     }
     if ($message === '') {
-        $message = __('This item could not be added to cart.', 'vms');
+        $message = __('This item could not be added to cart.', 'backstage-venue-manager');
     }
 
-    throw new Exception($message);
+    throw new Exception($message); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Store API expects the first plain-text validation notice as the exception message for its JSON/REST error response; escaping belongs at the eventual output sink.
 }
 
-function vms_ticketing_v2_render_disabled_cart_checkout_button(): void
+function bvmgr_ticketing_v2_render_disabled_cart_checkout_button(): void
 {
-    echo '<button type="button" class="checkout-button button alt wc-forward" disabled="disabled" aria-disabled="true">' . esc_html__('Checkout unavailable — fix cart items above', 'vms') . '</button>';
+    echo '<button type="button" class="checkout-button button alt wc-forward" disabled="disabled" aria-disabled="true">' . esc_html__('Checkout unavailable — fix cart items above', 'backstage-venue-manager') . '</button>';
 }
 
-function vms_ticketing_v2_maybe_gate_cart_checkout_button(): void
+function bvmgr_ticketing_v2_maybe_gate_cart_checkout_button(): void
 {
     if (!function_exists('is_cart') || !is_cart()) {
         return;
     }
-    if (!vms_ticketing_v2_cart_has_checkout_blockers()) {
+    if (!bvmgr_ticketing_v2_cart_has_checkout_blockers()) {
         return;
     }
 
     remove_action('woocommerce_proceed_to_checkout', 'woocommerce_button_proceed_to_checkout', 20);
-    add_action('woocommerce_proceed_to_checkout', 'vms_ticketing_v2_render_disabled_cart_checkout_button', 20);
+    add_action('woocommerce_proceed_to_checkout', 'bvmgr_ticketing_v2_render_disabled_cart_checkout_button', 20);
 }
 
-function vms_ticketing_v2_filter_checkout_order_button_html(string $button_html): string
+function bvmgr_ticketing_v2_filter_checkout_order_button_html(string $button_html): string
 {
     if (!function_exists('is_checkout') || !is_checkout()) {
         return $button_html;
     }
-    if (!vms_ticketing_v2_cart_has_checkout_blockers()) {
+    if (!bvmgr_ticketing_v2_cart_has_checkout_blockers()) {
         return $button_html;
     }
 
-    return '<button type="submit" class="button alt" name="woocommerce_checkout_place_order" id="place_order" value="' . esc_attr__('Checkout blocked — return to cart', 'vms') . '" disabled="disabled" aria-disabled="true">' . esc_html__('Checkout blocked — return to cart', 'vms') . '</button>';
+    return '<button type="submit" class="button alt" name="woocommerce_checkout_place_order" id="place_order" value="' . esc_attr__('Checkout blocked — return to cart', 'backstage-venue-manager') . '" disabled="disabled" aria-disabled="true">' . esc_html__('Checkout blocked — return to cart', 'backstage-venue-manager') . '</button>';
 }
 
-function vms_ticketing_v2_filter_available_payment_gateways(array $gateways): array
+function bvmgr_ticketing_v2_filter_available_payment_gateways(array $gateways): array
 {
     if (!function_exists('is_checkout') || !is_checkout()) {
         return $gateways;
     }
-    if (!vms_ticketing_v2_cart_has_checkout_blockers()) {
+    if (!bvmgr_ticketing_v2_cart_has_checkout_blockers()) {
         return $gateways;
     }
 
@@ -8853,7 +8708,7 @@ function vms_ticketing_v2_filter_available_payment_gateways(array $gateways): ar
  *   claim_assignments:array<int,array{seat:int,assignee_email:string}>
  * }
  */
-function vms_ticketing_v2_atomic_normalize_ticket_line($line): array
+function bvmgr_ticketing_v2_atomic_normalize_ticket_line($line): array
 {
     if (!is_array($line)) {
         return array(
@@ -8888,7 +8743,7 @@ function vms_ticketing_v2_atomic_normalize_ticket_line($line): array
         $variation[$key] = sanitize_text_field(wp_unslash((string) $v));
     }
 
-    $claim_assignments = vms_ticketing_v2_claim_assignments_normalize(
+    $claim_assignments = bvmgr_ticketing_v2_claim_assignments_normalize(
         $line['claim_assignments'] ?? ($line['claimAssignments'] ?? array())
     );
 
@@ -8907,7 +8762,7 @@ function vms_ticketing_v2_atomic_normalize_ticket_line($line): array
  * @param mixed $line
  * @return array{product_id:int,qty:int}
  */
-function vms_ticketing_v2_atomic_normalize_addon_line($line): array
+function bvmgr_ticketing_v2_atomic_normalize_addon_line($line): array
 {
     if (!is_array($line)) {
         return array('product_id' => 0, 'qty' => 0);
@@ -8922,7 +8777,7 @@ function vms_ticketing_v2_atomic_normalize_addon_line($line): array
     );
 }
 
-function vms_ticketing_v2_atomic_product_matches_event(int $product_id, int $tec_event_id): bool
+function bvmgr_ticketing_v2_atomic_product_matches_event(int $product_id, int $tec_event_id): bool
 {
     $product_id = absint($product_id);
     $tec_event_id = absint($tec_event_id);
@@ -8930,14 +8785,14 @@ function vms_ticketing_v2_atomic_product_matches_event(int $product_id, int $tec
         return ($tec_event_id <= 0);
     }
 
-    if (function_exists('vms_ticketing_v2_resolve_event_id_for_product')) {
-        $resolved = absint(vms_ticketing_v2_resolve_event_id_for_product($product_id));
+    if (function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')) {
+        $resolved = absint(bvmgr_ticketing_v2_resolve_event_id_for_product($product_id));
         if ($resolved > 0) {
             return ((int) $resolved === (int) $tec_event_id);
         }
     }
 
-    $event_meta = absint(vms_ticketing_v2_meta_get($product_id, '_tribe_wooticket_for_event'));
+    $event_meta = absint(bvmgr_ticketing_v2_meta_get($product_id, '_tribe_wooticket_for_event'));
     if ($event_meta > 0) {
         return ((int) $event_meta === (int) $tec_event_id);
     }
@@ -8945,7 +8800,7 @@ function vms_ticketing_v2_atomic_product_matches_event(int $product_id, int $tec
     return false;
 }
 
-function vms_ticketing_v2_atomic_product_matches_plan(int $product_id, int $plan_id): bool
+function bvmgr_ticketing_v2_atomic_product_matches_plan(int $product_id, int $plan_id): bool
 {
     $product_id = absint($product_id);
     $plan_id = absint($plan_id);
@@ -8953,23 +8808,23 @@ function vms_ticketing_v2_atomic_product_matches_plan(int $product_id, int $plan
         return ($plan_id <= 0);
     }
 
-    $direct_plan = absint(vms_ticketing_v2_meta_get($product_id, vms_ticketing_v2_product_meta_key('event_plan_id')));
+    $direct_plan = absint(bvmgr_ticketing_v2_meta_get($product_id, bvmgr_ticketing_v2_product_meta_key('event_plan_id')));
     if ($direct_plan > 0) {
         return ((int) $direct_plan === (int) $plan_id);
     }
 
-    $event_id = function_exists('vms_ticketing_v2_resolve_event_id_for_product')
-        ? absint(vms_ticketing_v2_resolve_event_id_for_product($product_id))
+    $event_id = function_exists('bvmgr_ticketing_v2_resolve_event_id_for_product')
+        ? absint(bvmgr_ticketing_v2_resolve_event_id_for_product($product_id))
         : 0;
-    if ($event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $mapped_plan = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($event_id));
+    if ($event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $mapped_plan = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($event_id));
         if ($mapped_plan > 0) {
             return ((int) $mapped_plan === (int) $plan_id);
         }
     }
 
-    if (function_exists('vms_ticketing_v2_get_sync')) {
-        $sync = vms_ticketing_v2_get_sync($plan_id);
+    if (function_exists('bvmgr_ticketing_v2_get_sync')) {
+        $sync = bvmgr_ticketing_v2_get_sync($plan_id);
         $map = (is_array($sync) && isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
 
         $ticket_rows = (isset($map['tickets']) && is_array($map['tickets'])) ? $map['tickets'] : array();
@@ -8978,13 +8833,13 @@ function vms_ticketing_v2_atomic_product_matches_plan(int $product_id, int $plan
                 continue;
             }
             $mapped_pid = absint($ticket_row['woo_product_id'] ?? 0);
-            if ($mapped_pid > 0 && vms_ticketing_v2_pid_matches_mapped($product_id, $mapped_pid)) {
+            if ($mapped_pid > 0 && bvmgr_ticketing_v2_pid_matches_mapped($product_id, $mapped_pid)) {
                 return true;
             }
         }
 
         $mapped_ga = absint($map['ga']['woo_product_id'] ?? 0);
-        if ($mapped_ga > 0 && vms_ticketing_v2_pid_matches_mapped($product_id, $mapped_ga)) {
+        if ($mapped_ga > 0 && bvmgr_ticketing_v2_pid_matches_mapped($product_id, $mapped_ga)) {
             return true;
         }
 
@@ -8994,7 +8849,7 @@ function vms_ticketing_v2_atomic_product_matches_plan(int $product_id, int $plan
                 continue;
             }
             $mapped_ent = absint($ent_row['woo_product_id'] ?? 0);
-            if ($mapped_ent > 0 && vms_ticketing_v2_pid_matches_mapped($product_id, $mapped_ent)) {
+            if ($mapped_ent > 0 && bvmgr_ticketing_v2_pid_matches_mapped($product_id, $mapped_ent)) {
                 return true;
             }
         }
@@ -9008,7 +8863,7 @@ function vms_ticketing_v2_atomic_product_matches_plan(int $product_id, int $plan
  *
  * @param string[] $cart_keys
  */
-function vms_ticketing_v2_atomic_rollback_added_items(array $cart_keys): void
+function bvmgr_ticketing_v2_atomic_rollback_added_items(array $cart_keys): void
 {
     if (!function_exists('WC')) {
         return;
@@ -9034,27 +8889,34 @@ function vms_ticketing_v2_atomic_rollback_added_items(array $cart_keys): void
  * Atomic endpoint for event tickets + reserved add-ons in one request.
  * One click -> one server transaction -> one complete cart.
  */
-function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
+function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
 {
     if (!function_exists('wp_send_json_error') || !function_exists('WC')) {
         status_header(400);
         exit;
     }
 
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw ?: '', true);
+    $request_payload = bvmgr_ticketing_v2_read_json_request_payload(65536);
+    if (empty($request_payload['ok'])) {
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
+    }
+
+    $data = $request_payload['present'] ? $request_payload['payload'] : null;
     if (!is_array($data)) {
-        $data = $_POST;
+        $data = bvmgr_ticketing_v2_read_form_request_payload($_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Form fallback is shape-normalized only to extract and verify the existing atomic-add nonce before any cart mutation.
+    }
+    if (!is_array($data) || !bvmgr_ticketing_v2_validate_atomic_add_payload($data)) {
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
     }
 
     $nonce = '';
-    if (isset($data['nonce'])) {
+    if (isset($data['nonce']) && !is_array($data['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $data['nonce']));
-    } elseif (isset($_REQUEST['nonce'])) {
+    } elseif (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
-    if ($nonce === '' || !wp_verify_nonce($nonce, 'vms_ticketing_v2_atomic_add_to_cart')) {
-        wp_send_json_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_v2_atomic_add_to_cart'))) {
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
     $tec_event_id = absint($data['tec_event_id'] ?? ($data['tecEventId'] ?? 0));
@@ -9070,11 +8932,11 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
 
     $ticket_lines = array();
     foreach ($ticket_lines_raw as $line) {
-        $ticket_lines[] = vms_ticketing_v2_atomic_normalize_ticket_line($line);
+        $ticket_lines[] = bvmgr_ticketing_v2_atomic_normalize_ticket_line($line);
     }
     $addon_lines = array();
     foreach ($addon_lines_raw as $line) {
-        $addon_lines[] = vms_ticketing_v2_atomic_normalize_addon_line($line);
+        $addon_lines[] = bvmgr_ticketing_v2_atomic_normalize_addon_line($line);
     }
 
     $has_ticket_lines = false;
@@ -9092,11 +8954,11 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         }
     }
     if (!$has_ticket_lines && !$has_addon_lines) {
-        wp_send_json_error(array('ok' => false, 'message' => 'empty_selection'), 400);
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'empty_selection'), 400);
     }
 
-    if ($event_plan_id <= 0 && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $event_plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+    if ($event_plan_id <= 0 && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $event_plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
     }
 
     if (function_exists('wc_load_cart')) {
@@ -9105,18 +8967,18 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
 
     $wc = WC();
     if (!$wc || !isset($wc->cart) || !$wc->cart) {
-        wp_send_json_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
     }
 
     if (function_exists('wc_clear_notices')) {
         wc_clear_notices();
     }
-    vms_ticketing_v2_clear_success_notices();
+    bvmgr_ticketing_v2_clear_success_notices();
 
     if ($event_plan_id > 0 || $tec_event_id > 0) {
-        $event_validation = vms_ticketing_v2_validate_product_sale_context(0, $event_plan_id, $tec_event_id, 'ga_ticket');
+        $event_validation = bvmgr_ticketing_v2_validate_product_sale_context(0, $event_plan_id, $tec_event_id, 'ga_ticket');
         if (empty($event_validation['ok'])) {
-            wp_send_json_error(array(
+            bvmgr_ticketing_v2_ajax_send_error(array(
                 'ok' => false,
                 'message' => sanitize_text_field((string) ($event_validation['code'] ?? 'event_unavailable')),
                 'notice_message' => sanitize_text_field((string) ($event_validation['message'] ?? '')),
@@ -9133,7 +8995,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
     $request_assignee_counts = array();
     $buyer_user_id = is_user_logged_in() ? (int) get_current_user_id() : 0;
 
-    $GLOBALS['vms_ticketing_v2_atomic_add_in_progress'] = true;
+    $GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'] = true;
 
     foreach ($ticket_lines as $idx => $line) {
         $pid = absint($line['product_id'] ?? 0);
@@ -9146,11 +9008,11 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
             $errors[] = array('line' => $idx, 'type' => 'ticket', 'code' => 'invalid_ticket_line');
             break;
         }
-        if (vms_ticketing_v2_product_is_entitlement($pid)) {
+        if (bvmgr_ticketing_v2_product_is_entitlement($pid)) {
             $errors[] = array('line' => $idx, 'type' => 'ticket', 'product_id' => $pid, 'code' => 'ticket_expected');
             break;
         }
-        $sale_context = vms_ticketing_v2_validate_product_sale_context($pid, $event_plan_id, $tec_event_id, 'ga_ticket');
+        $sale_context = bvmgr_ticketing_v2_validate_product_sale_context($pid, $event_plan_id, $tec_event_id, 'ga_ticket');
         if (empty($sale_context['ok'])) {
             $sale_message = sanitize_text_field((string) ($sale_context['message'] ?? ''));
             if ($sale_message !== '' && function_exists('wc_add_notice')) {
@@ -9168,11 +9030,11 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         $event_plan_id = absint($sale_context['plan_id'] ?? $event_plan_id);
         $tec_event_id = absint($sale_context['event_id'] ?? $tec_event_id);
 
-        $disabled_ticket_state = function_exists('vms_ticketing_v2_disabled_ticket_config_for_product')
-            ? vms_ticketing_v2_disabled_ticket_config_for_product($pid, $event_plan_id)
+        $disabled_ticket_state = function_exists('bvmgr_ticketing_v2_disabled_ticket_config_for_product')
+            ? bvmgr_ticketing_v2_disabled_ticket_config_for_product($pid, $event_plan_id)
             : array('disabled' => false);
         if (!empty($disabled_ticket_state['disabled'])) {
-            $disabled_message = vms_ticketing_v2_disabled_ticket_notice_text($disabled_ticket_state);
+            $disabled_message = bvmgr_ticketing_v2_disabled_ticket_notice_text($disabled_ticket_state);
             if (function_exists('wc_add_notice')) {
                 wc_add_notice($disabled_message, 'error');
             }
@@ -9186,23 +9048,24 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
             break;
         }
 
-        $claim_context = function_exists('vms_ticketing_v2_claim_context_for_product')
-            ? vms_ticketing_v2_claim_context_for_product($pid)
+        $claim_context = function_exists('bvmgr_ticketing_v2_claim_context_for_product')
+            ? bvmgr_ticketing_v2_claim_context_for_product($pid)
             : array();
         $visibility_mode = sanitize_key((string) ($claim_context['visibility_mode'] ?? 'public'));
         $require_assignee_email = !empty($claim_context['require_assignee_email']);
         if ($visibility_mode === 'verified' && $require_assignee_email) {
             $claim_program = sanitize_key((string) ($claim_context['legacy_program'] ?? ''));
             $claim_allowed_programs = (array) ($claim_context['allowed_programs'] ?? array());
-            $claim_program_label = vms_ticketing_v2_claim_program_label_text($claim_allowed_programs, $claim_program);
+            $claim_program_label = bvmgr_ticketing_v2_claim_program_label_text($claim_allowed_programs, $claim_program);
             $claim_allow_direct_grants = !empty($claim_context['allow_direct_grants']);
             $claim_grant_type = sanitize_key((string) ($claim_context['claim_grant_type'] ?? 'event_ticket_eligibility'));
             if (!is_user_logged_in()) {
                 $guest_message = $claim_program_label !== ''
-                    ? sprintf(__('This ticket requires %s verification. Log in and submit verification first.', 'vms'), $claim_program_label)
-                    : __('This ticket requires account verification. Log in and submit verification first.', 'vms');
+                    /* translators: %s: human-readable value used in this message. */
+                    ? sprintf(__('This ticket requires %s verification. Log in and submit verification first.', 'backstage-venue-manager'), $claim_program_label)
+                    : __('This ticket requires account verification. Log in and submit verification first.', 'backstage-venue-manager');
                 if (empty($claim_allowed_programs) && $claim_allow_direct_grants) {
-                    $guest_message = __('This ticket requires event-specific account approval. Log in to continue.', 'vms');
+                    $guest_message = __('This ticket requires event-specific account approval. Log in to continue.', 'backstage-venue-manager');
                 }
                 if (function_exists('wc_add_notice')) {
                     wc_add_notice($guest_message, 'error');
@@ -9217,7 +9080,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
                 break;
             }
 
-            $buyer_eligibility = vms_ticketing_v2_resolve_claim_eligibility_for_user(
+            $buyer_eligibility = bvmgr_ticketing_v2_resolve_claim_eligibility_for_user(
                 $buyer_user_id,
                 absint($claim_context['event_id'] ?? 0),
                 $pid,
@@ -9231,7 +9094,8 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
                 $buyer_message = sanitize_text_field((string) ($buyer_eligibility['message'] ?? ''));
                 if ($buyer_message === '') {
                     $buyer_message = sprintf(
-                        __('Verification required for this ticket (%s). Submit your ID once for automatic recognition.', 'vms'),
+                        /* translators: %s: human-readable value used in this message. */
+                        __('Verification required for this ticket (%s). Submit your ID once for automatic recognition.', 'backstage-venue-manager'),
                         $claim_program_label
                     );
                 }
@@ -9249,11 +9113,11 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
                 break;
             }
 
-            $incoming_assignments = vms_ticketing_v2_claim_assignments_normalize($line['claim_assignments'] ?? array());
+            $incoming_assignments = bvmgr_ticketing_v2_claim_assignments_normalize($line['claim_assignments'] ?? array());
             $claim_event_id = absint($claim_context['event_id'] ?? 0);
             $claim_ticket_key = sanitize_key((string) ($claim_context['ticket_key'] ?? ''));
             $counts_key = ($claim_event_id > 0 ? (string) $claim_event_id : '0') . '|' . $claim_ticket_key;
-            $existing_counts = vms_ticketing_v2_cart_assignee_usage_for_event($claim_event_id, $claim_ticket_key);
+            $existing_counts = bvmgr_ticketing_v2_cart_assignee_usage_for_event($claim_event_id, $claim_ticket_key);
             if (isset($request_assignee_counts[$counts_key]) && is_array($request_assignee_counts[$counts_key])) {
                 foreach ($request_assignee_counts[$counts_key] as $email_key => $count) {
                     $email_key = strtolower(trim((string) $email_key));
@@ -9264,7 +9128,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
                 }
             }
 
-            $assignment_result = vms_ticketing_v2_validate_claim_assignments(
+            $assignment_result = bvmgr_ticketing_v2_validate_claim_assignments(
                 $pid,
                 $qty,
                 $incoming_assignments,
@@ -9278,7 +9142,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
             if (empty($assignment_result['ok'])) {
                 $assignment_message = sanitize_text_field((string) ($assignment_result['message'] ?? ''));
                 if ($assignment_message === '') {
-                    $assignment_message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'vms');
+                    $assignment_message = __('Please add one approved guest email per selected ticket before adding tickets to your cart.', 'backstage-venue-manager');
                 }
                 if (function_exists('wc_add_notice')) {
                     wc_add_notice($assignment_message, 'error');
@@ -9294,7 +9158,7 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
                 break;
             }
 
-            $validated_assignments = vms_ticketing_v2_claim_assignments_normalize($assignment_result['assignments'] ?? array());
+            $validated_assignments = bvmgr_ticketing_v2_claim_assignments_normalize($assignment_result['assignments'] ?? array());
             $cart_item_data['vms_claim_assignments'] = $validated_assignments;
             $cart_item_data['vms_claim_assignment_uid'] = function_exists('wp_generate_uuid4')
                 ? wp_generate_uuid4()
@@ -9321,10 +9185,10 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         $added_tickets += $qty;
     }
 
-    $GLOBALS['vms_ticketing_v2_atomic_add_in_progress'] = false;
+    $GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'] = false;
 
     if (empty($errors) && $event_plan_id > 0) {
-        $ratio_violations = vms_ticketing_v2_collect_ticket_ratio_violations((int) $event_plan_id);
+        $ratio_violations = bvmgr_ticketing_v2_collect_ticket_ratio_violations((int) $event_plan_id);
         foreach ($ratio_violations as $ratio_violation) {
             $ratio_message = sanitize_text_field((string) ($ratio_violation['message'] ?? ''));
             if ($ratio_message !== '') {
@@ -9351,11 +9215,11 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
                 $errors[] = array('line' => $idx, 'type' => 'addon', 'code' => 'invalid_addon_line');
                 break;
             }
-            if (!vms_ticketing_v2_product_is_entitlement($pid)) {
+            if (!bvmgr_ticketing_v2_product_is_entitlement($pid)) {
                 $errors[] = array('line' => $idx, 'type' => 'addon', 'product_id' => $pid, 'code' => 'not_entitlement');
                 break;
             }
-            $sale_context = vms_ticketing_v2_validate_product_sale_context($pid, $event_plan_id, $tec_event_id, 'entitlement');
+            $sale_context = bvmgr_ticketing_v2_validate_product_sale_context($pid, $event_plan_id, $tec_event_id, 'entitlement');
             if (empty($sale_context['ok'])) {
                 $sale_message = sanitize_text_field((string) ($sale_context['message'] ?? ''));
                 if ($sale_message !== '' && function_exists('wc_add_notice')) {
@@ -9381,17 +9245,17 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
         }
     }
 
-    $notice_messages = vms_ticketing_v2_atomic_error_notices();
+    $notice_messages = bvmgr_ticketing_v2_atomic_error_notices();
     if (!empty($errors) || !empty($notice_messages)) {
-        vms_ticketing_v2_atomic_rollback_added_items($added_keys);
-        vms_ticketing_v2_clear_success_notices();
+        bvmgr_ticketing_v2_atomic_rollback_added_items($added_keys);
+        bvmgr_ticketing_v2_clear_success_notices();
         $message = !empty($notice_messages)
             ? (string) $notice_messages[0]
-            : __('Could not add all selected items to cart. Please review your selection and try again.', 'vms');
+            : __('Could not add all selected items to cart. Please review your selection and try again.', 'backstage-venue-manager');
         if (function_exists('wc_clear_notices')) {
             wc_clear_notices();
         }
-        wp_send_json_error(array(
+        bvmgr_ticketing_v2_ajax_send_error(array(
             'ok' => false,
             'message' => $message,
             'errors' => $errors,
@@ -9400,12 +9264,12 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
     }
 
     $wc->cart->calculate_totals();
-    vms_ticketing_v2_clear_success_notices();
+    bvmgr_ticketing_v2_clear_success_notices();
     if (function_exists('wc_clear_notices')) {
         wc_clear_notices();
     }
 
-    wp_send_json_success(array(
+    bvmgr_ticketing_v2_ajax_send_success(array(
         'ok' => true,
         'cart_url' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
         'added_tickets' => $added_tickets,
@@ -9419,31 +9283,37 @@ function vms_ticketing_v2_ajax_atomic_add_to_cart(): void
  * Silent add endpoint used by the front-end reserved add-ons helper.
  * Adds entitlement products to cart without generating Woo “added to cart” notices.
  */
-function vms_ticketing_v2_ajax_silent_add(): void
+function bvmgr_ticketing_v2_ajax_silent_add(): void
 {
     if (!function_exists('wp_send_json_error') || !function_exists('WC')) {
         status_header(400);
         exit;
     }
 
-    // Prefer JSON payload; fall back to POST fields.
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw ?: '', true);
+    $request_payload = bvmgr_ticketing_v2_read_json_request_payload(65536);
+    if (empty($request_payload['ok'])) {
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
+    }
+
+    $data = $request_payload['present'] ? $request_payload['payload'] : null;
     if (!is_array($data)) {
-        $data = $_POST;
+        $data = bvmgr_ticketing_v2_read_form_request_payload($_POST); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Silent-add form fallback preserves the existing optional nonce contract and only normalizes payload shape before cart validation.
+    }
+    if (!is_array($data) || !bvmgr_ticketing_v2_validate_silent_add_payload($data)) {
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'invalid_payload'), 400);
     }
 
     // Nonce may arrive via query string, form POST, or JSON payload.
     $nonce = '';
-    if (isset($data['nonce'])) {
+    if (isset($data['nonce']) && !is_array($data['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $data['nonce']));
-    } elseif (isset($_REQUEST['nonce'])) {
+    } elseif (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash($_REQUEST['nonce']));
     }
 
     // If a nonce is provided, validate it. (We don’t hard-require one to avoid caching edge cases.)
-    if ($nonce !== '' && !wp_verify_nonce($nonce, 'vms_ticketing_v2_silent_add')) {
-        wp_send_json_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
+    if ($nonce !== '' && !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_v2_silent_add'))) {
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
     $tec_event_id = absint($data['tec_event_id'] ?? 0);
@@ -9452,7 +9322,7 @@ function vms_ticketing_v2_ajax_silent_add(): void
     $items = $data['items'] ?? array();
 
     if (!is_array($items) || empty($items)) {
-        wp_send_json_success(array('ok' => true, 'added' => 0));
+        bvmgr_ticketing_v2_ajax_send_success(array('ok' => true, 'added' => 0));
     }
 
     if (function_exists('wc_load_cart')) {
@@ -9461,30 +9331,30 @@ function vms_ticketing_v2_ajax_silent_add(): void
 
     $wc = WC();
     if (!$wc || !isset($wc->cart) || !$wc->cart) {
-        wp_send_json_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
     }
 
     // Clear stale success notices but keep validation/error notices intact.
-    vms_ticketing_v2_clear_success_notices();
+    bvmgr_ticketing_v2_clear_success_notices();
 
     $hint_plan_id = $event_plan_id;
-    if ($hint_plan_id <= 0 && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $hint_plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+    if ($hint_plan_id <= 0 && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $hint_plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
     }
     $seeded_hint_plan_id = 0;
     if ($hint_plan_id > 0 && $ga_qty_hint > 0) {
-        vms_ticketing_v2_session_seed_ga_hint($hint_plan_id, $ga_qty_hint, 'silent_add_payload');
+        bvmgr_ticketing_v2_session_seed_ga_hint($hint_plan_id, $ga_qty_hint, 'silent_add_payload');
         $seeded_hint_plan_id = $hint_plan_id;
     }
 
     if ($hint_plan_id > 0 || $tec_event_id > 0) {
-        $event_validation = vms_ticketing_v2_validate_product_sale_context(0, $hint_plan_id, $tec_event_id, 'entitlement');
+        $event_validation = bvmgr_ticketing_v2_validate_product_sale_context(0, $hint_plan_id, $tec_event_id, 'entitlement');
         if (empty($event_validation['ok'])) {
             if ($seeded_hint_plan_id > 0) {
-                vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
+                bvmgr_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
             }
-            vms_ticketing_v2_clear_success_notices();
-            wp_send_json_error(array(
+            bvmgr_ticketing_v2_clear_success_notices();
+            bvmgr_ticketing_v2_ajax_send_error(array(
                 'ok' => false,
                 'message' => sanitize_text_field((string) ($event_validation['code'] ?? 'event_unavailable')),
                 'notice_message' => sanitize_text_field((string) ($event_validation['message'] ?? '')),
@@ -9495,12 +9365,12 @@ function vms_ticketing_v2_ajax_silent_add(): void
     }
 
     // Respect per-event ticketing override (when turned off, no add-ons can be added).
-    if ($hint_plan_id > 0 && function_exists('vms_event_plan_is_ticketing_enabled') && !vms_event_plan_is_ticketing_enabled($hint_plan_id)) {
+    if ($hint_plan_id > 0 && function_exists('bvmgr_event_plan_is_ticketing_enabled') && !bvmgr_event_plan_is_ticketing_enabled($hint_plan_id)) {
         if ($seeded_hint_plan_id > 0) {
-            vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
+            bvmgr_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
         }
-        vms_ticketing_v2_clear_success_notices();
-        wp_send_json_error(array('ok' => false, 'message' => 'ticketing_disabled'), 403);
+        bvmgr_ticketing_v2_clear_success_notices();
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'ticketing_disabled'), 403);
     }
 
     $added = 0;
@@ -9519,12 +9389,12 @@ function vms_ticketing_v2_ajax_silent_add(): void
             continue;
         }
 
-        if (!vms_ticketing_v2_product_is_entitlement($pid)) {
+        if (!bvmgr_ticketing_v2_product_is_entitlement($pid)) {
             $errors[] = array('productId' => $pid, 'code' => 'not_entitlement');
             continue;
         }
 
-        $sale_context = vms_ticketing_v2_validate_product_sale_context($pid, $hint_plan_id, $tec_event_id, 'entitlement');
+        $sale_context = bvmgr_ticketing_v2_validate_product_sale_context($pid, $hint_plan_id, $tec_event_id, 'entitlement');
         if (empty($sale_context['ok'])) {
             $errors[] = array(
                 'productId' => $pid,
@@ -9546,28 +9416,28 @@ function vms_ticketing_v2_ajax_silent_add(): void
     if (!empty($errors)) {
         // Preserve validation/error notices, but drop success notices from partial adds.
         if ($seeded_hint_plan_id > 0) {
-            vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
+            bvmgr_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
         }
-        vms_ticketing_v2_clear_success_notices();
-        wp_send_json_error(array('ok' => false, 'message' => 'add_failed', 'errors' => $errors), 400);
+        bvmgr_ticketing_v2_clear_success_notices();
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'add_failed', 'errors' => $errors), 400);
     }
 
     $wc->cart->calculate_totals();
 
     // Ensure no success notices were queued.
-    vms_ticketing_v2_clear_success_notices();
+    bvmgr_ticketing_v2_clear_success_notices();
     if ($seeded_hint_plan_id > 0) {
-        vms_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
+        bvmgr_ticketing_v2_session_clear_ga_hint($seeded_hint_plan_id);
     }
 
-    wp_send_json_success(array('ok' => true, 'added' => $added));
+    bvmgr_ticketing_v2_ajax_send_success(array('ok' => true, 'added' => $added));
 }
 
 /**
  * Session-accurate cart context endpoint for front-end unlock state refresh.
  * Useful when cached event HTML carries stale data-vms-cart-ga-qty markers.
  */
-function vms_ticketing_v2_ajax_cart_context(): void
+function bvmgr_ticketing_v2_ajax_cart_context(): void
 {
     if (!function_exists('wp_send_json_error') || !function_exists('WC')) {
         status_header(400);
@@ -9578,15 +9448,15 @@ function vms_ticketing_v2_ajax_cart_context(): void
     $tec_event_id = absint($_REQUEST['tec_event_id'] ?? 0);
 
     $nonce = '';
-    if (isset($_REQUEST['nonce'])) {
+    if (isset($_REQUEST['nonce']) && !is_array($_REQUEST['nonce'])) {
         $nonce = sanitize_text_field(wp_unslash((string) $_REQUEST['nonce']));
     }
-    if ($nonce !== '' && !wp_verify_nonce($nonce, 'vms_ticketing_v2_cart_context')) {
-        wp_send_json_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
+    if ($nonce !== '' && !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_ticketing_v2_cart_context'))) {
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'bad_nonce'), 403);
     }
 
-    if ($plan_id <= 0 && $tec_event_id > 0 && function_exists('vms_ticketing_v2_find_plan_id_by_tec_event_id')) {
-        $plan_id = absint(vms_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
+    if ($plan_id <= 0 && $tec_event_id > 0 && function_exists('bvmgr_ticketing_v2_find_plan_id_by_tec_event_id')) {
+        $plan_id = absint(bvmgr_ticketing_v2_find_plan_id_by_tec_event_id($tec_event_id));
     }
 
     if (function_exists('wc_load_cart')) {
@@ -9595,36 +9465,36 @@ function vms_ticketing_v2_ajax_cart_context(): void
 
     $wc = WC();
     if (!$wc || !isset($wc->cart) || !$wc->cart) {
-        wp_send_json_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
+        bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'cart_unavailable'), 400);
     }
 
-    $scan = vms_ticketing_v2_cart_scan();
+    $scan = bvmgr_ticketing_v2_cart_scan();
     $ga_qty_raw = 0;
     if ($plan_id > 0 && isset($scan['ga_qty_by_plan']) && is_array($scan['ga_qty_by_plan'])) {
         $ga_qty_raw = absint($scan['ga_qty_by_plan'][$plan_id] ?? 0);
     }
-    $ga_qty = ($plan_id > 0) ? vms_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw) : $ga_qty_raw;
+    $ga_qty = ($plan_id > 0) ? bvmgr_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw) : $ga_qty_raw;
     $cfg = array();
-    if ($plan_id > 0 && function_exists('vms_ticketing_v2_get_config')) {
-        $cfg = vms_ticketing_v2_get_config($plan_id);
+    if ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_get_config')) {
+        $cfg = bvmgr_ticketing_v2_get_config($plan_id);
     }
-    $prior_history = ($plan_id > 0 && function_exists('vms_ticketing_v2_prior_addon_history_for_plan'))
-        ? vms_ticketing_v2_prior_addon_history_for_plan($plan_id, is_array($cfg) ? $cfg : array())
+    $prior_history = ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_prior_addon_history_for_plan'))
+        ? bvmgr_ticketing_v2_prior_addon_history_for_plan($plan_id, is_array($cfg) ? $cfg : array())
         : array('qualifying_qty' => 0, 'pool_qty_by_key' => array());
     $prior_qualifying_qty = max(0, absint($prior_history['qualifying_qty'] ?? 0));
     $prior_pool_qty_by_key = (isset($prior_history['pool_qty_by_key']) && is_array($prior_history['pool_qty_by_key']))
         ? $prior_history['pool_qty_by_key']
         : array();
-    $pool_qty_by_key = ($plan_id > 0 && function_exists('vms_ticketing_v2_cart_pool_qty_by_key_for_plan'))
-        ? vms_ticketing_v2_cart_pool_qty_by_key_for_plan($plan_id, is_array($cfg) ? $cfg : array())
+    $pool_qty_by_key = ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_cart_pool_qty_by_key_for_plan'))
+        ? bvmgr_ticketing_v2_cart_pool_qty_by_key_for_plan($plan_id, is_array($cfg) ? $cfg : array())
         : array();
 
     $has_vms_cart_items = !empty($scan['ticket_lines']) || !empty($scan['ent_lines']);
     $checkout_blocker_messages = $has_vms_cart_items
-        ? vms_ticketing_v2_capture_checkout_blocker_error_messages()
+        ? bvmgr_ticketing_v2_capture_checkout_blocker_error_messages()
         : array();
 
-    wp_send_json_success(array(
+    bvmgr_ticketing_v2_ajax_send_success(array(
         'ok' => true,
         'event_plan_id' => $plan_id,
         'tec_event_id' => $tec_event_id,

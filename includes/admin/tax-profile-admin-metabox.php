@@ -14,8 +14,8 @@ add_action('add_meta_boxes', function () {
     foreach ($screens as $screen) {
         add_meta_box(
             'vms_tax_profile_admin_box',
-            __('Tax Profile (Admin)', 'vms'),
-            'vms_render_tax_profile_admin_metabox',
+            __('Tax Profile (Admin)', 'backstage-venue-manager'),
+            'bvmgr_render_tax_profile_admin_metabox',
             $screen,
             'normal',
             'default' 
@@ -32,18 +32,18 @@ add_action('save_post', function ($post_id, $post) {
     if (wp_is_post_revision($post_id)) return;
     if (!current_user_can('edit_post', $post_id)) return;
 
-    if (
-        empty($_POST['vms_tax_admin_nonce']) ||
-        !wp_verify_nonce($_POST['vms_tax_admin_nonce'], 'vms_tax_admin_save')
-    ) {
+    $nonce = (isset($_POST['bvmgr_tax_admin_nonce']) && !is_array($_POST['bvmgr_tax_admin_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_tax_admin_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tax_admin_save'))) {
         return;
     }
 
     // Staff employees use the Employee Packet workflow; do not save W-9 fields here.
     if ($post->post_type === 'vms_staff') {
-        $wt = function_exists('vms_staff_get_worker_type') ? (string) vms_staff_get_worker_type((int) $post_id) : '';
+        $wt = function_exists('bvmgr_staff_get_worker_type') ? (string) bvmgr_staff_get_worker_type((int) $post_id) : '';
         if ($wt === '') {
-            $k_wt = function_exists('vms_meta_key') ? (string) vms_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
+            $k_wt = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('staff', 'worker_type') : '_vms_staff_worker_type';
             if ($k_wt === '') $k_wt = '_vms_staff_worker_type';
             $wt = sanitize_key((string) get_post_meta((int) $post_id, $k_wt, true));
         }
@@ -53,13 +53,14 @@ add_action('save_post', function ($post_id, $post) {
     }
 
     $t = function ($key) {
-        return isset($_POST[$key]) ? sanitize_text_field(wp_unslash($_POST[$key])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- This save handler verifies vms_tax_admin_save before reading tax-profile fields.
+        return bvmgr_request_read_text_field($_POST, (string) $key);
     };
     $k = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 
@@ -72,6 +73,7 @@ add_action('save_post', function ($post_id, $post) {
     $k_state       = $k('state', '_vms_state');
     $k_zip         = $k('zip', '_vms_zip');
     $k_w9_upload   = $k('w9_upload_id', '_vms_w9_upload_id');
+    $k_w9_upload_kind = function_exists('bvmgr_private_w9_storage_kind_meta_key') ? bvmgr_private_w9_storage_kind_meta_key() : '_vms_w9_upload_storage_kind';
     $k_w9_recv     = $k('w9_received_date', '_vms_w9_received_date');
     $k_done        = $k('tax_profile_completed_at', '_vms_tax_profile_completed_at');
 
@@ -99,30 +101,26 @@ add_action('save_post', function ($post_id, $post) {
     update_post_meta($post_id, $k_zip,   $zip);
 
     // Handle W-9 upload from admin screen
-    if (!empty($_FILES['vms_w9_upload']['name'])) {
-        if (!function_exists('media_handle_upload')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-            require_once ABSPATH . 'wp-admin/includes/media.php';
-            require_once ABSPATH . 'wp-admin/includes/image.php';
-        }
+    if (bvmgr_upload_request_has_file($_FILES, 'vms_w9_upload')) {
+        $previous_upload_id = (int) get_post_meta($post_id, $k_w9_upload, true);
+        $previous_kind = sanitize_key((string) get_post_meta($post_id, $k_w9_upload_kind, true));
+        $file_id = function_exists('bvmgr_private_w9_store_upload')
+            ? bvmgr_private_w9_store_upload((int) $post_id, $_FILES)
+            : new WP_Error('w9_upload_unavailable', __('The W-9 upload handler is unavailable.', 'backstage-venue-manager'));
 
-        $allowed = array('application/pdf', 'image/jpeg', 'image/png', 'image/webp');
-        $type = isset($_FILES['vms_w9_upload']['type']) ? (string) $_FILES['vms_w9_upload']['type'] : '';
-
-        if ($type && !in_array($type, $allowed, true)) {
-            // No hard fail here; just skip. (Could add admin notice later.)
-        } else {
-            $attach_id = media_handle_upload('vms_w9_upload', 0);
-            if (!is_wp_error($attach_id)) {
-                update_post_meta($post_id, $k_w9_upload, (int) $attach_id);
-                update_post_meta($post_id, $k_w9_recv, date('Y-m-d'));
+        if (!is_wp_error($file_id)) {
+            update_post_meta($post_id, $k_w9_upload, (int) $file_id);
+            update_post_meta($post_id, $k_w9_upload_kind, 'private_file');
+            update_post_meta($post_id, $k_w9_recv, wp_date('Y-m-d', time(), wp_timezone()));
+            if ($previous_kind === 'private_file' && $previous_upload_id > 0 && $previous_upload_id !== (int) $file_id && function_exists('bvmgr_private_files_delete')) {
+                bvmgr_private_files_delete($previous_upload_id);
             }
         }
     }
 
     // Completion stamp (optional)
-    if (function_exists('vms_vendor_tax_profile_is_complete')) {
-        if (vms_vendor_tax_profile_is_complete((int)$post_id)) {
+    if (function_exists('bvmgr_vendor_tax_profile_is_complete')) {
+        if (bvmgr_vendor_tax_profile_is_complete((int)$post_id)) {
             if (!(int) get_post_meta($post_id, $k_done, true)) {
                 update_post_meta($post_id, $k_done, time());
             }
@@ -131,14 +129,14 @@ add_action('save_post', function ($post_id, $post) {
 
 }, 20, 2);
 
-function vms_render_tax_profile_admin_metabox($post)
+function bvmgr_render_tax_profile_admin_metabox($post)
 {
     $id = (int) $post->ID;
     $is_staff_employee = false;
     if (($post instanceof WP_Post) && $post->post_type === "vms_staff") {
-        $wt = function_exists("vms_staff_get_worker_type") ? (string) vms_staff_get_worker_type($id) : "";
+        $wt = function_exists("bvmgr_staff_get_worker_type") ? (string) bvmgr_staff_get_worker_type($id) : "";
         if ($wt === "") {
-            $k_wt = function_exists("vms_meta_key") ? (string) vms_meta_key("staff", "worker_type") : "_vms_staff_worker_type";
+            $k_wt = function_exists("bvmgr_meta_key") ? (string) bvmgr_meta_key("staff", "worker_type") : "_vms_staff_worker_type";
             if ($k_wt === "") $k_wt = "_vms_staff_worker_type";
             $wt = sanitize_key((string) get_post_meta($id, $k_wt, true));
         }
@@ -146,10 +144,10 @@ function vms_render_tax_profile_admin_metabox($post)
     }
 
     $k = function ($field, $fallback) {
-        if (!function_exists('vms_meta_key')) {
+        if (!function_exists('bvmgr_meta_key')) {
             return $fallback;
         }
-        $mapped = (string) vms_meta_key('vendor', $field);
+        $mapped = (string) bvmgr_meta_key('vendor', $field);
         return ($mapped !== '') ? $mapped : $fallback;
     };
 
@@ -169,33 +167,33 @@ function vms_render_tax_profile_admin_metabox($post)
     $zip   = $m($k('zip', '_vms_zip'));
 
     $w9_upload_id = (int) $m($k('w9_upload_id', '_vms_w9_upload_id'), 0);
-    $w9_url = $w9_upload_id ? wp_get_attachment_url($w9_upload_id) : '';
-    $w9_label = $w9_upload_id ? get_the_title($w9_upload_id) : '';
+    $w9_url = $w9_upload_id && function_exists('bvmgr_private_w9_download_url') ? bvmgr_private_w9_download_url($id) : '';
+    $w9_label = $w9_upload_id && function_exists('bvmgr_private_w9_file_label') ? bvmgr_private_w9_file_label($id) : '';
 
-    $is_complete = function_exists('vms_vendor_tax_profile_is_complete')
-        ? vms_vendor_tax_profile_is_complete($id)
+    $is_complete = function_exists('bvmgr_vendor_tax_profile_is_complete')
+        ? bvmgr_vendor_tax_profile_is_complete($id)
         : false;
 
     // Staff employee: show employee packet status instead of W-9 tax profile UI.
     if ($is_staff_employee) {
-        $missing_emp = function_exists('vms_staff_employee_packet_missing_items')
-            ? (array) vms_staff_employee_packet_missing_items($id)
-            : array(__('W-4 received', 'vms'), __('I-9 verified', 'vms'));
+        $missing_emp = function_exists('bvmgr_staff_employee_packet_missing_items')
+            ? (array) bvmgr_staff_employee_packet_missing_items($id)
+            : array(__('W-4 received', 'backstage-venue-manager'), __('I-9 verified', 'backstage-venue-manager'));
 
         $emp_complete = empty($missing_emp);
 
         echo '<p class="vms-tax-profile-status">';
         echo $emp_complete
-            ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Employee packet complete', 'vms') . '</span>'
-            : '<span class="vms-badge vms-badge-miss">' . esc_html__('Employee packet incomplete', 'vms') . '</span>';
+            ? '<span class="vms-badge vms-badge-ok">' . esc_html__('Employee packet complete', 'backstage-venue-manager') . '</span>'
+            : '<span class="vms-badge vms-badge-miss">' . esc_html__('Employee packet incomplete', 'backstage-venue-manager') . '</span>';
         echo '</p>';
 
-        echo '<div class="vms-note"><strong>' . esc_html__('W-2 employee:', 'vms') . '</strong> ' .
-            esc_html__('Use the Employee Packet checklist in the sidebar (W-4 + I-9). No SSN is entered into WordPress.', 'vms') .
+        echo '<div class="vms-note"><strong>' . esc_html__('W-2 employee:', 'backstage-venue-manager') . '</strong> ' .
+            esc_html__('Use the Employee Packet checklist in the sidebar (W-4 + I-9). No SSN is entered into WordPress.', 'backstage-venue-manager') .
             '</div>';
 
         if (!$emp_complete) {
-            echo '<p class="description">' . esc_html__('Missing required items:', 'vms') . '</p>';
+            echo '<p class="description">' . esc_html__('Missing required items:', 'backstage-venue-manager') . '</p>';
             echo '<ul class="vms-missing">';
             foreach ($missing_emp as $m) {
                 echo '<li>' . esc_html((string) $m) . '</li>';
@@ -207,25 +205,25 @@ function vms_render_tax_profile_admin_metabox($post)
 
 
     $entity_types = [
-        ''            => __('— Select —', 'vms'),
-        'individual'  => __('Individual / Sole Proprietor', 'vms'),
-        'single_llc'  => __('Single-member LLC', 'vms'),
-        'llc'         => __('LLC (multi-member)', 'vms'),
-        'partnership' => __('Partnership', 'vms'),
-        's_corp'      => __('S-Corp', 'vms'),
-        'c_corp'      => __('C-Corp', 'vms'),
-        'nonprofit'   => __('Nonprofit / Exempt', 'vms'),
-        'other'       => __('Other', 'vms'),
+        ''            => __('— Select —', 'backstage-venue-manager'),
+        'individual'  => __('Individual / Sole Proprietor', 'backstage-venue-manager'),
+        'single_llc'  => __('Single-member LLC', 'backstage-venue-manager'),
+        'llc'         => __('LLC (multi-member)', 'backstage-venue-manager'),
+        'partnership' => __('Partnership', 'backstage-venue-manager'),
+        's_corp'      => __('S-Corp', 'backstage-venue-manager'),
+        'c_corp'      => __('C-Corp', 'backstage-venue-manager'),
+        'nonprofit'   => __('Nonprofit / Exempt', 'backstage-venue-manager'),
+        'other'       => __('Other', 'backstage-venue-manager'),
     ];
 
-    wp_nonce_field('vms_tax_admin_save', 'vms_tax_admin_nonce');
+    wp_nonce_field('bvmgr_tax_admin_save', 'bvmgr_tax_admin_nonce');
 
-    $provider = function_exists('vms_tax_settings_get_provider') ? (string) vms_tax_settings_get_provider() : 'upload';
+    $provider = function_exists('bvmgr_tax_settings_get_provider') ? (string) bvmgr_tax_settings_get_provider() : 'upload';
     if (!in_array($provider, array('upload', 'quickbooks_email', 'tax1099_email'), true)) {
         $provider = 'upload';
     }
-    $provider_label = function_exists('vms_tax_provider_label')
-        ? (string) vms_tax_provider_label($provider)
+    $provider_label = function_exists('bvmgr_tax_provider_label')
+        ? (string) bvmgr_tax_provider_label($provider)
         : (($provider === 'quickbooks_email') ? 'QuickBooks Online' : (($provider === 'tax1099_email') ? 'Tax1099' : 'Upload'));
 
     $k_attest = $k('w9_attested_at', '_vms_w9_external_vendor_attested_at');
@@ -237,41 +235,41 @@ function vms_render_tax_profile_admin_metabox($post)
 
     echo '<p class="vms-tax-profile-status">';
     if ($is_complete) {
-        echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-ok">' . esc_html__('Complete', 'backstage-venue-manager') . '</span>';
     } elseif ($provider !== 'upload' && $attested_at > 0) {
-        echo '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-warn">' . esc_html__('Submitted', 'backstage-venue-manager') . '</span>';
     } else {
-        echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'vms') . '</span>';
+        echo '<span class="vms-badge vms-badge-miss">' . esc_html__('Incomplete', 'backstage-venue-manager') . '</span>';
     }
     echo '</p>';
 
-    echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'vms') . '</strong> ' . esc_html($provider_label) . '</div>';
-    echo '<div class="vms-note"><strong>' . esc_html__('Privacy note:', 'vms') . '</strong> ' .
-        esc_html__('Do NOT type SSN/EIN into WordPress.', 'vms') .
+    echo '<div class="vms-note"><strong>' . esc_html__('Active W-9 source of truth:', 'backstage-venue-manager') . '</strong> ' . esc_html($provider_label) . '</div>';
+    echo '<div class="vms-note"><strong>' . esc_html__('Privacy note:', 'backstage-venue-manager') . '</strong> ' .
+        esc_html__('Do NOT type SSN/EIN into WordPress.', 'backstage-venue-manager') .
         '</div>';
 
     if ($provider !== 'upload') {
-        echo '<p class="description">' . esc_html__('This record uses the secure off-site workflow as the W-9 source of truth. Use the Tax Profile Status box in the sidebar to confirm or clear admin completion without using the temporary bypass.', 'vms') . '</p>';
+        echo '<p class="description">' . esc_html__('This record uses the secure off-site workflow as the W-9 source of truth. Use the Tax Profile Status box in the sidebar to confirm or clear admin completion without using the temporary bypass.', 'backstage-venue-manager') . '</p>';
         if ($attested_at > 0 && $done_at <= 0) {
-            echo '<p class="description">' . esc_html__('Staff/vendor has already indicated they completed the off-site step and is waiting on admin confirmation.', 'vms') . '</p>';
+            echo '<p class="description">' . esc_html__('Staff/vendor has already indicated they completed the off-site step and is waiting on admin confirmation.', 'backstage-venue-manager') . '</p>';
         }
     }
 
-    echo '<h3 class="vms-tax-profile-subhead vms-tax-profile-subhead-first">' . esc_html__('Payee & Entity', 'vms') . '</h3>';
+    echo '<h3 class="vms-tax-profile-subhead vms-tax-profile-subhead-first">' . esc_html__('Payee & Entity', 'backstage-venue-manager') . '</h3>';
 
     echo '<div class="vms-grid">';
     echo '<div class="vms-field vms-tax-profile-field-full">';
-    echo '<label for="vms_payee_legal_name">' . esc_html__('Legal / Payee Name (as on W-9)', 'vms') . '</label>';
+    echo '<label for="vms_payee_legal_name">' . esc_html__('Legal / Payee Name (as on W-9)', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_payee_legal_name" name="vms_payee_legal_name" value="' . esc_attr($payee_legal) . '" required>';
     echo '</div>';
 
     echo '<div class="vms-field vms-tax-profile-field-full">';
-    echo '<label for="vms_payee_dba">' . esc_html__('Business Name / DBA (optional)', 'vms') . '</label>';
+    echo '<label for="vms_payee_dba">' . esc_html__('Business Name / DBA (optional)', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_payee_dba" name="vms_payee_dba" value="' . esc_attr($dba) . '">';
     echo '</div>';
 
     echo '<div class="vms-field">';
-    echo '<label for="vms_entity_type">' . esc_html__('Entity Type', 'vms') . '</label>';
+    echo '<label for="vms_entity_type">' . esc_html__('Entity Type', 'backstage-venue-manager') . '</label>';
     echo '<select id="vms_entity_type" name="vms_entity_type" required>';
     foreach ($entity_types as $k => $label) {
         echo '<option value="' . esc_attr($k) . '" ' . selected($entity, $k, false) . '>' . esc_html($label) . '</option>';
@@ -280,66 +278,66 @@ function vms_render_tax_profile_admin_metabox($post)
     echo '</div>';
     echo '</div>';
 
-    echo '<h3 class="vms-tax-profile-subhead">' . esc_html__('Mailing Address', 'vms') . '</h3>';
+    echo '<h3 class="vms-tax-profile-subhead">' . esc_html__('Mailing Address', 'backstage-venue-manager') . '</h3>';
 
     echo '<div class="vms-grid">';
     echo '<div class="vms-field vms-tax-profile-field-full">';
-    echo '<label for="vms_addr1">' . esc_html__('Address Line 1', 'vms') . '</label>';
+    echo '<label for="vms_addr1">' . esc_html__('Address Line 1', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_addr1" name="vms_addr1" value="' . esc_attr($addr1) . '" required>';
     echo '</div>';
 
     echo '<div class="vms-field vms-tax-profile-field-full">';
-    echo '<label for="vms_addr2">' . esc_html__('Address Line 2 (optional)', 'vms') . '</label>';
+    echo '<label for="vms_addr2">' . esc_html__('Address Line 2 (optional)', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_addr2" name="vms_addr2" value="' . esc_attr($addr2) . '">';
     echo '</div>';
 
     echo '<div class="vms-field">';
-    echo '<label for="vms_city">' . esc_html__('City', 'vms') . '</label>';
+    echo '<label for="vms_city">' . esc_html__('City', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_city" name="vms_city" value="' . esc_attr($city) . '" required>';
     echo '</div>';
 
     echo '<div class="vms-field">';
-    echo '<label for="vms_state">' . esc_html__('State', 'vms') . '</label>';
+    echo '<label for="vms_state">' . esc_html__('State', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_state" name="vms_state" value="' . esc_attr($state) . '" maxlength="2" placeholder="TX" required>';
     echo '</div>';
 
     echo '<div class="vms-field">';
-    echo '<label for="vms_zip">' . esc_html__('ZIP', 'vms') . '</label>';
+    echo '<label for="vms_zip">' . esc_html__('ZIP', 'backstage-venue-manager') . '</label>';
     echo '<input type="text" id="vms_zip" name="vms_zip" value="' . esc_attr($zip) . '" required>';
     echo '</div>';
     echo '</div>';
 
-    echo '<h3 class="vms-tax-profile-subhead">' . esc_html__('W-9', 'vms') . ' (' . esc_html($provider_label) . ')</h3>';
+    echo '<h3 class="vms-tax-profile-subhead">' . esc_html__('W-9', 'backstage-venue-manager') . ' (' . esc_html($provider_label) . ')</h3>';
 
     if ($w9_upload_id > 0 && $w9_url) {
         echo '<p class="description vms-tax-profile-upload-note">' .
-            esc_html__('On file:', 'vms') . ' <a href="' . esc_url($w9_url) . '" target="_blank" rel="noopener">' .
-            esc_html($w9_label ? $w9_label : __('View uploaded W-9', 'vms')) .
+            esc_html__('On file:', 'backstage-venue-manager') . ' <a href="' . esc_url($w9_url) . '" target="_blank" rel="noopener">' .
+            esc_html($w9_label ? $w9_label : __('View uploaded W-9', 'backstage-venue-manager')) .
             '</a></p>';
     }
 
     if ($provider === 'upload') {
         if (!($w9_upload_id > 0 && $w9_url)) {
             echo '<p class="description vms-tax-profile-upload-note">' .
-                esc_html__('No W-9 uploaded yet. Upload a signed W-9 PDF/image.', 'vms') .
+                esc_html__('No W-9 uploaded yet. Upload a signed W-9 PDF/image.', 'backstage-venue-manager') .
                 '</p>';
         }
         echo '<p class="vms-tax-profile-upload-field">';
         echo '<input type="file" name="vms_w9_upload" accept="application/pdf,image/jpeg,image/png,image/webp">';
-        echo '<div class="vms-help">' . esc_html__('Accepted: PDF, JPG, PNG, WEBP.', 'vms') . '</div>';
+        echo '<div class="vms-help">' . esc_html__('Accepted: PDF, JPG, PNG, WEBP.', 'backstage-venue-manager') . '</div>';
         echo '</p>';
     } else {
-        echo '<p class="description">' . esc_html__('Primary workflow is off-site. Uploading a file here is optional and is not the source of truth for this mode.', 'vms') . '</p>';
+        echo '<p class="description">' . esc_html__('Primary workflow is off-site. Uploading a file here is optional and is not the source of truth for this mode.', 'backstage-venue-manager') . '</p>';
         if ($attested_at > 0) {
-            echo '<p class="description">' . esc_html__('Portal confirmation recorded:', 'vms') . ' ' . esc_html(wp_date('M j, Y g:ia', $attested_at, wp_timezone())) . '</p>';
+            echo '<p class="description">' . esc_html__('Portal confirmation recorded:', 'backstage-venue-manager') . ' ' . esc_html(wp_date('M j, Y g:ia', $attested_at, wp_timezone())) . '</p>';
         }
         if ($done_at > 0) {
-            echo '<p class="description">' . esc_html__('Completion recorded:', 'vms') . ' ' . esc_html(wp_date('M j, Y g:ia', $done_at, wp_timezone())) . '</p>';
+            echo '<p class="description">' . esc_html__('Completion recorded:', 'backstage-venue-manager') . ' ' . esc_html(wp_date('M j, Y g:ia', $done_at, wp_timezone())) . '</p>';
         }
     }
 
     echo '<p class="description">' .
-        esc_html__('Save/Update the post to store changes.', 'vms') .
+        esc_html__('Save/Update the post to store changes.', 'backstage-venue-manager') .
         '</p>';
     echo '</div>';
 }

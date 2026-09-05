@@ -1,20 +1,20 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_status_notice_post_type')) {
-	function vms_status_notice_post_type(): string
+if (!function_exists('bvmgr_status_notice_post_type')) {
+	function bvmgr_status_notice_post_type(): string
 	{
 		return 'vms_notice';
 	}
 }
 
-if (!function_exists('vms_status_notice_register_cpt')) {
-	function vms_status_notice_register_cpt(): void
+if (!function_exists('bvmgr_status_notice_register_cpt')) {
+	function bvmgr_status_notice_register_cpt(): void
 	{
-		register_post_type(vms_status_notice_post_type(), array(
+		register_post_type(bvmgr_status_notice_post_type(), array(
 			'labels' => array(
-				'name' => __('Status Notices', 'vms'),
-				'singular_name' => __('Status Notice', 'vms'),
+				'name' => __('Status Notices', 'backstage-venue-manager'),
+				'singular_name' => __('Status Notice', 'backstage-venue-manager'),
 			),
 			'public' => false,
 			'show_ui' => false,
@@ -26,4 +26,4 @@ if (!function_exists('vms_status_notice_register_cpt')) {
 		));
 	}
 }
-add_action('init', 'vms_status_notice_register_cpt', 9);
+add_action('init', 'bvmgr_status_notice_register_cpt', 9);

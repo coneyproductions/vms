@@ -1,5 +1,5 @@
 (() => {
-  if (window.VmsImageNormalize) {
+  if (window.BVMGR_IMAGE_NORMALIZE) {
     return;
   }
 
@@ -155,7 +155,7 @@
     }
   }
 
-  window.VmsImageNormalize = {
+  window.BVMGR_IMAGE_NORMALIZE = {
     formatBytes,
     getFileExtension,
     isHeicLike,

@@ -1,27 +1,73 @@
 <?php
+defined('ABSPATH') || exit;
+
+if (!function_exists('bvmgr_rating_request_source')) {
+    function bvmgr_rating_request_source(): array
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public rating form repopulation reads submitted POST state; mutation remains nonce-gated in vms_handle_rating_submission().
+        return is_array($_POST) ? $_POST : array();
+    }
+}
+
+if (!function_exists('bvmgr_rating_request_query_absint')) {
+    function bvmgr_rating_request_query_absint(string $key): int
+    {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only rating-link query arguments only select the display context.
+        return bvmgr_request_read_absint($_GET, $key);
+    }
+}
+
+if (!function_exists('bvmgr_rating_submitted_text_field')) {
+    function bvmgr_rating_submitted_text_field(string $key): string
+    {
+        return bvmgr_request_read_text_field(bvmgr_rating_request_source(), $key);
+    }
+}
+
+if (!function_exists('bvmgr_rating_submitted_email')) {
+    function bvmgr_rating_submitted_email(string $key): string
+    {
+        return bvmgr_request_read_email(bvmgr_rating_request_source(), $key);
+    }
+}
+
+if (!function_exists('bvmgr_rating_submitted_comment')) {
+    function bvmgr_rating_submitted_comment(): string
+    {
+        return bvmgr_request_read_textarea_field(bvmgr_rating_request_source(), 'vms_rating_comment');
+    }
+}
+
+if (!function_exists('bvmgr_rating_submitted_value')) {
+    function bvmgr_rating_submitted_value(string $key): int
+    {
+        $value = bvmgr_request_read_absint(bvmgr_rating_request_source(), $key);
+        return ($value >= 1 && $value <= 5) ? $value : 0;
+    }
+}
 
 
 // ============================
 // VMS Rating custom post type
 // ============================
-add_action('init', 'vms_register_rating_cpt');
-function vms_register_rating_cpt()
+add_action('init', 'bvmgr_register_rating_cpt');
+function bvmgr_register_rating_cpt()
 {
 
     $labels = array(
-        'name'               => __('Ratings', 'vms'),
-        'singular_name'      => __('Rating', 'vms'),
-        'menu_name'          => __('Ratings', 'vms'),
-        'name_admin_bar'     => __('Rating', 'vms'),
-        'add_new'            => __('Add New', 'vms'),
-        'add_new_item'       => __('Add New Rating', 'vms'),
-        'new_item'           => __('New Rating', 'vms'),
-        'edit_item'          => __('Edit Rating', 'vms'),
-        'view_item'          => __('View Rating', 'vms'),
-        'all_items'          => __('All Ratings', 'vms'),
-        'search_items'       => __('Search Ratings', 'vms'),
-        'not_found'          => __('No ratings found.', 'vms'),
-        'not_found_in_trash' => __('No ratings found in Trash.', 'vms'),
+        'name'               => __('Ratings', 'backstage-venue-manager'),
+        'singular_name'      => __('Rating', 'backstage-venue-manager'),
+        'menu_name'          => __('Ratings', 'backstage-venue-manager'),
+        'name_admin_bar'     => __('Rating', 'backstage-venue-manager'),
+        'add_new'            => __('Add New', 'backstage-venue-manager'),
+        'add_new_item'       => __('Add New Rating', 'backstage-venue-manager'),
+        'new_item'           => __('New Rating', 'backstage-venue-manager'),
+        'edit_item'          => __('Edit Rating', 'backstage-venue-manager'),
+        'view_item'          => __('View Rating', 'backstage-venue-manager'),
+        'all_items'          => __('All Ratings', 'backstage-venue-manager'),
+        'search_items'       => __('Search Ratings', 'backstage-venue-manager'),
+        'not_found'          => __('No ratings found.', 'backstage-venue-manager'),
+        'not_found_in_trash' => __('No ratings found in Trash.', 'backstage-venue-manager'),
     );
 
     $args = array(
@@ -42,22 +88,22 @@ function vms_register_rating_cpt()
 // ============================
 // Rating Details meta box
 // ============================
-add_action('add_meta_boxes', 'vms_add_rating_details_metabox');
-function vms_add_rating_details_metabox()
+add_action('add_meta_boxes', 'bvmgr_add_rating_details_metabox');
+function bvmgr_add_rating_details_metabox()
 {
     add_meta_box(
         'vms_rating_details',
-        __('Rating Details', 'vms'),
-        'vms_render_rating_details_metabox',
+        __('Rating Details', 'backstage-venue-manager'),
+        'bvmgr_render_rating_details_metabox',
         'vms_rating',
         'normal',
         'high'
     );
 }
 
-function vms_render_rating_details_metabox($post)
+function bvmgr_render_rating_details_metabox($post)
 {
-    wp_nonce_field('vms_save_rating_details', 'vms_rating_details_nonce');
+    wp_nonce_field('bvmgr_save_rating_details', 'bvmgr_rating_details_nonce');
 
     $band_id    = (int) get_post_meta($post->ID, '_vms_band_id', true);
     $event_id   = (int) get_post_meta($post->ID, '_vms_event_id', true);
@@ -84,10 +130,10 @@ function vms_render_rating_details_metabox($post)
 ?>
     <table class="form-table">
         <tr>
-            <th scope="row"><label for="vms_band_id"><?php esc_html_e('Music Vendor / Vendor', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_band_id"><?php esc_html_e('Music Vendor / Vendor', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <select id="vms_band_id" name="vms_band_id" class="vms-rating-select-wide">
-                    <option value=""><?php esc_html_e('-- Select Music Vendor --', 'vms'); ?></option>
+                    <option value=""><?php esc_html_e('-- Select Music Vendor --', 'backstage-venue-manager'); ?></option>
                     <?php foreach ($bands as $band) : ?>
                         <option value="<?php echo esc_attr($band->ID); ?>"
                             <?php selected($band_id, $band->ID); ?>>
@@ -99,10 +145,10 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><label for="vms_event_id"><?php esc_html_e('Event', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_event_id"><?php esc_html_e('Event', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <select id="vms_event_id" name="vms_event_id" class="vms-rating-select-wide">
-                    <option value=""><?php esc_html_e('-- Select Event --', 'vms'); ?></option>
+                    <option value=""><?php esc_html_e('-- Select Event --', 'backstage-venue-manager'); ?></option>
                     <?php foreach ($events as $event) : ?>
                         <?php
                         $ts   = strtotime($event->post_date);
@@ -118,10 +164,10 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><label for="vms_rating_value"><?php esc_html_e('Rating (Stars)', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_rating_value"><?php esc_html_e('Rating (Stars)', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <select id="vms_rating_value" name="vms_rating_value">
-                    <option value=""><?php esc_html_e('-- Select --', 'vms'); ?></option>
+                    <option value=""><?php esc_html_e('-- Select --', 'backstage-venue-manager'); ?></option>
                     <?php for ($i = 1; $i <= 5; $i++) : ?>
                         <option value="<?php echo esc_attr($i); ?>"
                             <?php selected($stars, $i); ?>>
@@ -133,7 +179,7 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><label for="vms_reviewer_name"><?php esc_html_e('Reviewer Name', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_reviewer_name"><?php esc_html_e('Reviewer Name', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <input type="text" id="vms_reviewer_name" name="vms_reviewer_name"
                     class="regular-text"
@@ -142,7 +188,7 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><label for="vms_reviewer_email"><?php esc_html_e('Reviewer Email', 'vms'); ?></label></th>
+            <th scope="row"><label for="vms_reviewer_email"><?php esc_html_e('Reviewer Email', 'backstage-venue-manager'); ?></label></th>
             <td>
                 <input type="email" id="vms_reviewer_email" name="vms_reviewer_email"
                     class="regular-text"
@@ -151,15 +197,15 @@ function vms_render_rating_details_metabox($post)
         </tr>
 
         <tr>
-            <th scope="row"><?php esc_html_e('Verified Attendance', 'vms'); ?></th>
+            <th scope="row"><?php esc_html_e('Verified Attendance', 'backstage-venue-manager'); ?></th>
             <td>
                 <label>
                     <input type="checkbox" name="vms_verified_attendance" value="1"
                         <?php checked($verified, 1); ?> />
-                    <?php esc_html_e('Mark this rating as from a verified attendee', 'vms'); ?>
+                    <?php esc_html_e('Mark this rating as from a verified attendee', 'backstage-venue-manager'); ?>
                 </label>
                 <p class="description">
-                    <?php esc_html_e('In the future, this will be set automatically based on ticket/attendance checks.', 'vms'); ?>
+                    <?php esc_html_e('In the future, this will be set automatically based on ticket/attendance checks.', 'backstage-venue-manager'); ?>
                 </p>
             </td>
         </tr>
@@ -167,26 +213,26 @@ function vms_render_rating_details_metabox($post)
 <?php
 }
 
-add_action('save_post_vms_rating', 'vms_save_rating_details_meta', 10, 2);
-function vms_save_rating_details_meta($post_id, $post)
+add_action('save_post_vms_rating', 'bvmgr_save_rating_details_meta', 10, 2);
+function bvmgr_save_rating_details_meta($post_id, $post)
 {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if ($post->post_type !== 'vms_rating') return;
 
-    if (
-        !isset($_POST['vms_rating_details_nonce']) ||
-        !wp_verify_nonce($_POST['vms_rating_details_nonce'], 'vms_save_rating_details')
-    ) {
+    $nonce = (isset($_POST['bvmgr_rating_details_nonce']) && !is_array($_POST['bvmgr_rating_details_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_rating_details_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_rating_details'))) {
         return;
     }
 
     if (!current_user_can('edit_post', $post_id)) return;
 
-    $band_id   = isset($_POST['vms_band_id']) ? absint($_POST['vms_band_id']) : 0;
-    $event_id  = isset($_POST['vms_event_id']) ? absint($_POST['vms_event_id']) : 0;
-    $stars     = isset($_POST['vms_rating_value']) ? (int) $_POST['vms_rating_value'] : 0;
-    $rev_name  = isset($_POST['vms_reviewer_name']) ? sanitize_text_field($_POST['vms_reviewer_name']) : '';
-    $rev_email = isset($_POST['vms_reviewer_email']) ? sanitize_email($_POST['vms_reviewer_email']) : '';
+    $band_id   = bvmgr_request_read_absint($_POST, 'vms_band_id');
+    $event_id  = bvmgr_request_read_absint($_POST, 'vms_event_id');
+    $stars     = bvmgr_rating_submitted_value('vms_rating_value');
+    $rev_name  = bvmgr_rating_submitted_text_field('vms_reviewer_name');
+    $rev_email = bvmgr_rating_submitted_email('vms_reviewer_email');
     $verified  = isset($_POST['vms_verified_attendance']) ? 1 : 0;
 
     update_post_meta($post_id, '_vms_band_id', $band_id);
@@ -204,7 +250,7 @@ function vms_save_rating_details_meta($post_id, $post)
  * @param bool $verified_only Whether to only include verified ratings
  * @return array { 'average' => float|null, 'count' => int }
  */
-function vms_get_band_rating_summary($band_id, $verified_only = true)
+function bvmgr_get_band_rating_summary($band_id, $verified_only = true)
 {
     $band_id = (int) $band_id;
     if (!$band_id) {
@@ -229,6 +275,7 @@ function vms_get_band_rating_summary($band_id, $verified_only = true)
         'post_type'      => 'vms_rating',
         'posts_per_page' => -1,
         'post_status'    => 'publish',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- The band summary intentionally reads every published rating linked to one band so its average and count remain complete.
         'meta_query'     => $meta_query,
         'fields'         => 'ids',
     ));
@@ -261,17 +308,24 @@ function vms_get_band_rating_summary($band_id, $verified_only = true)
 // ============================
 // Front-end Rating Shortcode
 // ============================
-add_shortcode('vms_rate_band', 'vms_rate_band_shortcode');
+add_shortcode('vms_rate_band', 'bvmgr_rate_band_shortcode');
 
-function vms_rate_band_shortcode($atts) {
+function bvmgr_rate_band_shortcode($atts) {
     $atts = shortcode_atts(array(
         'event' => 0,
         'band'  => 0,
     ), $atts, 'vms_rate_band');
 
     // Allow event/band to come from query string as well.
-    $event_id = isset($_GET['event']) ? absint($_GET['event']) : absint($atts['event']);
-    $band_id  = isset($_GET['band'])  ? absint($_GET['band'])  : absint($atts['band']);
+    $event_id = bvmgr_rating_request_query_absint('event');
+    if ($event_id <= 0) {
+        $event_id = absint($atts['event']);
+    }
+
+    $band_id = bvmgr_rating_request_query_absint('band');
+    if ($band_id <= 0) {
+        $band_id = absint($atts['band']);
+    }
 
     // If we don't even have IDs, bail.
     if (!$event_id || !$band_id) {
@@ -279,7 +333,7 @@ function vms_rate_band_shortcode($atts) {
     }
 
     // Look up Event Plan for this TEC event.
-    $plan_id = vms_get_event_plan_for_tec_event($event_id);
+    $plan_id = bvmgr_get_event_plan_for_tec_event($event_id);
     if (!$plan_id) {
         return '<p>Nope. This doesn\'t look like a valid show in our system.</p>';
     }
@@ -324,8 +378,8 @@ function vms_rate_band_shortcode($atts) {
 
     // Handle form submission
     $message = '';
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vms_rating_submit'])) {
-        $result  = vms_handle_rating_submission($event_id, $band_id);
+    if (bvmgr_request_method() === 'post' && bvmgr_request_read_bool_flag(bvmgr_rating_request_source(), 'vms_rating_submit')) {
+        $result  = bvmgr_handle_rating_submission($event_id, $band_id);
         $message = $result['message'];
     }
 
@@ -341,19 +395,19 @@ function vms_rate_band_shortcode($atts) {
         <p><?php echo esc_html("Event: {$event_title}"); ?></p>
 
         <form method="post">
-            <?php wp_nonce_field('vms_submit_rating', 'vms_rating_nonce'); ?>
+            <?php wp_nonce_field('bvmgr_submit_rating', 'bvmgr_rating_nonce'); ?>
 
             <p>
                 <label for="vms_reviewer_name"><strong>Your Name</strong></label><br>
                 <input type="text" id="vms_reviewer_name" name="vms_reviewer_name"
-                    value="<?php echo isset($_POST['vms_reviewer_name']) ? esc_attr($_POST['vms_reviewer_name']) : ''; ?>"
+                    value="<?php echo esc_attr(bvmgr_rating_submitted_text_field('vms_reviewer_name')); ?>"
                     class="regular-text" required>
             </p>
 
             <p>
                 <label for="vms_reviewer_email"><strong>Your Email</strong></label><br>
                 <input type="email" id="vms_reviewer_email" name="vms_reviewer_email"
-                    value="<?php echo isset($_POST['vms_reviewer_email']) ? esc_attr($_POST['vms_reviewer_email']) : ''; ?>"
+                    value="<?php echo esc_attr(bvmgr_rating_submitted_email('vms_reviewer_email')); ?>"
                     class="regular-text" required>
             </p>
 
@@ -363,7 +417,7 @@ function vms_rate_band_shortcode($atts) {
                     <option value="">-- Select --</option>
                     <?php for ($i = 1; $i <= 5; $i++) : ?>
                         <option value="<?php echo esc_attr($i); ?>"
-                            <?php selected(isset($_POST['vms_rating_value']) ? (int) $_POST['vms_rating_value'] : '', $i); ?>>
+                            <?php selected(bvmgr_rating_submitted_value('vms_rating_value'), $i); ?>>
                             <?php echo esc_html($i . ' ★'); ?>
                         </option>
                     <?php endfor; ?>
@@ -373,7 +427,7 @@ function vms_rate_band_shortcode($atts) {
             <p>
                 <label for="vms_rating_comment"><strong>Comments (optional)</strong></label><br>
                 <textarea id="vms_rating_comment" name="vms_rating_comment" rows="4" class="vms-rating-comment"><?php
-                    echo isset($_POST['vms_rating_comment']) ? esc_textarea($_POST['vms_rating_comment']) : '';
+                    echo esc_textarea(bvmgr_rating_submitted_comment());
                 ?></textarea>
             </p>
 
@@ -396,12 +450,12 @@ function vms_rate_band_shortcode($atts) {
  * @param int $band_id  vms_vendor ID
  * @return array { 'success' => bool, 'message' => string }
  */
-function vms_handle_rating_submission($event_id, $band_id)
+function bvmgr_handle_rating_submission($event_id, $band_id)
 {
-    if (
-        !isset($_POST['vms_rating_nonce']) ||
-        !wp_verify_nonce($_POST['vms_rating_nonce'], 'vms_submit_rating')
-    ) {
+    $nonce = (isset($_POST['bvmgr_rating_nonce']) && !is_array($_POST['bvmgr_rating_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_rating_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_submit_rating'))) {
 
         return array(
             'success' => false,
@@ -409,10 +463,10 @@ function vms_handle_rating_submission($event_id, $band_id)
         );
     }
 
-    $name    = isset($_POST['vms_reviewer_name']) ? sanitize_text_field($_POST['vms_reviewer_name']) : '';
-    $email   = isset($_POST['vms_reviewer_email']) ? sanitize_email($_POST['vms_reviewer_email']) : '';
-    $stars   = isset($_POST['vms_rating_value']) ? (int) $_POST['vms_rating_value'] : 0;
-    $comment = isset($_POST['vms_rating_comment']) ? wp_kses_post($_POST['vms_rating_comment']) : '';
+    $name    = bvmgr_rating_submitted_text_field('vms_reviewer_name');
+    $email   = bvmgr_rating_submitted_email('vms_reviewer_email');
+    $stars   = bvmgr_rating_submitted_value('vms_rating_value');
+    $comment = bvmgr_rating_submitted_comment();
 
     if (empty($name) || empty($email) || !$stars) {
         return array(
@@ -422,7 +476,7 @@ function vms_handle_rating_submission($event_id, $band_id)
     }
 
     // 1) Make sure this event is managed by an Event Plan.
-    $plan_id = vms_get_event_plan_for_tec_event($event_id);
+    $plan_id = bvmgr_get_event_plan_for_tec_event($event_id);
     if (!$plan_id) {
         return array(
             'success' => false,
@@ -467,6 +521,7 @@ function vms_handle_rating_submission($event_id, $band_id)
         'post_type'      => 'vms_rating',
         'posts_per_page' => 1,
         'post_status'    => 'any',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Duplicate prevention is capped at one rating and matches the exact band, event, and reviewer email tuple.
         'meta_query'     => array(
             'relation' => 'AND',
             array(
@@ -493,7 +548,7 @@ function vms_handle_rating_submission($event_id, $band_id)
     }
 
     // Attendance check – this is the gatekeeper.
-    $has_attended = vms_has_attended_event($event_id, $email);
+    $has_attended = bvmgr_has_attended_event($event_id, $email);
 
     if (!$has_attended) {
         return array(
@@ -554,7 +609,7 @@ function vms_handle_rating_submission($event_id, $band_id)
  * @param string $email    Attendee email
  * @return bool
  */
-function vms_has_attended_event($event_id, $email)
+function bvmgr_has_attended_event($event_id, $email)
 {
     $event_id = (int) $event_id;
     $email    = sanitize_email($email);

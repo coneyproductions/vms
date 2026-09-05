@@ -2,8 +2,8 @@
 defined('ABSPATH') || exit;
 
 if (defined('DOING_AJAX') && DOING_AJAX) {
-    if (empty($GLOBALS['vms_ajax_ob_started'])) {
-        $GLOBALS['vms_ajax_ob_started'] = true;
+    if (empty($GLOBALS['bvmgr_ajax_ob_started'])) {
+        $GLOBALS['bvmgr_ajax_ob_started'] = true;
         // Buffer any unexpected output so AJAX JSON stays valid.
         ob_start();
     }

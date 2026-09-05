@@ -2,8 +2,8 @@
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('VMS_Tours_Maintenance')) {
-	class VMS_Tours_Maintenance
+if (!class_exists('BVMGR_Tours_Maintenance')) {
+	class BVMGR_Tours_Maintenance
 	{
 		public static function init(): void
 		{
@@ -14,8 +14,8 @@ if (!class_exists('VMS_Tours_Maintenance')) {
 		{
 			add_submenu_page(
 				'vms-dashboard',
-				__('Tour Maintenance', 'vms'),
-				__('Tour Maintenance', 'vms'),
+				__('Tour Maintenance', 'backstage-venue-manager'),
+				__('Tour Maintenance', 'backstage-venue-manager'),
 				'manage_options',
 				'vms-tour-maintenance',
 				array(__CLASS__, 'render_page')
@@ -28,10 +28,10 @@ if (!class_exists('VMS_Tours_Maintenance')) {
 				wp_die('Insufficient permissions.');
 			}
 
-			if (function_exists('vms_admin_ui_render_shell')) {
-				vms_admin_ui_render_shell(
+			if (function_exists('bvmgr_admin_ui_render_shell')) {
+				bvmgr_admin_ui_render_shell(
 					array(
-						'title' => __('Tour Maintenance', 'vms'),
+						'title' => __('Tour Maintenance', 'backstage-venue-manager'),
 						'shell_id' => 'vms-tour-maintenance',
 					),
 					array(__CLASS__, 'render_page_content')
@@ -62,4 +62,4 @@ if (!class_exists('VMS_Tours_Maintenance')) {
 	}
 }
 
-VMS_Tours_Maintenance::init();
+BVMGR_Tours_Maintenance::init();

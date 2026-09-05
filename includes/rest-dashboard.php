@@ -7,7 +7,7 @@ require_once __DIR__ . '/schedule/helpers.php';
 require_once __DIR__ . '/schedule/schedule.php';
 
 // BOTH?
-if (!function_exists('vms_sch_get_all_venue_ids')) {
+if (!function_exists('bvmgr_sch_get_all_venue_ids')) {
   $path = __DIR__ . '/schedule/helpers.php';
   if (file_exists($path)) {
     require_once $path;
@@ -20,7 +20,7 @@ add_action('rest_api_init', function () {
     'permission_callback' => function () {
       return current_user_can('manage_options');
     },
-    'callback'            => 'vms_dashboard_rest_get',
+    'callback'            => 'bvmgr_dashboard_rest_get',
     'args'                => [
       'range' => [
         'required' => true,
@@ -60,7 +60,7 @@ add_action('rest_api_init', function () {
   ]);
 });
 
-function vms_dashboard_get_due_span_days(): int
+function bvmgr_dashboard_get_due_span_days(): int
 {
   // Reuse dashboard week span semantics so Due Dates and Financial Snapshot align.
   $span_raw = get_option('vms_dash_week_span', 1);
@@ -72,7 +72,7 @@ function vms_dashboard_get_due_span_days(): int
 }
 
 
-function vms_dashboard_rest_get(WP_REST_Request $req)
+function bvmgr_dashboard_rest_get(WP_REST_Request $req)
 {
 
   // ---------- Inputs (sanitized / normalized) ----------
@@ -106,7 +106,7 @@ function vms_dashboard_rest_get(WP_REST_Request $req)
 
   // ---------- Bills (separate range, not schedule-derived) ----------
   if ($range === 'bills') {
-    $resp = vms_dashboard_build_bills_response([
+    $resp = bvmgr_dashboard_build_bills_response([
       'venue_id' => $venue_id,
       'include_canceled' => (bool) $include_canceled,
       'only_open' => (bool) $only_open,
@@ -127,13 +127,13 @@ function vms_dashboard_rest_get(WP_REST_Request $req)
 
   // ---------- Due Dates (separate range, not schedule-derived) ----------
   if ($range === 'due') {
-    if (!function_exists('vms_due_build_dashboard_response')) {
+    if (!function_exists('bvmgr_due_build_dashboard_response')) {
       $path = __DIR__ . '/core/due-dates.php';
       if (file_exists($path)) require_once $path;
     }
 
-    $span_days = vms_dashboard_get_due_span_days();
-    $resp = vms_due_build_dashboard_response($span_days);
+    $span_days = bvmgr_dashboard_get_due_span_days();
+    $resp = bvmgr_due_build_dashboard_response($span_days);
 
     if ($debug_on) {
       $resp['debug'] = [
@@ -150,7 +150,7 @@ function vms_dashboard_rest_get(WP_REST_Request $req)
 
   // ---------- Financial Snapshot (summary cards from bills + due) ----------
   if ($range === 'financial') {
-    $resp = vms_dashboard_build_financial_response([
+    $resp = bvmgr_dashboard_build_financial_response([
       'venue_id' => $venue_id,
       'include_canceled' => (bool) $include_canceled,
       'only_open' => (bool) $only_open,
@@ -171,8 +171,8 @@ function vms_dashboard_rest_get(WP_REST_Request $req)
 
   // ---------- Staffing Readiness (next N events rollup cache) ----------
   if ($range === 'staffing') {
-    if (function_exists('vms_staffing_build_dashboard_response')) {
-      $resp = vms_staffing_build_dashboard_response([
+    if (function_exists('bvmgr_staffing_build_dashboard_response')) {
+      $resp = bvmgr_staffing_build_dashboard_response([
         'venue_id' => $venue_id,
         'staffing_n' => $staffing_n,
         'include_drafts' => (bool) $staffing_include_drafts,
@@ -273,7 +273,7 @@ function vms_dashboard_rest_get(WP_REST_Request $req)
     $args['__debug'] = 1;
   }
 
-  $raw = vms_schedule_items_for_dashboard($args);
+  $raw = bvmgr_schedule_items_for_dashboard($args);
 
   if ($debug_on && is_array($raw) && isset($raw['__items'])) {
     $raw_items = is_array($raw['__items']) ? $raw['__items'] : [];
@@ -283,7 +283,7 @@ function vms_dashboard_rest_get(WP_REST_Request $req)
   }
 
   // ---------- Normalize to the dashboard item shape the JS expects ----------
-  $items = array_values(array_filter(array_map('vms_dashboard_normalize_item', $raw_items)));
+  $items = array_values(array_filter(array_map('bvmgr_dashboard_normalize_item', $raw_items)));
 
   // ---------- Response ----------
   $resp = [
@@ -325,7 +325,7 @@ function vms_dashboard_rest_get(WP_REST_Request $req)
  * - Computes an estimated due date = event date + terms_days
  * - Sums only the “known” portion (flat fees)
  */
-function vms_dashboard_build_bills_response(array $args): array
+function bvmgr_dashboard_build_bills_response(array $args): array
 {
   $tz = wp_timezone();
   $today = new DateTimeImmutable('today', $tz);
@@ -354,21 +354,21 @@ function vms_dashboard_build_bills_response(array $args): array
 
   $venue_ids = [];
   if ($venue_id === 'all') {
-    $venue_ids = function_exists('vms_sch_get_all_venue_ids') ? (array) vms_sch_get_all_venue_ids() : [];
+    $venue_ids = function_exists('bvmgr_sch_get_all_venue_ids') ? (array) bvmgr_sch_get_all_venue_ids() : [];
   } else {
     $venue_ids = [absint($venue_id)];
   }
   $venue_ids = array_values(array_filter(array_map('absint', $venue_ids)));
 
-  $venue_name_map = function_exists('vms_sch_get_venue_name_map') ? (array) vms_sch_get_venue_name_map($venue_ids) : [];
+  $venue_name_map = function_exists('bvmgr_sch_get_venue_name_map') ? (array) bvmgr_sch_get_venue_name_map($venue_ids) : [];
 
   // Collect plan IDs inside the event-date window
   $plans_by_date = [];
   if (!empty($venue_ids)) {
-    if ($venue_id === 'all' && function_exists('vms_sch_get_plans_by_date_all')) {
-      $plans_by_date = (array) vms_sch_get_plans_by_date_all($venue_ids, $event_start_ymd, $event_end_ymd, $include_drafts, array('context' => 'dashboard_bills', 'include_cancelled' => false));
-    } elseif ($venue_id !== 'all' && function_exists('vms_sch_get_plans_by_date')) {
-      $plans_by_date = (array) vms_sch_get_plans_by_date((int) $venue_ids[0], $event_start_ymd, $event_end_ymd, $include_drafts, array('context' => 'dashboard_bills', 'include_cancelled' => false));
+    if ($venue_id === 'all' && function_exists('bvmgr_sch_get_plans_by_date_all')) {
+      $plans_by_date = (array) bvmgr_sch_get_plans_by_date_all($venue_ids, $event_start_ymd, $event_end_ymd, $include_drafts, array('context' => 'dashboard_bills', 'include_cancelled' => false));
+    } elseif ($venue_id !== 'all' && function_exists('bvmgr_sch_get_plans_by_date')) {
+      $plans_by_date = (array) bvmgr_sch_get_plans_by_date((int) $venue_ids[0], $event_start_ymd, $event_end_ymd, $include_drafts, array('context' => 'dashboard_bills', 'include_cancelled' => false));
     }
   }
 
@@ -399,8 +399,8 @@ function vms_dashboard_build_bills_response(array $args): array
           $r = is_object($row) ? (array) $row : $row;
           $plan_status = isset($r['plan_status']) ? sanitize_key((string) $r['plan_status']) : '';
         }
-        if ($plan_status === '' && function_exists('vms_event_plan_get_status')) {
-          $plan_status = (string) vms_event_plan_get_status($plan_id, 'dashboard_bills');
+        if ($plan_status === '' && function_exists('bvmgr_event_plan_get_status')) {
+          $plan_status = (string) bvmgr_event_plan_get_status($plan_id, 'dashboard_bills');
           $plan_status = sanitize_key($plan_status);
         }
         if ($plan_status === 'canceled') $plan_status = 'cancelled';
@@ -408,8 +408,8 @@ function vms_dashboard_build_bills_response(array $args): array
 
         // Canonical inclusion parity for financial feed (FIN-01):
         // Published-only by default; Include Draft/Ready enables what-if rows.
-        if (function_exists('vms_event_plan_should_include')) {
-          if (!vms_event_plan_should_include((int) $plan_id, 'dashboard_bills', array(
+        if (function_exists('bvmgr_event_plan_should_include')) {
+          if (!bvmgr_event_plan_should_include((int) $plan_id, 'dashboard_bills', array(
             'include_drafts'    => (bool) $include_drafts,
             'include_cancelled' => false,
           ))) {
@@ -469,8 +469,8 @@ function vms_dashboard_build_bills_response(array $args): array
         // If flat fee not explicitly stored on the plan and no snapshot exists,
         // fall back to the venue's per-day default comp (by DOW).
         if (($flat_fee === null || (float) $flat_fee <= 0) && in_array($structure, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true)) {
-          if (function_exists('vms_get_venue_default_comp_for_date') && $venue_id_effective > 0 && $event_date_ymd !== '') {
-            $def = (array) vms_get_venue_default_comp_for_date((int) $venue_id_effective, (string) $event_date_ymd);
+          if (function_exists('bvmgr_get_venue_default_comp_for_date') && $venue_id_effective > 0 && $event_date_ymd !== '') {
+            $def = (array) bvmgr_get_venue_default_comp_for_date((int) $venue_id_effective, (string) $event_date_ymd);
             $def_struct = isset($def['structure']) ? (string) $def['structure'] : '';
             $def_fee = isset($def['flat_fee_amount']) ? $def['flat_fee_amount'] : null;
             if (in_array($def_struct, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true) && is_numeric($def_fee) && (float) $def_fee > 0) {
@@ -479,7 +479,7 @@ function vms_dashboard_build_bills_response(array $args): array
           }
         }
 
-        $structure_label = vms_dashboard_comp_structure_label($structure);
+        $structure_label = bvmgr_dashboard_comp_structure_label($structure);
 
         $known_amount = null;
         if (in_array($structure, array('flat_fee', 'flat_fee_door_split', 'attendance_bonus'), true)) {
@@ -504,11 +504,11 @@ function vms_dashboard_build_bills_response(array $args): array
         $tax_missing = false;
         $tax_bypass_active = false;
         $tax_bypass_until = '';
-        if ($band_vendor_id > 0 && function_exists('vms_is_vendor_tax_profile_complete')) {
-          $tax_missing = !vms_is_vendor_tax_profile_complete((int) $band_vendor_id);
+        if ($band_vendor_id > 0 && function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+          $tax_missing = !bvmgr_is_vendor_tax_profile_complete((int) $band_vendor_id);
         }
-        if ($band_vendor_id > 0 && function_exists('vms_get_tax_bypass_status')) {
-          $st = (array) vms_get_tax_bypass_status((int) $band_vendor_id);
+        if ($band_vendor_id > 0 && function_exists('bvmgr_get_tax_bypass_status')) {
+          $st = (array) bvmgr_get_tax_bypass_status((int) $band_vendor_id);
           $tax_bypass_active = !empty($st['is_active']);
           $tax_bypass_until = isset($st['until']) ? (string) $st['until'] : '';
         }
@@ -518,8 +518,8 @@ function vms_dashboard_build_bills_response(array $args): array
         }
 
         $is_estimated = true;
-        $plan_status_label = function_exists('vms_event_plan_status_label')
-          ? (string) vms_event_plan_status_label((string) $plan_status)
+        $plan_status_label = function_exists('bvmgr_event_plan_status_label')
+          ? (string) bvmgr_event_plan_status_label((string) $plan_status)
           : ucwords(str_replace(array('_', '-'), ' ', (string) $plan_status));
 
         $items[] = [
@@ -538,7 +538,7 @@ function vms_dashboard_build_bills_response(array $args): array
           'structure' => $structure,
           'structure_label' => $structure_label,
           'known_amount' => ($known_amount === null) ? null : (float) $known_amount,
-          'known_amount_fmt' => ($known_amount === null) ? null : vms_dashboard_money_fmt((float) $known_amount),
+          'known_amount_fmt' => ($known_amount === null) ? null : bvmgr_dashboard_money_fmt((float) $known_amount),
           'payment_blocked' => (bool) $payment_blocked,
           'tax_missing' => (bool) $tax_missing,
           'tax_bypass_active' => (bool) $tax_bypass_active,
@@ -566,22 +566,22 @@ function vms_dashboard_build_bills_response(array $args): array
     'span_days' => $span_days,
     'terms_days' => $terms_days,
     'known_total' => (float) $known_total,
-    'known_total_fmt' => vms_dashboard_money_fmt((float) $known_total),
+    'known_total_fmt' => bvmgr_dashboard_money_fmt((float) $known_total),
     'items' => $items,
   ];
 }
 
-function vms_dashboard_build_financial_response(array $args): array
+function bvmgr_dashboard_build_financial_response(array $args): array
 {
-  if (!function_exists('vms_due_build_dashboard_response')) {
+  if (!function_exists('bvmgr_due_build_dashboard_response')) {
     $path = __DIR__ . '/core/due-dates.php';
     if (file_exists($path)) require_once $path;
   }
 
-  $bills = vms_dashboard_build_bills_response($args);
-  $due_span_days = vms_dashboard_get_due_span_days();
-  $due = function_exists('vms_due_build_dashboard_response')
-    ? vms_due_build_dashboard_response($due_span_days)
+  $bills = bvmgr_dashboard_build_bills_response($args);
+  $due_span_days = bvmgr_dashboard_get_due_span_days();
+  $due = function_exists('bvmgr_due_build_dashboard_response')
+    ? bvmgr_due_build_dashboard_response($due_span_days)
     : ['range_start' => '', 'range_end' => '', 'active_obligations' => 0, 'counts' => [], 'items' => []];
 
   $bills_items = (isset($bills['items']) && is_array($bills['items'])) ? $bills['items'] : [];
@@ -628,7 +628,7 @@ function vms_dashboard_build_financial_response(array $args): array
     ],
     'summary' => [
       'known_total' => isset($bills['known_total']) ? (float) $bills['known_total'] : 0.0,
-      'known_total_fmt' => isset($bills['known_total_fmt']) ? (string) $bills['known_total_fmt'] : vms_dashboard_money_fmt(0.0),
+      'known_total_fmt' => isset($bills['known_total_fmt']) ? (string) $bills['known_total_fmt'] : bvmgr_dashboard_money_fmt(0.0),
       'bills_total' => $bills_total,
       'bills_needs_attention' => $bills_needs_attention,
       'bills_missing_vendor' => $bills_missing_vendor,
@@ -647,7 +647,7 @@ function vms_dashboard_build_financial_response(array $args): array
   ];
 }
 
-function vms_dashboard_comp_structure_label(string $structure): string
+function bvmgr_dashboard_comp_structure_label(string $structure): string
 {
   $structure = sanitize_key($structure);
   if ($structure === 'door_split') return 'Door Split';
@@ -656,7 +656,7 @@ function vms_dashboard_comp_structure_label(string $structure): string
   return 'Flat Fee';
 }
 
-function vms_dashboard_money_fmt(float $amount): string
+function bvmgr_dashboard_money_fmt(float $amount): string
 {
   return '$' . number_format((float) $amount, 2, '.', ',');
 }
@@ -668,7 +668,7 @@ function vms_dashboard_money_fmt(float $amount): string
  */
 /* DROP-IN PATCH — add “why did items_count=0?” samples to debug */
 
-function vms_schedule_items_for_dashboard(array $args)
+function bvmgr_schedule_items_for_dashboard(array $args)
 {
   $want_debug = !empty($args['__debug']);
 
@@ -708,7 +708,7 @@ function vms_schedule_items_for_dashboard(array $args)
   $items = [];
 
   if ($venue_id === 'all') {
-    $venue_ids = vms_sch_get_all_venue_ids();
+    $venue_ids = bvmgr_sch_get_all_venue_ids();
     $debug['venue_ids_count'] = is_array($venue_ids) ? count($venue_ids) : 0;
     $debug['venue_ids_sample'] = is_array($venue_ids) ? array_slice($venue_ids, 0, 10) : [];
 
@@ -718,8 +718,8 @@ function vms_schedule_items_for_dashboard(array $args)
     }
 
     // $plans_by_date = vms_sch_get_plans_by_date_all($venue_ids, $start_ymd, $end_ymd);
-    $plans_by_date = vms_sch_get_plans_by_date_all($venue_ids, $start_ymd, $end_ymd, $include_drafts, array('context' => 'dashboard', 'include_cancelled' => $include_canceled));
-    $venue_name_map = vms_sch_get_venue_name_map($venue_ids);
+    $plans_by_date = bvmgr_sch_get_plans_by_date_all($venue_ids, $start_ymd, $end_ymd, $include_drafts, array('context' => 'dashboard', 'include_cancelled' => $include_canceled));
+    $venue_name_map = bvmgr_sch_get_venue_name_map($venue_ids);
 
     if (is_array($plans_by_date)) {
       $debug['plans_days'] = count($plans_by_date);
@@ -737,7 +737,7 @@ function vms_schedule_items_for_dashboard(array $args)
     }
 
     // $items = vms_dashboard_flatten_plans_by_date($plans_by_date, $venue_name_map, null, $include_canceled, $only_open);
-    $items = vms_dashboard_flatten_plans_by_date(
+    $items = bvmgr_dashboard_flatten_plans_by_date(
       $plans_by_date,
       $venue_name_map,
       null,
@@ -748,8 +748,8 @@ function vms_schedule_items_for_dashboard(array $args)
   } else {
     $vid = (int) $venue_id;
 
-    $open_map = vms_sch_get_open_map($vid, $start_ymd, $end_ymd);
-    $plans_by_date = vms_sch_get_plans_by_date($vid, $start_ymd, $end_ymd, $include_drafts, array('context' => 'dashboard', 'include_cancelled' => $include_canceled));
+    $open_map = bvmgr_sch_get_open_map($vid, $start_ymd, $end_ymd);
+    $plans_by_date = bvmgr_sch_get_plans_by_date($vid, $start_ymd, $end_ymd, $include_drafts, array('context' => 'dashboard', 'include_cancelled' => $include_canceled));
 
     if ($want_debug && is_array($plans_by_date)) {
       $debug['rows_for_2026_01_25'] = $plans_by_date['2026-01-25'] ?? null;
@@ -807,7 +807,7 @@ function vms_schedule_items_for_dashboard(array $args)
       $vid => (string) (get_the_title($vid) ?: 'Venue'),
     ];
 
-    $items = vms_dashboard_flatten_plans_by_date(
+    $items = bvmgr_dashboard_flatten_plans_by_date(
       $plans_by_date,
       $venue_name_map,
       $open_map,
@@ -842,7 +842,7 @@ function vms_schedule_items_for_dashboard(array $args)
  *   ...
  * ]
  */
-function vms_dashboard_flatten_plans_by_date(
+function bvmgr_dashboard_flatten_plans_by_date(
   $plans_by_date,
   array $venue_name_map,
   $open_map,
@@ -936,7 +936,7 @@ function vms_dashboard_flatten_plans_by_date(
     }
 
     foreach ($rows as $row) {
-      $it = vms_dashboard_normalize_schedule_row($ymd, $row, $venue_name_map, $open_map);
+      $it = bvmgr_dashboard_normalize_schedule_row($ymd, $row, $venue_name_map, $open_map);
 
       if (!$it || !is_array($it)) {
         $it = $fallback_item((string) $ymd, $row);
@@ -1001,16 +1001,16 @@ function vms_dashboard_flatten_plans_by_date(
 
       // Canonical inclusion rules: Published-only by default; optional what-if includes Draft/Ready.
       // Cancelled is controlled by its own toggle.
-      if (function_exists('vms_event_plan_should_include')) {
-        if ($plan_id > 0 && !vms_event_plan_should_include($plan_id, 'dashboard', array(
+      if (function_exists('bvmgr_event_plan_should_include')) {
+        if ($plan_id > 0 && !bvmgr_event_plan_should_include($plan_id, 'dashboard', array(
           'include_drafts'    => (bool) $include_drafts,
           'include_cancelled' => (bool) $include_canceled,
         ))) {
           continue;
         }
 
-        $status_key = function_exists('vms_event_plan_get_status')
-          ? (string) vms_event_plan_get_status($plan_id, 'dashboard')
+        $status_key = function_exists('bvmgr_event_plan_get_status')
+          ? (string) bvmgr_event_plan_get_status($plan_id, 'dashboard')
           : sanitize_key((string) ($it['status'] ?? ''));
         if ($status_key === 'canceled') {
           $status_key = 'cancelled';
@@ -1019,8 +1019,8 @@ function vms_dashboard_flatten_plans_by_date(
           $status_key = 'draft';
         }
 
-        $status_label = function_exists('vms_event_plan_status_label')
-          ? (string) vms_event_plan_status_label($status_key)
+        $status_label = function_exists('bvmgr_event_plan_status_label')
+          ? (string) bvmgr_event_plan_status_label($status_key)
           : ucwords(str_replace(array('_', '-'), ' ', $status_key));
 
         // Dashboard should display canonical status labels (Draft/Ready/Published/Cancelled).
@@ -1055,19 +1055,19 @@ function vms_dashboard_flatten_plans_by_date(
       $tax_bypass_active = false;
       $tax_bypass_until = '';
 
-      $k_band_vendor_id = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'band_vendor_id') : '';
+      $k_band_vendor_id = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'band_vendor_id') : '';
       if ($k_band_vendor_id === '') $k_band_vendor_id = '_vms_band_vendor_id';
 
       if ($plan_id > 0) {
         $vendor_id = absint(get_post_meta($plan_id, $k_band_vendor_id, true));
       }
 
-      if ($vendor_id > 0 && function_exists('vms_is_vendor_tax_profile_complete')) {
-        $tax_missing = !vms_is_vendor_tax_profile_complete($vendor_id);
+      if ($vendor_id > 0 && function_exists('bvmgr_is_vendor_tax_profile_complete')) {
+        $tax_missing = !bvmgr_is_vendor_tax_profile_complete($vendor_id);
       }
 
-      if ($vendor_id > 0 && function_exists('vms_get_tax_bypass_status')) {
-        $st_bypass = (array) vms_get_tax_bypass_status($vendor_id);
+      if ($vendor_id > 0 && function_exists('bvmgr_get_tax_bypass_status')) {
+        $st_bypass = (array) bvmgr_get_tax_bypass_status($vendor_id);
         $tax_bypass_active = !empty($st_bypass['is_active']);
         $tax_bypass_until  = isset($st_bypass['until']) ? (string) $st_bypass['until'] : '';
       }
@@ -1100,7 +1100,7 @@ function vms_dashboard_flatten_plans_by_date(
  * Normalize one Schedule row into dashboard item shape.
  * This is intentionally defensive: it tries common key names.
  */
-function vms_dashboard_normalize_schedule_row(string $ymd, $row, array $venue_name_map, $open_map)
+function bvmgr_dashboard_normalize_schedule_row(string $ymd, $row, array $venue_name_map, $open_map)
 {
   if (is_object($row)) $row = (array) $row;
   if (!is_array($row)) return null;
@@ -1120,8 +1120,8 @@ function vms_dashboard_normalize_schedule_row(string $ymd, $row, array $venue_na
   $start_hhmm = $row['start_time'] ?? $row['start'] ?? $row['start_hhmm'] ?? null;
   $end_hhmm   = $row['end_time']   ?? $row['end']   ?? $row['end_hhmm']   ?? null;
 
-  $start_ts = vms_dashboard_ts_from_ymd_hhmm($ymd, $start_hhmm);
-  $end_ts   = vms_dashboard_ts_from_ymd_hhmm($ymd, $end_hhmm);
+  $start_ts = bvmgr_dashboard_ts_from_ymd_hhmm($ymd, $start_hhmm);
+  $end_ts   = bvmgr_dashboard_ts_from_ymd_hhmm($ymd, $end_hhmm);
 
   // Title: prefer plan title if we have it
   $title = $row['title'] ?? $row['name'] ?? null;
@@ -1156,7 +1156,7 @@ function vms_dashboard_normalize_schedule_row(string $ymd, $row, array $venue_na
   ];
 }
 
-function vms_dashboard_ts_from_ymd_hhmm(string $ymd, $hhmm)
+function bvmgr_dashboard_ts_from_ymd_hhmm(string $ymd, $hhmm)
 {
   if (!$hhmm || !is_string($hhmm)) return null;
 
@@ -1178,7 +1178,7 @@ function vms_dashboard_ts_from_ymd_hhmm(string $ymd, $hhmm)
   return null;
 }
 
-function vms_dashboard_normalize_item($it)
+function bvmgr_dashboard_normalize_item($it)
 {
   // If it's already normalized, pass through.
   if (is_array($it) && isset($it['start_ts']) && isset($it['title'])) return $it;

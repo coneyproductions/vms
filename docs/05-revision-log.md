@@ -1,3 +1,10 @@
+## 0.2.24.748
+- Fixed the current-event Event Details sidebar guard so automatic sidebar injection only suppresses duplicates inside the real target sidebar, while manual `[vms_plan_your_visit layout="sidebar"]` placement still prevents a later auto duplicate when it renders first.
+- Enforced Vendor Type requirements at runtime for public vendor profiles so typeless vendors no longer expose public profile URLs or sidebar links just because older enablement meta was left behind.
+- Retired the orphaned legacy `vms_square_nightly_sync` schedule with a no-op callback plus bounded safe-context cleanup that unschedules every WP-Cron argument variant, cancels pending Action Scheduler rows, deletes failed/canceled retired-hook history, fails closed when the cron or Action Scheduler query APIs report an error, and stores its one-time completion marker only after the full cleanup verifies that no retired-hook rows remain.
+- Normalized both native `rest_cookie_invalid_nonce` responses and VMS Admissions nonce failures to the exact operator-facing refresh message `Your Admissions session expired. Refresh this page, then try again.` while preserving meaningful validation and permission errors.
+- Fixed canceled Admissions restore behavior after live validation exposed that restore was blocked: status-only restore back to active is now allowed, restore-plus-edit and other canceled-entry edits remain blocked, and focused regression coverage was added.
+
 ## 0.2.24.746
 - Fixed cancellation notification recipient discovery so the notifications step reads current staffing slot assignments first, falls back to legacy `_vms_staff_assignments` only when needed, and resolves staff emails in this order: staff `_vms_linked_user_id` user email, any user with `_vms_staff_id` pointing at the staff post, then older staff post meta fallbacks.
 - Stopped silently dropping assigned staff without email by recording typed `missing_email` skips in the cancellation job data while keeping vendor and secondary vendor recipient behavior intact.

@@ -1,22 +1,22 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_add_dispatch_db_option_key')) {
-	function vms_add_dispatch_db_option_key(): string
+if (!function_exists('bvmgr_add_dispatch_db_option_key')) {
+	function bvmgr_add_dispatch_db_option_key(): string
 	{
 		return 'vms_add_dispatch_db_schema_version';
 	}
 }
 
-if (!function_exists('vms_add_dispatch_db_target')) {
-	function vms_add_dispatch_db_target(): string
+if (!function_exists('bvmgr_add_dispatch_db_target')) {
+	function bvmgr_add_dispatch_db_target(): string
 	{
 		return '1.0.0';
 	}
 }
 
-if (!function_exists('vms_add_dispatch_table_name')) {
-	function vms_add_dispatch_table_name(string $kind): string
+if (!function_exists('bvmgr_add_dispatch_table_name')) {
+	function bvmgr_add_dispatch_table_name(string $kind): string
 	{
 		global $wpdb;
 		$map = array(
@@ -34,11 +34,11 @@ if (!function_exists('vms_add_dispatch_table_name')) {
 	}
 }
 
-if (!function_exists('vms_add_dispatch_maybe_upgrade_schema')) {
-	function vms_add_dispatch_maybe_upgrade_schema(): void
+if (!function_exists('bvmgr_add_dispatch_maybe_upgrade_schema')) {
+	function bvmgr_add_dispatch_maybe_upgrade_schema(): void
 	{
-		$current = (string) get_option(vms_add_dispatch_db_option_key(), '');
-		$target = vms_add_dispatch_db_target();
+		$current = (string) get_option(bvmgr_add_dispatch_db_option_key(), '');
+		$target = bvmgr_add_dispatch_db_target();
 		if ($current === $target) {
 			return;
 		}
@@ -47,9 +47,9 @@ if (!function_exists('vms_add_dispatch_maybe_upgrade_schema')) {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
 
-		$requests = vms_add_dispatch_table_name('requests');
-		$responses = vms_add_dispatch_table_name('responses');
-		$logs = vms_add_dispatch_table_name('logs');
+		$requests = bvmgr_add_dispatch_table_name('requests');
+		$responses = bvmgr_add_dispatch_table_name('responses');
+		$logs = bvmgr_add_dispatch_table_name('logs');
 
 		$sql_requests = "CREATE TABLE {$requests} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -133,6 +133,6 @@ if (!function_exists('vms_add_dispatch_maybe_upgrade_schema')) {
 		dbDelta($sql_responses);
 		dbDelta($sql_logs);
 
-		update_option(vms_add_dispatch_db_option_key(), $target, false);
+		update_option(bvmgr_add_dispatch_db_option_key(), $target, false);
 	}
 }

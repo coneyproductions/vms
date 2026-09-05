@@ -31,6 +31,7 @@ require_once __DIR__ . '/season-dates.php';
 require_once __DIR__ . '/season-board.php';
 require_once __DIR__ . '/continuity-binder.php';
 require_once __DIR__ . '/ticket-integrity-page.php';
+require_once __DIR__ . '/event-day-report.php';
 require_once __DIR__ . '/../ticketing/ticket-integrity-tours.php';
 require_once __DIR__ . '/docs-page.php';
 
@@ -47,6 +48,8 @@ require_once __DIR__ . '/vendor-comp-packages.php';
 require_once __DIR__ . '/vendor-details.php';
 require_once __DIR__ . '/vendor-command-center.php';
 require_once __DIR__ . '/event-command-center.php';
+require_once __DIR__ . '/event-reschedule.php';
+require_once __DIR__ . '/event-communications.php';
 require_once __DIR__ . '/vendor-booking-onboarding.php';
 require_once __DIR__ . '/vendor-availability.php';
 require_once __DIR__ . '/staffing.php';
@@ -70,13 +73,6 @@ require_once __DIR__ . '/vendor-user-link.php';
 require_once __DIR__ . '/woo-product-event-columns.php';
 require_once __DIR__ . '/square-sync-protection.php';
 require_once __DIR__ . '/square-ticket-mirror.php';
-require_once __DIR__ . '/addons/class-vms-addons-logger.php';
-require_once __DIR__ . '/addons/class-vms-addons-manifest.php';
-require_once __DIR__ . '/addons/class-vms-addons-installer.php';
-require_once __DIR__ . '/addons/class-vms-addons-licensing.php';
-require_once __DIR__ . '/addons/class-vms-addons-health.php';
-require_once __DIR__ . '/addons/class-vms-admin-addons.php';
-
 require_once __DIR__ . '/vendors/tax-bulk-actions.php';
 require_once __DIR__ . '/vendors/tax-metabox.php';
 require_once __DIR__ . '/vendors/tax-filters.php';
@@ -85,9 +81,9 @@ require_once __DIR__ . '/vendors/tax-export-csv.php';
 require_once __DIR__ . '/vendor-list-ui.php';
 
 
-$vms_ref_keys_map = __DIR__ . '/reference/keys-map.php';
-if (file_exists($vms_ref_keys_map)) {
-    require_once $vms_ref_keys_map;
+$bvmgr_ref_keys_map = __DIR__ . '/reference/keys-map.php';
+if (file_exists($bvmgr_ref_keys_map)) {
+    require_once $bvmgr_ref_keys_map;
 }
  
-add_action('admin_post_vms_save_continuity_binder', 'vms_admin_post_save_continuity_binder');
+add_action('admin_post_vms_save_continuity_binder', 'bvmgr_admin_post_save_continuity_binder');

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var cfg = window.vmsTicketingFront || {};
+  var cfg = window.BVMGR_TICKETING_FRONT || {};
   if (cfg.isCart || cfg.isCheckout) {
     return;
   }

@@ -1,32 +1,40 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
-add_action('admin_menu', 'vms_docs_admin_menu');
+add_action('admin_menu', 'bvmgr_docs_admin_menu');
 
-function vms_docs_admin_menu() {
+function bvmgr_docs_query_arg($key) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only docs routing only changes admin display state.
+    return bvmgr_request_read_scalar($_GET, (string) $key);
+}
+
+function bvmgr_docs_admin_menu() {
     // Parent slug depends on how you registered your VMS menu.
     // If your VMS top-level menu slug is different, change 'vms' below to match.
     $parent_slug = 'vms-dashboard';
 
     add_submenu_page(
         $parent_slug,
-        'VMS Docs',
+		'Backstage Venue Manager Docs',
         'Docs',
         'manage_options',
         'vms-docs',
-        'vms_docs_admin_page_render'
+        'bvmgr_docs_admin_page_render'
     );
 }
 
-function vms_docs_admin_page_render() {
+function bvmgr_docs_admin_page_render() {
     if (!current_user_can('manage_options')) {
         wp_die('You do not have permission to view this page.');
     }
 
-    $index = vms_docs_index();
+    $index = bvmgr_docs_index();
 
-    $active_module = isset($_GET['mod']) ? sanitize_key($_GET['mod']) : 'vms';
-    $active_slug   = isset($_GET['doc']) ? sanitize_title($_GET['doc']) : '';
+    $active_module = sanitize_key(bvmgr_docs_query_arg('mod'));
+    if ($active_module === '') {
+        $active_module = 'vms';
+    }
+    $active_slug = sanitize_title(bvmgr_docs_query_arg('doc'));
 
     // Pick first available module if requested one is missing.
     if (empty($index[$active_module])) {
@@ -48,7 +56,7 @@ function vms_docs_admin_page_render() {
     }
 
     echo '<div class="wrap vms-docs-admin">';
-    echo '<h1>VMS Documentation</h1>';
+    echo '<h1>Backstage Venue Manager Documentation</h1>';
 
     echo '<div class="vms-docs-layout">';
 
@@ -98,8 +106,30 @@ function vms_docs_admin_page_render() {
             echo '<p class="vms-docs-since">Applies since: <code>' . esc_html($active_doc['since']) . '</code></p>';
         }
 
-        $md = vms_docs_get_markdown($active_doc['file']);
-        echo vms_docs_render_markdown($md);
+        $md = bvmgr_docs_get_markdown($active_doc['file']);
+        echo wp_kses(
+            bvmgr_docs_render_markdown($md),
+            array(
+                'a' => array(
+                    'href' => true,
+                    'rel' => true,
+                    'target' => true,
+                ),
+                'code' => array(),
+                'em' => array(),
+                'h1' => array(),
+                'h2' => array(),
+                'h3' => array(),
+                'h4' => array(),
+                'h5' => array(),
+                'h6' => array(),
+                'li' => array(),
+                'p' => array(),
+                'pre' => array(),
+                'strong' => array(),
+                'ul' => array(),
+            )
+        );
     }
 
     echo '</div>'; // right

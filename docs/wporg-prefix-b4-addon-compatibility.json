@@ -1,0 +1,142 @@
+{
+    "schema_version": 1,
+    "artifact": "wporg-prefix-b4-addon-compatibility",
+    "authority": {
+        "authorized_starting_head": "bdd84df7bcbfcec65ee57fedf561bf4e167761f6",
+        "b4_identifier_map": "docs/wporg-prefix-b4-identifier-map.json",
+        "b4_identifier_map_sha256": "d7c67987a332ac3355d6bb61c6e155f3ea4fbf61db97ee21b2f01087ed8067f0"
+    },
+    "disposable_root": "/private/tmp/bvm-wporg-b4-addon-isolation",
+    "summary": {
+        "addons": 5,
+        "b4_semantic_consumers": 0,
+        "patches_required": 0,
+        "installed_trees_modified": 0
+    },
+    "retained_homonyms": [
+        {
+            "slug": "vms-refer-a-friend",
+            "identifier": "vms-admin",
+            "role": "admin_page_parent_slug_candidate",
+            "asset_api_consumer": false,
+            "compatibility_action": "retain unchanged"
+        }
+    ],
+    "addons": [
+        {
+            "slug": "vms-events-slider",
+            "installed_source_read_only": true,
+            "installed_source": {
+                "file_count": 3,
+                "sha256": "553da7e1fe004b390ee67ec1a673eb23255353282a65d2447be57da12af7b4dc"
+            },
+            "fresh_source_copy": {
+                "file_count": 3,
+                "sha256": "553da7e1fe004b390ee67ec1a673eb23255353282a65d2447be57da12af7b4dc"
+            },
+            "workspace_before_b4": {
+                "file_count": 3,
+                "sha256": "553da7e1fe004b390ee67ec1a673eb23255353282a65d2447be57da12af7b4dc"
+            },
+            "workspace_after_b4": {
+                "file_count": 3,
+                "sha256": "553da7e1fe004b390ee67ec1a673eb23255353282a65d2447be57da12af7b4dc"
+            },
+            "b4_semantic_consumers": [],
+            "patch_required": false,
+            "patch_sha256": null
+        },
+        {
+            "slug": "vms-fill-dates",
+            "installed_source_read_only": true,
+            "installed_source": {
+                "file_count": 9,
+                "sha256": "9bb93cc1638c979c7661f3aee0a50cdfd68be5db778df46edb10c391cbae52d2"
+            },
+            "fresh_source_copy": {
+                "file_count": 9,
+                "sha256": "9bb93cc1638c979c7661f3aee0a50cdfd68be5db778df46edb10c391cbae52d2"
+            },
+            "workspace_before_b4": {
+                "file_count": 9,
+                "sha256": "9bb93cc1638c979c7661f3aee0a50cdfd68be5db778df46edb10c391cbae52d2"
+            },
+            "workspace_after_b4": {
+                "file_count": 9,
+                "sha256": "9bb93cc1638c979c7661f3aee0a50cdfd68be5db778df46edb10c391cbae52d2"
+            },
+            "b4_semantic_consumers": [],
+            "patch_required": false,
+            "patch_sha256": null
+        },
+        {
+            "slug": "vms-data-tools",
+            "installed_source_read_only": true,
+            "installed_source": {
+                "file_count": 76,
+                "sha256": "7949410ac3fcd0d00d90a48cde8236d11c871eeddded20e2c44818dbb7aced56"
+            },
+            "fresh_source_copy": {
+                "file_count": 76,
+                "sha256": "7949410ac3fcd0d00d90a48cde8236d11c871eeddded20e2c44818dbb7aced56"
+            },
+            "workspace_before_b4": {
+                "file_count": 76,
+                "sha256": "7949410ac3fcd0d00d90a48cde8236d11c871eeddded20e2c44818dbb7aced56"
+            },
+            "workspace_after_b4": {
+                "file_count": 76,
+                "sha256": "7949410ac3fcd0d00d90a48cde8236d11c871eeddded20e2c44818dbb7aced56"
+            },
+            "b4_semantic_consumers": [],
+            "patch_required": false,
+            "patch_sha256": null
+        },
+        {
+            "slug": "vms-express-bar",
+            "installed_source_read_only": true,
+            "installed_source": {
+                "file_count": 43,
+                "sha256": "e464652afbb4840cf425c004950c04ae49dfcff329f2d3b1c17718c670416243"
+            },
+            "fresh_source_copy": {
+                "file_count": 43,
+                "sha256": "e464652afbb4840cf425c004950c04ae49dfcff329f2d3b1c17718c670416243"
+            },
+            "workspace_before_b4": {
+                "file_count": 43,
+                "sha256": "e464652afbb4840cf425c004950c04ae49dfcff329f2d3b1c17718c670416243"
+            },
+            "workspace_after_b4": {
+                "file_count": 43,
+                "sha256": "e464652afbb4840cf425c004950c04ae49dfcff329f2d3b1c17718c670416243"
+            },
+            "b4_semantic_consumers": [],
+            "patch_required": false,
+            "patch_sha256": null
+        },
+        {
+            "slug": "vms-refer-a-friend",
+            "installed_source_read_only": true,
+            "installed_source": {
+                "file_count": 15,
+                "sha256": "0a758947e855e220112f6aa68ea1df67080cccd9852908f47119a4451c7ddda2"
+            },
+            "fresh_source_copy": {
+                "file_count": 15,
+                "sha256": "0a758947e855e220112f6aa68ea1df67080cccd9852908f47119a4451c7ddda2"
+            },
+            "workspace_before_b4": {
+                "file_count": 15,
+                "sha256": "0a758947e855e220112f6aa68ea1df67080cccd9852908f47119a4451c7ddda2"
+            },
+            "workspace_after_b4": {
+                "file_count": 15,
+                "sha256": "0a758947e855e220112f6aa68ea1df67080cccd9852908f47119a4451c7ddda2"
+            },
+            "b4_semantic_consumers": [],
+            "patch_required": false,
+            "patch_sha256": null
+        }
+    ]
+}

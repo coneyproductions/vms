@@ -13,13 +13,13 @@ if (!defined('ABSPATH')) exit;
  *  2) Settings: vms_settings[default_venue_id]
  *  3) first available venue by title
  */
-function vms_get_current_venue_id()
+function bvmgr_get_current_venue_id()
 {
     $user_id = (int) get_current_user_id();
 
     // Prefer canonical constant if present.
-    $meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     $raw = get_user_meta($user_id, $meta_key, true);
@@ -29,8 +29,8 @@ function vms_get_current_venue_id()
     }
 
     // Fallback to Default Venue.
-    if (function_exists('vms_get_default_venue_id')) {
-        $default_id = (int) vms_get_default_venue_id();
+    if (function_exists('bvmgr_get_default_venue_id')) {
+        $default_id = (int) bvmgr_get_default_venue_id();
         if ($default_id > 0 && get_post_type($default_id) === 'vms_venue') {
             return (int) $default_id;
         }
@@ -56,13 +56,13 @@ function vms_get_current_venue_id()
 
 
 
-function vms_set_current_venue_id(int $venue_id): void
+function bvmgr_set_current_venue_id(int $venue_id): void
 {
     $user_id = (int) get_current_user_id();
 
     // Prefer canonical constant if present.
-    $meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     if ($venue_id > 0 && get_post_type($venue_id) === 'vms_venue') {
@@ -74,7 +74,7 @@ function vms_set_current_venue_id(int $venue_id): void
  * Render a reusable venue selector form (admin-only).
  * Include this at the top of VMS admin pages.
  */
-function vms_render_current_venue_selector(): void
+function bvmgr_render_current_venue_selector(): void
 {
     if (!current_user_can('manage_options')) {
         return;
@@ -83,18 +83,20 @@ function vms_render_current_venue_selector(): void
     $user_id = (int) get_current_user_id();
 
     // Prefer canonical constant if present.
-    $meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     // Prefer explicit venue_id in URL, else user meta.
-    $current = isset($_GET['venue_id'])
-        ? absint($_GET['venue_id'])
-        : absint(get_user_meta($user_id, $meta_key, true));
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only venue selection only determines the current admin view and stored user context.
+    $current = bvmgr_request_read_absint($_GET, 'venue_id');
+    if ($current <= 0) {
+        $current = absint(get_user_meta($user_id, $meta_key, true));
+    }
 
     // Fallback to Default Venue if none selected yet.
-    if ($current <= 0 && function_exists('vms_get_default_venue_id')) {
-        $current = (int) vms_get_default_venue_id();
+    if ($current <= 0 && function_exists('bvmgr_get_default_venue_id')) {
+        $current = (int) bvmgr_get_default_venue_id();
     }
 
     $venues = get_posts(array(
@@ -107,7 +109,7 @@ function vms_render_current_venue_selector(): void
     ));
 
     if (empty($venues)) {
-        echo '<div class="notice notice-warning"><p><strong>VMS:</strong> No venues exist yet. Create one under VMS → Venues.</p></div>';
+        echo '<div class="notice notice-warning"><p><strong>Backstage Venue Manager:</strong> No venues exist yet. Create one under Backstage Venue Manager → Venues.</p></div>';
         return;
     }
 
@@ -126,7 +128,7 @@ function vms_render_current_venue_selector(): void
     echo '<input type="hidden" name="action" value="vms_set_current_venue">';
     echo '<input type="hidden" name="vms_context" value="schedule">';
 
-    wp_nonce_field('vms_set_current_venue', 'vms_current_venue_nonce');
+    wp_nonce_field('bvmgr_set_current_venue', 'bvmgr_current_venue_nonce');
 
     echo '<label for="vms-venue-select" class="vms-venue-selector__label">Current Venue:</label>';
 
@@ -145,7 +147,11 @@ function vms_render_current_venue_selector(): void
         echo '<option value="' . esc_attr((string) $vid) . '"' . selected($current, $vid, false) . '>' . esc_html($label) . '</option>';
     }
     echo '</select>';
-    echo '<input type="hidden" name="redirect_to" value="' . esc_attr(wp_unslash($_SERVER['REQUEST_URI'])) . '">';
+    $current_redirect = bvmgr_request_local_redirect(
+        admin_url('admin.php?page=vms-schedule'),
+        bvmgr_request_current_uri()
+    );
+    echo '<input type="hidden" name="redirect_to" value="' . esc_attr($current_redirect) . '">';
     echo '</form>';
 }
 
@@ -166,12 +172,15 @@ add_action('admin_post_vms_set_current_venue', function () {
         wp_die('Not allowed');
     }
 
-    if (empty($_POST['vms_current_venue_nonce']) || !wp_verify_nonce($_POST['vms_current_venue_nonce'], 'vms_set_current_venue')) {
+    $nonce = (isset($_POST['bvmgr_current_venue_nonce']) && !is_array($_POST['bvmgr_current_venue_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_current_venue_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_set_current_venue'))) {
         wp_die('Bad nonce');
     }
 
     // Hard scope: only allow from Schedule pages.
-    $context = isset($_POST['vms_context']) ? sanitize_text_field((string) $_POST['vms_context']) : '';
+    $context = bvmgr_request_read_text_field($_POST, 'vms_context');
     if ($context !== 'schedule') {
         wp_die('Not allowed');
     }
@@ -179,12 +188,12 @@ add_action('admin_post_vms_set_current_venue', function () {
     $user_id = (int) get_current_user_id();
 
     // Prefer canonical constant if present.
-    $meta_key = defined('VMS_SCH_CURRENT_VENUE_META_KEY')
-        ? (string) VMS_SCH_CURRENT_VENUE_META_KEY
+    $meta_key = defined('BVMGR_SCH_CURRENT_VENUE_META_KEY')
+        ? (string) BVMGR_SCH_CURRENT_VENUE_META_KEY
         : '_vms_current_venue_id';
 
     // Numeric only.
-    $venue_id = isset($_POST['venue_id']) ? absint($_POST['venue_id']) : 0;
+    $venue_id = bvmgr_request_read_absint($_POST, 'venue_id');
 
     if ($venue_id > 0) {
         update_user_meta($user_id, $meta_key, (string) $venue_id);
@@ -192,9 +201,10 @@ add_action('admin_post_vms_set_current_venue', function () {
         delete_user_meta($user_id, $meta_key);
     }
 
-    $redirect = !empty($_POST['redirect_to'])
-        ? esc_url_raw((string) $_POST['redirect_to'])
-        : (wp_get_referer() ?: admin_url('admin.php?page=vms-schedule'));
+    $redirect = bvmgr_request_local_redirect(
+        wp_get_referer() ?: admin_url('admin.php?page=vms-schedule'),
+        bvmgr_request_read_scalar($_POST, 'redirect_to')
+    );
 
     // Ensure redirect reflects the newly selected venue_id.
     // If redirect_to still contains the prior venue_id, schedule.php can re-persist the old value on load.
@@ -221,20 +231,23 @@ add_action('admin_post_vms_set_dashboard_venue', function () {
         wp_die('Not allowed');
     }
 
-    if (empty($_POST['vms_dash_venue_nonce']) || !wp_verify_nonce($_POST['vms_dash_venue_nonce'], 'vms_set_dashboard_venue')) {
+    $nonce = (isset($_POST['bvmgr_dash_venue_nonce']) && !is_array($_POST['bvmgr_dash_venue_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_dash_venue_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_set_dashboard_venue'))) {
         wp_die('Bad nonce');
     }
 
     $user_id = (int) get_current_user_id();
 
-    $scope = isset($_POST['dash_scope']) ? sanitize_key((string) $_POST['dash_scope']) : 'venue';
+    $scope = bvmgr_request_read_key($_POST, 'dash_scope');
     if ($scope !== 'venue' && $scope !== 'all') {
         $scope = 'venue';
     }
 
     update_user_meta($user_id, '_vms_dash_scope', $scope);
 
-    $venue_id = isset($_POST['dash_venue_id']) ? absint($_POST['dash_venue_id']) : 0;
+    $venue_id = bvmgr_request_read_absint($_POST, 'dash_venue_id');
 
     // Enforce: all-venues scope implies venue_id=0.
     if ($scope === 'all') {
@@ -246,9 +259,10 @@ add_action('admin_post_vms_set_dashboard_venue', function () {
         delete_user_meta($user_id, '_vms_dash_venue_id');
     }
 
-    $redirect = !empty($_POST['redirect_to'])
-        ? esc_url_raw((string) $_POST['redirect_to'])
-        : (wp_get_referer() ?: admin_url('admin.php?page=vms-dashboard'));
+    $redirect = bvmgr_request_local_redirect(
+        wp_get_referer() ?: admin_url('admin.php?page=vms-dashboard'),
+        bvmgr_request_read_scalar($_POST, 'redirect_to')
+    );
 
     wp_safe_redirect($redirect);
     exit;
@@ -264,7 +278,7 @@ add_action('admin_post_vms_set_dashboard_venue', function () {
  *  - _vms_dash_venue_id = numeric string (only meaningful when scope=venue)
  *
  * POST params:
- *  - nonce (required) wp_create_nonce('vms_set_dashboard_prefs')
+ *  - nonce (required) wp_create_nonce('bvmgr_set_dashboard_prefs')
  *  - dash_scope ('venue' | 'all')
  *  - dash_venue_id (numeric string; ignored when scope=all)
  */
@@ -274,8 +288,10 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
         wp_send_json_error(array('message' => 'Not allowed'), 403);
     }
 
-    $nonce = isset($_POST['nonce']) ? (string) $_POST['nonce'] : '';
-    if (!$nonce || !wp_verify_nonce($nonce, 'vms_set_dashboard_prefs')) {
+    $nonce = (isset($_POST['nonce']) && !is_array($_POST['nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['nonce']))
+        : '';
+    if (!$nonce || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_set_dashboard_prefs'))) {
         wp_send_json_error(array('message' => 'Bad nonce'), 403);
     }
 
@@ -283,10 +299,10 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
 
     // Optional: persist the global what-if toggle (Draft/Ready).
     if (isset($_POST['include_drafts'])) {
-        $include_drafts = (absint($_POST['include_drafts']) === 1);
+        $include_drafts = (bvmgr_request_read_absint($_POST, 'include_drafts') === 1);
 
-        if (function_exists('vms_user_pref_set_include_drafts')) {
-            vms_user_pref_set_include_drafts((bool) $include_drafts, $user_id);
+        if (function_exists('bvmgr_user_pref_set_include_drafts')) {
+            bvmgr_user_pref_set_include_drafts((bool) $include_drafts, $user_id);
         } else {
             update_user_meta($user_id, '_vms_include_drafts', $include_drafts ? '1' : '0');
         }
@@ -294,7 +310,7 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
 
     // Optional: persist dashboard Include canceled toggle.
     if (isset($_POST['include_canceled'])) {
-        $include_canceled = (absint($_POST['include_canceled']) === 1);
+        $include_canceled = (bvmgr_request_read_absint($_POST, 'include_canceled') === 1);
         update_user_meta($user_id, '_vms_dash_include_canceled', $include_canceled ? '1' : '0');
     }
 
@@ -310,7 +326,7 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
     $scope = $scope_existing;
     $touch_scope = isset($_POST['dash_scope']);
     if ($touch_scope) {
-        $scope = isset($_POST['dash_scope']) ? sanitize_key((string) $_POST['dash_scope']) : 'venue';
+        $scope = bvmgr_request_read_key($_POST, 'dash_scope');
         if ($scope !== 'venue' && $scope !== 'all') {
             $scope = 'venue';
         }
@@ -323,7 +339,7 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
     $touch_venue = isset($_POST['dash_venue_id']);
 
     if ($touch_venue) {
-        $venue_id = absint($_POST['dash_venue_id']);
+        $venue_id = bvmgr_request_read_absint($_POST, 'dash_venue_id');
     }
 
     // Enforce: all-venues scope implies venue_id=0.
@@ -341,8 +357,8 @@ add_action('wp_ajax_vms_set_dashboard_prefs', function () {
         }
     }
 
-    $include_drafts_now = (function_exists('vms_user_pref_get_include_drafts'))
-        ? (bool) vms_user_pref_get_include_drafts($user_id)
+    $include_drafts_now = (function_exists('bvmgr_user_pref_get_include_drafts'))
+        ? (bool) bvmgr_user_pref_get_include_drafts($user_id)
         : false;
     $include_canceled_now = ((string) get_user_meta($user_id, '_vms_dash_include_canceled', true) === '1');
 

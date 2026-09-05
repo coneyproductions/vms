@@ -106,24 +106,24 @@ function current_user_can(string $capability): bool
 	return !empty($GLOBALS['vms_test_caps'][$capability]);
 }
 
-function vms_admission_manage_capability(): string
+function bvmgr_admission_manage_capability(): string
 {
 	return 'vms_admission_manage';
 }
 
-function vms_admission_door_capability(): string
+function bvmgr_admission_door_capability(): string
 {
 	return 'vms_door_checkin';
 }
 
-function vms_admission_current_user_can_manage(): bool
+function bvmgr_admission_current_user_can_manage(): bool
 {
-	return current_user_can(vms_admission_manage_capability());
+	return current_user_can(bvmgr_admission_manage_capability());
 }
 
-function vms_admission_current_user_can_checkin(): bool
+function bvmgr_admission_current_user_can_checkin(): bool
 {
-	return current_user_can(vms_admission_door_capability()) || vms_admission_current_user_can_manage();
+	return current_user_can(bvmgr_admission_door_capability()) || bvmgr_admission_current_user_can_manage();
 }
 
 $assert = static function (bool $condition, string $message): void {
@@ -158,24 +158,25 @@ $listRoute = $findRoute('/admissions', WP_REST_Server::READABLE);
 $createRoute = $findRoute('/admissions', WP_REST_Server::CREATABLE);
 $scanRoute = $findRoute('/admissions/scan', WP_REST_Server::CREATABLE);
 
-$assert(($listRoute['args']['permission_callback'] ?? null) === 'vms_admission_rest_can_checkin_request', 'Admissions list route should use explicit check-in permission callback.');
-$assert(($createRoute['args']['permission_callback'] ?? null) === 'vms_admission_rest_can_manage_request', 'Admissions create route should use explicit manage permission callback.');
-$assert(($scanRoute['args']['permission_callback'] ?? null) === 'vms_admission_rest_can_checkin_request', 'Admissions scan route should not remain publicly registered.');
+$assert(($listRoute['args']['permission_callback'] ?? null) === 'bvmgr_admission_rest_can_checkin_request', 'Admissions list route should use explicit check-in permission callback.');
+$assert(($createRoute['args']['permission_callback'] ?? null) === 'bvmgr_admission_rest_can_manage_request', 'Admissions create route should use explicit manage permission callback.');
+$assert(($scanRoute['args']['permission_callback'] ?? null) === 'bvmgr_admission_rest_can_checkin_request', 'Admissions scan route should not remain publicly registered.');
 
 $GLOBALS['vms_test_caps'] = array();
 $forbidden = call_user_func($listRoute['args']['permission_callback'], new WP_REST_Request());
 $assert($forbidden instanceof WP_Error, 'Admissions list should block unauthenticated/non-door access at the route boundary.');
 $assert($forbidden->get_error_code() === 'vms_admission_forbidden', 'Admissions list should return the hardened forbidden error code.');
 
-$GLOBALS['vms_test_caps'] = array(vms_admission_door_capability() => true);
+$GLOBALS['vms_test_caps'] = array(bvmgr_admission_door_capability() => true);
 $badNonce = call_user_func($listRoute['args']['permission_callback'], new WP_REST_Request(array('X-WP-Nonce' => 'expired')));
 $assert($badNonce instanceof WP_Error, 'Admissions list should reject invalid REST nonces.');
 $assert($badNonce->get_error_code() === 'vms_admission_bad_nonce', 'Admissions list should surface the hardened bad-nonce code.');
+$assert($badNonce->get_error_message() === 'Your Admissions session expired. Refresh the page and try again.', 'Admissions list should return the refreshed expired-session guidance.');
 
 $goodCheckin = call_user_func($listRoute['args']['permission_callback'], new WP_REST_Request(array('X-WP-Nonce' => 'good-rest-nonce')));
 $assert($goodCheckin === true, 'Admissions list should allow door users with a valid REST nonce.');
 
-$GLOBALS['vms_test_caps'] = array(vms_admission_manage_capability() => true);
+$GLOBALS['vms_test_caps'] = array(bvmgr_admission_manage_capability() => true);
 $goodManage = call_user_func($createRoute['args']['permission_callback'], new WP_REST_Request(array('X-WP-Nonce' => 'good-rest-nonce')));
 $assert($goodManage === true, 'Admissions create should allow managers with a valid REST nonce.');
 

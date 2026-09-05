@@ -1,0 +1,636 @@
+diff --git a/vms-agreements/docs/CHANGELOG.md b/vms-agreements/docs/CHANGELOG.md
+index 3b7da10..0ed8a0f 100644
+--- a/vms-agreements/docs/CHANGELOG.md
++++ b/vms-agreements/docs/CHANGELOG.md
+@@ -2,0 +3,7 @@
++## 0.3.48 - 2026-09-01
++
++- Registers the native `agreements` vendor-portal slug through Backstage Venue Manager's public `vms_vendor_portal_allowed_tabs` filter.
++- Fixes direct and clicked Agreements navigation falling back to Dashboard even though the Agreements link and pending-count badge were visible.
++- Preserves all existing core and companion portal tabs while keeping the existing BVM-authorized vendor context, packet query, acknowledgement, signature, review-link, and empty-state behavior unchanged.
++- Adds focused routing coverage for the full portal allowlist, active state, badge count, one/no-agreement rendering, acknowledged actions, and cross-vendor packet isolation.
++
+diff --git a/vms-agreements/docs/CODEX-HANDOFF-0.3.48.md b/vms-agreements/docs/CODEX-HANDOFF-0.3.48.md
+new file mode 100644
+index 0000000..d14044b
+--- /dev/null
++++ b/vms-agreements/docs/CODEX-HANDOFF-0.3.48.md
+@@ -0,0 +1,19 @@
++# VMS Agreements 0.3.48 Handoff
++
++## Scope
++
++Vendor-portal routing registration repair for Backstage Venue Manager 1.2.0.
++
++## Root cause and change
++
++Agreements already registered a native navigation link and custom-tab content provider, but it did not register `agreements` on BVM's `vms_vendor_portal_allowed_tabs` filter. BVM therefore normalized `?tab=agreements` to `dashboard` before active-state selection and custom rendering.
++
++0.3.48 registers only the `agreements` slug through that public filter. Existing slugs are preserved, and invalid filter values are left for BVM's own fail-closed validation.
++
++## Compatibility and data safety
++
++Existing templates, packets, review tokens, acknowledgement/signature records, hashes, vendor associations, and Event Plan associations do not require migration or regeneration. The repair does not broaden vendor access or change packet queries.
++
++## Package
++
++`vms-agreements-0.3.48-vendor-portal-routing-registration.zip`
+diff --git a/vms-agreements/docs/HANDOFF.md b/vms-agreements/docs/HANDOFF.md
+index f524c27..6541daa 100644
+--- a/vms-agreements/docs/HANDOFF.md
++++ b/vms-agreements/docs/HANDOFF.md
+@@ -6,2 +6,2 @@
+-- Version: **0.3.47**
+-- Build label: **bvm-public-runtime-compatibility**
++- Version: **0.3.48**
++- Build label: **vendor-portal-routing-registration**
+@@ -14 +14 @@
+-`0.3.47` includes all agreement/business-rule and presentation work through 0.3.46 and adds a focused Backstage Venue Manager dependency repair:
++`0.3.48` includes all agreement/business-rule and presentation work through 0.3.47 and adds a focused Backstage Venue Manager vendor-portal routing repair:
+@@ -16,4 +16,4 @@
+-- Recognizes the public Backstage Venue Manager `BVMGR_VERSION` identity.
+-- Preserves legacy `VMS_VERSION` support.
+-- Uses the resolved core version consistently for dependency checks and notices.
+-- Makes no agreement-language, compensation, hashing, acknowledgement, identity, production, signature, notification, permission, or nonce changes.
++- Registers `agreements` through BVM's public vendor-portal allowed-tab filter.
++- Keeps the existing Agreements navigation, badge, content renderer, packet queries, empty state, and secure review/print actions.
++- Preserves all BVM and companion portal slugs already present in the allowlist.
++- Makes no agreement-language, compensation, hashing, acknowledgement, identity, production, signature, notification, authorization, or nonce changes.
+@@ -36 +36 @@ Agreement-specific identity, production responsibilities, and Production Schedul
+-Use `docs/TEST-PLAN-0.3.47.md` for focused release checks and `docs/CODEX-HANDOFF-0.3.47.md` for the version-specific summary.
++Use `docs/TEST-PLAN-0.3.48.md` for focused release checks and `docs/CODEX-HANDOFF-0.3.48.md` for the version-specific summary.
+diff --git a/vms-agreements/docs/README.md b/vms-agreements/docs/README.md
+index fee659f..83d2f9e 100644
+--- a/vms-agreements/docs/README.md
++++ b/vms-agreements/docs/README.md
+@@ -0,0 +1,6 @@
++# VMS Agreements 0.3.48 - Vendor Portal Routing Registration
++
++This release registers the native `agreements` slug through Backstage Venue Manager's public vendor-portal allowlist. It fixes the partial-integration state where the Agreements link and pending badge rendered, but direct or clicked navigation was normalized back to Dashboard before Agreements could receive active styling or render its content callback.
++
++The repair is routing-only. It preserves BVM-authorized vendor context, packet ownership queries, review/print links, acknowledgement and signature behavior, empty states, and every existing core or companion portal tab.
++
+diff --git a/vms-agreements/docs/TEST-PLAN-0.3.48.md b/vms-agreements/docs/TEST-PLAN-0.3.48.md
+new file mode 100644
+index 0000000..afbca50
+--- /dev/null
++++ b/vms-agreements/docs/TEST-PLAN-0.3.48.md
+@@ -0,0 +1,35 @@
++# VMS Agreements 0.3.48 Test Plan
++
++## Automated routing regression
++
++Run `php tests/vendor-portal-routing-regression.php` with BVM 1.2.0 source available at the normal sibling path or through `BVM_PORTAL_SOURCE`.
++
++The test must confirm:
++
++- Dashboard, Profile, Tax Profile, Availability, Tech Docs, Guest List, Agreements, and the existing auxiliary portal slugs remain allowlisted.
++- Direct `tab=agreements` and the normal Agreements link both resolve to Agreements.
++- Agreements receives active styling while Dashboard is not selected.
++- A pending packet produces the expected badge count.
++- One-agreement, no-agreement, and acknowledged packet/action surfaces render.
++- Packet queries stay limited to the authorized vendor IDs passed by BVM.
++- Invalid tab values still fall back to Dashboard.
++- The BVM source retains the Add a Business navigation path.
++
++## Compatibility and release
++
++1. Run all four `tests/bvm-public-runtime-compatibility.php` scenarios.
++2. Run PHP lint across every plugin PHP file.
++3. Build `vms-agreements-0.3.48-vendor-portal-routing-registration.zip` with a single `vms-agreements/` root.
++4. Run `unzip -t` and compare the extracted package with the candidate source tree.
++
++## Production acceptance
++
++1. Back up the installed production `vms-agreements` directory outside the web root.
++2. Confirm production BVM and Agreements versions before deployment.
++3. Deploy only the Agreements package.
++4. Open `/vendor-portal/?tab=agreements&vendor_id=5505` without submitting any form or action.
++5. Confirm Agreements is active, Dashboard is inactive, the badge remains accurate, and the existing Reputation agreement plus its review/print or acknowledged actions render.
++6. Confirm Dashboard and another ordinary portal tab still work.
++7. Confirm a vendor without packets sees **No agreements yet** if a safe account/context is available.
++8. Check narrow/mobile layout and production logs.
++9. Do not acknowledge, sign, regenerate, reassign, delete, or otherwise mutate any real agreement during smoke testing.
+diff --git a/vms-agreements/includes/vendor-portal.php b/vms-agreements/includes/vendor-portal.php
+index 00ba717..d52a8a2 100644
+--- a/vms-agreements/includes/vendor-portal.php
++++ b/vms-agreements/includes/vendor-portal.php
+@@ -10,0 +11 @@ add_action('vms_vendor_portal_nav_links', 'vmsa_render_vendor_portal_nav_link',
++add_filter('vms_vendor_portal_allowed_tabs', 'vmsa_register_vendor_portal_tab', 20);
+@@ -12,0 +14,10 @@ add_filter('vms_vendor_portal_render_custom_tab', 'vmsa_render_vendor_portal_cus
++function vmsa_register_vendor_portal_tab($tabs)
++{
++    if (!is_array($tabs)) {
++        return $tabs;
++    }
++
++    $tabs[] = 'agreements';
++    return array_values(array_unique(array_filter(array_map('sanitize_key', $tabs))));
++}
++
+diff --git a/vms-agreements/tests/vendor-portal-routing-regression.php b/vms-agreements/tests/vendor-portal-routing-regression.php
+new file mode 100644
+index 0000000..9694e74
+--- /dev/null
++++ b/vms-agreements/tests/vendor-portal-routing-regression.php
+@@ -0,0 +1,483 @@
++<?php
++
++declare(strict_types=1);
++
++define('ABSPATH', __DIR__ . '/');
++define('VMSA_CPT_PACKET', 'vmsa_packet');
++
++$GLOBALS['vmsa_test_filters'] = array();
++$GLOBALS['vmsa_test_packets'] = array(
++    9001 => array(
++        'vendor_id' => 5505,
++        'status' => 'generated',
++        'snapshot' => array(
++            'event_plan' => array(
++                'id' => 7001,
++                'title' => 'Reputation - a Tribute to Taylor',
++                'event_date' => '2026-09-05',
++                'start_time' => '20:00',
++                'end_time' => '22:00',
++            ),
++            'venue' => array('name' => 'Serenade Range'),
++            'vendor' => array('name' => 'Reputation - a Tribute to Taylor'),
++            'compensation' => array('summary' => '$2,500 guarantee'),
++        ),
++    ),
++);
++$GLOBALS['vmsa_test_last_get_posts_args'] = array();
++$GLOBALS['vmsa_test_current_user_can_manage'] = false;
++
++function vmsa_test_fail(string $message): void
++{
++    fwrite(STDERR, "FAIL: {$message}\n");
++    exit(1);
++}
++
++function vmsa_test_assert(bool $condition, string $message): void
++{
++    if (!$condition) {
++        vmsa_test_fail($message);
++    }
++}
++
++function vmsa_test_same($expected, $actual, string $message): void
++{
++    if ($expected !== $actual) {
++        vmsa_test_fail($message . ' Expected ' . var_export($expected, true) . ', got ' . var_export($actual, true) . '.');
++    }
++}
++
++function vmsa_test_extract_function(string $source, string $name): string
++{
++    $start = strpos($source, 'function ' . $name . '(');
++    if ($start === false) {
++        vmsa_test_fail("Could not find {$name} in BVM vendor portal source.");
++    }
++
++    $brace = strpos($source, '{', $start);
++    if ($brace === false) {
++        vmsa_test_fail("Could not find the opening brace for {$name}.");
++    }
++
++    $depth = 0;
++    $length = strlen($source);
++    for ($index = $brace; $index < $length; $index++) {
++        if ($source[$index] === '{') {
++            $depth++;
++        } elseif ($source[$index] === '}') {
++            $depth--;
++            if ($depth === 0) {
++                return substr($source, $start, $index - $start + 1);
++            }
++        }
++    }
++
++    vmsa_test_fail("Could not extract the complete {$name} function.");
++}
++
++function add_filter(string $hook, $callback, int $priority = 10, int $accepted_args = 1): bool
++{
++    $GLOBALS['vmsa_test_filters'][$hook][$priority][] = array(
++        'callback' => $callback,
++        'accepted_args' => $accepted_args,
++    );
++    return true;
++}
++
++function add_action(string $hook, $callback, int $priority = 10, int $accepted_args = 1): bool
++{
++    return add_filter($hook, $callback, $priority, $accepted_args);
++}
++
++function apply_filters(string $hook, $value, ...$args)
++{
++    $callbacks = $GLOBALS['vmsa_test_filters'][$hook] ?? array();
++    ksort($callbacks, SORT_NUMERIC);
++    foreach ($callbacks as $rows) {
++        foreach ($rows as $row) {
++            $call_args = array_slice(array_merge(array($value), $args), 0, (int) $row['accepted_args']);
++            $value = call_user_func_array($row['callback'], $call_args);
++        }
++    }
++    return $value;
++}
++
++function has_filter(string $hook, $callback = false)
++{
++    foreach (($GLOBALS['vmsa_test_filters'][$hook] ?? array()) as $priority => $rows) {
++        foreach ($rows as $row) {
++            if ($callback === false || $row['callback'] === $callback) {
++                return $priority;
++            }
++        }
++    }
++    return false;
++}
++
++function sanitize_key($value): string
++{
++    return trim(preg_replace('/[^a-z0-9_\-]/', '', strtolower((string) $value)) ?? '');
++}
++
++function absint($value): int
++{
++    return abs((int) $value);
++}
++
++function vms_vendor_portal_query_key(string $key): string
++{
++    return isset($_GET[$key]) && !is_array($_GET[$key]) ? sanitize_key((string) $_GET[$key]) : '';
++}
++
++function bvmgr_vendor_portal_query_key(string $key): string
++{
++    return vms_vendor_portal_query_key($key);
++}
++
++function is_user_logged_in(): bool
++{
++    return true;
++}
++
++function current_user_can(string $capability): bool
++{
++    return $capability === 'manage_options' && !empty($GLOBALS['vmsa_test_current_user_can_manage']);
++}
++
++function get_current_user_id(): int
++{
++    return 1001;
++}
++
++function get_permalink(): string
++{
++    return 'https://example.test/vendor-portal/';
++}
++
++function home_url(string $path = ''): string
++{
++    return 'https://example.test' . $path;
++}
++
++function add_query_arg(array $args, string $url): string
++{
++    return $url . (str_contains($url, '?') ? '&' : '?') . http_build_query($args);
++}
++
++function esc_html__($text, $domain = null): string
++{
++    return (string) $text;
++}
++
++function esc_attr__($text, $domain = null): string
++{
++    return (string) $text;
++}
++
++function __($text, $domain = null): string
++{
++    return (string) $text;
++}
++
++function _n($single, $plural, $number, $domain = null): string
++{
++    return ((int) $number === 1) ? (string) $single : (string) $plural;
++}
++
++function esc_html($value): string
++{
++    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
++}
++
++function esc_attr($value): string
++{
++    return esc_html($value);
++}
++
++function esc_url($value): string
++{
++    return (string) $value;
++}
++
++function wp_kses($value, array $allowed_html): string
++{
++    return (string) $value;
++}
++
++function number_format_i18n($number): string
++{
++    return number_format((float) $number, 0, '.', ',');
++}
++
++function shortcode_atts(array $pairs, array $atts, string $shortcode = ''): array
++{
++    return array_merge($pairs, array_intersect_key($atts, $pairs));
++}
++
++function add_shortcode(string $tag, $callback): bool
++{
++    return true;
++}
++
++function vmsa_disable_public_cache(): void
++{
++}
++
++function vmsa_core_function_name(string $legacy_name): string
++{
++    return '';
++}
++
++function vmsa_get_packet_snapshot(int $packet_id): array
++{
++    return (array) ($GLOBALS['vmsa_test_packets'][$packet_id]['snapshot'] ?? array());
++}
++
++function vmsa_get_active_packet_statuses(): array
++{
++    return array('generated', 'sent', 'viewed', 'acknowledged');
++}
++
++function vmsa_packet_current_terms_status(int $packet_id): array
++{
++    return array('state' => 'current', 'label' => 'Current');
++}
++
++function vmsa_get_or_create_review_token(int $packet_id, bool $force_new = false): string
++{
++    return 'safe-read-only-token';
++}
++
++function vmsa_packet_review_url(int $packet_id, string $token = '', array $extra_args = array()): string
++{
++    return add_query_arg(array_merge(array('vmsa_packet' => $packet_id, 'vmsa_token' => $token), $extra_args), home_url('/agreement-review/'));
++}
++
++function vmsa_packet_print_url(int $packet_id, string $token = ''): string
++{
++    return vmsa_packet_review_url($packet_id, $token, array('vmsa_print' => '1'));
++}
++
++function vmsa_get_latest_ack_record(int $packet_id): array
++{
++    if (($GLOBALS['vmsa_test_packets'][$packet_id]['status'] ?? '') !== 'acknowledged') {
++        return array();
++    }
++    return array(
++        'signer_name' => 'Read Only Signer',
++        'signer_email' => 'signer@example.test',
++        'acknowledged_at' => '2026-08-31 20:00:00',
++    );
++}
++
++function vmsa_packet_has_acknowledgement_history(int $packet_id): bool
++{
++    return ($GLOBALS['vmsa_test_packets'][$packet_id]['status'] ?? '') === 'acknowledged';
++}
++
++function vmsa_get_post_title_text(int $post_id): string
++{
++    return 'Agreement Packet';
++}
++
++function vmsa_display_text($value): string
++{
++    return (string) $value;
++}
++
++function vmsa_format_time_range(string $start_time, string $end_time): string
++{
++    return trim($start_time . '-' . $end_time, '-');
++}
++
++function vmsa_format_date(string $date): string
++{
++    return $date;
++}
++
++function vmsa_clean_compensation_summary_text(string $summary): string
++{
++    return $summary;
++}
++
++function vmsa_format_audit_datetime(string $mysql): string
++{
++    return $mysql;
++}
++
++function vmsa_get_status_label(string $status): string
++{
++    return ucfirst($status);
++}
++
++function get_post_meta(int $post_id, string $key, bool $single = false)
++{
++    $packet = $GLOBALS['vmsa_test_packets'][$post_id] ?? array();
++    $values = array(
++        '_vmsa_vendor_id' => $packet['vendor_id'] ?? 0,
++        '_vmsa_status' => $packet['status'] ?? '',
++        '_vmsa_event_plan_id' => $packet['snapshot']['event_plan']['id'] ?? 0,
++        '_vmsa_generated_at' => '2026-08-31 19:00:00',
++        '_vmsa_acknowledged_at' => ($packet['status'] ?? '') === 'acknowledged' ? '2026-08-31 20:00:00' : '',
++    );
++    return $values[$key] ?? '';
++}
++
++function get_posts(array $args): array
++{
++    $GLOBALS['vmsa_test_last_get_posts_args'] = $args;
++    if (($args['post_type'] ?? '') !== VMSA_CPT_PACKET) {
++        return array();
++    }
++
++    $vendor_ids = array();
++    $statuses = array();
++    foreach ((array) ($args['meta_query'] ?? array()) as $clause) {
++        if (!is_array($clause)) {
++            continue;
++        }
++        if (($clause['key'] ?? '') === '_vmsa_vendor_id') {
++            $vendor_ids = array_map('absint', (array) ($clause['value'] ?? array()));
++        } elseif (($clause['key'] ?? '') === '_vmsa_status') {
++            $statuses = array_map('sanitize_key', (array) ($clause['value'] ?? array()));
++        }
++    }
++
++    $ids = array();
++    foreach ($GLOBALS['vmsa_test_packets'] as $packet_id => $packet) {
++        if (!in_array((int) $packet['vendor_id'], $vendor_ids, true)) {
++            continue;
++        }
++        if ($statuses !== array() && !in_array((string) $packet['status'], $statuses, true)) {
++            continue;
++        }
++        $ids[] = (int) $packet_id;
++    }
++    return $ids;
++}
++
++$plugin_root = dirname(__DIR__);
++$agreements_portal_source = $plugin_root . '/includes/vendor-portal.php';
++$agreements_public_source = $plugin_root . '/includes/public.php';
++$bvm_portal_source = getenv('BVM_PORTAL_SOURCE') ?: dirname($plugin_root) . '/packages/vms-github-reconcile/includes/portal/vendor-portal.php';
++
++foreach (array($agreements_portal_source, $agreements_public_source, $bvm_portal_source) as $required_source) {
++    if (!is_readable($required_source)) {
++        vmsa_test_fail('Required source is missing: ' . $required_source);
++    }
++}
++
++require $agreements_portal_source;
++
++$bvm_source = (string) file_get_contents($bvm_portal_source);
++$allowed_tabs_function = str_contains($bvm_source, 'function bvmgr_vendor_portal_allowed_tabs(')
++    ? 'bvmgr_vendor_portal_allowed_tabs'
++    : 'vms_vendor_portal_allowed_tabs';
++$requested_tab_function = str_contains($bvm_source, 'function bvmgr_vendor_portal_get_requested_tab(')
++    ? 'bvmgr_vendor_portal_get_requested_tab'
++    : 'vms_vendor_portal_get_requested_tab';
++eval(vmsa_test_extract_function($bvm_source, $allowed_tabs_function));
++eval(vmsa_test_extract_function($bvm_source, $requested_tab_function));
++
++add_filter('vms_vendor_portal_allowed_tabs', static function ($tabs) {
++    if (is_array($tabs)) {
++        $tabs[] = 'guest-list';
++    }
++    return $tabs;
++}, 15);
++
++vmsa_test_same(20, has_filter('vms_vendor_portal_allowed_tabs', 'vmsa_register_vendor_portal_tab'), 'Agreements must register its allowed-tab callback at the intended priority.');
++
++$allowed_tabs = $allowed_tabs_function();
++$required_tabs = array('dashboard', 'profile', 'tax-profile', 'availability', 'tech', 'guest-list', 'agreements', 'history', 'opportunities', 'all-vendors');
++vmsa_test_same(array(), array_values(array_diff($required_tabs, $allowed_tabs)), 'Agreements must preserve the complete portal routing matrix while adding its own slug.');
++
++$_GET = array('tab' => 'agreements');
++vmsa_test_same('agreements', $requested_tab_function('dashboard'), 'Direct tab=agreements must survive BVM validation.');
++
++$portal_context = array(
++    'base_url' => 'https://example.test/vendor-portal/',
++    'vendor_id' => 5505,
++    'vendor_ids' => array(5505),
++    'user_id' => 1001,
++    'is_preview' => false,
++);
++
++ob_start();
++vmsa_render_vendor_portal_nav_link('agreements', $portal_context);
++$nav_html = (string) ob_get_clean();
++vmsa_test_assert(str_contains($nav_html, 'class="is-active"'), 'Agreements navigation must receive active styling.');
++vmsa_test_assert(str_contains($nav_html, 'tab=agreements'), 'Agreements navigation must link to the native Agreements route.');
++vmsa_test_assert(str_contains($nav_html, 'vendor_id=5505'), 'Agreements navigation must retain the BVM-authorized vendor context.');
++vmsa_test_assert(str_contains($nav_html, 'vmsa-tab-badge">1</span>'), 'One pending agreement must produce a badge count of 1.');
++
++parse_str((string) parse_url(html_entity_decode($nav_html), PHP_URL_QUERY), $clicked_query);
++$_GET = array('tab' => (string) ($clicked_query['tab'] ?? ''));
++vmsa_test_same('agreements', $requested_tab_function('dashboard'), 'Clicking the normal Agreements link must route to Agreements.');
++vmsa_test_assert($requested_tab_function('dashboard') !== 'dashboard', 'Dashboard must not remain selected for Agreements requests.');
++
++ob_start();
++$rendered = vmsa_render_vendor_portal_custom_tab(false, 'agreements', $portal_context);
++$one_agreement_html = (string) ob_get_clean();
++vmsa_test_assert($rendered, 'The Agreements custom content provider must claim the Agreements route.');
++vmsa_test_assert(str_contains($one_agreement_html, '<h2>Agreements</h2>'), 'The Agreements content heading must render.');
++vmsa_test_assert(str_contains($one_agreement_html, 'Reputation - a Tribute to Taylor'), 'The authorized vendor agreement must render.');
++vmsa_test_assert(str_contains($one_agreement_html, 'Review Agreement'), 'The existing review action must remain available for a pending packet.');
++vmsa_test_assert(str_contains($one_agreement_html, 'Print / Save PDF'), 'The existing printable/signature workflow must remain available.');
++
++$GLOBALS['vmsa_test_packets'][9001]['status'] = 'acknowledged';
++ob_start();
++$acknowledged_rendered = vmsa_render_vendor_portal_custom_tab(false, 'agreements', $portal_context);
++$acknowledged_html = (string) ob_get_clean();
++vmsa_test_assert($acknowledged_rendered && str_contains($acknowledged_html, 'Acknowledged'), 'Acknowledged agreement state must still render.');
++vmsa_test_assert(str_contains($acknowledged_html, 'Review Agreement') && str_contains($acknowledged_html, 'Print / Save PDF'), 'Acknowledged review and printable proof actions must remain available.');
++
++$GLOBALS['vmsa_test_packets'][9001]['status'] = 'generated';
++$empty_context = $portal_context;
++$empty_context['vendor_id'] = 6606;
++$empty_context['vendor_ids'] = array(6606);
++ob_start();
++$empty_rendered = vmsa_render_vendor_portal_custom_tab(false, 'agreements', $empty_context);
++$empty_html = (string) ob_get_clean();
++vmsa_test_assert($empty_rendered && str_contains($empty_html, 'No agreements yet'), 'A vendor with no agreements must receive the intended empty state.');
++vmsa_test_assert(!str_contains($empty_html, 'Reputation - a Tribute to Taylor'), 'A vendor with no agreements must not receive another vendor\'s packet.');
++
++vmsa_test_same(array(9001), vmsa_get_vendor_portal_packets(array(5505)), 'The authorized vendor must receive its packet.');
++vmsa_test_same(array(), vmsa_get_vendor_portal_packets(array(6606)), 'A different vendor context must not receive the packet.');
++$query_vendor_clause = array();
++foreach ((array) ($GLOBALS['vmsa_test_last_get_posts_args']['meta_query'] ?? array()) as $clause) {
++    if (is_array($clause) && ($clause['key'] ?? '') === '_vmsa_vendor_id') {
++        $query_vendor_clause = $clause;
++        break;
++    }
++}
++vmsa_test_same(array(6606), $query_vendor_clause['value'] ?? array(), 'Packet queries must remain constrained to the authorized vendor IDs.');
++
++$_GET = array('tab' => 'not-a-real-section');
++vmsa_test_same('dashboard', $requested_tab_function('dashboard'), 'Invalid portal tabs must continue to fail closed to Dashboard.');
++
++foreach (array(
++    "\$tab === 'dashboard'",
++    "\$tab === 'profile'",
++    "\$tab === 'tax-profile'",
++    "\$tab === 'availability' || \$tab === 'opportunities'",
++    "\$tab === 'tech'",
++    'vms_vendor_portal_render_custom_tab',
++    'Add a Business',
++) as $marker) {
++    vmsa_test_assert(str_contains($bvm_source, $marker), 'BVM portal source lost required route/navigation marker: ' . $marker);
++}
++
++$public_source = (string) file_get_contents($agreements_public_source);
++foreach (array(
++    "add_action('admin_post_vmsa_acknowledge_packet', 'vmsa_handle_public_acknowledgement')",
++    'name="signer_name"',
++    'name="signer_email"',
++    'name="vmsa_ack[]"',
++    'vmsa_render_public_ack_proof',
++    'vmsa_render_public_print_signature_panel',
++) as $marker) {
++    vmsa_test_assert(str_contains($public_source, $marker), 'Agreement acknowledgement/signature source contract is missing: ' . $marker);
++}
++
++fwrite(STDOUT, "PASS: Agreements routing, active state, badge, content/empty states, acknowledgement actions, portal matrix, and vendor isolation are covered.\n");
+diff --git a/vms-agreements/vms-agreements-build.txt b/vms-agreements/vms-agreements-build.txt
+index c54101b..2fb885a 100644
+--- a/vms-agreements/vms-agreements-build.txt
++++ b/vms-agreements/vms-agreements-build.txt
+@@ -1 +1 @@
+-0.3.47
++0.3.48
+diff --git a/vms-agreements/vms-agreements.php b/vms-agreements/vms-agreements.php
+index 33da425..edbb4d4 100644
+--- a/vms-agreements/vms-agreements.php
++++ b/vms-agreements/vms-agreements.php
+@@ -6 +6 @@
+- * Version: 0.3.47
++ * Version: 0.3.48
+@@ -19 +19 @@ if (!defined('VMSA_VERSION')) {
+-    define('VMSA_VERSION', '0.3.47');
++    define('VMSA_VERSION', '0.3.48');

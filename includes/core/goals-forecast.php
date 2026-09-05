@@ -8,30 +8,34 @@ defined('ABSPATH') || exit;
  * (like Data Tools Square) only through function-exists checks.
  */
 
-if (!function_exists('vms_goals_log')) {
-	function vms_goals_log(string $message): void
+if (!function_exists('bvmgr_goals_log')) {
+	function bvmgr_goals_log(string $message): void
 	{
-		error_log('[VMS Goals] ' . $message);
+		bvmgr_record_operational_issue('goals_legacy_issue', array(
+			'service'   => 'goals_forecast',
+			'operation' => 'legacy_log',
+			'status'    => 'reported',
+		), $message);
 	}
 }
 
-if (!function_exists('vms_goals_table_name')) {
-	function vms_goals_table_name(): string
+if (!function_exists('bvmgr_goals_table_name')) {
+	function bvmgr_goals_table_name(): string
 	{
 		global $wpdb;
 		return $wpdb->prefix . 'vms_goals';
 	}
 }
 
-if (!function_exists('vms_goals_settings_option_key')) {
-	function vms_goals_settings_option_key(): string
+if (!function_exists('bvmgr_goals_settings_option_key')) {
+	function bvmgr_goals_settings_option_key(): string
 	{
 		return 'vms_goals_settings';
 	}
 }
 
-if (!function_exists('vms_goals_settings_defaults')) {
-	function vms_goals_settings_defaults(): array
+if (!function_exists('bvmgr_goals_settings_defaults')) {
+	function bvmgr_goals_settings_defaults(): array
 	{
 		return array(
 			'default_metric' => 'true_profit',
@@ -67,10 +71,10 @@ if (!function_exists('vms_goals_settings_defaults')) {
 	}
 }
 
-if (!function_exists('vms_goals_merge_settings_with_defaults')) {
-	function vms_goals_merge_settings_with_defaults(array $saved): array
+if (!function_exists('bvmgr_goals_merge_settings_with_defaults')) {
+	function bvmgr_goals_merge_settings_with_defaults(array $saved): array
 	{
-		$defaults = vms_goals_settings_defaults();
+		$defaults = bvmgr_goals_settings_defaults();
 		$merged = wp_parse_args($saved, $defaults);
 
 		$saved_concessions = isset($saved['concessions_model_defaults']) && is_array($saved['concessions_model_defaults'])
@@ -87,19 +91,19 @@ if (!function_exists('vms_goals_merge_settings_with_defaults')) {
 	}
 }
 
-if (!function_exists('vms_goals_get_settings')) {
-	function vms_goals_get_settings(): array
+if (!function_exists('bvmgr_goals_get_settings')) {
+	function bvmgr_goals_get_settings(): array
 	{
-		$raw = get_option(vms_goals_settings_option_key(), array());
+		$raw = get_option(bvmgr_goals_settings_option_key(), array());
 		if (!is_array($raw)) {
 			$raw = array();
 		}
-		return vms_goals_merge_settings_with_defaults($raw);
+		return bvmgr_goals_merge_settings_with_defaults($raw);
 	}
 }
 
-if (!function_exists('vms_goals_sanitize_bucket_component_map')) {
-	function vms_goals_sanitize_bucket_component_map($raw): array
+if (!function_exists('bvmgr_goals_sanitize_bucket_component_map')) {
+	function bvmgr_goals_sanitize_bucket_component_map($raw): array
 	{
 		$out = array();
 		if (!is_array($raw)) {
@@ -120,11 +124,11 @@ if (!function_exists('vms_goals_sanitize_bucket_component_map')) {
 	}
 }
 
-if (!function_exists('vms_goals_update_settings')) {
-	function vms_goals_update_settings(array $incoming): array
+if (!function_exists('bvmgr_goals_update_settings')) {
+	function bvmgr_goals_update_settings(array $incoming): array
 	{
-		$current = vms_goals_get_settings();
-		$merged = vms_goals_merge_settings_with_defaults(array_merge($current, $incoming));
+		$current = bvmgr_goals_get_settings();
+		$merged = bvmgr_goals_merge_settings_with_defaults(array_merge($current, $incoming));
 
 		$allowed_metric = array('true_profit', 'event_profit', 'gross_revenue');
 		$metric = sanitize_key((string) ($merged['default_metric'] ?? 'true_profit'));
@@ -182,20 +186,20 @@ if (!function_exists('vms_goals_update_settings')) {
 		$overhead['percent_of_gross_bps'] = max(0, min(10000, (int) ($overhead['percent_of_gross_bps'] ?? 0)));
 		$merged['overhead_rules'] = $overhead;
 
-		$merged['provider_bucket_component_map'] = vms_goals_sanitize_bucket_component_map($merged['provider_bucket_component_map'] ?? array());
+		$merged['provider_bucket_component_map'] = bvmgr_goals_sanitize_bucket_component_map($merged['provider_bucket_component_map'] ?? array());
 
 		$providers = isset($merged['enabled_actuals_providers']) && is_array($merged['enabled_actuals_providers'])
 			? $merged['enabled_actuals_providers']
 			: array();
 		$merged['enabled_actuals_providers'] = array_values(array_unique(array_filter(array_map('sanitize_key', $providers))));
 
-		update_option(vms_goals_settings_option_key(), $merged, false);
+		update_option(bvmgr_goals_settings_option_key(), $merged, false);
 		return $merged;
 	}
 }
 
-if (!function_exists('vms_goals_parse_money_to_cents')) {
-	function vms_goals_parse_money_to_cents($value): int
+if (!function_exists('bvmgr_goals_parse_money_to_cents')) {
+	function bvmgr_goals_parse_money_to_cents($value): int
 	{
 		if (is_int($value)) {
 			return max(0, $value);
@@ -217,8 +221,8 @@ if (!function_exists('vms_goals_parse_money_to_cents')) {
 	}
 }
 
-if (!function_exists('vms_goals_parse_local_datetime')) {
-	function vms_goals_parse_local_datetime(string $value): ?DateTimeImmutable
+if (!function_exists('bvmgr_goals_parse_local_datetime')) {
+	function bvmgr_goals_parse_local_datetime(string $value): ?DateTimeImmutable
 	{
 		$value = trim(str_replace('T', ' ', $value));
 		if ($value === '') {
@@ -242,8 +246,8 @@ if (!function_exists('vms_goals_parse_local_datetime')) {
 	}
 }
 
-if (!function_exists('vms_goals_compute_period_range')) {
-	function vms_goals_compute_period_range(string $period_type, string $custom_start = '', string $custom_end = ''): array
+if (!function_exists('bvmgr_goals_compute_period_range')) {
+	function bvmgr_goals_compute_period_range(string $period_type, string $custom_start = '', string $custom_end = ''): array
 	{
 		$period_type = sanitize_key($period_type);
 		$tz = wp_timezone();
@@ -268,8 +272,8 @@ if (!function_exists('vms_goals_compute_period_range')) {
 			$end = $start->modify('+7 days');
 		} else {
 			$period_type = 'custom';
-			$parsed_start = vms_goals_parse_local_datetime($custom_start);
-			$parsed_end = vms_goals_parse_local_datetime($custom_end);
+			$parsed_start = bvmgr_goals_parse_local_datetime($custom_start);
+			$parsed_end = bvmgr_goals_parse_local_datetime($custom_end);
 			$start = $parsed_start ?: new DateTimeImmutable($now->format('Y-m-d 00:00:00'), $tz);
 			$end = $parsed_end ?: $start->modify('+1 month');
 		}
@@ -288,8 +292,8 @@ if (!function_exists('vms_goals_compute_period_range')) {
 	}
 }
 
-if (!function_exists('vms_goals_normalize_goal_payload')) {
-	function vms_goals_normalize_goal_payload(array $input): array
+if (!function_exists('bvmgr_goals_normalize_goal_payload')) {
+	function bvmgr_goals_normalize_goal_payload(array $input): array
 	{
 		$name = sanitize_text_field((string) ($input['name'] ?? ''));
 		if ($name === '') {
@@ -306,7 +310,7 @@ if (!function_exists('vms_goals_normalize_goal_payload')) {
 			$period_type = 'month';
 		}
 
-		$range = vms_goals_compute_period_range(
+		$range = bvmgr_goals_compute_period_range(
 			$period_type,
 			(string) ($input['period_start_local'] ?? ''),
 			(string) ($input['period_end_local'] ?? '')
@@ -322,7 +326,7 @@ if (!function_exists('vms_goals_normalize_goal_payload')) {
 			$weight_mode = 'none';
 		}
 
-		$target_cents = vms_goals_parse_money_to_cents($input['target_cents'] ?? 0);
+		$target_cents = bvmgr_goals_parse_money_to_cents($input['target_cents'] ?? 0);
 		$venue_id = isset($input['venue_id']) ? absint($input['venue_id']) : 0;
 		$is_active = !empty($input['is_active']) ? 1 : 0;
 
@@ -341,62 +345,75 @@ if (!function_exists('vms_goals_normalize_goal_payload')) {
 	}
 }
 
-if (!function_exists('vms_goals_list')) {
-	function vms_goals_list(): array
+if (!function_exists('bvmgr_goals_list')) {
+	function bvmgr_goals_list(): array
 	{
 		global $wpdb;
-		$table = vms_goals_table_name();
+		$table = bvmgr_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goals table readiness must reflect the current custom schema before each repository read; no core API owns this table.
 		$exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ((string) $exists !== (string) $table) {
 			return array();
 		}
 
-		$rows = $wpdb->get_results("SELECT * FROM {$table} ORDER BY is_active DESC, updated_at_utc DESC, id DESC", ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal lists read the plugin-owned table directly so administration reflects immediate goal mutations.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare('SELECT * FROM %i ORDER BY is_active DESC, updated_at_utc DESC, id DESC', $table),
+			ARRAY_A
+		);
 		return is_array($rows) ? $rows : array();
 	}
 }
 
-if (!function_exists('vms_goals_get_goal')) {
-	function vms_goals_get_goal(int $goal_id): array
+if (!function_exists('bvmgr_goals_get_goal')) {
+	function bvmgr_goals_get_goal(int $goal_id): array
 	{
 		global $wpdb;
 		if ($goal_id <= 0) {
 			return array();
 		}
-		$table = vms_goals_table_name();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d LIMIT 1", $goal_id), ARRAY_A);
+		$table = bvmgr_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal reads query the plugin-owned table with %i/%d-prepared values so callers observe current repository state.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d LIMIT 1', $table, $goal_id), ARRAY_A);
 		return is_array($row) ? $row : array();
 	}
 }
 
-if (!function_exists('vms_goals_get_active_goal')) {
-	function vms_goals_get_active_goal(): array
+if (!function_exists('bvmgr_goals_get_active_goal')) {
+	function bvmgr_goals_get_active_goal(): array
 	{
 		global $wpdb;
-		$table = vms_goals_table_name();
+		$table = bvmgr_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active-goal table readiness must reflect the current custom schema before each repository read.
 		$exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ((string) $exists !== (string) $table) {
 			return array();
 		}
-		$row = $wpdb->get_row("SELECT * FROM {$table} WHERE is_active = 1 ORDER BY updated_at_utc DESC, id DESC LIMIT 1", ARRAY_A);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active-goal reads query request-fresh plugin-owned state so activation changes are visible immediately.
+		$row = $wpdb->get_row(
+			$wpdb->prepare('SELECT * FROM %i WHERE is_active = 1 ORDER BY updated_at_utc DESC, id DESC LIMIT 1', $table),
+			ARRAY_A
+		);
 		return is_array($row) ? $row : array();
 	}
 }
 
-if (!function_exists('vms_goals_save_goal')) {
-	function vms_goals_save_goal(array $input, int $goal_id = 0): array
+if (!function_exists('bvmgr_goals_save_goal')) {
+	function bvmgr_goals_save_goal(array $input, int $goal_id = 0): array
 	{
 		global $wpdb;
-		$table = vms_goals_table_name();
-		$payload = vms_goals_normalize_goal_payload($input);
+		$table = bvmgr_goals_table_name();
+		$payload = bvmgr_goals_normalize_goal_payload($input);
 		$now = gmdate('Y-m-d H:i:s');
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal-save table readiness must reflect the current custom schema before mutation.
 		$exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ((string) $exists !== (string) $table) {
 			return array('ok' => false, 'message' => 'Goals table is unavailable.');
 		}
 
 		if ($goal_id > 0) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal updates write the plugin-owned table directly so normalized goal state persists immediately.
 			$ok = $wpdb->update(
 				$table,
 				array_merge($payload, array('updated_at_utc' => $now)),
@@ -409,6 +426,7 @@ if (!function_exists('vms_goals_save_goal')) {
 			}
 			$saved_id = $goal_id;
 		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Goal creation persists a normalized custom-table row through wpdb::insert(); no core API preserves this repository contract.
 			$ok = $wpdb->insert(
 				$table,
 				array_merge($payload, array('created_at_utc' => $now, 'updated_at_utc' => $now)),
@@ -421,40 +439,45 @@ if (!function_exists('vms_goals_save_goal')) {
 		}
 
 		if (!empty($payload['is_active'])) {
-			$wpdb->query($wpdb->prepare("UPDATE {$table} SET is_active = 0 WHERE id <> %d", $saved_id));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Active-goal exclusivity updates the plugin-owned table with a fully prepared identifier and saved goal ID in the same mutation flow.
+			$wpdb->query($wpdb->prepare('UPDATE %i SET is_active = 0 WHERE id <> %d', $table, $saved_id));
 		}
 
 		return array('ok' => true, 'goal_id' => $saved_id, 'message' => 'Goal saved.');
 	}
 }
 
-if (!function_exists('vms_goals_delete_goal')) {
-	function vms_goals_delete_goal(int $goal_id): bool
+if (!function_exists('bvmgr_goals_delete_goal')) {
+	function bvmgr_goals_delete_goal(int $goal_id): bool
 	{
 		global $wpdb;
 		if ($goal_id <= 0) {
 			return false;
 		}
-		$table = vms_goals_table_name();
+		$table = bvmgr_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal deletion removes the plugin-owned row immediately; no core deletion API owns this custom table.
 		$deleted = $wpdb->delete($table, array('id' => $goal_id), array('%d'));
 		return $deleted !== false;
 	}
 }
 
-if (!function_exists('vms_goals_set_active_goal')) {
-	function vms_goals_set_active_goal(int $goal_id): bool
+if (!function_exists('bvmgr_goals_set_active_goal')) {
+	function bvmgr_goals_set_active_goal(int $goal_id): bool
 	{
 		global $wpdb;
 		if ($goal_id <= 0) {
 			return false;
 		}
-		$table = vms_goals_table_name();
+		$table = bvmgr_goals_table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal-activation table readiness must reflect the current custom schema before mutation.
 		$exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
 		if ((string) $exists !== (string) $table) {
 			return false;
 		}
 
-		$wpdb->query("UPDATE {$table} SET is_active = 0");
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal activation first clears the plugin-owned active flag with a prepared table identifier to preserve single-active ordering.
+		$wpdb->query($wpdb->prepare('UPDATE %i SET is_active = 0', $table));
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Goal activation writes the selected plugin-owned row immediately after clearing prior active flags.
 		$updated = $wpdb->update(
 			$table,
 			array(
@@ -469,8 +492,8 @@ if (!function_exists('vms_goals_set_active_goal')) {
 	}
 }
 
-if (!function_exists('vms_pos_provider_detect')) {
-	function vms_pos_provider_detect(): array
+if (!function_exists('bvmgr_pos_provider_detect')) {
+	function bvmgr_pos_provider_detect(): array
 	{
 		$providers = array();
 		if (function_exists('vms_square_get_event_actuals')) {
@@ -483,26 +506,31 @@ if (!function_exists('vms_pos_provider_detect')) {
 	}
 }
 
-if (!function_exists('vms_goals_component_map_for_buckets')) {
-	function vms_goals_component_map_for_buckets(): array
+if (!function_exists('bvmgr_goals_component_map_for_buckets')) {
+	function bvmgr_goals_component_map_for_buckets(): array
 	{
-		$settings = vms_goals_get_settings();
+		$settings = bvmgr_goals_get_settings();
 		$map = isset($settings['provider_bucket_component_map']) && is_array($settings['provider_bucket_component_map'])
 			? $settings['provider_bucket_component_map']
 			: array();
-		return vms_goals_sanitize_bucket_component_map($map);
+		return bvmgr_goals_sanitize_bucket_component_map($map);
 	}
 }
 
-if (!function_exists('vms_goals_provider_has_hard_errors')) {
-	function vms_goals_provider_has_hard_errors(string $provider, array $raw, array $errors): bool
+if (!function_exists('bvmgr_goals_provider_has_hard_errors')) {
+	function bvmgr_goals_provider_has_hard_errors(string $provider, array $raw, array $errors): bool
 	{
 		$provider = sanitize_key($provider);
 		if ($provider === 'square' && function_exists('vms_square_actuals_has_hard_errors')) {
 			try {
 				return (bool) vms_square_actuals_has_hard_errors($raw);
 			} catch (Throwable $e) {
-				vms_goals_log('Hard-error check failed (square): ' . $e->getMessage());
+				bvmgr_record_operational_issue('goals_provider_hard_error_check_failed', array(
+					'service'   => 'goals_forecast',
+					'provider'  => 'square',
+					'operation' => 'hard_error_check',
+					'status'    => 'failed',
+				), $e);
 			}
 		}
 
@@ -510,8 +538,8 @@ if (!function_exists('vms_goals_provider_has_hard_errors')) {
 	}
 }
 
-if (!function_exists('vms_goals_normalize_provider_actuals')) {
-	function vms_goals_normalize_provider_actuals(string $provider, array $raw): array
+if (!function_exists('bvmgr_goals_normalize_provider_actuals')) {
+	function bvmgr_goals_normalize_provider_actuals(string $provider, array $raw): array
 	{
 		$errors = array();
 		$meta = isset($raw['meta']) && is_array($raw['meta']) ? $raw['meta'] : array();
@@ -523,7 +551,7 @@ if (!function_exists('vms_goals_normalize_provider_actuals')) {
 		$gross = max(0, (int) ($totals['gross'] ?? 0));
 
 		$buckets = isset($raw['buckets']) && is_array($raw['buckets']) ? $raw['buckets'] : array();
-		$component_map = vms_goals_component_map_for_buckets();
+		$component_map = bvmgr_goals_component_map_for_buckets();
 		$ticket = 0;
 		$concessions = 0;
 		$add_on = 0;
@@ -570,7 +598,7 @@ if (!function_exists('vms_goals_normalize_provider_actuals')) {
 			'true_profit_cents' => $gross,
 		);
 
-		$has_hard_errors = vms_goals_provider_has_hard_errors($provider, $raw, $errors);
+		$has_hard_errors = bvmgr_goals_provider_has_hard_errors($provider, $raw, $errors);
 
 		return array(
 			'ok' => !$has_hard_errors,
@@ -583,10 +611,10 @@ if (!function_exists('vms_goals_normalize_provider_actuals')) {
 	}
 }
 
-if (!function_exists('vms_pos_get_event_actuals')) {
-	function vms_pos_get_event_actuals(int $event_plan_id, array $args = array()): array
+if (!function_exists('bvmgr_pos_get_event_actuals')) {
+	function bvmgr_pos_get_event_actuals(int $event_plan_id, array $args = array()): array
 	{
-		$providers = vms_pos_provider_detect();
+		$providers = bvmgr_pos_provider_detect();
 		if (empty($providers)) {
 			return array(
 				'ok' => false,
@@ -596,7 +624,7 @@ if (!function_exists('vms_pos_get_event_actuals')) {
 			);
 		}
 
-		$settings = vms_goals_get_settings();
+		$settings = bvmgr_goals_get_settings();
 		$enabled = isset($settings['enabled_actuals_providers']) && is_array($settings['enabled_actuals_providers'])
 			? $settings['enabled_actuals_providers']
 			: array();
@@ -622,9 +650,15 @@ if (!function_exists('vms_pos_get_event_actuals')) {
 					if (!is_array($raw)) {
 						continue;
 					}
-					return vms_goals_normalize_provider_actuals('square', $raw);
+					return bvmgr_goals_normalize_provider_actuals('square', $raw);
 				} catch (Throwable $e) {
-					vms_goals_log('Provider call failed (square): ' . $e->getMessage());
+					bvmgr_record_operational_issue('goals_provider_call_failed', array(
+						'service'   => 'goals_forecast',
+						'provider'  => 'square',
+						'operation' => 'fetch_actuals',
+						'status'    => 'failed',
+						'event_id'  => $event_plan_id,
+					), $e);
 					return array(
 						'ok' => false,
 						'provider' => 'square',
@@ -644,22 +678,28 @@ if (!function_exists('vms_pos_get_event_actuals')) {
 	}
 }
 
-if (!function_exists('vms_goals_refresh_event_actuals')) {
-	function vms_goals_refresh_event_actuals(int $event_plan_id, array $args = array()): array
+if (!function_exists('bvmgr_goals_refresh_event_actuals')) {
+	function bvmgr_goals_refresh_event_actuals(int $event_plan_id, array $args = array()): array
 	{
 		if ($event_plan_id <= 0) {
 			return array('ok' => false, 'message' => 'Invalid event plan id.');
 		}
 
-		$result = vms_pos_get_event_actuals($event_plan_id, $args);
+		$result = bvmgr_pos_get_event_actuals($event_plan_id, $args);
 		if (empty($result['ok'])) {
 			$msg = !empty($result['errors']) ? implode(' | ', (array) $result['errors']) : 'Provider returned no data.';
-			vms_goals_log('Actuals refresh failed for event ' . $event_plan_id . ': ' . $msg);
+			bvmgr_record_operational_issue('goals_actuals_refresh_failed', array(
+				'service'   => 'goals_forecast',
+				'provider'  => sanitize_key((string) ($result['provider'] ?? 'none')),
+				'operation' => 'refresh_actuals',
+				'status'    => 'failed',
+				'event_id'  => $event_plan_id,
+			), $msg);
 			return array('ok' => false, 'message' => $msg, 'data' => $result);
 		}
 
 		$incoming_totals = isset($result['totals']) && is_array($result['totals']) ? $result['totals'] : array();
-		$existing_totals = vms_goals_get_manual_event_actual_totals($event_plan_id);
+		$existing_totals = bvmgr_goals_get_manual_event_actual_totals($event_plan_id);
 		$totals = $existing_totals;
 
 		foreach (array('gross_revenue_cents', 'ticket_revenue_cents', 'add_on_revenue_cents', 'concessions_revenue_cents', 'other_revenue_cents') as $revenue_key) {
@@ -700,10 +740,10 @@ if (!function_exists('vms_goals_refresh_event_actuals')) {
 	}
 }
 
-if (!function_exists('vms_goals_get_ticket_stats')) {
-	function vms_goals_get_ticket_stats(int $event_plan_id): array
+if (!function_exists('bvmgr_goals_get_ticket_stats')) {
+	function bvmgr_goals_get_ticket_stats(int $event_plan_id): array
 	{
-		$key = function_exists('vms_meta_key') ? (string) vms_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
+		$key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1';
 		if ($key === '') {
 			$key = '_vms_ticket_stats_v1';
 		}
@@ -734,8 +774,8 @@ if (!function_exists('vms_goals_get_ticket_stats')) {
 	}
 }
 
-if (!function_exists('vms_goals_estimate_door_count')) {
-	function vms_goals_estimate_door_count(int $presale_count, string $mode, int $percent, int $count): int
+if (!function_exists('bvmgr_goals_estimate_door_count')) {
+	function bvmgr_goals_estimate_door_count(int $presale_count, string $mode, int $percent, int $count): int
 	{
 		$presale_count = max(0, $presale_count);
 		$mode = sanitize_key($mode);
@@ -754,11 +794,11 @@ if (!function_exists('vms_goals_estimate_door_count')) {
 	}
 }
 
-if (!function_exists('vms_goals_get_headcount_for_mode')) {
-	function vms_goals_get_headcount_for_mode(int $event_plan_id, string $mode, array $args = array()): int
+if (!function_exists('bvmgr_goals_get_headcount_for_mode')) {
+	function bvmgr_goals_get_headcount_for_mode(int $event_plan_id, string $mode, array $args = array()): int
 	{
-		$settings = vms_goals_get_settings();
-		$ticket_stats = vms_goals_get_ticket_stats($event_plan_id);
+		$settings = bvmgr_goals_get_settings();
+		$ticket_stats = bvmgr_goals_get_ticket_stats($event_plan_id);
 		$presale = (int) ($ticket_stats['qty_sold'] ?? 0);
 
 		$forecast = max(0, (int) get_post_meta($event_plan_id, '_vms_forecast_headcount', true));
@@ -786,12 +826,12 @@ if (!function_exists('vms_goals_get_headcount_for_mode')) {
 			if ($true > 0) {
 				return $true + $comp_true;
 			}
-			$door_est = vms_goals_estimate_door_count($presale, $door_mode, $door_percent, $door_count);
+			$door_est = bvmgr_goals_estimate_door_count($presale, $door_mode, $door_percent, $door_count);
 			return max($forecast, $presale + $door_est + $comp_forecast);
 		}
 
 		if ($mode === 'ticketed') {
-			$door_est = vms_goals_estimate_door_count($presale, $door_mode, $door_percent, $door_count);
+			$door_est = bvmgr_goals_estimate_door_count($presale, $door_mode, $door_percent, $door_count);
 			$ticketed = $presale + $door_est + $comp_forecast;
 			return max($ticketed, $forecast);
 		}
@@ -804,13 +844,13 @@ if (!function_exists('vms_goals_get_headcount_for_mode')) {
 			return $forecast + $comp_forecast;
 		}
 
-		$door_est = vms_goals_estimate_door_count($presale, $door_mode, $door_percent, $door_count);
+		$door_est = bvmgr_goals_estimate_door_count($presale, $door_mode, $door_percent, $door_count);
 		return $presale + $door_est + $comp_forecast;
 	}
 }
 
-if (!function_exists('vms_goals_get_overhead_allocated_cents')) {
-	function vms_goals_get_overhead_allocated_cents(int $gross_cents, int $headcount, array $overhead_rules): int
+if (!function_exists('bvmgr_goals_get_overhead_allocated_cents')) {
+	function bvmgr_goals_get_overhead_allocated_cents(int $gross_cents, int $headcount, array $overhead_rules): int
 	{
 		$gross_cents = max(0, $gross_cents);
 		$headcount = max(0, $headcount);
@@ -832,8 +872,8 @@ if (!function_exists('vms_goals_get_overhead_allocated_cents')) {
 	}
 }
 
-if (!function_exists('vms_goals_get_manual_event_actual_totals')) {
-	function vms_goals_get_manual_event_actual_totals(int $event_plan_id): array
+if (!function_exists('bvmgr_goals_get_manual_event_actual_totals')) {
+	function bvmgr_goals_get_manual_event_actual_totals(int $event_plan_id): array
 	{
 		$raw = get_post_meta($event_plan_id, '_vms_event_actuals_totals', true);
 		if (!is_array($raw)) {
@@ -861,8 +901,8 @@ if (!function_exists('vms_goals_get_manual_event_actual_totals')) {
 	}
 }
 
-if (!function_exists('vms_goals_get_default_direct_costs_cents')) {
-	function vms_goals_get_default_direct_costs_cents(int $event_plan_id): int
+if (!function_exists('bvmgr_goals_get_default_direct_costs_cents')) {
+	function bvmgr_goals_get_default_direct_costs_cents(int $event_plan_id): int
 	{
 		$manual = get_post_meta($event_plan_id, '_vms_event_direct_costs_cents', true);
 		if ($manual !== '' && is_numeric($manual)) {
@@ -880,8 +920,8 @@ if (!function_exists('vms_goals_get_default_direct_costs_cents')) {
 						$commission_mode = 'artist_fee';
 					}
 					if ($commission_percent !== '' && is_numeric($commission_percent) && (float) $commission_percent > 0 && $commission_mode === 'artist_fee') {
-						$commission_amount = function_exists('vms_calculate_agent_fee_amount')
-							? vms_calculate_agent_fee_amount((float) $flat, (float) $commission_percent, $commission_mode)
+						$commission_amount = function_exists('bvmgr_calculate_agent_fee_amount')
+							? bvmgr_calculate_agent_fee_amount((float) $flat, (float) $commission_percent, $commission_mode)
 							: (((float) $flat) * ((float) $commission_percent / 100));
 						$total_cents += max(0, (int) round(((float) $commission_amount) * 100));
 					}
@@ -893,8 +933,8 @@ if (!function_exists('vms_goals_get_default_direct_costs_cents')) {
 	}
 }
 
-if (!function_exists('vms_goals_get_default_processing_fees_cents')) {
-	function vms_goals_get_default_processing_fees_cents(int $event_plan_id): int
+if (!function_exists('bvmgr_goals_get_default_processing_fees_cents')) {
+	function bvmgr_goals_get_default_processing_fees_cents(int $event_plan_id): int
 	{
 		$manual = get_post_meta($event_plan_id, '_vms_event_processing_fees_cents', true);
 		if ($manual !== '' && is_numeric($manual)) {
@@ -904,10 +944,10 @@ if (!function_exists('vms_goals_get_default_processing_fees_cents')) {
 	}
 }
 
-if (!function_exists('vms_goals_get_event_pnl')) {
-	function vms_goals_get_event_pnl(int $event_plan_id, array $args = array()): array
+if (!function_exists('bvmgr_goals_get_event_pnl')) {
+	function bvmgr_goals_get_event_pnl(int $event_plan_id, array $args = array()): array
 	{
-		$settings = vms_goals_get_settings();
+		$settings = bvmgr_goals_get_settings();
 		$mode = sanitize_key((string) ($args['headcount_mode'] ?? 'forecast'));
 		if (!in_array($mode, array('forecast', 'ticketed', 'true'), true)) {
 			$mode = 'forecast';
@@ -917,14 +957,14 @@ if (!function_exists('vms_goals_get_event_pnl')) {
 			? (bool) $args['include_overhead']
 			: ((string) ($settings['default_overhead_mode'] ?? 'include_overhead') === 'include_overhead');
 
-		$headcount = vms_goals_get_headcount_for_mode($event_plan_id, $mode, $args);
-		$ticket_stats = vms_goals_get_ticket_stats($event_plan_id);
+		$headcount = bvmgr_goals_get_headcount_for_mode($event_plan_id, $mode, $args);
+		$ticket_stats = bvmgr_goals_get_ticket_stats($event_plan_id);
 		$avg_ticket_price = max(0, (int) ($settings['default_avg_ticket_price_cents'] ?? 2000));
 		if ((int) ($ticket_stats['qty_sold'] ?? 0) > 0 && (int) ($ticket_stats['revenue_cents'] ?? 0) > 0) {
 			$avg_ticket_price = (int) round(((int) $ticket_stats['revenue_cents']) / max(1, (int) $ticket_stats['qty_sold']));
 		}
 
-		$manual_actuals = vms_goals_get_manual_event_actual_totals($event_plan_id);
+		$manual_actuals = bvmgr_goals_get_manual_event_actual_totals($event_plan_id);
 		$has_manual_actuals = false;
 		foreach ($manual_actuals as $v) {
 			if ((int) $v > 0) {
@@ -964,17 +1004,17 @@ if (!function_exists('vms_goals_get_event_pnl')) {
 
 		$direct_costs = ($mode === 'true' && $has_manual_actuals)
 			? (int) ($manual_actuals['direct_costs_cents'] ?? 0)
-			: vms_goals_get_default_direct_costs_cents($event_plan_id);
+			: bvmgr_goals_get_default_direct_costs_cents($event_plan_id);
 		$processing_fees = ($mode === 'true' && $has_manual_actuals)
 			? (int) ($manual_actuals['processing_fees_cents'] ?? 0)
-			: vms_goals_get_default_processing_fees_cents($event_plan_id);
+			: bvmgr_goals_get_default_processing_fees_cents($event_plan_id);
 
 		$overhead_rules = isset($settings['overhead_rules']) && is_array($settings['overhead_rules'])
 			? $settings['overhead_rules']
 			: array();
 		$overhead_allocated = ($mode === 'true' && $has_manual_actuals && (int) ($manual_actuals['overhead_allocated_cents'] ?? 0) > 0)
 			? (int) $manual_actuals['overhead_allocated_cents']
-			: vms_goals_get_overhead_allocated_cents($gross_revenue, $headcount, $overhead_rules);
+			: bvmgr_goals_get_overhead_allocated_cents($gross_revenue, $headcount, $overhead_rules);
 		if (!$include_overhead) {
 			$overhead_allocated = 0;
 		}
@@ -1001,30 +1041,30 @@ if (!function_exists('vms_goals_get_event_pnl')) {
 	}
 }
 
-if (!function_exists('vms_goals_break_even_headcount')) {
-	function vms_goals_break_even_headcount(int $event_plan_id, array $args = array()): array
+if (!function_exists('bvmgr_goals_break_even_headcount')) {
+	function bvmgr_goals_break_even_headcount(int $event_plan_id, array $args = array()): array
 	{
 		$max_h = max(10, (int) ($args['max_headcount'] ?? 2000));
-		$base = vms_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast')));
+		$base = bvmgr_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast')));
 		$forecast_profit = (int) ($base['true_profit_cents'] ?? 0);
 
-		$profit_at_0 = (int) (vms_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => 0)))['true_profit_cents'] ?? 0);
+		$profit_at_0 = (int) (bvmgr_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => 0)))['true_profit_cents'] ?? 0);
 		if ($profit_at_0 >= 0) {
 			return array(
 				'found' => true,
 				'break_even_headcount' => 0,
 				'profit_at_forecast_cents' => $forecast_profit,
-				'profit_at_plus_10_cents' => (int) (vms_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => 10)))['true_profit_cents'] ?? 0),
+				'profit_at_plus_10_cents' => (int) (bvmgr_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => 10)))['true_profit_cents'] ?? 0),
 			);
 		}
 
-		$profit_at_max = (int) (vms_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => $max_h)))['true_profit_cents'] ?? 0);
+		$profit_at_max = (int) (bvmgr_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => $max_h)))['true_profit_cents'] ?? 0);
 		if ($profit_at_max < 0) {
 			return array(
 				'found' => false,
 				'break_even_headcount' => $max_h,
 				'profit_at_forecast_cents' => $forecast_profit,
-				'profit_at_plus_10_cents' => (int) (vms_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => max(0, (int) ($base['headcount'] ?? 0) + 10))))['true_profit_cents'] ?? 0),
+				'profit_at_plus_10_cents' => (int) (bvmgr_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => max(0, (int) ($base['headcount'] ?? 0) + 10))))['true_profit_cents'] ?? 0),
 				'warning' => 'Break-even exceeds configured search cap.',
 			);
 		}
@@ -1033,7 +1073,7 @@ if (!function_exists('vms_goals_break_even_headcount')) {
 		$high = $max_h;
 		while (($high - $low) > 1) {
 			$mid = (int) floor(($low + $high) / 2);
-			$profit = (int) (vms_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => $mid)))['true_profit_cents'] ?? 0);
+			$profit = (int) (bvmgr_goals_get_event_pnl($event_plan_id, array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => $mid)))['true_profit_cents'] ?? 0);
 			if ($profit >= 0) {
 				$high = $mid;
 			} else {
@@ -1041,7 +1081,7 @@ if (!function_exists('vms_goals_break_even_headcount')) {
 			}
 		}
 
-		$profit_plus_10 = (int) (vms_goals_get_event_pnl(
+		$profit_plus_10 = (int) (bvmgr_goals_get_event_pnl(
 			$event_plan_id,
 			array_merge($args, array('headcount_mode' => 'forecast', 'headcount_override' => max(0, (int) ($base['headcount'] ?? 0) + 10)))
 		)['true_profit_cents'] ?? 0);
@@ -1055,8 +1095,8 @@ if (!function_exists('vms_goals_break_even_headcount')) {
 	}
 }
 
-if (!function_exists('vms_goals_metric_value_from_pnl')) {
-	function vms_goals_metric_value_from_pnl(string $metric, array $pnl): int
+if (!function_exists('bvmgr_goals_metric_value_from_pnl')) {
+	function bvmgr_goals_metric_value_from_pnl(string $metric, array $pnl): int
 	{
 		$metric = sanitize_key($metric);
 		if ($metric === 'gross_revenue') {
@@ -1069,11 +1109,11 @@ if (!function_exists('vms_goals_metric_value_from_pnl')) {
 	}
 }
 
-if (!function_exists('vms_goals_get_event_ids_in_period')) {
-	function vms_goals_get_event_ids_in_period(string $start_local, string $end_local, int $limit = -1): array
+if (!function_exists('bvmgr_goals_get_event_ids_in_period')) {
+	function bvmgr_goals_get_event_ids_in_period(string $start_local, string $end_local, int $limit = -1): array
 	{
-		$start_dt = vms_goals_parse_local_datetime($start_local);
-		$end_dt = vms_goals_parse_local_datetime($end_local);
+		$start_dt = bvmgr_goals_parse_local_datetime($start_local);
+		$end_dt = bvmgr_goals_parse_local_datetime($end_local);
 		if (!($start_dt instanceof DateTimeImmutable) || !($end_dt instanceof DateTimeImmutable) || $end_dt <= $start_dt) {
 			return array();
 		}
@@ -1089,10 +1129,10 @@ if (!function_exists('vms_goals_get_event_ids_in_period')) {
 			'posts_per_page' => $posts_per_page,
 			'fields' => 'ids',
 			'no_found_rows' => true,
-			'meta_key' => '_vms_event_date',
+			'meta_key' => '_vms_event_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Goal progress intentionally orders the bounded Event Plan period query by its canonical event-date metadata.
 			'orderby' => 'meta_value',
 			'order' => 'ASC',
-			'meta_query' => array(
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Goal progress intentionally bounds Event Plans by the canonical event-date metadata; no equivalent indexed domain field exists.
 				array(
 					'key' => '_vms_event_date',
 					'value' => array($start_date, $end_date),
@@ -1106,8 +1146,8 @@ if (!function_exists('vms_goals_get_event_ids_in_period')) {
 		$out = array();
 		foreach ($ids as $id) {
 			$include = true;
-			if (function_exists('vms_event_plan_should_include')) {
-				$include = vms_event_plan_should_include($id, 'financial', array(
+			if (function_exists('bvmgr_event_plan_should_include')) {
+				$include = bvmgr_event_plan_should_include($id, 'financial', array(
 					'include_drafts' => false,
 					'include_cancelled' => false,
 				));
@@ -1120,22 +1160,29 @@ if (!function_exists('vms_goals_get_event_ids_in_period')) {
 	}
 }
 
-if (!function_exists('vms_goals_compute_goal_progress')) {
-	function vms_goals_compute_goal_progress(array $goal, array $args = array()): array
+if (!function_exists('bvmgr_goals_compute_goal_progress')) {
+	function bvmgr_goals_compute_goal_progress(array $goal, array $args = array()): array
 	{
 		$metric = sanitize_key((string) ($goal['metric'] ?? 'true_profit'));
 		$target_cents = max(0, (int) ($goal['target_cents'] ?? 0));
 		$start_local = (string) ($goal['period_start_local'] ?? '');
 		$end_local = (string) ($goal['period_end_local'] ?? '');
-		$settings = vms_goals_get_settings();
+		$settings = bvmgr_goals_get_settings();
 		$trailing_n = max(1, (int) ($settings['default_trailing_window_events'] ?? 6));
 		$max_events = max(25, (int) apply_filters('vms_goals_progress_max_events', 120));
 
-		$event_ids = vms_goals_get_event_ids_in_period($start_local, $end_local, $max_events + 1);
+		$event_ids = bvmgr_goals_get_event_ids_in_period($start_local, $end_local, $max_events + 1);
 		$is_truncated = (count($event_ids) > $max_events);
 		if ($is_truncated) {
 			$event_ids = array_slice($event_ids, 0, $max_events);
-			vms_goals_log('Goal progress evaluation capped at ' . $max_events . ' events for performance.');
+			bvmgr_record_operational_issue('goals_progress_capped', array(
+				'service'     => 'goals_forecast',
+				'operation'   => 'compute_progress',
+				'status'      => 'capped',
+				'count'       => $max_events,
+				'entity_type' => 'goal',
+				'entity_id'   => absint($goal['id'] ?? 0),
+			));
 		}
 
 		$today = wp_date('Y-m-d', null, wp_timezone());
@@ -1146,11 +1193,11 @@ if (!function_exists('vms_goals_compute_goal_progress')) {
 			$event_date = (string) get_post_meta($event_id, '_vms_event_date', true);
 			$is_completed = ($event_date !== '' && $event_date < $today);
 			if ($is_completed) {
-				$pnl = vms_goals_get_event_pnl($event_id, array(
+				$pnl = bvmgr_goals_get_event_pnl($event_id, array(
 					'headcount_mode' => 'true',
 					'include_overhead' => true,
 				));
-				$metric_value = vms_goals_metric_value_from_pnl($metric, $pnl);
+				$metric_value = bvmgr_goals_metric_value_from_pnl($metric, $pnl);
 				$row = array(
 					'event_plan_id' => $event_id,
 					'event_date' => $event_date,

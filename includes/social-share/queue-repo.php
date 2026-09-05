@@ -1,64 +1,67 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (!function_exists('vms_social_queue_statuses')) {
-	function vms_social_queue_statuses(): array
+if (!function_exists('bvmgr_social_queue_statuses')) {
+	function bvmgr_social_queue_statuses(): array
 	{
 		return array('draft', 'queued', 'posting', 'posted', 'failed', 'canceled', 'needs_review');
 	}
 }
 
-if (!function_exists('vms_social_valid_queue_status')) {
-	function vms_social_valid_queue_status(string $status): string
+if (!function_exists('bvmgr_social_valid_queue_status')) {
+	function bvmgr_social_valid_queue_status(string $status): string
 	{
 		$status = sanitize_key($status);
-		$allowed = vms_social_queue_statuses();
+		$allowed = bvmgr_social_queue_statuses();
 		return in_array($status, $allowed, true) ? $status : 'draft';
 	}
 }
 
-if (!function_exists('vms_social_account_get')) {
+if (!function_exists('bvmgr_social_account_get')) {
 	/**
 	 * @return array<string,mixed>|null
 	 */
-	function vms_social_account_get(int $account_id): ?array
+	function bvmgr_social_account_get(int $account_id): ?array
 	{
 		$account_id = absint($account_id);
 		if ($account_id <= 0) {
 			return null;
 		}
 		global $wpdb;
-		$table = vms_social_table_accounts();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $account_id), ARRAY_A);
+		$table = bvmgr_social_table_accounts();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social account reads query the plugin-owned accounts table with %i/%d-prepared values so authentication state reflects immediate repository writes.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $account_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
 
-if (!function_exists('vms_social_account_rows')) {
+if (!function_exists('bvmgr_social_account_rows')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_social_account_rows(string $platform = ''): array
+	function bvmgr_social_account_rows(string $platform = ''): array
 	{
 		global $wpdb;
-		$table = vms_social_table_accounts();
+		$table = bvmgr_social_table_accounts();
 		$platform = sanitize_key($platform);
 		if ($platform === '') {
-			$rows = $wpdb->get_results("SELECT * FROM {$table} ORDER BY id DESC", ARRAY_A);
+			$query = $wpdb->prepare('SELECT * FROM %i ORDER BY id DESC', $table);
 		} else {
-			$rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE platform = %s ORDER BY id DESC", $platform), ARRAY_A);
+			$query = $wpdb->prepare('SELECT * FROM %i WHERE platform = %s ORDER BY id DESC', $table, $platform);
 		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social account lists execute the immediately prepared query variable so administration reflects immediate account mutations.
+		$rows = $wpdb->get_results($query, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
 
-if (!function_exists('vms_social_account_token_json')) {
+if (!function_exists('bvmgr_social_account_token_json')) {
 	/**
 	 * @return array<string,mixed>
 	 */
-	function vms_social_account_token_json(int $account_id): array
+	function bvmgr_social_account_token_json(int $account_id): array
 	{
-		$account = vms_social_account_get($account_id);
+		$account = bvmgr_social_account_get($account_id);
 		if (!is_array($account)) {
 			return array();
 		}
@@ -66,15 +69,15 @@ if (!function_exists('vms_social_account_token_json')) {
 		if ($enc === '') {
 			return array();
 		}
-		return vms_social_decrypt_json($enc);
+		return bvmgr_social_decrypt_json($enc);
 	}
 }
 
-if (!function_exists('vms_social_account_save')) {
-	function vms_social_account_save(array $payload): int
+if (!function_exists('bvmgr_social_account_save')) {
+	function bvmgr_social_account_save(array $payload): int
 	{
 		global $wpdb;
-		$table = vms_social_table_accounts();
+		$table = bvmgr_social_table_accounts();
 
 		$id = absint($payload['id'] ?? 0);
 		$platform = sanitize_key((string) ($payload['platform'] ?? ''));
@@ -83,10 +86,10 @@ if (!function_exists('vms_social_account_save')) {
 		$meta_json = wp_json_encode((array) ($payload['meta_json'] ?? array()));
 		$token_blob_enc = '';
 		if (isset($payload['token_json']) && is_array($payload['token_json'])) {
-			$token_blob_enc = vms_social_encrypt_json((array) $payload['token_json']);
+			$token_blob_enc = bvmgr_social_encrypt_json((array) $payload['token_json']);
 		}
 
-		$now = vms_social_now_mysql_utc();
+		$now = bvmgr_social_now_mysql_utc();
 		if ($id > 0) {
 			$update = array(
 				'platform' => $platform,
@@ -100,10 +103,12 @@ if (!function_exists('vms_social_account_save')) {
 				$update['token_blob_enc'] = $token_blob_enc;
 				$formats[] = '%s';
 			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social account updates write the plugin-owned accounts table directly so authentication and token state persist atomically in the current request.
 			$wpdb->update($table, $update, array('id' => $id), $formats, array('%d'));
 			return $id;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Social account creation persists normalized custom-table rows through wpdb::insert(); no core API preserves this repository contract.
 		$wpdb->insert(
 			$table,
 			array(
@@ -121,20 +126,21 @@ if (!function_exists('vms_social_account_save')) {
 	}
 }
 
-if (!function_exists('vms_social_account_delete')) {
-	function vms_social_account_delete(int $account_id): bool
+if (!function_exists('bvmgr_social_account_delete')) {
+	function bvmgr_social_account_delete(int $account_id): bool
 	{
 		global $wpdb;
-		$table = vms_social_table_accounts();
+		$table = bvmgr_social_table_accounts();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social account deletion removes the plugin-owned account row immediately; no core deletion API owns this custom table.
 		$deleted = $wpdb->delete($table, array('id' => absint($account_id)), array('%d'));
 		return (bool) $deleted;
 	}
 }
 
-if (!function_exists('vms_social_account_set_auth_state')) {
-	function vms_social_account_set_auth_state(int $account_id, string $auth_state, array $meta_patch = array()): bool
+if (!function_exists('bvmgr_social_account_set_auth_state')) {
+	function bvmgr_social_account_set_auth_state(int $account_id, string $auth_state, array $meta_patch = array()): bool
 	{
-		$account = vms_social_account_get($account_id);
+		$account = bvmgr_social_account_get($account_id);
 		if (!is_array($account)) {
 			return false;
 		}
@@ -143,7 +149,7 @@ if (!function_exists('vms_social_account_set_auth_state')) {
 		$meta = is_array($meta) ? $meta : array();
 		$meta = array_merge($meta, $meta_patch);
 
-		$saved = vms_social_account_save(array(
+		$saved = bvmgr_social_account_save(array(
 			'id' => $account_id,
 			'platform' => (string) ($account['platform'] ?? ''),
 			'label' => (string) ($account['label'] ?? ''),
@@ -155,30 +161,31 @@ if (!function_exists('vms_social_account_set_auth_state')) {
 	}
 }
 
-if (!function_exists('vms_social_venue_map_rows')) {
+if (!function_exists('bvmgr_social_venue_map_rows')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_social_venue_map_rows(int $venue_id = 0): array
+	function bvmgr_social_venue_map_rows(int $venue_id = 0): array
 	{
 		global $wpdb;
-		$table = vms_social_table_venue_map();
+		$table = bvmgr_social_table_venue_map();
 		$venue_id = absint($venue_id);
 		if ($venue_id > 0) {
-			$sql = $wpdb->prepare("SELECT * FROM {$table} WHERE venue_id = %d ORDER BY id DESC", $venue_id);
+			$sql = $wpdb->prepare('SELECT * FROM %i WHERE venue_id = %d ORDER BY id DESC', $table, $venue_id);
 		} else {
-			$sql = "SELECT * FROM {$table} ORDER BY id DESC";
+			$sql = $wpdb->prepare('SELECT * FROM %i ORDER BY id DESC', $table);
 		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social venue-map lists execute the immediately prepared query variable so routing reflects immediate mapping mutations.
 		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
 
-if (!function_exists('vms_social_venue_map_for_platform')) {
+if (!function_exists('bvmgr_social_venue_map_for_platform')) {
 	/**
 	 * @return array<string,mixed>|null
 	 */
-	function vms_social_venue_map_for_platform(int $venue_id, string $platform): ?array
+	function bvmgr_social_venue_map_for_platform(int $venue_id, string $platform): ?array
 	{
 		$venue_id = absint($venue_id);
 		$platform = sanitize_key($platform);
@@ -187,10 +194,12 @@ if (!function_exists('vms_social_venue_map_for_platform')) {
 		}
 
 		global $wpdb;
-		$table = vms_social_table_venue_map();
+		$table = bvmgr_social_table_venue_map();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social destination lookups query the plugin-owned venue mapping table with fully prepared identifiers and values so queue routing uses current mapping state.
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE venue_id = %d AND platform = %s AND is_enabled = 1 ORDER BY id DESC LIMIT 1",
+				'SELECT * FROM %i WHERE venue_id = %d AND platform = %s AND is_enabled = 1 ORDER BY id DESC LIMIT 1',
+				$table,
 				$venue_id,
 				$platform
 			),
@@ -200,13 +209,13 @@ if (!function_exists('vms_social_venue_map_for_platform')) {
 	}
 }
 
-if (!function_exists('vms_social_venue_map_save')) {
-	function vms_social_venue_map_save(array $payload): int
+if (!function_exists('bvmgr_social_venue_map_save')) {
+	function bvmgr_social_venue_map_save(array $payload): int
 	{
 		global $wpdb;
-		$table = vms_social_table_venue_map();
+		$table = bvmgr_social_table_venue_map();
 		$id = absint($payload['id'] ?? 0);
-		$now = vms_social_now_mysql_utc();
+		$now = bvmgr_social_now_mysql_utc();
 		$row = array(
 			'venue_id' => absint($payload['venue_id'] ?? 0),
 			'platform' => sanitize_key((string) ($payload['platform'] ?? '')),
@@ -218,6 +227,7 @@ if (!function_exists('vms_social_venue_map_save')) {
 		);
 
 		if ($id > 0) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social venue-map updates write the plugin-owned mapping table directly so destination configuration persists immediately.
 			$wpdb->update(
 				$table,
 				$row,
@@ -229,6 +239,7 @@ if (!function_exists('vms_social_venue_map_save')) {
 		}
 
 		$row['created_at'] = $now;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Social venue-map creation persists normalized custom-table rows through wpdb::insert(); no core API preserves this repository contract.
 		$wpdb->insert(
 			$table,
 			$row,
@@ -238,49 +249,53 @@ if (!function_exists('vms_social_venue_map_save')) {
 	}
 }
 
-if (!function_exists('vms_social_venue_map_delete')) {
-	function vms_social_venue_map_delete(int $id): bool
+if (!function_exists('bvmgr_social_venue_map_delete')) {
+	function bvmgr_social_venue_map_delete(int $id): bool
 	{
 		global $wpdb;
-		$table = vms_social_table_venue_map();
+		$table = bvmgr_social_table_venue_map();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social venue-map deletion removes the plugin-owned mapping row immediately; no core deletion API owns this custom table.
 		$deleted = $wpdb->delete($table, array('id' => absint($id)), array('%d'));
 		return (bool) $deleted;
 	}
 }
 
-if (!function_exists('vms_social_templates_all')) {
+if (!function_exists('bvmgr_social_templates_all')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_social_templates_all(string $platform = ''): array
+	function bvmgr_social_templates_all(string $platform = ''): array
 	{
 		global $wpdb;
-		$table = vms_social_table_templates();
+		$table = bvmgr_social_table_templates();
 		$platform = sanitize_key($platform);
 		if ($platform === '') {
-			$rows = $wpdb->get_results("SELECT * FROM {$table} ORDER BY platform ASC, id DESC", ARRAY_A);
+			$query = $wpdb->prepare('SELECT * FROM %i ORDER BY platform ASC, id DESC', $table);
 		} else {
-			$rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE platform = %s ORDER BY id DESC", $platform), ARRAY_A);
+			$query = $wpdb->prepare('SELECT * FROM %i WHERE platform = %s ORDER BY id DESC', $table, $platform);
 		}
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social template lists execute the immediately prepared query variable so administration reflects immediate template mutations.
+		$rows = $wpdb->get_results($query, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
 
-if (!function_exists('vms_social_template_save')) {
-	function vms_social_template_save(array $payload): int
+if (!function_exists('bvmgr_social_template_save')) {
+	function bvmgr_social_template_save(array $payload): int
 	{
 		global $wpdb;
-		$table = vms_social_table_templates();
+		$table = bvmgr_social_table_templates();
 		$id = absint($payload['id'] ?? 0);
 		$platform = sanitize_key((string) ($payload['platform'] ?? ''));
 		$name = sanitize_text_field((string) ($payload['name'] ?? ''));
 		$body = (string) ($payload['body'] ?? '');
 		$is_default = empty($payload['is_default']) ? 0 : 1;
 		$settings_json = wp_json_encode((array) ($payload['settings_json'] ?? array()));
-		$now = vms_social_now_mysql_utc();
+		$now = bvmgr_social_now_mysql_utc();
 
 		if ($is_default && $platform !== '') {
-			$wpdb->query($wpdb->prepare("UPDATE {$table} SET is_default = 0 WHERE platform = %s", $platform));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Default-template reset writes the plugin-owned templates table with %i/%s-prepared values immediately before the replacement row is saved.
+			$wpdb->query($wpdb->prepare('UPDATE %i SET is_default = 0 WHERE platform = %s', $table, $platform));
 		}
 
 		$row = array(
@@ -293,78 +308,83 @@ if (!function_exists('vms_social_template_save')) {
 		);
 
 		if ($id > 0) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social template updates write the plugin-owned templates table directly so rendering configuration persists immediately.
 			$wpdb->update($table, $row, array('id' => $id), array('%s', '%s', '%s', '%s', '%d', '%s'), array('%d'));
 			return $id;
 		}
 
 		$row['created_at'] = $now;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Social template creation persists normalized custom-table rows through wpdb::insert(); no core API preserves this repository contract.
 		$wpdb->insert($table, $row, array('%s', '%s', '%s', '%s', '%d', '%s', '%s'));
 		return (int) $wpdb->insert_id;
 	}
 }
 
-if (!function_exists('vms_social_template_delete')) {
-	function vms_social_template_delete(int $id): bool
+if (!function_exists('bvmgr_social_template_delete')) {
+	function bvmgr_social_template_delete(int $id): bool
 	{
 		global $wpdb;
-		$table = vms_social_table_templates();
+		$table = bvmgr_social_table_templates();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social template deletion removes the plugin-owned template row immediately; no core deletion API owns this custom table.
 		$deleted = $wpdb->delete($table, array('id' => absint($id)), array('%d'));
 		return (bool) $deleted;
 	}
 }
 
-if (!function_exists('vms_social_queue_get')) {
+if (!function_exists('bvmgr_social_queue_get')) {
 	/**
 	 * @return array<string,mixed>|null
 	 */
-	function vms_social_queue_get(int $queue_id): ?array
+	function bvmgr_social_queue_get(int $queue_id): ?array
 	{
 		$queue_id = absint($queue_id);
 		if ($queue_id <= 0) {
 			return null;
 		}
 		global $wpdb;
-		$table = vms_social_table_queue();
-		$row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $queue_id), ARRAY_A);
+		$table = bvmgr_social_table_queue();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Social queue item reads query the plugin-owned queue table with %i/%d-prepared values so workers and controls observe current state transitions.
+		$row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id = %d', $table, $queue_id), ARRAY_A);
 		return is_array($row) ? $row : null;
 	}
 }
 
-if (!function_exists('vms_social_queue_latest_for_event')) {
+if (!function_exists('bvmgr_social_queue_latest_for_event')) {
 	/**
 	 * @return array<string,mixed>|null
 	 */
-	function vms_social_queue_latest_for_event(int $event_plan_id): ?array
+	function bvmgr_social_queue_latest_for_event(int $event_plan_id): ?array
 	{
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return null;
 		}
 		global $wpdb;
-		$table = vms_social_table_queue();
+		$table = bvmgr_social_table_queue();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Latest-event queue reads query the plugin-owned queue table with %i/%d-prepared values so event controls observe the newest repository mutation.
 		$row = $wpdb->get_row(
-			$wpdb->prepare("SELECT * FROM {$table} WHERE event_plan_id = %d ORDER BY id DESC LIMIT 1", $event_plan_id),
+			$wpdb->prepare('SELECT * FROM %i WHERE event_plan_id = %d ORDER BY id DESC LIMIT 1', $table, $event_plan_id),
 			ARRAY_A
 		);
 		return is_array($row) ? $row : null;
 	}
 }
 
-if (!function_exists('vms_social_queue_create')) {
+if (!function_exists('bvmgr_social_queue_create')) {
 	/**
 	 * @param array<string,mixed> $payload
 	 */
-	function vms_social_queue_create(array $payload): int
+	function bvmgr_social_queue_create(array $payload): int
 	{
 		global $wpdb;
-		$table = vms_social_table_queue();
+		$table = bvmgr_social_table_queue();
 
 		$scheduled = (string) ($payload['scheduled_at_utc'] ?? '');
 		if ($scheduled === '') {
-			$scheduled = vms_social_now_mysql_utc();
+			$scheduled = bvmgr_social_now_mysql_utc();
 		}
 
-		$status = vms_social_valid_queue_status((string) ($payload['status'] ?? 'queued'));
+		$status = bvmgr_social_valid_queue_status((string) ($payload['status'] ?? 'queued'));
 		if ($status === 'draft') {
 			$status = 'queued';
 		}
@@ -377,7 +397,8 @@ if (!function_exists('vms_social_queue_create')) {
 			$snapshot = '{}';
 		}
 
-		$now = vms_social_now_mysql_utc();
+		$now = bvmgr_social_now_mysql_utc();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Social queue creation persists the normalized snapshot and scheduling state through wpdb::insert(); no core API preserves this repository lifecycle.
 		$wpdb->insert(
 			$table,
 			array(
@@ -407,15 +428,15 @@ if (!function_exists('vms_social_queue_create')) {
 	}
 }
 
-if (!function_exists('vms_social_queue_list')) {
+if (!function_exists('bvmgr_social_queue_list')) {
 	/**
 	 * @param array<string,mixed> $filters
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_social_queue_list(array $filters = array(), int $limit = 100): array
+	function bvmgr_social_queue_list(array $filters = array(), int $limit = 100): array
 	{
 		global $wpdb;
-		$table = vms_social_table_queue();
+		$table = bvmgr_social_table_queue();
 		$where = array('1=1');
 		$params = array();
 
@@ -444,53 +465,60 @@ if (!function_exists('vms_social_queue_list')) {
 		}
 
 		$limit = max(1, min(500, $limit));
-		$sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . ' ORDER BY id DESC LIMIT %d';
+		$sql = 'SELECT * FROM %i WHERE ' . implode(' AND ', $where) . ' ORDER BY id DESC LIMIT %d'; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Queue lists assemble only bounded literal filter fragments plus prepared identifier, value, and limit placeholders.
+		array_unshift($params, $table);
 		$params[] = $limit;
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Queue lists prepare only bounded literal filters and the plugin-owned queue-table identifier.
 		$query = $wpdb->prepare($sql, $params);
+		// phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Queue lists read request-fresh custom-table state for worker/admin controls after queue mutations.
 		$rows = $wpdb->get_results($query, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
 
-if (!function_exists('vms_social_queue_due_items')) {
+if (!function_exists('bvmgr_social_queue_due_items')) {
 	/**
 	 * @return array<int,array<string,mixed>>
 	 */
-	function vms_social_queue_due_items(int $limit = 20): array
+	function bvmgr_social_queue_due_items(int $limit = 20): array
 	{
 		global $wpdb;
-		$table = vms_social_table_queue();
-		$now = vms_social_now_mysql_utc();
+		$table = bvmgr_social_table_queue();
+		$now = bvmgr_social_now_mysql_utc();
 		$limit = max(1, min(100, $limit));
 		$sql = $wpdb->prepare(
-			"SELECT * FROM {$table}
+			"SELECT * FROM %i
 			 WHERE status = 'queued'
 			   AND (scheduled_at_utc IS NULL OR scheduled_at_utc <= %s)
 			   AND (next_attempt_at_utc IS NULL OR next_attempt_at_utc <= %s)
 			 ORDER BY scheduled_at_utc ASC, id ASC
 			 LIMIT %d",
+			$table,
 			$now,
 			$now,
 			$limit
 		);
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Due-item selection executes the immediately prepared query variable so ordering/retry eligibility remains current for workers.
 		$rows = $wpdb->get_results($sql, ARRAY_A);
 		return is_array($rows) ? $rows : array();
 	}
 }
 
-if (!function_exists('vms_social_queue_claim')) {
-	function vms_social_queue_claim(int $queue_id): bool
+if (!function_exists('bvmgr_social_queue_claim')) {
+	function bvmgr_social_queue_claim(int $queue_id): bool
 	{
 		$queue_id = absint($queue_id);
 		if ($queue_id <= 0) {
 			return false;
 		}
 		global $wpdb;
-		$table = vms_social_table_queue();
+		$table = bvmgr_social_table_queue();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic queue claiming writes the plugin-owned queue table with fully prepared values and the queued-state predicate to preserve worker concurrency.
 		$updated = $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$table} SET status = 'posting', updated_at = %s WHERE id = %d AND status = 'queued'",
-				vms_social_now_mysql_utc(),
+				"UPDATE %i SET status = 'posting', updated_at = %s WHERE id = %d AND status = 'queued'",
+				$table,
+				bvmgr_social_now_mysql_utc(),
 				$queue_id
 			)
 		);
@@ -498,8 +526,8 @@ if (!function_exists('vms_social_queue_claim')) {
 	}
 }
 
-if (!function_exists('vms_social_queue_update')) {
-	function vms_social_queue_update(int $queue_id, array $fields): bool
+if (!function_exists('bvmgr_social_queue_update')) {
+	function bvmgr_social_queue_update(int $queue_id, array $fields): bool
 	{
 		$queue_id = absint($queue_id);
 		if ($queue_id <= 0 || empty($fields)) {
@@ -527,7 +555,7 @@ if (!function_exists('vms_social_queue_update')) {
 				continue;
 			}
 			if ($k === 'status') {
-				$v = vms_social_valid_queue_status((string) $v);
+				$v = bvmgr_social_valid_queue_status((string) $v);
 			}
 			if ($k === 'last_error_code') {
 				$v = sanitize_key((string) $v);
@@ -543,20 +571,21 @@ if (!function_exists('vms_social_queue_update')) {
 			return false;
 		}
 
-		$update['updated_at'] = vms_social_now_mysql_utc();
+		$update['updated_at'] = bvmgr_social_now_mysql_utc();
 		$formats[] = '%s';
 
 		global $wpdb;
-		$table = vms_social_table_queue();
+		$table = bvmgr_social_table_queue();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Queue state transitions write only the bounded allowlist to the plugin-owned queue table so worker/admin mutations persist immediately.
 		$ok = $wpdb->update($table, $update, array('id' => $queue_id), $formats, array('%d'));
 		return $ok !== false;
 	}
 }
 
-if (!function_exists('vms_social_queue_cancel')) {
-	function vms_social_queue_cancel(int $queue_id): bool
+if (!function_exists('bvmgr_social_queue_cancel')) {
+	function bvmgr_social_queue_cancel(int $queue_id): bool
 	{
-		return vms_social_queue_update(
+		return bvmgr_social_queue_update(
 			$queue_id,
 			array(
 				'status' => 'canceled',
@@ -567,10 +596,10 @@ if (!function_exists('vms_social_queue_cancel')) {
 	}
 }
 
-if (!function_exists('vms_social_queue_retry')) {
-	function vms_social_queue_retry(int $queue_id): bool
+if (!function_exists('bvmgr_social_queue_retry')) {
+	function bvmgr_social_queue_retry(int $queue_id): bool
 	{
-		return vms_social_queue_update(
+		return bvmgr_social_queue_update(
 			$queue_id,
 			array(
 				'status' => 'queued',

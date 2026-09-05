@@ -17,8 +17,8 @@ defined('ABSPATH') || exit;
  */
 
 
-if (!function_exists('vms_vendor_portal_admin_preview_url')) {
-	function vms_vendor_portal_admin_preview_url(int $vendor_id): string
+if (!function_exists('bvmgr_vendor_portal_admin_preview_url')) {
+	function bvmgr_vendor_portal_admin_preview_url(int $vendor_id): string
 	{
 		$vendor_id = absint($vendor_id);
 		if ($vendor_id <= 0) {
@@ -45,7 +45,7 @@ if (!function_exists('vms_vendor_portal_admin_preview_url')) {
 			'tab' => 'dashboard',
 			'vendor_id' => $vendor_id,
 			'vms_preview_vendor' => $vendor_id,
-			'vms_preview_nonce' => wp_create_nonce('vms_preview_vendor_portal_' . $vendor_id),
+			'bvmgr_preview_nonce' => wp_create_nonce('bvmgr_preview_vendor_portal_' . $vendor_id),
 		), $base_url);
 	}
 }
@@ -55,37 +55,37 @@ add_action('add_meta_boxes', function (): void {
 	add_meta_box(
 		'vms_vendor_user_link',
 		'Vendor Portal Users',
-		'vms_vendor_user_links_metabox_render',
+		'bvmgr_vendor_user_links_metabox_render',
 		'vms_vendor',
 		'side',
 		'default'
 	);
 });
 
-function vms_vendor_user_links_metabox_render($post): void
+function bvmgr_vendor_user_links_metabox_render($post): void
 {
 	if (!($post instanceof WP_Post)) return;
 
-	wp_nonce_field('vms_vendor_user_links_save', 'vms_vendor_user_links_nonce');
+	wp_nonce_field('bvmgr_vendor_user_links_save', 'bvmgr_vendor_user_links_nonce');
 
 	$vendor_id = (int) $post->ID;
 
 	$links = array();
-	if (function_exists('vms_vendor_user_links_get_by_vendor')) {
-		$links = vms_vendor_user_links_get_by_vendor($vendor_id, true);
+	if (function_exists('bvmgr_vendor_user_links_get_by_vendor')) {
+		$links = bvmgr_vendor_user_links_get_by_vendor($vendor_id, true);
 	}
 
 	// Vendor's primary contact user (back-compat convenience)
-	$primary_user_id = (int) get_post_meta($vendor_id, (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
+	$primary_user_id = (int) get_post_meta($vendor_id, (defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id'), true);
 
 	echo '<p class="description">';
 	echo 'Link one or more WordPress users who can manage this vendor in the Vendor Portal.';
 	echo '</p>';
 
-	if (current_user_can('manage_options') && function_exists('vms_vendor_portal_admin_preview_url')) {
-		$preview_url = (string) vms_vendor_portal_admin_preview_url($vendor_id);
+	if (current_user_can('manage_options') && function_exists('bvmgr_vendor_portal_admin_preview_url')) {
+		$preview_url = (string) bvmgr_vendor_portal_admin_preview_url($vendor_id);
 		if ($preview_url !== '') {
-			echo '<p><a class="button button-secondary button-small" href="' . esc_url($preview_url) . '" target="_blank" rel="noopener">' . esc_html__('Preview Vendor Portal', 'vms') . '</a></p>';
+			echo '<p><a class="button button-secondary button-small" href="' . esc_url($preview_url) . '" target="_blank" rel="noopener">' . esc_html__('Preview Vendor Portal', 'backstage-venue-manager') . '</a></p>';
 		}
 	}
 
@@ -117,12 +117,12 @@ function vms_vendor_user_links_metabox_render($post): void
 
 			echo '<label class="vms-vul-field-label"><strong>Role</strong></label>';
 			echo '<select name="vms_vul[links][' . esc_attr((string) $user_id) . '][role]" class="vms-vul-select">';
-			echo vms_vendor_user_links_role_options($role);
+			echo bvmgr_vendor_user_links_role_options($role);
 			echo '</select>';
 
 			echo '<label class="vms-vul-field-label vms-vul-field-label-gap"><strong>Status</strong></label>';
 			echo '<select name="vms_vul[links][' . esc_attr((string) $user_id) . '][status]" class="vms-vul-select">';
-			echo vms_vendor_user_links_status_options($status);
+			echo bvmgr_vendor_user_links_status_options($status);
 			echo '</select>';
 
 			echo '<label class="vms-vul-check-label vms-vul-check-label-gap-lg">';
@@ -195,12 +195,12 @@ function vms_vendor_user_links_metabox_render($post): void
 
 	echo '<label class="vms-vul-field-label vms-vul-field-label-gap"><strong>Role</strong></label>';
 	echo '<select name="vms_vul[new_role]" class="vms-vul-select">';
-	echo vms_vendor_user_links_role_options('manager');
+	echo bvmgr_vendor_user_links_role_options('manager');
 	echo '</select>';
 
 	echo '<label class="vms-vul-field-label vms-vul-field-label-gap"><strong>Status</strong></label>';
 	echo '<select name="vms_vul[new_status]" class="vms-vul-select">';
-	echo vms_vendor_user_links_status_options('active');
+	echo bvmgr_vendor_user_links_status_options('active');
 	echo '</select>';
 
 	echo '<label class="vms-vul-check-label vms-vul-check-label-gap-md">';
@@ -212,7 +212,7 @@ function vms_vendor_user_links_metabox_render($post): void
 	echo '</div>';
 }
 
-function vms_vendor_user_links_role_options(string $selected_role): string
+function bvmgr_vendor_user_links_role_options(string $selected_role): string
 {
 	$selected_role = sanitize_key($selected_role);
 
@@ -237,7 +237,7 @@ function vms_vendor_user_links_role_options(string $selected_role): string
 	return $out;
 }
 
-function vms_vendor_user_links_status_options(string $selected_status): string
+function bvmgr_vendor_user_links_status_options(string $selected_status): string
 {
 	$selected_status = sanitize_key($selected_status);
 
@@ -266,13 +266,19 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 
 	if (!current_user_can('edit_post', $post_id)) return;
 
-	if (!isset($_POST['vms_vendor_user_links_nonce']) || !wp_verify_nonce((string) $_POST['vms_vendor_user_links_nonce'], 'vms_vendor_user_links_save')) {
+	$nonce = (isset($_POST['bvmgr_vendor_user_links_nonce']) && !is_array($_POST['bvmgr_vendor_user_links_nonce']))
+		? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_vendor_user_links_nonce']))
+		: '';
+	if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_vendor_user_links_save'))) {
 		return;
 	}
 
 	$actor_user_id = get_current_user_id();
 
-	$data = isset($_POST['vms_vul']) && is_array($_POST['vms_vul']) ? $_POST['vms_vul'] : array();
+		$data = (isset($_POST['vms_vul']) && is_array($_POST['vms_vul']))
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured vendor-user link payloads are unslashed here and normalized field-by-field below.
+			? (array) wp_unslash($_POST['vms_vul'])
+			: array();
 
 	// Update existing links
 	$posted_links = isset($data['links']) && is_array($data['links']) ? $data['links'] : array();
@@ -285,8 +291,8 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 
 		$remove = !empty($row['remove']);
 		if ($remove) {
-			if (function_exists('vms_vendor_user_link_delete')) {
-				vms_vendor_user_link_delete($post_id, $user_id, $actor_user_id);
+			if (function_exists('bvmgr_vendor_user_link_delete')) {
+				bvmgr_vendor_user_link_delete($post_id, $user_id, $actor_user_id);
 			}
 			continue;
 		}
@@ -294,52 +300,52 @@ add_action('save_post_vms_vendor', function (int $post_id, WP_Post $post, bool $
 		$role = isset($row['role']) ? sanitize_key((string) $row['role']) : 'manager';
 		$status = isset($row['status']) ? sanitize_key((string) $row['status']) : 'active';
 
-		if (function_exists('vms_vendor_user_link_update')) {
-			vms_vendor_user_link_update($post_id, $user_id, array(
+		if (function_exists('bvmgr_vendor_user_link_update')) {
+			bvmgr_vendor_user_link_update($post_id, $user_id, array(
 				'role'   => $role,
 				'status' => $status,
 			), $actor_user_id);
-		} elseif (function_exists('vms_vendor_user_link_upsert')) {
-			vms_vendor_user_link_upsert($post_id, $user_id, array(
+		} elseif (function_exists('bvmgr_vendor_user_link_upsert')) {
+			bvmgr_vendor_user_link_upsert($post_id, $user_id, array(
 				'role'   => $role,
 				'status' => $status,
 				'source' => 'vendor_user_metabox',
 			), $actor_user_id);
 		}
 
-		if (!empty($row['set_primary_for_user']) && function_exists('vms_vendor_user_links_set_primary_for_user')) {
-			vms_vendor_user_links_set_primary_for_user($user_id, $post_id, $actor_user_id);
+		if (!empty($row['set_primary_for_user']) && function_exists('bvmgr_vendor_user_links_set_primary_for_user')) {
+			bvmgr_vendor_user_links_set_primary_for_user($user_id, $post_id, $actor_user_id);
 		}
 	}
 
 	// Add new link
 	$new_user_id = isset($data['new_user_id']) ? absint((string) $data['new_user_id']) : 0;
-	if ($new_user_id > 0 && function_exists('vms_vendor_user_link_upsert')) {
+	if ($new_user_id > 0 && function_exists('bvmgr_vendor_user_link_upsert')) {
 		$new_role = isset($data['new_role']) ? sanitize_key((string) $data['new_role']) : 'manager';
 		$new_status = isset($data['new_status']) ? sanitize_key((string) $data['new_status']) : 'active';
 		$set_primary = !empty($data['new_set_primary_for_user']);
 
-		vms_vendor_user_link_upsert($post_id, $new_user_id, array(
+		bvmgr_vendor_user_link_upsert($post_id, $new_user_id, array(
 			'role' => $new_role,
 			'status' => $new_status,
 			'set_primary_for_user' => $set_primary,
 			'source' => 'vendor_user_metabox',
 		), $actor_user_id);
 
-		if ($set_primary && function_exists('vms_vendor_user_links_set_primary_for_user')) {
-			vms_vendor_user_links_set_primary_for_user($new_user_id, $post_id, $actor_user_id);
+		if ($set_primary && function_exists('bvmgr_vendor_user_links_set_primary_for_user')) {
+			bvmgr_vendor_user_links_set_primary_for_user($new_user_id, $post_id, $actor_user_id);
 		}
 	}
 
 	// Update vendor's primary contact user pointer (optional convenience)
 	$primary_user_id = isset($data['primary_user_id']) ? absint((string) $data['primary_user_id']) : 0;
-	$key = (defined('VMS_VENDOR_PRIMARY_USER_META_KEY') ? VMS_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id');
+	$key = (defined('BVMGR_VENDOR_PRIMARY_USER_META_KEY') ? BVMGR_VENDOR_PRIMARY_USER_META_KEY : '_vms_vendor_user_id');
 
 	if ($primary_user_id > 0) {
 		// Only allow setting primary contact to a currently linked user.
 		$linked_ids = array();
-		if (function_exists('vms_vendor_user_links_get_by_vendor')) {
-			$rows = vms_vendor_user_links_get_by_vendor($post_id, true);
+		if (function_exists('bvmgr_vendor_user_links_get_by_vendor')) {
+			$rows = bvmgr_vendor_user_links_get_by_vendor($post_id, true);
 			foreach ($rows as $r) {
 				$linked_ids[] = isset($r['user_id']) ? absint($r['user_id']) : 0;
 			}
@@ -361,18 +367,18 @@ add_filter('post_row_actions', function (array $actions, WP_Post $post): array {
 	if (!current_user_can('manage_options')) {
 		return $actions;
 	}
-	if (!function_exists('vms_vendor_portal_admin_preview_url')) {
+	if (!function_exists('bvmgr_vendor_portal_admin_preview_url')) {
 		return $actions;
 	}
 
-	$preview_url = (string) vms_vendor_portal_admin_preview_url((int) $post->ID);
+	$preview_url = (string) bvmgr_vendor_portal_admin_preview_url((int) $post->ID);
 	if ($preview_url === '') {
 		return $actions;
 	}
 
 	$actions['vms_vendor_portal_preview'] =
 		'<a href="' . esc_url($preview_url) . '" target="_blank" rel="noopener">' .
-		esc_html__('Preview Portal', 'vms') .
+		esc_html__('Preview Portal', 'backstage-venue-manager') .
 		'</a>';
 
 	return $actions;
