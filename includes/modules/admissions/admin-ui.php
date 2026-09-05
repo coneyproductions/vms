@@ -57,6 +57,7 @@ if (!function_exists('bvmgr_admission_admin_enqueue_assets')) {
 				admin_url('admin-post.php?action=vms_admissions_export_csv&event_plan_id=' . $post_id),
 				'bvmgr_admissions_export_csv_' . $post_id
 			),
+			'eventDayReportUrl' => function_exists('bvmgr_event_day_report_url') ? bvmgr_event_day_report_url($post_id) : '',
 		));
 	}
 }
@@ -99,6 +100,9 @@ if (!function_exists('bvmgr_admission_render_event_plan_metabox')) {
 		echo '<p class="vms-adm-actions">';
 		echo '<button type="button" class="button button-primary" id="vms-adm-add-entry">' . esc_html__('Add Comp Entry', 'backstage-venue-manager') . '</button> ';
 		echo '<a class="button" id="vms-adm-export-csv" href="#">' . esc_html__('Export Door List CSV', 'backstage-venue-manager') . '</a>';
+		if (function_exists('bvmgr_event_day_report_url')) {
+			echo ' <a class="button" href="' . esc_url(bvmgr_event_day_report_url((int) $post->ID)) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Print Event-Day Guest List', 'backstage-venue-manager') . '</a>';
+		}
 		echo '</p>';
 		echo '<p id="vms-adm-feedback" class="vms-adm-feedback" aria-live="polite"></p>';
 		echo '<div id="vms-adm-summary" class="vms-adm-summary"></div>';

@@ -3027,6 +3027,9 @@ if (!function_exists('bvmgr_event_command_center_submitbox_link')) {
 
         echo '<div class="misc-pub-section misc-pub-vms-command-center">';
         echo '<a class="button button-small" href="' . esc_url(bvmgr_event_command_center_admin_url(array('plan_id' => $post_id))) . '">' . esc_html__('Open Command Center', 'backstage-venue-manager') . '</a>';
+        if (function_exists('bvmgr_event_day_report_url') && current_user_can(function_exists('bvmgr_admission_manage_capability') ? bvmgr_admission_manage_capability() : 'manage_options')) {
+            echo ' <a class="button button-primary" href="' . esc_url(bvmgr_event_day_report_url($post_id)) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Print Event-Day Guest List', 'backstage-venue-manager') . '</a>';
+        }
         echo '<span class="description vms-cc-submitbox-note">' . esc_html__('Open the event-level dashboard view for this show.', 'backstage-venue-manager') . '</span>';
         echo '</div>';
     }

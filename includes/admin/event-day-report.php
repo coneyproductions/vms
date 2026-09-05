@@ -389,6 +389,41 @@ if (!function_exists('bvmgr_event_day_report_attendee_checked_in')) {
     }
 }
 
+if (!function_exists('bvmgr_event_day_report_attendee_ids_for_woo_row')) {
+    function bvmgr_event_day_report_attendee_ids_for_woo_row(array $row): array
+    {
+        $attendee_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($row['attendee_ids'] ?? array())))));
+        if (!empty($attendee_ids)) {
+            return $attendee_ids;
+        }
+
+        $order_id = absint($row['order_id'] ?? 0);
+        $product_id = absint($row['product_id'] ?? 0);
+        $tec_event_id = absint($row['tec_event_id'] ?? 0);
+        if ($order_id <= 0 || $product_id <= 0 || $tec_event_id <= 0) {
+            return array();
+        }
+
+        $attendee_ids = get_posts(array(
+            'post_type' => 'tribe_wooticket',
+            'post_status' => 'any',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'no_found_rows' => true,
+            'orderby' => 'ID',
+            'order' => 'ASC',
+            'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Event-Day restores attendee identity only for one exact order, ticket product, and TEC event when current Event Tickets records omit order-item metadata.
+                'relation' => 'AND',
+                array('key' => '_tribe_wooticket_order', 'value' => (string) $order_id),
+                array('key' => '_tribe_wooticket_product', 'value' => (string) $product_id),
+                array('key' => '_tribe_wooticket_event', 'value' => (string) $tec_event_id),
+            ),
+        ));
+
+        return array_values(array_unique(array_filter(array_map('absint', (array) $attendee_ids))));
+    }
+}
+
 if (!function_exists('bvmgr_event_day_report_collect_woo_sources')) {
     function bvmgr_event_day_report_collect_woo_sources(int $event_plan_id, array $ops_lookup): array
     {
@@ -409,7 +444,7 @@ if (!function_exists('bvmgr_event_day_report_collect_woo_sources')) {
                 continue;
             }
             $row['attendees'] = array();
-            foreach ((array) ($row['attendee_ids'] ?? array()) as $attendee_id) {
+            foreach (bvmgr_event_day_report_attendee_ids_for_woo_row($row) as $attendee_id) {
                 $attendee_id = absint($attendee_id);
                 $post = $attendee_id > 0 ? get_post($attendee_id) : null;
                 if (!($post instanceof WP_Post) || !in_array((string) $post->post_status, bvmgr_ticket_sales_resolver_active_attendee_post_statuses(), true)) {
@@ -417,11 +452,11 @@ if (!function_exists('bvmgr_event_day_report_collect_woo_sources')) {
                 }
                 $name = trim((string) get_post_meta($attendee_id, '_tribe_tickets_full_name', true));
                 if ($name === '') {
-                    $name = trim((string) (get_post_meta($attendee_id, '_tribe_attendee_name', true) ?: get_post_meta($attendee_id, '_tribe_full_name', true)));
+                    $name = trim((string) (get_post_meta($attendee_id, '_tribe_attendee_name', true) ?: get_post_meta($attendee_id, '_tribe_full_name', true) ?: get_post_meta($attendee_id, '_vms_vendor_guest_name', true)));
                 }
                 $email = sanitize_email((string) get_post_meta($attendee_id, '_tribe_tickets_email', true));
                 if ($email === '') {
-                    $email = sanitize_email((string) (get_post_meta($attendee_id, '_tribe_attendee_email', true) ?: get_post_meta($attendee_id, '_tribe_email', true)));
+                    $email = sanitize_email((string) (get_post_meta($attendee_id, '_tribe_attendee_email', true) ?: get_post_meta($attendee_id, '_tribe_email', true) ?: get_post_meta($attendee_id, '_vms_vendor_guest_email', true)));
                 }
                 $reference = trim((string) (get_post_meta($attendee_id, '_tribe_wooticket_security_code', true) ?: $attendee_id));
                 $native = (string) get_post_meta($attendee_id, '_tribe_wooticket_checkedin', true);
@@ -486,7 +521,7 @@ if (!function_exists('bvmgr_event_day_report_collect_admissions')) {
             $event_plan_id
         ), ARRAY_A);
 
-        foreach ((array) $rows as &$row) {
+        foreach ($rows as &$row) {
             $bridge = function_exists('bvmgr_admission_vendor_guest_bridge_context_from_claim_meta')
                 ? bvmgr_admission_vendor_guest_bridge_context_from_claim_meta($row['claim_meta'] ?? '')
                 : array();
@@ -632,6 +667,7 @@ if (!function_exists('bvmgr_event_day_report_party_add')) {
                 'order_id' => max(0, (int) ($payload['order_id'] ?? 0)),
                 'name' => trim((string) ($payload['name'] ?? '')),
                 'email' => sanitize_email((string) ($payload['email'] ?? '')),
+                'purchaser_name' => trim((string) ($payload['purchaser_name'] ?? '')),
                 'expected' => 0,
                 'checked_in' => 0,
                 'admissions' => array(),
@@ -648,6 +684,9 @@ if (!function_exists('bvmgr_event_day_report_party_add')) {
         }
         if ($party['email'] === '' && !empty($payload['email'])) {
             $party['email'] = sanitize_email((string) $payload['email']);
+        }
+        if ($party['purchaser_name'] === '' && !empty($payload['purchaser_name'])) {
+            $party['purchaser_name'] = trim((string) $payload['purchaser_name']);
         }
         $expected = max(0, (int) ($payload['expected'] ?? 0));
         $party['expected'] += $expected;
@@ -839,22 +878,32 @@ if (!function_exists('bvmgr_event_day_report_build_model_from_sources')) {
                 );
             }
 
-            $customer_name = trim((string) ($row['customer_name'] ?? ''));
-            $customer_email = sanitize_email((string) ($row['customer_email'] ?? ''));
-            if ($customer_name === '' && !empty($attendees[0]['name'])) {
-                $customer_name = trim((string) $attendees[0]['name']);
+            $purchaser_name = trim((string) ($row['customer_name'] ?? ''));
+            $purchaser_email = sanitize_email((string) ($row['customer_email'] ?? ''));
+            $primary_name = '';
+            $primary_email = '';
+            foreach ($attendees as $attendee) {
+                $attendee_name = trim((string) ($attendee['name'] ?? ''));
+                if ($attendee_name === '') {
+                    continue;
+                }
+                $primary_name = $attendee_name;
+                $primary_email = sanitize_email((string) ($attendee['email'] ?? ''));
+                break;
             }
-            if ($customer_email === '' && !empty($attendees[0]['email'])) {
-                $customer_email = sanitize_email((string) $attendees[0]['email']);
+            if ($primary_name === '') {
+                $primary_name = $purchaser_name;
+                $primary_email = $purchaser_email;
             }
-            if ($customer_name === '') {
-                $customer_name = $reference !== '' ? $reference : 'Ticket Party';
+            if ($primary_name === '') {
+                $primary_name = $reference !== '' ? $reference : 'Ticket Party';
             }
 
             bvmgr_event_day_report_party_add($parties, 'order:' . $order_id, array(
                 'order_id' => $order_id,
-                'name' => $customer_name,
-                'email' => $customer_email,
+                'name' => $primary_name,
+                'email' => $primary_email,
+                'purchaser_name' => $purchaser_name,
                 'expected' => $expected,
                 'checked_in' => min($expected, $checked_in),
                 'admission_label' => trim((string) (($row['product_name'] ?? '') ?: 'Ticket')),
@@ -972,6 +1021,14 @@ if (!function_exists('bvmgr_event_day_report_build_model_from_sources')) {
             if (isset($parties[$party_key])) {
                 $reservation['party_size'] = (int) $parties[$party_key]['expected'];
                 $parties[$party_key]['reservations'][] = (string) $reservation['label'] . ' ×' . (int) $reservation['qty'];
+                $reservation['display_name'] = (string) ($parties[$party_key]['name'] ?? '');
+                $reservation['display_email'] = (string) ($parties[$party_key]['email'] ?? '');
+                $reservation['purchaser_name'] = (string) ($reservation['customer_name'] ?? '');
+            }
+            if (empty($reservation['display_name'])) {
+                $reservation['display_name'] = (string) ($reservation['customer_name'] ?? '');
+                $reservation['display_email'] = (string) ($reservation['customer_email'] ?? '');
+                $reservation['purchaser_name'] = '';
             }
             if (empty($reservation['audit']['family'])) {
                 $reservation['audit']['family'] = (string) $reservation['label'];
@@ -1035,6 +1092,7 @@ if (!function_exists('bvmgr_event_day_report_build_model')) {
             'start_time' => $start_time,
             'end_time' => $end_time,
             'schedule_label' => trim((string) ($context['event_date'] ?? '') . ($start_time !== '' ? ' · ' . $start_time : '') . ($end_time !== '' ? '–' . $end_time : '')),
+            'generated_label' => wp_date('F j, Y g:i a T', time(), wp_timezone()),
         ));
         $ops_lookup = bvmgr_event_day_report_ops_lookup($event_plan_id, $tec_event_id);
         $woo_result = bvmgr_event_day_report_collect_woo_sources($event_plan_id, $ops_lookup);
@@ -1094,6 +1152,7 @@ if (!function_exists('bvmgr_event_day_report_guest_search_text')) {
         $values = array(
             (string) ($party['name'] ?? ''),
             (string) ($party['email'] ?? ''),
+            (string) ($party['purchaser_name'] ?? ''),
             implode(' ', (array) ($party['references'] ?? array())),
             implode(' ', array_keys((array) ($party['admissions'] ?? array()))),
             implode(' ', (array) ($party['reservations'] ?? array())),
@@ -1140,7 +1199,15 @@ if (!function_exists('bvmgr_event_day_report_render_header')) {
             /* translators: %d: Event Plan post ID. */
             __('Event Plan #%d', 'backstage-venue-manager'),
             (int) ($plan['event_plan_id'] ?? 0)
-        )) . '</p></div>';
+        )) . '</p>';
+        if (!empty($plan['generated_label'])) {
+            echo '<p class="vms-edr-event-meta">' . esc_html(sprintf(
+                /* translators: %s: Local generated date and time. */
+                __('Generated %s', 'backstage-venue-manager'),
+                (string) $plan['generated_label']
+            )) . '</p>';
+        }
+        echo '</div>';
         echo '<div class="vms-edr-totals" aria-label="' . esc_attr__('Operational totals', 'backstage-venue-manager') . '">';
         $metrics = array(
             __('Expected Admissions', 'backstage-venue-manager') => (int) ($totals['expected'] ?? 0),
@@ -1165,7 +1232,15 @@ if (!function_exists('bvmgr_event_day_report_render_header')) {
             (int) ($totals['checked_in'] ?? 0),
             (int) ($totals['remaining'] ?? 0),
             (int) ($totals['reservation_units'] ?? 0)
-        )) . '</p></header>';
+        )) . '</p>';
+        if (!empty($plan['generated_label'])) {
+            echo '<p>' . esc_html(sprintf(
+                /* translators: %s: Local generated date and time. */
+                __('Generated %s', 'backstage-venue-manager'),
+                (string) $plan['generated_label']
+            )) . '</p>';
+        }
+        echo '</header>';
     }
 }
 
@@ -1199,6 +1274,13 @@ if (!function_exists('bvmgr_event_day_report_render_guests')) {
             if (!empty($party['email'])) {
                 echo '<small>' . esc_html((string) $party['email']) . '</small>';
             }
+            if (!empty($party['purchaser_name']) && strcasecmp((string) $party['purchaser_name'], (string) ($party['name'] ?? '')) !== 0) {
+                echo '<small>' . esc_html(sprintf(
+                    /* translators: %s: Purchaser or billing name. */
+                    __('Purchased by %s', 'backstage-venue-manager'),
+                    (string) $party['purchaser_name']
+                )) . '</small>';
+            }
             if (!empty($party['identities'])) {
                 echo '<details class="vms-edr-details"><summary>' . esc_html__('Identity details', 'backstage-venue-manager') . '</summary>';
                 bvmgr_event_day_report_render_identity_list((array) $party['identities']);
@@ -1224,6 +1306,9 @@ if (!function_exists('bvmgr_event_day_report_render_guests')) {
             echo '<details class="vms-edr-mobile-record vms-edr-mobile-guest" data-vms-edr-guest-row data-search="' . esc_attr($search) . '">';
             echo '<summary><strong>' . esc_html((string) ($party['name'] ?? 'Guest Party')) . '</strong></summary><div class="vms-edr-mobile-body"><dl>';
             echo '<dt>' . esc_html__('Email', 'backstage-venue-manager') . '</dt><dd>' . esc_html((string) (($party['email'] ?? '') ?: '—')) . '</dd>';
+            if (!empty($party['purchaser_name']) && strcasecmp((string) $party['purchaser_name'], (string) ($party['name'] ?? '')) !== 0) {
+                echo '<dt>' . esc_html__('Purchaser', 'backstage-venue-manager') . '</dt><dd>' . esc_html((string) $party['purchaser_name']) . '</dd>';
+            }
             echo '<dt>' . esc_html__('Admission', 'backstage-venue-manager') . '</dt><dd>' . esc_html($admissions !== '' ? $admissions : '—') . '</dd>';
             echo '<dt>' . esc_html__('Expected', 'backstage-venue-manager') . '</dt><dd>' . esc_html((string) $expected) . '</dd>';
             echo '<dt>' . esc_html__('Checked In', 'backstage-venue-manager') . '</dt><dd><strong>' . esc_html($checked . ' / ' . $expected) . '</strong></dd>';
@@ -1283,7 +1368,7 @@ if (!function_exists('bvmgr_event_day_report_render_reservations')) {
         }
 
         echo '<div class="vms-edr-table-wrap vms-edr-desktop-table"><table class="vms-edr-table vms-edr-reservation-table"><thead><tr><th scope="col">' . esc_html__('Exact Reservation', 'backstage-venue-manager') . '</th>';
-        echo '<th scope="col">' . esc_html__('Customer', 'backstage-venue-manager') . '</th><th class="num" scope="col">' . esc_html__('Qty', 'backstage-venue-manager') . '</th>';
+        echo '<th scope="col">' . esc_html__('Guest / Purchaser', 'backstage-venue-manager') . '</th><th class="num" scope="col">' . esc_html__('Qty', 'backstage-venue-manager') . '</th>';
         echo '<th class="num" scope="col">' . esc_html__('Admission Party', 'backstage-venue-manager') . '</th><th scope="col">' . esc_html__('Order', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
         $last_family = '';
         foreach ($reservations as $reservation) {
@@ -1301,9 +1386,16 @@ if (!function_exists('bvmgr_event_day_report_render_reservations')) {
             foreach ($warnings as $warning) {
                 echo '<span class="vms-edr-row-warning">' . esc_html((string) $warning) . '</span>';
             }
-            echo '</td><td><strong>' . esc_html((string) ($reservation['customer_name'] ?? 'Customer')) . '</strong>';
-            if (!empty($reservation['customer_email'])) {
-                echo '<small>' . esc_html((string) $reservation['customer_email']) . '</small>';
+            echo '</td><td><strong>' . esc_html((string) ($reservation['display_name'] ?? $reservation['customer_name'] ?? 'Customer')) . '</strong>';
+            if (!empty($reservation['display_email'])) {
+                echo '<small>' . esc_html((string) $reservation['display_email']) . '</small>';
+            }
+            if (!empty($reservation['purchaser_name']) && strcasecmp((string) $reservation['purchaser_name'], (string) ($reservation['display_name'] ?? '')) !== 0) {
+                echo '<small>' . esc_html(sprintf(
+                    /* translators: %s: Purchaser or billing name. */
+                    __('Purchased by %s', 'backstage-venue-manager'),
+                    (string) $reservation['purchaser_name']
+                )) . '</small>';
             }
             echo '</td><td class="num">' . esc_html((string) (int) ($reservation['qty'] ?? 0)) . '</td>';
             echo '<td class="num">' . esc_html(sprintf(
@@ -1332,9 +1424,16 @@ if (!function_exists('bvmgr_event_day_report_render_reservations')) {
                 )) . '</span>';
             }
             echo '</span></summary><div class="vms-edr-mobile-body"><dl>';
-            echo '<dt>' . esc_html__('Customer', 'backstage-venue-manager') . '</dt><dd><strong>' . esc_html((string) ($reservation['customer_name'] ?? 'Customer')) . '</strong>';
-            if (!empty($reservation['customer_email'])) {
-                echo '<small>' . esc_html((string) $reservation['customer_email']) . '</small>';
+            echo '<dt>' . esc_html__('Guest', 'backstage-venue-manager') . '</dt><dd><strong>' . esc_html((string) ($reservation['display_name'] ?? $reservation['customer_name'] ?? 'Customer')) . '</strong>';
+            if (!empty($reservation['display_email'])) {
+                echo '<small>' . esc_html((string) $reservation['display_email']) . '</small>';
+            }
+            if (!empty($reservation['purchaser_name']) && strcasecmp((string) $reservation['purchaser_name'], (string) ($reservation['display_name'] ?? '')) !== 0) {
+                echo '<small>' . esc_html(sprintf(
+                    /* translators: %s: Purchaser or billing name. */
+                    __('Purchased by %s', 'backstage-venue-manager'),
+                    (string) $reservation['purchaser_name']
+                )) . '</small>';
             }
             echo '</dd><dt>' . esc_html__('Party', 'backstage-venue-manager') . '</dt><dd>' . esc_html(sprintf(
                 /* translators: %d: Number of guests in the reservation party. */
@@ -1601,14 +1700,6 @@ if (!function_exists('bvmgr_event_day_report_handle_request')) {
         header('Content-Type: text/html; charset=' . get_option('blog_charset', 'UTF-8'));
         header('X-Robots-Tag: noindex, noarchive', true);
         header('X-Content-Type-Options: nosniff', true);
-        if (function_exists('bvmgr_admission_audit_log')) {
-            bvmgr_admission_audit_log($event_plan_id, null, $print ? 'event_day_report_print' : 'event_day_report_view', get_current_user_id(), 'admin', array(
-                'report_mode' => $mode,
-                'party_count' => count((array) ($model['parties'] ?? array())),
-                'reservation_count' => count((array) ($model['reservations'] ?? array())),
-                'issue_count' => count((array) ($model['issues'] ?? array())),
-            ));
-        }
         bvmgr_event_day_report_render_document($model, $mode, $print);
         exit;
     }
