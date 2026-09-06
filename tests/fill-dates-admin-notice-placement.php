@@ -153,6 +153,8 @@ final class VMS_Tours_Service
 
 require_once $helpersFile;
 require_once $toursFile;
+// Match the accepted companion bootstrap before exercising its admin module.
+require_once $addonRoot . '/includes/core-compat.php';
 require_once $adminPageFile;
 
 $capture = static function ($callback): string {

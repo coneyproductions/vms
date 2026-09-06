@@ -142,7 +142,7 @@
         card.classList.toggle('is-waiting-threshold', state.roleInUse && !state.requiredNow && headcountWired && state.threshold > 0);
 
         if (summary) {
-          summary.textContent = 'Need ' + state.need + ' · Filled ' + state.filled + ' · Open ' + state.open + (state.isCritical ? ' · Critical' : '');
+          summary.textContent = 'Need ' + state.need + ' · Assigned ' + state.filled + ' · Open ' + state.open + (state.isCritical ? ' · Critical' : '');
         }
 
         if (pill) {
@@ -168,7 +168,7 @@
 
         if (requiredWarning) {
           requiredWarning.classList.toggle('vms-hidden', !state.missingStaffNow);
-          requiredWarning.textContent = 'Current wired attendance ' + currentHeadcount + ' has reached this role\'s activation threshold of ' + state.threshold + '. Assign staff until Filled reaches Staff needed.';
+          requiredWarning.textContent = 'Current wired attendance ' + currentHeadcount + ' has reached this role\'s activation threshold of ' + state.threshold + '. Propose staff until Assigned reaches Staff needed; confirm each commitment separately.';
         }
       }
 

@@ -1827,6 +1827,7 @@ if (!function_exists('bvmgr_event_command_center_render_page_content')) {
         bvmgr_event_command_center_render_metric(__('Action items', 'backstage-venue-manager'), (string) count($actions));
         bvmgr_event_command_center_render_metric(__('Lineup warnings', 'backstage-venue-manager'), (string) count((array) ($lineup['warnings'] ?? array())));
         bvmgr_event_command_center_render_metric(__('Staffing coverage', 'backstage-venue-manager'), sprintf('%1$d/%2$d', (int) ($staffing['headcount_filled_total'] ?? 0), (int) ($staffing['headcount_needed_total'] ?? 0)));
+        bvmgr_event_command_center_render_metric(__('Proposed / Confirmed', 'backstage-venue-manager'), sprintf('%1$d / %2$d', (int) ($staffing['proposed_headcount'] ?? 0), (int) ($staffing['confirmed_headcount'] ?? 0)), __('Assigned includes tentative proposals', 'backstage-venue-manager'));
         bvmgr_event_command_center_render_metric(__('Last updated', 'backstage-venue-manager'), (string) ($header['modified_label'] ?? ''));
         echo '</div>';
         echo '</section>';
@@ -1959,8 +1960,8 @@ if (!function_exists('bvmgr_event_command_center_render_page_content')) {
                 $needed = max(0, (int) ($role['needed'] ?? 0));
                 $filled = max(0, (int) ($role['filled'] ?? 0));
                 $tone = ($filled >= $needed && $needed > 0) ? 'good' : (($filled > 0) ? 'warning' : 'critical');
-                /* translators: 1: filled staffing count, 2: required staffing count. */
-                echo '<li><strong>' . esc_html((string) ($role['role_name'] ?? __('Role', 'backstage-venue-manager'))) . '</strong><span>' . esc_html(sprintf(__('%1$d of %2$d filled', 'backstage-venue-manager'), $filled, $needed)) . '</span>' . wp_kses(bvmgr_event_command_center_render_chip(sprintf('%1$d/%2$d', $filled, $needed), $tone), bvmgr_event_command_center_allowed_markup()) . '</li>';
+                /* translators: 1: assigned staffing count, 2: required staffing count. */
+                echo '<li><strong>' . esc_html((string) ($role['role_name'] ?? __('Role', 'backstage-venue-manager'))) . '</strong><span>' . esc_html(sprintf(__('%1$d of %2$d assigned', 'backstage-venue-manager'), $filled, $needed)) . '</span>' . wp_kses(bvmgr_event_command_center_render_chip(sprintf('%1$d/%2$d', $filled, $needed), $tone), bvmgr_event_command_center_allowed_markup()) . '</li>';
             }
             echo '</ul>';
         }
@@ -2676,8 +2677,8 @@ if (!function_exists('bvmgr_event_command_center_build_module_hub_cards')) {
                 'status' => (string) ($staffing['readiness_label'] ?? __('N/A', 'backstage-venue-manager')),
                 'tone' => $staff_tone,
                 'summary' => array(
-                    /* translators: 1: filled staffing count, 2: required staffing count. */
-                    sprintf(__('Coverage: %1$d/%2$d filled', 'backstage-venue-manager'), (int) ($staffing['headcount_filled_total'] ?? 0), (int) ($staffing['headcount_needed_total'] ?? 0)),
+                    /* translators: 1: assigned staffing count, 2: required staffing count. */
+                    sprintf(__('Coverage: %1$d/%2$d assigned', 'backstage-venue-manager'), (int) ($staffing['headcount_filled_total'] ?? 0), (int) ($staffing['headcount_needed_total'] ?? 0)),
                     /* translators: 1: staffing positions required now, 2: currently open required positions. */
                     sprintf(__('Required now: %1$d · Open now: %2$d', 'backstage-venue-manager'), (int) ($staffing['required_now_headcount_total'] ?? 0), $staff_open),
                     /* translators: 1: proposed assignment count, 2: confirmed assignment count. */
@@ -2704,7 +2705,9 @@ if (!function_exists('bvmgr_event_command_center_build_module_hub_cards')) {
                     /* translators: %s: formatted vendor pay amount. */
                     sprintf(__('Reported direct costs: %s', 'backstage-venue-manager'), bvmgr_financial_money($financial['costs']['direct']['amount_cents'] ?? null)),
                     /* translators: %s: formatted labor amount. */
-                    sprintf(__('Estimated labor: %s', 'backstage-venue-manager'), bvmgr_financial_money($financial['forecast']['labor']['amount_cents'] ?? null)),
+                    sprintf(__('Planned labor: %s', 'backstage-venue-manager'), bvmgr_financial_money($financial['forecast']['labor']['amount_cents'] ?? null)),
+                    /* translators: %s: estimated cost of confirmed staffing assignments. */
+                    sprintf(__('Committed labor: %s', 'backstage-venue-manager'), bvmgr_financial_money($financial['staffing']['committed']['amount_cents'] ?? null)),
                     /* translators: %s: formatted projected margin amount. */
                     sprintf(__('Forecast direct margin: %s', 'backstage-venue-manager'), bvmgr_financial_money($financial['forecast']['margin']['amount_cents'] ?? null)),
                 ),

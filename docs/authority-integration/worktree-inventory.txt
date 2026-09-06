@@ -1,0 +1,242 @@
+worktree /Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/packages/vms-github-reconcile
+HEAD 79da784f5bfcc66bd058c0a7f54e08d7b15bb5d5
+branch refs/heads/work/unreleased-2026-06-18
+
+worktree /private/tmp/bvm-backstage-outreach-release.WicaAh/repo
+HEAD 27ee1bbac2ebc1a6122a886dd171605130393657
+branch refs/heads/release/backstage-outreach-1.0.0
+
+worktree /private/tmp/bvm-event-reschedule-rerelease/packages/vms-github-reconcile
+HEAD 2444acccc88a658daba5454dd71850174c5e1c3a
+branch refs/heads/integrate/event-reschedule-rerelease
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-event-reschedule-safety/packages/vms-github-reconcile
+HEAD eae0809b738486ba942835e2fcbb311be52a6e19
+branch refs/heads/fix/vms-event-reschedule-safety
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-final-rerelease-blockers/packages/vms-github-reconcile
+HEAD aa8109a825fc1a54278540178e6f8aaacf2c4566
+branch refs/heads/fix/final-rerelease-blockers
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-financial-authority-v2-01a077b1/packages/vms-github-reconcile
+HEAD 02619f276ffde1a4fc04426c4404237d1bc2d8f6
+branch refs/heads/work/financial-authority-v2
+
+worktree /private/tmp/bvm-financial-authority/packages/vms-github-reconcile
+HEAD 1e53fa3e4afc4301ff9c5b912df1a4bfc83f7444
+branch refs/heads/work/financial-authority
+
+worktree /private/tmp/bvm-g15-provenance-v2/packages/vms-github-reconcile
+HEAD d38c08139e79160b21780fc81e614751051463b8
+branch refs/heads/fix/g15-provenance-reproducible-builds
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-g17-admin-meta/packages/vms-github-reconcile
+HEAD 12f834d0a3ee62aaad69d9da1e66b6a5c41e545a
+branch refs/heads/codex/wporg-g17-admin-meta
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-g17-eventplan-perf/packages/vms-github-reconcile
+HEAD 901ed6e4eeff6860842904cc0b11eaa4611d820d
+branch refs/heads/codex/wporg-g17-eventplan-perf
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-g17-staff-ticket/packages/vms-github-reconcile
+HEAD 43b9857d358be6fc9e85475a1dfd2c6505ac7bff
+branch refs/heads/codex/wporg-g17-staff-ticket
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-legacy-occurrence-snapshot/packages/vms-github-reconcile
+HEAD 3df745df6376c1d2dd5f0994772bbc94ebf9f55a
+branch refs/heads/fix/legacy-occurrence-snapshot-normalization
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-reschedule-cli-actor/packages/vms-github-reconcile
+HEAD 9d067acdd83d1212e517cf2a29ff32660f482a24
+branch refs/heads/fix/reschedule-cli-actor
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-reschedule-communications/packages/vms-github-reconcile
+HEAD 1b9d9401325e77521beee8595629eb6806cb77ec
+branch refs/heads/feature/reschedule-customer-communications
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-reschedule-current-item-names/packages/vms-github-reconcile
+HEAD 64784e34335c66a2fa54189edb4143389a4c7b1e
+branch refs/heads/fix/reschedule-current-item-names
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile
+HEAD 18146de3d652a269cb9b056da23efffda9141382
+branch refs/heads/work/staffing-lifecycle
+
+worktree /private/tmp/bvm-wave1-g10/packages/vms-github-reconcile
+HEAD ccce2cbe2838e00305a9398411861dbee62a154a
+branch refs/heads/codex/wporg-wave1-g10-phase-b
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave1-g11/packages/vms-github-reconcile
+HEAD d9129a64d306ffdb0c7b04015ca2fd9578e11a36
+branch refs/heads/codex/wporg-wave1-g11-vendor-links
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave1-g12/packages/vms-github-reconcile
+HEAD 2f9f47de7bd61f549713381b5ad4b2ff245459e2
+branch refs/heads/codex/wporg-wave1-g12-social-queue
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave2-g10-rules/packages/vms-github-reconcile
+HEAD 3fc22b617e09462eeaa68026e0d33f822ab0bdfd
+branch refs/heads/codex/wporg-wave2-g10-rules
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave2-g11-confirmation/packages/vms-github-reconcile
+HEAD d8c219f0b07e93772800efda3dc0828467ddc9cd
+branch refs/heads/codex/wporg-wave2-g11-confirmation
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave2-g13-goals/packages/vms-github-reconcile
+HEAD d23bc271e6876a176be62e45e58ca7d0d5b018f2
+branch refs/heads/codex/wporg-wave2-g13-goals
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave3-g10-diagnostics/packages/vms-github-reconcile
+HEAD 0b9ee37d4d7f88c9adfed371b321a2bfed97e377
+branch refs/heads/codex/wporg-wave3-g10-diagnostics
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave3-g11-portal/packages/vms-github-reconcile
+HEAD 23e7cb18a5a73d515de046cbe9e1126e8bc3830b
+branch refs/heads/codex/wporg-wave3-g11-portal
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave3-g13-schema/packages/vms-github-reconcile
+HEAD acc4d1784a4d17be07db1d152ee31d16ac6e07dd
+branch refs/heads/codex/wporg-wave3-g13-schema
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave4-g12-background/packages/vms-github-reconcile
+HEAD 098dae593166a40c4802dd20edf6ca9b0248ff62
+branch refs/heads/codex/wporg-wave4-g12-background
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave4-g12-core/packages/vms-github-reconcile
+HEAD e2dc9aa898991c32f755158eb402a35d40174a21
+branch refs/heads/codex/wporg-wave4-g12-core
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave4-g12-social/packages/vms-github-reconcile
+HEAD 299326118b251ee1ef3fe84eee3a194f7c9032b4
+branch refs/heads/codex/wporg-wave4-g12-social
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave4-g13-admin-report/packages/vms-github-reconcile
+HEAD 619cd38ca6e6dee05dd65440b42b60dd62da084b
+branch refs/heads/codex/wporg-wave4-g13-admin-report
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave4-g13-event-plans/packages/vms-github-reconcile
+HEAD eb719dfa5da1d49ca60206a961fd2580c854ed6f
+branch refs/heads/codex/wporg-wave4-g13-event-plans
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave4-g13-migrations/packages/vms-github-reconcile
+HEAD d9b7059da2d32835d9e073990d01d79db4394233
+branch refs/heads/codex/wporg-wave4-g13-migrations
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave5-g10-integrity/packages/vms-github-reconcile
+HEAD 5284e1f7a4093dca4182abc6be3a8856b799bc44
+branch refs/heads/codex/wporg-wave5-g10-integrity
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave5-g10-support/packages/vms-github-reconcile
+HEAD 5f8160ff58a57de805ff49754ab255705c959b1f
+branch refs/heads/codex/wporg-wave5-g10-support
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave5-g10-ticketing-core/packages/vms-github-reconcile
+HEAD 2b834cd3723bc722027cd3c7d950155ed53518ef
+branch refs/heads/codex/wporg-wave5-g10-ticketing-core
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave5-g13-core-services/packages/vms-github-reconcile
+HEAD d507a7b46e42786cc7af639472d311315ee02cd3
+branch refs/heads/codex/wporg-wave5-g13-core-services
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave5-g13-tail/packages/vms-github-reconcile
+HEAD 617e8f951e70dcbbb2e896d0478af7e5bec95a90
+branch refs/heads/codex/wporg-wave5-g13-tail
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave6-g11-tail/packages/vms-github-reconcile
+HEAD b734d020de0929aecf1d9fe5d7c516f2f35cfd0b
+branch refs/heads/codex/wporg-wave6-g11-tail
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave6-g11-vendor-applications/packages/vms-github-reconcile
+HEAD 670094abde1195f7e5b1ca4fb81073134eabb9ba
+branch refs/heads/codex/wporg-wave6-g11-vendor-applications
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave6-g14-display/packages/vms-github-reconcile
+HEAD 94eaa87e9bbfd84efa28a956eb3cfbfa1ab2e09a
+branch refs/heads/codex/wporg-wave6-g14-display
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave7-g15-finance/packages/vms-github-reconcile
+HEAD a9c35d5198855533a6d93acac91dbb570a146dc8
+branch refs/heads/codex/wporg-wave7-g15-finance
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave7-g15-staff/packages/vms-github-reconcile
+HEAD f58d3fb58ceb5b9c1a171689ec5e1f00ebd6ac18
+branch refs/heads/codex/wporg-wave7-g15-staff
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave7-g15-ticketing/packages/vms-github-reconcile
+HEAD 0d5d19dcdaf0d93eaf5983deccae20f1f346cab5
+branch refs/heads/codex/wporg-wave7-g15-ticketing
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave8-g16-foundation/packages/vms-github-reconcile
+HEAD d248a2b5c5c21d8dd4fbf7394dcd3cbcc45bcca9
+branch refs/heads/codex/wporg-wave8-g16-foundation
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave8-g16-group-a/packages/vms-github-reconcile
+HEAD 40d74403728346b93d4a778f724ba8468598813a
+branch refs/heads/codex/wporg-wave8-g16-group-a
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave8-g16-group-b/packages/vms-github-reconcile
+HEAD b3d798b2f27c9329e00fb80b757a3b24234334c9
+branch refs/heads/codex/wporg-wave8-g16-group-b
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wave8-g16-group-c/packages/vms-github-reconcile
+HEAD b63b1982fb755adb118670b7e5c7d92fad5752ed
+branch refs/heads/codex/wporg-wave8-g16-group-c
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/bvm-wporg-identity-phase-a/packages/vms-github-reconcile
+HEAD 36e8a727a4af7ae0b8cdd8ab948b585237b82444
+branch refs/heads/codex/wporg-reviewer-identity-alignment
+prunable gitdir file points to non-existent location
+
+worktree /private/tmp/wporg-dbzero-g14.qulnlt/source
+HEAD 2c8f790b9128d547b8bc0a27a714253fb6671bea
+detached
+prunable gitdir file points to non-existent location
+
+worktree /Users/treyconey/Local Sites/serenade-range-local-test-site/app/bvm-local-checkpoints/wave4-20260906/bvm
+HEAD 1e53fa3e4afc4301ff9c5b912df1a4bfc83f7444
+branch refs/heads/checkpoint/bvm-accepted-local-2026-09-06
+
+worktree /Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/g14-reconstruct/packages/vms-github-reconcile
+HEAD 2c8f790b9128d547b8bc0a27a714253fb6671bea
+detached

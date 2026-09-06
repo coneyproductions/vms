@@ -1,0 +1,137 @@
+[
+  {
+    "test": "financial-authority.php",
+    "exit": 0,
+    "tail": "Financial authority PASS: 234 assertions (Woo available)\n"
+  },
+  {
+    "test": "financial-authority.php --no-woo",
+    "exit": 0,
+    "tail": "Financial authority PASS: 234 assertions (Woo absent)\n"
+  },
+  {
+    "test": "financial-investor-semantics.php",
+    "exit": 0,
+    "tail": "Investor financial semantics PASS (model, cached, override, zero, unavailable)\n"
+  },
+  {
+    "test": "staffing-financial.php",
+    "exit": 0,
+    "tail": "PASS 127 staffing/financial value and provenance assertions\n"
+  },
+  {
+    "test": "reporting-provider-contract.php",
+    "exit": 0,
+    "tail": "Reporting provider contract PASS\n"
+  },
+  {
+    "test": "data-tools-provider-decoupling.php",
+    "exit": 255,
+    "tail": "ecoupling.php on line 15\n\nFatal error: Uncaught RuntimeException: Installed Data Tools should remain on the accepted 0.5.55 promotion. in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/data-tools-provider-decoupling.php:15\nStack trace:\n#0 /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/data-tools-provider-decoupling.php(123): decoupling_assert(false, 'Installed Data ...')\n#1 {main}\n  thrown in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/data-tools-provider-decoupling.php on line 15\n"
+  },
+  {
+    "test": "data-tools-reporting-provider.php",
+    "exit": 0,
+    "tail": "Data Tools reporting provider PASS\n"
+  },
+  {
+    "test": "p0-source-consistency-repair.php",
+    "exit": 0,
+    "tail": "P0 source consistency repair tests passed.\n"
+  },
+  {
+    "test": "goals-forecast-repository-sql-remediation.php",
+    "exit": 0,
+    "tail": "goals forecast repository SQL remediation: PASS\n"
+  },
+  {
+    "test": "staffing-repository-sql-remediation.php",
+    "exit": 0,
+    "tail": "OK\n"
+  },
+  {
+    "test": "staffing-final-repository-sql-remediation.php",
+    "exit": 0,
+    "tail": "staffing final repository sql remediation: PASS\n"
+  },
+  {
+    "test": "staffing-matrix-rollup-reporting-repository-sql-remediation.php",
+    "exit": 0,
+    "tail": "OK\n"
+  },
+  {
+    "test": "ticketing-claims-repository-sql-remediation.php",
+    "exit": 0,
+    "tail": "Ticketing Claims repository SQL remediation: PASS\n"
+  },
+  {
+    "test": "ticketing-core-repository-sql-remediation.php",
+    "exit": 0,
+    "tail": "PASS: Ticketing core WP_Query/wpdb behavior, exact preparation/results/failures, fourteen-row inventory, narrow annotations, immutable projections, and mirror/shadow DB parity are covered.\n"
+  },
+  {
+    "test": "staffing-admin-inline-assets-remediation.php",
+    "exit": 0,
+    "tail": "staffing admin inline assets remediation: PASS\n"
+  },
+  {
+    "test": "event-plan-staff-inline-js-remediation.php",
+    "exit": 0,
+    "tail": "event plan staff inline js remediation: PASS\n"
+  },
+  {
+    "test": "staff-portal-inline-js-remediation.php",
+    "exit": 0,
+    "tail": "Staff Portal inline JS remediation OK.\n"
+  },
+  {
+    "test": "staff-portal-safe-html-output-remediation.php",
+    "exit": 0,
+    "tail": "Staff Portal safe HTML output remediation OK.\n"
+  },
+  {
+    "test": "event-plan-staff-output-remediation.php",
+    "exit": 0,
+    "tail": "event plan staff output remediation: PASS\n"
+  },
+  {
+    "test": "event-plan-readiness-details-output-remediation.php",
+    "exit": 0,
+    "tail": "event plan readiness details output remediation: PASS\n"
+  },
+  {
+    "test": "calendar-feeds-bvm-navigation.php",
+    "exit": 1,
+    "tail": "udes/provider-interface.php): Failed to open stream: No such file or directory in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/calendar-feeds-bvm-navigation.php on line 149\n\nWarning: hash_file(/private/tmp/bvm-authority-integration-20260906/backstage-calendar-feeds/includes/provider-interface.php): Failed to open stream: No such file or directory in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/calendar-feeds-bvm-navigation.php on line 149\nFAIL: includes/provider-interface.php remains byte-identical to accepted 0.1.3\n"
+  },
+  {
+    "test": "fill-dates-canonical-bvm-compatibility.php",
+    "exit": 1,
+    "tail": "Could not open input file: /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-canonical-bvm-compatibility.php\n"
+  },
+  {
+    "test": "backstage-outreach-bvm-integration.php",
+    "exit": 1,
+    "tail": "Could not open input file: /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/backstage-outreach-bvm-integration.php\n"
+  },
+  {
+    "test": "vendor-portal-bonus-progress-paid-basis.php",
+    "exit": 255,
+    "tail": "ption: Unable to find function vms_vendor_portal_build_bonus_progress_card. in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/vendor-portal-bonus-progress-paid-basis.php:41\nStack trace:\n#0 /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/vendor-portal-bonus-progress-paid-basis.php(203): bonus_progress_extract_function('<?php\\n\\n/**\\n * V...', 'vms_vendor_port...')\n#1 {main}\n  thrown in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/vendor-portal-bonus-progress-paid-basis.php on line 41\n"
+  },
+  {
+    "test": "addon-compatibility/runtime-contracts-test.php",
+    "exit": 0,
+    "tail": "BVM add-on runtime contracts passed: 71 canonical capabilities; 54 legacy fallbacks, 7 guarded optional, 10 migrated add-on gaps.\n"
+  },
+  {
+    "test": "addon-compatibility/additional-runtime-contracts-test.php",
+    "exit": 0,
+    "tail": "Additional semantic runtime contracts passed: 10 supported / 1 retired / 27 capabilities / 99 persistent identifiers.\n"
+  },
+  {
+    "test": "addon-compatibility/weather-command-center-connection.php",
+    "exit": 0,
+    "tail": "Weather Command Center canonical-first/legacy-fallback connection passed in mirror and active-local BVM.\n"
+  }
+]

@@ -1,0 +1,10 @@
+database_cleanup	pass
+runtime_cleanup	pass
+http_containment	pass
+process_boundary	pass
+residue_canary	removed-and-asserted
+normal_state	pass
+guard_cleanup	pass
+normal_guard_absent	yes
+runtime_absent	yes
+lock_released	yes

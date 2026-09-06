@@ -1,0 +1,17 @@
+[
+  {
+    "test": "data-tools-provider-decoupling.php",
+    "exit": 0,
+    "output": "Data Tools provider decoupling PASS\n"
+  },
+  {
+    "test": "calendar-feeds-bvm-navigation.php",
+    "exit": 0,
+    "output": "Calendar Feeds BVM navigation PASS\n"
+  },
+  {
+    "test": "vendor-portal-bonus-progress-paid-basis.php",
+    "exit": 0,
+    "output": "Vendor Portal paid bonus-basis regression OK.\n"
+  }
+]

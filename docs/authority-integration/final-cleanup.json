@@ -1,0 +1,21 @@
+{
+  "scope": "owned disposable integration source and server only",
+  "normal_local_touched": false,
+  "older_staffing_fixture_touched": false,
+  "server_version": "10.11.19-MariaDB",
+  "compat_schemas_before_drop": "",
+  "source_database_existed": true,
+  "source_database_absent": true,
+  "compat_databases_absent": true,
+  "owned_php_pid": 62105,
+  "owned_mariadb_pid": 61844,
+  "owned_processes_absent": true,
+  "socket_absent": true,
+  "compat_runtime_roots_absent": true,
+  "containment_locks_absent": true,
+  "source_guards_absent": true,
+  "source_tree_absent": true,
+  "datadir_absent": true,
+  "staged_addon_sources_preserved": true,
+  "bridge_authority_copy_preserved": true
+}

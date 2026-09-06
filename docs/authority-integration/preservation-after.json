@@ -1,0 +1,31 @@
+{
+  "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/packages/vms-github-reconcile": {
+    "count": 1783,
+    "sha256": "1dd01d8711255291c9f9244d355d8e6a468cc6f18f806b6f246c9bcd2e0d410b",
+    "matches_before": true
+  },
+  "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms": {
+    "count": 408,
+    "sha256": "29446f8d65d2ccc1fc8996aa7621e0c1f101a32c234e922d2c93cb3734eddcc5",
+    "matches_before": true
+  },
+  "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/backstage-venue-manager": {
+    "count": 384,
+    "sha256": "42aff15a1c45e7bfddba2aa4660d1f47441683c9a401392575e91fea871f2bd9",
+    "matches_before": true
+  },
+  "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms-data-tools": {
+    "count": 81,
+    "sha256": "be3674427d6ec9ae91d684dbac6de473788516882d63755b191777a6fc12f36a",
+    "matches_before": true
+  },
+  "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms-investor-portal": {
+    "count": 8,
+    "sha256": "fe6c601dd0ea6932f8c780b0bba6a51580a7aa699d86b6a009a3cce324f3a3d5",
+    "matches_before": true
+  },
+  "git_status_matches": true,
+  "stash_matches": true,
+  "original_head": "79da784f5bfcc66bd058c0a7f54e08d7b15bb5d5",
+  "original_index_empty": true
+}

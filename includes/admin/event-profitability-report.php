@@ -375,10 +375,10 @@ if (!function_exists('bvmgr_event_profitability_render_admin_page')) {
 
 		echo '<div class="wrap vms-event-profitability-admin">';
 		echo '<h1>' . esc_html__('Reporting: Event Profitability', 'backstage-venue-manager') . '</h1>';
-		echo '<p class="vms-event-profitability-intro">' . esc_html__('Planning scorecard using transaction ticket receipts, reported or configured direct costs, reported processing fees and estimated labor. Contributions exclude overhead and missing expenses. Summary values total available rows only. These estimates are not actual event profit or final accounting.', 'backstage-venue-manager') . '</p>';
+		echo '<p class="vms-event-profitability-intro">' . esc_html__('Planning scorecard using transaction ticket receipts, reported or configured direct costs, reported processing fees and planned labor. Contributions exclude overhead and missing expenses. Summary values total available rows only. These estimates are not actual event profit or final accounting.', 'backstage-venue-manager') . '</p>';
 
 		echo '<div class="vms-event-profitability-note-grid">';
-		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Estimated core contribution', 'backstage-venue-manager') . '</strong><span>' . esc_html__('Ticket receipts − reported/configured direct costs − estimated labor − reported processing fees', 'backstage-venue-manager') . '</span></div>';
+		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Estimated core contribution', 'backstage-venue-manager') . '</strong><span>' . esc_html__('Ticket receipts − reported/configured direct costs − planned labor − reported processing fees', 'backstage-venue-manager') . '</span></div>';
 		/* translators: %d: estimated bar profit margin percentage. */
 		echo '<div class="vms-event-profitability-note"><strong>' . esc_html__('Estimated night score', 'backstage-venue-manager') . '</strong><span>' . esc_html(sprintf(__('Estimated core contribution + estimated bar profit at %d%% margin', 'backstage-venue-manager'), $margin_pct)) . '</span></div>';
 		echo '</div>';
@@ -410,14 +410,14 @@ if (!function_exists('bvmgr_event_profitability_render_admin_page')) {
 		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Events', 'backstage-venue-manager') . '</span><strong>' . esc_html((string) (int) ($summary['count'] ?? 0)) . '</strong></article>';
 		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Transactional ticket receipts', 'backstage-venue-manager') . '</span><strong>' . esc_html(bvmgr_financial_money($summary['ticket_revenue_cents'] ?? null)) . '</strong></article>';
 		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Manual concessions reported', 'backstage-venue-manager') . '</span><strong>' . esc_html(bvmgr_financial_money($summary['concessions_cents'] ?? null)) . '</strong></article>';
-		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Estimated labor', 'backstage-venue-manager') . '</span><strong>' . esc_html(bvmgr_financial_money($summary['labor_cents'] ?? null)) . '</strong></article>';
+		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Planned labor', 'backstage-venue-manager') . '</span><strong>' . esc_html(bvmgr_financial_money($summary['labor_cents'] ?? null)) . '</strong></article>';
 		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Estimated core contribution', 'backstage-venue-manager') . '</span><strong class="' . esc_attr(bvmgr_event_profitability_money_class((int) ($summary['core_profit_cents'] ?? 0))) . '">' . esc_html(bvmgr_financial_money($summary['core_profit_cents'] ?? null)) . '</strong></article>';
 		echo '<article class="vms-event-profitability-summary-card"><span class="label">' . esc_html__('Estimated night score', 'backstage-venue-manager') . '</span><strong class="' . esc_attr(bvmgr_event_profitability_money_class((int) ($summary['total_contribution_cents'] ?? 0))) . '">' . esc_html(bvmgr_financial_money($summary['total_contribution_cents'] ?? null)) . '</strong></article>';
 		echo '</section>';
 		$summary_labels = array(
 			'ticket_revenue_cents' => __('Transactional ticket receipts', 'backstage-venue-manager'),
 			'concessions_cents' => __('Manual concessions reported', 'backstage-venue-manager'),
-			'labor_cents' => __('Estimated labor', 'backstage-venue-manager'),
+			'labor_cents' => __('Planned labor', 'backstage-venue-manager'),
 			'core_profit_cents' => __('Estimated core contribution', 'backstage-venue-manager'),
 			'total_contribution_cents' => __('Estimated night score', 'backstage-venue-manager'),
 		);
@@ -481,7 +481,7 @@ if (!function_exists('bvmgr_event_profitability_render_admin_page')) {
 			echo '<div><dt>' . esc_html__('Transactional ticket receipts', 'backstage-venue-manager') . '</dt><dd>' . esc_html(bvmgr_financial_money($row['ticket_revenue_cents'] ?? null)) . '</dd></div>';
 			echo '<div><dt>' . esc_html__('Manual concessions reported', 'backstage-venue-manager') . '</dt><dd>' . esc_html(bvmgr_financial_money($row['concessions_cents'] ?? null)) . '</dd></div>';
 			echo '<div><dt>' . esc_html__('Reported/configured direct costs', 'backstage-venue-manager') . '</dt><dd>' . esc_html(bvmgr_financial_money($row['vendor_cost_cents'] ?? null)) . '</dd></div>';
-			echo '<div><dt>' . esc_html__('Estimated labor', 'backstage-venue-manager') . '</dt><dd>' . esc_html(bvmgr_financial_money($row['labor_cents'] ?? null)) . '</dd></div>';
+			echo '<div><dt>' . esc_html__('Planned labor', 'backstage-venue-manager') . '</dt><dd>' . esc_html(bvmgr_financial_money($row['labor_cents'] ?? null)) . '</dd></div>';
 			echo '<div><dt>' . esc_html__('Est. Bar Profit', 'backstage-venue-manager') . '</dt><dd>' . esc_html(bvmgr_financial_money($row['estimated_bar_profit_cents'] ?? null)) . '</dd></div>';
 			echo '<div><dt>' . esc_html__('Reported processing fees', 'backstage-venue-manager') . '</dt><dd>' . esc_html(bvmgr_financial_money($row['processing_cents'] ?? null)) . '</dd></div>';
 			echo '</dl>';

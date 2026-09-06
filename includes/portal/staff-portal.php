@@ -377,6 +377,7 @@ if (!function_exists('bvmgr_staff_portal_assignment_status_label')) {
     function bvmgr_staff_portal_assignment_status_label(string $status): string
     {
         $status = sanitize_key($status);
+        if (function_exists('bvmgr_staffing_status_label')) return bvmgr_staffing_status_label($status);
         if ($status === 'confirmed') return __('Confirmed', 'backstage-venue-manager');
         if ($status === 'proposed') return __('Proposed', 'backstage-venue-manager');
         return __('Scheduled', 'backstage-venue-manager');
@@ -1810,6 +1811,7 @@ if (!function_exists('bvmgr_staff_portal_render_dashboard')) {
     function bvmgr_staff_portal_render_dashboard(int $staff_id, string $worker_type, string $tax_tab_label, string $url_tax_tab, string $url_availability, string $url_certifications = ''): void
     {
         $tz = wp_timezone();
+        if (function_exists('bvmgr_staffing_render_lifecycle_controls')) bvmgr_staffing_render_lifecycle_controls(0, 'staff');
         $assignments = bvmgr_staff_portal_get_assignment_rows($staff_id, 12);
         $event_map = bvmgr_staff_portal_calendar_event_map($assignments);
         $next_shift = !empty($assignments) ? $assignments[0] : null;

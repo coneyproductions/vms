@@ -5,6 +5,7 @@
     <?php endif; ?>
     <div class="vms-ep-card vms-ep-card--white vms-ep-card--staff" data-vms-section-has-data="<?php echo $vms_staff_has_data ? '1' : '0'; ?>">
     <p class="description"><?php esc_html_e('Structured staffing by role: set staff needed and shift windows, then assign staff. Missing staff is based only on roles with Staff needed above 0.', 'backstage-venue-manager'); ?></p>
+    <?php if (function_exists('bvmgr_staffing_render_lifecycle_controls')) bvmgr_staffing_render_lifecycle_controls((int) ($post->ID ?? 0)); ?>
     <p class="description vms-ep-staff-headcount-summary <?php echo $staff_headcount_wired ? '' : 'is-muted'; ?>" id="vms-ep-staff-headcount-summary">
         <?php
             echo esc_html(
@@ -254,7 +255,7 @@
                                 <?php
                                     echo esc_html(sprintf(
                                         /* translators: 1: number 1 used in this message, 2: number 2 used in this message, 3: number 3 used in this message, 4: value 4 used in this message. */
-                                        __('Need %1$d · Filled %2$d · Open %3$d%4$s', 'backstage-venue-manager'),
+                                        __('Need %1$d · Assigned %2$d · Open %3$d%4$s', 'backstage-venue-manager'),
                                         (int) $headcount,
                                         (int) $filled,
                                         (int) $open,
@@ -362,7 +363,7 @@
                         <?php esc_html_e('Absolute time mode requires Shift start plus Shift end or Duration when this role is in use.', 'backstage-venue-manager'); ?>
                     </div>
                     <div class="vms-ep-inline-warning vms-ep-inline-warning--required <?php echo $missing_staff_now ? '' : 'vms-hidden'; ?>" data-vms-role-required-warning>
-                        <?php esc_html_e('Current guest count has reached this role\'s trigger. Assign staff until Filled reaches Staff needed.', 'backstage-venue-manager'); ?>
+                        <?php esc_html_e('Current guest count has reached this role\'s trigger. Propose staff until Assigned reaches Staff needed; confirm each commitment separately.', 'backstage-venue-manager'); ?>
                     </div>
 
                     <?php if ($role_eligible_count <= 0) : ?>

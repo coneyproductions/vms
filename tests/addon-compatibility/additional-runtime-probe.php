@@ -93,6 +93,24 @@ if (!function_exists('set_current_screen')) {
 }
 
 wp_set_current_user(1);
+
+// Event-time writes require the explicit staffing schema update. This fixture
+// setup must never migrate a normal site or silently bypass a failed update.
+if ($coreExpected && function_exists('bvmgr_staffing_migrate_lifecycle')) {
+	$fixtureRoot = realpath(ABSPATH);
+	$tempRoot = realpath(sys_get_temp_dir());
+	if (!defined('WP_CLI') || !WP_CLI || !is_string($fixtureRoot) || !is_string($tempRoot)
+		|| dirname($fixtureRoot) !== $tempRoot
+		|| preg_match('/\Abvm-addon-compat-runtime\.[A-Za-z0-9]+\z/', basename($fixtureRoot)) !== 1
+		|| !defined('DB_NAME') || preg_match('/\Abvm_compat_[a-f0-9]{12}\z/', DB_NAME) !== 1) {
+		throw new RuntimeException('Staffing fixture migration requires an isolated compatibility runtime.');
+	}
+	$staffingMigration = bvmgr_staffing_migrate_lifecycle();
+	$check('staffing-fixture-schema-ready', 'No Fatal', $addon, !empty($staffingMigration['ok']), 'Explicit disposable staffing schema update succeeded before fixture writes.', $staffingMigration);
+	if (empty($staffingMigration['ok'])) {
+		throw new RuntimeException('Disposable staffing schema update failed: ' . (string) ($staffingMigration['error'] ?? 'unknown'));
+	}
+}
 set_current_screen('dashboard');
 add_filter('woocommerce_prevent_automatic_wizard_redirect', '__return_true', PHP_INT_MAX);
 

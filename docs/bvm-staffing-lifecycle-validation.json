@@ -1,0 +1,329 @@
+{
+  "date": "2026-09-06",
+  "branch": "work/staffing-lifecycle",
+  "parent_commit": "96309bdf5795a3944f002dee4c21811394362443",
+  "environment": {
+    "php": "8.3.33",
+    "wordpress": "7.1",
+    "database_server": "10.11.19-MariaDB",
+    "database": "staffing_test",
+    "socket": "localhost:/private/tmp/bvm-staffing-db/mysql.sock",
+    "preflight": {
+      "ok": true,
+      "schema": "ready",
+      "engines": {
+        "wp_vms_event_role_assignments": "InnoDB",
+        "wp_vms_event_role_slots": "InnoDB",
+        "wp_vms_staffing_audit_log": "InnoDB",
+        "wp_vms_staffing_event_rollups": "InnoDB",
+        "wp_posts": "InnoDB",
+        "wp_postmeta": "InnoDB"
+      },
+      "duplicate_pair_count": 18,
+      "orphan_count": 0,
+      "active_duplicate_pair_count": 0
+    },
+    "schema": {
+      "assignments": "CREATE TABLE `wp_vms_event_role_assignments` (\n  `assignment_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,\n  `slot_id` bigint(20) unsigned NOT NULL,\n  `staff_id` bigint(20) unsigned NOT NULL,\n  `status` varchar(20) NOT NULL DEFAULT 'proposed',\n  `pay_type_override` varchar(20) DEFAULT NULL,\n  `pay_rate_override` decimal(12,2) DEFAULT NULL,\n  `notes` text DEFAULT NULL,\n  `shift_start_ts` bigint(20) DEFAULT NULL,\n  `shift_end_ts` bigint(20) DEFAULT NULL,\n  `actual_start_local` datetime DEFAULT NULL,\n  `actual_end_local` datetime DEFAULT NULL,\n  `created_at` datetime NOT NULL,\n  `created_by` bigint(20) unsigned DEFAULT NULL,\n  `updated_at` datetime NOT NULL,\n  `updated_by` bigint(20) unsigned DEFAULT NULL,\n  `revision` bigint(20) unsigned NOT NULL DEFAULT 0,\n  PRIMARY KEY (`assignment_id`),\n  KEY `slot_status` (`slot_id`,`status`),\n  KEY `staff_status` (`staff_id`,`status`),\n  KEY `staff_status_shift` (`staff_id`,`status`,`shift_start_ts`,`shift_end_ts`)\n) ENGINE=InnoDB AUTO_INCREMENT=160 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci",
+      "audit": "CREATE TABLE `wp_vms_staffing_audit_log` (\n  `log_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,\n  `event_plan_id` bigint(20) unsigned DEFAULT NULL,\n  `actor_user_id` bigint(20) unsigned DEFAULT NULL,\n  `action` varchar(80) NOT NULL,\n  `before_json` longtext DEFAULT NULL,\n  `after_json` longtext DEFAULT NULL,\n  `created_at` datetime NOT NULL,\n  `assignment_id` bigint(20) unsigned DEFAULT NULL,\n  `operation_id` varchar(64) DEFAULT NULL,\n  PRIMARY KEY (`log_id`),\n  UNIQUE KEY `lifecycle_operation` (`operation_id`),\n  KEY `event_plan_id` (`event_plan_id`),\n  KEY `actor_user_id` (`actor_user_id`),\n  KEY `action` (`action`),\n  KEY `created_at` (`created_at`),\n  KEY `lifecycle_assignment` (`assignment_id`)\n) ENGINE=InnoDB AUTO_INCREMENT=540 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci"
+    }
+  },
+  "source_checks": [
+    {
+      "test": "p0-source-consistency-repair",
+      "exit": 0,
+      "output": "P0 source consistency repair tests passed.\n"
+    },
+    {
+      "test": "staffing-repository-sql-remediation",
+      "exit": 0,
+      "output": "OK\n"
+    },
+    {
+      "test": "staffing-final-repository-sql-remediation",
+      "exit": 0,
+      "output": "staffing final repository sql remediation: PASS\n"
+    },
+    {
+      "test": "staffing-matrix-rollup-reporting-repository-sql-remediation",
+      "exit": 0,
+      "output": "OK\n"
+    },
+    {
+      "test": "staff-portal-safe-html-output-remediation",
+      "exit": 0,
+      "output": "Staff Portal safe HTML output remediation OK.\n"
+    },
+    {
+      "test": "staff-portal-inline-js-remediation",
+      "exit": 0,
+      "output": "Staff Portal inline JS remediation OK.\n"
+    },
+    {
+      "test": "event-plan-staff-output-remediation",
+      "exit": 0,
+      "output": "event plan staff output remediation: PASS\n"
+    },
+    {
+      "test": "event-plan-staff-inline-js-remediation",
+      "exit": 0,
+      "output": "event plan staff inline js remediation: PASS\n"
+    },
+    {
+      "test": "staffing-admin-inline-assets-remediation",
+      "exit": 0,
+      "output": "staffing admin inline assets remediation: PASS\n"
+    },
+    {
+      "test": "event-plan-readiness-details-output-remediation",
+      "exit": 0,
+      "output": "event plan readiness details output remediation: PASS\n"
+    },
+    {
+      "test": "event-reschedule-cli-actor",
+      "exit": 0,
+      "output": "PASS: 45 reschedule CLI actor assertions\n"
+    },
+    {
+      "test": "addon-compatibility/runtime-contracts-test",
+      "exit": 0,
+      "output": "BVM add-on runtime contracts passed: 71 canonical capabilities; 54 legacy fallbacks, 7 guarded optional, 10 migrated add-on gaps.\n"
+    },
+    {
+      "test": "addon-compatibility/additional-runtime-contracts-test",
+      "exit": 0,
+      "output": "Additional semantic runtime contracts passed: 10 supported / 1 retired / 27 capabilities / 99 persistent identifiers.\n"
+    },
+    {
+      "test": "syntax assets/js/vms-event-plan-staff.js",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "test": "syntax assets/js/vms-staffing-lifecycle.js",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "test": "syntax includes/core/event-reschedule.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/core/event-reschedule.php\n"
+    },
+    {
+      "test": "syntax includes/core/load.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/core/load.php\n"
+    },
+    {
+      "test": "syntax includes/core/staffing-lifecycle-ui.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/core/staffing-lifecycle-ui.php\n"
+    },
+    {
+      "test": "syntax includes/core/staffing-lifecycle.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/core/staffing-lifecycle.php\n"
+    },
+    {
+      "test": "syntax includes/core/staffing.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/core/staffing.php\n"
+    },
+    {
+      "test": "syntax includes/cpt/event-plans.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/cpt/event-plans.php\n"
+    },
+    {
+      "test": "syntax includes/cpt/event-plans/partials/staff.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/cpt/event-plans/partials/staff.php\n"
+    },
+    {
+      "test": "syntax includes/db/staffing-lifecycle.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/db/staffing-lifecycle.php\n"
+    },
+    {
+      "test": "syntax includes/portal/staff-portal.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/includes/portal/staff-portal.php\n"
+    },
+    {
+      "test": "syntax tests/event-plan-staff-eligibility.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/event-plan-staff-eligibility.php\n"
+    },
+    {
+      "test": "syntax tests/event-plan-staff-inline-js-remediation.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/event-plan-staff-inline-js-remediation.php\n"
+    },
+    {
+      "test": "syntax tests/p0-source-consistency-repair.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/p0-source-consistency-repair.php\n"
+    },
+    {
+      "test": "syntax tests/staff-portal-inline-js-remediation.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staff-portal-inline-js-remediation.php\n"
+    },
+    {
+      "test": "syntax tests/staff-portal-safe-html-output-remediation.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staff-portal-safe-html-output-remediation.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-final-repository-sql-remediation.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-final-repository-sql-remediation.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-lifecycle-checkpoint-forensics.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-lifecycle-checkpoint-forensics.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-lifecycle/bootstrap.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-lifecycle/bootstrap.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-lifecycle/concurrency.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-lifecycle/concurrency.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-lifecycle/deadlock-worker.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-lifecycle/deadlock-worker.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-lifecycle/deadlock.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-lifecycle/deadlock.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-lifecycle/integration.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-lifecycle/integration.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-lifecycle/runtime.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-lifecycle/runtime.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-lifecycle/worker.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-lifecycle/worker.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php\n"
+    },
+    {
+      "test": "syntax tests/staffing-repository-sql-remediation.php",
+      "exit": 0,
+      "output": "No syntax errors detected in /private/tmp/bvm-staffing-lifecycle/packages/vms-github-reconcile/tests/staffing-repository-sql-remediation.php\n"
+    },
+    {
+      "test": "git diff --check",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "runtime_checks": [
+    {
+      "test": "forensics",
+      "exit": 0,
+      "clean_output": true,
+      "output": "PASS 32 real-database assertions\nPASS concurrency; 50 total database assertions\nPASS extended concurrency; 86 total database assertions\nPASS forensic 1: proposal creation remains Proposed\nPASS forensic 2: proposal has exactly one lifecycle audit, matrix does not duplicate it\nPASS forensic 3: accepted P0 confirmation retention\nPASS forensic 4: unchanged matrix performs no writes\nPASS forensic 5: stale lifecycle revision cannot overwrite a newer commitment decision\nPASS forensic 6: stale selected checkbox preserves Canceled\nPASS forensic 7: stale selected checkbox preserves Declined\nPASS forensic 8: unrelated omission preserves Declined history\nPASS forensic 9: simultaneous creation keeps one association\nPASS forensic 10: audit failure rolls back status and audit together\nPASS forensic 11: independent concurrent confirmations cannot both commit\nPASS all 11 updated forensic regressions\n"
+    },
+    {
+      "test": "integration",
+      "exit": 0,
+      "clean_output": true,
+      "output": "PASS 32 real-database assertions\nPASS integration; 74 database assertions\nPASS extended integration; 90 database assertions\nPASS complete integration; 95 database assertions\nPASS final integration; 98 database assertions\nPASS final transaction integration; 102 database assertions\n"
+    },
+    {
+      "test": "deadlock",
+      "exit": 0,
+      "clean_output": true,
+      "output": "PASS 32 real-database assertions\nPASS real deadlock and explicit retry; 39 database assertions\n"
+    },
+    {
+      "test": "reschedule-safety",
+      "exit": 0,
+      "clean_output": true,
+      "output": "PASS: 126 published-date lock/reschedule assertions.\nPASS: 8 Event-Day load/render assertions.\n"
+    },
+    {
+      "test": "reschedule-communications",
+      "exit": 0,
+      "clean_output": true,
+      "output": "PASS: 109 reschedule customer communication assertions.\n"
+    },
+    {
+      "test": "eligibility",
+      "exit": 0,
+      "clean_output": true,
+      "output": "event plan staff eligibility regression tests: PASS\n"
+    }
+  ],
+  "official_five_runtime_checks": [
+    {
+      "scenario": "bvm-all-official-five-core-first",
+      "check_count": 75,
+      "failures": []
+    },
+    {
+      "scenario": "bvm-all-official-five-addons-first",
+      "check_count": 75,
+      "failures": []
+    }
+  ],
+  "browser_checks": [
+    "own Proposed acceptance via authenticated AJAX",
+    "operator required-reason validation",
+    "operator cancellation",
+    "deliberate reproposal",
+    "own Proposed decline via authenticated AJAX",
+    "inactive Declined state after reload",
+    "operator shared count changes after reload"
+  ],
+  "preservation": {
+    "original": {
+      "root": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/packages/vms-github-reconcile",
+      "file_count": 1783,
+      "changed_files": [],
+      "manifest_sha256": "12d82a9f994316b07ab471a549baacb1d6a73b897c1934800a25b938de8e7ba6"
+    },
+    "canonical": {
+      "root": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/backstage-venue-manager",
+      "file_count": 384,
+      "changed_files": [],
+      "manifest_sha256": "9664c7cc4ff1c56a8fa84b66f1cb0da9666d4c789e6b36e6a068b473f133032a"
+    },
+    "legacy": {
+      "root": "/Users/treyconey/Local Sites/serenade-range-local-test-site/app/public/wp-content/plugins/vms",
+      "file_count": 408,
+      "changed_files": [],
+      "manifest_sha256": "cb3f99af709102678b514aeb992a19903d79ebfcb07ca5622785e795fc35c541"
+    },
+    "status_unchanged": true,
+    "index_unchanged": true,
+    "head_unchanged": true,
+    "protected_stash_sha": "d08e726804712dc233f0e37b217abd6389963863"
+  },
+  "cleanup": {
+    "browser_tab_closed": true,
+    "http_server_session_exited": true,
+    "database_server_session_exited": true,
+    "database_socket_absent": true,
+    "browser_login_helper_removed": true,
+    "dormant_disposable_data_and_logs": "/private/tmp/bvm-staffing-db"
+  }
+}

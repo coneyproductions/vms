@@ -140,6 +140,8 @@ if (!class_exists('VMS_Tours_Service')) {
 }
 
 require_once $toursFile;
+// Match the accepted companion bootstrap before exercising its admin module.
+require_once $addonRoot . '/includes/core-compat.php';
 require_once $adminPageFile;
 
 $assert(function_exists('vms_fd_register_menu'), 'Fill Dates must expose its submenu registration callback.');

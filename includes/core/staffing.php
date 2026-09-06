@@ -1683,6 +1683,11 @@ if (!function_exists('bvmgr_staffing_apply_template_to_event')) {
 	function bvmgr_staffing_apply_template_to_event(int $event_plan_id, int $template_id, string $mode = 'merge_missing', ?int $actor_user_id = null): array
 	{
 		global $wpdb;
+		if (!bvmgr_staffing_transaction_active()) {
+			$args = func_get_args();
+			return bvmgr_staffing_atomic(static function () use ($args): array { $GLOBALS['bvmgr_staffing_transaction']['plans'][] = (int) $args[0]; return bvmgr_staffing_apply_template_to_event(...$args); });
+		}
+
 		$event_plan_id = absint($event_plan_id);
 		$template_id = absint($template_id);
 		$mode = sanitize_key($mode);
@@ -1723,20 +1728,8 @@ if (!function_exists('bvmgr_staffing_apply_template_to_event')) {
 		}
 
 		if ($mode === 'replace_all') {
-			foreach ($existing_slots as $slot) {
-				$slot_id = isset($slot['slot_id']) ? absint($slot['slot_id']) : 0;
-				if ($slot_id <= 0) continue;
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template replacement cancels active assignment rows in the plugin-owned repository before reseeding slots, and no persistent cache contract safely spans this mutation batch.
-				$wpdb->query($wpdb->prepare(
-					"UPDATE %i SET status = 'canceled', updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
-					$t_asn,
-					bvmgr_staffing_now_mysql_utc(),
-					$actor_user_id > 0 ? $actor_user_id : 0,
-					$slot_id
-				));
-			}
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Template replacement clears the existing event-slot repository rows directly before reseeding the normalized set, and no persistent cache contract safely spans this mutation batch.
-			$wpdb->delete($t_slot, array('event_plan_id' => $event_plan_id), array('%d'));
+			foreach ($existing_slots as $slot) bvmgr_staffing_matrix_proposals((int) $slot['slot_id'], array());
+			$wpdb->update($t_slot, array('status' => 'canceled'), array('event_plan_id' => $event_plan_id));
 			$existing_by_role = array();
 			$thresholds = array();
 		}
@@ -1813,10 +1806,10 @@ if (!function_exists('bvmgr_staffing_event_plan_datetime')) {
 		$end_local = null;
 		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd)) {
 			if (preg_match('/^\d{2}:\d{2}$/', $start_hhmm)) {
-				$start_local = DateTimeImmutable::createFromFormat('Y-m-d H:i', $ymd . ' ' . $start_hhmm, $tz);
+				$start_local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $start_hhmm, $tz);
 			}
 			if (preg_match('/^\d{2}:\d{2}$/', $end_hhmm)) {
-				$end_local = DateTimeImmutable::createFromFormat('Y-m-d H:i', $ymd . ' ' . $end_hhmm, $tz);
+				$end_local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $end_hhmm, $tz);
 			}
 		}
 
@@ -1856,7 +1849,7 @@ if (!function_exists('bvmgr_staffing_resolve_anchor_local')) {
 		if (!preg_match('/^\d{2}:\d{2}$/', $hhmm)) {
 			return null;
 		}
-		$local = DateTimeImmutable::createFromFormat('Y-m-d H:i', $ymd . ' ' . $hhmm, wp_timezone());
+		$local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $hhmm, wp_timezone());
 		return $local instanceof DateTimeImmutable ? $local : null;
 	}
 }
@@ -1885,12 +1878,12 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 			$sh = isset($slot['shift_start_local']) ? trim((string) $slot['shift_start_local']) : '';
 			$eh = isset($slot['shift_end_local']) ? trim((string) $slot['shift_end_local']) : '';
 			if (preg_match('/^\d{2}:\d{2}$/', $sh)) {
-				$start_local = DateTimeImmutable::createFromFormat('Y-m-d H:i', $ymd . ' ' . $sh, $tz);
+				$start_local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $sh, $tz);
 			}
 			if ($start_local instanceof DateTimeImmutable && $duration !== null && $duration > 0) {
 				$end_local = $start_local->modify('+' . $duration . ' minutes');
 			} elseif (preg_match('/^\d{2}:\d{2}$/', $eh)) {
-				$end_local = DateTimeImmutable::createFromFormat('Y-m-d H:i', $ymd . ' ' . $eh, $tz);
+				$end_local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $eh, $tz);
 			}
 		} else {
 			$start_anchor_key = isset($slot['start_anchor_key']) ? sanitize_key((string) $slot['start_anchor_key']) : '';
@@ -1954,32 +1947,7 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 if (!function_exists('bvmgr_staffing_sync_assignment_shift_timestamps_for_slot')) {
 	function bvmgr_staffing_sync_assignment_shift_timestamps_for_slot(int $slot_id): void
 	{
-		global $wpdb;
-		$slot_id = absint($slot_id);
-		if ($slot_id <= 0) return;
-
-		$t_slot = bvmgr_staffing_table_name('event_slots');
-		$t_asn = bvmgr_staffing_table_name('assignments');
-		if ($t_slot === '' || $t_asn === '') return;
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Slot timestamp sync reads one custom repository row with %i/%d-prepared identifiers and IDs, and assignment updates must observe immediate slot edits.
-		$slot = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE slot_id = %d', $t_slot, $slot_id), ARRAY_A);
-		if (!is_array($slot) || empty($slot['event_plan_id'])) return;
-
-		$window = bvmgr_staffing_resolve_slot_window((int) $slot['event_plan_id'], $slot);
-		$start_ts = isset($window['start_ts']) ? $window['start_ts'] : null;
-		$end_ts = isset($window['end_ts']) ? $window['end_ts'] : null;
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Slot timestamp sync mutates the plugin-owned assignment repository directly after recalculating one slot window, and no persistent cache contract safely spans this immediate write path.
-		$wpdb->query($wpdb->prepare(
-			"UPDATE %i SET shift_start_ts = %s, shift_end_ts = %s, updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
-			$t_asn,
-			$start_ts !== null ? (string) (int) $start_ts : null,
-			$end_ts !== null ? (string) (int) $end_ts : null,
-			bvmgr_staffing_now_mysql_utc(),
-			absint(get_current_user_id()),
-			$slot_id
-		));
+		bvmgr_staffing_sync_lifecycle_window($slot_id);
 	}
 }
 
@@ -2087,6 +2055,11 @@ if (!function_exists('bvmgr_staffing_seed_event_slots_from_template')) {
 	function bvmgr_staffing_seed_event_slots_from_template(int $event_plan_id, bool $force = false, ?int $actor_user_id = null): array
 	{
 		global $wpdb;
+		if (!bvmgr_staffing_transaction_active()) {
+			$args = func_get_args();
+			return bvmgr_staffing_atomic(static function () use ($args): array { return bvmgr_staffing_seed_event_slots_from_template(...$args); });
+		}
+
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return array('ok' => false, 'error' => 'invalid_event_plan');
@@ -2835,6 +2808,7 @@ if (!function_exists('bvmgr_staffing_resolve_event_snapshot')) {
 			$rollup,
 			$rollup_state
 		);
+		if (function_exists('bvmgr_staffing_event_overlap_warnings')) $snapshot['overlap_warnings'] = bvmgr_staffing_event_overlap_warnings($event_plan_id, $slots);
 		$snapshot['rollup_was_missing'] = $rollup_was_missing;
 		$snapshot['rollup_was_dirty'] = $rollup_was_dirty;
 		$snapshot['rollup_was_incomplete'] = $rollup_was_incomplete;
@@ -3293,7 +3267,7 @@ if (!function_exists('bvmgr_staffing_reconcile_existing_assignment_rows')) {
 	/**
 	 * Pick one deterministic assignment row per staff member and identify extras.
 	 * Confirmed rows outrank proposed rows so an ordinary matrix save never demotes
-	 * an already-confirmed assignment. Duplicate rows are canceled by the caller.
+	 * an already-confirmed assignment. The lifecycle writer flags active duplicates for deliberate review.
 	 */
 	function bvmgr_staffing_reconcile_existing_assignment_rows(array $rows): array
 	{
@@ -3356,6 +3330,11 @@ if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 		array $precomputed_state = array()
 	): array {
 		global $wpdb;
+		if (!bvmgr_staffing_transaction_active()) {
+			$args = func_get_args();
+			return bvmgr_staffing_atomic(static function () use ($args): array { $GLOBALS['bvmgr_staffing_transaction']['plans'][] = (int) $args[0]; return bvmgr_staffing_save_event_roles_matrix(...$args); });
+		}
+
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return array('ok' => false, 'error' => 'invalid_event_plan');
@@ -3432,7 +3411,7 @@ if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves read the existing custom event-slot repository with %i/%d-prepared identifiers before comparing and mutating the request-fresh slot set.
 			$existing_rows = $wpdb->get_results($wpdb->prepare(
-				"SELECT * FROM %i WHERE event_plan_id = %d ORDER BY slot_id ASC",
+				"SELECT * FROM %i WHERE event_plan_id = %d ORDER BY (status = 'active') DESC, slot_id ASC",
 				$t_slot,
 				$event_plan_id
 			), ARRAY_A);
@@ -3495,6 +3474,7 @@ if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 
 				if ($headcount <= 0 && empty($staff_ids)) {
 					if ($slot_id > 0) {
+						bvmgr_staffing_matrix_proposals($slot_id, array());
 						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves cancel obsolete custom event-slot rows directly, and no persistent cache safely spans the paired slot and assignment mutations.
 						$wpdb->update(
 							$t_slot,
@@ -3508,14 +3488,6 @@ if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 							array('%d', '%s', '%s', '%d'),
 							array('%d')
 						);
-						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves cancel active assignment rows in the plugin-owned repository immediately after canceling an obsolete slot, and no persistent cache safely spans this mutation pair.
-						$wpdb->query($wpdb->prepare(
-							"UPDATE %i SET status = 'canceled', updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')",
-							$t_asn,
-							$now,
-							$actor_user_id > 0 ? $actor_user_id : 0,
-							$slot_id
-						));
 				}
 				continue;
 			}
@@ -3589,80 +3561,7 @@ if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 				}
 				$slot_count++;
 
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves read current assignment rows from the custom repository with %i/%d-prepared identifiers before reconciling the normalized staff set.
-				$existing_asn = $wpdb->get_results($wpdb->prepare(
-					'SELECT assignment_id, staff_id, status FROM %i WHERE slot_id = %d ORDER BY assignment_id ASC',
-					$t_asn,
-					$slot_id
-				), ARRAY_A);
-				$existing_plan = bvmgr_staffing_reconcile_existing_assignment_rows(is_array($existing_asn) ? $existing_asn : array());
-				$existing_by_staff = (array) ($existing_plan['primary_by_staff'] ?? array());
-				$duplicate_assignment_ids = (array) ($existing_plan['duplicate_assignment_ids'] ?? array());
-				foreach (array_values(array_unique(array_filter(array_map('absint', $duplicate_assignment_ids)))) as $duplicate_assignment_id) {
-					$duplicate_key = -$duplicate_assignment_id;
-					while (isset($existing_by_staff[$duplicate_key])) {
-						$duplicate_key--;
-					}
-					$existing_by_staff[$duplicate_key] = array('assignment_id' => $duplicate_assignment_id, 'status' => 'canceled');
-				}
-
-				foreach ($staff_ids as $staff_id) {
-					if (isset($existing_by_staff[$staff_id])) {
-						$aid = isset($existing_by_staff[$staff_id]['assignment_id']) ? absint($existing_by_staff[$staff_id]['assignment_id']) : 0;
-						if ($aid > 0) {
-							$existing_status = sanitize_key((string) ($existing_by_staff[$staff_id]['status'] ?? ''));
-							$desired_status = $existing_status === 'confirmed' ? 'confirmed' : 'proposed';
-							// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves revive matching assignment rows directly in the plugin-owned repository so the slot reconciliation observes immediate state.
-							$wpdb->update(
-								$t_asn,
-								array(
-									'status'     => $desired_status,
-								'updated_at' => $now,
-								'updated_by' => $actor_user_id > 0 ? $actor_user_id : null,
-							),
-							array('assignment_id' => $aid),
-							array('%s', '%s', '%d'),
-								array('%d')
-							);
-						}
-					} else {
-						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Matrix saves insert new assignment rows directly into the plugin-owned repository; no core API preserves this lifecycle.
-						$wpdb->insert(
-							$t_asn,
-							array(
-								'slot_id'     => $slot_id,
-							'staff_id'    => $staff_id,
-							'status'      => 'proposed',
-							'created_at'  => $now,
-							'created_by'  => $actor_user_id > 0 ? $actor_user_id : null,
-							'updated_at'  => $now,
-							'updated_by'  => $actor_user_id > 0 ? $actor_user_id : null,
-						),
-						array('%d', '%d', '%s', '%s', '%d', '%s', '%d')
-					);
-				}
-				$assignment_count++;
-			}
-
-				if (!empty($existing_by_staff)) {
-					foreach ($existing_by_staff as $sid => $a) {
-						if (in_array((int) $sid, $staff_ids, true)) continue;
-						$aid = isset($a['assignment_id']) ? absint($a['assignment_id']) : 0;
-						if ($aid <= 0) continue;
-						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves cancel assignment rows omitted from the desired staff set or identified as duplicates so downstream rollup recompute sees one request-fresh row per staff member.
-						$wpdb->update(
-							$t_asn,
-							array(
-								'status'     => 'canceled',
-							'updated_at' => $now,
-							'updated_by' => $actor_user_id > 0 ? $actor_user_id : null,
-						),
-						array('assignment_id' => $aid),
-						array('%s', '%s', '%d'),
-						array('%d')
-					);
-				}
-			}
+			$assignment_count += bvmgr_staffing_matrix_proposals($slot_id, $staff_ids);
 
 			bvmgr_staffing_sync_assignment_shift_timestamps_for_slot($slot_id);
 		}
@@ -3678,7 +3577,7 @@ if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 		$rollup = bvmgr_staffing_compute_rollup($event_plan_id);
 		$after = bvmgr_staffing_get_event_slots($event_plan_id, true);
 		bvmgr_staffing_audit_log('event_staffing_save', $event_plan_id, array('slots' => $before), array('slots' => $after), $actor_user_id);
-		do_action('vms_staffing_event_saved', $event_plan_id);
+		bvmgr_staffing_defer_event_saved($event_plan_id);
 
 		return array(
 			'ok'               => true,
@@ -3787,6 +3686,11 @@ if (!function_exists('bvmgr_staffing_compute_rollup')) {
 	function bvmgr_staffing_compute_rollup(int $event_plan_id): array
 	{
 		global $wpdb;
+		if (!bvmgr_staffing_transaction_active()) {
+			$args = func_get_args();
+			return bvmgr_staffing_atomic(static function () use ($args): array { return bvmgr_staffing_compute_rollup(...$args); });
+		}
+
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
 			return array('ok' => false, 'error' => 'invalid_event_plan');
@@ -3890,11 +3794,12 @@ if (!function_exists('bvmgr_staffing_compute_rollup')) {
 				}
 				$filled++;
 				if ($a_status === 'confirmed') {
+					$canonical_window = bvmgr_staffing_lifecycle_window(array('event_plan_id' => $event_plan_id, 'slot_id' => $slot_id));
 					$confirmed_windows[] = array(
 						'assignment_id' => isset($a['assignment_id']) ? absint($a['assignment_id']) : 0,
 						'staff_id'      => isset($a['staff_id']) ? absint($a['staff_id']) : 0,
-						'start_ts'      => isset($a['shift_start_ts']) && $a['shift_start_ts'] !== null ? (int) $a['shift_start_ts'] : null,
-						'end_ts'        => isset($a['shift_end_ts']) && $a['shift_end_ts'] !== null ? (int) $a['shift_end_ts'] : null,
+						'start_ts'      => $canonical_window['start_ts'] ?? null,
+						'end_ts'        => $canonical_window['end_ts'] ?? null,
 					);
 				}
 
@@ -3958,26 +3863,7 @@ if (!function_exists('bvmgr_staffing_compute_rollup')) {
 				if ($staff_id <= 0 || $aid <= 0 || $start_ts === null || $end_ts === null) continue;
 				if ($end_ts <= $start_ts) continue;
 
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup recompute performs a bounded custom-table overlap count across assignments and slots with %i/%d-prepared identifiers and windows, and request-fresh state is required during recompute.
-				$cnt = (int) $wpdb->get_var($wpdb->prepare(
-					"SELECT COUNT(*) FROM %i a
-					 INNER JOIN %i s ON s.slot_id = a.slot_id
-					 WHERE a.staff_id = %d
-					   AND a.status = 'confirmed'
-					   AND a.assignment_id <> %d
-					   AND s.event_plan_id <> %d
-					   AND a.shift_start_ts IS NOT NULL
-					   AND a.shift_end_ts IS NOT NULL
-					   AND a.shift_start_ts < %d
-					   AND a.shift_end_ts > %d",
-					$t_asn,
-					$t_slot,
-					$staff_id,
-					$aid,
-					$event_plan_id,
-					$end_ts,
-				$start_ts
-			));
+			$cnt = count(bvmgr_staffing_assignment_overlaps(array('assignment_id' => $aid, 'staff_id' => $staff_id), array('start_ts' => $start_ts, 'end_ts' => $end_ts))['hard']);
 			if ($cnt > 0) {
 				$conflict_count++;
 				if (count($conflict_items) < 6) {

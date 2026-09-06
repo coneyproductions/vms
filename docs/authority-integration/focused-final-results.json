@@ -1,0 +1,176 @@
+[
+  {
+    "test": "financial-authority.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "financial-authority.php --no-woo",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "financial-investor-semantics.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "staffing-financial.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "reporting-provider-contract.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "data-tools-provider-decoupling.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": true
+  },
+  {
+    "test": "data-tools-reporting-provider.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "p0-source-consistency-repair.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "goals-forecast-repository-sql-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "staffing-repository-sql-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "staffing-final-repository-sql-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "staffing-matrix-rollup-reporting-repository-sql-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "ticketing-claims-repository-sql-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "ticketing-core-repository-sql-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "staffing-admin-inline-assets-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "event-plan-staff-inline-js-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "staff-portal-inline-js-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "staff-portal-safe-html-output-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "event-plan-staff-output-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "event-plan-readiness-details-output-remediation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "calendar-feeds-bvm-navigation.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": true
+  },
+  {
+    "test": "fill-dates-canonical-bvm-compatibility.php",
+    "status": "ABSENT_FROM_ACCEPTED_BASE",
+    "exit": 1,
+    "fixture_corrected": false
+  },
+  {
+    "test": "backstage-outreach-bvm-integration.php",
+    "status": "ABSENT_FROM_ACCEPTED_BASE",
+    "exit": 1,
+    "fixture_corrected": false
+  },
+  {
+    "test": "vendor-portal-bonus-progress-paid-basis.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": true
+  },
+  {
+    "test": "addon-compatibility/runtime-contracts-test.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "addon-compatibility/additional-runtime-contracts-test.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "addon-compatibility/weather-command-center-connection.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": false
+  },
+  {
+    "test": "fill-dates-admin-notice-placement.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": true
+  },
+  {
+    "test": "fill-dates-menu-hook-compatibility.php",
+    "status": "PASS",
+    "exit": 0,
+    "fixture_corrected": true
+  }
+]

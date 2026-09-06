@@ -23,9 +23,11 @@ function bvmgr_goals_get_event_pnl($id, $args) {
     if (empty($args['include_overhead'])) { same('forecast', $args['headcount_mode'], 'Only forecast enters financial model service'); }
     return $GLOBALS['fixtures'][$id]['forecast'] ?? array();
 }
-function bvmgr_staffing_resolve_event_snapshot($id, $args) {
-    same(true, $args['skip_rollup_recompute'] ?? false, 'Financial reads cannot persist staffing rollups');
-    return $GLOBALS['fixtures'][$id]['staffing'] ?? array();
+function bvmgr_staffing_get_financial_labor($id) {
+    $staffing = $GLOBALS['fixtures'][$id]['staffing'] ?? array();
+    $available = ($staffing['rollup_state'] ?? '') === 'fresh';
+    $amount = $available ? (int) round(($staffing['rollup']['est_labor_cost_total'] ?? 0) * 100) : null;
+    return array('availability' => $available ? 'available' : 'unavailable', 'planned_cents' => $amount, 'committed_cents' => $amount);
 }
 function bvmgr_ticket_revenue_build_report($args) {
     $id = $args['event_plan_id'];
@@ -115,10 +117,15 @@ same(0, $s[19]['revenue']['tickets']['amount_cents'], 'Free tickets do not imply
 same('MANUAL_ACTUAL', $s[20]['revenue']['manual_concessions']['basis'], 'Explicit manual source remains separate');
 same(null, $s[22]['forecast']['margin']['amount_cents'], 'Dirty labor estimate cannot become fresh zero');
 foreach ($s as $snapshot) {
+    same($snapshot['staffing']['planned'], $snapshot['forecast']['labor'], 'Forecast uses exactly the planned staffing observation');
+    same('UNAVAILABLE', $snapshot['staffing']['actual']['basis'], 'Neither planned nor committed staffing proves paid labor');
     same(null, $snapshot['actual']['gross']['amount_cents'], 'Ticket channels cannot certify whole event gross');
     same('UNAVAILABLE', $snapshot['final']['basis'], 'No accounting final source');
     same(false, $snapshot['final']['finalized'], 'Never finalize');
 }
+$unavailable = bvmgr_financial_build_snapshot(100, array('staffing_labor' => array('availability' => 'unavailable', 'planned_cents' => 1000, 'committed_cents' => 900)));
+same(null, $unavailable['staffing']['planned']['amount_cents'], 'Unavailable authority rejects stale numeric planned field');
+same(null, $unavailable['staffing']['committed']['amount_cents'], 'Unavailable authority rejects stale numeric committed field');
 $before = serialize($GLOBALS['fixtures']);
 ob_start(); bvmgr_financial_render_summary($s[2]); $html = ob_get_clean();
 same(true, strpos($html, 'Transactional ticket receipts') !== false && strpos($html, 'Forecast gross revenue') !== false, 'Shared renderer shows actual and forecast separately');

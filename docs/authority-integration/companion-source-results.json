@@ -1,0 +1,197 @@
+{
+  "generated_utc": "2026-09-06T19:04:22.338766+00:00",
+  "php": "/opt/homebrew/opt/php@8.3/bin/php",
+  "php_version": "8.3.33",
+  "mode": "isolated source/stub tests; no WordPress/database bootstrap",
+  "environment_overrides": {
+    "BVM_FILL_DATES_ROOT": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates",
+    "BVM_FINANCIAL_DATA_TOOLS_FIXTURE": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/companion-plugins/vms-data-tools",
+    "BVM_FINANCIAL_CALENDAR_FIXTURE": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/companion-plugins/backstage-calendar-feeds"
+  },
+  "results": [
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/calendar-feeds-bvm-navigation.php",
+      "sha256": "9c56c10cae2cc667458b9a3bdd7ec512ebb3ba68b2a5395b87b5bf36e8f7c0f4",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "Calendar Feeds BVM navigation PASS\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/companion-plugins/backstage-calendar-feeds/tests/run.php",
+      "sha256": "d0cd98a5a13ad5a3830c0ccbe280c2041aeb1f727303ac2f5a89c668e3994ce7",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "PASS: 109 isolated assertions\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/data-tools-provider-decoupling.php",
+      "sha256": "9e1bc027fb83843fb2d0a497405d5c5016406a29c65056d5152e11bf8de8b283",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "Data Tools provider decoupling PASS\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/data-tools-reporting-provider.php",
+      "sha256": "f5b8e56d8538dec11d4d6f2a5165c58e4d9c83df5b5a58a7d714f7ff9c9874db",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "Data Tools reporting provider PASS\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-admin-notice-placement.php",
+      "sha256": "6933c25e2c678d78798d581544681f4422a3372dec7e772e82c1447899908eb1",
+      "source_unchanged": true,
+      "exit_code": 255,
+      "stdout": "\nFatal error: Uncaught Error: Call to undefined function vms_fd_core_class() in /private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates/includes/admin-page.php:64\nStack trace:\n#0 /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-admin-notice-placement.php(187): vms_fd_register_menu()\n#1 {main}\n  thrown in /private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates/includes/admin-page.php on line 64\n",
+      "stderr": "PHP Fatal error:  Uncaught Error: Call to undefined function vms_fd_core_class() in /private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates/includes/admin-page.php:64\nStack trace:\n#0 /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-admin-notice-placement.php(187): vms_fd_register_menu()\n#1 {main}\n  thrown in /private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates/includes/admin-page.php on line 64\n"
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-menu-hook-compatibility.php",
+      "sha256": "71a3cfddf191ebf7d9f294702a1813d8cf33e8b288961f11399245a0df581ce6",
+      "source_unchanged": true,
+      "exit_code": 255,
+      "stdout": "\nFatal error: Uncaught Error: Call to undefined function vms_fd_core_class() in /private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates/includes/admin-page.php:64\nStack trace:\n#0 /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-menu-hook-compatibility.php(161): vms_fd_register_menu()\n#1 {main}\n  thrown in /private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates/includes/admin-page.php on line 64\n",
+      "stderr": "PHP Fatal error:  Uncaught Error: Call to undefined function vms_fd_core_class() in /private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates/includes/admin-page.php:64\nStack trace:\n#0 /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-menu-hook-compatibility.php(161): vms_fd_register_menu()\n#1 {main}\n  thrown in /private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/vms-fill-dates/includes/admin-page.php on line 64\n"
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/addon-compatibility/commerce-business-contracts.php",
+      "sha256": "1e3b91445059fd57b28c67efc3b20b4726172192597724e0d3ee09474b512079",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "Commerce 0.2.13 cart/checkout/order/rules/mapping/admin/classic/Blocks and paid/comp boundary contracts passed.\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/addon-compatibility/weather-provider-persistence-contracts.php",
+      "sha256": "b996019f0fd9be0ad5a905ca9f8a89309cd90232b15a5a4c04a9315b8bc48094",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "Weather 0.1.12 provider success/failure/credentials/Open-Meteo/cron/admin-read contracts passed with network stubbed.\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/addon-compatibility/commerce-square-activation-regression.php",
+      "sha256": "9e8bee782a417da8e3901e4d8098c4c2da138118e109731b4cc9dc1e178a68e5",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "Commerce missing-Square activation regression passed for 0.2.13: no-Square / Square-present / no-WooCommerce / deterministic repeat.\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-financial.php",
+      "sha256": "38cc07005156a759c0a58f56543f92456788510707f107388d3e4ea5ce053993",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "PASS 127 staffing/financial value and provenance assertions\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-events-bridge/tests/legacy-admin-guard-probe.php",
+      "sha256": "717eaf58ffc5edb80479644de8c7dcdc66c6a4061b34d0b02f705e2b8b2fd36f",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "PASS: retained legacy enrichment writes enforce capability and nonce guards.\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-events-bridge/tests/router-provider-probe.php",
+      "sha256": "b74a924bf82b8135bcd26afda653449e8bb678ce388ffe4b6d7ad6058db59c5e",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "PASS: 56 assertions; Router is authoritative and outward payloads are sanitized.\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-event-router/tests/router-probe.php",
+      "sha256": "f52aaaad8a0a460a25524b780362c5f75df7dd9778844e2392dedf72c9858e49",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "PASS: 43 assertions; pure shadow policy; no WordPress or destination writes.\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-calendar-intake/tests/router-source-discovery-probe.php",
+      "sha256": "80471d28f6e84da2cd8ed97b3498ebce55ebaaf9f20918a6577510a91d8e46dc",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "PASS: 14 isolated source-discovery assertions\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-calendar-intake/tests/venue-registry-probe.php",
+      "sha256": "ee568c4c5207ea68b98f877f647767e902e1d7c4406be024f6e4d15f66e335ce",
+      "source_unchanged": true,
+      "exit_code": 0,
+      "stdout": "PASS: 22 assertions; exact venue resolver is private and fail-closed.\n",
+      "stderr": ""
+    }
+  ],
+  "skipped": [
+    {
+      "component": "Agreements",
+      "reason": "No Agreements candidate/tests in accepted companion-plugins or staged addon-sources; installed source not executed."
+    },
+    {
+      "component": "Outreach",
+      "reason": "No Outreach candidate/tests in accepted companion-plugins or staged addon-sources; instructed not to import dirty-only tests."
+    },
+    {
+      "component": "Sponsorships",
+      "reason": "No standalone source-only suite found; wave2c migration requires database/runtime and is reserved to contained runtime coordinator."
+    },
+    {
+      "component": "Weather ECC connection",
+      "reason": "Source test requires mirror equal to sibling active-local copy; not appropriate while isolated candidate intentionally differs from promotion copy."
+    },
+    {
+      "component": "DRM intake reconciliation",
+      "reason": "Probe explicitly requires active WordPress/wp eval-file; not source-only."
+    },
+    {
+      "component": "Calendar/DataTools normal-local acceptance",
+      "reason": "Requires runtime/normal-local promotion receipt; out of source-only scope."
+    }
+  ],
+  "passed": 13,
+  "failed": 2,
+  "final_adapter_review": {
+    "transactional_role_scope": "termmeta and term_taxonomy checked InnoDB and read with ordered direct SQL under consistent snapshot",
+    "metadata_scope": "plan metadata loaded from SQL snapshot, temporary get_post_metadata filter removed in finally; no term metadata cache reads",
+    "prior_review_fixes": "manual meta invalidated before operator entries; availability gate added before using numeric staffing amounts",
+    "new_tests": "staffing-financial source test run here; staffing-lifecycle/financial.php inspected only, DB execution reserved to runtime agent",
+    "remaining_note": "per-slot planned versus per-person committed rounding can differ by pennies and remains explicit"
+  },
+  "diagnostic_reruns": [
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-admin-notice-placement.php",
+      "command": [
+        "/opt/homebrew/opt/php@8.3/bin/php",
+        "-d",
+        "auto_prepend_file=/private/tmp/bvm-fill-dates-source-preload.php",
+        "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-admin-notice-placement.php"
+      ],
+      "exit_code": 0,
+      "stdout": "Fill Dates native admin-notice placement passed.\n",
+      "stderr": "",
+      "interpretation": "Real compatibility helper preloaded to repair isolated test fixture only; original source/test unchanged"
+    },
+    {
+      "path": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-menu-hook-compatibility.php",
+      "command": [
+        "/opt/homebrew/opt/php@8.3/bin/php",
+        "-d",
+        "auto_prepend_file=/private/tmp/bvm-fill-dates-source-preload.php",
+        "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-menu-hook-compatibility.php"
+      ],
+      "exit_code": 0,
+      "stdout": "Fill Dates returned menu-hook compatibility passed.\n",
+      "stderr": "",
+      "interpretation": "Real compatibility helper preloaded to repair isolated test fixture only; original source/test unchanged"
+    }
+  ],
+  "diagnostic_summary": "Raw 13/15 pass; two Fill Dates harness bootstrap failures rerun with real compatibility helper preload. Inspect per-rerun result; no repository changes."
+}

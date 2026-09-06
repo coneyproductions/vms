@@ -1,0 +1,12 @@
+[
+  {
+    "test": "fill-dates-admin-notice-placement.php",
+    "exit": 0,
+    "output": "Fill Dates native admin-notice placement passed.\n"
+  },
+  {
+    "test": "fill-dates-menu-hook-compatibility.php",
+    "exit": 0,
+    "output": "Fill Dates returned menu-hook compatibility passed.\n"
+  }
+]

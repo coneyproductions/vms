@@ -1,0 +1,97 @@
+{
+    "database": "bvm_integration_source",
+    "prefix": "bvm_migration_receipt_",
+    "source": "Wave4 schema reconstructed by removing only additive lifecycle columns from fresh disposable clones",
+    "before": {
+        "ok": true,
+        "engines": {
+            "bvm_migration_receipt_vms_event_role_assignments": "InnoDB",
+            "bvm_migration_receipt_vms_event_role_slots": "InnoDB",
+            "bvm_migration_receipt_vms_staffing_audit_log": "InnoDB",
+            "bvm_migration_receipt_vms_staffing_event_rollups": "InnoDB",
+            "bvm_migration_receipt_posts": "InnoDB",
+            "bvm_migration_receipt_postmeta": "InnoDB"
+        },
+        "schema": "lifecycle_migration_required",
+        "duplicate_pairs": [
+            {
+                "slot_id": "2",
+                "staff_id": "13",
+                "history_rows": "2",
+                "active_rows": "0"
+            },
+            {
+                "slot_id": "12",
+                "staff_id": "29",
+                "history_rows": "2",
+                "active_rows": "0"
+            },
+            {
+                "slot_id": "26",
+                "staff_id": "57",
+                "history_rows": "2",
+                "active_rows": "0"
+            },
+            {
+                "slot_id": "29",
+                "staff_id": "63",
+                "history_rows": "2",
+                "active_rows": "0"
+            }
+        ],
+        "orphan_assignment_ids": []
+    },
+    "first_migration": {
+        "ok": true
+    },
+    "second_migration": {
+        "ok": true
+    },
+    "after": {
+        "ok": true,
+        "engines": {
+            "bvm_migration_receipt_vms_event_role_assignments": "InnoDB",
+            "bvm_migration_receipt_vms_event_role_slots": "InnoDB",
+            "bvm_migration_receipt_vms_staffing_audit_log": "InnoDB",
+            "bvm_migration_receipt_vms_staffing_event_rollups": "InnoDB",
+            "bvm_migration_receipt_posts": "InnoDB",
+            "bvm_migration_receipt_postmeta": "InnoDB"
+        },
+        "schema": "ready",
+        "duplicate_pairs": [
+            {
+                "slot_id": "2",
+                "staff_id": "13",
+                "history_rows": "2",
+                "active_rows": "0"
+            },
+            {
+                "slot_id": "12",
+                "staff_id": "29",
+                "history_rows": "2",
+                "active_rows": "0"
+            },
+            {
+                "slot_id": "26",
+                "staff_id": "57",
+                "history_rows": "2",
+                "active_rows": "0"
+            },
+            {
+                "slot_id": "29",
+                "staff_id": "63",
+                "history_rows": "2",
+                "active_rows": "0"
+            }
+        ],
+        "orphan_assignment_ids": []
+    },
+    "schemas": {
+        "bvm_migration_receipt_vms_event_role_assignments": "CREATE TABLE `bvm_migration_receipt_vms_event_role_assignments` (\n  `assignment_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,\n  `slot_id` bigint(20) unsigned NOT NULL,\n  `staff_id` bigint(20) unsigned NOT NULL,\n  `status` varchar(20) NOT NULL DEFAULT 'proposed',\n  `pay_type_override` varchar(20) DEFAULT NULL,\n  `pay_rate_override` decimal(12,2) DEFAULT NULL,\n  `notes` text DEFAULT NULL,\n  `shift_start_ts` bigint(20) DEFAULT NULL,\n  `shift_end_ts` bigint(20) DEFAULT NULL,\n  `actual_start_local` datetime DEFAULT NULL,\n  `actual_end_local` datetime DEFAULT NULL,\n  `created_at` datetime NOT NULL,\n  `created_by` bigint(20) unsigned DEFAULT NULL,\n  `updated_at` datetime NOT NULL,\n  `updated_by` bigint(20) unsigned DEFAULT NULL,\n  `revision` bigint(20) unsigned NOT NULL DEFAULT 0,\n  PRIMARY KEY (`assignment_id`),\n  KEY `slot_status` (`slot_id`,`status`),\n  KEY `staff_status` (`staff_id`,`status`),\n  KEY `staff_status_shift` (`staff_id`,`status`,`shift_start_ts`,`shift_end_ts`)\n) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci",
+        "bvm_migration_receipt_vms_staffing_audit_log": "CREATE TABLE `bvm_migration_receipt_vms_staffing_audit_log` (\n  `log_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,\n  `event_plan_id` bigint(20) unsigned DEFAULT NULL,\n  `actor_user_id` bigint(20) unsigned DEFAULT NULL,\n  `action` varchar(80) NOT NULL,\n  `before_json` longtext DEFAULT NULL,\n  `after_json` longtext DEFAULT NULL,\n  `created_at` datetime NOT NULL,\n  `assignment_id` bigint(20) unsigned DEFAULT NULL,\n  `operation_id` varchar(64) DEFAULT NULL,\n  PRIMARY KEY (`log_id`),\n  UNIQUE KEY `lifecycle_operation` (`operation_id`),\n  KEY `event_plan_id` (`event_plan_id`),\n  KEY `actor_user_id` (`actor_user_id`),\n  KEY `action` (`action`),\n  KEY `created_at` (`created_at`),\n  KEY `lifecycle_assignment` (`assignment_id`)\n) ENGINE=InnoDB AUTO_INCREMENT=138 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci"
+    },
+    "preserved_assignment_count": 36,
+    "preserved_audit_count": 131,
+    "history_preserved": true,
+    "idempotent": true
+}

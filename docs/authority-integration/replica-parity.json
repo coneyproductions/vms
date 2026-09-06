@@ -1,0 +1,97 @@
+[
+  {
+    "file": "assets/css/vms-staffing-lifecycle.css",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "assets/js/vms-event-plan-staff.js",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "assets/js/vms-staffing-lifecycle.js",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/admin/event-command-center.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/admin/event-profitability-report.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/admin/goals-forecast.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/event-reschedule.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/financial-snapshot.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/financial-ticket-source.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/goals-forecast.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/load.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/staffing-financial.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/staffing-lifecycle-ui.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/staffing-lifecycle.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/core/staffing.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/cpt/event-plans.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/cpt/event-plans/partials/staff.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/db/staffing-lifecycle.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  },
+  {
+    "file": "includes/portal/staff-portal.php",
+    "canonical_replica_matches": true,
+    "vms_replica_matches": true
+  }
+]

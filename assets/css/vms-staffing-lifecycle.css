@@ -1,0 +1,11 @@
+.bvm-staffing-lifecycle { margin: 16px 0; }
+.bvm-staffing-assignment { padding: 12px; margin: 8px 0; border: 1px solid #c3c4c7; border-radius: 4px; }
+.bvm-staffing-assignment p { margin: 6px 0; }
+.bvm-staffing-state { display: inline-block; padding: 4px 8px; margin: 4px 8px 4px 0; border-radius: 4px; background: #f0f0f1; color: #2c3338; }
+.bvm-staffing-state.is-proposed { background: #fff3cd; color: #664d03; }
+.bvm-staffing-state.is-confirmed { background: #d1e7dd; color: #0f5132; }
+.bvm-staffing-state.is-declined, .bvm-staffing-state.is-canceled { background: #eee; color: #50575e; }
+.bvm-staffing-warning { color: #8a4b00; }
+
+.bvm-staffing-assignment label { display: block; margin-bottom: 4px; }
+.bvm-staffing-assignment input[data-staffing-reason-input] { width: 100%; max-width: 36em; box-sizing: border-box; padding: 6px 8px; font: inherit; }

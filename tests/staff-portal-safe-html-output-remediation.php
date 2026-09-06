@@ -236,7 +236,7 @@ foreach ($sourceLines as $line) {
 		continue;
 	}
 	$assert(
-		preg_match('~wp_kses\s*\(\s*vms_staff_portal_(?:safe_html|notice_html)\s*\(~', $line) === 1,
+		preg_match('~wp_kses\s*\(\s*(?:bvmgr|vms)_staff_portal_(?:safe_html|notice_html)\s*\(~', $line) === 1,
 		'The Staff Portal safe-HTML allowlist should only be applied directly to safe fragments, not larger portal markup.'
 	);
 }

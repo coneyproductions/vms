@@ -54,7 +54,12 @@ function bvmgr_financial_build_snapshot(int $plan_id, array $input): array
     $known_cost = count($known) ? array_sum($known) : null;
     $contribution = $receipt['amount_cents'] !== null && $known_cost !== null ? $receipt['amount_cents'] - $known_cost : null;
     $forecast = (array) ($input['forecast'] ?? array());
-    $labor = $input['labor_estimate_cents'] ?? null;
+    $staffing = (array) ($input['staffing_labor'] ?? array());
+    $staffing_available = ($staffing['availability'] ?? '') === 'available';
+    $labor = $staffing_available ? ($staffing['planned_cents'] ?? null) : null;
+    $committed = $staffing_available ? ($staffing['committed_cents'] ?? null) : null;
+    $labor_evidence = (array) ($staffing['evidence'] ?? array());
+    $labor_evidence['freshness'] = ($staffing['availability'] ?? '') === 'available' ? 'current_normalized_rows' : 'unavailable';
     $forecast_cost = isset($forecast['direct_costs_cents'], $forecast['processing_fees_cents']) && $labor !== null
         ? (int) $forecast['direct_costs_cents'] + (int) $forecast['processing_fees_cents'] + (int) $labor : null;
     $forecast_gross = $forecast['gross_revenue_cents'] ?? null;
@@ -71,7 +76,7 @@ function bvmgr_financial_build_snapshot(int $plan_id, array $input): array
         ));
     }
     return array(
-        'contract_version' => 1,
+        'contract_version' => 2,
         'event_plan_id' => $plan_id,
         'revenue' => array(
             'tickets' => $receipt,
@@ -87,11 +92,16 @@ function bvmgr_financial_build_snapshot(int $plan_id, array $input): array
             'known_costs' => bvmgr_financial_value($known_cost, 'MANUAL_ACTUAL', 'reported_direct_and_processing', 'known_costs_only'),
             'margin' => bvmgr_financial_value($contribution, 'DERIVED_ACTUAL', 'ticket_receipts_less_known_reported_costs', 'ticket_contribution_excluding_labor_and_missing_costs', array('confidence' => 'provisional', 'component_bases' => array('TRANSACTIONAL_ACTUAL', 'MANUAL_ACTUAL'))),
         ),
+        'staffing' => array(
+            'planned' => bvmgr_financial_value($labor, 'PLANNED_LABOR', 'normalized_staffing_lifecycle', 'active_slot_required_headcount', $labor_evidence),
+            'committed' => bvmgr_financial_value($committed, 'COMMITTED_LABOR', 'normalized_staffing_lifecycle', 'confirmed_assignment_estimate', $labor_evidence),
+            'actual' => $costs['labor'],
+        ),
         'forecast' => array(
             'gross' => bvmgr_financial_value($forecast_gross, 'FORECAST', 'goals_forecast_model', 'modeled_event_revenue'),
-            'costs' => bvmgr_financial_value($forecast_cost, 'FORECAST', 'configured_costs_and_scheduled_labor', 'direct_costs_excluding_overhead'),
-            'margin' => bvmgr_financial_value($forecast_margin, 'FORECAST', 'goals_model_less_scheduled_labor', 'direct_margin_excluding_overhead'),
-            'labor' => bvmgr_financial_value($labor, 'FORECAST', 'staffing_snapshot', 'scheduled_labor', (array) ($input['labor_evidence'] ?? array())),
+            'costs' => bvmgr_financial_value($forecast_cost, 'FORECAST', 'configured_costs_and_planned_labor', 'direct_costs_excluding_overhead'),
+            'margin' => bvmgr_financial_value($forecast_margin, 'FORECAST', 'goals_model_less_planned_labor', 'direct_margin_excluding_overhead'),
+            'labor' => bvmgr_financial_value($labor, 'PLANNED_LABOR', 'normalized_staffing_lifecycle', 'active_slot_required_headcount', $labor_evidence),
             'direct' => bvmgr_financial_value($forecast['direct_costs_cents'] ?? null, 'FORECAST', 'configured_compensation', 'direct_costs'),
             'processing' => bvmgr_financial_value($forecast['processing_fees_cents'] ?? null, 'FORECAST', 'configured_processing_fees', 'processing'),
         ),
@@ -105,7 +115,8 @@ function bvmgr_financial_build_snapshot(int $plan_id, array $input): array
 /** Shared read-only adapter. No refresh, writes, activation or direct add-on loading. */
 function bvmgr_financial_get_event_snapshot(int $plan_id): array
 {
-    return bvmgr_financial_request_cache($plan_id, 'financial_snapshot', static function () use ($plan_id): array {
+    // Re-read labor and operator entries after lifecycle mutations in this request.
+    // Ticket evidence retains its separate accepted request-cache contract.
         if ($plan_id <= 0) { return bvmgr_financial_build_snapshot($plan_id, array()); }
         $ticket = bvmgr_reporting_get_ticket_truth($plan_id);
         if (empty($ticket['available']) || empty($ticket['calculated'])) {
@@ -118,6 +129,7 @@ function bvmgr_financial_get_event_snapshot(int $plan_id): array
                 'freshness' => array('state' => $cache['state'], 'computed_at_gmt' => $cache['stats_computed_at_gmt']),
             ));
         }
+        if (function_exists('wp_cache_delete')) wp_cache_delete($plan_id, 'post_meta');
         $manual = array();
         foreach (array('direct' => '_vms_event_direct_costs_cents', 'processing' => '_vms_event_processing_fees_cents') as $key => $meta) {
             $raw = get_post_meta($plan_id, $meta, true);
@@ -127,24 +139,22 @@ function bvmgr_financial_get_event_snapshot(int $plan_id): array
             $raw = get_post_meta($plan_id, '_vms_concessions_actual_cents', true);
             $manual['concessions'] = $raw !== '' && is_numeric($raw) ? max(0, (int) $raw) : null;
         }
-        // Recomputing the staffing rollup persists data; this service only interprets its existing snapshot.
-        $staffing = function_exists('bvmgr_staffing_resolve_event_snapshot')
-            ? bvmgr_staffing_resolve_event_snapshot($plan_id, array('skip_rollup_recompute' => true)) : array();
-        $rollup = (array) ($staffing['rollup'] ?? array());
-        $labor = $rollup['est_labor_cost_total'] ?? null;
-        if (!in_array((string) ($staffing['rollup_state'] ?? ''), array('fresh', 'recomputed'), true)) { $labor = null; }
+        try {
+            $staffing_labor = function_exists('bvmgr_staffing_get_financial_labor')
+                ? bvmgr_staffing_get_financial_labor($plan_id) : array();
+        } catch (Throwable $error) {
+            $staffing_labor = array('availability' => 'unavailable', 'evidence' => array('reason' => 'staffing_authority_failed'));
+        }
         $forecast = function_exists('bvmgr_goals_get_event_pnl')
             ? bvmgr_goals_get_event_pnl($plan_id, array('headcount_mode' => 'forecast', 'include_overhead' => false)) : array();
         return bvmgr_financial_build_snapshot($plan_id, array(
             'ticket' => $ticket, 'manual' => $manual, 'forecast' => $forecast,
-            'labor_estimate_cents' => is_numeric($labor) ? (int) round((float) $labor * 100) : null,
-            'labor_evidence' => array('freshness' => (string) ($staffing['rollup_state'] ?? 'unavailable'), 'calculated_at_utc' => $rollup['computed_at'] ?? null),
+            'staffing_labor' => $staffing_labor,
             'legacy_totals' => (array) get_post_meta($plan_id, '_vms_event_actuals_totals', true),
             'legacy_provider' => (string) get_post_meta($plan_id, '_vms_event_actuals_provider', true),
             'legacy_pulled_at' => (string) get_post_meta($plan_id, '_vms_event_actuals_pulled_at_utc', true),
             'calculated_at_utc' => !empty($ticket['freshness']['computed_at_gmt']) ? gmdate('Y-m-d H:i:s', (int) $ticket['freshness']['computed_at_gmt']) : gmdate('Y-m-d H:i:s'),
         ));
-    });
 }
 
 /** Stable user-facing vocabulary shared by all operational consumers. */
@@ -156,8 +166,10 @@ function bvmgr_financial_display_rows(array $s): array
         array(__('Known reported costs', 'backstage-venue-manager'), $s['actual']['known_costs'], __('Direct costs and processing only; incomplete', 'backstage-venue-manager')),
         array(__('Provisional ticket contribution', 'backstage-venue-manager'), $s['actual']['margin'], __('Ticket receipts less known reported costs; excludes labor and missing expenses', 'backstage-venue-manager')),
         array(__('Forecast gross revenue', 'backstage-venue-manager'), $s['forecast']['gross'], __('Forecast/model; not transaction truth', 'backstage-venue-manager')),
-        array(__('Forecast direct margin', 'backstage-venue-manager'), $s['forecast']['margin'], __('Modeled revenue less configured costs and scheduled labor; excludes overhead', 'backstage-venue-manager')),
-        array(__('Estimated staffing labor', 'backstage-venue-manager'), $s['forecast']['labor'], __('Scheduled labor; not paid payroll', 'backstage-venue-manager')),
+        array(__('Forecast direct margin', 'backstage-venue-manager'), $s['forecast']['margin'], __('Modeled revenue less configured costs and planned labor; excludes overhead', 'backstage-venue-manager')),
+        array(__('Planned staffing labor', 'backstage-venue-manager'), $s['staffing']['planned'], __('Active planned positions, including unfilled positions; not paid payroll', 'backstage-venue-manager')),
+        array(__('Committed staffing labor', 'backstage-venue-manager'), $s['staffing']['committed'], __('Confirmed assignments at configured rates; not paid payroll or an additional forecast cost', 'backstage-venue-manager')),
+        array(__('Actual paid labor', 'backstage-venue-manager'), $s['staffing']['actual'], __('No paid payroll source', 'backstage-venue-manager')),
         array(__('Final accounting', 'backstage-venue-manager'), $s['final'], __('No finalized accounting source', 'backstage-venue-manager')),
     );
 }

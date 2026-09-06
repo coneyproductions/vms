@@ -1,0 +1,16 @@
+A	docs/financial-authority-consolidation.md
+A	docs/financial-authority-investor-0.2.3.patch
+A	docs/financial-authority-investor-baseline.json
+M	docs/wporg-remediation-ledger.md
+M	includes/admin/event-command-center.php
+M	includes/admin/event-profitability-report.php
+M	includes/admin/goals-forecast.php
+A	includes/core/financial-snapshot.php
+A	includes/core/financial-ticket-source.php
+M	includes/core/goals-forecast.php
+M	includes/core/load.php
+M	tests/data-tools-provider-decoupling.php
+M	tests/data-tools-reporting-provider.php
+A	tests/financial-authority.php
+A	tests/financial-investor-semantics.php
+M	tests/p0-source-consistency-repair.php

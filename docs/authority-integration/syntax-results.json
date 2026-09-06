@@ -1,0 +1,272 @@
+[
+  {
+    "file": "assets/js/vms-event-plan-staff.js",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "assets/js/vms-staffing-lifecycle.js",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "includes/admin/event-command-center.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/admin/event-command-center.php"
+  },
+  {
+    "file": "includes/admin/event-profitability-report.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/admin/event-profitability-report.php"
+  },
+  {
+    "file": "includes/admin/goals-forecast.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/admin/goals-forecast.php"
+  },
+  {
+    "file": "includes/core/event-reschedule.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/event-reschedule.php"
+  },
+  {
+    "file": "includes/core/financial-snapshot.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/financial-snapshot.php"
+  },
+  {
+    "file": "includes/core/financial-ticket-source.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/financial-ticket-source.php"
+  },
+  {
+    "file": "includes/core/goals-forecast.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/goals-forecast.php"
+  },
+  {
+    "file": "includes/core/load.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/load.php"
+  },
+  {
+    "file": "includes/core/staffing-financial.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/staffing-financial.php"
+  },
+  {
+    "file": "includes/core/staffing-lifecycle-ui.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/staffing-lifecycle-ui.php"
+  },
+  {
+    "file": "includes/core/staffing-lifecycle.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/staffing-lifecycle.php"
+  },
+  {
+    "file": "includes/core/staffing.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/core/staffing.php"
+  },
+  {
+    "file": "includes/cpt/event-plans.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/cpt/event-plans.php"
+  },
+  {
+    "file": "includes/cpt/event-plans/partials/staff.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/cpt/event-plans/partials/staff.php"
+  },
+  {
+    "file": "includes/db/staffing-lifecycle.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/db/staffing-lifecycle.php"
+  },
+  {
+    "file": "includes/portal/staff-portal.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/includes/portal/staff-portal.php"
+  },
+  {
+    "file": "tests/addon-compatibility/additional-runtime-probe.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/addon-compatibility/additional-runtime-probe.php"
+  },
+  {
+    "file": "tests/addon-compatibility/runtime-probe.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/addon-compatibility/runtime-probe.php"
+  },
+  {
+    "file": "tests/data-tools-provider-decoupling.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/data-tools-provider-decoupling.php"
+  },
+  {
+    "file": "tests/data-tools-reporting-provider.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/data-tools-reporting-provider.php"
+  },
+  {
+    "file": "tests/event-plan-staff-eligibility.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/event-plan-staff-eligibility.php"
+  },
+  {
+    "file": "tests/event-plan-staff-inline-js-remediation.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/event-plan-staff-inline-js-remediation.php"
+  },
+  {
+    "file": "tests/fill-dates-admin-notice-placement.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-admin-notice-placement.php"
+  },
+  {
+    "file": "tests/fill-dates-menu-hook-compatibility.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/fill-dates-menu-hook-compatibility.php"
+  },
+  {
+    "file": "tests/financial-authority.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/financial-authority.php"
+  },
+  {
+    "file": "tests/financial-investor-semantics.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/financial-investor-semantics.php"
+  },
+  {
+    "file": "tests/p0-source-consistency-repair.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/p0-source-consistency-repair.php"
+  },
+  {
+    "file": "tests/staff-portal-inline-js-remediation.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staff-portal-inline-js-remediation.php"
+  },
+  {
+    "file": "tests/staff-portal-safe-html-output-remediation.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staff-portal-safe-html-output-remediation.php"
+  },
+  {
+    "file": "tests/staffing-final-repository-sql-remediation.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-final-repository-sql-remediation.php"
+  },
+  {
+    "file": "tests/staffing-financial.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-financial.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle-checkpoint-forensics.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle-checkpoint-forensics.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/bootstrap.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/bootstrap.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/concurrency.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/concurrency.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/deadlock-worker.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/deadlock-worker.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/deadlock.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/deadlock.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/financial-provider.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/financial-provider.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/financial.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/financial.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/integration.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/integration.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/migration-receipt.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/migration-receipt.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/runtime.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/runtime.php"
+  },
+  {
+    "file": "tests/staffing-lifecycle/worker.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-lifecycle/worker.php"
+  },
+  {
+    "file": "tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-matrix-rollup-reporting-repository-sql-remediation.php"
+  },
+  {
+    "file": "tests/staffing-repository-sql-remediation.php",
+    "exit": 0,
+    "output": "No syntax errors detected in /private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/tests/staffing-repository-sql-remediation.php"
+  },
+  {
+    "file": "scripts/codex-preflight.sh",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "scripts/lib/bvm-test-containment.sh",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "scripts/test-bvm-additional-runtime-compatibility.sh",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "scripts/test-bvm-addon-runtime-compatibility.sh",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "scripts/test-bvm-test-containment.sh",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "scripts/test-data-tools-normal-local-acceptance.sh",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "scripts/test-installed-addon-registration-sweep.sh",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "file": "scripts/test-wave2c-sponsorships-current-shape-migration.sh",
+    "exit": 0,
+    "output": ""
+  }
+]

@@ -95,6 +95,24 @@ if (!function_exists('set_current_screen')) {
 
 wp_set_current_user(1);
 
+// Event-time writes require the explicit staffing schema update. This fixture
+// setup must never migrate a normal site or silently bypass a failed update.
+if ($coreExpected && function_exists('bvmgr_staffing_migrate_lifecycle')) {
+	$fixtureRoot = realpath(ABSPATH);
+	$tempRoot = realpath(sys_get_temp_dir());
+	if (!defined('WP_CLI') || !WP_CLI || !is_string($fixtureRoot) || !is_string($tempRoot)
+		|| dirname($fixtureRoot) !== $tempRoot
+		|| preg_match('/\Abvm-addon-compat-runtime\.[A-Za-z0-9]+\z/', basename($fixtureRoot)) !== 1
+		|| !defined('DB_NAME') || preg_match('/\Abvm_compat_[a-f0-9]{12}\z/', DB_NAME) !== 1) {
+		throw new RuntimeException('Staffing fixture migration requires an isolated compatibility runtime.');
+	}
+	$staffingMigration = bvmgr_staffing_migrate_lifecycle();
+	$check('staffing-fixture-schema-ready', 'No Fatal', $addon, !empty($staffingMigration['ok']), 'Explicit disposable staffing schema update succeeded before fixture writes.', $staffingMigration);
+	if (empty($staffingMigration['ok'])) {
+		throw new RuntimeException('Disposable staffing schema update failed: ' . (string) ($staffingMigration['error'] ?? 'unknown'));
+	}
+}
+
 // A real wp-admin request establishes a screen before screen-aware admin
 // callbacks execute. WP-CLI does not, so provide that missing request context.
 set_current_screen('dashboard');
@@ -400,6 +418,7 @@ if ($coreExpected && in_array('fill-dates', $targetAddons, true)) {
 		$statusKey = (string) bvmgr_meta_key('event_plan', 'status');
 		$slotLimitsKey = (string) bvmgr_meta_key('event_plan', 'slot_limits');
 		update_post_meta($fixturePlanId, $dateKey !== '' ? $dateKey : '_vms_event_date', $fixtureDate);
+		$check('fill-dates-fixture-date-persisted', 'BVM Recognized', 'fill-dates', get_post_meta($fixturePlanId, $dateKey !== '' ? $dateKey : '_vms_event_date', true) === $fixtureDate, 'The synthetic Event Plan date persisted through the staffing metadata guard.');
 		update_post_meta($fixturePlanId, $statusKey !== '' ? $statusKey : '_vms_event_plan_status', 'draft');
 		update_post_meta($fixturePlanId, $slotLimitsKey !== '' ? $slotLimitsKey : '_vms_slot_limits', array('food_truck' => 1));
 		bvmgr_calendar_feed_cache_bust();

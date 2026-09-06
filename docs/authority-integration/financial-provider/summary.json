@@ -1,0 +1,22 @@
+{
+  "core-first": {
+    "exit_code": 0,
+    "checks": 78,
+    "passed": true
+  },
+  "addon-first": {
+    "exit_code": 0,
+    "checks": 78,
+    "passed": true
+  },
+  "inactive": {
+    "exit_code": 0,
+    "checks": 78,
+    "passed": true
+  },
+  "absent": {
+    "exit_code": 0,
+    "checks": 78,
+    "passed": true
+  }
+}

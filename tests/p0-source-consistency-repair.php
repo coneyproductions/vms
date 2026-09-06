@@ -191,7 +191,7 @@ $plan = bvmgr_staffing_reconcile_existing_assignment_rows(array(
 ));
 p0_same('confirmed', $plan['primary_by_staff'][101]['status'], 'Matrix reconciliation did not retain confirmed status.');
 p0_same(array(5, 9), $plan['duplicate_assignment_ids'], 'Matrix reconciliation did not identify non-primary duplicate rows.');
-p0_assert(strpos($staffing_source, "\$desired_status = \$existing_status === 'confirmed' ? 'confirmed' : 'proposed';") !== false, 'Matrix save source must preserve confirmed status.');
+p0_assert(strpos($staffing_source, 'bvmgr_staffing_matrix_proposals($slot_id, $staff_ids)') !== false, 'Matrix must delegate state preservation to the canonical lifecycle repository; real retained-state behavior is tested with disposable SQL.');
 
 // 11. One person in two roles fills two planned positions but is one unique person.
 $case = $snapshot(array(
