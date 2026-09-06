@@ -163,6 +163,12 @@ function dt_provider_run(string $order): void
 	dt_provider_same(5, $event['free_qty'], $order . ' free quantity changed.');
 	dt_provider_same(27, $event['total_qty'], $order . ' total quantity changed.');
 	dt_provider_same(45678, $event['revenue_cents'], $order . ' revenue changed.');
+	require_once dirname(__DIR__) . '/includes/core/financial-snapshot.php';
+	$financial = bvmgr_financial_build_snapshot(2534, array('ticket' => $event));
+	dt_provider_same(45678, $financial['revenue']['tickets']['amount_cents'], 'Financial receipts preserve the actual Data Tools adapter total.');
+	dt_provider_same('TRANSACTIONAL_ACTUAL', $financial['revenue']['tickets']['basis'], 'Provider receipts have transaction provenance.');
+	dt_provider_same(null, $financial['revenue']['pos_other']['amount_cents'], 'Square ticket evidence must not be added twice as POS revenue.');
+	dt_provider_same(null, $financial['actual']['gross']['amount_cents'], 'Partial channels do not establish complete gross.');
 	dt_provider_same('full_day', $GLOBALS['dt_provider_model_filters']['square_scope_mode'] ?? '', $order . ' Square scope changed.');
 
 	$GLOBALS['dt_provider_model'] = array('costs' => array(), 'summary' => array(), 'row' => array());

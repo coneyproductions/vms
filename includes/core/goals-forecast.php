@@ -1025,6 +1025,8 @@ if (!function_exists('bvmgr_goals_get_event_pnl')) {
 		return array(
 			'event_plan_id' => $event_plan_id,
 			'headcount_mode' => $mode,
+			'financial_basis' => $mode === 'true' && $has_manual_actuals ? 'LEGACY_MIXED_SCENARIO' : 'FORECAST',
+			'finalized' => false,
 			'headcount' => max(0, $headcount),
 			'include_overhead' => $include_overhead,
 			'ticket_revenue_cents' => max(0, $ticket_revenue),
@@ -1262,7 +1264,9 @@ if (!function_exists('bvmgr_goals_compute_goal_progress')) {
 			'target_cents' => $target_cents,
 			'is_truncated' => $is_truncated,
 			'max_events_evaluated' => $max_events,
-			'actual_to_date_cents' => $actual_to_date,
+			'actual_to_date_cents' => $actual_to_date, // Compatibility key: entered/model progress, not certified actuals.
+			'financial_basis' => 'LEGACY_MIXED_SCENARIO',
+			'finalized' => false,
 			'remaining_required_cents' => $remaining_required,
 			'remaining_events_count' => $remaining_count,
 			'required_avg_per_remaining_event_cents' => $required_avg,

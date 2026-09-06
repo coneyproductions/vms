@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
 
+define('ABSPATH', __DIR__);
 $plugin_root = dirname(__DIR__);
+require_once $plugin_root . '/includes/core/financial-ticket-source.php';
+require_once $plugin_root . '/includes/core/financial-snapshot.php';
 $staffing_path = $plugin_root . '/includes/core/staffing.php';
 $command_center_path = $plugin_root . '/includes/admin/event-command-center.php';
 $event_plans_path = $plugin_root . '/includes/cpt/event-plans.php';
@@ -317,7 +320,7 @@ p0_same(array('cached_ticket_stats', 'CURRENT', 6), array($case['ticket_source']
 p0_assert(substr_count($command_center_source, 'bvmgr_event_command_center_resolve_ticket_sales_snapshot(') >= 3, 'Ticket reporting surfaces are not wired to the shared resolver.');
 p0_assert(strpos($command_center_source, "\$ticket_sales_available ? (string) (\$ticket['sold'] ?? 0) : '—'") !== false, 'Full Command Center must hide pending/unavailable paid totals.');
 p0_assert(strpos($command_center_source, "(string) (\$ticket['sales_summary_label']") !== false, 'Module hub must use the shared state-aware sales summary.');
-p0_assert(strpos($command_center_source, "__('Modeled gross revenue'") !== false, 'Financial snapshot must label modeled revenue explicitly.');
-p0_assert(strpos($command_center_source, "'revenue_basis' => \$has_actuals ? 'manual_actuals' : 'goals_forecast_model'") !== false, 'Financial snapshot must expose its actual-versus-model authority.');
+p0_assert(strpos($command_center_source, 'bvmgr_financial_render_summary($financial)') !== false, 'ECC must render shared financial authority.');
+p0_assert(strpos($command_center_source, 'return bvmgr_financial_get_event_snapshot($plan_id);') !== false, 'ECC must resolve the shared financial contract.');
 
 echo "P0 source consistency repair tests passed.\n";

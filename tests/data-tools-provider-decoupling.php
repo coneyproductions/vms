@@ -88,8 +88,8 @@ $providerContractPath = $root . '/includes/core/reporting-providers.php';
 $coreLoadPath = $root . '/includes/core/load.php';
 $dataToolsCandidate = $root . '/companion-plugins/vms-data-tools';
 $dataToolsProviderPath = $dataToolsCandidate . '/includes/integrations/bvm-reporting-provider.php';
-$installedDataTools = dirname($root, 2) . '/vms-data-tools';
-$installedCalendarFeeds = dirname($root, 2) . '/backstage-calendar-feeds';
+$installedDataTools = getenv('BVM_FINANCIAL_DATA_TOOLS_FIXTURE') ?: dirname($root, 2) . '/vms-data-tools';
+$installedCalendarFeeds = getenv('BVM_FINANCIAL_CALENDAR_FIXTURE') ?: dirname($root, 2) . '/backstage-calendar-feeds';
 
 $portal = (string) file_get_contents($portalPath);
 $commandCenter = (string) file_get_contents($commandCenterPath);
@@ -110,7 +110,7 @@ decoupling_assert(strpos($portal, 'WP_PLUGIN_DIR') === false, 'Vendor Portal sho
 decoupling_assert(strpos($portal, 'VMS_DT_ADMIN_DIR') === false, 'Vendor Portal should not reference Data Tools implementation paths.');
 decoupling_assert(preg_match('/vms_dt_reporting_[a-z0-9_]+\s*\(/', $portal) !== 1, 'Vendor Portal should not call Data Tools reporting internals.');
 decoupling_assert(preg_match('/vms_dt_reporting_[a-z0-9_]+\s*\(/', $commandCenter) !== 1, 'Event Command Center should not call Data Tools reporting internals.');
-decoupling_assert(strpos($commandCenter, 'bvmgr_reporting_resolve_event_ticket_sales') !== false, 'Event Command Center should consume the BVM provider contract.');
+decoupling_assert(strpos($commandCenter, 'bvmgr_reporting_get_ticket_truth') !== false && strpos(file_get_contents($root . '/includes/core/financial-ticket-source.php'), 'bvmgr_reporting_resolve_event_ticket_sales') !== false, 'Event Command Center should consume the BVM provider contract.');
 decoupling_assert(strpos($portal, 'bvmgr_reporting_resolve_event_ticket_sales') !== false, 'Vendor Portal should consume the BVM provider contract.');
 decoupling_assert(strpos($providerContract, 'vms-data-tools') === false && strpos($providerContract, 'VMS_DT_') === false, 'The BVM contract should not know a provider implementation or path.');
 decoupling_assert(strpos($coreLoad, "require_once __DIR__ . '/reporting-providers.php';") < strpos($coreLoad, "require_once __DIR__ . '/vendor-user-links.php';"), 'The BVM provider API should load before feature consumers.');
@@ -125,6 +125,11 @@ decoupling_assert(strpos($installedCalendarEntry, 'Version: 0.1.4') !== false, '
 
 $includedBefore = get_included_files();
 require_once $providerContractPath;
+require_once $root . '/includes/core/financial-ticket-source.php';
+require_once $root . '/includes/core/financial-snapshot.php';
+class WooCommerce {}
+class BVMGR_Ticket_Revenue_Service {}
+function wc_get_orders() { return array(); }
 eval(decoupling_extract_function($commandCenter, 'bvmgr_event_command_center_summarize_ticket_report_rows'));
 eval(decoupling_extract_function($commandCenter, 'bvmgr_event_command_center_get_ticket_reporting_truth'));
 $fallback = bvmgr_event_command_center_get_ticket_reporting_truth(2534);

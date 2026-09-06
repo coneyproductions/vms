@@ -1,0 +1,7 @@
+{
+  "version": "0.2.3",
+  "file": "includes/class-vms-investor-metrics-provider.php",
+  "baseline_sha256": "e07ff8421da1a5405a78077ef475598216284c7112c6952dcfecd8c949852af1",
+  "candidate_sha256": "ba2a30ff55b9b3ff31e313a83e4dc99e5127a1a1f6fba6a0c834495ec2dd9fc9",
+  "scope": "Read-only financial labels; no deployment, no stored data or override precedence changes."
+}

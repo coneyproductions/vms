@@ -445,7 +445,7 @@ if (!function_exists('bvmgr_goals_render_goals_tab')) {
 
 		echo '<label><strong>' . esc_html__('Metric', 'backstage-venue-manager') . '</strong></label>';
 		echo '<select name="metric">';
-		echo '<option value="true_profit" ' . selected($metric, 'true_profit', false) . '>' . esc_html__('True Profit', 'backstage-venue-manager') . '</option>';
+		echo '<option value="true_profit" ' . selected($metric, 'true_profit', false) . '>' . esc_html__('Profit after allocated overhead (scenario)', 'backstage-venue-manager') . '</option>';
 		echo '<option value="event_profit" ' . selected($metric, 'event_profit', false) . '>' . esc_html__('Event Profit', 'backstage-venue-manager') . '</option>';
 		echo '<option value="gross_revenue" ' . selected($metric, 'gross_revenue', false) . '>' . esc_html__('Gross Revenue', 'backstage-venue-manager') . '</option>';
 		echo '</select>';
@@ -546,7 +546,7 @@ if (!function_exists('bvmgr_goals_render_forecast_defaults_tab')) {
 
 		echo '<label><strong>Default metric</strong></label>';
 		echo '<select name="default_metric">';
-		echo '<option value="true_profit" ' . selected((string) $settings['default_metric'], 'true_profit', false) . '>True Profit</option>';
+		echo '<option value="true_profit" ' . selected((string) $settings['default_metric'], 'true_profit', false) . '>Profit after allocated overhead (scenario)</option>';
 		echo '<option value="event_profit" ' . selected((string) $settings['default_metric'], 'event_profit', false) . '>Event Profit</option>';
 		echo '<option value="gross_revenue" ' . selected((string) $settings['default_metric'], 'gross_revenue', false) . '>Gross Revenue</option>';
 		echo '</select>';
@@ -717,7 +717,7 @@ if (!function_exists('bvmgr_goals_event_plan_metabox_html')) {
 			}
 			echo '<p><strong>Active Goal:</strong> ' . esc_html((string) ($active_goal['name'] ?? '')) . '</p>';
 			echo '<p><strong>Required contribution for this event:</strong> ' . esc_html(bvmgr_goals_fmt_money($required_for_this_event)) . '</p>';
-			echo '<p><strong>Projected true profit (forecast mode):</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_forecast['true_profit_cents'] ?? 0))) . '</p>';
+			echo '<p><strong>Forecast profit after allocated overhead:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_forecast['true_profit_cents'] ?? 0))) . '</p>';
 			$delta = (int) ($pnl_forecast['true_profit_cents'] ?? 0) - $required_for_this_event;
 			echo '<p><strong>Delta vs required:</strong> ' . esc_html(bvmgr_goals_fmt_money($delta)) . '</p>';
 			if (!empty($goal_progress)) {
@@ -737,21 +737,23 @@ if (!function_exists('bvmgr_goals_event_plan_metabox_html')) {
 			echo '<p><strong>Pulled at (UTC):</strong> ' . esc_html($snapshot_pulled) . '</p>';
 		}
 
+		bvmgr_financial_render_summary(bvmgr_financial_get_event_snapshot((int) $post->ID));
+		echo '<p>' . esc_html__('Planning scenarios below may combine modeled values and stored entries. They do not establish transaction revenue or final accounting.', 'backstage-venue-manager') . '</p>';
 		echo '<div class="vms-goals-kpis">';
 		echo '<div><strong>Forecast Profit</strong><br />' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_forecast['true_profit_cents'] ?? 0))) . '</div>';
-		echo '<div><strong>Ticketed Profit</strong><br />' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_ticketed['true_profit_cents'] ?? 0))) . '</div>';
-		echo '<div><strong>True Profit</strong><br />' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_true['true_profit_cents'] ?? 0))) . '</div>';
+		echo '<div><strong>Ticketed-headcount model profit</strong><br />' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_ticketed['true_profit_cents'] ?? 0))) . '</div>';
+		echo '<div><strong>Entered/headcount model profit</strong><br />' . esc_html(bvmgr_goals_fmt_money((int) ($pnl_true['true_profit_cents'] ?? 0))) . '</div>';
 		echo '<div><strong>Break-even HC</strong><br />' . esc_html((string) ((int) ($break_even['break_even_headcount'] ?? 0))) . '</div>';
 		echo '</div>';
 
-		echo '<table class="widefat striped vms-goals-mini-table"><thead><tr><th>Metric</th><th>Forecast</th><th>Ticketed</th><th>True</th></tr></thead><tbody>';
+		echo '<table class="widefat striped vms-goals-mini-table"><thead><tr><th>Metric</th><th>Forecast</th><th>Ticketed-headcount model</th><th>Entered/headcount model</th></tr></thead><tbody>';
 		$rows = array(
 			'Headcount' => array((int) ($pnl_forecast['headcount'] ?? 0), (int) ($pnl_ticketed['headcount'] ?? 0), (int) ($pnl_true['headcount'] ?? 0), false),
 			'Gross Revenue' => array((int) ($pnl_forecast['gross_revenue_cents'] ?? 0), (int) ($pnl_ticketed['gross_revenue_cents'] ?? 0), (int) ($pnl_true['gross_revenue_cents'] ?? 0), true),
 			'Direct Costs' => array((int) ($pnl_forecast['direct_costs_cents'] ?? 0), (int) ($pnl_ticketed['direct_costs_cents'] ?? 0), (int) ($pnl_true['direct_costs_cents'] ?? 0), true),
 			'Processing Fees' => array((int) ($pnl_forecast['processing_fees_cents'] ?? 0), (int) ($pnl_ticketed['processing_fees_cents'] ?? 0), (int) ($pnl_true['processing_fees_cents'] ?? 0), true),
 			'Overhead' => array((int) ($pnl_forecast['overhead_allocated_cents'] ?? 0), (int) ($pnl_ticketed['overhead_allocated_cents'] ?? 0), (int) ($pnl_true['overhead_allocated_cents'] ?? 0), true),
-			'True Profit' => array((int) ($pnl_forecast['true_profit_cents'] ?? 0), (int) ($pnl_ticketed['true_profit_cents'] ?? 0), (int) ($pnl_true['true_profit_cents'] ?? 0), true),
+			'Profit after allocated overhead (scenario)' => array((int) ($pnl_forecast['true_profit_cents'] ?? 0), (int) ($pnl_ticketed['true_profit_cents'] ?? 0), (int) ($pnl_true['true_profit_cents'] ?? 0), true),
 		);
 		foreach ($rows as $label => $vals) {
 			echo '<tr><th scope="row">' . esc_html($label) . '</th>';
@@ -768,7 +770,7 @@ if (!function_exists('bvmgr_goals_event_plan_metabox_html')) {
 		echo '</tbody></table>';
 
 		echo '<h4>Manual Actual Inputs</h4>';
-		echo '<p class="description">Manual values are always available and used when provider data is unavailable.</p>';
+		echo '<p class="description">Manual entries remain separate from current transaction evidence. Legacy imported totals have mixed provenance and are not verified overrides.</p>';
 		echo '<div class="vms-goals-form-grid">';
 		echo '<label>Forecast Headcount<input type="number" min="0" step="1" name="vms_forecast_headcount" value="' . (int) $forecast . '" /></label>';
 		echo '<label>Door Sales Mode<select name="vms_door_sales_mode"><option value="percent" ' . selected($door_mode, 'percent', false) . '>Percent</option><option value="count" ' . selected($door_mode, 'count', false) . '>Count</option></select></label>';
@@ -782,7 +784,7 @@ if (!function_exists('bvmgr_goals_event_plan_metabox_html')) {
 		echo '<label>Processing Fees Actual ($)<input type="text" name="vms_event_processing_fees_actual" value="' . esc_attr(number_format($processing_fees_cents / 100, 2, '.', '')) . '" /></label>';
 		echo '</div>';
 
-		echo '<details><summary>Show normalized actual totals</summary>';
+		echo '<details><summary>Show recorded totals (unverified provenance)</summary>';
 		echo '<pre>' . esc_html(wp_json_encode($snapshot_totals, JSON_PRETTY_PRINT)) . '</pre>';
 		echo '</details>';
 
@@ -911,7 +913,7 @@ if (!function_exists('bvmgr_goals_render_dashboard_panel')) {
 		}
 		echo '<p><strong>Goal:</strong> ' . esc_html((string) ($active_goal['name'] ?? '')) . '</p>';
 		echo '<p><strong>Target:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['target_cents'] ?? 0))) . '</p>';
-		echo '<p><strong>Actual to date:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['actual_to_date_cents'] ?? 0))) . '</p>';
+		echo '<p><strong>Entered/model progress to date:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['actual_to_date_cents'] ?? 0))) . '</p>';
 		echo '<p><strong>Remaining required:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['remaining_required_cents'] ?? 0))) . '</p>';
 		echo '<p><strong>Remaining events:</strong> ' . esc_html((string) ((int) ($progress['remaining_events_count'] ?? 0))) . '</p>';
 		echo '<p><strong>Required avg / event:</strong> ' . esc_html(bvmgr_goals_fmt_money((int) ($progress['required_avg_per_remaining_event_cents'] ?? 0))) . '</p>';

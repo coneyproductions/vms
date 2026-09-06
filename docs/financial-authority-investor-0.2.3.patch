@@ -1,0 +1,43 @@
+--- a/includes/class-vms-investor-metrics-provider.php
++++ b/includes/class-vms-investor-metrics-provider.php
+@@ -505,0 +506,2 @@
++        $metrics = $this->annotate_financial_authority($metrics);
++
+@@ -545,0 +548,2 @@
++
++        $payload['metrics'] = $this->annotate_financial_authority($payload['metrics'], true);
+@@ -1753,0 +1758,34 @@
++    /** Read-only labels for legacy and current investor presentation metrics. */
++    private function annotate_financial_authority(array $metrics, bool $cached = false): array
++    {
++        $modeled = array('labor_cost', 'performer_cost', 'estimated_sales_tax', 'other_direct_costs', 'concession_cost', 'other_expenses', 'estimated_event_net');
++        foreach ($metrics as $key => &$metric) {
++            if (($metric['kind'] ?? '') !== 'currency') { continue; }
++            $override = !empty($metric['manual_override_active']);
++            $estimate = in_array($key, $modeled, true) || ($key === 'ad_spend' && ($metric['auto_source_type'] ?? '') === 'fallback');
++            $basis = empty($metric['available']) ? 'UNAVAILABLE'
++                : ($override ? 'MANUAL_ACTUAL' : ($estimate ? 'FORECAST' : ($cached ? 'RECORDED_ACTUAL' : 'TRANSACTIONAL_ACTUAL')));
++            $metric['financial_basis'] = $basis;
++            $metric['finalized'] = false;
++            $metric['financial_completeness'] = 'partial';
++            if ($estimate) {
++                $metric['auto_source_type'] = 'fallback';
++                $metric['auto_source_label'] = __('Planning estimate; not verified actual', 'vms-investor-portal');
++                if (!$override && !empty($metric['available'])) {
++                    $metric['source_type'] = 'fallback';
++                    $metric['source_label'] = $metric['auto_source_label'];
++                }
++            } elseif ($cached && !$override && !empty($metric['available'])) {
++                $metric['source_label'] = __('Recorded snapshot; not current transaction evidence', 'vms-investor-portal');
++            }
++            if ($override) {
++                $metric['source_label'] = __('Manual override; not independently verified', 'vms-investor-portal');
++            }
++            $metric['warnings'] = array_values(array_unique(array_merge((array) ($metric['warnings'] ?? array()), array(
++                __('Provisional investor presentation. Missing costs or revenue channels may be omitted; this is not final accounting.', 'vms-investor-portal'),
++            ))));
++        }
++        unset($metric);
++        return $metrics;
++    }
++
