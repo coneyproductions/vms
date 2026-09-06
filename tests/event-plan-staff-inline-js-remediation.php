@@ -70,7 +70,7 @@ try {
 
 	foreach (array(
 		'function initStaff(root) {',
-		'window.vmsEventPlanInitStaff = initStaff;',
+		'window.BVMGR_EVENT_PLAN_INIT_STAFF = initStaff;',
 		"initStaff(document);",
 	) as $removedInlineMarker) {
 		$assert(strpos($eventPlansSource, $removedInlineMarker) === false, 'Event Plan PHP should no longer own the staff controller marker: ' . $removedInlineMarker);
@@ -78,7 +78,7 @@ try {
 
 	foreach (array(
 		'function initStaff(root) {',
-		'window.vmsEventPlanInitStaff = initStaff;',
+		'window.BVMGR_EVENT_PLAN_INIT_STAFF = initStaff;',
 		'[data-vms-staff-wrap="1"]',
 		'[data-vms-role-assignment-input="1"]',
 		'[data-vms-role-headcount-input="1"]',
@@ -96,14 +96,14 @@ try {
 	}
 
 	$assert(strpos($staffAssetSource, 'var scope = root && root.querySelector ? root : document;') !== false, 'Staff asset should preserve root-scoped initialization compatibility.');
-	$assert(strpos($shellAssetSource, 'window.vmsEventPlanInitStaff(body);') !== false, 'Shell asset should still invoke the staff initializer after lazy loading.');
-	$assert(strpos($ticketingAssetSource, 'window.vmsEventPlanInitStaff') === false, 'Ticketing asset should not own the staff initializer.');
+	$assert(strpos($shellAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_STAFF(body);') !== false, 'Shell asset should still invoke the staff initializer after lazy loading.');
+	$assert(strpos($ticketingAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_STAFF') === false, 'Ticketing asset should not own the staff initializer.');
 	$assert(strpos($staffPartialSource, 'data-vms-staff-wrap="1"') !== false, 'Staff markup should retain the live wrap selector contract.');
 	$assert(strpos($staffPartialSource, 'data-vms-role-assignment-input="1"') !== false, 'Staff markup should retain the assignment selector contract.');
 	$assert(strpos($staffPartialSource, 'data-vms-role-headcount-input="1"') !== false, 'Staff markup should retain the headcount selector contract.');
 	$assert($findExecutableInlineScriptTags($eventPlansSource) === array(), 'Event Plan PHP should not emit executable inline <script> blocks.');
 	$assert(count($findApplicationJsonScriptTags($eventPlansSource, 'data-vms-secondary-config')) === 2, 'Event Plan PHP should retain only the two inert Secondary Vendors application/json carriers.');
-	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-staff'") !== false, 'Admin UI assets should register the new Event Plan staff handle.');
+	$assert(strpos($adminUiAssetsSource, "'bvmgr-event-plan-staff'") !== false, 'Admin UI assets should register the new Event Plan staff handle.');
 	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-staff.js'") !== false, 'Admin UI assets should point the staff handle at assets/js/vms-event-plan-staff.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Staff asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Staff asset should remain restricted to Event Plan edit/new screens.');
@@ -119,7 +119,7 @@ try {
 
 		$assetPath = $fileInfo->getPathname();
 		$contents = file_get_contents($assetPath);
-		if (!is_string($contents) || strpos($contents, 'window.vmsEventPlanInitStaff = initStaff;') === false) {
+		if (!is_string($contents) || strpos($contents, 'window.BVMGR_EVENT_PLAN_INIT_STAFF = initStaff;') === false) {
 			continue;
 		}
 

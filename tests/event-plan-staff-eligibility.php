@@ -229,7 +229,7 @@ try {
 			$cleanupRoleId => 1,
 		),
 		array(
-			$barRoleId => array($barExpiredId),
+			$barRoleId => array(),
 			$cleanupRoleId => array($cleanupOnlyId),
 		),
 		array(
@@ -252,6 +252,13 @@ try {
 		1
 	);
 	$assert(!empty($seedResult['ok']), 'Failed to seed staffing slots for the eligibility harness.');
+
+    // Seed pre-existing ineligible history directly: new proposals now enforce
+    // eligibility at the repository boundary, while retained history stays visible.
+    global $wpdb;
+    $barSlot = $wpdb->get_var($wpdb->prepare('SELECT slot_id FROM %i WHERE event_plan_id=%d AND role_id=%d', bvmgr_staffing_table_name('event_slots'), $planId, $barRoleId));
+    $wpdb->insert(bvmgr_staffing_table_name('assignments'), array('slot_id'=>$barSlot, 'staff_id'=>$barExpiredId, 'status'=>'proposed', 'created_at'=>bvmgr_staffing_now_mysql_utc(), 'updated_at'=>bvmgr_staffing_now_mysql_utc()));
+    bvmgr_staffing_mark_rollup_dirty($planId, 'legacy_fixture');
 
 	$barQualifiedStatus = bvmgr_staffing_staff_candidate_status_for_role($barQualifiedId, $barRoleId);
 	$barExpiredStatus = bvmgr_staffing_staff_candidate_status_for_role($barExpiredId, $barRoleId);

@@ -1771,6 +1771,11 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
     function bvmgr_event_occurrence_apply(int $plan_id, string $expected_old_start, string $new_start, string $reason, int $actor_user_id, string $expected_preview_fingerprint = ''): array
     {
         global $wpdb;
+        if (function_exists('bvmgr_staffing_atomic') && !bvmgr_staffing_transaction_active()) {
+            $args = func_get_args();
+            return bvmgr_staffing_atomic(static function () use ($args): array { $GLOBALS['bvmgr_staffing_transaction']['plans'][] = (int) $args[0]; return bvmgr_event_occurrence_apply(...$args); });
+        }
+        $staffing_transaction = function_exists('bvmgr_staffing_transaction_active') && bvmgr_staffing_transaction_active();
         $plan_id = absint($plan_id);
         $actor_user_id = absint($actor_user_id);
         $preview = bvmgr_event_occurrence_preview($plan_id, $expected_old_start, $new_start, $reason);
@@ -1803,10 +1808,10 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
 
         try {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The canonical multi-record occurrence update requires an explicit transaction boundary; caching does not apply to transaction control.
-            if ($wpdb->query('START TRANSACTION') === false) {
+            if (!$staffing_transaction && $wpdb->query('START TRANSACTION') === false) {
                 throw new RuntimeException('Database transaction could not be started.');
             }
-            $transaction_started = true;
+            $transaction_started = !$staffing_transaction;
             bvmgr_event_occurrence_clear_runtime_caches($preview);
             $revalidated = bvmgr_event_occurrence_preview($plan_id, $expected_old_start, $new_start, $reason);
             if (empty($revalidated['allowed']) || !hash_equals(bvmgr_event_occurrence_preview_fingerprint($preview), bvmgr_event_occurrence_preview_fingerprint($revalidated))) {
@@ -1910,6 +1915,9 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
                 throw new RuntimeException('Occurrence history persistence failed.');
             }
 
+            if ($staffing_transaction) {
+                foreach (bvmgr_staffing_get_event_slots($plan_id) as $slot) bvmgr_staffing_sync_lifecycle_window((int) $slot['slot_id']);
+            }
             do_action('bvmgr_event_occurrence_before_verify', $plan_id, $operation_id, $preview);
             $invariant_errors = bvmgr_event_occurrence_verify_invariants($invariants);
             if (!empty($invariant_errors)) {
@@ -1921,7 +1929,7 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
             }
 
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Commit follows complete invariant and integrity verification; caching does not apply to transaction control.
-            if ($wpdb->query('COMMIT') === false) {
+            if (!$staffing_transaction && $wpdb->query('COMMIT') === false) {
                 throw new RuntimeException('Database commit failed.');
             }
             $transaction_started = false;
@@ -1941,6 +1949,7 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
             }
             bvmgr_event_occurrence_clear_runtime_caches($preview);
             $result['message'] = $throwable->getMessage();
+            if ($throwable instanceof BVMGR_Staffing_Failure) $result['error'] = $throwable->getMessage();
             return $result;
         }
     }

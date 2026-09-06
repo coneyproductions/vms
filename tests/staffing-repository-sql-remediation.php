@@ -1,5 +1,10 @@
 <?php
 declare(strict_types=1);
+// Transaction ownership is verified with real connections in staffing-lifecycle/concurrency.php.
+function bvmgr_staffing_transaction_active(): bool { return true; }
+function bvmgr_staffing_matrix_proposals(int $slot, array $staff): int { $GLOBALS['lifecycle_proposal_calls'][] = array($slot, $staff); return count($staff); }
+function bvmgr_staffing_sync_lifecycle_window(int $slot): void { $GLOBALS['lifecycle_sync_calls'][] = $slot; }
+
 
 define('ABSPATH', __DIR__);
 
@@ -132,7 +137,7 @@ final class VMS_Test_WPDB
 	 * @param array<int,string>   $where_format
 	 * @return mixed
 	 */
-	public function update(string $table, array $data, array $where, array $format, array $where_format)
+	public function update(string $table, array $data, array $where, array $format = array(), array $where_format = array())
 	{
 		$this->call_log[] = array(
 			'kind' => 'update',
@@ -742,8 +747,8 @@ $expected_t2_inventory = array(
 	'includes/modules/staff-tasks/store.php:1876:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/modules/staff-tasks/store.php:1912:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/modules/staff-tasks/store.php:1936:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/portal/staff-portal.php:741:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/portal/staff-portal.php:1208:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/portal/staff-portal.php:742:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/portal/staff-portal.php:1209:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $expected_t3_inventory = array(
@@ -759,41 +764,31 @@ $expected_t3_inventory = array(
 	'includes/core/staffing.php:1483:WordPress.DB.DirectDatabaseQuery.DirectQuery',
 	'includes/core/staffing.php:1510:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/core/staffing.php:1513:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:1729:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:1738:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:1760:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:1753:WordPress.DB.DirectDatabaseQuery.DirectQuery',
 	'includes/core/staffing.php:1965:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:1973:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:1997:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2018:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2102:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2141:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:1986:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2075:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2114:WordPress.DB.DirectDatabaseQuery.DirectQuery',
 );
 
 $expected_t4_inventory = array(
-	'includes/core/staffing.php:2457:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2461:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3433:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3498:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3511:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3533:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3558:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:3592:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2430:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2434:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3412:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3478:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3505:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3530:WordPress.DB.DirectDatabaseQuery.DirectQuery',
 	'includes/core/staffing.php:3615:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3629:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:3652:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3716:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3802:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3819:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3961:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4056:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4143:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3706:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3723:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3942:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4029:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $expected_t5_inventory = array(
 	'includes/core/staffing.php:710:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4179:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4279:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4065:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4165:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $actual_inventory = vms_test_collect_db_phpcs_inventory(array($store_path, $admin_ui_path, $db_path, $staff_portal_path, $staffing_path));
@@ -1086,15 +1081,12 @@ try {
 		),
 	);
 	$replace_result = bvmgr_staffing_apply_template_to_event(90, 33, 'replace_all', 91);
-	vms_test_assert_same(array('ok' => true, 'template_id' => 33, 'seeded' => 2, 'skipped' => 0, 'mode' => 'replace_all'), $replace_result, 'Replace-all template application should cancel existing assignments, clear slots, and reseed the template roles.');
-	$query_calls = vms_test_filter_calls($wpdb, 'query');
+	vms_test_assert_same(array('ok' => true, 'template_id' => 33, 'seeded' => 2, 'skipped' => 0, 'mode' => 'replace_all'), $replace_result, 'Replace-all template application should preserve history and reseed roles after lifecycle validation.');
 	$delete_calls = vms_test_filter_calls($wpdb, 'delete');
 	$insert_calls = vms_test_filter_calls($wpdb, 'insert');
-	vms_test_assert_same(2, count($query_calls), 'Replace-all template application should cancel assignments for each existing slot before deleting slot rows.');
-	vms_test_assert_same('wp_vms_event_role_slots', $delete_calls[0]['table'], 'Replace-all template application should delete existing event-slot rows after canceling assignments.');
-	vms_test_assert_same(array(5, 9), array($insert_calls[0]['data']['role_id'], $insert_calls[1]['data']['role_id']), 'Replace-all template application should preserve template slot order when reseeding event slots.');
-	$cancel_prepare = vms_test_find_prepare($wpdb, "UPDATE %i SET status = 'canceled', updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')");
-	vms_test_assert_same('wp_vms_event_role_assignments', $cancel_prepare['args'][0], 'Replace-all template application should prepare the assignments table identifier for cancellation updates.');
+	vms_test_assert_same(array(array(401, array()), array(402, array())), $GLOBALS['lifecycle_proposal_calls'], 'Template replacement must delegate explicit-cancellation validation for every existing slot.');
+	vms_test_assert_same(array(), $delete_calls, 'Template replacement must preserve historical slot identities.');
+	vms_test_assert_same(array(5, 9), array($insert_calls[0]['data']['role_id'], $insert_calls[1]['data']['role_id']), 'Replacement preserves template order.');
 	vms_test_assert_same(
 		array(
 			array('event_plan_id' => 90, 'template_id' => 33, 'source' => 'manual_replace'),
@@ -1115,11 +1107,7 @@ try {
 		array('slot_id' => 515, 'event_plan_id' => 88),
 	);
 	bvmgr_staffing_sync_assignment_shift_timestamps_for_slot(515);
-	$slot_prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE slot_id = %d');
-	vms_test_assert_same(array('wp_vms_event_role_slots', 515), $slot_prepare['args'], 'Slot timestamp sync should prepare the event-slot table identifier and slot ID.');
-	$sync_prepare = vms_test_find_prepare($wpdb, "UPDATE %i SET shift_start_ts = %s, shift_end_ts = %s, updated_at = %s, updated_by = %d WHERE slot_id = %d AND status IN ('proposed','confirmed')");
-	vms_test_assert_same('wp_vms_event_role_assignments', $sync_prepare['args'][0], 'Slot timestamp sync should prepare the assignments table identifier.');
-	vms_test_assert_no_placeholders(vms_test_last_call($wpdb, 'query')['query'], 'Slot timestamp sync should execute fully prepared SQL.');
+	vms_test_assert_same(array(515), $GLOBALS['lifecycle_sync_calls'], 'Timestamp changes must delegate to the transactional conflict validator.');
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_results_queue = array(
