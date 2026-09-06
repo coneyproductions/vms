@@ -10,7 +10,6 @@ if ($argc !== 9) {
 unset($script);
 
 $contracts = require __DIR__ . '/additional-runtime-contracts.php';
-$phase6a = getenv('BVM_COMPAT_PHASE') === 'phase6a';
 $sourceManifest = json_decode((string) file_get_contents($sourcePath), true);
 if (!is_array($sourceManifest)) {
 	fwrite(STDERR, "Could not decode the isolated source manifest.\n");
@@ -104,8 +103,10 @@ foreach ($indexLines as $line) {
 		}
 	}
 	$isActivationScenario = $order === 'activation';
+	$activationStatePassed = !is_array($activationState) || !array_key_exists('passed', $activationState) || !empty($activationState['passed']);
 	$passed = (int) $exitCode === 0
 		&& (($isActivationScenario && is_array($activationState)) || (!$isActivationScenario && is_array($payload)))
+		&& $activationStatePassed
 		&& $checkFailures === array()
 		&& $debugSummary['fatal'] === array()
 		&& $debugSummary['database_error'] === array()
@@ -136,9 +137,7 @@ foreach ($indexLines as $line) {
 
 $dimensions = array('BVM Detection', 'APIs', 'Menu/UI', 'Notices', 'BVM-Absent');
 $matrix = array();
-$matrixContracts = $phase6a
-	? array('drm-events-bridge' => $contracts['plugins']['drm-events-bridge'])
-	: $contracts['plugins'];
+$matrixContracts = $contracts['plugins'];
 foreach ($matrixContracts as $addon => $contract) {
 	$dimensionResults = array();
 	foreach ($dimensions as $dimension) {
@@ -214,12 +213,26 @@ foreach ($scenarios as $scenario) {
 
 $cleanupPassed = $databaseCleanup === 'pass' && $runtimeCleanup === 'pass';
 $normalSiteUnchanged = $normalBefore !== '' && hash_equals($normalBefore, $normalAfter);
+$containment = array(
+	'external_http' => getenv('BVM_COMPAT_TEST_CONTAINMENT_HTTP') ?: 'missing',
+	'process_boundary' => getenv('BVM_COMPAT_TEST_CONTAINMENT_PROCESS_BOUNDARY') ?: 'missing',
+	'residue_canary' => getenv('BVM_COMPAT_TEST_CONTAINMENT_RESIDUE') ?: 'missing',
+	'normal_state' => getenv('BVM_COMPAT_TEST_CONTAINMENT_NORMAL_STATE') ?: 'missing',
+	'guard_cleanup' => getenv('BVM_COMPAT_TEST_CONTAINMENT_GUARD_CLEANUP') ?: 'missing',
+);
+$containmentPassed = $containment === array(
+	'external_http' => 'pass',
+	'process_boundary' => 'pass',
+	'residue_canary' => 'removed-and-asserted',
+	'normal_state' => 'pass',
+	'guard_cleanup' => 'pass',
+);
 $scenarioPass = $scenarios !== array() && !in_array(false, array_column($scenarios, 'passed'), true);
-$overallPass = $scenarioPass && $crossAddonPassed && $cleanupPassed && $normalSiteUnchanged;
+$overallPass = $scenarioPass && $crossAddonPassed && $cleanupPassed && $normalSiteUnchanged && $containmentPassed;
 
 $report = array(
 	'schema_version' => 1,
-	'suite' => $phase6a ? 'drm_events_bridge_phase6a' : 'additional_first_party',
+	'suite' => 'mixed_additional_first_party',
 	'overall' => $overallPass ? 'PASS' : 'FAIL',
 	'isolation' => array(
 		'wordpress' => 'Local WordPress core copied to a temporary tree',
@@ -227,21 +240,22 @@ $report = array(
 		'database_cleanup' => $databaseCleanup,
 		'runtime_tree_cleanup' => $runtimeCleanup,
 		'activation_schema_setup' => 'pass',
-		'external_http' => 'blocked',
+		'external_http' => 'blocked before transport by the test-only MU guard',
 		'normal_active_plugins_before_sha256' => $normalBefore,
 		'normal_active_plugins_after_sha256' => $normalAfter,
 		'normal_active_plugins_unchanged' => $normalSiteUnchanged,
+		'test_containment' => $containment,
 	),
 	'source_manifest' => $sourceManifest,
 	'contract_manifest' => $contracts,
-	'forensic_source_integrity' => $phase6a ? array(
+	'forensic_source_integrity' => array(
 		'bridge_dirty_status_before_sha256' => getenv('BVM_COMPAT_BRIDGE_STATUS_BEFORE_SHA256') ?: '',
 		'bridge_dirty_status_after_sha256' => getenv('BVM_COMPAT_BRIDGE_STATUS_AFTER_SHA256') ?: '',
 		'bridge_dirty_status_unchanged' => ($before = getenv('BVM_COMPAT_BRIDGE_STATUS_BEFORE_SHA256')) !== false
 			&& ($after = getenv('BVM_COMPAT_BRIDGE_STATUS_AFTER_SHA256')) !== false
 			&& $before !== ''
 			&& hash_equals($before, $after),
-	) : array(),
+	),
 	'bvm_only_identity_proof' => $firstIdentity,
 	'matrix' => $matrix,
 	'cross_ecosystem' => array('scenarios' => $crossScenarioIds, 'passed' => $crossAddonPassed),
@@ -256,16 +270,20 @@ if (file_put_contents($jsonPath, $json) === false) {
 
 $status = static fn($value): string => $value === null ? 'BLOCKED' : ($value ? 'PASS' : 'FAIL');
 $text = array(
-	$phase6a ? 'BVM / DRM Events Bridge Phase 6A Runtime Compatibility' : 'BVM Additional First-Party Integration Runtime Compatibility',
+	'BVM Mixed Additional-Suite Runtime Compatibility',
 	'Overall: ' . $report['overall'],
 	'',
 	'WordPress: ' . ($sourceManifest['wordpress_version'] ?? ''),
 	'BVM: ' . ($sourceManifest['plugins']['backstage-venue-manager']['version'] ?? ''),
 	'Database cleanup: ' . strtoupper($databaseCleanup),
 	'Runtime cleanup: ' . strtoupper($runtimeCleanup),
-	'External HTTP: BLOCKED',
+	'External HTTP blocked before transport: ' . $status($containment['external_http'] === 'pass'),
+	'Independent Local process blocked for bounded run: ' . $status($containment['process_boundary'] === 'pass'),
+	'Disposable residue removed and asserted: ' . $status($containment['residue_canary'] === 'removed-and-asserted'),
+	'Normal cron, Weather, and database state unchanged: ' . $status($containment['normal_state'] === 'pass'),
+	'Cross-process guard cleanup: ' . $status($containment['guard_cleanup'] === 'pass'),
 	'Normal active plugins unchanged: ' . $status($normalSiteUnchanged),
-	...($phase6a ? array('Bridge forensic worktree unchanged: ' . $status($report['forensic_source_integrity']['bridge_dirty_status_unchanged'])) : array()),
+	'Bridge forensic worktree unchanged: ' . $status($report['forensic_source_integrity']['bridge_dirty_status_unchanged']),
 	'',
 	'| Plugin | Version | BVM Detection | APIs | Menu/UI | Notices | BVM-Absent | Load Order | Overall |',
 	'| --- | ---: | --- | --- | --- | --- | --- | --- | --- |',

@@ -16,6 +16,7 @@ case "$compatibility_suite" in
 esac
 wordpress_source_root=${BVM_COMPAT_WP_ROOT:-$(CDPATH= cd -- "$repo_root/../../../.." && pwd)}
 source_plugins_root=${BVM_COMPAT_ADDON_ROOT:-$wordpress_source_root/wp-content/plugins}
+data_tools_candidate=${BVM_COMPAT_DATA_TOOLS_SOURCE_DIR:-$repo_root/companion-plugins/vms-data-tools}
 php_bin=${BVM_COMPAT_PHP_BIN:-$(command -v php)}
 wp_cli_bin=${BVM_COMPAT_WP_CLI_BIN:-$(command -v wp)}
 temp_base=${TMPDIR:-/tmp}
@@ -31,6 +32,7 @@ probe_file=$repo_root/tests/addon-compatibility/runtime-probe.php
 preload_file=$repo_root/tests/addon-compatibility/runtime-preload.php
 report_builder=$repo_root/tests/addon-compatibility/build-report.php
 source_manifest_builder=$repo_root/tests/addon-compatibility/source-manifest.php
+containment_lib=$repo_root/scripts/lib/bvm-test-containment.sh
 source_manifest=$output_dir/source-manifest.json
 scenario_index=$output_dir/scenarios.tsv
 debug_log=$runtime_root/wp-content/bvm-compat-debug.log
@@ -38,6 +40,9 @@ database_name=bvm_compat_$("$php_bin" -r 'echo bin2hex(random_bytes(6));')
 database_created=no
 database_cleanup=pending
 runtime_cleanup=pending
+
+# shellcheck source=scripts/lib/bvm-test-containment.sh
+. "$containment_lib"
 
 validate_database_name() {
 	case "$database_name" in
@@ -71,35 +76,70 @@ wp_source() {
 
 cleanup_on_exit() {
 	exit_code=$?
+	trap - EXIT HUP INT TERM
+	cleanup_failed=no
+	set +e
 	if [ "$database_created" = yes ]; then
-		if validate_database_name && wp_fixture db drop --yes --quiet >/dev/null 2>&1; then
+		if validate_database_name \
+			&& wp_fixture db drop --yes --quiet >/dev/null 2>&1 \
+			&& bvm_test_containment_database_absent "$database_name"; then
 			database_created=no
 			database_cleanup=pass
+			if [ "$bvm_test_containment_residue" = present-before-teardown ]; then
+				bvm_test_containment_residue=removed-and-asserted
+			fi
 		else
 			printf 'DISPOSABLE DATABASE CLEANUP FAILED: %s\n' "$database_name" >&2
 			database_cleanup=fail
+			cleanup_failed=yes
 		fi
 	fi
 	if [ -e "$runtime_root" ]; then
-		if safe_remove_runtime; then
+		if safe_remove_runtime && [ ! -e "$runtime_root" ]; then
 			runtime_cleanup=pass
 		else
 			runtime_cleanup=fail
+			cleanup_failed=yes
 		fi
 	fi
+	if [ "$bvm_test_containment_normal_guard_installed" = yes ] && [ -r "$bvm_test_containment_before" ]; then
+		bvm_test_containment_capture_normal_state "$bvm_test_containment_after"
+		if cmp -s "$bvm_test_containment_before" "$bvm_test_containment_after" \
+			&& cmp -s "${bvm_test_containment_before%.tsv}-tables.tsv" "${bvm_test_containment_after%.tsv}-tables.tsv" \
+			&& cmp -s "${bvm_test_containment_before%.tsv}-options.tsv" "${bvm_test_containment_after%.tsv}-options.tsv"; then
+			bvm_test_containment_normal_state_result=pass
+		else
+			bvm_test_containment_normal_state_result=fail
+			cleanup_failed=yes
+		fi
+	fi
+	if ! bvm_test_containment_remove_guards; then
+		cleanup_failed=yes
+	fi
+	if ! bvm_test_containment_release_lock; then
+		cleanup_failed=yes
+	fi
+	bvm_test_containment_write_cleanup_report "$database_cleanup" "$runtime_cleanup"
 	if [ "$exit_code" -ne 0 ]; then
 		printf 'Harness evidence preserved at: %s\n' "$output_dir" >&2
 	fi
+	if [ "$cleanup_failed" = yes ] && [ "$exit_code" -eq 0 ]; then
+		exit_code=1
+	fi
+	exit "$exit_code"
 }
-trap cleanup_on_exit EXIT HUP INT TERM
+trap cleanup_on_exit EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 for required_path in \
 	"$wordpress_source_root/wp-settings.php" \
 	"$wordpress_source_root/wp-config.php" \
-	"$repo_root/vendor-management-system.php" \
+	"$repo_root/backstage-venue-manager.php" \
 	"$source_plugins_root/vms-events-slider/vms-events-slider.php" \
 	"$source_plugins_root/vms-fill-dates/vms-fill-dates.php" \
-	"$source_plugins_root/vms-data-tools/vms-data-tools.php" \
+	"$data_tools_candidate/vms-data-tools.php" \
 	"$source_plugins_root/vms-express-bar/vms-express-bar.php" \
 	"$source_plugins_root/vms-refer-a-friend/vms-refer-a-friend.php" \
 	"$source_plugins_root/woocommerce/woocommerce.php" \
@@ -107,13 +147,22 @@ for required_path in \
 	"$probe_file" \
 	"$preload_file" \
 	"$report_builder" \
-	"$source_manifest_builder"
+	"$source_manifest_builder" \
+	"$containment_lib" \
+	"$repo_root/tests/addon-compatibility/test-containment-mu-plugin.php"
 do
 	if [ ! -r "$required_path" ]; then
 		printf 'Required compatibility source is missing or unreadable: %s\n' "$required_path" >&2
 		exit 2
 	fi
 done
+
+bvm_test_containment_prepare
+bvm_test_containment_install_normal_guard
+bvm_test_containment_wait_for_normal_cron
+bvm_test_containment_before=$output_dir/normal-state-before.tsv
+bvm_test_containment_after=$output_dir/normal-state-after.tsv
+bvm_test_containment_capture_stable_normal_state "$bvm_test_containment_before"
 
 normal_active_plugins_hash() {
 	wp_source option get active_plugins --format=json --skip-plugins --skip-themes --quiet \
@@ -137,6 +186,7 @@ validate_database_name
 
 rsync -a --exclude='wp-content/' --exclude='wp-config.php' "$wordpress_source_root/" "$runtime_root/"
 mkdir -p "$runtime_root/wp-content/plugins" "$runtime_root/wp-content/themes" "$runtime_root/wp-content/mu-plugins"
+bvm_test_containment_install_runtime_guard
 if [ -d "$wordpress_source_root/wp-content/themes" ]; then
 	rsync -a "$wordpress_source_root/wp-content/themes/" "$runtime_root/wp-content/themes/"
 fi
@@ -165,16 +215,19 @@ rsync -a \
 	"$repo_root/" \
 	"$runtime_root/wp-content/plugins/backstage-venue-manager/"
 
-for plugin_slug in vms-events-slider vms-fill-dates vms-data-tools vms-express-bar vms-refer-a-friend woocommerce the-events-calendar
+for plugin_slug in vms-events-slider vms-fill-dates vms-express-bar vms-refer-a-friend woocommerce the-events-calendar
 do
 	rsync -a "$source_plugins_root/$plugin_slug/" "$runtime_root/wp-content/plugins/$plugin_slug/"
 done
+mkdir -p "$runtime_root/wp-content/plugins/vms-data-tools"
+rsync -a --exclude='/.git/' --exclude='/AGENTS.md' --exclude='/tests/' "$data_tools_candidate/" "$runtime_root/wp-content/plugins/vms-data-tools/"
 
 if [ -e "$runtime_root/wp-content/plugins/vms/vendor-management-system.php" ] \
 	|| [ -e "$runtime_root/wp-content/plugins/vms.php" ] \
 	|| [ -e "$runtime_root/wp-content/plugins/vms/vms.php" ] \
-	|| [ -e "$runtime_root/wp-content/plugins/backstage-venue-manager.php" ]; then
-	printf 'A prohibited historical or nonexistent BVM bootstrap identity entered the fixture.\n' >&2
+	|| [ -e "$runtime_root/wp-content/plugins/backstage-venue-manager.php" ] \
+	|| [ -e "$runtime_root/wp-content/plugins/backstage-outreach" ]; then
+	printf 'A prohibited historical, nonexistent, or Outreach dependency-masking source entered the fixture.\n' >&2
 	exit 2
 fi
 
@@ -210,6 +263,13 @@ wp_fixture core install \
 	--skip-email \
 	--quiet
 
+bvm_test_containment_create_residue_canary
+bvm_test_containment_assert_http_blocked
+if [ "${BVM_COMPAT_CONTAINMENT_ABORT_AFTER_CANARY:-no}" = yes ]; then
+	printf 'Injected containment failure after the HTTP and residue canaries.\n' >&2
+	exit 86
+fi
+
 # Run activation hooks only inside the empty disposable database so plugin
 # schemas/capabilities match a normal installation before load-order testing.
 wp_fixture plugin activate \
@@ -243,7 +303,7 @@ done
 "$php_bin" "$source_manifest_builder" "$runtime_root" "$source_manifest" >/dev/null
 : > "$scenario_index"
 
-bvm_plugin=backstage-venue-manager/vendor-management-system.php
+bvm_plugin=backstage-venue-manager/backstage-venue-manager.php
 events_plugin=vms-events-slider/vms-events-slider.php
 fill_dates_plugin=vms-fill-dates/vms-fill-dates.php
 data_tools_plugin=vms-data-tools/vms-data-tools.php
@@ -326,16 +386,24 @@ run_scenario core-absent-refer-a-friend refer-a-friend no yes n/a vms-raf \
 run_scenario bvm-without-woocommerce-express-bar express-bar yes no core-first vms-express-bar \
 	"$bvm_plugin" "$express_bar_plugin"
 
+mv "$runtime_root/wp-content/plugins/vms-data-tools" "$runtime_root/wp-content/plugins/.vms-data-tools-absent"
+run_scenario bvm-data-tools-directory-absent data-tools yes yes directory-absent '' \
+	"$bvm_plugin" "$woocommerce_plugin"
+mv "$runtime_root/wp-content/plugins/.vms-data-tools-absent" "$runtime_root/wp-content/plugins/vms-data-tools"
+
 wp_fixture option update active_plugins '[]' --format=json --skip-plugins --skip-themes --quiet >/dev/null
-if validate_database_name && wp_fixture db drop --yes --quiet >/dev/null; then
+if validate_database_name \
+	&& wp_fixture db drop --yes --quiet >/dev/null \
+	&& bvm_test_containment_database_absent "$database_name"; then
 	database_created=no
 	database_cleanup=pass
+	bvm_test_containment_residue=removed-and-asserted
 else
 	database_cleanup=fail
 	printf 'DISPOSABLE DATABASE CLEANUP FAILED: %s\n' "$database_name" >&2
 fi
 
-if safe_remove_runtime; then
+if safe_remove_runtime && [ ! -e "$runtime_root" ]; then
 	runtime_cleanup=pass
 else
 	runtime_cleanup=fail
@@ -347,6 +415,27 @@ if [ "$normal_config_before" != "$normal_config_after" ]; then
 	printf 'Normal wp-config.php changed during the isolated harness.\n' >&2
 	exit 1
 fi
+bvm_test_containment_capture_normal_state "$bvm_test_containment_after"
+if ! cmp -s "$bvm_test_containment_before" "$bvm_test_containment_after"; then
+	printf 'Normal Local cron, Weather, activation, configuration, or database state changed during the isolated harness.\n' >&2
+	diff -u "$bvm_test_containment_before" "$bvm_test_containment_after" >&2 || true
+	diff -u "${bvm_test_containment_before%.tsv}-tables.tsv" "${bvm_test_containment_after%.tsv}-tables.tsv" >&2 || true
+	diff -u "${bvm_test_containment_before%.tsv}-options.tsv" "${bvm_test_containment_after%.tsv}-options.tsv" >&2 || true
+	exit 1
+fi
+bvm_test_containment_normal_state_result=pass
+if ! bvm_test_containment_remove_guards; then
+	exit 1
+fi
+if ! bvm_test_containment_release_lock; then
+	exit 1
+fi
+bvm_test_containment_write_cleanup_report "$database_cleanup" "$runtime_cleanup"
+export BVM_COMPAT_TEST_CONTAINMENT_HTTP=$bvm_test_containment_http
+export BVM_COMPAT_TEST_CONTAINMENT_PROCESS_BOUNDARY=$bvm_test_containment_process_boundary
+export BVM_COMPAT_TEST_CONTAINMENT_RESIDUE=$bvm_test_containment_residue
+export BVM_COMPAT_TEST_CONTAINMENT_NORMAL_STATE=$bvm_test_containment_normal_state_result
+export BVM_COMPAT_TEST_CONTAINMENT_GUARD_CLEANUP=$bvm_test_containment_guard_cleanup
 
 report_json=$output_dir/bvm-addon-runtime-compatibility.report.json
 report_text=$output_dir/bvm-addon-runtime-compatibility.report.txt

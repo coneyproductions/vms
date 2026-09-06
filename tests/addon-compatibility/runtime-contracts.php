@@ -1,14 +1,16 @@
 <?php
 declare(strict_types=1);
 
+return (static function (): array {
+
 /**
  * Historical official-five BVM runtime contracts.
  *
- * These names are intentionally explicit. The runtime probe validates live PHP
- * declarations after WordPress has loaded the requested plugin order; it does
- * not infer compatibility from source-string matches.
+ * These names remain explicit as compatibility evidence. They describe the
+ * fallback vocabulary consumed by older runtime revisions, not declarations
+ * that canonical BVM must continue to provide.
  */
-return array(
+$historicalFallbacks = array(
 	'functions' => array(
 		'events-slider' => array(
 			'vms_calendar_feed_cache_bust',
@@ -102,7 +104,9 @@ return array(
 		'express-bar' => array('VMS_PLUGIN_FILE', 'VMS_VERSION'),
 		'refer-a-friend' => array(),
 	),
-	'hooks' => array(
+);
+
+$hooks = array(
 		'events-slider' => array(),
 		'fill-dates' => array(
 			'vms_admin_ui_active_cluster',
@@ -118,8 +122,9 @@ return array(
 		),
 		'express-bar' => array('vms_admin_ui_nav_cluster_items'),
 		'refer-a-friend' => array('vms_admin_register_pages'),
-	),
-	'hook_callbacks' => array(
+	);
+
+$hookCallbacks = array(
 		'events-slider' => array(),
 		'fill-dates' => array(
 			'vms_admin_ui_active_cluster' => 'vms_fd_register_active_cluster',
@@ -135,5 +140,99 @@ return array(
 		),
 		'express-bar' => array('vms_admin_ui_nav_cluster_items' => 'vmseb_register_planning_nav_items'),
 		'refer-a-friend' => array('vms_admin_register_pages' => array('VMS_RAF_Plugin', 'register_vms_admin_pages')),
-	),
 );
+
+$supportedVersions = array(
+	'backstage-venue-manager' => '1.2.0',
+	'events-slider' => '1.0.10',
+	'fill-dates' => '0.1.8',
+	'data-tools' => '0.5.55',
+	'express-bar' => '0.6.24',
+	'refer-a-friend' => '0.2.6',
+);
+
+$guardedOptional = array_fill_keys(
+	array(
+		'vms_calendar_assignment_status_for_plan',
+		'vms_calendar_plan_vendor_ids',
+		'vms_calendar_vendor_primary_type',
+		'vms_event_plan_get_status',
+		'vms_event_plan_review_clean_text',
+		'vms_event_plan_review_source_label',
+		'vms_meta_key',
+	),
+	true
+);
+
+$bootstrapRequirements = array(
+	'fill-dates:function:vms_register_module' => true,
+	'data-tools:function:vms_core' => true,
+	'express-bar:constant:VMS_PLUGIN_FILE' => true,
+	'express-bar:constant:VMS_VERSION' => true,
+);
+
+$canonicalName = static function (string $kind, string $historical): string {
+	if ($kind === 'function' && strpos($historical, 'vms_') === 0) {
+		return 'bvmgr_' . substr($historical, 4);
+	}
+	if (($kind === 'class' || $kind === 'constant') && strpos($historical, 'VMS_') === 0) {
+		return 'BVMGR_' . substr($historical, 4);
+	}
+	return $historical;
+};
+
+$capabilities = array();
+foreach ($historicalFallbacks as $pluralKind => $byAddon) {
+	$kind = array('functions' => 'function', 'classes' => 'class', 'constants' => 'constant')[$pluralKind];
+	foreach ($byAddon as $contractAddon => $names) {
+		$capabilities[$contractAddon][$pluralKind] = array();
+		foreach ($names as $historical) {
+			$classification = 'LEGACY_FALLBACK';
+			if ($contractAddon === 'fill-dates') {
+				$classification = isset($guardedOptional[$historical])
+					? 'GUARDED_OPTIONAL'
+					: 'ADDON_MIGRATION_GAP';
+			}
+			$key = $contractAddon . ':' . $kind . ':' . $historical;
+			$capabilities[$contractAddon][$pluralKind][] = array(
+				'historical_fallback' => $historical,
+				'canonical' => $canonicalName($kind, $historical),
+				'requirement_path' => isset($bootstrapRequirements[$key]) ? 'bootstrap' : 'feature',
+				'provider' => 'canonical_bvm',
+				'reconciliation_classification' => $classification,
+			);
+		}
+	}
+}
+
+return array(
+	'schema_version' => 2,
+	'supported_versions' => $supportedVersions,
+	'capabilities' => $capabilities,
+	'historical_fallbacks' => $historicalFallbacks,
+	'provider_resolvers' => array(
+		'events-slider' => array(
+			'function' => 'vms_events_slider_core_function',
+			'constant' => 'vms_events_slider_core_constant',
+		),
+		'fill-dates' => array(
+			'function' => 'vms_fd_core_function',
+			'class' => 'vms_fd_core_class',
+		),
+		'data-tools' => array(
+			'function' => 'vms_dt_core_function',
+			'class' => 'vms_dt_core_class',
+			'constant' => 'vms_dt_core_constant',
+		),
+		'express-bar' => array(
+			'function' => 'ordered canonical function guards',
+			'constant' => 'ordered canonical constant guards',
+		),
+		'refer-a-friend' => array(
+			'function' => 'vms_raf_core_function',
+		),
+	),
+	'hooks' => $hooks,
+	'hook_callbacks' => $hookCallbacks,
+);
+})();

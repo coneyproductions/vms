@@ -13,6 +13,7 @@ $loadOrder = isset($args[4]) ? (string) $args[4] : 'n/a';
 $contracts = require __DIR__ . '/runtime-contracts.php';
 $officialAddons = array('events-slider', 'fill-dates', 'data-tools', 'express-bar', 'refer-a-friend');
 $targetAddons = $addon === 'all' ? $officialAddons : array($addon);
+$dataToolsDirectoryAbsent = $scenarioId === 'bvm-data-tools-directory-absent';
 
 $result = array(
 	'scenario' => $scenarioId,
@@ -198,13 +199,13 @@ try {
 $nativeNotices = (string) ob_get_clean();
 $result['notices'] = preg_replace('/\s+/', ' ', wp_strip_all_tags($nativeNotices)) ?: '';
 
-$coreLoaded = defined('VMS_PLUGIN_FILE') && defined('VMS_VERSION');
-$bvmFile = $coreLoaded ? (string) VMS_PLUGIN_FILE : '';
+$coreLoaded = defined('BVMGR_PLUGIN_FILE') && defined('BVMGR_VERSION');
+$bvmFile = $coreLoaded ? (string) BVMGR_PLUGIN_FILE : '';
 $result['identity'] = array(
 	'bvm_active' => $coreLoaded,
 	'bvm_plugin_basename' => $bvmFile !== '' ? plugin_basename($bvmFile) : '',
-	'bvm_version' => defined('VMS_VERSION') ? (string) VMS_VERSION : '',
-	'vms_plugin_file' => $bvmFile !== '' ? 'wp-content/plugins/' . plugin_basename($bvmFile) : '',
+	'bvm_version' => defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '',
+	'bvm_plugin_file' => $bvmFile !== '' ? 'wp-content/plugins/' . plugin_basename($bvmFile) : '',
 	'historical_main_exists' => is_file(WP_PLUGIN_DIR . '/vms/vendor-management-system.php'),
 	'nonexistent_bootstraps' => array(
 		'vms.php' => is_file(WP_PLUGIN_DIR . '/vms.php'),
@@ -215,7 +216,7 @@ $result['identity'] = array(
 
 $check('core-presence', 'BVM Recognized', $addon, $coreLoaded === $coreExpected, 'BVM runtime presence matched the scenario.');
 if ($coreExpected) {
-	$check('public-basename', 'BVM Recognized', $addon, $result['identity']['bvm_plugin_basename'] === 'backstage-venue-manager/vendor-management-system.php', 'BVM used its public plugin basename.', $result['identity']);
+	$check('public-basename', 'BVM Recognized', $addon, $result['identity']['bvm_plugin_basename'] === 'backstage-venue-manager/backstage-venue-manager.php', 'BVM used its public plugin basename.', $result['identity']);
 	$check('public-version', 'BVM Recognized', $addon, $result['identity']['bvm_version'] === '1.2.0', 'BVM exposed version 1.2.0.');
 	$check('historical-core-absent', 'BVM Recognized', $addon, !$result['identity']['historical_main_exists'], 'Historical standalone VMS core was absent.');
 	$check('nonexistent-bootstrap-identities-absent', 'BVM Recognized', $addon, !in_array(true, $result['identity']['nonexistent_bootstraps'], true), 'Nonexistent bootstrap identities were absent.');
@@ -230,34 +231,121 @@ $loadedMarkers = array(
 	'refer-a-friend' => defined('VMS_RAF_VERSION'),
 );
 
+$dataToolsActive = in_array('vms-data-tools/vms-data-tools.php', $result['active_plugins'], true);
+if (!$dataToolsActive) {
+	$dataToolsIncludedFiles = array_values(array_filter(
+		get_included_files(),
+		static fn(string $file): bool => strpos(str_replace('\\', '/', $file), '/wp-content/plugins/vms-data-tools/') !== false
+	));
+	$registeredReportingProviders = function_exists('bvmgr_reporting_get_registered_providers')
+		? bvmgr_reporting_get_registered_providers()
+		: array();
+	$check(
+		'data-tools-inactive-source-dormant',
+		'No Fatal',
+		$addon,
+		!defined('VMS_DT_VERSION')
+			&& !function_exists('vms_dt_init')
+			&& !function_exists('vms_dt_bvm_reporting_provider')
+			&& has_action('init', 'vms_dt_boot_plugin') === false
+			&& $dataToolsIncludedFiles === array(),
+		'Data Tools implementation source and bootstrap hooks stayed dormant while inactive.',
+		array('included_files' => $dataToolsIncludedFiles)
+	);
+	$check(
+		'data-tools-inactive-provider-absent',
+		'BVM Recognized',
+		$addon,
+		!isset($registeredReportingProviders['vms-data-tools']),
+		'Inactive Data Tools did not register a reporting provider.'
+	);
+}
+
+if ($dataToolsDirectoryAbsent) {
+	$missingResult = function_exists('bvmgr_reporting_resolve_event_ticket_sales')
+		? bvmgr_reporting_resolve_event_ticket_sales(2534, array('scope' => 'event_command_center'))
+		: array('available' => false);
+	$check('data-tools-directory-absent', 'Core-Absent Behavior', 'data-tools', !is_dir(WP_PLUGIN_DIR . '/vms-data-tools'), 'The directory-absent scenario removed Data Tools from the disposable filesystem.');
+	$check('data-tools-directory-absent-safe-result', 'Core-Absent Behavior', 'data-tools', empty($missingResult['available']) && empty($missingResult['provider_attempts']), 'BVM returned its safe provider-unavailable result without a Data Tools directory.');
+}
+
+$capabilityAvailable = static function (string $kind, string $name): bool {
+	if ($kind === 'function') {
+		return function_exists($name);
+	}
+	if ($kind === 'class') {
+		return class_exists($name);
+	}
+	return defined($name);
+};
+
+$providerSelection = static function (string $targetAddon, string $kind, array $capability) use ($contracts, $capabilityAvailable): array {
+	$historical = (string) ($capability['historical_fallback'] ?? '');
+	$canonical = (string) ($capability['canonical'] ?? '');
+	$canonicalAvailable = $capabilityAvailable($kind, $canonical);
+	$historicalAvailable = $capabilityAvailable($kind, $historical);
+	$resolver = (string) ($contracts['provider_resolvers'][$targetAddon][$kind] ?? '');
+	$selected = false;
+	$resolved = '';
+
+	if ($canonicalAvailable && $resolver !== '' && is_callable($resolver)) {
+		if ($kind === 'constant') {
+			$selected = !$historicalAvailable && $resolver($historical, null) === constant($canonical);
+			$resolved = $selected ? $canonical : '';
+		} else {
+			$resolved = (string) $resolver($historical);
+			$selected = $resolved === $canonical;
+		}
+	} elseif ($targetAddon === 'express-bar' && $canonicalAvailable && !$historicalAvailable) {
+		// Express Bar uses explicit canonical guards before its historical guards.
+		// The immutable source fingerprint and the exercised public outcome below
+		// jointly prove that only the canonical provider is available to that path.
+		$selected = function_exists('vmseb_is_vms_active') && vmseb_is_vms_active();
+		$resolved = $selected ? $canonical : '';
+	}
+
+	return array(
+		'historical' => $historical,
+		'canonical' => $canonical,
+		'canonical_available' => $canonicalAvailable,
+		'historical_available' => $historicalAvailable,
+		'resolver' => $resolver,
+		'resolved' => $resolved,
+		'selected' => $selected,
+		'requirement_path' => $capability['requirement_path'] ?? '',
+		'reconciliation_classification' => $capability['reconciliation_classification'] ?? '',
+	);
+};
+
 foreach ($targetAddons as $targetAddon) {
-	$check('addon-loaded-' . $targetAddon, 'No Fatal', $targetAddon, !empty($loadedMarkers[$targetAddon]), 'The add-on bootstrap completed.');
-	if (!$coreExpected) {
+	$check('addon-loaded-' . $targetAddon, 'No Fatal', $targetAddon, !empty($loadedMarkers[$targetAddon]) || ($targetAddon === 'data-tools' && $dataToolsDirectoryAbsent), $dataToolsDirectoryAbsent ? 'The intentional directory-absent fixture remained unloaded.' : 'The add-on bootstrap completed.');
+	if (!$coreExpected || ($targetAddon === 'data-tools' && $dataToolsDirectoryAbsent)) {
 		continue;
 	}
 
-	$missingFunctions = array_values(
-		array_filter(
-			(array) ($contracts['functions'][$targetAddon] ?? array()),
-			static fn(string $function): bool => !function_exists($function)
-		)
-	);
-	$missingClasses = array_values(
-		array_filter(
-			(array) ($contracts['classes'][$targetAddon] ?? array()),
-			static fn(string $class): bool => !class_exists($class)
-		)
-	);
-	$missingConstants = array_values(
-		array_filter(
-			(array) ($contracts['constants'][$targetAddon] ?? array()),
-			static fn(string $constant): bool => !defined($constant)
-		)
-	);
+	$providerDetails = array();
+	$missingCanonical = array();
+	$wrongProvider = array();
+	$declaredHistoricalFallbacks = array();
+	foreach (array('functions' => 'function', 'classes' => 'class', 'constants' => 'constant') as $pluralKind => $kind) {
+		foreach ((array) ($contracts['capabilities'][$targetAddon][$pluralKind] ?? array()) as $capability) {
+			$selection = $providerSelection($targetAddon, $kind, (array) $capability);
+			$providerDetails[] = $selection;
+			if (!$selection['canonical_available']) {
+				$missingCanonical[] = $selection['canonical'];
+			}
+			if (!$selection['selected']) {
+				$wrongProvider[] = $selection['historical'];
+			}
+			if ($selection['historical_available']) {
+				$declaredHistoricalFallbacks[] = $selection['historical'];
+			}
+		}
+	}
 
-	$check('runtime-functions-' . $targetAddon, 'BVM Recognized', $targetAddon, $missingFunctions === array(), 'All consumed BVM function contracts were declared at runtime.', array('missing' => $missingFunctions, 'checked' => count((array) $contracts['functions'][$targetAddon])));
-	$check('runtime-classes-' . $targetAddon, 'BVM Recognized', $targetAddon, $missingClasses === array(), 'All consumed BVM class contracts were declared at runtime.', array('missing' => $missingClasses));
-	$check('runtime-constants-' . $targetAddon, 'BVM Recognized', $targetAddon, $missingConstants === array(), 'All consumed BVM constant contracts were declared at runtime.', array('missing' => $missingConstants));
+	$check('canonical-capabilities-' . $targetAddon, 'BVM Recognized', $targetAddon, $missingCanonical === array(), 'All current canonical BVM capabilities were available.', array('missing' => $missingCanonical));
+	$check('canonical-provider-' . $targetAddon, 'BVM Recognized', $targetAddon, $wrongProvider === array(), 'The add-on selected canonical BVM as its runtime provider.', array('unresolved' => $wrongProvider, 'capabilities' => $providerDetails));
+	$check('legacy-fallbacks-not-required-' . $targetAddon, 'BVM Recognized', $targetAddon, $declaredHistoricalFallbacks === array(), 'Historical fallback declarations were not required from canonical BVM.', array('declared' => $declaredHistoricalFallbacks));
 
 	$missingHooks = array();
 	foreach ((array) ($contracts['hook_callbacks'][$targetAddon] ?? array()) as $hook => $callback) {
@@ -293,9 +381,77 @@ if ($coreExpected && in_array('fill-dates', $targetAddons, true)) {
 	$check('fill-dates-tour-hook', 'Menu', 'fill-dates', $tourContextMatches, 'Fill Dates tours recognized the returned hook.');
 	$check('fill-dates-core-recognition', 'BVM Recognized', 'fill-dates', function_exists('vms_fd_vms_ready') && vms_fd_vms_ready(), 'Fill Dates recognized BVM post types.');
 	$check('fill-dates-no-false-notice', 'Notices', 'fill-dates', strpos($nativeNotices, 'requires Backstage Venue Manager') === false, 'Fill Dates emitted no false missing-BVM notice.');
+
+	$fixtureDayOffset = 30 + (abs(crc32($scenarioId)) % 300);
+	$fixtureDate = wp_date('Y-m-d', strtotime('+' . $fixtureDayOffset . ' days'), wp_timezone());
+	$fixturePlanId = wp_insert_post(array(
+		'post_type' => 'vms_event_plan',
+		'post_status' => 'draft',
+		'post_title' => 'BVM compatibility fixture plan',
+	), true);
+	$fixtureCreated = !is_wp_error($fixturePlanId) && (int) $fixturePlanId > 0;
+	$canonicalEvents = array();
+	$fillEvents = array();
+	$canonicalLimits = array();
+	$fillLimits = array();
+	if ($fixtureCreated) {
+		$fixturePlanId = (int) $fixturePlanId;
+		$dateKey = (string) bvmgr_meta_key('event_plan', 'date');
+		$statusKey = (string) bvmgr_meta_key('event_plan', 'status');
+		$slotLimitsKey = (string) bvmgr_meta_key('event_plan', 'slot_limits');
+		update_post_meta($fixturePlanId, $dateKey !== '' ? $dateKey : '_vms_event_date', $fixtureDate);
+		update_post_meta($fixturePlanId, $statusKey !== '' ? $statusKey : '_vms_event_plan_status', 'draft');
+		update_post_meta($fixturePlanId, $slotLimitsKey !== '' ? $slotLimitsKey : '_vms_slot_limits', array('food_truck' => 1));
+		bvmgr_calendar_feed_cache_bust();
+		$calendarArgs = array(
+			'start_date' => $fixtureDate,
+			'end_date' => $fixtureDate,
+			'context' => 'admin',
+			'include_past' => true,
+			'include_statuses' => array('draft', 'ready', 'published', 'tentative', 'confirmed'),
+		);
+		$canonicalEvents = bvmgr_get_calendar_events($calendarArgs);
+		$fillEvents = vms_fd_collect_events($fixtureDate, $fixtureDate);
+		$canonicalLimits = bvmgr_calendar_get_event_slot_limits($fixturePlanId, 0);
+		$fillLimits = vms_fd_get_secondary_open_slots($fixturePlanId, 0, 'food_truck', 0);
+	}
+	$eventPlanIds = static function (array $events): array {
+		$ids = array();
+		foreach ($events as $event) {
+			if (is_array($event) && !empty($event['event_plan_id'])) {
+				$ids[] = absint($event['event_plan_id']);
+			}
+		}
+		sort($ids);
+		return array_values(array_unique($ids));
+	};
+	$canonicalEventIds = $eventPlanIds($canonicalEvents);
+	$fillEventIds = $eventPlanIds($fillEvents);
+	$check('fill-dates-canonical-calendar-outcome', 'BVM Recognized', 'fill-dates', $fixtureCreated && in_array((int) $fixturePlanId, $canonicalEventIds, true) && $fillEventIds === $canonicalEventIds, 'Fill Dates returned the same current-event population as canonical BVM.', array('canonical_ids' => $canonicalEventIds, 'fill_dates_ids' => $fillEventIds));
+	$check('fill-dates-canonical-slot-outcome', 'BVM Recognized', 'fill-dates', ($canonicalLimits['food_truck'] ?? 0) === 1 && ($fillLimits['max'] ?? 0) === 1 && ($fillLimits['open'] ?? 0) === 1 && !empty($fillLimits['limited']), 'Fill Dates matched canonical BVM slot limits.', array('canonical' => $canonicalLimits, 'fill_dates' => $fillLimits));
+	$registeredModule = function_exists('bvmgr_get_registered_module') ? bvmgr_get_registered_module('fill_dates') : null;
+	$check('fill-dates-canonical-module-registration', 'BVM Recognized', 'fill-dates', is_array($registeredModule) && ($registeredModule['source'] ?? '') === 'addon', 'Fill Dates registered its module through canonical BVM.', array('module' => $registeredModule));
+	$helpMarkup = function_exists('vms_fd_help_button') ? vms_fd_help_button() : '';
+	$check('fill-dates-canonical-shell-help-tour', 'BVM Recognized', 'fill-dates', vms_fd_core_function('vms_admin_ui_render_shell') === 'bvmgr_admin_ui_render_shell' && vms_fd_core_function('vms_render_help_button') === 'bvmgr_render_help_button' && vms_fd_core_class('VMS_Tours_Service') === 'BVMGR_Tours_Service' && $helpMarkup !== '', 'Fill Dates selected canonical shell, guided help, and tour providers.');
+	$safeMutationProviders = array(
+		'cache' => vms_fd_core_function('vms_calendar_feed_cache_bust'),
+		'review_get' => vms_fd_core_function('vms_event_plan_review_get_changes'),
+		'review_touch' => vms_fd_core_function('vms_event_plan_review_touch'),
+		'secondary_vendors' => vms_fd_core_function('vms_event_plan_set_secondary_vendors'),
+	);
+	$check('fill-dates-canonical-safe-mutation-selection', 'BVM Recognized', 'fill-dates', $safeMutationProviders === array(
+		'cache' => 'bvmgr_calendar_feed_cache_bust',
+		'review_get' => 'bvmgr_event_plan_review_get_changes',
+		'review_touch' => 'bvmgr_event_plan_review_touch',
+		'secondary_vendors' => 'bvmgr_event_plan_set_secondary_vendors',
+	), 'Fill Dates selected canonical review, secondary-vendor, and cache callables without exercising assignment/review writes.', $safeMutationProviders);
+	if ($fixtureCreated) {
+		wp_delete_post((int) $fixturePlanId, true);
+		bvmgr_calendar_feed_cache_bust();
+	}
 }
 
-if ($coreExpected && in_array('data-tools', $targetAddons, true)) {
+if ($coreExpected && in_array('data-tools', $targetAddons, true) && !$dataToolsDirectoryAbsent) {
 	$bvmRows = $menuRows('vms-dashboard', 'vms-data-tools');
 	$toolsRows = $menuRows('tools.php', 'vms-data-tools');
 	$hook = $hookFor('vms-data-tools', 'vms-dashboard');
@@ -303,8 +459,32 @@ if ($coreExpected && in_array('data-tools', $targetAddons, true)) {
 	$check('data-tools-bvm-menu-single', 'Menu', 'data-tools', count($bvmRows) === 1, 'Data Tools had one usable BVM entry.');
 	$check('data-tools-tools-menu-removed', 'Menu', 'data-tools', count($toolsRows) === 0 && count($allSlugRows('vms-data-tools')) === 1, 'The complete lifecycle removed the duplicate Tools entry.');
 	$check('data-tools-capability', 'Menu', 'data-tools', isset($bvmRows[0][1]) && $bvmRows[0][1] === 'read', 'The BVM Data Tools bridge kept its intended read capability.');
-	$check('data-tools-bridge-callback', 'Menu', 'data-tools', $callbackAttached($hook, 'vms_admin_ui_render_data_tools_page') && is_callable('vms_dt_render_tools_home'), 'The BVM Data Tools bridge and companion callback resolved.');
+	$check('data-tools-bridge-callback', 'Menu', 'data-tools', $callbackAttached($hook, 'bvmgr_admin_ui_render_data_tools_page') && is_callable('vms_dt_render_tools_home'), 'The canonical BVM Data Tools bridge and companion callback resolved.');
+	$dataReportProvider = function_exists('vms_dt_core_function') ? vms_dt_core_function('vms_ticket_revenue_build_report') : '';
+	$check('data-tools-canonical-surface', 'BVM Recognized', 'data-tools', vms_dt_core_function('vms_core') === 'bvmgr_core' && $dataReportProvider === 'bvmgr_ticket_revenue_build_report' && is_callable($dataReportProvider) && is_callable('vms_dt_render_tools_home'), 'Data Tools retained its canonical dependency, menu, and report surface.', array('report_provider' => $dataReportProvider));
 	$check('data-tools-no-false-notice', 'Notices', 'data-tools', strpos($nativeNotices, 'VMS Core is not detected') === false, 'Data Tools emitted no false missing-core notice.');
+
+	$reportingProviders = function_exists('bvmgr_reporting_get_registered_providers') ? bvmgr_reporting_get_registered_providers() : array();
+	$dataToolsProvider = (array) ($reportingProviders['vms-data-tools'] ?? array());
+	$check('data-tools-provider-single', 'BVM Recognized', 'data-tools', count(array_filter(array_keys($reportingProviders), static fn(string $id): bool => $id === 'vms-data-tools')) === 1, 'Data Tools registered exactly one reporting provider.');
+	$check('data-tools-provider-provenance', 'BVM Recognized', 'data-tools', ($dataToolsProvider['version'] ?? '') === '0.5.55' && ($dataToolsProvider['contract_version'] ?? 0) === 1, 'The reporting provider exposed candidate version and contract provenance.', $dataToolsProvider);
+
+	$fixturePlanId = wp_insert_post(array(
+		'post_type' => 'vms_event_plan',
+		'post_status' => 'draft',
+		'post_title' => 'Data Tools provider empty-result fixture',
+	), true);
+	$emptyProviderResult = array();
+	$vendorProviderResult = array();
+	if (!is_wp_error($fixturePlanId) && (int) $fixturePlanId > 0) {
+		$fixturePlanId = (int) $fixturePlanId;
+		update_post_meta($fixturePlanId, '_vms_event_date', wp_date('Y-m-d', current_time('timestamp'), wp_timezone()));
+		$emptyProviderResult = bvmgr_reporting_resolve_event_ticket_sales($fixturePlanId, array('scope' => 'event_command_center'));
+		$vendorProviderResult = bvmgr_reporting_resolve_event_ticket_sales($fixturePlanId, array('scope' => 'vendor_portal'));
+		wp_delete_post($fixturePlanId, true);
+	}
+	$check('data-tools-provider-valid-empty', 'BVM Recognized', 'data-tools', !empty($emptyProviderResult['available']) && !empty($emptyProviderResult['calculated']) && ($emptyProviderResult['provider_id'] ?? '') === 'vms-data-tools' && (int) ($emptyProviderResult['total_qty'] ?? -1) === 0, 'The active provider returned a valid calculated empty Event Command Center result.', $emptyProviderResult);
+	$check('data-tools-provider-vendor-portal', 'BVM Recognized', 'data-tools', !empty($vendorProviderResult['available']) && !empty($vendorProviderResult['calculated']) && ($vendorProviderResult['source'] ?? '') === 'data_tools_merged_ticket_sales', 'The active provider resolved the vendor-portal website/Square reporting scope.', $vendorProviderResult);
 }
 
 if ($coreExpected && in_array('express-bar', $targetAddons, true)) {
@@ -312,9 +492,10 @@ if ($coreExpected && in_array('express-bar', $targetAddons, true)) {
 	$barRows = $menuRows('vms-dashboard', 'vms-bar-menu');
 	$expressHook = $hookFor('vms-express-bar', 'vms-dashboard');
 	$barHook = $hookFor('vms-bar-menu', 'vms-dashboard');
+	$storedHooks = function_exists('vmseb_admin_page_hooks') ? vmseb_admin_page_hooks() : array();
 	$check('express-core-recognition', 'BVM Recognized', 'express-bar', function_exists('vmseb_is_vms_active') && vmseb_is_vms_active(), 'Express Bar recognized BVM.');
 	$check('express-menu-single', 'Menu', 'express-bar', count($expressRows) === 1 && count($barRows) === 1 && count($allSlugRows('vms-express-bar')) === 1 && count($allSlugRows('vms-bar-menu')) === 1, 'Express Bar attached two single BVM submenus with no rogue top level.');
-	$check('express-hooks-current', 'Menu', 'express-bar', $expressHook === 'vms_page_vms-express-bar' && $barHook === 'vms_page_vms-bar-menu', 'WordPress returned the hook suffixes currently reconstructed by Express Bar.', array('express' => $expressHook, 'bar_menu' => $barHook));
+	$check('express-returned-hooks-stored', 'Menu', 'express-bar', ($storedHooks['vms-express-bar'] ?? '') === $expressHook && ($storedHooks['vms-bar-menu'] ?? '') === $barHook, 'Express Bar stored the opaque hook suffixes returned by WordPress.', array('expected' => array($expressHook, $barHook), 'stored' => $storedHooks));
 	wp_dequeue_style('vmseb-admin');
 	wp_dequeue_script('vmseb-admin');
 	do_action('admin_enqueue_scripts', $expressHook);
@@ -324,6 +505,24 @@ if ($coreExpected && in_array('express-bar', $targetAddons, true)) {
 	do_action('admin_enqueue_scripts', $barHook);
 	$barAssets = wp_style_is('vmseb-admin', 'enqueued') && wp_script_is('vmseb-admin', 'enqueued');
 	$check('express-assets-current-hooks', 'Menu', 'express-bar', $expressAssets && $barAssets, 'Express Bar assets loaded on both actual WordPress hooks.');
+	wp_dequeue_style('vmseb-admin');
+	wp_dequeue_script('vmseb-admin');
+	do_action('admin_enqueue_scripts', 'dashboard');
+	$check('express-assets-unrelated-screen', 'Menu', 'express-bar', !wp_style_is('vmseb-admin', 'enqueued') && !wp_script_is('vmseb-admin', 'enqueued'), 'Express Bar assets stayed off unrelated admin screens.');
+	$fixturePostId = wp_insert_post(array('post_type' => 'post', 'post_status' => 'draft', 'post_title' => 'Express Bar compatibility fixture'), true);
+	$fixturePlanId = wp_insert_post(array('post_type' => 'vms_event_plan', 'post_status' => 'draft', 'post_title' => 'Express Bar mapped fixture plan'), true);
+	$publicRuntimeWorks = false;
+	if (!is_wp_error($fixturePostId) && !is_wp_error($fixturePlanId) && (int) $fixturePostId > 0 && (int) $fixturePlanId > 0) {
+		update_post_meta((int) $fixturePlanId, '_vms_tec_event_id', (int) $fixturePostId);
+		$publicRuntimeWorks = vmseb_resolve_event_plan_id_from_post(get_post((int) $fixturePostId)) === (int) $fixturePlanId;
+	}
+	$check('express-canonical-public-runtime', 'BVM Recognized', 'express-bar', $publicRuntimeWorks && shortcode_exists('vms_express_bar_menu'), 'Express Bar public runtime resolved an Event Plan through canonical BVM and retained its shortcode.');
+	if (!is_wp_error($fixturePlanId) && (int) $fixturePlanId > 0) {
+		wp_delete_post((int) $fixturePlanId, true);
+	}
+	if (!is_wp_error($fixturePostId) && (int) $fixturePostId > 0) {
+		wp_delete_post((int) $fixturePostId, true);
+	}
 	$check('express-woocommerce-state', 'Notices', 'express-bar', function_exists('vmseb_is_woocommerce_active') && vmseb_is_woocommerce_active() === $woocommerceExpected, 'Express Bar evaluated WooCommerce independently.');
 	$check('express-no-false-bvm-notice', 'Notices', 'express-bar', strpos($nativeNotices, 'requires the VMS core plugin') === false, 'Express Bar emitted no false BVM dependency warning.');
 	if ($woocommerceExpected) {
@@ -333,7 +532,7 @@ if ($coreExpected && in_array('express-bar', $targetAddons, true)) {
 
 if ($coreExpected && in_array('refer-a-friend', $targetAddons, true)) {
 	$rafSlugs = array('vms-raf', 'vms-raf-rewards', 'vms-raf-claims', 'vms-raf-referrals', 'vms-raf-settings', 'vms-raf-help');
-	$registry = function_exists('vms_admin_menu_registry') ? vms_admin_menu_registry() : array();
+	$registry = function_exists('bvmgr_admin_menu_registry') ? bvmgr_admin_menu_registry() : array();
 	$registryOwnsRoutes = true;
 	$menusSingle = true;
 	foreach ($rafSlugs as $slug) {
@@ -342,6 +541,8 @@ if ($coreExpected && in_array('refer-a-friend', $targetAddons, true)) {
 	}
 	$check('raf-registry-routes', 'Menu', 'refer-a-friend', $registryOwnsRoutes, 'BVM registry integration owned all intended RAF routes.');
 	$check('raf-menu-single', 'Menu', 'refer-a-friend', $menusSingle && count($topRows('vms-raf')) === 0, 'RAF exposed registry-owned BVM submenus without a standalone top-level menu.');
+	$rafCalendarUrl = function_exists('vms_raf_call_core_function') ? (string) vms_raf_call_core_function('vms_get_public_event_calendar_url') : '';
+	$check('raf-canonical-surface', 'BVM Recognized', 'refer-a-friend', vms_raf_core_function('vms_register_admin_page') === 'bvmgr_register_admin_page' && vms_raf_core_function('vms_admin_ui_render_shell') === 'bvmgr_admin_ui_render_shell' && vms_raf_core_function('vms_get_public_event_calendar_url') === 'bvmgr_get_public_event_calendar_url' && $rafCalendarUrl !== '' && class_exists('VMS_RAF_Plugin'), 'RAF retained its canonical registry, shell, calendar URL, and records/admin surface.', array('calendar_url' => $rafCalendarUrl));
 	$check('raf-no-false-notice', 'Notices', 'refer-a-friend', stripos($nativeNotices, 'refer-a-friend') === false, 'RAF introduced no BVM dependency warning.');
 }
 
@@ -352,6 +553,14 @@ if ($coreExpected && in_array('events-slider', $targetAddons, true)) {
 	);
 	$check('events-slider-no-menu-dependency', 'Menu', 'events-slider', $sliderMenuRows === array(), 'Events Slider created no BVM admin-menu dependency.');
 	$check('events-slider-no-false-notice', 'Notices', 'events-slider', stripos($nativeNotices, 'events slider') === false, 'Events Slider introduced no BVM dependency warning.');
+	$sliderAtts = vms_events_slider_normalize_atts(array('limit' => 1));
+	$sliderCacheKey = vms_events_slider_cache_key($sliderAtts);
+	delete_transient($sliderCacheKey);
+	$sliderFirstRender = vms_events_slider_shortcode($sliderAtts);
+	$sliderSecondRender = vms_events_slider_shortcode($sliderAtts);
+	$check('events-slider-public-render', 'BVM Recognized', 'events-slider', is_string($sliderFirstRender) && $sliderFirstRender !== '' && strpos($sliderFirstRender, 'VMS Events Slider') !== false, 'Events Slider produced its current public render outcome.');
+	$check('events-slider-cache-path', 'BVM Recognized', 'events-slider', get_transient($sliderCacheKey) !== false && strpos($sliderSecondRender, 'cache: HIT') !== false, 'Events Slider exercised a cached public render through canonical BVM compatibility.');
+	delete_transient($sliderCacheKey);
 }
 
 if (!$coreExpected && $addon === 'events-slider') {
@@ -365,7 +574,7 @@ if (!$coreExpected && $addon === 'fill-dates') {
 	$check('fill-dates-dependency-copy', 'Core-Absent Behavior', 'fill-dates', strpos($nativeNotices, 'Activate VMS') === false, 'Fill Dates accurately named Backstage Venue Manager.');
 }
 
-if (!$coreExpected && $addon === 'data-tools') {
+if (!$coreExpected && $addon === 'data-tools' && !$dataToolsDirectoryAbsent) {
 	$modulesStayedOut = !function_exists('vms_dt_render_tools_home') && has_action('admin_menu', 'vms_dt_register_admin_menu') === false;
 	$check('data-tools-missing-core-recognition', 'Core-Absent Behavior', 'data-tools', function_exists('vms_dt_is_vms_core_active') && !vms_dt_is_vms_core_active(), 'Data Tools recognized that BVM was absent.');
 	$check('data-tools-dependent-modules-skipped', 'Core-Absent Behavior', 'data-tools', $modulesStayedOut, 'Data Tools skipped BVM-dependent runtime modules.');

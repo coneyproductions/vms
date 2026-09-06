@@ -6023,15 +6023,31 @@ class BVMGR_Admin_Event_Plans
                 $rid = isset($slot_row['role_id']) ? absint($slot_row['role_id']) : 0;
                 if ($rid <= 0) continue;
                 $status = isset($slot_row['status']) ? sanitize_key((string) $slot_row['status']) : 'active';
+                if ($status !== 'active') {
+                    continue;
+                }
                 if (!isset($staff_slot_by_role[$rid])) {
-                    $staff_slot_by_role[$rid] = $slot_row;
-                } elseif ($status === 'active') {
                     $staff_slot_by_role[$rid] = $slot_row;
                 }
             }
         }
 
         $staff_role_meta_map = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(true) : array();
+        $staff_activation_thresholds = function_exists('bvmgr_staffing_get_event_role_activation_thresholds')
+            ? (array) bvmgr_staffing_get_event_role_activation_thresholds($post_id)
+            : array();
+        $staff_headcount_context = function_exists('bvmgr_staffing_get_event_plan_headcount_context')
+            ? (array) bvmgr_staffing_get_event_plan_headcount_context($post_id)
+            : array('wired' => false, 'headcount' => 0, 'label' => __('Attendance not wired yet', 'backstage-venue-manager'));
+        $staffing_snapshot = function_exists('bvmgr_staffing_resolve_event_snapshot')
+            ? (array) bvmgr_staffing_resolve_event_snapshot($post_id, array(
+                'slots' => $staff_slots,
+                'legacy_assignments' => $staff_assignments,
+                'role_map' => $staff_role_meta_map,
+                'activation_thresholds' => $staff_activation_thresholds,
+                'headcount_context' => $staff_headcount_context,
+            ))
+            : array();
 
         $staff_posts = get_posts(array(
             'post_type'      => 'vms_staff',
@@ -6052,9 +6068,16 @@ class BVMGR_Admin_Event_Plans
             }
         }
 
-        $staff_assigned_by_role = function_exists('bvmgr_staffing_get_event_assigned_staff_map')
-            ? (array) bvmgr_staffing_get_event_assigned_staff_map($post_id)
-            : array();
+        $staff_assigned_by_role = array();
+        foreach ((array) ($staffing_snapshot['roles_by_id'] ?? array()) as $role_id => $snapshot_role) {
+            if (!is_array($snapshot_role)) {
+                continue;
+            }
+            $role_id = absint($role_id);
+            if ($role_id > 0) {
+                $staff_assigned_by_role[$role_id] = (array) ($snapshot_role['assigned_staff_ids'] ?? array());
+            }
+        }
         $staff_by_role = array();
         $staff_eligible_counts_by_role = array();
         if (is_array($staff_roles) && !is_wp_error($staff_roles) && is_array($staff_posts)) {
@@ -6122,33 +6145,7 @@ class BVMGR_Admin_Event_Plans
             return '<span class="vms-ep-tax-badge vms-ep-tax-badge--missing" aria-label="Tax profile missing items">T⚠</span>';
         };
 
-        $vms_staff_has_data = false;
-        foreach ($staff_slot_by_role as $slot_row) {
-            if (!is_array($slot_row)) continue;
-            $need = isset($slot_row['headcount_needed']) ? max(0, (int) $slot_row['headcount_needed']) : 0;
-            $assignments_list = isset($slot_row['assignments']) && is_array($slot_row['assignments']) ? $slot_row['assignments'] : array();
-            if ($need > 0 || !empty($assignments_list)) {
-                $vms_staff_has_data = true;
-                break;
-            }
-        }
-        if (!$vms_staff_has_data && is_array($staff_assignments)) {
-            foreach ($staff_assignments as $arr) {
-                if (is_array($arr) && !empty(array_filter(array_map('absint', $arr), function ($v) {
-                    return $v > 0;
-                }))) {
-                    $vms_staff_has_data = true;
-                    break;
-                }
-            }
-        }
-
-        $staff_activation_thresholds = function_exists('bvmgr_staffing_get_event_role_activation_thresholds')
-            ? (array) bvmgr_staffing_get_event_role_activation_thresholds($post_id)
-            : array();
-        $staff_headcount_context = function_exists('bvmgr_staffing_get_event_plan_headcount_context')
-            ? (array) bvmgr_staffing_get_event_plan_headcount_context($post_id)
-            : array('wired' => false, 'headcount' => 0, 'label' => __('Attendance not wired yet', 'backstage-venue-manager'));
+        $vms_staff_has_data = in_array((string) ($staffing_snapshot['authority'] ?? 'empty'), array('normalized', 'legacy'), true);
         $staff_headcount_wired = !empty($staff_headcount_context['wired']);
         $staff_current_headcount = max(0, (int) ($staff_headcount_context['headcount'] ?? 0));
         $staff_headcount_label = isset($staff_headcount_context['label']) ? (string) $staff_headcount_context['label'] : __('Attendance not wired yet', 'backstage-venue-manager');
@@ -6184,6 +6181,7 @@ class BVMGR_Admin_Event_Plans
             'staff_applied_template_id' => $staff_applied_template_id,
             'staff_applied_template' => $staff_applied_template,
             'staff_recommended_template' => $staff_recommended_template,
+            'staffing_snapshot' => $staffing_snapshot,
         );
         } finally {
             if (function_exists('bvmgr_event_plan_perf_span_finish')) {
@@ -6222,6 +6220,9 @@ class BVMGR_Admin_Event_Plans
             : array();
         $staff_activation_thresholds = isset($render_context['staff_activation_thresholds']) && is_array($render_context['staff_activation_thresholds'])
             ? $render_context['staff_activation_thresholds']
+            : array();
+        $staffing_snapshot_roles = isset($render_context['staffing_snapshot']['roles_by_id']) && is_array($render_context['staffing_snapshot']['roles_by_id'])
+            ? (array) $render_context['staffing_snapshot']['roles_by_id']
             : array();
         $staff_headcount_wired = !empty($render_context['staff_headcount_wired']);
         $staff_current_headcount = max(0, (int) ($render_context['staff_current_headcount'] ?? 0));
@@ -6264,6 +6265,7 @@ class BVMGR_Admin_Event_Plans
             $staff_current_headcount,
             $vms_staff_has_data,
             $staff_applied_template_id,
+            $staffing_snapshot_roles,
             $staff_assignments
         );
 
@@ -6427,6 +6429,7 @@ class BVMGR_Admin_Event_Plans
         int $staff_current_headcount,
         bool $vms_staff_has_data,
         int $staff_applied_template_id,
+        array $staffing_snapshot_roles,
         array $staff_assignments
     ): array {
         $rows = array();
@@ -6449,36 +6452,17 @@ class BVMGR_Admin_Event_Plans
             $slot_row = isset($staff_slot_by_role[$role_id]) && is_array($staff_slot_by_role[$role_id])
                 ? $staff_slot_by_role[$role_id]
                 : array();
-
-            $assigned_ids = array();
-            if (!empty($slot_row['assignments']) && is_array($slot_row['assignments'])) {
-                foreach ($slot_row['assignments'] as $assignment_row) {
-                    if (!is_array($assignment_row)) {
-                        continue;
-                    }
-
-                    $assignment_status = isset($assignment_row['status']) ? sanitize_key((string) $assignment_row['status']) : '';
-                    if (!in_array($assignment_status, array('proposed', 'confirmed'), true)) {
-                        continue;
-                    }
-
-                    $staff_id = isset($assignment_row['staff_id']) ? absint($assignment_row['staff_id']) : 0;
-                    if ($staff_id > 0) {
-                        $assigned_ids[] = $staff_id;
-                    }
-                }
-            } elseif (isset($staff_assignments[$role_id]) && is_array($staff_assignments[$role_id])) {
-                $assigned_ids = array_map('intval', $staff_assignments[$role_id]);
-            }
-
-            $assigned_ids = array_values(array_unique(array_filter($assigned_ids, static function ($value): bool {
+            $snapshot_role = isset($staffing_snapshot_roles[$role_id]) && is_array($staffing_snapshot_roles[$role_id])
+                ? (array) $staffing_snapshot_roles[$role_id]
+                : array();
+            $assigned_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($snapshot_role['assigned_staff_ids'] ?? array())), static function ($value): bool {
                 return $value > 0;
             })));
 
             $default_headcount = isset($role_meta['default_headcount']) ? max(1, (int) $role_meta['default_headcount']) : 1;
             $use_role_default_headcount = empty($slot_row) && !$vms_staff_has_data && $staff_applied_template_id <= 0;
-            $headcount = isset($slot_row['headcount_needed'])
-                ? max(0, (int) $slot_row['headcount_needed'])
+            $headcount = array_key_exists('headcount_needed', $snapshot_role)
+                ? max(0, (int) $snapshot_role['headcount_needed'])
                 : ($use_role_default_headcount ? $default_headcount : 0);
             $time_mode = isset($slot_row['shift_time_mode']) ? sanitize_key((string) $slot_row['shift_time_mode']) : 'absolute';
             if (!in_array($time_mode, array('absolute', 'relative'), true)) {
@@ -6490,15 +6474,23 @@ class BVMGR_Admin_Event_Plans
             $duration_minutes = isset($slot_row['duration_minutes']) && $slot_row['duration_minutes'] !== null
                 ? (int) $slot_row['duration_minutes']
                 : '';
-            $filled = count($assigned_ids);
-            $open = max(0, $headcount - $filled);
+            $filled = array_key_exists('assigned_headcount', $snapshot_role)
+                ? max(0, (int) $snapshot_role['assigned_headcount'])
+                : 0;
+            $open = array_key_exists('open_positions', $snapshot_role)
+                ? max(0, (int) $snapshot_role['open_positions'])
+                : max(0, $headcount - $filled);
             $is_critical = !empty($role_meta['is_critical']);
             $role_in_use = ($headcount > 0 || $filled > 0);
-            $activation_threshold = array_key_exists($role_id, $staff_activation_thresholds)
-                ? max(0, (int) $staff_activation_thresholds[$role_id])
-                : ($role_in_use ? 1 : 0);
+            $activation_threshold = array_key_exists('activation_threshold', $snapshot_role)
+                ? max(0, (int) $snapshot_role['activation_threshold'])
+                : (array_key_exists($role_id, $staff_activation_thresholds)
+                    ? max(0, (int) $staff_activation_thresholds[$role_id])
+                    : ($role_in_use ? 1 : 0));
             $threshold_met = $staff_headcount_wired && ($staff_current_headcount >= $activation_threshold);
-            $required_now = ($headcount > 0) && $threshold_met;
+            $required_now = array_key_exists('is_required_now', $snapshot_role)
+                ? !empty($snapshot_role['is_required_now'])
+                : (($headcount > 0) && $threshold_met);
             // Preserve the legacy partial's warning calculation order for this lazy-load response.
             $absolute_time_missing = $role_in_use && $time_mode === 'absolute' && ($shift_start === '' || ($shift_end === '' && (int) $previous_duration_minutes <= 0));
             $missing_staff_now = $required_now && ($filled < $headcount);
@@ -6598,6 +6590,9 @@ class BVMGR_Admin_Event_Plans
                 'headcount' => $headcount,
                 'filled' => $filled,
                 'open' => $open,
+                'proposed' => max(0, (int) ($snapshot_role['proposed_headcount'] ?? 0)),
+                'confirmed' => max(0, (int) ($snapshot_role['confirmed_headcount'] ?? 0)),
+                'provenance' => sanitize_key((string) ($snapshot_role['provenance'] ?? 'empty')),
                 'base_summary' => sprintf(
                     /* translators: 1: number 1 used in this message, 2: number 2 used in this message, 3: number 3 used in this message, 4: value 4 used in this message. */
                     __('Need %1$d · Filled %2$d · Open %3$d%4$s', 'backstage-venue-manager'),
@@ -8283,19 +8278,19 @@ class BVMGR_Admin_Event_Plans
         $staffing_summary_trace = function_exists('bvmgr_event_plan_perf_span_start')
             ? bvmgr_event_plan_perf_span_start('event_plan_admin_boot_staffing_summary', (int) $post->ID, array('section' => 'staffing_summary'))
             : '';
+        $staff_assignment_total = 0;
+        $staff_role_total = 0;
         try {
-            $staff_assignment_total = 0;
-            foreach ($staff_assignments as $staff_role_assignments) {
-                if (!is_array($staff_role_assignments)) {
-                    continue;
-                }
-                $staff_assignment_total += count(array_filter(array_map('absint', $staff_role_assignments)));
-            }
+            $staffing_boot_snapshot = function_exists('bvmgr_staffing_resolve_event_snapshot')
+                ? (array) bvmgr_staffing_resolve_event_snapshot((int) $post->ID)
+                : array();
+            $staff_assignment_total = max(0, (int) ($staffing_boot_snapshot['headcount_filled_total'] ?? 0));
+            $staff_role_total = count((array) ($staffing_boot_snapshot['roles'] ?? array()));
         } finally {
             if (function_exists('bvmgr_event_plan_perf_span_finish')) {
                 bvmgr_event_plan_perf_span_finish('event_plan_admin_boot_staffing_summary', (int) $post->ID, $staffing_summary_trace, array(
                     'section' => 'staffing_summary',
-                    'staff_role_count' => count($staff_assignments),
+                    'staff_role_count' => $staff_role_total,
                     'staff_assignment_count' => $staff_assignment_total,
                     'staffing_render_mode' => $this->should_defer_event_plan_admin_section((int) $post->ID, 'staff') ? 'deferred' : 'full',
                 ));

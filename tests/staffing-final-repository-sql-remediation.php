@@ -259,6 +259,12 @@ function wp_verify_nonce(string $nonce, string $action): bool
 	return $nonce !== '';
 }
 
+function bvmgr_nonce_action_for_value(string $nonce, string $canonical_action): string
+{
+	unset($nonce);
+	return $canonical_action;
+}
+
 function current_user_can(string $capability, ...$args): bool
 {
 	unset($capability, $args);
@@ -818,7 +824,7 @@ function vms_test_reset_runtime(): VMS_Test_WPDB
 }
 
 $plugin_root = dirname(__DIR__);
-$live_plugin_root = dirname($plugin_root, 2) . '/vms';
+$live_plugin_root = dirname($plugin_root, 2) . '/backstage-venue-manager';
 
 $store_path = $plugin_root . '/includes/modules/staff-tasks/store.php';
 $db_path = $plugin_root . '/includes/modules/staff-tasks/db.php';
@@ -941,35 +947,35 @@ $expected_t3_inventory = array(
 	'includes/core/staffing.php:1973:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/core/staffing.php:1997:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/core/staffing.php:2018:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2136:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2175:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:2102:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2141:WordPress.DB.DirectDatabaseQuery.DirectQuery',
 );
 
 $expected_t4_inventory = array(
-	'includes/core/staffing.php:2491:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2495:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3071:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3136:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3149:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3171:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3196:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:3230:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3251:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3265:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:3288:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3352:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3438:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3455:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3597:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3692:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3779:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2457:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2461:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3433:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3498:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3511:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3533:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3558:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:3592:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3615:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3629:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:3652:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3716:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3802:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3819:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3961:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4056:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4143:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staffing.php:869:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $expected_t5_inventory = array(
 	'includes/core/staffing.php:710:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3815:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3915:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4179:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4279:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staff-list-columns.php:69:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staff-user-link.php:131:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staff-vendor-link.php:146:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
@@ -1080,9 +1086,10 @@ try {
 		),
 		'Mirror/live core staffing T5 targets should remain byte-identical.'
 	);
-	vms_test_assert_true(
-		hash('sha256', $core_staffing_source) !== hash('sha256', $live_core_staffing_source),
-		'Mirror/live core staffing should retain authorized whole-file divergence while the T5 functions stay aligned.'
+	vms_test_assert_same(
+		hash('sha256', $core_staffing_source),
+		hash('sha256', $live_core_staffing_source),
+		'Mirror/active core staffing should remain byte-identical.'
 	);
 
 	vms_test_assert_same(
@@ -1090,9 +1097,10 @@ try {
 		vms_test_collect_target_hashes($live_admin_ui_source, array('bvmgr_tasks_admin_get_event_options')),
 		'Mirror/live admin-ui T5 target should remain byte-identical.'
 	);
-	vms_test_assert_true(
-		hash('sha256', $admin_ui_source) !== hash('sha256', $live_admin_ui_source),
-		'Mirror/live admin-ui should retain authorized whole-file divergence while the T5 function stays aligned.'
+	vms_test_assert_same(
+		hash('sha256', $admin_ui_source),
+		hash('sha256', $live_admin_ui_source),
+		'Mirror/active admin-ui should remain byte-identical.'
 	);
 
 	$vendor_staff_marker = "add_action('save_post_vms_vendor', function (int \$post_id, WP_Post \$post, bool \$update): void {";
@@ -1101,9 +1109,10 @@ try {
 		hash('sha256', vms_test_extract_inline_closure($live_vendor_staff_link_source, $vendor_staff_marker)),
 		'Mirror/live vendor-staff save_post closure should remain byte-identical.'
 	);
-	vms_test_assert_true(
-		hash('sha256', $vendor_staff_link_source) !== hash('sha256', $live_vendor_staff_link_source),
-		'Mirror/live vendor-staff link should retain authorized whole-file divergence while the T5 closure stays aligned.'
+	vms_test_assert_same(
+		hash('sha256', $vendor_staff_link_source),
+		hash('sha256', $live_vendor_staff_link_source),
+		'Mirror/active vendor-staff link should remain byte-identical.'
 	);
 
 	$list_link_source = vms_test_extract_function($staff_list_columns_source, 'bvmgr_staff_admin_list_linked_user_id');
@@ -1176,7 +1185,7 @@ try {
 	$GLOBALS['vms_test_users'][55] = new WP_User(array('ID' => 55, 'display_name' => 'Pat User'));
 	$GLOBALS['vms_test_user_meta'][55]['_vms_staff_id'] = 91;
 	$_POST = array(
-		'vms_staff_user_link_nonce' => 'nonce',
+		'bvmgr_staff_user_link_nonce' => 'nonce',
 		'vms_linked_user_id' => '55',
 	);
 	$staff_user_post = new WP_Post(array('ID' => 33, 'post_type' => 'vms_staff'));
@@ -1202,7 +1211,7 @@ try {
 	$GLOBALS['vms_test_posts'][60] = new WP_Post(array('ID' => 60, 'post_type' => 'vms_vendor', 'post_title' => 'Vendor 60'));
 	$GLOBALS['vms_test_post_meta'][60]['_vms_linked_staff_id'] = 95;
 	$_POST = array(
-		'vms_staff_vendor_link_nonce' => 'nonce',
+		'bvmgr_staff_vendor_link_nonce' => 'nonce',
 		'vms_linked_vendor_id' => '60',
 	);
 	$staff_vendor_post = new WP_Post(array('ID' => 40, 'post_type' => 'vms_staff'));
@@ -1227,7 +1236,7 @@ try {
 	$GLOBALS['vms_test_posts'][75] = new WP_Post(array('ID' => 75, 'post_type' => 'vms_staff', 'post_title' => 'Staff 75'));
 	$GLOBALS['vms_test_post_meta'][75]['_vms_linked_vendor_id'] = 96;
 	$_POST = array(
-		'vms_vendor_staff_link_nonce' => 'nonce',
+		'bvmgr_vendor_staff_link_nonce' => 'nonce',
 		'vms_linked_staff_id' => '75',
 	);
 	$vendor_staff_post = new WP_Post(array('ID' => 50, 'post_type' => 'vms_vendor'));

@@ -1,0 +1,19 @@
+VMS Commerce Discounts
+Version: 0.2.13
+Build date: 2026-09-05
+
+Purpose
+- Preserve explicitly recorded zero-dollar and comped Woo cart-line subtotals as zero.
+- Fall back to live product prices only when Woo has not recorded line subtotal or line total data.
+- Preserve paid and discounted-positive qualification, discount allocation, display, order ledgering, and Square compatibility behavior.
+
+Files changed
+- vms-commerce-discounts.php
+- includes/class-vms-discounts-cart.php
+- readme.txt
+- vms-build.txt
+- vms-commerce-discounts-test-plan-0.2.13.md
+
+Notes
+- Only the recorded-subtotal presence boundary changes: an explicit zero remains zero, while absent transaction data may use the live product price.
+- Rule storage, normal activation, order handling, stored identifiers, public display, and Square request behavior are otherwise unchanged.

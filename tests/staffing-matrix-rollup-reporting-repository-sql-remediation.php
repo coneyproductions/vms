@@ -897,6 +897,8 @@ function vms_test_run_save_event_roles_matrix_assertions(): void
 		array(
 			array('assignment_id' => 901, 'staff_id' => 101, 'status' => 'canceled'),
 			array('assignment_id' => 902, 'staff_id' => 777, 'status' => 'confirmed'),
+			array('assignment_id' => 903, 'staff_id' => 102, 'status' => 'confirmed'),
+			array('assignment_id' => 904, 'staff_id' => 102, 'status' => 'proposed'),
 		),
 		array(),
 		array(),
@@ -957,11 +959,15 @@ function vms_test_run_save_event_roles_matrix_assertions(): void
 	vms_test_assert_same('canceled', $slot_updates[1]['data']['status'], 'Matrix saves should cancel obsolete slot rows.');
 
 	$assignment_updates = vms_test_filter_calls_by_table($wpdb, 'update', 'wp_vms_event_role_assignments');
-	vms_test_assert_same(2, count($assignment_updates), 'Matrix saves should revive retained assignments and cancel omitted assignments.');
+	vms_test_assert_same(4, count($assignment_updates), 'Matrix saves should revive retained assignments, preserve confirmations, and cancel omitted or duplicate assignments.');
 	vms_test_assert_same(array('assignment_id' => 901), $assignment_updates[0]['where'], 'Matrix saves should revive the retained assignment first.');
 	vms_test_assert_same('proposed', $assignment_updates[0]['data']['status'], 'Matrix saves should revive retained assignments as proposed.');
-	vms_test_assert_same(array('assignment_id' => 902), $assignment_updates[1]['where'], 'Matrix saves should cancel the omitted assignment row.');
-	vms_test_assert_same('canceled', $assignment_updates[1]['data']['status'], 'Matrix saves should cancel omitted assignments.');
+	vms_test_assert_same(array('assignment_id' => 903), $assignment_updates[1]['where'], 'Matrix saves should retain the canonical confirmed assignment row.');
+	vms_test_assert_same('confirmed', $assignment_updates[1]['data']['status'], 'Matrix saves must not demote a confirmed assignment to proposed.');
+	vms_test_assert_same(array('assignment_id' => 902), $assignment_updates[2]['where'], 'Matrix saves should cancel the omitted assignment row.');
+	vms_test_assert_same('canceled', $assignment_updates[2]['data']['status'], 'Matrix saves should cancel omitted assignments.');
+	vms_test_assert_same(array('assignment_id' => 904), $assignment_updates[3]['where'], 'Matrix saves should cancel the duplicate non-canonical assignment row.');
+	vms_test_assert_same('canceled', $assignment_updates[3]['data']['status'], 'Matrix saves should cancel duplicate assignments at the application layer.');
 
 	$slot_inserts = vms_test_filter_calls_by_table($wpdb, 'insert', 'wp_vms_event_role_slots');
 	vms_test_assert_same(1, count($slot_inserts), 'Matrix saves should insert one slot row for each new managed role.');
@@ -969,8 +975,8 @@ function vms_test_run_save_event_roles_matrix_assertions(): void
 	vms_test_assert_same(1, $slot_inserts[0]['data']['headcount_needed'], 'Matrix saves should persist the requested headcount on inserted slot rows.');
 
 	$assignment_inserts = vms_test_filter_calls_by_table($wpdb, 'insert', 'wp_vms_event_role_assignments');
-	vms_test_assert_same(2, count($assignment_inserts), 'Matrix saves should insert one assignment row for each newly assigned staff member.');
-	vms_test_assert_same(array(102, 103), array($assignment_inserts[0]['data']['staff_id'], $assignment_inserts[1]['data']['staff_id']), 'Matrix saves should preserve the normalized assignment insertion order.');
+	vms_test_assert_same(1, count($assignment_inserts), 'Matrix saves should insert only staff members without an existing canonical row.');
+	vms_test_assert_same(103, $assignment_inserts[0]['data']['staff_id'], 'Matrix saves should avoid inserting a duplicate for retained confirmed staff.');
 
 	foreach (vms_test_filter_calls($wpdb, 'query') as $call) {
 		vms_test_assert_no_placeholders($call['query'], 'Matrix save query execution should not retain unresolved placeholders.');
@@ -1069,7 +1075,7 @@ function vms_test_run_get_rollup_assertions(): void
 }
 
 $plugin_root = dirname(__DIR__);
-$live_plugin_root = dirname($plugin_root, 2) . '/vms';
+$live_plugin_root = dirname($plugin_root, 2) . '/backstage-venue-manager';
 $store_path = $plugin_root . '/includes/modules/staff-tasks/store.php';
 $db_path = $plugin_root . '/includes/modules/staff-tasks/db.php';
 $admin_ui_path = $plugin_root . '/includes/modules/staff-tasks/admin-ui.php';
@@ -1155,35 +1161,35 @@ $expected_t3_inventory = array(
 	'includes/core/staffing.php:1973:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/core/staffing.php:1997:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/core/staffing.php:2018:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2136:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2175:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:2102:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2141:WordPress.DB.DirectDatabaseQuery.DirectQuery',
 );
 
 $expected_t4_inventory = array(
-	'includes/core/staffing.php:2491:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:2495:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3071:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3136:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3149:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3171:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3196:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:3230:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3251:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3265:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:3288:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3352:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3438:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3455:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3597:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3692:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3779:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2457:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:2461:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3433:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3498:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3511:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3533:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3558:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:3592:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3615:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3629:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:3652:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3716:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3802:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3819:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3961:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4056:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4143:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staffing.php:869:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $expected_t5_inventory = array(
 	'includes/core/staffing.php:710:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3815:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3915:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4179:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4279:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $actual_inventory = vms_test_collect_db_phpcs_inventory(array($store_path, $admin_ui_path, $db_path, $staff_portal_path, $core_staffing_path, $admin_staffing_path));
@@ -1250,6 +1256,7 @@ eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_mark_rollu
 eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_estimate_slot_cost'));
 eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_compute_rollup'));
 eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_get_rollup'));
+eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_reconcile_existing_assignment_rows'));
 eval(vms_test_extract_function($core_staffing_source, 'bvmgr_staffing_save_event_roles_matrix'));
 
 try {

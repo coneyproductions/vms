@@ -32,6 +32,7 @@ $result = array(
 	'identity' => array(),
 	'menu' => array(),
 	'notices' => '',
+	'notices_by_owner' => array(),
 	'rest_namespaces' => array(),
 );
 
@@ -158,13 +159,34 @@ try {
 }
 $nativeNotices = (string) ob_get_clean();
 $result['notices'] = preg_replace('/\s+/', ' ', wp_strip_all_tags($nativeNotices)) ?: '';
+$noticeBlocks = array();
+if (preg_match_all('#<div\b[^>]*\bnotice\b[^>]*>.*?</div>#is', $nativeNotices, $noticeMatches) > 0) {
+	foreach ($noticeMatches[0] as $noticeHtml) {
+		$noticeText = preg_replace('/\s+/', ' ', wp_strip_all_tags((string) $noticeHtml)) ?: '';
+		if ($noticeText !== '') {
+			$noticeBlocks[] = $noticeText;
+		}
+	}
+}
+foreach ((array) $manifest['plugins'] as $noticeOwner => $noticeContract) {
+	$owned = array();
+	foreach ($noticeBlocks as $noticeText) {
+		foreach ((array) ($noticeContract['notice']['owner_patterns'] ?? array()) as $ownerPattern) {
+			if ($ownerPattern !== '' && stripos($noticeText, (string) $ownerPattern) !== false) {
+				$owned[] = $noticeText;
+				break;
+			}
+		}
+	}
+	$result['notices_by_owner'][$noticeOwner] = array_values(array_unique($owned));
+}
 
-$coreLoaded = defined('VMS_PLUGIN_FILE') && defined('VMS_VERSION');
-$bvmFile = $coreLoaded ? (string) VMS_PLUGIN_FILE : '';
+$coreLoaded = defined('BVMGR_PLUGIN_FILE') && defined('BVMGR_VERSION');
+$bvmFile = $coreLoaded ? (string) BVMGR_PLUGIN_FILE : '';
 $result['identity'] = array(
 	'bvm_active' => $coreLoaded,
 	'bvm_plugin_basename' => $bvmFile !== '' ? plugin_basename($bvmFile) : '',
-	'bvm_version' => defined('VMS_VERSION') ? (string) VMS_VERSION : '',
+	'bvm_version' => defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '',
 	'historical_main_exists' => is_file(WP_PLUGIN_DIR . '/vms/vendor-management-system.php'),
 	'nonexistent_bootstraps' => array(
 		'vms.php' => is_file(WP_PLUGIN_DIR . '/vms.php'),
@@ -183,10 +205,34 @@ $result['identity'] = array(
 
 $check('core-presence', 'BVM Detection', $addon, $coreLoaded === $coreExpected, 'BVM runtime presence matched the scenario.');
 if ($coreExpected) {
-	$check('public-basename', 'BVM Detection', $addon, $result['identity']['bvm_plugin_basename'] === 'backstage-venue-manager/vendor-management-system.php', 'BVM used its public plugin basename.', $result['identity']);
+	$check('public-basename', 'BVM Detection', $addon, $result['identity']['bvm_plugin_basename'] === 'backstage-venue-manager/backstage-venue-manager.php', 'BVM used its public plugin basename.', $result['identity']);
 	$check('public-version', 'BVM Detection', $addon, $result['identity']['bvm_version'] === '1.2.0', 'BVM exposed version 1.2.0.');
 	$check('historical-core-absent', 'BVM Detection', $addon, !$result['identity']['historical_main_exists'] && !in_array('vms/vendor-management-system.php', $result['active_plugins'], true), 'Historical standalone VMS core was absent and inactive.');
 	$check('nonexistent-bootstrap-identities-absent', 'BVM Detection', $addon, !in_array(true, $result['identity']['nonexistent_bootstraps'], true), 'Nonexistent bootstrap identities were absent.');
+}
+
+$calendarFeedsActive = in_array('backstage-calendar-feeds/backstage-calendar-feeds.php', $activePluginEntries, true);
+if ($calendarFeedsActive) {
+	$calendarRows = $menuRows($coreExpected ? 'vms-dashboard' : 'backstage', 'backstage');
+	$calendarTopRows = $topRows('backstage');
+	$calendarRegistry = function_exists('bvmgr_admin_menu_registry') ? bvmgr_admin_menu_registry() : array();
+	$calendarEntry = (array) ($calendarRegistry['backstage'] ?? array());
+	$check('calendar-feeds-version', 'APIs', 'backstage-calendar-feeds', defined('BCF_VERSION') && BCF_VERSION === '0.1.4', 'Calendar Feeds loaded the 0.1.4 candidate.');
+	if ($coreExpected) {
+		$check('calendar-feeds-bvm-registry', 'Menu/UI', 'backstage-calendar-feeds', count($calendarRows) === 1 && count($calendarTopRows) === 0 && ($calendarEntry['source'] ?? '') === 'backstage-calendar-feeds' && ($calendarEntry['capability'] ?? '') === 'manage_options' && !empty($calendarEntry['shell']), 'Calendar Feeds used one canonical BVM registry page without a duplicate top-level menu.', $calendarEntry);
+	} else {
+		$check('calendar-feeds-standalone-menu', 'Core-Absent Behavior', 'backstage-calendar-feeds', count($calendarTopRows) === 1 && count($calendarRows) === 1, 'Calendar Feeds remained reachable through its standalone Backstage menu.');
+	}
+
+	$calendarHealth = class_exists('ConeyProductions\\BackstageCalendarFeeds\\DRM_Calendar_Intake_Provider')
+		? (new ConeyProductions\BackstageCalendarFeeds\DRM_Calendar_Intake_Provider())->health()
+		: array('available' => false);
+	$intakeExpected = in_array('drm-calendar-intake/drm-calendar-intake.php', $activePluginEntries, true);
+	$calendarHealthAvailable = !is_wp_error($calendarHealth) && is_array($calendarHealth) && !empty($calendarHealth['available']);
+	$calendarHealthDetails = is_wp_error($calendarHealth)
+		? array('error_code' => $calendarHealth->get_error_code(), 'error_message' => $calendarHealth->get_error_message())
+		: (array) $calendarHealth;
+	$check('calendar-feeds-intake-contract', 'APIs', 'backstage-calendar-feeds', $calendarHealthAvailable === $intakeExpected, 'Calendar Feeds recognized DRM Calendar Intake presence or failed safely when it was unavailable.', $calendarHealthDetails);
 }
 
 $routes = rest_get_server()->get_routes();
@@ -287,22 +333,42 @@ foreach ($targetAddons as $targetAddon) {
 	}
 	$check('addon-loaded-' . $targetAddon, 'No Fatal', $targetAddon, $markerValueMatches, 'The selected add-on bootstrap and version marker loaded.', array('constant' => $marker['constant'], 'expected' => $marker['value'], 'actual' => $markerActual));
 
-	$companionUnavailable = $targetAddon === 'vms-commerce-discounts' && in_array($companionState, array('missing-woocommerce', 'missing-woocommerce-square'), true);
+	$companionUnavailable = $targetAddon === 'vms-commerce-discounts' && $companionState === 'missing-woocommerce';
 	if ($coreExpected && !$companionUnavailable) {
-		$missingFunctions = array_values(array_filter($contract['functions'], static fn(string $function): bool => !function_exists($function)));
-		$missingClasses = array_values(array_filter($contract['classes'], static fn(string $class): bool => !class_exists($class)));
-		$missingConstants = array_values(array_filter($contract['constants'], static fn(string $constant): bool => !defined($constant)));
-		$check('runtime-functions-' . $targetAddon, 'APIs', $targetAddon, $missingFunctions === array(), 'Consumed BVM function contracts were declared at runtime.', array('missing' => $missingFunctions, 'checked' => count($contract['functions'])));
-		$check('runtime-classes-' . $targetAddon, 'APIs', $targetAddon, $missingClasses === array(), 'Consumed BVM class contracts were declared at runtime.', array('missing' => $missingClasses));
-		$check('runtime-constants-' . $targetAddon, 'APIs', $targetAddon, $missingConstants === array(), 'Consumed BVM constant contracts were declared at runtime.', array('missing' => $missingConstants));
+		$missingCanonicalProviders = array();
+		foreach ((array) $contract['capabilities'] as $capability) {
+			if (($capability['external_dependency_owner'] ?? '') !== 'backstage-venue-manager') {
+				continue;
+			}
+			$provider = (string) ($capability['canonical_provider'] ?? '');
+			if ($provider === '' || strpos((string) ($capability['guard'] ?? ''), 'optional function guard') !== false) {
+				continue;
+			}
+			if (strpos($provider, 'bvmgr_') === 0) {
+				$available = function_exists($provider);
+			} elseif (preg_match('/^BVMGR_[A-Z0-9_]+$/', $provider) === 1) {
+				$available = defined($provider);
+			} else {
+				// Descriptive WordPress/data providers are checked by their outcome tests.
+				continue;
+			}
+			if (!$available) {
+				$missingCanonicalProviders[] = array('capability' => $capability['id'] ?? '', 'provider' => $provider);
+			}
+		}
+		$check('semantic-capabilities-' . $targetAddon, 'APIs', $targetAddon, $missingCanonicalProviders === array(), 'Semantic capabilities resolved through their canonical BVM providers without requiring legacy aliases.', array('missing' => $missingCanonicalProviders, 'checked' => count($contract['capabilities'])));
 
 		$missingHooks = array();
-		foreach ($contract['hook_callbacks'] as $hook => $_callback) {
-			if (has_filter((string) $hook) === false) {
+		foreach ((array) $contract['hooks'] as $hookContract) {
+			if (($hookContract['emission'] ?? '') !== 'bvm-emitted') {
+				continue;
+			}
+			$hook = (string) ($hookContract['name'] ?? '');
+			if (!in_array($hook, (array) ($manifest['hook_emission']['bvm_emitted'] ?? array()), true) || has_filter($hook) === false) {
 				$missingHooks[] = (string) $hook;
 			}
 		}
-		$check('runtime-hooks-' . $targetAddon, 'APIs', $targetAddon, $missingHooks === array(), 'Declared BVM hook integrations had callbacks attached.', array('missing' => $missingHooks));
+		$check('runtime-hooks-' . $targetAddon, 'APIs', $targetAddon, $missingHooks === array(), 'BVM-emitted hook integrations had callbacks attached; historical/dead hooks were not counted as support.', array('missing' => $missingHooks));
 
 		$missingDataStructures = array();
 		foreach (array_intersect($contract['post_types'], array('vms_event_plan', 'vms_venue', 'vms_doc')) as $postType) {
@@ -314,6 +380,7 @@ foreach ($targetAddons as $targetAddon) {
 
 		$menuFailures = array();
 		$menuHooks = array();
+		$registry = isset($GLOBALS['bvmgr_admin_menu_registry']) && is_array($GLOBALS['bvmgr_admin_menu_registry']) ? $GLOBALS['bvmgr_admin_menu_registry'] : array();
 		foreach ($contract['menus'] as $menu) {
 			$rows = $menuRows((string) $menu['parent'], (string) $menu['slug']);
 			$allRows = $allSlugRows((string) $menu['slug']);
@@ -329,15 +396,29 @@ foreach ($targetAddons as $targetAddon) {
 			if ($menuHook === '' || has_action($menuHook) === false) {
 				$menuFailures[] = array('slug' => $menu['slug'], 'expected_callback_hook' => $menuHook, 'callback_registered' => false);
 			}
+			if (!empty($menu['registry'])) {
+				$registryEntry = $registry[(string) $menu['slug']] ?? null;
+				if (!is_array($registryEntry)) {
+					$menuFailures[] = array('slug' => $menu['slug'], 'registry_entry' => 'missing');
+					continue;
+				}
+				if ((string) ($registryEntry['capability'] ?? '') !== (string) ($menu['capability'] ?? '')) {
+					$menuFailures[] = array('slug' => $menu['slug'], 'registry_capability' => $registryEntry['capability'] ?? null, 'expected_capability' => $menu['capability'] ?? null);
+				}
+				$callback = $registryEntry['callback'] ?? null;
+				$callbackMethod = is_array($callback) ? (string) ($callback[1] ?? '') : (is_string($callback) ? $callback : '');
+				if (isset($menu['callback_method']) && $callbackMethod !== (string) $menu['callback_method']) {
+					$menuFailures[] = array('slug' => $menu['slug'], 'registry_callback_method' => $callbackMethod, 'expected_callback_method' => $menu['callback_method']);
+				}
+			}
 		}
-		$check('menus-' . $targetAddon, 'Menu/UI', $targetAddon, $menuFailures === array(), 'Expected integration menus existed once under their intended parent with their intended capability and a registered callback.', array('failures' => $menuFailures, 'actual_page_hooks' => $menuHooks));
+		$check('menus-' . $targetAddon, 'Menu/UI', $targetAddon, $menuFailures === array(), 'Integration menus existed once with the intended parent, capability, callback, and canonical registry ownership where required.', array('failures' => $menuFailures, 'actual_page_hooks' => $menuHooks));
 
 		$presentNotice = (string) ($contract['notice']['present'] ?? '');
-		$check('no-false-bvm-notice-' . $targetAddon, 'Notices', $targetAddon, $presentNotice === '' || stripos($nativeNotices, $presentNotice) !== false, $presentNotice === '' ? 'No BVM-missing notice was expected while BVM was present.' : 'The expected BVM-present notice was emitted.');
-		if ($presentNotice === '') {
-			$falseMissing = preg_match('/(?:requires|activate|install)[^<]{0,80}(?:Backstage Venue Manager|VMS Core|VMS core|Venue Management System)/i', $nativeNotices) === 1;
-			$check('no-generic-false-bvm-notice-' . $targetAddon, 'Notices', $targetAddon, !$falseMissing, 'No false BVM/core dependency warning was emitted while BVM was present.', array('notice' => $result['notices']));
-		}
+		$ownedNoticeText = implode(' ', (array) ($result['notices_by_owner'][$targetAddon] ?? array()));
+		$absentNotice = (string) ($contract['notice']['absent'] ?? '');
+		$noticePassed = $presentNotice !== '' ? stripos($ownedNoticeText, $presentNotice) !== false : ($absentNotice === '' || stripos($ownedNoticeText, $absentNotice) === false);
+		$check('owned-notices-' . $targetAddon, 'Notices', $targetAddon, $noticePassed, 'Only notices owned by the package under test were evaluated for its BVM dependency state.', array('owned_notices' => $result['notices_by_owner'][$targetAddon] ?? array()));
 
 		$missingNamespaces = array_values(array_filter($contract['rest_namespaces'], static fn(string $namespace): bool => !in_array($namespace, $result['rest_namespaces'], true)));
 		$check('rest-registration-' . $targetAddon, 'APIs', $targetAddon, $missingNamespaces === array(), 'Expected REST namespaces were registered without executing endpoints.', array('missing' => $missingNamespaces));
@@ -351,8 +432,9 @@ foreach ($targetAddons as $targetAddon) {
 if (!$coreExpected && $addon !== 'all' && isset($manifest['plugins'][$addon])) {
 	$contract = $manifest['plugins'][$addon];
 	$absentNotice = (string) ($contract['notice']['absent'] ?? '');
-	$noticePassed = $absentNotice === '' || stripos($nativeNotices, $absentNotice) !== false;
-	$check('core-absent-notice-' . $addon, 'BVM-Absent', $addon, $noticePassed, $absentNotice === '' ? 'The intended standalone/no-op state emitted no required BVM notice.' : 'The intended native missing-BVM notice was emitted.', array('expected_fragment' => $absentNotice, 'notice' => $result['notices']));
+	$ownedNoticeText = implode(' ', (array) ($result['notices_by_owner'][$addon] ?? array()));
+	$noticePassed = $absentNotice === '' || stripos($ownedNoticeText, $absentNotice) !== false;
+	$check('core-absent-notice-' . $addon, 'BVM-Absent', $addon, $noticePassed, $absentNotice === '' ? 'The intended standalone/no-op state emitted no required BVM notice.' : 'The package-owned missing-BVM notice was emitted.', array('expected_fragment' => $absentNotice, 'owned_notices' => $result['notices_by_owner'][$addon] ?? array()));
 
 	if ($addon === 'drm-calendar-intake') {
 		$check('calendar-intake-standalone-menu', 'BVM-Absent', $addon, count($menuRows('edit.php?post_type=drm_calendar_item', 'drm-calendar-intake-settings')) === 1, 'Calendar Intake retained its quarantine UI without BVM.');
@@ -381,27 +463,23 @@ if ($scenarioId === 'third-party-absent-vms-commerce-discounts') {
 	$check('commerce-missing-woocommerce-notice', 'Notices', 'vms-commerce-discounts', stripos($nativeNotices, 'requires WooCommerce to be active') !== false && count($allSlugRows('vms-commerce-discounts')) === 0, 'Commerce Discounts emitted its WooCommerce-only dependency notice and registered no settings menu.');
 }
 if ($scenarioId === 'third-party-absent-square-vms-commerce-discounts') {
-	if (getenv('BVM_COMPAT_COMMERCE_SQUARE_CONTRACT') === 'phase5a') {
-		$squareCallbacks = array(
-			'wc_payment_gateway_square_credit_card_get_order' => has_filter('wc_payment_gateway_square_credit_card_get_order'),
-			'wc_payment_gateway_square_cash_app_pay_get_order' => has_filter('wc_payment_gateway_square_cash_app_pay_get_order'),
-		);
-		$check(
-			'commerce-missing-square-integration-unavailable',
-			'Notices',
-			'vms-commerce-discounts',
-			stripos($nativeNotices, 'WooCommerce Square integration is unavailable') !== false
-				&& count($allSlugRows('vms-commerce-discounts')) === 1
-				&& !class_exists('VMS_Discounts_Square_Bridge', false)
-				&& !class_exists('VMS_Discounts_Square_Order_Request', false)
-				&& !in_array(true, $squareCallbacks, true)
-				&& has_action('wp_ajax_vms_discounts_search_products') !== false,
-			'Commerce Discounts kept its non-Square runtime available while declaring the Square-specific integration unavailable.',
-			array('notice' => $result['notices'], 'square_callbacks' => $squareCallbacks)
-		);
-	} else {
-		$check('commerce-missing-square-fails-closed', 'Notices', 'vms-commerce-discounts', stripos($nativeNotices, 'failed to initialize') !== false && count($allSlugRows('vms-commerce-discounts')) === 0, 'Commerce Discounts failed closed at runtime when WooCommerce Square was missing.', array('notice' => $result['notices']));
-	}
+	$squareCallbacks = array(
+		'wc_payment_gateway_square_credit_card_get_order' => has_filter('wc_payment_gateway_square_credit_card_get_order'),
+		'wc_payment_gateway_square_cash_app_pay_get_order' => has_filter('wc_payment_gateway_square_cash_app_pay_get_order'),
+	);
+	$check(
+		'commerce-missing-square-integration-unavailable',
+		'Notices',
+		'vms-commerce-discounts',
+		stripos($ownedNoticeText = implode(' ', (array) ($result['notices_by_owner']['vms-commerce-discounts'] ?? array())), 'WooCommerce Square integration is unavailable') !== false
+			&& count($allSlugRows('vms-commerce-discounts')) === 1
+			&& !class_exists('VMS_Discounts_Square_Bridge', false)
+			&& !class_exists('VMS_Discounts_Square_Order_Request', false)
+			&& !in_array(true, $squareCallbacks, true)
+			&& has_action('wp_ajax_vms_discounts_search_products') !== false,
+		'Commerce 0.2.13 kept its non-Square runtime available while the optional Square bridge remained disabled.',
+		array('owned_notice' => $ownedNoticeText, 'square_callbacks' => $squareCallbacks)
+	);
 }
 if ($scenarioId === 'third-party-absent-vmsx-checkout-policies') {
 	$check('checkout-policies-no-woocommerce-menu', 'Menu/UI', 'vmsx-checkout-policies', count($allSlugRows('vmsx-checkout-policies')) === 0, 'Checkout Policies registered no fallback menu without WooCommerce.');
@@ -409,8 +487,199 @@ if ($scenarioId === 'third-party-absent-vmsx-checkout-policies') {
 if ($scenarioId === 'third-party-absent-vms-season-passes') {
 	$check('season-passes-woocommerce-optional', 'Notices', 'vms-season-passes', count($menuRows('vms-dashboard', 'vms-season-passes')) === 1 && stripos($nativeNotices, 'WooCommerce') === false, 'Season Passes kept its BVM runtime available while optional WooCommerce was absent.');
 }
+if ($scenarioId === 'third-party-absent-vms-season-passes-ops') {
+	$check('season-passes-ops-optional', 'APIs', 'vms-season-passes', function_exists('vms_season_passes_should_boot') && vms_season_passes_should_boot() && !function_exists('vms_ops_hash_scan_payload'), 'Season remained available without optional Ops scanner enrichment.');
+}
 if ($scenarioId === 'third-party-absent-vms-sponsorships') {
 	$check('sponsorships-tec-optional', 'Notices', 'vms-sponsorships', count($menuRows('vms-dashboard', 'vms-sponsorships')) === 1 && stripos($nativeNotices, 'Events Calendar') === false, 'Sponsorships kept its administrative integration available while optional TEC was absent.');
+}
+
+if ($coreExpected && in_array('vms-season-passes', $targetAddons, true)) {
+	$seasonProviders = array(
+		'boot' => function_exists('vms_season_passes_should_boot') && vms_season_passes_should_boot(),
+		'module' => function_exists('bvmgr_module_is_registered') && bvmgr_module_is_registered('season_passes'),
+		'scanner' => function_exists('vms_season_passes_register_scanner_hooks'),
+		'public' => function_exists('vms_season_passes_public_route_slug'),
+		'admin' => function_exists('vms_season_passes_render_admin_page'),
+		'tec_resolver' => function_exists('vms_season_passes_core_function') && vms_season_passes_core_function('vms_get_event_plan_for_tec_event') === 'bvmgr_get_event_plan_for_tec_event',
+	);
+	$check('season-runtime-providers', 'APIs', 'vms-season-passes', !in_array(false, $seasonProviders, true), 'Season loaded scanner, public, admin, module, and canonical TEC resolver providers.', $seasonProviders);
+}
+if ($coreExpected && in_array('vms-sponsorships', $targetAddons, true)) {
+	$shortcodes = array('vms_sponsor_event', 'vms_sponsor_slot', 'vms_sponsor_banner', 'vms_sponsor_placeholder', 'vms_sponsor_email', 'vms_sponsor_season', 'vms_sponsor_inquiry', 'vms_sponsor_apply', 'vms_sponsor_asset_upload');
+	$missingShortcodes = array_values(array_filter($shortcodes, static fn(string $shortcode): bool => !shortcode_exists($shortcode)));
+	$check('sponsorship-current-behavior', 'APIs', 'vms-sponsorships', $missingShortcodes === array(), 'Sponsorship shortcodes remained registered after canonical registry migration.', array('missing' => $missingShortcodes));
+
+	$callbackCount = static function (string $hook, string $class, string $method): int {
+		$registered = $GLOBALS['wp_filter'][$hook] ?? null;
+		if (!($registered instanceof WP_Hook)) {
+			return 0;
+		}
+		$count = 0;
+		foreach ($registered->callbacks as $callbacks) {
+			foreach ($callbacks as $definition) {
+				$callback = $definition['function'] ?? null;
+				if (is_array($callback) && is_object($callback[0] ?? null) && $callback[0] instanceof $class && ($callback[1] ?? '') === $method) {
+					++$count;
+				}
+			}
+		}
+		return $count;
+	};
+	$eventPlanHooks = array(
+		'add_meta_boxes' => $callbackCount('add_meta_boxes', 'VMS_Sponsorships_Event_Plans', 'add_event_plan_meta_box'),
+		'save_post' => $callbackCount('save_post', 'VMS_Sponsorships_Event_Plans', 'save_event_plan_meta'),
+		'legacy_dead' => $callbackCount('vms_event_plan_after_modules', 'VMS_Sponsorships_Event_Plans', 'render_vms_event_plan_card'),
+	);
+	$check(
+		'sponsorship-event-plan-hooks-single',
+		'APIs',
+		'vms-sponsorships',
+		!in_array(0, $eventPlanHooks, true) && max($eventPlanHooks) === 1,
+		'Sponsorship Event Plan callbacks registered once; the historical hook remains dormant rather than being revived by BVM.',
+		$eventPlanHooks
+	);
+
+	if ($scenarioId === 'additional-vms-sponsorships-core-first') {
+		global $wpdb;
+		$repo = VMS_Sponsorships::instance()->repo;
+		$packageId = 0;
+		$applicationId = 0;
+		$assignmentId = 0;
+		$eventPlanId = 0;
+		$previousPost = $_POST;
+		$previousUser = get_current_user_id();
+		$flowPassed = false;
+		$capabilityPassed = false;
+		$publicPassed = false;
+		$duplicateFailedClosed = false;
+		$invalidApplicationFailedClosed = false;
+		$cleanupPassed = false;
+		try {
+			$eventPlanId = wp_insert_post(array(
+				'post_type' => 'vms_event_plan',
+				'post_status' => 'publish',
+				'post_title' => 'Wave 2B synthetic sponsorship fixture',
+			), true);
+			if (is_wp_error($eventPlanId)) {
+				throw new RuntimeException('Could not create the synthetic Event Plan.');
+			}
+			$packageId = $repo->upsert_package(array(
+				'name' => 'Wave 2B synthetic package',
+				'slug' => 'wave-2b-synthetic-package',
+				'scope' => 'event',
+				'base_price' => '125.00',
+				'active' => 1,
+				'public_display_enabled' => 1,
+				'fulfillment_template' => wp_json_encode(array(array('key' => 'logo', 'label' => 'Synthetic logo placement'))),
+			));
+			$invalidApplication = $repo->create_application(array('business_name' => 'Invalid synthetic applicant', 'email' => 'not-an-email'));
+			$invalidApplicationFailedClosed = is_wp_error($invalidApplication) && $invalidApplication->get_error_code() === 'vms_sponsorships_invalid_application';
+			$applicationId = $repo->create_application(array(
+				'business_name' => 'Wave 2B Synthetic Sponsor',
+				'contact_name' => 'Synthetic Contact',
+				'email' => 'sponsorship-flow@example.invalid',
+				'event_id' => $eventPlanId,
+				'requested_package_id' => $packageId,
+				'status' => 'approved',
+			));
+			$assignmentId = $repo->create_assignment(array(
+				'application_id' => $applicationId,
+				'event_id' => $eventPlanId,
+				'package_id' => $packageId,
+				'assignment_scope' => 'event',
+				'slot_key' => 'community',
+				'status' => 'confirmed',
+				'sponsor_display_name' => 'Wave 2B Synthetic Sponsor',
+				'sponsor_url' => 'https://example.invalid/sponsor',
+				'public_display_enabled' => 1,
+				'physical_banner_included' => 0,
+			));
+			$duplicateAssignment = $repo->create_assignment(array(
+				'application_id' => $applicationId,
+				'event_id' => $eventPlanId,
+				'sponsor_display_name' => 'Duplicate must fail',
+			));
+			$duplicateFailedClosed = is_wp_error($duplicateAssignment) && $duplicateAssignment->get_error_code() === 'vms_sponsorships_duplicate_application_assignment';
+			$repo->increment_metric($assignmentId, 'synthetic_view', $eventPlanId, null, 2);
+			$flowPassed = $packageId > 0
+				&& $applicationId > 0
+				&& $assignmentId > 0
+				&& (int) ($repo->get_assignment_by_application_id($applicationId)->id ?? 0) === $assignmentId
+				&& count($repo->get_fulfillment_items($assignmentId)) === 1
+				&& (int) ($repo->get_metrics_summary($assignmentId)[0]->total ?? 0) === 2;
+
+			wp_set_current_user(0);
+			$_POST = array(
+				'vms_sponsorships_event_plan_meta_nonce' => wp_create_nonce('vms_sponsorships_event_plan_meta'),
+				'vms_sponsorship_value_tier' => 'premium',
+				'vms_expected_attendance' => '250',
+				'vms_sponsorship_price_multiplier' => '1.25',
+			);
+			do_action('save_post', $eventPlanId, get_post($eventPlanId));
+			$unauthorizedStayedBlank = get_post_meta($eventPlanId, '_vms_sponsorship_value_tier', true) === '';
+			$administrators = get_users(array('role' => 'administrator', 'number' => 1, 'fields' => 'ids'));
+			wp_set_current_user((int) ($administrators[0] ?? 0));
+			$_POST['vms_sponsorships_event_plan_meta_nonce'] = wp_create_nonce('vms_sponsorships_event_plan_meta');
+			do_action('save_post', $eventPlanId, get_post($eventPlanId));
+			$capabilityPassed = $unauthorizedStayedBlank
+				&& get_post_meta($eventPlanId, '_vms_sponsorship_value_tier', true) === 'premium'
+				&& (int) get_post_meta($eventPlanId, '_vms_expected_attendance', true) === 250;
+
+			$applicationForm = do_shortcode('[vms_sponsor_apply]');
+			$eventOutput = do_shortcode('[vms_sponsor_event event_id="' . $eventPlanId . '" slot="community"]');
+			$publicPassed = strpos($applicationForm, '<form') !== false && strpos($eventOutput, 'Wave 2B Synthetic Sponsor') !== false;
+		} catch (Throwable $exception) {
+			$result['runtime_errors'][] = array('severity' => E_USER_WARNING, 'message' => $exception->getMessage(), 'file' => __FILE__, 'line' => __LINE__);
+		} finally {
+			$_POST = $previousPost;
+			wp_set_current_user($previousUser);
+			if ($assignmentId > 0) {
+				$wpdb->delete($repo->table('fulfillment'), array('assignment_id' => $assignmentId));
+				$wpdb->delete($repo->table('metrics'), array('assignment_id' => $assignmentId));
+				$wpdb->delete($repo->table('assets'), array('assignment_id' => $assignmentId));
+				$wpdb->delete($repo->table('assignments'), array('id' => $assignmentId));
+			}
+			if ($applicationId > 0) {
+				$wpdb->delete($repo->table('applications'), array('id' => $applicationId));
+			}
+			if ($packageId > 0) {
+				$wpdb->delete($repo->table('packages'), array('id' => $packageId));
+			}
+			if ($eventPlanId > 0) {
+				wp_delete_post($eventPlanId, true);
+			}
+			$cleanupPassed = ($assignmentId <= 0 || (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM ' . $repo->table('assignments') . ' WHERE id = %d', $assignmentId)) === 0)
+				&& ($applicationId <= 0 || (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM ' . $repo->table('applications') . ' WHERE id = %d', $applicationId)) === 0)
+				&& ($packageId <= 0 || (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM ' . $repo->table('packages') . ' WHERE id = %d', $packageId)) === 0)
+				&& ($eventPlanId <= 0 || get_post($eventPlanId) === null);
+		}
+		$check('sponsorship-package-application-assignment-flow', 'APIs', 'vms-sponsorships', $flowPassed, 'Synthetic package, application, assignment, fulfillment, and metric flows completed in the disposable database.');
+		$check('sponsorship-invalid-and-duplicate-fail-closed', 'APIs', 'vms-sponsorships', $invalidApplicationFailedClosed && $duplicateFailedClosed, 'Invalid applications and duplicate application assignments failed closed.');
+		$check('sponsorship-event-plan-capability-gate', 'APIs', 'vms-sponsorships', $capabilityPassed, 'Event Plan metadata rejected an unauthenticated save and accepted a nonce-protected administrator save.');
+		$check('sponsorship-public-forms-and-shortcodes', 'APIs', 'vms-sponsorships', $publicPassed, 'Public application and assigned-sponsor shortcodes rendered against synthetic fixture data.');
+		$check('sponsorship-flow-cleanup', 'No Fatal', 'vms-sponsorships', $cleanupPassed, 'All synthetic Sponsorships flow rows and the Event Plan were removed before scenario completion.');
+	}
+}
+if ($coreExpected && in_array('vmsx-checkout-policies', $targetAddons, true)) {
+	$settingsSection = isset($GLOBALS['wp_settings_sections']['vms-settings']['vmsx_checkout_policies_section']);
+	$fallbackRows = $allSlugRows('vmsx-checkout-policies');
+	$check('checkout-settings-location', 'Menu/UI', 'vmsx-checkout-policies', $settingsSection && count($fallbackRows) === 0, 'Checkout registered its BVM settings section and suppressed the WooCommerce fallback location.', array('settings_section' => $settingsSection, 'fallback_rows' => count($fallbackRows)));
+}
+if ($coreExpected && in_array('vmsx-weather-risk', $targetAddons, true)) {
+	$weatherProviders = array(
+		'ready' => class_exists('VMSX_Weather_Risk_Compatibility') && VMSX_Weather_Risk_Compatibility::is_ready(),
+		'module' => function_exists('bvmgr_module_is_registered') && bvmgr_module_is_registered('weather_risk'),
+		'venue' => has_action('save_post_vms_venue', array('VMSX_Weather_Risk_Venue_Location', 'handle_venue_save')) !== false,
+		'ajax' => has_action('wp_ajax_vmsx_weather_risk_refresh') !== false,
+		'cron' => has_action('vmsx_weather_risk_refresh_cron') !== false,
+	);
+	$check('weather-runtime-providers', 'APIs', 'vmsx-weather-risk', !in_array(false, $weatherProviders, true), 'Weather loaded canonical readiness, module, venue, AJAX, and cron providers.', $weatherProviders);
+	if ($companionState === 'missing-data-tools') {
+		$check('weather-data-tools-optional', 'APIs', 'vmsx-weather-risk', !function_exists('vms_dt_reporting_ticket_pace_rows') && VMSX_Weather_Risk_Compatibility::is_ready(), 'Weather remained ready without optional Data Tools enrichment.');
+	} elseif ($companionState === 'data-tools-present') {
+		$check('weather-data-tools-enrichment', 'APIs', 'vmsx-weather-risk', function_exists('vms_dt_reporting_ticket_pace_rows') && VMSX_Weather_Risk_Compatibility::is_ready(), 'Weather remained ready with optional Data Tools enrichment available.');
+	}
 }
 
 if ($coreExpected && in_array('vms-commerce-discounts', $targetAddons, true) && $woocommerceExpected && $companionState !== 'missing-woocommerce-square') {
@@ -421,7 +690,7 @@ if ($coreExpected && in_array('vms-commerce-discounts', $targetAddons, true) && 
 	$check('commerce-returned-hook-assets', 'Menu/UI', 'vms-commerce-discounts', wp_style_is('vms-discounts-admin', 'enqueued') && wp_script_is('vms-discounts-admin', 'enqueued'), 'Commerce Discounts used the actual WordPress-returned menu hook for assets.', array('hook' => $hook));
 }
 
-$ownedSlugs = array_merge(array('backstage-venue-manager'), $allAddons, array('vms-events-slider', 'vms-fill-dates', 'vms-data-tools', 'vms-express-bar', 'vms-refer-a-friend'));
+$ownedSlugs = array_merge(array('backstage-venue-manager', 'backstage-calendar-feeds'), $allAddons, array('vms-events-slider', 'vms-fill-dates', 'vms-data-tools', 'vms-express-bar', 'vms-refer-a-friend'));
 $ownedPattern = '#^(' . implode('|', array_map(static fn(string $slug): string => preg_quote($slug, '#'), $ownedSlugs)) . ')/#';
 $compatibilityRuntimeErrors = array_values(array_filter(
 	$result['runtime_errors'],

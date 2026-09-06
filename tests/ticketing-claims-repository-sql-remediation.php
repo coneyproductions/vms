@@ -333,7 +333,7 @@ function vms_test_reset_db(VMS_Test_WPDB $wpdb): void
 
 $pluginRoot = dirname(__DIR__);
 $frameworkPath = $pluginRoot . '/includes/integrations/ticketing-claims-framework.php';
-$liveFrameworkPath = dirname(__DIR__, 3) . '/vms/includes/integrations/ticketing-claims-framework.php';
+$liveFrameworkPath = dirname(__DIR__, 3) . '/backstage-venue-manager/includes/integrations/ticketing-claims-framework.php';
 
 $frameworkSource = (string) file_get_contents($frameworkPath);
 $liveFrameworkSource = (string) file_get_contents($liveFrameworkPath);

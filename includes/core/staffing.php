@@ -2056,52 +2056,18 @@ if (!function_exists('bvmgr_staffing_get_event_assigned_staff_map')) {
 		}
 
 		$assigned = array();
-		$slots = bvmgr_staffing_get_event_slots($event_plan_id, true);
-		if (!empty($slots)) {
-			foreach ($slots as $slot_row) {
-				if (!is_array($slot_row)) {
-					continue;
-				}
-				$role_id = isset($slot_row['role_id']) ? absint($slot_row['role_id']) : 0;
-				if ($role_id <= 0) {
-					continue;
-				}
-				$assignment_rows = isset($slot_row['assignments']) && is_array($slot_row['assignments']) ? $slot_row['assignments'] : array();
-				foreach ($assignment_rows as $assignment_row) {
-					if (!is_array($assignment_row)) {
-						continue;
-					}
-					$status = isset($assignment_row['status']) ? sanitize_key((string) $assignment_row['status']) : '';
-					if (!in_array($status, array('proposed', 'confirmed'), true)) {
-						continue;
-					}
-					$staff_id = isset($assignment_row['staff_id']) ? absint($assignment_row['staff_id']) : 0;
-					if ($staff_id <= 0) {
-						continue;
-					}
-					if (!isset($assigned[$role_id])) {
-						$assigned[$role_id] = array();
-					}
-					$assigned[$role_id][] = $staff_id;
-				}
+		$snapshot = function_exists('bvmgr_staffing_resolve_event_snapshot')
+			? bvmgr_staffing_resolve_event_snapshot($event_plan_id)
+			: array();
+		foreach ((array) ($snapshot['roles_by_id'] ?? array()) as $role_id => $role) {
+			$role_id = absint($role_id);
+			if ($role_id <= 0 || !is_array($role)) {
+				continue;
 			}
-		}
-
-		if (empty($assigned)) {
-			$legacy = get_post_meta($event_plan_id, '_vms_staff_assignments', true);
-			if (is_array($legacy)) {
-				foreach ($legacy as $role_id => $staff_ids) {
-					$role_id = absint($role_id);
-					if ($role_id <= 0 || !is_array($staff_ids)) {
-						continue;
-					}
-					$assigned[$role_id] = array_values(array_unique(array_filter(array_map('absint', $staff_ids))));
-				}
+			$staff_ids = array_values(array_unique(array_filter(array_map('absint', (array) ($role['assigned_staff_ids'] ?? array())))));
+			if (!empty($staff_ids)) {
+				$assigned[$role_id] = $staff_ids;
 			}
-		}
-
-		foreach ($assigned as $role_id => $staff_ids) {
-			$assigned[$role_id] = array_values(array_unique(array_filter(array_map('absint', (array) $staff_ids))));
 		}
 
 		return $assigned;
@@ -2527,6 +2493,352 @@ if (!function_exists('bvmgr_staffing_get_event_plan_headcount_context')) {
 		}
 
 		return $context;
+	}
+}
+
+if (!function_exists('bvmgr_staffing_build_event_snapshot')) {
+	/**
+	 * Build the canonical staffing snapshot from already-loaded records.
+	 *
+	 * Normalized slot rows are authoritative as soon as any normalized row exists,
+	 * including a canceled row. Legacy role assignments are consulted only when the
+	 * normalized repository has no rows at all. Keeping this function record-only
+	 * makes the source contract testable without touching a WordPress database.
+	 */
+	function bvmgr_staffing_build_event_snapshot(
+		int $event_plan_id,
+		array $slots,
+		array $legacy_assignments,
+		array $role_map,
+		array $activation_thresholds,
+		array $headcount_context,
+		array $rollup = array(),
+		string $rollup_state = 'fresh'
+	): array {
+		$event_plan_id = absint($event_plan_id);
+		$normalized_present = !empty($slots);
+		$legacy_present = false;
+		foreach ($legacy_assignments as $legacy_staff_ids) {
+			if (is_array($legacy_staff_ids) && !empty(array_filter(array_map('absint', $legacy_staff_ids)))) {
+				$legacy_present = true;
+				break;
+			}
+		}
+
+		$authority = $normalized_present ? 'normalized' : ($legacy_present ? 'legacy' : 'empty');
+		$provenance = $authority;
+		if ($normalized_present && $legacy_present) {
+			$provenance = 'normalized_legacy_ignored';
+		}
+
+		$roles = array();
+		$duplicate_assignment_count = 0;
+		if ($normalized_present) {
+			foreach ($slots as $slot) {
+				if (!is_array($slot)) {
+					continue;
+				}
+				$status = sanitize_key((string) ($slot['status'] ?? 'active'));
+				if ($status !== '' && $status !== 'active') {
+					continue;
+				}
+				$role_id = absint($slot['role_id'] ?? 0);
+				if ($role_id <= 0) {
+					continue;
+				}
+				$role_meta = is_array($role_map[$role_id] ?? null) ? (array) $role_map[$role_id] : array();
+				if (!isset($roles[$role_id])) {
+					$roles[$role_id] = array(
+						'role_id' => $role_id,
+						'role_name' => trim((string) ($slot['role_name'] ?? $role_meta['name'] ?? __('Role', 'backstage-venue-manager'))),
+						'is_critical' => !empty($role_meta['is_critical']),
+						'provenance' => 'normalized',
+						'slot_ids' => array(),
+						'headcount_needed' => 0,
+						'assigned_headcount' => 0,
+						'proposed_headcount' => 0,
+						'confirmed_headcount' => 0,
+						'legacy_status_unknown_headcount' => 0,
+						'canceled_assignment_count' => 0,
+						'assigned_staff_ids' => array(),
+						'assignments' => array(),
+					);
+				}
+
+				$slot_id = absint($slot['slot_id'] ?? 0);
+				if ($slot_id > 0) {
+					$roles[$role_id]['slot_ids'][] = $slot_id;
+				}
+				$roles[$role_id]['headcount_needed'] += max(0, (int) ($slot['headcount_needed'] ?? 0));
+
+				$assignment_by_staff = array();
+				foreach ((array) ($slot['assignments'] ?? array()) as $assignment) {
+					if (!is_array($assignment)) {
+						continue;
+					}
+					$staff_id = absint($assignment['staff_id'] ?? 0);
+					if ($staff_id <= 0) {
+						continue;
+					}
+					$assignment_status = sanitize_key((string) ($assignment['status'] ?? ''));
+					if (!in_array($assignment_status, array('proposed', 'confirmed'), true)) {
+						if ($assignment_status === 'canceled') {
+							$roles[$role_id]['canceled_assignment_count']++;
+						}
+						continue;
+					}
+					if (isset($assignment_by_staff[$staff_id])) {
+						$duplicate_assignment_count++;
+						if ($assignment_status !== 'confirmed') {
+							continue;
+						}
+					}
+					$assignment['staff_id'] = $staff_id;
+					$assignment['status'] = $assignment_status;
+					$assignment_by_staff[$staff_id] = $assignment;
+				}
+
+				foreach ($assignment_by_staff as $staff_id => $assignment) {
+					$assignment_status = (string) $assignment['status'];
+					$roles[$role_id]['assigned_headcount']++;
+					$roles[$role_id][$assignment_status . '_headcount']++;
+					$roles[$role_id]['assigned_staff_ids'][] = (int) $staff_id;
+					$roles[$role_id]['assignments'][] = $assignment;
+				}
+			}
+		} elseif ($legacy_present) {
+			foreach ($legacy_assignments as $role_id_raw => $staff_ids_raw) {
+				$role_id = absint($role_id_raw);
+				$staff_ids = array_values(array_unique(array_filter(array_map('absint', (array) $staff_ids_raw))));
+				if ($role_id <= 0 || empty($staff_ids)) {
+					continue;
+				}
+				$role_meta = is_array($role_map[$role_id] ?? null) ? (array) $role_map[$role_id] : array();
+				$assignments = array();
+				foreach ($staff_ids as $staff_id) {
+					$assignments[] = array('staff_id' => $staff_id, 'status' => 'legacy');
+				}
+				$roles[$role_id] = array(
+					'role_id' => $role_id,
+					'role_name' => trim((string) ($role_meta['name'] ?? __('Role', 'backstage-venue-manager'))),
+					'is_critical' => !empty($role_meta['is_critical']),
+					'provenance' => 'legacy',
+					'slot_ids' => array(),
+					// Legacy storage has no planned-headcount field; assigned count is the only safe minimum.
+					'headcount_needed' => count($staff_ids),
+					'assigned_headcount' => count($staff_ids),
+					'proposed_headcount' => 0,
+					'confirmed_headcount' => 0,
+					'legacy_status_unknown_headcount' => count($staff_ids),
+					'canceled_assignment_count' => 0,
+					'assigned_staff_ids' => $staff_ids,
+					'assignments' => $assignments,
+				);
+			}
+		}
+
+		$headcount_wired = !empty($headcount_context['wired']);
+		$current_headcount = max(0, (int) ($headcount_context['headcount'] ?? 0));
+		$needed_total = 0;
+		$required_now_total = 0;
+		$filled_total = 0;
+		$proposed_total = 0;
+		$confirmed_total = 0;
+		$legacy_unknown_total = 0;
+		$open_total = 0;
+		$required_open_total = 0;
+		$critical_open_total = 0;
+		$unique_people = array();
+		$missing_items = array();
+
+		foreach ($roles as $role_id => &$role) {
+			$role['assigned_staff_ids'] = array_values(array_unique(array_filter(array_map('absint', (array) $role['assigned_staff_ids']))));
+			$role_in_use = ((int) $role['headcount_needed'] > 0 || (int) $role['assigned_headcount'] > 0);
+			$threshold = array_key_exists($role_id, $activation_thresholds)
+				? max(0, (int) $activation_thresholds[$role_id])
+				: ($role_in_use ? 1 : 0);
+			$required_now = (int) $role['headcount_needed'] > 0
+				&& $headcount_wired
+				&& $current_headcount >= $threshold;
+			$open = max(0, (int) $role['headcount_needed'] - (int) $role['assigned_headcount']);
+			$required_open = $required_now ? $open : 0;
+			$role['activation_threshold'] = $threshold;
+			$role['is_required_now'] = $required_now;
+			$role['required_now_headcount'] = $required_now ? (int) $role['headcount_needed'] : 0;
+			$role['open_positions'] = $open;
+			$role['required_open_positions'] = $required_open;
+			$role['unique_assigned_people_count'] = count($role['assigned_staff_ids']);
+			$role['needed'] = (int) $role['headcount_needed'];
+			$role['filled'] = (int) $role['assigned_headcount'];
+			$role['open'] = $open;
+
+			$needed_total += (int) $role['headcount_needed'];
+			$required_now_total += (int) $role['required_now_headcount'];
+			$filled_total += (int) $role['assigned_headcount'];
+			$proposed_total += (int) $role['proposed_headcount'];
+			$confirmed_total += (int) $role['confirmed_headcount'];
+			$legacy_unknown_total += (int) $role['legacy_status_unknown_headcount'];
+			$open_total += $open;
+			$required_open_total += $required_open;
+			if (!empty($role['is_critical'])) {
+				$critical_open_total += $required_open;
+			}
+			foreach ($role['assigned_staff_ids'] as $staff_id) {
+				$unique_people[$staff_id] = true;
+			}
+			if ($required_open > 0) {
+				$missing_items[] = array(
+					'role_id' => (int) $role_id,
+					'role_name' => (string) $role['role_name'],
+					'need' => (int) $role['headcount_needed'],
+					'filled' => (int) $role['assigned_headcount'],
+					'open' => $required_open,
+					'is_critical' => !empty($role['is_critical']) ? 1 : 0,
+				);
+			}
+		}
+		unset($role);
+		ksort($roles, SORT_NUMERIC);
+
+		$conflict_count = max(0, (int) ($rollup['conflict_count'] ?? 0))
+			+ max(0, (int) ($rollup['unavailable_assigned_count'] ?? 0));
+		if ($needed_total <= 0 || !$headcount_wired) {
+			$readiness_status = 'not_applicable';
+		} elseif ($conflict_count > 0 || $critical_open_total > 0) {
+			$readiness_status = 'red_flag';
+		} elseif ($required_open_total > 0) {
+			$readiness_status = 'needs_staff';
+		} else {
+			$readiness_status = 'ready';
+		}
+
+		$missing_summary = array(
+			'open_headcount_total' => $required_open_total,
+			'open_slots_count' => count($missing_items),
+			'items' => array_slice($missing_items, 0, 3),
+		);
+		$conflict_summary = is_array($rollup['conflict_summary'] ?? null)
+			? (array) $rollup['conflict_summary']
+			: array('conflict_count' => $conflict_count, 'items' => array());
+		$rollup['headcount_needed_total'] = $needed_total;
+		$rollup['headcount_filled_total'] = $filled_total;
+		$rollup['open_headcount_total'] = $required_open_total;
+		$rollup['critical_open_headcount'] = $critical_open_total;
+		$rollup['readiness_status'] = $readiness_status;
+		$rollup['missing_summary'] = $missing_summary;
+		$rollup['conflict_summary'] = $conflict_summary;
+
+		return array(
+			'ok' => $event_plan_id > 0,
+			'event_plan_id' => $event_plan_id,
+			'authority' => $authority,
+			'provenance' => $provenance,
+			'legacy_detected' => $legacy_present,
+			'legacy_ignored' => $normalized_present && $legacy_present,
+			'rollup_state' => sanitize_key($rollup_state),
+			'rollup' => $rollup,
+			'roles' => array_values($roles),
+			'roles_by_id' => $roles,
+			'headcount_context' => $headcount_context,
+			'planned_headcount' => $needed_total,
+			'headcount_needed_total' => $needed_total,
+			'required_now_headcount_total' => $required_now_total,
+			'assigned_headcount' => $filled_total,
+			'headcount_filled_total' => $filled_total,
+			'proposed_headcount' => $proposed_total,
+			'confirmed_headcount' => $confirmed_total,
+			'legacy_status_unknown_headcount' => $legacy_unknown_total,
+			'open_positions' => $open_total,
+			'open_headcount_total' => $required_open_total,
+			'required_open_positions' => $required_open_total,
+			'critical_open_headcount' => $critical_open_total,
+			'unique_assigned_people_count' => count($unique_people),
+			'unique_assigned_staff_ids' => array_map('intval', array_keys($unique_people)),
+			'duplicate_assignment_count' => $duplicate_assignment_count,
+			'conflict_count' => $conflict_count,
+			'readiness_status' => $readiness_status,
+			'missing_summary' => $missing_summary,
+			'conflict_summary' => $conflict_summary,
+		);
+	}
+}
+
+if (!function_exists('bvmgr_staffing_resolve_event_snapshot')) {
+	/** Resolve the request-fresh staffing truth shared by cards and Command Center. */
+	function bvmgr_staffing_resolve_event_snapshot(int $event_plan_id, array $args = array()): array
+	{
+		$event_plan_id = absint($event_plan_id);
+		if ($event_plan_id <= 0) {
+			return bvmgr_staffing_build_event_snapshot(0, array(), array(), array(), array(), array(), array(), 'invalid');
+		}
+
+		$slots = array_key_exists('slots', $args)
+			? (array) $args['slots']
+			: bvmgr_staffing_get_event_slots($event_plan_id, true);
+		$legacy = array_key_exists('legacy_assignments', $args)
+			? (array) $args['legacy_assignments']
+			: (array) get_post_meta($event_plan_id, '_vms_staff_assignments', true);
+		$role_map = array_key_exists('role_map', $args)
+			? (array) $args['role_map']
+			: bvmgr_staffing_role_map_by_id(true);
+		$thresholds = array_key_exists('activation_thresholds', $args)
+			? (array) $args['activation_thresholds']
+			: bvmgr_staffing_get_event_role_activation_thresholds($event_plan_id);
+		$headcount_context = array_key_exists('headcount_context', $args)
+			? (array) $args['headcount_context']
+			: bvmgr_staffing_get_event_plan_headcount_context($event_plan_id);
+		$rollup = array_key_exists('rollup', $args)
+			? (is_array($args['rollup']) ? (array) $args['rollup'] : array())
+			: (function_exists('bvmgr_staffing_get_rollup') ? (array) (bvmgr_staffing_get_rollup($event_plan_id) ?? array()) : array());
+
+		$rollup_state = empty($rollup) ? 'missing' : 'fresh';
+		$required_rollup_keys = array('readiness_status', 'headcount_needed_total', 'headcount_filled_total', 'open_headcount_total', 'conflict_count', 'computed_at');
+		$rollup_incomplete = false;
+		foreach ($required_rollup_keys as $required_key) {
+			if (!array_key_exists($required_key, $rollup)) {
+				$rollup_incomplete = true;
+				break;
+			}
+		}
+		if (!empty($rollup['dirty'])) {
+			$rollup_state = 'dirty';
+		} elseif (!empty($rollup) && $rollup_incomplete) {
+			$rollup_state = 'incomplete';
+		}
+		$rollup_was_missing = $rollup_state === 'missing';
+		$rollup_was_dirty = $rollup_state === 'dirty';
+		$rollup_was_incomplete = $rollup_state === 'incomplete';
+
+		$normalized_present = !empty($slots);
+		$should_recompute = $normalized_present && in_array($rollup_state, array('missing', 'dirty', 'incomplete'), true);
+		if ($should_recompute && empty($args['skip_rollup_recompute']) && function_exists('bvmgr_staffing_compute_rollup')) {
+			$computed = (array) bvmgr_staffing_compute_rollup($event_plan_id);
+			if (!empty($computed['ok'])) {
+				$rollup = $computed;
+				$rollup_state = 'recomputed';
+			} else {
+				$rollup_state = 'derived_normalized';
+			}
+		} elseif ($should_recompute) {
+			$rollup_state = 'derived_normalized';
+		} elseif (!$normalized_present && !empty($legacy)) {
+			$rollup_state = 'derived_legacy';
+		}
+
+		$snapshot = bvmgr_staffing_build_event_snapshot(
+			$event_plan_id,
+			$slots,
+			$legacy,
+			$role_map,
+			bvmgr_staffing_normalize_role_activation_thresholds($thresholds),
+			$headcount_context,
+			$rollup,
+			$rollup_state
+		);
+		$snapshot['rollup_was_missing'] = $rollup_was_missing;
+		$snapshot['rollup_was_dirty'] = $rollup_was_dirty;
+		$snapshot['rollup_was_incomplete'] = $rollup_was_incomplete;
+		return $snapshot;
 	}
 }
 
@@ -2977,6 +3289,56 @@ if (!function_exists('bvmgr_staffing_assess_event_plan_save_request')) {
 	}
 }
 
+if (!function_exists('bvmgr_staffing_reconcile_existing_assignment_rows')) {
+	/**
+	 * Pick one deterministic assignment row per staff member and identify extras.
+	 * Confirmed rows outrank proposed rows so an ordinary matrix save never demotes
+	 * an already-confirmed assignment. Duplicate rows are canceled by the caller.
+	 */
+	function bvmgr_staffing_reconcile_existing_assignment_rows(array $rows): array
+	{
+		$grouped = array();
+		foreach ($rows as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+			$staff_id = absint($row['staff_id'] ?? 0);
+			$assignment_id = absint($row['assignment_id'] ?? 0);
+			if ($staff_id <= 0 || $assignment_id <= 0) {
+				continue;
+			}
+			$row['staff_id'] = $staff_id;
+			$row['assignment_id'] = $assignment_id;
+			$row['status'] = sanitize_key((string) ($row['status'] ?? ''));
+			$grouped[$staff_id][] = $row;
+		}
+
+		$primary_by_staff = array();
+		$duplicate_assignment_ids = array();
+		$priority = array('confirmed' => 3, 'proposed' => 2, 'canceled' => 1);
+		foreach ($grouped as $staff_id => $staff_rows) {
+			usort($staff_rows, static function (array $a, array $b) use ($priority): int {
+				$a_priority = (int) ($priority[$a['status']] ?? 0);
+				$b_priority = (int) ($priority[$b['status']] ?? 0);
+				if ($a_priority !== $b_priority) {
+					return $a_priority > $b_priority ? -1 : 1;
+				}
+				return ((int) $a['assignment_id']) <=> ((int) $b['assignment_id']);
+			});
+			$primary_by_staff[(int) $staff_id] = $staff_rows[0];
+			foreach (array_slice($staff_rows, 1) as $duplicate) {
+				$duplicate_assignment_ids[] = (int) $duplicate['assignment_id'];
+			}
+		}
+
+		sort($duplicate_assignment_ids, SORT_NUMERIC);
+		return array(
+			'primary_by_staff' => $primary_by_staff,
+			'duplicate_assignment_ids' => array_values(array_unique($duplicate_assignment_ids)),
+		);
+	}
+}
+
 if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 	function bvmgr_staffing_save_event_roles_matrix(
 		int $event_plan_id,
@@ -3233,26 +3595,28 @@ if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 					$t_asn,
 					$slot_id
 				), ARRAY_A);
-				$existing_by_staff = array();
-				if (is_array($existing_asn)) {
-				foreach ($existing_asn as $a) {
-					$sid = isset($a['staff_id']) ? absint($a['staff_id']) : 0;
-					if ($sid <= 0) continue;
-					if (!isset($existing_by_staff[$sid])) {
-						$existing_by_staff[$sid] = $a;
+				$existing_plan = bvmgr_staffing_reconcile_existing_assignment_rows(is_array($existing_asn) ? $existing_asn : array());
+				$existing_by_staff = (array) ($existing_plan['primary_by_staff'] ?? array());
+				$duplicate_assignment_ids = (array) ($existing_plan['duplicate_assignment_ids'] ?? array());
+				foreach (array_values(array_unique(array_filter(array_map('absint', $duplicate_assignment_ids)))) as $duplicate_assignment_id) {
+					$duplicate_key = -$duplicate_assignment_id;
+					while (isset($existing_by_staff[$duplicate_key])) {
+						$duplicate_key--;
 					}
+					$existing_by_staff[$duplicate_key] = array('assignment_id' => $duplicate_assignment_id, 'status' => 'canceled');
 				}
-			}
 
 				foreach ($staff_ids as $staff_id) {
 					if (isset($existing_by_staff[$staff_id])) {
 						$aid = isset($existing_by_staff[$staff_id]['assignment_id']) ? absint($existing_by_staff[$staff_id]['assignment_id']) : 0;
 						if ($aid > 0) {
+							$existing_status = sanitize_key((string) ($existing_by_staff[$staff_id]['status'] ?? ''));
+							$desired_status = $existing_status === 'confirmed' ? 'confirmed' : 'proposed';
 							// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves revive matching assignment rows directly in the plugin-owned repository so the slot reconciliation observes immediate state.
 							$wpdb->update(
 								$t_asn,
 								array(
-									'status'     => 'proposed',
+									'status'     => $desired_status,
 								'updated_at' => $now,
 								'updated_by' => $actor_user_id > 0 ? $actor_user_id : null,
 							),
@@ -3285,7 +3649,7 @@ if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
 						if (in_array((int) $sid, $staff_ids, true)) continue;
 						$aid = isset($a['assignment_id']) ? absint($a['assignment_id']) : 0;
 						if ($aid <= 0) continue;
-						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves cancel assignment rows omitted from the desired staff set directly in the repository so downstream rollup recompute sees immediate state.
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Matrix saves cancel assignment rows omitted from the desired staff set or identified as duplicates so downstream rollup recompute sees one request-fresh row per staff member.
 						$wpdb->update(
 							$t_asn,
 							array(

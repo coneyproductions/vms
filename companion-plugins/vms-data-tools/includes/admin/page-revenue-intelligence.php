@@ -1,0 +1,3793 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+if (!function_exists('vms_dt_register_revenue_intelligence_page')) {
+    function vms_dt_register_revenue_intelligence_page(): void
+    {
+        $cap = function_exists('vms_dt_manage_capability') ? vms_dt_manage_capability() : 'manage_options';
+
+        add_submenu_page(
+            'vms-data-tools',
+            __('Revenue Intelligence', 'vms-data-tools'),
+            __('Revenue Intelligence', 'vms-data-tools'),
+            $cap,
+            vms_dt_get_menu_slug_revenue_intelligence(),
+            'vms_dt_render_revenue_intelligence_page'
+        );
+    }
+}
+
+if (!function_exists('vms_dt_rr_money')) {
+    function vms_dt_rr_money(int $cents): string
+    {
+        $negative = $cents < 0;
+        $abs = abs($cents);
+        $formatted = '$' . number_format($abs / 100, 2);
+        return $negative ? ('-' . $formatted) : $formatted;
+    }
+}
+
+if (!function_exists('vms_dt_rr_pct')) {
+    function vms_dt_rr_pct(float $numerator, float $denominator, int $precision = 1): string
+    {
+        if ($denominator <= 0.0) {
+            return '0%';
+        }
+        return number_format(($numerator / $denominator) * 100, $precision) . '%';
+    }
+}
+
+if (!function_exists('vms_dt_rr_safe_ymd')) {
+    function vms_dt_rr_safe_ymd(string $value, string $fallback = ''): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return $fallback;
+        }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return $value;
+        }
+        $ts = strtotime($value);
+        if (!$ts) {
+            return $fallback;
+        }
+        return wp_date('Y-m-d', $ts, wp_timezone());
+    }
+}
+
+if (!function_exists('vms_dt_rr_today_ymd')) {
+    function vms_dt_rr_today_ymd(): string
+    {
+        return wp_date('Y-m-d', time(), wp_timezone());
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_square_scope_options')) {
+    function vms_dt_rr_square_scope_options(): array
+    {
+        return array(
+            'full_day' => __('Full event day', 'vms-data-tools'),
+            'event_hours' => __('Event hours only', 'vms-data-tools'),
+            'buffered' => __('Event hours + buffer', 'vms-data-tools'),
+        );
+    }
+}
+
+if (!function_exists('vms_dt_rr_normalize_square_scope_mode')) {
+    function vms_dt_rr_normalize_square_scope_mode(string $value): string
+    {
+        $value = sanitize_key(trim($value));
+        $options = vms_dt_rr_square_scope_options();
+        return isset($options[$value]) ? $value : 'full_day';
+    }
+}
+
+if (!function_exists('vms_dt_rr_square_scope_label')) {
+    function vms_dt_rr_square_scope_label(string $mode): string
+    {
+        $options = vms_dt_rr_square_scope_options();
+        $mode = vms_dt_rr_normalize_square_scope_mode($mode);
+        return (string) ($options[$mode] ?? $options['full_day']);
+    }
+}
+
+if (!function_exists('vms_dt_rr_default_filters')) {
+    function vms_dt_rr_default_filters(): array
+    {
+        $today = vms_dt_rr_today_ymd();
+        $year_start = wp_date('Y-01-01', time(), wp_timezone());
+
+        return array(
+            'event_from' => $year_start,
+            'event_to' => $today,
+            'sold_from' => '',
+            'sold_to' => '',
+            'venue_id' => 0,
+            'event_plan_id' => 0,
+            'square_location_id' => '',
+            'square_scope_mode' => 'full_day',
+            'compare' => 1,
+        );
+    }
+}
+
+if (!function_exists('vms_dt_rr_get_filters')) {
+    function vms_dt_rr_get_filters(array $source = null): array
+    {
+        $defaults = vms_dt_rr_default_filters();
+        $source = is_array($source) ? $source : $_GET;
+
+        $has_explicit_filter = false;
+        foreach (array('event_from', 'event_to', 'sold_from', 'sold_to', 'venue_id', 'event_plan_id', 'square_location_id', 'square_scope_mode', 'compare') as $filter_key) {
+            if (array_key_exists($filter_key, $source)) {
+                $has_explicit_filter = true;
+                break;
+            }
+        }
+
+        $filters = array(
+            'event_from' => vms_dt_rr_safe_ymd(isset($source['event_from']) ? (string) wp_unslash($source['event_from']) : '', $defaults['event_from']),
+            'event_to' => vms_dt_rr_safe_ymd(isset($source['event_to']) ? (string) wp_unslash($source['event_to']) : '', $defaults['event_to']),
+            'sold_from' => vms_dt_rr_safe_ymd(isset($source['sold_from']) ? (string) wp_unslash($source['sold_from']) : '', ''),
+            'sold_to' => vms_dt_rr_safe_ymd(isset($source['sold_to']) ? (string) wp_unslash($source['sold_to']) : '', ''),
+            'venue_id' => isset($source['venue_id']) ? absint($source['venue_id']) : 0,
+            'event_plan_id' => isset($source['event_plan_id']) ? absint($source['event_plan_id']) : 0,
+            'square_location_id' => isset($source['square_location_id']) ? sanitize_text_field((string) wp_unslash($source['square_location_id'])) : '',
+            'square_scope_mode' => isset($source['square_scope_mode']) ? vms_dt_rr_normalize_square_scope_mode((string) wp_unslash($source['square_scope_mode'])) : (string) $defaults['square_scope_mode'],
+            'compare' => array_key_exists('compare', $source) ? (!empty($source['compare']) ? 1 : 0) : ($has_explicit_filter ? 0 : $defaults['compare']),
+        );
+
+        if ($filters['event_from'] !== '' && $filters['event_to'] !== '' && strcmp($filters['event_from'], $filters['event_to']) > 0) {
+            $tmp = $filters['event_from'];
+            $filters['event_from'] = $filters['event_to'];
+            $filters['event_to'] = $tmp;
+        }
+
+        if ($filters['sold_from'] !== '' && $filters['sold_to'] !== '' && strcmp($filters['sold_from'], $filters['sold_to']) > 0) {
+            $tmp = $filters['sold_from'];
+            $filters['sold_from'] = $filters['sold_to'];
+            $filters['sold_to'] = $tmp;
+        }
+
+        return $filters;
+    }
+}
+
+if (!function_exists('vms_dt_rr_event_post_statuses')) {
+    function vms_dt_rr_event_post_statuses(): array
+    {
+        return array('publish', 'private', 'draft', 'pending', 'future');
+    }
+}
+
+if (!function_exists('vms_dt_rr_get_venue_options')) {
+    function vms_dt_rr_get_venue_options(): array
+    {
+        $venue_post_type = (string) vms_dt_core_constant(
+            'VMS_VENUE_CPT',
+            vms_dt_core_constant('VMS_CPT_VENUE', 'vms_venue')
+        );
+        $ids = get_posts(array(
+            'post_type' => $venue_post_type,
+            'post_status' => array('publish', 'private', 'draft'),
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'fields' => 'ids',
+        ));
+
+        $out = array();
+        foreach ((array) $ids as $id) {
+            $out[] = array(
+                'id' => (int) $id,
+                'label' => (string) get_the_title((int) $id),
+            );
+        }
+        return $out;
+    }
+}
+
+if (!function_exists('vms_dt_rr_get_event_options')) {
+    function vms_dt_rr_get_event_options(int $limit = 250): array
+    {
+        $ids = get_posts(array(
+            'post_type' => 'vms_event_plan',
+            'post_status' => vms_dt_rr_event_post_statuses(),
+            'posts_per_page' => $limit,
+            'orderby' => 'meta_value',
+            'meta_key' => '_vms_event_date',
+            'order' => 'DESC',
+            'fields' => 'ids',
+        ));
+
+        $out = array();
+        foreach ((array) $ids as $id) {
+            $id = (int) $id;
+            $date = (string) get_post_meta($id, '_vms_event_date', true);
+            $venue_id = (int) get_post_meta($id, '_vms_venue_id', true);
+            $venue = $venue_id > 0 ? (string) get_the_title($venue_id) : '';
+            $label = trim((string) get_the_title($id));
+            if ($date !== '') {
+                $label .= ' — ' . $date;
+            }
+            if ($venue !== '') {
+                $label .= ' — ' . $venue;
+            }
+            $out[] = array(
+                'id' => $id,
+                'label' => $label,
+            );
+        }
+
+        return $out;
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_settings')) {
+    function vms_dt_rr_woo_square_settings(): array
+    {
+        $settings = get_option('wc_square_settings', array());
+        return is_array($settings) ? $settings : array();
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_environment')) {
+    function vms_dt_rr_woo_square_environment(): string
+    {
+        if (function_exists('wc_square')) {
+            try {
+                $settings = wc_square()->get_settings_handler();
+                if (is_object($settings) && method_exists($settings, 'get_environment')) {
+                    $environment = (string) $settings->get_environment();
+                    if (in_array($environment, array('production', 'sandbox'), true)) {
+                        return $environment;
+                    }
+                }
+            } catch (Throwable $e) {
+            }
+        }
+
+        $settings = vms_dt_rr_woo_square_settings();
+        $sandbox = !empty($settings['enable_sandbox']) && (string) $settings['enable_sandbox'] === 'yes';
+        return $sandbox ? 'sandbox' : 'production';
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_is_sandbox')) {
+    function vms_dt_rr_woo_square_is_sandbox(): bool
+    {
+        return vms_dt_rr_woo_square_environment() === 'sandbox';
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_access_token')) {
+    function vms_dt_rr_woo_square_access_token(): string
+    {
+        if (function_exists('wc_square')) {
+            try {
+                $settings = wc_square()->get_settings_handler();
+                if (is_object($settings) && method_exists($settings, 'get_access_token')) {
+                    $token = (string) $settings->get_access_token();
+                    if ($token !== '') {
+                        return $token;
+                    }
+                }
+            } catch (Throwable $e) {
+            }
+        }
+
+        $tokens = get_option('wc_square_access_tokens', array());
+        $tokens = is_array($tokens) ? $tokens : array();
+        $environment = vms_dt_rr_woo_square_environment();
+        return trim((string) ($tokens[$environment] ?? ''));
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_configured_location_id')) {
+    function vms_dt_rr_woo_square_configured_location_id(): string
+    {
+        if (function_exists('wc_square')) {
+            try {
+                $settings = wc_square()->get_settings_handler();
+                if (is_object($settings) && method_exists($settings, 'get_location_id')) {
+                    $location_id = trim((string) $settings->get_location_id());
+                    if ($location_id !== '') {
+                        return $location_id;
+                    }
+                }
+            } catch (Throwable $e) {
+            }
+        }
+
+        $settings = vms_dt_rr_woo_square_settings();
+        $environment = vms_dt_rr_woo_square_environment();
+        $key = $environment . '_location_id';
+        return trim((string) ($settings[$key] ?? ''));
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_base_url')) {
+    function vms_dt_rr_woo_square_base_url(): string
+    {
+        return vms_dt_rr_woo_square_is_sandbox() ? 'https://connect.squareupsandbox.com' : 'https://connect.squareup.com';
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_api_version')) {
+    function vms_dt_rr_woo_square_api_version(): string
+    {
+        if (defined('VMS_SQUARE_API_VERSION') && is_string(VMS_SQUARE_API_VERSION) && VMS_SQUARE_API_VERSION !== '') {
+            return VMS_SQUARE_API_VERSION;
+        }
+        return '2026-01-22';
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_api_request')) {
+    function vms_dt_rr_woo_square_api_request(string $method, string $path, ?array $body = null): array
+    {
+        $token = vms_dt_rr_woo_square_access_token();
+        if ($token === '') {
+            throw new Exception('Woo Square access token is missing. Reconnect Square in WooCommerce first.');
+        }
+
+        $url = rtrim(vms_dt_rr_woo_square_base_url(), '/') . $path;
+        $attempt = 0;
+        $max_attempts = 4;
+        $last_error = 'Unknown Square API error';
+
+        while ($attempt < $max_attempts) {
+            $attempt++;
+            $args = array(
+                'method' => strtoupper($method),
+                'timeout' => 45,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $token,
+                    'Content-Type' => 'application/json',
+                    'Square-Version' => vms_dt_rr_woo_square_api_version(),
+                ),
+            );
+
+            if ($body !== null) {
+                $args['body'] = wp_json_encode($body);
+            }
+
+            $response = wp_remote_request($url, $args);
+            if (is_wp_error($response)) {
+                $last_error = $response->get_error_message();
+            } else {
+                $code = (int) wp_remote_retrieve_response_code($response);
+                $raw = (string) wp_remote_retrieve_body($response);
+                $json = $raw !== '' ? json_decode($raw, true) : array();
+
+                if ($code >= 200 && $code < 300) {
+                    return is_array($json) ? $json : array();
+                }
+
+                $last_error = 'Square API error HTTP ' . $code;
+                if (is_array($json) && !empty($json['errors'])) {
+                    $last_error .= ' ' . wp_json_encode($json['errors']);
+                }
+
+                if (in_array($code, array(429, 500, 502, 503, 504), true) && $attempt < $max_attempts) {
+                    $retry_after = wp_remote_retrieve_header($response, 'retry-after');
+                    if (is_string($retry_after) && ctype_digit($retry_after)) {
+                        $sleep_seconds = min(30, (int) $retry_after);
+                    } else {
+                        $sleep_seconds = array(1, 3, 7)[$attempt - 1] ?? 7;
+                    }
+                    usleep(random_int(0, 250000));
+                    sleep($sleep_seconds);
+                    continue;
+                }
+            }
+        }
+
+        throw new Exception($last_error);
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_woo_square_api_request_with_query')) {
+    function vms_dt_rr_woo_square_api_request_with_query(string $method, string $path, array $query = array(), ?array $body = null): array
+    {
+        $query = array_filter($query, static function ($value): bool {
+            return !($value === null || $value === '');
+        });
+        if (!empty($query)) {
+            $path .= (strpos($path, '?') === false ? '?' : '&') . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        }
+        return vms_dt_rr_woo_square_api_request($method, $path, $body);
+    }
+}
+
+if (!function_exists('vms_dt_rr_square_list_payments_scope')) {
+    function vms_dt_rr_square_list_payments_scope(array $location_ids, string $window_start_utc, string $window_end_utc): array
+    {
+        $location_ids = array_values(array_unique(array_filter(array_map('strval', $location_ids))));
+        if (empty($location_ids) || $window_start_utc === '' || $window_end_utc === '') {
+            return array();
+        }
+
+        $cache_key = 'vms_dt_rr_payments_' . md5(wp_json_encode(array(
+            'env' => vms_dt_rr_woo_square_environment(),
+            'location_ids' => $location_ids,
+            'window_start_utc' => $window_start_utc,
+            'window_end_utc' => $window_end_utc,
+        )));
+        $cached = get_transient($cache_key);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $begin_rfc3339 = gmdate(DATE_RFC3339, strtotime($window_start_utc . ' UTC'));
+        $end_rfc3339 = gmdate(DATE_RFC3339, strtotime($window_end_utc . ' UTC'));
+        $payments = array();
+
+        foreach ($location_ids as $location_id) {
+            $cursor = '';
+            do {
+                $query = array(
+                    'location_id' => $location_id,
+                    'begin_time' => $begin_rfc3339,
+                    'end_time' => $end_rfc3339,
+                    'sort_order' => 'ASC',
+                    'limit' => 100,
+                );
+                if ($cursor !== '') {
+                    $query['cursor'] = $cursor;
+                }
+                $payload = vms_dt_rr_woo_square_api_request_with_query('GET', '/v2/payments', $query, null);
+                foreach ((array) ($payload['payments'] ?? array()) as $payment) {
+                    if (!is_array($payment)) {
+                        continue;
+                    }
+                    if (strtoupper((string) ($payment['status'] ?? '')) !== 'COMPLETED') {
+                        continue;
+                    }
+                    $payment['location_id'] = (string) ($payment['location_id'] ?? $location_id);
+                    $payments[] = $payment;
+                }
+                $cursor = trim((string) ($payload['cursor'] ?? ''));
+            } while ($cursor !== '');
+        }
+
+        set_transient($cache_key, $payments, 10 * MINUTE_IN_SECONDS);
+        return $payments;
+    }
+}
+
+if (!function_exists('vms_dt_rr_square_batch_retrieve_orders')) {
+    function vms_dt_rr_square_batch_retrieve_orders(array $order_ids): array
+    {
+        $order_ids = array_values(array_unique(array_filter(array_map('strval', $order_ids))));
+        if (empty($order_ids)) {
+            return array();
+        }
+
+        $orders = array();
+        foreach (array_chunk($order_ids, 100) as $chunk) {
+            $payload = vms_dt_rr_woo_square_api_request('POST', '/v2/orders/batch-retrieve', array(
+                'order_ids' => array_values($chunk),
+            ));
+            foreach ((array) ($payload['orders'] ?? array()) as $order) {
+                if (!is_array($order)) {
+                    continue;
+                }
+                $order_id = trim((string) ($order['id'] ?? ''));
+                if ($order_id === '') {
+                    continue;
+                }
+                $orders[$order_id] = $order;
+            }
+        }
+
+        return $orders;
+    }
+}
+
+if (!function_exists('vms_dt_rr_square_supplement_rows_from_payments')) {
+    function vms_dt_rr_square_supplement_rows_from_payments(array $rows, array $location_ids, string $window_start_utc, string $window_end_utc): array
+    {
+        $existing_ids = array();
+        foreach ($rows as $row) {
+            if (is_array($row) && !empty($row['square_order_id'])) {
+                $existing_ids[(string) $row['square_order_id']] = true;
+            }
+        }
+
+        $payments = vms_dt_rr_square_list_payments_scope($location_ids, $window_start_utc, $window_end_utc);
+        if (empty($payments)) {
+            return $rows;
+        }
+
+        $payment_context_by_order = array();
+        $missing_order_ids = array();
+        foreach ($payments as $payment) {
+            if (!is_array($payment)) {
+                continue;
+            }
+            $order_id = trim((string) ($payment['order_id'] ?? ''));
+            if ($order_id === '') {
+                continue;
+            }
+            $payment_context_by_order[$order_id][] = $payment;
+            if (!isset($existing_ids[$order_id])) {
+                $missing_order_ids[$order_id] = true;
+            }
+        }
+
+        if (empty($missing_order_ids)) {
+            return $rows;
+        }
+
+        $orders = vms_dt_rr_square_batch_retrieve_orders(array_keys($missing_order_ids));
+        foreach ($orders as $order_id => $order) {
+            if (isset($existing_ids[$order_id]) || !is_array($order)) {
+                continue;
+            }
+            $payment_context = (array) ($payment_context_by_order[$order_id] ?? array());
+            $closed_at = trim((string) ($order['closed_at'] ?? ''));
+            if ($closed_at === '' && !empty($payment_context[0]['created_at'])) {
+                $closed_at = trim((string) $payment_context[0]['created_at']);
+            }
+            $closed_ts = $closed_at !== '' ? strtotime($closed_at) : false;
+            $order_with_context = $order;
+            if (!empty($payment_context)) {
+                $order_with_context['_vms_payment_context'] = $payment_context;
+            }
+            $rows[] = array(
+                'square_order_id' => $order_id,
+                'location_id' => (string) ($order['location_id'] ?? ($payment_context[0]['location_id'] ?? '')),
+                'closed_at_utc' => $closed_ts ? gmdate('Y-m-d H:i:s', $closed_ts) : '',
+                'line_items_json' => wp_json_encode(isset($order['line_items']) && is_array($order['line_items']) ? $order['line_items'] : array()),
+                'raw_json' => wp_json_encode($order_with_context),
+                'tenders_json' => wp_json_encode(isset($order['tenders']) && is_array($order['tenders']) ? $order['tenders'] : array()),
+                'tip_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_tip_money') : 0,
+                'service_charge_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_service_charge_money') : 0,
+                'total_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_money') : 0,
+                'tax_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_tax_money') : 0,
+                'discount_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_discount_money') : 0,
+                'returned_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'return_amounts') : 0,
+            );
+            $existing_ids[$order_id] = true;
+        }
+
+        return $rows;
+    }
+}
+
+if (!function_exists('vms_dt_rr_woo_square_fetch_locations')) {
+    function vms_dt_rr_woo_square_fetch_locations(): array
+    {
+        $transient_key = 'vms_dt_rr_locations_' . md5(vms_dt_rr_woo_square_environment());
+        $cached = get_transient($transient_key);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = vms_dt_rr_woo_square_api_request('GET', '/v2/locations', null);
+        $locations = isset($payload['locations']) && is_array($payload['locations']) ? $payload['locations'] : array();
+        $out = array();
+        foreach ($locations as $location) {
+            if (!is_array($location)) {
+                continue;
+            }
+            $location_id = trim((string) ($location['id'] ?? ''));
+            if ($location_id === '') {
+                continue;
+            }
+            $status = strtoupper((string) ($location['status'] ?? ''));
+            if ($status !== '' && $status !== 'ACTIVE') {
+                continue;
+            }
+            $name = trim((string) ($location['name'] ?? ''));
+            $out[$location_id] = $name !== '' ? $name : $location_id;
+        }
+
+        set_transient($transient_key, $out, 15 * MINUTE_IN_SECONDS);
+        return $out;
+    }
+}
+
+if (!function_exists('vms_dt_rr_get_square_location_options')) {
+    function vms_dt_rr_get_square_location_options(): array
+    {
+        $out = array();
+        $configured_location_id = vms_dt_rr_woo_square_configured_location_id();
+
+        try {
+            $out = vms_dt_rr_woo_square_fetch_locations();
+        } catch (Throwable $e) {
+            $out = array();
+        }
+
+        if ($configured_location_id !== '' && !isset($out[$configured_location_id])) {
+            $out = array($configured_location_id => $configured_location_id) + $out;
+        }
+
+        return $out;
+    }
+}
+
+if (!function_exists('vms_dt_rr_get_event_plan_ids')) {
+    function vms_dt_rr_get_event_plan_ids(array $filters): array
+    {
+        if (!empty($filters['event_plan_id'])) {
+            $post = get_post((int) $filters['event_plan_id']);
+            if ($post instanceof WP_Post && $post->post_type === 'vms_event_plan') {
+                return array((int) $filters['event_plan_id']);
+            }
+            return array();
+        }
+
+        $meta_query = array('relation' => 'AND');
+        if (!empty($filters['event_from']) || !empty($filters['event_to'])) {
+            if (!empty($filters['event_from']) && !empty($filters['event_to'])) {
+                $meta_query[] = array(
+                    'key' => '_vms_event_date',
+                    'value' => array($filters['event_from'], $filters['event_to']),
+                    'compare' => 'BETWEEN',
+                    'type' => 'DATE',
+                );
+            } elseif (!empty($filters['event_from'])) {
+                $meta_query[] = array(
+                    'key' => '_vms_event_date',
+                    'value' => $filters['event_from'],
+                    'compare' => '>=',
+                    'type' => 'DATE',
+                );
+            } else {
+                $meta_query[] = array(
+                    'key' => '_vms_event_date',
+                    'value' => $filters['event_to'],
+                    'compare' => '<=',
+                    'type' => 'DATE',
+                );
+            }
+        }
+
+        if (!empty($filters['venue_id'])) {
+            $meta_query[] = array(
+                'key' => '_vms_venue_id',
+                'value' => (int) $filters['venue_id'],
+                'compare' => '=',
+                'type' => 'NUMERIC',
+            );
+        }
+
+        $args = array(
+            'post_type' => 'vms_event_plan',
+            'post_status' => vms_dt_rr_event_post_statuses(),
+            'posts_per_page' => -1,
+            'orderby' => 'meta_value',
+            'meta_key' => '_vms_event_date',
+            'order' => 'ASC',
+            'fields' => 'ids',
+        );
+        if (count($meta_query) > 1) {
+            $args['meta_query'] = $meta_query;
+        }
+
+        return array_values(array_map('absint', get_posts($args)));
+    }
+}
+
+if (!function_exists('vms_dt_rr_build_ticket_report')) {
+    function vms_dt_rr_build_ticket_report(array $filters): array
+    {
+        if (!vms_dt_has_core_function('vms_ticket_revenue_build_report')) {
+            return array(
+                'rows' => array(),
+                'event_summary' => array(),
+                'warnings' => array('VMS core ticket revenue service is unavailable.'),
+                'unresolved_rows' => array(),
+                'counts' => array(),
+            );
+        }
+
+        $args = array(
+            'event_from' => (string) ($filters['event_from'] ?? ''),
+            'event_to' => (string) ($filters['event_to'] ?? ''),
+            'sold_from' => (string) ($filters['sold_from'] ?? ''),
+            'sold_to' => (string) ($filters['sold_to'] ?? ''),
+            'recognition_status' => 'all',
+            'preview_limit' => 500,
+            'unresolved_limit' => 200,
+        );
+
+        if (!empty($filters['event_plan_id'])) {
+            $args['event_plan_id'] = (int) $filters['event_plan_id'];
+        }
+
+        $cache_key = md5(wp_json_encode($args));
+        static $memory_cache = array();
+        if (isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
+                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_ticket_report_cache', 'memory_hit');
+            }
+            return $memory_cache[$cache_key];
+        }
+
+        $transient_key = '';
+        $transient_ttl = 0;
+        if (!empty($args['event_plan_id'])) {
+            $transient_ttl = max(0, (int) apply_filters('vms_dt_ticket_report_cache_ttl', MINUTE_IN_SECONDS));
+            if ($transient_ttl > 0) {
+                $transient_key = 'vms_dt_tix_' . $cache_key;
+                $cached = get_transient($transient_key);
+                if (is_array($cached)) {
+                    if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
+                        vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_ticket_report_cache', 'transient_hit');
+                    }
+                    $memory_cache[$cache_key] = $cached;
+                    return $cached;
+                }
+            }
+        }
+
+        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
+            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.ticket_report', array(
+                'event_plan_id' => (int) ($args['event_plan_id'] ?? 0),
+                'sold_from' => (string) ($args['sold_from'] ?? ''),
+                'sold_to' => (string) ($args['sold_to'] ?? ''),
+            ));
+        }
+
+        try {
+            $report = (array) vms_dt_call_core_function('vms_ticket_revenue_build_report', $args);
+            $report['_vms_dt_cache_key'] = $cache_key;
+            $memory_cache[$cache_key] = $report;
+            if ($transient_key !== '') {
+                set_transient($transient_key, $report, $transient_ttl);
+            }
+            return $report;
+        } finally {
+            if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
+                $report_rows = isset($report['rows']) && is_array($report['rows']) ? count($report['rows']) : 0;
+                $warnings = isset($report['warnings']) && is_array($report['warnings']) ? count($report['warnings']) : 0;
+                vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.ticket_report', array(
+                    'event_plan_id' => (int) ($args['event_plan_id'] ?? 0),
+                    'row_count' => $report_rows,
+                    'warning_count' => $warnings,
+                ));
+            }
+        }
+    }
+}
+
+if (!function_exists('vms_dt_rr_build_website_event_map')) {
+    function vms_dt_rr_build_website_event_map(array $ticket_report, array $allowed_event_ids): array
+    {
+        $allowed_event_ids = array_values(array_map('intval', $allowed_event_ids));
+        $report_cache_key = (string) ($ticket_report['_vms_dt_cache_key'] ?? '');
+        $cache_key = $report_cache_key !== ''
+            ? ($report_cache_key . ':' . md5(wp_json_encode($allowed_event_ids)))
+            : '';
+        static $memory_cache = array();
+        if ($cache_key !== '' && isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
+                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_website_map_cache', 'memory_hit');
+            }
+            return $memory_cache[$cache_key];
+        }
+
+        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
+            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.website_event_map', array(
+                'event_count' => count($allowed_event_ids),
+                'ticket_rows' => count((array) ($ticket_report['rows'] ?? array())),
+            ));
+        }
+
+        $allowed_lookup = array_fill_keys(array_map('intval', $allowed_event_ids), true);
+        $map = array();
+        $unassigned_rows = 0;
+
+        foreach ((array) ($ticket_report['rows'] ?? array()) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $event_plan_id = (int) ($row['event_plan_id'] ?? 0);
+            if ($event_plan_id <= 0 || (!empty($allowed_lookup) && !isset($allowed_lookup[$event_plan_id]))) {
+                $unassigned_rows++;
+                continue;
+            }
+
+            if (!isset($map[$event_plan_id])) {
+                $map[$event_plan_id] = array(
+                    'website_ticket_cents' => 0,
+                    'website_addon_cents' => 0,
+                    'website_total_cents' => 0,
+                    'website_ticket_net_cents' => 0,
+                    'website_ticket_tax_cents' => 0,
+                    'website_ticket_refunded_cents' => 0,
+                    'website_ticket_ordered_cents' => 0,
+                    'website_addon_net_cents' => 0,
+                    'website_addon_tax_cents' => 0,
+                    'website_addon_refunded_cents' => 0,
+                    'website_addon_ordered_cents' => 0,
+                    'website_order_ids' => array(),
+                    'website_line_count' => 0,
+                    'website_ticket_qty' => 0,
+                    'website_ticket_refunded_qty' => 0,
+                    'website_ticket_ordered_qty' => 0,
+                    'website_paid_ticket_qty' => 0,
+                    'website_free_ticket_qty' => 0,
+                    'website_addon_qty' => 0,
+                    'website_addon_refunded_qty' => 0,
+                    'website_addon_ordered_qty' => 0,
+                );
+            }
+
+            $cash_total = (int) ($row['cash_total_cents'] ?? 0);
+            $net_subtotal = (int) ($row['net_subtotal_cents'] ?? 0);
+            $tax_cents = (int) ($row['tax_cents'] ?? 0);
+            $refunded_subtotal = (int) ($row['refunded_subtotal_cents'] ?? 0);
+            $qty = max(0, (int) ($row['quantity'] ?? 0));
+            $refunded_qty = max(0, (int) ($row['refunded_quantity'] ?? 0));
+            $item_kind = sanitize_key((string) ($row['item_kind'] ?? 'ticket'));
+            if (in_array($item_kind, array('entitlement', 'addon'), true)) {
+                $map[$event_plan_id]['website_addon_cents'] += $cash_total;
+                $map[$event_plan_id]['website_addon_net_cents'] += $net_subtotal;
+                $map[$event_plan_id]['website_addon_tax_cents'] += $tax_cents;
+                $map[$event_plan_id]['website_addon_refunded_cents'] += $refunded_subtotal;
+                $map[$event_plan_id]['website_addon_ordered_cents'] += ($net_subtotal + $refunded_subtotal);
+                $map[$event_plan_id]['website_addon_qty'] += max(0, $qty - $refunded_qty);
+                $map[$event_plan_id]['website_addon_refunded_qty'] += $refunded_qty;
+                $map[$event_plan_id]['website_addon_ordered_qty'] += $qty;
+            } else {
+                $map[$event_plan_id]['website_ticket_cents'] += $cash_total;
+                $map[$event_plan_id]['website_ticket_net_cents'] += $net_subtotal;
+                $map[$event_plan_id]['website_ticket_tax_cents'] += $tax_cents;
+                $map[$event_plan_id]['website_ticket_refunded_cents'] += $refunded_subtotal;
+                $map[$event_plan_id]['website_ticket_ordered_cents'] += ($net_subtotal + $refunded_subtotal);
+                $net_qty = max(0, $qty - $refunded_qty);
+                $map[$event_plan_id]['website_ticket_qty'] += $net_qty;
+                if ($net_subtotal > 0) {
+                    $map[$event_plan_id]['website_paid_ticket_qty'] += $net_qty;
+                } else {
+                    $map[$event_plan_id]['website_free_ticket_qty'] += $net_qty;
+                }
+                $map[$event_plan_id]['website_ticket_refunded_qty'] += $refunded_qty;
+                $map[$event_plan_id]['website_ticket_ordered_qty'] += $qty;
+            }
+            $map[$event_plan_id]['website_total_cents'] += $cash_total;
+            $map[$event_plan_id]['website_line_count']++;
+            $order_id = (int) ($row['order_id'] ?? 0);
+            if ($order_id > 0) {
+                $map[$event_plan_id]['website_order_ids'][$order_id] = true;
+            }
+        }
+
+        foreach ($map as $event_plan_id => $row) {
+            $map[$event_plan_id]['website_order_count'] = count((array) $row['website_order_ids']);
+            unset($map[$event_plan_id]['website_order_ids']);
+        }
+
+        $result = array(
+            'map' => $map,
+            'unassigned_rows' => $unassigned_rows,
+            'warnings' => (array) ($ticket_report['warnings'] ?? array()),
+            'unresolved_rows' => (array) ($ticket_report['unresolved_rows'] ?? array()),
+            'counts' => (array) ($ticket_report['counts'] ?? array()),
+        );
+        if ($cache_key !== '') {
+            $memory_cache[$cache_key] = $result;
+        }
+        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
+            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.website_event_map', array(
+                'event_count' => count($map),
+                'unassigned_rows' => $unassigned_rows,
+            ));
+        }
+        return $result;
+    }
+}
+
+if (!function_exists('vms_dt_rr_get_category_cache_map')) {
+    function vms_dt_rr_get_category_cache_map(): array
+    {
+        $rows = function_exists('vms_square_setting') ? vms_square_setting('categories_cache', array()) : array();
+        if (!is_array($rows)) {
+            $rows = array();
+        }
+        $out = array();
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $id = trim((string) ($row['id'] ?? ''));
+            if ($id === '') {
+                continue;
+            }
+            $out[$id] = array(
+                'id' => $id,
+                'name' => (string) ($row['name'] ?? $id),
+                'type' => (string) ($row['type'] ?? ''),
+            );
+        }
+        return $out;
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_text_has_any')) {
+    function vms_dt_rr_text_has_any(string $haystack, array $needles): bool
+    {
+        $haystack = strtolower($haystack);
+        foreach ($needles as $needle) {
+            if ($needle !== '' && strpos($haystack, strtolower((string) $needle)) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_bucket_display_group')) {
+    function vms_dt_rr_bucket_display_group($bucket_key, $bucket_label, array $ticket_bucket_keys = array())
+    {
+        $bucket_key = is_string($bucket_key) ? sanitize_key($bucket_key) : '';
+        $bucket_label = is_string($bucket_label) ? trim(wp_strip_all_tags($bucket_label)) : '';
+        $ticket_bucket_keys = array_values(array_filter(array_map('sanitize_key', $ticket_bucket_keys)));
+
+        if ($bucket_key === 'website_overlap' || $bucket_key === 'uncategorized' || $bucket_key === 'ignored') {
+            return 'held_out';
+        }
+
+        if (in_array($bucket_key, $ticket_bucket_keys, true)) {
+            return 'square_direct_tickets';
+        }
+
+        $normalized = strtolower($bucket_label);
+        if ($normalized !== '') {
+            if (strpos($normalized, 'ticket') !== false) {
+                return 'square_direct_tickets';
+            }
+            if (strpos($normalized, 'bar') !== false || strpos($normalized, 'beer') !== false || strpos($normalized, 'wine') !== false) {
+                return 'bar';
+            }
+            if (strpos($normalized, 'food') !== false || strpos($normalized, 'concession') !== false) {
+                return 'food';
+            }
+            if (strpos($normalized, 'merch') !== false) {
+                return 'merch';
+            }
+        }
+
+        $map = array(
+            'ticket' => 'square_direct_tickets',
+            'door_ticket' => 'square_direct_tickets',
+            'online_ticket' => 'square_direct_tickets',
+            'addon' => 'addons',
+            'bar' => 'bar',
+            'food' => 'food',
+            'merch' => 'merch',
+            'other' => 'other',
+        );
+
+        return isset($map[$bucket_key]) ? $map[$bucket_key] : 'other';
+    }
+}
+
+if (!function_exists('vms_dt_rr_standard_bucket_labels')) {
+    function vms_dt_rr_standard_bucket_labels(): array
+    {
+        return array(
+            'ticket' => 'Tickets / door',
+            'bar' => 'Bar',
+            'food' => 'Food / concessions',
+            'merch' => 'Merch',
+            'other' => 'Other',
+            'website_overlap' => 'Website / online overlap',
+            'ignore' => 'Ignore / exclude',
+        );
+    }
+}
+
+if (!function_exists('vms_dt_rr_variation_override_option_name')) {
+    function vms_dt_rr_variation_override_option_name(): string
+    {
+        return 'vms_dt_rr_variation_bucket_overrides';
+    }
+}
+
+if (!function_exists('vms_dt_rr_allowed_bucket_keys')) {
+    function vms_dt_rr_allowed_bucket_keys(): array
+    {
+        return array_keys(vms_dt_rr_standard_bucket_labels());
+    }
+}
+
+if (!function_exists('vms_dt_rr_sanitize_bucket_key')) {
+    function vms_dt_rr_sanitize_bucket_key(string $bucket_key): string
+    {
+        $bucket_key = strtolower(trim(sanitize_text_field($bucket_key)));
+        return in_array($bucket_key, vms_dt_rr_allowed_bucket_keys(), true) ? $bucket_key : '';
+    }
+}
+
+if (!function_exists('vms_dt_rr_get_variation_bucket_overrides')) {
+    function vms_dt_rr_get_variation_bucket_overrides(): array
+    {
+        $raw = get_option(vms_dt_rr_variation_override_option_name(), array());
+        if (!is_array($raw)) {
+            $raw = array();
+        }
+
+        $out = array();
+        foreach ($raw as $variation_id => $bucket_key) {
+            $variation_id = trim(sanitize_text_field((string) $variation_id));
+            $bucket_key = vms_dt_rr_sanitize_bucket_key((string) $bucket_key);
+            if ($variation_id === '' || $bucket_key === '') {
+                continue;
+            }
+            $out[$variation_id] = $bucket_key;
+        }
+
+        return $out;
+    }
+}
+
+if (!function_exists('vms_dt_rr_update_variation_bucket_overrides')) {
+    function vms_dt_rr_update_variation_bucket_overrides(array $overrides): void
+    {
+        $clean = array();
+        foreach ($overrides as $variation_id => $bucket_key) {
+            $variation_id = trim(sanitize_text_field((string) $variation_id));
+            $bucket_key = vms_dt_rr_sanitize_bucket_key((string) $bucket_key);
+            if ($variation_id === '' || $bucket_key === '') {
+                continue;
+            }
+            $clean[$variation_id] = $bucket_key;
+        }
+
+        update_option(vms_dt_rr_variation_override_option_name(), $clean, false);
+    }
+}
+
+if (!function_exists('vms_dt_rr_line_item_looks_ticketish')) {
+    function vms_dt_rr_line_item_looks_ticketish(array $line_item, string $category_name = ''): bool
+    {
+        $parts = array(
+            (string) ($line_item['name'] ?? ''),
+            (string) ($line_item['variation_name'] ?? ''),
+            (string) ($line_item['catalog_object_id'] ?? ''),
+            $category_name,
+        );
+        $text = strtolower(trim(implode(' ', array_filter(array_map('trim', $parts)))));
+        if ($text === '') {
+            return false;
+        }
+
+        return vms_dt_rr_text_has_any($text, array(
+            'ticket',
+            'tickets',
+            'admission',
+            'general admission',
+            'vip',
+            'entry',
+            'cover',
+            'door',
+            'gate',
+            'rsvp',
+            'reserved',
+            'guest list',
+            'fire table',
+            'fire pit',
+            'addon',
+            'add-on',
+        ));
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_detect_ticket_bucket_keys')) {
+    function vms_dt_rr_detect_ticket_bucket_keys(array $bucket_labels, array $bucket_map): array
+    {
+        $keys = array();
+        foreach ($bucket_map as $bucket_key => $cat_ids) {
+            $text = strtolower(trim((string) $bucket_key . ' ' . (string) ($bucket_labels[$bucket_key] ?? '')));
+            if (vms_dt_rr_text_has_any($text, array('door', 'ticket', 'tickets', 'admission', 'cover', 'entry', 'gate'))) {
+                $keys[] = (string) $bucket_key;
+            }
+        }
+        return array_values(array_unique($keys));
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_square_source_classification')) {
+    function vms_dt_rr_square_source_classification(string $raw_json, string $tenders_json): array
+    {
+        $raw = json_decode($raw_json, true);
+        $tenders = json_decode($tenders_json, true);
+        $context_parts = array();
+
+        if (is_array($raw)) {
+            $context_parts[] = (string) ($raw['source']['name'] ?? '');
+            $context_parts[] = (string) ($raw['source']['application_details']['square_product'] ?? '');
+            $context_parts[] = (string) ($raw['customer_id'] ?? '');
+            foreach ((array) ($raw['_vms_payment_context'] ?? array()) as $payment) {
+                if (!is_array($payment)) {
+                    continue;
+                }
+                $context_parts[] = (string) ($payment['application_details']['square_product'] ?? '');
+                $context_parts[] = (string) ($payment['source_type'] ?? '');
+                $context_parts[] = (string) ($payment['note'] ?? '');
+                $context_parts[] = (string) ($payment['card_details']['entry_method'] ?? '');
+                $context_parts[] = (string) ($payment['app_fee_money']['amount'] ?? '');
+            }
+        }
+
+        $blob = strtolower(trim(implode(' ', array_filter(array_map('trim', $context_parts)))) . ' ' . $raw_json . ' ' . $tenders_json);
+        $has_woo = vms_dt_rr_text_has_any($blob, array(
+            'woocommerce',
+            'woo commerce',
+            'woocommerce square',
+            'wc-order',
+            'wc_order',
+            'wordpress',
+            'wp_order',
+            'tribe tickets',
+            'event tickets',
+            'event-tickets',
+            'square_product":"woocommerce',
+            'square_product":"woocommerce_square',
+        ));
+        $has_payment_link_phrase = vms_dt_rr_text_has_any($blob, array(
+            'payment link',
+            'payment links',
+            'paymentlink',
+            'payment_link',
+            'qr code',
+            'qr-code',
+            'scan to pay',
+            'online_checkout',
+            'checkout_api',
+        ));
+        $has_online_phrase = vms_dt_rr_text_has_any($blob, array(
+            'online',
+            'website',
+            'web site',
+            'ecommerce',
+            'e-commerce',
+            'checkout',
+            'buy online',
+            'web order',
+            'online order',
+            'source":"online',
+            'source":"ecommerce',
+            'order_source',
+            'source":{',
+        ));
+
+        $has_card_present = false;
+        $has_cash = false;
+        $has_card_not_present = false;
+        if (is_array($tenders)) {
+            foreach ($tenders as $tender) {
+                if (!is_array($tender)) {
+                    continue;
+                }
+                $type = strtoupper((string) ($tender['type'] ?? ''));
+                if ($type === 'CASH') {
+                    $has_cash = true;
+                }
+                if ($type === 'CARD' || $type === 'SQUARE_GIFT_CARD') {
+                    $has_card_not_present = true;
+                }
+                $entry = strtoupper((string) ($tender['card_details']['entry_method'] ?? ''));
+                if (in_array($entry, array('SWIPED', 'DIPPED', 'TAPPED', 'CONTACTLESS', 'CONTACTLESS_EMV'), true)) {
+                    $has_card_present = true;
+                    $has_card_not_present = false;
+                }
+            }
+        }
+
+        $has_pos_phrase = vms_dt_rr_text_has_any($blob, array('point of sale', 'square pos', 'square register', 'register', 'terminal', 'square_register', 'point_of_sale'));
+
+        if ($has_woo) {
+            return array(
+                'code' => 'woo_linked',
+                'label' => 'Woo-linked / overlap',
+                'confidence' => 'high',
+                'likely_in_person' => false,
+            );
+        }
+
+        if ($has_payment_link_phrase) {
+            return array(
+                'code' => 'in_person',
+                'label' => 'Door QR / Payment Link',
+                'confidence' => 'high',
+                'likely_in_person' => true,
+            );
+        }
+
+        if ($has_cash || $has_card_present || $has_pos_phrase) {
+            return array(
+                'code' => 'in_person',
+                'label' => 'Likely in-person',
+                'confidence' => ($has_cash || $has_card_present) ? 'high' : 'medium',
+                'likely_in_person' => true,
+            );
+        }
+
+        if ($has_online_phrase || $has_card_not_present) {
+            return array(
+                'code' => 'website_candidate',
+                'label' => 'Likely website / online',
+                'confidence' => ($has_online_phrase && $has_card_not_present) ? 'high' : 'medium',
+                'likely_in_person' => false,
+            );
+        }
+
+        return array(
+            'code' => 'unknown',
+            'label' => 'Unknown source',
+            'confidence' => 'low',
+            'likely_in_person' => false,
+        );
+    }
+}
+
+if (!function_exists('vms_dt_rr_register_unmapped_entry')) {
+    function vms_dt_rr_register_unmapped_entry(array &$entries, array $line_item, int $line_total, string $source_code, string $category_id, string $category_name, string $suggested_bucket = ''): void
+    {
+        $item_name = trim((string) ($line_item['name'] ?? ''));
+        $variation_name = trim((string) ($line_item['variation_name'] ?? ''));
+        $variation_id = trim((string) ($line_item['catalog_object_id'] ?? ''));
+        $display_name = trim($item_name . ($variation_name !== '' ? ' — ' . $variation_name : ''));
+        if ($display_name === '') {
+            $display_name = $variation_id !== '' ? ('Variation ' . $variation_id) : 'Unnamed Square line item';
+        }
+
+        if ($category_id !== '') {
+            $entry_key = 'category|' . $category_id;
+            if (!isset($entries[$entry_key])) {
+                $entries[$entry_key] = array(
+                    'entry_key' => $entry_key,
+                    'map_type' => 'category',
+                    'map_id' => $category_id,
+                    'label' => $category_name !== '' ? $category_name : $category_id,
+                    'category_id' => $category_id,
+                    'category_name' => $category_name !== '' ? $category_name : $category_id,
+                    'variation_id' => '',
+                    'example_items' => array(),
+                    'gross_cents' => 0,
+                    'line_count' => 0,
+                    'orders_count' => 0,
+                    'in_person_cents' => 0,
+                    'woo_overlap_cents' => 0,
+                    'suggested_bucket' => $suggested_bucket,
+                    'needs_manual_review' => false,
+                );
+            }
+            $entries[$entry_key]['gross_cents'] += $line_total;
+            $entries[$entry_key]['line_count']++;
+            $entries[$entry_key]['orders_count']++;
+            if ($source_code === 'woo_linked') {
+                $entries[$entry_key]['woo_overlap_cents'] += $line_total;
+            } else {
+                $entries[$entry_key]['in_person_cents'] += $line_total;
+            }
+            if (count($entries[$entry_key]['example_items']) < 5) {
+                $entries[$entry_key]['example_items'][$display_name] = true;
+            }
+            return;
+        }
+
+        if ($variation_id !== '') {
+            $entry_key = 'variation|' . $variation_id;
+            if (!isset($entries[$entry_key])) {
+                $entries[$entry_key] = array(
+                    'entry_key' => $entry_key,
+                    'map_type' => 'variation',
+                    'map_id' => $variation_id,
+                    'label' => $display_name,
+                    'category_id' => '',
+                    'category_name' => '',
+                    'variation_id' => $variation_id,
+                    'example_items' => array(),
+                    'gross_cents' => 0,
+                    'line_count' => 0,
+                    'orders_count' => 0,
+                    'in_person_cents' => 0,
+                    'woo_overlap_cents' => 0,
+                    'suggested_bucket' => $suggested_bucket,
+                    'needs_manual_review' => false,
+                );
+            }
+            $entries[$entry_key]['gross_cents'] += $line_total;
+            $entries[$entry_key]['line_count']++;
+            $entries[$entry_key]['orders_count']++;
+            if ($source_code === 'woo_linked') {
+                $entries[$entry_key]['woo_overlap_cents'] += $line_total;
+            } else {
+                $entries[$entry_key]['in_person_cents'] += $line_total;
+            }
+            if (count($entries[$entry_key]['example_items']) < 5) {
+                $entries[$entry_key]['example_items'][$display_name] = true;
+            }
+            return;
+        }
+
+        $entry_key = 'manual|' . md5($display_name);
+        if (!isset($entries[$entry_key])) {
+            $entries[$entry_key] = array(
+                'entry_key' => $entry_key,
+                'map_type' => 'manual',
+                'map_id' => '',
+                'label' => $display_name,
+                'category_id' => '',
+                'category_name' => '',
+                'variation_id' => '',
+                'example_items' => array(),
+                'gross_cents' => 0,
+                'line_count' => 0,
+                'orders_count' => 0,
+                'in_person_cents' => 0,
+                'woo_overlap_cents' => 0,
+                'suggested_bucket' => $suggested_bucket,
+                'needs_manual_review' => true,
+            );
+        }
+        $entries[$entry_key]['gross_cents'] += $line_total;
+        $entries[$entry_key]['line_count']++;
+        $entries[$entry_key]['orders_count']++;
+        if ($source_code === 'woo_linked') {
+            $entries[$entry_key]['woo_overlap_cents'] += $line_total;
+        } else {
+            $entries[$entry_key]['in_person_cents'] += $line_total;
+        }
+        if (count($entries[$entry_key]['example_items']) < 5) {
+            $entries[$entry_key]['example_items'][$display_name] = true;
+        }
+    }
+}
+
+if (!function_exists('vms_dt_rr_square_zero_summary')) {
+    function vms_dt_rr_square_zero_summary(): array
+    {
+        return array(
+            'counted' => array(
+                'square_direct_tickets' => 0,
+                'bar' => 0,
+                'food' => 0,
+                'merch' => 0,
+                'other' => 0,
+            ),
+            'excluded_overlap' => array(
+                'square_direct_tickets' => 0,
+                'bar' => 0,
+                'food' => 0,
+                'merch' => 0,
+                'other' => 0,
+            ),
+            'counted_tip_cents' => 0,
+            'counted_service_cents' => 0,
+            'overlap_tip_cents' => 0,
+            'overlap_service_cents' => 0,
+            'unclassified_cents' => 0,
+            'unclassified_tip_cents' => 0,
+            'unclassified_service_cents' => 0,
+            'scope_line_total_cents' => 0,
+            'scope_line_tax_cents' => 0,
+            'scope_line_discount_cents' => 0,
+            'scope_line_net_ex_tax_cents' => 0,
+            'scope_tip_cents' => 0,
+            'scope_service_cents' => 0,
+            'scope_cash_cents' => 0,
+            'scope_card_cents' => 0,
+            'scope_other_tender_cents' => 0,
+            'ignored_cents' => 0,
+            'ignored_orders_count' => 0,
+            'unknown_ticket_source_cents' => 0,
+            'website_candidate_ticket_cents' => 0,
+            'website_candidate_other_cents' => 0,
+            'square_direct_ticket_qty' => 0,
+            'square_direct_tickets_net_cents' => 0,
+            'square_paid_ticket_qty' => 0,
+            'square_free_ticket_qty' => 0,
+            'excluded_overlap_ticket_qty' => 0,
+            'orders_count' => 0,
+            'woo_overlap_orders_count' => 0,
+            'website_candidate_orders_count' => 0,
+            'in_person_orders_count' => 0,
+            'unknown_orders_count' => 0,
+            'source_line_total_cents' => array(
+                'woo_linked' => 0,
+                'website_candidate' => 0,
+                'in_person' => 0,
+                'unknown' => 0,
+            ),
+            'source_card_cents' => array(
+                'woo_linked' => 0,
+                'website_candidate' => 0,
+                'in_person' => 0,
+                'unknown' => 0,
+            ),
+            'source_cash_cents' => array(
+                'woo_linked' => 0,
+                'website_candidate' => 0,
+                'in_person' => 0,
+                'unknown' => 0,
+            ),
+            'source_tip_cents' => array(
+                'woo_linked' => 0,
+                'website_candidate' => 0,
+                'in_person' => 0,
+                'unknown' => 0,
+            ),
+            'missing_category_count' => 0,
+            'counted_bucket_gross' => array(),
+            'excluded_bucket_gross' => array(),
+            'errors' => array(),
+            'warnings' => array(),
+            'ticket_bucket_keys' => array(),
+            'bucket_labels' => array(),
+            'window' => array(),
+        );
+    }
+}
+
+if (!function_exists('vms_dt_rr_normalize_time_value')) {
+    function vms_dt_rr_normalize_time_value(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        $formats = array('H:i', 'H:i:s', 'g:i A', 'g:i a', 'g A', 'g a', 'ga', 'h:i A', 'h:i a');
+        foreach ($formats as $format) {
+            $dt = DateTimeImmutable::createFromFormat('!' . $format, $value, wp_timezone());
+            if ($dt instanceof DateTimeImmutable) {
+                return $dt->format('H:i');
+            }
+        }
+
+        $ts = strtotime($value);
+        if ($ts === false) {
+            return '';
+        }
+
+        return wp_date('H:i', $ts, wp_timezone());
+    }
+}
+
+if (!function_exists('vms_dt_rr_build_event_window')) {
+    function vms_dt_rr_build_event_window(int $event_plan_id, string $scope_mode = 'full_day'): array
+    {
+        $tz = wp_timezone();
+        $utc = new DateTimeZone('UTC');
+        $scope_mode = vms_dt_rr_normalize_square_scope_mode($scope_mode);
+
+        $event_date = trim((string) get_post_meta($event_plan_id, '_vms_event_date', true));
+        $venue_id = (int) get_post_meta($event_plan_id, '_vms_venue_id', true);
+        $start_raw = trim((string) get_post_meta($event_plan_id, '_vms_start_time', true));
+        $end_raw = trim((string) get_post_meta($event_plan_id, '_vms_end_time', true));
+        $start_source = 'event_plan';
+        $end_source = 'event_plan';
+        $warnings = array();
+        $errors = array();
+
+        if ($start_raw === '' && $venue_id > 0) {
+            $start_raw = trim((string) get_post_meta($venue_id, '_vms_default_start_time', true));
+            if ($start_raw !== '') {
+                $start_source = 'venue_default';
+                $warnings[] = 'Used venue default start time for Square attribution because the event plan start time is blank.';
+            }
+        }
+        if ($end_raw === '' && $venue_id > 0) {
+            $end_raw = trim((string) get_post_meta($venue_id, '_vms_default_end_time', true));
+            if ($end_raw !== '') {
+                $end_source = 'venue_default';
+                $warnings[] = 'Used venue default end time for Square attribution because the event plan end time is blank.';
+            }
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date)) {
+            $errors[] = 'Event date is missing or invalid, so on-site sales cannot be matched safely.';
+        }
+
+        $start_time = vms_dt_rr_normalize_time_value($start_raw);
+        $end_time = vms_dt_rr_normalize_time_value($end_raw);
+
+        if ($scope_mode !== 'full_day') {
+            if ($start_raw !== '' && $start_time === '') {
+                $errors[] = 'Start time is invalid, so on-site sales cannot be matched safely.';
+            }
+            if ($end_raw !== '' && $end_time === '') {
+                $errors[] = 'End time is invalid, so on-site sales cannot be matched safely.';
+            }
+            if ($start_time === '') {
+                $errors[] = 'Start time is missing, so on-site sales cannot be matched safely.';
+            }
+            if ($end_time === '') {
+                $errors[] = 'End time is missing, so on-site sales cannot be matched safely.';
+            }
+        }
+
+        $window_start_utc = '';
+        $window_end_utc = '';
+        $window_start_local = '';
+        $window_end_local = '';
+
+        if (empty($errors)) {
+            try {
+                if ($scope_mode === 'full_day') {
+                    $start_dt = new DateTimeImmutable($event_date . ' 00:00:00', $tz);
+                    $end_dt = $start_dt->modify('+1 day');
+                    $warnings[] = 'Square scope is Full event day, so on-site sales are matched midnight-to-midnight in the WordPress timezone. This is the best parity mode for matching Square daily reports.';
+                } else {
+                    $start_dt = new DateTimeImmutable($event_date . ' ' . $start_time . ':00', $tz);
+                    $end_dt = new DateTimeImmutable($event_date . ' ' . $end_time . ':00', $tz);
+                    if ($end_dt <= $start_dt) {
+                        $end_dt = $end_dt->modify('+1 day');
+                        $warnings[] = 'End time is earlier than or equal to start time, so Revenue Intelligence treated the event as overnight.';
+                    }
+                    if ($scope_mode === 'buffered') {
+                        $start_dt = $start_dt->modify('-2 hours');
+                        $end_dt = $end_dt->modify('+4 hours');
+                        $warnings[] = 'Square scope is Event hours + buffer, so Revenue Intelligence included sales from two hours before start through four hours after end.';
+                    } else {
+                        $warnings[] = 'Square scope is Event hours only, so any sales before the start time or after the end time stay outside the counted event window.';
+                    }
+                }
+                $window_start_local = $start_dt->format('Y-m-d H:i');
+                $window_end_local = $end_dt->format('Y-m-d H:i');
+                $window_start_utc = $start_dt->setTimezone($utc)->format('Y-m-d H:i:s');
+                $window_end_utc = $end_dt->setTimezone($utc)->format('Y-m-d H:i:s');
+            } catch (Throwable $e) {
+                $errors[] = 'Event time window could not be computed safely.';
+            }
+        }
+
+        return array(
+            'event_date' => $event_date,
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+            'start_time_source' => $start_source,
+            'end_time_source' => $end_source,
+            'scope_mode' => $scope_mode,
+            'scope_label' => vms_dt_rr_square_scope_label($scope_mode),
+            'window_start_local' => $window_start_local,
+            'window_end_local' => $window_end_local,
+            'window_start_utc' => $window_start_utc,
+            'window_end_utc' => $window_end_utc,
+            'errors' => array_values(array_unique(array_filter(array_map('strval', $errors)))),
+            'warnings' => array_values(array_unique(array_filter(array_map('strval', $warnings)))),
+        );
+    }
+}
+
+if (!function_exists('vms_dt_rr_resolve_square_location_scope')) {
+    function vms_dt_rr_resolve_square_location_scope(array $filters): array
+    {
+        $options = vms_dt_rr_get_square_location_options();
+        $selected = trim((string) ($filters['square_location_id'] ?? ''));
+        $configured_location_id = vms_dt_rr_woo_square_configured_location_id();
+        $has_token = vms_dt_rr_woo_square_access_token() !== '';
+
+        $scope = array(
+            'options' => $options,
+            'selected_location_id' => $selected,
+            'location_ids' => array(),
+            'selected_label' => '',
+            'warnings' => array(),
+            'errors' => array(),
+            'auto_selected' => false,
+            'requires_selection' => false,
+        );
+
+        if (!$has_token) {
+            $scope['errors'][] = 'WooCommerce Square is not connected, so on-site Square revenue cannot be loaded yet.';
+            return $scope;
+        }
+
+        if (empty($options)) {
+            if ($configured_location_id !== '') {
+                $scope['location_ids'] = array($configured_location_id);
+                $scope['selected_location_id'] = $configured_location_id;
+                $scope['selected_label'] = $configured_location_id;
+                $scope['auto_selected'] = true;
+                $scope['warnings'][] = 'Revenue Intelligence could not fetch the full Woo Square location list, so it is using the configured Woo Square location only.';
+                return $scope;
+            }
+            $scope['errors'][] = 'No active Square locations could be read from WooCommerce Square.';
+            return $scope;
+        }
+
+        if ($selected !== '') {
+            if (!isset($options[$selected])) {
+                $scope['errors'][] = 'The selected Square location is not available from the WooCommerce Square connection.';
+                return $scope;
+            }
+            $scope['location_ids'] = array($selected);
+            $scope['selected_label'] = $options[$selected];
+            return $scope;
+        }
+
+        if ($configured_location_id !== '' && isset($options[$configured_location_id])) {
+            $scope['location_ids'] = array($configured_location_id);
+            $scope['selected_location_id'] = $configured_location_id;
+            $scope['selected_label'] = $options[$configured_location_id];
+            $scope['auto_selected'] = true;
+            return $scope;
+        }
+
+        if (count($options) === 1) {
+            $only_location = (string) array_key_first($options);
+            $scope['location_ids'] = array($only_location);
+            $scope['selected_location_id'] = $only_location;
+            $scope['selected_label'] = $options[$only_location];
+            $scope['auto_selected'] = true;
+            return $scope;
+        }
+
+        $scope['requires_selection'] = true;
+        $scope['warnings'][] = 'Select a Square location to include on-site revenue. Revenue Intelligence now reads Square access from WooCommerce Square, not from Event Plans.';
+        return $scope;
+    }
+}
+
+if (!function_exists('vms_dt_rr_square_fetch_scope_orders')) {
+    function vms_dt_rr_square_fetch_scope_orders(array $location_ids, string $window_start_utc, string $window_end_utc): array
+    {
+        $location_ids = array_values(array_filter(array_map(static function ($value): string {
+            return trim((string) $value);
+        }, $location_ids)));
+
+        if (empty($location_ids) || $window_start_utc === '' || $window_end_utc === '') {
+            return array();
+        }
+
+        $cache_key = 'vms_dt_rr_orders_' . md5(wp_json_encode(array(
+            'env' => vms_dt_rr_woo_square_environment(),
+            'location_ids' => $location_ids,
+            'window_start_utc' => $window_start_utc,
+            'window_end_utc' => $window_end_utc,
+        )));
+        static $memory_cache = array();
+        if (isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
+                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_square_orders_cache', 'memory_hit');
+            }
+            return $memory_cache[$cache_key];
+        }
+        $cached = get_transient($cache_key);
+        if (is_array($cached)) {
+            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
+                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_square_orders_cache', 'transient_hit');
+            }
+            $memory_cache[$cache_key] = $cached;
+            return $cached;
+        }
+
+        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
+            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.square_fetch_scope_orders', array(
+                'location_count' => count($location_ids),
+                'window_start_utc' => $window_start_utc,
+                'window_end_utc' => $window_end_utc,
+            ));
+        }
+
+        $body = array(
+            'location_ids' => $location_ids,
+            'query' => array(
+                'filter' => array(
+                    'date_time_filter' => array(
+                        'closed_at' => array(
+                            'start_at' => gmdate(DATE_RFC3339, strtotime($window_start_utc . ' UTC')),
+                            'end_at' => gmdate(DATE_RFC3339, strtotime($window_end_utc . ' UTC')),
+                        ),
+                    ),
+                    'state_filter' => array(
+                        'states' => array('COMPLETED'),
+                    ),
+                ),
+                'sort' => array(
+                    'sort_field' => 'CLOSED_AT',
+                    'sort_order' => 'ASC',
+                ),
+            ),
+            'limit' => 500,
+        );
+
+        $rows = array();
+        $cursor = '';
+        do {
+            if ($cursor !== '') {
+                $body['cursor'] = $cursor;
+            } else {
+                unset($body['cursor']);
+            }
+
+            $payload = vms_dt_rr_woo_square_api_request('POST', '/v2/orders/search', $body);
+            $orders = isset($payload['orders']) && is_array($payload['orders']) ? $payload['orders'] : array();
+            foreach ($orders as $order) {
+                if (!is_array($order)) {
+                    continue;
+                }
+                $closed_at = trim((string) ($order['closed_at'] ?? ''));
+                $closed_ts = $closed_at !== '' ? strtotime($closed_at) : false;
+                $rows[] = array(
+                    'square_order_id' => (string) ($order['id'] ?? ''),
+                    'location_id' => (string) ($order['location_id'] ?? ''),
+                    'closed_at_utc' => $closed_ts ? gmdate('Y-m-d H:i:s', $closed_ts) : '',
+                    'line_items_json' => wp_json_encode(isset($order['line_items']) && is_array($order['line_items']) ? $order['line_items'] : array()),
+                    'raw_json' => wp_json_encode($order),
+                    'tenders_json' => wp_json_encode(isset($order['tenders']) && is_array($order['tenders']) ? $order['tenders'] : array()),
+                    'tip_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_tip_money') : 0,
+                    'service_charge_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_service_charge_money') : 0,
+                    'total_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_money') : 0,
+                    'tax_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_tax_money') : 0,
+                    'discount_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'total_discount_money') : 0,
+                    'returned_amount' => function_exists('vms_square_money_amount') ? (int) vms_square_money_amount($order, 'return_amounts') : 0,
+                );
+            }
+            $cursor = isset($payload['cursor']) ? trim((string) $payload['cursor']) : '';
+        } while ($cursor !== '');
+
+        try {
+            $rows = vms_dt_rr_square_supplement_rows_from_payments($rows, $location_ids, $window_start_utc, $window_end_utc);
+        } catch (Throwable $e) {
+        }
+
+        $memory_cache[$cache_key] = $rows;
+        set_transient($cache_key, $rows, 10 * MINUTE_IN_SECONDS);
+        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
+            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.square_fetch_scope_orders', array(
+                'row_count' => count($rows),
+                'location_count' => count($location_ids),
+            ));
+        }
+        return $rows;
+    }
+}
+
+if (!function_exists('vms_dt_rr_square_prime_catalog_map_pairs')) {
+    function vms_dt_rr_square_prime_catalog_map_pairs(array $rows): int
+    {
+        if (!function_exists('vms_square_catalog_map_get_reporting_category_id') || !function_exists('vms_square_catalog_map_ingest_batch_retrieve_response')) {
+            return 0;
+        }
+
+        if (function_exists('vms_square_sync_maybe_create_tables')) {
+            vms_square_sync_maybe_create_tables();
+        }
+
+        $need = array();
+        foreach ($rows as $row) {
+            $line_items = json_decode((string) ($row['line_items_json'] ?? ''), true);
+            if (!is_array($line_items)) {
+                continue;
+            }
+            foreach ($line_items as $line_item) {
+                if (!is_array($line_item)) {
+                    continue;
+                }
+                $variation_id = (string) ($line_item['catalog_object_id'] ?? '');
+                $catalog_version = isset($line_item['catalog_version']) ? (int) $line_item['catalog_version'] : 0;
+                if ($variation_id === '' || $catalog_version <= 0) {
+                    continue;
+                }
+                if (vms_square_catalog_map_get_reporting_category_id($variation_id, $catalog_version) !== '') {
+                    continue;
+                }
+                $need[$variation_id . '|' . $catalog_version] = array('id' => $variation_id, 'v' => $catalog_version);
+            }
+        }
+
+        if (empty($need)) {
+            return 0;
+        }
+
+        $by_version = array();
+        foreach ($need as $pair) {
+            $version = (int) $pair['v'];
+            $by_version[$version] = $by_version[$version] ?? array();
+            $by_version[$version][] = (string) $pair['id'];
+        }
+
+        $new = 0;
+        foreach ($by_version as $version => $ids) {
+            $ids = array_values(array_unique(array_filter($ids)));
+            foreach (array_chunk($ids, 200) as $chunk) {
+                $payload = vms_dt_rr_woo_square_api_request('POST', '/v2/catalog/batch-retrieve', array(
+                    'object_ids' => array_values($chunk),
+                    'include_related_objects' => true,
+                    'catalog_version' => (int) $version,
+                ));
+                $new += (int) vms_square_catalog_map_ingest_batch_retrieve_response($payload, (int) $version);
+            }
+        }
+
+        return (int) $new;
+    }
+}
+
+if (!function_exists('vms_dt_rr_build_square_event_maps')) {
+    function vms_dt_rr_build_square_event_maps(array $event_ids, array $filters): array
+    {
+        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
+            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.square_event_maps', array(
+                'event_count' => count($event_ids),
+                'square_scope_mode' => (string) ($filters['square_scope_mode'] ?? 'full_day'),
+            ));
+        }
+
+        try {
+            $result = array(
+                'map' => array(),
+                'meta' => array(
+                    'warnings' => array(),
+                    'errors' => array(),
+                    'selected_location_id' => '',
+                    'selected_location_label' => '',
+                    'location_requires_selection' => false,
+                    'auto_selected_location' => false,
+                    'selected_scope_mode' => 'full_day',
+                    'selected_scope_label' => vms_dt_rr_square_scope_label('full_day'),
+                    'fetched_orders_count' => 0,
+                    'matched_orders_count' => 0,
+                    'ambiguous_orders_count' => 0,
+                    'outside_window_orders_count' => 0,
+                    'catalog_pairs_primed' => 0,
+                    'ignored_cents' => 0,
+                    'outside_window_line_total_cents' => 0,
+                    'outside_window_total_collected_cents' => 0,
+                    'unmapped_entries' => array(),
+                ),
+            );
+
+            foreach ($event_ids as $event_plan_id) {
+                $result['map'][(int) $event_plan_id] = vms_dt_rr_square_zero_summary();
+            }
+
+        $scope = vms_dt_rr_resolve_square_location_scope($filters);
+        $result['meta']['warnings'] = array_merge($result['meta']['warnings'], (array) ($scope['warnings'] ?? array()));
+        $result['meta']['errors'] = array_merge($result['meta']['errors'], (array) ($scope['errors'] ?? array()));
+        $result['meta']['selected_location_id'] = (string) ($scope['selected_location_id'] ?? '');
+        $result['meta']['selected_location_label'] = (string) ($scope['selected_label'] ?? '');
+        $result['meta']['location_requires_selection'] = !empty($scope['requires_selection']);
+        $result['meta']['auto_selected_location'] = !empty($scope['auto_selected']);
+        $result['meta']['selected_scope_mode'] = vms_dt_rr_normalize_square_scope_mode((string) ($filters['square_scope_mode'] ?? 'full_day'));
+        $result['meta']['selected_scope_label'] = vms_dt_rr_square_scope_label((string) ($filters['square_scope_mode'] ?? 'full_day'));
+
+        $bucket_map = function_exists('vms_square_effective_bucket_category_ids') ? (array) vms_square_effective_bucket_category_ids() : array();
+        $bucket_labels = function_exists('vms_square_effective_bucket_labels') ? (array) vms_square_effective_bucket_labels() : array();
+        $ticket_bucket_keys = vms_dt_rr_detect_ticket_bucket_keys($bucket_labels, $bucket_map);
+        $category_to_bucket = array();
+        foreach ($bucket_map as $bucket_key => $cat_ids) {
+            foreach ((array) $cat_ids as $cat_id) {
+                $cat_id = trim((string) $cat_id);
+                if ($cat_id === '' || isset($category_to_bucket[$cat_id])) {
+                    continue;
+                }
+                $category_to_bucket[$cat_id] = (string) $bucket_key;
+            }
+        }
+
+        foreach ($result['map'] as $event_plan_id => $summary) {
+            $result['map'][$event_plan_id]['bucket_labels'] = $bucket_labels;
+            $result['map'][$event_plan_id]['ticket_bucket_keys'] = $ticket_bucket_keys;
+        }
+
+        if (empty($bucket_map)) {
+            $result['meta']['warnings'][] = 'No Square bucket mapping is configured. Square dollars can be found, but uncategorized line items stay outside the current profitability basis.';
+        }
+
+        $window_index = array();
+        $scan_start_utc = '';
+        $scan_end_utc = '';
+        foreach ($event_ids as $event_plan_id) {
+            $event_plan_id = (int) $event_plan_id;
+            $window = vms_dt_rr_build_event_window($event_plan_id, (string) ($filters['square_scope_mode'] ?? 'full_day'));
+            $result['map'][$event_plan_id]['window'] = $window;
+            $result['map'][$event_plan_id]['errors'] = array_values(array_unique(array_merge(
+                (array) ($result['map'][$event_plan_id]['errors'] ?? array()),
+                (array) ($window['errors'] ?? array())
+            )));
+            $result['map'][$event_plan_id]['warnings'] = array_values(array_unique(array_merge(
+                (array) ($result['map'][$event_plan_id]['warnings'] ?? array()),
+                (array) ($window['warnings'] ?? array())
+            )));
+
+            $start_utc = (string) ($window['window_start_utc'] ?? '');
+            $end_utc = (string) ($window['window_end_utc'] ?? '');
+            if ($start_utc === '' || $end_utc === '') {
+                continue;
+            }
+
+            $window_index[$event_plan_id] = array(
+                'window_start_utc' => $start_utc,
+                'window_end_utc' => $end_utc,
+            );
+            if ($scan_start_utc === '' || strcmp($start_utc, $scan_start_utc) < 0) {
+                $scan_start_utc = $start_utc;
+            }
+            if ($scan_end_utc === '' || strcmp($end_utc, $scan_end_utc) > 0) {
+                $scan_end_utc = $end_utc;
+            }
+        }
+
+        if (empty($scope['location_ids'])) {
+            return $result;
+        }
+
+        if (empty($window_index)) {
+            $result['meta']['errors'][] = 'No valid event time windows were available in the selected scope, so on-site revenue stayed at zero.';
+            return $result;
+        }
+
+        if (!empty($filters['sold_from'])) {
+            try {
+                $sold_floor = (new DateTimeImmutable((string) $filters['sold_from'] . ' 00:00:00', wp_timezone()))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+                if ($scan_start_utc === '' || strcmp($sold_floor, $scan_start_utc) > 0) {
+                    $scan_start_utc = $sold_floor;
+                }
+            } catch (Throwable $e) {
+            }
+        }
+        if (!empty($filters['sold_to'])) {
+            try {
+                $sold_ceiling = (new DateTimeImmutable((string) $filters['sold_to'] . ' 00:00:00', wp_timezone()))->modify('+1 day')->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+                if ($scan_end_utc === '' || strcmp($sold_ceiling, $scan_end_utc) < 0) {
+                    $scan_end_utc = $sold_ceiling;
+                }
+            } catch (Throwable $e) {
+            }
+        }
+
+        if ($scan_start_utc !== '' && $scan_end_utc !== '' && strcmp($scan_start_utc, $scan_end_utc) >= 0) {
+            $result['meta']['warnings'][] = 'The sold-date filter excludes all possible on-site sale times for the selected event scope.';
+            return $result;
+        }
+
+        try {
+            $rows = vms_dt_rr_square_fetch_scope_orders((array) $scope['location_ids'], $scan_start_utc, $scan_end_utc);
+        } catch (Throwable $e) {
+            $result['meta']['errors'][] = 'Square order lookup failed through the WooCommerce Square connection: ' . $e->getMessage();
+            return $result;
+        }
+
+        $result['meta']['fetched_orders_count'] = is_array($rows) ? count($rows) : 0;
+        if (empty($rows)) {
+            $result['meta']['warnings'][] = 'No Square orders matched the selected Square location and event windows.';
+            return $result;
+        }
+
+        try {
+            $result['meta']['catalog_pairs_primed'] = vms_dt_rr_square_prime_catalog_map_pairs($rows);
+        } catch (Throwable $e) {
+            $result['meta']['warnings'][] = 'Square catalog lookup could not be refreshed, so some line items may remain unclassified.';
+        }
+
+        foreach ($rows as $row) {
+            $closed_at_utc = trim((string) ($row['closed_at_utc'] ?? ''));
+            if ($closed_at_utc === '') {
+                continue;
+            }
+
+            $matching_event_ids = array();
+            foreach ($window_index as $event_plan_id => $window) {
+                if ($closed_at_utc >= (string) $window['window_start_utc'] && $closed_at_utc < (string) $window['window_end_utc']) {
+                    $matching_event_ids[] = (int) $event_plan_id;
+                }
+            }
+
+            if (count($matching_event_ids) === 0) {
+                $result['meta']['outside_window_orders_count']++;
+                $outside_line_total = 0;
+                $outside_line_items = json_decode((string) ($row['line_items_json'] ?? ''), true);
+                if (is_array($outside_line_items)) {
+                    foreach ($outside_line_items as $outside_line_item) {
+                        if (!is_array($outside_line_item)) {
+                            continue;
+                        }
+                        $outside_line_total += function_exists('vms_square_money_amount_from_money_obj')
+                            ? (int) vms_square_money_amount_from_money_obj($outside_line_item, 'total_money')
+                            : 0;
+                    }
+                }
+                $result['meta']['outside_window_line_total_cents'] += $outside_line_total;
+                $result['meta']['outside_window_total_collected_cents'] += $outside_line_total
+                    + (int) ($row['tip_amount'] ?? 0)
+                    + (int) ($row['service_charge_amount'] ?? 0);
+                continue;
+            }
+            if (count($matching_event_ids) > 1) {
+                $result['meta']['ambiguous_orders_count']++;
+                continue;
+            }
+
+            $event_plan_id = (int) $matching_event_ids[0];
+            $summary = $result['map'][$event_plan_id];
+            $summary['orders_count']++;
+            $result['meta']['matched_orders_count']++;
+
+            $raw_json = (string) ($row['raw_json'] ?? '');
+            $tenders_json = (string) ($row['tenders_json'] ?? '');
+            $source = vms_dt_rr_square_source_classification($raw_json, $tenders_json);
+            if ($source['code'] === 'woo_linked') {
+                $summary['woo_overlap_orders_count']++;
+            } elseif ($source['code'] === 'website_candidate') {
+                $summary['website_candidate_orders_count']++;
+            } elseif ($source['code'] === 'in_person') {
+                $summary['in_person_orders_count']++;
+            } else {
+                $summary['unknown_orders_count']++;
+            }
+
+            $tenders = json_decode((string) ($row['tenders_json'] ?? ''), true);
+            if (is_array($tenders)) {
+                foreach ($tenders as $tender) {
+                    if (!is_array($tender)) {
+                        continue;
+                    }
+                    $tender_amount = 0;
+                    if (function_exists('vms_square_money_amount_from_money_obj')) {
+                        $tender_amount = (int) vms_square_money_amount_from_money_obj($tender, 'amount_money');
+                    }
+                    $tender_type = strtoupper((string) ($tender['type'] ?? ''));
+                    if ($tender_type === 'CASH') {
+                        $summary['scope_cash_cents'] += $tender_amount;
+                        if (isset($summary['source_cash_cents'][$source['code']])) {
+                            $summary['source_cash_cents'][$source['code']] += $tender_amount;
+                        }
+                    } elseif ($tender_type === 'CARD' || $tender_type === 'SQUARE_GIFT_CARD') {
+                        $summary['scope_card_cents'] += $tender_amount;
+                        if (isset($summary['source_card_cents'][$source['code']])) {
+                            $summary['source_card_cents'][$source['code']] += $tender_amount;
+                        }
+                    } else {
+                        $summary['scope_other_tender_cents'] += $tender_amount;
+                    }
+                }
+            }
+            $summary['scope_tip_cents'] += (int) ($row['tip_amount'] ?? 0);
+            if (isset($summary['source_tip_cents'][$source['code']])) {
+                $summary['source_tip_cents'][$source['code']] += (int) ($row['tip_amount'] ?? 0);
+            }
+            $summary['scope_service_cents'] += (int) ($row['service_charge_amount'] ?? 0);
+
+            $line_items = json_decode((string) ($row['line_items_json'] ?? ''), true);
+            if (!is_array($line_items)) {
+                $result['map'][$event_plan_id] = $summary;
+                continue;
+            }
+
+            $weights = array(
+                'counted' => 0,
+                'excluded' => 0,
+                'unclassified' => 0,
+            );
+
+            foreach ($line_items as $line_item) {
+                if (!is_array($line_item)) {
+                    continue;
+                }
+
+                try {
+                    $line_total = function_exists('vms_square_money_amount_from_money_obj')
+                        ? (int) vms_square_money_amount_from_money_obj($line_item, 'total_money')
+                        : 0;
+                    $line_qty = isset($line_item['quantity']) ? max(0, (int) round((float) $line_item['quantity'])) : 0;
+                    $line_tax = function_exists('vms_square_money_amount_from_money_obj')
+                        ? (int) vms_square_money_amount_from_money_obj($line_item, 'total_tax_money')
+                        : 0;
+                    $line_discount = function_exists('vms_square_money_amount_from_money_obj')
+                        ? (int) vms_square_money_amount_from_money_obj($line_item, 'total_discount_money')
+                        : 0;
+                    $line_net = max(0, $line_total - $line_tax);
+                    if (isset($summary['source_line_total_cents'][$source['code']])) {
+                        $summary['source_line_total_cents'][$source['code']] += $line_total;
+                    }
+                    $summary['scope_line_total_cents'] += $line_total;
+                    $summary['scope_line_tax_cents'] += $line_tax;
+                    $summary['scope_line_discount_cents'] += $line_discount;
+                    $summary['scope_line_net_ex_tax_cents'] += $line_net;
+                    $variation_id = (string) ($line_item['catalog_object_id'] ?? '');
+                    $catalog_version = isset($line_item['catalog_version']) ? (int) $line_item['catalog_version'] : 0;
+                    $category_id = ($variation_id !== '' && $catalog_version > 0 && function_exists('vms_square_catalog_map_get_reporting_category_id'))
+                        ? (string) vms_square_catalog_map_get_reporting_category_id($variation_id, $catalog_version)
+                        : '';
+                    $override_bucket_key = $variation_id !== '' ? (string) ($variation_overrides[$variation_id] ?? '') : '';
+                    $bucket_key = $override_bucket_key !== '' ? $override_bucket_key : ($category_id !== '' ? (string) ($category_to_bucket[$category_id] ?? '') : '');
+                    $category_name = $category_id !== '' ? (string) (($category_cache[$category_id]['name'] ?? $category_id)) : '';
+                    $is_ticketish = function_exists('vms_dt_rr_line_item_looks_ticketish')
+                        ? (bool) vms_dt_rr_line_item_looks_ticketish($line_item, $category_name)
+                        : false;
+                    $uncategorized_like = $category_name !== '' && strpos(strtolower(trim($category_name)), 'uncategorized') !== false;
+                    if ($override_bucket_key === '' && $uncategorized_like) {
+                        $bucket_key = 'website_overlap';
+                    }
+
+                    if ($bucket_key === '') {
+                        $suggested_bucket = '';
+                        if ($is_ticketish) {
+                            $suggested_bucket = ($source['code'] === 'in_person') ? 'ticket' : 'website_overlap';
+                        }
+                        if ($is_ticketish && $source['code'] === 'in_person') {
+                            $bucket_key = 'ticket';
+                        } else {
+                            $summary['unclassified_cents'] += $line_total;
+                            $summary['missing_category_count']++;
+                            $weights['unclassified'] += max(0, $line_total);
+                            if (function_exists('vms_dt_rr_register_unmapped_entry')) {
+                                vms_dt_rr_register_unmapped_entry($result['meta']['unmapped_entries'], $line_item, $line_total, (string) ($source['code'] ?? ''), $category_id, $category_name, $suggested_bucket);
+                            }
+                            continue;
+                        }
+                    }
+
+                    if ($bucket_key === 'ignore') {
+                        $summary['ignored_cents'] += $line_total;
+                        $summary['ignored_orders_count']++;
+                        $result['meta']['ignored_cents'] += $line_total;
+                        $weights['excluded'] += max(0, $line_total);
+                        continue;
+                    }
+
+                    $bucket_label = (string) ($bucket_labels[$bucket_key] ?? ucwords(str_replace('_', ' ', $bucket_key)));
+                    $display_group = function_exists('vms_dt_rr_bucket_display_group')
+                        ? (string) vms_dt_rr_bucket_display_group($bucket_key, $bucket_label, $ticket_bucket_keys)
+                        : (string) $bucket_key;
+                    $auto_overlap_candidate = ($source['code'] === 'website_candidate' && $is_ticketish);
+                    if ($auto_overlap_candidate) {
+                        $summary['website_candidate_ticket_cents'] += $line_total;
+                    } elseif ($source['code'] === 'website_candidate') {
+                        $summary['website_candidate_other_cents'] += $line_total;
+                    }
+                    $target_key = ($source['code'] === 'woo_linked' || $bucket_key === 'website_overlap' || $auto_overlap_candidate) ? 'excluded_overlap' : 'counted';
+
+                    if (!isset($summary[$target_key][$display_group])) {
+                        $summary[$target_key][$display_group] = 0;
+                    }
+                    $summary[$target_key][$display_group] += $line_total;
+                    if ($display_group === 'square_direct_tickets') {
+                        if ($target_key === 'excluded_overlap') {
+                            $summary['excluded_overlap_ticket_qty'] += $line_qty;
+                        } else {
+                            $summary['square_direct_ticket_qty'] += $line_qty;
+                            $summary['square_direct_tickets_net_cents'] += $line_net;
+                            if ($line_net > 0) {
+                                $summary['square_paid_ticket_qty'] += $line_qty;
+                            } else {
+                                $summary['square_free_ticket_qty'] += $line_qty;
+                            }
+                        }
+                    }
+                    $bucket_store_key = ($target_key === 'excluded_overlap') ? 'excluded_bucket_gross' : 'counted_bucket_gross';
+                    if (!isset($summary[$bucket_store_key][$bucket_key])) {
+                        $summary[$bucket_store_key][$bucket_key] = 0;
+                    }
+                    $summary[$bucket_store_key][$bucket_key] += $line_total;
+                    $weights[$target_key === 'excluded_overlap' ? 'excluded' : 'counted'] += max(0, $line_total);
+
+                    if ($display_group === 'square_direct_tickets' && $source['code'] === 'unknown') {
+                        $summary['unknown_ticket_source_cents'] += $line_total;
+                    }
+                } catch (Throwable $line_item_error) {
+                    $summary['errors'][] = 'A Square line item could not be fully classified and was skipped: ' . $line_item_error->getMessage();
+                    $result['meta']['warnings'][] = 'One or more Square line items could not be fully classified and were skipped.';
+                    continue;
+                }
+            }
+
+            if (function_exists('vms_square_allocate_amount_by_weights')) {
+                $tip_alloc = vms_square_allocate_amount_by_weights((int) ($row['tip_amount'] ?? 0), $weights);
+                $summary['counted_tip_cents'] += (int) ($tip_alloc['counted'] ?? 0);
+                $summary['overlap_tip_cents'] += (int) ($tip_alloc['excluded'] ?? 0);
+                $summary['unclassified_tip_cents'] += (int) ($tip_alloc['unclassified'] ?? 0);
+
+                $service_alloc = vms_square_allocate_amount_by_weights((int) ($row['service_charge_amount'] ?? 0), $weights);
+                $summary['counted_service_cents'] += (int) ($service_alloc['counted'] ?? 0);
+                $summary['overlap_service_cents'] += (int) ($service_alloc['excluded'] ?? 0);
+                $summary['unclassified_service_cents'] += (int) ($service_alloc['unclassified'] ?? 0);
+            }
+
+            $result['map'][$event_plan_id] = $summary;
+        }
+
+        foreach ($result['map'] as $event_plan_id => $summary) {
+            if ((int) ($summary['unknown_ticket_source_cents'] ?? 0) > 0) {
+                $summary['warnings'][] = 'Some Square ticket-category sales were counted from orders whose source could not be confidently identified. Review diagnostics before treating direct-ticket totals as perfect.';
+            }
+            if ((int) ($summary['unclassified_cents'] ?? 0) > 0) {
+                $summary['warnings'][] = 'Some Square line totals could not be classified into a revenue bucket. Those dollars are shown separately and excluded from the current profitability basis.';
+            }
+            $summary['warnings'] = array_values(array_unique(array_filter(array_map('strval', (array) $summary['warnings']))));
+            $summary['errors'] = array_values(array_unique(array_filter(array_map('strval', (array) $summary['errors']))));
+            $result['map'][$event_plan_id] = $summary;
+        }
+
+        if (!empty($result['meta']['unmapped_entries']) && is_array($result['meta']['unmapped_entries'])) {
+            uasort($result['meta']['unmapped_entries'], static function (array $a, array $b): int {
+                return ((int) ($b['gross_cents'] ?? 0)) <=> ((int) ($a['gross_cents'] ?? 0));
+            });
+            $result['meta']['unmapped_entries'] = array_values($result['meta']['unmapped_entries']);
+        }
+
+        if ((int) $result['meta']['ambiguous_orders_count'] > 0) {
+            $result['meta']['warnings'][] = sprintf(
+                '%d Square order(s) overlapped multiple event windows and were excluded until the event times are de-conflicted.',
+                (int) $result['meta']['ambiguous_orders_count']
+            );
+        }
+        if ((int) $result['meta']['outside_window_orders_count'] > 0) {
+            $result['meta']['warnings'][] = sprintf(
+                '%d Square order(s) at the selected location fell outside the selected Square scope and were ignored.',
+                (int) $result['meta']['outside_window_orders_count']
+            );
+        }
+
+        $result['meta']['warnings'] = array_values(array_unique(array_filter(array_map('strval', (array) $result['meta']['warnings']))));
+        $result['meta']['errors'] = array_values(array_unique(array_filter(array_map('strval', (array) $result['meta']['errors']))));
+
+            return $result;
+        } finally {
+            if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
+                vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.square_event_maps', array(
+                    'event_count' => count($event_ids),
+                ));
+            }
+        }
+    }
+}
+
+if (!function_exists('vms_dt_rr_event_status_label')) {
+    function vms_dt_rr_event_status_label(int $event_plan_id): string
+    {
+        if (vms_dt_has_core_function('vms_event_plan_get_status')) {
+            return (string) vms_dt_call_core_function('vms_event_plan_get_status', $event_plan_id, 'dashboard');
+        }
+        return sanitize_key((string) get_post_meta($event_plan_id, '_vms_event_plan_status', true));
+    }
+}
+
+if (!function_exists('vms_dt_rr_confidence_badges')) {
+    function vms_dt_rr_confidence_badges(array $row): array
+    {
+        $badges = array();
+        if ((int) ($row['square_overlap_excluded_cents'] ?? 0) > 0) {
+            $badges[] = 'Woo overlap excluded';
+        }
+        if ((int) ($row['square_unclassified_cents'] ?? 0) > 0) {
+            $badges[] = 'Unclassified Square sales';
+        }
+        if ((int) ($row['square_unknown_ticket_source_cents'] ?? 0) > 0) {
+            $badges[] = 'Unknown ticket source';
+        }
+        if (!empty($row['square_errors'])) {
+            $badges[] = 'Square window/setup issue';
+        }
+        return $badges;
+    }
+}
+
+if (!function_exists('vms_dt_rr_build_report_dataset')) {
+    function vms_dt_rr_build_report_dataset(array $filters): array
+    {
+        $cache_key = md5(wp_json_encode($filters));
+        static $memory_cache = array();
+        if (isset($memory_cache[$cache_key]) && is_array($memory_cache[$cache_key])) {
+            if (vms_dt_has_core_function('vms_resource_fingerprint_flag')) {
+                vms_dt_call_core_function('vms_resource_fingerprint_flag', 'dt_report_dataset_cache', 'memory_hit');
+            }
+            return $memory_cache[$cache_key];
+        }
+
+        if (vms_dt_has_core_function('vms_resource_fingerprint_span_start')) {
+            vms_dt_call_core_function('vms_resource_fingerprint_span_start', 'dt.report_dataset', array(
+                'event_plan_id' => (int) ($filters['event_plan_id'] ?? 0),
+                'event_from' => (string) ($filters['event_from'] ?? ''),
+                'event_to' => (string) ($filters['event_to'] ?? ''),
+            ));
+        }
+
+        $event_ids = vms_dt_rr_get_event_plan_ids($filters);
+        $ticket_report = vms_dt_rr_build_ticket_report($filters);
+        $website = vms_dt_rr_build_website_event_map($ticket_report, $event_ids);
+        $square_bundle = vms_dt_rr_build_square_event_maps($event_ids, $filters);
+        $square_map = (array) ($square_bundle['map'] ?? array());
+        $square_meta = (array) ($square_bundle['meta'] ?? array());
+
+        $event_rows = array();
+        foreach ($event_ids as $event_plan_id) {
+            $event_plan_id = (int) $event_plan_id;
+            $website_row = isset($website['map'][$event_plan_id]) && is_array($website['map'][$event_plan_id])
+                ? $website['map'][$event_plan_id]
+                : array(
+                    'website_ticket_cents' => 0,
+                    'website_addon_cents' => 0,
+                    'website_total_cents' => 0,
+                    'website_ticket_net_cents' => 0,
+                    'website_ticket_tax_cents' => 0,
+                    'website_ticket_refunded_cents' => 0,
+                    'website_ticket_ordered_cents' => 0,
+                    'website_addon_net_cents' => 0,
+                    'website_addon_tax_cents' => 0,
+                    'website_addon_refunded_cents' => 0,
+                    'website_addon_ordered_cents' => 0,
+                    'website_order_count' => 0,
+                    'website_line_count' => 0,
+                    'website_ticket_qty' => 0,
+                    'website_ticket_refunded_qty' => 0,
+                    'website_ticket_ordered_qty' => 0,
+                    'website_paid_ticket_qty' => 0,
+                    'website_free_ticket_qty' => 0,
+                    'website_addon_qty' => 0,
+                    'website_addon_refunded_qty' => 0,
+                    'website_addon_ordered_qty' => 0,
+                );
+            $square = isset($square_map[$event_plan_id]) && is_array($square_map[$event_plan_id])
+                ? $square_map[$event_plan_id]
+                : vms_dt_rr_square_zero_summary();
+
+            $event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
+            $venue_id = (int) get_post_meta($event_plan_id, '_vms_venue_id', true);
+            $venue_name = $venue_id > 0 ? (string) get_the_title($venue_id) : '';
+            $status = vms_dt_rr_event_status_label($event_plan_id);
+
+            $square_counted_total = (int) array_sum((array) $square['counted']);
+            $square_overlap_total = (int) array_sum((array) $square['excluded_overlap']);
+            $square_tip_total = (int) ($square['counted_tip_cents'] + $square['overlap_tip_cents'] + $square['unclassified_tip_cents']);
+            $square_service_total = (int) ($square['counted_service_cents'] + $square['overlap_service_cents'] + $square['unclassified_service_cents']);
+            $square_scope_total_collected = (int) (($square['scope_line_total_cents'] ?? 0) + ($square['scope_tip_cents'] ?? 0) + ($square['scope_service_cents'] ?? 0));
+            $website_originated_attribution = (int) ($website_row['website_total_cents'] ?? 0);
+            $direct_square_pos_collected = max(0, $square_scope_total_collected - $website_originated_attribution);
+            $profitability_basis = (int) ($website_row['website_total_cents'] ?? 0) + $square_counted_total;
+
+            $row = array(
+                'event_plan_id' => $event_plan_id,
+                'event_title' => (string) get_the_title($event_plan_id),
+                'event_date' => $event_date,
+                'venue_id' => $venue_id,
+                'venue_name' => $venue_name,
+                'status' => $status,
+                'website_ticket_cents' => (int) ($website_row['website_ticket_cents'] ?? 0),
+                'website_addon_cents' => (int) ($website_row['website_addon_cents'] ?? 0),
+                'website_total_cents' => (int) ($website_row['website_total_cents'] ?? 0),
+                'website_ticket_net_cents' => (int) ($website_row['website_ticket_net_cents'] ?? 0),
+                'website_ticket_tax_cents' => (int) ($website_row['website_ticket_tax_cents'] ?? 0),
+                'website_ticket_refunded_cents' => (int) ($website_row['website_ticket_refunded_cents'] ?? 0),
+                'website_ticket_ordered_cents' => (int) ($website_row['website_ticket_ordered_cents'] ?? 0),
+                'website_addon_net_cents' => (int) ($website_row['website_addon_net_cents'] ?? 0),
+                'website_addon_tax_cents' => (int) ($website_row['website_addon_tax_cents'] ?? 0),
+                'website_addon_refunded_cents' => (int) ($website_row['website_addon_refunded_cents'] ?? 0),
+                'website_addon_ordered_cents' => (int) ($website_row['website_addon_ordered_cents'] ?? 0),
+                'website_order_count' => (int) ($website_row['website_order_count'] ?? 0),
+                'website_line_count' => (int) ($website_row['website_line_count'] ?? 0),
+                'website_ticket_qty' => (int) ($website_row['website_ticket_qty'] ?? 0),
+                'website_ticket_refunded_qty' => (int) ($website_row['website_ticket_refunded_qty'] ?? 0),
+                'website_ticket_ordered_qty' => (int) ($website_row['website_ticket_ordered_qty'] ?? 0),
+                'website_paid_ticket_qty' => (int) ($website_row['website_paid_ticket_qty'] ?? 0),
+                'website_free_ticket_qty' => (int) ($website_row['website_free_ticket_qty'] ?? 0),
+                'website_addon_qty' => (int) ($website_row['website_addon_qty'] ?? 0),
+                'website_addon_refunded_qty' => (int) ($website_row['website_addon_refunded_qty'] ?? 0),
+                'website_addon_ordered_qty' => (int) ($website_row['website_addon_ordered_qty'] ?? 0),
+                'square_direct_tickets_cents' => (int) ($square['counted']['square_direct_tickets'] ?? 0),
+                'square_direct_tickets_net_cents' => (int) ($square['square_direct_tickets_net_cents'] ?? 0),
+                'square_bar_cents' => (int) ($square['counted']['bar'] ?? 0),
+                'square_food_cents' => (int) ($square['counted']['food'] ?? 0),
+                'square_merch_cents' => (int) ($square['counted']['merch'] ?? 0),
+                'square_other_cents' => (int) ($square['counted']['other'] ?? 0),
+                'square_counted_total_cents' => $square_counted_total,
+                'square_overlap_excluded_cents' => $square_overlap_total,
+                'square_unclassified_cents' => (int) ($square['unclassified_cents'] ?? 0),
+                'square_ignored_cents' => (int) ($square['ignored_cents'] ?? 0),
+                'square_scope_gross_cents' => $square_counted_total + (int) ($square['unclassified_cents'] ?? 0) + $square_overlap_total + (int) ($square['ignored_cents'] ?? 0),
+                'square_unknown_ticket_source_cents' => (int) ($square['unknown_ticket_source_cents'] ?? 0),
+                'square_tip_total_cents' => $square_tip_total,
+                'square_service_total_cents' => $square_service_total,
+                'square_scope_line_total_cents' => (int) ($square['scope_line_total_cents'] ?? 0),
+                'square_scope_line_tax_cents' => (int) ($square['scope_line_tax_cents'] ?? 0),
+                'square_scope_line_discount_cents' => (int) ($square['scope_line_discount_cents'] ?? 0),
+                'square_scope_line_net_ex_tax_cents' => (int) ($square['scope_line_net_ex_tax_cents'] ?? 0),
+                'square_scope_tip_cents' => (int) ($square['scope_tip_cents'] ?? 0),
+                'square_scope_service_cents' => (int) ($square['scope_service_cents'] ?? 0),
+                'square_scope_cash_cents' => (int) ($square['scope_cash_cents'] ?? 0),
+                'square_scope_card_cents' => (int) ($square['scope_card_cents'] ?? 0),
+                'square_scope_other_tender_cents' => (int) ($square['scope_other_tender_cents'] ?? 0),
+                'square_scope_total_collected_cents' => $square_scope_total_collected,
+                'processor_total_collected_cents' => $square_scope_total_collected,
+                'website_originated_attribution_cents' => $website_originated_attribution,
+                'direct_square_pos_collected_cents' => $direct_square_pos_collected,
+                'square_source_line_total_cents' => (array) ($square['source_line_total_cents'] ?? array()),
+                'square_source_card_cents' => (array) ($square['source_card_cents'] ?? array()),
+                'square_source_cash_cents' => (array) ($square['source_cash_cents'] ?? array()),
+                'square_source_tip_cents' => (array) ($square['source_tip_cents'] ?? array()),
+                'square_website_candidate_ticket_cents' => (int) ($square['website_candidate_ticket_cents'] ?? 0),
+                'square_website_candidate_other_cents' => (int) ($square['website_candidate_other_cents'] ?? 0),
+                'square_direct_ticket_qty' => (int) ($square['square_direct_ticket_qty'] ?? 0),
+                'square_paid_ticket_qty' => (int) ($square['square_paid_ticket_qty'] ?? 0),
+                'square_free_ticket_qty' => (int) ($square['square_free_ticket_qty'] ?? 0),
+                'square_excluded_overlap_ticket_qty' => (int) ($square['excluded_overlap_ticket_qty'] ?? 0),
+                'counted_total_cents' => $profitability_basis,
+                'profitability_basis_cents' => $profitability_basis,
+                'square_orders_count' => (int) ($square['orders_count'] ?? 0),
+                'square_overlap_orders_count' => (int) ($square['woo_overlap_orders_count'] ?? 0),
+                'square_unknown_orders_count' => (int) ($square['unknown_orders_count'] ?? 0),
+                'square_errors' => (array) ($square['errors'] ?? array()),
+                'square_warnings' => (array) ($square['warnings'] ?? array()),
+                'square_missing_category_count' => (int) ($square['missing_category_count'] ?? 0),
+                'square_ticket_bucket_keys' => (array) ($square['ticket_bucket_keys'] ?? array()),
+                'square_bucket_labels' => (array) ($square['bucket_labels'] ?? array()),
+                'square_window' => (array) ($square['window'] ?? array()),
+            );
+
+            $row['issues_count'] = count(vms_dt_rr_confidence_badges($row))
+                + count($row['square_errors'])
+                + count($row['square_warnings']);
+            $row['confidence_badges'] = vms_dt_rr_confidence_badges($row);
+
+            $event_rows[] = $row;
+        }
+
+        usort($event_rows, static function (array $a, array $b): int {
+            $cmp = strcmp((string) ($b['event_date'] ?? ''), (string) ($a['event_date'] ?? ''));
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            return strcmp((string) ($a['event_title'] ?? ''), (string) ($b['event_title'] ?? ''));
+        });
+
+        $result = array(
+            'filters' => $filters,
+            'event_rows' => $event_rows,
+            'website' => $website,
+            'ticket_report' => $ticket_report,
+            'square_meta' => $square_meta,
+        );
+        $memory_cache[$cache_key] = $result;
+        if (vms_dt_has_core_function('vms_resource_fingerprint_span_finish')) {
+            vms_dt_call_core_function('vms_resource_fingerprint_span_finish', 'dt.report_dataset', array(
+                'event_count' => count($event_ids),
+                'row_count' => count($event_rows),
+            ));
+        }
+        return $result;
+    }
+}
+
+if (!function_exists('vms_dt_rr_build_overview')) {
+    function vms_dt_rr_build_overview(array $event_rows, array $website_meta, array $square_meta = array()): array
+    {
+        $overview = array(
+            'events_count' => count($event_rows),
+            'website_ticket_cents' => 0,
+            'website_addon_cents' => 0,
+            'website_total_cents' => 0,
+            'website_ticket_net_cents' => 0,
+            'website_ticket_tax_cents' => 0,
+            'website_ticket_refunded_cents' => 0,
+            'website_ticket_ordered_cents' => 0,
+            'website_addon_net_cents' => 0,
+            'website_addon_tax_cents' => 0,
+            'website_addon_refunded_cents' => 0,
+            'website_addon_ordered_cents' => 0,
+            'website_ticket_qty' => 0,
+            'website_ticket_refunded_qty' => 0,
+            'website_ticket_ordered_qty' => 0,
+            'square_direct_ticket_qty' => 0,
+            'square_direct_tickets_cents' => 0,
+            'square_direct_tickets_net_cents' => 0,
+            'square_bar_cents' => 0,
+            'square_food_cents' => 0,
+            'square_merch_cents' => 0,
+            'square_other_cents' => 0,
+            'square_counted_total_cents' => 0,
+            'counted_total_cents' => 0,
+            'overlap_excluded_cents' => 0,
+            'unclassified_square_cents' => 0,
+            'square_ignored_cents' => 0,
+            'square_gross_in_scope_cents' => 0,
+            'square_scope_line_total_cents' => 0,
+            'square_scope_line_tax_cents' => 0,
+            'square_scope_line_discount_cents' => 0,
+            'square_scope_line_net_ex_tax_cents' => 0,
+            'square_scope_cash_cents' => 0,
+            'square_scope_card_cents' => 0,
+            'square_scope_other_tender_cents' => 0,
+            'square_scope_total_collected_cents' => 0,
+            'processor_total_collected_cents' => 0,
+            'website_originated_attribution_cents' => 0,
+            'direct_square_pos_collected_cents' => 0,
+            'profitability_basis_cents' => 0,
+            'square_source_line_total_cents' => array(
+                'woo_linked' => 0,
+                'website_candidate' => 0,
+                'in_person' => 0,
+                'unknown' => 0,
+            ),
+            'square_source_card_cents' => array(
+                'woo_linked' => 0,
+                'website_candidate' => 0,
+                'in_person' => 0,
+                'unknown' => 0,
+            ),
+            'square_source_cash_cents' => array(
+                'woo_linked' => 0,
+                'website_candidate' => 0,
+                'in_person' => 0,
+                'unknown' => 0,
+            ),
+            'square_source_tip_cents' => array(
+                'woo_linked' => 0,
+                'website_candidate' => 0,
+                'in_person' => 0,
+                'unknown' => 0,
+            ),
+            'square_website_candidate_ticket_cents' => 0,
+            'square_website_candidate_other_cents' => 0,
+            'tips_excluded_cents' => 0,
+            'service_charges_excluded_cents' => 0,
+            'unknown_ticket_source_cents' => 0,
+            'events_with_issues' => 0,
+            'website_unresolved_count' => count((array) ($website_meta['unresolved_rows'] ?? array())),
+            'website_unassigned_rows' => (int) ($website_meta['unassigned_rows'] ?? 0),
+            'square_report_errors_count' => count((array) ($square_meta['errors'] ?? array())),
+            'square_report_warnings_count' => count((array) ($square_meta['warnings'] ?? array())),
+            'square_location_label' => (string) ($square_meta['selected_location_label'] ?? ''),
+            'square_scope_mode' => (string) ($square_meta['selected_scope_mode'] ?? 'full_day'),
+            'square_scope_label' => (string) ($square_meta['selected_scope_label'] ?? vms_dt_rr_square_scope_label('full_day')),
+            'square_ambiguous_orders_count' => (int) ($square_meta['ambiguous_orders_count'] ?? 0),
+            'square_outside_window_orders_count' => (int) ($square_meta['outside_window_orders_count'] ?? 0),
+            'square_outside_window_line_total_cents' => (int) ($square_meta['outside_window_line_total_cents'] ?? 0),
+            'square_outside_window_total_collected_cents' => (int) ($square_meta['outside_window_total_collected_cents'] ?? 0),
+            'square_location_requires_selection' => !empty($square_meta['location_requires_selection']),
+        );
+
+        $top_event = null;
+        foreach ($event_rows as $row) {
+            $overview['website_ticket_cents'] += (int) ($row['website_ticket_cents'] ?? 0);
+            $overview['website_addon_cents'] += (int) ($row['website_addon_cents'] ?? 0);
+            $overview['website_total_cents'] += (int) ($row['website_total_cents'] ?? 0);
+            $overview['website_ticket_net_cents'] += (int) ($row['website_ticket_net_cents'] ?? 0);
+            $overview['website_ticket_tax_cents'] += (int) ($row['website_ticket_tax_cents'] ?? 0);
+            $overview['website_ticket_refunded_cents'] += (int) ($row['website_ticket_refunded_cents'] ?? 0);
+            $overview['website_ticket_ordered_cents'] += (int) ($row['website_ticket_ordered_cents'] ?? 0);
+            $overview['website_addon_net_cents'] += (int) ($row['website_addon_net_cents'] ?? 0);
+            $overview['website_addon_tax_cents'] += (int) ($row['website_addon_tax_cents'] ?? 0);
+            $overview['website_addon_refunded_cents'] += (int) ($row['website_addon_refunded_cents'] ?? 0);
+            $overview['website_addon_ordered_cents'] += (int) ($row['website_addon_ordered_cents'] ?? 0);
+            $overview['website_ticket_qty'] += (int) ($row['website_ticket_qty'] ?? 0);
+            $overview['website_ticket_refunded_qty'] += (int) ($row['website_ticket_refunded_qty'] ?? 0);
+            $overview['website_ticket_ordered_qty'] += (int) ($row['website_ticket_ordered_qty'] ?? 0);
+            $overview['square_direct_ticket_qty'] += (int) ($row['square_direct_ticket_qty'] ?? 0);
+            $overview['square_direct_tickets_cents'] += (int) ($row['square_direct_tickets_cents'] ?? 0);
+            $overview['square_direct_tickets_net_cents'] += (int) ($row['square_direct_tickets_net_cents'] ?? ($row['square_direct_tickets_cents'] ?? 0));
+            $overview['square_bar_cents'] += (int) ($row['square_bar_cents'] ?? 0);
+            $overview['square_food_cents'] += (int) ($row['square_food_cents'] ?? 0);
+            $overview['square_merch_cents'] += (int) ($row['square_merch_cents'] ?? 0);
+            $overview['square_other_cents'] += (int) ($row['square_other_cents'] ?? 0);
+            $overview['square_counted_total_cents'] += (int) ($row['square_counted_total_cents'] ?? 0);
+            $overview['counted_total_cents'] += (int) ($row['counted_total_cents'] ?? 0);
+            $overview['overlap_excluded_cents'] += (int) ($row['square_overlap_excluded_cents'] ?? 0);
+            $overview['unclassified_square_cents'] += (int) ($row['square_unclassified_cents'] ?? 0);
+            $overview['square_ignored_cents'] += (int) ($row['square_ignored_cents'] ?? 0);
+            $overview['square_gross_in_scope_cents'] += (int) ($row['square_scope_gross_cents'] ?? 0);
+            $overview['square_scope_line_total_cents'] += (int) ($row['square_scope_line_total_cents'] ?? 0);
+            $overview['square_scope_line_tax_cents'] += (int) ($row['square_scope_line_tax_cents'] ?? 0);
+            $overview['square_scope_line_discount_cents'] += (int) ($row['square_scope_line_discount_cents'] ?? 0);
+            $overview['square_scope_line_net_ex_tax_cents'] += (int) ($row['square_scope_line_net_ex_tax_cents'] ?? 0);
+            $overview['square_scope_cash_cents'] += (int) ($row['square_scope_cash_cents'] ?? 0);
+            $overview['square_scope_card_cents'] += (int) ($row['square_scope_card_cents'] ?? 0);
+            $overview['square_scope_other_tender_cents'] += (int) ($row['square_scope_other_tender_cents'] ?? 0);
+            $overview['square_scope_total_collected_cents'] += (int) ($row['square_scope_total_collected_cents'] ?? 0);
+            $overview['processor_total_collected_cents'] += (int) ($row['processor_total_collected_cents'] ?? 0);
+            $overview['website_originated_attribution_cents'] += (int) ($row['website_originated_attribution_cents'] ?? 0);
+            $overview['direct_square_pos_collected_cents'] += (int) ($row['direct_square_pos_collected_cents'] ?? 0);
+            $overview['profitability_basis_cents'] += (int) ($row['profitability_basis_cents'] ?? 0);
+            foreach (array('woo_linked', 'website_candidate', 'in_person', 'unknown') as $source_code) {
+                $overview['square_source_line_total_cents'][$source_code] += (int) (($row['square_source_line_total_cents'][$source_code] ?? 0));
+                $overview['square_source_card_cents'][$source_code] += (int) (($row['square_source_card_cents'][$source_code] ?? 0));
+                $overview['square_source_cash_cents'][$source_code] += (int) (($row['square_source_cash_cents'][$source_code] ?? 0));
+                $overview['square_source_tip_cents'][$source_code] += (int) (($row['square_source_tip_cents'][$source_code] ?? 0));
+            }
+            $overview['square_website_candidate_ticket_cents'] += (int) ($row['square_website_candidate_ticket_cents'] ?? 0);
+            $overview['square_website_candidate_other_cents'] += (int) ($row['square_website_candidate_other_cents'] ?? 0);
+            $overview['tips_excluded_cents'] += (int) ($row['square_tip_total_cents'] ?? 0);
+            $overview['service_charges_excluded_cents'] += (int) ($row['square_service_total_cents'] ?? 0);
+            $overview['unknown_ticket_source_cents'] += (int) ($row['square_unknown_ticket_source_cents'] ?? 0);
+            if ((int) ($row['issues_count'] ?? 0) > 0) {
+                $overview['events_with_issues']++;
+            }
+            if ($top_event === null || (int) ($row['profitability_basis_cents'] ?? ($row['counted_total_cents'] ?? 0)) > (int) ($top_event['profitability_basis_cents'] ?? ($top_event['counted_total_cents'] ?? 0))) {
+                $top_event = $row;
+            }
+        }
+
+        $overview['online_total_cents'] = $overview['website_total_cents'];
+        $overview['onsite_total_cents'] = $overview['square_counted_total_cents'];
+        $overview['processor_total_collected_cents'] = (int) ($overview['processor_total_collected_cents'] ?? $overview['square_scope_total_collected_cents']);
+        $overview['website_originated_attribution_cents'] = (int) ($overview['website_originated_attribution_cents'] ?? $overview['website_total_cents']);
+        $overview['direct_square_pos_collected_cents'] = (int) ($overview['direct_square_pos_collected_cents'] ?? max(0, $overview['processor_total_collected_cents'] - $overview['website_originated_attribution_cents']));
+        $overview['profitability_basis_cents'] = (int) ($overview['profitability_basis_cents'] ?? $overview['counted_total_cents']);
+        $overview['ticket_sales_total_cents'] = (int) ($overview['website_ticket_net_cents'] + ($overview['square_direct_tickets_net_cents'] ?? $overview['square_direct_tickets_cents']));
+        $overview['ticket_qty_total'] = (int) ($overview['website_ticket_qty'] + $overview['square_direct_ticket_qty']);
+        $overview['top_event'] = $top_event;
+        $overview['avg_per_event_cents'] = $overview['events_count'] > 0 ? (int) round(($overview['profitability_basis_cents'] ?? $overview['counted_total_cents']) / $overview['events_count']) : 0;
+        $overview['square_likely_online_overlap_cents'] = (int) (($overview['square_source_line_total_cents']['woo_linked'] ?? 0) + ($overview['square_website_candidate_ticket_cents'] ?? 0));
+        $overview['square_likely_online_card_cents'] = (int) (($overview['square_source_card_cents']['woo_linked'] ?? 0) + ($overview['square_source_card_cents']['website_candidate'] ?? 0));
+        $overview['square_likely_in_person_card_cents'] = (int) ($overview['square_source_card_cents']['in_person'] ?? 0);
+        $overview['square_unknown_card_cents'] = (int) ($overview['square_source_card_cents']['unknown'] ?? 0);
+        $overview['square_card_still_not_in_person_cents'] = max(0, (int) ($overview['square_scope_card_cents'] ?? 0) - (int) ($overview['square_source_card_cents']['in_person'] ?? 0));
+
+        if ($overview['square_report_errors_count'] > 0 || !empty($overview['square_location_requires_selection'])) {
+            $overview['confidence_state'] = 'bad';
+            $overview['confidence_label'] = 'Needs cleanup before you present it as final';
+        } elseif ($overview['events_with_issues'] === 0 && $overview['website_unresolved_count'] === 0 && $overview['unclassified_square_cents'] === 0 && $overview['square_ambiguous_orders_count'] === 0) {
+            $overview['confidence_state'] = 'good';
+            $overview['confidence_label'] = 'Clean enough to share confidently';
+        } elseif ($overview['unclassified_square_cents'] > 0 || $overview['unknown_ticket_source_cents'] > 0 || $overview['website_unresolved_count'] > 0 || $overview['square_ambiguous_orders_count'] > 0) {
+            $overview['confidence_state'] = 'watch';
+            $overview['confidence_label'] = 'Usable, but review flagged diagnostics';
+        } else {
+            $overview['confidence_state'] = 'bad';
+            $overview['confidence_label'] = 'Needs cleanup before you present it as final';
+        }
+
+        return $overview;
+    }
+}
+
+if (!function_exists('vms_dt_rr_shift_filters_to_previous_period')) {
+    function vms_dt_rr_shift_filters_to_previous_period(array $filters): array
+    {
+        if (empty($filters['event_from']) || empty($filters['event_to'])) {
+            return array();
+        }
+
+        try {
+            $start = new DateTimeImmutable($filters['event_from'], wp_timezone());
+            $end = new DateTimeImmutable($filters['event_to'], wp_timezone());
+        } catch (Throwable $e) {
+            return array();
+        }
+
+        $days = (int) $start->diff($end)->format('%a') + 1;
+        $prev_end = $start->modify('-1 day');
+        $prev_start = $prev_end->modify('-' . max(0, $days - 1) . ' days');
+
+        $shifted = $filters;
+        $shifted['event_from'] = $prev_start->format('Y-m-d');
+        $shifted['event_to'] = $prev_end->format('Y-m-d');
+        $shifted['compare'] = 0;
+
+        if (!empty($filters['sold_from']) && !empty($filters['sold_to'])) {
+            try {
+                $sold_start = new DateTimeImmutable($filters['sold_from'], wp_timezone());
+                $sold_end = new DateTimeImmutable($filters['sold_to'], wp_timezone());
+                $sold_days = (int) $sold_start->diff($sold_end)->format('%a') + 1;
+                $sold_prev_end = $sold_start->modify('-1 day');
+                $sold_prev_start = $sold_prev_end->modify('-' . max(0, $sold_days - 1) . ' days');
+                $shifted['sold_from'] = $sold_prev_start->format('Y-m-d');
+                $shifted['sold_to'] = $sold_prev_end->format('Y-m-d');
+            } catch (Throwable $e) {
+                $shifted['sold_from'] = '';
+                $shifted['sold_to'] = '';
+            }
+        }
+
+        return $shifted;
+    }
+}
+
+if (!function_exists('vms_dt_rr_build_monthly_series')) {
+    function vms_dt_rr_build_monthly_series(array $event_rows): array
+    {
+        $months = array();
+        foreach ($event_rows as $row) {
+            $date = (string) ($row['event_date'] ?? '');
+            if ($date === '') {
+                continue;
+            }
+            $month = substr($date, 0, 7);
+            if (!isset($months[$month])) {
+                $months[$month] = array(
+                    'label' => $month,
+                    'counted_total_cents' => 0,
+                    'events_count' => 0,
+                );
+            }
+            $months[$month]['counted_total_cents'] += (int) ($row['profitability_basis_cents'] ?? ($row['counted_total_cents'] ?? 0));
+            $months[$month]['events_count']++;
+        }
+
+        ksort($months);
+        return array_values($months);
+    }
+}
+
+if (!function_exists('vms_dt_rr_build_composition_segments')) {
+    function vms_dt_rr_build_composition_segments(array $overview): array
+    {
+        $segments = array(
+            array('key' => 'website_ticket', 'label' => 'Website tickets', 'class' => 'website-ticket', 'value' => (int) ($overview['website_ticket_cents'] ?? 0)),
+            array('key' => 'website_addon', 'label' => 'Website add-ons', 'class' => 'website-addon', 'value' => (int) ($overview['website_addon_cents'] ?? 0)),
+            array('key' => 'square_ticket', 'label' => 'Square direct tickets', 'class' => 'square-ticket', 'value' => (int) ($overview['square_direct_tickets_cents'] ?? 0)),
+            array('key' => 'bar', 'label' => 'Bar', 'class' => 'bar', 'value' => (int) ($overview['square_bar_cents'] ?? 0)),
+            array('key' => 'food', 'label' => 'Food / concessions', 'class' => 'food', 'value' => (int) ($overview['square_food_cents'] ?? 0)),
+            array('key' => 'merch', 'label' => 'Merch', 'class' => 'merch', 'value' => (int) ($overview['square_merch_cents'] ?? 0)),
+            array('key' => 'other', 'label' => 'Other', 'class' => 'other', 'value' => (int) ($overview['square_other_cents'] ?? 0)),
+        );
+
+        return array_values(array_filter($segments, static function (array $segment): bool {
+            return (int) ($segment['value'] ?? 0) > 0;
+        }));
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_composition_svg')) {
+    function vms_dt_rr_render_composition_svg(array $segments, int $total_cents): string
+    {
+        if ($total_cents <= 0 || empty($segments)) {
+            return '<div class="vms-dt-empty">No current profitability basis yet for the selected period.</div>';
+        }
+
+        $width = 900;
+        $height = 44;
+        $x = 0;
+        $svg = '<svg class="vms-dt-composition-svg" viewBox="0 0 ' . $width . ' ' . $height . '" role="img" aria-label="Profitability basis composition chart">';
+        foreach ($segments as $index => $segment) {
+            $value = (int) $segment['value'];
+            $segment_width = ($index === array_key_last($segments))
+                ? ($width - $x)
+                : (int) round(($value / $total_cents) * $width);
+            if ($segment_width < 0) {
+                $segment_width = 0;
+            }
+            $svg .= '<rect class="vms-dt-segment--' . esc_attr((string) $segment['class']) . '" x="' . (int) $x . '" y="6" width="' . (int) $segment_width . '" height="28" rx="10" ry="10"></rect>';
+            $x += $segment_width;
+        }
+        $svg .= '</svg>';
+        return $svg;
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_trend_svg')) {
+    function vms_dt_rr_render_trend_svg(array $monthly_series): string
+    {
+        if (count($monthly_series) < 1) {
+            return '<div class="vms-dt-empty">Not enough event history in the selected period to plot a trend yet.</div>';
+        }
+
+        $width = 900;
+        $height = 260;
+        $left = 46;
+        $right = 20;
+        $top = 20;
+        $bottom = 40;
+        $plot_width = $width - $left - $right;
+        $plot_height = $height - $top - $bottom;
+        $max = 0;
+        foreach ($monthly_series as $row) {
+            $max = max($max, (int) ($row['counted_total_cents'] ?? 0));
+        }
+        if ($max <= 0) {
+            $max = 1;
+        }
+
+        $count = count($monthly_series);
+        $step = $count > 1 ? ($plot_width / ($count - 1)) : 0;
+        $points = array();
+        $labels = array();
+        foreach ($monthly_series as $index => $row) {
+            $value = (int) ($row['counted_total_cents'] ?? 0);
+            $x = $left + (int) round($index * $step);
+            $y = $top + (int) round($plot_height - (($value / $max) * $plot_height));
+            $points[] = $x . ',' . $y;
+            $labels[] = array('x' => $x, 'label' => (string) ($row['label'] ?? ''), 'value' => $value, 'y' => $y);
+        }
+
+        $svg = '<svg class="vms-dt-trend-svg" viewBox="0 0 ' . $width . ' ' . $height . '" role="img" aria-label="Monthly revenue trend chart">';
+        for ($i = 0; $i < 4; $i++) {
+            $gy = $top + (int) round(($plot_height / 4) * $i);
+            $svg .= '<line class="vms-dt-gridline" x1="' . $left . '" y1="' . $gy . '" x2="' . ($width - $right) . '" y2="' . $gy . '"></line>';
+        }
+        $svg .= '<line class="vms-dt-axis" x1="' . $left . '" y1="' . ($height - $bottom) . '" x2="' . ($width - $right) . '" y2="' . ($height - $bottom) . '"></line>';
+        $svg .= '<polyline class="vms-dt-trend-line" points="' . esc_attr(implode(' ', $points)) . '"></polyline>';
+        foreach ($labels as $point) {
+            $label = (string) ($point['label'] ?? '');
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $label)) {
+                $label = substr($label, 5);
+            } elseif (preg_match('/^\d{4}-\d{2}$/', $label)) {
+                $label = substr($label, 5);
+            }
+            $label = str_replace('-', '/', $label);
+            $svg .= '<circle class="vms-dt-trend-dot" cx="' . (int) $point['x'] . '" cy="' . (int) $point['y'] . '" r="4"></circle>';
+            $svg .= '<text class="vms-dt-axis-text" x="' . (int) $point['x'] . '" y="' . ($height - 16) . '" text-anchor="middle">' . esc_html($label) . '</text>';
+        }
+        $svg .= '</svg>';
+        return $svg;
+    }
+}
+
+if (!function_exists('vms_dt_rr_period_delta')) {
+    function vms_dt_rr_period_delta(int $current, int $previous): array
+    {
+        $delta = $current - $previous;
+        $direction = 'flat';
+        if ($delta > 0) {
+            $direction = 'up';
+        } elseif ($delta < 0) {
+            $direction = 'down';
+        }
+
+        return array(
+            'delta_cents' => $delta,
+            'direction' => $direction,
+            'delta_pct' => ($previous > 0) ? (($delta / $previous) * 100) : 0,
+        );
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_filter_form')) {
+    function vms_dt_rr_render_filter_form(array $filters): void
+    {
+        $venues = vms_dt_rr_get_venue_options();
+        $events = vms_dt_rr_get_event_options();
+        $square_locations = vms_dt_rr_get_square_location_options();
+        ?>
+        <form method="get" action="" class="vms-dt-card vms-dt-section">
+            <input type="hidden" name="page" value="<?php echo esc_attr(vms_dt_get_menu_slug_revenue_intelligence()); ?>" />
+            <div class="vms-dt-card-head">
+                <div>
+                    <h2><?php esc_html_e('Filters', 'vms-data-tools'); ?></h2>
+                    <p class="vms-dt-section-desc"><?php esc_html_e('Scope the dashboard by event date, sold date, venue, one specific event plan, the Square location read from WooCommerce Square, and how tightly Square sales should follow the event clock.', 'vms-data-tools'); ?></p>
+                </div>
+            </div>
+            <div class="vms-dt-filter-grid">
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-event-from"><?php esc_html_e('Event date from', 'vms-data-tools'); ?></label>
+                    <input id="vms-dt-rr-event-from" type="date" name="event_from" value="<?php echo esc_attr((string) $filters['event_from']); ?>" />
+                </div>
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-event-to"><?php esc_html_e('Event date to', 'vms-data-tools'); ?></label>
+                    <input id="vms-dt-rr-event-to" type="date" name="event_to" value="<?php echo esc_attr((string) $filters['event_to']); ?>" />
+                </div>
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-sold-from"><?php esc_html_e('Sold date from', 'vms-data-tools'); ?></label>
+                    <input id="vms-dt-rr-sold-from" type="date" name="sold_from" value="<?php echo esc_attr((string) $filters['sold_from']); ?>" />
+                </div>
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-sold-to"><?php esc_html_e('Sold date to', 'vms-data-tools'); ?></label>
+                    <input id="vms-dt-rr-sold-to" type="date" name="sold_to" value="<?php echo esc_attr((string) $filters['sold_to']); ?>" />
+                </div>
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-square-location"><?php esc_html_e('Square location', 'vms-data-tools'); ?></label>
+                    <select id="vms-dt-rr-square-location" name="square_location_id">
+                        <option value=""><?php echo count($square_locations) <= 1 ? esc_html__('Use configured location', 'vms-data-tools') : esc_html__('Select a Square location', 'vms-data-tools'); ?></option>
+                        <?php foreach ($square_locations as $location_id => $label) : ?>
+                            <option value="<?php echo esc_attr((string) $location_id); ?>" <?php selected((string) ($filters['square_location_id'] ?? ''), (string) $location_id); ?>>
+                                <?php echo esc_html((string) $label); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-square-scope-mode"><?php esc_html_e('Square scope', 'vms-data-tools'); ?></label>
+                    <select id="vms-dt-rr-square-scope-mode" name="square_scope_mode">
+                        <?php foreach (vms_dt_rr_square_scope_options() as $scope_key => $scope_label) : ?>
+                            <option value="<?php echo esc_attr((string) $scope_key); ?>" <?php selected((string) ($filters['square_scope_mode'] ?? 'full_day'), (string) $scope_key); ?>>
+                                <?php echo esc_html((string) $scope_label); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-venue"><?php esc_html_e('Venue', 'vms-data-tools'); ?></label>
+                    <select id="vms-dt-rr-venue" name="venue_id">
+                        <option value="0"><?php esc_html_e('All venues', 'vms-data-tools'); ?></option>
+                        <?php foreach ($venues as $venue) : ?>
+                            <option value="<?php echo esc_attr((string) ($venue['id'] ?? 0)); ?>" <?php selected((int) ($filters['venue_id'] ?? 0), (int) ($venue['id'] ?? 0)); ?>>
+                                <?php echo esc_html((string) ($venue['label'] ?? '')); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-event-plan"><?php esc_html_e('Specific event plan', 'vms-data-tools'); ?></label>
+                    <select id="vms-dt-rr-event-plan" name="event_plan_id">
+                        <option value="0"><?php esc_html_e('All event plans in range', 'vms-data-tools'); ?></option>
+                        <?php foreach ($events as $event) : ?>
+                            <option value="<?php echo esc_attr((string) ($event['id'] ?? 0)); ?>" <?php selected((int) ($filters['event_plan_id'] ?? 0), (int) ($event['id'] ?? 0)); ?>>
+                                <?php echo esc_html((string) ($event['label'] ?? '')); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="vms-dt-field">
+                    <label for="vms-dt-rr-compare"><?php esc_html_e('Comparison', 'vms-data-tools'); ?></label>
+                    <label class="vms-dt-badge vms-dt-badge--neutral" for="vms-dt-rr-compare">
+                        <input id="vms-dt-rr-compare" type="checkbox" name="compare" value="1" <?php checked(!empty($filters['compare'])); ?> />
+                        <?php esc_html_e('Compare to previous same-length period', 'vms-data-tools'); ?>
+                    </label>
+                </div>
+            </div>
+            <div class="vms-dt-toolbar">
+                <div class="vms-dt-toolbar-left">
+                    <button type="submit" class="button button-primary"><?php esc_html_e('Refresh dashboard', 'vms-data-tools'); ?></button>
+                    <a class="button" href="<?php echo esc_url(vms_dt_admin_url(vms_dt_get_menu_slug_revenue_intelligence())); ?>"><?php esc_html_e('Reset filters', 'vms-data-tools'); ?></a>
+                </div>
+            </div>
+        </form>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_kpi_cards')) {
+    function vms_dt_rr_render_kpi_cards(array $overview, array $compare_overview = null): void
+    {
+        $compare_overview = is_array($compare_overview) ? $compare_overview : array();
+        $counted_delta = !empty($compare_overview) ? vms_dt_rr_period_delta((int) ($overview['profitability_basis_cents'] ?? $overview['counted_total_cents']), (int) ($compare_overview['profitability_basis_cents'] ?? ($compare_overview['counted_total_cents'] ?? 0))) : array('delta_cents' => 0, 'direction' => 'flat', 'delta_pct' => 0.0);
+        $processor_delta = !empty($compare_overview) ? vms_dt_rr_period_delta((int) ($overview['processor_total_collected_cents'] ?? 0), (int) ($compare_overview['processor_total_collected_cents'] ?? 0)) : array('delta_cents' => 0, 'direction' => 'flat', 'delta_pct' => 0.0);
+        $website_origin_delta = !empty($compare_overview) ? vms_dt_rr_period_delta((int) ($overview['website_originated_attribution_cents'] ?? 0), (int) ($compare_overview['website_originated_attribution_cents'] ?? 0)) : array('delta_cents' => 0, 'direction' => 'flat', 'delta_pct' => 0.0);
+        $direct_square_delta = !empty($compare_overview) ? vms_dt_rr_period_delta((int) ($overview['direct_square_pos_collected_cents'] ?? 0), (int) ($compare_overview['direct_square_pos_collected_cents'] ?? 0)) : array('delta_cents' => 0, 'direction' => 'flat', 'delta_pct' => 0.0);
+        ?>
+        <div class="vms-dt-kpi-grid">
+            <div class="vms-dt-kpi">
+                <p class="vms-dt-kpi-label"><?php esc_html_e('Current profitability basis', 'vms-data-tools'); ?></p>
+                <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['profitability_basis_cents'] ?? 0))); ?></p>
+                <p class="vms-dt-kpi-meta vms-dt-kpi-trend--<?php echo esc_attr((string) $counted_delta['direction']); ?>">
+                    <?php echo esc_html(vms_dt_rr_money((int) $counted_delta['delta_cents']) . ' vs prior period (' . number_format((float) $counted_delta['delta_pct'], 1) . '%)'); ?>
+                </p>
+            </div>
+            <div class="vms-dt-kpi">
+                <p class="vms-dt-kpi-label"><?php esc_html_e('Square total collected', 'vms-data-tools'); ?></p>
+                <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['processor_total_collected_cents'] ?? 0))); ?></p>
+                <p class="vms-dt-kpi-meta vms-dt-kpi-trend--<?php echo esc_attr((string) $processor_delta['direction']); ?>">
+                    <?php echo esc_html(vms_dt_rr_money((int) $processor_delta['delta_cents']) . ' vs prior period (' . number_format((float) $processor_delta['delta_pct'], 1) . '%)'); ?>
+                </p>
+            </div>
+            <div class="vms-dt-kpi">
+                <p class="vms-dt-kpi-label"><?php esc_html_e('Website-originated attribution', 'vms-data-tools'); ?></p>
+                <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['website_originated_attribution_cents'] ?? 0))); ?></p>
+                <p class="vms-dt-kpi-meta vms-dt-kpi-trend--<?php echo esc_attr((string) $website_origin_delta['direction']); ?>">
+                    <?php echo esc_html(vms_dt_rr_pct((float) ($overview['website_originated_attribution_cents'] ?? 0), (float) max(1, (int) ($overview['processor_total_collected_cents'] ?? 0))) . ' of Square processor total'); ?>
+                </p>
+            </div>
+            <div class="vms-dt-kpi">
+                <p class="vms-dt-kpi-label"><?php esc_html_e('Direct Square / POS portion', 'vms-data-tools'); ?></p>
+                <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['direct_square_pos_collected_cents'] ?? 0))); ?></p>
+                <p class="vms-dt-kpi-meta vms-dt-kpi-trend--<?php echo esc_attr((string) $direct_square_delta['direction']); ?>">
+                    <?php echo esc_html(vms_dt_rr_pct((float) ($overview['direct_square_pos_collected_cents'] ?? 0), (float) max(1, (int) ($overview['processor_total_collected_cents'] ?? 0))) . ' of Square processor total'); ?>
+                </p>
+            </div>
+            <div class="vms-dt-kpi">
+                <p class="vms-dt-kpi-label"><?php esc_html_e('Excluded overlap', 'vms-data-tools'); ?></p>
+                <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) $overview['overlap_excluded_cents'])); ?></p>
+                <p class="vms-dt-kpi-sub"><?php esc_html_e('Shown for reconciliation only; not included in the current profitability basis.', 'vms-data-tools'); ?></p>
+            </div>
+            <div class="vms-dt-kpi">
+                <p class="vms-dt-kpi-label"><?php esc_html_e('Confidence', 'vms-data-tools'); ?></p>
+                <p class="vms-dt-kpi-value"><?php echo esc_html((string) $overview['confidence_label']); ?></p>
+                <p class="vms-dt-kpi-sub"><?php echo esc_html((int) $overview['events_with_issues']); ?> <?php esc_html_e('event(s) flagged', 'vms-data-tools'); ?> · <?php echo esc_html((int) $overview['website_unresolved_count']); ?> <?php esc_html_e('website unresolved row(s)', 'vms-data-tools'); ?></p>
+            </div>
+        </div>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_compare_cards')) {
+    function vms_dt_rr_render_compare_cards(array $overview, array $compare_overview = null): void
+    {
+        if (empty($compare_overview)) {
+            return;
+        }
+        ?>
+        <div class="vms-dt-section vms-dt-compare-grid">
+            <div class="vms-dt-compare-card">
+                <p class="vms-dt-compare-title"><?php esc_html_e('Current vs previous profitability basis', 'vms-data-tools'); ?></p>
+                <div class="vms-dt-compare-row"><span><?php esc_html_e('Current', 'vms-data-tools'); ?></span><strong><?php echo esc_html(vms_dt_rr_money((int) ($overview['profitability_basis_cents'] ?? 0))); ?></strong></div>
+                <div class="vms-dt-compare-row"><span><?php esc_html_e('Previous', 'vms-data-tools'); ?></span><strong><?php echo esc_html(vms_dt_rr_money((int) ($compare_overview['profitability_basis_cents'] ?? 0))); ?></strong></div>
+            </div>
+            <div class="vms-dt-compare-card">
+                <p class="vms-dt-compare-title"><?php esc_html_e('Current processor cash mix', 'vms-data-tools'); ?></p>
+                <div class="vms-dt-compare-row"><span><?php esc_html_e('Website-originated', 'vms-data-tools'); ?></span><strong><?php echo esc_html(vms_dt_rr_pct((float) ($overview['website_originated_attribution_cents'] ?? 0), (float) max(1, (int) ($overview['processor_total_collected_cents'] ?? 0)))); ?></strong></div>
+                <div class="vms-dt-compare-row"><span><?php esc_html_e('Direct Square / POS', 'vms-data-tools'); ?></span><strong><?php echo esc_html(vms_dt_rr_pct((float) ($overview['direct_square_pos_collected_cents'] ?? 0), (float) max(1, (int) ($overview['processor_total_collected_cents'] ?? 0)))); ?></strong></div>
+            </div>
+            <div class="vms-dt-compare-card">
+                <p class="vms-dt-compare-title"><?php esc_html_e('Average profitability basis per event', 'vms-data-tools'); ?></p>
+                <div class="vms-dt-compare-row"><span><?php esc_html_e('Current', 'vms-data-tools'); ?></span><strong><?php echo esc_html(vms_dt_rr_money((int) $overview['avg_per_event_cents'])); ?></strong></div>
+                <div class="vms-dt-compare-row"><span><?php esc_html_e('Previous', 'vms-data-tools'); ?></span><strong><?php echo esc_html(vms_dt_rr_money((int) ($compare_overview['avg_per_event_cents'] ?? 0))); ?></strong></div>
+            </div>
+        </div>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_top_event_list')) {
+    function vms_dt_rr_render_top_event_list(array $event_rows): void
+    {
+        if (empty($event_rows)) {
+            echo '<div class="vms-dt-empty">No events matched the current filters.</div>';
+            return;
+        }
+
+        $rows = $event_rows;
+        usort($rows, static function (array $a, array $b): int {
+            return ((int) ($b['profitability_basis_cents'] ?? ($b['counted_total_cents'] ?? 0))) <=> ((int) ($a['profitability_basis_cents'] ?? ($a['counted_total_cents'] ?? 0)));
+        });
+        $rows = array_slice($rows, 0, 6);
+        $max = 0;
+        foreach ($rows as $row) {
+            $max = max($max, (int) ($row['profitability_basis_cents'] ?? ($row['counted_total_cents'] ?? 0)));
+        }
+        if ($max <= 0) {
+            $max = 1;
+        }
+        ?>
+        <table class="vms-dt-ranking-table">
+            <thead>
+                <tr>
+                    <th><?php esc_html_e('Event', 'vms-data-tools'); ?></th>
+                    <th><?php esc_html_e('Share', 'vms-data-tools'); ?></th>
+                    <th class="vms-dt-num"><?php esc_html_e('Current profitability basis', 'vms-data-tools'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($rows as $row) : ?>
+                <tr>
+                    <td>
+                        <div class="vms-dt-event-name"><?php echo esc_html((string) ($row['event_title'] ?? '')); ?></div>
+                        <div class="vms-dt-event-sub"><?php echo esc_html((string) ($row['event_date'] ?? '')); ?><?php echo !empty($row['venue_name']) ? ' · ' . esc_html((string) $row['venue_name']) : ''; ?></div>
+                    </td>
+                    <td>
+                        <meter class="vms-dt-meter" min="0" max="100" optimum="100" value="<?php echo esc_attr((string) round((((int) ($row['profitability_basis_cents'] ?? ($row['counted_total_cents'] ?? 0))) / $max) * 100)); ?>"></meter>
+                    </td>
+                    <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['profitability_basis_cents'] ?? ($row['counted_total_cents'] ?? 0)))); ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_event_table')) {
+    function vms_dt_rr_render_event_table(array $event_rows): void
+    {
+        if (empty($event_rows)) {
+            echo '<div class="vms-dt-empty">No events matched the current filters.</div>';
+            return;
+        }
+        ?>
+        <div class="vms-dt-table-wrap">
+            <table class="vms-dt-table">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Event', 'vms-data-tools'); ?></th>
+                        <th><?php esc_html_e('Status', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Website tickets (origin)', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Website add-ons (origin)', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Square direct tickets counted', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Bar', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Food', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Merch', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Other', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Current profitability basis', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Excluded overlap', 'vms-data-tools'); ?></th>
+                        <th class="vms-dt-num"><?php esc_html_e('Unclassified', 'vms-data-tools'); ?></th>
+                        <th><?php esc_html_e('Flags', 'vms-data-tools'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($event_rows as $row) : ?>
+                    <tr>
+                        <td>
+                            <div class="vms-dt-event-name"><?php echo esc_html((string) ($row['event_title'] ?? '')); ?></div>
+                            <div class="vms-dt-event-sub"><?php echo esc_html((string) ($row['event_date'] ?? '')); ?><?php echo !empty($row['venue_name']) ? ' · ' . esc_html((string) $row['venue_name']) : ''; ?></div>
+                        </td>
+                        <td><?php echo esc_html((string) ($row['status'] ?? '')); ?></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_ticket_cents'] ?? 0))); ?></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_addon_cents'] ?? 0))); ?></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_direct_tickets_cents'] ?? 0))); ?></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_bar_cents'] ?? 0))); ?></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_food_cents'] ?? 0))); ?></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_merch_cents'] ?? 0))); ?></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_other_cents'] ?? 0))); ?></td>
+                        <td class="vms-dt-num"><strong><?php echo esc_html(vms_dt_rr_money((int) ($row['profitability_basis_cents'] ?? ($row['counted_total_cents'] ?? 0)))); ?></strong></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_overlap_excluded_cents'] ?? 0))); ?></td>
+                        <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_unclassified_cents'] ?? 0))); ?></td>
+                        <td>
+                            <div class="vms-dt-chip-list">
+                                <?php foreach ((array) ($row['confidence_badges'] ?? array()) as $badge) : ?>
+                                    <span class="vms-dt-badge vms-dt-badge--<?php echo strpos((string) $badge, 'issue') !== false ? 'danger' : 'info'; ?>"><?php echo esc_html((string) $badge); ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_build_mapper_redirect_args')) {
+    function vms_dt_rr_build_mapper_redirect_args(array $filters): array
+    {
+        return array(
+            'page' => vms_dt_get_menu_slug_revenue_intelligence(),
+            'event_from' => (string) ($filters['event_from'] ?? ''),
+            'event_to' => (string) ($filters['event_to'] ?? ''),
+            'sold_from' => (string) ($filters['sold_from'] ?? ''),
+            'sold_to' => (string) ($filters['sold_to'] ?? ''),
+            'venue_id' => (string) ((int) ($filters['venue_id'] ?? 0)),
+            'event_plan_id' => (string) ((int) ($filters['event_plan_id'] ?? 0)),
+            'square_location_id' => (string) ($filters['square_location_id'] ?? ''),
+            'square_scope_mode' => (string) ($filters['square_scope_mode'] ?? 'full_day'),
+            'compare' => !empty($filters['compare']) ? '1' : '0',
+        );
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_render_parity_panel')) {
+    function vms_dt_rr_render_parity_panel(array $event_rows, array $overview): void
+    {
+        if (count($event_rows) !== 1) {
+            return;
+        }
+        $row = is_array($event_rows[0] ?? null) ? $event_rows[0] : array();
+        if (empty($row)) {
+            return;
+        }
+        ?>
+        <div class="vms-dt-two-col vms-dt-section">
+            <div class="vms-dt-table-card">
+                <div class="vms-dt-card-head">
+                    <div>
+                        <h2><?php esc_html_e('Website parity audit', 'vms-data-tools'); ?></h2>
+                        <p class="vms-dt-section-desc"><?php esc_html_e('Use these numbers to line up Revenue Intelligence with The Events Calendar / website-side ticket reporting for this one event.', 'vms-data-tools'); ?></p>
+                    </div>
+                </div>
+                <ul class="vms-dt-summary-list">
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Completed ticket sales (net)', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_ticket_net_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Refunded ticket face value', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_ticket_refunded_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Ticket sales ordered before refunds', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_ticket_ordered_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Ticket tax collected', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_ticket_tax_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Website add-ons net', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_addon_net_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Website add-ons tax', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_addon_tax_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Website-originated attribution', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['website_total_cents'] ?? 0))); ?></span></li>
+                </ul>
+                <div class="vms-dt-mini-note"><?php esc_html_e('This website-originated attribution includes website-side sales tax. When Square processes website orders, these dollars are already inside Square processor totals.', 'vms-data-tools'); ?></div>
+            </div>
+            <div class="vms-dt-table-card">
+                <div class="vms-dt-card-head">
+                    <div>
+                        <h2><?php esc_html_e('Square parity audit', 'vms-data-tools'); ?></h2>
+                        <p class="vms-dt-section-desc"><?php esc_html_e('Use these numbers to line up Revenue Intelligence with the Square report for this one event.', 'vms-data-tools'); ?></p>
+                    </div>
+                </div>
+                <ul class="vms-dt-summary-list">
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Square scope mode', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html((string) ($overview['square_scope_label'] ?? '')); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Square line totals found in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_scope_line_total_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Square line tax found in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_scope_line_tax_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Square line discounts found in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_scope_line_discount_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Square net ex tax in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_scope_line_net_ex_tax_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Square tips in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_scope_tip_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Square service charges in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_scope_service_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Cash tenders found in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_scope_cash_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Card tenders found in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_scope_card_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Likely in-person card tenders', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_likely_in_person_card_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Likely website / online card tenders', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_likely_online_card_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Card tenders still not identified as in-person', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_card_still_not_in_person_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Likely website / online ticket overlap', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_likely_online_overlap_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Website / online overlap excluded', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_overlap_excluded_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Outside selected Square scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_outside_window_line_total_cents'] ?? 0))); ?></span></li>
+                    <li><span class="vms-dt-summary-key"><?php esc_html_e('Direct Square / POS counted now', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($row['square_counted_total_cents'] ?? 0))); ?></span></li>
+                </ul>
+                <div class="vms-dt-mini-note"><?php esc_html_e('Use Full event day when you want Revenue Intelligence to line up with Square\'s all-day report for that event date. Use Website / online overlap for Square ticket or add-on lines that are already counted on the website side.', 'vms-data-tools'); ?></div>
+            </div>
+        </div>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_reconciliation_panel')) {
+    function vms_dt_rr_render_reconciliation_panel(array $overview): void
+    {
+        $square_gap_cents = (int) ($overview['square_gross_in_scope_cents'] ?? 0)
+            - (int) ($overview['square_counted_total_cents'] ?? 0)
+            - (int) ($overview['overlap_excluded_cents'] ?? 0)
+            - (int) ($overview['unclassified_square_cents'] ?? 0)
+            - (int) ($overview['square_ignored_cents'] ?? 0);
+        if ($square_gap_cents < 0) {
+            $square_gap_cents = 0;
+        }
+        ?>
+        <div class="vms-dt-table-card vms-dt-section">
+            <div class="vms-dt-card-head">
+                <div>
+                    <h2><?php esc_html_e('Square reconciliation snapshot', 'vms-data-tools'); ?></h2>
+                    <p class="vms-dt-section-desc"><?php esc_html_e('Use this to compare the Square dollars found in the selected event windows against what is currently counted, excluded, or still unresolved.', 'vms-data-tools'); ?></p>
+                </div>
+            </div>
+            <div class="vms-dt-kpi-grid vms-dt-kpi-grid--compact">
+                <div class="vms-dt-kpi">
+                    <p class="vms-dt-kpi-label"><?php esc_html_e('Square scope mode', 'vms-data-tools'); ?></p>
+                    <p class="vms-dt-kpi-value"><?php echo esc_html((string) ($overview['square_scope_label'] ?? '')); ?></p>
+                    <p class="vms-dt-kpi-sub"><?php esc_html_e('This controls how much of the day counts toward the selected event.', 'vms-data-tools'); ?></p>
+                </div>
+                <div class="vms-dt-kpi">
+                    <p class="vms-dt-kpi-label"><?php esc_html_e('Square gross found in scope', 'vms-data-tools'); ?></p>
+                    <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_gross_in_scope_cents'] ?? 0))); ?></p>
+                    <p class="vms-dt-kpi-sub"><?php esc_html_e('All matched Square line totals before exclusions.', 'vms-data-tools'); ?></p>
+                </div>
+                <div class="vms-dt-kpi">
+                    <p class="vms-dt-kpi-label"><?php esc_html_e('Direct Square / POS counted now', 'vms-data-tools'); ?></p>
+                    <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_counted_total_cents'] ?? 0))); ?></p>
+                    <p class="vms-dt-kpi-sub"><?php esc_html_e('Current direct Square / POS revenue already landing in counted buckets.', 'vms-data-tools'); ?></p>
+                </div>
+                <div class="vms-dt-kpi">
+                    <p class="vms-dt-kpi-label"><?php esc_html_e('Still outside current profitability basis', 'vms-data-tools'); ?></p>
+                    <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['overlap_excluded_cents'] + $overview['unclassified_square_cents'] + $overview['square_ignored_cents']))); ?></p>
+                    <p class="vms-dt-kpi-sub"><?php esc_html_e('Overlap, unmapped, and ignored Square dollars combined.', 'vms-data-tools'); ?></p>
+                </div>
+                <div class="vms-dt-kpi">
+                    <p class="vms-dt-kpi-label"><?php esc_html_e('Outside selected Square scope', 'vms-data-tools'); ?></p>
+                    <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_outside_window_line_total_cents'] ?? 0))); ?></p>
+                    <p class="vms-dt-kpi-sub"><?php echo esc_html((int) ($overview['square_outside_window_orders_count'] ?? 0)); ?> <?php esc_html_e('order(s) were seen at the selected location but fell outside the current Square scope.', 'vms-data-tools'); ?></p>
+                </div>
+                <div class="vms-dt-kpi">
+                    <p class="vms-dt-kpi-label"><?php esc_html_e('Unexplained gap', 'vms-data-tools'); ?></p>
+                    <p class="vms-dt-kpi-value"><?php echo esc_html(vms_dt_rr_money((int) $square_gap_cents)); ?></p>
+                    <p class="vms-dt-kpi-sub"><?php esc_html_e('This should usually stay at $0.00.', 'vms-data-tools'); ?></p>
+                </div>
+            </div>
+            <ul class="vms-dt-summary-list vms-dt-section">
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Square gross found in scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_gross_in_scope_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Direct Square / POS counted now', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_counted_total_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Woo overlap excluded', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['overlap_excluded_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Unclassified Square sales', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['unclassified_square_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Outside selected Square scope', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_outside_window_line_total_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Ignored by mapper', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_ignored_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Tips tracked separately', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['tips_excluded_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Service charges tracked separately', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['service_charges_excluded_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Website-originated attribution', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['website_originated_attribution_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Current profitability basis', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['profitability_basis_cents'] ?? 0))); ?></span></li>
+            </ul>
+            <div class="vms-dt-mini-note"><?php esc_html_e('Formula: Square gross found in scope = counted now + Woo overlap excluded + unclassified + ignored. Website-originated attribution is shown separately so it is not mistaken for an extra cash channel. Outside selected Square scope is tracked separately so you can tell whether the mismatch is caused by timing instead of mapping. Use Full event day when you want the closest parity with Square\'s all-day report.', 'vms-data-tools'); ?></div>
+        </div>
+        <?php
+    }
+}
+
+
+if (!function_exists('vms_dt_rr_render_source_audit_panel')) {
+    function vms_dt_rr_render_source_audit_panel(array $overview): void
+    {
+        ?>
+        <div class="vms-dt-table-card vms-dt-section">
+            <div class="vms-dt-card-head">
+                <div>
+                    <h2><?php esc_html_e('Square source audit', 'vms-data-tools'); ?></h2>
+                    <p class="vms-dt-section-desc"><?php esc_html_e('This isolates the remaining card / channel gap by showing how Revenue Intelligence currently classifies Square order sources.', 'vms-data-tools'); ?></p>
+                </div>
+            </div>
+            <ul class="vms-dt-summary-list">
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Likely in-person line totals', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_source_line_total_cents']['in_person'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Likely website / online line totals', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) (($overview['square_source_line_total_cents']['woo_linked'] ?? 0) + ($overview['square_source_line_total_cents']['website_candidate'] ?? 0)))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Unknown-source line totals', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_source_line_total_cents']['unknown'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Likely in-person card tenders', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_likely_in_person_card_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Likely website / online card tenders', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_likely_online_card_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Unknown-source card tenders', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_unknown_card_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Auto-held website / online ticket overlap', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_website_candidate_ticket_cents'] ?? 0))); ?></span></li>
+                <li><span class="vms-dt-summary-key"><?php esc_html_e('Website-like non-ticket Square lines still counted', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) ($overview['square_website_candidate_other_cents'] ?? 0))); ?></span></li>
+            </ul>
+            <div class="vms-dt-mini-note"><?php esc_html_e('Use this panel to decide whether the remaining mismatch is mostly duplicate online ticket flow or a real missing-source issue. Ticket-like rows from likely website / online orders are now held out of the direct Square / POS counted basis automatically.', 'vms-data-tools'); ?></div>
+        </div>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_mapper_card')) {
+    function vms_dt_rr_render_mapper_card(array $dataset, array $filters): void
+    {
+        $square_meta = (array) ($dataset['square_meta'] ?? array());
+        $entries = (array) ($square_meta['unmapped_entries'] ?? array());
+        $standard_buckets = vms_dt_rr_standard_bucket_labels();
+        ?>
+        <div class="vms-dt-table-card vms-dt-section">
+            <div class="vms-dt-card-head">
+                <div>
+                    <h2><?php esc_html_e('Square revenue mapper', 'vms-data-tools'); ?></h2>
+                    <p class="vms-dt-section-desc"><?php esc_html_e('These are the exact Square categories or items still sitting outside your current profitability basis. Map them once and the report gets smarter from here forward.', 'vms-data-tools'); ?></p>
+                    <p class="vms-dt-mini-note"><?php esc_html_e('Use Website / online overlap when those Square lines represent online ticket or add-on sales that are already counted on the website side.', 'vms-data-tools'); ?></p>
+                </div>
+            </div>
+            <?php if (!empty($_GET['rr_mapper_saved'])) : ?>
+                <div class="notice notice-success inline"><p><?php echo esc_html((string) wp_unslash($_GET['rr_mapper_saved'])); ?></p></div>
+            <?php endif; ?>
+            <?php if (empty($entries)) : ?>
+                <div class="vms-dt-callout"><strong><?php esc_html_e('No unmapped Square lines in this scope.', 'vms-data-tools'); ?></strong><div><?php esc_html_e('That means every visible Square category/item in the current filter set is already classified or intentionally excluded.', 'vms-data-tools'); ?></div></div>
+            <?php else : ?>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <?php wp_nonce_field('vms_dt_rr_save_mapper', 'vms_dt_rr_mapper_nonce'); ?>
+                    <input type="hidden" name="action" value="vms_dt_rr_save_mapper" />
+                    <?php foreach (vms_dt_rr_build_mapper_redirect_args($filters) as $key => $value) : ?>
+                        <input type="hidden" name="<?php echo esc_attr((string) $key); ?>" value="<?php echo esc_attr((string) $value); ?>" />
+                    <?php endforeach; ?>
+                    <div class="vms-dt-table-wrap">
+                        <table class="vms-dt-table">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Map by', 'vms-data-tools'); ?></th>
+                                    <th><?php esc_html_e('Square category / item', 'vms-data-tools'); ?></th>
+                                    <th><?php esc_html_e('Examples seen', 'vms-data-tools'); ?></th>
+                                    <th class="vms-dt-num"><?php esc_html_e('Gross in scope', 'vms-data-tools'); ?></th>
+                                    <th class="vms-dt-num"><?php esc_html_e('In-person gross', 'vms-data-tools'); ?></th>
+                                    <th class="vms-dt-num"><?php esc_html_e('Woo overlap seen', 'vms-data-tools'); ?></th>
+                                    <th><?php esc_html_e('Apply bucket', 'vms-data-tools'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach ($entries as $index => $entry) : ?>
+                                <?php $map_type = (string) ($entry['map_type'] ?? 'manual'); ?>
+                                <?php $map_id = (string) ($entry['map_id'] ?? ''); ?>
+                                <?php $suggested = vms_dt_rr_sanitize_bucket_key((string) ($entry['suggested_bucket'] ?? '')); ?>
+                                <?php $examples = array_keys((array) ($entry['example_items'] ?? array())); ?>
+                                <tr>
+                                    <td>
+                                        <strong><?php echo esc_html(ucfirst($map_type)); ?></strong>
+                                        <div class="vms-dt-event-sub"><?php echo $map_type === 'category' ? esc_html__('Maps every item in this Square category.', 'vms-data-tools') : ($map_type === 'variation' ? esc_html__('Maps only this exact Square item.', 'vms-data-tools') : esc_html__('Manual review needed. No reusable catalog object was attached.', 'vms-data-tools')); ?></div>
+                                        <input type="hidden" name="map_type[<?php echo (int) $index; ?>]" value="<?php echo esc_attr($map_type); ?>" />
+                                        <input type="hidden" name="map_id[<?php echo (int) $index; ?>]" value="<?php echo esc_attr($map_id); ?>" />
+                                    </td>
+                                    <td>
+                                        <?php $entry_label = trim((string) ($entry['label'] ?? '')); ?>
+                                        <?php if ($map_type === 'category' && ($entry_label === '' || $entry_label === (string) ($entry['category_id'] ?? ''))) {
+                                            $entry_label = __('Unlabeled Square category', 'vms-data-tools');
+                                        } ?>
+                                        <div class="vms-dt-event-name"><?php echo esc_html($entry_label); ?></div>
+                                        <div class="vms-dt-event-sub">
+                                            <?php if (!empty($entry['category_id'])) : ?><?php echo esc_html__('Category ID:', 'vms-data-tools') . ' ' . esc_html((string) $entry['category_id']); ?><br><?php endif; ?>
+                                            <?php if (!empty($entry['variation_id'])) : ?><?php echo esc_html__('Variation ID:', 'vms-data-tools') . ' ' . esc_html((string) $entry['variation_id']); ?><br><?php endif; ?>
+                                            <?php echo esc_html((string) (int) ($entry['orders_count'] ?? 0)); ?> <?php esc_html_e('order hit(s)', 'vms-data-tools'); ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="vms-dt-chip-list">
+                                            <?php foreach ($examples as $example) : ?>
+                                                <span class="vms-dt-badge vms-dt-badge--neutral"><?php echo esc_html((string) $example); ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </td>
+                                    <td class="vms-dt-num"><strong><?php echo esc_html(vms_dt_rr_money((int) ($entry['gross_cents'] ?? 0))); ?></strong></td>
+                                    <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($entry['in_person_cents'] ?? 0))); ?></td>
+                                    <td class="vms-dt-num"><?php echo esc_html(vms_dt_rr_money((int) ($entry['woo_overlap_cents'] ?? 0))); ?></td>
+                                    <td>
+                                        <?php if ($map_type === 'manual') : ?>
+                                            <span class="vms-dt-badge vms-dt-badge--danger"><?php esc_html_e('Manual review', 'vms-data-tools'); ?></span>
+                                        <?php else : ?>
+                                            <select name="bucket_key[<?php echo (int) $index; ?>]">
+                                                <option value=""><?php esc_html_e('Leave unmapped', 'vms-data-tools'); ?></option>
+                                                <?php foreach ($standard_buckets as $bucket_key => $bucket_label) : ?>
+                                                    <option value="<?php echo esc_attr((string) $bucket_key); ?>" <?php selected($suggested, (string) $bucket_key); ?>><?php echo esc_html((string) $bucket_label); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="vms-dt-toolbar">
+                        <div class="vms-dt-toolbar-left">
+                            <button type="submit" class="button button-primary"><?php esc_html_e('Save mapper changes', 'vms-data-tools'); ?></button>
+                        </div>
+                        <div class="vms-dt-toolbar-right">
+                            <span class="vms-dt-mini-note"><?php esc_html_e('Category mappings classify every Square item in that category. Variation mappings only affect that exact catalog item. Use the in-person and Woo overlap columns to sanity-check where the money is really coming from.', 'vms-data-tools'); ?></span>
+                        </div>
+                    </div>
+                </form>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_diagnostics')) {
+    function vms_dt_rr_render_diagnostics(array $dataset, array $overview): void
+    {
+        $event_rows = (array) ($dataset['event_rows'] ?? array());
+        $website_meta = (array) ($dataset['website'] ?? array());
+        $square_meta = (array) ($dataset['square_meta'] ?? array());
+        ?>
+        <div class="vms-dt-diagnostics-card vms-dt-section">
+            <div class="vms-dt-card-head">
+                <div>
+                    <h2><?php esc_html_e('Diagnostics', 'vms-data-tools'); ?></h2>
+                    <p class="vms-dt-section-desc"><?php esc_html_e('This section explains what was excluded, what still needs cleanup, and where confidence drops.', 'vms-data-tools'); ?></p>
+                </div>
+            </div>
+
+            <details open>
+                <summary><?php esc_html_e('Executive notes', 'vms-data-tools'); ?></summary>
+                <ul class="vms-dt-note-list">
+                            <li><?php esc_html_e('The current profitability basis still uses website-originated charges plus Square counted sales matched by the selected Square scope and the selected Square location read from WooCommerce Square.', 'vms-data-tools'); ?></li>
+                    <li><?php esc_html_e('Revenue Intelligence no longer reads Square fields from Event Plans. Full event day is the best parity mode when you want one event to line up with Square\'s all-day report for that date.', 'vms-data-tools'); ?></li>
+                    <li><?php esc_html_e('Excluded overlap is visible for reconciliation, but it is intentionally kept out of the current profitability basis to avoid double counting Woo-linked Square rows.', 'vms-data-tools'); ?></li>
+                    <li><?php esc_html_e('Unclassified Square sales are not counted. They remain outside the total until Square categories / bucket mapping are cleaned up.', 'vms-data-tools'); ?></li>
+                    <li><?php esc_html_e('Tips and service charges are tracked separately and shown for operational awareness, but they are not included in the current profitability basis.', 'vms-data-tools'); ?></li>
+                </ul>
+            </details>
+
+            <details open>
+                <summary><?php esc_html_e('Report-level Square notes', 'vms-data-tools'); ?></summary>
+                <ul class="vms-dt-note-list">
+                    <?php $has_report_notes = false; ?>
+                    <?php if (!empty($square_meta['selected_location_label'])) : $has_report_notes = true; ?>
+                        <li><strong><?php esc_html_e('Square location in scope:', 'vms-data-tools'); ?></strong> <?php echo esc_html((string) $square_meta['selected_location_label']); ?><?php if (!empty($square_meta['auto_selected_location'])) : ?> <?php esc_html_e('(auto-selected because it is the only configured location)', 'vms-data-tools'); ?><?php endif; ?></li>
+                    <?php endif; ?>
+                    <?php if (!empty($square_meta['selected_scope_label'])) : $has_report_notes = true; ?>
+                        <li><strong><?php esc_html_e('Square scope mode:', 'vms-data-tools'); ?></strong> <?php echo esc_html((string) $square_meta['selected_scope_label']); ?></li>
+                    <?php endif; ?>
+                    <?php foreach ((array) ($square_meta['errors'] ?? array()) as $error) : $has_report_notes = true; ?>
+                        <li><?php echo esc_html((string) $error); ?></li>
+                    <?php endforeach; ?>
+                    <?php foreach ((array) ($square_meta['warnings'] ?? array()) as $warning) : $has_report_notes = true; ?>
+                        <li><?php echo esc_html((string) $warning); ?></li>
+                    <?php endforeach; ?>
+                    <?php if (!empty($square_meta['unmapped_entries'])) : $has_report_notes = true; ?>
+                        <li><?php echo esc_html((string) count((array) $square_meta['unmapped_entries'])); ?> <?php esc_html_e('unmapped Square category/item row(s) are listed in the Square revenue mapper above.', 'vms-data-tools'); ?></li>
+                    <?php endif; ?>
+                    <?php if ((int) ($overview['ignored_cents'] ?? 0) > 0) : $has_report_notes = true; ?>
+                        <li><?php esc_html_e('Ignored / excluded by mapper:', 'vms-data-tools'); ?> <?php echo esc_html(vms_dt_rr_money((int) ($overview['ignored_cents'] ?? 0))); ?></li>
+                    <?php endif; ?>
+                    <?php if (!$has_report_notes) : ?>
+                        <li><?php esc_html_e('No report-level Square warnings for this filter set.', 'vms-data-tools'); ?></li>
+                    <?php endif; ?>
+                </ul>
+            </details>
+
+            <details>
+                <summary><?php esc_html_e('Website ticketing diagnostics', 'vms-data-tools'); ?> (<?php echo esc_html((string) (int) ($overview['website_unresolved_count'] ?? 0)); ?>)</summary>
+                <?php if (empty($website_meta['warnings']) && empty($website_meta['unresolved_rows']) && empty($overview['website_unassigned_rows'])) : ?>
+                    <p class="vms-dt-muted"><?php esc_html_e('No website-side warnings were returned for this filter set.', 'vms-data-tools'); ?></p>
+                <?php else : ?>
+                    <ul class="vms-dt-note-list">
+                        <?php foreach ((array) ($website_meta['warnings'] ?? array()) as $warning) : ?>
+                            <li><?php echo esc_html((string) $warning); ?></li>
+                        <?php endforeach; ?>
+                        <?php if ((int) ($overview['website_unassigned_rows'] ?? 0) > 0) : ?>
+                            <li><?php echo esc_html((string) (int) ($overview['website_unassigned_rows'] ?? 0)); ?> <?php esc_html_e('website-originated row(s) could not be joined to an event plan in the filtered set.', 'vms-data-tools'); ?></li>
+                        <?php endif; ?>
+                    </ul>
+                <?php endif; ?>
+            </details>
+
+            <details>
+                <summary><?php esc_html_e('Event-level window / Square warnings', 'vms-data-tools'); ?></summary>
+                <ul class="vms-dt-note-list">
+                    <?php $has_square_notes = false; ?>
+                    <?php foreach ($event_rows as $row) : ?>
+                        <?php foreach ((array) ($row['square_errors'] ?? array()) as $error) : $has_square_notes = true; ?>
+                            <li><strong><?php echo esc_html((string) ($row['event_title'] ?? '')); ?>:</strong> <?php echo esc_html((string) $error); ?></li>
+                        <?php endforeach; ?>
+                        <?php foreach ((array) ($row['square_warnings'] ?? array()) as $warning) : $has_square_notes = true; ?>
+                            <li><strong><?php echo esc_html((string) ($row['event_title'] ?? '')); ?>:</strong> <?php echo esc_html((string) $warning); ?></li>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                    <?php if (!$has_square_notes) : ?>
+                        <li><?php esc_html_e('No event-level Square or window warnings for this filter set.', 'vms-data-tools'); ?></li>
+                    <?php endif; ?>
+                </ul>
+            </details>
+        </div>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_rr_render_download_button')) {
+    function vms_dt_rr_render_download_button(array $filters): void
+    {
+        ?>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <?php wp_nonce_field('vms_dt_rr_download_csv', 'vms_dt_rr_nonce'); ?>
+            <input type="hidden" name="action" value="vms_dt_rr_download_csv" />
+            <?php foreach ($filters as $key => $value) : ?>
+                <input type="hidden" name="<?php echo esc_attr((string) $key); ?>" value="<?php echo esc_attr((string) $value); ?>" />
+            <?php endforeach; ?>
+            <button type="submit" class="button"><?php esc_html_e('Download event CSV', 'vms-data-tools'); ?></button>
+        </form>
+        <?php
+    }
+}
+
+if (!function_exists('vms_dt_render_revenue_intelligence_page')) {
+    function vms_dt_render_revenue_intelligence_page(): void
+    {
+        if (!function_exists('vms_dt_current_user_can_manage_tools') || !vms_dt_current_user_can_manage_tools()) {
+            return;
+        }
+
+        $filters = vms_dt_rr_get_filters();
+        $dataset = vms_dt_rr_build_report_dataset($filters);
+        $overview = vms_dt_rr_build_overview((array) ($dataset['event_rows'] ?? array()), (array) ($dataset['website'] ?? array()), (array) ($dataset['square_meta'] ?? array()));
+        $compare_overview = array();
+        if (!empty($filters['compare']) && empty($filters['event_plan_id'])) {
+            $previous_filters = vms_dt_rr_shift_filters_to_previous_period($filters);
+            if (!empty($previous_filters)) {
+                $previous_dataset = vms_dt_rr_build_report_dataset($previous_filters);
+                $compare_overview = vms_dt_rr_build_overview((array) ($previous_dataset['event_rows'] ?? array()), (array) ($previous_dataset['website'] ?? array()), (array) ($previous_dataset['square_meta'] ?? array()));
+            }
+        }
+
+        $composition_segments = vms_dt_rr_build_composition_segments($overview);
+        $monthly_series = vms_dt_rr_build_monthly_series((array) ($dataset['event_rows'] ?? array()));
+        $top_event = is_array($overview['top_event'] ?? null) ? $overview['top_event'] : array();
+        ?>
+        <div class="wrap vms-dt-wrap">
+            <h1><?php esc_html_e('Revenue Intelligence', 'vms-data-tools'); ?></h1>
+            <p class="vms-dt-lead"><?php esc_html_e('Processor cash and attribution reporting: Square processor totals, website-originated attribution, direct Square / POS counted sales, overlap exclusions, trend visibility, and diagnostics.', 'vms-data-tools'); ?></p>
+
+            <div class="vms-dt-callout <?php echo $overview['confidence_state'] === 'good' ? '' : ($overview['confidence_state'] === 'watch' ? 'vms-dt-callout--warn' : 'vms-dt-callout--danger'); ?>">
+                <strong><?php echo esc_html((string) $overview['confidence_label']); ?></strong>
+                <div>
+                    <?php echo esc_html($overview['events_count']); ?> <?php esc_html_e('event(s) in scope', 'vms-data-tools'); ?> ·
+                    <?php echo esc_html(vms_dt_rr_money((int) ($overview['profitability_basis_cents'] ?? 0))); ?> <?php esc_html_e('current profitability basis', 'vms-data-tools'); ?> ·
+                    <?php echo esc_html(vms_dt_rr_money((int) $overview['overlap_excluded_cents'])); ?> <?php esc_html_e('overlap excluded', 'vms-data-tools'); ?>
+                </div>
+            </div>
+
+            <?php vms_dt_rr_render_filter_form($filters); ?>
+            <?php vms_dt_rr_render_kpi_cards($overview, $compare_overview); ?>
+            <?php vms_dt_rr_render_compare_cards($overview, $compare_overview); ?>
+            <?php vms_dt_rr_render_parity_panel((array) ($dataset['event_rows'] ?? array()), $overview); ?>
+
+            <div class="vms-dt-two-col vms-dt-section">
+                <div class="vms-dt-chart-card">
+                    <div class="vms-dt-card-head">
+                        <div>
+                            <h2><?php esc_html_e('Profitability basis composition', 'vms-data-tools'); ?></h2>
+                            <p class="vms-dt-section-desc"><?php esc_html_e('This chart shows only the current profitability basis. Overlap exclusions and unclassified Square sales stay visible separately below.', 'vms-data-tools'); ?></p>
+                        </div>
+                    </div>
+                    <?php echo vms_dt_rr_render_composition_svg($composition_segments, (int) ($overview['profitability_basis_cents'] ?? $overview['counted_total_cents'])); ?>
+                    <div class="vms-dt-legend">
+                        <?php foreach ($composition_segments as $segment) : ?>
+                            <span class="vms-dt-legend-item">
+                                <span class="vms-dt-legend-swatch vms-dt-legend-swatch--<?php echo esc_attr((string) ($segment['class'] ?? 'other')); ?>"></span>
+                                <?php echo esc_html((string) ($segment['label'] ?? '')); ?> — <?php echo esc_html(vms_dt_rr_money((int) ($segment['value'] ?? 0))); ?>
+                            </span>
+                        <?php endforeach; ?>
+                    </div>
+                    <ul class="vms-dt-summary-list vms-dt-section">
+                        <li><span class="vms-dt-summary-key"><?php esc_html_e('Excluded overlap', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) $overview['overlap_excluded_cents'])); ?></span></li>
+                        <li><span class="vms-dt-summary-key"><?php esc_html_e('Unclassified Square sales', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) $overview['unclassified_square_cents'])); ?></span></li>
+                        <li><span class="vms-dt-summary-key"><?php esc_html_e('Tips tracked', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) $overview['tips_excluded_cents'])); ?></span></li>
+                        <li><span class="vms-dt-summary-key"><?php esc_html_e('Service charges tracked', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) $overview['service_charges_excluded_cents'])); ?></span></li>
+                    </ul>
+                </div>
+                <div class="vms-dt-chart-card">
+                    <div class="vms-dt-card-head">
+                        <div>
+                            <h2><?php esc_html_e('Top events', 'vms-data-tools'); ?></h2>
+                            <p class="vms-dt-section-desc"><?php esc_html_e('Ranked by current profitability basis inside the active filter scope.', 'vms-data-tools'); ?></p>
+                        </div>
+                    </div>
+                    <?php vms_dt_rr_render_top_event_list((array) ($dataset['event_rows'] ?? array())); ?>
+                    <?php if (!empty($top_event)) : ?>
+                        <div class="vms-dt-callout vms-dt-section">
+                            <strong><?php esc_html_e('Top performer in scope', 'vms-data-tools'); ?></strong>
+                            <div><?php echo esc_html((string) ($top_event['event_title'] ?? '')); ?> — <?php echo esc_html(vms_dt_rr_money((int) ($top_event['profitability_basis_cents'] ?? ($top_event['counted_total_cents'] ?? 0)))); ?></div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="vms-dt-two-col vms-dt-section">
+                <div class="vms-dt-chart-card">
+                    <div class="vms-dt-card-head">
+                        <div>
+                            <h2><?php esc_html_e('Monthly trend', 'vms-data-tools'); ?></h2>
+                            <p class="vms-dt-section-desc"><?php esc_html_e('Grouped by event month using the current profitability basis only.', 'vms-data-tools'); ?></p>
+                        </div>
+                    </div>
+                    <?php echo vms_dt_rr_render_trend_svg($monthly_series); ?>
+                </div>
+                <div class="vms-dt-chart-card">
+                    <div class="vms-dt-card-head">
+                        <div>
+                            <h2><?php esc_html_e('Quick answers', 'vms-data-tools'); ?></h2>
+                            <p class="vms-dt-section-desc"><?php esc_html_e('The numbers below answer the most likely investor / operator questions immediately.', 'vms-data-tools'); ?></p>
+                        </div>
+                    </div>
+                    <ul class="vms-dt-summary-list">
+                        <li><span class="vms-dt-summary-key"><?php esc_html_e('Average profitability basis per event', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) $overview['avg_per_event_cents'])); ?></span></li>
+                        <li><span class="vms-dt-summary-key"><?php esc_html_e('Website-originated share of Square total', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_pct((float) ($overview['website_originated_attribution_cents'] ?? 0), (float) max(1, (int) ($overview['processor_total_collected_cents'] ?? 0)))); ?></span></li>
+                        <li><span class="vms-dt-summary-key"><?php esc_html_e('Direct Square / POS share of Square total', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_pct((float) ($overview['direct_square_pos_collected_cents'] ?? 0), (float) max(1, (int) ($overview['processor_total_collected_cents'] ?? 0)))); ?></span></li>
+                        <li><span class="vms-dt-summary-key"><?php esc_html_e('Ticket-led revenue', 'vms-data-tools'); ?></span><span class="vms-dt-summary-value"><?php echo esc_html(vms_dt_rr_money((int) (($overview['website_ticket_net_cents'] ?? 0) + ($overview['square_direct_tickets_net_cents'] ?? ($overview['square_direct_tickets_cents'] ?? 0))))); ?></span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <?php vms_dt_rr_render_reconciliation_panel($overview); ?>
+
+            <div class="vms-dt-table-card vms-dt-section">
+                <div class="vms-dt-card-head">
+                    <div>
+                        <h2><?php esc_html_e('Event-by-event profitability table', 'vms-data-tools'); ?></h2>
+                        <p class="vms-dt-section-desc"><?php esc_html_e('This is the investor-safe detail view. The current profitability basis is explicit, overlap is explicit, and unresolved Square dollars stay out of the total.', 'vms-data-tools'); ?></p>
+                    </div>
+                    <div class="vms-dt-table-actions">
+                        <?php vms_dt_rr_render_download_button($filters); ?>
+                    </div>
+                </div>
+                <?php vms_dt_rr_render_event_table((array) ($dataset['event_rows'] ?? array())); ?>
+            </div>
+
+            <?php vms_dt_rr_render_mapper_card($dataset, $filters); ?>
+            <?php vms_dt_rr_render_diagnostics($dataset, $overview); ?>
+        </div>
+        <?php
+    }
+}
+
+
+add_action('admin_post_vms_dt_rr_save_mapper', 'vms_dt_rr_handle_save_mapper');
+
+if (!function_exists('vms_dt_rr_handle_save_mapper')) {
+    function vms_dt_rr_handle_save_mapper(): void
+    {
+        if (!function_exists('vms_dt_current_user_can_manage_tools') || !vms_dt_current_user_can_manage_tools()) {
+            wp_die('Not allowed.');
+        }
+        $nonce = isset($_POST['vms_dt_rr_mapper_nonce']) ? (string) wp_unslash($_POST['vms_dt_rr_mapper_nonce']) : '';
+        if (!wp_verify_nonce($nonce, 'vms_dt_rr_save_mapper')) {
+            wp_die('Bad nonce.');
+        }
+
+        $bucket_map = function_exists('vms_square_effective_bucket_category_ids') ? vms_square_effective_bucket_category_ids() : array();
+        $bucket_labels = function_exists('vms_square_effective_bucket_labels') ? vms_square_effective_bucket_labels() : array();
+        $bucket_labels = array_merge(vms_dt_rr_standard_bucket_labels(), is_array($bucket_labels) ? $bucket_labels : array());
+        $overrides = vms_dt_rr_get_variation_bucket_overrides();
+
+        $types = isset($_POST['map_type']) && is_array($_POST['map_type']) ? $_POST['map_type'] : array();
+        $ids = isset($_POST['map_id']) && is_array($_POST['map_id']) ? $_POST['map_id'] : array();
+        $buckets = isset($_POST['bucket_key']) && is_array($_POST['bucket_key']) ? $_POST['bucket_key'] : array();
+        $saved_count = 0;
+
+        foreach ($types as $idx => $type_raw) {
+            $type = sanitize_key((string) wp_unslash($type_raw));
+            $map_id = isset($ids[$idx]) ? trim(sanitize_text_field((string) wp_unslash($ids[$idx]))) : '';
+            $bucket_key = isset($buckets[$idx]) ? vms_dt_rr_sanitize_bucket_key((string) wp_unslash($buckets[$idx])) : '';
+            if ($map_id === '' || $bucket_key === '') {
+                continue;
+            }
+
+            if ($type === 'category') {
+                foreach ($bucket_map as $existing_key => $cat_ids) {
+                    if (!is_array($cat_ids)) {
+                        $bucket_map[$existing_key] = array();
+                        continue;
+                    }
+                    $bucket_map[$existing_key] = array_values(array_filter(array_map('strval', $cat_ids), static function ($value) use ($map_id): bool {
+                        return (string) $value !== (string) $map_id;
+                    }));
+                }
+                $bucket_map[$bucket_key] = isset($bucket_map[$bucket_key]) && is_array($bucket_map[$bucket_key]) ? $bucket_map[$bucket_key] : array();
+                if (!in_array($map_id, $bucket_map[$bucket_key], true)) {
+                    $bucket_map[$bucket_key][] = $map_id;
+                }
+                $bucket_map[$bucket_key] = array_values(array_unique(array_filter(array_map('strval', $bucket_map[$bucket_key]))));
+                $saved_count++;
+            } elseif ($type === 'variation') {
+                $overrides[$map_id] = $bucket_key;
+                $saved_count++;
+            }
+        }
+
+        if (function_exists('vms_square_settings_update')) {
+            vms_square_settings_update(array(
+                'bucket_category_ids' => $bucket_map,
+                'bucket_labels' => $bucket_labels,
+            ));
+        }
+        vms_dt_rr_update_variation_bucket_overrides($overrides);
+
+        $filters = vms_dt_rr_get_filters($_POST);
+        $args = vms_dt_rr_build_mapper_redirect_args($filters);
+        $args['rr_mapper_saved'] = $saved_count > 0
+            ? sprintf(__('Saved %d revenue mapping change(s). Refresh complete.', 'vms-data-tools'), $saved_count)
+            : __('No mapper changes were submitted.', 'vms-data-tools');
+        wp_safe_redirect(add_query_arg($args, admin_url('admin.php')));
+        exit;
+    }
+}
+
+add_action('admin_post_vms_dt_rr_download_csv', 'vms_dt_rr_handle_download_csv');
+
+if (!function_exists('vms_dt_rr_handle_download_csv')) {
+    function vms_dt_rr_handle_download_csv(): void
+    {
+        if (!function_exists('vms_dt_current_user_can_manage_tools') || !vms_dt_current_user_can_manage_tools()) {
+            wp_die('Not allowed.');
+        }
+        $nonce = isset($_POST['vms_dt_rr_nonce']) ? (string) wp_unslash($_POST['vms_dt_rr_nonce']) : '';
+        if (!wp_verify_nonce($nonce, 'vms_dt_rr_download_csv')) {
+            wp_die('Bad nonce.');
+        }
+
+        $filters = vms_dt_rr_get_filters($_POST);
+        $dataset = vms_dt_rr_build_report_dataset($filters);
+        $rows = (array) ($dataset['event_rows'] ?? array());
+
+        $filename = 'vms-revenue-intelligence-' . (!empty($filters['event_from']) ? $filters['event_from'] : vms_dt_rr_today_ymd()) . '-to-' . (!empty($filters['event_to']) ? $filters['event_to'] : vms_dt_rr_today_ymd()) . '.csv';
+
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, array(
+            'Event Date',
+            'Event',
+            'Venue',
+            'Status',
+            'Website Tickets (Origin)',
+            'Website Add-Ons (Origin)',
+            'Website-Originated Total',
+            'Square Processor Collected',
+            'Direct Square/POS Portion',
+            'Square Direct Tickets Counted',
+            'Bar',
+            'Food',
+            'Merch',
+            'Other',
+            'Direct Square/POS Counted Total',
+            'Excluded Overlap',
+            'Unclassified Square',
+            'Unknown Ticket Source',
+            'Tips Tracked',
+            'Service Charges Tracked',
+            'Current Profitability Basis',
+            'Flags',
+        ));
+
+        foreach ($rows as $row) {
+            fputcsv($out, array(
+                (string) ($row['event_date'] ?? ''),
+                (string) ($row['event_title'] ?? ''),
+                (string) ($row['venue_name'] ?? ''),
+                (string) ($row['status'] ?? ''),
+                number_format(((int) ($row['website_ticket_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['website_addon_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['website_total_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['processor_total_collected_cents'] ?? ($row['square_scope_total_collected_cents'] ?? 0))) / 100, 2, '.', ''),
+                number_format(((int) ($row['direct_square_pos_collected_cents'] ?? max(0, (int) ($row['square_scope_total_collected_cents'] ?? 0) - (int) ($row['website_total_cents'] ?? 0)))) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_direct_tickets_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_bar_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_food_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_merch_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_other_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_counted_total_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_overlap_excluded_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_unclassified_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_unknown_ticket_source_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_tip_total_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['square_service_total_cents'] ?? 0)) / 100, 2, '.', ''),
+                number_format(((int) ($row['profitability_basis_cents'] ?? ($row['counted_total_cents'] ?? 0))) / 100, 2, '.', ''),
+                implode(' | ', (array) ($row['confidence_badges'] ?? array())),
+            ));
+        }
+
+        fclose($out);
+        exit;
+    }
+}

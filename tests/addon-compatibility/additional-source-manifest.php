@@ -14,10 +14,9 @@ if (!is_string($wordpressRoot) || !is_file($wordpressRoot . '/wp-includes/versio
 }
 
 $contracts = require __DIR__ . '/additional-runtime-contracts.php';
-$phase6a = getenv('BVM_COMPAT_PHASE') === 'phase6a';
 $pluginsRoot = $wordpressRoot . '/wp-content/plugins';
 $entries = array(
-	'backstage-venue-manager' => 'vendor-management-system.php',
+	'backstage-venue-manager' => 'backstage-venue-manager.php',
 	'woocommerce' => 'woocommerce.php',
 	'woocommerce-square' => 'woocommerce-square.php',
 	'the-events-calendar' => 'the-events-calendar.php',
@@ -26,15 +25,14 @@ $entries = array(
 	'vms-events-slider' => 'vms-events-slider.php',
 	'vms-fill-dates' => 'vms-fill-dates.php',
 	'vms-data-tools' => 'vms-data-tools.php',
+	'backstage-calendar-feeds' => 'backstage-calendar-feeds.php',
 	'vms-express-bar' => 'vms-express-bar.php',
 	'vms-refer-a-friend' => 'vms-refer-a-friend.php',
 );
 foreach ($contracts['plugins'] as $slug => $contract) {
 	$entries[$slug] = basename((string) $contract['entry']);
 }
-if ($phase6a) {
-	$entries['drm-event-router'] = 'drm-event-router.php';
-}
+$entries['drm-event-router'] = 'drm-event-router.php';
 
 $treeHash = static function (string $root): array {
 	$files = array();
@@ -74,21 +72,32 @@ $manifest = array(
 	'wordpress_version' => '',
 	'plugins' => array(),
 	'source_selection' => array(
-		'vms-commerce-discounts' => getenv('BVM_COMPAT_COMMERCE_SQUARE_CONTRACT') === 'phase5a'
-			? 'Phase 5A corrected archive ' . (getenv('BVM_COMPAT_COMMERCE_VERSION') ?: '0.2.12') . ' reconstructed from authoritative 0.2.11; installed 0.2.4 and temporary 0.2.9 copies excluded as stale'
-			: 'versioned installable archive 0.2.11; installed 0.2.4 and active temporary 0.2.9 copies excluded as stale',
-		'vmsx-weather-risk' => 'latest versioned installable archive 0.1.12; installed active 0.1.3 copy excluded as stale',
-		'drm-events-bridge' => $phase6a
-			? 'immutable git archive of deployed release commit ' . (getenv('BVM_COMPAT_BRIDGE_COMMIT') ?: 'unknown') . '; dirty worktree excluded'
-			: 'not staged: blocked because the authoritative Git worktree is concurrently dirty',
-		'drm-event-router' => $phase6a
-			? 'immutable git archive of production-matched commit ' . (getenv('BVM_COMPAT_ROUTER_COMMIT') ?: 'unknown')
-			: 'indirect integration outside this runtime phase',
+		'backstage-calendar-feeds' => 'accepted local 0.1.4 BVM navigation source; 0.1.3 predecessor excluded',
+		'vms-data-tools' => 'accepted local 0.5.55 BVM reporting-provider source; 0.5.54 predecessor excluded',
+		'vms-commerce-discounts' => 'local 0.2.13 source candidate derived from the exact frozen 0.2.12 archive; obsolete 0.2.11 excluded',
+		'vms-sponsorships' => 'clean 0.1.28 successor candidate; active same-version-drifted 0.1.27 excluded',
+		'vmsx-weather-risk' => 'local candidate derived from exact frozen 0.1.12 title-cleanup archive; installed 0.1.3 excluded',
+		'drm-events-bridge' => 'immutable git archive of accepted 0.2.2 commit ' . (getenv('BVM_COMPAT_BRIDGE_COMMIT') ?: 'unknown') . '; dirty worktree excluded',
+		'drm-event-router' => 'immutable git archive of current authoritative 0.1.3 commit ' . (getenv('BVM_COMPAT_ROUTER_COMMIT') ?: 'unknown'),
+	),
+	'frozen_baselines' => array(
+		'vms-commerce-discounts' => array(
+			'archive' => 'vms-commerce-discounts-0.2.12.zip',
+			'archive_sha256' => '0cd5f4d2d0ce3dd9484d85442dff38783bfa45f17f46bdd942d1e9ba9962b001',
+			'pristine_tree_sha256' => '3a3528dfa1ed5d76608f27504ffed4990d1c2c320f1897d4c0cb49200531a060',
+			'pristine_file_count' => 26,
+		),
+		'vmsx-weather-risk' => array(
+			'archive' => 'vmsx-weather-risk-0.1.12-title-cleanup.zip',
+			'archive_sha256' => '5d57006c4ef190b5ac7786abce15f2585b4ffb302831451399224b0ef03ade28',
+			'pristine_tree_sha256' => '131d3bace99b7860b1e1585c99b967604a00e0f0a13b6f71576d748c455111af',
+			'pristine_file_count' => 35,
+		),
 	),
 	'blocked' => $contracts['blocked'],
 	'retired' => $contracts['retired'] ?? array(),
 	'indirect' => $contracts['indirect'],
-	'git_provenance' => $phase6a ? array(
+	'git_provenance' => array(
 		'drm-events-bridge' => array(
 			'commit' => getenv('BVM_COMPAT_BRIDGE_COMMIT') ?: '',
 			'git_tree' => getenv('BVM_COMPAT_BRIDGE_TREE') ?: '',
@@ -100,7 +109,7 @@ $manifest = array(
 			'git_tree' => getenv('BVM_COMPAT_ROUTER_TREE') ?: '',
 			'bootstrap_sha256' => getenv('BVM_COMPAT_ROUTER_BOOTSTRAP_SHA256') ?: '',
 		),
-	) : array(),
+	),
 );
 
 $versionSource = (string) file_get_contents($wordpressRoot . '/wp-includes/version.php');
@@ -120,6 +129,10 @@ foreach ($entries as $slug => $entryFile) {
 		$pluginHeader($entry),
 		$treeHash($root)
 	);
+	if (isset($contracts['plugins'][$slug]) && $manifest['plugins'][$slug]['version'] !== (string) $contracts['plugins'][$slug]['version']) {
+		fwrite(STDERR, "Staged plugin version does not match approved contract: {$slug}.\n");
+		exit(1);
+	}
 }
 
 $json = json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";

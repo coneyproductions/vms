@@ -190,6 +190,12 @@ function check_ajax_referer(string $action, string $query_arg): bool
 	return true;
 }
 
+function bvmgr_nonce_action_for_request(string $canonical_action, string $query_arg): string
+{
+	unset($query_arg);
+	return $canonical_action;
+}
+
 /** @param array<string,mixed> $source */
 function bvmgr_request_read_text_field(array $source, string $key): string
 {
@@ -376,7 +382,7 @@ function ticketing_core_validate_directive_anchor(string $source, string $direct
 
 $root = dirname(__DIR__);
 $mirror_path = $root . '/includes/integrations/ticketing.php';
-$shadow_root = dirname($root, 2) . '/vms';
+$shadow_root = dirname($root, 2) . '/backstage-venue-manager';
 $shadow_path = $shadow_root . '/includes/integrations/ticketing.php';
 $source = file_get_contents($mirror_path);
 $shadow_source = file_get_contents($shadow_path);
@@ -437,15 +443,15 @@ $mirror_projection = ticketing_core_project_pre_remediation($source, $directives
 $shadow_projection = ticketing_core_project_pre_remediation($shadow_source, $directives);
 ticketing_core_same(7, $mirror_projection['removed'], 'Mirror projection must strip exactly seven owned annotations.');
 ticketing_core_same(7, $shadow_projection['removed'], 'Shadow projection must strip exactly seven owned annotations.');
-ticketing_core_same('8980181edc0df051578f5ba6a2e79f230100f0316b08a15370088cf765e313c0', hash('sha256', $mirror_projection['source']), 'Mirror changed outside the exact owned remediation.');
-ticketing_core_same('f3b3d4914bb80b0fb56c3e1fc320945656fee036d2df2a1a484f276a514b36da', hash('sha256', $shadow_projection['source']), 'Shadow changed outside the exact owned remediation.');
-ticketing_core_assert(hash('sha256', $source) !== hash('sha256', $shadow_source), 'Intentional whole-file mirror/shadow divergence must remain.');
+ticketing_core_same('42c722e727662b9706f1e07c1f9dc5007e876aac4c084cf9545f063d6739cd30', hash('sha256', $mirror_projection['source']), 'Mirror changed outside the exact owned remediation.');
+ticketing_core_same('42c722e727662b9706f1e07c1f9dc5007e876aac4c084cf9545f063d6739cd30', hash('sha256', $shadow_projection['source']), 'Active source changed outside the exact owned remediation.');
+ticketing_core_same(hash('sha256', $source), hash('sha256', $shadow_source), 'Mirror and active ticketing sources must remain byte-identical.');
 
 foreach (array('mirror' => $source, 'shadow' => $shadow_source) as $tree => $tree_source) {
 	$mutated = str_replace("return array_values(array_unique(array_map('absint', \$q->posts ?? array())));", "return array_values(array_map('absint', \$q->posts ?? array()));", $tree_source, $count);
 	ticketing_core_same(1, $count, 'Runtime mutation control should alter one ticket-product result contract: ' . $tree . '.');
 	$mutation_projection = ticketing_core_project_pre_remediation($mutated, $directives);
-	$baseline_hash = $tree === 'mirror' ? '8980181edc0df051578f5ba6a2e79f230100f0316b08a15370088cf765e313c0' : 'f3b3d4914bb80b0fb56c3e1fc320945656fee036d2df2a1a484f276a514b36da';
+	$baseline_hash = '42c722e727662b9706f1e07c1f9dc5007e876aac4c084cf9545f063d6739cd30';
 	ticketing_core_assert(hash('sha256', $mutation_projection['source']) !== $baseline_hash, 'Immutable projection must reject non-comment runtime mutation: ' . $tree . '.');
 }
 
@@ -461,7 +467,7 @@ ticketing_core_same(
 );
 $mirror_search = ticketing_core_extract_function($source, 'bvmgr_ticketing_ajax_search_tec_events');
 $shadow_search = ticketing_core_extract_function($shadow_source, 'bvmgr_ticketing_ajax_search_tec_events');
-ticketing_core_assert($mirror_search !== $shadow_search, 'Pre-existing search request-reader divergence must remain preserved.');
+ticketing_core_same($mirror_search, $shadow_search, 'Mirror and active TEC search boundaries must remain byte-identical.');
 ticketing_core_same(
 	ticketing_core_extract_between($mirror_search, '$like =', '$items = array();'),
 	ticketing_core_extract_between($shadow_search, '$like =', '$items = array();'),
@@ -785,7 +791,7 @@ ticketing_core_same(array('tribe_events', 42, '%42%'), $wpdb->prepares[0]['args'
 $expected_numeric_search_sql = "SELECT ID FROM wp_search_posts WHERE post_type = 'tribe_events' AND post_status NOT IN ('trash','auto-draft') AND (ID = 42 OR post_title LIKE '%42%') ORDER BY post_date DESC LIMIT 15";
 ticketing_core_same($expected_numeric_search_sql, ticketing_core_normalize_sql($wpdb->prepares[0]['sql']), 'Rendered numeric TEC search SQL changed.');
 ticketing_core_same($expected_numeric_search_sql, ticketing_core_normalize_sql($wpdb->executions[0]['sql']), 'Executed numeric TEC search SQL changed.');
-ticketing_core_same(array(array('vms_ticketing_nonce', 'nonce')), $GLOBALS['ticketing_core_nonce_calls'], 'Numeric TEC search nonce contract changed.');
+ticketing_core_same(array(array('bvmgr_ticketing_nonce', 'nonce')), $GLOBALS['ticketing_core_nonce_calls'], 'Numeric TEC search canonical nonce contract changed.');
 ticketing_core_no_placeholders($wpdb->executions[0]['sql']);
 
 // Text search: wildcard escaping, nonnumeric branch, and null read failure keep an empty success payload.
@@ -816,7 +822,7 @@ $short_response = ticketing_core_capture_ajax(static function (): void {
 });
 ticketing_core_same(array('items' => array()), $short_response->payload, 'Short TEC query response changed.');
 ticketing_core_same(array(), $wpdb->prepares, 'Short TEC query must remain DB-free.');
-ticketing_core_same(array(array('vms_ticketing_nonce', 'nonce')), $GLOBALS['ticketing_core_nonce_calls'], 'Short TEC query nonce ordering changed.');
+ticketing_core_same(array(array('bvmgr_ticketing_nonce', 'nonce')), $GLOBALS['ticketing_core_nonce_calls'], 'Short TEC query nonce ordering changed.');
 
 $wpdb = new VMS_Ticketing_Core_WPDB_Spy('wp_forbidden_');
 $GLOBALS['wpdb'] = $wpdb;
@@ -829,7 +835,7 @@ $forbidden_response = ticketing_core_capture_ajax(static function (): void {
 ticketing_core_same(false, $forbidden_response->success, 'Forbidden TEC search response kind changed.');
 ticketing_core_same(array('message' => 'forbidden'), $forbidden_response->payload, 'Forbidden TEC search message changed.');
 ticketing_core_same(403, $forbidden_response->status, 'Forbidden TEC search status changed.');
-ticketing_core_same(array(array('vms_ticketing_nonce', 'nonce')), $GLOBALS['ticketing_core_nonce_calls'], 'Nonce verification must still precede capability denial.');
+ticketing_core_same(array(array('bvmgr_ticketing_nonce', 'nonce')), $GLOBALS['ticketing_core_nonce_calls'], 'Canonical nonce verification must still precede capability denial.');
 ticketing_core_same(array(), $wpdb->executions, 'Forbidden TEC search must remain DB-free.');
 
 $wpdb = new VMS_Ticketing_Core_WPDB_Spy('wp_tec_off_');
@@ -844,7 +850,7 @@ $tec_off_response = ticketing_core_capture_ajax(static function (): void {
 ticketing_core_same(false, $tec_off_response->success, 'Inactive TEC response kind changed.');
 ticketing_core_same(array('message' => 'tec_inactive'), $tec_off_response->payload, 'Inactive TEC response message changed.');
 ticketing_core_same(400, $tec_off_response->status, 'Inactive TEC response status changed.');
-ticketing_core_same(array(array('vms_ticketing_nonce', 'nonce')), $GLOBALS['ticketing_core_nonce_calls'], 'Inactive TEC nonce ordering changed.');
+ticketing_core_same(array(array('bvmgr_ticketing_nonce', 'nonce')), $GLOBALS['ticketing_core_nonce_calls'], 'Inactive TEC nonce ordering changed.');
 ticketing_core_same(array(), $wpdb->executions, 'Inactive TEC search must remain DB-free.');
 
 fwrite(STDOUT, "PASS: Ticketing core WP_Query/wpdb behavior, exact preparation/results/failures, fourteen-row inventory, narrow annotations, immutable projections, and mirror/shadow DB parity are covered.\n");

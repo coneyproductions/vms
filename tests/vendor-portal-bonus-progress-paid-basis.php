@@ -6,13 +6,15 @@ define('ABSPATH', __DIR__);
 $root = dirname(__DIR__);
 $portal_path = $root . '/includes/portal/vendor-portal.php';
 $helpers_path = $root . '/includes/helpers.php';
-$data_tools_path = dirname($root, 2) . '/vms-data-tools/includes/admin/page-reporting-module.php';
+$data_tools_path = $root . '/companion-plugins/vms-data-tools/includes/admin/page-reporting-module.php';
+$data_tools_provider_path = $root . '/companion-plugins/vms-data-tools/includes/integrations/bvm-reporting-provider.php';
 $active_bvm_path = dirname($root, 2) . '/backstage-venue-manager/includes/portal/vendor-portal.php';
 $legacy_path = dirname($root, 2) . '/vms/includes/portal/vendor-portal.php';
 
 $portal_source = (string) file_get_contents($portal_path);
 $helpers_source = (string) file_get_contents($helpers_path);
 $data_tools_source = (string) file_get_contents($data_tools_path);
+$data_tools_provider_source = (string) file_get_contents($data_tools_provider_path);
 $active_bvm_source = (string) file_get_contents($active_bvm_path);
 $legacy_source = (string) file_get_contents($legacy_path);
 
@@ -117,11 +119,6 @@ function bvmgr_vendor_portal_format_stats_updated_label(array $stats): string
 	return (string) ($stats['updated_label'] ?? '');
 }
 
-function bvmgr_vendor_portal_maybe_load_data_tools_reporting(): bool
-{
-	return true;
-}
-
 function vms_dt_reporting_build_website_detail_rows(int $plan_id): array
 {
 	return $GLOBALS['bonus_progress_website'][$plan_id] ?? array('ticket_rows' => array(), 'addon_rows' => array());
@@ -134,6 +131,22 @@ function vms_dt_reporting_build_square_line_evidence(int $plan_id, array $filter
 		'ticket_rows' => array(),
 		'warnings' => array(),
 		'errors' => array(),
+	);
+}
+
+function bvmgr_reporting_resolve_event_ticket_sales(int $plan_id, array $context = array()): array
+{
+	if (($context['scope'] ?? '') !== 'vendor_portal') {
+		return array('available' => false, 'calculated' => false);
+	}
+
+	return array_merge(
+		vms_dt_bvm_reporting_vendor_portal_summary($plan_id),
+		array(
+			'provider_id' => 'vms-data-tools',
+			'provider_version' => '0.5.55',
+			'provider_contract_version' => 1,
+		)
 	);
 }
 
@@ -184,6 +197,7 @@ function bvmgr_vendor_portal_render_progress_cards_section(array $cards, string 
 bonus_progress_assert($portal_source !== '', 'Mirror Vendor Portal source should be readable.');
 bonus_progress_assert($helpers_source !== '', 'BVM compensation helper source should be readable.');
 bonus_progress_assert($data_tools_source !== '', 'Data Tools reporting source should be readable.');
+bonus_progress_assert($data_tools_provider_source !== '', 'Data Tools BVM provider source should be readable.');
 bonus_progress_same($portal_source, $active_bvm_source, 'Mirror and active local BVM portal files should stay byte-identical.');
 
 $legacy_builder = bonus_progress_extract_function($legacy_source, 'vms_vendor_portal_build_bonus_progress_card');
@@ -198,6 +212,7 @@ bonus_progress_assert(
 
 eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_zero_ticket_source_rollup'));
 eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_build_ticket_source_rollup'));
+eval(bonus_progress_extract_function($data_tools_provider_source, 'vms_dt_bvm_reporting_vendor_portal_summary'));
 eval(bonus_progress_extract_function($helpers_source, 'bvmgr_attendance_bonus_supported_modes'));
 eval(bonus_progress_extract_function($helpers_source, 'bvmgr_normalize_attendance_bonus_mode'));
 eval(bonus_progress_extract_function($helpers_source, 'bvmgr_normalize_comp_nonnegative_float'));

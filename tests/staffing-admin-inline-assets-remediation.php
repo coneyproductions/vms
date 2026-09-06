@@ -102,7 +102,7 @@ function bvmgr_asset_version(): string
 require_once dirname(__DIR__) . '/includes/admin/staffing.php';
 
 $pluginRoot = dirname(__DIR__);
-$livePluginRoot = dirname(dirname($pluginRoot)) . '/vms';
+$livePluginRoot = dirname(dirname($pluginRoot)) . '/backstage-venue-manager';
 
 $staffingPath = $pluginRoot . '/includes/admin/staffing.php';
 $scriptPath = $pluginRoot . '/assets/js/vms-staffing-admin.js';
@@ -159,7 +159,7 @@ try {
 	$assert(strpos($staffingSource, 'wp_add_inline_script(') === false, 'Staffing admin PHP should not reintroduce behavior through wp_add_inline_script().');
 	$assert(strpos($staffingSource, 'wp_add_inline_style(') === false, 'Staffing admin PHP should not reintroduce styles through wp_add_inline_style().');
 
-	$assert(has_action('admin_enqueue_scripts', 'vms_staffing_admin_enqueue_assets') === 50, 'Staffing admin should register a dedicated admin_enqueue_scripts callback at priority 50.');
+	$assert(has_action('admin_enqueue_scripts', 'bvmgr_staffing_admin_enqueue_assets') === 50, 'Staffing admin should register its canonical admin_enqueue_scripts callback at priority 50.');
 	$assert(function_exists('bvmgr_staffing_admin_screen_is_role_target'), 'Staffing admin should declare a dedicated Staff Roles screen helper.');
 	$assert(function_exists('bvmgr_staffing_admin_is_templates_page'), 'Staffing admin should declare a dedicated Staffing Templates page helper.');
 	$assert(bvmgr_staffing_admin_screen_is_role_target((object) array('base' => 'edit-tags', 'taxonomy' => 'vms_staff_role', 'post_type' => 'vms_staff')) === true, 'Staffing screen helper should allow the Staff Roles add/list screen.');
@@ -219,10 +219,10 @@ try {
 	$assert($GLOBALS['vms_test_scripts'] === array(), 'Unrelated admin pages should not enqueue the Staffing admin script.');
 	$assert($GLOBALS['vms_test_styles'] === array(), 'Unrelated admin pages should not enqueue the Staffing admin stylesheet.');
 
-	$assert(strpos($staffingSource, 'function vms_staffing_admin_enqueue_assets(): void') !== false, 'Staffing admin source should declare the dedicated enqueue callback.');
+	$assert(strpos($staffingSource, 'function bvmgr_staffing_admin_enqueue_assets(): void') !== false, 'Staffing admin source should declare the canonical enqueue callback.');
 	$assert(strpos($staffingSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-staffing-admin.js'") !== false, 'Staffing admin source should point to assets/js/vms-staffing-admin.js.');
 	$assert(strpos($staffingSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-staffing-admin.css'") !== false, 'Staffing admin source should point to assets/css/vms-staffing-admin.css.');
-	$assert(strpos($staffingSource, "add_action('admin_enqueue_scripts', 'vms_staffing_admin_enqueue_assets', 50);") !== false, 'Staffing admin source should register the enqueue callback.');
+	$assert(strpos($staffingSource, "add_action('admin_enqueue_scripts', 'bvmgr_staffing_admin_enqueue_assets', 50);") !== false, 'Staffing admin source should register the canonical enqueue callback.');
 	$assert(strpos($staffingSource, "return \$page === 'vms-staffing-templates';") !== false, 'Staffing admin source should preserve the exact templates page slug.');
 	$assert(strpos($staffingSource, "in_array((string) (\$screen->base ?? ''), array('edit-tags', 'term'), true)") !== false, 'Staffing admin source should preserve the exact Staff Roles taxonomy screen bases.');
 	$assert(strpos($staffingSource, "(string) (\$screen->taxonomy ?? '') !== 'vms_staff_role'") !== false, 'Staffing admin source should preserve the exact Staff Roles taxonomy gate.');
@@ -273,13 +273,13 @@ try {
 
 	$assert(strpos($corePluginSource, 'vms-staffing-admin') === false, 'Staffing admin assets should not be registered through the global core admin asset loader.');
 	$assert(strpos($adminUiAssetsSource, 'vms-staffing-admin') === false, 'Staffing admin assets should not be registered through the shared admin UI asset loader.');
-	$assert(strpos($staffCptSource, 'function vms_staff_cpt_admin_enqueue_assets(): void') !== false, 'Staff CPT source should remain readable and unchanged by this slice.');
-	$assert(strpos($staffPortalSource, 'function vms_staff_portal_safe_html(') !== false, 'Staff Portal source should remain readable and unchanged by this slice.');
+	$assert(strpos($staffCptSource, 'function bvmgr_staff_cpt_admin_enqueue_assets(): void') !== false, 'Staff CPT source should retain its canonical asset callback.');
+	$assert(strpos($staffPortalSource, 'function bvmgr_staff_portal_safe_html(') !== false, 'Staff Portal source should retain its canonical safe-HTML helper.');
 
 	$assert(strpos($ledgerSource, '`WPORG-22R-L`') !== false, 'Ledger should record the Staffing admin residual closeout under WPORG-22R-L.');
 	$assert(strpos($prereviewSource, '## WPORG-22R-L Result') !== false, 'Prereview remediation should include the Staffing admin closeout section.');
 
-	$assert($liveStaffingSource !== '', 'Live Staffing admin PHP should remain readable while the mirror-only remediation leaves ../../vms untouched.');
+	$assert($liveStaffingSource !== '', 'Active Backstage Staffing admin PHP should remain readable.');
 	$assert($scriptSource === $liveScriptSource, 'Mirror/live Staffing admin JS assets should remain byte-for-byte synchronized.');
 	$assert($styleSource === $liveStyleSource, 'Mirror/live Staffing admin CSS assets should remain byte-for-byte synchronized.');
 

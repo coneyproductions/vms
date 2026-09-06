@@ -804,53 +804,6 @@ if (!function_exists('bvmgr_vendor_portal_get_ticket_sales_snapshot')) {
 }
 
 
-if (!function_exists('bvmgr_vendor_portal_maybe_load_data_tools_reporting')) {
-    function bvmgr_vendor_portal_maybe_load_data_tools_reporting(): bool
-    {
-        static $attempted = false;
-        static $loaded = false;
-
-        if ($loaded) {
-            return true;
-        }
-        if ($attempted) {
-            return false;
-        }
-        $attempted = true;
-
-        if (function_exists('vms_dt_reporting_build_website_detail_rows') && function_exists('vms_dt_reporting_build_square_line_evidence')) {
-            $loaded = true;
-            return true;
-        }
-
-        $admin_dir = '';
-        if (defined('VMS_DT_ADMIN_DIR') && is_string(VMS_DT_ADMIN_DIR) && VMS_DT_ADMIN_DIR !== '') {
-            $admin_dir = untrailingslashit(VMS_DT_ADMIN_DIR);
-        } elseif (defined('WP_PLUGIN_DIR') && is_string(WP_PLUGIN_DIR) && WP_PLUGIN_DIR !== '') {
-            $candidate = untrailingslashit(WP_PLUGIN_DIR) . '/vms-data-tools/includes/admin';
-            if (is_dir($candidate)) {
-                $admin_dir = $candidate;
-            }
-        }
-
-        if ($admin_dir === '') {
-            return false;
-        }
-
-        $revenue_file = $admin_dir . '/page-revenue-intelligence.php';
-        $reporting_file = $admin_dir . '/page-reporting-module.php';
-        if (is_readable($revenue_file)) {
-            require_once $revenue_file;
-        }
-        if (is_readable($reporting_file)) {
-            require_once $reporting_file;
-        }
-
-        $loaded = function_exists('vms_dt_reporting_build_website_detail_rows') && function_exists('vms_dt_reporting_build_square_line_evidence');
-        return $loaded;
-    }
-}
-
 if (!function_exists('bvmgr_vendor_portal_get_data_tools_sales_snapshot')) {
     function bvmgr_vendor_portal_get_data_tools_sales_snapshot(int $plan_id): array
     {
@@ -864,94 +817,43 @@ if (!function_exists('bvmgr_vendor_portal_get_data_tools_sales_snapshot')) {
             return $cache[$plan_id];
         }
 
-        if (!bvmgr_vendor_portal_maybe_load_data_tools_reporting()) {
+        if (!function_exists('bvmgr_reporting_resolve_event_ticket_sales')) {
             $cache[$plan_id] = array();
             return $cache[$plan_id];
         }
 
-        $event_date = (string) get_post_meta($plan_id, '_vms_event_date', true);
-        $website = (array) vms_dt_reporting_build_website_detail_rows($plan_id);
-        $website_ticket_rows = array();
-
-        foreach ((array) ($website['ticket_rows'] ?? array()) as $entry) {
-            if (!is_array($entry)) {
-                continue;
-            }
-
-            $sold_date = (string) ($entry['sold_date'] ?? '');
-            if ($sold_date === '') {
-                $sold_date = substr((string) ($entry['sold_datetime'] ?? ''), 0, 10);
-            }
-            if ($sold_date !== '' && $event_date !== '' && $sold_date > $event_date) {
-                continue;
-            }
-            $website_ticket_rows[] = $entry;
-        }
-
-        $square_filters = array(
-            'event_plan_id' => $plan_id,
-            'square_scope_mode' => 'full_day',
-            'sold_from' => '',
-            'sold_to' => '',
-        );
-        $square = (array) vms_dt_reporting_build_square_line_evidence($plan_id, $square_filters);
-        $ticket_sources = function_exists('vms_dt_reporting_build_ticket_source_rollup')
-            ? (array) vms_dt_reporting_build_ticket_source_rollup(
-                array(),
-                array(
-                    'website' => array('ticket_rows' => $website_ticket_rows),
-                    'square' => $square,
-                )
-            )
-            : array();
-
-        $online_qty = max(0, (int) ($ticket_sources['website_paid_ticket_qty'] ?? 0));
-        $online_net_cents = max(0, (int) ($ticket_sources['website_paid_ticket_revenue_cents'] ?? 0));
-        $excluded_free_online_qty = max(0, (int) ($ticket_sources['website_free_ticket_qty'] ?? 0));
-        $door_qty = max(0, (int) ($ticket_sources['square_ticket_qty'] ?? 0));
-        $door_paid_qty = max(0, (int) ($ticket_sources['square_paid_ticket_qty'] ?? 0));
-        $door_free_qty = max(0, (int) ($ticket_sources['square_free_ticket_qty'] ?? 0));
-        $door_gross_cents = max(0, (int) ($ticket_sources['square_paid_ticket_revenue_cents'] ?? 0));
-        $website_rows_seen = max(0, (int) ($ticket_sources['website_rows_seen'] ?? count($website_ticket_rows)));
-        $door_rows_seen = max(0, (int) ($ticket_sources['square_rows_seen'] ?? 0));
-
-        $headcount = max(0, (int) ($ticket_sources['ticketed_attendance_qty'] ?? ($online_qty + $excluded_free_online_qty + $door_qty)));
-        $sales_cents = max(0, (int) ($ticket_sources['paid_ticket_revenue_cents'] ?? ($online_net_cents + $door_gross_cents)));
-        $free_ticket_qty_total = max(0, (int) ($ticket_sources['free_ticket_qty_total'] ?? ($excluded_free_online_qty + $door_free_qty)));
-        $has_countable_data = !empty($ticket_sources['has_countable_data'])
-            || ($headcount > 0)
-            || ($website_rows_seen > 0)
-            || ($door_rows_seen > 0)
-            || ($free_ticket_qty_total > 0);
-
-        $label = __('Paid ticket sales', 'backstage-venue-manager');
-        if ($free_ticket_qty_total > 0) {
-            $label = __('Ticketed attendance', 'backstage-venue-manager');
-        } elseif ($door_paid_qty > 0) {
-            $label = __('Paid ticket sales + counted door sales', 'backstage-venue-manager');
+        $provider_result = bvmgr_reporting_resolve_event_ticket_sales($plan_id, array(
+            'scope' => 'vendor_portal',
+        ));
+        if (empty($provider_result['available']) || empty($provider_result['calculated'])) {
+            $cache[$plan_id] = array();
+            return $cache[$plan_id];
         }
 
         $cache[$plan_id] = array(
-            'headcount' => $headcount,
-            'online_qty' => max(0, $online_qty),
-            'online_net_cents' => max(0, $online_net_cents),
-            'door_qty' => max(0, $door_qty),
-            'door_paid_qty' => $door_paid_qty,
-            'door_free_qty' => $door_free_qty,
-            'door_gross_cents' => max(0, $door_gross_cents),
-            'sales_cents' => $sales_cents,
-            'excluded_free_online_qty' => max(0, $excluded_free_online_qty),
-            'excluded_free_ticket_qty_total' => $free_ticket_qty_total,
-            'paid_ticket_qty_total' => max(0, (int) ($ticket_sources['paid_ticket_qty_total'] ?? ($online_qty + $door_paid_qty))),
-            'free_ticket_qty_total' => $free_ticket_qty_total,
-            'ticketed_attendance_qty' => $headcount,
-            'has_countable_data' => $has_countable_data,
-            'source_mode' => 'data_tools_live',
-            'source' => 'data_tools_merged_ticket_sales',
-            'label' => $label,
-            'updated_label' => wp_date('M j, Y g:ia', current_time('timestamp'), wp_timezone()),
-            'warnings' => array_values(array_unique(array_filter(array_map('strval', (array) ($square['warnings'] ?? array()))))),
-            'errors' => array_values(array_unique(array_filter(array_map('strval', (array) ($square['errors'] ?? array()))))),
+            'headcount' => max(0, (int) ($provider_result['headcount'] ?? 0)),
+            'online_qty' => max(0, (int) ($provider_result['online_qty'] ?? 0)),
+            'online_net_cents' => max(0, (int) ($provider_result['online_net_cents'] ?? 0)),
+            'door_qty' => max(0, (int) ($provider_result['door_qty'] ?? 0)),
+            'door_paid_qty' => max(0, (int) ($provider_result['door_paid_qty'] ?? 0)),
+            'door_free_qty' => max(0, (int) ($provider_result['door_free_qty'] ?? 0)),
+            'door_gross_cents' => max(0, (int) ($provider_result['door_gross_cents'] ?? 0)),
+            'sales_cents' => max(0, (int) ($provider_result['sales_cents'] ?? 0)),
+            'excluded_free_online_qty' => max(0, (int) ($provider_result['excluded_free_online_qty'] ?? 0)),
+            'excluded_free_ticket_qty_total' => max(0, (int) ($provider_result['excluded_free_ticket_qty_total'] ?? 0)),
+            'paid_ticket_qty_total' => max(0, (int) ($provider_result['paid_ticket_qty_total'] ?? 0)),
+            'free_ticket_qty_total' => max(0, (int) ($provider_result['free_ticket_qty_total'] ?? 0)),
+            'ticketed_attendance_qty' => max(0, (int) ($provider_result['ticketed_attendance_qty'] ?? 0)),
+            'has_countable_data' => !empty($provider_result['has_countable_data']),
+            'source_mode' => sanitize_key((string) ($provider_result['source_mode'] ?? '')),
+            'source' => sanitize_key((string) ($provider_result['source'] ?? '')),
+            'label' => (string) ($provider_result['label'] ?? ''),
+            'updated_label' => (string) ($provider_result['updated_label'] ?? ''),
+            'provider_id' => sanitize_key((string) ($provider_result['provider_id'] ?? '')),
+            'provider_version' => (string) ($provider_result['provider_version'] ?? ''),
+            'provider_contract_version' => (int) ($provider_result['provider_contract_version'] ?? 0),
+            'warnings' => (array) ($provider_result['warnings'] ?? array()),
+            'errors' => (array) ($provider_result['errors'] ?? array()),
         );
 
         return $cache[$plan_id];

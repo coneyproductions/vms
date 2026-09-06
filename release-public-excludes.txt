@@ -18,6 +18,7 @@ docs/
 scripts/
 dist/
 _attic/
+companion-plugins/
 # Dormant prototype code that is explicitly outside the canonical bootstrap.
 includes/safety/
 BUILD-NOTES-*.md

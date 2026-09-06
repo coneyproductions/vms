@@ -1,0 +1,223 @@
+.vms-dt-vio-wrap .vms-dt-vio-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin: 8px 0 16px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-header h1 {
+  margin-bottom: 4px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-header .description {
+  margin: 0;
+  max-width: 720px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-send-form .form-table th {
+  width: 260px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-verify-form {
+  margin-top: 16px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-preview-table details {
+  margin-top: 6px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-log-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 16px;
+  align-items: flex-end;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-log-filters label {
+  display: block;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-filter-actions {
+  align-self: flex-end;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-inline-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-inline-form:last-child {
+  margin-bottom: 0;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-panel,
+.vms-dt-vio-wrap .vms-dt-vio-retention-preview {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-panel h3,
+.vms-dt-vio-wrap .vms-dt-vio-retention-preview h3 {
+  margin: 0 0 8px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-preview__reasons {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f6f7f7;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-preview__reasons ul {
+  margin: 8px 0 0 18px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-preview-table,
+.vms-dt-vio-wrap .vms-dt-vio-retention-commit-form {
+  margin-top: 12px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-badge--active {
+  background: #e8f5e9;
+  color: #0f5b2f;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-retention-badge--archived {
+  background: #f1f1f1;
+  color: #50575e;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-queue {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-card {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-card__header {
+  margin-bottom: 12px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-card__header h3 {
+  margin: 0 0 4px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-list {
+  display: grid;
+  gap: 12px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-row__meta {
+  display: grid;
+  gap: 4px;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-row__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-status {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-status--pending {
+  background: #fff7d6;
+  color: #7a5300;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-status--accepted {
+  background: #dff5e5;
+  color: #0f5b2f;
+}
+
+.vms-dt-vio-wrap .vms-dt-vio-interest-status--declined,
+.vms-dt-vio-wrap .vms-dt-vio-interest-status--withdrawn {
+  background: #f1f1f1;
+  color: #50575e;
+}
+
+@media (max-width: 782px) {
+  .vms-dt-vio-wrap .vms-dt-vio-header {
+    flex-direction: column;
+  }
+
+  .vms-dt-vio-wrap .vms-dt-vio-log-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vms-dt-vio-wrap .vms-dt-vio-inline-form {
+    flex-wrap: wrap;
+  }
+
+  .vms-dt-vio-wrap .vms-dt-vio-retention-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vms-dt-vio-wrap .vms-dt-vio-interest-row {
+    flex-direction: column;
+  }
+
+  .vms-dt-vio-wrap .vms-dt-vio-interest-row__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

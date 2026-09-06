@@ -167,22 +167,10 @@ if (!function_exists('bvmgr_event_profitability_get_labor_cost_cents')) {
 	{
 		$labor_dollars = null;
 
-		if (function_exists('bvmgr_staffing_get_rollup')) {
-			$rollup = bvmgr_staffing_get_rollup($event_plan_id);
-			$needs_compute = !is_array($rollup)
-				|| !array_key_exists('est_labor_cost_total', $rollup)
-				|| $rollup['est_labor_cost_total'] === null
-				|| $rollup['est_labor_cost_total'] === ''
-				|| (!empty($rollup['dirty']) && function_exists('bvmgr_staffing_compute_rollup'));
-
-			if ($needs_compute && function_exists('bvmgr_staffing_compute_rollup')) {
-				$computed = (array) bvmgr_staffing_compute_rollup($event_plan_id);
-				if (!empty($computed['ok']) && isset($computed['est_labor_cost_total']) && $computed['est_labor_cost_total'] !== null) {
-					$labor_dollars = (float) $computed['est_labor_cost_total'];
-				}
-			}
-
-			if ($labor_dollars === null && is_array($rollup) && isset($rollup['est_labor_cost_total']) && $rollup['est_labor_cost_total'] !== null && $rollup['est_labor_cost_total'] !== '') {
+		if (function_exists('bvmgr_staffing_resolve_event_snapshot')) {
+			$staffing_snapshot = (array) bvmgr_staffing_resolve_event_snapshot($event_plan_id);
+			$rollup = is_array($staffing_snapshot['rollup'] ?? null) ? (array) $staffing_snapshot['rollup'] : array();
+			if (isset($rollup['est_labor_cost_total']) && $rollup['est_labor_cost_total'] !== null && $rollup['est_labor_cost_total'] !== '') {
 				$labor_dollars = (float) $rollup['est_labor_cost_total'];
 			}
 		}

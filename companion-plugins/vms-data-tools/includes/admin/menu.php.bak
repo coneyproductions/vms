@@ -1,0 +1,265 @@
+<?php
+defined('ABSPATH') || exit;
+
+add_action('admin_menu', 'vms_dt_register_admin_menu', 99);
+
+add_action('admin_init', function (): void {
+	if (!is_admin()) return;
+
+	$page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+	if ($page === 'vms-vendor-import-csv') {
+		wp_safe_redirect(admin_url('admin.php?page=' . vms_dt_get_menu_slug_vendor_import()));
+		exit;
+	}
+});
+
+function vms_dt_register_admin_menu(): void
+{
+	// Parent: "VMS" top-level menu should already exist in core.
+	// If core uses a different slug, update 'vms' below to match.
+	$parent_slug = 'vms-dashboard';
+
+	// If VMS core hasn’t registered a top-level menu yet, fall back to Tools.
+	if (!vms_dt_admin_menu_slug_exists($parent_slug)) {
+		$parent_slug = 'tools.php';
+	}
+
+	add_submenu_page(
+		$parent_slug,
+		__('Data Tools', 'vms-data-tools'),
+		__('Data Tools', 'vms-data-tools'),
+		'read',
+		vms_dt_get_menu_slug_data_tools(),
+		'vms_dt_render_data_tools_landing'
+	);
+
+	add_submenu_page(
+		vms_dt_get_menu_slug_data_tools(),
+		__('Vendor Import', 'vms-data-tools'),
+		__('Vendor Import', 'vms-data-tools'),
+		VMS_DT_CAP_IMPORT_VENDORS,
+		vms_dt_get_menu_slug_vendor_import(),
+		'vms_dt_vendor_import_page_compat'
+	);
+
+	
+}
+
+add_action('admin_menu', function (): void {
+	remove_submenu_page('vms', 'vms-vendor-import-csv');
+	remove_submenu_page('tools.php', 'vms-vendor-import-csv');
+}, 999);
+
+add_filter('parent_file', 'vms_dt_parent_file_keep_vms_open');
+add_filter('submenu_file', 'vms_dt_submenu_file_keep_vms_open');
+
+add_action('admin_head', 'vms_dt_force_menu_open_on_pages');
+
+function vms_dt_force_menu_open_on_pages(): void
+{
+	global $parent_file, $submenu_file, $plugin_page;
+
+	$page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
+	$is_dt_page = in_array($page, [
+		vms_dt_get_menu_slug_data_tools(),
+		vms_dt_get_menu_slug_vendor_import(),
+		'vms-data-tools-vendor-import', // hard catch, just in case
+		'vms-vendor-import-csv',        // legacy redirect target / compat view
+	], true);
+
+	if (!$is_dt_page) {
+		return;
+	}
+
+	// Keep the VMS top-level expanded.
+	$parent_file = 'vms';
+
+	// Highlight Data Tools as the current submenu item.
+	$submenu_file = ($page === vms_dt_get_menu_slug_vendor_import())
+		? vms_dt_get_menu_slug_vendor_import()
+		: vms_dt_get_menu_slug_data_tools();
+
+	// Help WP know which "plugin page" we're on.
+	$plugin_page = $page;
+}
+
+function vms_dt_parent_file_keep_vms_open(string $parent_file): string
+{
+	$page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
+
+	// If we are on any VMS Data Tools page, keep the VMS parent expanded.
+	if (in_array($page, [
+		vms_dt_get_menu_slug_data_tools(),
+		vms_dt_get_menu_slug_vendor_import(),
+		'vms-data-tools-vendor-import',
+		'vms-vendor-import-csv',
+	], true)) {
+		return 'vms';
+	}
+
+	return $parent_file;
+}
+
+function vms_dt_submenu_file_keep_vms_open(?string $submenu_file): string
+{
+	$page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+
+	if (in_array($page, [
+		vms_dt_get_menu_slug_vendor_import(),
+		'vms-data-tools-vendor-import',
+		'vms-vendor-import-csv',
+	], true)) {
+		return vms_dt_get_menu_slug_vendor_import();
+	}
+
+	if ($page === vms_dt_get_menu_slug_data_tools()) {
+		return vms_dt_get_menu_slug_data_tools();
+	}
+
+	return (string) ($submenu_file ?? '');
+}
+
+/**
+ * Detect whether a given admin menu slug exists.
+ * This avoids a broken parent slug if core hasn’t registered yet.
+ */
+function vms_dt_admin_menu_slug_exists(string $slug): bool
+{
+	global $menu;
+	if (!is_array($menu)) {
+		return false;
+	}
+
+	foreach ($menu as $item) {
+		if (!empty($item[2]) && $item[2] === $slug) {
+			return true;
+		}
+	}
+	return false;
+}
+
+function vms_dt_render_data_tools_landing(): void
+{
+	if (!current_user_can('read')) {
+		wp_die(__('You do not have permission to view this page.', 'vms-data-tools'));
+	}
+
+?>
+	<div class="wrap">
+		<h1><?php echo esc_html__('VMS Data Tools', 'vms-data-tools'); ?></h1>
+		<p><?php echo esc_html__('Data movement tools for VMS.', 'vms-data-tools'); ?></p>
+<p style="margin-top:20px;">
+	<?php if (vms_dt_current_user_can_import()) : ?>
+
+		<a href="<?php echo esc_url(vms_dt_admin_url(vms_dt_get_menu_slug_vendor_import())); ?>"
+			class="button button-primary button-large">
+			<?php echo esc_html__('Vendor Import (CSV)', 'vms-data-tools'); ?>
+		</a>
+
+		<a href="<?php echo esc_url(vms_dt_admin_url('vms-dt-holidays-import')); ?>"
+			class="button button-secondary button-large"
+			style="margin-left:10px;">
+			<?php echo esc_html__('Upload Holidays (CSV)', 'vms-data-tools'); ?>
+		</a>
+
+	<?php endif; ?>
+</p>
+
+		
+		<!-- <ul class="vms-dt-links">
+			<li>
+				<a href="<?php echo esc_url(vms_dt_admin_url(vms_dt_get_menu_slug_vendor_import())); ?>">
+					<?php echo esc_html__('Vendor Import (CSV)', 'vms-data-tools'); ?>
+				</a>
+			</li>
+		</ul> -->
+	</div>
+<?php
+}
+
+function vms_dt_vendor_import_page_compat(): void
+{
+	$engine = dirname(__DIR__) . '/services/vendor-import/vendor-import-engine.php';
+	if (file_exists($engine)) {
+		require_once $engine;
+	}
+
+	$page = __DIR__ . '/page-vendor-import.php';
+	if (file_exists($page)) {
+		require_once $page;
+	}
+
+	if (function_exists('vms_dt_vendor_import_render_page')) {
+		vms_dt_vendor_import_render_page();
+		return;
+	}
+
+	// Absolute last resort: fall back to legacy renderer if still present.
+	if (function_exists('vms_vendor_import_render_page')) {
+		vms_vendor_import_render_page();
+		return;
+	}
+
+	echo '<div class="wrap"><div class="notice notice-error"><p>';
+	echo esc_html__('Vendor Import page renderer missing in both Data Tools and legacy importer.', 'vms');
+	echo '</p></div></div>';
+}
+
+add_action('admin_footer', function (): void {
+	if (!is_admin()) {
+		return;
+	}
+
+	$page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+
+	// Only run on DT pages (canonical + legacy redirect target)
+	$is_dt_page = in_array($page, [
+		vms_dt_get_menu_slug_data_tools(),
+		vms_dt_get_menu_slug_vendor_import(),
+		'vms-data-tools-vendor-import',
+		'vms-vendor-import-csv',
+	], true);
+
+	if (!$is_dt_page) {
+		return;
+	}
+?>
+	<script>
+		(function() {
+			// Force the VMS top-level menu open
+			var top = document.querySelector('#toplevel_page_vms');
+			if (!top) return;
+
+			top.classList.add('wp-has-current-submenu', 'wp-menu-open');
+			top.classList.remove('wp-not-current-submenu');
+
+			var a = top.querySelector('a.wp-has-submenu');
+			if (a) a.setAttribute('aria-expanded', 'true');
+
+			// Optional: highlight the Data Tools submenu item if present
+			var dtLink = document.querySelector('#toplevel_page_vms a[href*="page=<?php echo esc_js(vms_dt_get_menu_slug_data_tools()); ?>"]');
+			if (dtLink && dtLink.parentElement) {
+				dtLink.parentElement.classList.add('current');
+			}
+
+			// Optional: highlight Vendor Import submenu item if present
+			var viLink = document.querySelector('#toplevel_page_vms a[href*="page=<?php echo esc_js(vms_dt_get_menu_slug_vendor_import()); ?>"]');
+			if (viLink && viLink.parentElement) {
+				viLink.parentElement.classList.add('current');
+			}
+		})();
+	</script>
+<?php
+
+	add_action('admin_menu', function () {
+		// Legacy importer slug (authoritative from handoff)
+		$legacy_slug = 'vms-vendor-import-csv';
+
+		// Remove if it was registered as a top-level page
+		remove_menu_page($legacy_slug);
+
+		// Remove if it was registered as a submenu under VMS or other parents (defensive)
+		remove_submenu_page('vms', $legacy_slug);
+		remove_submenu_page('tools.php', $legacy_slug);
+	}, 999);
+}, 999);

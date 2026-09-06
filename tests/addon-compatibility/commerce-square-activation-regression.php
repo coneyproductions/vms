@@ -1,29 +1,9 @@
 <?php
 declare(strict_types=1);
 
-$expectedVersion = getenv('BVM_COMMERCE_EXPECTED_VERSION') ?: '0.2.12';
-$sourceDir = getenv('BVM_COMMERCE_SOURCE_DIR') ?: '';
+$expectedVersion = getenv('BVM_COMMERCE_EXPECTED_VERSION') ?: '0.2.13';
+$sourceDir = getenv('BVM_COMMERCE_SOURCE_DIR') ?: dirname(__DIR__, 2) . '/companion-plugins/vms-commerce-discounts';
 $temporaryRoot = '';
-
-if ($sourceDir === '') {
-	$archive = dirname(__DIR__, 2) . '/docs/addon-compatibility/artifacts/vms-commerce-discounts-0.2.12.zip';
-	if (!is_file($archive)) {
-		fwrite(STDERR, "Set BVM_COMMERCE_SOURCE_DIR or provide the committed corrected Commerce archive.\n");
-		exit(2);
-	}
-	$temporaryRoot = sys_get_temp_dir() . '/bvm-commerce-regression-' . bin2hex(random_bytes(6));
-	if (!mkdir($temporaryRoot, 0700, true)) {
-		fwrite(STDERR, "Could not create the Commerce regression extraction directory.\n");
-		exit(2);
-	}
-	$zip = new ZipArchive();
-	if ($zip->open($archive) !== true || !$zip->extractTo($temporaryRoot)) {
-		fwrite(STDERR, "Could not extract the committed corrected Commerce archive.\n");
-		exit(2);
-	}
-	$zip->close();
-	$sourceDir = $temporaryRoot . '/vms-commerce-discounts';
-}
 
 $cleanup = static function () use (&$temporaryRoot): void {
 	if ($temporaryRoot === '' || !is_dir($temporaryRoot)) {

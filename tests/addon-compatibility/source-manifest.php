@@ -14,8 +14,9 @@ if (!is_string($wordpressRoot) || !is_file($wordpressRoot . '/wp-includes/versio
 }
 
 $pluginsRoot = $wordpressRoot . '/wp-content/plugins';
+$contracts = require __DIR__ . '/runtime-contracts.php';
 $plugins = array(
-	'backstage-venue-manager' => 'vendor-management-system.php',
+	'backstage-venue-manager' => 'backstage-venue-manager.php',
 	'vms-events-slider' => 'vms-events-slider.php',
 	'vms-fill-dates' => 'vms-fill-dates.php',
 	'vms-data-tools' => 'vms-data-tools.php',
@@ -23,6 +24,14 @@ $plugins = array(
 	'vms-refer-a-friend' => 'vms-refer-a-friend.php',
 	'woocommerce' => 'woocommerce.php',
 	'the-events-calendar' => 'the-events-calendar.php',
+);
+$contractPackageForSlug = array(
+	'backstage-venue-manager' => 'backstage-venue-manager',
+	'vms-events-slider' => 'events-slider',
+	'vms-fill-dates' => 'fill-dates',
+	'vms-data-tools' => 'data-tools',
+	'vms-express-bar' => 'express-bar',
+	'vms-refer-a-friend' => 'refer-a-friend',
 );
 
 $treeHash = static function (string $root): array {
@@ -60,8 +69,14 @@ $pluginHeader = static function (string $path): array {
 
 $manifest = array(
 	'wordpress_version' => '',
+	'contract_schema_version' => $contracts['schema_version'] ?? null,
+	'supported_versions' => $contracts['supported_versions'] ?? array(),
 	'plugins' => array(),
 	'fill_dates_phase_2_files' => array(),
+	'fixture_exclusions' => array(
+		'legacy_vms' => !is_dir($pluginsRoot . '/vms'),
+		'backstage_outreach' => !is_dir($pluginsRoot . '/backstage-outreach'),
+	),
 );
 
 $versionSource = (string) file_get_contents($wordpressRoot . '/wp-includes/version.php');
@@ -76,7 +91,7 @@ foreach ($plugins as $slug => $entryFile) {
 		fwrite(STDERR, "Missing isolated plugin source: {$slug}/{$entryFile}\n");
 		exit(1);
 	}
-	$manifest['plugins'][$slug] = array_merge(
+	$pluginIdentity = array_merge(
 		array(
 			'entry' => $slug . '/' . $entryFile,
 			'entry_sha256' => hash_file('sha256', $entry),
@@ -84,9 +99,21 @@ foreach ($plugins as $slug => $entryFile) {
 		$pluginHeader($entry),
 		$treeHash($root)
 	);
+	$manifest['plugins'][$slug] = $pluginIdentity;
+	if (isset($contractPackageForSlug[$slug])) {
+		$package = $contractPackageForSlug[$slug];
+		$expectedVersion = (string) ($contracts['supported_versions'][$package] ?? '');
+		if ($expectedVersion === '' || $pluginIdentity['version'] !== $expectedVersion) {
+			fwrite(
+				STDERR,
+				"Unsupported isolated package version for {$slug}: expected {$expectedVersion}, found {$pluginIdentity['version']}.\n"
+			);
+			exit(1);
+		}
+	}
 }
 
-foreach (array('includes/admin-page.php', 'includes/tours.php') as $relative) {
+foreach (array('includes/core-compat.php', 'includes/admin-page.php', 'includes/tours.php') as $relative) {
 	$path = $pluginsRoot . '/vms-fill-dates/' . $relative;
 	$manifest['fill_dates_phase_2_files'][$relative] = hash_file('sha256', $path);
 }

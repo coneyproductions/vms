@@ -159,10 +159,6 @@ foreach ($officialAddons as $addon) {
 		$overall = 'FAIL — unusable with BVM-only core';
 	} elseif (!$allPassed) {
 		$overall = 'PARTIAL — runtime incompatibility found';
-	} elseif ($addon === 'express-bar') {
-		$overall = 'PASS WITH DEBT — works but reconstructs current menu hooks';
-	} elseif ($addon === 'data-tools') {
-		$overall = 'PASS WITH DEBT — works through the current late menu bridge cleanup';
 	} else {
 		$overall = 'PASS — BVM-only runtime compatible';
 	}
@@ -191,12 +187,31 @@ foreach ($scenarios as $scenario) {
 
 $cleanupPassed = $databaseCleanup === 'pass' && $runtimeCleanup === 'pass';
 $normalSiteUnchanged = $normalBefore !== '' && hash_equals($normalBefore, $normalAfter);
+$containment = array(
+	'external_http' => getenv('BVM_COMPAT_TEST_CONTAINMENT_HTTP') ?: 'missing',
+	'process_boundary' => getenv('BVM_COMPAT_TEST_CONTAINMENT_PROCESS_BOUNDARY') ?: 'missing',
+	'residue_canary' => getenv('BVM_COMPAT_TEST_CONTAINMENT_RESIDUE') ?: 'missing',
+	'normal_state' => getenv('BVM_COMPAT_TEST_CONTAINMENT_NORMAL_STATE') ?: 'missing',
+	'guard_cleanup' => getenv('BVM_COMPAT_TEST_CONTAINMENT_GUARD_CLEANUP') ?: 'missing',
+);
+$containmentPassed = $containment === array(
+	'external_http' => 'pass',
+	'process_boundary' => 'pass',
+	'residue_canary' => 'removed-and-asserted',
+	'normal_state' => 'pass',
+	'guard_cleanup' => 'pass',
+);
 $scenarioPass = $scenarios !== array() && !in_array(false, array_column($scenarios, 'passed'), true);
-$overallPass = $scenarioPass && $crossAddonPassed && $cleanupPassed && $normalSiteUnchanged;
+$overallPass = $scenarioPass && $crossAddonPassed && $cleanupPassed && $normalSiteUnchanged && $containmentPassed;
 
 $report = array(
-	'schema_version' => 1,
+	'schema_version' => 2,
 	'overall' => $overallPass ? 'PASS' : 'FAIL',
+	'contract_model' => array(
+		'schema_version' => $sourceManifest['contract_schema_version'] ?? null,
+		'supported_versions' => $sourceManifest['supported_versions'] ?? array(),
+		'provider_requirement' => 'canonical BVM; historical VMS names are fallback evidence only',
+	),
 	'isolation' => array(
 		'wordpress' => 'Local WordPress core copied to a temporary tree',
 		'database' => 'uniquely named bvm_compat_* disposable database',
@@ -206,6 +221,7 @@ $report = array(
 		'normal_active_plugins_before_sha256' => $normalBefore,
 		'normal_active_plugins_after_sha256' => $normalAfter,
 		'normal_active_plugins_unchanged' => $normalSiteUnchanged,
+		'test_containment' => $containment,
 	),
 	'source_manifest' => $sourceManifest,
 	'bvm_only_identity_proof' => $firstIdentity,
@@ -230,8 +246,14 @@ $text = array(
 	'',
 	'WordPress: ' . ($sourceManifest['wordpress_version'] ?? ''),
 	'BVM: ' . ($sourceManifest['plugins']['backstage-venue-manager']['version'] ?? ''),
+	'Contract model: canonical BVM provider / historical VMS fallback evidence',
 	'Database cleanup: ' . strtoupper($databaseCleanup),
 	'Runtime cleanup: ' . strtoupper($runtimeCleanup),
+	'External HTTP blocked before transport: ' . $yesNo($containment['external_http'] === 'pass'),
+	'Independent Local process blocked for bounded run: ' . $yesNo($containment['process_boundary'] === 'pass'),
+	'Disposable residue removed and asserted: ' . $yesNo($containment['residue_canary'] === 'removed-and-asserted'),
+	'Normal cron, Weather, and database state unchanged: ' . $yesNo($containment['normal_state'] === 'pass'),
+	'Cross-process guard cleanup: ' . $yesNo($containment['guard_cleanup'] === 'pass'),
 	'Normal active plugins unchanged: ' . $yesNo($normalSiteUnchanged),
 	'',
 	'| Add-on | BVM Recognized | No Fatal | Menu | Notices | Core-Absent Behavior | Load Order | Overall |',

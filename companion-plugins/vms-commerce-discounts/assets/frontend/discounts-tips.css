@@ -1,0 +1,102 @@
+.vms-discounts-tip-row th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.vms-discounts-tip-box {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.025);
+    text-align: left;
+}
+
+.vms-discounts-tip-copy {
+    display: grid;
+    gap: 3px;
+}
+
+.vms-discounts-tip-copy strong {
+    font-size: 15px;
+    line-height: 1.25;
+}
+
+.vms-discounts-tip-copy span {
+    font-size: 13px;
+    line-height: 1.35;
+    opacity: 0.8;
+}
+
+.vms-discounts-tip-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.vms-discounts-tip-button.button,
+.vms-discounts-tip-custom-apply.button {
+    border-radius: 999px;
+    min-height: 34px;
+    line-height: 1.2;
+}
+
+.vms-discounts-tip-button.is-selected {
+    box-shadow: inset 0 0 0 2px currentColor;
+    font-weight: 700;
+}
+
+.vms-discounts-tip-custom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: end;
+}
+
+.vms-discounts-tip-custom label {
+    display: grid;
+    gap: 4px;
+    min-width: 145px;
+    margin: 0;
+}
+
+.vms-discounts-tip-custom label span {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.vms-discounts-tip-custom-input {
+    width: 145px;
+    min-height: 34px;
+}
+
+.vms-discounts-tip-status {
+    min-height: 18px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+    opacity: 0.8;
+}
+
+.vms-discounts-tip-box.is-error .vms-discounts-tip-status {
+    opacity: 1;
+    font-weight: 700;
+}
+
+@media (max-width: 520px) {
+    .vms-discounts-tip-controls,
+    .vms-discounts-tip-custom {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .vms-discounts-tip-button.button,
+    .vms-discounts-tip-custom-apply.button,
+    .vms-discounts-tip-custom label,
+    .vms-discounts-tip-custom-input {
+        width: 100%;
+    }
+}

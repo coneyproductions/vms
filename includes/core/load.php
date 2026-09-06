@@ -2,6 +2,7 @@
 defined('ABSPATH') || exit;
 
 require_once __DIR__ . '/plugin.php';
+require_once __DIR__ . '/reporting-providers.php';
 require_once __DIR__ . '/vendor-user-links.php';
 require_once __DIR__ . '/../helpers.php';
 require_once __DIR__ . '/private-files.php';

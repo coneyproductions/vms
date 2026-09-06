@@ -492,7 +492,8 @@ if (!function_exists('bvmgr_event_command_center_is_weather_addon_active')) {
     function bvmgr_event_command_center_is_weather_addon_active(): bool
     {
         if (function_exists('bvmgr_admin_ui_registered_page_url')) {
-            return bvmgr_admin_ui_registered_page_url('vmsx-weather-risk-settings') !== '';
+            return bvmgr_admin_ui_registered_page_url('vms-weather-risk-settings') !== ''
+                || bvmgr_admin_ui_registered_page_url('vmsx-weather-risk-settings') !== '';
         }
 
         return false;
@@ -503,9 +504,11 @@ if (!function_exists('bvmgr_event_command_center_get_weather_url')) {
     function bvmgr_event_command_center_get_weather_url(): string
     {
         if (function_exists('bvmgr_admin_ui_registered_page_url')) {
-            $registered = bvmgr_admin_ui_registered_page_url('vmsx-weather-risk-settings');
-            if ($registered !== '') {
-                return $registered;
+            foreach (array('vms-weather-risk-settings', 'vmsx-weather-risk-settings') as $slug) {
+                $registered = bvmgr_admin_ui_registered_page_url($slug);
+                if ($registered !== '') {
+                    return $registered;
+                }
             }
         }
 
@@ -578,6 +581,45 @@ if (!function_exists('bvmgr_event_command_center_get_plan_header')) {
 }
 
 
+if (!function_exists('bvmgr_event_command_center_summarize_ticket_report_rows')) {
+    /** Summarize net paid/free ticket rows after refunds, excluding add-ons. */
+    function bvmgr_event_command_center_summarize_ticket_report_rows(array $rows): array
+    {
+        $paid_qty = 0;
+        $free_qty = 0;
+        $revenue_cents = 0;
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $item_kind = sanitize_key((string) ($row['item_kind'] ?? 'ticket'));
+            if (in_array($item_kind, array('addon', 'entitlement'), true)) {
+                continue;
+            }
+            $qty = max(0, (int) ($row['quantity'] ?? 0));
+            $refunded_qty = max(0, (int) ($row['refunded_quantity'] ?? 0));
+            $net_qty = max(0, $qty - $refunded_qty);
+            if ($net_qty <= 0) {
+                continue;
+            }
+            $net_cents = max(0, (int) ($row['net_subtotal_cents'] ?? 0));
+            $revenue_cents += $net_cents;
+            if ($net_cents > 0) {
+                $paid_qty += $net_qty;
+            } else {
+                $free_qty += $net_qty;
+            }
+        }
+
+        return array(
+            'paid_qty' => $paid_qty,
+            'free_qty' => $free_qty,
+            'total_qty' => $paid_qty + $free_qty,
+            'revenue_cents' => $revenue_cents,
+        );
+    }
+}
+
 if (!function_exists('bvmgr_event_command_center_get_ticket_reporting_truth')) {
     /**
      * Resolve the best available ticket-sales truth for Event Command Center.
@@ -602,6 +644,7 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_reporting_truth')) {
             }
             $empty = array(
                 'available' => false,
+                'calculated' => false,
                 'source' => '',
                 'source_label' => '',
                 'paid_qty' => 0,
@@ -616,69 +659,42 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_reporting_truth')) {
                     return $empty;
                 }
 
-                if (function_exists('vms_dt_reporting_build_event_model')) {
-                    try {
-                        $model = (array) vms_dt_reporting_build_event_model(array(
-                            'event_plan_id' => $plan_id,
-                            'event_from' => '',
-                            'event_to' => '',
-                            'sold_from' => '',
-                            'sold_to' => '',
-                            'venue_id' => 0,
-                            'square_location_id' => '',
-                            'square_scope_mode' => 'full_day',
-                            'compare' => 0,
-                        ));
+                if (function_exists('bvmgr_reporting_resolve_event_ticket_sales')) {
+                    $provider_result = bvmgr_reporting_resolve_event_ticket_sales($plan_id, array(
+                        'scope' => 'event_command_center',
+                    ));
+                    if (!empty($provider_result['available']) && !empty($provider_result['calculated'])) {
                         if (function_exists('bvmgr_resource_fingerprint_add_marker')) {
-                            bvmgr_resource_fingerprint_add_marker('ecc.ticket_source.dt_model', 0.0, array('plan_id' => $plan_id));
+                            bvmgr_resource_fingerprint_add_marker('ecc.ticket_source.reporting_provider', 0.0, array(
+                                'plan_id' => $plan_id,
+                                'provider_id' => (string) ($provider_result['provider_id'] ?? ''),
+                                'provider_version' => (string) ($provider_result['provider_version'] ?? ''),
+                            ));
                         }
-                        $costs = isset($model['costs']) && is_array($model['costs']) ? (array) $model['costs'] : array();
-                        $summary = isset($model['summary']) && is_array($model['summary']) ? (array) $model['summary'] : array();
-                        $row = isset($model['row']) && is_array($model['row']) ? (array) $model['row'] : array();
-
-                        $paid_qty = max(0, (int) ($costs['paid_ticket_qty_total'] ?? 0));
-                        if ($paid_qty <= 0) {
-                            $paid_qty = max(0, (int) (($row['website_paid_ticket_qty'] ?? 0) + ($row['square_paid_ticket_qty'] ?? 0)));
-                        }
-
-                        $free_qty = max(0, (int) ($costs['free_ticket_qty_excluded'] ?? 0));
-                        if ($free_qty <= 0) {
-                            $free_qty = max(0, (int) (($row['website_free_ticket_qty'] ?? 0) + ($row['square_free_ticket_qty'] ?? 0)));
-                        }
-
-                        $total_qty = max(0, (int) ($costs['ticket_qty_total'] ?? 0));
-                        if ($total_qty <= 0) {
-                            $total_qty = max(0, (int) ($summary['total_ticket_qty'] ?? 0));
-                        }
-                        if ($total_qty <= 0 && ($paid_qty > 0 || $free_qty > 0)) {
-                            $total_qty = $paid_qty + $free_qty;
-                        }
-
-                        $revenue_cents = max(0, (int) ($costs['ticket_sales_total_cents'] ?? 0));
-                        if ($revenue_cents <= 0) {
-                            $revenue_cents = max(0, (int) ($summary['total_ticket_sales_cents'] ?? 0));
-                        }
-
-                        if ($total_qty > 0 || $revenue_cents > 0 || $paid_qty > 0 || $free_qty > 0) {
-                            return array(
-                                'available' => true,
-                                'source' => 'dt_reporting_model',
-                                'source_label' => __('Data Tools reporting model', 'backstage-venue-manager'),
-                                'paid_qty' => $paid_qty,
-                                'free_qty' => $free_qty,
-                                'total_qty' => $total_qty,
-                                'revenue_cents' => $revenue_cents,
-                                'warnings' => array_values(array_unique(array_filter(array_merge(
-                                    (array) ($row['confidence_badges'] ?? array()),
-                                    (array) ($row['square_warnings'] ?? array()),
-                                    (array) ($row['square_errors'] ?? array())
-                                )))),
-                            );
-                        }
-                    } catch (Throwable $e) {
-                        /* translators: %s: exception message from Data Tools reporting lookup. */
-                        $empty['warnings'][] = sprintf(__('Data Tools ticket model could not be read: %s', 'backstage-venue-manager'), $e->getMessage());
+                        return array(
+                            'available' => true,
+                            'calculated' => true,
+                            'source' => sanitize_key((string) ($provider_result['source'] ?? '')),
+                            'source_label' => (string) ($provider_result['source_label'] ?? ''),
+                            'provider_id' => sanitize_key((string) ($provider_result['provider_id'] ?? '')),
+                            'provider_version' => (string) ($provider_result['provider_version'] ?? ''),
+                            'provider_contract_version' => (int) ($provider_result['provider_contract_version'] ?? 0),
+                            'paid_qty' => max(0, (int) ($provider_result['paid_qty'] ?? 0)),
+                            'free_qty' => max(0, (int) ($provider_result['free_qty'] ?? 0)),
+                            'total_qty' => max(0, (int) ($provider_result['total_qty'] ?? 0)),
+                            'revenue_cents' => max(0, (int) ($provider_result['revenue_cents'] ?? 0)),
+                            'warnings' => array_values(array_unique(array_filter(array_merge(
+                                (array) ($provider_result['warnings'] ?? array()),
+                                (array) ($provider_result['errors'] ?? array())
+                            )))),
+                        );
                     }
+
+                    $empty['warnings'] = array_values(array_unique(array_filter(array_merge(
+                        (array) ($empty['warnings'] ?? array()),
+                        (array) ($provider_result['warnings'] ?? array()),
+                        (array) ($provider_result['errors'] ?? array())
+                    ))));
                 }
 
                 if (function_exists('bvmgr_ticket_revenue_build_report')) {
@@ -697,43 +713,25 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_reporting_truth')) {
                             bvmgr_resource_fingerprint_add_marker('ecc.ticket_source.core_ticket_revenue', 0.0, array('plan_id' => $plan_id));
                         }
 
-                        $paid_qty = 0;
-                        $free_qty = 0;
-                        $revenue_cents = 0;
-                        foreach ((array) ($report['rows'] ?? array()) as $row) {
-                            if (!is_array($row)) {
-                                continue;
-                            }
-                            $item_kind = sanitize_key((string) ($row['item_kind'] ?? 'ticket'));
-                            if (in_array($item_kind, array('addon', 'entitlement'), true)) {
-                                continue;
-                            }
-                            $qty = max(0, (int) ($row['quantity'] ?? 0));
-                            $refunded_qty = max(0, (int) ($row['refunded_quantity'] ?? 0));
-                            $net_qty = max(0, $qty - $refunded_qty);
-                            if ($net_qty <= 0) {
-                                continue;
-                            }
-                            $net_cents = max(0, (int) ($row['net_subtotal_cents'] ?? 0));
-                            $revenue_cents += $net_cents;
-                            if ($net_cents > 0) {
-                                $paid_qty += $net_qty;
-                            } else {
-                                $free_qty += $net_qty;
-                            }
-                        }
-
-                        $total_qty = $paid_qty + $free_qty;
-                        if ($total_qty > 0 || $revenue_cents > 0) {
+                        $row_totals = bvmgr_event_command_center_summarize_ticket_report_rows((array) ($report['rows'] ?? array()));
+                        $paid_qty = (int) $row_totals['paid_qty'];
+                        $free_qty = (int) $row_totals['free_qty'];
+                        $revenue_cents = (int) $row_totals['revenue_cents'];
+                        $total_qty = (int) $row_totals['total_qty'];
+                        if (array_key_exists('rows', $report)) {
                             return array(
                                 'available' => true,
+                                'calculated' => true,
                                 'source' => 'core_ticket_revenue',
                                 'source_label' => __('VMS ticket revenue rows', 'backstage-venue-manager'),
                                 'paid_qty' => $paid_qty,
                                 'free_qty' => $free_qty,
                                 'total_qty' => $total_qty,
                                 'revenue_cents' => $revenue_cents,
-                                'warnings' => (array) ($report['warnings'] ?? array()),
+                                'warnings' => array_values(array_unique(array_filter(array_merge(
+                                    (array) ($empty['warnings'] ?? array()),
+                                    (array) ($report['warnings'] ?? array())
+                                )))),
                             );
                         }
                     } catch (Throwable $e) {
@@ -752,28 +750,286 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_reporting_truth')) {
     }
 }
 
+if (!function_exists('bvmgr_event_command_center_normalize_ticket_cache')) {
+    /** Interpret cached sales without converting absent or pending values into zero. */
+    function bvmgr_event_command_center_normalize_ticket_cache(array $ticket_stats, array $ticketing_stats_v2 = array(), int $now = 0, int $stale_after = 0): array
+    {
+        $now = $now > 0 ? $now : time();
+        $stale_after = $stale_after > 0 ? $stale_after : (12 * 60 * 60);
+        $provider = sanitize_key((string) ($ticket_stats['provider'] ?? ''));
+        $v2_provider = sanitize_key((string) ($ticketing_stats_v2['provider'] ?? ''));
+
+        $qty = null;
+        if (array_key_exists('qty_sold', $ticket_stats) && is_numeric($ticket_stats['qty_sold'])) {
+            $qty = max(0, (int) $ticket_stats['qty_sold']);
+        } elseif (array_key_exists('qty', $ticket_stats) && is_numeric($ticket_stats['qty'])) {
+            $qty = max(0, (int) $ticket_stats['qty']);
+        }
+
+        $revenue_cents = null;
+        if (array_key_exists('revenue_cents', $ticket_stats) && is_numeric($ticket_stats['revenue_cents'])) {
+            $revenue_cents = max(0, (int) $ticket_stats['revenue_cents']);
+        } elseif (array_key_exists('revenue', $ticket_stats) && is_numeric($ticket_stats['revenue'])) {
+            $revenue_cents = max(0, (int) round(((float) $ticket_stats['revenue']) * 100));
+        }
+
+        $computed_at_gmt = 0;
+        foreach (array('computed_at_gmt', 'updated_at_gmt', 'pulled_at_gmt', 'computed_at') as $stamp_key) {
+            if (!array_key_exists($stamp_key, $ticket_stats)) {
+                continue;
+            }
+            $raw_stamp = $ticket_stats[$stamp_key];
+            $stamp = is_numeric($raw_stamp) ? (int) $raw_stamp : strtotime((string) $raw_stamp . ' UTC');
+            if ($stamp !== false) {
+                $computed_at_gmt = max($computed_at_gmt, (int) $stamp);
+            }
+        }
+
+        $v2_computed_at_gmt = 0;
+        foreach (array('computed_at_gmt', 'updated_at_gmt', 'pulled_at_gmt', 'computed_at') as $stamp_key) {
+            if (!array_key_exists($stamp_key, $ticketing_stats_v2)) {
+                continue;
+            }
+            $raw_stamp = $ticketing_stats_v2[$stamp_key];
+            $stamp = is_numeric($raw_stamp) ? (int) $raw_stamp : strtotime((string) $raw_stamp . ' UTC');
+            if ($stamp !== false) {
+                $v2_computed_at_gmt = max($v2_computed_at_gmt, (int) $stamp);
+            }
+        }
+
+        $has_values = $qty !== null && $revenue_cents !== null;
+        $pending = $provider === 'pending_refresh'
+            || (!$has_values && $v2_provider === 'pending_refresh');
+        if ($pending) {
+            $state = 'PENDING_REFRESH';
+        } elseif (!$has_values || $computed_at_gmt <= 0) {
+            $state = 'UNAVAILABLE';
+        } elseif (($now - $computed_at_gmt) > $stale_after) {
+            $state = 'STALE';
+        } elseif ($qty === 0 && $revenue_cents === 0) {
+            $state = 'VALID_ZERO';
+        } else {
+            $state = 'CURRENT';
+        }
+
+        $display_sales = in_array($state, array('CURRENT', 'STALE', 'VALID_ZERO'), true);
+        return array(
+            'state' => $state,
+            'display_sales' => $display_sales,
+            'is_current' => in_array($state, array('CURRENT', 'VALID_ZERO'), true),
+            'is_stale' => $state === 'STALE',
+            'is_pending_refresh' => $state === 'PENDING_REFRESH',
+            'is_valid_zero' => $state === 'VALID_ZERO',
+            'sold' => $display_sales ? $qty : null,
+            'revenue_cents' => $display_sales ? $revenue_cents : null,
+            'provider' => $provider,
+            'stats_computed_at_gmt' => $computed_at_gmt,
+            'mapping_computed_at_gmt' => $v2_computed_at_gmt,
+            'warnings' => array_values(array_filter(array_merge(
+                (array) ($ticket_stats['warnings'] ?? array()),
+                (array) ($ticketing_stats_v2['warnings'] ?? array())
+            ))),
+        );
+    }
+}
+
+if (!function_exists('bvmgr_event_command_center_build_ticket_sales_snapshot')) {
+    /** Build the shared ticket-sales truth from a live report result or cache fallback. */
+    function bvmgr_event_command_center_build_ticket_sales_snapshot(
+        array $reporting_truth,
+        array $ticket_stats,
+        array $ticketing_stats_v2,
+        int $comp_forecast = 0,
+        int $comp_true = 0,
+        int $now = 0,
+        int $stale_after = 0
+    ): array {
+        $now = $now > 0 ? $now : time();
+        $cache = bvmgr_event_command_center_normalize_ticket_cache($ticket_stats, $ticketing_stats_v2, $now, $stale_after);
+        $live_available = !empty($reporting_truth['available']) && !empty($reporting_truth['calculated']);
+
+        if ($live_available) {
+            $sold = max(0, (int) ($reporting_truth['paid_qty'] ?? 0));
+            $free_qty = max(0, (int) ($reporting_truth['free_qty'] ?? 0));
+            $revenue_cents = max(0, (int) ($reporting_truth['revenue_cents'] ?? 0));
+            $state = ($sold === 0 && $free_qty === 0 && $revenue_cents === 0) ? 'VALID_ZERO' : 'CURRENT';
+            $source = sanitize_key((string) ($reporting_truth['source'] ?? 'live_reporting'));
+            $source_label = trim((string) ($reporting_truth['source_label'] ?? __('Live ticket reporting', 'backstage-venue-manager')));
+            $warnings = (array) ($reporting_truth['warnings'] ?? array());
+            $stats_computed_at_gmt = $now;
+            $display_sales = true;
+        } else {
+            $sold = $cache['sold'];
+            $free_qty = null;
+            $revenue_cents = $cache['revenue_cents'];
+            $state = (string) $cache['state'];
+            $source = 'cached_ticket_stats';
+            $source_label = __('Cached ticket stats', 'backstage-venue-manager');
+            $warnings = array_merge((array) ($reporting_truth['warnings'] ?? array()), (array) ($cache['warnings'] ?? array()));
+            $stats_computed_at_gmt = max(0, (int) ($cache['stats_computed_at_gmt'] ?? 0));
+            $display_sales = !empty($cache['display_sales']);
+        }
+
+        $comp_forecast = max(0, $comp_forecast);
+        $comp_true = max(0, $comp_true);
+        if ($comp_true > 0) {
+            $comp_count = $comp_true;
+            $comp_basis = 'actual_override';
+        } elseif ($free_qty !== null) {
+            $comp_count = $free_qty;
+            $comp_basis = 'transaction_free';
+        } else {
+            $comp_count = $comp_forecast;
+            $comp_basis = $comp_forecast > 0 ? 'forecast' : 'none';
+        }
+
+        if ($state === 'PENDING_REFRESH') {
+            $status_label = __('Ticket stats pending refresh', 'backstage-venue-manager');
+            $sales_summary_label = __('Ticket stats pending refresh; sales totals are not available yet.', 'backstage-venue-manager');
+        } elseif ($state === 'UNAVAILABLE') {
+            $status_label = __('Ticket sales unavailable', 'backstage-venue-manager');
+            $sales_summary_label = __('Ticket sales totals are unavailable.', 'backstage-venue-manager');
+        } elseif ($state === 'STALE') {
+            $status_label = __('Stale ticket stats', 'backstage-venue-manager');
+            $sales_summary_label = sprintf(
+                /* translators: 1: paid ticket count, 2: formatted gross sales amount. */
+                __('Stale cached sales: %1$d paid / %2$s', 'backstage-venue-manager'),
+                (int) $sold,
+                function_exists('bvmgr_event_command_center_money') ? bvmgr_event_command_center_money((int) $revenue_cents) : ('$' . number_format(((int) $revenue_cents) / 100, 2))
+            );
+        } else {
+            $status_label = $state === 'VALID_ZERO'
+                ? __('Current: no sales yet', 'backstage-venue-manager')
+                : __('Current ticket sales', 'backstage-venue-manager');
+            $sales_summary_label = sprintf(
+                /* translators: 1: paid ticket count, 2: formatted gross sales amount. */
+                __('Current sales: %1$d paid / %2$s', 'backstage-venue-manager'),
+                (int) $sold,
+                function_exists('bvmgr_event_command_center_money') ? bvmgr_event_command_center_money((int) $revenue_cents) : ('$' . number_format(((int) $revenue_cents) / 100, 2))
+            );
+        }
+
+        $age_label = '';
+        if ($state === 'PENDING_REFRESH') {
+            $mapping_ts = max(
+                0,
+                (int) ($cache['mapping_computed_at_gmt'] ?? 0),
+                (int) ($cache['stats_computed_at_gmt'] ?? 0)
+            );
+            if ($mapping_ts > 0) {
+                $age_label = sprintf(
+                    /* translators: %s: human-readable age since ticket-product mapping reconciliation. */
+                    __('Product mapping reconciled %s ago; sales refresh pending.', 'backstage-venue-manager'),
+                    human_time_diff($mapping_ts, $now)
+                );
+            }
+        } elseif (!$live_available && $stats_computed_at_gmt > 0) {
+            $age_label = sprintf(
+                /* translators: %s: human-readable age since the cached ticket-sales calculation. */
+                $state === 'STALE' ? __('Sales cache is stale (%s old).', 'backstage-venue-manager') : __('Sales refreshed %s ago.', 'backstage-venue-manager'),
+                human_time_diff($stats_computed_at_gmt, $now)
+            );
+        } elseif ($live_available) {
+            $age_label = __('Calculated from current reporting data.', 'backstage-venue-manager');
+        }
+
+        return array(
+            'ticket_state' => $state,
+            'display_sales' => $display_sales,
+            'is_current' => in_array($state, array('CURRENT', 'VALID_ZERO'), true),
+            'is_stale' => $state === 'STALE',
+            'is_pending_refresh' => $state === 'PENDING_REFRESH',
+            'is_valid_zero' => $state === 'VALID_ZERO',
+            'sold' => $display_sales ? (int) $sold : null,
+            'revenue_cents' => $display_sales ? (int) $revenue_cents : null,
+            'free_qty' => $free_qty,
+            'comp_count' => $comp_count,
+            'comp_count_basis' => $comp_basis,
+            'comp_forecast' => $comp_forecast,
+            'total_ticket_count' => ($display_sales ? (int) $sold : 0) + $comp_count,
+            'ticket_source' => $source,
+            'ticket_source_label' => $source_label,
+            'ticket_source_warnings' => array_values(array_unique(array_filter($warnings))),
+            'stats_computed_at_gmt' => $stats_computed_at_gmt,
+            'mapping_computed_at_gmt' => max(0, (int) ($cache['mapping_computed_at_gmt'] ?? 0)),
+            'stats_age_label' => $age_label,
+            'status_label' => $status_label,
+            'sales_summary_label' => $sales_summary_label,
+            'revenue_basis' => $display_sales ? 'actual_transaction' : 'unavailable',
+        );
+    }
+}
+
+if (!function_exists('bvmgr_event_command_center_resolve_ticket_sales_snapshot')) {
+    function bvmgr_event_command_center_resolve_ticket_sales_snapshot(int $plan_id, array $args = array()): array
+    {
+        $plan_id = absint($plan_id);
+        $bundle = array_key_exists('bundle', $args)
+            ? (array) $args['bundle']
+            : (function_exists('bvmgr_event_command_center_ticket_summary_meta_bundle') ? bvmgr_event_command_center_ticket_summary_meta_bundle($plan_id) : array());
+        $reporting_truth = array_key_exists('reporting_truth', $args)
+            ? (array) $args['reporting_truth']
+            : bvmgr_event_command_center_get_ticket_reporting_truth($plan_id);
+        $ticket_stats = array_key_exists('ticket_stats', $args)
+            ? (array) $args['ticket_stats']
+            : (array) ($bundle['ticket_stats'] ?? array());
+        $ticketing_stats_v2 = array_key_exists('ticketing_stats_v2', $args)
+            ? (array) $args['ticketing_stats_v2']
+            : (array) ($bundle['ticketing_stats_v2'] ?? array());
+
+        return bvmgr_event_command_center_build_ticket_sales_snapshot(
+            $reporting_truth,
+            $ticket_stats,
+            $ticketing_stats_v2,
+            array_key_exists('comp_forecast', $args) ? (int) $args['comp_forecast'] : (int) ($bundle['comp_forecast'] ?? 0),
+            array_key_exists('comp_true', $args) ? (int) $args['comp_true'] : (int) ($bundle['comp_true'] ?? 0),
+            (int) ($args['now'] ?? 0),
+            (int) ($args['stale_after'] ?? 0)
+        );
+    }
+}
+
+if (!function_exists('bvmgr_event_command_center_ticket_activity_from_cache')) {
+    function bvmgr_event_command_center_ticket_activity_from_cache(array $ticket_stats, array $ticketing_stats_v2 = array(), int $now = 0): array
+    {
+        $now = $now > 0 ? $now : time();
+        $snapshot = bvmgr_event_command_center_normalize_ticket_cache($ticket_stats, $ticketing_stats_v2, $now);
+        $state = (string) ($snapshot['state'] ?? 'UNAVAILABLE');
+        if ($state === 'UNAVAILABLE') {
+            return array();
+        }
+
+        if ($state === 'PENDING_REFRESH') {
+            $ts = max(
+                0,
+                (int) ($snapshot['mapping_computed_at_gmt'] ?? 0),
+                (int) ($snapshot['stats_computed_at_gmt'] ?? 0)
+            );
+            return array(
+                'title' => __('Product mapping reconciled', 'backstage-venue-manager'),
+                'detail' => __('Ticket IDs were reconciled; sold and revenue totals are still pending refresh.', 'backstage-venue-manager'),
+                'ts' => $ts,
+            );
+        }
+
+        $ts = max(0, (int) ($snapshot['stats_computed_at_gmt'] ?? 0));
+        return array(
+            'title' => $state === 'STALE' ? __('Ticket stats are stale', 'backstage-venue-manager') : __('Ticket stats refreshed', 'backstage-venue-manager'),
+            'detail' => $state === 'STALE'
+                ? __('Cached ticket sales were calculated previously and are now stale.', 'backstage-venue-manager')
+                : __('Cached ticket sales data was refreshed.', 'backstage-venue-manager'),
+            'ts' => $ts,
+        );
+    }
+}
+
 if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot')) {
     function bvmgr_event_command_center_get_ticket_snapshot(int $plan_id): array
     {
-        $reporting_truth = bvmgr_event_command_center_get_ticket_reporting_truth($plan_id);
-        $ticket_stats = function_exists('bvmgr_goals_get_ticket_stats')
-            ? (array) bvmgr_goals_get_ticket_stats($plan_id)
-            : array('qty_sold' => 0, 'revenue_cents' => 0);
-
-        $sold = !empty($reporting_truth['available'])
-            ? max(0, (int) ($reporting_truth['paid_qty'] ?? 0))
-            : max(0, (int) ($ticket_stats['qty_sold'] ?? 0));
-        $revenue_cents = !empty($reporting_truth['available'])
-            ? max(0, (int) ($reporting_truth['revenue_cents'] ?? 0))
-            : max(0, (int) ($ticket_stats['revenue_cents'] ?? 0));
-        $comp_count = max(0, (int) get_post_meta($plan_id, '_vms_comp_headcount_forecast', true));
-        if (!empty($reporting_truth['available'])) {
-            $comp_count = max($comp_count, max(0, (int) ($reporting_truth['free_qty'] ?? 0)));
-        }
-        $true_comp_count = max(0, (int) get_post_meta($plan_id, '_vms_comp_headcount_true', true));
-        if ($true_comp_count > 0) {
-            $comp_count = $true_comp_count;
-        }
+        $sales = bvmgr_event_command_center_resolve_ticket_sales_snapshot($plan_id);
+        $sold = !empty($sales['display_sales']) ? max(0, (int) ($sales['sold'] ?? 0)) : 0;
+        $revenue_cents = !empty($sales['display_sales']) ? max(0, (int) ($sales['revenue_cents'] ?? 0)) : 0;
+        $comp_count = max(0, (int) ($sales['comp_count'] ?? 0));
 
         if (function_exists('bvmgr_resource_fingerprint_span_start')) {
             bvmgr_resource_fingerprint_span_start('ecc.ticket_integrity_scan', array('plan_id' => $plan_id));
@@ -822,24 +1078,14 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot')) {
         }
 
         $sell_through = null;
-        if ($capacity > 0) {
+        if ($capacity > 0 && !empty($sales['display_sales'])) {
             $sell_through = min(100, max(0, (($sold / max(1, $capacity)) * 100)));
         }
 
-        $total_ticket_count = $sold + $comp_count;
-        if (!empty($reporting_truth['available'])) {
-            $reported_total = max(0, (int) ($reporting_truth['total_qty'] ?? 0));
-            $total_ticket_count = max($total_ticket_count, $reported_total);
-        }
+        $total_ticket_count = max(0, (int) ($sales['total_ticket_count'] ?? ($sold + $comp_count)));
 
-        return array(
-            'sold' => $sold,
-            'revenue_cents' => $revenue_cents,
-            'comp_count' => $comp_count,
+        return array_merge($sales, array(
             'total_ticket_count' => $total_ticket_count,
-            'ticket_source' => !empty($reporting_truth['available']) ? (string) ($reporting_truth['source'] ?? '') : 'cached_ticket_stats',
-            'ticket_source_label' => !empty($reporting_truth['available']) ? (string) ($reporting_truth['source_label'] ?? '') : __('Cached ticket stats', 'backstage-venue-manager'),
-            'ticket_source_warnings' => (array) ($reporting_truth['warnings'] ?? array()),
             'capacity' => $capacity > 0 ? $capacity : null,
             'remaining' => $remaining_known ? $remaining : null,
             'sell_through' => $sell_through,
@@ -850,10 +1096,10 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot')) {
             'event_timestamp' => $event_ts,
             'low_inventory_flag' => $low_inventory_flag,
             'low_inventory_severity' => $low_inventory_severity,
-            'status_label' => ($scan !== array() && function_exists('bvmgr_ticket_integrity_status_label'))
+            'integrity_status_label' => ($scan !== array() && function_exists('bvmgr_ticket_integrity_status_label'))
                 ? (string) bvmgr_ticket_integrity_status_label((string) ($scan['status'] ?? ''))
                 : __('Unknown', 'backstage-venue-manager'),
-        );
+        ));
     }
 }
 
@@ -890,6 +1136,7 @@ if (!function_exists('bvmgr_event_command_center_get_financial_snapshot')) {
 
         return array(
             'mode' => $mode,
+            'revenue_basis' => $has_actuals ? 'manual_actuals' : 'goals_forecast_model',
             'gross_cents' => $gross_cents,
             'vendor_cost_cents' => $vendor_cost_cents,
             'labor_cost_cents' => $labor_cost_cents,
@@ -1060,60 +1307,15 @@ if (!function_exists('bvmgr_event_command_center_get_lineup_snapshot')) {
 if (!function_exists('bvmgr_event_command_center_get_staffing_snapshot')) {
     function bvmgr_event_command_center_get_staffing_snapshot(int $plan_id): array
     {
-        $rollup = function_exists('bvmgr_staffing_get_rollup') ? bvmgr_staffing_get_rollup($plan_id) : null;
-        $needs_compute = !is_array($rollup) || !isset($rollup['readiness_status']) || !empty($rollup['dirty']);
-        if ($needs_compute && function_exists('bvmgr_staffing_compute_rollup')) {
-            $computed = (array) bvmgr_staffing_compute_rollup($plan_id);
-            if (!empty($computed['ok'])) {
-                $rollup = $computed;
-            }
-        }
-
-        if (!is_array($rollup)) {
-            $rollup = array();
-        }
-
-        $slots = function_exists('bvmgr_staffing_get_event_slots') ? (array) bvmgr_staffing_get_event_slots($plan_id, false) : array();
-        $roles = array();
-        foreach ($slots as $slot) {
-            if (!is_array($slot)) {
-                continue;
-            }
-            $role_name = trim((string) ($slot['role_name'] ?? __('Role', 'backstage-venue-manager')));
-            $needed = max(0, (int) ($slot['headcount_needed'] ?? 0));
-            $filled = 0;
-            foreach ((array) ($slot['assignments'] ?? array()) as $assignment) {
-                $status = sanitize_key((string) ($assignment['status'] ?? ''));
-                if (in_array($status, array('proposed', 'confirmed'), true)) {
-                    $filled++;
-                }
-            }
-            if (!isset($roles[$role_name])) {
-                $roles[$role_name] = array(
-                    'role_name' => $role_name,
-                    'needed' => 0,
-                    'filled' => 0,
-                );
-            }
-            $roles[$role_name]['needed'] += $needed;
-            $roles[$role_name]['filled'] += $filled;
-        }
-
-        return array(
-            'rollup' => $rollup,
-            'roles' => array_values($roles),
-            'readiness_status' => sanitize_key((string) ($rollup['readiness_status'] ?? 'na')),
-            'readiness_label' => function_exists('bvmgr_staffing_dashboard_readiness_label')
-                ? (string) bvmgr_staffing_dashboard_readiness_label((string) ($rollup['readiness_status'] ?? 'na'))
-                : __('N/A', 'backstage-venue-manager'),
-            'headcount_needed_total' => max(0, (int) ($rollup['headcount_needed_total'] ?? 0)),
-            'headcount_filled_total' => max(0, (int) ($rollup['headcount_filled_total'] ?? 0)),
-            'open_headcount_total' => max(0, (int) ($rollup['open_headcount_total'] ?? 0)),
-            'critical_open_headcount' => max(0, (int) ($rollup['critical_open_headcount'] ?? 0)),
-            'conflict_count' => max(0, (int) ($rollup['conflict_count'] ?? 0)),
-            'missing_summary' => is_array($rollup['missing_summary'] ?? null) ? (array) $rollup['missing_summary'] : array(),
-            'conflict_summary' => is_array($rollup['conflict_summary'] ?? null) ? (array) $rollup['conflict_summary'] : array(),
-        );
+        $snapshot = function_exists('bvmgr_staffing_resolve_event_snapshot')
+            ? (array) bvmgr_staffing_resolve_event_snapshot($plan_id)
+            : array();
+        $readiness_status = sanitize_key((string) ($snapshot['readiness_status'] ?? 'na'));
+        $snapshot['readiness_status'] = $readiness_status;
+        $snapshot['readiness_label'] = function_exists('bvmgr_staffing_dashboard_readiness_label')
+            ? (string) bvmgr_staffing_dashboard_readiness_label($readiness_status)
+            : __('N/A', 'backstage-venue-manager');
+        return $snapshot;
     }
 }
 
@@ -1331,17 +1533,16 @@ if (!function_exists('bvmgr_event_command_center_collect_activity')) {
             );
         }
 
-        $ticket_stats = get_post_meta($plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'ticket_stats') : '_vms_ticket_stats_v1', true);
-        if (is_array($ticket_stats)) {
-            $computed = trim((string) ($ticket_stats['computed_at_gmt'] ?? $ticket_stats['computed_at'] ?? ''));
-            if ($computed !== '') {
-                $items[] = array(
-                    'title' => __('Ticket stats refreshed', 'backstage-venue-manager'),
-                    'detail' => __('Cached ticket sales data was refreshed.', 'backstage-venue-manager'),
-                    'when' => bvmgr_event_command_center_time_ago_label($computed, true),
-                    'ts' => bvmgr_event_command_center_parse_datetime($computed, true) instanceof DateTimeImmutable ? bvmgr_event_command_center_parse_datetime($computed, true)->getTimestamp() : 0,
-                );
-            }
+        $ticket_bundle = function_exists('bvmgr_event_command_center_ticket_summary_meta_bundle')
+            ? (array) bvmgr_event_command_center_ticket_summary_meta_bundle($plan_id)
+            : array();
+        $ticket_activity = bvmgr_event_command_center_ticket_activity_from_cache(
+            (array) ($ticket_bundle['ticket_stats'] ?? array()),
+            (array) ($ticket_bundle['ticketing_stats_v2'] ?? array())
+        );
+        if (!empty($ticket_activity) && !empty($ticket_activity['ts'])) {
+            $ticket_activity['when'] = bvmgr_event_command_center_time_ago_label(gmdate('Y-m-d H:i:s', (int) $ticket_activity['ts']), true);
+            $items[] = $ticket_activity;
         }
 
         $actuals_pulled = (string) get_post_meta($plan_id, '_vms_event_actuals_pulled_at_utc', true);
@@ -1903,9 +2104,11 @@ if (!function_exists('bvmgr_event_command_center_render_page_content')) {
         echo '<section class="vms-cc-card">';
         echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Ticket Snapshot', 'backstage-venue-manager') . '</h3></div>';
         echo '<div class="vms-cc-metrics">';
-        bvmgr_event_command_center_render_metric(__('Paid tickets', 'backstage-venue-manager'), (string) ($ticket['sold'] ?? 0));
-        bvmgr_event_command_center_render_metric(__('Gross sales', 'backstage-venue-manager'), bvmgr_event_command_center_money((int) ($ticket['revenue_cents'] ?? 0)));
-        bvmgr_event_command_center_render_metric(__('Guest list / comps', 'backstage-venue-manager'), (string) ($ticket['comp_count'] ?? 0));
+        $ticket_sales_available = !empty($ticket['display_sales']);
+        bvmgr_event_command_center_render_metric(__('Paid tickets', 'backstage-venue-manager'), $ticket_sales_available ? (string) ($ticket['sold'] ?? 0) : '—');
+        bvmgr_event_command_center_render_metric(__('Gross ticket sales', 'backstage-venue-manager'), $ticket_sales_available ? bvmgr_event_command_center_money((int) ($ticket['revenue_cents'] ?? 0)) : '—', __('Actual transactions', 'backstage-venue-manager'));
+        $comp_basis_label = ($ticket['comp_count_basis'] ?? '') === 'forecast' ? __('Forecast', 'backstage-venue-manager') : __('Actual / reported', 'backstage-venue-manager');
+        bvmgr_event_command_center_render_metric(__('Guest list / comps', 'backstage-venue-manager'), (string) ($ticket['comp_count'] ?? 0), $comp_basis_label);
         /* translators: %d: ticket capacity count. */
         bvmgr_event_command_center_render_metric(__('Remaining', 'backstage-venue-manager'), $ticket['remaining'] !== null ? (string) $ticket['remaining'] : '—', $ticket['capacity'] !== null ? sprintf(__('of %d', 'backstage-venue-manager'), (int) $ticket['capacity']) : '');
         echo '</div>';
@@ -1917,13 +2120,16 @@ if (!function_exists('bvmgr_event_command_center_render_page_content')) {
             echo '<div class="vms-cc-progress__label">' . esc_html(sprintf(__('Sell-through: %s%%', 'backstage-venue-manager'), number_format_i18n($sell_through, 1))) . '</div>';
             echo '</div>';
         }
+        echo '<p class="vms-cc-card__note">' . esc_html((string) ($ticket['sales_summary_label'] ?? '')) . '</p>';
         $total_count = isset($ticket['total_ticket_count']) ? max(0, (int) $ticket['total_ticket_count']) : ((int) ($ticket['sold'] ?? 0) + (int) ($ticket['comp_count'] ?? 0));
-        if ((int) ($ticket['comp_count'] ?? 0) > 0 || $total_count > (int) ($ticket['sold'] ?? 0)) {
+        if ($ticket_sales_available && ((int) ($ticket['comp_count'] ?? 0) > 0 || $total_count > (int) ($ticket['sold'] ?? 0))) {
             /* translators: 1: total admitted or ticketed count, 2: paid count, 3: complimentary or free count. */
             echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Total admitted/ticketed: %1$d (%2$d paid + %3$d comp/free).', 'backstage-venue-manager'), $total_count, (int) ($ticket['sold'] ?? 0), (int) ($ticket['comp_count'] ?? 0))) . '</p>';
         }
         if (!empty($ticket['issue_summary'])) {
             echo '<p class="vms-cc-card__note">' . esc_html((string) $ticket['issue_summary']) . '</p>';
+        } elseif (!$ticket_sales_available) {
+            echo '<p class="vms-cc-card__note">' . esc_html__('Sales availability is described by the ticket status above.', 'backstage-venue-manager') . '</p>';
         } elseif ((int) ($ticket['sold'] ?? 0) <= 0) {
             echo '<p class="vms-cc-card__note">' . esc_html__('No paid ticket sales are showing yet for this event.', 'backstage-venue-manager') . '</p>';
         } else {
@@ -2038,10 +2244,13 @@ if (!function_exists('bvmgr_event_command_center_render_page_content')) {
         echo '<section class="vms-cc-card">';
         echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Financial Snapshot', 'backstage-venue-manager') . '</h3></div>';
         echo '<div class="vms-cc-metrics">';
-        bvmgr_event_command_center_render_metric(__('Gross revenue', 'backstage-venue-manager'), bvmgr_event_command_center_money((int) ($financial['gross_cents'] ?? 0)), !empty($financial['has_actuals']) ? __('Actuals loaded', 'backstage-venue-manager') : __('No ticket revenue yet', 'backstage-venue-manager'));
+        $gross_label = !empty($financial['has_actuals']) ? __('Actual gross revenue', 'backstage-venue-manager') : __('Modeled gross revenue', 'backstage-venue-manager');
+        $gross_basis = !empty($financial['has_actuals']) ? __('Manual actuals loaded', 'backstage-venue-manager') : __('Forecast/model; not transaction truth', 'backstage-venue-manager');
+        $margin_basis = !empty($financial['has_actuals']) ? __('Based on manual actuals and loaded costs', 'backstage-venue-manager') : __('Forecast/model; not transaction truth', 'backstage-venue-manager');
+        bvmgr_event_command_center_render_metric($gross_label, bvmgr_event_command_center_money((int) ($financial['gross_cents'] ?? 0)), $gross_basis);
         bvmgr_event_command_center_render_metric(__('Vendor pay', 'backstage-venue-manager'), bvmgr_event_command_center_money((int) ($financial['vendor_cost_cents'] ?? 0)), (int) ($financial['vendor_cost_cents'] ?? 0) > 0 ? __('Compensation loaded', 'backstage-venue-manager') : __('No vendor pay loaded', 'backstage-venue-manager'));
         bvmgr_event_command_center_render_metric(__('Labor', 'backstage-venue-manager'), bvmgr_event_command_center_money((int) ($financial['labor_cost_cents'] ?? 0)), (int) ($financial['labor_cost_cents'] ?? 0) > 0 ? __('Staffing labor loaded', 'backstage-venue-manager') : __('No staffing labor yet', 'backstage-venue-manager'));
-        bvmgr_event_command_center_render_metric(__('Projected margin', 'backstage-venue-manager'), bvmgr_event_command_center_money_signed((int) ($financial['margin_cents'] ?? 0)), ((int) ($financial['gross_cents'] ?? 0) > 0 || !empty($financial['has_actuals'])) ? __('Based on current revenue and loaded costs', 'backstage-venue-manager') : __('Waiting on revenue', 'backstage-venue-manager'));
+        bvmgr_event_command_center_render_metric(__('Projected margin', 'backstage-venue-manager'), bvmgr_event_command_center_money_signed((int) ($financial['margin_cents'] ?? 0)), $margin_basis);
         echo '</div>';
         echo '<p class="vms-cc-card__note">' . esc_html__('This is a show-ops snapshot, not final accounting truth. Meta ad spend is still waiting on event-level wiring from the Ads side.', 'backstage-venue-manager') . '</p>';
         echo '</section>';
@@ -2352,37 +2561,11 @@ if (!function_exists('bvmgr_event_command_center_ticket_summary_snapshot')) {
             ? ($enabled_ticket_count + $enabled_entitlement_count)
             : ($linked_ticket_product_count + $mapped_entitlement_product_count);
 
-        $sold = 0;
-        if (array_key_exists('qty_sold', $ticket_stats) && is_numeric($ticket_stats['qty_sold'])) {
-            $sold = max(0, (int) $ticket_stats['qty_sold']);
-        } elseif (array_key_exists('qty', $ticket_stats) && is_numeric($ticket_stats['qty'])) {
-            $sold = max(0, (int) $ticket_stats['qty']);
-        }
-
-        $revenue_cents = 0;
-        if (array_key_exists('revenue_cents', $ticket_stats) && is_numeric($ticket_stats['revenue_cents'])) {
-            $revenue_cents = max(0, (int) $ticket_stats['revenue_cents']);
-        } elseif (array_key_exists('revenue', $ticket_stats) && is_numeric($ticket_stats['revenue'])) {
-            $revenue_cents = max(0, (int) round(((float) $ticket_stats['revenue']) * 100));
-        }
-
-        $comp_count = max(0, (int) ($bundle['comp_forecast'] ?? 0));
-        $true_comp_count = max(0, (int) ($bundle['comp_true'] ?? 0));
-        if ($true_comp_count > 0) {
-            $comp_count = $true_comp_count;
-        }
-
-        $computed_at_gmt = 0;
-        foreach (array('computed_at_gmt', 'updated_at_gmt', 'pulled_at_gmt') as $stamp_key) {
-            if (array_key_exists($stamp_key, $ticket_stats) && is_numeric($ticket_stats[$stamp_key])) {
-                $computed_at_gmt = max($computed_at_gmt, (int) $ticket_stats[$stamp_key]);
-            }
-            if (array_key_exists($stamp_key, $ticketing_stats_v2) && is_numeric($ticketing_stats_v2[$stamp_key])) {
-                $computed_at_gmt = max($computed_at_gmt, (int) $ticketing_stats_v2[$stamp_key]);
-            }
-        }
-
-        $ticket_source_warnings = array_values(array_filter((array) ($ticketing_stats_v2['warnings'] ?? array())));
+        $sales = bvmgr_event_command_center_resolve_ticket_sales_snapshot($plan_id, array('bundle' => $bundle));
+        $ticket_source_warnings = array_values(array_unique(array_filter(array_merge(
+            (array) ($sales['ticket_source_warnings'] ?? array()),
+            (array) ($ticketing_stats_v2['warnings'] ?? array())
+        ))));
         $integrity_entry = bvmgr_event_command_center_ticket_integrity_store_entry($plan_id, $linked_tec_id);
         $integrity_status = sanitize_key((string) ($integrity_entry['status'] ?? ''));
         $issue_summary = trim((string) ($integrity_entry['issue_summary'] ?? ''));
@@ -2417,25 +2600,12 @@ if (!function_exists('bvmgr_event_command_center_ticket_summary_snapshot')) {
             }
         }
 
-        $status_label = __('Not configured', 'backstage-venue-manager');
-        if (in_array($integrity_status, array('red', 'yellow'), true) && function_exists('bvmgr_ticket_integrity_status_label')) {
-            $status_label = (string) bvmgr_ticket_integrity_status_label($integrity_status);
-        } elseif ($effective_ticket_count > 0) {
-            $status_label = __('Summary ready', 'backstage-venue-manager');
-        } elseif ($linked_tec_id > 0) {
-            $status_label = __('Linked only', 'backstage-venue-manager');
+        $status_label = (string) ($sales['status_label'] ?? __('Ticket sales unavailable', 'backstage-venue-manager'));
+        if ($effective_ticket_count <= 0 && $linked_tec_id <= 0 && ($sales['ticket_state'] ?? '') === 'UNAVAILABLE') {
+            $status_label = __('Not configured', 'backstage-venue-manager');
         }
 
-        $stats_age_label = '';
-        if ($computed_at_gmt > 0) {
-            $stats_age_label = sprintf(
-                /* translators: %s: human-readable age since the cached ticket summary refresh. */
-                __('Refreshed %s ago', 'backstage-venue-manager'),
-                human_time_diff($computed_at_gmt, time())
-            );
-        }
-
-        $cache[$plan_id] = array(
+        $cache[$plan_id] = array_merge($sales, array(
             'linked_tec_id' => $linked_tec_id,
             'linked_tec_status' => $linked_tec_status,
             'ticket_mode' => $ticket_mode,
@@ -2444,12 +2614,6 @@ if (!function_exists('bvmgr_event_command_center_ticket_summary_snapshot')) {
             'effective_ticket_count' => $effective_ticket_count,
             'linked_ticket_product_count' => $linked_ticket_product_count,
             'mapped_entitlement_product_count' => $mapped_entitlement_product_count,
-            'sold' => $sold,
-            'revenue_cents' => $revenue_cents,
-            'comp_count' => $comp_count,
-            'total_ticket_count' => $sold + $comp_count,
-            'ticket_source' => 'edit_screen_cached_summary',
-            'ticket_source_label' => __('Edit-screen cached summary', 'backstage-venue-manager'),
             'ticket_source_warnings' => $ticket_source_warnings,
             'ticketing_sync_status' => sanitize_key((string) ($ticketing_stats_v2['sync_status'] ?? '')),
             'integrity_status' => $integrity_status,
@@ -2465,11 +2629,9 @@ if (!function_exists('bvmgr_event_command_center_ticket_summary_snapshot')) {
             'status_label' => $status_label,
             'summary_mode' => 'summary_only',
             'full_detail_deferred' => 1,
-            'stats_computed_at_gmt' => $computed_at_gmt,
-            'stats_age_label' => $stats_age_label,
             'full_detail_url' => bvmgr_event_command_center_admin_url(array('plan_id' => $plan_id)),
             'integrity_url' => function_exists('bvmgr_admin_ui_page_url') ? bvmgr_admin_ui_page_url('vms-ticket-integrity') : '',
-        );
+        ));
 
         return $cache[$plan_id];
     }
@@ -2545,26 +2707,7 @@ if (!function_exists('bvmgr_event_command_center_get_ticket_snapshot_light')) {
 if (!function_exists('bvmgr_event_command_center_get_staffing_snapshot_light')) {
     function bvmgr_event_command_center_get_staffing_snapshot_light(int $plan_id): array
     {
-        $rollup = function_exists('bvmgr_staffing_get_rollup') ? bvmgr_staffing_get_rollup($plan_id) : null;
-        if (!is_array($rollup)) {
-            $rollup = array();
-        }
-
-        return array(
-            'rollup' => $rollup,
-            'roles' => array(),
-            'readiness_status' => sanitize_key((string) ($rollup['readiness_status'] ?? 'na')),
-            'readiness_label' => function_exists('bvmgr_staffing_dashboard_readiness_label')
-                ? (string) bvmgr_staffing_dashboard_readiness_label((string) ($rollup['readiness_status'] ?? 'na'))
-                : __('N/A', 'backstage-venue-manager'),
-            'headcount_needed_total' => max(0, (int) ($rollup['headcount_needed_total'] ?? 0)),
-            'headcount_filled_total' => max(0, (int) ($rollup['headcount_filled_total'] ?? 0)),
-            'open_headcount_total' => max(0, (int) ($rollup['open_headcount_total'] ?? 0)),
-            'critical_open_headcount' => max(0, (int) ($rollup['critical_open_headcount'] ?? 0)),
-            'conflict_count' => max(0, (int) ($rollup['conflict_count'] ?? 0)),
-            'missing_summary' => is_array($rollup['missing_summary'] ?? null) ? (array) $rollup['missing_summary'] : array(),
-            'conflict_summary' => is_array($rollup['conflict_summary'] ?? null) ? (array) $rollup['conflict_summary'] : array(),
-        );
+        return bvmgr_event_command_center_get_staffing_snapshot($plan_id);
     }
 }
 
@@ -2697,6 +2840,10 @@ if (!function_exists('bvmgr_event_command_center_build_module_hub_cards')) {
             $ticket_tone = 'critical';
         } elseif (($ticket['integrity_status'] ?? '') === 'yellow' || !empty($ticket['low_inventory_flag'])) {
             $ticket_tone = 'warning';
+        } elseif (in_array((string) ($ticket['ticket_state'] ?? ''), array('PENDING_REFRESH', 'STALE'), true)) {
+            $ticket_tone = 'warning';
+        } elseif (($ticket['ticket_state'] ?? '') === 'UNAVAILABLE') {
+            $ticket_tone = 'muted';
         }
         $ticket_mode = sanitize_key((string) ($ticket['ticket_mode'] ?? ''));
         $ticket_configured_count = $ticket_mode === 'vms_managed'
@@ -2774,8 +2921,7 @@ if (!function_exists('bvmgr_event_command_center_build_module_hub_cards')) {
                     sprintf(__('Configured add-ons: %d', 'backstage-venue-manager'), $ticket_add_on_count),
                     /* translators: %s: linked calendar status label. */
                     sprintf(__('Linked calendar status: %s', 'backstage-venue-manager'), $ticket_linked_status_label),
-                    /* translators: 1: paid ticket count, 2: formatted gross sales amount. */
-                    sprintf(__('Cached sales: %1$d paid / %2$s', 'backstage-venue-manager'), (int) ($ticket['sold'] ?? 0), bvmgr_event_command_center_money((int) ($ticket['revenue_cents'] ?? 0))),
+                    (string) ($ticket['sales_summary_label'] ?? __('Ticket sales totals are unavailable.', 'backstage-venue-manager')),
                     $ticket_stats_age_label,
                 ),
                 'warning' => $ticket_warning,
@@ -2808,8 +2954,12 @@ if (!function_exists('bvmgr_event_command_center_build_module_hub_cards')) {
                 'summary' => array(
                     /* translators: 1: filled staffing count, 2: required staffing count. */
                     sprintf(__('Coverage: %1$d/%2$d filled', 'backstage-venue-manager'), (int) ($staffing['headcount_filled_total'] ?? 0), (int) ($staffing['headcount_needed_total'] ?? 0)),
-                    /* translators: %d: number of open staffing roles. */
-                    sprintf(__('Open roles: %d', 'backstage-venue-manager'), $staff_open),
+                    /* translators: 1: staffing positions required now, 2: currently open required positions. */
+                    sprintf(__('Required now: %1$d · Open now: %2$d', 'backstage-venue-manager'), (int) ($staffing['required_now_headcount_total'] ?? 0), $staff_open),
+                    /* translators: 1: proposed assignment count, 2: confirmed assignment count. */
+                    sprintf(__('Proposed: %1$d · Confirmed: %2$d', 'backstage-venue-manager'), (int) ($staffing['proposed_headcount'] ?? 0), (int) ($staffing['confirmed_headcount'] ?? 0)),
+                    /* translators: %d: unique people assigned across all staffing roles. */
+                    sprintf(__('Unique assigned people: %d', 'backstage-venue-manager'), (int) ($staffing['unique_assigned_people_count'] ?? 0)),
                     /* translators: %d: number of staffing conflicts. */
                     sprintf(__('Conflicts: %d', 'backstage-venue-manager'), $staff_conflicts),
                 ),

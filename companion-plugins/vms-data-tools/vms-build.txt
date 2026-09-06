@@ -1,0 +1,4 @@
+VMS Data Tools
+Build: 0.5.55
+Slug: bvm-reporting-provider
+Notes: Register an active-plugin-owned BVM event ticket-sales provider so BVM never loads Data Tools implementation files by filesystem presence.

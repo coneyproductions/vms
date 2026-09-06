@@ -1,0 +1,24 @@
+.vms-discounts-cart-price {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    line-height: 1.25;
+}
+
+.vms-discounts-cart-price__row {
+    align-items: baseline;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.vms-discounts-cart-price__original {
+    opacity: 0.72;
+    text-decoration: line-through;
+}
+
+.vms-discounts-cart-price__current {
+    font-style: normal;
+    font-weight: 700;
+    text-decoration: none;
+}
