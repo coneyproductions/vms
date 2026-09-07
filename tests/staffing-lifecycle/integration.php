@@ -5,7 +5,9 @@ $other=new wpdb(DB_USER,DB_PASSWORD,DB_NAME,DB_HOST);$other->suppress_errors(tru
 $assignment_table=bvmgr_staffing_table_name('assignments');$audit_table=bvmgr_staffing_table_name('audit');
 // A second connection commits between two reads in the same managed transaction.
 $wpdb->query("INSERT INTO {$wpdb->options} (option_name,option_value,autoload) VALUES ('staffing_isolation','first','off') ON DUPLICATE KEY UPDATE option_value='first'");
-$r=bvmgr_staffing_atomic(static function()use($other){global $wpdb;$a=$wpdb->get_var("SELECT option_value FROM {$wpdb->options} WHERE option_name='staffing_isolation'");$other->query("UPDATE {$wpdb->options} SET option_value='second' WHERE option_name='staffing_isolation'");$b=$wpdb->get_var("SELECT option_value FROM {$wpdb->options} WHERE option_name='staffing_isolation'");check($a==='first'&&$b==='second','READ COMMITTED visibility within one transaction');return array('ok'=>true);});check($r['ok'],'isolation probe commit');
+$isolation_observed=array();
+$r=bvmgr_staffing_atomic(static function()use($other,&$isolation_observed){global $wpdb;$a=$wpdb->get_var("SELECT option_value FROM {$wpdb->options} WHERE option_name='staffing_isolation'");$other->query("UPDATE {$wpdb->options} SET option_value='second' WHERE option_name='staffing_isolation'");$b=$wpdb->get_var("SELECT option_value FROM {$wpdb->options} WHERE option_name='staffing_isolation'");$isolation_observed=array($a,$b);return array('ok'=>true);});check($r['ok'],'isolation probe commit');
+check($isolation_observed===array('first','second'),'READ COMMITTED visibility within one transaction: '.json_encode($isolation_observed));
 $f=fixture();$events=array();
 $observe=static function($event)use(&$events,$other,$assignment_table,$audit_table){
     $events[]=array($event,bvmgr_staffing_transaction_active(),$other->get_var($other->prepare('SELECT status FROM %i WHERE assignment_id=%d',$assignment_table,$event['assignment_id'])),(int)$other->get_var($other->prepare('SELECT COUNT(*) FROM %i WHERE operation_id=%s',$audit_table,$event['operation_id'])));
@@ -68,6 +70,8 @@ echo 'PASS integration; '.$checks." database assertions\n";
 $receipt=bvmgr_staffing_lifecycle_preflight();check($receipt['ok']&&$receipt['schema']==='ready'&&count($receipt['duplicate_pairs'])>0,'read-only duplicate/schema preflight');
 // Unknown historical state cannot be rewritten by a lifecycle action.
 $f=fixture();$wpdb->update($assignment_table,array('status'=>'checked_in'),array('assignment_id'=>$f['id']));$before=bvmgr_staffing_lifecycle_row($f['id']);check(bvmgr_staffing_transition_assignment($f['id'],'canceled',options($f))['error']==='invalid_transition'&&$before===bvmgr_staffing_lifecycle_row($f['id']),'unknown legacy state preserved');
+// Restore only the injected fixture fault before later whole-population gates.
+$wpdb->update($assignment_table,array('status'=>'proposed'),array('assignment_id'=>$f['id']));
 // Expired, inactive and missing-window transitions are rejected.
 foreach(array('expired','inactive','missing','bad_date') as $case){$f=fixture();
     if($case==='expired')update_post_meta($f['plan'],'_vms_event_date','2020-01-01');
@@ -75,6 +79,7 @@ foreach(array('expired','inactive','missing','bad_date') as $case){$f=fixture();
     if($case==='missing')delete_post_meta($f['plan'],'_vms_event_date');
     if($case==='bad_date')update_post_meta($f['plan'],'_vms_event_date','2030-02-31');
     $before=bvmgr_staffing_lifecycle_row($f['id']);$n=audits($f['id']);$r=bvmgr_staffing_transition_assignment($f['id'],'confirmed',options($f));check(!$r['ok']&&$r['error']==='assignment_expired'&&$before===bvmgr_staffing_lifecycle_row($f['id'])&&$n===audits($f['id']),$case.' context cannot commit');
+    if($case==='inactive')$wpdb->update(bvmgr_staffing_table_name('event_slots'),array('status'=>'active'),array('slot_id'=>$f['slot']));
 }
 // Durations support overnight work; reversed explicit clocks remain rejected.
 $timezone=get_option('timezone_string');update_option('timezone_string','America/Chicago');$f=fixture();

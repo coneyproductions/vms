@@ -7,6 +7,10 @@ $fixtures = array(
     '/private/tmp/bvm-authority-integration-20260906/runtime/source-wordpress' => array('bvm_integration_source', 'localhost:/private/tmp/bvm-authority-integration-20260906/runtime/mysql.sock'),
 );
 if (!isset($fixtures[$root]) || !is_file($root . '/wp-config.php')) throw new RuntimeException('Explicit disposable root required');
+if ($root === '/private/tmp/bvm-authority-integration-20260906/runtime/source-wordpress'
+    && (getenv('BVM_DISPOSABLE_DB_GUARDED') !== '1' || !is_dir(dirname($root) . '/.staffing-db-guard.lock'))) {
+    throw new RuntimeException('Integration database resource supervisor required');
+}
 require_once $root . '/wp-load.php';
 if (DB_HOST !== $fixtures[$root][1] || DB_NAME !== $fixtures[$root][0]) throw new RuntimeException('Wrong database');
 wp_set_current_user(1);

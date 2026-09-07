@@ -108,11 +108,14 @@ function bvmgr_staffing_atomic(callable $operation): array
         if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 5)', $lock)) !== 1) throw new BVMGR_Staffing_Failure('staffing_busy');
         $locked = true;
         if ((int) $wpdb->get_var('SELECT @@autocommit') !== 1) throw new BVMGR_Staffing_Failure('external_transaction');
+        bvmgr_staffing_require_transaction_schema();
         // Both MySQL and MariaDB reject SET TRANSACTION inside an existing
         // transaction, even before its first write. Never implicitly commit it.
+        // Keep this adjacent to START: MySQL can consume next-transaction
+        // isolation on the schema reads above, reverting the actual staffing
+        // transaction to the connection's default REPEATABLE READ isolation.
         try { $wpdb->query('SET TRANSACTION ISOLATION LEVEL READ COMMITTED'); }
         catch (BVMGR_Staffing_Failure $e) { throw new BVMGR_Staffing_Failure('external_transaction'); }
-        bvmgr_staffing_require_transaction_schema();
         $wpdb->query('START TRANSACTION');
         $started = true;
         $GLOBALS['bvmgr_staffing_transaction'] = array('events' => array(), 'plans' => array(), 'saved_events' => array());

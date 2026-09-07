@@ -6,13 +6,15 @@ $old_tables = array();
 foreach (array('assignments', 'event_slots', 'audit', 'rollups') as $kind) $old_tables[$kind] = bvmgr_staffing_table_name($kind);
 $old_tables['posts'] = $wpdb->posts;
 $old_tables['postmeta'] = $wpdb->postmeta;
+$old_tables['terms'] = $wpdb->terms;
+$old_tables['term_taxonomy'] = $wpdb->term_taxonomy;
 $wpdb = new wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
 $wpdb->set_prefix('bvm_migration_receipt_');
 $receipt = array('database' => DB_NAME, 'prefix' => $wpdb->prefix, 'source' => 'Wave4 schema reconstructed by removing only additive lifecycle columns from fresh disposable clones');
 $created = array();
 try {
     foreach ($old_tables as $kind => $source) {
-        $target = in_array($kind, array('posts', 'postmeta'), true) ? $wpdb->$kind : bvmgr_staffing_table_name($kind);
+        $target = in_array($kind, array('posts', 'postmeta', 'terms', 'term_taxonomy'), true) ? $wpdb->$kind : bvmgr_staffing_table_name($kind);
         if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $target))) throw new RuntimeException('Receipt prefix already exists; preserve it');
         if ($wpdb->query($wpdb->prepare('CREATE TABLE %i LIKE %i', $target, $source)) === false) throw new RuntimeException('Clone schema failed');
         $created[] = $target;

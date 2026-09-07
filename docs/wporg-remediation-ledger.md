@@ -1010,3 +1010,71 @@ Date: 2026-09-06. Status: `verified` for the sequencing guard and bounded dispos
 - Normal-local evidence conclusively traces assignments 19/20/21 to the June 18 cancellation-notification dry-run fixture and its incomplete cleanup. Only these three assignments were deleted after exact backups, before-image locks and a disposable rollback rehearsal. Five surviving assignments and all 1,337 audit rows remain exact. All other 245 table contents are unchanged; normal source, schema, options, activation, cron, companions, legacy VMS and the original dirty repository are preserved. Associated test slot 3422/cache 4587 were not included in the expressly named assignment write scope; their disposition remains an operator scope question, so a global staffing-integrity/promotion-ready claim is withheld.
 - Validation: 75 no-mutation gate assertions (including real CLI exit codes, schemas, rows, version canary, auto-increments and no mutation statements); lifecycle integration 102; concurrency 86; real deadlock/retry 39; all 11 forensic regressions; three focused repository-SQL checks. Actual MySQL 8.0.35 current-shape rehearsal passes original-orphan rejection, two independent controlled migrations, preservation of five assignments/all audit history, idempotence, targeted transaction rollback and exact restoration of its imported fixture. Dump/restore-only deprecated integer display-width metadata and redundant charset rendering are explicitly recorded; storage semantics and all row bytes match normal Local. No broad ecosystem re-certification is claimed.
 - Evidence/report root: `/Users/treyconey/Local Sites/serenade-range-local-test-site/app/bvm-local-rollbacks/staffing-orphan-forensics-20260906`. The local sequencing commit and final disposal/preservation receipts are recorded there. Runtime replicas were synchronized only under `/private/tmp/bvm-authority-integration-20260906/`; no normal-local source promotion, migration DDL, business mutation, staging/production/SSH/remote WP-CLI, network communication, push, release or protected-stash operation was performed. Protected stash remains `d08e726804712dc233f0e37b217abd6389963863`.
+
+## Staffing population forensics and expanded migration gate — 2026-09-06
+
+Status: **blocked / validation pending**. Candidate-only work based on `abdf6da`; no normal runtime or legacy tree changes, promotion, activation/deactivation, or new commit.
+
+- Fresh Local hashes matched the final targeted-cleanup receipts across all 246 tables: 165 orphan slots, 100 invalid rollups, zero orphan/duplicate assignments, rolled-back lifecycle schema, preserved source/options/cron/companions/stash.
+- Classified all 165 as unassigned planning slots for 55 absent plans with complete matching snapshots in 108 retained audit rows; all historical snapshots are assignment-free. All 100 derived caches have absent plan roots: 55 with three slots and 45 empty (39 dirty placeholders, six clean calculations). No blanket test-data claim or deletion-by-age rule is used. Retention semantics and guarded policy are in `docs/authority-integration/staffing-population-retention.md`.
+- Draft expanded SQL gate checks the missing population and role/value/base-schema/status/cache invariants while reporting supported terminal duplicates, multiple shifts and trash. Real normal-local read-only execution exits 1 with exact 165/100 blocker counts and no other detected staffing blocker. PHP lint and diff-check pass. Added real-database blocker fixtures and updated cloned role-table dependencies; these fixtures are **not yet run**.
+- Full targeted population/related audit/meta/schema/options/hash backup and exact-row rollback SQL are retained outside webroot at `app/bvm-local-rollbacks/staffing-population-20260906/target-population-rollback.tar.gz`, SHA-256 `1ce49040bbcecff28096d4db758d897070d94824075ca10382146e175905dc53` (72,889 bytes), with verified archive members.
+- Local capture first failed with ENOSPC; compressed capture succeeded, but less than 300 MB free remains insufficient for the required disposable DB/runtime. Normal remediation, the expanded real-SQL regression/migration/concurrency/cross-domain rehearsal, and local commit are held pending disk capacity and validation. No normal-local DB write has occurred. Do not interpret lint or the read-only blocker receipt as a passing migration rehearsal.
+
+
+## Staffing population resume after disk recovery — 2026-09-06
+
+Status: **verified for a fresh controlled local promotion attempt; NOT promoted**.
+This entry completes the preceding population draft without replacing its history.
+
+- Post-incident Local PHP 8.3.30 SHORTINIT/read-only health passed against MySQL
+  8.0.35. All 246 starting table/schema hashes and the complete captured population
+  matched the stopped task. The protected stash, original dirty worktree, canonical
+  BVM, legacy tree, eight companions and all prior rollback material remain intact.
+- New test-only foreground DB supervision refuses low disk and resource collisions,
+  limits logs/runtime, stops child groups on success/failure/signals/timeouts,
+  bounds failed evidence and proves process exit before deleting the datadir.
+  Sixteen real-process fault checks pass, including teardown-proof failure; normal
+  Local server logging/configuration is untouched. Integration bootstrap requires
+  the resource guard. The 186.36 GB incident was an abandoned MySQL 8.4 shutdown
+  looping after its data files had already been deleted.
+- Reverified the 72,889-byte population archive at SHA-256
+  `1ce49040bbcecff28096d4db758d897070d94824075ca10382146e175905dc53`, all eight
+  data/evidence members and exact restoration in a disposable MySQL 8.0.35 fixture.
+  Under serializable locks and the staffing advisory lock, normal S1/R1 maintenance
+  deleted exactly 165 audit-covered unassigned slots and 100 archived derived
+  caches (55 with slots, 39 empty dirty, six empty clean). No source promotion,
+  lifecycle migration, inferred relationships or audit changes occurred.
+- All invalid blockers are zero. Retained state: 3,234 slots, five assignments,
+  1,337 audits, 1,103 rollups; one existing-plan canceled slot and 1,064 existing-plan
+  historical cache contexts are tolerated. The 1,080 dirty valid-root caches remain
+  supported. All schemas/auto-increments and all 244 other tables, including options,
+  activation, cron and audit, are unchanged. The standalone final gate exits zero
+  with `lifecycle_migration_required`, and before/after 246-table manifests are exact.
+- Expanded gate coverage includes base identities/auto-increments, roots/roles,
+  slot/assignment/cache values and statuses, duplicate caches, revisions, request-ID
+  shape/uniqueness, confirmed windows/overlaps and transactional prerequisites.
+  Existing-plan canceled/trash state, terminal duplicate history and multiple shifts
+  remain supported. Every failure occurs before DDL/DML/version changes.
+- MySQL rehearsal exposed a real pre-existing transaction-order defect: schema reads
+  consumed next-transaction READ COMMITTED configuration. Candidate-only ordering
+  now checks schema first, sets isolation immediately before START, and preserves
+  the external-transaction rejection. An independent writer regression proves the
+  second read observes its committed update. No authorization/state-machine policy
+  changed. Tests also restore deliberate fault inputs before later global gates,
+  use the actual MySQL deadlock metric, and clean failed-test barriers.
+- Passing validation includes 176 no-mutation assertions, the captured-population
+  migration/consumer/rollback rehearsal, lifecycle integration 102, genuine
+  concurrency 86, real deadlock/retry 41, real Staffing–Financial SQL 33 and value
+  semantics 127. Two independent captured-shape migrations preserve every old
+  column and are idempotent; rollback restores exact schema/state/history. Captured
+  plans 76, 1544 and 1430 agree across shared staffing, Event Plan, full ECC and
+  light ECC. HTTP is blocked before transport. Final servers/logs/data/runtime and
+  owned process groups are removed; bounded diagnostic evidence remains private.
+- Full A–X report, exact IDs, private runner, hashes, receipts and local commit
+  record: `app/bvm-local-rollbacks/staffing-population-resume-20260906/`.
+  Candidate changes are isolated on `work/bvm-authority-integration`; the original
+  dirty branch and all normal/legacy plugin source remain frozen. No remote Git,
+  staging/production, deployment, provider/payment action, external communication,
+  packaging, activation/deactivation or BVM promotion occurred. Local commit only;
+  commit SHA is recorded in the private consolidated report and commit receipt.
