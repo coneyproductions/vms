@@ -32,7 +32,8 @@ function add_query_arg($args, $url = '') { return $url . (strpos($url, '?') === 
 function get_edit_post_link($id, $context = '') { return '/wp-admin/post.php?post=' . $id . '&action=edit'; }
 function bvmgr_admin_ui_page_url($page, $args = array()) { return add_query_arg(array_merge(array('page' => $page), $args), admin_url('admin.php')); }
 function current_user_can(...$args) { return true; }
-function bvmgr_event_command_center_can_manage_promo_video($id): bool { return false; }
+function bvmgr_event_command_center_can_manage_promo_video($id): bool { return !empty($GLOBALS['ecc_fixture_promo_controls']); }
+function wp_nonce_field($action, $name) { echo '<input type="hidden" name="' . esc_attr($name) . '" value="fixture-nonce">'; }
 function get_post_meta(...$args) { return ''; }
 function get_the_title($id) { return 'Fixture event'; }
 function wp_nonce_url($url, $action) { return add_query_arg(array('_wpnonce' => 'fixture-' . $action), $url); }
@@ -146,6 +147,8 @@ if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     $shell_css = 'body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d2735}*{box-sizing:border-box}a{color:#165fcf}button,input,select{font:inherit}.fixture-top{background:#1d2327;color:#f0f0f1;padding:8px 22px;font-size:13px}.fixture-layout{margin:24px 30px 40px 180px}.fixture-side{position:absolute;top:35px;left:0;width:150px;padding:20px 12px;color:#414b56}.fixture-side p{margin:0 0 16px}.button{display:inline-block;text-decoration:none;min-height:32px;padding:5px 12px;border:1px solid #2271b1;border-radius:3px;background:#f6f7f7;color:#2271b1;cursor:pointer}.button-primary{background:#2271b1;color:#fff}.button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #165fcf;outline-offset:3px}.fixture-caption{font-size:12px;color:#5a677a;margin:0 0 16px}@media(max-width:782px){.fixture-side{display:none}.fixture-layout{margin:16px 10px}.fixture-top{padding:8px 12px}}';
     $index = array();
     foreach (ecc_fixture_cases() as $name => $payload) {
+        // Exercise the real retained promo forms in the representative show-day fixture.
+        $GLOBALS['ecc_fixture_promo_controls'] = $name === '02-show-day';
         ob_start();
         bvmgr_event_command_center_render_dashboard(420, $payload);
         $dashboard = ob_get_clean();
