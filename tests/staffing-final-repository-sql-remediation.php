@@ -451,6 +451,12 @@ function bvmgr_staffing_get_rollup(int $plan_id)
 	return $GLOBALS['vms_test_rollups'][$plan_id] ?? null;
 }
 
+function bvmgr_staffing_resolve_event_snapshot(int $plan_id): array
+{
+	$rollup = $GLOBALS['vms_test_rollup_recompute'][$plan_id] ?? $GLOBALS['vms_test_rollups'][$plan_id] ?? array();
+	return array('rollup' => $rollup, 'missing_summary' => json_decode($rollup['missing_summary_json'] ?? '[]', true), 'conflict_summary' => json_decode($rollup['conflict_summary_json'] ?? '[]', true));
+}
+
 function bvmgr_staffing_compute_rollup(int $plan_id): array
 {
 	$GLOBALS['vms_test_compute_rollup_calls'][] = $plan_id;
@@ -953,22 +959,22 @@ $expected_t3_inventory = array(
 $expected_t4_inventory = array(
 	'includes/core/staffing.php:2430:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/core/staffing.php:2434:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3412:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3478:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3505:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3530:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:3615:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3706:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3723:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3942:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4029:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3408:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3474:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3501:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3526:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:3611:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3699:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3716:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4008:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4077:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staffing.php:869:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $expected_t5_inventory = array(
 	'includes/core/staffing.php:710:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4065:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4165:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4113:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4200:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staff-list-columns.php:69:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staff-user-link.php:131:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/admin/staff-vendor-link.php:146:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
@@ -1310,7 +1316,8 @@ try {
 	$GLOBALS['vms_test_posts'][202] = new WP_Post(array('ID' => 202, 'post_type' => 'vms_event_plan', 'post_title' => 'Beta'));
 	$response = bvmgr_staffing_build_dashboard_response(array('staffing_n' => 2, 'venue_id' => '7', 'include_drafts' => true));
 	vms_test_assert_same(array(201, 202), array_column($response['items'], 'plan_id'), 'Dashboard response should keep prepared-query order, venue filtering, inclusion gates, and the item cap.');
-	vms_test_assert_same(array(201), $GLOBALS['vms_test_compute_rollup_calls'], 'Dashboard response should recompute only dirty rollups.');
+	vms_test_assert_same(array(), $GLOBALS['vms_test_compute_rollup_calls'], 'Dashboard response must never call the rollup writer.');
+	vms_test_assert_same(1, $GLOBALS['vms_test_rollups'][201]['dirty'], 'Dashboard response must preserve dirty storage.');
 	vms_test_assert_same('READY', $response['items'][0]['readiness_label'], 'Dashboard response should format readiness labels through the shared helper.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT p.ID FROM %i AS pm INNER JOIN %i AS p ON p.ID = pm.post_id WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND pm.meta_key = %s AND pm.meta_value >= %s ORDER BY pm.meta_value ASC, p.ID ASC LIMIT %d');
 	vms_test_assert_same(array('wp_postmeta', 'wp_posts', 'vms_event_plan', 'publish', 'draft', 'pending', 'private', 'future', '_vms_event_date', vms_test_today_ymd(), 120), $prepare['args'], 'Dashboard response should prepare the postmeta/posts identifiers, bounded statuses, event-date key, today boundary, and hard limit.');

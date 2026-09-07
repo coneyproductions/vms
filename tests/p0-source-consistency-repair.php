@@ -96,6 +96,7 @@ function bvmgr_staffing_compute_rollup(int $event_plan_id): array
 		'computed_at' => '2026-09-05 12:00:00',
 	);
 }
+function bvmgr_staffing_derive_rollup(int $event_plan_id, ?array $slots = null, ?array $roles = null): array { return array('ok' => true, 'conflict_count' => 0); }
 foreach (array(
 	'bvmgr_event_command_center_summarize_ticket_report_rows',
 	'bvmgr_event_command_center_normalize_ticket_cache',
@@ -163,7 +164,7 @@ $case = $snapshot(array($slot(1, 10, 1)), array(20 => array(201)));
 p0_same('normalized_legacy_ignored', $case['provenance'], 'Mixed storage did not record ignored legacy data.');
 p0_assert(!isset($case['roles_by_id'][20]), 'Mixed storage leaked a legacy role into normalized truth.');
 
-// 7-9. Runtime resolver recomputes missing, dirty, and incomplete normalized rollups.
+// 7-9. Runtime resolver derives missing, dirty, and incomplete rollups without calling the writer.
 $resolver_args = array(
 	'slots' => array($slot(1, 10, 1, array($assignment(1, 101, 'confirmed')))),
 	'legacy_assignments' => array(),
@@ -177,10 +178,10 @@ foreach (array(
 	'incomplete' => array('dirty' => 0, 'computed_at' => '2026-09-05 11:00:00'),
 ) as $rollup_case => $rollup_value) {
 	$resolved = bvmgr_staffing_resolve_event_snapshot(2534, $resolver_args + array('rollup' => $rollup_value));
-	p0_same('recomputed', $resolved['rollup_state'], ucfirst($rollup_case) . ' rollup was not recomputed.');
+	p0_same('derived_' . $rollup_case, $resolved['rollup_state'], ucfirst($rollup_case) . ' rollup was not derived in memory.');
 	p0_same(array(1, 1, 0), array($resolved['headcount_needed_total'], $resolved['headcount_filled_total'], $resolved['open_headcount_total']), ucfirst($rollup_case) . ' rollup leaked inconsistent stored totals.');
 }
-p0_same(3, $GLOBALS['p0_rollup_compute_calls'], 'Full rollup recompute count does not match missing/dirty/incomplete scenarios.');
+p0_same(0, $GLOBALS['p0_rollup_compute_calls'], 'A reader called the persistent rollup writer.');
 
 // 10. Duplicate slot/staff rows count once, and reconciliation keeps confirmed.
 $case = $snapshot(array($slot(1, 10, 1, array($assignment(1, 101, 'proposed'), $assignment(2, 101, 'confirmed')))));

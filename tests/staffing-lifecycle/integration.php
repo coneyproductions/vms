@@ -20,7 +20,9 @@ $snapshot=bvmgr_staffing_resolve_event_snapshot($f['plan']);$ecc=bvmgr_event_com
 foreach(array('assigned_headcount','proposed_headcount','confirmed_headcount','open_headcount_total','planned_headcount') as $key)check($snapshot[$key]===$ecc[$key],'shared ECC field '.$key);
 check($snapshot['assigned_headcount']===1&&$snapshot['confirmed_headcount']===1&&$snapshot['proposed_headcount']===0,'confirmed shared counts');
 $portal=bvmgr_staff_portal_get_assignment_rows($f['staff']);check(count($portal)===1&&$portal[0]['assignment_status']==='confirmed','portal sees same committed assignment');
-$dirty=bvmgr_staffing_get_rollup($f['plan']);check(empty($dirty['dirty']),'resolver deterministically recomputes marker');
+$dirty=bvmgr_staffing_get_rollup($f['plan']);check(!empty($dirty['dirty']),'reader preserves dirty marker while returning current truth');
+check(bvmgr_staffing_compute_rollup($f['plan'])['ok'],'explicit maintenance rebuild succeeds');
+check(empty(bvmgr_staffing_get_rollup($f['plan'])['dirty']),'explicit rebuild clears dirty marker');
 check(bvmgr_staffing_transition_assignment($f['id'],'canceled',options($f))['ok'],'integration cancel');$dirty=bvmgr_staffing_get_rollup($f['plan']);check(!empty($dirty['dirty']),'cancellation dirties rollup atomically');
 $snapshot=bvmgr_staffing_resolve_event_snapshot($f['plan']);check($snapshot['assigned_headcount']===0&&$snapshot['proposed_headcount']===0&&$snapshot['confirmed_headcount']===0,'inactive normalized history contributes no coverage');check(bvmgr_staff_portal_get_assignment_rows($f['staff'])===array(),'inactive assignment does not return as upcoming shift');
 remove_action('vms_staffing_assignment_transitioned',$observe);

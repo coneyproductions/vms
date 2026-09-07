@@ -774,21 +774,21 @@ $expected_t3_inventory = array(
 $expected_t4_inventory = array(
 	'includes/core/staffing.php:2430:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	'includes/core/staffing.php:2434:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3412:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3478:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3505:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3530:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/core/staffing.php:3615:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3706:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3723:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:3942:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4029:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3408:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3474:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3501:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3526:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+	'includes/core/staffing.php:3611:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3699:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:3716:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4008:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4077:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $expected_t5_inventory = array(
 	'includes/core/staffing.php:710:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4065:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/core/staffing.php:4165:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4113:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/core/staffing.php:4200:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 
 $actual_inventory = vms_test_collect_db_phpcs_inventory(array($store_path, $admin_ui_path, $db_path, $staff_portal_path, $staffing_path));

@@ -2737,7 +2737,7 @@ if (!function_exists('bvmgr_staffing_build_event_snapshot')) {
 }
 
 if (!function_exists('bvmgr_staffing_resolve_event_snapshot')) {
-	/** Resolve the request-fresh staffing truth shared by cards and Command Center. */
+	/** Resolve request-fresh staffing truth in memory. Never repairs or persists rollups. */
 	function bvmgr_staffing_resolve_event_snapshot(int $event_plan_id, array $args = array()): array
 	{
 		$event_plan_id = absint($event_plan_id);
@@ -2764,39 +2764,32 @@ if (!function_exists('bvmgr_staffing_resolve_event_snapshot')) {
 			? (is_array($args['rollup']) ? (array) $args['rollup'] : array())
 			: (function_exists('bvmgr_staffing_get_rollup') ? (array) (bvmgr_staffing_get_rollup($event_plan_id) ?? array()) : array());
 
-		$rollup_state = empty($rollup) ? 'missing' : 'fresh';
-		$required_rollup_keys = array('readiness_status', 'headcount_needed_total', 'headcount_filled_total', 'open_headcount_total', 'conflict_count', 'computed_at');
-		$rollup_incomplete = false;
-		foreach ($required_rollup_keys as $required_key) {
-			if (!array_key_exists($required_key, $rollup)) {
-				$rollup_incomplete = true;
-				break;
-			}
-		}
-		if (!empty($rollup['dirty'])) {
+		$stored_rollup = $rollup;
+		$derived = bvmgr_staffing_derive_rollup($event_plan_id, $slots, $role_map);
+		$rollup_state = empty($stored_rollup) ? 'missing' : 'fresh';
+		if (!empty($stored_rollup['dirty'])) {
 			$rollup_state = 'dirty';
-		} elseif (!empty($rollup) && $rollup_incomplete) {
-			$rollup_state = 'incomplete';
-		}
-		$rollup_was_missing = $rollup_state === 'missing';
-		$rollup_was_dirty = $rollup_state === 'dirty';
-		$rollup_was_incomplete = $rollup_state === 'incomplete';
-
-		$normalized_present = !empty($slots);
-		$should_recompute = $normalized_present && in_array($rollup_state, array('missing', 'dirty', 'incomplete'), true);
-		if ($should_recompute && empty($args['skip_rollup_recompute']) && function_exists('bvmgr_staffing_compute_rollup')) {
-			$computed = (array) bvmgr_staffing_compute_rollup($event_plan_id);
-			if (!empty($computed['ok'])) {
-				$rollup = $computed;
-				$rollup_state = 'recomputed';
-			} else {
-				$rollup_state = 'derived_normalized';
+		} elseif (!empty($stored_rollup)) {
+			foreach (array('computed_at', 'readiness_status', 'headcount_needed_total', 'headcount_filled_total', 'open_headcount_total', 'conflict_count', 'calc_hash') as $key) {
+				if (!array_key_exists($key, $stored_rollup)) { $rollup_state = 'incomplete'; break; }
 			}
-		} elseif ($should_recompute) {
-			$rollup_state = 'derived_normalized';
-		} elseif (!$normalized_present && !empty($legacy)) {
-			$rollup_state = 'derived_legacy';
+			if ($rollup_state === 'fresh') {
+				if (!is_string($stored_rollup['computed_at']) || !strtotime($stored_rollup['computed_at'] . ' UTC')) {
+					$rollup_state = 'malformed';
+				} else {
+					// Validate current derived values, not just a dirty marker or timestamp.
+					foreach ($derived as $key => $value) {
+						if (in_array($key, array('ok', 'computed_at', 'missing_summary', 'conflict_summary'), true)) continue;
+						if (!array_key_exists($key, $stored_rollup) || (($stored_rollup[$key] === null || $value === null) && $stored_rollup[$key] !== $value) || $stored_rollup[$key] != $value) { $rollup_state = 'stale'; break; }
+					}
+				}
+			}
 		}
+		$stored_state = $rollup_state;
+		// Even an unmarked stale rollup cannot supply old conflicts, costs or counts.
+		$rollup = $derived;
+		$rollup_state = $stored_state === 'fresh' ? 'fresh' : 'derived_' . $stored_state;
+		if (empty($slots) && !empty($legacy)) $rollup_state = 'derived_legacy';
 
 		$snapshot = bvmgr_staffing_build_event_snapshot(
 			$event_plan_id,
@@ -2809,9 +2802,12 @@ if (!function_exists('bvmgr_staffing_resolve_event_snapshot')) {
 			$rollup_state
 		);
 		if (function_exists('bvmgr_staffing_event_overlap_warnings')) $snapshot['overlap_warnings'] = bvmgr_staffing_event_overlap_warnings($event_plan_id, $slots);
-		$snapshot['rollup_was_missing'] = $rollup_was_missing;
-		$snapshot['rollup_was_dirty'] = $rollup_was_dirty;
-		$snapshot['rollup_was_incomplete'] = $rollup_was_incomplete;
+		$snapshot['rollup_was_missing'] = $stored_state === 'missing';
+		$snapshot['rollup_was_dirty'] = $stored_state === 'dirty';
+		$snapshot['rollup_was_incomplete'] = $stored_state === 'incomplete';
+		$snapshot['rollup_storage_state'] = $stored_state;
+		$snapshot['rollup_provenance'] = $stored_state === 'fresh' ? 'persisted_current_verified' : 'derived_' . $stored_state;
+		$snapshot['rollup_persisted_computed_at'] = $stored_rollup['computed_at'] ?? null;
 		return $snapshot;
 	}
 }
@@ -3682,14 +3678,11 @@ if (!function_exists('bvmgr_staffing_estimate_slot_cost')) {
 	}
 }
 
-if (!function_exists('bvmgr_staffing_compute_rollup')) {
-	function bvmgr_staffing_compute_rollup(int $event_plan_id): array
+if (!function_exists('bvmgr_staffing_derive_rollup')) {
+	/** Calculate from canonical state without a transaction, cache repair, or persistence. */
+	function bvmgr_staffing_derive_rollup(int $event_plan_id, ?array $source_slots = null, ?array $source_roles = null): array
 	{
 		global $wpdb;
-		if (!bvmgr_staffing_transaction_active()) {
-			$args = func_get_args();
-			return bvmgr_staffing_atomic(static function () use ($args): array { return bvmgr_staffing_compute_rollup(...$args); });
-		}
 
 		$event_plan_id = absint($event_plan_id);
 		if ($event_plan_id <= 0) {
@@ -3698,11 +3691,11 @@ if (!function_exists('bvmgr_staffing_compute_rollup')) {
 
 		$t_slot = bvmgr_staffing_table_name('event_slots');
 			$t_asn = bvmgr_staffing_table_name('assignments');
-			$t_roll = bvmgr_staffing_table_name('rollups');
-			if ($t_slot === '' || $t_asn === '' || $t_roll === '') {
+			if ($t_slot === '' || $t_asn === '') {
 				return array('ok' => false, 'error' => 'missing_table');
 			}
 
+		if ($source_slots === null) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup recompute reads the custom event-slot repository with %i/%d-prepared identifiers so staffing reports and rebuilds observe request-fresh slot state.
 			$slots = $wpdb->get_results($wpdb->prepare(
 				"SELECT * FROM %i WHERE event_plan_id = %d AND status = 'active' ORDER BY slot_id ASC",
@@ -3738,7 +3731,13 @@ if (!function_exists('bvmgr_staffing_compute_rollup')) {
 			}
 		}
 
-		$role_map = bvmgr_staffing_role_map_by_id(true);
+		} else {
+			$slots = array_filter($source_slots, static fn($slot) => is_array($slot) && ($slot['status'] ?? 'active') === 'active');
+			$assignments_by_slot = array();
+			foreach ($slots as $slot) $assignments_by_slot[(int) $slot['slot_id']] = (array) ($slot['assignments'] ?? array());
+		}
+
+		$role_map = $source_roles ?? bvmgr_staffing_role_map_by_id(true);
 		$event_date = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
 		$venue_id = absint(get_post_meta($event_plan_id, '_vms_venue_id', true));
 		$status = function_exists('bvmgr_event_plan_get_status') ? (string) bvmgr_event_plan_get_status($event_plan_id, 'dashboard') : 'draft';
@@ -3939,6 +3938,73 @@ if (!function_exists('bvmgr_staffing_compute_rollup')) {
 			$calc_hash = md5(wp_json_encode($calc_data));
 			$computed_at = bvmgr_staffing_now_mysql_utc();
 
+
+		return array(
+			'ok'                        => true,
+			'venue_id' => $venue_id,
+			'event_status' => $status,
+			'event_start_local' => $event_start_local,
+			'critical_slots_total' => $critical_slots_total,
+			'calc_hash' => $calc_hash,
+			'computed_at' => $computed_at,
+			'calc_version' => 'staffing_v1',
+			'event_plan_id'             => $event_plan_id,
+			'slots_total'               => $slots_total,
+			'headcount_needed_total'    => $headcount_needed_total,
+			'headcount_filled_total'    => $headcount_filled_total,
+			'open_headcount_total'      => $open_headcount_total,
+			'open_slots_count'          => $open_slots_count,
+			'critical_open_headcount'   => $critical_open_headcount,
+			'critical_open_slots_count' => $critical_open_slots_count,
+			'conflict_count'            => $conflict_count,
+			'unavailable_assigned_count'=> $unavailable_assigned_count,
+			'red_flag_reason_mask'      => $red_flag_reason_mask,
+			'readiness_status'          => $readiness_status,
+			'est_labor_cost_total'      => $cost_known ? (float) $est_labor_cost_total : null,
+			'est_hours_total'           => $cost_known ? (float) $est_hours_total : null,
+			'missing_summary'           => $missing_summary,
+			'conflict_summary'          => $conflict_summary,
+		);
+	}
+}
+
+if (!function_exists('bvmgr_staffing_compute_rollup')) {
+	/** Explicit mutation/maintenance writer; readers must use the snapshot resolver. */
+	function bvmgr_staffing_compute_rollup(int $event_plan_id): array
+	{
+		global $wpdb;
+		if (!bvmgr_staffing_transaction_active()) {
+			$args = func_get_args();
+			return bvmgr_staffing_atomic(static function () use ($args): array { return bvmgr_staffing_compute_rollup(...$args); });
+		}
+
+		$rollup = bvmgr_staffing_derive_rollup($event_plan_id);
+		if (empty($rollup['ok'])) return $rollup;
+		$t_roll = bvmgr_staffing_table_name('rollups');
+		if ($t_roll === '') return array('ok' => false, 'error' => 'missing_table');
+		$event_plan_id = $rollup['event_plan_id'];
+		$venue_id = $rollup['venue_id'];
+		$event_start_local = $rollup['event_start_local'];
+		$slots_total = $rollup['slots_total'];
+		$headcount_needed_total = $rollup['headcount_needed_total'];
+		$headcount_filled_total = $rollup['headcount_filled_total'];
+		$open_headcount_total = $rollup['open_headcount_total'];
+		$open_slots_count = $rollup['open_slots_count'];
+		$critical_slots_total = $rollup['critical_slots_total'];
+		$critical_open_headcount = $rollup['critical_open_headcount'];
+		$critical_open_slots_count = $rollup['critical_open_slots_count'];
+		$conflict_count = $rollup['conflict_count'];
+		$unavailable_assigned_count = $rollup['unavailable_assigned_count'];
+		$red_flag_reason_mask = $rollup['red_flag_reason_mask'];
+		$readiness_status = $rollup['readiness_status'];
+		$est_labor_cost_total = $rollup['est_labor_cost_total'];
+		$est_hours_total = $rollup['est_hours_total'];
+		$missing_summary = $rollup['missing_summary'];
+		$conflict_summary = $rollup['conflict_summary'];
+		$calc_hash = $rollup['calc_hash'];
+		$computed_at = $rollup['computed_at'];
+		$status = $rollup['event_status'];
+		$cost_known = $est_labor_cost_total !== null;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Rollup recompute upserts the plugin-owned rollup repository directly with a %i-prepared identifier so dashboard and rebuild reads see the freshly computed state.
 			$wpdb->query($wpdb->prepare(
 				"INSERT INTO %i
@@ -3996,25 +4062,7 @@ if (!function_exists('bvmgr_staffing_compute_rollup')) {
 			''
 		));
 
-		return array(
-			'ok'                        => true,
-			'event_plan_id'             => $event_plan_id,
-			'slots_total'               => $slots_total,
-			'headcount_needed_total'    => $headcount_needed_total,
-			'headcount_filled_total'    => $headcount_filled_total,
-			'open_headcount_total'      => $open_headcount_total,
-			'open_slots_count'          => $open_slots_count,
-			'critical_open_headcount'   => $critical_open_headcount,
-			'critical_open_slots_count' => $critical_open_slots_count,
-			'conflict_count'            => $conflict_count,
-			'unavailable_assigned_count'=> $unavailable_assigned_count,
-			'red_flag_reason_mask'      => $red_flag_reason_mask,
-			'readiness_status'          => $readiness_status,
-			'est_labor_cost_total'      => $cost_known ? (float) $est_labor_cost_total : null,
-			'est_hours_total'           => $cost_known ? (float) $est_hours_total : null,
-			'missing_summary'           => $missing_summary,
-			'conflict_summary'          => $conflict_summary,
-		);
+		return $rollup;
 	}
 }
 
@@ -4086,23 +4134,10 @@ if (!function_exists('bvmgr_staffing_build_dashboard_response')) {
 				}
 			}
 
-			$roll = bvmgr_staffing_get_rollup($plan_id);
-			if (!is_array($roll) || !empty($roll['dirty'])) {
-				bvmgr_staffing_compute_rollup($plan_id);
-				$roll = bvmgr_staffing_get_rollup($plan_id);
-			}
-			if (!is_array($roll)) continue;
-
-			$missing_summary = array();
-			$conflict_summary = array();
-			if (!empty($roll['missing_summary_json'])) {
-				$m = json_decode((string) $roll['missing_summary_json'], true);
-				if (is_array($m)) $missing_summary = $m;
-			}
-			if (!empty($roll['conflict_summary_json'])) {
-				$c = json_decode((string) $roll['conflict_summary_json'], true);
-				if (is_array($c)) $conflict_summary = $c;
-			}
+			$snapshot = bvmgr_staffing_resolve_event_snapshot($plan_id);
+			$roll = $snapshot['rollup'];
+			$missing_summary = $snapshot['missing_summary'];
+			$conflict_summary = $snapshot['conflict_summary'];
 
 			$event_date = (string) get_post_meta($plan_id, '_vms_event_date', true);
 			$start_time = (string) get_post_meta($plan_id, '_vms_start_time', true);
