@@ -68,6 +68,7 @@ function bvmgr_event_command_center_money(int $cents): string
 
 $staffing_source = (string) file_get_contents($staffing_path);
 $command_center_source = (string) file_get_contents($command_center_path);
+$command_center_dashboard_source = (string) file_get_contents($plugin_root . '/includes/admin/event-command-center-dashboard.php');
 $event_plans_source = (string) file_get_contents($event_plans_path);
 p0_assert($staffing_source !== '' && $command_center_source !== '' && $event_plans_source !== '', 'P0 source files must be readable.');
 
@@ -318,9 +319,10 @@ p0_same(array('cached_ticket_stats', 'CURRENT', 6), array($case['ticket_source']
 
 // Full and light ticket surfaces consume the same resolver fields and pending-safe copy.
 p0_assert(substr_count($command_center_source, 'bvmgr_event_command_center_resolve_ticket_sales_snapshot(') >= 3, 'Ticket reporting surfaces are not wired to the shared resolver.');
-p0_assert(strpos($command_center_source, "\$ticket_sales_available ? (string) (\$ticket['sold'] ?? 0) : '—'") !== false, 'Full Command Center must hide pending/unavailable paid totals.');
+p0_assert(strpos($command_center_source, 'bvmgr_event_command_center_render_dashboard($plan_id, bvmgr_event_command_center_build_payload($plan_id))') !== false, 'Full Command Center must render the shared payload through its dashboard.');
+p0_assert(strpos($command_center_dashboard_source, "\$available = !empty(\$ticket['display_sales'])") !== false && strpos($command_center_dashboard_source, "\$available ? (string) (\$ticket['sold'] ?? 0) : \$unknown") !== false, 'Full Command Center must hide pending/unavailable paid totals.');
 p0_assert(strpos($command_center_source, "(string) (\$ticket['sales_summary_label']") !== false, 'Module hub must use the shared state-aware sales summary.');
-p0_assert(strpos($command_center_source, 'bvmgr_financial_render_summary($financial)') !== false, 'ECC must render shared financial authority.');
+p0_assert(strpos($command_center_dashboard_source, 'bvmgr_financial_render_summary($financial)') !== false, 'ECC must render shared financial authority.');
 p0_assert(strpos($command_center_source, 'return bvmgr_financial_get_event_snapshot($plan_id);') !== false, 'ECC must resolve the shared financial contract.');
 
 echo "P0 source consistency repair tests passed.\n";

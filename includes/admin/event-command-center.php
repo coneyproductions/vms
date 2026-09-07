@@ -3,6 +3,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/event-command-center-context.php';
+require_once __DIR__ . '/event-command-center-dashboard.php';
+
 if (!function_exists('bvmgr_event_command_center_page_slug')) {
     function bvmgr_event_command_center_page_slug(): string
     {
@@ -1210,17 +1213,15 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
 if (!function_exists('bvmgr_event_command_center_get_weather_snapshot')) {
     function bvmgr_event_command_center_get_weather_snapshot(int $plan_id): array
     {
-        unset($plan_id);
-
         $active = bvmgr_event_command_center_is_weather_addon_active();
-        return array(
+        return bvmgr_event_command_center_get_operational_weather($plan_id, array(
             'active' => $active,
             'label' => $active ? __('Weather tracking available', 'backstage-venue-manager') : __('Weather tracking not enabled in this build yet', 'backstage-venue-manager'),
             'summary' => $active
                 ? __('Open the weather workspace for live forecast, rain risk, wind, heat, and show-day weather notes.', 'backstage-venue-manager')
                 : __('Install or activate the Backstage Venue Manager weather module to show event-level forecast, rain, wind, heat, and weather-watch notes here.', 'backstage-venue-manager'),
             'url' => bvmgr_event_command_center_get_weather_url(),
-        );
+        ));
     }
 }
 
@@ -1397,6 +1398,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
         if (($staffing['critical_open_headcount'] ?? 0) > 0) {
             $alerts[] = array(
                 'severity' => 'red',
+                'code' => 'staffing_critical',
                 'title' => __('Critical staffing gap', 'backstage-venue-manager'),
                 /* translators: %d: number of critical staffing seats still open. */
                 'detail' => sprintf(_n('%d critical staffing seat is still open.', '%d critical staffing seats are still open.', (int) $staffing['critical_open_headcount'], 'backstage-venue-manager'), (int) $staffing['critical_open_headcount']),
@@ -1406,6 +1408,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
         } elseif (($staffing['open_headcount_total'] ?? 0) > 0) {
             $alerts[] = array(
                 'severity' => 'yellow',
+                'code' => 'staffing_open',
                 'title' => __('Staffing incomplete', 'backstage-venue-manager'),
                 /* translators: %d: number of staffing seats still open. */
                 'detail' => sprintf(_n('%d staffing seat is still open.', '%d staffing seats are still open.', (int) $staffing['open_headcount_total'], 'backstage-venue-manager'), (int) $staffing['open_headcount_total']),
@@ -1417,6 +1420,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
         if (($staffing['conflict_count'] ?? 0) > 0) {
             $alerts[] = array(
                 'severity' => 'yellow',
+                'code' => 'staffing_conflict',
                 'title' => __('Staffing conflict detected', 'backstage-venue-manager'),
                 /* translators: %d: number of staffing assignment conflicts. */
                 'detail' => sprintf(_n('%d assignment conflict is flagged in staffing.', '%d assignment conflicts are flagged in staffing.', (int) $staffing['conflict_count'], 'backstage-venue-manager'), (int) $staffing['conflict_count']),
@@ -1448,6 +1452,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
         if (empty($marketing['social_ready'])) {
             $alerts[] = array(
                 'severity' => 'informational',
+                'code' => 'social',
                 'title' => __('Social posting suppressed', 'backstage-venue-manager'),
                 'detail' => __('This event is marked Do Not Post, so social sharing workflows are intentionally muted.', 'backstage-venue-manager'),
                 'action_label' => __('Open Social Sharing', 'backstage-venue-manager'),
@@ -1458,6 +1463,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
         if (empty($marketing['promo_video_id']) && empty($marketing['promo_external_url'])) {
             $alerts[] = array(
                 'severity' => 'yellow',
+                'code' => 'promo',
                 'title' => __('Promo video missing', 'backstage-venue-manager'),
                 'detail' => !empty($marketing['promo_submission_pending'])
                     ? __('A vendor clip has been submitted, but it still needs operator review before it goes live.', 'backstage-venue-manager')
@@ -1475,6 +1481,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
                 $severity = 'yellow';
             }
             $normalized[] = array(
+                'code' => sanitize_key((string) ($alert['code'] ?? '')),
                 'severity' => $severity,
                 'title' => sanitize_text_field((string) ($alert['title'] ?? '')),
                 'detail' => bvmgr_event_command_center_clean_text((string) ($alert['detail'] ?? '')),
@@ -1667,6 +1674,7 @@ if (!function_exists('bvmgr_event_command_center_build_payload')) {
             $marketing = bvmgr_event_command_center_get_marketing_snapshot($plan_id, $header);
             $weather = bvmgr_event_command_center_get_weather_snapshot($plan_id);
             $notes = bvmgr_event_command_center_get_notes_snapshot($plan_id);
+            $context = bvmgr_event_command_center_get_operational_context($plan_id);
             $alerts = bvmgr_event_command_center_build_alerts($plan_id, $header, $ticket, $lineup, $staffing, $marketing, $weather);
             $health = bvmgr_event_command_center_get_health($alerts);
             $timeline = bvmgr_event_command_center_get_timeline_rows($plan_id, $lineup, $staffing);
@@ -1687,6 +1695,7 @@ if (!function_exists('bvmgr_event_command_center_build_payload')) {
                 'timeline' => $timeline,
                 'actions' => $actions,
                 'activity' => $activity,
+                'context' => $context,
             );
         } finally {
             if (function_exists('bvmgr_resource_fingerprint_span_finish')) {
@@ -1751,303 +1760,10 @@ if (!function_exists('bvmgr_event_command_center_render_metric')) {
 if (!function_exists('bvmgr_event_command_center_render_page_content')) {
     function bvmgr_event_command_center_render_page_content(int $plan_id): void
     {
-        $payload = bvmgr_event_command_center_build_payload($plan_id);
-        $header = (array) $payload['header'];
-        $health = (array) $payload['health'];
-        $ticket = (array) $payload['ticket'];
-        $financial = (array) $payload['financial'];
-        $lineup = (array) $payload['lineup'];
-        $staffing = (array) $payload['staffing'];
-        $marketing = (array) $payload['marketing'];
-        $weather = (array) $payload['weather'];
-        $notes = (array) $payload['notes'];
-        $alerts = (array) $payload['alerts'];
-        $timeline = (array) $payload['timeline'];
-        $actions = (array) $payload['actions'];
-        $activity = (array) $payload['activity'];
-
-        $status_chip = bvmgr_event_command_center_render_chip((string) ($header['status_label'] ?? __('Unknown', 'backstage-venue-manager')), (string) ($header['status_tone'] ?? 'muted'));
-        /* translators: %s: current command center health label. */
-        $health_chip = bvmgr_event_command_center_render_chip(sprintf(__('Health: %s', 'backstage-venue-manager'), (string) ($health['label'] ?? __('Needs Review', 'backstage-venue-manager'))), bvmgr_event_command_center_health_tone((string) ($health['status'] ?? 'needs-review')));
-        $highlight_chips = bvmgr_event_command_center_get_highlight_chips($alerts);
-
-        echo '<div class="vms-event-command-center">';
         bvmgr_event_command_center_render_notice();
-
-        echo '<section class="vms-cc-overview">';
-        echo '<div class="vms-cc-overview__identity">';
-        echo '<div class="vms-cc-overview__eyebrow">' . esc_html__('Event Command Center', 'backstage-venue-manager') . '</div>';
-        echo '<h2 class="vms-cc-overview__title">' . esc_html((string) ($header['title'] ?? '')) . '</h2>';
-        echo '<div class="vms-cc-overview__meta">';
-        echo '<span>' . esc_html((string) ($header['date_label'] ?? '')) . '</span>';
-        echo '<span>•</span>';
-        echo '<span>' . esc_html((string) ($header['time_label'] ?? '')) . '</span>';
-        echo '<span>•</span>';
-        echo '<span>' . esc_html((string) ($header['venue_label'] ?? '')) . '</span>';
-        echo '<span>•</span>';
-        echo '<span>' . esc_html((string) ($header['days_until_label'] ?? '')) . '</span>';
-        echo '</div>';
-        echo '<div class="vms-cc-overview__chips">' . wp_kses($status_chip . $health_chip . implode('', $highlight_chips), bvmgr_event_command_center_allowed_markup()) . '</div>';
-        echo '</div>';
-        echo '<div class="vms-cc-overview__actions">';
-        if (!empty($header['edit_url'])) {
-            echo '<a class="button button-primary" href="' . esc_url((string) $header['edit_url']) . '">' . esc_html__('Open Event Plan', 'backstage-venue-manager') . '</a>';
-        }
-        if (!empty($header['public_event_url'])) {
-            echo '<a class="button" href="' . esc_url((string) $header['public_event_url']) . '" target="_blank" rel="noopener">' . esc_html__('View Public Event', 'backstage-venue-manager') . '</a>';
-        } elseif (!empty($header['edit_event_url'])) {
-            echo '<a class="button" href="' . esc_url((string) $header['edit_event_url']) . '">' . esc_html__('Open Calendar Event', 'backstage-venue-manager') . '</a>';
-        }
-        if (!empty($header['ticket_url'])) {
-            echo '<a class="button" href="' . esc_url((string) $header['ticket_url']) . '" target="_blank" rel="noopener">' . esc_html__('Open Ticket Page', 'backstage-venue-manager') . '</a>';
-        }
-        if (!empty($marketing['meta_ads_builder_url'])) {
-            echo '<a class="button" href="' . esc_url((string) $marketing['meta_ads_builder_url']) . '">' . esc_html__('Open Marketing', 'backstage-venue-manager') . '</a>';
-        }
-        echo '<a class="button" href="#vms-cc-notes">' . esc_html__('Jump to Notes', 'backstage-venue-manager') . '</a>';
-        echo '</div>';
-        echo '</section>';
-
-        echo '<div class="vms-cc-grid vms-cc-grid--top">';
-
-        echo '<section class="vms-cc-card vms-cc-card--weather-top">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Weather / Venue Conditions', 'backstage-venue-manager') . '</h3></div>';
-        echo '<div class="vms-cc-overview__chips">' . wp_kses(bvmgr_event_command_center_render_chip((string) ($weather['label'] ?? __('Unavailable', 'backstage-venue-manager')), !empty($weather['active']) ? 'good' : 'warning'), bvmgr_event_command_center_allowed_markup()) . '</div>';
-        echo '<p class="vms-cc-card__note">' . esc_html((string) ($weather['summary'] ?? '')) . '</p>';
-        if (!empty($weather['active']) && !empty($weather['url'])) {
-            echo '<div class="vms-cc-inline-actions"><a class="button button-small" href="' . esc_url((string) $weather['url']) . '">' . esc_html__('Open Weather Workspace', 'backstage-venue-manager') . '</a></div>';
-        }
-        echo '</section>';
-
-        echo '<section class="vms-cc-card">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Show Health', 'backstage-venue-manager') . '</h3></div>';
-        echo '<div class="vms-cc-health__headline">' . wp_kses($health_chip, bvmgr_event_command_center_allowed_markup()) . '</div>';
-        echo '<p class="vms-cc-health__summary">' . esc_html((string) ($health['summary'] ?? '')) . '</p>';
-        echo '<div class="vms-cc-metrics">';
-        bvmgr_event_command_center_render_metric(__('Action items', 'backstage-venue-manager'), (string) count($actions));
-        bvmgr_event_command_center_render_metric(__('Lineup warnings', 'backstage-venue-manager'), (string) count((array) ($lineup['warnings'] ?? array())));
-        bvmgr_event_command_center_render_metric(__('Staffing coverage', 'backstage-venue-manager'), sprintf('%1$d/%2$d', (int) ($staffing['headcount_filled_total'] ?? 0), (int) ($staffing['headcount_needed_total'] ?? 0)));
-        bvmgr_event_command_center_render_metric(__('Proposed / Confirmed', 'backstage-venue-manager'), sprintf('%1$d / %2$d', (int) ($staffing['proposed_headcount'] ?? 0), (int) ($staffing['confirmed_headcount'] ?? 0)), __('Assigned includes tentative proposals', 'backstage-venue-manager'));
-        bvmgr_event_command_center_render_metric(__('Last updated', 'backstage-venue-manager'), (string) ($header['modified_label'] ?? ''));
-        echo '</div>';
-        echo '</section>';
-
-        echo '<section class="vms-cc-card">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Ticket Snapshot', 'backstage-venue-manager') . '</h3></div>';
-        echo '<div class="vms-cc-metrics">';
-        $ticket_sales_available = !empty($ticket['display_sales']);
-        bvmgr_event_command_center_render_metric(__('Paid tickets', 'backstage-venue-manager'), $ticket_sales_available ? (string) ($ticket['sold'] ?? 0) : '—');
-        bvmgr_event_command_center_render_metric(__('Transactional ticket receipts', 'backstage-venue-manager'), $ticket_sales_available ? bvmgr_event_command_center_money((int) ($ticket['revenue_cents'] ?? 0)) : '—', __('Actual transactions', 'backstage-venue-manager'));
-        $comp_basis_label = ($ticket['comp_count_basis'] ?? '') === 'forecast' ? __('Forecast', 'backstage-venue-manager') : __('Actual / reported', 'backstage-venue-manager');
-        bvmgr_event_command_center_render_metric(__('Guest list / comps', 'backstage-venue-manager'), (string) ($ticket['comp_count'] ?? 0), $comp_basis_label);
-        /* translators: %d: ticket capacity count. */
-        bvmgr_event_command_center_render_metric(__('Remaining', 'backstage-venue-manager'), $ticket['remaining'] !== null ? (string) $ticket['remaining'] : '—', $ticket['capacity'] !== null ? sprintf(__('of %d', 'backstage-venue-manager'), (int) $ticket['capacity']) : '');
-        echo '</div>';
-        if ($ticket['sell_through'] !== null) {
-            $sell_through = (float) $ticket['sell_through'];
-            echo '<div class="vms-cc-progress">';
-            echo '<progress class="vms-cc-progress__bar" max="100" value="' . esc_attr((string) round($sell_through, 1)) . '"></progress>';
-            /* translators: %s: sell-through percentage value. */
-            echo '<div class="vms-cc-progress__label">' . esc_html(sprintf(__('Sell-through: %s%%', 'backstage-venue-manager'), number_format_i18n($sell_through, 1))) . '</div>';
-            echo '</div>';
-        }
-        echo '<p class="vms-cc-card__note">' . esc_html((string) ($ticket['sales_summary_label'] ?? '')) . '</p>';
-        $total_count = isset($ticket['total_ticket_count']) ? max(0, (int) $ticket['total_ticket_count']) : ((int) ($ticket['sold'] ?? 0) + (int) ($ticket['comp_count'] ?? 0));
-        if ($ticket_sales_available && ((int) ($ticket['comp_count'] ?? 0) > 0 || $total_count > (int) ($ticket['sold'] ?? 0))) {
-            /* translators: 1: total admitted or ticketed count, 2: paid count, 3: complimentary or free count. */
-            echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Total admitted/ticketed: %1$d (%2$d paid + %3$d comp/free).', 'backstage-venue-manager'), $total_count, (int) ($ticket['sold'] ?? 0), (int) ($ticket['comp_count'] ?? 0))) . '</p>';
-        }
-        if (!empty($ticket['issue_summary'])) {
-            echo '<p class="vms-cc-card__note">' . esc_html((string) $ticket['issue_summary']) . '</p>';
-        } elseif (!$ticket_sales_available) {
-            echo '<p class="vms-cc-card__note">' . esc_html__('Sales availability is described by the ticket status above.', 'backstage-venue-manager') . '</p>';
-        } elseif ((int) ($ticket['sold'] ?? 0) <= 0) {
-            echo '<p class="vms-cc-card__note">' . esc_html__('No paid ticket sales are showing yet for this event.', 'backstage-venue-manager') . '</p>';
-        } else {
-            echo '<p class="vms-cc-card__note">' . esc_html__('No ticketing warnings are currently stacked against this show.', 'backstage-venue-manager') . '</p>';
-        }
-        echo '</section>';
-
-        echo '<section class="vms-cc-card">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Alerts & Next Actions', 'backstage-venue-manager') . '</h3></div>';
-        if (empty($alerts)) {
-            echo '<p class="vms-cc-empty">' . esc_html__('No alerts or follow-up items are currently stacked.', 'backstage-venue-manager') . '</p>';
-        } else {
-            echo '<ul class="vms-cc-alert-list">';
-            foreach ($alerts as $alert) {
-                $severity = sanitize_key((string) ($alert['severity'] ?? 'yellow'));
-                echo '<li class="vms-cc-alert is-' . esc_attr($severity) . '">';
-                echo '<div class="vms-cc-alert__body">';
-                echo '<strong>' . esc_html((string) ($alert['title'] ?? '')) . '</strong>';
-                echo '<p>' . esc_html((string) ($alert['detail'] ?? '')) . '</p>';
-                echo '</div>';
-                if (!empty($alert['action_label']) && !empty($alert['action_url'])) {
-                    echo '<a class="button button-small" href="' . esc_url((string) $alert['action_url']) . '">' . esc_html((string) ($alert['action_label'] ?? '')) . '</a>';
-                }
-                echo '</li>';
-            }
-            echo '</ul>';
-        }
-        echo '</section>';
-
-        echo '</div>';
-
-        echo '<div class="vms-cc-grid vms-cc-grid--middle">';
-
-        echo '<section class="vms-cc-card">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Schedule / Timeline', 'backstage-venue-manager') . '</h3></div>';
-        if (empty($timeline)) {
-            echo '<p class="vms-cc-empty">' . esc_html__('No timeline anchors are stored yet beyond the core event time.', 'backstage-venue-manager') . '</p>';
-        } else {
-            echo '<ul class="vms-cc-timeline">';
-            foreach ($timeline as $row) {
-                echo '<li class="vms-cc-timeline__row">';
-                echo '<span class="vms-cc-timeline__time">' . esc_html((string) ($row['time'] ?? '')) . '</span>';
-                echo '<span class="vms-cc-timeline__label">' . esc_html((string) ($row['label'] ?? '')) . '</span>';
-                echo '<span class="vms-cc-timeline__detail">' . esc_html((string) ($row['detail'] ?? '')) . '</span>';
-                echo '</li>';
-            }
-            echo '</ul>';
-        }
-        echo '</section>';
-
-        echo '<section class="vms-cc-card">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Lineup & Participants', 'backstage-venue-manager') . '</h3></div>';
-        echo '<div class="vms-cc-participant-group">';
-        echo '<h4>' . esc_html__('Talent', 'backstage-venue-manager') . '</h4>';
-        echo '<ul class="vms-cc-participant-list">';
-        if (!empty($lineup['primary'])) {
-            $primary = (array) $lineup['primary'];
-            echo '<li><strong>' . esc_html((string) ($primary['display_name'] ?? $primary['vendor_title'] ?? __('Primary vendor', 'backstage-venue-manager'))) . '</strong><span>' . esc_html__('Primary', 'backstage-venue-manager') . '</span>' . wp_kses(bvmgr_event_command_center_render_chip(__('Booked', 'backstage-venue-manager'), 'good'), bvmgr_event_command_center_allowed_markup()) . '</li>';
-        } else {
-            echo '<li><strong>' . esc_html__('Primary vendor', 'backstage-venue-manager') . '</strong><span>' . esc_html__('Missing', 'backstage-venue-manager') . '</span>' . wp_kses(bvmgr_event_command_center_render_chip(__('Missing', 'backstage-venue-manager'), 'critical'), bvmgr_event_command_center_allowed_markup()) . '</li>';
-        }
-        foreach ((array) ($lineup['supporting'] ?? array()) as $entry) {
-            if (!is_array($entry)) {
-                continue;
-            }
-            echo '<li><strong>' . esc_html((string) ($entry['display_name'] ?? $entry['vendor_title'] ?? __('Supporting act', 'backstage-venue-manager'))) . '</strong><span>' . esc_html__('Supporting', 'backstage-venue-manager') . '</span>' . wp_kses(bvmgr_event_command_center_render_chip(__('Booked', 'backstage-venue-manager'), 'good'), bvmgr_event_command_center_allowed_markup()) . '</li>';
-        }
-        echo '</ul>';
-        echo '</div>';
-
-        echo '<div class="vms-cc-participant-group">';
-        echo '<h4>' . esc_html__('Secondary Vendors', 'backstage-venue-manager') . '</h4>';
-        if (empty($lineup['secondary'])) {
-            echo '<p class="vms-cc-empty vms-cc-empty--inline">' . esc_html__('No secondary vendors assigned.', 'backstage-venue-manager') . '</p>';
-        } else {
-            echo '<ul class="vms-cc-participant-list">';
-            foreach ((array) $lineup['secondary'] as $row) {
-                if (!is_array($row)) {
-                    continue;
-                }
-                echo '<li><strong>' . esc_html((string) ($row['display_name'] ?? __('Secondary vendor', 'backstage-venue-manager'))) . '</strong><span>' . esc_html((string) ($row['role_label'] ?? '')) . '</span>' . wp_kses(bvmgr_event_command_center_render_chip((string) ($row['status_label'] ?? __('Booked', 'backstage-venue-manager')), (string) ($row['status_tone'] ?? 'good')), bvmgr_event_command_center_allowed_markup()) . '</li>';
-            }
-            echo '</ul>';
-        }
-        echo '</div>';
-
-        echo '<div class="vms-cc-participant-group">';
-        echo '<h4>' . esc_html__('Staff', 'backstage-venue-manager') . '</h4>';
-        if (empty($staffing['roles'])) {
-            echo '<p class="vms-cc-empty vms-cc-empty--inline">' . esc_html__('No staffing slots are stored yet for this event.', 'backstage-venue-manager') . '</p>';
-        } else {
-            echo '<ul class="vms-cc-participant-list">';
-            foreach ((array) $staffing['roles'] as $role) {
-                if (!is_array($role)) {
-                    continue;
-                }
-                $needed = max(0, (int) ($role['needed'] ?? 0));
-                $filled = max(0, (int) ($role['filled'] ?? 0));
-                $tone = ($filled >= $needed && $needed > 0) ? 'good' : (($filled > 0) ? 'warning' : 'critical');
-                /* translators: 1: assigned staffing count, 2: required staffing count. */
-                echo '<li><strong>' . esc_html((string) ($role['role_name'] ?? __('Role', 'backstage-venue-manager'))) . '</strong><span>' . esc_html(sprintf(__('%1$d of %2$d assigned', 'backstage-venue-manager'), $filled, $needed)) . '</span>' . wp_kses(bvmgr_event_command_center_render_chip(sprintf('%1$d/%2$d', $filled, $needed), $tone), bvmgr_event_command_center_allowed_markup()) . '</li>';
-            }
-            echo '</ul>';
-        }
-        echo '</div>';
-        echo '</section>';
-
-        echo '</div>';
-
-        echo '<div class="vms-cc-grid vms-cc-grid--support">';
-
-        echo '<section class="vms-cc-card">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Financial Snapshot', 'backstage-venue-manager') . '</h3></div>';
-        echo '<div class="vms-cc-metrics">';
-        bvmgr_financial_render_summary($financial);
-        echo '</div>';
-        echo '<p class="vms-cc-card__note">' . esc_html__('This is a show-ops snapshot, not final accounting truth. Meta ad spend is still waiting on event-level wiring from the Ads side.', 'backstage-venue-manager') . '</p>';
-        echo '</section>';
-
-        echo '<section class="vms-cc-card">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Marketing Snapshot', 'backstage-venue-manager') . '</h3></div>';
-        echo '<ul class="vms-cc-simple-list">';
-        echo '<li><span>' . esc_html__('Public event page', 'backstage-venue-manager') . '</span><strong>' . esc_html((string) ($marketing['event_page_label'] ?? '')) . '</strong></li>';
-        echo '<li><span>' . esc_html__('Social sharing', 'backstage-venue-manager') . '</span><strong>' . esc_html((string) ($marketing['social_label'] ?? '')) . '</strong></li>';
-        echo '<li><span>' . esc_html__('Promo video', 'backstage-venue-manager') . '</span><strong>' . esc_html((string) ($marketing['promo_video_label'] ?? '')) . '</strong></li>';
-        echo '</ul>';
-        echo '<div class="vms-cc-inline-actions">';
-        if (!empty($marketing['social_url'])) {
-            echo '<a class="button button-small" href="' . esc_url((string) $marketing['social_url']) . '">' . esc_html__('Open Social Sharing', 'backstage-venue-manager') . '</a>';
-        }
-        if (!empty($marketing['meta_ads_builder_url'])) {
-            echo '<a class="button button-small" href="' . esc_url((string) $marketing['meta_ads_builder_url']) . '">' . esc_html__('Open Ads Workspace', 'backstage-venue-manager') . '</a>';
-        }
-        echo '</div>';
-        if (!empty($marketing['promo_submission_pending'])) {
-            $submitted_note = !empty($marketing['promo_submission_uploaded_label'])
-                /* translators: %s: formatted vendor promo submission timestamp label. */
-                ? sprintf(__('Vendor clip submitted %s and still waiting for review.', 'backstage-venue-manager'), (string) ($marketing['promo_submission_uploaded_label'] ?? ''))
-                : __('A vendor clip is waiting for review before it goes live.', 'backstage-venue-manager');
-            echo '<p class="vms-cc-card__note">' . esc_html($submitted_note) . '</p>';
-        } elseif (!empty($marketing['promo_video_uploaded_label'])) {
-            /* translators: %s: formatted promo video update timestamp label. */
-            echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Promo video update: %s', 'backstage-venue-manager'), (string) $marketing['promo_video_uploaded_label'])) . '</p>';
-        } elseif (!empty($marketing['meta_ads_registered'])) {
-            echo '<p class="vms-cc-card__note">' . esc_html__('Event-level ad campaign status is not wired into this card yet, but the ads workspace is available.', 'backstage-venue-manager') . '</p>';
-        }
-        echo '</section>';
-
-        echo '</div>';
-
-        bvmgr_event_command_center_render_promo_video_manager($plan_id, $marketing);
-
-        echo '<div class="vms-cc-grid vms-cc-grid--bottom">';
-
-        echo '<section class="vms-cc-card" id="vms-cc-notes">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Internal Notes', 'backstage-venue-manager') . '</h3></div>';
-        if (empty($notes['has_notes'])) {
-            echo '<p class="vms-cc-empty">' . esc_html__('No internal notes are saved yet for this event.', 'backstage-venue-manager') . '</p>';
-        } else {
-            echo '<div class="vms-cc-notes">' . nl2br(esc_html((string) ($notes['notes'] ?? ''))) . '</div>';
-        }
-        echo '</section>';
-
-        echo '<section class="vms-cc-card">';
-        echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Recent Activity', 'backstage-venue-manager') . '</h3></div>';
-        if (empty($activity)) {
-            echo '<p class="vms-cc-empty">' . esc_html__('No recent activity signals were found yet.', 'backstage-venue-manager') . '</p>';
-        } else {
-            echo '<ul class="vms-cc-activity-list">';
-            foreach ($activity as $item) {
-                echo '<li>';
-                echo '<strong>' . esc_html((string) ($item['title'] ?? '')) . '</strong>';
-                echo '<p>' . esc_html((string) ($item['detail'] ?? '')) . '</p>';
-                echo '<span>' . esc_html((string) ($item['when'] ?? '')) . '</span>';
-                echo '</li>';
-            }
-            echo '</ul>';
-        }
-        echo '</section>';
-
-        echo '</div>';
-
-        echo '</div>';
+        bvmgr_event_command_center_render_dashboard($plan_id, bvmgr_event_command_center_build_payload($plan_id));
     }
 }
-
-
 
 if (!function_exists('bvmgr_event_command_center_edit_fragment_url')) {
     function bvmgr_event_command_center_edit_fragment_url(int $plan_id, string $fragment = ''): string
@@ -2465,6 +2181,7 @@ if (!function_exists('bvmgr_event_command_center_build_module_hub_payload')) {
             $weather = bvmgr_event_command_center_get_weather_snapshot($plan_id);
             $checkpoint('command_center_module_hub_weather');
             $notes = bvmgr_event_command_center_get_notes_snapshot($plan_id);
+            $context = bvmgr_event_command_center_get_operational_context($plan_id);
             $checkpoint('command_center_module_hub_notes');
             $alerts = bvmgr_event_command_center_build_alerts($plan_id, $header, $ticket, $lineup, $staffing, $marketing, $weather);
             $checkpoint('command_center_module_hub_alerts');

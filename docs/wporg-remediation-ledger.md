@@ -1078,3 +1078,11 @@ This entry completes the preceding population draft without replacing its histor
   staging/production, deployment, provider/payment action, external communication,
   packaging, activation/deactivation or BVM promotion occurred. Local commit only;
   commit SHA is recorded in the private consolidated report and commit receipt.
+
+## 2026-09-07 — Event Command Center 2.0 (source/disposable only)
+
+- Source authority: new `work/event-command-center-2` from accepted `5200bebbf0eb12c70c2fb56e367ff678b1f32853`; isolated worktree `/private/tmp/bvm-ecc2-20260907/packages/vms-github-reconcile`.
+- Implemented the operational hierarchy, explicit readiness, separate staffing lifecycle/overlap states and financial bases, canonical Event-Day launch, cached optional Weather and read-only communication/agreement/tool adapters. Existing reports, write/security/lifecycle services and Event Plan module hub remain authoritative.
+- Runtime scope is four files: `includes/admin/event-command-center.php`, new `event-command-center-context.php` and `event-command-center-dashboard.php` alongside it, plus `assets/css/vms-event-command-center.css`. Shared changes are synchronized only to the task's disposable sibling, never normal Local or the original historical dirty tree.
+- New contextual/semantic/visual tests and adjusted P0 renderer-location assertions preserve paid/zero/unavailable and shared-authority checks. Full final evidence, matrices, containment, exact changed files, visual findings, limitations and promotion requirements are recorded in `docs/event-command-center-2/consolidated-report.md` and its linked private receipts.
+- No commit implies promotion: only local task commits are authorized; no push, packaging/ZIP, deployment, normal-local activation/database/source change or protected-stash manipulation is part of this task. Historical payables strict-fixture debt remains documented and no substitute was fabricated.

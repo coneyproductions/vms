@@ -1,0 +1,1185 @@
+{
+  "base_commit": "5200bebbf0eb12c70c2fb56e367ff678b1f32853",
+  "scope": "source and disposable only; matrix fields named normal refer to the separate disposable source WordPress, not normal Local",
+  "runtime_sha256": {
+    "includes/admin/event-command-center.php": "dfed6a29404423e2f6bbfc2d25b92d681bd8349ccb9133de09d07e41255a330c",
+    "includes/admin/event-command-center-context.php": "d4fee9334a82ee971179a602fb98d39a7fd6daf41f01905e0c6c785dd081270a",
+    "includes/admin/event-command-center-dashboard.php": "233141ac8ae2e88005f9e246e3d2597e87e6584f7c3ef0ffb6e812ffa4692337",
+    "assets/css/vms-event-command-center.css": "e18f8fbcb95b744bcb29f0e51eab36535ba64e2209b2622b0ff47f01c481d885"
+  },
+  "official": {
+    "overall": "PASS",
+    "scenario_count": 19,
+    "full_report": "/private/tmp/bvm-ecc2-20260907/validation/evidence/matrix-only-final4-official/bvm-addon-runtime-compatibility.report.json",
+    "full_report_sha256": "f0b5bc657f539361e8b7a3e1de1c250454cfa1a5c937c111ee89f2d5ecea98bc",
+    "isolation": {
+      "wordpress": "Local WordPress core copied to a temporary tree",
+      "database": "uniquely named bvm_compat_* disposable database",
+      "database_cleanup": "pass",
+      "runtime_tree_cleanup": "pass",
+      "activation_schema_setup": "pass",
+      "normal_active_plugins_before_sha256": "955d5e12d68988bbd7c4a0714366bc0e85f5008529c407261d604da41608634b",
+      "normal_active_plugins_after_sha256": "955d5e12d68988bbd7c4a0714366bc0e85f5008529c407261d604da41608634b",
+      "normal_active_plugins_unchanged": true,
+      "test_containment": {
+        "external_http": "pass",
+        "process_boundary": "pass",
+        "residue_canary": "removed-and-asserted",
+        "normal_state": "pass",
+        "guard_cleanup": "pass"
+      }
+    },
+    "scenarios": [
+      {
+        "id": "bvm-only-events-slider-core-first",
+        "addon": "events-slider",
+        "core": "yes",
+        "woocommerce": "no",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-events-slider-addon-first",
+        "addon": "events-slider",
+        "core": "yes",
+        "woocommerce": "no",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-fill-dates-core-first",
+        "addon": "fill-dates",
+        "core": "yes",
+        "woocommerce": "no",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-fill-dates-addon-first",
+        "addon": "fill-dates",
+        "core": "yes",
+        "woocommerce": "no",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-data-tools-core-first",
+        "addon": "data-tools",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-data-tools-addon-first",
+        "addon": "data-tools",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-express-bar-core-first",
+        "addon": "express-bar",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-express-bar-addon-first",
+        "addon": "express-bar",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-refer-a-friend-core-first",
+        "addon": "refer-a-friend",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-only-refer-a-friend-addon-first",
+        "addon": "refer-a-friend",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-all-official-five-core-first",
+        "addon": "all",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-all-official-five-addons-first",
+        "addon": "all",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "addons-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "core-absent-events-slider",
+        "addon": "events-slider",
+        "core": "no",
+        "woocommerce": "no",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "core-absent-fill-dates",
+        "addon": "fill-dates",
+        "core": "no",
+        "woocommerce": "no",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "core-absent-data-tools",
+        "addon": "data-tools",
+        "core": "no",
+        "woocommerce": "yes",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "core-absent-express-bar",
+        "addon": "express-bar",
+        "core": "no",
+        "woocommerce": "yes",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "core-absent-refer-a-friend",
+        "addon": "refer-a-friend",
+        "core": "no",
+        "woocommerce": "yes",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-without-woocommerce-express-bar",
+        "addon": "express-bar",
+        "core": "yes",
+        "woocommerce": "no",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "bvm-data-tools-directory-absent",
+        "addon": "data-tools",
+        "core": "yes",
+        "woocommerce": "yes",
+        "load_order": "directory-absent",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      }
+    ]
+  },
+  "additional": {
+    "overall": "PASS",
+    "scenario_count": 52,
+    "full_report": "/private/tmp/bvm-ecc2-20260907/validation/evidence/matrix-only-final4-additional/bvm-additional-runtime-compatibility.report.json",
+    "full_report_sha256": "76ef83375724601d90ad7430bdc6218939e22f2cce383bf10db2d42027a6eb6c",
+    "isolation": {
+      "wordpress": "Local WordPress core copied to a temporary tree",
+      "database": "uniquely named bvm_compat_* disposable database",
+      "database_cleanup": "pass",
+      "runtime_tree_cleanup": "pass",
+      "activation_schema_setup": "pass",
+      "external_http": "blocked before transport by the test-only MU guard",
+      "normal_active_plugins_before_sha256": "955d5e12d68988bbd7c4a0714366bc0e85f5008529c407261d604da41608634b",
+      "normal_active_plugins_after_sha256": "955d5e12d68988bbd7c4a0714366bc0e85f5008529c407261d604da41608634b",
+      "normal_active_plugins_unchanged": true,
+      "test_containment": {
+        "external_http": "pass",
+        "process_boundary": "pass",
+        "residue_canary": "removed-and-asserted",
+        "normal_state": "pass",
+        "guard_cleanup": "pass"
+      }
+    },
+    "scenarios": [
+      {
+        "id": "activation-core-absent-vms-season-passes",
+        "addon": "vms-season-passes",
+        "core": "no",
+        "woocommerce": "yes",
+        "companion_state": "core-absent",
+        "load_order": "activation",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "activation-core-absent-vmsx-weather-risk",
+        "addon": "vmsx-weather-risk",
+        "core": "no",
+        "woocommerce": "yes",
+        "companion_state": "core-absent",
+        "load_order": "activation",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "activation-canonical-bvm-vms-season-passes",
+        "addon": "vms-season-passes",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "canonical-bvm",
+        "load_order": "activation",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "activation-canonical-bvm-vmsx-weather-risk",
+        "addon": "vmsx-weather-risk",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "canonical-bvm",
+        "load_order": "activation",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "deactivation-canonical-bvm-vmsx-weather-risk",
+        "addon": "vmsx-weather-risk",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "canonical-bvm",
+        "load_order": "activation",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-activation-absent-square-vms-commerce-discounts",
+        "addon": "vms-commerce-discounts",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "missing-woocommerce-square",
+        "load_order": "activation",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-drm-calendar-intake-core-first",
+        "addon": "drm-calendar-intake",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-drm-calendar-intake-addon-first",
+        "addon": "drm-calendar-intake",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-commerce-discounts-core-first",
+        "addon": "vms-commerce-discounts",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-commerce-discounts-addon-first",
+        "addon": "vms-commerce-discounts",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-investor-portal-core-first",
+        "addon": "vms-investor-portal",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-investor-portal-addon-first",
+        "addon": "vms-investor-portal",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-meta-ads-core-first",
+        "addon": "vms-meta-ads",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-meta-ads-addon-first",
+        "addon": "vms-meta-ads",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-ops-console-premium-core-first",
+        "addon": "vms-ops-console-premium",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-ops-console-premium-addon-first",
+        "addon": "vms-ops-console-premium",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-season-passes-core-first",
+        "addon": "vms-season-passes",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-season-passes-addon-first",
+        "addon": "vms-season-passes",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-sponsorships-core-first",
+        "addon": "vms-sponsorships",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vms-sponsorships-addon-first",
+        "addon": "vms-sponsorships",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vmsx-checkout-policies-core-first",
+        "addon": "vmsx-checkout-policies",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vmsx-checkout-policies-addon-first",
+        "addon": "vmsx-checkout-policies",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vmsx-weather-risk-core-first",
+        "addon": "vmsx-weather-risk",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-vmsx-weather-risk-addon-first",
+        "addon": "vmsx-weather-risk",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-drm-events-bridge-core-first",
+        "addon": "drm-events-bridge",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-drm-events-bridge-addon-first",
+        "addon": "drm-events-bridge",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-calendar-feeds-core-first",
+        "addon": "drm-calendar-intake",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-calendar-feeds-addon-first",
+        "addon": "drm-calendar-intake",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "addon-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-drm-calendar-intake",
+        "addon": "drm-calendar-intake",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-calendar-feeds-standalone-provider-absent",
+        "addon": "all",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "missing-intake",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-vms-commerce-discounts",
+        "addon": "vms-commerce-discounts",
+        "core": "no",
+        "woocommerce": "yes",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-vms-investor-portal",
+        "addon": "vms-investor-portal",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-vms-meta-ads",
+        "addon": "vms-meta-ads",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-vms-ops-console-premium",
+        "addon": "vms-ops-console-premium",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-vms-season-passes",
+        "addon": "vms-season-passes",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-vms-sponsorships",
+        "addon": "vms-sponsorships",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-vmsx-checkout-policies",
+        "addon": "vmsx-checkout-policies",
+        "core": "no",
+        "woocommerce": "yes",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-vmsx-weather-risk",
+        "addon": "vmsx-weather-risk",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-core-absent-drm-events-bridge",
+        "addon": "drm-events-bridge",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "normal",
+        "load_order": "n/a",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-absent-vms-commerce-discounts",
+        "addon": "vms-commerce-discounts",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "missing-woocommerce",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-absent-square-vms-commerce-discounts",
+        "addon": "vms-commerce-discounts",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "missing-woocommerce-square",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-absent-vmsx-checkout-policies",
+        "addon": "vmsx-checkout-policies",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "missing-woocommerce",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-absent-vms-season-passes",
+        "addon": "vms-season-passes",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "missing-woocommerce",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-present-vms-season-passes-woocommerce",
+        "addon": "vms-season-passes",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "woocommerce-present",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-absent-vms-season-passes-ops",
+        "addon": "vms-season-passes",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "missing-ops",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-absent-vms-sponsorships",
+        "addon": "vms-sponsorships",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "missing-tec",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-provider-absent-drm-events-bridge",
+        "addon": "drm-events-bridge",
+        "core": "no",
+        "woocommerce": "no",
+        "companion_state": "missing-router",
+        "load_order": "missing-provider",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-absent-vmsx-weather-risk-data-tools",
+        "addon": "vmsx-weather-risk",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "missing-data-tools",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-present-vmsx-weather-risk-data-tools",
+        "addon": "vmsx-weather-risk",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "data-tools-present",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "third-party-absent-vmsx-weather-risk-tec",
+        "addon": "vmsx-weather-risk",
+        "core": "yes",
+        "woocommerce": "no",
+        "companion_state": "missing-tec",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-coexistence-core-first",
+        "addon": "all",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "full",
+        "load_order": "core-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      },
+      {
+        "id": "additional-coexistence-addons-first",
+        "addon": "all",
+        "core": "yes",
+        "woocommerce": "yes",
+        "companion_state": "full",
+        "load_order": "addons-first",
+        "exit_code": 0,
+        "passed": true,
+        "check_failures": []
+      }
+    ]
+  },
+  "resource_guard": {
+    "ok": true,
+    "processes": [
+      {
+        "name": "initialize",
+        "pid": 98631
+      },
+      {
+        "name": "server",
+        "pid": 98632
+      },
+      {
+        "name": "test-command",
+        "pid": 98633
+      }
+    ],
+    "limits": {
+      "minimum_free_bytes": 3221225472,
+      "maximum_log_bytes": 8388608,
+      "retained_failure_log_bytes": 1048576,
+      "timeout_seconds": 900
+    },
+    "free_before": 191060615168,
+    "no_process_remains": true,
+    "database_residue_absent": true,
+    "peak_log_bytes": {
+      "initialize.log": 970,
+      "mysql-error.log": 1805,
+      "server.log": 0,
+      "test-command.log": 1645
+    },
+    "free_after": 191056850944
+  },
+  "focused_suites": [
+    {
+      "test": "financial-authority.php",
+      "exit": 0,
+      "stdout_sha256": "7607cbf974f044e2a3fdb344549fd99f0bf0f7fc749ce24ca6f0c55643bede9c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "financial-authority.php --no-woo",
+      "exit": 0,
+      "stdout_sha256": "3c4c5b2518c715d69158fa4a8bcc834182b64d9f91ddf3be2d22d5cf34a79cbb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "financial-investor-semantics.php",
+      "exit": 0,
+      "stdout_sha256": "15b1ab06ca361f5066fcae1f5d1bf07cea8c933c36d8418e2a80b65dd6a283e0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "staffing-financial.php",
+      "exit": 0,
+      "stdout_sha256": "37ab9a76f0868d9139ff4709b4ab4ecc2067d9dcf89ca96be3261a5f4d0a9d19",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "reporting-provider-contract.php",
+      "exit": 0,
+      "stdout_sha256": "feb4b991ec58549893c6f1129614a3e29525797177933bc860e7cc59124e7ca2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "data-tools-provider-decoupling.php",
+      "exit": 0,
+      "stdout_sha256": "14f219e07fb25072f30620fe1bffa7f543b4f27e29fb29060858feae25ba3f77",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "data-tools-reporting-provider.php",
+      "exit": 0,
+      "stdout_sha256": "c56bdd74d1641ffa7cc5fbbdac04188884e34add4ae592f2575c2d290a00e471",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "p0-source-consistency-repair.php",
+      "exit": 0,
+      "stdout_sha256": "aea36f0b6f2deb789e10ab2f26ea49a1209a6d129714abfd9fcb8b2446cb3a5b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "goals-forecast-repository-sql-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "ffcbe131e602695a7a527b15d6cc751876736e5d572c34e424f783af409de39a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "staffing-repository-sql-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "a12b7cb43c9d9134b5bb1b35e9096b66775d9e92e7611d1cc92b02edd6782a87",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "staffing-final-repository-sql-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "8c95108c1be0ac713032123cf5e3ebe865837339f0efef9ddb53c2f807c94dad",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "staffing-matrix-rollup-reporting-repository-sql-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "a12b7cb43c9d9134b5bb1b35e9096b66775d9e92e7611d1cc92b02edd6782a87",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "ticketing-claims-repository-sql-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "c79533a0bd7a1c684d515e8df75bfb546d6ea23c6f40f9a75ce9a59c828aacef",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "ticketing-core-repository-sql-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "2bcc2196e421a68df5284fc66588117df7b0d7fcbf0fce5569c4c7b831a69572",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "staffing-admin-inline-assets-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "794d141b4e444d06f580b29dcbd7a010e2d352834e4d0fb85307df6f038d8f64",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "event-plan-staff-inline-js-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "ae0a2623a4dcf7c3c2c3a846eecf0f1d4443f6fadd0e213d5c328809ba0afb17",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "staff-portal-inline-js-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "f77de72ace56989397b3ec78444a75ec1816e8e13a46d793b0651d2126294a58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "staff-portal-safe-html-output-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "4a547c445688a6e15bc3d14b64ee81a7bd7e6712526cf550e4b2aa18f711b190",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "event-plan-staff-output-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "06a1a67ed2410f8f19943d9932ae0f546bfac1700b52f75c72fb1023616665bb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "event-plan-readiness-details-output-remediation.php",
+      "exit": 0,
+      "stdout_sha256": "e11d2d7fe6ea6eb8ef5c7241c27e25d5611ca398d37986616c4e5a70fec080b4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "calendar-feeds-bvm-navigation.php",
+      "exit": 0,
+      "stdout_sha256": "c7fba2f8a247d55c74194ab65ee294c480854df4778d327414d629bd79253713",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "vendor-portal-bonus-progress-paid-basis.php",
+      "exit": 0,
+      "stdout_sha256": "bbeec9772e90b5427403190abffac9d02fd9252a3f6cca4e549754945c1d1c8f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "addon-compatibility/runtime-contracts-test.php",
+      "exit": 0,
+      "stdout_sha256": "f75f9dfc1e38882a678564e17e624d2766a5dc0945a269ad5aa86411764932ea",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "addon-compatibility/additional-runtime-contracts-test.php",
+      "exit": 0,
+      "stdout_sha256": "5eeea5ac40f608a5cace6a1cd6f8506f88a636e20dfea48501b6fbe42d38bb62",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "addon-compatibility/weather-command-center-connection.php",
+      "exit": 0,
+      "stdout_sha256": "814c03c1be9a1f8f4330bf8acfdc4783b7b7a2d1d5c62da4aa7abd839a431cb9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "fill-dates-admin-notice-placement.php",
+      "exit": 0,
+      "stdout_sha256": "5d86a1482c0738b5839b5685687db14c098c3c4e700aedabe80e3860bd46629d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "fill-dates-menu-hook-compatibility.php",
+      "exit": 0,
+      "stdout_sha256": "dd30945318049cbd9348cafefcd7eda8c1309fb491588d5e8851a25cc17c0674",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "addon-compatibility/commerce-business-contracts.php",
+      "exit": 0,
+      "stdout_sha256": "fd4103da8f6a3699f426da4ab14e92da292fbdd67fcbd230bc80d9f408b65f28",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "addon-compatibility/commerce-square-activation-regression.php",
+      "exit": 0,
+      "stdout_sha256": "cf6cd8d71c86cd7cde6a6f5d3bbd0acc53c971e9df225e78427999ba9ffeccef",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "addon-compatibility/weather-provider-persistence-contracts.php",
+      "exit": 0,
+      "stdout_sha256": "84a04c320519502053d56ea983dc6e9f508f0ea8ddc6848fa241ab71b383ffcd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "/private/tmp/bvm-authority-integration-20260906/packages/vms-github-reconcile/companion-plugins/backstage-calendar-feeds/tests/run.php",
+      "exit": 0,
+      "stdout_sha256": "2572141f756d89e348fbcdbe5f3cdad31609ca62a1b42410fa4be30f63848f6f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-events-bridge/tests/router-provider-probe.php",
+      "exit": 0,
+      "stdout_sha256": "11987c9760e9db086a391c6e2bf4c200d6897396b876838a54130fdbd7ec6508",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-events-bridge/tests/legacy-admin-guard-probe.php",
+      "exit": 0,
+      "stdout_sha256": "d8a6b34e8bc5848812c3bb267b97280093e3fd0b1b8bb683f6137dab60630f98",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-event-router/tests/router-probe.php",
+      "exit": 0,
+      "stdout_sha256": "291226b052405b5e33c6ff110fedde06570da34ecc9288da5caa290a5534700f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-calendar-intake/tests/router-source-discovery-probe.php",
+      "exit": 0,
+      "stdout_sha256": "ebf8dd2feee21efe07a5d4036123d40eff325ec2c7a99eba3fdf9b56d657973c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "test": "/private/tmp/bvm-authority-integration-20260906/runtime/addon-sources/drm-calendar-intake/tests/venue-registry-probe.php",
+      "exit": 0,
+      "stdout_sha256": "83f9a30ccc0e2323419577367cc1cf81871daa48a8fddf953063eae0bb06598d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "ui_receipt": {
+    "preservation-before.json": "89e6027d2bab73406e12f0ef00a94acb63a92e5b0e3b2ea227ac873b4d68a175",
+    "preservation-after.json": "89e6027d2bab73406e12f0ef00a94acb63a92e5b0e3b2ea227ac873b4d68a175",
+    "ui/browser-acceptance.json": "a85ac8f5cb4908d15e2441a81fc670f9e6045d8c2f4b6c62663bcb01d6f055f2",
+    "ui/fixture-manifest.json": "b55f8745043de72328bc75651b13a58da2f5ffc2ffaea4cf9421559c1a9ffd36",
+    "ui/contrast-check.json": "7f9c3cf51117a52e1bfdda42ebf51e17fdd70d800d3a5a79d6c27c042a6482cf",
+    "screenshots": {
+      "01-healthy-upcoming-1440.png": "e4aaf9980b76537ae97926045d5b6247db0437b565beb9c9562148b42faf4ec5",
+      "02-show-day-1440.png": "2041c701285e38bc2b608479a971b1726b02b2244d3c2170e123008e1b5cc0d5",
+      "02-show-day-390.png": "57f8770c607c314d016f2acb2715c926c7f7f68642f8d71e46504f7ad432dc62",
+      "07-staffing-conflict-open-1440.png": "7265549ba7fd1b7f4ba1c19d8331123f8b01dfdeb03e427f487d2d36908e998f",
+      "07-staffing-conflict-open-390.png": "52b32aa0df07255c0a4e337a333be720f5a64b07232f071f1eb60e26e7912d6f",
+      "08-weather-warning-1024.png": "edb93f4353d51b21a9ad716de0bf87cdbfc12ed1e3168cf35a4e041f8df1228c",
+      "11-actual-unavailable-1440.png": "959bc90c583cb43fec6b92b2a411a19ab097be5ba5647ae27138c91f29f69c27",
+      "15-minimal-optionals-unavailable-1440.png": "52b6bbc00e927c5d3c6cc5b33649c4d9f24c4034dfecce6cacf9c93bed05d916",
+      "15-minimal-optionals-unavailable-390.png": "c00533b13815b7bdad7ab131bca005fe4fe7a520f9b1a394b5bbdd71147e7645"
+    }
+  },
+  "ui_assertions": 248,
+  "ui_cases": 16,
+  "ui_widths": [
+    1440,
+    1024,
+    390
+  ],
+  "semantic_assertions": 103,
+  "optional_context_assertions": 35,
+  "historical_payables_fixture": "unavailable; not fabricated or passed",
+  "final_closeout": {
+    "ok": true,
+    "matrices": {
+      "official": {
+        "overall": "PASS",
+        "scenarios": 19,
+        "containment": {
+          "database_cleanup": "pass",
+          "runtime_cleanup": "pass",
+          "http_containment": "pass",
+          "process_boundary": "pass",
+          "residue_canary": "removed-and-asserted",
+          "normal_state": "pass",
+          "guard_cleanup": "pass",
+          "normal_guard_absent": "yes",
+          "runtime_absent": "yes",
+          "lock_released": "yes"
+        }
+      },
+      "additional": {
+        "overall": "PASS",
+        "scenarios": 52,
+        "containment": {
+          "database_cleanup": "pass",
+          "runtime_cleanup": "pass",
+          "http_containment": "pass",
+          "process_boundary": "pass",
+          "residue_canary": "removed-and-asserted",
+          "normal_state": "pass",
+          "guard_cleanup": "pass",
+          "normal_guard_absent": "yes",
+          "runtime_absent": "yes",
+          "lock_released": "yes"
+        }
+      }
+    },
+    "final_source_files": 798,
+    "final_source_still_exact": true,
+    "snapshot_sha256": "340a8d20fa7f8683600b5b2efe04987389121e0b16a08c988b083714e368a4e0",
+    "final_guard": {
+      "ok": true,
+      "processes": [
+        {
+          "name": "initialize",
+          "pid": 98631
+        },
+        {
+          "name": "server",
+          "pid": 98632
+        },
+        {
+          "name": "test-command",
+          "pid": 98633
+        }
+      ],
+      "limits": {
+        "minimum_free_bytes": 3221225472,
+        "maximum_log_bytes": 8388608,
+        "retained_failure_log_bytes": 1048576,
+        "timeout_seconds": 900
+      },
+      "free_before": 191060615168,
+      "no_process_remains": true,
+      "database_residue_absent": true,
+      "peak_log_bytes": {
+        "initialize.log": 970,
+        "mysql-error.log": 1805,
+        "server.log": 0,
+        "test-command.log": 1645
+      },
+      "free_after": 191056850944
+    },
+    "removed_source_fixture_directories": [
+      "/private/tmp/bvm-ecc2-20260907/validation/runtime",
+      "/private/tmp/bvm-ecc2-20260907/validation/packages",
+      "/private/tmp/bvm-ecc2-20260907/validation/vms",
+      "/private/tmp/bvm-ecc2-20260907/validation/backstage-venue-manager",
+      "/private/tmp/bvm-ecc2-20260907/validation/vms-data-tools",
+      "/private/tmp/bvm-ecc2-20260907/validation/backstage-calendar-feeds"
+    ],
+    "no_runtime_or_database_fixture_remains": true
+  },
+  "focused_full_report": "/private/tmp/bvm-ecc2-20260907/validation/evidence/focused-final-freeze.json"
+}
