@@ -147,47 +147,16 @@ if (!function_exists('bvmgr_tasks_recurrence_label')) {
 if (!function_exists('bvmgr_tasks_recurrence_next_due_local')) {
 	function bvmgr_tasks_recurrence_next_due_local(string $due_at_local, string $pattern, ?int $every_n_days = null): ?string
 	{
-		$due_at_local = sanitize_text_field($due_at_local);
-		if ($due_at_local === '') {
-			return null;
-		}
-
-		$pattern = bvmgr_tasks_sanitize_recurrence_pattern($pattern);
-		if ($pattern === 'none') {
-			return null;
-		}
-
-		$tz = wp_timezone();
-		try {
-			$base = new DateTimeImmutable($due_at_local, $tz);
-		} catch (Exception $e) {
-			return null;
-		}
-
-		if ($pattern === 'daily') {
-			return $base->modify('+1 day')->format('Y-m-d H:i:s');
-		}
-		if ($pattern === 'every_n_days') {
-			$days = (int) bvmgr_tasks_normalize_recurrence_every_n_days($pattern, $every_n_days);
-			return $base->modify('+' . $days . ' days')->format('Y-m-d H:i:s');
-		}
-		if ($pattern === 'weekly') {
-			return $base->modify('+1 week')->format('Y-m-d H:i:s');
-		}
-		if ($pattern === 'monthly') {
-			return $base->modify('+1 month')->format('Y-m-d H:i:s');
-		}
-		if ($pattern === 'quarterly') {
-			return $base->modify('+3 months')->format('Y-m-d H:i:s');
-		}
-		if ($pattern === 'semi_annual') {
-			return $base->modify('+6 months')->format('Y-m-d H:i:s');
-		}
-		if ($pattern === 'annual') {
-			return $base->modify('+1 year')->format('Y-m-d H:i:s');
-		}
-
-		return null;
+        try {
+            $base=bvmgr_tasks_parse_clock($due_at_local,wp_timezone_string());
+            $months=array('monthly'=>1,'quarterly'=>3,'semi_annual'=>6,'annual'=>12);
+            if (isset($months[$pattern])) { $first=$base->modify('first day of this month')->modify('+'.$months[$pattern].' months'); $next=$first->setDate((int)$first->format('Y'),(int)$first->format('m'),min((int)$base->format('d'),(int)$first->format('t'))); }
+            elseif (in_array($pattern,array('daily','weekly','every_n_days'),true)) { $days=$pattern==='weekly'?7:($pattern==='daily'?1:(int)bvmgr_tasks_normalize_recurrence_every_n_days($pattern,$every_n_days)); $next=$base->modify('+'.$days.' days'); }
+            else return null;
+            // DateTime may normalize a DST gap; compare the intended wall clock explicitly.
+            $local=$next->format('Y-m-d').' '.$base->format('H:i:s');
+            return bvmgr_tasks_parse_clock($local,wp_timezone_string())->format('Y-m-d H:i:s');
+        } catch (Throwable $e) { return null; }
 	}
 }
 
@@ -219,7 +188,7 @@ if (!function_exists('bvmgr_tasks_log_task_action')) {
 		}
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staff Tasks task-action logs write normalized custom-table audit rows through wpdb::insert(); no core API preserves this repository contract.
-			$wpdb->insert(
+			$written = $wpdb->insert(
 				$table,
 				array(
 					'task_instance_id' => $task_instance_id,
@@ -230,6 +199,7 @@ if (!function_exists('bvmgr_tasks_log_task_action')) {
 			),
 			array('%d', '%s', '%d', '%s', '%s')
 		);
+        if ($written !== 1) throw new RuntimeException('task_audit_write_failed');
 	}
 }
 
@@ -345,13 +315,14 @@ if (!function_exists('bvmgr_tasks_get_task_templates')) {
 	}
 }
 
-if (!function_exists('bvmgr_tasks_upsert_task_template')) {
+if (!function_exists('bvmgr_tasks_upsert_task_template_row')) {
 	/**
 	 * @param array<string,mixed> $payload
 	 * @return int|WP_Error
 	 */
-	function bvmgr_tasks_upsert_task_template(array $payload, int $template_id = 0)
+	function bvmgr_tasks_upsert_task_template_row(array $payload, int $template_id = 0)
 	{
+        if (empty($GLOBALS['bvmgr_tasks_transaction'])) return new WP_Error('task_transaction_required','Use the task definition authority.');
 		global $wpdb;
 		$table = bvmgr_tasks_table_name('task_templates');
 		if ($table === '') {
@@ -369,7 +340,7 @@ if (!function_exists('bvmgr_tasks_upsert_task_template')) {
 		$required_default = !empty($payload['required_default']) ? 1 : 0;
 		$scope = bvmgr_tasks_sanitize_scope((string) ($payload['scope'] ?? 'event'));
 		$due_mode = bvmgr_tasks_sanitize_due_mode((string) ($payload['due_mode'] ?? 'none'));
-		$due_offset_minutes = ($payload['due_offset_minutes'] !== '' && $payload['due_offset_minutes'] !== null)
+		$due_offset_minutes = (($payload['due_offset_minutes'] ?? '') !== '' && ($payload['due_offset_minutes'] ?? null) !== null)
 			? (int) $payload['due_offset_minutes']
 			: null;
 		$due_time_local = trim((string) ($payload['due_time_local'] ?? ''));
@@ -570,13 +541,14 @@ if (!function_exists('bvmgr_tasks_get_checklist_templates')) {
 	}
 }
 
-if (!function_exists('bvmgr_tasks_upsert_checklist_template')) {
+if (!function_exists('bvmgr_tasks_upsert_checklist_template_row')) {
 	/**
 	 * @param array<string,mixed> $payload
 	 * @return int|WP_Error
 	 */
-	function bvmgr_tasks_upsert_checklist_template(array $payload, int $checklist_id = 0)
+	function bvmgr_tasks_upsert_checklist_template_row(array $payload, int $checklist_id = 0)
 	{
+        if (empty($GLOBALS['bvmgr_tasks_transaction'])) return new WP_Error('task_transaction_required','Use the task definition authority.');
 		global $wpdb;
 		$table = bvmgr_tasks_table_name('checklist_templates');
 		if ($table === '') {
@@ -652,6 +624,8 @@ if (!function_exists('bvmgr_tasks_replace_checklist_items')) {
 	 */
 	function bvmgr_tasks_replace_checklist_items(int $checklist_id, array $items)
 	{
+        if (!bvmgr_tasks_current_user_can_manage_checklists()) return new WP_Error('forbidden','Checklist manager permission required.');
+        if (empty($GLOBALS['bvmgr_tasks_transaction'])) return bvmgr_tasks_atomic(static fn()=>bvmgr_tasks_replace_checklist_items($checklist_id,$items));
 		global $wpdb;
 		$table = bvmgr_tasks_table_name('checklist_items');
 		$checklist_id = absint($checklist_id);
@@ -659,10 +633,10 @@ if (!function_exists('bvmgr_tasks_replace_checklist_items')) {
 			return new WP_Error('vms_tasks_checklist_items_invalid', __('Checklist items are unavailable.', 'backstage-venue-manager'));
 		}
 		$checklist = bvmgr_tasks_get_checklist_template($checklist_id);
+        if (!$checklist) return new WP_Error('checklist_missing','Checklist unavailable.');
+        $before=(array)$wpdb->get_results($wpdb->prepare('SELECT task_template_id,sort_order,overrides_json FROM %i WHERE checklist_id=%d ORDER BY sort_order,id',$table,$checklist_id),ARRAY_A);
+        $normalized=array();
 		$checklist_scope = bvmgr_tasks_sanitize_scope((string) ($checklist['scope'] ?? 'event'));
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff Tasks checklist-item replacement clears the custom child rows directly before reinserting the normalized ordered set, and no persistent cache contract safely spans this mutation batch.
-			$wpdb->delete($table, array('checklist_id' => $checklist_id), array('%d'));
 
 		$sort_order = 0;
 		foreach ($items as $item) {
@@ -701,18 +675,14 @@ if (!function_exists('bvmgr_tasks_replace_checklist_items')) {
 				$payload['due_offset_minutes'] = (int) $overrides['due_offset_minutes'];
 			}
 
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Staff Tasks checklist-item replacement persists normalized child rows through wpdb::insert(); no core API preserves this checklist repository contract.
-				$wpdb->insert(
-					$table,
-					array(
-						'checklist_id' => $checklist_id,
-					'task_template_id' => $template_id,
-					'sort_order' => isset($item['sort_order']) ? (int) $item['sort_order'] : $sort_order,
-					'overrides_json' => !empty($payload) ? wp_json_encode($payload) : null,
-				),
-				array('%d', '%d', '%d', '%s')
-			);
-		}
+            $normalized[]=array('task_template_id'=>(string)$template_id,'sort_order'=>(string)(isset($item['sort_order'])?(int)$item['sort_order']:$sort_order),'overrides_json'=>$payload?wp_json_encode($payload):null);
+        }
+        usort($normalized,static fn($a,$b)=>(int)$a['sort_order']<=>(int)$b['sort_order']);
+        if ($before===$normalized) return true;
+        $wpdb->delete($table,array('checklist_id'=>$checklist_id));
+        foreach ($normalized as $item) $wpdb->insert($table,array_merge(array('checklist_id'=>$checklist_id),$item));
+        $wpdb->insert(bvmgr_tasks_table_name('task_logs'),array('task_instance_id'=>0,'action'=>'checklist_items_saved','actor_user_id'=>get_current_user_id(),
+            'details'=>wp_json_encode(array('entity'=>'checklist_items','checklist_id'=>$checklist_id,'before'=>$before,'after'=>$normalized)),'created_at'=>bvmgr_tasks_now_utc_mysql()));
 
 		return true;
 	}
@@ -1029,49 +999,7 @@ if (!function_exists('bvmgr_tasks_get_event_context')) {
 	/** @return array<string,mixed>|null */
 	function bvmgr_tasks_get_event_context(int $event_id): ?array
 	{
-		$event_id = absint($event_id);
-		if ($event_id <= 0 || get_post_type($event_id) !== 'vms_event_plan') {
-			return null;
-		}
-
-		$k_date = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'date') : '_vms_event_date';
-		$k_venue = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'venue_id') : '_vms_venue_id';
-		$k_start_dt = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'start_datetime') : '_vms_event_plan_start_datetime';
-
-		$date_ymd = trim((string) get_post_meta($event_id, $k_date, true));
-		$start_local = trim((string) get_post_meta($event_id, $k_start_dt, true));
-		if ($start_local === '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_ymd)) {
-			$start_local = $date_ymd . ' 12:00:00';
-		}
-
-		$venue_id = absint(get_post_meta($event_id, $k_venue, true));
-		$event_type = sanitize_key((string) get_post_meta($event_id, '_vms_event_type', true));
-		if ($event_type === '' && function_exists('bvmgr_staffing_pick_template_event_type')) {
-			$event_type = sanitize_key((string) bvmgr_staffing_pick_template_event_type($event_id));
-		}
-
-		$tz = wp_timezone();
-		$start_dt = null;
-		if ($start_local !== '') {
-			try {
-				$start_dt = new DateTimeImmutable($start_local, $tz);
-			} catch (Exception $e) {
-				$start_dt = null;
-			}
-		}
-		if (!($start_dt instanceof DateTimeImmutable)) {
-			return null;
-		}
-
-		return array(
-			'event_id' => $event_id,
-			'event_title' => (string) get_the_title($event_id),
-			'venue_id' => $venue_id,
-			'event_type' => $event_type,
-			'date_ymd' => $date_ymd,
-			'event_start_local' => $start_dt->format('Y-m-d H:i:s'),
-			'event_start_ts' => $start_dt->getTimestamp(),
-		);
+        return bvmgr_tasks_event_authority($event_id);
 	}
 }
 
@@ -1145,9 +1073,9 @@ if (!function_exists('bvmgr_tasks_get_instances')) {
 			$venue_id = $has_venue_id ? absint($filters['venue_id']) : 0;
 			$required_only = !empty($filters['required_only']) ? 1 : 0;
 			$has_due_before = !empty($filters['due_before']) ? 1 : 0;
-			$due_before = $has_due_before ? sanitize_text_field((string) $filters['due_before']) : '';
+			$due_before = $has_due_before ? sanitize_text_field((string) $filters['due_before']) : '9999-12-31 23:59:59';
 			$has_due_after = !empty($filters['due_after']) ? 1 : 0;
-			$due_after = $has_due_after ? sanitize_text_field((string) $filters['due_after']) : '';
+			$due_after = $has_due_after ? sanitize_text_field((string) $filters['due_after']) : '1000-01-01 00:00:00';
 
 		$limit = isset($filters['limit']) ? absint($filters['limit']) : 200;
 		if ($limit <= 0) {
@@ -1239,9 +1167,9 @@ if (!function_exists('bvmgr_tasks_count_instances')) {
 			$venue_id = $has_venue_id ? absint($filters['venue_id']) : 0;
 			$required_only = !empty($filters['required_only']) ? 1 : 0;
 			$has_due_before = !empty($filters['due_before']) ? 1 : 0;
-			$due_before = $has_due_before ? sanitize_text_field((string) $filters['due_before']) : '';
+			$due_before = $has_due_before ? sanitize_text_field((string) $filters['due_before']) : '9999-12-31 23:59:59';
 			$has_due_after = !empty($filters['due_after']) ? 1 : 0;
-			$due_after = $has_due_after ? sanitize_text_field((string) $filters['due_after']) : '';
+			$due_after = $has_due_after ? sanitize_text_field((string) $filters['due_after']) : '1000-01-01 00:00:00';
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance counts read the normalized custom repository with prepared identifier/filter values, and assignment, supersession, and recurrence flows must see request-fresh state.
 			return (int) $wpdb->get_var(
@@ -1290,13 +1218,14 @@ if (!function_exists('bvmgr_tasks_count_instances')) {
 		}
 	}
 
-if (!function_exists('bvmgr_tasks_insert_instance')) {
+if (!function_exists('bvmgr_tasks_insert_instance_row')) {
 	/**
 	 * @param array<string,mixed> $payload
 	 * @return int|WP_Error
 	 */
-	function bvmgr_tasks_insert_instance(array $payload)
+	function bvmgr_tasks_insert_instance_row(array $payload)
 	{
+        if (empty($GLOBALS['bvmgr_tasks_transaction'])) return new WP_Error('task_transaction_required','Use the task command authority.');
 		global $wpdb;
 		$table = bvmgr_tasks_table_name('task_instances');
 		if ($table === '') {
@@ -1382,67 +1311,7 @@ if (!function_exists('bvmgr_tasks_update_instance_assignment')) {
 		?string $role_key = null
 	): bool
 	{
-		global $wpdb;
-		$table = bvmgr_tasks_table_name('task_instances');
-		$instance_id = absint($instance_id);
-		if ($table === '' || $instance_id <= 0) {
-			return false;
-		}
-		$assignee_user_id = absint($assignee_user_id);
-		if ($assignee_user_id <= 0) {
-			$assignee_user_id = null;
-		}
-
-		$data = array(
-			'assignee_user_id' => $assignee_user_id,
-			'assignment_locked' => $lock ? 1 : 0,
-			'updated_at' => bvmgr_tasks_now_utc_mysql(),
-		);
-		$formats = array('%d', '%d', '%s');
-		$log_payload = array(
-			'assignee_user_id' => $assignee_user_id,
-			'assignment_locked' => ($lock ? 1 : 0),
-		);
-
-		if ($assignment_mode !== null || $role_key !== null) {
-			$mode = bvmgr_tasks_sanitize_assignment_mode((string) $assignment_mode);
-			$effective_role = sanitize_key((string) $role_key);
-			if ($mode === 'person') {
-				$effective_role = '';
-			}
-			$data['assignment_mode'] = $mode;
-			$data['role_key'] = $effective_role;
-			$formats[] = '%s';
-			$formats[] = '%s';
-			$log_payload['assignment_mode'] = $mode;
-			$log_payload['role_key'] = $effective_role;
-		}
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance assignment updates mutate a custom repository row through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
-			$updated = $wpdb->update(
-				$table,
-				$data,
-				array('id' => $instance_id),
-				$formats,
-			array('%d')
-		);
-		if ($updated === false) {
-			return false;
-		}
-
-		bvmgr_tasks_log_task_action(
-			$instance_id,
-			'assigned',
-			$actor_user_id,
-			wp_json_encode($log_payload)
-		);
-		if (function_exists('bvmgr_tasks_emit_assignment_notification')) {
-			$latest = bvmgr_tasks_get_instance($instance_id);
-			if (is_array($latest)) {
-				bvmgr_tasks_emit_assignment_notification($latest);
-			}
-		}
-		return true;
+        $r=bvmgr_tasks_set_instance_assignment($instance_id,$assignee_user_id,$lock,$actor_user_id,$assignment_mode,$role_key); return !is_wp_error($r);
 	}
 }
 
@@ -1457,61 +1326,9 @@ if (!function_exists('bvmgr_tasks_set_instance_assignment')) {
 		?string $role_key = null
 	)
 	{
-		$instance_id = absint($instance_id);
-		if ($instance_id <= 0) {
-			return new WP_Error('vms_tasks_instance_invalid', __('Task instance is invalid.', 'backstage-venue-manager'));
-		}
-
-		$row = bvmgr_tasks_get_instance($instance_id);
-		if (!is_array($row)) {
-			return new WP_Error('vms_tasks_instance_missing', __('Task instance was not found.', 'backstage-venue-manager'));
-		}
-
-		$status = bvmgr_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
-		if ($status === 'superseded') {
-			return new WP_Error('vms_tasks_instance_superseded', __('Superseded tasks are read-only.', 'backstage-venue-manager'));
-		}
-
-		if ($actor_user_id === null) {
-			$actor_user_id = absint(get_current_user_id());
-		}
-		$actor_user_id = absint($actor_user_id);
-		if ($actor_user_id <= 0) {
-			$actor_user_id = null;
-		}
-
-		$set_rule = ($assignment_mode !== null || $role_key !== null);
-		$mode = null;
-		$effective_role_key = null;
-		if ($set_rule) {
-			$mode = bvmgr_tasks_sanitize_assignment_mode((string) $assignment_mode);
-			$effective_role_key = sanitize_key((string) $role_key);
-
-			if ($mode === 'role' && absint($assignee_user_id) > 0) {
-				$mode = 'person';
-				$effective_role_key = '';
-			}
-			if ($mode === 'person') {
-				$effective_role_key = '';
-			}
-			if (in_array($mode, array('role', 'scheduled_role'), true) && $effective_role_key === '') {
-				return new WP_Error('vms_tasks_role_required', __('Role is required for role-based assignments.', 'backstage-venue-manager'));
-			}
-		}
-
-		$ok = bvmgr_tasks_update_instance_assignment(
-			$instance_id,
-			$assignee_user_id,
-			$assignment_locked,
-			$actor_user_id,
-			$mode,
-			$effective_role_key
-		);
-		if (!$ok) {
-			return new WP_Error('vms_tasks_assignment_update_failed', __('Failed to update task assignment.', 'backstage-venue-manager'));
-		}
-
-		return true;
+        $row=bvmgr_tasks_get_instance($instance_id);
+        $r=bvmgr_tasks_command('assignment',$instance_id,array('assignee_user_id'=>$assignee_user_id,'assignment_locked'=>$assignment_locked,'assignment_mode'=>$assignment_mode??($row['assignment_mode']??'person'),'role_key'=>$role_key??($row['role_key']??'')),bvmgr_tasks_request_revision(),bvmgr_tasks_request_operation());
+        return is_wp_error($r)?$r:true;
 	}
 }
 
@@ -1519,112 +1336,8 @@ if (!function_exists('bvmgr_tasks_transition_instance_status')) {
 	/** @return true|WP_Error */
 	function bvmgr_tasks_transition_instance_status(int $instance_id, string $new_status, string $reason = '', ?int $actor_user_id = null)
 	{
-		global $wpdb;
-		$table = bvmgr_tasks_table_name('task_instances');
-		$instance_id = absint($instance_id);
-		if ($table === '' || $instance_id <= 0) {
-			return new WP_Error('vms_tasks_instance_invalid', __('Task instance is invalid.', 'backstage-venue-manager'));
-		}
-
-		$row = bvmgr_tasks_get_instance($instance_id);
-		if (!is_array($row)) {
-			return new WP_Error('vms_tasks_instance_missing', __('Task instance was not found.', 'backstage-venue-manager'));
-		}
-
-		$current = bvmgr_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
-		$new_status = bvmgr_tasks_sanitize_status($new_status);
-		$reason = sanitize_text_field($reason);
-		if ($new_status === $current) {
-			return true;
-		}
-		if ($current === 'superseded') {
-			return new WP_Error('vms_tasks_instance_superseded', __('Superseded tasks are read-only.', 'backstage-venue-manager'));
-		}
-		if (!in_array($new_status, array('open', 'done', 'skipped', 'canceled'), true)) {
-			return new WP_Error('vms_tasks_status_invalid', __('Invalid status transition.', 'backstage-venue-manager'));
-		}
-
-		$allowed = false;
-		if ($current === 'open' && in_array($new_status, array('done', 'skipped', 'canceled'), true)) {
-			$allowed = true;
-		}
-		if (in_array($current, array('done', 'skipped', 'canceled'), true) && $new_status === 'open') {
-			$allowed = true;
-		}
-		if (!$allowed) {
-			return new WP_Error('vms_tasks_status_forbidden', __('This status transition is not allowed.', 'backstage-venue-manager'));
-		}
-
-		if (in_array($new_status, array('skipped', 'canceled'), true) && $reason === '') {
-			return new WP_Error('vms_tasks_reason_required', __('A reason is required for skipped or canceled tasks.', 'backstage-venue-manager'));
-		}
-
-		if ($actor_user_id === null) {
-			$actor_user_id = absint(get_current_user_id());
-		}
-		$actor_user_id = absint($actor_user_id);
-		if ($actor_user_id <= 0) {
-			$actor_user_id = null;
-		}
-
-		$data = array(
-			'status' => $new_status,
-			'updated_at' => bvmgr_tasks_now_utc_mysql(),
-		);
-		$formats = array('%s', '%s');
-
-		if ($new_status === 'done') {
-			$data['completed_by_user_id'] = $actor_user_id;
-			$data['completed_at_local'] = bvmgr_tasks_now_local_mysql();
-			$data['skip_reason'] = null;
-			$data['cancel_reason'] = null;
-			$formats = array('%s', '%s', '%d', '%s', '%s', '%s');
-		} elseif ($new_status === 'skipped') {
-			$data['skip_reason'] = $reason;
-			$formats[] = '%s';
-		} elseif ($new_status === 'canceled') {
-			$data['cancel_reason'] = $reason;
-			$formats[] = '%s';
-		} elseif ($new_status === 'open') {
-			$data['completed_by_user_id'] = null;
-			$data['completed_at_local'] = null;
-			$formats[] = '%d';
-			$formats[] = '%s';
-		}
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance status transitions mutate a custom repository row through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
-			$ok = $wpdb->update($table, $data, array('id' => $instance_id), $formats, array('%d'));
-			if ($ok === false) {
-				return new WP_Error('vms_tasks_status_update_failed', __('Failed to update task status.', 'backstage-venue-manager'));
-			}
-
-		$action = 'status_changed';
-		if ($new_status === 'done') {
-			$action = 'marked_done';
-		} elseif ($new_status === 'skipped') {
-			$action = 'marked_skipped';
-		} elseif ($new_status === 'canceled') {
-			$action = 'marked_canceled';
-		} elseif ($new_status === 'open') {
-			$action = 'reopened';
-		}
-
-		bvmgr_tasks_log_task_action($instance_id, $action, $actor_user_id, wp_json_encode(array(
-			'from' => $current,
-			'to' => $new_status,
-			'reason' => $reason,
-		)));
-		if (in_array($new_status, array('done', 'skipped', 'canceled'), true)) {
-			$spawned = bvmgr_tasks_spawn_next_recurrence_instance($instance_id, $actor_user_id);
-			if (is_wp_error($spawned)) {
-				bvmgr_tasks_log_task_action($instance_id, 'recurrence_generation_failed', $actor_user_id, wp_json_encode(array(
-					'error' => $spawned->get_error_message(),
-					'to_status' => $new_status,
-				)));
-			}
-		}
-
-		return true;
+        $r=bvmgr_tasks_command('transition',$instance_id,array('status'=>$new_status,'reason'=>$reason),bvmgr_tasks_request_revision(),bvmgr_tasks_request_operation());
+        return is_wp_error($r)?$r:true;
 	}
 }
 
@@ -1632,114 +1345,7 @@ if (!function_exists('bvmgr_tasks_spawn_next_recurrence_instance')) {
 	/** @return int|WP_Error */
 	function bvmgr_tasks_spawn_next_recurrence_instance(int $instance_id, ?int $actor_user_id = null)
 	{
-		global $wpdb;
-		$table = bvmgr_tasks_table_name('task_instances');
-		$instance_id = absint($instance_id);
-		if ($table === '' || $instance_id <= 0) {
-			return 0;
-		}
-
-		$row = bvmgr_tasks_get_instance($instance_id);
-		if (!is_array($row)) {
-			return 0;
-		}
-
-		$status = bvmgr_tasks_sanitize_status((string) ($row['status'] ?? 'open'));
-		if (!in_array($status, array('done', 'skipped', 'canceled'), true)) {
-			return 0;
-		}
-
-		if (absint($row['event_id'] ?? 0) > 0) {
-			return 0;
-		}
-
-		$pattern = bvmgr_tasks_sanitize_recurrence_pattern((string) ($row['recurrence_pattern'] ?? 'none'));
-		if ($pattern === 'none') {
-			return 0;
-		}
-
-		$due_at_local = sanitize_text_field((string) ($row['due_at_local'] ?? ''));
-		if ($due_at_local === '') {
-			return new WP_Error('vms_tasks_recurrence_due_missing', __('Recurring task is missing its due date/time.', 'backstage-venue-manager'));
-		}
-
-		$every_n_days = bvmgr_tasks_normalize_recurrence_every_n_days($pattern, $row['recurrence_every_n_days'] ?? 0);
-		$next_due = bvmgr_tasks_recurrence_next_due_local($due_at_local, $pattern, $every_n_days);
-		if ($next_due === null) {
-			return new WP_Error('vms_tasks_recurrence_compute_failed', __('Failed to compute next recurring due date/time.', 'backstage-venue-manager'));
-		}
-
-		$root_id = absint($row['recurrence_root_instance_id'] ?? 0);
-		if ($root_id <= 0) {
-			$root_id = $instance_id;
-		}
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Task-instance recurrence checks read the normalized custom repository with prepared identifier/filter values, and completion flows must detect existing successors immediately.
-			$existing_id = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					'SELECT id FROM %i
-					 WHERE (id = %d OR recurrence_root_instance_id = %d)
-					   AND due_at_local = %s
-					   AND status <> %s
-					 LIMIT 1',
-					$table,
-					$root_id,
-					$root_id,
-					$next_due,
-					'superseded'
-				)
-			);
-		if ($existing_id > 0) {
-			return $existing_id;
-		}
-
-		$created = bvmgr_tasks_insert_instance(array(
-			'task_template_id' => absint($row['task_template_id'] ?? 0),
-			'origin_checklist_id' => absint($row['origin_checklist_id'] ?? 0),
-			'event_id' => null,
-			'venue_id' => absint($row['venue_id'] ?? 0),
-			'event_type' => sanitize_key((string) ($row['event_type'] ?? '')),
-			'title' => (string) ($row['title'] ?? ''),
-			'instructions' => (string) ($row['instructions'] ?? ''),
-			'priority' => (string) ($row['priority'] ?? 'normal'),
-			'is_required' => !empty($row['is_required']) ? 1 : 0,
-			'due_at_local' => $next_due,
-			'status' => 'open',
-			'assignment_mode' => (string) ($row['assignment_mode'] ?? 'role'),
-			'role_key' => (string) ($row['role_key'] ?? ''),
-			'assignee_user_id' => absint($row['assignee_user_id'] ?? 0),
-			'assignment_locked' => !empty($row['assignment_locked']) ? 1 : 0,
-			'recurrence_pattern' => $pattern,
-			'recurrence_every_n_days' => $every_n_days,
-			'recurrence_root_instance_id' => $root_id,
-		));
-		if (is_wp_error($created)) {
-			return $created;
-		}
-
-		$new_id = absint($created);
-		bvmgr_tasks_log_task_action($new_id, 'created_from_recurrence', $actor_user_id, wp_json_encode(array(
-			'source_instance_id' => $instance_id,
-			'recurrence_root_instance_id' => $root_id,
-			'recurrence_pattern' => $pattern,
-			'recurrence_every_n_days' => $every_n_days,
-			'due_at_local' => $next_due,
-		)));
-		bvmgr_tasks_log_task_action($instance_id, 'recurrence_next_created', $actor_user_id, wp_json_encode(array(
-			'next_instance_id' => $new_id,
-			'due_at_local' => $next_due,
-			'recurrence_pattern' => $pattern,
-			'recurrence_every_n_days' => $every_n_days,
-		)));
-
-		if (function_exists('bvmgr_tasks_emit_assignment_notification')) {
-			$latest = bvmgr_tasks_get_instance($new_id);
-			if (is_array($latest) && absint($latest['assignee_user_id'] ?? 0) > 0) {
-				bvmgr_tasks_emit_assignment_notification($latest);
-			}
-		}
-
-		return $new_id;
+        return bvmgr_tasks_atomic(static function()use($instance_id){$row=bvmgr_tasks_get_instance($instance_id); return $row && in_array($row['status'],array('done','skipped'),true)?bvmgr_tasks_recurrence_successor($row):0;});
 	}
 }
 
@@ -1749,80 +1355,7 @@ if (!function_exists('bvmgr_tasks_resolve_scheduled_role_user_id')) {
 	 */
 	function bvmgr_tasks_resolve_scheduled_role_user_id(int $event_id, string $role_key): array
 	{
-		$event_id = absint($event_id);
-		$role_key = sanitize_key($role_key);
-		if ($event_id <= 0 || $role_key === '') {
-			return array('status' => 'none', 'assignee_user_id' => 0, 'staff_ids' => array());
-		}
-
-		if (!taxonomy_exists('vms_staff_role')) {
-			return array('status' => 'none', 'assignee_user_id' => 0, 'staff_ids' => array());
-		}
-		$term = get_term_by('slug', $role_key, 'vms_staff_role');
-		$role_id = ($term instanceof WP_Term) ? absint($term->term_id) : 0;
-		if ($role_id <= 0) {
-			return array('status' => 'none', 'assignee_user_id' => 0, 'staff_ids' => array());
-		}
-
-			global $wpdb;
-			$t_slots = function_exists('bvmgr_staffing_table_name') ? (string) bvmgr_staffing_table_name('event_slots') : '';
-			$t_assign = function_exists('bvmgr_staffing_table_name') ? (string) bvmgr_staffing_table_name('assignments') : '';
-			if ($t_slots === '' || $t_assign === '') {
-				$t_slots = $wpdb->prefix . (defined('BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_SLOTS_SUFFIX : 'vms_event_role_slots');
-				$t_assign = $wpdb->prefix . (defined('BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX') ? BVMGR_DB_TABLE_EVENT_ROLE_ASSIGNMENTS_SUFFIX : 'vms_event_role_assignments');
-			}
-			$t_usermeta = (property_exists($wpdb, 'usermeta') && is_string($wpdb->usermeta) && $wpdb->usermeta !== '')
-				? $wpdb->usermeta
-				: $wpdb->prefix . 'usermeta';
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled-role resolution reads the staffing repositories with prepared identifier/filter values, and portal/task assignment flows must observe immediate staffing changes.
-			$staff_ids = $wpdb->get_col(
-				$wpdb->prepare(
-					'SELECT DISTINCT a.staff_id
-					 FROM %i s
-					 INNER JOIN %i a ON a.slot_id = s.slot_id
-					 WHERE s.event_plan_id = %d
-					   AND s.role_id = %d
-					   AND s.status = %s
-					   AND a.status IN (%s, %s, %s)',
-					$t_slots,
-					$t_assign,
-					$event_id,
-					$role_id,
-					'active',
-					'proposed',
-					'confirmed',
-					'checked_in'
-				)
-			);
-
-		$staff_ids = array_values(array_unique(array_filter(array_map('absint', is_array($staff_ids) ? $staff_ids : array()))));
-		if (count($staff_ids) === 0) {
-			return array('status' => 'none', 'assignee_user_id' => 0, 'staff_ids' => array());
-		}
-		if (count($staff_ids) > 1) {
-			return array('status' => 'multiple', 'assignee_user_id' => 0, 'staff_ids' => $staff_ids);
-		}
-
-			$staff_id = $staff_ids[0];
-			$user_id = absint(get_post_meta($staff_id, '_vms_linked_user_id', true));
-			if ($user_id <= 0) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Scheduled-role fallback reads a single normalized usermeta link with prepared identifier/filter values, and portal/task assignment flows must observe immediate link changes.
-				$user_id = (int) $wpdb->get_var(
-					$wpdb->prepare(
-						'SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1',
-						$t_usermeta,
-						'_vms_staff_id',
-						(string) $staff_id
-					)
-				);
-			}
-
-		if ($user_id <= 0) {
-			return array('status' => 'none', 'assignee_user_id' => 0, 'staff_ids' => $staff_ids);
-		}
-
-		return array('status' => 'single', 'assignee_user_id' => $user_id, 'staff_ids' => $staff_ids);
+        return bvmgr_tasks_scheduled_person($event_id, $role_key);
 	}
 }
 
@@ -1830,64 +1363,8 @@ if (!function_exists('bvmgr_tasks_select_existing_open_instance')) {
 	/** @return array<string,mixed>|null */
 	function bvmgr_tasks_select_existing_open_instance(int $event_id, int $template_id, int $origin_checklist_id, ?string $due_at_local, bool $strict_due = true): ?array
 	{
-		global $wpdb;
-		$table = bvmgr_tasks_table_name('task_instances');
-		if ($table === '') {
-			return null;
-		}
-
-		$event_id = absint($event_id);
-		$template_id = absint($template_id);
-		$origin_checklist_id = absint($origin_checklist_id);
-		if ($event_id <= 0 || $template_id <= 0) {
-			return null;
-		}
-
-			if ($strict_due) {
-				if ($due_at_local === null || $due_at_local === '') {
-					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Existing-open-instance selection reads the normalized custom repository with prepared identifier/filter values, and regeneration/supersession flows must observe the latest request-local state.
-					$row = $wpdb->get_row(
-						$wpdb->prepare(
-							'SELECT * FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND due_at_local IS NULL ORDER BY id DESC LIMIT 1',
-							$table,
-							$event_id,
-							$template_id,
-							$origin_checklist_id,
-							'open'
-						),
-						ARRAY_A
-					);
-				} else {
-					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Existing-open-instance selection reads the normalized custom repository with prepared identifier/filter values, and regeneration/supersession flows must observe the latest request-local state.
-					$row = $wpdb->get_row(
-						$wpdb->prepare(
-							'SELECT * FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND due_at_local = %s ORDER BY id DESC LIMIT 1',
-							$table,
-							$event_id,
-							$template_id,
-							$origin_checklist_id,
-							'open',
-							$due_at_local
-						),
-						ARRAY_A
-					);
-				}
-			} else {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Existing-open-instance selection reads the normalized custom repository with prepared identifier/filter values, and regeneration/supersession flows must observe the latest request-local state.
-				$row = $wpdb->get_row(
-					$wpdb->prepare(
-						'SELECT * FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s ORDER BY id DESC LIMIT 1',
-						$table,
-						$event_id,
-						$template_id,
-						$origin_checklist_id,
-						'open'
-					),
-					ARRAY_A
-				);
-			}
-
-		return is_array($row) ? $row : null;
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE event_id=%d AND task_template_id=%d ORDER BY id LIMIT 1',bvmgr_tasks_table_name('task_instances'),$event_id,$template_id),ARRAY_A)?:null;
 	}
 }
 
@@ -1895,64 +1372,7 @@ if (!function_exists('bvmgr_tasks_supersede_open_instances')) {
 	/** @return int rows superseded */
 	function bvmgr_tasks_supersede_open_instances(int $event_id, int $template_id, int $origin_checklist_id, int $new_instance_id, ?int $actor_user_id = null): int
 	{
-		global $wpdb;
-		$table = bvmgr_tasks_table_name('task_instances');
-		if ($table === '') {
-			return 0;
-		}
-
-		$event_id = absint($event_id);
-		$template_id = absint($template_id);
-		$origin_checklist_id = absint($origin_checklist_id);
-		$new_instance_id = absint($new_instance_id);
-		if ($event_id <= 0 || $template_id <= 0 || $new_instance_id <= 0) {
-			return 0;
-		}
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Open-instance supersession reads the normalized custom repository with prepared identifier/filter values, and regeneration flows must observe the latest request-local state before mutating siblings.
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					'SELECT id FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND id <> %d',
-					$table,
-					$event_id,
-					$template_id,
-					$origin_checklist_id,
-					'open',
-					$new_instance_id
-				),
-				ARRAY_A
-			);
-
-		if (!is_array($rows) || empty($rows)) {
-			return 0;
-		}
-
-		$count = 0;
-		foreach ($rows as $row) {
-			$instance_id = absint($row['id'] ?? 0);
-			if ($instance_id <= 0) {
-				continue;
-			}
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Open-instance supersession mutates sibling repository rows through wpdb::update(); no core API is equivalent and no read cache applies to this immediate write path.
-				$updated = $wpdb->update(
-					$table,
-					array(
-						'status' => 'superseded',
-					'superseded_by_instance_id' => $new_instance_id,
-					'updated_at' => bvmgr_tasks_now_utc_mysql(),
-				),
-				array('id' => $instance_id),
-				array('%s', '%d', '%s'),
-				array('%d')
-			);
-			if ($updated !== false && (int) $updated > 0) {
-				$count++;
-				bvmgr_tasks_log_task_action($instance_id, 'regenerated_and_superseded', $actor_user_id, wp_json_encode(array(
-					'superseded_by_instance_id' => $new_instance_id,
-				)));
-			}
-		}
-
-		return $count;
+        // Generated tasks retain their identity through event changes; historical superseded rows remain readable.
+        return 0;
 	}
 }

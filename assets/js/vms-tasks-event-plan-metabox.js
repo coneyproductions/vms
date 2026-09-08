@@ -53,6 +53,7 @@
       action: 'vms_tasks_create_one_off_ajax',
       nonce: (box.getAttribute('data-vms-nonce') || '').trim(),
       event_id: (box.getAttribute('data-vms-event-id') || '').trim(),
+      operation_id: box.getAttribute('data-operation-id') || '',
       title: getVal('title'),
       instructions: getVal('instructions'),
       priority: getVal('priority') || 'normal',
@@ -130,6 +131,8 @@
         var okMsg = (payload.data && payload.data.message) ? String(payload.data.message) : 'Task created.';
         var tasksUrl = (payload.data && payload.data.tasks_url) ? String(payload.data.tasks_url) : '';
         setNotice(box, 'success', okMsg, tasksUrl);
+
+        if (payload.data && payload.data.next_operation_id) box.setAttribute('data-operation-id', payload.data.next_operation_id);
 
         // Clear only the title and instructions so repeated entry stays quick.
         var t = $(box, '[data-vms-tasks-field="title"]');

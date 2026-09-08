@@ -772,9 +772,9 @@ if (!function_exists('bvmgr_tasks_admin_handle_generate_event')) {
 		if (!bvmgr_tasks_current_user_can_manage_all()) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Insufficient permissions.', 'backstage-venue-manager'));
 		}
-		$event_id = absint($_GET['event_id'] ?? 0);
-		$nonce = (isset($_GET['_wpnonce']) && !is_array($_GET['_wpnonce']))
-			? sanitize_text_field(wp_unslash((string) $_GET['_wpnonce']))
+		$event_id = absint($_POST['event_id'] ?? 0);
+		$nonce = (isset($_POST['_wpnonce']) && !is_array($_POST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_POST['_wpnonce']))
 			: '';
 		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_tasks_generate_event_' . $event_id))) {
 			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', __('Security check failed.', 'backstage-venue-manager'));
@@ -970,87 +970,9 @@ if (!function_exists('bvmgr_tasks_admin_handle_create_one_off')) {
 		}
 
 		$instance_id = absint($created);
-		bvmgr_tasks_log_task_action($instance_id, 'created_ad_hoc', get_current_user_id(), wp_json_encode(array(
-			'event_id' => $event_id,
-			'title' => $title,
-			'is_required' => $is_required ? 1 : 0,
-			'assignment_mode' => $assignment_mode,
-			'role_key' => $role_key,
-			'assignee_user_id' => $assignee_user_id,
-			'recurrence_pattern' => $recurrence_pattern,
-			'recurrence_every_n_days' => $recurrence_every_n_days,
-		)));
-		if ($assignee_user_id > 0 && function_exists('bvmgr_tasks_emit_assignment_notification')) {
-			$latest = bvmgr_tasks_get_instance($instance_id);
-			if (is_array($latest)) {
-				bvmgr_tasks_emit_assignment_notification($latest);
-			}
-		}
+		// Creation history and assignment delivery follow the canonical committed command.
 
-		if ($make_repeatable_now) {
-			$due_mode = 'none';
-			$due_time_local = '';
-			if (is_string($due_at_local) && preg_match('/^\d{4}-\d{2}-\d{2}\s(\d{2}:\d{2})/', $due_at_local, $matches)) {
-				$due_mode = 'fixed_datetime';
-				$due_time_local = (string) $matches[1];
-			}
-
-			$template_payload = array(
-				'title' => $title,
-				'instructions' => $instructions,
-				'is_active' => 1,
-				'priority' => $priority,
-				'required_default' => $is_required ? 1 : 0,
-				'scope' => ($event_id > 0 ? 'event' : 'general'),
-				'due_mode' => $due_mode,
-				'due_offset_minutes' => '',
-				'due_time_local' => $due_time_local,
-				'assignment_mode' => $assignment_mode,
-				'role_key' => $role_key,
-				'assignee_user_id' => $assignee_user_id,
-			);
-			$template_id = bvmgr_tasks_upsert_task_template($template_payload, 0);
-			if (is_wp_error($template_id)) {
-				$message = sprintf(
-					/* translators: %s is an error string from template save. */
-					__('Task was created, but repeatable template save failed: %s', 'backstage-venue-manager'),
-					$template_id->get_error_message()
-				);
-				bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
-			}
-
-			$template_id = absint($template_id);
-			if ($repeatable_checklist_id > 0) {
-				$target_checklist = bvmgr_tasks_get_checklist_template($repeatable_checklist_id);
-				if (!is_array($target_checklist)) {
-					$message = __('Task and repeatable template were created, but selected checklist was not found.', 'backstage-venue-manager');
-					bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
-				}
-
-				$items = bvmgr_tasks_get_checklist_items($repeatable_checklist_id);
-				$sort = count($items) + 1;
-				$items[] = array(
-					'task_template_id' => $template_id,
-					'sort_order' => $sort,
-					'overrides' => array(),
-				);
-				$replace = bvmgr_tasks_replace_checklist_items($repeatable_checklist_id, $items);
-				if (is_wp_error($replace)) {
-					$message = sprintf(
-						/* translators: %s is an error string from checklist update. */
-						__('Task and repeatable template were created, but checklist update failed: %s', 'backstage-venue-manager'),
-						$replace->get_error_message()
-					);
-					bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'error', $message);
-				}
-
-				$success = __('Task created and saved as a repeatable template. It was added to the selected checklist.', 'backstage-venue-manager');
-				bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'success', $success);
-			}
-
-			$success = __('Task created and saved as a repeatable template. Add it to a checklist template to activate automatic generation.', 'backstage-venue-manager');
-			bvmgr_tasks_admin_redirect_url_with_notice($return_url, 'success', $success);
-		}
+        // Optional repeatable definition is created atomically by the original command.
 
 		if (!empty($_POST['open_repeatable_template'])) {
 			$template_url = bvmgr_tasks_admin_page_url('vms-task-templates', array('clone_instance_id' => $instance_id));
@@ -1214,74 +1136,16 @@ if (!function_exists('bvmgr_tasks_admin_handle_create_one_off_ajax')) {
 		}
 
 		$instance_id = absint($created);
-		bvmgr_tasks_log_task_action($instance_id, 'created_ad_hoc', get_current_user_id(), wp_json_encode(array(
-			'event_id' => $event_id,
-			'title' => $title,
-			'is_required' => $is_required ? 1 : 0,
-			'assignment_mode' => $assignment_mode,
-			'role_key' => $role_key,
-			'assignee_user_id' => $assignee_user_id,
-		)));
-		if ($assignee_user_id > 0 && function_exists('bvmgr_tasks_emit_assignment_notification')) {
-			$latest = bvmgr_tasks_get_instance($instance_id);
-			if (is_array($latest)) {
-				bvmgr_tasks_emit_assignment_notification($latest);
-			}
-		}
+		// Creation history and assignment delivery follow the canonical committed command.
 
 		// Repeatable template save is optional from the metabox.
-		if ($make_repeatable_now) {
-			$due_mode = 'none';
-			$due_time_local = '';
-			if (is_string($due_at_local) && preg_match('/^\d{4}-\d{2}-\d{2}\s(\d{2}:\d{2})/', $due_at_local, $matches)) {
-				$due_mode = 'fixed_datetime';
-				$due_time_local = (string) $matches[1];
-			}
-
-			$template_payload = array(
-				'title' => $title,
-				'instructions' => $instructions,
-				'is_active' => 1,
-				'priority' => $priority,
-				'required_default' => $is_required ? 1 : 0,
-				'scope' => 'event',
-				'due_mode' => $due_mode,
-				'due_offset_minutes' => '',
-				'due_time_local' => $due_time_local,
-				'assignment_mode' => $assignment_mode,
-				'role_key' => $role_key,
-				'assignee_user_id' => $assignee_user_id,
-			);
-			$template_id = bvmgr_tasks_upsert_task_template($template_payload, 0);
-			if (is_wp_error($template_id)) {
-				wp_send_json_error(array('message' => $template_id->get_error_message()), 500);
-			}
-
-			$template_id = absint($template_id);
-			if ($repeatable_checklist_id > 0) {
-				$target_checklist = bvmgr_tasks_get_checklist_template($repeatable_checklist_id);
-				if (!is_array($target_checklist)) {
-					wp_send_json_error(array('message' => __('Selected checklist was not found.', 'backstage-venue-manager')), 400);
-				}
-
-				$items = bvmgr_tasks_get_checklist_items($repeatable_checklist_id);
-				$sort = count($items) + 1;
-				$items[] = array(
-					'task_template_id' => $template_id,
-					'sort_order' => $sort,
-					'overrides' => array(),
-				);
-				$replace = bvmgr_tasks_replace_checklist_items($repeatable_checklist_id, $items);
-				if (is_wp_error($replace)) {
-					wp_send_json_error(array('message' => $replace->get_error_message()), 500);
-				}
-			}
-		}
+        // Optional repeatable definition is created atomically by the original command.
 
 		$tasks_url = bvmgr_tasks_admin_page_url('vms-tasks', array('event_id' => $event_id));
 		wp_send_json_success(array(
 			'instance_id' => $instance_id,
 			'tasks_url' => $tasks_url,
+            'next_operation_id' => wp_generate_uuid4(),
 			'message' => __('Task created.', 'backstage-venue-manager'),
 		));
 	}
@@ -1414,7 +1278,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 			echo '</p>';
 		}
 
-		echo '<p class="description">' . esc_html__('Regenerate tasks from each Event Plan using the Tasks metabox action "Regenerate Tasks Now" (nonce-protected).', 'backstage-venue-manager') . '</p>';
+		echo '<p class="description">' . esc_html__('Generate missing tasks from each Event Plan using the Tasks panel. Existing task identities and history are retained.', 'backstage-venue-manager') . '</p>';
 		echo '<p style="margin:10px 0;padding:10px;border-left:4px solid #2271b1;background:#f0f6fc;" data-vms-tour="tasks.repeatable">';
 		echo '<strong>' . esc_html__('Repeatable Tasks Setup:', 'backstage-venue-manager') . '</strong> ';
 		echo esc_html__('Create role-based task templates, then include them in checklist templates (default, venue, or event type) so events generate tasks automatically.', 'backstage-venue-manager') . ' ';
@@ -1424,6 +1288,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 		echo '<h2 style="margin-top:16px;">' . esc_html__('Add Task', 'backstage-venue-manager') . '</h2>';
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin:8px 0 16px 0;padding:12px;border:1px solid #ccd0d4;background:#fff;" data-vms-tour="tasks.add">';
 			wp_nonce_field('bvmgr_tasks_create_one_off');
+            bvmgr_tasks_command_fields(array());
 			echo '<input type="hidden" name="action" value="vms_tasks_create_one_off">';
 			echo '<input type="hidden" name="return_page" value="vms-tasks">';
 			echo '<p>';
@@ -1541,10 +1406,11 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 				$recurrence_label = bvmgr_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days);
 
 				echo '<tr>';
-				echo '<td><strong>' . esc_html((string) ($row['title'] ?? '')) . '</strong><br><span class="description">' . esc_html((string) ($row['priority'] ?? 'normal')) . '</span>';
+				echo '<td><strong><a href="'.esc_url(bvmgr_tasks_detail_url($instance_id)).'">' . esc_html((string) ($row['title'] ?? '')) . '</a></strong><br><span class="description">' . esc_html((string) ($row['priority'] ?? 'normal')) . '</span>';
 				if ($recurrence_pattern !== 'none') {
 					echo '<br><span class="description">' . esc_html($recurrence_label) . '</span>';
 				}
+                bvmgr_tasks_timing_summary($row);
 				echo '</td>';
 				echo '<td>';
 				if ($event_id > 0) {
@@ -1565,6 +1431,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 					echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 					echo '<input type="hidden" name="return_page" value="vms-tasks">';
 					echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
+                    bvmgr_tasks_command_fields($row);
 					echo '<button class="button button-small" name="target_status" value="done" type="submit">' . esc_html__('Done', 'backstage-venue-manager') . '</button> ';
 					echo '<button class="button button-small" name="target_status" value="skipped" type="submit">' . esc_html__('Skip', 'backstage-venue-manager') . '</button> ';
 					echo '<input type="text" name="reason" placeholder="' . esc_attr__('Reason for skip/cancel', 'backstage-venue-manager') . '" style="width:180px;"> ';
@@ -1576,6 +1443,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 					echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 					echo '<input type="hidden" name="return_page" value="vms-tasks">';
 					echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
+                    bvmgr_tasks_command_fields($row);
 					echo '<input type="text" name="reason" placeholder="' . esc_attr__('Reason for reopen', 'backstage-venue-manager') . '" style="width:180px;"> ';
 					echo '<button class="button button-small" name="target_status" value="open" type="submit">' . esc_html__('Reopen', 'backstage-venue-manager') . '</button>';
 					echo '</form>';
@@ -1586,6 +1454,7 @@ if (!function_exists('bvmgr_tasks_render_tasks_page')) {
 				echo '<input type="hidden" name="action" value="vms_tasks_update_assignment">';
 				echo '<input type="hidden" name="return_page" value="vms-tasks">';
 				echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
+                    bvmgr_tasks_command_fields($row);
 				echo '<input type="hidden" name="event_id" value="' . esc_attr((string) $event_id) . '">';
 				echo '<select name="assignment_mode" style="max-width:150px;">';
 				echo '<option value="person" ' . selected($assignment_mode, 'person', false) . '>' . esc_html__('Person', 'backstage-venue-manager') . '</option>';
@@ -1667,7 +1536,9 @@ if (!function_exists('bvmgr_tasks_render_task_templates_page')) {
 					'role_key' => sanitize_key((string) wp_unslash($_POST['role_key'] ?? '')),
 					'assignee_user_id' => absint($_POST['assignee_user_id'] ?? 0),
 				);
-				$saved = bvmgr_tasks_upsert_task_template($payload, $template_id);
+				$payload['expected_hash']=(string)($_POST['expected_hash']??'');
+                if (isset($_POST['timing']) && is_array($_POST['timing'])) $payload['timing']=bvmgr_tasks_timing_input($_POST['timing']);
+                $saved = bvmgr_tasks_upsert_task_template($payload, $template_id);
 				if (is_wp_error($saved)) {
 					$errors[] = $saved->get_error_message();
 				} else {
@@ -1722,7 +1593,9 @@ if (!function_exists('bvmgr_tasks_render_task_templates_page')) {
 
 		echo '<form method="post">';
 		wp_nonce_field('bvmgr_tasks_save_template');
+        echo '<input type="hidden" name="expected_hash" value="'.esc_attr(hash('sha256',wp_json_encode(!empty($current['id'])?$current:array()))).'">';
 		echo '<input type="hidden" name="vms_tasks_template_action" value="save">';
+        bvmgr_tasks_template_schedule_fields($current?:array());
 		echo '<input type="hidden" name="template_id" value="' . esc_attr((string) ($current['id'] ?? 0)) . '">';
 		echo '<table class="form-table" role="presentation"><tbody>';
 		echo '<tr><th><label for="vms_tasks_title">' . esc_html__('Title', 'backstage-venue-manager') . '</label></th><td><input id="vms_tasks_title" class="regular-text" name="title" value="' . esc_attr((string) ($current['title'] ?? '')) . '" required></td></tr>';
@@ -1817,34 +1690,17 @@ if (!function_exists('bvmgr_tasks_render_checklist_templates_page')) {
 						'venue_id' => absint($_POST['venue_id'] ?? 0),
 					'event_type' => sanitize_key((string) wp_unslash($_POST['event_type'] ?? '')),
 				);
-				$saved = bvmgr_tasks_upsert_checklist_template($payload, $checklist_id);
-				if (is_wp_error($saved)) {
-					$errors[] = $saved->get_error_message();
-				} else {
-					$template_ids = isset($_POST['task_template_ids']) && is_array($_POST['task_template_ids'])
-						? array_map('absint', (array) wp_unslash($_POST['task_template_ids']))
-						: array();
-					$items = array();
-					$sort = 0;
-					foreach ($template_ids as $template_id) {
-						if ($template_id <= 0) {
-							continue;
-						}
-						$sort++;
-						$items[] = array(
-							'task_template_id' => $template_id,
-							'sort_order' => $sort,
-							'overrides' => array(),
-						);
-					}
-					$replace = bvmgr_tasks_replace_checklist_items((int) $saved, $items);
-					if (is_wp_error($replace)) {
-						$errors[] = $replace->get_error_message();
-					} else {
-						$messages[] = __('Checklist template saved.', 'backstage-venue-manager');
-						$edit_id = (int) $saved;
-					}
-				}
+
+                $payload['expected_hash']=(string)($_POST['expected_hash']??'');
+                $items=array();
+                foreach ((array)($_POST['task_template_ids']??array()) as $template_id) if (is_scalar($template_id) && absint($template_id)>0) $items[]=array('task_template_id'=>absint($template_id),'sort_order'=>count($items)+1,'overrides'=>array());
+                $saved=bvmgr_tasks_atomic(static function()use($payload,$checklist_id,$items){
+                    $id=bvmgr_tasks_upsert_checklist_template($payload,$checklist_id); if (is_wp_error($id)) return $id;
+                    $result=bvmgr_tasks_replace_checklist_items((int)$id,$items); return is_wp_error($result)?$result:$id;
+                });
+                if (is_wp_error($saved)) $errors[]=$saved->get_error_message();
+                else { $messages[]=__('Checklist template saved.','backstage-venue-manager'); $edit_id=(int)$saved; }
+
 			}
 		}
 
@@ -1873,6 +1729,7 @@ if (!function_exists('bvmgr_tasks_render_checklist_templates_page')) {
 		wp_nonce_field('bvmgr_tasks_save_checklist');
 		echo '<input type="hidden" name="vms_tasks_checklist_action" value="save">';
 		echo '<input type="hidden" name="checklist_id" value="' . esc_attr((string) ($current['id'] ?? 0)) . '">';
+        echo '<input type="hidden" name="expected_hash" value="'.esc_attr(hash('sha256',wp_json_encode($current ? array_merge($current,array('_items'=>$current_items)):array()))).'">';
 		echo '<table class="form-table" role="presentation"><tbody>';
 		echo '<tr><th><label for="vms_tasks_checklist_name">' . esc_html__('Name', 'backstage-venue-manager') . '</label></th><td><input id="vms_tasks_checklist_name" class="regular-text" name="name" value="' . esc_attr((string) ($current['name'] ?? '')) . '" required></td></tr>';
 		echo '<tr><th>' . esc_html__('Active', 'backstage-venue-manager') . '</th><td><label><input type="checkbox" name="is_active" value="1" ' . checked(!empty($current['is_active']) || !$current, true, false) . '> ' . esc_html__('Enabled', 'backstage-venue-manager') . '</label></td></tr>';
@@ -2025,10 +1882,10 @@ if (!function_exists('bvmgr_tasks_render_my_tasks_page')) {
 		$user_id = absint(get_current_user_id());
 		$tab = sanitize_key(bvmgr_tasks_admin_query_arg('tab'));
 		if ($tab === '') {
-			$tab = 'today';
+			$tab = 'all';
 		}
-		if (!in_array($tab, array('overdue', 'today', 'upcoming'), true)) {
-			$tab = 'today';
+		if (!in_array($tab, array('all', 'overdue', 'today', 'upcoming'), true)) {
+			$tab = 'all';
 		}
 
 		$filters = array(
@@ -2056,9 +1913,10 @@ if (!function_exists('bvmgr_tasks_render_my_tasks_page')) {
 		bvmgr_tasks_admin_render_notices();
 		echo '<nav class="nav-tab-wrapper">';
 		foreach (array(
-			'overdue' => __('Overdue', 'backstage-venue-manager'),
-			'today' => __('Today', 'backstage-venue-manager'),
-			'upcoming' => __('Upcoming', 'backstage-venue-manager'),
+			'all' => __('All open', 'backstage-venue-manager'),
+            'overdue' => __('Overdue', 'backstage-venue-manager'),
+			'today' => __('Due today', 'backstage-venue-manager'),
+			'upcoming' => __('Due later', 'backstage-venue-manager'),
 		) as $slug => $label) {
 			echo '<a class="nav-tab ' . ($tab === $slug ? 'nav-tab-active' : '') . '" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-my-tasks', array('tab' => $slug))) . '">' . esc_html($label) . '</a>';
 		}
@@ -2081,7 +1939,8 @@ if (!function_exists('bvmgr_tasks_render_my_tasks_page')) {
 			if ($event_id > 0) {
 				echo '<p><strong>' . esc_html__('Event:', 'backstage-venue-manager') . '</strong> <a href="' . esc_url(get_edit_post_link($event_id)) . '">' . esc_html(get_the_title($event_id)) . '</a></p>';
 			}
-			echo '<p><strong>' . esc_html__('Due:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($row['due_at_local'] ?? __('No due date', 'backstage-venue-manager'))) . '</p>';
+			bvmgr_tasks_timing_summary($row);
+            echo '<p><strong>' . esc_html__('Due:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($row['due_at_local'] ?? __('No due date', 'backstage-venue-manager'))) . '</p>';
 			if ($recurrence_pattern !== 'none') {
 				echo '<p><strong>' . esc_html__('Repeats:', 'backstage-venue-manager') . '</strong> ' . esc_html(bvmgr_tasks_recurrence_label($recurrence_pattern, $recurrence_every_n_days)) . '</p>';
 			}
@@ -2090,6 +1949,7 @@ if (!function_exists('bvmgr_tasks_render_my_tasks_page')) {
 			echo '<input type="hidden" name="action" value="vms_tasks_transition">';
 			echo '<input type="hidden" name="return_page" value="vms-my-tasks">';
 			echo '<input type="hidden" name="instance_id" value="' . esc_attr((string) $instance_id) . '">';
+                    bvmgr_tasks_command_fields($row);
 			echo '<button class="button button-primary button-small" type="submit" name="target_status" value="done">' . esc_html__('Done', 'backstage-venue-manager') . '</button> ';
 			echo '<input type="text" name="reason" placeholder="' . esc_attr__('Skip reason', 'backstage-venue-manager') . '" style="width:130px;"> ';
 			echo '<button class="button button-small" type="submit" name="target_status" value="skipped">' . esc_html__('Skip', 'backstage-venue-manager') . '</button>';
@@ -2392,6 +2252,7 @@ if (!function_exists('bvmgr_tasks_render_event_plan_tasks_table')) {
 			if ($is_one_off) {
 				echo ' <small>(' . esc_html__('Manual', 'backstage-venue-manager') . ')</small>';
 			}
+            bvmgr_tasks_timing_summary($row);
 			echo '</td>';
 			echo '<td>' . esc_html($due_raw !== '' ? $due_raw : __('No due date', 'backstage-venue-manager')) . '</td>';
 			echo '<td>' . esc_html($assignment_summary) . '</td>';
@@ -2405,6 +2266,8 @@ if (!function_exists('bvmgr_tasks_render_event_plan_tasks_table')) {
 						'return_page' => 'event-plan',
 						'event_id' => $event_id,
 						'instance_id' => $instance_id,
+                        'revision' => (int)($row['revision']??0),
+                        'operation_id' => wp_generate_uuid4(),
 						'target_status' => 'done',
 					));
 				}
@@ -2417,6 +2280,8 @@ if (!function_exists('bvmgr_tasks_render_event_plan_tasks_table')) {
 						'return_page' => 'event-plan',
 						'event_id' => $event_id,
 						'instance_id' => $instance_id,
+                        'revision' => (int)($row['revision']??0),
+                        'operation_id' => wp_generate_uuid4(),
 						'target_status' => 'canceled',
 						'reason' => __('Removed manual task from Event Plan panel.', 'backstage-venue-manager'),
 					));
@@ -2429,6 +2294,8 @@ if (!function_exists('bvmgr_tasks_render_event_plan_tasks_table')) {
 					'return_page' => 'event-plan',
 					'event_id' => $event_id,
 					'instance_id' => $instance_id,
+                        'revision' => (int)($row['revision']??0),
+                        'operation_id' => wp_generate_uuid4(),
 				));
 
 				echo '<td>';
@@ -2501,7 +2368,9 @@ if (!function_exists('bvmgr_tasks_render_event_plan_metabox')) {
 
 		echo '<p><a class="button" href="' . esc_url(bvmgr_tasks_admin_page_url('vms-tasks', array('event_id' => $event_id))) . '">' . esc_html__('Open Tasks Page For This Event', 'backstage-venue-manager') . '</a> ';
 		if ($can_manage_all) {
-			echo '<a class="button button-secondary" href="' . esc_url($generate_url) . '">' . esc_html__('Regenerate Tasks Now', 'backstage-venue-manager') . '</a>';
+			$form_id=bvmgr_tasks_event_plan_metabox_form_id($event_id,'generate');
+            bvmgr_tasks_event_plan_metabox_register_form($form_id,'post',admin_url('admin-post.php'),array('action'=>'vms_tasks_generate_event','event_id'=>$event_id,'return_page'=>'event-plan','_wpnonce'=>wp_create_nonce('bvmgr_tasks_generate_event_'.$event_id)));
+            echo '<button class="button button-secondary" type="submit" form="'.esc_attr($form_id).'">'.esc_html__('Generate missing tasks', 'backstage-venue-manager').'</button>';
 		}
 		echo '</p>';
 
@@ -2551,7 +2420,7 @@ if (!function_exists('bvmgr_tasks_render_event_plan_metabox')) {
 			// (including cancellation) via browser required-field validation.
 			// Use an AJAX submit button instead.
 			$nonce = wp_create_nonce('bvmgr_tasks_create_one_off');
-			echo '<div class="vms-tasks-event-plan-addtask" data-vms-event-id="' . esc_attr((string) $event_id) . '" data-vms-nonce="' . esc_attr($nonce) . '">';
+			echo '<div class="vms-tasks-event-plan-addtask" data-operation-id="' . esc_attr(wp_generate_uuid4()) . '" data-vms-event-id="' . esc_attr((string) $event_id) . '" data-vms-nonce="' . esc_attr($nonce) . '">';
 			echo '<p><input type="text" class="widefat" data-vms-tasks-field="title" placeholder="' . esc_attr__('Task title', 'backstage-venue-manager') . '"></p>';
 			echo '<p><textarea class="widefat" rows="2" data-vms-tasks-field="instructions" placeholder="' . esc_attr__('Instructions (optional)', 'backstage-venue-manager') . '"></textarea></p>';
 			echo '<p>';

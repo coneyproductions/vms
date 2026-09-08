@@ -11,8 +11,8 @@ if (!function_exists('bvmgr_tasks_db_option_key')) {
 if (!function_exists('bvmgr_tasks_db_schema_target')) {
 	function bvmgr_tasks_db_schema_target(): string
 	{
-		// 1.2.0 adds recurring cadence fields on task instances.
-		return '1.2.0';
+		// Additive operational identity/timing; no historical record rewrite.
+		return '1.3.0';
 	}
 }
 
@@ -85,6 +85,7 @@ if (!function_exists('bvmgr_tasks_maybe_upgrade_schema')) {
 		$sql_task_templates = "CREATE TABLE {$t_task_templates} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 			title VARCHAR(190) NOT NULL,
+			timing_json LONGTEXT NULL,
 			instructions LONGTEXT NULL,
 			is_active TINYINT(1) NOT NULL DEFAULT 1,
 			priority VARCHAR(20) NOT NULL DEFAULT 'normal',
@@ -146,6 +147,7 @@ if (!function_exists('bvmgr_tasks_maybe_upgrade_schema')) {
 			venue_id BIGINT(20) UNSIGNED NULL,
 			event_type VARCHAR(100) NULL,
 			title VARCHAR(190) NOT NULL,
+			timing_json LONGTEXT NULL,
 			instructions LONGTEXT NULL,
 			priority VARCHAR(20) NOT NULL DEFAULT 'normal',
 			is_required TINYINT(1) NOT NULL DEFAULT 1,
@@ -160,6 +162,9 @@ if (!function_exists('bvmgr_tasks_maybe_upgrade_schema')) {
 			skip_reason VARCHAR(255) NULL,
 			cancel_reason VARCHAR(255) NULL,
 			superseded_by_instance_id BIGINT(20) UNSIGNED NULL,
+			revision BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			generation_key VARCHAR(190) NULL,
+			UNIQUE KEY generation_identity (generation_key),
 			recurrence_pattern VARCHAR(30) NOT NULL DEFAULT 'none',
 			recurrence_every_n_days INT(11) NULL,
 			recurrence_root_instance_id BIGINT(20) UNSIGNED NULL,
@@ -181,6 +186,8 @@ if (!function_exists('bvmgr_tasks_maybe_upgrade_schema')) {
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 			task_instance_id BIGINT(20) UNSIGNED NOT NULL,
 			action VARCHAR(50) NOT NULL,
+			operation_key VARCHAR(64) NULL,
+			UNIQUE KEY task_operation (operation_key),
 			actor_user_id BIGINT(20) UNSIGNED NULL,
 			details LONGTEXT NULL,
 			created_at DATETIME NOT NULL,

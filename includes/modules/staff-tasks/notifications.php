@@ -4,14 +4,7 @@ defined('ABSPATH') || exit;
 if (!function_exists('bvmgr_tasks_notification_task_url')) {
 	function bvmgr_tasks_notification_task_url(int $instance_id = 0, int $assignee_user_id = 0): string
 	{
-		$query = array('page' => 'vms-tasks');
-		if ($instance_id > 0) {
-			$query['task_instance_id'] = $instance_id;
-		}
-		if ($assignee_user_id > 0) {
-			$query['assignee_user_id'] = $assignee_user_id;
-		}
-		return add_query_arg($query, admin_url('admin.php'));
+        return add_query_arg(array('page'=>$instance_id>0?'vms-task-detail':'vms-my-tasks','task_id'=>$instance_id),admin_url('admin.php'));
 	}
 }
 
@@ -73,28 +66,8 @@ if (!function_exists('bvmgr_tasks_maybe_notify_user')) {
 		array $vars,
 		int $task_instance_id = 0
 	): void {
-		$user_id = absint($user_id);
-		if ($user_id <= 0) {
-			return;
-		}
-
-		if (function_exists('bvmgr_notify_user')) {
-			bvmgr_notify_user($user_id, $event_key, $template_key, $vars);
-			return;
-		}
-
-		if ($task_instance_id > 0) {
-			bvmgr_tasks_log_task_action(
-				$task_instance_id,
-				'notification_skipped',
-				null,
-				wp_json_encode(array(
-					'event_key' => $event_key,
-					'template_key' => $template_key,
-					'reason' => 'core_notifications_api_unavailable',
-				))
-			);
-		}
+        // Legacy call signature retained; only committed task notification work is eligible.
+        bvmgr_tasks_delivery_tick();
 	}
 }
 
@@ -104,26 +77,7 @@ if (!function_exists('bvmgr_tasks_emit_assignment_notification')) {
 	 */
 	function bvmgr_tasks_emit_assignment_notification(array $row): void
 	{
-		$settings = bvmgr_tasks_get_settings();
-		if (empty($settings['notify_assignment_alerts'])) {
-			return;
-		}
-		$user_id = absint($row['assignee_user_id'] ?? 0);
-		if ($user_id <= 0) {
-			return;
-		}
-
-		$payload = bvmgr_tasks_notification_context($row);
-		$payload['recipient_user_id'] = $user_id;
-
-		bvmgr_tasks_emit_notification_event('vms_task_assigned', $payload);
-		bvmgr_tasks_maybe_notify_user(
-			$user_id,
-			'vms_task_assigned',
-			'staff_tasks.task_assigned',
-			$payload,
-			absint($row['id'] ?? 0)
-		);
+        bvmgr_tasks_delivery_tick();
 	}
 }
 
@@ -153,92 +107,14 @@ if (!function_exists('bvmgr_tasks_notification_format_floating_local_datetime'))
 if (!function_exists('bvmgr_tasks_notification_scan_due_soon')) {
 	function bvmgr_tasks_notification_scan_due_soon(): void
 	{
-		$settings = bvmgr_tasks_get_settings();
-		if (empty($settings['notify_due_soon_alerts'])) {
-			return;
-		}
-
-		$now = bvmgr_tasks_now_local_mysql();
-		$window_minutes = bvmgr_tasks_notifications_default_due_soon_window_minutes();
-		$due_before = bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d H:i:s', $now . ' +' . $window_minutes . ' minutes');
-		$rows = bvmgr_tasks_get_instances(array(
-			'status' => 'open',
-			'due_after' => $now,
-			'due_before' => $due_before,
-			'limit' => 500,
-		));
-
-		foreach ($rows as $row) {
-			$instance_id = absint($row['id'] ?? 0);
-			$user_id = absint($row['assignee_user_id'] ?? 0);
-			if ($instance_id <= 0 || $user_id <= 0) {
-				continue;
-			}
-			if (function_exists('bvmgr_tasks_has_task_action_log') && bvmgr_tasks_has_task_action_log($instance_id, 'notification_due_soon')) {
-				continue;
-			}
-
-			$payload = bvmgr_tasks_notification_context($row);
-			$payload['recipient_user_id'] = $user_id;
-			$payload['due_soon_window_minutes'] = $window_minutes;
-
-			bvmgr_tasks_emit_notification_event('vms_task_due_soon', $payload);
-			bvmgr_tasks_maybe_notify_user(
-				$user_id,
-				'vms_task_due_soon',
-				'staff_tasks.task_due_soon',
-				$payload,
-				$instance_id
-			);
-			bvmgr_tasks_log_task_action($instance_id, 'notification_due_soon', null, wp_json_encode(array(
-				'user_id' => $user_id,
-				'due_before' => $due_before,
-			)));
-		}
+        bvmgr_tasks_delivery_tick('reminders');
 	}
 }
 
 if (!function_exists('bvmgr_tasks_notification_scan_overdue')) {
 	function bvmgr_tasks_notification_scan_overdue(): void
 	{
-		$settings = bvmgr_tasks_get_settings();
-		if (empty($settings['notify_overdue_alerts'])) {
-			return;
-		}
-
-		$now = bvmgr_tasks_now_local_mysql();
-		$rows = bvmgr_tasks_get_instances(array(
-			'status' => 'open',
-			'due_before' => $now,
-			'limit' => 500,
-		));
-
-		foreach ($rows as $row) {
-			$instance_id = absint($row['id'] ?? 0);
-			$user_id = absint($row['assignee_user_id'] ?? 0);
-			if ($instance_id <= 0 || $user_id <= 0) {
-				continue;
-			}
-			if (function_exists('bvmgr_tasks_has_task_action_log') && bvmgr_tasks_has_task_action_log($instance_id, 'notification_overdue')) {
-				continue;
-			}
-
-			$payload = bvmgr_tasks_notification_context($row);
-			$payload['recipient_user_id'] = $user_id;
-
-			bvmgr_tasks_emit_notification_event('vms_task_overdue', $payload);
-			bvmgr_tasks_maybe_notify_user(
-				$user_id,
-				'vms_task_overdue',
-				'staff_tasks.task_overdue',
-				$payload,
-				$instance_id
-			);
-			bvmgr_tasks_log_task_action($instance_id, 'notification_overdue', null, wp_json_encode(array(
-				'user_id' => $user_id,
-				'at' => $now,
-			)));
-		}
+        bvmgr_tasks_delivery_tick('reminders');
 	}
 }
 
@@ -259,65 +135,7 @@ if (!function_exists('bvmgr_tasks_notification_digest_window_end')) {
 if (!function_exists('bvmgr_tasks_notification_run_digest')) {
 	function bvmgr_tasks_notification_run_digest(): void
 	{
-		$settings = bvmgr_tasks_get_settings();
-		if (empty($settings['notify_daily_digest'])) {
-			return;
-		}
-
-		$now = bvmgr_tasks_now_local_mysql();
-		$today = bvmgr_tasks_notification_format_floating_local_datetime('Y-m-d', $now);
-		$time = (string) ($settings['notify_digest_time'] ?? '08:00');
-		$run_after = $today . ' ' . $time . ':00';
-		if (strtotime($now) < strtotime($run_after)) {
-			return;
-		}
-
-		$last_run_day = (string) get_option('vms_tasks_digest_last_run_day', '');
-		if ($last_run_day === $today) {
-			return;
-		}
-
-		$window = (string) ($settings['notify_digest_window'] ?? 'next3');
-		$due_before = bvmgr_tasks_notification_digest_window_end($window, $now);
-		$rows = bvmgr_tasks_get_instances(array(
-			'status' => 'open',
-			'due_after' => $now,
-			'due_before' => $due_before,
-			'limit' => 1000,
-		));
-
-		$grouped = array();
-		foreach ($rows as $row) {
-			$user_id = absint($row['assignee_user_id'] ?? 0);
-			if ($user_id <= 0) {
-				continue;
-			}
-			if (!isset($grouped[$user_id])) {
-				$grouped[$user_id] = array();
-			}
-			$grouped[$user_id][] = bvmgr_tasks_notification_context($row);
-		}
-
-		foreach ($grouped as $user_id => $items) {
-			$payload = array(
-				'recipient_user_id' => (int) $user_id,
-				'window' => $window,
-				'due_before' => $due_before,
-				'task_count' => count($items),
-				'tasks' => $items,
-				'task_url' => bvmgr_tasks_notification_task_url(0, (int) $user_id),
-			);
-			bvmgr_tasks_emit_notification_event('vms_task_digest', $payload);
-			bvmgr_tasks_maybe_notify_user(
-				(int) $user_id,
-				'vms_task_digest',
-				'staff_tasks.task_digest_daily',
-				$payload,
-				0
-			);
-		}
-
-		update_option('vms_tasks_digest_last_run_day', $today, false);
+        bvmgr_tasks_delivery_tick('digest');
 	}
 }
 
@@ -332,6 +150,7 @@ if (!function_exists('bvmgr_tasks_notifications_tick')) {
 	}
 }
 add_action('bvmgr_tasks_notifications_tick', 'bvmgr_tasks_notifications_tick');
+add_action('vms_tasks_notifications_tick', 'bvmgr_tasks_notifications_tick');
 
 if (!function_exists('bvmgr_tasks_notifications_digest_tick')) {
 	function bvmgr_tasks_notifications_digest_tick(): void
@@ -343,6 +162,7 @@ if (!function_exists('bvmgr_tasks_notifications_digest_tick')) {
 	}
 }
 add_action('bvmgr_tasks_notifications_digest_tick', 'bvmgr_tasks_notifications_digest_tick');
+add_action('vms_tasks_notifications_digest_tick', 'bvmgr_tasks_notifications_digest_tick');
 
 if (!function_exists('bvmgr_tasks_notifications_register_cron_schedules')) {
 	function bvmgr_tasks_notifications_register_cron_schedules(array $schedules): array
@@ -361,9 +181,6 @@ add_filter('cron_schedules', 'bvmgr_tasks_notifications_register_cron_schedules'
 if (!function_exists('bvmgr_tasks_notifications_ensure_cron')) {
 	function bvmgr_tasks_notifications_ensure_cron(): void
 	{
-		if (function_exists('bvmgr_should_run_runtime_maintenance') && !bvmgr_should_run_runtime_maintenance()) {
-			return;
-		}
 		if (!function_exists('bvmgr_schedule_exists') || !bvmgr_schedule_exists('vms_tasks_fifteen_minutes')) {
 			return;
 		}
@@ -375,4 +192,4 @@ if (!function_exists('bvmgr_tasks_notifications_ensure_cron')) {
 		}
 	}
 }
-add_action('init', 'bvmgr_tasks_notifications_ensure_cron', 30);
+// Schedules are installed explicitly, never repaired by page reads.
