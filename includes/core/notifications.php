@@ -340,12 +340,12 @@ if (!function_exists('bvmgr_notify_insert_log')) {
 	 *
 	 * @param array<string,mixed> $entry
 	 */
-	function bvmgr_notify_insert_log(array $entry): void
+	function bvmgr_notify_insert_log(array $entry): bool
 	{
 		global $wpdb;
 		$table = bvmgr_notify_log_table_name();
 		if ($table === '') {
-			return;
+			return false;
 		}
 
 		$status = sanitize_key((string) ($entry['status'] ?? 'queued'));
@@ -393,6 +393,7 @@ if (!function_exists('bvmgr_notify_insert_log')) {
 				error_log('[BVM operational] event=notification_log_insert_failed event_key=' . $event_key);
 			}
 		}
+		return $ok === 1;
 	}
 }
 

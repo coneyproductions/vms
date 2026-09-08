@@ -680,14 +680,10 @@ if (!function_exists('bvmgr_staff_portal_get_event_tech_docs')) {
                 $vendor_name = __('Vendor', 'backstage-venue-manager');
             }
 
-            $pairs = array(
-                'stage_plot' => array(
-                    'label' => __('Stage plot', 'backstage-venue-manager'),
-                ),
-                'input_list' => array(
-                    'label' => __('Input list', 'backstage-venue-manager'),
-                ),
-            );
+            $pairs = array();
+            foreach (bvmgr_tech_doc_types() as $key => $label) {
+                $pairs[$key] = array('label' => $label);
+            }
 
             foreach ($pairs as $doc_key => $doc) {
                 if (!function_exists('bvmgr_vendor_portal_tech_doc_payload') || !function_exists('bvmgr_vendor_portal_tech_doc_download_url')) {

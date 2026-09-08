@@ -6572,31 +6572,21 @@ if (!function_exists('bvmgr_vendor_portal_tech_doc_max_bytes')) {
 if (!function_exists('bvmgr_vendor_portal_tech_doc_meta_key')) {
     function bvmgr_vendor_portal_tech_doc_meta_key(string $doc_key): string
     {
-        if ($doc_key === 'input_list') {
-            return '_vms_input_list_attachment_id';
-        }
-
-        return '_vms_stage_plot_attachment_id';
+        return isset(bvmgr_tech_doc_types()[$doc_key]) ? '_vms_' . $doc_key . '_attachment_id' : '';
     }
 }
 
 if (!function_exists('bvmgr_vendor_portal_tech_doc_storage_kind_meta_key')) {
     function bvmgr_vendor_portal_tech_doc_storage_kind_meta_key(string $doc_key): string
     {
-        if ($doc_key === 'input_list') {
-            return '_vms_input_list_storage_kind';
-        }
-
-        return '_vms_stage_plot_storage_kind';
+        return isset(bvmgr_tech_doc_types()[$doc_key]) ? '_vms_' . $doc_key . '_storage_kind' : '';
     }
 }
 
 if (!function_exists('bvmgr_vendor_portal_tech_doc_label')) {
     function bvmgr_vendor_portal_tech_doc_label(string $doc_key): string
     {
-        return $doc_key === 'input_list'
-            ? __('Input list', 'backstage-venue-manager')
-            : __('Stage plot', 'backstage-venue-manager');
+        return bvmgr_tech_doc_types()[$doc_key] ?? '';
     }
 }
 
@@ -6630,7 +6620,7 @@ if (!function_exists('bvmgr_vendor_portal_tech_doc_payload')) {
     {
         $vendor_id = absint($vendor_id);
         $doc_key = sanitize_key($doc_key);
-        if ($vendor_id <= 0 || !in_array($doc_key, array('stage_plot', 'input_list'), true)) {
+        if ($vendor_id <= 0 || !isset(bvmgr_tech_doc_types()[$doc_key])) {
             return new WP_Error('tech_doc_missing', __('Requested file is not available.', 'backstage-venue-manager'));
         }
 
@@ -6717,7 +6707,7 @@ if (!function_exists('bvmgr_vendor_portal_user_can_download_tech_doc')) {
         $vendor_id = absint($vendor_id);
         $plan_id = absint($plan_id);
         $doc_key = sanitize_key($doc_key);
-        if ($vendor_id <= 0 || !in_array($doc_key, array('stage_plot', 'input_list'), true)) {
+        if ($vendor_id <= 0 || !isset(bvmgr_tech_doc_types()[$doc_key])) {
             return false;
         }
 
@@ -6767,7 +6757,7 @@ if (!function_exists('bvmgr_vendor_portal_download_tech_doc_handler')) {
         $vendor_id = isset($_GET['vendor_id']) && !is_array($_GET['vendor_id']) ? absint($_GET['vendor_id']) : 0;
         $doc_key = isset($_GET['doc_key']) && !is_array($_GET['doc_key']) ? sanitize_key((string) $_GET['doc_key']) : '';
         $plan_id = isset($_GET['plan_id']) && !is_array($_GET['plan_id']) ? absint($_GET['plan_id']) : 0;
-        if ($vendor_id <= 0 || !in_array($doc_key, array('stage_plot', 'input_list'), true)) {
+        if ($vendor_id <= 0 || !isset(bvmgr_tech_doc_types()[$doc_key])) {
             wp_die(esc_html__('Requested file is not available.', 'backstage-venue-manager'));
         }
 
@@ -6802,7 +6792,7 @@ if (!function_exists('bvmgr_vendor_portal_render_tech_docs')) {
         $vendor_id = (int) $vendor_id;
 
         echo '<h3>' . esc_html__('Tech Docs', 'backstage-venue-manager') . '</h3>';
-        echo '<p class="vms-muted">' . esc_html__('Upload your current stage plot and input list (PDF or image). You can replace them any time.', 'backstage-venue-manager') . '</p>';
+        echo '<p class="vms-muted">' . esc_html__('Upload stage plots, input lists / patch sheets, and technical or production riders / backline requirements (PDF or image). Replace only when the content changes.', 'backstage-venue-manager') . '</p>';
 
         // Handle uploads
         if (bvmgr_request_method() === 'post' && isset($_POST['vms_techdocs_save'])) {
@@ -6814,74 +6804,53 @@ if (!function_exists('bvmgr_vendor_portal_render_tech_docs')) {
             } else {
 
                 $updated = false;
-
-                if (bvmgr_upload_request_has_file($_FILES, 'vms_stage_plot')) {
-                    $previous_id = (int) get_post_meta($vendor_id, '_vms_stage_plot_attachment_id', true);
-                    $previous_kind = sanitize_key((string) get_post_meta($vendor_id, '_vms_stage_plot_storage_kind', true));
-                    $file_id = bvmgr_vendor_portal_store_tech_doc_upload($vendor_id, 'vms_stage_plot');
-                    if (!is_wp_error($file_id)) {
-                        update_post_meta($vendor_id, '_vms_stage_plot_attachment_id', (int) $file_id);
-                        update_post_meta($vendor_id, '_vms_stage_plot_storage_kind', 'private_file');
-                        if ($previous_kind === 'private_file' && $previous_id > 0 && $previous_id !== (int) $file_id && function_exists('bvmgr_private_files_delete')) {
-                            bvmgr_private_files_delete($previous_id);
-                        }
-                        $updated = true;
-                    } else {
-                        /* translators: %s: media upload error message. */
-                        echo wp_kses_post(bvmgr_portal_notice('error', sprintf(__('Stage plot upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message())));
+                $changes = array();
+                foreach (bvmgr_tech_doc_types() as $doc_key => $label) {
+                    $field = 'vms_' . $doc_key;
+                    if (!bvmgr_upload_request_has_file($_FILES, $field)) {
+                        continue;
                     }
-                }
-
-                if (bvmgr_upload_request_has_file($_FILES, 'vms_input_list')) {
-                    $previous_id = (int) get_post_meta($vendor_id, '_vms_input_list_attachment_id', true);
-                    $previous_kind = sanitize_key((string) get_post_meta($vendor_id, '_vms_input_list_storage_kind', true));
-                    $file_id = bvmgr_vendor_portal_store_tech_doc_upload($vendor_id, 'vms_input_list');
-                    if (!is_wp_error($file_id)) {
-                        update_post_meta($vendor_id, '_vms_input_list_attachment_id', (int) $file_id);
-                        update_post_meta($vendor_id, '_vms_input_list_storage_kind', 'private_file');
-                        if ($previous_kind === 'private_file' && $previous_id > 0 && $previous_id !== (int) $file_id && function_exists('bvmgr_private_files_delete')) {
-                            bvmgr_private_files_delete($previous_id);
-                        }
-                        $updated = true;
-                    } else {
-                        /* translators: %s: media upload error message. */
-                        echo wp_kses_post(bvmgr_portal_notice('error', sprintf(__('Input list upload failed: %s', 'backstage-venue-manager'), $file_id->get_error_message())));
+                    $meta_key = bvmgr_vendor_portal_tech_doc_meta_key($doc_key);
+                    $storage_key = bvmgr_vendor_portal_tech_doc_storage_kind_meta_key($doc_key);
+                    $previous_id = (int) get_post_meta($vendor_id, $meta_key, true);
+                    $previous_kind = sanitize_key((string) get_post_meta($vendor_id, $storage_key, true));
+                    $before = bvmgr_tech_doc_snapshot($vendor_id, $doc_key);
+                    $file_id = bvmgr_vendor_portal_store_tech_doc_upload($vendor_id, $field);
+                    if (is_wp_error($file_id)) {
+                        echo wp_kses_post(bvmgr_portal_notice('error', $label . ': ' . $file_id->get_error_message()));
+                        continue;
                     }
+                    update_post_meta($vendor_id, $meta_key, (int) $file_id);
+                    update_post_meta($vendor_id, $storage_key, 'private_file');
+                    if ($previous_kind === 'private_file' && $previous_id > 0 && $previous_id !== (int) $file_id && function_exists('bvmgr_private_files_delete')) {
+                        bvmgr_private_files_delete($previous_id);
+                    }
+                    $after = bvmgr_tech_doc_snapshot($vendor_id, $doc_key);
+                    if (empty($after['hash']) || ($before['hash'] ?? '') !== $after['hash']) {
+                        $changes[$doc_key] = $previous_id > 0 ? 'updated' : 'new';
+                    }
+                    $updated = true;
                 }
-
                 if ($updated) {
+                    // One batch per successful request; generic vendor-review delivery stays independent.
                     bvmgr_vendor_flag_vendor_update($vendor_id, 'tech_docs');
-                    echo wp_kses_post(bvmgr_portal_notice('success', __('Tech docs updated.', 'backstage-venue-manager')));
+                    bvmgr_tech_doc_uploaded($vendor_id, $changes);
+                    echo wp_kses_post(bvmgr_portal_notice('success', __('Tech docs saved. Technician notification results are available on the Event Plan.', 'backstage-venue-manager')));
                 }
             }
         }
 
-        $stage_id = (int) get_post_meta($vendor_id, '_vms_stage_plot_attachment_id', true);
-        $input_id = (int) get_post_meta($vendor_id, '_vms_input_list_attachment_id', true);
-
-        $stage_url = $stage_id ? bvmgr_vendor_portal_tech_doc_download_url($vendor_id, 'stage_plot') : '';
-        $input_url = $input_id ? bvmgr_vendor_portal_tech_doc_download_url($vendor_id, 'input_list') : '';
-
-        echo '<div class="vms-portal-card">';
-        echo '<ul class="vms-m0 vms-pl-18">';
-        echo '<li><strong>' . esc_html__('Stage Plot:', 'backstage-venue-manager') . '</strong> ' . ($stage_url ? '<a target="_blank" rel="noopener" href="' . esc_url($stage_url) . '">' . esc_html__('Download current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
-        echo '<li><strong>' . esc_html__('Input List:', 'backstage-venue-manager') . '</strong> ' . ($input_url ? '<a target="_blank" rel="noopener" href="' . esc_url($input_url) . '">' . esc_html__('Download current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
-        echo '</ul>';
-        echo '</div>';
-
-        echo '<div class="vms-portal-card">';
-        echo '<form method="post" enctype="multipart/form-data">';
+        echo '<div class="vms-portal-card"><ul>';
+        foreach (bvmgr_tech_doc_types() as $doc_key => $label) {
+            $id = (int) get_post_meta($vendor_id, bvmgr_vendor_portal_tech_doc_meta_key($doc_key), true);
+            $url = $id ? bvmgr_vendor_portal_tech_doc_download_url($vendor_id, $doc_key) : '';
+            echo '<li><strong>' . esc_html($label) . ':</strong> ' . ($url ? '<a href="' . esc_url($url) . '">' . esc_html__('Download current', 'backstage-venue-manager') . '</a>' : esc_html__('None uploaded', 'backstage-venue-manager')) . '</li>';
+        }
+        echo '</ul></div><div class="vms-portal-card"><form method="post" enctype="multipart/form-data">';
         wp_nonce_field('bvmgr_techdocs_save', 'bvmgr_techdocs_nonce');
-
-        echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Upload / Replace Stage Plot', 'backstage-venue-manager') . '</strong></label>';
-        echo '<input type="file" name="vms_stage_plot" accept=".pdf,.png,.jpg,.jpeg,.webp">';
-        echo '</div>';
-
-        echo '<div class="vms-field">';
-        echo '<label><strong>' . esc_html__('Upload / Replace Input List', 'backstage-venue-manager') . '</strong></label>';
-        echo '<input type="file" name="vms_input_list" accept=".pdf,.png,.jpg,.jpeg,.webp">';
-        echo '</div>';
+        foreach (bvmgr_tech_doc_types() as $doc_key => $label) {
+            echo '<p><label>' . esc_html($label) . '<br><input type="file" name="vms_' . esc_attr($doc_key) . '" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></p>';
+        }
 
         echo '<p class="vms-m0"><button type="submit" name="vms_techdocs_save" class="button button-primary">' . esc_html__('Save Tech Docs', 'backstage-venue-manager') . '</button></p>';
         echo '</form>';

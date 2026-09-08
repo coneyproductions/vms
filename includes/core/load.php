@@ -49,6 +49,8 @@ require_once __DIR__ . '/ticket-revenue.php';
 require_once __DIR__ . '/ticket-sales-resolver.php';
 require_once __DIR__ . '/notifications.php';
 require_once __DIR__ . '/vendor-document-alerts.php';
+require_once __DIR__ . '/tech-document-notifications.php';
+require_once dirname(__DIR__) . '/admin/tech-document-notifications.php';
 require_once __DIR__ . '/lineup-schedule.php';
 require_once __DIR__ . '/event-plan-review.php';
 require_once __DIR__ . '/event-feedback.php';
