@@ -61,7 +61,7 @@
         return;
       }
 
-      ok = window.confirm('Run LIVE refunds now for this already-cancelled event? This does not save the Event Plan. Backstage Venue Manager will attempt WooCommerce gateway refunds for remaining eligible ticket lines and queue anything unsafe for manual review.');
+      ok = window.confirm('Run LIVE refunds now for this already-cancelled event? This does not save the Event Plan. Backstage Venue Manager will require an accepted preflight covering all supported event-linked purchases before executing WooCommerce gateway refunds. Review tickets, preorders, add-ons, and exceptions in the Cancellation Report.');
       if (!ok) {
         event.preventDefault();
         return;
@@ -119,7 +119,7 @@
         message += ' Backstage Venue Manager will also create a linked Draft Event Plan for ' + replacementDate + '.';
       }
       if (usesAutoRefund) {
-        message += ' This will attempt LIVE payment refunds for matching ticket orders through WooCommerce. Mixed orders will refund only the cancelled event ticket lines when possible, and anything unsafe will be queued for manual review.';
+        message += ' This will stop sales and open a refund preflight for all supported event-linked purchases, including tickets, preorders, and add-ons. Refund execution requires your separate acceptance of that preflight.';
       }
 
       ok = window.confirm(message);

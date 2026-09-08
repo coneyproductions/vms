@@ -1,0 +1,19 @@
+{
+  "frozen_zip_sha256": "2c2a488395d32d419741a99a1211c18fe649f73e567c1cff8de749d44d08c8e3",
+  "frozen_zip_files": 396,
+  "frozen_branch": "04caf99ae7a98ac507c067a7535d2a672efa457b",
+  "protected_stash": "d08e726804712dc233f0e37b217abd6389963863",
+  "unchanged_runtime_hashes": {
+    "includes/core/staffing.php": "bb8292ef3efaeeb6f0638716705f7ce920aa0c1f792d5af8b3d13225023e37ae",
+    "includes/core/event-communications.php": "8f6044978d5905085591e4a18c74914089ec8ad424ecf190907f8dd7c4f598e5",
+    "includes/admin/event-communications.php": "497d06b60f89ec5233811cf96c2d1a26c9193abc41094dd9b98935285123f40f",
+    "includes/core/event-reschedule.php": "1200ca4aba042328800d138d0bcd49cf685db5f56ec1c1cf28f16f8c062b84d3",
+    "includes/admin/event-reschedule.php": "73a3d578f7d2899b448f4777ba2f40bfcf1a3ffdaf78f15aec7fc76fd6340c7e",
+    "includes/core/reporting-providers.php": "6ce14e7d600abd982e8ca3a0ea004b426e68fdd51ac1b35404bfffb3a8e2a686",
+    "includes/core/private-files.php": "3838284b82d78730c687aaf54c0e833e7c40b653dd3cdb1fd4920becbebc2e8b",
+    "includes/admin/event-command-center.php": "dfed6a29404423e2f6bbfc2d25b92d681bd8349ccb9133de09d07e41255a330c",
+    "includes/admin/event-command-center-context.php": "d4fee9334a82ee971179a602fb98d39a7fd6daf41f01905e0c6c785dd081270a",
+    "includes/admin/event-command-center-dashboard.php": "233141ac8ae2e88005f9e246e3d2597e87e6584f7c3ef0ffb6e812ffa4692337",
+    "includes/ticketing/ticket-integrity-monitor.php": "35fc89f102027fb4d66eb2bfa05da704daf176107b524f1c5e33bb3236cf4d17"
+  }
+}

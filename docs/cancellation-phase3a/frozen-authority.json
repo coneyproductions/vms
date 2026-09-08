@@ -1,0 +1,10 @@
+{
+  "release_branch": "release/wporg-readiness-2026-09-07",
+  "release_commit": "04caf99ae7a98ac507c067a7535d2a672efa457b",
+  "zip": "/private/tmp/bvm-wporg-readiness-20260907-123118/submission-ready/backstage-venue-manager.zip",
+  "zip_sha256": "2c2a488395d32d419741a99a1211c18fe649f73e567c1cff8de749d44d08c8e3",
+  "zip_files": 396,
+  "protected_stash": [
+    "d08e726804712dc233f0e37b217abd6389963863 On work/unreleased-2026-06-18: WPORG-16D preserve unrelated sidebar+doc work"
+  ]
+}

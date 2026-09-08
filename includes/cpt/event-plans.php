@@ -5749,31 +5749,8 @@ class BVMGR_Admin_Event_Plans
         $steps = isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array();
         $backfill_notice = '';
 
-        // Reliability hardening: legacy cancelled plans may predate job envelopes.
-        if (
-            $plan_status === 'cancelled'
-            && ($job_id === '' || empty($steps))
-            && function_exists('bvmgr_cancellation_backfill_legacy_job')
-        ) {
-            $repair = (array) bvmgr_cancellation_backfill_legacy_job($post_id, array(
-                'source' => 'event_plan_panel_backfill',
-                'backfill_by_user_id' => get_current_user_id(),
-            ));
-            if (!empty($repair['ok'])) {
-                $job_id = sanitize_text_field((string) ($repair['job_id'] ?? (string) get_post_meta($post_id, $k_job_id, true)));
-                $job_state = sanitize_key((string) ($repair['state'] ?? (string) get_post_meta($post_id, $k_job_state, true)));
-                $summary = isset($repair['summary']) && is_array($repair['summary'])
-                    ? $repair['summary']
-                    : get_post_meta($post_id, $k_job_summary, true);
-                if (!is_array($summary)) {
-                    $summary = array();
-                }
-                $steps = isset($summary['steps']) && is_array($summary['steps']) ? $summary['steps'] : array();
-                if (!empty($repair['created'])) {
-                    $backfill_notice = __('Legacy cancelled plan auto-backfilled into a safe no-op cancellation job envelope.', 'backstage-venue-manager');
-                }
-            }
-        }
+        // Event Plan and report reads never create cancellation records.
+        if (function_exists('bvmgr_cancel_report_links')) bvmgr_cancel_report_links($post_id, $summary);
 
         if ($job_id === '' && empty($steps) && $plan_status !== 'cancelled') {
             return;
@@ -10796,7 +10773,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                                     ? (bvmgr_meta_key('event_plan', 'cancel_job_state') ?: '_vms_cancel_job_state')
                                     : '_vms_cancel_job_state';
                                 $job_state = sanitize_key((string) get_post_meta($post_id, $k_job_state, true));
-                                $requires_review = ($job_state === 'completed') ? '0' : '1';
+                                $requires_review = in_array($job_state, array('completed', 'completed_with_exclusions'), true) && get_post_meta($post_id, $k_cancel_review, true) !== '1' ? '0' : '1';
                                 update_post_meta($post_id, $k_cancel_review, $requires_review);
                             }
                         }
@@ -12320,6 +12297,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     }
                 }
 
+                if (function_exists('bvmgr_cancel_report_url')) $redirect_url = bvmgr_cancel_report_url($post_id);
                 wp_safe_redirect($redirect_url);
                 exit;
             }

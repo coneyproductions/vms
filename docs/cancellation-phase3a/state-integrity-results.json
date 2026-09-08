@@ -1,0 +1,20 @@
+{
+  "tables": 246,
+  "options": 824,
+  "all_original_rows_restored": true,
+  "options_exact": true,
+  "structural_schema_equal": true,
+  "auto_increment_advanced": [
+    "wp_commentmeta",
+    "wp_comments",
+    "wp_postmeta",
+    "wp_posts",
+    "wp_vms_square_ticket_mirror_log",
+    "wp_vms_ticket_inventory_audit",
+    "wp_wc_order_addresses",
+    "wp_wc_order_operational_data",
+    "wp_wc_orders_meta",
+    "wp_woocommerce_order_itemmeta",
+    "wp_woocommerce_order_items"
+  ]
+}

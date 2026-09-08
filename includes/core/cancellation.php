@@ -40,6 +40,9 @@ if (!function_exists('bvmgr_cancellation_job_statuses')) {
 	function bvmgr_cancellation_job_statuses(): array
 	{
 		return array(
+			'planned' => __('Preflight — review required', 'backstage-venue-manager'),
+			'attention_required' => __('Attention required', 'backstage-venue-manager'),
+			'completed_with_exclusions' => __('Completed with exclusions', 'backstage-venue-manager'),
 			'queued' => __('Queued', 'backstage-venue-manager'),
 			'running' => __('Running', 'backstage-venue-manager'),
 			'completed' => __('Completed', 'backstage-venue-manager'),
@@ -671,10 +674,18 @@ if (!function_exists('bvmgr_cancellation_create_job')) {
 		$k_job_summary = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_job_summary') ?: '_vms_cancel_job_summary') : '_vms_cancel_job_summary';
 		$k_cancel_policy = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_policy') ?: '_vms_cancel_policy') : '_vms_cancel_policy';
 		$k_cancel_reason_code = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_reason_code') ?: '_vms_cancel_reason_code') : '_vms_cancel_reason_code';
+		$k_cancel_vendor_message = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_vendor_message') ?: '_vms_cancel_vendor_message') : '_vms_cancel_vendor_message';
 		$k_cancel_reason_note = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancel_reason_note') ?: '_vms_cancel_reason_note') : '_vms_cancel_reason_note';
 		$k_cancelled_at_gmt = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancelled_at_gmt') ?: '_vms_cancelled_at_gmt') : '_vms_cancelled_at_gmt';
 		$k_cancelled_by_user_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'cancelled_by_user_id') ?: '_vms_cancelled_by_user_id') : '_vms_cancelled_by_user_id';
 
+		$previous = get_post_meta($event_plan_id, $k_job_summary, true);
+		if (is_array($previous) && !empty($previous['job_id'])) {
+			$history = (array) ($previous['previous_jobs'] ?? array());
+			unset($previous['previous_jobs']);
+			$history[$previous['job_id']] = $previous;
+			$summary['previous_jobs'] = $history;
+		}
 		update_post_meta($event_plan_id, $k_job_id, $job_id);
 		update_post_meta($event_plan_id, $k_job_state, 'queued');
 		update_post_meta($event_plan_id, $k_job_summary, $summary);
@@ -1490,10 +1501,9 @@ if (!function_exists('bvmgr_cancellation_run_job')) {
 			'provider_sales_stop' => array(
 				array('key' => 'policy_capture', 'allowed' => array('done')),
 			),
-			'refund_discovery' => array(
-				array('key' => 'provider_sales_stop', 'allowed' => array('done')),
-			),
+			'refund_discovery' => array(), // Read the full scope even when sales-stop needs attention.
 			'refund_execution' => array(
+				array('key' => 'provider_sales_stop', 'allowed' => array('done')),
 				array('key' => 'refund_discovery', 'allowed' => array('done')),
 			),
 			'notifications' => array(
@@ -1659,6 +1669,24 @@ if (!function_exists('bvmgr_cancellation_run_job')) {
 			$final_state = 'queued';
 		}
 
+		if (in_array($policy, $refund_policies, true) && function_exists('bvmgr_cancel_job_report')) {
+			$summary['purchase_report'] = bvmgr_cancel_job_report($event_plan_id, $summary);
+			$purchase_status = $summary['purchase_report']['status'];
+			$other_block = false;
+			foreach ($steps as $report_step) {
+				if ($report_step['key'] !== 'refund_execution' && in_array($report_step['status'], array('blocked', 'failed'), true)) $other_block = true;
+			}
+			$final_state = $purchase_status === 'completed_successfully' ? 'completed' : $purchase_status;
+			if ($other_block || $failed_count > 0 || ($blocked_count > 0 && $purchase_status !== 'planned')) {
+				$final_state = 'attention_required';
+				$summary['purchase_report']['status'] = 'attention_required';
+				foreach ($steps as $report_step) {
+					if (in_array($report_step['status'], array('blocked', 'failed'), true)) $summary['purchase_report']['warnings'][] = $report_step['key'] . ': ' . ($report_step['message'] ?? '');
+				}
+			}
+			$current_run['purchase_report'] = $summary['purchase_report'];
+		}
+
 		$summary['final_state'] = $final_state;
 		$summary['step_totals'] = array(
 			'done' => $done_count,
@@ -1683,7 +1711,7 @@ if (!function_exists('bvmgr_cancellation_run_job')) {
 				break;
 			}
 		}
-		if ($final_state !== 'completed') {
+		if (!in_array($final_state, array('completed', 'completed_with_exclusions'), true)) {
 			$requires_review = true;
 		}
 

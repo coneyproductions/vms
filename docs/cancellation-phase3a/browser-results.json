@@ -1,0 +1,22 @@
+[
+  {
+    "fixture": "preflight",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "fixture": "preflight",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "fixture": "partial",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "fixture": "partial",
+    "width": 390,
+    "passed": true
+  }
+]

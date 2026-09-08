@@ -1,0 +1,12 @@
+{
+  "passed": 7,
+  "checks": [
+    "Existing cancellation 295 readable and coverage unverified",
+    "Existing cancellation 295 stable refresh",
+    "Existing cancellation 344 readable and coverage unverified",
+    "Existing cancellation 344 stable refresh",
+    "19 communications controls belong to explicit independent forms",
+    "Event Plan save FormData excludes communications send/edit fields",
+    "Durable communications audience/history stable on refresh"
+  ]
+}

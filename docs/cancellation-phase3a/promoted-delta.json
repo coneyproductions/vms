@@ -1,0 +1,37 @@
+[
+  {
+    "file": "includes/core/cancellation.php",
+    "old_sha256": "06b4bff02ff374f966beb64660f4fa112213dfc45993318767c11fc34a1d1885",
+    "new_sha256": "3f63833fe28dae0bb79ec53882d44646317dfa44f7c59f0bcc978b9e5c25e4e5"
+  },
+  {
+    "file": "includes/core/cancellation-adapters.php",
+    "old_sha256": "c72da0cc3a1bbe7b6d3e4900b110147558b5cfa16b98868eef4c4616f563c6d6",
+    "new_sha256": "9163f82bab5f2a07629da8ec5d2e64208f5935500860a80c482340fa8837161a"
+  },
+  {
+    "file": "includes/core/cancellation-purchases.php",
+    "old_sha256": null,
+    "new_sha256": "a8ee1046fe8275de22324709687d6ad897d4812da6828014381198ed681895c6"
+  },
+  {
+    "file": "includes/core/load.php",
+    "old_sha256": "6567106b679c5db681acb945327a69b0c9532a12baa27487aad62d1d4e86138e",
+    "new_sha256": "d69bf0d2460486f3d39b571e1933887d4cd2e15a1b61ecfa8eb6c0b200f98167"
+  },
+  {
+    "file": "includes/admin/cancellation-report.php",
+    "old_sha256": null,
+    "new_sha256": "a5f72575d8a8718e85484b205f9eea0be5099339c16c23207b432ac1c63c506f"
+  },
+  {
+    "file": "includes/cpt/event-plans.php",
+    "old_sha256": "cbf7ead0e42badb12b019b73476ea70a3945481dd07dca547bf2144301e081ae",
+    "new_sha256": "196dce3ce8cd79d578bf92bb4205e0d83f4fbf212ac5b8146ebdd49087743ab1"
+  },
+  {
+    "file": "assets/js/vms-event-plan-workflow.js",
+    "old_sha256": "6deb1d74e4947403a387c321f601cad768757b639439e833c1b1348038b8e294",
+    "new_sha256": "44b227aae477cef8c7d91e7ca27f84ce1c58cfdc9dffdd2a297a1f9ad3091688"
+  }
+]

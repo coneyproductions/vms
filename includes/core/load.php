@@ -38,6 +38,7 @@ require_once __DIR__ . '/calendar-feed.php';
 require_once __DIR__ . '/calendar-ticket-counts.php';
 require_once __DIR__ . '/cancellation.php';
 require_once __DIR__ . '/cancellation-adapters.php';
+if (is_admin()) require_once dirname(__DIR__) . '/admin/cancellation-report.php';
 require_once __DIR__ . '/event-credits.php';
 require_once __DIR__ . '/goals-forecast.php';
 
