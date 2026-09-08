@@ -10,11 +10,16 @@ require_once __DIR__ . '/event-authority.php';
 require_once __DIR__ . '/generator.php';
 require_once __DIR__ . '/notifications.php';
 require_once __DIR__ . '/delivery.php';
+foreach (array('state','provider','mapping','sync','oauth') as $google_component) {
+    require_once __DIR__ . '/google/' . $google_component . '.php';
+}
+unset($google_component);
 
 if (is_admin()) {
 	require_once __DIR__ . '/tours.php';
 	require_once __DIR__ . '/admin-ui.php';
     require_once __DIR__ . '/authority-ui.php';
+    require_once __DIR__ . '/google/ui.php';
 }
 
 if (!function_exists('bvmgr_staff_tasks_module_boot')) {
