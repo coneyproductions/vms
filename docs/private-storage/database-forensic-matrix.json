@@ -1,0 +1,366 @@
+{
+  "window_utc": [
+    "2026-09-08T02:47:00.463632+00:00",
+    "2026-09-08T02:53:58.568490+00:00"
+  ],
+  "row_events": 784,
+  "matrix": [
+    {
+      "table": "wp_actionscheduler_actions",
+      "before_count": 3283,
+      "after_count": 3299,
+      "events": 69,
+      "operations": {
+        "UPDATE": 51,
+        "DELETE FROM": 1,
+        "INSERT INTO": 17
+      },
+      "threads": [
+        18338,
+        18339,
+        18347
+      ],
+      "columns": [
+        "action_id",
+        "args",
+        "attempts",
+        "claim_id",
+        "extended_args",
+        "group_id",
+        "hook",
+        "last_attempt_gmt",
+        "last_attempt_local",
+        "priority",
+        "schedule",
+        "scheduled_date_gmt",
+        "scheduled_date_local",
+        "status"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "Action Scheduler"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_actionscheduler_claims",
+      "before_count": 0,
+      "after_count": 0,
+      "events": 8,
+      "operations": {
+        "INSERT INTO": 4,
+        "DELETE FROM": 4
+      },
+      "threads": [
+        18338,
+        18347
+      ],
+      "columns": [
+        "claim_id",
+        "date_created_gmt"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "Action Scheduler"
+      ],
+      "rows_changed": false
+    },
+    {
+      "table": "wp_actionscheduler_logs",
+      "before_count": 9812,
+      "after_count": 9861,
+      "events": 53,
+      "operations": {
+        "INSERT INTO": 51,
+        "DELETE FROM": 2
+      },
+      "threads": [
+        18338,
+        18339,
+        18347
+      ],
+      "columns": [
+        "action_id",
+        "log_date_gmt",
+        "log_date_local",
+        "log_id",
+        "message"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "Action Scheduler"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_mailpoet_subscribers",
+      "before_count": 83,
+      "after_count": 83,
+      "events": 1,
+      "operations": {
+        "UPDATE": 1
+      },
+      "threads": [
+        18348
+      ],
+      "columns": [
+        "last_engagement_at",
+        "last_page_view_at",
+        "updated_at"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "MailPoet logged-in subscriber activity tracking"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_options",
+      "before_count": 824,
+      "after_count": 781,
+      "events": 358,
+      "operations": {
+        "DELETE FROM": 85,
+        "INSERT INTO": 42,
+        "UPDATE": 231
+      },
+      "threads": [
+        18337,
+        18338,
+        18339,
+        18340,
+        18341,
+        18342,
+        18343,
+        18344,
+        18345,
+        18346,
+        18347,
+        18348,
+        18349,
+        18350
+      ],
+      "columns": [
+        "autoload",
+        "option_id",
+        "option_name",
+        "option_value"
+      ],
+      "classification": [
+        "BASELINE NOISE",
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "BVM/companion cron, cache or diagnostics",
+        "Weather Risk scheduled refresh/cache",
+        "WordPress/Woo/TEC cron, scheduler, cache, updates"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_postmeta",
+      "before_count": 83504,
+      "after_count": 83504,
+      "events": 72,
+      "operations": {
+        "UPDATE": 44,
+        "DELETE FROM": 14,
+        "INSERT INTO": 14
+      },
+      "threads": [
+        18338,
+        18339
+      ],
+      "columns": [
+        "meta_id",
+        "meta_key",
+        "meta_value",
+        "post_id"
+      ],
+      "classification": [
+        "BASELINE NOISE",
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "BVM Square sync firewall on scheduled Woo product save",
+        "Weather Risk cron refresh",
+        "WooCommerce scheduled sales / Events Calendar ticket cost refresh"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_posts",
+      "before_count": 3877,
+      "after_count": 3877,
+      "events": 2,
+      "operations": {
+        "UPDATE": 2
+      },
+      "threads": [
+        18338
+      ],
+      "columns": [
+        "post_modified",
+        "post_modified_gmt"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "Woo scheduled sales product modified timestamps"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_tec_kv_cache",
+      "before_count": 2,
+      "after_count": 2,
+      "events": 5,
+      "operations": {
+        "DELETE FROM": 2,
+        "INSERT INTO": 2,
+        "UPDATE": 1
+      },
+      "threads": [
+        18338
+      ],
+      "columns": [
+        "cache_key",
+        "expiration",
+        "value"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "TEC ticket view invalidation and rebuilding"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_usermeta",
+      "before_count": 1540,
+      "after_count": 1541,
+      "events": 5,
+      "operations": {
+        "UPDATE": 2,
+        "INSERT INTO": 2,
+        "DELETE FROM": 1
+      },
+      "threads": [
+        18345,
+        18348
+      ],
+      "columns": [
+        "meta_key",
+        "meta_value",
+        "umeta_id",
+        "user_id"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "WordPress login session and Woo customer/cart hooks"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_vms_social_audit",
+      "before_count": 4868,
+      "after_count": 4869,
+      "events": 1,
+      "operations": {
+        "INSERT INTO": 1
+      },
+      "threads": [
+        18339
+      ],
+      "columns": [
+        "action",
+        "actor_user_id",
+        "created_at",
+        "details_json",
+        "id",
+        "platform",
+        "queue_id"
+      ],
+      "classification": [
+        "BASELINE NOISE"
+      ],
+      "owners": [
+        "BVM social queue cron runner_tick, skipped/processed=0"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_wc_admin_note_actions",
+      "before_count": 106,
+      "after_count": 106,
+      "events": 154,
+      "operations": {
+        "DELETE FROM": 77,
+        "INSERT INTO": 77
+      },
+      "threads": [
+        18338
+      ],
+      "columns": [
+        "action_id",
+        "actioned_text",
+        "label",
+        "name",
+        "nonce_action",
+        "nonce_name",
+        "note_id",
+        "query",
+        "status"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "Woo admin inbox refresh"
+      ],
+      "rows_changed": true
+    },
+    {
+      "table": "wp_woocommerce_sessions",
+      "before_count": 46,
+      "after_count": 4,
+      "events": 42,
+      "operations": {
+        "DELETE FROM": 42
+      },
+      "threads": [
+        18338
+      ],
+      "columns": [
+        "session_expiry",
+        "session_id",
+        "session_key",
+        "session_value"
+      ],
+      "classification": [
+        "EXPECTED PLATFORM WRITE"
+      ],
+      "owners": [
+        "Woo scheduled expired session cleanup"
+      ],
+      "rows_changed": true
+    }
+  ],
+  "additional_transient_tables": [
+    "wp_wc_category_lookup: TRUNCATE and ten inserts; net table hash identical",
+    "wp_wc_product_meta_lookup: four updates; net table hash identical"
+  ],
+  "unresolved": []
+}

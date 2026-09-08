@@ -1,0 +1,26 @@
+# Private document storage security contract
+
+Authority: release/wporg-readiness-2026-09-07, starting at 31aabbfc603daaa2b4b3c130fc130c970cf26a7f. All changes and tests are isolated; original normal-local trees and the prior readiness evidence remain unchanged.
+
+## Existing identities and consumers
+
+- `vms_private_files.id` is referenced by vendor/staff W-9 meta, staff qualification rows, vendor stage plot/input list meta and ticket verification request meta when `storage_kind=private_file`. The index stores `stored_filename` as a relative object key plus original name, MIME, size, SHA-256, author and related record. Those IDs and keys must remain unchanged.
+- Earlier W-9, qualification and technical documents can instead reference WordPress attachment IDs. Preserve those IDs; private attachment migration must include originals and registered derivatives. Do not sweep unrelated Media Library files.
+- Older verification requests have `proof_file_path` absolute paths under uploads/vms-verification-proofs. Import preview/report state can contain absolute paths under uploads/vms-event-plan-imports or uploads/vms-private/event-plan-imports; current imports use relative keys. Read-only compatibility resolution must map those historical names to migrated objects without loading old plaintext.
+- W-9 routes require a contextual nonce plus edit permission or the established vendor/staff ownership relationship. Certifications require a contextual nonce and edit/staff ownership. Technical documents require existing vendor/plan authorization and nonce. Verification proof routes require verification-management permission and nonce. Import reports require manage_options and a token-specific nonce. Preserve these policies and stream after authorization; never redirect to storage URLs.
+- Upload MIME/size/is_uploaded_file validation and image normalization remain authoritative. Replacement consumers update their document association before deleting the prior private ID. Deletion must retain metadata when owned file removal fails.
+- Retired Safety source is excluded from the ZIP. Its historical rows share the private-file index and remain recognizable. The separate Ops Console companion owns uploads/vms-private/member-photos and directly manages its paths; unindexed companion files must not be swept or modified by BVM migration. Data Tools and Calendar Feeds do not directly load the BVM private store.
+
+## Configuration and fail-closed boundary
+
+Use an existing dedicated storage directory explicitly provisioned by the host, not an inferred parent of ABSPATH. Require both a private root and a complete host-declared list of filesystem directories published by document roots/aliases. These are trusted server-side wp-config constants, never request inputs or a UI text field. PHP cannot enumerate arbitrary reverse proxy aliases; the host configuration declaration is necessary and must include all aliases and other sites that could publish this storage. Absence of that declaration is unavailable, not automatic fallback.
+
+Canonicalize and validate every operation. Reject overlap with every declared public root, ABSPATH, WP_CONTENT_DIR and uploads, inconsistent DOCUMENT_ROOT, unresolved paths, traversal, symlinks/junction redirects, and unreadable/unwritable roots. Isolate multisite objects by blog ID. Only create directories beneath an already validated private root during explicit writes. No ordinary read, status page or schema-version fast path creates storage or migrates objects. Deny files and filesystem modes remain secondary measures.
+
+## Controlled migration
+
+An explicit administrator POST with manage_options and a nonce performs migration under a storage lock. Inventory indexed documents, known BVM-owned import/proof buckets and specifically referenced legacy attachments; reject unknown/unsafe paths. Copy to an exclusive temporary file in verified storage, flush and SHA-256 verify, publish without overwriting a conflicting destination, persist a durable recovery receipt, then remove only verified owned legacy plaintext. Resume from that receipt after interruption. Preserve associations and logical keys. Report success only after old originals and recognized derivatives are gone. Keep partial failures visible; block new private writes until recognized legacy objects have been migrated. Reads never perform this work and never fall back to public plaintext.
+
+## Acceptance
+
+Exercise real filesystem validation and disposable WordPress/MySQL migration plus Nginx static and authorized PHP HTTP routes from the exact rebuilt ZIP. Test no configuration, malicious/misleading roots, subdirectory WordPress, relocated content/uploads, symlinks, traversal, interrupted copy/unlink, idempotence, authorization and zero read writes. Retain all old failed-candidate evidence; requalify a new artifact.

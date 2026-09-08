@@ -1,0 +1,142 @@
+[
+  {
+    "path": "includes/core/private-files.php",
+    "base_sha256": "3838284b82d78730c687aaf54c0e833e7c40b653dd3cdb1fd4920becbebc2e8b",
+    "converged_sha256": "58d57cd88ac99bfd30a74d371a41ac7251f604f0f4b987709a42369db0e76eab",
+    "qualified_sha256": "58d57cd88ac99bfd30a74d371a41ac7251f604f0f4b987709a42369db0e76eab",
+    "identical_to_qualified": true,
+    "classification": "already present differently",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": true
+  },
+  {
+    "path": "includes/core/private-storage.php",
+    "base_sha256": null,
+    "converged_sha256": "bed8ffb5d9fd9dfce93eba5a323b5dacb4c86c622f41dbddc23e52ab612fdeec",
+    "qualified_sha256": "bed8ffb5d9fd9dfce93eba5a323b5dacb4c86c622f41dbddc23e52ab612fdeec",
+    "identical_to_qualified": true,
+    "classification": "absent",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": true
+  },
+  {
+    "path": "includes/core/private-storage-migration.php",
+    "base_sha256": null,
+    "converged_sha256": "a43e559c7f397f1a273c07fe0e7bd801b5a2cc2bf5d2ff4c6c581a0781d2b878",
+    "qualified_sha256": "a43e559c7f397f1a273c07fe0e7bd801b5a2cc2bf5d2ff4c6c581a0781d2b878",
+    "identical_to_qualified": true,
+    "classification": "absent",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": true
+  },
+  {
+    "path": "includes/core/staffing.php",
+    "base_sha256": "bb8292ef3efaeeb6f0638716705f7ce920aa0c1f792d5af8b3d13225023e37ae",
+    "converged_sha256": "af10e448fe61e35eb58d77e77b867efe1cf7ca8dec3a4f3323c73a085eeb5d22",
+    "qualified_sha256": "af10e448fe61e35eb58d77e77b867efe1cf7ca8dec3a4f3323c73a085eeb5d22",
+    "identical_to_qualified": true,
+    "classification": "already present differently",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": true
+  },
+  {
+    "path": "includes/integrations/ticketing-verifications.php",
+    "base_sha256": "98372270441cb3b215861bc3f1472406439fc8a8a289a1e22b358c80f3d7f5f1",
+    "converged_sha256": "904b542f66b1d353fada08586fa96070fb985e42b6d4a56949099002f312e1c1",
+    "qualified_sha256": "904b542f66b1d353fada08586fa96070fb985e42b6d4a56949099002f312e1c1",
+    "identical_to_qualified": true,
+    "classification": "already present differently",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": true
+  },
+  {
+    "path": "includes/services/event-plan-import/event-plan-import-engine.php",
+    "base_sha256": "fd7e9290f34c8bbc62ff8d4fba8769978ac8aea38fd047d96fd0650bdaeade66",
+    "converged_sha256": "afddaf3970c73c874a079a084f83d2698f86a88ac3bbaf305b18908891c14ee4",
+    "qualified_sha256": "afddaf3970c73c874a079a084f83d2698f86a88ac3bbaf305b18908891c14ee4",
+    "identical_to_qualified": true,
+    "classification": "already present differently",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": true
+  },
+  {
+    "path": "readme.txt",
+    "base_sha256": "ec325966eea528968fccfb2ff41a966a0e64324023c61b662fd701bd52a14911",
+    "converged_sha256": "6d7683674aab49892aaf43ab9062ec2a75b2c98ffe3222d1781421f48227b1b7",
+    "qualified_sha256": "1fa2b5400c0c70b0632b4c1bf1209ba4a1735b9e9401b54113303a5dae95b286",
+    "identical_to_qualified": false,
+    "classification": "already present differently",
+    "resolution": "security-only readme section; preserve accepted surrounding text",
+    "runtime": false
+  },
+  {
+    "path": "docs/private-storage/security-contract.md",
+    "base_sha256": null,
+    "converged_sha256": "de59b624667bbd8263b1dde79a2fc5d6e0bf3622851d1c039739105ecc1ea3c1",
+    "qualified_sha256": "de59b624667bbd8263b1dde79a2fc5d6e0bf3622851d1c039739105ecc1ea3c1",
+    "identical_to_qualified": true,
+    "classification": "absent",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": false
+  },
+  {
+    "path": "tests/private-file-operations-boundary-remediation.php",
+    "base_sha256": "0e1b515915c409742834c7385b3ff50dff3ae46b9f1a1aea402ed028bfde1e56",
+    "converged_sha256": "bdeb91a388de99ca80471b64484ddfc88eedca895c05169be94382b9e78f6bb2",
+    "qualified_sha256": "bdeb91a388de99ca80471b64484ddfc88eedca895c05169be94382b9e78f6bb2",
+    "identical_to_qualified": true,
+    "classification": "already present differently",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": false
+  },
+  {
+    "path": "tests/private-file-upload-api-remediation.php",
+    "base_sha256": "e3619bc86bb76547ed8a3a8a3b37f34c259e2db450acca5c8c30641c115540e1",
+    "converged_sha256": "1103d76dea4196dd48da040fae21cb5543636fcc02e18bb9d530811d48af5038",
+    "qualified_sha256": "1103d76dea4196dd48da040fae21cb5543636fcc02e18bb9d530811d48af5038",
+    "identical_to_qualified": true,
+    "classification": "already present differently",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": false
+  },
+  {
+    "path": "tests/private-storage-boundary.php",
+    "base_sha256": null,
+    "converged_sha256": "c5c08a42ec54c1b7f548a1c191639d4a24168ad058a97f5ec632700d65631ca1",
+    "qualified_sha256": "c5c08a42ec54c1b7f548a1c191639d4a24168ad058a97f5ec632700d65631ca1",
+    "identical_to_qualified": true,
+    "classification": "absent",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": false
+  },
+  {
+    "path": "tests/private-storage-integration.php",
+    "base_sha256": null,
+    "converged_sha256": "c8bba4d59387d0f945dc87210a4f0b326e55b0da43e0efbf93ae3f2f01ec4f42",
+    "qualified_sha256": "c8bba4d59387d0f945dc87210a4f0b326e55b0da43e0efbf93ae3f2f01ec4f42",
+    "identical_to_qualified": true,
+    "classification": "absent",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": false
+  },
+  {
+    "path": "tests/event-plan-import-file-operations-boundary-remediation.php",
+    "base_sha256": "6826b5f93642fb46fcd81e64e4e5b15cdffb45efc59907214fff6618137a47e1",
+    "converged_sha256": "0c36254d90632dbe93df9570f35e8e47a6a2629d94f156fec1f69fb860308f4c",
+    "qualified_sha256": "0c36254d90632dbe93df9570f35e8e47a6a2629d94f156fec1f69fb860308f4c",
+    "identical_to_qualified": true,
+    "classification": "already present differently",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": false
+  },
+  {
+    "path": "tests/event-plan-import-upload-api-remediation.php",
+    "base_sha256": "841680abb37b81761fc25f5a444f066c83e49dc73b7e9e7f371d064870b2eadb",
+    "converged_sha256": "525293f8ce057cbb2eb368256342e318bc2e079807689a016c2c34b788947563",
+    "qualified_sha256": "525293f8ce057cbb2eb368256342e318bc2e079807689a016c2c34b788947563",
+    "identical_to_qualified": true,
+    "classification": "already present differently",
+    "resolution": "qualified security delta applied; later accepted semantics preserved",
+    "runtime": false
+  }
+]

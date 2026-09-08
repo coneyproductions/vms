@@ -553,6 +553,10 @@ if (!function_exists('bvmgr_staffing_normalize_staff_qualification_row')) {
 			}
 		}
 
+		if ($attachment_id > 0 && $storage_kind !== 'private_file' && get_post_meta($attachment_id, '_bvmgr_private_storage_key', true) !== '') {
+			$proof_url = '';
+		}
+
 		$notes = isset($row['notes']) ? sanitize_textarea_field((string) $row['notes']) : '';
 		$source = isset($row['source']) ? sanitize_key((string) $row['source']) : 'admin';
 		if (!in_array($source, array('admin', 'staff_portal', 'migration'), true)) {

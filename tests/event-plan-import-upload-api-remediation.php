@@ -31,7 +31,7 @@ $assert(strpos($actionsSource, 'rename(') === false, 'Event Plan import actions 
 $assert(strpos($actionsSource, 'wp_handle_upload(') !== false, 'Event Plan import actions should call wp_handle_upload().');
 $assert(substr_count($actionsSource, "'test_form' => false") === 1, 'Event Plan import should disable test_form exactly once for this admin-post flow.');
 $assert(strpos($actionsSource, "current_user_can('manage_options')") !== false, 'Event Plan import capability should remain manage_options.');
-$assert(strpos($actionsSource, "check_admin_referer('vms_event_plan_import_preview')") !== false, 'Event Plan import nonce action should remain unchanged.');
+$assert(strpos($actionsSource, "check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_preview', '_wpnonce'), '_wpnonce')") !== false, 'Event Plan import must verify the canonical nonce through the explicit legacy-action compatibility boundary.');
 $assert(strpos($actionsSource, "bvmgr_upload_read_file(\$_FILES, 'event_plan_csv_file')") !== false, 'Event Plan import should keep the event_plan_csv_file upload field.');
 $assert(strpos($actionsSource, "bvmgr_validate_uploaded_file(\n") !== false || strpos($actionsSource, 'bvmgr_validate_uploaded_file(') !== false, 'Event Plan import should preserve shared upload validation.');
 $assert(strpos($actionsSource, "'Failed to store uploaded CSV file.'") !== false, 'Event Plan import should preserve the existing storage-failure notice.');
@@ -48,7 +48,7 @@ $assert(strpos($actionsSource, "@chmod(\$target_path, 0640); // phpcs:ignore Wor
 $assert(strpos($actionsSource, "\$handled['url']") === false && strpos($actionsSource, '$handled["url"]') === false, 'Event Plan import should not use the returned public URL from wp_handle_upload().');
 $assert(strpos($actionsSource, 'bvmgr_private_files_store_validated_upload(') === false, 'Event Plan import should not route preview uploads through the shared private-file broker.');
 
-$assert(strpos($pageSource, "wp_nonce_field('vms_event_plan_import_preview');") !== false, 'Event Plan import form should keep the existing preview nonce field.');
+$assert(strpos($pageSource, "wp_nonce_field('bvmgr_event_plan_import_preview');") !== false, 'Event Plan import form should keep the existing preview nonce field.');
 $assert(strpos($pageSource, 'name="event_plan_csv_file"') !== false, 'Event Plan import form should keep the existing upload field name.');
 $assert(strpos($pageSource, 'name="action" value="vms_event_plan_import_preview"') !== false, 'Event Plan import form should keep the existing admin-post action.');
 
@@ -194,6 +194,9 @@ function current_user_can(string $capability): bool
 	$GLOBALS['vms_test_calls']['current_user_can'][] = $capability;
 	return !empty($GLOBALS['vms_test_case']['allow_current_user']);
 }
+
+// Nonce selection uses core verification; this upload fixture has no legacy nonce.
+function wp_verify_nonce($nonce, $action) { return false; }
 
 function check_admin_referer(string $action): bool
 {
@@ -436,6 +439,7 @@ function wp_handle_upload(&$file, $overrides = false, $time = null): array
 	);
 }
 
+require dirname(__DIR__) . '/includes/core/prefix-b4-compat.php';
 require $actionsFile;
 
 function vms_test_recursive_delete(string $path): void
@@ -576,7 +580,7 @@ vms_test_reset_case('success');
 $successRedirect = vms_test_run_preview_action();
 $assert($successRedirect === '/wp-admin/admin.php?page=vms-import-event-plans&preview_token=epcsv_test_token', 'Successful Event Plan preview should preserve the existing preview_token redirect.');
 $assert($GLOBALS['vms_test_calls']['current_user_can'] === array('manage_options'), 'Successful Event Plan preview should preserve the manage_options capability check.');
-$assert($GLOBALS['vms_test_calls']['check_admin_referer'] === array('vms_event_plan_import_preview'), 'Successful Event Plan preview should preserve the preview nonce action.');
+$assert($GLOBALS['vms_test_calls']['check_admin_referer'] === array('bvmgr_event_plan_import_preview'), 'Successful Event Plan preview should preserve the preview nonce action.');
 $assert(count($GLOBALS['vms_test_calls']['bvmgr_upload_read_file']) === 1 && $GLOBALS['vms_test_calls']['bvmgr_upload_read_file'][0]['field'] === 'event_plan_csv_file', 'Successful Event Plan preview should keep the event_plan_csv_file field.');
 $validateCall = $GLOBALS['vms_test_calls']['bvmgr_validate_uploaded_file'][0] ?? array();
 $assert(($validateCall['args']['allowed_mimes'] ?? null) === bvmgr_event_plan_import_allowed_mimes(), 'Successful Event Plan preview should preserve the CSV MIME allowlist.');

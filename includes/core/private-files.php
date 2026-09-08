@@ -1,5 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
+require_once __DIR__ . '/private-storage.php';
+require_once __DIR__ . '/private-storage-migration.php';
 
 if (!defined('BVMGR_PRIVATE_FILES_TABLE_SUFFIX')) {
 	define('BVMGR_PRIVATE_FILES_TABLE_SUFFIX', 'vms_private_files');
@@ -25,14 +27,8 @@ if (!function_exists('bvmgr_private_files_upload_dir')) {
 	 */
 	function bvmgr_private_files_upload_dir(): array
 	{
-		$uploads = wp_upload_dir(null, false);
-		$base_dir = isset($uploads['basedir']) ? trim((string) $uploads['basedir']) : '';
-		$dir = $base_dir !== '' ? trailingslashit($base_dir) . 'vms-private' : '';
-
-		return array(
-			'dir' => $dir,
-			'base_dir' => $base_dir,
-		);
+		$config = bvmgr_private_storage_config();
+		return is_wp_error($config) ? array('dir' => '', 'base_dir' => '') : array('dir' => $config['site'], 'base_dir' => $config['root']);
 	}
 }
 
@@ -64,29 +60,7 @@ if (!function_exists('bvmgr_private_files_write_hardening_files')) {
 if (!function_exists('bvmgr_private_files_ensure_dir')) {
 	function bvmgr_private_files_ensure_dir(string $bucket = ''): bool
 	{
-		$paths = bvmgr_private_files_upload_dir();
-		$base_dir = $paths['dir'];
-		if ($base_dir === '') {
-			return false;
-		}
-
-		if (!wp_mkdir_p($base_dir)) {
-			return false;
-		}
-		bvmgr_private_files_write_hardening_files($base_dir);
-
-		$bucket = sanitize_key($bucket);
-		if ($bucket === '') {
-			return true;
-		}
-
-		$bucket_dir = trailingslashit($base_dir) . $bucket;
-		if (!wp_mkdir_p($bucket_dir)) {
-			return false;
-		}
-		bvmgr_private_files_write_hardening_files($bucket_dir);
-
-		return true;
+		return bvmgr_private_storage_prepare($bucket);
 	}
 }
 
@@ -159,48 +133,14 @@ if (!function_exists('bvmgr_private_files_generate_storage_key')) {
 if (!function_exists('bvmgr_private_files_absolute_path')) {
 	function bvmgr_private_files_absolute_path(string $storage_key): string
 	{
-		$storage_key = bvmgr_private_files_validate_storage_key($storage_key);
-		if ($storage_key === '') {
-			return '';
-		}
-
-		$paths = bvmgr_private_files_upload_dir();
-		$base_dir = $paths['dir'];
-		if ($base_dir === '') {
-			return '';
-		}
-
-		return trailingslashit($base_dir) . $storage_key;
+		return bvmgr_private_storage_target($storage_key);
 	}
 }
 
 if (!function_exists('bvmgr_private_files_path_is_safe')) {
 	function bvmgr_private_files_path_is_safe(string $path): bool
 	{
-		$path = trim($path);
-		if ($path === '') {
-			return false;
-		}
-
-		$paths = bvmgr_private_files_upload_dir();
-		$base_dir = $paths['dir'];
-		if ($base_dir === '') {
-			return false;
-		}
-
-		$real_base = realpath($base_dir);
-		$real_path = realpath($path);
-		if ($real_base === false || $real_path === false) {
-			return false;
-		}
-
-		$normalized_base = trailingslashit(wp_normalize_path($real_base));
-		$normalized_path = wp_normalize_path($real_path);
-		if ($normalized_base === '' || $normalized_path === '') {
-			return false;
-		}
-
-		return strpos($normalized_path, $normalized_base) === 0;
+		return bvmgr_private_storage_safe_file($path);
 	}
 }
 
@@ -305,7 +245,6 @@ if (!function_exists('bvmgr_private_files_install_schema')) {
 	{
 		$installed = (string) get_option(BVMGR_PRIVATE_FILES_SCHEMA_OPTION, '');
 		if ($installed === BVMGR_PRIVATE_FILES_SCHEMA_VERSION) {
-			bvmgr_private_files_ensure_dir();
 			return;
 		}
 
@@ -331,7 +270,6 @@ if (!function_exists('bvmgr_private_files_install_schema')) {
 		) {$charset};";
 
 		dbDelta($sql);
-		bvmgr_private_files_ensure_dir();
 		update_option(BVMGR_PRIVATE_FILES_SCHEMA_OPTION, BVMGR_PRIVATE_FILES_SCHEMA_VERSION, false);
 	}
 }
@@ -358,7 +296,7 @@ if (!function_exists('bvmgr_private_file_get')) {
 if (!function_exists('bvmgr_private_file_path')) {
 	function bvmgr_private_file_path(string $stored_filename): string
 	{
-		return bvmgr_private_files_absolute_path($stored_filename);
+		return bvmgr_private_files_validate_storage_key($stored_filename) !== '' ? bvmgr_private_storage_resolve($stored_filename) : '';
 	}
 }
 
@@ -382,10 +320,10 @@ if (!function_exists('bvmgr_private_files_stream_path')) {
 		$filename = bvmgr_private_files_safe_download_name($filename);
 		$mime = trim($mime);
 		$disposition = strtolower(trim($disposition)) === 'inline' ? 'inline' : 'attachment';
-		if ($mime === '') {
+		if (!preg_match('~^[a-zA-Z0-9.+-]+/[a-zA-Z0-9.+-]+$~D', $mime)) {
 			$mime = 'application/octet-stream';
 		}
-		if ($path === '' || !file_exists($path) || !is_file($path) || !is_readable($path)) {
+		if (!bvmgr_private_files_path_is_safe($path) || $path === '' || !file_exists($path) || !is_file($path) || !is_readable($path)) {
 			wp_die(esc_html__('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
@@ -417,7 +355,8 @@ if (!function_exists('bvmgr_private_files_attachment_payload')) {
 			return new WP_Error('attachment_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 		}
 
-		$path = (string) get_attached_file($attachment_id, true);
+		$key = (string) get_post_meta($attachment_id, '_bvmgr_private_storage_key', true);
+		$path = $key !== '' ? bvmgr_private_storage_resolve($key) : '';
 		if ($path === '' || !file_exists($path) || !is_file($path) || !is_readable($path)) {
 			return new WP_Error('attachment_missing', __('Requested file is not available.', 'backstage-venue-manager'));
 		}
@@ -517,7 +456,7 @@ if (!function_exists('bvmgr_private_files_store_validated_upload')) {
 			return new WP_Error('private_storage_invalid', __('Could not prepare private file storage.', 'backstage-venue-manager'));
 		}
 		if (!bvmgr_private_files_ensure_dir($bucket)) {
-			return new WP_Error('private_dir_unavailable', __('Could not create the private upload directory.', 'backstage-venue-manager'));
+			return bvmgr_private_storage_error();
 		}
 
 		$extension = isset($validated_upload['ext']) ? sanitize_key((string) $validated_upload['ext']) : '';
@@ -599,7 +538,7 @@ if (!function_exists('bvmgr_private_files_store_validated_upload')) {
 
 			return new WP_Error('private_upload_move_failed', __('Could not store the uploaded file.', 'backstage-venue-manager'));
 		}
-			@chmod($destination, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- Preserve 0640 permissions on the validated private upload path so brokered files remain locally readable while denied to public web access; WP_Filesystem would add incompatible credential-driven semantics.
+			@chmod($destination, 0600); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- Restrict the already validated non-public upload to its filesystem owner; WP_Filesystem would add incompatible credential-driven semantics.
 
 		$mime = isset($validated_upload['mime']) ? sanitize_text_field((string) $validated_upload['mime']) : 'application/octet-stream';
 		if ($mime === '') {
@@ -636,8 +575,11 @@ if (!function_exists('bvmgr_private_files_delete')) {
 		}
 
 		$path = bvmgr_private_file_path((string) ($row['stored_filename'] ?? ''));
+		if ($path === '') return false;
 		if ($path !== '' && bvmgr_private_files_path_is_safe($path) && file_exists($path) && is_file($path)) {
 				wp_delete_file($path);
+				clearstatcache(true, $path);
+				if (file_exists($path)) return false;
 			}
 
 		global $wpdb;

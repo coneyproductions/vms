@@ -210,11 +210,11 @@ if (!function_exists('bvmgr_event_plan_import_upload_root')) {
 
 		$bucket = bvmgr_event_plan_import_storage_bucket();
 		if (!bvmgr_private_files_ensure_dir($bucket)) {
-			return new WP_Error('upload_dir_create_failed', __('Could not create import directory in uploads.', 'backstage-venue-manager'));
+			return new WP_Error('upload_dir_create_failed', __('Private import storage is unavailable. Review Tools → BVM Private Documents.', 'backstage-venue-manager'));
 		}
 		$dir = bvmgr_private_files_bucket_dir($bucket);
 		if ($dir === '' || !is_dir($dir)) {
-			return new WP_Error('upload_dir_create_failed', __('Could not create import directory in uploads.', 'backstage-venue-manager'));
+			return new WP_Error('upload_dir_create_failed', __('Private import storage is unavailable. Review Tools → BVM Private Documents.', 'backstage-venue-manager'));
 		}
 
 		return array(
@@ -227,59 +227,20 @@ if (!function_exists('bvmgr_event_plan_import_upload_root')) {
 if (!function_exists('bvmgr_event_plan_import_path_is_safe')) {
 	function bvmgr_event_plan_import_path_is_safe(string $path): bool
 	{
-		$real_path = realpath($path);
-		if (!is_string($real_path) || $real_path === '') {
-			return false;
-		}
-
-		$roots = array();
-		$root = bvmgr_event_plan_import_upload_root();
-		if (!is_wp_error($root)) {
-			$roots[] = (string) $root['dir'];
-		}
-		$roots = array_merge($roots, bvmgr_event_plan_import_legacy_upload_roots());
-
-		foreach ($roots as $root_dir) {
-			$real_root = realpath($root_dir);
-			if (!is_string($real_root) || $real_root === '') {
-				continue;
-			}
-			if (strpos(wp_normalize_path($real_path), trailingslashit(wp_normalize_path($real_root))) === 0) {
-				return true;
-			}
-		}
-
-		return false;
+        if (!bvmgr_private_files_path_is_safe($path)) return false;
+        foreach (array('event-plan-imports', 'legacy-event-plan-imports') as $bucket) {
+            $root = bvmgr_private_storage_target($bucket);
+            if ($root !== '' && bvmgr_private_storage_within($path, $root)) return true;
+        }
+        return false;
 	}
 }
 
 if (!function_exists('bvmgr_event_plan_import_storage_path')) {
 	function bvmgr_event_plan_import_storage_path(string $reference): string
 	{
-		$reference = trim($reference);
-		if ($reference === '') {
-			return '';
-		}
-
-		if (file_exists($reference) && bvmgr_event_plan_import_path_is_safe($reference)) {
-			return $reference;
-		}
-		if (!function_exists('bvmgr_private_files_validate_storage_key') || !function_exists('bvmgr_private_files_absolute_path')) {
-			return '';
-		}
-
-		$storage_key = bvmgr_private_files_validate_storage_key($reference);
-		$bucket = bvmgr_event_plan_import_storage_bucket() . '/';
-		if ($storage_key === '' || strpos($storage_key, $bucket) !== 0) {
-			return '';
-		}
-
-		$path = bvmgr_private_files_absolute_path($storage_key);
-		if ($path === '' || !bvmgr_event_plan_import_path_is_safe($path)) {
-			return '';
-		}
-
-		return $path;
+        $path = bvmgr_private_storage_resolve($reference);
+        return $path !== '' && bvmgr_event_plan_import_path_is_safe($path) ? $path : '';
 	}
 }
 

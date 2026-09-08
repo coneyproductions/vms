@@ -100,7 +100,7 @@ $assert(strpos($brokerFunction, 'wp_normalize_path($handled_real) === wp_normali
 $assert(strpos($brokerFunction, 'bvmgr_private_files_path_is_safe($handled_file)') !== false, 'The broker should only unlink unexpected handled files when safe.');
 $assert(strpos($brokerFunction, "\$handled['url']") === false && strpos($brokerFunction, '$handled["url"]') === false, 'The broker should not use the returned public URL.');
 $assert(strpos($brokerFunction, 'wp_insert_attachment(') === false, 'The broker should not create attachments.');
-$assert(strpos($brokerFunction, '@chmod($destination, 0640);') !== false, 'The broker should preserve the existing 0640 permission behavior.');
+$assert(strpos($brokerFunction, '@chmod($destination, 0600);') !== false, 'The broker should preserve the existing 0600 permission behavior.');
 $assert(strpos($privateFilesSource, "'allowed_mimes' => bvmgr_private_w9_allowed_mimes()") !== false, 'The W-9 wrapper should pass its exact MIME map into the broker.');
 $assert(strpos($privateFilesSource, "'allowed_mimes' => bvmgr_private_staff_cert_allowed_mimes()") !== false, 'The staff-cert wrapper should pass its exact MIME map into the broker.');
 $assert(strpos($vendorPortalSource, '$allowed_mimes = bvmgr_vendor_portal_tech_doc_allowed_mimes();') !== false, 'Vendor tech docs should reuse the same MIME map for validation and storage.');
@@ -124,6 +124,15 @@ $assert(strpos($eventPlanSource, 'bvmgr_event_plan_import_with_scoped_upload_dir
 $assert(strpos($eventPlanSource, 'wp_handle_upload(') !== false, 'The Event Plan upload API implementation should remain present.');
 
 define('ABSPATH', __DIR__ . '/');
+define('ARRAY_A', 'ARRAY_A');
+define('WP_CONTENT_DIR', __DIR__);
+$bvm_private_test_root = sys_get_temp_dir() . '/bvm-private-broker-' . bin2hex(random_bytes(6));
+mkdir($bvm_private_test_root, 0700);
+define('BVMGR_PRIVATE_STORAGE_ROOT', realpath($bvm_private_test_root));
+define('BVMGR_PRIVATE_STORAGE_WEB_ROOTS', array(realpath(__DIR__)));
+function get_current_blog_id(): int { return 1; }
+function wp_unslash($value) { return $value; }
+register_shutdown_function(static function () { vms_test_recursive_delete(BVMGR_PRIVATE_STORAGE_ROOT); });
 
 final class VmsPrivateFilesUploadApiException extends RuntimeException
 {
@@ -388,6 +397,11 @@ function vms_test_make_wpdb(string $prefix)
 	return new class($prefix) {
 		public string $prefix;
 		public int $insert_id = 0;
+		public string $last_error = '';
+		public string $postmeta = 'wp_postmeta';
+		public string $posts = 'wp_posts';
+		public function prepare($query, ...$args) { return $query; }
+		public function get_results(...$args) { return array(); }
 
 		public function __construct(string $prefix)
 		{
@@ -421,7 +435,8 @@ function vms_test_reset_case(string $mode = 'success'): void
 {
 	$tempRoot = sys_get_temp_dir() . '/vms-private-upload-api-' . bin2hex(random_bytes(6));
 	$uploadsBaseDir = $tempRoot . '/uploads';
-	$privateRoot = $uploadsBaseDir . '/vms-private';
+	$privateRoot = BVMGR_PRIVATE_STORAGE_ROOT . '/site-1';
+	vms_test_recursive_delete($privateRoot);
 	$bucketDir = $privateRoot . '/verifications';
 	$outsideDir = $tempRoot . '/outside';
 	if (!mkdir($outsideDir, 0777, true) && !is_dir($outsideDir)) {
@@ -505,7 +520,7 @@ $result = bvmgr_private_files_store_validated_upload(
 		'related_post_id' => 45,
 	)
 );
-$assert(!is_wp_error($result), 'The broker should succeed for a valid upload.');
+$assert(!is_wp_error($result), 'The broker should succeed for a valid upload: ' . (is_wp_error($result) ? $result->get_error_code() . ' / ' . (is_wp_error(bvmgr_private_storage_config()) ? bvmgr_private_storage_config()->get_error_code() : (is_wp_error(bvmgr_private_storage_inventory()) ? bvmgr_private_storage_inventory()->get_error_code() : 'configured')) : ''));
 $assert($result === 321, 'The broker should return the registered private-file ID.');
 $expectedDestination = (string) $GLOBALS['vms_test_case']['expected_destination'];
 $call = $GLOBALS['vms_test_calls']['wp_handle_upload'][0] ?? null;
@@ -522,7 +537,7 @@ $assert(($call['upload_dir_filter_count'] ?? 0) === 1, 'The broker should scope 
 $assert(($call['filename'] ?? '') === 'uuid-test.pdf', 'The deterministic destination basename should remain UUID-based.');
 $assert(($call['file']['name'] ?? '') === 'Verification-Proof.pdf', 'The broker should preserve the sanitized display filename for wp_handle_upload().');
 $assert(file_exists($expectedDestination), 'The broker should store the file at the expected private destination.');
-$assert(sprintf('%o', fileperms($expectedDestination) & 0777) === '640', 'The broker should preserve the 0640 permission behavior.');
+$assert(sprintf('%o', fileperms($expectedDestination) & 0777) === '600', 'The broker should preserve the 0600 permission behavior.');
 $insert = $GLOBALS['vms_test_calls']['wpdb_insert'][0] ?? null;
 $assert(is_array($insert), 'The broker should register the stored file.');
 $assert(($insert['data']['stored_filename'] ?? '') === 'verifications/uuid-test.pdf', 'The broker should preserve the generated storage key.');

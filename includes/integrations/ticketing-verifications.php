@@ -829,64 +829,19 @@ if (!function_exists('bvmgr_ticketing_verification_upload_root')) {
 if (!function_exists('bvmgr_ticketing_verification_path_within_root')) {
     function bvmgr_ticketing_verification_path_within_root(string $path): bool
     {
-        $path = trim($path);
-        if ($path === '') {
-            return false;
+        if (!bvmgr_private_files_path_is_safe($path)) return false;
+        foreach (array('verifications', 'legacy-verifications') as $bucket) {
+            $root = bvmgr_private_storage_target($bucket);
+            if ($root !== '' && bvmgr_private_storage_within($path, $root)) return true;
         }
-
-        $upload_dir = wp_upload_dir(null, false);
-        $base = isset($upload_dir['basedir']) ? trim((string) $upload_dir['basedir']) : '';
-        $roots = array();
-
-        $current_root = bvmgr_ticketing_verification_upload_root();
-        if ($current_root !== '') {
-            $roots[] = $current_root;
-        }
-        if ($base !== '') {
-            $legacy_root = trailingslashit($base) . 'vms-verification-proofs';
-            if ($legacy_root !== '' && !in_array($legacy_root, $roots, true)) {
-                $roots[] = $legacy_root;
-            }
-        }
-
-        if (empty($roots)) {
-            return false;
-        }
-
-        $real_path = realpath($path);
-        if ($real_path === false) {
-            return false;
-        }
-
-        $real_path = wp_normalize_path($real_path);
-        if ($real_path === '') {
-            return false;
-        }
-
-        foreach ($roots as $root) {
-            $real_root = realpath((string) $root);
-            if ($real_root === false) {
-                continue;
-            }
-
-            $real_root = wp_normalize_path($real_root);
-            if ($real_root === '') {
-                continue;
-            }
-
-            if (strpos($real_path, trailingslashit($real_root)) === 0 || $real_path === $real_root) {
-                return true;
-            }
-        }
-
         return false;
-    }
+	}
 }
 
 if (!function_exists('bvmgr_ticketing_verification_delete_proof_file')) {
     function bvmgr_ticketing_verification_delete_proof_file(string $path): void
     {
-        $path = trim($path);
+        $path = bvmgr_private_storage_resolve($path);
         if ($path === '') {
             return;
         }
@@ -1027,7 +982,7 @@ if (!function_exists('bvmgr_ticketing_verification_proof_payload')) {
             );
         }
 
-        $path = (string) get_post_meta($request_id, 'proof_file_path', true);
+        $path = bvmgr_private_storage_resolve((string) get_post_meta($request_id, 'proof_file_path', true));
         $mime = (string) get_post_meta($request_id, 'proof_mime', true);
         if ($path === '' || !file_exists($path) || !bvmgr_ticketing_verification_path_within_root($path)) {
             return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
@@ -1114,12 +1069,16 @@ if (!function_exists('bvmgr_ticketing_verification_delete_proof_asset_for_reques
         $file_id = absint(get_post_meta($request_id, 'proof_file_id', true));
         $storage_kind = sanitize_key((string) get_post_meta($request_id, 'proof_storage_kind', true));
         if ($file_id > 0 && $storage_kind === 'private_file' && function_exists('bvmgr_private_files_delete')) {
-            bvmgr_private_files_delete($file_id);
+            if (!bvmgr_private_files_delete($file_id)) return;
         }
 
         $legacy_path = (string) get_post_meta($request_id, 'proof_file_path', true);
         if ($legacy_path !== '') {
-            bvmgr_ticketing_verification_delete_proof_file($legacy_path);
+            $resolved = bvmgr_private_storage_resolve($legacy_path);
+            if ($resolved === '') return;
+            bvmgr_ticketing_verification_delete_proof_file($resolved);
+            clearstatcache(true, $resolved);
+            if (file_exists($resolved)) return;
         }
 
         delete_post_meta($request_id, 'proof_file_id');

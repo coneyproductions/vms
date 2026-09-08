@@ -1,0 +1,125 @@
+<?php
+/** Real database/filesystem contract, evaluated only by the supervised disposable runner. */
+if (getenv('BVM_DISPOSABLE_DB_GUARDED') !== '1' || DB_NAME !== 'bvm_wporg'
+    || DB_HOST !== 'localhost:' . getenv('BVM_DISPOSABLE_DB_SOCKET') || strpos(ABSPATH, '/private/tmp/bvm-wporg-readiness-') !== 0) throw new RuntimeException('Disposable supervisor required');
+global $wpdb;
+wp_set_current_user(1);
+$assert = static function ($ok, string $label): void { if (!$ok) throw new RuntimeException($label); };
+$config = bvmgr_private_storage_config();
+$assert(!is_wp_error($config), 'secure host configuration accepted');
+$uploads = wp_upload_dir();
+$base = $uploads['basedir'];
+$private = $base . '/vms-private';
+$secret = "%PDF-1.4\nSYNTHETIC_PRIVATE_DOCUMENT_NO_CUSTOMER_DATA\n%%EOF\n";
+$vendor = wp_insert_post(array('post_type' => 'vms_vendor', 'post_title' => 'Synthetic private storage vendor', 'post_status' => 'publish'));
+$legacy_key = 'tax-docs/legacy-secret.pdf';
+wp_mkdir_p(dirname($private . '/' . $legacy_key));
+file_put_contents($private . '/' . $legacy_key, $secret);
+$wpdb->insert(bvmgr_private_files_table(), array('original_filename' => 'Legacy.pdf', 'stored_filename' => $legacy_key, 'mime_type' => 'application/pdf', 'file_size' => strlen($secret), 'sha256' => hash('sha256', $secret), 'created_at' => current_time('mysql'), 'related_post_id' => $vendor, 'related_post_type' => 'vms_vendor'));
+$file_id = (int) $wpdb->insert_id;
+update_post_meta($vendor, '_vms_w9_upload_id', $file_id);
+update_post_meta($vendor, '_vms_w9_upload_storage_kind', 'private_file');
+$before_row = bvmgr_private_file_get($file_id);
+$assert(is_wp_error(bvmgr_private_w9_file_payload($vendor)), 'legacy plaintext reads fail closed pending controlled migration');
+$assert(bvmgr_private_storage_pending(), 'legacy document reported pending');
+$assert(!bvmgr_private_files_ensure_dir('tax-docs'), 'new uploads blocked while legacy protection is incomplete');
+$outside = dirname(ABSPATH) . '/outside-arbitrary.txt';
+file_put_contents($outside, 'UNRELATED');
+$assert(!bvmgr_private_storage_migrate_object(array('key' => 'tax-docs/arbitrary', 'source' => $outside)), 'uncontrolled helper cannot migrate arbitrary files');
+$assert(is_file($outside), 'unrelated file retained');
+wp_create_nonce('private-storage-test-prime');
+$snapshot = static function () use ($base, $config): array {
+    $result = array();
+    foreach (array($base, $config['root']) as $root) {
+        if (!is_dir($root)) continue;
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST);
+        foreach ($iterator as $file) $result[$file->getPathname()] = $file->isFile() ? array(hash_file('sha256', $file->getPathname()), $file->getMTime(), $file->getPerms()) : 'directory';
+    }
+    ksort($result); return $result;
+};
+$before_files = $snapshot();
+$before_read = bvmgr_private_storage_inventory();
+$writes = array();
+$trap = static function ($sql) use (&$writes) { if (preg_match('/^\s*(INSERT|UPDATE|DELETE|REPLACE|CREATE|ALTER|DROP)\b/i', $sql)) $writes[] = $sql; return $sql; };
+add_filter('query', $trap, PHP_INT_MAX);
+ob_start(); bvmgr_private_storage_admin_page(); ob_end_clean();
+bvmgr_private_w9_file_payload($vendor);
+remove_filter('query', $trap, PHP_INT_MAX);
+file_put_contents(getenv('BVM_QUAL_EVIDENCE') . '/private-read-writes.json', wp_json_encode($writes));
+$assert(!$writes && $snapshot() === $before_files && bvmgr_private_storage_inventory() === $before_read, 'ordinary private admin/render/read does not migrate or mutate');
+// Failure after verified copy and durable receipt: deletion is deliberately refused.
+$block = static function ($path) use ($private, $legacy_key) { return $path === $private . '/' . $legacy_key ? '' : $path; };
+add_filter('wp_delete_file', $block);
+$interrupted = bvmgr_private_storage_migrate();
+remove_filter('wp_delete_file', $block);
+$assert(!$interrupted['ok'] && file_exists($private . '/' . $legacy_key), 'failed plaintext removal is not success');
+$destination = bvmgr_private_storage_target($legacy_key);
+$assert(hash_file('sha256', $destination) === hash('sha256', $secret), 'interruption retains verified secure destination');
+$assert(bvmgr_private_file_get($file_id) === $before_row && is_wp_error(bvmgr_private_w9_file_payload($vendor)), 'interrupted migration preserves identity and blocks legacy fallback');
+$complete = bvmgr_private_storage_migrate();
+$assert($complete['ok'] && !file_exists($private . '/' . $legacy_key), 'retry removes exposed source after verification');
+$assert(!is_dir($private . '/tax-docs') && is_dir($private), 'only empty owned bucket removed; shared root retained');
+$payload = bvmgr_private_w9_file_payload($vendor);
+$assert(!is_wp_error($payload) && file_get_contents($payload['path']) === $secret, 'authorized payload content preserved');
+$assert(bvmgr_private_file_get($file_id) === $before_row, 'private document row and consumer ID unchanged');
+$after_files = $snapshot();
+file_put_contents(getenv('BVM_QUAL_EVIDENCE') . '/private-migration-filesystems.json', wp_json_encode(array('before' => $before_files, 'after' => $after_files, 'db_row_before' => $before_row, 'db_row_after' => bvmgr_private_file_get($file_id)), JSON_PRETTY_PRINT));
+$writes = array(); add_filter('query', $trap, PHP_INT_MAX);
+$again = bvmgr_private_storage_migrate();
+ob_start(); bvmgr_private_storage_admin_page(); ob_end_clean();
+bvmgr_private_w9_file_payload($vendor);
+remove_filter('query', $trap, PHP_INT_MAX);
+$assert($again['ok'] && $again['migrated'] === 0 && !$writes && $snapshot() === $after_files, 'migration rerun and subsequent reads issue zero database writes');
+// Historical attachments: preserve the ID and verify/remove registered derivatives.
+wp_mkdir_p($base . '/2030/01');
+$attachment_path = $base . '/2030/01/private-attachment.pdf';
+file_put_contents($attachment_path, $secret . 'ATTACHMENT');
+file_put_contents($base . '/2030/01/private-thumb.jpg', 'SYNTHETIC_DERIVATIVE');
+$attachment_id = wp_insert_attachment(array('post_title' => 'Legacy private attachment', 'post_mime_type' => 'application/pdf', 'post_status' => 'inherit'), $attachment_path);
+wp_update_attachment_metadata($attachment_id, array('file' => '2030/01/private-attachment.pdf', 'sizes' => array('thumbnail' => array('file' => 'private-thumb.jpg', 'width' => 10, 'height' => 10, 'mime-type' => 'image/jpeg'))));
+update_post_meta($vendor, '_vms_stage_plot_attachment_id', $attachment_id);
+$assert(is_wp_error(bvmgr_private_files_attachment_payload($attachment_id)), 'legacy attachment not served from public uploads');
+$attachment_migration = bvmgr_private_storage_migrate();
+$assert($attachment_migration['ok'], 'referenced attachment migration completes');
+$assert(!file_exists($attachment_path) && !file_exists($base . '/2030/01/private-thumb.jpg'), 'original and registered derivative removed');
+$assert((int) get_post_meta($vendor, '_vms_stage_plot_attachment_id', true) === $attachment_id, 'attachment association preserved');
+$assert(!wp_get_attachment_url($attachment_id), 'migrated private attachment has no public URL');
+$attachment_payload = bvmgr_private_files_attachment_payload($attachment_id);
+$assert(!is_wp_error($attachment_payload) && file_get_contents($attachment_payload['path']) === $secret . 'ATTACHMENT', 'attachment still resolves through broker');
+// Historical absolute import/proof references map to secure keys after explicit migration.
+$old_import = $base . '/vms-event-plan-imports/probe.csv';
+$old_proof = $base . '/vms-verification-proofs/probe.pdf';
+wp_mkdir_p(dirname($old_import)); wp_mkdir_p(dirname($old_proof));
+file_put_contents($old_import, "a,b\n1,2\n"); file_put_contents($old_proof, $secret);
+$assert(bvmgr_event_plan_import_storage_path($old_import) === '', 'legacy absolute import read blocked before migration');
+$assert(bvmgr_private_storage_migrate()['ok'], 'legacy dedicated import/proof buckets migrate');
+$assert(file_get_contents(bvmgr_event_plan_import_storage_path($old_import)) === "a,b\n1,2\n", 'legacy absolute import reference remains usable');
+$assert(file_get_contents(bvmgr_private_storage_resolve($old_proof)) === $secret, 'legacy proof reference remains usable');
+// Conflicting destination: never overwrite or remove either content.
+$conflict_key = 'tax-docs/conflict.pdf';
+wp_mkdir_p(dirname($private . '/' . $conflict_key));
+file_put_contents($private . '/' . $conflict_key, $secret);
+file_put_contents(bvmgr_private_storage_target($conflict_key), 'DIFFERENT');
+$assert(!bvmgr_private_storage_migrate()['ok'], 'conflicting destination fails closed');
+$assert(file_get_contents($private . '/' . $conflict_key) === $secret, 'conflict preserves original');
+wp_delete_file(bvmgr_private_storage_target($conflict_key));
+$assert(bvmgr_private_storage_migrate()['ok'], 'resolved conflict is safely resumable');
+// A persisted digest mismatch must leave the original untouched and permit correction.
+$bad_key = 'tax-docs/mismatched-source.pdf';
+wp_mkdir_p(dirname($private . '/' . $bad_key));
+file_put_contents($private . '/' . $bad_key, $secret);
+$wpdb->insert(bvmgr_private_files_table(), array('original_filename' => 'Mismatch.pdf', 'stored_filename' => $bad_key, 'mime_type' => 'application/pdf', 'file_size' => strlen($secret), 'sha256' => hash('sha256', 'WRONG'), 'created_at' => current_time('mysql')));
+$bad_id = (int) $wpdb->insert_id;
+$assert(!bvmgr_private_storage_migrate()['ok'] && file_get_contents($private . '/' . $bad_key) === $secret && !file_exists(bvmgr_private_storage_target($bad_key)), 'source digest mismatch cannot publish or delete');
+$wpdb->update(bvmgr_private_files_table(), array('sha256' => hash('sha256', $secret)), array('id' => $bad_id));
+$assert(bvmgr_private_storage_migrate()['ok'], 'corrected synthetic metadata allows recovery');
+$subscriber = wp_create_user('private_storage_subscriber', wp_generate_password(), 'private-fixture@example.invalid');
+wp_set_current_user($subscriber);
+$assert(!bvmgr_private_w9_user_can_download($vendor), 'unrelated authenticated principal denied');
+$assert(!bvmgr_private_storage_migrate()['ok'], 'subscriber cannot migrate');
+wp_set_current_user(1);
+$assert(bvmgr_private_w9_user_can_download($vendor), 'authorized administrator retains access');
+$assert(bvmgr_private_files_ensure_dir('tax-docs'), 'new private writes available after migration');
+$receipt = array('ok' => true, 'vendor_id' => $vendor, 'file_id' => $file_id, 'attachment_id' => $attachment_id, 'subscriber_id' => $subscriber, 'old_private_url_path' => 'vms-private/' . $legacy_key, 'old_attachment_url_path' => '2030/01/private-attachment.pdf', 'old_thumbnail_url_path' => '2030/01/private-thumb.jpg', 'old_import_url_path' => 'vms-event-plan-imports/probe.csv', 'old_proof_url_path' => 'vms-verification-proofs/probe.pdf', 'sha256' => hash('sha256', $secret), 'root' => $config['root'], 'destination' => $destination, 'interrupted' => $interrupted, 'completed' => $complete, 'idempotent' => $again);
+file_put_contents(getenv('BVM_QUAL_EVIDENCE') . '/private-storage-integration.json', wp_json_encode($receipt, JSON_PRETTY_PRINT));
+echo "PASS private storage legacy/index/attachment/import migration, failure recovery, idempotence, ownership and zero-read-write contracts\n";

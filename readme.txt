@@ -28,6 +28,23 @@ Backstage Venue Manager 1.2.0 was runtime-tested on WordPress 6.8 and 7.0. Packa
 6. Configure Cloudflare Turnstile only if you plan to use the vendor application form with Turnstile protection enabled.
 7. Configure any optional external services only for the features you intend to use.
 
+== Private Document Storage ==
+
+W-9s, staff certificates, verification proofs, technical documents, and import files require private filesystem storage. Private uploads are disabled until your host configures it. BVM activation and features that do not use private documents remain available.
+
+Ask your hosting administrator to create a persistent, PHP-readable/writable directory outside every website document root, alias, symlink mapping, CDN origin, and public backup/export location. Do not assume the parent of WordPress is private. The directory must be dedicated to this WordPress installation/network and must not be exposed by any web server. Back it up privately together with the database.
+
+In wp-config.php, define BVMGR_PRIVATE_STORAGE_ROOT as that directory's canonical absolute path, and BVMGR_PRIVATE_STORAGE_WEB_ROOTS as an array of the canonical filesystem roots published by the host, including document roots and aliases. For example, with a host-verified public root /srv/example/public and a separate private directory /srv/example-documents:
+
+`define('BVMGR_PRIVATE_STORAGE_ROOT', '/srv/example-documents');`
+`define('BVMGR_PRIVATE_STORAGE_WEB_ROOTS', array('/srv/example/public'));`
+
+These example paths are not defaults. The host must supply the complete mapping: PHP cannot enumerate arbitrary server/proxy aliases. BVM checks real paths, public-root overlap, WordPress/content/uploads locations, and consistency with the server's DOCUMENT_ROOT. Unknown configuration, symlink/junction redirects, unsafe roots, or unavailable permissions fail closed; there is no public-uploads fallback. HTTP requests must supply a server DOCUMENT_ROOT matching a declared root. CLI migrations use the same explicit host declaration. Multisite uses a separate site-ID directory and requires a network super administrator for migration; repeat per site.
+
+After configuring storage, open Tools → BVM Private Documents. Existing uploads-based documents require an explicit administrator migration. Securely back up their files and database first, then run the migration batches until none remain. BVM preserves document IDs, verifies copied contents, records recovery state, and removes only the owned legacy plaintext after verification. Interrupted or failed migrations remain visible and can be retried; ordinary reads and page rendering never migrate files. Existing copies may still be publicly accessible until migration completes. Do not change the configured root without also restoring its private objects; BVM will not fetch missing documents from public uploads.
+
+Legacy private WordPress attachment IDs remain associated with their records; migration also protects registered image derivatives. Unrelated uploads and separately managed companion files are not migrated. Authorized downloads stream through existing BVM routes; the secure filesystem location is not published as a download URL. Host deny files and filesystem permissions alone are not treated as sufficient protection.
+
 == Frequently Asked Questions ==
 
 = Does Backstage Venue Manager require WooCommerce? =

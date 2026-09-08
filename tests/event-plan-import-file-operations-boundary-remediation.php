@@ -94,7 +94,7 @@ $assert(strpos($allSource, 'rename(') === false, 'F4 should not introduce direct
 $assert(strpos($allSource, 'copy(') === false, 'F4 should not introduce direct copy() handling.');
 
 $assert(strpos($previewAction, "current_user_can('manage_options')") !== false, 'Preview action should retain the manage_options capability gate.');
-$assert(strpos($previewAction, "check_admin_referer('vms_event_plan_import_preview')") !== false, 'Preview action should retain the preview nonce gate.');
+$assert(strpos($previewAction, "check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_preview', '_wpnonce'), '_wpnonce')") !== false, 'Preview action should retain the preview nonce gate.');
 $assert(strpos($previewAction, "bvmgr_upload_read_file(\$_FILES, 'event_plan_csv_file')") !== false, 'Preview action should retain the event_plan_csv_file upload field.');
 $assert(strpos($previewAction, 'bvmgr_validate_uploaded_file(') !== false, 'Preview action should retain shared upload validation.');
 $assert(strpos($previewAction, "bvmgr_event_plan_import_prepare_generated_path('csv', \$token, 'source')") !== false, 'Preview action should retain deterministic <token>-source.csv staging.');
@@ -106,14 +106,14 @@ $assert(strpos($previewAction, "bvmgr_event_plan_import_build_preview_from_csv(\
 $assert(strpos($previewAction, 'bvmgr_event_plan_import_delete_stored_file($target_key);') !== false, 'Preview action should retain staged source rollback when preview building fails.');
 
 $assert(strpos($downloadReportAction, "current_user_can('manage_options')") !== false, 'Preview report download should retain the manage_options capability gate.');
-$assert(strpos($downloadReportAction, "wp_verify_nonce(\$nonce, 'vms_event_plan_import_download_report_' . \$token)") !== false, 'Preview report download should retain the token-scoped nonce gate.');
+$assert(strpos($downloadReportAction, "wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_event_plan_import_download_report_' . \$token))") !== false, 'Preview report download should retain the token-scoped nonce gate.');
 $assert(strpos($downloadReportAction, "bvmgr_event_plan_import_storage_path((string) (\$preview['report_csv_storage_key'] ?? (\$preview['report_csv_path'] ?? '')))") !== false, 'Preview report download should retain the storage-key to legacy-path fallback.');
 $assert(strpos($downloadReportAction, '!file_exists($path)') !== false && strpos($downloadReportAction, '!bvmgr_event_plan_import_path_is_safe($path)') !== false, 'Preview report download should retain file-existence and safe-path checks.');
 $assert(strpos($downloadReportAction, "bvmgr_private_files_stream_path(\$path, \$filename, 'text/csv');") !== false, 'Preview report download should still prefer the shared private stream helper.');
 $assert(strpos($downloadReportAction, 'readfile($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile') !== false, 'Preview report download should retain only a line-specific readfile suppression.');
 $assert(strpos($downloadReportAction, 'file_get_contents(') === false, 'Preview report download should not switch to a full-memory read.');
 
-$assert(strpos($sampleDownloadAction, "check_admin_referer('vms_event_plan_import_download_sample_csv')") !== false, 'Sample CSV download should retain its nonce gate.');
+$assert(strpos($sampleDownloadAction, "check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_download_sample_csv', '_wpnonce'), '_wpnonce')") !== false, 'Sample CSV download should retain its nonce gate.');
 $assert(strpos($sampleDownloadAction, "fopen('php://output', 'wb')") !== false, 'Sample CSV download should retain the php://output stream.');
 $assert(strpos($sampleDownloadAction, "fputcsv(\$out, array(") !== false, 'Sample CSV download should still emit CSV rows directly.');
 $assert(strpos($sampleDownloadAction, 'fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose') !== false, 'Sample CSV download should retain only a line-specific fclose suppression.');

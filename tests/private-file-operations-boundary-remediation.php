@@ -109,13 +109,10 @@ $assert(strpos($streamFunction, 'exit;') !== false, 'The shared stream helper sh
 $assert(strpos($streamFunction, 'ob_end_clean') === false, 'The shared stream helper should not introduce output-buffer cleanup churn.');
 $assert(strpos($streamFunction, 'headers_sent(') === false, 'The shared stream helper should not introduce headers_sent() branching.');
 
-$assert(strpos($pathSafeFunction, '$real_base = realpath($base_dir);') !== false, 'The private-file path guard should canonicalize the base directory.');
-$assert(strpos($pathSafeFunction, '$real_path = realpath($path);') !== false, 'The private-file path guard should canonicalize candidate paths.');
-$assert(strpos($pathSafeFunction, 'return strpos($normalized_path, $normalized_base) === 0;') !== false, 'The private-file path guard should enforce the normalized base prefix.');
 
 $assert(strpos($storeFunction, 'wp_handle_upload(') !== false, 'The broker should still use wp_handle_upload().');
 $assert(strpos($storeFunction, 'wp_delete_file($handled_file);') !== false, 'The broker should use wp_delete_file() for handled-file rollback.');
-$assert(strpos($storeFunction, '@chmod($destination, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod') !== false, 'The broker should retain only a line-specific chmod suppression.');
+$assert(strpos($storeFunction, '@chmod($destination, 0600); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod') !== false, 'The broker should retain only a line-specific chmod suppression.');
 $assert(strpos($storeFunction, 'wp_delete_file($destination);') !== false, 'The broker should use wp_delete_file() for register rollback.');
 
 $assert(strpos($deleteFunction, 'bvmgr_private_files_path_is_safe($path)') !== false, 'The shared private-file delete path should preserve its safe-path guard.');
@@ -138,10 +135,6 @@ $assert(strpos($safetyDownloadFunction, 'vms_private_files_stream_path($path, $n
 $assert(strpos($safetyDownloadFunction, "readfile(\$path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile") !== false, 'The safety fallback stream should use a line-specific readfile suppression.');
 $assert(strpos($safetyDownloadFunction, 'exit;') !== false, 'The safety download handler should terminate after streaming.');
 
-$assert(strpos($ticketingPathFunction, '$current_root = bvmgr_ticketing_verification_upload_root();') !== false, 'The verification path guard should include the current private root.');
-$assert(strpos($ticketingPathFunction, "trailingslashit(\$base) . 'vms-verification-proofs'") !== false, 'The verification path guard should preserve the legacy proof root.');
-$assert(strpos($ticketingPathFunction, '$real_path = realpath($path);') !== false, 'The verification path guard should canonicalize candidate paths.');
-$assert(strpos($ticketingPathFunction, 'strpos($real_path, trailingslashit($real_root)) === 0 || $real_path === $real_root') !== false, 'The verification path guard should enforce root prefix matching.');
 
 $assert(strpos($ticketingDeleteFunction, '!bvmgr_ticketing_verification_path_within_root($path)') !== false, 'Verification proof cleanup should retain root enforcement.');
 $assert(strpos($ticketingDeleteFunction, 'wp_delete_file($path);') !== false, 'Verification proof cleanup should use wp_delete_file().');
@@ -163,3 +156,6 @@ $assert(strpos($imageNormalizeFunction, 'wp_delete_file($saved_path);') !== fals
 $assert(strpos($imageNormalizeFunction, "return new WP_Error('file_too_large'") !== false, 'Image normalization should still fail closed on oversized normalized output.');
 
 fwrite(STDOUT, "private-file-operations-boundary-remediation: OK\n");
+$assert(strpos($pathSafeFunction, 'bvmgr_private_storage_safe_file($path)') !== false, 'Private files must delegate to the verified non-public storage boundary.');
+$assert(strpos($ticketingPathFunction, 'bvmgr_private_files_path_is_safe($path)') !== false, 'Verification files must require the same secure boundary.');
+$assert(strpos($ticketingPathFunction, 'bvmgr_ticketing_verification_upload_root()') === false, 'Verification reads must not create directories.');
