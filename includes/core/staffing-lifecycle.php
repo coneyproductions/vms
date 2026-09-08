@@ -146,13 +146,17 @@ function bvmgr_staffing_atomic(callable $operation): array
         $wpdb = $original;
         foreach (array_unique($plans) as $plan_id) clean_post_cache($plan_id);
     }
-    // Commit has already succeeded. Delivery is deliberately not implemented.
+    // Commit has already succeeded; subscribers cannot undo staffing authority.
     foreach ($events as $event) {
         try { do_action('vms_staffing_assignment_transitioned', $event); }
         catch (Throwable $e) { $result['event_warning'] = 'subscriber_failed_after_commit'; }
     }
     foreach (array_unique($saved_events) as $plan) {
         try { do_action('vms_staffing_event_saved', $plan); }
+        catch (Throwable $e) { $result['event_warning'] = 'subscriber_failed_after_commit'; }
+    }
+    if (!empty($result['ok'])) {
+        try { do_action('vms_staffing_committed'); }
         catch (Throwable $e) { $result['event_warning'] = 'subscriber_failed_after_commit'; }
     }
     return $result;
