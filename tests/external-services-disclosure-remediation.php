@@ -22,7 +22,7 @@ try {
 		vms_test_disclosure_fail('Could not read the external-service source inventory.');
 	}
 
-	vms_test_disclosure_assert_contains('wp_oembed_get($video_url', $public_profile, 'Public vendor profiles should remain part of the oEmbed service inventory.');
+	vms_test_disclosure_assert_contains('wp_oembed_get($bvmgr_vendor_profile_video_url', $public_profile, 'Public vendor profiles should remain part of the oEmbed service inventory.');
 	vms_test_disclosure_assert_contains('wp_oembed_get($external_url', $vendor_portal, 'Vendor Portal promo video rendering should remain part of the oEmbed service inventory.');
 	vms_test_disclosure_assert_contains('5. Vendor-selected video and oEmbed providers', $readme, 'The public readme must name the optional oEmbed service family.');
 	vms_test_disclosure_assert_contains('WordPress may request the selected URL and its provider endpoints', $readme, 'The public readme must disclose server-side oEmbed discovery contact.');

@@ -586,12 +586,21 @@ $portal_source = (string) file_get_contents($portal_path);
 $live_store_source = (string) file_get_contents($live_store_path);
 $live_portal_source = (string) file_get_contents($live_portal_path);
 
+// Isolated command doubles; no DB or authority implementation is replaced in the real WordPress suite.
+function bvmgr_tasks_scheduled_person(...$args) { $GLOBALS['vms_test_scheduled_person'] = $args; return array('status' => 'single', 'assignee_user_id' => 88, 'staff_ids' => array(123)); }
+function bvmgr_tasks_request_revision() { return 7; }
+function bvmgr_tasks_request_operation() { return 'fixture-operation'; }
+function bvmgr_tasks_command(...$args) { $GLOBALS['vms_test_command'] = $args; return $GLOBALS['vms_test_command_result'] ?? array('ok' => true); }
+function bvmgr_tasks_atomic($callback) { return $callback(); }
+function bvmgr_tasks_recurrence_successor($row) { $GLOBALS['vms_test_recurrence_row'] = $row; return 902; }
+
 $store_targets = array(
 	'bvmgr_tasks_get_instance',
 	'bvmgr_tasks_get_instances',
 	'bvmgr_tasks_count_instances',
-	'bvmgr_tasks_insert_instance',
+	'bvmgr_tasks_insert_instance_row',
 	'bvmgr_tasks_update_instance_assignment',
+	'bvmgr_tasks_set_instance_assignment',
 	'bvmgr_tasks_transition_instance_status',
 	'bvmgr_tasks_spawn_next_recurrence_instance',
 	'bvmgr_tasks_resolve_scheduled_role_user_id',
@@ -730,9 +739,9 @@ try {
 			0,
 			1,
 			0,
-			'',
+			'9999-12-31 23:59:59',
 			0,
-			'',
+			'1000-01-01 00:00:00',
 		),
 		$prepare['args'],
 		'Task-instance count reads should normalize optional filters into sentinel-prepared arguments.'
@@ -741,7 +750,10 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$wpdb->insert_id = 913;
-	$inserted = bvmgr_tasks_insert_instance(array(
+	vms_test_assert_true(is_wp_error(bvmgr_tasks_insert_instance_row(array('title' => 'outside transaction'))), 'Repository insert must reject calls outside the command transaction.');
+	// Repository SQL double only; real command transactions are covered by task-authority.
+	$GLOBALS['bvmgr_tasks_transaction'] = true;
+	$inserted = bvmgr_tasks_insert_instance_row(array(
 		'title' => 'Line Check',
 		'event_id' => 22,
 		'assignee_user_id' => 12,
@@ -753,128 +765,37 @@ try {
 	vms_test_assert_same('wp_vms_task_instances', $insert_call['table'], 'Task-instance inserts should target the task-instance repository table.');
 	vms_test_assert_same('Line Check', $insert_call['data']['title'], 'Task-instance inserts should persist the normalized title.');
 
+	// Assignment/transition/recurrence now delegate to the command authority.
+	// Their persistence, recurrence uniqueness, revisions, and rollback are exercised by staff-tasks/authority.php and staff-tasks/concurrency.php.
 	$wpdb = vms_test_reset_state();
 	$wpdb->get_row_queue[] = array('id' => 33, 'assignee_user_id' => 45);
-	vms_test_assert_true(
-		bvmgr_tasks_update_instance_assignment(33, 45, true, 88, 'role', 'Front_Desk'),
-		'Task-instance assignment updates should report success when wpdb::update() succeeds.'
-	);
-	$update_call = vms_test_last_call($wpdb, 'update');
-	vms_test_assert_same('wp_vms_task_instances', $update_call['table'], 'Assignment updates should target the task-instance repository table.');
-	vms_test_assert_same('front_desk', $update_call['data']['role_key'], 'Assignment updates should normalize the role key before persisting it.');
-	vms_test_assert_same('role', $update_call['data']['assignment_mode'], 'Assignment updates should persist the provided assignment mode.');
+	vms_test_assert_true(bvmgr_tasks_update_instance_assignment(33, 45, true, 88, 'role', 'Front_Desk'), 'Legacy assignment entry delegates to command authority.');
+	vms_test_assert_same(array('assignment', 33, array('assignee_user_id' => 45, 'assignment_locked' => true, 'assignment_mode' => 'role', 'role_key' => 'Front_Desk'), 7, 'fixture-operation'), $GLOBALS['vms_test_command'], 'Assignment wrapper preserves payload and request revision/operation.');
+	vms_test_assert_true(bvmgr_tasks_transition_instance_status(44, 'open', 'reason', 90), 'Transition wrapper delegates.');
+	vms_test_assert_same(array('transition', 44, array('status' => 'open', 'reason' => 'reason'), 7, 'fixture-operation'), $GLOBALS['vms_test_command'], 'Transition wrapper preserves command identity.');
+	$failure = new WP_Error('fixture-command-rejected', 'Rejected');
+	$GLOBALS['vms_test_command_result'] = $failure;
+	vms_test_assert_same($failure, bvmgr_tasks_transition_instance_status(44, 'open'), 'Command errors must not become success.');
+	unset($GLOBALS['vms_test_command_result']);
+	$wpdb->get_row_queue[] = array('id' => 55, 'status' => 'done');
+	vms_test_assert_same(902, bvmgr_tasks_spawn_next_recurrence_instance(55), 'Completed recurrence delegates through atomic authority.');
+	vms_test_assert_same(array('id' => 55, 'status' => 'done'), $GLOBALS['vms_test_recurrence_row'], 'Recurrence authority receives the current row.');
+	$wpdb->get_row_queue[] = array('id' => 56, 'status' => 'open');
+	vms_test_assert_same(0, bvmgr_tasks_spawn_next_recurrence_instance(56), 'Open tasks must not create recurrence successors.');
 
 	$wpdb = vms_test_reset_state();
-	$wpdb->get_row_queue[] = array('id' => 44, 'status' => 'done');
-	vms_test_assert_true(
-		bvmgr_tasks_transition_instance_status(44, 'open', '', 90),
-		'Task-instance status transitions should report success when wpdb::update() succeeds.'
-	);
-	$update_call = vms_test_last_call($wpdb, 'update');
-	vms_test_assert_same('open', $update_call['data']['status'], 'Status transitions should persist the normalized target status.');
-	vms_test_assert_same(array('id' => 44), $update_call['where'], 'Status transitions should target the requested task-instance row.');
-
+	vms_test_assert_same(array('status' => 'single', 'assignee_user_id' => 88, 'staff_ids' => array(123)), bvmgr_tasks_resolve_scheduled_role_user_id(11, 'ops'), 'Scheduled role wrapper uses command authority eligibility.');
+	vms_test_assert_same(array(11, 'ops'), $GLOBALS['vms_test_scheduled_person'], 'Scheduled role wrapper preserves plan and role.');
+	// Phase 3D preserves generated task identity by plan/template across due/checklist changes.
+	foreach (array(array(null, true), array('2026-08-20 08:00:00', true), array('2026-08-20 08:00:00', false)) as $case) {
+		$wpdb = vms_test_reset_state(); $wpdb->get_row_queue[] = array('id' => 1);
+		vms_test_assert_same(array('id' => 1), bvmgr_tasks_select_existing_open_instance(20, 4, 6, $case[0], $case[1]), 'Plan/template lookup retains its existing identity for every due-date mode.');
+		$prepare = vms_test_find_prepare($wpdb, 'SELECT * FROM %i WHERE event_id=%d AND task_template_id=%d ORDER BY id LIMIT 1');
+		vms_test_assert_same(array('wp_vms_task_instances', 20, 4), $prepare['args'], 'Stable identity lookup prepares the identifier, plan, and template.');
+	}
 	$wpdb = vms_test_reset_state();
-	$wpdb->insert_id = 902;
-	$wpdb->get_row_queue[] = array(
-		'id' => 55,
-		'status' => 'done',
-		'event_id' => 0,
-		'due_at_local' => '2026-08-10 09:00:00',
-		'recurrence_pattern' => 'daily',
-		'recurrence_every_n_days' => 1,
-		'recurrence_root_instance_id' => 0,
-		'task_template_id' => 3,
-		'origin_checklist_id' => 6,
-		'venue_id' => 8,
-		'event_type' => 'concert',
-		'title' => 'Recurring',
-		'instructions' => 'Bring mics.',
-		'priority' => 'high',
-		'is_required' => 1,
-		'assignment_mode' => 'person',
-		'role_key' => '',
-		'assignee_user_id' => 71,
-		'assignment_locked' => 1,
-	);
-	$wpdb->get_var_queue[] = 0;
-	$wpdb->get_row_queue[] = array('id' => 902, 'assignee_user_id' => 71);
-	vms_test_assert_same(902, bvmgr_tasks_spawn_next_recurrence_instance(55, 91), 'Recurrence spawning should return the inserted task-instance ID when no successor exists.');
-	$prepare = vms_test_find_prepare($wpdb, 'SELECT id FROM %i WHERE (id = %d OR recurrence_root_instance_id = %d)');
-	vms_test_assert_same(
-		array('wp_vms_task_instances', 55, 55, '2026-08-11 09:00:00', 'superseded'),
-		$prepare['args'],
-		'Recurrence spawning should prepare the repository table and successor lookup filters.'
-	);
-	$insert_call = vms_test_last_call($wpdb, 'insert');
-	vms_test_assert_same(55, $insert_call['data']['recurrence_root_instance_id'], 'Recurrence spawning should persist the root instance ID on the successor row.');
-
-	$wpdb = vms_test_reset_state();
-	$wpdb->get_col_queue[] = array(123);
-	$wpdb->get_var_queue[] = 88;
-	$GLOBALS['vms_test_post_meta'][123]['_vms_linked_user_id'] = '';
-	vms_test_assert_same(
-		array('status' => 'single', 'assignee_user_id' => 88, 'staff_ids' => array(123)),
-		bvmgr_tasks_resolve_scheduled_role_user_id(11, 'ops'),
-		'Scheduled-role resolution should return the linked user when exactly one staffed match exists.'
-	);
-	$prepare = vms_test_find_prepare($wpdb, 'SELECT DISTINCT a.staff_id FROM %i s INNER JOIN %i a ON a.slot_id = s.slot_id');
-	vms_test_assert_same(
-		array('wp_vms_event_slots', 'wp_vms_assignments', 11, 5, 'active', 'proposed', 'confirmed', 'checked_in'),
-		$prepare['args'],
-		'Scheduled-role resolution should prepare the staffing-table identifiers and filter values.'
-	);
-	$prepare = vms_test_find_prepare($wpdb, 'SELECT user_id FROM %i WHERE meta_key = %s AND meta_value = %s ORDER BY umeta_id ASC LIMIT 1');
-	vms_test_assert_same(
-		array('wp_usermeta', '_vms_staff_id', '123'),
-		$prepare['args'],
-		'Scheduled-role fallback should prepare the usermeta identifier, meta key, and normalized staff ID string.'
-	);
-
-	$wpdb = vms_test_reset_state();
-	$wpdb->get_row_queue[] = array('id' => 1);
-	vms_test_assert_same(array('id' => 1), bvmgr_tasks_select_existing_open_instance(20, 4, 6, null, true), 'Strict due-null selection should return the queued row.');
-	$prepare = vms_test_find_prepare($wpdb, 'due_at_local IS NULL ORDER BY id DESC LIMIT 1');
-	vms_test_assert_same(
-		array('wp_vms_task_instances', 20, 4, 6, 'open'),
-		$prepare['args'],
-		'Strict due-null selection should prepare the repository table and equality filters.'
-	);
-
-	$wpdb = vms_test_reset_state();
-	$wpdb->get_row_queue[] = array('id' => 2);
-	vms_test_assert_same(array('id' => 2), bvmgr_tasks_select_existing_open_instance(20, 4, 6, '2026-08-20 08:00:00', true), 'Strict due-match selection should return the queued row.');
-	$prepare = vms_test_find_prepare($wpdb, 'due_at_local = %s ORDER BY id DESC LIMIT 1');
-	vms_test_assert_same(
-		array('wp_vms_task_instances', 20, 4, 6, 'open', '2026-08-20 08:00:00'),
-		$prepare['args'],
-		'Strict due-match selection should prepare the repository table, equality filters, and due timestamp.'
-	);
-
-	$wpdb = vms_test_reset_state();
-	$wpdb->get_row_queue[] = array('id' => 3);
-	vms_test_assert_same(array('id' => 3), bvmgr_tasks_select_existing_open_instance(20, 4, 6, '2026-08-20 08:00:00', false), 'Non-strict open-instance selection should return the queued row.');
-	$prepare = vms_test_find_prepare($wpdb, 'status = %s ORDER BY id DESC LIMIT 1');
-	vms_test_assert_same(
-		array('wp_vms_task_instances', 20, 4, 6, 'open'),
-		$prepare['args'],
-		'Non-strict open-instance selection should prepare the repository table and equality filters.'
-	);
-
-	$wpdb = vms_test_reset_state();
-	$wpdb->get_results_queue[] = array(array('id' => 5), array('id' => 6));
-	vms_test_assert_same(2, bvmgr_tasks_supersede_open_instances(20, 4, 6, 99, 72), 'Open-instance supersession should count each successful sibling update.');
-	$prepare = vms_test_find_prepare($wpdb, 'SELECT id FROM %i WHERE event_id = %d AND task_template_id = %d AND origin_checklist_id = %d AND status = %s AND id <> %d');
-	vms_test_assert_same(
-		array('wp_vms_task_instances', 20, 4, 6, 'open', 99),
-		$prepare['args'],
-		'Open-instance supersession should prepare the repository table and sibling selection filters.'
-	);
-	$update_calls = array_values(array_filter(
-		$wpdb->call_log,
-		static fn(array $entry): bool => ($entry['kind'] ?? '') === 'update'
-	));
-	vms_test_assert_same(2, count($update_calls), 'Open-instance supersession should update every queued sibling row.');
+	vms_test_assert_same(0, bvmgr_tasks_supersede_open_instances(20, 4, 6, 99, 72), 'Legacy supersession must preserve task identities.');
+	vms_test_assert_same(array(), $wpdb->call_log, 'Retired supersession must perform no SQL mutation.');
 
 	$wpdb = vms_test_reset_state();
 	$GLOBALS['vms_test_titles'][51] = 'Alex';
@@ -903,7 +824,7 @@ try {
 
 	$wpdb = vms_test_reset_state();
 	$GLOBALS['vms_test_titles'][22] = 'Load In';
-	$GLOBALS['vms_test_post_meta'][22]['_vms_event_date'] = '2026-08-20';
+	$GLOBALS['vms_test_post_meta'][22]['_vms_event_date'] = gmdate('Y-m-d', time() + 7 * 86400);
 	$GLOBALS['vms_test_plan_status'][22] = 'confirmed';
 	$wpdb->get_results_queue[] = array(array(
 		'assignment_id' => 11,

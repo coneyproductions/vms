@@ -117,7 +117,7 @@ try {
     $assert(strpos($staffSource, 'document.getElementById(\'vms-staff-qualification-add\')') === false, 'Staff CPT PHP should no longer own the add-button JavaScript helper.');
     $assert(strpos($staffSource, 'wp_add_inline_script(') === false, 'Staff CPT PHP should not reintroduce the helper through wp_add_inline_script().');
 
-    $assert(has_action('admin_enqueue_scripts', 'vms_staff_cpt_admin_enqueue_assets') === 50, 'Staff CPT should register a dedicated admin_enqueue_scripts callback at priority 50.');
+    $assert(has_action('admin_enqueue_scripts', 'bvmgr_staff_cpt_admin_enqueue_assets') === 50, 'Staff CPT should register a dedicated admin_enqueue_scripts callback at priority 50.');
     $assert(isset($GLOBALS['vms_test_actions']['add_meta_boxes_vms_staff'][10]) && count($GLOBALS['vms_test_actions']['add_meta_boxes_vms_staff'][10]) === 1, 'Staff CPT should keep the existing add_meta_boxes_vms_staff registration.');
     $assert(isset($GLOBALS['vms_test_actions']['save_post_vms_staff'][30]) && count($GLOBALS['vms_test_actions']['save_post_vms_staff'][30]) === 1, 'Staff CPT taxonomy save hook should remain registered at priority 30.');
     $assert(isset($GLOBALS['vms_test_actions']['save_post_vms_staff'][40]) && count($GLOBALS['vms_test_actions']['save_post_vms_staff'][40]) === 1, 'Staff qualifications save hook should remain registered at priority 40.');
@@ -164,7 +164,7 @@ try {
 
     $assert(strpos($staffSource, "register_post_type('vms_staff'") !== false, 'Staff CPT post-type registration should remain unchanged.');
     $assert(strpos($staffSource, "'vms-staff-qualifications'") !== false, 'Staff qualifications metabox registration should remain unchanged.');
-    $assert(strpos($staffSource, "wp_nonce_field('vms_staff_qualifications_save', 'vms_staff_qualifications_nonce');") !== false, 'Staff qualifications nonce field should remain unchanged.');
+    $assert(strpos($staffSource, "wp_nonce_field('bvmgr_staff_qualifications_save', 'bvmgr_staff_qualifications_nonce');") !== false, 'Staff qualifications nonce field should remain unchanged.');
     $assert(substr_count($staffSource, "current_user_can('edit_post', \$post_id)") >= 2, 'Staff CPT should preserve the existing edit_post capability checks.');
     $assert(strpos($staffSource, 'id="vms-staff-qualification-add"') !== false, 'Staff CPT should preserve the existing add button ID.');
     $assert(strpos($staffSource, 'id="vms-staff-qualifications-list"') !== false, 'Staff CPT should preserve the existing qualification list ID.');
@@ -176,7 +176,7 @@ try {
     $assert(strpos($staffSource, "\$proof_download_url !== '' ? \$proof_download_url : \$proof_url") !== false, 'Staff CPT should preserve the proof download URL fallback in rendered rows.');
 
     $assert(file_exists($assetPath), 'Staff CPT dedicated asset should exist.');
-    $assert(strpos($assetSource, "window.vmsStaffCptAdmin || {}") !== false, 'Staff CPT asset should read only the inert localized config object.');
+    $assert(strpos($assetSource, "window.BVMGR_STAFF_CPT_ADMIN || {}") !== false, 'Staff CPT asset should read only the inert localized config object.');
     $assert(strpos($assetSource, "document.getElementById('vms-staff-qualification-add')") !== false, 'Staff CPT asset should target the existing add button by ID.');
     $assert(strpos($assetSource, "document.getElementById('vms-staff-qualifications-list')") !== false, 'Staff CPT asset should target the existing qualification list by ID.');
     $assert(strpos($assetSource, "wrap.dataset.vmsStaffQualificationBound === '1'") !== false, 'Staff CPT asset should prevent duplicate initialization on the qualification list root.');
@@ -201,16 +201,12 @@ try {
     $assert(strpos($ledgerSource, '`WPORG-22R-K`') !== false, 'Ledger should record the Staff CPT residual closeout under WPORG-22R-K.');
     $assert(strpos($prereviewSource, '## WPORG-22R-K Result') !== false, 'Prereview remediation should include the Staff CPT closeout section.');
 
-    // G4 intentionally remediated the mirror Staff CPT only; live-tree convergence remains deferred and unauthorized here.
-    $assert($liveStaffHash === '148bd26964f6197bd7568f05e9fc4bd49edd59854999546150ac1d6f84d32432', 'Live Staff CPT PHP should remain on the untouched pre-G4 source hash until live-tree convergence is explicitly authorized.');
-    $assert($staffHash !== $liveStaffHash, 'Mirror/live Staff CPT PHP hashes should intentionally differ after the mirror-only G4 request-boundary remediation.');
-    $assert(strpos($staffSource, 'function vms_staff_has_verified_editor_request(int $post_id): bool') !== false, 'Mirror Staff CPT should retain the G4 verified-editor-request helper.');
-    $assert(strpos($staffSource, 'function vms_staff_submitted_tax_input(): array') !== false, 'Mirror Staff CPT should retain the G4 submitted tax_input helper.');
-    $assert(strpos($staffSource, 'if (!vms_staff_has_verified_editor_request($post_id)) return;') !== false, 'Mirror Staff CPT should gate taxonomy writes behind the G4 verified editor request boundary.');
-    $assert(strpos($staffSource, '$tax_input = vms_staff_submitted_tax_input();') !== false, 'Mirror Staff CPT should read taxonomy input through the G4 helper.');
-    $assert(strpos($liveStaffSource, 'function vms_staff_has_verified_editor_request(int $post_id): bool') === false, 'Live Staff CPT should remain free of the mirror-only G4 verified-editor-request helper until live convergence is authorized.');
-    $assert(strpos($liveStaffSource, 'function vms_staff_submitted_tax_input(): array') === false, 'Live Staff CPT should remain free of the mirror-only G4 submitted tax_input helper until live convergence is authorized.');
-    $assert(strpos($liveStaffSource, "if (!isset(\$_POST['tax_input']) || !is_array(\$_POST['tax_input'])) return;") !== false, 'Live Staff CPT should still reflect the untouched pre-G4 taxonomy gate while live convergence remains deferred.');
+    // Accepted runtime convergence preserves the current request boundary in both owned source copies.
+    $assert($staffHash === $liveStaffHash, 'Mirror/live Staff CPT PHP source copies retain canonical request boundaries.');
+    $assert(strpos($staffSource, 'function bvmgr_staff_has_verified_editor_request(int $post_id): bool') !== false, 'Mirror Staff CPT should retain the G4 verified-editor-request helper.');
+    $assert(strpos($staffSource, 'function bvmgr_staff_submitted_tax_input(): array') !== false, 'Mirror Staff CPT should retain the G4 submitted tax_input helper.');
+    $assert(strpos($staffSource, 'if (!bvmgr_staff_has_verified_editor_request($post_id)) return;') !== false, 'Mirror Staff CPT should gate taxonomy writes behind the G4 verified editor request boundary.');
+    $assert(strpos($staffSource, '$tax_input = bvmgr_staff_submitted_tax_input();') !== false, 'Mirror Staff CPT should read taxonomy input through the G4 helper.');
     $assert($assetHash === $liveAssetHash, 'Mirror/live Staff CPT JS asset hashes should remain byte-for-byte synchronized because G4 changed only the Staff CPT PHP request boundary.');
 
     fwrite(STDOUT, "staff cpt inline js remediation: PASS\n");

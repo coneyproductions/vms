@@ -1,0 +1,719 @@
+{
+    "runtime_authority": "3f4049014fcb151b0bb2113f4f1a688642c0855a",
+    "frozen_manifest_commit": "85a1a16",
+    "scope": "Post-WordPress.org provider decoupling, private storage, staffing, notification, and task authorities. Retired Data Tools implicit loader is intentionally absent. No historical migration certificate is regenerated against a later runtime.",
+    "symbol_changes": {
+        "classes": {
+            "removed": [],
+            "current": {
+                "BVMGR_Staffing_Failure": 1,
+                "BVMGR_Staffing_Transaction_DB": 1
+            }
+        },
+        "constants": {
+            "removed": [],
+            "current": {
+                "BVMGR_GOOGLE_SCOPE": 1
+            }
+        },
+        "functions": {
+            "removed": {
+                "bvmgr_vendor_portal_maybe_load_data_tools_reporting": 1
+            },
+            "current": {
+                "bvmgr_cancel_accept_preflight": 1,
+                "bvmgr_cancel_execute_scope": 1,
+                "bvmgr_cancel_job_report": 1,
+                "bvmgr_cancel_money": 1,
+                "bvmgr_cancel_preflight_report": 1,
+                "bvmgr_cancel_purchase_discover": 1,
+                "bvmgr_cancel_purchase_identity": 1,
+                "bvmgr_cancel_purchase_line": 1,
+                "bvmgr_cancel_purchase_providers": 1,
+                "bvmgr_cancel_reconcile": 1,
+                "bvmgr_cancel_report_label": 1,
+                "bvmgr_cancel_report_links": 1,
+                "bvmgr_cancel_report_money": 1,
+                "bvmgr_cancel_report_page": 1,
+                "bvmgr_cancel_report_render": 1,
+                "bvmgr_cancel_report_select": 1,
+                "bvmgr_cancel_report_url": 1,
+                "bvmgr_cancel_scope_blocked": 1,
+                "bvmgr_cancel_scope_exclusions": 1,
+                "bvmgr_cancel_scope_hash": 1,
+                "bvmgr_cancel_step_scope": 1,
+                "bvmgr_event_command_center_build_ticket_sales_snapshot": 1,
+                "bvmgr_event_command_center_dashboard_link": 1,
+                "bvmgr_event_command_center_dashboard_section": 1,
+                "bvmgr_event_command_center_event_day_url": 1,
+                "bvmgr_event_command_center_get_operational_context": 1,
+                "bvmgr_event_command_center_get_operational_weather": 1,
+                "bvmgr_event_command_center_normalize_ticket_cache": 1,
+                "bvmgr_event_command_center_operational_readiness": 1,
+                "bvmgr_event_command_center_render_dashboard": 1,
+                "bvmgr_event_command_center_resolve_ticket_sales_snapshot": 1,
+                "bvmgr_event_command_center_summarize_ticket_report_rows": 1,
+                "bvmgr_event_command_center_ticket_activity_from_cache": 1,
+                "bvmgr_event_day_report_attendee_ids_for_woo_row": 1,
+                "bvmgr_financial_build_snapshot": 1,
+                "bvmgr_financial_display_rows": 1,
+                "bvmgr_financial_get_event_snapshot": 1,
+                "bvmgr_financial_money": 1,
+                "bvmgr_financial_render_summary": 1,
+                "bvmgr_financial_request_cache": 1,
+                "bvmgr_financial_source_is_stale": 1,
+                "bvmgr_financial_value": 1,
+                "bvmgr_google_adopt": 1,
+                "bvmgr_google_allowed_user": 1,
+                "bvmgr_google_api": 1,
+                "bvmgr_google_begin": 1,
+                "bvmgr_google_calendar": 1,
+                "bvmgr_google_callback": 1,
+                "bvmgr_google_claims": 1,
+                "bvmgr_google_configured": 1,
+                "bvmgr_google_deliver": 1,
+                "bvmgr_google_disconnect": 1,
+                "bvmgr_google_event_id": 1,
+                "bvmgr_google_exclusive": 1,
+                "bvmgr_google_failure": 1,
+                "bvmgr_google_fields_match": 1,
+                "bvmgr_google_form": 1,
+                "bvmgr_google_http": 1,
+                "bvmgr_google_mirror_projection": 1,
+                "bvmgr_google_mirror_view": 1,
+                "bvmgr_google_page": 1,
+                "bvmgr_google_page_url": 1,
+                "bvmgr_google_projection": 1,
+                "bvmgr_google_queue": 1,
+                "bvmgr_google_redirect_uri": 1,
+                "bvmgr_google_replace_missing": 1,
+                "bvmgr_google_retry_calendar": 1,
+                "bvmgr_google_same_instant": 1,
+                "bvmgr_google_save": 1,
+                "bvmgr_google_seal": 1,
+                "bvmgr_google_state": 1,
+                "bvmgr_google_tasks": 1,
+                "bvmgr_google_tick": 1,
+                "bvmgr_google_token": 1,
+                "bvmgr_google_tokens": 1,
+                "bvmgr_google_unseal": 1,
+                "bvmgr_private_storage_admin_menu": 1,
+                "bvmgr_private_storage_admin_migrate": 1,
+                "bvmgr_private_storage_admin_notice": 1,
+                "bvmgr_private_storage_admin_page": 1,
+                "bvmgr_private_storage_attachment_ids": 1,
+                "bvmgr_private_storage_attachment_url": 1,
+                "bvmgr_private_storage_canonical": 1,
+                "bvmgr_private_storage_cleanup_legacy": 1,
+                "bvmgr_private_storage_config": 1,
+                "bvmgr_private_storage_error": 1,
+                "bvmgr_private_storage_inventory": 1,
+                "bvmgr_private_storage_legacy_roots": 1,
+                "bvmgr_private_storage_migrate": 1,
+                "bvmgr_private_storage_migrate_object": 1,
+                "bvmgr_private_storage_no_links": 1,
+                "bvmgr_private_storage_normalize": 1,
+                "bvmgr_private_storage_pending": 1,
+                "bvmgr_private_storage_prepare": 1,
+                "bvmgr_private_storage_receipt": 1,
+                "bvmgr_private_storage_resolve": 1,
+                "bvmgr_private_storage_safe_file": 1,
+                "bvmgr_private_storage_target": 1,
+                "bvmgr_private_storage_within": 1,
+                "bvmgr_reporting_empty_event_ticket_sales_result": 1,
+                "bvmgr_reporting_get_registered_providers": 1,
+                "bvmgr_reporting_get_ticket_truth": 1,
+                "bvmgr_reporting_normalize_event_ticket_sales_result": 1,
+                "bvmgr_reporting_normalize_messages": 1,
+                "bvmgr_reporting_normalize_ticket_cache": 1,
+                "bvmgr_reporting_provider_contract_version": 1,
+                "bvmgr_reporting_register_provider": 1,
+                "bvmgr_reporting_resolve_event_ticket_sales": 1,
+                "bvmgr_reporting_summarize_ticket_rows": 1,
+                "bvmgr_staffing_assignment_overlaps": 1,
+                "bvmgr_staffing_atomic": 1,
+                "bvmgr_staffing_build_event_snapshot": 1,
+                "bvmgr_staffing_build_financial_labor": 1,
+                "bvmgr_staffing_defer_event_saved": 1,
+                "bvmgr_staffing_derive_rollup": 1,
+                "bvmgr_staffing_event_overlap_warnings": 1,
+                "bvmgr_staffing_financial_estimate": 1,
+                "bvmgr_staffing_financial_unavailable": 1,
+                "bvmgr_staffing_get_financial_labor": 1,
+                "bvmgr_staffing_guard_time_add": 1,
+                "bvmgr_staffing_guard_time_delete": 1,
+                "bvmgr_staffing_guard_time_delete_by_mid": 1,
+                "bvmgr_staffing_guard_time_metadata": 1,
+                "bvmgr_staffing_guard_time_mutation": 1,
+                "bvmgr_staffing_guard_time_update_by_mid": 1,
+                "bvmgr_staffing_handle_lifecycle_request": 1,
+                "bvmgr_staffing_lifecycle_ajax": 1,
+                "bvmgr_staffing_lifecycle_dirty": 1,
+                "bvmgr_staffing_lifecycle_enqueue_assets": 1,
+                "bvmgr_staffing_lifecycle_inspect": 1,
+                "bvmgr_staffing_lifecycle_message": 1,
+                "bvmgr_staffing_lifecycle_nonce": 1,
+                "bvmgr_staffing_lifecycle_preflight": 1,
+                "bvmgr_staffing_lifecycle_public_result": 1,
+                "bvmgr_staffing_lifecycle_record": 1,
+                "bvmgr_staffing_lifecycle_row": 1,
+                "bvmgr_staffing_lifecycle_window": 1,
+                "bvmgr_staffing_lock_name": 1,
+                "bvmgr_staffing_matrix_proposals": 1,
+                "bvmgr_staffing_migrate_lifecycle": 1,
+                "bvmgr_staffing_notify_admin_page": 1,
+                "bvmgr_staffing_notify_admin_url": 1,
+                "bvmgr_staffing_notify_audits": 1,
+                "bvmgr_staffing_notify_deliver": 1,
+                "bvmgr_staffing_notify_enable": 1,
+                "bvmgr_staffing_notify_floor": 1,
+                "bvmgr_staffing_notify_key": 1,
+                "bvmgr_staffing_notify_landing": 1,
+                "bvmgr_staffing_notify_logs": 1,
+                "bvmgr_staffing_notify_obsolete": 1,
+                "bvmgr_staffing_notify_recipient": 1,
+                "bvmgr_staffing_notify_record": 1,
+                "bvmgr_staffing_notify_render": 1,
+                "bvmgr_staffing_notify_status": 1,
+                "bvmgr_staffing_notify_template": 1,
+                "bvmgr_staffing_notify_tick": 1,
+                "bvmgr_staffing_notify_work": 1,
+                "bvmgr_staffing_reconcile_existing_assignment_rows": 1,
+                "bvmgr_staffing_render_lifecycle_controls": 1,
+                "bvmgr_staffing_require_transaction_schema": 1,
+                "bvmgr_staffing_resolve_event_snapshot": 1,
+                "bvmgr_staffing_status_label": 1,
+                "bvmgr_staffing_sync_lifecycle_window": 1,
+                "bvmgr_staffing_transaction_active": 1,
+                "bvmgr_staffing_transaction_tables": 1,
+                "bvmgr_staffing_transition_assignment": 1,
+                "bvmgr_tasks_apply_row": 1,
+                "bvmgr_tasks_atomic": 1,
+                "bvmgr_tasks_audit": 1,
+                "bvmgr_tasks_authority_ready": 1,
+                "bvmgr_tasks_calendar_attention": 1,
+                "bvmgr_tasks_calendar_card": 1,
+                "bvmgr_tasks_calendar_json": 1,
+                "bvmgr_tasks_calendar_labels": 1,
+                "bvmgr_tasks_calendar_options": 1,
+                "bvmgr_tasks_calendar_page": 1,
+                "bvmgr_tasks_calendar_placements": 1,
+                "bvmgr_tasks_calendar_range": 1,
+                "bvmgr_tasks_calendar_read": 1,
+                "bvmgr_tasks_calendar_request": 1,
+                "bvmgr_tasks_calendar_select": 1,
+                "bvmgr_tasks_calendar_sync": 1,
+                "bvmgr_tasks_calendar_type": 1,
+                "bvmgr_tasks_calendar_url": 1,
+                "bvmgr_tasks_calendar_venue_sql": 1,
+                "bvmgr_tasks_command": 1,
+                "bvmgr_tasks_command_fields": 1,
+                "bvmgr_tasks_create_record": 1,
+                "bvmgr_tasks_delivery_latest": 1,
+                "bvmgr_tasks_delivery_record": 1,
+                "bvmgr_tasks_delivery_send": 1,
+                "bvmgr_tasks_delivery_tick": 1,
+                "bvmgr_tasks_delivery_work": 1,
+                "bvmgr_tasks_detail_page": 1,
+                "bvmgr_tasks_detail_url": 1,
+                "bvmgr_tasks_event_authority": 1,
+                "bvmgr_tasks_generate_committed_event": 1,
+                "bvmgr_tasks_insert_instance_row": 1,
+                "bvmgr_tasks_install_authority": 1,
+                "bvmgr_tasks_parse_clock": 1,
+                "bvmgr_tasks_person_valid": 1,
+                "bvmgr_tasks_project_record": 1,
+                "bvmgr_tasks_reconcile_event": 1,
+                "bvmgr_tasks_reconcile_event_records": 1,
+                "bvmgr_tasks_recurrence_successor": 1,
+                "bvmgr_tasks_request_gate": 1,
+                "bvmgr_tasks_request_operation": 1,
+                "bvmgr_tasks_request_revision": 1,
+                "bvmgr_tasks_save_definition": 1,
+                "bvmgr_tasks_scheduled_person": 1,
+                "bvmgr_tasks_sync_record": 1,
+                "bvmgr_tasks_sync_records": 1,
+                "bvmgr_tasks_template_schedule_fields": 1,
+                "bvmgr_tasks_template_timing": 1,
+                "bvmgr_tasks_timing": 1,
+                "bvmgr_tasks_timing_fields": 1,
+                "bvmgr_tasks_timing_input": 1,
+                "bvmgr_tasks_timing_summary": 1,
+                "bvmgr_tasks_upgrade_notice": 1,
+                "bvmgr_tasks_upsert_checklist_template_row": 1,
+                "bvmgr_tasks_upsert_task_template_row": 1,
+                "bvmgr_tech_doc_access_url": 1,
+                "bvmgr_tech_doc_admin_page": 1,
+                "bvmgr_tech_doc_admin_url": 1,
+                "bvmgr_tech_doc_delivery_state": 1,
+                "bvmgr_tech_doc_dispatch": 1,
+                "bvmgr_tech_doc_event_ids": 1,
+                "bvmgr_tech_doc_landing": 1,
+                "bvmgr_tech_doc_log": 1,
+                "bvmgr_tech_doc_logs": 1,
+                "bvmgr_tech_doc_plan_is_current": 1,
+                "bvmgr_tech_doc_recipient_can_access": 1,
+                "bvmgr_tech_doc_recipients": 1,
+                "bvmgr_tech_doc_role_field": 1,
+                "bvmgr_tech_doc_role_is_technical": 1,
+                "bvmgr_tech_doc_role_save": 1,
+                "bvmgr_tech_doc_snapshot": 1,
+                "bvmgr_tech_doc_staff_identity": 1,
+                "bvmgr_tech_doc_status_render": 1,
+                "bvmgr_tech_doc_storage_ready": 1,
+                "bvmgr_tech_doc_types": 1,
+                "bvmgr_tech_doc_uploaded": 1,
+                "bvmgr_tech_doc_vendor_ids": 1,
+                "bvmgr_ticketing_verification_proof_response_args": 1
+            }
+        },
+        "global_slots": {
+            "removed": [],
+            "current": {
+                "GLOBALS:bvmgr_google_lock": 4,
+                "GLOBALS:bvmgr_private_storage_migrating": 3,
+                "GLOBALS:bvmgr_reporting_providers": 8,
+                "GLOBALS:bvmgr_staffing_transaction": 14,
+                "GLOBALS:bvmgr_tasks_request": 4,
+                "GLOBALS:bvmgr_tasks_transaction": 15,
+                "GLOBALS:bvmgr_tasks_transaction_control": 4
+            }
+        }
+    },
+    "exact_literals": {
+        "includes/activation.php": {
+            "bvmgr_calendar_ticket_counts_schedule_cron": 1,
+            "bvmgr_email_followups_schedule_cron": 1,
+            "bvmgr_integrity_schedule_daily_scan": 1,
+            "bvmgr_notify_ensure_digest_cron": 1,
+            "bvmgr_social_schedule_cron": 1,
+            "bvmgr_tasks_notifications_ensure_cron": 1,
+            "bvmgr_tasks_schedule_nightly_generator": 1,
+            "bvmgr_ticket_integrity_maybe_schedule_cron": 1,
+            "bvmgr_ticketing_v2_legacy_cleanup_cron_init": 1,
+            "bvmgr_ticketing_verification_schedule_cleanup": 1,
+            "bvmgr_vendor_booking_onboarding_schedule_event": 1
+        },
+        "includes/admin-ui/nav.php": {
+            "bvmgr_admin_ui_ops_capability": 1,
+            "bvmgr_admin_ui_render_ops_console_page": 3,
+            "bvmgr_admin_ui_render_ops_console_settings_page": 2,
+            "vms_admin_ui_ops_capability": 1
+        },
+        "includes/admin/approvals-review-queue.php": {
+            "bvmgr_approvals_queue_vendor_pending_count": 2,
+            "bvmgr_approvals_queue_vendor_summary": 2,
+            "bvmgr_approvals_queue_verification_pending_count": 2,
+            "bvmgr_approvals_queue_verification_summary": 2,
+            "vms_tours_register": 1
+        },
+        "includes/admin/continuity-binder.php": {
+            "bvmgr_continuity_binder_render_updated_notice": 1,
+            "bvmgr_render_continuity_binder_page_content": 1
+        },
+        "includes/admin/data-tools/actions-event-plan-import.php": {
+            "bvmgr_event_plan_import_filter_upload_dir": 3
+        },
+        "includes/admin/due-dates.php": {
+            "bvmgr_due_render_admin_notices": 1,
+            "bvmgr_render_due_dates_admin_page_content": 1
+        },
+        "includes/admin/event-feedback.php": {
+            "bvmgr_feedback_admin_render_content": 2,
+            "bvmgr_feedback_admin_render_notices": 2,
+            "bvmgr_render_event_feedback_admin_page": 2,
+            "vms_tours_register": 1
+        },
+        "includes/admin/goals-forecast.php": {
+            "bvmgr_goals_save_goal": 2,
+            "vms_goals_refresh_event_actuals": 1
+        },
+        "includes/admin/integrity-calendar-reconcile.php": {
+            "bvmgr_render_integrity_calendar_reconcile_notice": 1,
+            "bvmgr_render_integrity_calendar_reconcile_page_content": 1
+        },
+        "includes/admin/integrity-venue-reconcile.php": {
+            "bvmgr_render_integrity_venue_reconcile_notice": 1,
+            "bvmgr_render_integrity_venue_reconcile_page_content": 1
+        },
+        "includes/admin/menu.php": {
+            "bvmgr_render_dashboard_page_content": 1
+        },
+        "includes/admin/schedule.php": {
+            "bvmgr_render_schedule_page_content": 1
+        },
+        "includes/admin/settings-page.php": {
+            "bvmgr_render_settings_page_content": 1,
+            "bvmgr_render_settings_page_notice_bar": 1,
+            "vms_ticketing_stock_reconcile_scan": 2
+        },
+        "includes/admin/square-sync-protection.php": {
+            "bvmgr_render_square_sync_protection_page_content": 2,
+            "bvmgr_square_sync_protection_render_admin_notice": 2
+        },
+        "includes/admin/ticket-integrity-page.php": {
+            "bvmgr_ticket_integrity_format_datetime": 1,
+            "bvmgr_ticket_integrity_handle_duplicate_cleanup": 1,
+            "bvmgr_ticket_integrity_render_notice_from_query": 1,
+            "vms_ticket_integrity_handle_duplicate_cleanup": 1
+        },
+        "includes/admin/vendor-availability.php": {
+            "bvmgr_render_vendor_availability_page_content": 2,
+            "vms_tours_register": 1
+        },
+        "includes/admin/vendor-command-center.php": {
+            "bvmgr_render_vendor_command_center_page_content": 2,
+            "vms_tours_register": 1
+        },
+        "includes/core/calendar-feed.php": {
+            "bvmgr_calendar_open_slot_link": 1,
+            "bvmgr_calendar_vendor_type_icons": 1,
+            "vms_calendar_open_slot_link": 1,
+            "vms_calendar_vendor_type_icons": 1
+        },
+        "includes/core/cancellation-adapters.php": {
+            "bvmgr_cancellation_refund_product_roles": 1,
+            "vms_cancellation_refund_product_roles": 1,
+            "vms_cancellation_run_step": 3
+        },
+        "includes/core/cancellation.php": {
+            "bvmgr_cancellation_auto_refund_guard": 1,
+            "bvmgr_cancellation_run_step": 1,
+            "vms_cancellation_auto_refund_guard": 1,
+            "vms_cancellation_run_step": 1
+        },
+        "includes/core/cli/stale-check.php": {
+            "bvmgr_get_event_plan_effective_comp_default": 2,
+            "bvmgr_sch_get_schedule_venue_candidates": 1,
+            "bvmgr_sch_pick_single_venue_candidate": 3
+        },
+        "includes/core/event-credits.php": {
+            "bvmgr_event_credit_product_is_eligible": 1,
+            "vms_event_credit_product_is_eligible": 1
+        },
+        "includes/core/event-plan-performance.php": {
+            "bvmgr_event_plan_perf_log_path": 1,
+            "vms_event_plan_perf_log_path": 1
+        },
+        "includes/core/event-plan-save-profiler.php": {
+            "vms_event_plan_save_profiler_enabled": 1,
+            "vms_event_plan_save_profiler_recording_enabled": 1,
+            "vms_event_plan_save_profiler_threshold_seconds": 1
+        },
+        "includes/core/notifications.php": {
+            "bvmgr_notify_provider_core_email_send": 2
+        },
+        "includes/core/private-files.php": {
+            "bvmgr_private_files_filter_upload_dir": 3
+        },
+        "includes/core/registry/admin-menu.php": {
+            "bvmgr_admin_menu_left_rail_specs": 1,
+            "bvmgr_admin_menu_render_missing_callback_page": 2,
+            "bvmgr_admin_menu_render_page_directory": 2,
+            "bvmgr_admin_menu_render_page_directory_content": 2,
+            "bvmgr_admin_menu_sections": 1,
+            "vms_admin_menu_left_rail_specs": 1,
+            "vms_admin_menu_sections": 1
+        },
+        "includes/core/registry/admin-slugs.php": {
+            "vms_admin_menu_slugs": 1
+        },
+        "includes/core/registry/constants.php": {
+            "vms_social_process_queue": 1,
+            "vms_staffing_audit_log": 1
+        },
+        "includes/core/registry/csv-contracts.php": {
+            "vms_csv_event_plan_recommended_columns": 1,
+            "vms_csv_event_plan_required_columns": 1,
+            "vms_csv_vendor_column_map": 1,
+            "vms_csv_vendor_recommended_columns": 1,
+            "vms_csv_vendor_required_columns": 1
+        },
+        "includes/core/registry/statuses.php": {
+            "vms_cancellation_reasons": 1,
+            "vms_event_plan_statuses": 1,
+            "vms_payment_statuses": 1,
+            "vms_vendor_availability_statuses": 1
+        },
+        "includes/core/secondary-vendor-assignments.php": {
+            "bvmgr_event_plan_secondary_vendor_type_options": 2,
+            "vms_event_plan_secondary_vendor_type_options": 1
+        },
+        "includes/core/slow-request-logger.php": {
+            "bvmgr_slow_request_logger_enabled": 1,
+            "bvmgr_slow_request_logger_shutdown": 2,
+            "vms_slow_request_logger_enabled": 1
+        },
+        "includes/core/staffing.php": {
+            "bvmgr_staffing_audit_log": 1,
+            "bvmgr_staffing_queue_seed_event_slots": 2,
+            "bvmgr_staffing_run_queued_seed_event_slots": 2,
+            "vms_staffing_audit_log": 1,
+            "vms_staffing_queue_seed_event_slots": 5,
+            "vms_staffing_run_queued_seed_event_slots": 7
+        },
+        "includes/core/vendor-application-confirmation.php": {
+            "bvmgr_vendor_app_confirmation_bypass_enabled": 1,
+            "bvmgr_vendor_app_confirmation_endpoint_slug": 1,
+            "vms_vendor_app_confirmation_bypass_enabled": 1,
+            "vms_vendor_app_confirmation_endpoint_slug": 1
+        },
+        "includes/core/vendor-user-links.php": {
+            "bvmgr_vendor_user_link_notification_enabled": 1,
+            "bvmgr_vendor_user_link_notification_recipients": 1,
+            "bvmgr_vendor_user_link_request_notification_enabled": 1,
+            "vms_vendor_user_link_notification_enabled": 1,
+            "vms_vendor_user_link_notification_recipients": 1,
+            "vms_vendor_user_link_request_notification_enabled": 1
+        },
+        "includes/cpt/event-plans.php": {
+            "bvmgr_event_plan_schedule_calendar_maintenance": 6,
+            "bvmgr_event_plan_schedule_deferred_calendar_publish": 2,
+            "bvmgr_secondary_vendor_is_qualified": 2,
+            "bvmgr_secondary_vendor_missing_items": 3,
+            "vms_event_plan_schedule_calendar_maintenance": 2,
+            "vms_event_plan_schedule_deferred_calendar_publish": 1,
+            "vms_publish_event_to_calendar": 4,
+            "vms_resync_event_to_calendar": 4,
+            "vms_secondary_vendor_is_qualified": 1,
+            "vms_secondary_vendor_missing_items": 1,
+            "vms_tec_sync_event_extras_from_plan": 2,
+            "vms_upsert_plan_product": 2
+        },
+        "includes/cpt/event-plans/partials/advanced-controls.php": {
+            "vms_resync_event_to_calendar": 1
+        },
+        "includes/cpt/ratings.php": {
+            "vms_has_attended_event": 1
+        },
+        "includes/db/migrations.php": {
+            "vms_staffing_audit_log": 1
+        },
+        "includes/helpers.php": {
+            "bvmgr_vendor_profile_base_slug": 1,
+            "vms_vendor_profile_base_slug": 1
+        },
+        "includes/helpers/schedule-helpers.php": {
+            "vms_schedule_items_for_dashboard": 1
+        },
+        "includes/integrations/attendance-woo.php": {
+            "vms_has_attended_event": 1
+        },
+        "includes/integrations/square-sync-firewall.php": {
+            "bvmgr_square_firewall_classify_product": 1,
+            "bvmgr_square_firewall_is_protected_sku": 1,
+            "bvmgr_square_firewall_protected_category_slugs": 1,
+            "vms_square_firewall_classify_product": 1,
+            "vms_square_firewall_is_protected_sku": 1,
+            "vms_square_firewall_protected_category_slugs": 1
+        },
+        "includes/integrations/square-ticket-mirror.php": {
+            "vms_square_ticket_mirror_log": 1
+        },
+        "includes/integrations/ticketing-claims-admin.php": {
+            "bvmgr_ticketing_claims_release_reservation": 1,
+            "vms_ticketing_claims_release_reservation": 1
+        },
+        "includes/integrations/ticketing-claims-customer.php": {
+            "vms_tours_register": 1
+        },
+        "includes/integrations/ticketing-phase-b.php": {
+            "bvmgr_ticketing_v2_ajax_clear_config": 1,
+            "bvmgr_ticketing_v2_ajax_commit_sync": 1,
+            "bvmgr_ticketing_v2_ajax_save_config": 1,
+            "vms_ticketing_b_apply_update_to_product": 4,
+            "vms_ticketing_v2_ajax_clear_config": 1,
+            "vms_ticketing_v2_ajax_commit_sync": 1,
+            "vms_ticketing_v2_ajax_save_config": 1,
+            "vms_ticketing_v2_commit_sync": 1,
+            "vms_ticketing_v2_ensure_tec_event_link": 5,
+            "vms_ticketing_v2_square_auto_sync_bridge_enabled": 1,
+            "vms_ticketing_v2_templates_apply_to_plan": 1,
+            "vms_ticketing_v2_upsert_entitlement_product": 4
+        },
+        "includes/integrations/ticketing-rules-v2.php": {
+            "vms_ticketing_v2_should_enforce_ticket_max_qty": 1,
+            "vms_ticketing_v2_wallet_pdf_local_asset_paths_enabled": 1
+        },
+        "includes/integrations/ticketing-verifications.php": {
+            "bvmgr_ticketing_verification_allowed_mimes": 1,
+            "bvmgr_ticketing_verification_decision_email_body": 1,
+            "bvmgr_ticketing_verification_decision_email_subject": 1,
+            "bvmgr_ticketing_verification_programs": 1,
+            "bvmgr_ticketing_verification_submission_notification_recipients": 1,
+            "vms_ticketing_verification_allowed_mimes": 1,
+            "vms_ticketing_verification_decision_email_body": 1,
+            "vms_ticketing_verification_decision_email_subject": 1,
+            "vms_ticketing_verification_programs": 1,
+            "vms_ticketing_verification_submission_notification_recipients": 1
+        },
+        "includes/modules/admissions/audit.php": {
+            "bvmgr_admission_settings": 1,
+            "vms_admission_settings": 1
+        },
+        "includes/modules/admissions/pass-claims.php": {
+            "bvmgr_pass_claims_render_admin_notices": 2
+        },
+        "includes/modules/admissions/rest.php": {
+            "bvmgr_admission_prepare_row": 2
+        },
+        "includes/modules/admissions/vendor-guest-portal.php": {
+            "vms_tours_register": 1
+        },
+        "includes/modules/availability-date-dispatch/admin-ui.php": {
+            "bvmgr_add_dispatch_render_admin_page_content": 2,
+            "vms_add_dispatch_close_request": 1,
+            "vms_tours_register": 1
+        },
+        "includes/modules/availability-date-dispatch/email.php": {
+            "bvmgr_add_dispatch_operator_interest_recipients": 1,
+            "vms_add_dispatch_operator_interest_recipients": 1
+        },
+        "includes/modules/email-followups/admin-ui.php": {
+            "bvmgr_email_followups_clear_logs": 2,
+            "bvmgr_email_followups_manual_batch_size": 1,
+            "bvmgr_email_followups_send_test": 2,
+            "vms_email_followups_manual_batch_size": 1,
+            "vms_tours_register": 1
+        },
+        "includes/modules/email-followups/logs.php": {
+            "bvmgr_email_followups_log": 1,
+            "vms_email_followups_log": 1
+        },
+        "includes/modules/email-followups/settings.php": {
+            "bvmgr_email_followups_settings": 1,
+            "vms_email_followups_settings": 1
+        },
+        "includes/modules/email-followups/templates.php": {
+            "vms_email_followups_settings": 1
+        },
+        "includes/modules/staff-tasks/generator.php": {
+            "bvmgr_tasks_maybe_generate_on_event_save": 2,
+            "bvmgr_tasks_queue_generate_for_event": 2,
+            "bvmgr_tasks_run_queued_event_generation": 2,
+            "vms_tasks_maybe_generate_on_event_save": 9,
+            "vms_tasks_queue_generate_for_event": 4,
+            "vms_tasks_run_queued_event_generation": 5
+        },
+        "includes/modules/staff-tasks/notifications.php": {
+            "bvmgr_tasks_notifications_digest_tick": 4,
+            "bvmgr_tasks_notifications_tick": 4,
+            "vms_tasks_notifications_digest_tick": 3,
+            "vms_tasks_notifications_tick": 3
+        },
+        "includes/modules/status-notices/admin-ui.php": {
+            "bvmgr_status_notice_notice_bar": 3,
+            "bvmgr_status_notice_save": 2
+        },
+        "includes/modules/status-notices/front.php": {
+            "bvmgr_status_notice_prepare_runtime_notice": 2
+        },
+        "includes/portal/vendor-portal.php": {
+            "bvmgr_vendor_portal_allowed_tabs": 1,
+            "vms_tours_register": 1,
+            "vms_vendor_portal_allowed_tabs": 1
+        },
+        "includes/public/event-details.php": {
+            "bvmgr_event_details_print_json_ld": 2,
+            "bvmgr_event_details_schema": 1,
+            "vms_event_details_print_json_ld": 1,
+            "vms_event_details_schema": 1
+        },
+        "includes/public/event-sidebar.php": {
+            "bvmgr_public_event_sidebar_targets": 1,
+            "vms_public_event_sidebar_targets": 1
+        },
+        "includes/rest-dashboard.php": {
+            "bvmgr_dashboard_normalize_item": 1,
+            "bvmgr_dashboard_rest_get": 1
+        },
+        "includes/rest-due-dates.php": {
+            "bvmgr_rest_due_dates_complete": 1,
+            "bvmgr_rest_due_dates_obligations": 1,
+            "bvmgr_rest_due_dates_uncomplete": 1
+        },
+        "includes/runtime-guards.php": {
+            "bvmgr_admin_guard_hook_probe_shutdown": 2,
+            "bvmgr_resource_fingerprint_log_limit": 1,
+            "bvmgr_resource_fingerprint_memory_threshold_bytes": 1,
+            "bvmgr_resource_fingerprint_shutdown": 2,
+            "bvmgr_resource_fingerprint_threshold_seconds": 1,
+            "bvmgr_should_run_runtime_maintenance": 1,
+            "vms_resource_fingerprint_log_limit": 1,
+            "vms_resource_fingerprint_memory_threshold_bytes": 1,
+            "vms_resource_fingerprint_threshold_seconds": 1,
+            "vms_should_run_runtime_maintenance": 1
+        },
+        "includes/social-share/admin.php": {
+            "bvmgr_social_queue_cancel": 2,
+            "bvmgr_social_queue_retry": 2,
+            "bvmgr_social_render_admin_page_content": 2,
+            "bvmgr_social_render_notices": 2,
+            "vms_social_process_queue": 1
+        },
+        "includes/social-share/event-plan-panel.php": {
+            "bvmgr_social_queue_cancel": 1,
+            "bvmgr_social_queue_retry": 1
+        },
+        "includes/social-share/permissions.php": {
+            "bvmgr_social_operator_capability": 1,
+            "vms_social_operator_capability": 1
+        },
+        "includes/social-share/queue-runner.php": {
+            "bvmgr_social_process_queue": 1,
+            "vms_social_process_queue": 2
+        },
+        "includes/social-share/template-engine.php": {
+            "bvmgr_social_platform_character_limit": 1,
+            "vms_social_platform_character_limit": 1
+        },
+        "includes/taxonomies/vendor-type.php": {
+            "bvmgr_vendor_type_registry": 1,
+            "vms_vendor_type_registry": 1
+        },
+        "includes/ticketing/ticket-integrity-checks.php": {
+            "bvmgr_ticket_integrity_ticket_is_sellable": 2
+        },
+        "includes/ticketing/ticket-integrity-cron.php": {
+            "bvmgr_ticket_integrity_next_daily_report_timestamp": 1,
+            "bvmgr_ticket_integrity_next_daily_timestamp": 1,
+            "bvmgr_ticket_integrity_run_spot_scan": 1,
+            "bvmgr_ticket_integrity_watch_plan_save": 1,
+            "bvmgr_ticket_integrity_watch_publish_transition": 1,
+            "bvmgr_ticket_integrity_watch_ticketing_meta": 2,
+            "vms_ticket_integrity_queue_spot_scan": 4,
+            "vms_ticket_integrity_run_spot_scan": 7,
+            "vms_ticket_integrity_watch_plan_save": 4,
+            "vms_ticket_integrity_watch_publish_transition": 5,
+            "vms_ticket_integrity_watch_ticketing_meta": 1
+        },
+        "includes/ticketing/ticket-integrity-daily-report.php": {
+            "vms_ticket_integrity_should_monitor_low_inventory": 1
+        },
+        "includes/ticketing/ticket-integrity-monitor.php": {
+            "bvmgr_ticket_integrity_fatal_guard_shutdown": 1
+        },
+        "includes/ticketing/ticket-inventory-forensics.php": {
+            "bvmgr_ticket_inventory_forensics_normalize_log_row": 1
+        },
+        "includes/ticketing/ticket-legacy-repair.php": {
+            "vms_ticket_integrity_duplicate_cleanup_run": 2,
+            "vms_ticket_integrity_repair_event": 7
+        },
+        "includes/ticketing/ticket-mutation-audit.php": {
+            "bvmgr_ticket_mutation_audit_normalize_log_row": 1
+        },
+        "includes/tours/class-vms-tours-service.php": {
+            "vms_tours_register": 1
+        },
+        "includes/vendor-applications.php": {
+            "bvmgr_vendor_app_normalize_vendor_type": 2,
+            "bvmgr_vendor_app_selectable_vendor_types": 1,
+            "bvmgr_vendor_app_send_response_email": 1,
+            "vms_vendor_app_selectable_vendor_types": 1,
+            "vms_vendor_app_send_response_email": 1,
+            "vms_vendor_apply_turnstile_secret_key": 1,
+            "vms_vendor_apply_turnstile_site_key": 1
+        }
+    }
+}

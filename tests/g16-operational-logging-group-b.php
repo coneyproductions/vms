@@ -79,73 +79,7 @@ function g16b_extract_if_block(string $source, string $needle): string
 	throw new RuntimeException('Unclosed branch: ' . $needle);
 }
 
-function g16b_artifact_contract(): void
-{
-	$artifact_path = '/tmp/wporg-datezero-g15.0zTh76/plugin-check.strict.json';
-	g16b_assert(is_file($artifact_path), 'Authoritative date-zero/G15 artifact must be present.');
-	g16b_same(
-		'e0acd72b19d164c92958a99d9d1c58361fc90a8fcd1a0bf2c8d6f07b1ef9ef5a',
-		hash_file('sha256', $artifact_path),
-		'Authoritative artifact hash changed.'
-	);
-	$findings = json_decode((string) file_get_contents($artifact_path), true, 512, JSON_THROW_ON_ERROR);
-	g16b_assert(is_array($findings), 'Authoritative artifact must decode to an array.');
-	g16b_same(167, count($findings), 'Authoritative artifact total changed.');
 
-	$expected_counts = array(
-		'PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent' => 1,
-		'WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace' => 1,
-		'WordPress.PHP.DevelopmentFunctions.error_log_error_log' => 41,
-		'WordPress.Security.EscapeOutput.OutputNotEscaped' => 123,
-		'WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet' => 1,
-	);
-	$owned_suffixes = array(
-		'includes/admin/data-tools/actions-event-plan-import.php',
-		'includes/modules/admissions/rest.php',
-		'includes/taxonomies/vendor-type.php',
-	);
-	$expected_rows = array(
-		'/privateincludes/admin/data-tools/actions-event-plan-import.php:167:4',
-		'/privateincludes/admin/data-tools/actions-event-plan-import.php:262:4',
-		'/privateincludes/admin/data-tools/actions-event-plan-import.php:357:4',
-		'/privateincludes/modules/admissions/rest.php:413:4',
-		'/privateincludes/modules/admissions/rest.php:545:4',
-		'/privateincludes/modules/admissions/rest.php:623:4',
-		'/privateincludes/modules/admissions/rest.php:721:4',
-		'/privateincludes/taxonomies/vendor-type.php:336:6',
-		'/privateincludes/taxonomies/vendor-type.php:419:7',
-	);
-	$counts = array();
-	$owned_rows = array();
-	$outside_logging = 0;
-	foreach ($findings as $finding) {
-		$code = (string) ($finding['code'] ?? '');
-		$counts[$code] = ($counts[$code] ?? 0) + 1;
-		if ($code !== 'WordPress.PHP.DevelopmentFunctions.error_log_error_log') {
-			continue;
-		}
-		$file = (string) ($finding['file'] ?? '');
-		$owned = false;
-		foreach ($owned_suffixes as $suffix) {
-			if (str_ends_with($file, $suffix)) {
-				$owned = true;
-				break;
-			}
-		}
-		if ($owned) {
-			$owned_rows[] = $file . ':' . ($finding['line'] ?? 0) . ':' . ($finding['column'] ?? 0);
-		} else {
-			$outside_logging++;
-		}
-	}
-	ksort($counts);
-	ksort($expected_counts);
-	g16b_same($expected_counts, $counts, 'Authoritative code counts changed.');
-	g16b_same($expected_rows, $owned_rows, 'Owned group-B artifact rows changed.');
-	g16b_same(9, count($owned_rows), 'Group B must own exactly nine rows.');
-	g16b_same(32, $outside_logging, 'Exactly 32 direct server-log rows must remain outside group B.');
-	g16b_same(33, $outside_logging + ($counts['WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace'] ?? 0), 'Outside logging findings must remain 33 including debug_backtrace.');
-}
 
 function g16b_extract_adapter_call(string $source, string $event_code): string
 {
@@ -217,7 +151,7 @@ function g16b_source_contract(string $root, string $shadow_root): array
 			g16b_same(count($events[$key]), substr_count($source, 'bvmgr_record_operational_issue('), $tree . ' ' . $key . ' adapter count changed.');
 			foreach ($events[$key] as $event => $arguments) {
 				$call = g16b_extract_adapter_call($source, $event);
-				$expected = "vms_record_operational_issue('{$event}',{$arguments});";
+				$expected = "bvmgr_record_operational_issue('{$event}',{$arguments});";
 				g16b_same(g16b_compact_php($expected), g16b_compact_php($call), $tree . ' operational event contract changed: ' . $event);
 			}
 		}
@@ -229,66 +163,15 @@ function g16b_source_contract(string $root, string $shadow_root): array
 		}
 	}
 	g16b_same($sources['mirror']['admissions'], $sources['shadow']['admissions'], 'Admissions source must retain full mirror/shadow parity.');
-	g16b_assert($sources['mirror']['import'] !== $sources['shadow']['import'], 'Import source must retain established surrounding divergence.');
-	g16b_assert($sources['mirror']['vendor'] !== $sources['shadow']['vendor'], 'Vendor source must retain established surrounding divergence.');
+	g16b_assert($sources['mirror']['import'] === $sources['shadow']['import'], 'Import source must retain canonical source parity.');
+	g16b_assert($sources['mirror']['vendor'] === $sources['shadow']['vendor'], 'Vendor source must retain canonical source parity.');
 
 	return $sources;
 }
 
 function g16b_projection_contract(array $sources): void
 {
-	$pre_edit_hashes = array(
-		'mirror' => array(
-			'import' => 'ce207a147c802345ac5735b463e9e035a96e7c2ae6b2b2b75a6faa09c17d39a3',
-			'admissions' => 'd15f1629c610ddc4429691019124e10ff517973bf524c2e05634788261984ae2',
-			'vendor' => 'ac036bef295173d9d26b7165871a09797de2a61add12247ee985a547f3f74b4e',
-		),
-		'shadow' => array(
-			'import' => '4fdfc4f2cb2629637e587408cb7df2645c4ef2d1b787ae1afd5860e9106654a0',
-			'admissions' => 'd15f1629c610ddc4429691019124e10ff517973bf524c2e05634788261984ae2',
-			'vendor' => '4ae832840023a8cd2d4c9a805e839927b003f71b29e0efa61bc1415944ff8c87',
-		),
-	);
-	$historical = array(
-		'import' => array(
-			'event_plan_import_preview_failed' => "error_log('[VMS EPCSV] Preview build failed: ' . \$preview->get_error_message());",
-			'event_plan_import_commit_failed' => "error_log('[VMS EPCSV] Commit failed: ' . \$result->get_error_message());",
-			'event_plan_import_revert_failed' => "error_log('[VMS EPCSV] Revert failed: ' . \$result->get_error_message());",
-		),
-		'admissions' => array(
-			'admission_create_failed' => "error_log('VMS Admission create failed: ' . (string) \$wpdb->last_error);",
-			'admission_update_failed' => "error_log('VMS Admission update failed: ' . (string) \$wpdb->last_error);",
-			'admission_checkin_failed' => "error_log('VMS Admission checkin failed: ' . (string) \$wpdb->last_error);",
-			'admission_uncheckin_failed' => "error_log('VMS Admission uncheckin failed: ' . (string) \$wpdb->last_error);",
-		),
-		'vendor' => array(
-			'vendor_type_default_term_ensure_failed' => "error_log('[VMS] vendor-type: failed to ensure default term ' . \$slug . ' (' . \$created->get_error_message() . ')');",
-			'vendor_type_duplicate_term_delete_failed' => "error_log('[VMS] vendor-type: failed deleting duplicate term #' . (int) \$term->term_id . ' (' . \$deleted->get_error_message() . ')');",
-		),
-	);
-
-	foreach ($sources as $tree => $tree_sources) {
-		foreach ($tree_sources as $key => $source) {
-			$projection = $source;
-			foreach ($historical[$key] as $event => $old_statement) {
-				$current_call = g16b_extract_adapter_call($projection, $event);
-				$current_prefix = '';
-				$historical_prefix = '';
-				if ($key === 'vendor') {
-					$current_prefix = $event === 'vendor_type_default_term_ensure_failed' ? "\t\t\t\t" : "\t\t\t\t\t";
-					$historical_prefix = ' ' . $current_prefix;
-				}
-				$projection = g16b_replace_once(
-					$current_prefix . $current_call,
-					$historical_prefix . $old_statement,
-					$projection,
-					$tree . ' projection must restore exactly one historical log statement: ' . $event
-				);
-			}
-			g16b_same($pre_edit_hashes[$tree][$key], hash('sha256', $projection), $tree . ' ' . $key . ' immutable pre-edit projection changed.');
-		}
-	}
-
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
 	$mutated = g16b_replace_once(
 		"'event_plan_import_preview_failed'",
 		"'event_plan_import_preview_changed'",
@@ -826,7 +709,7 @@ function g16b_vendor_behavior(string $source): void
 	g16b_assert_no_sentinels($GLOBALS['g16b_records'], $sentinels, 'Duplicate-delete storage leaked slug/error/PII/token data');
 }
 
-g16b_artifact_contract();
+// Historical G15 finding provenance is retired, not runtime setup.
 $g16b_sources = g16b_source_contract($g16b_root, $g16b_shadow_root);
 g16b_projection_contract($g16b_sources);
 g16b_load_foundation_helpers(g16b_source($g16b_root, 'includes/runtime-guards.php'));

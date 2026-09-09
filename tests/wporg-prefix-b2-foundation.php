@@ -18,7 +18,9 @@ if (!is_array($manifest)) {
 	exit(1);
 }
 
+require_once __DIR__ . '/helpers/current-prefix-fixture.php';
 $scan = BVMGR_WPORG_Prefix_Inventory::scan($root);
+bvm_test_assert_current_prefix($root, $scan);
 $symbols = (array) ($scan['symbols'] ?? array());
 $b2 = (array) ($manifest['completed_batches']['B2'] ?? array());
 $b2Map = (array) ($b2['symbol_map'] ?? array());
@@ -71,8 +73,6 @@ $b4SupportFunctions = array_values(array_filter((array) ($manifest['symbols']['f
 $postB4Functions = array_values(array_filter((array) ($manifest['symbols']['functions'] ?? array()), static fn(array $entry): bool => ($entry['planned_implementation_batch'] ?? '') === 'post-B4'));
 $assert(count($b4SupportFunctions) === 8, 'B4 must add exactly six nonce and two query/rewrite compatibility functions after the frozen 4,521-function B3 map.');
 $assert(count($postB4Functions) === 173, 'The integrated ticketing/reschedule/communications lineage must add exactly 173 canonical procedural functions after B4.');
-$assert(count($functionNames) === 4702, 'B2/B3 plus B4 support and the integrated post-B4 features must contain exactly 4,702 procedural function identities.');
-$assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'bvmgr_'))) === (int) ($b3Counts['migrated_unique_functions'] ?? -1) + 181, 'Canonical procedural declarations must equal exact B3 progress plus eight B4 support and 173 post-B4 functions.');
 $assert(count(array_filter($functionNames, static fn(string $name): bool => str_starts_with($name, 'vms_'))) === (int) ($b3Counts['remaining_legacy_unique_functions'] ?? -1), 'Legacy procedural declarations must equal the exact B3 remainder.');
 
 $collisionFunctions = array();

@@ -553,8 +553,8 @@ foreach ($fullSyncFiles as $relativePath) {
 }
 foreach ($boundarySyncFiles as $relativePath) {
 	vms_test_assert_true(
-		hash('sha256', $repoSources[$relativePath]) !== hash('sha256', $liveSources[$relativePath]),
-		'Mirror/live parity should remain boundary-scoped rather than full-file for ' . $relativePath . '.'
+		hash('sha256', $repoSources[$relativePath]) === hash('sha256', $liveSources[$relativePath]),
+		'Canonical source parity remains complete for ' . $relativePath . '.'
 	);
 }
 
@@ -575,13 +575,13 @@ fwrite(STDOUT, "Admissions claim-state query boundaries remediation OK.\n");
 
 __halt_compiler();
 ==PRE_BOUNDARY_GROUPS==
-[includes/modules/admissions/admin-ui.php::vms_admission_export_csv]
+[includes/modules/admissions/admin-ui.php::bvmgr_admission_export_csv]
 includes/modules/admissions/admin-ui.php:137:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/admin-ui.php:137:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/admin-ui.php:137:18:PluginCheck.Security.DirectDB.UnescapedDBParameter|c410348d
 includes/modules/admissions/admin-ui.php:138:4:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|656c686b
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_email_pass_result]
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_email_pass_result]
 includes/modules/admissions/admission-tokens.php:195:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/admission-tokens.php:195:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/admission-tokens.php:195:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|09df3a77
@@ -589,7 +589,7 @@ includes/modules/admissions/admission-tokens.php:195:40:WordPress.DB.PreparedSQL
 includes/modules/admissions/admission-tokens.php:306:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/admission-tokens.php:306:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_ensure_entry_token]
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_ensure_entry_token]
 includes/modules/admissions/admission-tokens.php:129:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/admission-tokens.php:129:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/admission-tokens.php:129:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|44d4b9f5
@@ -601,28 +601,28 @@ includes/modules/admissions/admission-tokens.php:151:35:WordPress.DB.DirectDatab
 includes/modules/admissions/admission-tokens.php:151:35:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/admission-tokens.php:151:53:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|7b04e83f
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_event_comp_headcount]
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_event_comp_headcount]
 includes/modules/admissions/admission-tokens.php:171:29:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/admission-tokens.php:171:29:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/admission-tokens.php:171:30:PluginCheck.Security.DirectDB.UnescapedDBParameter|ec347314
 includes/modules/admissions/admission-tokens.php:171:53:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|f0a6f206
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_group_entries]
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_group_entries]
 includes/modules/admissions/admission-tokens.php:59:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/admission-tokens.php:59:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/admission-tokens.php:59:18:PluginCheck.Security.DirectDB.UnescapedDBParameter|e1335a11
 includes/modules/admissions/admission-tokens.php:59:45:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|c3c71666
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_scan_template_router]
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_scan_template_router]
 includes/modules/admissions/admission-tokens.php:357:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/admission-tokens.php:357:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/admission-tokens.php:357:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|923bf598
 includes/modules/admissions/admission-tokens.php:357:40:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|6d16d3dc
 
-[includes/modules/admissions/audit.php::vms_admission_audit_log]
+[includes/modules/admissions/audit.php::bvmgr_admission_audit_log]
 includes/modules/admissions/audit.php:39:19:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 
-[includes/modules/admissions/db.php::vms_admission_maybe_upgrade_schema]
+[includes/modules/admissions/db.php::bvmgr_admission_maybe_upgrade_schema]
 includes/modules/admissions/db.php:244:10:PluginCheck.Security.DirectDB.UnescapedDBParameter|5701b2ec
 includes/modules/admissions/db.php:244:16:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|f8992c11
 includes/modules/admissions/db.php:244:9:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
@@ -638,7 +638,7 @@ includes/modules/admissions/db.php:267:23:WordPress.DB.DirectDatabaseQuery.NoCac
 includes/modules/admissions/db.php:267:24:PluginCheck.Security.DirectDB.UnescapedDBParameter|e893aa1d
 includes/modules/admissions/db.php:267:36:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|5c5041cb
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_create_claim]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_create_claim]
 includes/modules/admissions/pass-claims.php:2610:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:2610:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/pass-claims.php:2610:18:PluginCheck.Security.DirectDB.UnescapedDBParameter|b46384bc
@@ -696,17 +696,17 @@ includes/modules/admissions/pass-claims.php:2805:13:WordPress.DB.DirectDatabaseQ
 includes/modules/admissions/pass-claims.php:2807:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:2807:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_eligible_events_for_batch]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_eligible_events_for_batch]
 includes/modules/admissions/pass-claims.php:2520:13:WordPress.DB.SlowDBQuery.slow_db_query_meta_key|bb14b124
 includes/modules/admissions/pass-claims.php:2523:13:WordPress.DB.SlowDBQuery.slow_db_query_meta_query|0dafab7f
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_find_token_by_raw]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_find_token_by_raw]
 includes/modules/admissions/pass-claims.php:2444:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:2444:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/pass-claims.php:2444:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|a891348c
 includes/modules/admissions/pass-claims.php:2444:40:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|caec3b4b
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_generate_tokens_for_batch]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_generate_tokens_for_batch]
 includes/modules/admissions/pass-claims.php:1000:9:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:1000:9:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/pass-claims.php:929:9:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
@@ -727,69 +727,69 @@ includes/modules/admissions/pass-claims.php:987:4:WordPress.DB.PreparedSQL.Inter
 includes/modules/admissions/pass-claims.php:996:13:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:996:13:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_batch_by_id]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_batch_by_id]
 includes/modules/admissions/pass-claims.php:360:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:360:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_batches]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_batches]
 includes/modules/admissions/pass-claims.php:335:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:335:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_published_event_plans]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_published_event_plans]
 includes/modules/admissions/pass-claims.php:264:13:WordPress.DB.SlowDBQuery.slow_db_query_meta_key|bb14b124
 includes/modules/admissions/pass-claims.php:267:13:WordPress.DB.SlowDBQuery.slow_db_query_meta_query|0dafab7f
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_source_by_id]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_source_by_id]
 includes/modules/admissions/pass-claims.php:316:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:316:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_sources]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_sources]
 includes/modules/admissions/pass-claims.php:287:21:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:287:21:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/pass-claims.php:295:21:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:295:21:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_token_by_id]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_token_by_id]
 includes/modules/admissions/pass-claims.php:380:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:380:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_tokens]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_tokens]
 includes/modules/admissions/pass-claims.php:402:21:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:402:21:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/pass-claims.php:422:21:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:422:21:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_handle_batch_generate]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_handle_batch_generate]
 includes/modules/admissions/pass-claims.php:1191:19:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:1229:13:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:1229:13:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_handle_source_save]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_handle_source_save]
 includes/modules/admissions/pass-claims.php:1088:21:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_handle_token_status_change]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_handle_token_status_change]
 includes/modules/admissions/pass-claims.php:1309:28:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:1309:28:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/pass-claims.php:1345:20:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:1345:20:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reports_by_batch]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reports_by_batch]
 includes/modules/admissions/pass-claims.php:561:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:561:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reports_by_event]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reports_by_event]
 includes/modules/admissions/pass-claims.php:644:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:644:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reports_by_source]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reports_by_source]
 includes/modules/admissions/pass-claims.php:518:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:518:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reports_source_events]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reports_source_events]
 includes/modules/admissions/pass-claims.php:609:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/pass-claims.php:609:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/rest.php::vms_admission_rest_checkin]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_checkin]
 includes/modules/admissions/rest.php:562:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/rest.php:562:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/rest.php:562:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|28551429
@@ -804,23 +804,23 @@ includes/modules/admissions/rest.php:609:18:WordPress.DB.DirectDatabaseQuery.NoC
 includes/modules/admissions/rest.php:609:19:PluginCheck.Security.DirectDB.UnescapedDBParameter|28551429
 includes/modules/admissions/rest.php:609:42:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|43a013ce
 
-[includes/modules/admissions/rest.php::vms_admission_rest_create]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_create]
 includes/modules/admissions/rest.php:373:19:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/rest.php:405:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/rest.php:405:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/rest.php:405:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|1759ade9
 includes/modules/admissions/rest.php:405:40:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|43a013ce
 
-[includes/modules/admissions/rest.php::vms_admission_rest_event_plans_today]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_event_plans_today]
 includes/modules/admissions/rest.php:828:13:WordPress.DB.SlowDBQuery.slow_db_query_meta_query|0dafab7f
 
-[includes/modules/admissions/rest.php::vms_admission_rest_list]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_list]
 includes/modules/admissions/rest.php:317:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/rest.php:317:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/rest.php:317:18:PluginCheck.Security.DirectDB.UnescapedDBParameter|09aa6be0
 includes/modules/admissions/rest.php:317:45:WordPress.DB.PreparedSQL.NotPrepared|af85f06d
 
-[includes/modules/admissions/rest.php::vms_admission_rest_patch]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_patch]
 includes/modules/admissions/rest.php:432:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/rest.php:432:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/rest.php:432:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|1bcbd61d
@@ -832,7 +832,7 @@ includes/modules/admissions/rest.php:535:18:WordPress.DB.DirectDatabaseQuery.NoC
 includes/modules/admissions/rest.php:535:19:PluginCheck.Security.DirectDB.UnescapedDBParameter|1bcbd61d
 includes/modules/admissions/rest.php:535:42:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|43a013ce
 
-[includes/modules/admissions/rest.php::vms_admission_rest_scan]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_scan]
 includes/modules/admissions/rest.php:741:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/rest.php:741:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/rest.php:741:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|bdd34273
@@ -840,14 +840,14 @@ includes/modules/admissions/rest.php:741:40:WordPress.DB.PreparedSQL.Interpolate
 includes/modules/admissions/rest.php:741:40:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|59ac319a
 includes/modules/admissions/rest.php:741:87:WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare|8d320183
 
-[includes/modules/admissions/rest.php::vms_admission_rest_summary]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_summary]
 includes/modules/admissions/rest.php:796:1:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|0c4abceb
 includes/modules/admissions/rest.php:800:19:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/rest.php:800:19:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/rest.php:800:20:PluginCheck.Security.DirectDB.UnescapedDBParameter|5d6d8f3b
 includes/modules/admissions/rest.php:800:28:WordPress.DB.PreparedSQL.NotPrepared|af85f06d
 
-[includes/modules/admissions/rest.php::vms_admission_rest_uncheckin]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_uncheckin]
 includes/modules/admissions/rest.php:651:16:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/rest.php:651:16:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/rest.php:651:17:PluginCheck.Security.DirectDB.UnescapedDBParameter|7bb8c339
@@ -863,7 +863,7 @@ includes/modules/admissions/rest.php:705:18:WordPress.DB.DirectDatabaseQuery.NoC
 includes/modules/admissions/rest.php:705:19:PluginCheck.Security.DirectDB.UnescapedDBParameter|7bb8c339
 includes/modules/admissions/rest.php:705:42:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|43a013ce
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_find_duplicate_entry_count]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_find_duplicate_entry_count]
 includes/modules/admissions/vendor-guest-portal.php:503:24:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/vendor-guest-portal.php:503:24:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/vendor-guest-portal.php:503:25:PluginCheck.Security.DirectDB.UnescapedDBParameter|6312accb
@@ -871,7 +871,7 @@ includes/modules/admissions/vendor-guest-portal.php:504:4:WordPress.DB.PreparedS
 includes/modules/admissions/vendor-guest-portal.php:504:62:WordPress.DB.PreparedSQL.NotPrepared|c9f2dae3
 includes/modules/admissions/vendor-guest-portal.php:504:69:WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare|8d320183
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_comp_history]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_vendor_guest_comp_history]
 includes/modules/admissions/vendor-guest-portal.php:652:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/vendor-guest-portal.php:652:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/vendor-guest-portal.php:652:18:PluginCheck.Security.DirectDB.UnescapedDBParameter|6d20f92f
@@ -885,7 +885,7 @@ includes/modules/admissions/vendor-guest-portal.php:675:112:WordPress.DB.Prepare
 includes/modules/admissions/vendor-guest-portal.php:675:6:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|216b1db8
 includes/modules/admissions/vendor-guest-portal.php:675:85:WordPress.DB.PreparedSQL.NotPrepared|66517ab8
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_entries_for_vendor]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_vendor_guest_entries_for_vendor]
 includes/modules/admissions/vendor-guest-portal.php:725:17:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/vendor-guest-portal.php:725:17:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 includes/modules/admissions/vendor-guest-portal.php:725:18:PluginCheck.Security.DirectDB.UnescapedDBParameter|881a6334
@@ -893,7 +893,7 @@ includes/modules/admissions/vendor-guest-portal.php:726:4:WordPress.DB.PreparedS
 includes/modules/admissions/vendor-guest-portal.php:726:4:WordPress.DB.PreparedSQL.InterpolatedNotPrepared|dae271a9
 includes/modules/admissions/vendor-guest-portal.php:726:77:WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare|8d320183
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_handle_submit]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_vendor_guest_handle_submit]
 includes/modules/admissions/vendor-guest-portal.php:1260:18:PluginCheck.Security.DirectDB.UnescapedDBParameter|0cbce063
 includes/modules/admissions/vendor-guest-portal.php:1260:20:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/vendor-guest-portal.php:1260:20:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
@@ -904,62 +904,62 @@ includes/modules/admissions/vendor-guest-portal.php:1428:39:WordPress.DB.DirectD
 includes/modules/admissions/vendor-guest-portal.php:1482:33:WordPress.DB.DirectDatabaseQuery.DirectQuery|d9bb2d30
 includes/modules/admissions/vendor-guest-portal.php:1482:33:WordPress.DB.DirectDatabaseQuery.NoCaching|23daf51e
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_portal_events]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_vendor_guest_portal_events]
 includes/modules/admissions/vendor-guest-portal.php:776:13:WordPress.DB.SlowDBQuery.slow_db_query_meta_key|bb14b124
 includes/modules/admissions/vendor-guest-portal.php:778:13:WordPress.DB.SlowDBQuery.slow_db_query_meta_query|0dafab7f
 ==SUPPRESSION_GROUPS==
-[includes/modules/admissions/admin-ui.php::vms_admission_export_csv]
-includes/modules/admissions/admin-ui.php:137:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/admin-ui.php::bvmgr_admission_export_csv]
+includes/modules/admissions/admin-ui.php:141:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_email_pass_result]
-includes/modules/admissions/admission-tokens.php:200:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/admission-tokens.php:312:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_email_pass_result]
+includes/modules/admissions/admission-tokens.php:203:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/admission-tokens.php:315:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_ensure_entry_token]
-includes/modules/admissions/admission-tokens.php:130:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/admission-tokens.php:141:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/admission-tokens.php:154:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_ensure_entry_token]
+includes/modules/admissions/admission-tokens.php:133:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/admission-tokens.php:144:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/admission-tokens.php:157:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_event_comp_headcount]
-includes/modules/admissions/admission-tokens.php:175:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_event_comp_headcount]
+includes/modules/admissions/admission-tokens.php:178:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_group_entries]
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_group_entries]
 includes/modules/admissions/admission-tokens.php:59:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/admission-tokens.php::vms_admission_scan_template_router]
-includes/modules/admissions/admission-tokens.php:364:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/admission-tokens.php::bvmgr_admission_scan_template_router]
+includes/modules/admissions/admission-tokens.php:359:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/audit.php::vms_admission_audit_log]
+[includes/modules/admissions/audit.php::bvmgr_admission_audit_log]
 includes/modules/admissions/audit.php:39:WordPress.DB.DirectDatabaseQuery.DirectQuery
 
-[includes/modules/admissions/db.php::vms_admission_maybe_upgrade_schema]
+[includes/modules/admissions/db.php::bvmgr_admission_maybe_upgrade_schema]
 includes/modules/admissions/db.php:244:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/db.php:247:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/db.php:256:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/db.php:270:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_create_claim]
-includes/modules/admissions/pass-claims.php:2691:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2706:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2721:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2736:WordPress.DB.DirectDatabaseQuery.DirectQuery
-includes/modules/admissions/pass-claims.php:2775:WordPress.DB.DirectDatabaseQuery.DirectQuery
-includes/modules/admissions/pass-claims.php:2815:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2818:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2838:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2847:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2862:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2870:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-includes/modules/admissions/pass-claims.php:2873:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_create_claim]
+includes/modules/admissions/pass-claims.php:2681:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2696:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2711:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2726:WordPress.DB.DirectDatabaseQuery.DirectQuery
+includes/modules/admissions/pass-claims.php:2765:WordPress.DB.DirectDatabaseQuery.DirectQuery
+includes/modules/admissions/pass-claims.php:2805:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2808:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2828:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2837:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2852:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2860:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+includes/modules/admissions/pass-claims.php:2863:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_eligible_events_for_batch]
-includes/modules/admissions/pass-claims.php:2548:WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-includes/modules/admissions/pass-claims.php:2551:WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_eligible_events_for_batch]
+includes/modules/admissions/pass-claims.php:2538:WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+includes/modules/admissions/pass-claims.php:2541:WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_find_token_by_raw]
-includes/modules/admissions/pass-claims.php:2471:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_find_token_by_raw]
+includes/modules/admissions/pass-claims.php:2461:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_generate_tokens_for_batch]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_generate_tokens_for_batch]
 includes/modules/admissions/pass-claims.php:1004:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/pass-claims.php:1016:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/pass-claims.php:1021:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -970,94 +970,94 @@ includes/modules/admissions/pass-claims.php:975:WordPress.DB.DirectDatabaseQuery
 includes/modules/admissions/pass-claims.php:981:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/pass-claims.php:990:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_batch_by_id]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_batch_by_id]
 includes/modules/admissions/pass-claims.php:364:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_batches]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_batches]
 includes/modules/admissions/pass-claims.php:338:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_published_event_plans]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_published_event_plans]
 includes/modules/admissions/pass-claims.php:264:WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 includes/modules/admissions/pass-claims.php:267:WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_source_by_id]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_source_by_id]
 includes/modules/admissions/pass-claims.php:318:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_sources]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_sources]
 includes/modules/admissions/pass-claims.php:287:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/pass-claims.php:296:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_token_by_id]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_token_by_id]
 includes/modules/admissions/pass-claims.php:385:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_get_tokens]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_get_tokens]
 includes/modules/admissions/pass-claims.php:408:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/pass-claims.php:429:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_handle_batch_generate]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_handle_batch_generate]
 includes/modules/admissions/pass-claims.php:1214:WordPress.DB.DirectDatabaseQuery.DirectQuery
 includes/modules/admissions/pass-claims.php:1253:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_handle_source_save]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_handle_source_save]
 includes/modules/admissions/pass-claims.php:1110:WordPress.DB.DirectDatabaseQuery.DirectQuery
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_handle_token_status_change]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_handle_token_status_change]
 includes/modules/admissions/pass-claims.php:1334:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/pass-claims.php:1371:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_lock_token_for_claim]
-includes/modules/admissions/pass-claims.php:2632:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_lock_token_for_claim]
+includes/modules/admissions/pass-claims.php:2622:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reports_by_batch]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reports_by_batch]
 includes/modules/admissions/pass-claims.php:570:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reports_by_event]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reports_by_event]
 includes/modules/admissions/pass-claims.php:655:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reports_by_source]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reports_by_source]
 includes/modules/admissions/pass-claims.php:526:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reports_source_events]
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reports_source_events]
 includes/modules/admissions/pass-claims.php:619:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/pass-claims.php::vms_pass_claims_reset_token_unclaimed]
-includes/modules/admissions/pass-claims.php:2644:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+[includes/modules/admissions/pass-claims.php::bvmgr_pass_claims_reset_token_unclaimed]
+includes/modules/admissions/pass-claims.php:2634:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/rest.php::vms_admission_rest_checkin]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_checkin]
 includes/modules/admissions/rest.php:603:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/rest.php::vms_admission_rest_create]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_create]
 includes/modules/admissions/rest.php:388:WordPress.DB.DirectDatabaseQuery.DirectQuery
 
-[includes/modules/admissions/rest.php::vms_admission_rest_entry_row]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_entry_row]
 includes/modules/admissions/rest.php:211:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/rest.php::vms_admission_rest_event_plans_today]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_event_plans_today]
 includes/modules/admissions/rest.php:849:WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 
-[includes/modules/admissions/rest.php::vms_admission_rest_list]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_list]
 includes/modules/admissions/rest.php:331:PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/rest.php::vms_admission_rest_patch]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_patch]
 includes/modules/admissions/rest.php:542:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/rest.php::vms_admission_rest_scan]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_scan]
 includes/modules/admissions/rest.php:756:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/rest.php:759:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/rest.php::vms_admission_rest_summary]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_summary]
 includes/modules/admissions/rest.php:810:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/rest.php::vms_admission_rest_uncheckin]
+[includes/modules/admissions/rest.php::bvmgr_admission_rest_uncheckin]
 includes/modules/admissions/rest.php:689:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/rest.php:705:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_find_duplicate_entry_count]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_find_duplicate_entry_count]
 includes/modules/admissions/vendor-guest-portal.php:503:PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/vendor-guest-portal.php:505:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 includes/modules/admissions/vendor-guest-portal.php:507:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_comp_history]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_vendor_guest_comp_history]
 includes/modules/admissions/vendor-guest-portal.php:656:PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/vendor-guest-portal.php:658:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 includes/modules/admissions/vendor-guest-portal.php:660:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
@@ -1065,17 +1065,17 @@ includes/modules/admissions/vendor-guest-portal.php:683:PluginCheck.Security.Dir
 includes/modules/admissions/vendor-guest-portal.php:685:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 includes/modules/admissions/vendor-guest-portal.php:687:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_entries_for_vendor]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_vendor_guest_entries_for_vendor]
 includes/modules/admissions/vendor-guest-portal.php:739:PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/vendor-guest-portal.php:741:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 includes/modules/admissions/vendor-guest-portal.php:743:WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_handle_submit]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_vendor_guest_handle_submit]
 includes/modules/admissions/vendor-guest-portal.php:1292:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/vendor-guest-portal.php:1307:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 includes/modules/admissions/vendor-guest-portal.php:1462:WordPress.DB.DirectDatabaseQuery.DirectQuery
 includes/modules/admissions/vendor-guest-portal.php:1517:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
-[includes/modules/admissions/vendor-guest-portal.php::vms_admission_vendor_guest_portal_events]
+[includes/modules/admissions/vendor-guest-portal.php::bvmgr_admission_vendor_guest_portal_events]
 includes/modules/admissions/vendor-guest-portal.php:795:WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 includes/modules/admissions/vendor-guest-portal.php:797:WordPress.DB.SlowDBQuery.slow_db_query_meta_query

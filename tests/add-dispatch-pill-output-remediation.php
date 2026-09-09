@@ -170,7 +170,7 @@ foreach ($sourceLines as $line) {
 		continue;
 	}
 	$assert(
-		preg_match('~wp_kses\s*\(\s*vms_add_dispatch_(?:status|source)_pill\s*\(~', $line) === 1,
+		preg_match('~wp_kses\s*\(\s*bvmgr_add_dispatch_(?:status|source)_pill\s*\(~', $line) === 1,
 		'The pill allowlist should only be applied directly to status/source pill fragments, not larger ADD markup blocks.'
 	);
 }

@@ -103,7 +103,7 @@ $seasonSource = (string) file_get_contents($pluginRoot . '/includes/admin/season
 $tasksSource = (string) file_get_contents($pluginRoot . '/includes/modules/staff-tasks/admin-ui.php');
 $portalSource = (string) file_get_contents($pluginRoot . '/includes/portal/staff-portal.php');
 
-// Vendor Tax Profile remains mirror-only and deferred in this slice; no mirror/live cmp is required here.
+// Vendor Tax Profile POST/nonce behavior is characterized separately by vendor-tax-profile-strict-post-remediation.php.
 $vendorTaxSource = (string) file_get_contents($pluginRoot . '/includes/portal/vendor-tax-profile.php');
 
 $seasonHelperSource = vms_test_extract_function($seasonSource, 'bvmgr_sd_is_exact_post_request');
@@ -155,21 +155,21 @@ vms_test_assert_order(
 	$seasonSource,
 	array(
 		'if (!bvmgr_sd_is_exact_post_request()) return;',
-		'if (empty($_POST[\'vms_season_dates_nonce\']) || empty($_POST[\'vms_action\'])) return;',
+		'if (empty($_POST[\'bvmgr_season_dates_nonce\']) || empty($_POST[\'vms_action\'])) return;',
 		'$page_slug = sanitize_key(bvmgr_sd_query_arg(\'page\'));',
 		'$cap = apply_filters(\'vms_admin_capability\', \'manage_options\');',
 		'if (!current_user_can($cap)) return;',
 	),
 	'Season Dates method, page, and capability ordering changed unexpectedly.'
 );
-vms_test_assert(strpos($seasonSource, 'if (!$venue_id || !wp_verify_nonce($nonce, \'vms_season_dates_\' . $venue_id)) {') !== false, 'Season Dates nonce verification should remain after the exact POST gate.');
+vms_test_assert(strpos($seasonSource, 'if (!$venue_id || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_season_dates_\' . $venue_id))) {') !== false, 'Season Dates nonce verification should remain after the exact POST gate.');
 
 vms_test_assert_order(
 	$tasksSource,
 	array(
 		'if (!bvmgr_tasks_current_user_can_manage_templates()) {',
 		'if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_template_action\'])) {',
-		'check_admin_referer(\'vms_tasks_save_template\');',
+		'check_admin_referer(bvmgr_nonce_action_for_request(\'bvmgr_tasks_save_template\', \'_wpnonce\'), \'_wpnonce\');',
 		'$action = sanitize_key((string) wp_unslash($_POST[\'vms_tasks_template_action\']));',
 	),
 	'Staff Tasks template capability, method, and nonce ordering changed unexpectedly.'
@@ -179,7 +179,7 @@ vms_test_assert_order(
 	array(
 		'if (!bvmgr_tasks_current_user_can_manage_checklists()) {',
 		'if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_checklist_action\'])) {',
-		'check_admin_referer(\'vms_tasks_save_checklist\');',
+		'check_admin_referer(bvmgr_nonce_action_for_request(\'bvmgr_tasks_save_checklist\', \'_wpnonce\'), \'_wpnonce\');',
 		'$action = sanitize_key((string) wp_unslash($_POST[\'vms_tasks_checklist_action\']));',
 	),
 	'Staff Tasks checklist capability, method, and nonce ordering changed unexpectedly.'
@@ -189,7 +189,7 @@ vms_test_assert_order(
 	array(
 		'if (!bvmgr_tasks_current_user_can_manage_all()) {',
 		'if (bvmgr_tasks_admin_is_exact_post_request() && isset($_POST[\'vms_tasks_settings_action\'])) {',
-		'check_admin_referer(\'vms_tasks_save_settings\');',
+		'check_admin_referer(bvmgr_nonce_action_for_request(\'bvmgr_tasks_save_settings\', \'_wpnonce\'), \'_wpnonce\');',
 		'$input = array(',
 	),
 	'Staff Tasks settings capability, method, and nonce ordering changed unexpectedly.'
@@ -201,7 +201,7 @@ vms_test_assert_order(
 	$portalSource,
 	array(
 		'if (bvmgr_staff_portal_is_exact_post_request() && isset($_POST[\'vms_employee_packet_ack\'])) {',
-		'if ($nonce === \'\' || !wp_verify_nonce($nonce, \'vms_employee_packet_ack\')) {',
+		'if ($nonce === \'\' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_employee_packet_ack\'))) {',
 		'update_post_meta($staff_id, \'_vms_employee_packet_attested_at\', $now);',
 	),
 	'Staff Portal employee packet method, nonce, and mutation ordering changed unexpectedly.'
@@ -210,7 +210,7 @@ vms_test_assert_order(
 	$portalSource,
 	array(
 		'if (bvmgr_staff_portal_is_exact_post_request() && isset($_POST[\'vms_staff_tax_save\'])) {',
-		'if ($nonce === \'\' || !wp_verify_nonce($nonce, \'vms_staff_tax_save\')) {',
+		'if ($nonce === \'\' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_staff_tax_save\'))) {',
 		'update_post_meta($staff_id, \'_vms_payee_legal_name\', $payee_legal);',
 	),
 	'Staff Portal tax-profile method, nonce, and mutation ordering changed unexpectedly.'
@@ -220,7 +220,7 @@ vms_test_assert_order(
 	array(
 		'if (bvmgr_staff_portal_is_exact_post_request()) {',
 		'if (isset($_POST[\'vms_save_staff_ics_settings\'])) {',
-		'if ($nonce === \'\' || !wp_verify_nonce($nonce, \'vms_staff_ics_settings\')) {',
+		'if ($nonce === \'\' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_staff_ics_settings\'))) {',
 		'update_post_meta($staff_id, \'_vms_ics_url\', $new_url);',
 	),
 	'Staff Portal ICS settings method, nonce, and mutation ordering changed unexpectedly.'
@@ -229,7 +229,7 @@ vms_test_assert_order(
 	$portalSource,
 	array(
 		'if (isset($_POST[\'vms_save_staff_pattern\'])) {',
-		'if ($nonce === \'\' || !wp_verify_nonce($nonce, \'vms_staff_pattern_settings\')) {',
+		'if ($nonce === \'\' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_staff_pattern_settings\'))) {',
 		'update_post_meta($staff_id, \'_vms_pattern_enabled\', $enabled);',
 	),
 	'Staff Portal pattern settings nonce and mutation ordering changed unexpectedly.'
@@ -239,7 +239,7 @@ vms_test_assert_order(
 	array(
 		'$has_manual_submission = isset($_POST[\'vms_staff_save_availability\'])',
 		'if ($has_manual_submission) {',
-		'if ($nonce === \'\' || !wp_verify_nonce($nonce, \'vms_staff_save_availability\')) {',
+		'if ($nonce === \'\' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_staff_save_availability\'))) {',
 		'update_post_meta($staff_id, \'_vms_availability_manual\', $clean);',
 	),
 	'Staff Portal manual availability nonce and mutation ordering changed unexpectedly.'

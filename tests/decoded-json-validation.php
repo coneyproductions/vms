@@ -753,7 +753,7 @@ $assert(
 );
 
 $lookupProbeSource = preg_replace(
-	'/function\s+vms_ticketing_v2_assignee_consumed_qty_for_event\s*\(/',
+	'/function\s+bvmgr_ticketing_v2_assignee_consumed_qty_for_event\s*\(/',
 	'function vms_test_ticketing_v2_assignee_consumed_qty_lookup_probe(',
 	$mirrorConsumedQtySource,
 	1
@@ -762,7 +762,7 @@ $assert(is_string($lookupProbeSource) && $lookupProbeSource !== $mirrorConsumedQ
 eval($lookupProbeSource);
 
 $fallbackProbeSource = preg_replace(
-	'/function\s+vms_ticketing_v2_assignee_consumed_qty_for_event\s*\(/',
+	'/function\s+bvmgr_ticketing_v2_assignee_consumed_qty_for_event\s*\(/',
 	'function vms_test_ticketing_v2_assignee_consumed_qty_fallback_probe(',
 	$mirrorConsumedQtySource,
 	1
@@ -997,21 +997,21 @@ $assert(
 	'Live Ticketing Rules V2 should no longer raw-decode fallback claim assignments at the consumed-quantity site.'
 );
 $assert(
-	strpos($mirrorTicketingRulesSource, 'function vms_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
+	strpos($mirrorTicketingRulesSource, 'function bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
 	'Mirror Ticketing Rules V2 should define the stored claim-assignment decoder helper.'
 );
 $assert(
-	strpos($liveTicketingRulesSource, 'function vms_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
+	strpos($liveTicketingRulesSource, 'function bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
 	'Live Ticketing Rules V2 should define the stored claim-assignment decoder helper.'
 );
 $assert(
-	strpos($mirrorTicketingRulesSource, 'vms_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
-		&& strpos($mirrorTicketingRulesSource, 'vms_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json)') !== false,
+	strpos($mirrorTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
+		&& strpos($mirrorTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json)') !== false,
 	'Mirror Ticketing Rules V2 should route both consumed-quantity stored JSON reads through the helper.'
 );
 $assert(
-	strpos($liveTicketingRulesSource, 'vms_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
-		&& strpos($liveTicketingRulesSource, 'vms_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json)') !== false,
+	strpos($liveTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
+		&& strpos($liveTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json)') !== false,
 	'Live Ticketing Rules V2 should route both consumed-quantity stored JSON reads through the helper.'
 );
 $assert(
@@ -1038,12 +1038,12 @@ $assert(
 	'Mirror Ticketing Rules V2 should retain only the specialized stored claim-assignment decoder raw decode.'
 );
 $assert(
-	substr_count($liveTicketingRulesSource, 'json_decode(') === 3,
-	'Live Ticketing Rules V2 should retain only the specialized stored claim-assignment decoder and the two unrelated request-body raw decodes.'
+	substr_count($liveTicketingRulesSource, 'json_decode(') === 1,
+	'Live Ticketing Rules V2 should retain only the specialized stored claim-assignment decoder.'
 );
 $assert(
-	substr_count($liveTicketingRulesSource, '$data = json_decode($raw ?: \'\', true);') === 2,
-	'Live Ticketing Rules V2 should still retain the two unrelated request-body raw decodes outside this remediation slice.'
+	substr_count($liveTicketingRulesSource, '$data = json_decode($raw ?: \'\', true);') === 0,
+	'Live Ticketing Rules V2 rejects the superseded raw request-body decodes.'
 );
 
 $GLOBALS['vms_test_current_user_caps'] = array('manage_options' => true);

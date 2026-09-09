@@ -264,24 +264,24 @@ $existingCountsHelperBody = vms_test_extract_function($claimsCustomerSource, 'bv
 
 vms_test_assert_code_order(
 	"\$grant_id = bvmgr_ticketing_claims_post_absint('grant_id');",
-	"check_admin_referer('vms_ticketing_claims_update_grant_note_' . \$grant_id);",
+	"check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_update_grant_note_' . \$grant_id, '_wpnonce'), '_wpnonce');",
 	$updateGrantNoteBody,
 	'Grant-note mutations should derive the dynamic nonce action from the sanitized grant ID before verifying the existing nonce.'
 );
 vms_test_assert_code_order(
-	"check_admin_referer('vms_ticketing_claims_update_grant_note_' . \$grant_id);",
+	"check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_update_grant_note_' . \$grant_id, '_wpnonce'), '_wpnonce');",
 	"\$event_plan_id = bvmgr_ticketing_claims_post_absint('event_plan_id');",
 	$updateGrantNoteBody,
 	'Grant-note mutations should read the event plan ID only after the existing nonce has been verified.'
 );
 vms_test_assert_code_order(
 	"\$grant_id = bvmgr_ticketing_claims_post_absint('grant_id');",
-	"check_admin_referer('vms_ticketing_claims_set_grant_status_' . \$grant_id);",
+	"check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_set_grant_status_' . \$grant_id, '_wpnonce'), '_wpnonce');",
 	$setGrantStatusBody,
 	'Grant-status mutations should derive the dynamic nonce action from the sanitized grant ID before verifying the existing nonce.'
 );
 vms_test_assert_code_order(
-	"check_admin_referer('vms_ticketing_claims_set_grant_status_' . \$grant_id);",
+	"check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_set_grant_status_' . \$grant_id, '_wpnonce'), '_wpnonce');",
 	"\$event_plan_id = bvmgr_ticketing_claims_post_absint('event_plan_id');",
 	$setGrantStatusBody,
 	'Grant-status mutations should read the event plan ID only after the existing nonce has been verified.'

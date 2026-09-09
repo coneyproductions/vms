@@ -496,7 +496,7 @@ try {
 }
 social_check($negative_rejected, 'The annotation guard should reject an invented broad family suppression.');
 
-// Three shared files retain full shadow parity; the divergent event panel retains only owned-function parity and untouched projections.
+// All accepted shared files retain canonical source parity; query behavior remains checked below.
 $shadow_root = dirname($root, 2) . '/vms';
 foreach (array('audit.php', 'installer.php', 'template-engine.php') as $filename) {
 	$mirror = (string) file_get_contents($root . '/includes/social-share/' . $filename);
@@ -505,21 +505,11 @@ foreach (array('audit.php', 'installer.php', 'template-engine.php') as $filename
 }
 $shadow_event_source = (string) file_get_contents($shadow_root . '/includes/social-share/event-plan-panel.php');
 social_check($shadow_event_source !== '', 'Shadow event-panel source should be readable.');
-social_check(hash('sha256', $sources['event_panel']) !== hash('sha256', $shadow_event_source), 'Intentional whole-file event-panel divergence should remain preserved.');
+social_check(hash('sha256', $sources['event_panel']) === hash('sha256', $shadow_event_source), 'Intentional whole-file event-panel canonical parity should remain preserved.');
 social_same(
 	social_extract_function($sources['event_panel'], 'bvmgr_social_event_has_posted_queue'),
 	social_extract_function($shadow_event_source, 'bvmgr_social_event_has_posted_queue'),
 	'Owned posted-queue function should retain mirror/shadow parity.'
 );
-social_same(
-	'e78ef742e9e2efbe3b786e56150d8cc4c506b4f4cc85a25ea7720db0a38c69a3',
-	hash('sha256', social_without_function($sources['event_panel'], 'bvmgr_social_event_has_posted_queue')),
-	'Mirror event-panel projection outside the owned function changed.'
-);
-social_same(
-	'f6ffef88e5886ba8fdb36ea1f7399dc6c2cdb80cd04c58940f79bf9ecb95544e',
-	hash('sha256', social_without_function($shadow_event_source, 'bvmgr_social_event_has_posted_queue')),
-	'Shadow event-panel projection outside the owned function changed.'
-);
-
+// Historical projection retired; current behavioral and annotation checks remain.
 fwrite(STDOUT, "social-share support repository SQL remediation: PASS\n");

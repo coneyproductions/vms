@@ -270,7 +270,7 @@ require_once $repo_root . '/includes/integrations/ticketing-verifications.php';
 
 $fixture_root = sys_get_temp_dir() . '/bvmgr-eligibility-proof-preview-' . getmypid();
 $upload_root = $fixture_root . '/uploads';
-$private_root = $upload_root . '/vms-private';
+$private_root = $fixture_root . '/secure/site-1';
 $proof_root = $private_root . '/verifications';
 $other_root = $private_root . '/tax-docs';
 $legacy_root = $upload_root . '/vms-verification-proofs';
@@ -280,6 +280,14 @@ foreach (array($proof_root, $other_root, $legacy_root) as $directory) {
     }
 }
 
+define('BVMGR_PRIVATE_STORAGE_ROOT', $fixture_root . '/secure');
+define('BVMGR_PRIVATE_STORAGE_WEB_ROOTS', array(ABSPATH, $upload_root));
+define('WP_CONTENT_DIR', $upload_root);
+function wp_is_writable($path) { return is_writable($path); }
+function get_current_blog_id() { return 1; }
+function add_filter($hook, $callback, $priority = 10, $args = 1) {}
+require_once $repo_root . '/includes/core/private-storage.php';
+require_once $repo_root . '/includes/core/private-files.php';
 $GLOBALS['bvmgr_proof_upload_root'] = $upload_root;
 $GLOBALS['bvmgr_proof_private_root'] = $private_root;
 $GLOBALS['bvmgr_proof_allow_gif'] = true;

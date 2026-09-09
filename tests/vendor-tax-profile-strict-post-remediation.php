@@ -162,7 +162,7 @@ vms_test_assert_order(
 	array(
 		'if ($vendor_id <= 0) {',
 		'if (bvmgr_vendor_tax_is_exact_post_request() && isset($_POST[\'vms_vendor_tax_save\'])) {',
-		'if ($nonce === \'\' || !wp_verify_nonce($nonce, \'vms_vendor_tax_save\')) {',
+		'if ($nonce === \'\' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_vendor_tax_save\'))) {',
 		'update_post_meta($vendor_id, $k_legal,  $t(\'vms_payee_legal_name\'));',
 	),
 	'Mirror Vendor Tax Profile changed vendor validation, request-method, or nonce ordering unexpectedly.'
@@ -172,7 +172,7 @@ vms_test_assert_order(
 	array(
 		'if ($vendor_id <= 0) {',
 		'if (bvmgr_vendor_tax_is_exact_post_request() && isset($_POST[\'vms_vendor_tax_save\'])) {',
-		'if ($nonce === \'\' || !wp_verify_nonce($nonce, \'vms_vendor_tax_save\')) {',
+		'if ($nonce === \'\' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_vendor_tax_save\'))) {',
 		'update_post_meta($vendor_id, $k_legal,  $t(\'vms_payee_legal_name\'));',
 	),
 	'Live Vendor Tax Profile changed vendor validation, request-method, or nonce ordering unexpectedly.'
@@ -191,7 +191,7 @@ vms_test_assert_order(
 	$liveSource,
 	array(
 		'$vendor_update_context = \'\';',
-		'if (!empty($_FILES[\'vms_w9_upload\'][\'name\'])) {',
+		'if (bvmgr_upload_request_has_file($_FILES, \'vms_w9_upload\')) {',
 		'if ($vendor_update_context !== \'\' && function_exists(\'bvmgr_vendor_flag_vendor_update\')) {',
 		'if (bvmgr_vendor_tax_profile_is_complete($vendor_id)) {',
 	),
@@ -207,21 +207,13 @@ vms_test_assert(strpos($liveSource, "if (bvmgr_vendor_tax_is_exact_post_request(
 vms_test_assert(strpos($mirrorSource, "bvmgr_upload_request_has_file(\$_FILES, 'vms_w9_upload')") !== false, 'Mirror Vendor Tax Profile should retain the private-file upload request guard.');
 vms_test_assert(strpos($mirrorSource, 'bvmgr_private_w9_store_upload($vendor_id, $_FILES)') !== false, 'Mirror Vendor Tax Profile should retain the private-file W-9 storage path.');
 vms_test_assert(strpos($mirrorSource, 'bvmgr_private_files_delete($previous_upload_id);') !== false, 'Mirror Vendor Tax Profile should retain replacement cleanup.');
-vms_test_assert(strpos($mirrorSource, 'wp_kses_post(vms_portal_notice(') !== false, 'Mirror Vendor Tax Profile should retain the wrapped portal notice sink pattern.');
+vms_test_assert(strpos($mirrorSource, 'wp_kses_post(bvmgr_portal_notice(') !== false, 'Mirror Vendor Tax Profile should retain the wrapped portal notice sink pattern.');
 vms_test_assert(strpos($mirrorSource, 'bvmgr_private_w9_download_url($vendor_id)') !== false, 'Mirror Vendor Tax Profile should retain private-download URL behavior.');
 vms_test_assert(strpos($mirrorSource, 'bvmgr_private_w9_file_label($vendor_id)') !== false, 'Mirror Vendor Tax Profile should retain private-download label behavior.');
 vms_test_assert(strpos($mirrorSource, "media_handle_upload('vms_w9_upload', 0)") === false, 'Mirror Vendor Tax Profile should not regress to the live legacy upload path.');
 vms_test_assert(strpos($mirrorSource, 'wp_get_attachment_url($w9_upload_id)') === false, 'Mirror Vendor Tax Profile should not regress to live attachment URL behavior.');
 
-vms_test_assert(strpos($liveSource, "!empty(\$_FILES['vms_w9_upload']['name'])") !== false, 'Live Vendor Tax Profile should retain its legacy upload entry condition.');
-vms_test_assert(strpos($liveSource, "media_handle_upload('vms_w9_upload', 0)") !== false, 'Live Vendor Tax Profile should retain its legacy upload implementation.');
-vms_test_assert(strpos($liveSource, 'echo vms_portal_notice(') !== false, 'Live Vendor Tax Profile should retain its direct notice output pattern.');
-vms_test_assert(strpos($liveSource, 'wp_get_attachment_url($w9_upload_id)') !== false, 'Live Vendor Tax Profile should retain attachment URL behavior.');
-vms_test_assert(strpos($liveSource, 'bvmgr_private_w9_store_upload($vendor_id, $_FILES)') === false, 'Live Vendor Tax Profile should not receive mirror-only private-file upload logic.');
-vms_test_assert(strpos($liveSource, 'bvmgr_private_files_delete($previous_upload_id);') === false, 'Live Vendor Tax Profile should not receive mirror-only cleanup logic.');
-vms_test_assert(strpos($liveSource, 'wp_kses_post(vms_portal_notice(') === false, 'Live Vendor Tax Profile should not receive the mirror notice sink pattern.');
-vms_test_assert(strpos($liveSource, 'bvmgr_private_w9_download_url($vendor_id)') === false, 'Live Vendor Tax Profile should not receive mirror private-download behavior.');
-vms_test_assert(strpos($liveSource, 'bvmgr_private_w9_file_label($vendor_id)') === false, 'Live Vendor Tax Profile should not receive mirror private-download labels.');
+vms_test_assert($mirrorSource === $liveSource, 'Canonical Vendor Tax copies share secure upload, cleanup, and download boundaries.');
 
 $mirrorEvalSource = vms_test_rename_function($mirrorHelperSource, 'vms_vendor_tax_is_exact_post_request_mirror');
 $liveEvalSource = vms_test_rename_function($liveHelperSource, 'vms_vendor_tax_is_exact_post_request_live');

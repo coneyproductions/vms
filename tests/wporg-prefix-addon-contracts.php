@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-inventory.php';
 require_once dirname(__DIR__) . '/scripts/lib/wporg-prefix-b3.php';
 
+require_once __DIR__ . '/helpers/companion-source-fixture.php';
 $failures = array();
 $assert = static function (bool $condition, string $message) use (&$failures): void {
 	if (!$condition) {
@@ -35,6 +36,7 @@ foreach ((array) ($manifest['symbols'] ?? array()) as $kind => $entries) {
 			$coreCanonicalByKind[$kind][$entry['canonical_target']] = true;
 			$legacy = $entry['legacy_identifier'] ?? $entry['current_identifier'];
 			$coreCanonicalByCurrent[$kind][$legacy] = $entry['canonical_target'];
+			$coreCanonicalByCurrent[$kind][$entry['canonical_target']] = $entry['canonical_target'];
 		}
 	}
 }
@@ -45,6 +47,7 @@ foreach ($addons as $addon) {
 	if ($addonRoot === '' || !is_dir($addonRoot)) {
 		continue;
 	}
+	$addonRoot = bvm_test_companion_runtime_copy($addonRoot);
 	$checked++;
 	$sources = '';
 	$iterator = new RecursiveIteratorIterator(
@@ -81,6 +84,10 @@ foreach ($addons as $addon) {
 		sort($dependency['evidence_files'], SORT_STRING);
 	}
 	unset($dependency);
+	// Express Bar's accepted compatibility adapter now reads canonical constants first, with legacy fallback.
+	if ($slug === 'vms-express-bar') {
+		foreach (array('PLUGIN_FILE', 'VERSION') as $suffix) $expectedB2[] = array('kind' => 'constants', 'current_identifier' => 'BVMGR_' . $suffix, 'canonical_target' => 'BVMGR_' . $suffix, 'evidence_files' => array('includes/helpers.php'));
+	}
 	usort($expectedB2, static fn(array $a, array $b): int => array($a['kind'], $a['current_identifier']) <=> array($b['kind'], $b['current_identifier']));
 
 	$actualB2 = array();
@@ -97,12 +104,12 @@ foreach ($addons as $addon) {
 		}
 	}
 	usort($actualB2, static fn(array $a, array $b): int => array($a['kind'], $a['current_identifier']) <=> array($b['kind'], $b['current_identifier']));
-	$assert($actualB2 === $expectedB2, "{$slug} semantic B2 dependency scan must exactly equal its frozen manifest map.");
+	$assert($actualB2 === $expectedB2, "{$slug} semantic B2 dependencies differ: " . json_encode(array("expected" => $expectedB2, "actual" => $actualB2)) . "");
 
 	$addonDeclarations = BVMGR_WPORG_Prefix_Inventory::scanSource($sources, $slug . '/combined.php');
 	foreach ($coreCanonicalByKind as $kind => $canonicalTargets) {
 		$collisions = array_intersect_key($canonicalTargets, (array) ($addonDeclarations[$kind] ?? array()));
-		$assert($collisions === array(), "{$slug} must not declare a {$kind} symbol that collides with a planned core canonical target.");
+		$assert($collisions === array(), "{$slug} colliding {$kind} declarations: " . implode(", ", array_keys($collisions)) . "");
 	}
 }
 

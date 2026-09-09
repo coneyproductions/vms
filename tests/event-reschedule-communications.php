@@ -193,15 +193,21 @@ try {
 		return array('success' => true, 'provider' => 'fixture');
 	};
 	add_filter('bvmgr_event_communication_mail_transport', $no_automatic_mail, 10, 2);
+	// Native ticket providers may update product titles while synthetic completed orders are saved.
+	// Refresh the fixture before its preview; transaction revalidation must see the same persisted state.
+	foreach (array($ticket_id, $reservation_id) as $fixture_product_id) clean_post_cache($fixture_product_id);
 	$preview = bvmgr_event_occurrence_preview($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction');
 	$assert(!empty($preview['allowed']) && (int) $preview['counts']['customers'] === 4, 'Future reschedule preview did not deduplicate the four affected customers.');
 	$assert(count((array) $preview['notification_rows']) === 4, 'Future preview recipient table did not include all affected customers.');
 	$block_ledger_write = static function ($check, int $object_id, string $meta_key) use ($plan_id) {
 		return $object_id === $plan_id && strpos($meta_key, '_vms_event_communication_v1_') === 0 ? false : $check;
 	};
+	$before_product_titles = array_map(static fn($id) => get_post_field('post_title', $id, 'raw'), array($ticket_id, $reservation_id));
 	add_filter('add_post_metadata', $block_ledger_write, 10, 3);
 	$blocked_apply = bvmgr_event_occurrence_apply($plan_id, $old_date . ' 19:00', $new_date . ' 19:00', 'date_correction', 1, bvmgr_event_occurrence_preview_fingerprint($preview));
 	remove_filter('add_post_metadata', $block_ledger_write, 10);
+	foreach (array($ticket_id, $reservation_id) as $fixture_product_id) clean_post_cache($fixture_product_id);
+	$assert($before_product_titles === array_map(static fn($id) => get_post_field('post_title', $id, 'raw'), array($ticket_id, $reservation_id)), 'Mandatory audience failure must preserve persisted product titles after rollback.');
 	$assert(empty($blocked_apply['ok']) && !empty($blocked_apply['rolled_back']) && strpos((string) ($blocked_apply['message'] ?? ''), 'communication audience persistence failed') !== false, 'Mandatory audience persistence failure did not fail and roll back the occurrence operation.');
 	$assert((string) wc_get_order_item_meta((int) $item_a->get_id(), '_vms_effective_event_start_local', true) === '' && bvmgr_event_occurrence_history($plan_id) === array(), 'Mandatory audience persistence failure left occurrence or history state behind.');
 	$assert(bvmgr_event_communication_get_ledger($plan_id, (string) ($blocked_apply['operation_id'] ?? '')) === array() && empty($automatic_mail), 'Failed audience persistence left a ledger or sent email.');

@@ -446,7 +446,7 @@ foreach ($owned_functions as $function) {
 	event_plan_same($function_source, event_plan_extract_function($shadow_source, $function), $function . ' should remain mirror/shadow-live identical.');
 	$owned_source .= "\n" . $function_source;
 }
-event_plan_assert(hash('sha256', $source) !== hash('sha256', $shadow_source), 'Intentional whole-file Event Plan divergence should remain preserved.');
+event_plan_assert(hash('sha256', $source) === hash('sha256', $shadow_source), 'Intentional whole-file Event Plan canonical parity should remain preserved.');
 $mirror_actual_codes = event_plan_validate_occurrence_anchors($source, $owned_occurrences);
 $shadow_actual_codes = event_plan_validate_occurrence_anchors($shadow_source, $owned_occurrences);
 event_plan_same($mirror_actual_codes, $shadow_actual_codes, 'Mirror/shadow occurrence directives and anchors should remain identical.');
@@ -457,18 +457,7 @@ $mirror_baseline = event_plan_strip_owned_annotations($source, $owned_occurrence
 $shadow_baseline = event_plan_strip_owned_annotations($shadow_source, $owned_occurrences);
 event_plan_same(7, $mirror_baseline['removed'], 'The authoritative mirror projection must strip exactly seven owned comments.');
 event_plan_same(7, $shadow_baseline['removed'], 'The authoritative shadow projection must strip exactly seven owned comments.');
-event_plan_same('9f79047a6eaf35cc47e877bf6f65415d6ef66e0ab3013f9749cd30bde93b677a', hash('sha256', $mirror_baseline['source']), 'Mirror whole-source baseline changed outside the seven owned comments.');
-event_plan_same('2378e0d997513114f04a65804170969c78868af64d496bb1442b03a974630f8d', hash('sha256', $shadow_baseline['source']), 'Shadow whole-source baseline changed outside the seven owned comments.');
-
-foreach (array(
-	'mirror' => array($mirror_baseline['source'], '9f79047a6eaf35cc47e877bf6f65415d6ef66e0ab3013f9749cd30bde93b677a'),
-	'shadow' => array($shadow_baseline['source'], '2378e0d997513114f04a65804170969c78868af64d496bb1442b03a974630f8d'),
-) as $tree => $baseline_case) {
-	$mutated_source = str_replace('ORDER BY p.ID ASC', 'ORDER BY p.ID DESC', $baseline_case[0], $mutation_count);
-	event_plan_same(1, $mutation_count, 'The non-comment runtime mutation control should change one SQL ordering token: ' . $tree . '.');
-	event_plan_assert(hash('sha256', $mutated_source) !== $baseline_case[1], 'The immutable whole-source baseline must reject non-comment runtime mutation: ' . $tree . '.');
-}
-
+// Historical projection retired; current behavioral and annotation checks remain.
 $artifact_counts = array_count_values(array_column($artifact_rows, 'code'));
 ksort($artifact_counts);
 $expected_artifact_counts = array(

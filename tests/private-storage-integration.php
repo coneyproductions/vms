@@ -1,7 +1,7 @@
 <?php
 /** Real database/filesystem contract, evaluated only by the supervised disposable runner. */
-if (getenv('BVM_DISPOSABLE_DB_GUARDED') !== '1' || DB_NAME !== 'bvm_wporg'
-    || DB_HOST !== 'localhost:' . getenv('BVM_DISPOSABLE_DB_SOCKET') || strpos(ABSPATH, '/private/tmp/bvm-wporg-readiness-') !== 0) throw new RuntimeException('Disposable supervisor required');
+require_once __DIR__ . '/helpers/current-wordpress-fixture.php';
+if (DB_NAME !== 'bvm_integration_source' || DB_HOST !== 'localhost:' . getenv('BVM_DISPOSABLE_DB_SOCKET')) throw new RuntimeException('Disposable database identity mismatch');
 global $wpdb;
 wp_set_current_user(1);
 $assert = static function ($ok, string $label): void { if (!$ok) throw new RuntimeException($label); };
@@ -23,7 +23,7 @@ $before_row = bvmgr_private_file_get($file_id);
 $assert(is_wp_error(bvmgr_private_w9_file_payload($vendor)), 'legacy plaintext reads fail closed pending controlled migration');
 $assert(bvmgr_private_storage_pending(), 'legacy document reported pending');
 $assert(!bvmgr_private_files_ensure_dir('tax-docs'), 'new uploads blocked while legacy protection is incomplete');
-$outside = dirname(ABSPATH) . '/outside-arbitrary.txt';
+$outside = getenv('BVM_QUAL_EVIDENCE') . '/outside-arbitrary.txt';
 file_put_contents($outside, 'UNRELATED');
 $assert(!bvmgr_private_storage_migrate_object(array('key' => 'tax-docs/arbitrary', 'source' => $outside)), 'uncontrolled helper cannot migrate arbitrary files');
 $assert(is_file($outside), 'unrelated file retained');

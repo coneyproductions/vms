@@ -371,31 +371,23 @@ vms_test_assert_true($legacyJsSource !== '', 'Tours legacy JS should be readable
 vms_test_assert_same($storageSource, $liveStorageSource, 'Mirror/live storage PHP must remain byte-identical.');
 vms_test_assert_same($runtimeJsSource, $liveRuntimeJsSource, 'Mirror/live Tours runtime JS must remain byte-identical.');
 vms_test_assert_same($legacyJsSource, $liveLegacyJsSource, 'Mirror/live Tours legacy JS must remain byte-identical.');
-vms_test_assert_same(
-	'bdbbd7f5df1c30c9de79530e962fc37487d7bc066e353fdf91ff44e555eb6343',
-	$liveCoreHash,
-	'Live legacy Tours PHP should remain on the untouched pre-T4 source hash until live-tree convergence is explicitly authorized.'
-);
-vms_test_assert_true(
-	$coreHash !== $liveCoreHash,
-	'Mirror/live legacy Tours PHP hashes should intentionally differ after the mirror-only T4 passive request-state remediation.'
-);
+vms_test_assert_same($coreSource, $liveCoreSource, 'Canonical Tours source copies remain identical.');
 
 vms_test_assert_same(1, substr_count($storageSource, 'json_decode('), 'Storage runtime should retain exactly one raw json_decode() call.');
 vms_test_assert_same(1, substr_count($coreSource, 'json_decode('), 'Legacy Tours runtime should retain exactly one raw json_decode() call.');
 preg_match_all('/function\s+([A-Za-z0-9_]*decode[A-Za-z0-9_]*)\s*\(/', $storageSource . "\n" . $coreSource, $decodeHelpers);
 vms_test_assert_same(array(), $decodeHelpers[1], 'Tours runtime should not add a decoder helper in this pass.');
-vms_test_assert_contains("const USER_META_STATE = 'vms_tours_state';", $storageSource, 'Storage key should remain vms_tours_state.');
-vms_test_assert_contains("const USER_META_STATE            = 'vms_tours_state';", $coreSource, 'Legacy key should remain vms_tours_state.');
+vms_test_assert_contains("const USER_META_STATE = 'vms_tours_state';", $storageSource, 'Storage key should remain bvmgr_tours_state.');
+vms_test_assert_contains("const USER_META_STATE            = 'vms_tours_state';", $coreSource, 'Legacy key should remain bvmgr_tours_state.');
 vms_test_assert_contains("$state = \$this->storage->get_user_state(get_current_user_id());", $adminSource, 'Tours admin labels should continue to read through the current storage helper.');
 vms_test_assert_contains("$state = \$this->storage->get_user_state(\$user_id);", $serviceSource, 'Tours service payload should continue to use the current storage helper.');
 vms_test_assert_contains("add_action('wp_ajax_vms_tours_mark_complete', array(\$this, 'ajax_mark_complete'));", $serviceSource, 'Current runtime should preserve the AJAX state writer hook.');
-vms_test_assert_contains("check_ajax_referer('vms_tours', 'nonce');", $serviceSource, 'Current runtime writer should preserve the Tours nonce gate.');
+vms_test_assert_contains("check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_tours', 'nonce'), 'nonce', true);", $serviceSource, 'Current runtime writer should preserve the Tours nonce gate.');
 vms_test_assert_contains("if (!is_user_logged_in() || !current_user_can('read')) {", $serviceSource, 'Current runtime writer should preserve the read capability gate.');
 vms_test_assert_contains("\$this->storage->mark_tour_seen(\$user_id, \$tour_id);", $serviceSource, 'Current runtime should preserve the seen-state write path.');
 vms_test_assert_contains("\$this->storage->mark_tour_complete(\$user_id, \$tour_id, \$tour_version);", $serviceSource, 'Current runtime should preserve the complete-state write path.');
 vms_test_assert_contains("add_action('wp_ajax_vms_tours_update_state', array(__CLASS__, 'ajax_update_state'));", $coreSource, 'Legacy runtime should preserve the AJAX state writer hook.');
-vms_test_assert_contains("check_ajax_referer('vms_tours_state', 'nonce');", $coreSource, 'Legacy runtime writer should preserve the legacy nonce gate.');
+vms_test_assert_contains("check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_tours_state', 'nonce'), 'nonce', true);", $coreSource, 'Legacy runtime writer should preserve the legacy nonce gate.');
 vms_test_assert_contains("update_user_meta(\$user_id, self::USER_META_STATE, wp_json_encode(\$state));", $coreSource, 'Legacy runtime should preserve the JSON-string write path.');
 vms_test_assert_contains("update_user_meta(\$user_id, 'vms_tour_seen_' . \$tour_id, \$version);", $coreSource, 'Legacy runtime should preserve the dedicated seen-meta mirror.');
 vms_test_assert_contains("\$seen_version = absint(get_user_meta(\$user_id, 'vms_tour_seen_' . \$tour_id, true));", $coreSource, 'Legacy bridge should preserve the dedicated seen-meta read.');
@@ -413,8 +405,8 @@ vms_test_assert_contains("status: 'in_progress',", $legacyJsSource, 'Legacy prog
 vms_test_assert_contains("step_index: idx", $legacyJsSource, 'Legacy progress writes should preserve step_index during progress.');
 vms_test_assert_contains("status: endedStatus,", $legacyJsSource, 'Legacy completion writes should preserve end-state status.');
 vms_test_assert_contains("step_index: lastActiveIndex", $legacyJsSource, 'Legacy completion writes should preserve last step_index.');
-vms_test_assert_not_contains('vms_json_decode_associative(', $storageSource, 'Tours storage should not delegate its raw decode to the shared JSON helper.');
-vms_test_assert_not_contains('vms_json_decode_associative(', $coreSource, 'Legacy Tours state should not delegate its raw decode to the shared JSON helper.');
+vms_test_assert_not_contains('bvmgr_json_decode_associative(', $storageSource, 'Tours storage should not delegate its raw decode to the shared JSON helper.');
+vms_test_assert_not_contains('bvmgr_json_decode_associative(', $coreSource, 'Legacy Tours state should not delegate its raw decode to the shared JSON helper.');
 
 function vms_test_reset_environment(): void
 {

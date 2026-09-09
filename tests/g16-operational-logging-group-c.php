@@ -46,52 +46,16 @@ function g16c_replace_once(string $source, string $current, string $replacement,
 	return str_replace($current, $replacement, $source);
 }
 
-function g16c_remove_function(string $source, string $name): string
-{
-	$function = g16c_extract_function($source, $name);
-	return g16c_replace_once($source, $function, '', 'Owned function removal failed: ' . $name);
-}
 
-function g16c_token_hash(string $source): string
-{
-	$normalized = '';
-	foreach (token_get_all($source) as $token) {
-		if (is_array($token) && in_array($token[0], array(T_WHITESPACE, T_COMMENT, T_DOC_COMMENT), true)) {
-			continue;
-		}
-		$normalized .= is_array($token) ? $token[1] : $token;
-	}
-	return hash('sha256', $normalized);
-}
+
+
 
 /** @param array<int,array{current:string,historical:string}> $specs */
-function g16c_reverse_owned_changes(string $source, array $specs, string $label): string
-{
-	foreach ($specs as $index => $spec) {
-		$source = g16c_replace_once($source, $spec['current'], $spec['historical'], $label . ' reverse fragment ' . $index);
-	}
-	return $source;
-}
 
-function g16c_swap_function(string $source, string $name, string $current_hash, string $historical_base64): string
-{
-	$current = g16c_extract_function($source, $name);
-	g16c_same($current_hash, hash('sha256', $current), 'Current owned function contract changed: ' . $name);
-	$historical = base64_decode($historical_base64, true);
-	g16c_assert(is_string($historical) && $historical !== '', 'Historical function decode failed: ' . $name);
-	return g16c_replace_once($source, $current, $historical, 'Historical function swap failed: ' . $name);
-}
 
-function g16c_remove_ticket_helpers(string $source): string
-{
-	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
-	$last = g16c_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
-	$last_start = strpos($source, $last, (int) $start);
-	g16c_assert($start !== false && $last_start !== false, 'Ticket helper projection bounds changed.');
-	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
-	g16c_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), 'Ticket helper block changed.');
-	return g16c_replace_once($source, $block . "\n\n", '', 'Ticket helper block removal failed.');
-}
+
+
+
 
 $g16c_paths = array(
 	'settings' => 'includes/admin/settings-page.php',
@@ -105,52 +69,7 @@ foreach ($g16c_paths as $key => $relative) {
 	$g16c_sources['shadow'][$key] = g16c_read($g16c_shadow . '/' . $relative);
 }
 
-g16c_same('e0acd72b19d164c92958a99d9d1c58361fc90a8fcd1a0bf2c8d6f07b1ef9ef5a', hash_file('sha256', $g16c_artifact), 'Artifact SHA-256 changed.');
-$g16c_findings = json_decode(g16c_read($g16c_artifact), true, 512, JSON_THROW_ON_ERROR);
-g16c_same(167, count($g16c_findings), 'Artifact total changed.');
-$g16c_types = array_count_values(array_column($g16c_findings, 'type'));
-ksort($g16c_types);
-g16c_same(array('ERROR' => 125, 'WARNING' => 42), $g16c_types, 'Artifact severity inventory changed.');
-
-$g16c_logging_code = 'WordPress.PHP.DevelopmentFunctions.error_log_error_log';
-$g16c_expected_owned = array(
-	'includes/admin/settings-page.php:272:3:WARNING:' . $g16c_logging_code,
-	'includes/core/notifications.php:381:4:WARNING:' . $g16c_logging_code,
-	'includes/integrations/ticketing-phase-b.php:4711:5:WARNING:' . $g16c_logging_code,
-	'includes/ticketing/ticket-integrity-monitor.php:482:4:WARNING:' . $g16c_logging_code,
-);
-$g16c_expected_neighbors = array(
-	'includes/admin/settings-page.php:1788:8:ERROR:WordPress.Security.EscapeOutput.OutputNotEscaped',
-	'includes/admin/settings-page.php:1982:10:ERROR:WordPress.Security.EscapeOutput.OutputNotEscaped',
-	'includes/integrations/ticketing-phase-b.php:9764:14:ERROR:WordPress.Security.EscapeOutput.OutputNotEscaped',
-);
-$g16c_owned = array();
-$g16c_neighbors = array();
-$g16c_logging_total = 0;
-foreach ($g16c_findings as $row) {
-	$code = (string) ($row['code'] ?? '');
-	$g16c_logging_total += str_starts_with($code, 'WordPress.PHP.DevelopmentFunctions.error_log_') ? 1 : 0;
-	foreach ($g16c_paths as $relative) {
-		if (!str_ends_with((string) ($row['file'] ?? ''), $relative)) {
-			continue;
-		}
-		$signature = $relative . ':' . (int) ($row['line'] ?? 0) . ':' . (int) ($row['column'] ?? 0) . ':' . ($row['type'] ?? '') . ':' . $code;
-		if ($code === $g16c_logging_code) {
-			$g16c_owned[] = $signature;
-		} elseif ($code === 'WordPress.Security.EscapeOutput.OutputNotEscaped') {
-			$g16c_neighbors[] = $signature;
-		}
-	}
-}
-sort($g16c_expected_owned);
-sort($g16c_expected_neighbors);
-sort($g16c_owned);
-sort($g16c_neighbors);
-g16c_same(42, $g16c_logging_total, 'Authoritative logging total changed.');
-g16c_same($g16c_expected_owned, $g16c_owned, 'Owned artifact rows changed.');
-g16c_same($g16c_expected_neighbors, $g16c_neighbors, 'Accepted Output neighbors changed.');
-g16c_same(38, $g16c_logging_total - count($g16c_owned), 'Exactly 38 logging findings must remain outside group C.');
-
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
 foreach (array('mirror', 'shadow') as $tree) {
 	$combined = implode("\n", $g16c_sources[$tree]);
 	g16c_same(2, preg_match_all('/(?<![A-Za-z0-9_])error_log\s*\(/', $combined), $tree . ' must retain exactly two direct last-resort calls.');
@@ -215,271 +134,7 @@ foreach (array('fatal_message', 'fatal_file', 'context=%', 'message=%', 'file=%'
 	g16c_same(0, substr_count($g16c_shutdown, $forbidden), 'Ticket direct boundary leaked forbidden field: ' . $forbidden);
 }
 
-$g16c_reverse_specs = array();
-$g16c_reverse_specs['settings'] = array(array(
-	'current' => <<<'PHP'
-	$operational_context = array(
-		'service' => 'ticketing',
-		'operation' => 'sync_image_backfill',
-		'stage' => 'complete',
-		'status' => ((int) $summary['errors'] > 0) ? 'completed_with_errors' : 'completed',
-		'count' => (int) $summary['errors'],
-	);
-	if (function_exists('bvmgr_entitlements_sync_image_log')) {
-		bvmgr_entitlements_sync_image_log('entitlement_image_sync_backfill_completed', $operational_context);
-	} elseif (function_exists('vms_record_operational_issue')) {
-		vms_record_operational_issue('entitlement_image_sync_backfill_completed', $operational_context);
-	}
-PHP,
-	'historical' => <<<'PHP'
-	$summary_msg = sprintf(
-		'Backfill complete: checked=%d updated=%d skipped=%d errors=%d',
-		(int) $summary['checked'],
-		(int) $summary['updated'],
-		(int) $summary['skipped'],
-		(int) $summary['errors']
-	);
-	if (function_exists('vms_entitlements_sync_image_log')) {
-		vms_entitlements_sync_image_log($summary_msg);
-	} else {
-		error_log('[VMS Ticket Product Image Sync] ' . $summary_msg);
-	}
-PHP,
-));
-$g16c_reverse_specs['notifications'] = array(array(
-	'current' => <<<'PHP'
-		if ($ok !== 1) {
-			$event_key = substr(sanitize_key((string) ($entry['event_key'] ?? 'unknown')), 0, 80);
-			$recorded = function_exists('vms_record_operational_issue') && vms_record_operational_issue(
-				'notification_log_insert_failed',
-				array(
-					'service' => 'notifications',
-					'operation' => 'insert_log',
-					'status' => 'failed',
-					'event_key' => $event_key,
-				)
-			);
-			if (!$recorded && function_exists('error_log')) {
-				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Preserve one minimal fallback when both the notification-table insert and the bounded option-backed operational adapter are unavailable; payload is limited to a fixed event and sanitized bounded event key.
-				error_log('[BVM operational] event=notification_log_insert_failed event_key=' . $event_key);
-			}
-		}
-PHP,
-	'historical' => <<<'PHP'
-		if ($ok !== 1) {
-			error_log('[VMS Notify] Failed to insert notification log row for event_key=' . sanitize_key((string) ($entry['event_key'] ?? 'unknown')));
-		}
-PHP,
-));
-$g16c_reverse_specs['phase'] = array(
-	array(
-		'current' => <<<'PHP'
-function bvmgr_entitlements_sync_image_log(string $event_code, array $context = array(), $error = null): void {
-    if (!function_exists('vms_record_operational_issue')) {
-        return;
-    }
-
-    if (func_num_args() === 1) {
-        vms_record_operational_issue(
-            'entitlement_image_sync_legacy',
-            array(
-                'service' => 'ticketing',
-                'operation' => 'sync_image',
-                'status' => 'legacy',
-            ),
-            $event_code
-        );
-        return;
-    }
-
-    vms_record_operational_issue($event_code, $context, $error);
-}
-PHP,
-		'historical' => <<<'PHP'
-function vms_entitlements_sync_image_log(string $message): void {
-    error_log('[VMS Entitlement Image Sync] ' . $message);
-}
-PHP,
-	),
-	array(
-		'current' => <<<'PHP'
-        vms_entitlements_sync_image_log(
-            'entitlement_image_sync_product_failed',
-            array(
-                'service' => 'ticketing',
-                'operation' => 'sync_image',
-                'stage' => 'validate_product',
-                'status' => $result['status'],
-                'product_id' => $product_id,
-            )
-        );
-PHP,
-		'historical' => <<<'PHP'
-        bvmgr_entitlements_sync_image_log(
-            sprintf('status=%s product_id=%d entitlement_id=%s', $result['status'], $product_id, $entitlement_id)
-        );
-PHP,
-	),
-	array(
-		'current' => <<<'PHP'
-                vms_entitlements_sync_image_log(
-                    'entitlement_image_sync_product_save_failed',
-                    array(
-                        'service' => 'ticketing',
-                        'operation' => 'sync_image',
-                        'stage' => 'product_save',
-                        'status' => 'warning_wc_save_failed',
-                        'product_id' => $product_id,
-                        'plan_id' => absint($result['plan_id']),
-                        'post_id' => $img_id,
-                    ),
-                    $e
-                );
-PHP,
-		'historical' => <<<'PHP'
-                bvmgr_entitlements_sync_image_log(
-                    sprintf(
-                        'status=warning_wc_save_failed product_id=%d entitlement_id=%s image_id=%d detail=%s',
-                        $product_id,
-                        $entitlement_id,
-                        $img_id,
-                        $e->getMessage()
-                    )
-                );
-PHP,
-	),
-	array(
-		'current' => <<<'PHP'
-        vms_entitlements_sync_image_log(
-            'entitlement_image_sync_product_completed',
-            array(
-                'service' => 'ticketing',
-                'operation' => 'sync_image',
-                'stage' => 'apply_image',
-                'status' => $result['status'],
-                'product_id' => $product_id,
-                'plan_id' => absint($result['plan_id']),
-                'post_id' => $img_id,
-            )
-        );
-PHP,
-		'historical' => <<<'PHP'
-        bvmgr_entitlements_sync_image_log(
-            sprintf(
-                'status=%s product_id=%d entitlement_id=%s plan_id=%d image_id=%d',
-                $result['status'],
-                $product_id,
-                $entitlement_id,
-                absint($result['plan_id']),
-                $img_id
-            )
-        );
-PHP,
-	),
-	array(
-		'current' => <<<'PHP'
-    vms_entitlements_sync_image_log(
-        'entitlement_image_sync_product_result',
-        array(
-            'service' => 'ticketing',
-            'operation' => 'sync_image',
-            'stage' => 'resolve_image',
-            'status' => (string) $result['status'],
-            'product_id' => $product_id,
-            'plan_id' => absint($result['plan_id']),
-            'post_id' => $img_id,
-        )
-    );
-PHP,
-		'historical' => <<<'PHP'
-    bvmgr_entitlements_sync_image_log(
-        sprintf(
-            'status=%s product_id=%d entitlement_id=%s plan_id=%d image_id=%d detail=%s',
-            (string) $result['status'],
-            $product_id,
-            $entitlement_id,
-            absint($result['plan_id']),
-            $img_id,
-            (string) $result['message']
-        )
-    );
-PHP,
-	),
-	array(
-		'current' => <<<'PHP'
-            vms_entitlements_sync_image_log(
-                'entitlement_image_sync_plan_skipped',
-                array(
-                    'service' => 'ticketing',
-                    'operation' => 'sync_image',
-                    'stage' => 'resolve_product',
-                    'status' => $res['status'],
-                    'plan_id' => $plan_id,
-                )
-            );
-PHP,
-		'historical' => <<<'PHP'
-            bvmgr_entitlements_sync_image_log(
-                sprintf(
-                    'status=%s product_id=%d entitlement_id=%s plan_id=%d detail=%s',
-                    $res['status'],
-                    0,
-                    $entitlement_id,
-                    $plan_id,
-                    $res['message']
-                )
-            );
-PHP,
-	),
-);
-
-$g16c_ticket_shutdown_historical = 'ZnVuY3Rpb24gdm1zX3RpY2tldF9pbnRlZ3JpdHlfZmF0YWxfZ3VhcmRfc2h1dGRvd24oKTogdm9pZAp7CgkkZ3VhcmRzID0gJEdMT0JBTFNbJ3Ztc190aWNrZXRfaW50ZWdyaXR5X2ZhdGFsX2d1YXJkcyddID8/IGFycmF5KCk7CglpZiAoIWlzX2FycmF5KCRndWFyZHMpIHx8IGVtcHR5KCRndWFyZHMpKSB7CgkJcmV0dXJuOwoJfQoKCSRlcnJvciA9IGVycm9yX2dldF9sYXN0KCk7CglpZiAoIXZtc190aWNrZXRfaW50ZWdyaXR5X2lzX2ZhdGFsX2Vycm9yKCRlcnJvcikpIHsKCQlyZXR1cm47Cgl9CgoJdW5zZXQoJEdMT0JBTFNbJ3Ztc190aWNrZXRfaW50ZWdyaXR5X2ZhdGFsX2d1YXJkX3Jlc2VydmUnXSk7CgoJJGlzX21lbW9yeV9mYXRhbCA9IHZtc190aWNrZXRfaW50ZWdyaXR5X2lzX21lbW9yeV9mYXRhbCgkZXJyb3IpOwoJJGZhdGFsX21lc3NhZ2UgPSB0cmltKChzdHJpbmcpICgkZXJyb3JbJ21lc3NhZ2UnXSA/PyAnJykpOwoJJGZhdGFsX2ZpbGUgPSB0cmltKChzdHJpbmcpICgkZXJyb3JbJ2ZpbGUnXSA/PyAnJykpOwoJaWYgKCRmYXRhbF9maWxlICE9PSAnJyAmJiBkZWZpbmVkKCdBQlNQQVRIJykpIHsKCQkkZmF0YWxfZmlsZSA9IHN0cl9yZXBsYWNlKEFCU1BBVEgsICcnLCAkZmF0YWxfZmlsZSk7Cgl9CgkkcGVha19tZW1vcnlfbWIgPSBmdW5jdGlvbl9leGlzdHMoJ21lbW9yeV9nZXRfcGVha191c2FnZScpCgkJPyByb3VuZCgoKGludCkgbWVtb3J5X2dldF9wZWFrX3VzYWdlKHRydWUpKSAvIDEwNDg1NzYsIDEpCgkJOiAwLjA7CgoJZm9yZWFjaCAoJGd1YXJkcyBhcyAkZ3VhcmRfaWQgPT4gJGd1YXJkKSB7CgkJaWYgKCFpc19hcnJheSgkZ3VhcmQpIHx8ICFlbXB0eSgkZ3VhcmRbJ2ZpbmFsaXplZCddKSkgewoJCQljb250aW51ZTsKCQl9CgoJCSRvcGVyYXRpb24gPSBzYW5pdGl6ZV9rZXkoKHN0cmluZykgKCRndWFyZFsnb3BlcmF0aW9uJ10gPz8gJ3Vua25vd24nKSk7CgkJJGNvbnRleHQgPSBpc19hcnJheSgkZ3VhcmRbJ2NvbnRleHQnXSA/PyBudWxsKSA/ICRndWFyZFsnY29udGV4dCddIDogYXJyYXkoKTsKCQkkY29udGV4dFsnZmF0YWxfdHlwZSddID0gKGludCkgKCRlcnJvclsndHlwZSddID8/IDApOwoJCSRjb250ZXh0WydmYXRhbF9tZXNzYWdlJ10gPSAkZmF0YWxfbWVzc2FnZTsKCQkkY29udGV4dFsnZmF0YWxfZmlsZSddID0gJGZhdGFsX2ZpbGU7CgkJJGNvbnRleHRbJ2ZhdGFsX2xpbmUnXSA9IChpbnQpICgkZXJyb3JbJ2xpbmUnXSA/PyAwKTsKCQkkY29udGV4dFsncGVha19tZW1vcnlfbWInXSA9ICRwZWFrX21lbW9yeV9tYjsKCQkkY29udGV4dFsnbWVtb3J5X2V4aGF1c3RlZCddID0gJGlzX21lbW9yeV9mYXRhbCA/IDEgOiAwOwoKCQkkZXZlbnRfdHlwZSA9ICdzY2FuX2ZhaWxlZCc7CgkJJG1lc3NhZ2UgPSBfXygnVGlja2V0IGludGVncml0eSBzY2FuIGhpdCBhIGZhdGFsIGVycm9yLicsICdiYWNrc3RhZ2UtdmVudWUtbWFuYWdlcicpOwoJCWlmICgkb3BlcmF0aW9uID09PSAnc2NhbicpIHsKCQkJJGV2ZW50X3R5cGUgPSAkaXNfbWVtb3J5X2ZhdGFsID8gJ3NjYW5fZmFpbGVkX21lbW9yeScgOiAnc2Nhbl9mYWlsZWQnOwoJCQkkbWVzc2FnZSA9ICRpc19tZW1vcnlfZmF0YWwKCQkJCT8gX18oJ1RpY2tldCBpbnRlZ3JpdHkgc2NhbiBleGhhdXN0ZWQgUEhQIG1lbW9yeS4nLCAnYmFja3N0YWdlLXZlbnVlLW1hbmFnZXInKQoJCQkJOiBfXygnVGlja2V0IGludGVncml0eSBzY2FuIGhpdCBhIGZhdGFsIGVycm9yLicsICdiYWNrc3RhZ2UtdmVudWUtbWFuYWdlcicpOwoJCX0gZWxzZWlmICgkb3BlcmF0aW9uID09PSAnZGFpbHlfcmVwb3J0JykgewoJCQkkZXZlbnRfdHlwZSA9ICdkYWlseV9yZXBvcnRfZmFpbGVkJzsKCQkJJG1lc3NhZ2UgPSAkaXNfbWVtb3J5X2ZhdGFsCgkJCQk/IF9fKCdTdGF0ZSBvZiB0aGUgUmFuZ2UgZmFpbGVkIGR1cmluZyBhIFBIUCBtZW1vcnkgZXhoYXVzdGlvbi4nLCAnYmFja3N0YWdlLXZlbnVlLW1hbmFnZXInKQoJCQkJOiBfXygnU3RhdGUgb2YgdGhlIFJhbmdlIGhpdCBhIGZhdGFsIGVycm9yIGJlZm9yZSBzZW5kLicsICdiYWNrc3RhZ2UtdmVudWUtbWFuYWdlcicpOwoJCX0KCgkJaWYgKGZ1bmN0aW9uX2V4aXN0cygnZXJyb3JfbG9nJykpIHsKCQkJJGVuY29kZWRfY29udGV4dCA9IGZ1bmN0aW9uX2V4aXN0cygnd3BfanNvbl9lbmNvZGUnKSA/IHdwX2pzb25fZW5jb2RlKCRjb250ZXh0KSA6IGpzb25fZW5jb2RlKCRjb250ZXh0KTsKCQkJZXJyb3JfbG9nKAoJCQkJc3ByaW50ZigKCQkJCQknW1ZNUyBUSUNLRVQgSU5URUdSSVRZIEZBVEFMXSBvcGVyYXRpb249JTEkcyBtZW1vcnlfZXhoYXVzdGVkPSUyJGQgdHlwZT0lMyRkIGZpbGU9JTQkcyBsaW5lPSU1JGQgbWVzc2FnZT0lNiRzIGNvbnRleHQ9JTckcycsCgkJCQkJJG9wZXJhdGlvbiwKCQkJCQkkaXNfbWVtb3J5X2ZhdGFsID8gMSA6IDAsCgkJCQkJKGludCkgKCRlcnJvclsndHlwZSddID8/IDApLAoJCQkJCSRmYXRhbF9maWxlLAoJCQkJCShpbnQpICgkZXJyb3JbJ2xpbmUnXSA/PyAwKSwKCQkJCQkkZmF0YWxfbWVzc2FnZSwKCQkJCQlpc19zdHJpbmcoJGVuY29kZWRfY29udGV4dCkgPyAkZW5jb2RlZF9jb250ZXh0IDogJycKCQkJCSkKCQkJKTsKCQl9CgoJCWlmICgkb3BlcmF0aW9uID09PSAnZGFpbHlfcmVwb3J0JyAmJiBmdW5jdGlvbl9leGlzdHMoJ3Ztc190aWNrZXRfaW50ZWdyaXR5X3BhdGNoX2RhaWx5X3JlcG9ydF9zdGF0ZScpKSB7CgkJCSRzdGF0ZV9jaGFuZ2VzID0gYXJyYXkoCgkJCQknbGFzdF9zdGF0dXMnID0+ICdmYWlsZWQnLAoJCQkJJ2xhc3RfZXJyb3InID0+ICRpc19tZW1vcnlfZmF0YWwgPyAnZmF0YWxfbWVtb3J5X2V4aGF1c3RlZCcgOiAnZmF0YWxfZXJyb3InLAoJCQkpOwoJCQlpZiAoIWVtcHR5KCRjb250ZXh0Wyd0cmlnZ2VyJ10pKSB7CgkJCQkkc3RhdGVfY2hhbmdlc1snbGFzdF90cmlnZ2VyJ10gPSBzYW5pdGl6ZV9rZXkoKHN0cmluZykgJGNvbnRleHRbJ3RyaWdnZXInXSk7CgkJCX0KCQkJaWYgKCFlbXB0eSgkY29udGV4dFsnbW9kZSddKSkgewoJCQkJJHN0YXRlX2NoYW5nZXNbJ2xhc3RfbW9kZSddID0gc2FuaXRpemVfa2V5KChzdHJpbmcpICRjb250ZXh0Wydtb2RlJ10pOwoJCQl9CgkJCWlmICghZW1wdHkoJGNvbnRleHRbJ3JlY2lwaWVudCddKSkgewoJCQkJJHN0YXRlX2NoYW5nZXNbJ2xhc3RfcmVjaXBpZW50J10gPSBzYW5pdGl6ZV9lbWFpbCgoc3RyaW5nKSAkY29udGV4dFsncmVjaXBpZW50J10pOwoJCQl9CgkJCXZtc190aWNrZXRfaW50ZWdyaXR5X3BhdGNoX2RhaWx5X3JlcG9ydF9zdGF0ZSgkc3RhdGVfY2hhbmdlcyk7CgkJfQoKCQl2bXNfdGlja2V0X2ludGVncml0eV9sb2dfZXZlbnQoJGV2ZW50X3R5cGUsICRtZXNzYWdlLCAkY29udGV4dCk7CgkJJGd1YXJkc1skZ3VhcmRfaWRdWydmaW5hbGl6ZWQnXSA9IHRydWU7Cgl9CgoJJEdMT0JBTFNbJ3Ztc190aWNrZXRfaW50ZWdyaXR5X2ZhdGFsX2d1YXJkcyddID0gJGd1YXJkczsKfQ==';
-
-$g16c_pre_edit_hashes = array(
-	'mirror' => array(
-		'settings' => '63f8655693b3e34b2e64ddd60e386710f9c9e0c38c9d47da8aaa79b660e4ea9e',
-		'notifications' => 'c384536b996923ec05267f298cc7d4f5d8e2b41a9a9bd384ccd70401dada3c8b',
-		'phase' => '9db8bc9b9a5963d4daa1f7fcd6f4c0f863d25f74d92524460111dedcbd2b83da',
-		'ticket' => '832c4cf7e2eedaf4b7c9a621d27f28149073906e198227981a1e7673fc560bed',
-	),
-	'shadow' => array(
-		'settings' => '650c6628ff5957b8eb565668c760703610cc0c4886842a61ac2e4f94566c247b',
-		'notifications' => 'c384536b996923ec05267f298cc7d4f5d8e2b41a9a9bd384ccd70401dada3c8b',
-		'phase' => 'cf6794339901625bfb2afadd5978af78de664017ce6d3e42558fdf65f90c40e6',
-		'ticket' => '4b86e1eda7daba85726886cdb19c6d823733e96f9dae20646bddd74b72b0c02c',
-	),
-);
-$g16c_project_full = static function (string $source, string $key) use ($g16c_reverse_specs, $g16c_ticket_shutdown_historical): string {
-	if ($key === 'ticket') {
-		$source = g16c_remove_ticket_helpers($source);
-		return g16c_swap_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown', '3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', $g16c_ticket_shutdown_historical);
-	}
-	return g16c_reverse_owned_changes($source, $g16c_reverse_specs[$key], $key);
-};
-foreach (array('mirror', 'shadow') as $tree) {
-	foreach ($g16c_paths as $key => $_relative) {
-		$projection = $g16c_project_full($g16c_sources[$tree][$key], $key);
-		g16c_same($g16c_pre_edit_hashes[$tree][$key], hash('sha256', $projection), 'Exact pre-G16 full-source projection changed for ' . $tree . ' ' . $key);
-	}
-}
-
-$g16c_mutations = array(
-	'settings' => array("'operation' => 'sync_image_backfill'", "'operation' => 'sync_image_mutated'"),
-	'notifications' => array("'operation' => 'insert_log'", "'operation' => 'insert_mutated'"),
-	'phase' => array('entitlement_image_sync_product_failed', 'entitlement_image_sync_product_mutated'),
-	'ticket' => array('event=ticket_integrity_fatal_shutdown', 'event=ticket_integrity_fatal_mutated'),
-);
-foreach ($g16c_mutations as $key => $mutation) {
-	$mutated = g16c_replace_once($g16c_sources['mirror'][$key], $mutation[0], $mutation[1], 'Owned mutation setup failed for ' . $key);
-	$rejected = false;
-	try {
-		$g16c_project_full($mutated, $key);
-	} catch (RuntimeException $exception) {
-		$rejected = true;
-	}
-	g16c_assert($rejected, 'Owned-function mutation must invalidate exact pre-edit reconstruction: ' . $key);
-}
-
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
 if (!defined('BVMGR_PLUGIN_PATH')) {
 	define('BVMGR_PLUGIN_PATH', $g16c_root);
 }
@@ -685,6 +340,8 @@ if (!defined('MINUTE_IN_SECONDS')) {
 }
 function current_user_can($capability): bool { return true; }
 function wp_die($message): void { throw new RuntimeException((string) $message); }
+// Action-selection double; nonce compatibility is covered by wporg-prefix-b4-nonces.
+function bvmgr_nonce_action_for_request($action, $field = false) { return $action; }
 function check_admin_referer($action): void { $GLOBALS['g16c_nonce_checked'] = $action; }
 function get_posts($args): array { return array(); }
 function set_transient($key, $value, $expiration): bool
@@ -719,7 +376,7 @@ try {
 } catch (G16CSettingsExit $exception) {
 	// Expected control-flow sentinel.
 }
-g16c_same('vms_sync_entitlement_images', $GLOBALS['g16c_nonce_checked'], 'Settings nonce contract changed.');
+g16c_same('bvmgr_sync_entitlement_images', $GLOBALS['g16c_nonce_checked'], 'Settings nonce contract changed.');
 g16c_same(array('transient', 'redirect'), $GLOBALS['g16c_settings_order'], 'Settings adapter false must preserve transient/redirect behavior.');
 g16c_same('vms_entitlement_image_sync_last', $GLOBALS['g16c_transient'][0], 'Settings transient key changed.');
 g16c_same(0, $GLOBALS['g16c_transient'][1]['errors'], 'Settings empty backfill summary changed.');

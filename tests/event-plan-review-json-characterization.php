@@ -270,7 +270,7 @@ function bvmgr_admin_ui_page_url(string $slug): string
 function bvmgr_event_command_center_admin_url(array $args = array()): string
 {
 	$query = http_build_query($args);
-	return '/wp-admin/admin.php?page=vms-event-command-center' . ($query !== '' ? '&' . $query : '');
+	return '/wp-admin/admin.php?page=bvmgr-event-command-center' . ($query !== '' ? '&' . $query : '');
 }
 
 function vms_test_assert_true(bool $condition, string $message): void
@@ -943,7 +943,7 @@ vms_test_assert_same(1, substr_count($decode_changes_body, 'json_decode('), 'Cha
 vms_test_assert_same(2, substr_count($mirror_review_source, 'json_decode('), 'Event Plan Review runtime should retain exactly two raw json_decode() calls.');
 vms_test_assert_true(strpos($get_snapshot_body, 'json_decode(') === false, 'Snapshot compatibility wrapper should no longer decode raw JSON directly.');
 vms_test_assert_true(strpos($get_changes_body, 'json_decode(') === false, 'Changes compatibility wrapper should no longer decode raw JSON directly.');
-vms_test_assert_true(strpos($mirror_review_source, 'vms_json_decode_associative(') === false, 'Event Plan Review should not delegate these fields to the shared JSON helper.');
+vms_test_assert_true(strpos($mirror_review_source, 'bvmgr_json_decode_associative(') === false, 'Event Plan Review should not delegate these fields to the shared JSON helper.');
 vms_test_assert_true(strpos($mirror_review_source, 'bvmgr_event_plan_review_decode_snapshot_json') !== false && strpos($mirror_review_source, 'bvmgr_event_plan_review_decode_changes_json') !== false, 'Specialized JSON decoders should exist.');
 vms_test_assert_true(strpos($mirror_review_source, 'bvmgr_event_plan_review_get_snapshot_state') !== false && strpos($mirror_review_source, 'bvmgr_event_plan_review_get_changes_state') !== false, 'State-aware post readers should exist.');
 vms_test_assert_contains("update_post_meta(\$plan_id, bvmgr_event_plan_review_meta_key('snapshot_json'), wp_json_encode(\$snapshot));", $mark_published_body, 'Snapshot writer should remain wp_json_encode()-backed.');
@@ -968,6 +968,8 @@ vms_test_assert_true(strpos($mirror_review_source, 'snapshot_version') === false
 vms_test_assert_true($live_review_source !== '', 'Live event-plan-review.php should remain readable while this mirror-only remediation leaves ../../vms untouched.');
 
 require $mirror_review_path;
+// Ticket-cache behavior is independently covered by p0-source-consistency-repair.php.
+function bvmgr_event_command_center_ticket_activity_from_cache(array $stats, array $v2 = array(), int $now = 0): array { return array(); }
 eval($activity_body);
 eval($alerts_body);
 eval($health_body);

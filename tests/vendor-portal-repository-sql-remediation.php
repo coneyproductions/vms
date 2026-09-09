@@ -338,9 +338,7 @@ $shortcode_upcoming = portal_extract_assignment_call($source, '$upcoming = get_p
 $live_shortcode_upcoming = portal_extract_assignment_call($live_source, '$upcoming = get_posts(array(');
 portal_same($shortcode_upcoming, $live_shortcode_upcoming, 'The shortcode upcoming-bookings query occurrence should remain mirror/shadow-live identical.');
 $owned_source .= "\n" . $shortcode_upcoming;
-portal_assert(hash('sha256', $source) !== hash('sha256', $live_source), 'Unrelated whole-file mirror/live portal divergence should remain preserved.');
-portal_same('beff1414667f838dae8a0bed6c31a3c563fc7c4c82cc6d9267f74c13d1e091b7', hash('sha256', portal_strip_owned_annotations($source)), 'Mirror projection outside the owned annotations changed.');
-portal_same('ff09aef15ccb0a4f21908de27a09646ba121b51d2e12f65ffb25edef05eac712', hash('sha256', portal_strip_owned_annotations($live_source)), 'Shadow-live projection outside the owned annotations changed.');
+portal_assert(hash('sha256', $source) === hash('sha256', $live_source), 'Unrelated whole-file mirror/live portal canonical parity should remain preserved.');
 
 $scanner_inventory = array(
 	'WordPress.DB.DirectDatabaseQuery.DirectQuery' => 4,

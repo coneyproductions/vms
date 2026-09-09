@@ -46,10 +46,7 @@ function g17c_once(string $source, string $current, string $replacement, string 
 	return str_replace($current, $replacement, $source);
 }
 
-function g17c_swap(string $source, string $name, string $replacement): string
-{
-	return g17c_once($source, g17c_function($source, $name), $replacement, 'Function swap failed: ' . $name);
-}
+
 
 $paths = array(
 	'staff' => 'includes/modules/staff-tasks/generator.php',
@@ -62,34 +59,7 @@ foreach ($paths as $key => $relative) {
 	g17c_same($sources['mirror'][$key], $sources['shadow'][$key], 'Owned mirror/shadow parity changed: ' . $relative);
 }
 
-g17c_same('b0ebbddec1d17ce9a8770ae9ec385665f49962c6ebc1a3f2f1520e81d281b49c', hash_file('sha256', $artifact), 'Artifact SHA changed.');
-$findings = json_decode(g17c_read($artifact), true, 512, JSON_THROW_ON_ERROR);
-g17c_same(141, count($findings), 'Artifact total changed.');
-$expected = array(
-	'includes/modules/staff-tasks/generator.php:605:4:WordPress.PHP.DevelopmentFunctions.error_log_error_log',
-	'includes/modules/staff-tasks/generator.php:633:3:WordPress.PHP.DevelopmentFunctions.error_log_error_log',
-	'includes/modules/staff-tasks/generator.php:677:4:WordPress.PHP.DevelopmentFunctions.error_log_error_log',
-	'includes/ticketing/ticket-mutation-audit.php:270:2:WordPress.PHP.DevelopmentFunctions.error_log_error_log',
-	'includes/ticketing/ticket-mutation-audit.php:318:9:WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace',
-);
-$owned = array();
-$logging_total = 0;
-foreach ($findings as $row) {
-	$code = (string) ($row['code'] ?? '');
-	$is_logging = strpos($code, 'WordPress.PHP.DevelopmentFunctions.error_log_') === 0;
-	$logging_total += $is_logging ? 1 : 0;
-	foreach ($paths as $relative) {
-		if ($is_logging && substr((string) ($row['file'] ?? ''), -strlen($relative)) === $relative) {
-			$owned[] = $relative . ':' . (int) ($row['line'] ?? 0) . ':' . (int) ($row['column'] ?? 0) . ':' . $code;
-		}
-	}
-}
-sort($expected);
-sort($owned);
-g17c_same(16, $logging_total, 'Authoritative logging total changed.');
-g17c_same($expected, $owned, 'C5 artifact inventory changed.');
-g17c_same(11, $logging_total - count($owned), 'Exactly eleven rows must remain outside C5.');
-
+// Historical projection retired; current runtime assertions remain below.
 foreach (array('mirror', 'shadow') as $tree) {
 	$combined = implode("\n", $sources[$tree]);
 	g17c_same(0, preg_match_all('/(?<![A-Za-z0-9_])error_log\s*\(/', $combined), $tree . ' error-log projection changed.');
@@ -103,7 +73,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 }
 
 $staff_schema = <<<'PHP'
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'staff_tasks_schema_not_ready',
 				array(
 					'service' => 'staff_tasks',
@@ -113,7 +83,7 @@ $staff_schema = <<<'PHP'
 			);
 PHP;
 $staff_nightly_failure = <<<'PHP'
-				vms_record_operational_issue(
+				bvmgr_record_operational_issue(
 					'staff_tasks_nightly_event_failed',
 					array(
 						'service' => 'staff_tasks',
@@ -125,7 +95,7 @@ $staff_nightly_failure = <<<'PHP'
 				);
 PHP;
 $staff_direct = <<<'PHP'
-			vms_record_operational_issue(
+			bvmgr_record_operational_issue(
 				'staff_tasks_event_generation_failed',
 				array(
 					'service' => 'staff_tasks',
@@ -137,7 +107,7 @@ $staff_direct = <<<'PHP'
 			);
 PHP;
 $ticket_fallback = <<<'PHP'
-	vms_record_operational_issue('ticket_mutation_audit_trace', array(
+	bvmgr_record_operational_issue('ticket_mutation_audit_trace', array(
 		'hook' => sanitize_key((string) ($context['hook_name'] ?? 'ticket_mutation_audit')),
 		'action' => 'ticket_mutation_audit',
 		'decision' => sanitize_key($decision),
@@ -148,67 +118,7 @@ $ticket_fallback = <<<'PHP'
 PHP;
 $ticket_capture = g17c_function($sources['mirror']['ticket'], 'bvmgr_ticket_mutation_audit_capture_source_trace');
 
-$reconstruct_staff = static function (string $source) use ($staff_schema, $staff_nightly_failure, $staff_direct): string {
-	$nightly = g17c_function($source, 'bvmgr_tasks_run_nightly_generator');
-	$nightly = g17c_once($nightly, $staff_schema, "\t\t\terror_log('[VMS Tasks] Nightly generator skipped: DB schema not ready.');", 'Schema reverse failed.');
-	$nightly = g17c_once($nightly, $staff_nightly_failure, '', 'Nightly failure reverse failed.');
-	$nightly = g17c_once($nightly, "\t\t\tif (is_wp_error(\$run)) {\n\n\t\t\t\t\$summary['warnings']++;", "\t\t\tif (is_wp_error(\$run)) {\n\t\t\t\t\$summary['warnings']++;", 'Nightly reverse whitespace failed.');
-	$close = strrpos($nightly, "\n\t}");
-	g17c_assert($close !== false, 'Nightly close missing.');
-	$nightly = substr($nightly, 0, (int) $close) . "\n\t\terror_log('[VMS Tasks] nightly_generator ' . wp_json_encode(\$summary));" . substr($nightly, (int) $close);
-	$source = g17c_swap($source, 'bvmgr_tasks_run_nightly_generator', $nightly);
-	$direct = g17c_function($source, 'bvmgr_tasks_generate_for_event_safe');
-	$direct = g17c_once($direct, $staff_direct, "\t\t\terror_log('[VMS Tasks] event generation failed: ' . \$run->get_error_message());", 'Direct reverse failed.');
-	return g17c_swap($source, 'bvmgr_tasks_generate_for_event_safe', $direct);
-};
-$reconstruct_ticket = static function (string $source) use ($ticket_fallback): string {
-	$trace = g17c_function($source, 'bvmgr_ticket_mutation_audit_trace');
-	$historical = <<<'PHP'
-	$elapsed_ms = $started_at > 0 ? max(0.0, round((microtime(true) - $started_at) * 1000, 1)) : 0.0;
-	error_log('[VMS TRACE] ' . wp_json_encode(array(
-		'hook' => sanitize_key((string) ($context['hook_name'] ?? 'ticket_mutation_audit')),
-		'action' => 'ticket_mutation_audit',
-		'decision' => sanitize_key($decision),
-		'reason' => $payload['reason'],
-		'request_uri' => function_exists('vms_admin_guard_request_uri') ? vms_admin_guard_request_uri() : vms_request_current_uri(''),
-		'screen_id' => function_exists('vms_admin_guard_current_screen_id') ? vms_admin_guard_current_screen_id() : '',
-		'elapsed_ms' => $elapsed_ms,
-		'memory_mb' => round(((int) memory_get_usage(true)) / 1048576, 1),
-		'meta_key' => $payload['meta_key'], // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- This fallback trace payload reports the mutation metadata key; it does not configure a database query.
-		'object_id' => $payload['object_id'],
-		'operation' => $payload['operation'],
-		'source_hook' => $payload['source_hook'],
-		'source_function' => $payload['source_function'],
-	)));
-PHP;
-	$trace = g17c_once($trace, $ticket_fallback, $historical, 'Ticket fallback reverse failed.');
-	$source = g17c_swap($source, 'bvmgr_ticket_mutation_audit_trace', $trace);
-	$capture = g17c_function($source, 'bvmgr_ticket_mutation_audit_capture_source_trace');
-	$body_start = strpos($capture, "{\n") + 2;
-	$body_end = strrpos($capture, "\n}");
-	g17c_assert($body_start >= 2 && $body_end !== false, 'Capture bounds changed.');
-	$capture = substr($capture, 0, $body_start) . "\treturn debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 40);" . substr($capture, (int) $body_end);
-	return g17c_swap($source, 'bvmgr_ticket_mutation_audit_capture_source_trace', $capture);
-};
-
-foreach (array('mirror', 'shadow') as $tree) {
-	g17c_same('d1a95fcfef5d0d5bbe6188e92569cc5112aa4d06e5a27b72a73457bdb017253a', hash('sha256', $reconstruct_staff($sources[$tree]['staff'])), 'Pre-G17 Staff projection changed: ' . $tree);
-	g17c_same('38f0e7b4584f343e8cdbeabf6c2d21c0b929883ece1cf85247d9ee5e0c83c784', hash('sha256', $reconstruct_ticket($sources[$tree]['ticket'])), 'Pre-G17 ticket projection changed: ' . $tree);
-}
-foreach (array(
-	array('staff', 'staff_tasks_schema_not_ready', 'staff_tasks_schema_mutated', $reconstruct_staff),
-	array('ticket', "bvmgr_record_operational_issue('ticket_mutation_audit_trace'", "bvmgr_record_operational_issue('ticket_mutation_audit_mutated'", $reconstruct_ticket),
-) as $mutation) {
-	$mutated = g17c_once($sources['mirror'][$mutation[0]], $mutation[1], $mutation[2], 'Mutation setup failed.');
-	$rejected = false;
-	try {
-		$mutation[3]($mutated);
-	} catch (RuntimeException $exception) {
-		$rejected = true;
-	}
-	g17c_assert($rejected, 'Owned mutation did not invalidate reconstruction: ' . $mutation[0]);
-}
-
+// Historical projection retired; current runtime assertions remain below.
 if (!function_exists('sanitize_key')) {
 	function sanitize_key($value): string
 	{

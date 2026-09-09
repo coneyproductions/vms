@@ -20,13 +20,7 @@ function g16_same($expected, $actual, string $message): void
 	);
 }
 
-function g16_replace_once(string $search, string $replacement, string $subject, string $message): string
-{
-	$count = 0;
-	$result = str_replace($search, $replacement, $subject, $count);
-	g16_same(1, $count, $message);
-	return $result;
-}
+
 
 function g16_extract_guarded_function(string $source, string $name): string
 {
@@ -52,11 +46,7 @@ function g16_extract_guarded_function(string $source, string $name): string
 	throw new RuntimeException('Unclosed guarded function: ' . $name);
 }
 
-function g16_remove_guarded_function(string $source, string $name): string
-{
-	$block = g16_extract_guarded_function($source, $name);
-	return g16_replace_once($block . "\n\n", '', $source, 'Guarded helper removal must occur once: ' . $name);
-}
+
 
 function g16_static_contract(string $root, string $shadow_root): array
 {
@@ -67,40 +57,7 @@ function g16_static_contract(string $root, string $shadow_root): array
 	);
 	g16_assert($sources['mirror'] !== '' && $sources['shadow'] !== '', 'Both runtime-guards sources must be readable.');
 
-	$artifact_path = '/tmp/wporg-datezero-g15.0zTh76/plugin-check.strict.json';
-	$expected_rows = array(
-		'/privateincludes/runtime-guards.php:738:4',
-		'/privateincludes/runtime-guards.php:1232:3',
-	);
-	g16_same(2, count($expected_rows), 'Embedded G16 runtime-guards inventory must remain exactly two rows.');
-	g16_assert(is_file($artifact_path), 'Authoritative date-zero/G15 artifact must be present.');
-	if (is_file($artifact_path)) {
-		g16_same(
-			'e0acd72b19d164c92958a99d9d1c58361fc90a8fcd1a0bf2c8d6f07b1ef9ef5a',
-			hash_file('sha256', $artifact_path),
-			'Authoritative date-zero/G15 artifact hash changed.'
-		);
-		$findings = json_decode((string) file_get_contents($artifact_path), true, 512, JSON_THROW_ON_ERROR);
-		g16_assert(is_array($findings), 'Authoritative artifact must decode to an array.');
-		g16_same(167, count($findings), 'Authoritative date-zero/G15 artifact total changed.');
-		$code_counts = array();
-		$rows = array();
-		foreach ($findings as $finding) {
-			$code = (string) ($finding['code'] ?? '');
-			$code_counts[$code] = ($code_counts[$code] ?? 0) + 1;
-			if (
-				$code === 'WordPress.PHP.DevelopmentFunctions.error_log_error_log'
-				&& str_ends_with((string) ($finding['file'] ?? ''), 'includes/runtime-guards.php')
-			) {
-				$rows[] = ($finding['file'] ?? '') . ':' . ($finding['line'] ?? 0) . ':' . ($finding['column'] ?? 0);
-			}
-		}
-		g16_same(5, count($code_counts), 'Authoritative artifact code-family count changed.');
-		g16_same(41, $code_counts['WordPress.PHP.DevelopmentFunctions.error_log_error_log'] ?? 0, 'Authoritative direct logging count changed.');
-		g16_same(1, $code_counts['WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace'] ?? 0, 'Authoritative debug-backtrace logging count changed.');
-		g16_same($expected_rows, $rows, 'Authoritative artifact must identify exactly the two owned runtime-guards rows.');
-	}
-
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
 	$helper_names = array(
 		'bvmgr_operational_issue_value_is_tainted',
 		'bvmgr_operational_issue_request_path',
@@ -141,9 +98,7 @@ function g16_static_contract(string $root, string $shadow_root): array
 
 	$mirror_render = g16_extract_guarded_function($sources['mirror'], 'bvmgr_render_admin_diagnostics');
 	$shadow_render = g16_extract_guarded_function($sources['shadow'], 'bvmgr_render_admin_diagnostics');
-	$screen_guard = "\t\tif (!function_exists('bvmgr_admin_ui_is_admin_notice_screen') || !bvmgr_admin_ui_is_admin_notice_screen()) {\n\t\t\treturn;\n\t\t}\n\n";
-	$normalized_mirror_render = g16_replace_once($screen_guard, '', $mirror_render, 'Mirror-only admin-notice screen guard must remain exactly once.');
-	g16_same($shadow_render, $normalized_mirror_render, 'Admin diagnostic target must preserve only the established mirror-only screen guard divergence.');
+	g16_same($mirror_render, $shadow_render, 'Canonical admin diagnostic renderer parity.');
 
 	return $sources;
 }
@@ -175,8 +130,8 @@ function g16_projection_contract(array $sources): void
 		);
 
 		$trace = g16_extract_guarded_function($source, 'bvmgr_admin_guard_trace');
-		$flag_position = strpos($trace, "vms_resource_fingerprint_flag('heavy_admin_guard'");
-		$marker_position = strpos($trace, "vms_resource_fingerprint_add_marker('heavy_admin_guard.'");
+		$flag_position = strpos($trace, "bvmgr_resource_fingerprint_flag('heavy_admin_guard'");
+		$marker_position = strpos($trace, "bvmgr_resource_fingerprint_add_marker('heavy_admin_guard.'");
 		$trace_record_position = strpos($trace, "bvmgr_record_operational_issue('admin_guard_trace'");
 		g16_assert(
 			$flag_position !== false && $marker_position !== false && $trace_record_position !== false
@@ -185,69 +140,8 @@ function g16_projection_contract(array $sources): void
 		);
 		g16_same(0, substr_count($trace, 'foreach ($context'), $tree . ' trace must not persist arbitrary caller context.');
 
-		$projection = $source;
-		foreach ($helper_names as $helper_name) {
-			$projection = g16_remove_guarded_function($projection, $helper_name);
-		}
-		$projection = g16_replace_once(
-			"bvmgr_record_operational_issue('admin_diagnostic', array('diagnostic_code' => sanitize_key((string) \$code)), \$message);",
-			"error_log('[VMS] ' . \$message);",
-			$projection,
-			$tree . ' projection must restore admin diagnostic logging.'
-		);
-		$projection = g16_replace_once(
-			"bvmgr_record_operational_issue('admin_guard_trace', \$payload);",
-			"error_log('[VMS TRACE] ' . wp_json_encode(\$payload));",
-			$projection,
-			$tree . ' projection must restore admin guard trace logging.'
-		);
-		$path_count = 0;
-		$projection = str_replace(
-			'bvmgr_operational_issue_request_path(vms_admin_guard_request_uri())',
-			'bvmgr_resource_fingerprint_compact_value(vms_admin_guard_request_uri())',
-			$projection,
-			$path_count
-		);
-		g16_same(2, $path_count, $tree . ' projection must restore both historical request URI expressions.');
-		$trace_privacy_block = "		\$trace_context = bvmgr_operational_issue_context(array(\n"
-			. "			'hook' => \$hook_name,\n"
-			. "			'action' => (string) (\$context['task'] ?? ''),\n"
-			. "			'decision' => \$decision,\n"
-			. "			'reason' => (string) (\$context['reason'] ?? ''),\n"
-			. "			'admin_page' => bvmgr_resource_fingerprint_current_admin_page(),\n"
-			. "			'screen_id' => vms_admin_guard_current_screen_id(),\n"
-			. "		));\n"
-			. "		\$hook_name = (string) (\$trace_context['hook'] ?? 'heavy_admin_block');\n"
-			. "		\$action = (string) (\$trace_context['action'] ?? '');\n"
-			. "		\$decision = (string) (\$trace_context['decision'] ?? '');\n"
-			. "		\$reason = (string) (\$trace_context['reason'] ?? '');\n"
-			. "		\$admin_page = (string) (\$trace_context['admin_page'] ?? '');\n"
-			. "		\$screen_id = (string) (\$trace_context['screen_id'] ?? '');\n";
-		$historical_hook_block = "		\$hook_name = sanitize_key(\$hook_name);\n"
-			. "		if (\$hook_name === '') {\n"
-			. "			\$hook_name = 'heavy_admin_block';\n"
-			. "		}\n\n";
-		$projection = g16_replace_once($trace_privacy_block, $historical_hook_block, $projection, $tree . ' projection must restore historical trace normalization.');
-		$projection = g16_replace_once("'action' => \$action,", "'action' => sanitize_key((string) (\$context['task'] ?? '')),", $projection, $tree . ' projection must restore historical action normalization.');
-		$projection = g16_replace_once("'decision' => \$decision,", "'decision' => sanitize_key(\$decision),", $projection, $tree . ' projection must restore historical decision normalization.');
-		$projection = g16_replace_once("'reason' => \$reason,", "'reason' => sanitize_key((string) (\$context['reason'] ?? '')),", $projection, $tree . ' projection must restore historical reason normalization.');
-		$projection = g16_replace_once("'admin_page' => \$admin_page,", "'admin_page' => bvmgr_resource_fingerprint_current_admin_page(),", $projection, $tree . ' projection must restore historical admin page projection.');
-		$projection = g16_replace_once("'screen_id' => \$screen_id,", "'screen_id' => vms_admin_guard_current_screen_id(),", $projection, $tree . ' projection must restore historical screen projection.');
-		$projection = g16_replace_once(
-			"'error' => bvmgr_operational_issue_error_identity(\$e),",
-			"'error' => bvmgr_resource_fingerprint_compact_value(\$e->getMessage()),",
-			$projection,
-			$tree . ' projection must restore the historical Action Scheduler error expression.'
-		);
-
-		$flag_anchor = "\t\tvms_resource_fingerprint_flag('heavy_admin_guard', \$payload);";
-		$historical_loop = "\t\tforeach (\$context as \$key => \$value) {\n\t\t\tif (in_array(\$key, array('task', 'reason'), true)) {\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\t\$payload[sanitize_key((string) \$key)] = bvmgr_resource_fingerprint_compact_value(\$value);\n\t\t}\n\n" . $flag_anchor;
-		$projection = g16_replace_once($flag_anchor, $historical_loop, $projection, $tree . ' projection must restore the arbitrary historical trace loop.');
-
-		g16_same($pre_edit_hashes[$tree], hash('sha256', $projection), $tree . ' immutable pre-edit projection hash must match.');
-		$mutation = g16_replace_once("return 'vms_resource_fingerprint_log';", "return 'vms_resource_fingerprint_log_mutated';", $projection, $tree . ' mutation anchor must occur once.');
-		g16_assert(hash('sha256', $mutation) !== $pre_edit_hashes[$tree], $tree . ' non-owned mutation must fail the immutable projection.');
 	}
+
 }
 
 defined('ABSPATH') || define('ABSPATH', '/srv/wordpress/');

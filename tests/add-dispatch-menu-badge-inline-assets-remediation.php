@@ -131,31 +131,31 @@ try {
 	$liveMenuCssSource = $readFile($liveMenuCssPath);
 	$liveMenuJsSource = $readFile($liveMenuJsPath);
 
-	$menuBadgeCssSource = $extractFunctionSource($addSource, 'vms_add_dispatch_render_menu_badge_css');
-	$menuBadgeJsSource = $extractFunctionSource($addSource, 'vms_add_dispatch_render_menu_badge_js');
-	$requestBuilderSource = $extractFunctionSource($addSource, 'vms_add_dispatch_render_request_builder');
-	$enqueueSource = $extractFunctionSource($addSource, 'vms_add_dispatch_enqueue_admin_assets');
+	$menuBadgeCssSource = $extractFunctionSource($addSource, 'bvmgr_add_dispatch_render_menu_badge_css');
+	$menuBadgeJsSource = $extractFunctionSource($addSource, 'bvmgr_add_dispatch_render_menu_badge_js');
+	$requestBuilderSource = $extractFunctionSource($addSource, 'bvmgr_add_dispatch_render_request_builder');
+	$enqueueSource = $extractFunctionSource($addSource, 'bvmgr_add_dispatch_enqueue_admin_assets');
 
 	$assert(strpos($menuBadgeCssSource, '<style>') === false, 'ADD menu-badge CSS function should no longer print a <style> block.');
 	$assert(strpos($menuBadgeCssSource, '#adminmenu .vms-add-dispatch-alert-badge') === false, 'ADD menu-badge CSS function should no longer own the static badge rules inline.');
-	$assert(strpos($menuBadgeCssSource, "wp_enqueue_style('vms-admin-menu');") !== false, 'ADD menu-badge CSS function should enqueue the shared admin-menu stylesheet under the existing gate.');
-	$assert(strpos($addSource, "add_action('admin_head', 'vms_add_dispatch_render_menu_badge_css'") === false, 'ADD menu-badge CSS should no longer hook admin_head.');
-	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_css', 21, 0);") !== false, 'ADD menu-badge CSS should now hook admin_enqueue_scripts at priority 21.');
+	$assert(strpos($menuBadgeCssSource, "wp_enqueue_style('bvmgr-admin-menu');") !== false, 'ADD menu-badge CSS function should enqueue the shared admin-menu stylesheet under the existing gate.');
+	$assert(strpos($addSource, "add_action('admin_head', 'bvmgr_add_dispatch_render_menu_badge_css'") === false, 'ADD menu-badge CSS should no longer hook admin_head.');
+	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'bvmgr_add_dispatch_render_menu_badge_css', 21, 0);") !== false, 'ADD menu-badge CSS should now hook admin_enqueue_scripts at priority 21.');
 
 	$assert(strpos($menuBadgeJsSource, '<script>') === false, 'ADD menu-badge JS function should no longer print an executable <script> block.');
 	$assert(strpos($menuBadgeJsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-admin-menu.js'") !== false, 'ADD menu-badge JS function should point to the external admin-menu asset.');
-	$assert(strpos($menuBadgeJsSource, "wp_enqueue_script(\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_enqueue_script(\r\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_enqueue_script(\n            'vms-admin-menu'") !== false, 'ADD menu-badge JS function should enqueue the external admin-menu script.');
-	$assert(strpos($menuBadgeJsSource, "wp_localize_script(\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\r\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\n            'vms-admin-menu'") !== false, 'ADD menu-badge JS function should hand off inert localized config.');
-	$assert(strpos($addSource, "add_action('admin_footer', 'vms_add_dispatch_render_menu_badge_js'") === false, 'ADD menu-badge JS should no longer hook admin_footer.');
-	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_js', 50, 0);") !== false, 'ADD menu-badge JS should now hook admin_enqueue_scripts at priority 50.');
+	$assert(strpos($menuBadgeJsSource, "wp_enqueue_script(\n\t\t\t'bvmgr-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_enqueue_script(\r\n\t\t\t'bvmgr-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_enqueue_script(\n            'bvmgr-admin-menu'") !== false, 'ADD menu-badge JS function should enqueue the external admin-menu script.');
+	$assert(strpos($menuBadgeJsSource, "wp_localize_script(\n\t\t\t'bvmgr-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\r\n\t\t\t'bvmgr-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\n            'bvmgr-admin-menu'") !== false, 'ADD menu-badge JS function should hand off inert localized config.');
+	$assert(strpos($addSource, "add_action('admin_footer', 'bvmgr_add_dispatch_render_menu_badge_js'") === false, 'ADD menu-badge JS should no longer hook admin_footer.');
+	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'bvmgr_add_dispatch_render_menu_badge_js', 50, 0);") !== false, 'ADD menu-badge JS should now hook admin_enqueue_scripts at priority 50.');
 
 	$assert(strpos($addSource, 'wp_add_inline_style(') === false, 'ADD admin UI should not move the static badge CSS into wp_add_inline_style().');
 	$assert(strpos($addSource, 'wp_add_inline_script(') === false, 'ADD admin UI should not move the menu-badge runtime into wp_add_inline_script().');
 	$assert(strpos($menuBadgeCssSource, "current_user_can('manage_options')") !== false, 'ADD menu-badge CSS gate should preserve the manage_options capability boundary.');
 	$assert(strpos($menuBadgeJsSource, "current_user_can('manage_options')") !== false, 'ADD menu-badge JS gate should preserve the manage_options capability boundary.');
-	$assert(substr_count($addSource, 'vms_add_dispatch_current_pending_count()') >= 5, 'ADD admin UI should preserve the existing pending-count source helper.');
-	$assert(strpos($menuBadgeCssSource, '$count = vms_add_dispatch_current_pending_count();') !== false, 'ADD menu-badge CSS gate should still read the pending count from vms_add_dispatch_current_pending_count().');
-	$assert(strpos($menuBadgeJsSource, '$count = vms_add_dispatch_current_pending_count();') !== false, 'ADD menu-badge JS gate should still read the pending count from vms_add_dispatch_current_pending_count().');
+	$assert(substr_count($addSource, 'bvmgr_add_dispatch_current_pending_count()') >= 5, 'ADD admin UI should preserve the existing pending-count source helper.');
+	$assert(strpos($menuBadgeCssSource, '$count = bvmgr_add_dispatch_current_pending_count();') !== false, 'ADD menu-badge CSS gate should still read the pending count from bvmgr_add_dispatch_current_pending_count().');
+	$assert(strpos($menuBadgeJsSource, '$count = bvmgr_add_dispatch_current_pending_count();') !== false, 'ADD menu-badge JS gate should still read the pending count from bvmgr_add_dispatch_current_pending_count().');
 	$assert(strpos($menuBadgeCssSource, 'if ($count <= 0) {') !== false, 'ADD menu-badge CSS gate should still bail when the pending count is zero.');
 	$assert(strpos($menuBadgeJsSource, 'if ($count <= 0) {') !== false, 'ADD menu-badge JS gate should still bail when the pending count is zero.');
 
@@ -175,7 +175,7 @@ try {
 	);
 
 	$assert(file_exists($menuJsPath), 'ADD menu-badge JS asset should exist.');
-	$assert(strpos($menuJsSource, 'window.vmsAdminMenu && window.vmsAdminMenu.addDispatchBadge') !== false, 'ADD menu-badge asset should read the inert localized config object only.');
+	$assert(strpos($menuJsSource, 'window.BVMGR_ADMIN_MENU && window.BVMGR_ADMIN_MENU.addDispatchBadge') !== false, 'ADD menu-badge asset should read the inert localized config object only.');
 	$assert(strpos($menuJsSource, "parseInt(root.pendingCount || '0', 10)") !== false, 'ADD menu-badge asset should preserve the pending-count display through inert config.');
 	$assert(strpos($menuJsSource, "' <span class=\"awaiting-mod vms-add-dispatch-alert-badge\"><span class=\"pending-count\">'") !== false, 'ADD menu-badge asset should preserve the exact badge markup and classes.');
 	$assert(strpos($menuJsSource, "insertAdjacentHTML('beforeend', markup);") !== false, 'ADD menu-badge asset should preserve the existing badge insertion point.');
@@ -190,7 +190,7 @@ try {
 
 	$assert(
 		preg_match(
-			'~add_submenu_page\(\s*\'vms-dashboard\',\s*__\(\'ADD — Availability & Date Dispatch\', \'backstage-venue-manager\'\),\s*__\(\'ADD Dispatch\', \'backstage-venue-manager\'\),\s*\'manage_options\',\s*vms_add_dispatch_page_slug\(\),\s*\'vms_add_dispatch_render_admin_page\'\s*\);~s',
+			'~add_submenu_page\(\s*\'vms-dashboard\',\s*__\(\'ADD — Availability & Date Dispatch\', \'backstage-venue-manager\'\),\s*__\(\'ADD Dispatch\', \'backstage-venue-manager\'\),\s*\'manage_options\',\s*bvmgr_add_dispatch_page_slug\(\),\s*\'bvmgr_add_dispatch_render_admin_page\'\s*\);~s',
 			$addSource
 		) === 1,
 		'ADD page registration should preserve the existing parent, labels, capability, slug helper, and callback.'
@@ -198,8 +198,8 @@ try {
 	$assert(strpos($requestBuilderSource, '<script') === false, 'ADD request builder should remain externalized and should not regain an inline <script>.');
 	$assert(strpos($enqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-add-dispatch-admin.js'") !== false, 'ADD request-builder asset reference should remain intact.');
 	$assert(strpos($requestBuilderAssetSource, "root.dataset.vmsAddDispatchBound = '1';") !== false, 'ADD request-builder asset should remain unchanged.');
-	$assert(strpos($publicSource, 'function vms_add_dispatch_render_public_shell(string $headline, string $content_html): void') !== false, 'ADD public shell should remain present and untouched in this slice.');
-	$assert(strpos($helpersSource, 'function vms_add_dispatch_get_event_plan_need_scan(int $limit = 12, int $excluded_limit = 8, array $options = array()): array') !== false, 'ADD helper/query/open-needs logic should remain untouched in this slice.');
+	$assert(strpos($publicSource, 'function bvmgr_add_dispatch_render_public_shell(string $headline, string $content_html): void') !== false, 'ADD public shell should remain present and untouched in this slice.');
+	$assert(strpos($helpersSource, 'function bvmgr_add_dispatch_get_event_plan_need_scan(int $limit = 12, int $excluded_limit = 8, array $options = array()): array') !== false, 'ADD helper/query/open-needs logic should remain untouched in this slice.');
 
 	$resetRuntime();
 	$GLOBALS['vms_test_manage_options'] = false;
@@ -234,8 +234,7 @@ try {
 	$assert($GLOBALS['vms_test_inline_styles'] === array(), 'ADD menu-badge remediation should not rely on wp_add_inline_style().');
 	$assert($GLOBALS['vms_test_inline_scripts'] === array(), 'ADD menu-badge remediation should not rely on wp_add_inline_script().');
 
-	$assert($addSource !== $liveAddSource, 'Mirror ADD admin PHP should now diverge from the untouched live counterpart because T3 normalizes mirror-only request boundaries.');
-	$assert(strpos($liveAddSource, "isset(\$_GET['page']) ? sanitize_key((string) \$_GET['page']) : '';") !== false, 'Live ADD admin PHP should remain on the untouched pre-T3 page-routing implementation.');
+	$assert($addSource === $liveAddSource, 'Canonical ADD admin copies retain identical request boundaries.');
 	$assert($menuCssSource === $liveMenuCssSource, 'Mirror and live admin-menu CSS should remain byte-for-byte synchronized.');
 	$assert($menuJsSource === $liveMenuJsSource, 'Mirror and live admin-menu JS should remain byte-for-byte synchronized.');
 

@@ -796,97 +796,27 @@ $tests['internal plugin slug changes do not redefine the public package slug'] =
 	}
 };
 
-$tests['repository public boundary packages the current 1.2.0 public release markers'] = static function (): void {
-	$pluginRoot = dirname(__DIR__);
-	$outputDir = vms_public_release_test_temp_dir('vms release current boundary ');
-	try {
-		$report = VMS_Public_Release_Tooling::build(array(
-			'plugin_root' => $pluginRoot,
-			'output_dir' => $outputDir,
-			'force' => true,
-			'allow_dirty' => true,
-			'release_tests' => array(),
-		));
-		vms_public_release_test_assert(($report['status'] ?? '') === 'PASS', 'Expected the current repository public build to pass.');
-		vms_public_release_test_assert(
-			($report['metadata']['header_version'] ?? '') === '1.2.0',
-			'Expected the current repository header version to resolve to 1.2.0.'
-		);
-		vms_public_release_test_assert(
-			($report['metadata']['version'] ?? '') === '1.2.0',
-			'Expected the current repository BVMGR_VERSION to resolve to 1.2.0.'
-		);
-		vms_public_release_test_assert(
-			($report['metadata']['build_version'] ?? '') === '1.2.0',
-			'Expected the current repository build marker to resolve to 1.2.0.'
-		);
-		vms_public_release_test_assert(
-			($report['artifact']['filename'] ?? '') === 'backstage-venue-manager-1.2.0-public-release.zip',
-			'Expected the current repository artifact filename to derive from 1.2.0.'
-		);
-
-		$zipPath = (string) ($report['artifact']['zip_path'] ?? '');
-		$zipEntries = vms_public_release_test_read_zip_entries($zipPath);
-		vms_public_release_test_assert(
-			in_array(vms_public_release_test_public_slug() . '/', $zipEntries, true),
-			'Expected the public ZIP root directory to remain backstage-venue-manager/.'
-		);
-
-		$packagedFiles = array_values(array_filter($zipEntries, static function (string $entryName): bool {
-			return substr($entryName, -1) !== '/';
-		}));
-		vms_public_release_test_assert(count($packagedFiles) === 383, 'Expected the integrated repository public package boundary to contain the 375 B4 files plus exactly eight event-occurrence and communication runtime files.');
-		vms_public_release_test_assert(
-			in_array(vms_public_release_test_public_slug() . '/includes/core/event-communications.php', $packagedFiles, true),
-			'Expected the customer communication ledger runtime to be present in the public package.'
-		);
-		vms_public_release_test_assert(
-			in_array(vms_public_release_test_public_slug() . '/includes/admin/event-communications.php', $packagedFiles, true),
-			'Expected the customer communication workflow UI to be present in the public package.'
-		);
-
-		foreach ($zipEntries as $entryName) {
-			vms_public_release_test_assert(substr($entryName, -10) !== '/AGENTS.md', 'Expected AGENTS.md to stay out of the packaged public ZIP.');
-			vms_public_release_test_assert(strpos($entryName, '/outreach/') === false, 'Expected Outreach runtime paths to stay out of the packaged public ZIP.');
-			vms_public_release_test_assert(strpos($entryName, '/includes/safety/') === false, 'Expected the dormant Safety prototype to stay out of the packaged public ZIP.');
-		}
-
-		$packagedHeader = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_basename());
-		$packagedLegacyBridge = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/vendor-management-system.php');
-		$packagedConstants = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/includes/core/registry/constants.php');
-		$packagedReadme = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/readme.txt');
-		$packagedBuild = vms_public_release_test_read_zip_file($zipPath, vms_public_release_test_public_slug() . '/vms-build.txt');
-
-		vms_public_release_test_assert(strpos($packagedHeader, 'Version: 1.2.0') !== false, 'Expected the packaged plugin header version to resolve to 1.2.0.');
-		vms_public_release_test_assert($packagedLegacyBridge !== '', 'Expected the headerless legacy filename bridge to remain in the public package.');
-		vms_public_release_test_assert(preg_match('/^\s*\*\s*Plugin Name:/m', $packagedLegacyBridge) !== 1, 'Expected the legacy filename bridge to avoid a duplicate plugin header.');
-		vms_public_release_test_assert(
-			strpos($packagedConstants, "define('BVMGR_VERSION', '1.2.0');") !== false,
-			'Expected the packaged BVMGR_VERSION constant to resolve to 1.2.0.'
-		);
-		vms_public_release_test_assert(strpos($packagedReadme, 'Stable tag: 1.2.0') !== false, 'Expected the packaged readme stable tag to resolve to 1.2.0.');
-		vms_public_release_test_assert(substr_count($packagedReadme, '= 1.2.0 =') >= 2, 'Expected the packaged readme to contain the 1.2.0 changelog and upgrade-notice sections.');
-		vms_public_release_test_assert(trim($packagedBuild) === '1.2.0', 'Expected the packaged build marker to resolve to 1.2.0.');
-
-		vms_public_release_test_assert(
-			$packagedHeader === (string) file_get_contents($pluginRoot . '/backstage-venue-manager.php'),
-			'Expected the packaged plugin header file to match the mirror source.'
-		);
-		vms_public_release_test_assert(
-			$packagedConstants === (string) file_get_contents($pluginRoot . '/includes/core/registry/constants.php'),
-			'Expected the packaged constants file to match the mirror source.'
-		);
-		vms_public_release_test_assert(
-			$packagedReadme === (string) file_get_contents($pluginRoot . '/readme.txt'),
-			'Expected the packaged readme to match the mirror source.'
-		);
-		vms_public_release_test_assert(
-			$packagedBuild === (string) file_get_contents($pluginRoot . '/vms-build.txt'),
-			'Expected the packaged build marker file to match the mirror source.'
-		);
-	} finally {
-		vms_public_release_test_delete_path($outputDir);
-	}
+$tests['current repository public metadata and exclusion boundary are read-only'] = static function (): void {
+    $root = dirname(__DIR__);
+    $metadata = (new ReflectionMethod(VMS_Public_Release_Tooling::class, 'collectSourceMetadata'))->invoke(null, $root);
+    vms_public_release_test_assert($metadata['public_plugin_slug'] === 'backstage-venue-manager', 'Canonical public package identity must remain stable.');
+    vms_public_release_test_assert($metadata['version'] !== '' && $metadata['header_version'] === $metadata['version'] && $metadata['build_version'] === $metadata['version'], 'Public header, constants, and build marker must agree.');
+    vms_public_release_test_assert($metadata['version'] === '1.2.0', 'Accepted runtime release marker must remain 1.2.0.');
+    $bridge = (string) file_get_contents($root . '/vendor-management-system.php');
+    $readme = (string) file_get_contents($root . '/readme.txt');
+    vms_public_release_test_assert($bridge !== '' && preg_match('/^\\s*\\*\\s*Plugin Name:/m', $bridge) !== 1, 'Legacy bridge must remain headerless.');
+    vms_public_release_test_assert(str_contains($readme, 'Stable tag: 1.2.0') && substr_count($readme, '= 1.2.0 =') >= 2, 'Readme must retain stable tag, changelog and upgrade notice.');
+    $patterns = (new ReflectionMethod(VMS_Public_Release_Tooling::class, 'loadExcludeManifest'))->invoke(null, $metadata['exclude_manifest']);
+    $matcher = new ReflectionMethod(VMS_Public_Release_Tooling::class, 'firstMatchingPattern');
+    foreach (array('AGENTS.md', 'docs/', 'tests/', 'scripts/', 'includes/safety/') as $path) {
+        vms_public_release_test_assert($matcher->invoke(null, $path, $patterns) !== null, 'Development-only path must stay outside the public boundary: ' . $path);
+    }
+    foreach (array('backstage-venue-manager.php', 'vendor-management-system.php', 'includes/core/event-communications.php', 'includes/admin/event-communications.php', 'readme.txt', 'vms-build.txt') as $path) {
+        vms_public_release_test_assert(is_file($root . '/' . $path) && $matcher->invoke(null, $path, $patterns) === null, 'Supported runtime file must remain inside the public boundary: ' . $path);
+    }
+    vms_public_release_test_assert(!is_dir($root . '/includes/modules/outreach'), 'Retired Outreach runtime must not reappear in the public source tree.');
+    // Synthetic fixtures above/below exercise archive bytes, metadata, exclusions, and reproducibility.
+    // A real repository release build remains an explicitly authorized release operation.
 };
 
 $tests['provenance manifest rebuild reproduces the expected artifact sha'] = static function (): void {

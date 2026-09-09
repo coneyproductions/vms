@@ -305,7 +305,7 @@ foreach ($accepted_plugins as $relative => $version) {
 
 $ecc_source = (string) file_get_contents(WP_PLUGIN_DIR . '/backstage-venue-manager/includes/admin/event-command-center.php');
 $portal_source = (string) file_get_contents(WP_PLUGIN_DIR . '/backstage-venue-manager/includes/portal/vendor-portal.php');
-wave3b2_dt_assert(str_contains($ecc_source, 'bvmgr_reporting_resolve_event_ticket_sales'), 'ECC does not consume the BVM reporting contract.');
+wave3b2_dt_assert(str_contains($ecc_source, 'return bvmgr_reporting_get_ticket_truth($plan_id);'), 'ECC does not consume the BVM reporting contract.');
 wave3b2_dt_assert(str_contains($portal_source, 'bvmgr_reporting_resolve_event_ticket_sales'), 'Vendor Portal does not consume the BVM reporting contract.');
 wave3b2_dt_assert(!str_contains($ecc_source, 'VMS_DT_ADMIN_DIR') && !str_contains($portal_source, 'VMS_DT_ADMIN_DIR'), 'BVM references the Data Tools implementation directory.');
 wave3b2_dt_assert(preg_match('/vms_dt_reporting_[a-z0-9_]+\s*\(/', $ecc_source) !== 1, 'ECC directly calls a Data Tools reporting internal.');
@@ -336,7 +336,7 @@ if (!$expectation['provider']) {
 		'callback' => static fn(): array => array('available' => true, 'calculated' => true),
 	)), 'BVM accepted a duplicate provider ID.');
 
-	$provider_result = bvmgr_reporting_resolve_event_ticket_sales(2534, array('scope' => 'event_command_center'));
+	$provider_result = bvmgr_event_command_center_get_ticket_reporting_truth(2534);
 	wave3b2_dt_assert(!empty($provider_result['available']) && !empty($provider_result['calculated']), 'Provider did not return a calculated ECC result.');
 	wave3b2_dt_assert(($provider_result['provider_id'] ?? '') === 'vms-data-tools', 'ECC provider identity changed.');
 	wave3b2_dt_assert(($provider_result['provider_version'] ?? '') === '0.5.55', 'ECC provider version changed.');

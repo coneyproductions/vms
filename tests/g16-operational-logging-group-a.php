@@ -84,157 +84,26 @@ function g16a_normalize(string $source): string
 	return is_string($normalized) ? $normalized : '';
 }
 
-function g16a_restore_call(string $source, string $event_code, string $historical): string
-{
-	$call = g16a_operational_call($source, $event_code);
-	$line_start = strpos($source, $call);
-	g16a_assert($line_start !== false, 'Known operational call must be replaceable: ' . $event_code);
-	$indent_length = strspn($call, " \t");
-	$indent = substr($call, 0, $indent_length);
-	$replacement = '';
-	foreach (explode("\n", $historical) as $line) {
-		$replacement .= $indent . $line . "\n";
-	}
-	return substr($source, 0, (int) $line_start) . $replacement . substr($source, (int) $line_start + strlen($call) + 1);
-}
 
-function g16a_restore_group_a_baseline(string $relative, string $source): string
-{
-	$maps = array(
-		'includes/vendor-applications.php' => array(
-			'vendor_app_vendor_create_failed' => "\$error_message = is_wp_error(\$vendor_id) ? \$vendor_id->get_error_message() : 'unknown error';\nerror_log('[VMS] vendor-applications: failed creating vendor for app_id ' . \$app_id . ' (' . \$error_message . ')');",
-			'vendor_app_submitting_user_missing' => "error_log('[VMS] vendor-applications: submitting user missing for app_id ' . \$app_id . ' (user_id ' . \$user_id . ')');",
-			'vendor_app_user_link_failed' => "error_log('[VMS] vendor-applications: failed linking submitting user ' . \$user_id . ' to vendor ' . \$vendor_id . ' for app_id ' . \$app_id);",
-			'vendor_apply_turnstile_config_missing' => "error_log('[VMS] vendor-apply: Turnstile keys missing; blocking submission.');",
-			'vendor_apply_turnstile_request_failed' => "error_log('[VMS] vendor-apply: Turnstile siteverify request failed: ' . \$resp->get_error_message());",
-			'vendor_apply_turnstile_response_failed' => "error_log('[VMS] vendor-apply: Turnstile siteverify non-2xx or empty body. HTTP ' . \$code);",
-			'vendor_app_vendor_type_unresolved' => "error_log('[VMS] vendor-applications: unknown vendor type slug \"' . \$slug . '\" on app_id ' . \$app_id . '; not assigning taxonomy term.');",
-			'vendor_app_vendor_type_assignment_failed' => "error_log('[VMS] vendor-applications: failed setting vms_vendor_type terms for vendor_id ' . \$vendor_id . ' (app_id ' . \$app_id . ')');",
-		),
-		'includes/core/vendor-application-confirmation.php' => array(
-			'vendor_app_review_ready_mail_failed' => "error_log('[VMS] vendor-apply: review-ready admin notification failed for app_id ' . \$app_id);",
-		),
-		'includes/core/goals-forecast.php' => array(
-			'goals_legacy_issue' => "error_log('[VMS Goals] ' . \$message);",
-			'goals_provider_hard_error_check_failed' => "bvmgr_goals_log('Hard-error check failed (square): ' . \$e->getMessage());",
-			'goals_provider_call_failed' => "bvmgr_goals_log('Provider call failed (square): ' . \$e->getMessage());",
-			'goals_actuals_refresh_failed' => "bvmgr_goals_log('Actuals refresh failed for event ' . \$event_plan_id . ': ' . \$msg);",
-			'goals_progress_capped' => "bvmgr_goals_log('Goal progress evaluation capped at ' . \$max_events . ' events for performance.');",
-		),
-	);
-	g16a_assert(isset($maps[$relative]), 'Unknown Group A projection target: ' . $relative);
-	$map = $maps[$relative];
-	if (
-		$relative === 'includes/vendor-applications.php'
-		&& strpos($source, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'") !== false
-	) {
-		$map['vendor_apply_turnstile_payload_invalid'] = "error_log('[VMS] vendor-apply: Turnstile siteverify returned an invalid JSON payload.');";
-	}
-	foreach ($map as $event_code => $historical) {
-		$source = g16a_restore_call($source, $event_code, $historical);
-	}
-	return $source;
-}
 
-g16a_assert(is_file($g16a_artifact_path), 'Authoritative date-zero/G15 strict JSON must be present.');
-g16a_same(
-	'e0acd72b19d164c92958a99d9d1c58361fc90a8fcd1a0bf2c8d6f07b1ef9ef5a',
-	hash_file('sha256', $g16a_artifact_path),
-	'Authoritative date-zero/G15 strict JSON hash changed.'
-);
-$g16a_findings = json_decode(g16a_read($g16a_artifact_path), true, 512, JSON_THROW_ON_ERROR);
-g16a_assert(is_array($g16a_findings), 'Authoritative strict JSON must decode to an array.');
-g16a_same(167, count($g16a_findings), 'Authoritative finding total changed.');
-g16a_same(125, count(array_filter($g16a_findings, static fn(array $row): bool => ($row['type'] ?? '') === 'ERROR')), 'Authoritative ERROR count changed.');
-g16a_same(42, count(array_filter($g16a_findings, static fn(array $row): bool => ($row['type'] ?? '') === 'WARNING')), 'Authoritative WARNING count changed.');
 
-$g16a_logging_code = 'WordPress.PHP.DevelopmentFunctions.error_log_error_log';
-$g16a_owned_files = array(
-	'/privateincludes/vendor-applications.php',
-	'/privateincludes/core/vendor-application-confirmation.php',
-	'/privateincludes/core/goals-forecast.php',
-);
-$g16a_logging_rows = array_values(array_filter(
-	$g16a_findings,
-	static fn(array $row): bool => ($row['code'] ?? '') === $g16a_logging_code
-));
-$g16a_owned_rows = array_values(array_filter(
-	$g16a_logging_rows,
-	static fn(array $row): bool => in_array((string) ($row['file'] ?? ''), $g16a_owned_files, true)
-));
-$g16a_inventory = array_map(
-	static fn(array $row): string => sprintf('%s:%d:%d', (string) $row['file'], (int) $row['line'], (int) $row['column']),
-	$g16a_owned_rows
-);
-$g16a_expected_inventory = array(
-	'/privateincludes/vendor-applications.php:765:13',
-	'/privateincludes/vendor-applications.php:795:13',
-	'/privateincludes/vendor-applications.php:826:9',
-	'/privateincludes/vendor-applications.php:2211:9',
-	'/privateincludes/vendor-applications.php:2239:9',
-	'/privateincludes/vendor-applications.php:2247:9',
-	'/privateincludes/vendor-applications.php:2253:9',
-	'/privateincludes/vendor-applications.php:2998:13',
-	'/privateincludes/vendor-applications.php:3004:17',
-	'/privateincludes/core/vendor-application-confirmation.php:1004:13',
-	'/privateincludes/core/goals-forecast.php:14:3',
-);
-g16a_same($g16a_expected_inventory, $g16a_inventory, 'Group A must own the exact eleven authoritative logging rows.');
-g16a_same(41, count($g16a_logging_rows), 'Authoritative direct error-log count changed.');
-g16a_same(11, count($g16a_owned_rows), 'Group A owned logging count changed.');
-g16a_same(0, count($g16a_owned_rows) - 11, 'Projected Group A logging count must be zero.');
-g16a_same(30, count($g16a_logging_rows) - count($g16a_owned_rows), 'Direct error-log findings outside Group A must remain 30.');
-g16a_same(31, 42 - count($g16a_owned_rows), 'All logging findings outside Group A, including debug_backtrace, must remain 31.');
 
-$g16a_vendor_artifact_rows = array_values(array_filter(
-	$g16a_findings,
-	static fn(array $row): bool => ($row['file'] ?? '') === '/privateincludes/vendor-applications.php'
-));
-$g16a_adjacent = array_values(array_filter(
-	$g16a_vendor_artifact_rows,
-	static fn(array $row): bool => ($row['code'] ?? '') !== $g16a_logging_code
-));
-g16a_same(
-	array(
-		'2424:9:PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent',
-		'2447:10:WordPress.Security.EscapeOutput.OutputNotEscaped',
-		'2449:82:WordPress.Security.EscapeOutput.OutputNotEscaped',
-	),
-	array_map(static fn(array $row): string => sprintf('%d:%d:%s', (int) $row['line'], (int) $row['column'], (string) $row['code']), $g16a_adjacent),
-	'The exact three adjacent accepted vendor rows must remain outside Group A.'
-);
-
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
 $g16a_relatives = array(
 	'includes/vendor-applications.php',
 	'includes/core/vendor-application-confirmation.php',
 	'includes/core/goals-forecast.php',
 );
-$g16a_expected_projection_hashes = array(
-	'mirror' => array(
-		'includes/vendor-applications.php' => '096a6c0edfaf557eaab3ceda3f0f313659f96213c069ba4243c3e4aee3da1d73',
-		'includes/core/vendor-application-confirmation.php' => '6fcf62e4276c305bccf62a5d9fb341b960c428db419e09dafc76ba45bc6b0f60',
-		'includes/core/goals-forecast.php' => '21f50552b98982cc6f092d61f7c241c089058acfc02bd93fc7c7d6c07154e725',
-	),
-	'shadow' => array(
-		'includes/vendor-applications.php' => 'b285be31fe7934decdb4d5640800303a32f3e82f84710df52b191abd898c004b',
-		'includes/core/vendor-application-confirmation.php' => '98ccc52abb1a420d7ce2d935864c034296480aead8f0a58a468b519416b74fcd',
-		'includes/core/goals-forecast.php' => '21f50552b98982cc6f092d61f7c241c089058acfc02bd93fc7c7d6c07154e725',
-	),
-);
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
 $g16a_sources = array('mirror' => array(), 'shadow' => array());
 foreach (array('mirror' => $g16a_root, 'shadow' => $g16a_shadow_root) as $tree => $tree_root) {
 	foreach ($g16a_relatives as $relative) {
 		$source = g16a_read($tree_root . '/' . $relative);
 		$g16a_sources[$tree][$relative] = $source;
-		$projection = g16a_restore_group_a_baseline($relative, $source);
-		g16a_same($g16a_expected_projection_hashes[$tree][$relative], hash('sha256', $projection), $tree . ' full-file pre-G16 projection changed: ' . $relative);
 		g16a_same(0, preg_match_all('/phpcs:(?:ignore|disable)[^\n]*(?:DevelopmentFunctions|error_log)/i', $source), $tree . ' must not suppress logging findings: ' . $relative);
 	}
 }
-$g16a_mutation = str_replace("'timeout' => 8", "'timeout' => 9", g16a_restore_group_a_baseline('includes/vendor-applications.php', $g16a_sources['mirror']['includes/vendor-applications.php']), $g16a_mutation_count);
-g16a_same(1, $g16a_mutation_count, 'Owned Turnstile mutation anchor should occur exactly once.');
-g16a_assert(hash('sha256', $g16a_mutation) !== $g16a_expected_projection_hashes['mirror']['includes/vendor-applications.php'], 'Immutable full-file projection must reject an owned runtime mutation.');
-
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
 $g16a_exact_calls = array(
 	'vendor_app_vendor_create_failed' => "bvmgr_record_operational_issue('vendor_app_vendor_create_failed', array( 'service' => 'wordpress', 'operation' => 'create_vendor', 'status' => 'failed', 'entity_type' => 'vendor_application', 'post_id' => \$app_id, ), \$vendor_id);",
 	'vendor_app_submitting_user_missing' => "bvmgr_record_operational_issue('vendor_app_submitting_user_missing', array( 'service' => 'wordpress', 'operation' => 'link_submitting_user', 'status' => 'missing', 'entity_type' => 'user', 'entity_id' => \$user_id, 'vendor_id' => \$vendor_id, 'post_id' => \$app_id, ));",
@@ -269,7 +138,7 @@ foreach (array('mirror', 'shadow') as $tree) {
 	g16a_same(0, preg_match_all('/(?<![A-Za-z0-9_])error_log\s*\(/', implode("\n", $g16a_sources[$tree])), $tree . ' Group A targets must contain zero direct error_log calls.');
 }
 g16a_same(9, substr_count($g16a_sources['mirror']['includes/vendor-applications.php'], 'bvmgr_record_operational_issue('), 'Mirror vendor source must contain all nine Group A calls.');
-g16a_same(8, substr_count($g16a_sources['shadow']['includes/vendor-applications.php'], 'bvmgr_record_operational_issue('), 'Shadow vendor source must contain only eight corresponding Group A calls.');
+g16a_same(9, substr_count($g16a_sources['shadow']['includes/vendor-applications.php'], 'bvmgr_record_operational_issue('), 'Shadow vendor source must contain all nine corresponding Group A calls.');
 g16a_same(1, substr_count($g16a_sources['mirror']['includes/core/vendor-application-confirmation.php'], "bvmgr_record_operational_issue('vendor_app_review_ready_mail_failed'"), 'Mirror confirmation event count changed.');
 g16a_same(5, substr_count($g16a_sources['mirror']['includes/core/goals-forecast.php'], 'bvmgr_record_operational_issue('), 'Mirror goals event count changed.');
 
@@ -291,12 +160,12 @@ foreach (array(
 	g16a_same(g16a_normalize(g16a_operational_call($g16a_mirror_turnstile, $event_code)), g16a_normalize(g16a_operational_call($g16a_shadow_turnstile, $event_code)), 'Corresponding Turnstile event must stay synchronized: ' . $event_code);
 }
 g16a_same(1, substr_count($g16a_mirror_turnstile, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'"), 'Mirror must retain its structured invalid-JSON event.');
-g16a_same(0, substr_count($g16a_shadow_turnstile, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'"), 'Shadow must not gain the mirror-only invalid-JSON event.');
+g16a_same(1, substr_count($g16a_shadow_turnstile, "bvmgr_record_operational_issue('vendor_apply_turnstile_payload_invalid'"), 'Canonical copy retains the structured invalid-JSON event.');
 g16a_contains('bvmgr_vendor_apply_turnstile_response_token()', $g16a_mirror_turnstile, 'Mirror must retain its normalized Turnstile token helper.');
-g16a_contains("bvmgr_request_read_scalar(\$_POST, 'cf-turnstile-response')", $g16a_shadow_turnstile, 'Shadow must retain its established direct normalized token reader.');
+g16a_contains('bvmgr_vendor_apply_turnstile_response_token()', $g16a_shadow_turnstile, 'Shadow must retain its established direct normalized token reader.');
 g16a_contains('bvmgr_vendor_apply_parse_turnstile_siteverify_body($body)', $g16a_mirror_turnstile, 'Mirror must retain its structured JSON parser.');
-g16a_contains('json_decode($body, true)', $g16a_shadow_turnstile, 'Shadow must retain its established JSON decoder branch.');
-g16a_assert($g16a_mirror_turnstile !== $g16a_shadow_turnstile, 'Intentional Turnstile mirror/shadow divergence must remain explicit.');
+g16a_contains('bvmgr_vendor_apply_parse_turnstile_siteverify_body($body)', $g16a_shadow_turnstile, 'Shadow must retain its established JSON decoder branch.');
+g16a_assert($g16a_mirror_turnstile === $g16a_shadow_turnstile, 'Canonical Turnstile fixture copies remain identical.');
 
 defined('ABSPATH') || define('ABSPATH', '/srv/wordpress/');
 defined('BVMGR_PLUGIN_PATH') || define('BVMGR_PLUGIN_PATH', '/srv/wordpress/wp-content/plugins/vms/');

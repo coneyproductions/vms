@@ -195,9 +195,9 @@ g14v2_assert(strpos($reproducibleJson, $historicalZipHash) === false, 'Historica
 g14v2_assert(strpos($reproducibleJson, $historicalJsonHash) === false, 'Historical strict JSON identifier was confused with reproducible content identity.');
 g14v2_assert($manifestHash !== $historicalZipHash && $manifestHash !== $historicalJsonHash, 'Reproducible manifest hash must remain distinct from historical artifact identifiers.');
 
-$g15Source = (string) file_get_contents(__DIR__ . '/g15-ticketing-date-windows.php');
+$g15Source = (string) file_get_contents(__DIR__ . '/ticketing-date-window-contract.php');
 $fixtureSource = (string) file_get_contents($provenancePath);
-g14v2_assert(strpos($g15Source, 'wporg-dbzero-g14.qulnlt') === false, 'G15 still depends on the lost temporary G14 artifact path.');
+g14v2_assert(strpos($g15Source, 'wporg-dbzero-g14.qulnlt') === false, 'Current occurrence-clock regression must not depend on the lost historical scanner artifact.');
 g14v2_assert(strpos($fixtureSource, 'wporg-dbzero-g14.qulnlt') === false, 'Provenance fixture contains a temporary artifact dependency.');
 
 $tempRoot = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'bvmgr-g14v2-test-' . bin2hex(random_bytes(8));

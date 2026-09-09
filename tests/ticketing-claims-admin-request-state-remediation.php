@@ -227,7 +227,7 @@ require_once $claimsAdmin;
 
 $source = (string) file_get_contents($claimsAdmin);
 vms_test_assert($source !== '', 'Claims admin source should be readable.');
-vms_test_assert(strpos($source, "wp_create_nonce('vms_ticketing_claims_create_grant')") !== false, 'Claims admin should preserve the create-grant nonce action.');
+vms_test_assert(strpos($source, "wp_create_nonce('bvmgr_ticketing_claims_create_grant')") !== false, 'Claims admin should preserve the create-grant nonce action.');
 vms_test_assert(strpos($source, "'action' => 'vms_ticketing_claims_create_grant'") !== false, 'Claims admin should preserve the create-grant admin-post action name.');
 vms_test_assert(strpos($source, "'vms_claim_lookup'") !== false, 'Claims admin should preserve the claims lookup request key.');
 vms_test_assert(strpos($source, "'vms_claim_user_id'") !== false, 'Claims admin should preserve the selected-user request key.');

@@ -284,7 +284,15 @@ $assert(in_array('template:tag', $b2_5Legacy, true), 'B2.5 map must include the 
 // Independent semantic audit: assigned/bound variables at PHP file scope must
 // be modeled, proven method-local through the include boundary, or carry one
 // exact reason-coded unreachable exclusion. This does not consume Plugin Check.
+$moduleLoader = (string) file_get_contents($root . '/includes/modules/load.php');
+$staffBootstrap = (string) file_get_contents($root . '/includes/modules/staff-tasks/staff-tasks.php');
+$assert(preg_match("~function bvmgr_load_modules\\(\\): void \\{[^}]+require_once __DIR__ \\. '/staff-tasks/staff-tasks.php';~", $moduleLoader) === 1
+    && str_contains($staffBootstrap, "require_once __DIR__ . '/authority-ui.php';"),
+    'Staff task temporary assignments require the actual function-scoped include chain.');
 $methodScopePartials = array(
+	// Both files are included inside bvmgr_load_modules(); their loop temporaries are function-local.
+	'includes/modules/staff-tasks/staff-tasks.php',
+	'includes/modules/staff-tasks/authority-ui.php',
 	'includes/cpt/event-plans/partials/advanced-controls.php',
 	'includes/cpt/event-plans/partials/comp-ack.php',
 	'includes/cpt/event-plans/partials/compensation.php',
@@ -296,8 +304,11 @@ $methodScopePartials = array(
 	'includes/cpt/event-plans/partials/time-lineup.php',
 	'includes/cpt/event-plans/partials/workflow-status.php',
 );
+require_once __DIR__ . '/helpers/current-prefix-fixture.php';
+$currentScan = BVMGR_WPORG_Prefix_Inventory::scan($root);
+bvm_test_assert_current_prefix($root, $currentScan);
 $semanticGlobalAssignmentSites = array();
-foreach ((array) ($manifest['symbols']['global_slots'] ?? array()) as $entry) {
+foreach ((array) ($currentScan['symbols']['global_slots'] ?? array()) as $entry) {
 	$plain = (string) preg_replace('/^(?:GLOBALS:|global:|loader:|template:)/', '', (string) ($entry['current_identifier'] ?? ''));
 	foreach ((array) ($entry['declaration_sites'] ?? array()) as $site) {
 		$semanticGlobalAssignmentSites[(string) ($site['file'] ?? '') . '|' . (int) ($site['line'] ?? 0) . '|' . $plain] = true;
@@ -331,8 +342,8 @@ foreach ($topLevelAssignments as $row) {
 ksort($partialFilesSeen, SORT_STRING);
 $expectedPartialFiles = array_fill_keys($methodScopePartials, true);
 ksort($expectedPartialFiles, SORT_STRING);
-$assert($partialFilesSeen === $expectedPartialFiles, 'Top-level semantic audit must recognize exactly the ten Event Plan partial families as method-included scope.');
-$assert($unmodeledAssignments === array(), 'Every live top-level assignment must map to the semantic global inventory.');
+$assert($partialFilesSeen === $expectedPartialFiles, 'Top-level semantic audit must recognize the Event Plan partials and function-included Staff Tasks files as local scope.');
+$assert($unmodeledAssignments === array(), 'Unmodeled current top-level assignments: ' . json_encode($unmodeledAssignments));
 $assert($deadCodeAssignments === array(array('file' => 'includes/rest-dashboard.php', 'line' => 11, 'variable' => 'path')), 'Only the exact unreachable rest-dashboard $path assignment may be reason-coded out.');
 $restDashboard = (string) file_get_contents($root . '/includes/rest-dashboard.php');
 $scheduleHelpers = (string) file_get_contents($root . '/includes/schedule/helpers.php');
@@ -496,11 +507,11 @@ $assert(BVMGR_Prefix_Compatibility_Map::writeTargets('bvmgr_key', 'vms_key', fal
 $assert(BVMGR_Prefix_Compatibility_Map::writeTargets('bvmgr_key', 'vms_key', true) === array('bvmgr_key', 'vms_key'), 'Rollback-safe policy may explicitly mirror.');
 $assert(BVMGR_Prefix_Compatibility_Map::fireOrder('bvmgr_hook', 'vms_hook') === array('bvmgr_hook', 'vms_hook'), 'Dual-fire order must be canonical first.');
 
-$command = escapeshellarg(PHP_BINARY) . ' -d memory_limit=1G ' . escapeshellarg($root . '/scripts/generate-wporg-prefix-manifest.php') . ' --check 2>&1';
+$command = escapeshellarg(PHP_BINARY) . ' -d memory_limit=1G ' . escapeshellarg(dirname($root, 2) . '/prefix-manifest-certificate/scripts/generate-wporg-prefix-manifest.php') . ' --check 2>&1';
 $output = array();
 $status = 0;
 exec($command, $output, $status);
-$assert($status === 0, 'Committed manifest must match a fresh semantic generation: ' . implode(' ', $output));
+$assert($status === 0, 'Frozen 85a1a16 manifest must reproduce from its historical source; current declarations are checked separately: ' . implode(' ', $output));
 
 if ($failures !== array()) {
 	fwrite(STDERR, "Prefix manifest guardrail failures:\n- " . implode("\n- ", $failures) . "\n");

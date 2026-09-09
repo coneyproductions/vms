@@ -96,7 +96,7 @@ try {
 	foreach (array(
 		'id="vms-tax-status"',
 		'id="vms-tax-bypass-inline"',
-		'data-nonce="<?php echo esc_attr(wp_create_nonce(\'vms_tax_bypass_ajax\')); ?>"',
+		'data-nonce="<?php echo esc_attr(wp_create_nonce(\'bvmgr_tax_bypass_ajax\')); ?>"',
 		'data-default-until="<?php echo esc_attr($tax_bypass_default_until); ?>"',
 		'id="vms-tax-bypass-active-flag"',
 		'id="vms-tax-bypass-until"',
@@ -147,7 +147,7 @@ try {
 	$assert(strpos($primaryVendorAssetSource, 'window.VMS_EVENT_PLAN_PRIMARY_VENDOR') === false, 'Primary-vendor asset should not introduce a global configuration object.');
 	$assert(strpos($adminUiAssetsSource, 'wp_add_inline_script(') === false, 'Admin UI asset bootstrap should not reintroduce inline-script controller wiring.');
 	$assert(
-		preg_match("/wp_enqueue_script\\(\\s*'vms-event-plan-primary-vendor',\\s*BVMGR_PLUGIN_URL \\. 'assets\\/js\\/vms-event-plan-primary-vendor\\.js',\\s*array\\(\\),\\s*bvmgr_admin_ui_asset_version\\(\\),\\s*true\\s*\\);/s", $adminUiAssetsSource) === 1,
+		preg_match("/wp_enqueue_script\\(\\s*'bvmgr-event-plan-primary-vendor',\\s*BVMGR_PLUGIN_URL \\. 'assets\\/js\\/vms-event-plan-primary-vendor\\.js',\\s*array\\(\\),\\s*bvmgr_admin_ui_asset_version\\(\\),\\s*true\\s*\\);/s", $adminUiAssetsSource) === 1,
 		'Admin UI assets should register the primary-vendor asset under the dedicated handle with no dependencies.'
 	);
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Primary-vendor asset should remain restricted to post and post-new screens.');

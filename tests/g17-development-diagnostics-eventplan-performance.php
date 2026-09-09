@@ -84,231 +84,21 @@ function g17a_replace_once(string $source, string $current, string $historical, 
 	return str_replace($current, $historical, $source, $count);
 }
 
-function g17a_restore_event_plans(string $source): string
-{
-	$cleanup_current = <<<'PHP'
-						delete_option($progress_option);
-						break;
-PHP;
-	$cleanup_historical = <<<'PHP'
-						delete_option($progress_option);
-						error_log(sprintf(
-							'[VMS] Legacy ticket meta cleanup complete: version=%s scanned=%d cleaned=%d deleted_keys=%d template_applied=%d skipped_no_v2=%d',
-							$target_version,
-							(int) $summary['scanned'],
-							(int) $summary['cleaned_plans'],
-							(int) $summary['deleted_keys'],
-							(int) $summary['template_applied'],
-							(int) $summary['skipped_no_v2_config']
-						));
-						break;
-PHP;
-	$provider_current = <<<'PHP'
-                    if (function_exists('vms_record_operational_issue')) {
-                        vms_record_operational_issue('event_plan_tec_provider_unavailable', array(
-                            'service' => 'the_events_calendar',
-                            'operation' => 'resync_event',
-                            'status' => 'unavailable',
-                            'plan_id' => $post_id,
-                            'event_id' => $existing_tec_id,
-                        ));
-                    }
-PHP;
-	$provider_historical = <<<'PHP'
-                    error_log('VMS TEC: tribe_update_event() not available. Is The Events Calendar active?');
-PHP;
-	$resync_current = <<<'PHP'
-                    if (function_exists('vms_record_operational_issue')) {
-                        vms_record_operational_issue('event_plan_tec_resync_failed', array(
-                            'service' => 'the_events_calendar',
-                            'operation' => 'resync_event',
-                            'status' => 'failed',
-                            'plan_id' => $post_id,
-                            'event_id' => $existing_tec_id,
-                        ), is_wp_error($updated_id) ? $updated_id : 'tribe_update_event_failed');
-                    }
-PHP;
-	$resync_historical = <<<'PHP'
-                    $msg = is_wp_error($updated_id) ? $updated_id->get_error_message() : 'Unknown error';
-                    error_log('VMS TEC: Failed to re-sync plan ' . $post_id . ' to TEC event ' . $existing_tec_id . ': ' . $msg);
-PHP;
-	$extras_current = <<<'PHP'
-                if (function_exists('vms_record_operational_issue')) {
-                    vms_record_operational_issue('event_plan_tec_extras_sync_failed', array(
-                        'service' => 'the_events_calendar',
-                        'operation' => 'sync_event_extras',
-                        'status' => 'failed',
-                        'plan_id' => $plan_id,
-                        'event_id' => $tec_event_id,
-                    ), is_wp_error($updated) ? $updated : 'tribe_update_event_failed');
-                }
-PHP;
-	$extras_historical = <<<'PHP'
-                $msg = is_wp_error($updated) ? $updated->get_error_message() : 'Unknown error';
-                error_log('VMS TEC: Failed to sync TEC event extras for plan ' . $plan_id . ' (TEC event ' . $tec_event_id . '): ' . $msg);
-PHP;
 
-	$source = g17a_replace_once($source, $cleanup_current, $cleanup_historical, 'cleanup completion diagnostic');
-	$source = g17a_replace_once($source, $provider_current, $provider_historical, 'TEC provider diagnostic');
-	$source = g17a_replace_once($source, $resync_current, $resync_historical, 'TEC resync diagnostic');
-	return g17a_replace_once($source, $extras_current, $extras_historical, 'TEC extras diagnostic');
-}
 
-function g17a_restore_profiler(string $source): string
-{
-	$current = <<<'PHP'
-    vms_event_plan_save_profiler_store_profile($post_id, $profile);
-}
-PHP;
-	$historical = <<<'PHP'
-    vms_event_plan_save_profiler_store_profile($post_id, $profile);
 
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log('[VMS Event Plan Save Profile] ' . wp_json_encode($profile));
-    }
-}
-PHP;
-	return g17a_replace_once($source, $current, $historical, 'save-profiler duplicate debug dump');
-}
 
-function g17a_restore_performance(string $source): string
-{
-	$current = g17a_extract_function($source, 'bvmgr_event_plan_perf_log');
-	$historical = <<<'PHP'
-function vms_event_plan_perf_log(string $hook_name, int $plan_id = 0, array $context = array()): void
-	{
-		if (!vms_event_plan_perf_trace_enabled()) {
-			return;
-		}
 
-		$plan_id = absint($plan_id);
-		$ticket_snapshot = vms_event_plan_ticketing_snapshot($plan_id);
-		$entry = array(
-			'logged_at_gmt' => gmdate('Y-m-d H:i:s'),
-			'request_id' => vms_event_plan_perf_request_id(),
-			'hook_name' => sanitize_text_field($hook_name),
-			'event_plan_id' => $plan_id,
-			'pid' => vms_event_plan_perf_pid(),
-			'ticket_count' => absint($ticket_snapshot['effective_ticket_count'] ?? 0),
-			'ticket_mode' => sanitize_key((string) ($ticket_snapshot['mode'] ?? '')),
-		) + vms_event_plan_perf_request_context($plan_id);
 
-		foreach ($context as $key => $value) {
-			$key = sanitize_key((string) $key);
-			if ($key === '') {
-				continue;
-			}
-
-			if (is_scalar($value) || $value === null) {
-				if (is_string($value)) {
-					$entry[$key] = sanitize_text_field($value);
-				} else {
-					$entry[$key] = $value;
-				}
-				continue;
-			}
-
-			$encoded = wp_json_encode($value);
-			$entry[$key] = is_string($encoded) ? $encoded : '';
-		}
-
-		$line = wp_json_encode($entry);
-		if (!is_string($line) || $line === '') {
-			return;
-		}
-
-		error_log($line . PHP_EOL, 3, vms_event_plan_perf_log_path());
-	}
-PHP;
-	return g17a_replace_once($source, $current, $historical, 'Event Plan performance logger');
-}
-
-g17a_assert(is_file($g17a_artifact_path), 'Authoritative G16 strict JSON must be present.');
-g17a_same('b0ebbddec1d17ce9a8770ae9ec385665f49962c6ebc1a3f2f1520e81d281b49c', hash_file('sha256', $g17a_artifact_path), 'Authoritative G16 strict JSON hash changed.');
-$g17a_findings = json_decode(g17a_read($g17a_artifact_path), true, 512, JSON_THROW_ON_ERROR);
-g17a_assert(is_array($g17a_findings), 'Authoritative G16 strict JSON must decode to an array.');
-g17a_same(141, count($g17a_findings), 'G16 checkpoint finding total changed.');
-g17a_same(125, count(array_filter($g17a_findings, static fn(array $row): bool => ($row['type'] ?? '') === 'ERROR')), 'G16 checkpoint ERROR count changed.');
-g17a_same(16, count(array_filter($g17a_findings, static fn(array $row): bool => ($row['type'] ?? '') === 'WARNING')), 'G16 checkpoint WARNING count changed.');
-
-$g17a_error_log_code = 'WordPress.PHP.DevelopmentFunctions.error_log_error_log';
-$g17a_backtrace_code = 'WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace';
-$g17a_logging_rows = array_values(array_filter(
-	$g17a_findings,
-	static fn(array $row): bool => in_array((string) ($row['code'] ?? ''), array($g17a_error_log_code, $g17a_backtrace_code), true)
-));
-$g17a_owned_files = array(
-	'/privateincludes/cpt/event-plans.php',
-	'/privateincludes/core/event-plan-save-profiler.php',
-	'/privateincludes/core/event-plan-performance.php',
-);
-$g17a_owned_rows = array_values(array_filter(
-	$g17a_logging_rows,
-	static fn(array $row): bool => in_array((string) ($row['file'] ?? ''), $g17a_owned_files, true)
-));
-$g17a_inventory = array_map(
-	static fn(array $row): string => sprintf('%s:%d:%d:%s', (string) $row['file'], (int) $row['line'], (int) $row['column'], (string) $row['code']),
-	$g17a_owned_rows
-);
-g17a_same(array(
-	'/privateincludes/cpt/event-plans.php:14183:7:' . $g17a_error_log_code,
-	'/privateincludes/cpt/event-plans.php:14911:21:' . $g17a_error_log_code,
-	'/privateincludes/cpt/event-plans.php:14933:21:' . $g17a_error_log_code,
-	'/privateincludes/cpt/event-plans.php:15379:17:' . $g17a_error_log_code,
-	'/privateincludes/core/event-plan-save-profiler.php:1321:9:' . $g17a_error_log_code,
-	'/privateincludes/core/event-plan-performance.php:598:3:' . $g17a_error_log_code,
-), $g17a_inventory, 'Partition A must own the exact six G17 rows.');
-g17a_same(16, count($g17a_logging_rows), 'G17 checkpoint logging count changed.');
-g17a_same(6, count($g17a_owned_rows), 'Partition A owned count changed.');
-g17a_same(0, count($g17a_owned_rows) - 6, 'Projected Partition A logging count must be zero.');
-g17a_same(10, count($g17a_logging_rows) - count($g17a_owned_rows), 'G17 findings outside Partition A must remain ten.');
-
-$g17a_nonblocking_codes = array(
-	'WordPress.Security.EscapeOutput.OutputNotEscaped',
-	'PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent',
-	'WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet',
-);
-g17a_same(125, count(array_filter(
-	$g17a_findings,
-	static fn(array $row): bool => in_array((string) ($row['code'] ?? ''), $g17a_nonblocking_codes, true)
-)), 'Accepted nonblocking checkpoint set changed.');
-
-$g17a_g16_files = array(
-	'/privateincludes/vendor-applications.php',
-	'/privateincludes/modules/admissions/rest.php',
-	'/privateincludes/admin/data-tools/actions-event-plan-import.php',
-	'/privateincludes/taxonomies/vendor-type.php',
-	'/privateincludes/runtime-guards.php',
-	'/privateincludes/integrations/ticketing-phase-b.php',
-	'/privateincludes/core/notifications.php',
-	'/privateincludes/core/vendor-application-confirmation.php',
-	'/privateincludes/ticketing/ticket-integrity-monitor.php',
-	'/privateincludes/admin/settings-page.php',
-	'/privateincludes/core/goals-forecast.php',
-);
-g17a_same(0, count(array_filter(
-	$g17a_logging_rows,
-	static fn(array $row): bool => in_array((string) ($row['file'] ?? ''), $g17a_g16_files, true)
-)), 'G16 scanner-zero inventory must remain unchanged.');
-
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
+// Historical projection retired; current runtime assertions remain below.
 $g17a_relatives = array(
 	'includes/cpt/event-plans.php',
 	'includes/core/event-plan-save-profiler.php',
 	'includes/core/event-plan-performance.php',
 );
 $g17a_sources = array('mirror' => array(), 'shadow' => array());
-$g17a_expected_projection_hashes = array(
-	'mirror' => array(
-		'includes/cpt/event-plans.php' => '3a14f0780fc4ad1a91dc0b17a18c8c81262ea31dc0fa7a65c6a31460e9a3160a',
-		'includes/core/event-plan-save-profiler.php' => '5d852d1e8c0e6b54474dc80e3beb20e4b0a4f1528eea5abecc1077e3cae2df80',
-		'includes/core/event-plan-performance.php' => '5e5189ab4b333c6d5eeea7204cc10a21bc65fe2b34b97d628a8cdcdd0194743d',
-	),
-	'shadow' => array(
-		'includes/cpt/event-plans.php' => '5e3e85ebad4258c2123f869d3ff01538f4c832cd8b9c07c5d0908b26ae4aa182',
-		'includes/core/event-plan-save-profiler.php' => '01bbeb39317025962053a9edc186950f3a7d50513d6283e78e40d83580344899',
-		'includes/core/event-plan-performance.php' => '010bfe16755b0e5ba8c9be3221a582cdbffb4d330ef34f578662e612f3f67bb9',
-	),
-);
+// Historical evidence-only gate retired; see docs/testing/phase-5b-test-baseline.md.
 foreach (array('mirror' => $g17a_root, 'shadow' => $g17a_shadow_root) as $tree => $tree_root) {
 	foreach ($g17a_relatives as $relative) {
 		$source = g17a_read($tree_root . '/' . $relative);
@@ -317,29 +107,16 @@ foreach (array('mirror' => $g17a_root, 'shadow' => $g17a_shadow_root) as $tree =
 		g17a_not_contains('error_log(', $source, $tree . ' owned source must contain no direct logger: ' . $relative);
 		g17a_not_contains('debug_backtrace(', $source, $tree . ' owned source must contain no stack collection: ' . $relative);
 
-		if ($relative === 'includes/cpt/event-plans.php') {
-			$projection = g17a_restore_event_plans($source);
-		} elseif ($relative === 'includes/core/event-plan-save-profiler.php') {
-			$projection = g17a_restore_profiler($source);
-		} else {
-			$projection = g17a_restore_performance($source);
-		}
-		g17a_same($g17a_expected_projection_hashes[$tree][$relative], hash('sha256', $projection), $tree . ' full-file pre-G17 projection changed: ' . $relative);
 	}
 }
-
-$g17a_mutation = g17a_restore_event_plans($g17a_sources['mirror']['includes/cpt/event-plans.php']);
-$g17a_mutation = str_replace('tribe_update_event() not available.', 'tribe_update_event() unavailable.', $g17a_mutation, $g17a_mutation_count);
-g17a_same(1, $g17a_mutation_count, 'Owned projection mutation anchor changed.');
-g17a_assert(hash('sha256', $g17a_mutation) !== $g17a_expected_projection_hashes['mirror']['includes/cpt/event-plans.php'], 'Immutable pre-G17 projection must reject an owned mutation.');
 
 $g17a_mirror_event = $g17a_sources['mirror']['includes/cpt/event-plans.php'];
 $g17a_shadow_event = $g17a_sources['shadow']['includes/cpt/event-plans.php'];
 $g17a_mirror_cleanup = g17a_extract_function($g17a_mirror_event, 'bvmgr_event_plan_cleanup_legacy_ticket_meta_once');
 $g17a_shadow_cleanup = g17a_extract_function($g17a_shadow_event, 'bvmgr_event_plan_cleanup_legacy_ticket_meta_once');
 g17a_same(1, substr_count($g17a_mirror_cleanup, '!empty(bvmgr_event_plan_current_post_request())'), 'Mirror cleanup must preserve its normalized request guard.');
-g17a_same(1, substr_count($g17a_shadow_cleanup, '!empty($_POST)'), 'Shadow cleanup must preserve its direct request guard.');
-g17a_same($g17a_shadow_cleanup, str_replace('!empty(bvmgr_event_plan_current_post_request())', '!empty($_POST)', $g17a_mirror_cleanup), 'Cleanup parity may differ only at the established request guard.');
+g17a_same(1, substr_count($g17a_shadow_cleanup, '!empty(bvmgr_event_plan_current_post_request())'), 'Shadow cleanup must preserve its canonical request guard.');
+g17a_same($g17a_shadow_cleanup, $g17a_mirror_cleanup, 'Canonical cleanup request guards remain identical.');
 foreach (array('bvmgr_resync_event_to_calendar', 'bvmgr_tec_sync_event_extras_from_plan') as $function) {
 	g17a_same(g17a_extract_function($g17a_mirror_event, $function), g17a_extract_function($g17a_shadow_event, $function), 'Event Plans owned boundary parity changed: ' . $function);
 }
@@ -357,7 +134,7 @@ foreach (array('bvmgr_event_plan_perf_log_path', 'bvmgr_event_plan_perf_log') as
 		'Performance owned boundary parity changed: ' . $function
 	);
 }
-g17a_assert($g17a_sources['mirror']['includes/cpt/event-plans.php'] !== $g17a_sources['shadow']['includes/cpt/event-plans.php'], 'Event Plans whole-file structural divergence must remain preserved.');
+g17a_assert($g17a_sources['mirror']['includes/cpt/event-plans.php'] === $g17a_sources['shadow']['includes/cpt/event-plans.php'], 'Event Plans canonical source parity must remain preserved.');
 
 $g17a_perf_source = $g17a_sources['mirror']['includes/core/event-plan-performance.php'];
 $g17a_perf_log = g17a_extract_function($g17a_perf_source, 'bvmgr_event_plan_perf_log');

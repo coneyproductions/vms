@@ -7,6 +7,7 @@ parser.add_argument('--evidence',required=True,type=Path)
 parser.add_argument('--php',required=True)
 parser.add_argument('--label',required=True)
 parser.add_argument('--reverse',action='store_true')
+parser.add_argument('--frozen-zip',type=Path,help='Explicit read-only qualified WordPress.org ZIP for integrity test')
 parser.add_argument('--timezone',default='UTC')
 parser.add_argument('tests',nargs='*')
 args=parser.parse_args()
@@ -19,24 +20,28 @@ dest=E/label;dest.mkdir(parents=True,exist_ok=False)
 profile=dest/'containment.sb'
 profile.write_text('(version 1)\n(allow default)\n(deny network*)\n(deny file-write*)\n(allow file-write* (subpath '+json.dumps(str(W))+') (subpath '+json.dumps(str(dest))+') (literal "/dev/null"))\n(deny file-write* (subpath '+json.dumps(str(R/'.git'))+'))\n')
 results=[]; selected=set(args.tests)
+routes=json.loads((R/'tests/fixtures/test-debt-routes.json').read_text())
 unknown=selected-{p.stem for p in (R/'tests').glob('*.php')}
 if unknown:raise SystemExit('Unknown tests: '+', '.join(sorted(unknown)))
 for test in sorted((R/'tests').glob('*.php'),reverse=args.reverse):
  if selected and test.stem not in selected:continue
- s=test.read_text(); reason=None
- if test.name=='bootstrap-wordpress.php':reason='Support library, not executable test.'
- elif test.name in ['public-release-build-pipeline.php','public-release-reproducibility.php','release-compatibility-harness.php','g14-g15-provenance-v2.php','check-package-integrity.php']:reason='Release artifact/packaging qualification; excluded from runtime baseline under no-packaging scope.'
- elif '/helpers/current-wordpress-fixture.php' in s or test.name in ['private-storage-integration.php','cancellation-notification-staff-email-resolver.php'] or 'vms_tests_require_wordpress(' in s or ("require __DIR__ . '/staffing-lifecycle/" in s) or ('/staffing-lifecycle/bootstrap.php' in s):reason='Real WordPress/disposable database suite; scheduled separately.'
- elif test.name in ['calendar-feeds-normal-local-acceptance.php','data-tools-normal-local-acceptance.php']:reason='Companion installed-runtime acceptance, scheduled separately from core standalone tests.'
+ reason=routes.get(test.name)
  if reason:results.append({'test':test.name,'status':'NOT_IN_STANDALONE_SET','reason':reason});continue
  temp=dest/('tmp-'+test.stem);temp.mkdir(exist_ok=False)
  env={k:v for k,v in os.environ.items() if not k.startswith(('VMS_TEST_','BVM_','WP_'))}
  env.update(TMPDIR=str(temp),TMP=str(temp),TEMP=str(temp),GIT_OPTIONAL_LOCKS='0',PATH=str(Path(PHP).parent)+os.pathsep+os.environ['PATH'])
+ if test.name == 'financial-investor-semantics.php':
+  env['BVM_FINANCIAL_INVESTOR_CANDIDATE']=str(W/'investor-financial-candidate.php')
  cmd=['/usr/bin/sandbox-exec','-f',str(profile),PHP,'-d','memory_limit=512M','-d','date.timezone='+args.timezone,str(test)]
+ if test.name == 'check-package-integrity.php':
+  import hashlib
+  if not args.frozen_zip or not args.frozen_zip.is_file(): raise SystemExit('--frozen-zip is required for package integrity')
+  if hashlib.sha256(args.frozen_zip.read_bytes()).hexdigest()!='2c2a488395d32d419741a99a1211c18fe649f73e567c1cff8de749d44d08c8e3': raise SystemExit('Qualified ZIP hash mismatch')
+  cmd.append(str(args.frozen_zip.resolve()))
  start=time.monotonic()
  p=subprocess.Popen(cmd,cwd=R,env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True)
  try:
-  out,err=p.communicate(timeout=90);rc=p.returncode
+  out,err=p.communicate(timeout=300 if test.stem.startswith(('public-release-', 'release-compatibility-', 'g14-g15-')) else 90);rc=p.returncode
  except subprocess.TimeoutExpired:
   os.killpg(p.pid,signal.SIGKILL);out,err=p.communicate();rc=124;err+=b'\nTIMEOUT: owned process group terminated'
  # Descendants must not survive a standalone test, even if their parent exits successfully.

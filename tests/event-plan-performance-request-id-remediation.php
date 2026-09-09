@@ -253,9 +253,9 @@ vms_test_event_plan_perf_assert_contains('bvmgr_request_current_uri()', $request
 vms_test_event_plan_perf_assert_contains("substr(hash('sha256', implode('|', \$seed)), 0, 12)", $requestIdSource, 'Request ID function should preserve the hash and truncation algorithm.');
 vms_test_event_plan_perf_assert_not_contains("\$_SERVER['REQUEST_TIME_FLOAT']", $requestIdSource, 'Request ID function should not retain a direct request-time server read.');
 vms_test_event_plan_perf_assert_not_contains("isset(\$_SERVER['REQUEST_TIME_FLOAT'])", $mirrorSource, 'Mirror Event Plan performance source should no longer contain a direct request-time server read.');
-vms_test_event_plan_perf_assert_contains("isset(\$_SERVER['REQUEST_TIME_FLOAT'])", $liveSource, 'Untouched live Event Plan performance source should retain its pre-B3 direct request-time seed during isolated migration.');
+vms_test_event_plan_perf_assert_not_contains("isset(\$_SERVER['REQUEST_TIME_FLOAT'])", $liveSource, 'Canonical copy rejects direct request-time reads.');
 vms_test_event_plan_perf_assert(substr_count($mirrorSource, "bvmgr_request_server_value('REQUEST_TIME_FLOAT')") === 1, 'Mirror Event Plan performance source should contain one canonical helper-backed request-time seed.');
-vms_test_event_plan_perf_assert(substr_count($liveSource, "vms_request_server_value('REQUEST_TIME_FLOAT')") === 0, 'Untouched live Event Plan performance source should not be rewritten during isolated B3.');
+vms_test_event_plan_perf_assert(substr_count($liveSource, "bvmgr_request_server_value('REQUEST_TIME_FLOAT')") === 1, 'Canonical copy uses the normalized request-time helper.');
 
 vms_test_event_plan_perf_assert(substr_count($mirrorSource, "'request_id' => bvmgr_event_plan_perf_request_id()") === 2, 'Event Plan performance should preserve the two downstream request_id payload assignments.');
 vms_test_event_plan_perf_assert_contains("'request_id' => bvmgr_event_plan_perf_request_id(),", $mirrorSource, 'Trace logging should still receive the derived request ID.');

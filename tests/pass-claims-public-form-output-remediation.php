@@ -367,6 +367,7 @@ if (!function_exists('wp_nonce_field')) {
 	}
 }
 
+function bvmgr_nonce_action_for_value($nonce, $action) { return $action; }
 if (!function_exists('wp_verify_nonce')) {
 	function wp_verify_nonce($nonce, $action = -1): bool
 	{
@@ -624,7 +625,7 @@ $expectedFormHtml = static function (array $batch, array $eligibleEvents, array 
 	}
 
 	$html .= '<form method="post">';
-	$html .= '<input type="hidden" name="_vms_pass_claim_nonce" value="nonce">';
+	$html .= '<input type="hidden" name="_bvmgr_pass_claim_nonce" value="nonce">';
 	$html .= '<div class="vms-pass-grid">';
 	$html .= '<label>First Name<input type="text" name="first_name" value="' . esc_attr((string) ($posted['first_name'] ?? '')) . '" required></label>';
 	$html .= '<label>Last Name<input type="text" name="last_name" value="' . esc_attr((string) ($posted['last_name'] ?? '')) . '" required></label>';
@@ -691,16 +692,16 @@ $assert(bvmgr_pass_claims_get_request_token() === 'uri token', 'Pass Claims requ
 
 $assert(strpos($passClaimsSource, '$_SERVER') === false, 'Mirror Pass Claims runtime should not retain direct $_SERVER reads.');
 $assert(strpos($livePassClaimsSource, '$_SERVER') === false, 'Live Pass Claims runtime should not retain direct $_SERVER reads.');
-$assert(substr_count($passClaimsSource, 'vms_request_current_uri()') === 1, 'Mirror Pass Claims runtime should use the shared current-URI helper for claim-token routing.');
-$assert(substr_count($livePassClaimsSource, 'vms_request_current_uri()') === 2, 'Live Pass Claims runtime should use the shared current-URI helper for claim and invite routing.');
-$assert(substr_count($passClaimsSource, 'vms_request_remote_addr()') === 2, 'Mirror Pass Claims runtime should use the shared remote-address helper at each claim boundary.');
-$assert(substr_count($livePassClaimsSource, 'vms_request_remote_addr()') === 2, 'Live Pass Claims runtime should use the shared remote-address helper at each claim boundary.');
-$assert(substr_count($passClaimsSource, 'vms_request_user_agent()') === 1, 'Mirror Pass Claims runtime should use the shared user-agent helper during claim persistence.');
-$assert(substr_count($livePassClaimsSource, 'vms_request_user_agent()') === 1, 'Live Pass Claims runtime should use the shared user-agent helper during claim persistence.');
-$assert(substr_count($passClaimsSource, "vms_request_method() === 'post'") === 1, 'Mirror Pass Claims runtime should preserve the POST-only public submit gate through the shared method helper.');
-$assert(substr_count($livePassClaimsSource, "vms_request_method() === 'post'") === 1, 'Live Pass Claims runtime should preserve the POST-only public submit gate through the shared method helper.');
-$assert(strpos($passClaimsSource, "vms_pass_claims_rate_limit_hit(\$ip, (string) (\$token_row['token_public_key'] ?? ''))") !== false, 'Mirror Pass Claims runtime should preserve the rate-limit public-key handoff.');
-$assert(strpos($livePassClaimsSource, "vms_pass_claims_rate_limit_hit(\$ip, (string) (\$token_row['token_public_key'] ?? ''))") !== false, 'Live Pass Claims runtime should preserve the rate-limit public-key handoff.');
+$assert(substr_count($passClaimsSource, 'bvmgr_request_current_uri()') === 1, 'Mirror Pass Claims runtime should use the shared current-URI helper for claim-token routing.');
+$assert(substr_count($livePassClaimsSource, 'bvmgr_request_current_uri()') === 1, 'Live Pass Claims runtime should use the shared current-URI helper for claim and invite routing.');
+$assert(substr_count($passClaimsSource, 'bvmgr_request_remote_addr()') === 2, 'Mirror Pass Claims runtime should use the shared remote-address helper at each claim boundary.');
+$assert(substr_count($livePassClaimsSource, 'bvmgr_request_remote_addr()') === 2, 'Live Pass Claims runtime should use the shared remote-address helper at each claim boundary.');
+$assert(substr_count($passClaimsSource, 'bvmgr_request_user_agent()') === 1, 'Mirror Pass Claims runtime should use the shared user-agent helper during claim persistence.');
+$assert(substr_count($livePassClaimsSource, 'bvmgr_request_user_agent()') === 1, 'Live Pass Claims runtime should use the shared user-agent helper during claim persistence.');
+$assert(substr_count($passClaimsSource, "bvmgr_request_method() === 'post'") === 1, 'Mirror Pass Claims runtime should preserve the POST-only public submit gate through the shared method helper.');
+$assert(substr_count($livePassClaimsSource, "bvmgr_request_method() === 'post'") === 1, 'Live Pass Claims runtime should preserve the POST-only public submit gate through the shared method helper.');
+$assert(strpos($passClaimsSource, "bvmgr_pass_claims_rate_limit_hit(\$ip, (string) (\$token_row['token_public_key'] ?? ''))") !== false, 'Mirror Pass Claims runtime should preserve the rate-limit public-key handoff.');
+$assert(strpos($livePassClaimsSource, "bvmgr_pass_claims_rate_limit_hit(\$ip, (string) (\$token_row['token_public_key'] ?? ''))") !== false, 'Live Pass Claims runtime should preserve the rate-limit public-key handoff.');
 
 $resetRuntime();
 $GLOBALS['vms_test_is_admin'] = true;
@@ -712,32 +713,32 @@ $resetRuntime();
 bvmgr_pass_claims_template_router();
 $assert($GLOBALS['vms_test_shell_calls'] === array(), 'Pass Claims template router should stay silent when no claim token is present.');
 
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_render_public_shell(string $headline, callable $render_content): void') !== false, 'Pass Claims public shell should accept a renderer callback.');
 $assert(strpos($passClaimsSource, "echo '<main id=\"primary\" class=\"site-main vms-pass-public-page\" role=\"main\">';") !== false, 'Pass Claims public shell should preserve the outer main wrapper.');
 $assert(strpos($passClaimsSource, "echo '<div class=\"vms-pass-wrap\"><div class=\"vms-pass-card\">';") !== false, 'Pass Claims public shell should preserve the nested pass wrappers.');
 $assert(strpos($passClaimsSource, '$render_content();') !== false, 'Pass Claims public shell should invoke the renderer callback at the content insertion point.');
 $assert(strpos($passClaimsSource, 'echo $content_html;') === false, 'Pass Claims public shell should remove the raw content_html sink.');
 $assert(strpos($adminShellSource, 'echo $captured_notices_html;') !== false && strpos($adminShellSource, 'echo $content_html;') !== false, 'Administrator shell raw captured and content sinks should remain unchanged.');
 
-$formHelperStart = strpos($passClaimsSource, 'function vms_pass_claims_public_form_html(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): string');
-$formHelperEnd = strpos($passClaimsSource, "if (!function_exists('vms_pass_claims_render_public_shell'))");
+$formHelperStart = strpos($passClaimsSource, 'function bvmgr_pass_claims_public_form_html(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): string');
+$formHelperEnd = strpos($passClaimsSource, "if (!function_exists('bvmgr_pass_claims_render_public_shell'))");
 $assert($formHelperStart !== false && $formHelperEnd !== false && $formHelperEnd > $formHelperStart, 'Pass Claims public form helper block should be locatable.');
 $formHelperSource = substr($passClaimsSource, (int) $formHelperStart, (int) $formHelperEnd - (int) $formHelperStart);
 
-$assert(strpos($formHelperSource, 'function vms_pass_claims_public_form_html(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): string') !== false, 'Pass Claims should define a dedicated public form HTML helper.');
-$assert(strpos($formHelperSource, 'function vms_pass_claims_render_public_form(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): void') !== false, 'Pass Claims should define a dedicated public form renderer.');
+$assert(strpos($formHelperSource, 'function bvmgr_pass_claims_public_form_html(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): string') !== false, 'Pass Claims should define a dedicated public form HTML helper.');
+$assert(strpos($formHelperSource, 'function bvmgr_pass_claims_render_public_form(array $batch, array $eligible_events, array $posted, string $error, int $max_party_size): void') !== false, 'Pass Claims should define a dedicated public form renderer.');
 $assert(strpos($formHelperSource, 'wp_kses(') === false, 'Pass Claims public form family should rely on direct escaping rather than a local KSES contract.');
 $assert(strpos($formHelperSource, 'wp_kses_post(') === false, 'Pass Claims public form family should not use wp_kses_post().');
 $assert(!preg_match('~wp_kses_allowed_html\s*\(\s*[\'"]post[\'"]\s*\)~', $formHelperSource), 'Pass Claims public form family should not use the broad post allowlist.');
 $assert(strpos($formHelperSource, '$wpdb') === false && strpos($formHelperSource, 'get_post(') === false && strpos($formHelperSource, 'get_posts(') === false && strpos($formHelperSource, 'get_transient(') === false && strpos($formHelperSource, 'set_transient(') === false && strpos($formHelperSource, 'delete_transient(') === false, 'Pass Claims public form helper should not add provider or storage operations.');
-$assert(strpos($formHelperSource, 'wp_verify_nonce(') === false && strpos($formHelperSource, 'vms_pass_claims_create_claim(') === false && strpos($formHelperSource, '$_POST') === false, 'Pass Claims public form helper should stay outside nonce verification, mutation, and direct request parsing.');
-$assert(strpos($formHelperSource, "wp_nonce_field('vms_pass_claim_submit', '_vms_pass_claim_nonce', true, false)") !== false, 'Pass Claims public form helper should preserve the exact nonce helper call.');
+$assert(strpos($formHelperSource, 'wp_verify_nonce(') === false && strpos($formHelperSource, 'bvmgr_pass_claims_create_claim(') === false && strpos($formHelperSource, '$_POST') === false, 'Pass Claims public form helper should stay outside nonce verification, mutation, and direct request parsing.');
+$assert(strpos($formHelperSource, "wp_nonce_field('bvmgr_pass_claim_submit', '_bvmgr_pass_claim_nonce', true, false)") !== false, 'Pass Claims public form helper should preserve the exact nonce helper call.');
 
-$assert(strpos($passClaimsSource, 'vms_pass_claims_render_public_form($batch, $eligible_events, $posted, $error, $max_party_size);') !== false, 'Pass Claims should route the interactive form family through the dedicated public form renderer.');
-$assert(strpos($passClaimsSource, "vms_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), \$html);") === false, 'Pass Claims should remove the old raw form html handoff.');
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_public_status_allowed_html(): array') !== false, 'The accepted Pass Claims public status family should remain defined.');
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_public_claimed_card_html(int $entry_id): string') !== false, 'The accepted Pass Claims already-claimed family should remain defined.');
-$assert(strpos($passClaimsSource, 'function vms_pass_claims_public_success_confirmation_html(array $success, string $posted_email): string') !== false, 'The accepted Pass Claims success family should remain defined.');
+$assert(strpos($passClaimsSource, 'bvmgr_pass_claims_render_public_form($batch, $eligible_events, $posted, $error, $max_party_size);') !== false, 'Pass Claims should route the interactive form family through the dedicated public form renderer.');
+$assert(strpos($passClaimsSource, "bvmgr_pass_claims_render_public_shell(__('Claim Your Pass', 'backstage-venue-manager'), \$html);") === false, 'Pass Claims should remove the old raw form html handoff.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_public_status_allowed_html(): array') !== false, 'The accepted Pass Claims public status family should remain defined.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_public_claimed_card_html(int $entry_id): string') !== false, 'The accepted Pass Claims already-claimed family should remain defined.');
+$assert(strpos($passClaimsSource, 'function bvmgr_pass_claims_public_success_confirmation_html(array $success, string $posted_email): string') !== false, 'The accepted Pass Claims success family should remain defined.');
 
 $assert(strpos($publicJsSource, '[data-vms-pass-party-decrease]') !== false, 'Pass Claims public JS should preserve the decrease-button selector.');
 $assert(strpos($publicJsSource, '[data-vms-pass-party-increase]') !== false, 'Pass Claims public JS should preserve the increase-button selector.');
@@ -767,7 +768,7 @@ foreach (array('<a', 'href=', 'action=', 'id=', 'style=', 'onclick=', 'onchange=
 }
 $assert(strpos($expectedInitialForm, 'data-vms-pass-party-decrease') !== false && strpos($expectedInitialForm, 'data-vms-pass-party-increase') !== false && strpos($expectedInitialForm, 'data-vms-pass-party-size') !== false, 'Pass Claims public form contract should preserve the existing JS data selectors.');
 $assert(strpos($expectedInitialForm, 'aria-label="Decrease party size"') !== false && strpos($expectedInitialForm, 'aria-label="Increase party size"') !== false, 'Pass Claims public form contract should preserve the existing ARIA button labels.');
-$assert(substr_count($expectedInitialForm, '<form method="post">') === 1 && substr_count($expectedInitialForm, 'name="_vms_pass_claim_nonce"') === 1 && substr_count($expectedInitialForm, 'name="vms_pass_claim_submit" value="1"') === 1, 'Pass Claims public form contract should preserve one form, one nonce field, and one submit control.');
+$assert(substr_count($expectedInitialForm, '<form method="post">') === 1 && substr_count($expectedInitialForm, 'name="_bvmgr_pass_claim_nonce"') === 1 && substr_count($expectedInitialForm, 'name="vms_pass_claim_submit" value="1"') === 1, 'Pass Claims public form contract should preserve one form, one nonce field, and one submit control.');
 $assert(strpos($expectedInitialForm, '&lt;i&gt;Launch Event&lt;/i&gt; (September 12, 2026) - Main &lt;script&gt;Hall&lt;/script&gt;') !== false, 'Pass Claims public form contract should keep HTML-like event labels inert.');
 $assert(strpos($expectedInitialForm, 'checked="checked"') === false && strpos($expectedInitialForm, 'selected="selected"') === false, 'Pass Claims initial GET form should start with no selected event and no checked opt-in state.');
 $assert(strpos($expectedInitialForm, 'value="1"') !== false, 'Pass Claims initial GET form should preserve the default party-size value.');
@@ -801,7 +802,7 @@ $GLOBALS['vms_test_nonce_return'] = false;
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = array(
 	'vms_pass_claim_submit' => '1',
-	'_vms_pass_claim_nonce' => 'bad-nonce',
+	'_bvmgr_pass_claim_nonce' => 'bad-nonce',
 	'first_name' => '<b>Ada</b>',
 	'last_name' => '<i>Lovelace</i>',
 	'phone' => '555-0100',
@@ -815,7 +816,7 @@ $invalidNonceRender = $captureShellRender(static function (): void {
 });
 $assert($invalidNonceRender['headline'] === 'Claim Your Pass', 'Invalid nonce Pass Claims submission should remain in the interactive form family.');
 $assert($invalidNonceRender['content_html'] === $invalidNonceExpected, 'Invalid nonce Pass Claims submission should preserve the exact error form markup without reposted values.');
-$assert($GLOBALS['vms_test_nonce_calls'] === 1 && $GLOBALS['vms_test_nonce_args'] === array(array('bad-nonce', 'vms_pass_claim_submit')), 'Invalid nonce Pass Claims submission should preserve the exact nonce validation path.');
+$assert($GLOBALS['vms_test_nonce_calls'] === 1 && $GLOBALS['vms_test_nonce_args'] === array(array('bad-nonce', 'bvmgr_pass_claim_submit')), 'Invalid nonce Pass Claims submission should preserve the exact nonce validation path.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_eligible_calls'] === 1 && $GLOBALS['vms_test_create_claim_calls'] === 0 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0, 'Invalid nonce Pass Claims submission should stop before claim mutation while preserving the pre-form reads.');
 
 $invalidEventPosted = array(
@@ -835,7 +836,7 @@ $GLOBALS['vms_test_eligible_return'] = $events;
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = array(
 	'vms_pass_claim_submit' => '1',
-	'_vms_pass_claim_nonce' => 'ok-nonce',
+	'_bvmgr_pass_claim_nonce' => 'ok-nonce',
 	'first_name' => 'Ada "Quoted" <b>Tag</b>',
 	'last_name' => 'Lovelace & Co.',
 	'phone' => '555-0100 "quoted"',
@@ -869,7 +870,7 @@ $GLOBALS['vms_test_eligible_return'] = $events;
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = array(
 	'vms_pass_claim_submit' => '1',
-	'_vms_pass_claim_nonce' => 'ok-nonce',
+	'_bvmgr_pass_claim_nonce' => 'ok-nonce',
 	'first_name' => 'Ada',
 	'last_name' => 'Lovelace',
 	'phone' => '555-0100',
@@ -903,7 +904,7 @@ $GLOBALS['vms_test_create_claim_return'] = new WP_Error('invalid_claim_input', '
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = array(
 	'vms_pass_claim_submit' => '1',
-	'_vms_pass_claim_nonce' => 'ok-nonce',
+	'_bvmgr_pass_claim_nonce' => 'ok-nonce',
 	'first_name' => 'Ada "Quoted"',
 	'last_name' => 'Lovelace <em>Team</em>',
 	'phone' => '555-0100 "quoted"',
@@ -970,7 +971,7 @@ $GLOBALS['vms_test_create_claim_return'] = array(
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = array(
 	'vms_pass_claim_submit' => '1',
-	'_vms_pass_claim_nonce' => 'ok-nonce',
+	'_bvmgr_pass_claim_nonce' => 'ok-nonce',
 	'first_name' => 'Ada',
 	'last_name' => 'Lovelace',
 	'phone' => '555-0100',

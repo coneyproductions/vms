@@ -50,9 +50,9 @@ $requiredMarkupSnippets = array(
 	'vms-addon-minus',
 	'vms-addon-plus',
 	'admin_url(\'admin-ajax.php?action=vms_ticketing_v2_atomic_add_to_cart\')',
-	'wp_create_nonce(\'vms_ticketing_v2_atomic_add_to_cart\')',
+	'wp_create_nonce(\'bvmgr_ticketing_v2_atomic_add_to_cart\')',
 	'\'atomicAddUrl\' => admin_url(\'admin-ajax.php?action=vms_ticketing_v2_atomic_add_to_cart\')',
-	'\'atomicAddNonce\' => wp_create_nonce(\'vms_ticketing_v2_atomic_add_to_cart\')',
+	'\'atomicAddNonce\' => wp_create_nonce(\'bvmgr_ticketing_v2_atomic_add_to_cart\')',
 	'\'cartUrl\' => function_exists(\'wc_get_cart_url\') ? wc_get_cart_url() : home_url(\'/cart/\')',
 	'\'tecEventId\' => (int) $tec_event_id',
 	'\'eventPlanId\' => (int) $plan_id_for_event',
@@ -63,7 +63,7 @@ foreach ($requiredMarkupSnippets as $snippet) {
 }
 
 $assert(strpos($ticketingRulesSource, 'if (!$is_event && !$is_cart && !$is_checkout) return;') !== false, 'Ticketing front bundle enqueue should stay scoped away from unrelated requests.');
-$assert(strpos($ticketingRulesSource, "wp_enqueue_script(\n        'vms-ticketing-front'") !== false, 'Ticketing Rules V2 should continue to enqueue the main ticketing front bundle.');
+$assert(strpos($ticketingRulesSource, "wp_enqueue_script(\n        'bvmgr-ticketing-front'") !== false, 'Ticketing Rules V2 should continue to enqueue the main ticketing front bundle.');
 $assert(strpos($ticketingRulesSource, "wp_enqueue_script(\n        'vms-ticketing-front-server-controls'") === false, 'Ticketing Rules V2 should not introduce a second competing server-controls enqueue.');
 $assert(strpos($ticketingRulesSource, 'assets/vms-ticketing-front-server-controls.js') === false, 'Ticketing Rules V2 should not retain the unused server-controls sidecar path after this remediation.');
 

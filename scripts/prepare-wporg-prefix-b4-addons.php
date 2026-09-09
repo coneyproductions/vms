@@ -144,6 +144,12 @@ final class BVMGR_WPORG_Prefix_B4_Addons
 		);
 	}
 
+	/** Test-only read API: no staging, provenance writes, or installed-tree assumptions. */
+	public static function scanRuntimeConsumers(string $root, array $map): array
+	{
+		return self::semanticConsumers($root, self::lookups($map));
+	}
+
 	private static function lookups(array $map): array
 	{
 		$lookups = array();
@@ -316,9 +322,12 @@ final class BVMGR_WPORG_Prefix_B4_Addons
 	}
 }
 
+if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) {
 try {
 	BVMGR_WPORG_Prefix_B4_Addons::run(dirname(__DIR__), $argv[1] ?? '--check');
 } catch (Throwable $exception) {
 	fwrite(STDERR, $exception->getMessage() . PHP_EOL);
 	exit(1);
+}
+
 }
