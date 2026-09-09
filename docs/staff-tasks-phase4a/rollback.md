@@ -9,3 +9,8 @@ The private candidate patch and focused Git commit preserve the implementation. 
 Before any later normal-local promotion, record a fresh full normal-source baseline and take backups of the actual installed seven paths. Verify accepted Phase 3D authority and stop on drift. Bind a separate normal rollback manifest to the exact installed/candidate hashes. Promote only those runtime paths, leaving the frozen release and dirty historical tree alone. Real Google acceptance requires safe test credentials and the configuration/origin setup in `configuration.md`.
 
 After a later installation, rollback should restore only the seven source paths from that promotion's verified backup. Do not drop the Google state option or erase task/audit history. Removing the module loader stops future Google work without deleting historical calendars/events. Retain encrypted state and its key securely to allow same-account/idempotent recovery. Re-enabling synchronization on a clone requires explicit origin/credential review. If an operator intentionally discards encrypted credentials, retain Google subject, site namespace and calendar identities. Never reset task identity or invent dates for the two legacy review tasks.
+
+
+## Real-account acceptance follow-up
+
+The real Google gate has now passed with a narrowly necessary response-comparison correction, followed by controlled normal-local promotion. See [local-acceptance.md](local-acceptance.md) for current accepted status, evidence, preserved boundaries and the separate normal rollback. Earlier statements above describe the unpromoted original candidate.

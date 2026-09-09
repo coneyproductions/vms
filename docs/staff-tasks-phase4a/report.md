@@ -96,3 +96,8 @@ All fake task/user/calendar fixtures are confined to the destroyed disposable da
 The final supervised provider run passes **369 Google-workflow assertions**, plus the **82** accepted Staff Tasks foundation assertions (**451 total**). These counts include fixture/commit-boundary assertions, not 369 distinct product capabilities. Final evidence is `final11-task-concurrency.stdout` and `disposable-final11.json`; supervisor cleanup succeeds. The large-backlog test's earlier two-forced-runs assumption was corrected: each forced pass also rechecks existing mirrors, so bounded pending work must be allowed to drain in ordinary subsequent ticks. The final test verifies all 23 new backlog tasks drain and repeated reconciliation creates no duplicate events. Earlier failed harness/fake-provider runs remain in evidence.
 
 The final normal read window passes **33** views with exact **246-table**, options, private-file and binlog preservation. PHP lint, source review, whitespace checks, isolated sibling parity and rollback dry-run pass. Final commit identity, source manifest/patch and preservation receipts are retained in the private `acceptance-report.md` / `closeout.json`. This is an unpromoted candidate ready for the real test-account gate, not a claim of active local Google integration.
+
+
+## Real-account acceptance follow-up
+
+The real Google gate has now passed with a narrowly necessary response-comparison correction, followed by controlled normal-local promotion. See [local-acceptance.md](local-acceptance.md) for current accepted status, evidence, preserved boundaries and the separate normal rollback. Earlier statements above describe the unpromoted original candidate.

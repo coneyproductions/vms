@@ -186,10 +186,27 @@ function bvmgr_google_mirror_view(array $state, array $mirror): array
 /** Compare only fields BVM owns; unrelated Google preferences never trigger replacement. */
 function bvmgr_google_fields_match(array $owned, array $remote): bool
 {
+    // Google may omit its default busy value and return equivalent instants in UTC.
+    if (array_key_exists('transparency',$owned) && !array_key_exists('transparency',$remote)) $remote['transparency']='opaque';
     foreach ($owned as $key=>$value) {
         if (!array_key_exists($key,$remote)) return false;
         if (is_array($value)) { if (!is_array($remote[$key]) || !bvmgr_google_fields_match($value,$remote[$key])) return false; }
-        elseif ($value!==$remote[$key]) return false;
+        elseif ($value!==$remote[$key] && ($key!=='dateTime' || !bvmgr_google_same_instant($value,$remote[$key]))) return false;
     }
     return true;
+}
+
+/** Compare valid offset-bearing RFC3339 instants; retain separate strict IANA-zone checks. */
+function bvmgr_google_same_instant($left, $right): bool
+{
+    $pattern='/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/D';
+    $values=array();
+    foreach (array($left,$right) as $value) {
+        if (!is_string($value) || !preg_match($pattern,$value)) return false;
+        try { $date=new DateTimeImmutable($value); $errors=DateTimeImmutable::getLastErrors(); }
+        catch (Throwable $e) { return false; }
+        if ($errors && ($errors['warning_count'] || $errors['error_count'])) return false;
+        $values[]=$date->format('U.u');
+    }
+    return $values[0]===$values[1];
 }
