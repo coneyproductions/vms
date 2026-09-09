@@ -127,7 +127,7 @@ function bvmgr_tasks_timing(array $input, int $plan = 0): array
 }
 
 /** Existing user identity stays canonical; staff links, where present, must be reciprocal and active. */
-function bvmgr_tasks_person_valid(int $user): bool
+function bvmgr_tasks_person_valid(int $user,?array $links=null): bool
 {
     if (!$user) return true;
     $u=get_userdata($user); if (!$u || (int)$u->user_status !== 0) return false;
@@ -135,8 +135,8 @@ function bvmgr_tasks_person_valid(int $user): bool
     if (!$staff) return true;
     if (get_post_type($staff)!=='vms_staff' || get_post_status($staff)!=='publish') return false;
     global $wpdb;
-    $users=(array)$wpdb->get_col($wpdb->prepare('SELECT DISTINCT user_id FROM %i WHERE meta_key=%s AND meta_value=%s',$wpdb->usermeta,'_vms_staff_id',(string)$staff));
-    $staff_links=(array)$wpdb->get_col($wpdb->prepare('SELECT DISTINCT post_id FROM %i WHERE meta_key=%s AND meta_value=%s',$wpdb->postmeta,'_vms_linked_user_id',(string)$user));
+    $users=$links!==null?($links['users_by_staff'][$staff]??array()):(array)$wpdb->get_col($wpdb->prepare('SELECT DISTINCT user_id FROM %i WHERE meta_key=%s AND meta_value=%s',$wpdb->usermeta,'_vms_staff_id',(string)$staff));
+    $staff_links=$links!==null?($links['staff_by_user'][$user]??array()):(array)$wpdb->get_col($wpdb->prepare('SELECT DISTINCT post_id FROM %i WHERE meta_key=%s AND meta_value=%s',$wpdb->postmeta,'_vms_linked_user_id',(string)$user));
     if (count($users)!==1 || (int)$users[0]!==$user || count($staff_links)>1 || ($staff_links && (int)$staff_links[0]!==$staff)) return false;
     $identity=bvmgr_tech_doc_staff_identity($staff);
     return (int)$identity['user_id']===$user && !in_array($identity['error'],array('ambiguous_staff_user','invalid_staff','invalid_linked_user','ambiguous_user_link'),true);
@@ -271,12 +271,53 @@ function bvmgr_tasks_recurrence_successor(array $row): int
 function bvmgr_tasks_sync_record(int $id): ?array
 {
     $row=bvmgr_tasks_get_instance($id); if (!$row) return null;
-    $timing=json_decode((string)($row['timing_json']??''),true); $event=(int)$row['event_id']>0?bvmgr_tasks_event_authority((int)$row['event_id']):null;
+    $context=array();
+    return bvmgr_tasks_project_record($row,$context);
+}
+
+/** Batch read adapter. Scope this context to one read; never retain it across a command. */
+function bvmgr_tasks_sync_records(array $rows): array
+{
+    $users=array_values(array_unique(array_filter(array_map('intval',array_column($rows,'assignee_user_id')))));
+    if ($users) { cache_users($users); update_meta_cache('user',$users); }
+    $posts=array_merge(array_column($rows,'event_id'),array_column($rows,'venue_id'));
+    foreach ($users as $user) $posts[]=(int)get_user_meta($user,'_vms_staff_id',true);
+    $posts=array_values(array_unique(array_filter(array_map('intval',$posts))));
+    if ($posts) _prime_post_caches($posts,false,true);
+    $related=array();foreach ($posts as $post) $related[]=(int)get_post_meta($post,'_vms_tec_event_id',true);
+    $related=array_values(array_unique(array_filter($related)));if ($related) _prime_post_caches($related,false,true);
+    $context=array('links'=>array('users_by_staff'=>array(),'staff_by_user'=>array()));$out=array();
+    // Batch the exact reciprocal-link queries used by person_valid; ambiguity rules are unchanged.
+    global $wpdb;
+    $staff_ids=array_values(array_unique(array_filter(array_map(static fn($id)=>(int)get_user_meta($id,'_vms_staff_id',true),$users))));
+    if ($staff_ids) {
+        $sql=$wpdb->prepare('SELECT DISTINCT user_id,meta_value FROM %i WHERE meta_key=%s AND meta_value IN ('.implode(',',array_fill(0,count($staff_ids),'%s')).')',...array_merge(array($wpdb->usermeta,'_vms_staff_id'),array_map('strval',$staff_ids)));
+        foreach ((array)$wpdb->get_results($sql,ARRAY_A) as $link) $context['links']['users_by_staff'][(int)$link['meta_value']][]=(int)$link['user_id'];
+    }
+    if ($users) {
+        $sql=$wpdb->prepare('SELECT DISTINCT post_id,meta_value FROM %i WHERE meta_key=%s AND meta_value IN ('.implode(',',array_fill(0,count($users),'%s')).')',...array_merge(array($wpdb->postmeta,'_vms_linked_user_id'),array_map('strval',$users)));
+        foreach ((array)$wpdb->get_results($sql,ARRAY_A) as $link) $context['links']['staff_by_user'][(int)$link['meta_value']][]=(int)$link['post_id'];
+    }
+    foreach ($rows as $row) $out[(int)$row['id']]=bvmgr_tasks_project_record($row,$context);
+    return $out;
+}
+
+/** Same authority projection for single and bounded batch reads. Does not repair dependencies. */
+function bvmgr_tasks_project_record(array $row,array &$context): array
+{
+    $plan=(int)$row['event_id'];$user=(int)$row['assignee_user_id'];
+    if (!array_key_exists($plan,$context['events']??array())) $context['events'][$plan]=$plan>0?bvmgr_tasks_event_authority($plan):null;
+    $timing=json_decode((string)($row['timing_json']??''),true); $event=$context['events'][$plan];
     $review=$timing['review']??'legacy_timing_requires_review';
-    if (empty($row['generation_key']) && !empty($row['task_template_id'])) { global $wpdb; $duplicates=(int)$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE event_id=%d AND task_template_id=%d',bvmgr_tasks_table_name('task_instances'),$row['event_id'],$row['task_template_id'])); if ($duplicates>1) $review='legacy_generation_identity_requires_review'; }
-    if ((int)$row['assignee_user_id']>0 && !bvmgr_tasks_person_valid((int)$row['assignee_user_id'])) $review='assignee_unavailable_or_ambiguous';
+    if (empty($row['generation_key']) && !empty($row['task_template_id'])) { global $wpdb; $key=$plan.':'.$row['task_template_id']; if (!isset($context['duplicates'][$key])) $context['duplicates'][$key]=(int)$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE event_id=%d AND task_template_id=%d',bvmgr_tasks_table_name('task_instances'),$row['event_id'],$row['task_template_id'])); if ($context['duplicates'][$key]>1) $review='legacy_generation_identity_requires_review'; }
+    if ($user>0 && !array_key_exists($user,$context['people']??array())) $context['people'][$user]=bvmgr_tasks_person_valid($user,$context['links']??null);
+    if ($user>0 && !$context['people'][$user]) $review='assignee_unavailable_or_ambiguous';
     if ($row['status']==='open' && $event && !empty($timing['occurrence_start_utc']) && $timing['occurrence_start_utc']!==gmdate('Y-m-d H:i:s',$event['event_start_ts'])) $review='event_timing_reconciliation_pending';
-    if ($row['status']==='open' && $row['assignment_mode']==='scheduled_role' && empty($row['assignment_locked']) && (int)bvmgr_tasks_scheduled_person((int)$row['event_id'],(string)$row['role_key'])['assignee_user_id']!==(int)$row['assignee_user_id']) $review='staffing_reconciliation_pending';
+    if ($row['status']==='open' && $row['assignment_mode']==='scheduled_role' && empty($row['assignment_locked'])) {
+        $key=$plan.':'.$row['role_key'];
+        if (!isset($context['roles'][$key])) $context['roles'][$key]=bvmgr_tasks_scheduled_person($plan,(string)$row['role_key']);
+        if ((int)$context['roles'][$key]['assignee_user_id']!==$user) $review='staffing_reconciliation_pending';
+    }
     if ((int)$row['event_id']>0 && !$event) $review='event_occurrence_unavailable';
     if ($event && in_array($event['status'],array('cancelled','archived'),true) && ($timing['cancellation_policy']??'review')==='review') $review='event_'.$event['status'];
     return array('contract_version'=>1,'task_id'=>(int)$row['id'],'revision'=>(int)($row['revision']??0),'status'=>$row['status'],

@@ -682,6 +682,10 @@ if (!function_exists('bvmgr_tasks_admin_resolve_return_url')) {
 	function bvmgr_tasks_admin_resolve_return_url(string $default_page = 'vms-tasks'): string
 	{
 		$return_page = sanitize_key(bvmgr_tasks_admin_request_arg('return_page'));
+        if ($return_page === 'vms-tasks-calendar' && function_exists('bvmgr_tasks_calendar_url')) {
+            $input=array(); foreach (array('date','view','assignee','event','venue','type','status','required','focus','range_page','queue_page') as $key) $input[$key]=bvmgr_tasks_admin_request_arg('calendar_'.$key);
+            return bvmgr_tasks_calendar_url(bvmgr_tasks_calendar_request($input));
+        }
 		if (in_array($return_page, array('vms-tasks', 'vms-my-tasks'), true)) {
 			return bvmgr_tasks_admin_page_url($return_page);
 		}

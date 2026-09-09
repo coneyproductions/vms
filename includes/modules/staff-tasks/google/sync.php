@@ -176,7 +176,15 @@ function bvmgr_google_mirror_view(array $state, array $mirror): array
 {
     $c=$state['connections'][$mirror['user']]??array();
     if (($c['status']??'')!=='connected') { $mirror['state']=($c['status']??'')==='authorization_required'?'authorization_required':'not_connected'; return $mirror; }
-    $p=bvmgr_google_projection(bvmgr_tasks_sync_record($mirror['task']),$mirror['user'],$state['site'],!empty($mirror['attempted']));
+    return bvmgr_google_mirror_projection($state,$mirror,bvmgr_tasks_sync_record($mirror['task']));
+}
+
+/** Read-only status using an already authorized canonical task projection. */
+function bvmgr_google_mirror_projection(array $state,array $mirror,?array $task): array
+{
+    $c=$state['connections'][$mirror['user']]??array();
+    if (($c['status']??'')!=='connected') { $mirror['state']=($c['status']??'')==='authorization_required'?'authorization_required':'not_connected'; return $mirror; }
+    $p=bvmgr_google_projection($task,$mirror['user'],$state['site'],!empty($mirror['attempted']));
     if (($p['state']??'')==='blocked_timing_review' || !empty($p['review_block'])) $mirror['state']='blocked_timing_review';
     elseif (!empty($p['hash']) && ($mirror['applied']??'')!==$p['hash'] && $mirror['state']==='synced') $mirror['state']='update_pending';
     elseif (!empty($p['retire']) && ($mirror['applied']??'')!=='retired') $mirror['state']='update_pending';

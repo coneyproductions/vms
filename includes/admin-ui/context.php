@@ -258,7 +258,7 @@ if (!function_exists('bvmgr_admin_ui_active_cluster')) {
 			return 'planning';
 		}
 
-		if (in_array($page, array('vms-vendor-command-center', 'vms-vendor-availability', 'vms-tasks', 'vms-task-templates', 'vms-checklist-templates', 'vms-task-settings', 'vms-my-tasks', 'vms-staffing-templates', 'vms-staffing-rollups', 'vms-verifications'), true)) {
+		if (in_array($page, array('vms-vendor-command-center', 'vms-vendor-availability', 'vms-tasks', 'vms-tasks-calendar', 'vms-task-templates', 'vms-checklist-templates', 'vms-task-settings', 'vms-my-tasks', 'vms-staffing-templates', 'vms-staffing-rollups', 'vms-verifications'), true)) {
 			return 'vendors_staff';
 		}
 
