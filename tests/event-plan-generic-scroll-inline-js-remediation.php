@@ -105,14 +105,14 @@ $findApplicationJsonScriptTags = static function (string $source, string $requir
 	$assert(strpos($shellAssetSource, 'if (!target) return;') !== false, 'The shell asset should safely no-op when the target element does not exist.');
 	$assert(strpos($shellAssetSource, 'window.setTimeout(function () {') !== false && strpos($shellAssetSource, '}, 150);') !== false, 'The shell asset should preserve the existing deferred scroll timing.');
 	$assert(strpos($shellAssetSource, "target.scrollIntoView({ behavior: 'smooth', block: 'start' });") !== false, 'The shell asset should preserve the existing scroll options.');
-	$assert(strpos($shellAssetSource, 'window.vmsEventPlanInitCollapsibleSection = initExistingSection;') !== false, 'The shell asset should also own the migrated collapsible-section helper.');
+	$assert(strpos($shellAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION = initExistingSection;') !== false, 'The shell asset should also own the migrated collapsible-section helper.');
 	$assert(strpos($shellAssetSource, 'focus(') === false, 'The generic scroll shell asset should not introduce focus behavior.');
 	foreach (array('ajaxurl', 'XMLHttpRequest', 'wp.apiFetch') as $forbiddenToken) {
 		$assert(strpos($shellAssetSource, $forbiddenToken) === false, 'The shell asset should remain passive and generic: ' . $forbiddenToken);
 	}
 	$assert(strpos($shellAssetSource, 'maybeFocusEventPlanTicketingArea') === false, 'The shell asset should not absorb the ticketing-specific focus helper.');
 
-	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-shell'") !== false, 'Admin UI assets should enqueue the new Event Plan shell asset.');
+	$assert(strpos($adminUiAssetsSource, "'bvmgr-event-plan-shell'") !== false, 'Admin UI assets should enqueue the new Event Plan shell asset.');
 	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js'") !== false, 'Admin UI assets should point the shell handle to assets/js/vms-event-plan-shell.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'The shell asset should stay scoped to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'The shell asset should stay scoped to Event Plan edit/new screens.');

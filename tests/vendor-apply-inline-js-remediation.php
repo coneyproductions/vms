@@ -96,7 +96,7 @@ $assert(($GLOBALS['vms_test_scripts']['bvmgr-vendor-apply']['src'] ?? '') === 'h
 $assert(isset($GLOBALS['vms_test_scripts']['cf-turnstile']), 'Vendor Applications form should keep the existing Turnstile asset enqueued when both keys are configured.');
 $assert(strpos($html, 'id="vms-vendor-apply-variant-map"') !== false, 'Vendor Applications form should render the JSON configuration payload.');
 $assert(stripos($html, 'onchange=') === false && stripos($html, 'onclick=') === false && stripos($html, 'onsubmit=') === false, 'Vendor Applications form should not emit inline event-handler attributes.');
-$assert(strpos($html, 'name="vms_vendor_apply_nonce"') !== false, 'Vendor Applications form should preserve its server-side nonce field.');
+$assert(strpos($html, 'name="bvmgr_vendor_apply_nonce"') !== false, 'Vendor Applications form should preserve its server-side nonce field.');
 $assert(strpos($html, 'name="vms_app_vendor_type"') !== false, 'Vendor Applications form should preserve the vendor-type field.');
 $assert(strpos($html, 'data-vms-band-required="1"') !== false, 'Vendor Applications form should preserve the band-specific required markers.');
 $assert(strpos($html, 'class="cf-turnstile" data-sitekey="site-key"') !== false, 'Vendor Applications form should preserve the Turnstile widget markup when both keys are configured.');

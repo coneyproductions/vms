@@ -33,7 +33,7 @@ try {
 	$assert(strpos($eventPlansSource, 'wp_ajax_nopriv_vms_load_event_plan_admin_section') === false, 'The shared lazy-section AJAX endpoint should not expose an unauthenticated hook.');
 	$assert(strpos($eventPlansSource, '$post_id = isset($_POST[\'post_id\']) ? absint($_POST[\'post_id\']) : 0;') !== false, 'Lazy-section AJAX handler should continue to normalize post_id with absint().');
 	$assert(strpos($eventPlansSource, '$section = isset($_POST[\'section\']) ? sanitize_key((string) wp_unslash($_POST[\'section\'])) : \'\';') !== false, 'Lazy-section AJAX handler should continue to sanitize the section field with wp_unslash() + sanitize_key().');
-	$assert(strpos($eventPlansSource, "check_ajax_referer('vms_event_plan_admin_section', 'nonce');") !== false, 'Lazy-section AJAX handler should keep the exact nonce action and request field.');
+	$assert(strpos($eventPlansSource, "check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_admin_section', 'nonce'), 'nonce', true);") !== false, 'Lazy-section AJAX handler should keep the exact nonce action and request field.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);") !== false, 'Lazy-section AJAX handler should retain the exact invalid-plan response.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Not allowed'), 403);") !== false, 'Lazy-section AJAX handler should retain the exact capability error response.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Section not supported.'), 400);") !== false, 'Lazy-section AJAX handler should retain the exact unsupported-section response.');
@@ -147,7 +147,7 @@ try {
 		"params.set('nonce', lazyNonce);",
 		"if (!response.ok || !payload || !payload.success || !payload.data || typeof payload.data.html !== 'string') {",
 		'body.innerHTML = payload.data.html;',
-		'window.vmsEventPlanInitSecondaryVendors(body);',
+		'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);',
 	) as $requiredShellMarker) {
 		$assert(strpos($shellAssetSource, $requiredShellMarker) !== false, 'Shell asset should retain the Secondary Vendors lazy-load consumer marker: ' . $requiredShellMarker);
 	}
@@ -160,7 +160,7 @@ try {
 		'meta.textContent = payload.data.summary_meta;',
 		'payload.data.message',
 		'payload.data.changed',
-		'window.vmsEventPlanInitSecondaryVendors(body);',
+		'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);',
 	) as $requiredSaveAssetMarker) {
 		$assert(strpos($secondaryVendorAssetSource, $requiredSaveAssetMarker) !== false, 'Dedicated Secondary Vendors asset should retain the save-response consumer marker: ' . $requiredSaveAssetMarker);
 	}
@@ -798,7 +798,7 @@ try {
 	$assert($richWrapper instanceof DOMElement, 'Secondary Vendors rich lazy-load renderer should preserve the section wrapper.');
 	$assert($richWrapper->getAttribute('data-vms-module-owner') === 'secondary_vendors', 'Secondary Vendors rich lazy-load renderer should preserve the module owner data attribute.');
 	$assert($richWrapper->getAttribute('data-vms-save-url') === 'https://example.com/wp-admin/admin-ajax.php', 'Secondary Vendors rich lazy-load renderer should preserve the save URL contract.');
-	$assert($richWrapper->getAttribute('data-vms-save-nonce') === 'nonce-vms_event_plan_secondary_vendors_save', 'Secondary Vendors rich lazy-load renderer should preserve the save nonce contract.');
+	$assert($richWrapper->getAttribute('data-vms-save-nonce') === 'nonce-bvmgr_event_plan_secondary_vendors_save', 'Secondary Vendors rich lazy-load renderer should preserve the save nonce contract.');
 	$assert($richWrapper->getAttribute('data-vms-save-post-id') === (string) $postId, 'Secondary Vendors rich lazy-load renderer should preserve the save post ID contract.');
 
 	$configScript = $richXpath->query('//*[@id="root"]//script[@type="application/json" and @data-vms-secondary-config]')->item(0);

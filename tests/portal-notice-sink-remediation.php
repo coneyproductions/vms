@@ -16,11 +16,11 @@ $assert(is_string($vendorPortalSource) && $vendorPortalSource !== '', 'Vendor Po
 $assert(is_string($taxProfileSource) && $taxProfileSource !== '', 'Vendor tax profile source should be readable.');
 $assert(is_string($guestPortalSource) && $guestPortalSource !== '', 'Vendor guest portal source should be readable.');
 
-$assert(strpos($vendorPortalSource, 'function vms_portal_notice(string $type, string $msg): string') !== false, 'Portal notice helper signature should remain string-only.');
+$assert(strpos($vendorPortalSource, 'function bvmgr_portal_notice(string $type, string $msg): string') !== false, 'Portal notice helper signature should remain string-only.');
 $assert(strpos($vendorPortalSource, '$type = ($type === \'success\' || $type === \'warning\') ? $type : \'error\';') !== false, 'Portal notice helper should keep the existing success/warning/error type contract.');
 $assert(strpos($vendorPortalSource, 'esc_attr($type)') !== false, 'Portal notice helper should keep escaping the notice type for the class attribute.');
 $assert(strpos($vendorPortalSource, 'esc_html($msg)') !== false, 'Portal notice helper should keep escaping notice text.');
-$assert(strpos($vendorPortalSource, 'wp_kses_post(vms_portal_notice(') !== false, 'Main Vendor Portal should continue to show the established portal notice sink pattern.');
+$assert(strpos($vendorPortalSource, 'wp_kses_post(bvmgr_portal_notice(') !== false, 'Main Vendor Portal should continue to show the established portal notice sink pattern.');
 
 $targetSources = array(
 	'includes/portal/vendor-tax-profile.php' => $taxProfileSource,
@@ -33,16 +33,16 @@ $expectedSinkCounts = array(
 );
 
 foreach ($targetSources as $relativePath => $source) {
-	$assert(strpos($source, 'echo vms_portal_notice(') === false, $relativePath . ' should not directly echo portal notice fragments.');
-	$assert(substr_count($source, 'echo wp_kses_post(vms_portal_notice(') === $expectedSinkCounts[$relativePath], $relativePath . ' should wrap each direct portal notice fragment with the established sink.');
-	$assert(strpos($source, 'esc_html(vms_portal_notice(') === false, $relativePath . ' should not text-escape the full helper-generated fragment.');
-	$assert(strpos($source, 'esc_attr(vms_portal_notice(') === false, $relativePath . ' should not attribute-escape the full helper-generated fragment.');
-	$assert(strpos($source, 'wp_kses(vms_portal_notice(') === false, $relativePath . ' should not add a divergent inline allowlist for this narrow slice.');
-	$assert(!preg_match('~phpcs:ignore[^\n]*vms_portal_notice~i', $source), $relativePath . ' should not silence portal notice sink findings without changing the sink.');
+	$assert(strpos($source, 'echo bvmgr_portal_notice(') === false, $relativePath . ' should not directly echo portal notice fragments.');
+	$assert(substr_count($source, 'echo wp_kses_post(bvmgr_portal_notice(') === $expectedSinkCounts[$relativePath], $relativePath . ' should wrap each direct portal notice fragment with the established sink.');
+	$assert(strpos($source, 'esc_html(bvmgr_portal_notice(') === false, $relativePath . ' should not text-escape the full helper-generated fragment.');
+	$assert(strpos($source, 'esc_attr(bvmgr_portal_notice(') === false, $relativePath . ' should not attribute-escape the full helper-generated fragment.');
+	$assert(strpos($source, 'wp_kses(bvmgr_portal_notice(') === false, $relativePath . ' should not add a divergent inline allowlist for this narrow slice.');
+	$assert(!preg_match('~phpcs:ignore[^\n]*bvmgr_portal_notice~i', $source), $relativePath . ' should not silence portal notice sink findings without changing the sink.');
 }
 
 foreach ($targetSources as $relativePath => $source) {
-	preg_match_all('~vms_portal_notice\([^\n]+~', $source, $noticeCallMatches);
+	preg_match_all('~bvmgr_portal_notice\([^\n]+~', $source, $noticeCallMatches);
 	foreach ($noticeCallMatches[0] as $noticeCall) {
 		$assert(strpos($noticeCall, '<a ') === false && strpos($noticeCall, 'href=') === false, $relativePath . ' portal notice calls should not introduce link markup; the helper contract is escaped text inside the notice div.');
 	}

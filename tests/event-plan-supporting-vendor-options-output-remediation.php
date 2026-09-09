@@ -30,7 +30,7 @@ try {
 	$assert(strpos($eventPlansSource, "add_action('wp_ajax_vms_load_event_plan_supporting_vendor_options', array(\$this, 'ajax_load_event_plan_supporting_vendor_options'));") !== false, 'Event Plans should register the exact authenticated supporting-vendor options AJAX hook.');
 	$assert(strpos($eventPlansSource, 'wp_ajax_nopriv_vms_load_event_plan_supporting_vendor_options') === false, 'Event Plans should not register a nopriv supporting-vendor options AJAX hook.');
 	$assert(strpos($eventPlansSource, '$post_id = isset($_POST[\'post_id\']) ? absint($_POST[\'post_id\']) : 0;') !== false, 'Supporting-vendor options AJAX handler should continue to normalize post_id with absint().');
-	$assert(strpos($eventPlansSource, "check_ajax_referer('vms_event_plan_admin_section', 'nonce');") !== false, 'Supporting-vendor options AJAX handler should keep the exact nonce action and request field.');
+	$assert(strpos($eventPlansSource, "check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_admin_section', 'nonce'), 'nonce', true);") !== false, 'Supporting-vendor options AJAX handler should keep the exact nonce action and request field.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);") !== false, 'Supporting-vendor options AJAX handler should retain the exact invalid-plan response.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Not allowed'), 403);") !== false, 'Supporting-vendor options AJAX handler should retain the exact capability failure response.');
 	$assert(strpos($eventPlansSource, 'build_event_plan_supporting_vendor_options_response_payload') !== false, 'Supporting-vendor options AJAX handler should route the response through the family-specific payload builder.');
@@ -95,7 +95,7 @@ try {
 
 	foreach (array(
 		'data-lineup-vendor-options-url="<?php echo esc_url(admin_url(\'admin-ajax.php\')); ?>"',
-		'data-lineup-vendor-options-nonce="<?php echo esc_attr(wp_create_nonce(\'vms_event_plan_admin_section\')); ?>"',
+		'data-lineup-vendor-options-nonce="<?php echo esc_attr(wp_create_nonce(\'bvmgr_event_plan_admin_section\')); ?>"',
 		'<template id="vms-lineup-supporting-vendor-options-template">',
 		'<select id="vms_band_vendor_id" name="vms_band_vendor_id" class="vms-ep-select-md" data-lineup-primary-vendor-select>',
 		'data-lineup-vendor-select',

@@ -95,14 +95,14 @@ try {
 	$liveStaffAssetSource = $readFile($liveStaffAssetPath);
 	$liveAddAssetSource = $readFile($liveAddAssetPath);
 
-	$tasksPageSource = $extractFunctionSource($staffSource, 'vms_tasks_render_tasks_page');
-	$checklistsPageSource = $extractFunctionSource($staffSource, 'vms_tasks_render_checklist_templates_page');
-	$staffEnqueueSource = $extractFunctionSource($staffSource, 'vms_tasks_admin_enqueue_page_assets');
-	$staffAssetPagesSource = $extractFunctionSource($staffSource, 'vms_tasks_admin_page_asset_pages');
-	$addEnqueueSource = $extractFunctionSource($addSource, 'vms_add_dispatch_enqueue_admin_assets');
-	$requestBuilderSource = $extractFunctionSource($addSource, 'vms_add_dispatch_render_request_builder');
-	$menuBadgeCssSource = $extractFunctionSource($addSource, 'vms_add_dispatch_render_menu_badge_css');
-	$menuBadgeJsSource = $extractFunctionSource($addSource, 'vms_add_dispatch_render_menu_badge_js');
+	$tasksPageSource = $extractFunctionSource($staffSource, 'bvmgr_tasks_render_tasks_page');
+	$checklistsPageSource = $extractFunctionSource($staffSource, 'bvmgr_tasks_render_checklist_templates_page');
+	$staffEnqueueSource = $extractFunctionSource($staffSource, 'bvmgr_tasks_admin_enqueue_page_assets');
+	$staffAssetPagesSource = $extractFunctionSource($staffSource, 'bvmgr_tasks_admin_page_asset_pages');
+	$addEnqueueSource = $extractFunctionSource($addSource, 'bvmgr_add_dispatch_enqueue_admin_assets');
+	$requestBuilderSource = $extractFunctionSource($addSource, 'bvmgr_add_dispatch_render_request_builder');
+	$menuBadgeCssSource = $extractFunctionSource($addSource, 'bvmgr_add_dispatch_render_menu_badge_css');
+	$menuBadgeJsSource = $extractFunctionSource($addSource, 'bvmgr_add_dispatch_render_menu_badge_js');
 
 	$assert(strpos($tasksPageSource, '<script') === false, 'Staff Tasks page renderer should no longer emit the executable create-task inline <script>.');
 	$assert(strpos($tasksPageSource, 'document.getElementById("vms_tasks_one_off_event")') === false, 'Staff Tasks page renderer should no longer own the create-task DOM controller.');
@@ -110,25 +110,25 @@ try {
 	$assert(strpos($checklistsPageSource, 'syncChecklistContext') === false, 'Checklist Templates page renderer should no longer own the scope-change controller.');
 	$assert(strpos($staffSource, 'wp_add_inline_script') === false, 'Staff Tasks admin UI should not reintroduce the helpers through wp_add_inline_script().');
 
-	$assert(strpos($staffSource, 'function vms_tasks_admin_page_asset_pages(): array') !== false, 'Staff Tasks should declare the exact page list helper for the new asset gate.');
+	$assert(strpos($staffSource, 'function bvmgr_tasks_admin_page_asset_pages(): array') !== false, 'Staff Tasks should declare the exact page list helper for the new asset gate.');
 	$assert(strpos($staffAssetPagesSource, "'vms-tasks'") !== false, 'Staff Tasks asset page list should include the Tasks page.');
 	$assert(strpos($staffAssetPagesSource, "'vms-checklist-templates'") !== false, 'Staff Tasks asset page list should include the Checklist Templates page.');
 	$assert(strpos($staffAssetPagesSource, "'vms-task-templates'") === false, 'Staff Tasks asset page list should stay limited to the two targeted pages.');
-	$assert(strpos($staffEnqueueSource, "!in_array(\$page, vms_tasks_admin_page_asset_pages(), true)") !== false, 'Staff Tasks enqueue should bail unless the current page matches the exact targeted page list.');
-	$assert(strpos($staffEnqueueSource, 'vms_tasks_current_user_can_manage_all()') !== false, 'Staff Tasks enqueue should preserve the manage-all capability boundary.');
+	$assert(strpos($staffEnqueueSource, "!in_array(\$page, bvmgr_tasks_admin_page_asset_pages(), true)") !== false, 'Staff Tasks enqueue should bail unless the current page matches the exact targeted page list.');
+	$assert(strpos($staffEnqueueSource, 'bvmgr_tasks_current_user_can_manage_all()') !== false, 'Staff Tasks enqueue should preserve the manage-all capability boundary.');
 	$assert(strpos($staffEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-tasks-admin-pages.js'") !== false, 'Staff Tasks enqueue should point to the external admin-pages asset.');
-	$assert(strpos($staffSource, "add_action('admin_enqueue_scripts', 'vms_tasks_admin_enqueue_page_assets', 60);") !== false, 'Staff Tasks should register the page-scoped enqueue callback.');
+	$assert(strpos($staffSource, "add_action('admin_enqueue_scripts', 'bvmgr_tasks_admin_enqueue_page_assets', 60);") !== false, 'Staff Tasks should register the page-scoped enqueue callback.');
 
 	$assert(
 		preg_match(
-			'~add_submenu_page\(\s*\$parent,\s*__\(\'Tasks\', \'backstage-venue-manager\'\),\s*__\(\'Tasks\', \'backstage-venue-manager\'\),\s*\$menu_cap,\s*\'vms-tasks\',\s*\'vms_tasks_render_tasks_page\'\s*\);~s',
+			'~add_submenu_page\(\s*\$parent,\s*__\(\'Tasks\', \'backstage-venue-manager\'\),\s*__\(\'Tasks\', \'backstage-venue-manager\'\),\s*\$menu_cap,\s*\'vms-tasks\',\s*\'bvmgr_tasks_render_tasks_page\'\s*\);~s',
 			$staffSource
 		) === 1,
 		'Staff Tasks should preserve the Tasks page registration, capability variable, slug, and callback.'
 	);
 	$assert(
 		preg_match(
-			'~add_submenu_page\(\s*\$parent,\s*__\(\'Checklist Templates\', \'backstage-venue-manager\'\),\s*__\(\'Checklist Templates\', \'backstage-venue-manager\'\),\s*\$menu_cap,\s*\'vms-checklist-templates\',\s*\'vms_tasks_render_checklist_templates_page\'\s*\);~s',
+			'~add_submenu_page\(\s*\$parent,\s*__\(\'Checklist Templates\', \'backstage-venue-manager\'\),\s*__\(\'Checklist Templates\', \'backstage-venue-manager\'\),\s*\$menu_cap,\s*\'vms-checklist-templates\',\s*\'bvmgr_tasks_render_checklist_templates_page\'\s*\);~s',
 			$staffSource
 		) === 1,
 		'Staff Tasks should preserve the Checklist Templates page registration, capability variable, slug, and callback.'
@@ -188,20 +188,20 @@ try {
 	}
 
 	$assert(file_exists($eventPlanMetaboxAssetPath), 'Existing Staff Tasks Event Plan metabox asset should remain present.');
-	$assert(strpos($staffSource, "'vms-tasks-event-plan-metabox'") !== false, 'Staff Tasks admin UI should still enqueue the Event Plan metabox asset.');
+	$assert(strpos($staffSource, "'bvmgr-tasks-event-plan-metabox'") !== false, 'Staff Tasks admin UI should still enqueue the Event Plan metabox asset.');
 	$assert(strpos($staffSource, 'assets/js/vms-tasks-event-plan-metabox.js') !== false, 'Staff Tasks admin UI should still point to the Event Plan metabox asset.');
 
 	$assert(strpos($requestBuilderSource, '<script') === false, 'ADD request builder should no longer emit the executable recipient-review inline <script>.');
 	$assert(strpos($requestBuilderSource, 'document.currentScript.previousElementSibling') === false, 'ADD request builder should no longer own the inline currentScript bootstrap.');
 	$assert(strpos($addSource, 'wp_add_inline_script') === false, 'ADD admin UI should not reintroduce the request-builder helper through wp_add_inline_script().');
 
-	$assert(strpos($addEnqueueSource, "\$page !== vms_add_dispatch_page_slug() && !\$is_event_plan") !== false, 'ADD admin enqueue should preserve the existing page-or-Event-Plan style gate.');
+	$assert(strpos($addEnqueueSource, "\$page !== bvmgr_add_dispatch_page_slug() && !\$is_event_plan") !== false, 'ADD admin enqueue should preserve the existing page-or-Event-Plan style gate.');
 	$assert(strpos($addEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css'") !== false, 'ADD admin enqueue should preserve the existing stylesheet ownership.');
-	$assert(strpos($addEnqueueSource, "\$page === vms_add_dispatch_page_slug() && current_user_can('manage_options')") !== false, 'ADD request-builder asset should load only on the exact ADD page under the existing capability boundary.');
+	$assert(strpos($addEnqueueSource, "\$page === bvmgr_add_dispatch_page_slug() && current_user_can('manage_options')") !== false, 'ADD request-builder asset should load only on the exact ADD page under the existing capability boundary.');
 	$assert(strpos($addEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-add-dispatch-admin.js'") !== false, 'ADD admin enqueue should point to the external request-builder asset.');
 	$assert(
 		preg_match(
-			'~add_submenu_page\(\s*\'vms-dashboard\',\s*__\(\'ADD — Availability & Date Dispatch\', \'backstage-venue-manager\'\),\s*__\(\'ADD Dispatch\', \'backstage-venue-manager\'\),\s*\'manage_options\',\s*vms_add_dispatch_page_slug\(\),\s*\'vms_add_dispatch_render_admin_page\'\s*\);~s',
+			'~add_submenu_page\(\s*\'vms-dashboard\',\s*__\(\'ADD — Availability & Date Dispatch\', \'backstage-venue-manager\'\),\s*__\(\'ADD Dispatch\', \'backstage-venue-manager\'\),\s*\'manage_options\',\s*bvmgr_add_dispatch_page_slug\(\),\s*\'bvmgr_add_dispatch_render_admin_page\'\s*\);~s',
 			$addSource
 		) === 1,
 		'ADD page registration should preserve the existing parent, labels, capability, slug helper, and callback.'
@@ -267,14 +267,14 @@ try {
 	}
 
 	$assert(strpos($menuBadgeCssSource, '<style>') === false, 'ADD menu-badge CSS gate should no longer print inline CSS.');
-	$assert(strpos($menuBadgeCssSource, "wp_enqueue_style('vms-admin-menu');") !== false, 'ADD menu-badge CSS gate should enqueue the shared admin-menu stylesheet.');
-	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_css', 21, 0);") !== false, 'ADD menu-badge CSS should remain owned by its admin_enqueue_scripts gate.');
+	$assert(strpos($menuBadgeCssSource, "wp_enqueue_style('bvmgr-admin-menu');") !== false, 'ADD menu-badge CSS gate should enqueue the shared admin-menu stylesheet.');
+	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'bvmgr_add_dispatch_render_menu_badge_css', 21, 0);") !== false, 'ADD menu-badge CSS should remain owned by its admin_enqueue_scripts gate.');
 	$assert(strpos($menuBadgeJsSource, '<script>') === false, 'ADD menu-badge JS gate should no longer print an inline script block.');
 	$assert(strpos($menuBadgeJsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-admin-menu.js'") !== false, 'ADD menu-badge JS gate should preserve the external admin-menu asset boundary.');
-	$assert(strpos($menuBadgeJsSource, "wp_localize_script(\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\r\n\t\t\t'vms-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\n            'vms-admin-menu'") !== false, 'ADD menu-badge JS gate should hand off inert localized config through vmsAdminMenu.');
-	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'vms_add_dispatch_render_menu_badge_js', 50, 0);") !== false, 'ADD menu-badge JS should remain owned by its admin_enqueue_scripts gate.');
+	$assert(strpos($menuBadgeJsSource, "wp_localize_script(\n\t\t\t'bvmgr-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\r\n\t\t\t'bvmgr-admin-menu'") !== false || strpos($menuBadgeJsSource, "wp_localize_script(\n            'bvmgr-admin-menu'") !== false, 'ADD menu-badge JS gate should hand off inert localized config through BVMGR_ADMIN_MENU.');
+	$assert(strpos($addSource, "add_action('admin_enqueue_scripts', 'bvmgr_add_dispatch_render_menu_badge_js', 50, 0);") !== false, 'ADD menu-badge JS should remain owned by its admin_enqueue_scripts gate.');
 
-	$assert(strpos($publicSource, 'function vms_add_dispatch_render_public_shell(string $headline, string $content_html): void') !== false, 'ADD public shell should remain present and untouched in this slice.');
+	$assert(strpos($publicSource, 'function bvmgr_add_dispatch_render_public_shell(string $headline, string $content_html): void') !== false, 'ADD public shell should remain present and untouched in this slice.');
 
 	$assert($staffSource === $liveStaffSource, 'Mirror and live Staff Tasks PHP should remain byte-for-byte synchronized.');
 	$assert($addSource === $liveAddSource, 'Mirror and live ADD admin PHP should remain byte-for-byte synchronized.');

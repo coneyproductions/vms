@@ -120,6 +120,8 @@ try {
     ), true);
     $assert(!is_wp_error($planId) && (int) $planId > 0, 'Failed to create test Event Plan.');
     $planId = $registerPost((int) $planId);
+    // Explicit per-plan fixture state; do not depend on a site's ticketing default.
+    update_post_meta($planId, '_vms_ticketing_enabled_override', 'on');
 
     update_post_meta($planId, $planStatusKey, 'published');
     $setPlanOccurrence($planId, $futureStartTs, $futureEndTs);
@@ -151,7 +153,7 @@ try {
     update_post_meta($productId, '_vms_ticket_key', 'veteran_admission');
 
     $liveContext = bvmgr_ticketing_v2_validate_product_sale_context($productId, 0, 0, 'ga_ticket');
-    $assert(!empty($liveContext['ok']), 'Live published event should remain purchasable.');
+    $assert(!empty($liveContext['ok']), 'Live published event should remain purchasable: ' . wp_json_encode($liveContext));
 
     $cartContext = bvmgr_ticketing_v2_capture_cart_item_context(array(), $productId, 0);
     $snapshot = (array) ($cartContext['_vms_ticketing_context'] ?? array());
@@ -262,7 +264,7 @@ try {
     update_post_meta($planId, '_vms_ticketing_enabled_override', 'off');
     $disabledContext = bvmgr_ticketing_v2_validate_product_sale_context($productId, $planId, $eventId, 'ga_ticket');
     $assert(($disabledContext['code'] ?? '') === 'ticketing_disabled', 'Ticketing-disabled events should block ticket sales.');
-    delete_post_meta($planId, '_vms_ticketing_enabled_override');
+    update_post_meta($planId, '_vms_ticketing_enabled_override', 'on');
 
     delete_post_meta($productId, $planMetaKey);
     delete_post_meta($productId, '_tribe_wooticket_for_event');

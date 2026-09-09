@@ -264,6 +264,8 @@ if (!function_exists('get_current_user_id')) {
 }
 
 if (!function_exists('check_admin_referer')) {
+	// Renderer/handler unit boundary; nonce compatibility itself has dedicated coverage.
+	function bvmgr_nonce_action_for_request(string $action, $field = false): string { return $action; }
 	function check_admin_referer(string $action): bool
 	{
 		$GLOBALS['vms_test_referer_actions'][] = $action;
@@ -496,6 +498,8 @@ function current_user_can(string $capability): bool
 	return $capability === 'read';
 }
 
+// Renderer/handler unit boundary; nonce compatibility itself has dedicated coverage.
+function bvmgr_nonce_action_for_request(string $action, $field = false): string { return $action; }
 function check_admin_referer(string $action): bool
 {
 	$GLOBALS['vms_test_referer_actions'][] = $action;
@@ -614,8 +618,8 @@ $assert(is_string($storageSource) && $storageSource !== '', 'Guided Tours storag
 $assert(is_string($serviceSource) && $serviceSource !== '', 'Guided Tours service source should be readable.');
 $assert(is_string($shellSource) && $shellSource !== '', 'Shell source should be readable.');
 $assert(strpos($adminSource, "add_action('admin_post_vms_tours_reset_my_state', array(\$this, 'handle_reset_my_state'));") !== false, 'Guided Tours should preserve the reset admin-post registration.');
-$assert(strpos($adminSource, "check_admin_referer('vms_tours_reset_my_state');") !== false, 'Guided Tours reset handler should preserve the nonce action.');
-$assert(strpos($adminSource, "wp_nonce_field('vms_tours_reset_my_state');") !== false, 'Guided Tours reset form should preserve the nonce field action.');
+$assert(strpos($adminSource, "check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_tours_reset_my_state', '_wpnonce'), '_wpnonce');") !== false, 'Guided Tours reset handler should preserve the nonce action.');
+$assert(strpos($adminSource, "wp_nonce_field('bvmgr_tours_reset_my_state');") !== false, 'Guided Tours reset form should preserve the nonce field action.');
 $assert(strpos($adminSource, "'vms_tours_reset_my_state' => '1'") !== false, 'Guided Tours reset redirect should preserve the exact success query flag and value.');
 $assert(strpos($adminSource, "if (\$this->query_arg('vms_tours_reset_my_state') !== '')") === false, 'Guided Tours page should no longer inline the reset notice condition directly in render_page_content().');
 $assert(strpos($adminSource, 'private function get_reset_notice_context(): array') !== false, 'Guided Tours page should define a dedicated reset-notice context builder.');
@@ -708,13 +712,13 @@ try {
 } catch (RuntimeException $e) {
 	$assertSame('Nonce check failed.', $e->getMessage(), 'Guided Tours reset handler should preserve nonce failure ordering.');
 }
-$assertSame(array('vms_tours_reset_my_state'), $GLOBALS['vms_test_referer_actions'], 'Guided Tours reset handler should preserve the nonce action.');
+$assertSame(array('bvmgr_tours_reset_my_state'), $GLOBALS['vms_test_referer_actions'], 'Guided Tours reset handler should preserve the nonce action.');
 $assertSame(array(), $GLOBALS['vms_test_storage_calls']['reset_user_state'], 'Guided Tours reset handler should not mutate state when nonce verification fails.');
 $assertSame(array(), $GLOBALS['vms_test_redirects'], 'Guided Tours reset handler should not redirect when nonce verification fails.');
 
 $reset_state();
 $successHandlerResult = $run_reset_success_subprocess();
-$assertSame(array('vms_tours_reset_my_state'), $successHandlerResult['referer_actions'] ?? null, 'Guided Tours reset handler should verify the existing nonce action.');
+$assertSame(array('bvmgr_tours_reset_my_state'), $successHandlerResult['referer_actions'] ?? null, 'Guided Tours reset handler should verify the existing nonce action.');
 $assertSame(array(23), $successHandlerResult['reset_user_state'] ?? null, 'Guided Tours reset handler should preserve the exact user-state reset call.');
 $assertSame(
 	array('https://example.test/wp-admin/admin.php?page=vms-guided-tours&vms_tours_reset_my_state=1'),
@@ -773,7 +777,7 @@ $assert(strpos($page_content, '<div class="vms-tours-admin-page" data-vms-tour="
 $assert(strpos($page_content, '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice">') !== false, 'Guided Tours reset notice should preserve the exact data-vms-tour hook and classes.');
 $assert(strpos($page_content, '<div class="notice notice-success is-dismissible" data-vms-tour="guided-tours.reset-notice">') < strpos($page_content, '<form method="post" action="options.php" data-vms-tour="guided-tours.global-settings">'), 'Guided Tours reset notice should remain before the global settings form.');
 $assert(strpos($page_content, '<form method="post" action="https://example.test/wp-admin/admin-post.php" class="vms-tours-admin-reset-form" data-vms-tour="guided-tours.reset-progress">') !== false, 'Guided Tours reset form should remain unchanged.');
-$assert(strpos($page_content, 'name="_wpnonce" value="nonce:vms_tours_reset_my_state"') !== false, 'Guided Tours reset form should preserve the nonce field.');
+$assert(strpos($page_content, 'name="_wpnonce" value="nonce:bvmgr_tours_reset_my_state"') !== false, 'Guided Tours reset form should preserve the nonce field.');
 
 $captured_notices_html = '';
 $remaining_content_html = bvmgr_admin_ui_extract_notice_markup($page_content, $captured_notices_html);

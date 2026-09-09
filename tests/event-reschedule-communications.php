@@ -544,15 +544,12 @@ try {
 	$assert(strpos($cli_source, "WP_CLI::add_command('bvmgr event communication'") !== false && strpos($cli_source, 'BOOTSTRAP-COMMUNICATIONS') !== false && strpos($cli_source, 'MARK-MANUAL') !== false, 'Communication CLI control surface is incomplete.');
 	$shadow_root = dirname($plugin_root, 2) . '/vms';
 	if (is_dir($shadow_root)) {
-		$legacy_transform = static function (string $canonical): string {
-			return str_replace(array('BVMGR_', 'bvmgr_', "'backstage-venue-manager'"), array('VMS_', 'vms_', "'vms'"), $canonical);
-		};
 		$shadow_core = is_file($shadow_root . '/includes/core/event-communications.php') ? (string) file_get_contents($shadow_root . '/includes/core/event-communications.php') : '';
 		$shadow_admin = is_file($shadow_root . '/includes/admin/event-communications.php') ? (string) file_get_contents($shadow_root . '/includes/admin/event-communications.php') : '';
-		$assert($shadow_core === $legacy_transform($source) && $shadow_admin === $legacy_transform($admin_source), 'Disposable legacy sibling communication services lost exact logical parity.');
+		$assert($shadow_core === $source && $shadow_admin === $admin_source, 'Canonical isolated communication service copies lost parity.');
 		$shadow_reschedule = is_file($shadow_root . '/includes/core/event-reschedule.php') ? (string) file_get_contents($shadow_root . '/includes/core/event-reschedule.php') : '';
 		$shadow_cli = is_file($shadow_root . '/includes/core/cli/event-reschedule.php') ? (string) file_get_contents($shadow_root . '/includes/core/cli/event-reschedule.php') : '';
-		$assert(strpos($shadow_reschedule, 'vms_event_communication_persist_for_operation') !== false && strpos($shadow_cli, "WP_CLI::add_command('vms event communication'") !== false, 'Disposable legacy sibling is missing the automatic ledger or controlled CLI integration.');
+		$assert(strpos($shadow_reschedule, 'bvmgr_event_communication_persist_for_operation') !== false && strpos($shadow_cli, "WP_CLI::add_command('bvmgr event communication'") !== false, 'Disposable legacy sibling is missing the automatic ledger or controlled CLI integration.');
 	}
 
 	fwrite(STDOUT, 'PASS: ' . $assertions . " reschedule customer communication assertions.\n");

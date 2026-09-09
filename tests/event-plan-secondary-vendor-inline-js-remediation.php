@@ -30,15 +30,15 @@ try {
 	$shellAssetSource = $readFile($shellAssetPath);
 
 	foreach (array(
-		'window.vmsEventPlanInitSecondaryVendors = initSecondaryVendors;',
+		'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS = initSecondaryVendors;',
 		"section.dataset.vmsSecondaryInitBound === '1'",
 		"section.dataset.vmsSecondaryInitBound = '1';",
 		"group.dataset.vmsSecondaryGroupBound === '1'",
 		"row.dataset.vmsSecondaryRowBound === '1'",
 		"const configNode = section.querySelector('[data-vms-secondary-config]');",
 		"params.set('action', 'vms_save_event_plan_secondary_vendors');",
-		"window.vmsEventPlanPersistRequestedSection('secondary_vendors');",
-		'window.vmsEventPlanInitSecondaryVendors(body);',
+		"window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION('secondary_vendors');",
+		'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);',
 	) as $removedInlineMarker) {
 		$assert(
 			strpos($eventPlansSource, $removedInlineMarker) === false,
@@ -47,7 +47,7 @@ try {
 	}
 
 	foreach (array(
-		'window.vmsEventPlanInitSecondaryVendors = initSecondaryVendors;',
+		'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS = initSecondaryVendors;',
 		"section.dataset.vmsSecondaryInitBound === '1'",
 		"section.dataset.vmsSecondaryInitBound = '1';",
 		"group.dataset.vmsSecondaryGroupBound === '1'",
@@ -84,9 +84,9 @@ try {
 		'vms_secondary_vendor_assignments[${groupIndex}][open_for_dispatch]',
 		'vms_secondary_vendor_assignments[${groupIndex}][vendor_ids][]',
 		'application/x-www-form-urlencoded; charset=UTF-8',
-		"window.vmsEventPlanPersistRequestedSection('secondary_vendors');",
-		'window.vmsEventPlanInitCollapsibleSection(collapsibleSection);',
-		'window.vmsEventPlanInitSecondaryVendors(body);',
+		"window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION('secondary_vendors');",
+		'window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION(collapsibleSection);',
+		'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);',
 		'secondary_vendor_save_failed',
 		'secondary_vendor_render_target_missing',
 	) as $requiredAssetMarker) {
@@ -107,8 +107,8 @@ try {
 	$assert(strpos($secondaryVendorsSource, 'name="vms_clear_secondary_vendors"') !== false, 'Secondary Vendors partial should retain the clear-intent field.');
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendor-group-template"') !== false, 'Secondary Vendors partial should retain the group template.');
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendor-row-template"') !== false, 'Secondary Vendors partial should retain the row template.');
-	$assert(strpos($shellAssetSource, 'window.vmsEventPlanInitSecondaryVendors(body);') !== false, 'Shell asset should still call the Secondary Vendors compatibility initializer after lazy loading.');
-	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-secondary-vendors'") !== false, 'Admin UI assets should register the Secondary Vendors handle.');
+	$assert(strpos($shellAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);') !== false, 'Shell asset should still call the Secondary Vendors compatibility initializer after lazy loading.');
+	$assert(strpos($adminUiAssetsSource, "'bvmgr-event-plan-secondary-vendors'") !== false, 'Admin UI assets should register the Secondary Vendors handle.');
 	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js'") !== false, 'Admin UI assets should point the Secondary Vendors handle at the new asset.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Secondary Vendors asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Secondary Vendors asset should remain restricted to Event Plan edit/new screens.');
@@ -132,7 +132,7 @@ try {
 
 		$assetPath = $fileInfo->getPathname();
 		$contents = file_get_contents($assetPath);
-		if (!is_string($contents) || strpos($contents, 'window.vmsEventPlanInitSecondaryVendors = initSecondaryVendors;') === false) {
+		if (!is_string($contents) || strpos($contents, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS = initSecondaryVendors;') === false) {
 			continue;
 		}
 

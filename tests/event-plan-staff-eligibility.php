@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/bootstrap-wordpress.php';
-vms_tests_require_wordpress(__DIR__);
+require_once __DIR__ . '/helpers/current-wordpress-fixture.php';
 
 if (!class_exists('BVMGR_Admin_Event_Plans')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
@@ -141,7 +140,7 @@ try {
 
 	$runSave = static function (int $planId, array $overrides = array()): void {
 		$defaults = array(
-			'vms_event_plan_details_nonce' => wp_create_nonce('vms_save_event_plan_details'),
+			'bvmgr_event_plan_details_nonce' => wp_create_nonce('bvmgr_save_event_plan_details'),
 			'post_ID' => $planId,
 			'original_post_status' => 'draft',
 			'vms_event_plan_action' => 'save_draft',
@@ -251,7 +250,7 @@ try {
 		array(),
 		1
 	);
-	$assert(!empty($seedResult['ok']), 'Failed to seed staffing slots for the eligibility harness.');
+	$assert(!empty($seedResult['ok']), 'Failed to seed staffing slots for the eligibility harness: ' . wp_json_encode($seedResult));
 
     // Seed pre-existing ineligible history directly: new proposals now enforce
     // eligibility at the repository boundary, while retained history stays visible.

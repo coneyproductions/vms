@@ -308,25 +308,25 @@ foreach (
     ) as $label => $source
 ) {
     vms_test_public_calendar_assert_not_contains("\$_SERVER['HTTP_USER_AGENT']", $source, $label . ' should remove direct HTTP_USER_AGENT reads.');
-    vms_test_public_calendar_assert_contains("vms_request_server_value('HTTP_USER_AGENT')", $source, $label . ' should source the request UA through the shared server-value helper.');
+    vms_test_public_calendar_assert_contains("bvmgr_request_server_value('HTTP_USER_AGENT')", $source, $label . ' should source the request UA through the shared server-value helper.');
     vms_test_public_calendar_assert_contains('strtolower(sanitize_text_field($user_agent))', $source, $label . ' should preserve lowercase sanitize_text_field() normalization.');
-    vms_test_public_calendar_assert_contains('vms_public_calendar_get_request_user_agent()', $source, $label . ' should preserve the local UA helper and its call site.');
-    vms_test_public_calendar_assert_not_contains('vms_request_user_agent()', $source, $label . ' should not migrate to the capped shared UA helper.');
+    vms_test_public_calendar_assert_contains('bvmgr_public_calendar_get_request_user_agent()', $source, $label . ' should preserve the local UA helper and its call site.');
+    vms_test_public_calendar_assert_not_contains('bvmgr_request_user_agent()', $source, $label . ' should not migrate to the capped shared UA helper.');
     vms_test_public_calendar_assert_contains("strpos(\$user_agent, 'ipad') !== false", $source, $label . ' should preserve the ipad marker.');
     vms_test_public_calendar_assert_contains("strpos(\$user_agent, 'tablet') !== false", $source, $label . ' should preserve the tablet marker.');
     vms_test_public_calendar_assert_contains("strpos(\$user_agent, 'kindle') !== false", $source, $label . ' should preserve the kindle marker.');
     vms_test_public_calendar_assert_contains("strpos(\$user_agent, 'silk/') !== false", $source, $label . ' should preserve the silk/ marker.');
     vms_test_public_calendar_assert_contains("strpos(\$user_agent, 'playbook') !== false", $source, $label . ' should preserve the playbook marker.');
     vms_test_public_calendar_assert_contains("trim((string) \$atts['view']) !== ''", $source, $label . ' should preserve shortcode-view precedence.');
-    vms_test_public_calendar_assert_contains('$requested_view = vms_public_calendar_get_requested_view();', $source, $label . ' should preserve request-view precedence.');
+    vms_test_public_calendar_assert_contains('$requested_view = bvmgr_public_calendar_get_requested_view();', $source, $label . ' should preserve request-view precedence.');
     vms_test_public_calendar_assert_contains("if (\$view === 'auto') {", $source, $label . ' should preserve the auto-view branch.');
     vms_test_public_calendar_assert_contains("} elseif (\$is_tablet_calendar_request && \$view === 'month') {", $source, $label . ' should preserve month-to-list coercion on mobile/tablet.');
     vms_test_public_calendar_assert_contains('$base_args[\'view\'] = $view;', $source, $label . ' should preserve requested-view navigation state.');
     vms_test_public_calendar_assert_contains('data-vms-effective-view="<?php echo esc_attr($effective_view); ?>"', $source, $label . ' should preserve effective-view data attributes.');
     vms_test_public_calendar_assert_contains('vms-public-cal--view-<?php echo esc_attr($effective_view); ?>', $source, $label . ' should preserve effective-view wrapper classes.');
-    vms_test_public_calendar_assert_contains('vms_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed)', $source, $label . ' should preserve the list-view branch.');
-    vms_test_public_calendar_assert_contains('vms_public_calendar_render_compact_view($rendered_months, $events, $state_venue_id, $show_open_closed)', $source, $label . ' should preserve the compact-view branch.');
-    vms_test_public_calendar_assert_contains('vms_public_calendar_render_month_grid($month, $days, $day_states)', $source, $label . ' should preserve the month-grid branch.');
+    vms_test_public_calendar_assert_contains('bvmgr_public_calendar_render_list_view($events, $show_vendors, $show_images, $show_open_closed)', $source, $label . ' should preserve the list-view branch.');
+    vms_test_public_calendar_assert_contains('bvmgr_public_calendar_render_compact_view($rendered_months, $events, $state_venue_id, $show_open_closed)', $source, $label . ' should preserve the compact-view branch.');
+    vms_test_public_calendar_assert_contains('bvmgr_public_calendar_render_month_grid($month, $days, $day_states)', $source, $label . ' should preserve the month-grid branch.');
     vms_test_public_calendar_assert_contains('vms-public-cal-mobile-list-fallback', $source, $label . ' should preserve the hidden mobile list fallback.');
     vms_test_public_calendar_assert_contains('Mobile and tablet list view', $source, $label . ' should preserve the mobile-list accessibility text.');
     vms_test_public_calendar_assert_contains('Compact view shows up to three event-bearing months in weekend-focused chunks and skips empty months.', $source, $label . ' should preserve the compact-view note.');
@@ -339,17 +339,17 @@ foreach (
     ) as $label => $helperSource
 ) {
     vms_test_public_calendar_assert_not_contains("\$_SERVER['HTTP_USER_AGENT']", $helperSource, $label . ' should not access HTTP_USER_AGENT directly.');
-    vms_test_public_calendar_assert_contains("vms_request_server_value('HTTP_USER_AGENT')", $helperSource, $label . ' should call the shared server-value helper.');
+    vms_test_public_calendar_assert_contains("bvmgr_request_server_value('HTTP_USER_AGENT')", $helperSource, $label . ' should call the shared server-value helper.');
     vms_test_public_calendar_assert_contains('sanitize_text_field($user_agent)', $helperSource, $label . ' should retain sanitize_text_field().');
     vms_test_public_calendar_assert_contains('strtolower(sanitize_text_field($user_agent))', $helperSource, $label . ' should retain lowercase normalization.');
-    vms_test_public_calendar_assert_not_contains('vms_request_user_agent()', $helperSource, $label . ' should not use the capped UA helper.');
+    vms_test_public_calendar_assert_not_contains('bvmgr_request_user_agent()', $helperSource, $label . ' should not use the capped UA helper.');
     vms_test_public_calendar_assert_not_contains('substr(', $helperSource, $label . ' should not add a length cap.');
 }
 
 vms_test_public_calendar_assert_contains("return substr(sanitize_text_field(\$user_agent), 0, 255);", $mirrorRuntimeGuardsSource, 'Mirror runtime guards should preserve the capped shared UA helper outside this calendar path.');
 vms_test_public_calendar_assert_contains("return substr(sanitize_text_field(\$user_agent), 0, 255);", $liveRuntimeGuardsSource, 'Live runtime guards should preserve the capped shared UA helper outside this calendar path.');
-vms_test_public_calendar_assert_contains("vms_request_server_value('HTTP_USER_AGENT')", $mirrorRuntimeGuardsSource, 'Mirror runtime guards should preserve the helper-backed UA source.');
-vms_test_public_calendar_assert_contains("vms_request_server_value('HTTP_USER_AGENT')", $liveRuntimeGuardsSource, 'Live runtime guards should preserve the helper-backed UA source.');
+vms_test_public_calendar_assert_contains("bvmgr_request_server_value('HTTP_USER_AGENT')", $mirrorRuntimeGuardsSource, 'Mirror runtime guards should preserve the helper-backed UA source.');
+vms_test_public_calendar_assert_contains("bvmgr_request_server_value('HTTP_USER_AGENT')", $liveRuntimeGuardsSource, 'Live runtime guards should preserve the helper-backed UA source.');
 
 eval($mirrorRequestedViewHelper);
 eval($mirrorUaHelper);

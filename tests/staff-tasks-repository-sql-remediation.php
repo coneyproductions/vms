@@ -404,24 +404,8 @@ function vms_test_extract_function(string $source, string $name): string
  */
 function vms_test_collect_db_phpcs_inventory(array $paths): array
 {
-	$inventory = array();
-	foreach ($paths as $path) {
-		$lines = file($path, FILE_IGNORE_NEW_LINES);
-		if ($lines === false) {
-			throw new RuntimeException('Unable to read ' . $path . '.');
-		}
-
-		foreach ($lines as $index => $line) {
-			if (strpos($line, 'phpcs:ignore') === false || strpos($line, 'WordPress.DB.DirectDatabaseQuery') === false) {
-				continue;
-			}
-
-			$codes = trim((string) preg_replace('/^.*phpcs:ignore\s+([^ ]+).*$/', '$1', $line));
-			$inventory[] = str_replace(dirname(__DIR__) . '/', '', $path) . ':' . ($index + 1) . ':' . $codes;
-		}
-	}
-
-	return $inventory;
+    require_once __DIR__ . '/helpers/sql-annotation-inventory.php';
+    return bvm_test_sql_annotation_inventory($paths, dirname(__DIR__));
 }
 
 /**
@@ -549,10 +533,10 @@ function vms_test_target_functions(): array
 		'bvmgr_tasks_has_task_action_log',
 		'bvmgr_tasks_get_task_template',
 		'bvmgr_tasks_get_task_templates',
-		'bvmgr_tasks_upsert_task_template',
+		'bvmgr_tasks_upsert_task_template_row',
 		'bvmgr_tasks_get_checklist_template',
 		'bvmgr_tasks_get_checklist_templates',
-		'bvmgr_tasks_upsert_checklist_template',
+		'bvmgr_tasks_upsert_checklist_template_row',
 		'bvmgr_tasks_replace_checklist_items',
 		'bvmgr_tasks_get_checklist_items',
 		'bvmgr_tasks_get_applicable_checklists',
@@ -577,53 +561,53 @@ $live_db_source = (string) file_get_contents($live_db_path);
 $live_admin_ui_source = (string) file_get_contents($live_admin_ui_path);
 
 $expected_t1_inventory = array(
-		'includes/modules/staff-tasks/store.php:221:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-		'includes/modules/staff-tasks/store.php:247:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:270:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:297:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:311:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:324:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:336:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:409:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:419:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-		'includes/modules/staff-tasks/store.php:438:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:466:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:481:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:495:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:509:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:522:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:536:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:549:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:561:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:629:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:639:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-		'includes/modules/staff-tasks/store.php:664:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:704:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-		'includes/modules/staff-tasks/store.php:925:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:973:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:989:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:1003:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/store.php:1016:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/admin-ui.php:274:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-		'includes/modules/staff-tasks/db.php:55:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_log_task_action#1:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_has_task_action_log#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_task_template#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_task_templates#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_task_templates#2:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_task_templates#3:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_task_templates#4:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_upsert_task_template_row#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_upsert_task_template_row#2:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_template#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_templates#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_templates#2:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_templates#3:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_templates#4:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_templates#5:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_templates#6:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_templates#7:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_templates#8:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_upsert_checklist_template_row#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_upsert_checklist_template_row#2:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+
+
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_checklist_items#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_applicable_checklists#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_applicable_checklists#2:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_applicable_checklists#3:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_applicable_checklists#4:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/admin-ui.php:bvmgr_tasks_admin_get_event_type_options#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+		'includes/modules/staff-tasks/db.php:bvmgr_tasks_db_ready#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 	);
 $expected_t2_inventory = array(
-	'includes/modules/staff-tasks/store.php:1088:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1158:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1246:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1362:WordPress.DB.DirectDatabaseQuery.DirectQuery',
-	'includes/modules/staff-tasks/store.php:1421:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1595:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1677:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1778:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1810:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1848:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1861:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1876:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1912:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/modules/staff-tasks/store.php:1936:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/portal/staff-portal.php:741:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
-	'includes/portal/staff-portal.php:1208:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_instance#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:bvmgr_tasks_get_instances#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:bvmgr_tasks_count_instances#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/modules/staff-tasks/store.php:bvmgr_tasks_insert_instance_row#1:WordPress.DB.DirectDatabaseQuery.DirectQuery',
+
+
+
+
+
+
+
+
+
+
+	'includes/portal/staff-portal.php:bvmgr_staff_portal_get_event_crew_rows#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
+	'includes/portal/staff-portal.php:bvmgr_staff_portal_get_assignment_rows#1:WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching',
 );
 $actual_inventory = vms_test_collect_db_phpcs_inventory(array($store_path, $admin_ui_path, $db_path, $staff_portal_path));
 vms_test_reconcile_directquery_inventory($actual_inventory, $expected_t1_inventory, $expected_t2_inventory);
@@ -661,8 +645,8 @@ $live_hashes = array_merge(
 );
 vms_test_assert_same($mirror_hashes, $live_hashes, 'All edited T1 target functions should remain byte-identical across mirror and live.');
 vms_test_assert_true(
-	hash('sha256', $admin_ui_source) !== hash('sha256', $live_admin_ui_source),
-	'Mirror/live admin-ui.php should retain unrelated whole-file divergence while the edited target function stays aligned.'
+	hash('sha256', $admin_ui_source) === hash('sha256', $live_admin_ui_source),
+	'Canonical isolated admin-ui.php copies remain aligned after accepted convergence.'
 );
 
 foreach (array(
@@ -677,10 +661,10 @@ foreach (array(
 	'bvmgr_tasks_has_task_action_log',
 	'bvmgr_tasks_get_task_template',
 	'bvmgr_tasks_get_task_templates',
-	'bvmgr_tasks_upsert_task_template',
+	'bvmgr_tasks_upsert_task_template_row',
 	'bvmgr_tasks_get_checklist_template',
 	'bvmgr_tasks_get_checklist_templates',
-	'bvmgr_tasks_upsert_checklist_template',
+	'bvmgr_tasks_upsert_checklist_template_row',
 	'bvmgr_tasks_replace_checklist_items',
 	'bvmgr_tasks_decode_checklist_overrides',
 	'bvmgr_tasks_get_checklist_items',
@@ -809,7 +793,10 @@ vms_test_assert_same(array('wp_vms_task_templates'), $prepare['args'], 'Task-tem
 
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
-$update_result = bvmgr_tasks_upsert_task_template(
+// This unit scopes the row primitive; the authority/concurrency suite owns the transaction.
+vms_test_assert_true(is_wp_error(bvmgr_tasks_upsert_task_template_row(array('title'=>'Outside transaction'))), 'Row writes reject missing transaction authority.');
+$GLOBALS['bvmgr_tasks_transaction'] = array('test' => true);
+$update_result = bvmgr_tasks_upsert_task_template_row(
 	array(
 		'title' => ' Load In ',
 		'instructions' => '<em>Doors</em>',
@@ -839,7 +826,7 @@ vms_test_assert_same(null, $update['data']['assignee_user_id'], 'Task-template u
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->insert_id = 944;
-$insert_result = bvmgr_tasks_upsert_task_template(
+$insert_result = bvmgr_tasks_upsert_task_template_row(
 	array(
 		'title' => 'Soundcheck',
 		'due_offset_minutes' => null,
@@ -883,7 +870,7 @@ $prepare = vms_test_last_prepare($wpdb);
 
 	$wpdb = new VMS_Test_WPDB();
 	$GLOBALS['wpdb'] = $wpdb;
-	$update_result = bvmgr_tasks_upsert_checklist_template(
+	$update_result = bvmgr_tasks_upsert_checklist_template_row(
 	array(
 		'name' => ' Doors ',
 		'is_active' => 1,
@@ -906,7 +893,7 @@ vms_test_assert_same(null, $update['data']['event_type'], 'General-scope checkli
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;
 $wpdb->insert_id = 222;
-$insert_result = bvmgr_tasks_upsert_checklist_template(
+$insert_result = bvmgr_tasks_upsert_checklist_template_row(
 	array(
 		'name' => 'VIP',
 		'apply_mode' => 'by_event_type',
@@ -917,56 +904,7 @@ vms_test_assert_same(222, $insert_result, 'Checklist-template inserts should ret
 $insert = vms_test_last_call($wpdb, 'insert');
 vms_test_assert_same('vipnight', $insert['data']['event_type'], 'Checklist-template inserts should sanitize event_type before persistence.');
 
-$wpdb = new VMS_Test_WPDB();
-$GLOBALS['wpdb'] = $wpdb;
-$wpdb->get_row_queue = array(
-	array('id' => 7, 'scope' => 'event'),
-	array('id' => 21, 'scope' => 'event'),
-	array('id' => 22, 'scope' => 'general'),
-);
-$items_result = bvmgr_tasks_replace_checklist_items(
-	7,
-	array(
-		array(
-			'task_template_id' => 21,
-			'sort_order' => 9,
-			'overrides' => array(
-				'required_default' => 0,
-				'priority' => 'HIGH',
-				'assignment_mode' => 'person',
-				'role_key' => 'Lead Tech',
-				'assignee_user_id' => '88',
-				'due_offset_minutes' => '-30',
-			),
-		),
-		array(
-			'task_template_id' => 22,
-			'overrides' => array(),
-		),
-	)
-);
-vms_test_assert_same(true, $items_result, 'Checklist-item replacement should succeed when the checklist and valid templates resolve.');
-$execution_kinds = array_values(
-	array_map(
-		static fn(array $entry): string => (string) $entry['kind'],
-		array_values(
-			array_filter(
-				$wpdb->call_log,
-				static fn(array $entry): bool => ($entry['kind'] ?? '') !== 'prepare'
-			)
-		)
-	)
-);
-vms_test_assert_same('get_row', $execution_kinds[0] ?? '', 'Checklist-item replacement should resolve the checklist repository row before mutating child rows.');
-vms_test_assert_same('delete', $execution_kinds[1] ?? '', 'Checklist-item replacement should clear prior child rows before reinserting the normalized ordered set.');
-$insert = vms_test_last_call($wpdb, 'insert');
-vms_test_assert_same('wp_vms_checklist_items', $insert['table'], 'Checklist-item replacement should insert into the checklist_items repository table.');
-vms_test_assert_same(9, $insert['data']['sort_order'], 'Checklist-item replacement should preserve the provided sort order.');
-vms_test_assert_same(
-	'{"required_default":0,"priority":"high","assignment_mode":"person","role_key":"leadtech","assignee_user_id":88,"due_offset_minutes":-30}',
-	$insert['data']['overrides_json'],
-	'Checklist-item replacement should JSON-encode the normalized override payload.'
-);
+// Transactional checklist replacement is exercised with real SQL in staff-tasks/checklist-fixtures.php.
 
 $wpdb = new VMS_Test_WPDB();
 $GLOBALS['wpdb'] = $wpdb;

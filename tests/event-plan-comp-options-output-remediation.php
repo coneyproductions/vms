@@ -113,7 +113,7 @@ try {
 	$assert(false === has_action('wp_ajax_nopriv_vms_get_event_plan_comp_options'), 'Compensation-options AJAX endpoint should not expose an unauthenticated hook.');
 	$assert(strpos($eventPlansSource, "add_action('wp_ajax_vms_get_event_plan_comp_options', array(\$this, 'ajax_get_event_plan_comp_options'));") !== false, 'Event Plans should register the exact authenticated compensation-options AJAX hook.');
 	$assert(strpos($eventPlansSource, 'wp_ajax_nopriv_vms_get_event_plan_comp_options') === false, 'Event Plans should not register a nopriv compensation-options AJAX hook.');
-	$assert(strpos($eventPlansSource, "check_ajax_referer('vms_comp_options', 'nonce');") !== false, 'Compensation-options AJAX handler should keep the exact nonce action and request field.');
+	$assert(strpos($eventPlansSource, "check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_comp_options', 'nonce'), 'nonce', true);") !== false, 'Compensation-options AJAX handler should keep the exact nonce action and request field.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Not allowed'), 403);") !== false, 'Compensation-options AJAX handler should retain the exact capability failure response.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Comp options helper not loaded'), 500);") !== false, 'Compensation-options AJAX handler should retain the exact helper-missing response.');
 	$assert(strpos($eventPlansSource, '$selected_opt = isset($_POST[\'selected_opt\']) ? sanitize_text_field(wp_unslash($_POST[\'selected_opt\'])) : \'\';') !== false, 'Compensation-options AJAX handler should continue to sanitize selected_opt with wp_unslash() + sanitize_text_field().');
@@ -349,7 +349,7 @@ try {
 	update_post_meta($disabledPackageId, '_vms_attendance_bonus_mode', 'step');
 
 	$noVenueResponse = $dispatchAjax(array(
-		'nonce' => wp_create_nonce('vms_comp_options'),
+		'nonce' => wp_create_nonce('bvmgr_comp_options'),
 		'venue_id' => '',
 		'vendor_id' => (string) $vendorId,
 		'event_date' => '',
@@ -369,7 +369,7 @@ try {
 	$assert($selectedVendorTile->getAttribute('data-commission-mode') === 'artist_fee', 'Compensation-options should preserve the vendor default commission mode attribute.');
 
 	$holidayResponse = $dispatchAjax(array(
-		'nonce' => wp_create_nonce('vms_comp_options'),
+		'nonce' => wp_create_nonce('bvmgr_comp_options'),
 		'venue_id' => (string) $venueId,
 		'vendor_id' => (string) $vendorId,
 		'event_date' => $eventDate,
@@ -472,7 +472,7 @@ try {
 	);
 
 	$packageResponse = $dispatchAjax(array(
-		'nonce' => wp_create_nonce('vms_comp_options'),
+		'nonce' => wp_create_nonce('bvmgr_comp_options'),
 		'venue_id' => (string) $venueId,
 		'vendor_id' => (string) $vendorId,
 		'event_date' => $eventDate,
@@ -491,7 +491,7 @@ try {
 	$assert($packageTile->getAttribute('data-commission-mode') === 'gross', 'Package tile should preserve the package commission mode attribute.');
 
 	$emptyVenueResponse = $dispatchAjax(array(
-		'nonce' => wp_create_nonce('vms_comp_options'),
+		'nonce' => wp_create_nonce('bvmgr_comp_options'),
 		'venue_id' => (string) $emptyVenueId,
 		'vendor_id' => '',
 		'event_date' => $eventDate,
@@ -503,7 +503,7 @@ try {
 	$assert(strpos($emptyVenueHtml, 'Select a Venue above to load packages.') === false, 'Compensation-options fragment should not show the no-venue prompt when a venue is selected.');
 
 	$unauthorizedResponse = $dispatchAjax(array(
-		'nonce' => wp_create_nonce('vms_comp_options'),
+		'nonce' => wp_create_nonce('bvmgr_comp_options'),
 		'venue_id' => (string) $venueId,
 		'vendor_id' => (string) $vendorId,
 		'event_date' => $eventDate,

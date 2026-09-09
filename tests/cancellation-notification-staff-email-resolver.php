@@ -1,14 +1,7 @@
 <?php
 declare(strict_types=1);
 
-$wpLoad = dirname(__DIR__, 4) . '/wp-load.php';
-if (!defined('ABSPATH')) {
-	if (!file_exists($wpLoad)) {
-		fwrite(STDERR, "Could not locate wp-load.php.\n");
-		exit(1);
-	}
-	require_once $wpLoad;
-}
+require __DIR__ . '/helpers/current-wordpress-fixture.php';
 
 if (!function_exists('bvmgr_cancellation_run_step')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';

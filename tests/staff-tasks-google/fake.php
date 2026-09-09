@@ -5,7 +5,12 @@ if (!defined('BVM_GOOGLE_CLIENT_SECRET')) define('BVM_GOOGLE_CLIENT_SECRET','fix
 if (!defined('BVM_GOOGLE_TOKEN_KEY')) define('BVM_GOOGLE_TOKEN_KEY',base64_encode(str_repeat('F',32)));
 function google_fake(callable $operation) {
     $path=getenv('BVM_GOOGLE_FAKE');
-    if (!$path || !str_starts_with($path,'/Users/treyconey/Documents/BVM Ecosystem Audit 2026-09-07/phase-4a/')) throw new RuntimeException('private fake root required');
+    $root = getenv('BVM_GOOGLE_FIXTURE_ROOT');
+    if (getenv('BVM_DISPOSABLE_DB_GUARDED') !== '1' || !$root || !is_dir($root)
+        || realpath(dirname($path ?: '')) !== realpath($root) || basename($path ?: '') !== 'google-fake.json'
+        || is_link($path) || str_starts_with(realpath($root), realpath(ABSPATH))) {
+        throw new RuntimeException('Explicit private disposable Google fixture root required');
+    }
     $f=fopen($path,'c+'); flock($f,LOCK_EX); $s=json_decode(stream_get_contents($f),true)?:array('calendars'=>array(),'events'=>array(),'calls'=>array(),'fault'=>array());
     try { $r=$operation($s); rewind($f); ftruncate($f,0); fwrite($f,json_encode($s)); fflush($f); return $r; }
     finally { flock($f,LOCK_UN); fclose($f); }

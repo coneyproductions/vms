@@ -231,16 +231,16 @@ try {
 	$livePublicSource = $readFile($livePublicPath);
 	$liveAssetSource = $readFile($liveAssetPath);
 
-	$shellSource = $extractFunctionSource($publicSource, 'vms_add_dispatch_render_public_shell');
-	$stylesheetUrlSource = $extractFunctionSource($publicSource, 'vms_add_dispatch_public_shell_stylesheet_url');
-	$routerSource = $extractFunctionSource($publicSource, 'vms_add_dispatch_template_router');
-	$renderResponseSource = $extractFunctionSource($publicSource, 'vms_add_dispatch_render_public_response');
-	$rewriteSource = $extractFunctionSource($publicSource, 'vms_add_dispatch_register_rewrite');
-	$flushSource = $extractFunctionSource($publicSource, 'vms_add_dispatch_maybe_flush_rewrites');
+	$shellSource = $extractFunctionSource($publicSource, 'bvmgr_add_dispatch_render_public_shell');
+	$stylesheetUrlSource = $extractFunctionSource($publicSource, 'bvmgr_add_dispatch_public_shell_stylesheet_url');
+	$routerSource = $extractFunctionSource($publicSource, 'bvmgr_add_dispatch_template_router');
+	$renderResponseSource = $extractFunctionSource($publicSource, 'bvmgr_add_dispatch_render_public_response');
+	$rewriteSource = $extractFunctionSource($publicSource, 'bvmgr_add_dispatch_register_rewrite');
+	$flushSource = $extractFunctionSource($publicSource, 'bvmgr_add_dispatch_maybe_flush_rewrites');
 
-	$assert(has_action('init', 'vms_add_dispatch_register_rewrite') === 30, 'ADD public response rewrite registration should remain on init priority 30.');
-	$assert(has_action('admin_init', 'vms_add_dispatch_maybe_flush_rewrites') === 30, 'ADD public response flush guard should remain on admin_init priority 30.');
-	$assert(has_action('template_redirect', 'vms_add_dispatch_template_router') === 0, 'ADD public response router should remain on template_redirect priority 0.');
+	$assert(has_action('init', 'bvmgr_add_dispatch_register_rewrite') === 30, 'ADD public response rewrite registration should remain on init priority 30.');
+	$assert(has_action('admin_init', 'bvmgr_add_dispatch_maybe_flush_rewrites') === 30, 'ADD public response flush guard should remain on admin_init priority 30.');
+	$assert(has_action('template_redirect', 'bvmgr_add_dispatch_template_router') === 0, 'ADD public response router should remain on template_redirect priority 0.');
 
 	$assert(strpos($rewriteSource, "add_rewrite_tag('%bvmgr_add_dispatch_token%', '([^&]+)');") !== false && strpos($rewriteSource, "add_rewrite_tag('%vms_add_dispatch_token%', '([^&]+)');") !== false, 'ADD public response must register the canonical tag and retain the legacy inbound tag.');
 	$assert(strpos($rewriteSource, "add_rewrite_rule('^availability-dispatch/respond/([^/]+)/?$', 'index.php?bvmgr_add_dispatch_token=\$matches[1]', 'top');") !== false, 'ADD public response must preserve the physical route and target the canonical query var.');
@@ -250,7 +250,7 @@ try {
 
 	$assert(strpos($shellSource, '<style>') === false, 'ADD public shell should no longer emit a targeted inline <style> block.');
 	$assert(strpos($publicSource, 'wp_add_inline_style(') === false, 'ADD public shell should not move styles into wp_add_inline_style().');
-	$assert(strpos($shellSource, '$stylesheet_url = vms_add_dispatch_public_shell_stylesheet_url();') !== false, 'ADD public shell should resolve the standalone stylesheet through a dedicated helper.');
+	$assert(strpos($shellSource, '$stylesheet_url = bvmgr_add_dispatch_public_shell_stylesheet_url();') !== false, 'ADD public shell should resolve the standalone stylesheet through a dedicated helper.');
 	$assert(
 		preg_match(
 			'~echo \'<title>\' \. esc_html\(\$headline\) \. \'</title>\';\s*if \(\$stylesheet_url !== \'\'\) \{\s*echo \'<link rel="stylesheet" href="\' \. esc_url\(\$stylesheet_url\) \. \'">\';\s*\}\s*echo \'</head><body><div class="vms-add-public"><div class="vms-add-card">\';~s',
@@ -262,13 +262,13 @@ try {
 	$assert(strpos($shellSource, 'nocache_headers();') !== false, 'ADD public shell should preserve nocache headers.');
 	$assert(strpos($shellSource, "echo '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">';") !== false, 'ADD public shell should preserve the standalone document opener.');
 	$assert(strpos($shellSource, "echo '</div></div></body></html>';") !== false, 'ADD public shell should preserve the standalone document closer.');
-	$assert(strpos($shellSource, 'wp_kses($content_html, vms_add_dispatch_public_response_allowed_html())') !== false, 'ADD public shell should preserve the final response-fragment allowlist sink.');
+	$assert(strpos($shellSource, 'wp_kses($content_html, bvmgr_add_dispatch_public_response_allowed_html())') !== false, 'ADD public shell should preserve the final response-fragment allowlist sink.');
 	$assert(strpos($shellSource, 'wp_head(') === false, 'ADD public shell should remain a standalone document without wp_head().');
 	$assert(strpos($shellSource, 'wp_enqueue_style(') === false, 'ADD public shell should not globally enqueue the standalone stylesheet.');
 	$assert(strpos($shellSource, 'exit;') !== false, 'ADD public shell should preserve explicit response termination.');
 
 	$assert(strpos($stylesheetUrlSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-public-shell.css'") !== false, 'ADD public shell stylesheet helper should point to assets/css/vms-add-dispatch-public-shell.css.');
-	$assert(strpos($stylesheetUrlSource, "function_exists('vms_asset_version') ? trim((string) vms_asset_version()) : ''") !== false, 'ADD public shell stylesheet helper should prefer vms_asset_version().');
+	$assert(strpos($stylesheetUrlSource, "function_exists('bvmgr_asset_version') ? trim((string) bvmgr_asset_version()) : ''") !== false, 'ADD public shell stylesheet helper should prefer bvmgr_asset_version().');
 	$assert(strpos($stylesheetUrlSource, "if (\$version === '' && defined('BVMGR_VERSION')) {") !== false, 'ADD public shell stylesheet helper should fall back to BVMGR_VERSION when the helper is unavailable or empty.');
 	$assert(strpos($stylesheetUrlSource, "\$stylesheet_url = add_query_arg('ver', \$version, \$stylesheet_url);") !== false, 'ADD public shell stylesheet helper should add the version query through add_query_arg().');
 
@@ -303,18 +303,18 @@ try {
 	$assert(strpos($assetSource, '<?php') === false && strpos($assetSource, '<?=') === false, 'ADD public shell stylesheet should remain purely static CSS.');
 
 	$assert(strpos($renderResponseSource, '<style>') === false, 'ADD public response renderer should not retain inline CSS emitters.');
-	$assert(strpos($renderResponseSource, "esc_url(vms_add_dispatch_build_response_url(\$response, 'available'))") !== false, 'ADD public response should preserve the available-link escaping boundary.');
-	$assert(strpos($renderResponseSource, "esc_url(vms_add_dispatch_build_response_url(\$response, 'unavailable'))") !== false, 'ADD public response should preserve the unavailable-link escaping boundary.');
+	$assert(strpos($renderResponseSource, "esc_url(bvmgr_add_dispatch_build_response_url(\$response, 'available'))") !== false, 'ADD public response should preserve the available-link escaping boundary.');
+	$assert(strpos($renderResponseSource, "esc_url(bvmgr_add_dispatch_build_response_url(\$response, 'unavailable'))") !== false, 'ADD public response should preserve the unavailable-link escaping boundary.');
 	$assert(strpos($renderResponseSource, "nl2br(esc_html((string) \$request['message']))") !== false, 'ADD public response should preserve the escaped note-message boundary.');
-	$assert(strpos($renderResponseSource, 'vms_add_dispatch_find_response_by_raw_token($raw_token)') !== false, 'ADD public response should preserve the raw-token lookup boundary.');
+	$assert(strpos($renderResponseSource, 'bvmgr_add_dispatch_find_response_by_raw_token($raw_token)') !== false, 'ADD public response should preserve the raw-token lookup boundary.');
 	$assert(strpos($renderResponseSource, "sanitize_key((string) (\$request['status'] ?? '')) !== 'active'") !== false, 'ADD public response should preserve the active-request status check.');
-	$assert(strpos($renderResponseSource, 'vms_add_dispatch_response_expired($response)') !== false, 'ADD public response should preserve the expired-link guard.');
-	$assert(strpos($renderResponseSource, '$choice = vms_add_dispatch_get_request_choice();') !== false, 'ADD public response should preserve the request-choice handling.');
+	$assert(strpos($renderResponseSource, 'bvmgr_add_dispatch_response_expired($response)') !== false, 'ADD public response should preserve the expired-link guard.');
+	$assert(strpos($renderResponseSource, '$choice = bvmgr_add_dispatch_get_request_choice();') !== false, 'ADD public response should preserve the request-choice handling.');
 
 	$assert(strpos($routerSource, 'if (is_admin()) {') !== false, 'ADD public shell router should preserve the is_admin() guard.');
-	$assert(strpos($routerSource, '$token = vms_add_dispatch_get_request_token();') !== false, 'ADD public shell router should preserve the request-token fetch.');
+	$assert(strpos($routerSource, '$token = bvmgr_add_dispatch_get_request_token();') !== false, 'ADD public shell router should preserve the request-token fetch.');
 	$assert(strpos($routerSource, "if (\$token === '') {") !== false, 'ADD public shell router should preserve the empty-token early return.');
-	$assert(strpos($routerSource, 'vms_add_dispatch_render_public_response($token);') !== false, 'ADD public shell router should preserve the response render dispatch.');
+	$assert(strpos($routerSource, 'bvmgr_add_dispatch_render_public_response($token);') !== false, 'ADD public shell router should preserve the response render dispatch.');
 
 	$expectedAllowedHtml = array(
 		'a' => array(
@@ -335,7 +335,7 @@ try {
 
 	$assert(strpos($outputTestSource, 'ADD public shell output remediation OK.') !== false, 'Existing ADD public shell output remediation test should remain present.');
 	$assert(strpos($adminUiSource, "BVMGR_PLUGIN_URL . 'assets/css/vms-add-dispatch-admin.css'") !== false, 'ADD admin asset ownership should remain unchanged in this slice.');
-	$assert(strpos($helpersSource, 'function vms_add_dispatch_get_event_plan_need_scan(int $limit = 12, int $excluded_limit = 8, array $options = array()): array') !== false, 'ADD helper/open-needs query logic should remain unchanged in this slice.');
+	$assert(strpos($helpersSource, 'function bvmgr_add_dispatch_get_event_plan_need_scan(int $limit = 12, int $excluded_limit = 8, array $options = array()): array') !== false, 'ADD helper/open-needs query logic should remain unchanged in this slice.');
 	$assert(strpos($openNeedsTestSource, 'Future Event Plan with missing Primary Vendor should appear in ADD open needs.') !== false, 'The adjudicated ADD open-needs baseline diagnostic should remain unchanged.');
 
 	$assert($publicSource === $livePublicSource, 'Mirror/live ADD public-shell PHP should remain byte-identical before commit.');

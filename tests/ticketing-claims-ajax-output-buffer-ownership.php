@@ -376,12 +376,12 @@ try {
 
 	vms_test_assert_code_order(
 		'if (!is_user_logged_in()) {',
-		"if (!check_ajax_referer('vms_ticketing_claims_log_client_action', 'nonce', false)) {",
+		"if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_log_client_action', 'nonce'), 'nonce', false)) {",
 		$clientLogBody,
 		'Client logging should still check the logged-in state before nonce validation.'
 	);
 	vms_test_assert_code_order(
-		"if (!check_ajax_referer('vms_ticketing_claims_log_client_action', 'nonce', false)) {",
+		"if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_log_client_action', 'nonce'), 'nonce', false)) {",
 		'if (!in_array($reason_code, $allowed, true)) {',
 		$clientLogBody,
 		'Client logging should still validate the nonce before reason validation.'
@@ -407,7 +407,7 @@ PHP,
 	);
 	vms_test_assert_code_contains(
 		<<<'PHP'
-if (!check_ajax_referer('vms_ticketing_claims_log_client_action', 'nonce', false)) {
+if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_log_client_action', 'nonce'), 'nonce', false)) {
 	bvmgr_ticketing_v2_ajax_send_error(array('message' => 'bad_nonce'), 403);
 }
 PHP,
@@ -430,7 +430,7 @@ PHP,
 	);
 
 	vms_test_assert_code_order(
-		"if (!check_ajax_referer('vms_ticketing_claims_validate_assignee', 'nonce', false)) {",
+		"if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_validate_assignee', 'nonce'), 'nonce', false)) {",
 		'if (!is_user_logged_in()) {',
 		$assigneeBody,
 		'Assignee validation should still check the nonce before the logged-in state.'
@@ -474,7 +474,7 @@ PHP,
 	);
 	vms_test_assert_code_contains(
 		<<<'PHP'
-if (!check_ajax_referer('vms_ticketing_claims_validate_assignee', 'nonce', false)) {
+if (!check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_ticketing_claims_validate_assignee', 'nonce'), 'nonce', false)) {
 	bvmgr_ticketing_v2_ajax_send_error(array(
 		'ok' => false,
 		'message' => __('Session expired. Please refresh and try again.', 'backstage-venue-manager'),

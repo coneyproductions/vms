@@ -326,6 +326,8 @@ if (!function_exists('wp_die')) {
 }
 
 if (!function_exists('check_admin_referer')) {
+	// Renderer/handler unit boundary; nonce compatibility itself has dedicated coverage.
+	function bvmgr_nonce_action_for_request(string $action, $field = false): string { return $action; }
 	function check_admin_referer(string $action): bool
 	{
 		$GLOBALS['vms_test_referer_actions'][] = $action;
@@ -643,8 +645,8 @@ $assert(isset($GLOBALS['vms_test_actions']['admin_post_vms_integrity_scan'][10])
 $assertSame('bvmgr_handle_integrity_scan', $GLOBALS['vms_test_actions']['admin_post_vms_integrity_scan'][10][0], 'Settings should preserve the integrity scan handler callback.');
 $assert(strpos($settingsSource, "isset(\$_POST['mode']) ? sanitize_key((string) \$_POST['mode']) : 'all';") !== false, 'Integrity scan handler should preserve mode normalization without widening the request contract.');
 $assert(strpos($settingsSource, "isset(\$_POST['limit']) ? (int) \$_POST['limit'] : 500;") !== false, 'Integrity scan handler should preserve limit normalization and default.');
-$assert(strpos($settingsSource, "check_admin_referer('vms_integrity_scan');") !== false, 'Integrity scan handler should preserve the nonce action.');
-$assert(strpos($settingsSource, "wp_nonce_field('vms_integrity_scan');") !== false, 'Integrity scan controls should preserve the nonce field action.');
+$assert(strpos($settingsSource, "check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_integrity_scan', '_wpnonce'), '_wpnonce');") !== false, 'Integrity scan handler should preserve the nonce action.');
+$assert(strpos($settingsSource, "wp_nonce_field('bvmgr_integrity_scan');") !== false, 'Integrity scan controls should preserve the nonce field action.');
 $assert(strpos($settingsSource, "name=\"action\" value=\"vms_integrity_scan\"") !== false, 'Integrity scan controls should preserve the admin-post action field.');
 $assert(strpos($settingsSource, 'function bvmgr_build_settings_page_integrity_scan_result_context(') !== false, 'Settings should expose a dedicated integrity-scan context builder.');
 $assert(strpos($settingsSource, 'function bvmgr_render_settings_page_integrity_scan_result(') !== false, 'Settings should expose a dedicated integrity-scan renderer.');
@@ -693,7 +695,7 @@ try {
 } catch (RuntimeException $e) {
 	$assertSame('Nonce check failed.', $e->getMessage(), 'Integrity scan handler should preserve nonce failure ordering.');
 }
-$assertSame(array('vms_integrity_scan'), $GLOBALS['vms_test_referer_actions'], 'Integrity scan handler should preserve the nonce action.');
+$assertSame(array('bvmgr_integrity_scan'), $GLOBALS['vms_test_referer_actions'], 'Integrity scan handler should preserve the nonce action.');
 $assertSame(array(), $GLOBALS['vms_test_scan_calls'], 'Integrity scan handler should not start a scan when nonce verification fails.');
 $assertSame(array(), $GLOBALS['vms_test_transient_set_payloads'], 'Integrity scan handler should not write transients when nonce verification fails.');
 $assertSame(array(), $GLOBALS['vms_test_redirects'], 'Integrity scan handler should not redirect when nonce verification fails.');
@@ -739,7 +741,7 @@ foreach ($handler_cases as $case) {
 
 	bvmgr_handle_integrity_scan();
 
-	$assertSame(array('vms_integrity_scan'), $GLOBALS['vms_test_referer_actions'], 'Integrity scan handler should verify the same nonce action for every mode.');
+	$assertSame(array('bvmgr_integrity_scan'), $GLOBALS['vms_test_referer_actions'], 'Integrity scan handler should verify the same nonce action for every mode.');
 	$assertSame(array(array('mode' => $case['expected_mode'], 'limit' => $case['expected_limit'])), $GLOBALS['vms_test_scan_calls'], 'Integrity scan handler should preserve mode dispatch and limit clamping.');
 	$assertSame(1, $GLOBALS['vms_test_transient_set_calls'], 'Integrity scan handler should write exactly one transient result.');
 	$transient_write = $GLOBALS['vms_test_transient_set_payloads'][0];

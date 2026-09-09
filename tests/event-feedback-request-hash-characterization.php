@@ -245,7 +245,7 @@ function wp_unslash($value)
     return $value;
 }
 
-function vms_request_server_value(string $key): string
+function bvmgr_request_server_value(string $key): string
 {
     if (!isset($_SERVER[$key]) || !is_scalar($_SERVER[$key])) {
         return '';
@@ -275,7 +275,7 @@ set_error_handler(
 );
 
 try {
-    $hash = vms_feedback_request_hash();
+    $hash = bvmgr_feedback_request_hash();
 } finally {
     restore_error_handler();
 }
@@ -358,17 +358,17 @@ foreach (
     ) as $label => $source
 ) {
     vms_test_event_feedback_assert_contains(
-        "vms_request_server_value('HTTP_CF_CONNECTING_IP')",
+        "bvmgr_request_server_value('HTTP_CF_CONNECTING_IP')",
         $source,
         $label . ' should source Cloudflare IPs through the shared server-value helper.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_request_server_value('HTTP_X_FORWARDED_FOR')",
+        "bvmgr_request_server_value('HTTP_X_FORWARDED_FOR')",
         $source,
         $label . ' should source XFF through the shared server-value helper.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_request_server_value('REMOTE_ADDR')",
+        "bvmgr_request_server_value('REMOTE_ADDR')",
         $source,
         $label . ' should source remote addresses through the shared server-value helper.'
     );
@@ -378,12 +378,12 @@ foreach (
         $label . ' should preserve first-element XFF parsing.'
     );
     vms_test_event_feedback_assert_contains(
-        "substr(vms_request_server_value('HTTP_USER_AGENT'), 0, 255)",
+        "substr(bvmgr_request_server_value('HTTP_USER_AGENT'), 0, 255)",
         $source,
         $label . ' should preserve the helper-backed capped UA boundary.'
     );
     vms_test_event_feedback_assert_contains(
-        "substr(vms_request_server_value('HTTP_ACCEPT_LANGUAGE'), 0, 80)",
+        "substr(bvmgr_request_server_value('HTTP_ACCEPT_LANGUAGE'), 0, 80)",
         $source,
         $label . ' should preserve the helper-backed capped Accept-Language boundary.'
     );
@@ -426,44 +426,44 @@ foreach (
         $label . ' should no longer read request globals directly.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_request_server_value('HTTP_CF_CONNECTING_IP')",
+        "bvmgr_request_server_value('HTTP_CF_CONNECTING_IP')",
         $helperSource,
         $label . ' should source Cloudflare IPs through the shared server-value helper.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_request_server_value('HTTP_X_FORWARDED_FOR')",
+        "bvmgr_request_server_value('HTTP_X_FORWARDED_FOR')",
         $helperSource,
         $label . ' should source XFF through the shared server-value helper.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_request_server_value('REMOTE_ADDR')",
+        "bvmgr_request_server_value('REMOTE_ADDR')",
         $helperSource,
         $label . ' should source remote addresses through the shared server-value helper.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_request_server_value('HTTP_USER_AGENT')",
+        "bvmgr_request_server_value('HTTP_USER_AGENT')",
         $helperSource,
         $label . ' should source user agents through the shared server-value helper.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_request_server_value('HTTP_ACCEPT_LANGUAGE')",
+        "bvmgr_request_server_value('HTTP_ACCEPT_LANGUAGE')",
         $helperSource,
         $label . ' should source Accept-Language through the shared server-value helper.'
     );
     vms_test_event_feedback_assert(
-        strpos($helperSource, "vms_request_server_value('HTTP_CF_CONNECTING_IP')")
-        < strpos($helperSource, "vms_request_server_value('HTTP_X_FORWARDED_FOR')")
-        && strpos($helperSource, "vms_request_server_value('HTTP_X_FORWARDED_FOR')")
-        < strpos($helperSource, "vms_request_server_value('REMOTE_ADDR')"),
+        strpos($helperSource, "bvmgr_request_server_value('HTTP_CF_CONNECTING_IP')")
+        < strpos($helperSource, "bvmgr_request_server_value('HTTP_X_FORWARDED_FOR')")
+        && strpos($helperSource, "bvmgr_request_server_value('HTTP_X_FORWARDED_FOR')")
+        < strpos($helperSource, "bvmgr_request_server_value('REMOTE_ADDR')"),
         $label . ' should preserve CF > XFF > REMOTE source order.'
     );
     vms_test_event_feedback_assert_not_contains(
-        'vms_request_remote_addr(',
+        'bvmgr_request_remote_addr(',
         $helperSource,
         $label . ' should not migrate to the remote-address helper yet.'
     );
     vms_test_event_feedback_assert_not_contains(
-        'vms_request_user_agent(',
+        'bvmgr_request_user_agent(',
         $helperSource,
         $label . ' should not migrate to the capped UA helper yet.'
     );
@@ -476,12 +476,12 @@ foreach (
     ) as $label => $source
 ) {
     vms_test_event_feedback_assert_contains(
-        '$request_hash = function_exists(\'vms_feedback_request_hash\') ? vms_feedback_request_hash() : \'\';',
+        '$request_hash = function_exists(\'bvmgr_feedback_request_hash\') ? bvmgr_feedback_request_hash() : \'\';',
         $source,
         $label . ' should still compute request_hash up front.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_feedback_existing_recent_duplicate(\$event_plan_id, \$duplicate_fingerprint, \$request_hash)",
+        "bvmgr_feedback_existing_recent_duplicate(\$event_plan_id, \$duplicate_fingerprint, \$request_hash)",
         $source,
         $label . ' should preserve the duplicate lookup tuple.'
     );
@@ -491,17 +491,17 @@ foreach (
         $label . ' should preserve the request submission lock identity.'
     );
     vms_test_event_feedback_assert_contains(
-        "update_post_meta(\$response_id, vms_feedback_meta_key('duplicate_fingerprint'), \$duplicate_fingerprint);",
+        "update_post_meta(\$response_id, bvmgr_feedback_meta_key('duplicate_fingerprint'), \$duplicate_fingerprint);",
         $source,
         $label . ' should persist the duplicate fingerprint.'
     );
     vms_test_event_feedback_assert_contains(
-        "update_post_meta(\$response_id, vms_feedback_meta_key('request_hash'), \$request_hash);",
+        "update_post_meta(\$response_id, bvmgr_feedback_meta_key('request_hash'), \$request_hash);",
         $source,
         $label . ' should persist the request hash.'
     );
     vms_test_event_feedback_assert_contains(
-        "vms_feedback_dedupe_redirect(\$redirect, 'fingerprint');",
+        "bvmgr_feedback_dedupe_redirect(\$redirect, 'fingerprint');",
         $source,
         $label . ' should preserve the fingerprint dedupe reason.'
     );
@@ -533,17 +533,17 @@ foreach (
 }
 
 vms_test_event_feedback_assert_contains(
-    "function vms_feedback_existing_recent_duplicate(int \$event_plan_id, string \$duplicate_fingerprint, string \$request_hash, int \$window_seconds = 7200): int",
+    "function bvmgr_feedback_existing_recent_duplicate(int \$event_plan_id, string \$duplicate_fingerprint, string \$request_hash, int \$window_seconds = 7200): int",
     $mirrorCoreSource,
     'Mirror core Event Feedback should preserve the 7200-second duplicate window default.'
 );
 vms_test_event_feedback_assert(
-    strpos($mirrorPublicSource, '$request_hash = function_exists(\'vms_feedback_request_hash\') ? vms_feedback_request_hash() : \'\';')
-    < strpos($mirrorPublicSource, "vms_feedback_existing_recent_duplicate(\$event_plan_id, \$duplicate_fingerprint, \$request_hash)"),
+    strpos($mirrorPublicSource, '$request_hash = function_exists(\'bvmgr_feedback_request_hash\') ? bvmgr_feedback_request_hash() : \'\';')
+    < strpos($mirrorPublicSource, "bvmgr_feedback_existing_recent_duplicate(\$event_plan_id, \$duplicate_fingerprint, \$request_hash)"),
     'Mirror public Event Feedback should compute request_hash before the duplicate lookup.'
 );
 vms_test_event_feedback_assert(
-    strpos($mirrorPublicSource, "vms_feedback_existing_recent_duplicate(\$event_plan_id, \$duplicate_fingerprint, \$request_hash)")
+    strpos($mirrorPublicSource, "bvmgr_feedback_existing_recent_duplicate(\$event_plan_id, \$duplicate_fingerprint, \$request_hash)")
     < strpos($mirrorPublicSource, "hash('sha256', \$event_plan_id . '|' . \$duplicate_fingerprint . '|' . \$request_hash)"),
     'Mirror public Event Feedback should derive the request lock after the duplicate lookup.'
 );

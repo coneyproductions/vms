@@ -663,7 +663,7 @@ try {
 	$assert(strpos($ajaxSource, '\'footer_forms_html\' => bvmgr_social_event_panel_footer_forms_html($event_plan_id, (int) ($payload[\'queue_id\'] ?? 0)),') !== false, 'AJAX render should still call the public footer producer.');
 	$assert(strpos($ajaxSource, "wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);") !== false, 'AJAX invalid-plan failure should remain unchanged.');
 	$assert(strpos($ajaxSource, "wp_send_json_error(array('message' => 'Not allowed.'), 403);") !== false, 'AJAX capability failure should remain unchanged.');
-	$assert(strpos($ajaxSource, "check_ajax_referer('vms_social_load_event_panel', 'nonce');") !== false, 'AJAX nonce check should remain unchanged.');
+	$assert(strpos($ajaxSource, "check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_social_load_event_panel', 'nonce'), 'nonce', true);") !== false, 'AJAX nonce check should remain unchanged.');
 
 	foreach (array(
 		'get_post_meta(',
@@ -706,7 +706,7 @@ try {
 		$assert(strpos($builderSource, $requiredBuilderMarker) !== false, 'Main builder should keep the expected external-read marker: ' . $requiredBuilderMarker);
 	}
 	$assert(strpos($footerBuilderSource, 'admin_url(\'admin-post.php\')') !== false, 'Footer builder should own admin-post URL generation.');
-	$assert(strpos($footerBuilderSource, 'wp_create_nonce(\'vms_social_event_queue\')') !== false, 'Footer builder should own detached queue nonce generation.');
+	$assert(strpos($footerBuilderSource, 'wp_create_nonce(\'bvmgr_social_event_queue\')') !== false, 'Footer builder should own detached queue nonce generation.');
 	$assert(strpos($eventPanelSource, 'wp_kses(') === false, 'No broad wp_kses() layer should be introduced in the Social Sharing event panel.');
 	$assert(strpos($eventPanelSource, 'wp_kses_post(') === false, 'No broad wp_kses_post() layer should be introduced in the Social Sharing event panel.');
 	$assert(strpos($socialAdminAssetSource, 'shell.innerHTML = String(payload.data.html);') !== false, 'JS source should remain unchanged for shell.innerHTML insertion.');
@@ -741,7 +741,7 @@ try {
 	}
 	$assert(is_array($queuedView['last_queue']) && array_keys($queuedView['last_queue']) === array('id', 'status', 'platform', 'last_error_message'), 'Main context builder should normalize a finite last_queue shape.');
 	$assert((int) $queuedView['queue_id'] === 314, 'Main context builder should preserve the latest queue ID.');
-	$assert((string) $queuedView['nonce_value'] === 'nonce:vms_social_event_panel_save', 'Main context builder should preserve the current panel nonce contract.');
+	$assert((string) $queuedView['nonce_value'] === 'nonce:bvmgr_social_event_panel_save', 'Main context builder should preserve the current panel nonce contract.');
 	$assert((string) $queuedView['referer_value'] === '/wp-admin/post.php?post=42&action=edit', 'Main context builder should preserve the current referer contract.');
 
 	$queuedFooterView = bvmgr_social_build_event_panel_footer_forms_view(42, 314);
@@ -783,10 +783,10 @@ try {
 	$queuedChildren = $getDirectChildElements($queuedRoot);
 	$assert(array_map(static fn (DOMElement $element): string => $element->tagName, $queuedChildren) === array('input', 'input', 'p', 'p', 'div', 'div', 'hr', 'h4', 'p', 'p', 'div', 'div'), 'Queued main renderer should preserve the exact current top-level order.');
 	$assertAttributesExact($queuedChildren[0], array(
-		'id' => 'vms_social_event_panel_nonce',
-		'name' => 'vms_social_event_panel_nonce',
+		'id' => 'bvmgr_social_event_panel_nonce',
+		'name' => 'bvmgr_social_event_panel_nonce',
 		'type' => 'hidden',
-		'value' => 'nonce:vms_social_event_panel_save',
+		'value' => 'nonce:bvmgr_social_event_panel_save',
 	), 'Queued main nonce input');
 	$assertAttributesExact($queuedChildren[1], array(
 		'name' => '_wp_http_referer',
@@ -812,7 +812,7 @@ try {
 
 	$defaultNoQueueView = array(
 		'event_plan_id' => 42,
-		'nonce_value' => 'nonce:vms_social_event_panel_save',
+		'nonce_value' => 'nonce:bvmgr_social_event_panel_save',
 		'referer_value' => '/wp-admin/post.php?post=42&action=edit',
 		'do_not_post' => false,
 		'flag_unpublished' => false,
@@ -875,7 +875,7 @@ try {
 
 	$hostileView = array(
 		'event_plan_id' => 42,
-		'nonce_value' => 'nonce:vms_social_event_panel_save"><svg onload=alert(1)>',
+		'nonce_value' => 'nonce:bvmgr_social_event_panel_save"><svg onload=alert(1)>',
 		'referer_value' => 'javascript:alert(1)',
 		'do_not_post' => true,
 		'flag_unpublished' => true,
@@ -983,19 +983,19 @@ try {
 		return $inputs;
 	};
 	$assert($getHiddenInputMap($footerQueuedChildren[0]) === array(
-		array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_event_queue'),
+		array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:bvmgr_social_event_queue'),
 		array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_event_queue'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 	), 'Queue detached form should preserve the exact hidden-field contract.');
 	$assert($getHiddenInputMap($footerQueuedChildren[1]) === array(
-	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_cancel'),
+	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:bvmgr_social_queue_cancel'),
 	array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_cancel'),
 		array('name' => 'queue_id', 'type' => 'hidden', 'value' => '314'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 		array('name' => 'tab', 'type' => 'hidden', 'value' => 'queue'),
 	), 'Cancel detached form should preserve the exact hidden-field contract.');
 	$assert($getHiddenInputMap($footerQueuedChildren[2]) === array(
-	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_retry'),
+	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:bvmgr_social_queue_retry'),
 	array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_retry'),
 		array('name' => 'queue_id', 'type' => 'hidden', 'value' => '314'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),

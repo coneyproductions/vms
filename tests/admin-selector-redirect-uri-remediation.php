@@ -127,12 +127,12 @@ foreach (
         'Live dashboard selector' => $liveDashboardSelector,
     ) as $label => $source
 ) {
-    vms_test_admin_selector_redirect_assert(substr_count($source, 'vms_request_current_uri()') === 1, $label . ' should call vms_request_current_uri() exactly once.');
+    vms_test_admin_selector_redirect_assert(substr_count($source, 'bvmgr_request_current_uri()') === 1, $label . ' should call bvmgr_request_current_uri() exactly once.');
     vms_test_admin_selector_redirect_assert_contains("admin_url('admin.php?page=vms-dashboard')", $source, $label . ' should preserve the dashboard fallback.');
-    vms_test_admin_selector_redirect_assert_contains('vms_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
+    vms_test_admin_selector_redirect_assert_contains('bvmgr_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
     vms_test_admin_selector_redirect_assert_contains('redirect_to', $source, $label . ' should preserve the redirect_to field.');
     vms_test_admin_selector_redirect_assert_contains("admin-post.php", $source, $label . ' should preserve the admin-post form action.');
-    vms_test_admin_selector_redirect_assert_contains('vms_set_dashboard_venue', $source, $label . ' should preserve the dashboard admin-post route.');
+    vms_test_admin_selector_redirect_assert_contains('bvmgr_set_dashboard_venue', $source, $label . ' should preserve the dashboard admin-post route.');
     vms_test_admin_selector_redirect_assert_contains('esc_attr($current_redirect)', $source, $label . ' should preserve redirect output escaping.');
     vms_test_admin_selector_redirect_assert_not_contains('wp_parse_url(', $source, $label . ' should keep the full current URI candidate instead of path-only parsing.');
 }
@@ -143,12 +143,12 @@ foreach (
         'Live schedule selector' => $liveScheduleSelector,
     ) as $label => $source
 ) {
-    vms_test_admin_selector_redirect_assert(substr_count($source, 'vms_request_current_uri()') === 1, $label . ' should call vms_request_current_uri() exactly once.');
+    vms_test_admin_selector_redirect_assert(substr_count($source, 'bvmgr_request_current_uri()') === 1, $label . ' should call bvmgr_request_current_uri() exactly once.');
     vms_test_admin_selector_redirect_assert_contains("admin_url('admin.php?page=vms-schedule')", $source, $label . ' should preserve the schedule fallback.');
-    vms_test_admin_selector_redirect_assert_contains('vms_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
+    vms_test_admin_selector_redirect_assert_contains('bvmgr_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
     vms_test_admin_selector_redirect_assert_contains('redirect_to', $source, $label . ' should preserve the redirect_to field.');
     vms_test_admin_selector_redirect_assert_contains("admin-post.php", $source, $label . ' should preserve the admin-post form action.');
-    vms_test_admin_selector_redirect_assert_contains('vms_set_current_venue', $source, $label . ' should preserve the schedule admin-post route.');
+    vms_test_admin_selector_redirect_assert_contains('bvmgr_set_current_venue', $source, $label . ' should preserve the schedule admin-post route.');
     vms_test_admin_selector_redirect_assert_contains('esc_attr($current_redirect)', $source, $label . ' should preserve redirect output escaping.');
     vms_test_admin_selector_redirect_assert_not_contains('wp_parse_url(', $source, $label . ' should keep the full current URI candidate instead of path-only parsing.');
 }
@@ -160,13 +160,13 @@ foreach (
     ) as $label => $source
 ) {
     vms_test_admin_selector_redirect_assert_contains("current_user_can('manage_options')", $source, $label . ' should preserve the capability check.');
-    vms_test_admin_selector_redirect_assert_contains('wp_verify_nonce($nonce, \'vms_set_current_venue\')', $source, $label . ' should preserve the schedule nonce check.');
+    vms_test_admin_selector_redirect_assert_contains('wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_set_current_venue\'))', $source, $label . ' should preserve the schedule nonce check.');
     vms_test_admin_selector_redirect_assert(
         strpos($source, "\$_POST['redirect_to'] ?? ''") !== false
-        || strpos($source, "vms_request_read_scalar(\$_POST, 'redirect_to')") !== false,
+        || strpos($source, "bvmgr_request_read_scalar(\$_POST, 'redirect_to')") !== false,
         $label . ' should continue reading submitted redirect_to through the validated local redirect path.'
     );
-    vms_test_admin_selector_redirect_assert_contains('vms_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
+    vms_test_admin_selector_redirect_assert_contains('bvmgr_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
     vms_test_admin_selector_redirect_assert_contains("wp_get_referer() ?: admin_url('admin.php?page=vms-schedule')", $source, $label . ' should preserve the schedule POST fallback.');
     vms_test_admin_selector_redirect_assert_contains("add_query_arg('venue_id', (string) \$venue_id, \$redirect)", $source, $label . ' should preserve schedule venue_id addition.');
     vms_test_admin_selector_redirect_assert_contains("remove_query_arg('venue_id', \$redirect)", $source, $label . ' should preserve schedule venue_id removal.');
@@ -180,31 +180,31 @@ foreach (
     ) as $label => $source
 ) {
     vms_test_admin_selector_redirect_assert_contains("current_user_can('manage_options')", $source, $label . ' should preserve the capability check.');
-    vms_test_admin_selector_redirect_assert_contains('wp_verify_nonce($nonce, \'vms_set_dashboard_venue\')', $source, $label . ' should preserve the dashboard nonce check.');
+    vms_test_admin_selector_redirect_assert_contains('wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, \'bvmgr_set_dashboard_venue\'))', $source, $label . ' should preserve the dashboard nonce check.');
     vms_test_admin_selector_redirect_assert(
         strpos($source, "\$_POST['redirect_to'] ?? ''") !== false
-        || strpos($source, "vms_request_read_scalar(\$_POST, 'redirect_to')") !== false,
+        || strpos($source, "bvmgr_request_read_scalar(\$_POST, 'redirect_to')") !== false,
         $label . ' should continue reading submitted redirect_to through the validated local redirect path.'
     );
-    vms_test_admin_selector_redirect_assert_contains('vms_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
+    vms_test_admin_selector_redirect_assert_contains('bvmgr_request_local_redirect(', $source, $label . ' should preserve local redirect validation.');
     vms_test_admin_selector_redirect_assert_contains("wp_get_referer() ?: admin_url('admin.php?page=vms-dashboard')", $source, $label . ' should preserve the dashboard POST fallback.');
     vms_test_admin_selector_redirect_assert_contains('wp_safe_redirect($redirect);', $source, $label . ' should preserve the safe redirect sink.');
 }
 
 vms_test_admin_selector_redirect_assert(
-    substr_count($mirrorHelpersSource, 'vms_request_current_uri()') === 1,
+    substr_count($mirrorHelpersSource, 'bvmgr_request_current_uri()') === 1,
     'Mirror helpers should own one helper-backed selector URI fallback.'
 );
 vms_test_admin_selector_redirect_assert(
-    substr_count($liveHelpersSource, 'vms_request_current_uri()') === 1,
+    substr_count($liveHelpersSource, 'bvmgr_request_current_uri()') === 1,
     'Live helpers should own one helper-backed selector URI fallback.'
 );
 vms_test_admin_selector_redirect_assert(
-    substr_count($mirrorVenueContextSource, 'vms_request_current_uri()') === 1,
+    substr_count($mirrorVenueContextSource, 'bvmgr_request_current_uri()') === 1,
     'Mirror venue-context should own one helper-backed selector URI fallback.'
 );
 vms_test_admin_selector_redirect_assert(
-    substr_count($liveVenueContextSource, 'vms_request_current_uri()') === 1,
+    substr_count($liveVenueContextSource, 'bvmgr_request_current_uri()') === 1,
     'Live venue-context should own one helper-backed selector URI fallback.'
 );
 

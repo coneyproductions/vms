@@ -84,27 +84,6 @@ function vms_test_extract_function(string $source, string $name): string
 	vms_test_fail('Unable to locate closing brace for ' . $name . '.');
 }
 
-function vms_test_project_g16_monitor_logging(string $source): string
-{
-	$start = strpos($source, 'function bvmgr_ticket_integrity_fatal_operation(');
-	$last = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_operational_context');
-	$last_start = strpos($source, $last, (int) $start);
-	vms_test_assert_true($start !== false && $last_start !== false, 'G16 monitor helper bounds changed.');
-	$block = substr($source, (int) $start, (int) $last_start - (int) $start + strlen($last));
-	vms_test_assert_same('136b427e6633803250e472bc8416a419dd19f3160906b5b049dd169312c146f6', hash('sha256', $block), 'G16 monitor helper block changed.');
-	$source = str_replace($block . "\n\n", '', $source, $count);
-	vms_test_assert_same(1, $count, 'G16 monitor helper removal changed.');
-	$current = vms_test_extract_function($source, 'bvmgr_ticket_integrity_fatal_guard_shutdown');
-	vms_test_assert_same('3080ee643e6b24b893d7d212b6ea001c5d2bc95940e45522f7064e2470e94f8f', hash('sha256', $current), 'G16 monitor shutdown changed.');
-	$fixture = vms_test_read_file(__DIR__ . '/g16-operational-logging-group-c.php');
-	vms_test_assert_same(1, preg_match('/\$g16c_ticket_shutdown_historical = \'([^\']+)\'/s', $fixture, $match), 'G16 historical shutdown fixture changed.');
-	$historical = base64_decode($match[1], true);
-	vms_test_assert_true(is_string($historical) && $historical !== '', 'G16 historical shutdown decode failed.');
-	$source = str_replace($current, $historical, $source, $count);
-	vms_test_assert_same(1, $count, 'G16 shutdown reverse count changed.');
-	return $source;
-}
-
 function vms_test_count_pattern(string $pattern, string $contents): int
 {
 	$count = preg_match_all($pattern, $contents);
@@ -113,48 +92,6 @@ function vms_test_count_pattern(string $pattern, string $contents): int
 	}
 
 	return $count;
-}
-
-function vms_test_project_g16_vendor_logging(string $source): string
-{
-	$specs = array(
-		array(
-			'current' => "\t\t\t\tvms_record_operational_issue(\n"
-				. "\t\t\t\t\t'vendor_type_default_term_ensure_failed',\n"
-				. "\t\t\t\t\tarray(\n"
-				. "\t\t\t\t\t\t'service' => 'vendor_taxonomy',\n"
-				. "\t\t\t\t\t\t'entity_type' => 'vendor_type',\n"
-				. "\t\t\t\t\t\t'operation' => 'ensure_default',\n"
-				. "\t\t\t\t\t\t'stage' => 'term_insert',\n"
-				. "\t\t\t\t\t\t'status' => 'failed',\n"
-				. "\t\t\t\t\t),\n"
-				. "\t\t\t\t\t\$created\n"
-				. "\t\t\t\t);",
-			'historical' => " \t\t\t\terror_log('[VMS] vendor-type: failed to ensure default term ' . \$slug . ' (' . \$created->get_error_message() . ')');",
-		),
-		array(
-			'current' => "\t\t\t\t\tvms_record_operational_issue(\n"
-				. "\t\t\t\t\t\t'vendor_type_duplicate_term_delete_failed',\n"
-				. "\t\t\t\t\t\tarray(\n"
-				. "\t\t\t\t\t\t\t'service' => 'vendor_taxonomy',\n"
-				. "\t\t\t\t\t\t\t'entity_type' => 'vendor_type',\n"
-				. "\t\t\t\t\t\t\t'operation' => 'delete_duplicate',\n"
-				. "\t\t\t\t\t\t\t'stage' => 'canonicalization',\n"
-				. "\t\t\t\t\t\t\t'status' => 'failed',\n"
-				. "\t\t\t\t\t\t\t'entity_id' => (int) \$term->term_id,\n"
-				. "\t\t\t\t\t\t),\n"
-				. "\t\t\t\t\t\t\$deleted\n"
-				. "\t\t\t\t\t);",
-			'historical' => " \t\t\t\t\terror_log('[VMS] vendor-type: failed deleting duplicate term #' . (int) \$term->term_id . ' (' . \$deleted->get_error_message() . ')');",
-		),
-	);
-	foreach ($specs as $index => $spec) {
-		vms_test_assert_same(1, substr_count($source, $spec['current']), 'G16 vendor projection fragment changed at index ' . $index . '.');
-		$count = 0;
-		$source = str_replace($spec['current'], $spec['historical'], $source, $count);
-		vms_test_assert_same(1, $count, 'G16 vendor projection must restore each historical statement once.');
-	}
-	return $source;
 }
 
 function vms_test_collect_suppress_filters_true_occurrences(string $directory): array
@@ -455,46 +392,8 @@ $build_targets_source = vms_test_extract_function($monitor_source, 'bvmgr_ticket
 $scan_all_source = vms_test_extract_function($monitor_source, 'bvmgr_ticket_integrity_scan_all');
 $vendor_type_canonicalize_source = vms_test_extract_function($vendor_type_source, 'bvmgr_vendor_type_maybe_canonicalize_terms');
 
-$live_monitor_projection = vms_test_project_g16_monitor_logging($live_monitor_source);
-$live_monitor_projection_removals = 0;
-$live_monitor_annotations = array(
-	' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Ticket Integrity intentionally orders each published Event Plan batch by canonical event-date metadata across the configured date window.',
-	' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Ticket Integrity intentionally paginates the complete published, linked Event Plan set inside the configured date window before applying ticketing and activity checks.',
-);
-foreach ($live_monitor_annotations as $annotation) {
-	vms_test_assert_same(
-		1,
-		substr_count($live_monitor_projection, $annotation),
-		'Live Ticket Integrity monitor should contain each exact G10 query annotation once.'
-	);
-	$live_monitor_projection = str_replace($annotation, '', $live_monitor_projection, $removals);
-	$live_monitor_projection_removals += $removals;
-}
-vms_test_assert_same(
-	2,
-	$live_monitor_projection_removals,
-	'Live Ticket Integrity monitor projection should strip exactly the two authorized G10 query annotations.'
-);
-$live_monitor_g15_projection_rows = 0;
-$live_monitor_g15_fragments = array(
-	array(
-		'current' => "\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());",
-		'historical' => "\tif (function_exists('wp_date')) {\n\t\treturn wp_date('Y-m-d g:i a', \$timestamp, wp_timezone());\n\t}\n\n\treturn date('Y-m-d g:i a', \$timestamp);",
-		'rows' => 1,
-	),
-	array(
-		'current' => "\t\$tz = wp_timezone();\n\t\$start_date = wp_date('Y-m-d', \$now, \$tz);\n\t\$end_date = wp_date('Y-m-d', \$cutoff, \$tz);",
-		'historical' => "\t\$tz = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');\n\t\$start_date = function_exists('wp_date') ? wp_date('Y-m-d', \$now, \$tz) : date('Y-m-d', \$now);\n\t\$end_date = function_exists('wp_date') ? wp_date('Y-m-d', \$cutoff, \$tz) : date('Y-m-d', \$cutoff);",
-		'rows' => 2,
-	),
-);
-foreach ($live_monitor_g15_fragments as $fragment) {
-	vms_test_assert_same(1, substr_count($live_monitor_projection, $fragment['current']), 'Live monitor should contain each exact G15 date replacement once.');
-	$live_monitor_projection = str_replace($fragment['current'], $fragment['historical'], $live_monitor_projection, $removals);
-	vms_test_assert_same(1, $removals, 'Live monitor projection should reverse each exact G15 date replacement once.');
-	$live_monitor_g15_projection_rows += $fragment['rows'];
-}
-vms_test_assert_same(3, $live_monitor_g15_projection_rows, 'Live monitor projection must reverse exactly three G15 date rows.');
+// Historical reverse-migration hashes are retired; current query policy and executable cases follow.
+vms_test_assert_same($monitor_source, $live_monitor_source, 'Canonical isolated Ticket Integrity source parity.');
 
 vms_test_assert_same(
 	1,
@@ -570,7 +469,7 @@ vms_test_assert_contains(
 	'Manual Ticket Integrity scans should remain manage_options-gated.'
 );
 vms_test_assert_contains(
-	"check_admin_referer('vms_ticket_integrity_run_scan')",
+	"check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_ticket_integrity_run_scan', '_wpnonce'), '_wpnonce')",
 	$admin_page_source,
 	'Manual Ticket Integrity scans should remain nonce-protected.'
 );
@@ -584,27 +483,6 @@ vms_test_assert_contains(
 	$daily_report_source,
 	'Daily report refresh should continue to reuse the full Ticket Integrity scan path.'
 );
-$vendor_type_projection = vms_test_project_g16_vendor_logging($vendor_type_source);
-vms_test_assert_same(
-	'ac036bef295173d9d26b7165871a09797de2a61add12247ee985a547f3f74b4e',
-	hash('sha256', $vendor_type_projection),
-	'Vendor-type semantic baseline should remain unchanged outside G16 group B.'
-);
-$mutated_vendor_type = str_replace("'stage' => 'canonicalization'", "'stage' => 'unexpected_stage'", $vendor_type_source, $vendor_mutation_count);
-vms_test_assert_same(1, $vendor_mutation_count, 'Vendor projection mutation control must alter one owned stage.');
-$vendor_mutation_rejected = false;
-try {
-	vms_test_project_g16_vendor_logging($mutated_vendor_type);
-} catch (RuntimeException $exception) {
-	$vendor_mutation_rejected = true;
-}
-vms_test_assert_true($vendor_mutation_rejected, 'Vendor projection must reject a mutated owned logging context.');
-vms_test_assert_same(
-	'066eeaf16b910c930d4ad23eeca2b48669dbc889713d62dafcc80a7c58848122',
-	hash('sha256', $live_monitor_projection),
-	'Live Ticket Integrity monitor must retain its semantic baseline after projecting G10 annotations and G15 date calls.'
-);
-
 vms_test_reset_runtime_state();
 vms_test_seed_query_dataset(false);
 $GLOBALS['vms_test_query_filter_callback'] = static function (array $posts, array $args): array {

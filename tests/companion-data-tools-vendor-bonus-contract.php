@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+// Companion contract with the tracked Data Tools source, not a core dependency probe.
 
 define('ABSPATH', __DIR__);
 
@@ -8,15 +9,10 @@ $portal_path = $root . '/includes/portal/vendor-portal.php';
 $helpers_path = $root . '/includes/helpers.php';
 $data_tools_path = $root . '/companion-plugins/vms-data-tools/includes/admin/page-reporting-module.php';
 $data_tools_provider_path = $root . '/companion-plugins/vms-data-tools/includes/integrations/bvm-reporting-provider.php';
-$active_bvm_path = dirname($root, 2) . '/backstage-venue-manager/includes/portal/vendor-portal.php';
-$legacy_path = dirname($root, 2) . '/vms/includes/portal/vendor-portal.php';
-
 $portal_source = (string) file_get_contents($portal_path);
 $helpers_source = (string) file_get_contents($helpers_path);
 $data_tools_source = (string) file_get_contents($data_tools_path);
 $data_tools_provider_source = (string) file_get_contents($data_tools_provider_path);
-$active_bvm_source = (string) file_get_contents($active_bvm_path);
-$legacy_source = (string) file_get_contents($legacy_path);
 
 function bonus_progress_assert(bool $condition, string $message): void
 {
@@ -198,18 +194,8 @@ bonus_progress_assert($portal_source !== '', 'Mirror Vendor Portal source should
 bonus_progress_assert($helpers_source !== '', 'BVM compensation helper source should be readable.');
 bonus_progress_assert($data_tools_source !== '', 'Data Tools reporting source should be readable.');
 bonus_progress_assert($data_tools_provider_source !== '', 'Data Tools BVM provider source should be readable.');
-bonus_progress_same($portal_source, $active_bvm_source, 'Mirror and active local BVM portal files should stay byte-identical.');
-
-$legacy_builder = bonus_progress_extract_function($legacy_source, 'vms_vendor_portal_build_bonus_progress_card');
-bonus_progress_assert(
-	strpos($legacy_builder, "(int) (\$count_breakdown['presales'] ?? 0) + (int) (\$count_breakdown['door_sales'] ?? 0)") !== false,
-	'Legacy shadow should retain the same paid-basis expression under its compatibility prefix.'
-);
-bonus_progress_assert(
-	strpos($legacy_source, "__('Vendor Bonus Progress', 'vms')") !== false,
-	'Legacy shadow should retain the synchronized Vendor Bonus Progress heading.'
-);
-
+// Explicit companion contract: extract the tracked Data Tools provider into this isolated
+// test process. BVM runtime does not boot the inactive companion from its source mirror.
 eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_zero_ticket_source_rollup'));
 eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_build_ticket_source_rollup'));
 eval(bonus_progress_extract_function($data_tools_provider_source, 'vms_dt_bvm_reporting_vendor_portal_summary'));

@@ -52,16 +52,16 @@ try {
 	$assert(strpos($holidaysSource, 'document.querySelectorAll(".vms_holidays_row_cb")') === false, 'Holidays PHP should no longer own the row-checkbox controller.');
 	$assert(strpos($taxBypassSource, "removeAttribute('required')") === false, 'Tax Bypass PHP should no longer own the required-field shim.');
 
-	$assert(strpos($holidaysSource, 'function vms_admin_holidays_page_slug(): string') !== false, 'Holidays should declare a dedicated page-slug helper.');
+	$assert(strpos($holidaysSource, 'function bvmgr_admin_holidays_page_slug(): string') !== false, 'Holidays should declare a dedicated page-slug helper.');
 	$assert(strpos($holidaysSource, "return 'vms-holidays';") !== false, 'Holidays should preserve the exact page slug.');
-	$assert(strpos($holidaysSource, 'function vms_admin_holidays_enqueue_assets(): void') !== false, 'Holidays should declare a dedicated asset enqueue callback.');
-	$assert(strpos($holidaysSource, "add_action('admin_enqueue_scripts', 'vms_admin_holidays_enqueue_assets', 50);") !== false, 'Holidays should register its page-specific enqueue callback.');
-	$assert(preg_match('~\$page\s*!==\s*vms_admin_holidays_page_slug\(\)~', $holidaysSource) === 1, 'Holidays enqueue should bail unless the current admin page matches the exact Holidays slug.');
+	$assert(strpos($holidaysSource, 'function bvmgr_admin_holidays_enqueue_assets(): void') !== false, 'Holidays should declare a dedicated asset enqueue callback.');
+	$assert(strpos($holidaysSource, "add_action('admin_enqueue_scripts', 'bvmgr_admin_holidays_enqueue_assets', 50);") !== false, 'Holidays should register its page-specific enqueue callback.');
+	$assert(preg_match('~\$page\s*!==\s*bvmgr_admin_holidays_page_slug\(\)~', $holidaysSource) === 1, 'Holidays enqueue should bail unless the current admin page matches the exact Holidays slug.');
 	$assert(strpos($holidaysSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-holidays-admin.js'") !== false, 'Holidays should enqueue the external asset from assets/js/vms-holidays-admin.js.');
 	$assert(substr_count($holidaysSource, "current_user_can('manage_options')") >= 2, 'Holidays should keep both the page capability guard and the enqueue capability guard.');
 	$assert(
 		preg_match(
-			'~add_submenu_page\(\s*\$parent_slug,\s*__\(\'Holidays\', \'backstage-venue-manager\'\),\s*__\(\'Holidays\', \'backstage-venue-manager\'\),\s*\$capability,\s*\'vms-holidays\',\s*\'vms_admin_holidays_page\'\s*\);~s',
+			'~add_submenu_page\(\s*\$parent_slug,\s*__\(\'Holidays\', \'backstage-venue-manager\'\),\s*__\(\'Holidays\', \'backstage-venue-manager\'\),\s*\$capability,\s*\'vms-holidays\',\s*\'bvmgr_admin_holidays_page\'\s*\);~s',
 			$menuSource
 		) === 1,
 		'Holidays page registration should retain the existing parent, labels, capability variable, slug, and callback.'
@@ -87,10 +87,10 @@ try {
 	$assert(strpos($holidaysAssetSource, '.disabled') === false, 'Holidays asset should not add new disabled-row branching.');
 
 	$assert(strpos($taxBypassSource, "return array('vms_vendor', 'vms_staff');") !== false, 'Tax Bypass should preserve the exact supported post types.');
-	$assert(strpos($taxBypassSource, 'function vms_tax_bypass_supported_screen($screen): bool') !== false, 'Tax Bypass should declare a dedicated supported-screen helper.');
+	$assert(strpos($taxBypassSource, 'function bvmgr_tax_bypass_supported_screen($screen): bool') !== false, 'Tax Bypass should declare a dedicated supported-screen helper.');
 	$assert(strpos($taxBypassSource, "in_array((string) (\$screen->base ?? ''), array('post', 'post-new'), true)") !== false, 'Tax Bypass should remain restricted to post and post-new screens.');
-	$assert(strpos($taxBypassSource, "in_array((string) (\$screen->post_type ?? ''), vms_tax_bypass_supported_post_types(), true)") !== false, 'Tax Bypass should remain restricted to the supported Vendor/Staff post types.');
-	$assert(strpos($taxBypassSource, 'add_action(\'admin_enqueue_scripts\', \'vms_admin_disable_required_for_tax_fields\', 50);') !== false, 'Tax Bypass should register the external asset gate on admin_enqueue_scripts.');
+	$assert(strpos($taxBypassSource, "in_array((string) (\$screen->post_type ?? ''), bvmgr_tax_bypass_supported_post_types(), true)") !== false, 'Tax Bypass should remain restricted to the supported Vendor/Staff post types.');
+	$assert(strpos($taxBypassSource, 'add_action(\'admin_enqueue_scripts\', \'bvmgr_admin_disable_required_for_tax_fields\', 50);') !== false, 'Tax Bypass should register the external asset gate on admin_enqueue_scripts.');
 	$assert(strpos($taxBypassSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-tax-bypass-admin.js'") !== false, 'Tax Bypass should enqueue the external asset from assets/js/vms-tax-bypass-admin.js.');
 	$assert(substr_count($taxBypassSource, "current_user_can('manage_options')") >= 3, 'Tax Bypass should keep its existing admin capability boundaries plus the enqueue capability guard.');
 	foreach (array(

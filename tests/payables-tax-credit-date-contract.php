@@ -2,9 +2,13 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
+$GLOBALS['g15_assertions'] = 0;
+// Current runtime contract. Historical scanner provenance is a separate, hash-bound gate.
+// All IDs and metadata below are synthetic in-memory doubles; no WordPress/database boot.
 
 function g15_assert(bool $condition, string $message): void
 {
+	$GLOBALS['g15_assertions']++;
 	if (!$condition) {
 		throw new RuntimeException($message);
 	}
@@ -14,58 +18,6 @@ function g15_same($expected, $actual, string $message): void
 {
 	g15_assert($expected === $actual, $message . "\nExpected: " . var_export($expected, true) . "\nActual: " . var_export($actual, true));
 }
-
-$root = dirname(__DIR__);
-$shadow_root = dirname($root, 2) . '/vms';
-$artifact_code = 'WordPress.DateTime.RestrictedFunctions.date_date';
-$artifact_rows = array(
-	'includes/core/payables.php:88:16' => array('file' => 'includes/core/payables.php', 'occurrence' => 'payables_bill'),
-	'includes/core/payables.php:119:12' => array('file' => 'includes/core/payables.php', 'occurrence' => 'payables_add'),
-	'includes/portal/vendor-tax-profile.php:158:116' => array('file' => 'includes/portal/vendor-tax-profile.php', 'occurrence' => 'tax_received'),
-	'includes/core/event-credits.php:844:84' => array('file' => 'includes/core/event-credits.php', 'occurrence' => 'credit_today'),
-);
-
-g15_same(4, count($artifact_rows), 'The G15 P3 artifact inventory must remain exactly four rows.');
-g15_same(array($artifact_code => 4), array_count_values(array_fill(0, 4, $artifact_code)), 'The artifact-derived rule split changed.');
-
-$artifact_path = '/tmp/wporg-dbzero-g14.qulnlt/plugin-check.strict.json';
-g15_assert(is_file($artifact_path), 'Authoritative DB-zero/G14 strict JSON is missing.');
-g15_same('c5fe4d23b3cdf632f239632a23f2c58f9ccf7b8e293ff4b9e71f65101527aa17', hash_file('sha256', $artifact_path), 'Authoritative strict JSON hash changed.');
-$artifact = json_decode((string) file_get_contents($artifact_path), true);
-g15_assert(is_array($artifact), 'Authoritative strict JSON must decode.');
-g15_same(181, count($artifact), 'Authoritative total finding count changed.');
-$type_counts = array_count_values(array_column($artifact, 'type'));
-g15_same(139, $type_counts['ERROR'] ?? 0, 'Authoritative error count changed.');
-g15_same(42, $type_counts['WARNING'] ?? 0, 'Authoritative warning count changed.');
-
-$date_rows = array_values(array_filter(
-	$artifact,
-	static fn(array $row): bool => ($row['code'] ?? '') === 'WordPress.DateTime.RestrictedFunctions.date_date'
-));
-g15_same(14, count($date_rows), 'Authoritative date_date count changed.');
-$owned_suffixes = array(
-	'includes/core/payables.php',
-	'includes/portal/vendor-tax-profile.php',
-	'includes/core/event-credits.php',
-);
-$actual_owned_signatures = array();
-foreach ($date_rows as $row) {
-	$file = (string) ($row['file'] ?? '');
-	foreach ($owned_suffixes as $suffix) {
-		if ($file === $suffix || substr($file, -strlen($suffix)) === $suffix) {
-			$actual_owned_signatures[] = $suffix . ':' . (int) $row['line'] . ':' . (int) $row['column'] . ':' . (string) $row['code'];
-			break;
-		}
-	}
-}
-$expected_owned_signatures = array_map(
-	static fn(string $row_id): string => $row_id . ':WordPress.DateTime.RestrictedFunctions.date_date',
-	array_keys($artifact_rows)
-);
-sort($actual_owned_signatures);
-sort($expected_owned_signatures);
-g15_same($expected_owned_signatures, $actual_owned_signatures, 'Authoritative owned date rows changed.');
-g15_same(10, count($date_rows) - count($actual_owned_signatures), 'Date rows outside G15 P3 must remain exactly ten.');
 
 function g15_extract_function(string $source, string $name): string
 {
@@ -113,45 +65,14 @@ function g15_replace_once(string $source, string $search, string $replacement, s
 	return $source;
 }
 
-$owned_files = array(
-	'includes/core/payables.php',
-	'includes/portal/vendor-tax-profile.php',
-	'includes/core/event-credits.php',
-);
-$sources = array('mirror' => array(), 'shadow' => array());
-foreach ($owned_files as $file) {
-	foreach (array('mirror' => $root, 'shadow' => $shadow_root) as $tree => $tree_root) {
-		$source = file_get_contents($tree_root . '/' . $file);
-		g15_assert(is_string($source) && $source !== '', 'Unable to read owned source: ' . $tree . '/' . $file);
-		$sources[$tree][$file] = $source;
-	}
+$root = dirname(__DIR__);
+$sources = array('mirror' => array());
+foreach (array('includes/core/payables.php', 'includes/portal/vendor-tax-profile.php', 'includes/core/event-credits.php') as $file) {
+    $source = file_get_contents($root . '/' . $file);
+    g15_assert(is_string($source) && $source !== '', 'Current source must be readable: ' . $file);
+    $sources['mirror'][$file] = $source;
 }
-
-$current = array(
-	'payables_bill' => "        \$ymd = gmdate('Ymd');",
-	'tax_received' => "\t\t\t\t\t\tupdate_post_meta(\$vendor_id, \$k_recv, wp_date('Y-m-d', time(), wp_timezone()));",
-	'tax_received_shadow' => "\t\t\t\t\t\t\tupdate_post_meta(\$vendor_id, \$k_recv, wp_date('Y-m-d', time(), wp_timezone()));",
-	'credit_today' => "\t\t\t\$today = wp_date('Y-m-d', time(), wp_timezone());",
-);
-
-$covered_rows = array();
-foreach ($artifact_rows as $row_id => $row) {
-	foreach (array('mirror', 'shadow') as $tree) {
-		$source = $sources[$tree][$row['file']];
-		if ($row['occurrence'] === 'payables_add') {
-			$function = g15_extract_function($source, 'bvmgr_payables_add_days');
-			g15_same(1, substr_count($function, "new DateTimeImmutable(\$ymd . ' 00:00:00', \$utc)"), 'Add-days must construct one immutable date with the explicit UTC object: ' . $tree);
-			g15_same(1, substr_count($function, '$date = $date->setTimezone($utc);'), 'Add-days must normalize embedded timezone tokens back to UTC: ' . $tree);
-			g15_same(1, substr_count($function, "return \$date->format('Y-m-d');"), 'Add-days must format the UTC immutable date once: ' . $tree);
-		} else {
-			$key = ($tree === 'shadow' && $row['occurrence'] === 'tax_received') ? 'tax_received_shadow' : $row['occurrence'];
-			g15_same(1, substr_count($source, $current[$key]), 'Current occurrence must exist once: ' . $tree . '/' . $row_id);
-		}
-	}
-	$covered_rows[$row_id] = true;
-}
-g15_same(array_keys($artifact_rows), array_keys($covered_rows), 'Every artifact row must map to one remediated occurrence.');
-
+$current = array('tax_received' => "update_post_meta(\$vendor_id, \$k_recv, wp_date('Y-m-d', time(), wp_timezone()));");
 function g15_validate_no_date_suppressions(string $source): void
 {
 	if (preg_match('/phpcs:(?:disable|enable|ignoreFile)[^\r\n]*(?:WordPress\.DateTime|RestrictedFunctions\.date_date)/i', $source) === 1) {
@@ -184,12 +105,6 @@ foreach (array(
 	g15_assert($rejected, 'DateTime suppression negative control was accepted.');
 }
 
-$historical = array(
-	'payables_bill' => "        \$ymd = date('Ymd');",
-	'tax_received' => "\t\t\t\t\t\tupdate_post_meta(\$vendor_id, \$k_recv, function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d'));",
-	'tax_received_shadow' => "\t\t\t\t\t\t\tupdate_post_meta(\$vendor_id, \$k_recv, function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d'));",
-	'credit_today' => "\t\t\t\$today = function_exists('wp_date') ? wp_date('Y-m-d', time(), wp_timezone()) : date('Y-m-d');",
-);
 $historical_add_days = <<<'PHP'
 function bvmgr_payables_add_days(string $ymd, int $days): string
 {
@@ -212,59 +127,6 @@ function bvmgr_payables_add_days(string $ymd, int $days): string
     return date('Y-m-d', $ts);
 }
 PHP;
-$pre_hashes = array(
-	'mirror' => array(
-		'includes/core/payables.php' => 'a69575a326f8eca4cec46bb8943907aeb8f343e2eada49b6a3b0525d47005e6d',
-		'includes/portal/vendor-tax-profile.php' => '0c7a7eb2d3a028c0a147a87792c3e22af68de2548bfd92256169ba9df6ae6945',
-		'includes/core/event-credits.php' => '7339da181909451754cf007452104cdb903a5cbaa8f978e363679873deae9093',
-	),
-	'shadow' => array(
-		'includes/core/payables.php' => 'a69575a326f8eca4cec46bb8943907aeb8f343e2eada49b6a3b0525d47005e6d',
-		'includes/portal/vendor-tax-profile.php' => '276d52b01348cdd1c04598d8585c4f31ed474996e274cb5a91d5e71c919221ee',
-		'includes/core/event-credits.php' => '7339da181909451754cf007452104cdb903a5cbaa8f978e363679873deae9093',
-	),
-);
-
-$project_historical = static function (string $source, string $file, string $tree = 'mirror'): string {
-	global $current, $historical, $historical_add_days;
-	if ($file === 'includes/core/payables.php') {
-		$source = g15_replace_once($source, $current['payables_bill'], $historical['payables_bill'], 'Payables bill projection changed.');
-		return g15_replace_once($source, g15_extract_function($source, 'bvmgr_payables_add_days'), $historical_add_days, 'Payables add-days projection changed.');
-	}
-	if ($file === 'includes/portal/vendor-tax-profile.php') {
-		$key = $tree === 'shadow' ? 'tax_received_shadow' : 'tax_received';
-		return g15_replace_once($source, $current[$key], $historical[$key], 'Vendor Tax projection changed: ' . $tree);
-	}
-	return g15_replace_once($source, $current['credit_today'], $historical['credit_today'], 'Event Credits projection changed.');
-};
-
-foreach ($sources as $tree => $tree_sources) {
-	foreach ($tree_sources as $file => $source) {
-		g15_same($pre_hashes[$tree][$file], hash('sha256', $project_historical($source, $file, $tree)), 'Immutable pre-edit projection changed: ' . $tree . '/' . $file);
-	}
-}
-
-$mutation_anchors = array(
-	'includes/core/payables.php' => array('return (float) $raw;', 'return 999.0;'),
-	'includes/portal/vendor-tax-profile.php' => array("return 'POST' === \$request_method;", 'return false; // mutation control'),
-	'includes/core/event-credits.php' => array("apply_filters('vms_event_credit_code_prefix', 'EVENT-CREDIT')", "apply_filters('vms_event_credit_code_prefix', 'MUTATED')"),
-);
-foreach ($mutation_anchors as $file => $mutation) {
-	$mutated = g15_replace_once($sources['mirror'][$file], $mutation[0], $mutation[1], 'Mutation anchor changed: ' . $file);
-	g15_assert(hash('sha256', $project_historical($mutated, $file)) !== $pre_hashes['mirror'][$file], 'Immutable projection accepted runtime drift: ' . $file);
-}
-
-g15_same($sources['mirror']['includes/core/payables.php'], $sources['shadow']['includes/core/payables.php'], 'Payables must retain full mirror/shadow parity.');
-g15_same($sources['mirror']['includes/core/event-credits.php'], $sources['shadow']['includes/core/event-credits.php'], 'Event Credits must retain full mirror/shadow parity.');
-g15_assert($sources['mirror']['includes/portal/vendor-tax-profile.php'] !== $sources['shadow']['includes/portal/vendor-tax-profile.php'], 'Vendor Tax whole-file divergence disappeared.');
-g15_same(1, substr_count($sources['mirror']['includes/portal/vendor-tax-profile.php'], $current['tax_received']), 'Mirror Vendor Tax shared statement changed.');
-g15_same(1, substr_count($sources['shadow']['includes/portal/vendor-tax-profile.php'], $current['tax_received']), 'Shadow Vendor Tax shared statement changed.');
-
-$tax_export_source = file_get_contents($root . '/includes/admin/vendors/tax-export-csv.php');
-g15_assert(is_string($tax_export_source), 'Unable to read deferred tax-export source.');
-g15_same('81c8e94a51769026434c36b5c6d8a4db8b7a5e991a5daebdaa71638ad4763014', hash('sha256', $tax_export_source), 'Deferred tax-export source changed.');
-g15_same(3, preg_match_all('/(?<![A-Za-z0-9_])date\(/', $tax_export_source), 'The three deferred tax-export date() calls must remain untouched.');
-
 $GLOBALS['g15_site_timezone'] = new DateTimeZone('UTC');
 $GLOBALS['g15_now'] = 0;
 $GLOBALS['g15_updated_meta'] = array();
@@ -478,4 +340,4 @@ g15_same(false, g15_event_credit_product_is_eligible(1, 10), 'Original Event Pla
 g15_same(0, $filter_count(), 'Original-plan rejection must stop before filters.');
 
 date_default_timezone_set('UTC');
-fwrite(STDOUT, "PASS: G15 P3 exact four-row remediation, immutable projections, parity, payables dates, W-9 stamp, and Event Credit eligibility are covered.\n");
+fwrite(STDOUT, "PASS: Current payables dates, W-9 stamp, Event Credit eligibility and legacy UTC characterization; {$GLOBALS['g15_assertions']} assertions.\n");

@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/bootstrap-wordpress.php';
-vms_tests_require_wordpress(__DIR__);
+require_once __DIR__ . '/helpers/current-wordpress-fixture.php';
 
 if (!class_exists('BVMGR_Admin_Event_Plans')) {
 	require_once dirname(__DIR__) . '/backstage-venue-manager.php';
@@ -37,7 +36,7 @@ $cleanup = static function () use (&$createdPosts, &$createdTerms, &$originalPos
 	}
 	foreach (array_reverse($createdTerms) as $termRow) {
 		if (!empty($termRow['created']) && !empty($termRow['term_id'])) {
-			wp_delete_term((int) $termRow['term_id'], 'vms_vendor_type');
+			wp_delete_term((int) $termRow['term_id'], $termRow['taxonomy'] ?? 'vms_vendor_type');
 		}
 	}
 	$_POST = $originalPost;
@@ -107,12 +106,26 @@ try {
 		return array();
 	};
 
-	$seedPlanState = static function (int $planId, int $primaryVendorId, string $secondaryType, array $secondaryVendorIds) use ($getPrimaryLineupEntry): void {
+    $syntheticStaffAssignments = array();
+    foreach (array('Fixture stage', 'Fixture gates') as $label) {
+        $role = wp_insert_term($label, 'vms_staff_role');
+        $staff = wp_insert_post(array('post_type'=>'vms_staff','post_status'=>'publish','post_title'=>$label), true);
+        $assert(!is_wp_error($role) && !is_wp_error($staff), 'Synthetic staffing relationships created.');
+        $registerTerm(array('term_id'=>$role['term_id'],'created'=>true,'taxonomy'=>'vms_staff_role'));
+        $registerPost((int)$staff);
+        wp_set_post_terms($staff, array((int)$role['term_id']), 'vms_staff_role');
+        $syntheticStaffAssignments[(int)$role['term_id']] = array((int)$staff);
+    }
+
+	$seedPlanState = static function (int $planId, int $primaryVendorId, string $secondaryType, array $secondaryVendorIds) use ($getPrimaryLineupEntry, $syntheticStaffAssignments): void {
 		bvmgr_event_occurrence_authorized_write(static function () use ($planId): void {
 			update_post_meta($planId, '_vms_event_date', '2026-06-12');
 			update_post_meta($planId, '_vms_start_time', '19:00');
 			update_post_meta($planId, '_vms_end_time', '21:00');
 		});
+		if (get_post_meta($planId, '_vms_event_date', true) !== '2026-06-12') {
+			throw new RuntimeException('Canonical fixture date was not seeded before the editor save.');
+		}
 		update_post_meta($planId, '_vms_event_plan_status', 'published');
 		update_post_meta($planId, '_vms_venue_id', 0);
 		update_post_meta($planId, '_vms_band_vendor_id', $primaryVendorId);
@@ -122,10 +135,7 @@ try {
 		foreach ($secondaryVendorIds as $secondaryVendorId) {
 			add_post_meta($planId, '_vms_secondary_vendor_id', (int) $secondaryVendorId, false);
 		}
-		update_post_meta($planId, '_vms_staff_assignments', array(
-			97 => array(2443),
-			85 => array(1248),
-		));
+		update_post_meta($planId, '_vms_staff_assignments', $syntheticStaffAssignments);
 		update_post_meta($planId, '_vms_ticketing_enabled_override', 'on');
 		update_post_meta($planId, '_vms_ticket_ui_layout_override', 'progressive');
 		update_post_meta($planId, '_vms_ticket_ui_addons_heading_override', 'Fire Pits & Tables');
@@ -403,10 +413,7 @@ try {
 	$assert((int) get_post_meta($planId, '_vms_band_vendor_id', true) === $primaryVendorId, 'Deferred/unloaded save altered the saved primary vendor.');
 	$assert((string) get_post_meta($planId, '_vms_secondary_vendor_type', true) === $foodTruckSlug, 'Deferred/unloaded save altered the saved secondary vendor type.');
 	$assert((array) get_post_meta($planId, '_vms_secondary_vendor_ids', true) === array($foodTruckVendorId), 'Deferred/unloaded save altered the saved secondary vendor IDs.');
-	$assert((array) get_post_meta($planId, '_vms_staff_assignments', true) === array(
-		97 => array(2443),
-		85 => array(1248),
-	), 'Deferred/unloaded save altered the saved staff assignments.');
+	$assert((array) get_post_meta($planId, '_vms_staff_assignments', true) === $syntheticStaffAssignments, 'Deferred/unloaded save altered the saved staff assignments.');
 	$assert((string) get_post_meta($planId, '_vms_ticketing_enabled_override', true) === 'on', 'Deferred/unloaded save altered ticketing meta.');
 
 	$seedPlanState($planId, $primaryVendorId, $foodTruckSlug, array($foodTruckVendorId));
@@ -423,7 +430,7 @@ try {
 	$coreSaveAfter = $getRelevantState($planId);
 	$coreSaveDiff = $diffState($coreSaveBefore, $coreSaveAfter);
 	$printDiff('Core save with detached Secondary Vendors', $coreSaveDiff);
-	$assert(($coreSaveAfter['core_details']['event_date'] ?? '') === '2026-06-12', 'Ordinary save changed the protected published event date.');
+	$assert(($coreSaveAfter['core_details']['event_date'] ?? '') === '2026-06-12', 'Ordinary save changed the protected published event date: ' . wp_json_encode(array('before' => $coreSaveBefore['core_details'] ?? null, 'after' => $coreSaveAfter['core_details'] ?? null)));
 	$assert(($coreSaveAfter['secondary_vendors'] ?? array()) === ($coreSaveBefore['secondary_vendors'] ?? array()), 'Core details save altered Secondary Vendors while the detached module was loaded.');
 	$assert(($coreSaveAfter['staffing'] ?? array()) === ($coreSaveBefore['staffing'] ?? array()), 'Core details save altered staffing while the detached Secondary Vendors module was loaded.');
 	$assert(($coreSaveAfter['ticketing'] ?? array()) === ($coreSaveBefore['ticketing'] ?? array()), 'Core details save altered ticketing overrides while the detached Secondary Vendors module was loaded.');

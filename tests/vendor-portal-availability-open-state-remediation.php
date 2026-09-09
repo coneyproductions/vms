@@ -86,7 +86,7 @@ $assert(strpos($shellAssetSource, "if (!target) target = availabilityRoot.queryS
 $assert(strpos($shellAssetSource, "openYm = preferredYm && byYm.has(preferredYm) ? preferredYm : todayYm && byYm.has(todayYm) ? todayYm : firstYm();") !== false, 'Vendor Portal asset should preserve the stored-month then today-month fallback order.');
 
 $assert(strpos($vendorPortalSource, 'onchange="this.form.submit()"') === false, 'Vendor Portal source should still avoid inline submit handlers.');
-$activePathMarkers = array("'vms-public-calendar'", 'assets/js/vms-public-calendar.js', 'vms-public-cal', 'vms-cal-entry', 'vms-cal-pop');
+$activePathMarkers = array("'bvmgr-public-calendar'", 'assets/js/vms-public-calendar.js', 'vms-public-cal', 'vms-cal-entry', 'vms-cal-pop');
 foreach ($activePathMarkers as $marker) {
 	$assert(strpos($vendorPortalSource, $marker) !== false || strpos($publicCalendarSource, $marker) !== false, 'Active public-calendar path marker should remain intact: ' . $marker);
 }

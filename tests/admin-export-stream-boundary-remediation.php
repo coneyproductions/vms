@@ -180,7 +180,7 @@ try {
 		$settingsFunction,
 		array(
 			"current_user_can('manage_options')",
-			"wp_verify_nonce(\$nonce, 'vms_ticketing_stock_csv')",
+			"wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_ticketing_stock_csv'))",
 			"get_transient('vms_ticketing_stock_reconcile_last')",
 			"get_transient(bvmgr_ticketing_stock_preview_transient_key(get_current_user_id()))",
 			"@set_time_limit(0); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Administrator-only ticketing stock CSV export streams a bounded transient report and WordPress does not provide a native execution-limit alternative.",
@@ -198,7 +198,7 @@ try {
 		$squareClosure,
 		array(
 			"current_user_can('manage_options')",
-			"check_admin_referer('vms_square_sync_protection_csv');",
+			"check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_square_sync_protection_csv', '_wpnonce'), '_wpnonce');",
 			'$report = bvmgr_square_sync_protection_get_report();',
 			'nocache_headers();',
 			"header('Content-Type: text/csv; charset=utf-8');",
@@ -215,7 +215,7 @@ try {
 		$admissionsFunction,
 		array(
 			'current_user_can(bvmgr_admission_manage_capability())',
-			"wp_verify_nonce(\$nonce, 'vms_admissions_export_csv_' . \$event_plan_id)",
+			"wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_admissions_export_csv_' . \$event_plan_id))",
 			'$rows = $wpdb->get_results($wpdb->prepare(',
 			'FROM %i WHERE event_plan_id = %d ORDER BY guest_name ASC, id ASC',
 			'$table,',
@@ -235,7 +235,7 @@ try {
 		$passExportFunction,
 		array(
 			'current_user_can(bvmgr_pass_claims_capability())',
-			"wp_verify_nonce(\$nonce, 'vms_pass_export_' . \$batch_id)",
+			"wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_pass_export_' . \$batch_id))",
 			'bvmgr_pass_claims_get_tokens($batch_id, 10000)',
 			'if (!headers_sent()) {',
 			'nocache_headers();',
@@ -256,7 +256,7 @@ try {
 		$passReportFunction,
 		array(
 			'current_user_can(bvmgr_pass_claims_capability())',
-			"wp_verify_nonce(\$nonce, 'vms_pass_report_export_' . \$scope)",
+			"wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_pass_report_export_' . \$scope))",
 			"if (!in_array(\$scope, array('source', 'batch', 'source_event', 'event'), true)) {",
 			'$rows = bvmgr_pass_claims_reports_by_batch();',
 			'$rows = bvmgr_pass_claims_reports_source_events();',

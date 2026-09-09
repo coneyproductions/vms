@@ -454,7 +454,7 @@ $assert(strpos($settingsSource, "'bvmgr_field_default_venue'") !== false, 'The D
 $assert(strpos($settingsSource, "name=\"vms_settings[default_venue_id]\" class=\"vms-minw-320\"") !== false, 'The Default Venue select control should remain unchanged.');
 $assert(strpos($settingsSource, '$out[\'default_venue_id\'] = isset($input[\'default_venue_id\']) ? absint($input[\'default_venue_id\']) : 0;') !== false, 'Default Venue option sanitization should remain unchanged.');
 $assert(strpos($settingsSource, "isset(\$_GET['venue_id']) ? absint(wp_unslash(\$_GET['venue_id'])) : 0;") !== false, 'Default Venue action handler should preserve venue_id normalization.');
-$assert(strpos($settingsSource, "wp_verify_nonce(\$nonce, 'vms_set_default_venue_' . \$venue_id)") !== false, 'Default Venue action handler should preserve the nonce action.');
+$assert(strpos($settingsSource, "wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_set_default_venue_' . \$venue_id))") !== false, 'Default Venue action handler should preserve the nonce action.');
 $assert(strpos($settingsSource, "Venue must be published before it can be set as the Default Venue.") !== false, 'Default Venue action handler should preserve the published-venue guard.');
 $assert(strpos($settingsSource, "bvmgr_render_settings_default_venue_alert(") !== false, 'Default Venue field should route through the dedicated alert renderer.');
 $assert(strpos($settingsSource, "bvmgr_build_settings_default_venue_alert_context(") !== false, 'Default Venue field should route through the dedicated alert context builder.');
@@ -595,7 +595,7 @@ $assertSame('https://example.test/wp-admin/post.php?post=41&action=edit', $selec
 $assertSame('button button-secondary', $selected_unpublished_context['primary_action']['class'], 'Selected unpublished venue should preserve the selected-venue action class.');
 $assertSame(true, $selected_unpublished_context['secondary_action']['visible'], 'Selected unpublished venue should preserve the fix-now action when exactly one venue is publishable.');
 $assertSame('Fix now: set Default Venue to “Main <Hall>”', $selected_unpublished_context['secondary_action']['label'], 'Fix-now action should preserve the exact label before escaping.');
-$assertSame('https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&venue_id=42&_wpnonce=nonce%3Avms_set_default_venue_42', $selected_unpublished_context['secondary_action']['href'], 'Fix-now action should preserve the nonce-protected destination.');
+$assertSame('https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&venue_id=42&_wpnonce=nonce%3Abvmgr_set_default_venue_42', $selected_unpublished_context['secondary_action']['href'], 'Fix-now action should preserve the nonce-protected destination.');
 $assertSame('button button-primary', $selected_unpublished_context['secondary_action']['class'], 'Fix-now action should preserve the primary button class.');
 
 $reset_state();
@@ -681,7 +681,7 @@ $renderer_context = array(
 		'visible' => true,
 		'class' => 'button button-primary',
 		'label' => 'Fix now: set Default Venue to “Main <Hall>”',
-		'href' => 'https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&venue_id=42&_wpnonce=nonce%3Avms_set_default_venue_42',
+		'href' => 'https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&venue_id=42&_wpnonce=nonce%3Abvmgr_set_default_venue_42',
 		'target' => '',
 		'rel' => '',
 	),
@@ -690,7 +690,7 @@ ob_start();
 bvmgr_render_settings_default_venue_alert($renderer_context);
 $rendered_selected_unpublished = (string) ob_get_clean();
 $assertSame(
-	'<div class="notice notice-warning vms-settings-default-venue-alert"><p><strong>Default Venue needs attention:</strong> The selected venue is not published (status: <strong>private</strong>). Publish it or choose a published venue.</p><p><a class="button button-secondary" href="https://example.test/wp-admin/post.php?post=41&amp;action=edit">Open selected venue</a></p><p><a class="button button-primary" href="https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&amp;venue_id=42&amp;_wpnonce=nonce%3Avms_set_default_venue_42">Fix now: set Default Venue to “Main &lt;Hall&gt;”</a></p></div>',
+	'<div class="notice notice-warning vms-settings-default-venue-alert"><p><strong>Default Venue needs attention:</strong> The selected venue is not published (status: <strong>private</strong>). Publish it or choose a published venue.</p><p><a class="button button-secondary" href="https://example.test/wp-admin/post.php?post=41&amp;action=edit">Open selected venue</a></p><p><a class="button button-primary" href="https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&amp;venue_id=42&amp;_wpnonce=nonce%3Abvmgr_set_default_venue_42">Fix now: set Default Venue to “Main &lt;Hall&gt;”</a></p></div>',
 	$rendered_selected_unpublished,
 	'The default-venue alert renderer should preserve the exact selected-unpublished finite markup contract.'
 );
@@ -706,7 +706,7 @@ $renderer_context = array(
 		'visible' => true,
 		'class' => 'button button-primary',
 		'label' => 'Fix now: set Default Venue to “Only & Venue”',
-		'href' => 'https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&venue_id=52&_wpnonce=nonce%3Avms_set_default_venue_52',
+		'href' => 'https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&venue_id=52&_wpnonce=nonce%3Abvmgr_set_default_venue_52',
 		'target' => '',
 		'rel' => '',
 	),
@@ -715,7 +715,7 @@ ob_start();
 bvmgr_render_settings_default_venue_alert($renderer_context);
 $rendered_unset = (string) ob_get_clean();
 $assertSame(
-	'<div class="notice notice-warning vms-settings-default-venue-alert"><p><strong>Default Venue is not set.</strong> This can cause parts of VMS to load with no venue context (especially in single-venue installs).</p><p><a class="button button-primary" href="https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&amp;venue_id=52&amp;_wpnonce=nonce%3Avms_set_default_venue_52">Fix now: set Default Venue to “Only &amp; Venue”</a></p></div>',
+	'<div class="notice notice-warning vms-settings-default-venue-alert"><p><strong>Default Venue is not set.</strong> This can cause parts of Backstage Venue Manager to load with no venue context (especially in single-venue installs).</p><p><a class="button button-primary" href="https://example.test/wp-admin/admin-post.php?action=vms_set_default_venue&amp;venue_id=52&amp;_wpnonce=nonce%3Abvmgr_set_default_venue_52">Fix now: set Default Venue to “Only &amp; Venue”</a></p></div>',
 	$rendered_unset,
 	'The default-venue alert renderer should preserve the exact unset finite markup contract.'
 );

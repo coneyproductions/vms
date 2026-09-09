@@ -134,12 +134,12 @@ try {
 
 	$vendorNonce = static function (): string {
 		wp_set_current_user(1);
-		return wp_create_nonce('vms_avail_ajax');
+		return wp_create_nonce('bvmgr_avail_ajax');
 	};
 
 	$previewNonce = static function (int $vendorId): string {
 		wp_set_current_user(1);
-		return wp_create_nonce('vms_preview_vendor_portal_' . $vendorId);
+		return wp_create_nonce('bvmgr_preview_vendor_portal_' . $vendorId);
 	};
 
 	$validSave = $invokeAjax(array(
@@ -204,7 +204,7 @@ try {
 		'date' => $activeDate,
 		'state' => 'unavailable',
 		'vms_preview_vendor' => $previewVendorId,
-		'vms_preview_nonce' => $previewNonce($previewVendorId),
+		'bvmgr_preview_nonce' => $previewNonce($previewVendorId),
 	), false);
 	$assert(isset($validPreview['json']['success']) && $validPreview['json']['success'] === true, 'Valid preview-vendor autosave should succeed.');
 	$previewManual = get_post_meta($previewVendorId, '_vms_availability_manual', true);
@@ -216,7 +216,7 @@ try {
 		'date' => $activeDate,
 		'state' => 'available',
 		'vms_preview_vendor' => $previewVendorId,
-		'vms_preview_nonce' => 'expired-preview',
+		'bvmgr_preview_nonce' => 'expired-preview',
 	), false);
 	$assert(isset($invalidPreview['json']['success']) && $invalidPreview['json']['success'] === false, 'Invalid preview nonce should be rejected.');
 	$assert((string) ($invalidPreview['json']['data']['message'] ?? '') === 'Vendor not linked.', 'Invalid preview nonce should fall through to the existing vendor-not-linked rejection.');

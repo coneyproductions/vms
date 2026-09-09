@@ -68,7 +68,7 @@ try {
 		$assert(strpos($staffPortalAssetSource, "action: SAVE_ACTION") !== false, 'Staff Portal asset should own the availability save action payload.');
 		$assert(strpos($staffPortalSource, 'vms_staff_save_manual_availability_day') !== false, 'Staff Portal autosave handler contract should remain intact.');
 
-	$activePathMarkers = array("'vms-public-calendar'", 'assets/js/vms-public-calendar.js', 'vms-public-cal', 'vms-cal-entry', 'vms-cal-pop');
+	$activePathMarkers = array("'bvmgr-public-calendar'", 'assets/js/vms-public-calendar.js', 'vms-public-cal', 'vms-cal-entry', 'vms-cal-pop');
 	foreach ($activePathMarkers as $marker) {
 		$assert(strpos($vendorPortalSource, $marker) !== false || strpos($publicCalendarSource, $marker) !== false, 'Active public-calendar path marker should remain intact: ' . $marker);
 	}

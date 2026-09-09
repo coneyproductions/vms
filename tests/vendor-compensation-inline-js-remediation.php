@@ -161,25 +161,25 @@ try {
     $liveVendorSource = $readFile($liveVendorPath);
     $liveAssetSource = $readFile($liveAssetPath);
 
-    $compRenderSource = $extractFunctionSource($compSource, 'vms_render_comp_package_meta_box');
-    $vendorRenderSource = $extractFunctionSource($vendorSource, 'vms_render_vendor_defaults_metabox');
-    $compEnqueueSource = $extractFunctionSource($compSource, 'vms_comp_package_admin_enqueue_assets');
-    $vendorEnqueueSource = $extractFunctionSource($vendorSource, 'vms_vendor_defaults_admin_enqueue_assets');
-    $compScreenSource = $extractFunctionSource($compSource, 'vms_comp_package_admin_screen_is_target');
-    $vendorScreenSource = $extractFunctionSource($vendorSource, 'vms_vendor_defaults_admin_screen_is_target');
+    $compRenderSource = $extractFunctionSource($compSource, 'bvmgr_render_comp_package_meta_box');
+    $vendorRenderSource = $extractFunctionSource($vendorSource, 'bvmgr_render_vendor_defaults_metabox');
+    $compEnqueueSource = $extractFunctionSource($compSource, 'bvmgr_comp_package_admin_enqueue_assets');
+    $vendorEnqueueSource = $extractFunctionSource($vendorSource, 'bvmgr_vendor_defaults_admin_enqueue_assets');
+    $compScreenSource = $extractFunctionSource($compSource, 'bvmgr_comp_package_admin_screen_is_target');
+    $vendorScreenSource = $extractFunctionSource($vendorSource, 'bvmgr_vendor_defaults_admin_screen_is_target');
 
     $assert(strpos($compRenderSource, '<script') === false, 'Comp Package metabox should no longer emit an executable inline <script>.');
     $assert(strpos($vendorRenderSource, '<script') === false, 'Vendor Defaults metabox should no longer emit an executable inline <script>.');
     $assert(strpos($compSource, 'wp_add_inline_script(') === false, 'Comp Package admin should not reintroduce the helper through wp_add_inline_script().');
     $assert(strpos($vendorSource, 'wp_add_inline_script(') === false, 'Vendor Defaults admin should not reintroduce the helper through wp_add_inline_script().');
 
-    $assert(has_action('admin_enqueue_scripts', 'vms_comp_package_admin_enqueue_assets') === 50, 'Comp Package admin should register its screen-scoped enqueue callback at priority 50.');
-    $assert(has_action('admin_enqueue_scripts', 'vms_vendor_defaults_admin_enqueue_assets') === 50, 'Vendor Defaults admin should register its screen-scoped enqueue callback at priority 50.');
+    $assert(has_action('admin_enqueue_scripts', 'bvmgr_comp_package_admin_enqueue_assets') === 50, 'Comp Package admin should register its screen-scoped enqueue callback at priority 50.');
+    $assert(has_action('admin_enqueue_scripts', 'bvmgr_vendor_defaults_admin_enqueue_assets') === 50, 'Vendor Defaults admin should register its screen-scoped enqueue callback at priority 50.');
     $assert(strpos($compEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js'") !== false, 'Comp Package admin should point to the shared compensation asset.');
     $assert(strpos($vendorEnqueueSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-compensation-admin.js'") !== false, 'Vendor Defaults admin should point to the shared compensation asset.');
-    $assert(strpos($compEnqueueSource, "'vmsCompPackageAdmin'") !== false, 'Comp Package admin should localize only the inert comp-package labels.');
-    $assert(strpos($vendorEnqueueSource, "'vmsVendorDefaultsAdmin'") !== false, 'Vendor Defaults admin should localize only the inert vendor-defaults strings.');
-    $assert(strpos($corePluginSource, 'vms-compensation-admin') === false, 'Compensation admin asset should not be loaded by the global core admin asset loader.');
+    $assert(strpos($compEnqueueSource, "'BVMGR_COMP_PACKAGE_ADMIN'") !== false, 'Comp Package admin should localize only the inert comp-package labels.');
+    $assert(strpos($vendorEnqueueSource, "'BVMGR_VENDOR_DEFAULTS_ADMIN'") !== false, 'Vendor Defaults admin should localize only the inert vendor-defaults strings.');
+    $assert(strpos($corePluginSource, 'bvmgr-compensation-admin') === false, 'Compensation admin asset should not be loaded by the global core admin asset loader.');
 
     $assert(strpos($compScreenSource, "array('post', 'post-new')") !== false, 'Comp Package screen gate should stay limited to post/post-new.');
     $assert(strpos($compScreenSource, "=== 'vms_comp_package'") !== false, 'Comp Package screen gate should stay limited to the vms_comp_package post type.');
@@ -188,14 +188,14 @@ try {
 
     $assert(strpos($compSource, "register_post_type('vms_comp_package'") !== false, 'Comp Package CPT registration should remain unchanged.');
     $assert(strpos($compSource, "'vms_comp_package_details'") !== false, 'Comp Package metabox registration should remain unchanged.');
-    $assert(strpos($compSource, "wp_nonce_field('vms_save_comp_package', 'vms_comp_package_nonce');") !== false, 'Comp Package nonce field should remain unchanged.');
+    $assert(strpos($compSource, "wp_nonce_field('bvmgr_save_comp_package', 'bvmgr_comp_package_nonce');") !== false, 'Comp Package nonce field should remain unchanged.');
     $assert(strpos($compSource, "add_action('save_post_vms_comp_package', function") !== false, 'Comp Package save hook should remain unchanged.');
     $assert(strpos($compSource, "name=\"vms_comp_type\"") !== false, 'Comp Package field names should remain unchanged.');
     $assert(strpos($compSource, "name=\"vms_flat_fee\"") !== false, 'Comp Package flat-fee field should remain unchanged.');
     $assert(strpos($compSource, "name=\"vms_attendance_bonus_mode\"") !== false, 'Comp Package attendance-bonus field should remain unchanged.');
 
     $assert(strpos($vendorSource, "'vms_vendor_defaults'") !== false, 'Vendor Defaults metabox registration should remain unchanged.');
-    $assert(strpos($vendorSource, "wp_nonce_field('vms_save_vendor_defaults', 'vms_vendor_defaults_nonce');") !== false, 'Vendor Defaults nonce field should remain unchanged.');
+    $assert(strpos($vendorSource, "wp_nonce_field('bvmgr_save_vendor_defaults', 'bvmgr_vendor_defaults_nonce');") !== false, 'Vendor Defaults nonce field should remain unchanged.');
     $assert(strpos($vendorSource, "add_action('save_post_vms_vendor', function") !== false, 'Vendor Defaults save hook should remain unchanged.');
     $assert(strpos($vendorSource, "name=\"vms_default_comp_structure\"") !== false, 'Vendor Defaults comp-structure field should remain unchanged.');
     $assert(strpos($vendorSource, "name=\"vms_default_comp_package_id\"") !== false, 'Vendor Defaults template field should remain unchanged.');

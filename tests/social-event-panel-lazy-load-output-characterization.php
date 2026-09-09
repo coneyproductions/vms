@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+// The native verifier remains mocked below; this unit selects the current nonce action.
+function bvmgr_nonce_action_for_request(string $action, $field = false): string { return $action; }
+
 
 if (!defined('ABSPATH')) {
 	define('ABSPATH', dirname(__DIR__) . '/');
@@ -722,7 +725,7 @@ try {
 	$assert(strpos($ajaxSource, "'footer_forms_html' => bvmgr_social_event_panel_footer_forms_html(\$event_plan_id, (int) (\$payload['queue_id'] ?? 0)),") !== false, 'AJAX lazy load should preserve the footer_forms_html producer call.');
 	$assert(strpos($ajaxSource, "wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);") !== false, 'AJAX lazy load should preserve the explicit invalid-plan response.');
 	$assert(strpos($ajaxSource, "wp_send_json_error(array('message' => 'Not allowed.'), 403);") !== false, 'AJAX lazy load should preserve the explicit capability response.');
-	$assert(strpos($ajaxSource, "check_ajax_referer('vms_social_load_event_panel', 'nonce');") !== false, 'AJAX lazy load should preserve the exact nonce action and request field.');
+	$assert(strpos($ajaxSource, "check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_social_load_event_panel', 'nonce'), 'nonce', true);") !== false, 'AJAX lazy load should preserve the exact nonce action and request field.');
 	$assert(strpos($ajaxSource, '$event_plan_id = absint(bvmgr_social_post_value(\'post_id\'));') !== false, 'AJAX lazy load should continue to normalize post_id through bvmgr_social_post_value() and absint().');
 
 	foreach (array(
@@ -741,7 +744,7 @@ try {
 	) as $requiredReadMarker) {
 		$assert(strpos($markupSource, $requiredReadMarker) !== false, 'Event-panel markup should preserve the external-read marker: ' . $requiredReadMarker);
 	}
-	$assert(strpos($renderSource, 'wp_create_nonce(\'vms_social_load_event_panel\')') !== false, 'Collapsed shell render should preserve the lazy-load nonce generation.');
+	$assert(strpos($renderSource, 'wp_create_nonce(\'bvmgr_social_load_event_panel\')') !== false, 'Collapsed shell render should preserve the lazy-load nonce generation.');
 	$assert(strpos($renderSource, 'admin_url(\'admin-ajax.php\')') !== false, 'Collapsed shell render should preserve the admin-ajax URL read.');
 	$assert(strpos($footerHtmlSource, "wp_nonce_field('vms_social_event_queue', '_wpnonce', false);") !== false, 'Detached queue form should preserve the exact queue nonce field contract.');
 	$assert(strpos($footerHtmlSource, "wp_nonce_field('vms_social_queue_cancel', '_wpnonce', false);") !== false, 'Detached cancel form should preserve the exact cancel nonce field contract.');
@@ -816,7 +819,7 @@ try {
 	$assertAttributesExact($collapsedShell, array(
 		'class' => 'vms-social-event-panel-shell',
 		'data-vms-social-lazy' => '1',
-		'data-vms-social-nonce' => 'nonce:vms_social_load_event_panel',
+		'data-vms-social-nonce' => 'nonce:bvmgr_social_load_event_panel',
 		'data-vms-social-post-id' => '42',
 		'data-vms-social-url' => 'https://example.test/wp-admin/admin-ajax.php',
 	), 'Collapsed Social Sharing shell');
@@ -859,10 +862,10 @@ try {
 	$assert(array_map(static fn (DOMElement $element): string => $element->tagName, $topLevelChildren) === array('input', 'input', 'p', 'p', 'div', 'div', 'hr', 'h4', 'p', 'p', 'div', 'div'), 'Social event-panel markup should preserve the exact current top-level element order.');
 
 	$assertAttributesExact($topLevelChildren[0], array(
-		'id' => 'vms_social_event_panel_nonce',
-		'name' => 'vms_social_event_panel_nonce',
+		'id' => 'bvmgr_social_event_panel_nonce',
+		'name' => 'bvmgr_social_event_panel_nonce',
 		'type' => 'hidden',
-		'value' => 'nonce:vms_social_event_panel_save',
+		'value' => 'nonce:bvmgr_social_event_panel_save',
 	), 'Social event-panel nonce input');
 	$assertAttributesExact($topLevelChildren[1], array(
 		'name' => '_wp_http_referer',
@@ -1137,19 +1140,19 @@ try {
 	};
 
 	$assert($getHiddenInputMap($footerForms[0]) === array(
-		array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_event_queue'),
+		array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:bvmgr_social_event_queue'),
 		array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_event_queue'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 	), 'Queue detached form should preserve the exact hidden-field contract.');
 	$assert($getHiddenInputMap($footerForms[1]) === array(
-	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_cancel'),
+	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:bvmgr_social_queue_cancel'),
 	array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_cancel'),
 		array('name' => 'queue_id', 'type' => 'hidden', 'value' => '314'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
 		array('name' => 'tab', 'type' => 'hidden', 'value' => 'queue'),
 	), 'Cancel detached form should preserve the exact hidden-field contract.');
 	$assert($getHiddenInputMap($footerForms[2]) === array(
-	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:vms_social_queue_retry'),
+	array('name' => '_wpnonce', 'type' => 'hidden', 'value' => 'nonce:bvmgr_social_queue_retry'),
 	array('name' => 'action', 'type' => 'hidden', 'value' => 'vms_social_queue_retry'),
 		array('name' => 'queue_id', 'type' => 'hidden', 'value' => '314'),
 		array('name' => 'event_plan_id', 'type' => 'hidden', 'value' => '42'),
@@ -1166,7 +1169,7 @@ try {
 	$GLOBALS['vms_test_social_manage'] = true;
 	$successResponse = $dispatchAjax(array(
 		'post_id' => '42',
-		'nonce' => 'nonce:vms_social_load_event_panel',
+		'nonce' => 'nonce:bvmgr_social_load_event_panel',
 	));
 	$assert($successResponse['success'] === true, 'Social event-panel AJAX success response should stay successful for valid requests.');
 	$assert((int) $successResponse['status_code'] === 200, 'Social event-panel AJAX success response should preserve the default 200 status.');
@@ -1175,16 +1178,16 @@ try {
 	$assert((string) $successResponse['data']['footer_forms_html'] === $footerFormsHtml, 'Social event-panel AJAX success should return the exact shared detached footer-form HTML.');
 	$assert($GLOBALS['vms_test_ajax_referer_calls'] === array(
 		array(
-			'action' => 'vms_social_load_event_panel',
+			'action' => 'bvmgr_social_load_event_panel',
 			'query_arg' => 'nonce',
-			'value' => 'nonce:vms_social_load_event_panel',
+			'value' => 'nonce:bvmgr_social_load_event_panel',
 		),
 	), 'Social event-panel AJAX success should preserve the exact nonce lifecycle.');
 
 	$GLOBALS['vms_test_ajax_referer_calls'] = array();
 	$invalidPlanResponse = $dispatchAjax(array(
 		'post_id' => '999',
-		'nonce' => 'nonce:vms_social_load_event_panel',
+		'nonce' => 'nonce:bvmgr_social_load_event_panel',
 	));
 	$assert($invalidPlanResponse['success'] === false, 'Social event-panel AJAX invalid-plan response should remain an error.');
 	$assert((int) $invalidPlanResponse['status_code'] === 400, 'Social event-panel AJAX invalid-plan response should preserve the exact 400 status.');
@@ -1197,7 +1200,7 @@ try {
 	$GLOBALS['vms_test_social_manage'] = true;
 	$notAllowedResponse = $dispatchAjax(array(
 		'post_id' => '42',
-		'nonce' => 'nonce:vms_social_load_event_panel',
+		'nonce' => 'nonce:bvmgr_social_load_event_panel',
 	));
 	$assert($notAllowedResponse['success'] === false, 'Social event-panel AJAX capability response should remain an error.');
 	$assert((int) $notAllowedResponse['status_code'] === 403, 'Social event-panel AJAX capability response should preserve the exact 403 status.');

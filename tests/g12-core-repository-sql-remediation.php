@@ -252,6 +252,12 @@ function bvmgr_private_files_safe_download_name(string $filename, string $fallba
 	return $fallback_base !== '' ? $fallback_base : 'download';
 }
 
+// Explicit storage boundary double: SQL ownership is tested here; real path safety is covered separately.
+function bvmgr_private_storage_resolve(string $storage_key): string
+{
+    return (string) ($GLOBALS['g12_private_paths'][$storage_key] ?? '');
+}
+
 function bvmgr_private_files_absolute_path(string $storage_key): string
 {
 	return isset($GLOBALS['g12_private_paths'][$storage_key])
@@ -384,11 +390,11 @@ $shadow_notify_path = $shadow_root . '/includes/core/notifications.php';
 $shadow_private_path = $shadow_root . '/includes/core/private-files.php';
 $shadow_notify_source = (string) file_get_contents($shadow_notify_path);
 g12_same($notify_source, $shadow_notify_source, 'Notification mirror/shadow-live full-file parity changed.');
-g12_check(!file_exists($shadow_private_path), 'The intentionally mirror-only private-files runtime must not gain a shadow-live counterpart.');
+g12_same($private_source, (string) file_get_contents($shadow_private_path), 'Accepted private-storage convergence keeps the canonical broker identical in the isolated source fixture.');
 $mirror_load = (string) file_get_contents($root . '/includes/core/load.php');
 $shadow_load = (string) file_get_contents($shadow_root . '/includes/core/load.php');
 g12_contains("require_once __DIR__ . '/private-files.php';", $mirror_load, 'Mirror core load should retain the private-file broker.');
-g12_not_contains("require_once __DIR__ . '/private-files.php';", $shadow_load, 'Shadow-live core load must not gain the mirror-only private-file broker.');
+g12_contains("require_once __DIR__ . '/private-files.php';", $shadow_load, 'Accepted private-storage convergence loads the canonical broker in both isolated copies.');
 
 $historical_rows = array(
 	'includes/core/notifications.php:360:15:WordPress.DB.DirectDatabaseQuery.DirectQuery',
@@ -480,7 +486,7 @@ g12_not_contains('SELECT * FROM {$table} WHERE id = %d', $private_get_source, 'P
 g12_same(1, substr_count($notify_source, 'error_log('), 'The G16 notification direct fallback count changed.');
 g12_same(1, substr_count($notify_source, 'DevelopmentFunctions.error_log_error_log'), 'The G16 notification fallback must retain one exact line-local suppression.');
 g12_contains("if (!\$recorded && function_exists('error_log'))", $notify_insert_source, 'The G16 fallback must require adapter failure and an available logger.');
-g12_same(1, substr_count($private_source, '@chmod($destination, 0640)'), 'Private upload permissions must retain the exact 0640 boundary.');
+g12_same(1, substr_count($private_source, '@chmod($destination, 0600)'), 'Private upload permissions must retain the accepted owner-only 0600 boundary.');
 g12_same(3, substr_count($private_source, 'wp_delete_file('), 'Private-file mismatch, rollback, and deletion cleanup paths must remain intact.');
 
 eval($notify_insert_source);

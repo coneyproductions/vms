@@ -35,7 +35,7 @@ $assert(is_string($vendorPortalSource) && $vendorPortalSource !== '', 'Vendor Po
 $assert(is_string($publicCalendarSource) && $publicCalendarSource !== '', 'Public calendar asset should be readable.');
 $assert(is_string($modalAssetSource) && $modalAssetSource !== '', 'Unused modal asset duplicate should remain present.');
 $assert(strpos($vendorPortalSource, 'window.__vmsPortalModalInlineLoaded') === false, 'Vendor Portal source should no longer contain the dead modal inline-load guard.');
-$assert(strpos($vendorPortalSource, 'window.VMSPortalCalendarModalOpen = function(trigger)') === false, 'Vendor Portal source should no longer assign the dead modal global opener.');
+$assert(strpos($vendorPortalSource, 'window.BVMGR_PORTAL_CALENDAR_MODAL_OPEN = function(trigger)') === false, 'Vendor Portal source should no longer assign the dead modal global opener.');
 $assert(strpos($vendorPortalSource, 'data-vms-modal-title') === false, 'Vendor Portal source should no longer contain the dead data-vms-modal-* controller logic.');
 $assert(strpos($vendorPortalSource, 'vms-av-event-trigger') === false, 'Vendor Portal source should no longer contain the dead modal trigger selector.');
 $assert(strpos($vendorPortalSource, 'vms-portal-calendar-modal') === false, 'Vendor Portal source should no longer contain the dead modal DOM id or class contract.');
@@ -45,11 +45,11 @@ foreach ($forbiddenRuntimePatterns as $pattern) {
 	$matches = $findMatches($runtimePhpFiles, $pattern);
 	$assert($matches === array(), 'First-party runtime PHP should not retain the dead modal contract. Pattern ' . $pattern . ' matched: ' . implode(', ', $matches));
 }
-$activeVendorPortalMarkers = array('vms-public-cal', 'vms-cal-entry', 'vms-cal-pop', "'vms-public-calendar'", 'assets/js/vms-public-calendar.js');
+$activeVendorPortalMarkers = array('vms-public-cal', 'vms-cal-entry', 'vms-cal-pop', "'bvmgr-public-calendar'", 'assets/js/vms-public-calendar.js');
 foreach ($activeVendorPortalMarkers as $marker) {
 	$assert(strpos($vendorPortalSource, $marker) !== false, 'Vendor Portal source should preserve the active public-calendar path marker: ' . $marker);
 }
-$assert(strpos($vendorPortalSource, "wp_enqueue_script('vms-vendor-portal'") !== false, 'Vendor Portal source should still enqueue the shared frontend asset after modal cleanup.');
+$assert(strpos($vendorPortalSource, "wp_enqueue_script('bvmgr-vendor-portal'") !== false, 'Vendor Portal source should still enqueue the shared frontend asset after modal cleanup.');
 $assert(strpos($vendorPortalSource, 'data-vms-portal-config="availability"') !== false, 'Vendor Portal source should still expose the scoped availability JSON payload after modal cleanup.');
 $obsoleteMarkers = array('function vmsSetNarrow()', 'function vmsPortalStripOpportunityTabs()', 'window.VMS_AV = window.VMS_AV || {};', 'var methods = document.querySelectorAll("details.vms-av-method");', 'var cookieName = "vms_av_open_ym";', 'document.querySelector(".vms-av-allvendors-wrap")');
 foreach ($obsoleteMarkers as $marker) {
@@ -70,7 +70,7 @@ $assert(strpos($publicCalendarSource, "const ENTRY_SELECTOR = '.vms-cal-entry';"
 $assert(strpos($publicCalendarSource, "const POP_SELECTOR = '.vms-cal-pop';") !== false, 'Public calendar asset should still target the active Vendor Portal popover selector.');
 $assert(strpos($publicCalendarSource, 'function openEntry(entry)') !== false, 'Public calendar asset should still contain the active popover opener.');
 $assert(strpos($publicCalendarSource, 'function placePopover(entry)') !== false, 'Public calendar asset should still contain the active popover placement logic.');
-$assert(strpos($modalAssetSource, 'window.VMSPortalCalendarModalOpen = function(trigger)') !== false, 'Unused modal duplicate asset should remain unchanged in this slice.');
+$assert(strpos($modalAssetSource, 'window.BVMGR_PORTAL_CALENDAR_MODAL_OPEN = function(trigger)') !== false, 'Unused modal duplicate asset should remain unchanged in this slice.');
 $assert(strpos($modalAssetSource, 'data-vms-modal-title') !== false, 'Unused modal duplicate asset should still contain the historical modal data-attribute contract.');
 $assert(strpos($modalAssetSource, "e.target.closest('.vms-av-event-trigger')") !== false, 'Unused modal duplicate asset should still contain the historical trigger selector.');
 fwrite(STDOUT, "Vendor Portal modal inline JS remediation OK.\n");

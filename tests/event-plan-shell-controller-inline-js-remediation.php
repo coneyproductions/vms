@@ -31,10 +31,10 @@ try {
 	$ticketingAssetSource = $readFile($ticketingAssetPath);
 
 	foreach (array(
-		'window.vmsEventPlanInitCollapsibleSection = initExistingSection;',
-		'window.vmsEventPlanInitCollapsibleSections = initCollapsibleSections;',
-		'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;',
-		'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;',
+		'window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION = initExistingSection;',
+		'window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTIONS = initCollapsibleSections;',
+		'window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION = persistRequestedSection;',
+		'window.BVMGR_EVENT_PLAN_REVEAL_REQUESTED_SECTION = revealRequestedSection;',
 		"const stateKey = 'vms_ep_sections_state_' + String(postId || 'new');",
 		"params.set('action', 'vms_load_event_plan_admin_section');",
 		"<?php echo esc_js(__('Loading section editor…', 'backstage-venue-manager')); ?>",
@@ -44,10 +44,10 @@ try {
 	}
 
 	foreach (array(
-		'window.vmsEventPlanInitCollapsibleSection = initExistingSection;',
-		'window.vmsEventPlanInitCollapsibleSections = initCollapsibleSections;',
-		'window.vmsEventPlanPersistRequestedSection = persistRequestedSection;',
-		'window.vmsEventPlanRevealRequestedSection = revealRequestedSection;',
+		'window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION = initExistingSection;',
+		'window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTIONS = initCollapsibleSections;',
+		'window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION = persistRequestedSection;',
+		'window.BVMGR_EVENT_PLAN_REVEAL_REQUESTED_SECTION = revealRequestedSection;',
 		'vms_ep_sections_state_',
 		'vms_ep_load_section',
 		'vms_load_event_plan_admin_section',
@@ -67,12 +67,12 @@ try {
 	$assert(strpos($eventPlansSource, 'data-vms-lazy-error-label=') !== false, 'Event Plan PHP should provide the translated lazy-load error label through a non-executable data attribute.');
 	$assert(strpos($shellAssetSource, 'maybeFocusEventPlanTicketingArea') === false, 'Shell asset should not absorb the ticketing-specific focus helper.');
 	$assert(strpos($ticketingAssetSource, 'function maybeFocusEventPlanTicketingArea()') !== false, 'admin-ticketing.js should retain the ticketing-specific focus helper.');
-	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-shell'") !== false, 'Admin UI assets should retain the existing Event Plan shell handle.');
+	$assert(strpos($adminUiAssetsSource, "'bvmgr-event-plan-shell'") !== false, 'Admin UI assets should retain the existing Event Plan shell handle.');
 	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js'") !== false, 'Admin UI assets should still point the shell handle at assets/js/vms-event-plan-shell.js.');
 	$assert(strpos($adminUiAssetsSource, "in_array((string) \$screen->base, array('post', 'post-new'), true)") !== false, 'Shell asset should remain restricted to post and post-new screens.');
 	$assert(strpos($adminUiAssetsSource, "(string) (\$screen->post_type ?? '') === 'vms_event_plan'") !== false, 'Shell asset should remain restricted to Event Plan edit/new screens.');
-	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitStaff = initStaff;') === false, 'Staff controller ownership should move out of Event Plan PHP in this slice.');
-	$assert(strpos($staffAssetSource, 'window.vmsEventPlanInitStaff = initStaff;') !== false, 'Dedicated staff asset should now own the public staff initializer.');
+	$assert(strpos($eventPlansSource, 'window.BVMGR_EVENT_PLAN_INIT_STAFF = initStaff;') === false, 'Staff controller ownership should move out of Event Plan PHP in this slice.');
+	$assert(strpos($staffAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_STAFF = initStaff;') !== false, 'Dedicated staff asset should now own the public staff initializer.');
 	$assert(
 		preg_match('/<script\b(?![^>]*type=(["\'])application\/json\1)[^>]*>/i', $eventPlansSource) !== 1,
 		'Event Plan PHP should not contain executable inline script blocks after the workflow migration.'

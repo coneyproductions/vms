@@ -52,16 +52,16 @@ try {
 	$assert(strpos($pageSource, 'window.alert(') === false, 'Event Plan Import PHP should no longer contain the inline submit guard alert.');
 	$assert(strpos($pageSource, 'wp_add_inline_script') === false, 'Event Plan Import PHP should not reintroduce executable commit-selection behavior through wp_add_inline_script().');
 
-	$assert(strpos($pageSource, 'function vms_event_plan_import_page_slug(): string') !== false, 'Event Plan Import should declare a dedicated page-slug helper for the asset gate.');
+	$assert(strpos($pageSource, 'function bvmgr_event_plan_import_page_slug(): string') !== false, 'Event Plan Import should declare a dedicated page-slug helper for the asset gate.');
 	$assert(strpos($pageSource, "return 'vms-import-event-plans';") !== false, 'Event Plan Import should retain the exact hidden page slug.');
-	$assert(strpos($pageSource, 'function vms_event_plan_import_enqueue_assets(): void') !== false, 'Event Plan Import should declare a dedicated admin_enqueue_scripts callback.');
-	$assert(strpos($pageSource, "add_action('admin_enqueue_scripts', 'vms_event_plan_import_enqueue_assets', 50);") !== false, 'Event Plan Import should register the page-scoped enqueue callback.');
-	$assert(preg_match('~\$page\s*!==\s*vms_event_plan_import_page_slug\(\)~', $pageSource) === 1, 'Event Plan Import enqueue should bail unless the current admin page matches the exact hidden page slug.');
+	$assert(strpos($pageSource, 'function bvmgr_event_plan_import_enqueue_assets(): void') !== false, 'Event Plan Import should declare a dedicated admin_enqueue_scripts callback.');
+	$assert(strpos($pageSource, "add_action('admin_enqueue_scripts', 'bvmgr_event_plan_import_enqueue_assets', 50);") !== false, 'Event Plan Import should register the page-scoped enqueue callback.');
+	$assert(preg_match('~\$page\s*!==\s*bvmgr_event_plan_import_page_slug\(\)~', $pageSource) === 1, 'Event Plan Import enqueue should bail unless the current admin page matches the exact hidden page slug.');
 	$assert(strpos($pageSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-import.js'") !== false, 'Event Plan Import should enqueue the external asset from assets/js/vms-event-plan-import.js.');
 	$assert(substr_count($pageSource, "current_user_can('manage_options')") >= 2, 'Event Plan Import should keep both the page capability gate and the enqueue capability gate.');
 	$assert(
 		preg_match(
-			"~add_submenu_page\\(\\s*null,\\s*__\\('Import Event Plans \\(CSV\\)', 'backstage-venue-manager'\\),\\s*__\\('Import Event Plans \\(CSV\\)', 'backstage-venue-manager'\\),\\s*'manage_options',\\s*vms_event_plan_import_page_slug\\(\\),\\s*'vms_event_plan_import_render_admin_page'\\s*\\);~s",
+			"~add_submenu_page\\(\\s*null,\\s*__\\('Import Event Plans \\(CSV\\)', 'backstage-venue-manager'\\),\\s*__\\('Import Event Plans \\(CSV\\)', 'backstage-venue-manager'\\),\\s*'manage_options',\\s*bvmgr_event_plan_import_page_slug\\(\\),\\s*'bvmgr_event_plan_import_render_admin_page'\\s*\\);~s",
 			$pageSource
 		) === 1,
 		'Event Plan Import should preserve the hidden submenu registration, labels, capability, slug, and callback.'
@@ -78,7 +78,7 @@ try {
 	$assert(strpos($pageSource, "__('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager')") !== false, 'Event Plan Import should preserve the exact selected-required alert message.');
 	$assert(strpos($pageSource, "(\$preview['rows_json_storage_key'] ?? (\$preview['rows_json_path'] ?? ''))") !== false, 'Event Plan Import should preserve the rows_json_storage_key to legacy rows_json_path fallback.');
 	$assert(strpos($pageSource, "'notices_callback' => \$render_notice") !== false, 'Event Plan Import shell render should preserve the explicit notice callback wiring.');
-	$assert(strpos($pageSource, 'vms_event_plan_import_render_rows_payload_error((string) $rows_payload->get_error_code());') !== false, 'Event Plan Import should preserve the package-owned rows-payload error renderer.');
+	$assert(strpos($pageSource, 'bvmgr_event_plan_import_render_rows_payload_error((string) $rows_payload->get_error_code());') !== false, 'Event Plan Import should preserve the package-owned rows-payload error renderer.');
 
 	$assert(file_exists($assetPath), 'Event Plan Import external commit-selection asset should exist.');
 	$assert(strpos($assetSource, "document.getElementById('vms-epcsv-commit-form')") !== false, 'Event Plan Import asset should target the existing commit form by ID.');
@@ -105,15 +105,15 @@ try {
 	$assert(strpos($assetSource, 'if (scopeAll && scopeAll.checked) {') !== false, 'Event Plan Import asset should preserve the all-scope continuation branch.');
 	$assert(strpos($assetSource, 'updateCount();') !== false, 'Event Plan Import asset should preserve the initial selected-count computation.');
 
-	$assert(strpos($corePluginSource, 'vms-event-plan-import') === false, 'Event Plan Import asset should not be registered through the global core admin asset loader.');
-	$assert(strpos($adminUiAssetsSource, 'vms-event-plan-import') === false, 'Event Plan Import asset should not be registered through the shared VMS admin UI asset loader.');
+	$assert(strpos($corePluginSource, 'bvmgr-event-plan-import') === false, 'Event Plan Import asset should not be registered through the global core admin asset loader.');
+	$assert(strpos($adminUiAssetsSource, 'bvmgr-event-plan-import') === false, 'Event Plan Import asset should not be registered through the shared VMS admin UI asset loader.');
 
 	$assert($pageSource === $livePageSource, 'Mirror and live Event Plan Import PHP should remain byte-for-byte synchronized.');
 	$assert($shellSource === $liveShellSource, 'Mirror and live Administrator shell PHP should remain byte-for-byte synchronized.');
 	$assert($assetSource === $liveAssetSource, 'Mirror and live Event Plan Import JS should remain byte-for-byte synchronized.');
 
 	$assert(strpos($actionsSource, 'wp_handle_upload(') !== false, 'Event Plan Import upload API remediation should remain present in the actions boundary.');
-	$assert(strpos($engineSource, "function vms_event_plan_import_set_notice(string \$type, string \$message): void") !== false, 'Event Plan Import notice and storage engine should remain present and readable.');
+	$assert(strpos($engineSource, "function bvmgr_event_plan_import_set_notice(string \$type, string \$message): void") !== false, 'Event Plan Import notice and storage engine should remain present and readable.');
 	$assert(strpos($rowsPayloadTestSource, 'rows_json_storage_key') !== false, 'Rows-payload regression coverage should still verify the storage-key fallback contract.');
 	$assert(strpos($noticeTestSource, 'Event Plan Import shell call should supply the page-local explicit notice callback.') !== false, 'Explicit-notice regression coverage should still verify the Event Plan Import shell callback contract.');
 	$assert(strpos($uploadApiTestSource, 'wp_handle_upload') !== false, 'Upload API regression coverage should remain present for Event Plan Import preview staging.');

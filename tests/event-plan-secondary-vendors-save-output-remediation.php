@@ -32,7 +32,7 @@ try {
 	$assert(strpos($eventPlansSource, "add_action('wp_ajax_vms_save_event_plan_secondary_vendors', array(\$this, 'ajax_save_event_plan_secondary_vendors'));") !== false, 'Secondary Vendors save response should retain the authenticated save AJAX hook.');
 	$assert(strpos($eventPlansSource, 'wp_ajax_nopriv_vms_save_event_plan_secondary_vendors') === false, 'Secondary Vendors save AJAX endpoint should not expose an unauthenticated hook.');
 	$assert(strpos($eventPlansSource, '$post_id = isset($_POST[\'post_id\']) ? absint($_POST[\'post_id\']) : 0;') !== false, 'Secondary Vendors save handler should continue to normalize post_id with absint().');
-	$assert(strpos($eventPlansSource, "check_ajax_referer('vms_event_plan_secondary_vendors_save', 'nonce');") !== false, 'Secondary Vendors save handler should keep the exact nonce action and request field.');
+	$assert(strpos($eventPlansSource, "check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_secondary_vendors_save', 'nonce'), 'nonce', true);") !== false, 'Secondary Vendors save handler should keep the exact nonce action and request field.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Invalid Event Plan.'), 400);") !== false, 'Secondary Vendors save handler should retain the exact invalid-plan response.');
 	$assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Not allowed'), 403);") !== false, 'Secondary Vendors save handler should retain the exact capability error response.');
 	$assert(strpos($eventPlansSource, '? bvmgr_event_plan_save_secondary_vendors_module($post_id, (array) $_POST)') !== false, 'Secondary Vendors save handler should continue to route mutation through the existing module save helper.');
@@ -241,7 +241,7 @@ try {
 		'meta.textContent = payload.data.summary_meta;',
 		'payload.data.message',
 		'payload.data.changed',
-		'window.vmsEventPlanInitSecondaryVendors(body);',
+		'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);',
 	) as $requiredSaveConsumerMarker) {
 		$assert(strpos($secondaryVendorAssetSource, $requiredSaveConsumerMarker) !== false, 'Dedicated Secondary Vendors asset should retain the save-response consumer marker: ' . $requiredSaveConsumerMarker);
 	}
@@ -250,7 +250,7 @@ try {
 	$assert(strpos($secondaryVendorAssetSource, 'payload.data.repair_reasons') === false, 'Dedicated Secondary Vendors asset should not start consuming repair_reasons from the save response.');
 	$assert(strpos($secondaryVendorAssetSource, 'payload.data.queued_calendar_maintenance') === false, 'Dedicated Secondary Vendors asset should not start consuming queued_calendar_maintenance from the save response.');
 	$assert(strpos($secondaryVendorAssetSource, 'vms_secondary_vendors_module_detached') === false, 'Dedicated Secondary Vendors asset should not start sending the detached-module marker in the AJAX save request.');
-	$assert(strpos($shellAssetSource, 'window.vmsEventPlanInitSecondaryVendors(body);') !== false, 'Accepted shell lazy-load consumer should still reinitialize Secondary Vendors after lazy replacement.');
+	$assert(strpos($shellAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);') !== false, 'Accepted shell lazy-load consumer should still reinitialize Secondary Vendors after lazy replacement.');
 
 	if (!defined('ABSPATH')) {
 		define('ABSPATH', $pluginRoot . '/');
@@ -885,7 +885,7 @@ try {
 	$assert($richWrapper instanceof DOMElement, 'Secondary Vendors rich save renderer should preserve the section wrapper.');
 	$assert($richWrapper->getAttribute('data-vms-module-owner') === 'secondary_vendors', 'Secondary Vendors rich save renderer should preserve the module owner data attribute.');
 	$assert($richWrapper->getAttribute('data-vms-save-url') === 'https://example.com/wp-admin/admin-ajax.php', 'Secondary Vendors rich save renderer should preserve the save URL contract.');
-	$assert($richWrapper->getAttribute('data-vms-save-nonce') === 'nonce-vms_event_plan_secondary_vendors_save', 'Secondary Vendors rich save renderer should preserve the save nonce contract.');
+	$assert($richWrapper->getAttribute('data-vms-save-nonce') === 'nonce-bvmgr_event_plan_secondary_vendors_save', 'Secondary Vendors rich save renderer should preserve the save nonce contract.');
 	$assert($richWrapper->getAttribute('data-vms-save-post-id') === (string) $postId, 'Secondary Vendors rich save renderer should preserve the save post ID contract.');
 
 	$configScript = $richXpath->query('//*[@id="root"]//script[@type="application/json" and @data-vms-secondary-config]')->item(0);

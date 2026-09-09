@@ -21,7 +21,7 @@ $assert(!preg_match('~echo \'<script>\(function\(\)\{function vmsPortalStripOppo
 $assert(!preg_match('~echo \'<script>\s*document\.addEventListener\("DOMContentLoaded", function \(\) \{\s*var wrap = document\.querySelector\("\.vms-av-allvendors-wrap"\);~s', $vendorPortalSource), 'Vendor Portal source should no longer emit the inline All Vendors accordion script.');
 $assert(strpos($vendorPortalSource, 'onchange="this.form.submit()"') === false, 'Vendor Portal source should no longer contain inline submit-on-change attributes.');
 $assert(substr_count($vendorPortalSource, 'data-vms-portal-submit-on-change="1"') === 3, 'Vendor Portal source should mark exactly three select controls for external submit-on-change handling.');
-$assert(strpos($vendorPortalSource, "wp_enqueue_script('vms-vendor-portal'") !== false, 'Vendor Portal render path should enqueue the new shell asset.');
+$assert(strpos($vendorPortalSource, "wp_enqueue_script('bvmgr-vendor-portal'") !== false, 'Vendor Portal render path should enqueue the new shell asset.');
 $assert(strpos($vendorPortalSource, 'assets/js/vms-vendor-portal.js') !== false, 'Vendor Portal render path should point at the new shell asset file.');
 
 $requiredAssetMarkers = array(
@@ -62,7 +62,7 @@ foreach ($scriptMatches as $scriptMatch) {
 	$assert($type === 'application/json', 'Vendor Portal source should not emit executable inline script tags.');
 }
 
-$activePathMarkers = array("'vms-public-calendar'", 'assets/js/vms-public-calendar.js', 'vms-public-cal', 'vms-cal-entry', 'vms-cal-pop');
+$activePathMarkers = array("'bvmgr-public-calendar'", 'assets/js/vms-public-calendar.js', 'vms-public-cal', 'vms-cal-entry', 'vms-cal-pop');
 foreach ($activePathMarkers as $marker) {
 	$assert(strpos($vendorPortalSource, $marker) !== false || strpos($publicCalendarSource, $marker) !== false, 'Active public-calendar path marker should remain intact: ' . $marker);
 }

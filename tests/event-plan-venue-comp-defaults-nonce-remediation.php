@@ -47,9 +47,9 @@ $fetchDefaultsSource = $extractFunctionBody($compensationAssetSource, 'fetchDefa
 $assert(strpos($eventPlansSource, "add_action('wp_ajax_vms_get_venue_comp_defaults', array(\$this, 'ajax_get_venue_comp_defaults'));") !== false, 'Event Plans should retain the exact authenticated venue-defaults AJAX hook.');
 $assert(strpos($eventPlansSource, 'wp_ajax_nopriv_vms_get_venue_comp_defaults') === false, 'Venue-defaults AJAX endpoint should not register a nopriv hook.');
 $assert(strpos($eventPlansSource, 'public function ajax_get_venue_comp_defaults(): void') !== false, 'Venue-defaults AJAX handler signature should remain exact.');
-$assert(substr_count($eventPlansSource, "wp_create_nonce('vms_get_venue_comp_defaults')") === 1, 'Event Plans should create the venue-defaults nonce exactly once.');
+$assert(substr_count($eventPlansSource, "wp_create_nonce('bvmgr_get_venue_comp_defaults')") === 1, 'Event Plans should create the venue-defaults nonce exactly once.');
 $assert(substr_count($eventPlansSource, 'data-defaults-nonce=') === 1, 'Event Plans should expose the venue-defaults nonce only on the compensation wrapper configuration boundary.');
-$assert(strpos($eventPlansSource, "check_ajax_referer('vms_get_venue_comp_defaults', 'nonce', false)") !== false, 'Venue-defaults AJAX handler should use the expected nonce action, request key, and non-terminating verification.');
+$assert(strpos($eventPlansSource, "check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_get_venue_comp_defaults', 'nonce'), 'nonce', false)") !== false, 'Venue-defaults AJAX handler should use the expected nonce action, request key, and non-terminating verification.');
 $assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => __('Security check failed. Please refresh the page and try again.', 'backstage-venue-manager')), 403);") !== false, 'Venue-defaults AJAX handler should use the fixed translated nonce failure response.');
 $assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Not allowed'), 403);") !== false, 'Venue-defaults AJAX handler should retain the existing capability failure response.');
 $assert(strpos($eventPlansSource, "wp_send_json_error(array('message' => 'Effective default helper not loaded'), 500);") !== false, 'Venue-defaults AJAX handler should retain the existing helper-missing response.');
@@ -58,7 +58,7 @@ $assert(strpos($eventPlansSource, '$event_date = isset($_POST[\'event_date\']) ?
 $assert(strpos($eventPlansSource, "wp_send_json_success(array('row' => array()));") !== false, 'Venue-defaults AJAX handler should retain the empty-success payload for missing venue/date.');
 $assert(strpos($eventPlansSource, "wp_send_json_success(array('row' => \$row));") !== false, 'Venue-defaults AJAX handler should retain the resolved row success payload.');
 
-$nonceCheckPos = strpos($ajaxMethodSource, "check_ajax_referer('vms_get_venue_comp_defaults', 'nonce', false)");
+$nonceCheckPos = strpos($ajaxMethodSource, "check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_get_venue_comp_defaults', 'nonce'), 'nonce', false)");
 $venueReadPos = strpos($ajaxMethodSource, '$venue_id   = isset($_POST[\'venue_id\']) ? absint($_POST[\'venue_id\']) : 0;');
 $dateReadPos = strpos($ajaxMethodSource, '$event_date = isset($_POST[\'event_date\']) ? sanitize_text_field(wp_unslash($_POST[\'event_date\'])) : \'\';');
 $resolverPos = strpos($ajaxMethodSource, 'bvmgr_get_event_plan_effective_comp_default($venue_id, $event_date)');
@@ -131,6 +131,8 @@ function current_user_can(string $capability): bool
 	return !empty($GLOBALS['vms_event_plan_venue_comp_defaults_nonce_harness']['allow_capability']);
 }
 
+// Current-action boundary double; native verifier below still rejects missing/invalid nonce.
+function bvmgr_nonce_action_for_request(string $action, $field = false): string { return $action; }
 function check_ajax_referer(string $action, string $query_arg = 'nonce', bool $stop = true)
 {
 	$GLOBALS['vms_event_plan_venue_comp_defaults_nonce_harness']['nonce_checks'][] = array(
@@ -185,7 +187,7 @@ function sanitize_key($value): string
 	return (string) preg_replace('/[^a-z0-9_\-]/', '', $value);
 }
 
-function vms_get_event_plan_effective_comp_default(int $venue_id, string $event_date): array
+function bvmgr_get_event_plan_effective_comp_default(int $venue_id, string $event_date): array
 {
 	$GLOBALS['vms_event_plan_venue_comp_defaults_nonce_harness']['resolver_calls'][] = array(
 		'venue_id' => $venue_id,
@@ -217,7 +219,7 @@ $dispatchHarness = static function (array $post, bool $allowCapability, array $r
 	$previousPost = $_POST ?? array();
 	$GLOBALS[$harnessStateKey] = array(
 		'allow_capability' => $allowCapability,
-		'expected_nonce' => 'valid-vms_get_venue_comp_defaults',
+		'expected_nonce' => 'valid-bvmgr_get_venue_comp_defaults',
 		'resolver_result' => $resolverResult,
 		'capability_checks' => array(),
 		'nonce_checks' => array(),
@@ -290,7 +292,7 @@ $assert($missingNonce['output'] === '', 'Missing nonce should not emit output be
 $assert($missingNonce['state']['resolver_calls'] === array(), 'Missing nonce should not call the defaults resolver.');
 $assert($missingNonce['state']['absint_calls'] === array(), 'Missing nonce should not read venue_id before nonce rejection.');
 $assert($missingNonce['state']['sanitize_text_field_calls'] === array(), 'Missing nonce should not sanitize event_date before nonce rejection.');
-$assert($missingNonce['state']['nonce_checks'][0]['action'] === 'vms_get_venue_comp_defaults', 'Missing nonce should verify the exact nonce action.');
+$assert($missingNonce['state']['nonce_checks'][0]['action'] === 'bvmgr_get_venue_comp_defaults', 'Missing nonce should verify the exact nonce action.');
 $assert($missingNonce['state']['nonce_checks'][0]['query_arg'] === 'nonce', 'Missing nonce should verify the exact nonce request key.');
 $assert($missingNonce['state']['nonce_checks'][0]['stop'] === false, 'Missing nonce should use the non-terminating nonce verification path.');
 $assert(!array_key_exists('nonce', $missingNonce['payload']), 'Missing nonce response should not reflect the submitted nonce.');
@@ -314,7 +316,7 @@ $assert(!array_key_exists('nonce', $invalidNonce['payload']), 'Invalid nonce res
 
 $capabilityFailure = $dispatchHarness(
 	array(
-		'nonce' => 'valid-vms_get_venue_comp_defaults',
+		'nonce' => 'valid-bvmgr_get_venue_comp_defaults',
 		'venue_id' => '45',
 		'event_date' => ' 2026-08-14 ',
 	),
@@ -331,7 +333,7 @@ $assert($capabilityFailure['output'] === '', 'Capability failure should not emit
 
 $validRequest = $dispatchHarness(
 	array(
-		'nonce' => 'valid-vms_get_venue_comp_defaults',
+		'nonce' => 'valid-bvmgr_get_venue_comp_defaults',
 		'venue_id' => '45',
 		'event_date' => ' 2026-08-14 ',
 	),

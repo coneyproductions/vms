@@ -35,7 +35,7 @@ try {
 	);
 	$assert(substr_count($secondaryVendorsSource, '<script') === 1, 'Secondary Vendors partial should retain only the non-executable JSON script tag.');
 	$assert(strpos($secondaryVendorsSource, '<script type="application/json" data-vms-secondary-config>') !== false, 'Secondary Vendors partial should retain the scoped application/json configuration payload.');
-	$assert(strpos($secondaryVendorsSource, 'window.vmsEventPlanInitSecondaryVendors') === false, 'Secondary Vendors partial should not self-bootstrap the live initializer.');
+	$assert(strpos($secondaryVendorsSource, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS') === false, 'Secondary Vendors partial should not self-bootstrap the live initializer.');
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendors-section"') !== false, 'Secondary Vendors section wrapper should remain present.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-save-url=') !== false, 'Secondary Vendors save URL contract should remain present.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-save-nonce=') !== false, 'Secondary Vendors save nonce contract should remain present.');
@@ -49,19 +49,19 @@ try {
 	$assert(strpos($secondaryVendorsSource, 'id="vms-secondary-vendor-row-template"') !== false, 'Secondary Vendors row template should remain present.');
 	$assert(strpos($secondaryVendorsSource, 'data-vms-secondary-row-indicators') !== false, 'Secondary Vendors row indicator markup should remain present.');
 
-	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitSecondaryVendors = initSecondaryVendors;') === false, 'Event Plan source should no longer expose the live secondary-vendor initializer.');
+	$assert(strpos($eventPlansSource, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS = initSecondaryVendors;') === false, 'Event Plan source should no longer expose the live secondary-vendor initializer.');
 	$assert(strpos($eventPlansSource, "section.dataset.vmsSecondaryInitBound === '1'") === false, 'Event Plan source should no longer retain the Secondary Vendors duplicate-init guard.');
 	$assert(strpos($eventPlansSource, "section.dataset.vmsSecondaryInitBound = '1';") === false, 'Event Plan source should no longer mark the Secondary Vendors section as initialized.');
-	$assert(strpos($secondaryVendorAssetSource, 'window.vmsEventPlanInitSecondaryVendors = initSecondaryVendors;') !== false, 'Dedicated Secondary Vendors asset should now expose the public compatibility initializer.');
+	$assert(strpos($secondaryVendorAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS = initSecondaryVendors;') !== false, 'Dedicated Secondary Vendors asset should now expose the public compatibility initializer.');
 	$assert(strpos($secondaryVendorAssetSource, "section.dataset.vmsSecondaryInitBound === '1'") !== false, 'Dedicated Secondary Vendors asset should retain duplicate-init protection.');
 	$assert(strpos($secondaryVendorAssetSource, "section.dataset.vmsSecondaryInitBound = '1';") !== false, 'Dedicated Secondary Vendors asset should still mark the section as initialized.');
 	$assert(strpos($secondaryVendorAssetSource, "document.addEventListener('DOMContentLoaded', function() {\n            initSecondaryVendors(document);") !== false || strpos($secondaryVendorAssetSource, "document.addEventListener('DOMContentLoaded', function() {\r\n            initSecondaryVendors(document);") !== false, 'Dedicated Secondary Vendors asset should still initialize on DOM ready.');
 	$assert(strpos($secondaryVendorAssetSource, "    } else {\n        initSecondaryVendors(document);") !== false || strpos($secondaryVendorAssetSource, "    } else {\r\n        initSecondaryVendors(document);") !== false, 'Dedicated Secondary Vendors asset should still initialize after immediate render.');
 	$assert(strpos($shellAssetSource, 'body.innerHTML = payload.data.html;') !== false, 'Shell lazy-load success path should still inject the rendered Secondary Vendors markup.');
-	$assert(strpos($shellAssetSource, 'window.vmsEventPlanInitSecondaryVendors(body);') !== false, 'Shell lazy-load success path should still reinitialize Secondary Vendors after injecting markup.');
-	$assert(strpos($eventPlansSource, 'window.vmsEventPlanInitSecondaryVendors(body);') === false, 'Event Plan PHP should no longer reinitialize Secondary Vendors after save-response markup replacement.');
-	$assert(strpos($secondaryVendorAssetSource, 'window.vmsEventPlanInitSecondaryVendors(body);') !== false, 'Dedicated Secondary Vendors asset should still reinitialize itself after save-response markup replacement.');
-	$assert(strpos($adminUiAssetsSource, "'vms-event-plan-secondary-vendors'") !== false, 'Admin UI assets should register the dedicated Secondary Vendors handle.');
+	$assert(strpos($shellAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);') !== false, 'Shell lazy-load success path should still reinitialize Secondary Vendors after injecting markup.');
+	$assert(strpos($eventPlansSource, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);') === false, 'Event Plan PHP should no longer reinitialize Secondary Vendors after save-response markup replacement.');
+	$assert(strpos($secondaryVendorAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(body);') !== false, 'Dedicated Secondary Vendors asset should still reinitialize itself after save-response markup replacement.');
+	$assert(strpos($adminUiAssetsSource, "'bvmgr-event-plan-secondary-vendors'") !== false, 'Admin UI assets should register the dedicated Secondary Vendors handle.');
 	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js'") !== false, 'Admin UI assets should point the Secondary Vendors handle at the dedicated asset.');
 
 	$bridgeHits = array();
@@ -75,7 +75,7 @@ try {
 
 		$path = $fileInfo->getPathname();
 		$contents = file_get_contents($path);
-		if (!is_string($contents) || strpos($contents, 'window.vmsEventPlanInitSecondaryVendors(document)') === false) {
+		if (!is_string($contents) || strpos($contents, 'window.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS(document)') === false) {
 			continue;
 		}
 
@@ -97,7 +97,7 @@ try {
 		if (!is_string($contents)) {
 			continue;
 		}
-		$definesInitializer = preg_match('/window\.vmsEventPlanInitSecondaryVendors\s*=(?!=)/', $contents) === 1
+		$definesInitializer = preg_match('/window\.BVMGR_EVENT_PLAN_INIT_SECONDARY_VENDORS\s*=(?!=)/', $contents) === 1
 			|| preg_match('/function\s+initSecondaryVendors\s*\(/', $contents) === 1
 			|| preg_match('/\b(?:const|let|var)\s+initSecondaryVendors\s*=/', $contents) === 1;
 		if (!$definesInitializer) {
