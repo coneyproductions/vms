@@ -36,7 +36,13 @@ $old_version = static fn() => 'vendor_core_v2';
 try {
     $wpdb->prefix = $legacy_prefix;
     add_filter('pre_option_vms_db_schema_version', $old_version);
-    bvmgr_db_migrate_vendor_core_v3();
+    set_error_handler(static function ($severity, $message) { throw new RuntimeException($message); });
+    try {
+        bvmgr_db_migrate_vendor_core_v3();
+        $assert($wpdb->last_error === '', 'base installer produced no database error');
+    } finally {
+        restore_error_handler();
+    }
     $assert(!in_array('revision', $wpdb->get_col($wpdb->prepare('SHOW COLUMNS FROM %i', $assignments)), true), 'existing assignments require explicit migration');
     $assert(!in_array('operation_id', $wpdb->get_col($wpdb->prepare('SHOW COLUMNS FROM %i', $audit)), true), 'existing audit requires explicit migration');
     $assert($wpdb->get_var($wpdb->prepare('SELECT action FROM %i', $audit)) === 'retained_legacy_canary', 'legacy audit retained');

@@ -180,14 +180,14 @@ function bvmgr_db_migrate_vendor_core_v3(): void
 	$audit_lifecycle_indexes = '';
 	$existing_assignments = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($t_assignments)));
 	if ($wpdb->last_error === '' && $existing_assignments === null) {
-		$assignment_lifecycle_columns = "revision BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,";
+		$assignment_lifecycle_columns = "revision BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,\n\t\t";
 	}
 	$existing_audit = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($t_audit)));
 	if ($wpdb->last_error === '' && $existing_audit === null) {
 		$audit_lifecycle_columns = "assignment_id BIGINT(20) UNSIGNED NULL,
-		operation_id VARCHAR(64) NULL,";
+		operation_id VARCHAR(64) NULL,\n\t\t";
 		$audit_lifecycle_indexes = "UNIQUE KEY lifecycle_operation (operation_id),
-		KEY lifecycle_assignment (assignment_id),";
+		KEY lifecycle_assignment (assignment_id),\n\t\t";
 	}
 
 	$sql_templates = "CREATE TABLE {$t_templates} (
@@ -270,8 +270,7 @@ function bvmgr_db_migrate_vendor_core_v3(): void
 	) {$charset_collate};";
 
 	$sql_assignments = "CREATE TABLE {$t_assignments} (
-		{$assignment_lifecycle_columns}
-		assignment_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+		{$assignment_lifecycle_columns}assignment_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 		slot_id BIGINT(20) UNSIGNED NOT NULL,
 		staff_id BIGINT(20) UNSIGNED NOT NULL,
 		status VARCHAR(20) NOT NULL DEFAULT 'proposed',
@@ -325,8 +324,7 @@ function bvmgr_db_migrate_vendor_core_v3(): void
 	) {$charset_collate};";
 
 	$sql_audit = "CREATE TABLE {$t_audit} (
-		{$audit_lifecycle_columns}
-		log_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+		{$audit_lifecycle_columns}log_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 		event_plan_id BIGINT(20) UNSIGNED NULL,
 		actor_user_id BIGINT(20) UNSIGNED NULL,
 		action VARCHAR(80) NOT NULL,
@@ -334,8 +332,7 @@ function bvmgr_db_migrate_vendor_core_v3(): void
 		after_json LONGTEXT NULL,
 		created_at DATETIME NOT NULL,
 		PRIMARY KEY (log_id),
-		{$audit_lifecycle_indexes}
-		KEY event_plan_id (event_plan_id),
+		{$audit_lifecycle_indexes}KEY event_plan_id (event_plan_id),
 		KEY actor_user_id (actor_user_id),
 		KEY action (action),
 		KEY created_at (created_at)
