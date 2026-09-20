@@ -479,7 +479,9 @@ if (!function_exists('bvmgr_staffing_admin_template_row_markup')) {
 			'is_optional'          => 'vms_tpl_slots[' . $idx . '][is_optional]',
 			'notes'                => 'vms_tpl_slots[' . $idx . '][notes]',
 		);
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		?>
 		<div class="vms-tpl-slot-row" data-vms-tpl-slot-row="1">
 			<div class="vms-tpl-slot-card">
@@ -592,6 +594,9 @@ if (!function_exists('bvmgr_staffing_admin_template_row_markup')) {
 		</div>
 		<?php
 		return trim((string) ob_get_clean());
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 

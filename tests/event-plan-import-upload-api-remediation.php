@@ -165,6 +165,12 @@ function add_filter(string $hook, $callback, int $priority = 10, int $accepted_a
 	return true;
 }
 
+function has_filter(string $hook, $callback = false)
+{
+	$callbacks = $GLOBALS['vms_test_filters'][$hook] ?? array();
+	return $callback === false ? !empty($callbacks) : (in_array($callback, $callbacks, true) ? 10 : false);
+}
+
 function remove_filter(string $hook, $callback, int $priority = 10): bool
 {
 	unset($priority);

@@ -334,7 +334,9 @@ if (!function_exists('bvmgr_event_details_render_external_ticketing_panel')) {
         $producer = trim((string) ($destination['producer'] ?? ''));
         $producer_website = trim((string) ($destination['producer_website'] ?? ''));
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <aside class="vms-external-ticketing-panel" data-vms-external-ticketing-panel="1" aria-label="<?php esc_attr_e('Ticket information', 'backstage-venue-manager'); ?>">
             <?php if ($is_hosted) : ?>
@@ -356,6 +358,9 @@ if (!function_exists('bvmgr_event_details_render_external_ticketing_panel')) {
         </aside>
         <?php
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -405,7 +410,9 @@ if (!function_exists('bvmgr_event_details_render_card')) {
         $questions_url = trim((string) ($ctx['questions_url'] ?? ''));
 
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section class="<?php echo esc_attr(implode(' ', array_map('sanitize_html_class', $classes))); ?>" aria-label="<?php echo esc_attr($heading); ?>" data-vms-event-details-card="1">
             <h2 class="vms-event-details-card__title"><?php echo esc_html($heading); ?></h2>
@@ -456,6 +463,9 @@ if (!function_exists('bvmgr_event_details_render_card')) {
         </section>
         <?php
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 

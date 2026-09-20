@@ -105,7 +105,6 @@
     pid = parseInt(pid || 0, 10) || 0;
     if (pid > 0) persistAdvancedControlsState(pid);
 
-    suppressBeforeUnloadForNavigation();
 
     if (editUrlBase && pid > 0) {
       window.location.href = editUrlBase + pid + '&action=edit#vms_event_plan_advanced_controls';
@@ -120,27 +119,8 @@
     window.location.reload();
   }
 
-  let suppressBeforeUnload = false;
-
-  window.addEventListener('beforeunload', function (e) {
-    if (!suppressBeforeUnload) return;
-    try {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      e.returnValue = undefined;
-    } catch (err) {
-      // ignore
-    }
-  }, true);
-
-  function suppressBeforeUnloadForNavigation() {
-    suppressBeforeUnload = true;
-    try { window.onbeforeunload = null; } catch (e) {}
-  }
-
   function safeReload(delayMs) {
     persistAdvancedControlsState(getPlanId());
-    suppressBeforeUnloadForNavigation();
     const wait = Math.max(0, parseInt(delayMs || 0, 10) || 0);
     if (wait > 0) {
       window.setTimeout(() => { window.location.reload(); }, wait);

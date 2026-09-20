@@ -88,7 +88,8 @@ if (!function_exists('bvmgr_admission_qr_image_url')) {
 		if ($data === '') {
 			return '';
 		}
-		return 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=16&data=' . rawurlencode($data);
+		require_once __DIR__ . '/local-qr.php';
+		return \BVMGR\Admissions\Local_QR::data_uri($data);
 	}
 }
 
@@ -242,6 +243,7 @@ if (!function_exists('bvmgr_admission_email_pass_result')) {
 		}
 		$body .= '<div style="display:flex;flex-wrap:wrap;gap:14px;margin:18px 0;">';
 		$slot = 1;
+		$qr_images = array();
 		foreach ($group_rows as $group_row) {
 			$group_entry_id = (int) ($group_row['id'] ?? 0);
 			$group_token = $group_entry_id > 0 ? bvmgr_admission_ensure_entry_token($group_entry_id) : '';
@@ -249,12 +251,17 @@ if (!function_exists('bvmgr_admission_email_pass_result')) {
 				continue;
 			}
 			$qr_url = bvmgr_admission_qr_image_url('vms-admission:' . $group_token);
+			if ($qr_url !== '') {
+				$cid = 'bvmgr-pass-' . wp_generate_uuid4();
+				$qr_images[$cid] = base64_decode(substr($qr_url, strlen('data:image/png;base64,')), true);
+				$qr_url = 'cid:' . $cid;
+			}
 			/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 			$label = $count > 1 ? sprintf(__('Pass %1$d of %2$d', 'backstage-venue-manager'), $slot, $count) : __('Gate QR code', 'backstage-venue-manager');
 			$body .= '<div style="border:1px solid #d9e2ef;border-radius:12px;padding:12px;background:#fff;text-align:center;min-width:190px;">';
 			$body .= '<strong style="display:block;margin-bottom:8px;">' . esc_html($label) . '</strong>';
 			if ($qr_url !== '') {
-				$body .= '<img src="' . esc_url($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '" width="170" height="170" style="display:block;max-width:170px;height:auto;margin:0 auto;">';
+				$body .= '<img src="' . esc_attr($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '" width="170" height="170" style="display:block;max-width:170px;height:auto;margin:0 auto;">';
 			}
 			$body .= '<span style="display:block;font-size:12px;color:#526174;margin-top:6px;">' . esc_html('GL-' . $group_entry_id) . '</span>';
 			$body .= '</div>';
@@ -278,8 +285,20 @@ if (!function_exists('bvmgr_admission_email_pass_result')) {
 			}
 		};
 		add_action('wp_mail_failed', $mail_capture, 10, 1);
-		$sent = wp_mail($email, $subject, $body, $headers);
-		remove_action('wp_mail_failed', $mail_capture, 10);
+		$embed_qr = static function ($mailer) use ($qr_images): void {
+			foreach ($qr_images as $cid => $png) {
+				if (strpos($mailer->Body, 'cid:' . $cid) !== false) {
+					$mailer->addStringEmbeddedImage($png, $cid, 'admission-pass.png', 'base64', 'image/png');
+				}
+			}
+		};
+		add_action('phpmailer_init', $embed_qr);
+		try {
+			$sent = wp_mail($email, $subject, $body, $headers);
+		} finally {
+			remove_action('phpmailer_init', $embed_qr);
+			remove_action('wp_mail_failed', $mail_capture, 10);
+		}
 		$now = bvmgr_admission_now_mysql();
 		$result = array(
 			'sent' => (bool) $sent,
@@ -419,12 +438,12 @@ if (!function_exists('bvmgr_admission_scan_template_router')) {
 						continue;
 					}
 					/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
-					echo '<div class="vms-pass-qr-item"><strong>' . esc_html(sprintf(__('Pass %1$d of %2$d', 'backstage-venue-manager'), $slot, $group_count)) . '</strong><img class="vms-pass-qr" src="' . esc_url($group_qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"><span>' . esc_html('GL-' . $group_entry_id) . '</span></div>';
+					echo '<div class="vms-pass-qr-item"><strong>' . esc_html(sprintf(__('Pass %1$d of %2$d', 'backstage-venue-manager'), $slot, $group_count)) . '</strong><img class="vms-pass-qr" src="' . esc_attr($group_qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"><span>' . esc_html('GL-' . $group_entry_id) . '</span></div>';
 					$slot++;
 				}
 				echo '</div>';
 			} elseif ($qr_url !== '') {
-				echo '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_url($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"></div>';
+				echo '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_attr($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"></div>';
 			}
 			echo '<p class="vms-pass-meta"><strong>' . esc_html__('Name:', 'backstage-venue-manager') . '</strong> ' . esc_html($name) . '</p>';
 			if ($title !== '') {

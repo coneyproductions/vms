@@ -2224,7 +2224,9 @@ if (!function_exists('bvmgr_event_command_center_module_hub_card')) {
         $secondary_label = trim((string) ($card['secondary_label'] ?? ''));
         $secondary_url = trim((string) ($card['secondary_url'] ?? ''));
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         echo '<section class="vms-ep-module-card">';
         echo '<div class="vms-ep-module-card__header">';
         echo '<h4>' . esc_html($title) . '</h4>';
@@ -2258,6 +2260,9 @@ if (!function_exists('bvmgr_event_command_center_module_hub_card')) {
         echo '</section>';
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 

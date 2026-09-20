@@ -157,7 +157,9 @@ $render_secondary_vendor_status_badges = static function (array $group, int $sel
 		}
 	}
 
+	$bvmgr_buffer_level = ob_get_level();
 	ob_start();
+	try {
 	foreach ($badges as $badge) {
 		$label = trim((string) ($badge['label'] ?? ''));
 		$variant = sanitize_html_class((string) ($badge['variant'] ?? 'unknown'));
@@ -168,6 +170,9 @@ $render_secondary_vendor_status_badges = static function (array $group, int $sel
 	}
 
 	return (string) ob_get_clean();
+	} finally {
+	    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+	}
 };
 
 $render_secondary_vendor_group_summary = static function (array $group): array {
@@ -475,7 +480,7 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 	data-vms-save-post-id="<?php echo (int) $post->ID; ?>">
 	<input type="hidden" name="vms_secondary_vendors_module_detached" value="1" />
 	<input type="hidden" name="vms_clear_secondary_vendors" value="0" id="vms-clear-secondary-vendors-intent" />
-	<script type="application/json" data-vms-secondary-config><?php echo wp_json_encode($secondary_config); ?></script>
+	<script type="application/json" data-vms-secondary-config><?php echo wp_json_encode($secondary_config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?></script>
 
 	<p class="description vms-mt-8 vms-mb-8"><?php esc_html_e('Use Save Additional Vendors to save changes in this section.', 'backstage-venue-manager'); ?></p>
 

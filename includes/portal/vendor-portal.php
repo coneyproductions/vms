@@ -320,11 +320,47 @@ if (!function_exists('bvmgr_vendor_portal_render_preview_hidden_fields')) {
     }
 }
 
+if (!function_exists('bvmgr_vendor_portal_bridge_legacy_hook')) {
+    /**
+     * Preserve legacy companion registrations while dispatching only the canonical hook.
+     *
+     * BVM loads before several retained companion plugins, so copy their callbacks at
+     * the point of use. A callback already registered on the canonical hook is never
+     * copied, which prevents dual-registered extensions from rendering twice.
+     */
+    function bvmgr_vendor_portal_bridge_legacy_hook(string $suffix): void
+    {
+        global $wp_filter;
+
+        $legacy_hook = 'vms_vendor_portal_' . $suffix;
+        $canonical_hook = 'bvmgr_vendor_portal_' . $suffix;
+        if (empty($wp_filter[$legacy_hook]) || !is_object($wp_filter[$legacy_hook]) || empty($wp_filter[$legacy_hook]->callbacks)) {
+            return;
+        }
+
+        foreach ($wp_filter[$legacy_hook]->callbacks as $priority => $callbacks) {
+            foreach ($callbacks as $registration) {
+                if (!isset($registration['function']) || has_filter($canonical_hook, $registration['function']) !== false) {
+                    continue;
+                }
+
+                add_filter(
+                    $canonical_hook,
+                    $registration['function'],
+                    (int) $priority,
+                    max(1, (int) ($registration['accepted_args'] ?? 1))
+                );
+            }
+        }
+    }
+}
+
 if (!function_exists('bvmgr_vendor_portal_allowed_tabs')) {
     function bvmgr_vendor_portal_allowed_tabs(): array
     {
+        bvmgr_vendor_portal_bridge_legacy_hook('allowed_tabs');
         $tabs = apply_filters(
-            'vms_vendor_portal_allowed_tabs',
+            'bvmgr_vendor_portal_allowed_tabs',
             array('dashboard', 'profile', 'tax-profile', 'history', 'availability', 'opportunities', 'all-vendors', 'tech')
         );
 
@@ -982,7 +1018,9 @@ if (!function_exists('bvmgr_vendor_portal_render_count_breakdown_markup')) {
             return '';
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         echo '<div class="vms-vp-progress-breakdown">';
         foreach ($lines as $line) {
             if (!is_array($line)) {
@@ -1000,6 +1038,9 @@ if (!function_exists('bvmgr_vendor_portal_render_count_breakdown_markup')) {
         }
         echo '</div>';
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -3178,7 +3219,9 @@ if (!function_exists('bvmgr_vendor_portal_render_headliner_promo_video_markup_fr
             return '';
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="<?php echo esc_attr($classes); ?>">
             <?php if ($heading !== '') : ?>
@@ -3194,6 +3237,9 @@ if (!function_exists('bvmgr_vendor_portal_render_headliner_promo_video_markup_fr
         </div>
         <?php
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -4438,7 +4484,9 @@ if (!function_exists('bvmgr_vendor_portal_render_link_request_panel')) {
         $flash = bvmgr_vendor_portal_pull_flash($user_id);
         $return_url = $base_url !== '' ? $base_url : home_url('/vendor-portal/');
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         if (!empty($flash['message'])) {
             echo wp_kses_post(bvmgr_portal_notice(!empty($flash['type']) ? (string) $flash['type'] : 'success', (string) $flash['message']));
         }
@@ -4526,12 +4574,17 @@ if (!function_exists('bvmgr_vendor_portal_render_link_request_panel')) {
         echo '</div>';
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
 function bvmgr_vendor_portal_shortcode($atts = []): string
 {
+    $bvmgr_buffer_level = ob_get_level();
     ob_start();
+    try {
 
     // Enqueue portal assets when the shortcode renders.
     // This avoids fragile has_shortcode() detection in themes/page builders.
@@ -4539,6 +4592,7 @@ function bvmgr_vendor_portal_shortcode($atts = []): string
         wp_enqueue_style('bvmgr-portal');
     }
     if (function_exists('wp_enqueue_script')) {
+        wp_enqueue_script('bvmgr-number-input-guard');
         $calendar_script_ver = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null);
         if (defined('BVMGR_PLUGIN_PATH')) {
             $calendar_script_file = BVMGR_PLUGIN_PATH . 'assets/js/vms-public-calendar.js';
@@ -4778,7 +4832,8 @@ function bvmgr_vendor_portal_shortcode($atts = []): string
     }
     echo '<a class="' . ($active_tab === 'availability' ? 'is-active' : '') . '" href="' . esc_url($url_availability) . '">' . esc_html__('Availability', 'backstage-venue-manager') . '</a>';
     echo '<a class="' . ($active_tab === 'tech' ? 'is-active' : '') . '" href="' . esc_url($url_tech) . '">' . esc_html__('Tech Docs', 'backstage-venue-manager') . '</a>';
-    do_action('vms_vendor_portal_nav_links', $active_tab, $portal_context);
+    bvmgr_vendor_portal_bridge_legacy_hook('nav_links');
+    do_action('bvmgr_vendor_portal_nav_links', $active_tab, $portal_context);
     if (!$is_preview) {
         $apply_url = function_exists('bvmgr_vendor_app_get_application_page_url')
             ? bvmgr_vendor_app_get_application_page_url(array('vms_from_portal' => '1'))
@@ -5106,7 +5161,8 @@ $manual_future = 0;
             echo wp_kses_post(bvmgr_portal_notice('error', __('Tech Docs module is not loaded.', 'backstage-venue-manager')));
         }
     } else {
-        $custom_rendered = (bool) apply_filters('vms_vendor_portal_render_custom_tab', false, $tab, $portal_context);
+        bvmgr_vendor_portal_bridge_legacy_hook('render_custom_tab');
+        $custom_rendered = (bool) apply_filters('bvmgr_vendor_portal_render_custom_tab', false, $tab, $portal_context);
         if (!$custom_rendered) {
             echo wp_kses_post(bvmgr_portal_notice('error', __('That portal section is not available.', 'backstage-venue-manager')));
         }
@@ -5115,6 +5171,9 @@ $manual_future = 0;
     echo '</div>'; // body
     echo '</div>'; // vms-portal
     return (string) ob_get_clean();
+    } finally {
+        if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+    }
 }
 
 // Register shortcode (override any previous registration).

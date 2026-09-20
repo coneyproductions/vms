@@ -2357,7 +2357,9 @@ if (!function_exists('bvmgr_vendor_apply_render_success_screen')) {
             $steps[] = __('Because you submitted this while signed in, the application is already tied to your current website account for approval-time linking if the operator approves it.', 'backstage-venue-manager');
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section class="vms-vendor-apply-confirmation">
             <div class="vms-vendor-apply-confirmation__notice vms-notice vms-notice-success">
@@ -2382,6 +2384,9 @@ if (!function_exists('bvmgr_vendor_apply_render_success_screen')) {
         </section>
         <?php
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -2391,6 +2396,7 @@ if (!function_exists('bvmgr_vendor_apply_render_success_screen')) {
 add_shortcode('vms_vendor_apply', 'bvmgr_vendor_apply_shortcode');
 function bvmgr_vendor_apply_shortcode($atts = array(), $content = ''): string
 {
+        if (function_exists('bvmgr_enqueue_public_style_stack')) bvmgr_enqueue_public_style_stack();
     // Handle submission first
     if (bvmgr_request_method() === 'post' && bvmgr_vendor_apply_has_frontend_submission_marker()) {
         return bvmgr_vendor_apply_handle_frontend_post();
@@ -2483,12 +2489,14 @@ function bvmgr_vendor_apply_shortcode($atts = array(), $content = ''): string
         wp_enqueue_script('bvmgr-vendor-apply', $apply_script_src, array(), $apply_script_ver, true);
     }
 
-    $variant_map_json = wp_json_encode(bvmgr_vendor_app_form_variant_map());
+    $variant_map_json = wp_json_encode(bvmgr_vendor_app_form_variant_map(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     if (!is_string($variant_map_json) || $variant_map_json === '') {
         $variant_map_json = '{}';
     }
 
+    $bvmgr_buffer_level = ob_get_level();
     ob_start();
+    try {
     echo '<div class="vms-vendor-apply-flow">';
     echo $msg;
     ?>
@@ -2630,6 +2638,9 @@ function bvmgr_vendor_apply_shortcode($atts = array(), $content = ''): string
     echo '</div>';
 
     return (string) ob_get_clean();
+    } finally {
+        if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+    }
 }
 /**
  * Handle POST from frontend shortcode and redirect back with success/error flags.

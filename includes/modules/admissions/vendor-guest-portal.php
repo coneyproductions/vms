@@ -998,7 +998,7 @@ if (!function_exists('bvmgr_admission_vendor_guest_register_portal_tab')) {
 		return array_values(array_unique(array_filter(array_map('sanitize_key', $tabs))));
 	}
 }
-add_filter('vms_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);
+add_filter('bvmgr_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);
 
 if (!function_exists('bvmgr_admission_vendor_guest_portal_url')) {
 	function bvmgr_admission_vendor_guest_portal_url(array $portal_context, int $event_plan_id = 0): string
@@ -1026,7 +1026,7 @@ if (!function_exists('bvmgr_admission_vendor_guest_add_nav_link')) {
 		echo '<a class="' . ($tab === 'guest-list' ? 'is-active' : '') . '" href="' . esc_url($url) . '">' . esc_html__('Guest List', 'backstage-venue-manager') . '</a>';
 	}
 }
-add_action('vms_vendor_portal_nav_links', 'bvmgr_admission_vendor_guest_add_nav_link', 20, 2);
+add_action('bvmgr_vendor_portal_nav_links', 'bvmgr_admission_vendor_guest_add_nav_link', 20, 2);
 
 if (!function_exists('bvmgr_admission_vendor_guest_portal_screen_key')) {
 	function bvmgr_admission_vendor_guest_portal_screen_key(string $screen_key): string
@@ -1261,7 +1261,7 @@ if (!function_exists('bvmgr_admission_vendor_guest_render_custom_tab')) {
 		return true;
 	}
 }
-add_filter('vms_vendor_portal_render_custom_tab', 'bvmgr_admission_vendor_guest_render_custom_tab', 20, 3);
+add_filter('bvmgr_vendor_portal_render_custom_tab', 'bvmgr_admission_vendor_guest_render_custom_tab', 20, 3);
 
 if (!function_exists('bvmgr_admission_vendor_guest_handle_submit')) {
 	function bvmgr_admission_vendor_guest_handle_submit(): void

@@ -147,10 +147,6 @@
       updateWpTitleBox();
     }
 
-    postForm.addEventListener('submit', function () {
-      window.onbeforeunload = null;
-    });
-
     if (bandSel) {
       bandSel.addEventListener('change', onChange);
     }

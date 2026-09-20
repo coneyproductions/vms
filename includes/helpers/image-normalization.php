@@ -25,6 +25,12 @@ if (!function_exists('bvmgr_normalize_uploaded_image_to_jpeg')) {
 			return new WP_Error('save_failed', __('Could not save the normalized image. Please try again.', 'backstage-venue-manager'));
 		}
 
+        $bvmgr_storage = bvmgr_private_storage_config();
+        if (is_wp_error($bvmgr_storage) || !bvmgr_private_storage_is_verified($bvmgr_storage)
+            || !bvmgr_private_storage_within($target_dir, $bvmgr_storage['site']) || !bvmgr_private_storage_no_links($target_dir)) {
+            return bvmgr_private_storage_error('private_image_destination_invalid');
+        }
+
         if ($filename_base === '') {
             $filename_base = 'proof-' . gmdate('Ymd-His');
         }
@@ -77,6 +83,7 @@ if (!function_exists('bvmgr_normalize_uploaded_image_to_jpeg')) {
 
         $filename = wp_unique_filename($target_dir, $filename_base . '.jpg');
         $target_path = trailingslashit($target_dir) . $filename;
+        if (!bvmgr_private_storage_no_links($target_path) || file_exists($target_path)) return bvmgr_private_storage_error('private_image_destination_invalid');
         $saved = $editor->save($target_path, 'image/jpeg');
         if (is_wp_error($saved) || empty($saved['path']) || !file_exists((string) $saved['path'])) {
             return new WP_Error('image_processing_failed', __('Could not process image. Try a JPG, PNG, WEBP, or screenshot instead.', 'backstage-venue-manager'));

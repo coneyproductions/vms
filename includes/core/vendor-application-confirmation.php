@@ -1421,7 +1421,9 @@ if (!function_exists('bvmgr_vendor_app_render_resend_confirmation_form')) {
         $app_ref = bvmgr_vendor_app_get_public_lookup_key($app_id);
         $button_label = $button_label !== '' ? $button_label : __('Resend confirmation email', 'backstage-venue-manager');
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <form class="vms-vendor-apply-confirmation__resend" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="vms_vendor_app_resend_confirmation">
@@ -1432,6 +1434,9 @@ if (!function_exists('bvmgr_vendor_app_render_resend_confirmation_form')) {
         </form>
         <?php
         return wp_kses((string) ob_get_clean(), bvmgr_vendor_app_confirmation_allowed_html());
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -1473,7 +1478,9 @@ if (!function_exists('bvmgr_vendor_apply_render_confirmation_pending_screen')) {
             $notice_body = __('Please request a new confirmation email below so we can move your application into review.', 'backstage-venue-manager');
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section class="vms-vendor-apply-confirmation">
             <div class="vms-vendor-apply-confirmation__notice vms-notice vms-notice-warning">
@@ -1499,6 +1506,9 @@ if (!function_exists('bvmgr_vendor_apply_render_confirmation_pending_screen')) {
         </section>
         <?php
         return wp_kses((string) ob_get_clean(), bvmgr_vendor_app_confirmation_allowed_html());
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -1525,7 +1535,9 @@ if (!function_exists('bvmgr_vendor_apply_render_existing_status_screen')) {
             $body = __('If you already have Vendor Portal access, use the Vendor Portal. If your portal access is not connected yet, please reply to the most recent onboarding email or contact us for help.', 'backstage-venue-manager');
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section class="vms-vendor-apply-confirmation">
             <div class="vms-vendor-apply-confirmation__notice vms-notice vms-notice-success">
@@ -1544,6 +1556,9 @@ if (!function_exists('bvmgr_vendor_apply_render_existing_status_screen')) {
         </section>
         <?php
         return wp_kses((string) ob_get_clean(), bvmgr_vendor_app_confirmation_allowed_html());
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -1561,7 +1576,9 @@ if (!function_exists('bvmgr_vendor_app_render_portal_applicant_panel')) {
             ? bvmgr_vendor_portal_page_url()
             : home_url('/vendor-portal/');
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         echo '<div class="vms-portal-auth-wrap">';
         echo '<div class="vms-portal-auth-col vms-portal-auth-apply vms-vendor-applicant-state">';
         if ($state['kind'] === 'unconfirmed') {
@@ -1586,6 +1603,9 @@ if (!function_exists('bvmgr_vendor_app_render_portal_applicant_panel')) {
         echo '</div>';
         echo '</div>';
         return wp_kses((string) ob_get_clean(), bvmgr_vendor_app_confirmation_allowed_html());
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -1753,7 +1773,9 @@ if (!function_exists('bvmgr_vendor_app_maybe_render_confirmation_page')) {
             } elseif ($code === 'vms_vendor_app_confirm_token_used' || ($code === 'vms_vendor_app_confirm_token_invalidated' && is_array($data) && sanitize_key((string) ($data['reason'] ?? '')) === 'confirmed')) {
                 $portal_url = function_exists('bvmgr_vendor_portal_page_url') ? bvmgr_vendor_portal_page_url() : home_url('/vendor-portal/');
                 $reset_url = bvmgr_vendor_app_confirmation_reset_url();
+                $bvmgr_buffer_level = ob_get_level();
                 ob_start();
+                try {
                 ?>
                 <section class="vms-vendor-apply-confirmation">
                     <div class="vms-vendor-apply-confirmation__notice vms-notice vms-notice-success">
@@ -1772,6 +1794,9 @@ if (!function_exists('bvmgr_vendor_app_maybe_render_confirmation_page')) {
                 </section>
                 <?php
                 $content = (string) ob_get_clean();
+                } finally {
+                    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+                }
             } elseif ($code === 'vms_vendor_app_confirm_token_invalidated' && $app_id > 0) {
                 $content = bvmgr_vendor_apply_render_confirmation_pending_screen($app_id, array('notice' => 'expired'));
             } else {
@@ -1787,7 +1812,9 @@ if (!function_exists('bvmgr_vendor_app_maybe_render_confirmation_page')) {
         $reset_url = (string) ($result['reset_url'] ?? bvmgr_vendor_app_confirmation_reset_url());
         $had_existing_user = !empty($result['had_existing_user']);
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section class="vms-vendor-apply-confirmation">
             <div class="vms-vendor-apply-confirmation__notice vms-notice vms-notice-success">
@@ -1815,6 +1842,9 @@ if (!function_exists('bvmgr_vendor_app_maybe_render_confirmation_page')) {
         </section>
         <?php
         $content = (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
         bvmgr_vendor_app_render_confirmation_shell($title, $content);
     }
 }

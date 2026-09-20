@@ -42,26 +42,9 @@ function bvmgr_ticketing_admin_query_absint(string $key): int
 }
 
 
-/**
- * AJAX helpers: keep JSON responses valid even if something prints output.
- * Any buffered output is discarded and included in the response for admins (truncated).
- */
+/** AJAX responses use WordPress directly without owning request-global buffers. */
 function bvmgr_ticketing_ajax_attach_noise(array $data): array
 {
-    $noise = '';
-    if (!empty($GLOBALS['bvmgr_ajax_ob_started'])) {
-        $noise = (string) ob_get_contents();
-        // We started this buffer explicitly in integrations/load.php for AJAX requests.
-        // Close it now so our JSON response is not buffered behind any later output.
-        @ob_end_clean();
-        $GLOBALS['bvmgr_ajax_ob_started'] = false;
-    }
-
-    $noise = wp_strip_all_tags((string) $noise, false);
-    if ($noise !== '' && current_user_can('manage_options')) {
-        $data['_vms_ajax_noise'] = mb_substr($noise, 0, 400);
-    }
-
     return $data;
 }
 
@@ -77,23 +60,8 @@ function bvmgr_ticketing_ajax_send_error(array $data = array(), int $http_status
     wp_send_json_error($data, $http_status);
 }
 
-function bvmgr_ticketing_ajax_discard_owned_buffer(): void
-{
-    if (empty($GLOBALS['bvmgr_ajax_ob_started'])) {
-        return;
-    }
-
-    if (ob_get_level() > 0) {
-        @ob_end_clean();
-    }
-
-    $GLOBALS['bvmgr_ajax_ob_started'] = false;
-}
-
 function bvmgr_ticketing_v2_ajax_send_success($data = null, ?int $status_code = null, int $flags = 0): void
 {
-    bvmgr_ticketing_ajax_discard_owned_buffer();
-
     if (func_num_args() < 2) {
         wp_send_json_success($data);
     } elseif (func_num_args() < 3) {
@@ -105,8 +73,6 @@ function bvmgr_ticketing_v2_ajax_send_success($data = null, ?int $status_code = 
 
 function bvmgr_ticketing_v2_ajax_send_error($data = null, ?int $status_code = null, int $flags = 0): void
 {
-    bvmgr_ticketing_ajax_discard_owned_buffer();
-
     if (func_num_args() < 2) {
         wp_send_json_error($data);
     } elseif (func_num_args() < 3) {

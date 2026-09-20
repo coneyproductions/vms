@@ -34,15 +34,19 @@ if (!function_exists('bvmgr_event_plan_import_with_scoped_upload_dir')) {
 	 */
 	function bvmgr_event_plan_import_with_scoped_upload_dir(array $context, callable $callback)
 	{
-		$GLOBALS['bvmgr_event_plan_import_upload_dir_context'] = $context;
-		add_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir');
+        $had_context = array_key_exists('bvmgr_event_plan_import_upload_dir_context', $GLOBALS);
+        $previous = $GLOBALS['bvmgr_event_plan_import_upload_dir_context'] ?? null;
+        $had_filter = has_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir') !== false;
+        $GLOBALS['bvmgr_event_plan_import_upload_dir_context'] = $context;
+        if (!$had_filter) add_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir');
 
-		try {
-			return $callback();
-		} finally {
-			remove_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir');
-			unset($GLOBALS['bvmgr_event_plan_import_upload_dir_context']);
-		}
+        try {
+            return $callback();
+        } finally {
+            if (!$had_filter) remove_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir');
+            if ($had_context) $GLOBALS['bvmgr_event_plan_import_upload_dir_context'] = $previous;
+            else unset($GLOBALS['bvmgr_event_plan_import_upload_dir_context']);
+        }
 	}
 }
 

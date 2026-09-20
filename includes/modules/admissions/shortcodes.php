@@ -35,7 +35,9 @@ if (!function_exists('bvmgr_door_checkin_shortcode')) {
 			),
 		));
 
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		?>
 		<div class="vms-door-checkin" id="vms-door-checkin-root">
 			<div class="vms-door-toolbar">
@@ -57,6 +59,9 @@ if (!function_exists('bvmgr_door_checkin_shortcode')) {
 		</div>
 		<?php
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 add_shortcode('vms_door_checkin', 'bvmgr_door_checkin_shortcode');

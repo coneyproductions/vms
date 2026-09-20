@@ -44,14 +44,14 @@ class BVMGR_Social_Provider_Webhook implements BVMGR_Social_Provider_Interface
 	public function validate_connection(int $account_id): array
 	{
 		$cfg = function_exists('bvmgr_social_account_token_json') ? bvmgr_social_account_token_json($account_id) : array();
-		$url = esc_url_raw((string) ($cfg['webhook_url'] ?? ''));
-		$ok = $url !== '';
+		$url = $cfg['webhook_url'] ?? '';
+		$ok = bvmgr_social_webhook_url_is_safe($url);
 		return array(
 			'ok' => $ok,
 			'auth_state' => $ok ? 'connected' : 'error',
 			'destinations' => $ok ? array(array('id' => $url, 'name' => $url)) : array(),
 			'permissions_ok' => $ok,
-			'warnings' => $ok ? array() : array('Webhook URL is missing.'),
+			'warnings' => $ok ? array() : array('Webhook URL is missing or unsafe.'),
 		);
 	}
 
@@ -83,9 +83,9 @@ class BVMGR_Social_Provider_Webhook implements BVMGR_Social_Provider_Interface
 	public function publish(int $account_id, string $destination_id, array $rendered_payload): array
 	{
 		$cfg = function_exists('bvmgr_social_account_token_json') ? bvmgr_social_account_token_json($account_id) : array();
-		$url = esc_url_raw((string) ($cfg['webhook_url'] ?? ''));
-		if ($url === '') {
-			throw new RuntimeException('Webhook URL is missing.');
+		$url = $cfg['webhook_url'] ?? '';
+		if (!bvmgr_social_webhook_url_is_safe($url)) {
+			throw new RuntimeException('Webhook URL is missing or unsafe.');
 		}
 
 		$secret = (string) ($cfg['signing_secret'] ?? '');
@@ -101,20 +101,38 @@ class BVMGR_Social_Provider_Webhook implements BVMGR_Social_Provider_Interface
 			$headers['X-VMS-Signature'] = hash_hmac('sha256', $json, $secret);
 		}
 
-		$response = wp_remote_post(
-			$url,
-			array(
-				'timeout' => 12,
-				'headers' => $headers,
-				'body' => $json,
-			)
-		);
+		$current_url = $url;
+		$response = null;
+		$code = 0;
+		for ($redirects = 0; $redirects <= 3; $redirects++) {
+			if (!bvmgr_social_webhook_url_is_safe($current_url)) {
+				throw new RuntimeException('Webhook URL is missing or unsafe.');
+			}
+			$response = wp_safe_remote_post(
+				$current_url,
+				array(
+					'timeout' => 12,
+					'redirection' => 0,
+					'headers' => $headers,
+					'body' => $json,
+				)
+			);
 
-		if (is_wp_error($response)) {
-			throw new RuntimeException((string) $response->get_error_message()); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook transport diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.
+			if (is_wp_error($response)) {
+				throw new RuntimeException((string) $response->get_error_message()); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook transport diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.
+			}
+
+			$code = (int) wp_remote_retrieve_response_code($response);
+			if ($code < 300 || $code >= 400) {
+				break;
+			}
+			if ($redirects === 3) {
+				throw new RuntimeException('Webhook exceeded the redirect limit.');
+			}
+			$location = wp_remote_retrieve_header($response, 'location');
+			$current_url = is_string($location) ? $location : '';
 		}
 
-		$code = (int) wp_remote_retrieve_response_code($response);
 		if ($code < 200 || $code >= 300) {
 			throw new RuntimeException('Webhook returned HTTP ' . $code); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal plain-text webhook status diagnostic; the queue runner sanitizes it for storage and downstream sinks escape or JSON-encode it contextually.
 		}

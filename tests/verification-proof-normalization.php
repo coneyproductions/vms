@@ -3,6 +3,12 @@ declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
 
+// Isolated image-editor fixture; production storage boundaries have separate adversarial tests.
+function bvmgr_private_storage_config() { return array('site' => $GLOBALS['root']); }
+function bvmgr_private_storage_is_verified(array $config): bool { return true; }
+function bvmgr_private_storage_within(string $path, string $root): bool { return $path === $root || str_starts_with($path, $root . '/'); }
+function bvmgr_private_storage_no_links(string $path): bool { return !is_link($path); }
+
 if (!class_exists('WP_Error')) {
     class WP_Error
     {

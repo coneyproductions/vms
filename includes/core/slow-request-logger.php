@@ -55,13 +55,7 @@ if (!function_exists('bvmgr_slow_request_logger_max_bytes')) {
 if (!function_exists('bvmgr_slow_request_logger_log_path')) {
 	function bvmgr_slow_request_logger_log_path(): string
 	{
-		if (defined('VMS_SLOW_REQUEST_LOGGER_PATH') && is_string(VMS_SLOW_REQUEST_LOGGER_PATH) && VMS_SLOW_REQUEST_LOGGER_PATH !== '') {
-			return VMS_SLOW_REQUEST_LOGGER_PATH;
-		}
-
-		return defined('WP_CONTENT_DIR')
-			? WP_CONTENT_DIR . '/vms-slow-request.log'
-			: dirname(__DIR__, 3) . '/vms-slow-request.log';
+		return function_exists('bvmgr_private_storage_target') ? bvmgr_private_storage_target('diagnostics/slow-request.log') : '';
 	}
 }
 
@@ -391,6 +385,8 @@ if (!function_exists('bvmgr_slow_request_logger_fatal_summary')) {
 if (!function_exists('bvmgr_slow_request_logger_rotate_file')) {
 	function bvmgr_slow_request_logger_rotate_file(string $path): void
 	{
+		if ($path === '' || $path !== bvmgr_slow_request_logger_log_path() || !bvmgr_private_storage_safe_file($path)
+			|| !bvmgr_private_storage_no_links($path . '.1') || (file_exists($path . '.1') && !bvmgr_private_storage_safe_file($path . '.1'))) return;
 		$max_bytes = bvmgr_slow_request_logger_max_bytes();
 		$current_size = file_exists($path) ? (int) @filesize($path) : 0;
 		if ($current_size < $max_bytes) {
@@ -408,14 +404,9 @@ if (!function_exists('bvmgr_slow_request_logger_rotate_file')) {
 if (!function_exists('bvmgr_slow_request_logger_write_entry')) {
 	function bvmgr_slow_request_logger_write_entry(array $entry): void
 	{
-		$path = bvmgr_slow_request_logger_log_path();
-		$directory = dirname($path);
-		if (!is_dir($directory) && function_exists('wp_mkdir_p')) {
-			wp_mkdir_p($directory);
-		}
-		if (!is_dir($directory) || !wp_is_writable($directory)) {
-			return;
-		}
+        if (!bvmgr_private_storage_prepare('diagnostics')) return;
+        $path = bvmgr_slow_request_logger_log_path();
+        if ($path === '' || (file_exists($path) && !bvmgr_private_storage_safe_file($path))) return;
 
 		bvmgr_slow_request_logger_rotate_file($path);
 		$line = function_exists('wp_json_encode') ? wp_json_encode($entry) : json_encode($entry);

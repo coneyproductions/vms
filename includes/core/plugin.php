@@ -164,7 +164,7 @@ add_action('admin_enqueue_scripts', function ($hook_suffix = ''): void {
  * Public / portal assets
  *
  * Rules:
- * - Load shared styles everywhere on the public site
+ * - Register shared styles; BVM renderers enqueue their required dependencies
  * - Load portal styles only when the portal shortcode is present (or allow override via filter)
  */
 add_action('wp_enqueue_scripts', function (): void {
@@ -172,22 +172,22 @@ add_action('wp_enqueue_scripts', function (): void {
 	$ver = defined('BVMGR_VERSION') ? BVMGR_VERSION : null;
 
 	// Shared foundation
-	wp_enqueue_style(
+	wp_register_style(
 		'bvmgr-shared',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-shared.css',
 		[],
 		$ver
 	);
 
-	wp_enqueue_style(
+	wp_register_style(
 		'bvmgr-ui',
 		BVMGR_PLUGIN_URL . 'assets/css/vms-ui.css',
 		['bvmgr-shared'],
 		$ver
 	);
 
-	// Prevent accidental mouse-wheel changes on number fields across VMS public forms.
-	wp_enqueue_script(
+	// Register the guard; individual BVM public renderers own enqueueing.
+	wp_register_script(
 		'bvmgr-number-input-guard',
 		BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js',
 		[],
@@ -211,17 +211,16 @@ add_action('wp_enqueue_scripts', function (): void {
 		['bvmgr-ui'],
 		$portal_ver
 	);
-	// Portal stylesheet
-	//
-	// We enqueue this globally on the public site because page builders and template injections
-	// can render the [vms_vendor_portal] shortcode without it existing in post_content, which
-	// makes has_shortcode() based gating unreliable. The CSS is scoped under .vms-portal so it
-	// will not affect other public pages.
-	$should = apply_filters('vms_should_enqueue_portal_assets', true);
+	// Known shortcode content can load in the head. Template and builder renderers
+	// also enqueue this handle directly, so their late styles use WordPress's footer.
+	$queried = function_exists('get_queried_object') ? get_queried_object() : null;
+	$content = $queried instanceof WP_Post ? (string) $queried->post_content : '';
+	$should = $content !== '' && (has_shortcode($content, 'vms_vendor_portal') || has_shortcode($content, 'vms_staff_portal'));
+	$should = apply_filters('vms_should_enqueue_portal_assets', $should);
 	if ($should !== false) {
 		wp_enqueue_style('bvmgr-portal');
 	}
-}, 20);
+}, 5);
 
 /**
  * Ensure DB schema migrations run on update as well as initial install.

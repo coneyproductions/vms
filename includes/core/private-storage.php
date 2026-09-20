@@ -1,5 +1,5 @@
 <?php
-/** Private storage boundary. Host configuration is mandatory; no public fallback. */
+/** Verified private storage within the WordPress uploads directory. */
 defined('ABSPATH') || exit;
 
 function bvmgr_private_storage_error(string $code = 'private_storage_unavailable'): WP_Error
@@ -54,47 +54,89 @@ function bvmgr_private_storage_no_links(string $path): bool
     return true;
 }
 
-/** @return array{root:string,site:string}|WP_Error */
+/** Resolve paths without creating files, changing options, or making HTTP requests. */
 function bvmgr_private_storage_config()
 {
-    if (!defined('BVMGR_PRIVATE_STORAGE_ROOT') || !is_string(BVMGR_PRIVATE_STORAGE_ROOT)
-        || !defined('BVMGR_PRIVATE_STORAGE_WEB_ROOTS') || !is_array(BVMGR_PRIVATE_STORAGE_WEB_ROOTS)
-        || !BVMGR_PRIVATE_STORAGE_WEB_ROOTS) return bvmgr_private_storage_error('private_storage_not_configured');
-    $root = bvmgr_private_storage_canonical(BVMGR_PRIVATE_STORAGE_ROOT);
-    if ($root === '' || !@is_dir($root) || !@is_readable($root) || !@wp_is_writable($root) || !bvmgr_private_storage_no_links(BVMGR_PRIVATE_STORAGE_ROOT)) return bvmgr_private_storage_error('private_storage_invalid_root');
-    $public = array();
-    foreach (BVMGR_PRIVATE_STORAGE_WEB_ROOTS as $declared) {
-        if (!is_string($declared)) return bvmgr_private_storage_error('private_storage_invalid_web_roots');
-        $real = bvmgr_private_storage_canonical($declared);
-        if ($real === '' || !@is_dir($real)) return bvmgr_private_storage_error('private_storage_invalid_web_roots');
-        $public[] = $real;
-    }
-    $wordpress = bvmgr_private_storage_canonical(ABSPATH);
-    $covered = false;
-    foreach ($public as $webroot) if (bvmgr_private_storage_within($wordpress, $webroot)) $covered = true;
-    if (!$covered) return bvmgr_private_storage_error('private_storage_wordpress_root_unverified');
-    // These are server configuration fields, never HTTP_* request headers.
-    $document_root = isset($_SERVER['DOCUMENT_ROOT']) && is_string($_SERVER['DOCUMENT_ROOT']) ? wp_unslash($_SERVER['DOCUMENT_ROOT']) : '';
-    if ($document_root !== '') {
-        $effective = bvmgr_private_storage_canonical($document_root);
-        $cli_wordpress_root = PHP_SAPI === 'cli' && $effective === $wordpress;
-        if ($effective === '' || (!$cli_wordpress_root && !in_array($effective, $public, true))) return bvmgr_private_storage_error('private_storage_document_root_mismatch');
-    } elseif (PHP_SAPI !== 'cli') {
-        return bvmgr_private_storage_error('private_storage_document_root_unknown');
-    }
     $uploads = wp_upload_dir(null, false);
-    $known = array(ABSPATH, WP_CONTENT_DIR, isset($uploads['basedir']) ? (string) $uploads['basedir'] : '');
-    foreach ($known as $path) {
-        $real = bvmgr_private_storage_canonical($path);
-        if ($real === '') return bvmgr_private_storage_error('private_storage_public_path_unknown');
-        $public[] = $real;
-    }
-    foreach ($public as $webroot) {
-        if (bvmgr_private_storage_within($root, $webroot) || bvmgr_private_storage_within($webroot, $root)) return bvmgr_private_storage_error('private_storage_public_overlap');
-    }
+    if (!empty($uploads['error']) || empty($uploads['basedir']) || empty($uploads['baseurl'])) return bvmgr_private_storage_error('private_uploads_unavailable');
+    $base = bvmgr_private_storage_canonical((string) $uploads['basedir']);
+    $url = untrailingslashit((string) $uploads['baseurl']);
+    if ($base === '' || !preg_match('~^https?://~i', $url)) return bvmgr_private_storage_error('private_uploads_invalid');
+    $container = $base . '/backstage-venue-manager';
+    $root = $container . '/private';
     $site = $root . '/site-' . get_current_blog_id();
-    if (!bvmgr_private_storage_no_links($site)) return bvmgr_private_storage_error('private_storage_symlink');
-    return array('root' => $root, 'site' => $site);
+    if (!bvmgr_private_storage_no_links($root) || !bvmgr_private_storage_no_links($site)) return bvmgr_private_storage_error('private_storage_symlink');
+    return array('root' => $root, 'site' => $site, 'container' => $container, 'url' => $url . '/backstage-venue-manager');
+}
+
+/** Only these immutable, non-executable protection files may be generated. */
+function bvmgr_private_storage_protection_files(): array
+{
+    return array(
+        'index.php' => '',
+        '.htaccess' => "<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n",
+        'web.config' => '<?xml version="1.0" encoding="UTF-8"?><configuration><system.webServer><security><authorization><remove users="*" roles="" verbs="" /><add accessType="Deny" users="*" /></authorization></security></system.webServer></configuration>',
+    );
+}
+
+/** Reject arbitrary, traversal, linked, and cross-site hardening destinations. */
+function bvmgr_private_storage_harden(string $dir): bool
+{
+    $config = bvmgr_private_storage_config();
+    if (is_wp_error($config) || !bvmgr_private_storage_no_links($dir) || !is_dir($dir)
+        || ($dir !== $config['root'] && !bvmgr_private_storage_within($dir, $config['site']))) return false;
+    foreach (bvmgr_private_storage_protection_files() as $name => $content) {
+        $path = $dir . '/' . $name;
+        if (!bvmgr_private_storage_no_links($path)) return false;
+        if (file_exists($path)) {
+            if (!is_file($path) || (int) (@stat($path)['nlink'] ?? 0) !== 1 || file_get_contents($path) !== $content) return false;
+        } else {
+            $handle = @fopen($path, 'xb');
+            if (!$handle) return false;
+            try { if ($content !== '' && fwrite($handle, $content) !== strlen($content)) return false; }
+            finally { fclose($handle); }
+        }
+    }
+    return true;
+}
+
+/** Read-only check of the verified configuration and protection files. */
+function bvmgr_private_storage_is_verified(array $config): bool
+{
+    $receipt = get_option('bvmgr_private_storage_http_verification', array());
+    if (!is_array($receipt) || ($receipt['root'] ?? '') !== $config['root'] || ($receipt['url'] ?? '') !== $config['url']) return false;
+    foreach (bvmgr_private_storage_protection_files() as $name => $content) {
+        $path = $config['root'] . '/' . $name;
+        if (!bvmgr_private_storage_no_links($path) || !is_file($path) || (int) (@stat($path)['nlink'] ?? 0) !== 1 || file_get_contents($path) !== $content) return false;
+    }
+    return true;
+}
+
+/** Explicit preparation only: prove the uploads URL mapping and actual HTTP denial. */
+function bvmgr_private_storage_verify_http(array $config): bool
+{
+    if ($config !== bvmgr_private_storage_config()) return false;
+    $verified = false;
+    $token = wp_generate_uuid4();
+    $public = $config['container'] . '/probe-' . $token . '.txt';
+    $private = $config['root'] . '/probe-' . $token . '.txt';
+    foreach (array($public, $private) as $path) if (!bvmgr_private_storage_no_links($path) || file_exists($path)) return false;
+    try {
+        foreach (array($public, $private) as $path) if (file_put_contents($path, $token, LOCK_EX) !== strlen($token)) return false;
+        // The URL comes exclusively from WordPress uploads configuration, never request input.
+        $args = array('timeout' => 5, 'redirection' => 0, 'limit_response_size' => 1024, 'cookies' => array(), 'headers' => array('Cache-Control' => 'no-cache'));
+        $visible = wp_remote_get($config['url'] . '/' . basename($public), $args);
+        $hidden = wp_remote_get($config['url'] . '/private/' . basename($private), $args);
+        if (is_wp_error($visible) || is_wp_error($hidden) || wp_remote_retrieve_response_code($visible) !== 200
+            || wp_remote_retrieve_body($visible) !== $token || wp_remote_retrieve_response_code($hidden) !== 403) return false;
+        $receipt = array('root' => $config['root'], 'url' => $config['url']);
+        update_option('bvmgr_private_storage_http_verification', $receipt, false);
+        $verified = get_option('bvmgr_private_storage_http_verification') === $receipt;
+        return $verified;
+    } finally {
+        if (!$verified) delete_option('bvmgr_private_storage_http_verification');
+        foreach (array($public, $private) as $path) if (bvmgr_private_storage_no_links($path)) wp_delete_file($path);
+    }
 }
 
 /** Resolve a validated logical key for an explicit write; does not create anything. */
@@ -111,7 +153,7 @@ function bvmgr_private_storage_target(string $key): string
 function bvmgr_private_storage_safe_file(string $path): bool
 {
     $config = bvmgr_private_storage_config();
-    if (is_wp_error($config) || !bvmgr_private_storage_no_links($path) || !@is_file($path) || !@is_readable($path)) return false;
+    if (is_wp_error($config) || !bvmgr_private_storage_is_verified($config) || !bvmgr_private_storage_no_links($path) || !@is_file($path) || !@is_readable($path)) return false;
     $real = @realpath($path);
     $stat = @stat($path);
     return $real !== false && bvmgr_private_storage_within(wp_normalize_path($real), $config['site'])
@@ -124,7 +166,14 @@ function bvmgr_private_storage_legacy_roots(): array
     $uploads = wp_upload_dir(null, false);
     $base = isset($uploads['basedir']) ? bvmgr_private_storage_canonical((string) $uploads['basedir']) : '';
     if ($base === '') return array();
-    return array($base . '/vms-private' => '', $base . '/vms-event-plan-imports' => 'legacy-event-plan-imports/', $base . '/vms-verification-proofs' => 'legacy-verifications/');
+    $roots = array($base . '/vms-private' => '', $base . '/vms-event-plan-imports' => 'legacy-event-plan-imports/', $base . '/vms-verification-proofs' => 'legacy-verifications/');
+    if (defined('BVMGR_PRIVATE_STORAGE_ROOT') && is_string(BVMGR_PRIVATE_STORAGE_ROOT)) {
+        $prior = bvmgr_private_storage_canonical(BVMGR_PRIVATE_STORAGE_ROOT . '/site-' . get_current_blog_id());
+        $config = bvmgr_private_storage_config();
+        if ($prior !== '' && !is_wp_error($config) && !bvmgr_private_storage_within($prior, $config['container'])
+            && !bvmgr_private_storage_within($config['container'], $prior) && bvmgr_private_storage_no_links($prior)) $roots[$prior] = '';
+    }
+    return $roots;
 }
 
 /** Read compatibility: stable keys and historical absolute references map to secure objects only. */
@@ -145,7 +194,7 @@ function bvmgr_private_storage_resolve(string $reference): string
         }
     } else {
         foreach (bvmgr_private_storage_legacy_roots() as $root => $prefix) {
-            if ($prefix === '') { $legacy = $root . '/' . $key; break; }
+            if ($prefix === '' && (@file_exists($root . '/' . $key) || @is_link($root . '/' . $key))) { $legacy = $root . '/' . $key; break; }
         }
     }
     if ($key === '' || ($legacy !== '' && (@file_exists($legacy) || @is_link($legacy)))) return '';
@@ -153,18 +202,17 @@ function bvmgr_private_storage_resolve(string $reference): string
     return $path !== '' && bvmgr_private_storage_safe_file($path) ? $path : '';
 }
 
-/** Explicit mutation only: root itself must already exist and pass host validation. */
+/** Explicit mutation only; unsupported HTTP configurations fail before private writes. */
 function bvmgr_private_storage_prepare(string $bucket, bool $migration = false): bool
 {
     $config = bvmgr_private_storage_config();
-    if (is_wp_error($config) || !@wp_is_writable($config['root'])) return false;
+    if (is_wp_error($config) || ($bucket !== '' && sanitize_key($bucket) !== $bucket)) return false;
+    if (!bvmgr_private_storage_no_links($config['root']) || (!is_dir($config['root']) && !wp_mkdir_p($config['root']))) return false;
+    if (!bvmgr_private_storage_harden($config['root']) || !bvmgr_private_storage_verify_http($config)) return false;
     if (!$migration && bvmgr_private_storage_pending()) return false;
-    $bucket = sanitize_key($bucket);
     $path = $config['site'] . ($bucket !== '' ? '/' . $bucket : '');
-    if (!bvmgr_private_storage_no_links($path)) return false;
-    if (!@is_dir($config['site']) && !@mkdir($config['site'], 0700)) return false;
-    if (!@is_dir($path) && !@mkdir($path, 0700)) return false;
-    return bvmgr_private_storage_no_links($path) && @wp_is_writable($path);
+    if (!bvmgr_private_storage_no_links($path) || (!is_dir($path) && !wp_mkdir_p($path))) return false;
+    return bvmgr_private_storage_no_links($path) && wp_is_writable($path);
 }
 
 /** Suppress public URLs for explicitly migrated private attachments. */

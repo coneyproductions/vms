@@ -383,7 +383,9 @@ function bvmgr_rate_band_shortcode($atts) {
         $message = $result['message'];
     }
 
+    $bvmgr_buffer_level = ob_get_level();
     ob_start();
+    try {
 
     if (!empty($message)) {
         echo '<div class="vms-rating-message">' . wp_kses_post($message) . '</div>';
@@ -441,6 +443,9 @@ function bvmgr_rate_band_shortcode($atts) {
     <?php
 
     return ob_get_clean();
+    } finally {
+        if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+    }
 }
 
 /**

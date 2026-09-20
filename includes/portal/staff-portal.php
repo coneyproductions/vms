@@ -1704,6 +1704,7 @@ function bvmgr_staff_portal_shortcode()
         wp_enqueue_style('bvmgr-portal');
     }
     if (function_exists('wp_enqueue_script')) {
+        wp_enqueue_script('bvmgr-number-input-guard');
         $calendar_script_ver = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null);
         if (defined('BVMGR_PLUGIN_PATH')) {
             $calendar_script_file = BVMGR_PLUGIN_PATH . 'assets/js/vms-public-calendar.js';
@@ -1727,10 +1728,15 @@ function bvmgr_staff_portal_shortcode()
     $url_availability   = add_query_arg('tab', 'availability', $base_url);
 
     if (!is_user_logged_in()) {
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         echo '<p>' . esc_html__('Please log in to access the staff portal.', 'backstage-venue-manager') . '</p>';
         echo wp_login_form(array('echo' => false, 'redirect' => esc_url(get_permalink())));
         return ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     $user_id  = get_current_user_id();
@@ -1773,7 +1779,9 @@ function bvmgr_staff_portal_shortcode()
         wp_enqueue_script('bvmgr-staff-portal', $staff_portal_script_src, array(), $staff_portal_script_ver, true);
     }
 
+    $bvmgr_buffer_level = ob_get_level();
     ob_start();
+    try {
 
     echo '<div class="vms-portal" id="vms-portal-root">';
     echo '<h2>' . esc_html__('Staff Portal:', 'backstage-venue-manager') . ' ' . esc_html($staff->post_title) . '</h2>';
@@ -1801,6 +1809,9 @@ function bvmgr_staff_portal_shortcode()
 
     echo '</div>';
     return ob_get_clean();
+    } finally {
+        if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+    }
 }
 
 if (!function_exists('bvmgr_staff_portal_render_dashboard')) {

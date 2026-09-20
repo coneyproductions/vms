@@ -77,7 +77,8 @@ if (!function_exists('bvmgr_add_dispatch_render_public_shell')) {
 		echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
 		echo '<title>' . esc_html($headline) . '</title>';
 		if ($stylesheet_url !== '') {
-			echo '<link rel="stylesheet" href="' . esc_url($stylesheet_url) . '">';
+			wp_enqueue_style('bvmgr-add-dispatch-public-shell', $stylesheet_url, array(), null);
+			wp_print_styles(array('bvmgr-add-dispatch-public-shell'));
 		}
 		echo '</head><body><div class="vms-add-public"><div class="vms-add-card">';
 		echo wp_kses($content_html, bvmgr_add_dispatch_public_response_allowed_html());

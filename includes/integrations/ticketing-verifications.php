@@ -153,6 +153,54 @@ if (!function_exists('bvmgr_ticketing_verification_request_post_types')) {
     }
 }
 
+/** Map only metadata owned by the verification request post types. */
+function bvmgr_verification_meta_key(string $field): string
+{
+    $fields = array('decision_email_last_error', 'decision_email_last_sent_at', 'decision_email_last_status', 'decision_email_last_to', 'program', 'proof_file_id', 'proof_file_path', 'proof_mime', 'proof_storage_kind', 'review_notes', 'reviewed_at', 'reviewed_by', 'submission_email_last_error', 'submission_email_last_sent_at', 'submission_email_last_status', 'submission_email_last_to', 'submit_notes', 'submitted_at', 'user_id');
+    return in_array($field, $fields, true) ? 'bvmgr_verification_' . $field : '';
+}
+
+/** Existing records remain readable without writing during reads. */
+function bvmgr_verification_meta_get(int $request_id, string $field, bool $single = true)
+{
+    $key = bvmgr_verification_meta_key($field);
+    if ($key === '' || !in_array(get_post_type($request_id), bvmgr_ticketing_verification_request_post_types(), true)) return $single ? '' : array();
+    return get_post_meta($request_id, metadata_exists('post', $request_id, $key) ? $key : $field, $single);
+}
+
+/** Only explicit, already-authorized request mutations create prefixed values. */
+function bvmgr_verification_meta_update(int $request_id, string $field, $value)
+{
+    $key = bvmgr_verification_meta_key($field);
+    if ($key === '' || !in_array(get_post_type($request_id), bvmgr_ticketing_verification_request_post_types(), true)) return false;
+    return update_post_meta($request_id, $key, $value);
+}
+
+/** Remove both representations so deleted legacy proof references cannot reappear. */
+function bvmgr_verification_meta_delete(int $request_id, string $field): bool
+{
+    $key = bvmgr_verification_meta_key($field);
+    if ($key === '' || !in_array(get_post_type($request_id), bvmgr_ticketing_verification_request_post_types(), true)) return false;
+    $legacy = delete_post_meta($request_id, $field);
+    return delete_post_meta($request_id, $key) || $legacy;
+}
+
+/** Canonical values take precedence, including when a legacy value differs. */
+function bvmgr_verification_meta_query(string $field, string $value): array
+{
+    $key = bvmgr_verification_meta_key($field);
+    if ($key === '') return array(array('key' => 'bvmgr_verification_invalid', 'compare' => 'EXISTS'));
+    return array(
+        'relation' => 'OR',
+        array('key' => $key, 'value' => $value, 'compare' => '='),
+        array(
+            'relation' => 'AND',
+            array('key' => $key, 'compare' => 'NOT EXISTS'),
+            array('key' => $field, 'value' => $value, 'compare' => '='),
+        ),
+    );
+}
+
 if (!function_exists('bvmgr_ticketing_verification_upload_settings_option_key')) {
     function bvmgr_ticketing_verification_upload_settings_option_key(): string
     {
@@ -960,8 +1008,8 @@ if (!function_exists('bvmgr_ticketing_verification_proof_payload')) {
             return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
         }
 
-        $file_id = absint(get_post_meta($request_id, 'proof_file_id', true));
-        $storage_kind = sanitize_key((string) get_post_meta($request_id, 'proof_storage_kind', true));
+        $file_id = absint(bvmgr_verification_meta_get($request_id, 'proof_file_id', true));
+        $storage_kind = sanitize_key((string) bvmgr_verification_meta_get($request_id, 'proof_storage_kind', true));
         if ($file_id > 0 && $storage_kind === 'private_file') {
             $row = bvmgr_private_file_get($file_id);
             if (!is_array($row)) {
@@ -982,8 +1030,8 @@ if (!function_exists('bvmgr_ticketing_verification_proof_payload')) {
             );
         }
 
-        $path = bvmgr_private_storage_resolve((string) get_post_meta($request_id, 'proof_file_path', true));
-        $mime = (string) get_post_meta($request_id, 'proof_mime', true);
+        $path = bvmgr_private_storage_resolve((string) bvmgr_verification_meta_get($request_id, 'proof_file_path', true));
+        $mime = (string) bvmgr_verification_meta_get($request_id, 'proof_mime', true);
         if ($path === '' || !file_exists($path) || !bvmgr_ticketing_verification_path_within_root($path)) {
             return new WP_Error('proof_missing', __('Proof file not found or already deleted.', 'backstage-venue-manager'));
         }
@@ -1066,13 +1114,13 @@ if (!function_exists('bvmgr_ticketing_verification_delete_proof_asset_for_reques
             return;
         }
 
-        $file_id = absint(get_post_meta($request_id, 'proof_file_id', true));
-        $storage_kind = sanitize_key((string) get_post_meta($request_id, 'proof_storage_kind', true));
+        $file_id = absint(bvmgr_verification_meta_get($request_id, 'proof_file_id', true));
+        $storage_kind = sanitize_key((string) bvmgr_verification_meta_get($request_id, 'proof_storage_kind', true));
         if ($file_id > 0 && $storage_kind === 'private_file' && function_exists('bvmgr_private_files_delete')) {
             if (!bvmgr_private_files_delete($file_id)) return;
         }
 
-        $legacy_path = (string) get_post_meta($request_id, 'proof_file_path', true);
+        $legacy_path = (string) bvmgr_verification_meta_get($request_id, 'proof_file_path', true);
         if ($legacy_path !== '') {
             $resolved = bvmgr_private_storage_resolve($legacy_path);
             if ($resolved === '') return;
@@ -1081,9 +1129,9 @@ if (!function_exists('bvmgr_ticketing_verification_delete_proof_asset_for_reques
             if (file_exists($resolved)) return;
         }
 
-        delete_post_meta($request_id, 'proof_file_id');
-        delete_post_meta($request_id, 'proof_storage_kind');
-        delete_post_meta($request_id, 'proof_file_path');
+        bvmgr_verification_meta_delete($request_id, 'proof_file_id');
+        bvmgr_verification_meta_delete($request_id, 'proof_storage_kind');
+        bvmgr_verification_meta_delete($request_id, 'proof_file_path');
     }
 }
 
@@ -1170,10 +1218,7 @@ if (!function_exists('bvmgr_ticketing_verification_get_latest_request')) {
             'orderby'        => 'date',
             'order'          => 'DESC',
             'no_found_rows'  => true,
-            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Exact-user verification lookup is restricted to the established user_id key and returns at most the single latest request.
-            'meta_key'       => 'user_id',
-            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Exact-user verification lookup is restricted to one normalized user ID and returns at most the single latest request.
-            'meta_value'     => (string) $user_id,
+            'meta_query' => bvmgr_verification_meta_query('user_id', (string) $user_id),
         ));
 
         if (empty($posts) || !($posts[0] instanceof WP_Post)) {
@@ -1214,8 +1259,8 @@ if (!function_exists('bvmgr_ticketing_verification_get_user_state')) {
         if ($pending_request instanceof WP_Post) {
             $state['mode'] = 'pending';
             $state['request_id'] = (int) $pending_request->ID;
-            $state['program'] = sanitize_key((string) get_post_meta((int) $pending_request->ID, 'program', true));
-            $state['submitted_at'] = (string) get_post_meta((int) $pending_request->ID, 'submitted_at', true);
+            $state['program'] = sanitize_key((string) bvmgr_verification_meta_get((int) $pending_request->ID, 'program', true));
+            $state['submitted_at'] = (string) bvmgr_verification_meta_get((int) $pending_request->ID, 'submitted_at', true);
             return $state;
         }
 
@@ -1223,9 +1268,9 @@ if (!function_exists('bvmgr_ticketing_verification_get_user_state')) {
         if ($denied_request instanceof WP_Post) {
             $state['mode'] = 'denied';
             $state['request_id'] = (int) $denied_request->ID;
-            $state['program'] = sanitize_key((string) get_post_meta((int) $denied_request->ID, 'program', true));
-            $state['submitted_at'] = (string) get_post_meta((int) $denied_request->ID, 'submitted_at', true);
-            $state['review_notes'] = (string) get_post_meta((int) $denied_request->ID, 'review_notes', true);
+            $state['program'] = sanitize_key((string) bvmgr_verification_meta_get((int) $denied_request->ID, 'program', true));
+            $state['submitted_at'] = (string) bvmgr_verification_meta_get((int) $denied_request->ID, 'submitted_at', true);
+            $state['review_notes'] = (string) bvmgr_verification_meta_get((int) $denied_request->ID, 'review_notes', true);
             return $state;
         }
 
@@ -1519,10 +1564,10 @@ if (!function_exists('bvmgr_ticketing_verification_send_decision_email')) {
         $to = (string) ($ctx['user_email'] ?? '');
         if (!is_email($to) || $request_id <= 0) {
             if ($request_id > 0) {
-                update_post_meta($request_id, 'decision_email_last_status', 'skipped_invalid_email');
-                update_post_meta($request_id, 'decision_email_last_error', 'Missing or invalid recipient email.');
-                update_post_meta($request_id, 'decision_email_last_sent_at', current_time('mysql'));
-                update_post_meta($request_id, 'decision_email_last_to', $to);
+                bvmgr_verification_meta_update($request_id, 'decision_email_last_status', 'skipped_invalid_email');
+                bvmgr_verification_meta_update($request_id, 'decision_email_last_error', 'Missing or invalid recipient email.');
+                bvmgr_verification_meta_update($request_id, 'decision_email_last_sent_at', current_time('mysql'));
+                bvmgr_verification_meta_update($request_id, 'decision_email_last_to', $to);
             }
             return false;
         }
@@ -1535,10 +1580,10 @@ if (!function_exists('bvmgr_ticketing_verification_send_decision_email')) {
         $enabled = (bool) apply_filters('vms_ticketing_verification_decision_email_enabled', true, $ctx);
 
         if (!$enabled) {
-            update_post_meta($request_id, 'decision_email_last_status', 'skipped_disabled');
-            update_post_meta($request_id, 'decision_email_last_error', '');
-            update_post_meta($request_id, 'decision_email_last_sent_at', current_time('mysql'));
-            update_post_meta($request_id, 'decision_email_last_to', $to);
+            bvmgr_verification_meta_update($request_id, 'decision_email_last_status', 'skipped_disabled');
+            bvmgr_verification_meta_update($request_id, 'decision_email_last_error', '');
+            bvmgr_verification_meta_update($request_id, 'decision_email_last_sent_at', current_time('mysql'));
+            bvmgr_verification_meta_update($request_id, 'decision_email_last_to', $to);
             return false;
         }
 
@@ -1547,10 +1592,10 @@ if (!function_exists('bvmgr_ticketing_verification_send_decision_email')) {
             $sent = (bool) wp_mail($to, $subject, $body);
         }
 
-        update_post_meta($request_id, 'decision_email_last_status', $sent ? 'sent' : 'failed');
-        update_post_meta($request_id, 'decision_email_last_error', $sent ? '' : 'wp_mail reported failure.');
-        update_post_meta($request_id, 'decision_email_last_sent_at', current_time('mysql'));
-        update_post_meta($request_id, 'decision_email_last_to', $to);
+        bvmgr_verification_meta_update($request_id, 'decision_email_last_status', $sent ? 'sent' : 'failed');
+        bvmgr_verification_meta_update($request_id, 'decision_email_last_error', $sent ? '' : 'wp_mail reported failure.');
+        bvmgr_verification_meta_update($request_id, 'decision_email_last_sent_at', current_time('mysql'));
+        bvmgr_verification_meta_update($request_id, 'decision_email_last_to', $to);
 
         return $sent;
     }
@@ -1749,7 +1794,9 @@ if (!function_exists('bvmgr_ticketing_verification_render_panel')) {
             }
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section id="vms-verification-panel" class="vms-verification-panel" aria-label="<?php echo esc_attr__('Verification', 'backstage-venue-manager'); ?>">
             <h3><?php echo esc_html__('Get Verified', 'backstage-venue-manager'); ?></h3>
@@ -1852,6 +1899,9 @@ if (!function_exists('bvmgr_ticketing_verification_render_panel')) {
         </section>
         <?php
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -2080,10 +2130,10 @@ if (!function_exists('bvmgr_ticketing_verification_send_submission_notification'
             return false;
         }
 
-        $user_id = absint(get_post_meta($request_id, 'user_id', true));
-        $program = sanitize_key((string) get_post_meta($request_id, 'program', true));
-        $submitted_at = (string) get_post_meta($request_id, 'submitted_at', true);
-        $submit_notes = (string) get_post_meta($request_id, 'submit_notes', true);
+        $user_id = absint(bvmgr_verification_meta_get($request_id, 'user_id', true));
+        $program = sanitize_key((string) bvmgr_verification_meta_get($request_id, 'program', true));
+        $submitted_at = (string) bvmgr_verification_meta_get($request_id, 'submitted_at', true);
+        $submit_notes = (string) bvmgr_verification_meta_get($request_id, 'submit_notes', true);
         $user = $user_id > 0 ? get_userdata($user_id) : null;
 
         $site_name = wp_specialchars_decode((string) get_bloginfo('name'), ENT_QUOTES);
@@ -2120,10 +2170,10 @@ if (!function_exists('bvmgr_ticketing_verification_send_submission_notification'
 
         $recipients = bvmgr_ticketing_verification_submission_notification_recipients($context);
         if (empty($recipients)) {
-            update_post_meta($request_id, 'submission_email_last_status', 'skipped_no_recipient');
-            update_post_meta($request_id, 'submission_email_last_error', 'No valid recipient email configured.');
-            update_post_meta($request_id, 'submission_email_last_sent_at', current_time('mysql'));
-            update_post_meta($request_id, 'submission_email_last_to', '');
+            bvmgr_verification_meta_update($request_id, 'submission_email_last_status', 'skipped_no_recipient');
+            bvmgr_verification_meta_update($request_id, 'submission_email_last_error', 'No valid recipient email configured.');
+            bvmgr_verification_meta_update($request_id, 'submission_email_last_sent_at', current_time('mysql'));
+            bvmgr_verification_meta_update($request_id, 'submission_email_last_to', '');
             return false;
         }
 
@@ -2169,10 +2219,10 @@ if (!function_exists('bvmgr_ticketing_verification_send_submission_notification'
             }
         }
 
-        update_post_meta($request_id, 'submission_email_last_status', ($sent_count > 0) ? 'sent' : 'failed');
-        update_post_meta($request_id, 'submission_email_last_error', ($sent_count > 0) ? '' : 'wp_mail reported failure.');
-        update_post_meta($request_id, 'submission_email_last_sent_at', current_time('mysql'));
-        update_post_meta($request_id, 'submission_email_last_to', implode(', ', $recipients));
+        bvmgr_verification_meta_update($request_id, 'submission_email_last_status', ($sent_count > 0) ? 'sent' : 'failed');
+        bvmgr_verification_meta_update($request_id, 'submission_email_last_error', ($sent_count > 0) ? '' : 'wp_mail reported failure.');
+        bvmgr_verification_meta_update($request_id, 'submission_email_last_sent_at', current_time('mysql'));
+        bvmgr_verification_meta_update($request_id, 'submission_email_last_to', implode(', ', $recipients));
 
         /**
          * Fires after VMS sends a new verification submission notification email.
@@ -2270,28 +2320,28 @@ if (!function_exists('bvmgr_ticketing_verification_create_request')) {
         }
 
         $request_id = (int) $request_id;
-        update_post_meta($request_id, 'user_id', $user_id);
-        update_post_meta($request_id, 'program', $program);
+        bvmgr_verification_meta_update($request_id, 'user_id', $user_id);
+        bvmgr_verification_meta_update($request_id, 'program', $program);
         if ($proof_file_id > 0) {
-            update_post_meta($request_id, 'proof_file_id', $proof_file_id);
-            update_post_meta($request_id, 'proof_storage_kind', $proof_storage_kind !== '' ? $proof_storage_kind : 'private_file');
-            delete_post_meta($request_id, 'proof_file_path');
+            bvmgr_verification_meta_update($request_id, 'proof_file_id', $proof_file_id);
+            bvmgr_verification_meta_update($request_id, 'proof_storage_kind', $proof_storage_kind !== '' ? $proof_storage_kind : 'private_file');
+            bvmgr_verification_meta_delete($request_id, 'proof_file_path');
         } else {
-            update_post_meta($request_id, 'proof_file_path', $proof_path);
-            delete_post_meta($request_id, 'proof_file_id');
-            delete_post_meta($request_id, 'proof_storage_kind');
+            bvmgr_verification_meta_update($request_id, 'proof_file_path', $proof_path);
+            bvmgr_verification_meta_delete($request_id, 'proof_file_id');
+            bvmgr_verification_meta_delete($request_id, 'proof_storage_kind');
         }
-        update_post_meta($request_id, 'proof_mime', $proof_mime);
-        update_post_meta($request_id, 'submitted_at', current_time('mysql'));
+        bvmgr_verification_meta_update($request_id, 'proof_mime', $proof_mime);
+        bvmgr_verification_meta_update($request_id, 'submitted_at', current_time('mysql'));
         if ($notes !== '') {
-            update_post_meta($request_id, 'submit_notes', $notes);
+            bvmgr_verification_meta_update($request_id, 'submit_notes', $notes);
         }
 
         $queued = bvmgr_ticketing_verification_queue_submission_notification($request_id);
-        update_post_meta($request_id, 'submission_email_last_status', $queued ? 'queued' : 'queue_failed');
-        update_post_meta($request_id, 'submission_email_last_error', $queued ? '' : 'Could not queue submission notification.');
-        update_post_meta($request_id, 'submission_email_last_sent_at', current_time('mysql'));
-        update_post_meta($request_id, 'submission_email_last_to', '');
+        bvmgr_verification_meta_update($request_id, 'submission_email_last_status', $queued ? 'queued' : 'queue_failed');
+        bvmgr_verification_meta_update($request_id, 'submission_email_last_error', $queued ? '' : 'Could not queue submission notification.');
+        bvmgr_verification_meta_update($request_id, 'submission_email_last_sent_at', current_time('mysql'));
+        bvmgr_verification_meta_update($request_id, 'submission_email_last_to', '');
 
         return $request_id;
     }
@@ -2982,13 +3032,7 @@ if (!function_exists('bvmgr_ticketing_verification_render_admin_page')) {
         );
         if ($program_filter !== 'all') {
             // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Capability-gated admin listing is capped at 250 requests and applies one exact configured-program filter.
-            $query_args['meta_query'] = array(
-                array(
-                    'key' => 'program',
-                    'value' => $program_filter,
-                    'compare' => '=',
-                ),
-            );
+            $query_args['meta_query'] = bvmgr_verification_meta_query('program', $program_filter);
         }
 
         $requests = get_posts($query_args);
@@ -3000,8 +3044,8 @@ if (!function_exists('bvmgr_ticketing_verification_render_admin_page')) {
                 }
 
                 $request_id = (int) $request->ID;
-                $user_id = absint(get_post_meta($request_id, 'user_id', true));
-                $program = sanitize_key((string) get_post_meta($request_id, 'program', true));
+                $user_id = absint(bvmgr_verification_meta_get($request_id, 'user_id', true));
+                $program = sanitize_key((string) bvmgr_verification_meta_get($request_id, 'program', true));
                 $user = ($user_id > 0) ? get_userdata($user_id) : null;
 
                 $haystack = array(
@@ -3277,14 +3321,14 @@ if (!function_exists('bvmgr_ticketing_verification_render_admin_page')) {
                         <?php foreach ($requests as $request) : ?>
                             <?php
                             $request_id = (int) $request->ID;
-                            $user_id = absint(get_post_meta($request_id, 'user_id', true));
-                            $program = sanitize_key((string) get_post_meta($request_id, 'program', true));
-                            $submitted_at = (string) get_post_meta($request_id, 'submitted_at', true);
+                            $user_id = absint(bvmgr_verification_meta_get($request_id, 'user_id', true));
+                            $program = sanitize_key((string) bvmgr_verification_meta_get($request_id, 'program', true));
+                            $submitted_at = (string) bvmgr_verification_meta_get($request_id, 'submitted_at', true);
                             $status = (string) get_post_status($request_id);
                             if (!in_array($status, array('pending', 'approved', 'denied'), true)) {
                                 $status = 'pending';
                             }
-                            $submit_notes = (string) get_post_meta($request_id, 'submit_notes', true);
+                            $submit_notes = (string) bvmgr_verification_meta_get($request_id, 'submit_notes', true);
                             $user = $user_id > 0 ? get_userdata($user_id) : null;
                             $proof_payload = bvmgr_ticketing_verification_proof_payload($request_id);
                             $proof_exists = !is_wp_error($proof_payload);
@@ -3377,8 +3421,8 @@ if (!function_exists('bvmgr_ticketing_verification_handle_decision')) {
             wp_die(esc_html__('Verification request not found.', 'backstage-venue-manager'));
         }
 
-        $user_id = absint(get_post_meta($request_id, 'user_id', true));
-        $program = sanitize_key((string) get_post_meta($request_id, 'program', true));
+        $user_id = absint(bvmgr_verification_meta_get($request_id, 'user_id', true));
+        $program = sanitize_key((string) bvmgr_verification_meta_get($request_id, 'program', true));
         $from_status = sanitize_key((string) $request->post_status);
         if (!in_array($from_status, array('pending', 'approved', 'denied'), true)) {
             $from_status = 'pending';
@@ -3411,10 +3455,10 @@ if (!function_exists('bvmgr_ticketing_verification_handle_decision')) {
             $ok = false;
         }
 
-        update_post_meta($request_id, 'reviewed_at', current_time('mysql'));
-        update_post_meta($request_id, 'reviewed_by', get_current_user_id());
+        bvmgr_verification_meta_update($request_id, 'reviewed_at', current_time('mysql'));
+        bvmgr_verification_meta_update($request_id, 'reviewed_by', get_current_user_id());
         if ($review_notes !== '') {
-            update_post_meta($request_id, 'review_notes', $review_notes);
+            bvmgr_verification_meta_update($request_id, 'review_notes', $review_notes);
         }
 
         bvmgr_ticketing_verification_delete_proof_asset_for_request($request_id);

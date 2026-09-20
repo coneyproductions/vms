@@ -6,9 +6,27 @@ if (!function_exists('bvmgr_event_plan_checkin_close_meta_key')) {
     function bvmgr_event_plan_checkin_close_meta_key(): string
     {
         $key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'checkin_close_at') : '';
-        return $key !== '' ? $key : '_checkin_close_at';
+        return $key !== '' ? $key : '_bvmgr_checkin_close_at';
     }
 }
+
+/** Read either key for existing Ops Console consumers; never persist during reads. */
+function bvmgr_checkin_close_legacy_meta_read($value, $post_id, $meta_key, $single)
+{
+    if ($value !== null || !in_array($meta_key, array('_checkin_close_at', '_bvmgr_checkin_close_at'), true)
+        || !in_array(get_post_type($post_id), array('vms_event_plan', 'tribe_events'), true)) return $value;
+    // Inspect physical values without recursively invoking this metadata filter.
+    $cache = wp_cache_get($post_id, 'post_meta');
+    if ($cache === false) {
+        $loaded = update_meta_cache('post', array($post_id));
+        $cache = $loaded[$post_id] ?? array();
+    }
+    $key = array_key_exists('_bvmgr_checkin_close_at', $cache) ? '_bvmgr_checkin_close_at' : '_checkin_close_at';
+    if ($meta_key === $key || !array_key_exists($key, $cache)) return $value;
+    // WordPress unwraps the first entry for a single-value filtered read.
+    return array_map('maybe_unserialize', $cache[$key]);
+}
+add_filter('get_post_metadata', 'bvmgr_checkin_close_legacy_meta_read', 10, 4);
 
 if (!function_exists('bvmgr_event_plan_parse_local_datetime')) {
     function bvmgr_event_plan_parse_local_datetime(string $value): ?DateTimeImmutable
@@ -174,6 +192,7 @@ if (!function_exists('bvmgr_event_plan_store_checkin_close_meta')) {
             update_post_meta($post_id, $meta_key, $value);
         } else {
             delete_post_meta($post_id, $meta_key);
+            delete_post_meta($post_id, '_checkin_close_at');
         }
 
         $resolved['stored'] = $value !== '';
@@ -193,8 +212,9 @@ if (!function_exists('bvmgr_event_plan_sync_checkin_close_meta_to_tec')) {
         if ($tec_event_id > 0) {
             $value = (string) ($resolved['checkin_close_at'] ?? '');
             if ($value !== '') {
-                update_post_meta($tec_event_id, '_checkin_close_at', $value);
+                update_post_meta($tec_event_id, '_bvmgr_checkin_close_at', $value);
             } else {
+                delete_post_meta($tec_event_id, '_bvmgr_checkin_close_at');
                 delete_post_meta($tec_event_id, '_checkin_close_at');
             }
         }

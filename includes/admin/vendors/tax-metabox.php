@@ -112,8 +112,11 @@ function bvmgr_vendor_tax_metabox_render($post)
 
 function bvmgr_vendor_tax_adminpost_mark_complete()
 {
-	$vendor_id = isset($_GET['vendor_id']) ? (int) $_GET['vendor_id'] : 0;
-	if ($vendor_id <= 0) wp_die('Invalid vendor.');
+	$raw_vendor_id = $_GET['vendor_id'] ?? null;
+	$vendor_id = (is_int($raw_vendor_id) || is_string($raw_vendor_id))
+		? filter_var(wp_unslash($raw_vendor_id), FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)))
+		: false;
+	if (!$vendor_id || get_post_type($vendor_id) !== BVMGR_CPT_VENDOR) wp_die('Invalid vendor.');
 	if (!current_user_can('edit_post', $vendor_id)) wp_die('Permission denied.');
 
 	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_tax_mark_complete_' . $vendor_id, '_wpnonce'), '_wpnonce');
@@ -147,8 +150,11 @@ add_action('admin_post_vms_vendor_tax_mark_complete', 'bvmgr_vendor_tax_adminpos
 
 function bvmgr_vendor_tax_adminpost_mark_incomplete()
 {
-	$vendor_id = isset($_GET['vendor_id']) ? (int) $_GET['vendor_id'] : 0;
-	if ($vendor_id <= 0) wp_die('Invalid vendor.');
+	$raw_vendor_id = $_GET['vendor_id'] ?? null;
+	$vendor_id = (is_int($raw_vendor_id) || is_string($raw_vendor_id))
+		? filter_var(wp_unslash($raw_vendor_id), FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)))
+		: false;
+	if (!$vendor_id || get_post_type($vendor_id) !== BVMGR_CPT_VENDOR) wp_die('Invalid vendor.');
 	if (!current_user_can('edit_post', $vendor_id)) wp_die('Permission denied.');
 
 	check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_vendor_tax_mark_incomplete_' . $vendor_id, '_wpnonce'), '_wpnonce');

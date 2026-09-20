@@ -626,7 +626,9 @@ if (!function_exists('bvmgr_vendor_profiles_render_event_vendor_sidebar')) {
             return '';
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="vms-event-vendor-groups" data-vms-event-vendor-groups="1">
             <?php foreach ($groups as $group) : ?>
@@ -703,6 +705,9 @@ if (!function_exists('bvmgr_vendor_profiles_render_event_vendor_sidebar')) {
         </div>
         <?php
         $markup = (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
         if ($markup !== '') {
             bvmgr_vendor_profiles_mark_event_sidebar_rendered($tec_event_id);
         }
@@ -1047,13 +1052,18 @@ if (!function_exists('bvmgr_vendor_profiles_render_social_links')) {
             return '';
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         echo '<div class="vms-vp-socials" aria-label="' . esc_attr__('Social links', 'backstage-venue-manager') . '">';
         foreach ($links as $key => $url) {
             echo '<a class="vms-vp-social vms-vp-social--' . esc_attr($key) . '" href="' . esc_url($url) . '" target="_blank" rel="noopener" aria-label="' . esc_attr(bvmgr_vendor_profiles_social_label((string) $key)) . '"><span class="vms-vp-social__glyph" aria-hidden="true">' . wp_kses(bvmgr_vendor_profiles_social_svg((string) $key), bvmgr_vendor_profiles_social_icon_allowed_html()) . '</span></a>';
         }
         echo '</div>';
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -1100,7 +1110,9 @@ if (!function_exists('bvmgr_vendor_profiles_render_event_teaser')) {
         $teaser_label = bvmgr_vendor_profiles_teaser_label($vendor_id);
         $teaser_heading = bvmgr_vendor_profiles_teaser_heading($vendor_id);
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section class="<?php echo esc_attr($classes); ?>" aria-label="<?php echo esc_attr($teaser_label); ?>">
             <div class="vms-vendor-teaser__media">
@@ -1140,6 +1152,9 @@ if (!function_exists('bvmgr_vendor_profiles_render_event_teaser')) {
         </section>
         <?php
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -1162,7 +1177,9 @@ if (!function_exists('bvmgr_vendor_profiles_render_next_show_card')) {
             $classes .= ' vms-vp-next-show--compact';
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section class="<?php echo esc_attr($classes); ?>">
             <p class="vms-vp-next-show__eyebrow"><?php echo esc_html__('Next show', 'backstage-venue-manager'); ?></p>
@@ -1190,6 +1207,9 @@ if (!function_exists('bvmgr_vendor_profiles_render_next_show_card')) {
         </section>
         <?php
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 
@@ -1288,13 +1308,18 @@ if (!function_exists('bvmgr_vendor_profiles_render_event_promo_video_section')) 
             return '';
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <section class="vms-event-promo-video vms-vp-card" aria-label="<?php echo esc_attr($heading); ?>">
             <?php echo wp_kses($promo_markup, bvmgr_vendor_profiles_promo_allowed_html()); ?>
         </section>
         <?php
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }
 

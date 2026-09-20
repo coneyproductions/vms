@@ -40,8 +40,11 @@ function bvmgr_private_storage_inventory()
     $add = static function (string $source, string $key, string $expected = '') use (&$groups, &$seen): void {
         $valid = bvmgr_private_files_validate_storage_key($key);
         if ($valid === '' || $valid !== $key) throw new RuntimeException('private_legacy_key_invalid');
-        if (isset($seen[$key])) return;
-        $seen[$key] = true;
+        if (isset($seen[$key])) {
+            if (wp_normalize_path($seen[$key]) !== wp_normalize_path($source)) throw new RuntimeException('private_legacy_source_conflict');
+            return;
+        }
+        $seen[$key] = $source;
         $destination = bvmgr_private_storage_target($key);
         if (!@file_exists($source) && !@is_link($source) && $destination !== '' && bvmgr_private_storage_safe_file($destination)) {
             if ($expected !== '' && !hash_equals($expected, (string) @hash_file('sha256', $destination))) throw new RuntimeException('private_destination_hash_mismatch');
@@ -53,10 +56,14 @@ function bvmgr_private_storage_inventory()
     try {
         $rows = $wpdb->get_results($wpdb->prepare('SELECT id, stored_filename, sha256 FROM %i ORDER BY id', bvmgr_private_files_table()), ARRAY_A);
         if ($wpdb->last_error !== '' || !is_array($rows)) throw new RuntimeException('private_inventory_database_error');
-        foreach ($rows as $row) $add($legacy_private . '/' . (string) $row['stored_filename'], (string) $row['stored_filename'], (string) $row['sha256']);
+        foreach ($rows as $row) {
+            $source = $legacy_private . '/' . (string) $row['stored_filename'];
+            foreach ($roots as $root => $prefix) if ($prefix === '' && file_exists($root . '/' . (string) $row['stored_filename'])) { $source = $root . '/' . (string) $row['stored_filename']; break; }
+            $add($source, (string) $row['stored_filename'], (string) $row['sha256']);
+        }
         // Include abandoned generated BVM files, but not unrelated companion uploads.
         $sweep = array();
-        foreach (array('tax-docs', 'staff-certifications', 'vendor-tech-docs', 'verifications', 'event-plan-imports', 'general') as $bucket) $sweep[$legacy_private . '/' . $bucket] = $bucket . '/';
+        foreach ($roots as $root => $prefix) if ($prefix === '') foreach (array('tax-docs', 'staff-certifications', 'vendor-tech-docs', 'verifications', 'event-plan-imports', 'general', 'legacy-attachments', 'legacy-event-plan-imports', 'legacy-verifications') as $bucket) $sweep[$root . '/' . $bucket] = $bucket . '/';
         foreach ($roots as $root => $prefix) if ($prefix !== '') $sweep[$root] = $prefix;
         $visited = 0;
         foreach ($sweep as $directory => $prefix) {
@@ -144,8 +151,10 @@ function bvmgr_private_storage_cleanup_legacy(string $source): void
 /** Copy/verify/publish/receipt/remove. Reruns never overwrite differing destination bytes. */
 function bvmgr_private_storage_migrate_object(array $file): bool
 {
-    if (empty($GLOBALS['bvmgr_private_storage_migrating']) || !current_user_can('manage_options')) return false;
-    $key = (string) $file['key'];
+    $batch = $GLOBALS['bvmgr_private_storage_migrating'] ?? null;
+    $key = isset($file['key']) && is_string($file['key']) ? $file['key'] : '';
+    if (!is_array($batch) || $key === '' || !isset($batch[$key]) || $batch[$key] !== $file
+        || !current_user_can('manage_options') || (is_multisite() && !is_super_admin())) return false;
     $source = (string) $file['source'];
     $destination = bvmgr_private_storage_target($key);
     if ($destination === '' || !bvmgr_private_storage_no_links($source)) return false;
@@ -209,11 +218,19 @@ function bvmgr_private_storage_migrate(int $limit = 25): array
         if (is_resource($lock)) fclose($lock);
         return array('ok' => false, 'error' => 'private_migration_busy');
     }
-    $GLOBALS['bvmgr_private_storage_migrating'] = true;
+    $had_context = array_key_exists('bvmgr_private_storage_migrating', $GLOBALS);
+    $prior_context = $GLOBALS['bvmgr_private_storage_migrating'] ?? null;
     try {
         $inventory = bvmgr_private_storage_inventory();
         if (is_wp_error($inventory)) return array('ok' => false, 'error' => $inventory->get_error_code());
         if (!$inventory) return array('ok' => true, 'migrated' => 0, 'remaining' => 0);
+        // Bind the low-level mover to this validated inventory, never a caller path.
+        $batch = array();
+        foreach ($inventory as $group) foreach ($group['files'] as $file) {
+            if (isset($batch[$file['key']]) && $batch[$file['key']] !== $file) return array('ok' => false, 'error' => 'private_legacy_source_conflict');
+            $batch[$file['key']] = $file;
+        }
+        $GLOBALS['bvmgr_private_storage_migrating'] = $batch;
         $done = 0;
         $failures = array();
         foreach (array_slice($inventory, 0, max(1, min(100, $limit)), true) as $identity => $group) {
@@ -241,7 +258,8 @@ function bvmgr_private_storage_migrate(int $limit = 25): array
         update_option('bvmgr_private_storage_migration_result', $result, false);
         return $result;
     } finally {
-        unset($GLOBALS['bvmgr_private_storage_migrating']);
+        if ($had_context) $GLOBALS['bvmgr_private_storage_migrating'] = $prior_context;
+        else unset($GLOBALS['bvmgr_private_storage_migrating']);
         flock($lock, LOCK_UN);
         fclose($lock);
     }
@@ -259,16 +277,16 @@ function bvmgr_private_storage_admin_page(): void
     $config = bvmgr_private_storage_config();
     $inventory = is_wp_error($config) ? $config : bvmgr_private_storage_inventory();
     echo '<div class="wrap"><h1>' . esc_html__('BVM Private Documents', 'backstage-venue-manager') . '</h1>';
-    echo '<p>' . esc_html__('Ask your host to provision a writable directory outside every public document root and alias, then set BVMGR_PRIVATE_STORAGE_ROOT and BVMGR_PRIVATE_STORAGE_WEB_ROOTS in wp-config.php. The plugin readme documents the configuration. Private uploads stay disabled until configuration and legacy migration are complete.', 'backstage-venue-manager') . '</p>';
+    echo '<p>' . esc_html__('Private documents use a Backstage Venue Manager directory in WordPress uploads. The migration action verifies that the uploads URL serves a harmless probe and that the server denies access to the private directory. Private uploads stay disabled if protection cannot be verified. Existing documents are copied and verified before their legacy copies are removed.', 'backstage-venue-manager') . '</p>';
     if (is_wp_error($inventory)) {
         echo '<p>' . esc_html($inventory->get_error_message()) . ' (' . esc_html($inventory->get_error_code()) . ')</p>';
-    } elseif (!$inventory) {
+    } elseif (!$inventory && bvmgr_private_storage_is_verified($config)) {
         echo '<p>' . esc_html__('Private storage is configured. No pending BVM-owned legacy documents were found.', 'backstage-venue-manager') . '</p>';
     } else {
         echo '<p>' . esc_html__('Legacy documents require migration. Their old public copies may remain exposed until migration succeeds. Back up documents and database securely before continuing. Each batch verifies copied content before removing owned originals; rerun interrupted batches.', 'backstage-venue-manager') . '</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="bvmgr_private_storage_migrate">';
         wp_nonce_field('bvmgr_private_storage_migrate');
-        submit_button(__('Migrate next batch of private documents', 'backstage-venue-manager'));
+        submit_button(__('Verify storage and migrate next batch', 'backstage-venue-manager'));
         echo '</form>';
     }
     $last = get_option('bvmgr_private_storage_migration_result', array());
@@ -280,7 +298,7 @@ function bvmgr_private_storage_admin_notice(): void
 {
     if (!current_user_can('manage_options')) return;
     $config = bvmgr_private_storage_config();
-    if (!is_wp_error($config) && !bvmgr_private_storage_pending()) return;
+    if (!is_wp_error($config) && bvmgr_private_storage_is_verified($config) && !bvmgr_private_storage_pending()) return;
     echo '<div class="notice notice-error"><p>' . esc_html__('Private document uploads are unavailable or legacy documents need protection. Review Tools → BVM Private Documents. Existing public copies are not secured until migration completes.', 'backstage-venue-manager') . ' <a href="' . esc_url(admin_url('tools.php?page=bvmgr-private-storage')) . '">' . esc_html__('Review private storage', 'backstage-venue-manager') . '</a></p></div>';
 }
 add_action('admin_notices', 'bvmgr_private_storage_admin_notice');

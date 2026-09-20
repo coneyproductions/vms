@@ -1032,7 +1032,9 @@ class BVMGR_Admin_Event_Plans
             ? $context['secondary_unqualified']
             : array();
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <p class="description">
             <?php esc_html_e('Attach one or more additional vendors to this event. Use separate groups for Food Vendor, Dessert Vendor, Photographer, Market Vendor, and other non-performer vendor types. These vendors will see this date as Tentative when the Event Plan is Draft/Ready and Booked once Published.', 'backstage-venue-manager'); ?>
@@ -1045,7 +1047,7 @@ class BVMGR_Admin_Event_Plans
             data-vms-save-post-id="<?php echo (int) ($context['post_id'] ?? 0); ?>">
             <input type="hidden" name="vms_secondary_vendors_module_detached" value="1" />
             <input type="hidden" name="vms_clear_secondary_vendors" value="0" id="vms-clear-secondary-vendors-intent" />
-            <SCRIPT data-vms-secondary-config type="application/json"><?php echo wp_json_encode((array) ($context['secondary_config'] ?? array())); ?></SCRIPT>
+            <SCRIPT data-vms-secondary-config type="application/json"><?php echo wp_json_encode((array) ($context['secondary_config'] ?? array()), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?></SCRIPT>
 
             <p class="description vms-mt-8 vms-mb-8"><?php esc_html_e('Use Save Additional Vendors to save changes in this section.', 'backstage-venue-manager'); ?></p>
 
@@ -1086,6 +1088,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function build_event_plan_secondary_vendors_save_response_group_summary_context(array $group): array
@@ -1199,7 +1204,9 @@ class BVMGR_Admin_Event_Plans
             ? $context['secondary_mode_options']
             : array();
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="vms-secondary-vendor-group<?php echo $is_market_group ? ' vms-secondary-vendor-group--market' : ''; ?><?php echo !$group_has_type ? ' vms-secondary-vendor-group--type-pending' : ''; ?>"
             data-vms-group-index="<?php echo esc_attr((string) $group_index); ?>"
@@ -1366,6 +1373,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_save_response_row_html(
@@ -1381,7 +1391,9 @@ class BVMGR_Admin_Event_Plans
             : array();
         $field_name = sprintf('vms_secondary_vendor_assignments[%d][vendor_ids][]', $group_index);
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="vms-secondary-vendor-row" data-vms-row-index="<?php echo esc_attr((string) $row_index); ?>">
             <div class="vms-secondary-vendor-row__vendor">
@@ -1419,6 +1431,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_save_response_status_badges_html(array $group, int $selected_id, array $pool_option_rows): string
@@ -1467,7 +1482,9 @@ class BVMGR_Admin_Event_Plans
             }
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         foreach ($badges as $badge) {
             $label = trim((string) ($badge['label'] ?? ''));
             $variant = sanitize_html_class((string) ($badge['variant'] ?? 'unknown'));
@@ -1480,13 +1497,18 @@ class BVMGR_Admin_Event_Plans
         }
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_save_response_group_template_html(array $context): string
     {
         $post_id = (int) ($context['post_id'] ?? 0);
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <template id="vms-secondary-vendor-group-template">
             <div class="vms-secondary-vendor-group vms-secondary-vendor-group--type-pending" data-vms-group-index="" data-vms-missing-ids="[]" data-vms-mismatch-ids="[]" data-vms-unqualified-ids="[]">
@@ -1555,11 +1577,16 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_save_response_row_template_html(): string
     {
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <template id="vms-secondary-vendor-row-template">
             <div class="vms-secondary-vendor-row" data-vms-row-index="">
@@ -1577,6 +1604,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_save_response_vendor_category_notice_html(array $context): string
@@ -1588,7 +1618,9 @@ class BVMGR_Admin_Event_Plans
             ? $context['vendor_category_names']
             : array();
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="notice notice-info inline vms-notice vms-notice--info">
             <p><strong><?php esc_html_e('Vendor category sync', 'backstage-venue-manager'); ?></strong></p>
@@ -1631,6 +1663,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_save_response_selected_attr(bool $selected): string
@@ -1869,7 +1904,9 @@ class BVMGR_Admin_Event_Plans
             ? $context['secondary_unqualified']
             : array();
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <p class="description">
             <?php esc_html_e('Attach one or more additional vendors to this event. Use separate groups for Food Vendor, Dessert Vendor, Photographer, Market Vendor, and other non-performer vendor types. These vendors will see this date as Tentative when the Event Plan is Draft/Ready and Booked once Published.', 'backstage-venue-manager'); ?>
@@ -1882,7 +1919,7 @@ class BVMGR_Admin_Event_Plans
             data-vms-save-post-id="<?php echo (int) ($context['post_id'] ?? 0); ?>">
             <input type="hidden" name="vms_secondary_vendors_module_detached" value="1" />
             <input type="hidden" name="vms_clear_secondary_vendors" value="0" id="vms-clear-secondary-vendors-intent" />
-            <script type="application/json" data-vms-secondary-config><?php echo wp_json_encode((array) ($context['secondary_config'] ?? array())); ?></script>
+            <script type="application/json" data-vms-secondary-config><?php echo wp_json_encode((array) ($context['secondary_config'] ?? array()), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?></script>
 
             <p class="description vms-mt-8 vms-mb-8"><?php esc_html_e('Use Save Additional Vendors to save changes in this section.', 'backstage-venue-manager'); ?></p>
 
@@ -1923,6 +1960,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function build_event_plan_secondary_vendors_lazy_load_group_summary_context(array $group): array
@@ -2036,7 +2076,9 @@ class BVMGR_Admin_Event_Plans
             ? $context['secondary_mode_options']
             : array();
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="vms-secondary-vendor-group<?php echo $is_market_group ? ' vms-secondary-vendor-group--market' : ''; ?><?php echo !$group_has_type ? ' vms-secondary-vendor-group--type-pending' : ''; ?>"
             data-vms-group-index="<?php echo esc_attr((string) $group_index); ?>"
@@ -2203,6 +2245,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_lazy_load_row_html(
@@ -2218,7 +2263,9 @@ class BVMGR_Admin_Event_Plans
             : array();
         $field_name = sprintf('vms_secondary_vendor_assignments[%d][vendor_ids][]', $group_index);
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="vms-secondary-vendor-row" data-vms-row-index="<?php echo esc_attr((string) $row_index); ?>">
             <div class="vms-secondary-vendor-row__vendor">
@@ -2256,6 +2303,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_lazy_load_status_badges_html(array $group, int $selected_id, array $pool_option_rows): string
@@ -2304,7 +2354,9 @@ class BVMGR_Admin_Event_Plans
             }
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         foreach ($badges as $badge) {
             $label = trim((string) ($badge['label'] ?? ''));
             $variant = sanitize_html_class((string) ($badge['variant'] ?? 'unknown'));
@@ -2317,13 +2369,18 @@ class BVMGR_Admin_Event_Plans
         }
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_lazy_load_group_template_html(array $context): string
     {
         $post_id = (int) ($context['post_id'] ?? 0);
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <template id="vms-secondary-vendor-group-template">
             <div class="vms-secondary-vendor-group vms-secondary-vendor-group--type-pending" data-vms-group-index="" data-vms-missing-ids="[]" data-vms-mismatch-ids="[]" data-vms-unqualified-ids="[]">
@@ -2392,11 +2449,16 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_lazy_load_row_template_html(): string
     {
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <template id="vms-secondary-vendor-row-template">
             <div class="vms-secondary-vendor-row" data-vms-row-index="">
@@ -2414,6 +2476,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_lazy_load_vendor_category_notice_html(array $context): string
@@ -2425,7 +2490,9 @@ class BVMGR_Admin_Event_Plans
             ? $context['vendor_category_names']
             : array();
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="notice notice-info inline vms-notice vms-notice--info">
             <p><strong><?php esc_html_e('Vendor category sync', 'backstage-venue-manager'); ?></strong></p>
@@ -2468,6 +2535,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_secondary_vendors_lazy_load_selected_attr(bool $selected): string
@@ -6792,7 +6862,9 @@ class BVMGR_Admin_Event_Plans
             ? $staff_context['role_rows']
             : array();
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="vms-ep-card vms-ep-card--white vms-ep-card--staff" data-vms-section-has-data="<?php echo $has_data ? '1' : '0'; ?>">
             <p class="description"><?php esc_html_e('Structured staffing by role: set staff needed and shift windows, then assign staff. Missing staff is based only on roles with Staff needed above 0.', 'backstage-venue-manager'); ?></p>
@@ -6842,6 +6914,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_staff_response_template_alert_notice_html(array $template_alerts): string
@@ -6853,7 +6928,9 @@ class BVMGR_Admin_Event_Plans
             return '';
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div class="notice notice-warning inline">
             <p><strong><?php esc_html_e('Staffing alert:', 'backstage-venue-manager'); ?></strong></p>
@@ -6866,11 +6943,16 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_staff_response_template_option_rows_html(array $template_options, int $selected_template_id): string
     {
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         foreach ($template_options as $template_option) {
             if (!is_array($template_option)) {
                 continue;
@@ -6886,11 +6968,16 @@ class BVMGR_Admin_Event_Plans
         }
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_staff_response_role_cards_html(array $role_rows): string
     {
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         foreach ($role_rows as $role_row) {
             if (!is_array($role_row)) {
                 continue;
@@ -6900,6 +6987,9 @@ class BVMGR_Admin_Event_Plans
         }
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_staff_response_role_card_html(array $role_row): string
@@ -6914,7 +7004,9 @@ class BVMGR_Admin_Event_Plans
             ? $role_row['candidate_rows']
             : array();
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         ?>
         <div
             class="<?php echo esc_attr((string) ($role_row['card_class_name'] ?? 'vms-ep-staff-role')); ?>"
@@ -7010,6 +7102,9 @@ class BVMGR_Admin_Event_Plans
         <?php
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_staff_response_anchor_option_rows_html(string $selected_key): string
@@ -7023,7 +7118,9 @@ class BVMGR_Admin_Event_Plans
             'a4' => __('Anchor 4', 'backstage-venue-manager'),
         );
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         foreach ($anchor_options as $anchor_key => $anchor_label) {
             ?>
             <option value="<?php echo esc_attr($anchor_key); ?>"<?php echo $this->render_event_plan_staff_response_selected_attr($selected_key === $anchor_key); ?>><?php echo esc_html($anchor_label); ?></option>
@@ -7031,11 +7128,16 @@ class BVMGR_Admin_Event_Plans
         }
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_staff_response_candidate_rows_html(int $role_id, array $candidate_rows): string
     {
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         foreach ($candidate_rows as $candidate_row) {
             if (!is_array($candidate_row)) {
                 continue;
@@ -7055,11 +7157,16 @@ class BVMGR_Admin_Event_Plans
         }
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_staff_response_badges_html(array $badge_rows): string
     {
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         foreach ($badge_rows as $badge_row) {
             if (!is_array($badge_row)) {
                 continue;
@@ -7084,6 +7191,9 @@ class BVMGR_Admin_Event_Plans
         }
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 
     private function render_event_plan_staff_response_selected_attr(bool $selected): string
@@ -7518,9 +7628,14 @@ class BVMGR_Admin_Event_Plans
         }
 
         try {
+            $bvmgr_buffer_level = ob_get_level();
             ob_start();
+            try {
             $this->render_event_plan_partial($partial, $vars);
             $html = (string) ob_get_clean();
+            } finally {
+                if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+            }
             return $html;
         } finally {
             if (function_exists('bvmgr_event_plan_perf_span_finish')) {

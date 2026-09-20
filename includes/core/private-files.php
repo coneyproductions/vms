@@ -35,26 +35,8 @@ if (!function_exists('bvmgr_private_files_upload_dir')) {
 if (!function_exists('bvmgr_private_files_write_hardening_files')) {
 	function bvmgr_private_files_write_hardening_files(string $dir): void
 	{
-		$dir = trim($dir);
-		if ($dir === '' || !is_dir($dir)) {
-			return;
-		}
-
-		$index = trailingslashit($dir) . 'index.php';
-		if (!file_exists($index)) {
-			@file_put_contents($index, "<?php\nhttp_response_code(403);\nexit;\n");
-		}
-
-		$htaccess = trailingslashit($dir) . '.htaccess';
-		if (!file_exists($htaccess)) {
-			@file_put_contents($htaccess, "Deny from all\n<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n");
-		}
-
-		$webconfig = trailingslashit($dir) . 'web.config';
-		if (!file_exists($webconfig)) {
-			@file_put_contents($webconfig, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>\n");
-		}
-	}
+        bvmgr_private_storage_harden($dir);
+    }
 }
 
 if (!function_exists('bvmgr_private_files_ensure_dir')) {
@@ -81,6 +63,7 @@ if (!function_exists('bvmgr_private_files_bucket_dir')) {
 if (!function_exists('bvmgr_private_files_validate_storage_key')) {
 	function bvmgr_private_files_validate_storage_key(string $storage_key): string
 	{
+		if (strpos($storage_key, "\0") !== false) return '';
 		$storage_key = trim(str_replace('\\', '/', $storage_key));
 		if ($storage_key === '' || strpos($storage_key, "\0") !== false) {
 			return '';
@@ -228,14 +211,18 @@ if (!function_exists('bvmgr_private_files_with_scoped_upload_dir')) {
 	 */
 	function bvmgr_private_files_with_scoped_upload_dir(array $context, callable $callback)
 	{
+		$had_context = array_key_exists('bvmgr_private_files_upload_dir_context', $GLOBALS);
+		$previous = $GLOBALS['bvmgr_private_files_upload_dir_context'] ?? null;
+		$had_filter = has_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir') !== false;
 		$GLOBALS['bvmgr_private_files_upload_dir_context'] = $context;
-		add_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir');
+		if (!$had_filter) add_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir');
 
 		try {
 			return $callback();
 		} finally {
-			remove_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir');
-			unset($GLOBALS['bvmgr_private_files_upload_dir_context']);
+			if (!$had_filter) remove_filter('upload_dir', 'bvmgr_private_files_filter_upload_dir');
+			if ($had_context) $GLOBALS['bvmgr_private_files_upload_dir_context'] = $previous;
+			else unset($GLOBALS['bvmgr_private_files_upload_dir_context']);
 		}
 	}
 }

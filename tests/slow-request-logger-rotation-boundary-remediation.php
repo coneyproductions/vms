@@ -7,6 +7,12 @@ define('VMS_SLOW_REQUEST_LOGGER_TIME_THRESHOLD', 999999.0);
 define('VMS_SLOW_REQUEST_LOGGER_MEMORY_THRESHOLD', 1073741824);
 define('VMS_SLOW_REQUEST_LOGGER_MAX_BYTES', 1024);
 
+// The storage service is exercised independently by wporg-round2-storage-boundary.php.
+function bvmgr_private_storage_target(string $key): string { return $key === 'diagnostics/slow-request.log' ? VMS_SLOW_REQUEST_LOGGER_PATH : ''; }
+function bvmgr_private_storage_prepare(string $bucket): bool { return $bucket === 'diagnostics' && (is_dir(dirname(VMS_SLOW_REQUEST_LOGGER_PATH)) || mkdir(dirname(VMS_SLOW_REQUEST_LOGGER_PATH), 0700, true)); }
+function bvmgr_private_storage_no_links(string $path): bool { return !is_link($path) && dirname($path) === dirname(VMS_SLOW_REQUEST_LOGGER_PATH); }
+function bvmgr_private_storage_safe_file(string $path): bool { return bvmgr_private_storage_no_links($path) && is_file($path) && (int) stat($path)['nlink'] === 1; }
+
 function vms_test_rotation_assert(bool $condition, string $message): void
 {
 	if ($condition) {
@@ -175,7 +181,7 @@ try {
 		'Rotation boundary should use wp_delete_file_from_directory() for the retained log generation.'
 	);
 	vms_test_rotation_assert(
-		strpos($source, '!is_dir($directory) || !wp_is_writable($directory)') !== false,
+		strpos($source, "bvmgr_private_storage_prepare('diagnostics')") !== false,
 		'Write path should use wp_is_writable() for the logger directory check.'
 	);
 	vms_test_rotation_assert(

@@ -42,55 +42,12 @@ if (!class_exists('BVMGR_Tours_Compat')) {
 
 		public function init(): void
 		{
-			add_action('wp_print_scripts', array($this, 'deregister_legacy_scripts'), 100);
-			add_action('admin_notices', array($this, 'render_legacy_notice'));
+			// Foreign scripts remain under their owners' control.
 		}
 
 		public function deregister_legacy_scripts(): void
 		{
-			if (!$this->screen->is_vms_admin_screen()) {
-				return;
-			}
-
-			foreach ($this->legacy_handles as $handle) {
-				if (in_array($handle, self::ALLOWED_SCRIPT_HANDLES, true)) {
-					continue;
-				}
-
-				if (wp_script_is($handle, 'enqueued') || wp_script_is($handle, 'registered')) {
-					$this->detected_legacy_handles[] = $handle;
-					wp_dequeue_script($handle);
-					wp_deregister_script($handle);
-				}
-			}
-
-			global $wp_scripts;
-			if (!($wp_scripts instanceof WP_Scripts)) {
-				return;
-			}
-
-			foreach ((array) $wp_scripts->queue as $handle) {
-				if (in_array($handle, self::ALLOWED_SCRIPT_HANDLES, true)) {
-					continue;
-				}
-				if (!isset($wp_scripts->registered[$handle])) {
-					continue;
-				}
-
-				$src = (string) ($wp_scripts->registered[$handle]->src ?? '');
-				$needle = strtolower($src);
-				if ($needle === '') {
-					continue;
-				}
-
-				if (strpos($needle, 'intro') !== false || strpos($needle, 'shepherd') !== false || strpos($needle, 'hopscotch') !== false || strpos($needle, 'tourguide') !== false) {
-					$this->detected_legacy_handles[] = $handle;
-					wp_dequeue_script($handle);
-					wp_deregister_script($handle);
-				}
-			}
-
-			$this->detected_legacy_handles = array_values(array_unique($this->detected_legacy_handles));
+			// Retained for callers of the compatibility API; never remove foreign scripts.
 		}
 
 		public function render_legacy_notice(): void

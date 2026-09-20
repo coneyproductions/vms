@@ -419,7 +419,9 @@ if (!function_exists('bvmgr_social_render_event_panel_html')) {
 		$queue_cancel_form_id = (string) ($view['queue_cancel_form_id'] ?? '');
 		$queue_retry_form_id = (string) ($view['queue_retry_form_id'] ?? '');
 
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		echo '<input type="hidden" id="bvmgr_social_event_panel_nonce" name="bvmgr_social_event_panel_nonce" value="' . esc_attr($nonce_value) . '" />';
 		echo '<input type="hidden" name="_wp_http_referer" value="' . esc_attr($referer_value) . '" />';
 		echo '<p class="description">' . esc_html__('Phase 1 manual toolkit: copy caption/link and open share dialogs. Queue actions currently use the Phase 0 provider framework.', 'backstage-venue-manager') . '</p>';
@@ -485,6 +487,9 @@ if (!function_exists('bvmgr_social_render_event_panel_html')) {
 		}
 
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 
@@ -531,7 +536,9 @@ if (!function_exists('bvmgr_social_render_event_panel_footer_forms_markup')) {
 		$queue_cancel_nonce_value = (string) ($view['queue_cancel_nonce_value'] ?? '');
 		$queue_retry_nonce_value = (string) ($view['queue_retry_nonce_value'] ?? '');
 
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 
 		echo '<form id="' . esc_attr($queue_form_id) . '" method="post" action="' . esc_url($action_url) . '" class="vms-social-detached-form" style="display:none;">';
 		echo '<input type="hidden" id="_wpnonce" name="_wpnonce" value="' . esc_attr($queue_nonce_value) . '" />';
@@ -558,6 +565,9 @@ if (!function_exists('bvmgr_social_render_event_panel_footer_forms_markup')) {
 		}
 
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 
@@ -808,12 +818,10 @@ if (!function_exists('bvmgr_social_handle_event_queue')) {
 	function bvmgr_social_handle_event_queue(): void
 	{
 		bvmgr_social_require_manage_capability();
+		bvmgr_social_require_post_request();
 		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_social_event_queue', '_wpnonce'), '_wpnonce');
 
-		$event_plan_id = absint(bvmgr_social_post_value('event_plan_id'));
-		if ($event_plan_id <= 0) {
-			wp_die(esc_html__('Invalid event plan.', 'backstage-venue-manager'));
-		}
+		$event_plan_id = bvmgr_social_require_event_permission(bvmgr_social_post_value('event_plan_id'));
 
 		$do_not_post = (int) get_post_meta($event_plan_id, bvmgr_social_event_panel_meta_key('do_not_post'), true) === 1;
 		if ($do_not_post) {

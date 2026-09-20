@@ -270,7 +270,19 @@ function bvmgr_social_account_token_json(int $account_id): array
  * @param array<string,mixed> $args
  * @return mixed
  */
-function wp_remote_post($url, array $args = array())
+// This exception-contract fixture permits only its synthetic endpoint.
+// Real core URL/redirect validation is covered by the native P1-B regression.
+function wp_http_validate_url($url)
+{
+	return is_string($url) && strpos($url, 'https://hooks.example.test/') === 0 ? $url : false;
+}
+
+function bvmgr_social_webhook_url_is_safe($url): bool
+{
+	return (bool) wp_http_validate_url($url);
+}
+
+function wp_safe_remote_post($url, array $args = array())
 {
 	$GLOBALS['vms_test_remote_posts'][] = array(
 		'url' => (string) $url,
@@ -294,6 +306,11 @@ function wp_remote_retrieve_response_code($response): int
 	}
 
 	return (int) ($response['code'] ?? 0);
+}
+
+function wp_remote_retrieve_header($response, string $header): string
+{
+	return is_array($response) ? (string) ($response['headers'][$header] ?? '') : '';
 }
 
 function wp_generate_uuid4(): string

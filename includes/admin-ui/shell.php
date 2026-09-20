@@ -36,14 +36,11 @@ if (!function_exists('bvmgr_admin_ui_extract_notice_markup')) {
 			return $markup;
 		}
 
-		$prev_use_errors = libxml_use_internal_errors(true);
 		$doc = new DOMDocument('1.0', 'UTF-8');
 		$loaded = $doc->loadHTML(
 			'<!doctype html><html><body><div id="vms-shell-fragment">' . $markup . '</div></body></html>',
-			defined('LIBXML_HTML_NOIMPLIED') ? LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD : 0
+			LIBXML_NOERROR | LIBXML_NOWARNING | (defined('LIBXML_HTML_NOIMPLIED') ? LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD : 0)
 		);
-		libxml_clear_errors();
-		libxml_use_internal_errors($prev_use_errors);
 
 		if (!$loaded) {
 			return $markup;
@@ -191,21 +188,36 @@ if (!function_exists('bvmgr_admin_ui_render_shell')) {
 			$explicit_notices_html = '';
 			$rich_explicit_notices_html = '';
 
+			$bvmgr_buffer_level = ob_get_level();
 			ob_start();
+			try {
 			call_user_func($content_callback);
 			$content_html = (string) ob_get_clean();
+			} finally {
+			    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+			}
 			$content_html = bvmgr_admin_ui_extract_notice_markup($content_html, $captured_notices_html);
 
 			if (is_callable($notices_callback)) {
+				$bvmgr_buffer_level = ob_get_level();
 				ob_start();
+				try {
 				call_user_func($notices_callback);
 				$explicit_notices_html = (string) ob_get_clean();
+				} finally {
+				    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+				}
 			}
 
 			if (is_callable($rich_notices_callback)) {
+				$bvmgr_buffer_level = ob_get_level();
 				ob_start();
+				try {
 				call_user_func($rich_notices_callback);
 				$rich_explicit_notices_html = (string) ob_get_clean();
+				} finally {
+				    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+				}
 			}
 
 			$captured_notices_html = bvmgr_admin_ui_prepare_notice_markup($captured_notices_html);

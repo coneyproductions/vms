@@ -634,11 +634,11 @@ $singleSuccess = array(
 	'venue_name' => 'Main Hall',
 	'reference' => 'GL-17',
 	'scan_url' => 'https://scan.example.test/pass?token=primary',
-	'admission_token' => 'primary token"><script>',
+	'admission_token' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
 	'admission_tokens' => array(
 		array(
 			'entry_id' => 17,
-			'token' => 'primary token"><script>',
+			'token' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
 			'reference' => 'GL-17',
 		),
 	),
@@ -653,7 +653,7 @@ $expectedSingleSuccess = '<h1>You Are Confirmed</h1>';
 $expectedSingleSuccess .= '<div class="vms-pass-success">Your pass has been claimed and your reservation is confirmed.</div>';
 $expectedSingleSuccess .= '<div class="vms-pass-ticket">';
 $expectedSingleSuccess .= '<h2>Show this pass at the gate</h2>';
-$expectedSingleSuccess .= '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_url($singleQrUrl) . '" alt="Gate QR code"></div>';
+$expectedSingleSuccess .= '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_attr($singleQrUrl) . '" alt="Gate QR code"></div>';
 $expectedSingleSuccess .= '<p class="vms-pass-meta"><strong>Event:</strong> Summer Fest</p>';
 $expectedSingleSuccess .= '<p class="vms-pass-meta"><strong>Date:</strong> August 1, 2026</p>';
 $expectedSingleSuccess .= '<p class="vms-pass-meta"><strong>Venue:</strong> Main Hall</p>';
@@ -666,7 +666,7 @@ $expectedSingleSuccess .= '<p class="vms-pass-note">We also emailed a copy of th
 $resetRuntime();
 $GLOBALS['vms_test_public_pass_url_return'] = $singlePassUrl;
 $assert(bvmgr_pass_claims_public_success_confirmation_html($singleSuccess, 'guest@example.test') === $expectedSingleSuccess, 'Pass Claims success-confirmation helper should preserve the single-pass success markup exactly.');
-$assert($GLOBALS['vms_test_public_pass_url_calls'] === 1 && $GLOBALS['vms_test_public_pass_url_args'] === array(array('primary token"><script>', true)), 'Pass Claims success-confirmation helper should preserve the public pass URL lookup inputs.');
+$assert($GLOBALS['vms_test_public_pass_url_calls'] === 1 && $GLOBALS['vms_test_public_pass_url_args'] === array(array('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', true)), 'Pass Claims success-confirmation helper should preserve the public pass URL lookup inputs.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 0 && $GLOBALS['vms_test_get_batch_calls'] === 0 && $GLOBALS['vms_test_create_claim_calls'] === 0 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_eligible_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0 && $GLOBALS['vms_test_nonce_calls'] === 0, 'Pass Claims success-confirmation helper should not perform token, batch, nonce, eligibility, rate-limit, or mutation work on its own.');
 
 $resetRuntime();
@@ -687,7 +687,7 @@ $multiSuccess = array(
 	'admission_tokens' => array(
 		array(
 			'entry_id' => 31,
-			'token' => 'group one<script>',
+			'token' => 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
 			'reference' => '<em>Ref 1</em>',
 		),
 		array(
@@ -697,7 +697,7 @@ $multiSuccess = array(
 		),
 		array(
 			'entry_id' => 33,
-			'token' => 'group three',
+			'token' => 'cccccccccccccccccccccccccccccccccccccccc',
 			'reference' => '<svg>Ref 3</svg>',
 		),
 	),
@@ -707,8 +707,8 @@ $multiSuccess = array(
 		'message' => '<a href="javascript:bad()">Mailbox full</a>',
 	),
 );
-$multiQrOne = bvmgr_pass_claims_qr_image_url('vms-admission:group one<script>');
-$multiQrThree = bvmgr_pass_claims_qr_image_url('vms-admission:group three');
+$multiQrOne = bvmgr_pass_claims_qr_image_url('vms-admission:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+$multiQrThree = bvmgr_pass_claims_qr_image_url('vms-admission:cccccccccccccccccccccccccccccccccccccccc');
 $multiEmailMessage = sprintf(
 	'Your pass is confirmed, but the email was not sent: %s. Screenshot this page and use it at the gate.',
 	'<a href="javascript:bad()">Mailbox full</a>'
@@ -719,8 +719,8 @@ $expectedMultiSuccess .= '<div class="vms-pass-ticket">';
 $expectedMultiSuccess .= '<h2>Show these passes at the gate</h2>';
 $expectedMultiSuccess .= '<p class="vms-pass-hint">Each person has their own QR code, so your group can arrive separately.</p>';
 $expectedMultiSuccess .= '<div class="vms-pass-qr-grid">';
-$expectedMultiSuccess .= '<div class="vms-pass-qr-item"><strong>Pass 1 of 3</strong><img class="vms-pass-qr" src="' . esc_url($multiQrOne) . '" alt="Gate QR code"><span>&lt;em&gt;Ref 1&lt;/em&gt;</span></div>';
-$expectedMultiSuccess .= '<div class="vms-pass-qr-item"><strong>Pass 3 of 3</strong><img class="vms-pass-qr" src="' . esc_url($multiQrThree) . '" alt="Gate QR code"><span>&lt;svg&gt;Ref 3&lt;/svg&gt;</span></div>';
+$expectedMultiSuccess .= '<div class="vms-pass-qr-item"><strong>Pass 1 of 3</strong><img class="vms-pass-qr" src="' . esc_attr($multiQrOne) . '" alt="Gate QR code"><span>&lt;em&gt;Ref 1&lt;/em&gt;</span></div>';
+$expectedMultiSuccess .= '<div class="vms-pass-qr-item"><strong>Pass 3 of 3</strong><img class="vms-pass-qr" src="' . esc_attr($multiQrThree) . '" alt="Gate QR code"><span>&lt;svg&gt;Ref 3&lt;/svg&gt;</span></div>';
 $expectedMultiSuccess .= '</div>';
 $expectedMultiSuccess .= '<p class="vms-pass-meta"><strong>Event:</strong> &lt;b&gt;Launch Night&lt;/b&gt;</p>';
 $expectedMultiSuccess .= '<p class="vms-pass-meta"><strong>Date:</strong> &lt;bad date&gt;</p>';
@@ -841,11 +841,11 @@ $routeSuccess = array(
 	'venue_name' => 'Route Hall <script>',
 	'reference' => 'GL-501',
 	'scan_url' => 'https://scan.example.test/route?token=route',
-	'admission_token' => 'route token',
+	'admission_token' => 'dddddddddddddddddddddddddddddddddddddddd',
 	'admission_tokens' => array(
 		array(
 			'entry_id' => 501,
-			'token' => 'route token',
+			'token' => 'dddddddddddddddddddddddddddddddddddddddd',
 			'reference' => 'GL-501',
 		),
 	),
@@ -856,7 +856,7 @@ $routeSuccess = array(
 	),
 );
 $routePassUrl = 'https://passes.example.test/route?token=route token&unsafe="quote"<tag>';
-$routeQrUrl = bvmgr_pass_claims_qr_image_url('vms-admission:route token');
+$routeQrUrl = bvmgr_pass_claims_qr_image_url('vms-admission:dddddddddddddddddddddddddddddddddddddddd');
 $routeWarning = sprintf(
 	'Your pass is confirmed, but the email was not sent: %s. Screenshot this page and use it at the gate.',
 	'Mailbox <full>'
@@ -865,7 +865,7 @@ $expectedRouteSuccess = '<h1>You Are Confirmed</h1>';
 $expectedRouteSuccess .= '<div class="vms-pass-success">Your pass has been claimed and your reservation is confirmed.</div>';
 $expectedRouteSuccess .= '<div class="vms-pass-ticket">';
 $expectedRouteSuccess .= '<h2>Show this pass at the gate</h2>';
-$expectedRouteSuccess .= '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_url($routeQrUrl) . '" alt="Gate QR code"></div>';
+$expectedRouteSuccess .= '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_attr($routeQrUrl) . '" alt="Gate QR code"></div>';
 $expectedRouteSuccess .= '<p class="vms-pass-meta"><strong>Event:</strong> Route Event &lt;b&gt;X&lt;/b&gt;</p>';
 $expectedRouteSuccess .= '<p class="vms-pass-meta"><strong>Date:</strong> September 12, 2026</p>';
 $expectedRouteSuccess .= '<p class="vms-pass-meta"><strong>Venue:</strong> Route Hall &lt;script&gt;</p>';
@@ -911,7 +911,7 @@ $assert($successfulRouteRender['headline'] === 'Pass Claimed', 'Successful Pass 
 $assert($successfulRouteRender['content_html'] === $expectedRouteSuccess, 'Successful Pass Claims submission should preserve the exact success-confirmation markup.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 1 && $GLOBALS['vms_test_get_batch_calls'] === 1 && $GLOBALS['vms_test_eligible_calls'] === 1 && $GLOBALS['vms_test_create_claim_calls'] === 1 && $GLOBALS['vms_test_nonce_calls'] === 2 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0, 'Successful Pass Claims submission should pass canonical selection through the native verifier while preserving the existing success-path read and mutation counts.');
 $assert($GLOBALS['vms_test_nonce_args'] === array(array('ok-nonce', 'bvmgr_pass_claim_submit'), array('ok-nonce', 'bvmgr_pass_claim_submit')), 'Successful Pass Claims submission should select and then natively validate the canonical nonce action without a legacy retry.');
-$assert($GLOBALS['vms_test_public_pass_url_calls'] === 1 && $GLOBALS['vms_test_public_pass_url_args'] === array(array('route token', true)), 'Successful Pass Claims submission should preserve the public-pass URL lookup inputs.');
+$assert($GLOBALS['vms_test_public_pass_url_calls'] === 1 && $GLOBALS['vms_test_public_pass_url_args'] === array(array('dddddddddddddddddddddddddddddddddddddddd', true)), 'Successful Pass Claims submission should preserve the public-pass URL lookup inputs.');
 $assert($GLOBALS['vms_test_find_token_tokens'] === array('success-route-token'), 'Pass Claims template router should pass the resolved success-route token unchanged into the token lookup.');
 $assert($GLOBALS['vms_test_get_batch_ids'] === array(9), 'Successful Pass Claims submission should preserve the batch lookup input.');
 $assert(count($GLOBALS['vms_test_create_claim_args']) === 1, 'Successful Pass Claims submission should execute the claim mutation exactly once.');

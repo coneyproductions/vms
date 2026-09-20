@@ -1497,7 +1497,7 @@ if (!function_exists('bvmgr_render_vendor_command_center_page_content')) {
         echo '</summary>';
         echo '<div class="vms-vcc-panel__body">';
 
-        echo '<script type="application/json" id="vms-vcc-vendor-map">' . wp_json_encode($vendor_form_map) . '</script>';
+        echo '<script type="application/json" id="vms-vcc-vendor-map">' . wp_json_encode($vendor_form_map, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . '</script>';
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-compose__form">';
         wp_nonce_field('bvmgr_vendor_command_center_send_onboarding', 'bvmgr_vendor_command_center_nonce');
@@ -1555,7 +1555,7 @@ if (!function_exists('bvmgr_render_vendor_command_center_page_content')) {
         echo '<span class="vms-vcc-panel__toggle" aria-hidden="true"></span>';
         echo '</summary>';
         echo '<div class="vms-vcc-panel__body">';
-        echo '<script type="application/json" id="vms-vcc-template-map">' . wp_json_encode($template_editor_payload) . '</script>';
+        echo '<script type="application/json" id="vms-vcc-template-map">' . wp_json_encode($template_editor_payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . '</script>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-vcc-compose__form">';
         wp_nonce_field('bvmgr_vendor_command_center_save_template', 'bvmgr_vendor_command_center_template_nonce');
         echo '<input type="hidden" name="action" value="vms_vendor_command_center_save_template">';

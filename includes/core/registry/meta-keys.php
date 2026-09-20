@@ -304,7 +304,7 @@ function bvmgr_meta_keys(): array
 			// Optional timing keys (datetime)
 			'start_datetime' => '_vms_event_plan_start_datetime',
 			'end_datetime'   => '_vms_event_plan_end_datetime',
-			'checkin_close_at' => '_checkin_close_at',
+			'checkin_close_at' => '_bvmgr_checkin_close_at',
 			'operational_start_local' => '_bvmgr_event_plan_operational_start_local',
 			'operational_end_local' => '_bvmgr_event_plan_operational_end_local',
 			'operational_start_offset_minutes' => '_bvmgr_event_plan_operational_start_offset_minutes',

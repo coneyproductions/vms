@@ -142,7 +142,9 @@ if (!function_exists('bvmgr_public_calendar_render_nav')) {
 			$title = date_i18n('F Y', strtotime((string) ($month['start'] ?? 'now')));
 		}
 
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		?>
 		<div class="vms-public-cal-nav">
 			<a class="vms-public-cal-nav-link" href="<?php echo esc_url(add_query_arg(array('ym' => (string) ($nav['prev'] ?? '')), $base)); ?>">← <?php echo esc_html($prev_label); ?></a>
@@ -151,6 +153,9 @@ if (!function_exists('bvmgr_public_calendar_render_nav')) {
 		</div>
 		<?php
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 
@@ -543,7 +548,9 @@ if (!function_exists('bvmgr_public_calendar_render_compact_nav')) {
 		$next_ym = trim((string) ($context['next_ym'] ?? ''));
 		$next_label = trim((string) ($context['next_label'] ?? ''));
 
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		?>
 		<div class="vms-public-cal-nav">
 			<?php if ($prev_ym !== '' && $prev_label !== ''): ?>
@@ -560,6 +567,9 @@ if (!function_exists('bvmgr_public_calendar_render_compact_nav')) {
 		</div>
 		<?php
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 
@@ -768,7 +778,9 @@ if (!function_exists('bvmgr_public_calendar_render_list_view')) {
 			return '<p class="vms-public-cal-empty">' . esc_html__('No events found for this range.', 'backstage-venue-manager') . '</p>';
 		}
 
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		echo '<div class="vms-public-cal-list">';
 		foreach ($events as $event) {
 			$date_key = trim((string) ($event['date_key'] ?? ''));
@@ -870,6 +882,9 @@ if (!function_exists('bvmgr_public_calendar_render_list_view')) {
 		}
 		echo '</div>';
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 
@@ -1064,7 +1079,9 @@ if (!function_exists('bvmgr_public_calendar_render_day_entries')) {
 			return '';
 		}
 
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		foreach ($entries as $ev) {
 			$title = trim((string) ($ev['title'] ?? ''));
 			if ($title === '') {
@@ -1181,6 +1198,9 @@ if (!function_exists('bvmgr_public_calendar_render_day_entries')) {
 		}
 
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 
@@ -1287,7 +1307,9 @@ if (!function_exists('bvmgr_public_calendar_render_compact_view')) {
 		}
 
 		$weekday_labels = bvmgr_public_calendar_compact_weekday_labels();
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		echo '<div class="vms-public-cal-compact">';
 		$rendered_count = 0;
 		foreach ($months as $month) {
@@ -1350,6 +1372,9 @@ if (!function_exists('bvmgr_public_calendar_render_compact_view')) {
 
 		echo '</div>';
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 
@@ -1404,6 +1429,7 @@ if (!function_exists('bvmgr_public_calendar_shortcode_handler')) {
 	 */
 	function bvmgr_public_calendar_shortcode_handler($atts = array(), $content = '', $tag = 'vms_public_calendar'): string
 	{
+        if (function_exists('bvmgr_enqueue_public_style_stack')) bvmgr_enqueue_public_style_stack();
 		$is_legacy = ($tag === 'vms_venue_calendar');
 
 		$defaults = array(
@@ -1572,7 +1598,9 @@ if (!function_exists('bvmgr_public_calendar_shortcode_handler')) {
 			true
 		);
 
+		$bvmgr_buffer_level = ob_get_level();
 		ob_start();
+		try {
 		?>
 		<div class="vms-public-cal vms-public-cal--view-<?php echo esc_attr($effective_view); ?>" data-vms-effective-view="<?php echo esc_attr($effective_view); ?>">
 			<form method="get" class="vms-public-cal-filters">
@@ -1638,6 +1666,9 @@ if (!function_exists('bvmgr_public_calendar_shortcode_handler')) {
 		<?php
 
 		return (string) ob_get_clean();
+		} finally {
+		    if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+		}
 	}
 }
 

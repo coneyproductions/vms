@@ -157,9 +157,9 @@ try {
 
 	$combinedSource = implode("\n", array($settingsSource, $squareSource, $admissionsSource, $passClaimsSource));
 	vms_test_assert_same(
-		6,
+		5,
 		vms_test_count_pattern('/phpcs:ignore (?:WordPress\.WP\.AlternativeFunctions\.file_system_operations_fclose|Squiz\.PHP\.DiscouragedFunctions\.Discouraged)/', $combinedSource),
-		'The F2 runtime files should keep exactly the six owned stream-boundary suppressions while allowing later, separately tested remediation annotations in the same files.'
+		'The F2 runtime files should keep exactly the five owned response-stream suppressions while allowing later, separately tested remediation annotations in the same files.'
 	);
 	vms_test_assert_same(
 		5,
@@ -167,13 +167,14 @@ try {
 		'The F2 runtime files should keep exactly five php://output fclose() suppressions.'
 	);
 	vms_test_assert_same(
-		1,
+		0,
 		vms_test_count_pattern('/phpcs:ignore Squiz\.PHP\.DiscouragedFunctions\.Discouraged/', $combinedSource),
-		'The F2 runtime files should keep exactly one set_time_limit() suppression.'
+		'The F2 runtime files must not retain a set_time_limit() suppression.'
 	);
 	vms_test_assert_same(0, vms_test_count_pattern('/phpcs:disable/', $combinedSource), 'The F2 runtime files should not introduce any broad phpcs:disable directives.');
 	vms_test_assert_same(0, vms_test_count_pattern('/phpcs:enable/', $combinedSource), 'The F2 runtime files should not introduce any phpcs:enable directives.');
 
+	vms_test_assert_not_contains('set_time_limit(', $combinedSource, 'Exports must respect the host execution limit.');
 	$settingsFunction = vms_test_extract_function($settingsSource, 'bvmgr_handle_ticketing_stock_csv');
 	vms_test_assert_stream_boundary(
 		'Ticketing stock CSV export',
@@ -183,7 +184,6 @@ try {
 			"wp_verify_nonce(\$nonce, bvmgr_nonce_action_for_value(\$nonce, 'bvmgr_ticketing_stock_csv'))",
 			"get_transient('vms_ticketing_stock_reconcile_last')",
 			"get_transient(bvmgr_ticketing_stock_preview_transient_key(get_current_user_id()))",
-			"@set_time_limit(0); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Administrator-only ticketing stock CSV export streams a bounded transient report and WordPress does not provide a native execution-limit alternative.",
 			"header('Content-Type: text/csv; charset=utf-8');",
 			"header('Content-Disposition: attachment; filename=vms-ticketing-stock-' . \$mode . '-report-' . gmdate('Ymd-His') . '.csv');",
 			"fclose(\$out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the bounded administrator CSV response stream opened on php://output; no local filesystem path or WP_Filesystem replacement applies to this HTTP output handle.",

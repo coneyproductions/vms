@@ -26,6 +26,30 @@ function bvmgr_vendor_handle_tax_bulk_actions($redirect_url, $action, $post_ids)
 		return $redirect_url;
 	}
 
+	if (!isset($_REQUEST['_wpnonce']) || !is_string($_REQUEST['_wpnonce'])) {
+		wp_die(esc_html__('Security check failed.', 'backstage-venue-manager'), '', array('response' => 403));
+	}
+	check_admin_referer('bulk-posts');
+
+	if (!is_array($post_ids)) {
+		wp_die(esc_html__('Invalid vendor selection.', 'backstage-venue-manager'));
+	}
+
+	// Validate the entire selection before writing, including mixed-ownership batches.
+	$vendor_ids = array();
+	foreach ($post_ids as $post_id) {
+		$vendor_id = (is_int($post_id) || is_string($post_id))
+			? filter_var($post_id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)))
+			: false;
+		if (!$vendor_id || get_post_type($vendor_id) !== BVMGR_CPT_VENDOR) {
+			wp_die(esc_html__('Invalid vendor selection.', 'backstage-venue-manager'));
+		}
+		if (!current_user_can('edit_post', $vendor_id)) {
+			wp_die(esc_html__('Permission denied.', 'backstage-venue-manager'), '', array('response' => 403));
+		}
+		$vendor_ids[] = $vendor_id;
+	}
+
 	$k_done    = bvmgr_meta_key('vendor', 'tax_profile_completed_at');
 	$k_attest  = bvmgr_meta_key('vendor', 'w9_attested_at');
 	$k_prov    = bvmgr_meta_key('vendor', 'w9_provider');
@@ -33,10 +57,7 @@ function bvmgr_vendor_handle_tax_bulk_actions($redirect_url, $action, $post_ids)
 	$now = time();
 	$changed = 0;
 
-	foreach ((array) $post_ids as $vendor_id) {
-		$vendor_id = (int) $vendor_id;
-		if ($vendor_id <= 0) continue;
-
+	foreach ($vendor_ids as $vendor_id) {
 		if ($action === 'vms_tax_mark_complete') {
 			update_post_meta($vendor_id, $k_done, $now);
 			$changed++;

@@ -1,7 +1,7 @@
 <?php
 /** Real database/filesystem contract, evaluated only by the supervised disposable runner. */
-require_once __DIR__ . '/helpers/current-wordpress-fixture.php';
-if (DB_NAME !== 'bvm_integration_source' || DB_HOST !== 'localhost:' . getenv('BVM_DISPOSABLE_DB_SOCKET')) throw new RuntimeException('Disposable database identity mismatch');
+if (getenv('BVM_DISPOSABLE_DB_GUARDED') !== '1' || DB_NAME !== 'bvm_tranche2'
+    || DB_HOST !== 'localhost:' . getenv('BVM_DISPOSABLE_DB_SOCKET') || rtrim(ABSPATH, '/') !== getenv('BVM_TRANCHE2_WORDPRESS_ROOT')) throw new RuntimeException('Disposable supervisor required');
 global $wpdb;
 wp_set_current_user(1);
 $assert = static function ($ok, string $label): void { if (!$ok) throw new RuntimeException($label); };
@@ -23,10 +23,16 @@ $before_row = bvmgr_private_file_get($file_id);
 $assert(is_wp_error(bvmgr_private_w9_file_payload($vendor)), 'legacy plaintext reads fail closed pending controlled migration');
 $assert(bvmgr_private_storage_pending(), 'legacy document reported pending');
 $assert(!bvmgr_private_files_ensure_dir('tax-docs'), 'new uploads blocked while legacy protection is incomplete');
-$outside = getenv('BVM_QUAL_EVIDENCE') . '/outside-arbitrary.txt';
+$outside = dirname(ABSPATH) . '/outside-arbitrary.txt';
 file_put_contents($outside, 'UNRELATED');
 $assert(!bvmgr_private_storage_migrate_object(array('key' => 'tax-docs/arbitrary', 'source' => $outside)), 'uncontrolled helper cannot migrate arbitrary files');
 $assert(is_file($outside), 'unrelated file retained');
+$GLOBALS['bvmgr_private_storage_migrating'] = true;
+$assert(!bvmgr_private_storage_migrate_object(array('key' => 'tax-docs/arbitrary', 'source' => $outside)), 'boolean migration flag cannot authorize a caller path');
+$GLOBALS['bvmgr_private_storage_migrating'] = array($legacy_key => array('key' => $legacy_key, 'source' => $private . '/' . $legacy_key, 'expected' => hash('sha256', $secret)));
+$assert(!bvmgr_private_storage_migrate_object(array('key' => $legacy_key, 'source' => $outside, 'expected' => hash('sha256', $secret))), 'validated key cannot substitute an arbitrary source');
+unset($GLOBALS['bvmgr_private_storage_migrating']);
+$assert(file_get_contents($outside) === 'UNRELATED', 'rejected migration preserves unrelated bytes');
 wp_create_nonce('private-storage-test-prime');
 $snapshot = static function () use ($base, $config): array {
     $result = array();

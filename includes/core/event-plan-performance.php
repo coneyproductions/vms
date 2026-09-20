@@ -8,17 +8,6 @@ if (!function_exists('bvmgr_event_plan_perf_trace_enabled')) {
 	}
 }
 
-if (!function_exists('bvmgr_event_plan_perf_log_path')) {
-	function bvmgr_event_plan_perf_log_path(): string
-	{
-		$path = defined('WP_CONTENT_DIR')
-			? WP_CONTENT_DIR . '/vms-event-plan-perf-trace.log'
-			: dirname(__DIR__, 3) . '/vms-event-plan-perf-trace.log';
-
-		return (string) apply_filters('vms_event_plan_perf_log_path', $path);
-	}
-}
-
 if (!function_exists('bvmgr_event_plan_perf_request_state')) {
 	function bvmgr_event_plan_perf_request_state(): array
 	{
@@ -624,28 +613,8 @@ if (!function_exists('bvmgr_event_plan_perf_should_capture_queries')) {
 	}
 }
 
-if (!function_exists('bvmgr_event_plan_perf_maybe_enable_query_capture')) {
-	function bvmgr_event_plan_perf_maybe_enable_query_capture(): void
-	{
-		global $wpdb;
-
-		if (!bvmgr_event_plan_perf_should_capture_queries() || !is_object($wpdb)) {
-			return;
-		}
-
-		if (!defined('SAVEQUERIES')) {
-			define('SAVEQUERIES', true);
-		}
-
-		if (property_exists($wpdb, 'save_queries')) {
-			$wpdb->save_queries = true;
-		}
-		if (!isset($wpdb->queries) || !is_array($wpdb->queries)) {
-			$wpdb->queries = array();
-		}
-	}
-}
-bvmgr_event_plan_perf_maybe_enable_query_capture();
+// SQL details are read only when the host has independently enabled collection.
+// BVM measures its own operation durations without changing WordPress query capture.
 
 if (!function_exists('bvmgr_event_plan_perf_query_entries')) {
 	function bvmgr_event_plan_perf_query_entries(): array
@@ -889,8 +858,6 @@ if (!function_exists('bvmgr_event_plan_perf_query_checkpoint')) {
 		if (!bvmgr_event_plan_perf_trace_enabled()) {
 			return;
 		}
-
-		bvmgr_event_plan_perf_maybe_enable_query_capture();
 
 		$plan_id = absint($plan_id);
 		$phase = sanitize_key($phase);

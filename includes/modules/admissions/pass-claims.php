@@ -138,7 +138,8 @@ if (!function_exists('bvmgr_pass_claims_qr_image_url')) {
 		if ($data === '') {
 			return '';
 		}
-		return 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=16&data=' . rawurlencode($data);
+		require_once __DIR__ . '/local-qr.php';
+		return \BVMGR\Admissions\Local_QR::data_uri($data);
 	}
 }
 
@@ -2977,13 +2978,13 @@ if (!function_exists('bvmgr_pass_claims_public_success_confirmation_html')) {
 				/* translators: 1: number 1 used in this message, 2: number 2 used in this message. */
 				$html .= '<div class="vms-pass-qr-item"><strong>' . esc_html(sprintf(__('Pass %1$d of %2$d', 'backstage-venue-manager'), $index + 1, $total)) . '</strong>';
 				if ($group_qr_url !== '') {
-					$html .= '<img class="vms-pass-qr" src="' . esc_url($group_qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '">';
+					$html .= '<img class="vms-pass-qr" src="' . esc_attr($group_qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '">';
 				}
 				$html .= '<span>' . esc_html($reference) . '</span></div>';
 			}
 			$html .= '</div>';
 		} elseif ($qr_url !== '') {
-			$html .= '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_url($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"></div>';
+			$html .= '<div class="vms-pass-qr-wrap"><img class="vms-pass-qr" src="' . esc_attr($qr_url) . '" alt="' . esc_attr__('Gate QR code', 'backstage-venue-manager') . '"></div>';
 		}
 		$html .= '<p class="vms-pass-meta"><strong>' . esc_html__('Event:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($success['event_title'] ?? '')) . '</p>';
 		if (!empty($success['event_date'])) {
@@ -3099,6 +3100,7 @@ if (!function_exists('bvmgr_pass_claims_render_public_shell')) {
 			wp_enqueue_style('bvmgr-pass-claims-public', BVMGR_PLUGIN_URL . 'assets/css/vms-pass-claims-public.css', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : null);
 		}
 		if (function_exists('wp_enqueue_script') && defined('BVMGR_PLUGIN_URL')) {
+			wp_enqueue_script('bvmgr-number-input-guard', BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : null, true);
 			wp_enqueue_script('bvmgr-pass-claims-public', BVMGR_PLUGIN_URL . 'assets/js/vms-pass-claims-public.js', array(), defined('BVMGR_VERSION') ? BVMGR_VERSION : null, true);
 		}
 

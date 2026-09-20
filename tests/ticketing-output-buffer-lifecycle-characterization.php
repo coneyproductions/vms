@@ -221,46 +221,12 @@ try {
 	$firstRequirePos = strpos($loadSource, 'require_once');
 	vms_test_assert_true($firstRequirePos !== false, 'load.php should still contain integration require_once statements.');
 	$loadPrologue = substr($loadSource, 0, (int) $firstRequirePos);
-	vms_test_assert_contains("defined('DOING_AJAX') && DOING_AJAX", $loadPrologue, 'load.php should still gate the global opener with DOING_AJAX.');
-	vms_test_assert_contains("empty(\$GLOBALS['bvmgr_ajax_ob_started'])", $loadPrologue, 'load.php should still guard ownership with vms_ajax_ob_started.');
-	vms_test_assert_contains("\$GLOBALS['bvmgr_ajax_ob_started'] = true;", $loadPrologue, 'load.php should still record AJAX buffer ownership.');
-	vms_test_assert_contains('ob_start();', $loadPrologue, 'load.php should still open the request-global AJAX buffer.');
-	vms_test_assert_true(
-		strpos($loadPrologue, "defined('DOING_AJAX') && DOING_AJAX") < strpos($loadPrologue, 'ob_start();'),
-		'load.php should still open the AJAX buffer only inside the DOING_AJAX gate.'
-	);
-
-	$legacyAttachBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_attach_noise');
-	$legacySuccessBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_send_success');
-	$legacyErrorBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_send_error');
-	$v2DiscardBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_discard_owned_buffer');
-	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_success');
-	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_error');
-
-	vms_test_assert_contains("!empty(\$GLOBALS['bvmgr_ajax_ob_started'])", $legacyAttachBody, 'Legacy cleanup helper should still consult the shared AJAX buffer ownership flag.');
-	vms_test_assert_contains('ob_get_contents()', $legacyAttachBody, 'Legacy cleanup helper should still read buffered AJAX noise before closing.');
-	vms_test_assert_contains('@ob_end_clean();', $legacyAttachBody, 'Legacy cleanup helper should still explicitly close the owned AJAX buffer.');
-	vms_test_assert_contains("\$GLOBALS['bvmgr_ajax_ob_started'] = false;", $legacyAttachBody, 'Legacy cleanup helper should still reset shared AJAX buffer ownership to false.');
-	vms_test_assert_contains('bvmgr_ticketing_ajax_attach_noise($data)', $legacySuccessBody, 'Legacy success wrapper should still route through the cleanup helper.');
-	vms_test_assert_contains('wp_send_json_success($data, $http_status)', $legacySuccessBody, 'Legacy success wrapper should still send JSON through wp_send_json_success().');
-	vms_test_assert_contains('bvmgr_ticketing_ajax_attach_noise($data)', $legacyErrorBody, 'Legacy error wrapper should still route through the cleanup helper.');
-	vms_test_assert_contains('wp_send_json_error($data, $http_status)', $legacyErrorBody, 'Legacy error wrapper should still send JSON through wp_send_json_error().');
-	vms_test_assert_contains("empty(\$GLOBALS['bvmgr_ajax_ob_started'])", $v2DiscardBody, 'The V2 cleanup-only helper should still guard on the shared AJAX buffer ownership flag.');
-	vms_test_assert_contains('ob_get_level() > 0', $v2DiscardBody, 'The V2 cleanup-only helper should still only close a current buffer when one exists.');
-	vms_test_assert_contains('@ob_end_clean();', $v2DiscardBody, 'The V2 cleanup-only helper should still suppress compatibility-level close warnings.');
-	vms_test_assert_contains("\$GLOBALS['bvmgr_ajax_ob_started'] = false;", $v2DiscardBody, 'The V2 cleanup-only helper should still clear AJAX buffer ownership after cleanup.');
-	vms_test_assert_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still invoke the cleanup-only helper.');
-	vms_test_assert_contains('wp_send_json_success(', $v2SuccessWrapperBody, 'The V2 success wrapper should still delegate to wp_send_json_success().');
-	vms_test_assert_true(
-		strpos($v2SuccessWrapperBody, 'bvmgr_ticketing_ajax_discard_owned_buffer();') < strpos($v2SuccessWrapperBody, 'wp_send_json_success('),
-		'The V2 success wrapper should still clean up the owned buffer before delegating to WordPress JSON output.'
-	);
-	vms_test_assert_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still invoke the cleanup-only helper.');
-	vms_test_assert_contains('wp_send_json_error(', $v2ErrorWrapperBody, 'The V2 error wrapper should still delegate to wp_send_json_error().');
-	vms_test_assert_true(
-		strpos($v2ErrorWrapperBody, 'bvmgr_ticketing_ajax_discard_owned_buffer();') < strpos($v2ErrorWrapperBody, 'wp_send_json_error('),
-		'The V2 error wrapper should still clean up the owned buffer before delegating to WordPress JSON output.'
-	);
+	vms_test_assert_not_contains('ob_start(', $loadPrologue, 'Integration loading must not open an AJAX-wide buffer.');
+	vms_test_assert_not_contains('bvmgr_ajax_ob_started', $ticketingSource, 'Responders must not own request-global buffers.');
+	foreach (array('bvmgr_ticketing_ajax_send_success', 'bvmgr_ticketing_ajax_send_error', 'bvmgr_ticketing_v2_ajax_send_success', 'bvmgr_ticketing_v2_ajax_send_error') as $responder) {
+		$body = vms_test_extract_function($ticketingSource, $responder);
+		vms_test_assert_not_contains('ob_end_clean', $body, 'Responder must preserve caller buffers.');
+	}
 
 	$v2AjaxExpectations = array(
 		'bvmgr_ticketing_v2_ajax_silent_add' => array(

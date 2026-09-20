@@ -10160,12 +10160,7 @@ if (!function_exists('bvmgr_ticketing_v2_ajax_send_json_success_fast')) {
             nocache_headers();
             header('Content-Type: application/json; charset=' . get_option('blog_charset'));
             header('X-VMS-Fast-Ajax: ' . $operation);
-            header('Content-Length: ' . strlen($payload));
             header('Connection: close');
-        }
-
-        while (ob_get_level() > 0) {
-            @ob_end_clean();
         }
 
         echo $payload;

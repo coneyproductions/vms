@@ -801,8 +801,39 @@ if (!function_exists('bvmgr_schedule_exists')) {
 if (!function_exists('bvmgr_is_owned_cron_hook')) {
 	function bvmgr_is_owned_cron_hook(string $hook): bool
 	{
-		$hook = trim($hook);
-		return $hook !== '' && strpos($hook, 'vms_') === 0;
+		// Exact producers, including retained jobs from earlier BVM installations.
+		// A short prefix alone cannot establish ownership of another plugin's job.
+		$owned = array(
+			'vms_square_nightly_sync',
+			'vms_social_process_queue',
+			'vms_tasks_notifications_tick',
+			'vms_tasks_notifications_digest_tick',
+			'vms_tasks_nightly_generator',
+			'vms_tasks_generate_for_event_queued',
+			'vms_email_followups_cron',
+			'vms_calendar_ticket_counts_nightly',
+			'vms_vendor_booking_onboarding_daily',
+			'vms_notify_digest_tick_cron',
+			'vms_ticket_integrity_daily_scan',
+			'vms_ticket_integrity_spot_scan',
+			'vms_ticket_integrity_daily_report',
+			'vms_ticket_integrity_payment_gateway_health',
+			'vms_integrity_daily_scan',
+			'vms_ticketing_v2_legacy_cleanup',
+			'vms_ticketing_verification_cleanup',
+			'vms_event_plan_legacy_ticket_cleanup',
+			'vms_event_plan_calendar_maintenance',
+			'vms_event_plan_deferred_calendar_publish',
+			'vms_staffing_seed_event_slots_queued',
+			'vms_ticketing_v2_async_send_woo_ticket_emails',
+			'vms_ticketing_verification_send_submission_notification_async',
+		);
+		foreach (array('BVMGR_SOCIAL_CRON_HOOK', 'BVMGR_CRON_TASKS_NIGHTLY', 'BVMGR_CALENDAR_TICKET_COUNTS_CRON_HOOK') as $constant_name) {
+			if (defined($constant_name) && is_string(constant($constant_name))) {
+				$owned[] = constant($constant_name);
+			}
+		}
+		return $hook !== '' && in_array($hook, $owned, true);
 	}
 }
 

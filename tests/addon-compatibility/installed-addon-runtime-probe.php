@@ -127,6 +127,7 @@ $check(
 		&& (string) VMSA_VERSION === $expectedAgreementsVersion
 		&& in_array('vms-agreements', $allMenuSlugs, true)
 		&& has_filter('vms_vendor_portal_allowed_tabs', 'vmsa_register_vendor_portal_tab') !== false
+		&& has_filter('bvmgr_vendor_portal_allowed_tabs', 'vmsa_register_vendor_portal_tab') !== false
 		&& in_array('agreements', $portalTabs, true)
 		&& $agreementsRequestedTab === 'agreements'
 		&& $agreementsRequestedVendor === 5505,
@@ -134,7 +135,7 @@ $check(
 );
 $check(
 	'guest-list-routing-regression',
-	has_filter('vms_vendor_portal_allowed_tabs', $guestListAllowedTabCallback) !== false
+	has_filter('bvmgr_vendor_portal_allowed_tabs', $guestListAllowedTabCallback) !== false
 		&& in_array('guest-list', $portalTabs, true)
 		&& $guestListRequestedTab === 'guest-list'
 		&& $guestListRequestedVendor === 5505,

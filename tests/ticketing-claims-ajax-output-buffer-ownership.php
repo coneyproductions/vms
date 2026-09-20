@@ -281,13 +281,8 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		ob_start();
 		$collectorLevel = ob_get_level();
 
-		if ($noise !== '') {
-			$GLOBALS['bvmgr_ajax_ob_started'] = true;
-			ob_start();
-			echo $noise;
-		} else {
-			$GLOBALS['bvmgr_ajax_ob_started'] = false;
-		}
+		echo $noise;
+		unset($GLOBALS['bvmgr_ajax_ob_started']);
 
 		try {
 			call_user_func_array($callable, $args);
@@ -296,6 +291,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 			unset($exception);
 		}
 
+		vms_test_assert_same($collectorLevel, ob_get_level(), 'Responder must preserve caller buffer depth.');
 		$output = (string) ob_get_contents();
 		$flagAfter = $GLOBALS['bvmgr_ajax_ob_started'] ?? null;
 		$call = $GLOBALS['vms_test_wp_json_calls'][0] ?? null;
@@ -304,6 +300,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		return array(
 			'call' => $call,
 			'output' => $output,
+			'noise' => $noise,
 			'collector_level' => $collectorLevel,
 			'start_level' => $startLevel,
 			'flag_after' => $flagAfter,
@@ -322,7 +319,8 @@ try {
 	$ticketingSource = vms_test_read_file($ticketingPath);
 	$claimsSource = vms_test_read_file($claimsPath);
 
-	$discardBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_discard_owned_buffer');
+	$discardBody = '';
+	vms_test_assert_not_contains('function bvmgr_ticketing_ajax_discard_owned_buffer', $ticketingSource, 'Request-global buffer cleanup must be removed.');
 	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_success');
 	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_error');
 	$clientLogBody = vms_test_extract_function($claimsSource, 'bvmgr_ticketing_claims_handle_client_log_action');
@@ -331,16 +329,6 @@ try {
 
 	eval($discardBody . "\n" . $v2SuccessWrapperBody . "\n" . $v2ErrorWrapperBody);
 
-	vms_test_assert_code_contains(
-		'bvmgr_ticketing_ajax_discard_owned_buffer();',
-		$v2SuccessWrapperBody,
-		'The V2 success wrapper should still invoke the cleanup-only helper.'
-	);
-	vms_test_assert_code_contains(
-		'bvmgr_ticketing_ajax_discard_owned_buffer();',
-		$v2ErrorWrapperBody,
-		'The V2 error wrapper should still invoke the cleanup-only helper.'
-	);
 
 	vms_test_assert_same(
 		array('wp_ajax_vms_ticketing_claims_log_client_action'),
@@ -612,10 +600,10 @@ PHP,
 	vms_test_assert_same(false, $loginRequiredResult['call']['success'], 'The wrapper should terminate claims login failures through wp_send_json_error().');
 	vms_test_assert_same(array('message' => 'login_required'), $loginRequiredResult['call']['data'], 'The wrapper should preserve the claims login_required payload.');
 	vms_test_assert_same(401, $loginRequiredResult['call']['status_code'], 'The wrapper should preserve the explicit 401 status.');
-	vms_test_assert_same(false, $loginRequiredResult['call']['flag_state_at_send'], 'The wrapper should clear ownership before the 401 JSON send.');
-	vms_test_assert_same(false, $loginRequiredResult['flag_after'], 'The wrapper should leave ownership cleared after the 401 response.');
-	vms_test_assert_same($loginRequiredResult['call']['json'], $loginRequiredResult['output'], 'Owned output should not precede the 401 JSON payload.');
-	vms_test_assert_not_contains('claims-login-noise', $loginRequiredResult['output'], 'Owned 401 noise should not leak into the JSON response.');
+	vms_test_assert_same(null, $loginRequiredResult['call']['flag_state_at_send'], 'The wrapper should leave legacy ownership absent before the 401 JSON send.');
+	vms_test_assert_same(null, $loginRequiredResult['flag_after'], 'The wrapper should leave legacy ownership absent after the 401 response.');
+	vms_test_assert_same($loginRequiredResult['noise'] . $loginRequiredResult['call']['json'], $loginRequiredResult['output'], 'Caller bytes should precede the 401 JSON payload.');
+	vms_test_assert_contains('claims-login-noise', $loginRequiredResult['output'], 'Owned 401 noise must remain in its caller buffer before the JSON response.');
 
 	$badNonceResult = vms_test_run_wrapper(
 		'bvmgr_ticketing_v2_ajax_send_error',
@@ -624,9 +612,9 @@ PHP,
 	);
 	vms_test_assert_same(false, $badNonceResult['call']['success'], 'The wrapper should terminate bad_nonce claims failures through wp_send_json_error().');
 	vms_test_assert_same(403, $badNonceResult['call']['status_code'], 'The wrapper should preserve the explicit 403 status.');
-	vms_test_assert_same(false, $badNonceResult['call']['flag_state_at_send'], 'The wrapper should clear ownership before the 403 JSON send.');
-	vms_test_assert_same($badNonceResult['call']['json'], $badNonceResult['output'], 'Owned output should not precede the 403 JSON payload.');
-	vms_test_assert_not_contains('claims-nonce-noise', $badNonceResult['output'], 'Owned 403 noise should not leak into the JSON response.');
+	vms_test_assert_same(null, $badNonceResult['call']['flag_state_at_send'], 'The wrapper should leave legacy ownership absent before the 403 JSON send.');
+	vms_test_assert_same($badNonceResult['noise'] . $badNonceResult['call']['json'], $badNonceResult['output'], 'Caller bytes should precede the 403 JSON payload.');
+	vms_test_assert_contains('claims-nonce-noise', $badNonceResult['output'], 'Owned 403 noise must remain in its caller buffer before the JSON response.');
 
 	$invalidRequestResult = vms_test_run_wrapper(
 		'bvmgr_ticketing_v2_ajax_send_error',
@@ -635,9 +623,9 @@ PHP,
 	);
 	vms_test_assert_same(false, $invalidRequestResult['call']['success'], 'The wrapper should terminate invalid-request claims failures through wp_send_json_error().');
 	vms_test_assert_same(400, $invalidRequestResult['call']['status_code'], 'The wrapper should preserve the explicit 400 status.');
-	vms_test_assert_same(false, $invalidRequestResult['call']['flag_state_at_send'], 'The wrapper should clear ownership before the 400 JSON send.');
-	vms_test_assert_same($invalidRequestResult['call']['json'], $invalidRequestResult['output'], 'Owned output should not precede the 400 JSON payload.');
-	vms_test_assert_not_contains('claims-invalid-noise', $invalidRequestResult['output'], 'Owned 400 noise should not leak into the JSON response.');
+	vms_test_assert_same(null, $invalidRequestResult['call']['flag_state_at_send'], 'The wrapper should leave legacy ownership absent before the 400 JSON send.');
+	vms_test_assert_same($invalidRequestResult['noise'] . $invalidRequestResult['call']['json'], $invalidRequestResult['output'], 'Caller bytes should precede the 400 JSON payload.');
+	vms_test_assert_contains('claims-invalid-noise', $invalidRequestResult['output'], 'Owned 400 noise must remain in its caller buffer before the JSON response.');
 
 	$deliberate200Payload = array(
 		'ok' => false,
@@ -654,10 +642,10 @@ PHP,
 	vms_test_assert_same(false, $deliberate200Result['call']['success'], 'The wrapper should keep deliberate claims 200 failures on the error sender.');
 	vms_test_assert_same($deliberate200Payload, $deliberate200Result['call']['data'], 'The wrapper should preserve deliberate claims 200 payloads unchanged.');
 	vms_test_assert_same(200, $deliberate200Result['call']['status_code'], 'The wrapper should preserve the deliberate HTTP 200 error status.');
-	vms_test_assert_same(false, $deliberate200Result['call']['flag_state_at_send'], 'The wrapper should clear ownership before the deliberate 200 JSON send.');
-	vms_test_assert_same(false, $deliberate200Result['flag_after'], 'The wrapper should leave ownership cleared after the deliberate 200 response.');
-	vms_test_assert_same($deliberate200Result['call']['json'], $deliberate200Result['output'], 'Owned output should not precede the deliberate 200 JSON payload.');
-	vms_test_assert_not_contains('claims-200-noise', $deliberate200Result['output'], 'Owned deliberate-200 noise should not leak into the JSON response.');
+	vms_test_assert_same(null, $deliberate200Result['call']['flag_state_at_send'], 'The wrapper should leave legacy ownership absent before the deliberate 200 JSON send.');
+	vms_test_assert_same(null, $deliberate200Result['flag_after'], 'The wrapper should leave legacy ownership absent after the deliberate 200 response.');
+	vms_test_assert_same($deliberate200Result['noise'] . $deliberate200Result['call']['json'], $deliberate200Result['output'], 'Caller bytes should precede the deliberate 200 JSON payload.');
+	vms_test_assert_contains('claims-200-noise', $deliberate200Result['output'], 'Owned deliberate-200 noise must remain in its caller buffer before the JSON response.');
 	vms_test_assert_true(!array_key_exists('_vms_ajax_noise', $deliberate200Result['call']['data']), 'Claims deliberate-200 payloads must not gain legacy diagnostic noise.');
 
 	$successPayload = array(
@@ -680,10 +668,10 @@ PHP,
 	vms_test_assert_same($successPayload, $successResult['call']['data'], 'The wrapper should preserve claims success payloads unchanged, including nested arrays.');
 	vms_test_assert_same(null, $successResult['call']['status_code'], 'The wrapper should preserve the normal default success status when no explicit status is supplied.');
 	vms_test_assert_same(1, $successResult['call']['num_args'], 'The wrapper should preserve the default success path when no explicit status or flags are supplied.');
-	vms_test_assert_same(false, $successResult['call']['flag_state_at_send'], 'The wrapper should clear ownership before the success JSON send.');
-	vms_test_assert_same(false, $successResult['flag_after'], 'The wrapper should leave ownership cleared after the success response.');
-	vms_test_assert_same($successResult['call']['json'], $successResult['output'], 'Owned output should not precede the success JSON payload.');
-	vms_test_assert_not_contains('claims-success-noise', $successResult['output'], 'Owned success noise should not leak into the JSON response.');
+	vms_test_assert_same(null, $successResult['call']['flag_state_at_send'], 'The wrapper should leave legacy ownership absent before the success JSON send.');
+	vms_test_assert_same(null, $successResult['flag_after'], 'The wrapper should leave legacy ownership absent after the success response.');
+	vms_test_assert_same($successResult['noise'] . $successResult['call']['json'], $successResult['output'], 'Caller bytes should precede the success JSON payload.');
+	vms_test_assert_contains('claims-success-noise', $successResult['output'], 'Owned success noise must remain in its caller buffer before the JSON response.');
 	vms_test_assert_true(!array_key_exists('_vms_ajax_noise', $successResult['call']['data']), 'Claims success payloads must not gain legacy diagnostic noise.');
 
 	fwrite(STDOUT, "ticketing claims AJAX output buffer ownership: PASS\n");

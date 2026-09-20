@@ -184,6 +184,7 @@ if (!function_exists('bvmgr_events_photo_register_shortcodes')) {
 if (!function_exists('bvmgr_events_photo_shortcode')) {
     function bvmgr_events_photo_shortcode(array $atts = array()): string
     {
+        if (function_exists('bvmgr_enqueue_public_style_stack')) bvmgr_enqueue_public_style_stack();
         if (!function_exists('bvmgr_get_calendar_events')) {
             return '';
         }
@@ -324,7 +325,9 @@ if (!function_exists('bvmgr_events_photo_shortcode')) {
             $more_label = __('View Full Concert Calendar', 'backstage-venue-manager');
         }
 
+        $bvmgr_buffer_level = ob_get_level();
         ob_start();
+        try {
         echo '<div class="' . esc_attr(implode(' ', $wrapper_classes)) . '">';
         foreach ($items as $event) {
             $plan_id = absint($event['event_plan_id'] ?? 0);
@@ -422,5 +425,8 @@ if (!function_exists('bvmgr_events_photo_shortcode')) {
         }
 
         return (string) ob_get_clean();
+        } finally {
+            if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+        }
     }
 }

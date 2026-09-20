@@ -343,6 +343,7 @@ eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_render_pass
 eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_render_admin_page'));
 eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_query_key'));
 eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_query_absint'));
+eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_bridge_legacy_hook'));
 eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_allowed_tabs'));
 eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_get_requested_tab'));
 eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_get_requested_vendor_id'));
@@ -352,8 +353,8 @@ eval(vms_test_extract_function($vendorGuestSource, 'bvmgr_admission_vendor_guest
 eval(vms_test_extract_function($vendorGuestSource, 'bvmgr_admission_vendor_guest_portal_screen_key'));
 eval(vms_test_extract_function($vendorGuestSource, 'bvmgr_admission_vendor_guest_render_custom_tab'));
 
-add_filter('vms_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);
-add_filter('vms_vendor_portal_allowed_tabs', static function ($tabs) {
+add_filter('bvmgr_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);
+add_filter('bvmgr_vendor_portal_allowed_tabs', static function ($tabs) {
 	if (!is_array($tabs)) {
 		return $tabs;
 	}
@@ -397,7 +398,7 @@ vms_test_assert_not_contains(
 	'Vendor Guest Portal should no longer broad-cast guest_event through a string coercion path.'
 );
 vms_test_assert_contains(
-	"add_filter('vms_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);",
+	"add_filter('bvmgr_vendor_portal_allowed_tabs', 'bvmgr_admission_vendor_guest_register_portal_tab', 20);",
 	$vendorGuestSource,
 	'Vendor Guest Portal should register its canonical slug with the portal allowlist.'
 );

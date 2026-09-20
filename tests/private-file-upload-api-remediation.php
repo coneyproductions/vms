@@ -288,15 +288,27 @@ function get_current_user_id(): int
 
 function get_option(string $option, $default = false)
 {
-	unset($option);
-	return $default;
+	return $GLOBALS['vms_test_options'][$option] ?? $default;
 }
 
 function update_option(string $option, $value, bool $autoload = true): bool
 {
-	unset($option, $value, $autoload);
+	$GLOBALS['vms_test_options'][$option] = $value;
 	return true;
 }
+
+function delete_option(string $option): bool { unset($GLOBALS['vms_test_options'][$option]); return true; }
+function untrailingslashit(string $value): string { return rtrim($value, '/'); }
+function has_filter(string $hook, $callback) { return in_array($callback, $GLOBALS['vms_test_filters'][$hook] ?? array(), true) ? 10 : false; }
+// Transport fixture only; actual HTTP denial is covered by the isolated storage integration run.
+function wp_remote_get(string $url, array $args): array {
+    $config = bvmgr_private_storage_config();
+    if (str_starts_with($url, $config['url'] . '/private/')) return array('response' => array('code' => 403), 'body' => '');
+    if (!str_starts_with($url, $config['url'] . '/probe-')) throw new RuntimeException('Unexpected transport URL');
+    return array('response' => array('code' => 200), 'body' => file_get_contents($config['container'] . '/' . basename($url)));
+}
+function wp_remote_retrieve_response_code(array $response): int { return $response['response']['code']; }
+function wp_remote_retrieve_body(array $response): string { return $response['body']; }
 
 function dbDelta(string $sql): void
 {
@@ -433,9 +445,9 @@ function vms_test_make_wpdb(string $prefix)
 
 function vms_test_reset_case(string $mode = 'success'): void
 {
-	$tempRoot = sys_get_temp_dir() . '/vms-private-upload-api-' . bin2hex(random_bytes(6));
+	$tempRoot = BVMGR_PRIVATE_STORAGE_ROOT . '/vms-private-upload-api-' . bin2hex(random_bytes(6));
 	$uploadsBaseDir = $tempRoot . '/uploads';
-	$privateRoot = BVMGR_PRIVATE_STORAGE_ROOT . '/site-1';
+	$privateRoot = $uploadsBaseDir . '/backstage-venue-manager/private/site-1';
 	vms_test_recursive_delete($privateRoot);
 	$bucketDir = $privateRoot . '/verifications';
 	$outsideDir = $tempRoot . '/outside';
@@ -465,6 +477,7 @@ function vms_test_reset_case(string $mode = 'success'): void
 		'temp_root' => $tempRoot,
 	);
 
+	$GLOBALS['vms_test_options'] = array();
 	$GLOBALS['vms_test_filters'] = array();
 	$GLOBALS['vms_test_filter_events'] = array();
 	$GLOBALS['vms_test_calls'] = array(

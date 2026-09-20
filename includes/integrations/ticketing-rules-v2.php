@@ -5661,7 +5661,7 @@ function bvmgr_ticketing_v2_wallet_pdf_existing_qr_path(string $link): string
         return '';
     }
 
-    $upload_dir = wp_upload_dir();
+    $upload_dir = wp_upload_dir(null, false);
     $base_dir = isset($upload_dir['basedir']) ? (string) $upload_dir['basedir'] : '';
     if ($base_dir === '') {
         return '';
@@ -8038,7 +8038,9 @@ function bvmgr_ticketing_v2_render_entitlements_block(int $tec_event_id, int $pl
         return '';
     }
 
+    $bvmgr_buffer_level = ob_get_level();
     ob_start();
+    try {
     ?>
 
     <?php
@@ -8214,6 +8216,9 @@ function bvmgr_ticketing_v2_render_entitlements_block(int $tec_event_id, int $pl
     <?php
 
     return (string) ob_get_clean();
+    } finally {
+        if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+    }
 }
 
 
@@ -8995,7 +9000,10 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
     $request_assignee_counts = array();
     $buyer_user_id = is_user_logged_in() ? (int) get_current_user_id() : 0;
 
+    $bvmgr_had_atomic_context = array_key_exists('bvmgr_ticketing_v2_atomic_add_in_progress', $GLOBALS);
+    $bvmgr_previous_atomic_context = $GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'] ?? null;
     $GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'] = true;
+    try {
 
     foreach ($ticket_lines as $idx => $line) {
         $pid = absint($line['product_id'] ?? 0);
@@ -9185,7 +9193,10 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
         $added_tickets += $qty;
     }
 
-    $GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'] = false;
+    } finally {
+        if ($bvmgr_had_atomic_context) $GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress'] = $bvmgr_previous_atomic_context;
+        else unset($GLOBALS['bvmgr_ticketing_v2_atomic_add_in_progress']);
+    }
 
     if (empty($errors) && $event_plan_id > 0) {
         $ratio_violations = bvmgr_ticketing_v2_collect_ticket_ratio_violations((int) $event_plan_id);

@@ -1,14 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
 
-if (defined('DOING_AJAX') && DOING_AJAX) {
-    if (empty($GLOBALS['bvmgr_ajax_ob_started'])) {
-        $GLOBALS['bvmgr_ajax_ob_started'] = true;
-        // Buffer any unexpected output so AJAX JSON stays valid.
-        ob_start();
-    }
-}
-
 require_once __DIR__ . '/../integrations/tec-sync.php';
 require_once __DIR__ . '/../integrations/attendance-woo.php';
 require_once __DIR__ . '/../integrations/vendor-ics-sync.php';

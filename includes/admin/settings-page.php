@@ -568,7 +568,6 @@ function bvmgr_handle_ticketing_stock_csv(): void
 
 	$rows = is_array($rep['results'] ?? null) ? (array) $rep['results'] : array();
 
-	@set_time_limit(0); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Administrator-only ticketing stock CSV export streams a bounded transient report and WordPress does not provide a native execution-limit alternative.
 	header('Content-Type: text/csv; charset=utf-8');
 	header('Content-Disposition: attachment; filename=vms-ticketing-stock-' . $mode . '-report-' . gmdate('Ymd-His') . '.csv');
 
@@ -1777,9 +1776,14 @@ function bvmgr_render_settings_page()
 
   echo '<div class="wrap"><h1>' . esc_html__('Backstage Venue Manager Settings', 'backstage-venue-manager') . '</h1>';
   bvmgr_render_settings_page_notices();
+  $bvmgr_buffer_level = ob_get_level();
   ob_start();
+  try {
   bvmgr_render_settings_page_content(true);
   $content_html = (string) ob_get_clean();
+  } finally {
+      if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+  }
   $content_html = str_replace(
     bvmgr_settings_page_ticketing_stock_notice_placeholder(),
     bvmgr_get_settings_page_ticketing_stock_notice_markup(),
@@ -2627,9 +2631,14 @@ function bvmgr_render_settings_page_notice_bar(): void
 
 function bvmgr_get_settings_page_ticketing_stock_notice_markup(): string
 {
+  $bvmgr_buffer_level = ob_get_level();
   ob_start();
+  try {
   bvmgr_render_settings_page_ticketing_stock_notices(bvmgr_get_settings_page_ticketing_stock_notice_state());
   return (string) ob_get_clean();
+  } finally {
+      if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+  }
 }
 
 function bvmgr_render_settings_page_ticketing_stock_notices(array $ticketing_stock_notice_state): void

@@ -245,13 +245,8 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		ob_start();
 		$collectorLevel = ob_get_level();
 
-		if ($noise !== '') {
-			$GLOBALS['bvmgr_ajax_ob_started'] = true;
-			ob_start();
-			echo $noise;
-		} else {
-			$GLOBALS['bvmgr_ajax_ob_started'] = false;
-		}
+		echo $noise;
+		unset($GLOBALS['bvmgr_ajax_ob_started']);
 
 		try {
 			call_user_func_array($callable, $args);
@@ -260,6 +255,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 			unset($exception);
 		}
 
+		vms_test_assert_same($collectorLevel, ob_get_level(), 'Responder must preserve caller buffer depth.');
 		$output = (string) ob_get_contents();
 		$flagAfter = $GLOBALS['bvmgr_ajax_ob_started'] ?? null;
 		$call = $GLOBALS['vms_test_wp_json_calls'][0] ?? null;
@@ -268,6 +264,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		return array(
 			'call' => $call,
 			'output' => $output,
+			'noise' => $noise,
 			'collector_level' => $collectorLevel,
 			'start_level' => $startLevel,
 			'flag_after' => $flagAfter,
@@ -286,67 +283,15 @@ try {
 	$ticketingSource = vms_test_read_file($ticketingPath);
 	$v2Source = vms_test_read_file($v2Path);
 
-	$discardBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_discard_owned_buffer');
+	$discardBody = '';
+	vms_test_assert_not_contains('function bvmgr_ticketing_ajax_discard_owned_buffer', $ticketingSource, 'Request-global buffer cleanup must be removed.');
 	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_success');
 	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_error');
 
 	eval($discardBody . "\n" . $v2SuccessWrapperBody . "\n" . $v2ErrorWrapperBody);
 
-	vms_test_assert_code_contains('if (empty($GLOBALS[\'bvmgr_ajax_ob_started\'])) { return; }', $discardBody, 'The cleanup-only helper should return early when the ownership flag is false.');
-	vms_test_assert_code_contains('if (ob_get_level() > 0) { @ob_end_clean(); }', $discardBody, 'The cleanup-only helper should only close one current buffer when a buffer exists.');
-	vms_test_assert_code_contains('$GLOBALS[\'bvmgr_ajax_ob_started\'] = false;', $discardBody, 'The cleanup-only helper should always clear the ownership flag after a marked cleanup attempt.');
-	vms_test_assert_code_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still call the cleanup-only helper.');
-	vms_test_assert_code_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still call the cleanup-only helper.');
 	vms_test_assert_code_contains('wp_send_json_success($data);', $v2SuccessWrapperBody, 'The V2 success wrapper should preserve the default WordPress success path when status and flags are omitted.');
 	vms_test_assert_code_contains('wp_send_json_error($data);', $v2ErrorWrapperBody, 'The V2 error wrapper should preserve the default WordPress error path when status and flags are omitted.');
-
-	$payloadReference = array(
-		'nested' => array(
-			'label' => 'alpha',
-			'enabled' => true,
-			'count' => 3,
-			'note' => null,
-		),
-	);
-	$payloadBefore = $payloadReference;
-	$startLevel = ob_get_level();
-	try {
-		ob_start();
-		$outerLevel = ob_get_level();
-		echo 'outer-buffer';
-		$GLOBALS['bvmgr_ajax_ob_started'] = false;
-		bvmgr_ticketing_ajax_discard_owned_buffer();
-		vms_test_assert_same($outerLevel, ob_get_level(), 'The cleanup-only helper should not close unrelated buffers when the ownership flag is false.');
-		vms_test_assert_same('outer-buffer', (string) ob_get_contents(), 'The cleanup-only helper should not discard unrelated buffered output when the ownership flag is false.');
-		vms_test_assert_same(false, $GLOBALS['bvmgr_ajax_ob_started'], 'The cleanup-only helper should leave the ownership flag false when no owned buffer is marked.');
-		vms_test_assert_same($payloadBefore, $payloadReference, 'The cleanup-only helper should not mutate arbitrary response payload data.');
-	} finally {
-		vms_test_cleanup_output_buffers($startLevel);
-		unset($GLOBALS['bvmgr_ajax_ob_started']);
-	}
-
-	$startLevel = ob_get_level();
-	try {
-		ob_start();
-		$collectorLevel = ob_get_level();
-		$GLOBALS['bvmgr_ajax_ob_started'] = true;
-		ob_start();
-		echo 'owned-noise';
-		bvmgr_ticketing_ajax_discard_owned_buffer();
-		vms_test_assert_same($collectorLevel, ob_get_level(), 'The cleanup-only helper should restore the expected buffer level after closing an owned buffer.');
-		vms_test_assert_same('', (string) ob_get_contents(), 'The cleanup-only helper should discard owned buffered noise instead of emitting it.');
-		vms_test_assert_same(false, $GLOBALS['bvmgr_ajax_ob_started'], 'The cleanup-only helper should clear the ownership flag after closing an owned buffer.');
-	} finally {
-		vms_test_cleanup_output_buffers($startLevel);
-		unset($GLOBALS['bvmgr_ajax_ob_started']);
-	}
-
-	$GLOBALS['bvmgr_ajax_ob_started'] = true;
-	$startLevel = ob_get_level();
-	bvmgr_ticketing_ajax_discard_owned_buffer();
-	vms_test_assert_same($startLevel, ob_get_level(), 'The cleanup-only helper should stay safe when the ownership flag is true but no current buffer exists.');
-	vms_test_assert_same(false, $GLOBALS['bvmgr_ajax_ob_started'], 'The cleanup-only helper should clear the ownership flag even when no current buffer exists.');
-	unset($GLOBALS['bvmgr_ajax_ob_started']);
 
 	$successPayload = array(
 		'ok' => true,
@@ -361,10 +306,10 @@ try {
 	vms_test_assert_same($successPayload, $successResult['call']['data'], 'The V2 success wrapper should forward associative payloads unchanged.');
 	vms_test_assert_same(201, $successResult['call']['status_code'], 'The V2 success wrapper should preserve explicit HTTP statuses.');
 	vms_test_assert_same(2, $successResult['call']['num_args'], 'The V2 success wrapper should call WordPress with the explicit status path when a status is supplied.');
-	vms_test_assert_same(false, $successResult['call']['flag_state_at_send'], 'The V2 success wrapper should clear the ownership flag before JSON termination.');
-	vms_test_assert_same(false, $successResult['flag_after'], 'The V2 success wrapper should leave the ownership flag false after cleanup.');
-	vms_test_assert_same($successResult['call']['json'], $successResult['output'], 'Owned output should not precede the success JSON payload.');
-	vms_test_assert_not_contains('success-noise', $successResult['output'], 'Owned buffered noise should not leak before the success JSON payload.');
+	vms_test_assert_same(null, $successResult['call']['flag_state_at_send'], 'The V2 success wrapper should leave the ownership flag absent before JSON termination.');
+	vms_test_assert_same(null, $successResult['flag_after'], 'The V2 success wrapper should leave the ownership flag absent after the response.');
+	vms_test_assert_same($successResult['noise'] . $successResult['call']['json'], $successResult['output'], 'Caller bytes should precede the success JSON payload.');
+	vms_test_assert_contains('success-noise', $successResult['output'], 'Owned buffered noise must remain in its caller buffer before the success JSON payload.');
 	vms_test_assert_true(!array_key_exists('_vms_ajax_noise', $successResult['call']['data']), 'The V2 success wrapper must not attach legacy diagnostic noise.');
 
 	$errorPayload = array(
@@ -378,9 +323,9 @@ try {
 	vms_test_assert_same($errorPayload, $errorResult['call']['data'], 'The V2 error wrapper should forward nested error payloads unchanged.');
 	vms_test_assert_same(422, $errorResult['call']['status_code'], 'The V2 error wrapper should preserve explicit HTTP statuses.');
 	vms_test_assert_same(2, $errorResult['call']['num_args'], 'The V2 error wrapper should call WordPress with the explicit status path when a status is supplied.');
-	vms_test_assert_same(false, $errorResult['call']['flag_state_at_send'], 'The V2 error wrapper should clear the ownership flag before JSON termination.');
-	vms_test_assert_same($errorResult['call']['json'], $errorResult['output'], 'Owned output should not precede the error JSON payload.');
-	vms_test_assert_not_contains('error-noise', $errorResult['output'], 'Owned buffered noise should not leak before the error JSON payload.');
+	vms_test_assert_same(null, $errorResult['call']['flag_state_at_send'], 'The V2 error wrapper should leave the ownership flag absent before JSON termination.');
+	vms_test_assert_same($errorResult['noise'] . $errorResult['call']['json'], $errorResult['output'], 'Caller bytes should precede the error JSON payload.');
+	vms_test_assert_contains('error-noise', $errorResult['output'], 'Owned buffered noise must remain in its caller buffer before the error JSON payload.');
 	vms_test_assert_true(!array_key_exists('_vms_ajax_noise', $errorResult['call']['data']), 'The V2 error wrapper must not attach legacy diagnostic noise.');
 
 	$successDefaultResult = vms_test_run_wrapper('bvmgr_ticketing_v2_ajax_send_success', array(null));

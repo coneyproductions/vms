@@ -267,13 +267,8 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		ob_start();
 		$collectorLevel = ob_get_level();
 
-		if ($noise !== '') {
-			$GLOBALS['bvmgr_ajax_ob_started'] = true;
-			ob_start();
-			echo $noise;
-		} else {
-			$GLOBALS['bvmgr_ajax_ob_started'] = false;
-		}
+		echo $noise;
+		unset($GLOBALS['bvmgr_ajax_ob_started']);
 
 		try {
 			call_user_func_array($callable, $args);
@@ -282,6 +277,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 			unset($exception);
 		}
 
+		vms_test_assert_same($collectorLevel, ob_get_level(), 'Responder must preserve caller buffer depth.');
 		$output = (string) ob_get_contents();
 		$flagAfter = $GLOBALS['bvmgr_ajax_ob_started'] ?? null;
 		$call = $GLOBALS['vms_test_wp_json_calls'][0] ?? null;
@@ -290,6 +286,7 @@ function vms_test_run_wrapper(string $callable, array $args, string $noise = '')
 		return array(
 			'call' => $call,
 			'output' => $output,
+			'noise' => $noise,
 			'collector_level' => $collectorLevel,
 			'start_level' => $startLevel,
 			'flag_after' => $flagAfter,
@@ -308,37 +305,36 @@ try {
 	$ticketingSource = vms_test_read_file($ticketingPath);
 	$phaseBSource = vms_test_read_file($phaseBPath);
 
-	$discardBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_ajax_discard_owned_buffer');
+	$discardBody = '';
+	vms_test_assert_not_contains('function bvmgr_ticketing_ajax_discard_owned_buffer', $ticketingSource, 'Request-global buffer cleanup must be removed.');
 	$v2SuccessWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_success');
 	$v2ErrorWrapperBody = vms_test_extract_function($ticketingSource, 'bvmgr_ticketing_v2_ajax_send_error');
 	$fastHelperBody = vms_test_extract_function($phaseBSource, 'bvmgr_ticketing_v2_ajax_send_json_success_fast');
 
 	eval($discardBody . "\n" . $v2SuccessWrapperBody . "\n" . $v2ErrorWrapperBody);
 
-	vms_test_assert_code_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2SuccessWrapperBody, 'The V2 success wrapper should still invoke the cleanup-only helper.');
-	vms_test_assert_code_contains('bvmgr_ticketing_ajax_discard_owned_buffer();', $v2ErrorWrapperBody, 'The V2 error wrapper should still invoke the cleanup-only helper.');
 
 	$successResult = vms_test_run_wrapper('bvmgr_ticketing_v2_ajax_send_success', array(array('ok' => true, 'scope' => 'phase-b'), 201), 'phase-b-success-noise');
 	vms_test_assert_same(true, $successResult['call']['success'], 'The V2 success wrapper should still terminate through the success sender.');
 	vms_test_assert_same(array('ok' => true, 'scope' => 'phase-b'), $successResult['call']['data'], 'The V2 success wrapper should forward Phase B payloads unchanged.');
 	vms_test_assert_same(201, $successResult['call']['status_code'], 'The V2 success wrapper should preserve explicit HTTP statuses.');
-	vms_test_assert_same(false, $successResult['call']['flag_state_at_send'], 'The V2 success wrapper should clear AJAX ownership before JSON termination.');
-	vms_test_assert_same(false, $successResult['flag_after'], 'The V2 success wrapper should leave ownership cleared after cleanup.');
-	vms_test_assert_same($successResult['call']['json'], $successResult['output'], 'The V2 success wrapper should discard owned buffer noise before emitting JSON.');
-	vms_test_assert_not_contains('phase-b-success-noise', $successResult['output'], 'Owned Phase B success noise should not leak into the JSON response.');
+	vms_test_assert_same(null, $successResult['call']['flag_state_at_send'], 'The V2 success wrapper should leave legacy ownership absent before JSON termination.');
+	vms_test_assert_same(null, $successResult['flag_after'], 'The V2 success wrapper should leave legacy ownership absent after cleanup.');
+	vms_test_assert_same($successResult['noise'] . $successResult['call']['json'], $successResult['output'], 'The V2 success wrapper should preserve caller bytes before emitting JSON.');
+	vms_test_assert_contains('phase-b-success-noise', $successResult['output'], 'Owned Phase B success noise must remain in its caller buffer before the JSON response.');
 
 	$errorResult = vms_test_run_wrapper('bvmgr_ticketing_v2_ajax_send_error', array(array('message' => 'bad_nonce'), 403), 'phase-b-error-noise');
 	vms_test_assert_same(false, $errorResult['call']['success'], 'The V2 error wrapper should still terminate through the error sender.');
 	vms_test_assert_same(array('message' => 'bad_nonce'), $errorResult['call']['data'], 'The V2 error wrapper should forward Phase B error payloads unchanged.');
 	vms_test_assert_same(403, $errorResult['call']['status_code'], 'The V2 error wrapper should preserve explicit HTTP statuses.');
-	vms_test_assert_same(false, $errorResult['call']['flag_state_at_send'], 'The V2 error wrapper should clear AJAX ownership before JSON termination.');
-	vms_test_assert_same(false, $errorResult['flag_after'], 'The V2 error wrapper should leave ownership cleared after cleanup.');
-	vms_test_assert_same($errorResult['call']['json'], $errorResult['output'], 'The V2 error wrapper should discard owned buffer noise before emitting JSON.');
-	vms_test_assert_not_contains('phase-b-error-noise', $errorResult['output'], 'Owned Phase B error noise should not leak into the JSON response.');
+	vms_test_assert_same(null, $errorResult['call']['flag_state_at_send'], 'The V2 error wrapper should leave legacy ownership absent before JSON termination.');
+	vms_test_assert_same(null, $errorResult['flag_after'], 'The V2 error wrapper should leave legacy ownership absent after cleanup.');
+	vms_test_assert_same($errorResult['noise'] . $errorResult['call']['json'], $errorResult['output'], 'The V2 error wrapper should preserve caller bytes before emitting JSON.');
+	vms_test_assert_contains('phase-b-error-noise', $errorResult['output'], 'Owned Phase B error noise must remain in its caller buffer before the JSON response.');
 
 	vms_test_assert_code_contains('$operation = sanitize_key($operation);', $fastHelperBody, 'The fast success helper should still sanitize the operation name.');
 	vms_test_assert_code_contains("header('X-VMS-Fast-Ajax: ' . \$operation);", $fastHelperBody, 'The fast success helper should still emit the X-VMS-Fast-Ajax header.');
-	vms_test_assert_code_contains('while (ob_get_level() > 0) { @ob_end_clean(); }', $fastHelperBody, 'The fast success helper should still drain active buffers directly.');
+	vms_test_assert_not_contains('ob_end_clean', $fastHelperBody, 'Fast response must preserve caller buffers.');
 	vms_test_assert_code_contains('echo $payload;', $fastHelperBody, 'The fast success helper should still echo the pre-encoded payload.');
 	vms_test_assert_code_contains('exit;', $fastHelperBody, 'The fast success helper should still terminate immediately after the fast response path.');
 
