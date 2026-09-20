@@ -6,7 +6,6 @@ require_once __DIR__ . '/crypto.php';
 require_once __DIR__ . '/installer.php';
 
 require_once __DIR__ . '/providers/interface-provider.php';
-require_once __DIR__ . '/providers/class-provider-mock.php';
 require_once __DIR__ . '/providers/class-provider-webhook.php';
 require_once __DIR__ . '/providers/class-provider-meta.php';
 require_once __DIR__ . '/providers/class-provider-linkedin.php';

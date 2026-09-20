@@ -48,3 +48,6 @@ node_modules/
 **/*.cache
 *.map
 **/*.map
+
+# Development-only social provider; no public loader, registry, or seed references.
+includes/social-share/providers/class-provider-mock.php

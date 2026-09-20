@@ -270,12 +270,6 @@ if (!function_exists('bvmgr_social_seed_default_templates')) {
 				'body' => "{event_title} | {event_date} | {venue_name} {venue_state}\n{ticket_url} {hashtags}",
 				'settings_json' => wp_json_encode(array('hashtags' => '#live #events', 'character_limit' => 280)),
 			),
-			array(
-				'platform' => 'mock',
-				'name' => 'Mock Provider Default',
-				'body' => "{event_title}\n{event_date} {start_time}-{end_time}\n{venue_name}\n{ticket_url}",
-				'settings_json' => wp_json_encode(array('hashtags' => '', 'character_limit' => 10000)),
-			),
 		);
 
 		foreach ($seed as $index => $row) {

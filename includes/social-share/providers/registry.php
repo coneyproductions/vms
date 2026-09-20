@@ -27,7 +27,6 @@ if (!function_exists('bvmgr_social_get_providers')) {
 		}
 
 		$defaults = array(
-			'mock' => new BVMGR_Social_Provider_Mock(),
 			'webhook' => new BVMGR_Social_Provider_Webhook(),
 			'meta' => new BVMGR_Social_Provider_Meta(),
 			'linkedin' => new BVMGR_Social_Provider_LinkedIn(),

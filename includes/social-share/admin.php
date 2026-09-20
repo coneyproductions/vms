@@ -61,7 +61,7 @@ if (!function_exists('bvmgr_social_supported_platforms')) {
 	 */
 	function bvmgr_social_supported_platforms(): array
 	{
-		return array('facebook', 'instagram', 'linkedin', 'x', 'mock', 'webhook', 'meta');
+		return array('facebook', 'instagram', 'linkedin', 'x', 'webhook', 'meta');
 	}
 }
 

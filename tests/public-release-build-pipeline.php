@@ -808,7 +808,7 @@ $tests['current repository public metadata and exclusion boundary are read-only'
     vms_public_release_test_assert(str_contains($readme, 'Stable tag: 1.2.0') && substr_count($readme, '= 1.2.0 =') >= 2, 'Readme must retain stable tag, changelog and upgrade notice.');
     $patterns = (new ReflectionMethod(VMS_Public_Release_Tooling::class, 'loadExcludeManifest'))->invoke(null, $metadata['exclude_manifest']);
     $matcher = new ReflectionMethod(VMS_Public_Release_Tooling::class, 'firstMatchingPattern');
-    foreach (array('AGENTS.md', 'docs/', 'tests/', 'scripts/', 'includes/safety/') as $path) {
+    foreach (array('AGENTS.md', 'docs/', 'tests/', 'scripts/', 'includes/safety/', 'includes/social-share/providers/class-provider-mock.php') as $path) {
         vms_public_release_test_assert($matcher->invoke(null, $path, $patterns) !== null, 'Development-only path must stay outside the public boundary: ' . $path);
     }
     foreach (array('backstage-venue-manager.php', 'vendor-management-system.php', 'includes/core/event-communications.php', 'includes/admin/event-communications.php', 'readme.txt', 'vms-build.txt') as $path) {
