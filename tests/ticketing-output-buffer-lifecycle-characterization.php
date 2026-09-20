@@ -411,13 +411,18 @@ try {
 	$appendBody = vms_test_extract_function($v2Source, 'bvmgr_ticketing_v2_append_entitlements_to_tec_event');
 
 	vms_test_assert_contains("\$template->get('post_id', 0)", $footerMountBody, 'The native footer placement should source the authoritative event ID from the template context.');
-	vms_test_assert_contains('bvmgr_ticketing_v2_render_entitlements_block($tec_event_id, $plan_id)', $footerMountBody, 'The native footer placement should continue to reuse the shared entitlements renderer.');
+	vms_test_assert_contains('bvmgr_ticketing_v2_render_purchase_region($tec_event_id, $plan_id)', $footerMountBody, 'The native footer placement should use the shared purchase-composition renderer.');
 	vms_test_assert_contains('id=\"vms-addon-mount\"', $footerMountBody, 'The native footer placement should prepend the dedicated add-on mount host.');
 	vms_test_assert_contains('bvmgr_ticketing_v2_native_footer_mount_placed($tec_event_id)', $footerMountBody, 'The native footer placement should guard against duplicate insertion within the same request.');
 	vms_test_assert_not_contains('ob_start(', $footerMountBody, 'The native footer placement should not open any output buffer.');
 
 	vms_test_assert_contains('bvmgr_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)', $appendBody, 'The automatic append fallback should suppress duplicate output after successful native footer placement.');
 	vms_test_assert_not_contains('ob_start(', $appendBody, 'The automatic append fallback should not open any output buffer.');
+
+	$purchaseRegionBody = vms_test_extract_function($v2Source, 'bvmgr_ticketing_v2_render_purchase_region');
+	vms_test_assert_contains("do_action('bvmgr_ticketing_purchase_extensions', \$tec_event_id, \$plan_id)", $purchaseRegionBody, 'The purchase-composition renderer should expose the generic extension hook.');
+	vms_test_assert_contains('while (ob_get_level() > $extension_buffer_level)', $purchaseRegionBody, 'The purchase-composition renderer should clean extension buffers back to its entry depth.');
+	vms_test_assert_contains('while (ob_get_level() > $region_buffer_level)', $purchaseRegionBody, 'The purchase-composition renderer should clean its markup buffer back to its entry depth.');
 
 	vms_test_assert_contains('bvmgr_ticketing_v2_event_id_from_ticket_query_args($args)', $disabledFilterBody, 'Disabled-ticket suppression should resolve the authoritative event ID from the native query-filter contract.');
 	vms_test_assert_contains('bvmgr_ticketing_v2_disabled_ticket_products_for_plan($plan_id)', $disabledFilterBody, 'Disabled-ticket suppression should continue to reuse the existing disabled-product helper.');

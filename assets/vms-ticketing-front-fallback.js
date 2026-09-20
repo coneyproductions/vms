@@ -25,6 +25,31 @@
     return;
   }
 
+  if (window.BVMGR_TICKETING_FALLBACK_INITIALIZED) {
+    return;
+  }
+  window.BVMGR_TICKETING_FALLBACK_INITIALIZED = true;
+
+  function collectPurchaseExtensions(state, validate) {
+    var registry = window.BVMGR_TICKETING_PURCHASE_EXTENSIONS;
+    var handlers = registry && registry.handlers ? registry.handlers : {};
+    var result = { ok: true, message: '', focusEl: null, payloads: {}, quantity: 0 };
+    Object.keys(handlers).forEach(function (extensionId) {
+      if (!result.ok || !handlers[extensionId] || typeof handlers[extensionId].collect !== 'function') return;
+      var collected = handlers[extensionId].collect({ state: state, validate: !!validate }) || {};
+      if (!collected.active) return;
+      if (collected.ok === false) {
+        result.ok = false;
+        result.message = String(collected.message || 'Please review the selected purchase options.');
+        result.focusEl = collected.focusEl || null;
+        return;
+      }
+      result.payloads[extensionId] = collected.payload || {};
+      result.quantity += Math.max(0, Number(collected.quantity || 0));
+    });
+    return result;
+  }
+
   var SELECTORS = {
     form: '#tribe-tickets__tickets-form, .tribe-tickets__tickets-wrapper form, .tribe-tickets__tickets-form',
     addonSource: '#vms-reserved-addons.vms-entitlements-block',
@@ -51,6 +76,13 @@
 
   function qa(selector, root) {
     return Array.prototype.slice.call((root || document).querySelectorAll(selector));
+  }
+
+  function ticketSubmitButtons(form) {
+    return qa(SELECTORS.submit, form).filter(function (button) {
+      var owner = button && button.closest ? button.closest('form') : null;
+      return !owner || owner === form;
+    });
   }
 
   function toInt(value, fallback) {
@@ -335,6 +367,9 @@
   }
 
   function refresh(state) {
+    if (activeBundleOwnsPage() || !state.form.isConnected) {
+      return;
+    }
     hideDisabledTicketRows(state);
     state.addons.forEach(function (addon) {
       var limit = computeAddonLimit(state, addon);
@@ -476,13 +511,22 @@
   }
 
   function submitAtomically(state) {
+    if (activeBundleOwnsPage()) {
+      return;
+    }
     if (state.isSubmitting) {
       return;
     }
 
     hideDisabledTicketRows(state);
     var addonLines = collectAddonLines(state);
-    if (!addonLines.length) {
+    var extensionResult = collectPurchaseExtensions(state, true);
+    if (!extensionResult.ok) {
+      setGlobalMessage(state, extensionResult.message, 'error');
+      if (extensionResult.focusEl && typeof extensionResult.focusEl.focus === 'function') extensionResult.focusEl.focus();
+      return;
+    }
+    if (!addonLines.length && extensionResult.quantity <= 0) {
       return;
     }
 
@@ -495,7 +539,7 @@
     setGlobalMessage(state, '', '');
     refresh(state);
 
-    var submitButtons = qa(SELECTORS.submit, state.form);
+    var submitButtons = ticketSubmitButtons(state.form);
     submitButtons.forEach(function (button) {
       setDisabled(button, true);
     });
@@ -511,7 +555,8 @@
         tecEventId: state.tecEventId,
         eventPlanId: state.eventPlanId,
         ticket_lines: readTicketLines(state),
-        addon_lines: addonLines
+        addon_lines: addonLines,
+        extensions: extensionResult.payloads
       })
     }).then(function (response) {
       return response.json().catch(function () {
@@ -520,6 +565,16 @@
     }).then(function (payload) {
       if (!payload || !payload.success || !payload.data || !payload.data.ok) {
         throw new Error((payload && payload.data && (payload.data.message || (payload.data.notice_messages && payload.data.notice_messages[0]))) || 'Could not add items to cart.');
+      }
+      state.isSubmitting = false;
+      submitButtons.forEach(function (button) {
+        setDisabled(button, false);
+      });
+      refresh(state);
+      setGlobalMessage(state, 'Your tickets are in your cart.', 'success');
+      var offerController = window.BVMGR_TICKETING_POST_CART_OFFER;
+      if (offerController && typeof offerController.handle === 'function' && offerController.handle(payload, state)) {
+        return;
       }
       setGlobalMessage(state, 'Added to cart. Redirecting…', 'success');
       window.location.href = payload.data.cart_url || cfg.cartUrl || '/cart/';
@@ -534,6 +589,9 @@
   }
 
   function boot() {
+    if (activeBundleOwnsPage()) {
+      return true;
+    }
     var form = resolveForm();
     var sourceBlock = resolveSourceBlock(form);
     if (!form || !sourceBlock) {
@@ -544,7 +602,7 @@
     }
     var forceLegacyUpgrade = hasLegacyAddLinks(sourceBlock);
     if (!forceLegacyUpgrade && alreadyHandled(sourceBlock)) {
-      return false;
+      return true;
     }
     if (forceLegacyUpgrade) {
       sourceBlock.removeAttribute('data-vms-fallback-active');
@@ -568,6 +626,7 @@
       isSubmitting: false,
       statusBox: null
     };
+    window.BVMGR_TICKETING_FALLBACK_STATE = state;
 
     hideDisabledTicketRows(state);
 
@@ -594,7 +653,13 @@
       }
     }, true);
     form.addEventListener('submit', function (event) {
-      if (!collectAddonLines(state).length) {
+      if (event && event.target !== form) {
+        return;
+      }
+      if (activeBundleOwnsPage()) {
+        return;
+      }
+      if (!collectAddonLines(state).length && collectPurchaseExtensions(state, false).quantity <= 0) {
         return;
       }
       event.preventDefault();
@@ -605,7 +670,11 @@
     return true;
   }
 
+  var bootTimer = 0;
+
   function scheduleBoot(attempt) {
+    window.clearTimeout(bootTimer);
+    bootTimer = 0;
     var tries = typeof attempt === 'number' ? attempt : 0;
     if (boot()) {
       return;
@@ -613,7 +682,7 @@
     if (tries >= 8) {
       return;
     }
-    window.setTimeout(function () {
+    bootTimer = window.setTimeout(function () {
       scheduleBoot(tries + 1);
     }, tries < 3 ? 150 : 400);
   }
@@ -630,8 +699,24 @@
     window.setTimeout(function () { scheduleBoot(0); }, 0);
   });
 
-  var observer = new MutationObserver(function () {
-    scheduleBoot(0);
+  document.addEventListener('bvmgr:purchase-extension-change', function () {
+    var state = window.BVMGR_TICKETING_FALLBACK_STATE;
+    if (state) {
+      refresh(state);
+    }
   });
-  observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+
+  if (typeof MutationObserver !== 'undefined') {
+    var observer = new MutationObserver(function () {
+      if (activeBundleOwnsPage()) {
+        window.clearTimeout(bootTimer);
+        observer.disconnect();
+        return;
+      }
+      if (!bootTimer) {
+        bootTimer = window.setTimeout(function () { scheduleBoot(0); }, 0);
+      }
+    });
+    observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+  }
 })();

@@ -223,7 +223,7 @@ function bvmgr_ticketing_v2_find_plan_id_by_tec_event_id(int $eventId): int
 	return (int) ($GLOBALS['vms_test_context']['plan_ids'][$eventId] ?? 0);
 }
 
-function bvmgr_ticketing_v2_render_entitlements_block(int $tecEventId, int $planId): string
+function bvmgr_ticketing_v2_render_purchase_region(int $tecEventId, int $planId): string
 {
 	$GLOBALS['vms_test_context']['render_calls'][] = array($tecEventId, $planId);
 	return (string) ($GLOBALS['vms_test_context']['render_output'][$tecEventId] ?? '');
@@ -454,7 +454,7 @@ try {
 	vms_test_assert_same($footerHtml, substr($result, strlen($expectedMount)), 'Valid footer placement should preserve the original footer bytes unchanged after the inserted mount.');
 	vms_test_assert_same('', $output, 'Valid footer placement should not emit direct output.');
 	vms_test_assert_same($beforeLevel, $afterLevel, 'Valid footer placement should not open any output buffer.');
-	vms_test_assert_same(array(array(120, 520)), $GLOBALS['vms_test_context']['render_calls'], 'Valid footer placement should render entitlements for the template-derived event and resolved plan.');
+	vms_test_assert_same(array(array(120, 520)), $GLOBALS['vms_test_context']['render_calls'], 'Valid footer placement should render the purchase region for the template-derived event and resolved plan.');
 
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {

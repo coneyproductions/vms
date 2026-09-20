@@ -3347,6 +3347,30 @@ function bvmgr_ticketing_v2_validate_atomic_addon_line_payload($line): bool
     return true;
 }
 
+/**
+ * Validate the generic purchase-extension envelope without knowing an
+ * extension's private schema. Registered extensions remain responsible for
+ * validating their own payload before any cart mutation occurs.
+ */
+function bvmgr_ticketing_v2_validate_purchase_extensions_payload($extensions): bool
+{
+    if (!is_array($extensions) || (!empty($extensions) && bvmgr_array_is_list_compat($extensions)) || count($extensions) > 20) {
+        return false;
+    }
+
+    foreach ($extensions as $extension_id => $payload) {
+        if (!is_string($extension_id) || sanitize_key($extension_id) !== $extension_id || !is_array($payload)) {
+            return false;
+        }
+        $encoded = wp_json_encode($payload);
+        if (!is_string($encoded) || strlen($encoded) > 32768) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function bvmgr_ticketing_v2_validate_atomic_add_payload(array $data): bool
 {
     if (!bvmgr_ticketing_v2_payload_is_object_like_array($data)) {
@@ -3377,6 +3401,11 @@ function bvmgr_ticketing_v2_validate_atomic_add_payload(array $data): bool
         if (!bvmgr_ticketing_v2_validate_atomic_addon_line_payload($line)) {
             return false;
         }
+    }
+
+    $extensions = $data['extensions'] ?? array();
+    if (!bvmgr_ticketing_v2_validate_purchase_extensions_payload($extensions)) {
+        return false;
     }
 
     return true;
@@ -6520,11 +6549,24 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
 
     $build_stamp = $front_script_version !== '' ? $front_script_version : gmdate('YmdHis');
 
+    $post_cart_offer_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-post-cart-offer.js';
+    $post_cart_offer_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
+    if (is_readable($post_cart_offer_script_path)) {
+        $post_cart_offer_script_version = (string) filemtime($post_cart_offer_script_path);
+    }
+    wp_enqueue_script(
+        'bvmgr-ticketing-post-cart-offer',
+        plugins_url('assets/vms-ticketing-post-cart-offer.js', BVMGR_PLUGIN_FILE),
+        array(),
+        $post_cart_offer_script_version,
+        true
+    );
+
     // Bundle loads on event/cart/checkout pages for ticketing UI state + cart consistency guards.
     wp_enqueue_script(
         'bvmgr-ticketing-front',
         plugins_url('assets/vms-ticketing-front.js', BVMGR_PLUGIN_FILE),
-        array(),
+        array('bvmgr-ticketing-post-cart-offer'),
         $front_script_version,
         true
     );
@@ -6532,7 +6574,7 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
     wp_enqueue_script(
         'bvmgr-ticketing-front-fallback',
         plugins_url('assets/vms-ticketing-front-fallback.js', BVMGR_PLUGIN_FILE),
-        array(),
+        array('bvmgr-ticketing-post-cart-offer'),
         $fallback_script_version,
         true
     );
@@ -7042,6 +7084,36 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         ? (string) bvmgr_ticketing_v2_resolve_qualifying_ticket_label((int) $plan_id_for_event)
         : __('qualifying tickets', 'backstage-venue-manager');
 
+    $post_cart_offer = array();
+    if ($is_event && $tec_event_id > 0 && $plan_id_for_event > 0) {
+        /**
+         * Filter the optional offer displayed only after a successful atomic cart add.
+         *
+         * Extensions own availability and destination decisions. Returning an empty
+         * array preserves the normal cart redirect.
+         *
+         * @param array $offer        Offer configuration.
+         * @param int   $tec_event_id TEC event post ID.
+         * @param int   $plan_id      Event Plan post ID.
+         */
+        $candidate_offer = apply_filters('bvmgr_ticketing_post_cart_offer', array(), (int) $tec_event_id, (int) $plan_id_for_event);
+        if (is_array($candidate_offer) && !empty($candidate_offer['enabled'])) {
+            $primary_url = esc_url_raw((string) ($candidate_offer['primaryUrl'] ?? ''));
+            if ($primary_url !== '') {
+                $post_cart_offer = array(
+                    'enabled'        => 1,
+                    'id'             => sanitize_key((string) ($candidate_offer['id'] ?? 'offer')),
+                    'title'          => sanitize_text_field((string) ($candidate_offer['title'] ?? '')),
+                    'message'        => sanitize_text_field((string) ($candidate_offer['message'] ?? '')),
+                    'primaryLabel'   => sanitize_text_field((string) ($candidate_offer['primaryLabel'] ?? '')),
+                    'primaryUrl'     => $primary_url,
+                    'secondaryLabel' => sanitize_text_field((string) ($candidate_offer['secondaryLabel'] ?? '')),
+                    'secondaryUrl'   => esc_url_raw((string) ($candidate_offer['secondaryUrl'] ?? '')),
+                );
+            }
+        }
+    }
+
     wp_localize_script('bvmgr-ticketing-front', 'BVMGR_TICKETING_FRONT', array(
         'tecEventId' => (int) $tec_event_id,
         'eventPlanId' => (int) $plan_id_for_event,
@@ -7064,10 +7136,10 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         'myActiveTicketCount' => (int) $my_active_ticket_count,
         'ticketHelpText' => (function_exists('bvmgr_ticketing_ui_help_should_render') && !bvmgr_ticketing_ui_help_should_render((int) $plan_id_for_event, 'tickets')) ? '' : (function_exists('bvmgr_ticketing_ui_help_effective_text') ? (string) bvmgr_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'tickets') : ''),
         'ticketHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('tickets') : array(),
-        'addonHelpText' => (function_exists('bvmgr_ticketing_ui_help_should_render') && !bvmgr_ticketing_ui_help_should_render((int) $plan_id_for_event, 'addons')) ? '' : (function_exists('bvmgr_ticketing_ui_help_effective_text') ? (string) bvmgr_ticketing_ui_help_effective_text((int) $plan_id_for_event, 'addons') : ''),
+        'addonHelpText' => '',
         'addonHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('addons') : array(),
-        'addonSectionHeading' => function_exists('bvmgr_ticketing_ui_addons_section_heading_effective') ? (string) bvmgr_ticketing_ui_addons_section_heading_effective((int) $plan_id_for_event) : (function_exists('bvmgr_ticketing_ui_addons_section_heading') ? (string) bvmgr_ticketing_ui_addons_section_heading() : __('Fire Pits & Tables', 'backstage-venue-manager')),
-        'addonSectionSubtext' => function_exists('bvmgr_ticketing_ui_addons_section_subtext_effective') ? (string) bvmgr_ticketing_ui_addons_section_subtext_effective((int) $plan_id_for_event) : (function_exists('bvmgr_ticketing_ui_addons_section_subtext') ? (string) bvmgr_ticketing_ui_addons_section_subtext() : __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager')),
+        'addonSectionHeading' => __('Amenities', 'backstage-venue-manager'),
+        'addonSectionSubtext' => __('Make your night more comfortable.', 'backstage-venue-manager'),
         'ticketRatioQualifyingLabel' => $ticket_ratio_qualifying_label,
         'loginUrl'   => wp_login_url($redirect_after_login),
         'registerUrl' => function_exists('wp_registration_url') ? wp_registration_url() : wp_login_url($redirect_after_login),
@@ -7089,6 +7161,8 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         'disabledTicketProductIds' => array_values(array_unique(array_filter(array_map('absint', $disabled_ticket_product_ids)))),
         'disabledTicketMap' => $disabled_ticket_map,
         'cartUrl' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
+        'checkoutUrl' => function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : home_url('/checkout/'),
+        'postCartOffer' => $post_cart_offer,
         'wcAjaxAddToCartUrl' => (class_exists('WC_AJAX') ? WC_AJAX::get_endpoint('add_to_cart') : home_url('/?wc-ajax=add_to_cart')),
         'cartContextUrl' => admin_url('admin-ajax.php?action=vms_ticketing_v2_cart_context'),
         'cartContextNonce' => wp_create_nonce('bvmgr_ticketing_v2_cart_context'),
@@ -7637,7 +7711,7 @@ function bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount(string 
         }
     }
 
-    $mount_body = bvmgr_ticketing_v2_render_entitlements_block($tec_event_id, $plan_id);
+    $mount_body = bvmgr_ticketing_v2_render_purchase_region($tec_event_id, $plan_id);
     if ($mount_body === '') {
         return $html;
     }
@@ -7722,7 +7796,7 @@ function bvmgr_ticketing_v2_append_entitlements_to_tec_event(string $content): s
     $plan_id = bvmgr_ticketing_v2_find_plan_id_by_tec_event_id((int) $tec_event_id);
     if ($plan_id <= 0) return $content;
 
-    $html = bvmgr_ticketing_v2_render_entitlements_block((int) $tec_event_id, (int) $plan_id);
+    $html = bvmgr_ticketing_v2_render_purchase_region((int) $tec_event_id, (int) $plan_id);
     if ($html === '') return $content;
 
     return $content . $html;
@@ -8218,6 +8292,56 @@ function bvmgr_ticketing_v2_render_entitlements_block(int $tec_event_id, int $pl
     return (string) ob_get_clean();
     } finally {
         if (ob_get_level() === $bvmgr_buffer_level + 1) ob_end_clean();
+    }
+}
+
+/**
+ * Render the optional-purchase region between ticket selection and the native
+ * ticket footer/totals. Add-ons may contribute presentation-only sections via
+ * `bvmgr_ticketing_purchase_extensions`; each integration keeps ownership of
+ * its own products, validation, stock, nonces, and order lifecycle.
+ *
+ * @param int $tec_event_id TEC event post ID.
+ * @param int $plan_id      Event Plan post ID.
+ */
+function bvmgr_ticketing_v2_render_purchase_region(int $tec_event_id, int $plan_id): string
+{
+    $entitlements = bvmgr_ticketing_v2_render_entitlements_block($tec_event_id, $plan_id);
+    $extension_buffer_level = ob_get_level();
+    ob_start();
+    try {
+        do_action('bvmgr_ticketing_purchase_extensions', $tec_event_id, $plan_id);
+        $extensions = trim((string) ob_get_clean());
+    } finally {
+        while (ob_get_level() > $extension_buffer_level) {
+            ob_end_clean();
+        }
+    }
+    if ($entitlements === '' && $extensions === '') {
+        return '';
+    }
+
+    $region_buffer_level = ob_get_level();
+    ob_start();
+    try {
+    ?>
+    <section class="bvmgr-enhance-night bvmgr-amenities" aria-labelledby="bvmgr-enhance-night-heading-<?php echo esc_attr((string) $tec_event_id); ?>">
+        <header class="bvmgr-enhance-night__header">
+            <h2 id="bvmgr-enhance-night-heading-<?php echo esc_attr((string) $tec_event_id); ?>"><?php echo esc_html__('Make your night more comfortable.', 'backstage-venue-manager'); ?></h2>
+        </header>
+        <?php if ($entitlements !== '') : ?>
+            <div class="bvmgr-enhance-night__group bvmgr-enhance-night__group--amenities">
+                <div class="bvmgr-enhance-night__options"><?php echo $entitlements; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Existing renderer escapes its dynamic output. ?></div>
+            </div>
+        <?php endif; ?>
+        <?php echo $extensions; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Extensions own and escape their output contract. ?>
+    </section>
+    <?php
+    return (string) ob_get_clean();
+    } finally {
+        while (ob_get_level() > $region_buffer_level) {
+            ob_end_clean();
+        }
     }
 }
 
@@ -8891,7 +9015,56 @@ function bvmgr_ticketing_v2_atomic_rollback_added_items(array $cart_keys): void
 }
 
 /**
- * Atomic endpoint for event tickets + reserved add-ons in one request.
+ * Resolve registered atomic purchase extensions for this event.
+ *
+ * Each handler may expose validate, add, commit, and rollback callbacks. Core
+ * owns transaction order and cart rollback; extensions own their private
+ * availability rules, metadata, and any compensating cleanup.
+ *
+ * @return array<string,array<string,callable>>
+ */
+function bvmgr_ticketing_v2_purchase_extension_handlers(int $event_plan_id, int $tec_event_id): array
+{
+    $context = array(
+        'event_plan_id' => $event_plan_id,
+        'tec_event_id'  => $tec_event_id,
+    );
+    $handlers = apply_filters('bvmgr_ticketing_purchase_extension_handlers', array(), $context);
+    if (!is_array($handlers)) {
+        return array();
+    }
+
+    $normalized = array();
+    foreach ($handlers as $extension_id => $handler) {
+        $extension_id = sanitize_key((string) $extension_id);
+        if ($extension_id === '' || !is_array($handler) || !is_callable($handler['validate'] ?? null) || !is_callable($handler['add'] ?? null)) {
+            continue;
+        }
+        $normalized[$extension_id] = $handler;
+    }
+    return $normalized;
+}
+
+/**
+ * Ask all participating extensions to compensate after a failed transaction.
+ */
+function bvmgr_ticketing_v2_atomic_rollback_extensions(array $prepared_extensions, array $handlers, array $context): void
+{
+    foreach ($prepared_extensions as $extension_id => $prepared) {
+        $rollback = $handlers[$extension_id]['rollback'] ?? null;
+        if (is_callable($rollback)) {
+            try {
+                call_user_func($rollback, $prepared, $context);
+            } catch (Throwable $throwable) {
+                unset($throwable);
+            }
+        }
+    }
+}
+
+/**
+ * Atomic endpoint for event tickets, reserved add-ons, and registered purchase
+ * extensions in one request.
  * One click -> one server transaction -> one complete cart.
  */
 function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
@@ -8928,6 +9101,7 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
     $event_plan_id = absint($data['event_plan_id'] ?? ($data['eventPlanId'] ?? 0));
     $ticket_lines_raw = $data['ticket_lines'] ?? ($data['tickets'] ?? array());
     $addon_lines_raw = $data['addon_lines'] ?? ($data['addons'] ?? array());
+    $extension_payloads = isset($data['extensions']) && is_array($data['extensions']) ? $data['extensions'] : array();
     if (!is_array($ticket_lines_raw)) {
         $ticket_lines_raw = array();
     }
@@ -8958,7 +9132,7 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
             break;
         }
     }
-    if (!$has_ticket_lines && !$has_addon_lines) {
+    if (!$has_ticket_lines && !$has_addon_lines && empty($extension_payloads)) {
         bvmgr_ticketing_v2_ajax_send_error(array('ok' => false, 'message' => 'empty_selection'), 400);
     }
 
@@ -8993,9 +9167,54 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
         $tec_event_id = absint($event_validation['event_id'] ?? $tec_event_id);
     }
 
+    $extension_handlers = bvmgr_ticketing_v2_purchase_extension_handlers($event_plan_id, $tec_event_id);
+    $prepared_extensions = array();
+    $extension_context = array(
+        'event_plan_id' => $event_plan_id,
+        'tec_event_id'  => $tec_event_id,
+        'cart'          => $wc->cart,
+    );
+    foreach ($extension_payloads as $extension_id => $extension_payload) {
+        $extension_id = sanitize_key((string) $extension_id);
+        if ($extension_id === '' || !isset($extension_handlers[$extension_id])) {
+            bvmgr_ticketing_v2_ajax_send_error(array(
+                'ok' => false,
+                'message' => __('A selected purchase option is unavailable. Your selections are still on screen; please review them and try again.', 'backstage-venue-manager'),
+                'errors' => array(array('type' => 'extension', 'extension' => $extension_id, 'code' => 'extension_unavailable')),
+            ), 409);
+        }
+        try {
+            $validation = call_user_func($extension_handlers[$extension_id]['validate'], $extension_payload, $extension_context);
+        } catch (Throwable $throwable) {
+            unset($throwable);
+            $validation = array(
+                'ok' => false,
+                'code' => 'extension_validation_error',
+                'message' => __('A selected purchase option could not be validated. Your selections have been preserved.', 'backstage-venue-manager'),
+            );
+        }
+        if (!is_array($validation) || empty($validation['ok'])) {
+            $message = is_array($validation) ? sanitize_text_field((string) ($validation['message'] ?? '')) : '';
+            if ($message === '') {
+                $message = __('A selected purchase option is no longer available. Your selections have been preserved.', 'backstage-venue-manager');
+            }
+            bvmgr_ticketing_v2_ajax_send_error(array(
+                'ok' => false,
+                'message' => $message,
+                'errors' => array(array(
+                    'type' => 'extension',
+                    'extension' => $extension_id,
+                    'code' => sanitize_key((string) (is_array($validation) ? ($validation['code'] ?? 'validation_failed') : 'validation_failed')),
+                )),
+            ), (int) (is_array($validation) ? ($validation['http'] ?? 400) : 400));
+        }
+        $prepared_extensions[$extension_id] = $validation['prepared'] ?? array();
+    }
+
     $added_keys = array();
     $added_tickets = 0;
     $added_addons = 0;
+    $added_extensions = 0;
     $errors = array();
     $request_assignee_counts = array();
     $buyer_user_id = is_user_logged_in() ? (int) get_current_user_id() : 0;
@@ -9256,9 +9475,51 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
         }
     }
 
+    if (empty($errors)) {
+        foreach ($prepared_extensions as $extension_id => $prepared) {
+            try {
+                $result = call_user_func($extension_handlers[$extension_id]['add'], $prepared, $extension_context);
+            } catch (Throwable $throwable) {
+                unset($throwable);
+                $result = array(
+                    'ok' => false,
+                    'code' => 'extension_add_error',
+                    'message' => __('A selected purchase option could not be added. Nothing from this attempt was kept in the cart.', 'backstage-venue-manager'),
+                );
+            }
+            if (!is_array($result) || empty($result['ok'])) {
+                if (is_array($result)) {
+                    foreach ((array) ($result['cart_keys'] ?? array()) as $cart_key) {
+                        if (is_string($cart_key) && $cart_key !== '') {
+                            $added_keys[] = $cart_key;
+                        }
+                    }
+                }
+                $message = is_array($result) ? sanitize_text_field((string) ($result['message'] ?? '')) : '';
+                $errors[] = array(
+                    'type' => 'extension',
+                    'extension' => $extension_id,
+                    'code' => sanitize_key((string) (is_array($result) ? ($result['code'] ?? 'add_failed') : 'add_failed')),
+                    'message' => $message,
+                );
+                if ($message !== '' && function_exists('wc_add_notice')) {
+                    wc_add_notice($message, 'error');
+                }
+                break;
+            }
+            foreach ((array) ($result['cart_keys'] ?? array()) as $cart_key) {
+                if (is_string($cart_key) && $cart_key !== '') {
+                    $added_keys[] = $cart_key;
+                }
+            }
+            $added_extensions += max(0, absint($result['quantity'] ?? 0));
+        }
+    }
+
     $notice_messages = bvmgr_ticketing_v2_atomic_error_notices();
     if (!empty($errors) || !empty($notice_messages)) {
         bvmgr_ticketing_v2_atomic_rollback_added_items($added_keys);
+        bvmgr_ticketing_v2_atomic_rollback_extensions($prepared_extensions, $extension_handlers, $extension_context);
         bvmgr_ticketing_v2_clear_success_notices();
         $message = !empty($notice_messages)
             ? (string) $notice_messages[0]
@@ -9275,6 +9536,48 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
     }
 
     $wc->cart->calculate_totals();
+    $notice_messages = bvmgr_ticketing_v2_atomic_error_notices();
+    if (!empty($notice_messages)) {
+        bvmgr_ticketing_v2_atomic_rollback_added_items($added_keys);
+        bvmgr_ticketing_v2_atomic_rollback_extensions($prepared_extensions, $extension_handlers, $extension_context);
+        bvmgr_ticketing_v2_clear_success_notices();
+        if (function_exists('wc_clear_notices')) {
+            wc_clear_notices();
+        }
+        bvmgr_ticketing_v2_ajax_send_error(array(
+            'ok' => false,
+            'message' => (string) $notice_messages[0],
+            'errors' => array(),
+            'notice_messages' => $notice_messages,
+        ), 400);
+    }
+
+    foreach ($prepared_extensions as $extension_id => $prepared) {
+        $commit = $extension_handlers[$extension_id]['commit'] ?? null;
+        if (!is_callable($commit)) {
+            continue;
+        }
+        try {
+            $result = call_user_func($commit, $prepared, $extension_context);
+        } catch (Throwable $throwable) {
+            unset($throwable);
+            $result = array(
+                'ok' => false,
+                'message' => __('A selected purchase option could not be completed. Nothing from this attempt was kept in the cart.', 'backstage-venue-manager'),
+            );
+        }
+        if (is_array($result) && empty($result['ok'])) {
+            bvmgr_ticketing_v2_atomic_rollback_added_items($added_keys);
+            bvmgr_ticketing_v2_atomic_rollback_extensions($prepared_extensions, $extension_handlers, $extension_context);
+            $message = sanitize_text_field((string) ($result['message'] ?? ''));
+            bvmgr_ticketing_v2_ajax_send_error(array(
+                'ok' => false,
+                'message' => $message !== '' ? $message : __('Could not complete the selected purchase options. Your selections have been preserved.', 'backstage-venue-manager'),
+                'errors' => array(array('type' => 'extension', 'extension' => $extension_id, 'code' => 'commit_failed')),
+            ), 400);
+        }
+    }
+
     bvmgr_ticketing_v2_clear_success_notices();
     if (function_exists('wc_clear_notices')) {
         wc_clear_notices();
@@ -9285,7 +9588,8 @@ function bvmgr_ticketing_v2_ajax_atomic_add_to_cart(): void
         'cart_url' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
         'added_tickets' => $added_tickets,
         'added_addons' => $added_addons,
-        'added_total' => ($added_tickets + $added_addons),
+        'added_extensions' => $added_extensions,
+        'added_total' => ($added_tickets + $added_addons + $added_extensions),
     ));
 }
 

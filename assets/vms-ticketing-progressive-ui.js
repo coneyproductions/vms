@@ -8,6 +8,11 @@
     return;
   }
 
+  if (window.BVMGR_TICKETING_PROGRESSIVE_INITIALIZED) {
+    return;
+  }
+  window.BVMGR_TICKETING_PROGRESSIVE_INITIALIZED = true;
+
   var SELECTORS = {
     form: '#tribe-tickets__tickets-form, #tribe-tickets form, .tribe-tickets__tickets form, .tribe-tickets__tickets-form, form.tribe-tickets__tickets-form',
     flow: '#vms-ticketing-flow, .vms-ticketing-flow.vms-ticket-ui',
@@ -80,7 +85,10 @@
       help.id = helpId;
     }
 
-    help.innerHTML = copy;
+    if (help.__vmsHelpHtml !== copy) {
+      help.innerHTML = copy;
+      help.__vmsHelpHtml = copy;
+    }
     help.setAttribute('data-vms-progressive-help', String(key || 'section'));
 
     var firstNonHelpChild = null;
@@ -288,11 +296,13 @@
     } else {
       var titleExisting = query('.vms-ticket-progressive-title', header);
       var descExisting = query('.vms-ticket-progressive-description', header);
-      if (titleExisting) {
+      if (titleExisting && titleExisting.textContent !== title) {
         titleExisting.textContent = title;
       }
       if (descExisting) {
-        descExisting.textContent = description;
+        if (descExisting.textContent !== description) {
+          descExisting.textContent = description;
+        }
         descExisting.hidden = String(description || '').trim() === '';
       }
       var buttonExisting = query('.vms-ticket-progressive-toggle', header);
@@ -417,26 +427,12 @@
     }
     var hasAddons = moveAddonSourceIntoProgressiveSection(addonsSection, addonsContent, form, flow) || hasAddonChoices(addonsSection);
     addonsSection.hidden = !hasAddons;
-    if (hasAddons && selectedAddonQty(addonsSection) > 0) {
+    if (hasAddons && !addonsSection.hasAttribute('data-vms-user-toggled') && selectedAddonQty(addonsSection) > 0) {
       setSectionOpen(addonsSection, true, false);
     } else if (hasAddons && !addonsSection.hasAttribute('data-vms-user-toggled')) {
       setSectionOpen(addonsSection, false, false);
     }
     return hasAddons;
-  }
-
-  function scheduleAddonVisibilityRetries(addonsSection, addonsContent, form, flow) {
-    var delays = [50, 200, 600, 1200, 2500];
-    delays.forEach(function (delay) {
-      window.setTimeout(function () {
-        syncAddonSectionVisibility(addonsSection, addonsContent, form, flow);
-      }, delay);
-    });
-    if (document.readyState !== 'complete') {
-      window.addEventListener('load', function () {
-        syncAddonSectionVisibility(addonsSection, addonsContent, form, flow);
-      }, { once: true });
-    }
   }
 
   function selectedAddonQty(addonsSection) {
@@ -606,97 +602,66 @@
       );
       ensureProgressiveHelp(addonsSection, addonsContent, 'addons', cfg.addonHelpText || '');
       syncAddonSectionVisibility(addonsSection, addonsContent, form, flow);
-      scheduleAddonVisibilityRetries(addonsSection, addonsContent, form, flow);
     }
 
     return true;
   }
 
-  var pendingEnhanceByDelay = {};
+  var pendingEnhance = 0;
+  var observedForm = null;
 
-  function scheduleEnhance(delay) {
-    var wait = Math.max(0, toInt(delay, 0));
-    if (pendingEnhanceByDelay[wait]) {
+  function scheduleEnhance() {
+    if (pendingEnhance) {
       return;
     }
-    pendingEnhanceByDelay[wait] = window.setTimeout(function () {
-      delete pendingEnhanceByDelay[wait];
+    pendingEnhance = window.requestAnimationFrame(function () {
+      pendingEnhance = 0;
       enhanceProgressiveTicketUi();
-    }, wait);
-  }
-
-  function scheduleEnhanceBurst(delays) {
-    (Array.isArray(delays) ? delays : [delays]).forEach(function (delay) {
-      scheduleEnhance(delay);
+      bindProgressiveWatchers();
     });
   }
 
   function bindProgressiveWatchers() {
     var form = query(SELECTORS.form);
-    if (!form || form.getAttribute('data-vms-progressive-watchers') === '1') {
+    observedForm = form;
+    if (!form || form.__vmsProgressiveWatchers) {
       return;
     }
-    form.setAttribute('data-vms-progressive-watchers', '1');
-    form.addEventListener('input', function (event) {
-      var target = event.target;
-      if (target && target.matches && (target.matches(SELECTORS.nativeQty) || target.matches(SELECTORS.addonInput))) {
-        scheduleEnhanceBurst([0, 120]);
-      }
-    }, true);
-    form.addEventListener('change', function (event) {
-      var target = event.target;
-      if (target && target.matches && (target.matches(SELECTORS.nativeQty) || target.matches(SELECTORS.addonInput))) {
-        scheduleEnhanceBurst([0, 120]);
-      }
-    }, true);
-    form.addEventListener('pointerup', function (event) {
-      var pointerType = event && event.pointerType ? String(event.pointerType).toLowerCase() : '';
-      if (pointerType !== 'touch') {
-        return;
-      }
-      var target = event.target;
-      if (target && target.closest && (target.closest(SELECTORS.nativeQtyButtons) || target.closest('.vms-addon-minus, .vms-addon-plus'))) {
-        scheduleEnhanceBurst([80, 180, 320, 520, 900]);
-      }
-    }, true);
-    form.addEventListener('touchend', function (event) {
-      var target = event.target;
-      if (target && target.closest && (target.closest(SELECTORS.nativeQtyButtons) || target.closest('.vms-addon-minus, .vms-addon-plus'))) {
-        scheduleEnhanceBurst([80, 180, 320, 520, 900]);
-      }
-    }, true);
-    form.addEventListener('click', function (event) {
-      var target = event.target;
-      if (target && target.closest && (target.closest(SELECTORS.nativeQtyButtons) || target.closest('.vms-addon-minus, .vms-addon-plus'))) {
-        scheduleEnhanceBurst([80, 180, 320, 520, 900]);
-      }
-    }, true);
-    if (typeof MutationObserver !== 'undefined') {
-      var observer = new MutationObserver(function () {
-        scheduleEnhance(0);
+    form.__vmsProgressiveWatchers = true;
+    ['input', 'change', 'click'].forEach(function (type) {
+      form.addEventListener(type, function (event) {
+        var target = event.target;
+        if (target && target.closest && target.closest(SELECTORS.nativeQty + ', ' + SELECTORS.addonInput + ', ' + SELECTORS.nativeQtyButtons + ', .vms-addon-minus, .vms-addon-plus')) {
+          scheduleEnhance();
+        }
       });
-      observer.observe(form, {
-        childList: true,
-        subtree: true
-      });
-    }
+    });
   }
 
-  function boot(attempt) {
-    var ok = enhanceProgressiveTicketUi();
+  function boot() {
+    enhanceProgressiveTicketUi();
     bindProgressiveWatchers();
-    if (!ok && attempt < 30) {
-      window.setTimeout(function () {
-        boot(attempt + 1);
-      }, 100);
+    if (typeof MutationObserver !== 'undefined') {
+      var observer = new MutationObserver(function (records) {
+        var relevant = !observedForm || !observedForm.isConnected || records.some(function (record) {
+          if (observedForm.contains(record.target)) {
+            return true;
+          }
+          return Array.prototype.some.call(record.addedNodes, function (node) {
+            return node.nodeType === 1 && (node.matches(SELECTORS.form + ', ' + SELECTORS.flow + ', #vms-reserved-addons') || node.querySelector(SELECTORS.form + ', ' + SELECTORS.flow + ', #vms-reserved-addons'));
+          });
+        });
+        if (relevant) {
+          scheduleEnhance();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      boot(0);
-    });
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
   } else {
-    boot(0);
+    boot();
   }
 })();

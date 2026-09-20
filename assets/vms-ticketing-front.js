@@ -1,7 +1,46 @@
 (function () {
   'use strict';
 
+  // One controller per document, including duplicate/cached script tags before DOM ready.
+  if (window.BVMGR_TICKETING_FRONT_INITIALIZED) {
+    return;
+  }
+  window.BVMGR_TICKETING_FRONT_INITIALIZED = true;
+
   var cfg = window.BVMGR_TICKETING_FRONT || {};
+
+  function collectPurchaseExtensions(state, options) {
+    var registry = window.BVMGR_TICKETING_PURCHASE_EXTENSIONS;
+    var handlers = registry && registry.handlers && typeof registry.handlers === 'object' ? registry.handlers : {};
+    var result = { ok: true, message: '', focusEl: null, payloads: {}, contributions: [], quantity: 0, total: 0 };
+    Object.keys(handlers).forEach(function (extensionId) {
+      if (!result.ok || !handlers[extensionId] || typeof handlers[extensionId].collect !== 'function') {
+        return;
+      }
+      var collected;
+      try {
+        collected = handlers[extensionId].collect({ state: state, validate: !!(options && options.validate) }) || {};
+      } catch (error) {
+        collected = { active: true, ok: false, message: error && error.message ? error.message : 'A selected purchase option could not be read.' };
+      }
+      if (!collected.active) {
+        return;
+      }
+      if (collected.ok === false) {
+        result.ok = false;
+        result.message = String(collected.message || 'Please review the selected purchase options.');
+        result.focusEl = collected.focusEl || null;
+        return;
+      }
+      result.payloads[extensionId] = collected.payload || {};
+      result.quantity += Math.max(0, Number(collected.quantity || 0));
+      result.total += Math.max(0, Number(collected.total || 0));
+      (collected.contributions || []).forEach(function (contribution) {
+        result.contributions.push(contribution);
+      });
+    });
+    return result;
+  }
 
   function isDiagFlagEnabled() {
     var raw = '';
@@ -1158,18 +1197,20 @@
     return Array.prototype.slice.call((root || document).querySelectorAll(selector));
   }
 
+  function setAttributeIfChanged(node, name, value) {
+    if (node && node.getAttribute(name) !== String(value)) {
+      node.setAttribute(name, String(value));
+    }
+  }
+
   function setDisabled(node, disabled) {
     if (!node) {
       return;
     }
-    node.disabled = !!disabled;
-    if (disabled) {
-      node.setAttribute('disabled', 'disabled');
-      node.setAttribute('aria-disabled', 'true');
-    } else {
-      node.removeAttribute('disabled');
-      node.setAttribute('aria-disabled', 'false');
+    if (node.disabled !== !!disabled) {
+      node.disabled = !!disabled;
     }
+    setAttributeIfChanged(node, 'aria-disabled', disabled ? 'true' : 'false');
   }
 
   function decodeDisplayText(value) {
@@ -1449,7 +1490,7 @@
           maxPerQualifying: item.rule.maxPerQualifying,
           limitedProductIds: {},
           selectedQty: 0,
-          qualifyingQty: Math.max(0, toInt(state && state.cartGaQty, 0)) + (state && state.qualifyingTicketIds && state.qualifyingTicketIds.length ? selectedQualifyingQty(state) : 0),
+          qualifyingQty: Math.max(0, toInt(state && state.cartGaQty, 0)),
           allowedQty: 0
         };
       }
@@ -1460,17 +1501,19 @@
 
     Object.keys(groups).forEach(function (groupKey) {
       var group = groups[groupKey];
-      if (!(state && state.qualifyingTicketIds && state.qualifyingTicketIds.length)) {
-        (rows || []).forEach(function (item) {
-          if (!item || !item.countsTowardUnlock || item.qty <= 0) {
-            return;
-          }
-          if (group.limitedProductIds[String(item.productId)]) {
-            return;
-          }
-          group.qualifyingQty += Math.max(0, item.qty || 0);
-        });
-      }
+      // Ratio-limited tickets may unlock add-ons, but cannot qualify their own group.
+      (rows || []).forEach(function (item) {
+        if (!item || !item.countsTowardUnlock || item.qty <= 0) {
+          return;
+        }
+        if (state.qualifyingTicketIds && state.qualifyingTicketIds.length && state.qualifyingTicketIds.indexOf(item.productId) < 0) {
+          return;
+        }
+        if (group.limitedProductIds[String(item.productId)]) {
+          return;
+        }
+        group.qualifyingQty += Math.max(0, item.qty || 0);
+      });
       group.allowedQty = Math.max(0, group.qualifyingQty * group.maxPerQualifying);
     });
 
@@ -1529,8 +1572,7 @@
         item.qty = clampedQty;
         changed = true;
       }
-      item.input.max = String(maxForInput);
-      item.input.setAttribute('max', String(maxForInput));
+      setAttributeIfChanged(item.input, 'max', maxForInput);
 
       var note = ensureTicketRuleNote(item.row);
       if (note) {
@@ -1547,11 +1589,9 @@
       var buttons = findTicketQtyButtons(item.row);
       buttons.plus.forEach(function (button) {
         setDisabled(button, maxForInput <= clampedQty || state.isSubmitting);
-        button.setAttribute('aria-disabled', (maxForInput <= clampedQty || state.isSubmitting) ? 'true' : 'false');
       });
       buttons.minus.forEach(function (button) {
         setDisabled(button, clampedQty <= 0 || state.isSubmitting);
-        button.setAttribute('aria-disabled', (clampedQty <= 0 || state.isSubmitting) ? 'true' : 'false');
       });
     });
 
@@ -2040,79 +2080,6 @@
     return 'Click here for more info.';
   }
 
-  function setQualifiedTicketMoreInfoExpanded(details, summary, open) {
-    if (!details || !summary) {
-      return;
-    }
-    details.open = !!open;
-    summary.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }
-
-  function bindQualifiedTicketMoreInfoSummary(summary, details) {
-    if (!summary || !details || summary.getAttribute('data-vms-touch-bound') === '1') {
-      if (summary && details) {
-        summary.setAttribute('aria-expanded', details.open ? 'true' : 'false');
-      }
-      return;
-    }
-    summary.setAttribute('data-vms-touch-bound', '1');
-    summary.setAttribute('aria-expanded', details.open ? 'true' : 'false');
-
-    var ignoreClickUntil = 0;
-    var lastToggleAt = 0;
-
-    function toggle(event) {
-      var now = Date.now();
-      if (lastToggleAt && (now - lastToggleAt) < 240) {
-        if (event) {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.stopImmediatePropagation) {
-            event.stopImmediatePropagation();
-          }
-        }
-        return;
-      }
-      lastToggleAt = now;
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (event.stopImmediatePropagation) {
-          event.stopImmediatePropagation();
-        }
-      }
-      setQualifiedTicketMoreInfoExpanded(details, summary, !details.open);
-    }
-
-    summary.addEventListener('pointerup', function (event) {
-      var pointerType = event && event.pointerType ? String(event.pointerType).toLowerCase() : '';
-      if (pointerType !== 'touch') {
-        return;
-      }
-      ignoreClickUntil = Date.now() + 500;
-      toggle(event);
-    }, true);
-
-    summary.addEventListener('touchend', function (event) {
-      ignoreClickUntil = Date.now() + 500;
-      toggle(event);
-    }, true);
-
-    summary.addEventListener('click', function (event) {
-      if (ignoreClickUntil && Date.now() < ignoreClickUntil) {
-        if (event) {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.stopImmediatePropagation) {
-            event.stopImmediatePropagation();
-          }
-        }
-        return;
-      }
-      toggle(event);
-    }, true);
-  }
-
   function defaultQualifiedTicketDescription(access, viewerContext, row) {
     return baseQualifiedTicketDescription(access, viewerContext, row);
   }
@@ -2242,45 +2209,48 @@
     var actionLabel = verificationNoun && normalizeKey(verificationNoun) !== 'account'
       ? 'Start ' + capitalizeFirst(verificationNoun) + ' Verification'
       : 'Start Verification';
-    var wasOpen = false;
     var details = query('.vms-qualified-ticket-more-info', descriptionWrap);
-    if (details) {
-      wasOpen = !!details.open;
-      details.parentNode.removeChild(details);
+    if (!details) {
+      // Native summary activation handles mouse, keyboard and touch exactly once.
+      details = createEl('details', 'vms-qualified-ticket-more-info');
+      details.appendChild(createEl('summary', 'vms-qualified-ticket-more-info-summary', qualifiedTicketVerificationPrompt()));
+      var body = createEl('div', 'vms-qualified-ticket-more-info-body');
+      body.appendChild(createEl('p', 'vms-qualified-ticket-more-info-intro'));
+      var list = createEl('ol', 'vms-qualified-ticket-more-info-list');
+      for (var index = 0; index < 4; index += 1) {
+        list.appendChild(document.createElement('li'));
+      }
+      body.appendChild(list);
+      details.appendChild(body);
+      descriptionWrap.appendChild(details);
     }
 
-    details = createEl('details', 'vms-qualified-ticket-more-info');
-    details.open = wasOpen;
-
-    var summary = createEl('summary', 'vms-qualified-ticket-more-info-summary', qualifiedTicketVerificationPrompt());
-    var body = createEl('div', 'vms-qualified-ticket-more-info-body');
-    var introEl = createEl('p', 'vms-qualified-ticket-more-info-intro', intro);
-    var list = document.createElement('ol');
-    list.className = 'vms-qualified-ticket-more-info-list';
-    [
+    var signature = JSON.stringify([intro, verificationNoun, actionUrl, actionLabel]);
+    if (details.__vmsInfoSignature === signature) {
+      return;
+    }
+    setText(query('.vms-qualified-ticket-more-info-intro', details), intro);
+    var items = [
       'Create or sign in to your account.',
       'Submit your ' + verificationNoun + ' verification.',
       'Approval is often completed quickly.',
       'Once approved, return here and select your free ticket.'
-    ].forEach(function (item) {
-      var li = document.createElement('li');
-      li.textContent = item;
-      list.appendChild(li);
+    ];
+    queryAll('.vms-qualified-ticket-more-info-list > li', details).forEach(function (item, index) {
+      setText(item, items[index]);
     });
-
-    body.appendChild(introEl);
-    body.appendChild(list);
-
+    var action = query('.vms-qualified-ticket-more-info-action', details);
     if (actionUrl) {
-      var action = createEl('a', 'vms-qualified-ticket-more-info-action', actionLabel);
-      action.href = normalizeUrl(actionUrl);
-      body.appendChild(action);
+      if (!action) {
+        action = createEl('a', 'vms-qualified-ticket-more-info-action');
+        query('.vms-qualified-ticket-more-info-body', details).appendChild(action);
+      }
+      setText(action, actionLabel);
+      setAttributeIfChanged(action, 'href', normalizeUrl(actionUrl));
+    } else if (action && action.parentNode) {
+      action.parentNode.removeChild(action);
     }
-
-    bindQualifiedTicketMoreInfoSummary(summary, details);
-    details.appendChild(summary);
-    details.appendChild(body);
-    descriptionWrap.appendChild(details);
+    details.__vmsInfoSignature = signature;
   }
 
   function ensureQualifiedTicketDescription(row, access, viewerContext) {
@@ -3139,6 +3109,12 @@
     if (!canUseState(state)) {
       return false;
     }
+    if (state.flowRoot && state.flowRoot.isConnected
+        && (!state.sourceBlock || state.flowRoot.contains(state.sourceBlock))
+        && state.submitButtons.every(function (button) { return button.isConnected; })) {
+      scheduleRefresh(state);
+      return true;
+    }
 
     state.footer = query(SELECTORS.footer, state.form) || state.footer || null;
     if (state.sourceBlock) {
@@ -3383,6 +3359,11 @@
       return action && String(action.label || '').trim() && String(action.url || '').trim();
     }) : [];
 
+    var signature = JSON.stringify(nextActions);
+    if (actionsEl.__vmsActionsSignature === signature) {
+      return;
+    }
+    actionsEl.__vmsActionsSignature = signature;
     actionsEl.innerHTML = '';
     actionsEl.hidden = !nextActions.length;
     nextActions.forEach(function (action) {
@@ -3456,19 +3437,8 @@
       ticketModel.panelRowsEl = panelRows;
     }
 
-    if (ticketModel.noteEl.parentNode !== row) {
-      row.appendChild(ticketModel.noteEl);
-    }
-    if (ticketModel.helpEl.parentNode !== row) {
-      if (ticketModel.panelEl && ticketModel.panelEl.parentNode === row) {
-        row.insertBefore(ticketModel.helpEl, ticketModel.panelEl);
-      } else {
-        row.appendChild(ticketModel.helpEl);
-      }
-    }
-    if (ticketModel.panelEl.parentNode !== row) {
-      row.appendChild(ticketModel.panelEl);
-    }
+    // The status stack owns these nodes for their entire lifetime.
+    ensureTicketStatusStack(row, ticketModel);
   }
 
   function ensureTicketClaimRow(state, ticketModel, seat) {
@@ -3757,7 +3727,9 @@
           ticketModel.helpEl.open = false;
         }
         setText(ticketModel.helpTitleEl, ticketModel.context.helpTitle);
-        if (ticketModel.helpListEl) {
+        var helpSignature = JSON.stringify(ticketModel.context.helpItems || []);
+        if (ticketModel.helpListEl && ticketModel.helpListEl.__vmsHelpSignature !== helpSignature) {
+          ticketModel.helpListEl.__vmsHelpSignature = helpSignature;
           ticketModel.helpListEl.innerHTML = '';
           (ticketModel.context.helpItems || []).forEach(function (item) {
             ticketModel.helpListEl.appendChild(createEl('p', 'vms-claim-ticket-help-line', item));
@@ -3794,7 +3766,7 @@
 
     visibleSeats.forEach(function (seatNumber, index) {
       var rowState = ensureTicketClaimRow(state, ticketModel, seatNumber);
-      rowState.labelEl.textContent = 'Approved guest email for ticket ' + String(seatNumber);
+      setText(rowState.labelEl, 'Approved guest email for ticket ' + String(seatNumber));
       var liveValue = String(rowState.inputEl.value || '').trim();
       var storedValue = String(rowState.email || '').trim();
       if ((document.activeElement === rowState.inputEl || (liveValue && liveValue !== storedValue))
@@ -4305,7 +4277,15 @@
     });
 
     var addonTotal = 0;
-    if (state.subtotalAddonSummaryNode) {
+    var extensionResult = collectPurchaseExtensions(state, { validate: false });
+    var addonSignature = JSON.stringify(state.addons.map(function (addon) {
+      return [addon.productId, addon.label, addon.unitPrice, addon.qty];
+    }).concat(extensionResult.contributions.map(function (contribution) {
+      return ['extension', contribution.label, contribution.unitPrice, contribution.quantity];
+    })));
+    var updateAddonSummary = state.subtotalAddonSummaryNode && state.subtotalAddonSummaryNode.__vmsAddonSignature !== addonSignature;
+    if (updateAddonSummary) {
+      state.subtotalAddonSummaryNode.__vmsAddonSignature = addonSignature;
       state.subtotalAddonSummaryNode.innerHTML = '';
     }
 
@@ -4315,10 +4295,25 @@
         return;
       }
       addonTotal += addon.unitPrice * qty;
-      if (state.subtotalAddonSummaryNode) {
+      if (updateAddonSummary) {
         var item = createEl('div', 'vms-ticketing-subtotal__addon-item');
         item.appendChild(createEl('span', 'vms-ticketing-subtotal__addon-label', addon.label + ' × ' + String(qty)));
         item.appendChild(createEl('span', 'vms-ticketing-subtotal__addon-value', formatMoney(addon.unitPrice * qty)));
+        state.subtotalAddonSummaryNode.appendChild(item);
+      }
+    });
+
+    extensionResult.contributions.forEach(function (contribution) {
+      var qty = Math.max(0, Number(contribution.quantity || 0));
+      var unitPrice = Math.max(0, Number(contribution.unitPrice || 0));
+      if (qty <= 0) {
+        return;
+      }
+      addonTotal += unitPrice * qty;
+      if (updateAddonSummary) {
+        var item = createEl('div', 'vms-ticketing-subtotal__addon-item');
+        item.appendChild(createEl('span', 'vms-ticketing-subtotal__addon-label', String(contribution.label || 'Purchase option') + ' × ' + String(qty)));
+        item.appendChild(createEl('span', 'vms-ticketing-subtotal__addon-value', formatMoney(unitPrice * qty)));
         state.subtotalAddonSummaryNode.appendChild(item);
       }
     });
@@ -4334,9 +4329,11 @@
   function refreshSubmitState(state) {
     var addonLines = collectAddonLines(state);
     var ticketLines = readTicketLines(state);
+    var extensionResult = collectPurchaseExtensions(state, { validate: false });
     var hasAddons = addonLines.length > 0;
+    var hasExtensions = extensionResult.quantity > 0;
     var hasTickets = ticketLines.length > 0 || hasNativeTicketSelection(state);
-    var shouldEnable = state.isSubmitting ? false : (hasTickets || hasAddons);
+    var shouldEnable = state.isSubmitting ? false : (hasTickets || hasAddons || hasExtensions);
 
     state.submitButtons.forEach(function (button) {
       if (!button) {
@@ -4569,21 +4566,25 @@
   }
 
   function scheduleRefresh(state) {
-    if (state.refreshRafScheduled) {
+    if (state.refreshRafScheduled || !stateBelongsToCurrentDocument(state)) {
       return;
     }
     state.refreshRafScheduled = true;
     window.requestAnimationFrame(function () {
       state.refreshRafScheduled = false;
-      diagLog('schedule-refresh-raf');
-      refresh(state, { clampAddons: true, clearGlobalMessage: true });
-    });
-    window.setTimeout(function () {
+      if (!stateBelongsToCurrentDocument(state)) {
+        return;
+      }
+      syncTrackedTicketQty(state);
       refresh(state, { clampAddons: true, clearGlobalMessage: false });
-    }, 180);
+    });
   }
 
   function bindNativeQtyObservers(state) {
+    if (state.nativeQtyBound) {
+      return;
+    }
+    state.nativeQtyBound = true;
     function resolveNativeQtyInputFromButton(button) {
       var wrap = button && button.closest
         ? button.closest('.tribe-tickets__tickets-item-quantity, .tribe-tickets__item__quantity')
@@ -4696,14 +4697,9 @@
       }, Math.max(0, toInt(cfg.nativeQtyTouchFallbackDelayMs, 160)));
     }
 
-    function trackedRefresh(delay) {
-      hideDisabledTicketRows(state);
+    function trackedRefresh() {
       syncTrackedTicketQty(state);
       scheduleRefresh(state);
-      window.setTimeout(function () {
-        syncTrackedTicketQty(state);
-        refresh(state, { clampAddons: true, clearGlobalMessage: false });
-      }, delay || 80);
     }
 
     function mutationTouchesNativeTicketControls(record) {
@@ -4731,6 +4727,10 @@
       if (!record) {
         return false;
       }
+      // Setting an attribute to its current value still queues a mutation.
+      if (record.type === 'attributes' && record.oldValue === record.target.getAttribute(record.attributeName)) {
+        return false;
+      }
       if (touches(record.target, false)) {
         return true;
       }
@@ -4748,14 +4748,12 @@
       });
     }
 
-    queryAll(SELECTORS.nativeQty, state.form).forEach(function (input) {
-      input.addEventListener('input', function () {
-        diagLog('native-qty-input', { name: input.name || input.id || '', value: input.value });
-        trackedRefresh(60);
-      });
-      input.addEventListener('change', function () {
-        diagLog('native-qty-change', { name: input.name || input.id || '', value: input.value });
-        trackedRefresh(100);
+    // Delegation also covers quantity inputs replaced later by TEC.
+    ['input', 'change'].forEach(function (type) {
+      state.form.addEventListener(type, function (event) {
+        if (event.target && event.target.matches && event.target.matches(SELECTORS.nativeQty)) {
+          trackedRefresh();
+        }
       });
     });
 
@@ -4782,9 +4780,8 @@
         setNativeQtyTouchSuppressUntil(btn, 0);
       }
       diagLog('native-qty-button-click', { buttonClass: btn.className || '' });
-      window.setTimeout(function () { trackedRefresh(60); }, 0);
-      window.setTimeout(function () { trackedRefresh(120); }, 120);
-      window.setTimeout(function () { trackedRefresh(240); }, 240);
+      // Read after TEC's click handlers have applied the native quantity.
+      scheduleRefresh(state);
     }, true);
 
     state.form.addEventListener('pointerup', function (event) {
@@ -4822,6 +4819,7 @@
         childList: true,
         subtree: true,
         attributes: true,
+        attributeOldValue: true,
         attributeFilter: ['value', 'aria-disabled', 'disabled', 'class']
       });
       state.ticketQtyObserver = observer;
@@ -5044,7 +5042,6 @@
       if (!addon.inputEl) {
         return;
       }
-      bindAddonCheckboxToggle(addon, state, { clearGlobalMessage: true });
       bindAddonStepperButton(addon.minusEl, function () {
         diagLog('addon-minus-click', { productId: addon.productId, before: addon.qty });
         addon.qty = Math.max(0, addon.qty - 1);
@@ -5093,11 +5090,15 @@
   }
 
   function bindEvents(state) {
+    if (state.formEventsBound) {
+      return;
+    }
+    state.formEventsBound = true;
+
     state.addons.forEach(function (addon) {
       if (!addon.inputEl) {
         return;
       }
-      bindAddonCheckboxToggle(addon, state, { clearGlobalMessage: false });
       bindAddonStepperButton(addon.minusEl, function () {
         addon.qty = Math.max(0, addon.qty - 1);
         refresh(state, { clampAddons: false });
@@ -5321,161 +5322,34 @@
     if (!button || typeof handler !== 'function') {
       return;
     }
-    var ignoreClickUntil = 0;
-    var lastTouchHandleAt = 0;
-
-    button.addEventListener('pointerup', function (event) {
-      var pointerType = event && event.pointerType ? String(event.pointerType).toLowerCase() : '';
-      if (pointerType !== 'touch') {
-        return;
-      }
-      if (Date.now() - lastTouchHandleAt < 80) {
-        return;
-      }
-      lastTouchHandleAt = Date.now();
-      ignoreClickUntil = Date.now() + 500;
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (event.stopImmediatePropagation) {
-          event.stopImmediatePropagation();
-        }
-      }
-      handler();
-    }, true);
-
-    button.addEventListener('touchend', function (event) {
-      if (Date.now() - lastTouchHandleAt < 80) {
-        return;
-      }
-      lastTouchHandleAt = Date.now();
-      ignoreClickUntil = Date.now() + 500;
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (event.stopImmediatePropagation) {
-          event.stopImmediatePropagation();
-        }
-      }
-      handler();
-    }, true);
-
-    button.addEventListener('click', function (event) {
-      if (ignoreClickUntil && Date.now() < ignoreClickUntil) {
-        if (event) {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.stopImmediatePropagation) {
-            event.stopImmediatePropagation();
-          }
-        }
-        return;
-      }
-      handler();
-    }, true);
-  }
-
-  function bindAddonCheckboxToggle(addon, state, options) {
-    if (!addon || !addon.isCheckbox || !addon.inputEl || !state) {
+    button.__vmsAddonStepperHandler = handler;
+    if (button.__vmsAddonStepperBound) {
       return;
     }
-
-    var opts = options || {};
-    var clearGlobalMessage = !!opts.clearGlobalMessage;
-    var wrap = addon.checkboxWrapEl || addon.inputEl;
-    var ignoreClickUntil = 0;
-    var lastTouchHandleAt = 0;
-
-    function suppressEvent(event) {
-      if (!event) {
-        return;
+    button.__vmsAddonStepperBound = true;
+    button.addEventListener('click', function () {
+      if (!button.disabled) {
+        button.__vmsAddonStepperHandler();
       }
-      event.preventDefault();
-      event.stopPropagation();
-      if (event.stopImmediatePropagation) {
-        event.stopImmediatePropagation();
-      }
-    }
-
-    function applyTouchToggle(event) {
-      if (!addon.inputEl || addon.inputEl.disabled) {
-        return;
-      }
-      ignoreClickUntil = Date.now() + 500;
-      suppressEvent(event);
-      addon.qty = addon.qty > 0 ? 0 : 1;
-      addon.inputEl.checked = addon.qty > 0;
-      addon.inputEl.value = addon.qty > 0 ? '1' : '0';
-      refresh(state, { clampAddons: true, clearGlobalMessage: clearGlobalMessage });
-    }
-
-    wrap.addEventListener('pointerup', function (event) {
-      var pointerType = event && event.pointerType ? String(event.pointerType).toLowerCase() : '';
-      if (pointerType !== 'touch') {
-        return;
-      }
-      if (Date.now() - lastTouchHandleAt < 80) {
-        return;
-      }
-      lastTouchHandleAt = Date.now();
-      applyTouchToggle(event);
-    }, true);
-
-    wrap.addEventListener('touchend', function (event) {
-      if (Date.now() - lastTouchHandleAt < 80) {
-        return;
-      }
-      lastTouchHandleAt = Date.now();
-      applyTouchToggle(event);
-    }, true);
-
-    wrap.addEventListener('click', function (event) {
-      if (!(ignoreClickUntil && Date.now() < ignoreClickUntil)) {
-        return;
-      }
-      suppressEvent(event);
-    }, true);
+    });
   }
 
   function bindSubmitButton(button, state) {
     if (!button || !state) {
       return;
     }
-    var ignoreClickUntil = 0;
-
-    function invoke(event) {
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (event.stopImmediatePropagation) {
-          event.stopImmediatePropagation();
-        }
-      }
-      handleAtomicSubmit(state);
+    button.__vmsSubmitState = state;
+    if (button.__vmsSubmitBound) {
+      return;
     }
-
-    button.addEventListener('pointerup', function (event) {
-      ignoreClickUntil = Date.now() + 500;
-      invoke(event);
-    }, true);
-
-    button.addEventListener('touchend', function (event) {
-      ignoreClickUntil = Date.now() + 500;
-      invoke(event);
-    }, true);
-
+    button.__vmsSubmitBound = true;
     button.addEventListener('click', function (event) {
-      if (ignoreClickUntil && Date.now() < ignoreClickUntil) {
-        if (event) {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.stopImmediatePropagation) {
-            event.stopImmediatePropagation();
-          }
-        }
-        return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      if (!button.disabled) {
+        handleAtomicSubmit(button.__vmsSubmitState);
       }
-      invoke(event);
     }, true);
   }
 
@@ -5525,6 +5399,7 @@
     var ticketBuild = buildAtomicTicketLines(state, { requireComplete: true });
     var ticketLines = ticketBuild.ok ? ticketBuild.ticketLines : [];
     var addonLines = collectAddonLines(state);
+    var extensionResult = collectPurchaseExtensions(state, { validate: true });
     if (!ticketBuild.ok) {
       refresh(state, { clampAddons: true });
       setGlobalMessage(state, ticketBuild.message, 'error');
@@ -5534,7 +5409,16 @@
       return;
     }
 
-    if (!ticketLines.length && !addonLines.length) {
+    if (!extensionResult.ok) {
+      refresh(state, { clampAddons: true });
+      setGlobalMessage(state, extensionResult.message, 'error');
+      if (extensionResult.focusEl && typeof extensionResult.focusEl.focus === 'function') {
+        extensionResult.focusEl.focus();
+      }
+      return;
+    }
+
+    if (!ticketLines.length && !addonLines.length && extensionResult.quantity <= 0) {
       if (hasNativeTicketSelection(state)) {
         requestNativeSubmit(state);
         return;
@@ -5557,10 +5441,17 @@
         }
         ticketLines = ticketBuild.ticketLines;
         addonLines = collectAddonLines(state);
+        extensionResult = collectPurchaseExtensions(state, { validate: true });
+        if (!extensionResult.ok) {
+          if (extensionResult.focusEl && typeof extensionResult.focusEl.focus === 'function') {
+            extensionResult.focusEl.focus();
+          }
+          throw new Error(extensionResult.message || 'Please review the selected purchase options.');
+        }
 
         if (!cfg.atomicAddUrl || !cfg.atomicAddNonce) {
           diagLog('atomic-add-missing-config');
-          if (!addonLines.length) {
+          if (!addonLines.length && extensionResult.quantity <= 0) {
             state.isSubmitting = false;
             refresh(state, { clampAddons: true });
             requestNativeSubmit(state);
@@ -5569,7 +5460,7 @@
           throw new Error('Atomic add endpoint unavailable.');
         }
 
-        diagLog('atomic-add-request', { ticketLines: ticketLines, addonLines: addonLines });
+        diagLog('atomic-add-request', { ticketLines: ticketLines, addonLines: addonLines, extensions: extensionResult.payloads });
         return fetch(normalizeUrl(cfg.atomicAddUrl), {
           method: 'POST',
           credentials: 'same-origin',
@@ -5581,7 +5472,8 @@
             tecEventId: state.tecEventId,
             eventPlanId: state.eventPlanId,
             ticket_lines: ticketLines,
-            addon_lines: addonLines
+            addon_lines: addonLines,
+            extensions: extensionResult.payloads
           })
         }).then(function (response) {
           return response.json().catch(function () {
@@ -5590,6 +5482,13 @@
         }).then(function (payload) {
           if (!payload || !payload.success || !payload.data || !payload.data.ok) {
             throw new Error(getErrorMessage(payload));
+          }
+          state.isSubmitting = false;
+          refresh(state, { clampAddons: true });
+          setGlobalMessage(state, 'Your tickets are in your cart.', 'success');
+          var offerController = window.BVMGR_TICKETING_POST_CART_OFFER;
+          if (offerController && typeof offerController.handle === 'function' && offerController.handle(payload, state)) {
+            return payload;
           }
           setGlobalMessage(state, 'Added to cart. Redirecting…', 'success');
           window.location.href = payload.data.cart_url || cfg.cartUrl || normalizeUrl('/cart/');
@@ -5607,6 +5506,12 @@
     window.addEventListener('pageshow', function (event) {
       if (!event || !event.persisted) {
         return;
+      }
+      var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
+      if (stateBelongsToCurrentDocument(bundle.state)) {
+        bundle.state.isSubmitting = false;
+        bundle.state.allowNativeSubmit = false;
+        scheduleRefresh(bundle.state);
       }
       queryAll('.vms-cart-overlay').forEach(function (node) {
         if (node && node.parentNode) {
@@ -5877,6 +5782,14 @@
   installPageShowReset();
   installDomObserver();
   startDiagPanel();
+
+  document.addEventListener('bvmgr:purchase-extension-change', function () {
+    var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
+    if (stateBelongsToCurrentDocument(bundle.state)) {
+      syncTrackedTicketQty(bundle.state);
+      refresh(bundle.state, { clampAddons: true, clearGlobalMessage: false });
+    }
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot, { once: true });

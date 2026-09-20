@@ -6,6 +6,26 @@
     return;
   }
 
+  function collectPurchaseExtensions(state, validate) {
+    var registry = window.BVMGR_TICKETING_PURCHASE_EXTENSIONS;
+    var handlers = registry && registry.handlers ? registry.handlers : {};
+    var result = { ok: true, message: '', focusEl: null, payloads: {}, quantity: 0 };
+    Object.keys(handlers).forEach(function (extensionId) {
+      if (!result.ok || !handlers[extensionId] || typeof handlers[extensionId].collect !== 'function') return;
+      var collected = handlers[extensionId].collect({ state: state, validate: !!validate }) || {};
+      if (!collected.active) return;
+      if (collected.ok === false) {
+        result.ok = false;
+        result.message = String(collected.message || 'Please review the selected purchase options.');
+        result.focusEl = collected.focusEl || null;
+        return;
+      }
+      result.payloads[extensionId] = collected.payload || {};
+      result.quantity += Math.max(0, Number(collected.quantity || 0));
+    });
+    return result;
+  }
+
   var SELECTORS = {
     form: '#tribe-tickets__tickets-form',
     sourceBlock: '#vms-reserved-addons.vms-entitlements-block[data-vms-render-mode="server_controls"]',
@@ -33,6 +53,13 @@
 
   function qa(selector, root) {
     return Array.prototype.slice.call((root || document).querySelectorAll(selector));
+  }
+
+  function ticketSubmitButtons(form) {
+    return qa(SELECTORS.submit, form).filter(function (button) {
+      var owner = button && button.closest ? button.closest('form') : null;
+      return !owner || owner === form;
+    });
   }
 
   function toInt(value, fallback) {
@@ -369,7 +396,8 @@
     hideDisabledTicketRows(state);
     var ticketLines = readTicketLines(state);
     var addonLines = collectAddonLines(state);
-    var hasSelection = ticketLines.length > 0 || addonLines.length > 0;
+    var extensionResult = collectPurchaseExtensions(state, false);
+    var hasSelection = ticketLines.length > 0 || addonLines.length > 0 || extensionResult.quantity > 0;
     var nextLabel = state.isSubmitting ? 'Adding…' : (hasSelection ? 'Add items to cart' : state.defaultSubmitLabel);
 
     state.submitButtons.forEach(function (button) {
@@ -534,7 +562,13 @@
 
     var ticketLines = readTicketLines(state);
     var addonLines = collectAddonLines(state);
-    if (!ticketLines.length && !addonLines.length) {
+    var extensionResult = collectPurchaseExtensions(state, true);
+    if (!extensionResult.ok) {
+      setGlobalMessage(state, extensionResult.message, 'error');
+      if (extensionResult.focusEl && typeof extensionResult.focusEl.focus === 'function') extensionResult.focusEl.focus();
+      return;
+    }
+    if (!ticketLines.length && !addonLines.length && extensionResult.quantity <= 0) {
       return;
     }
 
@@ -562,7 +596,8 @@
         tecEventId: state.tecEventId,
         eventPlanId: state.eventPlanId,
         ticket_lines: ticketLines,
-        addon_lines: addonLines
+        addon_lines: addonLines,
+        extensions: extensionResult.payloads
       })
     }).then(function (response) {
       return response.json().catch(function () {
@@ -571,6 +606,16 @@
     }).then(function (payload) {
       if (!payload || !payload.success || !payload.data || !payload.data.ok) {
         throw new Error((payload && payload.data && (payload.data.message || (payload.data.notice_messages && payload.data.notice_messages[0]))) || 'Could not add items to cart.');
+      }
+      state.isSubmitting = false;
+      state.submitButtons.forEach(function (button) {
+        setDisabled(button, false);
+      });
+      refresh(state);
+      setGlobalMessage(state, 'Your tickets are in your cart.', 'success');
+      var offerController = window.BVMGR_TICKETING_POST_CART_OFFER;
+      if (offerController && typeof offerController.handle === 'function' && offerController.handle(payload, state)) {
+        return;
       }
       setGlobalMessage(state, 'Added to cart. Redirecting…', 'success');
       window.location.href = payload.data.cart_url || cfg.cartUrl || '/cart/';
@@ -668,7 +713,7 @@
       addons: [],
       isSubmitting: false,
       statusBox: null,
-      submitButtons: qa(SELECTORS.submit, form),
+      submitButtons: ticketSubmitButtons(form),
       defaultSubmitLabel: (function () {
         var button = q(SELECTORS.submit, form);
         if (!button) {
@@ -693,6 +738,7 @@
     }
 
     var state = buildState(form, sourceBlock);
+    window.BVMGR_TICKETING_SERVER_CONTROLS_STATE = state;
     hideDisabledTicketRows(state);
     qa('.vms-entitlements-list > .vms-ent-row, .vms-entitlements-list > .vms-entitlements-item', sourceBlock).forEach(function (row) {
       wireAddonRow(state, row);
@@ -757,10 +803,10 @@
     });
     document.addEventListener('click', function (event) {
       var target = event.target && event.target.closest ? event.target.closest(SELECTORS.submit) : null;
-      if (!target || !state.form.contains(target)) {
+      if (!target || state.submitButtons.indexOf(target) === -1) {
         return;
       }
-      if (!readTicketLines(state).length && !collectAddonLines(state).length) {
+      if (!readTicketLines(state).length && !collectAddonLines(state).length && collectPurchaseExtensions(state, false).quantity <= 0) {
         return;
       }
       event.preventDefault();
@@ -772,7 +818,10 @@
       submitAtomically(state);
     }, true);
     form.addEventListener('submit', function (event) {
-      if (!readTicketLines(state).length && !collectAddonLines(state).length) {
+      if (event && event.target !== form) {
+        return;
+      }
+      if (!readTicketLines(state).length && !collectAddonLines(state).length && collectPurchaseExtensions(state, false).quantity <= 0) {
         return;
       }
       event.preventDefault();
@@ -810,5 +859,12 @@
 
   window.addEventListener('pageshow', function () {
     window.setTimeout(function () { scheduleBoot(0); }, 0);
+  });
+
+  document.addEventListener('bvmgr:purchase-extension-change', function () {
+    var state = window.BVMGR_TICKETING_SERVER_CONTROLS_STATE;
+    if (state) {
+      scheduleRefresh(state);
+    }
   });
 })();
