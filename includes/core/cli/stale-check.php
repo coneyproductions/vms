@@ -293,7 +293,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 		 */
 		private function check_bug_02(): array
 		{
-			$file = WP_CONTENT_DIR . '/plugins/vms/includes/admin/schedule.php';
+			$file = BVMGR_PLUGIN_PATH . 'includes/admin/schedule.php';
 			$code = is_readable($file) ? (string) file_get_contents($file) : '';
 			$has_date_write = (strpos($code, "update_post_meta((int) \$plan_id, '_vms_event_date', \$ymd);") !== false);
 			$has_venue_write = (strpos($code, "update_post_meta((int) \$plan_id, '_vms_venue_id', (int) \$venue_id);") !== false);
@@ -360,7 +360,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			 */
 			private function check_bug_05(): array
 			{
-				$file = WP_CONTENT_DIR . '/plugins/vms/includes/cpt/event-plans.php';
+				$file = BVMGR_PLUGIN_PATH . 'includes/cpt/event-plans.php';
 				$code = is_readable($file) ? (string) file_get_contents($file) : '';
 
 				$has_effective_helper = function_exists('bvmgr_get_event_plan_effective_comp_default');
@@ -539,7 +539,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 		{
 			$issues = array();
 
-			$schedule_file = WP_CONTENT_DIR . '/plugins/vms/includes/admin/schedule.php';
+			$schedule_file = BVMGR_PLUGIN_PATH . 'includes/admin/schedule.php';
 			$schedule_code = is_readable($schedule_file) ? (string) file_get_contents($schedule_file) : '';
 			$has_schedule_wiring = (
 				strpos($schedule_code, 'bvmgr_sch_get_schedule_venue_candidates') !== false
@@ -550,7 +550,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			}
 
 			if (!function_exists('bvmgr_sch_pick_single_venue_candidate')) {
-				$schedule_helpers_file = WP_CONTENT_DIR . '/plugins/vms/includes/schedule/helpers.php';
+				$schedule_helpers_file = BVMGR_PLUGIN_PATH . 'includes/schedule/helpers.php';
 				if (is_readable($schedule_helpers_file)) {
 					require_once $schedule_helpers_file;
 				}
@@ -606,8 +606,8 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			{
 				$issues = array();
 
-			$js_file = WP_CONTENT_DIR . '/plugins/vms/assets/vms-ticketing-front.js';
-			$css_file = WP_CONTENT_DIR . '/plugins/vms/assets/css/vms-ticketing-front.css';
+			$js_file = BVMGR_PLUGIN_PATH . 'assets/vms-ticketing-front.js';
+			$css_file = BVMGR_PLUGIN_PATH . 'assets/css/vms-ticketing-front.css';
 
 			$js_code = is_readable($js_file) ? (string) file_get_contents($js_file) : '';
 			$css_code = is_readable($css_file) ? (string) file_get_contents($css_file) : '';
@@ -670,7 +670,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			{
 				$issues = array();
 
-				$js_file = WP_CONTENT_DIR . '/plugins/vms/assets/vms-ticketing-front.js';
+				$js_file = BVMGR_PLUGIN_PATH . 'assets/vms-ticketing-front.js';
 				$js_code = is_readable($js_file) ? (string) file_get_contents($js_file) : '';
 				if ($js_code === '') {
 					$issues[] = 'front ticketing bundle missing or unreadable';
@@ -738,13 +738,13 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 		{
 			$issues = array();
 
-			$rules_file = WP_CONTENT_DIR . '/plugins/vms/includes/integrations/ticketing-rules-v2.php';
+			$rules_file = BVMGR_PLUGIN_PATH . 'includes/integrations/ticketing-rules-v2.php';
 			$rules_code = is_readable($rules_file) ? (string) file_get_contents($rules_file) : '';
 			if ($rules_code === '') {
 				$issues[] = 'ticketing-rules-v2.php missing or unreadable';
 			}
 
-			$js_file = WP_CONTENT_DIR . '/plugins/vms/assets/vms-ticketing-front.js';
+			$js_file = BVMGR_PLUGIN_PATH . 'assets/vms-ticketing-front.js';
 			$js_code = is_readable($js_file) ? (string) file_get_contents($js_file) : '';
 			if ($js_code === '') {
 				$issues[] = 'vms-ticketing-front.js missing or unreadable';
@@ -847,13 +847,13 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 		{
 			$issues = array();
 
-			$rules_file = WP_CONTENT_DIR . '/plugins/vms/includes/integrations/ticketing-rules-v2.php';
+			$rules_file = BVMGR_PLUGIN_PATH . 'includes/integrations/ticketing-rules-v2.php';
 			$rules_code = is_readable($rules_file) ? (string) file_get_contents($rules_file) : '';
 			if ($rules_code === '') {
 				$issues[] = 'ticketing-rules-v2.php missing or unreadable';
 			}
 
-			$js_file = WP_CONTENT_DIR . '/plugins/vms/assets/vms-ticketing-front.js';
+			$js_file = BVMGR_PLUGIN_PATH . 'assets/vms-ticketing-front.js';
 			$js_code = is_readable($js_file) ? (string) file_get_contents($js_file) : '';
 			if ($js_code === '') {
 				$issues[] = 'vms-ticketing-front.js missing or unreadable';
@@ -968,7 +968,7 @@ if (!class_exists('BVMGR_CLI_Stale_Check_Command')) {
 			{
 				$issues = array();
 
-				$event_plan_file = WP_CONTENT_DIR . '/plugins/vms/includes/cpt/event-plans.php';
+				$event_plan_file = BVMGR_PLUGIN_PATH . 'includes/cpt/event-plans.php';
 				$event_plan_code = is_readable($event_plan_file) ? (string) file_get_contents($event_plan_file) : '';
 				if ($event_plan_code === '') {
 					$issues[] = 'event-plans.php missing or unreadable';

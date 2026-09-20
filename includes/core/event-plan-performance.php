@@ -977,16 +977,16 @@ if (!function_exists('bvmgr_event_plan_perf_dependency_snapshot')) {
 				continue;
 			}
 
-			if (strpos($included_file, '/plugins/vms/') !== false) {
+			if (strpos($included_file, wp_normalize_path(BVMGR_PLUGIN_PATH)) === 0) {
 				$vms_file_count++;
 			}
-			if (strpos($included_file, '/plugins/woocommerce/') !== false) {
+			if (defined('WC_ABSPATH') && strpos($included_file, wp_normalize_path(WC_ABSPATH)) === 0) {
 				$woo_file_count++;
 			}
 			if (
-				strpos($included_file, '/plugins/the-events-calendar/') !== false
-				|| strpos($included_file, '/plugins/event-tickets/') !== false
-				|| strpos($included_file, '/plugins/event-tickets-plus/') !== false
+				(defined('TRIBE_EVENTS_FILE') && strpos($included_file, wp_normalize_path(plugin_dir_path(TRIBE_EVENTS_FILE))) === 0)
+				|| (defined('EVENT_TICKETS_MAIN_PLUGIN_FILE') && strpos($included_file, wp_normalize_path(plugin_dir_path(EVENT_TICKETS_MAIN_PLUGIN_FILE))) === 0)
+				|| (defined('EVENT_TICKETS_PLUS_FILE') && strpos($included_file, wp_normalize_path(plugin_dir_path(EVENT_TICKETS_PLUS_FILE))) === 0)
 			) {
 				$tec_file_count++;
 			}
