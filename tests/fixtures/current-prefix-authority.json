@@ -1,7 +1,7 @@
 {
     "runtime_authority": "3f4049014fcb151b0bb2113f4f1a688642c0855a",
     "frozen_manifest_commit": "85a1a16",
-    "scope": "Post-WordPress.org provider decoupling, private storage, staffing, notification, and task authorities. Retired Data Tools implicit loader is intentionally absent. No historical migration certificate is regenerated against a later runtime.",
+    "scope": "Post-WordPress.org provider decoupling, private storage, staffing, notification, task, and explicit plugin activation-state authorities. The retired Data Tools implicit loader and seven retired automatic plugin-basename migration helpers are intentionally absent. No historical migration certificate is regenerated against a later runtime.",
     "symbol_changes": {
         "classes": {
             "removed": [],
@@ -18,6 +18,13 @@
         },
         "functions": {
             "removed": {
+                "bvmgr_maybe_migrate_activated_legacy_plugin_basename": 1,
+                "bvmgr_migrate_legacy_plugin_basename": 1,
+                "bvmgr_migrate_legacy_plugin_basename_values": 1,
+                "bvmgr_migrate_registered_legacy_plugin_basenames": 1,
+                "bvmgr_plugin_basename_compatibility_pair": 1,
+                "bvmgr_plugin_basename_compatibility_pairs": 1,
+                "bvmgr_register_legacy_plugin_basename_compatibility": 1,
                 "bvmgr_vendor_portal_maybe_load_data_tools_reporting": 1
             },
             "current": {
@@ -276,7 +283,8 @@
                 "GLOBALS:bvmgr_staffing_transaction": 14,
                 "GLOBALS:bvmgr_tasks_request": 4,
                 "GLOBALS:bvmgr_tasks_transaction": 15,
-                "GLOBALS:bvmgr_tasks_transaction_control": 4
+                "GLOBALS:bvmgr_tasks_transaction_control": 4,
+                "loader:bvmgr_canonical_plugin_file": 3
             }
         }
     },

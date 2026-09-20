@@ -319,12 +319,26 @@ $templateAssignmentNames = array();
 $partialFilesSeen = array();
 $unmodeledAssignments = array();
 $deadCodeAssignments = array();
+$activationBootstrapAssignments = array();
+$activationBootstrapAssignmentKeys = array_fill_keys(array(
+	'backstage-venue-manager.php|20|bvmgr_current_basename',
+	'backstage-venue-manager.php|21|bvmgr_active_basenames',
+	'backstage-venue-manager.php|23|bvmgr_active_basenames',
+	'backstage-venue-manager.php|25|bvmgr_conflict',
+	'backstage-venue-manager.php|26|bvmgr_active_basename',
+	'backstage-venue-manager.php|29|bvmgr_conflict',
+), true);
 foreach ($topLevelAssignments as $row) {
 	$file = (string) $row['file'];
 	$line = (int) $row['line'];
 	$variable = (string) $row['variable'];
+	$key = $file . '|' . $line . '|' . $variable;
 	if (in_array($file, $methodScopePartials, true)) {
 		$partialFilesSeen[$file] = true;
+		continue;
+	}
+	if (isset($activationBootstrapAssignmentKeys[$key])) {
+		$activationBootstrapAssignments[] = $row;
 		continue;
 	}
 	if ($file === 'includes/rest-dashboard.php' && $line === 11 && $variable === 'path') {
@@ -334,7 +348,6 @@ foreach ($topLevelAssignments as $row) {
 	if ($file === 'includes/public/templates/vendor-profile.php') {
 		$templateAssignmentNames[$variable] = true;
 	}
-	$key = $file . '|' . $line . '|' . $variable;
 	if (!isset($semanticGlobalAssignmentSites[$key])) {
 		$unmodeledAssignments[] = $row;
 	}
@@ -345,6 +358,17 @@ ksort($expectedPartialFiles, SORT_STRING);
 $assert($partialFilesSeen === $expectedPartialFiles, 'Top-level semantic audit must recognize the Event Plan partials and function-included Staff Tasks files as local scope.');
 $assert($unmodeledAssignments === array(), 'Unmodeled current top-level assignments: ' . json_encode($unmodeledAssignments));
 $assert($deadCodeAssignments === array(array('file' => 'includes/rest-dashboard.php', 'line' => 11, 'variable' => 'path')), 'Only the exact unreachable rest-dashboard $path assignment may be reason-coded out.');
+$assert($activationBootstrapAssignments === array(
+	array('file' => 'backstage-venue-manager.php', 'line' => 20, 'variable' => 'bvmgr_current_basename'),
+	array('file' => 'backstage-venue-manager.php', 'line' => 21, 'variable' => 'bvmgr_active_basenames'),
+	array('file' => 'backstage-venue-manager.php', 'line' => 23, 'variable' => 'bvmgr_active_basenames'),
+	array('file' => 'backstage-venue-manager.php', 'line' => 25, 'variable' => 'bvmgr_conflict'),
+	array('file' => 'backstage-venue-manager.php', 'line' => 26, 'variable' => 'bvmgr_active_basename'),
+	array('file' => 'backstage-venue-manager.php', 'line' => 29, 'variable' => 'bvmgr_conflict'),
+), 'Activation bootstrap must expose only the exact request-local conflict-detection assignments.');
+$activationBootstrap = (string) file_get_contents($root . '/backstage-venue-manager.php');
+$activationBootstrapUnset = 'unset($bvmgr_current_basename, $bvmgr_active_basenames, $bvmgr_active_basename, $bvmgr_conflict);';
+$assert(substr_count($activationBootstrap, $activationBootstrapUnset) === 2, 'Activation bootstrap request-local state must be cleared on both conflict and normal paths.');
 $restDashboard = (string) file_get_contents($root . '/includes/rest-dashboard.php');
 $scheduleHelpers = (string) file_get_contents($root . '/includes/schedule/helpers.php');
 $assert(

@@ -45,6 +45,8 @@ After configuring storage, open Tools → BVM Private Documents. Existing upload
 
 Legacy private WordPress attachment IDs remain associated with their records; migration also protects registered image derivatives. Unrelated uploads and separately managed companion files are not migrated. Authorized downloads stream through existing BVM routes; the secure filesystem location is not published as a download URL. Host deny files and filesystem permissions alone are not treated as sufficient protection.
 
+To replace a legacy VMS installation, deactivate it in WordPress Plugins or Network Admin, then activate Backstage Venue Manager. BVM never changes another plugin's activation state and retains venue data.
+
 == Frequently Asked Questions ==
 
 = Does Backstage Venue Manager require WooCommerce? =

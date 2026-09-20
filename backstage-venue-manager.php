@@ -15,6 +15,37 @@
 
 defined('ABSPATH') || exit;
 
+// Detect incompatible parallel installations before loading shared declarations.
+// Activation and deactivation remain explicit WordPress administrator actions.
+$bvmgr_current_basename = plugin_basename(__FILE__);
+$bvmgr_active_basenames = (array) get_option('active_plugins', array());
+if (is_multisite()) {
+    $bvmgr_active_basenames = array_merge($bvmgr_active_basenames, array_keys((array) get_site_option('active_sitewide_plugins', array())));
+}
+$bvmgr_conflict = defined('BVMGR_PLUGIN_FILE') && BVMGR_PLUGIN_FILE !== __FILE__;
+foreach ($bvmgr_active_basenames as $bvmgr_active_basename) {
+    if (in_array(basename((string) $bvmgr_active_basename), array('vendor-management-system.php', 'backstage-venue-manager.php', 'vms.php'), true)
+        && dirname((string) $bvmgr_active_basename) !== dirname($bvmgr_current_basename)) {
+        $bvmgr_conflict = true;
+    }
+}
+if ($bvmgr_conflict) {
+    add_action('admin_notices', static function (): void {
+        if (!current_user_can('activate_plugins')) return;
+        echo '<div class="notice notice-error"><p>' . esc_html__('Backstage Venue Manager is paused because another BVM or legacy VMS installation is active. Deactivate the other installation in Plugins (or Network Admin), then activate this installation. Your venue data is retained.', 'backstage-venue-manager') . '</p></div>';
+    });
+    add_action('network_admin_notices', static function (): void {
+        if (!current_user_can('manage_network_plugins')) return;
+        echo '<div class="notice notice-error"><p>' . esc_html__('Backstage Venue Manager requires one active installation. Deactivate the legacy VMS or duplicate BVM installation before activating this copy. Venue data is retained.', 'backstage-venue-manager') . '</p></div>';
+    });
+    register_activation_hook(__FILE__, static function (): void {
+        wp_die(esc_html__('Deactivate the other BVM or legacy VMS installation in WordPress before activating Backstage Venue Manager. Venue data is retained.', 'backstage-venue-manager'));
+    });
+    unset($bvmgr_current_basename, $bvmgr_active_basenames, $bvmgr_active_basename, $bvmgr_conflict);
+    return;
+}
+unset($bvmgr_current_basename, $bvmgr_active_basenames, $bvmgr_active_basename, $bvmgr_conflict);
+
 define('BVMGR_PLUGIN_FILE', __FILE__);
 define('BVMGR_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('BVMGR_PLUGIN_URL', plugin_dir_url(__FILE__));

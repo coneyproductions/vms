@@ -177,7 +177,9 @@ $assert(strpos($main, "register_activation_hook(__FILE__, '" . $b3Name('vms_acti
 $assert(strpos($main, "register_deactivation_hook(__FILE__, '" . $b3Name('vms_deactivate_plugin') . "')") !== false, 'Deactivation callback must use the exact current B3 identity.');
 $assert(strpos($legacyBridge, "define('BVMGR_LEGACY_PLUGIN_FILE', __FILE__)") !== false, 'Legacy basename bridge must use the canonical constant symbol.');
 $assert(strpos($legacyBridge, '$bvmgr_canonical_plugin_file') !== false, 'Legacy basename bridge must use the canonical loader-local variable.');
-$assert(strpos($legacyBridge, $b3Name('vms_register_legacy_plugin_basename_compatibility')) !== false, 'Legacy bridge must use the exact current basename compatibility callback.');
+$assert(strpos($legacyBridge, $b3Name('vms_register_legacy_plugin_basename_compatibility')) === false, 'Legacy bridge must not intercept or rewrite WordPress activation state.');
+$assert(strpos($legacyBridge, "register_activation_hook(__FILE__, '" . $b3Name('vms_activate_plugin') . "')") !== false, 'Legacy bridge must preserve explicit legacy-basename activation behavior.');
+$assert(strpos($legacyBridge, "register_deactivation_hook(__FILE__, '" . $b3Name('vms_deactivate_plugin') . "')") !== false, 'Legacy bridge must preserve explicit legacy-basename deactivation behavior.');
 $assert(strpos($delegatingBridge, 'backstage-venue-manager.php') !== false, 'vms.php must continue delegating to the canonical Phase A bootstrap.');
 
 if ($failures !== array()) {
