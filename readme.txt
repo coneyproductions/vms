@@ -16,7 +16,7 @@ Backstage Venue Manager helps venue operators manage event plans, vendor records
 
 The core plugin loads without WooCommerce, The Events Calendar, or Event Tickets. Features that depend on one of those optional integrations become available when the required plugin is installed and active. When an optional dependency is missing, Backstage Venue Manager is intended to keep loading while the dependent feature stays unavailable.
 
-Backstage Venue Manager 1.2.0 was runtime-tested on WordPress 6.8 and 7.0. Packaging, repo-root release tests, and direct WordPress boot smoke were also revalidated under PHP 8.3 during this release-candidate pass.
+Use the Event Command Center to review event readiness, staffing commitments, ticket availability, and financial summaries. Optional integrations supply additional information when installed and configured.
 
 == Installation ==
 
@@ -83,13 +83,6 @@ Use the plugin's WordPress.org support forum after the listing is approved. Prod
 
 Email coneyproductionsllc@gmail.com.
 
-== Screenshots ==
-
-1. Backstage Venue Manager dashboard and top-level navigation.
-2. Event plan editing and venue operations workflow.
-3. Vendor records and vendor application workflow.
-4. Admissions and ticketing-related operator tools.
-
 == External Services ==
 
 Backstage Venue Manager can connect to third-party services only when the corresponding feature is enabled or configured.
@@ -147,6 +140,9 @@ Private security reports: coneyproductionsllc@gmail.com
 
 = 1.2.0 =
 
+* Added the Event Command Center and staffing assignment responses with read-only staffing summaries.
+* Separated transactional receipts, reported values, forecasts, and unavailable accounting totals.
+* Included current staffing lifecycle tables on new installations; existing staffing data uses the guarded migration workflow.
 * Established the Backstage Venue Manager public core line under the `backstage-venue-manager` package identity and WordPress.org slug.
 * Hardened WordPress.org review-sensitive security and request boundaries while preserving established venue, vendor, Event Plan, and ticketing workflows.
 * Normalized output, JSON, filesystem, upload, and download handling across public-package review surfaces.
@@ -157,7 +153,7 @@ Private security reports: coneyproductionsllc@gmail.com
 
 = 1.0.0 =
 
-* First public WordPress.org release for Backstage Venue Manager.
+* Initial prerelease candidate for Backstage Venue Manager.
 * Applied the selected public plugin name, author metadata, licensing metadata, and public-facing readme.
 * Documented optional dependency boundaries, external-service disclosures, privacy notes, and uninstall data-retention behavior.
 

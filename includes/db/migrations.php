@@ -173,6 +173,23 @@ function bvmgr_db_migrate_vendor_core_v3(): void
 	$t_rollups = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_EVENT_ROLLUPS_SUFFIX : 'vms_staffing_event_rollups');
 	$t_audit = $wpdb->prefix . (defined('BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX') ? BVMGR_DB_TABLE_STAFFING_AUDIT_LOG_SUFFIX : 'vms_staffing_audit_log');
 
+	// New tables start with the current lifecycle shape. Existing staffing tables
+	// still require the explicit, population-preflighted lifecycle migration.
+	$assignment_lifecycle_columns = '';
+	$audit_lifecycle_columns = '';
+	$audit_lifecycle_indexes = '';
+	$existing_assignments = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($t_assignments)));
+	if ($wpdb->last_error === '' && $existing_assignments === null) {
+		$assignment_lifecycle_columns = "revision BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,";
+	}
+	$existing_audit = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($t_audit)));
+	if ($wpdb->last_error === '' && $existing_audit === null) {
+		$audit_lifecycle_columns = "assignment_id BIGINT(20) UNSIGNED NULL,
+		operation_id VARCHAR(64) NULL,";
+		$audit_lifecycle_indexes = "UNIQUE KEY lifecycle_operation (operation_id),
+		KEY lifecycle_assignment (assignment_id),";
+	}
+
 	$sql_templates = "CREATE TABLE {$t_templates} (
 		template_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 		name VARCHAR(190) NOT NULL,
@@ -253,6 +270,7 @@ function bvmgr_db_migrate_vendor_core_v3(): void
 	) {$charset_collate};";
 
 	$sql_assignments = "CREATE TABLE {$t_assignments} (
+		{$assignment_lifecycle_columns}
 		assignment_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 		slot_id BIGINT(20) UNSIGNED NOT NULL,
 		staff_id BIGINT(20) UNSIGNED NOT NULL,
@@ -307,6 +325,7 @@ function bvmgr_db_migrate_vendor_core_v3(): void
 	) {$charset_collate};";
 
 	$sql_audit = "CREATE TABLE {$t_audit} (
+		{$audit_lifecycle_columns}
 		log_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 		event_plan_id BIGINT(20) UNSIGNED NULL,
 		actor_user_id BIGINT(20) UNSIGNED NULL,
@@ -315,6 +334,7 @@ function bvmgr_db_migrate_vendor_core_v3(): void
 		after_json LONGTEXT NULL,
 		created_at DATETIME NOT NULL,
 		PRIMARY KEY (log_id),
+		{$audit_lifecycle_indexes}
 		KEY event_plan_id (event_plan_id),
 		KEY actor_user_id (actor_user_id),
 		KEY action (action),
