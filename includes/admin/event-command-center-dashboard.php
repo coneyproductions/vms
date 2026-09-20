@@ -292,6 +292,9 @@ function bvmgr_event_command_center_render_dashboard(int $plan_id, array $payloa
                 <?php bvmgr_event_command_center_render_promo_video_manager($plan_id, $marketing); ?>
             </details>
         <?php endif; ?>
+        <?php if (function_exists('bvmgr_ecc_render_registered_extensions')) : ?>
+            <?php bvmgr_ecc_render_registered_extensions($plan_id, $payload); ?>
+        <?php endif; ?>
     </div>
     <?php
 }

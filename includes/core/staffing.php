@@ -1804,17 +1804,37 @@ if (!function_exists('bvmgr_staffing_event_plan_datetime')) {
 		$ymd = (string) get_post_meta($event_plan_id, '_vms_event_date', true);
 		$start_hhmm = (string) get_post_meta($event_plan_id, '_vms_start_time', true);
 		$end_hhmm = (string) get_post_meta($event_plan_id, '_vms_end_time', true);
+		if (function_exists('bvmgr_operational_event_occurrence')) {
+			$occurrence = bvmgr_operational_event_occurrence($event_plan_id);
+			$valid = !empty($occurrence['valid'])
+				&& ($occurrence['start'] ?? null) instanceof DateTimeImmutable
+				&& ($occurrence['end'] ?? null) instanceof DateTimeImmutable;
+			return array(
+				'event_date_ymd' => $ymd,
+				'start_hhmm'     => $start_hhmm,
+				'end_hhmm'       => $end_hhmm,
+				'start_local'    => $valid ? $occurrence['start'] : null,
+				'end_local'      => $valid ? $occurrence['end'] : null,
+			);
+		}
 
 		$tz = wp_timezone();
 		$start_local = null;
 		$end_local = null;
 		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd)) {
 			if (preg_match('/^\d{2}:\d{2}$/', $start_hhmm)) {
-				$start_local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $start_hhmm, $tz);
+				$start_local = function_exists('bvmgr_operational_parse_local_datetime')
+					? bvmgr_operational_parse_local_datetime($ymd . ' ' . $start_hhmm)
+					: DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $start_hhmm, $tz);
 			}
 			if (preg_match('/^\d{2}:\d{2}$/', $end_hhmm)) {
-				$end_local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $end_hhmm, $tz);
+				$end_local = function_exists('bvmgr_operational_parse_local_datetime')
+					? bvmgr_operational_parse_local_datetime($ymd . ' ' . $end_hhmm)
+					: DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $end_hhmm, $tz);
 			}
+		}
+		if ($start_local instanceof DateTimeImmutable && $end_local instanceof DateTimeImmutable && $end_local < $start_local) {
+			$end_local = $end_local->modify('+1 day');
 		}
 
 		return array(
@@ -1853,7 +1873,9 @@ if (!function_exists('bvmgr_staffing_resolve_anchor_local')) {
 		if (!preg_match('/^\d{2}:\d{2}$/', $hhmm)) {
 			return null;
 		}
-		$local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $hhmm, wp_timezone());
+		$local = function_exists('bvmgr_operational_parse_local_datetime')
+			? bvmgr_operational_parse_local_datetime($ymd . ' ' . $hhmm)
+			: DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $hhmm, wp_timezone());
 		return $local instanceof DateTimeImmutable ? $local : null;
 	}
 }
@@ -1877,24 +1899,41 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 
 		$start_local = null;
 		$end_local = null;
+		$start_unresolved = false;
+		$end_unresolved = false;
 		$duration = isset($slot['duration_minutes']) && $slot['duration_minutes'] !== null ? (int) $slot['duration_minutes'] : null;
 		if ($mode === 'absolute' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd)) {
 			$sh = isset($slot['shift_start_local']) ? trim((string) $slot['shift_start_local']) : '';
 			$eh = isset($slot['shift_end_local']) ? trim((string) $slot['shift_end_local']) : '';
 			if (preg_match('/^\d{2}:\d{2}$/', $sh)) {
-				$start_local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $sh, $tz);
+				$start_local = function_exists('bvmgr_operational_parse_local_datetime')
+					? bvmgr_operational_parse_local_datetime($ymd . ' ' . $sh)
+					: DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $sh, $tz);
+				$start_unresolved = !($start_local instanceof DateTimeImmutable);
+			} elseif ($sh !== '') {
+				$start_unresolved = true;
 			}
 			if ($start_local instanceof DateTimeImmutable && $duration !== null && $duration > 0) {
 				$end_local = $start_local->modify('+' . $duration . ' minutes');
 			} elseif (preg_match('/^\d{2}:\d{2}$/', $eh)) {
-				$end_local = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $eh, $tz);
+				$end_local = function_exists('bvmgr_operational_parse_local_datetime')
+					? bvmgr_operational_parse_local_datetime($ymd . ' ' . $eh)
+					: DateTimeImmutable::createFromFormat('!Y-m-d H:i', $ymd . ' ' . $eh, $tz);
+				$end_unresolved = !($end_local instanceof DateTimeImmutable);
+				if ($start_local instanceof DateTimeImmutable && $end_local instanceof DateTimeImmutable && $end_local < $start_local) {
+					$end_local = $end_local->modify('+1 day');
+				}
+			} elseif ($eh !== '') {
+				$end_unresolved = true;
 			}
 		} else {
 			$start_anchor_key = isset($slot['start_anchor_key']) ? sanitize_key((string) $slot['start_anchor_key']) : '';
 			$start_offset = isset($slot['start_offset_minutes']) ? (int) $slot['start_offset_minutes'] : 0;
 			$start_anchor = bvmgr_staffing_resolve_anchor_local($event_plan_id, $start_anchor_key);
-			if (!$start_anchor instanceof DateTimeImmutable) {
+			if (!$start_anchor instanceof DateTimeImmutable && $start_anchor_key === '') {
 				$start_anchor = $dt['start_local'] instanceof DateTimeImmutable ? $dt['start_local'] : null;
+			} elseif (!$start_anchor instanceof DateTimeImmutable) {
+				$start_unresolved = true;
 			}
 			if ($start_anchor instanceof DateTimeImmutable) {
 				$start_local = $start_anchor->modify(($start_offset >= 0 ? '+' : '') . $start_offset . ' minutes');
@@ -1907,8 +1946,10 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 				$end_local = $start_local->modify('+' . $duration . ' minutes');
 			} else {
 				$end_anchor = bvmgr_staffing_resolve_anchor_local($event_plan_id, $end_anchor_key);
-				if (!$end_anchor instanceof DateTimeImmutable && $dt['end_local'] instanceof DateTimeImmutable) {
+				if (!$end_anchor instanceof DateTimeImmutable && $end_anchor_key === '' && $dt['end_local'] instanceof DateTimeImmutable) {
 					$end_anchor = $dt['end_local'];
+				} elseif (!$end_anchor instanceof DateTimeImmutable && $end_anchor_key !== '') {
+					$end_unresolved = true;
 				}
 				if ($end_anchor instanceof DateTimeImmutable) {
 					$end_local = $end_anchor->modify(($end_offset >= 0 ? '+' : '') . $end_offset . ' minutes');
@@ -1916,10 +1957,10 @@ if (!function_exists('bvmgr_staffing_resolve_slot_window')) {
 			}
 		}
 
-		if (!$start_local instanceof DateTimeImmutable && $dt['start_local'] instanceof DateTimeImmutable) {
+		if (!$start_unresolved && !$start_local instanceof DateTimeImmutable && $dt['start_local'] instanceof DateTimeImmutable) {
 			$start_local = $dt['start_local'];
 		}
-		if (!$end_local instanceof DateTimeImmutable) {
+		if (!$end_unresolved && !$end_local instanceof DateTimeImmutable) {
 			if ($dt['end_local'] instanceof DateTimeImmutable) {
 				$end_local = $dt['end_local'];
 			} elseif ($start_local instanceof DateTimeImmutable) {

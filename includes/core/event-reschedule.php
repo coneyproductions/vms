@@ -254,7 +254,7 @@ if (!function_exists('bvmgr_event_occurrence_from_parts')) {
         if (!($start instanceof DateTimeImmutable) || !($end instanceof DateTimeImmutable)) {
             return $out;
         }
-        if ($end <= $start) {
+        if ($end < $start) {
             $end = $end->modify('+1 day');
         }
         if ($end <= $start || ($end->getTimestamp() - $start->getTimestamp()) > DAY_IN_SECONDS) {

@@ -34,6 +34,8 @@ require_once __DIR__ . '/../cpt/ratings.php';
 require_once __DIR__ . '/../cpt/staff.php';
 
 require_once __DIR__ . '/event-plan-inclusion.php';
+require_once __DIR__ . '/operational-context.php';
+require_once __DIR__ . '/operational-scope.php';
 require_once __DIR__ . '/calendar-feed.php';
 require_once __DIR__ . '/calendar-ticket-counts.php';
 require_once __DIR__ . '/cancellation.php';
@@ -63,6 +65,8 @@ require_once __DIR__ . '/due-dates.php';
 
 // Staffing roles / slots / assignments / rollups (STAFF-01 Phase A)
 require_once __DIR__ . '/staffing.php';
+require_once __DIR__ . '/staffing-dispatch.php';
+require_once __DIR__ . '/ecc-extensions.php';
 require_once __DIR__ . '/staffing-lifecycle.php';
 require_once __DIR__ . '/staffing-financial.php';
 require_once __DIR__ . '/staffing-lifecycle-ui.php';

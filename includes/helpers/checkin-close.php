@@ -77,8 +77,11 @@ if (!function_exists('bvmgr_event_plan_end_datetime')) {
             return null;
         }
 
-        if ($start instanceof DateTimeImmutable && $end <= $start) {
+        if ($start instanceof DateTimeImmutable && $end < $start) {
             return $end->add(new DateInterval('P1D'));
+        }
+        if ($start instanceof DateTimeImmutable && $end == $start) {
+            return null;
         }
 
         return $end;

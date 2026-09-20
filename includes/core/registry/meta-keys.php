@@ -305,6 +305,10 @@ function bvmgr_meta_keys(): array
 			'start_datetime' => '_vms_event_plan_start_datetime',
 			'end_datetime'   => '_vms_event_plan_end_datetime',
 			'checkin_close_at' => '_checkin_close_at',
+			'operational_start_local' => '_bvmgr_event_plan_operational_start_local',
+			'operational_end_local' => '_bvmgr_event_plan_operational_end_local',
+			'operational_start_offset_minutes' => '_bvmgr_event_plan_operational_start_offset_minutes',
+			'operational_end_offset_minutes' => '_bvmgr_event_plan_operational_end_offset_minutes',
 
 			// Status + notes (if you want these centralized too)
 			'status'         => '_vms_event_plan_status',
