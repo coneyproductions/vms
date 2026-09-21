@@ -567,6 +567,17 @@ try {
     wp_update_post(array('ID' => $addon_id, 'post_title' => $old_date . ' 19:00 - Fire Table #01'));
 
     // Inject a failure at the last possible pre-commit point to prove rollback of all writes.
+    $rollback_state_before = array(
+        'plan_title' => (string) get_the_title($plan_id),
+        'plan_event_date' => (string) get_post_meta($plan_id, '_vms_event_date', true),
+        'plan_start_time' => (string) get_post_meta($plan_id, '_vms_start_time', true),
+        'plan_end_time' => (string) get_post_meta($plan_id, '_vms_end_time', true),
+        'tec_title' => (string) get_the_title($event_id),
+        'tec_start_date' => (string) get_post_meta($event_id, '_EventStartDate', true),
+        'tec_end_date' => (string) get_post_meta($event_id, '_EventEndDate', true),
+        'ticket_title' => (string) get_the_title($ticket_id),
+        'addon_title' => (string) get_the_title($addon_id),
+    );
     $throw_for_rollback = static function (): void {
         throw new RuntimeException('Fixture rollback injection.');
     };
@@ -575,7 +586,18 @@ try {
     remove_action('bvmgr_event_occurrence_before_verify', $throw_for_rollback, 10);
     $assert(empty($rolled_back['ok']) && !empty($rolled_back['rolled_back']), 'Injected failure did not report transaction rollback.');
     $assert((string) wc_get_order_item_meta($ticket_item_id, '_vms_effective_event_start_local', true) === '', 'Rollback left effective order-item occurrence metadata behind.');
-    $assert(strpos((string) get_the_title($ticket_id), $old_date) === 0, 'Rollback left the product title partially migrated.');
+    $rollback_state_after = array(
+        'plan_title' => (string) get_the_title($plan_id),
+        'plan_event_date' => (string) get_post_meta($plan_id, '_vms_event_date', true),
+        'plan_start_time' => (string) get_post_meta($plan_id, '_vms_start_time', true),
+        'plan_end_time' => (string) get_post_meta($plan_id, '_vms_end_time', true),
+        'tec_title' => (string) get_the_title($event_id),
+        'tec_start_date' => (string) get_post_meta($event_id, '_EventStartDate', true),
+        'tec_end_date' => (string) get_post_meta($event_id, '_EventEndDate', true),
+        'ticket_title' => (string) get_the_title($ticket_id),
+        'addon_title' => (string) get_the_title($addon_id),
+    );
+    $assert($rollback_state_after === $rollback_state_before, 'Rollback did not restore exact Event Plan, linked TEC, and product title/date state.');
     $assert(bvmgr_event_occurrence_history($plan_id) === array(), 'Rollback left an audit entry behind.');
     $assert(function_exists('bvmgr_event_communication_get_ledger') && bvmgr_event_communication_get_ledger($plan_id, (string) ($rolled_back['operation_id'] ?? '')) === array(), 'Rollback left a communication ledger behind.');
 
@@ -589,6 +611,12 @@ try {
     $assert((string) wc_get_order_item_meta($addon_item_id, '_vms_effective_event_start_local', true) === $new_date . ' 19:00:00', 'Reservation effective occurrence did not migrate.');
     $ticket_title_after = (string) get_the_title($ticket_id);
     $addon_title_after = (string) get_the_title($addon_id);
+    $ticket_title_raw_after = (string) get_post_field('post_title', $ticket_id, 'raw');
+    $addon_title_raw_after = (string) get_post_field('post_title', $addon_id, 'raw');
+    $expected_ticket_title_after = bvmgr_ticketing_v2_compose_product_admin_title('Veteran / Youth Admission', $event_id);
+    $expected_addon_title_after = bvmgr_ticketing_v2_compose_product_admin_title('Fire Table #01', $event_id);
+    $assert($ticket_title_raw_after === $expected_ticket_title_after, 'Successful reschedule did not commit the exact canonical ticket product title: ' . $ticket_title_raw_after);
+    $assert($addon_title_raw_after === $expected_addon_title_after, 'Successful reschedule did not commit the exact canonical reservation product title: ' . $addon_title_raw_after);
     $assert(strpos($ticket_title_after, $old_date) === false && strpos($ticket_title_after, 'Veteran / Youth Admission') !== false, 'Ticket product title still exposes the old occurrence: ' . $ticket_title_after);
     $assert(strpos($addon_title_after, $old_date) === false && strpos($addon_title_after, 'Fire Table #01') !== false, 'Numbered reservation identity was not preserved in the updated title: ' . $addon_title_after);
     $assert((string) (new WC_Order_Item_Product($ticket_item_id))->get_name() === $new_date . ' 19:00 - Veteran / Youth Admission', 'Future reschedule APPLY did not set the canonical current ticket line name.');

@@ -15283,7 +15283,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 return true;
             } finally {
                 if (function_exists('bvmgr_event_plan_perf_span_finish')) {
-                    bvmgr_event_plan_perf_span_finish('vms_resync_event_to_calendar', $post_id, $trace, array('job_name' => 'calendar_resync', 'linked_tec_event_id' => $existing_tec_event_id));
+                    bvmgr_event_plan_perf_span_finish('vms_resync_event_to_calendar', $post_id, $trace, array('job_name' => 'calendar_resync', 'linked_tec_event_id' => $existing_tec_id));
                 }
             }
         }

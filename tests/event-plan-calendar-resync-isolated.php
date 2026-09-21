@@ -21,6 +21,24 @@ $scheduledMaintenancePairs = array();
 $originalPost = $_POST ?? array();
 $originalGet = $_GET ?? array();
 $originalRequest = $_REQUEST ?? array();
+$runtimeWarnings = array();
+
+$callWithWarningCapture = static function (callable $callback) use (&$runtimeWarnings) {
+    set_error_handler(static function (int $severity, string $message, string $file, int $line) use (&$runtimeWarnings): bool {
+        if (($severity & (E_WARNING | E_NOTICE | E_USER_WARNING | E_USER_NOTICE)) === 0) {
+            return false;
+        }
+
+        $runtimeWarnings[] = $message . ' in ' . $file . ':' . $line;
+        return true;
+    });
+
+    try {
+        return $callback();
+    } finally {
+        restore_error_handler();
+    }
+};
 
 $registerPost = static function (int $postId) use (&$createdPosts): int {
     $createdPosts[] = $postId;
@@ -308,7 +326,7 @@ try {
     $beforePlanState = $capturePlanState($planId);
     $beforeResyncState = $captureResyncOwnedState($planId, $tecId);
 
-    $successResult = bvmgr_event_plan_handle_resync_calendar_request(array(
+    $successResult = $callWithWarningCapture(static fn() => bvmgr_event_plan_handle_resync_calendar_request(array(
         '_bvmgr_resync_calendar_nonce' => wp_create_nonce('bvmgr_resync_calendar'),
         'post_id' => $planId,
         'redirect_to' => admin_url('post.php?post=' . $planId . '&action=edit'),
@@ -320,7 +338,7 @@ try {
         'vms_end_time' => '11:00',
         'vms_ticketing_enabled_override' => 'off',
         'vms_cancel_policy' => 'stop_sales_auto_refund',
-    ), false);
+    ), false));
 
     clean_post_cache($planId);
     clean_post_cache($tecId);
@@ -389,16 +407,19 @@ try {
     update_post_meta($missingLinkPlanId, '_vms_flat_fee_amount', '250.00');
     $beforeMissingLinkState = $capturePlanState($missingLinkPlanId);
     $clearNotices();
-    $missingLinkResult = bvmgr_event_plan_handle_resync_calendar_request(array(
+    $missingLinkResult = $callWithWarningCapture(static fn() => bvmgr_event_plan_handle_resync_calendar_request(array(
         '_bvmgr_resync_calendar_nonce' => wp_create_nonce('bvmgr_resync_calendar'),
         'post_id' => $missingLinkPlanId,
         'redirect_to' => admin_url('post.php?post=' . $missingLinkPlanId . '&action=edit'),
         'source' => 'advanced_controls',
-    ), false);
+    ), false));
     $afterMissingLinkState = $capturePlanState($missingLinkPlanId);
     $assert(empty($missingLinkResult['ok']), 'Isolated Re-sync should fail when no linked TEC event exists.');
     $assert($missingLinkResult['notice_message'] === 'No linked calendar event found. Use “Publish Now” first.', 'Missing-link failure should preserve the existing Re-sync error copy.');
     $assert(wp_json_encode($beforeMissingLinkState) === wp_json_encode($afterMissingLinkState), 'Missing-link failure should not alter Event Plan fields.');
+    $missingLinkPost = get_post($missingLinkPlanId);
+    $assert($missingLinkPost instanceof WP_Post, 'Expected missing-link Event Plan fixture to exist.');
+    $assert($callWithWarningCapture(static fn() => bvmgr_resync_event_to_calendar($missingLinkPlanId, $missingLinkPost, 0)) === false, 'Direct Re-sync should reject a zero linked TEC event ID.');
 
     $invalidPlanId = $createPlan('Validation Failure Plan', 'Validation failure body');
     $invalidTecId = $createTecEvent('Validation Failure TEC Event', 'Validation failure TEC body');
@@ -407,18 +428,24 @@ try {
     $beforeInvalidPlanState = $capturePlanState($invalidPlanId);
     $beforeInvalidTecState = $captureResyncOwnedState($invalidPlanId, $invalidTecId);
     $clearNotices();
-    $validationResult = bvmgr_event_plan_handle_resync_calendar_request(array(
+    $validationResult = $callWithWarningCapture(static fn() => bvmgr_event_plan_handle_resync_calendar_request(array(
         '_bvmgr_resync_calendar_nonce' => wp_create_nonce('bvmgr_resync_calendar'),
         'post_id' => $invalidPlanId,
         'redirect_to' => admin_url('post.php?post=' . $invalidPlanId . '&action=edit'),
         'source' => 'advanced_controls',
-    ), false);
+    ), false));
     $afterInvalidPlanState = $capturePlanState($invalidPlanId);
     $afterInvalidTecState = $captureResyncOwnedState($invalidPlanId, $invalidTecId);
     $assert(empty($validationResult['ok']), 'Isolated Re-sync should fail validation for an incomplete Event Plan.');
     $assert(strpos($validationResult['notice_message'], 'Cannot re-sync:') === 0, 'Validation failure should preserve the existing Re-sync validation error prefix.');
     $assert(wp_json_encode($beforeInvalidPlanState) === wp_json_encode($afterInvalidPlanState), 'Validation failure should not alter Event Plan fields.');
     $assert(wp_json_encode($beforeInvalidTecState) === wp_json_encode($afterInvalidTecState), 'Validation failure should not alter TEC state.');
+    $invalidPlanPost = get_post($invalidPlanId);
+    $assert($invalidPlanPost instanceof WP_Post, 'Expected invalid Event Plan fixture to exist.');
+    $assert($callWithWarningCapture(static fn() => bvmgr_resync_event_to_calendar($invalidPlanId, $invalidPlanPost, $invalidTecId)) === false, 'Direct Re-sync should reject an Event Plan whose TEC arguments cannot be built.');
+    $assert(wp_json_encode($beforeInvalidPlanState) === wp_json_encode($capturePlanState($invalidPlanId)), 'Direct validation failure should not alter Event Plan fields.');
+    $assert(wp_json_encode($beforeInvalidTecState) === wp_json_encode($captureResyncOwnedState($invalidPlanId, $invalidTecId)), 'Direct validation failure should not alter TEC state.');
+    $assert($runtimeWarnings === array(), 'Calendar Re-sync emitted PHP warning/notice: ' . implode(' | ', $runtimeWarnings));
 
     remove_action('vms_event_plan_saved', $savedHookProbe, 999);
 

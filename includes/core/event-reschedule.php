@@ -1773,7 +1773,11 @@ if (!function_exists('bvmgr_event_occurrence_apply')) {
         global $wpdb;
         if (function_exists('bvmgr_staffing_atomic') && !bvmgr_staffing_transaction_active()) {
             $args = func_get_args();
-            return bvmgr_staffing_atomic(static function () use ($args): array { $GLOBALS['bvmgr_staffing_transaction']['plans'][] = (int) $args[0]; return bvmgr_event_occurrence_apply(...$args); });
+            $result = bvmgr_staffing_atomic(static function () use ($args): array { $GLOBALS['bvmgr_staffing_transaction']['plans'][] = (int) $args[0]; return bvmgr_event_occurrence_apply(...$args); });
+            if (isset($result['preview']) && is_array($result['preview'])) {
+                bvmgr_event_occurrence_clear_runtime_caches($result['preview']);
+            }
+            return $result;
         }
         $staffing_transaction = function_exists('bvmgr_staffing_transaction_active') && bvmgr_staffing_transaction_active();
         $plan_id = absint($plan_id);
