@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/helpers/certified-source-fixture.php';
+
 define('ABSPATH', __DIR__);
 
 chdir(dirname(__DIR__));
@@ -910,13 +912,10 @@ function vms_test_build_large_valid_changes_json(array $payload): string
 }
 
 $mirror_review_path = getcwd() . '/includes/core/event-plan-review.php';
-$live_review_path = realpath(getcwd() . '/../../vms/includes/core/event-plan-review.php');
 $command_center_path = getcwd() . '/includes/admin/event-command-center.php';
 
-vms_test_assert_true(is_string($live_review_path) && $live_review_path !== '', 'Live event-plan-review.php path should resolve.');
-
 $mirror_review_source = (string) file_get_contents($mirror_review_path);
-$live_review_source = (string) file_get_contents($live_review_path);
+$certified_review_source = bvmgr_test_certified_source('includes/core/event-plan-review.php');
 $command_center_source = (string) file_get_contents($command_center_path);
 
 $current_snapshot_body = vms_test_extract_function($mirror_review_source, 'bvmgr_event_plan_review_current_snapshot');
@@ -965,7 +964,7 @@ vms_test_assert_contains("'invalid' === (\$changes_state['state'] ?? '')", $has_
 vms_test_assert_contains("bvmgr_event_plan_review_get_changes(\$plan_id)", $activity_body, 'Command Center activity should still read changes through the canonical review helper.');
 vms_test_assert_contains("bvmgr_event_plan_review_has_changes(\$plan_id)", $alerts_body, 'Command Center alerts should still consult has_changes() through the review helper.');
 vms_test_assert_true(strpos($mirror_review_source, 'snapshot_version') === false && strpos($mirror_review_source, 'changes_version') === false, 'No migration or version marker should be added.');
-vms_test_assert_true($live_review_source !== '', 'Live event-plan-review.php should remain readable while this mirror-only remediation leaves ../../vms untouched.');
+vms_test_assert_true($mirror_review_source === $certified_review_source, 'Event Plan Review source should match the authenticated certified-source fixture.');
 
 require $mirror_review_path;
 // Ticket-cache behavior is independently covered by p0-source-consistency-repair.php.

@@ -2441,7 +2441,12 @@ PHP;
 	private static function containsCredentialPattern(string $contents): bool
 	{
 		return preg_match('~-----BEGIN [A-Z ]*PRIVATE KEY-----~', $contents) === 1
-			|| preg_match('~\\b(DB_PASSWORD|AUTH_KEY|SECURE_AUTH_KEY|SQUARE_ACCESS_TOKEN|AWS_SECRET_ACCESS_KEY|PRIVATE_KEY)\\b~', $contents) === 1
+			|| preg_match('~\\b(?:sk_(?:live|test)|rk_(?:live|test))_[A-Za-z0-9]{8,}\\b~', $contents) === 1
+			|| preg_match('~\\b(?:AKIA|ASIA)[A-Z0-9]{16}\\b~', $contents) === 1
+			|| preg_match('~\\b(?:ghp|gho|ghu|ghs|github_pat)_[A-Za-z0-9_]{20,}\\b~', $contents) === 1
+			|| preg_match('~\\bdefine\\s*\\(\\s*([\'\"])(?:DB_PASSWORD|AUTH_KEY|SECURE_AUTH_KEY|LOGGED_IN_KEY|NONCE_KEY|SQUARE_ACCESS_TOKEN|AWS_SECRET_ACCESS_KEY|PRIVATE_KEY)\\1\\s*,\\s*([\'\"])(?:(?!\\2).)+\\2\\s*\\)~is', $contents) === 1
+			|| preg_match('~\\$[A-Za-z0-9_]*(?:password|passwd|secret|api_?key|access_?token|private_?key)[A-Za-z0-9_]*\\s*=\\s*([\'\"])(?:(?!\\1).)+\\1~is', $contents) === 1
+			|| preg_match('~(?<key_quote>[\'\"])[A-Za-z0-9_]*(?:password|passwd|secret|api_?key|access_?token|private_?key)[A-Za-z0-9_]*\\k<key_quote>\\s*=>\\s*(?<value_quote>[\'\"])[^\\s\'\"]{8,}\\k<value_quote>~is', $contents) === 1
 			|| preg_match('~://[^\\s/:]+:[^\\s/@]+@~', $contents) === 1;
 	}
 

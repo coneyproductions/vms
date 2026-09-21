@@ -402,6 +402,35 @@ PHP,
 
 $tests = array();
 
+$tests['credential scanner distinguishes configuration identifiers from embedded secrets'] = static function (): void {
+	$accepted = array(
+		'new wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);',
+		"hash_hmac('sha256', \$payload, AUTH_KEY);",
+		"defined('SECURE_AUTH_KEY') && getenv('AWS_SECRET_ACCESS_KEY');",
+		"array('client_secret' => 'Client Secret', 'signing_secret' => 'Signing secret');",
+	);
+	foreach ($accepted as $source) {
+		vms_public_release_test_assert(
+			vms_public_release_test_invoke_private_static('containsCredentialPattern', array($source)) === false,
+			'Expected configuration identifier usage to pass the credential scan: ' . $source
+		);
+	}
+
+	$rejected = array(
+		"\$password = 'plaintext-password';",
+		"\$password = 'short';",
+		"define('DB_PASSWORD', 'plaintext-password');",
+		"\$api_token = 'sk_live_1234567890abcdef';",
+		"'https://fixture-user:fixture-secret@example.test/api'",
+	);
+	foreach ($rejected as $source) {
+		vms_public_release_test_assert(
+			vms_public_release_test_invoke_private_static('containsCredentialPattern', array($source)) === true,
+			'Expected embedded credential material to fail the credential scan.'
+		);
+	}
+};
+
 $tests['prohibited development file included in staged source'] = static function (): void {
 	$pluginRoot = vms_public_release_test_fixture(array(
 		'extra_files' => array(
@@ -801,11 +830,11 @@ $tests['current repository public metadata and exclusion boundary are read-only'
     $metadata = (new ReflectionMethod(VMS_Public_Release_Tooling::class, 'collectSourceMetadata'))->invoke(null, $root);
     vms_public_release_test_assert($metadata['public_plugin_slug'] === 'backstage-venue-manager', 'Canonical public package identity must remain stable.');
     vms_public_release_test_assert($metadata['version'] !== '' && $metadata['header_version'] === $metadata['version'] && $metadata['build_version'] === $metadata['version'], 'Public header, constants, and build marker must agree.');
-    vms_public_release_test_assert($metadata['version'] === '1.2.0', 'Accepted runtime release marker must remain 1.2.0.');
+    vms_public_release_test_assert($metadata['version'] === '1.3.0', 'Unified release marker must be 1.3.0.');
     $bridge = (string) file_get_contents($root . '/vendor-management-system.php');
     $readme = (string) file_get_contents($root . '/readme.txt');
     vms_public_release_test_assert($bridge !== '' && preg_match('/^\\s*\\*\\s*Plugin Name:/m', $bridge) !== 1, 'Legacy bridge must remain headerless.');
-    vms_public_release_test_assert(str_contains($readme, 'Stable tag: 1.2.0') && substr_count($readme, '= 1.2.0 =') >= 2, 'Readme must retain stable tag, changelog and upgrade notice.');
+    vms_public_release_test_assert(str_contains($readme, 'Stable tag: 1.3.0') && substr_count($readme, '= 1.3.0 =') >= 2, 'Readme must contain the 1.3.0 stable tag, changelog and upgrade notice.');
     $patterns = (new ReflectionMethod(VMS_Public_Release_Tooling::class, 'loadExcludeManifest'))->invoke(null, $metadata['exclude_manifest']);
     $matcher = new ReflectionMethod(VMS_Public_Release_Tooling::class, 'firstMatchingPattern');
     foreach (array('AGENTS.md', 'docs/', 'tests/', 'scripts/', 'includes/safety/', 'includes/social-share/providers/class-provider-mock.php') as $path) {

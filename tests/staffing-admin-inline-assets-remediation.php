@@ -100,9 +100,9 @@ function bvmgr_asset_version(): string
 }
 
 require_once dirname(__DIR__) . '/includes/admin/staffing.php';
+require_once __DIR__ . '/helpers/certified-source-fixture.php';
 
 $pluginRoot = dirname(__DIR__);
-$livePluginRoot = dirname(dirname($pluginRoot)) . '/backstage-venue-manager';
 
 $staffingPath = $pluginRoot . '/includes/admin/staffing.php';
 $scriptPath = $pluginRoot . '/assets/js/vms-staffing-admin.js';
@@ -113,9 +113,6 @@ $ledgerPath = $pluginRoot . '/docs/wporg-remediation-ledger.md';
 $prereviewPath = $pluginRoot . '/docs/WPORG_PREREVIEW_REMEDIATION.md';
 $corePluginPath = $pluginRoot . '/includes/core/plugin.php';
 $adminUiAssetsPath = $pluginRoot . '/includes/admin-ui/assets.php';
-$liveStaffingPath = $livePluginRoot . '/includes/admin/staffing.php';
-$liveScriptPath = $livePluginRoot . '/assets/js/vms-staffing-admin.js';
-$liveStylePath = $livePluginRoot . '/assets/css/vms-staffing-admin.css';
 
 $assert = static function (bool $condition, string $message): void {
 	if ($condition) {
@@ -149,9 +146,9 @@ try {
 	$prereviewSource = $readFile($prereviewPath);
 	$corePluginSource = $readFile($corePluginPath);
 	$adminUiAssetsSource = $readFile($adminUiAssetsPath);
-	$liveStaffingSource = $readFile($liveStaffingPath);
-	$liveScriptSource = $readFile($liveScriptPath);
-	$liveStyleSource = $readFile($liveStylePath);
+	$certifiedStaffingSource = bvmgr_test_certified_source('includes/admin/staffing.php');
+	$certifiedScriptSource = bvmgr_test_certified_source('assets/js/vms-staffing-admin.js');
+	$certifiedStyleSource = bvmgr_test_certified_source('assets/css/vms-staffing-admin.css');
 
 	$assert(strpos($staffingSource, '<script') === false, 'Staffing admin PHP should no longer emit executable inline <script> blocks.');
 	$assert(strpos($staffingSource, '<style') === false, 'Staffing admin PHP should no longer emit inline <style> blocks.');
@@ -279,9 +276,9 @@ try {
 	$assert(strpos($ledgerSource, '`WPORG-22R-L`') !== false, 'Ledger should record the Staffing admin residual closeout under WPORG-22R-L.');
 	$assert(strpos($prereviewSource, '## WPORG-22R-L Result') !== false, 'Prereview remediation should include the Staffing admin closeout section.');
 
-	$assert($liveStaffingSource !== '', 'Active Backstage Staffing admin PHP should remain readable.');
-	$assert($scriptSource === $liveScriptSource, 'Mirror/live Staffing admin JS assets should remain byte-for-byte synchronized.');
-	$assert($styleSource === $liveStyleSource, 'Mirror/live Staffing admin CSS assets should remain byte-for-byte synchronized.');
+	$assert($staffingSource === $certifiedStaffingSource, 'Staffing admin PHP should match the authenticated certified-source fixture.');
+	$assert($scriptSource === $certifiedScriptSource, 'Staffing admin JS should match the authenticated certified-source fixture.');
+	$assert($styleSource === $certifiedStyleSource, 'Staffing admin CSS should match the authenticated certified-source fixture.');
 
 	fwrite(STDOUT, "staffing admin inline assets remediation: PASS\n");
 } catch (Throwable $e) {

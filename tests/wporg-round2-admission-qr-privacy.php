@@ -104,7 +104,10 @@ $unrelated_capture = static function ($error) use (&$unrelated_error): void {
 	$unrelated_error = is_wp_error($error) ? $error->get_error_message() : 'unknown mail error';
 };
 add_action('wp_mail_failed', $unrelated_capture, 10, 1);
+$fixture_mail_from = static function (): string { return 'wordpress@example.invalid'; };
+add_filter('wp_mail_from', $fixture_mail_from);
 $unrelated_sent = wp_mail('guest@example.invalid', 'Unrelated fixture', 'No QR');
+remove_filter('wp_mail_from', $fixture_mail_from);
 remove_action('wp_mail_failed', $unrelated_capture, 10);
 $assert($unrelated_sent && count($GLOBALS['phpmailer']->messages) === 2, 'Unrelated mail composed after QR mail: ' . $unrelated_error);
 $assert($GLOBALS['phpmailer']->messages[1]['attachments'] === array(), 'No QR leaks to later email');

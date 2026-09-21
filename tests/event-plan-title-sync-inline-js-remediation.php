@@ -82,7 +82,6 @@ try {
 		'document.querySelector(\'textarea.editor-post-title__input\')',
 		'document.querySelector(\'h1.editor-post-title__input\')',
 		'wp.data.dispatch(\'core/editor\').editPost({',
-		'window.onbeforeunload = null;',
 		'Primary Vendor changed. Update the title to match the selected Primary Vendor?',
 		'(auto-title disabled)',
 		'(select Primary Vendor to preview)',
@@ -91,6 +90,7 @@ try {
 		$assert(strpos($titleAssetSource, $requiredTitleMarker) !== false, 'Title asset should own the migrated title-sync marker: ' . $requiredTitleMarker);
 	}
 
+	$assert(strpos($titleAssetSource, 'onbeforeunload') === false, 'Title sync should not overwrite or clear another editor\'s unload handler.');
 	$assert(strpos($titleAssetSource, 'window.VMS_EVENT_PLAN_TITLE') === false, 'Title asset should not introduce a global configuration object.');
 	$assert(strpos($adminUiAssetsSource, "'bvmgr-event-plan-title'") !== false, 'Admin UI assets should register the new Event Plan title handle.');
 	$assert(strpos($adminUiAssetsSource, "BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-title.js'") !== false, 'Admin UI assets should point the title handle at assets/js/vms-event-plan-title.js.');

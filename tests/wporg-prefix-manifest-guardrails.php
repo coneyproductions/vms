@@ -531,11 +531,37 @@ $assert(BVMGR_Prefix_Compatibility_Map::writeTargets('bvmgr_key', 'vms_key', fal
 $assert(BVMGR_Prefix_Compatibility_Map::writeTargets('bvmgr_key', 'vms_key', true) === array('bvmgr_key', 'vms_key'), 'Rollback-safe policy may explicitly mirror.');
 $assert(BVMGR_Prefix_Compatibility_Map::fireOrder('bvmgr_hook', 'vms_hook') === array('bvmgr_hook', 'vms_hook'), 'Dual-fire order must be canonical first.');
 
-$command = escapeshellarg(PHP_BINARY) . ' -d memory_limit=1G ' . escapeshellarg(dirname($root, 2) . '/prefix-manifest-certificate/scripts/generate-wporg-prefix-manifest.php') . ' --check 2>&1';
-$output = array();
-$status = 0;
-exec($command, $output, $status);
-$assert($status === 0, 'Frozen 85a1a16 manifest must reproduce from its historical source; current declarations are checked separately: ' . implode(' ', $output));
+$certificateRoot = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'bvm-prefix-certificate-' . bin2hex(random_bytes(6));
+$archiveOutput = array();
+$archiveStatus = 0;
+if (!mkdir($certificateRoot, 0700, true) && !is_dir($certificateRoot)) {
+	$assert(false, 'Unable to create the disposable frozen-manifest certificate directory.');
+} else {
+	try {
+		$archiveCommand = 'git -C ' . escapeshellarg($root) . ' archive 85a1a16 | tar -x -C ' . escapeshellarg($certificateRoot) . ' 2>&1';
+		exec($archiveCommand, $archiveOutput, $archiveStatus);
+		$assert($archiveStatus === 0, 'Frozen 85a1a16 source must export from retained Git evidence: ' . implode(' ', $archiveOutput));
+
+		$command = escapeshellarg(PHP_BINARY) . ' -d memory_limit=1G ' . escapeshellarg($certificateRoot . '/scripts/generate-wporg-prefix-manifest.php') . ' --check 2>&1';
+		$output = array();
+		$status = 0;
+		exec($command, $output, $status);
+		$assert($status === 0, 'Frozen 85a1a16 manifest must reproduce from its retained Git source; current declarations are checked separately: ' . implode(' ', $output));
+	} finally {
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator($certificateRoot, FilesystemIterator::SKIP_DOTS),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+		foreach ($iterator as $item) {
+			if ($item->isDir() && !$item->isLink()) {
+				@rmdir($item->getPathname());
+			} else {
+				@unlink($item->getPathname());
+			}
+		}
+		@rmdir($certificateRoot);
+	}
+}
 
 if ($failures !== array()) {
 	fwrite(STDERR, "Prefix manifest guardrail failures:\n- " . implode("\n- ", $failures) . "\n");

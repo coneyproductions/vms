@@ -1,13 +1,15 @@
 {
-    "runtime_authority": "3f4049014fcb151b0bb2113f4f1a688642c0855a",
+    "runtime_authority": "0ca4eb0e505f26e16348b20cbfd54243c241ad80",
     "frozen_manifest_commit": "85a1a16",
-    "scope": "Post-WordPress.org provider decoupling, private storage, staffing, notification, task, and explicit plugin activation-state authorities. The retired Data Tools implicit loader and seven retired automatic plugin-basename migration helpers are intentionally absent. No historical migration certificate is regenerated against a later runtime.",
+    "scope": "Certified unified source declaration and retained-literal authority. Generated deterministically from the frozen migration manifest plus the certified current runtime; historical migration certificates remain immutable.",
     "symbol_changes": {
         "classes": {
             "removed": [],
             "current": {
                 "BVMGR_Staffing_Failure": 1,
-                "BVMGR_Staffing_Transaction_DB": 1
+                "BVMGR_Staffing_Transaction_DB": 1,
+                "Local_QR": 1,
+                "QRCode": 1
             }
         },
         "constants": {
@@ -18,6 +20,8 @@
         },
         "functions": {
             "removed": {
+                "bvmgr_event_plan_perf_log_path": 1,
+                "bvmgr_event_plan_perf_maybe_enable_query_capture": 1,
                 "bvmgr_maybe_migrate_activated_legacy_plugin_basename": 1,
                 "bvmgr_migrate_legacy_plugin_basename": 1,
                 "bvmgr_migrate_legacy_plugin_basename_values": 1,
@@ -25,6 +29,7 @@
                 "bvmgr_plugin_basename_compatibility_pair": 1,
                 "bvmgr_plugin_basename_compatibility_pairs": 1,
                 "bvmgr_register_legacy_plugin_basename_compatibility": 1,
+                "bvmgr_ticketing_ajax_discard_owned_buffer": 1,
                 "bvmgr_vendor_portal_maybe_load_data_tools_reporting": 1
             },
             "current": {
@@ -49,6 +54,22 @@
                 "bvmgr_cancel_scope_exclusions": 1,
                 "bvmgr_cancel_scope_hash": 1,
                 "bvmgr_cancel_step_scope": 1,
+                "bvmgr_checkin_close_legacy_meta_read": 1,
+                "bvmgr_current_user_can_operate_context": 1,
+                "bvmgr_ecc_boot_extension_registry": 1,
+                "bvmgr_ecc_enqueue_registered_extension_assets": 1,
+                "bvmgr_ecc_extension_context": 1,
+                "bvmgr_ecc_extension_is_visible": 1,
+                "bvmgr_ecc_extension_registry": 1,
+                "bvmgr_ecc_get_extensions": 1,
+                "bvmgr_ecc_render_extension_metric": 1,
+                "bvmgr_ecc_render_registered_extensions": 1,
+                "bvmgr_email_followups_check_preview_content": 1,
+                "bvmgr_email_followups_content_hash": 1,
+                "bvmgr_email_followups_event_draft": 1,
+                "bvmgr_email_followups_event_draft_key": 1,
+                "bvmgr_email_followups_manual_content": 1,
+                "bvmgr_email_followups_save_event_draft_post": 1,
                 "bvmgr_event_command_center_build_ticket_sales_snapshot": 1,
                 "bvmgr_event_command_center_dashboard_link": 1,
                 "bvmgr_event_command_center_dashboard_section": 1,
@@ -62,6 +83,14 @@
                 "bvmgr_event_command_center_summarize_ticket_report_rows": 1,
                 "bvmgr_event_command_center_ticket_activity_from_cache": 1,
                 "bvmgr_event_day_report_attendee_ids_for_woo_row": 1,
+                "bvmgr_event_plan_operational_window": 1,
+                "bvmgr_event_plan_render_secondary_vendor_outcomes": 1,
+                "bvmgr_event_plan_save_secondary_vendor_outcomes": 1,
+                "bvmgr_event_plan_save_secondary_vendor_outcomes_ajax": 1,
+                "bvmgr_event_plan_secondary_vendor_assigned_ids": 1,
+                "bvmgr_event_plan_secondary_vendor_outcome": 1,
+                "bvmgr_event_plan_secondary_vendor_outcome_options": 1,
+                "bvmgr_event_plan_vendor_customer_eligible": 1,
                 "bvmgr_financial_build_snapshot": 1,
                 "bvmgr_financial_display_rows": 1,
                 "bvmgr_financial_get_event_snapshot": 1,
@@ -104,6 +133,13 @@
                 "bvmgr_google_token": 1,
                 "bvmgr_google_tokens": 1,
                 "bvmgr_google_unseal": 1,
+                "bvmgr_operational_context_timestamp": 1,
+                "bvmgr_operational_event_context_candidate_ids": 1,
+                "bvmgr_operational_event_occurrence": 1,
+                "bvmgr_operational_event_plan_status": 1,
+                "bvmgr_operational_parse_local_datetime": 1,
+                "bvmgr_operational_scope_decision": 1,
+                "bvmgr_operational_window_meta_keys": 1,
                 "bvmgr_private_storage_admin_menu": 1,
                 "bvmgr_private_storage_admin_migrate": 1,
                 "bvmgr_private_storage_admin_notice": 1,
@@ -114,7 +150,9 @@
                 "bvmgr_private_storage_cleanup_legacy": 1,
                 "bvmgr_private_storage_config": 1,
                 "bvmgr_private_storage_error": 1,
+                "bvmgr_private_storage_harden": 1,
                 "bvmgr_private_storage_inventory": 1,
+                "bvmgr_private_storage_is_verified": 1,
                 "bvmgr_private_storage_legacy_roots": 1,
                 "bvmgr_private_storage_migrate": 1,
                 "bvmgr_private_storage_migrate_object": 1,
@@ -122,11 +160,14 @@
                 "bvmgr_private_storage_normalize": 1,
                 "bvmgr_private_storage_pending": 1,
                 "bvmgr_private_storage_prepare": 1,
+                "bvmgr_private_storage_protection_files": 1,
                 "bvmgr_private_storage_receipt": 1,
                 "bvmgr_private_storage_resolve": 1,
                 "bvmgr_private_storage_safe_file": 1,
                 "bvmgr_private_storage_target": 1,
+                "bvmgr_private_storage_verify_http": 1,
                 "bvmgr_private_storage_within": 1,
+                "bvmgr_register_ecc_extension": 1,
                 "bvmgr_reporting_empty_event_ticket_sales_result": 1,
                 "bvmgr_reporting_get_registered_providers": 1,
                 "bvmgr_reporting_get_ticket_truth": 1,
@@ -137,12 +178,21 @@
                 "bvmgr_reporting_register_provider": 1,
                 "bvmgr_reporting_resolve_event_ticket_sales": 1,
                 "bvmgr_reporting_summarize_ticket_rows": 1,
+                "bvmgr_resolve_operational_event_context": 1,
+                "bvmgr_social_current_user_can_configure": 1,
+                "bvmgr_social_require_configuration_capability": 1,
+                "bvmgr_social_require_event_permission": 1,
+                "bvmgr_social_require_post_request": 1,
+                "bvmgr_social_require_queue_permission": 1,
+                "bvmgr_social_webhook_url_is_safe": 1,
                 "bvmgr_staffing_assignment_overlaps": 1,
                 "bvmgr_staffing_atomic": 1,
                 "bvmgr_staffing_build_event_snapshot": 1,
                 "bvmgr_staffing_build_financial_labor": 1,
                 "bvmgr_staffing_defer_event_saved": 1,
                 "bvmgr_staffing_derive_rollup": 1,
+                "bvmgr_staffing_dispatch_role": 1,
+                "bvmgr_staffing_dispatch_statuses": 1,
                 "bvmgr_staffing_event_overlap_warnings": 1,
                 "bvmgr_staffing_financial_estimate": 1,
                 "bvmgr_staffing_financial_unavailable": 1,
@@ -188,6 +238,7 @@
                 "bvmgr_staffing_reconcile_existing_assignment_rows": 1,
                 "bvmgr_staffing_render_lifecycle_controls": 1,
                 "bvmgr_staffing_require_transaction_schema": 1,
+                "bvmgr_staffing_resolve_dispatch_assignments": 1,
                 "bvmgr_staffing_resolve_event_snapshot": 1,
                 "bvmgr_staffing_status_label": 1,
                 "bvmgr_staffing_sync_lifecycle_window": 1,
@@ -271,19 +322,34 @@
                 "bvmgr_tech_doc_types": 1,
                 "bvmgr_tech_doc_uploaded": 1,
                 "bvmgr_tech_doc_vendor_ids": 1,
-                "bvmgr_ticketing_verification_proof_response_args": 1
+                "bvmgr_ticketing_v2_atomic_rollback_extensions": 1,
+                "bvmgr_ticketing_v2_purchase_extension_handlers": 1,
+                "bvmgr_ticketing_v2_render_purchase_region": 1,
+                "bvmgr_ticketing_v2_validate_purchase_extensions_payload": 1,
+                "bvmgr_ticketing_verification_proof_response_args": 1,
+                "bvmgr_vendor_portal_bridge_legacy_hook": 1,
+                "bvmgr_verification_meta_delete": 1,
+                "bvmgr_verification_meta_get": 1,
+                "bvmgr_verification_meta_key": 1,
+                "bvmgr_verification_meta_query": 1,
+                "bvmgr_verification_meta_update": 1
             }
         },
         "global_slots": {
-            "removed": [],
+            "removed": {
+                "GLOBALS:bvmgr_ajax_ob_started": 6
+            },
             "current": {
+                "GLOBALS:bvmgr_event_plan_import_upload_dir_context": 7,
                 "GLOBALS:bvmgr_google_lock": 4,
-                "GLOBALS:bvmgr_private_storage_migrating": 3,
+                "GLOBALS:bvmgr_private_files_upload_dir_context": 7,
+                "GLOBALS:bvmgr_private_storage_migrating": 5,
                 "GLOBALS:bvmgr_reporting_providers": 8,
                 "GLOBALS:bvmgr_staffing_transaction": 14,
                 "GLOBALS:bvmgr_tasks_request": 4,
                 "GLOBALS:bvmgr_tasks_transaction": 15,
                 "GLOBALS:bvmgr_tasks_transaction_control": 4,
+                "GLOBALS:bvmgr_ticketing_v2_atomic_add_in_progress": 5,
                 "loader:bvmgr_canonical_plugin_file": 3
             }
         }
@@ -320,7 +386,7 @@
             "bvmgr_render_continuity_binder_page_content": 1
         },
         "includes/admin/data-tools/actions-event-plan-import.php": {
-            "bvmgr_event_plan_import_filter_upload_dir": 3
+            "bvmgr_event_plan_import_filter_upload_dir": 4
         },
         "includes/admin/due-dates.php": {
             "bvmgr_due_render_admin_notices": 1,
@@ -399,10 +465,7 @@
             "bvmgr_event_credit_product_is_eligible": 1,
             "vms_event_credit_product_is_eligible": 1
         },
-        "includes/core/event-plan-performance.php": {
-            "bvmgr_event_plan_perf_log_path": 1,
-            "vms_event_plan_perf_log_path": 1
-        },
+        "includes/core/event-plan-performance.php": [],
         "includes/core/event-plan-save-profiler.php": {
             "vms_event_plan_save_profiler_enabled": 1,
             "vms_event_plan_save_profiler_recording_enabled": 1,
@@ -412,7 +475,7 @@
             "bvmgr_notify_provider_core_email_send": 2
         },
         "includes/core/private-files.php": {
-            "bvmgr_private_files_filter_upload_dir": 3
+            "bvmgr_private_files_filter_upload_dir": 4
         },
         "includes/core/registry/admin-menu.php": {
             "bvmgr_admin_menu_left_rail_specs": 1,
@@ -617,9 +680,8 @@
             "bvmgr_status_notice_prepare_runtime_notice": 2
         },
         "includes/portal/vendor-portal.php": {
-            "bvmgr_vendor_portal_allowed_tabs": 1,
-            "vms_tours_register": 1,
-            "vms_vendor_portal_allowed_tabs": 1
+            "bvmgr_vendor_portal_allowed_tabs": 2,
+            "vms_tours_register": 1
         },
         "includes/public/event-details.php": {
             "bvmgr_event_details_print_json_ld": 2,
@@ -723,5 +785,218 @@
             "vms_vendor_apply_turnstile_secret_key": 1,
             "vms_vendor_apply_turnstile_site_key": 1
         }
+    },
+    "b3_progress": {
+        "counts": {
+            "baseline_unique_functions": 4521,
+            "baseline_declaration_sites": 4541,
+            "migrated_unique_functions": 4510,
+            "migrated_declaration_sites": 4530,
+            "remaining_legacy_unique_functions": 0,
+            "remaining_legacy_declaration_sites": 0,
+            "prohibited_semantic_surface": 0
+        },
+        "issues": [
+            {
+                "type": "declaration_state",
+                "legacy": "vms_event_plan_perf_log_path",
+                "canonical": "bvmgr_event_plan_perf_log_path",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_event_plan_perf_maybe_enable_query_capture",
+                "canonical": "bvmgr_event_plan_perf_maybe_enable_query_capture",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_maybe_migrate_activated_legacy_plugin_basename",
+                "canonical": "bvmgr_maybe_migrate_activated_legacy_plugin_basename",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_migrate_legacy_plugin_basename",
+                "canonical": "bvmgr_migrate_legacy_plugin_basename",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_migrate_legacy_plugin_basename_values",
+                "canonical": "bvmgr_migrate_legacy_plugin_basename_values",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_migrate_registered_legacy_plugin_basenames",
+                "canonical": "bvmgr_migrate_registered_legacy_plugin_basenames",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_plugin_basename_compatibility_pair",
+                "canonical": "bvmgr_plugin_basename_compatibility_pair",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_plugin_basename_compatibility_pairs",
+                "canonical": "bvmgr_plugin_basename_compatibility_pairs",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_register_legacy_plugin_basename_compatibility",
+                "canonical": "bvmgr_register_legacy_plugin_basename_compatibility",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_ticketing_ajax_discard_owned_buffer",
+                "canonical": "bvmgr_ticketing_ajax_discard_owned_buffer",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "declaration_state",
+                "legacy": "vms_vendor_portal_maybe_load_data_tools_reporting",
+                "canonical": "bvmgr_vendor_portal_maybe_load_data_tools_reporting",
+                "legacy_sites": 0,
+                "canonical_sites": 0,
+                "expected_sites": 1
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/ecc-extensions.php",
+                "line": 151,
+                "kind": "string_reference",
+                "found": "vms_event_command_center_render_metric",
+                "expected": "bvmgr_event_command_center_render_metric"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/ecc-extensions.php",
+                "line": 152,
+                "kind": "direct_call",
+                "found": "vms_event_command_center_render_metric",
+                "expected": "bvmgr_event_command_center_render_metric"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/ecc-extensions.php",
+                "line": 245,
+                "kind": "string_reference",
+                "found": "vms_event_command_center_page_slug",
+                "expected": "bvmgr_event_command_center_page_slug"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/ecc-extensions.php",
+                "line": 245,
+                "kind": "direct_call",
+                "found": "vms_event_command_center_page_slug",
+                "expected": "bvmgr_event_command_center_page_slug"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/operational-context.php",
+                "line": 21,
+                "kind": "string_reference",
+                "found": "vms_meta_key",
+                "expected": "bvmgr_meta_key"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/operational-context.php",
+                "line": 22,
+                "kind": "direct_call",
+                "found": "vms_meta_key",
+                "expected": "bvmgr_meta_key"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/operational-context.php",
+                "line": 81,
+                "kind": "string_reference",
+                "found": "vms_event_plan_start_datetime",
+                "expected": "bvmgr_event_plan_start_datetime"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/operational-context.php",
+                "line": 84,
+                "kind": "string_reference",
+                "found": "vms_event_plan_end_datetime",
+                "expected": "bvmgr_event_plan_end_datetime"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/operational-context.php",
+                "line": 297,
+                "kind": "string_reference",
+                "found": "vms_event_plan_get_status",
+                "expected": "bvmgr_event_plan_get_status"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/operational-context.php",
+                "line": 298,
+                "kind": "direct_call",
+                "found": "vms_event_plan_get_status",
+                "expected": "bvmgr_event_plan_get_status"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/staffing-dispatch.php",
+                "line": 33,
+                "kind": "string_reference",
+                "found": "vms_staffing_role_map_by_id",
+                "expected": "bvmgr_staffing_role_map_by_id"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/staffing-dispatch.php",
+                "line": 73,
+                "kind": "string_reference",
+                "found": "vms_staffing_get_event_slots",
+                "expected": "bvmgr_staffing_get_event_slots"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/staffing-dispatch.php",
+                "line": 76,
+                "kind": "string_reference",
+                "found": "vms_staffing_resolve_slot_window",
+                "expected": "bvmgr_staffing_resolve_slot_window"
+            },
+            {
+                "type": "stale_or_forward_reference",
+                "file": "includes/core/staffing-dispatch.php",
+                "line": 79,
+                "kind": "string_reference",
+                "found": "vms_staffing_get_staff_user",
+                "expected": "bvmgr_staffing_get_staff_user"
+            }
+        ]
     }
 }

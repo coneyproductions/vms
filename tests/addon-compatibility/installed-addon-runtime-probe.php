@@ -57,7 +57,7 @@ try {
 $check('admin-and-rest-lifecycle', $lifecycleException === null, $lifecycleException ?? array());
 
 $activePlugins = array_values((array) get_option('active_plugins', array()));
-$check('public-bvm-identity', defined('BVMGR_VERSION') && (string) BVMGR_VERSION === '1.2.0' && function_exists('bvmgr_core') && in_array('backstage-venue-manager/backstage-venue-manager.php', $activePlugins, true));
+$check('public-bvm-identity', defined('BVMGR_VERSION') && (string) BVMGR_VERSION === '1.3.0' && function_exists('bvmgr_core') && in_array('backstage-venue-manager/backstage-venue-manager.php', $activePlugins, true));
 $check('legacy-vms-runtime-absent', !defined('VMS_VERSION') && !function_exists('vms_core') && !in_array('vms/vendor-management-system.php', $activePlugins, true));
 
 $allMenuSlugs = array();

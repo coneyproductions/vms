@@ -20,7 +20,11 @@ if (!is_array($manifest)) {
 
 require_once __DIR__ . '/helpers/current-prefix-fixture.php';
 $scan = BVMGR_WPORG_Prefix_Inventory::scan($root);
-bvm_test_assert_current_prefix($root, $scan);
+$currentAuthority = bvm_test_assert_current_prefix($root, $scan);
+$removedByKind = array();
+foreach ((array) ($currentAuthority['symbol_changes'] ?? array()) as $kind => $changes) {
+	$removedByKind[$kind] = array_fill_keys(array_keys((array) ($changes['removed'] ?? array())), true);
+}
 $symbols = (array) ($scan['symbols'] ?? array());
 $b2 = (array) ($manifest['completed_batches']['B2'] ?? array());
 $b2Map = (array) ($b2['symbol_map'] ?? array());
@@ -52,7 +56,7 @@ foreach ($b2Map as $entry) {
 	$mappedUnique[$kind]++;
 	$mappedSites[$kind] += count((array) ($entry['declaration_sites'] ?? array()));
 	$legacyByKind[$kind][$legacy] = true;
-	$assert(isset($declared[$kind][$canonical]), "Canonical B2 symbol is not declared: {$kind}:{$canonical}.");
+	$assert(isset($declared[$kind][$canonical]) || isset($removedByKind[$kind][$canonical]), "Canonical B2 symbol is neither declared nor explicitly retired: {$kind}:{$canonical}.");
 	$assert(!isset($declared[$kind][$legacy]), "Legacy B2 symbol is still declared: {$kind}:{$legacy}.");
 }
 $assert($mappedUnique === $expectedUnique, 'B2 map must contain exactly 23 classes, 1 interface, 107 constants, and 44 globals.');
@@ -60,7 +64,11 @@ $assert($mappedSites === $expectedSites, 'B2 map must retain the exact 23/1/116/
 
 foreach (array('classes', 'interfaces', 'constants') as $kind) {
 	foreach (array_keys((array) ($declared[$kind] ?? array())) as $name) {
-		$assert(str_starts_with($name, 'BVMGR_'), "Current {$kind} declaration must use BVMGR_: {$name}.");
+		$namespacedLocalQr = $kind === 'classes' && $name === 'Local_QR'
+			&& str_contains((string) file_get_contents($root . '/includes/modules/admissions/local-qr.php'), 'namespace BVMGR\\Admissions;');
+		$namespacedVendorQr = $kind === 'classes' && $name === 'QRCode'
+			&& str_contains((string) file_get_contents($root . '/includes/modules/admissions/qr/QRCode.php'), 'namespace BVMGR\\Vendor\\PHPQRCode;');
+		$assert(str_starts_with($name, 'BVMGR_') || $namespacedLocalQr || $namespacedVendorQr, "Current {$kind} declaration must use BVMGR_ or the certified BVMGR namespace: {$name}.");
 	}
 }
 foreach (array_keys((array) ($declared['global_slots'] ?? array())) as $slot) {

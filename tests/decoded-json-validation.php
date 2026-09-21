@@ -576,13 +576,8 @@ function vms_test_decoded_json_find_matching_brace(string $code, int $openBraceP
 	throw new RuntimeException('Matching brace not found.');
 }
 
-function vms_test_decoded_json_extract_named_function(string $path, string $functionName): string
+function vms_test_decoded_json_extract_named_function_from_source(string $code, string $functionName): string
 {
-	$code = file_get_contents($path);
-	if (!is_string($code) || $code === '') {
-		throw new RuntimeException('Unable to read source file: ' . $path);
-	}
-
 	$signature = 'function ' . $functionName . '(';
 	$start = strpos($code, $signature);
 	if ($start === false) {
@@ -596,6 +591,16 @@ function vms_test_decoded_json_extract_named_function(string $path, string $func
 
 	$endPos = vms_test_decoded_json_find_matching_brace($code, $bracePos);
 	return substr($code, $start, $endPos - $start + 1);
+}
+
+function vms_test_decoded_json_extract_named_function(string $path, string $functionName): string
+{
+	$code = file_get_contents($path);
+	if (!is_string($code) || $code === '') {
+		throw new RuntimeException('Unable to read source file: ' . $path);
+	}
+
+	return vms_test_decoded_json_extract_named_function_from_source($code, $functionName);
 }
 
 if (!defined('ARRAY_A')) {
@@ -729,27 +734,27 @@ final class VMS_Test_Decoded_JSON_WPDB
 }
 
 $mirrorTicketingRulesPath = dirname(__DIR__) . '/includes/integrations/ticketing-rules-v2.php';
-$liveTicketingRulesPath = dirname(__DIR__) . '/../../vms/includes/integrations/ticketing-rules-v2.php';
 $mirrorTicketingRulesSource = file_get_contents($mirrorTicketingRulesPath);
-$liveTicketingRulesSource = file_get_contents($liveTicketingRulesPath);
+require_once __DIR__ . '/helpers/certified-source-fixture.php';
+$certifiedTicketingRulesSource = bvmgr_test_certified_source('includes/integrations/ticketing-rules-v2.php');
 $assert(is_string($mirrorTicketingRulesSource) && $mirrorTicketingRulesSource !== '', 'Expected to load the mirror Ticketing Rules V2 runtime source.');
-$assert(is_string($liveTicketingRulesSource) && $liveTicketingRulesSource !== '', 'Expected to load the live Ticketing Rules V2 runtime source.');
+$assert($certifiedTicketingRulesSource !== '', 'Expected to load the independently authenticated certified Ticketing Rules V2 source.');
 
 $mirrorDecodeHelperSource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows');
-$liveDecodeHelperSource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows');
+$certifiedDecodeHelperSource = vms_test_decoded_json_extract_named_function_from_source($certifiedTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows');
 $mirrorConsumedQtySource = vms_test_decoded_json_extract_named_function($mirrorTicketingRulesPath, 'bvmgr_ticketing_v2_assignee_consumed_qty_for_event');
-$liveConsumedQtySource = vms_test_decoded_json_extract_named_function($liveTicketingRulesPath, 'bvmgr_ticketing_v2_assignee_consumed_qty_for_event');
+$certifiedConsumedQtySource = vms_test_decoded_json_extract_named_function_from_source($certifiedTicketingRulesSource, 'bvmgr_ticketing_v2_assignee_consumed_qty_for_event');
 $normalizeSource = static function (string $source): string {
 	$normalized = preg_replace('/\s+/', ' ', trim($source));
 	return is_string($normalized) ? $normalized : trim($source);
 };
 $assert(
-	$normalizeSource($mirrorDecodeHelperSource) === $normalizeSource($liveDecodeHelperSource),
-	'Mirror and live stored claim-assignment decoder helpers should remain synchronized.'
+	$normalizeSource($mirrorDecodeHelperSource) === $normalizeSource($certifiedDecodeHelperSource),
+	'Current and certified stored claim-assignment decoder helpers should remain synchronized.'
 );
 $assert(
-	$normalizeSource($mirrorConsumedQtySource) === $normalizeSource($liveConsumedQtySource),
-	'Mirror and live consumed-quantity readers should remain synchronized in the targeted block.'
+	$normalizeSource($mirrorConsumedQtySource) === $normalizeSource($certifiedConsumedQtySource),
+	'Current and certified consumed-quantity readers should remain synchronized in the targeted block.'
 );
 
 $lookupProbeSource = preg_replace(
@@ -989,20 +994,20 @@ $assert(
 	'Mirror Ticketing Rules V2 should no longer raw-decode fallback claim assignments at the consumed-quantity site.'
 );
 $assert(
-	strpos($liveTicketingRulesSource, '$decoded = json_decode($assignments_json, true);') === false,
-	'Live Ticketing Rules V2 should no longer raw-decode lookup-backed claim assignments at the consumed-quantity site.'
+	strpos($certifiedTicketingRulesSource, '$decoded = json_decode($assignments_json, true);') === false,
+	'Certified Ticketing Rules V2 should no longer raw-decode lookup-backed claim assignments at the consumed-quantity site.'
 );
 $assert(
-	strpos($liveTicketingRulesSource, '$decoded = json_decode($assignment_json, true);') === false,
-	'Live Ticketing Rules V2 should no longer raw-decode fallback claim assignments at the consumed-quantity site.'
+	strpos($certifiedTicketingRulesSource, '$decoded = json_decode($assignment_json, true);') === false,
+	'Certified Ticketing Rules V2 should no longer raw-decode fallback claim assignments at the consumed-quantity site.'
 );
 $assert(
 	strpos($mirrorTicketingRulesSource, 'function bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
 	'Mirror Ticketing Rules V2 should define the stored claim-assignment decoder helper.'
 );
 $assert(
-	strpos($liveTicketingRulesSource, 'function bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
-	'Live Ticketing Rules V2 should define the stored claim-assignment decoder helper.'
+	strpos($certifiedTicketingRulesSource, 'function bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($raw): array') !== false,
+	'Certified Ticketing Rules V2 should define the stored claim-assignment decoder helper.'
 );
 $assert(
 	strpos($mirrorTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
@@ -1010,9 +1015,9 @@ $assert(
 	'Mirror Ticketing Rules V2 should route both consumed-quantity stored JSON reads through the helper.'
 );
 $assert(
-	strpos($liveTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
-		&& strpos($liveTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json)') !== false,
-	'Live Ticketing Rules V2 should route both consumed-quantity stored JSON reads through the helper.'
+	strpos($certifiedTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignments_json)') !== false
+		&& strpos($certifiedTicketingRulesSource, 'bvmgr_ticketing_v2_decode_stored_claim_assignment_rows($assignment_json)') !== false,
+	'Certified Ticketing Rules V2 should route both consumed-quantity stored JSON reads through the helper.'
 );
 $assert(
 	($mirrorArrayBranchPos = strpos($mirrorTicketingRulesSource, 'if (is_array($assignment_json)) {')) !== false
@@ -1022,28 +1027,28 @@ $assert(
 	'Mirror Ticketing Rules V2 should preserve the direct-array branch and legacy seat-meta fallback.'
 );
 $assert(
-	($liveArrayBranchPos = strpos($liveTicketingRulesSource, 'if (is_array($assignment_json)) {')) !== false
-		&& ($liveJsonBranchPos = strpos($liveTicketingRulesSource, "elseif (is_string(\$assignment_json) && \$assignment_json !== '') {")) !== false
-		&& $liveArrayBranchPos < $liveJsonBranchPos
-		&& strpos($liveTicketingRulesSource, "stripos(\$meta_key, 'seat ') !== 0 || stripos(\$meta_key, ' assignee') === false") !== false,
-	'Live Ticketing Rules V2 should preserve the direct-array branch and legacy seat-meta fallback.'
+	($certifiedArrayBranchPos = strpos($certifiedTicketingRulesSource, 'if (is_array($assignment_json)) {')) !== false
+		&& ($certifiedJsonBranchPos = strpos($certifiedTicketingRulesSource, "elseif (is_string(\$assignment_json) && \$assignment_json !== '') {")) !== false
+		&& $certifiedArrayBranchPos < $certifiedJsonBranchPos
+		&& strpos($certifiedTicketingRulesSource, "stripos(\$meta_key, 'seat ') !== 0 || stripos(\$meta_key, ' assignee') === false") !== false,
+	'Certified Ticketing Rules V2 should preserve the direct-array branch and legacy seat-meta fallback.'
 );
 $assert(
 	strpos($mirrorTicketingRulesSource, "add_meta_data('_vms_claim_assignments', wp_json_encode(\$assignment_snapshot), true);") !== false
-		&& strpos($liveTicketingRulesSource, "add_meta_data('_vms_claim_assignments', wp_json_encode(\$assignment_snapshot), true);") !== false,
-	'Ticketing Rules V2 should leave the stored claim-assignment writer unchanged in mirror and live.'
+		&& strpos($certifiedTicketingRulesSource, "add_meta_data('_vms_claim_assignments', wp_json_encode(\$assignment_snapshot), true);") !== false,
+	'Ticketing Rules V2 should leave the stored claim-assignment writer unchanged from the certified source.'
 );
 $assert(
 	substr_count($mirrorTicketingRulesSource, 'json_decode(') === 1,
 	'Mirror Ticketing Rules V2 should retain only the specialized stored claim-assignment decoder raw decode.'
 );
 $assert(
-	substr_count($liveTicketingRulesSource, 'json_decode(') === 1,
-	'Live Ticketing Rules V2 should retain only the specialized stored claim-assignment decoder.'
+	substr_count($certifiedTicketingRulesSource, 'json_decode(') === 1,
+	'Certified Ticketing Rules V2 should retain only the specialized stored claim-assignment decoder.'
 );
 $assert(
-	substr_count($liveTicketingRulesSource, '$data = json_decode($raw ?: \'\', true);') === 0,
-	'Live Ticketing Rules V2 rejects the superseded raw request-body decodes.'
+	substr_count($certifiedTicketingRulesSource, '$data = json_decode($raw ?: \'\', true);') === 0,
+	'Certified Ticketing Rules V2 rejects the superseded raw request-body decodes.'
 );
 
 $GLOBALS['vms_test_current_user_caps'] = array('manage_options' => true);

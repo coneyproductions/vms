@@ -38,12 +38,12 @@ function vms_dt_vio_create_interest_submission($vendor, $event, $args): array {
 $dt = $scenario !== 'agreements';
 $ag = $scenario !== 'data-tools';
 define('BVMGR_PLUGIN_URL', 'https://example.invalid/bvm/');
-define('BVMGR_VERSION', '1.2.0');
+define('BVMGR_VERSION', '1.3.0');
 register_post_type('vms_vendor', array('public' => false));
 register_post_type('vmsa_packet', array('public' => false));
 $vendor = wp_insert_post(array('post_type' => 'vms_vendor', 'post_title' => 'Hook fixture vendor', 'post_status' => 'publish'));
 $GLOBALS['p1c2_vendor'] = $vendor;
-$user = wp_insert_user(array('user_login' => 'portal_fixture', 'user_pass' => 'disposable', 'role' => 'subscriber'));
+$user = wp_insert_user(array('user_login' => 'portal_fixture_' . str_replace('-', '_', $scenario), 'user_pass' => 'disposable', 'role' => 'subscriber'));
 $assert(!is_wp_error($user) && $vendor > 0, 'Native fixture creation');
 wp_set_current_user($user);
 $page = wp_insert_post(array('post_type' => 'page', 'post_title' => 'Portal fixture', 'post_status' => 'publish'));

@@ -123,6 +123,11 @@ function trailingslashit(string $value): string
     return rtrim($value, '/\\') . '/';
 }
 
+function untrailingslashit(string $value): string
+{
+    return rtrim($value, '/\\');
+}
+
 function wp_normalize_path(string $path): string
 {
     return str_replace('\\', '/', $path);
@@ -163,9 +168,20 @@ function get_post(int $post_id)
     return $GLOBALS['bvmgr_proof_posts'][$post_id] ?? null;
 }
 
+function get_post_type(int $post_id): string
+{
+    $post = get_post($post_id);
+    return $post instanceof WP_Post ? $post->post_type : '';
+}
+
 function get_post_meta(int $post_id, string $key, bool $single = false)
 {
     return $GLOBALS['bvmgr_proof_meta'][$post_id][$key] ?? '';
+}
+
+function metadata_exists(string $meta_type, int $object_id, string $meta_key): bool
+{
+    return $meta_type === 'post' && array_key_exists($meta_key, $GLOBALS['bvmgr_proof_meta'][$object_id] ?? array());
 }
 
 function bvmgr_private_file_get(int $file_id): ?array
@@ -176,6 +192,21 @@ function bvmgr_private_file_get(int $file_id): ?array
 function bvmgr_private_file_path(string $stored_filename): string
 {
     return trailingslashit($GLOBALS['bvmgr_proof_private_root']) . $stored_filename;
+}
+
+function bvmgr_private_files_path_is_safe(string $path): bool
+{
+    $real_path = realpath($path);
+    $real_root = realpath((string) ($GLOBALS['bvmgr_proof_private_root'] ?? ''));
+    return is_string($real_path) && is_string($real_root)
+        && ($real_path === $real_root || strpos($real_path, trailingslashit($real_root)) === 0)
+        && is_file($real_path) && !is_link($path);
+}
+
+function bvmgr_ticketing_verification_path_within_root(string $path): bool
+{
+    return bvmgr_private_files_path_is_safe($path)
+        && strpos(wp_normalize_path($path), '/verifications/') !== false;
 }
 
 function bvmgr_private_files_ensure_dir(string $bucket = ''): bool
@@ -201,7 +232,11 @@ function bvmgr_private_files_safe_download_name(string $filename, string $fallba
 
 function wp_upload_dir($time = null, bool $create_dir = true): array
 {
-    return array('basedir' => $GLOBALS['bvmgr_proof_upload_root']);
+    return array(
+        'basedir' => $GLOBALS['bvmgr_proof_upload_root'],
+        'baseurl' => 'https://example.test/wp-content/uploads',
+        'error' => false,
+    );
 }
 
 function wp_check_filetype_and_ext(string $path, string $filename, array $allowed_mimes): array
@@ -270,7 +305,7 @@ require_once $repo_root . '/includes/integrations/ticketing-verifications.php';
 
 $fixture_root = sys_get_temp_dir() . '/bvmgr-eligibility-proof-preview-' . getmypid();
 $upload_root = $fixture_root . '/uploads';
-$private_root = $fixture_root . '/secure/site-1';
+$private_root = $upload_root . '/backstage-venue-manager/private/site-1';
 $proof_root = $private_root . '/verifications';
 $other_root = $private_root . '/tax-docs';
 $legacy_root = $upload_root . '/vms-verification-proofs';
@@ -280,7 +315,7 @@ foreach (array($proof_root, $other_root, $legacy_root) as $directory) {
     }
 }
 
-define('BVMGR_PRIVATE_STORAGE_ROOT', $fixture_root . '/secure');
+define('BVMGR_PRIVATE_STORAGE_ROOT', $fixture_root . '/legacy-secure');
 define('BVMGR_PRIVATE_STORAGE_WEB_ROOTS', array(ABSPATH, $upload_root));
 define('WP_CONTENT_DIR', $upload_root);
 function wp_is_writable($path) { return is_writable($path); }
@@ -351,7 +386,7 @@ try {
             ),
             array('vms_manage_verifications' => true)
         );
-        bvmgrProofSame('stream', $result['result'], 'Authorized previewable proof should stream.');
+        bvmgrProofSame('stream', $result['result'], 'Authorized previewable proof should stream: ' . (string) ($result['message'] ?? 'no denial message'));
         bvmgrProofSame($expected[0], $result['stream']['mime'], 'Previewable proof should use its validated MIME type.');
         bvmgrProofSame($expected[1], $result['stream']['disposition'], 'Previewable proof should use inline disposition.');
     }
@@ -478,9 +513,18 @@ try {
             unlink($path);
         }
     }
-    foreach (array($proof_root, $other_root, $legacy_root, $private_root, $upload_root, $fixture_root) as $directory) {
-        if (is_dir($directory)) {
-            rmdir($directory);
+    if (is_dir($fixture_root)) {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($fixture_root, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($iterator as $item) {
+            if ($item->isDir() && !$item->isLink()) {
+                rmdir($item->getPathname());
+            } else {
+                unlink($item->getPathname());
+            }
         }
+        rmdir($fixture_root);
     }
 }

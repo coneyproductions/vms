@@ -30,20 +30,10 @@ try {
 	$assert(count($publicApis) === 12, 'Frozen B3 map must identify exactly 12 public B3 function APIs.');
 	$progress = BVMGR_WPORG_Prefix_B3::progress($root, $map);
 	require_once __DIR__ . '/helpers/current-prefix-fixture.php';
-	bvm_test_assert_current_prefix($root);
-	$assert($progress['issues'] === array(
-		array('type' => 'declaration_state', 'legacy' => 'vms_maybe_migrate_activated_legacy_plugin_basename', 'canonical' => 'bvmgr_maybe_migrate_activated_legacy_plugin_basename', 'legacy_sites' => 0, 'canonical_sites' => 0, 'expected_sites' => 1),
-		array('type' => 'declaration_state', 'legacy' => 'vms_migrate_legacy_plugin_basename', 'canonical' => 'bvmgr_migrate_legacy_plugin_basename', 'legacy_sites' => 0, 'canonical_sites' => 0, 'expected_sites' => 1),
-		array('type' => 'declaration_state', 'legacy' => 'vms_migrate_legacy_plugin_basename_values', 'canonical' => 'bvmgr_migrate_legacy_plugin_basename_values', 'legacy_sites' => 0, 'canonical_sites' => 0, 'expected_sites' => 1),
-		array('type' => 'declaration_state', 'legacy' => 'vms_migrate_registered_legacy_plugin_basenames', 'canonical' => 'bvmgr_migrate_registered_legacy_plugin_basenames', 'legacy_sites' => 0, 'canonical_sites' => 0, 'expected_sites' => 1),
-		array('type' => 'declaration_state', 'legacy' => 'vms_plugin_basename_compatibility_pair', 'canonical' => 'bvmgr_plugin_basename_compatibility_pair', 'legacy_sites' => 0, 'canonical_sites' => 0, 'expected_sites' => 1),
-		array('type' => 'declaration_state', 'legacy' => 'vms_plugin_basename_compatibility_pairs', 'canonical' => 'bvmgr_plugin_basename_compatibility_pairs', 'legacy_sites' => 0, 'canonical_sites' => 0, 'expected_sites' => 1),
-		array('type' => 'declaration_state', 'legacy' => 'vms_register_legacy_plugin_basename_compatibility', 'canonical' => 'bvmgr_register_legacy_plugin_basename_compatibility', 'legacy_sites' => 0, 'canonical_sites' => 0, 'expected_sites' => 1),
-		array('type' => 'declaration_state', 'legacy' => 'vms_vendor_portal_maybe_load_data_tools_reporting', 'canonical' => 'bvmgr_vendor_portal_maybe_load_data_tools_reporting', 'legacy_sites' => 0, 'canonical_sites' => 0, 'expected_sites' => 1),
-	), 'Only the eight explicitly retired current-line helpers may be absent; all other mapped references must resolve.');
+	$currentAuthority = bvm_test_assert_current_prefix($root);
+	$assert(($progress['issues'] ?? array()) === ($currentAuthority['b3_progress']['issues'] ?? null), 'Current B3 issues must exactly match the deterministically generated certified authority.');
 	$counts = (array) ($progress['counts'] ?? array());
-	$assert((int) ($counts['migrated_unique_functions'] ?? -1) + (int) ($counts['remaining_legacy_unique_functions'] ?? -1) === 4513, 'Current B3 unique progress after eight explicit retirements must reconcile exactly.');
-	$assert((int) ($counts['migrated_declaration_sites'] ?? -1) + (int) ($counts['remaining_legacy_declaration_sites'] ?? -1) === 4533, 'Current B3 declaration-site progress after eight explicit retirements must reconcile exactly.');
+	$assert($counts === ($currentAuthority['b3_progress']['counts'] ?? null), 'Current B3 counts must exactly match the deterministically generated certified authority.');
 	$graph = BVMGR_WPORG_Prefix_B3::loadJson($root . '/' . BVMGR_WPORG_Prefix_B3::GRAPH_PATH);
 	$assert(($graph['counts']['nodes'] ?? null) === 4521, 'B3 dependency graph must contain every frozen function node.');
 	$assert((int) ($graph['counts']['edges'] ?? 0) > 0, 'B3 dependency graph must contain direct/dynamic edges.');
