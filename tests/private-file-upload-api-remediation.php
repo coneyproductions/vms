@@ -123,16 +123,18 @@ $assert(strpos($verificationStoreFunction, 'bvmgr_private_files_store_validated_
 $assert(strpos($eventPlanSource, 'bvmgr_event_plan_import_with_scoped_upload_dir(') !== false, 'The Event Plan upload API implementation should remain unchanged.');
 $assert(strpos($eventPlanSource, 'wp_handle_upload(') !== false, 'The Event Plan upload API implementation should remain present.');
 
-define('ABSPATH', __DIR__ . '/');
+$bvm_private_test_base = sys_get_temp_dir() . '/bvm-private-broker-' . bin2hex(random_bytes(6));
+mkdir($bvm_private_test_base . '/public/wordpress/wp-content/uploads', 0700, true);
+mkdir($bvm_private_test_base . '/private', 0700, true);
+$bvm_private_test_base = realpath($bvm_private_test_base);
+define('ABSPATH', $bvm_private_test_base . '/public/wordpress/');
 define('ARRAY_A', 'ARRAY_A');
-define('WP_CONTENT_DIR', __DIR__);
-$bvm_private_test_root = sys_get_temp_dir() . '/bvm-private-broker-' . bin2hex(random_bytes(6));
-mkdir($bvm_private_test_root, 0700);
-define('BVMGR_PRIVATE_STORAGE_ROOT', realpath($bvm_private_test_root));
-define('BVMGR_PRIVATE_STORAGE_WEB_ROOTS', array(realpath(__DIR__)));
+define('WP_CONTENT_DIR', $bvm_private_test_base . '/public/wordpress/wp-content');
+define('BVMGR_PRIVATE_STORAGE_ROOT', $bvm_private_test_base . '/private');
+define('BVMGR_PRIVATE_STORAGE_WEB_ROOTS', array($bvm_private_test_base . '/public'));
 function get_current_blog_id(): int { return 1; }
 function wp_unslash($value) { return $value; }
-register_shutdown_function(static function () { vms_test_recursive_delete(BVMGR_PRIVATE_STORAGE_ROOT); });
+register_shutdown_function(static function () { vms_test_recursive_delete($GLOBALS['bvm_private_test_base']); });
 
 final class VmsPrivateFilesUploadApiException extends RuntimeException
 {
@@ -300,15 +302,6 @@ function update_option(string $option, $value, bool $autoload = true): bool
 function delete_option(string $option): bool { unset($GLOBALS['vms_test_options'][$option]); return true; }
 function untrailingslashit(string $value): string { return rtrim($value, '/'); }
 function has_filter(string $hook, $callback) { return in_array($callback, $GLOBALS['vms_test_filters'][$hook] ?? array(), true) ? 10 : false; }
-// Transport fixture only; actual HTTP denial is covered by the isolated storage integration run.
-function wp_remote_get(string $url, array $args): array {
-    $config = bvmgr_private_storage_config();
-    if (str_starts_with($url, $config['url'] . '/private/')) return array('response' => array('code' => 403), 'body' => '');
-    if (!str_starts_with($url, $config['url'] . '/probe-')) throw new RuntimeException('Unexpected transport URL');
-    return array('response' => array('code' => 200), 'body' => file_get_contents($config['container'] . '/' . basename($url)));
-}
-function wp_remote_retrieve_response_code(array $response): int { return $response['response']['code']; }
-function wp_remote_retrieve_body(array $response): string { return $response['body']; }
 
 function dbDelta(string $sql): void
 {
@@ -445,9 +438,9 @@ function vms_test_make_wpdb(string $prefix)
 
 function vms_test_reset_case(string $mode = 'success'): void
 {
-	$tempRoot = BVMGR_PRIVATE_STORAGE_ROOT . '/vms-private-upload-api-' . bin2hex(random_bytes(6));
+	$tempRoot = $GLOBALS['bvm_private_test_base'] . '/public/cases/vms-private-upload-api-' . bin2hex(random_bytes(6));
 	$uploadsBaseDir = $tempRoot . '/uploads';
-	$privateRoot = $uploadsBaseDir . '/backstage-venue-manager/private/site-1';
+	$privateRoot = BVMGR_PRIVATE_STORAGE_ROOT . '/site-1';
 	vms_test_recursive_delete($privateRoot);
 	$bucketDir = $privateRoot . '/verifications';
 	$outsideDir = $tempRoot . '/outside';

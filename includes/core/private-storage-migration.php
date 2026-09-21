@@ -136,11 +136,12 @@ function bvmgr_private_storage_receipt(string $key, array $value): bool
 /** Remove only empty directories inside recognized legacy private roots after verified removal. */
 function bvmgr_private_storage_cleanup_legacy(string $source): void
 {
+    $owned_roots = bvmgr_private_storage_owned_legacy_roots();
     foreach (bvmgr_private_storage_legacy_roots() as $root => $prefix) {
         if (!bvmgr_private_storage_within($source, $root) || !bvmgr_private_storage_no_links($root)) continue;
         for ($directory = dirname($source); bvmgr_private_storage_within($directory, $root); $directory = dirname($directory)) {
-            // The shared vms-private root may also belong to optional companions.
-            if ($directory === $root && $prefix === '') break;
+            // Retain shared legacy roots that may also belong to optional companions.
+            if ($directory === $root && $prefix === '' && !in_array($root, $owned_roots, true)) break;
             if (!bvmgr_private_storage_no_links($directory) || !@rmdir($directory)) break;
             if ($directory === $root) break;
         }
@@ -277,7 +278,7 @@ function bvmgr_private_storage_admin_page(): void
     $config = bvmgr_private_storage_config();
     $inventory = is_wp_error($config) ? $config : bvmgr_private_storage_inventory();
     echo '<div class="wrap"><h1>' . esc_html__('BVM Private Documents', 'backstage-venue-manager') . '</h1>';
-    echo '<p>' . esc_html__('Private documents use a Backstage Venue Manager directory in WordPress uploads. The migration action verifies that the uploads URL serves a harmless probe and that the server denies access to the private directory. Private uploads stay disabled if protection cannot be verified. Existing documents are copied and verified before their legacy copies are removed.', 'backstage-venue-manager') . '</p>';
+    echo '<p>' . esc_html__('Private documents require a host-provisioned directory outside every public web root. Configure BVMGR_PRIVATE_STORAGE_ROOT and the complete BVMGR_PRIVATE_STORAGE_WEB_ROOTS list before migration. Existing documents are copied and verified before their BVM-owned legacy copies are removed.', 'backstage-venue-manager') . '</p>';
     if (is_wp_error($inventory)) {
         echo '<p>' . esc_html($inventory->get_error_message()) . ' (' . esc_html($inventory->get_error_code()) . ')</p>';
     } elseif (!$inventory && bvmgr_private_storage_is_verified($config)) {
@@ -286,7 +287,7 @@ function bvmgr_private_storage_admin_page(): void
         echo '<p>' . esc_html__('Legacy documents require migration. Their old public copies may remain exposed until migration succeeds. Back up documents and database securely before continuing. Each batch verifies copied content before removing owned originals; rerun interrupted batches.', 'backstage-venue-manager') . '</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="bvmgr_private_storage_migrate">';
         wp_nonce_field('bvmgr_private_storage_migrate');
-        submit_button(__('Verify storage and migrate next batch', 'backstage-venue-manager'));
+        submit_button(__('Migrate next verified batch', 'backstage-venue-manager'));
         echo '</form>';
     }
     $last = get_option('bvmgr_private_storage_migration_result', array());
