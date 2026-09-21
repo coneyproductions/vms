@@ -1,6 +1,25 @@
 (function () {
 	'use strict';
 
+	var eventEditor = document.querySelector('.vms-efu-event-editor');
+	var eventDraftDirty = false;
+	if (eventEditor) {
+		eventEditor.addEventListener('input', function () {
+			eventDraftDirty = true;
+			eventEditor.querySelector('[data-vms-efu-event-fields]').hidden = !eventEditor.querySelector('[name="customize_event"]').checked;
+			eventEditor.querySelector('[data-vms-efu-draft-warning]').hidden = false;
+		});
+		document.addEventListener('submit', function (event) {
+			var action = event.target.querySelector('[name="action"]');
+			if (eventDraftDirty && action && ['vms_email_followups_send_test', 'vms_email_followups_manual_send'].indexOf(action.value) !== -1) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				eventEditor.querySelector('[data-vms-efu-draft-warning]').scrollIntoView({block: 'center'});
+			}
+		}, true);
+	}
+
+
 	function recipientBoxes(form) {
 		return Array.prototype.slice.call(form.querySelectorAll('[data-vms-efu-recipient]'));
 	}

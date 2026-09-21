@@ -861,14 +861,22 @@ if (!function_exists('bvmgr_calendar_prepare_vendor_groups')) {
 		unset($group);
 
 		ksort($groups);
+		if ($context === 'public' && function_exists('bvmgr_event_plan_vendor_customer_eligible')) {
+			foreach ($groups as &$public_group) {
+				$public_group['vendors'] = array_values(array_filter((array) ($public_group['vendors'] ?? array()), static function ($vendor) use ($event_plan_id): bool {
+					return bvmgr_event_plan_vendor_customer_eligible($event_plan_id, (int) ($vendor['vendor_id'] ?? 0));
+				}));
+			}
+			unset($public_group);
+		}
 		return (array) apply_filters('vms_calendar_vendor_groups', $groups, $event_plan_id, $context);
 	}
 }
 
 if (!function_exists('bvmgr_calendar_feed_cache_bust')) {
-	function bvmgr_calendar_feed_cache_bust(): void
+	function bvmgr_calendar_feed_cache_bust(bool $unique = false): void
 	{
-		update_option(BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION, (string) time(), false);
+		update_option(BVMGR_CALENDAR_FEED_CACHE_BUST_OPTION, $unique ? wp_generate_uuid4() : (string) time(), false);
 	}
 }
 

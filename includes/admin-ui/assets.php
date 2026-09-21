@@ -101,7 +101,7 @@ if (!function_exists('bvmgr_admin_ui_enqueue_assets')) {
 				'bvmgr-event-plan-secondary-vendors',
 				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-secondary-vendors.js',
 				array(),
-				bvmgr_admin_ui_asset_version(),
+				bvmgr_admin_ui_asset_version() . '-participation-v1',
 				true
 			);
 

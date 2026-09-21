@@ -250,7 +250,7 @@ if (!function_exists('bvmgr_feedback_get_event_context')) {
 	/**
 	 * @return array<string,mixed>
 	 */
-	function bvmgr_feedback_get_event_context(int $event_plan_id): array
+	function bvmgr_feedback_get_event_context(int $event_plan_id, bool $customer_facing = false): array
 	{
 		$event_plan_id = absint($event_plan_id);
 		$plan = $event_plan_id > 0 ? get_post($event_plan_id) : null;
@@ -261,6 +261,11 @@ if (!function_exists('bvmgr_feedback_get_event_context')) {
 		$venue_id = bvmgr_feedback_get_event_plan_venue_id($event_plan_id);
 		$primary_vendor_id = bvmgr_feedback_get_primary_vendor_id($event_plan_id);
 		$secondary_vendor_ids = bvmgr_feedback_get_secondary_vendor_ids($event_plan_id);
+		if ($customer_facing && function_exists('bvmgr_event_plan_vendor_customer_eligible')) {
+			$secondary_vendor_ids = array_values(array_filter($secondary_vendor_ids, static function ($vendor_id) use ($event_plan_id): bool {
+				return bvmgr_event_plan_vendor_customer_eligible($event_plan_id, (int) $vendor_id);
+			}));
+		}
 		$venue_title = $venue_id > 0 ? get_the_title($venue_id) : '';
 		if (!is_string($venue_title) || trim($venue_title) === '') {
 			$venue_title = get_bloginfo('name');

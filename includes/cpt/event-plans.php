@@ -1084,6 +1084,7 @@ class BVMGR_Admin_Event_Plans
             <?php echo $this->render_event_plan_secondary_vendors_save_response_group_template_html($context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             <?php echo $this->render_event_plan_secondary_vendors_save_response_row_template_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             <?php echo $this->render_event_plan_secondary_vendors_save_response_vendor_category_notice_html($context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php bvmgr_event_plan_render_secondary_vendor_outcomes((int) ($context['post_id'] ?? 0)); ?>
         </div>
         <?php
 
@@ -1956,6 +1957,7 @@ class BVMGR_Admin_Event_Plans
             <?php echo $this->render_event_plan_secondary_vendors_lazy_load_group_template_html($context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             <?php echo $this->render_event_plan_secondary_vendors_lazy_load_row_template_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             <?php echo $this->render_event_plan_secondary_vendors_lazy_load_vendor_category_notice_html($context); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php bvmgr_event_plan_render_secondary_vendor_outcomes((int) ($context['post_id'] ?? 0)); ?>
         </div>
         <?php
 

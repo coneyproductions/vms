@@ -750,6 +750,13 @@
             btnSave.disabled = true;
             setStatus(statusEl, String(labels.saving || 'Saving Additional Vendors…'), 'info');
 
+            const outcomePanel = section.querySelector('.vms-secondary-outcomes[data-dirty="1"]');
+            if (outcomePanel) {
+                btnSave.disabled = false;
+                const outcomeStatus = outcomePanel.querySelector('[data-vms-outcomes-status]');
+                setStatus(statusEl, outcomeStatus.dataset.unsaved, 'error');
+                return;
+            }
             const params = new URLSearchParams();
             params.set('action', 'vms_save_event_plan_secondary_vendors');
             params.set('post_id', String(postId));
@@ -860,3 +867,43 @@
         initSecondaryVendors(document);
     }
 })();
+
+// Separate participation save: never serialize these controls as assignments.
+document.addEventListener('change', function (event) {
+    if (!event.target.matches('[data-vms-outcome-vendor]')) return;
+    const panel = event.target.closest('.vms-secondary-outcomes');
+    panel.dataset.dirty = '1';
+    const status = panel.querySelector('[data-vms-outcomes-status]');
+    status.textContent = status.dataset.unsaved;
+});
+document.addEventListener('click', async function (event) {
+    const button = event.target.closest('[data-vms-outcomes-save]');
+    if (!button || button.disabled) return;
+    const panel = button.closest('.vms-secondary-outcomes');
+    const status = panel.querySelector('[data-vms-outcomes-status]');
+    const controls = Array.from(panel.querySelectorAll('[data-vms-outcome-vendor]'));
+    const params = new URLSearchParams();
+    params.set('action', 'vms_secondary_vendor_outcomes');
+    params.set('post_id', panel.dataset.vmsOutcomesPlan);
+    params.set('nonce', panel.dataset.vmsOutcomesNonce);
+    controls.forEach(control => params.set('outcomes[' + control.dataset.vmsOutcomeVendor + ']', control.value));
+    button.disabled = true;
+    controls.forEach(control => { control.disabled = true; });
+    status.textContent = status.dataset.saving;
+    try {
+        const response = await fetch(panel.dataset.vmsOutcomesUrl, {
+            method: 'POST', credentials: 'same-origin',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+            body: params.toString()
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) throw new Error(payload.data && payload.data.message || status.dataset.error);
+        status.textContent = payload.data.message;
+        panel.dataset.dirty = '0';
+    } catch (error) {
+        status.textContent = error.message || status.dataset.error;
+    } finally {
+        button.disabled = false;
+        controls.forEach(control => { control.disabled = false; });
+    }
+});

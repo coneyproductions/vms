@@ -196,7 +196,9 @@ if (!function_exists('bvmgr_vendor_profiles_get_secondary_vendors_for_tec_event'
             }
         }
 
-        return $secondary_ids;
+        return array_values(array_filter($secondary_ids, static function ($vendor_id) use ($plan_id): bool {
+            return !function_exists('bvmgr_event_plan_vendor_customer_eligible') || bvmgr_event_plan_vendor_customer_eligible($plan_id, (int) $vendor_id);
+        }));
     }
 }
 
@@ -489,7 +491,10 @@ if (!function_exists('bvmgr_vendor_profiles_build_event_vendor_groups')) {
             return true;
         };
 
-        $append_card = static function (string $type_slug, int $vendor_id, string $display_name = '') use (&$groups, $ensure_group, $is_type_public): void {
+        $append_card = static function (string $type_slug, int $vendor_id, string $display_name = '') use (&$groups, $ensure_group, $is_type_public, $plan_id): void {
+            if (function_exists('bvmgr_event_plan_vendor_customer_eligible') && !bvmgr_event_plan_vendor_customer_eligible($plan_id, $vendor_id)) {
+                return;
+            }
             $vendor_id = absint($vendor_id);
             if ($vendor_id <= 0 || !bvmgr_vendor_profiles_vendor_exists($vendor_id)) {
                 return;
@@ -1070,6 +1075,10 @@ if (!function_exists('bvmgr_vendor_profiles_render_social_links')) {
 if (!function_exists('bvmgr_vendor_profiles_render_event_teaser')) {
     function bvmgr_vendor_profiles_render_event_teaser(int $vendor_id, int $tec_event_id = 0, array $args = array()): string
     {
+        $plan_id = $tec_event_id > 0 ? bvmgr_vendor_profiles_get_event_plan_for_tec_event($tec_event_id) : 0;
+        if ($plan_id > 0 && function_exists('bvmgr_event_plan_vendor_customer_eligible') && !bvmgr_event_plan_vendor_customer_eligible($plan_id, $vendor_id)) {
+            return '';
+        }
         $vendor_id = (int) $vendor_id;
         $tec_event_id = (int) $tec_event_id;
 

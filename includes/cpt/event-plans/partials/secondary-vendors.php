@@ -644,4 +644,5 @@ $render_secondary_vendor_group = static function (array $group, int $group_index
 		</p>
 	</div>
 
+	<?php bvmgr_event_plan_render_secondary_vendor_outcomes((int) $post->ID); ?>
 </div>

@@ -682,7 +682,7 @@ if (!function_exists('bvmgr_public_calendar_vendor_slots')) {
 			}
 			foreach ((array) ($ids['secondary_ids'] ?? array()) as $sid) {
 				$sid = absint($sid);
-				if ($sid > 0) {
+				if ($sid > 0 && (!function_exists('bvmgr_event_plan_vendor_customer_eligible') || bvmgr_event_plan_vendor_customer_eligible($plan_id, $sid))) {
 					$ordered_ids[] = $sid;
 				}
 			}
@@ -720,6 +720,9 @@ if (!function_exists('bvmgr_public_calendar_vendor_slots')) {
 				$vendors = isset($group['vendors']) && is_array($group['vendors']) ? $group['vendors'] : array();
 				foreach ($vendors as $vendor) {
 					if (!is_array($vendor)) {
+						continue;
+					}
+					if ($plan_id > 0 && function_exists('bvmgr_event_plan_vendor_customer_eligible') && !bvmgr_event_plan_vendor_customer_eligible($plan_id, (int) ($vendor['vendor_id'] ?? 0))) {
 						continue;
 					}
 					$name = trim((string) ($vendor['display_name'] ?? ''));

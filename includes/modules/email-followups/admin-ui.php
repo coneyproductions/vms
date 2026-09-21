@@ -70,7 +70,7 @@ if (!function_exists('bvmgr_email_followups_enqueue_admin_assets')) {
 			'bvmgr-email-followups-admin',
 			BVMGR_PLUGIN_URL . 'assets/js/vms-email-followups-admin.js',
 			array(),
-			defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : null,
+			(defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '') . '-event-copy-v1',
 			true
 		);
 	}
@@ -442,12 +442,39 @@ if (!function_exists('bvmgr_email_followups_render_preview_tab')) {
 			return;
 		}
 
+		$preview_content = bvmgr_email_followups_manual_content($event_plan_id, $email_key);
+		$active_batch_token = sanitize_key(bvmgr_email_followups_query_arg('batch_token'));
+		$active_batch = $active_batch_token !== '' ? bvmgr_email_followups_batch_get($active_batch_token) : array();
+		$active_batch_matches = !empty($active_batch) && (int) ($active_batch['event_plan_id'] ?? 0) === $event_plan_id && ($active_batch['email_key'] ?? '') === $email_key;
+		if ($active_batch_matches) {
+			$preview_content = isset($active_batch['content']) && is_array($active_batch['content']) ? $active_batch['content'] : bvmgr_email_followups_template_for($email_key);
+		}
 		$context = bvmgr_email_followups_event_context($event_plan_id);
 		$recipient_result = bvmgr_email_followups_event_recipients($event_plan_id);
 		$recipients = (array) ($recipient_result['recipients'] ?? array());
-		$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, !empty($recipients[0]) ? (array) $recipients[0] : array('name' => 'Preview Recipient'));
+		$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, !empty($recipients[0]) ? (array) $recipients[0] : array('name' => 'Preview Recipient'), $preview_content);
 		$scheduled_ts = bvmgr_email_followups_scheduled_timestamp($event_plan_id, $email_key);
 		list($allowed, $reason) = bvmgr_email_followups_context_allows_send($context);
+
+		$draft = bvmgr_email_followups_event_draft($event_plan_id, $email_key);
+		$source = $draft ?? bvmgr_email_followups_template_for($email_key);
+		if ($active_batch_matches) {
+			echo '<p class="notice notice-info inline">' . esc_html__('The preview and test use the frozen copy for the batch in progress. Finish this batch before editing event copy.', 'backstage-venue-manager') . '</p>';
+		}
+		if (!$active_batch_matches) {
+			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-efu-event-editor">';
+			wp_nonce_field('bvmgr_email_followups_event_draft');
+			echo '<input type="hidden" name="action" value="vms_email_followups_event_draft" />';
+			echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '" />';
+			echo '<input type="hidden" name="email_key" value="' . esc_attr($email_key) . '" />';
+			echo '<p><label><input type="checkbox" name="customize_event" value="1" ' . checked($draft !== null, true, false) . ' /> ' . esc_html__('Customize for This Event', 'backstage-venue-manager') . '</label></p>';
+			echo '<div data-vms-efu-event-fields' . ($draft === null ? ' hidden' : '') . '>';
+			echo '<p><label>' . esc_html__('Subject', 'backstage-venue-manager') . '<br /><input class="large-text" name="event_subject" value="' . esc_attr($source['subject']) . '" /></label></p>';
+			echo '<p><label>' . esc_html__('Body', 'backstage-venue-manager') . '<br /><textarea class="large-text" name="event_body" rows="12">' . esc_textarea($source['body']) . '</textarea></label></p>';
+			echo '<p class="description">' . esc_html__('Keep tokens such as {customer_greeting}, {feedback_url}, and {signature}. This event draft expires after 12 hours; your saved template is unchanged. A send batch keeps its own frozen copy.', 'backstage-venue-manager') . '</p></div>';
+			echo '<p><button type="submit" class="button button-primary">' . esc_html__('Apply & Preview', 'backstage-venue-manager') . '</button> <button type="submit" name="reset_to_template" value="1" class="button">' . esc_html__('Reset to Template', 'backstage-venue-manager') . '</button></p>';
+			echo '<p data-vms-efu-draft-warning hidden role="status">' . esc_html__('Apply & Preview your changes before testing or sending.', 'backstage-venue-manager') . '</p></form>';
+		}
 
 		echo '<section class="vms-efu-grid">';
 		echo '<article class="vms-efu-card"><h2>' . esc_html__('Recipient Preview', 'backstage-venue-manager') . '</h2>';
@@ -496,15 +523,20 @@ if (!function_exists('bvmgr_email_followups_render_preview_tab')) {
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
 		wp_nonce_field('bvmgr_email_followups_send_test');
 		echo '<input type="hidden" name="action" value="vms_email_followups_send_test" />';
+		echo '<input type="hidden" name="content_hash" value="' . esc_attr(bvmgr_email_followups_content_hash($preview_content)) . '" />';
+		if ($active_batch_matches) {
+			echo '<input type="hidden" name="batch_token" value="' . esc_attr($active_batch_token) . '" />';
+		}
 		echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '" />';
 		echo '<input type="hidden" name="email_key" value="' . esc_attr($email_key) . '" />';
 		echo '<label><span>' . esc_html__('Send test to', 'backstage-venue-manager') . '</span><input type="email" name="test_recipient" value="' . esc_attr((string) $settings['test_recipient']) . '" /></label> ';
 		echo '<button type="submit" class="button button-primary">' . esc_html__('Send Test Email', 'backstage-venue-manager') . '</button>';
 		echo '</form>';
 
-		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-efu-manual-send-form">';
+		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-efu-manual-send-form"' . ($active_batch_matches ? ' hidden' : '') . '>';
 		wp_nonce_field('bvmgr_email_followups_manual_send');
 		echo '<input type="hidden" name="action" value="vms_email_followups_manual_send" />';
+		echo '<input type="hidden" name="content_hash" value="' . esc_attr(bvmgr_email_followups_content_hash(bvmgr_email_followups_manual_content($event_plan_id, $email_key))) . '" />';
 		echo '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) $event_plan_id) . '" />';
 		echo '<input type="hidden" name="email_key" value="' . esc_attr($email_key) . '" />';
 		echo '<input type="hidden" name="recipient_selection_present" value="1" />';
@@ -551,6 +583,9 @@ if (!function_exists('bvmgr_email_followups_render_logs_tab')) {
 		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Time', 'backstage-venue-manager') . '</th><th>' . esc_html__('Status', 'backstage-venue-manager') . '</th><th>' . esc_html__('Action', 'backstage-venue-manager') . '</th><th>' . esc_html__('Template', 'backstage-venue-manager') . '</th><th>' . esc_html__('Event', 'backstage-venue-manager') . '</th><th>' . esc_html__('Recipient', 'backstage-venue-manager') . '</th><th>' . esc_html__('Message', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 		foreach ($logs as $log) {
 			$plan_id = absint($log['event_plan_id'] ?? 0);
+			if (isset($log['meta']['subject'], $log['meta']['body_html'])) {
+				echo '<tr><td colspan="7"><details><summary>' . esc_html__('Sent content', 'backstage-venue-manager') . '</summary><p>' . esc_html((string) $log['meta']['subject']) . '</p><pre style="white-space:pre-wrap">' . esc_html((string) $log['meta']['body_html']) . '</pre></details></td></tr>';
+			}
 			echo '<tr><td>' . esc_html((string) ($log['created_at'] ?? '')) . '</td><td>' . esc_html((string) ($log['status'] ?? '')) . '</td><td>' . esc_html((string) ($log['action'] ?? '')) . '</td><td>' . esc_html((string) ($log['email_key'] ?? '')) . '</td><td>' . esc_html($plan_id > 0 ? get_the_title($plan_id) : '') . '</td><td>' . esc_html((string) ($log['recipient'] ?? '')) . '</td><td>' . esc_html((string) ($log['message'] ?? '')) . '</td></tr>';
 		}
 		echo '</tbody></table></section>';
@@ -590,7 +625,7 @@ if (!function_exists('bvmgr_email_followups_batch_transient_key')) {
 }
 
 if (!function_exists('bvmgr_email_followups_batch_create')) {
-	function bvmgr_email_followups_batch_create(int $event_plan_id, string $email_key, array $emails): string
+	function bvmgr_email_followups_batch_create(int $event_plan_id, string $email_key, array $emails, ?array $content = null): string
 	{
 		$emails = function_exists('bvmgr_email_followups_normalize_recipient_emails') ? bvmgr_email_followups_normalize_recipient_emails($emails) : array();
 		if (empty($emails)) {
@@ -601,6 +636,7 @@ if (!function_exists('bvmgr_email_followups_batch_create')) {
 			'event_plan_id' => absint($event_plan_id),
 			'email_key' => sanitize_key($email_key),
 			'emails' => $emails,
+			'content' => $content ?? bvmgr_email_followups_template_for($email_key),
 			'created_at' => time(),
 		), 12 * HOUR_IN_SECONDS);
 		return $token;
@@ -629,6 +665,42 @@ if (!function_exists('bvmgr_email_followups_batch_clear')) {
 	}
 }
 
+
+if (!function_exists('bvmgr_email_followups_check_preview_content')) {
+	function bvmgr_email_followups_check_preview_content(array $content, int $event_plan_id, string $email_key): void
+	{
+		if (isset($_POST['content_hash']) && (!is_string($_POST['content_hash']) || !hash_equals(bvmgr_email_followups_content_hash($content), $_POST['content_hash']))) {
+			bvmgr_email_followups_redirect_notice('preview', __('The event copy changed or expired. Preview again before sending.', 'backstage-venue-manager'), 'warning', array('event_plan_id' => $event_plan_id, 'email_key' => $email_key));
+		}
+	}
+}
+
+if (!function_exists('bvmgr_email_followups_save_event_draft_post')) {
+	function bvmgr_email_followups_save_event_draft_post(): void
+	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('Insufficient permissions.', 'backstage-venue-manager'));
+		}
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_email_followups_event_draft', '_wpnonce'), '_wpnonce');
+		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
+		$email_key = isset($_POST['email_key']) && is_scalar($_POST['email_key']) ? sanitize_key((string) $_POST['email_key']) : '';
+		$definitions = bvmgr_email_followups_template_definitions();
+		if (get_post_type($event_plan_id) !== 'vms_event_plan' || !isset($definitions[$email_key])) {
+			wp_die(esc_html__('Invalid event or template.', 'backstage-venue-manager'));
+		}
+		$key = bvmgr_email_followups_event_draft_key($event_plan_id, $email_key);
+		if (!empty($_POST['reset_to_template']) || empty($_POST['customize_event'])) {
+			delete_transient($key);
+		} else {
+			$subject = isset($_POST['event_subject']) && is_string($_POST['event_subject']) ? sanitize_text_field(wp_unslash($_POST['event_subject'])) : '';
+			$body = isset($_POST['event_body']) && is_string($_POST['event_body']) ? sanitize_textarea_field(wp_unslash($_POST['event_body'])) : '';
+			set_transient($key, array('subject' => $subject, 'body' => $body), 12 * HOUR_IN_SECONDS);
+		}
+		bvmgr_email_followups_redirect_notice('preview', __('Event copy applied. Review the preview before sending.', 'backstage-venue-manager'), 'success', array('event_plan_id' => $event_plan_id, 'email_key' => $email_key));
+	}
+}
+add_action('admin_post_vms_email_followups_event_draft', 'bvmgr_email_followups_save_event_draft_post');
+
 if (!function_exists('bvmgr_email_followups_send_test_post')) {
 	function bvmgr_email_followups_send_test_post(): void
 	{
@@ -639,8 +711,18 @@ if (!function_exists('bvmgr_email_followups_send_test_post')) {
 		$event_plan_id = isset($_POST['event_plan_id']) ? absint($_POST['event_plan_id']) : 0;
 		$email_key = isset($_POST['email_key']) ? sanitize_key((string) $_POST['email_key']) : 'know_before';
 		$to = isset($_POST['test_recipient']) ? sanitize_email((string) wp_unslash($_POST['test_recipient'])) : '';
-		$result = bvmgr_email_followups_send_test($email_key, $event_plan_id, $to);
-		bvmgr_email_followups_redirect_notice('preview', (string) ($result['message'] ?? ''), !empty($result['ok']) ? 'success' : 'error', array('event_plan_id' => $event_plan_id, 'email_key' => $email_key));
+		$content = bvmgr_email_followups_manual_content($event_plan_id, $email_key);
+		$batch_token = isset($_POST['batch_token']) && is_string($_POST['batch_token']) ? sanitize_key($_POST['batch_token']) : '';
+		if ($batch_token !== '') {
+			$batch = bvmgr_email_followups_batch_get($batch_token);
+			if (empty($batch) || (int) ($batch['event_plan_id'] ?? 0) !== $event_plan_id || ($batch['email_key'] ?? '') !== $email_key) {
+				bvmgr_email_followups_redirect_notice('preview', __('The send batch expired. Preview again before testing.', 'backstage-venue-manager'), 'warning', array('event_plan_id' => $event_plan_id, 'email_key' => $email_key));
+			}
+			$content = isset($batch['content']) && is_array($batch['content']) ? $batch['content'] : bvmgr_email_followups_template_for($email_key);
+		}
+		bvmgr_email_followups_check_preview_content($content, $event_plan_id, $email_key);
+		$result = bvmgr_email_followups_send_test($email_key, $event_plan_id, $to, $content);
+		bvmgr_email_followups_redirect_notice('preview', (string) ($result['message'] ?? ''), !empty($result['ok']) ? 'success' : 'error', array('event_plan_id' => $event_plan_id, 'email_key' => $email_key, 'batch_token' => $batch_token));
 	}
 }
 add_action('admin_post_vms_email_followups_send_test', 'bvmgr_email_followups_send_test_post');
@@ -659,12 +741,15 @@ if (!function_exists('bvmgr_email_followups_manual_send_post')) {
 			bvmgr_email_followups_redirect_notice('preview', __('Manual send was not confirmed, so no recipient emails were sent.', 'backstage-venue-manager'), 'warning', array('event_plan_id' => $event_plan_id, 'email_key' => $email_key));
 		}
 
+		$content = bvmgr_email_followups_manual_content($event_plan_id, $email_key);
 		$recipient_emails = array();
 		if ($batch_token !== '') {
 			$batch = bvmgr_email_followups_batch_get($batch_token);
 			if (empty($batch) || (int) ($batch['event_plan_id'] ?? 0) !== $event_plan_id || sanitize_key((string) ($batch['email_key'] ?? '')) !== $email_key) {
 				bvmgr_email_followups_redirect_notice('preview', __('The saved send batch expired or no longer matches this event/template. No emails were sent.', 'backstage-venue-manager'), 'warning', array('event_plan_id' => $event_plan_id, 'email_key' => $email_key));
 			}
+			// Legacy in-progress batches predate customization and keep normal templates.
+			$content = isset($batch['content']) && is_array($batch['content']) ? $batch['content'] : bvmgr_email_followups_template_for($email_key);
 			$recipient_emails = function_exists('bvmgr_email_followups_normalize_recipient_emails') ? bvmgr_email_followups_normalize_recipient_emails((array) ($batch['emails'] ?? array())) : array();
 		} elseif (!empty($_POST['recipient_selection_present'])) {
 			$selected = isset($_POST['selected_recipients']) && is_array($_POST['selected_recipients'])
@@ -676,18 +761,23 @@ if (!function_exists('bvmgr_email_followups_manual_send_post')) {
 			}
 		}
 
+		if ($batch_token === '') {
+			bvmgr_email_followups_check_preview_content($content, $event_plan_id, $email_key);
+		}
+
 		$result = bvmgr_email_followups_send_event_email($email_key, $event_plan_id, 'manual', array(
 			'recipient_emails' => $recipient_emails,
 			'limit' => bvmgr_email_followups_manual_batch_size(),
+			'content' => $content,
 		));
 
 		$remaining = function_exists('bvmgr_email_followups_normalize_recipient_emails') ? bvmgr_email_followups_normalize_recipient_emails((array) ($result['remaining_emails'] ?? array())) : array();
 		$args = array('event_plan_id' => $event_plan_id, 'email_key' => $email_key);
 		if (!empty($remaining)) {
-			$new_token = $batch_token !== '' ? $batch_token : bvmgr_email_followups_batch_create($event_plan_id, $email_key, $remaining);
+			$new_token = $batch_token !== '' ? $batch_token : bvmgr_email_followups_batch_create($event_plan_id, $email_key, $remaining, $content);
 			if ($batch_token !== '') {
 				bvmgr_email_followups_batch_clear($batch_token);
-				$new_token = bvmgr_email_followups_batch_create($event_plan_id, $email_key, $remaining);
+				$new_token = bvmgr_email_followups_batch_create($event_plan_id, $email_key, $remaining, $content);
 			}
 			if ($new_token !== '') {
 				$args['batch_token'] = $new_token;

@@ -16,6 +16,41 @@ if (!function_exists('bvmgr_email_followups_template_for')) {
 	}
 }
 
+
+// Drafts belong to an event/template, never to the shared template settings.
+if (!function_exists('bvmgr_email_followups_event_draft_key')) {
+	function bvmgr_email_followups_event_draft_key(int $event_plan_id, string $email_key): string
+	{
+		return 'vms_efu_draft_' . absint($event_plan_id) . '_' . md5(sanitize_key($email_key));
+	}
+}
+
+if (!function_exists('bvmgr_email_followups_event_draft')) {
+	function bvmgr_email_followups_event_draft(int $event_plan_id, string $email_key): ?array
+	{
+		$draft = get_transient(bvmgr_email_followups_event_draft_key($event_plan_id, $email_key));
+		return is_array($draft) && isset($draft['subject'], $draft['body']) ? $draft : null;
+	}
+}
+
+if (!function_exists('bvmgr_email_followups_manual_content')) {
+	function bvmgr_email_followups_manual_content(int $event_plan_id, string $email_key): array
+	{
+		$content = bvmgr_email_followups_event_draft($event_plan_id, $email_key)
+			?? bvmgr_email_followups_template_for($email_key);
+		$settings = bvmgr_email_followups_settings();
+		$content['signature'] = trim(wp_strip_all_tags((string) ($settings['signature'] ?? '')));
+		return $content;
+	}
+}
+
+if (!function_exists('bvmgr_email_followups_content_hash')) {
+	function bvmgr_email_followups_content_hash(array $content): string
+	{
+		return hash('sha256', wp_json_encode($content));
+	}
+}
+
 if (!function_exists('bvmgr_email_followups_feedback_url')) {
 	function bvmgr_email_followups_feedback_url(int $event_plan_id, array $recipient = array(), string $email_key = ''): string
 	{
@@ -90,11 +125,14 @@ if (!function_exists('bvmgr_email_followups_token_map')) {
 }
 
 if (!function_exists('bvmgr_email_followups_render_message')) {
-	function bvmgr_email_followups_render_message(string $email_key, int $event_plan_id, array $recipient = array()): array
+	function bvmgr_email_followups_render_message(string $email_key, int $event_plan_id, array $recipient = array(), ?array $content = null): array
 	{
-		$template = bvmgr_email_followups_template_for($email_key);
+		$template = $content ?? bvmgr_email_followups_template_for($email_key);
 		$context = bvmgr_email_followups_event_context($event_plan_id);
 		$tokens = bvmgr_email_followups_token_map($context, $recipient, $email_key);
+		if ($content !== null && array_key_exists('signature', $content)) {
+			$tokens['{signature}'] = (string) $content['signature'];
+		}
 		$subject = strtr((string) $template['subject'], $tokens);
 		$body_text = strtr((string) $template['body'], $tokens);
 
@@ -131,14 +169,14 @@ if (!function_exists('bvmgr_email_followups_headers')) {
 }
 
 if (!function_exists('bvmgr_email_followups_send_test')) {
-	function bvmgr_email_followups_send_test(string $email_key, int $event_plan_id, string $to): array
+	function bvmgr_email_followups_send_test(string $email_key, int $event_plan_id, string $to, ?array $content = null): array
 	{
 		$email_key = sanitize_key($email_key);
 		$to = sanitize_email($to);
 		if (!is_email($to)) {
 			return array('ok' => false, 'message' => __('Invalid test recipient.', 'backstage-venue-manager'));
 		}
-		$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, array('email' => $to, 'name' => __('Test Recipient', 'backstage-venue-manager')));
+		$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, array('email' => $to, 'name' => __('Test Recipient', 'backstage-venue-manager')), $content ?? bvmgr_email_followups_manual_content($event_plan_id, $email_key));
 		list($allowed, $reason) = bvmgr_email_followups_context_allows_send((array) ($rendered['context'] ?? array()));
 		if (!$allowed) {
 			/* translators: %s: test blocked. */
@@ -152,6 +190,7 @@ if (!function_exists('bvmgr_email_followups_send_test')) {
 			'recipient' => $to,
 			'status' => $ok ? 'sent' : 'error',
 			'message' => $ok ? 'Test email sent.' : 'wp_mail returned false for test email.',
+			'meta' => array('subject' => '[TEST] ' . (string) $rendered['subject'], 'body_html' => (string) $rendered['body_html']),
 		));
 		return array('ok' => (bool) $ok, 'message' => $ok ? __('Test email sent.', 'backstage-venue-manager') : __('WordPress email returned an error for this test.', 'backstage-venue-manager'));
 	}
@@ -254,6 +293,8 @@ if (!function_exists('bvmgr_email_followups_send_event_email')) {
 			$recipients = array_slice($recipients, 0, $limit);
 		}
 
+		// Only an explicitly supplied manual snapshot can override shared templates.
+		$content = $mode === 'manual' && isset($args['content']) && is_array($args['content']) ? $args['content'] : null;
 		$sent = 0;
 		$errors = 0;
 		$skipped = 0;
@@ -276,7 +317,7 @@ if (!function_exists('bvmgr_email_followups_send_event_email')) {
 				continue;
 			}
 
-			$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, $recipient);
+			$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, $recipient, $content);
 			$sync = bvmgr_email_followups_maybe_sync_mailpoet_subscriber($email, (string) ($recipient['name'] ?? ''), array('ticket-buyer', 'vms-event-buyer'));
 			$ok = wp_mail($email, (string) $rendered['subject'], (string) $rendered['body_html'], bvmgr_email_followups_headers());
 			bvmgr_email_followups_log(array(
@@ -287,6 +328,8 @@ if (!function_exists('bvmgr_email_followups_send_event_email')) {
 				'status' => $ok ? 'sent' : 'error',
 				'message' => $ok ? 'Email sent.' : 'wp_mail returned false.',
 				'meta' => array(
+					'subject' => (string) $rendered['subject'],
+					'body_html' => (string) $rendered['body_html'],
 					'qty' => (int) ($recipient['qty'] ?? 0),
 					'mailpoet_sync' => $sync,
 					'feedback_link' => $email_key === 'post_event' && !empty($rendered['tokens']['{feedback_url}']),

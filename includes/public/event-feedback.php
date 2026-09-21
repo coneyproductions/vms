@@ -122,7 +122,7 @@ if (!function_exists('bvmgr_feedback_render_public_survey')) {
 	 */
 	function bvmgr_feedback_render_public_survey(int $event_plan_id, string $token, array $invitation = array()): void
 	{
-		$context = bvmgr_feedback_get_event_context($event_plan_id);
+		$context = bvmgr_feedback_get_event_context($event_plan_id, true);
 		if (empty($context) || !bvmgr_feedback_verify_public_token($event_plan_id, $token)) {
 			echo '<main class="vms-feedback-page"><section class="vms-feedback-card"><h1>' . esc_html__('Feedback link unavailable', 'backstage-venue-manager') . '</h1><p>' . esc_html__('This feedback link is not valid. Please use the survey link provided by the venue.', 'backstage-venue-manager') . '</p></section></main>';
 			return;
@@ -328,7 +328,7 @@ if (!function_exists('bvmgr_feedback_handle_submit')) {
 			exit;
 		}
 
-		$context = bvmgr_feedback_get_event_context($event_plan_id);
+		$context = bvmgr_feedback_get_event_context($event_plan_id, true);
 		if (empty($context)) {
 			wp_die(esc_html__('Event feedback form unavailable.', 'backstage-venue-manager'));
 		}
@@ -430,7 +430,7 @@ if (!function_exists('bvmgr_feedback_handle_submit')) {
 		$allowed_order_choices = bvmgr_feedback_secondary_vendor_order_options();
 		foreach ($posted_secondary as $vendor_id => $row) {
 			$vendor_id = absint($vendor_id);
-			if ($vendor_id <= 0 || !is_array($row)) {
+			if ($vendor_id <= 0 || !is_array($row) || (function_exists('bvmgr_event_plan_vendor_customer_eligible') && !bvmgr_event_plan_vendor_customer_eligible($event_plan_id, $vendor_id))) {
 				continue;
 			}
 			$did_order = bvmgr_feedback_sanitize_choice($row['did_order'] ?? '', $allowed_order_choices);

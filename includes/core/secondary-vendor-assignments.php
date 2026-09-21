@@ -1117,3 +1117,113 @@ if (!function_exists('bvmgr_event_plan_secondary_vendor_group_available_slots'))
 		return max(0, $limit - $filled);
 	}
 }
+
+// Participation is separate from assignment membership, capacity and dispatch state.
+if (!function_exists('bvmgr_event_plan_secondary_vendor_outcome_options')) {
+	function bvmgr_event_plan_secondary_vendor_outcome_options(): array
+	{
+		return array(
+			'scheduled' => __('Scheduled', 'backstage-venue-manager'),
+			'attended' => __('Attended', 'backstage-venue-manager'),
+			'cancelled' => __('Cancelled', 'backstage-venue-manager'),
+			'no_show' => __('No-show', 'backstage-venue-manager'),
+		);
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_secondary_vendor_outcome')) {
+	function bvmgr_event_plan_secondary_vendor_outcome(int $post_id, int $vendor_id): string
+	{
+		$outcomes = get_post_meta($post_id, '_vms_secondary_vendor_outcomes_v1', true);
+		$value = is_array($outcomes) ? ($outcomes[$vendor_id] ?? 'scheduled') : 'scheduled';
+		return is_string($value) && isset(bvmgr_event_plan_secondary_vendor_outcome_options()[$value]) ? $value : 'scheduled';
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_secondary_vendor_assigned_ids')) {
+	function bvmgr_event_plan_secondary_vendor_assigned_ids(int $post_id): array
+	{
+		return bvmgr_event_plan_get_secondary_vendor_flat_ids_from_assignments(bvmgr_event_plan_get_secondary_vendor_assignments($post_id));
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_vendor_customer_eligible')) {
+	function bvmgr_event_plan_vendor_customer_eligible(int $post_id, int $vendor_id): bool
+	{
+		// Primary/lineup vendors and unrelated vendor profiles keep their existing behavior.
+		if (!in_array($vendor_id, bvmgr_event_plan_secondary_vendor_assigned_ids($post_id), true)) {
+			return true;
+		}
+		return in_array(bvmgr_event_plan_secondary_vendor_outcome($post_id, $vendor_id), array('scheduled', 'attended'), true);
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_save_secondary_vendor_outcomes')) {
+	function bvmgr_event_plan_save_secondary_vendor_outcomes(int $post_id, array $updates)
+	{
+		if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan') {
+			return new WP_Error('invalid_event', __('Invalid Event Plan.', 'backstage-venue-manager'));
+		}
+		$assigned_ids = bvmgr_event_plan_secondary_vendor_assigned_ids($post_id);
+		$options = bvmgr_event_plan_secondary_vendor_outcome_options();
+		$stored = get_post_meta($post_id, '_vms_secondary_vendor_outcomes_v1', true);
+		$outcomes = is_array($stored) ? $stored : array();
+		foreach ($updates as $vendor_id => $outcome) {
+			if (!ctype_digit((string) $vendor_id) || !in_array((int) $vendor_id, $assigned_ids, true) || !is_string($outcome) || !isset($options[$outcome])) {
+				return new WP_Error('invalid_outcome', __('The assigned vendors or outcomes changed. Reload this Event Plan and try again.', 'backstage-venue-manager'));
+			}
+			$outcomes[(int) $vendor_id] = $outcome;
+		}
+		$changed = $outcomes !== (is_array($stored) ? $stored : array());
+		if ($changed) {
+			if (!update_post_meta($post_id, '_vms_secondary_vendor_outcomes_v1', $outcomes)) {
+				return new WP_Error('outcome_save_failed', __('Event participation could not be saved. Please try again.', 'backstage-venue-manager'));
+			}
+			if (function_exists('bvmgr_calendar_feed_cache_bust')) {
+				bvmgr_calendar_feed_cache_bust(true);
+			}
+		}
+		return array('changed' => $changed);
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_render_secondary_vendor_outcomes')) {
+	function bvmgr_event_plan_render_secondary_vendor_outcomes(int $post_id): void
+	{
+		$ids = bvmgr_event_plan_secondary_vendor_assigned_ids($post_id);
+		if (empty($ids)) {
+			return;
+		}
+		echo '<div class="vms-secondary-outcomes" data-vms-outcomes-plan="' . esc_attr((string) $post_id) . '" data-vms-outcomes-nonce="' . esc_attr(wp_create_nonce('bvmgr_secondary_vendor_outcomes')) . '" data-vms-outcomes-url="' . esc_url(admin_url('admin-ajax.php')) . '">';
+		echo '<h3>' . esc_html__('Event Participation / Outcome', 'backstage-venue-manager') . '</h3>';
+		echo '<p class="description">' . esc_html__('For saved assignments below. Cancelled and no-show vendors remain assigned internally and are hidden from attendee feedback and public event promotion. Save assignment changes above before updating participation.', 'backstage-venue-manager') . '</p>';
+		foreach ($ids as $vendor_id) {
+			echo '<p><label>' . esc_html(get_the_title($vendor_id)) . ' <select data-vms-outcome-vendor="' . esc_attr((string) $vendor_id) . '">';
+			foreach (bvmgr_event_plan_secondary_vendor_outcome_options() as $value => $label) {
+				echo '<option value="' . esc_attr($value) . '" ' . selected(bvmgr_event_plan_secondary_vendor_outcome($post_id, $vendor_id), $value, false) . '>' . esc_html($label) . '</option>';
+			}
+			echo '</select></label></p>';
+		}
+		echo '<p><button type="button" class="button" data-vms-outcomes-save>' . esc_html__('Save Event Participation', 'backstage-venue-manager') . '</button></p>';
+		echo '<p data-vms-outcomes-status role="status" data-saving="' . esc_attr__('Saving event participation…', 'backstage-venue-manager') . '" data-error="' . esc_attr__('Event participation could not be saved. Please try again.', 'backstage-venue-manager') . '" data-unsaved="' . esc_attr__('Participation changes are not saved. Use Save Event Participation.', 'backstage-venue-manager') . '"></p></div>';
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_save_secondary_vendor_outcomes_ajax')) {
+	function bvmgr_event_plan_save_secondary_vendor_outcomes_ajax(): void
+	{
+		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+		if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan' || !current_user_can('edit_post', $post_id)) {
+			wp_send_json_error(array('message' => __('Not allowed.', 'backstage-venue-manager')), 403);
+		}
+		check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_secondary_vendor_outcomes', 'nonce'), 'nonce');
+		// The helper allowlists vendor IDs and exact outcome values before any write.
+		$updates = isset($_POST['outcomes']) && is_array($_POST['outcomes']) ? wp_unslash($_POST['outcomes']) : array();
+		$result = bvmgr_event_plan_save_secondary_vendor_outcomes($post_id, $updates);
+		if (is_wp_error($result)) {
+			wp_send_json_error(array('message' => $result->get_error_message()), 400);
+		}
+		wp_send_json_success(array('changed' => $result['changed'], 'message' => __('Event participation saved.', 'backstage-venue-manager')));
+	}
+}
+add_action('wp_ajax_vms_secondary_vendor_outcomes', 'bvmgr_event_plan_save_secondary_vendor_outcomes_ajax');
