@@ -375,7 +375,11 @@
       var limit = computeAddonLimit(state, addon);
       addon.qty = clamp(addon.qty, 0, limit);
       if (addon.inputEl) {
-        addon.inputEl.value = String(addon.qty);
+        if (addon.isCheckbox) {
+          addon.inputEl.checked = addon.qty > 0;
+        } else {
+          addon.inputEl.value = String(addon.qty);
+        }
         addon.inputEl.setAttribute('max', String(limit));
       }
       setDisabled(addon.minusEl, addon.qty <= 0 || state.isSubmitting);
@@ -418,7 +422,13 @@
   function wireRow(state, row) {
     var addLink = q('.vms-entitlements-add', row);
     var soldOut = q('.vms-entitlements-soldout', row);
-    var productId = inferProductId(row, addLink);
+    var serverStepper = q('[data-vms-server-stepper="1"]', row);
+    var serverInput = serverStepper ? q('.vms-addon-input', serverStepper) : null;
+    var serverMinus = serverStepper ? q('.vms-addon-minus', serverStepper) : null;
+    var serverPlus = serverStepper ? q('.vms-addon-plus', serverStepper) : null;
+    var productId = serverStepper
+      ? toInt(serverStepper.getAttribute('data-vms-product-id') || row.getAttribute('data-vms-product-id'), 0)
+      : inferProductId(row, addLink);
     if (productId <= 0) {
       return;
     }
@@ -441,9 +451,10 @@
       poolMax: toInt((addLink && addLink.getAttribute('data-vms-pool-max')) || row.getAttribute('data-vms-pool-max'), 0),
       minGa: toInt((addLink && addLink.getAttribute('data-vms-pool-min-ga')) || 0, 0),
       maxQty: toInt((addLink && addLink.getAttribute('data-vms-max-qty')) || 0, 0),
-      canAdd: !!addLink,
+      canAdd: serverStepper ? String(serverStepper.getAttribute('data-vms-can-add') || '1') !== '0' : !!addLink,
       soldOutText: soldOut ? String(soldOut.textContent || '').trim() : '',
-      qty: 0,
+      isCheckbox: !!(serverInput && String(serverInput.type || '').toLowerCase() === 'checkbox'),
+      qty: serverInput ? (String(serverInput.type || '').toLowerCase() === 'checkbox' ? (serverInput.checked ? 1 : 0) : Math.max(0, toInt(serverInput.value, 0))) : 0,
       rowEl: row,
       noteEl: noteEl,
       statusEl: statusEl,
@@ -452,7 +463,31 @@
       plusEl: null
     };
 
-    if (qtyWrap && addLink) {
+    if (serverStepper && serverInput && serverMinus && serverPlus) {
+      model.poolKey = serverStepper.getAttribute('data-vms-pool-key') || row.getAttribute('data-vms-pool-key') || '';
+      model.poolMax = toInt(serverStepper.getAttribute('data-vms-pool-max') || row.getAttribute('data-vms-pool-max'), 0);
+      model.minGa = toInt(serverStepper.getAttribute('data-vms-pool-min-ga') || row.getAttribute('data-vms-min-ga'), 0);
+      model.maxQty = toInt(serverStepper.getAttribute('data-vms-max-qty') || row.getAttribute('data-vms-max-qty'), 0);
+      serverMinus.addEventListener('click', function () {
+        model.qty = Math.max(0, model.qty - 1);
+        refresh(state);
+      });
+      serverPlus.addEventListener('click', function () {
+        model.qty += 1;
+        refresh(state);
+      });
+      serverInput.addEventListener('input', function () {
+        model.qty = model.isCheckbox ? (serverInput.checked ? 1 : 0) : Math.max(0, toInt(serverInput.value, 0));
+        refresh(state);
+      });
+      serverInput.addEventListener('change', function () {
+        model.qty = model.isCheckbox ? (serverInput.checked ? 1 : 0) : Math.max(0, toInt(serverInput.value, 0));
+        refresh(state);
+      });
+      model.inputEl = serverInput;
+      model.minusEl = serverMinus;
+      model.plusEl = serverPlus;
+    } else if (qtyWrap && addLink) {
       addLink.hidden = true;
       addLink.classList.add('vms-ent-link-hidden');
       qtyWrap.innerHTML = '';
@@ -597,9 +632,6 @@
     if (!form || !sourceBlock) {
       return false;
     }
-    if (String(sourceBlock.getAttribute('data-vms-render-mode') || '') === 'server_controls') {
-      return true;
-    }
     var forceLegacyUpgrade = hasLegacyAddLinks(sourceBlock);
     if (!forceLegacyUpgrade && alreadyHandled(sourceBlock)) {
       return true;
@@ -627,6 +659,8 @@
       statusBox: null
     };
     window.BVMGR_TICKETING_FALLBACK_STATE = state;
+    form.setAttribute('data-vms-ticket-surface-owner', 'tec-native');
+    sourceBlock.setAttribute('data-vms-addon-controller-owner', 'bvmgr-ticketing-front-fallback');
 
     hideDisabledTicketRows(state);
 

@@ -26,7 +26,7 @@ async function installRoutes(page, mode, layout, requests, failRef) {
         for (const fn of ['refresh', 'boot', 'init']) {
           text = text.replace(new RegExp('(function ' + fn + '\\([^)]*\\) \\{)'), `$1 window.__test.calls['${name}:${fn}']=(window.__test.calls['${name}:${fn}']||0)+1;`);
         }
-        text = text.replace('  installPageShowReset();', '  window.__test.refresh = refresh; window.__test.init = init;\n  installPageShowReset();');
+        text = text.replace('  installPageShowReset();', '  if (window.__test) { window.__test.refresh = refresh; window.__test.init = init; }\n  installPageShowReset();');
       }
       return route.fulfill({body: text, contentType: 'application/javascript'});
     }
@@ -180,12 +180,110 @@ async function runOwnershipVariants(browser) {
       check(await page.locator('[data-vms-fallback-active="1"]').count() === 1, 'fallback owns legacy markup once');
       await page.evaluate(source('vms-ticketing-front-fallback.js'));
       check(await page.locator('[data-vms-fallback-active="1"]').count() === 1, 'duplicate fallback script does not remount');
+    } else if (variant === 'classic') {
+      check(await page.locator('[data-vms-fallback-active="1"]').count() === 1, 'classic: fallback owns server-controls add-ons once');
+      check(await page.locator('#tribe-tickets__tickets-form[data-vms-ticket-surface-owner="tec-native"]').count() === 1, 'classic: TEC retains native ticket-surface authority');
     } else {
       check(await page.locator('[data-vms-fallback-active="1"]').count() === 0, `${variant}: fallback does not compete with primary`);
     }
     await sleep(250); const start = await page.evaluate(() => window.__variantMutations); await sleep(700);
     check(await page.evaluate(() => window.__variantMutations) === start, `${variant}: lifecycle settles at idle`);
     await context.close();
+  }
+}
+
+function isComputedVisible(node) {
+  if (!node || !node.isConnected || node.hidden) return false;
+  let current = node;
+  while (current && current.nodeType === 1) {
+    const style = window.getComputedStyle(current);
+    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+    current = current.parentElement;
+  }
+  const rect = node.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
+async function runSettledVisibilityMatrix(browser) {
+  for (const layout of ['classic', 'progressive']) {
+    for (const identity of ['guest', 'admin']) {
+      const label = `${layout}/${identity}`;
+      const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+      const page = await context.newPage();
+      page.setDefaultTimeout(7000);
+      const requests = [];
+      const errors = [];
+      const warnings = [];
+      const failRef = {value: false};
+      page.on('pageerror', error => errors.push(String(error)));
+      page.on('console', message => {
+        if (message.type() === 'error') errors.push(message.text());
+        if (message.type() === 'warning') warnings.push(message.text());
+      });
+      await page.addInitScript(() => { window.__test = {calls: {}}; });
+      await installRoutes(page, identity, layout, requests, failRef);
+      await page.goto('https://ticketing.example.test/event/');
+      await page.waitForSelector('#tribe-tickets__tickets-form');
+
+      // The incident occurred after MutationObserver/requestAnimationFrame work,
+      // so this acceptance window must remain at least two settled seconds.
+      await sleep(2200);
+      const visibility = await page.evaluate(isComputedVisible => {
+        const visible = eval(`(${isComputedVisible})`);
+        const form = document.querySelector('#tribe-tickets__tickets-form');
+        const rows = Array.from(document.querySelectorAll('.tribe-tickets__tickets-item'));
+        return {
+          formCount: document.querySelectorAll('#tribe-tickets__tickets-form').length,
+          rowCount: rows.length,
+          visibleForm: visible(form),
+          visibleRows: rows.filter(visible).length,
+          owner: form ? form.getAttribute('data-vms-ticket-surface-owner') : '',
+          fallbackOwners: document.querySelectorAll('[data-vms-fallback-active="1"]').length,
+          addonOwners: document.querySelectorAll('[data-vms-addon-controller-owner]').length,
+          progressiveEnhancers: document.querySelectorAll('[data-vms-progressive-enhancer="presentation-only"]').length,
+          progressiveObservers: window.__test ? window.__test.progressiveObservers || 0 : 0,
+          bundleLoaded: !!(window.BVMGR_TICKETING_FRONT_BUNDLE && window.BVMGR_TICKETING_FRONT_BUNDLE.loaded),
+          bundleState: !!(window.BVMGR_TICKETING_FRONT_BUNDLE && window.BVMGR_TICKETING_FRONT_BUNDLE.state),
+          layout: window.BVMGR_TICKETING_FRONT && window.BVMGR_TICKETING_FRONT.uiLayout
+        };
+      }, isComputedVisible.toString());
+      check(visibility.formCount === 1 && visibility.rowCount === 4, `${label}: exactly one native form and four ticket rows remain connected`);
+      check(visibility.visibleForm && visibility.visibleRows === 4, `${label}: form and all ticket rows have computed visibility after 2.2 seconds`);
+      if (layout === 'classic') {
+        check(visibility.owner === 'tec-native', `${label}: TEC is the sole ticket-surface owner`);
+        check(visibility.fallbackOwners === 1 && visibility.addonOwners === 1, `${label}: fallback owns only the server-controls add-ons`);
+        check(visibility.progressiveEnhancers === 0, `${label}: progressive enhancer is inactive`);
+      } else {
+        check(visibility.owner === 'bvmgr-ticketing-front', `${label}: unified controller is the sole ticket-surface owner (${JSON.stringify(visibility)}; ${errors.join('; ')})`);
+        check(visibility.fallbackOwners === 0 && visibility.addonOwners === 0, `${label}: fallback does not compete for server_controls`);
+        check(visibility.progressiveEnhancers === 1, `${label}: progressive presentation attaches once`);
+      }
+
+      const ga = page.locator('#tribe-tickets__tickets-item-quantity-number--6996');
+      await page.locator('#tribe-block-tickets-item-6996 .tribe-tickets__tickets-item-quantity-add').click();
+      check(await ga.inputValue() === '1', `${label}: native GA increment remains functional`);
+      await page.locator('#tribe-block-tickets-item-6996 .tribe-tickets__tickets-item-quantity-remove').click();
+      check(await ga.inputValue() === '0', `${label}: native GA decrement remains functional`);
+      await ga.fill('2'); await ga.dispatchEvent('change'); await sleep(100);
+      if (layout === 'progressive') {
+        const addonToggle = page.locator('.vms-ticket-ui-addons .vms-ticket-progressive-toggle');
+        if (await addonToggle.getAttribute('aria-expanded') === 'false') await addonToggle.click();
+      }
+      const addonPlus = page.locator('[data-vms-product-id="7006"] .vms-addon-plus').first();
+      await addonPlus.click(); await sleep(100);
+      check(!(await addonPlus.isDisabled()), `${label}: server-controls add-on remains available`);
+      await page.locator('[data-test-extension-qty]').fill('1');
+      await page.locator('[data-test-extension-terms]').check();
+      await page.locator('#tribe-tickets__tickets-submit').click();
+      await page.waitForURL('**/cart/');
+      const atomic = requests.filter(request => request.path === '/api/atomic-add');
+      check(atomic.length === 1, `${label}: cart handoff remains single-request`);
+      const payload = JSON.parse(atomic[0].body);
+      check(payload.ticket_lines.some(line => line.product_id === 6996 && line.qty === 2), `${label}: cart handoff preserves native ticket quantity`);
+      check(payload.addon_lines.some(line => line.product_id === 7006 && line.qty === 1), `${label}: cart handoff preserves add-on quantity`);
+      check(errors.length === 0 && warnings.length === 0, `${label}: no BVM console errors or warnings (${errors.concat(warnings).join('; ')})`);
+      await context.close();
+    }
   }
 }
 
@@ -217,9 +315,15 @@ async function runPostCart(browser) {
 (async () => {
   const browser = await playwright.chromium.launch({headless: true, executablePath});
   try {
+    if (process.env.BVM_TEST_MATRIX_ONLY === '1') {
+      await runSettledVisibilityMatrix(browser);
+      console.log(`${checks} settled ticket visibility assertions passed; all requests were contained and mocked.`);
+      return;
+    }
     for (const mode of ['guest', 'unverified', 'verified']) await runLifecycle(browser, mode, {viewport: {width: 1280, height: 900}}, 'desktop');
     await runLifecycle(browser, 'guest', {...playwright.devices['iPhone 13']}, 'mobile');
     await runOwnershipVariants(browser);
+    await runSettledVisibilityMatrix(browser);
     await runPostCart(browser);
     console.log(`${checks} public ticketing browser assertions passed; all requests were contained and mocked.`);
   } finally {

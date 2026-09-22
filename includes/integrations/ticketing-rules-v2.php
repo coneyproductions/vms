@@ -6456,7 +6456,10 @@ function bvmgr_ticketing_v2_front_ui_settings(int $plan_id = 0): array
 
     $show_availability = ($availability_display !== 'hide');
     $is_admin_user = function_exists('current_user_can') ? current_user_can('manage_options') : false;
-    $force_legacy = ($layout_override === 'classic');
+    // Classic is the Safe Mode contract for every viewer. An administrator
+    // preview must never silently turn the globally selected classic layout
+    // back into the unified controller path.
+    $force_legacy = ($layout === 'classic');
     $effective_v2 = (!$force_legacy && ($layout === 'v2' || $layout === 'progressive')) || (!$force_legacy && $admin_preview && $is_admin_user);
     // Safe-mode render paths should identify themselves consistently, including on public mobile views.
     // The front-end still decides whether the active render path actually qualifies for the notice.

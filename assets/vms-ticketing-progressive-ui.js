@@ -517,14 +517,7 @@
     });
   }
 
-  function placeRow(row, content) {
-    if (!row || !content || row.parentNode === content) {
-      return;
-    }
-    content.appendChild(row);
-  }
-
-  function classifyTicketRows(form, ticketsContent) {
+  function classifyTicketRows(form) {
     var standardCount = 0;
     var qualifiedCount = 0;
     var seenRows = [];
@@ -535,7 +528,6 @@
         return;
       }
       seenRows.push(row);
-      placeRow(row, ticketsContent);
       if (isQualifiedTicket(inferProductId(input))) {
         row.classList.add('vms-progressive-qualified-ticket-row');
         qualifiedCount += 1;
@@ -558,22 +550,21 @@
       return false;
     }
 
+    // The primary bundle is the sole ticket-surface controller. Progressive
+    // is a presentation enhancer only: it may decorate the primary shell but
+    // must never claim or independently reparent native TEC rows.
+    if (String(form.getAttribute('data-vms-ticket-surface-owner') || '') !== 'bvmgr-ticketing-front') {
+      return false;
+    }
+
     flow.classList.add('vms-ticket-ui-progressive');
     form.setAttribute('data-vms-ticket-ui-progressive', '1');
+    form.setAttribute('data-vms-progressive-enhancer', 'presentation-only');
 
     var ticketsSection = query('.vms-ticket-ui-tickets', flow);
     var addonsSection = query('.vms-ticket-ui-addons', flow);
     if (!ticketsSection) {
       return false;
-    }
-
-    var qualifiedSection = query('.vms-ticket-ui-qualified', flow);
-    if (qualifiedSection && qualifiedSection.parentNode) {
-      queryAll(SELECTORS.nativeQty, qualifiedSection).forEach(function (input) {
-        var row = getTicketRow(input);
-        placeRow(row, ticketsSection);
-      });
-      qualifiedSection.parentNode.removeChild(qualifiedSection);
     }
 
     var ticketsContent = ensureProgressiveSection(
@@ -586,10 +577,14 @@
 
     ensureProgressiveHelp(ticketsSection, ticketsContent, 'tickets', cfg.ticketHelpText || '');
 
-    var counts = classifyTicketRows(form, ticketsContent);
+    var counts = classifyTicketRows(form);
 
     setSectionOpen(ticketsSection, true, false);
-    ticketsSection.hidden = (counts.standardCount + counts.qualifiedCount) <= 0;
+    // Visibility is fail-open. TEC decides whether its native form has live
+    // rows; a transient zero count during another controller's lifecycle must
+    // never hide a section that already received valid server-rendered rows.
+    ticketsSection.hidden = false;
+    ticketsSection.setAttribute('data-vms-visible-ticket-count', String(counts.standardCount + counts.qualifiedCount));
     syncQualifiedHelperVisibility(ticketsSection);
 
     if (addonsSection) {
@@ -609,6 +604,7 @@
 
   var pendingEnhance = 0;
   var observedForm = null;
+  var bootAttempts = 0;
 
   function scheduleEnhance() {
     if (pendingEnhance) {
@@ -639,24 +635,14 @@
   }
 
   function boot() {
-    enhanceProgressiveTicketUi();
-    bindProgressiveWatchers();
-    if (typeof MutationObserver !== 'undefined') {
-      var observer = new MutationObserver(function (records) {
-        var relevant = !observedForm || !observedForm.isConnected || records.some(function (record) {
-          if (observedForm.contains(record.target)) {
-            return true;
-          }
-          return Array.prototype.some.call(record.addedNodes, function (node) {
-            return node.nodeType === 1 && (node.matches(SELECTORS.form + ', ' + SELECTORS.flow + ', #vms-reserved-addons') || node.querySelector(SELECTORS.form + ', ' + SELECTORS.flow + ', #vms-reserved-addons'));
-          });
-        });
-        if (relevant) {
-          scheduleEnhance();
-        }
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
+    if (!enhanceProgressiveTicketUi()) {
+      bootAttempts += 1;
+      if (bootAttempts <= 20) {
+        window.setTimeout(boot, 50);
+      }
+      return;
     }
+    bindProgressiveWatchers();
   }
 
   if (document.readyState === 'loading') {

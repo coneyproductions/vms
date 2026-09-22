@@ -19,6 +19,7 @@ exports.page = function (mode = 'guest', layout = 'progressive') {
   });
   const cfg = {
     tecEventId: 6995, eventPlanId: 6994, isLoggedIn: mode === 'guest' ? 0 : 1,
+    isAdminUser: mode === 'admin' ? 1 : 0,
     currentUserEmail: mode === 'guest' ? '' : 'buyer@example.test',
     uiLayout: layout, uiProgressive: layout === 'progressive' ? 1 : 0, buildStamp: 'test', myActiveTicketCount: -1,
     ticketAccessMap: access, ticketPriceMap: {6996: 20, 6997: 0, 6998: 0, 6999: 0},

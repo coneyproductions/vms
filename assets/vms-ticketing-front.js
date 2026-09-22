@@ -1093,6 +1093,22 @@
     return;
   }
 
+  // Classic is a true TEC-native Safe Mode. Keep this bundle available on
+  // cart/checkout pages, but do not claim, move, or observe the event ticket
+  // surface. The fallback bundle may enhance BVM add-ons without owning TEC.
+  if (!useV2Layout()) {
+    window.BVMGR_TICKETING_FRONT_BUNDLE = {
+      loaded: false,
+      nativeAuthority: true,
+      buildStamp: String(cfg.buildStamp || ''),
+      state: null,
+      bootTimer: 0,
+      bootAttempts: 0,
+      observer: null
+    };
+    return;
+  }
+
   var incomingBuildStamp = String(cfg.buildStamp || '');
   startDiagPanel();
   diagLog('bundle-start', { build: incomingBuildStamp || String(cfg.buildStamp || '') });
@@ -2800,6 +2816,7 @@
     }
     flow.classList.add('vms-ticketing-flow', 'vms-ticket-ui');
     flow.classList.toggle('vms-ticket-ui-v2', useV2Layout());
+    flow.classList.toggle('vms-ticket-ui-progressive', useProgressiveLayout());
     flow.classList.toggle('vms-hide-ticket-availability', shouldHideTicketAvailability());
 
     var renderMode = activeRenderMode(state);
@@ -5556,6 +5573,12 @@
     if (!form) {
       return false;
     }
+    var ticketSurfaceOwner = String(form.getAttribute('data-vms-ticket-surface-owner') || '');
+    if (ticketSurfaceOwner && ticketSurfaceOwner !== 'bvmgr-ticketing-front') {
+      diagLog('ticket-surface-owned', { owner: ticketSurfaceOwner });
+      return true;
+    }
+    form.setAttribute('data-vms-ticket-surface-owner', 'bvmgr-ticketing-front');
     if (!sourceBlock) {
       var ticketOnlyState = buildTicketOnlyState(form);
       if (activateTicketOnlyState(ticketOnlyState)) {
