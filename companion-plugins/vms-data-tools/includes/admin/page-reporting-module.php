@@ -1454,6 +1454,53 @@ if (!function_exists('vms_dt_reporting_square_ticket_channel_summary')) {
 }
 
 if (!function_exists('vms_dt_reporting_build_website_detail_rows')) {
+    /**
+     * Partition canonical BVM revenue rows without promoting unknown/non-ticket
+     * product roles into attendance.
+     *
+     * @return array{ticket_rows:array<int,array<string,mixed>>,addon_rows:array<int,array<string,mixed>>}
+     */
+    function vms_dt_reporting_partition_website_detail_rows(array $rows): array
+    {
+        $out = array(
+            'ticket_rows' => array(),
+            'addon_rows' => array(),
+        );
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $item_kind = sanitize_key((string) ($row['item_kind'] ?? ''));
+            $entry = array(
+                'order_id' => (int) ($row['order_id'] ?? 0),
+                'order_number' => (string) ($row['order_number'] ?? ''),
+                'sold_date' => (string) ($row['sold_date'] ?? ''),
+                'sold_datetime' => (string) ($row['sold_datetime'] ?? ''),
+                'customer_name' => (string) ($row['customer_name'] ?? ''),
+                'customer_email' => (string) ($row['customer_email'] ?? ''),
+                'item_name' => (string) ($row['item_name'] ?? ''),
+                'item_kind' => $item_kind,
+                'product_id' => (int) ($row['product_id'] ?? 0),
+                'product_sku' => (string) ($row['product_sku'] ?? ''),
+                'quantity' => (int) ($row['quantity'] ?? 0),
+                'refunded_quantity' => (int) ($row['refunded_quantity'] ?? 0),
+                'net_subtotal_cents' => (int) ($row['net_subtotal_cents'] ?? 0),
+                'tax_cents' => (int) ($row['tax_cents'] ?? 0),
+                'cash_total_cents' => (int) ($row['cash_total_cents'] ?? 0),
+                'refunded_subtotal_cents' => (int) ($row['refunded_subtotal_cents'] ?? 0),
+            );
+
+            if ($item_kind === 'ticket') {
+                $out['ticket_rows'][] = $entry;
+            } else {
+                $out['addon_rows'][] = $entry;
+            }
+        }
+
+        return $out;
+    }
+
     function vms_dt_reporting_build_website_detail_rows(int $event_plan_id): array
     {
         $out = array(
@@ -1480,34 +1527,115 @@ if (!function_exists('vms_dt_reporting_build_website_detail_rows')) {
         $out['warnings'] = array_values(array_unique(array_filter(array_map('strval', (array) ($ticket_report['warnings'] ?? array())))));
         $out['counts'] = (array) ($ticket_report['counts'] ?? array());
 
-        foreach ((array) ($ticket_report['rows'] ?? array()) as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $entry = array(
-                'order_id' => (int) ($row['order_id'] ?? 0),
-                'order_number' => (string) ($row['order_number'] ?? ''),
-                'sold_date' => (string) ($row['sold_date'] ?? ''),
-                'sold_datetime' => (string) ($row['sold_datetime'] ?? ''),
-                'customer_name' => (string) ($row['customer_name'] ?? ''),
-                'customer_email' => (string) ($row['customer_email'] ?? ''),
-                'item_name' => (string) ($row['item_name'] ?? ''),
-                'product_sku' => (string) ($row['product_sku'] ?? ''),
-                'quantity' => (int) ($row['quantity'] ?? 0),
-                'refunded_quantity' => (int) ($row['refunded_quantity'] ?? 0),
-                'net_subtotal_cents' => (int) ($row['net_subtotal_cents'] ?? 0),
-                'tax_cents' => (int) ($row['tax_cents'] ?? 0),
-                'cash_total_cents' => (int) ($row['cash_total_cents'] ?? 0),
-                'refunded_subtotal_cents' => (int) ($row['refunded_subtotal_cents'] ?? 0),
-            );
-            if (in_array(sanitize_key((string) ($row['item_kind'] ?? 'ticket')), array('entitlement', 'addon'), true)) {
-                $out['addon_rows'][] = $entry;
-            } else {
-                $out['ticket_rows'][] = $entry;
-            }
-        }
+        $partition = vms_dt_reporting_partition_website_detail_rows((array) ($ticket_report['rows'] ?? array()));
+        $out['ticket_rows'] = $partition['ticket_rows'];
+        $out['addon_rows'] = $partition['addon_rows'];
 
         return $out;
+    }
+}
+
+if (!function_exists('vms_dt_reporting_square_money_field')) {
+    function vms_dt_reporting_square_money_field(array $source, string $field, bool &$available): int
+    {
+        $available = array_key_exists($field, $source)
+            && is_array($source[$field])
+            && array_key_exists('amount', $source[$field])
+            && is_numeric($source[$field]['amount']);
+
+        return $available ? (int) $source[$field]['amount'] : 0;
+    }
+}
+
+if (!function_exists('vms_dt_reporting_square_line_payment_evidence')) {
+    /** @return array{status:string,evidence_source:string,evidence_available:bool,total_cents:int,tax_cents:int,net_cents:int,discount_cents:int} */
+    function vms_dt_reporting_square_line_payment_evidence(array $line_item): array
+    {
+        $total_available = false;
+        $tax_available = false;
+        $discount_available = false;
+        $gross_available = false;
+        $variation_total_available = false;
+        $base_price_available = false;
+
+        $total = vms_dt_reporting_square_money_field($line_item, 'total_money', $total_available);
+        $tax = vms_dt_reporting_square_money_field($line_item, 'total_tax_money', $tax_available);
+        $discount = vms_dt_reporting_square_money_field($line_item, 'total_discount_money', $discount_available);
+        $gross = vms_dt_reporting_square_money_field($line_item, 'gross_sales_money', $gross_available);
+        $variation_total = vms_dt_reporting_square_money_field($line_item, 'variation_total_price_money', $variation_total_available);
+        $base_price = vms_dt_reporting_square_money_field($line_item, 'base_price_money', $base_price_available);
+        $quantity = isset($line_item['quantity']) ? max(0, (int) round((float) $line_item['quantity'])) : 0;
+
+        $reference = 0;
+        $reference_available = false;
+        $reference_source = '';
+        if ($gross_available) {
+            $reference = $gross;
+            $reference_available = true;
+            $reference_source = 'gross_sales_money';
+        } elseif ($variation_total_available) {
+            $reference = $variation_total;
+            $reference_available = true;
+            $reference_source = 'variation_total_price_money';
+        } elseif ($base_price_available) {
+            $reference = $base_price * $quantity;
+            $reference_available = true;
+            $reference_source = 'base_price_money';
+        }
+
+        $status = 'unknown';
+        $evidence_source = '';
+        if ($total_available && $total > 0) {
+            $status = 'paid';
+            $evidence_source = 'total_money';
+        } elseif ($total_available && $total === 0) {
+            if ($reference_available && $reference > 0 && (!$discount_available || $discount < $reference)) {
+                $status = 'unknown';
+                $evidence_source = 'conflicting_zero_total';
+            } else {
+                $status = 'free';
+                $evidence_source = 'total_money';
+            }
+        } elseif ($reference_available && $reference === 0) {
+            $status = 'free';
+            $evidence_source = $reference_source;
+        } elseif ($reference_available && $reference > 0 && $discount_available) {
+            $status = $discount >= $reference ? 'free' : 'paid';
+            $evidence_source = $reference_source . '_and_total_discount_money';
+        }
+
+        $net = $total_available
+            ? max(0, $total - ($tax_available ? $tax : 0))
+            : max(0, $reference - ($discount_available ? $discount : 0));
+
+        return array(
+            'status' => $status,
+            'evidence_source' => $evidence_source,
+            'evidence_available' => $status !== 'unknown',
+            'total_cents' => $total_available ? max(0, $total) : max(0, $reference - ($discount_available ? $discount : 0)),
+            'tax_cents' => $tax_available ? max(0, $tax) : 0,
+            'net_cents' => $status === 'free' ? 0 : $net,
+            'discount_cents' => $discount_available ? max(0, $discount) : 0,
+        );
+    }
+}
+
+if (!function_exists('vms_dt_reporting_square_row_payment_status')) {
+    function vms_dt_reporting_square_row_payment_status(array $row): string
+    {
+        $status = sanitize_key((string) ($row['payment_status'] ?? ''));
+        if (in_array($status, array('paid', 'free', 'unknown'), true)) {
+            return $status;
+        }
+
+        if (array_key_exists('net_cents', $row) || array_key_exists('gross_cents', $row)) {
+            $amount = array_key_exists('net_cents', $row)
+                ? (int) $row['net_cents']
+                : (int) $row['gross_cents'];
+            return $amount > 0 ? 'paid' : 'free';
+        }
+
+        return 'unknown';
     }
 }
 
@@ -1638,10 +1766,11 @@ if (!function_exists('vms_dt_reporting_build_square_line_evidence')) {
                     continue;
                 }
 
-                $line_total = function_exists('vms_square_money_amount_from_money_obj') ? (int) vms_square_money_amount_from_money_obj($line_item, 'total_money') : 0;
+                $payment_evidence = vms_dt_reporting_square_line_payment_evidence($line_item);
+                $line_total = (int) $payment_evidence['total_cents'];
                 $line_qty = isset($line_item['quantity']) ? max(0, (int) round((float) $line_item['quantity'])) : 0;
-                $line_tax = function_exists('vms_square_money_amount_from_money_obj') ? (int) vms_square_money_amount_from_money_obj($line_item, 'total_tax_money') : 0;
-                $line_discount = function_exists('vms_square_money_amount_from_money_obj') ? (int) vms_square_money_amount_from_money_obj($line_item, 'total_discount_money') : 0;
+                $line_tax = (int) $payment_evidence['tax_cents'];
+                $line_discount = (int) $payment_evidence['discount_cents'];
                 $variation_id = (string) ($line_item['catalog_object_id'] ?? '');
                 $catalog_version = isset($line_item['catalog_version']) ? (int) $line_item['catalog_version'] : 0;
                 $category_id = ($variation_id !== '' && $catalog_version > 0 && function_exists('vms_square_catalog_map_get_reporting_category_id'))
@@ -1685,7 +1814,7 @@ if (!function_exists('vms_dt_reporting_build_square_line_evidence')) {
                     }
                 }
 
-                $line_net = max(0, $line_total - $line_tax);
+                $line_net = (int) $payment_evidence['net_cents'];
                 $row_entry = array(
                     'closed_at_local' => $closed_local,
                     'closed_at_utc' => $closed_at_utc,
@@ -1698,6 +1827,9 @@ if (!function_exists('vms_dt_reporting_build_square_line_evidence')) {
                     'tax_cents' => $line_tax,
                     'net_cents' => $line_net,
                     'discount_cents' => $line_discount,
+                    'payment_status' => (string) $payment_evidence['status'],
+                    'payment_evidence_source' => (string) $payment_evidence['evidence_source'],
+                    'payment_evidence_available' => !empty($payment_evidence['evidence_available']),
                     'source_code' => (string) ($source['code'] ?? ''),
                     'source_label' => (string) ($source['label'] ?? ''),
                     'bucket_key' => $bucket_key,
@@ -1799,6 +1931,7 @@ if (!function_exists('vms_dt_reporting_zero_ticket_source_rollup')) {
             'square_ticket_qty' => 0,
             'square_paid_ticket_qty' => 0,
             'square_free_ticket_qty' => 0,
+            'square_unknown_ticket_qty' => 0,
             'square_paid_ticket_revenue_cents' => 0,
             'paid_ticket_qty_total' => 0,
             'free_ticket_qty_total' => 0,
@@ -1823,6 +1956,7 @@ if (!function_exists('vms_dt_reporting_build_ticket_source_rollup')) {
         $result['square_ticket_qty'] = max(0, (int) ($row['square_direct_ticket_qty'] ?? 0));
         $result['square_paid_ticket_qty'] = max(0, (int) ($row['square_paid_ticket_qty'] ?? 0));
         $result['square_free_ticket_qty'] = max(0, (int) ($row['square_free_ticket_qty'] ?? 0));
+        $result['square_unknown_ticket_qty'] = max(0, (int) ($row['square_unknown_ticket_qty'] ?? 0));
         $result['square_paid_ticket_revenue_cents'] = max(0, (int) ($row['square_direct_tickets_net_cents'] ?? ($row['square_direct_tickets_cents'] ?? 0)));
 
         $result['website_addons_net_cents'] = max(0, (int) ($row['website_addon_net_cents'] ?? 0));
@@ -1867,7 +2001,11 @@ if (!function_exists('vms_dt_reporting_build_ticket_source_rollup')) {
         }
 
         $row_has_square_split = (
-            ((int) ($row['square_paid_ticket_qty'] ?? 0) + (int) ($row['square_free_ticket_qty'] ?? 0)) > 0
+            (
+                (int) ($row['square_paid_ticket_qty'] ?? 0)
+                + (int) ($row['square_free_ticket_qty'] ?? 0)
+                + (int) ($row['square_unknown_ticket_qty'] ?? 0)
+            ) > 0
         );
 
         if (!empty($square_ticket_rows) && !$row_has_square_split) {
@@ -1875,6 +2013,7 @@ if (!function_exists('vms_dt_reporting_build_ticket_source_rollup')) {
             $result['square_ticket_qty'] = 0;
             $result['square_paid_ticket_qty'] = 0;
             $result['square_free_ticket_qty'] = 0;
+            $result['square_unknown_ticket_qty'] = 0;
             $result['square_paid_ticket_revenue_cents'] = 0;
             $result['square_rows_seen'] = 0;
 
@@ -1890,11 +2029,14 @@ if (!function_exists('vms_dt_reporting_build_ticket_source_rollup')) {
                 $result['square_rows_seen']++;
                 $result['square_ticket_qty'] += $qty;
                 $net_cents = max(0, (int) ($ticket_row['net_cents'] ?? (((int) ($ticket_row['gross_cents'] ?? 0)) - ((int) ($ticket_row['tax_cents'] ?? 0)))));
-                if ($net_cents > 0) {
+                $payment_status = vms_dt_reporting_square_row_payment_status($ticket_row);
+                if ($payment_status === 'paid') {
                     $result['square_paid_ticket_qty'] += $qty;
                     $result['square_paid_ticket_revenue_cents'] += $net_cents;
-                } else {
+                } elseif ($payment_status === 'free') {
                     $result['square_free_ticket_qty'] += $qty;
+                } else {
+                    $result['square_unknown_ticket_qty'] += $qty;
                 }
             }
         }
@@ -1907,11 +2049,11 @@ if (!function_exists('vms_dt_reporting_build_ticket_source_rollup')) {
             }
         }
 
-        if ($result['square_ticket_qty'] > 0 && ($result['square_paid_ticket_qty'] + $result['square_free_ticket_qty']) <= 0) {
+        if ($result['square_ticket_qty'] > 0 && ($result['square_paid_ticket_qty'] + $result['square_free_ticket_qty'] + $result['square_unknown_ticket_qty']) <= 0) {
             if ($result['square_paid_ticket_revenue_cents'] > 0) {
                 $result['square_paid_ticket_qty'] = $result['square_ticket_qty'];
             } else {
-                $result['square_free_ticket_qty'] = $result['square_ticket_qty'];
+                $result['square_unknown_ticket_qty'] = $result['square_ticket_qty'];
             }
         }
 

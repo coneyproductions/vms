@@ -1,6 +1,6 @@
 <?php
 /**
- * Isolated VMS Data Tools 0.5.55 provider and load-order regression.
+ * Isolated VMS Data Tools 0.5.56 provider and load-order regression.
  *
  * Run with: php tests/data-tools-reporting-provider.php
  */
@@ -8,7 +8,7 @@
 declare(strict_types=1);
 
 define('ABSPATH', __DIR__);
-define('VMS_DT_VERSION', '0.5.55');
+define('VMS_DT_VERSION', '0.5.56');
 define('VMS_DT_ADMIN_DIR', dirname(__DIR__) . '/companion-plugins/vms-data-tools/includes/admin/');
 
 $GLOBALS['dt_provider_hooks'] = array();
@@ -135,7 +135,7 @@ function dt_provider_run(string $order): void
 
 	$providers = bvmgr_reporting_get_registered_providers();
 	dt_provider_same(1, count($providers), $order . ' should register exactly one provider.');
-	dt_provider_same('0.5.55', $providers['vms-data-tools']['version'] ?? '', $order . ' should expose candidate provenance.');
+	dt_provider_same('0.5.56', $providers['vms-data-tools']['version'] ?? '', $order . ' should expose candidate provenance.');
 	dt_provider_same(1, $providers['vms-data-tools']['contract_version'] ?? 0, $order . ' contract version changed.');
 
 	$GLOBALS['dt_provider_model'] = array(

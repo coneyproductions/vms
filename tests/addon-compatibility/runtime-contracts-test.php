@@ -14,7 +14,7 @@ $expectedVersions = array(
 	'backstage-venue-manager' => '1.3.1',
 	'events-slider' => '1.0.10',
 	'fill-dates' => '0.1.8',
-	'data-tools' => '0.5.55',
+	'data-tools' => '0.5.56',
 	'express-bar' => '0.6.24',
 	'refer-a-friend' => '0.2.6',
 );

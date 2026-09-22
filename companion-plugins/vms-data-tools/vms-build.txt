@@ -1,4 +1,4 @@
 VMS Data Tools
-Build: 0.5.55
+Build: 0.5.56
 Slug: bvm-reporting-provider
-Notes: Register an active-plugin-owned BVM event ticket-sales provider so BVM never loads Data Tools implementation files by filesystem presence.
+Notes: Preserve canonical admission roles and read Square line money directly in portal reporting so paid, free, and unknown door admissions stay distinct.

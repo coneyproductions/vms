@@ -8,12 +8,14 @@ $root = dirname(__DIR__);
 $portal_path = $root . '/includes/portal/vendor-portal.php';
 $portal_css_path = $root . '/assets/css/vms-portal.css';
 $helpers_path = $root . '/includes/helpers.php';
+$ticket_revenue_path = $root . '/includes/core/ticket-revenue.php';
 $data_tools_path = $root . '/companion-plugins/vms-data-tools/includes/admin/page-reporting-module.php';
 $data_tools_provider_path = $root . '/companion-plugins/vms-data-tools/includes/integrations/bvm-reporting-provider.php';
 $reporting_contract_path = $root . '/includes/core/reporting-providers.php';
 $portal_source = (string) file_get_contents($portal_path);
 $portal_css_source = (string) file_get_contents($portal_css_path);
 $helpers_source = (string) file_get_contents($helpers_path);
+$ticket_revenue_source = (string) file_get_contents($ticket_revenue_path);
 $data_tools_source = (string) file_get_contents($data_tools_path);
 $data_tools_provider_source = (string) file_get_contents($data_tools_provider_path);
 $reporting_contract_source = (string) file_get_contents($reporting_contract_path);
@@ -70,6 +72,12 @@ function __(string $text, string $domain = ''): string
 	return $text;
 }
 
+function _n(string $single, string $plural, int $number, string $domain = ''): string
+{
+	unset($domain);
+	return $number === 1 ? $single : $plural;
+}
+
 function wp_strip_all_tags($value): string
 {
 	return strip_tags((string) $value);
@@ -106,6 +114,7 @@ $GLOBALS['bonus_progress_square'] = array();
 $GLOBALS['bonus_progress_stats'] = array();
 $GLOBALS['bonus_progress_guests'] = array();
 $GLOBALS['bonus_progress_terms'] = array();
+$GLOBALS['bonus_progress_product_meta'] = array();
 $GLOBALS['bonus_progress_section_cards'] = array(array('plan_id' => 2534));
 $GLOBALS['bonus_progress_section_title'] = '';
 
@@ -137,16 +146,21 @@ function wp_reset_postdata(): void
 
 function get_post_meta(int $post_id, string $key, bool $single = false)
 {
+	if (isset($GLOBALS['bonus_progress_product_meta'][$post_id][$key])) {
+		return $GLOBALS['bonus_progress_product_meta'][$post_id][$key];
+	}
 	if ($key === '_vms_event_date') {
 		return $post_id === 2537 ? '2026-09-19' : '2026-09-05';
-	}
-	if ($key === '_vms_square_location_id' && $post_id === 2537) {
-		return 'KING-GEORGE-SQUARE';
 	}
 	if ($key === '_vms_band_vendor_id' && $post_id === 2537) {
 		return $single ? 77 : array(77);
 	}
 	return '';
+}
+
+function bvmgr_ticketing_v2_product_role_for_naming(int $product_id): string
+{
+	return sanitize_key((string) get_post_meta($product_id, '_vms_product_role', true));
 }
 
 function get_the_title(int $post_id): string
@@ -193,7 +207,7 @@ function bvmgr_reporting_resolve_event_ticket_sales(int $plan_id, array $context
 		vms_dt_bvm_reporting_vendor_portal_summary($plan_id),
 		array(
 			'provider_id' => 'vms-data-tools',
-			'provider_version' => '0.5.55',
+			'provider_version' => '0.5.56',
 			'provider_contract_version' => 1,
 		)
 	);
@@ -246,10 +260,16 @@ function bvmgr_vendor_portal_render_progress_cards_section(array $cards, string 
 bonus_progress_assert($portal_source !== '', 'Mirror Vendor Portal source should be readable.');
 bonus_progress_assert($portal_css_source !== '', 'Mirror Vendor Portal stylesheet should be readable.');
 bonus_progress_assert($helpers_source !== '', 'BVM compensation helper source should be readable.');
+bonus_progress_assert($ticket_revenue_source !== '', 'BVM ticket revenue source should be readable.');
 bonus_progress_assert($data_tools_source !== '', 'Data Tools reporting source should be readable.');
 bonus_progress_assert($data_tools_provider_source !== '', 'Data Tools BVM provider source should be readable.');
 // Explicit companion contract: extract the tracked Data Tools provider into this isolated
 // test process. BVM runtime does not boot the inactive companion from its source mirror.
+eval(bonus_progress_extract_function($ticket_revenue_source, 'bvmgr_ticket_sales_resolver_line_kind_for_product'));
+eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_partition_website_detail_rows'));
+eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_square_money_field'));
+eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_square_line_payment_evidence'));
+eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_square_row_payment_status'));
 eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_zero_ticket_source_rollup'));
 eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_build_ticket_source_rollup'));
 eval(bonus_progress_extract_function($data_tools_provider_source, 'vms_dt_bvm_reporting_complimentary_label'));
@@ -368,34 +388,99 @@ bonus_progress_assert($zero_card !== array(), 'G. A valid linked zero-sales atte
 bonus_progress_same(0, $zero_card['attendance_count'], 'G. Zero paid sales should remain zero progress.');
 bonus_progress_same(150, $zero_card['snapshot']['tickets_to_next'], 'G. Zero paid sales should retain the first threshold.');
 
-// Issue #10: King-George-shaped canonical truth, without event-specific production code.
+// Issue #10: production-shaped King George evidence, without event-specific production code.
 $GLOBALS['bonus_progress_terms'][2537] = $terms;
-$GLOBALS['bonus_progress_website'][2537] = array(
-	'ticket_rows' => array(
-		array('item_name' => '2026-09-19 19:00 - General Admission', 'quantity' => 136, 'refunded_quantity' => 0, 'net_subtotal_cents' => 272000, 'sold_date' => '2026-09-18'),
-		array('item_name' => '2026-09-19 19:00 - Veteran Admission', 'quantity' => 18, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
-		array('item_name' => '2026-09-19 19:00 - Police / Fire / EMT Admission', 'quantity' => 4, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
-		array('item_name' => "2026-09-19 19:00 - Child's Admission (12 & under)", 'quantity' => 6, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
-		array('item_name' => '2026-09-19 19:00 - Public School Teacher Admission', 'quantity' => 1, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
-	),
-	'addon_rows' => array(
-		array('item_name' => 'Fan rental', 'quantity' => 2, 'refunded_quantity' => 0, 'net_subtotal_cents' => 4000),
-		array('item_name' => 'Ticket add-on', 'quantity' => 5, 'refunded_quantity' => 0, 'net_subtotal_cents' => 5000),
-	),
+$product_roles = array(
+	9001 => 'ga_ticket',
+	9002 => 'ga_ticket',
+	9003 => 'ga_ticket',
+	9004 => 'ga_ticket',
+	9005 => 'ga_ticket',
+	9010 => 'rental',
+	9011 => 'addon',
+	9012 => 'merchandise',
 );
+foreach ($product_roles as $product_id => $role) {
+	$GLOBALS['bonus_progress_product_meta'][$product_id]['_vms_product_role'] = $role;
+}
+$website_source_rows = array(
+	array('product_id' => 9001, 'item_name' => '2026-09-19 19:00 - General Admission', 'quantity' => 136, 'refunded_quantity' => 0, 'net_subtotal_cents' => 272000, 'sold_date' => '2026-09-18'),
+	array('product_id' => 9002, 'item_name' => '2026-09-19 19:00 - Veteran Admission', 'quantity' => 18, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
+	array('product_id' => 9003, 'item_name' => '2026-09-19 19:00 - Police / Fire / EMT Admission', 'quantity' => 4, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
+	array('product_id' => 9004, 'item_name' => "2026-09-19 19:00 - Child's Admission (12 & under)", 'quantity' => 6, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
+	array('product_id' => 9005, 'item_name' => '2026-09-19 19:00 - Public School Teacher Admission', 'quantity' => 1, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
+	array('product_id' => 9010, 'item_name' => 'Event-linked equipment rental', 'quantity' => 2, 'refunded_quantity' => 0, 'net_subtotal_cents' => 4000, 'sold_date' => '2026-09-18'),
+	array('product_id' => 9011, 'item_name' => 'Reserved add-on', 'quantity' => 5, 'refunded_quantity' => 0, 'net_subtotal_cents' => 5000, 'sold_date' => '2026-09-18'),
+	array('product_id' => 9012, 'item_name' => 'Event merchandise', 'quantity' => 4, 'refunded_quantity' => 0, 'net_subtotal_cents' => 6000, 'sold_date' => '2026-09-18'),
+);
+foreach ($website_source_rows as &$website_source_row) {
+	$website_source_row['item_kind'] = bvmgr_ticket_sales_resolver_line_kind_for_product((int) $website_source_row['product_id']);
+}
+unset($website_source_row);
+$website_partition = vms_dt_reporting_partition_website_detail_rows($website_source_rows);
+bonus_progress_same(165, array_sum(array_column($website_partition['ticket_rows'], 'quantity')), 'Canonical website classifier should retain 136 paid plus 29 free admissions.');
+bonus_progress_same(11, array_sum(array_column($website_partition['addon_rows'], 'quantity')), 'Rental, add-on, and merchandise quantities should remain outside admissions.');
+bonus_progress_same('addon', bvmgr_ticket_sales_resolver_line_kind_for_product(9010), 'Explicit rental role should be authoritative non-admission evidence.');
+$GLOBALS['bonus_progress_website'][2537] = $website_partition;
+
+$square_source_lines = array(
+	array('quantity' => '1', 'base_price_money' => array('amount' => 2500), 'gross_sales_money' => array('amount' => 2500), 'total_discount_money' => array('amount' => 0), 'total_tax_money' => array('amount' => 206), 'total_money' => array('amount' => 2706)),
+	array('quantity' => '1', 'base_price_money' => array('amount' => 2500), 'gross_sales_money' => array('amount' => 2500), 'total_discount_money' => array('amount' => 0), 'total_tax_money' => array('amount' => 206), 'total_money' => array('amount' => 2706)),
+	array('quantity' => '1', 'base_price_money' => array('amount' => 2500), 'gross_sales_money' => array('amount' => 2500), 'total_discount_money' => array('amount' => 0), 'total_tax_money' => array('amount' => 206), 'total_money' => array('amount' => 2706)),
+	array('quantity' => '2', 'base_price_money' => array('amount' => 2000), 'gross_sales_money' => array('amount' => 4000), 'total_discount_money' => array('amount' => 0), 'total_tax_money' => array('amount' => 330), 'total_money' => array('amount' => 4330)),
+	array('quantity' => '2', 'base_price_money' => array('amount' => 2000), 'gross_sales_money' => array('amount' => 4000), 'total_discount_money' => array('amount' => 0), 'total_tax_money' => array('amount' => 330), 'total_money' => array('amount' => 4330)),
+	array('quantity' => '1', 'base_price_money' => array('amount' => 2500), 'gross_sales_money' => array('amount' => 2500), 'total_discount_money' => array('amount' => 0), 'total_tax_money' => array('amount' => 206), 'total_money' => array('amount' => 2706)),
+);
+$square_ticket_rows = array();
+foreach ($square_source_lines as $square_source_line) {
+	$payment_evidence = vms_dt_reporting_square_line_payment_evidence($square_source_line);
+	bonus_progress_same('paid', $payment_evidence['status'], 'Positive raw Square total_money must remain paid without the admin-only money helper.');
+	$square_ticket_rows[] = array(
+		'line_name' => 'Ticket',
+		'treatment' => 'counted',
+		'is_direct_ticket' => true,
+		'quantity' => (int) $square_source_line['quantity'],
+		// Reproduce the failed evidence row while retaining the corrected source verdict.
+		'gross_cents' => 0,
+		'net_cents' => 0,
+		'payment_status' => $payment_evidence['status'],
+		'payment_evidence_source' => $payment_evidence['evidence_source'],
+	);
+}
+$square_ticket_rows[] = array('line_name' => 'Merchandise', 'treatment' => 'counted', 'is_direct_ticket' => false, 'quantity' => 20, 'net_cents' => 40000, 'payment_status' => 'paid');
 $GLOBALS['bonus_progress_square'][2537] = array(
-	'ticket_rows' => array(
-		array('line_name' => 'Door admission', 'treatment' => 'counted', 'is_direct_ticket' => true, 'quantity' => 8, 'net_cents' => 16000),
-		array('line_name' => 'Merchandise', 'treatment' => 'counted', 'is_direct_ticket' => false, 'quantity' => 20, 'net_cents' => 40000),
-	),
+	'ticket_rows' => $square_ticket_rows,
 	'warnings' => array(),
 	'errors' => array(),
 );
+
+$free_square_evidence = vms_dt_reporting_square_line_payment_evidence(array(
+	'quantity' => '1',
+	'base_price_money' => array('amount' => 0),
+	'gross_sales_money' => array('amount' => 0),
+	'total_discount_money' => array('amount' => 0),
+	'total_tax_money' => array('amount' => 0),
+	'total_money' => array('amount' => 0),
+));
+bonus_progress_same('free', $free_square_evidence['status'], 'A genuine explicit zero-value Square admission must remain complimentary.');
+$unknown_square_evidence = vms_dt_reporting_square_line_payment_evidence(array('quantity' => '1'));
+bonus_progress_same('unknown', $unknown_square_evidence['status'], 'Missing Square monetary fields must remain unknown, not complimentary.');
+$square_status_rollup = vms_dt_reporting_build_ticket_source_rollup(array(), array('square' => array('ticket_rows' => array(
+	array('treatment' => 'counted', 'is_direct_ticket' => true, 'quantity' => 1, 'net_cents' => 0, 'payment_status' => 'free'),
+	array('treatment' => 'counted', 'is_direct_ticket' => true, 'quantity' => 1, 'payment_status' => 'unknown'),
+))));
+bonus_progress_same(0, $square_status_rollup['square_paid_ticket_qty'], 'Free and unknown Square rows must not become paid.');
+bonus_progress_same(1, $square_status_rollup['square_free_ticket_qty'], 'Explicit free Square admission classification changed.');
+bonus_progress_same(1, $square_status_rollup['square_unknown_ticket_qty'], 'Unavailable Square monetary evidence must remain separate from complimentary.');
+$square_unknown_categories = vms_dt_bvm_reporting_complimentary_categories(array(), array(
+	array('line_name' => 'Ticket', 'treatment' => 'counted', 'is_direct_ticket' => true, 'quantity' => 1, 'payment_status' => 'unknown'),
+));
+bonus_progress_same(array(), $square_unknown_categories, 'Unknown Square admissions must not appear as complimentary categories.');
 $GLOBALS['bonus_progress_stats'][2537] = array('qty_sold' => 136, 'ticket_product_ids' => array(9001));
 $GLOBALS['bonus_progress_guests'][2537] = 2;
 
 $king_card = bvmgr_vendor_portal_build_bonus_progress_card(2537, true);
-bonus_progress_same('KING-GEORGE-SQUARE', $GLOBALS['bonus_progress_square_filters'][2537]['square_location_id'] ?? '', 'The provider must scope Square truth to the Event Plan location.');
+bonus_progress_same('', $GLOBALS['bonus_progress_square_filters'][2537]['square_location_id'] ?? null, 'An empty Event Plan location must reach the Data Tools configured-location fallback unchanged.');
 bonus_progress_same(136, $king_card['count_breakdown']['presales'], 'King George paid website admissions changed.');
 bonus_progress_same(8, $king_card['count_breakdown']['door_sales'], 'King George paid Square door admissions changed.');
 bonus_progress_same(31, $king_card['count_breakdown']['comp_guest'], 'King George complimentary aggregate changed.');
@@ -413,6 +498,7 @@ $expected_comp_detail = array(
 );
 bonus_progress_same($expected_comp_detail, $king_card['count_breakdown']['comp_detail'], 'King George complimentary detail changed.');
 bonus_progress_same(31, array_sum(array_column($king_card['count_breakdown']['comp_detail'], 'qty')), 'Complimentary detail must reconcile to the aggregate.');
+bonus_progress_assert(!in_array('Ticket', array_column($king_card['count_breakdown']['comp_detail'], 'label'), true), 'Paid Square admissions must not appear as a Ticket complimentary category.');
 
 $past_rows = bvmgr_vendor_portal_get_past_assigned_event_rows(77, 1);
 bonus_progress_same(1, count($past_rows), 'Past Shows should include the completed King George fixture once.');

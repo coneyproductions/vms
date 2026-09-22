@@ -119,7 +119,7 @@ decoupling_assert(strpos($dataToolsBootstrap, "require_once VMS_DT_INCLUDES_DIR 
 decoupling_assert(strpos($dataToolsProvider, "'id' => 'vms-data-tools'") !== false, 'Data Tools provider identity changed.');
 decoupling_assert(strpos($dataToolsProvider, "'contract_version' => 1") !== false, 'Data Tools provider contract version changed.');
 decoupling_assert(strpos($dataToolsProvider, "'scope' => 'vendor_portal'") === false, 'Provider scope should be read from BVM context, not hardcoded registration state.');
-decoupling_assert(strpos($dataToolsEntry, 'Version: 0.5.55') !== false && strpos($dataToolsEntry, "define('VMS_DT_VERSION', '0.5.55')") !== false, 'Data Tools successor should be 0.5.55.');
+decoupling_assert(strpos($dataToolsEntry, 'Version: 0.5.56') !== false && strpos($dataToolsEntry, "define('VMS_DT_VERSION', '0.5.56')") !== false, 'Data Tools issue #10 candidate should be 0.5.56.');
 decoupling_assert(strpos($installedDataToolsEntry, 'Version: 0.5.55') !== false, 'Installed Data Tools should remain on the accepted 0.5.55 promotion.');
 decoupling_assert(strpos($installedCalendarEntry, 'Version: 0.1.4') !== false, 'Installed Calendar Feeds should remain on the accepted 0.1.4 promotion.');
 

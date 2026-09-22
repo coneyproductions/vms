@@ -486,7 +486,7 @@ if ($coreExpected && in_array('data-tools', $targetAddons, true) && !$dataToolsD
 	$reportingProviders = function_exists('bvmgr_reporting_get_registered_providers') ? bvmgr_reporting_get_registered_providers() : array();
 	$dataToolsProvider = (array) ($reportingProviders['vms-data-tools'] ?? array());
 	$check('data-tools-provider-single', 'BVM Recognized', 'data-tools', count(array_filter(array_keys($reportingProviders), static fn(string $id): bool => $id === 'vms-data-tools')) === 1, 'Data Tools registered exactly one reporting provider.');
-	$check('data-tools-provider-provenance', 'BVM Recognized', 'data-tools', ($dataToolsProvider['version'] ?? '') === '0.5.55' && ($dataToolsProvider['contract_version'] ?? 0) === 1, 'The reporting provider exposed candidate version and contract provenance.', $dataToolsProvider);
+	$check('data-tools-provider-provenance', 'BVM Recognized', 'data-tools', ($dataToolsProvider['version'] ?? '') === '0.5.56' && ($dataToolsProvider['contract_version'] ?? 0) === 1, 'The reporting provider exposed candidate version and contract provenance.', $dataToolsProvider);
 
 	$fixturePlanId = wp_insert_post(array(
 		'post_type' => 'vms_event_plan',

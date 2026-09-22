@@ -188,7 +188,8 @@ if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
 				!is_array($row)
 				|| (($row['treatment'] ?? '') !== 'counted')
 				|| empty($row['is_direct_ticket'])
-				|| (int) ($row['net_cents'] ?? 0) > 0
+				|| !function_exists('vms_dt_reporting_square_row_payment_status')
+				|| vms_dt_reporting_square_row_payment_status($row) !== 'free'
 			) {
 				continue;
 			}
@@ -249,6 +250,7 @@ if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
 		$door_qty = max(0, (int) ($ticket_sources['square_ticket_qty'] ?? 0));
 		$door_paid_qty = max(0, (int) ($ticket_sources['square_paid_ticket_qty'] ?? 0));
 		$door_free_qty = max(0, (int) ($ticket_sources['square_free_ticket_qty'] ?? 0));
+		$door_unknown_qty = max(0, (int) ($ticket_sources['square_unknown_ticket_qty'] ?? 0));
 		$door_gross_cents = max(0, (int) ($ticket_sources['square_paid_ticket_revenue_cents'] ?? 0));
 		$website_rows_seen = max(0, (int) ($ticket_sources['website_rows_seen'] ?? count($website_ticket_rows)));
 		$door_rows_seen = max(0, (int) ($ticket_sources['square_rows_seen'] ?? 0));
@@ -266,6 +268,18 @@ if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
 			|| ($website_rows_seen > 0)
 			|| ($door_rows_seen > 0)
 			|| ($free_ticket_qty_total > 0);
+		$square_warnings = (array) ($square['warnings'] ?? array());
+		if ($door_unknown_qty > 0) {
+			$square_warnings[] = sprintf(
+				_n(
+					'%d Square admission has unavailable monetary evidence and is excluded from paid and complimentary counts.',
+					'%d Square admissions have unavailable monetary evidence and are excluded from paid and complimentary counts.',
+					$door_unknown_qty,
+					'vms-data-tools'
+				),
+				$door_unknown_qty
+			);
+		}
 
 		$label = __('Paid ticket sales', 'vms-data-tools');
 		if ($free_ticket_qty_total > 0) {
@@ -292,6 +306,7 @@ if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
 			'door_qty' => $door_qty,
 			'door_paid_qty' => $door_paid_qty,
 			'door_free_qty' => $door_free_qty,
+			'door_unknown_qty' => $door_unknown_qty,
 			'door_gross_cents' => $door_gross_cents,
 			'sales_cents' => $sales_cents,
 			'excluded_free_online_qty' => $excluded_free_online_qty,
@@ -301,7 +316,7 @@ if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
 			'ticketed_attendance_qty' => $headcount,
 			'complimentary_categories' => $complimentary_categories,
 			'has_countable_data' => $has_countable_data,
-			'warnings' => array_values(array_unique(array_filter(array_map('strval', (array) ($square['warnings'] ?? array()))))),
+			'warnings' => array_values(array_unique(array_filter(array_map('strval', $square_warnings)))),
 			'errors' => array_values(array_unique(array_filter(array_map('strval', (array) ($square['errors'] ?? array()))))),
 		);
 	}

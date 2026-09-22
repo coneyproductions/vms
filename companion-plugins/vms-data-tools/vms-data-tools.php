@@ -3,7 +3,7 @@
 /**
  * Plugin Name: VMS Data Tools
  * Description: Data movement tools for VMS (Vendor Import, exports, sync, etc.).
- * Version: 0.5.55
+ * Version: 0.5.56
  * Author: Coney Productions LLC
  * Text Domain: vms-data-tools
  */
@@ -20,7 +20,7 @@ if (defined('VMS_DT_PLUGIN_FILE') && realpath((string) VMS_DT_PLUGIN_FILE) !== r
     return;
 }
 
-define('VMS_DT_VERSION', '0.5.55');
+define('VMS_DT_VERSION', '0.5.56');
 define('VMS_DT_PLUGIN_FILE', __FILE__);
 define('VMS_DT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('VMS_DT_PLUGIN_URL', plugin_dir_url(__FILE__));
