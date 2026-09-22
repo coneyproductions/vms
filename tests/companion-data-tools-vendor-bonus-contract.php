@@ -6,11 +6,13 @@ define('ABSPATH', __DIR__);
 
 $root = dirname(__DIR__);
 $portal_path = $root . '/includes/portal/vendor-portal.php';
+$portal_css_path = $root . '/assets/css/vms-portal.css';
 $helpers_path = $root . '/includes/helpers.php';
 $data_tools_path = $root . '/companion-plugins/vms-data-tools/includes/admin/page-reporting-module.php';
 $data_tools_provider_path = $root . '/companion-plugins/vms-data-tools/includes/integrations/bvm-reporting-provider.php';
 $reporting_contract_path = $root . '/includes/core/reporting-providers.php';
 $portal_source = (string) file_get_contents($portal_path);
+$portal_css_source = (string) file_get_contents($portal_css_path);
 $helpers_source = (string) file_get_contents($helpers_path);
 $data_tools_source = (string) file_get_contents($data_tools_path);
 $data_tools_provider_source = (string) file_get_contents($data_tools_provider_path);
@@ -242,6 +244,7 @@ function bvmgr_vendor_portal_render_progress_cards_section(array $cards, string 
 }
 
 bonus_progress_assert($portal_source !== '', 'Mirror Vendor Portal source should be readable.');
+bonus_progress_assert($portal_css_source !== '', 'Mirror Vendor Portal stylesheet should be readable.');
 bonus_progress_assert($helpers_source !== '', 'BVM compensation helper source should be readable.');
 bonus_progress_assert($data_tools_source !== '', 'Data Tools reporting source should be readable.');
 bonus_progress_assert($data_tools_provider_source !== '', 'Data Tools BVM provider source should be readable.');
@@ -420,8 +423,15 @@ $king_markup = bvmgr_vendor_portal_render_count_breakdown_markup($king_card['cou
 foreach (array('Complimentary admissions — 31', 'Veterans', 'Children 12 &amp; under', 'Police / Fire / EMT', 'Public School Teacher', 'Guest passes') as $expected_markup) {
 	bonus_progress_assert(strpos($king_markup, $expected_markup) !== false, 'Vendor-facing complimentary detail is missing: ' . $expected_markup);
 }
+bonus_progress_assert(strpos($king_markup, '<details class="vms-vp-progress-breakdown__details">') !== false, 'Complimentary detail must retain the native collapsed disclosure.');
+bonus_progress_assert(strpos($king_markup, '<details open') === false, 'Complimentary detail must remain collapsed by default.');
 
 bonus_progress_assert(strpos($portal_source, "__('Final paid count: %d', 'backstage-venue-manager')") !== false, 'Event History must label the canonical value as Final paid count.');
+bonus_progress_assert(strpos($portal_source, 'class="vms-vp-event-history"') !== false, 'Event History should expose a presentation-only density scope.');
+bonus_progress_assert(strpos($portal_source, 'class="vms-portal-card vms-vp-event-history-list"') !== false, 'Past Shows should expose its compact presentation hook.');
+bonus_progress_assert(strpos($portal_source, "' vms-vp-progress-stat--breakdown'") !== false, 'History Count Source should retain the full-width breakdown hook.');
+bonus_progress_assert(strpos($portal_css_source, '.vms-vp-event-history .vms-vp-progress-card--bonus-progress .vms-vp-progress-stats') !== false, 'Past Show Performance should retain the compact three-column summary layout.');
+bonus_progress_assert(strpos($portal_css_source, '.vms-vp-event-history-list .vms-dash-list li') !== false, 'Past Shows should retain its compact list spacing.');
 
 // Dashboard heading and Profile placement remain separate contracts.
 bvmgr_vendor_portal_render_bonus_progress_section(2533, 'dashboard');

@@ -1994,6 +1994,113 @@ details.vms-av-method[data-method="ics"] .field input[type="url"] {
   }
 }
 
+/* Event History keeps completed-show detail dense without changing live progress cards. */
+.vms-vp-event-history .vms-vp-progress-section {
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.vms-vp-event-history .vms-vp-progress-section__header {
+  margin-bottom: 8px;
+}
+
+.vms-vp-event-history .vms-vp-progress-list {
+  gap: 8px;
+}
+
+.vms-vp-event-history .vms-vp-progress-card {
+  padding: 10px;
+}
+
+.vms-vp-event-history .vms-vp-progress-card__countline {
+  margin: 8px 0 0;
+}
+
+.vms-vp-event-history .vms-vp-progress-stats {
+  gap: 0;
+  margin-top: 8px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fbfdff;
+}
+
+.vms-vp-event-history .vms-vp-progress-card--bonus-progress .vms-vp-progress-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.vms-vp-event-history .vms-vp-progress-card--sales-snapshot .vms-vp-progress-stats {
+  grid-template-columns: 1fr;
+}
+
+.vms-vp-event-history .vms-vp-progress-stat {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.vms-vp-event-history .vms-vp-progress-card--bonus-progress .vms-vp-progress-stat + .vms-vp-progress-stat:not(.vms-vp-progress-stat--breakdown) {
+  border-left: 1px solid #eef2f7;
+}
+
+.vms-vp-event-history .vms-vp-progress-stat strong {
+  overflow-wrap: anywhere;
+}
+
+.vms-vp-event-history .vms-vp-progress-stat--breakdown {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-top: 1px solid #eef2f7;
+  border-left: 0;
+  background: #fff;
+}
+
+.vms-vp-event-history .vms-vp-progress-breakdown {
+  gap: 4px;
+}
+
+.vms-vp-event-history .vms-vp-progress-breakdown__details > summary {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.vms-vp-event-history .vms-vp-progress-breakdown__details[open] > summary {
+  margin-bottom: 4px;
+}
+
+.vms-vp-event-history-list {
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.vms-vp-event-history-list .vms-dash-list {
+  margin-top: 4px;
+}
+
+.vms-vp-event-history-list .vms-dash-list li {
+  margin: 3px 0;
+}
+
+.vms-vp-event-history-list .vms-mt-8 {
+  margin-top: 4px !important;
+}
+
+@media (max-width:520px) {
+  .vms-vp-event-history .vms-vp-progress-stat {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .vms-vp-event-history .vms-vp-progress-stat__label {
+    font-size: 10px;
+  }
+}
+
 /* Dashboard layout */
 .vms-dash-grid {
   display: grid;
