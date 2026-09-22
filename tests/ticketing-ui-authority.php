@@ -86,6 +86,26 @@ try {
     update_post_meta($nativePlanId, '_vms_ticketing_sales_mode', 'serenade_range');
     $assert(!bvmgr_tec_event_suppresses_native_ticketing($eventId), 'Returning to native sales did not restore TEC authority.');
 
+    $ticketingRulesSource = (string) file_get_contents(dirname(__DIR__) . '/includes/integrations/ticketing-rules-v2.php');
+    foreach (array(
+        '$front_script_version',
+        '$fallback_script_version',
+        '$post_cart_offer_script_version',
+        '$progressive_script_version',
+    ) as $versionVariable) {
+        $assert(
+            strpos($ticketingRulesSource, $versionVariable . " = function_exists('bvmgr_asset_version')") !== false,
+            $versionVariable . ' must resolve from the public BVM release version.'
+        );
+    }
+    $assert(
+        strpos($ticketingRulesSource, 'filemtime($front_script_path)') === false
+            && strpos($ticketingRulesSource, 'filemtime($fallback_script_path)') === false
+            && strpos($ticketingRulesSource, 'filemtime($post_cart_offer_script_path)') === false
+            && strpos($ticketingRulesSource, 'filemtime($progressive_script_path)') === false,
+        'Ticket JavaScript asset versions must not override BVMGR_VERSION with filesystem mtimes.'
+    );
+
     echo "Ticket UI Classic/Progressive authority and TEC suppression contracts passed.\n";
 } finally {
     update_option('vms_settings', $originalSettings);

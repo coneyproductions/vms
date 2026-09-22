@@ -2,7 +2,7 @@
 - Restored Safe Mode native TEC ticket authority and a single Progressive ticket controller so valid ticket rows remain visible after frontend lifecycle work settles.
 - Moved the complete server-rendered add-on/rental purchase region into the native ticket form and preserved canonical sponsorship, ticket, and purchase ordering without a duplicate legacy rental block.
 - Repaired compact entitlement action-column sizing so rental decrement and increment controls remain pointer-clickable at desktop and mobile widths.
-- Advanced the public plugin/header/build/readme and compatibility-test release identity to `1.3.1` so repaired ticket JavaScript and CSS receive a fresh cache-busting version.
+- Advanced the public plugin/header/build/readme and compatibility-test release identity to `1.3.1`, and removed ticket JavaScript file-mtime overrides so all repaired ticket JavaScript and CSS URLs carry that fresh cache-busting version.
 
 ## 0.2.24.748
 - Fixed the current-event Event Details sidebar guard so automatic sidebar injection only suppresses duplicates inside the real target sidebar, while manual `[vms_plan_your_visit layout="sidebar"]` placement still prevents a later auto duplicate when it renders first.

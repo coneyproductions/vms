@@ -6538,25 +6538,13 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
 
     if (!$is_event && !$is_cart && !$is_checkout) return;
 
-    $front_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-front.js';
     $front_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
-    if (is_readable($front_script_path)) {
-        $front_script_version = (string) filemtime($front_script_path);
-    }
 
-    $fallback_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-front-fallback.js';
     $fallback_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
-    if (is_readable($fallback_script_path)) {
-        $fallback_script_version = (string) filemtime($fallback_script_path);
-    }
 
     $build_stamp = $front_script_version !== '' ? $front_script_version : gmdate('YmdHis');
 
-    $post_cart_offer_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-post-cart-offer.js';
     $post_cart_offer_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
-    if (is_readable($post_cart_offer_script_path)) {
-        $post_cart_offer_script_version = (string) filemtime($post_cart_offer_script_path);
-    }
     wp_enqueue_script(
         'bvmgr-ticketing-post-cart-offer',
         plugins_url('assets/vms-ticketing-post-cart-offer.js', BVMGR_PLUGIN_FILE),
@@ -7184,7 +7172,6 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         $progressive_script_path = trailingslashit(BVMGR_PLUGIN_PATH) . 'assets/vms-ticketing-progressive-ui.js';
         $progressive_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
         if (is_readable($progressive_script_path)) {
-            $progressive_script_version = (string) filemtime($progressive_script_path);
             wp_enqueue_script(
                 'bvmgr-ticketing-progressive-ui',
                 plugins_url('assets/vms-ticketing-progressive-ui.js', BVMGR_PLUGIN_FILE),

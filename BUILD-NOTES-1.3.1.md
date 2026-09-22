@@ -17,6 +17,8 @@ Safe Mode leaves native TEC ticket rendering authoritative. Progressive uses one
 
 Ticket products, stock, orders, pricing, qualification, checkout, add-on, and rental business semantics are unchanged.
 
+All public ticket JavaScript and CSS handles use the canonical `BVMGR_VERSION` release marker. The ticket enqueue owner no longer replaces the 1.3.1 query version with per-file mtimes, so the production-facing cache-busting contract is consistent across the complete ticket bundle.
+
 ## Build procedure
 
 Build only from the clean committed 1.3.1 release checkpoint with:

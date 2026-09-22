@@ -1,7 +1,7 @@
 # BVM 1.3.1 Test Plan — Ticket Surface and Rental Purchase UI
 
 1. Confirm `backstage-venue-manager.php`, `BVMGR_VERSION`, `vms-build.txt`, and the readme stable tag all report `1.3.1`.
-2. Run PHP lint, JavaScript syntax checks, `tests/ticketing-server-mount-native-footer-remediation.php`, `tests/ticketing-output-buffer-lifecycle-characterization.php`, `tests/ticketing-ui-authority.php`, and `tests/ticketing-public-lifecycle.js`.
+2. Run PHP lint, JavaScript syntax checks, `tests/ticketing-server-mount-native-footer-remediation.php`, `tests/ticketing-output-buffer-lifecycle-characterization.php`, `tests/ticketing-ui-authority.php`, and `tests/ticketing-public-lifecycle.js`. The authority test must reject ticket JavaScript enqueue paths that replace `BVMGR_VERSION` with filesystem mtimes.
 3. Run the public-release build pipeline, release compatibility harness, and reproducibility suite from the clean committed 1.3.1 checkpoint.
 4. Build twice from the exact commit. Require identical archive SHA-256 values, identical normalized manifests, one `backstage-venue-manager/` root, and the filename `backstage-venue-manager-1.3.1-public-release.zip`.
 5. Install that exact ZIP on staging. Confirm the installed manifest matches the ZIP, all three public version markers report `1.3.1`, and ticket JavaScript/CSS URLs use `ver=1.3.1`.

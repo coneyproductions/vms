@@ -14,3 +14,5 @@ Audit baseline: Issue #8 commit `2a1e491d7a46a3122abc2d23cca7b1ccc0e1748d`, tree
 | `OTHER` | Component, companion, add-on, schema/content, migration, and internal `0.2.24.*` versions | Preserved; none is the public BVM release marker. |
 
 The historical `VMS_VERSION` compatibility name is not reintroduced. The canonical public runtime constant is `BVMGR_VERSION`, and it is the version used by BVM asset enqueues and the release builder.
+
+The ticket enqueue owner was audited separately because it previously resolved `BVMGR_VERSION` and then replaced that value with per-file mtimes for four JavaScript handles. The 1.3.1 release removes those overrides and retains the existing release-version fallback, making the ticket JavaScript and CSS cache keys consistently `1.3.1`.

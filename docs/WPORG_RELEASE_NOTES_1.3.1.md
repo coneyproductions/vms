@@ -18,4 +18,4 @@
 
 ## Release-engineering boundary
 
-Version `1.3.1` gives the repaired frontend JavaScript and CSS a new public cache-busting identity after 1.3.0 was served. This note does not authorize production deployment, publication, WordPress.org submission, or external communication.
+Version `1.3.1` gives the repaired frontend JavaScript and CSS a consistent new public cache-busting identity after 1.3.0 was served; ticket JavaScript no longer substitutes per-file mtimes for that release marker. This note does not authorize production deployment, publication, WordPress.org submission, or external communication.
