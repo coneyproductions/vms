@@ -104,6 +104,11 @@ $valid = static function (int $plan_id, array $context): array {
 		'total_qty' => 20,
 		'revenue_cents' => 34567,
 		'door_paid_qty' => -8,
+		'complimentary_categories' => array(
+			array('key' => 'veterans', 'label' => '<b>Veterans</b>', 'qty' => 2, 'source' => 'website'),
+			array('key' => 'veterans', 'label' => 'Veterans', 'qty' => 1, 'source' => 'website'),
+			array('key' => 'invalid', 'label' => '', 'qty' => 99, 'source' => 'website'),
+		),
 		'has_countable_data' => true,
 		'warnings' => array('<b>Provider warning</b>', 'Provider warning'),
 	);
@@ -145,6 +150,11 @@ reporting_provider_same(1, $resolved['provider_contract_version'], 'Provider con
 reporting_provider_same('fixture_truth', $resolved['source'], 'Source provenance should survive normalization.');
 reporting_provider_same(17, $resolved['paid_qty'], 'Paid quantity changed.');
 reporting_provider_same(0, $resolved['door_paid_qty'], 'Negative quantities should normalize to zero.');
+reporting_provider_same(
+	array(array('key' => 'veterans', 'label' => 'Veterans', 'qty' => 3, 'source' => 'website')),
+	$resolved['complimentary_categories'],
+	'Backward-compatible complimentary category detail should normalize and aggregate.'
+);
 reporting_provider_same(array('Primary provider has no result.', 'Provider warning'), $resolved['warnings'], 'Provider warnings should be normalized and retained.');
 reporting_provider_same(array('unavailable', 'calculated'), array_column($resolved['provider_attempts'], 'status'), 'Attempt diagnostics changed.');
 

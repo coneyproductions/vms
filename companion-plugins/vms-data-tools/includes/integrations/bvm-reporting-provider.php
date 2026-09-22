@@ -114,6 +114,97 @@ if (!function_exists('vms_dt_bvm_reporting_event_summary')) {
 }
 
 if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
+	function vms_dt_bvm_reporting_complimentary_label(string $item_name, string $source): string
+	{
+		$label = trim(wp_strip_all_tags($item_name));
+		$label = (string) preg_replace('/^\d{4}-\d{2}-\d{2}(?:\s+\d{1,2}:\d{2})?\s*[-\x{2013}\x{2014}:]\s*/u', '', $label);
+		$searchable = strtolower($label);
+
+		if (strpos($searchable, 'veteran') !== false) {
+			return __('Veterans', 'vms-data-tools');
+		}
+		if (strpos($searchable, 'child') !== false && (strpos($searchable, '12') !== false || strpos($searchable, 'under') !== false)) {
+			return __('Children 12 & under', 'vms-data-tools');
+		}
+		if (
+			strpos($searchable, 'police') !== false
+			|| strpos($searchable, 'fire') !== false
+			|| strpos($searchable, 'emt') !== false
+			|| strpos($searchable, 'first responder') !== false
+		) {
+			return __('Police / Fire / EMT', 'vms-data-tools');
+		}
+		if (strpos($searchable, 'teacher') !== false) {
+			return __('Public School Teacher', 'vms-data-tools');
+		}
+		if ($label !== '') {
+			return $label;
+		}
+
+		return $source === 'square'
+			? __('Complimentary door admission', 'vms-data-tools')
+			: __('Complimentary website admission', 'vms-data-tools');
+	}
+
+	/**
+	 * @param array<int,array<string,mixed>> $website_rows
+	 * @param array<int,array<string,mixed>> $square_rows
+	 * @return array<int,array{key:string,label:string,qty:int,source:string}>
+	 */
+	function vms_dt_bvm_reporting_complimentary_categories(array $website_rows, array $square_rows): array
+	{
+		$categories = array();
+		$add_category = static function (string $label, int $qty, string $source) use (&$categories): void {
+			$qty = max(0, $qty);
+			$label = trim($label);
+			if ($label === '' || $qty <= 0) {
+				return;
+			}
+
+			$key = sanitize_key($label);
+			$aggregate_key = $source . ':' . $key;
+			if (!isset($categories[$aggregate_key])) {
+				$categories[$aggregate_key] = array(
+					'key' => $key,
+					'label' => $label,
+					'qty' => 0,
+					'source' => $source,
+				);
+			}
+			$categories[$aggregate_key]['qty'] += $qty;
+		};
+
+		foreach ($website_rows as $row) {
+			if (!is_array($row) || (int) ($row['net_subtotal_cents'] ?? 0) > 0) {
+				continue;
+			}
+			$qty = max(0, (int) ($row['quantity'] ?? 0) - (int) ($row['refunded_quantity'] ?? 0));
+			$label = vms_dt_bvm_reporting_complimentary_label((string) ($row['item_name'] ?? ''), 'website');
+			$add_category($label, $qty, 'website');
+		}
+
+		foreach ($square_rows as $row) {
+			if (
+				!is_array($row)
+				|| (($row['treatment'] ?? '') !== 'counted')
+				|| empty($row['is_direct_ticket'])
+				|| (int) ($row['net_cents'] ?? 0) > 0
+			) {
+				continue;
+			}
+			$label = vms_dt_bvm_reporting_complimentary_label((string) ($row['line_name'] ?? ''), 'square');
+			$add_category($label, max(0, (int) ($row['quantity'] ?? 0)), 'square');
+		}
+
+		$categories = array_values($categories);
+		usort($categories, static function (array $left, array $right): int {
+			$qty_order = ((int) ($right['qty'] ?? 0)) <=> ((int) ($left['qty'] ?? 0));
+			return $qty_order !== 0 ? $qty_order : strcmp((string) ($left['label'] ?? ''), (string) ($right['label'] ?? ''));
+		});
+
+		return $categories;
+	}
+
 	/** @return array<string,mixed> */
 	function vms_dt_bvm_reporting_vendor_portal_summary(int $event_plan_id): array
 	{
@@ -136,8 +227,10 @@ if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
 			$website_ticket_rows[] = $entry;
 		}
 
+		$square_location_id = trim((string) get_post_meta($event_plan_id, '_vms_square_location_id', true));
 		$square = (array) vms_dt_reporting_build_square_line_evidence($event_plan_id, array(
 			'event_plan_id' => $event_plan_id,
+			'square_location_id' => $square_location_id,
 			'square_scope_mode' => 'full_day',
 			'sold_from' => '',
 			'sold_to' => '',
@@ -164,6 +257,10 @@ if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
 		$sales_cents = max(0, (int) ($ticket_sources['paid_ticket_revenue_cents'] ?? ($online_net_cents + $door_gross_cents)));
 		$free_ticket_qty_total = max(0, (int) ($ticket_sources['free_ticket_qty_total'] ?? ($excluded_free_online_qty + $door_free_qty)));
 		$paid_ticket_qty_total = max(0, (int) ($ticket_sources['paid_ticket_qty_total'] ?? ($online_qty + $door_paid_qty)));
+		$complimentary_categories = vms_dt_bvm_reporting_complimentary_categories(
+			$website_ticket_rows,
+			(array) ($square['ticket_rows'] ?? array())
+		);
 		$has_countable_data = !empty($ticket_sources['has_countable_data'])
 			|| ($headcount > 0)
 			|| ($website_rows_seen > 0)
@@ -202,6 +299,7 @@ if (!function_exists('vms_dt_bvm_reporting_vendor_portal_summary')) {
 			'paid_ticket_qty_total' => $paid_ticket_qty_total,
 			'free_ticket_qty_total' => $free_ticket_qty_total,
 			'ticketed_attendance_qty' => $headcount,
+			'complimentary_categories' => $complimentary_categories,
 			'has_countable_data' => $has_countable_data,
 			'warnings' => array_values(array_unique(array_filter(array_map('strval', (array) ($square['warnings'] ?? array()))))),
 			'errors' => array_values(array_unique(array_filter(array_map('strval', (array) ($square['errors'] ?? array()))))),

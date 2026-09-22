@@ -9,10 +9,12 @@ $portal_path = $root . '/includes/portal/vendor-portal.php';
 $helpers_path = $root . '/includes/helpers.php';
 $data_tools_path = $root . '/companion-plugins/vms-data-tools/includes/admin/page-reporting-module.php';
 $data_tools_provider_path = $root . '/companion-plugins/vms-data-tools/includes/integrations/bvm-reporting-provider.php';
+$reporting_contract_path = $root . '/includes/core/reporting-providers.php';
 $portal_source = (string) file_get_contents($portal_path);
 $helpers_source = (string) file_get_contents($helpers_path);
 $data_tools_source = (string) file_get_contents($data_tools_path);
 $data_tools_provider_source = (string) file_get_contents($data_tools_provider_path);
+$reporting_contract_source = (string) file_get_contents($reporting_contract_path);
 
 function bonus_progress_assert(bool $condition, string $message): void
 {
@@ -66,6 +68,21 @@ function __(string $text, string $domain = ''): string
 	return $text;
 }
 
+function wp_strip_all_tags($value): string
+{
+	return strip_tags((string) $value);
+}
+
+function esc_html($value): string
+{
+	return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
+
+function number_format_i18n($value): string
+{
+	return number_format((int) $value);
+}
+
 function current_time(string $type)
 {
 	return $type === 'timestamp' ? 1788498000 : '2026-09-04 00:00:00';
@@ -90,18 +107,52 @@ $GLOBALS['bonus_progress_terms'] = array();
 $GLOBALS['bonus_progress_section_cards'] = array(array('plan_id' => 2534));
 $GLOBALS['bonus_progress_section_title'] = '';
 
+final class WP_Post
+{
+	public int $ID;
+
+	public function __construct(int $id)
+	{
+		$this->ID = $id;
+	}
+}
+
+final class WP_Query
+{
+	/** @var WP_Post[] */
+	public array $posts;
+
+	public function __construct(array $args)
+	{
+		unset($args);
+		$this->posts = array(new WP_Post(2537));
+	}
+}
+
+function wp_reset_postdata(): void
+{
+}
+
 function get_post_meta(int $post_id, string $key, bool $single = false)
 {
-	unset($single);
 	if ($key === '_vms_event_date') {
-		return '2026-09-05';
+		return $post_id === 2537 ? '2026-09-19' : '2026-09-05';
+	}
+	if ($key === '_vms_square_location_id' && $post_id === 2537) {
+		return 'KING-GEORGE-SQUARE';
+	}
+	if ($key === '_vms_band_vendor_id' && $post_id === 2537) {
+		return $single ? 77 : array(77);
 	}
 	return '';
 }
 
 function get_the_title(int $post_id): string
 {
-	return $post_id === 2534 ? 'The Alternatives' : 'Test Event ' . $post_id;
+	if ($post_id === 2534) {
+		return 'The Alternatives';
+	}
+	return $post_id === 2537 ? 'George Strait tribute: King George' : 'Test Event ' . $post_id;
 }
 
 function bvmgr_format_local_ymd(string $date, string $format): string
@@ -122,7 +173,7 @@ function vms_dt_reporting_build_website_detail_rows(int $plan_id): array
 
 function vms_dt_reporting_build_square_line_evidence(int $plan_id, array $filters): array
 {
-	unset($filters);
+	$GLOBALS['bonus_progress_square_filters'][$plan_id] = $filters;
 	return $GLOBALS['bonus_progress_square'][$plan_id] ?? array(
 		'ticket_rows' => array(),
 		'warnings' => array(),
@@ -198,7 +249,10 @@ bonus_progress_assert($data_tools_provider_source !== '', 'Data Tools BVM provid
 // test process. BVM runtime does not boot the inactive companion from its source mirror.
 eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_zero_ticket_source_rollup'));
 eval(bonus_progress_extract_function($data_tools_source, 'vms_dt_reporting_build_ticket_source_rollup'));
+eval(bonus_progress_extract_function($data_tools_provider_source, 'vms_dt_bvm_reporting_complimentary_label'));
+eval(bonus_progress_extract_function($data_tools_provider_source, 'vms_dt_bvm_reporting_complimentary_categories'));
 eval(bonus_progress_extract_function($data_tools_provider_source, 'vms_dt_bvm_reporting_vendor_portal_summary'));
+eval(bonus_progress_extract_function($reporting_contract_source, 'bvmgr_reporting_normalize_complimentary_categories'));
 eval(bonus_progress_extract_function($helpers_source, 'bvmgr_attendance_bonus_supported_modes'));
 eval(bonus_progress_extract_function($helpers_source, 'bvmgr_normalize_attendance_bonus_mode'));
 eval(bonus_progress_extract_function($helpers_source, 'bvmgr_normalize_comp_nonnegative_float'));
@@ -207,9 +261,11 @@ eval(bonus_progress_extract_function($helpers_source, 'bvmgr_calculate_attendanc
 eval(bonus_progress_extract_function($helpers_source, 'bvmgr_get_attendance_bonus_progress_snapshot'));
 eval(bonus_progress_extract_function($portal_source, 'bvmgr_vendor_portal_get_data_tools_sales_snapshot'));
 eval(bonus_progress_extract_function($portal_source, 'bvmgr_vendor_portal_get_count_breakdown'));
+eval(bonus_progress_extract_function($portal_source, 'bvmgr_vendor_portal_render_count_breakdown_markup'));
 eval(bonus_progress_extract_function($portal_source, 'bvmgr_vendor_portal_get_progress_headcount_context'));
 $builder_source = bonus_progress_extract_function($portal_source, 'bvmgr_vendor_portal_build_bonus_progress_card');
 eval($builder_source);
+eval(bonus_progress_extract_function($portal_source, 'bvmgr_vendor_portal_get_past_assigned_event_rows'));
 eval(bonus_progress_extract_function($portal_source, 'bvmgr_vendor_portal_render_bonus_progress_section'));
 
 $terms = array(
@@ -308,6 +364,64 @@ $zero_card = bvmgr_vendor_portal_build_bonus_progress_card(2536, false);
 bonus_progress_assert($zero_card !== array(), 'G. A valid linked zero-sales attendance-bonus card should still render.');
 bonus_progress_same(0, $zero_card['attendance_count'], 'G. Zero paid sales should remain zero progress.');
 bonus_progress_same(150, $zero_card['snapshot']['tickets_to_next'], 'G. Zero paid sales should retain the first threshold.');
+
+// Issue #10: King-George-shaped canonical truth, without event-specific production code.
+$GLOBALS['bonus_progress_terms'][2537] = $terms;
+$GLOBALS['bonus_progress_website'][2537] = array(
+	'ticket_rows' => array(
+		array('item_name' => '2026-09-19 19:00 - General Admission', 'quantity' => 136, 'refunded_quantity' => 0, 'net_subtotal_cents' => 272000, 'sold_date' => '2026-09-18'),
+		array('item_name' => '2026-09-19 19:00 - Veteran Admission', 'quantity' => 18, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
+		array('item_name' => '2026-09-19 19:00 - Police / Fire / EMT Admission', 'quantity' => 4, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
+		array('item_name' => "2026-09-19 19:00 - Child's Admission (12 & under)", 'quantity' => 6, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
+		array('item_name' => '2026-09-19 19:00 - Public School Teacher Admission', 'quantity' => 1, 'refunded_quantity' => 0, 'net_subtotal_cents' => 0, 'sold_date' => '2026-09-18'),
+	),
+	'addon_rows' => array(
+		array('item_name' => 'Fan rental', 'quantity' => 2, 'refunded_quantity' => 0, 'net_subtotal_cents' => 4000),
+		array('item_name' => 'Ticket add-on', 'quantity' => 5, 'refunded_quantity' => 0, 'net_subtotal_cents' => 5000),
+	),
+);
+$GLOBALS['bonus_progress_square'][2537] = array(
+	'ticket_rows' => array(
+		array('line_name' => 'Door admission', 'treatment' => 'counted', 'is_direct_ticket' => true, 'quantity' => 8, 'net_cents' => 16000),
+		array('line_name' => 'Merchandise', 'treatment' => 'counted', 'is_direct_ticket' => false, 'quantity' => 20, 'net_cents' => 40000),
+	),
+	'warnings' => array(),
+	'errors' => array(),
+);
+$GLOBALS['bonus_progress_stats'][2537] = array('qty_sold' => 136, 'ticket_product_ids' => array(9001));
+$GLOBALS['bonus_progress_guests'][2537] = 2;
+
+$king_card = bvmgr_vendor_portal_build_bonus_progress_card(2537, true);
+bonus_progress_same('KING-GEORGE-SQUARE', $GLOBALS['bonus_progress_square_filters'][2537]['square_location_id'] ?? '', 'The provider must scope Square truth to the Event Plan location.');
+bonus_progress_same(136, $king_card['count_breakdown']['presales'], 'King George paid website admissions changed.');
+bonus_progress_same(8, $king_card['count_breakdown']['door_sales'], 'King George paid Square door admissions changed.');
+bonus_progress_same(31, $king_card['count_breakdown']['comp_guest'], 'King George complimentary aggregate changed.');
+bonus_progress_same(144, $king_card['attendance_count'], 'King George final paid count must be paid presales plus paid door only.');
+bonus_progress_same(144, $king_card['snapshot']['attendance_count'], 'King George bonus basis diverged from the displayed paid count.');
+bonus_progress_same(0.0, $king_card['snapshot']['current_bonus'], 'King George free tickets or guest passes entered the bonus basis.');
+bonus_progress_same(1500.0, $king_card['snapshot']['projected_total'], 'King George final payout changed.');
+
+$expected_comp_detail = array(
+	array('key' => 'veterans', 'label' => 'Veterans', 'qty' => 18),
+	array('key' => 'children12under', 'label' => 'Children 12 & under', 'qty' => 6),
+	array('key' => 'policefireemt', 'label' => 'Police / Fire / EMT', 'qty' => 4),
+	array('key' => 'publicschoolteacher', 'label' => 'Public School Teacher', 'qty' => 1),
+	array('key' => 'guest_passes', 'label' => 'Guest passes', 'qty' => 2),
+);
+bonus_progress_same($expected_comp_detail, $king_card['count_breakdown']['comp_detail'], 'King George complimentary detail changed.');
+bonus_progress_same(31, array_sum(array_column($king_card['count_breakdown']['comp_detail'], 'qty')), 'Complimentary detail must reconcile to the aggregate.');
+
+$past_rows = bvmgr_vendor_portal_get_past_assigned_event_rows(77, 1);
+bonus_progress_same(1, count($past_rows), 'Past Shows should include the completed King George fixture once.');
+bonus_progress_same(144, $past_rows[0]['attendance_count'] ?? null, 'Past Shows must use the same canonical paid count as Past Show Performance.');
+bonus_progress_same($king_card['count_breakdown'], $past_rows[0]['count_breakdown'] ?? array(), 'Past Shows and Past Show Performance must share one canonical breakdown.');
+
+$king_markup = bvmgr_vendor_portal_render_count_breakdown_markup($king_card['count_breakdown']);
+foreach (array('Complimentary admissions — 31', 'Veterans', 'Children 12 &amp; under', 'Police / Fire / EMT', 'Public School Teacher', 'Guest passes') as $expected_markup) {
+	bonus_progress_assert(strpos($king_markup, $expected_markup) !== false, 'Vendor-facing complimentary detail is missing: ' . $expected_markup);
+}
+
+bonus_progress_assert(strpos($portal_source, "__('Final paid count: %d', 'backstage-venue-manager')") !== false, 'Event History must label the canonical value as Final paid count.');
 
 // Dashboard heading and Profile placement remain separate contracts.
 bvmgr_vendor_portal_render_bonus_progress_section(2533, 'dashboard');
