@@ -2917,9 +2917,8 @@
       return null;
     }
 
-    var existingHost = state.sourceBlock && state.sourceBlock.parentNode && state.sourceBlock.parentNode.nodeType === 1
-      && state.sourceBlock.parentNode.id === 'vms-addon-mount'
-      ? state.sourceBlock.parentNode
+    var existingHost = state.sourceBlock && state.sourceBlock.closest
+      ? state.sourceBlock.closest('#vms-addon-mount')
       : null;
     var mountHost = existingHost || query('#vms-addon-mount', addonsSection) || query('#vms-addon-mount', state.flowRoot || addonsSection);
     if (!mountHost) {
@@ -3022,7 +3021,7 @@
       state.sourceBlock.setAttribute('data-vms-addons-mounted', '1');
     }
     if (mountHost) {
-      if (state.sourceBlock.parentNode !== mountHost) {
+      if (!mountHost.contains(state.sourceBlock)) {
         mountHost.appendChild(state.sourceBlock);
       }
       return;

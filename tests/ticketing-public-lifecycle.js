@@ -19,6 +19,9 @@ async function installRoutes(page, mode, layout, requests, failRef) {
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.pathname === '/event/') return route.fulfill({body: fixture(mode, layout), contentType: 'text/html'});
+    if (url.pathname.startsWith('/assets/css/')) {
+      return route.fulfill({body: fs.readFileSync(path.join(assetRoot, 'css', path.basename(url.pathname)), 'utf8'), contentType: 'text/css'});
+    }
     if (url.pathname.startsWith('/assets/')) {
       const name = path.basename(url.pathname);
       let text = source(name);
@@ -155,6 +158,7 @@ async function runOwnershipVariants(browser) {
     await page.route('**/*', async route => {
       const url = new URL(route.request().url());
       if (url.pathname === '/event/') return route.fulfill({body: html, contentType: 'text/html'});
+      if (url.pathname.startsWith('/assets/css/')) return route.fulfill({body: fs.readFileSync(path.join(assetRoot, 'css', path.basename(url.pathname)), 'utf8'), contentType: 'text/css'});
       if (url.pathname.startsWith('/assets/')) return route.fulfill({body: source(path.basename(url.pathname)), contentType: 'application/javascript'});
       if (url.pathname === '/api/cart-context') return route.fulfill({json: {success: true, data: {ga_qty: 0, prior_qualifying_qty: 0, pool_qty_by_key: {}, prior_pool_qty_by_key: {}}}});
       throw new Error('Unexpected variant request: ' + url);
@@ -207,8 +211,9 @@ function isComputedVisible(node) {
 async function runSettledVisibilityMatrix(browser) {
   for (const layout of ['classic', 'progressive']) {
     for (const identity of ['guest', 'admin']) {
-      const label = `${layout}/${identity}`;
-      const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+      for (const viewport of [{name: 'desktop', width: 1280, height: 900}, {name: 'mobile', width: 390, height: 844}]) {
+      const label = `${layout}/${identity}/${viewport.name}`;
+      const context = await browser.newContext({viewport: {width: viewport.width, height: viewport.height}});
       const page = await context.newPage();
       page.setDefaultTimeout(7000);
       const requests = [];
@@ -244,11 +249,21 @@ async function runSettledVisibilityMatrix(browser) {
           progressiveObservers: window.__test ? window.__test.progressiveObservers || 0 : 0,
           bundleLoaded: !!(window.BVMGR_TICKETING_FRONT_BUNDLE && window.BVMGR_TICKETING_FRONT_BUNDLE.loaded),
           bundleState: !!(window.BVMGR_TICKETING_FRONT_BUNDLE && window.BVMGR_TICKETING_FRONT_BUNDLE.state),
-          layout: window.BVMGR_TICKETING_FRONT && window.BVMGR_TICKETING_FRONT.uiLayout
+          layout: window.BVMGR_TICKETING_FRONT && window.BVMGR_TICKETING_FRONT.uiLayout,
+          purchaseMounts: document.querySelectorAll('#vms-addon-mount').length,
+          rentals: document.querySelectorAll('[data-bvmgr-purchase-extension="bvm-rentals"]').length,
+          rentalsInForm: form ? form.querySelectorAll('[data-bvmgr-purchase-extension="bvm-rentals"]').length : 0,
+          rentalsOutsideForm: form ? Array.from(document.querySelectorAll('[data-bvmgr-purchase-extension="bvm-rentals"]')).filter(node => !form.contains(node)).length : 0,
+          sponsorshipPrecedesForm: !!(form && document.querySelector('[data-test-sponsorship]') && (document.querySelector('[data-test-sponsorship]').compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING)),
+          ticketPrecedesRental: !!(form && form.querySelector('.tribe-tickets__tickets-item') && form.querySelector('[data-bvmgr-purchase-extension="bvm-rentals"]') && (form.querySelector('.tribe-tickets__tickets-item').compareDocumentPosition(form.querySelector('[data-bvmgr-purchase-extension="bvm-rentals"]')) & Node.DOCUMENT_POSITION_FOLLOWING)),
+          progressiveRentalContainment: !!document.querySelector('.vms-ticket-ui-addons #vms-addon-mount [data-bvmgr-purchase-extension="bvm-rentals"]')
         };
       }, isComputedVisible.toString());
       check(visibility.formCount === 1 && visibility.rowCount === 4, `${label}: exactly one native form and four ticket rows remain connected`);
       check(visibility.visibleForm && visibility.visibleRows === 4, `${label}: form and all ticket rows have computed visibility after 2.2 seconds`);
+      check(visibility.purchaseMounts === 1 && visibility.rentals === 1, `${label}: exactly one purchase mount and one rental extension remain`);
+      check(visibility.rentalsInForm === 1 && visibility.rentalsOutsideForm === 0, `${label}: rental is server-contained by the native ticket form with no stray old-location block`);
+      check(visibility.sponsorshipPrecedesForm && visibility.ticketPrecedesRental, `${label}: sponsorship, tickets, and rental retain canonical DOM order`);
       if (layout === 'classic') {
         check(visibility.owner === 'tec-native', `${label}: TEC is the sole ticket-surface owner`);
         check(visibility.fallbackOwners === 1 && visibility.addonOwners === 1, `${label}: fallback owns only the server-controls add-ons`);
@@ -257,7 +272,33 @@ async function runSettledVisibilityMatrix(browser) {
         check(visibility.owner === 'bvmgr-ticketing-front', `${label}: unified controller is the sole ticket-surface owner (${JSON.stringify(visibility)}; ${errors.join('; ')})`);
         check(visibility.fallbackOwners === 0 && visibility.addonOwners === 0, `${label}: fallback does not compete for server_controls`);
         check(visibility.progressiveEnhancers === 1, `${label}: progressive presentation attaches once`);
+        check(visibility.progressiveRentalContainment, `${label}: the complete server purchase mount is inside the progressive add-on surface`);
       }
+
+      if (layout === 'progressive') {
+        const rentalSectionToggle = page.locator('.vms-ticket-ui-addons .vms-ticket-progressive-toggle');
+        if (await rentalSectionToggle.getAttribute('aria-expanded') === 'false') await rentalSectionToggle.click();
+      }
+
+      const rentalHitTest = async selector => {
+        const locator = page.locator(selector);
+        await locator.scrollIntoViewIfNeeded();
+        return locator.evaluate(node => {
+        const rect = node.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const top = document.elementFromPoint(x, y);
+        return {clickable: !!top && (top === node || node.contains(top)), x, y, top: top ? top.className : '', width: rect.width, height: rect.height};
+        });
+      };
+      const plusHit = await rentalHitTest('[data-test-rental-plus]');
+      check(plusHit.clickable, `${label}: rental + is pointer-clickable by elementFromPoint (${JSON.stringify(plusHit)})`);
+      await page.locator('[data-test-rental-plus]').click();
+      check(await page.locator('[data-test-extension-qty]').inputValue() === '1', `${label}: rental + increments quantity`);
+      const minusHit = await rentalHitTest('[data-test-rental-minus]');
+      check(minusHit.clickable, `${label}: rental − is pointer-clickable by elementFromPoint (${JSON.stringify(minusHit)})`);
+      await page.locator('[data-test-rental-minus]').click();
+      check(await page.locator('[data-test-extension-qty]').inputValue() === '0', `${label}: rental − decrements quantity`);
 
       const ga = page.locator('#tribe-tickets__tickets-item-quantity-number--6996');
       await page.locator('#tribe-block-tickets-item-6996 .tribe-tickets__tickets-item-quantity-add').click();
@@ -283,6 +324,7 @@ async function runSettledVisibilityMatrix(browser) {
       check(payload.addon_lines.some(line => line.product_id === 7006 && line.qty === 1), `${label}: cart handoff preserves add-on quantity`);
       check(errors.length === 0 && warnings.length === 0, `${label}: no BVM console errors or warnings (${errors.concat(warnings).join('; ')})`);
       await context.close();
+      }
     }
   }
 }

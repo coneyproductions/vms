@@ -149,6 +149,7 @@ function vms_test_reset_context(): void
 		'cancelled_event_ids' => array(),
 		'plan_ids' => array(),
 		'post_content' => array(),
+		'tickets_on_sale' => array(),
 		'render_output' => array(),
 		'render_calls' => array(),
 		'main_query' => true,
@@ -262,6 +263,11 @@ function get_the_ID(): int
 	return (int) ($GLOBALS['vms_test_context']['current_post_id'] ?? 0);
 }
 
+function tribe_events_has_tickets_on_sale(int $eventId): bool
+{
+	return !empty($GLOBALS['vms_test_context']['tickets_on_sale'][$eventId]);
+}
+
 final class Vms_Test_Ticketing_Template
 {
 	/** @var array<string,mixed> */
@@ -322,6 +328,8 @@ try {
 	$appendFunctionSource = vms_test_extract_function($ticketingRulesSource, 'bvmgr_ticketing_v2_append_entitlements_to_tec_event');
 	vms_test_assert_not_contains('ob_start(', $footerFunctionSource, 'The native footer callback should not open any output buffer.');
 	vms_test_assert_not_contains('ob_start(', $appendFunctionSource, 'The automatic append fallback should not open any output buffer.');
+	vms_test_assert_not_contains("\$html === ''", $footerFunctionSource, 'The before-include callback must accept TEC\'s normally empty HTML prefix.');
+	vms_test_assert_contains("tribe_events_has_tickets_on_sale((int) \$tec_event_id)", $appendFunctionSource, 'Events with an on-sale native form must defer purchase placement to the TEC footer seam.');
 
 	vms_test_assert_not_contains('<script>', $ticketingRulesSource, 'The declarative renderer contract should not emit raw executable <script> blocks.');
 	vms_test_assert_not_contains('</script>', $ticketingRulesSource, 'The declarative renderer contract should not emit raw executable </script> tags.');
@@ -456,6 +464,17 @@ try {
 	vms_test_assert_same($beforeLevel, $afterLevel, 'Valid footer placement should not open any output buffer.');
 	vms_test_assert_same(array(array(120, 520)), $GLOBALS['vms_test_context']['render_calls'], 'Valid footer placement should render the purchase region for the template-derived event and resolved plan.');
 
+	vms_test_reset_context();
+	$GLOBALS['vms_test_context']['post_types'][126] = 'tribe_events';
+	$GLOBALS['vms_test_context']['plan_ids'][126] = 526;
+	$GLOBALS['vms_test_context']['render_output'][126] = $renderedMarkup;
+	[$result] = vms_test_call_with_capture(
+		static function () use ($validFooterPath): string {
+			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount('', $validFooterPath, array('v2', 'tickets', 'footer'), new Vms_Test_Ticketing_Template(array('post_id' => 126)));
+		}
+	);
+	vms_test_assert_same($expectedMount, $result, 'TEC\'s empty before-include prefix should still receive the complete server purchase mount.');
+
 	[$result] = vms_test_call_with_capture(
 		static function () use ($footerHtml, $validFooterPath): string {
 			return bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount($footerHtml, $validFooterPath, array(), new Vms_Test_Ticketing_Template(array('post_id' => 120)));
@@ -502,6 +521,21 @@ try {
 	vms_test_assert_same($content . $renderedMarkup, $result, 'Absent native footer placement should preserve the automatic append fallback.');
 	vms_test_assert_same(1, substr_count($result, 'id="vms-reserved-addons"'), 'Automatic append fallback should not duplicate the reserved-addons root.');
 	vms_test_assert_same(0, substr_count($result, 'id="vms-addon-mount"'), 'Automatic append fallback should not create the native footer mount host.');
+
+	vms_test_reset_context();
+	$GLOBALS['vms_test_context']['current_post_id'] = 127;
+	$GLOBALS['vms_test_context']['queried_object_id'] = 127;
+	$GLOBALS['vms_test_context']['post_types'][127] = 'tribe_events';
+	$GLOBALS['vms_test_context']['plan_ids'][127] = 527;
+	$GLOBALS['vms_test_context']['tickets_on_sale'][127] = true;
+	$GLOBALS['vms_test_context']['render_output'][127] = $renderedMarkup;
+	[$result] = vms_test_call_with_capture(
+		static function () use ($content): string {
+			return bvmgr_ticketing_v2_append_entitlements_to_tec_event($content);
+		}
+	);
+	vms_test_assert_same($content, $result, 'An on-sale native ticket form should never receive the purchase region through event content.');
+	vms_test_assert_same(array(), $GLOBALS['vms_test_context']['render_calls'], 'The content fallback should not render before the native ticket form owns placement.');
 
 	vms_test_reset_context();
 	$GLOBALS['vms_test_context']['current_post_id'] = 123;

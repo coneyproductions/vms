@@ -414,8 +414,10 @@ try {
 	vms_test_assert_contains('bvmgr_ticketing_v2_render_purchase_region($tec_event_id, $plan_id)', $footerMountBody, 'The native footer placement should use the shared purchase-composition renderer.');
 	vms_test_assert_contains('id=\"vms-addon-mount\"', $footerMountBody, 'The native footer placement should prepend the dedicated add-on mount host.');
 	vms_test_assert_contains('bvmgr_ticketing_v2_native_footer_mount_placed($tec_event_id)', $footerMountBody, 'The native footer placement should guard against duplicate insertion within the same request.');
+	vms_test_assert_not_contains("\$html === ''", $footerMountBody, 'The TEC before-include callback should accept its normally empty prefix.');
 	vms_test_assert_not_contains('ob_start(', $footerMountBody, 'The native footer placement should not open any output buffer.');
 
+	vms_test_assert_contains('tribe_events_has_tickets_on_sale((int) $tec_event_id)', $appendBody, 'On-sale native ticket forms should own server-side purchase-region placement.');
 	vms_test_assert_contains('bvmgr_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)', $appendBody, 'The automatic append fallback should suppress duplicate output after successful native footer placement.');
 	vms_test_assert_not_contains('ob_start(', $appendBody, 'The automatic append fallback should not open any output buffer.');
 

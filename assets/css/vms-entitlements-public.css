@@ -289,7 +289,7 @@
 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row {
   border: 1px solid rgba(11, 102, 92, 0.18);
   background: rgba(11, 102, 92, 0.06);
-  grid-template-columns: 96px minmax(0, 1fr) 110px;
+  grid-template-columns: 96px minmax(0, 1fr) max-content;
   grid-template-areas: "image main side";
   gap: 12px;
   padding: 10px;
@@ -298,7 +298,7 @@
 }
 
 .vms-entitlements-block.vms-entitlements--compact .vms-ent-row--no-image {
-  grid-template-columns: minmax(0, 1fr) 110px;
+  grid-template-columns: minmax(0, 1fr) max-content;
   grid-template-areas: "main side";
 }
 
@@ -338,7 +338,7 @@
 
 .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
   grid-area: side;
-  width: 110px;
+  width: max-content;
   min-width: 110px;
   justify-self: end;
   align-self: start;
@@ -1320,4 +1320,3 @@
     flex-basis: auto !important;
   }
 }
-

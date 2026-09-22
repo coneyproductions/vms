@@ -7655,7 +7655,9 @@ function bvmgr_ticketing_v2_event_id_from_ticket_query_args(array $args): int
 
 function bvmgr_ticketing_v2_filter_ticket_footer_with_entitlements_mount(string $html, string $file, array $name, $template): string
 {
-    if ($html === '' || is_admin()) {
+    // TEC's before-include filter normally receives an empty prefix. The
+    // rendered footer is concatenated after this callback returns.
+    if (is_admin()) {
         return $html;
     }
 
@@ -7791,6 +7793,14 @@ function bvmgr_ticketing_v2_append_entitlements_to_tec_event(string $content): s
     $tec_event_id = get_the_ID();
     if ($tec_event_id !== (int) get_queried_object_id()) return $content;
     if ($tec_event_id <= 0) return $content;
+
+    // A live native ticket form owns purchase placement. Its footer template
+    // mounts the complete purchase region inside that form; appending the same
+    // region to event content would place it before sponsorship and strand
+    // purchase extensions outside the ticket surface.
+    if (function_exists('tribe_events_has_tickets_on_sale') && tribe_events_has_tickets_on_sale((int) $tec_event_id)) {
+        return $content;
+    }
 
     if (bvmgr_ticketing_v2_native_footer_mount_placed((int) $tec_event_id)) return $content;
 
