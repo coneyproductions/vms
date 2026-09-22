@@ -224,7 +224,7 @@ $result['identity'] = array(
 $check('core-presence', 'BVM Detection', $addon, $coreLoaded === $coreExpected, 'BVM runtime presence matched the scenario.');
 if ($coreExpected) {
 	$check('public-basename', 'BVM Detection', $addon, $result['identity']['bvm_plugin_basename'] === 'backstage-venue-manager/backstage-venue-manager.php', 'BVM used its public plugin basename.', $result['identity']);
-	$check('public-version', 'BVM Detection', $addon, $result['identity']['bvm_version'] === '1.3.0', 'BVM exposed version 1.3.0.');
+	$check('public-version', 'BVM Detection', $addon, $result['identity']['bvm_version'] === '1.3.1', 'BVM exposed version 1.3.1.');
 	$check('historical-core-absent', 'BVM Detection', $addon, !$result['identity']['historical_main_exists'] && !in_array('vms/vendor-management-system.php', $result['active_plugins'], true), 'Historical standalone VMS core was absent and inactive.');
 	$check('nonexistent-bootstrap-identities-absent', 'BVM Detection', $addon, !in_array(true, $result['identity']['nonexistent_bootstraps'], true), 'Nonexistent bootstrap identities were absent.');
 }

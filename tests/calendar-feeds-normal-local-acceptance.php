@@ -130,7 +130,7 @@ if ($mode === 'candidate-diagnostic') {
 }
 
 wave3b1_calendar_assert(defined('BCF_VERSION') && BCF_VERSION === $expected_version, 'Calendar Feeds did not load the expected version.');
-wave3b1_calendar_assert(defined('BVMGR_VERSION') && BVMGR_VERSION === '1.3.0', 'Canonical BVM 1.3.0 did not load.');
+wave3b1_calendar_assert(defined('BVMGR_VERSION') && BVMGR_VERSION === '1.3.1', 'Canonical BVM 1.3.1 did not load.');
 wave3b1_calendar_assert(defined('DRM_CI_VERSION') && DRM_CI_VERSION === '0.2.4', 'DRM Calendar Intake 0.2.4 changed.');
 wave3b1_calendar_assert(defined('DRM_ER_VERSION') && DRM_ER_VERSION === '0.1.3', 'DRM Event Router 0.1.3 changed.');
 wave3b1_calendar_assert(defined('DRM_EVENTS_BRIDGE_VERSION') && DRM_EVENTS_BRIDGE_VERSION === '0.2.2', 'DRM Events Bridge 0.2.2 changed.');

@@ -234,13 +234,13 @@ $tests['repository public boundary keeps current metadata separate from internal
 	vms_release_compat_test_assert(is_string($readme), 'Expected repository readme to be readable.');
 	vms_release_compat_test_assert(is_string($build), 'Expected repository build marker to be readable.');
 
-	vms_release_compat_test_assert(strpos($header, 'Version: 1.3.0') !== false, 'Expected the current repository plugin header to advertise 1.3.0.');
+	vms_release_compat_test_assert(strpos($header, 'Version: 1.3.1') !== false, 'Expected the current repository plugin header to advertise 1.3.1.');
 	vms_release_compat_test_assert(
-		strpos($constants, "define('BVMGR_VERSION', '1.3.0');") !== false,
-		'Expected the current repository BVMGR_VERSION constant to advertise 1.3.0.'
+		strpos($constants, "define('BVMGR_VERSION', '1.3.1');") !== false,
+		'Expected the current repository BVMGR_VERSION constant to advertise 1.3.1.'
 	);
-	vms_release_compat_test_assert(strpos($readme, 'Stable tag: 1.3.0') !== false, 'Expected the current repository readme stable tag to advertise 1.3.0.');
-	vms_release_compat_test_assert(trim($build) === '1.3.0', 'Expected the current repository build marker to advertise 1.3.0.');
+	vms_release_compat_test_assert(strpos($readme, 'Stable tag: 1.3.1') !== false, 'Expected the current repository readme stable tag to advertise 1.3.1.');
+	vms_release_compat_test_assert(trim($build) === '1.3.1', 'Expected the current repository build marker to advertise 1.3.1.');
 	vms_release_compat_test_assert(strpos($header, 'Version: 1.1.0') === false, 'Expected the live-only 1.1.0 marker to stay out of the public plugin header.');
 	vms_release_compat_test_assert(strpos($readme, 'Stable tag: 1.1.0') === false, 'Expected the live-only 1.1.0 marker to stay out of the public readme stable tag.');
 	vms_release_compat_test_assert(trim($build) !== '1.1.0', 'Expected the live-only 1.1.0 build marker to stay out of the public build source.');

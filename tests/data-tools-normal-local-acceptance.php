@@ -269,7 +269,7 @@ if ($mode === 'candidate-diagnostic') {
 	wave3b2_dt_require_plugin('vms-data-tools/vms-data-tools.php');
 }
 
-wave3b2_dt_assert(defined('BVMGR_VERSION') && BVMGR_VERSION === '1.3.0', 'Canonical BVM 1.3.0 did not load.');
+wave3b2_dt_assert(defined('BVMGR_VERSION') && BVMGR_VERSION === '1.3.1', 'Canonical BVM 1.3.1 did not load.');
 wave3b2_dt_assert(defined('VMS_DT_VERSION') && VMS_DT_VERSION === $expected_version, 'Data Tools did not load the expected version.');
 wave3b2_dt_assert(function_exists('bvmgr_reporting_resolve_event_ticket_sales'), 'BVM reporting-provider resolver is unavailable.');
 wave3b2_dt_assert(function_exists('bvmgr_event_command_center_get_ticket_reporting_truth'), 'Event Command Center ticket path is unavailable.');

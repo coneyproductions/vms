@@ -144,7 +144,7 @@ $contracts = array(
 			'companions' => array('required' => array(), 'optional' => array('woocommerce', 'vms-ops-console-premium')),
 			'marker' => array('constant' => 'VMS_SEASON_PASSES_VERSION', 'value' => '0.1.0'),
 			'capabilities' => array(
-				$capability('core-identity', 'bootstrap', 'BVMGR_VERSION', 'VMS_VERSION', 'backstage-venue-manager', 'canonical-first version resolver', 'runtime boots for BVM 1.3.0'),
+				$capability('core-identity', 'bootstrap', 'BVMGR_VERSION', 'VMS_VERSION', 'backstage-venue-manager', 'canonical-first version resolver', 'runtime boots for BVM 1.3.1'),
 				$capability('module-registration', 'registration', 'bvmgr_register_module', 'vms_register_module', 'backstage-venue-manager', 'canonical-first resolver', 'season_passes module registered'),
 				$capability('admin-registry', 'registration', 'bvmgr_register_admin_page', 'vms_register_admin_page', 'backstage-venue-manager', 'canonical-first resolver; no fallback without core', 'canonical registry entry and one physical menu'),
 				$capability('event-plan-resolution', 'feature path', 'bvmgr_get_event_plan_for_tec_event', 'vms_get_event_plan_for_tec_event', 'the-events-calendar', 'canonical-first resolver', 'TEC scans resolve through canonical provider'),
@@ -214,7 +214,7 @@ $contracts = array(
 			'marker' => array('constant' => 'VMSX_WR_VERSION', 'value' => '0.1.12'),
 			'capabilities' => array(
 				$capability('core-path', 'bootstrap', 'BVMGR_PLUGIN_PATH', 'VMS_PLUGIN_PATH', 'backstage-venue-manager', 'canonical-first constant resolver', 'canonical source path recognized'),
-				$capability('core-version', 'bootstrap', 'BVMGR_VERSION', 'VMS_VERSION', 'backstage-venue-manager', 'canonical-first version resolver', 'runtime ready for BVM 1.3.0'),
+				$capability('core-version', 'bootstrap', 'BVMGR_VERSION', 'VMS_VERSION', 'backstage-venue-manager', 'canonical-first version resolver', 'runtime ready for BVM 1.3.1'),
 				$capability('module-registration', 'registration', 'bvmgr_register_module', 'vms_register_module', 'backstage-venue-manager', 'canonical-first resolver', 'weather module registered'),
 				$capability('admin-shell', 'feature path', 'bvmgr_admin_ui_render_shell', 'vms_admin_ui_render_shell', 'backstage-venue-manager', 'canonical-first with local wrapper fallback', 'both admin pages render'),
 				$capability('ticket-labor', 'feature path', 'bvmgr_event_profitability_get_labor_cost_cents', 'vms_event_profitability_get_labor_cost_cents', 'backstage-venue-manager', 'canonical-first with zero fallback', 'risk exposure remains safe'),

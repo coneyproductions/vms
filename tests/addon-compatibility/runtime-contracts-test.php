@@ -11,7 +11,7 @@ $assert = static function (bool $condition, string $message) use (&$failures): v
 
 $expectedAddons = array('events-slider', 'fill-dates', 'data-tools', 'express-bar', 'refer-a-friend');
 $expectedVersions = array(
-	'backstage-venue-manager' => '1.3.0',
+	'backstage-venue-manager' => '1.3.1',
 	'events-slider' => '1.0.10',
 	'fill-dates' => '0.1.8',
 	'data-tools' => '0.5.55',

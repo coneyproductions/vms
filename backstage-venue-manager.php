@@ -3,7 +3,7 @@
  * Plugin Name: Backstage Venue Manager
  * Plugin URI: https://coneyproductions.booklivetalent.com/vms/
  * Description: Manage venue operations, event plans, vendor records, and optional ticketing workflows from WordPress.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Requires at least: 6.8
  * Requires PHP: 8.3
  * Author: Coney Productions
