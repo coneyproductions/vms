@@ -9697,6 +9697,67 @@ function bvmgr_ticketing_v2_clear_commit_fatal_context(): void {
     unset($GLOBALS['bvmgr_ticketing_v2_fatal_memory_reserve']);
 }
 
+function bvmgr_ticketing_v2_product_has_durable_create_recovery_identity(
+    int $plan_id,
+    int $tec_event_id,
+    string $ticket_key,
+    string $intent_id,
+    int $product_id
+): bool {
+    $plan_id = absint($plan_id);
+    $tec_event_id = absint($tec_event_id);
+    $product_id = absint($product_id);
+    $ticket_key = sanitize_key($ticket_key);
+    $intent_id = sanitize_key($intent_id);
+    if ($plan_id <= 0 || $tec_event_id <= 0 || $product_id <= 0 || $ticket_key === '') {
+        return false;
+    }
+
+    $sync = bvmgr_ticketing_v2_get_sync($plan_id);
+    $sync_map = (isset($sync['map']) && is_array($sync['map'])) ? $sync['map'] : array();
+    $mapped_row = (isset($sync_map['tickets'][$ticket_key]) && is_array($sync_map['tickets'][$ticket_key]))
+        ? $sync_map['tickets'][$ticket_key]
+        : array();
+    if (absint($mapped_row['woo_product_id'] ?? 0) === $product_id) {
+        return true;
+    }
+
+    if ($intent_id === '' || get_post_type($product_id) !== 'product') {
+        return false;
+    }
+
+    $stored_intent_id = sanitize_key((string) get_post_meta(
+        $product_id,
+        bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id'),
+        true
+    ));
+    $stored_ticket_key = sanitize_key((string) get_post_meta(
+        $product_id,
+        bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key'),
+        true
+    ));
+    $stored_plan_id = absint(get_post_meta(
+        $product_id,
+        bvmgr_ticketing_v2_product_meta_key('event_plan_id'),
+        true
+    ));
+    $stored_tec_event_id = absint(get_post_meta(
+        $product_id,
+        bvmgr_ticketing_v2_product_meta_key('tec_event_id'),
+        true
+    ));
+    $provider_event_id = absint(get_post_meta($product_id, '_tribe_wooticket_for_event', true));
+
+    return (
+        $stored_intent_id !== ''
+        && hash_equals($stored_intent_id, $intent_id)
+        && $stored_ticket_key === $ticket_key
+        && $stored_plan_id === $plan_id
+        && $stored_tec_event_id === $tec_event_id
+        && $provider_event_id === $tec_event_id
+    );
+}
+
 function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
     $context = is_array($GLOBALS['bvmgr_ticketing_v2_commit_fatal_context'] ?? null)
         ? $GLOBALS['bvmgr_ticketing_v2_commit_fatal_context']
@@ -9756,8 +9817,15 @@ function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
     );
     update_post_meta($plan_id, bvmgr_ticketing_v2_k('commit_fatal'), $record);
 
+    $create_recovery_identity_durable = bvmgr_ticketing_v2_product_has_durable_create_recovery_identity(
+        $plan_id,
+        absint($context['tec_event_id'] ?? 0),
+        sanitize_key((string) ($context['ticket_key'] ?? '')),
+        $intent_id,
+        $context_product_id
+    );
     if (
-        $context_product_id > 0
+        $create_recovery_identity_durable
         && !empty($context['create_lock_name'])
         && !empty($context['create_lock_token'])
     ) {
@@ -9794,8 +9862,8 @@ function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
 
 if (empty($GLOBALS['bvmgr_ticketing_v2_commit_shutdown_registered'])) {
     $GLOBALS['bvmgr_ticketing_v2_commit_shutdown_registered'] = true;
-    register_shutdown_function('bvmgr_ticketing_v2_commit_shutdown_diagnostics');
     register_shutdown_function('bvmgr_ticketing_v2_shutdown_release_active_commit_lock');
+    register_shutdown_function('bvmgr_ticketing_v2_commit_shutdown_diagnostics');
 }
 
 function bvmgr_ticketing_v2_commit_action_priority(array $action): int {
@@ -10687,6 +10755,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                             bvmgr_ticketing_v2_set_commit_fatal_context(array(
                                 'plan_id' => $plan_id,
                                 'preview_id' => $preview_id,
+                                'tec_event_id' => $tec_event_id,
                                 'phase' => 'create_recovery',
                                 'cursor' => max(0, $action_next_cursor - 1),
                                 'scope' => 'ticket',
@@ -10749,6 +10818,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                             bvmgr_ticketing_v2_set_commit_fatal_context(array(
                                 'plan_id' => $plan_id,
                                 'preview_id' => $preview_id,
+                                'tec_event_id' => $tec_event_id,
                                 'phase' => 'provider_create',
                                 'cursor' => max(0, $action_next_cursor - 1),
                                 'scope' => 'ticket',
@@ -10792,6 +10862,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         bvmgr_ticketing_v2_set_commit_fatal_context(array(
                             'plan_id' => $plan_id,
                             'preview_id' => $preview_id,
+                            'tec_event_id' => $tec_event_id,
                             'phase' => 'create_finalize',
                             'cursor' => max(0, $action_next_cursor - 1),
                             'scope' => 'ticket',
@@ -10904,6 +10975,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         bvmgr_ticketing_v2_set_commit_fatal_context(array(
                             'plan_id' => $plan_id,
                             'preview_id' => $preview_id,
+                            'tec_event_id' => $tec_event_id,
                             'phase' => 'post_create_checkpoint',
                             'cursor' => max(0, $action_next_cursor - 1),
                             'scope' => 'ticket',
