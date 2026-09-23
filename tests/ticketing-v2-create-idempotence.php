@@ -145,6 +145,10 @@ foreach (array(
     'function bvmgr_ticketing_v2_delete_create_lock_if_token_matches(',
     'function bvmgr_ticketing_v2_acquire_create_lock(',
     'function bvmgr_ticketing_v2_release_create_lock(',
+    'function bvmgr_ticketing_v2_acquire_commit_lock(',
+    'function bvmgr_ticketing_v2_release_commit_lock(',
+    'function bvmgr_ticketing_v2_shutdown_release_active_commit_lock(',
+    'function bvmgr_ticketing_v2_force_ticket_product_staged(',
     'function bvmgr_ticketing_v2_persist_action_checkpoint(',
     'function bvmgr_ticketing_v2_commit_shutdown_diagnostics(',
 ) as $required) {
@@ -240,24 +244,94 @@ vms_issue5_assert_contains(
     $preview,
     'Preview must block ambiguous, unverifiable, or sold interrupted CREATE candidates.'
 );
+$previewSafeRecoveryPos = strpos($preview, "if (\$interrupted_status === 'safe') {");
+$previewUnsafeRecoveryPos = strpos($preview, "elseif (in_array(\$interrupted_status, array('ambiguous', 'unsafe', 'sold'), true))", $previewSafeRecoveryPos);
+vms_issue5_assert_true(
+    $previewSafeRecoveryPos !== false && $previewUnsafeRecoveryPos !== false,
+    'Unable to isolate Preview interrupted-CREATE recovery block.'
+);
+$previewSafeRecoveryBlock = substr($preview, $previewSafeRecoveryPos, $previewUnsafeRecoveryPos - $previewSafeRecoveryPos);
 vms_issue5_assert_contains(
-    'recovery_candidate_ids',
-    $commit,
-    'Commit must carry recovery identity from Preview and revalidate it before adoption.'
+    "\$row['action'] = 'create';",
+    $previewSafeRecoveryBlock,
+    'Preview-discovered interrupted CREATE recovery must route through the guarded CREATE state machine, not ADOPT.'
 );
 vms_issue5_assert_contains(
-    'bvmgr_ticketing_v2_find_interrupted_create_candidates(',
-    substr($commit, strpos($commit, "if (\$act === 'adopt') {")),
-    'Commit must revalidate a Preview recovery candidate before adopting it.'
+    'bvmgr_ticketing_v2_create_intent_is_terminal($matching_intent)',
+    $preview,
+    'Preview must block unresolved prior CREATE intents whose product identity cannot be proven.'
 );
+vms_issue5_assert_contains(
+    "'unresolved_create_intent_requires_reconciliation'",
+    $ticketCreateBlock,
+    'Commit must block an unresolved prior CREATE intent instead of issuing another provider CREATE.'
+);
+
 $adoptStart = strpos($commit, "if (\$act === 'adopt') {");
 $updateStart = ($adoptStart !== false) ? strpos($commit, "if (\$act === 'update') {", $adoptStart) : false;
 vms_issue5_assert_true($adoptStart !== false && $updateStart !== false, 'Unable to isolate the ticket ADOPT action block.');
 $adoptBlock = substr($commit, $adoptStart, $updateStart - $adoptStart);
 vms_issue5_assert_contains(
-    "bvmgr_ticketing_v2_finish_create_intent(",
+    "'interrupted_create_preview_requires_refresh'",
     $adoptBlock,
-    'Recovering an interrupted CREATE through Preview → Adopt must finalize and clear its temporary recovery identity.'
+    'An old Preview that encoded interrupted recovery as ADOPT must be rejected and refreshed.'
+);
+
+$createLock = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_acquire_create_lock');
+vms_issue5_assert_true(
+    strpos($createLock, 'recovered_stale_lock') === false
+        && strpos($createLock, 'create_lock_stale_seconds') === false,
+    'Per-ticket CREATE lock must never be automatically stolen by elapsed time.'
+);
+vms_issue5_assert_contains(
+    "'create_already_in_progress_or_interrupted'",
+    $createLock,
+    'An existing CREATE lock must conservatively block automatic retry.'
+);
+
+$commitLockPos = strpos($commit, 'bvmgr_ticketing_v2_acquire_commit_lock(');
+$tecMutationPos = strpos($commit, '$tec_event_id = absint($payload[\'tec_event_id\'] ?? 0);');
+$commitUnlockPos = strrpos($commit, 'bvmgr_ticketing_v2_release_commit_lock(');
+vms_issue5_assert_true(
+    $commitLockPos !== false
+        && $tecMutationPos !== false
+        && $commitUnlockPos !== false
+        && $commitLockPos < $tecMutationPos
+        && $commitUnlockPos > $tecMutationPos,
+    'Per-plan Commit lock must cover mutable Prepare/actions/finalize work and final map writes.'
+);
+
+$createTicket = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_create_ticket');
+$stageFirstPos = strpos($createTicket, 'bvmgr_ticketing_v2_force_ticket_product_staged($product_id)');
+$applyUpdatePos = strpos($createTicket, 'bvmgr_ticketing_b_apply_update_to_product(');
+$stageSecondPos = ($applyUpdatePos !== false)
+    ? strpos($createTicket, 'bvmgr_ticketing_v2_force_ticket_product_staged($product_id)', $applyUpdatePos)
+    : false;
+vms_issue5_assert_true(
+    $stageFirstPos !== false
+        && $applyUpdatePos !== false
+        && $stageSecondPos !== false
+        && $stageFirstPos < $applyUpdatePos
+        && $stageSecondPos > $applyUpdatePos,
+    'Provider-created product must be explicitly staged before and after normal ticket updates.'
+);
+$stageHelper = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_force_ticket_product_staged');
+vms_issue5_assert_contains(
+    "\$post_status === 'draft' && \$catalog_visibility === 'hidden'",
+    $stageHelper,
+    'Staging helper must read back and verify both draft status and hidden catalog visibility.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false)',
+    $source,
+    'Provider meta capture must use the non-Woo-save staging path to avoid recursive provider save behavior.'
+);
+
+$shutdown = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_commit_shutdown_diagnostics');
+vms_issue5_assert_contains(
+    '!bvmgr_ticketing_v2_create_intent_is_terminal($current_intent)',
+    $shutdown,
+    'Fatal shutdown must never downgrade completed/recovered CREATE intent state.'
 );
 
 // Exercise the pure recovery classifier without loading WordPress.
