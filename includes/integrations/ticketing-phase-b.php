@@ -10580,14 +10580,11 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         bvmgr_ticketing_v2_stamp_ticket_runtime_meta($pid, $tec_event_id, $ticket_cfg);
                         bvmgr_ticketing_v2_maybe_mark_primary_ticket_as_rsvp($pid, $ticket_key, $primary_ticket_key, $ticket_cfg);
                         bvmgr_ticketing_v2_apply_ticket_image_policy($pid, $plan_id, $ticket_cfg);
-                        $restored = bvmgr_ticketing_v2_restore_enabled_ticket_product($pid);
-                        if (empty($restored['ok'])) {
-                            $row['message'] = (string) ($restored['message'] ?? 'restore_failed_after_create');
-                            $row['woo_product_id'] = $pid;
-                            $results[] = $row;
-                            continue;
-                        }
 
+                        // Make ownership durable while a newly-created product is
+                        // still draft/hidden. If persistence fails, do not expose
+                        // the ticket publicly; the CREATE intent/marker remains
+                        // available for a safe retry.
                         $sync_map['tickets'][$ticket_key] = array(
                             'provider' => 'tec_tickets_woo',
                             'ticket_key' => $ticket_key,
@@ -10631,6 +10628,30 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                             $now
                         );
 
+                        $saved_after_create_checkpoint = bvmgr_ticketing_v2_get_sync($plan_id);
+                        $saved_create_map = (isset($saved_after_create_checkpoint['map']) && is_array($saved_after_create_checkpoint['map']))
+                            ? $saved_after_create_checkpoint['map']
+                            : array();
+                        $saved_create_row = (isset($saved_create_map['tickets'][$ticket_key]) && is_array($saved_create_map['tickets'][$ticket_key]))
+                            ? $saved_create_map['tickets'][$ticket_key]
+                            : array();
+                        if (absint($saved_create_row['woo_product_id'] ?? 0) !== $pid) {
+                            $row['message'] = 'create_mapping_checkpoint_failed';
+                            $row['woo_product_id'] = $pid;
+                            $results[] = $row;
+                            continue;
+                        }
+
+                        // Publish/restore only after BVM can prove the product ID
+                        // is durably mapped to this ticket key.
+                        $restored = bvmgr_ticketing_v2_restore_enabled_ticket_product($pid);
+                        if (empty($restored['ok'])) {
+                            $row['message'] = (string) ($restored['message'] ?? 'restore_failed_after_create');
+                            $row['woo_product_id'] = $pid;
+                            $results[] = $row;
+                            continue;
+                        }
+
                         $intent_id = sanitize_key((string) ($intent['intent_id'] ?? ''));
                         if ($intent_id !== '') {
                             bvmgr_ticketing_v2_finish_create_intent(
@@ -10640,6 +10661,24 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                                 $recovered_interrupted_create ? 'recovered' : 'completed'
                             );
                         }
+
+                        // From this point onward the mapping is durable and the
+                        // product is fully restored. A later fatal should be
+                        // recorded as post-checkpoint, not as an interrupted
+                        // provider CREATE, and must not rewrite a completed intent.
+                        bvmgr_ticketing_v2_set_commit_fatal_context(array(
+                            'plan_id' => $plan_id,
+                            'preview_id' => $preview_id,
+                            'phase' => 'post_create_checkpoint',
+                            'cursor' => max(0, $action_next_cursor - 1),
+                            'scope' => 'ticket',
+                            'action' => 'create',
+                            'ticket_key' => $ticket_key,
+                            'intent_id' => '',
+                            'product_id' => $pid,
+                            'create_lock_name' => (string) ($create_lock['name'] ?? ''),
+                            'create_lock_token' => (string) ($create_lock['token'] ?? ''),
+                        ));
 
                         $row['ok'] = true;
                         $row['woo_product_id'] = $pid;
@@ -10671,6 +10710,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         continue;
                     }
 
+                    $recovery_intent_id = '';
                     $preview_recovery_candidates = is_array($a['recovery_candidate_ids'] ?? null)
                         ? array_values(array_filter(array_map('absint', $a['recovery_candidate_ids'])))
                         : array();
@@ -10686,6 +10726,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                             $ticket_hash,
                             $cfg_hash_now
                         );
+                        $recovery_intent_id = sanitize_key((string) ($matching_intent['intent_id'] ?? ''));
                         $current_recovery = bvmgr_ticketing_v2_find_interrupted_create_candidates(
                             $plan_id,
                             $tec_event_id,
@@ -10767,6 +10808,15 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         $sync_map,
                         $now
                     );
+
+                    if ($recovery_intent_id !== '') {
+                        bvmgr_ticketing_v2_finish_create_intent(
+                            $plan_id,
+                            $recovery_intent_id,
+                            $pid,
+                            'recovered'
+                        );
+                    }
 
                     $row['ok'] = true;
                     $row['woo_product_id'] = $pid;
