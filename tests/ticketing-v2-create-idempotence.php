@@ -142,6 +142,7 @@ foreach (array(
     "add_action('added_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);",
     "add_action('updated_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);",
     'function bvmgr_ticketing_v2_find_interrupted_create_candidates(',
+    'function bvmgr_ticketing_v2_delete_create_lock_if_token_matches(',
     'function bvmgr_ticketing_v2_acquire_create_lock(',
     'function bvmgr_ticketing_v2_release_create_lock(',
     'function bvmgr_ticketing_v2_persist_action_checkpoint(',
@@ -181,10 +182,25 @@ vms_issue5_assert_contains(
     'Successful CREATE mapping must checkpoint inside the CREATE action before the next action branch.'
 );
 $lockPos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_acquire_create_lock(');
+$recoveryInsideCreatePos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_find_interrupted_create_candidates(');
 $providerCreatePos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_create_ticket(');
+$checkpointInsideCreatePos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_persist_action_checkpoint(');
+$releaseInsideCreatePos = strrpos($ticketCreateBlock, 'bvmgr_ticketing_v2_release_create_lock(');
 vms_issue5_assert_true(
-    $lockPos !== false && $providerCreatePos !== false && $lockPos < $providerCreatePos,
-    'Atomic CREATE lock must be acquired before the guarded provider CREATE call.'
+    $lockPos !== false
+        && $recoveryInsideCreatePos !== false
+        && $providerCreatePos !== false
+        && $checkpointInsideCreatePos !== false
+        && $releaseInsideCreatePos !== false
+        && $lockPos < $recoveryInsideCreatePos
+        && $lockPos < $providerCreatePos
+        && $checkpointInsideCreatePos < $releaseInsideCreatePos,
+    'CREATE lock must cover the final recovery scan, provider CREATE, and durable mapping checkpoint.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_get_sync($plan_id)',
+    $ticketCreateBlock,
+    'CREATE must refresh durable mapping after acquiring the lock.'
 );
 
 $preview = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_preview_sync');
