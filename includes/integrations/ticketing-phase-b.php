@@ -8593,33 +8593,83 @@ function bvmgr_ticketing_v2_preview_sync(int $plan_id): array {
             continue;
         }
 
-        $match = bvmgr_ticketing_v2_find_ticket_title_match($unclaimed_existing_ticket_pids, $ticket_label, array(
-            'plan_id' => $plan_id,
-            'tec_event_id' => $tec_event_id,
-            'ticket_key' => $ticket_key,
-        ));
-        if (($match['status'] ?? '') === 'found') {
-            $matched_pid = absint($match['product_id'] ?? 0);
+        $matching_intent = bvmgr_ticketing_v2_find_matching_create_intent(
+            $plan_id,
+            $tec_event_id,
+            $ticket_key,
+            $ticket_hash,
+            $cfg_hash
+        );
+        $interrupted_match = bvmgr_ticketing_v2_find_interrupted_create_candidates(
+            $plan_id,
+            $tec_event_id,
+            $ticket_key,
+            $ticket_row,
+            $matching_intent
+        );
+        $interrupted_status = sanitize_key((string) ($interrupted_match['status'] ?? 'none'));
+
+        if ($interrupted_status === 'safe') {
+            $matched_pid = absint($interrupted_match['product_id'] ?? 0);
             $row['action'] = 'adopt';
             $row['woo_product_id'] = $matched_pid;
-            $match_message = (string) ($match['message'] ?? 'exact_title_match');
-            if ($match_message === 'preferred_sold_match') {
-                $row['notes'] = 'Matched an existing sold ticket product by exact title. Will adopt that product instead of creating a new path.';
-            } elseif ($match_message === 'retired_fallback_match') {
-                $row['notes'] = 'Matched a retired exact-title ticket product. Will adopt it instead of creating a new duplicate path.';
-            } else {
-                $row['notes'] = 'Matched existing Event Ticket by internal/public title. Will adopt.';
-            }
+            $row['notes'] = 'Found one unsold ticket product from an interrupted CREATE. Will recover and update that product instead of creating another.';
+            $row['recovery_candidate_ids'] = is_array($interrupted_match['candidate_ids'] ?? null)
+                ? array_values(array_filter(array_map('absint', $interrupted_match['candidate_ids'])))
+                : array();
             $unclaimed_existing_ticket_pids = array_values(array_diff($unclaimed_existing_ticket_pids, array($matched_pid)));
-        } elseif (($match['status'] ?? '') === 'ambiguous') {
+        } elseif (in_array($interrupted_status, array('ambiguous', 'unsafe', 'sold'), true)) {
+            $candidate_ids = is_array($interrupted_match['candidate_ids'] ?? null)
+                ? array_values(array_filter(array_map('absint', $interrupted_match['candidate_ids'])))
+                : array();
             $row['action'] = 'error';
-            $row['notes'] = 'Multiple exact-title ticket products are attached to this event. Resolve or retire duplicates before committing so Backstage Venue Manager does not create another public ticket path.';
+            $row['recovery_candidate_ids'] = $candidate_ids;
+            if ($interrupted_status === 'ambiguous') {
+                $row['notes'] = 'Multiple exact interrupted-CREATE candidates are linked to this event. Commit is blocked so Backstage Venue Manager cannot guess which product owns this ticket row.';
+            } elseif ($interrupted_status === 'sold') {
+                $row['notes'] = 'An unmapped exact-title ticket candidate already has sales. Commit is blocked; Backstage Venue Manager will not silently adopt or replace a sold product.';
+            } else {
+                $row['notes'] = 'An unmapped exact-title ticket candidate was found, but Backstage Venue Manager could not prove it is unsold. Commit is blocked for manual reconciliation.';
+            }
+            if (!empty($candidate_ids)) {
+                $row['notes'] .= ' Candidate product IDs: #' . implode(', #', $candidate_ids) . '.';
+            }
+            $warnings[] = $row['notes'];
             $actions[] = $row;
             $blocked = true;
             continue;
         } else {
-            $row['action'] = 'create';
-            $row['notes'] = 'No mapped ticket found. Will create a new Event Ticket.';
+            // Legacy adoption remains available for older ticket products whose
+            // public/internal title can be resolved by the provider, but which do
+            // not match the stricter interrupted-CREATE recovery identity above.
+            $match = bvmgr_ticketing_v2_find_ticket_title_match($unclaimed_existing_ticket_pids, $ticket_label, array(
+                'plan_id' => $plan_id,
+                'tec_event_id' => $tec_event_id,
+                'ticket_key' => $ticket_key,
+            ));
+            if (($match['status'] ?? '') === 'found') {
+                $matched_pid = absint($match['product_id'] ?? 0);
+                $row['action'] = 'adopt';
+                $row['woo_product_id'] = $matched_pid;
+                $match_message = (string) ($match['message'] ?? 'exact_title_match');
+                if ($match_message === 'preferred_sold_match') {
+                    $row['notes'] = 'Matched an existing sold legacy ticket product by provider title. Will adopt that existing sales path.';
+                } elseif ($match_message === 'retired_fallback_match') {
+                    $row['notes'] = 'Matched a retired exact-title ticket product. Will adopt it instead of creating a new duplicate path.';
+                } else {
+                    $row['notes'] = 'Matched existing Event Ticket by internal/public title. Will adopt.';
+                }
+                $unclaimed_existing_ticket_pids = array_values(array_diff($unclaimed_existing_ticket_pids, array($matched_pid)));
+            } elseif (($match['status'] ?? '') === 'ambiguous') {
+                $row['action'] = 'error';
+                $row['notes'] = 'Multiple exact-title ticket products are attached to this event. Resolve or retire duplicates before committing so Backstage Venue Manager does not create another public ticket path.';
+                $actions[] = $row;
+                $blocked = true;
+                continue;
+            } else {
+                $row['action'] = 'create';
+                $row['notes'] = 'No mapped or recoverable ticket found. Will create one new Event Ticket.';
+            }
         }
 
         $actions[] = $row;
