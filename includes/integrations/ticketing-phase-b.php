@@ -9769,15 +9769,26 @@ function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
 
     $intent_id = sanitize_key((string) ($record['intent_id'] ?? ''));
     if ($intent_id !== '') {
-        $fatal_intent_changes = array(
-            'status' => 'fatal_interrupted',
-            'fatal_at' => time(),
-            'fatal_message' => $message,
-        );
-        if (absint($record['product_id'] ?? 0) > 0) {
-            $fatal_intent_changes['product_id'] = absint($record['product_id']);
+        $intents = bvmgr_ticketing_v2_get_create_intents($plan_id);
+        $current_intent = (isset($intents[$intent_id]) && is_array($intents[$intent_id]))
+            ? $intents[$intent_id]
+            : array();
+
+        // Never downgrade a completed/recovered CREATE because a later metadata
+        // hook or unrelated post-checkpoint operation fatals before the request
+        // clears its diagnostic context. The fatal record above remains
+        // available without changing terminal recovery truth.
+        if (!bvmgr_ticketing_v2_create_intent_is_terminal($current_intent)) {
+            $fatal_intent_changes = array(
+                'status' => 'fatal_interrupted',
+                'fatal_at' => time(),
+                'fatal_message' => $message,
+            );
+            if (absint($record['product_id'] ?? 0) > 0) {
+                $fatal_intent_changes['product_id'] = absint($record['product_id']);
+            }
+            bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, $fatal_intent_changes);
         }
-        bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, $fatal_intent_changes);
     }
 }
 
