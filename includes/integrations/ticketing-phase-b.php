@@ -856,14 +856,26 @@ function bvmgr_ticketing_v2_retire_ticket_product_from_config(int $product_id, i
     return array('ok' => true, 'message' => 'retired');
 }
 
+function bvmgr_ticketing_v2_normalize_title_dash_presentation(string $title): string {
+    $normalized = preg_replace(
+        '/[\x{2010}\x{2011}\x{2012}\x{2013}\x{2014}\x{2015}\x{2212}\x{FE58}\x{FE63}\x{FF0D}]/u',
+        '-',
+        $title
+    );
+    return is_string($normalized) ? $normalized : $title;
+}
+
 function bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(string $title): string {
-    $title = trim(html_entity_decode(wp_strip_all_tags($title), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    $title = function_exists('wp_strip_all_tags') ? wp_strip_all_tags($title) : strip_tags($title);
+    $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $title = bvmgr_ticketing_v2_normalize_title_dash_presentation($title);
+    $title = trim($title);
     if ($title === '') {
         return '';
     }
 
     $title = preg_replace('/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+-\s+/u', '', $title);
-    $title = preg_replace('/\s+[—-]\s+.+\([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}\)$/u', '', (string) $title);
+    $title = preg_replace('/\s+-\s+.+\([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}\)$/u', '', (string) $title);
 
     return trim((string) $title);
 }
@@ -4188,15 +4200,9 @@ function bvmgr_ticketing_v2_normalize_create_match_title(string $title): string 
     $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
     // WordPress/TEC can typographically transform the date/title separator
-    // from ASCII hyphen-minus to an en/em/non-breaking dash while persisting
-    // the exact same ticket title. Recovery identity is already constrained by
-    // Event Plan + TEC event + ticket key/create-intent markers, so normalize
-    // Unicode dash presentation here without weakening ownership checks.
-    $title = preg_replace(
-        '/[\x{2010}\x{2011}\x{2012}\x{2013}\x{2014}\x{2015}\x{2212}\x{FE58}\x{FE63}\x{FF0D}]/u',
-        '-',
-        $title
-    );
+    // while persisting the same ticket title. Use the same presentation
+    // normalization as legacy exact-title adoption so both safety paths agree.
+    $title = bvmgr_ticketing_v2_normalize_title_dash_presentation($title);
     $title = preg_replace('/\s+/u', ' ', trim((string) $title));
     $title = is_string($title) ? $title : '';
     return function_exists('mb_strtolower') ? mb_strtolower($title, 'UTF-8') : strtolower($title);
