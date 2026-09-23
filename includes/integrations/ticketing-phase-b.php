@@ -4034,7 +4034,7 @@ function bvmgr_ticketing_v2_capture_provider_create_link($meta_id, $object_id, $
     update_post_meta($product_id, '_visibility', 'hidden');
 
     $capture_stage = function_exists('bvmgr_ticketing_v2_force_ticket_product_staged')
-        ? bvmgr_ticketing_v2_force_ticket_product_staged($product_id)
+        ? bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false)
         : array('ok' => false, 'message' => 'staging_helper_missing');
 
     if ($intent_id !== '') {
@@ -7596,7 +7596,7 @@ function bvmgr_ticketing_v2_apply_ticket_to_product(int $product_id, int $tec_ev
     return bvmgr_ticketing_b_apply_update_to_product($product_id, $tier_like, $tec_event_id);
 }
 
-function bvmgr_ticketing_v2_force_ticket_product_staged(int $product_id): array {
+function bvmgr_ticketing_v2_force_ticket_product_staged(int $product_id, bool $use_wc_api = true): array {
     $product_id = absint($product_id);
     if ($product_id <= 0 || get_post_type($product_id) !== 'product') {
         return array('ok' => false, 'message' => 'invalid_product_for_staging');
@@ -7604,7 +7604,7 @@ function bvmgr_ticketing_v2_force_ticket_product_staged(int $product_id): array 
 
     $errors = array();
 
-    if (function_exists('wc_get_product')) {
+    if ($use_wc_api && function_exists('wc_get_product')) {
         $product = wc_get_product($product_id);
         if ($product) {
             try {
