@@ -4033,11 +4033,17 @@ function bvmgr_ticketing_v2_capture_provider_create_link($meta_id, $object_id, $
     }
     update_post_meta($product_id, '_visibility', 'hidden');
 
+    $capture_stage = function_exists('bvmgr_ticketing_v2_force_ticket_product_staged')
+        ? bvmgr_ticketing_v2_force_ticket_product_staged($product_id)
+        : array('ok' => false, 'message' => 'staging_helper_missing');
+
     if ($intent_id !== '') {
         bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, array(
             'status' => 'product_captured',
             'product_id' => $product_id,
             'captured_at' => time(),
+            'capture_stage_ok' => !empty($capture_stage['ok']) ? 1 : 0,
+            'capture_stage_message' => sanitize_key((string) ($capture_stage['message'] ?? '')),
         ));
     }
 
@@ -7590,6 +7596,69 @@ function bvmgr_ticketing_v2_apply_ticket_to_product(int $product_id, int $tec_ev
     return bvmgr_ticketing_b_apply_update_to_product($product_id, $tier_like, $tec_event_id);
 }
 
+function bvmgr_ticketing_v2_force_ticket_product_staged(int $product_id): array {
+    $product_id = absint($product_id);
+    if ($product_id <= 0 || get_post_type($product_id) !== 'product') {
+        return array('ok' => false, 'message' => 'invalid_product_for_staging');
+    }
+
+    $errors = array();
+
+    if (function_exists('wc_get_product')) {
+        $product = wc_get_product($product_id);
+        if ($product) {
+            try {
+                if (method_exists($product, 'set_status')) {
+                    $product->set_status('draft');
+                }
+                if (method_exists($product, 'set_catalog_visibility')) {
+                    $product->set_catalog_visibility('hidden');
+                }
+                $product->save();
+            } catch (Throwable $e) {
+                $errors[] = 'wc_stage_failed';
+            }
+        }
+    }
+
+    $updated = wp_update_post(array(
+        'ID' => $product_id,
+        'post_status' => 'draft',
+    ), true);
+    if (is_wp_error($updated) || absint($updated) <= 0) {
+        $errors[] = 'draft_status_write_failed';
+    }
+
+    update_post_meta($product_id, '_visibility', 'hidden');
+    if (taxonomy_exists('product_visibility')) {
+        foreach (array('exclude-from-catalog', 'exclude-from-search') as $term_slug) {
+            $term_result = wp_add_object_terms($product_id, $term_slug, 'product_visibility');
+            if (is_wp_error($term_result)) {
+                $errors[] = 'visibility_term_write_failed';
+                break;
+            }
+        }
+    }
+
+    if (function_exists('wc_delete_product_transients')) {
+        wc_delete_product_transients($product_id);
+    }
+    clean_post_cache($product_id);
+
+    $post_status = (string) get_post_status($product_id);
+    $catalog_visibility = bvmgr_ticketing_v2_get_product_catalog_visibility_state($product_id);
+    $ok = ($post_status === 'draft' && $catalog_visibility === 'hidden');
+
+    return array(
+        'ok' => $ok,
+        'message' => $ok ? 'staged' : 'staging_verification_failed',
+        'product_id' => $product_id,
+        'post_status' => $post_status,
+        'catalog_visibility' => $catalog_visibility,
+        'errors' => array_values(array_unique(array_filter(array_map('sanitize_key', $errors)))),
+    );
+}
+
 function bvmgr_ticketing_v2_create_ticket(int $tec_event_id, array $ticket, array $create_context = array()): array {
     $tec_event_id = absint($tec_event_id);
     if ($tec_event_id <= 0) {
@@ -7650,6 +7719,17 @@ function bvmgr_ticketing_v2_create_ticket(int $tec_event_id, array $ticket, arra
         }
     }
 
+    $staged_before_update = bvmgr_ticketing_v2_force_ticket_product_staged($product_id);
+    if (empty($staged_before_update['ok'])) {
+        return array(
+            'ok' => false,
+            'message' => 'created_but_staging_failed',
+            'woo_product_id' => $product_id,
+            'tec_ticket_id' => absint($created['ticket_id'] ?? $product_id),
+            'staging' => $staged_before_update,
+        );
+    }
+
     $upd = bvmgr_ticketing_b_apply_update_to_product($product_id, $tier_like, $tec_event_id);
     if (empty($upd['ok'])) {
         return array(
@@ -7660,10 +7740,22 @@ function bvmgr_ticketing_v2_create_ticket(int $tec_event_id, array $ticket, arra
         );
     }
 
+    $staged_after_update = bvmgr_ticketing_v2_force_ticket_product_staged($product_id);
+    if (empty($staged_after_update['ok'])) {
+        return array(
+            'ok' => false,
+            'message' => 'created_but_restaging_failed',
+            'woo_product_id' => $product_id,
+            'tec_ticket_id' => absint($created['ticket_id'] ?? $product_id),
+            'staging' => $staged_after_update,
+        );
+    }
+
     return array_merge($upd, array(
         'ok' => true,
         'woo_product_id' => $product_id,
         'tec_ticket_id' => absint($created['ticket_id'] ?? $product_id),
+        'staging' => $staged_after_update,
     ));
 }
 
@@ -10595,9 +10687,25 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                                 'create_lock_token' => (string) ($create_lock['token'] ?? ''),
                             ));
 
+                            $recovery_stage_before = bvmgr_ticketing_v2_force_ticket_product_staged($pid);
+                            if (empty($recovery_stage_before['ok'])) {
+                                $row['message'] = 'interrupted_create_recovery_staging_failed';
+                                $row['woo_product_id'] = $pid;
+                                $results[] = $row;
+                                continue;
+                            }
+
                             $created = bvmgr_ticketing_v2_apply_ticket_to_product($pid, $tec_event_id, $ticket_cfg);
                             if (empty($created['ok'])) {
                                 $row['message'] = (string) ($created['message'] ?? 'interrupted_create_recovery_apply_failed');
+                                $row['woo_product_id'] = $pid;
+                                $results[] = $row;
+                                continue;
+                            }
+
+                            $recovery_stage_after = bvmgr_ticketing_v2_force_ticket_product_staged($pid);
+                            if (empty($recovery_stage_after['ok'])) {
+                                $row['message'] = 'interrupted_create_recovery_restaging_failed';
                                 $row['woo_product_id'] = $pid;
                                 $results[] = $row;
                                 continue;
@@ -10688,6 +10796,14 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         bvmgr_ticketing_v2_stamp_ticket_runtime_meta($pid, $tec_event_id, $ticket_cfg);
                         bvmgr_ticketing_v2_maybe_mark_primary_ticket_as_rsvp($pid, $ticket_key, $primary_ticket_key, $ticket_cfg);
                         bvmgr_ticketing_v2_apply_ticket_image_policy($pid, $plan_id, $ticket_cfg);
+
+                        $final_staged_state = bvmgr_ticketing_v2_force_ticket_product_staged($pid);
+                        if (empty($final_staged_state['ok'])) {
+                            $row['message'] = 'create_staging_verification_failed_before_mapping';
+                            $row['woo_product_id'] = $pid;
+                            $results[] = $row;
+                            continue;
+                        }
 
                         // Make ownership durable while a newly-created product is
                         // still draft/hidden. If persistence fails, do not expose
