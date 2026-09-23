@@ -9199,6 +9199,139 @@ function bvmgr_ticketing_v2_clear_commit_progress(int $plan_id, string $preview_
     delete_transient($key);
 }
 
+/**
+ * Persist a successful mutating action immediately.
+ *
+ * This checkpoint deliberately happens inside the batch loop so a later fatal
+ * cannot erase a product mapping that was already changed successfully.
+ */
+function bvmgr_ticketing_v2_persist_action_checkpoint(
+    int $plan_id,
+    int $tec_event_id,
+    string $config_hash,
+    string $mode,
+    array $sync_map,
+    string $preview_id,
+    int $next_cursor,
+    int $total_actions,
+    int $now
+): array {
+    $existing = bvmgr_ticketing_v2_get_sync($plan_id);
+    $next_cursor = max(0, min(max(0, $total_actions), $next_cursor));
+    $status = ($next_cursor >= $total_actions) ? 'actions_complete' : 'actions_in_progress';
+
+    $sync_out = array(
+        'version' => 2,
+        'provider' => 'tec_tickets_woo',
+        'tec_event_id' => absint($tec_event_id),
+        'config_hash' => $config_hash,
+        'mode_at_last_commit' => $mode,
+        'map' => $sync_map,
+        'last_commit' => array(
+            'at' => $now,
+            'by' => get_current_user_id(),
+            'phase' => 'actions',
+            'next_cursor' => $next_cursor,
+            'total_actions' => max(0, $total_actions),
+            'status' => $status,
+        ),
+        'reconciliation' => is_array($existing['reconciliation'] ?? null) ? $existing['reconciliation'] : array(),
+        'last_error' => '',
+    );
+    bvmgr_ticketing_v2_set_sync($plan_id, $sync_out);
+
+    $progress = bvmgr_ticketing_v2_get_commit_progress($plan_id, $preview_id);
+    bvmgr_ticketing_v2_set_commit_progress($plan_id, $preview_id, array(
+        'status' => $status,
+        'next_cursor' => $next_cursor,
+        'total_actions' => max(0, $total_actions),
+        'config_hash' => $config_hash,
+        'tec_event_id' => absint($tec_event_id),
+        'started_at' => absint($progress['started_at'] ?? 0) > 0 ? absint($progress['started_at']) : $now,
+    ));
+
+    return $sync_out;
+}
+
+function bvmgr_ticketing_v2_set_commit_fatal_context(array $context): void {
+    if (!isset($GLOBALS['bvmgr_ticketing_v2_fatal_memory_reserve'])) {
+        $GLOBALS['bvmgr_ticketing_v2_fatal_memory_reserve'] = str_repeat('R', 65536);
+    }
+    $context['updated_at'] = time();
+    $GLOBALS['bvmgr_ticketing_v2_commit_fatal_context'] = $context;
+}
+
+function bvmgr_ticketing_v2_clear_commit_fatal_context(): void {
+    unset($GLOBALS['bvmgr_ticketing_v2_commit_fatal_context']);
+    unset($GLOBALS['bvmgr_ticketing_v2_fatal_memory_reserve']);
+}
+
+function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
+    $context = is_array($GLOBALS['bvmgr_ticketing_v2_commit_fatal_context'] ?? null)
+        ? $GLOBALS['bvmgr_ticketing_v2_commit_fatal_context']
+        : array();
+    if (empty($context)) {
+        return;
+    }
+
+    $last = error_get_last();
+    if (!is_array($last)) {
+        return;
+    }
+
+    $fatal_types = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR);
+    if (!in_array((int) ($last['type'] ?? 0), $fatal_types, true)) {
+        return;
+    }
+
+    // Release the reserve before allocating the diagnostic payload. This keeps
+    // the recorder usable for memory-exhaustion fatals.
+    unset($GLOBALS['bvmgr_ticketing_v2_fatal_memory_reserve']);
+
+    $plan_id = absint($context['plan_id'] ?? 0);
+    if ($plan_id <= 0) {
+        return;
+    }
+
+    $message = trim(strip_tags((string) ($last['message'] ?? 'fatal_error')));
+    if (strlen($message) > 600) {
+        $message = substr($message, 0, 600);
+    }
+
+    $record = array(
+        'plan_id' => $plan_id,
+        'preview_id' => sanitize_key((string) ($context['preview_id'] ?? '')),
+        'phase' => sanitize_key((string) ($context['phase'] ?? 'commit')),
+        'cursor' => max(0, (int) ($context['cursor'] ?? 0)),
+        'scope' => sanitize_key((string) ($context['scope'] ?? '')),
+        'action' => sanitize_key((string) ($context['action'] ?? '')),
+        'ticket_key' => sanitize_key((string) ($context['ticket_key'] ?? '')),
+        'intent_id' => sanitize_key((string) ($context['intent_id'] ?? '')),
+        'product_id' => absint($context['product_id'] ?? 0),
+        'error_type' => (int) ($last['type'] ?? 0),
+        'message' => $message,
+        'file' => (string) ($last['file'] ?? ''),
+        'line' => max(0, (int) ($last['line'] ?? 0)),
+        'timestamp' => time(),
+    );
+    update_post_meta($plan_id, bvmgr_ticketing_v2_k('commit_fatal'), $record);
+
+    $intent_id = sanitize_key((string) ($record['intent_id'] ?? ''));
+    if ($intent_id !== '') {
+        bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, array(
+            'status' => 'fatal_interrupted',
+            'fatal_at' => time(),
+            'fatal_message' => $message,
+            'product_id' => absint($record['product_id'] ?? 0),
+        ));
+    }
+}
+
+if (empty($GLOBALS['bvmgr_ticketing_v2_commit_shutdown_registered'])) {
+    $GLOBALS['bvmgr_ticketing_v2_commit_shutdown_registered'] = true;
+    register_shutdown_function('bvmgr_ticketing_v2_commit_shutdown_diagnostics');
+}
+
 function bvmgr_ticketing_v2_commit_action_priority(array $action): int {
     $scope = sanitize_key((string) ($action['scope'] ?? ''));
     $operation = sanitize_key((string) ($action['action'] ?? ''));
@@ -9774,12 +9907,23 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
         $batch_cursor = max(0, (int) ($batch_meta['cursor'] ?? $batch_cursor));
     }
 
-    foreach ($batch_actions as $a) {
+    foreach ($batch_actions as $batch_action_offset => $a) {
         if (!is_array($a)) {
             continue;
         }
         $scope = (string) ($a['scope'] ?? '');
         $act = (string) ($a['action'] ?? '');
+        $action_next_cursor = min($total_actions, $batch_cursor + max(0, (int) $batch_action_offset) + 1);
+        bvmgr_ticketing_v2_set_commit_fatal_context(array(
+            'plan_id' => $plan_id,
+            'preview_id' => $preview_id,
+            'phase' => 'actions',
+            'cursor' => max(0, $action_next_cursor - 1),
+            'scope' => $scope,
+            'action' => $act,
+            'ticket_key' => sanitize_key((string) ($a['ticket_key'] ?? '')),
+            'product_id' => absint($a['woo_product_id'] ?? 0),
+        ));
 
         if ($scope === 'ticket_cleanup') {
             $pid = absint($a['woo_product_id'] ?? 0);
@@ -9942,6 +10086,18 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         'last_error' => '',
                     );
 
+                    bvmgr_ticketing_v2_persist_action_checkpoint(
+                        $plan_id,
+                        $tec_event_id,
+                        $cfg_hash_now,
+                        $mode,
+                        $sync_map,
+                        $preview_id,
+                        $action_next_cursor,
+                        $total_actions,
+                        $now
+                    );
+
                     $row['ok'] = true;
                     $row['woo_product_id'] = $pid;
                     $row['message'] = 'disabled';
@@ -9950,17 +10106,135 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                 }
 
                 if ($act === 'create') {
-                    $created = bvmgr_ticketing_v2_create_ticket($tec_event_id, $ticket_cfg);
-                    if (empty($created['ok'])) {
-                        $row['message'] = (string) ($created['message'] ?? 'create_failed');
+                    $mapped_pid = (isset($sync_map['tickets'][$ticket_key]) && is_array($sync_map['tickets'][$ticket_key]))
+                        ? absint($sync_map['tickets'][$ticket_key]['woo_product_id'] ?? 0)
+                        : 0;
+                    $matching_intent = bvmgr_ticketing_v2_find_matching_create_intent(
+                        $plan_id,
+                        $tec_event_id,
+                        $ticket_key,
+                        $ticket_hash,
+                        $cfg_hash_now
+                    );
+
+                    $recovery = array('status' => 'none', 'product_id' => 0, 'candidate_ids' => array());
+                    if (
+                        $mapped_pid > 0
+                        && get_post_type($mapped_pid) === 'product'
+                        && (string) get_post_status($mapped_pid) !== 'trash'
+                        && absint(get_post_meta($mapped_pid, '_tribe_wooticket_for_event', true)) === $tec_event_id
+                    ) {
+                        // A prior action checkpoint already owns this product. Re-run
+                        // the update side idempotently; never issue a second CREATE.
+                        $recovery = array(
+                            'status' => 'safe',
+                            'product_id' => $mapped_pid,
+                            'candidate_ids' => array($mapped_pid),
+                            'reason' => 'existing_sync_mapping',
+                        );
+                    } else {
+                        $recovery = bvmgr_ticketing_v2_find_interrupted_create_candidates(
+                            $plan_id,
+                            $tec_event_id,
+                            $ticket_key,
+                            $ticket_cfg,
+                            $matching_intent
+                        );
+                    }
+
+                    $recovery_status = sanitize_key((string) ($recovery['status'] ?? 'none'));
+                    if (in_array($recovery_status, array('ambiguous', 'unsafe', 'sold'), true)) {
+                        $row['message'] = ($recovery_status === 'ambiguous')
+                            ? 'interrupted_create_multiple_candidates'
+                            : (($recovery_status === 'sold') ? 'interrupted_create_candidate_has_sales' : 'interrupted_create_candidate_unverified');
+                        $row['candidate_ids'] = is_array($recovery['candidate_ids'] ?? null)
+                            ? array_values(array_filter(array_map('absint', $recovery['candidate_ids'])))
+                            : array();
+                        $row['woo_product_id'] = absint($recovery['product_id'] ?? 0);
                         $results[] = $row;
                         continue;
                     }
 
-                    $pid = absint($created['woo_product_id'] ?? 0);
-                    $ticket_id = absint($created['tec_ticket_id'] ?? 0);
-                    if ($ticket_id <= 0) {
+                    $pid = 0;
+                    $ticket_id = 0;
+                    $created = array();
+                    $intent = $matching_intent;
+                    $recovered_interrupted_create = ($recovery_status === 'safe' && absint($recovery['product_id'] ?? 0) > 0);
+
+                    if ($recovered_interrupted_create) {
+                        $pid = absint($recovery['product_id']);
                         $ticket_id = $pid;
+                        $created = bvmgr_ticketing_v2_apply_ticket_to_product($pid, $tec_event_id, $ticket_cfg);
+                        if (empty($created['ok'])) {
+                            $row['message'] = (string) ($created['message'] ?? 'interrupted_create_recovery_apply_failed');
+                            $row['woo_product_id'] = $pid;
+                            $results[] = $row;
+                            continue;
+                        }
+                        $intent_id = sanitize_key((string) ($intent['intent_id'] ?? ''));
+                        if ($intent_id !== '') {
+                            bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, array(
+                                'status' => 'recovery_adopted',
+                                'product_id' => $pid,
+                                'recovered_at' => time(),
+                            ));
+                        }
+                    } else {
+                        $intent = bvmgr_ticketing_v2_begin_create_intent(
+                            $plan_id,
+                            $tec_event_id,
+                            $ticket_key,
+                            $ticket_hash,
+                            $cfg_hash_now,
+                            $preview_id,
+                            $ticket_label
+                        );
+                        $intent_id = sanitize_key((string) ($intent['intent_id'] ?? ''));
+                        if ($intent_id === '') {
+                            $row['message'] = 'create_intent_persist_failed';
+                            $results[] = $row;
+                            continue;
+                        }
+
+                        bvmgr_ticketing_v2_set_commit_fatal_context(array(
+                            'plan_id' => $plan_id,
+                            'preview_id' => $preview_id,
+                            'phase' => 'provider_create',
+                            'cursor' => max(0, $action_next_cursor - 1),
+                            'scope' => 'ticket',
+                            'action' => 'create',
+                            'ticket_key' => $ticket_key,
+                            'intent_id' => $intent_id,
+                            'product_id' => absint($intent['product_id'] ?? 0),
+                        ));
+
+                        $created = bvmgr_ticketing_v2_create_ticket($tec_event_id, $ticket_cfg, array(
+                            'plan_id' => $plan_id,
+                            'tec_event_id' => $tec_event_id,
+                            'ticket_key' => $ticket_key,
+                            'ticket_hash' => $ticket_hash,
+                            'config_hash' => $cfg_hash_now,
+                            'preview_id' => $preview_id,
+                            'intent_id' => $intent_id,
+                        ));
+                        if (empty($created['ok'])) {
+                            $row['message'] = (string) ($created['message'] ?? 'create_failed');
+                            $row['woo_product_id'] = absint($created['woo_product_id'] ?? $created['tec_ticket_id'] ?? 0);
+                            $results[] = $row;
+                            continue;
+                        }
+
+                        $pid = absint($created['woo_product_id'] ?? 0);
+                        $ticket_id = absint($created['tec_ticket_id'] ?? 0);
+                        if ($ticket_id <= 0) {
+                            $ticket_id = $pid;
+                        }
+                    }
+
+                    if ($pid <= 0 || get_post_type($pid) !== 'product') {
+                        $row['message'] = 'create_recovery_invalid_product';
+                        $results[] = $row;
+                        continue;
                     }
 
                     bvmgr_ticketing_v2_stamp_product_markers($pid, $plan_id, $tec_event_id, 'ga_ticket');
@@ -9970,6 +10244,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                     $restored = bvmgr_ticketing_v2_restore_enabled_ticket_product($pid);
                     if (empty($restored['ok'])) {
                         $row['message'] = (string) ($restored['message'] ?? 'restore_failed_after_create');
+                        $row['woo_product_id'] = $pid;
                         $results[] = $row;
                         continue;
                     }
@@ -9978,7 +10253,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         'provider' => 'tec_tickets_woo',
                         'ticket_key' => $ticket_key,
                         'label' => $ticket_label,
-                        'tec_ticket_id' => $ticket_id,
+                        'tec_ticket_id' => $ticket_id > 0 ? $ticket_id : $pid,
                         'woo_product_id' => $pid,
                         'counts_toward_unlock' => !empty($ticket_cfg['counts_toward_unlock']) ? 1 : 0,
                         'max_qty_per_order' => max(0, absint($ticket_cfg['max_qty_per_order'] ?? 0)),
@@ -9998,7 +10273,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                     if ($primary_ticket_key !== '' && $ticket_key === $primary_ticket_key) {
                         $sync_map['ga'] = array(
                             'provider' => 'tec_tickets_woo',
-                            'tec_ticket_id' => $ticket_id,
+                            'tec_ticket_id' => $ticket_id > 0 ? $ticket_id : $pid,
                             'woo_product_id' => $pid,
                             'ticket_key' => $ticket_key,
                             'sync_status' => 'synced',
@@ -10008,9 +10283,34 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         );
                     }
 
+                    bvmgr_ticketing_v2_persist_action_checkpoint(
+                        $plan_id,
+                        $tec_event_id,
+                        $cfg_hash_now,
+                        $mode,
+                        $sync_map,
+                        $preview_id,
+                        $action_next_cursor,
+                        $total_actions,
+                        $now
+                    );
+
+                    $intent_id = sanitize_key((string) ($intent['intent_id'] ?? ''));
+                    if ($intent_id !== '') {
+                        bvmgr_ticketing_v2_finish_create_intent(
+                            $plan_id,
+                            $intent_id,
+                            $pid,
+                            $recovered_interrupted_create ? 'recovered' : 'completed'
+                        );
+                    }
+
                     $row['ok'] = true;
                     $row['woo_product_id'] = $pid;
-                    $row['message'] = 'created';
+                    $row['message'] = $recovered_interrupted_create ? 'recovered_interrupted_create' : 'created';
+                    $row['recovery_candidate_ids'] = is_array($recovery['candidate_ids'] ?? null)
+                        ? array_values(array_filter(array_map('absint', $recovery['candidate_ids'])))
+                        : array();
                     $row = array_merge($row, bvmgr_ticketing_v2_extract_inventory_result_meta($created));
                     $results[] = $row;
                     continue;
@@ -10083,6 +10383,18 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         );
                     }
 
+                    bvmgr_ticketing_v2_persist_action_checkpoint(
+                        $plan_id,
+                        $tec_event_id,
+                        $cfg_hash_now,
+                        $mode,
+                        $sync_map,
+                        $preview_id,
+                        $action_next_cursor,
+                        $total_actions,
+                        $now
+                    );
+
                     $row['ok'] = true;
                     $row['woo_product_id'] = $pid;
                     $row['message'] = 'adopted';
@@ -10150,6 +10462,18 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                             'last_error' => '',
                         );
                     }
+
+                    bvmgr_ticketing_v2_persist_action_checkpoint(
+                        $plan_id,
+                        $tec_event_id,
+                        $cfg_hash_now,
+                        $mode,
+                        $sync_map,
+                        $preview_id,
+                        $action_next_cursor,
+                        $total_actions,
+                        $now
+                    );
 
                     $row['ok'] = true;
                     $row['woo_product_id'] = $pid;
@@ -10365,6 +10689,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
         if ($batch_failed) {
             bvmgr_ticketing_v2_clear_commit_progress($plan_id, $preview_id);
             bvmgr_ticketing_v2_cleanup_preview_keys($preview_ids, $key);
+            bvmgr_ticketing_v2_clear_commit_fatal_context();
             return array(
                 'ok' => true,
                 'phase' => 'stopped',
@@ -10394,6 +10719,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                 'tec_event_id' => $tec_event_id,
                 'started_at' => (int) ($commit_progress['started_at'] ?? $now),
             ));
+            bvmgr_ticketing_v2_clear_commit_fatal_context();
             return array(
                 'ok' => true,
                 'phase' => 'actions_complete',
@@ -10423,6 +10749,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
             'started_at' => (int) ($commit_progress['started_at'] ?? $now),
         ));
 
+        bvmgr_ticketing_v2_clear_commit_fatal_context();
         return array(
             'ok' => true,
             'phase' => 'actions',
@@ -10548,6 +10875,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
     $tec_event_view_url = ($tec_event_id > 0) ? (string) get_permalink($tec_event_id) : '';
     $tec_event_edit_url = ($tec_event_id > 0) ? (string) get_edit_post_link($tec_event_id, 'raw') : '';
 
+    bvmgr_ticketing_v2_clear_commit_fatal_context();
     return array(
         'ok' => true,
         'phase' => 'complete',
