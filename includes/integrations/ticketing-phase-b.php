@@ -9391,15 +9391,9 @@ function bvmgr_ticketing_v2_persist_action_checkpoint(
     string $config_hash,
     string $mode,
     array $sync_map,
-    string $preview_id,
-    int $next_cursor,
-    int $total_actions,
     int $now
 ): array {
     $existing = bvmgr_ticketing_v2_get_sync($plan_id);
-    $next_cursor = max(0, min(max(0, $total_actions), $next_cursor));
-    $status = ($next_cursor >= $total_actions) ? 'actions_complete' : 'actions_in_progress';
-
     $sync_out = array(
         'version' => 2,
         'provider' => 'tec_tickets_woo',
@@ -9410,26 +9404,12 @@ function bvmgr_ticketing_v2_persist_action_checkpoint(
         'last_commit' => array(
             'at' => $now,
             'by' => get_current_user_id(),
-            'phase' => 'actions',
-            'next_cursor' => $next_cursor,
-            'total_actions' => max(0, $total_actions),
-            'status' => $status,
+            'phase' => 'action_checkpoint',
         ),
         'reconciliation' => is_array($existing['reconciliation'] ?? null) ? $existing['reconciliation'] : array(),
         'last_error' => '',
     );
     bvmgr_ticketing_v2_set_sync($plan_id, $sync_out);
-
-    $progress = bvmgr_ticketing_v2_get_commit_progress($plan_id, $preview_id);
-    bvmgr_ticketing_v2_set_commit_progress($plan_id, $preview_id, array(
-        'status' => $status,
-        'next_cursor' => $next_cursor,
-        'total_actions' => max(0, $total_actions),
-        'config_hash' => $config_hash,
-        'tec_event_id' => absint($tec_event_id),
-        'started_at' => absint($progress['started_at'] ?? 0) > 0 ? absint($progress['started_at']) : $now,
-    ));
-
     return $sync_out;
 }
 
@@ -10295,9 +10275,6 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         $cfg_hash_now,
                         $mode,
                         $sync_map,
-                        $preview_id,
-                        $action_next_cursor,
-                        $total_actions,
                         $now
                     );
 
@@ -10506,9 +10483,6 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         $cfg_hash_now,
                         $mode,
                         $sync_map,
-                        $preview_id,
-                        $action_next_cursor,
-                        $total_actions,
                         $now
                     );
 
@@ -10642,9 +10616,6 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         $cfg_hash_now,
                         $mode,
                         $sync_map,
-                        $preview_id,
-                        $action_next_cursor,
-                        $total_actions,
                         $now
                     );
 
@@ -10722,9 +10693,6 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         $cfg_hash_now,
                         $mode,
                         $sync_map,
-                        $preview_id,
-                        $action_next_cursor,
-                        $total_actions,
                         $now
                     );
 
