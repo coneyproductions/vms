@@ -3806,7 +3806,18 @@ function bvmgr_ticketing_v2_begin_create_intent(
 
     $intents[$intent_id] = $intent;
     bvmgr_ticketing_v2_set_create_intents($plan_id, $intents);
-    return $intent;
+
+    $persisted = bvmgr_ticketing_v2_get_create_intents($plan_id);
+    if (
+        !isset($persisted[$intent_id])
+        || !is_array($persisted[$intent_id])
+        || (string) ($persisted[$intent_id]['ticket_hash'] ?? '') !== $ticket_hash
+        || (string) ($persisted[$intent_id]['config_hash'] ?? '') !== $config_hash
+    ) {
+        return array();
+    }
+
+    return $persisted[$intent_id];
 }
 
 function bvmgr_ticketing_v2_update_create_intent(int $plan_id, string $intent_id, array $changes): array {
@@ -10535,6 +10546,42 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         $row['message'] = 'adopt_linkage_mismatch';
                         $results[] = $row;
                         continue;
+                    }
+
+                    $preview_recovery_candidates = is_array($a['recovery_candidate_ids'] ?? null)
+                        ? array_values(array_filter(array_map('absint', $a['recovery_candidate_ids'])))
+                        : array();
+                    if (!empty($preview_recovery_candidates)) {
+                        // Recovery candidates are revalidated at Commit time. A
+                        // candidate that gained sales or a second matching orphan
+                        // that appeared after Preview must stop instead of being
+                        // silently adopted.
+                        $matching_intent = bvmgr_ticketing_v2_find_matching_create_intent(
+                            $plan_id,
+                            $tec_event_id,
+                            $ticket_key,
+                            $ticket_hash,
+                            $cfg_hash_now
+                        );
+                        $current_recovery = bvmgr_ticketing_v2_find_interrupted_create_candidates(
+                            $plan_id,
+                            $tec_event_id,
+                            $ticket_key,
+                            $ticket_cfg,
+                            $matching_intent
+                        );
+                        $current_recovery_status = sanitize_key((string) ($current_recovery['status'] ?? 'none'));
+                        $current_recovery_pid = absint($current_recovery['product_id'] ?? 0);
+                        if ($current_recovery_status !== 'safe' || $current_recovery_pid !== $pid) {
+                            $row['message'] = ($current_recovery_status === 'ambiguous')
+                                ? 'interrupted_create_multiple_candidates'
+                                : (($current_recovery_status === 'sold') ? 'interrupted_create_candidate_has_sales' : 'interrupted_create_candidate_changed');
+                            $row['candidate_ids'] = is_array($current_recovery['candidate_ids'] ?? null)
+                                ? array_values(array_filter(array_map('absint', $current_recovery['candidate_ids'])))
+                                : array();
+                            $results[] = $row;
+                            continue;
+                        }
                     }
 
                     $applied = bvmgr_ticketing_v2_apply_ticket_to_product($pid, $tec_event_id, $ticket_cfg);
