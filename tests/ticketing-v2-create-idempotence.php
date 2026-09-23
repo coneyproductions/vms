@@ -454,7 +454,30 @@ vms_issue5_assert_true(
     'Stable unresolved CREATE lookup must not depend on mutable ticket/config hashes or Preview ID.'
 );
 
-// Exercise the pure recovery classifier without loading WordPress.
+// Exercise the pure title normalizer and recovery classifier without loading WordPress.
+$normalizer = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_normalize_create_match_title');
+eval($normalizer);
+
+$expectedTitleNormalized = bvmgr_ticketing_v2_normalize_create_match_title(
+    '2031-10-25 19:00 - ISSUE5 BB4818 handled-durable-recovery TICKET'
+);
+$entityEnDashNormalized = bvmgr_ticketing_v2_normalize_create_match_title(
+    '2031-10-25 19:00 &#8211; ISSUE5 BB4818 handled-durable-recovery TICKET'
+);
+$unicodeEmDashNormalized = bvmgr_ticketing_v2_normalize_create_match_title(
+    "2031-10-25 19:00 — ISSUE5 BB4818 handled-durable-recovery TICKET"
+);
+vms_issue5_assert_same(
+    $expectedTitleNormalized,
+    $entityEnDashNormalized,
+    'HTML-encoded en dash from WordPress/TEC must normalize to the same interrupted-CREATE title as ASCII hyphen-minus.'
+);
+vms_issue5_assert_same(
+    $expectedTitleNormalized,
+    $unicodeEmDashNormalized,
+    'Unicode dash presentation differences must not block a proven interrupted-CREATE recovery.'
+);
+
 $classifier = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_classify_interrupted_create_candidates');
 eval($classifier);
 
