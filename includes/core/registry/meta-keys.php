@@ -193,6 +193,7 @@ function bvmgr_meta_keys(): array
 
 			// Ticketing (Phase B v2) entitlement identifier
 			'ticketing_entitlement_id'   => '_vms_ticketing_entitlement_id',   // string (stable entitlement id, e.g., ent_abc123)
+			'ticketing_create_intent_id' => '_vms_ticketing_create_intent_id', // string (temporary interrupted-CREATE recovery identity)
 			'ticketing_verified_program' => '_vms_ticketing_verified_program', // string (legacy single program slug)
 			'ticketing_allowed_programs' => '_vms_ticketing_allowed_programs', // csv (program slugs)
 			'ticketing_allow_direct_grants' => '_vms_ticketing_allow_direct_grants', // bool-ish string
@@ -285,6 +286,8 @@ function bvmgr_meta_keys(): array
 // Ticketing integration (Phase B v2 — GA attendance + entitlements + rules)
 'ticketing_config_v2' => '_vms_ticketing_config_v2',
 'ticketing_sync_v2'   => '_vms_ticketing_sync_v2',
+'ticketing_create_intents_v1' => '_vms_ticketing_create_intents_v1',
+'ticketing_commit_fatal_v1' => '_vms_ticketing_commit_fatal_v1',
 'ticketing_stats_v2'  => '_vms_ticketing_stats_v2',
 			// Public sales destination: serenade_range | external (missing = serenade_range)
 			'ticketing_sales_mode' => '_vms_ticketing_sales_mode',
