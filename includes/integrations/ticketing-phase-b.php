@@ -4099,6 +4099,20 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
             continue;
         }
 
+        // Interrupted-CREATE recovery is intentionally stricter than legacy
+        // exact-title adoption. A generic pre-existing/sold ticket with the same
+        // title must continue through the established legacy matcher below; only
+        // a product tied to the durable CREATE intent or carrying the minimal VMS
+        // recovery identity stamped during provider CREATE belongs here.
+        $matches_intent_product = ($intent_product_id > 0 && $product_id === $intent_product_id);
+        $has_ticket_identity = ($stored_ticket_key === $ticket_key || $legacy_ticket_key === $ticket_key);
+        $has_plan_identity = ($stored_plan_id === $plan_id || $source_plan_id === $plan_id);
+        $has_event_identity = ($stored_tec_event_id === 0 || $stored_tec_event_id === $tec_event_id);
+        $has_recovery_identity = $matches_intent_product || ($has_ticket_identity && $has_plan_identity && $has_event_identity);
+        if (!$has_recovery_identity) {
+            continue;
+        }
+
         $sold = function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_product')
             ? bvmgr_ticketing_v2_calc_sold_qty_for_product($product_id)
             : array('ok' => false, 'sold_qty' => 0, 'message' => 'sold_qty_helper_missing');
