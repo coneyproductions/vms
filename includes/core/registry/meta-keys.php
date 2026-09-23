@@ -285,6 +285,8 @@ function bvmgr_meta_keys(): array
 // Ticketing integration (Phase B v2 — GA attendance + entitlements + rules)
 'ticketing_config_v2' => '_vms_ticketing_config_v2',
 'ticketing_sync_v2'   => '_vms_ticketing_sync_v2',
+'ticketing_create_intents_v1' => '_vms_ticketing_create_intents_v1',
+'ticketing_commit_fatal_v1' => '_vms_ticketing_commit_fatal_v1',
 'ticketing_stats_v2'  => '_vms_ticketing_stats_v2',
 			// Public sales destination: serenade_range | external (missing = serenade_range)
 			'ticketing_sales_mode' => '_vms_ticketing_sales_mode',
