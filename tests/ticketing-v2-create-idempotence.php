@@ -149,6 +149,7 @@ foreach (array(
     'function bvmgr_ticketing_v2_release_commit_lock(',
     'function bvmgr_ticketing_v2_shutdown_release_active_commit_lock(',
     'function bvmgr_ticketing_v2_force_ticket_product_staged(',
+    'function bvmgr_ticketing_v2_product_has_durable_create_recovery_identity(',
     'function bvmgr_ticketing_v2_persist_action_checkpoint(',
     'function bvmgr_ticketing_v2_commit_shutdown_diagnostics(',
 ) as $required) {
@@ -332,6 +333,31 @@ vms_issue5_assert_contains(
     '!bvmgr_ticketing_v2_create_intent_is_terminal($current_intent)',
     $shutdown,
     'Fatal shutdown must never downgrade completed/recovered CREATE intent state.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_product_has_durable_create_recovery_identity(',
+    $shutdown,
+    'Fatal shutdown must release a CREATE lock only after recovery identity is durably provable.'
+);
+$durableIdentity = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_product_has_durable_create_recovery_identity');
+vms_issue5_assert_contains(
+    "bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id')",
+    $durableIdentity,
+    'Durable recovery identity must require the temporary CREATE-intent marker when sync mapping is not yet present.'
+);
+vms_issue5_assert_contains(
+    "absint(\$mapped_row['woo_product_id'] ?? 0) === \$product_id",
+    $durableIdentity,
+    'A durable sync mapping must independently prove recovery identity.'
+);
+
+$shutdownReleaseRegistration = strpos($source, "register_shutdown_function('bvmgr_ticketing_v2_shutdown_release_active_commit_lock')");
+$shutdownDiagnosticRegistration = strpos($source, "register_shutdown_function('bvmgr_ticketing_v2_commit_shutdown_diagnostics')");
+vms_issue5_assert_true(
+    $shutdownReleaseRegistration !== false
+        && $shutdownDiagnosticRegistration !== false
+        && $shutdownReleaseRegistration < $shutdownDiagnosticRegistration,
+    'Per-plan Commit lock fatal release must be registered before diagnostics so a diagnostic failure cannot strand the plan lock.'
 );
 
 // Exercise the pure recovery classifier without loading WordPress.
