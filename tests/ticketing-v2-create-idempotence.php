@@ -152,15 +152,21 @@ $commit = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_commit_sync')
 $recoveryPos = strpos($commit, 'bvmgr_ticketing_v2_find_interrupted_create_candidates(');
 $intentPos = strpos($commit, 'bvmgr_ticketing_v2_begin_create_intent(');
 $createPos = strpos($commit, 'bvmgr_ticketing_v2_create_ticket(');
-$checkpointPos = strpos($commit, 'bvmgr_ticketing_v2_persist_action_checkpoint(');
-
 vms_issue5_assert_true($recoveryPos !== false, 'Commit must inspect interrupted CREATE candidates.');
 vms_issue5_assert_true($intentPos !== false, 'Commit must persist CREATE intent.');
 vms_issue5_assert_true($createPos !== false, 'Commit must still contain one guarded provider CREATE call.');
-vms_issue5_assert_true($checkpointPos !== false, 'Commit must persist successful action checkpoints.');
 vms_issue5_assert_true($recoveryPos < $createPos, 'Retry recovery must happen before provider CREATE.');
 vms_issue5_assert_true($intentPos < $createPos, 'Durable CREATE intent must be written before provider CREATE.');
-vms_issue5_assert_true($checkpointPos > $createPos, 'Successful CREATE mapping must checkpoint after provider mutation.');
+
+$ticketCreateStart = strpos($commit, "if (\$act === 'create') {", $recoveryPos);
+$ticketAdoptStart = ($ticketCreateStart !== false) ? strpos($commit, "if (\$act === 'adopt') {", $ticketCreateStart) : false;
+vms_issue5_assert_true($ticketCreateStart !== false && $ticketAdoptStart !== false, 'Unable to isolate the ticket CREATE action block.');
+$ticketCreateBlock = substr($commit, $ticketCreateStart, $ticketAdoptStart - $ticketCreateStart);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_persist_action_checkpoint(',
+    $ticketCreateBlock,
+    'Successful CREATE mapping must checkpoint inside the CREATE action before the next action branch.'
+);
 
 $preview = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_preview_sync');
 vms_issue5_assert_contains(
