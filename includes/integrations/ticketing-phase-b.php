@@ -2509,6 +2509,8 @@ function bvmgr_ticketing_v2_product_meta_key(string $which): string {
             return '_vms_product_role';
         case 'ticketing_entitlement_id':
             return '_vms_ticketing_entitlement_id';
+        case 'ticketing_create_intent_id':
+            return '_vms_ticketing_create_intent_id';
         case 'ticketing_ticket_key':
             return '_vms_ticketing_ticket_key';
         case 'ticketing_counts_toward_unlock':
@@ -3886,11 +3888,28 @@ function bvmgr_ticketing_v2_update_create_intent(int $plan_id, string $intent_id
 }
 
 function bvmgr_ticketing_v2_finish_create_intent(int $plan_id, string $intent_id, int $product_id, string $status = 'completed'): array {
-    return bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, array(
-        'status' => sanitize_key($status),
-        'product_id' => absint($product_id),
+    $status = sanitize_key($status);
+    $product_id = absint($product_id);
+    $updated = bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, array(
+        'status' => $status,
+        'product_id' => $product_id,
         'finished_at' => time(),
     ));
+
+    if (
+        !empty($updated)
+        && $product_id > 0
+        && absint($updated['product_id'] ?? 0) === $product_id
+        && in_array($status, array('completed', 'recovered'), true)
+    ) {
+        // Once the durable sync map exists and the CREATE intent is finalized,
+        // this product is no longer an interrupted-CREATE candidate. Removing
+        // the temporary marker keeps ordinary legacy/VMS adoption semantics
+        // separate from crash recovery.
+        delete_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id'));
+    }
+
+    return $updated;
 }
 
 function bvmgr_ticketing_v2_set_active_create_context(array $context): void {
@@ -3949,6 +3968,9 @@ function bvmgr_ticketing_v2_capture_provider_create_link($meta_id, $object_id, $
     update_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_marker_version'), 1);
     update_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_source_plan_id'), $plan_id);
     update_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_source_provider'), 'tec_tickets_woo');
+    if ($intent_id !== '') {
+        update_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id'), $intent_id);
+    }
     update_post_meta($product_id, '_visibility', 'hidden');
 
     if ($intent_id !== '') {
@@ -4144,15 +4166,30 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
         }
 
         // Interrupted-CREATE recovery is intentionally stricter than legacy
-        // exact-title adoption. A generic pre-existing/sold ticket with the same
-        // title must continue through the established legacy matcher below; only
-        // a product tied to the durable CREATE intent or carrying the minimal VMS
-        // recovery identity stamped during provider CREATE belongs here.
+        // exact-title adoption. Generic pre-existing/sold tickets keep flowing
+        // through the established legacy matcher below. Recovery requires either
+        // the durable intent's recorded product ID or the temporary CREATE-intent
+        // marker stamped while the provider write is in flight.
         $matches_intent_product = ($intent_product_id > 0 && $product_id === $intent_product_id);
+        $active_intent_id = sanitize_key((string) ($intent['intent_id'] ?? ''));
+        $stored_create_intent_id = sanitize_key((string) get_post_meta(
+            $product_id,
+            bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id'),
+            true
+        ));
+        $matches_create_intent_marker = (
+            $stored_create_intent_id !== ''
+            && ($active_intent_id === '' || hash_equals($stored_create_intent_id, $active_intent_id))
+        );
         $has_ticket_identity = ($stored_ticket_key === $ticket_key || $legacy_ticket_key === $ticket_key);
         $has_plan_identity = ($stored_plan_id === $plan_id || $source_plan_id === $plan_id);
         $has_event_identity = ($stored_tec_event_id === 0 || $stored_tec_event_id === $tec_event_id);
-        $has_recovery_identity = $matches_intent_product || ($has_ticket_identity && $has_plan_identity && $has_event_identity);
+        $has_recovery_identity = $matches_intent_product || (
+            $matches_create_intent_marker
+            && $has_ticket_identity
+            && $has_plan_identity
+            && $has_event_identity
+        );
         if (!$has_recovery_identity) {
             continue;
         }
@@ -7540,6 +7577,9 @@ function bvmgr_ticketing_v2_create_ticket(int $tec_event_id, array $ticket, arra
         update_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key'), $context_ticket_key);
         update_post_meta($product_id, '_vms_ticket_key', $context_ticket_key);
         update_post_meta($product_id, '_vms_ticket_event_id', $tec_event_id);
+        if ($context_intent_id !== '') {
+            update_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id'), $context_intent_id);
+        }
         update_post_meta($product_id, '_visibility', 'hidden');
         if ($context_intent_id !== '') {
             bvmgr_ticketing_v2_update_create_intent($context_plan_id, $context_intent_id, array(
