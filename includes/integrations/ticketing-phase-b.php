@@ -3726,39 +3726,17 @@ function bvmgr_ticketing_v2_acquire_create_lock(int $plan_id, int $tec_event_id,
         );
     }
 
+    // Never steal this lock automatically. A timeout cannot prove the previous
+    // PHP request is dead, and taking over while its provider CREATE is still in
+    // flight can create a second Woo/TEC ticket path. Fatal shutdown releases
+    // the lock when recovery identity is durable; otherwise operator
+    // reconciliation is intentionally required.
     $existing = get_option($name, array());
-    $stale_seconds = max(60, (int) apply_filters('vms_ticketing_v2_create_lock_stale_seconds', 300, $plan_id, $tec_event_id, $ticket_key));
-    $existing_started_at = is_array($existing) ? absint($existing['started_at'] ?? 0) : 0;
-    $existing_token = is_array($existing) ? (string) ($existing['token'] ?? '') : '';
-
-    if (
-        $existing_started_at > 0
-        && (time() - $existing_started_at) > $stale_seconds
-        && $existing_token !== ''
-        && bvmgr_ticketing_v2_delete_create_lock_if_token_matches($name, $existing_token)
-    ) {
-        // The stale payload was removed with an atomic token/value comparison.
-        // A second add_option() remains the final ownership gate.
-        $payload['started_at'] = time();
-        if (add_option($name, $payload, '', false)) {
-            return array(
-                'ok' => true,
-                'name' => $name,
-                'token' => $token,
-                'started_at' => (int) $payload['started_at'],
-                'recovered_stale_lock' => 1,
-            );
-        }
-
-        $existing = get_option($name, array());
-        $existing_started_at = is_array($existing) ? absint($existing['started_at'] ?? 0) : 0;
-    }
-
     return array(
         'ok' => false,
-        'message' => 'create_already_in_progress',
+        'message' => 'create_already_in_progress_or_interrupted',
         'name' => $name,
-        'started_at' => $existing_started_at,
+        'started_at' => is_array($existing) ? absint($existing['started_at'] ?? 0) : 0,
     );
 }
 
@@ -3770,6 +3748,88 @@ function bvmgr_ticketing_v2_release_create_lock(array $lock): void {
     }
 
     bvmgr_ticketing_v2_delete_create_lock_if_token_matches($name, $token);
+}
+
+function bvmgr_ticketing_v2_create_intent_is_terminal(array $intent): bool {
+    $status = sanitize_key((string) ($intent['status'] ?? ''));
+    return in_array($status, array('completed', 'recovered', 'cleared', 'abandoned'), true);
+}
+
+function bvmgr_ticketing_v2_commit_lock_name(int $plan_id): string {
+    return 'bvmgr_tix_commit_' . md5((string) absint($plan_id));
+}
+
+function bvmgr_ticketing_v2_acquire_commit_lock(int $plan_id, string $preview_id): array {
+    $plan_id = absint($plan_id);
+    if ($plan_id <= 0) {
+        return array('ok' => false, 'message' => 'invalid_commit_lock_identity');
+    }
+
+    $name = bvmgr_ticketing_v2_commit_lock_name($plan_id);
+    $token = function_exists('wp_generate_uuid4')
+        ? wp_generate_uuid4()
+        : sha1(uniqid((string) mt_rand(), true));
+    $payload = array(
+        'token' => $token,
+        'plan_id' => $plan_id,
+        'preview_id' => sanitize_key($preview_id),
+        'started_at' => time(),
+    );
+
+    if (add_option($name, $payload, '', false)) {
+        return array(
+            'ok' => true,
+            'name' => $name,
+            'token' => $token,
+            'plan_id' => $plan_id,
+            'preview_id' => sanitize_key($preview_id),
+            'started_at' => (int) $payload['started_at'],
+        );
+    }
+
+    $existing = get_option($name, array());
+    return array(
+        'ok' => false,
+        'message' => 'commit_already_in_progress_or_interrupted',
+        'name' => $name,
+        'started_at' => is_array($existing) ? absint($existing['started_at'] ?? 0) : 0,
+    );
+}
+
+function bvmgr_ticketing_v2_release_commit_lock(array $lock): void {
+    $name = (string) ($lock['name'] ?? '');
+    $token = (string) ($lock['token'] ?? '');
+    if ($name === '' || $token === '') {
+        return;
+    }
+    bvmgr_ticketing_v2_delete_create_lock_if_token_matches($name, $token);
+}
+
+function bvmgr_ticketing_v2_set_active_commit_lock(array $lock): void {
+    $GLOBALS['bvmgr_ticketing_v2_active_commit_lock'] = $lock;
+}
+
+function bvmgr_ticketing_v2_clear_active_commit_lock(): void {
+    unset($GLOBALS['bvmgr_ticketing_v2_active_commit_lock']);
+}
+
+function bvmgr_ticketing_v2_shutdown_release_active_commit_lock(): void {
+    $last = error_get_last();
+    if (!is_array($last)) {
+        return;
+    }
+    $fatal_types = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR);
+    if (!in_array((int) ($last['type'] ?? 0), $fatal_types, true)) {
+        return;
+    }
+
+    $lock = is_array($GLOBALS['bvmgr_ticketing_v2_active_commit_lock'] ?? null)
+        ? $GLOBALS['bvmgr_ticketing_v2_active_commit_lock']
+        : array();
+    if (!empty($lock)) {
+        bvmgr_ticketing_v2_release_commit_lock($lock);
+        bvmgr_ticketing_v2_clear_active_commit_lock();
+    }
 }
 
 function bvmgr_ticketing_v2_find_matching_create_intent(
@@ -8837,13 +8897,29 @@ function bvmgr_ticketing_v2_preview_sync(int $plan_id): array {
 
         if ($interrupted_status === 'safe') {
             $matched_pid = absint($interrupted_match['product_id'] ?? 0);
-            $row['action'] = 'adopt';
+            // Keep interrupted CREATE recovery on the guarded CREATE state
+            // machine. Commit will acquire both the per-plan mutation lock and
+            // per-ticket CREATE lock, revalidate the candidate, checkpoint the
+            // map, verify it, and only then restore public visibility.
+            $row['action'] = 'create';
             $row['woo_product_id'] = $matched_pid;
-            $row['notes'] = 'Found one unsold ticket product from an interrupted CREATE. Will recover and update that product instead of creating another.';
+            $row['notes'] = 'Found one unsold ticket product from an interrupted CREATE. Commit will recover it through the guarded CREATE state machine instead of creating another.';
             $row['recovery_candidate_ids'] = is_array($interrupted_match['candidate_ids'] ?? null)
                 ? array_values(array_filter(array_map('absint', $interrupted_match['candidate_ids'])))
                 : array();
             $unclaimed_existing_ticket_pids = array_values(array_diff($unclaimed_existing_ticket_pids, array($matched_pid)));
+        } elseif (
+            $interrupted_status === 'none'
+            && !empty($matching_intent)
+            && !bvmgr_ticketing_v2_create_intent_is_terminal($matching_intent)
+        ) {
+            $row['action'] = 'error';
+            $row['notes'] = 'A prior ticket CREATE attempt is unresolved and no product identity can yet be proven. Backstage Venue Manager will not issue another CREATE until this interrupted attempt is reconciled.';
+            $row['create_intent_id'] = sanitize_key((string) ($matching_intent['intent_id'] ?? ''));
+            $warnings[] = $row['notes'];
+            $actions[] = $row;
+            $blocked = true;
+            continue;
         } elseif (in_array($interrupted_status, array('ambiguous', 'unsafe', 'sold'), true)) {
             $candidate_ids = is_array($interrupted_match['candidate_ids'] ?? null)
                 ? array_values(array_filter(array_map('absint', $interrupted_match['candidate_ids'])))
@@ -9262,6 +9338,8 @@ function bvmgr_ticketing_v2_commit_error_summary(string $code): string {
             return __('Commit batching had not finished preparing all ticket actions, so Backstage Venue Manager refused to finalize a partial sync.', 'backstage-venue-manager');
         case 'event_tickets_woo_unavailable':
             return __('Event Tickets (WooCommerce) is not available right now, so Backstage Venue Manager cannot create or sync tickets.', 'backstage-venue-manager');
+        case 'commit_already_in_progress_or_interrupted':
+            return __('Another Ticketing v2 Commit request is still active or ended without releasing its mutation lock. Backstage Venue Manager stopped this request so it cannot overwrite newer ticket mappings.', 'backstage-venue-manager');
         default:
             return __('Commit failed before Backstage Venue Manager could safely apply the ticket changes.', 'backstage-venue-manager');
     }
@@ -9305,6 +9383,9 @@ function bvmgr_ticketing_v2_commit_error_steps(string $code, array $diagnostics 
             break;
         case 'event_tickets_woo_unavailable':
             $steps[] = __('Activate Event Tickets, Event Tickets Plus, and WooCommerce, then try Preview → Commit again.', 'backstage-venue-manager');
+            break;
+        case 'commit_already_in_progress_or_interrupted':
+            $steps[] = __('Do not retry repeatedly. Refresh the Event Plan and inspect the last Ticketing v2 Commit/recovery state before any further Commit.', 'backstage-venue-manager');
             break;
         case 'preview_owner_mismatch':
             $steps[] = __('Generate a fresh Preview in your current browser session, then commit that new Preview.', 'backstage-venue-manager');
@@ -9611,6 +9692,7 @@ function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
 if (empty($GLOBALS['bvmgr_ticketing_v2_commit_shutdown_registered'])) {
     $GLOBALS['bvmgr_ticketing_v2_commit_shutdown_registered'] = true;
     register_shutdown_function('bvmgr_ticketing_v2_commit_shutdown_diagnostics');
+    register_shutdown_function('bvmgr_ticketing_v2_shutdown_release_active_commit_lock');
 }
 
 function bvmgr_ticketing_v2_commit_action_priority(array $action): int {
@@ -9894,6 +9976,22 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
         ));
     }
 
+    $commit_lock = bvmgr_ticketing_v2_acquire_commit_lock($plan_id, $preview_id);
+    if (empty($commit_lock['ok'])) {
+        return bvmgr_ticketing_v2_commit_error_response($plan_id, 'commit_already_in_progress_or_interrupted', array(
+            'stage' => 'commit_lock_guard',
+            'http' => 409,
+            'requested_preview_id' => $preview_id_raw,
+            'sanitized_preview_id' => $preview_id,
+            'preview_payload' => $payload,
+            'current_config_hash' => $cfg_hash_now,
+            'preview_config_hash' => (string) ($payload['config_hash'] ?? ''),
+            'commit_lock_started_at' => absint($commit_lock['started_at'] ?? 0),
+        ));
+    }
+    bvmgr_ticketing_v2_set_active_commit_lock($commit_lock);
+
+    try {
     $tec_event_id = absint($payload['tec_event_id'] ?? 0);
     $prepared_calendar_event = false;
     if ($requested_phase === 'prepare' || $tec_event_id <= 0) {
@@ -10450,6 +10548,16 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         }
 
                         $recovery_status = sanitize_key((string) ($recovery['status'] ?? 'none'));
+                        if (
+                            $recovery_status === 'none'
+                            && !empty($matching_intent)
+                            && !bvmgr_ticketing_v2_create_intent_is_terminal($matching_intent)
+                        ) {
+                            $row['message'] = 'unresolved_create_intent_requires_reconciliation';
+                            $row['create_intent_id'] = sanitize_key((string) ($matching_intent['intent_id'] ?? ''));
+                            $results[] = $row;
+                            continue;
+                        }
                         if (in_array($recovery_status, array('ambiguous', 'unsafe', 'sold'), true)) {
                             $row['message'] = ($recovery_status === 'ambiguous')
                                 ? 'interrupted_create_multiple_candidates'
@@ -10715,37 +10823,10 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         ? array_values(array_filter(array_map('absint', $a['recovery_candidate_ids'])))
                         : array();
                     if (!empty($preview_recovery_candidates)) {
-                        // Recovery candidates are revalidated at Commit time. A
-                        // candidate that gained sales or a second matching orphan
-                        // that appeared after Preview must stop instead of being
-                        // silently adopted.
-                        $matching_intent = bvmgr_ticketing_v2_find_matching_create_intent(
-                            $plan_id,
-                            $tec_event_id,
-                            $ticket_key,
-                            $ticket_hash,
-                            $cfg_hash_now
-                        );
-                        $recovery_intent_id = sanitize_key((string) ($matching_intent['intent_id'] ?? ''));
-                        $current_recovery = bvmgr_ticketing_v2_find_interrupted_create_candidates(
-                            $plan_id,
-                            $tec_event_id,
-                            $ticket_key,
-                            $ticket_cfg,
-                            $matching_intent
-                        );
-                        $current_recovery_status = sanitize_key((string) ($current_recovery['status'] ?? 'none'));
-                        $current_recovery_pid = absint($current_recovery['product_id'] ?? 0);
-                        if ($current_recovery_status !== 'safe' || $current_recovery_pid !== $pid) {
-                            $row['message'] = ($current_recovery_status === 'ambiguous')
-                                ? 'interrupted_create_multiple_candidates'
-                                : (($current_recovery_status === 'sold') ? 'interrupted_create_candidate_has_sales' : 'interrupted_create_candidate_changed');
-                            $row['candidate_ids'] = is_array($current_recovery['candidate_ids'] ?? null)
-                                ? array_values(array_filter(array_map('absint', $current_recovery['candidate_ids'])))
-                                : array();
-                            $results[] = $row;
-                            continue;
-                        }
+                        $row['message'] = 'interrupted_create_preview_requires_refresh';
+                        $row['candidate_ids'] = $preview_recovery_candidates;
+                        $results[] = $row;
+                        continue;
                     }
 
                     $applied = bvmgr_ticketing_v2_apply_ticket_to_product($pid, $tec_event_id, $ticket_cfg);
@@ -11314,6 +11395,10 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
         'remaining_actions' => 0,
         'next_cursor' => $total_actions,
     );
+    } finally {
+        bvmgr_ticketing_v2_release_commit_lock($commit_lock);
+        bvmgr_ticketing_v2_clear_active_commit_lock();
+    }
 }
 
 /**
