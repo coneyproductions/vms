@@ -4186,7 +4186,18 @@ add_action('updated_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link
 function bvmgr_ticketing_v2_normalize_create_match_title(string $title): string {
     $title = function_exists('wp_strip_all_tags') ? wp_strip_all_tags($title) : strip_tags($title);
     $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    $title = preg_replace('/\s+/u', ' ', trim($title));
+
+    // WordPress/TEC can typographically transform the date/title separator
+    // from ASCII hyphen-minus to an en/em/non-breaking dash while persisting
+    // the exact same ticket title. Recovery identity is already constrained by
+    // Event Plan + TEC event + ticket key/create-intent markers, so normalize
+    // Unicode dash presentation here without weakening ownership checks.
+    $title = preg_replace(
+        '/[\x{2010}\x{2011}\x{2012}\x{2013}\x{2014}\x{2015}\x{2212}\x{FE58}\x{FE63}\x{FF0D}]/u',
+        '-',
+        $title
+    );
+    $title = preg_replace('/\s+/u', ' ', trim((string) $title));
     $title = is_string($title) ? $title : '';
     return function_exists('mb_strtolower') ? mb_strtolower($title, 'UTF-8') : strtolower($title);
 }
