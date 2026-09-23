@@ -1521,15 +1521,17 @@ function bvmgr_ticketing_b_create_woo_ticket(int $tec_event_id, array $tier): ar
         return array('ok' => false, 'message' => 'missing_title');
     }
 
+    $staged_v2_create = !empty($GLOBALS['bvmgr_ticketing_v2_active_create_context']);
     $args = array(
         'title' => bvmgr_ticketing_v2_compose_product_admin_title($title, $tec_event_id),
-        // Two-phase CREATE: provider writes begin as draft/hidden. The normal
-        // Commit path publishes only after BVM identity, stock, and sync mapping
-        // have been durably established.
-        'status' => 'draft',
-        '_visibility' => 'hidden',
+        // Only Ticketing v2's guarded CREATE uses the two-phase draft/hidden
+        // lifecycle. Legacy callers retain their historical publish behavior.
+        'status' => $staged_v2_create ? 'draft' : 'publish',
         '_tribe_wooticket_for_event' => $tec_event_id,
     );
+    if ($staged_v2_create) {
+        $args['_visibility'] = 'hidden';
+    }
 
     // Price. Create with the same regular/scheduled-sale structure used by
     // updates so a single public ticket can carry early/regular price phases.
