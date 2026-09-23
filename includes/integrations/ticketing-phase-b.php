@@ -4059,6 +4059,47 @@ function bvmgr_ticketing_v2_clear_active_create_context(): void {
 }
 
 /**
+ * Fence Event Tickets provider writes at the WordPress insertion boundary.
+ *
+ * Event Tickets Plus may ignore a requested ticket status and hard-code
+ * post_status=publish while creating its Woo product. The metadata capture hook
+ * fires later, after the post already exists, so repairing status there is too
+ * late to prove the ticket was never briefly public.
+ *
+ * While the guarded Ticketing v2 provider CREATE context is active, every
+ * product post insert/update performed synchronously by that provider request
+ * is forced to draft before WordPress writes the row. Legacy callers are
+ * unaffected because they never set this context.
+ *
+ * @param array<string,mixed> $data
+ * @param array<string,mixed> $postarr
+ * @param array<string,mixed> $unsanitized_postarr
+ * @return array<string,mixed>
+ */
+function bvmgr_ticketing_v2_force_provider_product_insert_draft(
+    array $data,
+    array $postarr,
+    array $unsanitized_postarr = array(),
+    bool $update = false
+): array {
+    $context = is_array($GLOBALS['bvmgr_ticketing_v2_active_create_context'] ?? null)
+        ? $GLOBALS['bvmgr_ticketing_v2_active_create_context']
+        : array();
+    if (empty($context)) {
+        return $data;
+    }
+
+    $post_type = sanitize_key((string) ($data['post_type'] ?? $postarr['post_type'] ?? ''));
+    if ($post_type !== 'product') {
+        return $data;
+    }
+
+    $data['post_status'] = 'draft';
+    return $data;
+}
+add_filter('wp_insert_post_data', 'bvmgr_ticketing_v2_force_provider_product_insert_draft', PHP_INT_MAX, 4);
+
+/**
  * Capture the provider-created product at the first durable TEC event-link write.
  *
  * This hook intentionally stamps only recovery identity. Full ticket settings,
@@ -7821,6 +7862,10 @@ function bvmgr_ticketing_v2_create_ticket(int $tec_event_id, array $ticket, arra
     if (!empty($create_context)) {
         $create_context['tec_event_id'] = $tec_event_id;
         $create_context['ticket_key'] = sanitize_key((string) ($create_context['ticket_key'] ?? $ticket['ticket_key'] ?? ''));
+        $create_context['expected_admin_title'] = bvmgr_ticketing_v2_compose_product_admin_title(
+            (string) ($ticket['title'] ?? $ticket['name'] ?? $create_context['ticket_key']),
+            $tec_event_id
+        );
         bvmgr_ticketing_v2_set_active_create_context($create_context);
     }
     try {
