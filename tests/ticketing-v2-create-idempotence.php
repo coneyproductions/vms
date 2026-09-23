@@ -454,7 +454,13 @@ vms_issue5_assert_true(
     'Stable unresolved CREATE lookup must not depend on mutable ticket/config hashes or Preview ID.'
 );
 
-// Exercise the pure title normalizer and recovery classifier without loading WordPress.
+// Exercise the pure/shared title normalizers and recovery classifier without loading WordPress.
+$dashNormalizer = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_normalize_title_dash_presentation');
+eval($dashNormalizer);
+
+$legacyTitleNormalizer = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match');
+eval($legacyTitleNormalizer);
+
 $normalizer = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_normalize_create_match_title');
 eval($normalizer);
 
@@ -476,6 +482,29 @@ vms_issue5_assert_same(
     $expectedTitleNormalized,
     $unicodeEmDashNormalized,
     'Unicode dash presentation differences must not block a proven interrupted-CREATE recovery.'
+);
+
+$legacyAscii = bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
+    '2031-10-25 19:00 - ISSUE5 TICKET'
+);
+$legacyEntityEnDash = bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
+    '2031-10-25 19:00 &#8211; ISSUE5 TICKET'
+);
+vms_issue5_assert_same(
+    'ISSUE5 TICKET',
+    $legacyAscii,
+    'Legacy exact-title normalizer must strip the canonical date prefix.'
+);
+vms_issue5_assert_same(
+    $legacyAscii,
+    $legacyEntityEnDash,
+    'A WordPress-facing en dash must not prevent adoption of the same legitimate legacy sold ticket.'
+);
+vms_issue5_assert_true(
+    bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
+        '2031-10-25 19:00 &#8211; ISSUE5 VIP TICKET'
+    ) !== $legacyAscii,
+    'Meaningfully different legacy ticket titles must remain distinct after dash normalization.'
 );
 
 $classifier = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_classify_interrupted_create_candidates');
