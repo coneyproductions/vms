@@ -6188,7 +6188,7 @@ function bvmgr_ticketing_v2_resolve_ticket_image_target_id(array $ticket, int $p
 /**
  * Apply Ticketing v2 ticket image policy to a Woo product.
  */
-function bvmgr_ticketing_v2_apply_ticket_image_policy(int $product_id, int $plan_id, array $ticket): void {
+function bvmgr_ticketing_v2_apply_ticket_image_policy(int $product_id, int $plan_id, array $ticket, bool $avoid_wc_save = false): void {
     $product_id = absint($product_id);
     $plan_id = absint($plan_id);
     if ($product_id <= 0 || $plan_id <= 0) {
@@ -6196,20 +6196,29 @@ function bvmgr_ticketing_v2_apply_ticket_image_policy(int $product_id, int $plan
     }
 
     $target_image_id = bvmgr_ticketing_v2_resolve_ticket_image_target_id($ticket, $plan_id);
+    $current_image_id = function_exists('get_post_thumbnail_id') ? absint(get_post_thumbnail_id($product_id)) : 0;
 
-    $product = function_exists('wc_get_product') ? wc_get_product($product_id) : null;
-    if ($product && method_exists($product, 'set_image_id') && method_exists($product, 'save')) {
-        try {
-            $product->set_image_id($target_image_id);
-            $product->save();
-        } catch (Throwable $e) {
-            // Fall back to post thumbnail API below.
+    // Existing/adopted ticket products do not need a Woo product save merely
+    // to keep an already-correct image. Event Tickets Plus hooks WC_Product
+    // saves for ticket stock synchronization, so avoid re-entering that
+    // provider lifecycle when the post-thumbnail API is sufficient.
+    if (!$avoid_wc_save && $current_image_id !== $target_image_id) {
+        $product = function_exists('wc_get_product') ? wc_get_product($product_id) : null;
+        if ($product && method_exists($product, 'set_image_id') && method_exists($product, 'save')) {
+            try {
+                $product->set_image_id($target_image_id);
+                $product->save();
+            } catch (Throwable $e) {
+                // Fall back to post thumbnail API below.
+            }
         }
     }
 
     if ($target_image_id > 0 && function_exists('set_post_thumbnail')) {
-        set_post_thumbnail($product_id, $target_image_id);
-    } elseif ($target_image_id === 0 && function_exists('delete_post_thumbnail')) {
+        if ($current_image_id !== $target_image_id) {
+            set_post_thumbnail($product_id, $target_image_id);
+        }
+    } elseif ($target_image_id === 0 && $current_image_id > 0 && function_exists('delete_post_thumbnail')) {
         delete_post_thumbnail($product_id);
     }
 }
@@ -8429,7 +8438,61 @@ function bvmgr_ticketing_v2_compose_entitlement_preview_note(bool $config_change
     return 'No changes since last sync.';
 }
 
-function bvmgr_ticketing_v2_restore_enabled_ticket_product(int $product_id): array {
+function bvmgr_ticketing_v2_verify_ticket_inventory_after_apply(int $product_id, array $ticket): array {
+    $product_id = absint($product_id);
+    if ($product_id <= 0 || get_post_type($product_id) !== 'product') {
+        return array('ok' => false, 'message' => 'invalid_product_for_inventory_verify');
+    }
+
+    $capacity = array_key_exists('inventory_total', $ticket)
+        ? max(0, (int) $ticket['inventory_total'])
+        : null;
+    if ($capacity === null) {
+        return array('ok' => true, 'message' => 'unlimited_or_unchecked');
+    }
+
+    $sold = bvmgr_ticketing_v2_calc_sold_qty_for_product($product_id);
+    if (empty($sold['ok'])) {
+        return array(
+            'ok' => false,
+            'message' => 'sold_qty_unverified_after_apply',
+            'sold' => $sold,
+        );
+    }
+
+    $sold_qty = max(0, absint($sold['sold_qty'] ?? 0));
+    $expected_stock = max(0, $capacity - $sold_qty);
+    $actual_capacity_raw = get_post_meta($product_id, '_tribe_ticket_capacity', true);
+    $actual_stock_raw = get_post_meta($product_id, '_stock', true);
+    $actual_manage_stock = (string) get_post_meta($product_id, '_manage_stock', true);
+    $actual_stock_status = sanitize_key((string) get_post_meta($product_id, '_stock_status', true));
+
+    $actual_capacity = is_numeric($actual_capacity_raw) ? (int) $actual_capacity_raw : null;
+    $actual_stock = is_numeric($actual_stock_raw) ? (int) $actual_stock_raw : null;
+    $expected_status = ($expected_stock > 0) ? 'instock' : 'outofstock';
+
+    $ok = (
+        $actual_capacity === $capacity
+        && $actual_stock === $expected_stock
+        && $actual_manage_stock === 'yes'
+        && $actual_stock_status === $expected_status
+    );
+
+    return array(
+        'ok' => $ok,
+        'message' => $ok ? 'inventory_verified' : 'inventory_mismatch_after_apply',
+        'capacity' => $capacity,
+        'sold_qty' => $sold_qty,
+        'expected_stock' => $expected_stock,
+        'actual_capacity' => $actual_capacity,
+        'actual_stock' => $actual_stock,
+        'actual_manage_stock' => $actual_manage_stock,
+        'actual_stock_status' => $actual_stock_status,
+        'expected_stock_status' => $expected_status,
+    );
+}
+
+function bvmgr_ticketing_v2_restore_enabled_ticket_product(int $product_id, bool $avoid_wc_save = false): array {
     $product_id = absint($product_id);
     if ($product_id <= 0) {
         return array('ok' => false, 'message' => 'invalid_product_id');
@@ -8438,8 +8501,12 @@ function bvmgr_ticketing_v2_restore_enabled_ticket_product(int $product_id): arr
         return array('ok' => false, 'message' => 'not_product');
     }
 
+    $current_status = (string) get_post_status($product_id);
+    $current_visibility = bvmgr_ticketing_v2_get_product_catalog_visibility_state($product_id);
+    $already_public = ($current_status === 'publish' && $current_visibility !== 'hidden');
+
     $used_wc_product = false;
-    if (function_exists('wc_get_product')) {
+    if (!$already_public && !$avoid_wc_save && function_exists('wc_get_product')) {
         $product = wc_get_product($product_id);
         if ($product) {
             if (method_exists($product, 'set_status')) {
@@ -8453,7 +8520,7 @@ function bvmgr_ticketing_v2_restore_enabled_ticket_product(int $product_id): arr
         }
     }
 
-    if (!$used_wc_product) {
+    if (!$already_public && !$used_wc_product) {
         $updated = wp_update_post(array(
             'ID' => $product_id,
             'post_status' => 'publish',
@@ -11299,8 +11366,24 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                     bvmgr_ticketing_v2_stamp_product_markers($pid, $plan_id, $tec_event_id, 'ga_ticket');
                     bvmgr_ticketing_v2_stamp_ticket_runtime_meta($pid, $tec_event_id, $ticket_cfg);
                     bvmgr_ticketing_v2_maybe_mark_primary_ticket_as_rsvp($pid, $ticket_key, $primary_ticket_key, $ticket_cfg);
-                    bvmgr_ticketing_v2_apply_ticket_image_policy($pid, $plan_id, $ticket_cfg);
-                    $restored = bvmgr_ticketing_v2_restore_enabled_ticket_product($pid);
+
+                    // Legacy adoption must not re-enter Event Tickets Plus via an
+                    // unnecessary WC_Product::save() after direct stock/capacity
+                    // reconciliation. Use post-level image/visibility APIs and
+                    // verify the authoritative capacity - sold result before the
+                    // product can be checkpointed as canonical.
+                    bvmgr_ticketing_v2_apply_ticket_image_policy($pid, $plan_id, $ticket_cfg, true);
+
+                    $inventory_verified = bvmgr_ticketing_v2_verify_ticket_inventory_after_apply($pid, $ticket_cfg);
+                    if (empty($inventory_verified['ok'])) {
+                        $row['message'] = (string) ($inventory_verified['message'] ?? 'adopt_inventory_verify_failed');
+                        $row['inventory_verification'] = $inventory_verified;
+                        $row['woo_product_id'] = $pid;
+                        $results[] = $row;
+                        continue;
+                    }
+
+                    $restored = bvmgr_ticketing_v2_restore_enabled_ticket_product($pid, true);
                     if (empty($restored['ok'])) {
                         $row['message'] = (string) ($restored['message'] ?? 'restore_failed_after_adopt');
                         $results[] = $row;
@@ -11362,6 +11445,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                     $row['ok'] = true;
                     $row['woo_product_id'] = $pid;
                     $row['message'] = 'adopted';
+                    $row['inventory_verification'] = $inventory_verified;
                     $row = array_merge($row, bvmgr_ticketing_v2_extract_inventory_result_meta($applied));
                     $results[] = $row;
                     continue;
