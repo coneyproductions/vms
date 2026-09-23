@@ -138,6 +138,8 @@ vms_issue5_assert_contains(
 // Durable intent + provider-link capture are required before retry idempotence can work.
 foreach (array(
     'function bvmgr_ticketing_v2_begin_create_intent(',
+    'function bvmgr_ticketing_v2_find_unresolved_create_intent(',
+    'function bvmgr_ticketing_v2_can_release_create_lock_after_handled_exit(',
     'function bvmgr_ticketing_v2_capture_provider_create_link(',
     "add_action('added_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);",
     "add_action('updated_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);",
@@ -177,9 +179,14 @@ vms_issue5_assert_contains(
     'Ticket CREATE must acquire the atomic per-ticket lock before provider mutation.'
 );
 vms_issue5_assert_contains(
-    'bvmgr_ticketing_v2_release_create_lock(',
+    'bvmgr_ticketing_v2_can_release_create_lock_after_handled_exit(',
     $ticketCreateBlock,
-    'Ticket CREATE must release its lock on normal/handled exits.'
+    'Ticket CREATE lock release on handled exits must be proof-based rather than unconditional.'
+);
+vms_issue5_assert_contains(
+    'handled_failure_lock_retained',
+    $ticketCreateBlock,
+    'Handled provider failure must retain the CREATE lock when mutation may have started without durable recovery identity.'
 );
 vms_issue5_assert_contains(
     'bvmgr_ticketing_v2_persist_action_checkpoint(',
@@ -227,6 +234,12 @@ vms_issue5_assert_contains(
     $recoveryFinder,
     'Ordinary VMS ownership markers alone must not classify a product as an interrupted CREATE.'
 );
+$identityPos = strpos($recoveryFinder, '$has_recovery_identity');
+$titleMismatchPos = strpos($recoveryFinder, "'recovery_product_title_mismatch'");
+vms_issue5_assert_true(
+    $identityPos !== false && $titleMismatchPos !== false && $identityPos < $titleMismatchPos,
+    'Durable interrupted-CREATE identity must be established before title mismatch can reject or bypass the candidate.'
+);
 $finishIntent = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_finish_create_intent');
 vms_issue5_assert_contains(
     "delete_post_meta(\$product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id'))",
@@ -236,9 +249,19 @@ vms_issue5_assert_contains(
 
 $preview = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_preview_sync');
 vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_find_unresolved_create_intent(',
+    $preview,
+    'Preview must find unresolved CREATE intent by stable plan/event/ticket-key identity, independent of mutable hashes.'
+);
+vms_issue5_assert_contains(
     'bvmgr_ticketing_v2_find_interrupted_create_candidates(',
     $preview,
     'Preview must surface interrupted CREATE recovery before proposing another CREATE.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_find_unresolved_create_intent(',
+    $commit,
+    'Commit must independently resolve unresolved CREATE intent by stable identity before provider CREATE.'
 );
 vms_issue5_assert_contains(
     "in_array(\$interrupted_status, array('ambiguous', 'unsafe', 'sold'), true)",
@@ -318,9 +341,24 @@ vms_issue5_assert_true(
 );
 $stageHelper = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_force_ticket_product_staged');
 vms_issue5_assert_contains(
-    "\$post_status === 'draft' && \$catalog_visibility === 'hidden'",
+    "in_array('exclude-from-catalog', \$visibility_terms, true)",
     $stageHelper,
-    'Staging helper must read back and verify both draft status and hidden catalog visibility.'
+    'Staging helper must verify exclude-from-catalog taxonomy state.'
+);
+vms_issue5_assert_contains(
+    "in_array('exclude-from-search', \$visibility_terms, true)",
+    $stageHelper,
+    'Staging helper must verify exclude-from-search taxonomy state.'
+);
+vms_issue5_assert_contains(
+    "\$wc_visibility === 'hidden'",
+    $stageHelper,
+    'Staging helper must verify modern Woo catalog visibility directly.'
+);
+vms_issue5_assert_contains(
+    'empty($errors)',
+    $stageHelper,
+    'Staging helper must fail when visibility writes or reads report errors.'
 );
 vms_issue5_assert_contains(
     'bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false)',
@@ -358,6 +396,31 @@ vms_issue5_assert_true(
         && $shutdownDiagnosticRegistration !== false
         && $shutdownReleaseRegistration < $shutdownDiagnosticRegistration,
     'Per-plan Commit lock fatal release must be registered before diagnostics so a diagnostic failure cannot strand the plan lock.'
+);
+
+$handledRelease = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_can_release_create_lock_after_handled_exit');
+vms_issue5_assert_contains(
+    'if (!$provider_mutation_started)',
+    $handledRelease,
+    'Handled exit may release freely only before provider mutation starts.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_create_intent_is_terminal($intent)',
+    $handledRelease,
+    'Handled exit may release after provider mutation when the CREATE intent is terminal.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_product_has_durable_create_recovery_identity(',
+    $handledRelease,
+    'Handled exit may release after provider mutation only when durable recovery identity exists.'
+);
+
+$unresolvedFinder = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_find_unresolved_create_intent');
+vms_issue5_assert_true(
+    strpos($unresolvedFinder, 'ticket_hash') === false
+        && strpos($unresolvedFinder, 'config_hash') === false
+        && strpos($unresolvedFinder, 'preview_id') === false,
+    'Stable unresolved CREATE lookup must not depend on mutable ticket/config hashes or Preview ID.'
 );
 
 // Exercise the pure recovery classifier without loading WordPress.
