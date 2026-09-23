@@ -193,6 +193,7 @@ function bvmgr_meta_keys(): array
 
 			// Ticketing (Phase B v2) entitlement identifier
 			'ticketing_entitlement_id'   => '_vms_ticketing_entitlement_id',   // string (stable entitlement id, e.g., ent_abc123)
+			'ticketing_create_intent_id' => '_vms_ticketing_create_intent_id', // string (temporary interrupted-CREATE recovery identity)
 			'ticketing_verified_program' => '_vms_ticketing_verified_program', // string (legacy single program slug)
 			'ticketing_allowed_programs' => '_vms_ticketing_allowed_programs', // csv (program slugs)
 			'ticketing_allow_direct_grants' => '_vms_ticketing_allow_direct_grants', // bool-ish string
