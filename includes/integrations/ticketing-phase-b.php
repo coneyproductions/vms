@@ -3646,6 +3646,86 @@ function bvmgr_ticketing_v2_create_intent_id(
     )));
 }
 
+function bvmgr_ticketing_v2_create_lock_name(int $plan_id, int $tec_event_id, string $ticket_key): string {
+    return 'bvmgr_tix_create_' . md5(implode('|', array(
+        absint($plan_id),
+        absint($tec_event_id),
+        sanitize_key($ticket_key),
+    )));
+}
+
+function bvmgr_ticketing_v2_acquire_create_lock(int $plan_id, int $tec_event_id, string $ticket_key): array {
+    $plan_id = absint($plan_id);
+    $tec_event_id = absint($tec_event_id);
+    $ticket_key = sanitize_key($ticket_key);
+    if ($plan_id <= 0 || $tec_event_id <= 0 || $ticket_key === '') {
+        return array('ok' => false, 'message' => 'invalid_create_lock_identity');
+    }
+
+    $name = bvmgr_ticketing_v2_create_lock_name($plan_id, $tec_event_id, $ticket_key);
+    $token = function_exists('wp_generate_uuid4')
+        ? wp_generate_uuid4()
+        : sha1(uniqid((string) mt_rand(), true));
+    $payload = array(
+        'token' => $token,
+        'plan_id' => $plan_id,
+        'tec_event_id' => $tec_event_id,
+        'ticket_key' => $ticket_key,
+        'started_at' => time(),
+    );
+
+    if (add_option($name, $payload, '', false)) {
+        return array(
+            'ok' => true,
+            'name' => $name,
+            'token' => $token,
+            'started_at' => (int) $payload['started_at'],
+        );
+    }
+
+    $existing = get_option($name, array());
+    $stale_seconds = max(60, (int) apply_filters('vms_ticketing_v2_create_lock_stale_seconds', 300, $plan_id, $tec_event_id, $ticket_key));
+    $existing_started_at = is_array($existing) ? absint($existing['started_at'] ?? 0) : 0;
+    if ($existing_started_at > 0 && (time() - $existing_started_at) > $stale_seconds) {
+        // Stale locks can remain after a terminal PHP fatal. delete_option() is
+        // followed by another atomic add_option(); only one contender can win.
+        delete_option($name);
+        $payload['started_at'] = time();
+        if (add_option($name, $payload, '', false)) {
+            return array(
+                'ok' => true,
+                'name' => $name,
+                'token' => $token,
+                'started_at' => (int) $payload['started_at'],
+                'recovered_stale_lock' => 1,
+            );
+        }
+        $existing = get_option($name, array());
+        $existing_started_at = is_array($existing) ? absint($existing['started_at'] ?? 0) : 0;
+    }
+
+    return array(
+        'ok' => false,
+        'message' => 'create_already_in_progress',
+        'name' => $name,
+        'started_at' => $existing_started_at,
+    );
+}
+
+function bvmgr_ticketing_v2_release_create_lock(array $lock): void {
+    $name = (string) ($lock['name'] ?? '');
+    $token = (string) ($lock['token'] ?? '');
+    if ($name === '' || $token === '') {
+        return;
+    }
+
+    $existing = get_option($name, array());
+    $existing_token = is_array($existing) ? (string) ($existing['token'] ?? '') : '';
+    if ($existing_token !== '' && hash_equals($existing_token, $token)) {
+        delete_option($name);
+    }
+}
+
 function bvmgr_ticketing_v2_find_matching_create_intent(
     int $plan_id,
     int $tec_event_id,
@@ -3826,6 +3906,17 @@ function bvmgr_ticketing_v2_capture_provider_create_link($meta_id, $object_id, $
 
     $context['product_id'] = $product_id;
     $GLOBALS['bvmgr_ticketing_v2_active_create_context'] = $context;
+
+    $fatal_context = is_array($GLOBALS['bvmgr_ticketing_v2_commit_fatal_context'] ?? null)
+        ? $GLOBALS['bvmgr_ticketing_v2_commit_fatal_context']
+        : array();
+    if (
+        !empty($fatal_context)
+        && sanitize_key((string) ($fatal_context['intent_id'] ?? '')) === $intent_id
+    ) {
+        $fatal_context['product_id'] = $product_id;
+        $GLOBALS['bvmgr_ticketing_v2_commit_fatal_context'] = $fatal_context;
+    }
 }
 add_action('added_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);
 add_action('updated_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);
@@ -9403,6 +9494,17 @@ function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
     );
     update_post_meta($plan_id, bvmgr_ticketing_v2_k('commit_fatal'), $record);
 
+    if (
+        $context_product_id > 0
+        && !empty($context['create_lock_name'])
+        && !empty($context['create_lock_token'])
+    ) {
+        bvmgr_ticketing_v2_release_create_lock(array(
+            'name' => (string) $context['create_lock_name'],
+            'token' => (string) $context['create_lock_token'],
+        ));
+    }
+
     $intent_id = sanitize_key((string) ($record['intent_id'] ?? ''));
     if ($intent_id !== '') {
         $fatal_intent_changes = array(
@@ -10270,54 +10372,68 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                             ));
                         }
                     } else {
-                        $intent = bvmgr_ticketing_v2_begin_create_intent(
-                            $plan_id,
-                            $tec_event_id,
-                            $ticket_key,
-                            $ticket_hash,
-                            $cfg_hash_now,
-                            $preview_id,
-                            $ticket_label
-                        );
-                        $intent_id = sanitize_key((string) ($intent['intent_id'] ?? ''));
-                        if ($intent_id === '') {
-                            $row['message'] = 'create_intent_persist_failed';
+                        $create_lock = bvmgr_ticketing_v2_acquire_create_lock($plan_id, $tec_event_id, $ticket_key);
+                        if (empty($create_lock['ok'])) {
+                            $row['message'] = (string) ($create_lock['message'] ?? 'create_already_in_progress');
+                            $row['create_lock_started_at'] = absint($create_lock['started_at'] ?? 0);
                             $results[] = $row;
                             continue;
                         }
 
-                        bvmgr_ticketing_v2_set_commit_fatal_context(array(
-                            'plan_id' => $plan_id,
-                            'preview_id' => $preview_id,
-                            'phase' => 'provider_create',
-                            'cursor' => max(0, $action_next_cursor - 1),
-                            'scope' => 'ticket',
-                            'action' => 'create',
-                            'ticket_key' => $ticket_key,
-                            'intent_id' => $intent_id,
-                            'product_id' => absint($intent['product_id'] ?? 0),
-                        ));
+                        try {
+                            $intent = bvmgr_ticketing_v2_begin_create_intent(
+                                $plan_id,
+                                $tec_event_id,
+                                $ticket_key,
+                                $ticket_hash,
+                                $cfg_hash_now,
+                                $preview_id,
+                                $ticket_label
+                            );
+                            $intent_id = sanitize_key((string) ($intent['intent_id'] ?? ''));
+                            if ($intent_id === '') {
+                                $row['message'] = 'create_intent_persist_failed';
+                                $results[] = $row;
+                                continue;
+                            }
 
-                        $created = bvmgr_ticketing_v2_create_ticket($tec_event_id, $ticket_cfg, array(
-                            'plan_id' => $plan_id,
-                            'tec_event_id' => $tec_event_id,
-                            'ticket_key' => $ticket_key,
-                            'ticket_hash' => $ticket_hash,
-                            'config_hash' => $cfg_hash_now,
-                            'preview_id' => $preview_id,
-                            'intent_id' => $intent_id,
-                        ));
-                        if (empty($created['ok'])) {
-                            $row['message'] = (string) ($created['message'] ?? 'create_failed');
-                            $row['woo_product_id'] = absint($created['woo_product_id'] ?? $created['tec_ticket_id'] ?? 0);
-                            $results[] = $row;
-                            continue;
-                        }
+                            bvmgr_ticketing_v2_set_commit_fatal_context(array(
+                                'plan_id' => $plan_id,
+                                'preview_id' => $preview_id,
+                                'phase' => 'provider_create',
+                                'cursor' => max(0, $action_next_cursor - 1),
+                                'scope' => 'ticket',
+                                'action' => 'create',
+                                'ticket_key' => $ticket_key,
+                                'intent_id' => $intent_id,
+                                'product_id' => absint($intent['product_id'] ?? 0),
+                                'create_lock_name' => (string) ($create_lock['name'] ?? ''),
+                                'create_lock_token' => (string) ($create_lock['token'] ?? ''),
+                            ));
 
-                        $pid = absint($created['woo_product_id'] ?? 0);
-                        $ticket_id = absint($created['tec_ticket_id'] ?? 0);
-                        if ($ticket_id <= 0) {
-                            $ticket_id = $pid;
+                            $created = bvmgr_ticketing_v2_create_ticket($tec_event_id, $ticket_cfg, array(
+                                'plan_id' => $plan_id,
+                                'tec_event_id' => $tec_event_id,
+                                'ticket_key' => $ticket_key,
+                                'ticket_hash' => $ticket_hash,
+                                'config_hash' => $cfg_hash_now,
+                                'preview_id' => $preview_id,
+                                'intent_id' => $intent_id,
+                            ));
+                            if (empty($created['ok'])) {
+                                $row['message'] = (string) ($created['message'] ?? 'create_failed');
+                                $row['woo_product_id'] = absint($created['woo_product_id'] ?? $created['tec_ticket_id'] ?? 0);
+                                $results[] = $row;
+                                continue;
+                            }
+
+                            $pid = absint($created['woo_product_id'] ?? 0);
+                            $ticket_id = absint($created['tec_ticket_id'] ?? 0);
+                            if ($ticket_id <= 0) {
+                                $ticket_id = $pid;
+                            }
+                        } finally {
+                            bvmgr_ticketing_v2_release_create_lock($create_lock);
                         }
                     }
 
