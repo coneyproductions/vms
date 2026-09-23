@@ -140,6 +140,8 @@ foreach (array(
     'function bvmgr_ticketing_v2_begin_create_intent(',
     'function bvmgr_ticketing_v2_find_unresolved_create_intent(',
     'function bvmgr_ticketing_v2_can_release_create_lock_after_handled_exit(',
+    'function bvmgr_ticketing_v2_force_provider_product_insert_draft(',
+    "add_filter('wp_insert_post_data', 'bvmgr_ticketing_v2_force_provider_product_insert_draft', PHP_INT_MAX, 4);",
     'function bvmgr_ticketing_v2_capture_provider_create_link(',
     "add_action('added_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);",
     "add_action('updated_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);",
@@ -325,7 +327,36 @@ vms_issue5_assert_true(
     'Per-plan Commit lock must cover mutable Prepare/actions/finalize work and final map writes.'
 );
 
+$insertFence = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_force_provider_product_insert_draft');
+vms_issue5_assert_contains(
+    "$GLOBALS['bvmgr_ticketing_v2_active_create_context']",
+    $insertFence,
+    'Insertion-time draft fence must be scoped to the guarded Ticketing v2 CREATE context.'
+);
+vms_issue5_assert_contains(
+    "$post_type !== 'product'",
+    $insertFence,
+    'Insertion-time draft fence must affect only Woo product post writes.'
+);
+vms_issue5_assert_contains(
+    "$data['post_status'] = 'draft';",
+    $insertFence,
+    'Guarded provider product writes must be forced to draft before WordPress persists them.'
+);
+
 $createTicket = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_create_ticket');
+$activeContextPos = strpos($createTicket, 'bvmgr_ticketing_v2_set_active_create_context($create_context)');
+$providerCallForFencePos = strpos($createTicket, 'bvmgr_ticketing_b_create_woo_ticket(');
+$clearContextPos = strpos($createTicket, 'bvmgr_ticketing_v2_clear_active_create_context()');
+vms_issue5_assert_true(
+    $activeContextPos !== false
+        && $providerCallForFencePos !== false
+        && $clearContextPos !== false
+        && $activeContextPos < $providerCallForFencePos
+        && $providerCallForFencePos < $clearContextPos,
+    'Guarded CREATE context must surround the provider call so wp_insert_post_data can prevent an initial publish transition.'
+);
+
 $stageFirstPos = strpos($createTicket, 'bvmgr_ticketing_v2_force_ticket_product_staged($product_id)');
 $applyUpdatePos = strpos($createTicket, 'bvmgr_ticketing_b_apply_update_to_product(');
 $stageSecondPos = ($applyUpdatePos !== false)
