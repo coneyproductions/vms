@@ -160,7 +160,8 @@ vms_issue5_assert_true($createPos !== false, 'Commit must still contain one guar
 vms_issue5_assert_true($recoveryPos < $createPos, 'Retry recovery must happen before provider CREATE.');
 vms_issue5_assert_true($intentPos < $createPos, 'Durable CREATE intent must be written before provider CREATE.');
 
-$ticketCreateStart = strpos($commit, "if (\$act === 'create') {", $recoveryPos);
+$commitBeforeProviderCreate = substr($commit, 0, $createPos);
+$ticketCreateStart = strrpos($commitBeforeProviderCreate, "if (\$act === 'create') {");
 $ticketAdoptStart = ($ticketCreateStart !== false) ? strpos($commit, "if (\$act === 'adopt') {", $ticketCreateStart) : false;
 vms_issue5_assert_true($ticketCreateStart !== false && $ticketAdoptStart !== false, 'Unable to isolate the ticket CREATE action block.');
 $ticketCreateBlock = substr($commit, $ticketCreateStart, $ticketAdoptStart - $ticketCreateStart);
