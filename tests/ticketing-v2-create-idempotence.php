@@ -302,6 +302,29 @@ vms_issue5_assert_contains(
     $adoptBlock,
     'An old Preview that encoded interrupted recovery as ADOPT must be rejected and refreshed.'
 );
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_apply_ticket_image_policy($pid, $plan_id, $ticket_cfg, true)',
+    $adoptBlock,
+    'Legacy ADOPT must avoid WC_Product::save() for image changes so Event Tickets stock sync is not re-entered.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_verify_ticket_inventory_after_apply($pid, $ticket_cfg)',
+    $adoptBlock,
+    'Legacy ADOPT must verify authoritative capacity-minus-sold inventory before mapping.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_restore_enabled_ticket_product($pid, true)',
+    $adoptBlock,
+    'Legacy ADOPT must avoid Woo product save during public-state restore.'
+);
+$adoptInventoryVerifyPos = strpos($adoptBlock, 'bvmgr_ticketing_v2_verify_ticket_inventory_after_apply($pid, $ticket_cfg)');
+$adoptMapCheckpointPos = strpos($adoptBlock, 'bvmgr_ticketing_v2_persist_action_checkpoint(');
+vms_issue5_assert_true(
+    $adoptInventoryVerifyPos !== false
+        && $adoptMapCheckpointPos !== false
+        && $adoptInventoryVerifyPos < $adoptMapCheckpointPos,
+    'Legacy ADOPT inventory must be verified before the product can be checkpointed as canonical.'
+);
 
 $createLock = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_acquire_create_lock');
 vms_issue5_assert_true(
@@ -395,6 +418,37 @@ vms_issue5_assert_contains(
     'bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false)',
     $source,
     'Provider meta capture must use the non-Woo-save staging path to avoid recursive provider save behavior.'
+);
+
+$adoptInventoryVerifier = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_verify_ticket_inventory_after_apply');
+vms_issue5_assert_contains(
+    '$expected_stock = max(0, $capacity - $sold_qty);',
+    $adoptInventoryVerifier,
+    'ADOPT inventory verification must derive expected remaining stock from capacity minus authoritative sold quantity.'
+);
+vms_issue5_assert_contains(
+    "'inventory_mismatch_after_apply'",
+    $adoptInventoryVerifier,
+    'ADOPT must fail closed if persisted stock/capacity does not match the authoritative calculation.'
+);
+
+$restoreHelper = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_restore_enabled_ticket_product');
+vms_issue5_assert_contains(
+    '$already_public = ($current_status === \'publish\' && $current_visibility !== \'hidden\');',
+    $restoreHelper,
+    'Restore helper must recognize already-public products and avoid an unnecessary Woo save.'
+);
+vms_issue5_assert_contains(
+    '!$avoid_wc_save',
+    $restoreHelper,
+    'Restore helper must support the ADOPT no-Woo-save path.'
+);
+
+$imageHelper = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_apply_ticket_image_policy');
+vms_issue5_assert_contains(
+    '!$avoid_wc_save && $current_image_id !== $target_image_id',
+    $imageHelper,
+    'Image policy must support avoiding unnecessary Woo saves during legacy ADOPT.'
 );
 
 $shutdown = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_commit_shutdown_diagnostics');
