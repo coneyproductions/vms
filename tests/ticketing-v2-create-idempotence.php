@@ -185,22 +185,30 @@ $lockPos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_acquire_create_lock(')
 $recoveryInsideCreatePos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_find_interrupted_create_candidates(');
 $providerCreatePos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_create_ticket(');
 $checkpointInsideCreatePos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_persist_action_checkpoint(');
+$restoreInsideCreatePos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_restore_enabled_ticket_product(');
 $releaseInsideCreatePos = strrpos($ticketCreateBlock, 'bvmgr_ticketing_v2_release_create_lock(');
 vms_issue5_assert_true(
     $lockPos !== false
         && $recoveryInsideCreatePos !== false
         && $providerCreatePos !== false
         && $checkpointInsideCreatePos !== false
+        && $restoreInsideCreatePos !== false
         && $releaseInsideCreatePos !== false
         && $lockPos < $recoveryInsideCreatePos
         && $lockPos < $providerCreatePos
-        && $checkpointInsideCreatePos < $releaseInsideCreatePos,
-    'CREATE lock must cover the final recovery scan, provider CREATE, and durable mapping checkpoint.'
+        && $checkpointInsideCreatePos < $restoreInsideCreatePos
+        && $restoreInsideCreatePos < $releaseInsideCreatePos,
+    'CREATE lock must cover the final recovery scan, provider CREATE, durable mapping checkpoint, and publish restore in that order.'
 );
 vms_issue5_assert_contains(
     'bvmgr_ticketing_v2_get_sync($plan_id)',
     $ticketCreateBlock,
     'CREATE must refresh durable mapping after acquiring the lock.'
+);
+vms_issue5_assert_contains(
+    "'create_mapping_checkpoint_failed'",
+    $ticketCreateBlock,
+    'CREATE must verify the durable mapping before publishing/restoring the product.'
 );
 
 $recoveryFinder = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_find_interrupted_create_candidates');
@@ -241,6 +249,15 @@ vms_issue5_assert_contains(
     'bvmgr_ticketing_v2_find_interrupted_create_candidates(',
     substr($commit, strpos($commit, "if (\$act === 'adopt') {")),
     'Commit must revalidate a Preview recovery candidate before adopting it.'
+);
+$adoptStart = strpos($commit, "if (\$act === 'adopt') {");
+$updateStart = ($adoptStart !== false) ? strpos($commit, "if (\$act === 'update') {", $adoptStart) : false;
+vms_issue5_assert_true($adoptStart !== false && $updateStart !== false, 'Unable to isolate the ticket ADOPT action block.');
+$adoptBlock = substr($commit, $adoptStart, $updateStart - $adoptStart);
+vms_issue5_assert_contains(
+    "bvmgr_ticketing_v2_finish_create_intent(",
+    $adoptBlock,
+    'Recovering an interrupted CREATE through Preview → Adopt must finalize and clear its temporary recovery identity.'
 );
 
 // Exercise the pure recovery classifier without loading WordPress.
