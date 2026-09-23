@@ -3932,6 +3932,32 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
 
     $intent_product_id = absint($intent['product_id'] ?? 0);
     if ($intent_product_id > 0 && get_post_type($intent_product_id) === 'product') {
+        $intent_linked_event_id = absint(get_post_meta($intent_product_id, '_tribe_wooticket_for_event', true));
+        if ($intent_linked_event_id === $tec_event_id && (string) get_post_status($intent_product_id) !== 'trash') {
+            $intent_title = (string) get_the_title($intent_product_id);
+            $intent_title_normalized = bvmgr_ticketing_v2_normalize_create_match_title($intent_title);
+            if (
+                !in_array($intent_title, $expected_titles, true)
+                && !in_array($intent_title_normalized, $normalized_expected_titles, true)
+            ) {
+                // We have durable proof that this CREATE already produced a
+                // linked product, but its identity is not complete enough to
+                // auto-adopt. Block rather than risking a second CREATE.
+                return array(
+                    'status' => 'unsafe',
+                    'product_id' => $intent_product_id,
+                    'candidate_ids' => array($intent_product_id),
+                    'reason' => 'intent_product_title_mismatch',
+                    'candidates' => array(array(
+                        'product_id' => $intent_product_id,
+                        'title' => $intent_title,
+                        'sold_check_ok' => 0,
+                        'sold_qty' => 0,
+                        'sold_message' => 'intent_product_title_mismatch',
+                    )),
+                );
+            }
+        }
         $product_ids[] = $intent_product_id;
     }
     $product_ids = array_values(array_unique(array_filter(array_map('absint', $product_ids))));
@@ -9350,6 +9376,15 @@ function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
         $message = substr($message, 0, 600);
     }
 
+    $intent_id = sanitize_key((string) ($context['intent_id'] ?? ''));
+    $context_product_id = absint($context['product_id'] ?? 0);
+    if ($context_product_id <= 0 && $intent_id !== '') {
+        $intents = bvmgr_ticketing_v2_get_create_intents($plan_id);
+        if (isset($intents[$intent_id]) && is_array($intents[$intent_id])) {
+            $context_product_id = absint($intents[$intent_id]['product_id'] ?? 0);
+        }
+    }
+
     $record = array(
         'plan_id' => $plan_id,
         'preview_id' => sanitize_key((string) ($context['preview_id'] ?? '')),
@@ -9358,8 +9393,8 @@ function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
         'scope' => sanitize_key((string) ($context['scope'] ?? '')),
         'action' => sanitize_key((string) ($context['action'] ?? '')),
         'ticket_key' => sanitize_key((string) ($context['ticket_key'] ?? '')),
-        'intent_id' => sanitize_key((string) ($context['intent_id'] ?? '')),
-        'product_id' => absint($context['product_id'] ?? 0),
+        'intent_id' => $intent_id,
+        'product_id' => $context_product_id,
         'error_type' => (int) ($last['type'] ?? 0),
         'message' => $message,
         'file' => (string) ($last['file'] ?? ''),
@@ -9370,12 +9405,15 @@ function bvmgr_ticketing_v2_commit_shutdown_diagnostics(): void {
 
     $intent_id = sanitize_key((string) ($record['intent_id'] ?? ''));
     if ($intent_id !== '') {
-        bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, array(
+        $fatal_intent_changes = array(
             'status' => 'fatal_interrupted',
             'fatal_at' => time(),
             'fatal_message' => $message,
-            'product_id' => absint($record['product_id'] ?? 0),
-        ));
+        );
+        if (absint($record['product_id'] ?? 0) > 0) {
+            $fatal_intent_changes['product_id'] = absint($record['product_id']);
+        }
+        bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, $fatal_intent_changes);
     }
 }
 
