@@ -142,6 +142,8 @@ foreach (array(
     "add_action('added_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);",
     "add_action('updated_post_meta', 'bvmgr_ticketing_v2_capture_provider_create_link', 10, 4);",
     'function bvmgr_ticketing_v2_find_interrupted_create_candidates(',
+    'function bvmgr_ticketing_v2_acquire_create_lock(',
+    'function bvmgr_ticketing_v2_release_create_lock(',
     'function bvmgr_ticketing_v2_persist_action_checkpoint(',
     'function bvmgr_ticketing_v2_commit_shutdown_diagnostics(',
 ) as $required) {
@@ -163,9 +165,25 @@ $ticketAdoptStart = ($ticketCreateStart !== false) ? strpos($commit, "if (\$act 
 vms_issue5_assert_true($ticketCreateStart !== false && $ticketAdoptStart !== false, 'Unable to isolate the ticket CREATE action block.');
 $ticketCreateBlock = substr($commit, $ticketCreateStart, $ticketAdoptStart - $ticketCreateStart);
 vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_acquire_create_lock(',
+    $ticketCreateBlock,
+    'Ticket CREATE must acquire the atomic per-ticket lock before provider mutation.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_release_create_lock(',
+    $ticketCreateBlock,
+    'Ticket CREATE must release its lock on normal/handled exits.'
+);
+vms_issue5_assert_contains(
     'bvmgr_ticketing_v2_persist_action_checkpoint(',
     $ticketCreateBlock,
     'Successful CREATE mapping must checkpoint inside the CREATE action before the next action branch.'
+);
+$lockPos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_acquire_create_lock(');
+$providerCreatePos = strpos($ticketCreateBlock, 'bvmgr_ticketing_v2_create_ticket(');
+vms_issue5_assert_true(
+    $lockPos !== false && $providerCreatePos !== false && $lockPos < $providerCreatePos,
+    'Atomic CREATE lock must be acquired before the guarded provider CREATE call.'
 );
 
 $preview = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_preview_sync');
@@ -178,6 +196,16 @@ vms_issue5_assert_contains(
     "in_array(\$interrupted_status, array('ambiguous', 'unsafe', 'sold'), true)",
     $preview,
     'Preview must block ambiguous, unverifiable, or sold interrupted CREATE candidates.'
+);
+vms_issue5_assert_contains(
+    'recovery_candidate_ids',
+    $commit,
+    'Commit must carry recovery identity from Preview and revalidate it before adoption.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_find_interrupted_create_candidates(',
+    substr($commit, strpos($commit, "if (\$act === 'adopt') {")),
+    'Commit must revalidate a Preview recovery candidate before adopting it.'
 );
 
 // Exercise the pure recovery classifier without loading WordPress.
