@@ -329,17 +329,17 @@ vms_issue5_assert_true(
 
 $insertFence = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_force_provider_product_insert_draft');
 vms_issue5_assert_contains(
-    "$GLOBALS['bvmgr_ticketing_v2_active_create_context']",
+    "\$GLOBALS['bvmgr_ticketing_v2_active_create_context']",
     $insertFence,
     'Insertion-time draft fence must be scoped to the guarded Ticketing v2 CREATE context.'
 );
 vms_issue5_assert_contains(
-    "$post_type !== 'product'",
+    "\$post_type !== 'product'",
     $insertFence,
     'Insertion-time draft fence must affect only Woo product post writes.'
 );
 vms_issue5_assert_contains(
-    "$data['post_status'] = 'draft';",
+    "\$data['post_status'] = 'draft';",
     $insertFence,
     'Guarded provider product writes must be forced to draft before WordPress persists them.'
 );
