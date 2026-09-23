@@ -203,6 +203,24 @@ vms_issue5_assert_contains(
     'CREATE must refresh durable mapping after acquiring the lock.'
 );
 
+$recoveryFinder = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_find_interrupted_create_candidates');
+vms_issue5_assert_contains(
+    "bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id')",
+    $recoveryFinder,
+    'Interrupted CREATE recovery must require the dedicated temporary CREATE-intent marker or the durable intent product ID.'
+);
+vms_issue5_assert_contains(
+    '$matches_create_intent_marker',
+    $recoveryFinder,
+    'Ordinary VMS ownership markers alone must not classify a product as an interrupted CREATE.'
+);
+$finishIntent = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_finish_create_intent');
+vms_issue5_assert_contains(
+    "delete_post_meta(\$product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id'))",
+    $finishIntent,
+    'Successful CREATE completion must remove the temporary recovery marker.'
+);
+
 $preview = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_preview_sync');
 vms_issue5_assert_contains(
     'bvmgr_ticketing_v2_find_interrupted_create_candidates(',
