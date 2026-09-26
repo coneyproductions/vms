@@ -156,6 +156,7 @@ vms_issue5_assert_contains(
 
 // Durable intent + provider-link capture are required before retry idempotence can work.
 foreach (array(
+    'function bvmgr_ticketing_v2_normalize_title_quote_presentation(',
     'function bvmgr_ticketing_v2_begin_create_intent(',
     'function bvmgr_ticketing_v2_find_unresolved_create_intent(',
     'function bvmgr_ticketing_v2_can_release_create_lock_after_handled_exit(',
@@ -704,6 +705,9 @@ vms_issue5_assert_contains(
 $dashNormalizer = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_normalize_title_dash_presentation');
 eval($dashNormalizer);
 
+$quoteNormalizer = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_normalize_title_quote_presentation');
+eval($quoteNormalizer);
+
 $legacyTitleNormalizer = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match');
 eval($legacyTitleNormalizer);
 
@@ -745,6 +749,30 @@ vms_issue5_assert_same(
     $legacyAscii,
     $legacyEntityEnDash,
     'A WordPress-facing en dash must not prevent adoption of the same legitimate legacy sold ticket.'
+);
+
+$legacyTypographicApostrophe = bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
+    "2026-11-14 19:00 &#8211; Child&#8217;s Admission (12 &#038; under)"
+);
+$legacyStraightApostrophe = bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
+    "Child's Admission (12 & under)"
+);
+vms_issue5_assert_same(
+    $legacyStraightApostrophe,
+    $legacyTypographicApostrophe,
+    'WordPress typographic apostrophe/entity rendering must normalize to the configured straight-apostrophe ticket label.'
+);
+
+$createTypographicApostrophe = bvmgr_ticketing_v2_normalize_create_match_title(
+    "2026-11-14 19:00 &#8211; Child&#8217;s Admission (12 &#038; under)"
+);
+$createStraightApostrophe = bvmgr_ticketing_v2_normalize_create_match_title(
+    "2026-11-14 19:00 - Child's Admission (12 & under)"
+);
+vms_issue5_assert_same(
+    $createStraightApostrophe,
+    $createTypographicApostrophe,
+    'Interrupted-CREATE full-title normalization must treat WordPress typographic quotes as presentation-only differences.'
 );
 vms_issue5_assert_true(
     bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
