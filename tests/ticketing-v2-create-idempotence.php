@@ -443,7 +443,7 @@ vms_issue5_assert_true(
     'Provider meta capture must remain identity-only and must not re-enter product/ticket save or taxonomy lifecycles while provider CREATE is still active.'
 );
 vms_issue5_assert_contains(
-    "$capture_stage_ok = ($capture_post_status === 'draft' && $capture_visibility === 'hidden');",
+    '$capture_stage_ok = ($capture_post_status === \'draft\' && $capture_visibility === \'hidden\');',
     $captureHookExecutable,
     'Provider meta capture must verify the insertion fence left the captured product draft/hidden without performing another save.'
 );
