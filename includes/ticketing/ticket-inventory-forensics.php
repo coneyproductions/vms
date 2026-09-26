@@ -633,21 +633,27 @@ function bvmgr_ticket_inventory_forensics_load_ticket_object(int $product_id)
 	return null;
 }
 
-function bvmgr_ticket_inventory_forensics_snapshot_event(int $tec_event_id): array
+function bvmgr_ticket_inventory_forensics_snapshot_event(int $tec_event_id, bool $include_provider_state = true): array
 {
 	$tec_event_id = absint($tec_event_id);
 	$event_capacity = null;
 	$event_available = null;
 	$event_sold = null;
 
-	if ($tec_event_id > 0 && function_exists('tribe_tickets_get_capacity')) {
+	// Metadata-write hooks can fire while Event Tickets is still inside its
+	// provider CREATE/save lifecycle. Calling provider-derived availability or
+	// attendee APIs from inside those hooks can recursively enter Event Tickets
+	// before its current class/bootstrap path has finished. In passive mode,
+	// record only durable/raw metadata and leave provider-derived fields null.
+	if ($include_provider_state && $tec_event_id > 0 && function_exists('tribe_tickets_get_capacity')) {
 		$event_capacity = tribe_tickets_get_capacity($tec_event_id);
 	}
-	if ($tec_event_id > 0 && function_exists('tribe_events_count_available_tickets')) {
+	if ($include_provider_state && $tec_event_id > 0 && function_exists('tribe_events_count_available_tickets')) {
 		$event_available = tribe_events_count_available_tickets($tec_event_id);
 	}
 	if (
-		$tec_event_id > 0
+		$include_provider_state
+		&& $tec_event_id > 0
 		&& class_exists('Tribe__Tickets__Tickets')
 		&& method_exists('Tribe__Tickets__Tickets', 'get_event_attendees_count')
 	) {
@@ -670,11 +676,11 @@ function bvmgr_ticket_inventory_forensics_snapshot_event(int $tec_event_id): arr
 	);
 }
 
-function bvmgr_ticket_inventory_forensics_snapshot_product(int $product_id): array
+function bvmgr_ticket_inventory_forensics_snapshot_product(int $product_id, bool $include_provider_state = true): array
 {
 	$scope = bvmgr_ticket_inventory_forensics_resolve_scope($product_id);
-	$wc_product = function_exists('wc_get_product') ? wc_get_product($product_id) : null;
-	$ticket = bvmgr_ticket_inventory_forensics_load_ticket_object($product_id);
+	$wc_product = ($include_provider_state && function_exists('wc_get_product')) ? wc_get_product($product_id) : null;
+	$ticket = $include_provider_state ? bvmgr_ticket_inventory_forensics_load_ticket_object($product_id) : null;
 	$post = $product_id > 0 ? get_post($product_id) : null;
 	$post_status = $post instanceof WP_Post ? (string) $post->post_status : '';
 	$product_role = sanitize_key((string) get_post_meta($product_id, bvmgr_ticket_inventory_forensics_product_meta_key('product_role', '_vms_product_role'), true));
@@ -683,7 +689,10 @@ function bvmgr_ticket_inventory_forensics_snapshot_product(int $product_id): arr
 		trim((string) get_post_meta($product_id, '_ticket_start_date', true)),
 		trim((string) get_post_meta($product_id, '_ticket_end_date', true))
 	);
-	$event_snapshot = bvmgr_ticket_inventory_forensics_snapshot_event(absint($scope['tec_event_id'] ?? 0));
+	$event_snapshot = bvmgr_ticket_inventory_forensics_snapshot_event(
+		absint($scope['tec_event_id'] ?? 0),
+		$include_provider_state
+	);
 
 	$stock_quantity = $wc_product && method_exists($wc_product, 'get_stock_quantity')
 		? $wc_product->get_stock_quantity()
@@ -771,18 +780,18 @@ function bvmgr_ticket_inventory_forensics_snapshot_product(int $product_id): arr
 	);
 }
 
-function bvmgr_ticket_inventory_forensics_snapshot_object(int $object_id): array
+function bvmgr_ticket_inventory_forensics_snapshot_object(int $object_id, bool $include_provider_state = true): array
 {
 	$object_id = absint($object_id);
 	$scope = bvmgr_ticket_inventory_forensics_resolve_scope($object_id);
 	$post_type = (string) ($scope['post_type'] ?? '');
 
 	if ($post_type === 'product') {
-		return bvmgr_ticket_inventory_forensics_snapshot_product($object_id);
+		return bvmgr_ticket_inventory_forensics_snapshot_product($object_id, $include_provider_state);
 	}
 
 	if ($post_type === 'tribe_events') {
-		$event_snapshot = bvmgr_ticket_inventory_forensics_snapshot_event($object_id);
+		$event_snapshot = bvmgr_ticket_inventory_forensics_snapshot_event($object_id, $include_provider_state);
 		return array_merge(
 			array(
 				'post_type' => 'tribe_events',
@@ -1090,7 +1099,7 @@ function bvmgr_ticket_inventory_forensics_capture_pre_meta_write($check, $object
 		$object_id,
 		$meta_key,
 		array(
-			'before_snapshot' => bvmgr_ticket_inventory_forensics_snapshot_object($object_id),
+			'before_snapshot' => bvmgr_ticket_inventory_forensics_snapshot_object($object_id, false),
 			'context' => $context,
 			'source_hook' => $source_hook,
 			'source_function' => $source_function,
@@ -1139,7 +1148,7 @@ function bvmgr_ticket_inventory_forensics_capture_pre_meta_delete($check, $objec
 		$object_id,
 		$meta_key,
 		array(
-			'before_snapshot' => bvmgr_ticket_inventory_forensics_snapshot_object($object_id),
+			'before_snapshot' => bvmgr_ticket_inventory_forensics_snapshot_object($object_id, false),
 			'context' => $context,
 			'source_hook' => $source_hook,
 			'source_function' => $source_function,
@@ -1361,8 +1370,8 @@ function bvmgr_ticket_inventory_forensics_record_post_meta_write(string $operati
 		return;
 	}
 
-	$before_snapshot = is_array($pending['before_snapshot'] ?? null) ? $pending['before_snapshot'] : bvmgr_ticket_inventory_forensics_snapshot_object($object_id);
-	$after_snapshot = bvmgr_ticket_inventory_forensics_snapshot_object($object_id);
+	$before_snapshot = is_array($pending['before_snapshot'] ?? null) ? $pending['before_snapshot'] : bvmgr_ticket_inventory_forensics_snapshot_object($object_id, false);
+	$after_snapshot = bvmgr_ticket_inventory_forensics_snapshot_object($object_id, false);
 	$scope = bvmgr_ticket_inventory_forensics_resolve_scope($object_id);
 
 	$result_status = bvmgr_ticket_inventory_forensics_snapshot_hash($before_snapshot) === bvmgr_ticket_inventory_forensics_snapshot_hash($after_snapshot)
