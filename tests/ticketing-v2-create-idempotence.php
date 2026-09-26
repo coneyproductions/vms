@@ -380,10 +380,10 @@ vms_issue5_assert_true(
     'Guarded CREATE context must surround the provider call so wp_insert_post_data can prevent an initial publish transition.'
 );
 
-$stageFirstPos = strpos($createTicket, 'bvmgr_ticketing_v2_force_ticket_product_staged($product_id)');
+$stageFirstPos = strpos($createTicket, 'bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false)');
 $applyUpdatePos = strpos($createTicket, 'bvmgr_ticketing_b_apply_update_to_product(');
 $stageSecondPos = ($applyUpdatePos !== false)
-    ? strpos($createTicket, 'bvmgr_ticketing_v2_force_ticket_product_staged($product_id)', $applyUpdatePos)
+    ? strpos($createTicket, 'bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false)', $applyUpdatePos)
     : false;
 vms_issue5_assert_true(
     $stageFirstPos !== false
@@ -391,7 +391,7 @@ vms_issue5_assert_true(
         && $stageSecondPos !== false
         && $stageFirstPos < $applyUpdatePos
         && $stageSecondPos > $applyUpdatePos,
-    'Provider-created product must be explicitly staged before and after normal ticket updates.'
+    'Provider-created product must be staged before and after normal ticket updates without WC_Product::save() re-entry.'
 );
 $stageHelper = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_force_ticket_product_staged');
 vms_issue5_assert_contains(
@@ -414,10 +414,33 @@ vms_issue5_assert_contains(
     $stageHelper,
     'Staging helper must fail when visibility writes or reads report errors.'
 );
+$captureHook = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_capture_provider_create_link');
+vms_issue5_assert_true(
+    strpos($captureHook, 'bvmgr_ticketing_v2_force_ticket_product_staged(') === false
+        && strpos($captureHook, 'wp_update_post(') === false
+        && strpos($captureHook, 'wp_add_object_terms(') === false
+        && strpos($captureHook, '->save(') === false,
+    'Provider meta capture must remain identity-only and must not re-enter product/ticket save or taxonomy lifecycles while provider CREATE is still active.'
+);
 vms_issue5_assert_contains(
-    'bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false)',
-    $source,
-    'Provider meta capture must use the non-Woo-save staging path to avoid recursive provider save behavior.'
+    "$capture_stage_ok = ($capture_post_status === 'draft' && $capture_visibility === 'hidden');",
+    $captureHook,
+    'Provider meta capture must verify the insertion fence left the captured product draft/hidden without performing another save.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_force_ticket_product_staged($pid, false)',
+    $ticketCreateBlock,
+    'Interrupted CREATE recovery must stage without WC_Product::save() re-entry.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_apply_ticket_image_policy($pid, $plan_id, $ticket_cfg, true)',
+    $ticketCreateBlock,
+    'CREATE/recovery image application must avoid WC_Product::save() re-entry.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_restore_enabled_ticket_product($pid, true)',
+    $ticketCreateBlock,
+    'CREATE/recovery publish restore must avoid WC_Product::save() re-entry.'
 );
 
 $adoptInventoryVerifier = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_verify_ticket_inventory_after_apply');
