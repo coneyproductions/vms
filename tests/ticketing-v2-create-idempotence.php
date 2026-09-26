@@ -556,6 +556,46 @@ vms_issue5_assert_true(
 // hooks must not call Event Tickets/Woo provider-derived ticket state while a
 // provider CREATE is still active, or the audit itself can recursively re-enter
 // the provider bootstrap/save lifecycle.
+$interruptedUnsoldProof = vms_issue5_extract_function(
+    $source,
+    'bvmgr_ticketing_v2_prove_interrupted_create_unsold'
+);
+vms_issue5_assert_contains(
+    "oim.meta_key IN ('_product_id', '_variation_id')",
+    $interruptedUnsoldProof,
+    'Interrupted CREATE unsold fallback must check Woo order-item product references.'
+);
+vms_issue5_assert_contains(
+    "'_tribe_wooticket_product'",
+    $interruptedUnsoldProof,
+    'Interrupted CREATE unsold fallback must check TEC attendee/ticket references.'
+);
+vms_issue5_assert_contains(
+    "'total_sales'",
+    $interruptedUnsoldProof,
+    'Interrupted CREATE unsold fallback must fail closed on Woo total_sales references.'
+);
+
+$interruptedFinder = vms_issue5_extract_function(
+    $source,
+    'bvmgr_ticketing_v2_find_interrupted_create_candidates'
+);
+vms_issue5_assert_contains(
+    'if (empty($sold[\'ok\']) && $has_recovery_identity)',
+    $interruptedFinder,
+    'Interrupted CREATE fallback must run only after durable recovery identity is established and normal sold reconciliation cannot prove state.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_prove_interrupted_create_unsold($product_id)',
+    $interruptedFinder,
+    'Interrupted CREATE recovery must use the strict zero-reference fallback when normal sold reconciliation is unavailable.'
+);
+vms_issue5_assert_contains(
+    "'interrupted_create_zero_reference_proof'",
+    $interruptedFinder,
+    'Interrupted CREATE fallback must mark the recovery-specific zero-reference proof path.'
+);
+
 $forensicsPath = __DIR__ . '/../includes/ticketing/ticket-inventory-forensics.php';
 $forensicsSource = file_get_contents($forensicsPath);
 if (!is_string($forensicsSource) || $forensicsSource === '') {
