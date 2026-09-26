@@ -4391,6 +4391,9 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
         $label,
     ), 'strlen')));
     $normalized_expected_titles = array_values(array_unique(array_map('bvmgr_ticketing_v2_normalize_create_match_title', $expected_titles)));
+    $normalized_expected_base_title = strtolower(
+        bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match($label)
+    );
 
     $product_ids = get_posts(array(
         'post_type' => 'product',
@@ -4412,9 +4415,17 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
         if ($intent_linked_event_id === $tec_event_id && (string) get_post_status($intent_product_id) !== 'trash') {
             $intent_title = (string) get_the_title($intent_product_id);
             $intent_title_normalized = bvmgr_ticketing_v2_normalize_create_match_title($intent_title);
+            $intent_base_title_normalized = strtolower(
+                bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match($intent_title)
+            );
+            $intent_title_matches_base = (
+                $normalized_expected_base_title !== ''
+                && $intent_base_title_normalized === $normalized_expected_base_title
+            );
             if (
                 !in_array($intent_title, $expected_titles, true)
                 && !in_array($intent_title_normalized, $normalized_expected_titles, true)
+                && !$intent_title_matches_base
             ) {
                 // We have durable proof that this CREATE already produced a
                 // linked product, but its identity is not complete enough to
@@ -4430,6 +4441,8 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
                         'sold_check_ok' => 0,
                         'sold_qty' => 0,
                         'sold_message' => 'intent_product_title_mismatch',
+                        'normalized_candidate_base_title' => $intent_base_title_normalized,
+                        'normalized_expected_base_title' => $normalized_expected_base_title,
                     )),
                 );
             }
@@ -4495,9 +4508,17 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
 
         $title = (string) get_the_title($product_id);
         $normalized_title = bvmgr_ticketing_v2_normalize_create_match_title($title);
+        $normalized_candidate_base_title = strtolower(
+            bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match($title)
+        );
+        $title_matches_base = (
+            $normalized_expected_base_title !== ''
+            && $normalized_candidate_base_title === $normalized_expected_base_title
+        );
         if (
             !in_array($title, $expected_titles, true)
             && !in_array($normalized_title, $normalized_expected_titles, true)
+            && !$title_matches_base
         ) {
             return array(
                 'status' => 'unsafe',
@@ -4510,6 +4531,8 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
                     'sold_check_ok' => 0,
                     'sold_qty' => 0,
                     'sold_message' => 'recovery_product_title_mismatch',
+                    'normalized_candidate_base_title' => $normalized_candidate_base_title,
+                    'normalized_expected_base_title' => $normalized_expected_base_title,
                 )),
             );
         }
