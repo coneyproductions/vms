@@ -4164,17 +4164,27 @@ function bvmgr_ticketing_v2_capture_provider_create_link($meta_id, $object_id, $
     }
     update_post_meta($product_id, '_visibility', 'hidden');
 
-    $capture_stage = function_exists('bvmgr_ticketing_v2_force_ticket_product_staged')
-        ? bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false)
-        : array('ok' => false, 'message' => 'staging_helper_missing');
+    // Do not re-enter the Woo/Event Tickets product-save lifecycle from this
+    // provider meta callback. Event Tickets is still inside its CREATE work
+    // when _tribe_wooticket_for_event is written; calling wp_update_post(),
+    // taxonomy writers, or WC_Product::save() here can recursively invoke the
+    // provider lifecycle before the original CREATE has returned.
+    //
+    // The insertion fence already forces the product to draft, and the legacy
+    // visibility marker above keeps it hidden. This hook therefore captures
+    // durable recovery identity only. Full staging verification happens after
+    // the provider CREATE returns, or during interrupted-CREATE recovery.
+    $capture_post_status = (string) get_post_status($product_id);
+    $capture_visibility = sanitize_key((string) get_post_meta($product_id, '_visibility', true));
+    $capture_stage_ok = ($capture_post_status === 'draft' && $capture_visibility === 'hidden');
 
     if ($intent_id !== '') {
         bvmgr_ticketing_v2_update_create_intent($plan_id, $intent_id, array(
             'status' => 'product_captured',
             'product_id' => $product_id,
             'captured_at' => time(),
-            'capture_stage_ok' => !empty($capture_stage['ok']) ? 1 : 0,
-            'capture_stage_message' => sanitize_key((string) ($capture_stage['message'] ?? '')),
+            'capture_stage_ok' => $capture_stage_ok ? 1 : 0,
+            'capture_stage_message' => $capture_stage_ok ? 'captured_draft_hidden' : 'captured_identity_only',
         ));
     }
 
@@ -7938,7 +7948,7 @@ function bvmgr_ticketing_v2_create_ticket(int $tec_event_id, array $ticket, arra
         }
     }
 
-    $staged_before_update = bvmgr_ticketing_v2_force_ticket_product_staged($product_id);
+    $staged_before_update = bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false);
     if (empty($staged_before_update['ok'])) {
         return array(
             'ok' => false,
@@ -7959,7 +7969,7 @@ function bvmgr_ticketing_v2_create_ticket(int $tec_event_id, array $ticket, arra
         );
     }
 
-    $staged_after_update = bvmgr_ticketing_v2_force_ticket_product_staged($product_id);
+    $staged_after_update = bvmgr_ticketing_v2_force_ticket_product_staged($product_id, false);
     if (empty($staged_after_update['ok'])) {
         return array(
             'ok' => false,
@@ -11064,7 +11074,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                                 'create_lock_token' => (string) ($create_lock['token'] ?? ''),
                             ));
 
-                            $recovery_stage_before = bvmgr_ticketing_v2_force_ticket_product_staged($pid);
+                            $recovery_stage_before = bvmgr_ticketing_v2_force_ticket_product_staged($pid, false);
                             if (empty($recovery_stage_before['ok'])) {
                                 $row['message'] = 'interrupted_create_recovery_staging_failed';
                                 $row['woo_product_id'] = $pid;
@@ -11080,7 +11090,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                                 continue;
                             }
 
-                            $recovery_stage_after = bvmgr_ticketing_v2_force_ticket_product_staged($pid);
+                            $recovery_stage_after = bvmgr_ticketing_v2_force_ticket_product_staged($pid, false);
                             if (empty($recovery_stage_after['ok'])) {
                                 $row['message'] = 'interrupted_create_recovery_restaging_failed';
                                 $row['woo_product_id'] = $pid;
@@ -11190,9 +11200,9 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                         bvmgr_ticketing_v2_stamp_product_markers($pid, $plan_id, $tec_event_id, 'ga_ticket');
                         bvmgr_ticketing_v2_stamp_ticket_runtime_meta($pid, $tec_event_id, $ticket_cfg);
                         bvmgr_ticketing_v2_maybe_mark_primary_ticket_as_rsvp($pid, $ticket_key, $primary_ticket_key, $ticket_cfg);
-                        bvmgr_ticketing_v2_apply_ticket_image_policy($pid, $plan_id, $ticket_cfg);
+                        bvmgr_ticketing_v2_apply_ticket_image_policy($pid, $plan_id, $ticket_cfg, true);
 
-                        $final_staged_state = bvmgr_ticketing_v2_force_ticket_product_staged($pid);
+                        $final_staged_state = bvmgr_ticketing_v2_force_ticket_product_staged($pid, false);
                         if (empty($final_staged_state['ok'])) {
                             $row['message'] = 'create_staging_verification_failed_before_mapping';
                             $row['woo_product_id'] = $pid;
@@ -11263,7 +11273,7 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
 
                         // Publish/restore only after BVM can prove the product ID
                         // is durably mapped to this ticket key.
-                        $restored = bvmgr_ticketing_v2_restore_enabled_ticket_product($pid);
+                        $restored = bvmgr_ticketing_v2_restore_enabled_ticket_product($pid, true);
                         if (empty($restored['ok'])) {
                             $row['message'] = (string) ($restored['message'] ?? 'restore_failed_after_create');
                             $row['woo_product_id'] = $pid;
