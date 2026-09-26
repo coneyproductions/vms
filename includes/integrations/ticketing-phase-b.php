@@ -4517,6 +4517,7 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
         $sold = function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_product')
             ? bvmgr_ticketing_v2_calc_sold_qty_for_product($product_id)
             : array('ok' => false, 'sold_qty' => 0, 'message' => 'sold_qty_helper_missing');
+        $unsold_proof = array();
 
         // A captured interrupted-CREATE product may be too incomplete for the
         // normal paid-order reconciliation helper on some production schemas.
@@ -4542,6 +4543,7 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
             'sold_check_ok' => !empty($sold['ok']) ? 1 : 0,
             'sold_qty' => max(0, absint($sold['sold_qty'] ?? 0)),
             'sold_message' => sanitize_key((string) ($sold['message'] ?? '')),
+            'recovery_unsold_proof' => $unsold_proof,
         );
     }
 
@@ -9432,7 +9434,36 @@ function bvmgr_ticketing_v2_preview_sync(int $plan_id): array {
             } elseif ($interrupted_status === 'sold') {
                 $row['notes'] = 'An unmapped exact-title ticket candidate already has sales. Commit is blocked; Backstage Venue Manager will not silently adopt or replace a sold product.';
             } else {
+                $unsafe_reason = sanitize_key((string) ($interrupted_match['reason'] ?? 'sold_state_unverified'));
                 $row['notes'] = 'An unmapped exact-title ticket candidate was found, but Backstage Venue Manager could not prove it is unsold. Commit is blocked for manual reconciliation.';
+                $row['recovery_reason'] = $unsafe_reason;
+
+                $unsafe_candidates = is_array($interrupted_match['candidates'] ?? null)
+                    ? $interrupted_match['candidates']
+                    : array();
+                if (!empty($unsafe_candidates[0]) && is_array($unsafe_candidates[0])) {
+                    $sold_message = sanitize_key((string) ($unsafe_candidates[0]['sold_message'] ?? ''));
+                    $unsold_proof = is_array($unsafe_candidates[0]['recovery_unsold_proof'] ?? null)
+                        ? $unsafe_candidates[0]['recovery_unsold_proof']
+                        : array();
+                    $proof_message = sanitize_key((string) ($unsold_proof['message'] ?? ''));
+
+                    if ($unsafe_reason !== '') {
+                        $row['notes'] .= ' Recovery reason: ' . $unsafe_reason . '.';
+                    }
+                    if ($sold_message !== '') {
+                        $row['notes'] .= ' Sold-check: ' . $sold_message . '.';
+                    }
+                    if ($proof_message !== '') {
+                        $row['notes'] .= ' Zero-reference proof: ' . $proof_message . '.';
+                    }
+
+                    $row['recovery_diagnostics'] = array(
+                        'reason' => $unsafe_reason,
+                        'sold_message' => $sold_message,
+                        'zero_reference_proof' => $unsold_proof,
+                    );
+                }
             }
             if (!empty($candidate_ids)) {
                 $row['notes'] .= ' Candidate product IDs: #' . implode(', #', $candidate_ids) . '.';
