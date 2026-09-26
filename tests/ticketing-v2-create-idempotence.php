@@ -551,6 +551,77 @@ vms_issue5_assert_true(
     'Stable unresolved CREATE lookup must not depend on mutable ticket/config hashes or Preview ID.'
 );
 
+
+// Inventory mutation auditing runs inside add/update/delete metadata hooks. Those
+// hooks must not call Event Tickets/Woo provider-derived ticket state while a
+// provider CREATE is still active, or the audit itself can recursively re-enter
+// the provider bootstrap/save lifecycle.
+$forensicsPath = __DIR__ . '/../includes/ticketing/ticket-inventory-forensics.php';
+$forensicsSource = file_get_contents($forensicsPath);
+if (!is_string($forensicsSource) || $forensicsSource === '') {
+    vms_issue5_fail('Failed to read ticket inventory forensics source.');
+}
+
+$forensicsSnapshotProduct = vms_issue5_extract_function(
+    $forensicsSource,
+    'bvmgr_ticket_inventory_forensics_snapshot_product'
+);
+vms_issue5_assert_contains(
+    'bool $include_provider_state = true',
+    $forensicsSnapshotProduct,
+    'Inventory product snapshots must expose an explicit passive mode.'
+);
+vms_issue5_assert_contains(
+    '$ticket = $include_provider_state ? bvmgr_ticket_inventory_forensics_load_ticket_object($product_id) : null;',
+    $forensicsSnapshotProduct,
+    'Passive inventory snapshots must not load TEC ticket objects.'
+);
+vms_issue5_assert_contains(
+    '$wc_product = ($include_provider_state && function_exists(\'wc_get_product\')) ? wc_get_product($product_id) : null;',
+    $forensicsSnapshotProduct,
+    'Passive inventory snapshots must avoid Woo product-object loading inside metadata hooks.'
+);
+
+$forensicsSnapshotEvent = vms_issue5_extract_function(
+    $forensicsSource,
+    'bvmgr_ticket_inventory_forensics_snapshot_event'
+);
+vms_issue5_assert_contains(
+    'bool $include_provider_state = true',
+    $forensicsSnapshotEvent,
+    'Inventory event snapshots must expose an explicit passive mode.'
+);
+vms_issue5_assert_contains(
+    'if ($include_provider_state && $tec_event_id > 0 && function_exists(\'tribe_tickets_get_capacity\'))',
+    $forensicsSnapshotEvent,
+    'Passive inventory snapshots must skip TEC capacity APIs.'
+);
+vms_issue5_assert_contains(
+    '$include_provider_state',
+    $forensicsSnapshotEvent,
+    'Provider-derived event availability must be guarded by passive-mode state.'
+);
+
+$forensicsPreWrite = vms_issue5_extract_function(
+    $forensicsSource,
+    'bvmgr_ticket_inventory_forensics_capture_pre_meta_write'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticket_inventory_forensics_snapshot_object($object_id, false)',
+    $forensicsPreWrite,
+    'Pre-write inventory auditing must use passive snapshots.'
+);
+
+$forensicsPostWrite = vms_issue5_extract_function(
+    $forensicsSource,
+    'bvmgr_ticket_inventory_forensics_record_post_meta_write'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticket_inventory_forensics_snapshot_object($object_id, false)',
+    $forensicsPostWrite,
+    'Post-write inventory auditing must use passive snapshots.'
+);
+
 // Exercise the pure/shared title normalizers and recovery classifier without loading WordPress.
 $dashNormalizer = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_normalize_title_dash_presentation');
 eval($dashNormalizer);
