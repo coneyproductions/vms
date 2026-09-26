@@ -865,10 +865,28 @@ function bvmgr_ticketing_v2_normalize_title_dash_presentation(string $title): st
     return is_string($normalized) ? $normalized : $title;
 }
 
+function bvmgr_ticketing_v2_normalize_title_quote_presentation(string $title): string {
+    return str_replace(
+        array(
+            "\xE2\x80\x98", // U+2018 LEFT SINGLE QUOTATION MARK
+            "\xE2\x80\x99", // U+2019 RIGHT SINGLE QUOTATION MARK
+            "\xE2\x80\x9A", // U+201A SINGLE LOW-9 QUOTATION MARK
+            "\xE2\x80\x9B", // U+201B SINGLE HIGH-REVERSED-9 QUOTATION MARK
+            "\xE2\x80\x9C", // U+201C LEFT DOUBLE QUOTATION MARK
+            "\xE2\x80\x9D", // U+201D RIGHT DOUBLE QUOTATION MARK
+            "\xE2\x80\x9E", // U+201E DOUBLE LOW-9 QUOTATION MARK
+            "\xE2\x80\x9F", // U+201F DOUBLE HIGH-REVERSED-9 QUOTATION MARK
+        ),
+        array("'", "'", "'", "'", '"', '"', '"', '"'),
+        $title
+    );
+}
+
 function bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(string $title): string {
     $title = function_exists('wp_strip_all_tags') ? wp_strip_all_tags($title) : strip_tags($title);
     $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $title = bvmgr_ticketing_v2_normalize_title_dash_presentation($title);
+    $title = bvmgr_ticketing_v2_normalize_title_quote_presentation($title);
     $title = trim($title);
     if ($title === '') {
         return '';
@@ -4213,6 +4231,7 @@ function bvmgr_ticketing_v2_normalize_create_match_title(string $title): string 
     // while persisting the same ticket title. Use the same presentation
     // normalization as legacy exact-title adoption so both safety paths agree.
     $title = bvmgr_ticketing_v2_normalize_title_dash_presentation($title);
+    $title = bvmgr_ticketing_v2_normalize_title_quote_presentation($title);
     $title = preg_replace('/\s+/u', ' ', trim((string) $title));
     $title = is_string($title) ? $title : '';
     return function_exists('mb_strtolower') ? mb_strtolower($title, 'UTF-8') : strtolower($title);
