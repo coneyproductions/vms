@@ -246,6 +246,26 @@ vms_issue5_assert_contains(
 
 $recoveryFinder = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_find_interrupted_create_candidates');
 vms_issue5_assert_contains(
+    '$normalized_expected_base_title',
+    $recoveryFinder,
+    'Interrupted CREATE recovery must retain a normalized base ticket label for safe stale-prefix comparison.'
+);
+vms_issue5_assert_contains(
+    'bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match($intent_title)',
+    $recoveryFinder,
+    'Durable intent-product recovery must compare the captured product after stripping an admin date/time prefix.'
+);
+vms_issue5_assert_contains(
+    '$intent_title_matches_base',
+    $recoveryFinder,
+    'Durable intent-product recovery must accept a matching base ticket label when only the generated admin prefix differs.'
+);
+vms_issue5_assert_contains(
+    '$title_matches_base',
+    $recoveryFinder,
+    'Interrupted CREATE candidate recovery must accept a matching base ticket label only after durable identity checks.'
+);
+vms_issue5_assert_contains(
     "bvmgr_ticketing_v2_product_meta_key('ticketing_create_intent_id')",
     $recoveryFinder,
     'Interrupted CREATE recovery must require the dedicated temporary CREATE-intent marker or the durable intent product ID.'
@@ -731,6 +751,24 @@ vms_issue5_assert_true(
         '2031-10-25 19:00 &#8211; ISSUE5 VIP TICKET'
     ) !== $legacyAscii,
     'Meaningfully different legacy ticket titles must remain distinct after dash normalization.'
+);
+
+$capturedChildBase = bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
+    "2026-11-14 19:00 - Child's Admission (12 & under)"
+);
+$configuredChildBase = bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
+    "Child's Admission (12 & under)"
+);
+vms_issue5_assert_same(
+    $configuredChildBase,
+    $capturedChildBase,
+    'Durably identified interrupted CREATE recovery must be able to compare the configured ticket label after stripping a captured date/time admin prefix.'
+);
+vms_issue5_assert_true(
+    bvmgr_ticketing_v2_normalize_admin_ticket_title_for_match(
+        "2026-11-14 19:00 - Veteran Admission"
+    ) !== $configuredChildBase,
+    'Base-title recovery tolerance must not make meaningfully different ticket labels equivalent.'
 );
 
 $classifier = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_classify_interrupted_create_candidates');
