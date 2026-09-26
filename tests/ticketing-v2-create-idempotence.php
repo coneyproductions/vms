@@ -597,7 +597,7 @@ vms_issue5_assert_contains(
 );
 
 vms_issue5_assert_contains(
-    "'recovery_unsold_proof' => $unsold_proof",
+    '\'recovery_unsold_proof\' => $unsold_proof',
     $interruptedFinder,
     'Interrupted CREATE candidate diagnostics must preserve the zero-reference proof result when recovery remains blocked.'
 );
@@ -609,7 +609,7 @@ vms_issue5_assert_contains(
     'Blocked interrupted CREATE Preview rows must expose recovery diagnostics instead of collapsing every unsafe reason into one opaque message.'
 );
 vms_issue5_assert_contains(
-    "'Recovery reason: '",
+    "' Recovery reason: '",
     $commitPreviewSource,
     'Blocked interrupted CREATE Preview notes must identify the concrete recovery reason.'
 );
