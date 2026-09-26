@@ -596,6 +596,24 @@ vms_issue5_assert_contains(
     'Interrupted CREATE fallback must mark the recovery-specific zero-reference proof path.'
 );
 
+vms_issue5_assert_contains(
+    "'recovery_unsold_proof' => $unsold_proof",
+    $interruptedFinder,
+    'Interrupted CREATE candidate diagnostics must preserve the zero-reference proof result when recovery remains blocked.'
+);
+
+$commitPreviewSource = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_preview_sync');
+vms_issue5_assert_contains(
+    "'recovery_diagnostics'",
+    $commitPreviewSource,
+    'Blocked interrupted CREATE Preview rows must expose recovery diagnostics instead of collapsing every unsafe reason into one opaque message.'
+);
+vms_issue5_assert_contains(
+    "'Recovery reason: '",
+    $commitPreviewSource,
+    'Blocked interrupted CREATE Preview notes must identify the concrete recovery reason.'
+);
+
 $forensicsPath = __DIR__ . '/../includes/ticketing/ticket-inventory-forensics.php';
 $forensicsSource = file_get_contents($forensicsPath);
 if (!is_string($forensicsSource) || $forensicsSource === '') {
