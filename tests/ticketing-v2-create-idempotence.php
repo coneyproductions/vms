@@ -33,6 +33,25 @@ function vms_issue5_assert_contains(string $needle, string $haystack, string $me
     vms_issue5_assert_true(strpos($haystack, $needle) !== false, $message . "\nMissing: " . $needle);
 }
 
+function vms_issue5_strip_comments(string $source): string
+{
+    $tokens = token_get_all("<?php\n" . $source);
+    $out = '';
+
+    foreach ($tokens as $token) {
+        if (is_array($token)) {
+            if ($token[0] === T_OPEN_TAG || $token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
+                continue;
+            }
+            $out .= $token[1];
+            continue;
+        }
+        $out .= $token;
+    }
+
+    return $out;
+}
+
 function vms_issue5_extract_function(string $source, string $name): string
 {
     $needle = 'function ' . $name . '(';
@@ -415,16 +434,17 @@ vms_issue5_assert_contains(
     'Staging helper must fail when visibility writes or reads report errors.'
 );
 $captureHook = vms_issue5_extract_function($source, 'bvmgr_ticketing_v2_capture_provider_create_link');
+$captureHookExecutable = vms_issue5_strip_comments($captureHook);
 vms_issue5_assert_true(
-    strpos($captureHook, 'bvmgr_ticketing_v2_force_ticket_product_staged(') === false
-        && strpos($captureHook, 'wp_update_post(') === false
-        && strpos($captureHook, 'wp_add_object_terms(') === false
-        && strpos($captureHook, '->save(') === false,
+    strpos($captureHookExecutable, 'bvmgr_ticketing_v2_force_ticket_product_staged(') === false
+        && strpos($captureHookExecutable, 'wp_update_post(') === false
+        && strpos($captureHookExecutable, 'wp_add_object_terms(') === false
+        && strpos($captureHookExecutable, '->save(') === false,
     'Provider meta capture must remain identity-only and must not re-enter product/ticket save or taxonomy lifecycles while provider CREATE is still active.'
 );
 vms_issue5_assert_contains(
     "$capture_stage_ok = ($capture_post_status === 'draft' && $capture_visibility === 'hidden');",
-    $captureHook,
+    $captureHookExecutable,
     'Provider meta capture must verify the insertion fence left the captured product draft/hidden without performing another save.'
 );
 vms_issue5_assert_contains(
