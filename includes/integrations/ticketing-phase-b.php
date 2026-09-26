@@ -4274,6 +4274,102 @@ function bvmgr_ticketing_v2_classify_interrupted_create_candidates(array $candid
     );
 }
 
+/**
+ * Prove that a durably identified interrupted-CREATE product has never entered
+ * an order/attendee path.
+ *
+ * This is intentionally narrower than normal sold-quantity reconciliation. It
+ * is used only as a fail-closed fallback when the normal paid-order aggregate
+ * cannot be computed for a product that already has durable interrupted-CREATE
+ * identity. Any order-item, lookup, attendee, or total_sales reference blocks
+ * recovery.
+ */
+function bvmgr_ticketing_v2_prove_interrupted_create_unsold(int $product_id): array {
+    $product_id = absint($product_id);
+    if ($product_id <= 0) {
+        return array('ok' => false, 'unsold' => false, 'message' => 'invalid_product_id');
+    }
+
+    global $wpdb;
+    if (!isset($wpdb) || !is_object($wpdb)) {
+        return array('ok' => false, 'unsold' => false, 'message' => 'wpdb_unavailable');
+    }
+
+    $oi = $wpdb->prefix . 'woocommerce_order_items';
+    $oim = $wpdb->prefix . 'woocommerce_order_itemmeta';
+    if (!bvmgr_ticketing_v2_table_exists($oi) || !bvmgr_ticketing_v2_table_exists($oim)) {
+        return array('ok' => false, 'unsold' => false, 'message' => 'order_item_tables_unavailable');
+    }
+
+    $order_ref_sql = $wpdb->prepare(
+        "SELECT COUNT(DISTINCT oi.order_item_id)
+         FROM %i oi
+         INNER JOIN %i oim ON oim.order_item_id = oi.order_item_id
+         WHERE oi.order_item_type = 'line_item'
+           AND oim.meta_key IN ('_product_id', '_variation_id')
+           AND CAST(oim.meta_value AS UNSIGNED) = %d",
+        $oi,
+        $oim,
+        $product_id
+    );
+    $order_refs = $wpdb->get_var($order_ref_sql); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Recovery proof requires a fresh, fail-closed reference count.
+    if ($order_refs === null) {
+        return array('ok' => false, 'unsold' => false, 'message' => 'order_item_reference_query_failed');
+    }
+    $order_refs = max(0, (int) $order_refs);
+
+    $lookup_refs = 0;
+    $lookup_table = $wpdb->prefix . 'wc_order_product_lookup';
+    if (bvmgr_ticketing_v2_table_exists($lookup_table)) {
+        $lookup_sql = $wpdb->prepare(
+            "SELECT COUNT(*)
+             FROM %i
+             WHERE product_id = %d OR variation_id = %d",
+            $lookup_table,
+            $product_id,
+            $product_id
+        );
+        $lookup_value = $wpdb->get_var($lookup_sql); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Recovery proof cross-checks Woo lookup references.
+        if ($lookup_value === null) {
+            return array('ok' => false, 'unsold' => false, 'message' => 'lookup_reference_query_failed');
+        }
+        $lookup_refs = max(0, (int) $lookup_value);
+    }
+
+    $attendee_keys = array(
+        '_tribe_wooticket_product',
+        '_tribe_tickets_ticket_id',
+        '_tribe_tickets_product_id',
+    );
+    $attendee_placeholders = implode(', ', array_fill(0, count($attendee_keys), '%s'));
+    $attendee_sql = "
+        SELECT COUNT(*)
+        FROM %i
+        WHERE meta_key IN ({$attendee_placeholders})
+          AND CAST(meta_value AS UNSIGNED) = %d
+    "; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Placeholder list is fixed from three hard-coded TEC meta keys.
+    $attendee_args = array_merge(array($wpdb->postmeta), $attendee_keys, array($product_id));
+    $attendee_prepared = $wpdb->prepare($attendee_sql, $attendee_args);
+    $attendee_value = $wpdb->get_var($attendee_prepared); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Recovery proof needs a fresh TEC attendee reference count.
+    if ($attendee_value === null) {
+        return array('ok' => false, 'unsold' => false, 'message' => 'attendee_reference_query_failed');
+    }
+    $attendee_refs = max(0, (int) $attendee_value);
+
+    $meta_total_sales = max(0, (int) get_post_meta($product_id, 'total_sales', true));
+    $has_refs = ($order_refs > 0 || $lookup_refs > 0 || $attendee_refs > 0 || $meta_total_sales > 0);
+
+    return array(
+        'ok' => true,
+        'unsold' => !$has_refs,
+        'order_item_refs' => $order_refs,
+        'lookup_refs' => $lookup_refs,
+        'attendee_refs' => $attendee_refs,
+        'meta_total_sales' => $meta_total_sales,
+        'message' => $has_refs ? 'references_found' : 'no_order_or_attendee_references',
+    );
+}
+
 function bvmgr_ticketing_v2_find_interrupted_create_candidates(
     int $plan_id,
     int $tec_event_id,
@@ -4421,6 +4517,25 @@ function bvmgr_ticketing_v2_find_interrupted_create_candidates(
         $sold = function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_product')
             ? bvmgr_ticketing_v2_calc_sold_qty_for_product($product_id)
             : array('ok' => false, 'sold_qty' => 0, 'message' => 'sold_qty_helper_missing');
+
+        // A captured interrupted-CREATE product may be too incomplete for the
+        // normal paid-order reconciliation helper on some production schemas.
+        // When that helper cannot prove sold state, use a stricter zero-reference
+        // proof that is valid only because durable recovery identity was already
+        // established above. Any order/attendee/total_sales reference still
+        // blocks recovery.
+        if (empty($sold['ok']) && $has_recovery_identity) {
+            $unsold_proof = bvmgr_ticketing_v2_prove_interrupted_create_unsold($product_id);
+            if (!empty($unsold_proof['ok']) && !empty($unsold_proof['unsold'])) {
+                $sold = array(
+                    'ok' => true,
+                    'sold_qty' => 0,
+                    'message' => 'interrupted_create_zero_reference_proof',
+                    'recovery_unsold_proof' => $unsold_proof,
+                );
+            }
+        }
+
         $candidates[] = array(
             'product_id' => $product_id,
             'title' => $title,
