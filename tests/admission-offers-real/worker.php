@@ -9,6 +9,43 @@ if (!$wordpress_root || !$encoded) {
 $payload = json_decode((string) base64_decode($encoded, true), true, 32, JSON_THROW_ON_ERROR);
 require rtrim($wordpress_root, '/') . '/wp-load.php';
 
+if (($payload['mode'] ?? '') === 'paid_claim') {
+	global $wpdb;
+	if (!empty($payload['lock_wait_timeout'])) {
+		$wpdb->query('SET SESSION innodb_lock_wait_timeout = ' . (int) $payload['lock_wait_timeout']);
+	}
+	$connection_id = (int) $wpdb->get_var('SELECT CONNECTION_ID()');
+	$interrupt = static function (string $point) use ($payload): void {
+		if ($point !== 'after_offer_lock' || empty($payload['marker'])) return;
+		file_put_contents((string) $payload['marker'], 'locked');
+		$deadline = microtime(true) + 15;
+		while (!is_file((string) $payload['release'])) {
+			if (microtime(true) > $deadline) throw new RuntimeException('release_timeout');
+			usleep(20000);
+		}
+	};
+	$service = new BVMGR_Admission_Offer_Paid_Claim_Service(
+		$wpdb,
+		static fn(): string => (string) $payload['now'],
+		static function (): void {},
+		static fn(): bool => true,
+		$interrupt,
+		'USD'
+	);
+	try {
+		$result = $service->claim((array) $payload['request']);
+		echo json_encode(array(
+			'ok' => true,
+			'connection_id' => $connection_id,
+			'claim_id' => (int) $result['claim']['id'],
+			'reservation_id' => (int) $result['reservation']['id'],
+		), JSON_THROW_ON_ERROR);
+	} catch (Throwable $error) {
+		echo json_encode(array('ok' => false, 'connection_id' => $connection_id, 'error_class' => get_class($error), 'error' => $error->getMessage()), JSON_THROW_ON_ERROR);
+	}
+	exit(0);
+}
+
 final class BVMGR_Admission_Offer_Real_Pause_Store implements BVMGR_Admission_Offer_Capacity_Store_Interface
 {
 	private BVMGR_Admission_Offer_WPDB_Capacity_Store $inner;

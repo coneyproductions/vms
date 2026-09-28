@@ -59,6 +59,7 @@ final class BVMGR_Admission_Offer_Repository_Test_DB
 		if (in_array($prepared, array('START TRANSACTION', 'COMMIT', 'ROLLBACK'), true)) return 1;
 		if (!str_starts_with($prepared, 'TESTPREP:')) return false;
 		[$query, $args] = unserialize(base64_decode(substr($prepared, 9)), array('allowed_classes' => false));
+		if (str_starts_with($query, 'UPDATE %i SET')) return 1;
 		if (!str_starts_with($query, 'INSERT INTO')) return false;
 		$table = (string) $args[0];
 		$key = $table . ':' . $args[1] . ':' . $args[2] . ':' . $args[3];
@@ -273,6 +274,13 @@ $payload = json_decode((string) end($event_rows)['payload_redacted'], true);
 $assert($payload['email'] === '[redacted]' && $payload['nested']['token'] === '[redacted]', 'Domain event payload must redact identity and secrets.');
 $assert($payload['safe_count'] === 2, 'Domain event payload may preserve safe audit context.');
 $rejects(static fn() => bvmgr_admission_offer_transition_entity($db, 'checkouts', $checkout_id, 'payment_pending', 'paid', 1), 'provider_authority_required');
+$claim_transition_query_offset = count($db->queries);
+$assert(bvmgr_admission_offer_transition_entity($db, 'claims', $claim_id, 'claimed', 'canceled', 1, 7, '2026-09-28 12:04:00'), 'Generic Claim transition must succeed through the status column.');
+$claim_transition_queries = array_slice($db->queries, $claim_transition_query_offset);
+$claim_transition_sql = implode("\n", $claim_transition_queries);
+$assert(str_contains($claim_transition_sql, 'SET status = %s'), 'Claim transition must write status.');
+$assert(str_contains($claim_transition_sql, 'AND status = %s'), 'Claim transition must compare current status.');
+$assert(!str_contains($claim_transition_sql, 'SET state = %s') && !str_contains($claim_transition_sql, 'AND state = %s'), 'Claim transition must never reference a nonexistent Claim state column.');
 
 foreach (array_keys($db->rows) as $table) {
 	$assert(!str_contains($table, 'vms_pass_'), 'Admission Offers repository must not write legacy pass tables.');

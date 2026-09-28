@@ -162,6 +162,8 @@ $assert($locker_result['ok'] && $locker_result['connection_id'] !== $timeout['co
 
 require __DIR__ . '/phase-b.php';
 $phase_b = bvmgr_admission_offers_phase_b_real_certify($assert);
+require __DIR__ . '/phase-c1.php';
+$phase_c1 = bvmgr_admission_offers_phase_c1_real_certify($assert, $wordpress_root);
 
 $final_tables = array();
 foreach ($table_names as $table) $final_tables[$table] = hash('sha256', $normalize_create($table));
@@ -173,6 +175,7 @@ $result = array(
 	'schema' => $schema,
 	'contention' => array('forward' => $contention_forward, 'reverse' => $contention_reverse, 'combined_fit' => $fit, 'timeout' => $timeout),
 	'phase_b' => $phase_b,
+	'phase_c1' => $phase_c1,
 	'rollback_expected' => array('tables' => $final_tables, 'option' => get_option(bvmgr_admission_offers_db_option_key())),
 );
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);

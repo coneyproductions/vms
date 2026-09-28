@@ -431,7 +431,7 @@ if (!function_exists('bvmgr_admission_offer_transition_entity')) {
 			throw new BVMGR_Admission_Offer_Domain_Exception('provider_authority_required');
 		}
 		$table = bvmgr_admission_offers_table($kind);
-		$state_column = $kind === 'offers' ? 'status' : 'state';
+		$state_column = in_array($kind, array('offers', 'claims'), true) ? 'status' : 'state';
 		$now = $now ?: (function_exists('current_time') ? (string) current_time('mysql', true) : gmdate('Y-m-d H:i:s'));
 		$sql = "UPDATE %i SET {$state_column} = %s, state_version = state_version + 1, updated_at = %s";
 		$args = array($table, $to, $now);
