@@ -451,6 +451,11 @@ if (!function_exists('bvmgr_ticket_sales_resolver_line_kind_for_product')) {
         if (in_array($role, array('ga_ticket', 'ticket', 'legacy_ticket'), true)) {
             return 'ticket';
         }
+        if ($role !== '') {
+            // An explicit product role is authoritative. Event-linked rentals,
+            // merchandise, and other ancillary products are revenue, not admission.
+            return 'addon';
+        }
 
         if (function_exists('bvmgr_ticketing_v2_product_is_entitlement') && bvmgr_ticketing_v2_product_is_entitlement($product_id)) {
             return 'addon';

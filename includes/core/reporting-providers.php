@@ -45,12 +45,53 @@ if (!function_exists('bvmgr_reporting_empty_event_ticket_sales_result')) {
 			'paid_ticket_qty_total' => 0,
 			'free_ticket_qty_total' => 0,
 			'ticketed_attendance_qty' => 0,
+			'complimentary_categories' => array(),
 			'has_countable_data' => false,
 			'freshness' => array(),
 			'warnings' => array(),
 			'errors' => array(),
 			'provider_attempts' => array(),
 		);
+	}
+}
+
+if (!function_exists('bvmgr_reporting_normalize_complimentary_categories')) {
+	/** @param mixed $categories @return array<int,array{key:string,label:string,qty:int,source:string}> */
+	function bvmgr_reporting_normalize_complimentary_categories($categories): array
+	{
+		if (!is_array($categories)) {
+			return array();
+		}
+
+		$normalized = array();
+		foreach ($categories as $category) {
+			if (!is_array($category)) {
+				continue;
+			}
+
+			$label = trim(wp_strip_all_tags((string) ($category['label'] ?? '')));
+			$qty = max(0, (int) ($category['qty'] ?? 0));
+			if ($label === '' || $qty <= 0) {
+				continue;
+			}
+
+			$key = sanitize_key((string) ($category['key'] ?? $label));
+			$source = sanitize_key((string) ($category['source'] ?? ''));
+			$aggregate_key = $source . ':' . $key;
+			if (isset($normalized[$aggregate_key])) {
+				$normalized[$aggregate_key]['qty'] += $qty;
+				continue;
+			}
+
+			$normalized[$aggregate_key] = array(
+				'key' => $key,
+				'label' => $label,
+				'qty' => $qty,
+				'source' => $source,
+			);
+		}
+
+		return array_values($normalized);
 	}
 }
 
@@ -189,6 +230,7 @@ if (!function_exists('bvmgr_reporting_normalize_event_ticket_sales_result')) {
 		}
 
 		$result['has_countable_data'] = !empty($raw['has_countable_data']);
+		$result['complimentary_categories'] = bvmgr_reporting_normalize_complimentary_categories($raw['complimentary_categories'] ?? array());
 		$result['freshness'] = isset($raw['freshness']) && is_array($raw['freshness']) ? $raw['freshness'] : array();
 		$result['warnings'] = bvmgr_reporting_normalize_messages($raw['warnings'] ?? array());
 		$result['errors'] = bvmgr_reporting_normalize_messages($raw['errors'] ?? array());

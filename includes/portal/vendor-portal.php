@@ -880,6 +880,9 @@ if (!function_exists('bvmgr_vendor_portal_get_data_tools_sales_snapshot')) {
             'paid_ticket_qty_total' => max(0, (int) ($provider_result['paid_ticket_qty_total'] ?? 0)),
             'free_ticket_qty_total' => max(0, (int) ($provider_result['free_ticket_qty_total'] ?? 0)),
             'ticketed_attendance_qty' => max(0, (int) ($provider_result['ticketed_attendance_qty'] ?? 0)),
+            'complimentary_categories' => function_exists('bvmgr_reporting_normalize_complimentary_categories')
+                ? bvmgr_reporting_normalize_complimentary_categories($provider_result['complimentary_categories'] ?? array())
+                : array(),
             'has_countable_data' => !empty($provider_result['has_countable_data']),
             'source_mode' => sanitize_key((string) ($provider_result['source_mode'] ?? '')),
             'source' => sanitize_key((string) ($provider_result['source'] ?? '')),
@@ -979,6 +982,38 @@ if (!function_exists('bvmgr_vendor_portal_get_count_breakdown')) {
             : 0;
         $guest_admissions = bvmgr_vendor_portal_get_guest_admissions_count($plan_id);
         $comp_guest = max(0, $free_online + $free_door + $guest_admissions);
+        $comp_detail = array();
+        $remaining_free = max(0, $free_online + $free_door);
+        foreach ((array) ($merged_snapshot['complimentary_categories'] ?? array()) as $category) {
+            if (!is_array($category) || $remaining_free <= 0) {
+                continue;
+            }
+            $label = trim(wp_strip_all_tags((string) ($category['label'] ?? '')));
+            $qty = min($remaining_free, max(0, (int) ($category['qty'] ?? 0)));
+            if ($label === '' || $qty <= 0) {
+                continue;
+            }
+            $comp_detail[] = array(
+                'key' => sanitize_key((string) ($category['key'] ?? $label)),
+                'label' => $label,
+                'qty' => $qty,
+            );
+            $remaining_free -= $qty;
+        }
+        if ($remaining_free > 0) {
+            $comp_detail[] = array(
+                'key' => 'other_complimentary_admissions',
+                'label' => __('Other complimentary admissions', 'backstage-venue-manager'),
+                'qty' => $remaining_free,
+            );
+        }
+        if ($guest_admissions > 0) {
+            $comp_detail[] = array(
+                'key' => 'guest_passes',
+                'label' => __('Guest passes', 'backstage-venue-manager'),
+                'qty' => $guest_admissions,
+            );
+        }
 
         $lines = array(
             array(
@@ -1002,6 +1037,7 @@ if (!function_exists('bvmgr_vendor_portal_get_count_breakdown')) {
             'presales' => $presales,
             'door_sales' => $door_sales,
             'comp_guest' => $comp_guest,
+            'comp_detail' => $comp_detail,
             'lines' => $lines,
             'has_any' => ($presales > 0) || ($door_sales > 0) || ($comp_guest > 0) || !empty($merged_snapshot) || !empty($stats_payload),
         );
@@ -1036,6 +1072,30 @@ if (!function_exists('bvmgr_vendor_portal_render_count_breakdown_markup')) {
             echo '<strong>' . esc_html(number_format_i18n($qty)) . '</strong>';
             echo '</div>';
         }
+        $comp_detail = isset($count_breakdown['comp_detail']) && is_array($count_breakdown['comp_detail'])
+            ? (array) $count_breakdown['comp_detail']
+            : array();
+        if (!empty($comp_detail)) {
+            $comp_total = max(0, (int) ($count_breakdown['comp_guest'] ?? 0));
+            echo '<details class="vms-vp-progress-breakdown__details">';
+            /* translators: %d: total complimentary and guest admissions. */
+            echo '<summary>' . esc_html(sprintf(__('Complimentary admissions — %d', 'backstage-venue-manager'), $comp_total)) . '</summary>';
+            foreach ($comp_detail as $detail) {
+                if (!is_array($detail)) {
+                    continue;
+                }
+                $detail_label = trim((string) ($detail['label'] ?? ''));
+                $detail_qty = max(0, (int) ($detail['qty'] ?? 0));
+                if ($detail_label === '' || $detail_qty <= 0) {
+                    continue;
+                }
+                echo '<div class="vms-vp-progress-breakdown__row">';
+                echo '<span class="vms-vp-progress-breakdown__label">' . esc_html($detail_label) . '</span>';
+                echo '<strong>' . esc_html(number_format_i18n($detail_qty)) . '</strong>';
+                echo '</div>';
+            }
+            echo '</details>';
+        }
         echo '</div>';
         return (string) ob_get_clean();
         } finally {
@@ -1064,9 +1124,10 @@ if (!function_exists('bvmgr_vendor_portal_get_progress_headcount_context')) {
         $stats_payload = bvmgr_vendor_portal_get_ticket_sales_snapshot($plan_id);
         $merged_snapshot = bvmgr_vendor_portal_get_data_tools_sales_snapshot($plan_id);
         if (!empty($merged_snapshot) && !empty($merged_snapshot['has_countable_data'])) {
+            $paid_headcount = max(0, (int) ($merged_snapshot['paid_ticket_qty_total'] ?? 0));
             return array(
                 'wired' => true,
-                'headcount' => max(0, (int) ($merged_snapshot['headcount'] ?? 0)),
+                'headcount' => $paid_headcount,
                 'source' => (string) ($merged_snapshot['source'] ?? 'data_tools_merged_ticket_sales'),
                 'label' => (string) ($merged_snapshot['label'] ?? __('Paid ticket sales', 'backstage-venue-manager')),
                 'stats_payload' => $stats_payload,
@@ -1437,6 +1498,7 @@ if (!function_exists('bvmgr_vendor_portal_render_progress_cards_section')) {
         foreach ($cards as $index => $card) {
             $card_kind = sanitize_key((string) ($card['card_kind'] ?? 'bonus_progress'));
             $is_sales_snapshot = ($card_kind === 'sales_snapshot');
+            $card_layout_class = $is_sales_snapshot ? 'sales-snapshot' : 'bonus-progress';
             $snapshot = (array) ($card['snapshot'] ?? array());
             $attendance_count = max(0, (int) ($card['attendance_count'] ?? 0));
             $projected_total = (float) ($snapshot['projected_total'] ?? 0.0);
@@ -1457,7 +1519,7 @@ if (!function_exists('bvmgr_vendor_portal_render_progress_cards_section')) {
             $updated_label = trim((string) ($card['updated_label'] ?? ''));
             $event_date_label = trim((string) ($card['event_date_label'] ?? ''));
 
-            echo '<article class="vms-vp-progress-card"';
+            echo '<article class="vms-vp-progress-card vms-vp-progress-card--' . esc_attr($card_layout_class) . '"';
             if ($tour_enabled && !$is_sales_snapshot) {
                 echo ' data-vms-tour="vendor-progress.cards"';
             }
@@ -1479,7 +1541,10 @@ if (!function_exists('bvmgr_vendor_portal_render_progress_cards_section')) {
 
             echo '<div class="vms-vp-progress-card__countline">';
             /* translators: %d: attendance count for this vendor event card. */
-            echo '<strong>' . esc_html(sprintf($history_mode ? __('Final count: %d', 'backstage-venue-manager') : __('Current count: %d', 'backstage-venue-manager'), $attendance_count)) . '</strong>';
+            $count_label = $history_mode
+                ? __('Final paid count: %d', 'backstage-venue-manager')
+                : __('Current paid count: %d', 'backstage-venue-manager');
+            echo '<strong>' . esc_html(sprintf($count_label, $attendance_count)) . '</strong>';
             echo '</div>';
 
             if ($meter_enabled) {
@@ -1548,7 +1613,7 @@ if (!function_exists('bvmgr_vendor_portal_render_progress_cards_section')) {
                 }
                 echo '</div>';
 
-                echo '<div class="vms-vp-progress-stat">';
+                echo '<div class="vms-vp-progress-stat' . ($history_mode ? ' vms-vp-progress-stat--breakdown' : '') . '">';
                 if ($history_mode) {
                     echo '<span class="vms-vp-progress-stat__label">' . esc_html__('Count source', 'backstage-venue-manager') . '</span>';
                     if ($count_breakdown_markup !== '') {
@@ -1906,6 +1971,7 @@ if (!function_exists('bvmgr_vendor_portal_render_event_history_tab')) {
         $rows = bvmgr_vendor_portal_get_past_assigned_event_rows($vendor_id, 20);
 
         echo '<h3>' . esc_html__('Event History', 'backstage-venue-manager') . '</h3>';
+        echo '<div class="vms-vp-event-history">';
 
         $rendered_any = false;
 
@@ -1921,7 +1987,7 @@ if (!function_exists('bvmgr_vendor_portal_render_event_history_tab')) {
 
         if (!empty($rows)) {
             $rendered_any = true;
-            echo '<div class="vms-portal-card">';
+            echo '<div class="vms-portal-card vms-vp-event-history-list">';
             echo '<h3>' . esc_html__('Past Shows', 'backstage-venue-manager') . '</h3>';
             echo '<ul class="vms-dash-list">';
             foreach ($rows as $row) {
@@ -1944,7 +2010,7 @@ if (!function_exists('bvmgr_vendor_portal_render_event_history_tab')) {
                 }
                 if ($attendance_count !== null) {
                     /* translators: %d: final attendance count for the completed event. */
-                    $meta_bits[] = sprintf(__('Final count: %d', 'backstage-venue-manager'), $attendance_count);
+                    $meta_bits[] = sprintf(__('Final paid count: %d', 'backstage-venue-manager'), $attendance_count);
                 }
 
                 echo '<li>';
@@ -1972,6 +2038,7 @@ if (!function_exists('bvmgr_vendor_portal_render_event_history_tab')) {
             echo '<p class="vms-muted vms-m0">' . esc_html__('No completed event history is available yet.', 'backstage-venue-manager') . '</p>';
             echo '</div>';
         }
+        echo '</div>';
     }
 }
 
