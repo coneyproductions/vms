@@ -529,7 +529,10 @@ require_once dirname(__DIR__) . '/includes/core/prefix-b4-compat.php';
 require_once dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php';
 
 $pluginRoot = dirname(__DIR__);
-$livePluginRoot = dirname(dirname($pluginRoot)) . '/vms';
+$configuredLivePluginRoot = getenv('BVM_TEST_LIVE_PLUGIN_ROOT');
+$livePluginRoot = is_string($configuredLivePluginRoot) && $configuredLivePluginRoot !== ''
+	? $configuredLivePluginRoot
+	: dirname(dirname($pluginRoot)) . '/vms';
 $passClaimsSource = file_get_contents($pluginRoot . '/includes/modules/admissions/pass-claims.php');
 $livePassClaimsSource = file_get_contents($livePluginRoot . '/includes/modules/admissions/pass-claims.php');
 $adminShellSource = file_get_contents($pluginRoot . '/includes/admin-ui/shell.php');

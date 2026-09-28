@@ -197,6 +197,13 @@ $assert($GLOBALS['vms_test_enqueued_styles'] === array(
 ), 'Pass Claims public shell should preserve the public stylesheet enqueue.');
 $assert($GLOBALS['vms_test_enqueued_scripts'] === array(
 	array(
+		'handle' => 'bvmgr-number-input-guard',
+		'src' => BVMGR_PLUGIN_URL . 'assets/vms-number-input-guard.js',
+		'deps' => array(),
+		'ver' => BVMGR_VERSION,
+		'in_footer' => true,
+	),
+	array(
 		'handle' => 'bvmgr-pass-claims-public',
 		'src' => BVMGR_PLUGIN_URL . 'assets/js/vms-pass-claims-public.js',
 		'deps' => array(),
