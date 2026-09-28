@@ -21,6 +21,11 @@ trap cleanup EXIT HUP INT TERM
 repo_root=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
 public_root=$(CDPATH= cd -- "$repo_root/../../../.." && pwd)
 pre_phase_root=$(CDPATH= cd -- "$repo_root/../vms-github-reconcile" && pwd)
+plugin_root=${BVM_ADMISSION_OFFERS_PLUGIN_ROOT:-$repo_root}
+case "$plugin_root" in
+	"$repo_root"|"$public_root/wp-content/plugins/vms") ;;
+	*) echo "certification plugin root is outside the approved mirror/live pair" >&2; exit 2 ;;
+esac
 if [ -n "$(git -C "$pre_phase_root" status --short)" ] || [ -e "$pre_phase_root/includes/modules/admission-offers" ] || grep -q "admission-offers/admission-offers.php" "$pre_phase_root/includes/modules/load.php"; then
 	echo "pre-Phase-A rollback source mismatch" >&2
 	exit 2
@@ -30,7 +35,7 @@ wordpress_root="$runtime_root/wordpress"
 mkdir "$wordpress_root"
 rsync -a --exclude='wp-content' --exclude='wp-config.php' "$public_root/" "$wordpress_root/"
 mkdir -p "$wordpress_root/wp-content/plugins"
-ln -s "$repo_root" "$wordpress_root/wp-content/plugins/bvm"
+ln -s "$plugin_root" "$wordpress_root/wp-content/plugins/bvm"
 cat > "$wordpress_root/wp-config.php" <<EOF
 <?php
 define('DB_NAME', 'bvm_admission_offers_cert');

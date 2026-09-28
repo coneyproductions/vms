@@ -51,6 +51,10 @@ if (!function_exists('bvmgr_admission_audit_log')) {
 			array('%d', '%d', '%s', '%d', '%s', '%s', '%s')
 		);
 
+		if ($result !== false) {
+			do_action('bvmgr_admission_audit_logged', $event_plan_id, $entry_id, sanitize_key($action), $actor_user_id, sanitize_key($actor_context), $details);
+		}
+
 		return $result !== false;
 	}
 }

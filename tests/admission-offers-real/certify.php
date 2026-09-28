@@ -160,6 +160,9 @@ $assert(!$timeout['ok'] && $timeout['error_class'] === 'BVMGR_Admission_Offer_Tr
 file_put_contents($release, 'release'); $locker_result = $finish_worker($locker); @unlink($marker); @unlink($release);
 $assert($locker_result['ok'] && $locker_result['connection_id'] !== $timeout['connection_id'], 'Timeout fixture must use independent sessions and leave the locker healthy.');
 
+require __DIR__ . '/phase-b.php';
+$phase_b = bvmgr_admission_offers_phase_b_real_certify($assert);
+
 $final_tables = array();
 foreach ($table_names as $table) $final_tables[$table] = hash('sha256', $normalize_create($table));
 $result = array(
@@ -169,6 +172,7 @@ $result = array(
 	'schema_version' => get_option(bvmgr_admission_offers_db_option_key()),
 	'schema' => $schema,
 	'contention' => array('forward' => $contention_forward, 'reverse' => $contention_reverse, 'combined_fit' => $fit, 'timeout' => $timeout),
+	'phase_b' => $phase_b,
 	'rollback_expected' => array('tables' => $final_tables, 'option' => get_option(bvmgr_admission_offers_db_option_key())),
 );
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);

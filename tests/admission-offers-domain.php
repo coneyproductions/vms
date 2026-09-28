@@ -173,14 +173,17 @@ $runtime_source = '';
 foreach (glob($runtime_dir . '/*.php') ?: array() as $path) {
 	$runtime_source .= "\n" . (string) file_get_contents($path);
 }
-foreach (array('register_rest_route(', 'add_menu_page(', 'add_submenu_page(', 'add_shortcode(', 'wp_insert_post(', 'wc_create_order(', 'tribe_', 'vms_pass_', 'vms_admission_entries') as $forbidden) {
-	$assert(stripos($runtime_source, $forbidden) === false, 'Dormant foundation contains forbidden runtime surface: ' . $forbidden);
+foreach (array('register_rest_route(', 'add_menu_page(', 'add_submenu_page(', 'add_shortcode(', 'wp_insert_post(', 'wc_create_order(', 'tribe_', 'vms_pass_') as $forbidden) {
+	$assert(stripos($runtime_source, $forbidden) === false, 'Admission Offers core contains forbidden runtime surface: ' . $forbidden);
 }
 $assert(stripos($runtime_source, 'Backstage Outreach') === false, 'Core foundation must not depend on Backstage Outreach.');
 $assert(stripos($runtime_source, 'Commerce Discounts') === false, 'Core foundation must not depend on Commerce Discounts.');
 $loader_source = (string) file_get_contents($runtime_dir . '/admission-offers.php');
-$assert(substr_count($loader_source, 'add_action(') === 1, 'Dormant loader may register only its schema readiness hook.');
+$assert(substr_count($loader_source, 'add_action(') === 1, 'Loader may register only its schema readiness hook directly.');
 require_once $runtime_dir . '/admission-offers.php';
-$assert($GLOBALS['bvmgr_admission_offer_test_actions'] === array(array('plugins_loaded', 'bvmgr_admission_offers_foundation_boot', 8, 1)), 'Loader must register only dormant schema readiness.');
+$assert($GLOBALS['bvmgr_admission_offer_test_actions'] === array(
+	array('bvmgr_admission_audit_logged', 'bvmgr_admission_offer_observe_native_audit', 10, 4),
+	array('plugins_loaded', 'bvmgr_admission_offers_foundation_boot', 8, 1),
+), 'Phase B may register only schema readiness and native admission lifecycle observation.');
 
 echo "Admission Offers domain/schema: PASS ({$assertions} assertions)\n";
